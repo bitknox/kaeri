@@ -237,8 +237,12 @@ public final class SpotlightIndexer {
             for url in asked { _ = covers.image(url) }
         } onChange: { [weak self] in
             Task { @MainActor in
-                guard let self, self.generation == watch else { return }
+                guard let self else { return }
+                // Every change asks for a pass, an older watch's too: a pass that ends between
+                // the change and this task sets the newer watch after the change, and that
+                // watch never sees it.
                 self.schedule()
+                guard self.generation == watch else { return }
                 self.observe()
             }
         }
@@ -249,8 +253,11 @@ public final class SpotlightIndexer {
         scheduled?.cancel()
         scheduled = Task { [weak self, delay] in
             try? await Task.sleep(for: delay)
-            guard !Task.isCancelled else { return }
-            await self?.pass()
+            guard !Task.isCancelled, let self else { return }
+            // Only the wait is called off by a later change: a pass under way is not, or what
+            // it was telling Spotlight would stop halfway. The change is the next pass's.
+            self.scheduled = nil
+            await self.pass()
         }
     }
 

@@ -236,7 +236,8 @@ struct SpotlightTests {
         #expect(await index.calls == [.delete(["title/900001"])], "no clearing: the saved shelf says what is there")
     }
 
-    @Test func onceStartedTheIndexFollowsTheListsByItself() async throws {
+    @Test(.timeLimit(.minutes(1)))
+    func onceStartedTheIndexFollowsTheListsByItself() async throws {
         let store = AppStore()
         let index = RecordingIndex()
         let indexer = SpotlightIndexer(
@@ -245,25 +246,46 @@ struct SpotlightTests {
         )
         indexer.start()
         store.apply(.content(view: .continue, content: .entries([wayfarer()])))
-        try await until { await index.calls.count == 2 }
+        try await until { await index.calls.count >= 2 }
         #expect(await index.calls.last?.indexed == ["title/900001"])
 
         store.apply(.content(view: .continue, content: .empty))
-        try await until { await index.calls.count == 3 }
+        try await until { await index.calls.count >= 3 }
+        #expect(await index.calls.count == 3)
         #expect(await index.calls.last == .delete(["title/900001"]))
+        #expect(indexer.shelf?.titles.isEmpty == true)
     }
 
-    /// Wait for `condition`, two seconds at most.
+    @Test(.timeLimit(.minutes(1)))
+    func aChangeWhileAPassIsOutIsTakenByTheNext() async throws {
+        let store = AppStore()
+        let index = RecordingIndex(slowly: true)
+        let indexer = SpotlightIndexer(
+            store: store, index: index, prefix: Self.prefix, file: nil,
+            defaults: Self.defaults, delay: .milliseconds(20), covers: FakeCovers()
+        )
+        indexer.start()
+        store.apply(.content(view: .continue, content: .entries([wayfarer()])))
+        try await until { await index.indexing }
+        // The main actor held while the titles land, as a busy Mac holds it: the pass that sent
+        // them ends after the list has changed again.
+        Self.hold(0.3)
+        store.apply(.content(view: .continue, content: .empty))
+        try await until { await index.calls.count >= 3 }
+        #expect(await index.calls.last == .delete(["title/900001"]))
+        #expect(indexer.shelf?.titles.isEmpty == true)
+    }
+
+    /// Wait for `condition`, as long as it takes. A busy runner holds the main actor for
+    /// seconds; the test's time limit ends a wait for something that never comes.
     func until(_ condition: () async -> Bool) async throws {
-        let deadline = ContinuousClock.now + .seconds(2)
         while await !condition() {
-            guard ContinuousClock.now < deadline else {
-                Issue.record("timed out")
-                return
-            }
             try await Task.sleep(for: .milliseconds(10))
         }
     }
+
+    /// Keep the calling thread, as long work on the main actor does.
+    static func hold(_ seconds: TimeInterval) { Thread.sleep(forTimeInterval: seconds) }
 
     @Test func nothingIsToldBeforeAnyListHasAnswered() async {
         let index = RecordingIndex()
@@ -435,8 +457,18 @@ actor RecordingIndex: SpotlightIndex {
     }
 
     private(set) var calls: [Call] = []
+    /// Whether titles have been sent, landed or not.
+    private(set) var indexing = false
+    /// Titles take a tenth of a second to land, as on a busy Mac.
+    private let slowly: Bool
 
-    func index(_ items: [SpotlightItem]) async throws { calls.append(.index(items)) }
+    init(slowly: Bool = false) { self.slowly = slowly }
+
+    func index(_ items: [SpotlightItem]) async throws {
+        indexing = true
+        if slowly { try await Task.sleep(for: .milliseconds(100)) }
+        calls.append(.index(items))
+    }
     func delete(_ identifiers: [String]) async throws { calls.append(.delete(identifiers)) }
     func deleteAll(domains: [String]) async throws { calls.append(.deleteAll(domains)) }
     func reset() { calls = [] }
