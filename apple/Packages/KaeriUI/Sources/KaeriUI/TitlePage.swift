@@ -519,6 +519,9 @@ struct TitleHero: View {
             .opacity(faded ? 0 : 1)
             .padding(.bottom, 4)
         }
+        // Where it plays comes after the page, in lines under the actions: the words above glide
+        // up to make room (standard) while the lines fade in, rather than jumping.
+        .animation(navigator.motionReduced ? nil : .standard, value: store.licensed.availability[entry.id])
         .task(id: entry.id) {
             try? await Task.sleep(for: Self.offersWaitFor)
             offersWaited = entry.id
