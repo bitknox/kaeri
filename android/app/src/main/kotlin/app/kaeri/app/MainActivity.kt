@@ -38,7 +38,10 @@ import app.kaeri.app.tv.TvRemoteService
 import app.kaeri.design.KaeriTheme
 import app.kaeri.engine.ffi.FfiTvCommand
 import app.kaeri.engine.model.Command
+import app.kaeri.engine.model.Bounds
+import app.kaeri.engine.model.MediaFormat
 import app.kaeri.engine.model.SearchQuery
+import app.kaeri.engine.model.Season
 import app.kaeri.engine.model.SettingKey
 import app.kaeri.player.takeBackBeforeShown
 import app.kaeri.player.ui.PlayerFrame
@@ -182,7 +185,17 @@ class MainActivity : ComponentActivity() {
         val title = intent.getStringExtra(TITLE)?.takeIf { steerable }?.toUIntOrNull()
         val query = intent.getStringExtra(QUERY)?.takeIf { steerable }
         val genre = intent.getStringExtra(GENRE)?.takeIf { steerable }
-        val search = if (query != null || genre != null) SearchQuery(text = query.orEmpty(), genres = listOfNotNull(genre)) else null
+        val filters = intent.getStringExtra(FILTERS)?.takeIf { steerable }
+        val search = when {
+            // Every row filter set, and two of the sheet's, which the fixtures' catalogue answers
+            // with two titles (the Fixtures build turns the catalogue on for this extra).
+            filters == "set" -> SearchQuery(
+                text = query.orEmpty(), genres = listOf("Fantasy"), formats = listOf(MediaFormat.TV),
+                season = Season.SPRING, years = Bounds(min = 2024u, max = 2024u), minScore = 70u, licensedOnly = true,
+            )
+            query != null || genre != null -> SearchQuery(text = query.orEmpty(), genres = listOfNotNull(genre))
+            else -> null
+        }
         val sheet = intent.getStringExtra(SHEET)?.takeIf { steerable }
         val page = intent.getStringExtra(PAGE)?.takeIf { steerable }
         // The fixtures and debug builds open on the screen asked for; their pages only when asked.
@@ -493,6 +506,9 @@ class MainActivity : ComponentActivity() {
 
         /** A genre to browse, on Search, alone or with the query. */
         const val GENRE = "genre"
+
+        /** Search's filters: `set`, every row filter and two of the sheet's, with titles that match. */
+        const val FILTERS = "filters"
 
         /** A sheet to open over the destination: `filters`, Search's filters. */
         const val SHEET = "sheet"
