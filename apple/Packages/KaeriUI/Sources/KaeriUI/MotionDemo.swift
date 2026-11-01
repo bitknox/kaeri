@@ -13,6 +13,13 @@ public enum MotionDemo: String, CaseIterable, Sendable {
     case t1Poster
     /// T1 from Home's spotlight, whose title is often on a shelf too: out of the spotlight.
     case t1Spotlight
+    /// T1 from the first cover of the grid on screen: the Library's list, or Seasonal.
+    case t1Grid
+    /// M1 to a section `-KaeriTo` names, as a click in the sidebar does: its first load.
+    case section
+    /// Home asked for again as on its first visit, with nothing kept: its placeholders, then its
+    /// sections arriving.
+    case homeFirst
     /// M2: Continue's selection moves to the next title, the preview crossfading.
     case m2
     /// M3: the preview's banner grows into the title page.
@@ -32,6 +39,9 @@ public enum MotionDemo: String, CaseIterable, Sendable {
     case filters
     /// Search: TV toggled in the format filter, as a click in its menu does.
     case refine
+    /// Search: the filters changed three times, 1.2 s apart, as clicks in their menus and on a
+    /// chip do: TV added, then TV changed to Movie, then the genres taken off.
+    case pills
     /// The Mac's hover card: a pointer path rests on a cover, hands the card to the next cover
     /// and leaves it (the hover card board's Motion studies).
     case hover
@@ -86,6 +96,23 @@ public enum MotionDemo: String, CaseIterable, Sendable {
             guard let spot = store.discovery.view?.spotlight else { return }
             let entry = store.titles[spot.entry.id] ?? spot.entry
             navigator.openTitle(entry.id, from: TitleSource(entry.id, .spotlight, art: store.heroArt(entry).isCompact ? .poster : .banner))
+        case .t1Grid:
+            let ids = navigator.section == .seasonal
+                ? store.seasonal.state.ids
+                : store.library.segment(navigator.librarySegment).state.ids
+            guard let id = ids.first else { return }
+            navigator.openTitle(id, from: TitleSource(id, .grid, art: .poster))
+        case .section:
+            let arguments = ProcessInfo.processInfo.arguments
+            guard let at = arguments.firstIndex(of: "-KaeriTo"), arguments.indices.contains(at + 1),
+                  let section = AppSection(rawValue: arguments[at + 1])
+            else { return }
+            var instant = Transaction()
+            instant.disablesAnimations = true
+            withTransaction(instant) { navigator.section = section }
+        case .homeFirst:
+            store.discovery.forgetForDemo()
+            store.loadHome(force: true)
         case .m2:
             if queue.count > 1 { navigator.continueSelection = queue[1] }
         case .m3:
@@ -117,6 +144,14 @@ public enum MotionDemo: String, CaseIterable, Sendable {
             navigator.searchFiltersShown.toggle()
         case .refine:
             store.searchLive(store.search.query.togglingFormat(format: .tv))
+        case .pills:
+            Task { @MainActor in
+                store.searchLive(store.search.query.togglingFormat(format: .tv))
+                try? await Task.sleep(for: .milliseconds(1200))
+                store.searchLive(store.search.query.togglingFormat(format: .tv).togglingFormat(format: .movie))
+                try? await Task.sleep(for: .milliseconds(1200))
+                store.editSearch { $0.genres = []; $0.genresExcluded = [] }
+            }
         case .hover:
             #if os(macOS)
             HoverCardScript.requested = true

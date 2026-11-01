@@ -110,6 +110,7 @@ final class Delegate: NSObject, NSApplicationDelegate {
         store.episodesDelay = options.episodesDelay
         store.searchDelay = options.searchDelay
         store.detailDelay = options.detailDelay
+        store.listDelay = options.listDelay
         if let trouble = options.artTrouble {
             store.troubleArt(failFirst: trouble.failFirst, delay: trouble.delay)
         }

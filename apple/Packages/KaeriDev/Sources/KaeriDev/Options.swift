@@ -37,6 +37,11 @@ import Foundation
 ///                                                     it first, so it comes from the caches
 ///     swift run KaeriDev --search-delay 1500      each search answer held back 1.5 s, as a
 ///                                                     slow network answers
+///     swift run KaeriDev -KaeriMotion section -KaeriTo library --list-delay 900 \
+///         --snapshot shot.png --frames 0,100,200      the Library's first visit, its list
+///                                                     held back 900 ms, as a slow AniList
+///                                                     answers (Home, the calendar and
+///                                                     Seasonal too)
 ///     swift run KaeriDev -KaeriMotion t1Spotlight --snapshot shot.png --frames 0,50,100 \
 ///         --reduce-motion                             a motion demo as the app runs it with
 ///                                                     Reduce Motion on (its own moves only);
@@ -81,6 +86,8 @@ struct Options {
     var searchDelay: Duration?
     /// How long each title's page waits before the screens see it, as a slow AniList answers.
     var detailDelay: Duration?
+    /// How long the lists the screens browse wait before the screens see them.
+    var listDelay: Duration?
     /// Titles opened and left before the snapshot, so their pages and art are in the caches.
     var visit: [AnilistId] = []
     /// Whether a motion demo runs as with Reduce Motion on, for the moves the app decides itself.
@@ -93,7 +100,7 @@ struct Options {
                             [--player-shot <state>] [--snapshot <file.png>] [--size <width>x<height>]
                             [--media <file>] [--full-screen <times>] [--art-trouble <fails>[,<ms>]]
                             [--art-cache <MB>] [--episodes-delay <ms>] [--search-delay <ms>]
-                            [--detail-delay <ms>] [--visit <id>,…] [--reduce-motion]
+                            [--detail-delay <ms>] [--list-delay <ms>] [--visit <id>,…] [--reduce-motion]
         the player's states: \(PlayerShot.allCases.map(\.rawValue).joined(separator: ", "))
         """
 
@@ -171,6 +178,10 @@ struct Options {
                 let list = try value(flag)
                 visit = list.split(separator: ",").compactMap { AnilistId($0) }
                 guard !visit.isEmpty else { throw Problem.bad(flag, list) }
+            case "--list-delay":
+                let ms = try value(flag)
+                guard let delay = Int(ms), delay >= 0 else { throw Problem.bad(flag, ms) }
+                listDelay = .milliseconds(delay)
             case "--reduce-motion":
                 reduceMotion = true
             case "--search-delay":
