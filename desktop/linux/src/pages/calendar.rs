@@ -93,13 +93,14 @@ impl Broadcast {
     }
 }
 
-/// Whether a title is yours: under way here, or on your Watching or Planning list.
+/// Whether a title is yours: under way here, or on your Watching or Planning list, and not dropped.
 fn is_mine(entry: &Entry) -> bool {
-    entry.progress.is_some()
-        || matches!(
-            entry.list_status,
-            Some(LibrarySegment::Watching | LibrarySegment::Planning)
-        )
+    entry.list_status != Some(LibrarySegment::Dropped)
+        && (entry.progress.is_some()
+            || matches!(
+                entry.list_status,
+                Some(LibrarySegment::Watching | LibrarySegment::Planning)
+            ))
 }
 
 struct Page {
@@ -1372,6 +1373,21 @@ mod tests {
         let monday = day(2026, 10, 19);
         assert_eq!(day_heading(&monday, false), "Monday 19 October");
         assert_eq!(day_heading(&monday, true), "Monday, October 19");
+    }
+
+    #[test]
+    fn a_dropped_title_is_not_on_my_list() {
+        let mut entry = Entry::new(kaeri_core::ids::AnilistId::new(1), "Lantern Harbour");
+        assert!(!is_mine(&entry), "nothing started and not listed");
+        entry.progress = Some(kaeri_model::progress::TitleProgress { done: 3, next: 4 });
+        assert!(is_mine(&entry), "progress with no status");
+        entry.list_status = Some(LibrarySegment::Dropped);
+        assert!(!is_mine(&entry), "dropped, even with progress");
+        entry.progress = None;
+        entry.list_status = Some(LibrarySegment::Watching);
+        assert!(is_mine(&entry));
+        entry.list_status = Some(LibrarySegment::Planning);
+        assert!(is_mine(&entry));
     }
 
     #[test]
