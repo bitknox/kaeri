@@ -259,12 +259,9 @@ impl CalendarMemory {
             Ok(errors) => errors,
             Err(e) => (Some(e.to_string()), None),
         };
-        let failure = past_error.or(ahead_error);
-        let held = self
-            .lock()
-            .as_ref()
-            .filter(|k| k.window.anchor == anchor)
-            .map(|k| k.window.clone());
+        let mut failure = past_error.or(ahead_error);
+        let now_kept = self.held();
+        let held = now_kept.as_ref().filter(|w| w.anchor == anchor).cloned();
         let window = match (held, stale) {
             // Nothing arrived of a new window: the last good one stands in for it.
             (Some(w), Some(stale))
@@ -275,8 +272,14 @@ impl CalendarMemory {
                 stale
             }
             (Some(w), _) => w,
-            (None, Some(stale)) => stale,
-            (None, None) => Window { anchor, ..Window::default() },
+            // Another reader began a newer window while this one was read (a Calendar
+            // refresh): that one stands in, and the reader is told it may not be whole, so it
+            // asks again rather than keeping an empty week as the answer.
+            (None, stale) => {
+                failure
+                    .get_or_insert_with(|| "the schedule was renewed while it was read".into());
+                now_kept.or(stale).unwrap_or_else(|| Window { anchor, ..Window::default() })
+            }
         };
         Covered { window, failure }
     }
