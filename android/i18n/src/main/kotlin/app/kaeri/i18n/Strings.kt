@@ -1237,6 +1237,22 @@ object Strings {
     fun playerMoreDiscussionPauses(context: Context): String =
         context.getString(R.string.player_more_discussion_pauses)
 
+    /** Spoken name of a filter pill in the search row that has a value: Genres, Fantasy. */
+    fun searchPillSet(context: Context, filter: String, value: String): String =
+        context.getString(R.string.search_pill_set, filter, value)
+
+    /** Spoken name of a filter pill in the search row that has no value. */
+    fun searchPillAny(context: Context, filter: String): String =
+        context.getString(R.string.search_pill_any, filter)
+
+    /** Spoken name of the pinned filters button when the sheet holds filters that are set. */
+    fun searchPillAllSet(context: Context, count: Int): String =
+        context.getString(R.string.search_pill_all_set, count)
+
+    /** Spoken name of the pill in the search row that takes every filter off. */
+    fun searchPillClear(context: Context): String =
+        context.getString(R.string.search_pill_clear)
+
     /** Play on TV sheet: the heading over the TVs with Chromecast built in. */
     fun castSheetGroup(context: Context): String =
         context.getString(R.string.cast_sheet_group)
