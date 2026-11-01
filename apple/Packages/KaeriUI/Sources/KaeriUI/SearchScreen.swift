@@ -302,10 +302,12 @@ struct SearchScreen: View {
         .scrollPosition($scrollPosition)
         .scrollIndicators(.never)
         #if os(iOS)
-        // On the iPhone the filters stay under the field, sharing the bar's soft scroll edge.
+        // On the iPhone the filters stay under the field, sharing the bar's soft scroll edge:
+        // the covers blur and fade into the ground under the row, with no line where they stop.
         .safeAreaBar(edge: .top, spacing: 8) {
             if pinned { SearchFilterRow(compact: true, pinned: true) }
         }
+        .scrollEdgeEffectStyle(pinned ? .soft : nil, for: .top)
         .screenSubtitle(store.search.searchingLine ?? "")
         // The ground inside the inspector: it hosts the screen in a column of its own, which
         // draws the system's black over the ground TabStack puts behind it.
