@@ -553,17 +553,16 @@ jobs:
   #          AniList), then the Fixtures app's tests, which link it too, and the Mac player's
   #          controls clicked.
   #   apps   the app itself, from the XcodeGen project: built for an iPhone with signing off, and
-  #          for the Mac in Release, on the engines the apps ship.
-  #   audit  the accessibility audit on an iPhone Simulator, on the Simulator's testing engine, and
-  #          the FFI's tests as the apps build it, in the macOS testing engine's build that the
-  #          Simulator's engine makes first. The FFI's tests with the desktop feature are the macOS
-  #          test job's.
+  #          for the Mac in Release, on the engines the apps ship, and the FFI's tests as the apps
+  #          build it, in the Mac slice's build those engines leave. The FFI's tests with the
+  #          desktop feature are the macOS test job's.
   #
-  # One job did all three in turn, and took most of an hour warm. Split, the longest is the swift
-  # job, and the three share nothing they would have to wait for: each builds only the engines
-  # its checks link (the macOS testing engine is built by two of them, a few minutes each on a
-  # warm Rust cache), and all three restore the same caches. With the macOS test job that is
-  # four macOS runners for a pull request, of the five the account has at a time.
+  # One job did both in turn, and took most of an hour warm. Split, the longest is the swift job,
+  # and the two share nothing they would have to wait for: each builds only the engines its checks
+  # link, and both restore the same caches. With the macOS test job that is three macOS runners
+  # for a pull request, of the five the account has at a time. The XCUITest accessibility audit
+  # (apple/AuditTests, the "Kaeri Audit" scheme) runs locally, not here: it took twenty minutes a
+  # run and only ever warned.
   #
   # A job's steps run after an earlier step's failure, so one run reports every check it can.
   # The Xcode is named outright, since the runner's default moves.
@@ -589,7 +588,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        part: ${{ fromJSON(github.event_name == 'pull_request' && '["swift", "apps", "audit"]' || '["caches"]') }}
+        part: ${{ fromJSON(github.event_name == 'pull_request' && '["swift", "apps"]' || '["caches"]') }}
     env:
       XCODE: "27.1"
       DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
@@ -609,13 +608,13 @@ jobs:
         uses: actions/cache/restore@v6
         with:
           path: ~/.cache/kaeri-engine/apple
-          key: ci-apple-engines-sim-xcode${{ env.XCODE }}-${{ steps.sources.outputs.hash }}
+          key: ci-apple-engines-xcode${{ env.XCODE }}-${{ steps.sources.outputs.hash }}
           lookup-only: ${{ github.event_name == 'push' }}
       # Not read when every engine came from the cache above and the Rust tests below are
       # skipped, since nothing here compiles but engine.sh. One cache for every job here, saved
       # by the caches job, which builds every slice.
       - uses: Swatinem/rust-cache@v2
-        if: steps.engine.outputs.cache-hit != 'true' || (env.PART == 'audit' && needs.changes.outputs.engine == 'true')
+        if: steps.engine.outputs.cache-hit != 'true' || (env.PART == 'apps' && needs.changes.outputs.engine == 'true')
         with:
           shared-key: apple
           save-if: ${{ github.ref == 'refs/heads/main' }}
@@ -632,12 +631,11 @@ jobs:
         uses: actions/cache/restore@v6
         with:
           path: apple/.mpv/${{ env.MPV_PIN }}
-          key: ci-apple-mpv-macos-ios-sim-xcode${{ env.XCODE }}-${{ hashFiles('apple/scripts/mpv.sh', 'apple/patches/**') }}
+          key: ci-apple-mpv-macos-ios-xcode${{ env.XCODE }}-${{ hashFiles('apple/scripts/mpv.sh', 'apple/patches/**') }}
           lookup-only: ${{ github.event_name == 'push' }}
       - name: libmpv
         if: env.PART != 'caches' || steps.mpv.outputs.cache-hit != 'true'
-        # The Simulator's slice too, for the accessibility audit.
-        run: apple/scripts/mpv.sh macos ios ios-sim
+        run: apple/scripts/mpv.sh macos ios
       - name: Keep libmpv
         if: github.ref == 'refs/heads/main' && steps.mpv.outputs.cache-hit != 'true'
         uses: actions/cache/save@v6
@@ -706,22 +704,17 @@ jobs:
       - name: Apple, the engines
         if: ${{ !cancelled() && (env.PART == 'apps' || (env.PART == 'caches' && steps.engine.outputs.cache-hit != 'true')) }}
         run: apple/scripts/engine.sh release macos ios
-      # The Simulator's testing engine, which the accessibility audit builds the Fixtures app on,
-      # with the macOS slice engine.sh always builds beside it, which the Rust tests below share.
-      - name: Apple, the testing engine for the Simulator
-        if: ${{ !cancelled() && (env.PART == 'audit' || (env.PART == 'caches' && steps.engine.outputs.cache-hit != 'true')) }}
-        run: apple/scripts/engine.sh testing ios-sim
       # The apps build the engine without the desktop feature, so its hosted player has to pass
       # its contract in that build too: the FFI's own tests in the build engine.sh just made for
-      # the Mac's slice, with its features, target and profile, so nothing beneath the FFI
-      # compiles again but what the tests' own dependencies turn on. Only when the engine changed:
-      # a change to apple/ alone cannot move them. On main, only built, so the Rust cache holds
+      # the Mac's slice, with its target and profile, so little beneath the FFI compiles again but
+      # what the tests' own features and dependencies turn on. Only when the engine changed: a
+      # change to apple/ alone cannot move them. On main, only built, so the Rust cache holds
       # those dependencies too. Without the image's ANDROID_NDK_HOME, as engine.sh's clean
       # environment has it: BoringSSL's build script watches it, and seeing it change built
       # BoringSSL again.
       - name: Swift, Rust tests, the apps' build
         if: >-
-          ${{ !cancelled() && ((env.PART == 'audit' && needs.changes.outputs.engine == 'true')
+          ${{ !cancelled() && ((env.PART == 'apps' && needs.changes.outputs.engine == 'true')
           || (env.PART == 'caches' && steps.engine.outputs.cache-hit != 'true')) }}
         env:
           MACOSX_DEPLOYMENT_TARGET: "26.0"
@@ -738,7 +731,7 @@ jobs:
           key: ${{ steps.engine.outputs.cache-primary-key }}
       # The CJK subtitle font the iOS app bundles, which its iOS builds check for.
       - name: Apple, the subtitle font
-        if: ${{ !cancelled() && (env.PART == 'apps' || env.PART == 'audit') }}
+        if: ${{ !cancelled() && env.PART == 'apps' }}
         run: apple/scripts/fonts.sh
       - name: Apple, the app for an iPhone
         if: ${{ !cancelled() && env.PART == 'apps' }}
@@ -752,51 +745,6 @@ jobs:
         run: >-
           xcodebuild -project apple/Kaeri.xcodeproj -scheme Kaeri -configuration Release
           -destination platform=macOS build CODE_SIGNING_ALLOWED=NO KAERI_ENGINE_PROFILE=app-dev
-      # XCUITest's own accessibility audit (apple/AuditTests) over the Fixtures app's main screens
-      # on an iPhone Simulator, at the default text size and the largest. It reports and does not
-      # fail the job: the findings are listed in the job summary, and KAERI_A11Y_STRICT=1 on
-      # this step makes an issue fail it. A build that does not compile always fails it.
-      - name: Apple, the accessibility audit on an iPhone Simulator
-        if: ${{ !cancelled() && env.PART == 'audit' }}
-        timeout-minutes: 30
-        env:
-          MACOSX_DEPLOYMENT_TARGET: "26.0"
-        run: |
-          udid="$(xcrun simctl list devices available iPhone | grep -m1 -oE '[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}')"
-          [ -n "$udid" ] || { echo "::error::no iPhone Simulator on this runner"; exit 1; }
-          status=0
-          xcodebuild -project apple/Kaeri.xcodeproj -scheme "Kaeri Audit" \
-            -destination "id=$udid" -test-timeouts-enabled YES \
-            -default-test-execution-time-allowance 180 -maximum-test-execution-time-allowance 300 \
-            -resultBundlePath "$RUNNER_TEMP/audit.xcresult" test > "$RUNNER_TEMP/audit.log" 2>&1 || status=$?
-          tail -n 5 "$RUNNER_TEMP/audit.log"
-          grep '^AUDIT ' "$RUNNER_TEMP/audit.log" | sort -u > "$RUNNER_TEMP/audit.txt" || true
-          open="$(grep -vc 'set aside' "$RUNNER_TEMP/audit.txt" || true)"
-          {
-            echo "### Apple accessibility audit (iPhone Simulator, warn only)"
-            echo
-            echo "xcodebuild exited $status. Issues not set aside: $open. All lines:"
-            echo '```'
-            head -n 150 "$RUNNER_TEMP/audit.txt"
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
-          # No AUDIT line at all means the tests did not run: that is a failure, not a finding.
-          if [ ! -s "$RUNNER_TEMP/audit.txt" ] && [ "$status" != 0 ]; then
-            grep -E 'error:|\*\* TEST FAILED|BUILD FAILED' "$RUNNER_TEMP/audit.log" | head -n 20
-            exit "$status"
-          fi
-          if [ "$status" != 0 ]; then
-            echo "::warning::The accessibility audit found $open issue(s) not set aside; see the job summary."
-            [ "${KAERI_A11Y_STRICT:-}" = 1 ] && exit "$status"
-          fi
-          exit 0
-      - uses: actions/upload-artifact@v7
-        if: ${{ !cancelled() && env.PART == 'audit' }}
-        with:
-          name: apple-accessibility-audit
-          path: ${{ runner.temp }}/audit.xcresult
-          if-no-files-found: ignore
-          retention-days: 7
 
   # The Android app: its engine and Kotlin bindings as android/scripts/engine.sh builds them, with
   # the runner's newest NDK through cargo-ndk, which points every C build at the NDK's clang for
