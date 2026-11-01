@@ -858,7 +858,9 @@ struct SearchStart: View {
             if !store.search.recents.isEmpty {
                 RecentSearchList(compact: compact)
             }
-            Group {
+            // A stack, not a Group: a Group would hand the animation to each branch, and the
+            // branch coming in would arrive unanimated.
+            ZStack(alignment: .topLeading) {
                 if let rails = store.search.rails {
                     VStack(alignment: .leading, spacing: 28) {
                         ForEach(rails.filter { !$0.entries.isEmpty }, id: \.title) { rail in

@@ -169,7 +169,8 @@ struct ProvidersScreen: View {
     /// One page, with a row per source. A row pushes its own page, and Back returns to the list.
     private func list(_ rows: [ProviderRow]) -> some View {
         let shown = selection.map { store.resolvedSourceKey($0) ?? $0 }
-        return Group {
+        // A stack, not a Group, so the page and the list crossfade.
+        return ZStack(alignment: .topLeading) {
             if let shown {
                 VStack(alignment: .leading, spacing: 0) {
                     Button { selection = nil } label: {

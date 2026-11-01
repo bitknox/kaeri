@@ -204,7 +204,7 @@ struct PosterCellPlaceholder: View {
 /// A list's states other than its rows: loading, failed, offline and empty (the spec's States).
 ///
 /// Waiting is silent for 600 ms: what was on screen stays, or on a first visit the ground stays
-/// empty. Past that, placeholders stand in the real layout; once up they stay at least 0.3 s and
+/// empty and an answer in that time fades in. Past that, placeholders stand in the real layout; once up they stay at least 0.3 s and
 /// give way to the answer in one crossfade (T8), and past 4 s the job's activity line shows
 /// under them. A list already there when the screen opens shows at once. Offline, a list keeps
 /// what it has under the offline line, and one that failed with nothing says it is offline.
@@ -254,7 +254,9 @@ struct ListStates<Loaded: View, Empty: View>: View {
     static var activityAfter: Duration { .seconds(4) }
 
     var body: some View {
-        Group {
+        // A stack, not a Group: a Group hands its modifiers to whichever branch shows, so the
+        // follow task would restart, and lose its activity line, at each change of stage.
+        ZStack(alignment: .topLeading) {
             switch stage {
             case .waiting:
                 if shown.isAnswer { answer(shown) } else { placeholder.hidden() }
@@ -332,8 +334,11 @@ struct ListStates<Loaded: View, Empty: View>: View {
                 if left > .zero { try? await Task.sleep(for: left) }
                 guard !Task.isCancelled else { return }
             }
+            // Placeholders give way in one crossfade (standard); an answer inside 600 ms comes
+            // in over the empty ground on fade-in, as Home's local sections do.
             let fresh = stage != .answer || shown != state
-            withAnimation(fresh ? .standard : nil) {
+            let motion: Animation? = !fresh ? nil : stage == .placeholders ? .standard : .fadeIn
+            withAnimation(motion) {
                 shown = state
                 stage = .answer
                 slow = false
