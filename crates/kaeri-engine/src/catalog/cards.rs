@@ -8,8 +8,8 @@ use crate::{data, dispatch::Lent};
 /// The most titles one lookup carries.
 const AT_MOST: usize = 50;
 
-/// Say the cards of `ids`: first those the metadata cache holds from the lists that showed
-/// them, then the rest from one batched lookup at low priority. A title nothing could describe
+/// Say the cards of `ids`: first those the metadata cache holds, fresh, from the lists that
+/// showed them, then the rest from one batched lookup at low priority. A title nothing could describe
 /// is left out, and the card keeps what the list row had.
 pub async fn load_cards(lent: Lent, ids: Vec<AnilistId>) {
     let Lent { meta, store, tx, .. } = lent;
@@ -22,7 +22,13 @@ pub async fn load_cards(lent: Lent, ids: Vec<AnilistId>) {
     if wanted.is_empty() {
         return;
     }
-    let kept = meta.cached(&wanted);
+    // Only records as fresh as Home keeps its own: the cache outlives launches, and an older
+    // record would put last season's airing line over the row the list just brought. The rest
+    // are asked for, and until they come the card keeps what the list row had.
+    let missing = crate::catalog::home::stale_among(&store, wanted.clone());
+    let fresh: Vec<AnilistId> =
+        wanted.iter().copied().filter(|id| !missing.contains(id)).collect();
+    let kept = meta.cached(&fresh);
     if !kept.is_empty() {
         let entries = kept.iter().map(|media| data::entry_from(media, Some(&store))).collect();
         let _ = tx.send(Event::Cards(entries));
