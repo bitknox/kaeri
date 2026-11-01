@@ -18,8 +18,14 @@ pluginManager.withPlugin("com.android.library") {
 // (and each graphics mode has a sandbox of its own), so a host's callbacks reached the other
 // copy's empty map: TvShots' tvSender then failed with "not enough bytes remaining", every test
 // of the class, or once an earlier class's engine was freed. The app itself has one copy.
+//
+// Several of those JVMs at once, half a core each and no more than four: one after another, the
+// ui module's screenshot classes alone took five minutes of CI's Android job, most of it each JVM
+// starting Robolectric while the other cores sat idle. Each JVM is a process of its own, so the
+// one table of callbacks per process still holds.
 tasks.withType<Test>().configureEach {
     forkEvery = 1
+    maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceIn(1, 4)
 }
 pluginManager.withPlugin("com.android.application") {
     extensions.configure<com.android.build.api.dsl.ApplicationExtension> {
