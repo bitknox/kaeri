@@ -97,6 +97,13 @@ impl AniListTracker {
         }
     }
 
+    /// This tracker, asking against `base`'s budget and endpoint, with its own token: the app has
+    /// one AniList budget, and the list's pulls and writes are counted with every other request.
+    #[must_use]
+    pub fn on_budget_of(&self, base: &AniList) -> Self {
+        Self::new(self.client.on_budget_of(base))
+    }
+
     /// The full library, with media attached, for the Library screen.
     ///
     /// [`Tracker::pull_library`] returns only the syncable projection; this returns everything

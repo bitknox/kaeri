@@ -127,6 +127,10 @@ pub struct Options {
     /// The engine's clock, kept by the test to move it on or to read days in a zone of its own,
     /// or `None` for the system's.
     pub clock: Option<kaeri_engine::clock::Clock>,
+    /// The database to start on, shared with an earlier harness: a relaunch.
+    pub store: Option<Store>,
+    /// Run the launch's airing digest, as the app does.
+    pub digest: bool,
 }
 
 impl Default for Options {
@@ -142,6 +146,8 @@ impl Default for Options {
             before_start: None,
             season_hold: None,
             clock: None,
+            store: None,
+            digest: false,
         }
     }
 }
@@ -208,7 +214,7 @@ impl Harness {
         let http =
             HttpClient::offline(&NetworkConfig { timeout_secs: 5, ..config.network.clone() })
                 .expect("the offline client builds");
-        let store = kaeri_testkit::store();
+        let store = options.store.clone().unwrap_or_else(kaeri_testkit::store);
         let server = FakeAniList::start().await;
         server.set_now(options.now);
         if let Some(language) = options.viewer_title_language {
@@ -237,7 +243,10 @@ impl Harness {
         if options.signed_in.contains(&"anilist")
             && let Some(at) = sync.trackers.iter().position(|t| t.id() == "anilist")
         {
-            let client = server.anilist(&http).with_token(tokens.get("anilist").ok());
+            let client = server
+                .anilist(&http)
+                .with_token(tokens.get("anilist").ok())
+                .on_budget_of(meta.anilist());
             let tracker = Arc::new(AniListTracker::new(client));
             sync.trackers[at] = tracker.clone();
             sync.anilist = Some(tracker);
@@ -274,7 +283,11 @@ impl Harness {
         );
         start.saved = Some(saved);
         start.sources = Some(registry.clone());
-        start.background = Background { keep_next: options.keep_next, ..Background::none() };
+        start.background = Background {
+            keep_next: options.keep_next,
+            digest: options.digest,
+            ..Background::none()
+        };
         let engine_clock = options.clock.unwrap_or_default();
         let windows = Arc::new(std::sync::atomic::AtomicUsize::new(0));
         start.parts = Some(Parts {

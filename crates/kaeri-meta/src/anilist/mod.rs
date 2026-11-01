@@ -15,7 +15,10 @@ pub mod threads;
 use std::sync::Arc;
 
 use kaeri_core::ids::AnilistId;
-use kaeri_net::{HttpClient, RateLimiter, ratelimit::parse_rate_headers};
+use kaeri_net::{
+    HttpClient, RateLimiter,
+    ratelimit::{parse_rate_headers, parse_rate_limit},
+};
 use serde::de::DeserializeOwned;
 
 pub use model::{
@@ -38,6 +41,12 @@ pub enum AniListError {
 
     #[error("unexpected response shape: {0}")]
     Decode(String),
+
+    /// AniList refused the request for going over the limit, and kept refusing after waiting
+    /// as its headers said. Never a reason to stop asking AniList: the caller keeps what it
+    /// has, and asks again after `retry_in_secs`.
+    #[error("rate limited, retry in {retry_in_secs}s")]
+    RateLimited { retry_in_secs: u64 },
 
     #[error("not found")]
     NotFound,
@@ -321,6 +330,14 @@ pub async fn in_background<F: Future>(work: F) -> F::Output {
 /// How many tokens background work leaves in the bucket.
 const INTERACTIVE_RESERVE: f64 = 6.0;
 
+/// What AniList allows a minute when it is not degraded: the most the bucket follows the
+/// server's `X-RateLimit-Limit` up to.
+pub const MAX_PER_MINUTE: u32 = 90;
+
+/// How many times a request refused for going over the limit waits as the headers say and goes
+/// again, before it says so.
+const RATE_LIMIT_RETRIES: u32 = 3;
+
 /// One upcoming broadcast, for the Calendar screen.
 #[derive(Debug, Clone)]
 pub struct AiringEntry {
@@ -374,7 +391,10 @@ impl AniList {
     pub fn new(http: HttpClient, requests_per_minute: u32) -> Self {
         Self {
             http,
-            limiter: Arc::new(RateLimiter::per_minute(requests_per_minute)),
+            limiter: Arc::new(RateLimiter::per_minute_up_to(
+                requests_per_minute,
+                MAX_PER_MINUTE,
+            )),
             token: Arc::new(std::sync::RwLock::new(None)),
             endpoint: Arc::from(ENDPOINT),
         }
@@ -433,75 +453,90 @@ impl AniList {
         document: &str,
         variables: serde_json::Value,
     ) -> Result<T> {
-        if BACKGROUND.try_with(|()| ()).is_ok() {
-            self.limiter.acquire_leaving(INTERACTIVE_RESERVE).await;
-        } else {
-            self.limiter.acquire().await;
-        }
-
-        let mut request = self
-            .http
-            .plain()
-            .post(&*self.endpoint)
-            .header("content-type", "application/json")
-            .header("accept", "application/json");
-        if let Some(token) = &self.token() {
-            request = request.header("authorization", format!("Bearer {token}"));
-        }
-
-        let response = request
-            .json(&serde_json::json!({ "query": document, "variables": variables }))
-            .send()
-            .await
-            .map_err(|e| AniListError::Network(e.to_string()))?;
-
-        let status = response.status();
-
-        // Feed the server's own accounting back into the limiter before anything else —
-        // it is authoritative, and our local bucket is only an estimate.
-        let headers = response.headers().clone();
-        let (remaining, reset) = parse_rate_headers(
-            |name| headers.get(name).and_then(|v| v.to_str().ok()).map(str::to_owned),
-            now_epoch(),
-        );
-        self.limiter.observe(remaining, reset).await;
-
-        if status.as_u16() == 429 {
-            let wait = reset.unwrap_or(std::time::Duration::from_secs(60));
-            self.limiter.back_off(wait).await;
-            return Err(AniListError::Api(format!(
-                "rate limited, retry in {}s",
-                wait.as_secs()
-            )));
-        }
-        if status.as_u16() == 401 {
-            return Err(AniListError::Unauthenticated);
-        }
-
-        let body: serde_json::Value =
-            response.json().await.map_err(|e| AniListError::Decode(e.to_string()))?;
-
-        // GraphQL reports failure inside a 200, so this check is the real error path.
-        if let Some(errors) = body.get("errors").and_then(|e| e.as_array())
-            && !errors.is_empty()
-        {
-            let message = errors
-                .iter()
-                .filter_map(|e| e.get("message").and_then(|m| m.as_str()))
-                .collect::<Vec<_>>()
-                .join("; ");
-            return Err(AniListError::Api(if message.is_empty() {
-                format!("request failed with HTTP {}", status.as_u16())
+        let mut refused = 0;
+        loop {
+            if BACKGROUND.try_with(|()| ()).is_ok() {
+                self.limiter.acquire_leaving(INTERACTIVE_RESERVE).await;
             } else {
-                message
-            }));
+                self.limiter.acquire().await;
+            }
+
+            let mut request = self
+                .http
+                .plain()
+                .post(&*self.endpoint)
+                .header("content-type", "application/json")
+                .header("accept", "application/json");
+            if let Some(token) = &self.token() {
+                request = request.header("authorization", format!("Bearer {token}"));
+            }
+
+            let response = request
+                .json(&serde_json::json!({ "query": document, "variables": variables }))
+                .send()
+                .await
+                .map_err(|e| AniListError::Network(e.to_string()))?;
+
+            let status = response.status();
+
+            // Feed the server's own accounting back into the limiter before anything else —
+            // it is authoritative, and our local bucket is only an estimate.
+            let headers = response.headers().clone();
+            let get = |name: &str| -> Option<String> {
+                headers.get(name).and_then(|v| v.to_str().ok()).map(str::to_owned)
+            };
+            let (remaining, reset) = parse_rate_headers(get, now_epoch());
+            if let Some(limit) = parse_rate_limit(get) {
+                self.limiter.observe_limit(limit).await;
+            }
+            self.limiter.observe(remaining, reset).await;
+
+            if status.as_u16() == 429 {
+                // A wait and another go, never a failure: the limiter holds every request until
+                // the time the headers give, and the one that earned the refusal goes again.
+                let wait = reset.unwrap_or(std::time::Duration::from_secs(60));
+                self.limiter.back_off(wait).await;
+                refused += 1;
+                if refused > RATE_LIMIT_RETRIES {
+                    return Err(AniListError::RateLimited { retry_in_secs: wait.as_secs() });
+                }
+                tracing::info!(
+                    ?wait,
+                    "rate limited; waiting as AniList says, then asking again"
+                );
+                continue;
+            }
+
+            if status.as_u16() == 401 {
+                return Err(AniListError::Unauthenticated);
+            }
+
+            let body: serde_json::Value =
+                response.json().await.map_err(|e| AniListError::Decode(e.to_string()))?;
+
+            // GraphQL reports failure inside a 200, so this check is the real error path.
+            if let Some(errors) = body.get("errors").and_then(|e| e.as_array())
+                && !errors.is_empty()
+            {
+                let message = errors
+                    .iter()
+                    .filter_map(|e| e.get("message").and_then(|m| m.as_str()))
+                    .collect::<Vec<_>>()
+                    .join("; ");
+                return Err(AniListError::Api(if message.is_empty() {
+                    format!("request failed with HTTP {}", status.as_u16())
+                } else {
+                    message
+                }));
+            }
+
+            let data = body
+                .get("data")
+                .ok_or_else(|| AniListError::Decode("response had no data field".into()))?;
+
+            return serde_json::from_value(data.clone())
+                .map_err(|e| AniListError::Decode(e.to_string()));
         }
-
-        let data = body
-            .get("data")
-            .ok_or_else(|| AniListError::Decode("response had no data field".into()))?;
-
-        serde_json::from_value(data.clone()).map_err(|e| AniListError::Decode(e.to_string()))
     }
 
     /// Full-text search, with nothing else set.

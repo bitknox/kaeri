@@ -223,6 +223,21 @@ impl Sync {
         }
     }
 
+    /// The AniList tracker asking against `base`'s budget: one for the tracker and the metadata
+    /// source, as AniList counts requests per address and not per caller. Its token is kept, so a
+    /// sign-in made through the earlier client still reaches it.
+    #[must_use]
+    pub fn on_budget_of(mut self, base: &kaeri_meta::anilist::AniList) -> Self {
+        if let Some(at) = self.trackers.iter().position(|t| t.id() == "anilist")
+            && let Some(old) = self.anilist.as_ref()
+        {
+            let tracker = Arc::new(old.on_budget_of(base));
+            self.trackers[at] = tracker.clone();
+            self.anilist = Some(tracker);
+        }
+        self
+    }
+
     /// Kitsu at `site` in place of Kitsu itself, its sign-in and its tracker alike, signed in or
     /// not: a fixture build's fake, which no password typed into it leaves the machine for.
     #[must_use]

@@ -416,18 +416,29 @@ async fn an_error_answers_one_request_and_then_the_fixtures_return() {
 }
 
 #[tokio::test]
-async fn a_rate_limit_is_reported_and_held_to() {
+async fn a_rate_limit_is_waited_out_and_asked_again() {
     let server = FakeAniList::start().await;
     let anilist = server.anilist(&kaeri_testkit::http());
-    server.fail_next(Failure::RateLimited { retry_after_secs: 30 });
+    server.fail_next(Failure::RateLimited { retry_after_secs: 1 });
+    let started = std::time::Instant::now();
+    let media = anilist.media(FINISHED).await.expect("the refused request goes again");
+    assert_eq!(media.id, FINISHED);
+    assert!(started.elapsed() >= std::time::Duration::from_secs(1), "{:?}", started.elapsed());
+    assert_eq!(server.requests_for(Operation::Detail).len(), 2, "refused once, then answered");
+}
+
+#[tokio::test]
+async fn a_rate_limit_that_lasts_is_reported_and_held_to() {
+    let server = FakeAniList::start().await;
+    let anilist = server.anilist(&kaeri_testkit::http());
+    for _ in 0..4 {
+        server.fail_next(Failure::RateLimited { retry_after_secs: 1 });
+    }
     match anilist.media(FINISHED).await {
-        Err(AniListError::Api(message)) => {
-            assert!(message.contains("rate limited"), "{message}")
-        }
+        Err(AniListError::RateLimited { retry_in_secs }) => assert_eq!(retry_in_secs, 1),
         other => panic!("expected a rate-limit error, got {other:?}"),
     }
-    let wait = anilist.rate_limit_wait().await.expect("the client holds off after a 429");
-    assert!(wait.as_secs() > 20, "{wait:?}");
+    assert!(anilist.rate_limit_wait().await.is_some(), "the client holds off after a 429");
 }
 
 #[tokio::test]

@@ -410,6 +410,9 @@ impl Meta {
         }
         let result = call.await;
         match &result {
+            // Over the limit is AniList asking for patience, not failing: no strike for the
+            // breaker, so it is never skipped for it. This call falls to what is kept.
+            Err(AniListError::RateLimited { .. }) => {}
             Err(e) if Self::descends(e) => {
                 self.note_anilist(Some(e.to_string()));
                 self.trip("anilist");
@@ -525,7 +528,10 @@ impl Meta {
     fn descends(error: &AniListError) -> bool {
         matches!(
             error,
-            AniListError::Network(_) | AniListError::Api(_) | AniListError::Decode(_)
+            AniListError::Network(_)
+                | AniListError::Api(_)
+                | AniListError::Decode(_)
+                | AniListError::RateLimited { .. }
         )
     }
 
@@ -1155,6 +1161,24 @@ mod tests {
         let row = &meta.health()[1];
         assert_eq!(row.detail.as_deref(), Some("failing"));
         assert!(row.retry_at.is_some());
+    }
+
+    #[tokio::test]
+    async fn a_rate_limit_never_trips_the_breaker() {
+        let store = Store::open_in_memory().unwrap();
+        let http =
+            kaeri_net::HttpClient::new(&kaeri_core::config::NetworkConfig::default()).unwrap();
+        let meta = Meta::new(AniList::new(http, 30), None, store);
+        for _ in 0..BREAKER_THRESHOLD * 3 {
+            let answer = meta
+                .ask_anilist(async {
+                    Err::<(), _>(AniListError::RateLimited { retry_in_secs: 5 })
+                })
+                .await;
+            assert!(matches!(answer, Err(AniListError::RateLimited { .. })));
+        }
+        assert!(meta.skip("anilist").is_none(), "AniList is still asked after many refusals");
+        assert!(meta.health()[0].healthy, "{:?}", meta.health()[0]);
     }
 
     #[test]

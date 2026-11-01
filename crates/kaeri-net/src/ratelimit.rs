@@ -9,18 +9,30 @@
 //! budget, and when the server reports its own view it defers to that. The server is the
 //! authority on its own limit; our local count is only an estimate.
 
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 
 use tokio::sync::Mutex;
 use tokio::time::Instant;
 
+/// How urgent a request is. A screen's request goes before background work: low-priority
+/// requests wait while a screen's is waiting, and while the bucket is under their reserve.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Priority {
+    /// Something on screen is waiting for it.
+    Screen,
+    /// Nobody is looking at it: widgets, digests, stills, prefetch. Leaves `reserve` tokens.
+    Low { reserve: u32 },
+}
+
 /// A refilling token bucket.
 #[derive(Debug)]
 pub struct RateLimiter {
     state: Mutex<State>,
-    capacity: f64,
-    /// Tokens added per second.
-    refill_rate: f64,
+    /// The most a server's own limit may resize the bucket to, per minute.
+    ceiling: u32,
+    /// Screen requests waiting for a token, which low-priority requests let go first.
+    screens_waiting: AtomicUsize,
 }
 
 #[derive(Debug)]
@@ -29,20 +41,53 @@ struct State {
     last_refill: Instant,
     /// Set when the server tells us to stop until a given moment.
     hold_until: Option<Instant>,
+    /// Tokens the bucket holds at most.
+    capacity: f64,
+    /// Tokens added per second.
+    refill_rate: f64,
+}
+
+/// A screen request in the queue, counted until it has its token or is dropped.
+struct Waiting<'a>(&'a AtomicUsize);
+
+impl<'a> Waiting<'a> {
+    fn new(counter: &'a AtomicUsize) -> Self {
+        counter.fetch_add(1, Ordering::SeqCst);
+        Self(counter)
+    }
+}
+
+impl Drop for Waiting<'_> {
+    fn drop(&mut self) {
+        self.0.fetch_sub(1, Ordering::SeqCst);
+    }
 }
 
 impl RateLimiter {
     /// Build a limiter for `per_minute` requests.
     pub fn per_minute(per_minute: u32) -> Self {
         let capacity = f64::from(per_minute.max(1));
+        Self::build(capacity, capacity / 60.0, per_minute.max(1))
+    }
+
+    /// Build a limiter for `per_minute` requests that the server's own word, through
+    /// [`Self::observe_limit`], may raise to `ceiling` a minute and lower to one.
+    pub fn per_minute_up_to(per_minute: u32, ceiling: u32) -> Self {
+        let capacity = f64::from(per_minute.max(1));
+        Self::build(capacity, capacity / 60.0, ceiling.max(per_minute).max(1))
+    }
+
+    fn build(capacity: f64, refill_rate: f64, ceiling: u32) -> Self {
         Self {
             state: Mutex::new(State {
                 tokens: capacity,
                 last_refill: Instant::now(),
                 hold_until: None,
+                capacity,
+                refill_rate,
             }),
-            capacity,
-            refill_rate: capacity / 60.0,
+            ceiling,
+            screens_waiting: AtomicUsize::new(0),
         }
     }
 
@@ -55,21 +100,12 @@ impl RateLimiter {
     /// refused. Capacity is the burst ceiling; the refill rate stays the sustained budget.
     pub fn per_minute_burst(per_minute: u32, burst: u32) -> Self {
         let refill_rate = f64::from(per_minute.max(1)) / 60.0;
-        let capacity = f64::from(burst.max(1));
-        Self {
-            state: Mutex::new(State {
-                tokens: capacity,
-                last_refill: Instant::now(),
-                hold_until: None,
-            }),
-            capacity,
-            refill_rate,
-        }
+        Self::build(f64::from(burst.max(1)), refill_rate, per_minute.max(1))
     }
 
     /// Wait until a request may proceed.
     pub async fn acquire(&self) {
-        self.acquire_leaving(0.0).await;
+        self.acquire_with(Priority::Screen).await;
     }
 
     /// Wait until a request may proceed and still leave `reserve` tokens in the bucket.
@@ -78,11 +114,24 @@ impl RateLimiter {
     /// relations walk takes a token only while there are more than `reserve` left, so the last
     /// few are always there for whatever someone is looking at.
     pub async fn acquire_leaving(&self, reserve: f64) {
-        let reserve = reserve.clamp(0.0, (self.capacity - 1.0).max(0.0));
+        self.acquire_with(Priority::Low { reserve: reserve.max(0.0) as u32 }).await;
+    }
+
+    /// Wait until a request of `priority` may proceed. A screen's request goes first: a
+    /// low-priority one lets every screen request waiting have its token before it takes one.
+    pub async fn acquire_with(&self, priority: Priority) {
+        let _waiting =
+            (priority == Priority::Screen).then(|| Waiting::new(&self.screens_waiting));
         loop {
             let wait = {
                 let mut state = self.state.lock().await;
                 let now = Instant::now();
+                let reserve = match priority {
+                    Priority::Screen => 0.0,
+                    Priority::Low { reserve } => {
+                        f64::from(reserve).clamp(0.0, (state.capacity - 1.0).max(0.0))
+                    }
+                };
 
                 // A server-imposed hold outranks our own accounting.
                 if let Some(until) = state.hold_until {
@@ -98,15 +147,20 @@ impl RateLimiter {
                 .or_else(|| {
                     let elapsed = now.duration_since(state.last_refill).as_secs_f64();
                     state.tokens =
-                        (state.tokens + elapsed * self.refill_rate).min(self.capacity);
+                        (state.tokens + elapsed * state.refill_rate).min(state.capacity);
                     state.last_refill = now;
 
-                    if state.tokens >= 1.0 + reserve {
+                    if priority != Priority::Screen
+                        && self.screens_waiting.load(Ordering::SeqCst) > 0
+                    {
+                        // Let the screens go first; look again shortly.
+                        Some(Duration::from_millis(50))
+                    } else if state.tokens >= 1.0 + reserve {
                         state.tokens -= 1.0;
                         None
                     } else {
                         let deficit = 1.0 + reserve - state.tokens;
-                        Some(Duration::from_secs_f64(deficit / self.refill_rate))
+                        Some(Duration::from_secs_f64(deficit / state.refill_rate))
                     }
                 })
             };
@@ -116,6 +170,22 @@ impl RateLimiter {
                 None => return,
             }
         }
+    }
+
+    /// Follow the limit the server reports (`X-RateLimit-Limit`), up to this limiter's ceiling:
+    /// AniList runs degraded at 30 a minute and normally allows 90, and the bucket should be as
+    /// large as the server's word, whichever it is today. A bigger bucket refills faster but
+    /// does not start full: the tokens already counted stay.
+    pub async fn observe_limit(&self, limit: u32) {
+        let per_minute = f64::from(limit.clamp(1, self.ceiling));
+        let mut state = self.state.lock().await;
+        if (state.capacity - per_minute).abs() < f64::EPSILON {
+            return;
+        }
+        tracing::debug!(per_minute, "following the server's rate limit");
+        state.capacity = per_minute;
+        state.refill_rate = per_minute / 60.0;
+        state.tokens = state.tokens.min(per_minute);
     }
 
     /// Adopt the server's own view of the limit.
@@ -137,11 +207,11 @@ impl RateLimiter {
             return Some(until - now);
         }
         let elapsed = now.duration_since(state.last_refill).as_secs_f64();
-        let tokens = (state.tokens + elapsed * self.refill_rate).min(self.capacity);
+        let tokens = (state.tokens + elapsed * state.refill_rate).min(state.capacity);
         if tokens >= 1.0 {
             return None;
         }
-        Some(Duration::from_secs_f64((1.0 - tokens) / self.refill_rate))
+        Some(Duration::from_secs_f64((1.0 - tokens) / state.refill_rate))
     }
 
     /// How many requests could go now without waiting, as far as the bucket knows: none while
@@ -153,7 +223,7 @@ impl RateLimiter {
             return 0.0;
         }
         let elapsed = now.duration_since(state.last_refill).as_secs_f64();
-        (state.tokens + elapsed * self.refill_rate).min(self.capacity)
+        (state.tokens + elapsed * state.refill_rate).min(state.capacity)
     }
 
     pub async fn observe(&self, remaining: Option<u32>, reset_in: Option<Duration>) {
@@ -193,31 +263,42 @@ fn hold_from_now(hold: Duration) -> Instant {
 ///
 /// Returns `(remaining, reset_in)`. Handles both the absolute-epoch and
 /// seconds-from-now forms of `x-ratelimit-reset`, because services disagree about which
-/// they mean and guessing wrong turns a 1-second wait into a 56-year one.
+/// they mean and guessing wrong turns a 1-second wait into a 56-year one. When both a reset
+/// and a `Retry-After` are sent the larger counts: a reset in epoch seconds against a clock
+/// that is a little fast reads as "now", and a wait is never read as less than a second.
 pub fn parse_rate_headers(
     get: impl Fn(&str) -> Option<String>,
     now_epoch: i64,
 ) -> (Option<u32>, Option<Duration>) {
     let remaining = get("x-ratelimit-remaining").and_then(|v| v.trim().parse::<u32>().ok());
 
-    let reset = get("x-ratelimit-reset")
-        .and_then(|v| v.trim().parse::<i64>().ok())
-        .map(|reset| {
+    let reset =
+        get("x-ratelimit-reset").and_then(|v| v.trim().parse::<i64>().ok()).map(|reset| {
             // Values far in the future are epoch timestamps; small ones are durations.
             let secs = if reset > now_epoch.saturating_sub(86_400) && reset > 100_000 {
                 (reset - now_epoch).max(0)
             } else {
                 reset.max(0)
             };
-            Duration::from_secs(secs as u64).min(MAX_HOLD)
-        })
-        .or_else(|| {
-            get("retry-after")
-                .and_then(|v| v.trim().parse::<u64>().ok())
-                .map(|secs| Duration::from_secs(secs).min(MAX_HOLD))
+            Duration::from_secs(secs as u64)
         });
+    let retry_after =
+        get("retry-after").and_then(|v| v.trim().parse::<u64>().ok()).map(Duration::from_secs);
+    let wait = match (reset, retry_after) {
+        (Some(a), Some(b)) => Some(a.max(b)),
+        (a, b) => a.or(b),
+    };
 
-    (remaining, reset)
+    (remaining, wait.map(|wait| wait.clamp(MIN_HOLD, MAX_HOLD)))
+}
+
+/// The shortest wait the server's word is read as: a reset that parses as zero seconds would
+/// retry at once, earn another refusal and a longer timeout.
+pub const MIN_HOLD: Duration = Duration::from_secs(1);
+
+/// The limit the server reports for a minute (`x-ratelimit-limit`), if it does.
+pub fn parse_rate_limit(get: impl Fn(&str) -> Option<String>) -> Option<u32> {
+    get("x-ratelimit-limit").and_then(|v| v.trim().parse::<u32>().ok()).filter(|n| *n > 0)
 }
 
 #[cfg(test)]
@@ -408,5 +489,80 @@ mod tests {
             1_785_000_000,
         );
         assert_eq!(remaining, Some(29));
+    }
+
+    #[test]
+    fn a_reset_never_reads_as_zero_seconds() {
+        // An epoch reset against a clock that runs ahead, and a literal zero.
+        for reset in ["1784999990", "0"] {
+            let (_, wait) =
+                parse_rate_headers(headers(&[("x-ratelimit-reset", reset)]), 1_785_000_000);
+            assert_eq!(wait, Some(MIN_HOLD), "reset {reset}");
+        }
+    }
+
+    #[test]
+    fn the_longer_of_the_reset_and_retry_after_counts() {
+        let now = 1_785_000_000;
+        let (_, wait) = parse_rate_headers(
+            headers(&[("x-ratelimit-reset", "1784999999"), ("retry-after", "42")]),
+            now,
+        );
+        assert_eq!(wait, Some(Duration::from_secs(42)), "a skewed reset does not hide the 42");
+        let (_, wait) = parse_rate_headers(
+            headers(&[("x-ratelimit-reset", "1785000050"), ("retry-after", "20")]),
+            now,
+        );
+        assert_eq!(wait, Some(Duration::from_secs(50)));
+    }
+
+    #[test]
+    fn the_limit_header_is_read() {
+        assert_eq!(parse_rate_limit(headers(&[("x-ratelimit-limit", "90")])), Some(90));
+        assert_eq!(parse_rate_limit(headers(&[("x-ratelimit-limit", "0")])), None);
+        assert_eq!(parse_rate_limit(headers(&[])), None);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn the_bucket_follows_the_servers_limit_up_to_its_ceiling() {
+        let limiter = RateLimiter::per_minute_up_to(30, 90);
+        limiter.observe_limit(90).await;
+        // Drain what was counted, then a minute refills 90, not 30.
+        for _ in 0..30 {
+            limiter.acquire().await;
+        }
+        tokio::time::sleep(Duration::from_secs(60)).await;
+        assert!((limiter.available().await - 90.0).abs() < 0.5);
+        // Past the ceiling is held to it, and the degraded 30 shrinks the bucket again.
+        limiter.observe_limit(500).await;
+        assert!(limiter.available().await <= 90.0);
+        limiter.observe_limit(30).await;
+        assert!(limiter.available().await <= 30.0);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_screen_goes_before_background_work_waiting_for_the_same_token() {
+        let limiter = std::sync::Arc::new(RateLimiter::per_minute(60));
+        for _ in 0..60 {
+            limiter.acquire().await;
+        }
+        let order = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+        let low = {
+            let (limiter, order) = (limiter.clone(), order.clone());
+            tokio::spawn(async move {
+                limiter.acquire_with(Priority::Low { reserve: 0 }).await;
+                order.lock().unwrap().push("low");
+            })
+        };
+        tokio::time::sleep(Duration::from_millis(10)).await;
+        let screen = {
+            let (limiter, order) = (limiter.clone(), order.clone());
+            tokio::spawn(async move {
+                limiter.acquire().await;
+                order.lock().unwrap().push("screen");
+            })
+        };
+        let _ = tokio::join!(low, screen);
+        assert_eq!(*order.lock().unwrap(), ["screen", "low"]);
     }
 }
