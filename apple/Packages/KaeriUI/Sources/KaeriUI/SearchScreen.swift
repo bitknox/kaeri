@@ -249,13 +249,6 @@ struct SearchScreen: View {
         #endif
     }
 
-    /// The filters and the sort as set, without the words typed.
-    private var filterLook: SearchQuery {
-        var look = store.search.query
-        look.text = ""
-        return look
-    }
-
     var body: some View {
         @Bindable var navigator = navigator
         let startShown = store.search.startShown
@@ -291,8 +284,9 @@ struct SearchScreen: View {
             // A filter added, changed or taken off moves the row on standard: each capsule takes
             // its new width and words, the chips flow to their places, a new one fading in and a
             // gone one out, and what is under them glides with them. Typing moves none of it.
-            // With Reduce Motion it changes at once.
-            .animation(reduceMotion || navigator.motionReduced ? nil : .standard, value: filterLook)
+            // With Reduce Motion it changes at once. The iPhone's pinned row is not in the page:
+            // it moves on its own, and its page jumps to the first row instead.
+            .animation(reduceMotion || navigator.motionReduced || pinned ? nil : .standard, value: filtersAsked)
             .frame(width: settledWidth, alignment: .leading)
             .environment(\.searchSettledWidth, settledWidth)
             // With Reduce Motion the results take their new width at once while the panel fades.
