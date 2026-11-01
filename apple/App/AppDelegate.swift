@@ -253,6 +253,7 @@ final class AppDelegate: NSObject {
         #endif
         // A transition for the motion audit's recordings, two seconds after the screen is up.
         if let motion = MotionDemo.from() {
+            await motion.prelude(navigator: navigator, store: store)
             try? await Task.sleep(for: .seconds(2))
             print("KAERI_MOTION")
             fflush(stdout)

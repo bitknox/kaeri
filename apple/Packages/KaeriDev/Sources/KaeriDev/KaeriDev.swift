@@ -171,6 +171,8 @@ final class Delegate: NSObject, NSApplicationDelegate {
         let more = ProcessInfo.processInfo.environment["KAERI_SHOT_WAIT"].flatMap(Double.init) ?? 0
         try? await Task.sleep(for: .milliseconds(400 + Int(more * 1000)))
         if let motion = MotionDemo.from(), !options.frames.isEmpty, let window = Snapshot.window {
+            if options.reduceMotion { navigator.motionReduced = true }
+            await motion.prelude(navigator: navigator, store: store)
             await frames(of: motion, in: window, to: url)
         } else if options.artTrouble != nil, !options.frames.isEmpty, let window = Snapshot.window {
             // The window left alone while the troubled art comes in.

@@ -19,6 +19,9 @@ public enum MotionDemo: String, CaseIterable, Sendable {
     case m3
     /// M3 in reverse: Back from a title page opened from the preview.
     case back
+    /// Back from the page of Home's spotlight, opened from the spotlight first (`prelude`): its
+    /// art flies home.
+    case backSpotlight
     /// T9: the title's next episode is marked watched.
     case t9
     /// The title page's next season opened from its season picker, as a click on its cell does.
@@ -46,6 +49,25 @@ public enum MotionDemo: String, CaseIterable, Sendable {
         return MotionDemo(rawValue: arguments[index + 1])
     }
 
+    /// What has to happen before it runs, and settle: the page opened from where it goes back to,
+    /// or the page whose seasons it picks from, held back as long as the harness says.
+    @MainActor
+    public func prelude(navigator: Navigator, store: AppStore) async {
+        switch self {
+        case .backSpotlight:
+            MotionDemo.t1Spotlight.run(navigator: navigator, store: store)
+            try? await Task.sleep(for: .seconds(2))
+        case .season:
+            for _ in 0..<200 {
+                if let id = navigator.titleOnMac ?? navigator.paths[navigator.section]?.last?.id,
+                   store.titles[id]?.detail?.seasons != nil, store.titles.episodes[id] != nil { break }
+                try? await Task.sleep(for: .milliseconds(50))
+            }
+        default:
+            break
+        }
+    }
+
     /// Run it on the screen the launch opened.
     @MainActor
     public func run(navigator: Navigator, store: AppStore) {
@@ -68,7 +90,7 @@ public enum MotionDemo: String, CaseIterable, Sendable {
             if queue.count > 1 { navigator.continueSelection = queue[1] }
         case .m3:
             if let id = navigator.focusedTitle ?? queue.first { navigator.openTitle(id) }
-        case .back:
+        case .back, .backSpotlight:
             navigator.back()
         case .t9:
             guard let id = navigator.focusedTitle, let entry = store.titles[id] else { return }

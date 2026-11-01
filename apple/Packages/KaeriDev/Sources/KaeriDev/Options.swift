@@ -37,6 +37,11 @@ import Foundation
 ///                                                     it first, so it comes from the caches
 ///     swift run KaeriDev --search-delay 1500      each search answer held back 1.5 s, as a
 ///                                                     slow network answers
+///     swift run KaeriDev -KaeriMotion t1Spotlight --snapshot shot.png --frames 0,50,100 \
+///         --reduce-motion                             a motion demo as the app runs it with
+///                                                     Reduce Motion on (its own moves only);
+///                                                     last, as AppKit would otherwise read the
+///                                                     path after it as a file to open
 ///     swift run KaeriDev --home <dir>             keep the files in <dir> instead
 ///     swift run KaeriDev --real                   the app's own engine, real sources and
 ///                                                     AniList, in a new temporary home
@@ -78,6 +83,8 @@ struct Options {
     var detailDelay: Duration?
     /// Titles opened and left before the snapshot, so their pages and art are in the caches.
     var visit: [AnilistId] = []
+    /// Whether a motion demo runs as with Reduce Motion on, for the moves the app decides itself.
+    var reduceMotion = false
     var width: CGFloat = 1280
     var height: CGFloat = 800
 
@@ -86,7 +93,7 @@ struct Options {
                             [--player-shot <state>] [--snapshot <file.png>] [--size <width>x<height>]
                             [--media <file>] [--full-screen <times>] [--art-trouble <fails>[,<ms>]]
                             [--art-cache <MB>] [--episodes-delay <ms>] [--search-delay <ms>]
-                            [--detail-delay <ms>] [--visit <id>,…]
+                            [--detail-delay <ms>] [--visit <id>,…] [--reduce-motion]
         the player's states: \(PlayerShot.allCases.map(\.rawValue).joined(separator: ", "))
         """
 
@@ -164,6 +171,8 @@ struct Options {
                 let list = try value(flag)
                 visit = list.split(separator: ",").compactMap { AnilistId($0) }
                 guard !visit.isEmpty else { throw Problem.bad(flag, list) }
+            case "--reduce-motion":
+                reduceMotion = true
             case "--search-delay":
                 let ms = try value(flag)
                 guard let delay = Int(ms), delay >= 0 else { throw Problem.bad(flag, ms) }
