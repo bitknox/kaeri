@@ -109,12 +109,21 @@ async fn continue_entries(
     // The records asked for again are those older than Home keeps them: the rail and Home's
     // Continue read the same cache, and one request answers both.
     let stale = crate::catalog::home::stale_among(store, ids.clone());
+    let held = meta.cached(&ids);
     let mut fetched = if stale.is_empty() {
         Vec::new()
     } else {
-        meta.media_many(&stale).await.map_err(|e| e.to_string())?
+        match meta.media_many(&stale).await {
+            Ok(found) => found,
+            // What is kept stands in for the records that could not be asked again: the rail
+            // is the history's, and an older airing line beats no rail.
+            Err(e) if !held.is_empty() => {
+                tracing::warn!(error = %e, "Continue's records were not asked again; kept ones shown");
+                Vec::new()
+            }
+            Err(e) => return Err(e.to_string()),
+        }
     };
-    let held = meta.cached(&ids);
     let media: Vec<_> = ids
         .iter()
         .filter_map(|id| {
