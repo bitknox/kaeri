@@ -1,0 +1,79 @@
+---
+// Starlight's page frame, rearranged for the design (G): the top bar, then a band across the page
+// with the breadcrumb, the title and the page's one-line description, then the sidebar, the page
+// and its contents in one centred grid, and the site's footer under all of it. The sidebar is
+// Starlight's own, so on a phone it still opens from the menu button.
+import MobileMenuToggle from '@astrojs/starlight/components/MobileMenuToggle.astro';
+import SiteFooter from '../site/SiteFooter.astro';
+import { useSite } from '../../i18n/site';
+
+const route = Astro.locals.starlightRoute;
+const { hasSidebar } = route;
+const { title, description } = route.entry.data;
+const { t, href } = useSite(Astro);
+
+// The group the current page sits in, for the breadcrumb. The overview has none.
+type Entry = (typeof route.sidebar)[number];
+const groupOf = (entries: Entry[]): string | undefined => {
+	for (const e of entries) {
+		if (e.type === 'group' && e.entries.some((c) => c.type === 'link' && c.isCurrent)) return e.label;
+	}
+	return undefined;
+};
+const group = groupOf(route.sidebar);
+---
+
+<div class="page sl-flex">
+	<header class="header"><slot name="header" /></header>
+	<section class="docs-band" aria-labelledby="_top">
+		<div class="docs-band-in">
+			{
+				group && (
+					<p class="docs-crumb">
+						<a href={href('/docs/')}>{t('site.nav.docs')}</a> › {group}
+					</p>
+				)
+			}
+			<h1 id="_top" data-pagefind-meta="title">{title}</h1>
+			{description && <p class="docs-lede">{description}</p>}
+		</div>
+	</section>
+	<div class="docs-body">
+		{
+			hasSidebar && (
+				<nav class="sidebar print:hidden" aria-label={t('site.nav.docsLabel')}>
+					<MobileMenuToggle />
+					<script>
+						// The phone's menu is a popover; on wider screens the sidebar is always there.
+						class StarlightSidebarPane extends HTMLElement {
+							constructor() {
+								super();
+								const desktop = matchMedia('(min-width: 50em)');
+								const reset = () => {
+									this.popover = desktop.matches ? null : 'auto';
+								};
+								reset();
+								desktop.addEventListener('change', reset);
+								this.addEventListener('toggle', ({ newState }) => this.trapFocus(newState === 'open'));
+							}
+							/** Keep keyboard focus in the bar and the menu while the menu is open. */
+							trapFocus(trap: boolean) {
+								document.querySelectorAll<HTMLElement>('.main-frame, .docs-band, .site-footer, .sl-skip-link').forEach((el) => {
+									el.toggleAttribute('inert', trap);
+								});
+							}
+						}
+						customElements.define('sl-sidebar-pane', StarlightSidebarPane);
+					</script>
+					<sl-sidebar-pane popover="" id="starlight__sidebar" class="sidebar-pane">
+						<div class="sidebar-content sl-flex">
+							<slot name="sidebar" />
+						</div>
+					</sl-sidebar-pane>
+				</nav>
+			)
+		}
+		<div class="main-frame"><slot /></div>
+	</div>
+</div>
+<SiteFooter />

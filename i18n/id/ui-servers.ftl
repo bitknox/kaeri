@@ -1,0 +1,73 @@
+servers-add-title = Tambah server media
+servers-on-network = Di jaringan Anda
+servers-looking = Mencari server…
+servers-none-found = Tidak ada server di jaringan ini. Ketik alamatnya saja.
+servers-address = Alamat server
+servers-address-hint = jellyfin.home.example atau 192.168.1.20:8096
+servers-address-note = Ketik alamat server Anda, yang biasa dipakai untuk membuka Jellyfin di browser.
+servers-continue = { -proceed-cap }
+servers-sign-in-title = Masuk ke { $server }
+servers-user = Nama pengguna
+servers-password = Kata sandi
+servers-use-quick-connect = Pakai Quick Connect saja
+servers-use-password = Masuk dengan kata sandi saja
+servers-token-note = Kata sandi Anda tidak disimpan. { -app-name } menyimpan token masuk di { $store }.
+secure-store-windows = Credential Manager
+secure-store-linux = keyring Anda
+secure-store-device = Keychain Anda
+secure-store-android = penyimpanan aman { -device } ini
+servers-sign-in = Masuk
+servers-qc-title = Masukkan kode ini di Jellyfin
+servers-qc-steps = Di { -device } yang sudah masuk, buka Jellyfin, buka profil Anda, pilih Quick Connect, lalu masukkan kode ini.
+servers-qc-waiting = Menunggu persetujuan Anda
+servers-qc-expired = Kode itu sudah kedaluwarsa.
+servers-qc-new-code = Minta kode baru
+servers-libraries-title = Pilih { -library }
+servers-libraries-body = Acara dicocokkan dengan AniList agar muncul di Beranda, daftar Anda, dan Pencarian.
+servers-library-line = { $kind } · { $count } serial
+servers-report = Laporkan tontonan Anda ke Jellyfin
+servers-report-line = Titik lanjut dan tanda sudah ditonton mengikuti apa yang Anda putar di sini.
+servers-add = Tambah server
+servers-row-matching = Mencocokkan · { $done } dari { $total } serial
+servers-row-summary = { $libraries ->
+   *[other] { $libraries } { -library } · { $series } serial
+ }
+servers-row-libraries = { $count ->
+   *[other] { $count } { -library }
+ }
+servers-row-series = { $count ->
+   *[other] { $count } serial
+ }
+servers-row-needs-look = { $count } perlu dicek
+servers-page-line = { $address } · Jellyfin { $version } · masuk sebagai { $user }
+servers-sign-out = Keluar
+servers-remove = Hapus server
+servers-error-unreachable = Tidak bisa menjangkau { $address }. Periksa alamatnya dan pastikan server menyala.
+servers-error-not-jellyfin = Alamat itu menjawab, tetapi bukan server Jellyfin.
+servers-libraries = { -library-cap }
+servers-remove-line = Tidak ada yang dihapus di server.
+servers-removed = { $name } dihapus
+servers-error-too-old = Server ini menjalankan Jellyfin { $version }. { -app-name } membutuhkan 10.8 atau lebih baru.
+servers-error-credentials = Nama pengguna atau kata sandi salah.
+servers-error-qc-off = Quick Connect nonaktif di server ini. Masuk dengan kata sandi, atau aktifkan di dasbor Jellyfin.
+servers-error-plain-http = Alamat ini tidak ada di jaringan Anda dan tidak memakai HTTPS, jadi kata sandi Anda akan terkirim tanpa perlindungan. Pakai alamat https://.
+servers-error-bad-address = Itu tidak tampak seperti alamat. Ketik seperti saat Anda membuka Jellyfin di browser.
+servers-error-other = Terjadi kesalahan. Coba lagi.
+servers-cert-title = Periksa server ini
+servers-cert-body = { $host } memakai sertifikat yang tidak dipercaya { -device } ini. Itu wajar untuk server di rumah. Izinkan hanya jika sidik jari ini sama dengan yang ditampilkan server Anda.
+servers-cert-allow = Izinkan sertifikat ini
+servers-row-signed-out = Dikeluarkan oleh server
+servers-sign-in-again = Masuk lagi
+servers-row-not-answering = Tidak menjawab · terakhir terlihat { $time }
+title-server-not-answering = { $server } tidak menjawab. Episode yang Anda unduh tetap bisa diputar.
+servers-kind-shows = Serial
+servers-kind-movies = Film
+servers-kind-other = Video
+servers-quick-connect = Quick Connect
+servers-libraries-heading = { -library-cap }
+servers-refresh = Cocokkan lagi
+servers-needs-look = { $count } tidak cocok dengan AniList
+servers-kind-films = Film
+servers-error-certificate = { $host } memakai sertifikat yang tidak dipercaya { -device } ini. Pakai alamat https:// dengan sertifikat yang dipercaya.
+servers-row-signed-out-here = Keluar
+servers-sign-out-line = Mengakhiri sesi masuk { -device } ini di server. Server dan unduhan Anda tetap seperti semula.

@@ -1,0 +1,17 @@
+cast-episode = Avsnitt { $episode }
+cast-episode-titled = Avsnitt { $episode } · { $title }
+notice-cast-video-codec = { $name } kan inte spela den här videon ({ $codec }). Prova en annan { -source }.
+notice-cast-audio-codec = { $name } kan inte spela det här ljudet ({ $codec }), och den här { -device }en kan inte konvertera det. Prova en annan { -source }.
+notice-cast-container = { $name } kan inte spela den här filtypen. Prova en annan { -source }.
+notice-cast-deep-link = Det här avsnittet öppnas i en annan app, så det kan inte skickas till TV:n.
+notice-cast-never-fetches = { $name } började inte läsa strömmen. Ett VPN eller en brandvägg på den här { -device }en kan stå i vägen.
+notice-cast-refused = { $name } kunde inte spela den här strömmen. Prova en annan { -source }.
+notice-cast-taken-over = En annan { -device } startade något på { $name }, så castingen avbröts.
+notice-cast-not-same-network = Den här { -device }en är inte på samma nätverk som { $name } eller når den via ett VPN. Casting kräver att båda är på samma nätverk.
+notice-cast-lost = Tappade kontakten med { $name }, så castingen avbröts.
+notice-cast-no-device = Den TV:n finns inte längre på nätverket.
+notice-cast-unavailable = Den här versionen av { -app-name } kan inte skicka till TV:ar.
+cast-phase-starting = Startar på { $name }
+cast-phase-starting-for = Startar på { $name } · { $seconds } s
+cast-phase-waiting = Väntar på { $name } · { $seconds } s
+cast-phase-preparing = Förbereder strömmen · { $seconds } s

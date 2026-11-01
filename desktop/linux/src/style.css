@@ -1,0 +1,311 @@
+/* Obi & Silk on libadwaita: the palette as libadwaita's own variables, dark only at v1. Screens
+   use these and the classes below, never a colour of their own. */
+
+:root {
+  --ground: #161A2E;
+  --raised: #222638;
+  --raised-selected: #343A57;
+  --faint-rule: #2F3242;
+  --rule: #434653;
+  --edge: #727892;
+  --silk: #E4E0D6;
+  --haze: #A3A9C4;
+  --amber: #F2A64B;
+  --water: #7FC7D9;
+  --vermilion: #E06B54;
+  /* Controls laid over art: the paging buttons. */
+  --glass: rgba(40, 45, 68, 0.72);
+  --glass-rule: rgba(228, 224, 214, 0.12);
+
+  --window-bg-color: var(--ground);
+  --view-bg-color: var(--ground);
+  --window-fg-color: var(--silk);
+  --view-fg-color: var(--silk);
+  --headerbar-bg-color: var(--ground);
+  --headerbar-fg-color: var(--silk);
+  --sidebar-bg-color: #1C2034;
+  --sidebar-fg-color: var(--silk);
+  --secondary-sidebar-bg-color: var(--ground);
+  --card-bg-color: var(--raised);
+  --card-fg-color: var(--silk);
+  --solid-popover: #2A2F45;
+  --popover-bg-color: var(--solid-popover);
+  --popover-fg-color: var(--silk);
+  --dialog-bg-color: #2A2F45;
+  --dialog-fg-color: var(--silk);
+  --border-color: var(--faint-rule);
+  --accent-bg-color: var(--amber);
+  --accent-fg-color: var(--ground);
+  --accent-color: var(--amber);
+  --destructive-bg-color: var(--vermilion);
+  --error-color: var(--vermilion);
+  --error-bg-color: var(--vermilion);
+}
+
+/* Secondary text reads the same over every surface, and water marks a state. */
+.haze { color: var(--haze); }
+.state { color: var(--water); }
+.state-dot { background: var(--water); border-radius: 999px; min-width: 8px; min-height: 8px; }
+
+/* A language's flag in the picker: corners 2 and a hairline in the faint rule, for white flags. */
+.language-flag { border-radius: 2px; overflow: hidden; }
+.language-flag-edge { border-radius: 2px; border: 1px solid var(--faint-rule); }
+
+/* Show titles in Zen Kaku Gothic New, sized relative so they follow the text scale. */
+.show-title { font-family: "Zen Kaku Gothic New"; font-weight: 700; }
+.show-title.row { font-size: 1.07em; }
+.show-title.page { font-size: 2em; }
+
+/* Links in body text are silk and underlined, never amber. */
+label link { color: var(--silk); }
+
+/* Progress: amber on the edge colour, which holds 3:1 on the ground. The rule is for dividers. */
+progressbar trough { background: var(--edge); }
+progressbar progress { background: var(--amber); }
+
+/* Covers and banners: flat placeholders in the cover's own colour until the art lands. */
+.cover { border-radius: 8px; }
+.cover.small { border-radius: 6px; }
+.banner { border-radius: 12px; }
+.banner.flush { border-radius: 0; }
+.still { border-radius: 6px; }
+.still.spoiler { filter: blur(10px); }
+.art-fade { background: linear-gradient(to bottom, alpha(var(--ground), 0) 30%, var(--ground)); }
+
+/* The sidebar's foot. */
+.account-row { padding: 6px; }
+
+/* Poster grids. */
+gridview.posters { background: none; padding: 8px 24px 24px 24px; }
+gridview.posters > child { padding: 8px; border-radius: 12px; }
+gridview.posters > child:hover { background: alpha(var(--silk), 0.05); }
+
+/* Calendar: today's column on raised from heading to foot. */
+.calendar-head { padding: 8px 10px 4px 10px; border-radius: 12px 12px 0 0; }
+.calendar-body { padding: 4px 6px 8px 6px; border-radius: 0 0 12px 12px; }
+.calendar-head.today, .calendar-body.today { background: var(--raised); }
+.calendar-now-time { color: var(--silk); font-size: 0.86em; font-weight: 700; }
+.calendar-now separator { background: var(--silk); min-height: 1px; }
+.calendar-now-row { background: none; padding: 0 12px; }
+.broadcast { padding: 4px; border-radius: 8px; }
+.broadcast:hover { background: alpha(var(--silk), 0.05); }
+.banner.small { border-radius: 6px; }
+
+/* Downloads: the bar is water while it runs, haze while it waits. */
+progressbar.water progress { background: var(--water); }
+progressbar.waiting progress { background: var(--haze); }
+row progressbar.horizontal > trough { min-width: 60px; }
+row levelbar.horizontal trough { min-width: 60px; }
+row.failed .subtitle { color: var(--haze); }
+/* The source picker: a source with a note in place of a count reads quieter. */
+row.noted .title { color: var(--haze); }
+levelbar block.filled { background: var(--water); }
+levelbar block.empty { background: var(--edge); }
+
+/* A row's standing: a dot, or a ring for off and held back. */
+.mark { min-width: 6px; min-height: 6px; border-radius: 999px; }
+.mark.water { background: var(--water); }
+.mark.vermilion { background: var(--vermilion); }
+.mark.haze { background: var(--haze); }
+.mark.ring { box-shadow: inset 0 0 0 1.5px var(--haze); }
+.standing { color: var(--silk); }
+.problem { color: var(--silk); }
+.fingerprint { font-family: monospace; }
+
+.genre-tile { border-radius: 12px; padding: 18px; background: var(--raised); }
+.genre-tile:hover { background: var(--raised-selected); }
+
+/* Search's filters: what is set, each a chip that takes it off. */
+.edge-fade.start { background: linear-gradient(to right, var(--ground) 40%, alpha(var(--ground), 0)); }
+.edge-fade.end { background: linear-gradient(to left, var(--ground) 40%, alpha(var(--ground), 0)); }
+.edge-arrow { min-width: 26px; min-height: 26px; padding: 0; box-shadow: 0 0 0 6px var(--ground); }
+.filter-chip { padding: 2px 6px 2px 12px; min-height: 32px; }
+.filter-chip image { -gtk-icon-size: 12px; opacity: 0.7; }
+
+/* Episode rows. */
+.episode-row { min-height: 72px; padding: 6px 0; }
+.watched .episode-name { color: var(--haze); }
+
+/* The player: controls on a 35% dim of the ground, no blur, and behind each bar a gradient that
+   reaches 72% at the screen edge, so silk holds 5:1 on a white frame. */
+.player { background: black; }
+.player-dim {
+  background: linear-gradient(to bottom,
+    alpha(var(--ground), 0.72) 0%, alpha(var(--ground), 0.35) 18%,
+    alpha(var(--ground), 0.35) 82%, alpha(var(--ground), 0.72) 100%);
+}
+/* The starting screen's dim has no bars to sit behind. */
+.player-dim-flat { background: alpha(var(--ground), 0.35); }
+.player-bar { background: none; box-shadow: none; padding: 6px 12px; }
+.player-bar button { min-width: 40px; min-height: 40px; }
+.player-bar label { color: var(--silk); }
+.player-starting { background: var(--ground); }
+/* The seek line is drawn whole over the scale (player/timeline.rs): the scale keeps the input
+   and the keyboard, and draws nothing of its own. */
+.timeline trough { background: none; min-height: 6px; outline: none; }
+.timeline highlight, .timeline fill { background: none; }
+.timeline slider, .timeline:focus-visible slider, .timeline:hover slider {
+  background: none; box-shadow: none; border-color: transparent; outline: none;
+}
+.player-bar .speed { min-width: 52px; font-weight: 600; }
+/* "Skipped opening · Undo": a small card, Undo in amber. */
+.corner-card.undo-card { padding: 4px 6px 4px 14px; }
+.undo-button { padding: 4px 10px; min-height: 32px; }
+/* The marking bar at the top of the video (player/marking.rs): libadwaita radius 12, pill
+   buttons 34 px high. The prompts share the corner with Skip. */
+.corner-card.mark-bar { border-radius: 12px; padding: 10px 12px 12px 16px; margin: 72px 16px 0; min-width: 420px; }
+.mark-bar .mark-button, .prompt-card .mark-button { min-height: 34px; padding-top: 0; padding-bottom: 0; }
+.corner-card.prompt-card { padding: 8px 8px 8px 16px; }
+/* The Sub and Dub switch at the top of the Subtitles and Audio menu. */
+.translation-switch button { padding: 4px 16px; }
+.seek-preview { padding: 4px; }
+.seek-preview label { color: var(--silk); }
+.mini-controls button { min-width: 44px; min-height: 44px; }
+/* The party form's Use It, sized to the hint line it sits on. */
+.hint-button { padding: 2px 10px; min-height: 32px; }
+/* In a watch party: a water dot on the people button's corner. */
+.party-dot { background: var(--water); border-radius: 999px; min-width: 6px; min-height: 6px; margin: -1px -3px 0 0; }
+.corner-card { background: var(--raised); color: var(--silk); border-radius: 8px; padding: 12px; margin: 24px; }
+.up-next-still { border-radius: 4px; background: var(--ground); border: none; }
+.stats-panel { background: var(--popover-bg-color); color: var(--silk); border-radius: 12px; padding: 8px 14px 12px; font-size: 0.93em; }
+.stats-panel.narrow { font-size: 0.86em; }
+.stats-panel .warn { color: var(--amber); }
+.stats-close { min-width: 32px; min-height: 32px; padding: 0; margin: -4px -6px -4px -8px; }
+.stats-copy { padding: 4px 14px; min-height: 32px; }
+.stats-copied { padding: 4px 14px; }
+.countdown trough { background: var(--edge); min-height: 3px; }
+.countdown progress { background: var(--amber); min-height: 3px; }
+
+/* Placeholders: static raised plates where content will land. */
+.plate { background: var(--raised); border-radius: 8px; }
+.plate.bar { border-radius: 4px; }
+
+/* Nagare on a full-screen empty, at the brief's size. */
+statuspage.nagare image.icon { -gtk-icon-size: 160px; }
+/* A screen that failed: vermilion on the glyph and nothing else. */
+statuspage.failed image.icon { color: var(--vermilion); -gtk-icon-size: 32px; }
+
+/* The offline banner is a state, not an alert: raised and haze. */
+banner > revealer > widget { background: var(--raised); color: var(--haze); }
+
+/* Settings' preview column: a raised card on the pane's end. */
+.settings-preview { background: var(--raised); border-radius: 12px; padding: 16px; }
+.preview-frame { border-radius: 8px; }
+.chip {
+  font-size: 0.79em; font-weight: 500; padding: 1px 8px; border-radius: 999px;
+  background: alpha(#0B0D18, 0.6); border: 1px solid alpha(white, 0.16);
+}
+.caption-sample {
+  color: white; font-size: 1.07em; font-weight: 600;
+  text-shadow: 0 0 2px black, 0 0 2px black, 0 1px 3px black;
+}
+
+/* The player's Episodes and Sources lists check their pick in amber; every other menu in silk. */
+/* The player's menus open from OSD bars: solid, so bright video behind never washes them out. */
+.osd popover > contents, .osd popover.menu > contents { background-color: var(--solid-popover); }
+popover.menu modelbutton radio, popover.menu modelbutton check { color: var(--silk); }
+popover.menu modelbutton.amber-check radio:checked { color: var(--amber); }
+
+/* Amber stays on the one primary action, progress and switches that are on. A watched mark and a
+   selected row take the neutral fill, as the brief's Linux selection says. */
+checkbutton check:checked, checkbutton check:indeterminate {
+  background: var(--raised-selected);
+  border-color: var(--edge);
+  color: var(--silk);
+}
+row:selected, row:selected:hover, row:selected:focus {
+  background: var(--raised-selected);
+}
+/* An open group's arrow is haze, not the accent. */
+row.expander image.expander-row-arrow,
+row.expander:checked image.expander-row-arrow { color: var(--haze); }
+
+
+/* Trackers' and accounts' avatars: an initial on a neutral circle, never a colour of its own. */
+.neutral-avatar > avatar {
+  background: var(--raised-selected);
+  color: var(--haze);
+}
+/* A device code: a flat raised plate inside its dialog, no shadow. */
+.code-plate { background: var(--raised); border-radius: 12px; padding: 6px 6px 6px 18px; }
+/* An invite link to copy, on a plate inside a dialog. */
+.link-plate { background: var(--raised); border-radius: 8px; padding: 12px; }
+
+
+/* Play on TV: the six digits a TV shows, each in its box on the ground, the box to type next in
+   silk; the remote's play button a size up. */
+.code-box {
+  background: var(--ground); border-radius: 8px; box-shadow: inset 0 0 0 1px var(--rule);
+  font-size: 1.57em; font-weight: 600;
+}
+.code-box.current { box-shadow: inset 0 0 0 1px var(--silk); }
+.tv-play { min-width: 48px; min-height: 48px; -gtk-icon-size: 24px; }
+/* Up next on a cast's card: a rule over it, and its count as a thin bar. */
+.tv-up-next { border-top: 1px solid alpha(currentColor, 0.15); padding-top: 12px; }
+.tv-up-next-count trough, .tv-up-next-count progress { min-height: 2px; }
+
+/* Episode discussions: the words lead and amber waits for Post. A liked heart fills in silk,
+   quotes are haze behind a hairline, and the comment being answered sits on Raised. */
+.discussion-avatar { border-radius: 16px; }
+.discussion-avatar.small { border-radius: 12px; }
+.discussion-quote { border-left: 1px solid var(--rule); padding-left: 10px; color: var(--haze); }
+.discussion-row.top { padding: 10px 8px 2px 8px; border-radius: 8px; }
+.discussion-row.reply { padding: 4px 8px 2px 8px; border-radius: 8px; }
+.discussion-row.answering { background: var(--raised); }
+.discussion-rule { background: var(--faint-rule); min-height: 1px; margin-left: 52px; }
+.discussion-author { font-weight: 600; font-size: 0.93em; }
+.discussion-age, .discussion-count { font-size: 0.93em; }
+.discussion-like { color: var(--haze); font-size: 0.93em; padding: 0 8px; min-height: 32px; margin: -6px 0; }
+.discussion-like.liked { color: var(--silk); }
+.discussion-reply { color: var(--haze); font-weight: 600; font-size: 0.93em; }
+.discussion-open { text-decoration: underline; font-size: 0.93em; font-weight: 400; }
+.discussion-show { font-size: 0.86em; }
+.discussion-more { opacity: 0; }
+.discussion-row:hover .discussion-more, .discussion-more:focus, .discussion-more:checked { opacity: 1; }
+
+/* Today turns on and off with the quick token's 0.2 s. */
+button.calendar-today {
+  transition: opacity 200ms ease-out;
+}
+
+/* The hover preview is one surface: Raised, radius 12, the video flush at its top edge. */
+popover.trailer-preview > contents { padding: 0; border-radius: 12px; background-color: var(--raised); }
+
+
+/* Home: spotlight, shelves, cards. */
+.home-label { font-size: 14px; }
+.home-spot-title { font-size: 30px; line-height: 1.27; }
+.home-facts { font-size: 13px; color: var(--haze); }
+.home-main, .home-sec, .home-more > button { min-height: 34px; border-radius: 8px; font-size: 14px; }
+.home-main, .home-sec { padding: 0 16px; }
+.home-sec, .home-more > button { background: var(--raised); }
+.home-sec:hover, .home-more > button:hover { background: var(--raised-selected); }
+.home-more > button { min-width: 34px; padding: 0; }
+.home-sec.home-small { min-height: 32px; font-size: 13px; padding: 0 14px; }
+.home-heading { font-size: 17px; line-height: 1.3; font-weight: 700; }
+.home-aside { font-size: 14px; }
+.home-all { font-size: 14px; font-weight: 600; color: var(--silk); padding: 2px 4px; min-height: 0; }
+.home-card { padding: 0; border-radius: 12px; font-weight: 400; }
+.home-card:hover, .home-card:focus-visible { background: none; }
+.home-still { border-radius: 12px; }
+.home-card-title { font-size: 15px; line-height: 1.33; font-weight: 700; }
+.home-poster-title { font-size: 14px; line-height: 1.29; font-weight: 700; }
+.home-card-sub { font-size: 13px; line-height: 1.38; }
+.home-sub { font-size: 12px; line-height: 1.33; }
+.home-new { min-width: 6px; min-height: 6px; border-radius: 999px; background: var(--water); }
+progressbar.home-progress { min-height: 3px; }
+progressbar.home-progress trough { min-height: 3px; border-radius: 2px; background: var(--rule); }
+progressbar.home-progress progress { min-height: 3px; border-radius: 2px; background: var(--silk); }
+.home-arrow { min-width: 36px; min-height: 36px; padding: 0; color: var(--silk); background: var(--glass); box-shadow: inset 0 0 0 1px var(--glass-rule); }
+.home-arrow:hover { background: var(--raised-selected); }
+.home-arrow:active { background: var(--rule); }
+.home-week { border-top: 1px solid var(--faint-rule); padding-top: 12px; }
+.home-day { font-size: 12px; line-height: 1.33; font-weight: 600; }
+.home-week-time { font-size: 12px; font-weight: 600; color: var(--silk); }
+.home-week-title { font-size: 13px; }
+.home-week-line { font-size: 12px; }
+.home-day-more { font-size: 12px; font-weight: 600; padding: 0; min-height: 0; color: var(--silk); }
+.home-rule { background: var(--faint-rule); min-height: 1px; }
+.home-end { font-size: 14px; }
+.home-end link { color: var(--silk); }
+.home-capsule { padding: 0 8px; }

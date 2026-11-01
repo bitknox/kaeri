@@ -1,0 +1,196 @@
+# Linux desktop app: phases 1 and 2
+
+Branch `desktop/linux-app`, October 2026, built on the foundations spike
+to the shared rules in `docs/native-ux.md`.
+GTK 4 and libadwaita in Rust, no web views. Dark only for now.
+
+## Minimum versions
+
+The app is built against GTK 4.16 and libadwaita 1.7, so it needs both at run time. That is
+more than the accessibility announcements ask for: `gtk::Accessible::announce`, which the app
+uses for the player's cards, toasts and copy buttons, came in GTK 4.14. There is no fallback
+for an older GTK, because the app does not start on one. The AppImage carries Debian 13's
+GTK and libadwaita, so it is not affected.
+
+## What is in it
+
+- The shell: an `AdwApplicationWindow` with the sidebar of the brief (Home, Calendar,
+  Seasonal, Search, Library, Downloads; Providers and Plugin Stores under Sources; the account
+  row and Settings at the foot). It collapses into an overlay below the wide size.
+- Home: a spotlight with its main action in amber, over shelves (Continue first) in a 990 px
+  column. Each shelf is a scrolled window with paging buttons that fade in while the pointer is
+  over it. The engine sends Home whole and again as each part lands; a slot is rebuilt only when
+  what it shows changed. Placeholders show after 600 ms, the activity line after 4 s, and Not
+  interested fades the card and offers Undo. The Fixtures app has Home scenes (`--scene`, with
+  `KAERI_FIXTURES_HOME_WORLD=1`) for each state; `scripts/shots.sh` takes them.
+- Library, Watching: a poster grid like the other lists, with the same order menu, empty state
+  and signed-out page.
+- Settings, Hidden titles: what was marked Not interested, each with Restore.
+- Seasonal: the season in the header's centre, the format in a toggle group, a poster grid.
+- Search: typing anywhere starts it. The filters stand under the search bar from the start, so
+  the titles can be browsed with nothing typed: genres wanted or left out, year, season, formats,
+  statuses, and the sort at the end, with what is set as chips to take off one at a time or all.
+  Recent searches, This Season and genres before anything is typed or chosen; results and
+  matching settings after.
+- A title's page: banner, cover, the one main action, list status, seasons, episode rows with
+  watched checks and spoiler-blurred stills, details and related titles beside.
+- The player: libmpv's GL render API in a `GtkGLArea`, native controls over the video (top bar,
+  bottom bar with the timeline, volume, speed and settings), skip, up next and stall cards, and
+  the brief's keys and mouse. Everything goes through the engine's hosted player protocol.
+- Library: the tracker's five lists with counts, ordered from the header bar.
+- Settings: a page in the sidebar with its panes, rows updated in place from the engine. Closing
+  the window while downloads run asks whether to keep them going, as the brief says.
+
+Phase 2 added:
+
+- Calendar: the week as seven columns, an agenda on medium and narrow windows.
+- Downloads: the engine's queue by title, with pause, resume and remove, Pause All, and the
+  storage meter of the download folder's disk.
+- Providers: the source order, dragged or moved from a row's menu, each source's standing and
+  its page (hosts, version, update, disable, remove). Plugin Stores: the stores joined, each
+  store's page with Install, Update and Replace, Leave, and Join Store with the invite checked
+  as it is pasted. `--showcase` shows invented sources and stores in place of the fixture
+  engine's own, for the shots.
+- The player: openings and endings marked on the timeline from mpv's chapters, the buffered
+  part, a seek preview from a second mpv while the pointer is over the timeline, subtitles
+  raised above the controls while they show, and a mini player (P, or the top bar's button):
+  the window itself at 480×270, undecorated, dragged to move, double-clicked to restore.
+- Settings: at 1280 and wider a preview column on the pane's end, the Mac's: upscaling as the
+  480p source beside the mode, a caption sample for subtitles, a note for the other panes.
+  Below that, Upscaling opens a page of its own with the frame and the modes. A title's More
+  menu opens its Show Settings dialog: audio, the subtitles remembered, skips, spoilers,
+  new-episode notifications, the source it keeps and Reset to Defaults.
+- Engine details: calendar rows show an estimated time as "~16:30" and a "Sub" or "Dub" mark;
+  the timeline draws the engine's opening and ending marks, with the file's chapters standing in
+  until it has said, and the buffered ranges it reports, ahead of the played part; the device
+  code dialog counts down ("Expires in 14:59") and asks for a new code at nought; a queued
+  download has a Start Now action.
+- Recent searches kept between launches, the tracker's name on the account row when it gives
+  no user name, and the app icon at every hicolor size from `assets/icon`.
+
+Later added:
+
+- A store owner's tools in the store page's menu, as the Mac has them: Invite Someone, Show
+  Members (removing members, cancelling invites), Who Can Join (the store's open link and the
+  devices that joined with it), Publish a Plugin and Open Admin Page; Link Another Device for a
+  named member.
+- An invite link pasted anywhere outside a text field opens Join Store with it, and so does an
+  `kaeri://join` link or a store invite opened with the app.
+- Titles change language on every open page when the setting changes, without a reload.
+- An AppImage in a folder the app cannot write to saves its update to Downloads and says so,
+  with Show in Files.
+
+Play on TV added:
+
+- Play on TV from a title's header, an episode's menu and the player's top bar: a sheet that
+  finds TVs with Avahi (or takes a typed address), pairs with the six digits the TV shows, and
+  turns into the remote once the TV plays. A code that ran out locks the boxes and offers Get
+  a New Code. The engine's sender owns the protocol; `src/tv/` only draws it.
+- The remote: the episode, the playhead, Back and Forward 10 Seconds, Next Episode, Skip,
+  subtitle and audio tracks, TV Volume and search on the TV. Space plays and pauses, Left and
+  Right step 10 seconds.
+- The sidebar's foot says which TV is driven ("Playing on Living room"), and while the link is
+  down what became of it: Reconnecting, not found, or pair again. Media keys and GNOME's media
+  controls drive the TV while nothing plays on this computer.
+- Settings, Integrations: the paired TVs with Forget, and Pair a TV.
+- Problems show as a dot beside plain text, and a screen reader hears a wrong or expired code,
+  a lost TV and no TVs found. The shots run against fake TVs on loopback
+  (`kaeri-remote`'s `fake`); nothing leaves the machine.
+
+Trailers added:
+
+- The title page plays its trailer, muted, in the corner of the banner once the page has settled.
+  A title with a trailer opens with its head 100 px below the band, so nothing moves when the
+  trailer plays. The video is 448 by 252, exactly 16:9, so the player never letterboxes; the art
+  fades to the page's colour only when a frame is playing, and the sound button hangs below the
+  video's corner. The banner comes back half a second before the end. Scrolling more than 8 px
+  brings the banner back and then pauses the trailer. Below 700 px wide the page keeps its banner.
+  Leaving the page, starting an episode, opening a dialog or the window losing focus lets it go.
+- Resting the pointer on a cover in Seasonal, Search, Library or Related for 800 ms opens a preview
+  in a popover, one surface with the video flush at the top, then the title, the facts, two lines
+  of synopsis and the main action. When a preview has just closed, the next one opens after 300 ms
+  if the pointer rests within a second. It closes 150 ms after the pointer leaves, and at once on a
+  scroll, a key, a click elsewhere or the window losing focus.
+- Play trailer opens the trailer in a 960 by 540 window under an Adwaita header bar, with YouTube's controls and sound. If the embed
+  refuses the video, or there is no web view, the watch URL opens in the browser as before.
+- Settings, General: Play trailers (Always, Wi-Fi only, Off). The engine decides whether a trailer
+  starts by itself from that, the network and the device state the window reports (animations off,
+  power saver, a screen reader, under 4 GB of memory).
+- The web view is WebKitGTK 6, looked up with `dlopen` when a trailer is about to play, so nothing
+  links against it and the app starts the same without it. It runs on an ephemeral network session,
+  loads the engine's embed page under `https://app.kaeri.desktop/` (the Referer) and takes no
+  pointer input outside the Play trailer window.
+- WebKitGTK stops the whole app when its sandbox cannot start, so the app first tries
+  `bwrap --unshare-user --unshare-pid` in a process of its own and plays no trailer where that
+  fails. Inside a Flatpak the portal starts the web process and the check is skipped.
+- Packaging: a Flatpak on the GNOME runtime has WebKitGTK 6 and the GStreamer plugins. A
+  distribution package should recommend WebKitGTK 6 with bubblewrap and xdg-dbus-proxy, and
+  depend on GStreamer's libav and good plugins, or YouTube serves nothing playable and the trailer
+  fails without a sound. The build box has them for the shots, but its container cannot start the
+  sandbox, so the shots show the banner and the preview without a video.
+
+Episode discussions added:
+
+- The discussion of an episode opens in an `AdwDialog` (`pages/discussion.rs`), which is a bottom
+  sheet below the narrow size. The header has the thread title, the comment count and Open on
+  AniList. Comments are drawn again whenever the engine says the discussion, keeping the scroll
+  place, the spoilers the viewer opened and the replies they unfolded.
+- It opens from the episode's menu on the title page (when Episode discussions is on, and with
+  spoiler protection only for episodes the viewer has watched), from the quiet "Discussion · N
+  comments" line under an episode once the engine has found its thread, and from the player's More
+  menu from 85% of the episode. Opening it from the player pauses playback and closing it does not
+  resume.
+- Comment text is built from the engine's spans as Pango markup: bold, italic, strike-through,
+  links, spoilers as a muted bar that toggles, and quotes set in. Images and videos are a line
+  that opens in the browser, or an inline picture for images when Settings, Integrations, Load
+  images in comments is on.
+- Posting uses the field at the foot. Reply puts "Replying to name" above it, Edit starts from the
+  comment's own text, Delete asks once, and a comment AniList refused stays dimmed with "Didn't
+  post. Try again". Signed out, a line opens Settings, Accounts in place of the field.
+- Settings, Integrations has Episode discussions and Load images in comments.
+- The fixture build answers an opened discussion from `showcase.rs`, so the shots show a thread
+  without AniList.
+
+Controller navigation added:
+
+- A game controller drives the whole app. libmanette is loaded at run time with `dlopen`, so
+  nothing links against it and the app starts the same without it. The map from buttons to
+  actions is `kaeri-model`'s `input` module, shared with the other desktop clients.
+- The D-pad and the left stick move focus to the nearest widget in that direction, across the
+  sidebar and the page. A confirms, B goes back or closes the open popover, menu or dialog, and
+  Menu opens the controller help. In the player the buttons seek, pause, skip and open the
+  episode list, and the cards (Up next, skip intro) answer A and B.
+- Controller mode shows a focus ring and hides the pointer. Moving the mouse or pressing a key
+  leaves it. A text field opens Steam's on-screen keyboard through `steam://open/keyboard`.
+- Settings, Controller: use a controller, swap the A and B face buttons (the Nintendo layout),
+  and the help page. The first press of a controller shows the help once.
+- Packaging: a Flatpak needs `--device=all` to read the controller, and a distribution package
+  should depend on libmanette 0.2.12 or later (its Steam Deck driver and dead zone). Without
+  either the setting says no controller was found, and Steam Input's keyboard layouts still work.
+- Not tested on real hardware. The shots press buttons through the same path with a fake pad.
+
+The engine runs in-process on a tokio runtime of its own. The window only queues commands, and
+the engine's events reach GTK's main loop over a channel, where `hub.rs` hands them out.
+
+## Running it
+
+All of it builds and runs in the Linux box from the spike:
+
+```sh
+export CARGO_TARGET_DIR=~/kaeri-target-linux OUT=/tmp/kaeri-linux-out
+desktop/linux/scripts/docker.sh cargo test --manifest-path desktop/linux/Cargo.toml --features fixtures
+desktop/linux/scripts/docker.sh desktop/linux/scripts/shots.sh
+```
+
+The build goes to a Docker volume named after `CARGO_TARGET_DIR`, not to that folder, so nothing
+lands there. `desktop/linux/scripts/docker.sh --clean` deletes it, and `docker volume ls` lists
+them. Only what a command writes to `OUT` comes back to the host.
+
+`--features fixtures` builds in the test kit's scene: a fake AniList on loopback, made-up titles
+and a watch history, under a data directory of its own. The app then takes `--fixtures`, and
+`shots.sh` has it screenshot its own pages at the brief's three sizes into `OUT`. `SIZES` picks
+the sizes (`wide medium narrow`) and `SHOTS` the wide run's shots.
+
+## Not yet
+
+- Night mode and the subtitle style have no picture of their own yet.

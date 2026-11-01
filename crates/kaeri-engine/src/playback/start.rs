@@ -1,0 +1,923 @@
+//! Starting a playback: the plays a front end asks for, each with a fresh control channel and the
+//! window handed over, the stream found behind the eyecatch, and the settings it runs under.
+
+use kaeri_model::Msg;
+use kaeri_model::StoreMsg;
+use std::sync::Arc;
+
+use kaeri_core::{config::Config, ids::AnilistId};
+use kaeri_model::{
+    command::PlayerCommand, episodes::EpisodeRow, event::Event, notice::Notice,
+    playback::PlaybackId,
+};
+use tokio::{
+    sync::{mpsc, watch},
+    task::JoinHandle,
+};
+
+use crate::{
+    cache::{PlayHints, PlayKind},
+    jobs::JobGuard,
+    outbox::{Outbox, Played},
+    playback::{
+        self,
+        autonext::{Follow, Staged},
+        handoff::{Handoff, successor, take_controls},
+        link::{PlayerOpener, PlayerTarget, opener},
+        resolve::{Pick, Resolved, resolve_for_playback},
+        shaders::shader_dir,
+        slot::PlayerSlot,
+    },
+    services::Services,
+    show_settings,
+    state::EngineState,
+    titles::episodes::{EpisodeLoad, load_episodes},
+    tracking::commands::signed_in_tracker_ids,
+};
+
+/// What a play of `episode` of `id` takes from the engine's record of the titles: the name the
+/// window being handed over announces it by, and what the player's Up Next card and Episodes
+/// menu show. See [`TitleCache::hints`]. A staged play's name is remembered for the episode
+/// that follows it, which goes by the same name.
+///
+/// [`TitleCache::hints`]: crate::cache::TitleCache::hints
+fn hints_for(
+    id: AnilistId,
+    episode: &str,
+    kind: PlayKind,
+    skip_filler: bool,
+    engine: &mut EngineState,
+) -> PlayHints {
+    let hints = engine.cache.hints(id, episode, skip_filler, kind);
+    if kind == PlayKind::Staged {
+        engine.cache.announce(id, hints.title.clone());
+    }
+    hints
+}
+
+/// What this play opens its player with, from the config in effect: see [`opener`].
+///
+/// No player handle is kept across the session: every play builds its own from the config in
+/// effect, which is the live one the Settings screen edits, as the front end last said. A
+/// handle held across the session is exactly how a turned-off upscaler kept running.
+pub(crate) fn opener_for(
+    engine: &EngineState,
+    services: &Services,
+) -> Option<Arc<dyn PlayerOpener>> {
+    // While casting, every play casts to the same TV, auto-next's included.
+    #[cfg(feature = "cast")]
+    if let Some(cast) = &engine.casting
+        && services.casts.casting()
+    {
+        return Some(Arc::clone(cast) as Arc<dyn PlayerOpener>);
+    }
+    let hosted = services.hosted_player.then(|| -> Arc<dyn PlayerOpener> {
+        Arc::clone(&services.hosted) as Arc<dyn PlayerOpener>
+    });
+    opener(engine.config.effective(), &services.paths, &services.player_theme, hosted)
+}
+
+/// Play an episode from whichever source the resolution ladder chooses, staged for Now Playing
+/// as the engine's record of the titles names it, which the front end is told: where it was
+/// left, or from the beginning when `from_start`. Refused, with nothing staged, where this build
+/// has no player to open.
+pub fn play(
+    id: AnilistId,
+    episode: String,
+    from_start: bool,
+    job: Option<JobGuard>,
+    engine: &mut EngineState,
+    services: &Services,
+    tx: &Outbox,
+) {
+    let Some(opener) = opener_for(engine, services) else {
+        return playback::refuse(job, tx);
+    };
+    let billing = named(id, &episode, engine);
+    let staged = play_staged(
+        id, episode, None, from_start, false, billing, opener, job, engine, services, tx,
+    );
+    let _ = tx.send(staged);
+}
+
+/// Cast an episode to the TV with Chromecast built in that `device` names: a play as any other,
+/// in a cast to that TV, and every play after it too, until [`stop_casting`]. From `position`
+/// when it is carried over from this device, from the top when that is close to it.
+#[cfg(feature = "cast")]
+#[allow(clippy::too_many_arguments)]
+pub fn cast_to(
+    device: &str,
+    id: AnilistId,
+    episode: String,
+    position: Option<f64>,
+    job: Option<JobGuard>,
+    engine: &mut EngineState,
+    services: &Services,
+    tx: &Outbox,
+) {
+    use crate::playback::link::cast::CastOpener;
+
+    let hub = &services.casts;
+    let Some(device) = hub.device(device) else {
+        let _ = tx.send(Event::Toast(Notice::alert(kaeri_model::Msg::NoticeCastNoDevice)));
+        return drop(job);
+    };
+    // Carried over: written down as where the episode was left, which is where a play opens.
+    let from_start = match position {
+        Some(at) if at >= CARRY_FROM => {
+            let event = kaeri_store::WatchEvent::new(id, episode.clone(), at);
+            if let Err(e) = services.store.record_event(&event) {
+                tracing::warn!(error = %e, "couldn't carry the position over to the cast");
+            }
+            false
+        }
+        Some(_) => true,
+        None => false,
+    };
+    let scratch = services.paths.runtime_dir().join("cast");
+    if let Err(e) = std::fs::create_dir_all(&scratch) {
+        tracing::warn!(error = %e, "couldn't make the cast's scratch directory");
+    }
+    hub.begin(device.clone());
+    hub.asked(id, episode.clone());
+    engine.casting = Some(Arc::new(CastOpener::new(Arc::clone(hub), device, scratch)));
+    play(id, episode, from_start, job, engine, services, tx);
+}
+
+/// A position closer to the start than this is not carried over to a cast: it starts from the
+/// top, as Play on TV does.
+#[cfg(feature = "cast")]
+const CARRY_FROM: f64 = 5.0;
+
+/// Stop casting: the playback on the TV stops, the TV goes back to what it showed, and plays
+/// open on this device again.
+#[cfg(feature = "cast")]
+pub fn stop_casting(engine: &mut EngineState, services: &Services) {
+    if engine.casting.take().is_none() && !services.casts.casting() {
+        return;
+    }
+    services.casts.end();
+    control_player(PlayerCommand::Stop, engine);
+    // A TV kept for the next episode is let go too.
+    services.slot.release();
+}
+
+/// Play the release the user picked in the Sources overlay.
+#[allow(clippy::too_many_arguments)]
+pub fn play_source(
+    id: AnilistId,
+    episode: String,
+    provider_id: String,
+    source_id: String,
+    job: Option<JobGuard>,
+    engine: &mut EngineState,
+    services: &Services,
+    tx: &Outbox,
+) {
+    let Some(opener) = opener_for(engine, services) else {
+        return playback::refuse(job, tx);
+    };
+    let billing = named(id, &episode, engine);
+    let pick = Some(Pick::Release { provider_id, source_id });
+    let staged = play_staged(
+        id, episode, pick, false, false, billing, opener, job, engine, services, tx,
+    );
+    let _ = tx.send(staged);
+}
+
+/// Play what a playback led to, which the engine starts on its own, in `opener`'s player: staged
+/// as `follow` says, under the name the playback before it went by. Returns what it was staged
+/// as, for the engine to say right after the event that led to it.
+pub(crate) fn play_following(
+    follow: Follow,
+    opener: Arc<dyn PlayerOpener>,
+    job: Option<JobGuard>,
+    engine: &mut EngineState,
+    services: &Services,
+    tx: &Outbox,
+) -> Event {
+    let Follow { id, episode, title, episode_title } = follow;
+    let billing = (title, episode_title);
+    play_staged(id, episode, None, false, false, billing, opener, job, engine, services, tx)
+}
+
+/// What a play the front end asked for is staged as: the name the engine's record of the titles
+/// gives it, and the episode's own name from the table it holds when that is this title's.
+fn named(id: AnilistId, episode: &str, engine: &EngineState) -> (String, Option<String>) {
+    (engine.cache.name_for(id, PlayKind::Staged), engine.cache.episode_title(id, episode))
+}
+
+/// Stage a playback for Now Playing as `title`, with `episode_title`: the name the episode
+/// after it goes by too, and the engine's record of what Now Playing shows. Returns what the
+/// front end is told of it, for the caller to say in its place: a play that `opener` casts to
+/// a TV is the cast card's to show, so the player here is not told of it.
+fn stage(
+    played: &Played,
+    title: String,
+    episode_title: Option<String>,
+    opener: &dyn PlayerOpener,
+    engine: &mut EngineState,
+) -> Event {
+    engine.cache.announce(played.id, title.clone());
+    engine.staging.staged(Staged {
+        serial: played.serial,
+        id: played.id,
+        episode: played.episode.clone(),
+        title: title.clone(),
+        episode_title: episode_title.clone(),
+    });
+    let (id, episode) = (played.id, played.episode.clone());
+    // What the player starts at when it remembers a speed, and Now Playing until it says.
+    let speed = engine.config.effective().playback.persisted_speed.unwrap_or(1.0);
+    match opener.target() {
+        PlayerTarget::Local => {
+            Event::PlaybackStaged { id, title, episode, episode_title, speed }
+        }
+        PlayerTarget::Cast(_) => Event::CastStaged { id, title, episode, episode_title, speed },
+    }
+}
+
+/// Play a link the viewer opened as episode `episode` of title `id`, as they confirmed it: a
+/// play like any other, with history, resume, trackers and sync, from the link rather than a
+/// source. Refused with a notice while torrent playback is off. See [`crate::opened`].
+#[allow(clippy::too_many_arguments)]
+pub fn play_opened(
+    link: String,
+    id: AnilistId,
+    episode: String,
+    title: String,
+    job: Option<JobGuard>,
+    engine: &mut EngineState,
+    services: &Services,
+    tx: &Outbox,
+) {
+    if !crate::opened::playback_on(engine) {
+        let _ =
+            tx.send(Event::Toast(Notice::alert(Msg::Store(StoreMsg::TorrentLinkPlaybackOff))));
+        return;
+    }
+    let Some(opener) = opener_for(engine, services) else {
+        return playback::refuse(job, tx);
+    };
+    let episode_title = engine.cache.episode_title(id, &episode);
+    let pick = Some(Pick::Link(link));
+    let staged = play_staged(
+        id,
+        episode,
+        pick,
+        false,
+        false,
+        (title, episode_title),
+        opener,
+        job,
+        engine,
+        services,
+        tx,
+    );
+    let _ = tx.send(staged);
+}
+
+/// Play a link the viewer opened with nothing recorded, staged as `name`: its playback goes by
+/// [`kaeri_model::opened::UNTRACKED`]. Refused with a notice while torrent playback is off.
+pub fn play_opened_untracked(
+    link: String,
+    name: String,
+    job: Option<JobGuard>,
+    engine: &mut EngineState,
+    services: &Services,
+    tx: &Outbox,
+) {
+    if !crate::opened::playback_on(engine) {
+        let _ =
+            tx.send(Event::Toast(Notice::alert(Msg::Store(StoreMsg::TorrentLinkPlaybackOff))));
+        return;
+    }
+    let Some(opener) = opener_for(engine, services) else {
+        return playback::refuse(job, tx);
+    };
+    // The episode the name states picks the file in a season's torrent; none plays the
+    // torrent's own choice.
+    let episode = kaeri_providers::torrent::names::episode_in(&name)
+        .map(|n| n.to_string())
+        .unwrap_or_default();
+    let pick = Some(Pick::Untracked { link, name: name.clone() });
+    let id = kaeri_model::opened::UNTRACKED;
+    let staged = play_staged(
+        id,
+        episode,
+        pick,
+        true,
+        false,
+        (name, None),
+        opener,
+        job,
+        engine,
+        services,
+        tx,
+    );
+    let _ = tx.send(staged);
+}
+
+/// Play an episode staged for Now Playing as `billing` says, its title and its episode's own
+/// name, from the release `pick` names or whichever the resolution ladder chooses, and from the
+/// beginning when `from_start`. Returns what it was staged as.
+#[allow(clippy::too_many_arguments)]
+fn play_staged(
+    id: AnilistId,
+    episode: String,
+    // The release the user picked in the Sources overlay, or the link they opened.
+    pick: Option<Pick>,
+    from_start: bool,
+    // Asked for by a party: an episode with no source here says so for the party's dialog.
+    party: bool,
+    (title, episode_title): (String, Option<String>),
+    opener: Arc<dyn PlayerOpener>,
+    job: Option<JobGuard>,
+    engine: &mut EngineState,
+    services: &Services,
+    tx: &Outbox,
+) -> Event {
+    let Services { paths, sync, prefetch, store, .. } = services;
+    let played = engine.next_playback(id, &episode);
+    let staged = stage(&played, title, episode_title, opener.as_ref(), engine);
+    // What the show sets for itself, over the config in effect: sub or dub, quality, what is
+    // skipped.
+    let for_show = show_settings::for_show(engine.config.effective(), store, id);
+    let hints =
+        hints_for(id, &episode, PlayKind::Staged, for_show.playback.skip_filler, engine);
+    let EngineState { player_tx, finding, .. } = engine;
+    let config = &for_show;
+    // A fresh channel per playback. The one playing gives up its window only once
+    // this one has something to play — see `Handoff`.
+    let (prx, handoff) = take_controls(player_tx, successor(id, &episode, &hints, config));
+    let stopped = watch_for_stop(finding);
+    // Never from the streams found ahead for a release picked by hand: the pick names its
+    // own. Otherwise the same fresh channel, the same session-replacement semantics.
+    let prefetched = match pick {
+        None => prefetch.take(id, &episode, config.playback.translation),
+        Some(_) => None,
+    };
+    // Tracker ids rather than trackers: playback only needs to know which queues to
+    // append to, and passing the set would couple the player to the sync layer.
+    let tracker_ids = signed_in_tracker_ids(sync);
+    // An untracked play has no title to list the episodes of.
+    if hints.episodes.is_empty() && !Pick::untracked(pick.as_ref()) {
+        fill_episodes(id, &episode, services, player_tx);
+    }
+    spawn_playback(
+        id,
+        episode,
+        pick,
+        from_start,
+        party,
+        prx,
+        stopped,
+        handoff,
+        config,
+        services,
+        opener,
+        tracker_ids,
+        hints,
+        write_shaders(config, paths),
+        prefetched,
+        job,
+        &tx.for_playback(played),
+    );
+    staged
+}
+
+/// Play an episode with the watch party, which the caller has joined: staged and played as any
+/// play is, with a seat at the party. An episode none of the sources has leaves the viewer in
+/// the room with nothing playing, and says so with [`Event::PartyNoSource`].
+pub fn play_party(
+    id: AnilistId,
+    episode: String,
+    job: Option<JobGuard>,
+    engine: &mut EngineState,
+    services: &Services,
+    tx: &Outbox,
+) {
+    let Some(opener) = opener_for(engine, services) else {
+        return playback::refuse(job, tx);
+    };
+    let billing = named(id, &episode, engine);
+    let staged =
+        play_staged(id, episode, None, false, true, billing, opener, job, engine, services, tx);
+    let _ = tx.send(staged);
+}
+
+/// Play a downloaded episode from disk, in the full playback session all the same.
+#[allow(clippy::too_many_arguments)]
+pub fn play_local(
+    id: AnilistId,
+    episode: String,
+    title: String,
+    path: String,
+    job: Option<JobGuard>,
+    engine: &mut EngineState,
+    services: &Services,
+    tx: &Outbox,
+) {
+    let Some(opener) = opener_for(engine, services) else {
+        return playback::refuse(job, tx);
+    };
+    let Services { paths, http, store, sync, .. } = services;
+    let played = engine.next_playback(id, &episode);
+    let for_show = show_settings::for_show(engine.config.effective(), store, id);
+    let hints =
+        engine.cache.hints(id, &episode, for_show.playback.skip_filler, PlayKind::Staged);
+    // Named by the download it plays: the Downloads screen says what its rows are called.
+    let episode_title = engine.cache.episode_title(id, &episode);
+    let staged = stage(&played, title.clone(), episode_title, opener.as_ref(), engine);
+    let _ = tx.send(staged);
+    let EngineState { player_tx, finding, .. } = engine;
+    // Nothing to find: it opens at once, and a Stop is its session's from the start.
+    *finding = None;
+    let config = &for_show;
+    // No provider walk and no torrent session — the file is on disk — but the full
+    // playback session all the same: a downloaded episode records history, resumes,
+    // and syncs exactly like a streamed one. It used to go straight to mpv with no
+    // context, which made downloads second-class in every way that matters.
+    // Nothing to look up, so nothing can fail before it plays.
+    // Named by the download, as it is staged.
+    let hints = PlayHints { title: title.clone(), ..hints };
+    let (prx, handoff) = take_controls(player_tx, successor(id, &episode, &hints, config));
+    let PlayHints { next, episodes, cover_url, banner_url, episode_total, .. } = hints;
+    handoff.now();
+    let tracker_ids = signed_in_tracker_ids(sync);
+    if episodes.is_empty() {
+        fill_episodes(id, &episode, services, player_tx);
+    }
+    let shaders = write_shaders(config, paths);
+    let party = services.party.clone();
+    let (config, store, http, machine, tx) = (
+        config.clone(),
+        store.clone(),
+        http.clone(),
+        machine(opener, services),
+        tx.for_playback(played),
+    );
+    tokio::spawn(async move {
+        let _job = job;
+        let playback = config.playback.clone();
+        let stream = kaeri_core::stream::Stream::new(path, kaeri_core::stream::StreamKind::Mp4);
+        // Best-effort, exactly as the streaming path treats them.
+        let resume_at = store
+            .resume_position(id, &episode)
+            .inspect_err(|e| tracing::warn!(error = %e, "could not read resume position"))
+            .unwrap_or(None);
+        let mal_id = store.mapping_for(id).ok().flatten().and_then(|m| m.mal_id);
+        let context = playback::PlaybackContext {
+            anilist_id: id,
+            mal_id,
+            episode,
+            title,
+            translation: playback.translation,
+            resume_at,
+            // A local file's real length is knowable, but the hint only serves
+            // the aniskip fallback and a lie would filter its answers.
+            runtime_secs: None,
+            speed: playback.persist_speed.then_some(playback.persisted_speed).flatten(),
+            volume: playback.persist_volume.then_some(playback.persisted_volume).flatten(),
+            next,
+            episodes,
+            cover_url,
+            banner_url,
+            episode_total,
+        };
+        let settings = playback::PlaySettings {
+            shader_dir: shaders.await.ok().flatten(),
+            ..play_settings(&config, tracker_ids, party)
+        };
+        playback::play(vec![stream], context, store, http, machine, settings, tx, prx).await;
+    });
+}
+
+/// Write the shaders out for a playback, on the blocking pool rather than on the engine's own
+/// task: the first play in a new cache writes every one of them, and while a call blocks that
+/// task the engine routes no command and passes on no event. Awaited once the playback has its
+/// streams, so the writing overlaps the lookup. A write that panics leaves upscaling off, as
+/// one that fails does.
+fn write_shaders(
+    config: &Config,
+    paths: &kaeri_core::config::Paths,
+) -> JoinHandle<Option<std::path::PathBuf>> {
+    let (config, paths) = (config.clone(), paths.clone());
+    tokio::task::spawn_blocking(move || shader_dir(&config, &paths))
+}
+
+/// What a playback runs on: `opener`'s player, and the engine's slot, host and power source.
+fn machine(opener: Arc<dyn PlayerOpener>, services: &Services) -> playback::Machine {
+    #[cfg(feature = "testing")]
+    let opener: Arc<dyn PlayerOpener> = match &services.windows {
+        Some(opened) => {
+            Arc::new(crate::playback::link::Counted { inner: opener, opened: opened.clone() })
+        }
+        None => opener,
+    };
+    playback::Machine {
+        opener,
+        slot: services.slot.clone(),
+        host: services.host.clone(),
+        power: services.power.clone(),
+        offline: services.offline.clone(),
+    }
+}
+
+/// Steer whatever is playing, through the controls of the playback started last.
+///
+/// A Stop is that playback's whether or not it has opened yet: one still finding its stream
+/// reads its controls only once it plays, so it is told at once as well, and opens nothing.
+pub fn control_player(command: PlayerCommand, engine: &EngineState) {
+    let EngineState { player_tx, finding, .. } = engine;
+    if command == PlayerCommand::Stop
+        && let Some(finding) = finding
+    {
+        finding.send_replace(true);
+    }
+    if let Some(sender) = player_tx.as_ref() {
+        let _ = sender.send(command);
+    }
+}
+
+/// Steer `playback`, when it is the playback started last, which holds the controls. A command
+/// aimed at one another has followed since is let go: a Play Now or an Undo that a hosted
+/// player sent as its episode rolled on to the next was meant for the episode it showed.
+///
+/// But for a Stop while the playback started last is still finding its stream. The viewer
+/// stopped what was on screen, which was that one's starting screen, or the episode it is
+/// about to take the window from: the player it would open is what they turned down.
+pub fn control_playback(playback: PlaybackId, command: PlayerCommand, engine: &EngineState) {
+    let current = PlaybackId::new(engine.playbacks);
+    let finding = engine.finding.as_ref().is_some_and(|finding| !finding.is_closed());
+    if current != playback && !(command == PlayerCommand::Stop && playback < current && finding)
+    {
+        tracing::debug!(
+            playback = playback.get(),
+            current = engine.playbacks,
+            ?command,
+            "a command for a playback that is no longer current"
+        );
+        return;
+    }
+    if current != playback {
+        tracing::info!(
+            playback = playback.get(),
+            current = engine.playbacks,
+            "a stop for the playback before, while this one finds its stream: stopping it"
+        );
+    }
+    control_player(command, engine);
+}
+
+/// A fresh watch for a Stop that reaches the playback starting now before it opens, kept as the
+/// engine's `finding` in place of the one before it. See [`control_player`].
+fn watch_for_stop(finding: &mut Option<watch::Sender<bool>>) -> watch::Receiver<bool> {
+    let (stop, stopped) = watch::channel(false);
+    *finding = Some(stop);
+    stopped
+}
+
+/// What ended a playback's wait for its stream before the stream was found.
+enum Overtaken {
+    /// The viewer stopped it.
+    Stopped,
+    /// A newer playback was asked for, which took its controls and dropped its watch.
+    Superseded,
+}
+
+/// Until a Stop reaches the playback `stopped` watches for, or a newer playback replaces the
+/// watch, which only a newer one does.
+async fn stop_asked(stopped: &mut watch::Receiver<bool>) -> Overtaken {
+    match stopped.wait_for(|stop| *stop).await {
+        Ok(_) => Overtaken::Stopped,
+        Err(_) => Overtaken::Superseded,
+    }
+}
+
+/// Whether a newer playback has replaced the watch `stopped` reads.
+fn superseded(stopped: &watch::Receiver<bool>) -> bool {
+    stopped.has_changed().is_err() && !*stopped.borrow()
+}
+
+/// A playback stopped before it opened a player: it says it ended, stopped, and nothing opens.
+/// A window parked for it would wait for nothing.
+fn stopped_unopened(slot: &PlayerSlot, tx: &Outbox) {
+    tracing::info!("stopped while finding its stream; no player opens for it");
+    slot.release();
+    let _ = tx.send(Event::playback_ended(false, kaeri_model::playback::Ending::Stopped));
+}
+
+/// Resolve a stream and start playing it.
+///
+/// Everything slow happens inside the spawned task, behind the eyecatch: matching the title,
+/// walking the provider chain, and reading back where you left off.
+#[allow(clippy::too_many_arguments)]
+fn spawn_playback(
+    id: kaeri_core::ids::AnilistId,
+    episode: String,
+    // The release the user picked in the Sources overlay, or the link they opened; `None`
+    // lets the resolution ladder choose.
+    pick: Option<Pick>,
+    // Open at the beginning, whatever position the episode was left at.
+    from_start: bool,
+    // Asked for by a party: an episode with no source here says so, for the party's dialog
+    // that offers Choose source.
+    party: bool,
+    commands: mpsc::UnboundedReceiver<kaeri_model::command::PlayerCommand>,
+    // Whether a Stop reached this playback before it opened: see `control_player`.
+    mut stopped: watch::Receiver<bool>,
+    handoff: Handoff,
+    config: &Config,
+    services: &Services,
+    opener: Arc<dyn PlayerOpener>,
+    tracker_ids: Vec<String>,
+    // What the player's Up Next card, its Episodes menu and its starting screen show, from the
+    // engine's record of the titles.
+    hints: PlayHints,
+    // The shaders being written for it, while it looks for its streams.
+    shaders: JoinHandle<Option<std::path::PathBuf>>,
+    // This episode's streams, found ahead while the previous one's ending played.
+    prefetched: Option<Resolved>,
+    job: Option<JobGuard>,
+    tx: &Outbox,
+) {
+    let untracked = Pick::untracked(pick.as_ref());
+    // An untracked play keeps no seat at a party: the room would be told of a title it is not.
+    let hub = if untracked { Default::default() } else { services.party.clone() };
+    // A cast with Torrents while casting off passes torrents over, and the next source plays.
+    let no_torrents = matches!(opener.target(), crate::playback::link::PlayerTarget::Cast(_))
+        && !kaeri_model::settings::while_casting(config);
+    let registry = if no_torrents {
+        services.registry.without_torrents()
+    } else {
+        services.registry.clone()
+    };
+    let prefetched = if no_torrents {
+        prefetched
+            .map(|(streams, context)| {
+                let streams: Vec<_> = streams
+                    .into_iter()
+                    .filter(|s| s.kind != kaeri_core::stream::StreamKind::TorrentHttp)
+                    .collect();
+                (streams, context)
+            })
+            .filter(|(streams, _)| !streams.is_empty())
+    } else {
+        prefetched
+    };
+    let reports = services.servers.reports();
+    let (config, meta, store, registry, http, machine, slot, tx) = (
+        config.clone(),
+        services.meta.clone(),
+        services.store.clone(),
+        registry,
+        services.http.clone(),
+        machine(opener, services),
+        services.slot.clone(),
+        tx.clone(),
+    );
+
+    tokio::spawn(async move {
+        let playback = config.playback.clone();
+        let resolving = async {
+            match prefetched {
+                Some(found) => {
+                    tracing::info!(episode = %episode, "playing from the streams found ahead");
+                    Ok(found)
+                }
+                None => {
+                    resolve_for_playback(
+                        &meta,
+                        &store,
+                        &registry,
+                        id,
+                        &episode,
+                        pick,
+                        &playback,
+                        job.as_ref(),
+                    )
+                    .await
+                }
+            }
+        };
+        // Stopped while it looks: the viewer closed its starting screen, or stopped the episode
+        // it was to take the window from. Read in the controls, it would open the player first.
+        let resolved = tokio::select! {
+            biased;
+            overtaken = stop_asked(&mut stopped) => Err(overtaken),
+            resolved = resolving => Ok(resolved),
+        };
+        let resolved = match resolved {
+            Ok(resolved) => resolved,
+            // The episode it was to take over stops with it: what the viewer stopped.
+            Err(Overtaken::Stopped) => {
+                handoff.stop();
+                stopped_unopened(&slot, &tx);
+                return;
+            }
+            // Asked past, as N pressed again: the newer playback takes the window from the
+            // episode on screen through this one's controls, and this one finds nothing more.
+            // It says no ending, since its successor is the playback the apps now show.
+            Err(Overtaken::Superseded) => {
+                tracing::info!(episode = %episode, "a newer playback was asked for; giving way");
+                drop(job);
+                handoff.pass_on(commands).await;
+                return;
+            }
+        };
+        let context = match resolved {
+            Ok(pair) => pair,
+            // The episode being watched carries on, and the window with it: only the lookup
+            // failed, and closing what was playing over it would punish the viewer for asking.
+            Err(reason) if handoff.live() => {
+                // In a party the dialog says why, and a toast would say it twice.
+                // The kind comes as the lookup decided it.
+                if party {
+                    let _ = tx.send(Event::PartyNoSource {
+                        id,
+                        episode: episode.clone(),
+                        why: reason.why,
+                        reason: reason.text.clone(),
+                    });
+                } else {
+                    let _ = tx.send(Event::Toast(Notice::alert(reason.text.clone())));
+                }
+                let _ = tx.send(Event::PlaybackKept);
+                handoff.keep(commands, reason.text.english()).await;
+                return;
+            }
+            Err(reason) => {
+                // In the room all the same, with nothing playing: the party's dialog offers
+                // Choose source.
+                // The failure ladder's first rung: name the failure rather than showing an
+                // empty screen. Releasing the eyecatch is what the alert does for us. In a
+                // party the dialog names it instead, and the ending below releases it.
+                if party {
+                    let _ = tx.send(Event::PartyNoSource {
+                        id,
+                        episode: episode.clone(),
+                        why: reason.why,
+                        reason: reason.text,
+                    });
+                } else {
+                    let _ = tx.send(Event::Toast(Notice::alert(reason.text)));
+                }
+                // A window left open for this episode would wait for nothing.
+                slot.release();
+                let _ = tx
+                    .send(Event::playback_ended(false, kaeri_model::playback::Ending::Failed));
+                return;
+            }
+        };
+        let (streams, mut context) = context;
+        // Played from the beginning: no resume point, so the player opens at nought, nothing
+        // says it resumed, and the history it writes as it plays is where it is left next.
+        if from_start {
+            context.resume_at = None;
+        }
+        let PlayHints { next, episodes, cover_url, banner_url, episode_total, .. } = hints;
+        (context.next, context.episodes) = (next, episodes);
+        // The art the title's lookup found, else what its page or a list showed.
+        context.cover_url = context.cover_url.or(cover_url);
+        context.episode_total = context.episode_total.or(episode_total);
+        context.banner_url = context.banner_url.or(banner_url);
+        // Resolved: from here the wait is mpv opening, which Now Playing shows itself, and the
+        // session lasts the episode — far too long to hold a "starting" job open for.
+        drop(job);
+        // Say why this release, so an automatic pick is never a mystery. The active-provider
+        // header is sent from playback itself, per attempt, so failover never credits the
+        // stream that just failed.
+        if let Some(note) = streams.first().and_then(|s| s.pick_note.clone()) {
+            let _ = tx.send(Event::Toast(Notice::info(Msg::verbatim(note))));
+        }
+
+        let shader_dir = shaders.await.ok().flatten();
+        let settings = playback::PlaySettings {
+            shader_dir,
+            reports,
+            ..play_settings(&config, tracker_ids, hub)
+        };
+        let settings = if untracked { settings.untracked() } else { settings };
+        handoff.complete().await;
+        // Stopped while the window was handed over: the one parked for it closes.
+        if *stopped.borrow() {
+            stopped_unopened(&slot, &tx);
+            return;
+        }
+        // Asked past while the window was handed over: the window stays parked for the newer
+        // playback, which is waiting for these controls to close.
+        if superseded(&stopped) {
+            tracing::info!(episode = %episode, "a newer playback was asked for; leaving it the window");
+            return;
+        }
+        // Opening from here: a Stop is the session's, read off its controls.
+        drop(stopped);
+        playback::play(streams, context, store, http, machine, settings, tx, commands).await;
+    });
+}
+
+/// What one playback runs under, from the config as it stands now.
+pub fn play_settings(
+    config: &Config,
+    tracker_ids: Vec<String>,
+    party: playback::seat::PartyHub,
+) -> playback::PlaySettings {
+    let playback = &config.playback;
+    playback::PlaySettings {
+        threshold: playback.commit_threshold,
+        auto_skip: playback.skip_opening,
+        auto_skip_recap: playback.skip_recap_auto,
+        ask_was_opening: playback.ask_was_opening,
+        share_skip_times: playback.share_skip_times,
+        mark_chapters: playback.mark_chapters,
+        skip_button: playback.skip_button,
+        fullscreen: playback.fullscreen,
+        subtitle_language: Some(playback.subtitle_language.clone()),
+        auto_next: playback.auto_next,
+        night_mode: playback.night_mode,
+        remember_tracks: playback.persist_speed,
+        look: playback.upscaling.into(),
+        // Filled in by the caller, which knows where the cache is.
+        shader_dir: None,
+        tone_mapping: playback.tone_mapping.clone(),
+        tracker_ids,
+        presence: config.presence.clone(),
+        reports: Default::default(),
+        party,
+        up_next_countdown: playback::UP_NEXT_COUNTDOWN,
+        mpv_options: kaeri_playback::protocol::option_pairs(&playback.mpv_args),
+        untracked: false,
+    }
+}
+
+/// Load a title's episode list for a playback the episode table on screen could not describe.
+///
+/// The table belongs to whichever title is open, so a playback started from Home or Continue
+/// had no episode list: the player's Episodes menu was empty and, with no next episode known,
+/// there was no Up Next card, no fetching ahead and no keeping the window for the binge.
+/// Loaded in the background after playback starts, never in front of it, and handed to the
+/// playback through its controls.
+fn fill_episodes(
+    id: kaeri_core::ids::AnilistId,
+    episode: &str,
+    services: &Services,
+    controls: &Option<mpsc::UnboundedSender<kaeri_model::command::PlayerCommand>>,
+) {
+    let Some(controls) = controls.clone() else { return };
+    let (meta, store, registry, episode) = (
+        services.meta.clone(),
+        services.store.clone(),
+        services.registry.clone(),
+        episode.to_owned(),
+    );
+    tokio::spawn(async move {
+        match load_episodes(&meta, &store, &registry, id).await {
+            Ok(EpisodeLoad::Rows(rows)) if !rows.is_empty() => {
+                let next = following(&rows, &episode);
+                let _ =
+                    controls.send(kaeri_model::command::PlayerCommand::Episodes { rows, next });
+            }
+            Ok(_) => {}
+            Err(reason) => tracing::debug!(%reason, "no episode list for the player"),
+        }
+    });
+}
+
+/// The episode after `episode` in a list, when the list has it.
+fn following(rows: &[EpisodeRow], episode: &str) -> Option<String> {
+    let next = episode.trim().parse::<u32>().ok()?.checked_add(1)?.to_string();
+    rows.iter().any(|row| row.number == next && !row.unsourced).then_some(next)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_following_episode_is_only_offered_when_the_list_has_it() {
+        let rows: Vec<EpisodeRow> = ["1", "2", "3"]
+            .into_iter()
+            .map(|n| EpisodeRow {
+                number: n.into(),
+                title: None,
+                thumbnail: None,
+                description: None,
+                duration_secs: None,
+                watched: 0.0,
+                completed: false,
+                kind: None,
+                skippable: false,
+                airs_at: None,
+                delayed_from: None,
+                metadata_only: false,
+                source: None,
+                unsourced: false,
+                past_progress: false,
+            })
+            .collect();
+        assert_eq!(following(&rows, "1").as_deref(), Some("2"));
+        assert_eq!(following(&rows, "3"), None, "a finale has no next");
+        assert_eq!(following(&rows, "OVA"), None);
+    }
+}

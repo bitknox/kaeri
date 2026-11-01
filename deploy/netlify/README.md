@@ -1,0 +1,92 @@
+# Kaeri plugin store on Netlify
+
+A private plugin store for you and the people you invite, running as a Netlify function. Members
+join with an invite link from you and install the plugins you publish, all from inside Kaeri.
+
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/bitknox/kaeri&create_from_path=deploy/netlify)
+
+## What it creates
+
+The button copies this folder into a new repository on your Git account and deploys it to your
+Netlify account. It sets up two things:
+
+- a project whose one function answers every address of `https://<your-project>.netlify.app`
+- a Netlify Database, which is Postgres and keeps everything: members, invites, the plugin list
+  and the plugin files themselves
+
+The database is created by the first deploy, because this folder's `package.json` lists
+`@netlify/database`, and the function finds it through `NETLIFY_DB_URL`. There is nothing to copy
+by hand. Netlify Database is part of Netlify's credit-based plans, Free included, and a store for a
+group of friends fits in the Free plan's allowance. Plugin files count toward the database's
+storage.
+
+To use a database of your own instead, or if your plan does not include Netlify Database, put a
+Postgres connection string in `DATABASE_URL` under Project configuration, Environment variables,
+and deploy again. Any Postgres works, for example a free Neon project. `DATABASE_URL` wins when
+both are there.
+
+## Choose a setup code
+
+During the deploy you are asked for `KAERI_STORE_SETUP_CODE`. This is a code you make up, and
+it is how you prove the store is yours the first time you open it. Use something long and random,
+for example the output of `openssl rand -hex 16`, and keep it to yourself. It stops working once
+the store has an owner.
+
+You can also give the store a name with `KAERI_STORE_NAME`, which is what members see in
+Kaeri. Add it under Project configuration, Environment variables, and deploy again.
+
+## Claim the store
+
+1. Open `https://<your-project>.netlify.app/admin/` in a browser.
+2. Enter the setup code. The page answers with an owner invite link.
+3. In Kaeri, go to Providers, press Enter to open plugin stores, choose join a store and paste
+   the link.
+
+The device that joins with that link becomes the owner. From then on you invite people, publish
+plugins and remove members from the store's page in Kaeri, or from the admin page, which you
+open with "open the admin page" on the store in Kaeri.
+
+## Deploy by hand
+
+With [Bun](https://bun.sh) installed, from this folder:
+
+```sh
+bun install
+bunx netlify login
+bunx netlify sites:create
+bunx netlify env:set KAERI_STORE_SETUP_CODE "<your setup code>"
+bunx netlify deploy --prod
+```
+
+`netlify sites:create` makes the project and links this folder to it. `netlify deploy` builds on
+your machine, which also creates the Netlify Database, and uploads the result.
+
+## Update
+
+Your members, invites and plugins live in the database, so updating the function keeps all of
+them.
+
+If you used the button, your repository is a copy of this folder, not a fork, so GitHub's Sync
+fork does not apply. It comes with `update-store.yml`, a workflow that does the same job:
+
+1. Once, move `update-store.yml` to `.github/workflows/update-store.yml` and commit it.
+2. To update, open your repository's Actions tab, choose Update the store and Run workflow.
+
+It copies this folder from the newest Kaeri release over your repository, keeps your
+`netlify.toml`, and commits. Netlify deploys every commit to your repository's main branch, and the
+store brings its database up to date on its first request. If the release changed `netlify.toml`,
+the run shows the difference as a warning for you to bring over by hand. To update on a schedule,
+remove the `#` from the `schedule` lines in the workflow.
+
+Without the workflow, replace the files in your copy with the ones from this folder in the latest
+release, keep your `netlify.toml`, and commit.
+
+If you deployed by hand, fetch the latest Kaeri, then run `bun install` and
+`bunx netlify deploy --prod` in this folder again.
+
+## Your own domain
+
+A domain added to the project works without any change: invite links use whichever address the
+store was reached at. To make every link use one address, set `KAERI_STORE_URL`, for example
+to `https://plugins.example.com`, under Project configuration, Environment variables, and deploy
+again.

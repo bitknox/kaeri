@@ -1,0 +1,55 @@
+# What cargo-about accepts among the Rust crates compiled into a release, for
+# packaging/rust-licences/generate.sh, and what it has to be told about the crates whose own
+# licence files do not say everything. A crate under anything else fails the release, so a new
+# licence is a decision rather than a surprise.
+#
+# Where a crate offers a choice, the first of these it allows is the one listed.
+accepted = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "ISC",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "Zlib",
+    "Unicode-3.0",
+    "MPL-2.0",
+    "CDLA-Permissive-2.0",
+]
+ignore-dev-dependencies = true
+
+# MIT itself, and it builds the BoringSSL it vendors into the binary, under BoringSSL's own terms:
+# Apache-2.0, which BoringSSL moved its code to from the OpenSSL, SSLeay and ISC licences. The
+# test suite's Go licence, after it in the same file, covers nothing compiled in.
+[btls-sys.clarify]
+license = "MIT AND Apache-2.0"
+
+[[btls-sys.clarify.files]]
+path = "LICENSE-MIT"
+license = "MIT"
+checksum = "2f55c7cce4da9f8334dce14d53e35410f67973510bc9793ac2dafa5e8cddd3c3"
+
+[[btls-sys.clarify.files]]
+path = "deps/boringssl/LICENSE"
+license = "Apache-2.0"
+checksum = "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+end = "   limitations under the License.\n"
+
+# MIT or Apache-2.0 itself, and it builds the zstd it vendors in, which is BSD-3-Clause.
+[zstd-sys.clarify]
+license = "(MIT OR Apache-2.0) AND BSD-3-Clause"
+
+[[zstd-sys.clarify.files]]
+path = "LICENSE.Mit"
+license = "MIT"
+checksum = "129e8edef29e9abcd2ebabe252f4ef1b1289cdca356bf0040284a2fbccfb96c8"
+
+[[zstd-sys.clarify.files]]
+path = "LICENSE.Apache-2.0"
+license = "Apache-2.0"
+checksum = "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+
+[[zstd-sys.clarify.files]]
+path = "zstd/LICENSE"
+license = "BSD-3-Clause"
+checksum = "7055266497633c9025b777c78eb7235af13922117480ed5c674677adc381c9d8"

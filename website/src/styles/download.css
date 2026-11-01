@@ -1,0 +1,230 @@
+/* The Download page. The cards at its top are in pages.css; this is the install steps under them:
+   one band per system with its files, its steps and a picture of the app, then checksums and older
+   releases. */
+
+.dl-top {
+	padding-top: 72px;
+}
+
+.ds {
+	padding: 120px 0 0;
+}
+
+.ds-in {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 0 32px;
+	box-sizing: content-box;
+}
+
+.ds-lede {
+	margin: 16px 0 0;
+	max-width: 720px;
+	font-size: 19px;
+	line-height: 1.55;
+	color: var(--ani-dim);
+	text-wrap: pretty;
+}
+
+.ds-grid {
+	display: grid;
+	grid-template-columns: minmax(0, 664px) minmax(0, 472px);
+	justify-content: space-between;
+	gap: 40px 64px;
+}
+
+/* One band per system, with ground showing between them. */
+.ds-item {
+	margin-top: 64px;
+	padding: 96px 0;
+	background: var(--ani-band);
+	scroll-margin-top: 64px;
+}
+
+.ds-item + .ds-item {
+	margin-top: 56px;
+}
+
+.k-body .ds-item h3 {
+	font-family: var(--ani-font-display);
+	font-weight: 500;
+	font-size: 40px;
+	line-height: 1.1;
+	letter-spacing: -0.01em;
+}
+
+.ds-needs {
+	margin: 8px 0 0;
+	font-size: 17px;
+	color: var(--ani-dim);
+}
+
+/* Files: the name, then Download and its checksum on the right, between hairlines. */
+.ds-files {
+	margin: 24px 0 0;
+	padding: 0;
+	list-style: none;
+	border-top: 1px solid var(--ani-rule);
+}
+
+.ds-files li {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 6px 20px;
+	padding: 12px 0;
+	border-bottom: 1px solid var(--ani-rule);
+	font-size: 15px;
+}
+
+.ds-files code {
+	margin-right: auto;
+	padding: 0;
+	background: none;
+	font-size: 14px;
+	overflow-wrap: anywhere;
+}
+
+.ds-files a {
+	color: var(--ani-text);
+	text-underline-offset: 3px;
+	transition: color var(--t-fast) linear;
+}
+
+.ds-files a.ds-sha {
+	color: var(--ani-dim);
+}
+
+.ds-files a:hover {
+	color: var(--ani-text);
+	text-decoration-thickness: 2px;
+}
+
+.ds-arch,
+.ds-note {
+	margin: 16px 0 0;
+	font-size: 15px;
+	line-height: 1.55;
+	color: var(--ani-dim);
+}
+
+.ds-main ol {
+	margin: 24px 0 0;
+	padding-left: 26px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	font-size: 17px;
+	line-height: 1.55;
+}
+
+.ds-main ol strong {
+	font-weight: 600;
+}
+
+.ds-code {
+	margin: 14px 0 0;
+	padding: 14px 16px;
+	overflow-x: auto;
+	border-radius: 8px;
+	background: var(--ani-ground);
+	font-size: 14px;
+	line-height: 1.6;
+}
+
+.ds-shot img {
+	display: block;
+	width: 100%;
+	height: auto;
+	border-radius: 12px;
+	border: 1px solid var(--ani-rule);
+}
+
+.ds-phone img {
+	width: 260px;
+	margin: 0 auto;
+	border-radius: 28px;
+}
+
+/* Checksums and older releases: the heading on the left, what you need on the right. */
+.ds-checks h3 {
+	font-size: 15px;
+}
+
+.ds-checks h3 + .ds-code {
+	margin-top: 10px;
+}
+
+.ds-checks .ds-code + h3 {
+	margin-top: 24px;
+}
+
+.ds-checks .ds-code {
+	background: var(--ani-band);
+}
+
+.ds-older {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 24px 64px;
+}
+
+.ds-all {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	font-size: 17px;
+	color: var(--ani-text);
+	text-underline-offset: 3px;
+}
+
+#older {
+	padding-bottom: 8px;
+}
+
+@media (max-width: 960px) {
+	.ds-grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.ds-shot:not(.ds-phone) {
+		max-width: 640px;
+	}
+
+	.ds-phone img {
+		margin: 0;
+	}
+}
+
+@media (max-width: 700px) {
+	.dl-top {
+		padding-top: 28px;
+	}
+
+	.ds {
+		padding-top: 72px;
+	}
+
+	.ds-in {
+		padding: 0 16px;
+	}
+
+	.ds-item {
+		margin-top: 40px;
+		padding: 56px 0;
+	}
+
+	.ds-item + .ds-item {
+		margin-top: 32px;
+	}
+
+	.k-body .ds-item h3 {
+		font-size: 32px;
+	}
+
+	.ds-phone img {
+		width: 220px;
+	}
+}

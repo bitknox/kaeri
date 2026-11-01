@@ -1,0 +1,82 @@
+---
+title: Trackers and sync
+description: History is kept locally with no account; sync to five trackers is opt-in and queues changes while you are offline.
+---
+
+Local history needs no account, and trackers get a copy of it.
+Syncing to AniList, MyAnimeList, Kitsu, Simkl or Trakt is opt-in. In the terminal app, every
+service except Kitsu needs an app you register. There is no public client to borrow, and
+credentials shipped in an open-source binary would be public. The native apps sign in to all five
+from Accounts with nothing to register.
+
+Kitsu takes your account credentials directly, so there is nothing to register. Kaeri exchanges
+your username and password for a token once and drops them, and the password is never stored.
+In the terminal app, Kitsu is on by default: sign in on the Accounts screen. Nothing syncs to or from any tracker until
+you sign in to it.
+
+```toml
+[trackers]
+enabled = ["anilist", "mal", "kitsu", "simkl", "trakt"]   # default: ["kitsu"]
+token_storage = "keychain"    # or "file", see below
+
+[trackers.anilist]
+client_id = "…"
+client_secret = "…"           # required: AniList has no PKCE and no public client
+
+[trackers.mal]
+client_id = "…"               # that is all: MAL is a public client, PKCE covers it
+
+# kitsu needs no section at all
+
+[trackers.simkl]
+client_id = "…"               # an OAuth 2.0 app, or an older one that signs in by PIN
+
+[trackers.trakt]
+client_id = "…"
+client_secret = "…"           # Trakt wants one on the token exchange
+```
+
+| | AniList | MyAnimeList | Kitsu | Simkl | Trakt |
+|---|---|---|---|---|---|
+| Register at | [anilist.co](https://anilist.co/settings/developer) | [myanimelist.net](https://myanimelist.net/apiconfig), App Type **other** | nothing to register | [simkl.com](https://simkl.com/settings/developer) | [trakt.tv](https://trakt.tv/oauth/applications) |
+| Sign-in flow | browser redirect | browser redirect | username and password, once | device code | device code |
+| Redirect URL | `http://127.0.0.1:45617/callback` | `http://127.0.0.1:45617/callback` | none needed | none needed | none needed |
+| Needs a secret | **yes** | no | no | no | **yes** |
+| Token life | ~1 year | ~31 days, refreshed automatically | ~30 days, refreshed automatically | 7 days, refreshed automatically | ~3 months, then --login again |
+
+Then `kaeri --login`, or `kaeri --login --tracker mal`. Simkl and Trakt use the OAuth
+device flow, so `--login --tracker simkl` prints a code and a URL to enter it at. For Kitsu, press
+Enter on its row on the Accounts screen, which asks for your username and a masked password, or
+run `kaeri --login --tracker kitsu` on a machine without the interface. Check any of them with
+`kaeri --sync`.
+
+## How sync behaves
+
+Updates go through a durable outbox: watch offline for a week and everything is pushed, in
+order, when a connection returns. Progress only moves forward: a pull adopts a
+tracker's count when it is ahead of yours and never lowers it. When a status or a score disagrees
+with the tracker's and yours is not known to be newer, the conflict gets its own screen and
+neither side is overwritten.
+
+An episode is pushed when it crosses `commit_threshold`, 85% of runtime by default. It is set high
+so that opening an episode to check the subtitles does not mark it seen.
+
+MyAnimeList, Kitsu, Simkl and Trakt name titles by their own ids, which come from the ID-mapping
+datasets. An update for a title the datasets do not cover yet waits in the queue without holding
+up the rest, and goes out once a refresh adds the title. Accounts counts these as waiting for an id
+mapping.
+
+`a` sets a title's list status and `*` rates it out of ten. Both are queued in the same outbox for
+every tracker you are signed in to, and each tracker converts the rating to its own scale. Both
+live only on trackers, so with none signed in the keys say so instead.
+
+## Token storage
+
+Use `keychain` for an installed build. Use `file`, which is `0600`, if you are running from
+`cargo`: macOS keys keychain access on the *binary*, and every rebuild produces a new one, so
+"Always Allow" never sticks and every run prompts you. `kaeri --token-to-file` moves an
+existing token across, and `KAERI_TOKEN_STORAGE=file` overrides for a single run.
+
+The tokens for [plugin stores](/docs/plugins/stores/) you have joined are kept the same way, by
+the same `token_storage` setting and `KAERI_TOKEN_STORAGE` override, so the keychain notes
+above apply to them too.

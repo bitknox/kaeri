@@ -1,0 +1,36 @@
+# The TV app's baseline profile: the code on the way to the first focused card and through
+# browsing, compiled ahead of time so a low-end box doesn't interpret it on every cold start.
+# Compose, Compose for TV and the other AndroidX libraries ship their own profiles; these rules
+# cover the app's code, the store and the design system, and the engine's bindings.
+# Profileinstaller writes it on install for a sideloaded build. A debug build ignores it.
+
+# Start-up: the application, the activity and the root of the UI.
+HSPLapp/kaeri/tv/TvApp;->**(**)**
+HSPLapp/kaeri/tv/TvActivity;->**(**)**
+HSPLapp/kaeri/tv/TvRootKt**;->**(**)**
+Lapp/kaeri/tv/TvApp;
+Lapp/kaeri/tv/TvActivity;
+
+# Browsing: the shell, the rows and cards, the screens, focus and navigation.
+HSPLapp/kaeri/tv/shell/**;->**(**)**
+HSPLapp/kaeri/tv/ui/**;->**(**)**
+HSPLapp/kaeri/tv/screens/**;->**(**)**
+HSPLapp/kaeri/tv/home/**;->**(**)**
+HSPLapp/kaeri/tv/*;->**(**)**
+Lapp/kaeri/tv/shell/**;
+Lapp/kaeri/tv/ui/**;
+Lapp/kaeri/tv/screens/**;
+
+# The player's screen and its model, opened from any card.
+HSPLapp/kaeri/tv/player/**;->**(**)**
+HSPLapp/kaeri/player/**;->**(**)**
+
+# The store the screens read, the artwork it decodes, and the design system's colours and type.
+HSPLapp/kaeri/store/**;->**(**)**
+HSPLapp/kaeri/design/**;->**(**)**
+Lapp/kaeri/store/**;
+Lapp/kaeri/design/**;
+
+# The engine's generated bindings: every event and command crosses them.
+HSPLapp/kaeri/engine/**;->**(**)**
+Lapp/kaeri/engine/**;

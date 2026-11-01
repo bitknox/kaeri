@@ -1,0 +1,17 @@
+cast-chromecast = Chromecast
+cast-none-found-extra = Chromecast内蔵のテレビもここに表示されます。
+cast-local-network = ローカルネットワーク上の{ -device-pl }を{ -app-name }が見つけられるようにしてください
+cast-tvs-label = Chromecast内蔵のテレビを表示
+cast-torrents-label = キャスト中のトレント
+cast-tvs-note-mac = 「テレビで再生」のChromecastの下に表示されます。このMacがエピソードを送信します。
+cast-tvs-note-iphone = 「テレビで再生」のChromecastの下に表示されます。このiPhoneがエピソードを送信します。
+cast-tvs-note-ipad = 「テレビで再生」のChromecastの下に表示されます。このiPadがエピソードを送信します。
+cast-torrents-note-mac = Chromecast内蔵のテレビでトレントを再生できるようにします。再生中はこのMacがエピソードを送信します。
+cast-torrents-note-iphone = Chromecast内蔵のテレビでトレントを再生できるようにします。再生中はこのiPhoneがエピソードを送信します。
+cast-torrents-note-ipad = Chromecast内蔵のテレビでトレントを再生できるようにします。再生中はこのiPadがエピソードを送信します。
+cast-up-next-plays-in = { -up-next-cap } · { $seconds }秒後に再生
+cast-couldnt-start = { $name }で開始できませんでした
+cast-stopped = キャストを停止しました
+cast-play-here = ここで再生
+cast-stop = キャストを停止
+cast-volume-fixed = テレビ側で設定

@@ -1,0 +1,1913 @@
+//! The window: an `AdwOverlaySplitView` with the destinations down the sidebar and each
+//! destination's pages in an `AdwNavigationView`, the player over all of it, and the window's
+//! keys, actions, notices and close.
+
+use std::{
+    cell::{Cell, RefCell},
+    rc::Rc,
+};
+
+use adw::prelude::*;
+use gtk::{gio, glib};
+use kaeri_core::ids::AnilistId;
+use kaeri_i18n::t;
+use kaeri_model::{
+    catalog::{ContentFor, ContentList, LibrarySegment},
+    command::{Command, LicensedCommand, PlayerCommand},
+    event::Event,
+    local::LocalCommand,
+    notice::{Notice, NoticeHint, NoticeKind},
+    updates::UpdateStatus,
+};
+
+use kaeri_mpv_host::PlayerOptions;
+
+use crate::{
+    engine::HostRequest,
+    hub::Hub,
+    pages::{self, Dest},
+    player::PlayerView,
+    prefs::{CloseChoice, Prefs},
+    say, widgets,
+};
+
+/// How wide the window is, by the brief's breakpoints.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Size {
+    /// From 1000 sp: the sidebar shown, 240 wide.
+    Wide,
+    /// 600 to 999 sp: the sidebar 220 wide, inner splits collapsed.
+    Medium,
+    /// Under 600 sp: the sidebar an overlay behind a button.
+    Narrow,
+}
+
+/// What a window size change calls.
+type OnSize = Box<dyn Fn(Size)>;
+
+/// What one of the window's actions does.
+type ShellAction = Box<dyn Fn(&Shell, Option<&glib::Variant>)>;
+
+/// What every screen is built with.
+pub struct Ctx {
+    pub hub: Rc<Hub>,
+    pub window: adw::ApplicationWindow,
+    pub split: adw::OverlaySplitView,
+    pub notices: crate::notices::Notices,
+    pub prefs: Rc<Prefs>,
+    /// The app updating itself from its AppImage.
+    pub updater: Rc<crate::updater::Updater>,
+    /// Play on TV and the TV's remote.
+    pub tv: Rc<crate::tv::Tv>,
+    size: Cell<Size>,
+    sized: RefCell<Vec<OnSize>>,
+    /// Pushes a page on the destination on screen.
+    navs: RefCell<Vec<(Dest, adw::NavigationView)>>,
+    stack: gtk::Stack,
+    /// Dialogs waiting on the engine, which say its alerts themselves, newest last.
+    claims: RefCell<Vec<(u64, Claim)>>,
+    next_claim: Cell<u64>,
+    /// Whether the last input came from a game controller: the focus ring shows, the pointer is
+    /// hidden and hover previews stay shut.
+    pub controller_mode: Cell<bool>,
+    /// The name of the controller in use, while one is connected.
+    pub controller_device: RefCell<Option<String>>,
+    /// Where the page last had focus, for Right from the sidebar to go back to.
+    pub content_focus: RefCell<Option<glib::WeakRef<gtk::Widget>>>,
+    /// The sidebar's main menu button, which a controller's Menu button opens.
+    main_menu: RefCell<Option<gtk::MenuButton>>,
+}
+
+/// A dialog's hold on the engine's alerts: given the words, it says whether it showed them.
+type Claim = Rc<dyn Fn(&kaeri_model::Msg, &str) -> bool>;
+
+impl Ctx {
+    pub fn size(&self) -> Size {
+        self.size.get()
+    }
+
+    /// Run `f` with the size now and whenever it changes.
+    pub fn on_size(&self, f: impl Fn(Size) + 'static) {
+        f(self.size.get());
+        self.sized.borrow_mut().push(Box::new(f));
+    }
+
+    fn resized(&self, size: Size) {
+        if self.size.replace(size) != size {
+            for f in self.sized.borrow().iter() {
+                f(size);
+            }
+        }
+    }
+
+    /// The navigation view of the destination on screen.
+    pub fn nav(&self) -> Option<adw::NavigationView> {
+        let name = self.stack.visible_child_name()?;
+        self.navs.borrow().iter().find(|(d, _)| d.name() == name).map(|(_, n)| n.clone())
+    }
+
+    /// The destination on screen.
+    pub fn current_dest(&self) -> Option<Dest> {
+        self.stack.visible_child_name().and_then(|name| Dest::named(&name))
+    }
+
+    /// A controller has been seen: Settings shows the row that swaps its buttons from now on.
+    pub fn controller_seen(&self) {
+        self.prefs.set_controller_seen();
+    }
+
+    /// Open the window's main menu, showing the sidebar it sits in first when that is away.
+    pub fn open_main_menu(&self) {
+        let Some(button) = self.main_menu.borrow().clone() else { return };
+        if !button.is_mapped() {
+            self.split.set_show_sidebar(true);
+        }
+        glib::idle_add_local_once(move || button.popup());
+    }
+
+    /// A notice of the app's own: information, for 4 s or longer as its words run on.
+    pub fn toast(&self, text: &str) {
+        self.show_notice(text, false, None);
+    }
+
+    /// A notice of the app's own that something went wrong: it stays 8 s.
+    pub fn alert(&self, text: &str) {
+        self.show_notice(text, true, None);
+    }
+
+    /// One of the engine's notices: an alert stays 8 s, its hint is the button, and clicking
+    /// it anywhere dismisses it.
+    pub fn notice(&self, notice: &Notice) {
+        if setting_saved(notice) {
+            return;
+        }
+        // An alert a dialog is waiting on shows in that dialog, not as a toast under it.
+        let msg = notice.message();
+        let text = crate::say::msg(&msg);
+        if notice.kind == NoticeKind::Alert {
+            let claims: Vec<Claim> =
+                self.claims.borrow().iter().rev().map(|(_, c)| Rc::clone(c)).collect();
+            if claims.iter().any(|claim| claim(&msg, &text)) {
+                return;
+            }
+        }
+        let button = notice.hint.as_ref().map(|hint| match hint {
+            NoticeHint::StopPlayback => (t::action_stop(), "win.stop-playback", None),
+            NoticeHint::OpenStores => (t::shell_open_stores(), "win.go", Some("stores")),
+            NoticeHint::KitsuCredentials => {
+                (t::action_sign_in(), "win.settings-pane", Some("accounts"))
+            }
+            NoticeHint::UndoRemoveDemo => (t::action_undo(), "win.add-demo", None),
+            NoticeHint::RemoveDemo => (t::sources_demo_remove(), "win.remove-demo", None),
+            NoticeHint::UndoSubtitleReset => {
+                (t::action_undo(), "win.undo-subtitle-reset", None)
+            }
+            NoticeHint::ReportCrash => (t::crash_notice_report(), "win.report-bug", None),
+        });
+        let button =
+            button.as_ref().map(|(label, action, target)| (label.as_str(), *action, *target));
+        self.show_notice(&text, matches!(notice.kind, NoticeKind::Alert), button);
+    }
+
+    /// Have the engine's alerts go to `claim` first, until [`Ctx::release_alerts`]: for a dialog
+    /// that waits on the engine, which says only by an alert why it could not.
+    pub fn claim_alerts(
+        &self,
+        claim: impl Fn(&kaeri_model::Msg, &str) -> bool + 'static,
+    ) -> u64 {
+        let id = self.next_claim.get();
+        self.next_claim.set(id + 1);
+        self.claims.borrow_mut().push((id, Rc::new(claim)));
+        id
+    }
+
+    pub fn release_alerts(&self, id: u64) {
+        self.claims.borrow_mut().retain(|(at, _)| *at != id);
+    }
+
+    /// A notice of the app's own with a button: `label`, running the window's `action`.
+    pub fn toast_with(&self, text: &str, label: &str, action: &str) -> adw::Toast {
+        self.show_notice(text, false, Some((label, action, None)))
+    }
+
+    /// A notice of the app's own with a button running the window's `action` on `target`.
+    pub fn toast_to(&self, text: &str, label: &str, action: &str, target: &str) -> adw::Toast {
+        self.show_notice(text, false, Some((label, action, Some(target))))
+    }
+
+    fn show_notice(
+        &self,
+        text: &str,
+        alert: bool,
+        button: Option<(&str, &str, Option<&str>)>,
+    ) -> adw::Toast {
+        let toast = adw::Toast::new(text);
+        // The words as the toast's own title, so a click on them dismisses it.
+        let title = gtk::Label::new(Some(text));
+        title.set_wrap(true);
+        // Asks for the width of the words on one line, and wraps only when the toast has less.
+        title.set_natural_wrap_mode(gtk::NaturalWrapMode::None);
+        title.set_xalign(0.0);
+        let click = gtk::GestureClick::new();
+        click.connect_released({
+            let toast = toast.downgrade();
+            move |_, _, _, _| {
+                if let Some(toast) = toast.upgrade() {
+                    toast.dismiss();
+                }
+            }
+        });
+        title.add_controller(click);
+        match button {
+            // The button beside the words in the title, not the toast's own: that one gives up its
+            // width first and is cut short on a narrow window, where these words wrap instead.
+            Some((label, action, target)) => {
+                title.set_hexpand(true);
+                let button = gtk::Button::with_label(label);
+                button.set_valign(gtk::Align::Center);
+                button.set_action_name(Some(action));
+                if let Some(target) = target {
+                    button.set_action_target_value(Some(&target.to_variant()));
+                }
+                button.connect_clicked({
+                    let toast = toast.downgrade();
+                    move |_| {
+                        if let Some(toast) = toast.upgrade() {
+                            toast.dismiss();
+                        }
+                    }
+                });
+                let line = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+                line.append(&title);
+                line.append(&button);
+                toast.set_custom_title(Some(&line));
+            }
+            None => toast.set_custom_title(Some(&title)),
+        }
+        if alert {
+            toast.set_priority(adw::ToastPriority::High);
+        }
+        toast.set_timeout(say::notice_seconds(
+            text,
+            alert,
+            button.is_some(),
+            screen_reader_running(),
+        ));
+        self.notices.add(&toast);
+        // The custom title may not reach a screen reader as the toast's text, so say it too.
+        self.notices.overlay().upcast_ref::<gtk::Widget>().announce(
+            text,
+            if alert {
+                gtk::AccessibleAnnouncementPriority::High
+            } else {
+                gtk::AccessibleAnnouncementPriority::Medium
+            },
+        );
+        toast
+    }
+}
+
+/// The window and what drives it.
+pub struct Shell {
+    pub ctx: Rc<Ctx>,
+    pub player: Rc<PlayerView>,
+    top: gtk::Stack,
+    sidebar: gtk::ListBox,
+    foot: gtk::ListBox,
+    settings: pages::settings::SettingsPage,
+    search: pages::search::SearchPage,
+    /// Set once the viewer chose what closing does, so the next close goes through.
+    closing: Cell<bool>,
+    /// The game controller, once the window is built.
+    pad: std::cell::OnceCell<Rc<crate::pad::Pad>>,
+    /// The app kept running with its window closed, until the downloads end.
+    held: RefCell<Option<gio::ApplicationHoldGuard>>,
+    fixtures: bool,
+    /// Whether first launch was weighed, once, on Continue's first answer.
+    welcome_checked: Cell<bool>,
+    /// In a watch party, as the window last heard: what it says as one starts and ends.
+    pub in_party: Cell<bool>,
+    /// The viewer chose to leave the party to close, so the close goes on without asking again.
+    party_asked: Cell<bool>,
+}
+
+/// The size for a first launch: 80% of the monitor under the pointer (else the first monitor),
+/// at least 1280 by 800 and at most the monitor itself. The window manager places it.
+fn first_size() -> (i32, i32) {
+    let Some(display) = gtk::gdk::Display::default() else {
+        return (1280, 800);
+    };
+    let monitors = display.monitors();
+    let under_pointer =
+        display.default_seat().and_then(|seat| seat.pointer()).and_then(|pointer| {
+            let (surface, _, _) = pointer.surface_at_position();
+            surface.and_then(|s| display.monitor_at_surface(&s))
+        });
+    let monitor = under_pointer
+        .or_else(|| monitors.item(0).and_then(|m| m.downcast::<gtk::gdk::Monitor>().ok()));
+    match monitor {
+        Some(m) => {
+            let area = m.geometry();
+            (fit(area.width(), 1280), fit(area.height(), 800))
+        }
+        None => (1280, 800),
+    }
+}
+
+fn fit(area: i32, least: i32) -> i32 {
+    (area * 4 / 5).max(least).min(area.max(1))
+}
+
+impl Shell {
+    pub fn build(
+        app: &adw::Application,
+        hub: Rc<Hub>,
+        prefs: Rc<Prefs>,
+        player: &PlayerOptions,
+        updater: Rc<crate::updater::Updater>,
+        tv: Rc<crate::tv::Tv>,
+        fixtures: bool,
+    ) -> Rc<Self> {
+        let (width, height) = prefs.saved_size().unwrap_or_else(first_size);
+        let window = adw::ApplicationWindow::builder()
+            .application(app)
+            .title("Kaeri") // i18n-skip
+            .default_width(width)
+            .default_height(height)
+            .width_request(360)
+            .height_request(360)
+            .build();
+        if prefs.maximized() {
+            window.maximize();
+        }
+        let split = adw::OverlaySplitView::builder()
+            .min_sidebar_width(220.0)
+            .max_sidebar_width(240.0)
+            .sidebar_width_fraction(0.2)
+            .build();
+        let toasts = adw::ToastOverlay::new();
+        let stack = gtk::Stack::new();
+        stack.set_transition_type(gtk::StackTransitionType::None);
+        // A page shows at its own width: another page's longer words must not set the window's.
+        stack.set_hhomogeneous(false);
+        let ctx = Rc::new(Ctx {
+            hub: Rc::clone(&hub),
+            window: window.clone(),
+            split: split.clone(),
+            notices: crate::notices::Notices::new(&toasts),
+            prefs,
+            updater,
+            tv,
+            size: Cell::new(Size::Wide),
+            sized: RefCell::default(),
+            navs: RefCell::default(),
+            stack: stack.clone(),
+            claims: RefCell::default(),
+            next_claim: Cell::new(0),
+            controller_mode: Cell::new(false),
+            controller_device: RefCell::default(),
+            content_focus: RefCell::default(),
+            main_menu: RefCell::default(),
+        });
+
+        // The offline scene is offline before Home first asks, as a device without a network
+        // would be: the monitor that says so otherwise is not watched under fixtures.
+        #[cfg(feature = "fixtures")]
+        if fixtures && crate::fixtures::OFFLINE_SCENE.load(std::sync::atomic::Ordering::Relaxed)
+        {
+            ctx.hub.send(Command::NetworkPath {
+                cellular: false,
+                constrained: false,
+                offline: true,
+            });
+        }
+
+        // The destinations, each a navigation view of its own.
+        let search = pages::search::build(&ctx);
+        let settings = pages::settings::build(&ctx);
+        for dest in Dest::ALL {
+            let root = match dest {
+                Dest::Home => pages::home_page::build(&ctx),
+                Dest::Calendar => pages::calendar::build(&ctx),
+                Dest::Downloads => pages::downloads::build(&ctx),
+                Dest::Together => pages::together::build(&ctx),
+                Dest::Seasonal => pages::seasonal::build(&ctx),
+                Dest::Search => search.page.clone(),
+                Dest::Library => pages::library::build(&ctx),
+                Dest::Providers => pages::providers::build(&ctx),
+                Dest::Stores => pages::stores::build(&ctx),
+                Dest::Settings => settings.page.clone(),
+            };
+            let nav = adw::NavigationView::new();
+            nav.add(&root);
+            stack.add_named(&nav, Some(dest.name()));
+            ctx.navs.borrow_mut().push((dest, nav));
+        }
+
+        let (sidebar_page, sidebar, foot) = sidebar(&ctx);
+        split.set_sidebar(Some(&sidebar_page));
+        split.set_content(Some(&stack));
+
+        let player = PlayerView::new(&ctx, player);
+        let top = gtk::Stack::new();
+        top.set_transition_type(gtk::StackTransitionType::Crossfade);
+        top.set_transition_duration(200);
+        // Sized by the page on screen, so the mini player's window is not held to the main
+        // page's width.
+        top.set_hhomogeneous(false);
+        top.set_vhomogeneous(false);
+        top.add_named(&split, Some("main"));
+        top.add_named(&player.widget, Some("player"));
+        toasts.set_child(Some(&top));
+        window.set_content(Some(&toasts));
+
+        let shell = Rc::new(Self {
+            ctx,
+            player,
+            top,
+            sidebar,
+            foot,
+            settings,
+            search,
+            closing: Cell::new(false),
+            pad: std::cell::OnceCell::new(),
+            held: RefCell::default(),
+            fixtures,
+            welcome_checked: Cell::new(false),
+            in_party: Cell::new(false),
+            party_asked: Cell::new(false),
+        });
+        shell.player.attach(Rc::downgrade(&shell));
+        let _ = shell.pad.set(crate::pad::Pad::attach(&shell));
+        shell.watch_pages();
+        crate::tv::sheet::attach(&shell.ctx);
+        shell.breakpoints();
+        shell.actions(app);
+        shell.listen();
+        // Back from a licensed service: the engine asks whether an episode was watched there.
+        shell.ctx.window.connect_is_active_notify({
+            let hub = Rc::downgrade(&shell.ctx.hub);
+            move |window| {
+                if window.is_active()
+                    && let Some(hub) = hub.upgrade()
+                {
+                    hub.send(Command::Licensed(LicensedCommand::Returned));
+                }
+            }
+        });
+        shell.updates();
+        if !fixtures {
+            shell.watch_network();
+            shell.watch_device();
+        }
+        shell.close_request();
+        shell.go(Dest::Home);
+        shell
+    }
+
+    /// Where a controller's focus is, as its map reads it.
+    pub fn pad_context(&self) -> kaeri_model::input::PadContext {
+        if self.is_player() {
+            self.player.pad_context()
+        } else {
+            kaeri_model::input::PadContext::Browse
+        }
+    }
+
+    /// The game controller.
+    pub fn pad(&self) -> Option<&Rc<crate::pad::Pad>> {
+        self.pad.get()
+    }
+
+    /// A page coming on screen puts a controller's focus on its first control, and the page's
+    /// last focus is kept for Right from the sidebar to go back to.
+    fn watch_pages(self: &Rc<Self>) {
+        let ctx = &self.ctx;
+        let weak = Rc::downgrade(self);
+        let shown = move || {
+            if let Some(pad) = weak.upgrade().and_then(|shell| shell.pad().cloned()) {
+                pad.page_shown();
+            }
+        };
+        ctx.stack.connect_visible_child_notify({
+            let shown = shown.clone();
+            move |_| shown()
+        });
+        for (_, nav) in ctx.navs.borrow().iter() {
+            let shown = shown.clone();
+            nav.connect_visible_page_notify(move |_| shown());
+        }
+        let weak = Rc::downgrade(ctx);
+        ctx.window.connect_focus_widget_notify(move |window| {
+            let Some(ctx) = weak.upgrade() else { return };
+            let Some(focus) = GtkWindowExt::focus(window) else { return };
+            let in_sidebar = ctx
+                .split
+                .sidebar()
+                .is_some_and(|sidebar| focus == sidebar || focus.is_ancestor(&sidebar));
+            if !in_sidebar && focus.is::<gtk::Widget>() {
+                ctx.content_focus.replace(Some(focus.downgrade()));
+            }
+        });
+    }
+
+    /// Show `dest`, as its sidebar row does.
+    pub fn go(&self, dest: Dest) {
+        let ctx = &self.ctx;
+        ctx.stack.set_visible_child_name(dest.name());
+        let (list, other) = if dest == Dest::Settings {
+            (&self.foot, &self.sidebar)
+        } else {
+            (&self.sidebar, &self.foot)
+        };
+        other.unselect_all();
+        let mut child = list.first_child();
+        while let Some(widget) = child {
+            if let Some(row) = widget.downcast_ref::<gtk::ListBoxRow>()
+                && row.widget_name() == dest.name()
+                && !row.is_selected()
+            {
+                list.select_row(Some(row));
+            }
+            child = widget.next_sibling();
+        }
+        if ctx.split.is_collapsed() {
+            ctx.split.set_show_sidebar(false);
+        }
+        if dest == Dest::Search {
+            self.search.focus();
+        }
+    }
+
+    /// Settings on one of its panes.
+    pub fn settings_pane(&self, pane: &str) {
+        self.go(Dest::Settings);
+        self.settings.select(pane);
+    }
+
+    /// Settings' upscaling page, as a window too small for the preview column opens it.
+    pub fn settings_upscaling(&self) {
+        self.settings.upscaling();
+    }
+
+    /// A title's page, over the destination on screen.
+    pub fn open_title(&self, id: AnilistId) {
+        let Some(nav) = self.ctx.nav() else { return };
+        let stack = nav.navigation_stack();
+        let tags: Vec<Option<String>> = (0..stack.n_items())
+            .filter_map(|at| stack.item(at).and_downcast::<adw::NavigationPage>())
+            .map(|page| page.tag().map(|t| t.to_string()))
+            .collect();
+        match pages::title::reach(&tags, &pages::title::tag(id)) {
+            pages::title::Reach::Push => nav.push(&pages::title::page(&self.ctx, id)),
+            pages::title::Reach::Stay => {}
+            pages::title::Reach::PopTo => {
+                if let Some(page) = nav.find_page(&pages::title::tag(id)) {
+                    nav.pop_to_page(&page);
+                }
+            }
+        }
+    }
+
+    pub fn show_player(&self, on: bool) {
+        self.top.set_visible_child_name(if on { "player" } else { "main" });
+        self.search.capture_keys(!on);
+        if on {
+            self.player.focus();
+        }
+    }
+
+    pub fn back(&self) {
+        if self.top.visible_child_name().as_deref() == Some("player") {
+            self.player.close();
+        } else if let Some(nav) = self.ctx.nav() {
+            nav.pop();
+        }
+    }
+
+    fn breakpoints(self: &Rc<Self>) {
+        let window = &self.ctx.window;
+        let medium = adw::Breakpoint::new(
+            adw::BreakpointCondition::parse("max-width: 999sp").expect("a condition"),
+        );
+        medium.add_setter(&self.ctx.split, "max-sidebar-width", Some(&220.0f64.to_value()));
+        let narrow = adw::Breakpoint::new(
+            adw::BreakpointCondition::parse("max-width: 599sp").expect("a condition"),
+        );
+        narrow.add_setter(&self.ctx.split, "collapsed", Some(&true.to_value()));
+        window.add_breakpoint(medium.clone());
+        window.add_breakpoint(narrow.clone());
+        window.connect_current_breakpoint_notify({
+            let ctx = Rc::downgrade(&self.ctx);
+            move |window| {
+                let Some(ctx) = ctx.upgrade() else { return };
+                let size = match window.current_breakpoint() {
+                    Some(b) if b == narrow => Size::Narrow,
+                    Some(b) if b == medium => Size::Medium,
+                    _ => Size::Wide,
+                };
+                ctx.resized(size);
+            }
+        });
+    }
+
+    fn actions(self: &Rc<Self>, app: &adw::Application) {
+        let window = &self.ctx.window;
+        let hub = &self.ctx.hub;
+        let weak = Rc::downgrade(self);
+        let with = move |f: ShellAction| {
+            let weak = weak.clone();
+            move |_: &gio::SimpleAction, arg: Option<&glib::Variant>| {
+                if let Some(shell) = weak.upgrade() {
+                    f(&shell, arg);
+                }
+            }
+        };
+        let add = |name: &str, kind: Option<&glib::VariantTy>, f: ShellAction| {
+            let action = gio::SimpleAction::new(name, kind);
+            action.connect_activate(with(f));
+            window.add_action(&action);
+            action
+        };
+        let id_of =
+            |arg: Option<&glib::Variant>| arg.and_then(u32::from_variant).map(AnilistId::new);
+        let play_of = |arg: Option<&glib::Variant>| {
+            arg.and_then(<(u32, String)>::from_variant).map(|(id, ep)| (AnilistId::new(id), ep))
+        };
+
+        add(
+            "open-title",
+            Some(glib::VariantTy::UINT32),
+            Box::new(move |s, a| {
+                if let Some(id) = id_of(a) {
+                    s.open_title(id);
+                }
+            }),
+        );
+        add(
+            "play",
+            Some(glib::VariantTy::new("(us)").expect("a type")),
+            Box::new(move |s, a| {
+                if let Some((id, episode)) = play_of(a) {
+                    s.ctx.hub.send(Command::play(id, episode));
+                }
+            }),
+        );
+        add(
+            "play-from-start",
+            Some(glib::VariantTy::new("(us)").expect("a type")),
+            Box::new(move |s, a| {
+                if let Some((id, episode)) = play_of(a) {
+                    s.ctx.hub.send(Command::Play { id, episode, from_start: true });
+                }
+            }),
+        );
+        add(
+            "watch-together",
+            Some(glib::VariantTy::new("(us)").expect("a type")),
+            Box::new(move |s, a| {
+                if let Some((id, episode)) = play_of(a) {
+                    crate::party::form::open(
+                        &s.ctx,
+                        crate::party::form::For::Episode(id, episode),
+                    );
+                }
+            }),
+        );
+        // Play on TV: the title, the episode, and where this computer was in it (0 for its
+        // start).
+        add(
+            "play-on-tv",
+            Some(glib::VariantTy::new("(usd)").expect("a type")),
+            Box::new(move |s, a| {
+                let Some((id, episode, from)) = a.and_then(<(u32, String, f64)>::from_variant)
+                else {
+                    return;
+                };
+                let id = AnilistId::new(id);
+                let title = s.ctx.hub.entry(id).map(|e| e.title).unwrap_or_default();
+                s.ctx.tv.offer(crate::tv::Request {
+                    id,
+                    title,
+                    episode,
+                    from: (from > 0.0).then_some(from),
+                    from_player: false,
+                });
+            }),
+        );
+        add("tv-remote", None, Box::new(|s, _| s.ctx.tv.open_remote()));
+        // The session button's menu: the cast ends and Play on TV opens on the same episode.
+        add("tv-choose-another", None, Box::new(|s, _| s.ctx.tv.cast_choose_another()));
+        // The notice for a TV someone else took: carry on here.
+        add(
+            "tv-play-here",
+            None,
+            Box::new(|s, _| {
+                if let Some((id, episode)) = s.ctx.tv.take_taken() {
+                    s.ctx.hub.send(Command::play(id, episode));
+                }
+            }),
+        );
+        add(
+            "download",
+            Some(glib::VariantTy::new("(us)").expect("a type")),
+            Box::new(move |s, a| {
+                if let Some((id, episode)) = play_of(a) {
+                    s.ctx.hub.send(Command::DownloadEpisode { id, episode });
+                }
+            }),
+        );
+        add(
+            "mark-unwatched",
+            Some(glib::VariantTy::new("(us)").expect("a type")),
+            Box::new(move |s, a| {
+                if let Some((id, episode)) = play_of(a) {
+                    s.ctx.hub.send(Command::SetWatched {
+                        id,
+                        episodes: vec![episode],
+                        watched: false,
+                    });
+                }
+            }),
+        );
+        add(
+            "open-discussion",
+            Some(glib::VariantTy::new("(us)").expect("a type")),
+            Box::new(move |s, a| {
+                if let Some((id, episode)) = play_of(a)
+                    && let Ok(episode) = episode.parse()
+                {
+                    pages::discussion::open(&s.ctx, id, episode);
+                }
+            }),
+        );
+        add(
+            "open-anilist",
+            Some(glib::VariantTy::UINT32),
+            Box::new(move |s, a| {
+                if let Some(id) = id_of(a) {
+                    s.ctx.hub.send(Command::OpenExternal {
+                        url: format!("https://anilist.co/anime/{id}"),
+                    });
+                }
+            }),
+        );
+        add("about-demo", None, Box::new(|s, _| pages::providers::open_demo(&s.ctx)));
+        add(
+            "play-demo",
+            Some(glib::VariantTy::STRING),
+            Box::new(|s, _| s.ctx.hub.send(Command::PlayDemo)),
+        );
+        add("add-demo", None, Box::new(|s, _| s.ctx.hub.send(Command::AddDemo)));
+        add("remove-demo", None, Box::new(|s, _| s.ctx.hub.send(Command::RemoveDemo)));
+        add(
+            "undo-subtitle-reset",
+            None,
+            Box::new(|s, _| pages::settings::restore_subtitle_style(&s.ctx)),
+        );
+        add(
+            "stop-playback",
+            None,
+            Box::new(|s, _| s.ctx.hub.send(Command::Player(PlayerCommand::Stop))),
+        );
+        add(
+            "mark-watched",
+            Some(glib::VariantTy::new("(us)").expect("a type")),
+            Box::new(move |s, a| {
+                if let Some((id, episode)) = play_of(a) {
+                    s.ctx.hub.send(Command::SetWatched {
+                        id,
+                        episodes: vec![episode],
+                        watched: true,
+                    });
+                }
+            }),
+        );
+        add(
+            "plan",
+            Some(glib::VariantTy::UINT32),
+            Box::new(move |s, a| {
+                if let Some(id) = id_of(a) {
+                    s.ctx.hub.send(Command::SetStatus { id, status: LibrarySegment::Planning });
+                    s.ctx.toast(&t::library_added_planning());
+                }
+            }),
+        );
+        add(
+            "drop",
+            Some(glib::VariantTy::UINT32),
+            Box::new(move |s, a| {
+                if let Some(id) = id_of(a) {
+                    s.ctx.hub.send(Command::SetStatus { id, status: LibrarySegment::Dropped });
+                    s.ctx.hub.send(Command::HideFromContinue { id });
+                }
+            }),
+        );
+        add(
+            "hide-continue",
+            Some(glib::VariantTy::UINT32),
+            Box::new(move |s, a| {
+                if let Some(id) = id_of(a) {
+                    s.ctx.hub.send(Command::HideFromContinue { id });
+                    s.ctx.hub.send(Command::LoadContinue);
+                }
+            }),
+        );
+        add(
+            "restore-up-next",
+            Some(glib::VariantTy::STRING),
+            Box::new(move |s, a| {
+                if let Some(id) = a.and_then(String::from_variant).and_then(|n| n.parse().ok())
+                {
+                    s.ctx.hub.send(Command::RestoreUpNext { id: AnilistId::new(id) });
+                }
+            }),
+        );
+        add(
+            "go",
+            Some(glib::VariantTy::STRING),
+            Box::new(move |s, a| {
+                if let Some(dest) =
+                    a.and_then(String::from_variant).and_then(|n| Dest::named(&n))
+                {
+                    s.go(dest);
+                }
+            }),
+        );
+        add(
+            "settings-pane",
+            Some(glib::VariantTy::STRING),
+            Box::new(move |s, a| {
+                if let Some(pane) = a.and_then(String::from_variant) {
+                    s.settings_pane(&pane);
+                }
+            }),
+        );
+        add("search", None, Box::new(|s, _| s.go(Dest::Search)));
+        add("back", None, Box::new(|s, _| s.back()));
+        add("sync", None, Box::new(|s, _| s.ctx.hub.send(Command::SyncNow)));
+        add("about", None, Box::new(|s, _| pages::settings::about(&s.ctx)));
+        add(
+            "release-page",
+            None,
+            Box::new(|s, _| {
+                let page = s
+                    .ctx
+                    .hub
+                    .known
+                    .borrow()
+                    .update
+                    .as_ref()
+                    .and_then(|u| crate::updates::page(Some(u)).map(str::to_owned));
+                if let Some(page) = page {
+                    s.open_url(&page);
+                }
+            }),
+        );
+        let licensed_open = glib::VariantTy::new("(ussu)").ok();
+        add(
+            "licensed-open",
+            licensed_open,
+            Box::new(|s, a| {
+                if let Some(target) = a {
+                    pages::licensed::open(&s.ctx, target);
+                }
+            }),
+        );
+        let episode_of = |arg: Option<&glib::Variant>| {
+            let (id, episode) = arg
+                .and_then(String::from_variant)?
+                .split_once(':')
+                .map(|(id, episode)| (id.to_owned(), episode.to_owned()))?;
+            Some((AnilistId::new(id.parse().ok()?), episode.parse::<i64>().ok()?))
+        };
+        add(
+            "licensed-mark",
+            Some(glib::VariantTy::STRING),
+            Box::new(move |s, a| {
+                if let (Some((id, episode)), Some(target)) =
+                    (episode_of(a), a.and_then(String::from_variant))
+                {
+                    s.ctx.hub.send(Command::SetWatched {
+                        id,
+                        episodes: vec![episode.to_string()],
+                        watched: true,
+                    });
+                    s.ctx.toast_to(
+                        &t::licensed_marked(episode),
+                        &t::action_undo(),
+                        "win.licensed-unmark",
+                        &target,
+                    );
+                }
+            }),
+        );
+        add(
+            "licensed-unmark",
+            Some(glib::VariantTy::STRING),
+            Box::new(move |s, a| {
+                if let Some((id, episode)) = episode_of(a) {
+                    s.ctx.hub.send(Command::SetWatched {
+                        id,
+                        episodes: vec![episode.to_string()],
+                        watched: false,
+                    });
+                }
+            }),
+        );
+        add(
+            "library-add",
+            Some(glib::VariantTy::STRING),
+            Box::new(|s, a| {
+                if let Some(path) = a.and_then(String::from_variant) {
+                    s.ctx.hub.send(Command::Local(LocalCommand::AddFolder { path }));
+                }
+            }),
+        );
+        add(
+            "library-restore",
+            Some(glib::VariantTy::STRING),
+            Box::new(|s, a| {
+                if let Some(path) = a.and_then(String::from_variant) {
+                    s.ctx.hub.send(Command::Local(LocalCommand::RestoreFolder { path }));
+                }
+            }),
+        );
+        add(
+            "server-restore",
+            Some(glib::VariantTy::STRING),
+            Box::new(|s, a| {
+                if let Some(server) = a.and_then(String::from_variant) {
+                    s.ctx.hub.send(Command::Server(
+                        kaeri_model::servers::ServerCommand::Restore { server },
+                    ));
+                }
+            }),
+        );
+        add("check-updates", None, Box::new(|s, _| s.ctx.hub.send(Command::CheckForUpdates)));
+        add("update-download", None, Box::new(|s, _| s.ctx.updater.download()));
+        add("update-cancel", None, Box::new(|s, _| s.ctx.updater.stop()));
+        add("update-install", None, Box::new(|s, _| s.ctx.updater.install()));
+        add(
+            "update-show",
+            None,
+            Box::new(|s, _| {
+                let ctx = Rc::downgrade(&s.ctx);
+                s.ctx.updater.show_saved(&s.ctx.window, move || {
+                    if let Some(ctx) = ctx.upgrade() {
+                        ctx.toast(&t::downloads_folder_failed());
+                    }
+                });
+            }),
+        );
+        add(
+            "shortcuts",
+            None,
+            Box::new(|s, _| {
+                // The last input came from a controller: its buttons are what the viewer needs.
+                if s.ctx.controller_mode.get() {
+                    crate::pad::show_help(&s.ctx, &s.pad_context());
+                } else {
+                    pages::shortcuts(&s.ctx);
+                }
+            }),
+        );
+        add(
+            "connect",
+            Some(glib::VariantTy::STRING),
+            Box::new(move |s, a| {
+                if let Some(tracker) = a.and_then(String::from_variant) {
+                    s.ctx.hub.send(Command::Connect { tracker });
+                }
+            }),
+        );
+        // With the invite link on the clipboard in it, when there is one.
+        add("open-link", None, Box::new(|s, _| pages::opened::open(&s.ctx)));
+        add("report-bug", None, Box::new(|s, _| pages::report::open(&s.ctx)));
+        add("join-store", None, Box::new(|s, _| pages::join::open_from_clipboard(&s.ctx)));
+        let _ = hub;
+
+        for (i, dest) in Dest::ALL.iter().take(8).enumerate() {
+            app.set_accels_for_action(
+                &format!("win.go::{}", dest.name()),
+                &[&format!("<Control>{}", i + 1)],
+            );
+        }
+        app.set_accels_for_action("win.go::settings", &["<Control>comma"]);
+        app.set_accels_for_action("win.search", &["<Control>f"]);
+        app.set_accels_for_action("win.sync", &["<Control>r"]);
+        app.set_accels_for_action("win.back", &["<Alt>Left"]);
+        app.set_accels_for_action("win.shortcuts", &["<Control>question"]);
+        app.set_accels_for_action("window.close", &["<Control>w"]);
+        let quit = gio::SimpleAction::new("quit", None);
+        quit.connect_activate({
+            let weak = Rc::downgrade(self);
+            move |_, _| {
+                if let Some(shell) = weak.upgrade() {
+                    // Quitting is the answer: everything stops, with no question.
+                    shell.closing.set(true);
+                    shell.ctx.window.close();
+                }
+            }
+        });
+        app.add_action(&quit);
+        app.set_accels_for_action("app.quit", &["<Control>q"]);
+
+        // A paste that no text field takes: an invite link on the clipboard opens Join Store.
+        let paste = gtk::ShortcutController::new();
+        paste.add_shortcut(gtk::Shortcut::new(
+            gtk::ShortcutTrigger::parse_string("<Control>v"),
+            Some(gtk::CallbackAction::new({
+                let weak = Rc::downgrade(self);
+                move |_, _| {
+                    let Some(shell) = weak.upgrade() else { return glib::Propagation::Proceed };
+                    if shell.is_player() {
+                        return glib::Propagation::Proceed;
+                    }
+                    pages::join::paste(&shell.ctx);
+                    glib::Propagation::Stop
+                }
+            })),
+        ));
+        window.add_controller(paste);
+
+        // The mouse's back button.
+        let click = gtk::GestureClick::new();
+        click.set_button(8);
+        click.connect_pressed({
+            let weak = Rc::downgrade(self);
+            move |_, _, _, _| {
+                if let Some(shell) = weak.upgrade() {
+                    shell.back();
+                }
+            }
+        });
+        window.add_controller(click);
+    }
+
+    /// The app's own update: a notice once the new version is ready, how the app quits for
+    /// it, and after a restart to update, whether it went in.
+    fn updates(self: &Rc<Self>) {
+        let updater = &self.ctx.updater;
+        updater.on_ready({
+            let ctx = Rc::downgrade(&self.ctx);
+            move |version, saved| {
+                let Some(ctx) = ctx.upgrade() else { return };
+                if saved {
+                    let text = crate::updates::saved_notice(version);
+                    ctx.toast_with(&text, &t::settings_show_in_files(), "win.update-show");
+                } else {
+                    let text = t::updates_ready(version);
+                    ctx.toast_with(&text, &t::shell_restart(), "win.update-install");
+                }
+            }
+        });
+        updater.on_quit({
+            let weak = Rc::downgrade(self);
+            move || {
+                let Some(shell) = weak.upgrade() else { return };
+                shell.stop_and_close();
+                if let Some(app) = shell.ctx.window.application() {
+                    app.quit();
+                }
+            }
+        });
+        match updater.after_restart() {
+            Some((true, _)) => {
+                self.ctx.toast(&t::updates_updated(kaeri_engine::updates::CURRENT))
+            }
+            Some((false, version)) => {
+                let text = t::updates_did_not_install(&version);
+                self.ctx.toast_to(
+                    &text,
+                    &t::updates_open_about(),
+                    "win.settings-pane",
+                    "about",
+                );
+            }
+            None => {}
+        }
+    }
+
+    /// The engine's events the window itself answers: notices, sign-in pages, the player.
+    fn listen(self: &Rc<Self>) {
+        let weak = Rc::downgrade(self);
+        self.ctx.hub.listen(move |event| {
+            let Some(shell) = weak.upgrade() else { return };
+            if let Event::Update(status) = event {
+                shell.ctx.updater.heard(status);
+            }
+            match event {
+                Event::Toast(notice) => shell.ctx.notice(notice),
+                Event::Connectivity { offline } => widgets::set_offline(*offline),
+                Event::Content { view: ContentFor::Continue, content }
+                    if !shell.welcome_checked.get()
+                        && !matches!(content, ContentList::Loading) =>
+                {
+                    shell.welcome();
+                }
+                // A newer version, told once: Flatpak tells of its own, and an AppImage once
+                // the new one is ready to install.
+                Event::Update(UpdateStatus::Available { release, notify: true })
+                    if !crate::updates::flatpak() && !shell.ctx.updater.installs(release) =>
+                {
+                    let text = t::updates_version_out(&release.version);
+                    shell.ctx.toast_with(&text, &t::shell_view_release(), "win.release-page");
+                }
+                // Back from a service after long enough to have watched an episode: the notice
+                // holds Mark watched for its time.
+                Event::LicensedReturn(back) => {
+                    shell.ctx.toast_to(
+                        &say::msg(&back.prompt),
+                        &t::episode_mark_watched(),
+                        "win.licensed-mark",
+                        &format!("{}:{}", back.id.get(), back.episode), // i18n-skip
+                    );
+                }
+                Event::Authorize { url, .. } => shell.open_url(url),
+                Event::DeviceCode(prompt) => {
+                    pages::accounts::device_code(&shell.ctx, prompt.as_ref())
+                }
+                Event::PlaybackEnded { rolling_on: false, .. } => {
+                    shell.ctx.hub.send(Command::LoadContinue);
+                }
+                _ => {}
+            }
+            if matches!(event, Event::Downloads(_) | Event::Seeding(_)) {
+                shell.release_when_done();
+            }
+            if matches!(event, Event::PartyJoined(_)) {
+                shell.party_asked.set(false);
+            }
+            crate::party::heard(&shell, event);
+            shell.player.engine_event(event);
+        });
+    }
+
+    /// First launch, over Continue, unless this install has been used: a source, a tracker
+    /// signed in or anything watched. Weighed once; shown at most once ever.
+    fn welcome(self: &Rc<Self>) {
+        self.welcome_checked.set(true);
+        // Scenes open it themselves, as the welcome shot does.
+        if self.fixtures {
+            return;
+        }
+        let prefs = &self.ctx.prefs;
+        if prefs.welcomed() {
+            return;
+        }
+        prefs.set_welcomed();
+        if !self.ctx.hub.known.borrow().used() {
+            pages::first_launch::open(&self.ctx);
+        }
+    }
+
+    /// Tell the engine where the network stands, now and as it changes: offline without a
+    /// route past the local network, and a metered connection as a constrained one.
+    fn watch_network(&self) {
+        let monitor = gio::NetworkMonitor::default();
+        let told: Rc<Cell<Option<(bool, bool)>>> = Rc::default();
+        let tell = {
+            let hub = Rc::downgrade(&self.ctx.hub);
+            move |monitor: &gio::NetworkMonitor| {
+                let Some(hub) = hub.upgrade() else { return };
+                let offline = !monitor.is_network_available()
+                    || monitor.connectivity() == gio::NetworkConnectivity::Local;
+                #[cfg(feature = "fixtures")]
+                let offline = offline
+                    || crate::fixtures::OFFLINE_SCENE
+                        .load(std::sync::atomic::Ordering::Relaxed);
+                let constrained = monitor.is_network_metered();
+                if told.replace(Some((offline, constrained))) != Some((offline, constrained)) {
+                    hub.send(Command::NetworkPath { cellular: false, constrained, offline });
+                }
+            }
+        };
+        tell(&monitor);
+        let tell = Rc::new(tell);
+        monitor.connect_network_changed({
+            let tell = Rc::clone(&tell);
+            move |monitor, _| tell(monitor)
+        });
+        monitor.connect_connectivity_notify({
+            let tell = Rc::clone(&tell);
+            move |monitor| tell(monitor)
+        });
+        monitor.connect_network_metered_notify(move |monitor| tell(monitor));
+    }
+
+    /// Tell the engine what the device says about itself, now and as it changes: animations
+    /// turned off, power saver on, a screen reader running, and little memory. With the network
+    /// and the Play trailers setting these decide whether trailers start by themselves.
+    fn watch_device(&self) {
+        let hub = Rc::downgrade(&self.ctx.hub);
+        let tell = Rc::new(move || {
+            let Some(hub) = hub.upgrade() else { return };
+            let reduce_motion = gtk::Settings::default()
+                .is_some_and(|settings| !settings.is_gtk_enable_animations());
+            let low_power = gio::PowerProfileMonitor::get_default().is_power_saver_enabled();
+            hub.send(Command::DeviceState {
+                reduce_motion,
+                autoplay_previews: true,
+                low_power,
+                thermal_serious: false,
+                screen_reader: screen_reader_running(),
+                low_memory: memory_kib().is_some_and(|kib| kib < 4 * 1024 * 1024),
+            });
+        });
+        tell();
+        if let Some(settings) = gtk::Settings::default() {
+            settings.connect_gtk_enable_animations_notify({
+                let tell = Rc::clone(&tell);
+                move |_| tell()
+            });
+        }
+        gio::PowerProfileMonitor::get_default().connect_power_saver_enabled_notify({
+            let tell = Rc::clone(&tell);
+            move |_| tell()
+        });
+        if let Some(settings) = a11y_settings() {
+            settings.connect_changed(Some("screen-reader-enabled"), move |_, _| tell());
+        }
+    }
+
+    /// What the engine asked of the desktop.
+    pub fn host(&self, request: HostRequest) {
+        match request {
+            HostRequest::OpenUrl(url) => self.open_url(&url),
+            HostRequest::Notify { title, body } if !self.fixtures => {
+                let notification = gio::Notification::new(&title);
+                notification.set_body(Some(&body));
+                if let Some(app) = self.ctx.window.application() {
+                    app.send_notification(None, &notification);
+                }
+            }
+            HostRequest::Notify { title, .. } => tracing::info!(%title, "a notification"),
+        }
+    }
+
+    fn open_url(&self, url: &str) {
+        if self.fixtures {
+            tracing::info!(url = %kaeri_mpv_host::log::address(url), "a link, not opened in a scene");
+            return;
+        }
+        let ctx = Rc::downgrade(&self.ctx);
+        crate::portal::open_uri(&self.ctx.window, url, move || {
+            if let Some(ctx) = ctx.upgrade() {
+                ctx.toast(&t::accounts_browser_failed());
+            }
+        });
+    }
+
+    /// An `kaeri://` link handed to the app: a watch party's invite, a plugin store's invite,
+    /// or a tracker's sign-in coming back from the browser, `kaeri://auth/<tracker>` with the
+    /// token or code it carries.
+    pub fn open_link(self: &Rc<Self>, link: &str) {
+        // A magnet link, or a torrent file the system hands over as a file URI.
+        let path = gio::File::for_uri(link).path().filter(|_| link.starts_with("file:"));
+        if let Some(path) = path.as_ref().map(|p| p.to_string_lossy().into_owned())
+            && pages::opened::takes(&path)
+        {
+            pages::opened::open_input(&self.ctx, &path);
+            return;
+        }
+        if pages::opened::takes(link) {
+            pages::opened::open_input(&self.ctx, link);
+            return;
+        }
+        if is_party_link(link) {
+            crate::party::open_invite(self, link);
+            return;
+        }
+        if let Some(invite) = pages::join::invite_in(link) {
+            pages::join::open(&self.ctx, Some(&invite));
+            return;
+        }
+        match sign_in_return(link) {
+            Some(tracker) => {
+                let hub = &self.ctx.hub;
+                let job = hub.send_job(Command::FinishSignIn {
+                    tracker: tracker.clone(),
+                    callback: kaeri_model::stores::Secret(link.to_owned()),
+                });
+                hub.known.borrow_mut().signing.insert(tracker, crate::hub::SignIn::Job(job));
+                self.settings_pane("accounts");
+            }
+            None => {
+                tracing::info!("a link this app does not open");
+                self.ctx.toast(&t::stores_link_failed());
+            }
+        }
+    }
+
+    /// Closing with nothing running quits. Closing while episodes download or seed asks first.
+    fn close_request(self: &Rc<Self>) {
+        let weak = Rc::downgrade(self);
+        self.ctx.window.connect_close_request(move |window| {
+            let Some(shell) = weak.upgrade() else { return glib::Propagation::Proceed };
+            shell.ctx.prefs.remember_window(window);
+            // Closing leaves the party: asked first, unless quitting or already answered.
+            if !shell.closing.get()
+                && !shell.party_asked.get()
+                && crate::party::ask_before_closing(&shell)
+            {
+                return glib::Propagation::Stop;
+            }
+            let (downloading, seeding) = shell.ctx.hub.known.borrow().running();
+            let running = downloading + seeding > 0;
+            if shell.closing.get() || !running {
+                shell.player.window_closed();
+                return glib::Propagation::Proceed;
+            }
+            match shell.ctx.prefs.close_choice() {
+                CloseChoice::Ask => {
+                    pages::close_dialog(&shell, downloading, seeding);
+                    glib::Propagation::Stop
+                }
+                CloseChoice::KeepGoing => {
+                    shell.keep_going();
+                    glib::Propagation::Stop
+                }
+                CloseChoice::Stop => {
+                    shell.player.window_closed();
+                    glib::Propagation::Proceed
+                }
+            }
+        });
+    }
+
+    /// The viewer left the party to close the window: the close goes on, asking of downloads
+    /// as any close does.
+    pub fn left_party_to_close(&self) {
+        self.party_asked.set(true);
+        self.ctx.window.close();
+    }
+
+    /// The viewer chose to stop everything and close.
+    pub fn stop_and_close(&self) {
+        self.closing.set(true);
+        self.ctx.window.close();
+    }
+
+    /// The viewer chose to keep the downloads going with the window closed: ask the Background
+    /// portal, and keep running only if it agrees.
+    pub fn keep_going(self: &Rc<Self>) {
+        let weak = Rc::downgrade(self);
+        crate::portal::request_background(&self.ctx.window, move |allowed| {
+            let Some(shell) = weak.upgrade() else { return };
+            if allowed {
+                if let Some(app) = shell.ctx.window.application() {
+                    // Held until the downloads end or the viewer quits.
+                    shell.held.replace(Some(app.hold()));
+                }
+                shell.player.window_closed();
+                shell.ctx.window.set_visible(false);
+            } else {
+                shell.ctx.toast(&t::shell_no_background());
+                // A remembered Keep going that cannot keep going falls back to Stop.
+                if shell.ctx.prefs.close_choice() == CloseChoice::KeepGoing {
+                    shell.ctx.prefs.set_close_choice(CloseChoice::Stop);
+                }
+            }
+        });
+    }
+
+    /// With the window closed and kept going, quit once nothing downloads or seeds.
+    fn release_when_done(&self) {
+        if self.held.borrow().is_none() || self.ctx.window.is_visible() {
+            return;
+        }
+        let (downloading, seeding) = self.ctx.hub.known.borrow().running();
+        if downloading + seeding == 0 {
+            self.held.replace(None);
+            self.closing.set(true);
+            self.ctx.window.close();
+        }
+    }
+
+    /// The Search page, for a screenshot that searches.
+    pub fn search_page(&self) -> &pages::search::SearchPage {
+        &self.search
+    }
+
+    pub fn is_player(&self) -> bool {
+        self.top.visible_child_name().as_deref() == Some("player")
+    }
+}
+
+/// Whether `link` is a watch party's invite, `kaeri://party?…`, in any case.
+fn is_party_link(link: &str) -> bool {
+    ["kaeri://party?", "kaeri://party/?"].iter().any(|scheme| {
+        link.get(..scheme.len()).is_some_and(|start| start.eq_ignore_ascii_case(scheme))
+    })
+}
+
+/// The tracker an `kaeri://auth/<tracker>` sign-in return is for.
+fn sign_in_return(link: &str) -> Option<String> {
+    let rest = link.strip_prefix("kaeri://auth/")?;
+    let tracker: String =
+        rest.chars().take_while(|c| c.is_ascii_alphanumeric() || *c == '-').collect();
+    (!tracker.is_empty()).then_some(tracker)
+}
+
+/// The engine's word that a setting was written, "saved · quality": the row already shows the
+/// new value, so it goes unsaid. A refusal, "not saved: …", still shows.
+fn setting_saved(notice: &Notice) -> bool {
+    notice.kind == NoticeKind::Info
+        && matches!(notice.msg, Some(kaeri_model::Msg::NoticeSaved { .. }))
+}
+
+/// The sidebar: the destinations, "Sources" over the last two, and the account and Settings
+/// at its foot.
+fn sidebar(ctx: &Rc<Ctx>) -> (adw::NavigationPage, gtk::ListBox, gtk::ListBox) {
+    let list = gtk::ListBox::new();
+    list.add_css_class("navigation-sidebar");
+    for dest in Dest::ALL {
+        if dest == Dest::Settings {
+            continue;
+        }
+        if dest == Dest::Providers {
+            let header = gtk::Label::new(Some(&kaeri_i18n::t::sources_title()));
+            header.add_css_class("heading");
+            header.add_css_class("haze");
+            header.set_xalign(0.0);
+            header.set_margin_top(12);
+            header.set_margin_start(6);
+            let row = gtk::ListBoxRow::builder()
+                .child(&header)
+                .activatable(false)
+                .selectable(false)
+                .build();
+            list.append(&row);
+        }
+        list.append(&dest_row(dest));
+    }
+
+    let foot = gtk::ListBox::new();
+    foot.add_css_class("navigation-sidebar");
+    let account = account_row(ctx);
+    foot.append(&account);
+    foot.append(&dest_row(Dest::Settings));
+
+    let pick = |list: &gtk::ListBox| {
+        list.connect_row_activated(|list, row| {
+            let name = row.widget_name();
+            if name == "account" {
+                let _ =
+                    list.activate_action("win.settings-pane", Some(&"accounts".to_variant()));
+            } else {
+                let _ = list.activate_action("win.go", Some(&name.to_variant()));
+            }
+        });
+    };
+    pick(&list);
+    pick(&foot);
+
+    let column = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    let scroll = gtk::ScrolledWindow::builder()
+        .hscrollbar_policy(gtk::PolicyType::Never)
+        .vexpand(true)
+        .child(&list)
+        .build();
+    column.append(&scroll);
+    column.append(&playing_on(ctx));
+    announce_link(ctx);
+    pages::opened::watch(ctx);
+    keep_awake_while_relaying(ctx);
+    column.append(&foot);
+
+    let menu = gio::Menu::new();
+    let first = gio::Menu::new();
+    first.append(Some(&t::accounts_sync_now()), Some("win.sync"));
+    first.append(Some(&t::opened_open()), Some("win.open-link"));
+    first.append(Some(&t::stores_join_menu()), Some("win.join-store"));
+    menu.append_section(None, &first);
+    let second = gio::Menu::new();
+    second.append(Some(&t::about_report_bug()), Some("win.report-bug"));
+    second.append(Some(&t::shortcuts_title()), Some("win.shortcuts"));
+    second.append(Some(&t::about_title_app()), Some("win.about"));
+    menu.append_section(None, &second);
+    let primary = gtk::MenuButton::builder()
+        .icon_name("open-menu-symbolic")
+        .menu_model(&menu)
+        .tooltip_text(t::shell_main_menu())
+        .primary(true)
+        .build();
+    *ctx.main_menu.borrow_mut() = Some(primary.clone());
+    let header = adw::HeaderBar::new();
+    header.set_title_widget(Some(&adw::WindowTitle::new("Kaeri", ""))); // i18n-skip
+    header.pack_end(&primary);
+    let page = widgets::page("Kaeri", &header, &column); // i18n-skip
+    (page, list, foot)
+}
+
+/// The way back to the remote while a TV is driven, over the sidebar's foot: "Playing on Living
+/// room", or the TV's name while it plays nothing. While the link is down it says so in the same
+/// place, with the app's dots: "Reconnecting to Living room", "Living room not found", "Pair
+/// Living room again". One line, cut short with the whole of it in the tooltip.
+fn playing_on(ctx: &Rc<Ctx>) -> gtk::ListBox {
+    let list = gtk::ListBox::new();
+    list.add_css_class("navigation-sidebar");
+    list.set_selection_mode(gtk::SelectionMode::None);
+    let line = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+    line.append(&gtk::Image::from_icon_name("video-display-symbolic"));
+    let label = gtk::Label::new(None);
+    label.set_xalign(0.0);
+    label.set_hexpand(true);
+    label.set_ellipsize(gtk::pango::EllipsizeMode::End);
+    label.set_width_chars(1);
+    line.append(&label);
+    let dot = session_dot();
+    dot.set_valign(gtk::Align::Center);
+    line.append(&dot);
+    let row = gtk::ListBoxRow::builder().child(&line).build();
+    row.set_action_name(Some("win.tv-remote"));
+    let casting = session_menu(ctx, row.upcast_ref());
+    list.append(&row);
+    list.set_visible(false);
+    let show = {
+        let list = list.downgrade();
+        move |standing: Option<&(String, &'static str, bool)>| {
+            let Some(list) = list.upgrade() else { return };
+            list.set_visible(standing.is_some());
+            casting();
+            let Some((text, mark, _)) = standing else { return };
+            label.set_label(text);
+            row.set_tooltip_text(Some(text));
+            row.update_property(&[gtk::accessible::Property::Label(text)]);
+            mark_dot(&dot, mark);
+        }
+    };
+    follow_session(ctx, show);
+    list
+}
+
+/// The same, as a header button while the sidebar is folded away: the TV's icon with the dot,
+/// the words in its tooltip. Every destination's header has one beside the sidebar button.
+pub fn tv_session_button(ctx: &Rc<Ctx>) -> gtk::Button {
+    let icon = gtk::Overlay::new();
+    icon.set_child(Some(&gtk::Image::from_icon_name("video-display-symbolic")));
+    let dot = session_dot();
+    dot.set_halign(gtk::Align::End);
+    dot.set_valign(gtk::Align::Start);
+    icon.add_overlay(&dot);
+    let button = gtk::Button::builder().child(&icon).action_name("win.tv-remote").build();
+    button.add_css_class("flat");
+    let casting = session_menu(ctx, button.upcast_ref());
+    let session = Rc::new(Cell::new(false));
+    let collapsed = ctx.split.is_collapsed();
+    button.set_visible(false);
+    let place = {
+        let button = button.downgrade();
+        let session = Rc::clone(&session);
+        move |collapsed: bool| {
+            if let Some(button) = button.upgrade() {
+                button.set_visible(collapsed && session.get());
+            }
+        }
+    };
+    ctx.split.connect_collapsed_notify({
+        let place = place.clone();
+        move |split| place(split.is_collapsed())
+    });
+    let split = ctx.split.downgrade();
+    let weak = button.downgrade();
+    follow_session(ctx, move |standing| {
+        casting();
+        session.set(standing.is_some());
+        place(split.upgrade().map_or(collapsed, |s| s.is_collapsed()));
+        if let (Some((text, mark, _)), Some(button)) = (standing, weak.upgrade()) {
+            mark_dot(&dot, mark);
+            button.set_tooltip_text(Some(text));
+            button.update_property(&[gtk::accessible::Property::Label(text)]);
+        }
+    });
+    button
+}
+
+/// The session button's menu, on a secondary click or a long press: Choose another TV while a
+/// cast runs, as for a TV running Kaeri. Returns what to run as the session changes, which
+/// lets the menu open only while there is a cast to move.
+fn session_menu(ctx: &Rc<Ctx>, widget: &gtk::Widget) -> impl Fn() + use<> {
+    let menu = gio::Menu::new();
+    menu.append(Some(&t::tv_choose_another()), Some("win.tv-choose-another"));
+    let popover = gtk::PopoverMenu::from_model(Some(&menu));
+    popover.set_has_arrow(false);
+    popover.set_parent(widget);
+    widget.connect_destroy({
+        let popover = popover.clone();
+        move |_| popover.unparent()
+    });
+    let casting = Rc::new(Cell::new(false));
+    let open = {
+        let popover = popover.downgrade();
+        let casting = Rc::clone(&casting);
+        move |x: f64, y: f64| {
+            let Some(popover) = popover.upgrade().filter(|_| casting.get()) else { return };
+            popover.set_pointing_to(Some(&gtk::gdk::Rectangle::new(x as i32, y as i32, 1, 1)));
+            popover.popup();
+        }
+    };
+    let click = gtk::GestureClick::builder().button(gtk::gdk::BUTTON_SECONDARY).build();
+    click.connect_pressed({
+        let open = open.clone();
+        move |gesture, _, x, y| {
+            gesture.set_state(gtk::EventSequenceState::Claimed);
+            open(x, y);
+        }
+    });
+    widget.add_controller(click);
+    let press = gtk::GestureLongPress::new();
+    press.connect_pressed(move |gesture, x, y| {
+        gesture.set_state(gtk::EventSequenceState::Claimed);
+        open(x, y);
+    });
+    widget.add_controller(press);
+    let tv = Rc::downgrade(&ctx.tv);
+    move || casting.set(tv.upgrade().is_some_and(|tv| tv.casting()))
+}
+
+fn session_dot() -> gtk::Box {
+    let dot = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+    dot.add_css_class("mark");
+    dot
+}
+
+fn mark_dot(dot: &gtk::Box, mark: &str) {
+    for each in ["water", "haze", "vermilion"] {
+        dot.remove_css_class(each);
+    }
+    dot.add_css_class(mark);
+}
+
+/// Run `show` with what to say of the TV driven, now and as it changes, or `None` with none.
+fn follow_session(
+    ctx: &Rc<Ctx>,
+    show: impl Fn(Option<&(String, &'static str, bool)>) + 'static,
+) {
+    let tv = Rc::downgrade(&ctx.tv);
+    let run = move || {
+        let Some(tv) = tv.upgrade() else { return };
+        let card = tv.card().filter(|_| tv.connected().is_some());
+        let standing = tv
+            .cast_standing()
+            .or_else(|| card.map(|card| link_standing(&card, tv.now().is_some(), tv.ended())));
+        show(standing.as_ref());
+    };
+    run();
+    ctx.tv.listen(run);
+}
+
+/// Say the link going down to a screen reader, once each time, from the window, which is
+/// there at every width and with the sheet up or not.
+fn announce_link(ctx: &Rc<Ctx>) {
+    let said: RefCell<String> = RefCell::default();
+    let window = ctx.window.downgrade();
+    follow_session(ctx, move |standing| {
+        let down = standing.filter(|s| s.2).map(|s| s.0.clone()).unwrap_or_default();
+        if !down.is_empty()
+            && *said.borrow() != down
+            && let Some(window) = window.upgrade()
+        {
+            window
+                .upcast_ref::<gtk::Widget>()
+                .announce(&down, gtk::AccessibleAnnouncementPriority::Medium);
+        }
+        said.replace(down);
+    });
+}
+
+/// While this computer sends a TV the episode, it stays awake: sleeping would stop the cast.
+fn keep_awake_while_relaying(ctx: &Rc<Ctx>) {
+    let cookie: Cell<Option<u32>> = Cell::new(None);
+    let window = ctx.window.downgrade();
+    let tv = Rc::downgrade(&ctx.tv);
+    ctx.tv.listen(move || {
+        let (Some(tv), Some(window)) = (tv.upgrade(), window.upgrade()) else { return };
+        let Some(app) = window.application() else { return };
+        match (tv.cast_relaying(), cookie.get()) {
+            (true, None) => {
+                let id = app.inhibit(
+                    Some(&window),
+                    gtk::ApplicationInhibitFlags::SUSPEND,
+                    Some(&t::tv_cast_inhibit_reason()),
+                );
+                cookie.set(Some(id));
+            }
+            (false, Some(id)) => {
+                cookie.set(None);
+                // Zero when there is no session to ask, as in a headless run.
+                if id > 0 {
+                    app.uninhibit(id);
+                }
+            }
+            _ => {}
+        }
+    });
+}
+
+/// What the sidebar says of the TV driven, its dot, and whether the link is down.
+fn link_standing(
+    card: &kaeri_engine::remote::sender::RemoteCard,
+    playing: bool,
+    ended: bool,
+) -> (String, &'static str, bool) {
+    use kaeri_engine::remote::sender::LinkPhase;
+    let name = &card.tv_name;
+    match card.phase {
+        LinkPhase::Connected if playing => (t::tv_status_playing(name), "water", false),
+        LinkPhase::Connected => (name.clone(), "water", false),
+        LinkPhase::Connecting => (t::tv_status_connecting(name), "haze", false),
+        LinkPhase::Retrying if ended => (t::tv_status_not_found(name), "vermilion", true),
+        LinkPhase::Retrying => (t::tv_status_reconnecting(name), "haze", true),
+        LinkPhase::Unpaired | LinkPhase::KeyChanged => {
+            (t::tv_pair_again_with(name), "vermilion", true)
+        }
+    }
+}
+
+fn dest_row(dest: Dest) -> gtk::ListBoxRow {
+    let line = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+    line.append(&gtk::Image::from_icon_name(dest.icon()));
+    let label = gtk::Label::new(Some(&dest.title()));
+    label.set_xalign(0.0);
+    line.append(&label);
+    let row = gtk::ListBoxRow::builder().child(&line).build();
+    row.set_widget_name(dest.name());
+    row
+}
+
+/// The account at the sidebar's foot: "Mika", "AniList · Synced" with a water dot, which opens
+/// Settings on the Accounts pane.
+fn account_row(ctx: &Rc<Ctx>) -> gtk::ListBoxRow {
+    let avatar = adw::Avatar::new(28, None, true);
+    avatar.add_css_class("neutral-avatar");
+    let name = gtk::Label::new(Some(&t::accounts_state_signed_out()));
+    name.set_xalign(0.0);
+    name.set_ellipsize(gtk::pango::EllipsizeMode::End);
+    let dot = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+    dot.add_css_class("state-dot");
+    dot.set_valign(gtk::Align::Center);
+    let status =
+        widgets::haze(&t::shell_connect_tracker(say::tracker_name("anilist")), "caption");
+    let status_line = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+    status_line.append(&dot);
+    status_line.append(&status);
+    let text = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    text.set_valign(gtk::Align::Center);
+    text.append(&name);
+    text.append(&status_line);
+    let line = gtk::Box::new(gtk::Orientation::Horizontal, 10);
+    line.add_css_class("account-row");
+    line.append(&avatar);
+    line.append(&text);
+    let row = gtk::ListBoxRow::builder().child(&line).build();
+    row.set_widget_name("account");
+
+    let show = {
+        let (avatar, name, status, dot) = (avatar, name, status, dot);
+        let hub = Rc::downgrade(&ctx.hub);
+        move || {
+            let Some(hub) = hub.upgrade() else { return };
+            let known = hub.known.borrow();
+            match known.account() {
+                Some(state) => {
+                    let user = state
+                        .user
+                        .clone()
+                        .unwrap_or_else(|| say::tracker_name(&state.tracker).into());
+                    avatar.set_text(Some(&user));
+                    name.set_label(&user);
+                    let waiting = state.outbox;
+                    status.set_label(&if known.syncing() {
+                        t::accounts_sync_running()
+                    } else if waiting > 0 {
+                        t::shell_changes_waiting(i64::from(waiting))
+                    } else if state.user.is_some() {
+                        // As the Accounts pane says it, the tracker beside a name of the user's.
+                        t::shell_tracker_synced(say::tracker_name(&state.tracker))
+                    } else {
+                        t::accounts_sync_done()
+                    });
+                    dot.set_visible(waiting == 0 && !state.needs_reauth && !known.syncing());
+                }
+                None => {
+                    avatar.set_text(None);
+                    name.set_label(&t::accounts_state_signed_out());
+                    status.set_label(&t::shell_connect_tracker(say::tracker_name("anilist")));
+                    dot.set_visible(false);
+                }
+            }
+        }
+    };
+    show();
+    ctx.hub.listen(move |event| {
+        if matches!(event, Event::Sync(_) | Event::JobStarted { .. } | Event::JobDone(_)) {
+            show();
+        }
+    });
+    row
+}
+
+/// GNOME's accessibility settings, where its schema is installed.
+fn a11y_settings() -> Option<gio::Settings> {
+    const SCHEMA: &str = "org.gnome.desktop.a11y.applications";
+    gio::SettingsSchemaSource::default()?.lookup(SCHEMA, true)?;
+    Some(gio::Settings::new(SCHEMA))
+}
+
+/// Whether Orca or another screen reader is switched on.
+pub(crate) fn screen_reader_running() -> bool {
+    a11y_settings().is_some_and(|settings| settings.boolean("screen-reader-enabled"))
+}
+
+/// The machine's memory in KiB, from the kernel.
+fn memory_kib() -> Option<u64> {
+    let info = std::fs::read_to_string("/proc/meminfo").ok()?;
+    let line = info.lines().find(|line| line.starts_with("MemTotal:"))?;
+    line.split_whitespace().nth(1)?.parse().ok()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_sidebar_says_what_became_of_the_tv() {
+        use kaeri_engine::remote::{
+            protocol::state::Screen,
+            sender::{LinkPhase, RemoteCard},
+        };
+        let card = |phase| RemoteCard {
+            tv_name: "Living room".into(),
+            phase,
+            phase_line: None,
+            screen: Screen::Home,
+            now: None,
+            rev: 0,
+            over: false,
+            reached: false,
+            party: None,
+        };
+        let said = |phase, playing, ended| link_standing(&card(phase), playing, ended);
+        assert_eq!(
+            said(LinkPhase::Connected, true, false),
+            ("Playing on Living room".into(), "water", false)
+        );
+        assert_eq!(
+            said(LinkPhase::Retrying, true, false),
+            ("Reconnecting to Living room".into(), "haze", true)
+        );
+        assert_eq!(
+            said(LinkPhase::Retrying, true, true),
+            ("Living room not found".into(), "vermilion", true)
+        );
+        assert_eq!(
+            said(LinkPhase::Unpaired, false, true),
+            ("Pair again with Living room".into(), "vermilion", true)
+        );
+    }
+
+    #[test]
+    fn a_setting_saved_goes_unsaid_and_one_not_saved_does_not() {
+        let said = |kind, msg: kaeri_model::Msg| Notice::new(kind, msg);
+        let saved = kaeri_model::Msg::NoticeSaved { label: "upscaling".into() };
+        let refused = kaeri_model::Msg::verbatim("not saved: the disk is full");
+        assert!(setting_saved(&said(NoticeKind::Info, saved)));
+        assert!(!setting_saved(&said(NoticeKind::Alert, refused.clone())));
+        assert!(!setting_saved(&said(NoticeKind::Info, refused)));
+    }
+
+    #[test]
+    fn a_party_invite_is_told_from_other_links() {
+        assert!(is_party_link("kaeri://party?server=a&room=b&title=1&episode=2"));
+        assert!(is_party_link("KAERI://Party?server=a"));
+        assert!(is_party_link("kaeri://party/?server=a"));
+        assert!(!is_party_link("kaeri://auth/anilist#x"));
+        assert!(!is_party_link("kaeri://partyroom"));
+    }
+
+    #[test]
+    fn a_sign_in_return_names_its_tracker() {
+        assert_eq!(
+            sign_in_return("kaeri://auth/anilist#access_token=x&state=y").as_deref(),
+            Some("anilist")
+        );
+        assert_eq!(sign_in_return("kaeri://auth/mal?code=x&state=y").as_deref(), Some("mal"));
+        assert_eq!(sign_in_return("kaeri://join/abc"), None);
+        assert_eq!(sign_in_return("kaeri://party?server=a&room=b&title=1&episode=2"), None);
+        assert_eq!(sign_in_return("kaeri://auth/"), None);
+    }
+}
+
+#[cfg(test)]
+mod first_size_tests {
+    use super::fit;
+
+    #[test]
+    fn a_first_window_is_four_fifths_within_the_floor_and_the_monitor() {
+        assert_eq!(fit(3840, 1280), 3072);
+        assert_eq!(fit(1440, 1280), 1280);
+        assert_eq!(fit(1024, 1280), 1024);
+    }
+}

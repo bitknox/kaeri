@@ -1,0 +1,396 @@
+# Kaeri for Android
+
+The Android app: Kotlin and Jetpack Compose on the Kaeri engine, which it reaches through the
+Kotlin bindings UniFFI generates from `crates/kaeri-ffi`. Phones, tablets and foldables,
+Android 15 (API 35) and up, built to the rules in `docs/native-ux.md` and the motion
+spec in `android/docs/motion-android.md`.
+
+Kaeri doesn't host any shows. You add your own sources.
+
+## Modules
+
+| Module | What it holds | On Apple |
+|---|---|---|
+| `:engine` | The generated bindings and the engine's library, per flavour | KaeriKit |
+| `:store` | `EngineClient`, `AppStore` and its feature models, `EngineLaunch`, `AppHost` and the keystore-sealed secrets | KaeriStore |
+| `:design` | The Obi & Silk colour scheme, type, shapes, motion tokens, Nagare, the cover plate | KaeriDesign |
+| `:ui` | The navigation bar and the screens | KaeriUI |
+| `:player` | libmpv behind the engine's hosted player protocol: the JNI shim, `MpvClient`, `PlayerModel`, the media session | KaeriPlayer |
+| `:widgets` | The home-screen widgets, Continue watching and Airing today, in Glance | the widget extension |
+| `:app` | The activity, the application, and each flavour's launch | the app target |
+| `:testkit` | For tests only: the engine's scenes recorded as JSON, and the fixture titles' art | – |
+
+Two flavours, by the engine inside:
+
+- `app` (`app.kaeri.app`): the engine the app ships, on the real AniList and sources.
+- `fixtures` (`app.kaeri.fixtures`): the engine's `testing` build, on the test kit's fake
+  AniList and fixture titles, with nothing leaving the device. For screenshots and tests, never for
+  real use.
+
+## What it needs
+
+- Android Studio, for its JDK (`/Applications/Android Studio.app/Contents/jbr/Contents/Home`), and
+  the SDK with platform 37, the NDK and the emulator. The scripts find the SDK at
+  `~/Library/Android/sdk` unless `ANDROID_HOME` says otherwise, and the newest NDK in it.
+- The Rust toolchain the workspace pins, with `rustup target add aarch64-linux-android`, and
+  `cargo install cargo-ndk`.
+- Bash 4.4 or newer for the scripts (`brew install bash`).
+
+## Building
+
+```sh
+android/scripts/engine.sh testing   # the fixtures flavour's engine
+android/scripts/engine.sh release   # the app flavour's
+android/scripts/fonts.sh            # Roboto Flex and Zen Kaku Gothic New, with their licences
+cd android && ./gradlew assembleFixturesDebug assembleAppDebug
+```
+
+`engine.sh` builds `kaeri-ffi` twice: for arm64 phones with cargo-ndk (Android 35), into the
+APK's `jniLibs`, and for this Mac, for the unit tests and for the `uniffi-bindgen` that writes the
+Kotlin bindings from the arm64 library. Everything goes to `android/.engine/<release|testing>/`,
+which git ignores, with a stamp of the Rust sources it was built from. Cargo builds in
+`~/kaeri-target-android` unless `CARGO_TARGET_DIR` says otherwise; it takes about 9 GB.
+Cargo runs in a clean environment, which keeps cargo's and rustup's variables (`CARGO_BUILD_JOBS`
+among them), `RUSTC_WRAPPER` and sccache's `SCCACHE_*`, so a compiler cache works through it.
+Without an NDK it still builds this Mac's library and the bindings, so Gradle and the unit tests
+run, and the APK has no engine in it.
+
+Each build is also kept in a cache every worktree shares, `~/.cache/kaeri-engine/android/`
+(`KAERI_ENGINE_CACHE` names another root), by the sources' hash, the flavour, the profile,
+the ABI and the machine. A new worktree on sources some worktree has built already copies that
+build in, in under a second and with no cargo, which is most app work: it rarely changes
+`crates/`. The script says `engine: reused <hash>` or `engine: built <hash>`. An entry is written
+beside its place and renamed into it, so two builds at once never leave half of one, and entries
+unused for 14 days are removed; each takes about 370 MB.
+
+Every Gradle build checks first that its flavour's engine is current (`engine.sh --check`), and
+fails saying what to run when not, and fetches the fonts if they are not there yet (`fonts.sh`),
+from a copy every worktree shares in `~/.cache/kaeri-fonts` or else from google/fonts, failing
+only if that fetch does. Rust changes
+need `engine.sh` again; Gradle never builds Rust itself.
+
+`KAERI_ENGINE_PROFILE` picks the cargo profile: `app-dev` (opt-level 1, line tables) unless it
+says otherwise, `release` for a build to keep.
+
+## The player
+
+The player is libmpv, built by us as LGPL with `android/scripts/mpv.sh` into `android/.mpv` (about
+6 minutes on an idle Mac; `--check` says whether it is current, which every build asks first). The
+JNI shim in `player/src/main/cpp` is built by CMake against it. `PlayerModel` lives for the
+process, in the application, so a rotation, a fold or Picture in Picture only lends mpv a new
+surface. It carries out the engine's `PlayerOps`, keeps its `PlayerUi`, and reports mpv's
+properties and events back; `PlayerService` is the media session around it, a `mediaPlayback`
+foreground service. The emulator decodes in software: its MediaCodec stalls under FFmpeg, and a
+watchdog moves a decoder with no picture to software, or a stuck mpv to a new one.
+
+The player's screen is a destination of the frame's own (`PlayerSlot`), over the navigation bar,
+landscape on a phone. Going home while it plays takes the activity into Picture in Picture with
+the three actions; with the screen off the audio plays on with the video track off; the media
+notification and the lock screen carry back 10 s, play or pause and forward 10 s. The process's
+foreground and background, and the network it is on, go to the engine as `AppPhase` and
+`NetworkPath` (`app/SystemPhases.kt`).
+
+Plain-text subtitles (SRT, WebVTT and the rest) follow the system's caption style while Settings ›
+Playback › "Subtitles follow your system caption style" is on, as it is unless the viewer turns it
+off (kept on the device, `DevicePreferences`), and while captions are on in Accessibility › Caption
+preferences: with them off, Android's style is its stock white-on-black preset, which nobody chose,
+so the player keeps its own look, as ExoPlayer does. `CaptionStyle` reads `CaptioningManager`'s
+typeface, size, colours, window and edge and maps them to mpv's `sub-*` options at mpv's start;
+`CaptionStyleWatch` sends them again when the style or the setting changes. ASS subtitles keep
+their own look: mpv applies those options only to subtitles without a style at its default
+`sub-ass-override=scale`, which the player leaves as it is (`no` would also stop `sub-pos` lifting
+ASS dialogue). fonts.conf names the caption settings' typefaces as Android's fonts.xml has them.
+
+CI's checks do not run mpv.sh: with `KAERI_PLAYER_NATIVE=off` the player builds without libmpv
+and the shim, so its Kotlin compiles and its unit tests run, and that APK cannot play. A release
+does run it, on Linux (`.github/workflows/apps-release.yml`), where it also needs `gperf` and
+`python3-venv`.
+
+The instrumented tests drive the protocol on the testing engine's Playing scene against a real mpv
+in the emulator, with the episode `android/scripts/player-media.sh` makes:
+
+```sh
+android/scripts/player-media.sh
+cd android && ./gradlew :player:connectedFixturesDebugAndroidTest
+```
+
+## Running
+
+```sh
+adb install -r android/app/build/outputs/apk/fixtures/debug/app-fixtures-debug.apk
+adb shell am start -n app.kaeri.fixtures/app.kaeri.app.MainActivity --es scene fresh --es section seasonal
+```
+
+The fixtures flavour takes intent extras under the names of the Apple app's `-Kaeri*`
+arguments: `scene` (`watching`, `fresh` or `playing`), `media` (what the playing scene streams),
+`section` (`continue`, `calendar`, `seasonal`, `library`, `search`), `title` (a title page to
+open, by id), `query` (a search to run), `page` (a page over the destination, by its route:
+`settings`, `settings/playback`, `settings/sources`, `downloads`), `watched` (`900006:8`, or
+several titles joined by `/`), `downloads` (any value: three downloads seeded, see below), `notify`
+(any value: two new-episode notifications posted, with the fixtures' covers), `check` (seconds: the
+new-episode check run once that many seconds on, as the periodic work runs it; kill the app first
+for it to start an engine of its own), `widgets` (`continue-small`, `continue-wide`,
+`airing-small`, `airing-wide`, joined by commas: those widgets offered to the launcher to pin, and
+their record made at once), and
+`sheet` and `player` for the screens that take them in later phases. A scene is the engine's
+own (`start_scene`): the fake AniList at the real time, with its art, and for `watching` and
+`playing` a history seeded first. Each launch starts the testing engine in a new directory of its
+own. A debug build of either flavour says `KAERI_READY` in the log, tag
+`kaeri`, once its screens have what they asked for.
+
+The engine downloads torrents only, and no fixture has one, so the `downloads` extra seeds the
+queue instead (`seed_fixture_downloads`): episode 6 of 900001 finished, its file the fixtures'
+clip (`app/src/fixtures/assets/fixture-download.mkv`, ffmpeg's test pattern from
+`scripts/fixture-clip.sh`) copied into the app's download folder, so it plays offline; episode 7
+running; episode 3 of 900002 waiting. `shots.sh phone watching:downloads=1+page=downloads` shoots
+the Downloads screen, and `page=settings/downloads` the storage meter.
+
+### Checking downloads on a phone
+
+The real transfer, the download job and Wi-Fi only need a torrent source, which only a phone with
+its own VPN and index has:
+
+1. Build and install the app flavour: `android/scripts/engine.sh release`, then
+   `cd android && ./gradlew assembleAppDebug` and
+   `adb install -r app/build/outputs/apk/app/debug/app-app-debug.apk`.
+2. With the phone's VPN on, open Settings › Sources, turn on Torrent source, pick VPN on this
+   device, enter the torrent index, and Turn on. Wait for Last check to say Passed.
+3. On a title page, long-press an episode and pick Download. Downloads lists it as Queued, then
+   running, with its speed and the time left.
+4. The download notification is up: on Android 16 a Live Update at the top of the shade and the
+   lock screen, a segment per episode and the time left in the status bar's chip; on Android 15 the
+   plain progress notification. Pause (Pause all), Resume and Cancel act on the queue; a queue
+   paused keeps the notification ten minutes for Resume. `adb shell dumpsys jobscheduler | grep -A4
+   app.kaeri.app` shows the job, user-initiated, running.
+5. Lock the phone for ten minutes, or switch to another app: the download goes on and the
+   notification moves.
+6. With Wi-Fi only on (Settings › Downloads), turn Wi-Fi off: the download waits. Turn it on: it
+   goes on.
+7. Once done, the row says Downloaded with its size, "Episode 8 downloaded" is posted with Play,
+   and the job ends and its own notification goes. The
+   file is under `/sdcard/Android/data/app.kaeri.app/files/Movies`
+   (`adb shell ls -l /sdcard/Android/data/app.kaeri.app/files/Movies`).
+8. In flight mode, play it from Downloads.
+
+Launcher shortcuts and notifications open the activity on an app link: an explicit intent, action
+`app.kaeri.action.OPEN`, with the link in its extras, never a URL (`Shortcuts.kt`):
+`app.kaeri.link.open` says what it opens (`search`, `downloads`, `title`, `continue`, `play`
+or `download`) and `app.kaeri.link.show`, `.episode` and `.download` what of. The frame
+follows each through the app's own navigation (`AppLinks.kt`). Search and Downloads are static
+shortcuts, written into each variant's resources from `app/shortcuts.xml` with its package;
+Continue ("Continue", in full "Hoshikuzu no Tabibito E7") is published from the Continue queue,
+opens the player on the episode Continue would play, and with nothing to continue is taken off
+the list, a pinned copy disabled with "Nothing to continue".
+
+```sh
+adb shell am start -a app.kaeri.action.OPEN --es app.kaeri.link.open downloads -n app.kaeri.fixtures/app.kaeri.app.MainActivity
+```
+
+New-episode notifications come from a `WorkManager` job, `new-episodes`, about every six hours on
+a network with the battery not low, while Settings › Notifications' New episodes switch (the
+engine's `EpisodeNotifications`) is on or any show is switched on in its own settings sheet, which
+notifies whatever the switch says (the settings' `notifySwitchedOn`), or while a widget is on a
+home screen (looked at on start and as a widget's receiver is enabled or disabled), and is
+cancelled only when none holds. With only a widget, a run keeps the widgets' record and notifies of
+nothing. Turning a switch on, Settings' or a show's, is when the app asks to post
+notifications, and each show can turn its own off too. A show watched dubbed is said when the
+engine finds its source lists the dub, "Episode 9 is out, dubbed.", not at the broadcast. The
+Notifications pane's "Coming up" is the engine's `UpcomingNotices`, each row saying whether it
+notifies. The job asks the engine
+for what aired (`CheckNewEpisodes`), on the app's engine when it runs and otherwise on one started
+for the job with every background switch off (`BackgroundEngine`), fetches each episode's cover, and
+posts one notification per episode on the "New episodes" channel, grouped under a summary when
+there are several, with Play (an app link) and Mark watched (the app's own receiver). Then it asks
+for the widgets' record (`WidgetSnapshot`) and keeps it in `files/widgets/record.json`
+(`WidgetRecord`), where the widgets read it. The fixtures' `notify` extra posts two, for a look at
+the shade:
+
+```sh
+adb shell pm grant app.kaeri.fixtures android.permission.POST_NOTIFICATIONS
+adb shell am start -n app.kaeri.fixtures/app.kaeri.app.MainActivity --es notify 1
+```
+
+The home-screen widgets, Continue watching and Airing today (`:widgets`), are Glance's, drawn
+from that record in the app's own process. The app keeps the record's art beside it in
+`files/widgets/art/`, fetched through the engine like every other picture, and makes the record
+again each time it leaves the screen while a widget is placed. Each record written draws both
+widgets again, and a `widgets-redraw` work redraws them at the next moment what they show changes on
+its own: a broadcast airing, the record turning a day old, midnight. A widget with no record for
+today asks for one (`widgets-record`). The picker offers each at 2 × 2 and 4 × 2, with previews the
+app generates. `./gradlew :widgets:recordRoborazziFixturesDebug` draws them on the JVM at the
+boards' sizes, into `.shots/roborazzi/widget-*.png`.
+
+```sh
+adb shell am start -n app.kaeri.fixtures/app.kaeri.app.MainActivity --es widgets continue-wide,airing-wide
+```
+
+## On your own phone
+
+```sh
+android/scripts/install.sh
+```
+
+`install.sh` builds the app flavour's release, signed with the release key, installs it over the
+Kaeri already on the phone, keeping its data, and opens it. It ends by printing the version it
+installed and the signing certificate's SHA-256, which is public. The first run builds the engine
+in the release profile, which takes a while; later runs reuse it.
+
+- **The phone:** turn on Developer options (Settings › About phone, tap Build number seven times),
+  then Settings › System › Developer options › USB debugging. Connect it by USB and accept "Allow
+  USB debugging?" for this computer. The script takes the one phone `adb devices -l` lists,
+  emulators aside; with several, `ANDROID_SERIAL=<serial>` picks one. `--apk <file>` installs an
+  APK built already.
+- **The key:** the four `KAERI_RELEASE_*` properties in `~/.gradle/gradle.properties` name the
+  keystore, its alias and their passwords. Without them the release is unsigned, and the script
+  stops before installing.
+- **Keep the release key backed up, somewhere other than this Mac.** An update installs only over
+  a build signed with the same key, and AniList's sign-in comes back on an App Link verified
+  against it. Losing it means uninstalling Kaeri from every phone that has it, which deletes
+  its downloads and sign-ins there, and verifying a new key for the App Link.
+- A phone with a build signed by another key, a debug build for instance, refuses the update. The
+  script says so, and leaves the uninstall to you.
+
+## Updating itself
+
+The app flavour installs its own new releases. The engine checks GitHub's newest release once a
+day while Settings › About › "Check for updates" is on, and whenever Check now asks
+(`Event.Update`). The notice says a release is out, the first time and then as the engine says to,
+with "Update to v0.10.3" as its button; Settings › About offers the same row whenever a newer
+release is known.
+
+Nothing downloads or installs until the viewer presses Update. Then:
+
+1. The first time, one sentence asks for Android's "Install unknown apps" for Kaeri and opens
+   its page (`ACTION_MANAGE_UNKNOWN_APP_SOURCES`). The download starts as the viewer comes back
+   with the switch on. Where Android stops the app as the switch turns on, the press is kept for
+   15 minutes and goes on once the app is back on screen.
+2. The APK downloads as a user-initiated data transfer job, as episodes do, with its notification
+   and Cancel, into `files/updates`. A notice with a progress line follows it outside Settings,
+   whose row says "Downloading 34 %".
+3. Its SHA-256 has to be the one the release publishes in its `.sha256`, and PackageManager has to
+   read it as `app.kaeri.app`, signed with the certificate the installed app is (the release
+   key, `4D:66:4A:AB:…:9F:95`, as in `website/public/.well-known/assetlinks.json`), and newer.
+   Anything else is refused with a plain notice before the installer sees it.
+4. It is written into a `PackageInstaller` session that asks for no confirmation
+   (`USER_ACTION_NOT_REQUIRED`, with `UPDATE_PACKAGES_WITHOUT_USER_ACTION` in the app flavour's
+   manifest). Android lets an app update itself that way. Where it still wants the viewer to
+   confirm, its dialog shows; said no to, the file is kept for another press; failed, the notice
+   gives Android's message.
+5. Android closes the app as the update goes in. The new version's first start
+   (`MY_PACKAGE_REPLACED`) posts "Kaeri updated to v0.10.3" with the release's first line of
+   notes, which opens the app on the destination the update was taken from. It is posted only
+   for a version the in-app updater marked just before installing it, never after an install by
+   adb or by hand.
+
+The APK is deleted after an install, a failure, a cancel and at every start, with any session
+left. A release without an APK, or without a `.sha256` that reads, opens its page instead, as the
+fixtures flavour always does: it has no `REQUEST_INSTALL_PACKAGES`, which only the app flavour's
+manifest asks for.
+
+### The update on an emulator
+
+```sh
+android/scripts/update-test.sh build         # two keys of the test's own, 0.10.0, 0.10.1 and 0.10.2
+android/scripts/update-test.sh install       # 0.10.0 on emulator-5640 (SERIAL picks another)
+android/scripts/update-test.sh serve         # in a second shell; --slow to have time to cancel
+android/scripts/update-test.sh offer update  # 0.10.1, or `update 0.10.2`, other-key, bad-checksum
+```
+
+`build` makes two throwaway keys in `android/build/update-test`, which git ignores, and builds the
+app flavour's release three times with `KAERI_UPDATE_TEST_KEYSTORE`: signed with the test key and
+never reading the release key, with a receiver that offers a release as the engine would, and
+plain HTTP to this Mac through `adb reverse`. Then it signs 0.10.1 again with the other key, which
+the app has to refuse. Those builds are never for real use. `offer` posts the release's notice in
+the app; its button starts the real flow, through to Android's own dialog.
+
+## Tests
+
+```sh
+android/scripts/test.sh
+```
+
+The JVM unit tests: the store's reducers fed scripted event lists, the host and the sealed secrets
+on a plain key, and, in the fixtures flavour, the store on the real testing engine through JNA. The
+script runs them with HOME in a new temporary directory and tokens in files, and refuses to run
+with HOME at the user's own; the Gradle test task sets its own HOME under `build/` too.
+
+## Screenshots
+
+The screens are drawn on the JVM, with no emulator, at each board's size:
+
+```sh
+cd android && ./gradlew :ui:recordRoborazziFixturesDebug
+android/scripts/pairs.sh <boards> a2
+```
+
+`BoardShots` in `:ui` draws each board's screen with Robolectric's native graphics and captures it
+with Roborazzi, into `android/.shots/roborazzi/`, which git ignores: the phone at 412 × 915 dp
+and 420 dpi, the tablet at 1280 × 800 dp, each with a 24 dp status bar and gesture bar. The store
+is the app's own, fed a scene the testing engine recorded, with no engine behind it: the clock
+(`AppClock`) is held at the moment the scene was recorded, and art comes from the Rust test kit's
+files as the fake AniList serves it, so a run draws the same pixels every time.
+`verifyRoborazziFixturesDebug` compares a run with the last one recorded, and
+`compareRoborazziFixturesDebug` writes the differences. CI records them on every run and keeps
+them as the `android-screenshots` artifact.
+
+`pairs.sh <boards> [phase]` sets each capture beside its board, in
+`android/.shots/<phase>/pair-<board>.png`. `<boards>` is a directory of the boards rendered from
+the design canvas as PNGs, named as the canvas names them (`AndroidHome.png`).
+
+The scenes are in `android/testkit/src/main/resources/app/kaeri/testkit/scenes/`, as JSON:
+
+```sh
+android/scripts/scenes.sh
+```
+
+`scenes.sh` records them again: the store's `SceneRecorder` starts the testing engine on its
+`fresh` and `watching` scenes, asks for every screen's lists, the search the shots run and each
+fixture title's page and episodes, and writes every event it gets but art and the player's. Run it
+when the engine's events or the fixtures change; a scene recorded before a field the bindings now
+require fails to read, and says to.
+
+The emulator is for what needs a device: the engine on a real phone image, sign-in, the player,
+picture-in-picture and rotation.
+
+```sh
+android/scripts/shots.sh phone fresh fresh:seasonal app:seasonal
+android/scripts/shots.sh tablet fresh
+```
+
+`shots.sh <phone|phone-37|tablet|fold> [shot…]` builds the APKs, starts the device's AVD headless
+on a port of its own (5560 to 5566) unless it is running, installs, and for each shot clears the
+app, starts it with the shot's extras, waits for `KAERI_READY` and takes a screencap, with the
+status bar in demo mode at 19:30. `KAERI_EMULATOR_PORT` puts the emulator on another port, for a
+second worktree's beside the first. A shot is `watching`, `fresh` or `app` (the app flavour on the
+real AniList), then optionally `:` and a section or `key=value`s joined by `+`
+(`fresh:title=900001`, `fresh:query=hoshi`, `fresh:watched=900001:1,2,3`). Shots go to
+`android/.shots/a0/` (`KAERI_SHOTS_PHASE` names another), which git ignores. Shots of the app
+flavour show AniList's real catalogue, so they stay there and are never committed.
+
+The phone is `kaeri-phone-35-16k`, Android 15 with 16 KB pages; `KAERI_KEEP_EMULATOR=1`
+leaves an emulator the script started running for the next run.
+
+## Versions
+
+Every version is pinned in `gradle/libs.versions.toml`. Material3 is 1.5.0-beta01 rather than the
+stable 1.4.0 the Compose BOM picks, because 1.4.0 keeps the Expressive APIs the design is built on
+(`MaterialExpressiveTheme`, `MotionScheme`, the short navigation bar, the flexible top app bar,
+connected button groups) internal. Move to 1.5.0 once it is stable.
+
+The app is dark only, on the fixed Obi & Silk scheme; light follows the system once a light
+palette is drawn. It has no backup (`allowBackup="false"`): the tokens are sealed with a key that
+never leaves the device's keystore, so a restored copy could not open them.
+
+## Third-party
+
+Roboto Flex and Zen Kaku Gothic New are under the SIL Open Font License 1.1; `fonts.sh` fetches
+them from github.com/google/fonts at a pinned commit by SHA-256, and their licences ship in the APK
+under `assets/licences/`. JNA is used under the Apache License 2.0. The tests alone also use
+Robolectric (MIT), Roborazzi, kotlinx.serialization and kotlin-reflect (Apache License 2.0), none
+of which ships in the APK.
+
+libmpv (LGPL-2.1-or-later) and FFmpeg's libraries (LGPL-3.0-or-later, for mbedTLS) are separate
+shared libraries the app loads, built from the pinned sources in `scripts/mpv.sh`; their licences,
+and those of what is linked into libmpv, ship under `assets/licences/player/`. The JNI shim is
+adapted from mpv-android (MIT), credited in `player/NOTICE` and `mpv/NOTICE`. Media3 is used under
+the Apache License 2.0.

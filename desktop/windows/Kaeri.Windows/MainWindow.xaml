@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="Kaeri.Windows.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:player="using:Kaeri.Windows.Player"
+    xmlns:app="using:Kaeri.App">
+  <Grid x:Name="Root">
+    <Grid.KeyboardAccelerators>
+      <KeyboardAccelerator Key="O" Modifiers="Control" Invoked="OnKeyOpenLink" />
+    </Grid.KeyboardAccelerators>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <!-- The title bar: the app icon, "kaeri", back, the pane toggle and the search box,
+         with the content extended into it. Mica shows through it. -->
+    <TitleBar x:Name="AppTitleBar" Grid.Row="0" Title="{x:Bind app:T.AppName}"
+              IsBackButtonVisible="True" IsPaneToggleButtonVisible="True"
+              BackRequested="OnBackRequested" PaneToggleRequested="OnPaneToggleRequested">
+      <TitleBar.IconSource>
+        <ImageIconSource ImageSource="ms-appx:///Assets/kaeri.ico" />
+      </TitleBar.IconSource>
+      <AutoSuggestBox x:Name="SearchBox" MinWidth="320" MaxWidth="480" VerticalAlignment="Center"
+                      PlaceholderText="{x:Bind app:T.SearchPlaceholder}" QueryIcon="Find"
+                      AutomationProperties.Name="{x:Bind app:T.SearchPlaceholder}"
+                      QuerySubmitted="OnSearchSubmitted" TextChanged="OnSearchTextChanged"
+                      SuggestionChosen="OnSuggestionChosen">
+        <AutoSuggestBox.KeyboardAccelerators>
+          <KeyboardAccelerator Key="F" Modifiers="Control" Invoked="OnFocusSearch" />
+          <KeyboardAccelerator Key="E" Modifiers="Control" Invoked="OnFocusSearch" />
+        </AutoSuggestBox.KeyboardAccelerators>
+      </AutoSuggestBox>
+    </TitleBar>
+
+    <NavigationView x:Name="Nav" Grid.Row="1"
+                    IsBackButtonVisible="Collapsed" IsPaneToggleButtonVisible="False"
+                    IsSettingsVisible="True" PaneDisplayMode="Auto"
+                    ExpandedModeThresholdWidth="1008" CompactModeThresholdWidth="641"
+                    OpenPaneLength="240" IsTitleBarAutoPaddingEnabled="False"
+                    SelectionChanged="OnNavSelectionChanged">
+      <NavigationView.MenuItems>
+        <NavigationViewItem Content="{x:Bind app:T.HomeTitle}" Tag="home" AccessKey="H">
+          <NavigationViewItem.Icon><FontIcon Glyph="&#xE768;" /></NavigationViewItem.Icon>
+        </NavigationViewItem>
+        <NavigationViewItem Content="{x:Bind app:T.NavCalendar}" Tag="calendar" AccessKey="A">
+          <NavigationViewItem.Icon><FontIcon Glyph="&#xE787;" /></NavigationViewItem.Icon>
+        </NavigationViewItem>
+        <NavigationViewItem Content="{x:Bind app:T.NavSeasonal}" Tag="seasonal" AccessKey="S">
+          <NavigationViewItem.Icon><FontIcon Glyph="&#xE734;" /></NavigationViewItem.Icon>
+        </NavigationViewItem>
+        <NavigationViewItem Content="{x:Bind app:T.NavLibrary}" Tag="library" AccessKey="L">
+          <NavigationViewItem.Icon><FontIcon Glyph="&#xE8F1;" /></NavigationViewItem.Icon>
+        </NavigationViewItem>
+        <NavigationViewItem Content="{x:Bind app:T.NavDownloads}" Tag="downloads" AccessKey="D">
+          <NavigationViewItem.Icon><FontIcon Glyph="&#xE896;" /></NavigationViewItem.Icon>
+        </NavigationViewItem>
+        <NavigationViewItem Content="{x:Bind app:T.TogetherTitle}" Tag="together" AccessKey="W">
+          <NavigationViewItem.Icon><FontIcon Glyph="&#xE716;" /></NavigationViewItem.Icon>
+        </NavigationViewItem>
+        <NavigationViewItemSeparator />
+        <NavigationViewItem Content="{x:Bind app:T.SourcesTitle}" Tag="providers" AccessKey="P">
+          <NavigationViewItem.Icon><FontIcon Glyph="&#xE774;" /></NavigationViewItem.Icon>
+        </NavigationViewItem>
+        <NavigationViewItem Content="{x:Bind app:T.NavPluginStores}" Tag="stores" AccessKey="T">
+          <NavigationViewItem.Icon><FontIcon Glyph="&#xE719;" /></NavigationViewItem.Icon>
+        </NavigationViewItem>
+      </NavigationView.MenuItems>
+      <NavigationView.FooterMenuItems>
+        <NavigationViewItem x:Name="AccountItem" Tag="account" SelectsOnInvoked="True">
+          <NavigationViewItem.Icon><FontIcon Glyph="&#xE77B;" /></NavigationViewItem.Icon>
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock x:Name="AccountText" Text="{x:Bind app:T.AccountsStateSignedOut}" VerticalAlignment="Center" />
+            <Ellipse x:Name="AccountDot" Width="6" Height="6" Fill="{ThemeResource WaterBrush}"
+                     VerticalAlignment="Center" Visibility="Collapsed" />
+            <FontIcon x:Name="AccountAlert" Glyph="&#xE7BA;" FontSize="12" Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                      VerticalAlignment="Center" Visibility="Collapsed" />
+          </StackPanel>
+        </NavigationViewItem>
+      </NavigationView.FooterMenuItems>
+      <Grid>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <!-- While in a party: where it is and a way back to it, above every page but Together. -->
+        <Grid x:Name="PartyBar" Visibility="Collapsed" Background="{ThemeResource RaisedBrush}" Padding="20,8,20,8" ColumnSpacing="12"
+              AutomationProperties.LandmarkType="Custom" AutomationProperties.LocalizedLandmarkType="{x:Bind app:T.TogetherTitle}">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock x:Name="PartyBarTitle" Style="{StaticResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+            <TextBlock x:Name="PartyBarLine" Style="{StaticResource HazeCaptionStyle}" TextTrimming="CharacterEllipsis" />
+          </StackPanel>
+          <Button Grid.Column="1" Content="{x:Bind app:T.TogetherOpenLobby}" Click="OnPartyBarOpen" />
+          <Button Grid.Column="2" Content="{x:Bind app:T.PartyLeave}" Click="OnPartyBarLeave" />
+        </Grid>
+        <Frame x:Name="ContentFrame" Grid.Row="1" Navigated="OnFrameNavigated" />
+      </Grid>
+    </NavigationView>
+
+    <!-- The player, over the page it came from, with the title bar as its top bar. -->
+    <player:PlayerView x:Name="Player" Grid.Row="0" Grid.RowSpan="2" Visibility="Collapsed" />
+
+    <!-- What the engine says in passing: marked watched, a sync failed. Bottom centre, as the
+         board has it, and over the player, so a notice said while an episode plays is seen. -->
+    <InfoBar x:Name="Toast" Grid.Row="1" IsOpen="False" IsClosable="True" MaxWidth="480"
+             HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="24"
+             AutomationProperties.LiveSetting="Polite"
+             PointerEntered="OnToastPointerEntered" PointerExited="OnToastPointerExited" />
+  </Grid>
+</Window>

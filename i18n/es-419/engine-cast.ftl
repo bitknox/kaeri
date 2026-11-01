@@ -1,0 +1,17 @@
+cast-episode = Episodio { $episode }
+cast-episode-titled = Episodio { $episode } · { $title }
+notice-cast-video-codec = { $name } no puede reproducir este video ({ $codec }). Prueba con otra { -source }.
+notice-cast-audio-codec = { $name } no puede reproducir este audio ({ $codec }), y este { -device } no puede convertirlo. Prueba con otra { -source }.
+notice-cast-container = { $name } no puede reproducir este tipo de archivo. Prueba con otra { -source }.
+notice-cast-deep-link = Este episodio se abre en otra app, así que no se puede transmitir.
+notice-cast-never-fetches = { $name } no empezó a leer la transmisión. Puede que una VPN o un firewall de este { -device } lo esté bloqueando.
+notice-cast-refused = { $name } no pudo reproducir esta transmisión. Prueba con otra { -source }.
+notice-cast-taken-over = Otro { -device } inició algo en { $name }, así que se detuvo la transmisión.
+notice-cast-not-same-network = Este { -device } no está en la red de { $name }, o llega a ella por una VPN. Para transmitir, ambos deben estar en la misma red.
+notice-cast-lost = Se perdió la conexión con { $name }, así que se detuvo la transmisión.
+notice-cast-no-device = Ese televisor ya no está en la red.
+notice-cast-unavailable = Esta versión de { -app-name } no puede transmitir a televisores.
+cast-phase-starting = Iniciando en { $name }
+cast-phase-starting-for = Iniciando en { $name } · { $seconds } s
+cast-phase-waiting = Esperando a { $name } · { $seconds } s
+cast-phase-preparing = Preparando la transmisión · { $seconds } s

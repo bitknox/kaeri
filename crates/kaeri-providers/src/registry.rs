@@ -1,0 +1,1061 @@
+//! Provider registry and failover.
+//!
+//! Every source keeps its own catalogue, so one that has no such title or episode says nothing
+//! about the next: `NotFound` moves the walk on, as `Blocked`, `Parse` and `Transport` do. What
+//! sets it apart is that it is an answer rather than a fault, so it never counts against the
+//! source's health ([`ProviderError::counts_against_health`]), and the attempt still reports it
+//! by name when no source has what was asked for.
+//!
+//! A [`ProviderKey`] is only meaningful to the source that issued it, so a walk that carries one
+//! is a walk over one source. Asking each source for a title under its own key is
+//! [`crate::resolve::first_answer`]'s work.
+
+use std::{sync::Arc, time::Instant};
+
+use kaeri_core::{
+    Error,
+    error::ProviderError,
+    ids::ProviderKey,
+    media::{Episode, SearchHit, Translation},
+    stream::Stream,
+    traits::{Provider, ProviderKind, SourceCandidate},
+};
+
+use crate::{
+    health::HealthTracker,
+    torrent::{TorrentBridge, TorrentPlayback},
+};
+
+/// Providers in preference order, with shared health.
+#[derive(Clone)]
+pub struct ProviderRegistry {
+    /// Behind a lock because sources can arrive *after* startup. Plugins are the reason: compiling
+    /// a component costs hundreds of milliseconds, and paying that before the first frame made the
+    /// app feel slow for a capability most launches never use. They now load in the background and
+    /// join the chain when they are ready.
+    providers: Arc<std::sync::RwLock<Vec<Arc<dyn Provider>>>>,
+    health: HealthTracker,
+    /// The sources switched off by name, `providers.disabled`. Kept in the chain, so each keeps
+    /// its row, its place and its compiled plugin, and turning one back on is instant; never
+    /// tried, listed from or probed while off.
+    disabled: Arc<std::sync::RwLock<std::collections::BTreeSet<String>>>,
+    /// Whether sources are still on their way into the chain: plugins compiling at launch.
+    /// See [`Self::expect_arrivals`].
+    arriving: Arc<tokio::sync::watch::Sender<bool>>,
+    /// The engine's torrent session, lent to every source that names torrents as it joins the
+    /// chain: see [`TorrentBridge`]. One for the chain and all its views, filled in and emptied
+    /// as torrent playback comes and goes.
+    torrents: TorrentPlayback,
+}
+
+impl std::fmt::Debug for ProviderRegistry {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ProviderRegistry")
+            .field("providers", &self.ids())
+            .finish_non_exhaustive()
+    }
+}
+
+/// The outcome of walking the chain, including what each provider said.
+///
+/// Failures are carried rather than discarded so the UI can name the source that broke.
+/// An empty list with no explanation is the failure mode this design exists to avoid.
+#[derive(Debug)]
+pub struct Attempt<T> {
+    pub value: Option<T>,
+    /// Which provider produced `value`.
+    pub provider: Option<String>,
+    pub failures: Vec<(String, ProviderError)>,
+}
+
+impl<T> Attempt<T> {
+    fn success(provider: String, value: T, failures: Vec<(String, ProviderError)>) -> Self {
+        Self { value: Some(value), provider: Some(provider), failures }
+    }
+
+    fn exhausted(failures: Vec<(String, ProviderError)>) -> Self {
+        Self { value: None, provider: None, failures }
+    }
+
+    pub fn is_success(&self) -> bool {
+        self.value.is_some()
+    }
+
+    /// Turn an exhausted attempt into a reportable error.
+    pub fn into_error(self, title: &str, episode: &str) -> Error {
+        Error::AllProvidersFailed {
+            title: title.to_owned(),
+            episode: episode.to_owned(),
+            failures: self.failures,
+        }
+    }
+
+    /// One-line summary for a toast.
+    pub fn summary(&self) -> String {
+        if self.failures.is_empty() {
+            return "no providers configured".into();
+        }
+        self.failures
+            .iter()
+            .map(|(id, e)| format!("{id}: {}", described(e)))
+            .collect::<Vec<_>>()
+            .join(", ")
+    }
+}
+
+/// A failure as a toast names it: by its kind, unless it says it timed out.
+///
+/// The plugin vocabulary has no transport failure, so a plugin's timeout arrives as `Blocked`,
+/// and a toast reading "blocked" over a log reading "operation timed out" sent the viewer after
+/// a ban when the source had only been slow to answer.
+fn described(error: &ProviderError) -> &'static str {
+    let detail = match error {
+        ProviderError::NotFound => "",
+        ProviderError::Blocked(d)
+        | ProviderError::Parse(d)
+        | ProviderError::Transport(d)
+        | ProviderError::Unavailable(d)
+        | ProviderError::Other(d) => d,
+    };
+    if detail.to_ascii_lowercase().contains("timed out") {
+        "timed out"
+    } else {
+        error.state_label()
+    }
+}
+
+impl ProviderRegistry {
+    pub fn new(providers: Vec<Arc<dyn Provider>>) -> Self {
+        let health = HealthTracker::new(providers.iter().map(|p| p.manifest().id.clone()));
+        let torrents = TorrentPlayback::default();
+        let providers =
+            providers.into_iter().map(|p| TorrentBridge::lend(p, &torrents)).collect();
+        Self {
+            providers: Arc::new(std::sync::RwLock::new(providers)),
+            health,
+            disabled: Arc::default(),
+            arriving: Arc::new(tokio::sync::watch::Sender::new(false)),
+            torrents,
+        }
+    }
+
+    /// The torrent playback every source in this chain that names torrents plays through.
+    pub fn torrents(&self) -> &TorrentPlayback {
+        &self.torrents
+    }
+
+    /// `provider` as it joins this chain: lent torrent playback when it names torrents.
+    fn joining(&self, provider: Arc<dyn Provider>) -> Arc<dyn Provider> {
+        TorrentBridge::lend(provider, &self.torrents)
+    }
+
+    /// Switch off the sources `ids` names, and every other back on: `providers.disabled`, as
+    /// the config in effect has it.
+    pub fn set_disabled(&self, ids: impl IntoIterator<Item = String>) {
+        *self.disabled.write().unwrap_or_else(|e| e.into_inner()) = ids.into_iter().collect();
+    }
+
+    /// Whether the source `id` is switched off by name.
+    pub fn is_disabled(&self, id: &str) -> bool {
+        self.disabled.read().unwrap_or_else(|e| e.into_inner()).contains(id)
+    }
+
+    /// Say that sources are on their way into the chain, until [`Self::arrivals_done`].
+    ///
+    /// The chain as it stands meanwhile is only part of it: an episode looked up against it
+    /// would miss a source that is a moment from joining, or fail for having none at all.
+    /// What would rather wait for the rest says so with [`Self::arrivals`].
+    pub fn expect_arrivals(&self) {
+        self.arriving.send_replace(true);
+    }
+
+    /// Say that the sources on their way have joined the chain, or will not.
+    pub fn arrivals_done(&self) {
+        self.arriving.send_replace(false);
+    }
+
+    /// Whether sources are on their way into the chain.
+    pub fn is_arriving(&self) -> bool {
+        *self.arriving.borrow()
+    }
+
+    /// Wait for the sources on their way to join the chain, for at most `within`. Returns
+    /// whether none are still on their way.
+    pub async fn arrivals(&self, within: std::time::Duration) -> bool {
+        let mut arriving = self.arriving.subscribe();
+        let done = tokio::time::timeout(within, arriving.wait_for(|arriving| !arriving));
+        matches!(done.await, Ok(Ok(_)))
+    }
+
+    /// Add sources discovered after startup, keeping config order.
+    ///
+    /// Appended rather than inserted at a position: `providers.order` already put plugins last by
+    /// default, and a late arrival jumping ahead of a working source would change which one serves
+    /// a stream depending on how fast it compiled — a race deciding playback quality.
+    pub fn extend(&self, more: Vec<Arc<dyn Provider>>) {
+        if more.is_empty() {
+            return;
+        }
+        self.health.register(more.iter().map(|p| p.manifest().id.clone()));
+        let more: Vec<_> = more.into_iter().map(|p| self.joining(p)).collect();
+        let mut providers = self.providers.write().unwrap_or_else(|e| e.into_inner());
+        providers.extend(more);
+    }
+
+    /// Swap the whole chain, for a configuration change that redefines what sources exist.
+    ///
+    /// In place rather than by handing out a new registry: every caller holds a clone, and
+    /// a new object would leave all of them talking to the old chain — which for the torrent
+    /// source means a session the user has just switched off carrying on regardless.
+    ///
+    /// Takes sources as they already stand in a chain, from [`Self::all`]: they have been lent
+    /// torrent playback, if they name torrents, and are not lent it twice.
+    pub fn replace(&self, providers: Vec<Arc<dyn Provider>>) {
+        self.health.register(providers.iter().map(|p| p.manifest().id.clone()));
+        let mut held = self.providers.write().unwrap_or_else(|e| e.into_inner());
+        *held = providers;
+    }
+
+    /// Add a source, or swap it for a newer build of itself.
+    ///
+    /// A replacement keeps its place in the chain. An updated plugin moving to the back would
+    /// change which source serves a stream because of when it was installed, the same race
+    /// [`Self::extend`] avoids for late arrivals.
+    pub fn put(&self, provider: Arc<dyn Provider>) {
+        let provider = self.joining(provider);
+        let id = provider.manifest().id.clone();
+        self.health.register([id.clone()]);
+        let mut providers = self.providers.write().unwrap_or_else(|e| e.into_inner());
+        match providers.iter().position(|p| p.manifest().id == id) {
+            Some(at) => providers[at] = provider,
+            None => providers.push(provider),
+        }
+    }
+
+    /// Add a source that came up after the chain was built, at the place a ranking gives it.
+    ///
+    /// Before the first source that ranks after it, so a source that arrives late — the torrent
+    /// source waits for the VPN guard — still sits where `providers.order` put it rather than
+    /// wherever its arrival time would. A source with the same id is replaced.
+    pub fn insert_ranked<K: Ord>(
+        &self,
+        provider: Arc<dyn Provider>,
+        rank: impl Fn(&dyn Provider) -> K,
+    ) {
+        let provider = self.joining(provider);
+        let id = provider.manifest().id.clone();
+        self.health.register([id.clone()]);
+        let mut providers = self.providers.write().unwrap_or_else(|e| e.into_inner());
+        providers.retain(|p| p.manifest().id != id);
+        let place = rank(provider.as_ref());
+        let at =
+            providers.iter().position(|p| rank(p.as_ref()) > place).unwrap_or(providers.len());
+        providers.insert(at, provider);
+    }
+
+    /// Put the whole chain in the order a ranking gives it.
+    ///
+    /// For a source that joined at the end, or an order that changed under a live chain: where a
+    /// source is tried should follow `providers.order`, not when it compiled or was installed.
+    /// Stable, so sources that rank alike keep the places they had, and a source [`Self::put`]
+    /// swapped for a newer build stays where it was.
+    pub fn rank_by<K: Ord>(&self, rank: impl Fn(&dyn Provider) -> K) {
+        let mut providers = self.providers.write().unwrap_or_else(|e| e.into_inner());
+        providers.sort_by_cached_key(|p| rank(p.as_ref()));
+    }
+
+    /// Take a source out of the chain. Returns whether there was one to take.
+    pub fn remove(&self, id: &str) -> bool {
+        let mut providers = self.providers.write().unwrap_or_else(|e| e.into_inner());
+        let before = providers.len();
+        providers.retain(|p| p.manifest().id != id);
+        providers.len() != before
+    }
+
+    /// The whole chain, for a caller assembling a replacement for it.
+    pub fn all(&self) -> Vec<Arc<dyn Provider>> {
+        self.snapshot()
+    }
+
+    /// The providers of one kind, so a rebuild can keep what it did not rebuild.
+    ///
+    /// Plugins are the case this exists for: they compile in the background and join the
+    /// chain late, so a reload that only knows about configured sources would drop them.
+    pub fn of_kind(&self, kind: ProviderKind) -> Vec<Arc<dyn Provider>> {
+        self.snapshot().into_iter().filter(|p| p.manifest().kind == kind).collect()
+    }
+
+    /// A snapshot of the chain.
+    ///
+    /// Cloned out rather than held: every caller below is `async`, and keeping a `std` lock alive
+    /// across an `await` is how a deadlock gets written.
+    fn snapshot(&self) -> Vec<Arc<dyn Provider>> {
+        self.providers.read().unwrap_or_else(|e| e.into_inner()).clone()
+    }
+
+    pub fn health(&self) -> &HealthTracker {
+        &self.health
+    }
+
+    pub fn ids(&self) -> Vec<String> {
+        self.snapshot().iter().map(|p| p.manifest().id.clone()).collect()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.providers.read().unwrap_or_else(|e| e.into_inner()).is_empty()
+    }
+
+    /// Returns an owned handle rather than a borrow: the chain is behind a lock now, so nothing
+    /// can hand out a reference into it and outlive the read.
+    pub fn get(&self, id: &str) -> Option<Arc<dyn Provider>> {
+        self.snapshot().into_iter().find(|p| p.manifest().id == id)
+    }
+
+    /// The same registry narrowed to one provider, for a title the user has pinned.
+    ///
+    /// A view rather than a new registry: the [`HealthTracker`] is shared, so a failure while
+    /// pinned still counts against that provider everywhere else, and the Providers screen keeps
+    /// telling the truth. Building a fresh registry would give the pinned title its own private
+    /// health record and quietly re-try a source the rest of the app had already given up on.
+    ///
+    /// `None` when the id names nothing — a plugin that was removed, or one that has not finished
+    /// compiling yet. Callers are expected to read that as "fall back to the normal chain" rather
+    /// than as an error: refusing to play because a remembered preference is momentarily
+    /// unresolvable would be a worse answer than playing from the default source.
+    ///
+    /// A source switched off is `None` too, so a title pinned to it plays from the chain.
+    pub fn pinned(&self, provider_id: &str) -> Option<Self> {
+        if self.is_disabled(provider_id) {
+            return None;
+        }
+        let provider = self.get(provider_id)?;
+        Some(Self {
+            providers: Arc::new(std::sync::RwLock::new(vec![provider])),
+            health: self.health.clone(),
+            disabled: self.disabled.clone(),
+            arriving: Arc::clone(&self.arriving),
+            torrents: self.torrents.clone(),
+        })
+    }
+
+    /// The same registry with `provider_id` first in the order, and every other source kept
+    /// behind it, for a title the user has pinned to one.
+    ///
+    /// A pin ranks a source first. It does not take the others away: a source with part of a
+    /// season is no reason to leave the rest of it unplayable. A view like [`Self::pinned`], so
+    /// the health record is shared. A source that is not in the chain leaves the order as it is.
+    pub fn preferring(&self, provider_id: &str) -> Self {
+        let mut providers = self.snapshot();
+        if let Some(at) = providers.iter().position(|p| p.manifest().id == provider_id) {
+            let first = providers.remove(at);
+            providers.insert(0, first);
+        }
+        Self {
+            providers: Arc::new(std::sync::RwLock::new(providers)),
+            health: self.health.clone(),
+            disabled: self.disabled.clone(),
+            arriving: Arc::clone(&self.arriving),
+            torrents: self.torrents.clone(),
+        }
+    }
+
+    /// The same registry without the sources that name torrents, as a view like
+    /// [`Self::pinned`] that shares the health record: what a cast plays from when torrents are
+    /// not to serve it.
+    pub fn without_torrents(&self) -> Self {
+        let providers =
+            self.snapshot().into_iter().filter(|p| !p.manifest().torrents).collect();
+        Self {
+            providers: Arc::new(std::sync::RwLock::new(providers)),
+            health: self.health.clone(),
+            disabled: self.disabled.clone(),
+            arriving: Arc::clone(&self.arriving),
+            torrents: self.torrents.clone(),
+        }
+    }
+
+    /// Give every source that went down another chance, for a change to the sources the user
+    /// made: see [`HealthTracker::reset_down`].
+    pub fn retry_down(&self) {
+        self.health.reset_down();
+    }
+
+    /// The ids of the sources worth trying right now, in preference order.
+    pub fn usable_ids(&self) -> Vec<String> {
+        self.candidates().iter().map(|p| p.manifest().id.clone()).collect()
+    }
+
+    /// Providers that are worth trying right now, in preference order: none switched off.
+    fn candidates(&self) -> Vec<Arc<dyn Provider>> {
+        let usable = self.health.usable(&self.ids());
+        self.snapshot()
+            .into_iter()
+            .filter(|p| {
+                usable.contains(&p.manifest().id) && !self.is_disabled(&p.manifest().id)
+            })
+            .collect()
+    }
+
+    /// Walk the chain until one provider produces a result.
+    async fn walk<T, F, Fut>(&self, now: i64, call: F) -> Attempt<T>
+    where
+        F: Fn(Arc<dyn Provider>) -> Fut,
+        Fut: Future<Output = Result<T, ProviderError>>,
+    {
+        let mut failures = Vec::new();
+
+        for provider in self.candidates() {
+            let id = provider.manifest().id.clone();
+
+            // Local policy first: a provider held back by the VPN guard must not be
+            // contacted at all, and that is not a health event.
+            //
+            // Asked every time rather than remembered, because a hold is a statement about the
+            // present. Recording it and then skipping the provider forever meant a tunnel that
+            // recovered never got to say so.
+            match provider.is_available() {
+                Err(reason) => {
+                    self.health.record_failure(&id, &reason, now);
+                    failures.push((id, reason));
+                    continue;
+                }
+                Ok(()) => self.health.release(&id),
+            }
+
+            let started = Instant::now();
+            match call(provider).await {
+                Ok(value) => {
+                    self.health.record_success(&id, started.elapsed(), now);
+                    return Attempt::success(id, value, failures);
+                }
+                Err(error) => {
+                    self.health.record_failure(&id, &error, now);
+                    // A source without the title speaks for its own catalogue only.
+                    let should_continue =
+                        error.should_failover() || matches!(error, ProviderError::NotFound);
+                    tracing::debug!(provider = %id, %error, should_continue, "provider failed");
+                    failures.push((id, error));
+                    if !should_continue {
+                        break;
+                    }
+                }
+            }
+        }
+
+        Attempt::exhausted(failures)
+    }
+
+    pub async fn search(
+        &self,
+        query: &str,
+        translation: Translation,
+        now: i64,
+    ) -> Attempt<Vec<SearchHit>> {
+        self.walk(now, |p| {
+            let query = query.to_owned();
+            async move { p.search(&query, translation).await }
+        })
+        .await
+    }
+
+    pub async fn episodes(
+        &self,
+        key: &ProviderKey,
+        translation: Translation,
+        now: i64,
+    ) -> Attempt<Vec<Episode>> {
+        self.walk(now, |p| {
+            let key = key.clone();
+            async move { p.episodes(&key, translation).await }
+        })
+        .await
+    }
+
+    /// Every selectable release across usable providers, in provider order.
+    ///
+    /// An aggregation rather than a walk: choosing a release is the user's veto over
+    /// ranking, so hiding what later providers offer because an earlier one answered
+    /// would defeat the point. Failing providers are skipped — a partial slate is
+    /// still a slate.
+    pub async fn sources(
+        &self,
+        key: &ProviderKey,
+        episode: &str,
+        translation: Translation,
+        now: i64,
+    ) -> Vec<SourceCandidate> {
+        // Every provider is asked at once. This gathers rather than fails over, so nothing
+        // depends on order except the slate's, and `join_all` keeps that in candidate order:
+        // the picker waits for the slowest source instead of the sum of them all.
+        let listings = self.candidates().into_iter().map(|provider| async move {
+            let id = provider.manifest().id.clone();
+            if provider.is_available().is_err() {
+                return Vec::new();
+            }
+            let started = Instant::now();
+            match provider.sources(key, episode, translation).await {
+                Ok(candidates) => {
+                    self.health.record_success(&id, started.elapsed(), now);
+                    candidates
+                }
+                Err(error) => {
+                    self.health.record_failure(&id, &error, now);
+                    tracing::debug!(provider = %id, %error, "sources listing failed");
+                    Vec::new()
+                }
+            }
+        });
+        futures::future::join_all(listings).await.concat()
+    }
+
+    /// Resolve a specific pick from [`Self::sources`] on the provider that offered it.
+    ///
+    /// Deliberately no failover: substituting another provider's stream for the exact
+    /// release the user chose would silently undo the choice.
+    pub async fn resolve_source(
+        &self,
+        provider_id: &str,
+        key: &ProviderKey,
+        episode: &str,
+        translation: Translation,
+        source_id: &str,
+        now: i64,
+    ) -> Result<Vec<Stream>, ProviderError> {
+        let provider = self
+            .snapshot()
+            .into_iter()
+            .find(|p| p.manifest().id == provider_id)
+            .ok_or(ProviderError::NotFound)?;
+        provider.is_available()?;
+        let started = Instant::now();
+        match provider.resolve_source(key, episode, translation, source_id).await {
+            Ok(streams) if streams.is_empty() => Err(ProviderError::NotFound),
+            Ok(streams) => {
+                self.health.record_success(provider_id, started.elapsed(), now);
+                Ok(streams)
+            }
+            Err(error) => {
+                self.health.record_failure(provider_id, &error, now);
+                Err(error)
+            }
+        }
+    }
+
+    pub async fn resolve(
+        &self,
+        key: &ProviderKey,
+        episode: &str,
+        translation: Translation,
+        now: i64,
+    ) -> Attempt<Vec<Stream>> {
+        self.walk(now, |p| {
+            let key = key.clone();
+            let episode = episode.to_owned();
+            async move {
+                let streams = p.resolve(&key, &episode, translation).await?;
+                // A provider returning zero streams has not succeeded. Treating an empty
+                // list as success would end the walk and leave nothing to play.
+                if streams.is_empty() {
+                    return Err(ProviderError::NotFound);
+                }
+                Ok(streams)
+            }
+        })
+        .await
+    }
+
+    /// Probe every provider, for the Providers screen.
+    ///
+    /// Concurrently: each provider is its own host, so the screen waits for the slowest probe
+    /// rather than the sum of them. Each latency is still timed from its own start.
+    pub async fn check_all(&self, now: i64) {
+        let on = self.snapshot().into_iter().filter(|p| !self.is_disabled(&p.manifest().id));
+        let probes = on.map(|provider| async move {
+            let id = provider.manifest().id.clone();
+            if let Err(reason) = provider.is_available() {
+                self.health.record_failure(&id, &reason, now);
+                return;
+            }
+            let started = Instant::now();
+            match provider.health_check().await {
+                Ok(()) => self.health.record_success(&id, started.elapsed(), now),
+                Err(e) => self.health.record_failure(&id, &e, now),
+            }
+        });
+        futures::future::join_all(probes).await;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::time::Duration;
+
+    use super::*;
+    use crate::mock::MockProvider;
+
+    #[tokio::test(start_paused = true)]
+    async fn sources_on_their_way_are_waited_for_as_long_as_asked() {
+        let registry = ProviderRegistry::new(Vec::new());
+        assert!(registry.arrivals(Duration::from_secs(1)).await, "nothing on its way");
+
+        registry.expect_arrivals();
+        assert!(registry.is_arriving());
+        let started = tokio::time::Instant::now();
+        assert!(!registry.arrivals(Duration::from_secs(30)).await, "still on its way");
+        assert_eq!(started.elapsed(), Duration::from_secs(30), "waited as long as asked");
+
+        // Joined partway through a wait: the wait ends then, with them in the chain.
+        let waiting = tokio::spawn({
+            let registry = registry.clone();
+            async move { registry.arrivals(Duration::from_secs(30)).await }
+        });
+        tokio::time::sleep(Duration::from_secs(2)).await;
+        registry.extend(vec![MockProvider::new("late").arc()]);
+        registry.arrivals_done();
+        assert!(waiting.await.unwrap());
+        assert_eq!(registry.ids(), ["late"]);
+        assert!(!registry.is_arriving());
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn every_provider_is_probed_at_once() {
+        let slow = |id| MockProvider::new(id).with_latency(Duration::from_millis(300)).arc();
+        let registry = registry(vec![slow("a"), slow("b"), slow("c")]);
+
+        let started = tokio::time::Instant::now();
+        registry.check_all(0).await;
+        let took = started.elapsed();
+        assert!(took < Duration::from_millis(400), "probes ran in turn: {took:?}");
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn sources_are_gathered_at_once_and_kept_in_provider_order() {
+        let listing = |id: &str, ms| {
+            MockProvider::new(id)
+                .with_latency(Duration::from_millis(ms))
+                .with_sources(vec![SourceCandidate {
+                    id: format!("{id}-release"),
+                    provider_id: id.into(),
+                    title: id.into(),
+                    quality: None,
+                    label: None,
+                    size: None,
+                    dual_audio: false,
+                    dubbed: false,
+                    auto_pick: false,
+                }])
+                .arc()
+        };
+        // The first provider answers last, so arrival order is the reverse of provider order.
+        let registry = registry(vec![listing("a", 300), listing("b", 100)]);
+
+        let started = tokio::time::Instant::now();
+        let slate = registry.sources(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        let took = started.elapsed();
+        assert!(took < Duration::from_millis(400), "providers were asked in turn: {took:?}");
+        let order: Vec<_> = slate.iter().map(|c| c.provider_id.as_str()).collect();
+        assert_eq!(order, ["a", "b"], "the slate must keep provider order, not arrival order");
+    }
+
+    fn registry(providers: Vec<Arc<dyn Provider>>) -> ProviderRegistry {
+        ProviderRegistry::new(providers)
+    }
+
+    #[tokio::test]
+    async fn a_source_switched_off_keeps_its_place_and_is_never_asked() {
+        let off = MockProvider::new("off").with_streams(vec![stream("off's")]);
+        let asked = off.call_count();
+        let r = registry(vec![
+            off.arc(),
+            MockProvider::new("on").with_streams(vec![stream("on's")]).arc(),
+        ]);
+        r.set_disabled(["off".to_owned()]);
+
+        assert_eq!(r.ids(), ["off", "on"], "kept in the chain, where it was");
+        assert_eq!(r.usable_ids(), ["on"]);
+        assert!(r.is_disabled("off") && !r.is_disabled("on"));
+        let attempt = r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        assert_eq!(attempt.provider.as_deref(), Some("on"));
+        r.check_all(0).await;
+        assert_eq!(
+            asked.load(std::sync::atomic::Ordering::SeqCst),
+            0,
+            "never asked, nor probed"
+        );
+        assert!(r.pinned("off").is_none(), "a title pinned to it plays from the chain");
+
+        // Back on, at once: nothing to load again.
+        r.set_disabled(Vec::new());
+        assert_eq!(r.usable_ids(), ["off", "on"]);
+        let attempt = r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        assert_eq!(attempt.provider.as_deref(), Some("off"));
+    }
+
+    #[tokio::test]
+    async fn a_source_that_names_torrents_waits_for_torrent_playback() {
+        let r = registry(vec![
+            MockProvider::new("index").torrents().with_streams(vec![stream("index's")]).arc(),
+            MockProvider::new("site").with_streams(vec![stream("site's")]).arc(),
+        ]);
+        let attempt = r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        assert_eq!(attempt.provider.as_deref(), Some("site"), "passed over, not failed");
+        let index = r.health().get("index").unwrap();
+        assert_eq!(index.held_back.as_deref(), Some(crate::torrent::bridge::PLAYBACK_OFF));
+        assert_eq!(
+            index.health,
+            kaeri_core::error::Health::Unknown,
+            "never contacted, and policy is not a failure"
+        );
+        // The views share the chain's playback, so one session reaches every one of them.
+        assert!(r.preferring("index").torrents().session().is_none());
+    }
+
+    #[tokio::test]
+    async fn a_view_without_torrents_plays_from_the_rest_and_shares_their_health() {
+        let r = registry(vec![
+            MockProvider::new("swarm").torrents().with_streams(vec![stream("swarm's")]).arc(),
+            MockProvider::new("site").with_streams(vec![stream("site's")]).arc(),
+        ]);
+        let view = r.without_torrents();
+        assert_eq!(view.ids(), ["site"]);
+        assert_eq!(r.ids(), ["swarm", "site"], "the registry itself keeps them");
+        let attempt = view.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        assert_eq!(attempt.provider.as_deref(), Some("site"));
+        r.set_disabled(["site".to_owned()]);
+        assert!(view.usable_ids().is_empty(), "switched off in the view too");
+    }
+
+    #[test]
+    fn an_updated_source_keeps_its_place_and_a_new_one_goes_last() {
+        let r = registry(vec![
+            MockProvider::new("a").arc(),
+            MockProvider::new("b").arc(),
+            MockProvider::new("c").arc(),
+        ]);
+        r.put(MockProvider::new("b").with_streams(vec![stream("newer")]).arc());
+        assert_eq!(r.ids(), ["a", "b", "c"]);
+        r.put(MockProvider::new("d").arc());
+        assert_eq!(r.ids(), ["a", "b", "c", "d"]);
+    }
+
+    #[test]
+    fn a_late_source_takes_the_place_its_rank_gives_it() {
+        // The torrent source comes up once the VPN guard passes, after sources that were
+        // ready at once; it must still be tried in the order the configuration names.
+        let rank = |p: &dyn Provider| match p.manifest().id.as_str() {
+            "early" => 0,
+            "late" => 1,
+            _ => 2,
+        };
+        let r =
+            registry(vec![MockProvider::new("early").arc(), MockProvider::new("after").arc()]);
+        r.insert_ranked(MockProvider::new("late").arc(), rank);
+        assert_eq!(r.ids(), ["early", "late", "after"]);
+        r.insert_ranked(MockProvider::new("late").arc(), rank);
+        assert_eq!(r.ids(), ["early", "late", "after"], "replaced, not doubled");
+    }
+
+    #[test]
+    fn ranking_the_chain_moves_only_what_the_ranking_tells_apart() {
+        // `b` and `c` rank alike, so they keep the order they had between them; `d` outranks
+        // both and moves ahead of them.
+        let rank = |p: &dyn Provider| match p.manifest().id.as_str() {
+            "a" => 0,
+            "d" => 1,
+            _ => 2,
+        };
+        let r = registry(vec![
+            MockProvider::new("c").arc(),
+            MockProvider::new("a").arc(),
+            MockProvider::new("b").arc(),
+            MockProvider::new("d").arc(),
+        ]);
+        r.rank_by(rank);
+        assert_eq!(r.ids(), ["a", "d", "c", "b"]);
+        // An updated source is swapped in place, and ranking again leaves it there.
+        r.put(MockProvider::new("c").with_streams(vec![stream("newer")]).arc());
+        r.rank_by(rank);
+        assert_eq!(r.ids(), ["a", "d", "c", "b"]);
+    }
+
+    #[test]
+    fn a_removed_source_leaves_the_chain() {
+        let r = registry(vec![MockProvider::new("a").arc(), MockProvider::new("b").arc()]);
+        assert!(r.remove("a"));
+        assert!(!r.remove("a"));
+        assert_eq!(r.ids(), ["b"]);
+    }
+
+    fn stream(url: &str) -> Stream {
+        Stream::new(url, kaeri_core::stream::StreamKind::Hls)
+    }
+
+    #[tokio::test]
+    async fn the_first_working_provider_wins() {
+        let r = registry(vec![
+            MockProvider::new("a").with_streams(vec![stream("from-a")]).arc(),
+            MockProvider::new("b").with_streams(vec![stream("from-b")]).arc(),
+        ]);
+        let attempt = r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        assert_eq!(attempt.provider.as_deref(), Some("a"));
+        assert_eq!(attempt.value.unwrap()[0].url, "from-a");
+        assert!(attempt.failures.is_empty());
+    }
+
+    #[tokio::test]
+    async fn pinning_uses_the_named_provider_rather_than_the_first() {
+        let r = registry(vec![
+            MockProvider::new("a").with_streams(vec![stream("from-a")]).arc(),
+            MockProvider::new("b").with_streams(vec![stream("from-b")]).arc(),
+        ]);
+        let pinned = r.pinned("b").expect("b is registered");
+        let attempt = pinned.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        assert_eq!(attempt.provider.as_deref(), Some("b"));
+        assert_eq!(attempt.value.unwrap()[0].url, "from-b");
+    }
+
+    #[tokio::test]
+    async fn a_pinned_provider_does_not_fail_over_to_the_others() {
+        // The point of pinning: substituting another source for the one the user chose would
+        // silently undo the choice, exactly as it would for a picked release.
+        let r = registry(vec![
+            MockProvider::new("a").with_streams(vec![stream("from-a")]).arc(),
+            MockProvider::new("b").failing(ProviderError::Blocked("down".into())).arc(),
+        ]);
+        let pinned = r.pinned("b").expect("b is registered");
+        let attempt = pinned.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        assert!(attempt.value.is_none(), "must not quietly serve a's stream instead");
+        assert_eq!(attempt.failures.len(), 1);
+    }
+
+    #[test]
+    fn pinning_an_unknown_provider_is_none_rather_than_an_empty_registry() {
+        // An empty registry would resolve to "no providers configured", which reads as a
+        // misconfiguration. `None` lets the caller fall back to the normal chain instead.
+        let r = registry(vec![MockProvider::new("a").arc()]);
+        assert!(r.pinned("a").is_some());
+        assert!(r.pinned("removed-plugin").is_none());
+    }
+
+    #[tokio::test]
+    async fn a_hold_is_lifted_once_the_provider_is_available_again() {
+        // A hold is a statement about the present, so it has to be re-examined. Filtering held
+        // providers out of the chain meant the question was never asked again: one failed VPN
+        // check took torrenting out until the process restarted, however healthy the tunnel
+        // became afterwards.
+        let r =
+            registry(vec![MockProvider::new("a").with_streams(vec![stream("from-a")]).arc()]);
+        r.health().hold_back("a", "vpn guard failing");
+
+        let attempt = r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+
+        assert_eq!(
+            attempt.provider.as_deref(),
+            Some("a"),
+            "a held provider must still be asked whether it is available"
+        );
+        assert!(
+            r.health().get("a").is_none_or(|h| h.held_back.is_none()),
+            "the hold outlived the reason for it"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_provider_that_is_still_withheld_is_not_contacted() {
+        // The other half: lifting a stale hold must not weaken a live one.
+        let provider = MockProvider::new("a").unavailable("vpn guard failing");
+        let calls = provider.call_count();
+        let r = registry(vec![provider.arc()]);
+
+        let attempt = r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+
+        assert!(attempt.value.is_none(), "a withheld provider must not serve");
+        assert_eq!(calls.load(std::sync::atomic::Ordering::Relaxed), 0, "it was contacted");
+        assert_eq!(
+            r.health().get("a").and_then(|h| h.held_back),
+            Some("vpn guard failing".to_string())
+        );
+    }
+
+    #[tokio::test]
+    async fn a_pinned_view_shares_health_with_the_registry_it_came_from() {
+        // Shared rather than copied, so a failure while pinned is still visible on the
+        // Providers screen and to every other title.
+        let r = registry(vec![
+            MockProvider::new("a").arc(),
+            MockProvider::new("b").failing(ProviderError::Blocked("down".into())).arc(),
+        ]);
+        let pinned = r.pinned("b").expect("b is registered");
+        let _ = pinned.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        let recorded = r.health().get("b").expect("b is tracked");
+        assert!(
+            recorded.consecutive_failures > 0,
+            "the failure should be recorded on the shared tracker"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_blocked_provider_fails_over_to_the_next() {
+        let r = registry(vec![
+            MockProvider::new("a").failing(ProviderError::Blocked("cloudflare".into())).arc(),
+            MockProvider::new("b").with_streams(vec![stream("from-b")]).arc(),
+        ]);
+        let attempt = r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        assert_eq!(attempt.provider.as_deref(), Some("b"));
+        assert_eq!(attempt.failures.len(), 1, "the failure is carried, not discarded");
+        assert_eq!(attempt.failures[0].0, "a");
+    }
+
+    #[tokio::test]
+    async fn a_not_found_moves_on_without_counting_against_the_source() {
+        // Sources keep their own catalogues: one without the title says nothing about the next.
+        let r = registry(vec![
+            MockProvider::new("a").failing(ProviderError::NotFound).arc(),
+            MockProvider::new("b")
+                .with_hits(vec![SearchHit::new(ProviderKey::new("b-1"), "x")])
+                .arc(),
+        ]);
+
+        let attempt = r.search("x", Translation::Sub, 0).await;
+        assert_eq!(attempt.provider.as_deref(), Some("b"));
+        assert_eq!(attempt.failures, [("a".to_owned(), ProviderError::NotFound)]);
+        assert!(r.health().get("a").is_some_and(|h| h.is_usable()), "an answer is not a fault");
+    }
+
+    #[tokio::test]
+    async fn every_failure_is_reported_when_the_chain_is_exhausted() {
+        let r = registry(vec![
+            MockProvider::new("a").failing(ProviderError::Blocked("403".into())).arc(),
+            MockProvider::new("b").failing(ProviderError::Parse("no url".into())).arc(),
+            MockProvider::new("c").failing(ProviderError::Transport("timeout".into())).arc(),
+        ]);
+        let attempt = r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        assert!(!attempt.is_success());
+        assert_eq!(attempt.failures.len(), 3);
+
+        // The UI needs to name what broke, never show a bare empty list.
+        let summary = attempt.summary();
+        assert!(summary.contains("a: blocked"));
+        assert!(summary.contains("b: parse error"));
+        assert!(summary.contains("c: unreachable"));
+    }
+
+    #[tokio::test]
+    async fn a_timeout_is_named_whatever_it_was_filed_under() {
+        // How a plugin reports one: its vocabulary has no transport failure.
+        let r = registry(vec![
+            MockProvider::new("a")
+                .failing(ProviderError::Blocked("operation timed out".into()))
+                .arc(),
+        ]);
+        let attempt = r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        assert_eq!(attempt.summary(), "a: timed out");
+    }
+
+    #[tokio::test]
+    async fn an_empty_stream_list_is_not_treated_as_success() {
+        // Otherwise the walk ends with nothing to play and no explanation.
+        let r = registry(vec![
+            MockProvider::new("a").with_streams(vec![]).arc(),
+            MockProvider::new("b").with_streams(vec![stream("from-b")]).arc(),
+        ]);
+        let attempt = r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        // Empty maps to NotFound, so the walk moves on to a source that has something.
+        assert_eq!(attempt.provider.as_deref(), Some("b"));
+        assert_eq!(attempt.failures[0].1, ProviderError::NotFound);
+    }
+
+    #[tokio::test]
+    async fn a_held_back_provider_is_never_contacted() {
+        // The VPN guard has to prevent the request, not merely discard its result.
+        let torrent = MockProvider::new("torrent")
+            .with_streams(vec![stream("leaky")])
+            .unavailable("vpn guard failing");
+        let calls = torrent.call_count();
+
+        let r = registry(vec![
+            torrent.arc(),
+            MockProvider::new("remote").with_streams(vec![stream("safe")]).arc(),
+        ]);
+        let attempt = r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+
+        assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), 0, "no request may leave");
+        assert_eq!(attempt.provider.as_deref(), Some("remote"));
+        assert_eq!(r.health().get("torrent").unwrap().state_label(), "held back");
+    }
+
+    #[tokio::test]
+    async fn a_downed_provider_is_skipped_on_later_attempts() {
+        let a = MockProvider::new("a").failing(ProviderError::Blocked("403".into()));
+        let calls = a.call_count();
+        let r = registry(vec![
+            a.arc(),
+            MockProvider::new("b").with_streams(vec![stream("from-b")]).arc(),
+        ]);
+
+        // Three failures take it down.
+        for i in 0..3 {
+            r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, i).await;
+        }
+        let before = calls.load(std::sync::atomic::Ordering::SeqCst);
+        assert_eq!(before, 3);
+
+        r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 4).await;
+        assert_eq!(
+            calls.load(std::sync::atomic::Ordering::SeqCst),
+            before,
+            "a downed provider should not keep being retried every request"
+        );
+    }
+
+    #[tokio::test]
+    async fn success_records_latency_for_the_providers_screen() {
+        let r = registry(vec![MockProvider::new("a").with_streams(vec![stream("x")]).arc()]);
+        r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        assert!(r.health().get("a").unwrap().last_latency.is_some());
+    }
+
+    #[tokio::test]
+    async fn an_empty_registry_reports_that_rather_than_hanging() {
+        let r = registry(vec![]);
+        let attempt = r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        assert!(!attempt.is_success());
+        assert_eq!(attempt.summary(), "no providers configured");
+        assert!(r.is_empty());
+    }
+
+    #[tokio::test]
+    async fn search_and_episodes_walk_the_chain_the_same_way() {
+        let r = registry(vec![
+            MockProvider::new("a").failing(ProviderError::Blocked("x".into())).arc(),
+            MockProvider::new("b")
+                .with_hits(vec![SearchHit::new(ProviderKey::new("k"), "Hoshikuzu")])
+                .with_episodes(vec![Episode::new(1u32)])
+                .arc(),
+        ]);
+        assert_eq!(
+            r.search("hoshikuzu", Translation::Sub, 0).await.provider.as_deref(),
+            Some("b")
+        );
+        assert_eq!(
+            r.episodes(&ProviderKey::new("k"), Translation::Sub, 0).await.provider.as_deref(),
+            Some("b")
+        );
+    }
+
+    #[tokio::test]
+    async fn checking_all_providers_populates_the_screen() {
+        let r = registry(vec![
+            MockProvider::new("a").with_hits(vec![]).arc(),
+            MockProvider::new("b").failing(ProviderError::Transport("down".into())).arc(),
+            MockProvider::new("c").unavailable("vpn down").arc(),
+        ]);
+        r.check_all(0).await;
+
+        let all = r.health().all();
+        assert_eq!(all.len(), 3);
+        assert_eq!(r.health().get("a").unwrap().state_label(), "ready");
+        assert_eq!(r.health().get("b").unwrap().state_label(), "degraded");
+        assert_eq!(r.health().get("c").unwrap().state_label(), "held back");
+    }
+}

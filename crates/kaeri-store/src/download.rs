@@ -1,0 +1,679 @@
+//! The download queue.
+//!
+//! Persistent because the *files* outlive the process. A queue held in memory would, after a
+//! restart, either re-fetch from zero or leave partial files on disk that nothing knows about —
+//! and librqbit can resume a partial torrent, so throwing away the magnet is throwing away the
+//! only thing that makes resumption possible.
+//!
+//! Progress is written here as it changes rather than only at the end. That is a deliberate cost:
+//! it means a download interrupted by a crash comes back showing where it actually got to, instead
+//! of claiming zero and re-downloading what is already on disk.
+
+use rusqlite::OptionalExtension;
+
+use crate::{Result, Store, now};
+use kaeri_core::ids::AnilistId;
+
+/// Where a download is in its life.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DownloadState {
+    /// Accepted, not started. The queue is bounded, so this is a real state and not a formality.
+    Queued,
+    Active,
+    Paused,
+    Done,
+    Failed,
+}
+
+impl DownloadState {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Queued => "queued",
+            Self::Active => "active",
+            Self::Paused => "paused",
+            Self::Done => "done",
+            Self::Failed => "failed",
+        }
+    }
+
+    /// Parse a stored value. An unrecognised state is treated as queued rather than dropped: a row
+    /// written by a newer build should reappear as something the user can act on, not vanish.
+    pub fn parse(value: &str) -> Self {
+        match value {
+            "active" => Self::Active,
+            "paused" => Self::Paused,
+            "done" => Self::Done,
+            "failed" => Self::Failed,
+            _ => Self::Queued,
+        }
+    }
+
+    /// Whether this download still wants the network.
+    pub const fn is_running(self) -> bool {
+        matches!(self, Self::Queued | Self::Active)
+    }
+}
+
+/// One row of the queue.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Download {
+    pub id: i64,
+    pub anilist_id: AnilistId,
+    pub episode: String,
+    pub title: String,
+    pub magnet: String,
+    pub state: DownloadState,
+    pub path: Option<String>,
+    pub downloaded: u64,
+    pub total: u64,
+    pub error: Option<String>,
+    pub created_at: i64,
+    pub updated_at: i64,
+    /// Queued by keep next, to have a show's next episodes on the device, rather than asked for.
+    pub ahead: bool,
+    /// When the viewer asked it to start now, which put it at the front of the queue: see
+    /// [`Store::download_to_front`].
+    pub front_at: Option<i64>,
+}
+
+impl Download {
+    pub fn fraction(&self) -> f64 {
+        if self.total == 0 {
+            return 0.0;
+        }
+        (self.downloaded as f64 / self.total as f64).clamp(0.0, 1.0)
+    }
+}
+
+impl Store {
+    /// Add an episode to the queue, or return the existing row.
+    ///
+    /// Idempotent on `(anilist_id, episode)`. A held-down key must not queue the same file eight
+    /// times, and re-requesting something already downloaded should surface *that* rather than
+    /// starting again. Asked for, a row keep next queued becomes the viewer's own.
+    pub fn enqueue_download(
+        &self,
+        anilist_id: AnilistId,
+        episode: &str,
+        title: &str,
+        magnet: &str,
+    ) -> Result<Download> {
+        self.insert_download(anilist_id, episode, title, magnet, false)
+    }
+
+    /// [`Self::enqueue_download`], for keep next: the row says it was queued ahead. One the
+    /// viewer asked for stays theirs.
+    pub fn enqueue_download_ahead(
+        &self,
+        anilist_id: AnilistId,
+        episode: &str,
+        title: &str,
+        magnet: &str,
+    ) -> Result<Download> {
+        self.insert_download(anilist_id, episode, title, magnet, true)
+    }
+
+    fn insert_download(
+        &self,
+        anilist_id: AnilistId,
+        episode: &str,
+        title: &str,
+        magnet: &str,
+        ahead: bool,
+    ) -> Result<Download> {
+        let at = now();
+        self.with_tx(|c| {
+            // Asked for by the viewer: theirs to keep, whatever they let go of before.
+            if !ahead {
+                c.execute(
+                    "DELETE FROM download_dismissed WHERE anilist_id = ?1 AND episode = ?2",
+                    rusqlite::params![anilist_id.get(), episode],
+                )?;
+            }
+            c.execute(
+                "INSERT INTO download
+                    (anilist_id, episode, title, magnet, state, created_at, updated_at, ahead)
+                 VALUES (?1, ?2, ?3, ?4, 'queued', ?5, ?5, ?6)
+                 ON CONFLICT(anilist_id, episode) DO UPDATE SET
+                    -- A failed download asked for again is a retry, so it re-enters the queue. One
+                    -- that is running or finished is left exactly as it is.
+                    state = CASE WHEN download.state = 'failed' THEN 'queued' ELSE download.state END,
+                    error = CASE WHEN download.state = 'failed' THEN NULL ELSE download.error END,
+                    -- The magnet belongs to the same guard. It was outside it, so re-requesting
+                    -- an episode repointed a *running* torrent at different content: the state
+                    -- and the bytes already on disk stayed, and after a restart the queue
+                    -- resumed a different release against that partial file. A retry of a
+                    -- failed row is the one case where taking the new magnet is the point.
+                    magnet = CASE WHEN download.state = 'failed' THEN excluded.magnet
+                                  ELSE download.magnet END,
+                    -- Asked for by the viewer, it is theirs from now on; keep next never takes
+                    -- one of theirs over.
+                    ahead = download.ahead AND excluded.ahead,
+                    -- A retry waits its turn: a start now was for the attempt that failed.
+                    front_at = CASE WHEN download.state = 'failed' THEN NULL
+                                    ELSE download.front_at END,
+                    updated_at = ?5",
+                rusqlite::params![anilist_id.get(), episode, title, magnet, at, ahead],
+            )?;
+            Ok(())
+        })?;
+        self.download_for(anilist_id, episode)?
+            .ok_or_else(|| crate::StoreError::Missing("download row after insert".into()))
+    }
+
+    /// Make download `id` the viewer's own: asked for, a row keep next queued is no longer one
+    /// it queued.
+    pub fn keep_download(&self, id: i64) -> Result<()> {
+        self.with_conn(|c| {
+            c.execute("UPDATE download SET ahead = 0 WHERE id = ?1", [id])?;
+            Ok(())
+        })
+    }
+
+    pub fn download_for(
+        &self,
+        anilist_id: AnilistId,
+        episode: &str,
+    ) -> Result<Option<Download>> {
+        self.with_conn(|c| {
+            Ok(c.query_row(
+                "SELECT id, anilist_id, episode, title, magnet, state, path, downloaded, total,
+                        error, created_at, updated_at, ahead, front_at
+                   FROM download WHERE anilist_id = ?1 AND episode = ?2",
+                rusqlite::params![anilist_id.get(), episode],
+                row_to_download,
+            )
+            .optional()?)
+        })
+    }
+
+    /// The whole queue, newest request first.
+    pub fn downloads(&self) -> Result<Vec<Download>> {
+        self.with_conn(|c| {
+            let mut stmt = c.prepare(
+                "SELECT id, anilist_id, episode, title, magnet, state, path, downloaded, total,
+                        error, created_at, updated_at, ahead, front_at
+                   FROM download ORDER BY created_at DESC",
+            )?;
+            let rows = stmt.query_map([], row_to_download)?;
+            Ok(rows.collect::<rusqlite::Result<Vec<_>>>()?)
+        })
+    }
+
+    /// Downloads that still want the network, oldest first.
+    ///
+    /// Oldest first deliberately, unlike the display order: the queue should drain in the order it
+    /// was filled, while the screen should show what you just asked for at the top.
+    pub fn pending_downloads(&self) -> Result<Vec<Download>> {
+        self.with_conn(|c| {
+            let mut stmt = c.prepare(
+                "SELECT id, anilist_id, episode, title, magnet, state, path, downloaded, total,
+                        error, created_at, updated_at, ahead, front_at
+                   FROM download
+                  WHERE state IN ('queued', 'active')
+                  ORDER BY front_at IS NULL, front_at DESC, created_at ASC, id ASC",
+            )?;
+            let rows = stmt.query_map([], row_to_download)?;
+            Ok(rows.collect::<rusqlite::Result<Vec<_>>>()?)
+        })
+    }
+
+    /// Record progress against a download.
+    pub fn update_download_progress(
+        &self,
+        id: i64,
+        downloaded: u64,
+        total: u64,
+        path: Option<&str>,
+    ) -> Result<()> {
+        self.with_conn(|c| {
+            c.execute(
+                "UPDATE download
+                    SET downloaded = ?2,
+                        -- Never overwrite a known total with zero: metadata arrives after the
+                        -- torrent is added, and a stats poll in between reports nothing.
+                        total = CASE WHEN ?3 > 0 THEN ?3 ELSE total END,
+                        path = COALESCE(?4, path),
+                        state = CASE WHEN state = 'queued' THEN 'active' ELSE state END,
+                        updated_at = ?5
+                  WHERE id = ?1",
+                // Cast at the boundary: SQLite integers are signed, and a torrent will never
+                // approach the point where that matters.
+                rusqlite::params![id, downloaded as i64, total as i64, path, now()],
+            )?;
+            Ok(())
+        })
+    }
+
+    /// Date a download's request to `at`, for test fixtures.
+    ///
+    /// The queue lists by request time, which is kept in whole seconds, so rows a fixture adds
+    /// either side of a second boundary swapped places from one run to the next. A fixture
+    /// that dates each row itself lists the same way every time. The app never back-dates a
+    /// request, which is why this is hidden.
+    #[doc(hidden)]
+    pub fn date_download_request(&self, id: i64, at: i64) -> Result<()> {
+        self.with_conn(|c| {
+            c.execute(
+                "UPDATE download SET created_at = ?2 WHERE id = ?1",
+                rusqlite::params![id, at],
+            )?;
+            Ok(())
+        })
+    }
+
+    /// Put a waiting or paused download at the front of the queue, waiting, as asked at `at`:
+    /// "Start now". Ahead of every other waiting download, the ones asked to start now since
+    /// excepted. Whether it was one to move: a download running, finished or failed is not.
+    pub fn download_to_front(&self, id: i64, at: i64) -> Result<bool> {
+        self.with_conn(|c| {
+            let moved = c.execute(
+                "UPDATE download SET state = 'queued', front_at = ?2, updated_at = ?2
+                  WHERE id = ?1 AND state IN ('queued', 'paused')",
+                rusqlite::params![id, at],
+            )?;
+            Ok(moved > 0)
+        })
+    }
+
+    pub fn set_download_state(&self, id: i64, state: DownloadState) -> Result<()> {
+        self.with_conn(|c| {
+            c.execute(
+                "UPDATE download SET state = ?2, updated_at = ?3 WHERE id = ?1",
+                rusqlite::params![id, state.as_str(), now()],
+            )?;
+            Ok(())
+        })
+    }
+
+    /// Mark a download finished, recording where the file ended up.
+    pub fn finish_download(&self, id: i64, path: Option<&str>) -> Result<()> {
+        self.with_conn(|c| {
+            c.execute(
+                // `downloaded = total` reads as "it is all here", and is right whenever the
+                // total was learned. It was unconditional, so a download that finished before
+                // metadata arrived set both to zero and then rendered as 0% — finished, and
+                // reported as not started. Falling back to what was actually fetched keeps the
+                // meter honest in that case.
+                "UPDATE download
+                    SET state = 'done',
+                        downloaded = CASE WHEN total > 0 THEN total ELSE downloaded END,
+                        total = CASE WHEN total > 0 THEN total ELSE downloaded END,
+                        path = COALESCE(?2, path),
+                        error = NULL, updated_at = ?3
+                  WHERE id = ?1",
+                rusqlite::params![id, path, now()],
+            )?;
+            Ok(())
+        })
+    }
+
+    pub fn fail_download(&self, id: i64, reason: &str) -> Result<()> {
+        self.with_conn(|c| {
+            c.execute(
+                "UPDATE download SET state = 'failed', error = ?2, updated_at = ?3 WHERE id = ?1",
+                rusqlite::params![id, reason, now()],
+            )?;
+            Ok(())
+        })
+    }
+
+    /// Take a download off the queue, as the viewer lets it go: keep next does not queue its
+    /// episode again unless they ask for it themselves.
+    pub fn remove_download(&self, id: i64) -> Result<()> {
+        self.with_tx(|tx| {
+            tx.execute(
+                "INSERT OR REPLACE INTO download_dismissed (anilist_id, episode, at)
+                 SELECT anilist_id, episode, ?2 FROM download WHERE id = ?1",
+                rusqlite::params![id, now()],
+            )?;
+            tx.execute("DELETE FROM download WHERE id = ?1", [id])?;
+            Ok(())
+        })
+    }
+
+    /// Drop every finished row, returning how many went. Their files stay where they are, so
+    /// keep next does not fetch their episodes again either.
+    pub fn clear_completed_downloads(&self) -> Result<usize> {
+        self.with_tx(|tx| {
+            tx.execute(
+                "INSERT OR REPLACE INTO download_dismissed (anilist_id, episode, at)
+                 SELECT anilist_id, episode, ?1 FROM download WHERE state = 'done'",
+                [now()],
+            )?;
+            Ok(tx.execute("DELETE FROM download WHERE state = 'done'", [])?)
+        })
+    }
+
+    /// Take download `id` off the queue as keep next's, a day after its episode was watched:
+    /// only one keep next queued and the viewer never asked for, and not kept as let go of,
+    /// since a watched episode is not queued again anyway. Whether there was one to take.
+    pub fn expire_download(&self, id: i64) -> Result<bool> {
+        self.with_conn(|c| {
+            Ok(c.execute("DELETE FROM download WHERE id = ?1 AND ahead = 1", [id])? > 0)
+        })
+    }
+
+    /// Whether the viewer let `episode` of `anilist_id` go from the queue, and has not asked
+    /// for it since: keep next leaves it alone.
+    pub fn download_dismissed(&self, anilist_id: AnilistId, episode: &str) -> Result<bool> {
+        self.with_conn(|c| {
+            Ok(c.query_row(
+                "SELECT EXISTS(SELECT 1 FROM download_dismissed
+                                WHERE anilist_id = ?1 AND episode = ?2)",
+                rusqlite::params![anilist_id.get(), episode],
+                |r| r.get(0),
+            )?)
+        })
+    }
+
+    /// How many downloads still want the network — the rail badge.
+    pub fn active_download_count(&self) -> Result<u32> {
+        self.with_conn(|c| {
+            Ok(c.query_row(
+                "SELECT COUNT(*) FROM download WHERE state IN ('queued', 'active')",
+                [],
+                |r| r.get(0),
+            )?)
+        })
+    }
+}
+
+fn row_to_download(row: &rusqlite::Row<'_>) -> rusqlite::Result<Download> {
+    Ok(Download {
+        id: row.get(0)?,
+        anilist_id: AnilistId::new(row.get::<_, u32>(1)?),
+        episode: row.get(2)?,
+        title: row.get(3)?,
+        magnet: row.get(4)?,
+        state: DownloadState::parse(&row.get::<_, String>(5)?),
+        path: row.get(6)?,
+        downloaded: row.get::<_, i64>(7)?.max(0) as u64,
+        total: row.get::<_, i64>(8)?.max(0) as u64,
+        error: row.get(9)?,
+        created_at: row.get(10)?,
+        updated_at: row.get(11)?,
+        ahead: row.get(12)?,
+        front_at: row.get(13)?,
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const ID: AnilistId = AnilistId::new(154_587);
+
+    fn store() -> Store {
+        Store::open_in_memory().unwrap()
+    }
+
+    #[test]
+    fn a_download_asked_to_start_now_waits_at_the_front_of_the_queue() {
+        let store = store();
+        let queue = |store: &Store| -> Vec<String> {
+            store.pending_downloads().unwrap().into_iter().map(|d| d.episode).collect()
+        };
+        let rows: Vec<Download> = (1..=4)
+            .map(|n| {
+                store.enqueue_download(ID, &n.to_string(), "Hoshikuzu", "magnet:?xt=a").unwrap()
+            })
+            .collect();
+        assert_eq!(queue(&store), ["1", "2", "3", "4"], "oldest first");
+
+        assert!(store.download_to_front(rows[2].id, 100).unwrap());
+        assert_eq!(queue(&store), ["3", "1", "2", "4"]);
+        // Asked since, ahead of it.
+        assert!(store.download_to_front(rows[3].id, 200).unwrap());
+        assert_eq!(queue(&store), ["4", "3", "1", "2"]);
+
+        // A paused one starts waiting again, at the front.
+        store.set_download_state(rows[1].id, DownloadState::Paused).unwrap();
+        assert!(store.download_to_front(rows[1].id, 300).unwrap());
+        assert_eq!(queue(&store), ["2", "4", "3", "1"]);
+        assert_eq!(store.download_for(ID, "2").unwrap().unwrap().state, DownloadState::Queued);
+
+        // Running, finished or failed: nothing to move.
+        store.set_download_state(rows[0].id, DownloadState::Active).unwrap();
+        assert!(!store.download_to_front(rows[0].id, 400).unwrap());
+        store.fail_download(rows[2].id, "no peers").unwrap();
+        assert!(!store.download_to_front(rows[2].id, 400).unwrap());
+        assert!(!store.download_to_front(9_999, 400).unwrap());
+
+        // A retry of a failed one waits its turn.
+        store.enqueue_download(ID, "3", "Hoshikuzu", "magnet:?xt=a").unwrap();
+        assert_eq!(store.download_for(ID, "3").unwrap().unwrap().front_at, None);
+    }
+
+    #[test]
+    fn queueing_the_same_episode_twice_is_one_download() {
+        // A held-down key must not queue eight copies of one file.
+        let store = store();
+        let first = store.enqueue_download(ID, "1", "Hoshikuzu", "magnet:?xt=a").unwrap();
+        let second = store.enqueue_download(ID, "1", "Hoshikuzu", "magnet:?xt=a").unwrap();
+        assert_eq!(first.id, second.id);
+        assert_eq!(store.downloads().unwrap().len(), 1);
+    }
+
+    #[test]
+    fn asking_again_for_a_failed_download_retries_it() {
+        let store = store();
+        let row = store.enqueue_download(ID, "1", "Hoshikuzu", "magnet:?xt=a").unwrap();
+        store.fail_download(row.id, "no peers").unwrap();
+        assert_eq!(store.download_for(ID, "1").unwrap().unwrap().state, DownloadState::Failed);
+
+        let retried = store.enqueue_download(ID, "1", "Hoshikuzu", "magnet:?xt=a").unwrap();
+        assert_eq!(retried.state, DownloadState::Queued, "a retry must re-enter the queue");
+        assert_eq!(retried.error, None, "and forget the previous reason");
+    }
+
+    #[test]
+    fn asking_again_for_a_finished_download_does_not_restart_it() {
+        // Re-downloading something already on disk is the worst possible interpretation of a
+        // second keypress.
+        let store = store();
+        let row = store.enqueue_download(ID, "1", "Hoshikuzu", "magnet:?xt=a").unwrap();
+        store.finish_download(row.id, Some("/tmp/ep1.mkv")).unwrap();
+        let again = store.enqueue_download(ID, "1", "Hoshikuzu", "magnet:?xt=a").unwrap();
+        assert_eq!(again.state, DownloadState::Done);
+        assert_eq!(again.path.as_deref(), Some("/tmp/ep1.mkv"));
+    }
+
+    #[test]
+    fn progress_never_overwrites_a_known_total_with_zero() {
+        // Metadata arrives after the torrent is added, so a stats poll in between reports a total
+        // of nothing — and letting that through would make the meter jump back to empty.
+        let store = store();
+        let row = store.enqueue_download(ID, "1", "Hoshikuzu", "magnet:?xt=a").unwrap();
+        store.update_download_progress(row.id, 100, 5_000, None).unwrap();
+        store.update_download_progress(row.id, 200, 0, None).unwrap();
+        let after = store.download_for(ID, "1").unwrap().unwrap();
+        assert_eq!(after.total, 5_000, "the total must survive a poll that does not know it");
+        assert_eq!(after.downloaded, 200);
+        assert!((after.fraction() - 0.04).abs() < 1e-9);
+    }
+
+    #[test]
+    fn progress_promotes_a_queued_download_to_active() {
+        let store = store();
+        let row = store.enqueue_download(ID, "1", "Hoshikuzu", "magnet:?xt=a").unwrap();
+        store.update_download_progress(row.id, 1, 10, None).unwrap();
+        assert_eq!(store.download_for(ID, "1").unwrap().unwrap().state, DownloadState::Active);
+    }
+
+    #[test]
+    fn progress_does_not_resurrect_a_paused_download() {
+        // A final stats poll can arrive after the user pauses, and it must not undo that.
+        let store = store();
+        let row = store.enqueue_download(ID, "1", "Hoshikuzu", "magnet:?xt=a").unwrap();
+        store.set_download_state(row.id, DownloadState::Paused).unwrap();
+        store.update_download_progress(row.id, 5, 10, None).unwrap();
+        assert_eq!(store.download_for(ID, "1").unwrap().unwrap().state, DownloadState::Paused);
+    }
+
+    #[test]
+    fn the_queue_drains_oldest_first_but_displays_newest_first() {
+        let store = store();
+        for episode in ["1", "2", "3"] {
+            // Distinct timestamps: `now()` has second resolution and these would otherwise tie.
+            let row = store.enqueue_download(ID, episode, "Hoshikuzu", "magnet:?xt=a").unwrap();
+            store
+                .with_conn(|c| {
+                    c.execute(
+                        "UPDATE download SET created_at = ?2 WHERE id = ?1",
+                        rusqlite::params![row.id, row.id * 100],
+                    )?;
+                    Ok(())
+                })
+                .unwrap();
+        }
+        let displayed: Vec<String> =
+            store.downloads().unwrap().into_iter().map(|d| d.episode).collect();
+        let draining: Vec<String> =
+            store.pending_downloads().unwrap().into_iter().map(|d| d.episode).collect();
+        assert_eq!(displayed, vec!["3", "2", "1"], "newest request at the top");
+        assert_eq!(draining, vec!["1", "2", "3"], "but the queue is first-in-first-out");
+    }
+
+    #[test]
+    fn re_requesting_a_running_download_does_not_repoint_it() {
+        // The magnet sat outside the guard that protects `state` and `error`, so asking for
+        // an episode already running swapped what the torrent points at while leaving the
+        // state and the bytes already on disk — and after a restart the queue resumed a
+        // different release against that partial file.
+        let store = store();
+        let row = store.enqueue_download(ID, "1", "Hoshikuzu", "magnet:?xt=OLD").unwrap();
+        store.set_download_state(row.id, DownloadState::Active).unwrap();
+
+        store.enqueue_download(ID, "1", "Hoshikuzu", "magnet:?xt=NEW").unwrap();
+
+        let after = store.download_for(ID, "1").unwrap().expect("the row");
+        assert_eq!(after.magnet, "magnet:?xt=OLD", "a running torrent was repointed");
+        assert_eq!(after.state, DownloadState::Active);
+    }
+
+    #[test]
+    fn retrying_a_failed_download_takes_the_new_magnet() {
+        // The other half: a retry is exactly when a fresh magnet is the point, because the
+        // old one is what failed.
+        let store = store();
+        let row = store.enqueue_download(ID, "1", "Hoshikuzu", "magnet:?xt=OLD").unwrap();
+        store.fail_download(row.id, "no peers").unwrap();
+
+        store.enqueue_download(ID, "1", "Hoshikuzu", "magnet:?xt=NEW").unwrap();
+
+        let after = store.download_for(ID, "1").unwrap().expect("the row");
+        assert_eq!(after.magnet, "magnet:?xt=NEW");
+        assert_eq!(after.state, DownloadState::Queued);
+    }
+
+    #[test]
+    fn a_download_that_finished_before_metadata_does_not_read_as_zero_percent() {
+        // `downloaded = total` is right whenever the total was learned, and was applied even
+        // when it was not — so a finished download reported 0 of 0 bytes and rendered as
+        // never started.
+        let store = store();
+        let row = store.enqueue_download(ID, "1", "Hoshikuzu", "m").unwrap();
+        store.update_download_progress(row.id, 1_400, 0, None).unwrap();
+
+        store.finish_download(row.id, None).unwrap();
+
+        let after = store.download_for(ID, "1").unwrap().expect("the row");
+        assert_eq!(after.state, DownloadState::Done);
+        assert!(
+            after.fraction() > 0.99,
+            "a finished download rendered at {}",
+            after.fraction()
+        );
+    }
+
+    #[test]
+    fn only_running_downloads_count_toward_the_badge() {
+        let store = store();
+        let a = store.enqueue_download(ID, "1", "Hoshikuzu", "m").unwrap();
+        let b = store.enqueue_download(ID, "2", "Hoshikuzu", "m").unwrap();
+        store.enqueue_download(ID, "3", "Hoshikuzu", "m").unwrap();
+        store.finish_download(a.id, None).unwrap();
+        store.set_download_state(b.id, DownloadState::Paused).unwrap();
+        assert_eq!(store.active_download_count().unwrap(), 1);
+        assert_eq!(store.pending_downloads().unwrap().len(), 1);
+    }
+
+    #[test]
+    fn clearing_completed_leaves_everything_else() {
+        let store = store();
+        let done = store.enqueue_download(ID, "1", "Hoshikuzu", "m").unwrap();
+        store.enqueue_download(ID, "2", "Hoshikuzu", "m").unwrap();
+        let failed = store.enqueue_download(ID, "3", "Hoshikuzu", "m").unwrap();
+        store.finish_download(done.id, None).unwrap();
+        store.fail_download(failed.id, "no peers").unwrap();
+
+        assert_eq!(store.clear_completed_downloads().unwrap(), 1);
+        let left: Vec<DownloadState> =
+            store.downloads().unwrap().into_iter().map(|d| d.state).collect();
+        assert!(!left.contains(&DownloadState::Done));
+        assert_eq!(left.len(), 2, "a failed download is still there to retry");
+    }
+
+    #[test]
+    fn a_download_queued_ahead_says_so_until_the_viewer_asks_for_it() {
+        let store = store();
+        let ahead = store.enqueue_download_ahead(ID, "4", "Show", "m").unwrap();
+        assert!(ahead.ahead);
+        assert!(!store.enqueue_download(ID, "5", "Show", "m").unwrap().ahead);
+
+        // Queued ahead again: still the one row, still ahead.
+        let again = store.enqueue_download_ahead(ID, "4", "Show", "m").unwrap();
+        assert_eq!((again.id, again.ahead), (ahead.id, true));
+        // Asked for: the viewer's from now on, whatever keep next asks after.
+        assert!(!store.enqueue_download(ID, "4", "Show", "m").unwrap().ahead);
+        assert!(!store.enqueue_download_ahead(ID, "4", "Show", "m").unwrap().ahead);
+        // Nor does keep next take over one the viewer asked for first.
+        assert!(!store.enqueue_download_ahead(ID, "5", "Show", "m").unwrap().ahead);
+
+        let kept = store.enqueue_download_ahead(ID, "6", "Show", "m").unwrap();
+        store.keep_download(kept.id).unwrap();
+        assert!(!store.download_for(ID, "6").unwrap().unwrap().ahead);
+    }
+
+    #[test]
+    fn an_episode_let_go_of_is_remembered_until_asked_for_again() {
+        let store = store();
+        let cancelled = store.enqueue_download_ahead(ID, "4", "Show", "m").unwrap();
+        let finished = store.enqueue_download_ahead(ID, "5", "Show", "m").unwrap();
+        store.finish_download(finished.id, None).unwrap();
+        store.enqueue_download_ahead(ID, "6", "Show", "m").unwrap();
+        assert!(!store.download_dismissed(ID, "4").unwrap());
+
+        store.remove_download(cancelled.id).unwrap();
+        assert_eq!(store.clear_completed_downloads().unwrap(), 1);
+        assert!(store.download_dismissed(ID, "4").unwrap(), "cancelled");
+        assert!(store.download_dismissed(ID, "5").unwrap(), "cleared from the list");
+        assert!(!store.download_dismissed(ID, "6").unwrap(), "still queued");
+
+        // Queued ahead again, it stays let go of; asked for, it is the viewer's again.
+        store.enqueue_download_ahead(ID, "4", "Show", "m").unwrap();
+        assert!(store.download_dismissed(ID, "4").unwrap());
+        store.enqueue_download(ID, "4", "Show", "m").unwrap();
+        assert!(!store.download_dismissed(ID, "4").unwrap());
+    }
+
+    #[test]
+    fn only_a_download_queued_ahead_expires_and_it_is_not_kept_as_let_go_of() {
+        let store = store();
+        let ahead = store.enqueue_download_ahead(ID, "4", "Show", "m").unwrap();
+        let mine = store.enqueue_download(ID, "5", "Show", "m").unwrap();
+        assert!(!store.expire_download(mine.id).unwrap(), "asked for by hand");
+        assert!(store.expire_download(ahead.id).unwrap());
+        assert!(store.download_for(ID, "4").unwrap().is_none());
+        assert!(store.download_for(ID, "5").unwrap().is_some());
+        assert!(!store.download_dismissed(ID, "4").unwrap());
+    }
+
+    #[test]
+    fn an_unknown_state_reappears_as_something_actionable() {
+        // Forward compatibility: a row written by a newer build must not vanish from the queue.
+        assert_eq!(DownloadState::parse("teleporting"), DownloadState::Queued);
+        assert!(DownloadState::parse("teleporting").is_running());
+    }
+}

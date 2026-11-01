@@ -1,0 +1,35 @@
+[package]
+name = "kaeri-testkit"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Test kit: a fake AniList, fixture titles, store seeding and golden files"
+# Only ever a dev-dependency. It stands in for a network service, which nothing outside a test
+# should be able to build against by accident.
+publish = false
+
+[lib]
+# No doc example is written as a test, and rustdoc spends seconds per crate finding none.
+doctest = false
+
+# Kept below the app and the terminal front end on purpose: both are to test against it, so it
+# can depend on neither.
+[dependencies]
+kaeri-core.workspace = true
+kaeri-meta.workspace = true
+kaeri-net.workspace = true
+kaeri-providers.workspace = true
+kaeri-store.workspace = true
+# The local day a Home world is dated by.
+jiff.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
+# Scratch directories for the golden helper's own tests.
+tempfile = "3"
+
+[lints]
+workspace = true

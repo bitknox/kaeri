@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- The languages the app's text ships in, as L.languages lists them (KaeriStrings tests check
+	     the two match). The app's own bundle holds no strings, so without this list the system
+	     loads every framework in English and offers no per-app language. -->
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>de</string>
+		<string>es-419</string>
+		<string>fr</string>
+		<string>id</string>
+		<string>it</string>
+		<string>ja</string>
+		<string>pl</string>
+		<string>pt-BR</string>
+		<string>ru</string>
+		<string>sv</string>
+		<string>tr</string>
+		<string>vi</string>
+	</array>
+	<!-- The App Group the widgets' snapshot is written into, from KAERI_APP_GROUP
+	     (Config/Base.xcconfig). The Fixtures app has none, so it never writes over the app's. -->
+	<key>KaeriAppGroup</key>
+	<string>$(KAERI_APP_GROUP)</string>
+	<!-- What Xcode does not generate from the INFOPLIST_KEY settings: the kaeri:// links the
+	     app opens, for store invites, the trackers' sign-in and the widgets. The Fixtures app has
+	     none. -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>app.kaeri.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>Kaeri</string>
+			</array>
+		</dict>
+		<!-- Magnet links, which open on Open link or file's confirm step. -->
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>app.kaeri.magnet</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>magnet</string>
+			</array>
+		</dict>
+		<!-- The QR code on a TV's Pair a phone screen, read by the system's camera. -->
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>app.kaeri.remote</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>kaeri-remote</string>
+			</array>
+		</dict>
+	</array>
+	<!-- Torrent files, opened from Files, the share sheet or the Finder. The app only reads them. -->
+	<key>UTImportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeIdentifier</key>
+			<string>org.bittorrent.torrent</string>
+			<key>UTTypeDescription</key>
+			<string>BitTorrent file</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>torrent</string>
+				</array>
+				<key>public.mime-type</key>
+				<array>
+					<string>application/x-bittorrent</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>BitTorrent file</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Alternate</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>org.bittorrent.torrent</string>
+			</array>
+		</dict>
+	</array>
+	<!-- Play on TV: finding the TVs that run kaeri on the network, which asks for local
+	     network access the first time, and the camera for the code a TV shows to pair. -->
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Kaeri looks for TVs on your network, those running Kaeri and those with Chromecast built in, so you can play episodes on them and use this device as their remote.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_kaeri._tcp</string>
+		<string>_googlecast._tcp</string>
+	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Kaeri reads the code a TV shows, to pair with it.</string>
+	<!-- iPhone and iPad: the episode's audio plays on when the screen locks or the app goes to
+	     the background, with the video track off meanwhile. Free signing allows this mode. -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+		<!-- The app refresh task that keeps new-episode notifications scheduled. -->
+		<string>fetch</string>
+		<!-- Downloads going on after the app leaves, in a continued-processing task. -->
+		<string>processing</string>
+	</array>
+	<!-- Handoff: a title's page, and the episode playing. The
+	     Fixtures app has types of its own, so it and the app never take each other's. -->
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>app.kaeri.title</string>
+		<string>app.kaeri.playing</string>
+	</array>
+	<!-- iPhone and iPad: the launch screen, the ground with Nagare whole at 4 pt a cell
+	     (LaunchNagare, drawn on whole pixels by scripts/icon.sh), nothing animated. The Mac has
+	     none and ignores this. -->
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIColorName</key>
+		<string>LaunchGround</string>
+		<key>UIImageName</key>
+		<string>LaunchNagare</string>
+		<key>UIImageRespectsSafeAreaInsets</key>
+		<false/>
+	</dict>
+	<!-- The Mac's updater, Sparkle (MacUpdater.swift): the feed each release publishes, the
+	     public half of the key its .dmg and the feed are signed with, and no checks or installs of
+	     its own. iPhone and iPad have no Sparkle and ignore these; the Fixtures app has none. -->
+	<key>SUFeedURL</key>
+	<string>https://github.com/bitknox/kaeri/releases/latest/download/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>n+leuc3sQrPeVk7A/tKjihPOCYrCP3oM3iF+JrcvWdk=</string>
+	<key>SURequireSignedFeed</key>
+	<true/>
+	<key>SUVerifyUpdateBeforeExtraction</key>
+	<true/>
+	<key>SUEnableAutomaticChecks</key>
+	<false/>
+	<key>SUAutomaticallyUpdate</key>
+	<false/>
+	<key>SUAllowsAutomaticUpdates</key>
+	<false/>
+	<!-- iPhone and iPad: the background refresh, which checks for new episodes, schedules the
+	     week's notifications and writes the widgets' record. -->
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>app.kaeri.refresh</string>
+		<!-- Downloads after the app leaves: each window's identifier has a suffix of its own. -->
+		<string>$(PRODUCT_BUNDLE_IDENTIFIER).downloads.*</string>
+	</array>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+	</dict>
+</dict>
+</plist>

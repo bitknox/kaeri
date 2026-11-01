@@ -1,0 +1,882 @@
+//! The wasmtime host.
+//!
+//! Two configuration choices carry the sandbox, and both are easy to get subtly wrong:
+//!
+//! **Epoch interruption, not a future timeout.** A guest in `loop {}` never yields, so
+//! `tokio::time::timeout` around a call would wait forever — a timeout fires only when the future
+//! is polled, and a spinning guest never returns control. Epoch interruption makes wasmtime check
+//! a counter at loop back-edges and function entries, so the guest can be stopped mid-loop. A
+//! background ticker advances the epoch; each call sets its own deadline.
+//!
+//! **A `ResourceLimiter`, not a memory flag.** A maximum-memory setting bounds one memory; the
+//! limiter is consulted for every growth of every memory and table, which is what actually bounds
+//! a guest's footprint.
+//!
+//! **WASI is linked, and the context is what withholds.** A `wasm32-wasip2` component built in
+//! *any* language imports a WASI floor for its standard library, so refusing to link it would
+//! mean every plugin author compiling to `wasm32-unknown-unknown` and running
+//! `wasm-tools component new` by hand. [`wasmtime_wasi::p2::add_to_linker_async`] therefore adds
+//! the whole p2 surface — filesystem, sockets, random, clocks, cli — and containment comes from
+//! [`empty_wasi`] rather than from an absent import.
+//!
+//! What that context permits, precisely, because a vaguer claim here would be a false one:
+//!
+//! - **Filesystem: nothing.** No preopens, so a guest holds no directory handle to open from.
+//! - **Sockets: nothing.** `SocketAddrCheck` defaults to refusing every address, so a connect
+//!   fails no matter what the guest asks for.
+//! - **Environment and stdio: nothing.** No variables, no inherited descriptors.
+//! - **Clocks and random: yes.** A guest can read the wall clock and take random bytes. Neither
+//!   reaches anything outside the sandbox, and denying them would break standard libraries that
+//!   seed a hash map at startup.
+//!
+//! So a component importing `wasi:sockets` instantiates happily and then cannot connect —
+//! failing at the capability rather than at the link is what makes the guarantee hold for
+//! languages whose runtime imports more than it uses.
+
+use std::{path::Path, sync::Arc, time::Duration};
+
+use kaeri_core::error::ProviderError;
+
+use crate::{
+    host::{self, Capabilities},
+    sandbox::Limits,
+};
+
+wasmtime::component::bindgen!({
+    path: "../../wit/kaeri-provider.wit",
+    world: "plugin",
+    // Async on both sides. Imports must be async because `fetch` performs real I/O, and exports
+    // must be async because a guest call can block on one — a synchronous export awaiting an
+    // async import would deadlock the runtime.
+    //
+    // `trappable` lets a host function return `wasmtime::Result`, so a host-side failure surfaces
+    // as an attributable trap rather than a panic that would take the process down.
+    imports: { default: async | trappable },
+    exports: { default: async },
+});
+
+// Types declared in the *exported* interface live under `exports::`; the imported `host`
+// interface's types do not. Re-exported so callers need not know the generated shape.
+pub use self::exports::kaeri::provider::provider::{
+    Episode, Manifest, MediaStream, ProviderError as GuestError, SearchHit, SourceCandidate,
+    Subtitle,
+};
+use self::kaeri::provider::host::{HostError as GuestHostError, HttpRequest, HttpResponse};
+
+/// Whether plugins run in wasmtime's interpreter here, rather than as native code: always on iOS
+/// and on 32-bit machines, and anywhere with the `interpret` feature.
+///
+/// iOS lets no app but Apple's make memory executable, so nothing Cranelift compiles to native
+/// code can run there. It compiles to Pulley instead, wasmtime's portable bytecode, and the
+/// interpreter built into wasmtime runs that. The sandbox is the same either way: the same
+/// limits, the same epoch deadline, which the bytecode checks as native code does, and the same
+/// capabilities. The compiled bytecode is cached as native code is.
+///
+/// What it costs is speed. Measured on a Mac in a release build, the Rust reference plugin's
+/// episode list and stream lookup took 155 µs interpreted against 70 µs as native code: about
+/// twice as long, and compiling it took about as long either way. A plugin is a parser that
+/// spends its time waiting on the requests it asks the host to make, so a lookup is slower by
+/// what parsing costs, not by its network time. Guest code that computes more pays more, and a
+/// plugin that embeds a whole language runtime, as the JavaScript reference does, pays the most:
+/// an interpreter interpreting an interpreter.
+///
+/// A 32-bit host interprets too, since Cranelift emits native code for 64-bit machines only:
+/// most Android TV boxes run 32-bit Android on 64-bit chips.
+///
+/// `cargo test -p kaeri-plugin --features interpret` runs the conformance suite this way,
+/// the deadline and the memory ceiling included.
+pub const INTERPRETED: bool = cfg!(any(
+    target_os = "ios",
+    all(target_pointer_width = "32", not(target_family = "wasm")),
+    feature = "interpret"
+));
+
+/// The Pulley form for this machine's pointer width, when plugins are interpreted.
+const PULLEY: &str = if cfg!(target_pointer_width = "32") { "pulley32" } else { "pulley64" };
+
+/// How often the epoch advances.
+///
+/// This is the deadline's granularity: a guest can overrun by up to one tick. 100ms keeps the
+/// ticker's cost negligible while making the overshoot invisible next to a 20-second budget.
+const EPOCH_TICK: Duration = Duration::from_millis(100);
+
+/// A table entry is a function reference. Tens of thousands is far more than a parser needs;
+/// millions would be a memory-exhaustion vector.
+const MAX_TABLE_ENTRIES: usize = 100_000;
+
+#[derive(Debug, thiserror::Error)]
+pub enum PluginError {
+    #[error("{path}: {message}")]
+    Load { path: String, message: String },
+    #[error("plugin {plugin} exceeded its {limit:?} deadline")]
+    Deadline { plugin: String, limit: Duration },
+    #[error("plugin {plugin} trapped: {message}")]
+    Trap { plugin: String, message: String },
+    /// The plugin was built for another major version of the plugin ABI, so none of its imports
+    /// or exports line up with this host. It needs a new build from its author.
+    #[error(
+        "{path}: built for plugin ABI {found}, this app speaks {}; the plugin needs updating",
+        ABI_MAJOR
+    )]
+    OutdatedAbi { path: String, found: String },
+}
+
+/// The major version of the plugin ABI this host speaks: the major of the WIT package in
+/// `wit/kaeri-provider.wit`. A guest built for another major is refused up front.
+pub const ABI_MAJOR: u64 = 2;
+
+/// The ABI version a component was built for, if it was built for another major than this host's.
+///
+/// Read from the names the component imports and exports (`kaeri:provider/host@2.0.0`)
+/// before anything is linked, so an old plugin gets a clear answer instead of a linker error
+/// that names an interface nobody asked about.
+fn outdated_abi(
+    component: &wasmtime::component::Component,
+    engine: &wasmtime::Engine,
+) -> Option<String> {
+    let ty = component.component_type();
+    let names = ty
+        .imports(engine)
+        .map(|(name, _)| name.to_owned())
+        .chain(ty.exports(engine).map(|(name, _)| name.to_owned()));
+    for name in names {
+        let Some(rest) = name.strip_prefix("kaeri:provider/") else { continue };
+        let version = rest.split_once('@').map_or("", |(_, v)| v);
+        if version.split('.').next().and_then(|m| m.parse::<u64>().ok()) != Some(ABI_MAJOR) {
+            return Some(if version.is_empty() {
+                "unknown".to_owned()
+            } else {
+                version.to_owned()
+            });
+        }
+    }
+    None
+}
+
+impl PluginError {
+    /// Map onto the provider vocabulary the registry's failover rules understand.
+    ///
+    /// A plugin that hangs or traps is *broken*, not merely empty, so it counts against health and
+    /// triggers failover — the same treatment a native provider returning `Parse` gets.
+    pub fn as_provider_error(&self) -> ProviderError {
+        match self {
+            Self::Deadline { .. } => ProviderError::Parse("plugin timed out".into()),
+            Self::Trap { message, .. } => {
+                ProviderError::Parse(format!("plugin trapped: {message}"))
+            }
+            Self::Load { message, .. } => ProviderError::Other(message.clone()),
+            Self::OutdatedAbi { .. } => ProviderError::Other(self.to_string()),
+        }
+    }
+
+    /// Whether this looks like the deadline firing rather than a genuine fault.
+    fn from_call(plugin: &str, limit: Duration, error: &wasmtime::Error) -> Self {
+        // Asked of the trap itself rather than of its rendered text. The `Debug` form includes
+        // the wasm backtrace, and the symbols in it come from the guest's own name section —
+        // so a plugin with a function called `interrupt_handler` could have a genuine fault
+        // reported as a deadline, sending whoever read it looking for a loop that is not
+        // there. Attribution is the whole reason this function exists.
+        if error.downcast_ref::<wasmtime::Trap>() == Some(&wasmtime::Trap::Interrupt) {
+            return Self::Deadline { plugin: plugin.to_owned(), limit };
+        }
+        Self::Trap { plugin: plugin.to_owned(), message: error.to_string() }
+    }
+}
+
+/// Per-call guest state: the capabilities it was granted, and its resource ceiling.
+///
+/// The ceiling lives here rather than in a box because wasmtime borrows the limiter from the
+/// store's data — which is the right shape anyway: a guest's limits are part of its state.
+pub struct PluginState {
+    capabilities: Capabilities,
+    ceiling: Ceiling,
+    /// A WASI context that grants nothing — see the module docs. Built with no preopens, no
+    /// environment, no stdio and no network, purely so a wasip2 component's standard library
+    /// finds the imports it links against.
+    wasi: wasmtime_wasi::WasiCtx,
+    table: wasmtime::component::ResourceTable,
+}
+
+impl wasmtime_wasi::WasiView for PluginState {
+    fn ctx(&mut self) -> wasmtime_wasi::WasiCtxView<'_> {
+        wasmtime_wasi::WasiCtxView { ctx: &mut self.wasi, table: &mut self.table }
+    }
+}
+
+/// A context with every reachable capability withheld.
+///
+/// `WasiCtxBuilder` defaults to granting nothing, so this is deliberately *not* calling any of
+/// `inherit_stdio`, `inherit_env`, `preopened_dir` or `inherit_network`. Written out rather than
+/// left implicit, because the absence of those calls *is* the security property — the interfaces
+/// themselves are linked, as the module docs explain.
+fn empty_wasi() -> wasmtime_wasi::WasiCtx {
+    wasmtime_wasi::WasiCtxBuilder::new().build()
+}
+
+/// Bounds every memory and table growth a guest attempts.
+struct Ceiling {
+    memory_bytes: usize,
+}
+
+impl wasmtime::ResourceLimiter for Ceiling {
+    fn memory_growing(
+        &mut self,
+        _current: usize,
+        desired: usize,
+        _maximum: Option<usize>,
+    ) -> wasmtime::Result<bool> {
+        Ok(desired <= self.memory_bytes)
+    }
+
+    fn table_growing(
+        &mut self,
+        _current: usize,
+        desired: usize,
+        _maximum: Option<usize>,
+    ) -> wasmtime::Result<bool> {
+        Ok(desired <= MAX_TABLE_ENTRIES)
+    }
+}
+
+/// One authorised fetch, in the guest's error vocabulary. Shared by `fetch` and `fetch-many`.
+async fn one_fetch(
+    capabilities: &Capabilities,
+    request: HttpRequest,
+) -> Result<HttpResponse, GuestHostError> {
+    let outbound = host::Request {
+        method: request.method,
+        url: request.url,
+        headers: request.headers,
+        body: request.body,
+    };
+    match capabilities.fetch(outbound).await {
+        Ok(response) => Ok(HttpResponse {
+            status: response.status,
+            headers: response.headers,
+            body: response.body,
+        }),
+        Err(host::HostError::Denied(m)) => Err(GuestHostError::Denied(m)),
+        Err(host::HostError::Timeout) => Err(GuestHostError::Timeout),
+        Err(host::HostError::Transport(m)) => Err(GuestHostError::Transport(m)),
+    }
+}
+
+// The host side of the WIT `host` interface. This is the entire surface a guest can reach.
+impl kaeri::provider::host::Host for PluginState {
+    async fn fetch(
+        &mut self,
+        request: HttpRequest,
+    ) -> wasmtime::Result<Result<HttpResponse, GuestHostError>> {
+        Ok(one_fetch(&self.capabilities, request).await)
+    }
+
+    async fn fetch_many(
+        &mut self,
+        requests: Vec<HttpRequest>,
+    ) -> wasmtime::Result<Vec<Result<HttpResponse, GuestHostError>>> {
+        // Genuinely concurrent — this is the one thing a synchronous guest cannot do for
+        // itself. Authorisation and the fetch budget apply per request, exactly as if the
+        // guest had called `fetch` in a loop.
+        Ok(futures::future::join_all(
+            requests.into_iter().map(|request| one_fetch(&self.capabilities, request)),
+        )
+        .await)
+    }
+
+    async fn log(&mut self, level: String, msg: String) -> wasmtime::Result<()> {
+        // A guest's only output channel, and deliberately attributed: an unexplained log line
+        // from a third-party parser would be worse than none.
+        let plugin = self.capabilities.plugin_id();
+        match level.to_ascii_lowercase().as_str() {
+            "error" => tracing::error!(plugin, "{msg}"),
+            "warn" => tracing::warn!(plugin, "{msg}"),
+            "debug" | "trace" => tracing::debug!(plugin, "{msg}"),
+            _ => tracing::info!(plugin, "{msg}"),
+        }
+        Ok(())
+    }
+
+    async fn regex_captures(
+        &mut self,
+        pattern: String,
+        haystack: String,
+    ) -> wasmtime::Result<Vec<Vec<String>>> {
+        Ok(host::regex_captures(&pattern, &haystack))
+    }
+
+    async fn config_get(&mut self, key: String) -> wasmtime::Result<Option<String>> {
+        // Served from the capabilities rather than read from disk: what a guest may see was
+        // decided when the call was set up, and `describe` deliberately gets none at all.
+        Ok(self.capabilities.setting(&key))
+    }
+}
+
+/// Loads plugins and owns the shared engine.
+#[derive(Clone)]
+pub struct PluginHost {
+    engine: wasmtime::Engine,
+    limits: Limits,
+    http: Option<crate::HttpClient>,
+    /// Per-plugin settings from `[providers.plugins.settings.<id>]`, keyed by plugin id.
+    /// Served to a guest one key at a time through the lent `config-get`.
+    settings:
+        Arc<std::collections::BTreeMap<String, std::collections::BTreeMap<String, String>>>,
+    /// Keeps the epoch ticker alive for as long as any plugin might run.
+    _ticker: Arc<TickerGuard>,
+}
+
+/// Advances the engine's epoch on a timer, and stops when the host is dropped.
+///
+/// **A dedicated OS thread, not a tokio task.** This was a tokio task first, and the adversarial
+/// test hung: a guest spinning in `loop {}` occupies the executor thread, so a task that advances
+/// the epoch never gets polled — the deadline can never fire, and the very case epoch interruption
+/// exists for is the one case it fails to handle. A plain thread with `thread::sleep` advances
+/// regardless of what the async runtime is doing, or how saturated it is.
+struct TickerGuard {
+    stop: Arc<std::sync::atomic::AtomicBool>,
+    handle: Option<std::thread::JoinHandle<()>>,
+}
+
+impl Drop for TickerGuard {
+    fn drop(&mut self) {
+        self.stop.store(true, std::sync::atomic::Ordering::Relaxed);
+        // Not joined: the thread wakes at most one tick from now and exits on its own. Joining
+        // would make dropping the host block for up to a tick for no benefit.
+        drop(self.handle.take());
+    }
+}
+
+impl PluginHost {
+    /// Build a host with the given limits.
+    ///
+    /// `http` may be `None`, yielding a host whose plugins load and describe themselves but
+    /// cannot fetch — which is exactly what `plugin inspect` and the conformance tests want.
+    pub fn new(limits: Limits, http: Option<crate::HttpClient>) -> Result<Self, PluginError> {
+        Self::with_cache(limits, http, None)
+    }
+
+    /// A host that caches compiled components under `cache_dir`.
+    ///
+    /// Compilation is the expensive part and it is entirely deterministic, so paying it once per
+    /// build of a plugin rather than once per launch is the obvious win: the JavaScript reference
+    /// plugin measured **874 ms**, which was most of what the app spent before its first frame.
+    ///
+    /// wasmtime owns the cache, which is the point of doing it this way. Loading a precompiled
+    /// artefact by hand needs `unsafe` — it maps native code — and this crate forbids `unsafe`
+    /// because its whole job is running code we do not trust. Delegating keeps that invariant and
+    /// still gets the version-and-settings validation right, which is the part a hand-rolled cache
+    /// would most likely get wrong.
+    pub fn with_cache(
+        limits: Limits,
+        http: Option<crate::HttpClient>,
+        cache_dir: Option<&Path>,
+    ) -> Result<Self, PluginError> {
+        let mut config = Self::config()?;
+        if let Some(dir) = cache_dir {
+            // Best-effort: a cache that will not initialise costs a slow start, never a failure,
+            // so a bad path must not stop plugins from loading at all.
+            let mut cache_config = wasmtime::CacheConfig::new();
+            cache_config.with_directory(dir);
+            match wasmtime::Cache::new(cache_config) {
+                Ok(cache) => {
+                    config.cache(Some(cache));
+                    tracing::debug!(dir = %dir.display(), "plugin compilation cache enabled");
+                }
+                Err(e) => {
+                    tracing::warn!(error = %e, "plugin cache unavailable; compiling cold")
+                }
+            }
+        }
+
+        Self::from_config(limits, http, &config)
+    }
+
+    /// A host for asking plugins what they are, each once, and never running them after.
+    ///
+    /// That is what a plugin store does with every upload, on machines rented by the half
+    /// gigabyte. Compiling on every core at once holds every core's work in memory together: the
+    /// JavaScript reference plugin peaked at about 650 MB that way, and at about 460 MB one
+    /// function at a time, for a few seconds more on an upload. Nothing is cached, because no
+    /// upload is compiled twice. It cannot fetch.
+    pub fn for_inspection(limits: Limits) -> Result<Self, PluginError> {
+        let mut config = Self::config()?;
+        config.parallel_compilation(false);
+        Self::from_config(limits, None, &config)
+    }
+
+    fn config() -> Result<wasmtime::Config, PluginError> {
+        let mut config = wasmtime::Config::new();
+        config
+            .wasm_component_model(true)
+            // The only mechanism that can stop a guest which never yields. Everything else here
+            // is a default; async support is unconditional in wasmtime 47 and no longer a flag.
+            .epoch_interruption(true);
+        if INTERPRETED {
+            // Pulley's little-endian form at this machine's width: 64-bit on an arm64 phone,
+            // 32-bit on a TV box running 32-bit Android.
+            config.target(PULLEY).map_err(|e| PluginError::Load {
+                path: "engine".into(),
+                message: e.to_string(),
+            })?;
+        }
+        Ok(config)
+    }
+
+    fn from_config(
+        limits: Limits,
+        http: Option<crate::HttpClient>,
+        config: &wasmtime::Config,
+    ) -> Result<Self, PluginError> {
+        let engine = wasmtime::Engine::new(config)
+            .map_err(|e| PluginError::Load { path: "engine".into(), message: e.to_string() })?;
+
+        let stop = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let handle = {
+            let engine = engine.clone();
+            let stop = stop.clone();
+            std::thread::Builder::new()
+                .name("kaeri-plugin-epoch".into())
+                .spawn(move || {
+                    while !stop.load(std::sync::atomic::Ordering::Relaxed) {
+                        std::thread::sleep(EPOCH_TICK);
+                        engine.increment_epoch();
+                    }
+                })
+                .map_err(|e| PluginError::Load {
+                    path: "epoch ticker".into(),
+                    message: e.to_string(),
+                })?
+        };
+
+        Ok(Self {
+            engine,
+            limits,
+            http,
+            settings: Arc::new(Default::default()),
+            _ticker: Arc::new(TickerGuard { stop, handle: Some(handle) }),
+        })
+    }
+
+    /// Attach the user's per-plugin settings, keyed by plugin id.
+    ///
+    /// A builder rather than a constructor argument because most hosts — `plugin inspect`, the
+    /// whole conformance suite — correctly have none.
+    pub fn with_plugin_settings(
+        mut self,
+        settings: std::collections::BTreeMap<
+            String,
+            std::collections::BTreeMap<String, String>,
+        >,
+    ) -> Self {
+        self.settings = Arc::new(settings);
+        self
+    }
+
+    /// Compile a `.wasm` component and read its manifest.
+    ///
+    /// The manifest is read immediately because it declares `allowed-hosts`, and nothing can be
+    /// authorised until that is known.
+    pub async fn load(&self, path: impl AsRef<Path>) -> Result<LoadedPlugin, PluginError> {
+        let path = path.as_ref();
+        let display = path.display().to_string();
+        let fail = |message: String| PluginError::Load { path: display.clone(), message };
+
+        let bytes = tokio::fs::read(path).await.map_err(|e| fail(e.to_string()))?;
+        // Measured at 874 ms for the JavaScript reference plugin, which is 90% of the time the
+        // app spends assembling its provider chain. Caching wasmtime's precompiled artefact would
+        // remove it, but loading one requires `unsafe` — this crate forbids it, and running
+        // untrusted plugins is not where that invariant gets traded for 800 ms. Logged instead, so
+        // a slow start is attributable rather than mysterious.
+        let started = std::time::Instant::now();
+        let component = wasmtime::component::Component::new(&self.engine, &bytes)
+            .map_err(|e| fail(e.to_string()))?;
+        tracing::info!(elapsed = ?started.elapsed(), plugin = %path.display(), "component compiled");
+
+        if let Some(found) = outdated_abi(&component, &self.engine) {
+            return Err(PluginError::OutdatedAbi { path: display, found });
+        }
+
+        let mut linker = wasmtime::component::Linker::new(&self.engine);
+        // The empty WASI floor first — a wasip2 component's standard library links against it in
+        // every language, and without it nothing instantiates. It grants nothing; see the module
+        // docs for what is deliberately not in this linker.
+        wasmtime_wasi::p2::add_to_linker_async(&mut linker).map_err(|e| fail(e.to_string()))?;
+        Plugin::add_to_linker::<_, wasmtime::component::HasSelf<_>>(&mut linker, |state| state)
+            .map_err(|e| fail(e.to_string()))?;
+
+        let plugin = LoadedPlugin {
+            engine: self.engine.clone(),
+            linker,
+            component,
+            // Filled in below; a plugin cannot be trusted to be asked about itself twice and
+            // answer the same way, so the answer is captured once.
+            manifest: Manifest {
+                id: String::new(),
+                display_name: String::new(),
+                version: String::new(),
+                allowed_hosts: Vec::new(),
+                translation_types: Vec::new(),
+                capabilities: Vec::new(),
+            },
+            limits: self.limits,
+            http: self.http.clone(),
+            settings: Default::default(),
+        };
+
+        // Describing itself is the one call made with *no* capabilities: a manifest must not be
+        // able to depend on the network access it is about to request.
+        let manifest = plugin
+            .describe_with(Capabilities::new(display.clone(), Vec::new(), self.limits, None))
+            .await
+            .map_err(|e| fail(e.to_string()))?;
+
+        if manifest.id.trim().is_empty() {
+            return Err(fail("manifest has no id".into()));
+        }
+        if let Err(message) = refuse_reserved(&manifest.id) {
+            tracing::warn!(id = %manifest.id, file = %path.display(), "plugin refused: {message}");
+            return Err(fail(message));
+        }
+
+        tracing::info!(
+            id = %manifest.id,
+            version = %manifest.version,
+            hosts = ?manifest.allowed_hosts,
+            "plugin loaded"
+        );
+        // Settings are granted only when the manifest's id matches the file's own name.
+        //
+        // The id is asserted by the guest, and settings are where a user's API keys live — so
+        // handing a bucket over on the strength of that assertion alone means any `.wasm`
+        // dropped in the directory can name itself after a plugin the user trusts and be given
+        // its credentials. The filename is the one part of a plugin's identity the *user*
+        // controls, so agreement between the two is what unlocks the bucket. A mismatch is said
+        // out loud rather than silently ignored: a renamed file losing its settings would
+        // otherwise look like the plugin breaking for no reason.
+        let stem = path
+            .file_stem()
+            .map(|s| s.to_string_lossy().to_ascii_lowercase())
+            .unwrap_or_default();
+        let claimed = manifest.id.trim().to_ascii_lowercase();
+        let settings = match self.settings.get(&manifest.id) {
+            Some(_) if stem != claimed => {
+                tracing::warn!(
+                    id = %manifest.id,
+                    file = %path.display(),
+                    "settings for this id exist but the file is not named after it; \
+                     withholding them — rename the file to {}.wasm to grant them",
+                    claimed
+                );
+                Default::default()
+            }
+            Some(settings) => settings.clone(),
+            None => Default::default(),
+        };
+        Ok(LoadedPlugin { manifest, settings, ..plugin })
+    }
+
+    /// Every `*.wasm` in a directory, in a stable order.
+    ///
+    /// A missing directory yields an empty list rather than an error: having no plugins is the
+    /// normal case, not a failure.
+    pub async fn load_dir(
+        &self,
+        dir: impl AsRef<Path>,
+    ) -> Vec<Result<LoadedPlugin, PluginError>> {
+        let Ok(mut entries) = tokio::fs::read_dir(dir.as_ref()).await else {
+            return Vec::new();
+        };
+
+        let mut paths = Vec::new();
+        while let Ok(Some(entry)) = entries.next_entry().await {
+            let path = entry.path();
+            if path.extension().is_some_and(|e| e.eq_ignore_ascii_case("wasm")) {
+                paths.push(path);
+            }
+        }
+        // Sorted, so provider precedence never depends on filesystem order.
+        paths.sort();
+
+        let mut loaded = Vec::with_capacity(paths.len());
+        for path in paths {
+            loaded.push(self.load(&path).await);
+        }
+        loaded
+    }
+}
+
+/// A compiled plugin, ready to call.
+///
+/// Compilation happens once at load; every call gets a fresh `Store`, which is what stops one
+/// call leaking state into the next — a guest cannot stash a cookie from your search and use it
+/// during someone else's.
+pub struct LoadedPlugin {
+    engine: wasmtime::Engine,
+    linker: wasmtime::component::Linker<PluginState>,
+    component: wasmtime::component::Component,
+    manifest: Manifest,
+    limits: Limits,
+    http: Option<crate::HttpClient>,
+    /// This plugin's own settings, served through `config-get` on every call but `describe`.
+    settings: std::collections::BTreeMap<String, String>,
+}
+
+/// Identity and limits only.
+///
+/// Hand-written because the interesting fields — a compiled component, a linker — have no useful
+/// representation, and a derived impl would print pages of wasmtime internals into a log line.
+impl std::fmt::Debug for LoadedPlugin {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("LoadedPlugin")
+            .field("id", &self.manifest.id)
+            .field("version", &self.manifest.version)
+            .field("allowed_hosts", &self.manifest.allowed_hosts)
+            .field("limits", &self.limits)
+            .finish_non_exhaustive()
+    }
+}
+
+impl LoadedPlugin {
+    pub fn manifest(&self) -> &Manifest {
+        &self.manifest
+    }
+
+    pub fn limits(&self) -> Limits {
+        self.limits
+    }
+
+    pub fn id(&self) -> &str {
+        &self.manifest.id
+    }
+
+    /// A store with this call's capabilities, ceilings and deadline.
+    fn store(&self, capabilities: Capabilities) -> wasmtime::Store<PluginState> {
+        let mut store = wasmtime::Store::new(
+            &self.engine,
+            PluginState {
+                capabilities,
+                ceiling: Ceiling { memory_bytes: self.limits.memory_bytes },
+                wasi: empty_wasi(),
+                table: wasmtime::component::ResourceTable::new(),
+            },
+        );
+        store.limiter(|state| &mut state.ceiling);
+        // Ticks, not milliseconds — the deadline is counted in epoch increments.
+        let ticks = (self.limits.deadline.as_millis() / EPOCH_TICK.as_millis()).max(1) as u64;
+        store.set_epoch_deadline(ticks);
+        store
+    }
+
+    /// Capabilities for a real call: the declared hosts, the shared client, the settings.
+    fn capabilities(&self) -> Capabilities {
+        Capabilities::new(
+            self.manifest.id.clone(),
+            self.manifest.allowed_hosts.clone(),
+            self.limits,
+            self.http.clone(),
+        )
+        .with_settings(self.settings.clone())
+    }
+
+    async fn instantiate(
+        &self,
+        store: &mut wasmtime::Store<PluginState>,
+    ) -> Result<Plugin, PluginError> {
+        Plugin::instantiate_async(store, &self.component, &self.linker)
+            .await
+            .map_err(|e| PluginError::from_call(&self.manifest.id, self.limits.deadline, &e))
+    }
+
+    async fn describe_with(&self, capabilities: Capabilities) -> Result<Manifest, PluginError> {
+        let mut store = self.store(capabilities);
+        let instance = self.instantiate(&mut store).await?;
+        instance
+            .kaeri_provider_provider()
+            .call_describe(&mut store)
+            .await
+            .map_err(|e| PluginError::from_call("plugin", self.limits.deadline, &e))
+    }
+
+    /// Re-read the manifest, for `plugin inspect` and the periodic health check.
+    ///
+    /// With no capabilities, exactly as at load time. Health checks run on a schedule and are
+    /// not user-initiated, so handing this call the HTTP client or the settings map would let a
+    /// plugin read its settings and reach its declared host, unattended, forever. Describing
+    /// yourself needs nothing.
+    pub async fn describe(&self) -> Result<Manifest, PluginError> {
+        self.describe_with(Capabilities::new(
+            self.manifest.id.clone(),
+            Vec::new(),
+            self.limits,
+            None,
+        ))
+        .await
+    }
+
+    pub async fn search(
+        &self,
+        query: &str,
+        translation: &str,
+    ) -> Result<Result<Vec<SearchHit>, GuestError>, PluginError> {
+        let mut store = self.store(self.capabilities());
+        let instance = self.instantiate(&mut store).await?;
+        instance
+            .kaeri_provider_provider()
+            .call_search(&mut store, query, translation)
+            .await
+            .map_err(|e| PluginError::from_call(&self.manifest.id, self.limits.deadline, &e))
+    }
+
+    pub async fn list_episodes(
+        &self,
+        id: &str,
+        translation: &str,
+    ) -> Result<Result<Vec<Episode>, GuestError>, PluginError> {
+        let mut store = self.store(self.capabilities());
+        let instance = self.instantiate(&mut store).await?;
+        instance
+            .kaeri_provider_provider()
+            .call_list_episodes(&mut store, id, translation)
+            .await
+            .map_err(|e| PluginError::from_call(&self.manifest.id, self.limits.deadline, &e))
+    }
+
+    pub async fn resolve(
+        &self,
+        id: &str,
+        episode: &str,
+        translation: &str,
+    ) -> Result<Result<Vec<MediaStream>, GuestError>, PluginError> {
+        let mut store = self.store(self.capabilities());
+        let instance = self.instantiate(&mut store).await?;
+        instance
+            .kaeri_provider_provider()
+            .call_resolve(&mut store, id, episode, translation)
+            .await
+            .map_err(|e| PluginError::from_call(&self.manifest.id, self.limits.deadline, &e))
+    }
+
+    pub async fn sources(
+        &self,
+        id: &str,
+        episode: &str,
+        translation: &str,
+    ) -> Result<Result<Vec<SourceCandidate>, GuestError>, PluginError> {
+        let mut store = self.store(self.capabilities());
+        let instance = self.instantiate(&mut store).await?;
+        instance
+            .kaeri_provider_provider()
+            .call_sources(&mut store, id, episode, translation)
+            .await
+            .map_err(|e| PluginError::from_call(&self.manifest.id, self.limits.deadline, &e))
+    }
+
+    pub async fn resolve_source(
+        &self,
+        id: &str,
+        episode: &str,
+        translation: &str,
+        source_id: &str,
+    ) -> Result<Result<Vec<MediaStream>, GuestError>, PluginError> {
+        let mut store = self.store(self.capabilities());
+        let instance = self.instantiate(&mut store).await?;
+        instance
+            .kaeri_provider_provider()
+            .call_resolve_source(&mut store, id, episode, translation, source_id)
+            .await
+            .map_err(|e| PluginError::from_call(&self.manifest.id, self.limits.deadline, &e))
+    }
+}
+
+/// A plugin may not take the id of the built-in demo source: the demo cannot be repointed.
+fn refuse_reserved(id: &str) -> Result<(), String> {
+    if kaeri_core::demo::reserved(id) {
+        Err(format!("the id {id:?} is reserved for the built-in demo source"))
+    } else {
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn a_manifest_that_declares_the_demo_is_refused() {
+        for id in ["demo", " Demo ", "DEMO"] {
+            assert!(super::refuse_reserved(id).is_err(), "{id}");
+        }
+        assert!(super::refuse_reserved("example").is_ok());
+    }
+    use super::*;
+
+    #[test]
+    fn a_deadline_maps_to_a_failover_worthy_error() {
+        // A hung plugin is broken, not empty: it must count against health and trigger failover,
+        // exactly like a native provider that failed to parse.
+        let error = PluginError::Deadline { plugin: "p".into(), limit: Duration::from_secs(1) };
+        let mapped = error.as_provider_error();
+        assert!(matches!(mapped, ProviderError::Parse(_)));
+        assert!(
+            mapped.should_failover(),
+            "a timed-out plugin must fail over to the next source"
+        );
+    }
+
+    #[test]
+    fn a_trap_maps_to_a_failover_worthy_error() {
+        let error = PluginError::Trap { plugin: "p".into(), message: "unreachable".into() };
+        assert!(error.as_provider_error().should_failover());
+    }
+
+    #[test]
+    fn plugins_run_interpreted_exactly_where_they_must() {
+        // On iOS a JIT's output cannot run, so there, and only there unless asked, the engine
+        // compiles to Pulley and interprets it. Native code everywhere else, as before.
+        let host = PluginHost::new(Limits::default(), None).unwrap();
+        assert_eq!(host.engine.is_pulley(), INTERPRETED);
+        assert_eq!(INTERPRETED, cfg!(any(target_os = "ios", feature = "interpret")));
+    }
+
+    #[test]
+    fn the_epoch_tick_gives_the_deadline_real_granularity() {
+        // The deadline is expressed in ticks, so a tick coarser than the deadline would round to
+        // one and cut every call short.
+        let limits = Limits::default();
+        let ticks = limits.deadline.as_millis() / EPOCH_TICK.as_millis();
+        assert!(ticks >= 10, "only {ticks} ticks of granularity");
+    }
+
+    #[tokio::test]
+    async fn a_missing_plugin_file_is_a_load_error_not_a_panic() {
+        let host = PluginHost::new(Limits::default(), None).unwrap();
+        let error = host.load("/nonexistent/nope.wasm").await.unwrap_err();
+        assert!(matches!(error, PluginError::Load { .. }));
+    }
+
+    #[tokio::test]
+    async fn a_file_that_is_not_a_component_is_rejected() {
+        // A plugin directory is user-writable, so anything at all can appear in it.
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("junk.wasm");
+        std::fs::write(&path, b"this is not webassembly").unwrap();
+
+        let host = PluginHost::new(Limits::default(), None).unwrap();
+        assert!(matches!(host.load(&path).await, Err(PluginError::Load { .. })));
+    }
+
+    #[tokio::test]
+    async fn a_missing_plugin_directory_is_empty_rather_than_an_error() {
+        // Having no plugins is the normal case.
+        let host = PluginHost::new(Limits::default(), None).unwrap();
+        assert!(host.load_dir("/nonexistent/plugins").await.is_empty());
+    }
+
+    #[tokio::test]
+    async fn non_wasm_files_in_the_plugin_directory_are_ignored() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("README.md"), b"notes").unwrap();
+        std::fs::write(dir.path().join("config.toml"), b"x = 1").unwrap();
+
+        let host = PluginHost::new(Limits::default(), None).unwrap();
+        assert!(host.load_dir(dir.path()).await.is_empty());
+    }
+}

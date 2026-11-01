@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleName</key>
+	<string>Kaeri</string>
+	<key>CFBundleDisplayName</key>
+	<string>Kaeri</string>
+	<key>CFBundleIdentifier</key>
+	<string>app.kaeri.kaeri</string>
+	<!-- Replaced at package time with the release version. -->
+	<key>CFBundleShortVersionString</key>
+	<string>0.0.0</string>
+	<key>CFBundleVersion</key>
+	<string>0.0.0</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<!-- The launcher script, not the binary: a TUI needs a terminal, and Finder provides none. -->
+	<key>CFBundleExecutable</key>
+	<string>launcher</string>
+	<key>CFBundleIconFile</key>
+	<string>Kaeri</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>11.0</string>
+	<!-- No window of its own; everything happens in the terminal it opens. -->
+	<key>LSBackgroundOnly</key>
+	<false/>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSHumanReadableCopyright</key>
+	<string>MIT licensed. Kaeri doesn't host any shows. You add your own sources.</string>
+</dict>
+</plist>

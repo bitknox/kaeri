@@ -1,0 +1,87 @@
+---
+/**
+ * The download cards: one per platform, each with its button. The buttons point at the latest
+ * release's page until download.ts names the file. A card whose button fetches a file opens
+ * its next steps beneath it after a click (download.ts), and the card for the visitor's device
+ * takes the amber button and a line saying so. iPhone and iPad get the SideStore steps, never the file.
+ */
+import { FILES, LATEST } from '../data/site';
+import { useSite } from '../i18n/site';
+
+interface Props {
+	/** Where the install steps are: on the download page itself, or its path from another page. */
+	steps: string;
+	/** The level of each card's heading: h2 when the cards sit right under the page's title. */
+	heading?: 'h2' | 'h3';
+}
+
+const { steps, heading: Heading = 'h3' } = Astro.props;
+const { t } = useSite(Astro);
+
+// The platforms in the columns of the design: a pair in each, and the terminal alone.
+const columns = [
+	['mac', 'ios'],
+	['android', 'android-tv'],
+	['windows', 'linux'],
+	['terminal'],
+] as const;
+
+type Id = (typeof columns)[number][number];
+const kind: Record<Id, { asset?: string; link?: string }> = {
+	mac: { asset: FILES.mac[0].suffix },
+	ios: { link: 'ios' },
+	android: { asset: FILES.android[0].suffix },
+	'android-tv': { link: 'android-tv' },
+	windows: { asset: FILES.windows[0].suffix },
+	linux: { asset: FILES.linux[0].suffix },
+	terminal: { link: 'terminal' },
+};
+---
+
+<div class="dl-grid">
+	{
+		columns.map((column) => (
+			<div class="dl-col">
+				{column.map((id) => {
+					const k = kind[id];
+					const stepsHref = `${steps}#${id}`;
+					const hasPanel = id !== 'ios' && id !== 'android-tv';
+					return (
+						<div class="dl-card" data-card={id}>
+							<Heading class="dl-name">{t(`dl.card.${id}.name`)}</Heading>
+							<p class="dl-needs">{t(`dl.card.${id}.needs`)}</p>
+							{id === 'terminal' && <pre><code>brew install mpv ffmpeg</code></pre>}
+							<p class="dl-act">
+								<a
+									class="k-btn"
+									href={k.asset ? LATEST : stepsHref}
+									data-asset={k.asset}
+									data-next={hasPanel ? id : undefined}
+									data-steps={stepsHref}
+								>
+									{t(`dl.card.${id}.button`)}
+								</a>
+							</p>
+							<p class="dl-suggested" hidden>{t('dl.suggested')}</p>
+							{hasPanel && (
+								<div class="dl-next" data-panel={id}>
+									<div class="dl-next-in">
+										<div class="dl-next-body">
+											<h4 tabindex="-1">{t('dl.next.title')}</h4>
+											<ol set:html={t(`dl.next.${id}.list`)} />
+											<p><a href={stepsHref}>{t('dl.next.more')}</a></p>
+										</div>
+									</div>
+								</div>
+							)}
+						</div>
+					);
+				})}
+			</div>
+		))
+	}
+</div>
+
+<script>
+	import "../scripts/download";
+</script>

@@ -1,0 +1,573 @@
+-- Kaeri's companion script for mpv.
+--
+-- The host (the Kaeri TUI) drives playback over JSON IPC and owns every decision; this
+-- script draws the in-player parts of the app and reports what the viewer does. The contract
+-- is protocol v1:
+--
+--   host -> script  state     user-data/kaeri/{protocol,episode,next,status,menus,media}
+--   host -> script  commands  script-message-to Kaeri <skip-offer|skip-clear|skipped|toast|
+--                                                           stall|stall-clear|hello> <json>
+--   script -> host  events    script-message Kaeri <event> [json]
+--                             ready, next, previous, skip, undo-skip, play-next, cancel-next,
+--                             choose, stall-switch, stall-wait
+--   script -> tests           user-data/kaeri/ui (what is visible right now)
+--
+-- Key bindings. Every one is named, so `<key> script-binding kaeri/<name>` in input.conf
+-- rebinds it. "While shown" keys are forced bindings that exist only while their element is on
+-- screen; the rest of the time the key does whatever mpv or the user's input.conf says (S takes
+-- screenshots, Enter steps the playlist, Esc leaves fullscreen).
+--
+--   name           default key          when
+--   next           N                    always: next episode
+--   previous       P                    always: previous episode (replaces mpv's show-progress)
+--   menu           M, right click*      always: the Kaeri menu  (*Kaeri mode only)
+--   episodes       -                    always: the episode list on its own
+--   sources        -                    always: the source list on its own
+--   subtitles      -                    always: subtitle tracks (Kaeri mode: our menu)
+--   audio          -                    always: audio tracks (Kaeri mode: our menu)
+--   mini           Alt+m                always: mini player on/off
+--   keys           ?                    always: the keys overlay (this table, for viewers)
+--   sub-sync       Alt+z                always: start (or stop) two-point subtitle sync
+--   sub-style      Alt+s                always: the subtitle style panel on or off
+--   skip           S, Enter             while the skip button is shown
+--   undo-skip      u                    while "Skipped … · Undo" is shown
+--   play-next      Enter                while Up Next is shown
+--   cancel-next    Esc                  while Up Next is shown
+--   stall-switch   Enter                while the stall prompt is shown
+--   stall-wait     Esc                  while the stall prompt is shown
+--   (sync)         Enter mark, Esc stop while subtitle sync is running
+--   (menu)         arrows, PgUp/PgDn,   while our menu is open (Kaeri mode): move, open,
+--                  Home/End, Enter,     back; a click outside closes it
+--                  Esc/BS, wheel
+--   volume-up      wheel up*            always: volume +2  (*Kaeri mode only)
+--   volume-down    wheel down*          always: volume -2  (*Kaeri mode only)
+--   seek-back      Left*                always: back 5 s, exactly  (*Kaeri mode only)
+--   seek-forward   Right*               always: forward 5 s, exactly  (*Kaeri mode only)
+--   pause-click    left click*          on the picture: pause/resume after the double-click
+--                                       time; a double click stays mpv's fullscreen toggle
+--
+-- Buttons also take a left click; the left button is bound only while the pointer is over one,
+-- in a section that keeps the window from being dragged instead. None of the "while shown" keys
+-- are held while uosc's menu or mpv's console owns the keyboard.
+
+local config = require("config")
+local util = require("util")
+local app = require("app")
+local overlay = require("overlay")
+local keys = require("keys")
+local screen = require("screen")
+local menus = require("menus")
+local menu_view = require("menu_view")
+local mini = require("mini")
+local subsync = require("subsync")
+local substyle = require("substyle")
+local timeline = require("timeline")
+local volume = require("volume")
+local loading = require("elements/loading")
+local skip = require("elements/skip")
+local skipped = require("elements/skipped")
+local stall = require("elements/stall")
+local up_next = require("elements/up_next")
+local toast = require("elements/toast")
+local pause_flash = require("elements/pause_flash")
+local help = require("help")
+local host = require("host")
+local subs = require("subs")
+
+local PROTOCOL = 1
+
+-- Drawing order, back to front.
+overlay.register(loading)
+overlay.register(timeline)
+overlay.register(volume)
+overlay.register(skip)
+overlay.register(skipped)
+overlay.register(stall)
+overlay.register(up_next)
+overlay.register(toast)
+overlay.register(subsync.element)
+overlay.register(substyle.element)
+overlay.register(pause_flash)
+overlay.register(menu_view)
+overlay.register(help)
+
+-- The bottom-right corner holds one element at a time, the first of these that has something
+-- to show. A stall outranks everything (nothing else matters if the video is not moving). The
+-- note after an automatic skip comes next: it is there for six seconds, and an ending skipped
+-- on its own lands where Up Next is already showing, so ranked below it the way back into the
+-- ending was never on screen and `u` was never bound. Up Next outranks an ending's skip
+-- button, since playing on is the better way out of an ending.
+local CORNER = { stall, skipped, up_next, skip }
+
+---------------------------------------------------------------------------------------------
+-- The one refresh: visibility, keys, published state
+---------------------------------------------------------------------------------------------
+
+local last_ui = nil
+-- Whether the controls were up for activity at the last refresh, the volume's row with them.
+-- Kept from the refresh rather than read at publishing, so it matches where the fades were sent.
+local controls_up = false
+
+local function publish()
+    local menu_items, menu_focus = menu_view.rows()
+    local ui = {
+        skip = { visible = overlay.visible(skip), label = skip.label() },
+        skipped = { visible = overlay.visible(skipped) },
+        up_next = {
+            visible = overlay.visible(up_next),
+            countdown = overlay.visible(up_next) and up_next.countdown() or nil,
+            -- Beyond the brief's shape: whether the next episode's still is on screen.
+            still = up_next.still(),
+        },
+        loading = { visible = overlay.visible(loading) and loading.card_visible() },
+        stall = { visible = overlay.visible(stall) },
+        toast = toast.text(),
+        mini = mini.active(),
+        -- Not in the brief's shape: the subtitle-sync step (1-4) while it runs.
+        sync = subsync.step(),
+        -- Also beyond the brief: our own menu and seek bar, in Kaeri mode.
+        menu = menu_view.view(),
+        -- And what it lists, by title, with the row its cursor is on: what Enter would pick.
+        menu_items = menu_items,
+        menu_focus = menu_focus,
+        -- And the keys overlay, with what it lists while open (`label -> keys`).
+        keys = help.is_open(),
+        keys_listed = help.is_open() and help.listed() or nil,
+        timeline = overlay.visible(timeline),
+        -- Whether the controls are up. The seek bar needs a duration besides, so the controls
+        -- can come and go with `timeline` false throughout when the duration arrives after.
+        controls = controls_up,
+        -- Which form the volume control last drew, "row" or "pill": what a fade showed.
+        volume = volume.drawn(),
+        -- Whether anything is mid-fade. Published again as the last fade lands, so `false`
+        -- with the rest is what the screen came to rest on.
+        fading = overlay.fading(),
+    }
+    local json = util.format_json(ui)
+    if json ~= last_ui then
+        last_ui = json
+        mp.set_property_native("user-data/kaeri/ui", ui)
+    end
+end
+
+-- In `mpv` mode the loading card replaces whatever the user's player UI shows on an idle
+-- window (uosc's idle indicator, the stock OSC's logo) for as long as it is up, and gives it
+-- back after. In Kaeri mode uosc-opts.conf already turns uosc's off.
+local covering = false
+local logo_was_on = false
+local function cover_idle_indicators(on)
+    if on == covering or config.opts.uosc then
+        return
+    end
+    covering = on
+    if screen.uosc() then
+        screen.to_uosc("disable-elements", mp.get_script_name(), on and "idle_indicator" or "")
+    end
+    if mp.get_property_native("osc") == true then
+        if on then
+            logo_was_on = mp.get_property_native("user-data/osc/idlescreen") ~= false
+            if logo_was_on then
+                mp.commandv("script-message-to", "osc", "osc-idlescreen", "no", "no-osd")
+            end
+        elseif logo_was_on then
+            mp.commandv("script-message-to", "osc", "osc-idlescreen", "yes", "no-osd")
+        end
+    end
+end
+
+local function refresh()
+    loading.update()
+    overlay.show(loading, loading.wants())
+    cover_idle_indicators(loading.card_visible())
+
+    -- A loading card covers the video, and nothing in the corner is about that video any more.
+    local winner = nil
+    if not loading.card_visible() then
+        for _, el in ipairs(CORNER) do
+            if el.wants() then
+                winner = el
+                break
+            end
+        end
+    end
+    for _, el in ipairs(CORNER) do
+        overlay.show(el, el == winner)
+    end
+    up_next.sync_still(winner == up_next)
+    overlay.show(toast, toast.wants())
+    overlay.show(subsync.element, subsync.element.wants())
+    overlay.show(substyle.element, substyle.element.wants())
+    overlay.show(menu_view, menu_view.wants())
+    overlay.show(help, help.wants())
+    -- The controls give way to anything that takes the middle of the window.
+    local covered = menu_view.is_open() or help.is_open() or loading.card_visible()
+    controls_up = timeline.awake()
+    local seekbar = timeline.wants() and not covered
+    overlay.show(timeline, seekbar)
+    timeline.observe(seekbar)
+    overlay.show(volume, volume.wants() and not covered)
+    overlay.show(pause_flash, pause_flash.wants() and not covered)
+
+    -- The keys overlay holds only its close key while it is up. Otherwise the open menu owns
+    -- the keyboard; then a running sync (Enter marks, Esc stops); then whatever holds the
+    -- corner.
+    local wanted = {}
+    local holders = help.is_open() and { help } or { menu_view, substyle.element, subsync.element, winner }
+    if not app.modal then
+        for _, el in ipairs(holders) do
+            if overlay.visible(el) then
+                for key, fn in pairs(el.keys()) do
+                    if wanted[key] == nil then
+                        wanted[key] = fn
+                    end
+                end
+            end
+        end
+        -- An ending skipped on its own puts its note over Up Next, which keeps counting down
+        -- behind it. Its keys stay live underneath, or Esc did nothing for the six seconds the
+        -- note was up and the next episode started the moment the card came back.
+        if winner == skipped and up_next.wants() and not help.is_open() then
+            for key, fn in pairs(up_next.keys()) do
+                if wanted[key] == nil then
+                    wanted[key] = fn
+                end
+            end
+        end
+    end
+    keys.set(wanted)
+
+    publish()
+    overlay.request()
+end
+
+app.changed = refresh
+-- The form a fade drew is only known once it has drawn, so the screen at rest is said too.
+overlay.on_settle(publish)
+
+---------------------------------------------------------------------------------------------
+-- Host state
+---------------------------------------------------------------------------------------------
+
+local HOST_KEYS = { "protocol", "episode", "next", "status", "menus", "media" }
+
+for _, key in ipairs(HOST_KEYS) do
+    mp.observe_property("user-data/kaeri/" .. key, "native", function(_, value)
+        app.host[key] = value
+        if key == "next" then
+            up_next.set(value)
+        elseif key == "menus" or key == "episode" or key == "media" then
+            menus.refresh()
+        end
+        refresh()
+    end)
+end
+
+---------------------------------------------------------------------------------------------
+-- Host commands
+---------------------------------------------------------------------------------------------
+
+mp.register_script_message("skip-offer", function(json)
+    skip.offer(util.parse_json(json))
+end)
+
+mp.register_script_message("skip-clear", function()
+    skip.clear()
+end)
+
+mp.register_script_message("skipped", function(json)
+    skipped.show(util.parse_json(json))
+end)
+
+mp.register_script_message("toast", function(json)
+    local payload = util.parse_json(json)
+    toast.show(payload.text, util.str(payload.level), util.num(payload.duration))
+end)
+
+mp.register_script_message("stall", function(json)
+    stall.show(util.parse_json(json))
+end)
+
+mp.register_script_message("stall-clear", function()
+    stall.clear()
+end)
+
+---------------------------------------------------------------------------------------------
+-- Player state
+---------------------------------------------------------------------------------------------
+
+local p = app.player
+
+mp.observe_property("idle-active", "bool", function(_, value)
+    p.idle = value == true
+    up_next.evaluate()
+    refresh()
+end)
+
+mp.observe_property("duration", "number", function(_, value)
+    local had = (p.duration or 0) > 0
+    p.duration = value
+    up_next.evaluate()
+    -- The seek bar needs a duration. One that arrives while the controls are up brings the bar
+    -- up with them; until it did, a wake before the script knew the duration (a file just
+    -- started, a machine under load) left the controls up without the bar until the next.
+    if ((value or 0) > 0) ~= had then
+        refresh()
+    end
+end)
+
+mp.observe_property("speed", "number", function(_, value)
+    p.speed = value or 1
+    up_next.evaluate()
+end)
+
+mp.observe_property("osd-dimensions", "native", function(_, value)
+    if type(value) == "table" then
+        p.osd_w, p.osd_h = value.w or 0, value.h or 0
+        overlay.request()
+    end
+end)
+
+mp.observe_property("display-hidpi-scale", "number", function(_, value)
+    p.hidpi = value or 1
+    overlay.request()
+end)
+
+mp.observe_property("fullscreen", "bool", function(_, value)
+    p.fullscreen = value == true
+    overlay.request()
+end)
+
+mp.observe_property("window-maximized", "bool", function(_, value)
+    p.maximized = value == true
+    overlay.request()
+end)
+
+mp.observe_property("vo-configured", "bool", function(_, value)
+    p.vo_configured = value == true
+    overlay.request()
+end)
+
+mp.observe_property("current-tracks/audio", "native", function(_, value)
+    p.has_audio = value ~= nil
+    refresh()
+end)
+
+-- Another script's modal UI owns the keyboard while it is open.
+local modal = {}
+local function watch_modal(property)
+    mp.observe_property(property, "native", function(_, value)
+        modal[property] = value ~= nil and value ~= false
+        local any = false
+        for _, open in pairs(modal) do
+            any = any or open
+        end
+        if any ~= app.modal then
+            app.modal = any
+            refresh()
+        end
+    end)
+end
+watch_modal("user-data/uosc/menu/type")
+watch_modal("user-data/mpv/console/open")
+watch_modal("user-data/mpv/context-menu/open")
+
+-- Per-file state does not outlive its file: an offer, a stall or a cancelled Up Next belonged
+-- to the episode that just ended.
+local function new_file()
+    skip.clear()
+    skipped.clear()
+    stall.clear()
+    up_next.reset()
+    if subsync.step() then
+        subsync.cancel()
+    end
+    substyle.close()
+end
+mp.register_event("start-file", new_file)
+mp.register_event("end-file", function()
+    skip.clear()
+    stall.clear()
+end)
+
+---------------------------------------------------------------------------------------------
+-- Bringing the controls up
+--
+-- In Kaeri mode the resting state is just the video. uosc's control row and our seek bar
+-- come up when the pointer moves (anywhere, not only near the bottom), the video pauses or a
+-- seek lands, and fade out together once the cursor has been still for mpv's cursor-hide
+-- delay, wherever it rests, or as soon as it leaves the window.
+--
+-- uosc shows its row only when it is flashed (uosc-opts.conf takes its distance-based showing
+-- away), and each flash lasts its `flash_duration`, kept here at the bar's delay. Every wake
+-- flashes it, so both leave at the same moment. When the pointer leaves the window uosc fades
+-- its row at once, flash or no flash, and the bar follows.
+---------------------------------------------------------------------------------------------
+
+if config.opts.uosc then
+    mp.observe_property("cursor-autohide", "native", function()
+        local ms = math.floor(timeline.hide_delay() * 1000 + 0.5)
+        mp.commandv("change-list", "script-opts", "append", "uosc-flash_duration=" .. ms)
+    end)
+    local function wake()
+        local covered = menu_view.is_open() or help.is_open() or loading.card_visible()
+        if p.idle or app.modal or covered then
+            return
+        end
+        timeline.poke()
+        screen.to_uosc("flash-elements", "controls")
+    end
+    local seen_pointer = false
+    local was_inside = false
+    overlay.on_mouse_move(function(mouse)
+        -- The first report is where the pointer already was, not a movement.
+        if seen_pointer and mouse.inside then
+            wake()
+        elseif seen_pointer and was_inside then
+            timeline.rest()
+        end
+        seen_pointer = true
+        was_inside = mouse.inside
+    end)
+    -- Compared with the value at start-up rather than "skip the first report": a pause toggled
+    -- before the first report arrives would otherwise be taken for the starting state.
+    local was_paused = mp.get_property_native("pause") == true
+    mp.observe_property("pause", "bool", function(_, value)
+        if (value == true) ~= was_paused then
+            was_paused = value == true
+            wake()
+        end
+    end)
+    mp.register_event("seek", wake)
+end
+
+---------------------------------------------------------------------------------------------
+-- Bindings
+---------------------------------------------------------------------------------------------
+
+subsync.notify = function(text, alert)
+    toast.show(text, alert and "alert" or "info", 4)
+end
+menus.actions = { mini = mini.toggle, ["sub-sync"] = subsync.start, keys = help.open }
+menus.mini_on = mini.active
+
+mp.add_key_binding("N", "next", function()
+    util.emit("next")
+    toast.show("Next episode…", "info", 1.5)
+end)
+mp.add_key_binding("P", "previous", function()
+    util.emit("previous")
+    toast.show("Previous episode…", "info", 1.5)
+end)
+mp.add_key_binding("M", "menu", function()
+    menus.open("root")
+end)
+-- Right click is mpv's pause toggle by default, and the wheel seeks. In our own mode right
+-- click opens the menu and the wheel sets the volume, as in most players; in `mpv` mode the
+-- user's setup keeps both.
+if config.opts.uosc then
+    mp.add_key_binding("MBTN_RIGHT", "menu-pointer", function()
+        menus.open("root")
+    end)
+    mp.add_key_binding("WHEEL_UP", "volume-up", function()
+        volume.step(2)
+    end)
+    mp.add_key_binding("WHEEL_DOWN", "volume-down", function()
+        volume.step(-2)
+    end)
+    -- mpv's own arrows seek to a keyframe, which on HLS turned five seconds into seven or eight
+    -- either way. An exact seek decodes on from the keyframe, a matter of milliseconds.
+    mp.add_key_binding("LEFT", "seek-back", function()
+        mp.commandv("seek", "-5", "relative+exact")
+    end, { repeatable = true })
+    mp.add_key_binding("RIGHT", "seek-forward", function()
+        mp.commandv("seek", "5", "relative+exact")
+    end, { repeatable = true })
+
+    -- A click on the picture pauses, a double click goes fullscreen (mpv's own MBTN_LEFT_DBL),
+    -- so the single click waits out the double-click time before acting: otherwise every
+    -- double click would also pause and unpause underneath the fullscreen change. A press that
+    -- turns into a window drag never sends its release here, so dragging does not pause.
+    local pending = nil
+    local down_at = nil
+    mp.add_key_binding("MBTN_LEFT", "pause-click", function(event)
+        local pos = mp.get_property_native("mouse-pos") or {}
+        if event.event == "down" then
+            down_at = { x = pos.x or 0, y = pos.y or 0 }
+            return
+        end
+        if event.event ~= "up" and event.event ~= "press" then
+            return
+        end
+        if down_at and math.abs((pos.x or 0) - down_at.x) + math.abs((pos.y or 0) - down_at.y) > 8 then
+            down_at = nil
+            return
+        end
+        down_at = nil
+        if pending then
+            -- The second click of a double click: fullscreen is mpv's, the pause is cancelled.
+            pending:kill()
+            pending = nil
+            return
+        end
+        local wait = (mp.get_property_number("input-doubleclick-time") or 300) / 1000
+        pending = mp.add_timeout(wait, function()
+            pending = nil
+            mp.commandv("cycle", "pause")
+        end)
+    end, { complex = true })
+end
+mp.add_key_binding(nil, "episodes", function()
+    menus.open("episodes")
+end)
+mp.add_key_binding(nil, "sources", function()
+    menus.open("sources")
+end)
+mp.add_key_binding(nil, "subtitles", function()
+    menus.open("subtitles")
+end)
+mp.add_key_binding(nil, "audio", function()
+    menus.open("audio")
+end)
+mp.add_key_binding("Alt+m", "mini", mini.toggle)
+mp.add_key_binding("Alt+z", "sub-sync", subsync.start)
+mp.add_key_binding("Alt+s", "sub-style", substyle.toggle)
+-- mpv's own ? toggles the stats page that lists every binding by command; this is the same
+-- question asked by a viewer, and that page stays one key away (the overlay says which).
+mp.add_key_binding("?", "keys", help.toggle)
+help.before_open = function()
+    -- One overlay at a time in the middle of the window.
+    menu_view.close()
+end
+
+mp.add_key_binding(nil, "skip", skip.take)
+mp.add_key_binding(nil, "undo-skip", skipped.undo)
+mp.add_key_binding(nil, "play-next", up_next.play_now)
+mp.add_key_binding(nil, "cancel-next", up_next.cancel)
+mp.add_key_binding(nil, "stall-switch", stall.switch)
+mp.add_key_binding(nil, "stall-wait", stall.wait)
+
+---------------------------------------------------------------------------------------------
+-- Hello
+---------------------------------------------------------------------------------------------
+
+local function ready()
+    util.emit("ready", {
+        protocol = PROTOCOL,
+        uosc = screen.uosc(),
+        mpv = mp.get_property("mpv-version") or "",
+    })
+end
+
+-- `ready` goes out once at start-up, which can be before the host's IPC connection exists:
+-- mpv does not hold client messages for clients that connect later. A host that connected
+-- late asks again with `script-message-to kaeri hello`.
+mp.register_script_message("hello", ready)
+
+refresh()
+menus.sync_context_menu()
+host.start()
+-- Subtitles rise and settle with the seek bar's own fade.
+subs.follow(timeline)
+-- Every binding above is live before the host hears we are ready.
+keys.flush()
+ready()

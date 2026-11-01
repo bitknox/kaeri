@@ -1,0 +1,241 @@
+//! The host's half of the companion-script protocol.
+//!
+//! The companion is the Lua script Kaeri ships into mpv (`assets/mpv/scripts/kaeri`).
+//! It draws the skip button, the Up Next card, the loading card and the in-player menus, and it
+//! takes the viewer's input there — but it decides nothing. Every choice comes back here as an
+//! event, because the decisions need what only the host has: skip intervals, the episode list,
+//! the alternate streams, the watch history.
+//!
+//! Three channels, all plain mpv:
+//!
+//! - **State** the script should always see goes in `user-data/kaeri/<key>`, which it
+//!   observes. A property rather than a message, so a value set before the script finished
+//!   loading is still there when it looks.
+//! - **One-off instructions** ("offer a skip now") are `script-message-to kaeri`.
+//! - **What the viewer did** arrives as `script-message kaeri <event> <json>`, which
+//!   reaches the IPC socket as a `client-message`.
+//!
+//! The shapes, re-exported here, are the contract with the Lua side; the script's own header
+//! lists the same keys. Changing one without the other fails quietly, which is why the
+//! serialised forms are pinned in tests below.
+
+use serde::Serialize;
+
+use crate::protocol::Command;
+
+pub use kaeri_playback::companion::*;
+
+/// The protocol revision, published so a script from another build can tell it is mismatched.
+pub const PROTOCOL: u32 = 1;
+
+/// Publish one state key.
+pub fn state(key: &'static str, value: &impl Serialize) -> Command {
+    Command::SetUserData(key, serde_json::to_value(value).unwrap_or(serde_json::Value::Null))
+}
+
+/// Clear one state key; the script treats null as absent.
+pub fn clear(key: &'static str) -> Command {
+    Command::SetUserData(key, serde_json::Value::Null)
+}
+
+/// Show the skip button for the interval the playhead just entered.
+pub fn skip_offer(kind: &str, label: &str, to: f64) -> Command {
+    message("skip-offer", serde_json::json!({ "kind": kind, "label": label, "to": to }))
+}
+
+pub fn skip_clear() -> Command {
+    message("skip-clear", serde_json::json!({}))
+}
+
+/// An automatic skip just happened; the script offers to undo it.
+pub fn skipped(kind: &str, label: &str, from: f64, to: f64) -> Command {
+    message(
+        "skipped",
+        serde_json::json!({ "kind": kind, "label": label, "from": from, "to": to }),
+    )
+}
+
+/// A themed message on the video — what `show-text` was used for before the companion.
+pub fn toast(text: &str, level: Level) -> Command {
+    message("toast", serde_json::json!({ "text": text, "level": level, "duration": 3 }))
+}
+
+/// The stream has been held waiting for data this long, mid-episode.
+pub fn stall(seconds: u64) -> Command {
+    message("stall", serde_json::json!({ "seconds": seconds }))
+}
+
+pub fn stall_clear() -> Command {
+    message("stall-clear", serde_json::json!({}))
+}
+
+/// Ask the companion to say `ready` again.
+///
+/// mpv keeps no client messages for a client that connects later, so the `ready` the script
+/// sends as it loads is usually gone by the time the socket is up.
+pub fn hello() -> Command {
+    message("hello", serde_json::json!({}))
+}
+
+fn message(command: &'static str, payload: serde_json::Value) -> Command {
+    Command::ScriptMessage { command, payload }
+}
+
+/// Read a `client-message` from the companion.
+///
+/// `None` for messages that are not ours or that carry a shape this build does not know —
+/// another script on the bus, or a companion from a newer build. Neither is an error worth
+/// interrupting playback for.
+pub fn parse_event(args: &[String]) -> Option<ScriptEvent> {
+    let [tag, event, rest @ ..] = args else { return None };
+    if tag != "kaeri" {
+        return None;
+    }
+    let payload: serde_json::Value =
+        rest.first().and_then(|raw| serde_json::from_str(raw).ok()).unwrap_or_default();
+    Some(match event.as_str() {
+        "ready" => ScriptEvent::Ready {
+            uosc: payload.get("uosc").and_then(|v| v.as_bool()).unwrap_or(false),
+        },
+        "next" => ScriptEvent::Next,
+        "previous" => ScriptEvent::Previous,
+        "skip" => ScriptEvent::Skip,
+        "undo-skip" => ScriptEvent::UndoSkip { to: payload.get("to")?.as_f64()? },
+        "play-next" => ScriptEvent::PlayNext,
+        "cancel-next" => ScriptEvent::CancelNext,
+        "stall-switch" => ScriptEvent::StallSwitch,
+        "stall-wait" => ScriptEvent::StallWait,
+        "choose" => ScriptEvent::Choose(parse_choice(&payload)?),
+        "sub-style" => ScriptEvent::Choose(Choice::SubtitleStyle(
+            payload.get("setting")?.as_str()?.to_owned(),
+            match payload.get("value")? {
+                serde_json::Value::String(s) => s.clone(),
+                serde_json::Value::Number(n) => n.to_string(),
+                _ => return None,
+            },
+        )),
+        _ => return None,
+    })
+}
+
+fn parse_choice(payload: &serde_json::Value) -> Option<Choice> {
+    let menu = payload.get("menu")?.as_str()?;
+    let value = payload.get("value")?;
+    // Ids arrive as strings, but a script that sent a bare number for an episode means the
+    // same thing; refusing it would make the menu silently do nothing.
+    let text = || match value {
+        serde_json::Value::String(s) => Some(s.clone()),
+        serde_json::Value::Number(n) => Some(n.to_string()),
+        _ => None,
+    };
+    Some(match menu {
+        "episode" => Choice::Episode(text()?),
+        "source" => Choice::Source(text()?),
+        "translation" => Choice::Translation(text()?),
+        "upscaling" => Choice::Upscaling(text()?),
+        "tone_mapping" => Choice::ToneMapping(text()?),
+        "night_mode" => Choice::NightMode(value.as_bool()?),
+        _ => return None,
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn args(parts: &[&str]) -> Vec<String> {
+        parts.iter().map(|p| (*p).to_owned()).collect()
+    }
+
+    #[test]
+    fn the_existing_episode_keys_still_arrive() {
+        // N and P inside the player predate the companion; the old shim sent them bare.
+        assert_eq!(parse_event(&args(&["kaeri", "next"])), Some(ScriptEvent::Next));
+        assert_eq!(parse_event(&args(&["kaeri", "previous"])), Some(ScriptEvent::Previous));
+    }
+
+    #[test]
+    fn another_scripts_messages_are_not_ours() {
+        assert_eq!(parse_event(&args(&["uosc", "next"])), None);
+        assert_eq!(parse_event(&args(&["kaeri"])), None);
+    }
+
+    #[test]
+    fn an_undo_without_a_position_is_refused_rather_than_sent_to_zero() {
+        // Seeking to 0 on a malformed undo would throw the viewer back to the cold open.
+        assert_eq!(parse_event(&args(&["kaeri", "undo-skip", "{}"])), None);
+        assert_eq!(
+            parse_event(&args(&["kaeri", "undo-skip", r#"{"to":12.5}"#])),
+            Some(ScriptEvent::UndoSkip { to: 12.5 })
+        );
+    }
+
+    #[test]
+    fn menu_picks_are_typed_by_menu() {
+        let pick = |json: &str| parse_event(&args(&["kaeri", "choose", json]));
+        assert_eq!(
+            pick(r#"{"menu":"episode","value":"7"}"#),
+            Some(ScriptEvent::Choose(Choice::Episode("7".into())))
+        );
+        assert_eq!(
+            pick(r#"{"menu":"episode","value":7}"#),
+            Some(ScriptEvent::Choose(Choice::Episode("7".into())))
+        );
+        assert_eq!(
+            pick(r#"{"menu":"night_mode","value":true}"#),
+            Some(ScriptEvent::Choose(Choice::NightMode(true)))
+        );
+        assert_eq!(pick(r#"{"menu":"night_mode","value":"on"}"#), None);
+        assert_eq!(pick(r#"{"menu":"nonsense","value":"x"}"#), None);
+    }
+
+    #[test]
+    fn readiness_reports_whether_uosc_draws_the_menus() {
+        assert_eq!(
+            parse_event(&args(&["kaeri", "ready", r#"{"protocol":1,"uosc":true}"#])),
+            Some(ScriptEvent::Ready { uosc: true })
+        );
+    }
+
+    #[test]
+    fn state_serialises_to_the_shapes_the_script_reads() {
+        // These key names are read by the Lua side; a rename here is a blank card there.
+        let next = NextUp {
+            number: "6".into(),
+            label: "Episode 6".into(),
+            title: None,
+            at: Some(1310.0),
+            auto: true,
+            thumbnail: None,
+        };
+        let Command::SetUserData(key, value) = state("next", &next) else { panic!() };
+        assert_eq!(key, "next");
+        assert_eq!(value["label"], "Episode 6");
+        assert_eq!(value["at"], 1310.0);
+        assert_eq!(value["auto"], true);
+
+        let Command::SetUserData(_, value) =
+            state("status", &Status::loading("Opening episode 6", None))
+        else {
+            panic!()
+        };
+        assert_eq!(value["phase"], "loading");
+
+        let Command::ScriptMessage { command, payload } = toast("hello", Level::Alert) else {
+            panic!()
+        };
+        assert_eq!(command, "toast");
+        assert_eq!(payload["level"], "alert");
+    }
+
+    #[test]
+    fn a_subtitle_style_row_from_the_panel_is_read() {
+        let got =
+            parse_event(&args(&["kaeri", "sub-style", r#"{"setting":"size","value":120}"#]));
+        assert_eq!(
+            got,
+            Some(ScriptEvent::Choose(Choice::SubtitleStyle("size".into(), "120".into())))
+        );
+        assert!(parse_event(&args(&["kaeri", "sub-style", r#"{"setting":"size"}"#])).is_none());
+    }
+}

@@ -1,0 +1,284 @@
+{
+ "groups": [
+  {
+   "id": "watching",
+   "rows": [
+    {
+     "id": "builtInMpv",
+     "cells": [
+      "y",
+      "y",
+      "y",
+      "y",
+      "y",
+      "y",
+      "y",
+      "yourMpv"
+     ]
+    },
+    {
+     "id": "upscaling",
+     "cells": [
+      "y",
+      "y",
+      "y",
+      "y",
+      "n",
+      "y",
+      "y",
+      "y"
+     ]
+    },
+    {
+     "id": "openingAndEndingMarks",
+     "cells": [
+      "y",
+      "y",
+      "y",
+      "y",
+      "y",
+      "y",
+      "y",
+      "mpvs"
+     ]
+    },
+    {
+     "id": "loadASubtitleFile",
+     "cells": [
+      "y",
+      "n",
+      "n",
+      "n",
+      "n",
+      "y",
+      "y",
+      "mpvs"
+     ]
+    },
+    {
+     "id": "pictureInPicture",
+     "cells": [
+      "y",
+      "y",
+      "y",
+      "y",
+      "n",
+      "miniPlayer",
+      "miniPlayer",
+      "n"
+     ]
+    },
+    {
+     "id": "watchParties",
+     "cells": [
+      "y",
+      "y",
+      "y",
+      "n",
+      "n",
+      "y",
+      "y",
+      "y"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "titlePagesAndContinue",
+   "rows": [
+    {
+     "id": "episodeDiscussions",
+     "cells": [
+      "y",
+      "y",
+      "y",
+      "y",
+      "readOnly",
+      "y",
+      "y",
+      "n"
+     ]
+    },
+    {
+     "id": "moreAboutThisShow",
+     "cells": [
+      "y",
+      "y",
+      "y",
+      "y",
+      "n",
+      "y",
+      "y",
+      "similarShows"
+     ]
+    },
+    {
+     "id": "upNextForYou",
+     "cells": [
+      "d",
+      "d",
+      "d",
+      "d",
+      "d",
+      "y",
+      "y",
+      "y"
+     ]
+    },
+    {
+     "id": "watchAgain",
+     "cells": [
+      "d",
+      "d",
+      "d",
+      "y",
+      "y",
+      "y",
+      "y",
+      "n"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "trackingAndDownloads",
+   "rows": [
+    {
+     "id": "myanimelistAndKitsu",
+     "cells": [
+      "y",
+      "y",
+      "y",
+      "y",
+      "kitsuOnly",
+      "y",
+      "y",
+      "y"
+     ]
+    },
+    {
+     "id": "perShowSettings",
+     "cells": [
+      "y",
+      "y",
+      "y",
+      "y",
+      "y",
+      "y",
+      "y",
+      "sourceOnly"
+     ]
+    },
+    {
+     "id": "downloadAnEpisode",
+     "cells": [
+      "y",
+      "y",
+      "y",
+      "y",
+      "n",
+      "y",
+      "y",
+      "y"
+     ]
+    },
+    {
+     "id": "keepTheNextEpisodes",
+     "cells": [
+      "y",
+      "y",
+      "y",
+      "y",
+      "n",
+      "y",
+      "y",
+      "inConfig"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "devices",
+   "rows": [
+    {
+     "id": "playOnTvAndRemote",
+     "cells": [
+      "y",
+      "y",
+      "y",
+      "y",
+      "receives",
+      "y",
+      "y",
+      "d"
+     ]
+    },
+    {
+     "id": "newEpisodeAlerts",
+     "cells": [
+      "y",
+      "y",
+      "y",
+      "y",
+      "n",
+      "y",
+      "atLaunch",
+      "inConfig"
+     ]
+    },
+    {
+     "id": "homeScreenWidgets",
+     "cells": [
+      "y",
+      "y",
+      "y",
+      "y",
+      "n",
+      "d",
+      "n",
+      "n"
+     ]
+    },
+    {
+     "id": "liveActivities",
+     "cells": [
+      "n",
+      "y",
+      "n",
+      "n",
+      "n",
+      "n",
+      "n",
+      "n"
+     ]
+    },
+    {
+     "id": "handoffSpotlightShortcuts",
+     "cells": [
+      "y",
+      "y",
+      "y",
+      "n",
+      "n",
+      "n",
+      "n",
+      "n"
+     ]
+    },
+    {
+     "id": "updatesFromTheApp",
+     "cells": [
+      "y",
+      "viaSidestore",
+      "viaSidestore",
+      "y",
+      "y",
+      "y",
+      "y",
+      "y"
+     ]
+    }
+   ]
+  }
+ ]
+}

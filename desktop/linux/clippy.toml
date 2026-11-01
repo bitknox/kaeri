@@ -1,0 +1,5 @@
+# libadwaita 1.7's dismiss_all frees a toast whose hide animation still runs; see src/notices.rs.
+disallowed-methods = [
+  { path = "libadwaita::ToastOverlay::dismiss_all", reason = "use Notices::dismiss_each (src/notices.rs)" },
+  { path = "libadwaita::ToastOverlay::add_toast", reason = "use Notices::add, so dismiss_each can reach the toast" },
+]

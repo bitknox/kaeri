@@ -1,0 +1,17 @@
+cast-episode = Эпизод { $episode }
+cast-episode-titled = Эпизод { $episode } · { $title }
+notice-cast-video-codec = { $name } не может воспроизвести это видео ({ $codec }). Попробуйте другой { -source }.
+notice-cast-audio-codec = { $name } не может воспроизвести этот звук ({ $codec }), а это { -device } не умеет его преобразовать. Попробуйте другой { -source }.
+notice-cast-container = { $name } не может воспроизвести этот тип файла. Попробуйте другой { -source }.
+notice-cast-deep-link = Этот эпизод открывается в другом приложении, поэтому его нельзя передать на телевизор.
+notice-cast-never-fetches = { $name } не начал читать поток. Возможно, мешает VPN или брандмауэр на этом { -device }.
+notice-cast-refused = { $name } не смог воспроизвести этот поток. Попробуйте другой { -source }.
+notice-cast-taken-over = Другое { -device } запустило что-то на { $name }, поэтому трансляция остановлена.
+notice-cast-not-same-network = Это { -device } не в той сети, где { $name }, или подключается к ней через VPN. Для трансляции оба должны быть в одной сети.
+notice-cast-lost = Связь с { $name } потеряна, трансляция остановлена.
+notice-cast-no-device = Этот телевизор больше не в сети.
+notice-cast-unavailable = Эта версия { -app-name } не умеет передавать видео на телевизоры.
+cast-phase-starting = Запуск на { $name }
+cast-phase-starting-for = Запуск на { $name } · { $seconds } с
+cast-phase-waiting = Ожидание { $name } · { $seconds } с
+cast-phase-preparing = Подготовка потока · { $seconds } с

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Kaeri</string>
+    <string name="notices_channel">Notices</string>
+    <string name="notices_channel_description">Copies of the app\'s notices, for when Kaeri is in the background.</string>
+    <string name="downloads_channel">Downloads</string>
+    <string name="downloads_channel_description">How far the episodes being downloaded are.</string>
+    <string name="updates_channel">Updates</string>
+    <string name="updates_channel_description">How far the download of a new version of Kaeri is, and when it is installed.</string>
+    <string name="updates_cancel">Cancel</string>
+    <string name="episodes_channel">New episodes</string>
+    <string name="episodes_channel_description">When a show you follow has a new episode out.</string>
+    <string name="episode_play">Play</string>
+    <string name="episode_mark_watched">Mark watched</string>
+    <!-- The download notification's buttons. -->
+    <string name="downloads_pause">Pause</string>
+    <string name="downloads_pause_all">Pause all</string>
+    <string name="downloads_resume">Resume</string>
+    <string name="downloads_resume_all">Resume all</string>
+    <string name="downloads_cancel">Cancel</string>
+    <string name="download_play">Play</string>
+    <!-- The launcher's shortcuts. -->
+    <string name="shortcut_search">Search</string>
+    <string name="shortcut_search_long">Search titles</string>
+    <string name="shortcut_downloads">Downloads</string>
+    <string name="shortcut_unavailable">This shortcut is no longer available.</string>
+    <!-- The Continue shortcut: "Continue" where the launcher has little room; its show and episode
+         in full are worked out as it is published. -->
+    <string name="shortcut_continue">Continue</string>
+    <string name="shortcut_nothing_to_continue">Nothing to continue</string>
+</resources>

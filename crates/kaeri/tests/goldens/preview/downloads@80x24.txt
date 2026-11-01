@@ -1,0 +1,24 @@
+Kaeri                                                      plugins ·  ·  kitsu ○
+────────────────────────────────────────────────────────────────────────────────
+ ▸ │  Title                       State         Progress
+ ▤ │  ────────────────────────────────────────────────────────────────────────
+ ▦ │  ▌ Stardust Wayfarer  E4     Downloaded    ████████████  367 MB / 367 MB
+ / │    Stardust Wayfarer  E5     Downloading   ████▊░░░░░░░  147 MB / 367 MB
+ ▥ │    Stardust Wayfarer  E6     Queued        ░░░░░░░░░░░░  Torrents are off
+▌↓2│    Stardust Wayfarer  E7     Failed        █▎░░░░░░░░░░  37 MB / 367 MB
+ ◇ │
+ ◎ │
+ ≡ │
+ ⇄ │
+   │
+   │
+   │
+   │
+   │
+   │
+   │
+   │
+   │  ────────────────────────────────────────────────────────────────────────
+   │    downloads/900001/04.mkv
+────────────────────────────────────────────────────────────────────────────────
+plugins · Subbed · 1080p           c clear finished   X delete   ↵ play   ? keys

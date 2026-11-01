@@ -1,0 +1,64 @@
+[package]
+name = "kaeri"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "An anime streaming TUI"
+
+[[bin]]
+name = "kaeri"
+path = "src/main.rs"
+
+[dependencies]
+kaeri-core.workspace = true
+kaeri-engine = { workspace = true, features = ["desktop"] }
+kaeri-meta.workspace = true
+kaeri-model.workspace = true
+kaeri-net.workspace = true
+kaeri-player.workspace = true
+kaeri-plugin = { workspace = true, features = ["fetch"] }
+kaeri-store-server.workspace = true
+kaeri-providers.workspace = true
+kaeri-store.workspace = true
+kaeri-track = { workspace = true, features = ["keychain"] }
+kaeri-tui.workspace = true
+kaeri-i18n.workspace = true
+open.workspace = true
+anyhow.workspace = true
+# Encodes an invite link for the terminal's clipboard (OSC 52). Already in the tree.
+base64 = "0.23"
+# Verifies release archives against their published SHA-256 before `--update` installs.
+sha2 = "0.11"
+# Raises the open-file allowance at startup — macOS's default 256 is less than one
+# healthy torrent swarm.
+rlimit = "0.11"
+clap.workspace = true
+crossterm.workspace = true
+futures.workspace = true
+image.workspace = true
+# Local dates in `--doctor`. Already in the tree, through kaeri-core.
+jiff.workspace = true
+ratatui.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-appender.workspace = true
+tracing-subscriber.workspace = true
+# The updater stages a download in a private directory rather than a predictable one in
+# the shared temp dir: what it installs is read back from disk after `tar` runs.
+tempfile = "3"
+
+[dev-dependencies]
+# The engine as the contract tests stand it up: from the harness's own parts, saying when it is
+# idle. Only for the tests: the binary that ships has none of it.
+kaeri-engine = { workspace = true, features = ["testing"] }
+# The fake AniList, fixtures and goldens the dispatch contract tests stand the app up with.
+kaeri-testkit.workspace = true
+# The store contract tests serve a real plugin store on loopback.
+kaeri-plugin-store.workspace = true
+serde_json.workspace = true
+tempfile = "3"
+
+[lints]
+workspace = true

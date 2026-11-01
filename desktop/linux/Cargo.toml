@@ -1,0 +1,97 @@
+# The Linux desktop app: GTK 4 and libadwaita, calling the engine in-process. Its own workspace,
+# not the engine's: it needs GTK's and libmpv's development files, which the engine's CI does not
+# have. It shares the engine's toolchain through the repository's rust-toolchain.toml.
+[workspace]
+
+[package]
+name = "kaeri-desktop"
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.98"
+license = "MIT"
+publish = false
+
+[[bin]]
+name = "kaeri-desktop"
+path = "src/main.rs"
+
+[features]
+# The test kit's scene in place of the network: a fake AniList on loopback, the fixture titles
+# and a history already watched, for screenshots and for trying the app with nothing set up.
+# Never on in a build that ships.
+fixtures = [
+  "dep:kaeri-testkit",
+  "dep:kaeri-meta",
+  "dep:kaeri-providers",
+  "kaeri-providers/testing",
+  "dep:kaeri-track",
+  "dep:kaeri-party",
+  "dep:kaeri-remote",
+  "kaeri-remote/testing",
+  "kaeri-engine/testing",
+  "dep:kaeri-cast",
+  "kaeri-cast/fake",
+]
+
+[dependencies]
+# The fatal-signal handler, for a crash record while saving is on.
+libc = "0.2"
+kaeri-core = { path = "../../crates/kaeri-core" }
+kaeri-model = { path = "../../crates/kaeri-model" }
+kaeri-net = { path = "../../crates/kaeri-net" }
+kaeri-store = { path = "../../crates/kaeri-store" }
+# Without the terminal's mpv child, as this app hosts its own player; with the Discord presence,
+# watch parties, the remote's sender side for Play on TV and casting to TVs with Chromecast built in.
+kaeri-i18n = { path = "../../crates/kaeri-i18n" }
+kaeri-engine = { path = "../../crates/kaeri-engine", default-features = false, features = ["presence", "party", "remote", "cast"] }
+kaeri-mpv-host = { path = "../../crates/kaeri-mpv-host", features = ["libmpv"] }
+
+kaeri-testkit = { path = "../../crates/kaeri-testkit", optional = true }
+kaeri-meta = { path = "../../crates/kaeri-meta", optional = true }
+kaeri-providers = { path = "../../crates/kaeri-providers", optional = true }
+kaeri-track = { path = "../../crates/kaeri-track", default-features = false, optional = true }
+# A Syncplay server on loopback with members it plays, for the watch party's scenes.
+kaeri-party = { path = "../../crates/kaeri-party", features = ["testing"], optional = true }
+# TVs on loopback with a scripted player, for Play on TV's scenes.
+kaeri-remote = { path = "../../crates/kaeri-remote", optional = true }
+# TVs with Chromecast built in on loopback, for the casting scenes.
+kaeri-cast = { path = "../../crates/kaeri-cast", optional = true }
+
+# GraphicsOffload is GTK 4.14's; 4.16 gave it a black background for direct scanout.
+gtk = { package = "gtk4", version = "0.11", features = ["v4_16"] }
+# The power saver state, for trailers: GIO's PowerProfileMonitor is 2.70's.
+gio = { version = "0.22", features = ["v2_70"] }
+# 1.7 for the toggle group and the inline view switcher; Debian 13 ships 1.7.
+adw = { package = "libadwaita", version = "0.9", features = ["v1_7"] }
+# The native display, for hardware decoding's interop.
+gdk-wayland-sys = { package = "gdk4-wayland-sys", version = "0.11" }
+gdk-x11-sys = { package = "gdk4-x11-sys", version = "0.11" }
+gdk-wayland = { package = "gdk4-wayland", version = "0.11" }
+gdk-x11 = { package = "gdk4-x11", version = "0.11" }
+# Zen Kaku Gothic New added to the font map from a build run out of the repository.
+pango = { version = "0.22", features = ["v1_56"] }
+pangocairo = "0.22"
+async-channel = "2"
+# WebKitGTK (trailers, when one is about to play) and libmanette (controllers, when the app starts),
+# looked up and not linked, so a system without them still runs.
+libloading = "0.8"
+serde_json = "1"
+# Covers and banners decoded off the main loop.
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
+# The AppImage's own update: downloaded with the engine's HTTP stack and checked by its SHA-256.
+reqwest = { version = "0.13", default-features = false, features = ["rustls", "webpki-roots", "http2"] }
+sha2 = "0.11"
+tokio = { version = "1.53", features = ["rt-multi-thread", "sync", "time"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[dev-dependencies]
+tempfile = "3"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+
+[profile.dev]
+debug = "line-tables-only"
+[profile.dev.package."*"]
+debug = false

@@ -1,0 +1,73 @@
+servers-add-title = メディアサーバーを追加
+servers-on-network = ネットワーク上
+servers-looking = サーバーを探しています…
+servers-none-found = このネットワークにサーバーが見つかりません。代わりにアドレスを入力してください。
+servers-address = サーバーのアドレス
+servers-address-hint = jellyfin.home.example または 192.168.1.20:8096
+servers-address-note = ブラウザでJellyfinを開くときのサーバーのアドレスを入力してください。
+servers-continue = { -proceed-cap }
+servers-sign-in-title = { $server }にサインイン
+servers-user = ユーザー名
+servers-password = パスワード
+servers-use-quick-connect = 代わりにQuick Connectを使う
+servers-use-password = 代わりにパスワードでサインイン
+servers-token-note = パスワードは保存されません。{ -app-name }はサインイントークンを{ $store }に保管します。
+secure-store-windows = 資格情報マネージャー
+secure-store-linux = キーリング
+secure-store-device = キーチェーン
+secure-store-android = この{ -device }のセキュアストレージ
+servers-sign-in = サインイン
+servers-qc-title = このコードをJellyfinに入力
+servers-qc-steps = サインイン済みの{ -device }でJellyfinを開き、プロフィールからQuick Connectを選んで、このコードを入力してください。
+servers-qc-waiting = 承認を待っています
+servers-qc-expired = このコードの有効期限が切れました。
+servers-qc-new-code = 新しいコードを取得
+servers-libraries-title = { -library-cap }を選ぶ
+servers-libraries-body = 作品はAniListと照合され、ホーム、リスト、検索に表示されます。
+servers-library-line = { $kind } · { $count }シリーズ
+servers-report = 視聴状況をJellyfinに報告
+servers-report-line = ここで再生した内容に合わせて、再開位置と視聴済みの印が更新されます。
+servers-add = サーバーを追加
+servers-row-matching = 照合中 · { $done } / { $total }シリーズ
+servers-row-summary = { $libraries ->
+   *[other] { $libraries }個の{ -library } · { $series }シリーズ
+ }
+servers-row-libraries = { $count ->
+   *[other] { $count }個の{ -library }
+ }
+servers-row-series = { $count ->
+   *[other] { $count }シリーズ
+ }
+servers-row-needs-look = { $count }件は要確認
+servers-page-line = { $address } · Jellyfin { $version } · { $user }としてサインイン中
+servers-sign-out = サインアウト
+servers-remove = サーバーを削除
+servers-error-unreachable = { $address }に接続できません。アドレスと、サーバーの電源を確認してください。
+servers-error-not-jellyfin = そのアドレスは応答しましたが、Jellyfinサーバーではありません。
+servers-libraries = { -library-cap }
+servers-remove-line = サーバー側では何も削除されません。
+servers-removed = { $name }を削除しました
+servers-error-too-old = このサーバーはJellyfin { $version }です。{ -app-name }には10.8以降が必要です。
+servers-error-credentials = ユーザー名またはパスワードが違います。
+servers-error-qc-off = このサーバーではQuick Connectがオフです。パスワードでサインインするか、Jellyfinの管理ダッシュボードでオンにしてください。
+servers-error-plain-http = このアドレスはネットワーク内のものではなく、HTTPSも使っていないため、パスワードが保護されずに送信されます。https:// のアドレスを使ってください。
+servers-error-bad-address = アドレスの形式が正しくありません。ブラウザでJellyfinを開くときと同じ形で入力してください。
+servers-error-other = 問題が発生しました。もう一度お試しください。
+servers-cert-title = このサーバーを確認
+servers-cert-body = { $host }は、この{ -device }が信頼していない証明書を使っています。自宅のサーバーでは普通のことです。サーバーに表示されるフィンガープリントと一致する場合だけ許可してください。
+servers-cert-allow = この証明書を許可
+servers-row-signed-out = サーバーによりサインアウトされました
+servers-sign-in-again = 再度サインイン
+servers-row-not-answering = 応答なし · 最終確認 { $time }
+title-server-not-answering = { $server }が応答していません。ダウンロード済みのエピソードは再生できます。
+servers-kind-shows = 番組
+servers-kind-movies = 映画
+servers-kind-other = 動画
+servers-quick-connect = Quick Connect
+servers-libraries-heading = { -library-cap }
+servers-refresh = 再照合
+servers-needs-look = AniListと照合できていない作品: { $count }件
+servers-kind-films = 映画
+servers-error-certificate = { $host }は、この{ -device }が信頼していない証明書を使っています。信頼される証明書を持つ https:// のアドレスを使ってください。
+servers-row-signed-out-here = サインアウト済み
+servers-sign-out-line = この{ -device }のサーバーへのサインインを終了します。サーバーとダウンロードはそのまま残ります。

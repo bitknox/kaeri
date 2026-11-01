@@ -1,0 +1,175 @@
+---
+import '../../styles/pages.css';
+import DownloadGrid from '../../components/DownloadGrid.astro';
+import Faq from '../../components/Faq.astro';
+import HeroVideo from '../../components/HeroVideo.astro';
+import NagareStrip from '../../components/NagareStrip.astro';
+import Pic from '../../components/Pic.astro';
+import Page from '../../layouts/Page.astro';
+import { CC, DEMO_PART_1, DOWNLOAD, FEATURES, GITHUB, RELEASES } from '../../data/site';
+import { VERSION } from '../../data/version';
+import { localePaths, useSite } from '../../i18n/site';
+
+// One source, served once per language: English at the root, the others under their prefix.
+export const getStaticPaths = localePaths;
+
+const { t, href, words } = useSite(Astro);
+
+const bands = ['f1', 'f2', 'f3', 'f4'] as const;
+---
+
+<Page title={t('home.title')} description={t('home.description')} credit={1}>
+	<script type="application/json" data-words="dl.hero." set:html={words('dl.hero.')}></script>
+
+	<section class="hero" aria-labelledby="hero-h">
+		<div class="hero-copy">
+			<h1 id="hero-h">{t('home.hero.title')}</h1>
+			<p class="k-lede">{t('home.hero.sub')}</p>
+			<div class="hero-actions">
+				<a class="k-btn k-btn-primary k-btn-lg" href="#download" data-hero-download>{t('dl.hero.any.label')}</a>
+				<a class="k-arrow" href="#download">
+					{t('home.hero.platforms')}
+					<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+				</a>
+			</div>
+			<p class="hero-note" data-hero-note>{t('dl.hero.any.note', { version: VERSION })}</p>
+		</div>
+
+		<figure class="devices">
+			<div class="devices-stage">
+				<div class="dev-mac">
+					<HeroVideo eager morph="shot-hero" alt={t('home.hero.macAlt')} />
+				</div>
+				<div class="dev-ipad bezel">
+					<Pic name="ipad-title" sizes="(min-width: 1280px) 420px, 34vw" alt={t('home.hero.ipadAlt')} />
+				</div>
+				<div class="dev-phone bezel">
+					<Pic name="iphone-title" sizes="(min-width: 1280px) 190px, 154px" alt={t('home.hero.phoneAlt')} />
+				</div>
+			</div>
+			<figcaption>{t('home.hero.caption')}</figcaption>
+		</figure>
+	</section>
+
+	<section class="band band-green" aria-labelledby="f1-h">
+		<div class="band-in">
+			<div class="band-head">
+				<h2 id="f1-h">{t('home.f1.title')}</h2>
+				<p><span class="lead">{t('home.f1.lead')}</span> {t('home.f1.text')}</p>
+			</div>
+			<figure>
+				<div class="crop crop-a" style="aspect-ratio: 1200 / 540; view-transition-name: shot-continue">
+					<Pic name="mac-continue" sizes="min(1476px, 125vw)" style="left: -23%; top: -70%; width: 123%" alt={t('home.f1.alt')} />
+				</div>
+				<figcaption>{t('home.f1.caption')}</figcaption>
+			</figure>
+		</div>
+	</section>
+
+	<section class="band" aria-labelledby="f2-h">
+		<div class="band-in band-rule band-rule-violet">
+			<div class="band-head">
+				<h2 id="f2-h">{t('home.f2.title')}</h2>
+				<p><span class="lead">{t('home.f2.lead')}</span> {t('home.f2.text')}</p>
+			</div>
+			<figure>
+				<div class="crop crop-b" style="aspect-ratio: 1200 / 620; view-transition-name: shot-title">
+					<Pic name="ipad-title" sizes="min(1404px, 117vw)" style="left: -17.4%; top: -8.9%; width: 117%" alt={t('home.f2.alt')} />
+				</div>
+				<figcaption>{t('home.f2.caption')}</figcaption>
+			</figure>
+		</div>
+	</section>
+
+	<section class="band band-red" aria-labelledby="f3-h">
+		<div class="band-in">
+			<div class="band-head">
+				<h2 id="f3-h">{t('home.f3.title')}</h2>
+				<p><span class="lead">{t('home.f3.lead')}</span> {t('home.f3.text')}</p>
+			</div>
+			<figure class="player-fig">
+				<div class="player-bezel" style="view-transition-name: shot-player">
+					<Pic name="iphone-player" sizes="(min-width: 1100px) 1020px, 90vw" alt={t('home.f3.alt')} />
+				</div>
+				<figcaption set:html={t('home.f3.caption', { source: DEMO_PART_1, licence: CC })} />
+			</figure>
+		</div>
+	</section>
+
+	<section class="band" aria-labelledby="f4-h">
+		<div class="band-in band-rule band-rule-sky">
+			<div class="band-head">
+				<h2 id="f4-h">{t('home.f4.title')}</h2>
+				<p><span class="lead">{t('home.f4.lead')}</span> {t('home.f4.text')}</p>
+			</div>
+			<figure>
+				<div class="crop crop-b" style="aspect-ratio: 1200 / 420; view-transition-name: shot-calendar">
+					<Pic name="mac-calendar" sizes="min(1464px, 122vw)" style="left: -21.9%; top: 0; width: 122%" alt={t('home.f4.alt')} />
+				</div>
+				<figcaption>{t('home.f4.caption')}</figcaption>
+			</figure>
+		</div>
+	</section>
+
+	<section class="band band-plain" aria-labelledby="fx-h">
+		<div class="band-in">
+			<div class="band-head">
+				<h2 id="fx-h">{t('home.fx.title')}</h2>
+				<p><span class="lead">{t('home.fx.lead')}</span> {t('home.fx.text')}</p>
+			</div>
+			<div class="fx-grid">
+				<figure>
+					<div class="fx-crop"><Pic name="tv-continue" sizes="(min-width: 1200px) 420px, 60vw" style="left: -14%; top: 0; height: 100%; width: auto; max-width: none" alt={t('home.fx.tvAlt')} /></div>
+					<figcaption>{t('home.fx.tv')}</figcaption>
+				</figure>
+				<figure>
+					<div class="fx-crop"><Pic name="android-continue" sizes="(min-width: 1200px) 288px, 45vw" style="left: 0; top: -10%; width: 100%" alt={t('home.fx.androidAlt')} /></div>
+					<figcaption>{t('home.fx.android')}</figcaption>
+				</figure>
+				<figure>
+					<div class="fx-crop"><Pic name="windows-stores" sizes="(min-width: 1200px) 420px, 60vw" style="left: -39%; top: 0; height: 100%; width: auto; max-width: none" alt={t('home.fx.windowsAlt')} /></div>
+					<figcaption>{t('home.fx.windows')}</figcaption>
+				</figure>
+				<figure>
+					<div class="fx-crop"><Pic name="linux-continue" sizes="(min-width: 1200px) 420px, 60vw" style="left: -25%; top: 0; height: 100%; width: auto; max-width: none" alt={t('home.fx.linuxAlt')} /></div>
+					<figcaption>{t('home.fx.linux')}</figcaption>
+				</figure>
+			</div>
+			<p class="more"><a class="k-arrow" href={href(FEATURES)}>
+				{t('home.more')}
+				<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+			</a></p>
+		</div>
+	</section>
+
+	<section class="dl-sect" id="download" aria-labelledby="dl-h">
+		<div class="dl-in">
+			<h2 id="dl-h" class="dl-title">{t('dl.title')}</h2>
+			<p class="dl-version">{t('dl.version')} <span data-version>{VERSION}</span>. <a href={`${RELEASES}`}>{t('dl.notes')}</a></p>
+			<DownloadGrid steps={href(DOWNLOAD)} />
+			<nav class="dl-more" aria-label={t('dl.moreLabel')}>
+				<a href={href(DOWNLOAD)}>{t('dl.more.steps')}</a>
+				<a href={`${href(DOWNLOAD)}#check`}>{t('dl.more.check')}</a>
+				<a href={`${href(DOWNLOAD)}#older`}>{t('dl.more.older')}</a>
+			</nav>
+		</div>
+	</section>
+
+	<Faq />
+
+	<section class="oss" aria-labelledby="oss-h">
+		<div class="oss-in">
+			<img src="/favicon.svg" alt="" width="60" height="60" />
+			<h2 id="oss-h">{t('home.oss.title')}</h2>
+			<p>{t('home.oss.text')}</p>
+			<div class="oss-actions">
+				<a class="k-btn" href={GITHUB}>{t('home.oss.source')}</a>
+				<a class="k-btn" href={href('/docs/plugins/authoring/')}>{t('home.oss.plugin')}</a>
+				<a class="k-btn" href={`${GITHUB}/blob/main/docs/translations.md`}>{t('home.oss.translate')}</a>
+				<a class="k-btn" href={`${GITHUB}/issues`}>{t('home.oss.issue')}</a>
+			</div>
+		</div>
+	</section>
+
+	<NagareStrip slot="before-footer" />
+</Page>

@@ -1,0 +1,52 @@
+/target
+**/*.rs.bk
+*.pdb
+
+.DS_Store
+
+# Claude Code: personal settings, local notes and isolated checkouts stay local.
+CLAUDE.local.md
+.claude/settings.local.json
+/.claude/worktrees/
+
+# mpv writes screenshots to the working directory. They are frames of whatever was playing,
+# so they must never be committed.
+/mpv-shot*.jpg
+/mpv-shot*.png
+
+# Installer output. NSIS writes OutFile next to the .nsi, and the .icns is built from the
+# committed .iconset at package time — neither is source.
+/packaging/**/*-setup.exe
+/assets/icon/*.icns
+
+# Local runtime artefacts, should any land in-tree during development.
+/kaeri.db*
+/.kaeri/
+
+# This repository does not carry plugins. The four below are the exceptions and are not
+# plugins in the shipping sense: two are reference implementations that exist to be read, and
+# two are fixtures the tests run against (the hostile plugin, and a made-up torrent index on
+# index.example). Everything else under /plugins is somebody's
+# local build, and a source parser tracking a site that changes weekly does not belong in the
+# history of the host that loads it. If plugins are ever distributed it will be through a
+# separate registry, not this tree.
+/plugins/*
+!/plugins/example-rust/
+!/plugins/example-ts/
+!/plugins/test-hostile/
+!/plugins/test-torrent-index/
+
+# Plugins build out of tree and are their own workspaces, so their artefacts are not covered by
+# the root /target rule. The built .wasm is a release artefact, not source.
+/plugins/*/target
+/plugins/*/node_modules
+/plugins/*/*.wasm
+
+# The website (Astro + Starlight) manages its own dependencies and build output.
+/website/node_modules/
+/website/dist/
+/website/.astro/
+
+# The JS reference plugin is built with npm per docs/plugins.md; a bun lockfile beside
+# package-lock.json would be a second source of truth for the same dependencies.
+plugins/example-ts/bun.lock

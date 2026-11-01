@@ -1,0 +1,30 @@
+[package]
+name = "kaeri-store-server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "The plugin store server: `kaeri-store serve`, the binary the container image runs"
+
+[lib]
+doctest = false
+
+[[bin]]
+name = "kaeri-store"
+path = "src/main.rs"
+
+[dependencies]
+kaeri-plugin-store.workspace = true
+# The plugin host without `fetch`: a store asks plugins what they are and never lends them the
+# network, so the browser-emulating stack stays out of the server's build.
+kaeri-plugin.workspace = true
+async-trait.workspace = true
+clap.workspace = true
+qrcode = { version = "0.14", default-features = false }
+tempfile = "3"
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Kaeri.Windows.Pages.SeasonalPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:app="using:Kaeri.Windows"
+    xmlns:local="using:Kaeri.Windows.Pages"
+    xmlns:s="using:Kaeri.App"
+    Background="{ThemeResource GroundBrush}">
+  <Grid Padding="36,20,36,0" RowSpacing="12">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+    <StackPanel>
+      <TextBlock Text="{x:Bind s:T.NavSeasonal}" Style="{StaticResource PageTitleStyle}" AutomationProperties.HeadingLevel="Level1" />
+      <local:OfflineLine />
+    </StackPanel>
+    <!-- The season as a picker, with the seasons before and after it beside it. -->
+    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="4">
+      <Button x:Name="Earlier" Click="OnEarlier" ToolTipService.ToolTip="{x:Bind s:T.SeasonalPrevious}" AutomationProperties.Name="{x:Bind s:T.SeasonalPrevious}" MinHeight="32">
+        <FontIcon Glyph="&#xE76B;" FontSize="12" />
+      </Button>
+      <DropDownButton x:Name="SeasonPicker" MinWidth="140" MinHeight="32" AutomationProperties.Name="{x:Bind s:T.FilterSeason}">
+        <DropDownButton.Flyout>
+          <MenuFlyout x:Name="SeasonMenu" Placement="BottomEdgeAlignedLeft" />
+        </DropDownButton.Flyout>
+      </DropDownButton>
+      <Button x:Name="Later" Click="OnLater" ToolTipService.ToolTip="{x:Bind s:T.SeasonalNext}" AutomationProperties.Name="{x:Bind s:T.SeasonalNext}" MinHeight="32">
+        <FontIcon Glyph="&#xE76C;" FontSize="12" />
+      </Button>
+    </StackPanel>
+    <SelectorBar x:Name="Formats" Grid.Row="2" SelectionChanged="OnFormatChanged" Margin="-8,0,0,0">
+      <SelectorBarItem Text="{x:Bind s:T.FilterAllFormats}" Tag="" IsSelected="True" />
+      <SelectorBarItem Text="{x:Bind s:T.FormatTv}" Tag="TV,TV_SHORT" />
+      <SelectorBarItem Text="{x:Bind s:T.FormatMovie}" Tag="MOVIE" />
+      <SelectorBarItem Text="{x:Bind s:T.FormatOva}" Tag="OVA,SPECIAL" />
+      <SelectorBarItem Text="{x:Bind s:T.FormatOna}" Tag="ONA" />
+    </SelectorBar>
+    <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
+      <local:StateHost x:Name="State" Padding="0,4,0,24">
+        <app:CoverGrid x:Name="Grid" />
+      </local:StateHost>
+    </ScrollViewer>
+  </Grid>
+</Page>

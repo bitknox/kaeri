@@ -1,0 +1,400 @@
+// What the screens ask the engine for, beyond the lists: settings, accounts, sources, plugin
+// stores and downloads. Each sends one of the engine's own commands; where a screen waits on the
+// answer, the job it runs as is kept by the model that shows it.
+
+import KaeriKit
+import KaeriStrings
+import Foundation
+
+extension AppStore {
+    // MARK: Settings
+
+    /// Step a setting one rung, or over to its other state: an arrow on a row, a switch.
+    public func stepSetting(_ key: SettingKey, by delta: Int64) {
+        send(.stepSetting(key: key, delta: delta))
+    }
+
+    /// Set a setting to `value`: a menu's choice, a typed value, the source order.
+    public func setSetting(_ key: SettingKey, to value: SettingValue) {
+        send(.setSetting(key: key, value: value))
+    }
+
+    /// The demo: start it, put it back in Sources, or take it out.
+    public func playDemo() { send(.playDemo) }
+    public func addDemo() { send(.addDemo) }
+    public func removeDemo() { send(.removeDemo) }
+
+    /// Put the whole subtitle style back to its defaults. The notice's Undo sends the old one.
+    public func resetSubtitleStyle() {
+        subtitleBeforeReset = settings.subtitleStyle
+        send(.resetSubtitleStyle)
+    }
+
+    /// Send the style the reset replaced, each setting back.
+    public func undoSubtitleReset() {
+        guard let old = subtitleBeforeReset else { return }
+        subtitleBeforeReset = nil
+        setSetting(.subtitleSize, to: .int(Int64(old.size)))
+        setSetting(.subtitleFont, to: .str(old.font.fileName))
+        setSetting(.subtitleColour, to: .str(old.colour.fileName))
+        setSetting(.subtitleEdge, to: .str(old.edge.fileName))
+        setSetting(.subtitleThickness, to: .str(old.thickness.fileName))
+        setSetting(.subtitleBackground, to: .str(old.background.fileName))
+        setSetting(.subtitleOpacity, to: .int(Int64(old.opacity)))
+        setSetting(.subtitleRaise, to: .int(Int64(old.raise)))
+        setSetting(.styledSubtitles, to: .str(old.styled.fileName))
+        setSwitch(.followSystemCaptions, on: old.followSystem)
+    }
+
+    /// Turn a switch on or off, when it is not already.
+    public func setSwitch(_ key: SettingKey, on: Bool) {
+        guard settings.isOn(key) != on else { return }
+        setSetting(key, to: .bool(on))
+    }
+
+    /// How torrent traffic is protected, and what a failed check does. No protection and warning
+    /// only are each asked for with `acknowledged`, once the viewer has confirmed the risk; the
+    /// proxy left `nil` keeps the one the file has.
+    public func setTorrentProtection(
+        _ mode: TorrentProtection, proxy: TorrentProxy? = nil, onFailure: FailedCheck? = nil,
+        acknowledged: Bool = false
+    ) {
+        let current = settings.torrent
+        let proxy = proxy ?? current?.proxy.map { TorrentProxy(host: $0.host, port: $0.port, user: $0.user, password: nil) }
+        send(.setTorrentProtection(
+            mode: mode, proxy: mode == .proxy ? proxy : nil, onFailure: onFailure ?? current?.onFailure ?? .pause,
+            acknowledged: acknowledged))
+    }
+
+    /// Check `mode`, through `proxy` when it is one, before anything is saved: the verdict comes
+    /// to `providers.trial`, and nothing is written, the saved proxy and its password included.
+    /// A proxy with no password is checked with the one kept.
+    public func checkTorrentProtection(_ mode: TorrentProtection, proxy: TorrentProxy?) {
+        if let check = providers.trialStarted(ProtectionCheck(mode: mode, proxy: mode == .proxy ? proxy : nil)) {
+            send(check)
+        }
+    }
+
+    func send(_ check: ProtectionCheck) {
+        send(.checkTorrentProtection(mode: check.mode, proxy: check.proxy))
+    }
+
+    /// The notice after a crash, with Report… as its button: once per crash, and only while saving
+    /// and asking are on (the engine decides).
+    public func sayCrashNotice() {
+        guard crash.checkNotice() != nil else { return }
+        notices.post(Notice(kind: .info, text: L.crashNotice, hint: .reportCrash))
+    }
+
+    /// Say `text` in the notice capsule, as the engine's notices are said: what a sheet that
+    /// closed did.
+    public func say(_ text: String) {
+        notices.post(Notice(kind: .info, text: text, hint: nil))
+    }
+
+    // MARK: A show's own settings
+
+    /// Ask for `id`'s settings sheet: what it sets for itself, and what it remembers.
+    public func loadShowSettings(_ id: AnilistId) {
+        send(.loadShowSettings(id: id))
+    }
+
+    /// Set `key` for `id` alone, or with `nil` have it follow Settings again.
+    public func setShowSetting(_ id: AnilistId, _ key: ShowSettingKey, to value: SettingValue?) {
+        send(.setShowSetting(id: id, key: key, value: value))
+    }
+
+    /// Put `id` back on Settings: its own settings, the source it keeps and the remembered tracks.
+    public func resetShowSettings(_ id: AnilistId) {
+        send(.resetShowSettings(id: id))
+    }
+
+    /// The source `id` keeps, as its sheet last said: `nil` for automatic. The sheet's own rather
+    /// than `providers.preference`, which follows whichever title's detail came last.
+    public func showSource(_ id: AnilistId) -> String? {
+        showSettings.sheets[id]?.source
+    }
+
+    /// Whether `entry`'s trailer may start by itself on its page: the engine allows trailers now,
+    /// the player plays this one (YouTube's), and the spoiler rule does not hold it back.
+    public func trailerMayAutoplay(_ entry: Entry) -> Bool {
+        guard trailersMayAutoplay, let trailer = entry.trailer, trailerEmbeddable(trailer: trailer) else { return false }
+        return KaeriKit.trailerMayAutoplay(entry: entry, spoilerProtection: spoilerProtection(for: entry.id))
+    }
+
+    /// Whether `id`'s unwatched stills are blurred: as the show sets it, else as Settings does.
+    public func spoilerProtection(for id: AnilistId) -> Bool {
+        if let row = showSettings.row(.spoilerProtection, of: id) { return row.value == "on" }
+        return settings.row(.spoilerProtection).map(\.isOn) ?? true
+    }
+
+    // MARK: Hover cards
+
+    /// Whether a grid cover the pointer rests on grows into a card, as Settings has it. On until
+    /// the settings land. Separate from trailers: with these off the card shows its art only.
+    public var hoverCardsOn: Bool {
+        settings.row(.hoverCards).map(\.isOn) ?? true
+    }
+
+    // MARK: Discussions
+
+    /// Whether episode discussions are on in Settings: every entry point hangs on it.
+    public var discussionsOn: Bool {
+        settings.row(.episodeDiscussions).map(\.isOn) ?? true
+    }
+
+    /// Open the discussion of `episode`, which the sheet, pane or window then reads from `discussion`.
+    public func openDiscussion(_ key: DiscussionKey) {
+        discussion.requested(key)
+        send(.openDiscussion(media: key.media, episode: key.episode))
+    }
+
+    /// The sheet, pane or window showing `key` closed: nothing more is said of it. The engine keeps
+    /// one discussion, so this does nothing once another has been opened since.
+    public func closeDiscussion(_ key: DiscussionKey) {
+        guard discussion.owns(key) else { return }
+        discussion.closed()
+        send(.closeDiscussion)
+    }
+
+    public func moreComments() { send(.moreComments) }
+    public func postComment(_ text: String, parent: UInt32? = nil) { send(.postComment(parent: parent, text: text)) }
+    public func editComment(_ id: UInt32, text: String) { send(.editComment(id: id, text: text)) }
+    public func deleteComment(_ id: UInt32) { send(.deleteComment(id: id)) }
+    public func likeComment(_ id: UInt32) { send(.likeComment(id: id)) }
+
+    /// Check where torrent traffic leaves from now, rather than at the guard's next check.
+    public func checkConnection() {
+        send(.checkConnection)
+    }
+
+    // MARK: Accounts
+
+    public func syncNow() {
+        accounts.started("sync", job: send(.syncNow))
+    }
+
+    /// Start a tracker's own sign-in: the system's sheet for AniList and MyAnimeList, a device
+    /// code for Simkl and Trakt.
+    public func connect(_ tracker: String) {
+        accounts.started(tracker, job: send(.connect(tracker: tracker)))
+    }
+
+    /// The system's sheet came back from `request` with `callback`, the redirect that carries
+    /// the code or the token, so the engine finishes signing in. Never logged.
+    public func finishSignIn(_ request: SignInRequest, callback: URL) {
+        accounts.signInEnded(request)
+        send(.finishSignIn(tracker: request.tracker, callback: callback.absoluteString))
+    }
+
+    /// The system's sheet for `request` was closed without signing in.
+    public func cancelSignIn(_ request: SignInRequest) {
+        accounts.signInEnded(request)
+        send(.cancelSignIn(tracker: request.tracker))
+    }
+
+    public func connectKitsu(username: String, password: String) {
+        accounts.started("kitsu", job: send(.connectKitsu(username: username, password: password)))
+    }
+
+    public func disconnect(_ tracker: String) {
+        send(.disconnect(tracker: tracker))
+    }
+
+    public func resolveConflict(_ id: AnilistId, keepLocal: Bool) {
+        send(.resolveConflict(id: id, keepLocal: keepLocal))
+    }
+
+    // MARK: Sources
+
+    public func checkProviders() {
+        send(.checkProviders)
+    }
+
+    /// Move a source one row up the chain (`step` below zero) or down it.
+    public func moveSource(_ id: String, by step: Int) {
+        guard let order = SourceOrder.moved(settings.sources.order, rows: orderable, id: id, step: step)
+        else { return }
+        setSetting(.sourceOrder, to: .strings(order))
+    }
+
+    /// Move a source to where the row at `index` is: a drag.
+    public func moveSource(_ id: String, to index: Int) {
+        guard let order = SourceOrder.moved(settings.sources.order, rows: orderable, id: id, to: index)
+        else { return }
+        setSetting(.sourceOrder, to: .strings(order))
+    }
+
+    /// The providers in the order failover tries them, as the config now has it.
+    public var orderedProviders: [ProviderRow] {
+        SourceOrder.sorted(orderable, by: settings.sources.order)
+    }
+
+    /// The providers the person puts in order: plugins and the built-in ones. Your media, media
+    /// servers and the demo have places of their own and no handle.
+    var orderable: [ProviderRow] {
+        providers.rows.filter { !["library", "server", "catalogue", "licensed"].contains($0.kind) }
+    }
+
+    /// Pin a source for one title, or give it back to automatic with `nil`.
+    public func setProviderPreference(_ id: AnilistId, to provider: String?) {
+        send(.setProviderPreference(id: id, provider: provider))
+    }
+
+    /// Ask for what each source has of `id`, for the picker. The engine answers with
+    /// `Event.sourceOptions`.
+    public func loadSourceOptions(_ id: AnilistId) {
+        sourceChoices.asking(id)
+        send(.loadSourceOptions(id))
+    }
+
+    /// Pin `provider` for `id`, or give it back to automatic with `nil`, as the picker's rows do.
+    /// The engine relists the episodes by itself.
+    public func chooseSource(_ id: AnilistId, provider: String?) {
+        sourceChoices.chose(id, provider: provider)
+        setProviderPreference(id, to: provider)
+    }
+
+    /// Pin one release of a source for `id`, played for every episode that release holds.
+    public func chooseRelease(_ id: AnilistId, provider: String, release: SourceCandidate) {
+        sourceChoices.chose(id, provider: provider, release: release.id)
+        send(.pinRelease(id: id, providerId: provider, releaseId: release.id, title: release.title))
+    }
+
+    // MARK: Plugin stores
+
+    public func loadStores() {
+        send(.loadStores)
+    }
+
+    /// Check a pasted invite link against the store it names.
+    public func previewStore(_ link: String) {
+        let link = link.trimmingCharacters(in: .whitespacesAndNewlines)
+        stores.checking(link)
+        send(.previewStore(link: link))
+    }
+
+    /// Join with `link`, calling this device what the join sheet's field says.
+    public func joinStore(_ link: String) {
+        stores.started(.join, job: send(stores.joinCommand(link)))
+    }
+
+    public func leaveStore(_ store: String) {
+        stores.started(.leave(store: store), job: send(.leaveStore(store: store)))
+    }
+
+    /// Install a store's plugin, or update it.
+    public func installPlugin(_ plugin: String, from store: String) {
+        stores.started(.install(store: store, plugin: plugin), job: send(.installPlugin(store: store, plugin: plugin)))
+    }
+
+    /// Turn a plugin off without removing it, or back on: its source leaves the chain until then.
+    public func setPluginDisabled(_ plugin: String, _ disabled: Bool) {
+        send(.disablePlugin(id: plugin, disabled: disabled))
+    }
+
+    /// Whether a plugin is turned off, as its row or the config says.
+    public func isPluginDisabled(_ plugin: String) -> Bool {
+        providers.row(plugin)?.disabled ?? settings.sources.disabled.contains(plugin)
+    }
+
+    public func removePlugin(_ plugin: String) {
+        stores.started(.remove(plugin: plugin), job: send(.removePlugin(plugin: plugin)))
+    }
+
+    /// An invite link: for someone new with a name, for another device of yours without.
+    /// `uses` and `lasts` are the owner's choices; nil leaves them to the store, which makes a
+    /// link that works once, for a week.
+    public func createInvite(_ store: String, for name: String?, uses: InviteUses? = nil, lasts: InviteLasts? = nil) {
+        stores.started(.invite(store: store), job: send(.createInvite(store: store, name: name, uses: uses, lasts: lasts)))
+    }
+
+    public func loadMembers(_ store: String) {
+        send(.loadMembers(store: store))
+    }
+
+    public func removeMember(_ member: String, from store: String) {
+        send(.removeMember(store: store, member: member))
+    }
+
+    public func cancelInvite(_ invite: String, in store: String) {
+        send(.cancelInvite(store: store, invite: invite))
+    }
+
+    public func loadLocalPlugins(for store: String) {
+        send(.loadLocalPlugins(store: store))
+    }
+
+    public func publishPlugin(_ plugin: String, to store: String) {
+        send(.publishPlugin(store: store, plugin: plugin))
+    }
+
+    public func openAdmin(_ store: String) {
+        send(.openAdmin(store: store))
+    }
+
+    /// Let anyone with the store's link join, or only people you invite. Opening makes a new link.
+    public func setOpenJoin(_ store: String, open: Bool) {
+        stores.started(.openJoin(store: store), job: send(.setOpenJoin(store: store, open: open)))
+    }
+
+    /// Remove one device that joined with the store's link, or all of them when `device` is nil.
+    public func removeAnonymous(_ device: String?, from store: String) {
+        stores.started(.removeAnonymous(store: store), job: send(.removeAnonymous(store: store, device: device)))
+    }
+
+    // MARK: Downloads
+
+    public func loadDownloads() {
+        send(.loadDownloads)
+    }
+
+    /// Pause a download, or resume it.
+    public func toggleDownload(_ id: Int64) {
+        send(.downloadPause(id: id))
+    }
+
+    /// Start a queued download ahead of the rest. With every slot busy, the one that started
+    /// last waits again behind it, keeping what it fetched.
+    public func startDownloadNow(_ id: Int64) {
+        send(.downloadStartNow(id: id))
+    }
+
+    /// Take a download off the queue, keeping a finished file.
+    public func cancelDownload(_ id: Int64) {
+        send(.downloadCancel(id: id))
+    }
+
+    /// Take a download off the queue and delete its file.
+    public func deleteDownload(_ id: Int64) {
+        send(.downloadDelete(id: id))
+    }
+
+    public func clearCompletedDownloads() {
+        send(.downloadClearCompleted)
+    }
+
+    /// Pause every download that is running or waiting.
+    public func pauseAllDownloads() {
+        for row in downloads.rows where row.state == .active || row.state == .queued {
+            toggleDownload(row.id)
+        }
+    }
+
+    /// Resume every paused download.
+    public func resumeAllDownloads() {
+        for row in downloads.rows where row.state == .paused {
+            toggleDownload(row.id)
+        }
+    }
+
+    public func playDownload(_ row: DownloadRow) {
+        guard let path = row.path else { return }
+        send(.playLocal(id: row.anilistId, episode: row.episode, title: row.title, path: path))
+    }
+
+    /// Queue a failed download again: the engine retries it in place.
+    public func retryDownload(_ row: DownloadRow) {
+        send(.downloadEpisode(id: row.anilistId, episode: row.episode))
+    }
+}

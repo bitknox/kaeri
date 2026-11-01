@@ -1,0 +1,17 @@
+cast-chromecast = Chromecast
+cast-none-found-extra = Les TV avec Chromecast intégré apparaissent aussi ici.
+cast-local-network = Autorisez { -app-name } à trouver des { -device-pl } sur votre réseau local
+cast-tvs-label = Afficher les TV avec Chromecast intégré
+cast-torrents-label = Torrents pendant la diffusion
+cast-tvs-note-mac = Ils apparaissent sous Chromecast dans Lire sur la TV. Ce Mac leur envoie l’épisode.
+cast-tvs-note-iphone = Ils apparaissent sous Chromecast dans Lire sur la TV. Cet iPhone leur envoie l’épisode.
+cast-tvs-note-ipad = Ils apparaissent sous Chromecast dans Lire sur la TV. Cet iPad leur envoie l’épisode.
+cast-torrents-note-mac = Permet à une TV avec Chromecast intégré de lire des torrents. Ce Mac envoie l’épisode tant qu’il est en lecture.
+cast-torrents-note-iphone = Permet à une TV avec Chromecast intégré de lire des torrents. Cet iPhone envoie l’épisode tant qu’il est en lecture.
+cast-torrents-note-ipad = Permet à une TV avec Chromecast intégré de lire des torrents. Cet iPad envoie l’épisode tant qu’il est en lecture.
+cast-up-next-plays-in = { -up-next-cap } · lecture dans { $seconds } s
+cast-couldnt-start = Impossible de démarrer sur { $name }
+cast-stopped = Diffusion arrêtée
+cast-play-here = Lire ici
+cast-stop = Arrêter la diffusion
+cast-volume-fixed = Réglé sur la TV

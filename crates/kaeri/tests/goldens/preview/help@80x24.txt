@@ -1,0 +1,24 @@
+Kaeri                                                      plugins ·  ·  kitsu ○
+────────────────────────────────────────────────────────────────────────────────
+────────────────────────────────────────────────────────────────────────────────
+▌ Keys                                                             Page 1 of 3
+────────────────────────────────────────────────────────────────────────────────
+  Global                                Move down                  j / ↓
+    Show keys                      ?    Move left                  h / ←
+    Run a command         : / ctrl+k    Move right                 l / →
+    Quit                  Q / ctrl+c    Jump to top                    g
+    Back                     q / esc    Jump to bottom                 G
+    Toggle rail width            tab    Jump to today                  T
+    Refresh this view              r    Jump to previous day           {
+    Force a full resync            R    Jump to next day               }
+    Subbed or dubbed               t    Page up                   ctrl+u
+    Go to section                1–0    Page down                 ctrl+d
+    Search                         /  Lists
+    Recent messages                !    Open                           ↵
+    Copy the bug report            C    Play next unwatched        space
+    Delete the crash report        E    Set list status                a
+  Movement                              Rate this title                *
+    Move up                    k / ↑    Expand synopsis                i
+
+────────────────────────────────────────────────────────────────────────────────
+plugins · Subbed · 1080p                                     ↑↓ page   esc close

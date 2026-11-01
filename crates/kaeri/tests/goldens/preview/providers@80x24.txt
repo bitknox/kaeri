@@ -1,0 +1,24 @@
+Kaeri                                                      plugins ·  ·  kitsu ○
+────────────────────────────────────────────────────────────────────────────────
+ ▸ │  Sources
+ ▤ │
+ ▦ │    Source              Kind        State           Latency
+ / │  ────────────────────────────────────────────────────────────────────────
+ ▥ │  ▌ fixture             Built in    Ready           0 ms
+ ↓ │
+▌◇ │
+ ◎ │    About the demo
+ ≡ │    こ う し す ！  · CC BY 4.0 · from Wikimedia Commons
+ ⇄ │    Reaches Wikimedia Commons only: upload.wikimedia.org and commons.wi…
+   │    The demo never signs in anywhere and never writes to AniList.
+   │    B  Play the demo   Y  Remove demo
+   │
+   │  Plugin stores
+   │    Plugins shared by people you know. Join with an invite link.   ↵ Open
+   │
+   │  Metadata
+   │
+   │    anilist             Live
+   │    tenrai              Not in use
+────────────────────────────────────────────────────────────────────────────────
+plugins · Subbed · 1080p                    r refresh   ↵ plugin stores   ? keys

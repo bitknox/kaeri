@@ -1,0 +1,35 @@
+[package]
+name = "kaeri-player"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Playback: mpv over JSON IPC, external handoff, and skip data"
+
+[lib]
+# No doc example is written as a test, and rustdoc spends seconds per crate finding none.
+doctest = false
+
+[dependencies]
+kaeri-core.workspace = true
+kaeri-net.workspace = true
+# The pure half: the policy, the tracks, skips and the shapes, re-exported at the paths they had.
+kaeri-playback.workspace = true
+async-trait.workspace = true
+open.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+
+[build-dependencies]
+# Hashes assets/mpv/ at build time for the bundle's cache directory name; already in the tree.
+sha2 = "0.11"
+
+[dev-dependencies]
+tempfile = "3"
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "test-util"] }
+
+[lints]
+workspace = true

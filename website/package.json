@@ -1,0 +1,22 @@
+{
+  "name": "website",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "diagrams": "bun scripts/export-architecture.ts",
+    "test": "bun test src",
+    "build:pseudo": "bun scripts/pseudo.ts && SITE_PSEUDO=1 astro build --outDir dist-pseudo"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.42.6",
+    "@fontsource/zen-kaku-gothic-new": "^5.3.1",
+    "astro": "~7.3.8",
+    "gsap": "^3.15.0",
+    "sharp": "^0.35.5"
+  }
+}

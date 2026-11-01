@@ -1,0 +1,17 @@
+cast-episode = Épisode { $episode }
+cast-episode-titled = Épisode { $episode } · { $title }
+notice-cast-video-codec = { $name } ne peut pas lire cette vidéo ({ $codec }). Essayez une autre { -source }.
+notice-cast-audio-codec = { $name } ne peut pas lire cet audio ({ $codec }), et cet { -device } ne peut pas le convertir. Essayez une autre { -source }.
+notice-cast-container = { $name } ne peut pas lire ce type de fichier. Essayez une autre { -source }.
+notice-cast-deep-link = Cet épisode s’ouvre dans une autre application, donc il ne peut pas être diffusé.
+notice-cast-never-fetches = { $name } n’a pas commencé à lire le flux. Un VPN ou un pare-feu sur cet { -device } est peut-être en cause.
+notice-cast-refused = { $name } n’a pas pu lire ce flux. Essayez une autre { -source }.
+notice-cast-taken-over = Un autre { -device } a lancé quelque chose sur { $name }, la diffusion s’est donc arrêtée.
+notice-cast-not-same-network = Cet { -device } n’est pas sur le même réseau que { $name }, ou il y accède par un VPN. La diffusion exige que les deux soient sur le même réseau.
+notice-cast-lost = { $name } ne répond plus, la diffusion s’est donc arrêtée.
+notice-cast-no-device = Cette télévision n’est plus sur le réseau.
+notice-cast-unavailable = Cette version de { -app-name } ne peut pas diffuser sur les télévisions.
+cast-phase-starting = Démarrage sur { $name }
+cast-phase-starting-for = Démarrage sur { $name } · { $seconds } s
+cast-phase-waiting = En attente de { $name } · { $seconds } s
+cast-phase-preparing = Préparation du flux · { $seconds } s

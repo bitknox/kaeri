@@ -1,0 +1,34 @@
+---
+// The footer every page shares: the legal line, the licence, and the links.
+import { CC, DEMO_PART_1, DEMO_PART_2, DOWNLOAD, FEATURES, LEGAL, PRIVACY, STORES } from '../../data/site';
+import { useSite } from '../../i18n/site';
+
+interface Props {
+	/** The demo credit, on the pages that show a picture from it: the part the pictures come from. */
+	credit?: 1 | 2;
+}
+
+const { credit } = Astro.props;
+const { t, href } = useSite(Astro);
+const links = [
+	[FEATURES, 'site.nav.features'],
+	[DOWNLOAD, 'site.nav.download'],
+	['/docs/', 'site.nav.docs'],
+	[STORES, 'site.footer.stores'],
+	[PRIVACY, 'site.footer.privacy'],
+	[LEGAL, 'site.footer.legal'],
+] as const;
+---
+
+<footer class="site-footer">
+	<div class="site-footer-in">
+		<div class="site-footer-text">
+			<p>{t('site.legal')}</p>
+			<p set:html={credit ? t('site.footer.licenceCredit', { source: credit === 1 ? DEMO_PART_1 : DEMO_PART_2, part: `3.${credit}`, licence: CC }) : t('site.footer.licence')} />
+		</div>
+		<nav aria-label={t('site.footer.label')}>
+			{links.map(([path, key]) => <a href={href(path)}>{t(key)}</a>)}
+			<a href="mailto:legal@kaeri.app">legal@kaeri.app</a>
+		</nav>
+	</div>
+</footer>

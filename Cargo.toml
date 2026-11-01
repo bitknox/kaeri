@@ -1,0 +1,176 @@
+[workspace]
+resolver = "3"
+members = ["crates/*", "tools/i18n"]
+# Plugins are separate builds, not workspace members: they target `wasm32-wasip2` and must not
+# inherit the workspace's dependency versions or lints — a plugin is meant to be buildable by
+# someone who has only the WIT file.
+exclude = ["plugins/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.98"
+license = "MIT"
+repository = "https://github.com/bitknox/kaeri"
+
+[workspace.dependencies]
+# --- internal ---
+kaeri-core = { path = "crates/kaeri-core" }
+kaeri-net = { path = "crates/kaeri-net" }
+kaeri-meta = { path = "crates/kaeri-meta" }
+kaeri-jellyfin = { path = "crates/kaeri-jellyfin" }
+kaeri-model = { path = "crates/kaeri-model" }
+# Without its defaults, so each crate says whether it wants the desktop's parts: the binary
+# does, and a phone's build of the FFI does not. See the engine's `desktop` feature.
+kaeri-engine = { path = "crates/kaeri-engine", default-features = false }
+kaeri-discord = { path = "crates/kaeri-discord" }
+kaeri-player = { path = "crates/kaeri-player" }
+kaeri-playback = { path = "crates/kaeri-playback" }
+kaeri-party = { path = "crates/kaeri-party" }
+kaeri-mpv-host = { path = "crates/kaeri-mpv-host" }
+kaeri-plugin = { path = "crates/kaeri-plugin", default-features = false }
+kaeri-plugin-store = { path = "crates/kaeri-plugin-store" }
+kaeri-store-core = { path = "crates/kaeri-store-core" }
+kaeri-store-server = { path = "crates/kaeri-store-server" }
+kaeri-store-wasm = { path = "crates/kaeri-store-wasm" }
+kaeri-providers = { path = "crates/kaeri-providers" }
+kaeri-remote = { path = "crates/kaeri-remote" }
+kaeri-cast = { path = "crates/kaeri-cast" }
+kaeri-store = { path = "crates/kaeri-store" }
+# Without its defaults, so each crate says whether it wants the keyring crate: the binary and
+# the engine's `desktop` feature do, and a native app's build, which reaches the keychain
+# through its host, does not. See the crate's `keychain` feature.
+kaeri-track = { path = "crates/kaeri-track", default-features = false }
+kaeri-testkit = { path = "crates/kaeri-testkit" }
+kaeri-tui = { path = "crates/kaeri-tui" }
+kaeri-i18n = { path = "crates/kaeri-i18n" }
+
+# --- async ---
+tokio = { version = "1.53", features = ["rt-multi-thread", "macros", "sync", "time", "fs", "process", "net", "io-util", "signal"] }
+async-trait = "0.1"
+futures = "0.3"
+
+# --- translations ---
+# Fluent is the master format for every string (i18n/README via docs/translations.md). The runtime
+# crate loads the generated files; the generator parses the masters and asks CLDR which plural
+# categories a language has.
+fluent-bundle = "0.16"
+fluent-syntax = "0.12"
+unic-langid = "0.9"
+icu_plurals = "2"
+icu_locale_core = "2"
+regex = "1"
+roxmltree = "0.20"
+
+# --- errors / logging ---
+thiserror = "2"
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-appender = "0.2"
+
+# --- serde ---
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "1.1"
+# Format-preserving TOML, so writing one setting from the UI does not rewrite the user's whole
+# config file and discard their comments.
+toml_edit = "0.25"
+
+# --- http ---
+# wreq: browser TLS/JA3/JA4 + HTTP2 fingerprint emulation. Required for Cloudflare-fronted
+# providers; a correct browser header set alone returns 403.
+# 0.15 was 5.3 renumbered (the maintainers reset the version line in Aug 2026 and yanked 5.x);
+# 0.16 is the first past RUSTSEC-2026-0002, the unsound lru 0.13 its connection pool used, and
+# moved TLS from boring2 to btls, BoringSSL still. Features that 0.15 had on without being asked:
+# zstd (wreq-util 0.1's defaults turned it on, and the profiles offer it), and system-proxy (0.15
+# read the Mac's and Windows' proxy settings by default; 0.16 reads only the environment
+# without it). stream is for the mending proxy's capped reads, which 0.15 did with `chunk`.
+wreq = { version = "0.16.1", features = ["json", "gzip", "brotli", "deflate", "zstd", "cookies", "socks", "system-proxy", "stream"] }
+# emulation-compression puts each browser's own accept-encoding into its profile, where 0.1 always
+# had it. Without it the profiles carry none, and wreq's decoder appends one no browser sends
+# (`zstd,gzip,deflate,br`, last).
+wreq-util = { version = "0.2", features = ["emulation-compression"] }
+# reqwest: plain client for hosts that need no emulation (AniList, its image CDN, GitHub raw).
+reqwest = { version = "0.13", default-features = false, features = ["json", "query", "form", "rustls", "webpki-roots", "http2", "gzip", "brotli", "stream", "socks"] }
+
+# --- storage ---
+rusqlite = { version = "0.40", features = ["bundled", "chrono", "serde_json"] }
+
+# --- tui ---
+ratatui = "0.30"
+unicode-width = "0.2"
+# Local-timezone day boundaries for the calendar's rulings. Already in the tree via
+# rusqlite's feature, so this costs nothing new.
+chrono = "0.4"
+# default-features off: the `chafa-dyn` default pulls in the chafa C library via
+# pkg-config, which every Kitty/Sixel/iTerm2 protocol works without. It only adds a
+# higher-quality symbol fallback, so it stays an opt-in feature rather than a build
+# requirement on every machine.
+ratatui-image = { version = "11.0", default-features = false, features = ["crossterm", "tokio"] }
+crossterm = { version = "0.29", features = ["event-stream"] }
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
+terminal-colorsaurus = "1.0"
+
+# --- matching / parsing ---
+nucleo = "0.5"
+
+# --- foreign function interface ---
+# The bindings native front ends are generated with. Pinned exactly: the bindings and the library's
+# scaffolding have to come from the same release, and the generated Swift and Kotlin check the
+# library's contract version and checksums when they load it. Without its defaults, which only
+# the bindings generator needs.
+uniffi = { version = "=0.32.2", default-features = false }
+
+# --- platform ---
+directories = "6"
+clap = { version = "4", features = ["derive", "env"] }
+jiff = { version = "0.2", features = ["serde"] }
+# Opens a URL in the system handler — the licensed-source handoff, since a licensed
+# service's DRM streams cannot be decoded locally.
+open = "5"
+
+# Line tables are enough for a backtrace through a dependency; full debug info for ~650 crates
+# mostly costs link time across a dozen test binaries, and disk. Workspace crates keep it.
+[profile.dev.package."*"]
+debug = "line-tables-only"
+
+# The wasm compiler runs inside debug test binaries: an unoptimised Cranelift spends 18 s on the
+# JavaScript plugin that an optimised one compiles in about one, and the conformance tests that
+# load it saturate every core while they do. Optimising only the compiler keeps the rest of the
+# dev build fast to compile and debuggable.
+[profile.dev.package.cranelift-codegen]
+opt-level = 3
+[profile.dev.package.cranelift-frontend]
+opt-level = 3
+[profile.dev.package.cranelift-entity]
+opt-level = 3
+[profile.dev.package.cranelift-bforest]
+opt-level = 3
+[profile.dev.package.cranelift-bitset]
+opt-level = 3
+[profile.dev.package.cranelift-control]
+opt-level = 3
+[profile.dev.package.regalloc2]
+opt-level = 3
+[profile.dev.package.wasmparser]
+opt-level = 3
+[profile.dev.package.wasmtime-environ]
+opt-level = 3
+[profile.dev.package.wasmtime-internal-cranelift]
+opt-level = 3
+
+# The engine as the Apple app links it while it is developed: apple/scripts/engine.sh builds every
+# slice with this. Full debug info for every dependency makes the static library large and slow for
+# Xcode to link; line tables keep a backtrace readable, and opt-level 1 keeps the engine quick
+# enough to drive a screen.
+[profile.app-dev]
+inherits = "dev"
+opt-level = 1
+debug = "line-tables-only"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }

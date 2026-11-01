@@ -1,0 +1,41 @@
+home-title = Start
+home-resume-episode = Folge { $episode } fortsetzen
+home-play-episode = Folge { $episode } abspielen
+home-adding = Wird hinzugefügt
+home-details = Details
+home-more = Mehr
+home-mark-watched = Folge { $episode } als gesehen markieren
+home-marked-watched = Folge { $episode } als gesehen markiert
+home-remove-continue = Aus { -continue-cap } entfernen
+home-continue-count = { $count ->
+    [one] 1 Serie
+   *[other] { $count } Serien
+ }
+home-view-all = Alle ansehen
+home-full-calendar = Ganzer Kalender
+home-today = Heute
+home-nothing-airing = Nichts läuft
+home-day-more = { $count } weitere
+home-seasonal = Saison
+home-search = Suche
+home-end = Das war alles für jetzt. In Saison und Kalender findest du die vollständigen Listen.
+home-end-signed-out = Melde dich bei AniList an, um deine Liste und Geplant zu übernehmen.
+home-sign-in = Bei AniList anmelden
+home-end-no-sources = Füge eine { -source } hinzu, um von Start aus abzuspielen. { -plugin-store-cap-pl } bieten einige zur Auswahl.
+home-not-found = Nicht in deinen { -source-pl } gefunden
+home-failed = Vorschläge konnten nicht geladen werden
+home-try-again = Erneut versuchen
+home-loading = Vorschläge werden geladen
+home-offline = Offline. Start von { $time } wird angezeigt.
+home-offline-empty-title = Du bist offline
+home-offline-empty-body = Start braucht beim ersten Öffnen eine Verbindung. Downloads lassen sich weiter abspielen.
+home-open-downloads = Downloads öffnen
+settings-hidden-titles = Ausgeblendete Titel
+settings-hidden-titles-body = Titel, die du als „Kein Interesse“ markiert hast. Sie bleiben aus Start und aus { -up-next-cap } für dich draußen, bis du sie wiederherstellst.
+settings-hidden-on = Ausgeblendet { $date }
+settings-hidden-until-airs = Kommt zurück, wenn er läuft
+settings-restore = Wiederherstellen
+settings-hidden-empty = Nichts ausgeblendet. Titel, die du als „Kein Interesse“ markierst, erscheinen hier.
+home-previous = Zurück
+home-next = Weiter
+home-synced = AniList abgeglichen

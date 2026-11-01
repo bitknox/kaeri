@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./deploy/**/store_bg.wasm)",
+      "Read(./deploy/store-wasm/**)",
+      "Read(./crates/kaeri-store-core/assets/admin/**)",
+      "Read(./assets/shaders/**)",
+      "Read(./assets/mpv/fonts/**)",
+      "Read(./android/.engine/**)",
+      "Read(./apple/.engine/**)",
+      "Read(./android/testkit/src/main/resources/app/kaeri/testkit/scenes/**)"
+    ]
+  }
+}

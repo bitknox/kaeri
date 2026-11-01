@@ -1,0 +1,41 @@
+---
+// The shell of every page that is not a docs page: the head, the top bar, the main content and the footer.
+import '../styles/site.css';
+import SiteFooter from '../components/site/SiteFooter.astro';
+import SiteHead from '../components/site/SiteHead.astro';
+import SiteHeader from '../components/site/SiteHeader.astro';
+import LanguageSuggest from '../components/site/LanguageSuggest.astro';
+import { useSite } from '../i18n/site';
+import { VERSION } from '../data/version';
+
+interface Props {
+	title: string;
+	description: string;
+	/** The demo credit the footer carries: the part of the work the page's pictures come from. */
+	credit?: 1 | 2;
+	/** Extra classes on the body. */
+	class?: string;
+}
+
+const { title, description, credit, class: className } = Astro.props;
+const { t, lang, dir } = useSite(Astro);
+---
+
+<html lang={lang} dir={dir} data-version={VERSION}>
+	<head>
+		<SiteHead title={title} description={description} />
+		<slot name="head" />
+	</head>
+	<body class:list={['k-body', className]}>
+		<a class="skip-link" href="#main">{t('site.skip')}</a>
+		<LanguageSuggest />
+		<header>
+			<SiteHeader />
+		</header>
+		<main id="main">
+			<slot />
+			<slot name="before-footer" />
+		</main>
+		<SiteFooter credit={credit} />
+	</body>
+</html>

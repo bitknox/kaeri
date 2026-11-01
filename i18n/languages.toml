@@ -1,0 +1,90 @@
+# Which languages exist and how far along each is. English is the source: every other language is
+# a translation of it. See docs/translations.md.
+#
+#   name    the language's name in itself, as the language picker shows it
+#   flag    ISO 3166-1 code of the flag the graphical apps show beside the name (the terminal shows
+#           none). One of the flags in assets/flags/ and tools/i18n's FLAGS; add the image there
+#           when a language needs a new one. Languages with a region or script use the flag the
+#           design chose for them (es-419: mx, zh-Hant: tw).
+#   stage   draft | beta | released. Anything but released is labelled "Draft translation" in the app.
+#   drafts  hold | ship. `ship` puts machine drafts into release builds, labelled (a decision
+#           of 2026-10-26); `hold` keeps them out until reviewed. Reviewed strings always ship.
+source = "en"
+
+[language.en]
+name = "English"
+flag = "gb"
+stage = "released"
+
+# Draft translations : machine drafts ship, labelled. Terms first.
+[language.sv]
+name = "Svenska"
+flag = "se"
+stage = "draft"
+drafts = "ship"
+
+[language.ja]
+name = "日本語"
+flag = "jp"
+stage = "draft"
+drafts = "ship"
+
+[language.es-419]
+name = "Español (Latinoamérica)"
+flag = "mx"
+stage = "draft"
+drafts = "ship"
+
+[language.pt-BR]
+name = "Português (Brasil)"
+flag = "br"
+stage = "draft"
+drafts = "ship"
+
+[language.fr]
+name = "Français"
+flag = "fr"
+stage = "draft"
+drafts = "ship"
+
+[language.de]
+name = "Deutsch"
+flag = "de"
+stage = "draft"
+drafts = "ship"
+
+[language.it]
+name = "Italiano"
+flag = "it"
+stage = "draft"
+drafts = "ship"
+
+[language.pl]
+name = "Polski"
+flag = "pl"
+stage = "draft"
+drafts = "ship"
+
+[language.ru]
+name = "Русский"
+flag = "ru"
+stage = "draft"
+drafts = "ship"
+
+[language.tr]
+name = "Türkçe"
+flag = "tr"
+stage = "draft"
+drafts = "ship"
+
+[language.id]
+name = "Bahasa Indonesia"
+flag = "id"
+stage = "draft"
+drafts = "ship"
+
+[language.vi]
+name = "Tiếng Việt"
+flag = "vn"
+stage = "draft"
+drafts = "ship"

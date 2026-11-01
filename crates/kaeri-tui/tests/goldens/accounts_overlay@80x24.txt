@@ -1,0 +1,80 @@
+Kaeri                          plugins ●  ·  anilist ⇅ 3  kitsu ○  mal ✕ sign in
+────────────────────────────────────────────────────────────────────────────────
+▌▸ │    Continue watching  ──────────────────────────────────────────────────
+ ▤ │  ▌ Hoshikuzu no Tabibito                         Episode 3 · 12 min left
+ ▦ │
+ / │    Continue  ───────────────────────────────────────────────────────────
+────────────────────────────────────────────────────────────────────────────────
+▌ Accounts
+────────────────────────────────────────────────────────────────────────────────
+  AniList  ·  Signed in as tsubame_reads  ·  3 queued, 1 waiting f… Sign out
+▌ Kitsu  ·  Not connected  ·  0600 file                              Sign in
+  MyAnimeList  ·  Signed in as hotaru_watches  ·  Fetching yo… Sign in again
+
+   │    Wed 21  Hoshikuzu no Tabibito                              E9 · 06:37
+   │    Thu 22  Umibe no Kissaten                                 E11 · 23:37
+   │
+   │    Up next for you  ────────────────────────────────────────────────────
+   │    Komorebi Ryokan                                            New season
+   │    Tsuki to Kujira no Uta                          On your Planning list
+   │    Tetsu no Hanazono         Because you finished Kumo no Ue no Toshokan
+   │
+   │    This season · Autumn 2026  ──────────────────────────────────────────
+────────────── ▌ MyAnimeList needs signing in again. Press 8 to open Accounts. ─
+plugins · Subbed · 1080p                                   ↵ choose   esc cancel
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=rule mod=BOLD
+r00 c05-79 fg=rule
+r01 c00-79 fg=rule
+r02 c00-00 fg=rule
+r02 c01-01 fg=rule mod=BOLD
+r02 c02-79 fg=rule
+r03 c00-07 fg=rule
+r03 c08-28 fg=rule mod=BOLD
+r03 c29-79 fg=rule
+r04 c00-79 fg=rule
+r05 c00-79 fg=rule
+r06 c00-79 fg=rule bg=ground
+r07 c00-00 fg=obi bg=ground
+r07 c01-01 fg=rule bg=ground
+r07 c02-09 fg=text bg=ground mod=BOLD
+r07 c10-79 fg=rule bg=ground
+r08 c00-79 fg=rule bg=ground
+r09 c00-01 fg=rule bg=ground
+r09 c02-66 fg=text-dim bg=ground
+r09 c67-67 fg=rule bg=ground
+r09 c68-75 fg=text bg=ground
+r09 c76-79 fg=rule bg=ground
+r10 c00-00 fg=obi bg=ground
+r10 c01-01 fg=rule bg=ground
+r10 c02-38 fg=text bg=ground mod=BOLD
+r10 c39-68 fg=rule bg=ground
+r10 c69-75 fg=text bg=ground
+r10 c76-79 fg=rule bg=ground
+r11 c00-01 fg=rule bg=ground
+r11 c02-61 fg=text-dim bg=ground
+r11 c62-62 fg=rule bg=ground
+r11 c63-75 fg=text bg=ground
+r11 c76-79 fg=rule bg=ground
+r12 c00-79 fg=rule bg=ground
+r13 c00-79 fg=rule
+r14 c00-79 fg=rule
+r15 c00-79 fg=rule
+r16 c00-79 fg=rule
+r17 c00-79 fg=rule
+r18 c00-79 fg=rule
+r19 c00-79 fg=rule
+r20 c00-79 fg=rule
+r21 c00-79 fg=rule
+r22 c00-13 fg=rule
+r22 c14-14 fg=text
+r22 c15-15 fg=alert
+r22 c16-78 fg=text
+r22 c79-79 fg=rule
+r23 c00-23 fg=text-dim
+r23 c24-58 fg=rule
+r23 c59-59 fg=text
+r23 c60-69 fg=text-dim
+r23 c70-72 fg=text
+r23 c73-79 fg=text-dim

@@ -1,0 +1,756 @@
+//! Where streams come from, as the Providers screen shows it: each provider, the metadata ladder,
+//! the VPN guard's verdict, and the candidates offered when a title's match was too close to call.
+
+/// One provider, as the Providers screen shows it.
+///
+/// A flattened snapshot rather than the live tracker, so the UI crate stays independent of
+/// the provider implementations.
+#[derive(Debug, Clone, PartialEq, Default)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct ProviderRow {
+    pub id: String,
+    pub kind: String,
+    pub state: String,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub latency_ms: Option<u64>,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub last_error: Option<String>,
+    /// Whether resolution will actually try this source: not while it is switched off.
+    pub usable: bool,
+    /// Withheld by local policy rather than broken — a failing VPN guard, say.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub held_back: bool,
+    /// The name it goes by: the plugin's own, or the built-in source's.
+    pub name: String,
+    /// A plugin's version. `None` for a source built into Kaeri.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub version: Option<String>,
+    /// The hosts it may contact, and no others: a plugin's allowlist, which the host enforces
+    /// on every request it makes.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub hosts: Vec<String>,
+    /// Where it came from.
+    pub origin: ProviderOrigin,
+    /// Switched off by name, `providers.disabled`: kept, and not tried until it is on again.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub disabled: bool,
+    /// A newer version the store it came from offers, when there is one.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub update: Option<ProviderUpdate>,
+    /// It names torrents, which play through torrent playback: unusable while that is off.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub torrents: bool,
+    /// The built-in demo source. It sorts last, and has no update, store or permissions.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub is_demo: bool,
+}
+
+/// Where a provider came from: the provider page's "From Hotaru Plugins".
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum ProviderOrigin {
+    /// Part of kaeri: a remote API you run.
+    #[default]
+    BuiltIn,
+    /// Installed from a plugin store, which keeps it updated. `name` is the store's, or `None`
+    /// once that store is no longer joined: the plugin keeps working and stops updating.
+    Store { id: String, name: Option<String> },
+    /// A plugin file put in the plugin directory by hand.
+    ByHand,
+}
+
+/// The sections of the Your sources page, in the order the page draws them. A section with no rows
+/// is left out.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum SourceSection {
+    /// Folders on this device.
+    YourMedia,
+    /// Media servers.
+    MediaServers,
+    /// Licensed services.
+    LicensedServices,
+    /// Free catalogues.
+    FreeCatalogues,
+    /// The plugins of one store, or the plugins put in by hand.
+    Plugins,
+    /// What Kaeri ships: the demo, and the remote API.
+    BuiltIn,
+}
+
+/// One section of the Your sources page and the ids of its rows, in the order they are tried.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct SourceGroup {
+    pub section: SourceSection,
+    /// The store a plugins section is from. `None` for any other section, and for plugins put in
+    /// by hand.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub store: Option<String>,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub ids: Vec<String>,
+}
+
+/// The section a row belongs to.
+pub fn section_of(row: &ProviderRow) -> SourceSection {
+    match row.kind.as_str() {
+        "library" => SourceSection::YourMedia,
+        "server" => SourceSection::MediaServers,
+        "licensed" => SourceSection::LicensedServices,
+        "catalogue" => SourceSection::FreeCatalogues,
+        "plugin" => SourceSection::Plugins,
+        _ => SourceSection::BuiltIn,
+    }
+}
+
+/// The Your sources page as sections: first-party kinds first, then each store's plugins, then
+/// plugins put in by hand, then what is built in. Rows keep the order they came in, which is the
+/// order they are tried.
+pub fn source_groups(rows: &[ProviderRow]) -> Vec<SourceGroup> {
+    let mut groups: Vec<SourceGroup> = Vec::new();
+    for row in rows {
+        let section = section_of(row);
+        let store = match (&section, &row.origin) {
+            (SourceSection::Plugins, ProviderOrigin::Store { id, .. }) => Some(id.clone()),
+            _ => None,
+        };
+        match groups.iter_mut().find(|g| g.section == section && g.store == store) {
+            Some(group) => group.ids.push(row.id.clone()),
+            None => groups.push(SourceGroup { section, store, ids: vec![row.id.clone()] }),
+        }
+    }
+    // Stable, so the stores keep the order their first plugin came in.
+    groups.sort_by_key(|g| g.section as u8);
+    groups
+}
+
+/// Whether the page has nothing to list: no first-party source and no plugin. The demo and the
+/// remote API are not sources the viewer added, so they do not count.
+pub fn has_no_sources(rows: &[ProviderRow]) -> bool {
+    rows.iter().all(|row| section_of(row) == SourceSection::BuiltIn)
+}
+
+/// One source, as a title's source picker lists it: what it has of the title's episodes, so the
+/// choice is an informed one.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct SourceOption {
+    pub provider_id: String,
+    /// The name it goes by.
+    pub name: String,
+    /// How many of the title's episodes that are out this source lists: the 6 of "6 of 13".
+    pub covered: u32,
+    /// How many episodes are out, as AniList has it: the 13. When AniList does not say, what
+    /// the sources list.
+    pub of: u32,
+    /// This is the source pinned for the title.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub pinned: bool,
+    /// Why there is nothing to count, when there is not: switched off, resting after failures,
+    /// could not tell which title it is, or what it said when asked. `None` for a source that
+    /// listed episodes.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub note: Option<SourceNote>,
+    /// The releases it offers for the title's first episode, for a source that offers several (a
+    /// torrent source: a batch, and single releases). Empty for a source with one stream per
+    /// episode. A release is pinned with `Command::PinRelease`.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub releases: Vec<kaeri_core::traits::SourceCandidate>,
+    /// The id of the release pinned within this source, when one is.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub pinned_release: Option<String>,
+}
+
+/// Why a source has no episode count in the source picker. The front end words it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum SourceNote {
+    /// Switched off.
+    Off,
+    /// Resting after failures; changing the sources tries it again.
+    Resting,
+    /// Pinned for the title and no longer installed. The pin is kept for when it is back.
+    Gone,
+    /// It could not tell which title this is.
+    Ambiguous,
+    /// It was asked and failed. The reason is the source's own, not translated.
+    Failed { reason: String },
+}
+
+/// A newer version of a plugin, offered by the store it came from.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct ProviderUpdate {
+    pub version: String,
+    /// The hosts the newer version may contact that this one may not: "This update also
+    /// contacts …".
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub new_hosts: Vec<String>,
+}
+
+/// The entry in `providers.order` that stands for every source of a kind that the order does not
+/// name by id: `"plugins"`, and for the first-party kinds `"library"`, `"servers"`,
+/// `"catalogues"` and `"demo"`.
+pub fn group_entry(kind: &str) -> Option<&'static str> {
+    Some(match kind {
+        "plugin" => "plugins",
+        "library" => "library",
+        "server" => "servers",
+        "catalogue" => "catalogues",
+        "demo" => "demo",
+        _ => return None,
+    })
+}
+
+/// The order a new install starts with. Everything is in the one list the user can reorder, and
+/// by default the sources Kaeri provides come first, as the Your sources page lists them:
+/// Your media, media servers, free catalogues, then the plugins, with the demo last.
+pub fn default_source_order() -> Vec<String> {
+    ["library", "servers", "catalogues", "plugins", "demo"].map(String::from).to_vec()
+}
+
+/// `order` with the source `id` moved one place up the chain (`step` below zero) or down it, or
+/// `None` when it is already at that end or has no row.
+///
+/// One place is past the next row on screen. An entry with no row (a kind's group entry, a
+/// remote that is not set up, a plugin named but not installed) is stepped over rather than
+/// counted, so every press moves the row the user is looking at. It is kept all the same: the
+/// order is the user's, and only one entry was asked to move.
+///
+/// A group entry such as `"plugins"` is first spelled out as the sources on screen it stands for,
+/// in the order they are shown, so the ones not moved keep their places around the one that is.
+/// The group entry stays right after them, where a source added later still lands. A
+/// first-party source an older order never named is tried first, so that is where it is named.
+pub fn order_with_source_moved(
+    order: &[String],
+    rows: &[ProviderRow],
+    id: &str,
+    step: isize,
+) -> Option<Vec<String>> {
+    let mut order = order.to_vec();
+    let mut firsts = 0;
+    for row in rows {
+        if order.contains(&row.id) {
+            continue;
+        }
+        let group = group_entry(&row.kind);
+        let first_party = !matches!(row.kind.as_str(), "plugin" | "demo")
+            && matches!(row.kind.as_str(), "library" | "server" | "catalogue");
+        match group.and_then(|g| order.iter().position(|entry| entry == g)) {
+            Some(at) => order.insert(at, row.id.clone()),
+            None if first_party => {
+                order.insert(firsts, row.id.clone());
+                firsts += 1;
+            }
+            None => order.push(row.id.clone()),
+        }
+    }
+
+    let from = order.iter().position(|entry| entry == id)?;
+    let shown = |entry: &String| rows.iter().any(|row| row.id == *entry);
+    let to = if step < 0 {
+        order[..from].iter().rposition(shown)?
+    } else {
+        from + 1 + order[from + 1..].iter().position(shown)?
+    };
+    let entry = order.remove(from);
+    order.insert(to, entry);
+    Some(order)
+}
+
+/// `order` with the source `id` moved to place `index` among the rows on screen, counting from
+/// zero, or `None` when it has no row. For a drag: the row lands where it was dropped.
+pub fn order_with_source_placed(
+    order: &[String],
+    rows: &[ProviderRow],
+    id: &str,
+    index: usize,
+) -> Option<Vec<String>> {
+    let mut order = order.to_vec();
+    let shown = shown_ids(&order, rows);
+    let at = shown.iter().position(|shown| shown == id)?;
+    let index = index.min(shown.len() - 1);
+    let step = if index < at { -1 } else { 1 };
+    for _ in 0..at.abs_diff(index) {
+        order = order_with_source_moved(&order, rows, id, step)?;
+    }
+    Some(order)
+}
+
+/// The ids of the rows in the order `order` tries them, as the page lists them.
+fn shown_ids(order: &[String], rows: &[ProviderRow]) -> Vec<String> {
+    let mut ranked: Vec<(i64, usize, &str)> = rows
+        .iter()
+        .enumerate()
+        .map(|(i, row)| {
+            let named = order.iter().position(|e| *e == row.id);
+            let place = named
+                .or_else(|| {
+                    group_entry(&row.kind).and_then(|g| order.iter().position(|e| e == g))
+                })
+                .map_or_else(
+                    || match row.kind.as_str() {
+                        "library" | "server" | "catalogue" => -1,
+                        _ => order.len() as i64,
+                    },
+                    |p| p as i64,
+                );
+            (place, i, row.id.as_str())
+        })
+        .collect();
+    ranked.sort();
+    ranked.into_iter().map(|(_, _, id)| id.to_owned()).collect()
+}
+
+/// Whether a new `providers.order` only moves sources, rather than adding or taking one away.
+///
+/// The built-in entries say which sources exist; a plugin's id in the order only ranks it. So the
+/// same built-ins in any order need no rebuild, and a rebuild would restart the torrent session
+/// and cut off whatever it is playing. `"torrent"`, the torrent search that is no longer built
+/// in, names nothing either way.
+pub fn only_reorders(before: &[String], after: &[String]) -> bool {
+    let built_in = |order: &[String]| -> std::collections::BTreeSet<String> {
+        order.iter().filter(|id| matches!(id.as_str(), "remote" | "plugins")).cloned().collect()
+    };
+    built_in(before) == built_in(after)
+}
+
+/// The sources the config sets up, as far as the header's chips and the source label read them.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct ConfiguredSources {
+    /// The order failover walks them in.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub order: Vec<String>,
+    /// Those switched off by name.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub disabled: Vec<String>,
+    /// Whether torrent playback is switched on, for the sources that name torrents.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub torrent: bool,
+    /// Whether a remote source is set up.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub remote: bool,
+    /// Whether the demo is one of the sources.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub demo: bool,
+    /// Sources offers Add the demo: an install that has not got it. True whenever the demo is
+    /// off, as removing it and never having had it look the same from here.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub offer_demo: bool,
+}
+
+impl ConfiguredSources {
+    pub fn of(providers: &kaeri_core::config::ProvidersConfig) -> Self {
+        Self {
+            order: providers.order.clone(),
+            disabled: providers.disabled.clone(),
+            torrent: providers.torrent.enabled,
+            remote: providers.remote_url.is_some(),
+            demo: false,
+            offer_demo: true,
+        }
+    }
+
+    /// With the demo's state from `[sources]`.
+    pub fn with_demo(self, sources: &kaeri_core::config::SourcesConfig) -> Self {
+        Self { demo: sources.demo, offer_demo: !sources.demo, ..self }
+    }
+}
+
+/// Where the demo stands, for Home, Search and Sources. Sent at launch and whenever it changes.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct DemoState {
+    /// The demo is one of the sources.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub on: bool,
+    /// Sources offers Add the demo.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub offer: bool,
+    /// The demo is the only source that works: Search says other titles play once a store is
+    /// joined, and Home closes with the demo-only line.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub only: bool,
+    /// Part of the demo has been played, so Home's spotlight is back to its usual cases.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub played: bool,
+}
+
+/// What the credit block and the demo's About page show. The same constants the host guard
+/// reads, so nothing on screen can name a host the demo does not reach.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct DemoInfo {
+    /// The credit block, as the licence asks for it.
+    pub credit: String,
+    /// "CC BY 4.0".
+    pub licence_name: String,
+    pub licence_url: String,
+    /// The makers' site, linked and never streamed from.
+    pub maker_url: String,
+    /// The file page on Wikimedia Commons of the first part.
+    pub file_page_url: String,
+    /// The only hosts the demo reaches.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub hosts: Vec<String>,
+}
+
+/// The demo's credit, licence and hosts.
+pub fn demo_info() -> DemoInfo {
+    use kaeri_core::demo;
+    DemoInfo {
+        credit: demo::DEMO_CREDIT.into(),
+        licence_name: demo::DEMO_LICENCE_NAME.into(),
+        licence_url: demo::DEMO_LICENCE_URL.into(),
+        maker_url: demo::DEMO_MAKER_URL.into(),
+        file_page_url: demo::DEMO_FILE_PAGE_URL.into(),
+        hosts: demo::DEMO_HOSTS.iter().map(|host| (*host).to_owned()).collect(),
+    }
+}
+
+/// One configured source, and how it stands: a header chip.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct SourceChip {
+    pub id: String,
+    pub state: SourceState,
+}
+
+/// Each configured source, in the order failover walks them, and how it stands.
+///
+/// The header's chips. Read from the registered providers' `rows` rather than the config alone:
+/// a configured source can be ready, failing, held back by the VPN guard, still loading, or off
+/// on purpose — and only the last is something the config can say by itself.
+pub fn source_states(configured: &ConfiguredSources, rows: &[ProviderRow]) -> Vec<SourceChip> {
+    let of_kind = |kind: &str| -> SourceState {
+        let of_kind: Vec<&ProviderRow> = rows.iter().filter(|p| p.kind == kind).collect();
+        // Each switched off by name is off, not failing: a choice, not a fault.
+        let rows: Vec<&ProviderRow> = of_kind.iter().copied().filter(|p| !p.disabled).collect();
+        if rows.is_empty() && !of_kind.is_empty() {
+            SourceState::Off
+        } else if rows.iter().any(|p| p.usable) {
+            SourceState::Ready
+        } else if rows.iter().any(|p| p.held_back) {
+            SourceState::HeldBack
+        } else if rows.is_empty() {
+            SourceState::Pending
+        } else {
+            SourceState::Failing
+        }
+    };
+    configured
+        .order
+        .iter()
+        .filter(|id| !configured.disabled.contains(id))
+        .filter_map(|id| {
+            let state = match id.as_str() {
+                "plugins" => of_kind("plugin"),
+                "remote" if !configured.remote => return None,
+                "remote" => of_kind("remote"),
+                _ => return None,
+            };
+            Some(SourceChip { id: id.clone(), state })
+        })
+        .collect()
+}
+
+/// How one configured source stands, for the header chip that names it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum SourceState {
+    /// At least one of its providers will be tried.
+    Ready,
+    /// Switched off in config. Said quietly: off is a choice, not a fault.
+    Off,
+    /// Working, but withheld by local policy — the VPN guard.
+    HeldBack,
+    /// Registered and not answering, or refused at startup.
+    Failing,
+    /// Nothing registered yet: plugins are still compiling, or there are none.
+    Pending,
+}
+
+/// The VPN guard's verdict, for the badge beside the torrent source.
+///
+/// What the guard found and nothing about how it is shown: the badge's words, its marks and
+/// when it alerts are the front end's, as the terminal's `vpn_badge` has them.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum GuardView {
+    /// Not answered yet. Nothing runs until it passes, so nothing can have leaked.
+    Checking,
+    /// Traffic leaves where it should, through the network `exit` names.
+    Protected { exit: String },
+    /// Traffic was seen leaving where it should not. Torrents are halted.
+    Leaking,
+    /// The check could not be made: the proxy is down, or the lookup did not answer. Failing
+    /// all the same, and told apart from a leak.
+    Unreachable,
+    /// The configuration accepts an unprotected connection.
+    Unprotected,
+}
+
+/// One rung of the metadata ladder, as the Providers screen shows it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct MetaSourceRow {
+    pub source: String,
+    pub state: String,
+    pub healthy: bool,
+    /// The rung that answered the most recent request.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub active: bool,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub detail: Option<String>,
+    /// While the rung is being skipped, when it is next tried, in Unix seconds. Said at draw
+    /// time: a countdown built when the status was sent stood still on an idle screen.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub retry_at: Option<i64>,
+}
+
+/// One candidate offered when the resolution ladder could not decide.
+///
+/// Carries the score it was ranked with, because "which of these is your show" is a question
+/// the user can only answer if they can see *why* the app hesitated — two candidates at 0.62
+/// and 0.61 is a genuinely close call, one at 0.88 against one at 0.30 means something else
+/// went wrong and the list is worth distrusting.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct MatchCandidate {
+    /// The provider's own name for this result.
+    pub title: String,
+    /// The key to pin, if this is the one.
+    pub key: kaeri_core::ids::ProviderKey,
+    /// Title-match similarity, 0..1.
+    pub similarity: f64,
+    /// Why the ladder ruled it out, when it did: one of the `match-ruled-out-*` messages,
+    /// worded by the front end in place of the similarity.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub rejected: Option<crate::Msg>,
+    /// The year it started, as the source lists it.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub year: Option<u16>,
+    /// How many episodes the source lists for it.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub episodes: Option<u32>,
+    /// Its format, as the source lists it.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub format: Option<crate::search::MediaFormat>,
+}
+
+/// What a set of [`MatchCandidate`]s answers, so a sheet waiting on a search can tell its
+/// answer from the question the ladder asks on its own, and an old search from the newest.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum MatchQuestion {
+    /// The ladder found candidates on a title's source and could not choose between them.
+    Ladder,
+    /// [`Command::ManualSearch`](crate::command::Command::ManualSearch) for these words, as
+    /// they were sent. Empty candidates mean the source found nothing.
+    Search { query: String },
+}
+
+/// Which entry on a source a title is matched to now, and how it came to be.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct CurrentMatch {
+    pub provider_id: String,
+    /// The source's name.
+    pub source: String,
+    /// The source's name for the entry, as it was when matched. `None` for a match made
+    /// before Kaeri kept it.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub title: Option<String>,
+    /// Chosen by the person, from candidates or a search, rather than by the ladder: what
+    /// [`Command::ClearMatch`](crate::command::Command::ClearMatch) would undo.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub chosen_by_you: bool,
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn the_demo_info_names_only_the_two_hosts() {
+        let info = super::demo_info();
+        assert_eq!(info.hosts, ["upload.wikimedia.org", "commons.wikimedia.org"]);
+        assert!(info.credit.contains("CC BY 4.0"));
+    }
+
+    use super::*;
+
+    fn source_row(id: &str, kind: &str) -> ProviderRow {
+        ProviderRow {
+            id: id.into(),
+            kind: kind.into(),
+            state: "ready".into(),
+            latency_ms: None,
+            last_error: None,
+            usable: true,
+            held_back: false,
+            ..ProviderRow::default()
+        }
+    }
+
+    fn strings(entries: &[&str]) -> Vec<String> {
+        entries.iter().map(|e| (*e).to_owned()).collect()
+    }
+
+    #[test]
+    fn plugins_all_switched_off_are_off_and_not_failing() {
+        let configured =
+            ConfiguredSources { order: strings(&["plugins"]), ..ConfiguredSources::default() };
+        let off =
+            |id| ProviderRow { disabled: true, usable: false, ..source_row(id, "plugin") };
+        let state = |rows: &[ProviderRow]| source_states(&configured, rows)[0].state;
+        assert_eq!(state(&[off("a"), off("b")]), SourceState::Off);
+        assert_eq!(state(&[off("a"), source_row("b", "plugin")]), SourceState::Ready);
+        let failing = ProviderRow { usable: false, ..source_row("b", "plugin") };
+        assert_eq!(state(&[off("a"), failing]), SourceState::Failing, "the one on is failing");
+    }
+
+    #[test]
+    fn moving_a_plugin_names_the_plugins_on_screen_and_keeps_plugins_after_them() {
+        let rows = [
+            source_row("remote", "remote"),
+            source_row("alpha", "plugin"),
+            source_row("beta", "plugin"),
+        ];
+        let order = strings(&["remote", "plugins"]);
+        assert_eq!(
+            order_with_source_moved(&order, &rows, "beta", -1),
+            Some(strings(&["remote", "beta", "alpha", "plugins"]))
+        );
+        assert_eq!(
+            order_with_source_moved(&order, &rows, "alpha", -1),
+            Some(strings(&["alpha", "remote", "beta", "plugins"]))
+        );
+        assert_eq!(
+            order_with_source_moved(&order, &rows, "remote", 1),
+            Some(strings(&["alpha", "remote", "beta", "plugins"]))
+        );
+    }
+
+    #[test]
+    fn a_move_steps_over_entries_with_no_row_and_keeps_them() {
+        // `torrent` is the torrent search that is no longer built in, so it has no row; `gamma`
+        // is named but not installed. Both stay, and neither costs a press.
+        let rows = [source_row("remote", "remote"), source_row("alpha", "plugin")];
+        let order = strings(&["torrent", "remote", "gamma", "plugins"]);
+        assert_eq!(
+            order_with_source_moved(&order, &rows, "alpha", -1),
+            Some(strings(&["torrent", "alpha", "remote", "gamma", "plugins"]))
+        );
+        // Down past `"plugins"`, which has no row once its plugins are named.
+        let order = strings(&["alpha", "plugins", "remote"]);
+        assert_eq!(
+            order_with_source_moved(&order, &rows, "alpha", 1),
+            Some(strings(&["plugins", "remote", "alpha"]))
+        );
+    }
+
+    #[test]
+    fn a_move_past_either_end_or_of_no_row_changes_nothing() {
+        let rows = [source_row("remote", "remote"), source_row("alpha", "plugin")];
+        let order = strings(&["remote", "plugins"]);
+        assert_eq!(order_with_source_moved(&order, &rows, "remote", -1), None);
+        assert_eq!(order_with_source_moved(&order, &rows, "alpha", 1), None);
+        assert_eq!(order_with_source_moved(&order, &rows, "nothing", 1), None);
+    }
+
+    #[test]
+    fn without_plugins_in_the_order_a_plugin_on_screen_is_named_at_the_end() {
+        // A rebuild that dropped `"plugins"` keeps the plugins it had, last in the chain.
+        let rows = [source_row("remote", "remote"), source_row("alpha", "plugin")];
+        assert_eq!(
+            order_with_source_moved(&strings(&["remote"]), &rows, "alpha", -1),
+            Some(strings(&["alpha", "remote"]))
+        );
+    }
+
+    #[test]
+    fn an_order_with_the_same_sources_is_put_in_effect_without_a_rebuild() {
+        let order =
+            |entries: &[&str]| entries.iter().map(|e| (*e).to_owned()).collect::<Vec<_>>();
+        // Moved, or with a plugin named: the same sources, so the session can stay up.
+        assert!(only_reorders(&order(&["remote", "plugins"]), &order(&["plugins", "remote"])));
+        assert!(only_reorders(
+            &order(&["remote", "plugins"]),
+            &order(&["alpha", "plugins", "remote", "beta"])
+        ));
+        // The torrent search that is no longer built in names nothing.
+        assert!(only_reorders(&order(&["torrent", "plugins"]), &order(&["plugins"])));
+        // A built-in source added or taken away is a rebuild.
+        assert!(!only_reorders(&order(&["remote", "plugins"]), &order(&["plugins"])));
+        assert!(!only_reorders(&order(&["plugins"]), &order(&["plugins", "remote"])));
+    }
+}
+
+#[cfg(test)]
+mod section_tests {
+    use super::*;
+
+    fn row(id: &str, kind: &str, origin: ProviderOrigin) -> ProviderRow {
+        ProviderRow { id: id.into(), kind: kind.into(), origin, ..Default::default() }
+    }
+
+    #[test]
+    fn the_page_groups_first_party_kinds_above_plugins_and_built_in_last() {
+        let store = |id: &str| ProviderOrigin::Store { id: id.into(), name: None };
+        let rows = [
+            row("demo", "demo", ProviderOrigin::BuiltIn),
+            row("alpha", "plugin", store("mika")),
+            row("beta", "plugin", store("noor")),
+            row("home", "server", ProviderOrigin::BuiltIn),
+            row("gamma", "plugin", store("mika")),
+            row("disk", "library", ProviderOrigin::BuiltIn),
+        ];
+        let groups = source_groups(&rows);
+        let shape: Vec<_> = groups
+            .iter()
+            .map(|g| {
+                (
+                    g.section as u8,
+                    g.store.as_deref(),
+                    g.ids.iter().map(String::as_str).collect::<Vec<_>>(),
+                )
+            })
+            .collect();
+        assert_eq!(
+            shape,
+            [
+                (SourceSection::YourMedia as u8, None, vec!["disk"]),
+                (SourceSection::MediaServers as u8, None, vec!["home"]),
+                (SourceSection::Plugins as u8, Some("mika"), vec!["alpha", "gamma"]),
+                (SourceSection::Plugins as u8, Some("noor"), vec!["beta"]),
+                (SourceSection::BuiltIn as u8, None, vec!["demo"]),
+            ]
+        );
+    }
+
+    #[test]
+    fn only_the_built_in_sources_leave_the_page_empty() {
+        let demo = row("demo", "demo", ProviderOrigin::BuiltIn);
+        assert!(has_no_sources(std::slice::from_ref(&demo)));
+        assert!(!has_no_sources(&[demo, row("disk", "library", ProviderOrigin::BuiltIn)]));
+    }
+
+    #[test]
+    fn a_first_party_source_can_be_moved_below_a_plugin() {
+        let rows = [
+            row("disk", "library", ProviderOrigin::BuiltIn),
+            row("alpha", "plugin", ProviderOrigin::ByHand),
+        ];
+        let order: Vec<String> = default_source_order();
+        let moved = order_with_source_moved(&order, &rows, "disk", 1).unwrap();
+        let after = |id: &str| moved.iter().position(|e| e == id).unwrap();
+        assert!(after("alpha") < after("disk"), "{moved:?}");
+        assert!(after("disk") < after("plugins"), "{moved:?}");
+        // And dropped back at the top of the page with a drag.
+        let placed = order_with_source_placed(&moved, &rows, "disk", 0).unwrap();
+        assert!(
+            placed.iter().position(|e| e == "disk") < placed.iter().position(|e| e == "alpha"),
+            "{placed:?}"
+        );
+    }
+}

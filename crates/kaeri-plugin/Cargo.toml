@@ -1,0 +1,66 @@
+[package]
+name = "kaeri-plugin"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "WebAssembly component host for provider plugins, with a capability sandbox"
+
+[lib]
+# No doc example is written as a test, and rustdoc spends seconds per crate finding none.
+doctest = false
+
+[features]
+default = ["fetch"]
+# Lend plugins the host's HTTP client. Off, a host can only ask plugins to describe
+# themselves — enough for a plugin store's server, without the network stack in its build.
+fetch = ["dep:kaeri-net", "dep:wreq"]
+# Run plugins in wasmtime's interpreter, Pulley, rather than as native code, on any platform, as
+# iOS always does: the conformance suite on the path an iPhone takes, run where it can be.
+interpret = ["wasmtime/pulley"]
+
+[dependencies]
+kaeri-core.workspace = true
+anyhow.workspace = true
+kaeri-net = { workspace = true, optional = true }
+# The fetch response, read a chunk at a time against the size ceiling.
+wreq = { workspace = true, optional = true }
+async-trait.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+futures.workspace = true
+tracing.workspace = true
+# `cache` is what keeps plugin compilation off the critical path a second time: wasmtime manages
+# the on-disk artefact cache itself, so we get it without the `unsafe` that hand-rolling
+# `deserialize_file` would require in a crate whose entire job is running untrusted code.
+#
+# Default features off: they add GC, threads, stack switching, a WAT parser, profiling, coredumps,
+# the pooling allocator and component composition — none of which a host loading binary
+# components uses, and together a large share of the workspace's compile time. `backtrace` stays
+# so a trapped guest's error still says where.
+wasmtime = { version = "49.0", default-features = false, features = ["runtime", "std", "cranelift", "parallel-compilation", "component-model", "async", "cache", "anyhow", "backtrace"] }
+# Preview 2 only: the host links `wasmtime_wasi::p2`, and preview 1 would bring in the whole
+# wiggle/witx toolchain for nothing.
+wasmtime-wasi = { version = "49.0", default-features = false, features = ["p2"] }
+# Regex is lent to guests: a TinyGo or JS plugin bundling its own would be enormous.
+# The same URL parser the HTTP client uses. The allowlist has to read a URL exactly the way
+# the request will, or it is checking a different host than the one contacted.
+url = "2"
+regex = "1"
+
+# iOS lets no app but Apple's make memory executable, so nothing a compiler emits as native code
+# can run there, and Cranelift emits native code for 64-bit machines only. On both, the same
+# Cranelift emits Pulley bytecode instead, which wasmtime's interpreter runs: see
+# `engine::INTERPRETED`.
+[target.'cfg(any(target_os = "ios", all(target_pointer_width = "32", not(target_family = "wasm"))))'.dependencies]
+wasmtime = { version = "49.0", default-features = false, features = ["pulley"] }
+
+[dev-dependencies]
+# A fetch response built in a test, for the size ceiling.
+http = "1"
+tempfile = "3"
+# A component built in a test, to stand in for a plugin from an older ABI major.
+wasm-encoder = { version = "0.258", features = ["component-model"] }
+
+[lints]
+workspace = true

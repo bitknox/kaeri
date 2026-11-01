@@ -1,0 +1,73 @@
+servers-add-title = Thêm máy chủ media
+servers-on-network = Trong mạng của bạn
+servers-looking = Đang tìm máy chủ…
+servers-none-found = Không thấy máy chủ nào trong mạng này. Hãy nhập địa chỉ.
+servers-address = Địa chỉ máy chủ
+servers-address-hint = jellyfin.home.example hoặc 192.168.1.20:8096
+servers-address-note = Nhập địa chỉ máy chủ của bạn, địa chỉ bạn dùng để mở Jellyfin trong trình duyệt.
+servers-continue = { -proceed-cap }
+servers-sign-in-title = Đăng nhập vào { $server }
+servers-user = Tên người dùng
+servers-password = Mật khẩu
+servers-use-quick-connect = Dùng thay bằng Quick Connect
+servers-use-password = Đăng nhập bằng mật khẩu
+servers-token-note = Mật khẩu của bạn không được lưu. { -app-name } giữ một mã đăng nhập trong { $store }.
+secure-store-windows = Credential Manager
+secure-store-linux = kho khóa của bạn
+secure-store-device = Keychain của bạn
+secure-store-android = vùng lưu trữ bảo mật của { -device } này
+servers-sign-in = Đăng nhập
+servers-qc-title = Nhập mã này vào Jellyfin
+servers-qc-steps = Trên một { -device } đã đăng nhập, mở Jellyfin, vào hồ sơ của bạn, chọn Quick Connect và nhập mã này.
+servers-qc-waiting = Đang chờ bạn chấp thuận
+servers-qc-expired = Mã đó đã hết hạn.
+servers-qc-new-code = Lấy mã mới
+servers-libraries-title = Chọn { -library }
+servers-libraries-body = Phim được khớp với AniList để xuất hiện trong Trang chủ, danh sách và Tìm kiếm của bạn.
+servers-library-line = { $kind } · { $count } bộ
+servers-report = Báo cho Jellyfin những gì bạn xem
+servers-report-line = Điểm dừng và dấu đã xem sẽ theo những gì bạn phát ở đây.
+servers-add = Thêm máy chủ
+servers-row-matching = Đang khớp · { $done } trên { $total } bộ
+servers-row-summary = { $libraries ->
+   *[other] { $libraries } { -library } · { $series } bộ
+ }
+servers-row-libraries = { $count ->
+   *[other] { $count } { -library }
+ }
+servers-row-series = { $count ->
+   *[other] { $count } bộ
+ }
+servers-row-needs-look = { $count } cần xem lại
+servers-page-line = { $address } · Jellyfin { $version } · đăng nhập là { $user }
+servers-sign-out = Đăng xuất
+servers-remove = Gỡ máy chủ
+servers-error-unreachable = Không kết nối được { $address }. Hãy kiểm tra địa chỉ và máy chủ đã bật chưa.
+servers-error-not-jellyfin = Địa chỉ đó có phản hồi, nhưng không phải máy chủ Jellyfin.
+servers-libraries = { -library-cap }
+servers-remove-line = Không có gì bị xóa trên máy chủ.
+servers-removed = Đã gỡ { $name }
+servers-error-too-old = Máy chủ này chạy Jellyfin { $version }. { -app-name } cần 10.8 trở lên.
+servers-error-credentials = Sai tên người dùng hoặc mật khẩu.
+servers-error-qc-off = Quick Connect đang tắt trên máy chủ này. Hãy đăng nhập bằng mật khẩu, hoặc bật nó trong bảng điều khiển của Jellyfin.
+servers-error-plain-http = Địa chỉ này không nằm trong mạng của bạn và không dùng HTTPS, nên mật khẩu sẽ đi qua mà không được bảo vệ. Hãy dùng địa chỉ https://.
+servers-error-bad-address = Trông không giống một địa chỉ. Hãy nhập đúng như khi bạn mở Jellyfin trong trình duyệt.
+servers-error-other = Có lỗi xảy ra. Hãy thử lại.
+servers-cert-title = Kiểm tra máy chủ này
+servers-cert-body = { $host } dùng một chứng chỉ mà { -device } này không tin cậy. Điều đó bình thường với máy chủ trong nhà. Chỉ cho phép nếu dấu vân tay này khớp với dấu vân tay máy chủ của bạn hiển thị.
+servers-cert-allow = Cho phép chứng chỉ này
+servers-row-signed-out = Máy chủ đã đăng xuất bạn
+servers-sign-in-again = Đăng nhập lại
+servers-row-not-answering = Không phản hồi · thấy lần cuối { $time }
+title-server-not-answering = { $server } không phản hồi. Các tập bạn đã tải vẫn phát được.
+servers-kind-shows = Phim bộ
+servers-kind-movies = Phim lẻ
+servers-kind-other = Video
+servers-quick-connect = Quick Connect
+servers-libraries-heading = { -library-cap }
+servers-refresh = Khớp lại
+servers-needs-look = { $count } chưa khớp với AniList
+servers-kind-films = Phim điện ảnh
+servers-error-certificate = { $host } dùng một chứng chỉ mà { -device } này không tin cậy. Hãy dùng địa chỉ https:// có chứng chỉ mà nó tin cậy.
+servers-row-signed-out-here = Đã đăng xuất
+servers-sign-out-line = Kết thúc phiên đăng nhập của { -device } này trên máy chủ. Máy chủ và các tập đã tải vẫn như cũ.

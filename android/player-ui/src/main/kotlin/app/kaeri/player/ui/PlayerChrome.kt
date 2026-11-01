@@ -1,0 +1,540 @@
+// The player's controls over a 35 % dim, as AndroidPlayer draws them (T4): the top bar with the
+// back arrow, the show and the episode, subtitles and audio, and episodes; the bottom bar with
+// back 10 s, play or pause, forward 10 s, the times and the seek slider.
+
+package app.kaeri.player.ui
+
+import app.kaeri.i18n.Strings
+import app.kaeri.i18n.R
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import app.kaeri.ui.Menu
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
+import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderState
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.unit.Constraints
+import kotlin.math.roundToInt
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.setProgress
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
+import app.kaeri.design.Motion
+import app.kaeri.design.ObiSilk
+import app.kaeri.design.ShowTitle
+import app.kaeri.design.PlayerScrim
+import app.kaeri.design.tabular
+import app.kaeri.player.PlayerClock
+import app.kaeri.player.PlayerModel
+import app.kaeri.player.SeekPreview
+import app.kaeri.engine.model.TimeRange
+import app.kaeri.player.SeekSegment
+
+/** The 1 dp shadow the board puts under the controls' text and icons, for a bright frame. */
+private val ControlShadow = Shadow(Color(0xB30A0C18), Offset(0f, 2.6f), 2.6f)
+
+/** The player's More menu entry for the episode's discussion: how many comments, when known. */
+class DiscussionEntry(val comments: UInt?, val onOpen: () -> Unit)
+
+@Composable
+fun PlayerChrome(
+    model: PlayerModel,
+    onClose: () -> Unit,
+    onTracks: () -> Unit = {},
+    onEpisodes: () -> Unit = {},
+    /** The Skip times list in the More menu. */
+    onSkipTimes: () -> Unit = {},
+    /** The frames under the scrubbing finger, when there are to be any. */
+    preview: SeekPreview? = null,
+    /** Play on TV, where the app can: the episode carries on on a TV from here. */
+    onPlayOnTv: (() -> Unit)? = null,
+    /** The discussion in the More menu, from the point the episode counts as watched. */
+    discussion: DiscussionEntry? = null,
+    /** Watch together's people, while this device is in a party. */
+    onPeople: (() -> Unit)? = null,
+) {
+    Box(Modifier.fillMaxSize()) {
+        PlayerScrim()
+        TopBar(
+            model, onClose, onTracks, onEpisodes, onSkipTimes, onPlayOnTv, discussion,
+            Modifier.align(Alignment.TopStart).padding(start = 48.dp, end = 48.dp, top = 16.dp).fillMaxWidth().heightIn(min = 48.dp),
+            onPeople,
+        )
+        BottomBar(
+            model,
+            preview,
+            Modifier.align(Alignment.BottomStart).padding(start = 48.dp, end = 48.dp, bottom = 28.dp).fillMaxWidth().heightIn(min = 48.dp),
+        )
+    }
+}
+
+@Composable
+private fun TopBar(
+    model: PlayerModel,
+    onClose: () -> Unit,
+    onTracks: () -> Unit,
+    onEpisodes: () -> Unit,
+    onSkipTimes: () -> Unit,
+    onPlayOnTv: (() -> Unit)?,
+    discussion: DiscussionEntry?,
+    modifier: Modifier,
+    onPeople: (() -> Unit)? = null,
+) {
+    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        ControlButton(PlayerIcons.Back, stringResource(R.string.action_back), onClick = onClose)
+        Column(Modifier.weight(1f)) {
+            Text(
+                model.showTitle,
+                style = ShowTitle.row.copy(shadow = ControlShadow),
+                color = ObiSilk.Silk,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            // Into the next episode, the line crossfades on standard (T5).
+            androidx.compose.animation.AnimatedContent(
+                model.episodeLine(LocalContext.current),
+                transitionSpec = {
+                    androidx.compose.animation.fadeIn(Motion.standard()) togetherWith androidx.compose.animation.fadeOut(Motion.standard())
+                },
+                label = "episode line", // i18n-skip
+            ) { line ->
+                Text(
+                    line,
+                    style = MaterialTheme.typography.bodyMedium.copy(shadow = ControlShadow),
+                    color = ObiSilk.Silk,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        onPlayOnTv?.let { ControlButton(PlayerIcons.Tv, stringResource(R.string.tv_play_on), onClick = it) }
+        onPeople?.let { ControlButton(PlayerIcons.People, stringResource(R.string.together_people_button), onClick = it) }
+        ControlButton(PlayerIcons.Subtitles, stringResource(R.string.player_subtitles_audio_picture), onClick = onTracks)
+        ControlButton(PlayerIcons.Episodes, stringResource(R.string.player_episodes), onClick = onEpisodes)
+        MoreMenu(model, discussion, onSkipTimes)
+    }
+}
+
+/** The More button and its menu, which holds the controls up while it is open. */
+@Composable
+private fun MoreMenu(model: PlayerModel, discussion: DiscussionEntry?, onSkipTimes: () -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    DisposableEffect(open) {
+        model.hold("more", open) // i18n-skip
+        onDispose { model.hold("more", false) } // i18n-skip
+    }
+    Box {
+        // Open, the button keeps a haze disc under it, as the board draws it.
+        Box(Modifier.size(48.dp).background(if (open) ObiSilk.Silk.copy(alpha = 0.18f) else Color.Transparent, androidx.compose.foundation.shape.CircleShape)) {
+            ControlButton(PlayerIcons.More, stringResource(R.string.action_more)) { open = true }
+        }
+        Menu(expanded = open, onDismissRequest = { open = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.player_mark_skip_times)) },
+                onClick = {
+                    open = false
+                    model.beginMarking()
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.player_skip_times)) },
+                onClick = {
+                    open = false
+                    onSkipTimes()
+                },
+            )
+            if (discussion != null) DropdownMenuItem(
+                text = {
+                    Column {
+                        Text(stringResource(R.string.discussion_open))
+                        Text(
+                            discussion.comments?.let { pluralStringResource(R.plurals.player_more_discussion_note, it.toInt(), it.toInt()) }
+                                ?: stringResource(R.string.player_more_discussion_pauses),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                },
+                trailingIcon = { Icon(PlayerIcons.Discussion, contentDescription = null) },
+                onClick = {
+                    open = false
+                    discussion.onOpen()
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun BottomBar(model: PlayerModel, preview: SeekPreview?, modifier: Modifier) {
+    val time = MaterialTheme.typography.labelLarge.tabular().copy(shadow = ControlShadow)
+    val duration = model.duration ?: 0.0
+    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
+        StepButton(PlayerIcons.Replay, stringResource(R.string.player_back_10)) { model.seekBy(-10.0) }
+        Spacer(Modifier.width(4.dp))
+        ControlButton(if (model.paused) PlayerIcons.Play else PlayerIcons.Pause, stringResource(if (model.paused) R.string.action_play else R.string.action_pause), size = 32.dp) {
+            model.togglePause()
+        }
+        Spacer(Modifier.width(4.dp))
+        StepButton(PlayerIcons.Forward, stringResource(R.string.player_forward_10)) { model.seekBy(10.0) }
+        Spacer(Modifier.width(8.dp))
+        Text(PlayerClock.label(model.position), style = time, color = ObiSilk.Silk, modifier = Modifier.widthIn(min = 44.dp))
+        SeekSlider(model, preview, Modifier.weight(1f).padding(horizontal = 12.dp))
+        Text(
+            PlayerClock.remaining(maxOf(0.0, duration - model.position)),
+            style = time,
+            color = ObiSilk.Silk,
+            textAlign = TextAlign.End,
+            modifier = Modifier.widthIn(min = 52.dp),
+        )
+    }
+}
+
+@Composable
+private fun ControlButton(icon: ImageVector, label: String, size: Dp = 24.dp, onClick: () -> Unit) {
+    IconButton(onClick = onClick, modifier = Modifier.size(48.dp).semantics { contentDescription = label }) {
+        Icon(icon, contentDescription = null, tint = ObiSilk.Silk, modifier = Modifier.size(size))
+    }
+}
+
+/** Back or forward 10 s: the turning arrow at 28 dp with its 10 inside. */
+@Composable
+private fun StepButton(icon: ImageVector, label: String, onClick: () -> Unit) {
+    IconButton(onClick = onClick, modifier = Modifier.size(48.dp).semantics { contentDescription = label }) {
+        Box(Modifier.size(28.dp)) {
+            Icon(icon, contentDescription = null, tint = ObiSilk.Silk, modifier = Modifier.fillMaxSize())
+            Text(
+                "10",
+                style = TextStyle(fontSize = 8.5.sp, lineHeight = 10.sp, fontWeight = FontWeight.Bold),
+                color = ObiSilk.Silk,
+                modifier = Modifier.align(Alignment.Center).offset(y = 2.dp),
+            )
+        }
+    }
+}
+
+/**
+ * The Expressive slider with the board's track: 16 dp, 24 while touched, amber up to the handle,
+ * #727892 after it with the opening and the ending in haze, 2 dp gaps between the stretches and
+ * 6 dp either side of a 4 × 44 amber handle. While it moves the seek line follows the finger and
+ * mpv seeks by keyframes; on release it seeks exactly.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SeekSlider(model: PlayerModel, preview: SeekPreview?, modifier: Modifier) {
+    val haptics = LocalHapticFeedback.current
+    val touch = remember { MutableInteractionSource() }
+    val pressed by touch.collectIsPressedAsState()
+    val dragged by touch.collectIsDraggedAsState()
+    val active = pressed || dragged
+    val trackHeight by animateDpAsState(if (active) 24.dp else 16.dp, Motion.quick(), label = "track") // i18n-skip
+    val handleWidth by animateDpAsState(if (active) 2.dp else 4.dp, label = "handle") // i18n-skip
+    val duration = model.duration?.takeIf { it > 0 } ?: 1.0
+    // The stretches as a value that changes only with the chapters or the length, not with each
+    // tick of the position, so the tick below is not started again and the track can skip.
+    val segments by remember(model) { derivedStateOf { model.segments } }
+    // A tick each time the stretch under the handle changes while it is dragged.
+    LaunchedEffect(segments) {
+        snapshotFlow { segments.firstOrNull { model.position >= it.start && model.position < it.end }?.kind }
+            .distinctUntilChanged()
+            .drop(1)
+            .collect { if (model.scrubbing != null) haptics.performHapticFeedback(HapticFeedbackType.SegmentTick) }
+    }
+    val positionLabel = stringResource(R.string.player_position)
+    val previousChapter = stringResource(R.string.player_chapter_previous)
+    val nextChapter = stringResource(R.string.player_chapter_next)
+    val label = buildString {
+        append(Strings.playerPositionState(LocalContext.current, PlayerClock.label(model.position), PlayerClock.label(duration)))
+        model.chapter(model.position)?.let { append(", $it") }
+    }
+    val state = remember(duration) { SliderState(0f, 0, 0f..duration.toFloat()) }
+    // The line follows mpv, but for while the finger is on it.
+    SideEffect {
+        if (!state.isDragging && model.scrubbing == null) state.value = model.position.toFloat().coerceIn(0f, duration.toFloat())
+    }
+    // The pair over the handle while it moves: the frame there, and its time and stretch (T4).
+    val scrubbing = model.scrubbing
+    var sliderLeft by remember { mutableFloatStateOf(0f) }
+    var sliderWidth by remember { mutableIntStateOf(0) }
+    val density = LocalDensity.current
+    // Precision scrubbing: the finger 48 dp above the line moves it at half speed, 96 dp above at
+    // a quarter. The line keeps the finger's travel since the last move, scaled.
+    var fingerY by remember { mutableFloatStateOf(0f) }
+    var lastRaw by remember { mutableStateOf<Float?>(null) }
+    val above = with(density) { -fingerY.toDp() }
+    val quarterSpeed = stringResource(R.string.player_scrub_quarter)
+    val halfSpeed = stringResource(R.string.player_scrub_half)
+    val scale = when {
+        above >= 96.dp -> 0.25f
+        above >= 48.dp -> 0.5f
+        else -> 1f
+    }
+    Box(modifier.onGloballyPositioned { sliderLeft = it.positionInWindow().x; sliderWidth = it.size.width }) {
+    if (active && scrubbing != null) {
+        val handle = (scrubbing / duration).toFloat().coerceIn(0f, 1f) * sliderWidth
+        val window = with(density) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
+        val pairWidth = with(density) { 160.dp.toPx() }
+        val min = with(density) { 48.dp.toPx() }
+        val left = (sliderLeft + handle - pairWidth / 2).coerceIn(min, maxOf(min, window - min - pairWidth)) - sliderLeft
+        PreviewPair(
+            frame = preview?.frame,
+            label = buildString {
+                append(PlayerClock.label(scrubbing))
+                when (scale) {
+                    0.25f -> append(" · ").append(quarterSpeed)
+                    0.5f -> append(" · ").append(halfSpeed)
+                    else -> model.chapter(scrubbing)?.takeIf { model.segments.any { s -> s.kind != SeekSegment.Kind.Plain && scrubbing >= s.start && scrubbing < s.end } }
+                        ?.let { append(" · $it") }
+                }
+            },
+            // Measured free of the slider's 48 dp, and set with its foot 12 dp above the handle's top.
+            modifier = Modifier.layout { measurable, _ ->
+                val pair = measurable.measure(Constraints())
+                layout(0, 0) { pair.place(left.roundToInt(), (2.dp - 12.dp).roundToPx() - pair.height) }
+            },
+        )
+    }
+    Slider(
+        state = state,
+        onValueChange = { raw ->
+            val previous = lastRaw
+            val value = if (previous == null || scale == 1f) raw else (state.value + (raw - previous) * scale).coerceIn(0f, duration.toFloat())
+            lastRaw = raw
+            state.value = value
+            model.scrub(value.toDouble())
+            model.previewSource?.let { source -> preview?.show(value.toDouble(), source) }
+        },
+        onValueChangeFinished = {
+            lastRaw = null
+            model.endScrub()
+        },
+        interactionSource = touch,
+        modifier = Modifier.fillMaxWidth().height(48.dp).pointerInput(Unit) {
+            // Where the finger is above the line, read as it passes and never taken from the slider.
+            awaitPointerEventScope {
+                while (true) {
+                    val event = awaitPointerEvent(androidx.compose.ui.input.pointer.PointerEventPass.Initial)
+                    val change = event.changes.firstOrNull() ?: continue
+                    fingerY = if (change.pressed) change.position.y else 0f
+                }
+            }
+        }.semantics {
+            contentDescription = positionLabel
+            stateDescription = label
+            // The adjust gesture moves 10 s like the buttons, not 1 % of the file; the touch drag
+            // keeps its own continuous steps.
+            progressBarRangeInfo = ProgressBarRangeInfo(
+                model.position.toFloat().coerceIn(0f, duration.toFloat()),
+                0f..duration.toFloat(),
+                maxOf(0, (duration / ADJUST_STEP).toInt() - 1),
+            )
+            setProgress { target ->
+                model.seekTo(target.toDouble().coerceIn(0.0, duration))
+                true
+            }
+            val marks = model.chapters.map { it.time }.sorted()
+            if (marks.isNotEmpty()) {
+                customActions = listOf(
+                    CustomAccessibilityAction(previousChapter) {
+                        // Within the first 3 s of a chapter, the one before; else this one's start.
+                        model.seekTo(marks.lastOrNull { it < model.position - 3.0 } ?: 0.0)
+                        true
+                    },
+                    CustomAccessibilityAction(nextChapter) {
+                        marks.firstOrNull { it > model.position }?.let { model.seekTo(it) }
+                        true
+                    },
+                )
+            }
+        },
+        thumb = {
+            Box(Modifier.size(handleWidth, 44.dp).background(ObiSilk.Amber, RoundedCornerShape(2.dp)))
+        },
+        track = { SeekTrack(it, segments, model.buffered, duration, trackHeight, model.provisional) },
+    )
+    }
+}
+
+/** The 160 × 90 frame at corners 12 with a silk outline at 24 %, and under it, 4 apart, the time pill. */
+@Composable
+private fun PreviewPair(frame: android.graphics.Bitmap?, label: String, modifier: Modifier) {
+    Column(modifier.width(160.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(
+            Modifier
+                .size(160.dp, 90.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(ObiSilk.Ground)
+                .border(1.dp, ObiSilk.Silk.copy(alpha = 0.24f), RoundedCornerShape(12.dp)),
+        ) {
+            if (frame != null) {
+                val image = remember(frame) { frame.asImageBitmap() }
+                Image(image, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            }
+        }
+        Spacer(Modifier.height(4.dp))
+        Box(
+            Modifier.height(24.dp).clip(RoundedCornerShape(12.dp)).background(ObiSilk.Raised).padding(horizontal = 10.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(label, style = MaterialTheme.typography.labelMedium.tabular(), color = ObiSilk.Silk, maxLines = 1)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SeekTrack(state: SliderState, segments: List<SeekSegment>, buffered: List<TimeRange>, duration: Double, height: Dp, provisional: Pair<Double, Double>? = null) {
+    Canvas(
+        Modifier.fillMaxWidth().height(height).drawWithContent {
+            drawContent()
+            // The stretch being marked, at half water, on top of whatever the line shows there.
+            if (provisional != null) {
+                val from = (provisional.first / duration).toFloat().coerceIn(0f, 1f) * size.width
+                val to = (provisional.second / duration).toFloat().coerceIn(0f, 1f) * size.width
+                if (to - from >= 1f) drawRoundRect(ObiSilk.Water.copy(alpha = 0.5f), Offset(from, 0f), Size(to - from, size.height), CornerRadius(2.dp.toPx()))
+            }
+        },
+    ) {
+        val fraction = state.coercedValueAsFraction
+        val gap = 6.dp.toPx() + 2.dp.toPx()
+        val seam = 2.dp.toPx()
+        val outer = (height / 2).toPx()
+        val inner = 2.dp.toPx()
+        val handle = fraction * size.width
+        val playedEnd = handle - gap
+        // The opening and ending show in water on the played part too, on top of the amber.
+        val marks = segments.filter { it.kind != SeekSegment.Kind.Plain }
+            .map { (it.start / duration).toFloat() * size.width to (it.end / duration).toFloat() * size.width }
+        if (playedEnd > 0) piece(0f, playedEnd, ObiSilk.Amber, outer, inner, marks, ObiSilk.Water)
+        var at = handle + gap
+        if (at >= size.width) return@Canvas
+        // After the handle: the plain stretches and the marked ones, each its own piece.
+        val stretches = segments.ifEmpty { listOf(SeekSegment(SeekSegment.Kind.Plain, 0.0, duration)) }
+        val pieces = stretches.mapNotNull { segment ->
+            val start = maxOf(at, (segment.start / duration).toFloat() * size.width)
+            val end = (segment.end / duration).toFloat() * size.width
+            if (end - start < 1f) null else Triple(start, end, segment.kind)
+        }
+        pieces.forEachIndexed { i, (start, end, kind) ->
+            val last = i == pieces.lastIndex
+            val left = if (i == 0) start else start + seam / 2
+            val right = if (last) size.width else end - seam / 2
+            if (right - left < 1f) return@forEachIndexed
+            val color = if (kind == SeekSegment.Kind.Plain) ObiSilk.Edge else ObiSilk.Water
+            // What is buffered shows in silk on the plain stretches ahead of the handle.
+            val held = if (kind == SeekSegment.Kind.Plain) buffered.map { (it.start / duration).toFloat() * size.width to (it.end / duration).toFloat() * size.width } else emptyList()
+            piece(left, right, color, inner, if (last) outer else inner, held)
+            at = end
+        }
+    }
+}
+
+/** One stretch of the track, its corners [left] and [right] round, with the [held] parts of it in [heldColor]. */
+private fun DrawScope.piece(
+    start: Float,
+    end: Float,
+    color: Color,
+    left: Float,
+    right: Float,
+    held: List<Pair<Float, Float>> = emptyList(),
+    heldColor: Color = ObiSilk.Silk.copy(alpha = 0.3f),
+) {
+    val path = Path().apply {
+        addRoundRect(
+            RoundRect(
+                start, 0f, end, size.height,
+                topLeftCornerRadius = CornerRadius(left), bottomLeftCornerRadius = CornerRadius(left),
+                topRightCornerRadius = CornerRadius(right), bottomRightCornerRadius = CornerRadius(right),
+            ),
+        )
+    }
+    drawPath(path, color)
+    if (held.isNotEmpty()) {
+        clipPath(path) {
+            for ((from, to) in held) {
+                if (to > start && from < end) drawRect(heldColor, Offset(maxOf(from, start), 0f), Size(minOf(to, end) - maxOf(from, start), size.height))
+            }
+        }
+    }
+}
+
+/** The step TalkBack's adjust gesture moves the seek line by, as far as the 10 s buttons. */
+private const val ADJUST_STEP = 10.0

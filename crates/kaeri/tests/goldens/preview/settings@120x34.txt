@@ -1,0 +1,34 @@
+Kaeri                                                                                              plugins ·  ·  kitsu ○
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ▸  Home                   │  Appearance  ──────────────────────────────────────────────────────────────────────────
+  ▤  Calendar               │  ▌ Theme                       Adaptive
+  ▦  Seasonal               │    Motion                      On
+  /  Search                 │    Titles                      AniList's choice
+  ▥  Library                │    Play trailers               Always
+  ↓  Downloads              │
+  ◇  Sources                │  Playback  ────────────────────────────────────────────────────────────────────────────
+  ◎  Accounts               │    Audio                       Subbed
+▌ ≡  Settings               │    Quality                     1080p
+  ⇄  Together               │    Subtitles                   eng
+                            │    Counts as watched at        85%
+                            │    Auto-play next              On
+                            │    Skip opening automatically  On
+                            │    Skip recaps automatically   Off
+                            │    Ask about skips by hand     On
+                            │    Share skips with AniSkip    Off
+                            │    Skip filler automatically   Off
+                            │    Mark opening and ending     On
+                            │    Show skip button            On
+                            │    Start in full screen        Off
+                            │    Upscaling                   Natural · ArtCNN
+                            │    Player interface            Kaeri
+                            │    Night mode                  Off
+                            │    Size                        100%
+                            │    Font                        default
+                            │    Text colour                 white
+                            │    Edge                        outline
+                            │
+                            │
+                            │
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+plugins · Subbed · 1080p                                                                              ←→ change   ? keys

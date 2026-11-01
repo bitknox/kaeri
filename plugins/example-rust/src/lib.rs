@@ -1,0 +1,245 @@
+//! A reference provider plugin.
+//!
+//! This exists to be read. It exercises every part of the ABI — the manifest, the lent `fetch`,
+//! the lent regex, the error vocabulary — so the shape of a real provider is visible without
+//! needing a volatile live source to be reachable.
+//!
+//! It talks to `api.example`, a made-up host that stands for a source's API.
+//! A reference implementation whose tests fail because someone else's site changed its markup
+//! teaches nothing, so it never names a real one. Point it at a fake server to see it search.
+//!
+//! **The thing to notice:** there is no HTTP client here, no TLS, no async runtime. The whole
+//! plugin is a parser. `host::fetch` does the networking, which is why this compiles to a few
+//! kilobytes and leaves the allowlist and rate limiting to the host.
+
+#[allow(warnings)]
+mod bindings {
+    wit_bindgen::generate!({
+        path: "../../wit/kaeri-provider.wit",
+        world: "plugin",
+    });
+}
+
+use bindings::{
+    exports::kaeri::provider::provider::{
+        Episode, Guest, Manifest, MediaStream, ProviderError, SearchHit, SourceCandidate,
+        Subtitle,
+    },
+    kaeri::provider::host,
+};
+
+struct Component;
+
+/// The one host this plugin may reach. Declared here and enforced by the host, so asking for more
+/// than it needs would be visible in `kaeri plugin inspect`.
+const ALLOWED_HOST: &str = "api.example";
+
+impl Guest for Component {
+    fn describe() -> Manifest {
+        Manifest {
+            id: "example-rust".into(),
+            display_name: "Example (Rust)".into(),
+            version: env!("CARGO_PKG_VERSION").into(),
+            allowed_hosts: vec![ALLOWED_HOST.into()],
+            translation_types: vec!["sub".into(), "dub".into()],
+            // Open strings a future host can gate optional treatment on. Nothing to declare —
+            // which is the normal case, and what keeps declaring one meaningful.
+            capabilities: vec![],
+        }
+    }
+
+    fn search(query: String, translation: String) -> Result<Vec<SearchHit>, ProviderError> {
+        host::log("debug", &format!("search {query:?} ({translation})"));
+
+        // A real provider would request the site's search endpoint. Here the query is echoed
+        // back, which still exercises the whole round trip: request construction, the host's
+        // allowlist check, the response body arriving as bytes.
+        let body = get(&format!("https://{ALLOWED_HOST}/get?q={}", encode(&query)))?;
+
+        // The lent regex, rather than a bundled one. A parser that had to carry its own regex
+        // engine would be an order of magnitude larger than this whole component.
+        let echoed = host::regex_captures(r#""q":\s*"([^"]*)""#, &body)
+            .into_iter()
+            .next()
+            .and_then(|groups| groups.into_iter().nth(1))
+            .ok_or_else(|| ProviderError::Parse("no query echoed back".into()))?;
+
+        Ok(vec![SearchHit {
+            id: format!("example:{echoed}"),
+            title: format!("Echo of {echoed}"),
+            // Alternate spellings widen the match surface; sources romanise inconsistently
+            // enough that the primary title alone misses real matches.
+            synonyms: vec![format!("{echoed} (echo)")],
+            episode_count: Some(3),
+            year: Some(2026),
+            // A match gate, not a label: `tv` here stops a series search landing on a movie.
+            format: Some("tv".into()),
+        }])
+    }
+
+    fn list_episodes(id: String, _translation: String) -> Result<Vec<Episode>, ProviderError> {
+        // `not-found` rather than an empty list: the distinction is load-bearing in the host,
+        // where `not-found` deliberately does *not* trigger failover to the next provider.
+        let slug = id.strip_prefix("example:").ok_or(ProviderError::NotFound)?;
+        host::log("debug", &format!("episodes for {slug}"));
+
+        Ok((1..=3)
+            .map(|n| Episode {
+                number: n.to_string(),
+                title: Some(format!("{slug} — part {n}")),
+                duration_secs: Some(1_440),
+                description: Some(format!(
+                    "In which {slug} is echoed for the {n}th time, and nothing else happens."
+                )),
+                thumbnail: None,
+                air_date: Some(format!("2026-01-{n:02}")),
+                // `None` would mean "no claim"; this catalogue positively claims canon.
+                filler: Some(false),
+            })
+            .collect())
+    }
+
+    fn resolve(
+        id: String,
+        episode: String,
+        translation: String,
+    ) -> Result<Vec<MediaStream>, ProviderError> {
+        let slug = id.strip_prefix("example:").ok_or(ProviderError::NotFound)?;
+
+        // A real plugin reads this from the catalogue's response; the example keeps it fixed so
+        // it needs no network. A source that wraps its URLs in a cipher is the plugin's own
+        // business now: the ABI lends no crypto, so such a plugin brings a small library.
+        let url = STREAM_URL.to_owned();
+
+        // The lent settings: an optional mirror override from
+        // `[providers.plugins.settings.example-rust]`. The pattern to copy is the fallback —
+        // a plugin must work with every setting unset, because most users never write any.
+        let cdn = host::config_get("cdn").unwrap_or_else(|| "cdn.example.test".into());
+
+        host::log("info", &format!("resolved {slug} ep {episode} ({translation}) via {cdn}"));
+
+        Ok(vec![MediaStream {
+            url: url.replace("cdn.example.test", &cdn),
+            kind: "hls".into(),
+            quality: Some(1080),
+            // Referer-locked CDNs return 403 without this, which is why headers travel with the
+            // stream rather than being the player's guess.
+            headers: vec![("referer".into(), format!("https://{ALLOWED_HOST}/"))],
+            subtitles: vec![Subtitle {
+                language: "eng".into(),
+                url: format!("https://{ALLOWED_HOST}/anything/{slug}.vtt"),
+                hard: false,
+                // The URL above happens to end in `.vtt`; stating it anyway shows the field a
+                // source with API-shaped subtitle URLs must set, or the player has to guess.
+                format: Some("vtt".into()),
+            }],
+            // This source streams only. Absent is how the download queue knows to say so.
+            download_source: None,
+            pick_note: None,
+            file_index: None,
+        }])
+    }
+
+    /// The selectable releases for an episode, for the Sources overlay.
+    ///
+    /// Two candidates so the overlay has an actual choice to show. A source that resolves to
+    /// exactly one stream should return an empty list instead — that is the honest answer,
+    /// not an error.
+    fn sources(
+        id: String,
+        episode: String,
+        _translation: String,
+    ) -> Result<Vec<SourceCandidate>, ProviderError> {
+        let slug = id.strip_prefix("example:").ok_or(ProviderError::NotFound)?;
+        Ok(vec![
+            SourceCandidate {
+                id: format!("{slug}:{episode}:1080"),
+                title: format!("[Echo] {slug} - {episode} (1080p)"),
+                quality: Some(1080),
+                label: None,
+                size: Some("1.4 GiB".into()),
+                dual_audio: false,
+                dubbed: false,
+            },
+            SourceCandidate {
+                id: format!("{slug}:{episode}:720"),
+                title: format!("[Echo] {slug} - {episode} (720p)"),
+                quality: Some(720),
+                label: None,
+                size: Some("700 MiB".into()),
+                dual_audio: false,
+                dubbed: false,
+            },
+        ])
+    }
+
+    /// Resolve one candidate from `sources` by its id.
+    ///
+    /// Never falls back to the automatic pick — substituting another stream for the one the
+    /// user chose would silently undo the choice, so an unrecognised id is `not-found`.
+    fn resolve_source(
+        id: String,
+        episode: String,
+        translation: String,
+        source_id: String,
+    ) -> Result<Vec<MediaStream>, ProviderError> {
+        let quality: u32 = source_id
+            .rsplit(':')
+            .next()
+            .and_then(|q| q.parse().ok())
+            .ok_or(ProviderError::NotFound)?;
+        let mut streams = Self::resolve(id, episode, translation)?;
+        for stream in &mut streams {
+            stream.quality = Some(quality);
+        }
+        Ok(streams)
+    }
+}
+
+/// The stream a catalogue would name for any episode, on a host that does not exist.
+const STREAM_URL: &str = "https://cdn.example.test/master.m3u8";
+
+/// A GET through the host, with the host's failures translated into ours.
+fn get(url: &str) -> Result<String, ProviderError> {
+    let response = host::fetch(&host::HttpRequest {
+        method: "GET".into(),
+        url: url.into(),
+        headers: vec![("accept".into(), "application/json".into())],
+        body: None,
+    })
+    .map_err(|error| match error {
+        // A denial means the manifest and the code disagree — a bug in the plugin, not a site
+        // being down, so it is reported as such rather than as `blocked`.
+        host::HostError::Denied(m) => ProviderError::Other(format!("denied by the host: {m}")),
+        host::HostError::Timeout => ProviderError::Blocked("timed out".into()),
+        host::HostError::Transport(m) => ProviderError::Blocked(m),
+    })?;
+
+    match response.status {
+        200..=299 => String::from_utf8(response.body)
+            .map_err(|_| ProviderError::Parse("response was not utf-8".into())),
+        404 => Err(ProviderError::NotFound),
+        // The signature source failure, and the one the registry fails over on.
+        403 | 429 => Err(ProviderError::Blocked(format!("status {}", response.status))),
+        status => Err(ProviderError::Other(format!("unexpected status {status}"))),
+    }
+}
+
+/// Percent-encode a query value.
+///
+/// Hand-rolled because pulling a URL crate into a component to escape one parameter would be
+/// most of the binary.
+fn encode(input: &str) -> String {
+    let mut out = String::with_capacity(input.len() + 8);
+    for byte in input.bytes() {
+        match byte {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                out.push(byte as char);
+            }
+            _ => out.push_str(&format!("%{byte:02X}")),
+        }
+    }
+    out
+}
+
+bindings::export!(Component with_types_in bindings);

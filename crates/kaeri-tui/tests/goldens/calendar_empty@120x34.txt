@@ -1,0 +1,140 @@
+Kaeri                                                                                          plugins ●  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ▸  Home                   │         ▄
+▌ ▤  Calendar               │      ▄▀▀▀▀▀▄
+  ▦  Seasonal               │      ▀▀▀▀▀▀▀▀
+  /  Search                 │    ▀▄▀▀▀▀▀▀▀ ▄▄
+  ▥  Library                │    ▀▀▀▀▀▀▀   ▀▀
+  ↓  Downloads              │    ▀▀▀▀▀▀▀▀▄
+  ◇  Sources                │    ▀▀▀▀▀▀▀▀▀▄
+  ◎  Accounts               │    ▀ ▀▀   ▀▀
+  ≡  Settings               │
+  ⇄  Together               │  Nothing here yet
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+plugins · Subbed · 1080p                                                                                          ? keys
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c95-103 fg=state
+r00 c104-105 fg=text-dim
+r00 c106-106 fg=rule
+r00 c107-108 fg=text-dim
+r00 c109-119 fg=state
+r01 c00-119 fg=rule
+r02 c02-02 fg=text-dim
+r02 c05-08 fg=text-dim
+r02 c28-28 fg=rule
+r02 c38-38 fg=#e8e2d4
+r03 c00-00 fg=text-dim
+r03 c02-02 fg=text
+r03 c05-12 fg=text mod=BOLD
+r03 c28-28 fg=rule
+r03 c35-35 fg=#c6bea9
+r03 c36-36 fg=#c6bea9 bg=#e8e2d4
+r03 c37-39 fg=#e8e2d4 bg=#e8e2d4
+r03 c40-40 fg=#c6bea9 bg=#e8e2d4
+r03 c41-41 fg=#c6bea9
+r04 c02-02 fg=text-dim
+r04 c05-12 fg=text-dim
+r04 c28-28 fg=rule
+r04 c35-35 fg=#e8e2d4 bg=#efcfac
+r04 c36-36 fg=#efcfac bg=#232842
+r04 c37-38 fg=#efcfac bg=#efcfac
+r04 c39-39 fg=#c6bea9 bg=#c6bea9
+r04 c40-41 fg=#e8e2d4 bg=#e8e2d4
+r04 c42-42 fg=#c6bea9 bg=#c6bea9
+r05 c02-02 fg=text-dim
+r05 c05-10 fg=text-dim
+r05 c28-28 fg=rule
+r05 c33-33 fg=#dff5fb bg=state
+r05 c34-34 fg=obi
+r05 c35-35 fg=#d0a883 bg=obi
+r05 c36-37 fg=#efcfac bg=obi
+r05 c38-38 fg=#d0a883 bg=obi
+r05 c39-39 fg=#e8e2d4 bg=obi
+r05 c40-40 fg=#e8e2d4 bg=#e8e2d4
+r05 c41-41 fg=#c6bea9 bg=#c6bea9
+r05 c43-43 fg=#c57c2c
+r05 c44-44 fg=obi
+r06 c02-02 fg=text-dim
+r06 c05-11 fg=text-dim
+r06 c28-28 fg=rule
+r06 c33-33 fg=#8a6844 bg=#8a6844
+r06 c34-34 fg=#c57c2c bg=#68729e
+r06 c35-38 fg=obi bg=#464e7c
+r06 c39-39 fg=#c57c2c bg=#2e345c
+r06 c43-43 fg=#c57c2c
+r06 c44-44 fg=obi
+r07 c02-02 fg=text-dim
+r07 c05-13 fg=text-dim
+r07 c28-28 fg=rule
+r07 c33-33 fg=#8a6844 bg=#8a6844
+r07 c34-34 fg=#68729e bg=#68729e
+r07 c35-39 fg=#464e7c bg=#464e7c
+r07 c40-40 fg=#2e345c bg=#464e7c
+r07 c41-41 fg=#2e345c
+r08 c02-02 fg=text-dim
+r08 c05-11 fg=text-dim
+r08 c28-28 fg=rule
+r08 c33-33 fg=#8a6844 bg=#8a6844
+r08 c34-34 fg=#68729e bg=#68729e
+r08 c35-40 fg=#464e7c bg=#464e7c
+r08 c41-41 fg=#2e345c bg=#464e7c
+r08 c42-42 fg=#2e345c
+r09 c02-02 fg=text-dim
+r09 c05-12 fg=text-dim
+r09 c28-28 fg=rule
+r09 c33-33 fg=#8a6844
+r09 c35-36 fg=#232842
+r09 c40-41 fg=#232842
+r10 c02-02 fg=text-dim
+r10 c05-12 fg=text-dim
+r10 c28-28 fg=rule
+r11 c02-02 fg=text-dim
+r11 c05-12 fg=text-dim
+r11 c28-28 fg=rule
+r11 c31-46 fg=text-dim
+r12 c28-28 fg=rule
+r13 c28-28 fg=rule
+r14 c28-28 fg=rule
+r15 c28-28 fg=rule
+r16 c28-28 fg=rule
+r17 c28-28 fg=rule
+r18 c28-28 fg=rule
+r19 c28-28 fg=rule
+r20 c28-28 fg=rule
+r21 c28-28 fg=rule
+r22 c28-28 fg=rule
+r23 c28-28 fg=rule
+r24 c28-28 fg=rule
+r25 c28-28 fg=rule
+r26 c28-28 fg=rule
+r27 c28-28 fg=rule
+r28 c28-28 fg=rule
+r29 c28-28 fg=rule
+r30 c28-28 fg=rule
+r31 c28-28 fg=rule
+r32 c00-119 fg=rule
+r33 c00-23 fg=text-dim
+r33 c114-114 fg=text
+r33 c115-119 fg=text-dim

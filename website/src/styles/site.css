@@ -1,0 +1,725 @@
+/* Kaeri's site: tokens, type, the top bar, the footer and the parts every page shares. The two themes
+   are `:root` (dark, the default before a theme is known) and `[data-theme='light']`. The docs' own
+   variables are mapped onto these in docs.css, so Starlight and the custom pages read one setting. */
+
+/* Only the headings use Zen, at 500 and in Latin and Cyrillic; the Japanese subsets would add
+   240 font faces to every page's stylesheet. */
+@import '@fontsource/zen-kaku-gothic-new/latin-500.css';
+@import '@fontsource/zen-kaku-gothic-new/latin-ext-500.css';
+@import '@fontsource/zen-kaku-gothic-new/cyrillic-500.css';
+
+:root {
+	color-scheme: dark;
+	--ani-ground: #10131f;
+	--ani-text: #e4e0d6;
+	--ani-dim: #9298b5;
+	--ani-rule: #434653;
+	--ani-rule-faint: #2f3242;
+	--ani-raised: #161a2e;
+	--ani-well: #161a2e;
+	--ani-band: #222638;
+	--ani-band-green: #1a2421;
+	--ani-band-red: #411e22;
+	--ani-band-plum: #2c1f26;
+	--ani-band-blue: #1b2045;
+	--ani-rule-violet: #7781c5;
+	--ani-rule-sky: #a9c7d6;
+	--ani-bezel: #161a2e;
+	--ani-bezel-edge: #434653;
+	--ani-crop-a: #10131f;
+	--ani-crop-b: #161a2e;
+	--ani-obi: #f2a64b;
+	--ani-obi-hover: #f5b467;
+	--ani-on-obi: #161a2e;
+	--ani-link-hover: #f5b467;
+	--ani-focus: #f5b467;
+	--ani-foot: #161a2e;
+	--ani-foot-text: #e4e0d6;
+	--ani-foot-dim: #9298b5;
+
+	--ani-font-display: 'Zen Kaku Gothic New', 'Hiragino Kaku Gothic ProN', sans-serif;
+	--ani-font-ui: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, Roboto, sans-serif;
+	--ani-font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+	--ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+	--t-fast: 120ms;
+	--t-base: 200ms;
+}
+
+:root[data-theme='light'] {
+	color-scheme: light;
+	--ani-ground: #f0ede4;
+	--ani-text: #1e2033;
+	--ani-dim: #4f546e;
+	--ani-rule: #c2c0bd;
+	--ani-rule-faint: #d7d4cf;
+	--ani-raised: #e9e6de;
+	--ani-well: #e3e1d9;
+	--ani-band: #e3e1d9;
+	--ani-band-green: #d7eadf;
+	--ani-band-red: #ead7d8;
+	--ani-band-plum: #ecdde0;
+	--ani-band-blue: #dadef0;
+	--ani-rule-violet: #5e69ba;
+	--ani-rule-sky: #5e9cba;
+	--ani-bezel: #1e2033;
+	--ani-bezel-edge: #1e2033;
+	--ani-on-obi: #1e2033;
+	--ani-link-hover: #7a4309;
+	--ani-focus: #7a4309;
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html {
+	background: var(--ani-ground);
+	-webkit-text-size-adjust: 100%;
+}
+
+body.k-body {
+	margin: 0;
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	background: var(--ani-ground);
+	color: var(--ani-text);
+	font-family: var(--ani-font-ui);
+	font-size: 17px;
+	line-height: 1.5;
+	-webkit-font-smoothing: antialiased;
+}
+
+.k-body main {
+	flex: 1;
+}
+
+.k-body img {
+	max-width: 100%;
+	height: auto;
+}
+
+.k-body a {
+	color: var(--ani-text);
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 3px;
+	text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+	transition: color var(--t-fast) var(--ease), text-decoration-color var(--t-fast) var(--ease);
+}
+
+.k-body a:hover {
+	color: var(--ani-link-hover);
+	text-decoration-color: currentColor;
+}
+
+:focus-visible {
+	outline: 2px solid var(--ani-focus);
+	outline-offset: 3px;
+	transition: none;
+}
+
+.sr-only,
+.visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+.skip-link {
+	position: absolute;
+	left: 16px;
+	top: -60px;
+	z-index: 100;
+	padding: 10px 16px;
+	background: var(--ani-ground);
+	color: var(--ani-text);
+	border: 1px solid var(--ani-rule);
+	border-radius: 8px;
+}
+
+.skip-link:focus {
+	top: 8px;
+}
+
+/* ── Type ─────────────────────────────────────────────────────────────── */
+
+.k-body h1,
+.k-body h2 {
+	margin: 0;
+	font-family: var(--ani-font-display);
+	font-weight: 500;
+	letter-spacing: -0.015em;
+	text-wrap: balance;
+}
+
+.k-body h1 {
+	font-size: clamp(40px, 5vw + 12px, 64px);
+	line-height: 1.06;
+}
+
+.k-body h2 {
+	font-size: clamp(32px, 3vw + 14px, 52px);
+	line-height: 1.08;
+}
+
+.k-body h3 {
+	margin: 0;
+	font-size: 20px;
+	font-weight: 600;
+}
+
+.k-lede {
+	margin: 18px 0 0;
+	font-size: clamp(17px, 1vw + 12px, 20px);
+	line-height: 1.45;
+	color: var(--ani-dim);
+	text-wrap: pretty;
+}
+
+.k-dim {
+	color: var(--ani-dim);
+}
+
+.k-body code {
+	font-family: var(--ani-font-mono);
+	font-size: 0.9em;
+	padding: 1px 5px;
+	border-radius: 4px;
+	background: var(--ani-band);
+}
+
+.k-body pre {
+	margin: 18px 0 0;
+	padding: 12px 14px;
+	border-radius: 8px;
+	background: var(--ani-raised);
+	font-family: var(--ani-font-mono);
+	font-size: 14px;
+	line-height: 1.6;
+	color: var(--ani-text);
+	overflow-x: auto;
+}
+
+.k-body pre code {
+	padding: 0;
+	background: none;
+	font-size: inherit;
+}
+
+/* ── Buttons and the arrow link ───────────────────────────────────────── */
+
+.k-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	height: 44px;
+	padding: 0 22px;
+	border: 1px solid var(--ani-dim);
+	border-radius: 999px;
+	background: none;
+	color: var(--ani-text);
+	font: inherit;
+	font-size: 15px;
+	font-weight: 600;
+	text-decoration: none;
+	cursor: pointer;
+	transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+
+.k-body a.k-btn {
+	text-decoration: none;
+}
+
+.k-body a.k-btn:hover {
+	border-color: var(--ani-link-hover);
+}
+
+.k-btn-primary,
+.k-body a.k-btn-primary {
+	border-color: var(--ani-obi);
+	background: var(--ani-obi);
+	color: var(--ani-on-obi);
+}
+
+.k-body a.k-btn-primary:hover {
+	background: var(--ani-obi-hover);
+	border-color: var(--ani-obi-hover);
+	color: var(--ani-on-obi);
+}
+
+.k-btn-lg {
+	height: 48px;
+	padding: 0 26px;
+	font-size: 17px;
+}
+
+.k-arrow {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.k-arrow svg {
+	flex: none;
+}
+
+/* ── The top bar ──────────────────────────────────────────────────────── */
+
+.site-header {
+	position: relative;
+	width: 100%;
+	max-width: 1344px;
+	margin: 0 auto;
+	padding: 0 32px;
+	height: 64px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 24px;
+	font-family: var(--ani-font-ui);
+	color: var(--ani-text);
+}
+
+.site-brand,
+.k-body .site-brand {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	color: var(--ani-text);
+	text-decoration: none;
+}
+
+.site-brand img {
+	width: 28px;
+	height: 28px;
+	border-radius: 7px;
+	image-rendering: pixelated;
+}
+
+.site-brand span {
+	font-family: var(--ani-font-display);
+	font-size: 20px;
+	font-weight: 500;
+}
+
+.bar-right {
+	display: flex;
+	align-items: center;
+	gap: 20px;
+}
+
+.bar-nav {
+	display: flex;
+	gap: 28px;
+	font-size: 15px;
+}
+
+.bar-nav a {
+	padding: 6px 0;
+	color: var(--ani-text);
+	text-decoration: none;
+}
+
+.bar-nav a[aria-current='page'] {
+	text-decoration: underline;
+	text-decoration-thickness: 2px;
+	text-underline-offset: 8px;
+}
+
+.bar-search site-search,
+.bar-search {
+	display: flex;
+}
+
+.site-header site-search button[data-open-modal],
+.bar-search-fallback {
+	height: 40px;
+	width: 188px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 0 10px 0 12px;
+	border: 1px solid var(--ani-rule-faint);
+	border-radius: 20px;
+	background: var(--ani-raised);
+	color: var(--ani-dim);
+	font: inherit;
+	font-size: 14px;
+	cursor: pointer;
+	transition: border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+
+.site-header site-search button[data-open-modal]:hover {
+	border-color: var(--ani-dim);
+	color: var(--ani-text);
+}
+
+.site-header site-search button[data-open-modal] > span {
+	flex: 1;
+	text-align: left;
+}
+
+.site-header site-search button[data-open-modal] svg {
+	width: 15px;
+	height: 15px;
+}
+
+.site-header site-search kbd {
+	margin-inline-start: auto;
+	display: inline-flex;
+	gap: 0;
+	font-family: var(--ani-font-mono);
+	font-size: 12px;
+	padding: 1px 6px;
+	border: 1px solid var(--ani-rule-faint);
+	border-radius: 5px;
+	background: none;
+	color: var(--ani-dim);
+}
+
+.site-header site-search kbd kbd {
+	border: 0;
+	padding: 0;
+}
+
+.bar-icon {
+	width: 44px;
+	height: 44px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	border: 0;
+	border-radius: 8px;
+	background: none;
+	color: var(--ani-dim);
+	cursor: pointer;
+	transition: color var(--t-fast) var(--ease);
+}
+
+.bar-icon:hover {
+	color: var(--ani-text);
+}
+
+.theme-toggle .glyph {
+	display: none;
+}
+
+/* The glyph shows the theme the button switches to, as the label says. */
+:root:not([data-theme='light']) .theme-toggle .glyph-sun,
+:root[data-theme='light'] .theme-toggle .glyph-moon {
+	display: block;
+}
+
+.bar-menu {
+	display: none;
+}
+
+.bar-search-icon {
+	display: none;
+}
+
+@media (max-width: 820px) {
+	.site-header {
+		height: 56px;
+		padding: 0 4px 0 16px;
+		gap: 8px;
+	}
+
+	.site-brand span {
+		font-size: 19px;
+	}
+
+	.bar-right {
+		gap: 0;
+	}
+
+	.site-header site-search button[data-open-modal] {
+		width: 44px;
+		height: 44px;
+		padding: 0;
+		justify-content: center;
+		border: 0;
+		background: none;
+		border-radius: 8px;
+	}
+
+	.site-header site-search button[data-open-modal] > span,
+	.site-header site-search kbd {
+		display: none !important;
+	}
+
+	.bar-menu {
+		display: flex;
+	}
+
+	.bar-nav {
+		display: none;
+		position: absolute;
+		z-index: 30;
+		top: 56px;
+		left: 0;
+		right: 0;
+		flex-direction: column;
+		gap: 0;
+		padding: 8px 16px 16px;
+		background: var(--ani-ground);
+		border-bottom: 1px solid var(--ani-rule-faint);
+		font-size: 17px;
+	}
+
+	.bar-nav a {
+		padding: 12px 0;
+	}
+
+	.bar-nav.open {
+		display: flex;
+	}
+
+	.bar-menu-docs .bar-menu {
+		display: none;
+	}
+}
+
+/* ── The footer ───────────────────────────────────────────────────────── */
+
+.site-footer {
+	background: var(--ani-foot);
+	color: var(--ani-foot-dim);
+	padding: 32px 32px 56px;
+	font-family: var(--ani-font-ui);
+}
+
+.site-footer-in {
+	max-width: 1200px;
+	margin: 0 auto;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 24px 48px;
+}
+
+.site-footer-text {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	max-width: 640px;
+	font-size: 14px;
+	line-height: 1.5;
+}
+
+.site-footer-text p {
+	margin: 0;
+}
+
+.site-footer-text p:first-child {
+	color: var(--ani-foot-text);
+}
+
+.site-footer nav {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px 24px;
+	font-size: 14px;
+}
+
+.site-footer a,
+.k-body .site-footer a {
+	color: var(--ani-foot-dim);
+	text-decoration: none;
+	transition: color var(--t-fast) var(--ease);
+}
+
+.site-footer a:hover,
+.k-body .site-footer a:hover {
+	color: var(--ani-foot-text);
+	text-decoration: underline;
+}
+
+.site-footer .site-footer-text a {
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+.site-footer :focus-visible {
+	outline-color: #f5b467;
+}
+
+/* ── Disclosures (the FAQ and docs): the height eases open, the pixel chevron turns in two steps ── */
+
+.k-body summary,
+.sl-markdown-content summary {
+	cursor: pointer;
+}
+
+.faq details {
+	border-bottom: 1px solid var(--ani-rule);
+	padding: 22px 0;
+}
+
+.faq summary {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	font-size: 19px;
+	font-weight: 600;
+	list-style: none;
+}
+
+.faq summary::-webkit-details-marker {
+	display: none;
+}
+
+.faq summary::after,
+.sl-markdown-content details > summary::after {
+	content: '';
+	flex: none;
+	width: 14px;
+	height: 8px;
+	background: currentColor;
+	-webkit-mask: var(--chevron) center / contain no-repeat;
+	mask: var(--chevron) center / contain no-repeat;
+}
+
+:root {
+	--chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 4' shape-rendering='crispEdges'%3E%3Cpath d='M0 0h1v1H0zM6 0h1v1H6zM1 1h1v1H1zM5 1h1v1H5zM2 2h1v1H2zM4 2h1v1H4zM3 3h1v1H3z'/%3E%3C/svg%3E");
+}
+
+.faq details[open] > summary::after,
+.sl-markdown-content details[open] > summary::after {
+	transform: rotate(180deg);
+}
+
+.faq details p {
+	margin: 12px 0 0;
+	font-size: 17px;
+	line-height: 1.55;
+	color: var(--ani-dim);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	:root {
+		interpolate-size: allow-keywords;
+	}
+
+	.faq summary::after,
+	.sl-markdown-content details > summary::after {
+		transition: transform var(--t-base) steps(2, end);
+	}
+
+	.faq details::details-content,
+	.sl-markdown-content details::details-content {
+		block-size: 0;
+		overflow: clip;
+		transition: block-size var(--t-base) var(--ease), content-visibility var(--t-base) allow-discrete;
+	}
+
+	.faq details[open]::details-content,
+	.sl-markdown-content details[open]::details-content {
+		block-size: auto;
+	}
+}
+
+/* ── Page-to-page and theme changes ───────────────────────────────────── */
+
+@media (prefers-reduced-motion: no-preference) {
+	@view-transition {
+		navigation: auto;
+	}
+
+	.site-header {
+		view-transition-name: site-header;
+	}
+
+	::view-transition-group(root) {
+		animation-duration: 180ms;
+		animation-timing-function: var(--ease);
+	}
+
+	::view-transition-old(root),
+	::view-transition-new(root) {
+		animation-duration: 180ms;
+		animation-timing-function: var(--ease);
+	}
+
+	::view-transition-group(site-header) {
+		animation-duration: 0s;
+	}
+
+	html.theme-switching::view-transition-old(root),
+	html.theme-switching::view-transition-new(root) {
+		animation-duration: 200ms;
+		animation-timing-function: ease;
+	}
+
+	::view-transition-group(*) {
+		animation-timing-function: var(--ease);
+	}
+
+	/* The glyph swaps in four pixel-art steps. */
+	.theme-toggle.swap .glyph {
+		animation: glyph-in 240ms steps(4, end) both;
+	}
+
+	@keyframes glyph-in {
+		from {
+			clip-path: inset(100% 0 0 0);
+		}
+		to {
+			clip-path: inset(0 0 0 0);
+		}
+	}
+}
+
+/* ── Search dialog ─────────────────────────────────────────────────────── */
+site-search dialog {
+	border: 1px solid var(--ani-rule-faint);
+	background-color: var(--ani-ground);
+	box-shadow: none;
+}
+
+site-search dialog::backdrop {
+	-webkit-backdrop-filter: none;
+	backdrop-filter: none;
+}
+
+@media (min-width: 50rem) {
+	site-search dialog {
+		border-radius: 12px;
+	}
+}
+
+site-search dialog[open],
+site-search dialog[open]::backdrop {
+	animation: ani-fade-in 200ms ease-out;
+}
+
+@keyframes ani-fade-in {
+	from {
+		opacity: 0;
+	}
+}
+
+#starlight__search {
+	--pagefind-ui-primary: var(--ani-text);
+	--pagefind-ui-text: var(--ani-text);
+	--pagefind-ui-background: var(--ani-raised);
+	--pagefind-ui-border: var(--ani-rule-faint);
+	--pagefind-ui-tag: var(--ani-band);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	site-search dialog[open],
+	site-search dialog[open]::backdrop {
+		animation: none;
+	}
+}

@@ -1,0 +1,11 @@
+<Solution>
+  <Configurations>
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="Kaeri.App.Core/Kaeri.App.Core.csproj" />
+  <Project Path="Kaeri.App.Tests/Kaeri.App.Tests.csproj" />
+  <Project Path="Kaeri.Engine.Tests/Kaeri.Engine.Tests.csproj" />
+  <Project Path="Kaeri.Engine/Kaeri.Engine.csproj" />
+  <Project Path="Kaeri.Windows/Kaeri.Windows.csproj" />
+</Solution>

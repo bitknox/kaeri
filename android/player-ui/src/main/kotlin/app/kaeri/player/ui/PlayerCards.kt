@@ -1,0 +1,390 @@
+// What the player shows over the picture, as AndroidPlayer, AndroidPlayerUpNext and T4/T5 have it:
+// one card in the corner at a time (the stall prompt, Undo, Up Next, Skip), the resume note, an
+// alert, "Still watching?", and the start that could not play.
+
+package app.kaeri.player.ui
+
+import androidx.compose.ui.res.pluralStringResource
+import app.kaeri.i18n.Strings
+import app.kaeri.i18n.R
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.focusGroup
+import androidx.compose.material3.minimumInteractiveComponentSize
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.paneTitle
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import app.kaeri.design.Motion
+import app.kaeri.design.ObiSilk
+import app.kaeri.design.tabular
+import app.kaeri.engine.model.NoticeKind
+import app.kaeri.player.PlayerAlert
+import app.kaeri.player.PlayerModel
+import app.kaeri.player.SkipWords
+import app.kaeri.player.PlayerModel.Corner
+import app.kaeri.ui.ArtworkImage
+import app.kaeri.ui.pixels
+
+/**
+ * The corner, right 48 and bottom 88: one card at a time. Skip shows only while the controls are
+ * hidden; the others stay with the controls up. [throughGround] is the fade through the ground at
+ * Up Next's zero, which the card fades with, read as it draws.
+ */
+@Composable
+fun CornerCard(model: PlayerModel, chromeVisible: Boolean, throughGround: () -> Float, modifier: Modifier = Modifier) {
+    val corner = model.corner
+    val shown = when (corner) {
+        Corner.Skip -> !chromeVisible
+        null -> false
+        else -> true
+    }
+    AnimatedContent(
+        if (shown) corner else null,
+        modifier = modifier.graphicsLayer { alpha = 1f - throughGround() },
+        contentAlignment = Alignment.BottomEnd,
+        transitionSpec = {
+            fadeIn(Motion.standard()) togetherWith fadeOut(if (targetState == null) Motion.quick() else Motion.standard())
+        },
+        label = "corner", // i18n-skip
+    ) { card ->
+        when (card) {
+            Corner.Skip -> SkipButton(model)
+            Corner.Prompt -> SkipPromptCard(model)
+            Corner.Undo -> UndoNote(model)
+            Corner.UpNext -> UpNextCard(model)
+            Corner.Stall -> StallCard(model)
+            null -> Box(Modifier.size(1.dp))
+        }
+    }
+}
+
+/** "Skip opening": a 40 dp surfaceContainer pill in a 48 dp target, dimming 8 s after the segment starts. */
+@Composable
+private fun SkipButton(model: PlayerModel) {
+    val skip = model.skip ?: return
+    val haptics = LocalHapticFeedback.current
+    val touch = remember { MutableInteractionSource() }
+    val down by touch.collectIsPressedAsState()
+    val dim = model.skipDimmed && !down
+    var focused by remember { mutableStateOf(false) }
+    val strength by animateFloatAsState(if (dim) 0.4f else 1f, if (dim) Motion.fadeOut() else Motion.fadeIn(), label = "skip") // i18n-skip
+    Box(
+        Modifier
+            .height(48.dp)
+            .graphicsLayer { alpha = strength }
+            .onFocusChanged { focused = it.isFocused }
+            .clickable(interactionSource = touch, indication = null, role = androidx.compose.ui.semantics.Role.Button) {
+                haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+                model.takeSkip()
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Row(
+            // A keyboard or switch user sees where focus is: a silk edge, drawn only while focused.
+            Modifier.height(40.dp).clip(RoundedCornerShape(20.dp)).background(ObiSilk.Raised)
+                .then(if (focused) Modifier.border(2.dp, ObiSilk.Silk, RoundedCornerShape(20.dp)) else Modifier)
+                .padding(start = 16.dp, end = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(skip.label(LocalContext.current), style = MaterialTheme.typography.labelLarge, color = ObiSilk.Silk)
+            Icon(PlayerIcons.SkipNext, contentDescription = null, tint = ObiSilk.Silk, modifier = Modifier.size(20.dp))
+        }
+    }
+}
+
+/** "Skipped opening · Undo", for 6 s of playback. */
+@Composable
+private fun UndoNote(model: PlayerModel) {
+    val undo = model.undo ?: return
+    val haptics = LocalHapticFeedback.current
+    Row(
+        Modifier.height(48.dp).pill(ObiSilk.Raised).padding(start = 16.dp, end = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(undo.label(LocalContext.current), style = MaterialTheme.typography.labelLarge, color = ObiSilk.Silk, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+        Text(" · ", style = MaterialTheme.typography.labelLarge, color = ObiSilk.Haze)
+        TextButton(
+            onClick = {
+                haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+                model.undoSkip()
+            },
+            contentPadding = PaddingValues(horizontal = 12.dp),
+        ) { Text(stringResource(R.string.action_undo), style = MaterialTheme.typography.labelLarge, color = ObiSilk.Silk) }
+    }
+}
+
+/**
+ * Up Next, as AndroidPlayerUpNext draws it: 336 wide on surfaceContainer at corners 16, the next
+ * episode's still, "UP NEXT", its number and title, the countdown's bar drawn from the playback
+ * clock, "Plays in 8 s", Cancel and Play now. It never rises: opacity only.
+ */
+@Composable
+private fun UpNextCard(model: PlayerModel) {
+    val card = model.upNext ?: return
+    val haptics = LocalHapticFeedback.current
+    val countdown = model.countdown
+    val upNextTitle = stringResource(R.string.player_up_next)
+    // In a watch party the room moves on together: "Everyone moves on in 8 s", and no Cancel or Play now.
+    val party by app.kaeri.ui.LocalAppStore.current.party.view.collectAsStateWithLifecycle()
+    val together = party != null
+    Column(
+        Modifier
+            .width(336.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(ObiSilk.Raised)
+            .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)
+            .semantics { paneTitle = upNextTitle },
+    ) {
+        Row(Modifier.height(60.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Box(Modifier.size(96.dp, 54.dp).clip(RoundedCornerShape(8.dp)).background(ObiSilk.RaisedSelected)) {
+                card.next.thumbnail?.let { ArtworkImage(it, plate = null, maxPixelSize = pixels(96.dp), modifier = Modifier.fillMaxSize()) }
+            }
+            Column(Modifier.weight(1f)) {
+                Text(upNextTitle, style = MaterialTheme.typography.labelSmall, color = ObiSilk.Haze)
+                Text(Strings.episodeNumberPlain(LocalContext.current, card.next.number), style = MaterialTheme.typography.titleMedium, color = ObiSilk.Silk)
+                card.next.title?.let {
+                    Text(it, style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
+        }
+        if (countdown != null) {
+            LinearProgressIndicator(
+                progress = { countdown.second },
+                modifier = Modifier.padding(top = 12.dp).fillMaxWidth().height(4.dp),
+                color = ObiSilk.Amber,
+                trackColor = ObiSilk.Edge,
+                gapSize = 4.dp,
+                drawStopIndicator = {},
+            )
+        }
+        Row(Modifier.padding(top = 4.dp).height(48.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                countdown?.let {
+                    if (together) Strings.partyNextLine(LocalContext.current, it.first.toInt()) else stringResource(R.string.player_plays_in, it.first.toInt())
+                }.orEmpty(),
+                style = MaterialTheme.typography.bodyMedium.tabular(),
+                color = ObiSilk.Haze,
+                modifier = Modifier.weight(1f),
+            )
+            if (!together) TextButton(onClick = model::cancelNext, modifier = Modifier.minimumInteractiveComponentSize().height(40.dp), contentPadding = PaddingValues(horizontal = 12.dp)) {
+                Text(stringResource(R.string.action_cancel), style = MaterialTheme.typography.labelLarge, color = ObiSilk.Silk)
+            }
+            if (!together) Button(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+                    model.playNext()
+                },
+                modifier = Modifier.minimumInteractiveComponentSize().height(40.dp),
+                contentPadding = PaddingValues(start = 12.dp, end = 16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = ObiSilk.Amber, contentColor = ObiSilk.Ground),
+            ) {
+                Icon(PlayerIcons.Play, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.action_play_now), style = MaterialTheme.typography.labelLarge)
+            }
+        }
+    }
+}
+
+/** "Source is buffering · 9 s", counting up, with Keep waiting and Switch source. */
+@Composable
+private fun StallCard(model: PlayerModel) {
+    val stall = model.stall ?: return
+    val stallPane = stringResource(R.string.player_stall_detail)
+    Column(
+        Modifier.width(336.dp).clip(RoundedCornerShape(16.dp)).background(ObiSilk.Raised).padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)
+            // Said once as it appears; the counting title is not read again each second.
+            .semantics { paneTitle = stallPane },
+    ) {
+        Text(stringResource(R.string.player_stall_title, stall.held(model.clock).toInt()), style = MaterialTheme.typography.titleMedium.tabular(), color = ObiSilk.Silk)
+        Text(stringResource(R.string.player_stall_detail), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, modifier = Modifier.padding(top = 4.dp))
+        Row(Modifier.padding(top = 4.dp).height(48.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End)) {
+            TextButton(onClick = model::keepWaiting, modifier = Modifier.minimumInteractiveComponentSize().height(40.dp)) {
+                Text(stringResource(R.string.player_keep_waiting), style = MaterialTheme.typography.labelLarge, color = ObiSilk.Silk)
+            }
+            FilledTonalButton(
+                onClick = model::switchSource,
+                modifier = Modifier.minimumInteractiveComponentSize().height(40.dp),
+                colors = ButtonDefaults.filledTonalButtonColors(containerColor = ObiSilk.RaisedSelected, contentColor = ObiSilk.Silk),
+            ) { Text(stringResource(R.string.player_switch_source), style = MaterialTheme.typography.labelLarge) }
+        }
+    }
+}
+
+/** "Resumed at 12:04 · Start over", for 6 s of playback, at the other corner. */
+@Composable
+fun ResumeNote(model: PlayerModel, modifier: Modifier = Modifier) {
+    val note = model.resume
+    AnimatedVisibility(note != null, enter = fadeIn(Motion.standard()), exit = fadeOut(Motion.quick()), modifier = modifier) {
+        val shown = note ?: return@AnimatedVisibility
+        Row(
+            Modifier.height(48.dp).pill(ObiSilk.Raised).padding(start = 16.dp, end = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(shown.label(LocalContext.current), style = MaterialTheme.typography.labelLarge.tabular(), color = ObiSilk.Silk, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+            Text(" · ", style = MaterialTheme.typography.labelLarge, color = ObiSilk.Haze)
+            TextButton(onClick = model::startOver, contentPadding = PaddingValues(horizontal = 12.dp)) {
+                Text(stringResource(R.string.player_start_over), style = MaterialTheme.typography.labelLarge, color = ObiSilk.Silk)
+            }
+        }
+    }
+}
+
+/** A message on the video, under the top bar, for 4 s. */
+@Composable
+fun AlertNote(model: PlayerModel, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    // What was done to the skip times is said in the same capsule, as a notice, not an alert.
+    val alert = model.alert ?: model.skipNotice?.let { PlayerAlert(SkipWords.notice(context, it.notice), NoticeKind.INFO, it.since) }
+    AnimatedVisibility(alert != null, enter = fadeIn(Motion.standard()), exit = fadeOut(Motion.quick()), modifier = modifier) {
+        val shown = alert ?: return@AnimatedVisibility
+        Row(
+            Modifier.clip(RoundedCornerShape(20.dp)).background(ObiSilk.RaisedHigh).padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            if (shown.kind == NoticeKind.ALERT) Box(Modifier.size(8.dp).clip(RoundedCornerShape(4.dp)).background(ObiSilk.Vermilion))
+            Text(shown.text, style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Silk, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+        }
+    }
+}
+
+/**
+ * "Still watching?", drawn in the player as a dialog is (not a Dialog window, so the system bars
+ * stay hidden): 312 wide on surfaceContainerHigh at corners 28, over the black 32 % scrim.
+ */
+@Composable
+fun StillWatching(model: PlayerModel) {
+    val haptics = LocalHapticFeedback.current
+    val stillWatching = stringResource(R.string.player_still_watching)
+    val continueFocus = remember { FocusRequester() }
+    LaunchedEffect(model.stillWatching) { if (model.stillWatching) runCatching { continueFocus.requestFocus() } }
+    AnimatedVisibility(model.stillWatching, enter = fadeIn(Motion.standard()), exit = fadeOut(Motion.quick())) {
+        Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.32f)).clickable(interactionSource = null, indication = null) {}, contentAlignment = Alignment.Center) {
+            Column(
+                Modifier.width(312.dp).clip(RoundedCornerShape(28.dp)).background(ObiSilk.RaisedHigh).padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 16.dp)
+                    .focusGroup()
+                    .semantics { paneTitle = stillWatching },
+            ) {
+                Text(stillWatching, style = MaterialTheme.typography.titleLarge, color = ObiSilk.Silk)
+                Text(
+                    pluralStringResource(R.plurals.player_still_watching_detail, model.stillWatchingAfter, model.stillWatchingAfter),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = ObiSilk.Haze,
+                    modifier = Modifier.padding(top = 16.dp),
+                )
+                Row(Modifier.padding(top = 24.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
+                    TextButton(onClick = model::stopWatching) { Text(stringResource(R.string.action_stop), color = ObiSilk.Silk) }
+                    FilledTonalButton(
+                        onClick = {
+                            haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+                            model.continueWatching()
+                        },
+                        modifier = Modifier.focusRequester(continueFocus),
+                        colors = ButtonDefaults.filledTonalButtonColors(containerColor = ObiSilk.RaisedSelected, contentColor = ObiSilk.Silk),
+                    ) { Text(stringResource(R.string.player_still_watching_continue)) }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * What the starting screen says under its line: after 20 s of finding nothing, Choose source and
+ * Stop; and when the playback never played, "Couldn't play episode 7" with Choose source and Close.
+ */
+@Composable
+internal fun StartingChoices(model: PlayerModel, onChooseSource: () -> Unit) {
+    val starting = model.starting
+    if (model.failure == null && (starting == null || !starting.offersChoice(model.clock))) return
+    Row(Modifier.padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (model.failure != null) {
+            Button(
+                onClick = onChooseSource,
+                colors = ButtonDefaults.buttonColors(containerColor = ObiSilk.Amber, contentColor = ObiSilk.Ground),
+            ) { Text(stringResource(R.string.player_choose_source)) }
+            TextButton(onClick = model::viewerClosed) { Text(stringResource(R.string.action_close), color = ObiSilk.Silk) }
+        } else {
+            FilledTonalButton(
+                onClick = onChooseSource,
+                colors = ButtonDefaults.filledTonalButtonColors(containerColor = ObiSilk.RaisedSelected, contentColor = ObiSilk.Silk),
+            ) { Text(stringResource(R.string.player_choose_source)) }
+            TextButton(onClick = model::viewerClosed) { Text(stringResource(R.string.action_stop), color = ObiSilk.Silk) }
+        }
+    }
+}
+
+/** The 250 ms fade into the ground at Up Next's zero, and out of it on the next first frame (T5). */
+internal val ThroughGround = tween<Float>(250, easing = FastOutLinearInEasing)
+
+/** The semantics of a control drawn over the video, for TalkBack. */
+internal fun Modifier.described(label: String) = semantics { contentDescription = label }
+
+/**
+ * A pill's fill, 40 high and centred in the 48 the row has for touch: what is drawn stays as it
+ * was, and the target is the Material minimum.
+ */
+private fun Modifier.pill(color: Color): Modifier = drawBehind {
+    val height = 40.dp.toPx()
+    drawRoundRect(color, Offset(0f, (size.height - height) / 2), Size(size.width, height), CornerRadius(height / 2))
+}
