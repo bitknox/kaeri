@@ -87,6 +87,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.paneTitle
@@ -557,7 +559,7 @@ internal fun FiltersPill(count: Int, spoken: String, onClick: () -> Unit) {
             Modifier
                 .padding(vertical = 8.dp)
                 .animateContentSize(Motion.standard())
-                .heightIn(min = 32.dp)
+                .heightIn(min = with(LocalDensity.current) { 32.sp.toDp() })
                 .clip(shape)
                 .background(fill)
                 .border(1.dp, edge, shape)
@@ -565,7 +567,7 @@ internal fun FiltersPill(count: Int, spoken: String, onClick: () -> Unit) {
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(Icons.Sort, contentDescription = null, tint = content, modifier = Modifier.size(18.dp))
+            Icon(Icons.Sort, contentDescription = null, tint = content, modifier = Modifier.size(with(LocalDensity.current) { 18.sp.toDp() }))
             if (set) {
                 Crossfade(count, animationSpec = Motion.quick(), label = "filters count") { n -> // i18n-skip
                     Text(n.toString(), style = MaterialTheme.typography.labelMedium.tabular(), color = content, maxLines = 1)
