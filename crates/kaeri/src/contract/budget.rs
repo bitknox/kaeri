@@ -94,6 +94,7 @@ const BOUNDS: &[(&str, usize)] = &[
     ("Library", 0),
     ("Calendar", 6),
     ("Search start", 1),
+    ("hover 10 covers on the Mac", 10),
     ("hover 10 covers", 1),
     ("sync tick", 0),
     ("warm launch: airing digest", 2),
@@ -279,6 +280,10 @@ async fn anilist_budget_per_journey() {
         .sum();
     assert!(carded >= 1, "the cards of the covers on screen are answered");
     tally.take(&h, "hover 10 covers");
+    // The Mac's hover card also asks for the episode table its Play line reads, which looks the
+    // title up whole: counted on its own so the card's own cost above stays honest.
+    run(&mut h, hovered.iter().map(|id| Command::LoadEpisodes(*id)).collect()).await;
+    tally.take(&h, "hover 10 covers on the Mac: the Play line's tables");
 
     // A sync tick as the 15-minute loop and Sync now run it, and the widgets' record a sync
     // state sets off. Within five minutes of the last, so the schedule is still kept.
