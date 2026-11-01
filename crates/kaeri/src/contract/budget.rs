@@ -124,7 +124,7 @@ fn home_items(updates: &[Event]) -> Vec<(AnilistId, bool, SectionKind)> {
             Event::Home(home) => Some(home.as_ref().clone()),
             _ => None,
         })
-        .last()
+        .next_back()
     else {
         return Vec::new();
     };
@@ -182,8 +182,20 @@ async fn anilist_budget_per_journey() {
     // Home again inside half an hour, and after the player closes (a forced refresh).
     run(&mut h, vec![Command::LoadHome { refresh: false }, Command::LoadContinue]).await;
     tally.take(&h, "Home again within 30 min");
-    run(&mut h, vec![Command::LoadHome { refresh: true }]).await;
-    tally.take(&h, "Home after the player closes (refresh)");
+    // The player closes after an episode of the last title in Continue: Continue and Up next
+    // are made again from the history, and no part of Home is forced.
+    let moved = items
+        .iter()
+        .rfind(|(_, _, kind)| *kind == SectionKind::Continue)
+        .map(|(id, ..)| *id)
+        .expect("Continue holds a title");
+    kaeri_testkit::seed::watched(&store, moved, 1, now + 60);
+    let updates =
+        run(&mut h, vec![Command::LoadHome { refresh: false }, Command::LoadContinue]).await;
+    tally.take(&h, "Home after the player closes (Continue and Up next only)");
+    let after = home_items(&updates);
+    let first = after.iter().find(|(_, _, kind)| *kind == SectionKind::Continue);
+    assert_eq!(first.map(|(id, ..)| *id), Some(moved), "Continue moves on after an episode");
     h.advance_engine_clock(31 * 60);
     run(&mut h, vec![Command::LoadHome { refresh: false }, Command::LoadContinue]).await;
     tally.take(&h, "Home again after 31 min (engine clock moved)");
@@ -232,7 +244,7 @@ async fn anilist_budget_per_journey() {
     run(&mut h, vec![Command::SyncNow, Command::WidgetSnapshot]).await;
     tally.take(&h, "sync tick + widgets (schedule still kept)");
 
-    drop(h.quit().await);
+    let _ = h.quit().await;
 
     // Warm launch: a new engine on the same database, last launched two days ago, with the
     // launch's airing digest on.
@@ -281,5 +293,5 @@ async fn anilist_budget_per_journey() {
     println!("continue rows: {}", store.continue_list(15).unwrap_or_default().len());
 
     tally.print();
-    drop(h.quit().await);
+    let _ = h.quit().await;
 }

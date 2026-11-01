@@ -160,7 +160,7 @@ struct HomeScreen: View {
             store.loadContinue()
         }
         // A watch moves the queue on: asked again once the player has gone.
-        .onChange(of: playerUp) { _, up in if !up { store.loadHome(force: true) } }
+        .onChange(of: playerUp) { _, up in if !up { store.playerClosed() } }
         .onChange(of: store.offline) { was, now in
             // The connection came back: one refresh.
             if was, !now { store.loadHome(force: true) }
