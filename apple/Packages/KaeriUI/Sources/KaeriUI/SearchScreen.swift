@@ -211,6 +211,9 @@ struct SearchScreen: View {
     /// Whether the results are scrolled away from the top.
     @State private var scrolled = false
     @State private var scrollPosition = ScrollPosition()
+    /// A filter changed with the results scrolled: the answer, when it comes, starts at the
+    /// first row.
+    @State private var toFirstRow = false
 
     /// The filters asked for, without the words: they change when a filter does.
     private var filtersAsked: SearchQuery {
@@ -276,9 +279,15 @@ struct SearchScreen: View {
                 .id(Self.firstRow)
             }
             // A filter changed with the results scrolled brings its answer in at the first row,
-            // under the pinned row, and the large title stays folded. Typing is left to the field.
+            // under the pinned row, and the large title stays folded. The earlier answer stays
+            // where it is until then, so the move happens inside the results' crossfade (or as
+            // the placeholders take over). Typing is left to the field.
             .onChange(of: filtersAsked) {
-                guard pinned, scrolled else { return }
+                toFirstRow = pinned && scrolled
+            }
+            .onChange(of: AnswerShown(store.search)) {
+                guard toFirstRow, !store.search.pending || store.search.overdue else { return }
+                toFirstRow = false
                 proxy.scrollTo(Self.firstRow, anchor: .top)
             }
             .frame(width: settledWidth, alignment: .leading)
@@ -404,6 +413,18 @@ private struct LivePaused: View {
         )
         .font(compact ? .ui(15) : .mac(13))
         .foregroundStyle(.haze)
+    }
+}
+
+/// What the results show: the answer on screen, or placeholders once it is overdue. A change
+/// is when the results crossfade.
+private struct AnswerShown: Equatable {
+    let answered: SearchQuery?
+    let overdue: Bool
+
+    @MainActor init(_ search: SearchModel) {
+        answered = search.answered
+        overdue = search.overdue
     }
 }
 
