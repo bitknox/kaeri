@@ -807,21 +807,19 @@ pub async fn pull_once(sync: &Sync, tx: &Outbox) {
         match reconciled {
             Ok(report) => {
                 adopted += report.adopted;
-                let had_error = sync.pull_error(tracker.id()).is_some();
                 sync.note_pull(tracker.id(), None);
                 let _ = sync.store.set_meta_i64(&pull_key(tracker.id()), now);
-                // One state per pull, and only when the pull changed something: titles
-                // adopted, conflicts found, or a failure cleared.
-                if report.adopted > 0 || !report.conflicts.is_empty() || had_error {
-                    let _ = tx.send(Event::Sync(Box::new(sync.state_for(
-                        tracker.as_ref(),
-                        false,
-                        Some(format!(
-                            "pulled {}",
-                            kaeri_model::wording::plural(report.seen as usize, "title")
-                        )),
-                    ))));
-                }
+                // Said after every pull that went through, changed or not: the Accounts row's
+                // "Synced" time and Sync now's answer come from it, and a pull can move the
+                // list's statuses or the outbox without adopting a title.
+                let _ = tx.send(Event::Sync(Box::new(sync.state_for(
+                    tracker.as_ref(),
+                    false,
+                    Some(format!(
+                        "pulled {}",
+                        kaeri_model::wording::plural(report.seen as usize, "title")
+                    )),
+                ))));
 
                 // Conflicts are titles, so they need names — which means resolving each id
                 // against what we already have locally rather than making more requests.
