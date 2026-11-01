@@ -10,6 +10,8 @@ import Testing
 struct TitleOpeningTests {
     private let spotlight = TitleSource(900_001, .spotlight, art: .banner)
     private let shelf = TitleSource.shelf(900_001, .thisSeason, art: .poster)
+    private let cover = TitleLandingID(id: 900_001, art: .poster)
+    private let banner = TitleLandingID(id: 900_001, art: .banner)
 
     @Test func theSameTitleInTwoPlacesIsTwoSources() {
         #expect(spotlight != shelf)
@@ -21,13 +23,14 @@ struct TitleOpeningTests {
         let navigator = Navigator(route: LaunchRoute())
         navigator.openTitle(900_001, from: spotlight)
         #expect(navigator.paths[.home] == [TitleRoute(id: 900_001, from: spotlight)])
-        #expect(navigator.paths[.home]?.last?.zoomID == AnyHashable(spotlight))
+        #expect(navigator.paths[.home]?.last?.zoomID == .source(spotlight))
     }
 
     @Test func aPageFromNowhereZoomsOutOfNoElement() {
         let route = TitleRoute(id: 900_001)
-        #expect(route.zoomID != AnyHashable(900_001 as AnilistId))
-        #expect(route.zoomID != AnyHashable(spotlight))
+        #expect(route.zoomID == .nowhere(route))
+        #expect(route.zoomID != .source(spotlight))
+        #expect(route.zoomID != .landing(banner))
     }
 
     @Test func thePlayerGrowsOutOfOneHomeCardForATitleOnTwoShelves() {
@@ -55,6 +58,7 @@ struct TitleOpeningTests {
         #expect(navigator.awaits(900_001, .poster), "the page's cover waits for it")
         #expect(!navigator.awaits(900_001, .banner), "the banner comes in with the page")
         #expect(navigator.pageCovers && !navigator.pageSettled)
+        navigator.landingShown(cover, true)
         navigator.takeOff()
         // Without a window the spring ends at once, so the flight may already have landed.
         if let flight = navigator.flight {
@@ -73,6 +77,44 @@ struct TitleOpeningTests {
         #expect(navigator.lifted == spotlight)
         #expect(navigator.awaits(900_001, .banner))
         #expect(!navigator.awaits(900_001, .poster))
+    }
+
+    @Test func theSpotlightLandsOnTheCoverOfAPageWithNoBanner() {
+        let navigator = Navigator(route: LaunchRoute())
+        navigator.sourceShown(spotlight, true)
+        navigator.openTitle(900_001, from: spotlight)
+        navigator.landingShown(cover, true)
+        navigator.takeOff()
+        if let flight = navigator.flight {
+            #expect(flight.landing == .poster)
+            #expect(navigator.awaits(900_001, .poster))
+            #expect(!navigator.awaits(900_001, .banner))
+        }
+    }
+
+    @Test func artWithNowhereToLandLeavesThePageToComeInAlone() {
+        // Art flying to an element that is not on screen would fly to the whole page.
+        let navigator = Navigator(route: LaunchRoute())
+        navigator.sourceShown(spotlight, true)
+        navigator.openTitle(900_001, from: spotlight)
+        navigator.takeOff()
+        #expect(navigator.flight == nil)
+        #expect(navigator.lifted == nil)
+        #expect(navigator.pageSettled)
+        #expect(navigator.titleOnMac == 900_001)
+    }
+
+    @Test func aSeasonPickedOnThePageKeepsWhereThePageOpenedFrom() {
+        let navigator = Navigator(route: LaunchRoute())
+        navigator.sourceShown(spotlight, true)
+        navigator.openTitle(900_001, from: spotlight)
+        navigator.landingShown(banner, true)
+        navigator.takeOff()
+        if let flight = navigator.flight { navigator.land(flight) }
+        navigator.openTitle(900_002)
+        #expect(navigator.titleOnMac == 900_002)
+        #expect(navigator.flight == nil)
+        #expect(navigator.lifted == spotlight, "the spotlight stays lifted until the page goes")
     }
 
     @Test func nothingFliesFromAnElementOffScreenOrUnderReduceMotion() {
@@ -105,6 +147,7 @@ struct TitleOpeningTests {
         let navigator = Navigator(route: LaunchRoute())
         navigator.sourceShown(shelf, true)
         navigator.openTitle(900_001, from: shelf)
+        navigator.landingShown(cover, true)
         navigator.takeOff()
         if let flight = navigator.flight { navigator.land(flight) }
         #expect(navigator.pageSettled)
@@ -126,6 +169,7 @@ struct TitleOpeningTests {
         let navigator = Navigator(route: LaunchRoute())
         navigator.sourceShown(shelf, true)
         navigator.openTitle(900_001, from: shelf)
+        navigator.landingShown(cover, true)
         navigator.takeOff()
         if let flight = navigator.flight { navigator.land(flight) }
         navigator.sourceShown(shelf, false)

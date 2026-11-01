@@ -63,8 +63,8 @@ public struct TitleRoute: Hashable, Sendable {
 
     /// What the zoom grows out of: the element clicked, or with none nothing on screen, so the
     /// page never zooms out of another place the title happens to be.
-    var zoomID: AnyHashable {
-        source.map { AnyHashable($0) } ?? AnyHashable(self)
+    var zoomID: TitleMatch {
+        source.map(TitleMatch.source) ?? .nowhere(self)
     }
 }
 
@@ -75,12 +75,32 @@ public struct TitleFlight: Equatable, Sendable {
     public let opening: Bool
     /// Whether it is at the page's element now, or still at the source's.
     public var atPage: Bool
+    /// The page's element it lands on, or leaves from: the source's kind where the page has it,
+    /// its cover where the page has no banner.
+    public var landing: TitleSource.Art
+
+    public init(source: TitleSource, opening: Bool, atPage: Bool, landing: TitleSource.Art? = nil) {
+        self.source = source
+        self.opening = opening
+        self.atPage = atPage
+        self.landing = landing ?? source.art
+    }
 }
 
 /// The page's element art lands on: its cover for a poster, its banner for wide art.
-struct TitleLandingID: Hashable {
+struct TitleLandingID: Hashable, Sendable {
     let id: AnilistId
     let art: TitleSource.Art
+}
+
+/// What the Mac's flyer and the iPhone and iPad zoom pair by: the element clicked, the page's
+/// element art lands on, or for a page opened from nowhere nothing on screen. Every end names it
+/// as this one type, since a matched group is keyed by its id's type as well as its value: an id
+/// wrapped as `AnyHashable` on one end never meets the same value, typed, on the other.
+enum TitleMatch: Hashable, Sendable {
+    case source(TitleSource)
+    case landing(TitleLandingID)
+    case nowhere(TitleRoute)
 }
 
 extension EnvironmentValues {
@@ -171,11 +191,11 @@ private struct TitleSourceMark: ViewModifier {
     func body(content: Content) -> some View {
         if let space {
             #if os(iOS)
-            content.matchedTransitionSource(id: source, in: space)
+            content.matchedTransitionSource(id: TitleMatch.source(source), in: space)
             #else
             let lifted = navigator.lifted == source
             content
-                .matchedGeometryEffect(id: source, in: space, properties: .frame, isSource: true)
+                .matchedGeometryEffect(id: TitleMatch.source(source), in: space, properties: .frame, isSource: true)
                 // Its art is in flight or on the page: never drawn in two places.
                 .opacity(lifted ? 0 : 1)
                 .animation(nil, value: lifted)
@@ -202,10 +222,17 @@ private struct TitleLanding: ViewModifier {
         #if os(macOS)
         if let space {
             let waits = navigator.awaits(id, art)
+            let landing = TitleLandingID(id: id, art: art)
             content
-                .matchedGeometryEffect(id: TitleLandingID(id: id, art: art), in: space, properties: .frame, isSource: true)
+                .matchedGeometryEffect(id: TitleMatch.landing(landing), in: space, properties: .frame, isSource: true)
                 .opacity(waits ? 0 : 1)
                 .animation(nil, value: waits)
+                .onAppear { navigator.landingShown(landing, true) }
+                .onDisappear { navigator.landingShown(landing, false) }
+                .onChange(of: landing) { old, new in
+                    navigator.landingShown(old, false)
+                    navigator.landingShown(new, true)
+                }
         } else {
             content
         }
@@ -221,13 +248,25 @@ extension Navigator {
     /// Whether art in flight is to land on, or has just left, the element `art` of `id`'s page.
     func awaits(_ id: AnilistId, _ art: TitleSource.Art) -> Bool {
         guard let flight else { return false }
-        return flight.source.id == id && flight.source.art == art
+        return flight.source.id == id && flight.landing == art
     }
 
     /// An element a page can open from came on screen, or left it.
     func sourceShown(_ source: TitleSource, _ shown: Bool) {
         let count = (shownSources[source] ?? 0) + (shown ? 1 : -1)
         shownSources[source] = count > 0 ? count : nil
+    }
+
+    /// A page's element art can land on came on screen, or left it.
+    func landingShown(_ landing: TitleLandingID, _ shown: Bool) {
+        let count = (shownLandings[landing] ?? 0) + (shown ? 1 : -1)
+        shownLandings[landing] = count > 0 ? count : nil
+    }
+
+    /// The element of `id`'s page that art from `source` lands on: the same kind where the page
+    /// shows it, else its cover, as on a page with no wide art; nil with neither on screen.
+    func landing(of id: AnilistId, from source: TitleSource) -> TitleSource.Art? {
+        [source.art, .poster].first { shownLandings[TitleLandingID(id: id, art: $0)] != nil }
     }
 
     /// The page is gone at once, as a change of section takes it: nothing in flight or lifted.
@@ -244,6 +283,12 @@ extension Navigator {
     /// its art flies to the page's cover or banner while the rest fades in; under Reduce Motion,
     /// or from nowhere, the page crossfades in.
     func openOnMac(_ id: AnilistId, from source: TitleSource?) {
+        if titleOnMac != nil, source == nil {
+            // A season or related title picked on the page changes the page in place. Where it
+            // was opened from stays, so Back after returning to that title still flies home.
+            withAnimation(.standard) { titleOnMac = id }
+            return
+        }
         let flies = !motionReduced && titleOnMac == nil && source.map { $0.id == id && shownSources[$0] != nil } == true
         openedFrom = source
         pageCovers = true
@@ -268,9 +313,9 @@ extension Navigator {
     func backOnMac() {
         pageSettled = false
         if let source = openedFrom, source.id == titleOnMac, lifted == source, flight == nil,
-           !motionReduced, shownSources[source] != nil {
+           !motionReduced, shownSources[source] != nil, let landing = landing(of: source.id, from: source) {
             // The flyer takes off once it stands on the page's element; the page goes then.
-            flight = TitleFlight(source: source, opening: false, atPage: true)
+            flight = TitleFlight(source: source, opening: false, atPage: true, landing: landing)
             return
         }
         flight = nil
@@ -288,6 +333,18 @@ extension Navigator {
     /// spring, and Back's page fades out meanwhile.
     func takeOff() {
         guard var flight, flight.atPage != flight.opening else { return }
+        if flight.opening {
+            // The page came in with the flyer: art lands on its element of the same kind, on its
+            // cover where it has no banner. With neither the art has nowhere to go, and would fly
+            // to the whole page: the page comes in on its own instead.
+            guard let landing = landing(of: flight.source.id, from: flight.source) else {
+                self.flight = nil
+                lifted = nil
+                pageSettled = true
+                return
+            }
+            flight.landing = landing
+        }
         flight.atPage = flight.opening
         let landing = flight
         withAnimation(.standard) {
@@ -332,29 +389,33 @@ struct TitleFlyer: View {
         let entry = store.titles.page(flight.source.id)
         let atPage = flight.atPage
         let target = atPage
-            ? AnyHashable(TitleLandingID(id: flight.source.id, art: flight.source.art))
-            : AnyHashable(flight.source)
+            ? TitleMatch.landing(TitleLandingID(id: flight.source.id, art: flight.landing))
+            : TitleMatch.source(flight.source)
         Group {
             switch flight.source.art {
             case .poster:
                 ArtworkView(url: entry.coverUrl, color: entry.plateColor, maxPixelSize: TitleHero.coverPixels)
                     .clipShape(.rect(cornerRadius: 8))
             case .banner:
+                // Onto the banner it gains the page's ground; onto the cover of a page with no
+                // banner, the cover's corners.
+                let banner = flight.landing == .banner
                 HeroArtView(art: store.heroArt(entry), entry: entry)
                     .overlay(alignment: .bottom) {
                         VStack(spacing: 0) {
                             BannerScrim()
                             Palette.ground.frame(height: 96)
                         }
-                        .opacity(atPage ? 1 : 0)
+                        .opacity(atPage && banner ? 1 : 0)
                     }
-                    .clipShape(.rect(cornerRadius: atPage ? 0 : ArtShape.bannerRadius))
+                    .clipShape(.rect(cornerRadius: atPage ? (banner ? 0 : 8) : ArtShape.bannerRadius))
             }
         }
         .matchedGeometryEffect(id: target, in: space, properties: .frame, isSource: false)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
-        .onAppear { navigator.takeOff() }
+        // A turn later, once the page that came in with it has put its elements on screen.
+        .task { navigator.takeOff() }
     }
 }
 #endif

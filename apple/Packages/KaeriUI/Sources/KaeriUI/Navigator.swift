@@ -37,6 +37,9 @@ public final class Navigator {
     public var motionReduced = false
     /// The elements on screen a page can open from, on the Mac: art flies only from one of them.
     @ObservationIgnored var shownSources: [TitleSource: Int] = [:]
+    /// The elements of the Mac's page on screen that art can land on: its cover, and its banner
+    /// where it has wide art.
+    @ObservationIgnored var shownLandings: [TitleLandingID: Int] = [:]
     /// Each tab's pushed title pages, on iPhone and iPad, each with the element it zooms from.
     public var paths: [AppSection: [TitleRoute]] = [:]
     /// The title the menus' Episode items and the palette's commands act on: the one selected
