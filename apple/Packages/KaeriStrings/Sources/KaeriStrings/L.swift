@@ -1804,6 +1804,9 @@ public enum L {
     /// Tooltip of the All filters button.
     public static var searchFiltersHelp: String { string("search-filters-help", fallback: "Tags, length, score, origin and where to watch") }
 
+    /// Accessible label of the pinned filter button on iPhone, which shows only a glyph. The count of filters set follows it, as "All filters, 2 set".
+    public static var searchAllFilters: String { string("search-all-filters", fallback: "All filters") }
+
     /// VoiceOver value of the All filters button: how many advanced filters are set.
     public static func searchFiltersSet(count: Int) -> String {
         Self.format("search-filters-set", fallback: "%1$lld set", count)

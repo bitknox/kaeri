@@ -40,6 +40,10 @@ search-include = Include
 # Tooltip of the All filters button.
 search-filters-help = Tags, length, score, origin and where to watch
 
+# Accessible label of the pinned filter button on iPhone, which shows only a glyph. The count of
+# filters set follows it, as "All filters, 2 set".
+search-all-filters = All filters
+
 # VoiceOver value of the All filters button: how many advanced filters are set.
 # @arg count: int
 search-filters-set = { $count } set
