@@ -102,9 +102,13 @@ jobs:
           ref: ${{ inputs.tag }}
 
       # The tags without their history: next-version.sh reads their names, and a commit with a
-      # release already is found by its tag.
+      # release already is found by its tag. A repository with no release yet has none to fetch,
+      # and git fetch fails on a refspec that matches nothing.
       - name: The release tags
-        run: git fetch --force --depth=1 origin '+refs/tags/v*:refs/tags/v*'
+        run: |
+          if [[ -n "$(git ls-remote --tags origin 'refs/tags/v*')" ]]; then
+            git fetch --force --depth=1 origin '+refs/tags/v*:refs/tags/v*'
+          fi
 
       - name: The version scripts' own tests
         run: |
