@@ -327,6 +327,11 @@ pub async fn in_background<F: Future>(work: F) -> F::Output {
     BACKGROUND.scope((), work).await
 }
 
+/// Whether the caller is doing work nobody is looking at: see [`in_background`].
+pub fn is_background() -> bool {
+    BACKGROUND.try_with(|()| ()).is_ok()
+}
+
 /// How many tokens background work leaves in the bucket.
 const INTERACTIVE_RESERVE: f64 = 6.0;
 

@@ -40,6 +40,8 @@ const COMPLETED_PROBED: usize = 25;
 /// Sequels and Planning titles looked up together, one request of at most fifty.
 const SEQUELS_LOOKED_UP: usize = 30;
 const PLANNING_LOOKED_UP: usize = 20;
+/// The most titles one lookup by id carries: AniList's page of media.
+const MEDIA_PER_REQUEST: usize = 50;
 /// Recommended titles looked up, enough to fill the room after the ones that are filtered out.
 const RECOMMENDED_LOOKED_UP: usize = 18;
 
@@ -94,40 +96,58 @@ pub struct Ask {
 /// lookups. Nothing is sent when they fail; a second rail is not worth a toast, and what is on
 /// screen stays.
 pub async fn load_up_next(lent: Lent, ask: Ask) {
+    // A lookup that failed is asked for again after AniList's own wait, a few times, and the
+    // shelf is sent again as each answer fills it in.
+    for attempt in 0..=crate::catalog::RETRIES {
+        if attempt > 0 {
+            tokio::time::sleep(crate::catalog::retry_wait(&lent.meta).await).await;
+        }
+        if up_next_once(&lent, &ask).await {
+            return;
+        }
+    }
+}
+
+/// One go at Up next. Whether it needs no further go: it was sent whole, or could not be found.
+async fn up_next_once(lent: &Lent, ask: &Ask) -> bool {
     let Lent { meta, store, tx, .. } = lent;
-    let queue = queue(&store);
+    let queue = queue(store);
     let room = SUGGESTIONS_SHOWN;
     // Nothing watched yet has nothing to suggest from.
     if store.stats().is_ok_and(|s| s.titles == 0) {
         let _ = tx.send(Event::UpNext(Vec::new()));
-        return;
+        return true;
     }
-    let dismissed = dismissed(&store);
-    let from = signature(&store, &queue, &dismissed, &ask, room);
+    let dismissed = dismissed(store);
+    let from = signature(store, &queue, &dismissed, ask, room);
     if let Some(kept) = kept(&store)
         && kept.from == from
         && ask.now - kept.at < KEPT_FOR
-        && let Some(items) = items_from_cache(&meta, &store, &kept.picks)
+        && let Some(items) = items_from_cache(meta, store, &kept.picks)
     {
         let _ = tx.send(Event::UpNext(items));
-        return;
+        return true;
     }
-    let picks = match find(&meta, &store, &queue, &dismissed, &ask, room).await {
-        Ok(found) => found.picks,
+    let (picks, complete) = match find(meta, store, &queue, &dismissed, ask, room).await {
+        Ok(found) => (found.picks, found.complete),
         Err(e) => {
             tracing::warn!(error = %e, "Up next could not be found");
-            return;
+            return false;
         }
     };
     let cut: Vec<Pick> = picks.iter().take(room).map(|(pick, _)| pick.clone()).collect();
     let items = picks.into_iter().take(room).map(|(pick, entry)| item(&pick, entry)).collect();
     let kept = Kept { at: ask.now, from, picks: cut };
-    if let Ok(json) = serde_json::to_string(&kept)
+    // A lookup that failed leaves the others' picks on screen but not kept: the next ask finds
+    // the rest instead of serving a thin shelf for half an hour.
+    if complete
+        && let Ok(json) = serde_json::to_string(&kept)
         && let Err(e) = store.set_meta_text(KEPT_KEY, &json)
     {
         tracing::warn!(error = %e, "could not keep Up next");
     }
     let _ = tx.send(Event::UpNext(items));
+    complete
 }
 
 /// Not interested in `id`: hidden until it starts airing, and for good if it already has.
@@ -270,6 +290,9 @@ pub(crate) struct Found {
     pub finished: Vec<Entry>,
     /// Every title finished, whichever way, including those on the list not looked up.
     pub finished_ids: HashSet<AnilistId>,
+    /// Every lookup answered. When one failed, the picks are those the others found: shown, but
+    /// not kept as the answer, and asked for again.
+    pub complete: bool,
 }
 
 /// The suggestions, in order, and as many as the room, with the groups that cannot fill it
@@ -300,6 +323,22 @@ pub(crate) async fn find(
     };
     let mut probe: Vec<AnilistId> = watched.iter().map(|p| p.anilist_id).collect();
     for id in completed.iter().take(COMPLETED_PROBED) {
+        if !probe.contains(id) {
+            probe.push(*id);
+        }
+    }
+    // The Planning titles ride along with the probe, as far as one request of fifty holds them:
+    // they are known already, and asking for them apart is a request for nothing new.
+    let mut planning_ids: Vec<AnilistId> = if ask.listed {
+        store.library_with_status("PLANNING").unwrap_or_default()
+    } else {
+        Vec::new()
+    };
+    planning_ids.retain(|id| !queue.contains(id) && !started(*id));
+    planning_ids.truncate(PLANNING_LOOKED_UP);
+    let probe_len = probe.len();
+    let with_probe = MEDIA_PER_REQUEST.saturating_sub(probe_len);
+    for id in planning_ids.iter().take(with_probe) {
         if !probe.contains(id) {
             probe.push(*id);
         }
@@ -345,21 +384,21 @@ pub(crate) async fn find(
         }
     }
     sequel_ids.truncate(SEQUELS_LOOKED_UP);
-    let mut planning_ids: Vec<AnilistId> = if ask.listed {
-        store.library_with_status("PLANNING").unwrap_or_default()
-    } else {
-        Vec::new()
-    };
-    planning_ids.retain(|id| !sequel_ids.contains(id) && !queue.contains(id) && !started(*id));
-    planning_ids.truncate(PLANNING_LOOKED_UP);
-    let wanted: Vec<AnilistId> = sequel_ids.iter().chain(&planning_ids).copied().collect();
+    planning_ids.retain(|id| !sequel_ids.contains(id));
+    // Only the titles the probe did not already carry are asked for.
+    let wanted: Vec<AnilistId> = sequel_ids
+        .iter()
+        .chain(&planning_ids)
+        .filter(|id| !probed.iter().any(|m| m.id == **id))
+        .copied()
+        .collect();
     let found = if wanted.is_empty() {
         Vec::new()
     } else {
         meta.media_many(&wanted).await.map_err(|e| e.to_string())?
     };
     let entries: HashMap<AnilistId, Entry> =
-        found.iter().map(|m| (m.id, data::entry_from(m, Some(store)))).collect();
+        probed.iter().chain(&found).map(|m| (m.id, data::entry_from(m, Some(store)))).collect();
 
     let mut picks: Vec<(Pick, Entry)> = Vec::new();
     let group = |ids: &[AnilistId], why: Why, picks: &mut Vec<(Pick, Entry)>| {
@@ -389,6 +428,7 @@ pub(crate) async fn find(
     group(&planning_ids, Why::Planning, &mut picks);
 
     // What people who liked what was finished rated highest.
+    let mut complete = true;
     if picks.len() < room && !finished_entries.is_empty() {
         let sources: Vec<AnilistId> = finished_entries
             .iter()
@@ -440,15 +480,21 @@ pub(crate) async fn find(
                                 ));
                             }
                         }
-                        Err(e) => tracing::warn!(error = %e, "recommended titles failed"),
+                        Err(e) => {
+                            complete = false;
+                            tracing::warn!(error = %e, "recommended titles failed");
+                        }
                     }
                 }
             }
-            Err(e) => tracing::warn!(error = %e, "recommendations failed"),
+            Err(e) => {
+                complete = false;
+                tracing::warn!(error = %e, "recommendations failed");
+            }
         }
     }
 
-    Ok(Found { picks, finished: finished_entries, finished_ids: finished })
+    Ok(Found { picks, finished: finished_entries, finished_ids: finished, complete })
 }
 
 /// Airing first, then announced with a date, then finished, then announced without one.

@@ -221,7 +221,8 @@ impl Make {
             }
             Err(_) => {
                 tracing::warn!("gave up waiting for the week's broadcasts; using what is held");
-                let held = self.schedule.held().map(|w| w.between(days.today - 1, days.week_end));
+                let held =
+                    self.schedule.held().map(|w| w.between(days.today - 1, days.week_end));
                 (held.unwrap_or_default(), false)
             }
         }

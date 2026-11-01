@@ -1,0 +1,285 @@
+//! Measurement only, not a contract: how many AniList requests each journey costs, against the
+//! fake, in the world the Fixtures apps show. Run with `--nocapture` and read the table.
+
+use std::collections::BTreeMap;
+
+use kaeri_core::ids::AnilistId;
+use kaeri_model::{
+    catalog::LibrarySegment,
+    command::{Command, LicensedCommand},
+    event::Event,
+    home::SectionKind,
+};
+use kaeri_store::Store;
+use kaeri_testkit::{
+    fixtures,
+    home_world::{HomeClock, HomeWorld},
+};
+
+use super::WITH_ANILIST;
+use crate::harness::{Harness, Options};
+
+/// A schedule as busy as AniList's: 130 invented shows airing weekly, from thirteen weeks back
+/// to four ahead, about 130 broadcasts a week, at the fixtures' clock.
+fn busy_schedule(h: &Harness) {
+    const DAY: i64 = 86_400;
+    let server = h.server();
+    let titles: Vec<_> = (0..130u32)
+        .map(|n| fixtures::invented(960_000 + n, "RELEASING", 24, (2030, 1, 1), &[], &[]))
+        .collect();
+    server.add_titles(titles);
+    let mut rows = Vec::new();
+    for n in 0..130u32 {
+        let slot = i64::from(n) * 7 * DAY / 130;
+        for week in -13..4i64 {
+            let at = fixtures::FIXTURE_NOW + week * 7 * DAY + slot;
+            rows.push((AnilistId::new(960_000 + n), (week + 14) as u32, at));
+        }
+    }
+    server.add_broadcasts(rows);
+}
+
+fn install(h: &Harness, world: &HomeWorld) {
+    busy_schedule(h);
+    let server = h.server();
+    server.add_titles(fixtures::long_franchise());
+    server.add_titles(fixtures::franchise());
+    let (season, rest): (Vec<_>, Vec<_>) = world
+        .titles
+        .iter()
+        .cloned()
+        .partition(|t| world.this_season.iter().any(|id| t["id"] == id.get()));
+    server.add_season(season);
+    server.add_catalogue(rest);
+    server.add_broadcasts(world.broadcasts.iter().copied());
+    server.add_entries(world.entries.iter().cloned());
+}
+
+async fn launch(
+    now: i64,
+    store: Option<Store>,
+    world: &HomeWorld,
+    digest: bool,
+    ahead: i64,
+) -> Harness {
+    let clock = kaeri_engine::clock::Clock::default();
+    clock.advance(ahead);
+    let h = Harness::with(Options {
+        now,
+        config: Some(WITH_ANILIST.to_owned()),
+        signed_in: vec!["anilist"],
+        store,
+        digest,
+        clock: Some(clock),
+        ..Options::default()
+    })
+    .await;
+    install(&h, world);
+    h
+}
+
+#[derive(Default)]
+struct Tally {
+    rows: Vec<(String, usize, BTreeMap<String, usize>)>,
+    seen: usize,
+}
+
+impl Tally {
+    fn take(&mut self, h: &Harness, label: &str) {
+        let all: Vec<_> =
+            h.server().requests().into_iter().filter(|r| r.path == "/graphql").collect();
+        let new = &all[self.seen.min(all.len())..];
+        let mut by: BTreeMap<String, usize> = BTreeMap::new();
+        for r in new {
+            *by.entry(format!("{:?}", r.operation)).or_default() += 1;
+        }
+        self.rows.push((label.to_owned(), new.len(), by));
+        self.seen = all.len();
+    }
+
+    fn reset(&mut self) {
+        self.seen = 0;
+    }
+
+    fn print(&self) {
+        println!("\n| journey | requests | by operation |\n|---|---:|---|");
+        for (label, n, by) in &self.rows {
+            let by: Vec<String> = by.iter().map(|(k, v)| format!("{k} {v}")).collect();
+            println!("| {label} | {n} | {} |", by.join(", "));
+        }
+    }
+}
+
+async fn run(h: &mut Harness, commands: Vec<Command>) -> Vec<Event> {
+    for c in commands {
+        h.send(c);
+    }
+    h.settle().await
+}
+
+fn home_items(updates: &[Event]) -> Vec<(AnilistId, bool, SectionKind)> {
+    let Some(home) = updates
+        .iter()
+        .filter_map(|u| match u {
+            Event::Home(home) => Some(home.as_ref().clone()),
+            _ => None,
+        })
+        .last()
+    else {
+        return Vec::new();
+    };
+    home.sections
+        .iter()
+        .flat_map(|s| {
+            s.items.iter().map(move |i| (i.entry.id, i.entry.banner_url.is_some(), s.kind))
+        })
+        .collect()
+}
+
+fn open_title(id: AnilistId) -> Vec<Command> {
+    vec![
+        Command::LoadDetail(id),
+        Command::Licensed(LicensedCommand::LoadAvailability { id, plays_here: true }),
+        Command::LoadEpisodes(id),
+        Command::LoadDub(id),
+    ]
+}
+
+#[tokio::test]
+async fn anilist_budget_per_journey() {
+    let now = kaeri_store::now();
+    let world = HomeWorld::at(HomeClock::in_zone(now, &jiff::tz::TimeZone::UTC));
+    let mut tally = Tally::default();
+
+    let mut h = launch(now, None, &world, false, 0).await;
+    world.seed_history(h.store(), now);
+    let store = h.store().clone();
+
+    // Cold launch: the launch pull, Home as the Mac's Home tab asks for it, then what the
+    // Continue and sync answers set off (the widgets' record) and the stills of Continue cards
+    // without a banner.
+    run(&mut h, vec![Command::SyncNow]).await;
+    tally.take(&h, "cold launch: launch pull (SyncNow)");
+    let updates =
+        run(&mut h, vec![Command::LoadHome { refresh: false }, Command::LoadContinue]).await;
+    tally.take(&h, "cold launch: LoadHome + LoadContinue");
+    for r in h.server().requests().iter().filter(|r| r.path == "/graphql") {
+        let ids = r.variables.get("ids").map(|v| v.to_string()).unwrap_or_default();
+        println!("  {:?} ids={ids}", r.operation);
+    }
+    let items = home_items(&updates);
+    run(&mut h, vec![Command::WidgetSnapshot, Command::UpcomingNotices]).await;
+    tally.take(&h, "cold launch: WidgetSnapshot + UpcomingNotices");
+    let stills: Vec<Command> = items
+        .iter()
+        .filter(|(_, banner, kind)| !banner && *kind == SectionKind::Continue)
+        .map(|(id, ..)| Command::LoadEpisodes(*id))
+        .collect();
+    let n = stills.len();
+    run(&mut h, stills).await;
+    tally.take(&h, &format!("cold launch: Continue stills ({n} cards without a banner)"));
+
+    // Home again inside half an hour, and after the player closes (a forced refresh).
+    run(&mut h, vec![Command::LoadHome { refresh: false }, Command::LoadContinue]).await;
+    tally.take(&h, "Home again within 30 min");
+    run(&mut h, vec![Command::LoadHome { refresh: true }]).await;
+    tally.take(&h, "Home after the player closes (refresh)");
+    h.advance_engine_clock(31 * 60);
+    run(&mut h, vec![Command::LoadHome { refresh: false }, Command::LoadContinue]).await;
+    tally.take(&h, "Home again after 31 min (engine clock moved)");
+
+    // A title page, then two more seasons of the same franchise.
+    let [_, _, third, fourth, first_last] = fixtures::FRANCHISE_SEASONS;
+    run(&mut h, open_title(third)).await;
+    tally.take(&h, "open a title (5-season franchise)");
+    run(&mut h, open_title(fourth)).await;
+    tally.take(&h, "switch season (next)");
+    run(&mut h, open_title(first_last)).await;
+    tally.take(&h, "switch season (last)");
+    let long = fixtures::LONG_FRANCHISE_SEASONS[5];
+    run(&mut h, open_title(long)).await;
+    tally.take(&h, "open a title (12-season franchise)");
+    run(&mut h, open_title(fixtures::LONG_FRANCHISE_SEASONS[6])).await;
+    tally.take(&h, "switch season (12-season franchise)");
+
+    // Library: every segment, as the screen asks on appearing.
+    run(&mut h, LibrarySegment::ALL.iter().map(|s| Command::LoadLibrary(*s)).collect()).await;
+    tally.take(&h, "Library (5 segments)");
+
+    run(&mut h, vec![Command::LoadCalendar]).await;
+    tally.take(&h, "Calendar");
+
+    run(&mut h, vec![Command::LoadBrowse, Command::LoadSearchFacets]).await;
+    tally.take(&h, "Search start (rails + facets)");
+
+    // Hover ten covers: the hover card asks for the page and the episodes.
+    let hovered: Vec<AnilistId> = world
+        .titles
+        .iter()
+        .filter_map(|t| t["id"].as_u64().map(|n| AnilistId::new(n as u32)))
+        .filter(|id| *id != third && *id != fourth)
+        .take(10)
+        .collect();
+    let hover: Vec<Command> = hovered
+        .iter()
+        .flat_map(|id| [Command::LoadDetail(*id), Command::LoadEpisodes(*id)])
+        .collect();
+    run(&mut h, hover).await;
+    tally.take(&h, "hover 10 covers");
+
+    // A sync tick as the 15-minute loop and Sync now run it, and the widgets' record a sync
+    // state sets off. Within five minutes of the last, so the schedule is still kept.
+    run(&mut h, vec![Command::SyncNow, Command::WidgetSnapshot]).await;
+    tally.take(&h, "sync tick + widgets (schedule still kept)");
+
+    drop(h.quit().await);
+
+    // Warm launch: a new engine on the same database, last launched two days ago, with the
+    // launch's airing digest on.
+    store.set_meta_i64("airing_digest_seen", now - 2 * 86_400).unwrap();
+    let mut h = launch(now, Some(store.clone()), &world, true, 31 * 60).await;
+    tally.reset();
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+    while h
+        .server()
+        .requests()
+        .iter()
+        .all(|r| r.operation != kaeri_testkit::Operation::Schedule)
+        && std::time::Instant::now() < deadline
+    {
+        tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+    }
+    tokio::time::sleep(std::time::Duration::from_millis(300)).await;
+    tally.take(&h, "warm launch: airing digest (last launch 2 days ago)");
+    run(&mut h, vec![Command::SyncNow]).await;
+    tally.take(&h, "warm launch: launch pull");
+    let updates =
+        run(&mut h, vec![Command::LoadHome { refresh: false }, Command::LoadContinue]).await;
+    tally.take(&h, "warm launch: LoadHome + LoadContinue");
+    let items = home_items(&updates);
+    run(&mut h, vec![Command::WidgetSnapshot, Command::UpcomingNotices]).await;
+    tally.take(&h, "warm launch: WidgetSnapshot + UpcomingNotices (schedule cold)");
+    let stills: Vec<Command> = items
+        .iter()
+        .filter(|(_, banner, kind)| !banner && *kind == SectionKind::Continue)
+        .map(|(id, ..)| Command::LoadEpisodes(*id))
+        .collect();
+    let n = stills.len();
+    run(&mut h, stills).await;
+    tally.take(&h, &format!("warm launch: Continue stills ({n})"));
+    run(&mut h, vec![Command::LoadCalendar]).await;
+    tally.take(&h, "warm launch: Calendar");
+    run(&mut h, vec![Command::LoadBrowse, Command::LoadSearchFacets]).await;
+    tally.take(&h, "warm launch: Search start");
+    run(&mut h, open_title(third)).await;
+    tally.take(&h, "warm launch: open the same title");
+    run(&mut h, vec![Command::CheckNewEpisodes]).await;
+    tally.take(&h, "new-episode check");
+    h.advance_engine_clock(31 * 60);
+    run(&mut h, vec![Command::LoadHome { refresh: false }, Command::LoadContinue]).await;
+    tally.take(&h, "warm: Home after its half hour");
+    println!("continue rows: {}", store.continue_list(15).unwrap_or_default().len());
+
+    tally.print();
+    drop(h.quit().await);
+}

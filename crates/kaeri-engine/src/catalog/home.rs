@@ -195,6 +195,10 @@ struct PersonalPart {
     /// The titles found finished, for the rules every shelf keeps.
     #[serde(default)]
     finished: Vec<u32>,
+    /// A lookup failed, so this is what the others found: shown, and asked for again at once
+    /// rather than served for half an hour.
+    #[serde(default)]
+    incomplete: bool,
 }
 
 /// One broadcast.
@@ -1127,7 +1131,8 @@ fn due(meta: &Meta, store: &Store, ask: &HomeAsk) -> HashSet<HomePart> {
         due.insert(HomePart::Season);
     }
     let from = personal_signature(store, ask);
-    if !kept::<PersonalPart>(store, PERSONAL_KEY).is_some_and(|p| fresh(p.at) && p.from == from)
+    if !kept::<PersonalPart>(store, PERSONAL_KEY)
+        .is_some_and(|p| fresh(p.at) && p.from == from && !p.incomplete)
     {
         due.insert(HomePart::Suggestions);
     }
@@ -1177,46 +1182,81 @@ pub async fn load(lent: Lent, memory: HomeMemory, ask: HomeAsk) {
         send(&meta, &store, &tx, &ask, &memory, outcome.is_err());
         outcome.is_ok()
     };
+    // A part that fails, or comes back short of a lookup, is not given up on: what is kept is
+    // on screen already, and the part is asked for again after AniList's own wait, a few times.
+    // A short part is sent as it is, and again when it is whole.
+    let partial = || send(&meta, &store, &tx, &ask, &memory, false);
     let wanted = |part| due.contains(&part);
     tokio::join!(
         async {
             if stale.is_empty() {
                 return true;
             }
-            finish(None, refresh_continue(&meta, &stale).await)
+            let run = || async { refresh_continue(&meta, &stale).await.map(|()| true) };
+            finish(None, retried(&meta, run, partial).await)
         },
         async {
             if !wanted(HomePart::Season) {
                 return true;
             }
-            finish(Some(HomePart::Season), load_season(&meta, &store, &ask).await)
+            let run = || async { load_season(&meta, &store, &ask).await.map(|()| true) };
+            finish(Some(HomePart::Season), retried(&meta, run, partial).await)
         },
         async {
             if !wanted(HomePart::Suggestions) {
                 return true;
             }
-            finish(Some(HomePart::Suggestions), load_personal(&meta, &store, &ask).await)
+            let run = || load_personal(&meta, &store, &ask);
+            finish(Some(HomePart::Suggestions), retried(&meta, run, partial).await)
         },
         async {
             if !wanted(HomePart::Week) {
                 return true;
             }
-            let loaded = if fresh(&store, &ask) {
-                load_popular_week(&meta, &store, &ask).await
-            } else {
-                load_week(&meta, &store, &ask).await
+            let run = || async {
+                if fresh(&store, &ask) {
+                    load_popular_week(&meta, &store, &ask).await.map(|()| true)
+                } else {
+                    load_week(&meta, &store, &ask).await.map(|()| true)
+                }
             };
-            finish(Some(HomePart::Week), loaded)
+            finish(Some(HomePart::Week), retried(&meta, run, partial).await)
         },
     );
+}
+
+/// Run a part until it is whole: `run` says whether it was, a failure or a short answer is run
+/// again after the wait, and `partial` says what a short answer found. After the last go, a
+/// short answer stands and a failure is the part's.
+async fn retried<F, Fut>(meta: &Meta, mut run: F, partial: impl Fn()) -> Result<(), String>
+where
+    F: FnMut() -> Fut,
+    Fut: Future<Output = Result<bool, String>>,
+{
+    let mut tries = 0;
+    loop {
+        match run().await {
+            Ok(true) => return Ok(()),
+            Ok(false) if tries >= crate::catalog::RETRIES => return Ok(()),
+            Ok(false) => partial(),
+            Err(e) if tries >= crate::catalog::RETRIES => return Err(e),
+            Err(e) => tracing::warn!(error = %e, "part of Home failed; asking again"),
+        }
+        tries += 1;
+        tokio::time::sleep(crate::catalog::retry_wait(meta).await).await;
+    }
 }
 
 /// Continue's titles whose cached record is missing or old: their airing is what says an
 /// episode is waiting.
 fn stale_continue(store: &Store) -> Vec<AnilistId> {
+    stale_among(store, continue_ids(store))
+}
+
+/// The titles among `ids` whose cached record is missing or older than [`CONTINUE_FRESH`].
+pub(crate) fn stale_among(store: &Store, ids: Vec<AnilistId>) -> Vec<AnilistId> {
     let wall = kaeri_store::now();
-    continue_ids(store)
-        .into_iter()
+    ids.into_iter()
         .filter(|id| {
             store
                 .cached_media(*id)
@@ -1340,7 +1380,7 @@ fn personal_signature(store: &Store, ask: &HomeAsk) -> u64 {
 
 /// Up next for you, as Home has it: the suggestions with nothing airing today in their place,
 /// and "Because you finished" from the most recent title finished that rated well.
-async fn load_personal(meta: &Meta, store: &Store, ask: &HomeAsk) -> Result<(), String> {
+async fn load_personal(meta: &Meta, store: &Store, ask: &HomeAsk) -> Result<bool, String> {
     let from = personal_signature(store, ask);
     let queue: Vec<AnilistId> =
         store.continue_list(15).unwrap_or_default().iter().map(|p| p.anilist_id).collect();
@@ -1355,7 +1395,7 @@ async fn load_personal(meta: &Meta, store: &Store, ask: &HomeAsk) -> Result<(), 
             PERSONAL_KEY,
             &PersonalPart { at: ask.now, from, ..PersonalPart::default() },
         );
-        return Ok(());
+        return Ok(true);
     }
     let up_ask = up_next::Ask {
         listed: ask.listed,
@@ -1365,6 +1405,7 @@ async fn load_personal(meta: &Meta, store: &Store, ask: &HomeAsk) -> Result<(), 
     };
     // Every dismissal is left in, and taken out as Home is composed, so an Undo needs no request.
     let found = up_next::find(meta, store, &queue, &[], &up_ask, SUGGESTIONS_FOUND).await?;
+    let mut complete = found.complete;
     let because =
         match found.finished.iter().find(|e| e.score.is_some_and(|s| s >= BECAUSE_SCORE)) {
             Some(source) => match meta.recommended_titles(source.id, BECAUSE_ASKED).await {
@@ -1373,6 +1414,7 @@ async fn load_personal(meta: &Meta, store: &Store, ask: &HomeAsk) -> Result<(), 
                     ids: media.iter().map(|m| m.id.get()).collect(),
                 }),
                 Err(e) => {
+                    complete = false;
                     tracing::warn!(error = %e, "Because you finished failed");
                     None
                 }
@@ -1385,9 +1427,10 @@ async fn load_personal(meta: &Meta, store: &Store, ask: &HomeAsk) -> Result<(), 
         picks: found.picks.into_iter().map(|(pick, _)| pick).collect(),
         because,
         finished: found.finished_ids.iter().map(|id| id.get()).collect(),
+        incomplete: !complete,
     };
     keep(store, PERSONAL_KEY, &part);
-    Ok(())
+    Ok(complete)
 }
 
 /// The shows that may be followed: Watching on the tracker's list, and the history. What This

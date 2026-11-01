@@ -255,7 +255,31 @@ pub struct Meta {
     relations: Arc<Mutex<franchise::Relations>>,
     /// How long a page waits for the season walk: [`franchise::HOLD`].
     season_hold: Duration,
+    /// Several titles asked for together, in one request: see [`Self::media_many`].
+    many: Arc<Mutex<Many>>,
+    /// When each title last aired, kept until its next broadcast: see [`Self::last_aired_kept`].
+    aired: Arc<Mutex<HashMap<AnilistId, (LastAired, i64)>>>,
 }
+
+/// The titles asked for in one go.
+#[derive(Default)]
+struct Many {
+    /// The batch still taking titles, which goes out shortly after it opens.
+    open: Option<Batch>,
+}
+
+type BatchAnswer = Arc<Result<Vec<Media>>>;
+
+struct Batch {
+    ids: Vec<AnilistId>,
+    /// Nobody on a screen is waiting for any of it.
+    low: bool,
+    answer: Arc<tokio::sync::watch::Sender<Option<BatchAnswer>>>,
+}
+
+/// How long a batch waits for more titles before it goes out: long enough for the lookups a
+/// screen starts together, short enough not to be noticed.
+const BATCH_WAIT: Duration = Duration::from_millis(25);
 
 impl Meta {
     pub fn new(anilist: AniList, tenrai: Option<Tenrai>, store: Store) -> Self {
@@ -272,6 +296,8 @@ impl Meta {
             reuse_for: REUSE_FOR,
             relations: Arc::default(),
             season_hold: franchise::HOLD,
+            many: Arc::default(),
+            aired: Arc::default(),
         }
     }
 
@@ -648,7 +674,10 @@ impl Meta {
         };
 
         let mut tenrai_error = None;
-        if let Some(tenrai) = &self.tenrai {
+        // Over the limit is no reason to take a thinner record from Tenrai: what is cached
+        // stands in, and the page asks AniList again when it is let.
+        let patient = matches!(primary, AniListError::RateLimited { .. });
+        if let Some(tenrai) = self.tenrai.as_ref().filter(|_| !patient) {
             match self.ask_tenrai(tenrai.media(id)).await {
                 Ok(media) => {
                     self.note_tenrai(None);
@@ -670,10 +699,74 @@ impl Meta {
         (Err(self.exhausted(primary, tenrai_error)), false)
     }
 
+    /// Several titles, in the order asked, with lookups made together sharing one request: the
+    /// Continue rail, Home's refresh of it and Up next's probe ask for the same ids within
+    /// moments, and cost AniList one request between them. A title nothing can describe is left
+    /// out.
+    pub async fn media_many(&self, ids: &[AnilistId]) -> Result<Vec<Media>> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
+        let low = crate::anilist::is_background();
+        let mut rx = {
+            let Ok(mut many) = self.many.lock() else {
+                return self.media_many_direct(ids).await;
+            };
+            let batch = many.open.get_or_insert_with(|| {
+                let (tx, _) = tokio::sync::watch::channel(None);
+                let batch = Batch { ids: Vec::new(), low, answer: Arc::new(tx) };
+                let (me, answer) = (self.clone(), batch.answer.clone());
+                tokio::spawn(async move { me.send_batch(answer).await });
+                batch
+            });
+            // One screen's lookup in the batch makes the whole of it a screen's.
+            batch.low &= low;
+            for id in ids {
+                if !batch.ids.contains(id) {
+                    batch.ids.push(*id);
+                }
+            }
+            batch.answer.subscribe()
+        };
+        let answer = rx.wait_for(|a| a.is_some()).await.ok().and_then(|a| a.clone());
+        let Some(answer) = answer else { return self.media_many_direct(ids).await };
+        match answer.as_ref() {
+            Ok(found) => Ok(ids
+                .iter()
+                .filter_map(|id| found.iter().find(|m| m.id == *id).cloned())
+                .collect()),
+            Err(e) => Err(e.clone()),
+        }
+    }
+
+    /// Send the batch that is open, once it has had [`BATCH_WAIT`] to fill, and say the answer.
+    async fn send_batch(&self, answer: Arc<tokio::sync::watch::Sender<Option<BatchAnswer>>>) {
+        tokio::time::sleep(BATCH_WAIT).await;
+        let batch = self.many.lock().ok().and_then(|mut many| many.open.take());
+        let Some(batch) = batch else { return };
+        let ask = async {
+            let mut found = Vec::new();
+            let mut failure = None;
+            for chunk in batch.ids.chunks(50) {
+                match self.media_many_direct(chunk).await {
+                    Ok(list) => found.extend(list),
+                    Err(e) => failure = Some(e),
+                }
+            }
+            match failure {
+                Some(e) if found.is_empty() => Err(e),
+                _ => Ok(found),
+            }
+        };
+        let result =
+            if batch.low { crate::anilist::in_background(ask).await } else { ask.await };
+        let _ = answer.send(Some(Arc::new(result)));
+    }
+
     /// Several titles, in the order asked. Fallback assembles per title — the cache
     /// first, because these are almost always titles from the caller's own history,
     /// then Tenrai for the gaps. A title nothing can describe is omitted, not invented.
-    pub async fn media_many(&self, ids: &[AnilistId]) -> Result<Vec<Media>> {
+    async fn media_many_direct(&self, ids: &[AnilistId]) -> Result<Vec<Media>> {
         // The demo's title is the engine's own: asked of no one, and put back where it was asked.
         if ids.iter().any(|id| crate::demo::is_demo(*id)) {
             let others: Vec<AnilistId> =
@@ -681,7 +774,7 @@ impl Meta {
             let mut found = if others.is_empty() {
                 Vec::new()
             } else {
-                Box::pin(self.media_many(&others)).await.unwrap_or_default()
+                Box::pin(self.media_many_direct(&others)).await.unwrap_or_default()
             };
             let at = ids.iter().position(|id| crate::demo::is_demo(*id)).unwrap_or(0);
             found.insert(at.min(found.len()), crate::demo::media());
@@ -702,10 +795,11 @@ impl Meta {
         let mut assembled = Vec::with_capacity(ids.len());
         let mut tenrai_error = None;
         let mut rung = CACHE;
+        let patient = matches!(primary, AniListError::RateLimited { .. });
         for id in ids {
             if let Some(media) = self.recall(*id) {
                 assembled.push(media);
-            } else if let Some(tenrai) = &self.tenrai {
+            } else if let Some(tenrai) = self.tenrai.as_ref().filter(|_| !patient) {
                 match self.ask_tenrai(tenrai.media(*id)).await {
                     Ok(media) => {
                         self.remember(&media);
@@ -909,6 +1003,48 @@ impl Meta {
     /// When each title last aired. AniList only — nothing else knows; absent beats guessed.
     pub async fn last_aired(&self, ids: &[AnilistId]) -> Result<Vec<LastAired>> {
         self.weathered(self.anilist.last_aired(ids)).await
+    }
+
+    /// [`Self::last_aired`] for titles whose next broadcast is at `(id, next)`: an answer is kept
+    /// in memory until that broadcast, since nothing can have aired before it, and only the
+    /// titles without a kept answer are asked for, in one request as background work. The kept
+    /// answers come back with the new ones, and if the request fails, alone with the error.
+    pub async fn last_aired_kept(
+        &self,
+        titles: &[(AnilistId, i64)],
+        now: i64,
+    ) -> (Vec<LastAired>, Option<MetaError>) {
+        let (mut found, missing): (Vec<LastAired>, Vec<AnilistId>) = {
+            let aired = self.aired.lock().map(|a| a.clone()).unwrap_or_default();
+            let mut found = Vec::new();
+            let mut missing = Vec::new();
+            for (id, _) in titles {
+                match aired.get(id) {
+                    Some((row, until)) if now < *until => found.push(*row),
+                    _ => missing.push(*id),
+                }
+            }
+            (found, missing)
+        };
+        if missing.is_empty() {
+            return (found, None);
+        }
+        match crate::anilist::in_background(self.last_aired(&missing)).await {
+            Ok(rows) => {
+                if let Ok(mut aired) = self.aired.lock() {
+                    for row in &rows {
+                        if let Some((_, next)) =
+                            titles.iter().find(|(id, _)| *id == row.media_id)
+                        {
+                            aired.insert(row.media_id, (*row, *next));
+                        }
+                    }
+                }
+                found.extend(rows);
+                (found, None)
+            }
+            Err(e) => (found, Some(e)),
+        }
     }
 
     /// What aired for the titles followed, after `from` and before `to`: the new-episode check.

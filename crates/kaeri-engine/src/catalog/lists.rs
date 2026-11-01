@@ -106,10 +106,26 @@ async fn continue_entries(
     if ids.is_empty() {
         return Ok(Vec::new());
     }
-    meta.media_many(&ids)
-        .await
-        .map(|media| media.iter().map(|m| data::entry_from(m, Some(store))).collect())
-        .map_err(|e| e.to_string())
+    // The records asked for again are those older than Home keeps them: the rail and Home's
+    // Continue read the same cache, and one request answers both.
+    let stale = crate::catalog::home::stale_among(store, ids.clone());
+    let mut fetched = if stale.is_empty() {
+        Vec::new()
+    } else {
+        meta.media_many(&stale).await.map_err(|e| e.to_string())?
+    };
+    let held = meta.cached(&ids);
+    let media: Vec<_> = ids
+        .iter()
+        .filter_map(|id| {
+            fetched
+                .iter()
+                .position(|m| m.id == *id)
+                .map(|at| fetched.swap_remove(at))
+                .or_else(|| held.iter().find(|m| m.id == *id).cloned())
+        })
+        .collect();
+    Ok(media.iter().map(|m| data::entry_from(m, Some(store))).collect())
 }
 
 /// Titles kept in the CONTINUE rail. Long enough to cover what you are actually mid-way through,
@@ -134,6 +150,11 @@ pub async fn publish_list(
 
 /// When the releasing titles among `entries` last aired, as one more request, for a list
 /// already on screen.
+///
+/// An answer is kept in memory until the title's next broadcast, so a list shown again asks
+/// nothing for it. A request that fails, over the limit or not, is not given up on: what is
+/// kept is said at once, and the rest is asked for again after AniList's own wait, a few times,
+/// behind the list.
 pub async fn follow_aired(
     meta: &Meta,
     tx: &Outbox,
@@ -142,33 +163,60 @@ pub async fn follow_aired(
 ) {
     // Releasing titles only. A finished show has no broadcast to report, and including it would
     // spend rows of a capped response on titles that cannot use them.
-    let ids: Vec<kaeri_core::ids::AnilistId> =
-        entries.iter().filter(|e| e.airing_in.is_some()).map(|e| e.id).collect();
-    if ids.is_empty() {
+    let titles: Vec<(kaeri_core::ids::AnilistId, i64)> = entries
+        .iter()
+        .filter_map(|e| e.airing_in.map(|airing_in| (e.id, now.saturating_add(airing_in))))
+        .collect();
+    if titles.is_empty() {
         return;
     }
-    match meta.last_aired(&ids).await {
-        Ok(rows) => {
-            let _ = tx.send(Event::LastAired(
-                rows.into_iter()
-                    // Aired rows only. AniList has answered this query with rows whose air
-                    // time is still ahead, and naming next week's episode as "out just now"
-                    // is exactly the lie the broadcast line exists not to tell.
-                    .filter(|r| r.airing_at <= now)
-                    .map(|r| TitleAired {
-                        id: r.media_id,
-                        aired: Aired {
-                            episode: r.episode,
-                            ago: now.saturating_sub(r.airing_at),
-                        },
-                    })
-                    .collect(),
-            ));
-        }
-        // Not worth a toast: the list is already on screen and complete, and this only adds a
-        // line to it. Logged so the Logs overlay can still explain a missing line.
-        Err(e) => tracing::warn!(%e, "last-aired lookup failed"),
+    if say_aired(meta, tx, &titles, now).await {
+        return;
     }
+    let (meta, tx) = (meta.clone(), tx.clone());
+    tokio::spawn(async move {
+        for _ in 0..AIRED_RETRIES {
+            let wait = meta.rate_limit_wait().await.unwrap_or_default();
+            tokio::time::sleep(wait.max(AIRED_RETRY_AFTER)).await;
+            if say_aired(&meta, &tx, &titles, now_epoch()).await {
+                return;
+            }
+        }
+    });
+}
+
+/// How many more times a last-aired lookup that failed is asked for, and the least it waits.
+const AIRED_RETRIES: u32 = 3;
+const AIRED_RETRY_AFTER: std::time::Duration = std::time::Duration::from_secs(30);
+
+/// Say when `titles` last aired, kept answers and new, and whether nothing was left unanswered.
+async fn say_aired(
+    meta: &Meta,
+    tx: &Outbox,
+    titles: &[(kaeri_core::ids::AnilistId, i64)],
+    now: i64,
+) -> bool {
+    let (rows, failure) = meta.last_aired_kept(titles, now).await;
+    let aired: Vec<TitleAired> = rows
+        .into_iter()
+        // Aired rows only. AniList has answered this query with rows whose air time is still
+        // ahead, and naming next week's episode as "out just now" is exactly the lie the
+        // broadcast line exists not to tell.
+        .filter(|r| r.airing_at <= now)
+        .map(|r| TitleAired {
+            id: r.media_id,
+            aired: Aired { episode: r.episode, ago: now.saturating_sub(r.airing_at) },
+        })
+        .collect();
+    if !aired.is_empty() || failure.is_none() {
+        let _ = tx.send(Event::LastAired(aired));
+    }
+    // Not worth a toast: the list is already on screen and complete, and this only adds a line
+    // to it. Logged so the Logs overlay can still explain a missing line.
+    if let Some(e) = &failure {
+        tracing::warn!(%e, "last-aired lookup failed; asking again shortly");
+    }
+    failure.is_none()
 }
 
 /// The season containing today, derived from the epoch without a calendar dependency.
