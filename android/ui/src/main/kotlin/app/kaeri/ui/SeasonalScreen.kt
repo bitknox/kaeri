@@ -77,9 +77,11 @@ fun SeasonalScreen() {
 @Composable
 internal fun PosterGrid(
     padding: PaddingValues,
+    state: androidx.compose.foundation.lazy.grid.LazyGridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState(),
     content: androidx.compose.foundation.lazy.grid.LazyGridScope.() -> Unit,
 ) {
     LazyVerticalGrid(
+        state = state,
         columns = if (wideWindow()) GridCells.Adaptive(140.dp) else GridCells.Fixed(3),
         contentPadding = padding,
         horizontalArrangement = Arrangement.spacedBy(13.dp),
