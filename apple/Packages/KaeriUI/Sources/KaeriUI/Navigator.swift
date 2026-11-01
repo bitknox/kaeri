@@ -54,6 +54,8 @@ public final class Navigator {
     public var searchFiltersShown = false
     /// The search the launch arguments ask for, for a screenshot, until Search runs it.
     public var launchSearch: SearchQuery?
+    /// Points to scroll Search's results at launch, for shots.
+    public var launchScroll: Int?
     /// Whether Downloads is pushed over the Library, as its first row does on iPhone.
     public var downloadsPushed = false
     /// Counts the viewer's own marks of an episode as watched, for the light impact on iPhone:
@@ -128,6 +130,12 @@ public final class Navigator {
             launchSearch = SearchQuery(
                 text: route.query ?? "", available: available == "services" ? .onYourServices : .playsHere)
         }
+        if route.filters == "set" {
+            launchSearch = SearchQuery(
+                text: route.query ?? "", genres: ["Fantasy"], formats: [.tv], season: .fall, years: Bounds(min: 2026, max: 2026),
+                minScore: 70, minPopularity: obscureBelow)
+        }
+        launchScroll = route.scroll
         if let genre = route.genre { launchSearch = SearchQuery(text: route.query ?? "", genres: [genre]) }
         if route.sheet == "join" { invite = "https://plugins.hotaru.example/join/fixture#key" }
         if route.sheet == "show" { showSettings = route.title }
