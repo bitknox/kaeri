@@ -21,6 +21,16 @@ struct AskingTests {
         #expect(store.sentLog.count == 3, "a watch asks anyway")
     }
 
+    @Test func aHoverCardIsAskedForOnceAndNeverAsAPage() {
+        let store = AppStore()
+        store.loadCards([900_001])
+        #expect(store.sentLog == ["loadCards"], "the card, not the page")
+        store.apply(.cards([entry(900_001, "Stardust Wayfarer")]))
+        store.loadCards([900_001])
+        #expect(store.sentLog.count == 1, "its card is in")
+        #expect(store.titles[900_001]?.title == "Stardust Wayfarer")
+    }
+
     @Test func aQuestionAboutATitleIsNotPutAgainWhileItsAnswerIsOnItsWay() {
         let store = AppStore()
         store.loadDetail(900_001)
