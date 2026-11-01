@@ -828,25 +828,43 @@ jobs:
           key: windows-app
           save-if: ${{ github.ref == 'refs/heads/main' }}
       # The bindings generator, built once per pin and patch series: bindings.sh keeps it in
-      # ~/.cache/kaeri-bindgen-cs, by a key of that pin and those patches.
-      - uses: actions/cache@v6
+      # ~/.cache/kaeri-bindgen-cs, by a key of that pin and those patches. Saved from main only,
+      # below, as every cache here is: a pull request's own copy only took room from main's.
+      - name: Restore the bindings generator
+        id: bindgen
+        uses: actions/cache/restore@v6
         with:
           path: ~/.cache/kaeri-bindgen-cs
           key: ci-bindgen-cs-${{ hashFiles('desktop/windows/bindgen-cs/**') }}
       # libmpv, from mpv's development builds, whose file names carry the commit. The cache is
       # keyed by the script, whose pin and checksum are the file's; a miss fetches and verifies.
-      - uses: actions/cache@v6
+      - name: Restore libmpv
+        id: libmpv
+        uses: actions/cache/restore@v6
         with:
           path: desktop/windows/.libmpv
           key: ci-libmpv-x64-${{ hashFiles('desktop/windows/scripts/libmpv.ps1') }}
       - name: libmpv
         run: ./desktop/windows/scripts/libmpv.ps1 -Arch x64
         shell: pwsh
+      - name: Keep libmpv
+        if: github.ref == 'refs/heads/main' && steps.libmpv.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: desktop/windows/.libmpv
+          key: ${{ steps.libmpv.outputs.cache-primary-key }}
       # The testing engine, the generated bindings and both C# test projects, under a temporary
       # profile, as scripts/test.sh does everywhere.
       - name: Test
         run: desktop/windows/scripts/test.sh
         shell: bash
+      # The generator the step above built, when it had to.
+      - name: Keep the bindings generator
+        if: ${{ !cancelled() && github.ref == 'refs/heads/main' && steps.bindgen.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v6
+        with:
+          path: ~/.cache/kaeri-bindgen-cs
+          key: ${{ steps.bindgen.outputs.cache-primary-key }}
       # The app, against the bindings the tests just used. Building is the check: the XAML
       # compiler and the C# compiler both have to accept every page.
       - name: Build the app
