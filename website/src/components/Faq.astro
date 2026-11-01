@@ -1,0 +1,23 @@
+---
+// "Before you install.": the questions people ask first, each a disclosure whose height eases open.
+import { useSite } from '../i18n/site';
+
+const { t } = useSite(Astro);
+const ids = ['shows', 'mac', 'store', 'account', 'cost'];
+---
+
+<section class="faq-sect" aria-labelledby="faq-h">
+	<div class="faq">
+		<h2 id="faq-h" class="faq-title">{t('faq.title')}</h2>
+		<div class="faq-list">
+			{
+				ids.map((id, i) => (
+					<details open={i === 0}>
+						<summary>{t(`faq.${id}.q`)}</summary>
+						<p>{t(`faq.${id}.a`)}</p>
+					</details>
+				))
+			}
+		</div>
+	</div>
+</section>

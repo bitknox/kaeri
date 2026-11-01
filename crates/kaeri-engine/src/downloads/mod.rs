@@ -1,0 +1,965 @@
+//! The download manager.
+//!
+//! One task owns the queue. It polls the torrent session, writes progress to SQLite, and reports to
+//! the UI — the UI never touches librqbit, and librqbit never touches the interface.
+//!
+//! Three decisions worth stating.
+//!
+//! **Concurrency is capped.** A swarm gives you a share of its bandwidth, so eight downloads at once
+//! is not eight times faster — it is eight things all finishing late, and on a VPN proxy it is also
+//! eight times the connection count through one tunnel. The queue drains oldest-first.
+//!
+//! **Progress is persisted, not just displayed.** A download interrupted by a crash comes back
+//! showing where it got to, and librqbit resumes from the partial file rather than from zero.
+//!
+//! **The VPN guard is re-checked on every start.** A download runs unattended for a long time,
+//! which makes it the most important thing to gate, not the least.
+
+pub mod ahead;
+pub mod commands;
+
+use std::{path::PathBuf, sync::Arc, time::Duration};
+
+use kaeri_core::ProviderError;
+use kaeri_core::{config::Config, ids::AnilistId, media::Translation};
+use kaeri_model::{Cause, Msg, event::Event, notice::Notice};
+use kaeri_providers::{
+    ProviderRegistry,
+    torrent::{TorrentSession, session::DownloadHandle},
+};
+use kaeri_store::{Download, DownloadState, Store};
+
+use crate::outbox::Outbox;
+
+/// How many torrents fetch at once.
+///
+/// Two, not one: a single stalled swarm should not block the whole queue. Not eight, because a
+/// download's speed is set by the swarm rather than by how many you start.
+const CONCURRENCY: usize = 2;
+
+/// How often progress is polled and written.
+///
+/// A second is enough for a progress meter and cheap enough to run for hours. librqbit's stats are
+/// in-memory, so the cost here is the SQLite write, not the read.
+const POLL: Duration = Duration::from_secs(1);
+
+/// Live state for one running download.
+struct Running {
+    row_id: i64,
+    torrent_id: usize,
+    /// Set once metadata has arrived and the file is known.
+    path: Option<PathBuf>,
+}
+
+/// Run the download queue until the process ends.
+pub fn spawn(
+    store: Store,
+    session: Arc<TorrentSession>,
+    config: crate::SharedConfig,
+    tx: Outbox,
+) -> tokio::task::JoinHandle<()> {
+    tokio::spawn(async move {
+        let mut running: Vec<Running> = Vec::new();
+
+        // Anything the last run left mid-flight is back in the queue, not lost. It was `active` in
+        // the database and there is no torrent for it in this process, so without this it would sit
+        // at "downloading" forever with nothing behind it.
+        //
+        // This assumes one app at a time on a data folder. The Mac app and the terminal app
+        // share one, as do the Linux app and the terminal, and nothing locks it: a second app
+        // opened while the first downloads takes those rows back and starts them again.
+        if let Ok(pending) = store.pending_downloads() {
+            for row in pending.iter().filter(|d| d.state == DownloadState::Active) {
+                let _ = store.set_download_state(row.id, DownloadState::Queued);
+            }
+            if !pending.is_empty() {
+                tracing::info!(count = pending.len(), "download queue restored");
+            }
+        }
+
+        // Downloads whose torrents are being added, each in a task of its own: a magnet can take
+        // up to `METADATA_WAIT` to answer, and one with nobody sharing it held this loop for as
+        // long, so nothing else reported progress or started. Owned by this task, so they end
+        // with it when the session is stopped.
+        let mut starting = Starting::default();
+        loop {
+            tokio::time::sleep(POLL).await;
+            // Snapshotted per tick, so a folder or seeding change applies to the next
+            // download to finish rather than the next launch. Copied out rather than held:
+            // a `std` guard across an `await` would make this future non-`Send`.
+            let current =
+                config.read().map(|c| c.clone()).unwrap_or_else(|e| e.into_inner().clone());
+            poll_running(&store, &session, &current, &tx, &mut running).await;
+            take_started(&store, &session, &tx, &mut running, &mut starting);
+            start_queued(&store, &session, &mut running, &mut starting).await;
+        }
+    })
+}
+
+/// Advance every running download and retire the ones that finished.
+async fn poll_running(
+    store: &Store,
+    session: &TorrentSession,
+    config: &Config,
+    tx: &Outbox,
+    running: &mut Vec<Running>,
+) {
+    let mut finished = Vec::new();
+    // How many queued rows each torrent backs, counted before the walk so a cancellation can
+    // tell "this torrent is mine alone" from "another episode is still fetching from it".
+    let mut rows_per_torrent: std::collections::HashMap<usize, usize> =
+        std::collections::HashMap::new();
+    for entry in running.iter() {
+        *rows_per_torrent.entry(entry.torrent_id).or_default() += 1;
+    }
+
+    for entry in running.iter_mut() {
+        // The row is re-read rather than cached: the user can pause or cancel from the screen, and
+        // this loop has to notice.
+        let row = match store
+            .downloads()
+            .ok()
+            .and_then(|all| all.into_iter().find(|d| d.id == entry.row_id))
+        {
+            Some(row) => row,
+            // Cancelled out from under us: drop the torrent *and* the partial file. Only running
+            // downloads are tracked here, so this can never reach a finished one — cancelling
+            // something half-fetched should not leave gigabytes behind that nothing knows about.
+            //
+            // Unless another row is still using it. librqbit dedups by infohash, so two
+            // episodes queued from one season pack share a torrent id, and deleting its files
+            // for the cancelled episode took the other one's data with it — while that other
+            // row still read as active. The torrent is only forgotten once nothing else wants
+            // it; until then the row simply stops being tracked.
+            None => {
+                let shared = rows_per_torrent.get(&entry.torrent_id).copied().unwrap_or(0) > 1;
+                if shared {
+                    tracing::info!(
+                        torrent_id = entry.torrent_id,
+                        "cancelled, but another queued episode shares this torrent; keeping it"
+                    );
+                } else {
+                    let _ = session.forget(entry.torrent_id, true).await;
+                }
+                finished.push(entry.row_id);
+                continue;
+            }
+        };
+
+        match row.state {
+            DownloadState::Paused => {
+                let _ = session.pause_one(entry.torrent_id).await;
+                continue;
+            }
+            DownloadState::Done | DownloadState::Failed => {
+                finished.push(entry.row_id);
+                continue;
+            }
+            _ => {}
+        }
+
+        let Some(progress) = session.progress_of(entry.torrent_id) else {
+            // The session has forgotten it, which after a resume it may legitimately have. Requeue
+            // rather than fail: the partial file is still on disk and can be picked up again.
+            tracing::warn!(row = row.id, "torrent vanished from the session; requeueing");
+            let _ = store.set_download_state(row.id, DownloadState::Queued);
+            finished.push(entry.row_id);
+            continue;
+        };
+
+        // Un-pause a torrent whose row has come back. Pausing sets librqbit's own paused flag, and
+        // nothing was clearing it — so "resume" moved the row back to `queued`, this loop carried on
+        // polling a torrent that had stopped fetching, and the meter sat still forever. Found by
+        // looking for the call site `resume_one` did not have.
+        if progress.paused {
+            match session.resume_one(entry.torrent_id).await {
+                Ok(()) => tracing::info!(row = row.id, "download resumed"),
+                // Refused means the VPN guard is failing. Back to paused rather than pretending:
+                // a download that silently does not run is exactly the failure this app avoids.
+                Err(e) => {
+                    tracing::warn!(row = row.id, error = %e, "could not resume; pausing again");
+                    let _ = store.set_download_state(row.id, DownloadState::Paused);
+                    continue;
+                }
+            }
+        }
+
+        if entry.path.is_none() && !progress.name.is_empty() {
+            entry.path = Some(session.output_dir().join(&progress.name));
+        }
+        let path_string = entry.path.as_ref().map(|p| p.display().to_string());
+        let _ = store.update_download_progress(
+            row.id,
+            progress.downloaded,
+            progress.total,
+            path_string.as_deref(),
+        );
+
+        // Complete when every byte has arrived *and* the total is known. Without the second half, a
+        // poll before metadata reports 0 of 0 and would look finished.
+        if progress.total > 0 && progress.downloaded >= progress.total {
+            let mut final_path = entry.path.clone();
+            // Seeding stops here unless asked for. Leaving the torrent in the session
+            // advertised the user as a source indefinitely — exactly what the config's
+            // privacy default promises not to do silently.
+            if !config.downloads.keep_seeding {
+                let _ = session.forget(entry.torrent_id, false).await;
+                // Only a forgotten file can be relocated — while seeding, the torrent
+                // needs it exactly where the session put it.
+                if let (Some(path), Some(dir)) =
+                    (entry.path.clone(), config.downloads.directory.as_ref())
+                {
+                    final_path = Some(move_into(path, PathBuf::from(dir)));
+                }
+            }
+            let merged = finish(store, config, &row, final_path.clone()).await;
+            let (title, episode) = (row.title.clone(), row.episode.clone());
+            let _ = tx.send(Event::Toast(Notice::info(match merged {
+                Some(note) => Msg::NoticeDownloadFinishedNote { title, episode, note },
+                None => Msg::NoticeDownloadFinished { title, episode },
+            })));
+            run_completion_hook(config, &row, final_path.as_deref());
+            finished.push(entry.row_id);
+        }
+    }
+
+    running.retain(|r| !finished.contains(&r.row_id));
+    if !finished.is_empty() {
+        publish(store, tx);
+    }
+}
+
+/// Downloads being started: their torrents added in tasks of their own, by row.
+#[derive(Default)]
+struct Starting {
+    tasks: tokio::task::JoinSet<(Download, Result<DownloadHandle, ProviderError>)>,
+    /// Each start's task and the row it starts.
+    rows: Vec<(tokio::task::Id, i64)>,
+}
+
+impl Starting {
+    fn len(&self) -> usize {
+        self.rows.len()
+    }
+
+    fn has(&self, row: i64) -> bool {
+        self.rows.iter().any(|(_, id)| *id == row)
+    }
+
+    /// Add `row`'s torrent to `session` in a task of its own.
+    fn start(&mut self, session: &Arc<TorrentSession>, row: Download) {
+        let (id, session) = (row.id, Arc::clone(session));
+        let task = self.tasks.spawn(async move {
+            let episode = row.episode.trim().parse::<u32>().ok();
+            let added = session.download(&row.magnet, episode).await;
+            (row, added)
+        });
+        self.rows.push((task.id(), id));
+    }
+}
+
+/// Take in the downloads whose torrents have been added since the last tick: each one running
+/// from now on, or failed with why.
+fn take_started(
+    store: &Store,
+    session: &TorrentSession,
+    tx: &Outbox,
+    running: &mut Vec<Running>,
+    starting: &mut Starting,
+) {
+    while let Some(done) = starting.tasks.try_join_next_with_id() {
+        let (row, added) = match done {
+            Ok((task, done)) => {
+                starting.rows.retain(|(id, _)| *id != task);
+                done
+            }
+            // Its task panicked: the row is still queued, for a later tick to try again.
+            Err(e) => {
+                tracing::warn!(error = %e, "a download's start ended without an answer");
+                starting.rows.retain(|(id, _)| *id != e.id());
+                continue;
+            }
+        };
+        match added {
+            Ok(handle) => {
+                tracing::info!(row = row.id, torrent = handle.id, file = %handle.name, "download started");
+                let _ = store.update_download_progress(
+                    row.id,
+                    0,
+                    handle.total,
+                    Some(&session.output_dir().join(&handle.name).display().to_string()),
+                );
+                // Running from now on, even if it was paused or cancelled while it started: the
+                // next poll reads its row and pauses it, or forgets it with its file.
+                running.push(Running {
+                    row_id: row.id,
+                    torrent_id: handle.id,
+                    path: Some(session.output_dir().join(&handle.name)),
+                });
+            }
+            Err(e) => {
+                // Cancelled while it started: there is nothing left to fail, or to tell of.
+                let present = store
+                    .downloads()
+                    .map(|all| all.iter().any(|d| d.id == row.id))
+                    .unwrap_or(true);
+                if !present {
+                    continue;
+                }
+                // Named on the row rather than only toasted: the screen has to be able to say
+                // why afterwards, and a toast lasts seconds.
+                let reason = e.to_string();
+                tracing::warn!(row = row.id, %reason, "download could not start");
+                let _ = store.fail_download(row.id, &reason);
+                let _ = tx.send(Event::Toast(Notice::alert(Msg::NoticeDownloadFailed {
+                    title: row.title.clone(),
+                    episode: row.episode.clone(),
+                    reason,
+                })));
+            }
+        }
+        publish(store, tx);
+    }
+}
+
+/// Start downloads while there is room.
+async fn start_queued(
+    store: &Store,
+    session: &Arc<TorrentSession>,
+    running: &mut Vec<Running>,
+    starting: &mut Starting,
+) {
+    let Ok(pending) = store.pending_downloads() else { return };
+    // A download asked to start now, with every place taken: the one that would have been last
+    // to start goes back to waiting, behind it, as "Start now" says.
+    if running.len() + starting.len() >= CONCURRENCY {
+        let paused: Vec<i64> = store
+            .downloads()
+            .map(|all| {
+                all.into_iter()
+                    .filter(|d| d.state == DownloadState::Paused)
+                    .map(|d| d.id)
+                    .collect()
+            })
+            .unwrap_or_default();
+        let ids: Vec<i64> = running.iter().map(|r| r.row_id).collect();
+        let Some(yielded) = to_yield(&pending, &ids, &paused) else { return };
+        let Some(at) = running.iter().position(|r| r.row_id == yielded) else { return };
+        let entry = running.remove(at);
+        // Its torrent leaves the session, its file stays: started again, it picks up from what
+        // is on disk, as after a restart, and cancelled while it waits it holds nothing open.
+        // Unless another episode still fetches from the same torrent. A paused one stays paused.
+        if !running.iter().any(|r| r.torrent_id == entry.torrent_id) {
+            let _ = session.forget(entry.torrent_id, false).await;
+        }
+        if !paused.contains(&yielded) {
+            let _ = store.set_download_state(yielded, DownloadState::Queued);
+        }
+        tracing::info!(row = yielded, "download waits again for one asked to start now");
+    }
+
+    for row in pending {
+        if running.len() + starting.len() >= CONCURRENCY {
+            break;
+        }
+        if running.iter().any(|r| r.row_id == row.id) || starting.has(row.id) {
+            continue;
+        }
+        if row.state != DownloadState::Queued {
+            continue;
+        }
+        starting.start(session, row);
+    }
+}
+
+/// Which of the downloads `running` gives its place to a download asked to start now, when
+/// every place is taken: `None` when none need. `pending` is the queue in order, waiting and
+/// running, as [`Store::pending_downloads`] reads it; `paused` the downloads paused.
+///
+/// A paused one gives its place first, since it is fetching nothing. Otherwise the one latest
+/// in the queue, so long as the download asked to start now is ahead of it: one asked earlier
+/// keeps its place against one asked since only while it is ahead.
+fn to_yield(pending: &[Download], running: &[i64], paused: &[i64]) -> Option<i64> {
+    let order = |id: i64| pending.iter().position(|d| d.id == id);
+    let front = pending.iter().position(|d| {
+        d.state == DownloadState::Queued && d.front_at.is_some() && !running.contains(&d.id)
+    })?;
+    if let Some(&idle) = running.iter().find(|id| paused.contains(id)) {
+        return Some(idle);
+    }
+    running
+        .iter()
+        .filter_map(|&id| Some((order(id)?, id)))
+        .filter(|(at, _)| *at > front)
+        .max()
+        .map(|(_, id)| id)
+}
+
+/// Run the user's `downloads.on_complete` command, detached and best-effort.
+///
+/// Through the platform shell, so a config line can be a real pipeline. The hook gets
+/// the facts as environment variables rather than argv — no quoting rules to explain,
+/// no title with a quote in it breaking anything.
+fn run_completion_hook(config: &Config, row: &Download, path: Option<&std::path::Path>) {
+    let Some(hook) = config.downloads.on_complete.clone() else { return };
+    let (title, episode) = (row.title.clone(), row.episode.clone());
+    let path = path.map(|p| p.display().to_string()).unwrap_or_default();
+    tokio::task::spawn_blocking(move || {
+        let (shell, flag) = if cfg!(windows) { ("cmd", "/C") } else { ("sh", "-c") };
+        let outcome = std::process::Command::new(shell)
+            .arg(flag)
+            .arg(&hook)
+            .env("KAERI_PATH", &path)
+            .env("KAERI_TITLE", &title)
+            .env("KAERI_EPISODE", &episode)
+            // The TUI owns the terminal; a chatty hook must not paint over it.
+            .stdin(std::process::Stdio::null())
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .status();
+        match outcome {
+            Ok(status) if status.success() => {}
+            Ok(status) => tracing::warn!(%status, "on_complete hook exited nonzero"),
+            Err(e) => tracing::warn!(error = %e, "on_complete hook failed to start"),
+        }
+    });
+}
+
+/// A path in `dir` for `name` that does not already exist.
+///
+/// `rename` and `copy` both destroy whatever is at the destination, and release names collide
+/// readily: the same episode from two groups, or a re-queue of something already fetched. The
+/// downloads directory holds files the user chose to keep, so a completed download must never
+/// be the reason one disappears. A suffix is added instead, the way a browser does it.
+fn unique_destination(dir: &std::path::Path, name: &std::ffi::OsStr) -> PathBuf {
+    let candidate = dir.join(name);
+    if !candidate.exists() {
+        return candidate;
+    }
+    let name = std::path::Path::new(name);
+    let stem = name.file_stem().unwrap_or(name.as_os_str()).to_string_lossy().into_owned();
+    let extension = name.extension().map(|e| format!(".{}", e.to_string_lossy()));
+    // Bounded: past a few hundred the directory is telling us something other than "try again".
+    for n in 2..1000 {
+        let attempt =
+            dir.join(format!("{stem} ({n}){}", extension.as_deref().unwrap_or_default()));
+        if !attempt.exists() {
+            return attempt;
+        }
+    }
+    candidate
+}
+
+/// Move a finished download into the configured directory, falling back to copy+delete
+/// across filesystems. On any failure the file stays where it was — a download in the
+/// wrong folder beats one lost in transit. Rename is instant on the same filesystem,
+/// which is the overwhelmingly common case; the copy fallback is rare enough to wear.
+fn move_into(path: PathBuf, dir: PathBuf) -> PathBuf {
+    let Some(name) = path.file_name() else { return path };
+    if let Err(e) = std::fs::create_dir_all(&dir) {
+        tracing::warn!(error = %e, dir = %dir.display(), "could not create downloads dir");
+        return path;
+    }
+    let dest = unique_destination(&dir, name);
+    if dest == path {
+        return path;
+    }
+    match std::fs::rename(&path, &dest) {
+        Ok(()) => dest,
+        Err(_) => match std::fs::copy(&path, &dest) {
+            Ok(_) => {
+                let _ = std::fs::remove_file(&path);
+                dest
+            }
+            Err(e) => {
+                tracing::warn!(error = %e, "could not move download into downloads dir");
+                path
+            }
+        },
+    }
+}
+
+/// Mark a download finished, merging subtitles in if there are any to merge.
+async fn finish(
+    store: &Store,
+    config: &Config,
+    row: &Download,
+    path: Option<PathBuf>,
+) -> Option<Cause> {
+    let path_string = path.as_ref().map(|p| p.display().to_string());
+    let _ = store.finish_download(row.id, path_string.as_deref());
+
+    if !config.downloads.merge_subtitles {
+        return None;
+    }
+    let path = path?;
+    match crate::playback::remux::merge_sidecar_subtitles(&path).await {
+        Ok(crate::playback::remux::Merge::Merged { tracks, .. }) => {
+            Some(Cause::SubtitlesMerged { tracks: tracks as i64 })
+        }
+        Ok(crate::playback::remux::Merge::NothingToDo) => None,
+        Err(e) => {
+            // Never fatal. The video is downloaded and playable; a failed remux costs you an
+            // external subtitle file, which mpv will pick up beside the video anyway.
+            tracing::warn!(error = %e, path = %path.display(), "subtitle merge failed");
+            Some(Cause::SubtitlesLeftApart { reason: e.to_string() })
+        }
+    }
+}
+
+fn publish(store: &Store, tx: &Outbox) {
+    if let Ok(rows) = store.downloads() {
+        let _ = tx.send(Event::Downloads(rows.iter().map(to_row).collect()));
+    }
+}
+
+/// Flatten a stored download for the screen.
+pub fn to_row(download: &Download) -> kaeri_model::downloads::DownloadRow {
+    kaeri_model::downloads::DownloadRow {
+        id: download.id,
+        anilist_id: download.anilist_id,
+        title: download.title.clone(),
+        episode: download.episode.clone(),
+        state: row_state(download.state),
+        fraction: download.fraction(),
+        downloaded: download.downloaded,
+        total: download.total,
+        error: download.error.clone(),
+        path: download.path.clone(),
+        ahead: download.ahead,
+    }
+}
+
+/// The queue's state for a download, as its row has it.
+fn row_state(state: DownloadState) -> kaeri_model::downloads::DownloadState {
+    use kaeri_model::downloads::DownloadState as Row;
+    match state {
+        DownloadState::Queued => Row::Queued,
+        DownloadState::Active => Row::Active,
+        DownloadState::Paused => Row::Paused,
+        DownloadState::Done => Row::Done,
+        DownloadState::Failed => Row::Failed,
+    }
+}
+
+/// Publish the queue as it currently stands, for a screen that has just been opened.
+pub fn publish_now(store: &Store, tx: &Outbox) {
+    publish(store, tx);
+}
+
+/// Why an episode was not queued, and whether the same answer holds for the rest of the title.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Refusal {
+    /// About this episode only: no source has it, and the next one may still be there.
+    Episode(Cause),
+    /// About the title: it could not be matched, or its source streams but cannot be downloaded.
+    /// Asking again for another episode would walk the same chain to the same answer.
+    Title(Cause),
+}
+
+impl Refusal {
+    /// The reason, whichever it is about.
+    pub fn into_cause(self) -> Cause {
+        match self {
+            Self::Episode(reason) | Self::Title(reason) => reason,
+        }
+    }
+}
+
+impl std::fmt::Display for Refusal {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Episode(reason) | Self::Title(reason) => write!(f, "{reason}"),
+        }
+    }
+}
+
+/// Whether an episode [`enqueue`] did not refuse was queued just now or was already there.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Queued {
+    New,
+    /// Queued, running, paused or finished before this was asked, so nothing was resolved.
+    Existing,
+}
+
+/// What a range came to, for the toast that reports it.
+#[derive(Debug, Default, PartialEq)]
+pub struct RangeOutcome {
+    /// Rows this range added.
+    pub queued: usize,
+    /// Episodes that already had a row. Counted apart, because "queued 2 episodes" for two that
+    /// were in the queue before claimed work that was never done.
+    pub existing: usize,
+    /// The last reason an episode was not queued.
+    pub failed: Option<Cause>,
+}
+
+impl RangeOutcome {
+    /// Worded from what happened: what was added, what was there already, and what stopped it.
+    pub fn toast(&self) -> Notice {
+        let count = self.queued as i64;
+        let existing = Cause::AlreadyInDownloads { count: self.existing as i64 };
+        match (self.failed.clone(), self.queued, self.existing) {
+            (None, 0, 0) => Notice::info(Msg::NoticeDownloadsNoneQueued),
+            (None, 0, _) => Notice::info(Msg::NoticeDownloadsNoneNew { existing }),
+            (None, _, 0) => Notice::info(Msg::NoticeEpisodesQueued { count }),
+            (None, _, _) => Notice::info(Msg::NoticeEpisodesQueuedExisting { count, existing }),
+            (Some(reason), 0, 0) => {
+                Notice::alert(Msg::NoticeDownloadsNoneQueuedStopped { reason })
+            }
+            (Some(reason), 0, _) => {
+                Notice::alert(Msg::NoticeDownloadsNoneNewStopped { existing, reason })
+            }
+            (Some(reason), _, 0) => {
+                Notice::alert(Msg::NoticeEpisodesQueuedStopped { count, reason })
+            }
+            (Some(reason), _, _) => Notice::alert(Msg::NoticeEpisodesQueuedExistingStopped {
+                count,
+                existing,
+                reason,
+            }),
+        }
+    }
+}
+
+/// Queue a range of episodes one at a time, stopping at the first refusal that holds for the
+/// whole title.
+///
+/// Without the stop, a source that streams but cannot download was asked again for every episode
+/// left — about fifty seconds for six, with the job still running and the Downloads screen empty
+/// — to arrive at the answer it gave for the first.
+pub async fn enqueue_each<F, Fut>(episodes: &[String], mut enqueue: F) -> RangeOutcome
+where
+    F: FnMut(String) -> Fut,
+    Fut: std::future::Future<Output = Result<Queued, Refusal>>,
+{
+    let mut outcome = RangeOutcome::default();
+    for episode in episodes {
+        match enqueue(episode.clone()).await {
+            Ok(Queued::New) => outcome.queued += 1,
+            Ok(Queued::Existing) => outcome.existing += 1,
+            Err(Refusal::Title(reason)) => {
+                outcome.failed = Some(reason);
+                return outcome;
+            }
+            Err(Refusal::Episode(reason)) => outcome.failed = Some(reason),
+        }
+    }
+    outcome
+}
+
+/// Which version of an episode a download asks for: the translation, and the resolution its
+/// streams are ranked toward.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Wanted {
+    pub translation: Translation,
+    pub resolution: u32,
+}
+
+impl Wanted {
+    /// What a download asks for under `config`: playback's translation, and its quality or,
+    /// for downloads in higher quality, the best a source has.
+    pub fn of(config: &kaeri_core::config::Config) -> Self {
+        Self {
+            translation: config.playback.translation,
+            resolution: config.downloads.quality.resolution(config.playback.quality),
+        }
+    }
+}
+
+/// Queue an episode, resolving a magnet for it first: `ahead` for keep next, and otherwise
+/// asked for by the viewer, which makes one keep next queued theirs.
+///
+/// Resolution happens here rather than in the manager because it needs the provider chain and the
+/// mapping ladder — the same walk playback does. A download is "play it, but to disk", from the
+/// source the show is pinned to when it is.
+pub async fn enqueue(
+    store: &Store,
+    registry: &ProviderRegistry,
+    meta: &kaeri_meta::Meta,
+    anilist_id: AnilistId,
+    episode: &str,
+    wanted: Wanted,
+    ahead: bool,
+) -> Result<(Download, Queued), Refusal> {
+    let Wanted { translation, resolution } = wanted;
+    // Already queued or finished: report that instead of resolving again.
+    if let Ok(Some(existing)) = store.download_for(anilist_id, episode)
+        && existing.state != DownloadState::Failed
+    {
+        if existing.ahead && !ahead {
+            let _ = store.keep_download(existing.id);
+        }
+        return Ok((existing, Queued::Existing));
+    }
+
+    let media = meta
+        .media(anilist_id)
+        .await
+        .map_err(|e| Refusal::Title(Cause::verbatim(e.to_string())))?;
+    let title = meta.titles().pick(&media.title);
+    let now = kaeri_store::now();
+    // "Use this source for this series", as playback applies it: before the title is matched,
+    // since a key means something only to the source that gave it. One not registered now falls
+    // back to the chain.
+    let pinned = store
+        .provider_preference(anilist_id)
+        .ok()
+        .flatten()
+        .and_then(|provider| registry.pinned(&provider));
+    let registry = pinned.as_ref().unwrap_or(registry);
+    let answer = kaeri_providers::first_answer(
+        store,
+        registry,
+        anilist_id,
+        &media.match_target(),
+        translation,
+        now,
+        |source, key| async move { source.resolve(&key, episode, translation, now).await },
+    )
+    .await;
+    // Explained before the value is taken: the reasons name which providers failed, and that is
+    // the useful half of the message when nothing came back.
+    let summary = answer.explain();
+    let streams = match answer {
+        kaeri_providers::Answer::Answered { value, .. } => value,
+        kaeri_providers::Answer::Ambiguous { .. } => {
+            return Err(Refusal::Title(Cause::TitleNoMatch { detail: summary }));
+        }
+        // No source has the title: every episode of it would be refused the same way.
+        kaeri_providers::Answer::Unanswered { matched: false, .. } => {
+            return Err(Refusal::Title(Cause::TitleNoMatch { detail: summary }));
+        }
+        kaeri_providers::Answer::Unanswered { .. } => Vec::new(),
+    };
+    // Toward the quality asked for, as playback ranks them: the first torrent after that is the
+    // one taken, and among equals the source's own order stands.
+    let mut streams = streams;
+    streams.sort_by_key(|s| s.quality_rank(resolution));
+    // Only a torrent can be downloaded. An HLS stream would need remuxing a live playlist, and a
+    // deep link is somebody else's player — saying so is better than a mystery failure.
+    let magnet = streams
+        .iter()
+        .find(|s| s.kind == kaeri_core::stream::StreamKind::TorrentHttp)
+        .and_then(|s| s.download_source.clone())
+        .ok_or_else(|| {
+            if streams.is_empty() {
+                Refusal::Episode(Cause::NoSourceHasEpisode {
+                    episode: episode.to_owned(),
+                    detail: summary.clone(),
+                })
+            } else {
+                Refusal::Title(Cause::SourceCannotDownload)
+            }
+        })?;
+
+    // A store that cannot write one row will not write the next.
+    let queued = if ahead {
+        store.enqueue_download_ahead(anilist_id, episode, title, &magnet)
+    } else {
+        store.enqueue_download(anilist_id, episode, title, &magnet)
+    };
+    queued
+        .map(|row| (row, Queued::New))
+        .map_err(|e| Refusal::Title(Cause::verbatim(e.to_string())))
+}
+
+/// Queue a link the viewer opened as episode `episode` of title `anilist_id`, as any episode is
+/// queued once its magnet is found: the link is the magnet. One already queued, and not failed,
+/// is reported in its place.
+pub async fn enqueue_link(
+    store: &Store,
+    meta: &kaeri_meta::Meta,
+    anilist_id: AnilistId,
+    episode: &str,
+    magnet: &str,
+) -> Result<(Download, Queued), Refusal> {
+    if let Ok(Some(existing)) = store.download_for(anilist_id, episode)
+        && existing.state != DownloadState::Failed
+    {
+        if existing.ahead {
+            let _ = store.keep_download(existing.id);
+        }
+        return Ok((existing, Queued::Existing));
+    }
+    let media = meta
+        .media(anilist_id)
+        .await
+        .map_err(|e| Refusal::Title(Cause::verbatim(e.to_string())))?;
+    let title = meta.titles().pick(&media.title);
+    store
+        .enqueue_download(anilist_id, episode, title, magnet)
+        .map(|row| (row, Queued::New))
+        .map_err(|e| Refusal::Title(Cause::verbatim(e.to_string())))
+}
+
+/// What the viewer is told of one episode they asked to queue.
+pub fn queued_notice(queued: Result<(Download, Queued), Refusal>) -> Notice {
+    match queued {
+        Ok((row, Queued::New)) => {
+            Notice::info(Msg::NoticeDownloadQueued { title: row.title, episode: row.episode })
+        }
+        Ok((row, Queued::Existing)) => Notice::info(Msg::NoticeDownloadAlreadyQueued {
+            title: row.title,
+            episode: row.episode,
+        }),
+        Err(refusal) => {
+            Notice::alert(crate::playback::resolve::explained(refusal.into_cause()))
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn episodes(n: u32) -> Vec<String> {
+        (1..=n).map(|n| n.to_string()).collect()
+    }
+
+    #[test]
+    fn a_download_asks_for_what_its_quality_setting_says() {
+        use kaeri_core::config::{Config, DownloadQuality};
+        let mut config = Config::default();
+        config.playback.quality = 720;
+        let standard = Wanted::of(&config);
+        assert_eq!((standard.translation, standard.resolution), (Translation::Sub, 720));
+        config.downloads.quality = DownloadQuality::Higher;
+        assert_eq!(Wanted::of(&config).resolution, u32::MAX, "the best a source has");
+    }
+
+    #[tokio::test]
+    async fn a_range_stops_at_the_first_refusal_that_holds_for_the_title() {
+        let mut asked = Vec::new();
+        let outcome = enqueue_each(&episodes(6), |episode| {
+            asked.push(episode.clone());
+            async move {
+                match episode.as_str() {
+                    "1" => Ok(Queued::New),
+                    _ => Err(Refusal::Title(Cause::verbatim("cannot be downloaded"))),
+                }
+            }
+        })
+        .await;
+        assert_eq!(outcome.queued, 1);
+        assert_eq!(outcome.failed, Some(Cause::verbatim("cannot be downloaded")));
+        assert_eq!(asked, ["1", "2"], "the rest of the range was asked for anyway");
+    }
+
+    #[tokio::test]
+    async fn a_missing_episode_does_not_stop_the_rest() {
+        let outcome = enqueue_each(&episodes(4), |episode| async move {
+            match episode.as_str() {
+                "2" => Err(Refusal::Episode(Cause::verbatim("no source has this episode"))),
+                _ => Ok(Queued::New),
+            }
+        })
+        .await;
+        assert_eq!(outcome.queued, 3);
+        assert_eq!(outcome.failed, Some(Cause::verbatim("no source has this episode")));
+    }
+
+    /// Episodes already in the queue were counted as queued, so a range that added nothing said
+    /// "queued 2 episodes, then: …".
+    #[tokio::test]
+    async fn a_range_counts_rows_that_were_already_there_apart() {
+        let range: Vec<String> = (3..=8).map(|n| n.to_string()).collect();
+        let outcome = enqueue_each(&range, |episode| async move {
+            match episode.as_str() {
+                "3" | "4" => Ok(Queued::Existing),
+                _ => Err(Refusal::Title(Cause::SourceCannotDownload)),
+            }
+        })
+        .await;
+        assert_eq!((outcome.queued, outcome.existing), (0, 2));
+        let toast = outcome.toast();
+        assert_eq!(
+            toast.message(),
+            Msg::NoticeDownloadsNoneNewStopped {
+                existing: Cause::AlreadyInDownloads { count: 2 },
+                reason: Cause::SourceCannotDownload,
+            }
+        );
+        assert_eq!(
+            toast.text,
+            "Nothing new queued. 2 episodes are already in downloads. \
+             This source streams episodes but can't download them."
+        );
+        assert_eq!(toast.kind, kaeri_model::notice::NoticeKind::Alert);
+
+        let mixed = RangeOutcome { queued: 2, existing: 1, failed: None };
+        assert_eq!(
+            mixed.toast().text,
+            "Queued 2 episodes. One episode is already in downloads."
+        );
+        let stopped =
+            RangeOutcome { queued: 1, existing: 0, failed: Some(Cause::verbatim("why")) };
+        assert_eq!(stopped.toast().text, "Queued one episode, then it stopped. why");
+        let refused =
+            RangeOutcome { failed: Some(Cause::verbatim("why")), ..RangeOutcome::default() };
+        assert_eq!(refused.toast().text, "Nothing queued. why");
+    }
+
+    fn row(id: i64, state: DownloadState, front_at: Option<i64>) -> Download {
+        Download {
+            id,
+            anilist_id: AnilistId(900_101),
+            episode: id.to_string(),
+            title: "Invented Show".into(),
+            magnet: "magnet:?xt=urn:btih:0000".into(),
+            state,
+            path: None,
+            downloaded: 0,
+            total: 0,
+            error: None,
+            created_at: id,
+            updated_at: id,
+            ahead: false,
+            front_at,
+        }
+    }
+
+    #[test]
+    fn a_download_asked_to_start_now_takes_the_place_of_the_one_latest_in_the_queue() {
+        use DownloadState::{Active, Queued};
+        // As the store orders them: the one asked to start now first, then by when queued.
+        let pending = [
+            row(4, Queued, Some(50)),
+            row(1, Active, None),
+            row(2, Active, None),
+            row(3, Queued, None),
+        ];
+        assert_eq!(to_yield(&pending, &[1, 2], &[]), Some(2));
+        assert_eq!(to_yield(&pending, &[2, 1], &[]), Some(2), "whichever started first");
+    }
+
+    #[test]
+    fn a_paused_download_gives_its_place_before_one_fetching() {
+        use DownloadState::{Active, Queued};
+        let pending = [row(4, Queued, Some(50)), row(1, Active, None)];
+        assert_eq!(to_yield(&pending, &[1, 2], &[2]), Some(2));
+    }
+
+    #[test]
+    fn nothing_gives_way_unless_a_download_waiting_was_asked_to_start_now() {
+        use DownloadState::{Active, Queued};
+        let waiting = [row(1, Active, None), row(2, Active, None), row(3, Queued, None)];
+        assert_eq!(to_yield(&waiting, &[1, 2], &[]), None, "the queue in its own order");
+        let started = [row(1, Active, Some(50)), row(2, Active, None), row(3, Queued, None)];
+        assert_eq!(to_yield(&started, &[1, 2], &[]), None, "already running");
+    }
+
+    #[test]
+    fn one_asked_to_start_now_earlier_keeps_its_place_against_one_asked_since() {
+        use DownloadState::{Active, Queued};
+        // 5 was asked since 4 and is ahead of it; 4 is running and keeps its place, 1 gives way.
+        let pending =
+            [row(5, Queued, Some(60)), row(4, Active, Some(50)), row(1, Active, None)];
+        assert_eq!(to_yield(&pending, &[4, 1], &[]), Some(1));
+        // With both places taken by downloads asked to start now, the one asked first is now
+        // furthest back, so it gives way.
+        let both =
+            [row(6, Queued, Some(70)), row(5, Active, Some(60)), row(4, Active, Some(50))];
+        assert_eq!(to_yield(&both, &[5, 4], &[]), Some(4));
+    }
+}

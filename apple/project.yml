@@ -1,0 +1,624 @@
+# The Xcode project, for XcodeGen: `cd apple && xcodegen generate` writes Kaeri.xcodeproj,
+# which git ignores. See apple/README.md.
+#
+# Two apps from the same sources:
+#
+# - Kaeri: the app, on the release engine.
+# - Kaeri Fixtures: the same app on the testing engine (fake AniList, fixture titles, nothing
+#   leaving the machine), compiled with FIXTURES, for tests and screenshots only.
+#
+# Each package under Packages/ is compiled here as a framework, twice: once for each app, against
+# its engine. The two of a pair have the same product and module name, so the app's code imports
+# KaeriKit whichever engine is beneath it; the Fixtures app's frameworks, the app and its
+# tests build into a products directory of their own (`<configuration>-fixtures`), so neither app
+# ever sees the other's.
+
+name: Kaeri
+
+options:
+  bundleIdPrefix: app.kaeri
+  deploymentTarget:
+    macOS: "26.0"
+    iOS: "26.0"
+  developmentLanguage: en
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+configFiles:
+  Debug: Config/Base.xcconfig
+  Release: Config/Base.xcconfig
+
+packages:
+  # The Mac's updater (App/MacUpdater.swift), for the app only: not the Fixtures app, not iPhone
+  # or iPad. Its binary is signed ad hoc, as the app is; adhoc-sign.sh signs its helpers again
+  # from the inside out.
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    exactVersion: 2.10.0
+
+settings:
+  base:
+    # The engine slice for the platform being built, which the frameworks check is current.
+    KAERI_SLICE[sdk=macosx*]: macos
+    KAERI_SLICE[sdk=iphonesimulator*]: ios-sim
+    KAERI_SLICE[sdk=iphoneos*]: ios
+    # A release passes both on xcodebuild's command line, from its tag (packaging/apps/version.sh).
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEAD_CODE_STRIPPING: true
+    # Every string comes from the catalogue (KaeriStrings); a literal must not grow a second one.
+    SWIFT_EMIT_LOC_STRINGS: false
+  configs:
+    # The cargo profile engine.sh builds the engine with: app-dev to develop, release to keep.
+    Debug:
+      KAERI_ENGINE_PROFILE: app-dev
+    Release:
+      KAERI_ENGINE_PROFILE: release
+      # The Mac app ships stripped: the engine is linked into its binary, and its symbols are tens
+      # of megabytes. Strip happens in the build, with the dSYM kept beside the app for the
+      # release to attach, so crash reports can be symbolicated later (the apps-release workflow).
+      DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+      DEPLOYMENT_POSTPROCESSING[sdk=macosx*]: YES
+      STRIP_INSTALLED_PRODUCT[sdk=macosx*]: YES
+      COPY_PHASE_STRIP[sdk=macosx*]: YES
+      STRIP_STYLE[sdk=macosx*]: non-global
+
+targetTemplates:
+  # A package's sources as a framework, for Mac, iPad and iPhone.
+  Framework:
+    type: framework
+    supportedDestinations: [macOS, iOS]
+    settings:
+      base:
+        PRODUCT_NAME: ${module}
+        PRODUCT_MODULE_NAME: ${module}
+        PRODUCT_BUNDLE_IDENTIFIER: app.kaeri.${module}
+        GENERATE_INFOPLIST_FILE: true
+        DEFINES_MODULE: true
+        SKIP_INSTALL: true
+        ENABLE_MODULE_VERIFIER: false
+
+  # The engine's bindings over its XCFramework, with the model helpers beside them. A first build
+  # phase checks the engine is current for the slice being built: the scheme's pre-action builds
+  # it, and this fails the build plainly when that did not happen.
+  Engine:
+    templates: [Framework]
+    sources:
+      - path: .engine/${flavour}/Swift/kaeri_core.swift
+        optional: true
+        group: Packages/KaeriKit/Generated
+      - path: .engine/${flavour}/Swift/kaeri_model.swift
+        optional: true
+        group: Packages/KaeriKit/Generated
+      - path: .engine/${flavour}/Swift/kaeri_ffi.swift
+        optional: true
+        group: Packages/KaeriKit/Generated
+      - path: Packages/KaeriKit/Sources/KaeriKit/Model.swift
+        group: Packages/KaeriKit
+      - path: Packages/KaeriKit/Sources/KaeriKit/Settings.swift
+        group: Packages/KaeriKit
+      - path: Packages/KaeriKit/Sources/KaeriKit/Sources.swift
+        group: Packages/KaeriKit
+    dependencies:
+      - framework: .engine/${flavour}/KaeriEngine.xcframework
+        embed: false
+      # What the Rust library links against, as `cargo rustc -p kaeri-ffi --lib --
+      # --print native-static-libs` lists it.
+      - sdk: CoreFoundation.framework
+      - sdk: Security.framework
+      - sdk: SystemConfiguration.framework
+      - sdk: libc++.tbd
+      - sdk: libiconv.tbd
+    preBuildScripts:
+      - name: Check the engine
+        script: |
+          "$PROJECT_DIR/scripts/engine.sh" --check ${flavour} "$KAERI_SLICE"
+        basedOnDependencyAnalysis: false
+    settings:
+      base:
+        # The check reads the Rust sources, which no input file list could name.
+        ENABLE_USER_SCRIPT_SANDBOXING: false
+
+  Design:
+    templates: [Framework]
+    sources:
+      - path: Packages/KaeriDesign/Sources/KaeriDesign
+        excludes: ["Fonts", "Art"]
+      - path: Packages/KaeriDesign/Sources/KaeriDesign/Fonts
+        type: folder
+        buildPhase: resources
+      - path: Packages/KaeriDesign/Sources/KaeriDesign/Art
+        type: folder
+        buildPhase: resources
+
+  # libmpv's client and the surface it draws into, over the Mpv.xcframework that
+  # scripts/mpv.sh builds into .mpv/current. A first build phase checks it is current for the
+  # slice being built, as the engine's frameworks check theirs. The apps embed Mpv.framework.
+  Player:
+    templates: [Framework]
+    sources: [Packages/KaeriPlayer/Sources/KaeriPlayer]
+    dependencies:
+      - framework: .mpv/current/Mpv.xcframework
+        embed: false
+    preBuildScripts:
+      - name: Check libmpv
+        script: |
+          "$PROJECT_DIR/scripts/mpv.sh" --check "$KAERI_SLICE"
+        basedOnDependencyAnalysis: false
+    settings:
+      base:
+        # The check reads the script and the patches, which no input file list names.
+        ENABLE_USER_SCRIPT_SANDBOXING: false
+
+  # The generated strings (tools/i18n): the String Catalog and L.swift. Resources in the framework,
+  # so L finds its bundle with Bundle(for:); the Swift package finds it with Bundle.module.
+  Strings:
+    templates: [Framework]
+    sources: [Packages/KaeriStrings/Sources/KaeriStrings]
+
+  # The player the apps host for the engine, and its screens, over the player, the store and the
+  # design system.
+  PlayerUI:
+    templates: [Framework]
+    sources: [Packages/KaeriPlayer/Sources/KaeriPlayerUI]
+
+  # The Fixtures app's flavour: the testing engine's starts, and products of its own.
+  Fixtures:
+    settings:
+      base:
+        CONFIGURATION_BUILD_DIR: $(BUILD_DIR)/$(CONFIGURATION)-fixtures$(EFFECTIVE_PLATFORM_NAME)
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) FIXTURES
+
+  App:
+    type: application
+    supportedDestinations: [macOS, iOS]
+    dependencies:
+      # libmpv, which KaeriPlayer links and the app carries.
+      - framework: .mpv/current/Mpv.xcframework
+        embed: true
+        codeSign: true
+    sources:
+      - path: App
+        excludes: ["Info.plist", "Fixtures-Info.plist", "*.entitlements"]
+      # iOS only: the CJK font libass falls back to for subtitles, since iOS has no font FreeType
+      # opens with simplified-only characters (scripts/fonts.sh, which the first build phase
+      # checks), and its licence. KaeriPlayer finds the folder by name. The Mac gets neither.
+      - path: .fonts/SubtitleFonts
+        type: folder
+        buildPhase: resources
+        optional: true
+        destinationFilters: [iOS]
+      - path: ThirdParty/NOTICES-fonts.txt
+        buildPhase: resources
+        destinationFilters: [iOS]
+      # libmpv's notices, which every copy of the app carries, as the LGPL asks of a build that
+      # bundles libmpv and FFmpeg, and which the iPhone's About › Acknowledgements shows.
+      - path: ThirdParty/NOTICES-libmpv.txt
+        buildPhase: resources
+      # Sparkle's, which the Mac app carries.
+      - path: ThirdParty/NOTICES-sparkle.txt
+        buildPhase: resources
+        destinationFilters: [macOS]
+    preBuildScripts:
+      - name: Check the subtitle font
+        script: |
+          if [ "$KAERI_SLICE" != macos ]; then "$PROJECT_DIR/scripts/fonts.sh" --check; fi
+        basedOnDependencyAnalysis: false
+    settings:
+      base:
+        # The font check reads apple/.fonts, which no input file list names.
+        ENABLE_USER_SCRIPT_SANDBOXING: false
+        GENERATE_INFOPLIST_FILE: true
+        # Amber, the brief's accent: the system draws the focus ring and its own controls in it.
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        # Nagare, a PNG per slot drawn on whole pixels by scripts/icon.sh: iPhone and iPad with
+        # Dark and Tinted, and the Mac's 16 to 1024. Not Icon Composer, which scales one drawing
+        # to every size and puts his pixels on fractions.
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.entertainment
+        # The manifest is written by hand in App/Info.plist: one window. The store, the navigator
+        # and the player are shared by the whole app, so a second iPad window would run sign-in,
+        # the player and Picture in Picture twice.
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: false
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: true
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+        # Not sandboxed on the Mac, so it reads the terminal app's directories, and no
+        # hardened runtime for local builds, which the plugins' compiler needs.
+        ENABLE_APP_SANDBOX: false
+        ENABLE_HARDENED_RUNTIME: false
+        LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]: $(inherited) @executable_path/../Frameworks
+        LD_RUNPATH_SEARCH_PATHS[sdk=iphone*]: $(inherited) @executable_path/Frameworks
+
+  Tests:
+    type: bundle.unit-test
+    supportedDestinations: [macOS, iOS]
+    templates: [Fixtures]
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: true
+        PRODUCT_BUNDLE_IDENTIFIER: app.kaeri.tests.${target_name}
+
+targets:
+  # The app's frameworks, against the release engine.
+  KaeriKit:
+    templates: [Engine]
+    templateAttributes: { module: KaeriKit, flavour: release }
+    dependencies:
+      - target: KaeriStrings
+        embed: false
+  KaeriDesign:
+    templates: [Design]
+    templateAttributes: { module: KaeriDesign }
+  # The widgets' snapshot, links and play intent (apple/Packages/KaeriWidgets), which the
+  # store writes and the widget extension reads. It knows no engine.
+  KaeriWidgetData:
+    templates: [Framework]
+    templateAttributes: { module: KaeriWidgetData }
+    sources: [Packages/KaeriWidgets/Sources/KaeriWidgetData]
+    dependencies:
+      - target: KaeriStrings
+        embed: false
+  KaeriStrings:
+    templates: [Strings]
+    templateAttributes: { module: KaeriStrings }
+  KaeriStore:
+    templates: [Framework]
+    templateAttributes: { module: KaeriStore }
+    sources: [Packages/KaeriStore/Sources/KaeriStore]
+    dependencies:
+      - target: KaeriKit
+        embed: false
+      - target: KaeriStrings
+        embed: false
+      - target: KaeriWidgetData
+        embed: false
+  KaeriPlayer:
+    templates: [Player]
+    templateAttributes: { module: KaeriPlayer }
+  KaeriPlayerUI:
+    templates: [PlayerUI]
+    templateAttributes: { module: KaeriPlayerUI }
+    dependencies:
+      - target: KaeriPlayer
+        embed: false
+      - target: KaeriStore
+        embed: false
+      - target: KaeriDesign
+        embed: false
+      - target: KaeriStrings
+        embed: false
+  KaeriUI:
+    templates: [Framework]
+    templateAttributes: { module: KaeriUI }
+    sources: [Packages/KaeriUI/Sources/KaeriUI]
+    dependencies:
+      - target: KaeriStore
+        embed: false
+      - target: KaeriDesign
+        embed: false
+      - target: KaeriStrings
+        embed: false
+      - target: KaeriWidgetData
+        embed: false
+
+  # The same, against the testing engine, for the Fixtures app and the tests.
+  KaeriKitFixtures:
+    templates: [Engine, Fixtures]
+    templateAttributes: { module: KaeriKit, flavour: testing }
+    dependencies:
+      - target: KaeriStringsFixtures
+        embed: false
+  KaeriDesignFixtures:
+    templates: [Design, Fixtures]
+    templateAttributes: { module: KaeriDesign }
+  KaeriWidgetDataFixtures:
+    templates: [Framework, Fixtures]
+    templateAttributes: { module: KaeriWidgetData }
+    sources: [Packages/KaeriWidgets/Sources/KaeriWidgetData]
+    dependencies:
+      - target: KaeriStringsFixtures
+        embed: false
+  KaeriStringsFixtures:
+    templates: [Strings, Fixtures]
+    templateAttributes: { module: KaeriStrings }
+  KaeriStoreFixtures:
+    templates: [Framework, Fixtures]
+    templateAttributes: { module: KaeriStore }
+    sources: [Packages/KaeriStore/Sources/KaeriStore]
+    dependencies:
+      - target: KaeriKitFixtures
+        embed: false
+      - target: KaeriStringsFixtures
+        embed: false
+      - target: KaeriWidgetDataFixtures
+        embed: false
+  KaeriPlayerFixtures:
+    templates: [Player, Fixtures]
+    templateAttributes: { module: KaeriPlayer }
+  KaeriPlayerUIFixtures:
+    templates: [PlayerUI, Fixtures]
+    templateAttributes: { module: KaeriPlayerUI }
+    dependencies:
+      - target: KaeriPlayerFixtures
+        embed: false
+      - target: KaeriStoreFixtures
+        embed: false
+      - target: KaeriDesignFixtures
+        embed: false
+      - target: KaeriStringsFixtures
+        embed: false
+  KaeriUIFixtures:
+    templates: [Framework, Fixtures]
+    templateAttributes: { module: KaeriUI }
+    sources: [Packages/KaeriUI/Sources/KaeriUI]
+    dependencies:
+      - target: KaeriStoreFixtures
+        embed: false
+      - target: KaeriDesignFixtures
+        embed: false
+      - target: KaeriStringsFixtures
+        embed: false
+      - target: KaeriWidgetDataFixtures
+        embed: false
+
+  Kaeri:
+    templates: [App]
+    settings:
+      base:
+        PRODUCT_NAME: Kaeri
+        PRODUCT_BUNDLE_IDENTIFIER: app.kaeri.app
+        INFOPLIST_KEY_CFBundleDisplayName: Kaeri
+        # The kaeri:// links the app opens, the background refresh and the widgets' App Group
+        # (KAERI_APP_GROUP, Config/Base.xcconfig).
+        INFOPLIST_FILE: App/Info.plist
+        CODE_SIGN_ENTITLEMENTS: App/Kaeri.entitlements
+        # The downloads' Live Activity on iPhone, which the widget extension draws.
+        INFOPLIST_KEY_NSSupportsLiveActivities: true
+    dependencies:
+      - target: KaeriKit
+      - target: KaeriDesign
+      - target: KaeriStrings
+      - target: KaeriStore
+      - target: KaeriPlayer
+      - target: KaeriPlayerUI
+      - target: KaeriUI
+      - target: KaeriWidgetData
+      - target: KaeriWidgets
+      - package: Sparkle
+        product: Sparkle
+        destinationFilters: [macOS]
+
+  Kaeri Fixtures:
+    templates: [App, Fixtures]
+    settings:
+      base:
+        PRODUCT_NAME: Kaeri Fixtures
+        PRODUCT_BUNDLE_IDENTIFIER: app.kaeri.fixtures
+        INFOPLIST_KEY_CFBundleDisplayName: Kaeri fixtures
+        # Background audio, as the app has it.
+        INFOPLIST_FILE: App/Fixtures-Info.plist
+    dependencies:
+      - target: KaeriKitFixtures
+      - target: KaeriDesignFixtures
+      - target: KaeriStringsFixtures
+      - target: KaeriStoreFixtures
+      - target: KaeriPlayerFixtures
+      - target: KaeriPlayerUIFixtures
+      - target: KaeriUIFixtures
+      - target: KaeriWidgetDataFixtures
+
+  # Each package's tests, on the testing engine.
+  KaeriKitTests:
+    templates: [Tests]
+    sources: [Packages/KaeriKit/Tests/KaeriKitTests]
+    dependencies:
+      - target: KaeriKitFixtures
+  KaeriDesignTests:
+    templates: [Tests]
+    sources: [Packages/KaeriDesign/Tests/KaeriDesignTests]
+    dependencies:
+      - target: KaeriDesignFixtures
+  KaeriStoreTests:
+    templates: [Tests]
+    sources: [Packages/KaeriStore/Tests/KaeriStoreTests]
+    dependencies:
+      - target: KaeriStoreFixtures
+      - target: KaeriKitFixtures
+      - target: KaeriWidgetDataFixtures
+  KaeriUITests:
+    templates: [Tests]
+    sources: [Packages/KaeriUI/Tests/KaeriUITests]
+    dependencies:
+      - target: KaeriUIFixtures
+      - target: KaeriStoreFixtures
+      - target: KaeriKitFixtures
+      - target: KaeriWidgetDataFixtures
+
+  # The home-screen widgets, Continue watching and Airing today, which the app embeds on the Mac,
+  # iPad and iPhone (apple/Packages/KaeriWidgets: KaeriWidgetUI's sources are compiled
+  # in here). They read the snapshot the app writes into the App Group, KAERI_APP_GROUP, link
+  # no engine, and are sandboxed on the Mac.
+  KaeriWidgets:
+    type: app-extension
+    supportedDestinations: [macOS, iOS]
+    sources:
+      - path: Widgets
+        excludes: ["Info.plist", "*.entitlements"]
+      - path: Packages/KaeriWidgets/Sources/KaeriWidgetUI
+      # The show-title face, bundled in the extension, whose process may not read the app's
+      # frameworks, and its licence.
+      - path: Packages/KaeriDesign/Sources/KaeriDesign/Fonts/ZenKakuGothicNew-Bold.ttf
+        buildPhase: resources
+        group: Widgets
+      - path: Packages/KaeriDesign/Sources/KaeriDesign/Fonts/OFL.txt
+        buildPhase: resources
+        group: Widgets
+    dependencies:
+      # Both embedded by the app, whose Frameworks the extension finds them in.
+      - target: KaeriWidgetData
+        embed: false
+      - target: KaeriDesign
+        embed: false
+      - target: KaeriStrings
+        embed: false
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework
+    settings:
+      base:
+        PRODUCT_NAME: KaeriWidgets
+        PRODUCT_BUNDLE_IDENTIFIER: app.kaeri.app.widgets
+        GENERATE_INFOPLIST_FILE: true
+        INFOPLIST_FILE: Widgets/Info.plist
+        INFOPLIST_KEY_CFBundleDisplayName: Kaeri
+        CODE_SIGN_ENTITLEMENTS: Widgets/KaeriWidgets.entitlements
+        # The Mac's: sandboxed, with outgoing connections for AniList's public schedule.
+        ENABLE_APP_SANDBOX: true
+        ENABLE_OUTGOING_NETWORK_CONNECTIONS: true
+        ENABLE_HARDENED_RUNTIME: false
+        SKIP_INSTALL: true
+        LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]: $(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks
+        LD_RUNPATH_SEARCH_PATHS[sdk=iphone*]: $(inherited) @executable_path/Frameworks @executable_path/../../Frameworks
+
+  # The accessibility audit (ux_part3): XCUITest's performAccessibilityAudit() over the Fixtures
+  # app's main screens on an iPhone Simulator, at the default text size and at the largest.
+  KaeriAuditTests:
+    type: bundle.ui-testing
+    supportedDestinations: [iOS]
+    templates: [Fixtures]
+    sources: [AuditTests]
+    dependencies:
+      - target: Kaeri Fixtures
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: true
+        PRODUCT_BUNDLE_IDENTIFIER: app.kaeri.audit-tests
+        TEST_TARGET_NAME: Kaeri Fixtures
+
+  # The features page's videos (VideoFlows): each a task done in the Fixtures app as a person does
+  # it, while website/scripts/videos films the iPhone Simulator or the Mac. Run with the Video
+  # scheme, from those scripts.
+  KaeriVideoFlows:
+    type: bundle.ui-testing
+    supportedDestinations: [iOS, macOS]
+    templates: [Fixtures]
+    sources: [VideoFlows]
+    dependencies:
+      - target: Kaeri Fixtures
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: true
+        PRODUCT_BUNDLE_IDENTIFIER: app.kaeri.video-flows
+        TEST_TARGET_NAME: Kaeri Fixtures
+
+  # The Mac player's controls, clicked as a person clicks them (MacPlayerTests): XCUITest's
+  # clicks go through the window server, where the window's title bar and background can take
+  # them before the controls do. The Mac only; run with the Mac Player scheme.
+  KaeriMacPlayerTests:
+    type: bundle.ui-testing
+    supportedDestinations: [macOS]
+    templates: [Fixtures]
+    sources: [MacPlayerTests]
+    dependencies:
+      - target: Kaeri Fixtures
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: true
+        PRODUCT_BUNDLE_IDENTIFIER: app.kaeri.mac-player-tests
+        TEST_TARGET_NAME: Kaeri Fixtures
+
+schemes:
+  Kaeri:
+    build:
+      targets:
+        Kaeri: all
+      # Build the release engine for the platform being built, before Xcode plans the build
+      # that links it. Its output is in .engine/release.log; the frameworks' check says when it
+      # did not work.
+      preActions:
+        - name: Build the engine
+          settingsTarget: Kaeri
+          script: |
+            mkdir -p "$PROJECT_DIR/.engine"
+            "$PROJECT_DIR/scripts/engine.sh" release "$KAERI_SLICE" > "$PROJECT_DIR/.engine/release.log" 2>&1
+    run:
+      config: Debug
+    archive:
+      config: Release
+
+  Kaeri Fixtures:
+    build:
+      targets:
+        Kaeri Fixtures: all
+        KaeriKitTests: [test]
+        KaeriDesignTests: [test]
+        KaeriStoreTests: [test]
+        KaeriUITests: [test]
+      preActions:
+        - name: Build the engine
+          settingsTarget: Kaeri Fixtures
+          script: |
+            mkdir -p "$PROJECT_DIR/.engine"
+            "$PROJECT_DIR/scripts/engine.sh" testing "$KAERI_SLICE" > "$PROJECT_DIR/.engine/testing.log" 2>&1
+    run:
+      config: Debug
+      commandLineArguments:
+        "-KaeriScene watching": true
+    test:
+      config: Debug
+      targets:
+        - KaeriKitTests
+        - KaeriDesignTests
+        - KaeriStoreTests
+        - KaeriUITests
+
+  # xcodebuild -scheme "Kaeri Audit" -destination "platform=iOS Simulator,name=kaeri iPhone" test
+  Kaeri Audit:
+    build:
+      targets:
+        Kaeri Fixtures: all
+        KaeriAuditTests: [test]
+      preActions:
+        - name: Build the engine
+          settingsTarget: Kaeri Fixtures
+          script: |
+            mkdir -p "$PROJECT_DIR/.engine"
+            "$PROJECT_DIR/scripts/engine.sh" testing "$KAERI_SLICE" > "$PROJECT_DIR/.engine/testing.log" 2>&1
+    test:
+      config: Debug
+      targets:
+        - KaeriAuditTests
+
+  # website/scripts/videos/record.sh iphone (or mac) runs it, one flow at a time.
+  Kaeri Video:
+    build:
+      targets:
+        Kaeri Fixtures: all
+        KaeriVideoFlows: [test]
+      preActions:
+        - name: Build the engine
+          settingsTarget: Kaeri Fixtures
+          script: |
+            mkdir -p "$PROJECT_DIR/.engine"
+            "$PROJECT_DIR/scripts/engine.sh" testing "$KAERI_SLICE" > "$PROJECT_DIR/.engine/testing.log" 2>&1
+    test:
+      config: Debug
+      targets:
+        - KaeriVideoFlows
+
+  # xcodebuild -scheme "Kaeri Mac Player" -destination platform=macOS test
+  Kaeri Mac Player:
+    build:
+      targets:
+        Kaeri Fixtures: all
+        KaeriMacPlayerTests: [test]
+      preActions:
+        - name: Build the engine
+          settingsTarget: Kaeri Fixtures
+          script: |
+            mkdir -p "$PROJECT_DIR/.engine"
+            "$PROJECT_DIR/scripts/engine.sh" testing "$KAERI_SLICE" > "$PROJECT_DIR/.engine/testing.log" 2>&1
+    test:
+      config: Debug
+      targets:
+        - KaeriMacPlayerTests

@@ -1,0 +1,28 @@
+---
+import '../styles/notfound.css';
+import Nagare from '../components/Nagare.astro';
+import Page from '../layouts/Page.astro';
+import { useSite } from '../i18n/site';
+
+const { t, href } = useSite(Astro);
+---
+
+<Page title={t('notFound.title')} description={t('notFound.description')}>
+	<section class="nf">
+		<Nagare cell={8} class="nf-nagare" />
+		<h1>{t('notFound.heading')}</h1>
+		<p>{t('notFound.text')}</p>
+		<p class="nf-actions">
+			<button type="button" class="k-btn" data-open-search>
+				{t('notFound.search')}
+			</button>
+			<a class="k-btn" href={href('/')}>{t('notFound.home')}</a>
+		</p>
+	</section>
+</Page>
+
+<script>
+	document.querySelector('[data-open-search]')?.addEventListener('click', () => {
+		document.querySelector<HTMLButtonElement>('site-search button[data-open-modal]')?.click();
+	});
+</script>

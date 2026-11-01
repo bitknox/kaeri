@@ -1,0 +1,33 @@
+[package]
+name = "kaeri-tui"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Terminal interface for kaeri: theme, layout and views"
+
+[lib]
+# No doc example is written as a test, and rustdoc spends seconds per crate finding none.
+doctest = false
+
+[dependencies]
+kaeri-core.workspace = true
+# The words the screens show, by catalogue key (i18n/).
+kaeri-i18n.workspace = true
+# The values the work hands the interface and takes back from it.
+kaeri-model.workspace = true
+crossterm.workspace = true
+image.workspace = true
+ratatui-image.workspace = true
+ratatui.workspace = true
+unicode-width.workspace = true
+chrono.workspace = true
+terminal-colorsaurus.workspace = true
+tracing.workspace = true
+
+[features]
+# Opt in for a better no-graphics fallback. Requires chafa to be installed.
+chafa = ["ratatui-image/chafa-dyn"]
+
+[lints]
+workspace = true

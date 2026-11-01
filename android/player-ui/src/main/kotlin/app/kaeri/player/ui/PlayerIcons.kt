@@ -1,0 +1,60 @@
+// The player's icons, as AndroidPlayer draws them: 24 dp, stroked at 2 with round caps and joins.
+
+package app.kaeri.player.ui
+
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.addPathNodes
+import androidx.compose.ui.unit.dp
+
+internal object PlayerIcons {
+    private fun icon(name: String, stroked: List<String>, filled: List<String> = emptyList()) = ImageVector.Builder(
+        name = name, defaultWidth = 24.dp, defaultHeight = 24.dp, viewportWidth = 24f, viewportHeight = 24f,
+    ).apply {
+        for (path in stroked) {
+            addPath(
+                pathData = addPathNodes(path),
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 2f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+            )
+        }
+        for (path in filled) addPath(pathData = addPathNodes(path), fill = SolidColor(Color.Black))
+    }.build()
+
+    val Back = icon("Back", listOf("M19 12 H5.5 M11 6 L5 12 L11 18"))
+
+    /** Watch together's people: two heads and shoulders. */
+    val People = icon("People", listOf("M9 3.9 A3.75 3.75 0 1 1 8.985 3.9 Z", "M2.25 20.25 C3.3 15.3 14.7 15.3 15.75 20.25", "M15.9 4.35 A3.45 3.45 0 0 1 15.9 11.25", "M18.45 15.45 C20.25 16.2 21.3 17.85 21.75 20.25"))
+
+    /** Play on TV: a screen on its foot. */
+    val Tv = icon("Tv", listOf("M5 5 H19 A2 2 0 0 1 21 7 V15 A2 2 0 0 1 19 17 H5 A2 2 0 0 1 3 15 V7 A2 2 0 0 1 5 5 Z", "M8 21 H16 M12 17 V21"))
+
+    val Subtitles = icon(
+        "Subtitles",
+        listOf("M6 5 H18 A3 3 0 0 1 21 8 V16 A3 3 0 0 1 18 19 H6 A3 3 0 0 1 3 16 V8 A3 3 0 0 1 6 5 Z", "M7 12 H9.5 M12.5 12 H17 M7 15.5 H13 M16 15.5 H17"),
+    )
+
+    val Episodes = icon("Episodes", listOf("M4 6.5 H17 M4 11.5 H17 M4 16.5 H10"), listOf("M14 14.5 V20 L19 17.25 Z"))
+
+    /** Back 10 s: the turning arrow, with its "10" drawn over it. */
+    val Replay = icon("Replay", listOf("M12 5 A8 8 0 1 1 4.6 10", "M14.5 2.5 L12 5 L14.5 7.5"))
+
+    val Forward = icon("Forward", listOf("M12 5 A8 8 0 1 0 19.4 10", "M9.5 2.5 L12 5 L9.5 7.5"))
+
+    val Pause = icon("Pause", emptyList(), listOf("M7.5 5 H8.5 A1.5 1.5 0 0 1 10 6.5 V17.5 A1.5 1.5 0 0 1 8.5 19 H7.5 A1.5 1.5 0 0 1 6 17.5 V6.5 A1.5 1.5 0 0 1 7.5 5 Z", "M15.5 5 H16.5 A1.5 1.5 0 0 1 18 6.5 V17.5 A1.5 1.5 0 0 1 16.5 19 H15.5 A1.5 1.5 0 0 1 14 17.5 V6.5 A1.5 1.5 0 0 1 15.5 5 Z"))
+
+    val Play = icon("Play", emptyList(), listOf("M8 5.5 V18.5 L18.5 12 Z"))
+
+    /** More: three dots in a column. */
+    val More = icon("More", emptyList(), listOf("M12 4.5 A1.5 1.5 0 1 1 11.99 4.5 Z", "M12 10.5 A1.5 1.5 0 1 1 11.99 10.5 Z", "M12 16.5 A1.5 1.5 0 1 1 11.99 16.5 Z"))
+
+    /** A speech bubble, for an episode's discussion. */
+    val Discussion = icon("Discussion", listOf("M4 5 H20 A2 2 0 0 1 22 7 V15 A2 2 0 0 1 20 17 H10 L5.5 21 V17 H4 A2 2 0 0 1 2 15 V7 A2 2 0 0 1 4 5 Z"))
+
+    val SkipNext = icon("SkipNext", listOf("M17.5 6 V18"), listOf("M6 6.5 V17.5 L14 12 Z"))
+}

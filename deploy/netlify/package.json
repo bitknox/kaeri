@@ -1,0 +1,11 @@
+{
+  "name": "kaeri-store-netlify",
+  "private": true,
+  "type": "module",
+  "description": "A Kaeri plugin store, as a Netlify function on Postgres",
+  "license": "MIT",
+  "dependencies": {
+    "@netlify/database": "^2.0.1",
+    "pg": "^8.23.1"
+  }
+}

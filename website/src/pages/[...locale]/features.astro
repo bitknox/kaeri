@@ -1,0 +1,209 @@
+---
+import '../../styles/pages.css';
+import '../../styles/features.css';
+import CompareSlider from '../../components/CompareSlider.astro';
+import Flow from '../../components/Flow.astro';
+import HeroVideo from '../../components/HeroVideo.astro';
+import Pic from '../../components/Pic.astro';
+import matrix from '../../data/matrix.json';
+import small from '../../data/small.json';
+import Page from '../../layouts/Page.astro';
+import { CC, DEMO_PART_2, DOWNLOAD, INSTALL_GUIDE, STORES } from '../../data/site';
+import { localePaths, useSite } from '../../i18n/site';
+
+export const getStaticPaths = localePaths;
+
+const { t, href } = useSite(Astro);
+
+const platforms = ['mac', 'iphone', 'ipad', 'android', 'tv', 'windows', 'linux', 'terminal'] as const;
+const state = { y: 'available', d: 'development', n: 'none' } as const;
+
+---
+
+<Page title={t('features.title')} description={t('features.description')} credit={2}>
+	<section class="f-hero" aria-labelledby="hero-h">
+		<div class="f-in">
+			<h1 id="hero-h">{t('features.hero.title')}</h1>
+			<div class="f-hero-row">
+				<p class="k-lede">{t('features.hero.sub')}</p>
+				<a class="k-arrow" href="#platforms">
+					{t('features.hero.compare')}
+					<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+				</a>
+			</div>
+			<figure class="f-fig">
+				<HeroVideo eager morph="shot-hero" alt={t('features.hero.alt')} />
+				<figcaption>{t('features.hero.caption')}</figcaption>
+			</figure>
+		</div>
+	</section>
+
+	<section class="f-sect" aria-labelledby="find-h">
+		<div class="f-in">
+			<div class="band-head">
+				<h2 id="find-h">{t('features.find.title')}</h2>
+				<p><span class="lead">{t('features.find.lead')}</span> {t('features.find.text')}</p>
+			</div>
+			<figure class="f-fig">
+				<div class="f-pair">
+					<Pic name="mac-search" sizes="(min-width: 1264px) 1008px, 90vw" alt={t('features.find.searchAlt')} class="f-win" />
+					<div class="bezel f-phone" style="view-transition-name: shot-calendar">
+						<Pic name="iphone-calendar" sizes="(min-width: 1264px) 264px, 22vw" alt={t('features.find.calendarAlt')} />
+					</div>
+				</div>
+				<figcaption>{t('features.find.caption')}</figcaption>
+			</figure>
+		</div>
+	</section>
+
+	<section class="band band-plum" aria-labelledby="player-h">
+		<div class="band-in">
+			<div class="band-head">
+				<h2 id="player-h">{t('features.player.title')}</h2>
+				<p><span class="lead">{t('features.player.lead')}</span> {t('features.player.text')}</p>
+			</div>
+			<figure class="f-compare">
+				<CompareSlider />
+				<figcaption set:html={t('features.player.caption', { source: DEMO_PART_2, licence: CC })} />
+			</figure>
+		</div>
+	</section>
+
+	<section class="f-sect" aria-labelledby="sync-h">
+		<div class="f-in">
+			<div class="band-head">
+				<h2 id="sync-h">{t('features.sync.title')}</h2>
+				<p><span class="lead">{t('features.sync.lead')}</span> {t('features.sync.text')}</p>
+			</div>
+			<figure class="f-fig f-diagram">
+				<Flow
+					label={t('features.sync.diagram')}
+					steps={[
+						{ title: t('features.sync.history'), text: t('features.sync.historyText') },
+						{ title: t('features.sync.queue'), text: t('features.sync.queueText') },
+						{ title: t('features.sync.trackers'), text: t('features.sync.trackersText') },
+					]}
+					between={[t('features.sync.each'), t('features.sync.order')]}
+				/>
+				<figcaption>{t('features.sync.caption')}</figcaption>
+			</figure>
+		</div>
+	</section>
+
+	<section class="band band-blue" aria-labelledby="tv-h">
+		<div class="band-in">
+			<div class="band-head">
+				<h2 id="tv-h">{t('features.tv.title')}</h2>
+				<p><span class="lead">{t('features.tv.lead')}</span> {t('features.tv.text')}</p>
+			</div>
+			<figure>
+				<div class="f-remote">
+					<div class="bezel f-remote-phone">
+						<Pic name="iphone-tv-remote" sizes="(min-width: 1264px) 280px, 40vw" alt={t('features.tv.remoteAlt')} />
+					</div>
+					<div class="bezel f-remote-tv">
+						<Pic name="tv-title" sizes="(min-width: 1264px) 800px, 90vw" alt={t('features.tv.tvAlt')} />
+					</div>
+				</div>
+				<figcaption>{t('features.tv.caption')}</figcaption>
+			</figure>
+		</div>
+	</section>
+
+	<section class="f-sect" aria-labelledby="plugins-h">
+		<div class="f-in">
+			<div class="band-head">
+				<h2 id="plugins-h">{t('features.plugins.title')}</h2>
+				<p><span class="lead">{t('features.plugins.lead')}</span> {t('features.plugins.text')}</p>
+			</div>
+			<figure class="f-fig f-diagram">
+				<Flow
+					label={t('features.plugins.diagram')}
+					steps={[{ title: t('features.plugins.store'), text: t('features.plugins.storeText') }]}
+					between={[t('features.plugins.signed')]}
+					last={['mac', 'iphone', 'windows'].map((id) => ({ title: t(`features.plugins.device.${id}`), text: t('features.plugins.token') }))}
+				/>
+			</figure>
+			<p class="more"><a class="k-arrow" href={href(STORES)}>
+				{t('features.plugins.link')}
+				<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+			</a></p>
+		</div>
+	</section>
+
+	<section class="band band-plain" aria-labelledby="also-h">
+		<div class="band-in">
+			<h2 id="also-h">{t('features.also.title')}</h2>
+			<div class="small-grid">
+				{
+					small.map((group) => (
+						<div>
+							<h3>{t(`features.small.${group.id}.name`)}</h3>
+							<dl>
+								{group.items.map((id) => (
+									<div>
+										<dt>{t(`features.small.${group.id}.${id}.name`)}</dt>
+										<dd set:html={t(`features.small.${group.id}.${id}.text`)} />
+									</div>
+								))}
+							</dl>
+						</div>
+					))
+				}
+			</div>
+		</div>
+	</section>
+
+	<section class="f-sect f-matrix" id="platforms" aria-labelledby="matrix-h">
+		<div class="f-in">
+			<h2 id="matrix-h">{t('features.matrix.title')}</h2>
+			<p class="matrix-lede">{t('features.matrix.text')}</p>
+			<ul class="matrix-key" aria-label={t('features.matrix.key')}>
+				<li><span class="mark mark-available"></span>{t('features.matrix.available')}</li>
+				<li><span class="mark mark-development"></span>{t('features.matrix.development')}</li>
+				<li><span class="mark mark-none"></span>{t('features.matrix.none')}</li>
+			</ul>
+			<div class="matrix-scroll" tabindex="0" role="region" aria-label={t('features.matrix.caption')}>
+				<table class="matrix">
+					<caption class="sr-only">{t('features.matrix.caption')}</caption>
+					<thead>
+						<tr>
+							<th scope="col">{t('features.matrix.feature')}</th>
+							{platforms.map((p) => <th scope="col">{t(`features.matrix.platform.${p}`)}</th>)}
+						</tr>
+					</thead>
+					<tbody>
+						{
+							matrix.groups.map((group) => (
+								<>
+									<tr class="matrix-group">
+										<th scope="colgroup" colspan="9">{t(`features.matrix.group.${group.id}`)}</th>
+									</tr>
+									{group.rows.map((row) => (
+										<tr>
+											<th scope="row">{t(`features.matrix.row.${row.id}`)}</th>
+											{row.cells.map((cell) => (
+												<td>
+													{cell in state ? (
+														<span class={`mark mark-${state[cell as keyof typeof state]}`} role="img" aria-label={t(`features.matrix.${state[cell as keyof typeof state]}`)} />
+													) : (
+														<span class="cell-text">{t(`features.matrix.cell.${cell}`)}</span>
+													)}
+												</td>
+											))}
+										</tr>
+									))}
+								</>
+							))
+						}
+					</tbody>
+				</table>
+			</div>
+			<p class="matrix-note">{t('features.matrix.note')}</p>
+			<p class="matrix-cta">
+				<a class="k-btn k-btn-primary" href={href(DOWNLOAD)}>{t('features.matrix.get')}</a>
+				<a href={href(INSTALL_GUIDE)}>{t('features.matrix.guide')}</a>
+			</p>
+		</div>
+	</section>
+</Page>

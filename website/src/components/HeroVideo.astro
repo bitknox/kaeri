@@ -1,0 +1,215 @@
+---
+/**
+ * The Mac app's Home clip in its window: the poster paints first, the video fades in over it once it
+ * can play, and it pauses when it is off screen or when the visitor pauses it. Under Reduce Motion
+ * the video never loads and only the poster shows. The button is a real button.
+ */
+import videos from '../data/videos.json';
+import { useSite } from '../i18n/site';
+
+interface Props {
+	alt: string;
+	/** Above the fold: the poster loads ahead of everything else. */
+	eager?: boolean;
+	class?: string;
+	/** A view-transition name, so the picture can carry over to the same feature on another page. */
+	morph?: string;
+}
+
+const { alt, eager = false, class: className, morph } = Astro.props;
+const { t } = useSite(Astro);
+const video = videos['mac-home'];
+const base = '/features/mac-home';
+---
+
+<div class:list={['hero-video', className]} data-hero-video style={morph ? `view-transition-name: ${morph}` : undefined}>
+	<div class="hero-video-box" style={`aspect-ratio: ${video.w} / ${video.h}`}>
+		<picture>
+			<source type="image/avif" srcset={`${base}-poster.avif`} />
+			<img
+				src={`${base}-poster.webp`}
+				width={video.w}
+				height={video.h}
+				alt={alt}
+				loading={eager ? 'eager' : 'lazy'}
+				fetchpriority={eager ? 'high' : 'auto'}
+				decoding="async"
+			/>
+		</picture>
+		<video muted playsinline loop preload="none" disablepictureinpicture disableremoteplayback aria-hidden="true" tabindex="-1">
+			<source src={`${base}.webm`} type='video/webm; codecs="av01.0.05M.08"' />
+			<source src={`${base}.mp4`} type='video/mp4; codecs="avc1.640028"' />
+		</video>
+		<button type="button" class="hero-video-toggle" data-pause data-pause-label={t('video.pause')} data-play-label={t('video.play')} aria-label={t('video.pause')} hidden>
+			<svg class="g-pause" aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" shape-rendering="crispEdges"><path d="M3 2h3v10H3zM8 2h3v10H8z" fill="currentColor"></path></svg>
+			<svg class="g-play" aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" shape-rendering="crispEdges"><path d="M4 2h2v10H4zM6 3h2v8H6zM8 5h2v4H8z" fill="currentColor"></path></svg>
+		</button>
+	</div>
+</div>
+
+<style is:global>
+	.hero-video-box {
+		position: relative;
+		display: block;
+		overflow: hidden;
+		border-radius: 14px;
+		border: 1px solid var(--ani-bezel-edge);
+		background: var(--ani-crop-a);
+	}
+
+	.hero-video-box img,
+	.hero-video-box video {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.hero-video-box video {
+		position: absolute;
+		inset: 0;
+		opacity: 0;
+	}
+
+	.hero-video.is-playing video {
+		opacity: 1;
+	}
+
+	.hero-video-toggle[hidden] {
+		display: none;
+	}
+
+	.hero-video-toggle {
+		position: absolute;
+		right: 12px;
+		top: 12px;
+		width: 44px;
+		height: 44px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border: 0;
+		border-radius: 22px;
+		background: var(--ani-ground);
+		color: var(--ani-text);
+		cursor: pointer;
+		transition: color var(--t-fast) var(--ease);
+	}
+
+	.hero-video-toggle:hover {
+		color: var(--ani-link-hover);
+	}
+
+	.hero-video-toggle .g-play,
+	.hero-video.is-paused .hero-video-toggle .g-pause {
+		display: none;
+	}
+
+	.hero-video.is-paused .hero-video-toggle .g-play {
+		display: block;
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.hero-video-box video {
+			transition: opacity 200ms var(--ease);
+		}
+	}
+
+	@media (max-width: 600px) {
+		.hero-video-toggle {
+			right: 8px;
+			bottom: 8px;
+		}
+	}
+</style>
+
+<script>
+	const still = window.matchMedia('(prefers-reduced-motion: reduce)');
+	const clips = [...document.querySelectorAll<HTMLElement>('[data-hero-video]')];
+	const videoOf = (clip: HTMLElement) => clip.querySelector('video')!;
+	const onScreen = new Set<HTMLElement>();
+	/** Clips the visitor paused: they stay paused. */
+	const held = new Set<HTMLElement>();
+	const moved = new Map<HTMLElement, number>();
+
+	function play(clip: HTMLElement) {
+		if (still.matches || held.has(clip) || !onScreen.has(clip)) return;
+		if (document.readyState !== 'complete') {
+			window.addEventListener('load', () => play(clip), { once: true });
+			return;
+		}
+		const video = videoOf(clip);
+		if (video.preload !== 'auto') video.preload = 'auto';
+		video.play().catch(() => {});
+	}
+
+	for (const clip of clips) {
+		const video = videoOf(clip);
+		const button = clip.querySelector<HTMLButtonElement>('[data-pause]')!;
+		if (!still.matches) button.hidden = false;
+		video.addEventListener('playing', () => clip.classList.add('is-playing'));
+		video.addEventListener('error', () => clip.classList.remove('is-playing'), true);
+		for (const event of ['play', 'timeupdate']) video.addEventListener(event, () => moved.set(clip, performance.now()));
+		button.addEventListener('click', () => {
+			if (held.has(clip)) {
+				held.delete(clip);
+				clip.classList.remove('is-paused');
+				button.setAttribute('aria-label', button.dataset.pauseLabel!);
+				play(clip);
+			} else {
+				held.add(clip);
+				clip.classList.add('is-paused');
+				button.setAttribute('aria-label', button.dataset.playLabel!);
+				video.pause();
+			}
+		});
+	}
+
+	// WebKit can stall a WebM at its end instead of looping: a clip that has not moved for a second
+	// and a half plays its MP4 from then on.
+	window.setInterval(() => {
+		for (const clip of onScreen) {
+			const video = videoOf(clip);
+			const mp4 = video.querySelector<HTMLSourceElement>('source[type^="video/mp4"]');
+			if (video.paused || !mp4 || video.currentSrc.endsWith('.mp4')) continue;
+			if (performance.now() - (moved.get(clip) ?? performance.now()) < 1500) continue;
+			video.src = mp4.src;
+			play(clip);
+		}
+	}, 1000);
+
+	const watch = new IntersectionObserver(
+		(entries) => {
+			for (const entry of entries) {
+				const clip = entry.target as HTMLElement;
+				if (entry.isIntersecting) {
+					onScreen.add(clip);
+					play(clip);
+				} else {
+					onScreen.delete(clip);
+					videoOf(clip).pause();
+				}
+			}
+		},
+		{ threshold: 0.25 },
+	);
+	for (const clip of clips) watch.observe(clip);
+
+	document.addEventListener('visibilitychange', () => {
+		for (const clip of clips) {
+			if (document.hidden) videoOf(clip).pause();
+			else play(clip);
+		}
+	});
+
+	still.addEventListener('change', () => {
+		for (const clip of clips) {
+			const button = clip.querySelector<HTMLButtonElement>('[data-pause]')!;
+			button.hidden = still.matches;
+			if (still.matches) {
+				videoOf(clip).pause();
+				clip.classList.remove('is-playing');
+			} else play(clip);
+		}
+	});
+</script>

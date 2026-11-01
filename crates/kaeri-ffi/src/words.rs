@@ -1,0 +1,327 @@
+//! The model's words for counts, sizes, spans of time and progress, and its rules for how the
+//! desktop screens read a title (`kaeri_model::present`), for a front end that cannot call
+//! the model itself: the same rules the terminal and the Rust front ends read, so every app says
+//! a wait, a size or a queue row the same way rather than each writing its own and drifting.
+
+use kaeri_core::media::Translation;
+use kaeri_model::{
+    catalog::{Entry, ResumePoint, Season},
+    episodes::DubExtent,
+    hosted::{PlayerStats, StatsFixture},
+    present::{self, Casing, Queue, QueueItem, SeasonYear},
+    settings::SettingKey,
+    wording,
+};
+
+/// A made-up Stats for nerds in `state`, worded as the engine words a real one: what an app's
+/// previews, screenshots and tests show with no player behind them.
+#[uniffi::export]
+pub fn player_stats_fixture(state: StatsFixture) -> PlayerStats {
+    kaeri_engine::playback::stats::fixture(state)
+}
+
+/// A made-up marking bar in `state`: what an app's previews, screenshots and tests show with no
+/// player behind them.
+#[uniffi::export]
+pub fn skip_mark_fixture(
+    state: kaeri_model::playback::SkipMarkFixture,
+) -> kaeri_model::playback::SkipMarkView {
+    state.view()
+}
+
+/// A message from the engine in English. A bridge for the apps that have not moved to the
+/// catalogue yet (P2); each caller is marked `i18n P2` and goes when its app does.
+#[uniffi::export]
+pub fn msg_english(msg: kaeri_model::Msg) -> String {
+    msg.english()
+}
+
+/// The Your sources page as sections, from the provider rows: see
+/// [`kaeri_model::sources::source_groups`].
+#[uniffi::export]
+pub fn source_groups(
+    rows: Vec<kaeri_model::sources::ProviderRow>,
+) -> Vec<kaeri_model::sources::SourceGroup> {
+    kaeri_model::sources::source_groups(&rows)
+}
+
+/// The order a new install tries its sources in: the first-party kinds first.
+#[uniffi::export]
+pub fn default_source_order() -> Vec<String> {
+    kaeri_model::sources::default_source_order()
+}
+
+/// `providers.order` with source `id` moved one place up (`step` below zero) or down, for the
+/// Move up and Move down actions. `None` when it is already at that end. Write the result with
+/// `Command::SetSetting` for `SourceOrder`.
+#[uniffi::export]
+pub fn move_source(
+    order: Vec<String>,
+    rows: Vec<kaeri_model::sources::ProviderRow>,
+    id: String,
+    step: i32,
+) -> Option<Vec<String>> {
+    kaeri_model::sources::order_with_source_moved(&order, &rows, &id, step as isize)
+}
+
+/// `providers.order` with source `id` dropped at place `index` among the rows on screen, for a
+/// drag. `None` when the source has no row. Write the result with `Command::SetSetting` for
+/// `SourceOrder`.
+#[uniffi::export]
+pub fn place_source(
+    order: Vec<String>,
+    rows: Vec<kaeri_model::sources::ProviderRow>,
+    id: String,
+    index: u32,
+) -> Option<Vec<String>> {
+    kaeri_model::sources::order_with_source_placed(&order, &rows, &id, index as usize)
+}
+
+/// Whether the Your sources page has nothing to list, which is when it shows its empty state.
+#[uniffi::export]
+pub fn has_no_sources(rows: Vec<kaeri_model::sources::ProviderRow>) -> bool {
+    kaeri_model::sources::has_no_sources(&rows)
+}
+
+/// A wait in the largest unit that still reads at a glance: `6d 17h`, `2h 5m`, `now`.
+#[uniffi::export]
+pub fn countdown(seconds: i64) -> String {
+    wording::countdown(seconds)
+}
+
+/// How long ago: `2d ago`, or `just now` under a minute.
+#[uniffi::export]
+pub fn ago(seconds: i64) -> String {
+    wording::ago(seconds)
+}
+
+/// A count and its noun, singular for one: `1 episode`, `3 episodes`.
+#[uniffi::export]
+pub fn plural(count: u64, noun: String) -> String {
+    wording::plural(usize::try_from(count).unwrap_or(usize::MAX), &noun)
+}
+
+/// Bytes at human scale in decimal units, two significant figures: `1.4 GB`, `140 MB`.
+#[uniffi::export]
+pub fn human_bytes(bytes: u64) -> String {
+    wording::human_bytes(bytes)
+}
+
+/// A broadcast's time from now: `in 4d 20h` ahead, `3h ago` once aired.
+#[uniffi::export]
+pub fn calendar_time(seconds: i64) -> String {
+    wording::calendar_time(seconds)
+}
+
+/// What most recently aired and what is next: `ep 7 out 2d ago  ·  ep 8 in 4d 20h`.
+#[uniffi::export]
+pub fn broadcast_line(entry: Entry) -> String {
+    wording::broadcast_line(&entry)
+}
+
+/// The title page's line on its dub, from [`Event::TitleDub`]'s `dub`: "Dub to episode 6" for
+/// a dub that stops short, "Dubbed" for one with every aired episode, and `None`, to show
+/// nothing, when there is no dub or the source could not say.
+///
+/// [`Event::TitleDub`]: kaeri_model::event::Event::TitleDub
+#[uniffi::export]
+pub fn dub_line(dub: Option<DubExtent>) -> Option<String> {
+    present::dub_line(dub.as_ref())
+}
+
+/// A calendar row's time as its row shows it: `time` is the app's own clock text for the
+/// broadcast, with "~" before it when the row's `airing_approximate` says it is an estimate:
+/// "~16:30".
+#[uniffi::export]
+pub fn air_time(time: String, approximate: bool) -> String {
+    present::air_time(&time, approximate)
+}
+
+/// The mark an episode line ends its episode with: "Dub" for an episode watched or out in the
+/// dub, and `None`, to mark nothing, for a sub or when it is not known. For a Continue row it is
+/// the entry's `watched_in`; `continue_queue` marks its rows with it already.
+#[uniffi::export]
+pub fn episode_mark(translation: Option<Translation>) -> Option<String> {
+    present::episode_mark(translation).map(str::to_owned)
+}
+
+/// `label`, an episode as a line names it ("Episode 10", "E10"), with its `episode_mark` after
+/// it: "Episode 10 · Dub" for a dub, `label` alone for a sub or when it is not known.
+#[uniffi::export]
+pub fn episode_line(label: String, translation: Option<Translation>) -> String {
+    present::episode_line(&label, translation)
+}
+
+/// A calendar row's mark: "Dub" for the dub's own time or once the episode is out in the dub,
+/// and `None`, to mark nothing, otherwise. Never "Sub": only dubs are marked.
+#[uniffi::export]
+pub fn calendar_mark(entry: Entry) -> Option<String> {
+    present::calendar_mark(&entry).map(str::to_owned)
+}
+
+/// The line under a sign-in's device code, from its `expires_at` less now in seconds:
+/// "Expires in 15 min", "Expires in 45 s" in the last minute, then "Code expired", when the app
+/// offers a new code (`Command::Connect` again for a sign-in).
+#[uniffi::export]
+pub fn device_code_expiry(seconds_left: i64) -> String {
+    present::device_code_expiry(seconds_left)
+}
+
+/// A resume point as a viewer reads it: `10:06`, `1:02:03`.
+#[uniffi::export]
+pub fn resume_clock(resume: ResumePoint) -> String {
+    resume.clock()
+}
+
+/// The count beside a title's meter: `2 / 12`, `2 / 3 aired`, `2 watched`; `None` before any.
+#[uniffi::export]
+pub fn progress_label(entry: Entry) -> Option<String> {
+    entry.progress_label()
+}
+
+/// How far through the title the meter is, from nought to one.
+#[uniffi::export]
+pub fn watched_fraction(entry: Entry) -> f64 {
+    entry.watched_fraction()
+}
+
+/// The newest episode known to be out, reconciling AniList's schedule with its next episode.
+#[uniffi::export]
+pub fn latest_aired_episode(entry: Entry) -> Option<u32> {
+    entry.latest_aired().map(|(episode, _)| episode)
+}
+
+/// Continue's queue of `entries`, newest watch first as the engine sends them, less the titles
+/// `hidden` names: at most five rows, under way first, then new this week, each with what its
+/// row and the preview's button say, the button in `casing`.
+#[uniffi::export]
+pub fn continue_queue(entries: Vec<Entry>, hidden: Vec<u32>, casing: Casing) -> Queue {
+    Queue::of(&entries, &hidden, casing)
+}
+
+/// The season AniList files `unix` under.
+#[uniffi::export]
+pub fn season_at(unix: i64) -> SeasonYear {
+    SeasonYear::at(unix)
+}
+
+/// The season `delta` seasons after `from`, or before it when negative.
+#[uniffi::export]
+pub fn season_step(from: SeasonYear, delta: i32) -> SeasonYear {
+    from.step(delta)
+}
+
+/// A season as it is said: "Fall 2026".
+#[uniffi::export]
+pub fn season_name(season: SeasonYear) -> String {
+    season.name()
+}
+
+/// AniList's wire name for a season, as a search filter takes it: "FALL".
+#[uniffi::export]
+pub fn season_wire(season: Season) -> String {
+    present::season_wire(season).to_owned()
+}
+
+/// A format as a caption says it: "TV", "Movie", "OVA".
+#[uniffi::export]
+pub fn format_label(wire: String) -> String {
+    present::format_label(&wire)
+}
+
+/// The title page's metadata line: "TV · Summer 2026 · 24 episodes · 79%".
+#[uniffi::export]
+pub fn meta_line(entry: Entry) -> String {
+    present::meta_line(&entry)
+}
+
+/// The line under a cover: "Atelier Hotaru · 12 episodes".
+#[uniffi::export]
+pub fn cover_caption(entry: Entry) -> String {
+    present::cover_caption(&entry)
+}
+
+/// A tracker's name: "AniList" for `anilist`.
+#[uniffi::export]
+pub fn tracker_name(id: String) -> String {
+    present::tracker_name(&id)
+}
+
+/// A track by its language's name and its own words: "English (Signs)".
+#[uniffi::export]
+pub fn track_name(language: Option<String>, title: String) -> String {
+    present::track_name(language.as_deref(), &title)
+}
+
+/// A playhead: "4:05", "1:02:03".
+#[uniffi::export]
+pub fn play_clock(seconds: f64) -> String {
+    present::clock(seconds)
+}
+
+/// A runtime in whole minutes: "24 min".
+#[uniffi::export]
+pub fn runtime_minutes(seconds: u64) -> String {
+    present::minutes(seconds)
+}
+
+/// What one title plays next, as its page's amber action says it: the queue's rule for a single
+/// title, whether or not it is under way.
+#[uniffi::export]
+pub fn queue_item(entry: Entry, casing: Casing) -> QueueItem {
+    QueueItem::of(&entry, casing)
+}
+
+/// A setting's name as the settings screens print it, lower case: "auto-play next".
+#[uniffi::export]
+pub fn setting_label(key: SettingKey) -> String {
+    key.label().to_owned()
+}
+
+/// The heading a setting sits under: "appearance", "playback", "downloads" and so on.
+#[uniffi::export]
+pub fn setting_category(key: SettingKey) -> String {
+    key.category().to_owned()
+}
+
+#[cfg(test)]
+mod tests {
+    use kaeri_core::ids::AnilistId;
+    use kaeri_model::progress::TitleProgress;
+
+    use super::*;
+
+    #[test]
+    fn the_words_are_the_models() {
+        assert_eq!(countdown(6 * 86_400 + 17 * 3_600), "6d 17h");
+        assert_eq!(ago(30), "just now");
+        assert_eq!(plural(1, "episode".into()), "1 episode");
+        assert_eq!(human_bytes(1_400_000_000), "1.4 GB");
+        assert_eq!(calendar_time(-3 * 3_600), "3h ago");
+        assert_eq!(resume_clock(ResumePoint { position: 606.0, fraction: None }), "10:06");
+        let mut entry = Entry::new(AnilistId::new(900_001), "Stardust Wayfarer");
+        entry.episodes = Some(12);
+        entry.progress = Some(TitleProgress { done: 6, next: 7 });
+        assert_eq!(progress_label(entry.clone()).as_deref(), Some("6 / 12"));
+        assert!((watched_fraction(entry.clone()) - 0.5).abs() < 1e-9);
+        entry.next_episode = Some(8);
+        assert_eq!(latest_aired_episode(entry.clone()), Some(7));
+        entry.resume = Some(ResumePoint { position: 606.0, fraction: Some(606.0 / 1440.0) });
+        let queue = continue_queue(vec![entry], vec![], Casing::Sentence);
+        assert_eq!(queue.in_progress[0].button.as_deref(), Some("Resume episode 7 · 10:06"));
+        let fall = season_at(1_792_756_800);
+        assert_eq!(season_name(season_step(fall, 1)), "Winter 2027");
+        assert_eq!(play_clock(245.4), "4:05");
+        assert_eq!(setting_label(SettingKey::AutoNext), "auto-play next");
+        let fresh = Entry::new(AnilistId::new(900_002), "Atelier Hotaru");
+        assert_eq!(
+            queue_item(fresh, Casing::Sentence).button.as_deref(),
+            Some("Start episode 1")
+        );
+        assert_eq!(setting_category(SettingKey::AutoNext), "playback");
+        let waiting = player_stats_fixture(StatsFixture::Waiting);
+        assert!(waiting.waiting && waiting.rows.iter().all(|r| r.value == "–"));
+        let local = player_stats_fixture(StatsFixture::Local);
+        assert!(local.rows.iter().all(|r| r.label != "Network"));
+    }
+}

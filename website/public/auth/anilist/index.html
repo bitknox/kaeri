@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Finish signing in</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<script>
+  try { var t = localStorage.getItem("starlight-theme"); if (t === "dark" || t === "light") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+  @font-face { font-family: "Zen Kaku Gothic New"; font-weight: 500; font-display: swap;
+               src: url(/fonts/zen-kaku-gothic-new-latin-500.woff2) format("woff2"); }
+  :root { color-scheme: dark light; --ground: #10131f; --text: #e4e0d6; --dim: #9298b5; --amber: #f2a64b;
+          --amber-hover: #f5b467; --on-amber: #161a2e; --well: #161a2e; --band: #222638; --rule: #434653; --focus: #f5b467; }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) { --ground: #f0ede4; --text: #1e2033; --dim: #4f546e; --on-amber: #1e2033;
+            --well: #e3e1d9; --band: #e3e1d9; --rule: #c2c0bd; --focus: #7a4309; }
+  }
+  :root[data-theme="light"] { color-scheme: light; --ground: #f0ede4; --text: #1e2033; --dim: #4f546e; --on-amber: #1e2033;
+            --well: #e3e1d9; --band: #e3e1d9; --rule: #c2c0bd; --focus: #7a4309; }
+  :root[data-theme="dark"] { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: var(--ground); color: var(--text);
+         font: 17px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, Roboto, sans-serif; }
+  main { width: 100%; max-width: 40rem; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+  .brand { display: inline-flex; align-items: center; gap: .625rem; margin: 0 0 3rem; color: var(--text); text-decoration: none;
+           font: 500 1.375rem/1 "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", system-ui, sans-serif; }
+  .brand img { width: 32px; height: 32px; }
+  h1 { font: 500 clamp(2rem, 5vw, 2.75rem)/1.12 "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", system-ui, sans-serif;
+       letter-spacing: -.015em; margin: 0 0 .75rem; text-wrap: balance; }
+  h2 { font-size: 1rem; font-weight: 600; margin: 2rem 0 .25rem; }
+  .what { margin: 0 0 1.5rem; font-size: 1.25rem; color: var(--text); }
+  p { margin: 0 0 1rem; color: var(--dim); }
+  ol { margin: 0 0 1rem; padding-left: 1.5rem; }
+  strong { font-weight: 600; }
+  li + li { margin-top: .375rem; }
+  .actions { display: flex; flex-wrap: wrap; gap: .75rem; margin: 1.5rem 0 2rem; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 1.5rem; border-radius: 999px; font-weight: 600;
+         text-decoration: none; color: var(--text); border: 1px solid var(--rule); background: transparent;
+         transition: color 120ms cubic-bezier(.2,.8,.2,1), background-color 120ms cubic-bezier(.2,.8,.2,1), border-color 120ms cubic-bezier(.2,.8,.2,1); }
+  .btn:hover { border-color: var(--text); }
+  .btn-primary { background: var(--amber); border-color: var(--amber); color: var(--on-amber); }
+  .btn-primary:hover { background: var(--amber-hover); border-color: var(--amber-hover); }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; transition: none; }
+  .box { margin: 0 0 1.5rem; padding: 1.25rem 1rem; border-radius: 12px; background: var(--band); }
+  .box > :last-child { margin-bottom: 0; }
+  .box h2 { margin-top: 0; }
+  .code { display: block; margin: 0 0 1.5rem; color: var(--text);
+          font: 1.5rem/1.3 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-wrap: anywhere; }
+  .label { display: block; margin: 0 0 .25rem; font-size: .9375rem; color: var(--dim); }
+  a { color: var(--text); text-underline-offset: 3px; }
+  small { color: var(--dim); font-size: .9375rem; }
+  [hidden] { display: none !important; }
+  @media (max-width: 600px) { .actions { flex-direction: column; } .btn { min-height: 50px; } }
+  @media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <a class="brand" href="/"><img src="/favicon.svg" alt="" width="32" height="32"><span>Kaeri</span></a>
+  <h1>Finish signing in to AniList in Kaeri.</h1>
+  <p>This page should have opened Kaeri on your Android device. If you can read it, Android hasn’t linked kaeri.app to the app yet.</p>
+  <div class="box">
+    <h2>If it still doesn’t open</h2>
+    <ol>
+      <li>Open Android’s <strong>Settings › Apps › Kaeri › Open by default</strong>.</li>
+      <li>Turn on <strong>Open supported links</strong> and allow kaeri.app.</li>
+      <li>Go back to Kaeri and sign in to AniList again.</li>
+    </ol>
+  </div>
+  <p><small>Nothing from this page is sent anywhere. Your AniList sign-in stays in this browser tab, and closing it discards it.</small></p>
+</main>
+<script>
+  // Drop the token from the address bar and history as soon as the page loads.
+  if (location.hash) history.replaceState(null, "", location.pathname);
+</script>
+</body>
+</html>

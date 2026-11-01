@@ -1,0 +1,112 @@
+[package]
+name = "kaeri-ffi"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "The engine as a native front end holds it, through UniFFI: Swift and Kotlin bindings over its whole protocol"
+# Linked into a native app, never published: its shape follows the engine's.
+publish = false
+
+[lib]
+# `lib` for the tests and the bindings generator, `staticlib` for an app that links the engine
+# in, as iOS has to, and `cdylib` for the generator to read the interface from and for a front
+# end that loads it at run time.
+crate-type = ["lib", "staticlib", "cdylib"]
+# No doc example is written as a test, and rustdoc spends seconds per crate finding none.
+doctest = false
+
+# Generates the Swift and Kotlin bindings from the built library, from the same UniFFI release
+# as the scaffolding compiled into it. Behind its own feature so an app's build of the library
+# does not compile the generator and its command line.
+[[bin]]
+name = "uniffi-bindgen"
+path = "src/bin/uniffi-bindgen.rs"
+required-features = ["cli"]
+
+[features]
+default = ["desktop"]
+# The engine's desktop parts, mpv and watch parties among them. A phone's build turns it off,
+# with `--no-default-features`.
+desktop = ["kaeri-engine/desktop", "party"]
+# Only the Discord presence of them, for the Mac app, whose player is libmpv in its own process.
+presence = ["kaeri-engine/presence"]
+# `FfiEngine::start_testing`: the engine on a fake AniList, the test kit's fixture source and a
+# client that cannot leave the machine, for the Swift package's tests. Never on in an app.
+testing = [
+    "kaeri-engine/testing",
+    "dep:kaeri-testkit",
+    "dep:kaeri-meta",
+    "dep:kaeri-providers",
+    "dep:kaeri-track",
+    "dep:kaeri-plugin-store",
+    "kaeri-remote?/testing",
+    "kaeri-party?/testing",
+    "kaeri-cast?/fake",
+]
+# Watch parties: the engine's party commands, and with `testing` `FfiEngine::start_fake_party`,
+# a Syncplay server on the loopback interface. On in the desktop apps' builds beside
+# `--no-default-features`: desktop/windows/scripts/bindings.sh, apple/scripts/engine.sh and
+# desktop/linux.
+party = ["kaeri-engine/party", "dep:kaeri-party"]
+# `FfiEngine::start_remote`: the remote a TV runs for phones on its network to drive it. On in
+# Android's builds, which the TV app shares with the phone's.
+remote = [
+    "kaeri-engine/remote",
+    "kaeri-engine/cast",
+    "dep:kaeri-remote",
+    "dep:kaeri-cast",
+]
+# `FfiPlayer`: kaeri-mpv-host's libmpv player behind the hosted player protocol, for the
+# Windows app, whose video is mpv's d3d11 composition. Links libmpv, so only that app's build
+# turns it on: desktop/windows/scripts/bindings.sh, with KAERI_LIBMPV_DIR.
+mpv-host = ["dep:kaeri-mpv-host", "kaeri-mpv-host/libmpv"]
+# The `uniffi-bindgen` binary. With cargo metadata, which is how it finds each crate's own
+# `uniffi.toml`: the workspace takes uniffi without its default features, and without this the
+# Kotlin bindings came out under uniffi's default packages whatever the files said.
+cli = ["uniffi/cli", "uniffi/cargo-metadata"]
+
+# No terminal crate, not even transitively: tools/check-boundaries.sh holds it to that in CI.
+[dependencies]
+kaeri-core.workspace = true
+kaeri-engine.workspace = true
+# The commands and events themselves cross, with every row they carry: the model's `ffi` feature
+# derives their conversions, and turns on the core's for the core types among them.
+kaeri-model = { workspace = true, features = ["ffi"] }
+kaeri-net.workspace = true
+kaeri-store.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+# The app's log, written as the terminal writes its own.
+tracing.workspace = true
+tracing-appender.workspace = true
+tracing-subscriber.workspace = true
+uniffi.workspace = true
+# The remote's protocol, for `start_remote`.
+kaeri-remote = { workspace = true, optional = true }
+kaeri-cast = { workspace = true, optional = true }
+# The fake party server, behind `party` and `testing`.
+kaeri-party = { workspace = true, optional = true }
+# The hosted player, behind `mpv-host`.
+kaeri-mpv-host = { workspace = true, optional = true }
+# What `start_testing` builds the engine's parts from.
+kaeri-meta = { workspace = true, optional = true }
+kaeri-testkit = { workspace = true, optional = true }
+kaeri-providers = { workspace = true, optional = true }
+kaeri-track = { workspace = true, optional = true }
+# The plugin store scenes serve a store on loopback, as the contract tests do.
+kaeri-plugin-store = { workspace = true, optional = true }
+
+[dev-dependencies]
+# A fixture source that is slow to find one episode's streams.
+async-trait.workspace = true
+# Polls `next_events` on the test's own thread, outside the engine's runtime, as Swift does.
+futures.workspace = true
+# The hosted player's properties, in mpv's own JSON.
+serde_json.workspace = true
+tempfile = "3"
+# The day the widgets' record calls today, in the zone the engine reads it in.
+jiff.workspace = true
+
+[lints]
+workspace = true

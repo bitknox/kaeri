@@ -1,0 +1,88 @@
+using Kaeri.Engine.Model;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
+
+namespace Kaeri.Windows;
+
+public sealed partial class CoverGrid : UserControl
+{
+    public CoverGrid()
+    {
+        InitializeComponent();
+    }
+
+    /// <summary>The covers, replaced whole.</summary>
+    internal IReadOnlyList<CoverItem> Covers
+    {
+        set
+        {
+            Items.ItemsSource = value;
+#if KAERI_TESTING
+            // --show=hover: the first cover's preview open, as if the pointer rested on it.
+            if (Ctx.Current.Options.Show == "hover" && value.Count > 0 && !previewed)
+            {
+                previewed = true;
+                _ = Task.Delay(3000).ContinueWith(_ => DispatcherQueue.TryEnqueue(() =>
+                {
+                    if (Below(Items).OfType<ItemContainer>().FirstOrDefault(c => c.Tag is uint) is { } first)
+                        HoverPreview.Show(first, (uint)first.Tag);
+                }));
+            }
+#endif
+        }
+    }
+
+#if KAERI_TESTING
+    bool previewed;
+#endif
+
+    void OnInvoked(ItemsView sender, ItemsViewItemInvokedEventArgs e)
+    {
+        if (e.InvokedItem is not CoverItem item)
+            return;
+        // The cover flies to the title page's (a connected animation), when animations are on.
+        if (Motion.Enabled && CoverOf(item) is { } cover)
+            ConnectedAnimationService.GetForCurrentView().PrepareToAnimate(Pages.TitlePage.CoverAnimation, cover);
+        Ctx.Current.OpenTitle(item.Id);
+    }
+
+    static IEnumerable<DependencyObject> Below(DependencyObject root)
+    {
+        var count = VisualTreeHelper.GetChildrenCount(root);
+        for (var i = 0; i < count; i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            yield return child;
+            foreach (var deeper in Below(child))
+                yield return deeper;
+        }
+    }
+
+    /// <summary>The cover art of the shown container for <paramref name="item"/>, if it is realised.</summary>
+    UIElement? CoverOf(CoverItem item)
+    {
+        var container = Below(Items).OfType<ItemContainer>().FirstOrDefault(c => c.DataContext == item);
+        return container is null ? null : Below(container).OfType<FrameworkElement>().FirstOrDefault(f => f.Tag as string == "cover");
+    }
+
+    /// <summary>A container is up: the pointer resting on it opens the preview of the title it holds now, which a recycled container changes.</summary>
+    void OnCoverLoaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: uint })
+            HoverPreview.Attach((FrameworkElement)sender, () => (uint)((FrameworkElement)sender).Tag);
+    }
+
+    void OnOpen(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.Tag is CoverItem item)
+            Ctx.Current.OpenTitle(item.Id);
+    }
+
+    void OnPlan(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.Tag is CoverItem item)
+            Ctx.Current.Send(new Command.SetStatus(item.Id, LibrarySegment.Planning));
+    }
+}

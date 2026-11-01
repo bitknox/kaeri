@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- kaeri for Windows: WinUI 3 on the Windows App SDK, unpackaged and self-contained, so it
+       runs from its output folder. The engine comes in through the generated bindings
+       (Kaeri.Engine), its hosted mpv player draws into a SwapChainPanel through mpv's d3d11
+       composition mode, and the pages are Fluent controls in the brief's Obi and Silk palette.
+       Build with -p:EngineFlavour=testing for the fixture scenes (Options.cs). -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
+    <RootNamespace>Kaeri.Windows</RootNamespace>
+    <AssemblyName>Kaeri</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets/kaeri.ico</ApplicationIcon>
+    <Platforms>ARM64;x64</Platforms>
+    <RuntimeIdentifiers>win-arm64;win-x64</RuntimeIdentifiers>
+    <UseWinUI>true</UseWinUI>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Program.cs is the entry point: one copy runs, and a second launch hands over its link. -->
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DefineConstants Condition="'$(EngineFlavour)' == 'testing'">$(DefineConstants);KAERI_TESTING</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.5.1" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2705" />
+    <!-- SettingsCard, as Windows 11 Settings draws its rows. -->
+    <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.251219" />
+  </ItemGroup>
+  <!-- The pseudo-locale (qps-ploc), generated beside the strings, goes only into a testing build,
+       for the layout pass (the testing build run with the qps-ploc language). -->
+  <ItemGroup>
+    <PRIResource Remove="Strings.Pseudo/**" />
+    <PRIResource Include="Strings.Pseudo/**/*.resw" Condition="'$(EngineFlavour)' == 'testing'" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Kaeri.App.Core/Kaeri.App.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Show titles: Zen Kaku Gothic New Bold, under the OFL (assets/mpv/licenses). -->
+    <Content Include="../../../assets/mpv/fonts/ZenKakuGothicNew-Bold.ttf" Link="Assets/Fonts/ZenKakuGothicNew-Bold.ttf" CopyToOutputDirectory="PreserveNewest" />
+    <!-- The notifications' icon: Windows shows a PNG there, not an .ico. -->
+    <Content Include="../../../assets/flags/png/*.png" Link="Assets/Flags/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../../assets/icon/kaeri.iconset/icon_128x128@2x.png" Link="Assets/kaeri-256.png" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

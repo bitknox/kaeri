@@ -1,0 +1,285 @@
+// Plugin stores: the ones joined and their plugins, an invite link being checked or spent, and
+// what an owner manages: invites, members, who can join, and plugins to publish.
+
+import KaeriKit
+import KaeriStrings
+import Foundation
+import Observation
+
+/// A store's people and invite links, for its owner.
+public struct StoreMembers: Sendable {
+    public var members: [StoreMemberRow]
+    /// Links that still work.
+    public var invites: [StoreInviteRow]
+    /// Links that ended in the last 30 days.
+    public var ended: [StoreInviteRow]
+    /// Whether the store's server offers the choices of uses and length. An older one makes
+    /// links that work once, for seven days.
+    public var inviteChoices: Bool
+}
+
+/// The plugin stores, as the engine last said them.
+@Observable @MainActor
+public final class StoresModel {
+    /// What a pasted invite link leads to.
+    public enum Preview: Equatable, Sendable {
+        /// Being checked against the store it names.
+        case checking(link: String)
+        /// The store, checked against the key the link carries.
+        case store(InvitedStore)
+        /// Why it leads nowhere, in words to show in its place, and the store's contact when an
+        /// invite that stopped working came with one.
+        case failed(String, contact: String?)
+    }
+
+    /// What a store screen is waiting on, by the job the engine runs it as.
+    public enum Work: Hashable, Sendable {
+        case join
+        case leave(store: String)
+        case install(store: String, plugin: String)
+        case remove(plugin: String)
+        case invite(store: String)
+        /// Letting anyone with the link join, or only invited people.
+        case openJoin(store: String)
+        /// Removing devices that joined with the link.
+        case removeAnonymous(store: String)
+    }
+
+    /// Every joined store, in the order the engine lists them.
+    public private(set) var stores: [StoreRow] = []
+    /// Whether the engine has said the stores at all.
+    public private(set) var loaded = false
+    /// The invite link being checked, and what it leads to.
+    public private(set) var preview: Preview?
+    /// What the store will call this device, as the join sheet's field holds it: the kind of
+    /// device the engine offers with the preview, until the person joining types over it. An
+    /// open link sends no name, and this goes with nothing.
+    public var deviceName = ""
+    /// The kind of device the last preview offered, so a name typed over it survives the link
+    /// being checked again.
+    private var offeredName = ""
+    /// The joiner's own name, for an invite that works more than once. Sent only when the
+    /// preview says to ask for it.
+    public var joinerName = ""
+    /// The store just joined, for the screen to move into: until it is shown.
+    public private(set) var joined: String?
+    /// An invite link to show and send.
+    public private(set) var invite: InviteLinkView?
+    /// Each store's members and unused invites, for its owner.
+    public private(set) var members: [String: StoreMembers] = [:]
+    /// The local plugins an owner could publish to each store.
+    public private(set) var localPlugins: [String: [LocalPluginRow]] = [:]
+    /// Who can join each store, its open link and the devices that joined with it, for its
+    /// owner. Absent for a store whose server has no open joining.
+    public private(set) var openJoin: [String: OpenJoinView] = [:]
+    /// What is under way.
+    public private(set) var working: [JobId: Work] = [:]
+
+    public init() {}
+
+    func apply(_ rows: [StoreRow]) {
+        stores = rows
+        loaded = true
+    }
+
+    func checking(_ link: String) {
+        preview = .checking(link: link)
+    }
+
+    func previewed(_ answer: InvitePreview) {
+        switch answer {
+        case .store(let store):
+            preview = .store(store)
+            if deviceName == offeredName { deviceName = store.deviceLabel }
+            offeredName = store.deviceLabel
+        case .failed(let reason, let contact): preview = .failed(reason, contact: contact)
+        }
+    }
+
+    /// The join for `link`: an invite sends this device's name as the field holds it, and an open
+    /// link sends none.
+    func joinCommand(_ link: String) -> Command {
+        var label: String?
+        var name: String?
+        if case .store(let invited)? = preview {
+            if !invited.anonymous { label = deviceName }
+            let given = joinerName.trimmingCharacters(in: .whitespacesAndNewlines)
+            if invited.namesJoiner, !given.isEmpty { name = given }
+        }
+        return .joinStore(link: link.trimmingCharacters(in: .whitespacesAndNewlines), label: label, name: name)
+    }
+
+    func joined(_ store: String) {
+        joined = store
+        preview = nil
+    }
+
+    func invited(_ link: InviteLinkView) {
+        invite = link
+    }
+
+    func members(store: String, members: [StoreMemberRow], invites: [StoreInviteRow],
+                 ended: [StoreInviteRow], inviteChoices: Bool) {
+        self.members[store] = StoreMembers(members: members, invites: invites, ended: ended,
+                                           inviteChoices: inviteChoices)
+    }
+
+    func localPlugins(store: String, plugins: [LocalPluginRow]) {
+        localPlugins[store] = plugins
+    }
+
+    func openJoin(store: String, view: OpenJoinView) {
+        openJoin[store] = view
+    }
+
+    func started(_ work: Work, job: JobId?) {
+        if let job { working[job] = work }
+    }
+
+    func done(_ job: JobId) {
+        working[job] = nil
+    }
+
+    func clearWorking() {
+        working = [:]
+    }
+
+    /// Forget the invite link being checked: the join sheet closed.
+    public func clearPreview() {
+        preview = nil
+        deviceName = ""
+        offeredName = ""
+        joinerName = ""
+    }
+
+    /// The store just joined has been shown.
+    public func clearJoined() {
+        joined = nil
+    }
+
+    /// The invite link has been shown and closed.
+    public func clearInvite() {
+        invite = nil
+    }
+
+    public func isWorking(_ work: Work) -> Bool {
+        working.values.contains(work)
+    }
+
+    public func store(_ id: String) -> StoreRow? {
+        stores.first { $0.id == id }
+    }
+
+    /// Updates waiting across every store.
+    public var updates: Int {
+        stores.reduce(0) { $0 + $1.updates }
+    }
+
+    /// Where an installed plugin came from: the store that keeps it updated and its row there,
+    /// or the first store that lists it as added by hand.
+    public func origin(of plugin: String) -> (store: StoreRow, row: StorePluginRow)? {
+        var byHand: (StoreRow, StorePluginRow)?
+        for store in stores {
+            guard let row = store.plugins.first(where: { $0.id == plugin }) else { continue }
+            switch row.status {
+            case .installed, .update: return (store, row)
+            case .addedByHand: byHand = byHand ?? (store, row)
+            case .available, .otherStore: continue
+            }
+        }
+        return byHand
+    }
+}
+
+extension StoreRow {
+    /// Updates waiting in this store. `StoreRow::updates`.
+    public var updates: Int {
+        plugins.filter { if case .update = $0.status { true } else { false } }.count
+    }
+}
+
+extension StorePluginRow {
+    /// What it may contact, in a line: "Contacts open-archive.example and 1 more".
+    public var contactsLine: String {
+        guard let first = hosts.first else { return L.sourcesContactsNone }
+        return hosts.count > 1 ? L.sourcesContactsLine(first: first, more: hosts.count - 1) : L.sourcesContactsOne(first: first)
+    }
+
+    /// The version installed here: the one an update replaces, or the store's own.
+    public var installedVersion: String {
+        if case .update(let from, _) = status { return from }
+        return version
+    }
+
+    /// Where it stands on this device, in a word or two, when it is here at all: "Installed",
+    /// "1.4.0 installed", "Added by hand", "From Kumo". Nothing for one not installed.
+    public var standing: String? {
+        switch status {
+        case .available: nil
+        case .installed: L.storesPluginStateInstalled
+        case .update(let from, _): L.storesInstalledVersion(version: from)
+        case .addedByHand: L.sourcesOriginByHand
+        case .otherStore(let other): L.storesPluginFrom(other: other)
+        }
+    }
+}
+
+extension InvitedStore {
+    /// Who runs the store and where it answers: "Run by Ren · plugins.example", or the host alone
+    /// from a store that does not say who runs it.
+    public var runByLine: String {
+        owners.isEmpty ? host : L.storesRunBy(owner: owners.formatted(.list(type: .and).locale(AirTime.locale)), host: host)
+    }
+}
+
+extension StoreRow {
+    /// Who runs the store and where it answers, from its signed list: "Run by Ren ·
+    /// plugins.example", or the host alone from a store that does not say who runs it.
+    public var runByLine: String {
+        owners.isEmpty ? host : L.storesRunBy(owner: owners.formatted(.list(type: .and).locale(AirTime.locale)), host: host)
+    }
+
+    /// Who this device joined as: a name, or none, for one that joined with the store's link.
+    public var joinedAs: String {
+        anonymous ? L.storesJoinedNameless : L.storesDeviceJoinedAs(name: member)
+    }
+}
+
+/// What an invite link the app was handed holds: the store's own `https://…/join/{code}#{key}`,
+/// or its open link, the same with `?open` before the `#`.
+public enum InviteLinks {
+    /// The https invite in `url`, when it is one: an https link as the store makes it, or one the
+    /// app was opened with, `kaeri://join?link=<the https link>` or the https link with the
+    /// app's scheme in front of the host, `kaeri://plugins.example/join/{code}#{key}`.
+    public static func invite(in url: URL) -> String? {
+        switch url.scheme?.lowercased() {
+        case "https":
+            return url.path.contains("/join/") ? url.absoluteString : nil
+        case "http":
+            // A store on this machine, which has no certificate: its link stays http.
+            return Self.isLoopback(url.host) && url.path.contains("/join/") ? url.absoluteString : nil
+        case "kaeri":
+            if url.host == "join" {
+                let link = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+                    .queryItems?.first { $0.name == "link" }?.value
+                return link.flatMap(URL.init(string:)).flatMap(invite(in:))
+            }
+            guard url.host != "auth", var parts = URLComponents(url: url, resolvingAgainstBaseURL: false)
+            else { return nil }
+            parts.scheme = "https"
+            return parts.url.flatMap(invite(in:))
+        default:
+            return nil
+        }
+    }
+
+    private static func isLoopback(_ host: String?) -> Bool {
+        guard let host = host?.lowercased() else { return false }
+        return host == "localhost" || host == "127.0.0.1" || host == "[::1]" || host == "::1"
+    }
+
+    /// Whether pasted `text` reads as an invite link, before the engine checks it.
+    public static func looksLikeInvite(_ text: String) -> Bool {
+        URL(string: text.trimmingCharacters(in: .whitespacesAndNewlines)).flatMap(invite(in:)) != nil
+    }
+}

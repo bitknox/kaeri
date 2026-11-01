@@ -1,0 +1,39 @@
+[package]
+name = "kaeri-providers"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Provider registry, health tracking and failover"
+
+[lib]
+# No doc example is written as a test, and rustdoc spends seconds per crate finding none.
+doctest = false
+
+[dependencies]
+kaeri-core.workspace = true
+kaeri-meta.workspace = true
+kaeri-net.workspace = true
+kaeri-store.workspace = true
+reqwest.workspace = true
+async-trait.workspace = true
+# `join_all`, so sources and health checks ask every provider at once.
+futures.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+librqbit = { version = "8.1.1", default-features = false, features = ["rust-tls"] }
+
+[features]
+# Lets a test point the demo source at a local fake. Never enabled by default or by a release build.
+testing = []
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "test-util"] }
+reqwest.workspace = true
+# Scratch directories for the cache tests and the probes, removed however they end.
+tempfile = "3"
+
+[lints]
+workspace = true

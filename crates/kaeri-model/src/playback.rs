@@ -1,0 +1,618 @@
+//! Playback, as the work reports it: which playback it is, what a skip would seek past, how a
+//! playback came to an end, and what a newer one is about to play. Also what the player's Up Next
+//! card and Episodes menu show, the theme a front end dresses the player in, and a stream as a
+//! front end's own player is handed it.
+
+use kaeri_core::{
+    ids::AnilistId,
+    stream::{Stream, StreamKind, Subtitle},
+};
+
+/// One playback, numbered by the engine as it starts it, once each per run: two playbacks of
+/// one episode are two numbers. What a playback says is named with it, so whose it is never has
+/// to be guessed from what was started last.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct PlaybackId(u64);
+
+// The number itself on the far side of an FFI, under the type's name, as a job's is.
+#[cfg(feature = "ffi")]
+uniffi::custom_newtype!(PlaybackId, u64);
+
+impl PlaybackId {
+    /// The playback numbered `n`. The engine numbers them as it starts them.
+    pub const fn new(n: u64) -> Self {
+        Self(n)
+    }
+
+    /// The playback's number, for a front end that keys playbacks by a plain integer.
+    pub const fn get(self) -> u64 {
+        self.0
+    }
+}
+
+/// What a skip would seek past.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum SkipKind {
+    Opening,
+    Ending,
+    /// The "previously on" at the start of an episode: "Skip recap". It is skipped by itself
+    /// only under its own setting, `playback.skip_recap_auto`, off by default.
+    Recap,
+}
+
+/// Where a skip time came from, as the Skip times panel says it: "From the file", "Yours" or
+/// "From AniSkip". Per kind the file's chapters win, then the person's own marks, then AniSkip.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum SkipOrigin {
+    /// The file's own chapters.
+    File,
+    /// Marked by the person watching.
+    Yours,
+    /// AniSkip's shared list. Only these can be reported.
+    AniSkip,
+}
+
+/// A stretch of the playing file the timeline marks: an opening, an ending or a recap, from
+/// `start` to `end` in seconds of the file. See [`crate::event::Event::PlayerTimeline`].
+#[derive(Debug, Clone, Copy, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct TimelineMark {
+    pub kind: SkipKind,
+    pub start: f64,
+    pub end: f64,
+    /// Where it came from. `None` only from an app's own records; the engine always says.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub origin: Option<SkipOrigin>,
+}
+
+/// A stretch of the playing file, `start` to `end` in seconds of it: what the player has
+/// buffered. See [`crate::event::Event::PlayerBuffered`].
+#[derive(Debug, Clone, Copy, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct TimeRange {
+    pub start: f64,
+    pub end: f64,
+}
+
+/// Which step of marking a skip time the bar is on.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum SkipMarkStep {
+    /// "Play to where the opening starts, then mark it."
+    Start,
+    /// "Play to where it ends, then mark it." The start is marked, and the provisional segment
+    /// grows from it to the playhead.
+    End,
+    /// Both edges marked: the review, with the nudges, Watch the edges and Save.
+    Review,
+}
+
+/// One edge of a marked stretch.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum SkipEdge {
+    Start,
+    End,
+}
+
+/// Whether a marked stretch can be saved, and where it goes.
+#[derive(Debug, Clone, Copy, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum SkipMarkCheck {
+    /// It can be saved.
+    Fine,
+    /// Under 5 seconds, or not marked yet: Save is off. On the review: "That is under 5
+    /// seconds. Mark where it ends."
+    TooShort,
+    /// Longer than AniSkip takes in an episode this long, `most` seconds: it is saved on this
+    /// device only. "Saved on this device only. AniSkip takes openings up to 3 min in an
+    /// episode this long."
+    TooLong { most: f64 },
+}
+
+/// A line the review says under the edges.
+#[derive(Debug, Clone, Copy, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum SkipMarkNote {
+    /// Sharing is on: "Saving shares these times with AniSkip."
+    Shares,
+    /// The mark replaces AniSkip's times, `start` to `end` in seconds, which saving reports as
+    /// wrong.
+    Replaces { start: f64, end: f64 },
+    /// The show has no MyAnimeList entry: "AniSkip has no entry for this show, so this stays on
+    /// your devices."
+    NoEntry,
+}
+
+/// The marking bar for the playing file, as it stands: see
+/// [`crate::event::Event::PlayerSkipMark`].
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct SkipMarkView {
+    /// What is being marked: the segmented control's choice.
+    pub kind: SkipKind,
+    pub step: SkipMarkStep,
+    /// The start, in seconds of the file, once marked.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub start: Option<f64>,
+    /// The end, once marked. On the End step the app draws the provisional segment from the
+    /// start to the playhead.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub end: Option<f64>,
+    /// The stretch's length in seconds, `0` until both edges are marked: the review's title.
+    pub length: f64,
+    pub check: SkipMarkCheck,
+    /// The review's lines, in order.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub notes: Vec<SkipMarkNote>,
+    /// Whether Save is on.
+    pub can_save: bool,
+    /// Whether this edits a mark of this kind the viewer made before.
+    pub editing: bool,
+    /// Whether Watch the edges is playing.
+    pub previewing: bool,
+}
+
+/// A made-up marking bar, for an app's previews, screenshots and tests: the bar at each step
+/// and with each line, with no player behind it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum SkipMarkFixture {
+    /// Just opened on an opening: nothing marked.
+    Start,
+    /// The start marked at 1:31, the end to mark.
+    End,
+    /// The review of an opening from 1:31 to 3:01, which can be saved.
+    Review,
+    /// The review of a stretch under 5 seconds: Save is off.
+    TooShort,
+    /// The review of an opening longer than AniSkip takes in a 24-minute episode.
+    TooLong,
+    /// The review of a mark that replaces AniSkip's times.
+    Replaces,
+    /// The review with sharing on, replacing AniSkip's times: both lines.
+    Shares,
+    /// The review for a show with no MyAnimeList entry.
+    NoEntry,
+    /// The review of an ending the viewer marked before, opened to edit it.
+    Editing,
+    /// Watch the edges playing.
+    Previewing,
+}
+
+impl SkipMarkFixture {
+    /// The bar it names.
+    pub fn view(self) -> SkipMarkView {
+        let review = |start: f64, end: f64| SkipMarkView {
+            kind: SkipKind::Opening,
+            step: SkipMarkStep::Review,
+            start: Some(start),
+            end: Some(end),
+            length: end - start,
+            check: SkipMarkCheck::Fine,
+            notes: Vec::new(),
+            can_save: true,
+            editing: false,
+            previewing: false,
+        };
+        match self {
+            Self::Start => SkipMarkView {
+                step: SkipMarkStep::Start,
+                start: None,
+                end: None,
+                length: 0.0,
+                check: SkipMarkCheck::TooShort,
+                can_save: false,
+                ..review(0.0, 0.0)
+            },
+            Self::End => SkipMarkView {
+                step: SkipMarkStep::End,
+                end: None,
+                length: 0.0,
+                check: SkipMarkCheck::TooShort,
+                can_save: false,
+                ..review(91.0, 91.0)
+            },
+            Self::Review => review(91.0, 181.0),
+            Self::TooShort => SkipMarkView {
+                check: SkipMarkCheck::TooShort,
+                can_save: false,
+                ..review(91.0, 94.0)
+            },
+            Self::TooLong => SkipMarkView {
+                check: SkipMarkCheck::TooLong { most: 180.0 },
+                ..review(91.0, 301.0)
+            },
+            Self::Replaces => SkipMarkView {
+                notes: vec![SkipMarkNote::Replaces { start: 88.0, end: 178.0 }],
+                ..review(91.0, 181.0)
+            },
+            Self::Shares => SkipMarkView {
+                notes: vec![
+                    SkipMarkNote::Shares,
+                    SkipMarkNote::Replaces { start: 88.0, end: 178.0 },
+                ],
+                ..review(91.0, 181.0)
+            },
+            Self::NoEntry => {
+                SkipMarkView { notes: vec![SkipMarkNote::NoEntry], ..review(91.0, 181.0) }
+            }
+            Self::Editing => {
+                SkipMarkView { kind: SkipKind::Ending, editing: true, ..review(1290.0, 1380.0) }
+            }
+            Self::Previewing => SkipMarkView { previewing: true, ..review(91.0, 181.0) },
+        }
+    }
+}
+
+/// A prompt on the video about the skip times, until the viewer answers it or the app lets it
+/// go: see [`crate::event::Event::PlayerSkipPrompt`].
+#[derive(Debug, Clone, Copy, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum SkipPrompt {
+    /// "Was that the opening?", after the viewer skipped from `start` to `end` by hand near the
+    /// start of an episode with no opening known. Mark it opens the review on that stretch;
+    /// Don't ask again turns the prompt off.
+    WasOpening { start: f64, end: f64 },
+    /// "Wrong opening times?", after Undo on AniSkip's times of `kind`, with Report and Mark.
+    /// The app shows it for 8 seconds.
+    WrongTimes { kind: SkipKind },
+    /// "Share your skip times with AniSkip?", once, after the first Save, with Share and Keep
+    /// on my devices: answered with `PlayerCommand::AnswerShareSkipTimes`.
+    Share,
+}
+
+/// Something done to the skip times that the player says once, as a notice on the video: see
+/// [`crate::event::Event::PlayerSkipNotice`].
+#[derive(Debug, Clone, Copy, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum SkipNotice {
+    /// "Saved. The opening is skipped from now on."
+    Saved { kind: SkipKind },
+    /// Saved, longer than AniSkip takes: "Saved on this device only. AniSkip takes openings up
+    /// to 3 min in an episode this long." `most` is in seconds.
+    SavedHere { kind: SkipKind, most: f64 },
+    /// Saved, the same as AniSkip's times: "Saved. You confirmed AniSkip's times."
+    Confirmed,
+    /// AniSkip's times reported with sharing on: "Reported. AniSkip hides times after two
+    /// reports."
+    Reported,
+    /// AniSkip's times hidden with sharing off: "Hidden on your devices. Turn on sharing to
+    /// report it to AniSkip."
+    HiddenHere,
+}
+
+/// How a playback came to an end.
+///
+/// More than `watched` can say: an episode closed past the commit threshold counts as watched,
+/// and rolling on from it would open a new window on someone who just closed one.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum Ending {
+    /// mpv played the file to its end. `next` is the episode the player kept its window open
+    /// for — set only when the episode rolls on, which the playback decides: auto-next on, Up
+    /// Next not cancelled, and an episode list that has a next episode. Auto-next follows this
+    /// and nothing else, so a window is never kept for an episode that is not coming, and no
+    /// episode is searched for that the list says does not exist.
+    Complete { next: Option<String> },
+    /// The viewer stopped it from the terminal.
+    Stopped,
+    /// The player window went away: the viewer closed it, or mpv exited on its own.
+    Closed,
+    /// It could not play: no stream was found, mpv would not start, or the stream failed.
+    Failed,
+    /// Something else took the stream: a watch party, or the browser for a licensed stream.
+    Elsewhere,
+}
+
+/// What a newer playback is about to play, as the window it takes over announces it.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct Successor {
+    pub id: AnilistId,
+    pub title: String,
+    pub episode: String,
+    pub translation: kaeri_core::media::Translation,
+    /// The title's art by URL, where the engine knows it, for the starting screen the window
+    /// shows while the successor is found.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub cover_url: Option<String>,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub banner_url: Option<String>,
+}
+
+/// The episode that follows, as the Up Next card names it.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct NextEpisode {
+    pub number: String,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub title: Option<String>,
+    /// The episode's still, by URL, for the Up Next card.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub thumbnail: Option<String>,
+}
+
+impl NextEpisode {
+    pub fn label(&self) -> String {
+        format!("Episode {}", self.number)
+    }
+}
+
+/// One row of the player's Episodes menu.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct EpisodeEntry {
+    pub number: String,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub title: Option<String>,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub watched: bool,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub filler: bool,
+}
+
+/// The colours and font the player's own interface is drawn in.
+///
+/// Handed in by the front end, since the colours are its palette's and a palette is its own
+/// business. Each colour is `#RRGGBB`, as the companion script reads it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct PlayerTheme {
+    pub text: String,
+    pub dim: String,
+    pub obi: String,
+    pub state: String,
+    pub alert: String,
+    /// What the player's surfaces are painted on.
+    pub ground: String,
+    pub font: String,
+}
+
+impl PlayerTheme {
+    /// The companion's options, as `(key, value)` pairs without their prefix.
+    pub fn options(&self) -> Vec<(String, String)> {
+        [
+            ("text", &self.text),
+            ("dim", &self.dim),
+            ("obi", &self.obi),
+            ("state", &self.state),
+            ("alert", &self.alert),
+            ("ground", &self.ground),
+            ("font", &self.font),
+        ]
+        .into_iter()
+        .map(|(key, value)| (key.to_owned(), value.clone()))
+        .collect()
+    }
+}
+
+/// A stream, as a front end's own player is handed it to play: the core's [`Stream`] with what
+/// only the engine uses left out, and in shapes that cross an FFI.
+///
+/// Built [`From`] a stream. Its download source stays with the download queue, and the note on
+/// why it was picked is said as a notice of its own.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct PlayableStream {
+    pub url: String,
+    pub kind: PlayableKind,
+    /// Vertical resolution, when known: `1080`, `720`, …
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub quality: Option<u32>,
+    /// The headers the player must send with every request for the stream. Many CDNs are
+    /// referer-locked, so a player that drops these gets a 403.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub headers: Vec<HttpHeader>,
+    /// The subtitle tracks beside the stream, in the order the source listed them.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub subtitles: Vec<SubtitleTrack>,
+    /// The source that found it.
+    pub provider_id: String,
+    /// How the player's source menu describes it on its own: its quality and kind, as
+    /// `1080p · HLS`. Where two of a source's streams would read the same, the menu tells them
+    /// apart by their servers.
+    pub label: String,
+    /// Where a seekbar thumbnailer reads the stream instead of `url`, when that matters: a
+    /// torrent's, so the thumbnailer does not pull the swarm away from the playback head.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub thumbnail_url: Option<String>,
+}
+
+impl From<&Stream> for PlayableStream {
+    fn from(stream: &Stream) -> Self {
+        // Every field named, so one added to the core's stream is a choice made here.
+        let Stream {
+            url,
+            kind,
+            quality,
+            headers,
+            subtitles,
+            provider_id,
+            download_source: _,
+            pick_note: _,
+            thumbnail_url,
+        } = stream;
+        Self {
+            url: url.clone(),
+            kind: (*kind).into(),
+            quality: *quality,
+            headers: headers
+                .iter()
+                .map(|(name, value)| HttpHeader { name: name.clone(), value: value.clone() })
+                .collect(),
+            subtitles: subtitles.iter().map(SubtitleTrack::from).collect(),
+            provider_id: provider_id.clone(),
+            label: stream_label(stream),
+            thumbnail_url: thumbnail_url.clone(),
+        }
+    }
+}
+
+/// How a stream is played: the core's [`StreamKind`], as it crosses.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum PlayableKind {
+    /// An HLS manifest.
+    Hls,
+    /// A progressive MP4.
+    Mp4,
+    /// A loopback URL the engine's torrent session serves while it downloads.
+    TorrentHttp,
+    /// Not for the player at all: a link to open in a licensed app, through the host.
+    ExternalDeepLink,
+}
+
+impl From<StreamKind> for PlayableKind {
+    fn from(kind: StreamKind) -> Self {
+        match kind {
+            StreamKind::Hls => Self::Hls,
+            StreamKind::Mp4 => Self::Mp4,
+            // A torrent nothing has started never reaches a player: torrent playback starts it
+            // first. Named as the kind it becomes, should one cross all the same.
+            StreamKind::TorrentHttp | StreamKind::Torrent => Self::TorrentHttp,
+            StreamKind::ExternalDeepLink => Self::ExternalDeepLink,
+        }
+    }
+}
+
+/// One HTTP header a player sends with a stream.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct HttpHeader {
+    pub name: String,
+    pub value: String,
+}
+
+/// A subtitle track offered beside a stream: the core's [`Subtitle`], as it crosses.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct SubtitleTrack {
+    /// The language as the source gave it: a tag such as `en`, or a name.
+    pub language: String,
+    pub url: String,
+    /// Burned into the video, so it cannot be turned off and is no file to load.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub hard: bool,
+    /// The track's format when its URL does not say: `vtt`, `srt`, `ass`.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub format: Option<String>,
+}
+
+impl From<&Subtitle> for SubtitleTrack {
+    fn from(subtitle: &Subtitle) -> Self {
+        let Subtitle { language, url, hard, format } = subtitle;
+        Self {
+            language: language.clone(),
+            url: url.clone(),
+            hard: *hard,
+            format: format.clone(),
+        }
+    }
+}
+
+/// How the player's source menu describes a stream on its own: its quality, when known, and
+/// its kind, as `1080p · HLS`.
+pub fn stream_label(stream: &Stream) -> String {
+    let kind = match stream.kind {
+        StreamKind::Hls => "HLS",
+        StreamKind::TorrentHttp | StreamKind::Torrent => "torrent",
+        StreamKind::ExternalDeepLink => "external",
+        _ => "direct",
+    };
+    match stream.quality {
+        Some(quality) => format!("{quality}p · {kind}"),
+        None => kind.to_owned(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_playback_is_its_number() {
+        assert_eq!(PlaybackId::new(3).get(), 3);
+        assert!(PlaybackId::new(2) < PlaybackId::new(3));
+    }
+
+    #[test]
+    fn a_stream_is_handed_over_with_everything_a_player_needs() {
+        let stream = Stream {
+            provider_id: "yamabiko".into(),
+            subtitles: vec![
+                Subtitle {
+                    language: "en".into(),
+                    url: "https://subs.example/ep6.ass".into(),
+                    hard: false,
+                    format: Some("ass".into()),
+                },
+                Subtitle {
+                    language: "en".into(),
+                    url: "https://cdn.example/burned".into(),
+                    hard: true,
+                    format: None,
+                },
+            ],
+            pick_note: Some("top-ranked: a release".into()),
+            thumbnail_url: Some("http://127.0.0.1:45001/thumb".into()),
+            ..Stream::new("https://cdn.example/ep6/master.m3u8", StreamKind::Hls)
+                .with_quality(1080)
+                .with_header("Referer", "https://player.example/")
+                .with_download_source("magnet:?xt=urn:btih:0000")
+        };
+        let playable = PlayableStream::from(&stream);
+        assert_eq!(
+            playable,
+            PlayableStream {
+                url: "https://cdn.example/ep6/master.m3u8".into(),
+                kind: PlayableKind::Hls,
+                quality: Some(1080),
+                headers: vec![HttpHeader {
+                    name: "Referer".into(),
+                    value: "https://player.example/".into(),
+                }],
+                subtitles: vec![
+                    SubtitleTrack {
+                        language: "en".into(),
+                        url: "https://subs.example/ep6.ass".into(),
+                        hard: false,
+                        format: Some("ass".into()),
+                    },
+                    SubtitleTrack {
+                        language: "en".into(),
+                        url: "https://cdn.example/burned".into(),
+                        hard: true,
+                        format: None,
+                    },
+                ],
+                provider_id: "yamabiko".into(),
+                label: "1080p · HLS".into(),
+                thumbnail_url: Some("http://127.0.0.1:45001/thumb".into()),
+            }
+        );
+    }
+
+    #[test]
+    fn a_stream_is_labelled_by_its_quality_and_kind() {
+        let label = |kind, quality: Option<u32>| {
+            let stream = Stream::new("https://cdn.example/a", kind);
+            stream_label(&Stream { quality, ..stream })
+        };
+        assert_eq!(label(StreamKind::Hls, Some(720)), "720p · HLS");
+        assert_eq!(label(StreamKind::Mp4, None), "direct");
+        assert_eq!(label(StreamKind::TorrentHttp, Some(1080)), "1080p · torrent");
+        assert_eq!(label(StreamKind::ExternalDeepLink, None), "external");
+        for kind in [
+            StreamKind::Hls,
+            StreamKind::Mp4,
+            StreamKind::TorrentHttp,
+            StreamKind::ExternalDeepLink,
+        ] {
+            let playable = PlayableStream::from(&Stream::new("https://cdn.example/a", kind));
+            assert_eq!(playable.kind, kind.into());
+        }
+    }
+}

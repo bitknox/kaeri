@@ -1,0 +1,109 @@
+---
+title: Architecture
+description: Twenty-five crates, layered so the core depends on no source and the terminal front end never reaches the engine.
+---
+
+import ArchitectureDiagram from '../../../../components/architecture/ArchitectureDiagram.astro';
+
+Kaeri is twenty-five crates. A title moves through them from stable to volatile and back:
+metadata and the ID mapping are stable, the sources that find a stream are the volatile part,
+and the player, the history and the trackers are stable again.
+
+<ArchitectureDiagram kind="flow" />
+
+`kaeri-core` (types and traits) · `-net` (HTTP, with a client that matches a browser's TLS
+handshake for hosts that answer differently by client, and rate limiting) · `-meta` (AniList, the
+metadata failover, ID mapping, filler) · `-store` (SQLite: the history and the sync outbox) ·
+`-providers` (torrent, remote, mock) · `-player` (mpv IPC, the companion-script protocol, the
+bundled player files, track selection, aniskip) · `-discord` (Discord rich presence over its
+local socket) · `-playback` (the pure half of playback: what to record, skip and pick for tracks) ·
+`-mpv-host` (libmpv behind the engine's hosted player protocol, for the desktop apps) · `-party`
+(watch parties, a Syncplay protocol client) · `-remote` (a phone finds a Kaeri TV on the
+local network, pairs with it and drives it) · `-cast` (sending an episode to a TV with
+Chromecast built in, which the engine has and no app offers yet) · `-i18n` (the strings the terminal and Linux apps
+show, from the shared catalogue) · `-track` (AniList, MAL, Kitsu,
+Simkl, Trakt, sync) · `-plugin` (WASM host).
+
+Sources change and disappear, so every volatile piece sits behind a trait and the core depends on
+none of them.
+
+Local history is the source of truth, and sync is a projection of it. The SQLite history works
+with no account and no network, and trackers consume it through a durable outbox instead of being
+consulted for it.
+
+The metadata, mapping, player, tracker and plugin layers use documented public APIs. Only the
+source layer *chooses* a content source, it is off by default, and every source is a
+config edit away from being removed. Two playback-side paths then fetch from whatever host a
+source named, sidecar subtitles and the HLS mender below, and both are source-agnostic.
+
+## Layers
+
+<ArchitectureDiagram kind="crates" />
+
+- `kaeri-model` is the protocol between the engine and a front end: the commands a front end
+  sends, the events it gets back, the rows they carry, and the wording they are shown in. It
+  depends only on the core and does no I/O.
+- `kaeri-engine` does the work behind the screens: playback and the player's setup, sources
+  and plugins, tracker sync, downloads, artwork, plugin stores, HLS mending, choosing the
+  upscaling, and the background jobs, such as the daily update check.
+- `kaeri-tui` is the terminal front end: the screens, the keymap and the theme, on ratatui.
+- `kaeri` is the binary. It holds the command line, self-update, and the terminal's event
+  loop, which hands the front end's commands to the engine and its events back.
+- `kaeri-ffi` is the engine for the native apps: SwiftUI on macOS and iOS, Jetpack Compose
+  on Android and Android TV, and WinUI 3 on Windows. It hands them the model's own commands and
+  events through UniFFI, and takes links, notifications and the OS's secret store from the app.
+  The Swift package that wraps it is in `apple/`. The Linux app, written in Rust, links the engine
+  itself.
+- `kaeri-testkit` is used only by tests: a fake AniList, fixture titles and golden files.
+
+The engine and the model use no terminal library, not even through a dependency, so a front end
+that is not a terminal can run on them. The terminal front end depends on the model and the core,
+never on the engine. The engine's `desktop` feature holds what only a computer can do: mpv, watch
+parties, the browser sign-in redirect and desktop notifications. A phone build leaves it out.
+`tools/check-boundaries.sh` checks all three rules against the resolved dependency tree in CI,
+the last for iOS and Android.
+
+Four more crates make up [plugin stores](/docs/plugins/stores/). `kaeri-plugin-store` is the
+store client and the reference server. `kaeri-store-core` holds the store's protocol, rules,
+storage traits and admin page, and builds natively and to WebAssembly. `kaeri-store-server` is
+the `kaeri store …` commands and the standalone `kaeri-store` binary.
+`kaeri-store-wasm` is the store for Cloudflare Workers and Vercel or Netlify functions.
+Despite its name, `kaeri-store` is the local SQLite history and has nothing to do with them.
+
+## The HLS mender
+
+The mender sits on the default playback path: HLS goes through a loopback proxy that looks for
+where the media starts in each segment, since some hosts serve video behind an image header that
+mpv reads literally and refuses. A healthy segment matches at offset zero and passes through
+byte-for-byte, and nothing is decrypted. See `crates/kaeri-engine/src/playback/mend/`.
+
+## Development
+
+```sh
+cargo test --workspace        # no network
+cargo clippy --workspace --all-targets
+cargo test -p kaeri-tui --test goldens              # every screen against its saved golden
+cargo run -p kaeri-tui --example palette_report     # the palette's contrast margins
+cargo run -p kaeri --example player_preview -- path/to/video.mp4   # the player, no source
+cargo run -p kaeri-plugin --example plugin_bench --release        # what a plugin call costs
+```
+
+There are also live probes. They need real services and are not part of `cargo test`:
+
+```sh
+cargo run -p kaeri-providers --example stream_probe          # torrent path through the VPN
+cargo run -p kaeri-engine --example playback_probe           # torrent → mpv → history
+cargo run -p kaeri-engine --example sync_probe -- --write    # AniList push, then undo
+cargo run -p kaeri-engine --example mal_probe -- --write     # MAL push, then undo
+cargo run -p kaeri-engine --example simkl_probe -- --write   # Simkl push, then undo
+cargo run -p kaeri-engine --example kitsu_probe -- --write   # Kitsu push, then undo
+cargo run -p kaeri-engine --example mend_probe -- <url>      # HLS behind an image header → mpv
+cargo run -p kaeri-providers --example halt_probe            # the guard pausing torrents
+cargo run -p kaeri-meta --example filler_probe               # filler parsing
+cargo run -p kaeri-meta --example episode_meta_probe         # episode titles, stills, numbering
+cargo run -p kaeri-meta --example anilist_probe              # the AniList client
+cargo run -p kaeri-meta --example dataset_probe              # ID-mapping datasets
+cargo run -p kaeri-engine --example meta_probe               # the metadata failover
+cargo run -p kaeri-engine --example episodes_probe           # every stage from title to stream
+cargo run -p kaeri-engine --example continue_probe           # resume vs. sync thresholds
+```

@@ -1,0 +1,241 @@
+// The provider plugin ABI.
+//
+// The load-bearing decision here: **the sandbox has no sockets, and the host lends `fetch`.**
+//
+// The host makes each request, enforces `allowed-hosts`, rate-limits and keeps the cookie jar,
+// so a plugin is only a parser and cannot reach a host it did not declare. The guest says what
+// to request, the host makes the request, and the guest reads the bytes.
+//
+// The consequences are all good ones. A plugin is a few hundred bytes of parsing logic rather
+// than a megabyte of networking, and it needs no TLS stack of its own. It cannot exfiltrate
+// anything, because the host enforces `allowed-hosts` on its own side.
+//
+// `regex-captures` exists for the same reason: a TinyGo or JS guest that had to bundle a regex
+// implementation would be enormous. A plugin that needs anything more specialised brings its
+// own.
+//
+// **Versioning.** Major 2, because the component model's semver rules treat every
+// `0.x` minor as a different world — at major ≥ 1 the host can grow the `host` interface without
+// stranding components built against an older minor. What can never grow is the *export* set:
+// a new required export breaks every shipped plugin at instantiation. So the exports below are the
+// frozen surface, records prefer `option<>` fields over new shapes, open sets (stream `kind`,
+// `translation`, `capabilities`) are strings rather than enums, and anything a future host wants
+// to switch on is a declared capability rather than a new function. Removing an import is a
+// major bump too: the host refuses plugins built for another major.
+
+package kaeri:provider@2.0.0;
+
+interface host {
+    record http-request {
+        method: string,
+        url: string,
+        headers: list<tuple<string, string>>,
+        body: option<list<u8>>,
+    }
+
+    record http-response {
+        status: u16,
+        headers: list<tuple<string, string>>,
+        body: list<u8>,
+    }
+
+    variant host-error {
+        /// The URL's host is not in this plugin's `allowed-hosts`. Enforced host-side, so a
+        /// compromised guest cannot widen its own reach.
+        denied(string),
+        timeout,
+        transport(string),
+    }
+
+    /// Make an HTTP request through the host's client.
+    ///
+    /// The host makes the request, enforces `allowed-hosts`, rate-limits and keeps the cookie
+    /// jar. Guests get no sockets at all.
+    fetch: func(req: http-request) -> result<http-response, host-error>;
+
+    /// Several requests in one call, made concurrently. Results return in request order.
+    ///
+    /// The concurrency a synchronous guest cannot express itself: a provider that must ask
+    /// several mirrors for the same episode pays one round trip instead of one per mirror.
+    /// Each request is authorised independently and counts against the same per-call fetch
+    /// budget as `fetch`.
+    fetch-many: func(reqs: list<http-request>) -> list<result<http-response, host-error>>;
+
+    /// Write to the host's log. The only output channel a guest has.
+    log: func(level: string, msg: string);
+
+    /// Capture groups for every match. Group 0 is the whole match, as usual.
+    ///
+    /// Returned as plain lists rather than a stream, because a guest that had to page through
+    /// results would need more host calls than the parsing is worth.
+    regex-captures: func(pattern: string, haystack: string) -> list<list<string>>;
+
+    /// A value from this plugin's own section of the user's configuration —
+    /// `[providers.plugins.settings.<plugin-id>]` in config.toml.
+    ///
+    /// How a source that needs an account, an API key or a mirror choice receives it. `none`
+    /// for anything unset, which is the answer a plugin must be able to work without: settings
+    /// tune a source, they are not permitted to be the only way it functions.
+    config-get: func(key: string) -> option<string>;
+}
+
+interface provider {
+    record manifest {
+        id: string,
+        display-name: string,
+        version: string,
+        /// Hostnames this plugin may fetch. The host enforces it; declaring more than you need
+        /// is the plugin equivalent of asking for permissions you do not use.
+        allowed-hosts: list<string>,
+        translation-types: list<string>,
+        /// Optional behaviours this plugin opts into, as open strings.
+        ///
+        /// The escape hatch that keeps this contract stable: a future host gates new treatment
+        /// on a declared capability instead of a new record shape or a new export. Unknown
+        /// values are ignored, so declaring one never breaks on an older host. An empty list
+        /// is the normal case.
+        ///
+        /// `torrents`: this plugin returns `torrent` streams for the host to play. The host plays
+        /// them only while the person has torrent playback on and its protection check passes,
+        /// and drops torrent streams from a plugin that does not declare it.
+        capabilities: list<string>,
+    }
+
+    record search-hit {
+        id: string,
+        title: string,
+        /// Alternate titles for the same entry. Widens the match surface: the title matcher
+        /// scores against every name it is given, and sources romanise inconsistently enough
+        /// that the primary title alone misses real matches.
+        synonyms: list<string>,
+        episode-count: option<u32>,
+        year: option<u32>,
+        /// Broad shape when the catalogue states one: `tv`, `tv-short`, `movie`, `special`,
+        /// `ova`, `ona`, `music`.
+        ///
+        /// Used as a match gate — it is what stops a series search landing on its recap movie.
+        /// Absent or unrecognised claims nothing, which can only widen matching, never break it.
+        format: option<string>,
+    }
+
+    record episode {
+        number: string,
+        title: option<string>,
+        duration-secs: option<u32>,
+        /// One-paragraph synopsis, when the source has one. Plain text — terminals have no
+        /// use for markup, and the host strips none.
+        description: option<string>,
+        /// Still-frame URL, when the source publishes one. The metadata layer fills gaps from
+        /// its own catalogue, so absence costs nothing.
+        thumbnail: option<string>,
+        /// First-air date as `YYYY-MM-DD`, when known.
+        air-date: option<string>,
+        /// Whether the source marks this episode as filler. `none` means "no claim" — which is
+        /// different from `some(false)`, a positive claim of canon. Used as a fallback where
+        /// the host's own filler index does not cover the show.
+        filler: option<bool>,
+    }
+
+    record subtitle {
+        language: string,
+        url: string,
+        /// Burned into the video rather than a separate track.
+        hard: bool,
+        /// Track format when the URL does not end in a telling extension: `vtt`, `srt`, `ass`.
+        ///
+        /// The player picks its parser from the file extension, and an API-shaped URL carries
+        /// none — without this a track served from `/subtitles?id=…` is guessed at.
+        format: option<string>,
+    }
+
+    record media-stream {
+        url: string,
+        /// One of `hls`, `mp4`, `torrent`, `external-deeplink`.
+        ///
+        /// `torrent` means `url` is a magnet link or a bare info hash (40 hex or 32 base32
+        /// characters). The host starts it in its own torrent session, adds the person's
+        /// trackers and plays it over loopback; see `file-index` and the `torrents` capability.
+        /// Anything else unrecognised is treated as `mp4`, handed to the player to judge rather
+        /// than refused, so a plugin that knows about a container this host does not still works.
+        kind: string,
+        quality: option<u32>,
+        /// Headers the player must send, such as an authorisation header for your own server.
+        headers: list<tuple<string, string>>,
+        subtitles: list<subtitle>,
+        /// A durable reference a download queue can persist and resume from — a direct file
+        /// URL, where one exists at all.
+        ///
+        /// Distinct from `url`, which is what a player consumes *now* and may be short-lived.
+        /// Absent means "this source streams only", which is how the queue knows to say so
+        /// rather than failing obscurely.
+        download-source: option<string>,
+        /// One line saying why this stream over the others, surfaced as a toast when automatic
+        /// resolution picks it. Absent when there was nothing to choose between.
+        pick-note: option<string>,
+        /// For a `torrent` stream, the file to play, counting from 0 in the torrent's own file
+        /// order. Absent lets the host choose: the file whose name states the episode, else the
+        /// largest video. Ignored for other kinds.
+        file-index: option<u32>,
+    }
+
+    /// One selectable release for an episode, for the Sources overlay.
+    ///
+    /// Deliberately descriptive rather than playable, so listing stays cheap. The `id` is
+    /// opaque to the host and only ever handed back to `resolve-source` on the same plugin.
+    record source-candidate {
+        id: string,
+        /// The release title as listed at the source.
+        title: string,
+        quality: option<u32>,
+        /// One short line of your own about this candidate, shown under its title as written.
+        /// The host ranks nothing: candidates are shown in the order `sources` returns them.
+        label: option<string>,
+        /// Payload size as listed at the source, already human-readable (`"1.4 GiB"`).
+        size: option<string>,
+        dual-audio: bool,
+        dubbed: bool,
+    }
+
+    /// Mirrors `kaeri_core::ProviderError` one-for-one, so a WASM plugin and a native
+    /// provider report failures in exactly the same vocabulary — and the registry's failover
+    /// rules apply identically to both.
+    variant provider-error {
+        /// Works, but has no such title or episode. **Not** a failover trigger.
+        not-found,
+        /// The host refused the request or asked the client to slow down.
+        blocked(string),
+        /// The response arrived but did not look like what we expected — the site changed.
+        parse(string),
+        other(string),
+    }
+
+    describe: func() -> manifest;
+
+    search: func(query: string, translation: string) -> result<list<search-hit>, provider-error>;
+
+    list-episodes: func(id: string, translation: string)
+        -> result<list<episode>, provider-error>;
+
+    resolve: func(id: string, episode: string, translation: string)
+        -> result<list<media-stream>, provider-error>;
+
+    /// The selectable releases for an episode, best-first, without starting any of them.
+    ///
+    /// An empty list means "nothing to choose between here" — the honest answer for a source
+    /// that resolves to exactly one stream, and what the Sources overlay expects from one.
+    sources: func(id: string, episode: string, translation: string)
+        -> result<list<source-candidate>, provider-error>;
+
+    /// Resolve one candidate from `sources` by its id.
+    ///
+    /// Must not fall back to the automatic pick: silently substituting another stream for the
+    /// one the user chose would undo the choice. `not-found` is the right answer for an id
+    /// this plugin does not recognise.
+    resolve-source: func(id: string, episode: string, translation: string, source-id: string)
+        -> result<list<media-stream>, provider-error>;
+}
+
+world plugin {
+    import host;
+    export provider;
+}

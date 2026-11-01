@@ -1,0 +1,439 @@
+// Settings, accounts, sources, plugin stores and downloads: the store fed scripted events, as the
+// engine would send them, and what each model then holds.
+
+@testable import KaeriStore
+import KaeriKit
+import Foundation
+import Testing
+
+func provider(_ id: String, _ kind: String = "plugin", state: String = "ready", usable: Bool = true,
+              heldBack: Bool = false) -> ProviderRow {
+    ProviderRow(id: id, kind: kind, state: state, latencyMs: 320, lastError: nil, usable: usable, heldBack: heldBack,
+                name: id, version: nil, hosts: [], origin: kind == "plugin" ? .byHand : .builtIn, disabled: false,
+                update: nil)
+}
+
+func plugin(_ id: String, _ status: StorePluginStatus, hosts: [String] = ["films.example"]) -> StorePluginRow {
+    StorePluginRow(id: id, name: id.capitalized, version: "1.5.0", hosts: hosts, status: status)
+}
+
+func storeRow(_ id: String, _ plugins: [StorePluginRow], state: StoreState = .ready) -> StoreRow {
+    StoreRow(id: id, name: id.capitalized, url: "https://\(id).example", host: "\(id).example",
+             fingerprint: "9f3c 1a2b 77de 0c41", member: "Mika", owner: false, state: state, checkedAt: nil,
+             plugins: plugins)
+}
+
+func download(_ id: Int64, title: AnilistId, episode: String, _ state: DownloadState, done: UInt64,
+              of total: UInt64) -> DownloadRow {
+    DownloadRow(id: id, anilistId: title, title: "Title \(title)", episode: episode, state: state,
+                fraction: total > 0 ? Double(done) / Double(total) : 0, downloaded: done, total: total,
+                error: nil, path: state == .done ? "/tmp/\(id).mkv" : nil)
+}
+
+func settingsView(order: [String], rows: [SettingRow] = []) -> SettingsView {
+    SettingsView(
+        rows: rows, refused: nil, translation: .sub, quality: 1080, theme: .adaptive,
+        sources: ConfiguredSources(order: order, disabled: [], torrent: true, remote: false),
+        speed: nil, presenceClient: false, nativeRows: [], overridden: [],
+        torrent: ProtectionView(protection: .none, proxy: nil, onFailure: .pause)
+    )
+}
+
+@MainActor
+struct ProvidersTests {
+    @Test func theProvidersComeInAndANoteGoesOnceThereAreSome() {
+        let store = AppStore()
+        #expect(!store.providers.loaded)
+        store.apply(.providerNote(.verbatim(text: "No sources yet: plugins are still compiling.")))
+        store.apply(.providers([]))
+        #expect(store.providers.loaded)
+        #expect(store.providers.note == "No sources yet: plugins are still compiling.")
+        store.apply(.providers([provider("alpha")]))
+        #expect(store.providers.note == nil)
+    }
+
+    @Test func aProtectionIsCheckedWithNothingSavedAndOnlyTheSheetWaitingHearsTheVerdict() {
+        let store = AppStore()
+        let proxy = TorrentProxy(host: "proxy.example", port: 1080, user: "mika", password: nil)
+        store.checkTorrentProtection(.proxy, proxy: proxy)
+        #expect(store.providers.trial == .checking)
+        #expect(store.sentLog == ["checkTorrentProtection"], "checked, not set")
+
+        store.apply(.protectionChecked(.leaking))
+        #expect(store.providers.trial == .said(.leaking))
+        #expect(store.providers.trial?.failed == .leaking)
+        #expect(store.providers.trial?.passed == false)
+        #expect(store.providers.guardView == nil, "the guard's own verdict is untouched")
+
+        // A verdict for a sheet that closed is dropped.
+        store.providers.clearTrial()
+        store.apply(.protectionChecked(.protected(exit: "Lantern Networks")))
+        #expect(store.providers.trial == nil)
+
+        store.checkTorrentProtection(.proxy, proxy: proxy)
+        store.apply(.protectionChecked(.protected(exit: "Lantern Networks")))
+        #expect(store.providers.trial?.passed == true)
+        #expect(store.providers.trial?.failed == nil)
+    }
+
+    @Test func aVerdictOnACancelledCheckNeverSavesTheNextOne() {
+        let store = AppStore()
+        let proxy = TorrentProxy(host: "proxy.example", port: 1080, user: "mika", password: nil)
+        // Save, then Cancel while the check runs.
+        store.checkTorrentProtection(.proxy, proxy: proxy)
+        store.providers.clearTrial()
+        // Open the sheet again and Save: the new check waits for the old one's verdict.
+        store.checkTorrentProtection(.proxy, proxy: proxy)
+        #expect(store.sentLog == ["checkTorrentProtection"], "one check out at a time")
+        #expect(store.providers.trial == .checking)
+
+        // The old check passes. That says nothing of the new one, which goes now.
+        store.apply(.protectionChecked(.protected(exit: "Lantern Networks")))
+        #expect(store.providers.trial == .checking, "the old verdict is not the new check's")
+        #expect(store.sentLog == ["checkTorrentProtection", "checkTorrentProtection"])
+
+        store.apply(.protectionChecked(.leaking))
+        #expect(store.providers.trial == .said(.leaking), "only the new check's verdict counts")
+    }
+
+    @Test func aCheckWaitingItsTurnIsDroppedWithItsSheet() {
+        let store = AppStore()
+        let proxy = TorrentProxy(host: "proxy.example", port: 1080, user: nil, password: nil)
+        store.checkTorrentProtection(.proxy, proxy: proxy)
+        store.providers.clearTrial()
+        store.checkTorrentProtection(.proxy, proxy: proxy)
+        store.providers.clearTrial()
+        store.checkTorrentProtection(.device, proxy: nil)
+
+        // Only the newest of the waiting checks goes once the first answers.
+        store.apply(.protectionChecked(.unreachable))
+        #expect(store.sentLog == ["checkTorrentProtection", "checkTorrentProtection"])
+        store.providers.clearTrial()
+        store.apply(.protectionChecked(.protected(exit: "Lantern Networks")))
+        #expect(store.providers.trial == nil, "nobody waits for it")
+        #expect(store.sentLog.count == 2, "nothing more to send")
+    }
+
+    @Test func theEnginesCheckThroughAProxyAnswersAndWritesNothing() async throws {
+        let root = temporaryRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = AppStore()
+        await store.start(
+            EngineLaunch(engine: .fixtures(.watching), home: .override(root: root), platform: .macOs, secrets: .host),
+            host: quietHost())
+        defer { store.shutdown() }
+        try await waitFor({ store.settings.torrent != nil })
+        let before = store.settings.torrent
+
+        store.checkTorrentProtection(.proxy, proxy: TorrentProxy(host: "proxy.example", port: 1080, user: nil, password: nil))
+        // The engine checks on its own thread, which a busy machine can hold a while.
+        try await waitFor({ store.providers.trial != .checking }, within: .seconds(30))
+        #expect(store.providers.trial?.passed == true, "the testing engine's exit passes: \(String(describing: store.providers.trial))")
+        #expect(store.settings.torrent == before, "a check saves nothing")
+    }
+
+    @Test func aRebuildLastsUntilTheRebuiltList() {
+        let store = AppStore()
+        store.apply(.sourcesChanged)
+        #expect(store.providers.rebuilding)
+        store.apply(.providers([provider("torrent", "torrent")]))
+        #expect(!store.providers.rebuilding)
+    }
+
+    @Test func theRowsFollowTheOrderTheConfigHasNow() {
+        let store = AppStore()
+        store.apply(.providers([provider("torrent", "torrent"), provider("alpha"), provider("beta")]))
+        store.apply(.settings(settingsView(order: ["beta", "torrent", "plugins"])))
+        #expect(store.orderedProviders.map(\.id) == ["beta", "torrent", "alpha"])
+    }
+
+    @Test func aProviderSaysHowItStands() {
+        #expect(provider("a").standing == .working)
+        #expect(provider("a", state: "degraded").standing == .slow)
+        #expect(provider("a", state: "down", usable: false).standing == .failing)
+        #expect(provider("a", state: "held back", usable: false, heldBack: true).standing == .heldBack)
+    }
+
+    @Test func theGuardAndThePinnedSourceAreKept() {
+        let store = AppStore()
+        store.apply(.vpn(.protected(exit: "Lantern Networks")))
+        #expect(store.providers.guardView == .protected(exit: "Lantern Networks"))
+        #expect(store.providers.guardAt != nil)
+        #expect(store.providers.guardView?.passes == true)
+        store.apply(.vpn(nil))
+        #expect(store.providers.guardAt == nil)
+        store.apply(.providerPreference("alpha"))
+        #expect(store.providers.preference == "alpha")
+    }
+}
+
+@MainActor
+struct StoresTests {
+    @Test func anInviteIsCheckedThenLeadsToAStoreOrToWhyNot() {
+        let store = AppStore()
+        store.previewStore("  https://plugins.example/join/abc#key \n")
+        #expect(store.stores.preview == .checking(link: "https://plugins.example/join/abc#key"))
+        let invited = InvitedStore(link: "https://plugins.example/join/abc#key", name: "Hotaru Plugins",
+                                   url: "https://plugins.example", host: "plugins.example", fingerprint: "9f3c 1a2b",
+                                   alreadyJoined: false)
+        store.apply(.storePreview(.store(invited)))
+        #expect(store.stores.preview == .store(invited))
+        store.apply(.storePreview(.failed(reason: "the invite code in that link is damaged", contact: nil)))
+        #expect(store.stores.preview == .failed("the invite code in that link is damaged", contact: nil))
+        store.apply(.storeJoined(store: "hotaru"))
+        #expect(store.stores.preview == nil)
+        #expect(store.stores.joined == "hotaru")
+    }
+
+    @Test func anInviteOffersTheKindOfDeviceAndJoinsWithTheNameTyped() {
+        let store = AppStore()
+        let link = "https://plugins.example/join/abc#key"
+        store.previewStore(link)
+        let invited = InvitedStore(link: link, name: "Hotaru Plugins", url: "https://plugins.example",
+                                   host: "plugins.example", fingerprint: "9f3c 1a2b", alreadyJoined: false,
+                                   deviceLabel: "iPad")
+        store.apply(.storePreview(.store(invited)))
+        // The kind of device, never its own name, as the field starts.
+        #expect(store.stores.deviceName == "iPad")
+        #expect(store.stores.joinCommand(" \(link) ") == .joinStore(link: link, label: "iPad", name: nil))
+        // Typed over, and kept when the link is checked again.
+        store.stores.deviceName = "Den"
+        store.apply(.storePreview(.store(invited)))
+        #expect(store.stores.deviceName == "Den")
+        #expect(store.stores.joinCommand(link) == .joinStore(link: link, label: "Den", name: nil))
+        // An open link sends no name at all.
+        let open = InvitedStore(link: link, name: "Hotaru Plugins", url: "https://plugins.example",
+                                host: "plugins.example", fingerprint: "9f3c 1a2b", alreadyJoined: false,
+                                open: true, anonymous: true)
+        store.apply(.storePreview(.store(open)))
+        #expect(store.stores.joinCommand(link) == .joinStore(link: link, label: nil, name: nil))
+        store.stores.clearPreview()
+        #expect(store.stores.deviceName.isEmpty)
+    }
+
+    @Test func aPluginComesFromTheStoreThatKeepsItUpdated() {
+        let store = AppStore()
+        store.apply(.stores([
+            storeRow("mika", [plugin("kobunko", .otherStore("Hotaru")), plugin("machi", .addedByHand)]),
+            storeRow("hotaru", [plugin("kobunko", .installed), plugin("mukashi", .update(from: "1.4.0", newHosts: ["media2.example"]))]),
+        ]))
+        #expect(store.stores.origin(of: "kobunko")?.store.id == "hotaru")
+        #expect(store.stores.origin(of: "machi")?.store.id == "mika", "added by hand")
+        #expect(store.stores.origin(of: "mukashi")?.row.installedVersion == "1.4.0")
+        #expect(store.stores.origin(of: "nothing") == nil)
+        #expect(store.stores.updates == 1)
+    }
+
+    @Test func whatIsUnderWayEndsWithItsJob() {
+        let store = AppStore()
+        store.stores.started(.install(store: "hotaru", plugin: "mukashi"), job: 7)
+        #expect(store.stores.isWorking(.install(store: "hotaru", plugin: "mukashi")))
+        store.apply(.jobDone(7))
+        #expect(!store.stores.isWorking(.install(store: "hotaru", plugin: "mukashi")))
+    }
+
+    @Test func aPluginSaysWhatItMayContact() {
+        #expect(plugin("a", .available, hosts: ["one.example"]).contactsLine == "Contacts one.example")
+        #expect(plugin("a", .available, hosts: ["one.example", "two.example"]).contactsLine
+            == "Contacts one.example and one more")
+    }
+
+    @Test func anInviteLinkIsReadFromTheStoresAddressOrTheAppsOwn() throws {
+        let https = "https://plugins.example/join/abc#key"
+        #expect(InviteLinks.invite(in: try #require(URL(string: https))) == https)
+        #expect(InviteLinks.invite(in: try #require(URL(string: "kaeri://plugins.example/join/abc#key"))) == https)
+        let wrapped = "kaeri://join?link=" + (https.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? "")
+        #expect(InviteLinks.invite(in: try #require(URL(string: wrapped))) == https)
+        #expect(InviteLinks.invite(in: try #require(URL(string: "kaeri://auth/anilist#token=x"))) == nil, "a sign-in")
+        #expect(InviteLinks.invite(in: try #require(URL(string: "https://plugins.example/about"))) == nil)
+        #expect(InviteLinks.looksLikeInvite(" \(https)\n"))
+    }
+
+    @Test func aLoopbackStoreKeepsItsHttpLinkAndNoOtherDoes() throws {
+        let local = "http://127.0.0.1:8787/join/abc#key"
+        #expect(InviteLinks.invite(in: try #require(URL(string: local))) == local)
+        #expect(InviteLinks.looksLikeInvite("http://localhost:8787/join/abc#key"))
+        #expect(InviteLinks.invite(in: try #require(URL(string: "http://plugins.example/join/abc#key"))) == nil)
+    }
+
+    @Test func anInviteForSeveralPeopleSendsTheNameTypedAndAFailureKeepsTheContact() {
+        let store = AppStore()
+        let link = "https://plugins.example/join/abc#key"
+        let group = InvitedStore(link: link, name: "Hotaru Plugins", url: "https://plugins.example",
+                                 host: "plugins.example", fingerprint: "9f3c 1a2b", alreadyJoined: false,
+                                 deviceLabel: "iPad", namesJoiner: true)
+        store.apply(.storePreview(.store(group)))
+        #expect(store.stores.joinCommand(link) == .joinStore(link: link, label: "iPad", name: nil), "left empty")
+        store.stores.joinerName = "  Mina "
+        #expect(store.stores.joinCommand(link) == .joinStore(link: link, label: "iPad", name: "Mina"))
+        // An invite that works once never asks, so a leftover name is not sent.
+        let once = InvitedStore(link: link, name: "Hotaru Plugins", url: "https://plugins.example",
+                                host: "plugins.example", fingerprint: "9f3c 1a2b", alreadyJoined: false,
+                                deviceLabel: "iPad")
+        store.apply(.storePreview(.store(once)))
+        #expect(store.stores.joinCommand(link) == .joinStore(link: link, label: "iPad", name: nil))
+        store.apply(.storePreview(.failed(reason: "This invite ran out.", contact: "owner@plugins.example")))
+        #expect(store.stores.preview == .failed("This invite ran out.", contact: "owner@plugins.example"))
+        store.stores.clearPreview()
+        #expect(store.stores.joinerName.isEmpty)
+    }
+
+    @Test func anOwnersInvitesKeepTheEndedOnesAndWhetherTheServerOffersChoices() {
+        let store = AppStore()
+        let live = StoreInviteRow(id: "i1", name: "Book club", device: false, expiresAt: 100, used: 2, max: 5, until: 100)
+        let gone = StoreInviteRow(id: "i2", name: "Old", device: false, expiresAt: 50,
+                                  ended: InviteEnded(reason: .cancelled, at: 60))
+        store.apply(.storeMembers(store: "hotaru", members: [], invites: [live], ended: [gone], inviteChoices: false, contact: nil))
+        #expect(store.stores.members["hotaru"]?.invites.map(\.id) == ["i1"])
+        #expect(store.stores.members["hotaru"]?.ended.map(\.id) == ["i2"])
+        #expect(store.stores.members["hotaru"]?.inviteChoices == false)
+    }
+
+    @Test func aStoresOpenLinkIsReadWholeWithItsMark() throws {
+        let open = "https://plugins.example/join/abc?open#key"
+        #expect(InviteLinks.invite(in: try #require(URL(string: open))) == open)
+        #expect(InviteLinks.invite(in: try #require(URL(string: "kaeri://plugins.example/join/abc?open#key"))) == open)
+        let wrapped = "kaeri://join?link=" + (open.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? "")
+        #expect(InviteLinks.invite(in: try #require(URL(string: wrapped))) == open)
+        #expect(InviteLinks.looksLikeInvite(open))
+    }
+
+    @Test func whoCanJoinIsKeptForEachStoresOwner() {
+        let store = AppStore()
+        let view = OpenJoinView(open: true, link: "https://plugins.example/join/abc?open#key", devices: 3,
+                                recent: [AnonymousDeviceRow(id: "d1", joinedAt: 1_792_000_000, lastSeen: nil)])
+        store.apply(.openJoin(store: "hotaru", view: view))
+        #expect(store.stores.openJoin["hotaru"] == view)
+        #expect(store.stores.openJoin["mika"] == nil, "a store whose server has no open joining")
+        store.setOpenJoin("hotaru", open: false)
+        store.removeAnonymous(nil, from: "hotaru")
+    }
+
+    @Test func aPreviewSaysWhoRunsTheStoreAndWhereEachPluginStands() {
+        var invited = InvitedStore(link: "https://plugins.example/join/abc#key", name: "Hotaru Plugins",
+                                   url: "https://plugins.example", host: "plugins.example", fingerprint: "9f3c 1a2b",
+                                   alreadyJoined: false)
+        #expect(invited.runByLine == "plugins.example", "a store that does not say")
+        invited.owners = ["Ren", "Sora"]
+        #expect(invited.runByLine == "Run by Ren and Sora · plugins.example")
+        #expect(plugin("a", .available).standing == nil)
+        #expect(plugin("a", .installed).standing == "Installed")
+        #expect(plugin("a", .update(from: "1.4.0", newHosts: [])).standing == "1.4.0 installed")
+        #expect(plugin("a", .addedByHand).standing == "Added by hand")
+        #expect(plugin("a", .otherStore("Kumo")).standing == "From Kumo")
+        var row = storeRow("hotaru", [])
+        #expect(row.runByLine == "hotaru.example")
+        row.owners = ["Ren"]
+        #expect(row.runByLine == "Run by Ren · hotaru.example")
+    }
+
+    @Test func aDeviceThatJoinedWithTheLinkHasNoName() {
+        var row = storeRow("hotaru", [])
+        #expect(row.joinedAs == "Joined as Mika")
+        row.anonymous = true
+        row.member = ""
+        #expect(row.joinedAs == "Joined without a name")
+    }
+}
+
+@MainActor
+struct DownloadsTests {
+    @Test func theQueueIsGroupedByTitleWhereEachFirstAppears() {
+        let store = AppStore()
+        store.apply(.downloads([
+            download(1, title: 900_001, episode: "8", .done, done: 1_400, of: 1_400),
+            download(2, title: 900_006, episode: "9", .queued, done: 0, of: 0),
+            download(3, title: 900_001, episode: "9", .active, done: 300, of: 1_400),
+        ]))
+        #expect(store.downloads.groups.map(\.id) == [900_001, 900_006])
+        #expect(store.downloads.groups[0].rows.map(\.episode) == ["8", "9"])
+        #expect(store.downloads.bytesOnDisk == 1_700)
+    }
+
+    @Test func aRunningDownloadsSpeedIsWhatItMovedOverTheTime() {
+        let model = DownloadsModel()
+        let start = Date(timeIntervalSince1970: 1_000)
+        model.apply([download(3, title: 1, episode: "9", .active, done: 300_000_000, of: 1_400_000_000)], at: start)
+        #expect(model.rates[3] == nil, "one reading is no speed")
+        model.apply([download(3, title: 1, episode: "9", .active, done: 308_400_000, of: 1_400_000_000)],
+                    at: start.addingTimeInterval(1))
+        #expect(model.rates[3] == 8_400_000)
+        #expect(model.secondsLeft(model.rows[0]) == 130)
+        // Paused, it has no speed.
+        model.apply([download(3, title: 1, episode: "9", .paused, done: 308_400_000, of: 1_400_000_000)],
+                    at: start.addingTimeInterval(2))
+        #expect(model.rates[3] == nil)
+    }
+
+    @Test func aQueuedDownloadIsStartedAheadOfTheQueue() {
+        let store = AppStore()
+        store.startDownloadNow(2)
+        #expect(store.sentLog.last == "downloadStartNow")
+    }
+
+    @Test func aSeedingFilesSizeIsWhatWentUpOverItsRatio() {
+        let row = SeedRow(name: "Hoshikuzu no Tabibito - 05.mkv", uploadedBytes: 360_000_000, ratio: 0.8, goal: 1, leftSecs: 21_600)
+        #expect(row.size == 450_000_000)
+    }
+}
+
+@MainActor
+struct AccountsTests {
+    func state(_ tracker: String, connected: Bool = true, outbox: UInt32 = 0, last: String? = "pulled") -> SyncState {
+        SyncState(tracker: tracker, connected: connected, user: nil, storage: "keychain", storageDegraded: false,
+                  outbox: outbox, deferred: 0, needsReauth: false, last: last, pullError: nil)
+    }
+
+    @Test func aTrackerIsSyncedOnceASyncWentThroughWithNothingLeft() {
+        let store = AppStore()
+        store.apply(.sync(state("anilist", last: nil)))
+        #expect(store.accounts.syncedAt["anilist"] == nil, "at launch nothing has synced yet")
+        store.apply(.sync(state("anilist", outbox: 2, last: "queued")))
+        #expect(store.accounts.syncedAt["anilist"] == nil)
+        store.apply(.sync(state("anilist")))
+        #expect(store.accounts.syncedAt["anilist"] != nil)
+        store.apply(.sync(state("anilist", connected: false)))
+        #expect(store.accounts.syncedAt["anilist"] == nil)
+    }
+
+    @Test func aCodeThatRanOutStaysForItsSheetUntilSignedIn() {
+        let model = AccountsModel()
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let code = { (left: Int64) in
+            DeviceCodePrompt(tracker: "simkl", code: "7KQ4-M2XD", url: "https://simkl.example/pin",
+                             expiresAt: 1_800_000_000 + left)
+        }
+        model.deviceCode(code(600), at: now)
+        model.deviceCode(nil, at: now)
+        #expect(model.deviceCode == nil, "approved or refused in time, the code goes")
+        model.deviceCode(code(0), at: now)
+        model.deviceCode(nil, at: now)
+        #expect(model.deviceCode == code(0), "run out, it stays to say so")
+        #expect(AccountsModel.expired(code(0), at: now))
+        #expect(!AccountsModel.expired(code(600), at: now))
+        model.deviceCode(code(900), at: now)
+        #expect(model.deviceCode == code(900), "a new code replaces it")
+        model.deviceCode(code(0), at: now)
+        model.apply(state("simkl"))
+        #expect(model.deviceCode == nil, "signed in, nothing more to ask")
+    }
+
+    @Test func aSignInIsUnderWayUntilItsJobEnds() {
+        let store = AppStore()
+        store.accounts.started("kitsu", job: 4)
+        #expect(store.accounts.isWorking("kitsu"))
+        store.apply(.jobDone(4))
+        #expect(!store.accounts.isWorking("kitsu"))
+    }
+
+    @Test func aSettingsRowSaysItsSwitchAndItsChoice() {
+        let store = AppStore()
+        store.apply(.settings(settingsView(order: [], rows: [
+            SettingRow(key: .autoNext, value: "on", change: .steps(back: true, forward: false)),
+            SettingRow(key: .quality, value: "720p", change: .steps(back: true, forward: true)),
+        ])))
+        #expect(store.settings.isOn(.autoNext))
+        #expect(!store.settings.isOn(.nightMode), "a row it does not have")
+        #expect(store.settings.row(.quality)?.option?.value == .int(720))
+    }
+}

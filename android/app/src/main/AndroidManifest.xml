@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Asked for the first time a notice is posted as a notification, never at launch. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Downloads run as a user-initiated data transfer job, which Android 15's six-hour cap on
+         dataSync foreground services does not reach. -->
+    <uses-permission android:name="android.permission.RUN_USER_INITIATED_JOBS" />
+    <!-- Android 16's Live Updates: the download notification promoted to the top of the shade and
+         the lock screen, with its chip in the status bar. -->
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
+    <!-- Play on TV finds TVs and talks to them on the local network: Android 17 asks the first
+         time Play on TV is used. -->
+    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
+    <!-- A cast's stream goes out through this device: the Wi-Fi and the processor stay awake for it. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- No backup: the tokens are sealed with a key that never leaves this device's keystore, so a
+         restored copy could not open them, and everything else comes back from AniList and the stores. -->
+    <application
+        android:localeConfig="@xml/locales_config"
+        android:name=".KaeriApp"
+        android:allowBackup="false"
+        android:enableOnBackInvokedCallback="true"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Kaeri">
+
+        <!-- A release build can be traced from the shell (Perfetto, the baseline profile's
+             generator) as a debug build is, and nothing else changes. -->
+        <profileable android:shell="true" />
+
+        <!-- A turn or a fold changes the configuration without recreating the activity, so the
+             player, its surface and the shared state stay where they are. Going home while a video
+             plays takes the activity into Picture in Picture, the same SurfaceView playing on. -->
+        <activity
+            android:name=".MainActivity"
+            android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|density|keyboardHidden|uiMode"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- Where the MyAnimeList sign-in sends the browser back, kaeri://auth/mal, and
+                 AniList's on the shared client, kaeri://auth/anilist, for a launch without the
+                 Android one. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="kaeri" android:host="auth" android:pathPrefix="/" />
+            </intent-filter>
+            <!-- AniList's sign-in on Android comes back on a verified App Link, which no other app
+                 can claim: its implicit grant puts the token in the redirect. Verified against
+                 https://kaeri.app/.well-known/assetlinks.json. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="kaeri.app" android:pathPrefix="/auth/anilist" />
+            </intent-filter>
+            <!-- Watch party invites open the room's lobby: https://kaeri.app/party#..., a
+                 verified App Link like the sign-in's, and the same on kaeri://party. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="kaeri.app" android:path="/party" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="kaeri" android:host="party" />
+            </intent-filter>
+            <!-- Plugin store invites, which open the join sheet with the link in it:
+                 kaeri://join?link=<the store's https invite>, and the store's own
+                 https://<host>/join/<code>#<key> with kaeri:// in place of https://. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="kaeri" android:host="join" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="kaeri" android:host="*" android:pathPrefix="/join/" />
+            </intent-filter>
+            <!-- Magnet links and torrent files: opening one anywhere lands on Open link or file. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="magnet" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:mimeType="application/x-bittorrent" />
+            </intent-filter>
+            <!-- A TV's QR code, read by the system's camera: kaeri-remote://pair?... pairs with
+                 that TV. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="kaeri-remote" />
+            </intent-filter>
+            <!-- The launcher's shortcuts, Search and Downloads; Continue <title> is published as the
+                 queue changes. Each opens this activity explicitly, with the link in its extras
+                 (app.kaeri.action.OPEN), so no filter here claims those links. -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
+        </activity>
+        <!-- The TV this phone drives, kept through the background: its media notification, its
+             volume on the volume keys, and the link to it. -->
+        <service
+            android:name=".tv.TvRemoteService"
+            android:exported="true"
+            android:foregroundServiceType="mediaPlayback">
+            <intent-filter>
+                <action android:name="androidx.media3.session.MediaSessionService" />
+            </intent-filter>
+        </service>
+        <!-- The cast running now, kept through the background: its media notification, the TV's
+             volume on the volume keys, and the stream going out through this device. -->
+        <service
+            android:name=".tv.CastService"
+            android:exported="true"
+            android:foregroundServiceType="mediaPlayback">
+            <intent-filter>
+                <action android:name="androidx.media3.session.MediaSessionService" />
+            </intent-filter>
+        </service>
+        <!-- A new-episode notification's Mark watched, which only the app's own notifications
+             reach. -->
+        <receiver
+            android:name=".EpisodeActionReceiver"
+            android:exported="false" />
+        <!-- The download job: it keeps the process going while episodes download, with the
+             system's progress notification. -->
+        <!-- The download notification's Pause, Resume and Cancel, which only it reaches. -->
+        <receiver
+            android:name=".DownloadActionReceiver"
+            android:exported="false" />
+        <service
+            android:name=".DownloadJob"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+        <!-- The app's own update: its download, a user-initiated job as the episodes' is, and what
+             the installer says of the session it was handed in, with the notification's Cancel.
+             Only the app flavour asks to install packages (src/app/AndroidManifest.xml). -->
+        <service
+            android:name=".UpdateJob"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+        <receiver
+            android:name=".UpdateReceiver"
+            android:exported="false" />
+    </application>
+</manifest>

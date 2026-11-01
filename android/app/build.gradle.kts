@@ -1,0 +1,172 @@
+// The app: the activity, the application that holds the engine, and each flavour's launch.
+plugins {
+    id("kaeri.android.application")
+    id("kaeri.android.compose")
+    id("kaeri.engine.flavours")
+}
+
+/** The workspace version in Cargo.toml, which the merge train sets: a local build's versionName. */
+val workspaceVersion: String =
+    rootProject.file("../Cargo.toml").readText()
+        .substringAfter("[workspace.package]")
+        .let { Regex("""(?m)^version\s*=\s*"([^"]+)"""").find(it)?.groupValues?.get(1) }
+        ?: error("Cargo.toml has no [workspace.package] version")
+
+/**
+ * The update test's keystore (android/scripts/update-test.sh): with it, the app flavour is signed
+ * with a key the test made, never the release key, so one test build installs over another on an
+ * emulator; it carries src/updateTest, the receiver that offers it a release, and fetches over
+ * plain HTTP from this Mac. Never set for a build to keep.
+ */
+val updateTestKey: String? = providers.gradleProperty("KAERI_UPDATE_TEST_KEYSTORE").orNull?.takeIf { it.isNotBlank() }
+/** The test key's passwords, which keep nothing: the key is made for the test and thrown away. */
+val UPDATE_TEST_PASSWORD = "update-test"
+
+android {
+    namespace = "app.kaeri.app"
+    // The NDK strips the engine's library as the APK is packaged.
+    ndkVersion = libs.versions.ndk.get()
+    defaultConfig {
+        // A release takes both from its tag (packaging/apps/version.sh), which CI passes as the
+        // properties KAERI_VERSION_CODE and KAERI_VERSION_NAME; a local build keeps these (the name is the workspace version).
+        versionCode = providers.gradleProperty("KAERI_VERSION_CODE").map(String::toInt).getOrElse(1)
+        versionName = providers.gradleProperty("KAERI_VERSION_NAME").getOrElse(workspaceVersion)
+        ndk { abiFilters += "arm64-v8a" }
+        // The feature videos' flows, src/androidTestFixtures (website/scripts/videos).
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+    // The release key, from Gradle properties (~/.gradle/gradle.properties on the machine that
+    // signs). Where they are not set, as in CI, the release build is left unsigned rather than
+    // failing. The App Link AniList's sign-in comes back on is verified against this key.
+    val release = listOf("STORE_FILE", "STORE_PASSWORD", "KEY_ALIAS", "KEY_PASSWORD")
+        .associateWith { providers.gradleProperty("KAERI_RELEASE_$it").orNull }
+    val signsReleases = release.values.all { !it.isNullOrBlank() }
+    signingConfigs {
+        // An update test's build never reads the release key.
+        if (signsReleases && updateTestKey == null) {
+            create("release") {
+                storeFile = file(release.getValue("STORE_FILE")!!.replaceFirst("~", System.getProperty("user.home")))
+                storePassword = release.getValue("STORE_PASSWORD")
+                keyAlias = release.getValue("KEY_ALIAS")
+                keyPassword = release.getValue("KEY_PASSWORD")
+            }
+        }
+        // The update test's key (android/scripts/update-test.sh), which the test makes for itself.
+        updateTestKey?.let { key ->
+            create("updateTest") {
+                storeFile = file(key)
+                storePassword = UPDATE_TEST_PASSWORD
+                keyAlias = "update-test"
+                keyPassword = UPDATE_TEST_PASSWORD
+            }
+        }
+    }
+    productFlavors {
+        // The app flavour's release is the build to keep; the fixtures flavour is never for real use.
+        named("app") {
+            if (updateTestKey != null) {
+                signingConfig = signingConfigs.getByName("updateTest")
+            } else if (signsReleases) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
+    }
+    buildFeatures { buildConfig = true }
+    defaultConfig {
+        // Whether this is an update test's build: plain HTTP for the APK it fetches from this Mac.
+        buildConfigField("boolean", "UPDATE_TEST", (updateTestKey != null).toString())
+    }
+    testOptions {
+        // Robolectric reads the app's own resources: the shortcuts, the strings.
+        unitTests.isIncludeAndroidResources = true
+    }
+    buildTypes {
+        debug {
+            // en-XA (accented, longer) and ar-XB (right to left) in the language list, to look at
+            // layouts with: Settings > System > Languages, or `adb shell cmd locale set-app-locales`.
+            isPseudoLocalesEnabled = true
+        }
+        release {
+            // R8 shrinks and optimizes the app around the engine's bindings, which it keeps whole
+            // (proguard-rules.pro): Compose and the rest start much faster optimized.
+            isMinifyEnabled = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+    }
+    packaging {
+        // The engine's library is loaded straight out of the APK, page-aligned and uncompressed.
+        jniLibs.useLegacyPackaging = false
+    }
+}
+
+/**
+ * The launcher's static shortcuts, res/xml/shortcuts.xml, written from shortcuts.xml beside this
+ * file with the variant's application id in it: the intents name the package that opens them, and
+ * the system reads that as written, not as a resource.
+ */
+abstract class ShortcutsXml : DefaultTask() {
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val template: RegularFileProperty
+
+    @get:Input
+    abstract val applicationId: Property<String>
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun write() {
+        val xml = outputDir.get().dir("xml").asFile.apply { mkdirs() }.resolve("shortcuts.xml")
+        xml.writeText(template.get().asFile.readText().replace("\${applicationId}", applicationId.get()))
+    }
+}
+
+androidComponents {
+    onVariants(selector().withFlavor(KaeriSdk.ENGINE to "app")) { variant ->
+        if (updateTestKey != null) {
+            variant.sources.manifests.addStaticManifestFile("src/updateTest/AndroidManifest.xml")
+            variant.sources.kotlin?.addStaticSourceDirectory("src/updateTest/kotlin")
+        }
+    }
+    onVariants { variant ->
+        val shortcuts = tasks.register<ShortcutsXml>("write${variant.name.replaceFirstChar(Char::uppercase)}Shortcuts") {
+            template.set(layout.projectDirectory.file("shortcuts.xml"))
+            applicationId.set(variant.applicationId)
+        }
+        variant.sources.res?.addGeneratedSourceDirectory(shortcuts, ShortcutsXml::outputDir)
+    }
+}
+
+dependencies {
+    implementation(project(":ui"))
+    implementation(project(":player-ui"))
+    implementation(project(":widgets"))
+    implementation(libs.activity.compose)
+    implementation(libs.core.ktx)
+    implementation(libs.lifecycle.process)
+    // The TV's media session while Play on TV drives one.
+    implementation(libs.media3.session)
+    implementation(libs.media3.common)
+    implementation(libs.browser)
+    implementation(libs.work.runtime)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.coroutines.test)
+    testImplementation(libs.work.testing)
+    // The scenes the engine recorded, for the settings it says.
+    testImplementation(project(":testkit"))
+
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.junit)
+    androidTestImplementation(libs.androidx.test.uiautomator)
+}
+
+tasks.withType<Test>().configureEach {
+    // Robolectric's Android 16 reaches into the JDK's file descriptors, which the JDK keeps closed.
+    jvmArgs("--add-opens=java.base/jdk.internal.access=ALL-UNNAMED", "--add-exports=java.base/jdk.internal.access=ALL-UNNAMED")
+    // No engine starts in these tests; HOME is still one of their own, never the user's.
+    environment("HOME", layout.buildDirectory.dir("test-home/$name").get().asFile.path)
+    environment("KAERI_TOKEN_STORAGE", "file")
+}

@@ -1,0 +1,350 @@
+// TVJoinStore: adding a plugin store on the TV itself, no paired phone needed. The TV's own page
+// takes an invite link pasted on any phone, from a QR code; "Type the link" opens the system
+// keyboard as the last resort. Either way the TV shows the store before joining, with the amber
+// Join.
+
+package app.kaeri.tv.signin
+
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import app.kaeri.i18n.Strings
+import app.kaeri.i18n.R
+import android.content.Context
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.tv.material3.MaterialTheme
+import androidx.tv.material3.Text
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import app.kaeri.design.ObiSilk
+import app.kaeri.engine.model.InvitedStore
+import app.kaeri.store.InviteLinks
+import app.kaeri.store.StoresModel
+import app.kaeri.store.runByLine
+import app.kaeri.tv.remote.QrCode
+import app.kaeri.tv.ui.AmberButton
+import app.kaeri.tv.ui.ButtonLabel
+import app.kaeri.tv.ui.Canvas
+import app.kaeri.tv.ui.LocalAppStore
+import app.kaeri.tv.ui.LocalNotices
+import app.kaeri.tv.player.Spinner
+import app.kaeri.tv.ui.TonalButton
+import app.kaeri.tv.ui.entryFocus
+import app.kaeri.tv.ui.focusSoon
+import app.kaeri.store.plainReason
+
+/** The line under every Join. */
+
+/**
+ * TVJoinStore, until a store is joined ([onDone] with true) or Back ([onDone] with false). On
+ * first launch [cancelLabel] is "Skip for now".
+ */
+@Composable
+fun JoinStoreScreen(onDone: (joined: Boolean) -> Unit, cancelLabel: String? = null, title: String? = null, line: String? = null) {
+    val context = LocalContext.current
+    val cancelLabel = cancelLabel ?: stringResource(R.string.action_cancel)
+    val title = title ?: stringResource(R.string.stores_add_title)
+    val store = LocalAppStore.current
+    val notices = LocalNotices.current
+    val preview by store.stores.preview.collectAsStateWithLifecycle()
+    val joined by store.stores.joined.collectAsStateWithLifecycle()
+    val stores by store.stores.stores.collectAsStateWithLifecycle()
+    val done by rememberUpdatedState(onDone)
+    LaunchedEffect(Unit) { store.stores.clearJoined() }
+    LaunchedEffect(joined) {
+        val id = joined ?: return@LaunchedEffect
+        val name = stores.firstOrNull { it.id == id }?.name
+        notices?.say(if (name != null) Strings.storesTvJoined(context, name) else Strings.storesTvJoinedPlain(context))
+        store.stores.clearJoined()
+        done(true)
+    }
+    DisposableEffect(Unit) { onDispose { store.stores.clearPreview() } }
+    var typing by remember { mutableStateOf(false) }
+    var link by remember { mutableStateOf("") }
+    BackHandler {
+        when {
+            preview != null -> store.stores.clearPreview()
+            typing -> typing = false
+            else -> done(false)
+        }
+    }
+    val check: (String) -> Unit = { text ->
+        val invite = InviteLinks.invite(text) ?: text.trim()
+        link = invite
+        typing = false
+        store.previewStore(invite)
+    }
+
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(ObiSilk.Ground)
+            .padding(start = Canvas.Keyline, end = Canvas.SafeX, top = 72.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+    ) {
+        Text(title, style = MaterialTheme.typography.titleLarge, color = ObiSilk.Silk, modifier = Modifier.semantics { heading() })
+        if (line != null) Text(line, style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Silk, modifier = Modifier.widthIn(max = 640.dp))
+        when (val shown = preview) {
+            null -> if (typing) {
+                TypeLink(link, onCheck = check, onCancel = { typing = false })
+            } else {
+                Ways(onAnswer = check, onType = { typing = true }, onCancel = { done(false) }, cancelLabel = cancelLabel)
+            }
+            is StoresModel.Preview.Checking -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                // The spinner comes after a moment, so a quick answer never flashes it.
+                var spin by remember { mutableStateOf(false) }
+                LaunchedEffect(Unit) {
+                    delay(SPINNER_WAIT)
+                    spin = true
+                }
+                Box(Modifier.size(32.dp)) { if (spin) Spinner() }
+                Text(stringResource(R.string.stores_checking_store), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Haze)
+            }
+            is StoresModel.Preview.Failed -> Failed(shown.reason, shown.contact, onAgain = { store.stores.clearPreview() }, onCancel = { done(false) }, cancelLabel = cancelLabel)
+            is StoresModel.Preview.Store -> Preview(
+                shown.store,
+                onJoin = { store.joinStore(link) },
+                onCancel = { store.stores.clearPreview() },
+            )
+        }
+    }
+}
+
+/**
+ * The ways to hand the TV a link: the TV's page from a QR code, or typing it. The page closes
+ * after its 10 minutes; the QR code goes with it, "Code expired" in its place, and Get a new code
+ * opens another page.
+ */
+@Composable
+private fun Ways(onAnswer: (String) -> Unit, onType: () -> Unit, onCancel: () -> Unit, cancelLabel: String) {
+    val context = LocalContext.current
+    val pageHost = LocalPageHost.current
+    val scope = rememberCoroutineScope()
+    val answer by rememberUpdatedState(onAnswer)
+    var address by remember { mutableStateOf<String?>(null) }
+    var started by remember { mutableStateOf(false) }
+    // Each page in turn: a new one once the last has expired and Get a new code is pressed.
+    var opened by remember { mutableIntStateOf(0) }
+    var expired by remember { mutableStateOf(false) }
+    DisposableEffect(opened) {
+        expired = false
+        val page = SignInPage(context, tracker = Strings.storesFallbackTitle(context), form = PageForm.Link, authorizeUrl = null) { pasted ->
+            if (pasted is PageAnswer.Link) scope.launch { answer(pasted.text) }
+        }
+        val job = scope.launch {
+            val port = withContext(Dispatchers.IO) { page.start() }
+            val local = pageHost(context)
+            address = if (port != null && local != null) page.address(local, port) else null
+            started = true
+            if (port != null) {
+                delay(SignInPage.LIFETIME_MILLIS)
+                expired = true
+                page.stop()
+            }
+        }
+        onDispose {
+            job.cancel()
+            page.stop()
+        }
+    }
+    val type = remember { FocusRequester() }
+    val again = remember { FocusRequester() }
+    LaunchedEffect(expired) { if (expired) again.focusSoon() }
+    Text(
+        stringResource(R.string.stores_qr_instructions),
+        style = MaterialTheme.typography.bodyLarge,
+        color = ObiSilk.Silk,
+        modifier = Modifier.widthIn(max = 640.dp),
+    )
+    Row(horizontalArrangement = Arrangement.spacedBy(40.dp), verticalAlignment = Alignment.CenterVertically) {
+        val shown = address.takeIf { !expired }
+        if (shown != null) {
+            QrCode(shown, label = stringResource(R.string.tv_qr_label_link))
+        } else {
+            Box(Modifier.size(180.dp).background(ObiSilk.Raised, RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
+                if (expired) Text(stringResource(R.string.stores_code_expired), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Silk)
+            }
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.widthIn(max = 520.dp)) {
+            Text(stringResource(R.string.stores_or_open_address), style = MaterialTheme.typography.labelLarge, color = ObiSilk.Haze)
+            Text(
+                when {
+                    expired -> stringResource(R.string.stores_page_closed)
+                    shown != null -> shown
+                    started -> stringResource(R.string.stores_tv_no_network)
+                    else -> stringResource(R.string.downloads_notice_starting)
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = ObiSilk.Silk,
+            )
+            Text(stringResource(R.string.stores_page_closes), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze)
+        }
+    }
+    Row(Modifier.entryFocus(type), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        if (expired) {
+            TonalButton(onClick = { opened += 1 }, modifier = Modifier.focusRequester(again)) { ButtonLabel(stringResource(R.string.action_new_code)) }
+        }
+        TonalButton(onClick = onType, modifier = Modifier.focusRequester(type)) { ButtonLabel(stringResource(R.string.stores_type_link)) }
+        TonalButton(onClick = onCancel) { ButtonLabel(cancelLabel) }
+    }
+}
+
+/** The link typed with the system keyboard, then checked. */
+@Composable
+private fun TypeLink(start: String, onCheck: (String) -> Unit, onCancel: () -> Unit) {
+    var text by remember { mutableStateOf(start) }
+    val field = remember { FocusRequester() }
+    val keyboard = LocalSoftwareKeyboardController.current
+    LaunchedEffect(Unit) {
+        field.focusSoon()
+        keyboard?.show()
+    }
+    Box(
+        Modifier.widthIn(max = 640.dp).fillMaxWidth().height(56.dp).background(ObiSilk.Raised, CircleShape).padding(horizontal = 24.dp),
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        if (text.isEmpty()) Text(stringResource(R.string.stores_invite_link), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Haze)
+        BasicTextField(
+            value = text,
+            onValueChange = { text = it },
+            singleLine = true,
+            textStyle = MaterialTheme.typography.bodyLarge.copy(color = ObiSilk.Silk),
+            cursorBrush = SolidColor(ObiSilk.Amber),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Go, autoCorrectEnabled = false),
+            keyboardActions = KeyboardActions(onGo = { if (text.isNotBlank()) onCheck(text) }),
+            modifier = Modifier.fillMaxWidth().focusRequester(field),
+        )
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        TonalButton(onClick = { onCheck(text) }, enabled = text.isNotBlank()) { ButtonLabel(stringResource(R.string.stores_check_link)) }
+        TonalButton(onClick = onCancel) { ButtonLabel(stringResource(R.string.action_back)) }
+    }
+}
+
+/** The link did not lead to a store: an error's vermilion dot, why in plain words, another try, and Cancel. */
+@Composable
+private fun Failed(reason: String, contact: String?, onAgain: () -> Unit, onCancel: () -> Unit, cancelLabel: String) {
+    val again = remember { FocusRequester() }
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Box(Modifier.size(8.dp).background(ObiSilk.Vermilion, CircleShape))
+        Text(stringResource(R.string.stores_link_failed), style = MaterialTheme.typography.headlineSmall, color = ObiSilk.Silk)
+    }
+    Text(plainReason(LocalContext.current, reason), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Silk, modifier = Modifier.widthIn(max = 640.dp))
+    if (contact != null) Text(stringResource(R.string.store_invite_contact, contact), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Haze, modifier = Modifier.widthIn(max = 640.dp))
+    Row(Modifier.entryFocus(again), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        TonalButton(onClick = onAgain, modifier = Modifier.focusRequester(again)) { ButtonLabel(stringResource(R.string.stores_try_another_link)) }
+        TonalButton(onClick = onCancel) { ButtonLabel(cancelLabel) }
+    }
+}
+
+/**
+ * The store before joining: its name, who runs it, its key, its plugins with the hosts each
+ * contacts, and whether anyone with the link can join. The amber Join, focused, and Cancel.
+ */
+@Composable
+private fun Preview(invited: InvitedStore, onJoin: () -> Unit, onCancel: () -> Unit) {
+    val store = LocalAppStore.current
+    val working by store.stores.working.collectAsStateWithLifecycle()
+    val joining = store.stores.isWorking(working, StoresModel.Work.Join)
+    val join = remember { FocusRequester() }
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(invited.name, style = MaterialTheme.typography.headlineSmall, color = ObiSilk.Silk)
+        Text(invited.runByLine(LocalContext.current), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze)
+        Text(stringResource(R.string.tv_preview_key, invited.fingerprint.chunked(4).take(4).joinToString(" ")), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze)
+        if (invited.open) Text(stringResource(R.string.stores_anyone_with_link), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze)
+    }
+    if (invited.plugins.isNotEmpty()) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.widthIn(max = 720.dp)) {
+            invited.plugins.take(PREVIEW_PLUGINS).forEach { plugin ->
+                Row {
+                    Text(plugin.name, style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Silk, modifier = Modifier.width(200.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(plugin.hosts.joinToString(", "), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
+            if (invited.plugins.size > PREVIEW_PLUGINS) {
+                Text(stringResource(R.string.tv_preview_more, invited.plugins.size - PREVIEW_PLUGINS), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze)
+            }
+        }
+    }
+    // A link that works more than once asks who is joining; the store's owners see the name.
+    if (invited.namesJoiner && !invited.alreadyJoined) {
+        val name by store.stores.deviceName.collectAsStateWithLifecycle()
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Box(
+                Modifier.widthIn(max = 640.dp).fillMaxWidth().height(56.dp).background(ObiSilk.Raised, CircleShape).padding(horizontal = 24.dp),
+                contentAlignment = Alignment.CenterStart,
+            ) {
+                if (name.isEmpty()) Text(stringResource(R.string.stores_join_your_name), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Haze)
+                BasicTextField(
+                    value = name,
+                    onValueChange = store.stores::nameDevice,
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = ObiSilk.Silk),
+                    cursorBrush = SolidColor(ObiSilk.Amber),
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            Text(stringResource(R.string.stores_join_your_name_detail), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, modifier = Modifier.widthIn(max = 640.dp))
+        }
+    }
+    Column(Modifier.entryFocus(join)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            if (invited.alreadyJoined) {
+                TonalButton(onClick = onCancel, modifier = Modifier.focusRequester(join)) { ButtonLabel(stringResource(R.string.tv_already_joined)) }
+            } else {
+                AmberButton(onClick = onJoin, icon = null, enabled = !joining, modifier = Modifier.focusRequester(join)) { ButtonLabel(stringResource(if (joining) R.string.tv_joining else R.string.action_join)) }
+                TonalButton(onClick = onCancel) { ButtonLabel(stringResource(R.string.action_cancel)) }
+            }
+        }
+    }
+}
+
+/** How long Checking the store waits before its spinner shows. */
+private const val SPINNER_WAIT = 400L
+
+/** A store with many plugins shows the first few; the store's page in Settings has the rest. */
+private const val PREVIEW_PLUGINS = 5

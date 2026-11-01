@@ -1,0 +1,17 @@
+cast-chromecast = Chromecast
+cast-none-found-extra = ТВ со встроенным Chromecast тоже показываются здесь.
+cast-local-network = Разрешите { -app-name } находить { -device-pl } в вашей локальной сети
+cast-tvs-label = Показывать ТВ со встроенным Chromecast
+cast-torrents-label = Торренты при трансляции
+cast-tvs-note-mac = Они появятся в разделе Chromecast в «Смотреть на ТВ». Этот Mac отправляет им эпизод.
+cast-tvs-note-iphone = Они появятся в разделе Chromecast в «Смотреть на ТВ». Этот iPhone отправляет им эпизод.
+cast-tvs-note-ipad = Они появятся в разделе Chromecast в «Смотреть на ТВ». Этот iPad отправляет им эпизод.
+cast-torrents-note-mac = Позволяет ТВ со встроенным Chromecast воспроизводить торренты. Этот Mac передаёт эпизод, пока он идёт.
+cast-torrents-note-iphone = Позволяет ТВ со встроенным Chromecast воспроизводить торренты. Этот iPhone передаёт эпизод, пока он идёт.
+cast-torrents-note-ipad = Позволяет ТВ со встроенным Chromecast воспроизводить торренты. Этот iPad передаёт эпизод, пока он идёт.
+cast-up-next-plays-in = { -up-next-cap } · воспроизведение через { $seconds } с
+cast-couldnt-start = Не удалось запустить на { $name }
+cast-stopped = Трансляция остановлена
+cast-play-here = Смотреть здесь
+cast-stop = Остановить трансляцию
+cast-volume-fixed = Задаётся на ТВ

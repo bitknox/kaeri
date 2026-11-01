@@ -1,0 +1,45 @@
+---
+title: Overview
+description: Kaeri browses AniList with no account, plays episodes in mpv, keeps your history on your device and syncs it to five trackers. Sources are plugins or services you set up.
+---
+
+## Start here
+
+<ul class="docs-links">
+  <li><a href="/docs/getting-started/installation/"><strong>Requirements and installation</strong><span>The apps, prebuilt binaries for the terminal, or a build from source.</span><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg></a></li>
+  <li><a href="/docs/getting-started/quick-start/"><strong>Quick start</strong><span>Browsing needs no account and no config.</span><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg></a></li>
+  <li><a href="/docs/guides/configuration/"><strong>Configuration</strong><span>Every section of <code>config.toml</code> is optional.</span><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg></a></li>
+  <li><a href="/docs/plugins/authoring/"><strong>Writing a plugin</strong><span>WebAssembly components in Rust, JavaScript or any language that builds a WASI 0.2 component.</span><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg></a></li>
+</ul>
+
+## The apps
+
+The apps have mpv built in and install from the releases on GitHub, as
+[installation](/docs/getting-started/installation/#the-apps) describes. On a Mac, the app and the
+terminal app share one history and one config.
+
+The Android TV app is made for the remote's arrow keys. The Mac, iPhone, iPad, Android, Windows and
+Linux apps can send an episode to it and act as its remote. The [features page](/features/#platforms)
+shows what each app does.
+
+## The terminal app
+
+- Browsing, search and seasonal lists from AniList, with no account. `Ctrl-F` filters a search by
+  genre, year, season, format, status and sort.
+- A half-finished episode stays on the home screen with its position. `kaeri --continue` resumes it
+  from the shell.
+- [Playback](/docs/guides/player/) runs in mpv with Kaeri's own controls, seek bar thumbnails, a skip
+  button, Up next and menus.
+- Tracker sync covers AniList, MyAnimeList, Kitsu, Simkl and Trakt. Changes made offline sync when
+  you reconnect.
+- Plugins are sandboxed WebAssembly components. A [plugin store](/docs/plugins/stores/) that someone
+  you know runs lets you install their plugins and share your own.
+
+[Keys and command line](/docs/guides/keybindings-cli/) lists the rest.
+
+## In development
+
+- More sources, as plugins. The [plugin system](/docs/plugins/authoring/) is the path for new
+  sources.
+- Licensed services open in their own apps. Kaeri doesn't get round DRM, so a plugin can return a
+  link that opens in that service instead of a stream for mpv.

@@ -1,0 +1,17 @@
+cast-chromecast = Chromecast
+cast-none-found-extra = TV-apparater med inbyggd Chromecast visas också här.
+cast-local-network = Låt { -app-name } hitta { -device-pl } i ditt lokala nätverk
+cast-tvs-label = Visa TV-apparater med inbyggd Chromecast
+cast-torrents-label = Torrents vid casting
+cast-tvs-note-mac = De visas under Chromecast i Spela på TV. Den här Macen skickar avsnittet till dem.
+cast-tvs-note-iphone = De visas under Chromecast i Spela på TV. Den här iPhonen skickar avsnittet till dem.
+cast-tvs-note-ipad = De visas under Chromecast i Spela på TV. Den här iPaden skickar avsnittet till dem.
+cast-torrents-note-mac = Låter en TV med inbyggd Chromecast spela torrents. Den här Macen skickar avsnittet så länge det spelas.
+cast-torrents-note-iphone = Låter en TV med inbyggd Chromecast spela torrents. Den här iPhonen skickar avsnittet så länge det spelas.
+cast-torrents-note-ipad = Låter en TV med inbyggd Chromecast spela torrents. Den här iPaden skickar avsnittet så länge det spelas.
+cast-up-next-plays-in = { -up-next-cap } · spelas om { $seconds } s
+cast-couldnt-start = Kunde inte starta på { $name }
+cast-stopped = Castingen stoppades
+cast-play-here = Spela här
+cast-stop = Sluta casta
+cast-volume-fixed = Ställs in på TV:n

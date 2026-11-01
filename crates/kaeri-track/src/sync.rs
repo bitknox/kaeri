@@ -1,0 +1,977 @@
+//! The drain engine.
+//!
+//! Local SQLite is the source of truth and this pushes a projection of it outward. Two loops,
+//! deliberately separate:
+//!
+//! - **Drain** takes whatever the outbox holds and sends it. Runs often, cheap when idle.
+//! - **Pull** fetches the remote library and reconciles. Runs rarely, costs a request.
+//!
+//! The engine's whole job is to be boring under failure. Nothing here may block playback,
+//! nothing may lose a queued op, and a tracker that is down must not turn into a stream of
+//! error toasts.
+
+use std::sync::Arc;
+
+use kaeri_core::traits::Tracker;
+use kaeri_store::{Store, outbox::OutboxEntry};
+
+use crate::merge::{self, LocalState, Merged};
+
+/// How many ops one drain pass sends per tracker.
+///
+/// Bounded so a large backlog cannot monopolise a rate limit that other parts of the app share.
+/// The remainder simply waits for the next pass.
+const DRAIN_BATCH: u32 = 25;
+
+/// What one drain pass did, for the status line and the Accounts overlay.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct DrainReport {
+    pub sent: u32,
+    pub failed: u32,
+    /// Set when the tracker rejected our credentials. The user has to re-authorise; retrying
+    /// cannot help.
+    pub needs_reauth: bool,
+    /// Ops held back because the tracker cannot address their title until the id mappings
+    /// change. Still queued, and counted in `remaining`.
+    pub deferred: u32,
+    /// Ops the tracker answered with success but did not apply — a title it could not match.
+    /// Not retried, since the same request gets the same answer, and not counted in `sent`.
+    pub ignored: u32,
+    /// Ops still queued after this pass.
+    pub remaining: u32,
+}
+
+impl DrainReport {
+    pub fn did_nothing(&self) -> bool {
+        self.sent == 0
+            && self.failed == 0
+            && self.deferred == 0
+            && self.ignored == 0
+            && !self.needs_reauth
+    }
+}
+
+/// How long a rejected credential silences a tracker's queue.
+///
+/// Long enough that a dead token costs one request an hour rather than one a minute, short
+/// enough that a tracker which rejected us for its own reasons — a deploy, a brief outage
+/// dressed up as a 401 — recovers without the user doing anything.
+const REAUTH_HOLD_SECS: i64 = 3_600;
+
+/// Where a tracker's re-auth hold is remembered.
+///
+/// In `app_state` rather than on the rows: the queue is fine, the credential is not, and the
+/// hold has to survive a restart or the loop simply resumes.
+pub fn reauth_hold_key(tracker_id: &str) -> String {
+    format!("reauth_hold:{tracker_id}")
+}
+
+/// Where the progress last sent to a tracker for a title is remembered.
+fn pushed_key(tracker_id: &str, anilist_id: kaeri_core::ids::AnilistId) -> String {
+    format!("pushed_progress:{tracker_id}:{}", anilist_id.get())
+}
+
+/// Forget what has been sent to a tracker, when its account may have changed.
+///
+/// The memory is of a conversation with one account. Kept across a sign-in to another, it
+/// would stop the merge sending that account progress it has never been told.
+pub fn forget_pushed(store: &Store, tracker_id: &str) {
+    if let Err(e) = store.clear_meta_prefix(&format!("pushed_progress:{tracker_id}:")) {
+        tracing::warn!(tracker = tracker_id, error = %e, "could not forget sent progress");
+    }
+}
+
+/// The progress last sent to a tracker for a title.
+fn last_pushed(
+    store: &Store,
+    tracker_id: &str,
+    anilist_id: kaeri_core::ids::AnilistId,
+) -> Result<Option<u32>, kaeri_store::StoreError> {
+    Ok(store
+        .get_meta_i64(&pushed_key(tracker_id, anilist_id))?
+        .map(|sent| sent.clamp(0, i64::from(u32::MAX)) as u32))
+}
+
+/// Record a progress value as sent, keeping the highest.
+fn remember_pushed(
+    store: &Store,
+    tracker_id: &str,
+    anilist_id: kaeri_core::ids::AnilistId,
+    episode: u32,
+) -> Result<(), kaeri_store::StoreError> {
+    let highest = last_pushed(store, tracker_id, anilist_id)?.unwrap_or(0).max(episode);
+    store.set_meta_i64(&pushed_key(tracker_id, anilist_id), i64::from(highest))
+}
+
+/// Lift the hold after a successful sign-in, so the queue drains at once.
+pub fn clear_reauth_hold(
+    store: &Store,
+    tracker_id: &str,
+) -> Result<(), kaeri_store::StoreError> {
+    store.set_meta_i64(&reauth_hold_key(tracker_id), 0)
+}
+
+/// Send what the outbox holds for one tracker.
+///
+/// Ops are sent as a batch, and the batch's fate is applied to every op in it. That is safe
+/// precisely because tracker pushes are idempotent — a partial success followed by a retry
+/// re-sends something already applied, which by contract is a no-op.
+pub async fn drain(
+    store: &Store,
+    tracker: &dyn Tracker,
+    now: i64,
+) -> Result<DrainReport, kaeri_store::StoreError> {
+    let id = tracker.id();
+    let mut report = DrainReport::default();
+
+    if !tracker.is_authenticated() {
+        // Not an error. Watching with no account is a supported way to use this, so the queue
+        // simply waits — and keeps waiting across restarts, because it is a table.
+        report.remaining = store.outbox_depth(Some(id))?;
+        return Ok(report);
+    }
+
+    // A token the tracker has already rejected is still a token, and every
+    // `is_authenticated()` in this crate only asks whether one is present — so nothing here
+    // could tell "signed in" from "signed in with a credential that stopped working". The
+    // rejection below records a hold, and until it lapses the queue waits rather than
+    // re-presenting the same dead credential every minute for months.
+    if let Some(until) = store.get_meta_i64(&reauth_hold_key(id))?
+        && now < until
+    {
+        report.needs_reauth = true;
+        report.remaining = store.outbox_depth(Some(id))?;
+        return Ok(report);
+    }
+
+    let mut claimed = store.claim_ready(id, now, DRAIN_BATCH)?;
+    if claimed.is_empty() {
+        return Ok(report);
+    }
+
+    // A title the mapping datasets carry no id for on this tracker cannot be pushed *yet*.
+    // These used to go out anyway, be skipped inside the push, and be deleted with the rest of
+    // a successful batch — and every such title later gained an id, so the update was simply
+    // lost. Held back instead, out of the way of the ops behind them, until a mapping refresh
+    // wakes them.
+    let (sendable, unaddressable): (Vec<_>, Vec<_>) =
+        claimed.drain(..).partition(|entry| tracker.can_address(&entry.op));
+    for entry in &unaddressable {
+        store.defer(entry.id, "no id for this title on this tracker yet")?;
+        tracing::info!(
+            tracker = id,
+            anilist_id = entry.op.anilist_id().get(),
+            "no id mapped for this title yet; holding its update until the mappings change"
+        );
+    }
+    report.deferred = unaddressable.len() as u32;
+    let claimed = sendable;
+    if claimed.is_empty() {
+        report.remaining = store.outbox_depth(Some(id))?;
+        return Ok(report);
+    }
+
+    let ops: Vec<_> = claimed.iter().map(|entry| entry.op.clone()).collect();
+    match tracker.push_checked(&ops).await {
+        Ok(ignored) => {
+            for entry in &claimed {
+                store.complete(entry.id)?;
+                // Remembered whether or not it took, so the next pull does not queue the same
+                // value again: see `LocalState::last_pushed`.
+                if let kaeri_core::traits::TrackOp::SetProgress { anilist_id, episode } =
+                    entry.op
+                {
+                    remember_pushed(store, id, anilist_id, episode)?;
+                }
+                if ignored.contains(&entry.op.anilist_id()) {
+                    report.ignored += 1;
+                    tracing::warn!(
+                        tracker = id,
+                        anilist_id = entry.op.anilist_id().get(),
+                        "the tracker answered but did not apply this update; not retrying it"
+                    );
+                } else {
+                    report.sent += 1;
+                }
+            }
+            tracing::info!(tracker = id, sent = report.sent, "outbox drained");
+        }
+        Err(kaeri_core::Error::Auth(message)) => {
+            // Deliberately *not* counted as a failure: incrementing attempts would push the
+            // backoff toward an hour for something no amount of waiting fixes, and the queue
+            // has to still be intact when the user re-authorises.
+            //
+            // But it cannot be retried freely either. Nothing marked the rows, and
+            // `claim_ready` takes no lease, so the same batch was re-sent on every tick — an
+            // uncapped request loop against a rate-limited third party with a credential
+            // already known to be dead, for as long as the app ran. The hold is a statement
+            // about the credential rather than about the queue, which is why it is not the
+            // retry counter; signing in again lifts it.
+            report.needs_reauth = true;
+            store.set_meta_i64(&reauth_hold_key(id), now + REAUTH_HOLD_SECS)?;
+            tracing::warn!(
+                tracker = id,
+                %message,
+                "tracker rejected our credentials; holding the queue until sign-in"
+            );
+        }
+        Err(error) => {
+            let message = error.to_string();
+            for entry in &claimed {
+                store.fail(entry.id, &message, now)?;
+            }
+            report.failed = claimed.len() as u32;
+            tracing::warn!(tracker = id, %message, "outbox push failed; backing off");
+        }
+    }
+
+    report.remaining = store.outbox_depth(Some(id))?;
+    Ok(report)
+}
+
+/// What a library pull produced.
+#[derive(Debug, Clone, Default)]
+pub struct PullReport {
+    /// Titles seen on the remote list.
+    pub seen: u32,
+    /// Ops queued so the remote catches up with local.
+    pub queued: u32,
+    /// Titles where the remote was ahead and local adopted its value.
+    pub adopted: u32,
+    /// Disagreements needing the user, for the Conflicts overlay.
+    pub conflicts: Vec<merge::Conflict>,
+}
+
+/// Pull the remote library and reconcile it against local history.
+///
+/// Reconciliation is one-directional in effect: anything local can prove goes out through the
+/// outbox, anything the remote is ahead on is adopted locally, and anything genuinely
+/// contradictory is reported rather than resolved.
+pub async fn pull(
+    store: &Store,
+    tracker: &dyn Tracker,
+    now: i64,
+    last_pull_at: i64,
+) -> Result<PullReport, kaeri_core::Error> {
+    if !tracker.is_authenticated() {
+        return Ok(PullReport::default());
+    }
+    let remote = tracker.pull_library().await?;
+    reconcile(store, tracker.id(), &remote, now, last_pull_at)
+}
+
+/// The merge half of [`pull`], for a library already fetched.
+///
+/// Separate so several trackers' libraries can be fetched at once while their merges still
+/// run one at a time, in a fixed order: each merge reads and writes the same local history, so
+/// letting two interleave would make which of them reports a conflict depend on network timing.
+pub fn reconcile(
+    store: &Store,
+    id: &str,
+    remote: &[kaeri_core::traits::TrackedEntry],
+    now: i64,
+    last_pull_at: i64,
+) -> Result<PullReport, kaeri_core::Error> {
+    let mut report = PullReport { seen: remote.len() as u32, ..PullReport::default() };
+
+    for entry in remote {
+        let local = local_state(store, entry.anilist_id)
+            .and_then(|local| {
+                Ok(LocalState {
+                    last_pushed: last_pushed(store, id, entry.anilist_id)?,
+                    ..local
+                })
+            })
+            .map_err(|e| kaeri_core::Error::Store(e.to_string()))?;
+        let pending = store
+            .pending_progress(id, entry.anilist_id)
+            .map_err(|e| kaeri_core::Error::Store(e.to_string()))?;
+
+        let merged = merge::reconcile_at(&local, entry, pending, last_pull_at);
+        apply(store, id, entry.anilist_id, now, &merged, &mut report)
+            .map_err(|e| kaeri_core::Error::Store(e.to_string()))?;
+    }
+
+    tracing::info!(
+        tracker = id,
+        seen = report.seen,
+        queued = report.queued,
+        adopted = report.adopted,
+        conflicts = report.conflicts.len(),
+        "library reconciled"
+    );
+    Ok(report)
+}
+
+/// Put a merge result into effect.
+fn apply(
+    store: &Store,
+    tracker_id: &str,
+    anilist_id: kaeri_core::ids::AnilistId,
+    now: i64,
+    merged: &Merged,
+    report: &mut PullReport,
+) -> Result<(), kaeri_store::StoreError> {
+    for op in &merged.push {
+        if store.enqueue(tracker_id, op, now)?.is_some() {
+            report.queued += 1;
+        }
+    }
+    // Written, not just counted. This reported "adopted 1" and did nothing for as long as it
+    // existed, so a title watched on the tracker's own website stayed unwatched here and the
+    // app went on offering an episode already seen.
+    if let Some(upto) = merged.adopt_progress {
+        store.adopt_progress(anilist_id, upto, now)?;
+        report.adopted += 1;
+    }
+    report.conflicts.extend(merged.conflicts.iter().cloned());
+    Ok(())
+}
+
+/// Build the local view of one title from the watch log.
+///
+/// Progress is the highest regular episode completed, the same figure [`queue_progress`]
+/// sends: a tracker stores the episode you reached, so comparing its number against a tally
+/// would see a gap after every skipped or elsewhere-watched episode and push the tally over
+/// it. Derived from the log rather than a counter, so rewatching cannot inflate it.
+pub fn local_state(
+    store: &Store,
+    anilist_id: kaeri_core::ids::AnilistId,
+) -> Result<LocalState, kaeri_store::StoreError> {
+    Ok(LocalState {
+        progress: store.tracker_progress(anilist_id)?,
+        // Status and score are not yet set anywhere but the list-status and rate overlays,
+        // which write them straight to the outbox. Until that state is persisted locally, the
+        // merge sees "local has no opinion" — which is correct, and means the remote is left
+        // alone.
+        ..LocalState::default()
+    })
+}
+
+/// Queue progress for every configured tracker.
+///
+/// Called when an episode crosses the commit threshold. Failure to queue is logged, never
+/// propagated: a database hiccup must not interrupt playback.
+pub fn queue_progress(
+    store: &Store,
+    trackers: &[Arc<dyn Tracker>],
+    anilist_id: kaeri_core::ids::AnilistId,
+    now: i64,
+) {
+    let ids: Vec<String> = trackers.iter().map(|t| t.id().to_owned()).collect();
+    queue_progress_for(store, &ids, anilist_id, now);
+}
+
+/// Queue progress against tracker *ids*.
+///
+/// Takes ids rather than trackers because the caller is the playback loop, which has no reason
+/// to hold the tracker set — and this runs on a blocking thread, where moving a list of strings
+/// is simpler than threading trait objects through.
+pub fn queue_progress_for(
+    store: &Store,
+    trackers: &[String],
+    anilist_id: kaeri_core::ids::AnilistId,
+    now: i64,
+) {
+    let episodes = match store.tracker_progress(anilist_id) {
+        Ok(0) => return,
+        Ok(reached) => reached,
+        Err(e) => {
+            tracing::warn!(error = %e, "could not read the episode reached");
+            return;
+        }
+    };
+
+    let op = kaeri_core::traits::TrackOp::SetProgress { anilist_id, episode: episodes };
+    for tracker in trackers {
+        // Queued even for an unauthenticated tracker: the whole point of a durable outbox is
+        // that watching now and signing in later still syncs.
+        if let Err(e) = store.enqueue(tracker, &op, now) {
+            tracing::warn!(tracker, error = %e, "could not queue progress");
+        }
+    }
+}
+
+/// Give every op held for a missing id mapping another chance.
+///
+/// A mapping refresh already does this as part of writing the table; this is for anything
+/// else that learns the mappings may have changed and wants the next drain to look again.
+pub fn retry_deferred(store: &Store) -> u32 {
+    match store.wake_deferred() {
+        Ok(woken) => woken as u32,
+        Err(e) => {
+            tracing::warn!(error = %e, "could not wake deferred outbox ops");
+            0
+        }
+    }
+}
+
+/// Total queued ops across every tracker, for the `⇅` badge.
+pub fn depth(store: &Store) -> u32 {
+    store.outbox_depth(None).unwrap_or(0)
+}
+
+/// Claimed ops, for the Accounts overlay's "what is waiting" list.
+pub fn pending(store: &Store, tracker_id: &str, now: i64) -> Vec<OutboxEntry> {
+    store.claim_ready(tracker_id, now, 50).unwrap_or_default()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use kaeri_core::{
+        ids::AnilistId,
+        traits::{TrackOp, TrackedEntry, WatchStatus},
+    };
+    use kaeri_store::WatchEvent;
+    use std::sync::Mutex;
+
+    const HOSHIKUZU: AnilistId = AnilistId::new(154_587);
+
+    /// A tracker that records what it was asked to do and fails how the test tells it to.
+    struct MockTracker {
+        authenticated: bool,
+        /// Set to make `push` fail.
+        failure: Option<kaeri_core::Error>,
+        remote: Vec<TrackedEntry>,
+        pushed: Mutex<Vec<Vec<TrackOp>>>,
+        pulls: Mutex<u32>,
+        /// Titles this tracker has no id for, as a tracker keyed on its own ids would.
+        unmapped: Mutex<Vec<AnilistId>>,
+        /// Titles it answers for with success and does not apply.
+        ignores: Vec<AnilistId>,
+    }
+
+    impl MockTracker {
+        fn new() -> Self {
+            Self {
+                authenticated: true,
+                failure: None,
+                remote: Vec::new(),
+                pushed: Mutex::new(Vec::new()),
+                pulls: Mutex::new(0),
+                unmapped: Mutex::new(Vec::new()),
+                ignores: Vec::new(),
+            }
+        }
+
+        fn failing(error: kaeri_core::Error) -> Self {
+            Self { failure: Some(error), ..Self::new() }
+        }
+
+        fn with_remote(remote: Vec<TrackedEntry>) -> Self {
+            Self { remote, ..Self::new() }
+        }
+
+        fn unauthenticated() -> Self {
+            Self { authenticated: false, ..Self::new() }
+        }
+
+        fn batches(&self) -> Vec<Vec<TrackOp>> {
+            self.pushed.lock().unwrap().clone()
+        }
+    }
+
+    #[async_trait::async_trait]
+    impl Tracker for MockTracker {
+        fn id(&self) -> &str {
+            "mock"
+        }
+
+        fn is_authenticated(&self) -> bool {
+            self.authenticated
+        }
+
+        fn can_address(&self, op: &TrackOp) -> bool {
+            !self.unmapped.lock().unwrap().contains(&op.anilist_id())
+        }
+
+        async fn pull_library(&self) -> Result<Vec<TrackedEntry>, kaeri_core::Error> {
+            *self.pulls.lock().unwrap() += 1;
+            Ok(self.remote.clone())
+        }
+
+        async fn push_checked(
+            &self,
+            ops: &[TrackOp],
+        ) -> Result<Vec<AnilistId>, kaeri_core::Error> {
+            self.push(ops).await?;
+            Ok(ops
+                .iter()
+                .map(TrackOp::anilist_id)
+                .filter(|id| self.ignores.contains(id))
+                .collect())
+        }
+
+        async fn push(&self, ops: &[TrackOp]) -> Result<(), kaeri_core::Error> {
+            self.pushed.lock().unwrap().push(ops.to_vec());
+            match &self.failure {
+                Some(kaeri_core::Error::Auth(m)) => Err(kaeri_core::Error::Auth(m.clone())),
+                Some(e) => Err(kaeri_core::Error::Tracker {
+                    tracker: "mock".into(),
+                    message: e.to_string(),
+                }),
+                None => Ok(()),
+            }
+        }
+    }
+
+    fn store_with_completed(episodes: u32) -> Store {
+        let store = Store::open_in_memory().unwrap();
+        for ep in 1..=episodes {
+            store
+                .record_event(&WatchEvent {
+                    duration_secs: Some(1440.0),
+                    completed: true,
+                    at: 1_000 + i64::from(ep),
+                    ..WatchEvent::new(HOSHIKUZU, ep.to_string(), 1400.0)
+                })
+                .unwrap();
+        }
+        store
+    }
+
+    #[tokio::test]
+    async fn a_successful_drain_empties_the_queue() {
+        let store = Store::open_in_memory().unwrap();
+        store
+            .enqueue("mock", &TrackOp::SetProgress { anilist_id: HOSHIKUZU, episode: 12 }, 0)
+            .unwrap();
+
+        let tracker = MockTracker::new();
+        let report = drain(&store, &tracker, 100).await.unwrap();
+
+        assert_eq!(report.sent, 1);
+        assert_eq!(report.remaining, 0);
+        assert_eq!(tracker.batches().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn a_failed_push_leaves_the_op_queued_and_backs_off() {
+        // Losing a queued op on a transient failure is the worst thing this code could do.
+        let store = Store::open_in_memory().unwrap();
+        store
+            .enqueue("mock", &TrackOp::SetProgress { anilist_id: HOSHIKUZU, episode: 12 }, 0)
+            .unwrap();
+
+        let tracker = MockTracker::failing(kaeri_core::Error::Network("503".into()));
+        let report = drain(&store, &tracker, 100).await.unwrap();
+
+        assert_eq!(report.failed, 1);
+        assert_eq!(report.remaining, 1, "the op must survive a failure");
+        assert!(
+            store.claim_ready("mock", 101, 10).unwrap().is_empty(),
+            "should be waiting out a backoff rather than hammering"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_rejected_token_does_not_burn_the_backoff() {
+        // A bad token fails identically forever. Counting it as an attempt would push the
+        // retry delay to an hour, so a user who re-authorises would sit and wait for nothing.
+        let store = Store::open_in_memory().unwrap();
+        store
+            .enqueue("mock", &TrackOp::SetProgress { anilist_id: HOSHIKUZU, episode: 12 }, 0)
+            .unwrap();
+
+        let tracker = MockTracker::failing(kaeri_core::Error::Auth("bad token".into()));
+        let report = drain(&store, &tracker, 100).await.unwrap();
+
+        assert!(report.needs_reauth);
+        assert_eq!(report.failed, 0, "auth failure must not count as a retryable failure");
+        assert_eq!(
+            store.claim_ready("mock", 100, 10).unwrap().len(),
+            1,
+            "the op must be ready to send the moment the user re-authorises"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_rejected_credential_is_not_presented_again_every_minute() {
+        // The queue survives the rejection — that is the test above — but nothing stopped it
+        // being re-sent. `claim_ready` takes no lease and every `is_authenticated()` only asks
+        // whether a token is *present*, so an expired one kept the drain loop pushing the same
+        // batch at a rate-limited third party every tick, for as long as the app ran.
+        let store = Store::open_in_memory().unwrap();
+        store
+            .enqueue("mock", &TrackOp::SetProgress { anilist_id: HOSHIKUZU, episode: 12 }, 0)
+            .unwrap();
+        let tracker = MockTracker::failing(kaeri_core::Error::Auth("bad token".into()));
+
+        let first = drain(&store, &tracker, 100).await.unwrap();
+        assert!(first.needs_reauth);
+        assert_eq!(tracker.batches().len(), 1);
+
+        // A minute later, and an hour later: still held, still reported to the UI.
+        let again = drain(&store, &tracker, 160).await.unwrap();
+        assert!(again.needs_reauth, "the user still needs to sign in");
+        assert_eq!(tracker.batches().len(), 1, "a dead credential was presented again");
+        assert_eq!(again.remaining, 1, "and the queue is intact");
+
+        // Signing in lifts the hold, and the queue goes at once rather than waiting it out.
+        clear_reauth_hold(&store, "mock").unwrap();
+        let working = MockTracker::new();
+        let after = drain(&store, &working, 200).await.unwrap();
+        assert_eq!(after.sent, 1);
+    }
+
+    #[tokio::test]
+    async fn an_unauthenticated_tracker_keeps_the_queue_without_sending() {
+        // Watching with no account is supported, so the queue accumulates quietly and drains
+        // whenever an account appears.
+        let store = Store::open_in_memory().unwrap();
+        store
+            .enqueue("mock", &TrackOp::SetProgress { anilist_id: HOSHIKUZU, episode: 4 }, 0)
+            .unwrap();
+
+        let tracker = MockTracker::unauthenticated();
+        let report = drain(&store, &tracker, 100).await.unwrap();
+
+        assert!(report.did_nothing());
+        assert_eq!(report.remaining, 1);
+        assert!(tracker.batches().is_empty(), "must not call an unauthenticated tracker");
+    }
+
+    #[tokio::test]
+    async fn an_unmappable_title_is_held_not_lost_and_does_not_hold_up_the_rest() {
+        // The datasets have no MAL id for a title yet. Its op must not be skipped inside the
+        // push and deleted with the successful batch: such a title gains an id within weeks,
+        // by which time the update would be gone.
+        let store = Store::open_in_memory().unwrap();
+        let obscure = AnilistId::new(999_999);
+        store
+            .enqueue("mock", &TrackOp::SetProgress { anilist_id: obscure, episode: 3 }, 0)
+            .unwrap();
+        store
+            .enqueue("mock", &TrackOp::SetProgress { anilist_id: HOSHIKUZU, episode: 12 }, 1)
+            .unwrap();
+        let tracker = MockTracker::new();
+        tracker.unmapped.lock().unwrap().push(obscure);
+
+        let report = drain(&store, &tracker, 100).await.unwrap();
+        assert_eq!((report.sent, report.deferred, report.remaining), (1, 1, 1));
+        assert_eq!(
+            tracker.batches(),
+            vec![vec![TrackOp::SetProgress { anilist_id: HOSHIKUZU, episode: 12 }]],
+            "only the addressable op goes out"
+        );
+
+        // Later passes leave it alone: no request, no attempt counted against it.
+        let idle = drain(&store, &tracker, 10_000).await.unwrap();
+        assert!(idle.did_nothing());
+        assert_eq!(tracker.batches().len(), 1);
+
+        // The datasets gain the id; the refresh wakes the op and the next pass sends it.
+        tracker.unmapped.lock().unwrap().clear();
+        store.materialise_mapping("test", 0, &[], None, 20_000).unwrap();
+        let after = drain(&store, &tracker, 20_000).await.unwrap();
+        assert_eq!((after.sent, after.remaining), (1, 0));
+        assert_eq!(
+            tracker.batches()[1],
+            vec![TrackOp::SetProgress { anilist_id: obscure, episode: 3 }]
+        );
+    }
+
+    #[tokio::test]
+    async fn a_failed_refresh_still_leaves_a_way_to_retry_what_was_held() {
+        // A session whose startup refresh failed has no new mappings to wake anything with.
+        // A later refresh does it by itself; `retry_deferred` is the explicit lever.
+        let store = Store::open_in_memory().unwrap();
+        let obscure = AnilistId::new(999_999);
+        store
+            .enqueue("mock", &TrackOp::SetProgress { anilist_id: obscure, episode: 3 }, 0)
+            .unwrap();
+        let tracker = MockTracker::new();
+        tracker.unmapped.lock().unwrap().push(obscure);
+        drain(&store, &tracker, 100).await.unwrap();
+
+        tracker.unmapped.lock().unwrap().clear();
+        assert_eq!(retry_deferred(&store), 1);
+        assert_eq!(drain(&store, &tracker, 200).await.unwrap().sent, 1);
+    }
+
+    #[tokio::test]
+    async fn an_empty_queue_costs_no_request() {
+        let store = Store::open_in_memory().unwrap();
+        let tracker = MockTracker::new();
+        assert!(drain(&store, &tracker, 100).await.unwrap().did_nothing());
+        assert!(tracker.batches().is_empty());
+    }
+
+    #[tokio::test]
+    async fn a_binge_offline_drains_as_one_op_on_reconnect() {
+        // The whole offline story, end to end: twelve episodes with no network coalesce in the
+        // outbox and become a single push.
+        let store = Store::open_in_memory().unwrap();
+        for ep in 1..=12 {
+            store
+                .enqueue(
+                    "mock",
+                    &TrackOp::SetProgress { anilist_id: HOSHIKUZU, episode: ep },
+                    0,
+                )
+                .unwrap();
+        }
+        let tracker = MockTracker::new();
+        let report = drain(&store, &tracker, 100).await.unwrap();
+
+        assert_eq!(report.sent, 1);
+        assert_eq!(
+            tracker.batches()[0],
+            vec![TrackOp::SetProgress { anilist_id: HOSHIKUZU, episode: 12 }]
+        );
+    }
+
+    #[tokio::test]
+    async fn pushing_the_same_progress_twice_is_harmless() {
+        // The idempotence the batch-fate logic depends on.
+        let store = Store::open_in_memory().unwrap();
+        let op = TrackOp::SetProgress { anilist_id: HOSHIKUZU, episode: 12 };
+        store.enqueue("mock", &op, 0).unwrap();
+
+        let tracker = MockTracker::new();
+        drain(&store, &tracker, 100).await.unwrap();
+        store.enqueue("mock", &op, 200).unwrap();
+        let second = drain(&store, &tracker, 300).await.unwrap();
+
+        assert_eq!(second.sent, 1);
+        assert_eq!(tracker.batches().len(), 2);
+    }
+
+    #[tokio::test]
+    async fn a_pull_queues_local_progress_when_local_is_ahead() {
+        let store = store_with_completed(12);
+        let tracker = MockTracker::with_remote(vec![TrackedEntry {
+            anilist_id: HOSHIKUZU,
+            progress: 7,
+            status: WatchStatus::Current,
+            score: None,
+        }]);
+
+        let report = pull(&store, &tracker, 5_000, 0).await.unwrap();
+        assert_eq!(report.seen, 1);
+        assert_eq!(report.queued, 1);
+        assert_eq!(store.outbox_depth(Some("mock")).unwrap(), 1);
+    }
+
+    #[tokio::test]
+    async fn a_pull_adopts_the_remote_when_it_is_ahead() {
+        // "Watched two episodes on my phone" — no prompt, no conflict.
+        let store = store_with_completed(3);
+        let tracker = MockTracker::with_remote(vec![TrackedEntry {
+            anilist_id: HOSHIKUZU,
+            progress: 9,
+            status: WatchStatus::Current,
+            score: None,
+        }]);
+
+        let report = pull(&store, &tracker, 5_000, 0).await.unwrap();
+        assert_eq!(report.adopted, 1);
+        assert_eq!(report.queued, 0, "must not push a lower local value");
+        assert_eq!(store.outbox_depth(Some("mock")).unwrap(), 0);
+    }
+
+    #[tokio::test]
+    async fn a_pull_with_matching_progress_is_silent() {
+        let store = store_with_completed(12);
+        let tracker = MockTracker::with_remote(vec![TrackedEntry {
+            anilist_id: HOSHIKUZU,
+            progress: 12,
+            status: WatchStatus::Current,
+            score: None,
+        }]);
+
+        let report = pull(&store, &tracker, 5_000, 0).await.unwrap();
+        assert_eq!(report.queued, 0);
+        assert_eq!(report.adopted, 0);
+        assert!(report.conflicts.is_empty());
+    }
+
+    #[tokio::test]
+    async fn a_pull_does_not_re_queue_something_already_pending() {
+        // Pull-then-pull with no drain in between must not stack duplicate ops.
+        let store = store_with_completed(12);
+        let tracker = MockTracker::with_remote(vec![TrackedEntry {
+            anilist_id: HOSHIKUZU,
+            progress: 7,
+            status: WatchStatus::Current,
+            score: None,
+        }]);
+
+        pull(&store, &tracker, 5_000, 0).await.unwrap();
+        let second = pull(&store, &tracker, 6_000, 0).await.unwrap();
+
+        assert_eq!(second.queued, 0, "re-queued an op that was already pending");
+        assert_eq!(store.outbox_depth(Some("mock")).unwrap(), 1);
+    }
+
+    #[tokio::test]
+    async fn a_tracker_that_stays_behind_after_a_push_is_not_sent_the_same_value_again() {
+        // The echo loop: a pull queued 12, the drain sent it, the tracker answered 200 and
+        // went on reporting 7 — and the next pull queued 12 again, every fifteen minutes for
+        // a week. Once sent, a value waits for local progress to move past it.
+        let store = store_with_completed(12);
+        let tracker = MockTracker::with_remote(vec![TrackedEntry {
+            anilist_id: HOSHIKUZU,
+            progress: 7,
+            status: WatchStatus::Current,
+            score: None,
+        }]);
+
+        assert_eq!(pull(&store, &tracker, 5_000, 0).await.unwrap().queued, 1);
+        assert_eq!(drain(&store, &tracker, 5_001).await.unwrap().sent, 1);
+        let again = pull(&store, &tracker, 6_000, 5_000).await.unwrap();
+        assert_eq!(again.queued, 0, "queued a value the tracker already had");
+        assert_eq!(store.outbox_depth(Some("mock")).unwrap(), 0);
+
+        // Signing in again, perhaps to another account, starts the conversation over.
+        forget_pushed(&store, "mock");
+        assert_eq!(pull(&store, &tracker, 6_500, 6_000).await.unwrap().queued, 1);
+        drain(&store, &tracker, 6_501).await.unwrap();
+
+        // Episode 13 is new, and goes out.
+        store
+            .record_event(&WatchEvent {
+                duration_secs: Some(1440.0),
+                completed: true,
+                at: 7_000,
+                ..WatchEvent::new(HOSHIKUZU, "13", 1400.0)
+            })
+            .unwrap();
+        assert_eq!(pull(&store, &tracker, 8_000, 6_000).await.unwrap().queued, 1);
+    }
+
+    #[tokio::test]
+    async fn an_update_the_tracker_did_not_apply_is_reported_not_counted_as_sent() {
+        // A 200 that matched nothing used to count as success.
+        let store = Store::open_in_memory().unwrap();
+        store
+            .enqueue("mock", &TrackOp::SetProgress { anilist_id: HOSHIKUZU, episode: 12 }, 0)
+            .unwrap();
+        let tracker = MockTracker { ignores: vec![HOSHIKUZU], ..MockTracker::new() };
+
+        let report = drain(&store, &tracker, 100).await.unwrap();
+        assert_eq!((report.sent, report.ignored, report.remaining), (0, 1, 0));
+        assert!(!report.did_nothing());
+    }
+
+    #[tokio::test]
+    async fn an_unauthenticated_pull_is_a_no_op() {
+        let store = store_with_completed(5);
+        let tracker = MockTracker::unauthenticated();
+        let report = pull(&store, &tracker, 100, 0).await.unwrap();
+        assert_eq!(report.seen, 0);
+        assert_eq!(*tracker.pulls.lock().unwrap(), 0);
+    }
+
+    #[test]
+    fn progress_is_queued_from_completed_episodes_not_a_counter() {
+        // Rewatching must not inflate progress, so it comes from the completed episodes in
+        // the log.
+        let store = store_with_completed(12);
+        let tracker: Arc<dyn Tracker> = Arc::new(MockTracker::new());
+        queue_progress(&store, &[tracker], HOSHIKUZU, 9_000);
+
+        let queued = store.claim_ready("mock", 9_000, 10).unwrap();
+        assert_eq!(queued.len(), 1);
+        assert_eq!(queued[0].op, TrackOp::SetProgress { anilist_id: HOSHIKUZU, episode: 12 });
+
+        // Rewatching episode 1 adds an event but not an episode.
+        store
+            .record_event(&WatchEvent {
+                duration_secs: Some(1440.0),
+                completed: true,
+                at: 20_000,
+                ..WatchEvent::new(HOSHIKUZU, "1", 1400.0)
+            })
+            .unwrap();
+        queue_progress(&store, &[], HOSHIKUZU, 21_000);
+        assert_eq!(store.completed_episode_count(HOSHIKUZU).unwrap(), 12);
+    }
+
+    #[test]
+    fn progress_is_the_episode_reached_even_with_gaps_in_the_log() {
+        // Episodes 1–3 were watched elsewhere and 4–12 here. A distinct count queued 9, which
+        // walked a tracker that already said 12 backwards on the next pull's terms.
+        let store = Store::open_in_memory().unwrap();
+        for ep in 4..=12 {
+            store
+                .record_event(&WatchEvent {
+                    duration_secs: Some(1440.0),
+                    completed: true,
+                    at: 1_000 + i64::from(ep),
+                    ..WatchEvent::new(HOSHIKUZU, ep.to_string(), 1400.0)
+                })
+                .unwrap();
+        }
+        queue_progress_for(&store, &["mock".to_owned()], HOSHIKUZU, 9_000);
+        let queued = store.claim_ready("mock", 9_000, 10).unwrap();
+        assert_eq!(queued[0].op, TrackOp::SetProgress { anilist_id: HOSHIKUZU, episode: 12 });
+        assert_eq!(local_state(&store, HOSHIKUZU).unwrap().progress, 12);
+    }
+
+    #[tokio::test]
+    async fn a_gap_in_the_log_is_not_mistaken_for_the_remote_being_ahead() {
+        // The merge reads the same figure the queue sends. With a tally, nine episodes
+        // watched here against a remote at 12 read as "remote ahead" and adopted nothing
+        // new, while the same history queued 9 — two rules for one title.
+        let store = Store::open_in_memory().unwrap();
+        for ep in 4..=12 {
+            store
+                .record_event(&WatchEvent {
+                    duration_secs: Some(1440.0),
+                    completed: true,
+                    at: 1_000 + i64::from(ep),
+                    ..WatchEvent::new(HOSHIKUZU, ep.to_string(), 1400.0)
+                })
+                .unwrap();
+        }
+        let tracker = MockTracker::with_remote(vec![TrackedEntry {
+            anilist_id: HOSHIKUZU,
+            progress: 12,
+            status: WatchStatus::Current,
+            score: None,
+        }]);
+        let report = pull(&store, &tracker, 5_000, 0).await.unwrap();
+        assert_eq!((report.queued, report.adopted), (0, 0), "both sides already agree on 12");
+    }
+
+    #[test]
+    fn nothing_watched_queues_nothing() {
+        // Opening a title to read the synopsis must not touch anyone's list.
+        let store = Store::open_in_memory().unwrap();
+        let tracker: Arc<dyn Tracker> = Arc::new(MockTracker::new());
+        queue_progress(&store, &[tracker], HOSHIKUZU, 100);
+        assert_eq!(store.outbox_depth(None).unwrap(), 0);
+    }
+
+    #[test]
+    fn progress_is_queued_for_every_tracker_independently() {
+        // Per-tracker cursors are what stop a failing MAL push stalling AniList.
+        struct Named(&'static str);
+        #[async_trait::async_trait]
+        impl Tracker for Named {
+            fn id(&self) -> &str {
+                self.0
+            }
+            fn is_authenticated(&self) -> bool {
+                true
+            }
+            async fn pull_library(&self) -> Result<Vec<TrackedEntry>, kaeri_core::Error> {
+                Ok(Vec::new())
+            }
+            async fn push(&self, _: &[TrackOp]) -> Result<(), kaeri_core::Error> {
+                Ok(())
+            }
+        }
+
+        let store = store_with_completed(4);
+        let trackers: Vec<Arc<dyn Tracker>> =
+            vec![Arc::new(Named("anilist")), Arc::new(Named("mal"))];
+        queue_progress(&store, &trackers, HOSHIKUZU, 9_000);
+
+        assert_eq!(store.outbox_depth(Some("anilist")).unwrap(), 1);
+        assert_eq!(store.outbox_depth(Some("mal")).unwrap(), 1);
+        assert_eq!(depth(&store), 2);
+    }
+}

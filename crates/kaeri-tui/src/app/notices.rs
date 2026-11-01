@@ -1,0 +1,623 @@
+//! What the interface tells the user: toasts, the log behind them, and the work running.
+
+use std::time::{Duration, Instant};
+
+use kaeri_i18n::t;
+use kaeri_model::{
+    Msg,
+    bug_report::{BugError, BugReport, DeviceClass, issue_url},
+    command::Command,
+    downloads::DownloadState,
+    jobs::JobId,
+    notice::{Notice, NoticeHint, NoticeKind},
+};
+
+use super::App;
+use crate::{
+    keymap::{Action, Keymap},
+    nav::{Overlay, Section},
+};
+
+/// A notice on screen, for as long as it stays.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Toast {
+    pub notice: Notice,
+    /// Frames remaining before it disappears.
+    pub ttl: u16,
+}
+
+impl From<Notice> for Toast {
+    fn from(notice: Notice) -> Self {
+        // Failures stay up longer: they carry information the user may need to act on,
+        // and provider death is this app's defining failure mode.
+        let ttl = match notice.kind {
+            NoticeKind::Info => 90,
+            NoticeKind::Alert => 180,
+        };
+        Self { notice, ttl }
+    }
+}
+
+/// Log lines retained. Enough to cover a failover walk across every provider several times.
+pub const LOG_CAPACITY: usize = 200;
+
+/// One line in the Logs overlay.
+///
+/// The overlay exists because provider death is this app's defining failure mode, and a toast
+/// that has already faded cannot be read. When a source breaks at 2am, the first error in the
+/// sequence is the one that says why.
+#[derive(Debug, Clone, PartialEq)]
+pub struct LogRow {
+    pub kind: NoticeKind,
+    pub text: String,
+    /// Idle ticks at the time it was recorded, so lines can be shown relative to each other
+    /// without pulling a wall clock into the UI crate.
+    pub at: u64,
+    /// How many times in a row this exact line arrived. A retry loop or a burst of identical
+    /// failures is one line with a count, so it cannot push the line that explains it off
+    /// the screen.
+    pub count: u32,
+}
+
+/// An engine message in the language in use.
+pub fn say(msg: &Msg) -> String {
+    msg.text(&kaeri_i18n::localizer())
+}
+
+/// An info notice the terminal makes itself, from text it took from the catalogue.
+pub fn info(text: impl Into<String>) -> Notice {
+    Notice::info(Msg::verbatim(text))
+}
+
+/// An alert the terminal makes itself, from text it took from the catalogue.
+pub fn alert(text: impl Into<String>) -> Notice {
+    Notice::alert(Msg::verbatim(text))
+}
+
+/// A notice as the terminal says it: in the language in use, with what can be done about it, if
+/// the work said, put in the terminal's own words and keys.
+///
+/// The hint follows the notice as a sentence of its own. Its key is the one bound now, so a rebind
+/// changes what the line says.
+pub fn worded(notice: Notice, keymap: &Keymap) -> Notice {
+    let said = say(&notice.message());
+    let text = match notice.hint {
+        None => said,
+        Some(hint) => {
+            let hint = match hint {
+                NoticeHint::StopPlayback => {
+                    t::hint_stop_playback(&keymap.key_for(Action::StopPlayback).to_string())
+                }
+                NoticeHint::OpenStores => t::hint_open_stores(),
+                NoticeHint::KitsuCredentials => t::hint_kitsu_credentials(),
+                // Reached from the Sources screen and Settings; no key of its own here.
+                NoticeHint::UndoRemoveDemo
+                | NoticeHint::RemoveDemo
+                | NoticeHint::UndoSubtitleReset
+                | NoticeHint::ReportCrash => String::new(),
+            };
+            if hint.is_empty() { said } else { format!("{} {}", said, hint) }
+        }
+    };
+    Notice { kind: notice.kind, text, hint: None, msg: None }
+}
+
+impl App {
+    /// The bug report: the last problem the interface told of, in a pre-filled GitHub issue. The
+    /// link goes into the log whole, for a terminal that cannot open it, and the browser opens it.
+    pub(super) fn report_bug(&mut self) -> Option<Command> {
+        // With crash reports saved, the pane asks which to add; without, the last error goes alone.
+        if !self.crashes.is_empty() {
+            self.cursors.overlay.selected = 0;
+            self.nav.open_overlay(Overlay::BugReport);
+            return None;
+        }
+        let url = issue_url(&self.bug_report());
+        self.open_report(url)
+    }
+
+    /// Open `url`, a report, in the browser and keep it in the log.
+    fn open_report(&mut self, url: String) -> Option<Command> {
+        self.push_toast(info(t::toast_bug_report_opening()));
+        self.log(NoticeKind::Info, t::tui_log_bug_report_link(&url));
+        Some(Command::OpenExternal { url })
+    }
+
+    /// What a report from here says: this build, the sources, and the newest alert.
+    pub fn bug_report(&self) -> BugReport {
+        let error =
+            self.logs.iter().rev().find(|row| row.kind == NoticeKind::Alert).map(|row| {
+                BugError {
+                    kind: "message".into(), // i18n-skip
+                    message: row.text.clone(),
+                }
+            });
+        BugReport {
+            app_version: env!("CARGO_PKG_VERSION").into(),
+            platform: "Terminal".into(), // i18n-skip
+            os_version: format!("{} {}", std::env::consts::OS, std::env::consts::ARCH),
+            device: DeviceClass::Terminal,
+            build: if cfg!(debug_assertions) { "debug" } else { "release" }.into(), // i18n-skip
+            providers: self.providers.clone(),
+            error,
+            private: Vec::new(),
+            crashes: self.crashes.iter().map(|c| c.id.clone()).collect(),
+        }
+    }
+
+    /// The ids of crash reports deleted in Report a bug, once: whoever runs the app removes them
+    /// from disk.
+    pub fn take_deleted_crashes(&mut self) -> Vec<String> {
+        std::mem::take(&mut self.deleted_crashes)
+    }
+
+    /// Copy the report and the chosen crash, whole, to the clipboard.
+    pub(super) fn copy_report(&mut self) {
+        let report = self.bug_report();
+        let crashes: Vec<_> = match self.cursors.overlay.selected.checked_sub(1) {
+            Some(at) => self.crashes.get(at).cloned().into_iter().collect(),
+            None => Vec::new(),
+        };
+        self.clipboard = Some(kaeri_model::bug_report::report_text(&report, &crashes));
+        self.push_toast(info(t::report_copied()));
+    }
+
+    /// Delete the chosen crash report. The first row is the report alone and deletes nothing.
+    pub(super) fn delete_crash(&mut self) {
+        let Some(at) = self.cursors.overlay.selected.checked_sub(1) else { return };
+        if at >= self.crashes.len() {
+            return;
+        }
+        let gone = self.crashes.remove(at);
+        self.deleted_crashes.push(gone.id);
+        if self.crashes.is_empty() {
+            self.nav.close_overlay();
+        } else {
+            self.cursors.overlay.selected =
+                self.cursors.overlay.selected.min(self.crashes.len());
+        }
+    }
+
+    /// The Report a bug pane's Enter: the report alone on the first row, or with one crash.
+    pub(super) fn confirm_bug_report(&mut self) -> Option<Command> {
+        let report = self.bug_report();
+        let url = match self.cursors.overlay.selected.checked_sub(1) {
+            None => issue_url(&report),
+            Some(at) => {
+                let crash = self.crashes.get(at)?.clone();
+                kaeri_model::bug_report::issue_url_with(&report, &[crash])
+            }
+        };
+        self.nav.close_overlay();
+        self.open_report(url)
+    }
+
+    pub fn push_toast(&mut self, notice: Notice) {
+        // In the terminal's words, before it is logged or compared: the line on screen and in
+        // the log is the one with the key in it.
+        let notice = worded(notice, &self.keymap);
+        // Every toast is also a log line. A toast lives for a few seconds and the stack is
+        // capped at three, so without this the *third* provider failure silently erases the
+        // first — and when a source breaks, the earliest error is usually the one that explains
+        // the rest. This is the whole reason the Logs overlay exists.
+        self.log(notice.kind, notice.text.clone());
+        // The same message again is the same message, kept up longer rather than stacked: five
+        // presses of an arrow on Settings are one "saved", not a pile of identical lines. From
+        // anywhere in the stack, and brought up to newest: a copy left under another line was
+        // counted in the rule's "+N", so one message read as two.
+        if let Some(at) = self.toasts.iter().position(|t| t.notice == notice) {
+            self.toasts.remove(at);
+        }
+        // Cap the stack so a burst of provider failures cannot cover the screen.
+        if self.toasts.len() >= 3 {
+            self.toasts.remove(0);
+        }
+        self.toasts.push(Toast::from(notice));
+    }
+
+    /// Append to the log ring, newest last.
+    pub fn log(&mut self, kind: NoticeKind, text: String) {
+        // The same line again is a count on the last one, not another line.
+        if let Some(last) = self.logs.last_mut()
+            && last.kind == kind
+            && last.text == text
+        {
+            last.count += 1;
+            last.at = self.pulse;
+            return;
+        }
+        // Bounded: this runs for the life of the process and a provider retry loop could
+        // otherwise grow it without limit.
+        if self.logs.len() >= LOG_CAPACITY {
+            self.logs.remove(0);
+        }
+        self.logs.push(LogRow { kind, text, at: self.pulse, count: 1 });
+    }
+
+    /// Badge counts for the rail: work in flight, questions pending.
+    pub fn rail_counts(&self) -> Vec<(Section, u32)> {
+        let mut counts = Vec::new();
+        let active = self
+            .downloads
+            .iter()
+            .filter(|d| matches!(d.state, DownloadState::Active | DownloadState::Queued))
+            .count() as u32;
+        if active > 0 {
+            counts.push((Section::Downloads, active));
+        }
+        if !self.conflicts.is_empty() {
+            counts.push((Section::Accounts, self.conflicts.len() as u32));
+        }
+        counts
+    }
+
+    /// Age toasts by one frame.
+    pub fn tick_toasts(&mut self) {
+        for toast in &mut self.toasts {
+            toast.ttl = toast.ttl.saturating_sub(1);
+        }
+        self.toasts.retain(|t| t.ttl > 0);
+        self.tick_pending_reload();
+        // The loading pulse rides this tick rather than getting one of its own. The idle ticker
+        // already runs at 100 ms and already forces a repaint, so the animation is free — and
+        // 10 fps is more than a three-cell wave needs. A dedicated 60 fps ticker would burn a
+        // frame budget all the time to move three characters.
+        self.pulse = self.pulse.wrapping_add(1);
+    }
+
+    /// The frame the pulses and the skeleton's shimmer draw: the tick count, or with motion off
+    /// the first frame for good. The count itself keeps going, since notices are stamped by it.
+    pub fn pulse_frame(&self) -> u64 {
+        if self.settings.motion { self.pulse } else { 0 }
+    }
+
+    /// Start a [`Job`] for `task`, numbered here, if it is work the user will wait on.
+    ///
+    /// For a still frame or a test that stages one. The running app's jobs are numbered where
+    /// the work runs, which says so with [`Event::JobStarted`]; the runner ends each with
+    /// [`Event::JobDone`] when the work stops.
+    ///
+    /// [`Event::JobStarted`]: kaeri_model::event::Event::JobStarted
+    /// [`Event::JobDone`]: kaeri_model::event::Event::JobDone
+    pub fn begin_job(&mut self, task: &Command) -> Option<JobId> {
+        let label = task.activity()?;
+        self.next_job += 1;
+        let id = JobId::new(self.next_job);
+        self.start_job(id, label);
+        Some(id)
+    }
+
+    /// A job begun now, by this clock, so the time it shows counts from the moment the
+    /// interface learned of it.
+    pub(super) fn start_job(&mut self, id: JobId, label: String) {
+        self.jobs.push(Job { id, label, started: self.clock.now_instant(), note: None });
+    }
+
+    /// What a job is held up on, and until when: never more than [`LONGEST_HOLD`] from now,
+    /// whatever the server asked for.
+    pub(super) fn apply_job_note(&mut self, job: JobId, note: String, wait: Option<Duration>) {
+        let until = wait.map(|wait| self.clock.now_instant() + wait.min(LONGEST_HOLD));
+        if let Some(job) = self.jobs.iter_mut().find(|j| j.id == job) {
+            job.note = Some((note, until));
+        }
+    }
+
+    /// The jobs worth showing at `now`, newest first: the thing just asked for leads, and work
+    /// that has been running a while trails after it.
+    pub fn activity(&self, now: Instant) -> Vec<&Job> {
+        self.jobs
+            .iter()
+            .rev()
+            .filter(|job| now.saturating_duration_since(job.started) >= ACTIVITY_DELAY)
+            .collect()
+    }
+}
+
+/// The longest wait a job's note counts down from, as the rate limiter's own reset is capped.
+const LONGEST_HOLD: Duration = Duration::from_secs(3600);
+
+/// Something the user started and is waiting on, shown in the activity row until it ends.
+///
+/// The status line could only hold one sentence, written when work began and cleared — when it
+/// was cleared at all — by whichever path remembered to. So a message outlived its work, and two
+/// pieces of work overwrote each other. A job instead ends when the work that carries it ends,
+/// however it ends, and every running one is listed with how long it has taken.
+#[derive(Debug, Clone)]
+pub struct Job {
+    pub id: JobId,
+    pub label: String,
+    pub started: Instant,
+    /// What the work is held up on, when that is not the work itself — a rate-limit pause —
+    /// and until when, so the row can count it down rather than state a figure that goes stale.
+    pub note: Option<(String, Option<Instant>)>,
+}
+
+/// How long work runs before it earns a place in the activity row. Most loads answer well
+/// inside this, and a row that blinked in and out on every keypress would shift the screen for
+/// nothing; past it, the wait is long enough to wonder about.
+pub const ACTIVITY_DELAY: Duration = Duration::from_millis(600);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::app::fixtures::*;
+
+    fn crash(id: &str) -> kaeri_model::crash::CrashRecord {
+        use kaeri_model::crash::{CrashKind, CrashOrigin, CrashPlace, CrashRecord};
+        CrashRecord {
+            id: id.into(),
+            at_ms: 1,
+            uptime_secs: 3,
+            platform: "Terminal".into(),
+            os_version: "linux x86_64".into(),
+            app_version: "0.0.0".into(),
+            arch: "x86_64".into(),
+            place: CrashPlace::Home,
+            detail: String::new(),
+            kind: CrashKind::Panic,
+            reason: "a panic".into(),
+            frames: Vec::new(),
+            sources: 0,
+            demo_on: false,
+            origin: CrashOrigin::Saved,
+        }
+    }
+
+    #[test]
+    fn reporting_a_bug_opens_an_issue_with_the_last_alert_and_keeps_the_link() {
+        let mut a = app();
+        a.apply(Event::Toast(alert("no stream from lantern.example for \"Hidden Title\"")));
+        let Some(Command::OpenExternal { url }) = a.handle(Action::ReportBug, 5) else {
+            panic!("the browser opens");
+        };
+        assert!(url.starts_with(
+            "https://github.com/bitknox/kaeri/issues/new?template=bug_report.yml"
+        ));
+        assert!(url.contains("diagnostics="));
+        assert!(!url.contains("lantern") && !url.contains("Hidden"), "{url}");
+        let logged = a.logs.last().expect("the link is logged");
+        assert_eq!(logged.text, t::tui_log_bug_report_link(&url));
+        assert!(
+            a.toasts.last().is_some_and(|t| t.notice.text == t::toast_bug_report_opening())
+        );
+    }
+
+    #[test]
+    fn saved_crashes_are_offered_in_a_pane_and_one_goes_with_the_report() {
+        let mut a = app();
+        a.crashes = vec![crash("c1")];
+        assert!(a.handle(Action::ReportBug, 5).is_none());
+        assert_eq!(a.nav.overlay(), Some(&Overlay::BugReport));
+        assert_eq!(a.bug_report().crashes, vec!["c1".to_string()]);
+        a.handle(Action::Down, 5);
+        a.handle(Action::CopyReport, 5);
+        assert!(a.take_clipboard().is_some_and(|text| text.contains("0.0.0")));
+        let Some(Command::OpenExternal { url }) = a.handle(Action::Open, 5) else {
+            panic!("the browser opens");
+        };
+        assert!(url.contains("crash"), "{url}");
+        assert!(a.nav.overlay().is_none());
+    }
+
+    #[test]
+    fn a_saved_crash_can_be_deleted_from_the_pane() {
+        let mut a = app();
+        a.crashes = vec![crash("c1"), crash("c2")];
+        a.handle(Action::ReportBug, 5);
+        a.handle(Action::DeleteCrash, 5);
+        assert_eq!(a.crashes.len(), 2, "the first row is the report alone");
+        a.handle(Action::Down, 5);
+        a.handle(Action::DeleteCrash, 5);
+        assert_eq!(a.take_deleted_crashes(), vec!["c1".to_string()]);
+        a.handle(Action::DeleteCrash, 5);
+        assert_eq!(a.take_deleted_crashes(), vec!["c2".to_string()]);
+        assert!(a.nav.overlay().is_none(), "the pane closes with nothing left to pick");
+    }
+
+    #[test]
+    fn a_report_from_a_quiet_session_has_no_error() {
+        let report = app().bug_report();
+        assert!(report.error.is_none());
+        assert_eq!(report.device, DeviceClass::Terminal);
+    }
+
+    #[test]
+    fn a_hint_is_said_in_the_terminal_s_words_where_the_key_used_to_be() {
+        // Each notice as the work wrote it, then the hint as a sentence of its own.
+        let keymap = Keymap::new();
+        let said = |notice: Notice| worded(notice, &keymap).text;
+        let stalled = "mpv has not started playing after 20s. The source may have no data.";
+        assert_eq!(
+            said(alert(stalled).with_hint(NoticeHint::StopPlayback)),
+            format!("{stalled} Press x to stop playback.")
+        );
+        assert_eq!(
+            said(info("Plugin update ready: alpha.").with_hint(NoticeHint::OpenStores)),
+            format!("Plugin update ready: alpha. {}", t::hint_open_stores())
+        );
+        assert_eq!(
+            said(
+                info("Kitsu signs in from the Accounts screen.")
+                    .with_hint(NoticeHint::KitsuCredentials)
+            ),
+            format!("Kitsu signs in from the Accounts screen. {}", t::hint_kitsu_credentials())
+        );
+        assert_eq!(said(info("No hint.")), "No hint.");
+
+        // The key bound now, not the default.
+        let mut keymap = Keymap::new();
+        let rebound = [("stop_playback".to_owned(), "s".to_owned())].into_iter().collect();
+        assert!(keymap.apply_overrides(&rebound).is_empty());
+        let notice = alert("Stuck.").with_hint(NoticeHint::StopPlayback);
+        assert_eq!(worded(notice, &keymap).text, "Stuck. Press s to stop playback.");
+    }
+
+    #[test]
+    fn a_hinted_notice_is_shown_and_logged_as_the_terminal_words_it() {
+        let mut a = app();
+        let notice = info("Plugin update ready: alpha.").with_hint(NoticeHint::OpenStores);
+        let said = format!("Plugin update ready: alpha. {}", t::hint_open_stores());
+        a.apply(Event::Toast(notice.clone()));
+        a.apply(Event::Toast(notice));
+        assert_eq!(a.toasts.len(), 1, "the same notice again is the same line");
+        assert_eq!(a.toasts[0].notice.text, said);
+        assert_eq!(a.logs.last().unwrap().text, said);
+    }
+
+    #[test]
+    fn a_toast_already_up_is_refreshed_rather_than_counted_twice() {
+        let mut a = app();
+        for text in ["saved", "saved", "queued", "saved"] {
+            a.push_toast(info(text));
+        }
+        let up: Vec<&str> = a.toasts.iter().map(|t| t.notice.text.as_str()).collect();
+        assert_eq!(up, ["queued", "saved"], "one of each, the repeat newest");
+        // The log keeps every arrival, a run of repeats as one counted line.
+        let logged: Vec<(&str, u32)> =
+            a.logs.iter().map(|l| (l.text.as_str(), l.count)).collect();
+        assert_eq!(logged, [("saved", 2), ("queued", 1), ("saved", 1)]);
+    }
+
+    #[test]
+    fn a_toast_is_also_written_to_the_log() {
+        // The toast stack is capped at three and each lives for seconds; when a provider chain
+        // fails the *first* error is usually the one that explains the rest.
+        let mut a = app();
+        for i in 0..5 {
+            a.push_toast(alert(format!("failure {i}")));
+        }
+        assert_eq!(a.toasts.len(), 3, "the stack is still capped");
+        assert_eq!(a.logs.len(), 5, "but nothing was lost");
+        assert!(a.logs[0].text.contains("failure 0"));
+
+        a.handle(Action::ShowLogs, 10);
+        assert_eq!(a.nav.overlay(), Some(&Overlay::Logs));
+    }
+
+    /// Started long enough ago to be shown.
+    fn aged(a: &mut App, id: JobId, by: Duration) {
+        let now = a.clock.now_instant();
+        let job = a.jobs.iter_mut().find(|j| j.id == id).expect("a running job");
+        job.started = now.checked_sub(by).expect("a clock that far back");
+    }
+
+    #[test]
+    fn only_work_someone_waits_on_becomes_a_job() {
+        let mut a = app();
+        assert!(a.begin_job(&Command::LoadSeasonal).is_some());
+        assert!(
+            a.begin_job(&Command::LoadSources { id: AnilistId::new(1), episode: "3".into() })
+                .is_some()
+        );
+        // Outbox writes and player commands finish as they are asked; a row for them would only
+        // ever flash.
+        assert!(
+            a.begin_job(&Command::SetScore { id: AnilistId::new(1), score: 8.0 }).is_none()
+        );
+        assert!(a.begin_job(&Command::Player(PlayerCommand::TogglePause)).is_none());
+        assert_eq!(a.jobs.len(), 2);
+    }
+
+    #[test]
+    fn a_job_numbered_where_the_work_runs_is_shown_as_one_begun_here() {
+        let mut a = app();
+        let id = JobId::new(41);
+        let before = a.clock.now_instant();
+        a.apply(Event::JobStarted { job: id, activity: "checking providers".into() });
+        assert_eq!(a.jobs.len(), 1);
+        assert_eq!((a.jobs[0].id, a.jobs[0].label.as_str()), (id, "checking providers"));
+        let started = a.jobs[0].started;
+        assert!(before <= started && started <= a.clock.now_instant(), "timed from then");
+        a.apply(Event::JobNote {
+            job: id,
+            note: kaeri_model::Msg::verbatim("AniList limit"),
+            wait: None,
+        });
+        assert!(a.jobs[0].note.is_some());
+        a.apply(Event::JobDone(id));
+        assert!(a.jobs.is_empty());
+    }
+
+    /// The wait comes from a server's Retry-After, by way of the engine. However long it says,
+    /// the deadline is a time this clock can hold, and no more than an hour away, as the rate
+    /// limiter's own reset is.
+    #[test]
+    fn a_job_held_for_ever_is_held_for_an_hour_at_most() {
+        let mut a = app();
+        let id = a.begin_job(&Command::CheckProviders).unwrap();
+        for wait in [Duration::MAX, Duration::from_secs(u64::MAX), Duration::from_secs(86_400)]
+        {
+            a.apply(Event::JobNote {
+                job: id,
+                note: kaeri_model::Msg::verbatim("AniList limit"),
+                wait: Some(wait),
+            });
+            let until =
+                a.jobs[0].note.as_ref().and_then(|(_, until)| *until).expect("a deadline");
+            let held = until.saturating_duration_since(a.clock.now_instant());
+            assert!(held <= Duration::from_secs(3600), "held {held:?} for a wait of {wait:?}");
+        }
+    }
+
+    #[test]
+    fn a_job_runs_until_its_work_says_it_ended() {
+        let mut a = app();
+        let id = a.begin_job(&Command::CheckProviders).unwrap();
+        a.apply(Event::JobNote {
+            job: id,
+            note: kaeri_model::Msg::verbatim("AniList limit"),
+            wait: None,
+        });
+        assert_eq!(a.jobs[0].note.as_ref().map(|(n, _)| n.as_str()), Some("AniList limit"));
+
+        a.apply(Event::JobDone(id));
+        assert!(a.jobs.is_empty());
+        // A second end, or one for a job long gone, is harmless.
+        a.apply(Event::JobDone(id));
+    }
+
+    #[test]
+    fn work_earns_the_row_only_once_it_has_taken_a_while() {
+        let mut a = app();
+        let older = a.begin_job(&Command::LoadCalendar).unwrap();
+        let newer = a.begin_job(&Command::CheckProviders).unwrap();
+        assert!(a.activity(a.clock.now_instant()).is_empty(), "quick answers never show");
+
+        aged(&mut a, older, Duration::from_secs(5));
+        aged(&mut a, newer, Duration::from_secs(1));
+        let shown: Vec<_> = a.activity(a.clock.now_instant()).iter().map(|j| j.id).collect();
+        assert_eq!(shown, [newer, older], "the thing just asked for leads");
+    }
+
+    #[test]
+    fn toasts_expire_and_never_stack_beyond_three() {
+        let mut a = app();
+        for i in 0..6 {
+            a.push_toast(info(format!("message {i}")));
+        }
+        assert_eq!(a.toasts.len(), 3, "a burst of failures must not cover the screen");
+        assert!(a.toasts[0].notice.text.contains('3'), "oldest are dropped first");
+
+        for _ in 0..200 {
+            a.tick_toasts();
+        }
+        assert!(a.toasts.is_empty(), "toasts must expire");
+    }
+
+    #[test]
+    fn alerts_stay_up_longer_than_info() {
+        assert!(Toast::from(alert("provider down")).ttl > Toast::from(info("switched")).ttl);
+    }
+
+    #[test]
+    fn a_repeated_toast_is_kept_up_rather_than_stacked() {
+        let mut a = app();
+        for _ in 0..5 {
+            a.push_toast(info("saved quality"));
+        }
+        assert_eq!(a.toasts.len(), 1, "one message, said once");
+        assert_eq!(a.logs[0].count, 5, "the log still counts every one");
+        a.push_toast(info("saved theme"));
+        assert_eq!(a.toasts.len(), 2);
+    }
+}

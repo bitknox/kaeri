@@ -1,0 +1,50 @@
+/* The 404 page. Nagare looks left and right once, then stays still. */
+
+.nf {
+	max-width: 720px;
+	margin: 0 auto;
+	padding: 96px 32px 160px;
+}
+
+.nf h1 {
+	margin-top: 32px;
+	font-size: clamp(34px, 3vw + 16px, 48px);
+	line-height: 1.1;
+}
+
+.nf p {
+	margin: 16px 0 0;
+	font-size: 19px;
+	line-height: 1.55;
+	color: var(--ani-dim);
+}
+
+.nf .nf-actions {
+	margin-top: 32px;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+}
+
+.nf-nagare {
+	display: block;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.nf-nagare {
+		animation: nf-look 1800ms step-end 500ms 1 both;
+	}
+}
+
+@keyframes nf-look {
+	0% { transform: scaleX(1); }
+	20% { transform: scaleX(-1); }
+	55% { transform: scaleX(1); }
+	100% { transform: scaleX(1); }
+}
+
+@media (max-width: 700px) {
+	.nf {
+		padding: 56px 16px 96px;
+	}
+}

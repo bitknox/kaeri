@@ -1,0 +1,347 @@
+/* The Features page. The bands, frames and diagrams it shares with Home are in pages.css. */
+
+.f-hero {
+	padding: 72px 32px 104px;
+}
+
+.f-in {
+	max-width: 1200px;
+	margin: 0 auto;
+}
+
+.f-hero-row {
+	margin-top: 18px;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px 48px;
+}
+
+.f-hero-row .k-lede {
+	margin: 0;
+	max-width: 640px;
+}
+
+.f-hero-row .k-arrow {
+	font-size: 17px;
+}
+
+.f-sect {
+	padding: 0 32px 120px;
+}
+
+.band + .f-sect {
+	padding-top: 120px;
+}
+
+.f-sect .band-head {
+	padding-top: 0;
+}
+
+/* A hairline between the hero and the first section, as on the board. */
+.f-hero + .f-sect > .f-in {
+	padding-top: 56px;
+	border-top: 1px solid var(--ani-rule);
+}
+
+.f-fig {
+	margin: 56px 0 0;
+}
+
+.f-hero .f-fig {
+	margin-top: 56px;
+}
+
+.f-fig figcaption,
+.f-compare figcaption {
+	margin-top: 14px;
+	font-size: 14px;
+	line-height: 1.5;
+	color: var(--ani-dim);
+}
+
+.f-fig figcaption a,
+.f-compare figcaption a {
+	color: var(--ani-dim);
+}
+
+.f-pair {
+	position: relative;
+	aspect-ratio: 1200 / 700;
+}
+
+.f-win {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 84%;
+	border-radius: 14px;
+	border: 1px solid var(--ani-bezel-edge);
+}
+
+.f-phone {
+	right: 0;
+	top: 14%;
+	width: 22%;
+	padding: 7px;
+	border-radius: 36px;
+}
+
+.f-phone img {
+	border-radius: 30px;
+}
+
+.f-compare {
+	max-width: 1080px;
+	margin: 48px auto 0;
+}
+
+.f-remote {
+	display: flex;
+	align-items: flex-end;
+	gap: 40px;
+}
+
+.f-remote .bezel {
+	position: static;
+}
+
+.f-remote-phone {
+	flex: 0 0 min(24%, 280px);
+	padding: 6px;
+	border-radius: 34px;
+}
+
+.f-remote-phone img {
+	border-radius: 28px;
+}
+
+.f-remote-tv {
+	flex: 1;
+	padding: 10px;
+	border-radius: 8px;
+}
+
+.f-remote-tv img {
+	border-radius: 4px;
+	aspect-ratio: 1920 / 1080;
+}
+
+.small-grid {
+	margin-top: 48px;
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
+	gap: 48px 40px;
+}
+
+.small-grid > div {
+	padding-top: 24px;
+	border-top: 1px solid var(--ani-rule);
+}
+
+.small-grid dl {
+	margin: 16px 0 0;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+
+.small-grid dt {
+	font-size: 16px;
+	font-weight: 600;
+}
+
+.small-grid dd {
+	margin: 2px 0 0;
+	font-size: 15px;
+	line-height: 1.5;
+	color: var(--ani-dim);
+}
+
+.small-grid dd code {
+	font-size: 14px;
+}
+
+.f-matrix {
+	padding-bottom: 136px;
+}
+
+.matrix-lede {
+	margin: 20px 0 0;
+	max-width: 820px;
+	font-size: 19px;
+	line-height: 1.55;
+	color: var(--ani-dim);
+}
+
+.matrix-key {
+	margin: 28px 0 0;
+	padding: 0;
+	list-style: none;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px 28px;
+	font-size: 15px;
+	color: var(--ani-dim);
+}
+
+.matrix-key li {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.mark {
+	display: inline-block;
+	flex: none;
+}
+
+.mark-available {
+	width: 10px;
+	height: 10px;
+	background: var(--ani-text);
+}
+
+.mark-development {
+	width: 10px;
+	height: 10px;
+	border: 2px solid var(--ani-dim);
+}
+
+.mark-none {
+	width: 10px;
+	height: 2px;
+	background: var(--ani-rule);
+	vertical-align: middle;
+}
+
+.matrix-scroll {
+	margin-top: 32px;
+	overflow-x: auto;
+}
+
+.matrix {
+	width: 100%;
+	min-width: 760px;
+	border-collapse: collapse;
+}
+
+.matrix th,
+.matrix td {
+	text-align: center;
+	border-bottom: 1px solid var(--ani-rule-faint);
+}
+
+.matrix thead th {
+	padding: 0 8px 12px;
+	font-size: 14px;
+	font-weight: 600;
+	width: 9%;
+	border-bottom-color: var(--ani-rule);
+}
+
+.matrix thead th:first-child,
+.matrix tbody th[scope='row'] {
+	text-align: left;
+	width: auto;
+}
+
+.matrix tbody th[scope='row'] {
+	padding: 12px 16px 12px 0;
+	font-weight: 500;
+	font-size: 15px;
+}
+
+.matrix td {
+	padding: 12px 8px;
+}
+
+.matrix .matrix-group th {
+	padding: 28px 0 10px;
+	text-align: left;
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--ani-dim);
+	border-bottom-color: var(--ani-rule);
+}
+
+.cell-text {
+	font-size: 13px;
+	color: var(--ani-dim);
+}
+
+.matrix-note {
+	margin: 20px 0 0;
+	font-size: 15px;
+	color: var(--ani-dim);
+}
+
+.matrix-cta {
+	margin: 40px 0 0;
+	display: flex;
+	align-items: center;
+	gap: 20px 28px;
+	flex-wrap: wrap;
+}
+
+@media (max-width: 700px) {
+	.band + .f-sect {
+		padding-top: 72px;
+	}
+
+	.f-hero {
+		padding: 28px 16px 56px;
+	}
+
+	.f-sect {
+		padding: 0 16px 72px;
+	}
+
+	.f-hero-row .k-arrow {
+		font-size: 16px;
+	}
+
+	.f-fig {
+		margin-top: 32px;
+	}
+
+	.f-pair {
+		aspect-ratio: auto;
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+	}
+
+	.f-win {
+		position: static;
+		width: 100%;
+	}
+
+	.f-phone {
+		position: static;
+		width: 190px;
+		margin-inline: auto;
+	}
+
+	.f-remote {
+		flex-direction: column;
+		align-items: center;
+		gap: 24px;
+	}
+
+	.f-remote-phone {
+		flex: none;
+		width: 190px;
+	}
+
+	.f-remote-tv {
+		width: 100%;
+		flex: none;
+	}
+
+	.matrix-scroll {
+		margin-inline: -16px;
+		padding-inline: 16px;
+	}
+}

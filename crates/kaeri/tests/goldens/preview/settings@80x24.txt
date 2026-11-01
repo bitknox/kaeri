@@ -1,0 +1,24 @@
+Kaeri                                                      plugins ·  ·  kitsu ○
+────────────────────────────────────────────────────────────────────────────────
+ ▸ │  Appearance  ───────────────────────────────────────────────────────────
+ ▤ │  ▌ Theme                       Adaptive
+ ▦ │    Motion                      On
+ / │    Titles                      AniList's choice
+ ▥ │    Play trailers               Always
+ ↓ │
+ ◇ │  Playback  ─────────────────────────────────────────────────────────────
+ ◎ │    Audio                       Subbed
+▌≡ │    Quality                     1080p
+ ⇄ │    Subtitles                   eng
+   │    Counts as watched at        85%
+   │    Auto-play next              On
+   │    Skip opening automatically  On
+   │    Skip recaps automatically   Off
+   │    Ask about skips by hand     On
+   │    Share skips with AniSkip    Off
+   │    Skip filler automatically   Off
+   │
+   │
+   │
+────────────────────────────────────────────────────────────────────────────────
+plugins · Subbed · 1080p                                      ←→ change   ? keys

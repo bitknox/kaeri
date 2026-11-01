@@ -1,0 +1,550 @@
+/* The Home page, and the parts it shares with Features and Download: the bands, the device frames,
+   the download cards, the FAQ and the open-source band. */
+
+/* ── Bands ────────────────────────────────────────────────────────────── */
+
+.band {
+	padding: 120px 32px;
+}
+
+.band-green {
+	background: var(--ani-band-green);
+}
+
+.band-red {
+	background: var(--ani-band-red);
+}
+
+.band-plum {
+	background: var(--ani-band-plum);
+}
+
+.band-blue {
+	background: var(--ani-band-blue);
+}
+
+.band-plain {
+	background: var(--ani-band);
+}
+
+.band-in {
+	max-width: 1200px;
+	margin: 0 auto;
+}
+
+.band-rule {
+	border-top: 1px solid var(--ani-rule);
+	padding-top: 40px;
+}
+
+.band-rule-violet {
+	border-top-color: var(--ani-rule-violet);
+}
+
+.band-rule-sky {
+	border-top-color: var(--ani-rule-sky);
+}
+
+.band-head {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
+	gap: 24px 64px;
+	align-items: end;
+}
+
+.band-head p {
+	margin: 0;
+	font-size: 19px;
+	line-height: 1.55;
+	color: var(--ani-dim);
+}
+
+.lead {
+	color: var(--ani-text);
+	font-weight: 600;
+}
+
+.band figure {
+	margin: 48px 0 0;
+}
+
+.band figcaption,
+.devices figcaption {
+	margin-top: 14px;
+	font-size: 14px;
+	line-height: 1.5;
+	color: var(--ani-dim);
+}
+
+.band figcaption a,
+.site-credit a {
+	color: var(--ani-dim);
+}
+
+.crop {
+	position: relative;
+	overflow: hidden;
+	border-radius: 16px;
+	background: var(--ani-crop-a);
+}
+
+.crop-b {
+	background: var(--ani-crop-b);
+}
+
+.k-body .crop img,
+.k-body .fx-crop img {
+	position: absolute;
+	max-width: none;
+	height: auto;
+}
+
+.band .player-fig {
+	max-width: 1040px;
+	margin-inline: auto;
+}
+
+.player-bezel {
+	padding: 10px;
+	border-radius: 54px;
+	background: var(--ani-bezel);
+	border: 1px solid var(--ani-bezel-edge);
+}
+
+.player-bezel img {
+	display: block;
+	width: 100%;
+	aspect-ratio: 2622 / 1206;
+	border-radius: 44px;
+}
+
+.fx-grid {
+	margin-top: 48px;
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+	gap: 24px;
+}
+
+.band .fx-grid figure {
+	margin: 0;
+}
+
+.fx-crop {
+	position: relative;
+	overflow: hidden;
+	aspect-ratio: 4 / 5;
+	border-radius: 14px;
+	background: var(--ani-crop-a);
+}
+
+.fx-grid figcaption {
+	margin-top: 12px;
+	font-size: 15px;
+	color: var(--ani-text);
+}
+
+.more {
+	margin: 40px 0 0;
+}
+
+/* A card's name is an h2 on the Download page and an h3 on Home, and looks the same on both. */
+.k-body .dl-card .dl-name {
+	margin: 0;
+	font-family: inherit;
+	font-size: 20px;
+	font-weight: 600;
+	line-height: inherit;
+	letter-spacing: normal;
+}
+
+/* ── The hero ─────────────────────────────────────────────────────────── */
+
+.hero {
+	padding: 72px 32px 104px;
+}
+
+.hero-copy {
+	max-width: 760px;
+	margin: 0 auto;
+	text-align: center;
+}
+
+.hero-copy .k-lede {
+	max-width: 620px;
+	margin-inline: auto;
+}
+
+.hero-actions {
+	margin-top: 30px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 16px 28px;
+	flex-wrap: wrap;
+	font-size: 17px;
+}
+
+.hero-note {
+	margin: 14px 0 0;
+	font-size: 14px;
+	color: var(--ani-dim);
+}
+
+.devices {
+	max-width: 1280px;
+	margin: 64px auto 0;
+}
+
+.devices-stage {
+	position: relative;
+	aspect-ratio: 1280 / 880;
+}
+
+.dev-mac {
+	position: absolute;
+	left: 6.25%;
+	top: 0;
+	width: 87.5%;
+}
+
+.bezel {
+	position: absolute;
+	background: var(--ani-bezel);
+	border: 1px solid var(--ani-bezel-edge);
+}
+
+.bezel img {
+	display: block;
+	width: 100%;
+}
+
+.dev-ipad {
+	left: 0;
+	top: 52%;
+	width: 34%;
+	padding: 9px;
+	border-radius: 26px;
+}
+
+.dev-ipad img {
+	border-radius: 17px;
+}
+
+.dev-phone {
+	left: 82%;
+	top: 45%;
+	width: 17%;
+	padding: 6px;
+	border-radius: 36px;
+}
+
+.dev-phone img {
+	border-radius: 30px;
+}
+
+.devices figcaption {
+	margin-top: 28px;
+	text-align: center;
+}
+
+/* ── Download cards ───────────────────────────────────────────────────── */
+
+.dl-sect {
+	padding: 136px 32px 0;
+}
+
+.dl-in {
+	max-width: 1200px;
+	margin: 0 auto;
+}
+
+.k-body .dl-title {
+	text-align: center;
+	font-size: clamp(36px, 4vw + 14px, 56px);
+	line-height: 1.1;
+}
+
+.dl-version {
+	margin: 16px 0 0;
+	text-align: center;
+	font-size: 19px;
+	color: var(--ani-dim);
+}
+
+.dl-version a {
+	color: var(--ani-text);
+}
+
+.dl-grid {
+	margin-top: 72px;
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
+	gap: 40px 32px;
+}
+
+.dl-col {
+	border-top: 1px solid var(--ani-rule);
+	padding-top: 28px;
+	display: flex;
+	flex-direction: column;
+	gap: 44px;
+}
+
+.dl-needs {
+	margin: 8px 0 0;
+	font-size: 15px;
+	line-height: 1.5;
+	color: var(--ani-dim);
+}
+
+.dl-act {
+	margin: 18px 0 0;
+}
+
+.dl-card pre {
+	font-size: 14px;
+	margin-top: 18px;
+}
+
+.dl-suggested {
+	margin: 10px 0 0;
+	font-size: 14px;
+	color: var(--ani-dim);
+}
+
+.dl-next {
+	display: grid;
+	grid-template-rows: 1fr;
+	margin-top: 18px;
+}
+
+.dl-next-in {
+	min-height: 0;
+	overflow: hidden;
+}
+
+.dl-next-body {
+	padding: 16px;
+	border-radius: 10px;
+	background: var(--ani-raised);
+	font-size: 15px;
+	line-height: 1.5;
+}
+
+.dl-next-body h4 {
+	margin: 0;
+	font-size: 15px;
+	font-weight: 600;
+}
+
+.dl-next-body ol {
+	margin: 10px 0 0;
+	padding: 0 0 0 20px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.dl-next-body p {
+	margin: 12px 0 0;
+}
+
+.dl-next-body pre {
+	margin: 8px 0 0;
+	background: var(--ani-ground);
+}
+
+/* Without a script the panels stay shut; with one, a click opens the platform's own. */
+.dl-next {
+	grid-template-rows: 0fr;
+}
+
+.dl-next.open {
+	grid-template-rows: 1fr;
+}
+
+.dl-next:not(.open) .dl-next-in {
+	visibility: hidden;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.dl-next {
+		transition: grid-template-rows 220ms var(--ease);
+	}
+
+	.dl-next:not(.open) .dl-next-in {
+		transition: visibility 0s linear 220ms;
+	}
+}
+
+.dl-more {
+	margin-top: 64px;
+	display: flex;
+	justify-content: center;
+	gap: 12px 32px;
+	flex-wrap: wrap;
+	font-size: 15px;
+}
+
+/* ── The FAQ ──────────────────────────────────────────────────────────── */
+
+.faq-sect {
+	padding: 120px 32px 136px;
+}
+
+.faq {
+	max-width: 800px;
+	margin: 0 auto;
+}
+
+.k-body .faq-title {
+	font-size: clamp(30px, 2vw + 18px, 40px);
+	line-height: 1.1;
+	letter-spacing: -0.01em;
+}
+
+.faq-list {
+	margin-top: 32px;
+	border-top: 1px solid var(--ani-rule);
+}
+
+/* ── Open source ──────────────────────────────────────────────────────── */
+
+.oss {
+	background: var(--ani-band);
+	padding: 128px 32px;
+}
+
+.oss-in {
+	max-width: 720px;
+	margin: 0 auto;
+	text-align: center;
+}
+
+.oss-in img {
+	display: block;
+	margin: 0 auto;
+	width: 60px;
+	height: 60px;
+	border-radius: 14px;
+	image-rendering: pixelated;
+}
+
+.k-body .oss-in h2 {
+	margin-top: 28px;
+	font-size: clamp(32px, 3vw + 12px, 48px);
+	line-height: 1.1;
+}
+
+.oss-in p {
+	margin: 18px 0 0;
+	font-size: 19px;
+	line-height: 1.55;
+	color: var(--ani-dim);
+	text-wrap: pretty;
+}
+
+.oss-actions {
+	margin-top: 32px;
+	display: flex;
+	justify-content: center;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+/* ── Phones ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 700px) {
+	.band {
+		padding: 72px 16px;
+	}
+
+	.band figure {
+		margin-top: 32px;
+	}
+
+	.band-head p {
+		font-size: 17px;
+	}
+
+	.hero {
+		padding: 28px 16px 56px;
+	}
+
+	.hero-actions {
+		flex-direction: column;
+		margin-top: 24px;
+	}
+
+	.devices {
+		margin-top: 32px;
+	}
+
+	.devices-stage {
+		aspect-ratio: auto;
+		height: 400px;
+		overflow: hidden;
+	}
+
+	.dev-mac {
+		left: 20px;
+		width: 560px;
+	}
+
+	.dev-ipad {
+		display: none;
+	}
+
+	.dev-phone {
+		left: 216px;
+		top: 96px;
+		width: 154px;
+		padding: 5px;
+		border-radius: 30px;
+	}
+
+	.dev-phone img {
+		border-radius: 25px;
+	}
+
+	.devices figcaption {
+		text-align: left;
+		margin-top: 8px;
+		position: absolute;
+		left: 16px;
+		width: 180px;
+	}
+
+	.devices {
+		position: relative;
+	}
+
+	.player-bezel {
+		padding: 6px;
+		border-radius: 28px;
+	}
+
+	.player-bezel img {
+		border-radius: 22px;
+	}
+
+	.dl-sect {
+		padding: 80px 16px 0;
+	}
+
+	.dl-grid {
+		margin-top: 40px;
+	}
+
+	.faq-sect {
+		padding: 72px 16px 80px;
+	}
+
+	.oss {
+		padding: 80px 16px;
+	}
+
+	.site-footer {
+		padding-inline: 16px;
+	}
+}

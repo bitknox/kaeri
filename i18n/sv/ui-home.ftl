@@ -1,0 +1,41 @@
+home-title = Hem
+home-resume-episode = Fortsätt avsnitt { $episode }
+home-play-episode = Spela avsnitt { $episode }
+home-adding = Lägger till
+home-details = Detaljer
+home-more = Mer
+home-mark-watched = Markera avsnitt { $episode } som sett
+home-marked-watched = Avsnitt { $episode } markerat som sett
+home-remove-continue = Ta bort från { -continue-cap }
+home-continue-count = { $count ->
+    [one] 1 serie
+   *[other] { $count } serier
+ }
+home-view-all = Visa alla
+home-full-calendar = Hela kalendern
+home-today = Idag
+home-nothing-airing = Inget sänds
+home-day-more = { $count } till
+home-seasonal = Säsong
+home-search = Sök
+home-end = Det var allt för nu. Säsong och Kalender har de fullständiga listorna.
+home-end-signed-out = Logga in på AniList för att hämta din lista och Planering.
+home-sign-in = Logga in på AniList
+home-end-no-sources = Lägg till en { -source } för att spela från Hem. { -plugin-store-cap-pl } har några att välja bland.
+home-not-found = Finns inte i dina { -source-pl }
+home-failed = Kunde inte läsa in förslag
+home-try-again = Försök igen
+home-loading = Läser in förslag
+home-offline = Offline. Visar Hem från { $time }.
+home-offline-empty-title = Du är offline
+home-offline-empty-body = Hem behöver en anslutning första gången den öppnas. Nedladdningar spelas fortfarande.
+home-open-downloads = Öppna Nedladdningar
+settings-hidden-titles = Dolda titlar
+settings-hidden-titles-body = Titlar du markerat som Inte intresserad. De hålls borta från Hem och { -up-next-cap } för dig tills du återställer dem.
+settings-hidden-on = Dold { $date }
+settings-hidden-until-airs = Kommer tillbaka när den sänds
+settings-restore = Återställ
+settings-hidden-empty = Inget är dolt. Titlar du markerar som Inte intresserad visas här.
+home-previous = Bakåt
+home-next = Nästa
+home-synced = AniList synkat

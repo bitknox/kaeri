@@ -1,0 +1,128 @@
+---
+import '../../styles/pages.css';
+import '../../styles/download.css';
+import DownloadGrid from '../../components/DownloadGrid.astro';
+import Faq from '../../components/Faq.astro';
+import Pic from '../../components/Pic.astro';
+import Page from '../../layouts/Page.astro';
+import { FILES, INSTALL_GUIDE, RELEASES, SIDESTORE_SOURCE } from '../../data/site';
+import { VERSION } from '../../data/version';
+import { localePaths, useSite } from '../../i18n/site';
+
+export const getStaticPaths = localePaths;
+
+const { t, href, words } = useSite(Astro);
+
+// Each system's band: its files, its steps and a screenshot of the app it installs. Phones get a
+// narrower picture than the windows and the TV.
+const sections = [
+	{ id: 'mac', files: FILES.mac, shot: 'mac-title', phone: false },
+	{ id: 'ios', files: [], shot: 'iphone-continue', phone: true },
+	{ id: 'android', files: FILES.android, shot: 'android-continue', phone: true },
+	{ id: 'android-tv', files: FILES['android-tv'], shot: 'tv-continue', phone: false },
+	{ id: 'windows', files: FILES.windows, shot: 'windows-title', phone: false },
+	{ id: 'linux', files: FILES.linux, shot: 'linux-title', phone: false },
+	{ id: 'terminal', files: [], shot: undefined, phone: false },
+] as const;
+
+const escape = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const block = (text: string) => `<pre class="ds-code" tabindex="0"><code>${escape(text)}</code></pre>`;
+const code = (id: string) =>
+	id === 'ios'
+		? block(SIDESTORE_SOURCE)
+		: id === 'linux'
+			? block(`chmod +x ${name(FILES.linux[0].suffix)}\n./${name(FILES.linux[0].suffix)}`)
+			: id === 'terminal'
+				? block('brew install mpv ffmpeg')
+				: '';
+const name = (suffix: string) => `kaeri-${VERSION}${suffix}`;
+---
+
+<Page title={t('download.title')} description={t('download.description')}>
+	<script type="application/json" data-words="dl.hero." set:html={words('dl.hero.')}></script>
+
+	<section class="dl-sect dl-top" id="download" aria-labelledby="dl-h">
+		<div class="dl-in">
+			<h1 id="dl-h" class="dl-title">{t('dl.title')}</h1>
+			<p class="dl-version">{t('dl.version')} <span data-version>{VERSION}</span>. <a href={RELEASES}>{t('dl.notes')}</a></p>
+			<DownloadGrid steps="" heading="h2" />
+			<nav class="dl-more" aria-label={t('dl.moreLabel')}>
+				<a href="#steps">{t('dl.more.steps')}</a>
+				<a href="#check">{t('dl.more.check')}</a>
+				<a href="#older">{t('dl.more.older')}</a>
+			</nav>
+		</div>
+	</section>
+
+	<section class="ds" id="steps" aria-labelledby="steps-h">
+		<div class="ds-in ds-head">
+			<h2 id="steps-h">{t('download.steps.title')}</h2>
+			<p class="ds-lede">{t('download.steps.text')}</p>
+		</div>
+		{
+			sections.map((s) => (
+				<section class="ds-item" id={s.id} aria-labelledby={`${s.id}-h`}>
+					<div class="ds-in ds-grid">
+						<div class="ds-main">
+							<h3 id={`${s.id}-h`}>{t(`dl.card.${s.id}.name`)}</h3>
+							<p class="ds-needs">{t(`download.steps.${s.id}.needs`)}</p>
+							{s.files.length > 0 && (
+								<ul class="ds-files">
+									{s.files.map((f) => (
+										<li>
+											<code data-file={f.suffix}>{name(f.suffix)}</code>
+											<a href={`${RELEASES}/latest`} data-asset={f.suffix} aria-label={t('download.file.get', { file: name(f.suffix) })}>
+												{t('download.file.getShort')}
+											</a>
+											<a class="ds-sha" href={`${RELEASES}/latest`} data-sha={f.suffix} aria-label={t('download.file.sha', { file: name(f.suffix) })}>
+												{t('download.file.shaShort')}
+											</a>
+										</li>
+									))}
+								</ul>
+							)}
+							{s.id === 'android-tv' && <p class="ds-arch">{t('download.steps.android-tv.arch')}</p>}
+							<ol set:html={t(`download.steps.${s.id}.list`, { code: code(s.id) })} />
+							<p class="ds-note" set:html={t(`download.steps.${s.id}.note`, { guide: href(INSTALL_GUIDE) })} />
+						</div>
+						{s.shot && (
+							<div class:list={['ds-shot', { 'ds-phone': s.phone }]}>
+								<Pic name={s.shot} sizes={s.phone ? '260px' : '(min-width: 1264px) 472px, 90vw'} alt={t(`download.steps.${s.id}.shotAlt`)} />
+							</div>
+						)}
+					</div>
+				</section>
+			))
+		}
+	</section>
+
+	<section class="ds ds-pair" id="check" aria-labelledby="check-h">
+		<div class="ds-in ds-grid">
+			<div>
+				<h2 id="check-h">{t('download.check.title')}</h2>
+				<p class="ds-lede">{t('download.check.text')}</p>
+			</div>
+			<div class="ds-checks">
+				<h3>{t('download.check.mac')}</h3>
+				<pre class="ds-code" tabindex="0"><code>{`shasum -a 256 -c ${name(FILES.mac[0].suffix)}.sha256`}</code></pre>
+				<h3>{t('download.check.linux')}</h3>
+				<pre class="ds-code" tabindex="0"><code>{`sha256sum -c ${name(FILES.linux[0].suffix)}.sha256`}</code></pre>
+			</div>
+		</div>
+	</section>
+
+	<section class="ds ds-pair" id="older" aria-labelledby="older-h">
+		<div class="ds-in ds-older">
+			<div>
+				<h2 id="older-h">{t('download.older.title')}</h2>
+				<p class="ds-lede">{t('download.older.text')}</p>
+			</div>
+			<a class="ds-all" href={RELEASES}>
+				{t('download.older.all')}
+				<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+			</a>
+		</div>
+	</section>
+
+	<Faq />
+</Page>

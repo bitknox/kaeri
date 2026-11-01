@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security
+    url: https://github.com/bitknox/kaeri/security/advisories/new
+    about: Report a vulnerability privately. Don't open a public issue.
+  - name: Discussions
+    url: https://github.com/bitknox/kaeri/discussions
+    about: Ask a question or share an idea.
+  - name: Docs
+    url: https://kaeri.app/docs/
+    about: Guides for the apps, plugins and plugin stores.

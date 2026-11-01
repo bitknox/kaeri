@@ -1,0 +1,12 @@
+hint-stop-playback = Drücke { $key }, um die Wiedergabe zu stoppen.
+hint-open-stores = Gehe zu { -source-cap-pl } und drücke Enter, um die { -plugin-store-pl } zu öffnen.
+hint-kitsu-credentials = Drücke Enter in der Zeile, um deine Zugangsdaten einzugeben.
+party-joined = Du bist der { -watch-party } in Raum { $room } auf { $server } beigetreten.
+party-no-source-still-in = { $reason } Du bleibst in der { -watch-party }.
+status-reloading-sources = { -source-pl } werden neu geladen…
+pin-unavailable = { $name } ist für diesen Titel angeheftet, aber nicht verfügbar. Deshalb werden die anderen { -source-pl } verwendet.
+tui-together-section = Gemeinsam
+tui-together-join-prompt = Link oder Code
+tui-together-keys = r bereit · c Link kopieren · s jetzt starten · x verlassen
+tui-together-not-a-link = Das ist kein { -watch-party }-Link und kein Code.
+tui-together-recent-alone = Folge { $episode } · { $when }

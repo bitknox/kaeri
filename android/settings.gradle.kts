@@ -1,0 +1,32 @@
+// The Kaeri Android app: Kotlin and Jetpack Compose on the engine, through UniFFI.
+pluginManagement {
+    includeBuild("build-logic")
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = "kaeri"
+
+// The modules follow the Apple app's packages: the engine's bindings and library, the store that
+// holds the engine and its state, the design system, the screens, the player and its screens, and
+// the app.
+include(":engine", ":store", ":design", ":ui", ":player", ":player-ui", ":app")
+// Every string, generated from the catalogue in ../i18n; the phone and the TV both read it.
+include(":i18n")
+// The home-screen widgets, Glance's, drawn from the record the background check keeps.
+include(":widgets")
+// The TV app, a separate APK on Android 11 and up.
+include(":tv")
+// What the tests share: the engine's events recorded as scenes, and the fixture titles' art.
+include(":testkit")

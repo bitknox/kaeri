@@ -1,0 +1,55 @@
+---
+// The top bar every page shares: the icon and name, Features, Download and Docs, search and the
+// theme switch, and the language picker once there is more than one language. On a docs page the
+// menu button is Starlight's own, which opens the sidebar.
+import Search from '@astrojs/starlight/components/Search.astro';
+import iconUrl from '../../assets/icon-32.svg?url';
+import { DOWNLOAD, FEATURES } from '../../data/site';
+import { useSite } from '../../i18n/site';
+import LanguagePicker from './LanguagePicker.astro';
+import ThemeToggle from './ThemeToggle.astro';
+
+interface Props {
+	docs?: boolean;
+}
+
+const { docs = false } = Astro.props;
+const { t, href, pagePath } = useSite(Astro);
+const links = [
+	[FEATURES, 'site.nav.features'],
+	[DOWNLOAD, 'site.nav.download'],
+	['/docs/', 'site.nav.docs'],
+] as const;
+const here = (path: string) => (path === '/docs/' ? pagePath.startsWith('/docs/') : pagePath === path);
+---
+
+<div class:list={['site-header', { 'bar-menu-docs': docs }]}>
+	<a class="site-brand" href={href('/')}>
+		<img src={iconUrl} width="28" height="28" alt="" />
+		<span>Kaeri</span>
+	</a>
+	<div class="bar-right">
+		<nav class="bar-nav" id="bar-nav" aria-label={t('site.nav.label')}>
+			{links.map(([path, key]) => <a href={href(path)} aria-current={here(path) ? 'page' : undefined}>{t(key)}</a>)}
+		</nav>
+		<div class="bar-search"><Search /></div>
+		<ThemeToggle />
+		<LanguagePicker />
+		<button type="button" class="bar-icon bar-menu" data-bar-menu aria-controls="bar-nav" aria-expanded="false" aria-label={t('site.nav.menu')}>
+			<svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 6h14M3 10h14M3 14h14"></path></svg>
+		</button>
+	</div>
+</div>
+
+<script>
+	for (const button of document.querySelectorAll<HTMLButtonElement>('[data-bar-menu]')) {
+		const nav = document.getElementById(button.getAttribute('aria-controls')!);
+		button.addEventListener('click', () => {
+			const open = nav!.classList.toggle('open');
+			button.setAttribute('aria-expanded', String(open));
+		});
+		nav?.addEventListener('click', (e) => {
+			if ((e.target as HTMLElement).closest('a')) nav.classList.remove('open');
+		});
+	}
+</script>

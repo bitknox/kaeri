@@ -1,0 +1,33 @@
+---
+/**
+ * One of the apps' screenshots at the widths scripts/app-shots.ts made of it, as a plain image the
+ * page frames itself. `sizes` is the width the picture takes on the page, for the browser's pick.
+ */
+import shots from '../data/shots.json';
+
+interface Props {
+	name: keyof typeof shots;
+	alt: string;
+	sizes: string;
+	loading?: 'lazy' | 'eager';
+	class?: string;
+	style?: string;
+}
+
+const { name, alt, sizes, loading = 'lazy', class: className, style } = Astro.props;
+const shot = shots[name];
+const srcset = shot.widths.map((w) => `/apps/${name}-${w}.webp ${w}w`).join(', ');
+---
+
+<img
+	class={className}
+	style={style}
+	src={`/apps/${name}-${shot.widths[0]}.webp`}
+	srcset={srcset}
+	sizes={sizes}
+	width={shot.w}
+	height={shot.h}
+	alt={alt}
+	loading={loading}
+	decoding="async"
+/>

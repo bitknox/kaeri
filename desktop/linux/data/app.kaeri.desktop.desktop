@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Kaeri
+GenericName=Anime Player
+Comment=Browse, track and watch anime
+Exec=kaeri-desktop %u
+Icon=app.kaeri.desktop
+Categories=AudioVideo;Video;Player;GTK;
+Keywords=anime;anilist;mpv;
+StartupNotify=true
+MimeType=x-scheme-handler/kaeri;x-scheme-handler/magnet;application/x-bittorrent;

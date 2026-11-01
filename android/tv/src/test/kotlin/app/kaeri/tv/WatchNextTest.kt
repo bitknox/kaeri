@@ -1,0 +1,79 @@
+package app.kaeri.tv
+
+import org.junit.Assert.assertEquals
+import org.robolectric.RuntimeEnvironment
+import org.junit.Assert.assertNull
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import app.kaeri.engine.core.Translation
+import app.kaeri.engine.model.Entry
+import app.kaeri.engine.model.EpisodeRow
+import app.kaeri.engine.model.ResumePoint
+import app.kaeri.engine.model.TitleProgress
+import app.kaeri.store.ContinueQueue
+import app.kaeri.tv.home.WatchNextCard
+import app.kaeri.tv.home.WatchNextKind
+import app.kaeri.tv.home.parsePlayLink
+import app.kaeri.tv.home.playLink
+
+/** The Watch Next row from the Continue queue, under Google's rules, and the links it opens. */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [36])
+class WatchNextTest {
+    private val context = RuntimeEnvironment.getApplication()
+    private fun entry(id: UInt, next: UInt = 4u, resume: ResumePoint? = null) = Entry(
+        id = id,
+        title = "Title $id",
+        bannerUrl = "https://art.example/banner/$id.jpg",
+        progress = TitleProgress(done = next - 1u, next = next),
+        resume = resume,
+    )
+
+    private fun cards(vararg entries: Entry, episodes: Map<UInt, List<EpisodeRow>> = emptyMap()) =
+        WatchNextCard.of(context, ContinueQueue.of(entries.map { it.id }, entries.associateBy { it.id }), episodes)
+
+    @Test
+    fun an_episode_left_part_way_continues_where_it_stopped() {
+        val card = cards(entry(1u, resume = ResumePoint(position = 600.0, fraction = 0.5))).single()
+        assertEquals(WatchNextKind.Continue, card.kind)
+        assertEquals(600_000L, card.positionMillis)
+        assertEquals(1_200_000L, card.durationMillis)
+        assertEquals("Episode 4", card.description)
+    }
+
+    @Test
+    fun a_dub_is_marked_on_the_episode_line_and_a_sub_is_not() {
+        val dub = cards(entry(1u).copy(watchedIn = Translation.DUB)).single()
+        assertEquals("Episode 4 · Dubbed", dub.description)
+        val sub = cards(entry(2u).copy(watchedIn = Translation.SUB)).single()
+        assertEquals("Episode 4", sub.description)
+    }
+
+    @Test
+    fun under_two_minutes_in_or_at_the_ending_it_is_the_next_episode() {
+        val early = cards(entry(1u, resume = ResumePoint(position = 60.0, fraction = 0.05))).single()
+        assertEquals(WatchNextKind.Next, early.kind)
+        assertEquals(0L, early.positionMillis)
+        val ending = cards(entry(2u, resume = ResumePoint(position = 1_300.0, fraction = 0.9))).single()
+        assertEquals(WatchNextKind.Next, ending.kind)
+    }
+
+    @Test
+    fun the_episode_title_follows_its_number_once_known() {
+        val rows = mapOf(1u to listOf(EpisodeRow(number = "4", title = "The Lantern Road", durationSecs = 1_440uL)))
+        val card = cards(entry(1u), episodes = rows).single()
+        assertEquals(WatchNextKind.Next, card.kind)
+        assertEquals("Episode 4 · The Lantern Road", card.description)
+        assertEquals(1_440_000L, card.durationMillis)
+    }
+
+    @Test
+    fun a_play_link_reads_back() {
+        assertEquals(900_001u to 7u, parsePlayLink(playLink(900_001u, 7u)))
+        assertNull(parsePlayLink("https://kaeri.example/play/1/2"))
+        assertNull(parsePlayLink("kaeri-tv://play/1"))
+        assertNull(parsePlayLink(null))
+    }
+}

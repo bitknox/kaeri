@@ -1,0 +1,151 @@
+// The Settings screen's rules as a native screen needs them: the values each stepped setting
+// takes and the words the engine gives each one. Ports of `kaeri_model::settings`'s ladders
+// (`step`) and its wording (`value`), kept to the same rules, so a menu offers exactly what the
+// engine's arrows step through and names each choice as the row will once it is chosen.
+
+import KaeriStrings
+import Foundation
+
+/// One value a setting can be set to, as `SetSetting` takes it, and the words its row then says.
+public struct SettingOption: Hashable, Sendable {
+    public let value: SettingValue
+    /// As the engine words it: `1080p`, `natural · ArtCNN`, `until ratio 1.0`, `on`.
+    public let label: String
+
+    public init(value: SettingValue, label: String) {
+        self.value = value
+        self.label = label
+    }
+}
+
+extension SettingKey {
+    /// The settings with two states, on and off, that a switch shows.
+    public var isSwitch: Bool {
+        switch self {
+        case .motion, .autoNext, .skipOpening, .skipRecap, .askWasOpening, .shareSkipTimes, .skipFiller, .markChapters, .skipButton, .fullscreen, .nightMode,
+             .mergeSubtitles, .keepSeeding, .presence, .presenceTitle, .presenceRich, .torrents, .syncplay,
+             .updateCheck, .updateBeta, .spoilerProtection, .downloadsOnCellular, .torrentsOnCellular, .adultTitles,
+             .episodeDiscussions, .commentImages, .hoverCards:
+            true
+        default:
+            false
+        }
+    }
+
+    /// The values a stepped setting takes, in the order its arrows walk them, each with its
+    /// words: `step`'s ladders, the two choices of theme, sub or dub and the player interface,
+    /// the three forms of title, and off then on for a switch. Empty for one that is typed,
+    /// read-only or the source order.
+    public var options: [SettingOption] {
+        switch self {
+        case .quality:
+            [480, 720, 1080, 2160].map { SettingOption(value: .int(Int64($0)), label: "\($0)p") }
+        case .commitThreshold:
+            [70, 80, 85, 90, 95].map { SettingOption(value: .float(Double($0) / 100), label: "\($0)%") }
+        case .upscaling:
+            [("off", "off"), ("natural", "natural · ArtCNN"), ("sharp", "sharp · Anime4K")]
+                .map { SettingOption(value: .str($0.0), label: $0.1) }
+        case .seedRatio:
+            // Tenths, as the engine matches them.
+            [0, 5, 10, 15, 20].map { tenths in
+                let ratio = Double(tenths) / 10
+                return SettingOption(
+                    value: .float(ratio),
+                    label: tenths > 0 ? String(format: "until ratio %.1f", ratio) : "off"
+                )
+            }
+        case .seedHours:
+            [1, 6, 12, 24, 72].map { SettingOption(value: .int(Int64($0)), label: "\($0) h") }
+        case .uploadLimit:
+            [0, 256, 512, 1024, 2048, 5120].map {
+                SettingOption(value: .int(Int64($0)), label: Self.uploadLabel(kib: UInt64($0)))
+            }
+        case .translation:
+            ["sub", "dub"].map { SettingOption(value: .str($0), label: $0) }
+        case .theme:
+            ["adaptive", "immersive"].map { SettingOption(value: .str($0), label: $0) }
+        case .titles:
+            [("anilist", "AniList's choice"), ("english", "English"), ("romaji", "Romaji")]
+                .map { SettingOption(value: .str($0.0), label: $0.1) }
+        case .trailers:
+            [("always", "always"), ("wifi-only", "Wi-Fi only"), ("off", "off")] // i18n-skip: the engine's words
+                .map { SettingOption(value: .str($0.0), label: $0.1) }
+        case .playerUi:
+            [("kaeri", "kaeri"), ("mpv", "your mpv setup")]
+                .map { SettingOption(value: .str($0.0), label: $0.1) }
+        case .upNextCountdown:
+            [0, 5, 10, 15, 20, 30].map { SettingOption(value: .int(Int64($0)), label: $0 == 0 ? "off" : "\($0) s") }
+        case .downloadQuality:
+            ["standard", "higher"].map { SettingOption(value: .str($0), label: $0) }
+        case .keepNextEpisodes:
+            [0, 1, 2, 3, 5, 10].map {
+                SettingOption(value: .int(Int64($0)), label: $0 == 0 ? "off" : Wording.plural($0, "episode"))
+            }
+        case .vpnOnFailure:
+            // Warn only is asked for with its acknowledgement, through `SetTorrentProtection`.
+            [("pause", "pause torrents"), ("stop", "stop torrents")]
+                .map { SettingOption(value: .str($0.0), label: $0.1) }
+        default:
+            isSwitch
+                ? [SettingOption(value: .bool(false), label: "off"), SettingOption(value: .bool(true), label: "on")] // i18n-skip
+                : []
+        }
+    }
+
+    /// An upload cap as people read it: `unlimited`, `524 kB/s`, `2.1 MB/s`. `upload_label`.
+    static func uploadLabel(kib: UInt64) -> String {
+        // The engine's own words, which `SettingRow.option` matches the row's value against.
+        kib == 0 ? "unlimited" : "\(Wording.bytes(kib * 1024, locale: Locale(identifier: "en")))/s"
+    }
+}
+
+extension SettingRow {
+    /// The option the row stands on, found by its words. Theme and sub or dub say the saved
+    /// choice first, with the session's beside it when that differs, and stand on the saved one.
+    public var option: SettingOption? {
+        let saved = key == .theme || key == .translation
+            ? String(value.split(separator: " · ").first ?? Substring(value))
+            : value
+        return key.options.first { $0.label == saved }
+    }
+
+    /// Whether a switch is on.
+    public var isOn: Bool {
+        value == "on"
+    }
+
+    /// The text a typed setting starts editing from, when it is typed.
+    public var typedText: String? {
+        if case .typed(let text) = change { return text }
+        return nil
+    }
+
+    /// Whether the row can be changed from here at all: `SettingChange::editable`.
+    public var isEditable: Bool {
+        if case .fixed = change { return false }
+        return true
+    }
+}
+
+extension Wording {
+    /// A size as people read it: `9.4 GB`, `140 MB`, `0 B`. `wording::human_bytes`.
+    ///
+    /// One decimal below ten and none above, in decimal units, with the person's decimal mark.
+    public static func bytes(_ bytes: UInt64) -> String {
+        self.bytes(bytes, locale: AirTime.locale)
+    }
+
+    /// The same, in `locale`'s numbers.
+    public static func bytes(_ bytes: UInt64, locale: Locale) -> String {
+        let units: [(UInt64, (String) -> String)] = [
+            (1_000_000_000, L.sizeGigabyte(value:)), (1_000_000, L.sizeMegabyte(value:)),
+            (1_000, L.sizeKilobyte(value:)), (1, L.sizeByte(value:)),
+        ]
+        for (scale, unit) in units where bytes >= scale {
+            let value = Double(bytes) / Double(scale)
+            let digits = value < 10 && scale > 1 ? 1 : 0
+            return unit(value.formatted(.number.precision(.fractionLength(digits)).locale(locale)))
+        }
+        return L.sizeByte(value: 0.formatted(.number.locale(locale)))
+    }
+}

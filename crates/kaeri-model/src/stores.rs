@@ -1,0 +1,402 @@
+//! Plugin stores: the ones this machine has joined, their plugins and members, and the invites an
+//! owner makes. Also [`Secret`], which an invite link crosses in, and a tracker's password too.
+
+/// A plugin store this machine has joined, as the store screens show it.
+///
+/// Flattened by the binary from the store client's own state, so this crate knows nothing about
+/// the protocol — the same arrangement as [`ProviderRow`](crate::sources::ProviderRow).
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct StoreRow {
+    pub id: String,
+    pub name: String,
+    pub url: String,
+    /// The host the store answers at, from its URL: "Run by … · plugins.example".
+    pub host: String,
+    /// The store key's fingerprint, in groups of four.
+    pub fingerprint: String,
+    /// Who this machine joined as.
+    pub member: String,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub owner: bool,
+    pub state: StoreState,
+    /// When its plugin list was last fetched and verified, as a Unix time: "checked 2 min
+    /// ago". `None` before the first.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub checked_at: Option<i64>,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub plugins: Vec<StorePluginRow>,
+    /// Who runs it, the longest-standing owner first: "Run by …". Empty from a store that does
+    /// not say.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub owners: Vec<String>,
+    /// Anyone with the store's link can join it, not only people its owners invite: "Anyone with
+    /// the link can join". From its signed list, so as of the last refresh.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub open: bool,
+    /// This machine joined with the store's link, as a member with no name: `member` is empty,
+    /// and another device joins with the link rather than an invite.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub anonymous: bool,
+}
+
+impl StoreRow {
+    pub fn updates(&self) -> usize {
+        self.plugins
+            .iter()
+            .filter(|p| matches!(p.status, StorePluginStatus::Update { .. }))
+            .count()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum StoreState {
+    Ready,
+    /// The last refresh failed. The plugins listed are the last list that was verified.
+    Offline(String),
+    /// The store no longer accepts this device.
+    Revoked,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct StorePluginRow {
+    pub id: String,
+    pub name: String,
+    pub version: String,
+    /// What the plugin may contact. Shown before anything is installed.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub hosts: Vec<String>,
+    pub status: StorePluginStatus,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum StorePluginStatus {
+    Available,
+    Installed,
+    /// A newer version is offered, and these are the hosts it adds.
+    Update {
+        from: String,
+        new_hosts: Vec<String>,
+    },
+    /// A file with this id is in the plugin directory and did not come from a store.
+    AddedByHand,
+    /// Installed from another store, which keeps it updated.
+    OtherStore(String),
+}
+
+/// What a pasted invite link leads to, or why it leads nowhere: the answer to a preview, which
+/// [`Event::StorePreview`](crate::event::Event::StorePreview) carries.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum InvitePreview {
+    /// The store it leads to, checked against the key the link carries.
+    Store(InvitedStore),
+    /// Why it leads nowhere, in words to show in its place, and for an invite that stopped
+    /// working, the store's contact when it gave one: a line under the reason
+    /// (`store-invite-contact`).
+    Failed {
+        reason: String,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        contact: Option<String>,
+    },
+}
+
+/// A store an invite link leads to, about to be joined, for the confirmation.
+///
+/// Not named for the event that carries it: no variant is named after the type it carries. In
+/// the Kotlin bindings a variant is a class nested in its enum's, and hides any type of its name
+/// spelled bare there.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct InvitedStore {
+    pub link: Secret,
+    pub name: String,
+    pub url: String,
+    /// The host the store answers at, from its URL.
+    pub host: String,
+    pub fingerprint: String,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub already_joined: bool,
+    /// Who runs it, the longest-standing owner first: "Run by …".
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub owners: Vec<String>,
+    /// What it offers, each with the hosts it contacts and where it stands here: "4 plugins",
+    /// before anything is joined or installed. From the store's signed list, checked against the
+    /// key the link carries.
+    ///
+    /// Both empty from a store that predates the preview, which the link joins all the same.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub plugins: Vec<StorePluginRow>,
+    /// Anyone with the store's link can join it, not only people its owners invite: "Anyone with
+    /// the link can join". True for an open link, and for an invite to a store that is open.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub open: bool,
+    /// The link is the store's open link, which joins as a member with no name. An invite joins
+    /// as the person it was made for.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub anonymous: bool,
+    /// What the store's owner will see this device called, for the person joining to change
+    /// before they confirm: the kind of device it is, such as "iPad" or "Computer", never its
+    /// own name. Empty for an open link, which sends no name at all.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub device_label: String,
+    /// The invite works more than once, so the person joining can give their own name: "Your
+    /// name (optional)", sent with [`Command::JoinStore`]'s `name`. False for an open link, an
+    /// invite that works once, and one from a server before the choices.
+    ///
+    /// [`Command::JoinStore`]: crate::command::Command::JoinStore
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub names_joiner: bool,
+}
+
+/// What an invite join calls a device when the app names no kind of its own: the terminal
+/// app's word for the machine it runs on.
+pub const COMPUTER: &str = "Computer";
+
+/// The longest device name a store keeps, in characters.
+pub const DEVICE_LABEL_MAX: usize = 64;
+
+/// The name an invite join sends for this device: `given`, as the confirmation's field holds
+/// it, trimmed and cut to [`DEVICE_LABEL_MAX`], or `kind` when that leaves nothing.
+pub fn device_label(given: Option<&str>, kind: &str) -> String {
+    let given: String = given
+        .unwrap_or_default()
+        .chars()
+        .map(|c| if c.is_control() { ' ' } else { c })
+        .collect::<String>()
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .chars()
+        .take(DEVICE_LABEL_MAX)
+        .collect();
+    if given.is_empty() { kind.to_owned() } else { given }
+}
+
+/// How many times an invite works, as the owner picks it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum InviteUses {
+    #[default]
+    Once,
+    Five,
+    /// Any number of times, until it ends or is cancelled. The store needs a contact for it.
+    Any,
+}
+
+/// How long an invite works, as the owner picks it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum InviteLasts {
+    Day,
+    #[default]
+    Week,
+    Month,
+    /// Until it is used up or cancelled.
+    Forever,
+}
+
+/// A freshly made invite link.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct InviteLinkView {
+    pub store: String,
+    pub link: Secret,
+    /// Who it is for, or what the owner called it when it works more than once. `None` is
+    /// another device of your own.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub for_whom: Option<String>,
+    pub expires_at: i64,
+    /// How many times it works: 1, 5, or 0 for any number. The line under the link reads it
+    /// back with [`Self::until`]: "Works 5 times, until 7 November."
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub max: u32,
+    /// When it stops working, or `None` when it has no end date.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub until: Option<i64>,
+}
+
+/// Who can join a store, for its owner: only people they invite, or anyone with its link, and the
+/// devices that joined with the link. Carried by
+/// [`Event::OpenJoin`](crate::event::Event::OpenJoin).
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct OpenJoinView {
+    /// Anyone with the link can join. Otherwise only people the owners invite.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub open: bool,
+    /// The link to copy and share, while the store is open.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub link: Option<Secret>,
+    /// How many devices that joined with a link still work here. They stay when the store goes
+    /// back to invites only, until the owner removes them.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub devices: u32,
+    /// The most recently joined of them, newest first, at most a hundred.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub recent: Vec<AnonymousDeviceRow>,
+}
+
+/// A device that joined with a store's link. Nothing about who uses it is kept, so it is known
+/// by when it joined and when it was last seen.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct AnonymousDeviceRow {
+    pub id: String,
+    pub joined_at: i64,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub last_seen: Option<i64>,
+}
+
+/// One member of a store, for its owner.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct StoreMemberRow {
+    pub id: String,
+    pub name: String,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub owner: bool,
+    pub devices: u32,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub last_seen: Option<i64>,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub you: bool,
+}
+
+/// An invite link of a store, for its owner: one that still works, or one that ended in the last
+/// 30 days. "Used 2 of 5 · until 7 Nov".
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct StoreInviteRow {
+    pub id: String,
+    pub name: String,
+    pub device: bool,
+    pub expires_at: i64,
+    /// It joins as an owner.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub owner: bool,
+    /// How many times it was used.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub used: u32,
+    /// How many times it works in all: 1, 5, or 0 for any number.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub max: u32,
+    /// When it stops working, or `None` when it has no end date.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub until: Option<i64>,
+    /// Why and when it stopped working, for one in the ended group. `None` while it works.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub ended: Option<InviteEnded>,
+    /// Who joined with it, the first first.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub uses: Vec<InviteUseRow>,
+}
+
+/// Why an invite stopped working, and when: "Used up today", "Ended on 7 Nov", "Cancelled
+/// yesterday".
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct InviteEnded {
+    pub reason: InviteEndReason,
+    pub at: i64,
+}
+
+/// Why an invite stopped working.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum InviteEndReason {
+    /// It was used as many times as it allows.
+    UsedUp,
+    /// Its end date passed.
+    RanOut,
+    /// An owner cancelled it.
+    Cancelled,
+}
+
+/// One person who joined with an invite: "Alex · joined today".
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct InviteUseRow {
+    /// The member who joined, for removing them.
+    pub member: String,
+    pub name: String,
+    pub at: i64,
+    /// They were removed since.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub removed: bool,
+}
+
+/// A plugin in the local plugin directory that an owner could publish.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct LocalPluginRow {
+    pub id: String,
+    pub name: String,
+    pub version: String,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub hosts: Vec<String>,
+    /// The version the store already offers, if it offers one.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub published: Option<String>,
+}
+
+/// The host a store's URL names, lowercase, without a user, a port or a path: what the store
+/// screens name it by beside its name. The URL itself when it names none.
+pub fn host(url: &str) -> String {
+    let rest = url.split_once("://").map_or(url, |(_, rest)| rest);
+    let authority = rest.split(['/', '?', '#']).next().unwrap_or(rest);
+    let address = authority.rsplit('@').next().unwrap_or(authority);
+    let host = match address.strip_prefix('[') {
+        Some(bracketed) => bracketed.split(']').next().unwrap_or(bracketed),
+        None => address.split(':').next().unwrap_or(address),
+    };
+    if host.is_empty() { url.to_owned() } else { host.to_ascii_lowercase() }
+}
+
+/// A credential in transit.
+///
+/// Exists for exactly one reason: `Command` derives `Debug` and the task router logs a task
+/// when routing goes wrong. A plain `String` there would put a password in the log file;
+/// this prints a placeholder instead, everywhere, unconditionally.
+///
+/// The string itself on the far side of an FFI: the bindings name the type, and keeping it out
+/// of a log there is the front end's to do.
+#[derive(Clone, PartialEq, Eq)]
+pub struct Secret(pub String);
+
+#[cfg(feature = "ffi")]
+uniffi::custom_newtype!(Secret, String);
+
+impl std::fmt::Debug for Secret {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("Secret(«redacted»)")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_store_is_named_by_its_host() {
+        assert_eq!(host("https://Plugins.Example/with/a/path"), "plugins.example");
+        assert_eq!(host("https://plugins.example:8443"), "plugins.example");
+        assert_eq!(host("http://owner@[fe80::1]:8080/store"), "fe80::1");
+        assert_eq!(host("plugins.example"), "plugins.example", "no scheme");
+        assert_eq!(host("https://"), "https://", "nothing to name it by");
+    }
+
+    #[test]
+    fn a_device_is_called_its_kind_unless_named_otherwise() {
+        // Nothing typed, or only spaces: the kind of device, never the machine's own name.
+        assert_eq!(device_label(None, "iPad"), "iPad");
+        assert_eq!(device_label(Some("  \t "), COMPUTER), "Computer");
+        // What the person typed, tidied as the store would keep it.
+        assert_eq!(device_label(Some("  Living room\n TV "), "Mac"), "Living room TV");
+        let long = "x".repeat(100);
+        assert_eq!(device_label(Some(&long), "Mac").chars().count(), DEVICE_LABEL_MAX);
+    }
+}

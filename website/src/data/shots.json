@@ -1,0 +1,228 @@
+{
+	"mac-continue": {
+		"w": 2560,
+		"h": 1600,
+		"widths": [
+			1280,
+			2560
+		]
+	},
+	"mac-title": {
+		"w": 2560,
+		"h": 1600,
+		"widths": [
+			1280,
+			2560
+		]
+	},
+	"mac-calendar": {
+		"w": 2560,
+		"h": 1600,
+		"widths": [
+			1280,
+			2560
+		]
+	},
+	"mac-player": {
+		"w": 2560,
+		"h": 1600,
+		"widths": [
+			1280,
+			2560
+		]
+	},
+	"mac-search": {
+		"w": 2560,
+		"h": 1600,
+		"widths": [
+			1280,
+			2560
+		]
+	},
+	"iphone-continue": {
+		"w": 1206,
+		"h": 2622,
+		"widths": [
+			540,
+			1080
+		]
+	},
+	"iphone-title": {
+		"w": 1206,
+		"h": 2622,
+		"widths": [
+			540,
+			1080
+		]
+	},
+	"iphone-calendar": {
+		"w": 1206,
+		"h": 2622,
+		"widths": [
+			540,
+			1080
+		]
+	},
+	"iphone-player": {
+		"w": 2622,
+		"h": 1206,
+		"widths": [
+			1200,
+			2400
+		]
+	},
+	"ipad-continue": {
+		"w": 2420,
+		"h": 1668,
+		"widths": [
+			1280,
+			2420
+		]
+	},
+	"ipad-title": {
+		"w": 2420,
+		"h": 1668,
+		"widths": [
+			1280,
+			2420
+		]
+	},
+	"ipad-calendar": {
+		"w": 2420,
+		"h": 1668,
+		"widths": [
+			1280,
+			2420
+		]
+	},
+	"android-continue": {
+		"w": 1080,
+		"h": 2400,
+		"widths": [
+			540,
+			1080
+		]
+	},
+	"android-title": {
+		"w": 1080,
+		"h": 2400,
+		"widths": [
+			540,
+			1080
+		]
+	},
+	"android-calendar": {
+		"w": 1080,
+		"h": 2400,
+		"widths": [
+			540,
+			1080
+		]
+	},
+	"android-player": {
+		"w": 2400,
+		"h": 1080,
+		"widths": [
+			1200,
+			2400
+		]
+	},
+	"tablet-continue": {
+		"w": 2560,
+		"h": 1600,
+		"widths": [
+			1280,
+			2560
+		]
+	},
+	"tablet-title": {
+		"w": 2560,
+		"h": 1600,
+		"widths": [
+			1280,
+			2560
+		]
+	},
+	"tablet-calendar": {
+		"w": 2560,
+		"h": 1600,
+		"widths": [
+			1280,
+			2560
+		]
+	},
+	"iphone-tv-remote": {
+		"w": 1206,
+		"h": 2622,
+		"widths": [
+			540,
+			1080
+		]
+	},
+	"tv-continue": {
+		"w": 1920,
+		"h": 1080,
+		"widths": [
+			1280,
+			1920
+		]
+	},
+	"tv-title": {
+		"w": 1920,
+		"h": 1080,
+		"widths": [
+			1280,
+			1920
+		]
+	},
+	"windows-title": {
+		"w": 1008,
+		"h": 600,
+		"widths": [
+			1008
+		]
+	},
+	"windows-stores": {
+		"w": 1008,
+		"h": 640,
+		"widths": [
+			1008
+		]
+	},
+	"linux-continue": {
+		"w": 1270,
+		"h": 790,
+		"widths": [
+			1270
+		]
+	},
+	"linux-title": {
+		"w": 1270,
+		"h": 790,
+		"widths": [
+			1270
+		]
+	},
+	"linux-calendar": {
+		"w": 1270,
+		"h": 790,
+		"widths": [
+			1270
+		]
+	},
+	"windows-search": {
+		"w": 1008,
+		"h": 633,
+		"widths": [
+			1008
+		]
+	},
+	"tv-search": {
+		"w": 1920,
+		"h": 1080,
+		"widths": [
+			1280,
+			1920
+		]
+	}
+}

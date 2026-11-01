@@ -1,0 +1,432 @@
+//! The three pluggable seams: sources, players and trackers.
+//!
+//! Every volatile part of Kaeri sits behind one of these. That is the whole strategy:
+//! streaming sites die, gain challenges, or change their markup, and when they do the fix
+//! should be a config edit or a dropped-in `.wasm` file rather than a new release.
+//!
+//! [`Provider`] is deliberately the same shape as the `provider` interface in
+//! `wit/kaeri-provider.wit`, so a WASM plugin written in Go or TypeScript is
+//! indistinguishable from a native Rust source at this boundary.
+
+use async_trait::async_trait;
+
+use crate::{
+    error::ProviderError,
+    ids::{AnilistId, ExternalIds, ProviderKey},
+    media::{Episode, SearchHit, Translation},
+    stream::Stream,
+};
+
+/// What kind of source this is. Drives UI labelling and ranking, and decides whether a
+/// resolved stream is playable locally or has to be handed off.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ProviderKind {
+    /// An in-process source, such as the test mock.
+    Native,
+    /// WASM component plugin.
+    Plugin,
+    /// A JSON API you host.
+    Remote,
+    /// A licensed service we can browse and track but not decrypt — resolves to an
+    /// external deep link.
+    Licensed,
+    /// Folders on this device, scanned into a library.
+    Library,
+    /// A media server the user runs, such as Jellyfin.
+    Server,
+    /// A free catalogue the user added: an Internet Archive collection or a PeerTube channel.
+    Catalogue,
+    /// The bundled demo, made of works under open licences.
+    Demo,
+}
+
+impl ProviderKind {
+    /// Whether Kaeri itself provides this source, rather than a plugin or a web source: what
+    /// the user already has, a server they run, or a catalogue they chose.
+    pub const fn is_first_party(self) -> bool {
+        matches!(
+            self,
+            Self::Library | Self::Server | Self::Catalogue | Self::Licensed | Self::Demo
+        )
+    }
+
+    /// Where this kind sits by default, lowest first: Your media, then media servers, then free
+    /// catalogues, then everything else, then the demo. It breaks ties between sources the
+    /// user's order places alike; the order itself is the user's. Licensed links never play
+    /// inside Kaeri, so they take no part and sit with the rest.
+    pub const fn tier(self) -> u8 {
+        match self {
+            Self::Library => 0,
+            Self::Server => 1,
+            Self::Catalogue => 2,
+            Self::Demo => 4,
+            _ => 3,
+        }
+    }
+
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Native => "native",
+            Self::Plugin => "plugin",
+            Self::Remote => "remote",
+            Self::Licensed => "licensed",
+            Self::Library => "library",
+            Self::Server => "server",
+            Self::Catalogue => "catalogue",
+            Self::Demo => "demo",
+        }
+    }
+}
+
+/// Static description of a provider.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ProviderManifest {
+    /// Stable machine id, used in config and as the health/cache key.
+    pub id: String,
+    pub display_name: String,
+    pub version: String,
+    pub kind: ProviderKind,
+    /// Hosts this provider is permitted to contact.
+    ///
+    /// For WASM plugins the host *enforces* this allowlist on every `fetch`, which is
+    /// the main containment for what is otherwise a supply-chain surface: a plugin
+    /// registry for sources means running other people's code.
+    pub allowed_hosts: Vec<String>,
+    pub translations: Vec<Translation>,
+    /// Whether this source names torrents for the engine to play, as a plugin does by
+    /// declaring the `torrents` capability. Such a source plays only while torrent playback is
+    /// on, and a cast with torrents while casting off passes it over.
+    pub torrents: bool,
+}
+
+/// One selectable release a provider can offer for an episode.
+///
+/// Deliberately descriptive rather than playable: listing must be cheap — no torrent
+/// session, no stream negotiation — so a candidate carries an opaque `id` the same
+/// provider can turn into streams later via [`Provider::resolve_source`].
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct SourceCandidate {
+    /// Opaque identifier, meaningful only to the provider that produced it.
+    pub id: String,
+    /// The provider that produced this candidate, so a pick can be routed straight
+    /// back to it rather than re-entering failover.
+    pub provider_id: String,
+    /// The release title as listed at the source.
+    pub title: String,
+    /// Vertical resolution, when the listing states one.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub quality: Option<u32>,
+    /// One short line the source wrote about this candidate, shown under its title as written.
+    /// The engine reads nothing into it and ranks nothing by it.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub label: Option<String>,
+    /// Payload size as listed at the source, already human-readable (`"1.4 GiB"`).
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub size: Option<String>,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub dual_audio: bool,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub dubbed: bool,
+    /// Whether automatic resolution would pick this one, so the list can say which
+    /// release the user is currently getting.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub auto_pick: bool,
+}
+
+/// A source of episodes and streams.
+#[async_trait]
+pub trait Provider: Send + Sync {
+    fn manifest(&self) -> &ProviderManifest;
+
+    /// Find candidate titles. For site-backed sources this is the *primary* identification
+    /// path, not a fallback: site catalogues key on their own opaque ids, which
+    /// appear in no mapping dataset, so there is nothing to look up.
+    async fn search(
+        &self,
+        query: &str,
+        translation: Translation,
+    ) -> Result<Vec<SearchHit>, ProviderError>;
+
+    async fn episodes(
+        &self,
+        key: &ProviderKey,
+        translation: Translation,
+    ) -> Result<Vec<Episode>, ProviderError>;
+
+    /// Resolve playable streams, best-first where the provider has an opinion.
+    async fn resolve(
+        &self,
+        key: &ProviderKey,
+        episode: &str,
+        translation: Translation,
+    ) -> Result<Vec<Stream>, ProviderError>;
+
+    /// Find a title by the ids other services know it by, with no fuzzy matching. A source with
+    /// its own index (a media server, the library) answers from it; the default has no index and
+    /// answers `None`, so the caller falls back to [`Self::search`].
+    async fn lookup(&self, _ids: &ExternalIds) -> Result<Option<SearchHit>, ProviderError> {
+        Ok(None)
+    }
+
+    /// The AniList titles this source has in its own index, read with no network: what Search's
+    /// Available filter keeps to and a result's "In your library" line comes from. A source with
+    /// no index of its own has none.
+    fn titles(&self) -> Vec<AnilistId> {
+        Vec::new()
+    }
+
+    /// The selectable releases for an episode, best-first, without starting any of them.
+    ///
+    /// Optional, and not part of the WIT plugin interface: an empty list means "nothing
+    /// to choose between here", which is the honest answer for sources that resolve to
+    /// exactly one stream anyway.
+    async fn sources(
+        &self,
+        _key: &ProviderKey,
+        _episode: &str,
+        _translation: Translation,
+    ) -> Result<Vec<SourceCandidate>, ProviderError> {
+        Ok(Vec::new())
+    }
+
+    /// Resolve one specific candidate from [`Self::sources`] by its id.
+    ///
+    /// The default refuses rather than falling back to [`Self::resolve`]: silently
+    /// substituting the automatic pick for the one the user chose would be worse than
+    /// failing.
+    async fn resolve_source(
+        &self,
+        _key: &ProviderKey,
+        _episode: &str,
+        _translation: Translation,
+        _source_id: &str,
+    ) -> Result<Vec<Stream>, ProviderError> {
+        Err(ProviderError::NotFound)
+    }
+
+    /// Cheap liveness probe for the Providers screen. Default implementation runs a
+    /// throwaway search, which is a fair proxy for "is this source answering".
+    async fn health_check(&self) -> Result<(), ProviderError> {
+        self.search("a", Translation::Sub).await.map(|_| ())
+    }
+
+    /// Whether this provider is currently willing to serve.
+    ///
+    /// Distinct from health: a source held back by local policy, such as the torrent
+    /// protection check, is not a broken source. Returning an error keeps it out of
+    /// resolution entirely.
+    fn is_available(&self) -> Result<(), ProviderError> {
+        Ok(())
+    }
+}
+
+/// Something that can play a [`Stream`].
+///
+/// mpv over JSON IPC is the reference implementation, but the trait is what lets the
+/// licensed path work at all: episodes of a licensed service resolve to an external deep link and
+/// are opened by a handoff player, needing no new machinery anywhere else.
+#[async_trait]
+pub trait Player: Send + Sync {
+    fn id(&self) -> &str;
+
+    /// Whether this player can handle a given stream. The registry uses it to route an
+    /// `ExternalDeepLink` to the handoff player and everything else to mpv.
+    fn supports(&self, stream: &Stream) -> bool;
+
+    /// Begin playback. Returns once playback has *started*, not once it finishes.
+    async fn play(&self, stream: &Stream, session: PlaybackRequest)
+    -> Result<(), crate::Error>;
+}
+
+/// Context handed to a player alongside the stream.
+#[derive(Debug, Clone, Default)]
+pub struct PlaybackRequest {
+    /// Window/OSD title.
+    pub title: String,
+    /// Where to resume from, in seconds.
+    pub start_at: Option<f64>,
+    /// Preferred subtitle language tag.
+    pub subtitle_language: Option<String>,
+    /// Carried across episodes within a series so a chosen speed sticks.
+    pub speed: Option<f64>,
+    /// Carried across sessions so a chosen volume sticks, in mpv's 0–100 scale.
+    pub volume: Option<f64>,
+    /// Whether the viewer wants dubbed audio. Drives track selection: audio in their
+    /// own language with signs-only subtitles, instead of original audio with full
+    /// subtitles. Track order in the file never decides.
+    pub dub: bool,
+    /// Open the player fullscreen rather than windowed.
+    pub fullscreen: bool,
+    /// The viewer's own mpv options, `playback.mpv_args`, as property and value: what a player
+    /// a front end hosts sets as it opens. mpv's own process takes them on its command line.
+    pub mpv_options: Vec<(String, String)>,
+}
+
+/// An external service that holds watch progress.
+///
+/// Local SQLite history is always the source of truth; a tracker is a *projection* of
+/// it. That ordering is what makes the app work with no account and no network, and it
+/// is why `push` must be idempotent — the outbox will retry.
+#[async_trait]
+pub trait Tracker: Send + Sync {
+    fn id(&self) -> &str;
+
+    /// Whether credentials are present. `false` means degrade to local-only rather than
+    /// erroring.
+    fn is_authenticated(&self) -> bool;
+
+    async fn pull_library(&self) -> Result<Vec<TrackedEntry>, crate::Error>;
+
+    /// Apply a batch of operations. Must be safe to call twice with the same input.
+    async fn push(&self, ops: &[TrackOp]) -> Result<(), crate::Error>;
+
+    /// [`Self::push`], also naming the titles the tracker answered for without applying
+    /// anything.
+    ///
+    /// Some services answer a write with success and a list of what they could not match, so
+    /// the status alone says nothing about whether the list changed. The drain reports those
+    /// titles instead of counting them as sent. Default: `push`, trusting its success.
+    async fn push_checked(
+        &self,
+        ops: &[TrackOp],
+    ) -> Result<Vec<crate::ids::AnilistId>, crate::Error> {
+        self.push(ops).await.map(|()| Vec::new())
+    }
+
+    /// Whether this tracker can name the title an op is about, with the id mappings as they
+    /// stand.
+    ///
+    /// A tracker keyed on its own ids reaches a title through the mapping datasets, and a title
+    /// they do not cover yet cannot be pushed *yet*. The drain holds such an op back until the
+    /// mappings change instead of sending it, so it neither fails the batch nor is lost. Default
+    /// `true` for trackers keyed on AniList ids, which can name every title.
+    fn can_address(&self, _op: &TrackOp) -> bool {
+        true
+    }
+
+    /// Drop any in-memory credential.
+    ///
+    /// Signing out clears the stored token, but a tracker that cached one at construction would
+    /// keep using it — reporting itself as connected and pushing with a credential the user has
+    /// revoked. Default no-op for trackers that read the store on every call.
+    async fn forget_credentials(&self) {}
+
+    /// Take a credential obtained while the app was already running.
+    ///
+    /// The mirror of [`Self::forget_credentials`], and it exists for a reason worth recording:
+    /// signing in used to end with "restart to start syncing", because every tracker captured its
+    /// token at construction and nothing could hand it a new one. The token reached the keychain and
+    /// the running session never saw it.
+    async fn accept_credentials(
+        &self,
+        _access: &str,
+        _refresh: Option<&str>,
+        _expires_at: Option<i64>,
+    ) {
+    }
+}
+
+/// One title's state on a tracker.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TrackedEntry {
+    pub anilist_id: crate::ids::AnilistId,
+    pub progress: u32,
+    pub status: WatchStatus,
+    pub score: Option<f32>,
+}
+
+/// A pending change to push to a tracker.
+///
+/// Serialisable because these are persisted in the durable outbox — progress recorded
+/// while offline has to survive a process kill, so the queue lives in SQLite rather than
+/// in memory.
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(tag = "op", rename_all = "snake_case")]
+pub enum TrackOp {
+    /// Progress is monotonic, so conflicts resolve to `max(local, remote)` without
+    /// needing a timestamp or user intervention.
+    SetProgress {
+        anilist_id: crate::ids::AnilistId,
+        episode: u32,
+    },
+    /// Status is *not* monotonic, so this carries a timestamp for last-write-wins and
+    /// genuine divergence is surfaced rather than silently resolved.
+    SetStatus {
+        anilist_id: crate::ids::AnilistId,
+        status: WatchStatus,
+        at: i64,
+    },
+    SetScore {
+        anilist_id: crate::ids::AnilistId,
+        score: f32,
+        at: i64,
+    },
+}
+
+impl TrackOp {
+    pub const fn anilist_id(&self) -> crate::ids::AnilistId {
+        match self {
+            Self::SetProgress { anilist_id, .. }
+            | Self::SetStatus { anilist_id, .. }
+            | Self::SetScore { anilist_id, .. } => *anilist_id,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum WatchStatus {
+    Current,
+    Planning,
+    Completed,
+    Paused,
+    Dropped,
+    Repeating,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn track_ops_expose_their_subject_uniformly() {
+        let id = crate::ids::AnilistId::new(154_587);
+        let ops = [
+            TrackOp::SetProgress { anilist_id: id, episode: 12 },
+            TrackOp::SetStatus { anilist_id: id, status: WatchStatus::Current, at: 0 },
+            TrackOp::SetScore { anilist_id: id, score: 9.0, at: 0 },
+        ];
+        for op in &ops {
+            assert_eq!(op.anilist_id(), id);
+        }
+    }
+
+    #[test]
+    fn provider_kind_labels_are_stable() {
+        // These strings appear in config files and on the Providers screen, so they are
+        // part of the user-facing contract.
+        assert_eq!(ProviderKind::Plugin.as_str(), "plugin");
+        assert_eq!(ProviderKind::Licensed.as_str(), "licensed");
+        assert_eq!(ProviderKind::Library.as_str(), "library");
+        assert_eq!(ProviderKind::Server.as_str(), "server");
+        assert_eq!(ProviderKind::Catalogue.as_str(), "catalogue");
+        assert_eq!(ProviderKind::Demo.as_str(), "demo");
+    }
+
+    #[test]
+    fn first_party_kinds_are_tried_before_plugins_and_the_demo_last() {
+        let tiers: Vec<u8> = [
+            ProviderKind::Library,
+            ProviderKind::Server,
+            ProviderKind::Catalogue,
+            ProviderKind::Plugin,
+            ProviderKind::Demo,
+        ]
+        .map(ProviderKind::tier)
+        .to_vec();
+        assert!(tiers.windows(2).all(|pair| pair[0] < pair[1]), "{tiers:?}");
+        assert!(ProviderKind::Server.is_first_party());
+        assert!(!ProviderKind::Plugin.is_first_party());
+    }
+}

@@ -1,0 +1,1748 @@
+//! A store's records and files, and every rule about them.
+//!
+//! Written against [`Database`] and [`Blobs`] so the same rules run on SQLite and a directory, on
+//! Postgres and S3, and on D1 and R2. Nothing here reads the clock — every operation is told what
+//! time it is — because there is no clock to read in some of the places this runs.
+//!
+//! The database offers single statements and atomic batches, nothing more, so every decision is
+//! made by one statement: an invite is claimed by an `UPDATE … RETURNING` that only matches an
+//! unused one, a version is published by an upsert that only applies to a new version, and an
+//! open join adds its member only while the code it came with is the store's open code. Two
+//! requests racing for the same invite cannot both win, whatever runs underneath.
+//!
+//! A member who joined with the open link has no name: that is what makes them anonymous, and
+//! every name anyone is given otherwise is one to 64 characters. Nothing else about them is kept,
+//! and their row goes with their last device.
+
+use crate::{
+    blobs::{BlobError, Blobs},
+    crypto::{self, PublicKey, SigningKey},
+    db::{Database, DbError, Dialect, Row, Statement},
+    inspect::{Inspector, differs},
+    invite::Invite,
+    manifest::{self, PluginInfo},
+    protocol::{
+        DeviceRow, ENDED_INVITES_KEPT_SECS, EndReason, INVITE_LIFETIME_SECS, Index, IndexEntry,
+        InviteEnded, InviteFacts, InviteKind, InviteUse, MAX_NAME_CHARS, MAX_PLUGIN_BYTES,
+        Member, MemberRow, OPEN_DEVICES_LISTED, OpenState, PART_SIZE, PROTOCOL, PendingInvite,
+        RESERVED_IDS, Role, SignedIndex, StoreInfo, clean_name, is_valid_id, is_valid_version,
+    },
+    schema, sql,
+};
+
+/// This code's version, as the workspace has it, recorded with each migration it applies.
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+#[derive(Debug, thiserror::Error)]
+pub enum StoreError {
+    #[error("{0}")]
+    Setup(String),
+    #[error(transparent)]
+    Db(#[from] DbError),
+    #[error(transparent)]
+    Blob(#[from] BlobError),
+    #[error("{0}")]
+    Crypto(#[from] crypto::CryptoError),
+    /// The invite never existed, or cannot be used for a reason it does not say. A guess learns
+    /// nothing from it; someone holding a real invite that ended hears why, from the three below.
+    #[error("this invite was used, cancelled or has expired")]
+    InviteUnusable,
+    /// The invite was used as many times as it allows.
+    #[error("this invite has been used up. Ask the store's owners for a new one")]
+    InviteUsedUp { refusal: Refusal },
+    /// The invite's end date passed, at `at`.
+    #[error("this invite has ended. Ask the store's owners for a new one")]
+    InviteEnded { at: i64, refusal: Refusal },
+    /// An owner cancelled the invite, or removed whoever made it.
+    #[error("this invite was cancelled. Ask the store's owners for a new one")]
+    InviteCancelled { refusal: Refusal },
+    /// A sign-in link for the admin page that was used, has expired, or is not an owner's.
+    #[error("this sign-in link was already used or has expired — open the admin page again")]
+    LinkUnusable,
+    #[error("{0}")]
+    NotFound(String),
+    #[error("{0}")]
+    Forbidden(String),
+    #[error("{0}")]
+    Conflict(String),
+    #[error("{0}")]
+    InvalidPlugin(String),
+    #[error("{0}")]
+    BadRequest(String),
+    /// Open joining was asked for on a store whose operator has given no contact.
+    #[error("add a contact for this store before letting anyone with the link join")]
+    ContactNeeded,
+    /// The store does not let anyone join, or not with that code any more: closed, or opened
+    /// again since with a new link. One error for both, like [`Self::InviteUnusable`].
+    #[error(
+        "this link no longer lets anyone join. Ask the store's owner for a new link or an invite"
+    )]
+    OpenUnusable,
+    /// Too many devices joined with the open link from one address lately.
+    #[error("too many devices joined from this address lately. Wait an hour and try again")]
+    TooManyJoins,
+}
+
+/// Who to ask about an invite that stopped working: the store's contact, when it has one, and
+/// its owners, the longest-standing first.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Refusal {
+    pub contact: Option<String>,
+    pub owners: Vec<String>,
+}
+
+/// How stale `last_seen` may get before a request refreshes it. Writing it on every request
+/// would turn each index poll into a database write for a figure nobody needs to the second.
+const SEEN_GRANULARITY_SECS: i64 = 10 * 60;
+
+/// How long a sign-in link for the admin page works. Long enough to switch to a browser.
+pub const ADMIN_LINK_SECS: i64 = 10 * 60;
+
+/// How long an admin page session lasts. A working day, then sign in again from the app.
+pub const SESSION_SECS: i64 = 12 * 60 * 60;
+
+/// How long an unfinished upload is kept before its parts are thrown away.
+const UPLOAD_SECS: i64 = 60 * 60;
+
+/// Failed attempts allowed per address per window — redeeming, signing in, claiming.
+///
+/// Not what keeps any of them safe — every code is 128 random bits, and guessing one is not a
+/// matter of attempts per minute — but it keeps a script hammering an endpoint from costing
+/// anything.
+pub const ALLOWED_FAILURES: i64 = 10;
+pub const FAILURE_WINDOW_SECS: i64 = 10 * 60;
+
+/// Devices allowed to join with the open link per address per window. A household joining
+/// together fits; a script filling the members table does not. IPv6 addresses count by their
+/// /64, which is what one connection is usually handed.
+pub const OPEN_JOINS_ALLOWED: i64 = 10;
+pub const OPEN_JOIN_WINDOW_SECS: i64 = 60 * 60;
+
+/// A store name nobody chose.
+pub const DEFAULT_NAME: &str = "Plugin store";
+
+/// What an invite is for.
+#[derive(Debug, Clone, Copy)]
+pub struct NewInvite<'a> {
+    pub kind: InviteKind,
+    /// Who it is for, as the owner's member list will show them.
+    pub name: &'a str,
+    pub role: Role,
+    /// The member a device invite adds a device to.
+    pub member: Option<&'a str>,
+    pub created_by: Option<&'a str>,
+    /// When it stops working, or [`NO_END_DATE`](crate::protocol::NO_END_DATE).
+    pub expires_at: i64,
+    /// How many times it works, or `None` for any number. Once unless said otherwise.
+    pub max_uses: Option<u32>,
+}
+
+impl<'a> NewInvite<'a> {
+    /// Someone new, once.
+    pub fn member(
+        name: &'a str,
+        role: Role,
+        created_by: Option<&'a str>,
+        expires_at: i64,
+    ) -> Self {
+        Self {
+            kind: InviteKind::Member,
+            name,
+            role,
+            member: None,
+            created_by,
+            expires_at,
+            max_uses: Some(1),
+        }
+    }
+
+    /// The same invite, working `max_uses` times, or any number for `None`. Each person who joins
+    /// with one that works more than once is a member of their own.
+    pub fn times(self, max_uses: Option<u32>) -> Self {
+        Self { max_uses, ..self }
+    }
+
+    /// Another device for an existing member, asked for by that member.
+    pub fn device(member: &'a Member, expires_at: i64) -> Self {
+        Self {
+            kind: InviteKind::Device,
+            name: &member.name,
+            role: member.role,
+            member: Some(&member.id),
+            created_by: Some(&member.id),
+            expires_at,
+            max_uses: Some(1),
+        }
+    }
+}
+
+/// A store, open on its database and file storage.
+pub struct Store<D, B> {
+    db: D,
+    blobs: B,
+    key: SigningKey,
+}
+
+impl<D, B> std::fmt::Debug for Store<D, B> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Store").field("key", &self.key).finish_non_exhaustive()
+    }
+}
+
+impl<D: Database, B: Blobs> Store<D, B> {
+    /// Open a store, creating its tables and its key on first use, and bringing its tables up to
+    /// date when an earlier version made them (see [`crate::schema`]).
+    ///
+    /// `url` and `name` replace what is recorded when given. The key is kept in the database, so
+    /// a backup of the database is a backup of the store's identity.
+    pub async fn open(
+        db: D,
+        blobs: B,
+        url: Option<&str>,
+        name: Option<&str>,
+    ) -> Result<Self, StoreError> {
+        let dialect = db.dialect();
+        schema::migrate(&db, VERSION).await?;
+
+        // Generated once. Two instances starting together both try; the first insert wins and
+        // both read back the same key.
+        let fresh = SigningKey::generate()?;
+        db.batch(&[render(
+            dialect,
+            sql!(
+                "INSERT INTO meta (key, value) VALUES ('signing_key', ?1)
+                 ON CONFLICT(key) DO NOTHING",
+                fresh.encode()
+            ),
+        )])
+        .await?;
+        let stored = db
+            .query("SELECT value FROM meta WHERE key = 'signing_key'", &[])
+            .await?
+            .first()
+            .map(|row| row.text(0))
+            .transpose()?
+            .ok_or_else(|| StoreError::Setup("the store's key was not saved".into()))?;
+        let key = SigningKey::parse(&stored)?;
+
+        let store = Self { db, blobs, key };
+        if let Some(url) = url {
+            store.set_meta("url", url).await?;
+        }
+        match name.map(str::trim).filter(|n| !n.is_empty()) {
+            Some(name) => store.set_meta("name", name).await?,
+            None => {
+                store
+                    .exec(sql!(
+                        "INSERT INTO meta (key, value) VALUES ('name', ?1)
+                         ON CONFLICT(key) DO NOTHING",
+                        DEFAULT_NAME
+                    ))
+                    .await?;
+            }
+        }
+        Ok(store)
+    }
+
+    pub fn key(&self) -> &SigningKey {
+        &self.key
+    }
+
+    pub fn blobs(&self) -> &B {
+        &self.blobs
+    }
+
+    // --- plumbing ---------------------------------------------------------------------------
+
+    async fn query(&self, statement: Statement) -> Result<Vec<Row>, StoreError> {
+        let statement = render(self.db.dialect(), statement);
+        Ok(self.db.query(&statement.sql, &statement.params).await?)
+    }
+
+    async fn exec(&self, statement: Statement) -> Result<u64, StoreError> {
+        Ok(self.batch(vec![statement]).await?.first().copied().unwrap_or(0))
+    }
+
+    async fn batch(&self, statements: Vec<Statement>) -> Result<Vec<u64>, StoreError> {
+        let dialect = self.db.dialect();
+        let statements: Vec<Statement> =
+            statements.into_iter().map(|s| render(dialect, s)).collect();
+        Ok(self.db.batch(&statements).await?)
+    }
+
+    async fn meta(&self, key: &str) -> Result<Option<String>, StoreError> {
+        let rows = self.query(sql!("SELECT value FROM meta WHERE key = ?1", key)).await?;
+        Ok(rows.first().map(|row| row.text(0)).transpose()?)
+    }
+
+    async fn set_meta(&self, key: &str, value: &str) -> Result<(), StoreError> {
+        self.exec(sql!(
+            "INSERT INTO meta (key, value) VALUES (?1, ?2)
+             ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            key,
+            value
+        ))
+        .await?;
+        Ok(())
+    }
+
+    // --- identity ---------------------------------------------------------------------------
+
+    pub async fn name(&self) -> String {
+        self.meta("name").await.ok().flatten().unwrap_or_else(|| DEFAULT_NAME.into())
+    }
+
+    /// The address recorded for the store, if one was given.
+    pub async fn url(&self) -> Option<String> {
+        self.meta("url").await.ok().flatten().filter(|url| !url.is_empty())
+    }
+
+    pub async fn info(&self) -> StoreInfo {
+        StoreInfo {
+            protocol: PROTOCOL,
+            name: self.name().await,
+            key: self.key.public().encode(),
+            claimable: false,
+            contact: self.contact().await.ok().flatten(),
+            invite_choices: true,
+        }
+    }
+
+    /// How to reach whoever runs the store, once they have given it.
+    pub async fn contact(&self) -> Result<Option<String>, StoreError> {
+        Ok(self.meta("contact").await?.filter(|contact| !contact.trim().is_empty()))
+    }
+
+    /// Keep the operator's contact, which the store's pages show. Answers the tidied text.
+    pub async fn set_contact(&self, contact: &str) -> Result<String, StoreError> {
+        let contact = crate::protocol::clean_contact(contact)
+            .map_err(|message| StoreError::BadRequest(message.into()))?;
+        self.set_meta("contact", &contact).await?;
+        Ok(contact)
+    }
+
+    pub fn public_key(&self) -> PublicKey {
+        self.key.public()
+    }
+
+    // --- invites ----------------------------------------------------------------------------
+
+    /// Create an invite and return it with its link. The code exists only in the return value.
+    pub async fn create_invite(
+        &self,
+        new: NewInvite<'_>,
+        base: &str,
+        now: i64,
+    ) -> Result<(String, Invite), StoreError> {
+        let NewInvite { kind, name, role, member, created_by, expires_at, max_uses } = new;
+        let name = name.trim();
+        if name.is_empty() || name.chars().count() > MAX_NAME_CHARS {
+            return Err(StoreError::BadRequest(
+                "an invite needs a name of 1 to 64 characters".into(),
+            ));
+        }
+        // An owner invite, or one for another device, acts as whoever it makes: a link that can
+        // be passed on should not.
+        if max_uses != Some(1) && (role == Role::Owner || kind == InviteKind::Device) {
+            return Err(StoreError::BadRequest("owner invites work once".into()));
+        }
+        if max_uses == Some(0) {
+            return Err(StoreError::BadRequest("an invite works at least once".into()));
+        }
+        // A link that works any number of times can be passed on, like the store's own link, so
+        // it needs the same contact for whoever runs the store.
+        if max_uses.is_none() && self.contact().await?.is_none() {
+            return Err(StoreError::ContactNeeded);
+        }
+        let id = crypto::new_id()?;
+        let code = crypto::new_code()?;
+        self.exec(sql!(
+            "INSERT INTO invites (id, code_hash, kind, name, role, member_id, created_by,
+                                  created_at, expires_at, max_uses)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+            id.as_str(),
+            crypto::hash_secret(&code),
+            kind.as_str(),
+            name,
+            role.as_str(),
+            member,
+            created_by,
+            now,
+            expires_at,
+            max_uses.map(i64::from)
+        ))
+        .await?;
+        Ok((id, Invite { base: base.to_owned(), code, key: self.key.public(), open: false }))
+    }
+
+    /// The default expiry for an invite created `now`.
+    pub fn default_expiry(now: i64) -> i64 {
+        now + INVITE_LIFETIME_SECS
+    }
+
+    pub async fn has_owner(&self) -> Result<bool, StoreError> {
+        let rows = self
+            .query(sql!(
+                "SELECT EXISTS(SELECT 1 FROM members WHERE role = 'owner' AND removed_at IS NULL)"
+            ))
+            .await?;
+        Ok(rows.first().map(|r| r.bool(0)).transpose()?.unwrap_or(false))
+    }
+
+    /// An owner invite, while nobody has claimed the store yet.
+    ///
+    /// Earlier unclaimed owner invites are cancelled first, so only the link produced most
+    /// recently works — an old terminal's scrollback is not a way in.
+    pub async fn fresh_owner_invite(
+        &self,
+        base: &str,
+        now: i64,
+    ) -> Result<Option<Invite>, StoreError> {
+        if self.has_owner().await? {
+            return Ok(None);
+        }
+        self.exec(sql!(
+            "UPDATE invites SET cancelled_at = ?1
+             WHERE role = 'owner' AND created_by IS NULL AND used_at IS NULL
+               AND cancelled_at IS NULL",
+            now
+        ))
+        .await?;
+        let new = NewInvite::member("Owner", Role::Owner, None, Self::default_expiry(now));
+        let (_, invite) = self.create_invite(new, base, now).await?;
+        Ok(Some(invite))
+    }
+
+    /// Spend an invite: create the member it was for (or find them, for a device invite) and give
+    /// this device a token. As a client from before the joiner's own name redeems.
+    pub async fn redeem(
+        &self,
+        code: &str,
+        device_label: &str,
+        now: i64,
+    ) -> Result<(String, Member), StoreError> {
+        self.redeem_named(code, device_label, None, now).await
+    }
+
+    /// Spend one use of an invite, as [`Self::redeem`], with the name the joiner gave.
+    ///
+    /// The use is claimed by one statement that only matches an invite with a use left, before
+    /// its end date, whose maker is still a member, so two devices racing for an invite's last
+    /// use cannot both get it. Each use of a member invite makes a member of its own: named by
+    /// the invite when it works once, and otherwise by `name`, or with none given, the invite's
+    /// name and the use's number ("Book club 3").
+    pub async fn redeem_named(
+        &self,
+        code: &str,
+        device_label: &str,
+        name: Option<&str>,
+        now: i64,
+    ) -> Result<(String, Member), StoreError> {
+        if !crypto::is_code(code) {
+            return Err(StoreError::InviteUnusable);
+        }
+        let new_member = crypto::new_id()?;
+        let claimed = self
+            .query(sql!(
+                "UPDATE invites SET used_at = ?1, used_by = COALESCE(used_by, member_id, ?2),
+                                    uses = uses + 1
+                 WHERE code_hash = ?3 AND cancelled_at IS NULL AND expires_at > ?1
+                   AND (max_uses IS NULL OR uses < max_uses)
+                   AND (created_by IS NULL OR EXISTS (
+                       SELECT 1 FROM members m
+                       WHERE m.id = invites.created_by AND m.removed_at IS NULL))
+                 RETURNING id, kind, name, role, member_id, max_uses, uses",
+                now,
+                new_member.as_str(),
+                crypto::hash_secret(code)
+            ))
+            .await?;
+        let Some(row) = claimed.first() else {
+            return Err(self.why_unusable(code, now).await?);
+        };
+        let invite_id = row.text(0)?;
+        let kind = InviteKind::parse(&row.text(1)?);
+        let role = Role::parse(&row.text(3)?).unwrap_or_default();
+        let max_uses = row.opt_int(5)?;
+        let uses = row.int(6)?;
+
+        let token = crypto::new_token()?;
+        let device_id = crypto::new_id()?;
+        let label: String = device_label.trim().chars().take(64).collect();
+        let label = if label.is_empty() { "device".to_owned() } else { label };
+        let device = |member: &str| {
+            sql!(
+                "INSERT INTO devices (id, member_id, label, token_hash, created_at, last_seen)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?5)",
+                device_id.as_str(),
+                member,
+                label.as_str(),
+                crypto::hash_secret(&token),
+                now
+            )
+        };
+        let used = |member: &str| {
+            sql!(
+                "INSERT INTO invite_uses (invite_id, member_id, device_id, used_at)
+                 VALUES (?1, ?2, ?3, ?4)",
+                invite_id.as_str(),
+                member,
+                device_id.as_str(),
+                now
+            )
+        };
+
+        let member = match (kind, row.opt_text(4)?) {
+            (Some(InviteKind::Device), Some(member_id)) => {
+                let rows = self
+                    .query(sql!(
+                        "SELECT name, role FROM members WHERE id = ?1 AND removed_at IS NULL",
+                        member_id.as_str()
+                    ))
+                    .await?;
+                // The member was removed after asking for the invite: it dies with them.
+                let found = rows.first().ok_or(StoreError::InviteUnusable)?;
+                let member = Member {
+                    name: found.text(0)?,
+                    role: Role::parse(&found.text(1)?).unwrap_or_default(),
+                    id: member_id,
+                };
+                self.batch(vec![device(&member.id), used(&member.id)]).await?;
+                member
+            }
+            (Some(InviteKind::Member), _) => {
+                let invite_name = row.text(2)?;
+                let name = if max_uses == Some(1) {
+                    invite_name
+                } else {
+                    name.and_then(clean_name).unwrap_or_else(|| numbered(&invite_name, uses))
+                };
+                let member = Member { id: new_member, name, role };
+                self.batch(vec![
+                    sql!(
+                        "INSERT INTO members (id, name, role, joined_at) VALUES (?1, ?2, ?3, ?4)",
+                        member.id.as_str(),
+                        member.name.as_str(),
+                        role.as_str(),
+                        now
+                    ),
+                    device(&member.id),
+                    used(&member.id),
+                ])
+                .await?;
+                member
+            }
+            _ => return Err(StoreError::InviteUnusable),
+        };
+        Ok((token, member))
+    }
+
+    /// Why `code` did not join: one of the errors that say why, for a real invite that ended, or
+    /// [`StoreError::InviteUnusable`] for anything else. Each carries the store's contact.
+    async fn why_unusable(&self, code: &str, now: i64) -> Result<StoreError, StoreError> {
+        let rows = self
+            .query(sql!(
+                "SELECT cancelled_at, expires_at, max_uses, uses FROM invites WHERE code_hash = ?1",
+                crypto::hash_secret(code)
+            ))
+            .await?;
+        let Some(row) = rows.first() else { return Ok(StoreError::InviteUnusable) };
+        let used_up =
+            row.opt_int(2)?.is_some_and(|max| row.int(3).is_ok_and(|uses| uses >= max));
+        let expires_at = row.int(1)?;
+        // Who to ask for a new one. Whoever holds a real code was sent it, and the preview it
+        // would have given says as much.
+        let refusal = Refusal {
+            contact: self.contact().await.ok().flatten(),
+            owners: self.owner_names().await.unwrap_or_default(),
+        };
+        Ok(if row.opt_int(0)?.is_some() {
+            StoreError::InviteCancelled { refusal }
+        } else if used_up {
+            StoreError::InviteUsedUp { refusal }
+        } else if expires_at <= now {
+            StoreError::InviteEnded { at: expires_at, refusal }
+        } else {
+            // Its maker is gone, which cancels it all the same.
+            StoreError::InviteCancelled { refusal }
+        })
+    }
+
+    /// Whether `code` is an invite that would join, checked as [`Self::redeem`] checks it but
+    /// spending nothing: for a preview of what it leads to. Answers what it allows.
+    pub async fn check_invite(&self, code: &str, now: i64) -> Result<InviteFacts, StoreError> {
+        if !crypto::is_code(code) {
+            return Err(StoreError::InviteUnusable);
+        }
+        let found = self
+            .query(sql!(
+                "SELECT max_uses, expires_at FROM invites
+                 WHERE code_hash = ?1 AND cancelled_at IS NULL AND expires_at > ?2
+                   AND (max_uses IS NULL OR uses < max_uses)
+                   AND (created_by IS NULL OR EXISTS (
+                       SELECT 1 FROM members m
+                       WHERE m.id = invites.created_by AND m.removed_at IS NULL))",
+                crypto::hash_secret(code),
+                now
+            ))
+            .await?;
+        match found.first() {
+            Some(row) => Ok(InviteFacts {
+                max_uses: count(row.opt_int(0)?.unwrap_or(0)),
+                expires_at: row.int(1)?,
+            }),
+            None => Err(self.why_unusable(code, now).await?),
+        }
+    }
+
+    /// The owners' names, the longest-standing first: who the store says runs it.
+    pub async fn owner_names(&self) -> Result<Vec<String>, StoreError> {
+        let rows = self
+            .query(sql!(
+                "SELECT name FROM members WHERE role = 'owner' AND removed_at IS NULL
+                 ORDER BY joined_at, id"
+            ))
+            .await?;
+        Ok(rows.iter().map(|row| row.text(0)).collect::<Result<_, _>>()?)
+    }
+
+    /// The invites that still work, the oldest first.
+    pub async fn pending_invites(&self, now: i64) -> Result<Vec<PendingInvite>, StoreError> {
+        Ok(self.invite_lists(now).await?.0)
+    }
+
+    /// The invites that still work, the oldest first, and those that ended in the last 30 days,
+    /// the latest first, each with who joined with it.
+    pub async fn invite_lists(
+        &self,
+        now: i64,
+    ) -> Result<(Vec<PendingInvite>, Vec<PendingInvite>), StoreError> {
+        let kept = now - ENDED_INVITES_KEPT_SECS;
+        // Every invite that works, or could have ended since `kept`; which of them did, and when,
+        // is worked out below.
+        let rows = self
+            .query(sql!(
+                "SELECT id, name, role, kind, expires_at, max_uses, uses, used_at, cancelled_at
+                 FROM invites
+                 WHERE cancelled_at > ?1
+                    OR (cancelled_at IS NULL AND (expires_at > ?1 OR used_at > ?1))
+                 ORDER BY created_at, id",
+                kept
+            ))
+            .await?;
+        let uses = self
+            .query(sql!(
+                "SELECT u.invite_id, u.member_id, m.name, u.used_at, m.removed_at, m.id
+                 FROM invite_uses u
+                 JOIN invites i ON i.id = u.invite_id
+                 LEFT JOIN members m ON m.id = u.member_id
+                 WHERE i.cancelled_at > ?1
+                    OR (i.cancelled_at IS NULL AND (i.expires_at > ?1 OR i.used_at > ?1))
+                 ORDER BY u.used_at, u.member_id",
+                kept
+            ))
+            .await?;
+        let mut joined: std::collections::HashMap<String, Vec<InviteUse>> = Default::default();
+        for row in &uses {
+            joined.entry(row.text(0)?).or_default().push(InviteUse {
+                member: row.text(1)?,
+                name: row.opt_text(2)?.unwrap_or_default(),
+                used_at: row.int(3)?,
+                removed: row.opt_int(4)?.is_some() || row.opt_text(5)?.is_none(),
+            });
+        }
+
+        let (mut working, mut ended) = (Vec::new(), Vec::new());
+        for row in &rows {
+            let id = row.text(0)?;
+            let expires_at = row.int(4)?;
+            let max_uses = row.opt_int(5)?;
+            let uses = row.int(6)?;
+            let end = if let Some(at) = row.opt_int(8)? {
+                Some(InviteEnded { reason: EndReason::Cancelled, at })
+            } else if max_uses.is_some_and(|max| uses >= max) {
+                let at = row.opt_int(7)?.unwrap_or(expires_at);
+                Some(InviteEnded { reason: EndReason::UsedUp, at })
+            } else if expires_at <= now {
+                Some(InviteEnded { reason: EndReason::RanOut, at: expires_at })
+            } else {
+                None
+            };
+            if end.is_some_and(|end| end.at <= kept) {
+                continue;
+            }
+            let invite = PendingInvite {
+                joined: joined.remove(&id).unwrap_or_default(),
+                id,
+                name: row.text(1)?,
+                role: Role::parse(&row.text(2)?).unwrap_or_default(),
+                kind: InviteKind::parse(&row.text(3)?).unwrap_or(InviteKind::Member),
+                expires_at,
+                max_uses: count(max_uses.unwrap_or(0)),
+                uses: count(uses),
+                ended: end,
+            };
+            if invite.ended.is_some() { ended.push(invite) } else { working.push(invite) }
+        }
+        ended.sort_by_key(|invite| std::cmp::Reverse(invite.ended.map_or(0, |end| end.at)));
+        Ok((working, ended))
+    }
+
+    /// Cancel an invite that still works. Whoever joined with it already stays a member.
+    pub async fn cancel_invite(&self, id: &str, now: i64) -> Result<(), StoreError> {
+        let changed = self
+            .exec(sql!(
+                "UPDATE invites SET cancelled_at = ?1
+                 WHERE id = ?2 AND cancelled_at IS NULL AND expires_at > ?1
+                   AND (max_uses IS NULL OR uses < max_uses)",
+                now,
+                id
+            ))
+            .await?;
+        if changed == 0 {
+            return Err(StoreError::NotFound("no pending invite with that id".into()));
+        }
+        Ok(())
+    }
+
+    // --- open joining -----------------------------------------------------------------------
+
+    /// The open link's code while anyone may join, `None` while only invited people may.
+    ///
+    /// Kept as it is rather than as a digest, unlike every other code: the owner copies the link
+    /// again whenever they like, and the code grants nothing but what the link openly offers.
+    pub async fn open_code(&self) -> Result<Option<String>, StoreError> {
+        Ok(self.meta("open_code").await?.filter(|code| crypto::is_code(code)))
+    }
+
+    /// The open link, built on `base`, while the store has one.
+    pub async fn open_link(&self, base: &str) -> Result<Option<Invite>, StoreError> {
+        Ok(self.open_code().await?.map(|code| Invite {
+            base: base.to_owned(),
+            code,
+            key: self.key.public(),
+            open: true,
+        }))
+    }
+
+    /// Whether `code` is the open link's: how a request from a client that predates open links,
+    /// which takes the link for an invite, is told apart from a spent invite.
+    pub async fn is_open_code(&self, code: &str) -> Result<bool, StoreError> {
+        Ok(self.open_code().await?.is_some_and(|open| codes_match(&open, code)))
+    }
+
+    /// Let anyone with the link join, or only people the owners invite.
+    ///
+    /// Opening makes a new link, so a link from an earlier time the store was open stays dead:
+    /// switching to invites only and back is also how an owner replaces a link that went further
+    /// than they meant. Opening a store that is already open keeps its link. Closing stops new
+    /// joins and leaves the devices that joined, which the owner removes when they choose.
+    pub async fn set_open(&self, open: bool) -> Result<(), StoreError> {
+        if open {
+            if self.contact().await?.is_none() {
+                return Err(StoreError::ContactNeeded);
+            }
+            self.exec(sql!(
+                "INSERT INTO meta (key, value) VALUES ('open_code', ?1)
+                 ON CONFLICT(key) DO NOTHING",
+                crypto::new_code()?
+            ))
+            .await?;
+        } else {
+            self.exec(sql!("DELETE FROM meta WHERE key = 'open_code'")).await?;
+        }
+        Ok(())
+    }
+
+    /// Whether `code` would join now, checked as [`Self::join_open`] checks it but adding no
+    /// one: for a preview of what the link leads to.
+    pub async fn check_open(&self, code: &str) -> Result<(), StoreError> {
+        if crypto::is_code(code) && self.is_open_code(code).await? {
+            Ok(())
+        } else {
+            Err(StoreError::OpenUnusable)
+        }
+    }
+
+    /// Whether `client` has had as many devices join from it lately as it may.
+    pub async fn joins_blocked(&self, client: &str, now: i64) -> Result<bool, StoreError> {
+        let rows = self
+            .query(sql!(
+                "SELECT window_start, attempts FROM open_joins WHERE key = ?1",
+                join_key(client)
+            ))
+            .await?;
+        let Some(row) = rows.first() else { return Ok(false) };
+        Ok(now - row.int(0)? < OPEN_JOIN_WINDOW_SECS && row.int(1)? >= OPEN_JOINS_ALLOWED)
+    }
+
+    /// Join with the open link: a new member with no name, one device, and its token.
+    ///
+    /// The member is added by one statement that only adds them while `code` is still the store's
+    /// open code, so a join racing the owner closing the store, or opening it again with a new
+    /// link, does not get in on the old one. The device and the count for `client` go in the same
+    /// batch, so a join is all of them or none.
+    pub async fn join_open(
+        &self,
+        code: &str,
+        client: &str,
+        now: i64,
+    ) -> Result<(String, Member), StoreError> {
+        self.check_open(code).await?;
+        if self.joins_blocked(client, now).await? {
+            return Err(StoreError::TooManyJoins);
+        }
+        let member = Member { id: crypto::new_id()?, name: String::new(), role: Role::Member };
+        let token = crypto::new_token()?;
+        // Each value is cast to its column's type: Postgres cannot infer a parameter's type from
+        // the column an `INSERT … SELECT` fills.
+        let changed = self
+            .batch(vec![
+                sql!(
+                    "INSERT INTO members (id, name, role, joined_at)
+                     SELECT CAST(?1 AS TEXT), '', 'member', CAST(?2 AS BIGINT)
+                     WHERE EXISTS (SELECT 1 FROM meta
+                                   WHERE key = 'open_code' AND value = CAST(?3 AS TEXT))",
+                    member.id.as_str(),
+                    now,
+                    code
+                ),
+                sql!(
+                    "INSERT INTO devices (id, member_id, label, token_hash, created_at, last_seen)
+                     SELECT CAST(?1 AS TEXT), CAST(?2 AS TEXT), '', CAST(?3 AS TEXT),
+                            CAST(?4 AS BIGINT), CAST(?4 AS BIGINT)
+                     WHERE EXISTS (SELECT 1 FROM members WHERE id = CAST(?2 AS TEXT))",
+                    crypto::new_id()?,
+                    member.id.as_str(),
+                    crypto::hash_secret(&token),
+                    now
+                ),
+                sql!(
+                    "INSERT INTO open_joins (key, window_start, attempts) VALUES (?1, ?2, 1)
+                     ON CONFLICT(key) DO UPDATE SET
+                        window_start = CASE WHEN ?2 - open_joins.window_start >= ?3
+                                            THEN ?2 ELSE open_joins.window_start END,
+                        attempts = CASE WHEN ?2 - open_joins.window_start >= ?3
+                                        THEN 1 ELSE open_joins.attempts + 1 END",
+                    join_key(client),
+                    now,
+                    OPEN_JOIN_WINDOW_SECS
+                ),
+                sql!(
+                    "DELETE FROM open_joins WHERE window_start < ?1",
+                    now - OPEN_JOIN_WINDOW_SECS
+                ),
+            ])
+            .await?;
+        if changed.first().copied().unwrap_or(0) == 0 {
+            // Closed, or a new link made, between the check and the join.
+            return Err(StoreError::OpenUnusable);
+        }
+        Ok((token, member))
+    }
+
+    /// Who can join, the link while anyone can, and the devices that joined with a link.
+    pub async fn open_state(&self, base: &str) -> Result<OpenState, StoreError> {
+        let count = self
+            .query(sql!(
+                "SELECT COUNT(*) FROM devices d JOIN members m ON m.id = d.member_id
+                 WHERE d.revoked_at IS NULL AND m.removed_at IS NULL AND m.name = ''"
+            ))
+            .await?;
+        let devices = count.first().map(|row| row.int(0)).transpose()?.unwrap_or(0);
+        let rows = self
+            .query(sql!(
+                "SELECT d.id, d.created_at, d.last_seen
+                 FROM devices d JOIN members m ON m.id = d.member_id
+                 WHERE d.revoked_at IS NULL AND m.removed_at IS NULL AND m.name = ''
+                 ORDER BY d.created_at DESC, d.id LIMIT ?1",
+                i64::from(OPEN_DEVICES_LISTED)
+            ))
+            .await?;
+        let device_list = rows
+            .iter()
+            .map(|row| {
+                Ok(DeviceRow {
+                    id: row.text(0)?,
+                    label: String::new(),
+                    created_at: row.int(1)?,
+                    last_seen: row.opt_int(2)?,
+                })
+            })
+            .collect::<Result<_, StoreError>>()?;
+        let link = self.open_link(base).await?;
+        Ok(OpenState {
+            open: link.is_some(),
+            contact: self.contact().await?,
+            link: link.map(|invite| invite.link()),
+            devices: u32::try_from(devices.max(0)).unwrap_or(u32::MAX),
+            device_list,
+        })
+    }
+
+    /// Remove every member who joined with a link, and so every device they joined on: the
+    /// devices are revoked and the members' rows deleted, together. Answers how many devices
+    /// stopped working. Whether anyone can join is left as it is.
+    pub async fn remove_anonymous(&self, now: i64) -> Result<u64, StoreError> {
+        let changed = self
+            .batch(vec![
+                sql!(
+                    "UPDATE devices SET revoked_at = ?1
+                     WHERE revoked_at IS NULL AND member_id IN (
+                         SELECT id FROM members WHERE name = '')",
+                    now
+                ),
+                sql!("DELETE FROM members WHERE name = ''"),
+            ])
+            .await?;
+        Ok(changed.first().copied().unwrap_or(0))
+    }
+
+    // --- members and devices ----------------------------------------------------------------
+
+    /// Who a token belongs to, if it is still good.
+    pub async fn authenticate(
+        &self,
+        token: &str,
+        now: i64,
+    ) -> Result<Option<(Member, crate::protocol::Device)>, StoreError> {
+        let rows = self
+            .query(sql!(
+                "SELECT m.id, m.name, m.role, d.id, d.label, d.last_seen
+                 FROM devices d JOIN members m ON m.id = d.member_id
+                 WHERE d.token_hash = ?1 AND d.revoked_at IS NULL AND m.removed_at IS NULL",
+                crypto::hash_secret(token)
+            ))
+            .await?;
+        let Some(row) = rows.first() else { return Ok(None) };
+        let member = Member {
+            id: row.text(0)?,
+            name: row.text(1)?,
+            role: Role::parse(&row.text(2)?).unwrap_or_default(),
+        };
+        let device = crate::protocol::Device { id: row.text(3)?, label: row.text(4)? };
+        if row.opt_int(5)?.is_none_or(|seen| now - seen >= SEEN_GRANULARITY_SECS) {
+            self.exec(sql!(
+                "UPDATE devices SET last_seen = ?1 WHERE id = ?2",
+                now,
+                device.id.as_str()
+            ))
+            .await?;
+        }
+        Ok(Some((member, device)))
+    }
+
+    /// Revoke a device: the one a request came from, as it leaves. An anonymous member goes
+    /// with their last device, in the same batch.
+    pub async fn revoke_device(&self, device_id: &str, now: i64) -> Result<(), StoreError> {
+        self.batch(revoke(device_id, now)).await?;
+        Ok(())
+    }
+
+    /// Revoke one device of anyone's, for an owner. A member with a name stays; an anonymous one
+    /// goes with their last device, in the same batch.
+    pub async fn revoke_any_device(&self, device_id: &str, now: i64) -> Result<(), StoreError> {
+        let changed = self.batch(revoke(device_id, now)).await?;
+        if changed.first().copied().unwrap_or(0) == 0 {
+            return Err(StoreError::NotFound("no device with that id".into()));
+        }
+        Ok(())
+    }
+
+    pub async fn members(&self) -> Result<Vec<MemberRow>, StoreError> {
+        let devices = self
+            .query(sql!(
+                "SELECT d.member_id, d.id, d.label, d.created_at, d.last_seen
+                 FROM devices d JOIN members m ON m.id = d.member_id
+                 WHERE d.revoked_at IS NULL AND m.removed_at IS NULL AND m.name <> ''
+                 ORDER BY d.created_at"
+            ))
+            .await?;
+        let mut by_member: std::collections::HashMap<String, Vec<DeviceRow>> =
+            Default::default();
+        for row in &devices {
+            by_member.entry(row.text(0)?).or_default().push(DeviceRow {
+                id: row.text(1)?,
+                label: row.text(2)?,
+                created_at: row.int(3)?,
+                last_seen: row.opt_int(4)?,
+            });
+        }
+        // Anonymous members are counted, never listed: see `open_state`.
+        let rows = self
+            .query(sql!(
+                "SELECT id, name, role, joined_at FROM members
+                 WHERE removed_at IS NULL AND name <> '' ORDER BY joined_at, id"
+            ))
+            .await?;
+        rows.iter()
+            .map(|row| {
+                let id = row.text(0)?;
+                let device_list = by_member.remove(&id).unwrap_or_default();
+                Ok(MemberRow {
+                    last_seen: device_list.iter().filter_map(|d| d.last_seen).max(),
+                    devices: device_list.len() as u32,
+                    device_list,
+                    id,
+                    name: row.text(1)?,
+                    role: Role::parse(&row.text(2)?).unwrap_or_default(),
+                    joined_at: row.int(3)?,
+                })
+            })
+            .collect()
+    }
+
+    /// Change a member's role. Not your own: an owner making themselves a member could leave a
+    /// store with nobody to run it. Not an anonymous member's either, who has no name to run it by.
+    pub async fn set_role(&self, id: &str, role: Role, by: &str) -> Result<(), StoreError> {
+        if id == by {
+            return Err(StoreError::Forbidden(
+                "an owner cannot change their own role — another owner can".into(),
+            ));
+        }
+        let changed = self
+            .exec(sql!(
+                "UPDATE members SET role = ?1 WHERE id = ?2 AND removed_at IS NULL AND name <> ''",
+                role.as_str(),
+                id
+            ))
+            .await?;
+        if changed == 0 {
+            return Err(StoreError::NotFound("no member with that id".into()));
+        }
+        Ok(())
+    }
+
+    /// Change the name a member is shown by. An anonymous member has none to change.
+    pub async fn rename(&self, id: &str, name: &str) -> Result<(), StoreError> {
+        let name = name.trim();
+        if name.is_empty() || name.chars().count() > 64 {
+            return Err(StoreError::BadRequest("a name is 1 to 64 characters".into()));
+        }
+        let changed = self
+            .exec(sql!(
+                "UPDATE members SET name = ?1 WHERE id = ?2 AND removed_at IS NULL AND name <> ''",
+                name,
+                id
+            ))
+            .await?;
+        if changed == 0 {
+            return Err(StoreError::NotFound("no member with that id".into()));
+        }
+        Ok(())
+    }
+
+    /// The owner a command-line sign-in link is for: the one named, or the first to join.
+    pub async fn owner_named(&self, name: Option<&str>) -> Result<Option<Member>, StoreError> {
+        Ok(self
+            .members()
+            .await?
+            .into_iter()
+            .filter(|m| m.role == Role::Owner)
+            .find(|m| name.is_none_or(|name| m.name.eq_ignore_ascii_case(name.trim())))
+            .map(|m| Member { id: m.id, name: m.name, role: m.role }))
+    }
+
+    /// Remove a member, revoke every device they have, and cancel every invite that would bring
+    /// them, or anyone they chose, back in.
+    pub async fn remove_member(&self, id: &str, by: &str, now: i64) -> Result<(), StoreError> {
+        if id == by {
+            return Err(StoreError::Forbidden(
+                "an owner cannot remove themselves — a store always keeps one".into(),
+            ));
+        }
+        let changed = self
+            .batch(vec![
+                sql!(
+                    "UPDATE members SET removed_at = ?1 WHERE id = ?2 AND removed_at IS NULL",
+                    now,
+                    id
+                ),
+                sql!(
+                    "UPDATE devices SET revoked_at = ?1
+                     WHERE member_id = ?2 AND revoked_at IS NULL",
+                    now,
+                    id
+                ),
+                sql!(
+                    "UPDATE invites SET cancelled_at = ?1
+                     WHERE (member_id = ?2 OR created_by = ?2) AND cancelled_at IS NULL
+                       AND (max_uses IS NULL OR uses < max_uses)",
+                    now,
+                    id
+                ),
+                sql!("DELETE FROM sessions WHERE member_id = ?1", id),
+                // An anonymous member is not kept as removed: nothing of them is kept at all.
+                sql!("DELETE FROM members WHERE id = ?1 AND name = ''", id),
+            ])
+            .await?;
+        if changed.first().copied().unwrap_or(0) == 0 {
+            return Err(StoreError::NotFound("no member with that id".into()));
+        }
+        Ok(())
+    }
+
+    // --- the admin page ---------------------------------------------------------------------
+
+    /// A one-time link that signs a browser in as `member`, who must be an owner.
+    ///
+    /// The code travels in the link's fragment, so it never reaches the server's logs or a
+    /// proxy's, and the page trades it for a session cookie the moment it loads.
+    pub async fn create_admin_link(
+        &self,
+        member: &str,
+        base: &str,
+        now: i64,
+    ) -> Result<(String, i64), StoreError> {
+        let rows = self
+            .query(sql!(
+                "SELECT EXISTS(SELECT 1 FROM members
+                               WHERE id = ?1 AND role = 'owner' AND removed_at IS NULL)",
+                member
+            ))
+            .await?;
+        if !rows.first().map(|r| r.bool(0)).transpose()?.unwrap_or(false) {
+            return Err(StoreError::Forbidden("only the store's owner can do that".into()));
+        }
+        let code = crypto::new_code()?;
+        let expires_at = now + ADMIN_LINK_SECS;
+        self.exec(sql!(
+            "INSERT INTO admin_links (code_hash, member_id, created_at, expires_at)
+             VALUES (?1, ?2, ?3, ?4)",
+            crypto::hash_secret(&code),
+            member,
+            now,
+            expires_at
+        ))
+        .await?;
+        Ok((format!("{base}/admin/#login={code}"), expires_at))
+    }
+
+    /// Spend a sign-in link for a session token.
+    pub async fn open_session(
+        &self,
+        code: &str,
+        now: i64,
+    ) -> Result<(String, Member), StoreError> {
+        if !crypto::is_code(code) {
+            return Err(StoreError::LinkUnusable);
+        }
+        let claimed = self
+            .query(sql!(
+                "UPDATE admin_links SET used_at = ?1
+                 WHERE code_hash = ?2 AND used_at IS NULL AND expires_at > ?1
+                 RETURNING member_id",
+                now,
+                crypto::hash_secret(code)
+            ))
+            .await?;
+        let member_id = claimed.first().ok_or(StoreError::LinkUnusable)?.text(0)?;
+        let rows = self
+            .query(sql!(
+                "SELECT name FROM members
+                 WHERE id = ?1 AND role = 'owner' AND removed_at IS NULL",
+                member_id.as_str()
+            ))
+            .await?;
+        let name = rows.first().ok_or(StoreError::LinkUnusable)?.text(0)?;
+        let token = crypto::new_token()?;
+        // Old sessions and links are swept here rather than on a timer: signing in is rare, and
+        // this keeps both tables to what could still be used.
+        self.batch(vec![
+            sql!(
+                "INSERT INTO sessions (token_hash, member_id, created_at, expires_at)
+                 VALUES (?1, ?2, ?3, ?4)",
+                crypto::hash_secret(&token),
+                member_id.as_str(),
+                now,
+                now + SESSION_SECS
+            ),
+            sql!("DELETE FROM sessions WHERE expires_at <= ?1", now),
+            sql!("DELETE FROM admin_links WHERE expires_at <= ?1", now),
+        ])
+        .await?;
+        Ok((token, Member { id: member_id, name, role: Role::Owner }))
+    }
+
+    /// The owner a session belongs to, if it is still good — unexpired, and its owner still an
+    /// owner. Demoting or removing someone ends their sessions with no further step.
+    pub async fn session(&self, token: &str, now: i64) -> Result<Option<Member>, StoreError> {
+        let rows = self
+            .query(sql!(
+                "SELECT m.id, m.name FROM sessions s JOIN members m ON m.id = s.member_id
+                 WHERE s.token_hash = ?1 AND s.expires_at > ?2
+                   AND m.role = 'owner' AND m.removed_at IS NULL",
+                crypto::hash_secret(token),
+                now
+            ))
+            .await?;
+        rows.first()
+            .map(|row| Ok(Member { id: row.text(0)?, name: row.text(1)?, role: Role::Owner }))
+            .transpose()
+    }
+
+    pub async fn close_session(&self, token: &str) -> Result<(), StoreError> {
+        self.exec(sql!(
+            "DELETE FROM sessions WHERE token_hash = ?1",
+            crypto::hash_secret(token)
+        ))
+        .await?;
+        Ok(())
+    }
+
+    // --- failed attempts --------------------------------------------------------------------
+
+    /// Whether `key` — an address, usually — has failed too often lately.
+    pub async fn blocked(&self, key: &str, now: i64) -> Result<bool, StoreError> {
+        let rows = self
+            .query(sql!("SELECT window_start, attempts FROM failures WHERE key = ?1", key))
+            .await?;
+        let Some(row) = rows.first() else { return Ok(false) };
+        Ok(now - row.int(0)? < FAILURE_WINDOW_SECS && row.int(1)? >= ALLOWED_FAILURES)
+    }
+
+    /// Count a failed attempt. Kept in the database rather than in memory, because where a store
+    /// runs as a function there is no memory that outlives one request.
+    pub async fn fail(&self, key: &str, now: i64) -> Result<(), StoreError> {
+        self.batch(vec![
+            sql!(
+                "INSERT INTO failures (key, window_start, attempts) VALUES (?1, ?2, 1)
+                 ON CONFLICT(key) DO UPDATE SET
+                    window_start = CASE WHEN ?2 - failures.window_start >= ?3
+                                        THEN ?2 ELSE failures.window_start END,
+                    attempts = CASE WHEN ?2 - failures.window_start >= ?3
+                                    THEN 1 ELSE failures.attempts + 1 END",
+                key,
+                now,
+                FAILURE_WINDOW_SECS
+            ),
+            // Expired windows go as new failures arrive, so the table holds only what counts.
+            sql!("DELETE FROM failures WHERE window_start < ?1", now - FAILURE_WINDOW_SECS),
+        ])
+        .await?;
+        Ok(())
+    }
+
+    // --- plugins and the index --------------------------------------------------------------
+
+    pub async fn plugins(&self) -> Result<Vec<IndexEntry>, StoreError> {
+        let rows = self
+            .query(sql!(
+                "SELECT id, name, version, allowed_hosts, translations, sha256, size, published_at
+                 FROM plugins ORDER BY id"
+            ))
+            .await?;
+        rows.iter().map(|row| entry_from(row, 0)).collect()
+    }
+
+    pub async fn plugin(&self, id: &str) -> Result<Option<IndexEntry>, StoreError> {
+        let rows = self
+            .query(sql!(
+                "SELECT id, name, version, allowed_hosts, translations, sha256, size, published_at
+                 FROM plugins WHERE id = ?1",
+                id
+            ))
+            .await?;
+        rows.first().map(|row| entry_from(row, 0)).transpose()
+    }
+
+    /// The current index sequence.
+    pub async fn sequence(&self) -> u64 {
+        self.meta("sequence").await.ok().flatten().and_then(|s| s.parse().ok()).unwrap_or(0)
+    }
+
+    /// The current index, signed.
+    ///
+    /// The sequence and the plugins are read by one statement, so they are the same moment's: read
+    /// apart, a publish landing between them would sign one number over two different lists.
+    /// Deterministic for an unchanged store: `issued_at` is when the plugin set last changed.
+    pub async fn signed_index(&self) -> Result<SignedIndex, StoreError> {
+        let rows = self
+            .query(sql!(
+                "SELECT (SELECT value FROM meta WHERE key = 'sequence'),
+                        (SELECT value FROM meta WHERE key = 'index_updated_at'),
+                        p.id, p.name, p.version, p.allowed_hosts, p.translations, p.sha256,
+                        p.size, p.published_at
+                 FROM (SELECT 1 AS anchor) AS a LEFT JOIN plugins p ON 1 = 1
+                 ORDER BY p.id"
+            ))
+            .await?;
+        let first = rows.first();
+        let sequence = first.map(|r| r.opt_int(0)).transpose()?.flatten().unwrap_or(0).max(0);
+        let issued_at = first.map(|r| r.opt_int(1)).transpose()?.flatten().unwrap_or(0);
+        let mut plugins = Vec::new();
+        for row in &rows {
+            if row.opt_text(2)?.is_some() {
+                plugins.push(entry_from(row, 2)?);
+            }
+        }
+        let index = Index {
+            protocol: PROTOCOL,
+            store: self.name().await,
+            key: self.key.public().encode(),
+            sequence: sequence as u64,
+            issued_at,
+            plugins,
+            owners: self.owner_names().await?,
+            open: self.open_code().await?.is_some(),
+            contact: self.contact().await?,
+        };
+        let index = serde_json::to_string(&index)
+            .map_err(|e| StoreError::Setup(format!("encoding the index: {e}")))?;
+        Ok(SignedIndex { signature: self.key.sign_index(&index), index })
+    }
+
+    /// What a plugin is, decided the best way available.
+    ///
+    /// With a WebAssembly runtime, by asking the plugin — and a manifest section it carries must
+    /// agree. Without one, from the manifest section, which then has to be there.
+    async fn identify(
+        &self,
+        wasm: &[u8],
+        inspector: Option<&dyn Inspector>,
+    ) -> Result<PluginInfo, StoreError> {
+        match inspector {
+            Some(inspector) => {
+                let asked = inspector.inspect(wasm).await.map_err(StoreError::InvalidPlugin)?;
+                if let Ok(Some(carried)) = manifest::read(wasm)
+                    && let Some(problem) =
+                        differs(&carried, &asked.id, &asked.version, &asked.allowed_hosts)
+                {
+                    return Err(StoreError::InvalidPlugin(format!(
+                        "the plugin's manifest section disagrees with the plugin itself: {problem}"
+                    )));
+                }
+                Ok(asked)
+            }
+            None => manifest::read(wasm)
+                .map_err(|e| StoreError::InvalidPlugin(e.to_string()))?
+                .ok_or_else(|| {
+                    StoreError::InvalidPlugin(
+                        "this store cannot run plugins, so a plugin has to carry its manifest — \
+                         publish it from Kaeri, or run `kaeri plugin stamp` on it first"
+                            .into(),
+                    )
+                }),
+        }
+    }
+
+    /// Publish a plugin from its bytes.
+    ///
+    /// Publishing the version already published is accepted when the bytes are the same — a
+    /// retried upload — and refused when they differ, because a published version never changes:
+    /// clients verify a download against the digest in the index they already hold.
+    pub async fn publish(
+        &self,
+        wasm: &[u8],
+        inspector: Option<&dyn Inspector>,
+        now: i64,
+    ) -> Result<IndexEntry, StoreError> {
+        self.publish_with_digest(wasm, inspector, None, now).await
+    }
+
+    /// [`Self::publish`], taking the digest as given when one is. See
+    /// [`crate::protocol::PublishRequest::sha256`] for when that is right.
+    pub async fn publish_with_digest(
+        &self,
+        wasm: &[u8],
+        inspector: Option<&dyn Inspector>,
+        digest: Option<&str>,
+        now: i64,
+    ) -> Result<IndexEntry, StoreError> {
+        if wasm.len() as u64 > MAX_PLUGIN_BYTES {
+            return Err(StoreError::InvalidPlugin(format!(
+                "plugins are limited to {} MiB",
+                MAX_PLUGIN_BYTES / 1024 / 1024
+            )));
+        }
+        let info = self.identify(wasm, inspector).await?;
+        if !is_valid_id(&info.id) {
+            return Err(StoreError::InvalidPlugin(format!(
+                "the plugin's id {:?} must be lowercase letters, digits, - and _",
+                info.id
+            )));
+        }
+        if RESERVED_IDS.contains(&info.id.as_str()) {
+            return Err(StoreError::InvalidPlugin(format!(
+                "{} is the name of one of Kaeri's own sources — give the plugin another id",
+                info.id
+            )));
+        }
+        if !is_valid_version(&info.version) {
+            return Err(StoreError::InvalidPlugin(format!(
+                "the plugin's version {:?} must be letters, digits, ., -, + and _",
+                info.version
+            )));
+        }
+
+        let entry = IndexEntry {
+            id: info.id.clone(),
+            name: if info.name.trim().is_empty() { info.id.clone() } else { info.name.clone() },
+            version: info.version.clone(),
+            allowed_hosts: info.allowed_hosts.clone(),
+            translations: info.translations.clone(),
+            sha256: match digest {
+                Some(digest) => {
+                    let digest = digest.trim().to_ascii_lowercase();
+                    if digest.len() != 64 || !digest.bytes().all(|b| b.is_ascii_hexdigit()) {
+                        return Err(StoreError::BadRequest(
+                            "that is not a SHA-256 digest".into(),
+                        ));
+                    }
+                    digest
+                }
+                None => crypto::sha256_hex(wasm),
+            },
+            size: wasm.len() as u64,
+            published_at: now,
+        };
+        let previous = self.plugin(&entry.id).await?;
+        if let Some(previous) = &previous
+            && previous.version == entry.version
+        {
+            return if previous.sha256 == entry.sha256 {
+                Ok(previous.clone())
+            } else {
+                Err(version_conflict(&entry))
+            };
+        }
+
+        // Named by content, so a file is never overwritten in place: a racing publish of the same
+        // version writes a different key, and the row decides which one counts.
+        let key = blob_key(&entry);
+        self.blobs.put(&key, wasm.to_vec()).await?;
+        let mut statements = vec![sql!(
+            "INSERT INTO plugins (id, name, version, allowed_hosts, translations, sha256,
+                                          size, published_at)
+                     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+                     ON CONFLICT(id) DO UPDATE SET
+                        name = excluded.name, version = excluded.version,
+                        allowed_hosts = excluded.allowed_hosts,
+                        translations = excluded.translations, sha256 = excluded.sha256,
+                        size = excluded.size, published_at = excluded.published_at
+                     WHERE plugins.version <> excluded.version",
+            entry.id.as_str(),
+            entry.name.as_str(),
+            entry.version.as_str(),
+            serde_json::to_string(&entry.allowed_hosts).unwrap_or_else(|_| "[]".into()),
+            serde_json::to_string(&entry.translations).unwrap_or_else(|_| "[]".into()),
+            entry.sha256.as_str(),
+            entry.size,
+            entry.published_at
+        )];
+        statements.extend(bump_sequence(now));
+        let changed = self.batch(statements).await?;
+        if changed.first().copied().unwrap_or(0) == 0 {
+            // Someone else published this version between the check and the write.
+            let _ = self.blobs.delete(&key).await;
+            return Err(version_conflict(&entry));
+        }
+        if let Some(previous) = previous {
+            let _ = self.blobs.delete(&blob_key(&previous)).await;
+        }
+        Ok(entry)
+    }
+
+    /// Stop offering a plugin. Members who installed it keep it; it stops updating.
+    pub async fn unpublish(&self, id: &str, now: i64) -> Result<(), StoreError> {
+        let previous = self
+            .plugin(id)
+            .await?
+            .ok_or_else(|| StoreError::NotFound(format!("{id} is not published here")))?;
+        let mut statements = vec![sql!(
+            "DELETE FROM plugins WHERE id = ?1 AND sha256 = ?2",
+            id,
+            previous.sha256.as_str()
+        )];
+        statements.extend(bump_sequence(now));
+        let changed = self.batch(statements).await?;
+        if changed.first().copied().unwrap_or(0) == 0 {
+            return Err(StoreError::NotFound(format!("{id} is not published here")));
+        }
+        let _ = self.blobs.delete(&blob_key(&previous)).await;
+        Ok(())
+    }
+
+    /// The bytes of the version the index offers, and only that version: an older file that has
+    /// not been cleaned up yet is not something a client should be able to fetch.
+    pub async fn plugin_bytes(
+        &self,
+        id: &str,
+        version: &str,
+    ) -> Result<Option<(IndexEntry, Vec<u8>)>, StoreError> {
+        let Some(entry) = self.plugin(id).await?.filter(|e| e.version == version) else {
+            return Ok(None);
+        };
+        Ok(self.blobs.get(&blob_key(&entry)).await?.map(|bytes| (entry, bytes)))
+    }
+
+    /// A published version's entry, while that version is the one offered.
+    pub async fn published(
+        &self,
+        id: &str,
+        version: &str,
+    ) -> Result<Option<IndexEntry>, StoreError> {
+        Ok(self.plugin(id).await?.filter(|e| e.version == version))
+    }
+
+    /// `len` bytes of a published plugin from `start`, read without the rest of it.
+    pub async fn plugin_range(
+        &self,
+        entry: &IndexEntry,
+        start: u64,
+        len: u64,
+    ) -> Result<Option<Vec<u8>>, StoreError> {
+        Ok(self.blobs.get_range(&blob_key(entry), start, len).await?)
+    }
+
+    // --- uploads in parts -------------------------------------------------------------------
+
+    /// Start receiving a plugin of `size` bytes, in parts of [`PART_SIZE`].
+    pub async fn begin_upload(
+        &self,
+        member: &str,
+        size: u64,
+        now: i64,
+    ) -> Result<(String, u64), StoreError> {
+        if size == 0 || size > MAX_PLUGIN_BYTES {
+            return Err(StoreError::InvalidPlugin(format!(
+                "plugins are 1 byte to {} MiB",
+                MAX_PLUGIN_BYTES / 1024 / 1024
+            )));
+        }
+        // Uploads left unfinished an hour ago are thrown away as new ones start.
+        let stale = self
+            .query(sql!(
+                "SELECT id, size FROM uploads WHERE created_at < ?1",
+                now - UPLOAD_SECS
+            ))
+            .await?;
+        for row in &stale {
+            let (id, size) = (row.text(0)?, row.int(1)?.max(0) as u64);
+            for part in 0..parts_for(size) {
+                let _ = self.blobs.delete(&part_key(&id, part)).await;
+            }
+            self.exec(sql!("DELETE FROM uploads WHERE id = ?1", id.as_str())).await?;
+        }
+        let id = crypto::new_id()?;
+        self.exec(sql!(
+            "INSERT INTO uploads (id, member_id, size, created_at) VALUES (?1, ?2, ?3, ?4)",
+            id.as_str(),
+            member,
+            size,
+            now
+        ))
+        .await?;
+        Ok((id, parts_for(size)))
+    }
+
+    async fn upload(&self, id: &str, member: &str, now: i64) -> Result<u64, StoreError> {
+        let rows = self
+            .query(sql!(
+                "SELECT size FROM uploads WHERE id = ?1 AND member_id = ?2 AND created_at >= ?3",
+                id,
+                member,
+                now - UPLOAD_SECS
+            ))
+            .await?;
+        let row = rows
+            .first()
+            .ok_or_else(|| StoreError::NotFound("no such upload — start it again".into()))?;
+        Ok(row.int(0)?.max(0) as u64)
+    }
+
+    /// Store one part. Every part is [`PART_SIZE`] bytes except the last, which is what is left.
+    pub async fn put_part(
+        &self,
+        id: &str,
+        member: &str,
+        index: u64,
+        bytes: Vec<u8>,
+        now: i64,
+    ) -> Result<(), StoreError> {
+        let size = self.upload(id, member, now).await?;
+        let parts = parts_for(size);
+        if index >= parts {
+            return Err(StoreError::BadRequest(format!("this upload has {parts} parts")));
+        }
+        let expected =
+            if index + 1 == parts { size - PART_SIZE * (parts - 1) } else { PART_SIZE };
+        if bytes.len() as u64 != expected {
+            return Err(StoreError::BadRequest(format!(
+                "part {index} should be {expected} bytes and is {}",
+                bytes.len()
+            )));
+        }
+        self.blobs.put(&part_key(id, index), bytes).await?;
+        Ok(())
+    }
+
+    /// Put an upload's parts back together and publish the plugin they make.
+    pub async fn finish_upload(
+        &self,
+        id: &str,
+        member: &str,
+        inspector: Option<&dyn Inspector>,
+        digest: Option<&str>,
+        now: i64,
+    ) -> Result<IndexEntry, StoreError> {
+        let size = self.upload(id, member, now).await?;
+        let mut wasm = Vec::with_capacity(size as usize);
+        for part in 0..parts_for(size) {
+            let bytes = self.blobs.get(&part_key(id, part)).await?.ok_or_else(|| {
+                StoreError::BadRequest(format!("part {part} of this upload never arrived"))
+            })?;
+            wasm.extend_from_slice(&bytes);
+        }
+        let outcome = self.publish_with_digest(&wasm, inspector, digest, now).await;
+        // The parts go whether or not it published: a plugin that did not load will not load on
+        // a second try with the same bytes.
+        for part in 0..parts_for(size) {
+            let _ = self.blobs.delete(&part_key(id, part)).await;
+        }
+        self.exec(sql!("DELETE FROM uploads WHERE id = ?1", id)).await?;
+        outcome
+    }
+
+    // --- claiming ---------------------------------------------------------------------------
+
+    /// Claim a store nobody owns yet with the setup code it was deployed with. Answers with an
+    /// owner invite, which is what the owner pastes into the app.
+    pub async fn claim(
+        &self,
+        given: &str,
+        configured: &str,
+        contact: &str,
+        base: &str,
+        now: i64,
+    ) -> Result<(Invite, i64), StoreError> {
+        if !codes_match(given, configured) {
+            return Err(StoreError::Forbidden("that is not this store's setup code".into()));
+        }
+        let contact = crate::protocol::clean_contact(contact)
+            .map_err(|message| StoreError::BadRequest(message.into()))?;
+        match self.fresh_owner_invite(base, now).await? {
+            Some(invite) => {
+                self.set_meta("contact", &contact).await?;
+                Ok((invite, Self::default_expiry(now)))
+            }
+            None => Err(StoreError::Conflict(
+                "this store already has an owner — ask them for an invite".into(),
+            )),
+        }
+    }
+}
+
+/// A figure from the database as a count, which is never negative or past `u32`.
+fn count(value: i64) -> u32 {
+    u32::try_from(value.max(0)).unwrap_or(u32::MAX)
+}
+
+/// The name of a member who joined with an invite that works more than once and gave none: the
+/// invite's name and the use's number, cut so the whole stays a name.
+fn numbered(invite: &str, uses: i64) -> String {
+    let number = format!(" {uses}");
+    let room = MAX_NAME_CHARS.saturating_sub(number.chars().count());
+    let name: String = invite.chars().take(room).collect();
+    format!("{}{number}", name.trim_end())
+}
+
+/// Revoke one device, and delete its member when the member is anonymous and this was their
+/// last working device: one batch, so no member with no name is left with no way in.
+fn revoke(device_id: &str, now: i64) -> Vec<Statement> {
+    vec![
+        sql!(
+            "UPDATE devices SET revoked_at = ?1 WHERE id = ?2 AND revoked_at IS NULL",
+            now,
+            device_id
+        ),
+        sql!(
+            "DELETE FROM members
+             WHERE name = '' AND id IN (SELECT member_id FROM devices WHERE id = ?1)
+               AND NOT EXISTS (SELECT 1 FROM devices d
+                               WHERE d.member_id = members.id AND d.revoked_at IS NULL)",
+            device_id
+        ),
+    ]
+}
+
+/// Two codes compared as digests: equal-length, so the comparison's timing says nothing about
+/// where a guess went wrong.
+fn codes_match(a: &str, b: &str) -> bool {
+    crypto::hash_secret(a) == crypto::hash_secret(b)
+}
+
+/// What open joins from `client` are counted under: a digest of the address, or of an IPv6
+/// address's /64, which one connection is usually handed whole. A digest, so the table never
+/// holds an address as it is; and nothing ties a count to the device that joined.
+fn join_key(client: &str) -> String {
+    crypto::hash_secret(&join_address(client))
+}
+
+/// The address an open join is counted by, before it is digested. Anything that is not an
+/// address is counted as it is.
+fn join_address(client: &str) -> String {
+    match client.trim().parse::<std::net::IpAddr>() {
+        Ok(std::net::IpAddr::V6(ip)) => match ip.to_ipv4_mapped() {
+            Some(v4) => v4.to_string(),
+            None => {
+                let [a, b, c, d, ..] = ip.segments();
+                format!("{a:x}:{b:x}:{c:x}:{d:x}::/64")
+            }
+        },
+        Ok(ip) => ip.to_string(),
+        Err(_) => client.trim().to_owned(),
+    }
+}
+
+fn render(dialect: Dialect, statement: Statement) -> Statement {
+    Statement { sql: dialect.render(&statement.sql), params: statement.params }
+}
+
+/// Move the index on: the sequence, and the time it moved. Goes in the same batch as the change.
+fn bump_sequence(now: i64) -> [Statement; 2] {
+    [
+        sql!(
+            "INSERT INTO meta (key, value) VALUES ('sequence', '1')
+             ON CONFLICT(key) DO UPDATE SET value = CAST(CAST(meta.value AS INTEGER) + 1 AS TEXT)"
+        ),
+        sql!(
+            "INSERT INTO meta (key, value) VALUES ('index_updated_at', ?1)
+             ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            now.to_string()
+        ),
+    ]
+}
+
+fn version_conflict(entry: &IndexEntry) -> StoreError {
+    StoreError::Conflict(format!(
+        "{} {} is already published with different contents — raise its version",
+        entry.id, entry.version
+    ))
+}
+
+fn blob_key(entry: &IndexEntry) -> String {
+    format!("plugins/{}/{}/{}.wasm", entry.id, entry.version, entry.sha256)
+}
+
+fn part_key(upload: &str, part: u64) -> String {
+    format!("uploads/{upload}/{part}")
+}
+
+fn parts_for(size: u64) -> u64 {
+    size.div_ceil(PART_SIZE).max(1)
+}
+
+fn entry_from(row: &Row, at: usize) -> Result<IndexEntry, StoreError> {
+    let list = |text: String| serde_json::from_str::<Vec<String>>(&text).unwrap_or_default();
+    Ok(IndexEntry {
+        id: row.text(at)?,
+        name: row.text(at + 1)?,
+        version: row.text(at + 2)?,
+        allowed_hosts: list(row.text(at + 3)?),
+        translations: list(row.text(at + 4)?),
+        sha256: row.text(at + 5)?,
+        size: row.int(at + 6)?.max(0) as u64,
+        published_at: row.int(at + 7)?,
+    })
+}

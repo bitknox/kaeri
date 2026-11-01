@@ -1,0 +1,17 @@
+cast-episode = エピソード { $episode }
+cast-episode-titled = エピソード { $episode } · { $title }
+notice-cast-video-codec = { $name }ではこの映像を再生できません({ $codec })。別の{ -source }をお試しください。
+notice-cast-audio-codec = { $name }ではこの音声を再生できず({ $codec })、この{ -device }でも変換できません。別の{ -source }をお試しください。
+notice-cast-container = { $name }ではこの種類のファイルを再生できません。別の{ -source }をお試しください。
+notice-cast-deep-link = このエピソードは別のアプリで開くため、キャストできません。
+notice-cast-never-fetches = { $name }がストリームの読み込みを始めませんでした。この{ -device }のVPNやファイアウォールが原因かもしれません。
+notice-cast-refused = { $name }でこのストリームを再生できませんでした。別の{ -source }をお試しください。
+notice-cast-taken-over = 別の{ -device }が{ $name }で再生を始めたため、キャストを終了しました。
+notice-cast-not-same-network = この{ -device }は{ $name }と同じネットワークにないか、VPN経由で接続しています。キャストには同じネットワークが必要です。
+notice-cast-lost = { $name }との接続が切れたため、キャストを終了しました。
+notice-cast-no-device = キャスト先のテレビがネットワーク上にもうありません。
+notice-cast-unavailable = このバージョンの{ -app-name }では、テレビへのキャストはできません。
+cast-phase-starting = { $name }で開始中
+cast-phase-starting-for = { $name }で開始中 · { $seconds }秒
+cast-phase-waiting = { $name }を待っています · { $seconds }秒
+cast-phase-preparing = ストリームを準備中 · { $seconds }秒

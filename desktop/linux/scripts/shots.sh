@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# Inside the build box: builds the app with its fixture scene and has it screenshot its own
+# pages on a virtual X display with Mesa's software GL, at the brief's three sizes, into /out.
+# Inter stands in for Adwaita Sans, as the boards draw it.
+#
+#   OUT=/some/dir desktop/linux/scripts/docker.sh desktop/linux/scripts/shots.sh
+#
+# SHOTS picks every run's shots (comma-separated; the wide run takes all by default), and SIZES
+# picks the runs. The match picker's run, on a scene where a source cannot choose a match, is
+# SIZES=match.
+set -euo pipefail
+mkdir -p "$HOME/.config/gtk-4.0" /out/media
+printf '[Settings]\ngtk-font-name=Inter 11\n' \
+  >"$HOME/.config/gtk-4.0/settings.ini"
+
+cargo build --manifest-path desktop/linux/Cargo.toml --features fixtures 2>&1 \
+  | grep -E '^(error|warning)|-->' || true
+bin=/target/debug/kaeri-desktop
+[ -x "$bin" ] || { echo "the app did not build" >&2; exit 1; }
+
+# A synthetic test pattern, for the player's shot: every fixture episode streams it.
+media=/out/media/signal-test.mkv
+if [ ! -f "$media" ]; then
+  ffmpeg -hide_banner -loglevel error \
+    -f lavfi -i "testsrc2=size=1280x720:rate=24" -f lavfi -i "sine=frequency=440:sample_rate=48000" \
+    -t 60 -c:v libx264 -preset veryfast -pix_fmt yuv420p -c:a aac "$media"
+fi
+
+# A subtitle over the whole pattern, for the shot that shows it raised above the controls.
+printf '1\n00:00:00,000 --> 00:01:00,000\nThe lantern road runs on past the last town.\n' \
+  >/out/media/lantern-road.srt
+
+Xvfb :99 -screen 0 1600x1800x24 -nolisten tcp >/out/xvfb.log 2>&1 &
+xvfb=$!
+trap 'kill $xvfb 2>/dev/null || true' EXIT
+for _ in $(seq 50); do [ -e /tmp/.X11-unix/X99 ] && break; sleep 0.1; done
+export GTK_A11Y=none DISPLAY=:99 GDK_BACKEND=x11 GSK_RENDERER=ngl LIBGL_ALWAYS_SOFTWARE=1 NO_AT_BRIDGE=1
+
+# name, size, shots
+runs=(
+  "wide 1280x800 ${SHOTS:-all}"
+  "medium 900x720 ${SHOTS:-home,calendar,title,downloads,providers,store,settings,settings-upscaling}"
+  "match 1280x800 match"
+  "narrow 400x780 ${SHOTS:-home,calendar,title,show-settings,library,downloads,providers,store,join,settings}"
+  # A first launch with the demo as the only source: a run of its own, as its shots need it.
+  "demo 1280x800 ${SHOTS:-demo-home,demo-search,demo-title,demo-starting,demo-removed}"
+)
+for run in "${runs[@]}"; do
+  read -r name size shots <<<"$run"
+  case " ${SIZES:-wide medium narrow} " in *" $name "*) ;; *) continue ;; esac
+  data="/tmp/kaeri-scene-$name"
+  rm -rf "$data"
+  extra=(--showcase)
+  case "$name" in demo) extra=(--demo) ;; esac
+  case ",$shots," in *,downloads,*|*,all,*) extra+=(--downloading) ;; esac
+  # The match picker's shots need the finished title's source to be unsure of its match.
+  [ "$name" = match ] && extra+=(--unsure)
+  echo "run: $name at $size: $shots"
+  dbus-run-session -- timeout 240 "$bin" --fixtures --data "$data" --media "$media" "${extra[@]}" \
+    --hwdec no --ao null --size "$size" --shots /out --prefix "$name-" --shot "$shots" \
+    >"/out/$name.log" 2>&1 || echo "the $name run exited with $?"
+done
+
+# Home, one run per scene of the Home world (--scene): the states the board draws. SCENES picks
+# them; HOME_SHOTS picks what each takes.
+if [ "${SCENES-x}" != "" ]; then
+  for scene in ${SCENES:-watching fresh suggested one-left continue-full not-found slow failed offline sourceless}; do
+    data="/tmp/kaeri-scene-home-$scene"
+    rm -rf "$data"
+    shots="${HOME_SHOTS:-home,home-arrows,home-notice,home-hidden}"
+    [ "$scene" = slow ] && shots="home-loading,home-activity,home-settled"
+    echo "run: home scene $scene"
+    KAERI_FIXTURES_HOME_WORLD=1 dbus-run-session -- timeout 120 "$bin" --fixtures \
+      --scene "$scene" --data "$data" --media "$media" --hwdec no --ao null \
+      --size 1280x1700 --shots /out --prefix "scene-$scene-" --shot "$shots" \
+      >"/out/scene-$scene.log" 2>&1 || echo "the $scene run exited with $?"
+  done
+fi
+ls -1 /out/*.png 2>/dev/null || echo "no shots"

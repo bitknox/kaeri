@@ -1,0 +1,259 @@
+//! Seasonal: a season's titles as a poster grid, the season picked in the header's centre and
+//! the format in a toggle group above the grid.
+
+use std::{
+    cell::{Cell, RefCell},
+    rc::Rc,
+};
+
+use adw::prelude::*;
+use gtk::glib;
+use kaeri_i18n::t;
+use kaeri_model::{
+    catalog::{ContentFor, ContentList, Entry, Season},
+    command::Command,
+    event::Event,
+    present::SeasonYear,
+    search::SearchQuery,
+};
+
+use crate::{
+    say,
+    states::{self, Shape, States},
+    widgets::{self, PosterGrid},
+    window::Ctx,
+};
+
+/// The formats the toggle group offers: its name, and the wire formats it keeps.
+const FORMATS: [(&str, &[&str]); 4] = [
+    ("all", &[]),
+    ("tv", &["TV", "TV_SHORT"]),
+    ("movie", &["MOVIE"]),
+    ("ona", &["ONA", "OVA", "SPECIAL"]),
+];
+
+/// What a format toggle says.
+fn format_label(name: &str) -> String {
+    match name {
+        "tv" => t::format_tv(),
+        "movie" => t::format_movie(),
+        "ona" => t::seasonal_format_ona_ova(),
+        _ => t::seasonal_format_all(),
+    }
+}
+
+/// The seasons the picker offers: the current, the next, and the two years before.
+const BACK: i32 = 8;
+const AHEAD: i32 = 1;
+
+struct Page {
+    ctx: Rc<Ctx>,
+    grid: PosterGrid,
+    body: Rc<States>,
+    caption: gtk::Label,
+    empty: adw::StatusPage,
+    entries: RefCell<Vec<Entry>>,
+    format: Cell<usize>,
+    /// The seasons in the picker, newest first, and which is the current one.
+    seasons: Vec<(Season, i32)>,
+    now: usize,
+    picked: Cell<usize>,
+}
+
+pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
+    let current = SeasonYear::at(now());
+    let seasons: Vec<_> = (-AHEAD..=BACK)
+        .map(|back| {
+            let step = current.step(-back);
+            (step.season, step.year)
+        })
+        .collect();
+    let now = AHEAD as usize;
+
+    let names: Vec<String> = seasons.iter().map(|(s, y)| say::season(*s, y)).collect();
+    let refs: Vec<&str> = names.iter().map(String::as_str).collect();
+    let picker = gtk::DropDown::from_strings(&refs);
+    picker.set_selected(now as u32);
+    picker.set_tooltip_text(Some(&t::filter_season()));
+    picker.add_css_class("flat");
+
+    let header = adw::HeaderBar::new();
+    header.pack_start(&widgets::sidebar_button(&ctx.split));
+    header.pack_start(&crate::window::tv_session_button(ctx));
+    header.set_title_widget(Some(&picker));
+
+    let toggles = adw::ToggleGroup::new();
+    for (name, _) in FORMATS {
+        toggles.add(adw::Toggle::builder().name(name).label(format_label(name)).build());
+    }
+    toggles.set_active_name(Some("all"));
+    toggles.set_halign(gtk::Align::Start);
+    toggles.add_css_class("round");
+
+    let grid = PosterGrid::new(&ctx.hub);
+    let scroll = gtk::ScrolledWindow::builder()
+        .hscrollbar_policy(gtk::PolicyType::Never)
+        .vexpand(true)
+        .child(&grid.widget)
+        .build();
+    let empty = states::plain("", "");
+    let body = States::new(&ctx.hub, &scroll, Shape::Grid, &empty, &t::seasonal_load_failed());
+
+    let column = gtk::Box::new(gtk::Orientation::Vertical, 12);
+    let bar = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+    bar.set_margin_top(12);
+    bar.set_margin_start(18);
+    bar.set_margin_end(18);
+    bar.append(&toggles);
+    // What the engine says the list is, when it stopped at one page: said beside the formats.
+    let caption = widgets::haze("", "caption");
+    caption.set_hexpand(true);
+    caption.set_xalign(1.0);
+    caption.set_valign(gtk::Align::Center);
+    caption.set_visible(false);
+    bar.append(&caption);
+    column.append(&bar);
+    column.append(&body.widget);
+
+    let page = Rc::new(Page {
+        ctx: Rc::clone(ctx),
+        grid,
+        body,
+        caption,
+        empty,
+        entries: RefCell::default(),
+        format: Cell::new(0),
+        seasons,
+        now,
+        picked: Cell::new(now),
+    });
+    // Continue asks for this season as the app opens.
+    page.body.loading(Some(t::seasonal_loading()));
+    page.body.on_retry({
+        let weak = Rc::downgrade(&page);
+        move || {
+            if let Some(page) = weak.upgrade() {
+                page.pick(page.picked.get());
+            }
+        }
+    });
+    let weak = Rc::downgrade(&page);
+    ctx.hub.listen(move |event| {
+        if let Some(page) = weak.upgrade() {
+            page.heard(event);
+        }
+    });
+    toggles.connect_active_name_notify({
+        let page = Rc::clone(&page);
+        move |toggles| {
+            let name = toggles.active_name().unwrap_or_default();
+            page.format.set(FORMATS.iter().position(|(n, _)| *n == name).unwrap_or(0));
+            if page.body.has_answer() {
+                page.show();
+            }
+        }
+    });
+    picker.connect_selected_notify({
+        let page = Rc::clone(&page);
+        move |picker| page.pick(picker.selected() as usize)
+    });
+
+    widgets::content_page(&t::nav_seasonal(), &header, &column)
+}
+
+impl Page {
+    /// The current season is the engine's own Seasonal list; any other is a search by season.
+    fn pick(&self, at: usize) {
+        self.picked.set(at);
+        let command = if at == self.now {
+            Command::LoadSeasonal
+        } else {
+            Command::Search { query: self.query(at) }
+        };
+        self.caption.set_visible(false);
+        self.body.loading(Some(t::seasonal_loading()));
+        self.ctx.hub.send(command);
+    }
+
+    fn query(&self, at: usize) -> SearchQuery {
+        let (season, year) = self.seasons[at];
+        SearchQuery::season(season, u16::try_from(year).unwrap_or_default())
+    }
+
+    fn heard(&self, event: &Event) {
+        // Titles are named another way now: the season again, once it has been shown.
+        if matches!(event, Event::TitlesChanged(_)) {
+            if self.body.has_answer() {
+                self.pick(self.picked.get());
+            }
+            return;
+        }
+        let (Event::Content { view, .. } | Event::Caption { view, .. }) = event else { return };
+        let ours = match view {
+            ContentFor::Seasonal => self.picked.get() == self.now,
+            ContentFor::Search { query } => {
+                self.picked.get() != self.now && *query == self.query(self.picked.get())
+            }
+            _ => false,
+        };
+        if !ours {
+            return;
+        }
+        // The caption comes just ahead of its list.
+        let content = match event {
+            Event::Caption { text, .. } => {
+                self.caption.set_label(text);
+                self.caption.set_visible(!text.is_empty());
+                return;
+            }
+            Event::Content { content, .. } => content,
+            _ => return,
+        };
+        match content {
+            ContentList::Loading => self.body.loading(Some(t::seasonal_loading())),
+            ContentList::Failed(why) => {
+                tracing::warn!(%why, "the season did not load");
+                *self.entries.borrow_mut() = Vec::new();
+                self.body.failed(why);
+            }
+            _ => {
+                *self.entries.borrow_mut() = content.entries().to_vec();
+                self.show();
+            }
+        }
+    }
+
+    fn show(&self) {
+        let (_, keep) = FORMATS[self.format.get()];
+        let entries: Vec<Entry> = self
+            .entries
+            .borrow()
+            .iter()
+            .filter(|e| {
+                keep.is_empty()
+                    || e.format
+                        .as_deref()
+                        .is_some_and(|f| keep.contains(&f.to_ascii_uppercase().as_str()))
+            })
+            .cloned()
+            .collect();
+        self.grid.set(&entries);
+        if entries.is_empty() {
+            let (season, year) = self.seasons[self.picked.get()];
+            if keep.is_empty() {
+                self.empty.set_title(&t::seasonal_empty_title(&say::season(season, year)));
+                self.empty.set_description(Some(&t::seasonal_empty_detail()));
+            } else {
+                self.empty.set_title(&t::seasonal_empty_format());
+                self.empty.set_description(Some(&t::seasonal_empty_format_detail()));
+            }
+            self.body.empty();
+        } else {
+            self.body.content();
+        }
+    }
+}
+
+fn now() -> i64 {
+    glib::DateTime::now_utc().map_or(0, |t| t.to_unix())
+}

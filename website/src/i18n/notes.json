@@ -1,0 +1,8 @@
+{
+	"site.language.name": "The language's own name, as the language picker lists it.",
+	"site.suggest.text": "Shown on the site's pages in another language, when the visitor's browser prefers this one. Write it in this language.",
+	"site.suggest.go": "The button of the same offer.",
+	"site.suggest.dismiss": "The accessible name of the offer's close button.",
+	"compare.group": "The accessible name of the choice between upscaling looks.",
+	"features.matrix.cell.yourMpv": "Cells of the table of apps: short, a few words at most."
+}

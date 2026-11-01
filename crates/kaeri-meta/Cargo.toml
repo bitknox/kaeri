@@ -1,0 +1,32 @@
+[package]
+name = "kaeri-meta"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Metadata spine: AniList client, ID mapping datasets and title matching"
+
+[lib]
+# No doc example is written as a test, and rustdoc spends seconds per crate finding none.
+doctest = false
+
+[dependencies]
+kaeri-core.workspace = true
+kaeri-net.workspace = true
+kaeri-store.workspace = true
+nucleo.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+# Only to hold the query documents to GraphQL's grammar in a test.
+graphql-parser = "0.4.1"
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
+reqwest.workspace = true
+kaeri-net.workspace = true
+
+[lints]
+workspace = true

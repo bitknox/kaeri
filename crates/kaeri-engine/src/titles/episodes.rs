@@ -1,0 +1,1117 @@
+//! A title's episodes: listed from the source playback would use, and marked watched or not.
+
+use kaeri_core::{ids::AnilistId, media::Translation};
+use kaeri_meta::Meta;
+use kaeri_model::{
+    Msg,
+    episodes::EpisodeRow,
+    event::Event,
+    notice::Notice,
+    progress::Watch,
+    sources::{CurrentMatch, MatchQuestion},
+};
+use kaeri_providers::ProviderRegistry;
+use kaeri_store::Store;
+
+use super::{coverage, names};
+use crate::{
+    data, dispatch::Lent, now_epoch, outbox::Outbox, services::Services, state::EngineState,
+};
+
+/// What loading a title's episodes produced.
+pub enum EpisodeLoad {
+    Rows(Vec<EpisodeRow>),
+    /// No source lists the title, so its episodes are from AniList's data alone: see
+    /// [`EpisodeRow::metadata_only`]. With why, when a source was asked and could not list it;
+    /// with none set up, nothing is said until a play asks for one.
+    Unlisted {
+        rows: Vec<EpisodeRow>,
+        reason: Option<String>,
+    },
+    /// The ladder found candidates but could not choose. The user decides; until then the
+    /// table is AniList's, as [`EpisodeLoad::Unlisted`]'s, so the page has episodes to show.
+    Choose {
+        provider_id: String,
+        /// The source's name, for saying which one could not tell.
+        source: String,
+        candidates: Vec<kaeri_model::sources::MatchCandidate>,
+        rows: Vec<EpisodeRow>,
+    },
+}
+
+/// Resolve a title to a provider and list its episodes.
+///
+/// A title no source lists still has the episodes AniList knows of, marked as such, so its
+/// page shows them and they can be marked watched: with no source set up, and when the
+/// sources there are could not list it.
+pub async fn load_episodes(
+    meta: &Meta,
+    store: &Store,
+    registry: &ProviderRegistry,
+    id: kaeri_core::ids::AnilistId,
+) -> std::result::Result<EpisodeLoad, String> {
+    load_listed(meta, store, registry, id, &mut |_| ()).await.map(|listed| listed.load)
+}
+
+/// [`load_episodes`], and what the title is matched to after it: see [`Event::TitleMatch`].
+pub async fn load_episodes_matched(
+    meta: &Meta,
+    store: &Store,
+    registry: &ProviderRegistry,
+    id: kaeri_core::ids::AnilistId,
+) -> std::result::Result<(EpisodeLoad, Option<CurrentMatch>), String> {
+    let listed = load_listed(meta, store, registry, id, &mut |_| ()).await?;
+    let current = current_match(store, registry, id, listed.main.as_deref());
+    Ok((listed.load, current))
+}
+
+/// What title `id` is matched to on `main`, the source its table is from, as the store keeps
+/// it. `None` when no source's table it is.
+pub(crate) fn current_match(
+    store: &Store,
+    registry: &ProviderRegistry,
+    id: AnilistId,
+    main: Option<&str>,
+) -> Option<CurrentMatch> {
+    let provider_id = main?;
+    let kept = store.lookup_mapping(id, provider_id).ok().flatten();
+    Some(CurrentMatch {
+        provider_id: provider_id.to_owned(),
+        source: registry
+            .get(provider_id)
+            .map_or_else(|| provider_id.to_owned(), |p| p.manifest().display_name.clone()),
+        chosen_by_you: kept.as_ref().is_some_and(|kept| kept.rung.is_user_confirmed()),
+        title: kept.and_then(|kept| kept.title),
+    })
+}
+
+/// What [`load_listed`] came to.
+struct Listed {
+    load: EpisodeLoad,
+    /// What naming the rows takes: see [`names`].
+    unnamed: Option<names::Unnamed>,
+    /// The source the table is from, when sources listed it.
+    main: Option<String>,
+}
+
+/// What a pin on a title came to, when it was looked at.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Pin {
+    /// Not pinned: the order is the user's order.
+    Automatic,
+    /// Pinned, and the source is in the chain and usable: it is first.
+    Held(String),
+    /// Pinned to a source that is switched off, removed, still loading or resting. The title
+    /// goes by the order, and the pin is kept for when the source is back.
+    Unavailable(String),
+}
+
+/// The pin on title `id`, as the chain stands.
+pub fn pin_of(store: &Store, registry: &ProviderRegistry, id: AnilistId) -> Pin {
+    match store.provider_preference(id).ok().flatten() {
+        None => Pin::Automatic,
+        Some(provider) if registry.usable_ids().contains(&provider) => Pin::Held(provider),
+        Some(provider) => Pin::Unavailable(provider),
+    }
+}
+
+/// The chain for title `id`: the user's order, with the source pinned for the title first. A
+/// pin ranks a source; it does not drop the rest, since a source with part of a season is no
+/// reason to leave the remainder unplayable.
+pub fn chain_for(
+    store: &Store,
+    registry: &ProviderRegistry,
+    id: AnilistId,
+) -> ProviderRegistry {
+    match pin_of(store, registry, id) {
+        Pin::Held(provider) => registry.preferring(&provider),
+        _ => registry.clone(),
+    }
+}
+
+/// [`load_episodes`], and what naming its rows takes when a source listed them and left some
+/// without a title or a still: see [`names`]. `progress` is given the table as it stands each
+/// time a source answers that leaves the season short, ahead of the sources still being asked.
+async fn load_listed(
+    meta: &Meta,
+    store: &Store,
+    registry: &ProviderRegistry,
+    id: kaeri_core::ids::AnilistId,
+    progress: &mut (dyn FnMut(Vec<EpisodeRow>) + Send),
+) -> std::result::Result<Listed, String> {
+    let media = meta.media(id).await.map_err(|e| e.to_string())?;
+    // Numbered by the source a play would use, which may be one still compiling.
+    crate::sources::arrived(registry, || ()).await;
+    let now = now_epoch();
+    let from_metadata = || {
+        let rows = data::metadata_rows(&media, store, id, now);
+        dated(rows, &media, data::Numbering::Same, store, id, now)
+    };
+    // Nothing to ask a source for, quietly: with none set up, and for a title that has not
+    // started, where all a search can find is another title, as the season before a sequel.
+    if registry.is_empty() || coverage::unstarted(&media, now) {
+        let load = EpisodeLoad::Unlisted { rows: from_metadata(), reason: None };
+        return Ok(Listed { load, unnamed: None, main: None });
+    }
+    let chain = chain_for(store, registry, id);
+    let answer = kaeri_providers::gather(
+        store,
+        &chain,
+        id,
+        &media.match_target(),
+        Translation::Sub,
+        now,
+        |source, key| {
+            coverage::listing(source, key, Translation::Sub, (store, id), &media, now)
+        },
+        |answers| coverage::is_whole(&media, answers, now),
+        |answers| progress(build(&media, store, registry, id, answers, now).rows),
+    )
+    .await;
+
+    let answers = match answer {
+        kaeri_providers::Gathered::Answered(answers) => answers,
+        // Candidates exist, none confidently enough to pick. That is a question, not a
+        // failure: the user can see which of these is their show, and the answer is
+        // remembered as an override so it is asked once.
+        kaeri_providers::Gathered::Ambiguous { provider_id, candidates } => {
+            let candidates = candidates
+                .iter()
+                .map(|c| super::matching::candidate(&c.hit, c.score, c.rejected))
+                .collect();
+            let source = registry
+                .get(&provider_id)
+                .map_or_else(|| provider_id.clone(), |p| p.manifest().display_name.clone());
+            let rows = from_metadata();
+            let load = EpisodeLoad::Choose { provider_id, source, candidates, rows };
+            return Ok(Listed { load, unnamed: None, main: None });
+        }
+        kaeri_providers::Gathered::Unanswered { .. } => {
+            let reason = Some(answer.explain());
+            let load = EpisodeLoad::Unlisted { rows: from_metadata(), reason };
+            return Ok(Listed { load, unnamed: None, main: None });
+        }
+    };
+
+    let built = build(&media, store, registry, id, &answers, now);
+    let unnamed = names::Unnamed::of(
+        &media,
+        &built.episodes,
+        built.numbering,
+        &built.main,
+        built.marks,
+        now,
+    );
+    Ok(Listed { load: EpisodeLoad::Rows(built.rows), unnamed, main: Some(built.main) })
+}
+
+/// A table built from the sources' answers.
+struct Built {
+    rows: Vec<EpisodeRow>,
+    episodes: Vec<kaeri_core::media::Episode>,
+    numbering: data::Numbering,
+    main: String,
+    marks: coverage::Marks,
+}
+
+/// The table for title `id` from `answers`, in rank order: merged across the sources, named
+/// from what AniList knows of what they left out, and marked with where a gap was filled from.
+///
+/// A torrent source knows an episode exists but not what it is called, and some sources
+/// list nothing but the numbers. The metadata already fetched knows more, so it fills in what
+/// they lack before the rows reach the table.
+fn build(
+    media: &kaeri_meta::anilist::Media,
+    store: &Store,
+    registry: &ProviderRegistry,
+    id: AnilistId,
+    answers: &[kaeri_providers::Contribution<Vec<kaeri_core::media::Episode>>],
+    now: i64,
+) -> Built {
+    let merged = coverage::merge(media, answers, now);
+    let mut episodes = merged.episodes.clone();
+    let numbering = data::enrich_episodes(&mut episodes, media, now);
+    let marks = coverage::Marks {
+        filled: merged
+            .filled
+            .iter()
+            .map(|(number, provider)| {
+                let name = registry
+                    .get(provider)
+                    .map_or_else(|| provider.clone(), |p| p.manifest().display_name.clone());
+                (number.clone(), name)
+            })
+            .collect(),
+        missing: merged.missing.clone(),
+    };
+    let mut rows = data::episode_rows(&episodes, store, id);
+    marks.apply(&mut rows);
+    let rows = dated(rows, media, numbering, store, id, now);
+    Built { rows, episodes, numbering, main: merged.main, marks }
+}
+
+/// `rows`, dated by when each aired or airs, so an episode not out yet can be told from one
+/// that is, and marked with when one the schedule has moved later was to air before: each by
+/// the number AniList gives it, as `numbering` has the rows' numbers stand to AniList's.
+pub(crate) fn dated(
+    mut rows: Vec<EpisodeRow>,
+    media: &kaeri_meta::anilist::Media,
+    numbering: data::Numbering,
+    store: &Store,
+    id: AnilistId,
+    now: i64,
+) -> Vec<EpisodeRow> {
+    data::date_episodes(&mut rows, &numbering.rekey(&media.air_times()));
+    data::mark_delays(&mut rows, numbering, store, id, now);
+    data::mark_past_progress(&mut rows, store, id);
+    rows
+}
+
+/// Who a table of episodes is for: someone looking at the title, or an action taken on it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Asked {
+    /// A title page, a hover card or a focused card opening, or a source change listing it
+    /// again. A source that has nothing of the title is not news here: Home marks the miss
+    /// quietly, and a play says what is missing when one is asked for.
+    Looking,
+    /// Resetting or fixing the match, where the viewer waits to hear what came of it.
+    Acting,
+}
+
+/// What a load of title `id`'s episodes says, in order: the table, always, so the screen
+/// leaves its loading state whatever happened, then why it is empty or from AniList alone when
+/// that needs saying. A match the ladder could not make says its candidates first, since a
+/// front end may clear the table when they arrive, then AniList's table and why it is that.
+pub(crate) fn said(
+    id: AnilistId,
+    load: std::result::Result<EpisodeLoad, String>,
+    asked: Asked,
+) -> Vec<Event> {
+    match load {
+        Ok(EpisodeLoad::Rows(rows)) => vec![Event::Episodes { id, rows, failed: None }],
+        // The table is there either way. Why no source listed it is said only to an action
+        // that waits for it; to someone looking it goes to the log.
+        Ok(EpisodeLoad::Unlisted { rows, reason }) => {
+            let notice = reason.and_then(|reason| match asked {
+                Asked::Acting => {
+                    Some(Event::Toast(Notice::info(Msg::NoticeNoSourceCouldList { reason })))
+                }
+                Asked::Looking => {
+                    tracing::info!(id = id.get(), %reason, "no source could list the title");
+                    None
+                }
+            });
+            std::iter::once(Event::Episodes { id, rows, failed: None }).chain(notice).collect()
+        }
+        Ok(EpisodeLoad::Choose { provider_id, source, candidates, rows }) => vec![
+            Event::MatchChoices {
+                id,
+                provider_id,
+                candidates,
+                answers: MatchQuestion::Ladder,
+                source: source.clone(),
+            },
+            Event::Episodes { id, rows, failed: None },
+            Event::Toast(Notice::info(Msg::NoticeMatchUncertain { source })),
+        ],
+        // The table says it failed, so a page can tell that from a title with no episodes,
+        // and the toast says it to a page that shows only the empty table.
+        Err(reason) => {
+            let failed = Msg::NoticeEpisodesFailed { reason };
+            vec![
+                Event::Episodes { id, rows: Vec::new(), failed: Some(failed.clone()) },
+                Event::Toast(Notice::alert(failed)),
+            ]
+        }
+    }
+}
+
+/// [`said`], then what the title is matched to now, when the load got as far as asking a
+/// source: see [`Event::TitleMatch`].
+pub(crate) fn said_matched(
+    id: AnilistId,
+    load: std::result::Result<EpisodeLoad, String>,
+    current: Option<CurrentMatch>,
+    asked: Asked,
+) -> Vec<Event> {
+    // With no source set up, none was asked, and there is nothing to say of a match.
+    let sourced = !matches!(load, Ok(EpisodeLoad::Unlisted { reason: None, .. }) | Err(_));
+    let matched = sourced.then_some(Event::TitleMatch { id, current });
+    said(id, load, asked).into_iter().chain(matched).collect()
+}
+
+/// Title `id`'s episodes in the dub, from the source a play would use, once the sources on
+/// their way have arrived: `None` when no source answered. What the new-episode check reads, for
+/// a show watched dubbed.
+pub(crate) async fn dub_listing(
+    media: &kaeri_meta::anilist::Media,
+    store: &Store,
+    registry: &ProviderRegistry,
+    id: AnilistId,
+    now: i64,
+) -> Option<Vec<kaeri_core::media::Episode>> {
+    match dub_answer(media, store, registry, id, now).await.answer {
+        kaeri_providers::Answer::Answered { value, .. } => Some(value),
+        _ => None,
+    }
+}
+
+/// What a listing of a title in the dub came to: see [`dub_answer`].
+pub(crate) struct DubAnswer {
+    pub answer: kaeri_providers::Answer<Vec<kaeri_core::media::Episode>>,
+    /// No source answered, and that is because each matched the title and found nothing of it
+    /// in the dub, rather than because one failed or could not match it: it has no dub there.
+    pub none: bool,
+}
+
+/// What the source a dubbed play would use answers for title `id`'s episodes in the dub, once
+/// the sources on their way have arrived: [`dub_listing`], and the title page's dub line.
+pub(crate) async fn dub_answer(
+    media: &kaeri_meta::anilist::Media,
+    store: &Store,
+    registry: &ProviderRegistry,
+    id: AnilistId,
+    now: i64,
+) -> DubAnswer {
+    use std::sync::{
+        Arc,
+        atomic::{AtomicBool, AtomicUsize, Ordering},
+    };
+    crate::sources::arrived(registry, || ()).await;
+    // A title that has not started has no dub to speak of yet, and no source is asked.
+    if coverage::unstarted(media, now) {
+        let answer =
+            kaeri_providers::Answer::Unanswered { reasons: Vec::new(), matched: false };
+        return DubAnswer { answer, none: false };
+    }
+    let registry = &chain_for(store, registry, id);
+    // How many sources were listed, and whether each found nothing: a source that failed says
+    // nothing of whether there is a dub.
+    let (asked, nothing) = (Arc::new(AtomicUsize::new(0)), Arc::new(AtomicBool::new(true)));
+    // A source the ladder cannot match confidently in the dub is not asked about: the question
+    // of which title is meant belongs to the episode table, which asks it in the sub.
+    let answer = kaeri_providers::first_answer(
+        store,
+        registry,
+        id,
+        &media.match_target(),
+        Translation::Dub,
+        now,
+        |source, key| {
+            let (asked, nothing) = (asked.clone(), nothing.clone());
+            async move {
+                let attempt =
+                    coverage::listing(source, key, Translation::Dub, (store, id), media, now)
+                        .await;
+                asked.fetch_add(1, Ordering::SeqCst);
+                let not_found = attempt.failures.iter().all(|(_, error)| {
+                    matches!(error, kaeri_core::error::ProviderError::NotFound)
+                });
+                if attempt.value.is_some() || !not_found {
+                    nothing.store(false, Ordering::SeqCst);
+                }
+                attempt
+            }
+        },
+    )
+    .await;
+    let none = match &answer {
+        // One reason for each source tried: each was matched and listed, and found nothing.
+        kaeri_providers::Answer::Unanswered { reasons, matched: true } => {
+            !reasons.is_empty()
+                && asked.load(Ordering::SeqCst) == reasons.len()
+                && nothing.load(Ordering::SeqCst)
+        }
+        _ => false,
+    };
+    DubAnswer { answer, none }
+}
+
+/// A title's episodes, from the source playback would use, or the candidates to choose
+/// between when the ladder could not choose. A table that left episodes without a title or a
+/// still is named by `naming`, from what another source said of them: see [`names`].
+///
+/// Only the newest listing of a title speaks: `ticket` is checked before anything is sent, so a
+/// slow earlier load cannot land over a newer table. `announce` is whether a pin on a source
+/// that is not available is said (a load the viewer asked for, or a pin just set), not on every
+/// quiet relist.
+pub(crate) async fn list_episodes(
+    lent: Lent,
+    id: AnilistId,
+    naming: names::Naming,
+    ticket: super::refresh::Ticket,
+    announce: bool,
+) {
+    let Lent { meta, store, registry, tx, .. } = lent;
+    // A source still compiling is not an unavailable one: wait for those on their way.
+    crate::sources::arrived(&registry, || ()).await;
+    if announce && let Pin::Unavailable(provider) = pin_of(&store, &registry, id) {
+        let name = registry
+            .get(&provider)
+            .map_or_else(|| provider.clone(), |p| p.manifest().display_name.clone());
+        ticket.send(&tx, Event::PinUnavailable { id, provider_id: provider, name });
+    }
+    // A table that is short of the season is shown as it comes, and the sources still being
+    // asked fill in the rest.
+    let mut early = |rows| {
+        for event in said(id, Ok(EpisodeLoad::Rows(rows)), Asked::Looking) {
+            ticket.send(&tx, event);
+        }
+    };
+    let listed = load_listed(&meta, &store, &registry, id, &mut early).await;
+    let current = match &listed {
+        Ok(listed) => current_match(&store, &registry, id, listed.main.as_deref()),
+        Err(_) => None,
+    };
+    let load = match listed {
+        Ok(Listed { load: EpisodeLoad::Rows(_), unnamed: Some(unnamed), .. }) => {
+            naming.say(id, unnamed, &store, &registry, &tx, &ticket);
+            ticket.send(&tx, Event::TitleMatch { id, current });
+            return;
+        }
+        listed => listed.map(|listed| listed.load),
+    };
+    for event in said_matched(id, load, current, Asked::Looking) {
+        ticket.send(&tx, event);
+    }
+}
+
+/// Mark episodes watched, or take back that they were: in local history, and on the signed-in
+/// trackers when marking. An unmark keeps what was watched of an episode only marked (see
+/// `Store::unmark_episode`), so an episode is as it was before the mark. Then the record of the titles is moved on by what the store now
+/// holds, and the title said whole, as the answer to the mark.
+///
+/// Said whether the record holds the title or not. A mark sent before any list or page showed
+/// it, as a native app can, was written and left unsaid, and the screen caught up only at the
+/// next load; such a title's standing is read from the store.
+pub fn set_watched(
+    id: AnilistId,
+    episodes: &[String],
+    watched: bool,
+    engine: &mut EngineState,
+    services: &Services,
+    tx: &Outbox,
+) {
+    let Services { store, sync, .. } = services;
+    let now = kaeri_store::now();
+    // What an unmark leaves of each episode: the viewing a mark sat on, put back on the record
+    // below, so Undo returns an episode to where it was rather than to the start.
+    let mut kept = Vec::new();
+    for episode in episodes {
+        if watched {
+            let mut event = kaeri_store::WatchEvent::new(id, episode.clone(), 0.0);
+            event.completed = true;
+            let _ = store.record_event(&event);
+        } else if let Ok(Some(left)) = store.unmark_episode(id, episode) {
+            kept.push(Watch {
+                episode: episode.clone(),
+                position: left.position_secs,
+                duration: left.duration_secs,
+                completed: left.completed,
+            });
+        }
+    }
+    // Project to trackers only when marking: progress there is monotonic, so an
+    // unmark keeps the remote high-water mark and only local history forgets.
+    if watched {
+        let reached = store.tracker_progress(id).unwrap_or(0);
+        if reached > 0 {
+            let op =
+                kaeri_core::traits::TrackOp::SetProgress { anilist_id: id, episode: reached };
+            // Signed-in trackers only, like a finished episode: the default Kitsu
+            // entry has no account behind it until someone signs in.
+            for tracker in sync.trackers.iter().filter(|t| t.is_authenticated()) {
+                let _ = store.enqueue(tracker.id(), &op, now);
+            }
+        }
+    }
+    // Read back rather than assumed: a mark the store did not take is not one to show. When
+    // the store cannot say, each is taken as asked, which is what the interface showed.
+    let held = store.completed_episodes(id).ok();
+    let held =
+        |episode: &str| held.as_ref().map_or(watched, |held| held.iter().any(|e| e == episode));
+    let marked = engine.cache.marked(id, episodes, watched, held);
+    for watch in &kept {
+        engine.cache.kept(id, watch);
+    }
+    let said = marked.and_then(|id| engine.cache.progress(id)).unwrap_or_else(|| {
+        // The episode count from the cached metadata, when there is any: with it a finished
+        // show goes back to episode 1, and without it Continue counts on from history.
+        let total = store
+            .cached_media(id)
+            .ok()
+            .flatten()
+            .and_then(|(payload, _)| serde_json::from_str::<kaeri_meta::Media>(&payload).ok())
+            .and_then(|media| media.episodes);
+        let (progress, resume) = data::standing(store, id, total);
+        engine.cache.standing(id, progress, resume)
+    });
+    let _ = tx.send(said);
+}
+
+#[cfg(test)]
+mod tests {
+    use std::time::Duration;
+
+    use kaeri_core::media::Episode;
+    use kaeri_meta::Media;
+    use kaeri_testkit::fixtures::{self, AIRING, FINISHED, FIXTURE_NOW};
+
+    use super::*;
+    use crate::data::Numbering;
+
+    fn store() -> Store {
+        Store::open_in_memory().unwrap()
+    }
+
+    /// Title `id`'s table from AniList's data alone, dated as a load dates it.
+    fn from_metadata(media: &Media, store: &Store) -> Vec<EpisodeRow> {
+        let rows = data::metadata_rows(media, store, media.id, FIXTURE_NOW);
+        dated(rows, media, Numbering::Same, store, media.id, FIXTURE_NOW)
+    }
+
+    fn numbers(rows: &[EpisodeRow]) -> Vec<&str> {
+        rows.iter().map(|row| row.number.as_str()).collect()
+    }
+
+    /// A made-up title from AniList's wire shape: `fields` over an id.
+    fn media(fields: serde_json::Value) -> Media {
+        let mut wire = serde_json::json!({ "id": 1 });
+        wire.as_object_mut().unwrap().extend(fields.as_object().unwrap().clone());
+        serde_json::from_value(wire).unwrap()
+    }
+
+    /// AniList's streaming listings for episodes `numbers`, each titled and with a still.
+    fn listings(numbers: std::ops::RangeInclusive<u32>) -> serde_json::Value {
+        numbers
+            .map(|n| {
+                serde_json::json!({
+                    "title": format!("Episode {n} - Chapter {n}"),
+                    "thumbnail": format!("https://img.example/ep/1/{n}.jpg"),
+                })
+            })
+            .collect()
+    }
+
+    /// A source's bare episodes, numbered `numbers`.
+    fn bare(numbers: std::ops::RangeInclusive<u32>) -> Vec<Episode> {
+        numbers.map(Episode::new).collect()
+    }
+
+    /// A season of twelve, finished, with every episode listed and its weekly broadcasts.
+    fn finished_season() -> Media {
+        let aired: Vec<_> = (1..=12)
+            .map(|n| serde_json::json!({ "episode": n, "airingAt": 1_000_000 + i64::from(n) }))
+            .collect();
+        media(serde_json::json!({
+            "status": "FINISHED", "episodes": 12, "duration": 24,
+            "streamingEpisodes": listings(1..=12), "aired": aired,
+        }))
+    }
+
+    /// A season of twelve on the air: five out, the sixth next.
+    fn airing_season() -> Media {
+        media(serde_json::json!({
+            "status": "RELEASING", "episodes": 12, "duration": 24,
+            "streamingEpisodes": listings(1..=5),
+            "aired": (1..=5).map(|n| serde_json::json!({ "episode": n, "airingAt": 100 * n }))
+                .collect::<Vec<_>>(),
+            "nextAiringEpisode": { "episode": 6, "airingAt": 600, "timeUntilAiring": 50 },
+        }))
+    }
+
+    /// A title the cache holds, over offline metadata: a finished season of thirteen.
+    mod coverage {
+        use kaeri_core::{ids::ProviderKey, media::SearchHit};
+        use kaeri_providers::MockProvider;
+
+        use super::*;
+
+        pub const SHOW: AnilistId = AnilistId::new(900_301);
+
+        pub fn meta(store: &Store) -> Meta {
+            let media = serde_json::json!({
+                "id": 900_301,
+                "title": { "romaji": "Hoshi no Kakurega", "english": "The Hidden Star" },
+                "format": "TV", "status": "FINISHED", "episodes": 13, "duration": 24,
+            });
+            store.cache_media(SHOW, &media.to_string(), now_epoch()).unwrap();
+            let http =
+                kaeri_net::HttpClient::offline(&kaeri_core::config::NetworkConfig::default())
+                    .unwrap();
+            Meta::new(kaeri_meta::AniList::new(http, 30), None, store.clone())
+        }
+
+        /// A source that carries the show and lists episodes `listed`.
+        pub fn source(id: &str, listed: std::ops::RangeInclusive<u32>) -> MockProvider {
+            let key = format!("{id}-key");
+            let hit = SearchHit {
+                episode_count: Some(13),
+                ..SearchHit::new(ProviderKey::new(&key), "The Hidden Star")
+            };
+            MockProvider::new(id).with_hits(vec![hit]).with_episodes(bare(listed))
+        }
+    }
+
+    /// A finished season of twelve and its sequel, named as sequels are: the first season's
+    /// name with a subtitle after it, so a search for the sequel finds the first season too.
+    mod sequel {
+        use kaeri_core::{
+            ids::ProviderKey,
+            media::{MediaFormat, SearchHit},
+        };
+        use kaeri_providers::MockProvider;
+
+        use super::*;
+
+        pub const FIRST: AnilistId = AnilistId::new(900_401);
+        pub const SECOND: AnilistId = AnilistId::new(900_402);
+
+        /// The first season over offline metadata, and the second as `second` has it.
+        pub fn meta(store: &Store, second: serde_json::Value) -> Meta {
+            let first = serde_json::json!({
+                "id": FIRST.get(),
+                "title": { "romaji": "Kumo no Shiro", "english": "The Cloud Keep" },
+                "format": "TV", "status": "FINISHED", "episodes": 12, "duration": 24,
+                "seasonYear": 2025,
+            });
+            let mut wire = serde_json::json!({
+                "id": SECOND.get(),
+                "title": {
+                    "romaji": "Kumo no Shiro: Kanketsu-hen",
+                    "english": "The Cloud Keep: Final Chapter",
+                },
+                "format": "TV", "duration": 24,
+            });
+            wire.as_object_mut().unwrap().extend(second.as_object().unwrap().clone());
+            store.cache_media(FIRST, &first.to_string(), now_epoch()).unwrap();
+            store.cache_media(SECOND, &wire.to_string(), now_epoch()).unwrap();
+            let http =
+                kaeri_net::HttpClient::offline(&kaeri_core::config::NetworkConfig::default())
+                    .unwrap();
+            Meta::new(kaeri_meta::AniList::new(http, 30), None, store.clone())
+        }
+
+        /// The sequel announced and not started: no count, no schedule, no year yet.
+        pub fn unreleased() -> serde_json::Value {
+            serde_json::json!({ "status": "NOT_YET_RELEASED" })
+        }
+
+        /// The sequel on the air: three of twelve out, the fourth next.
+        pub fn airing() -> serde_json::Value {
+            let now = now_epoch();
+            let aired: Vec<_> = (1..=3_i64)
+                .map(|n| serde_json::json!({ "episode": n, "airingAt": now - 1_000 * (4 - n) }))
+                .collect();
+            serde_json::json!({
+                "status": "RELEASING", "episodes": 12, "seasonYear": 2026, "aired": aired,
+                "nextAiringEpisode": {
+                    "episode": 4, "airingAt": now + 1_000, "timeUntilAiring": 1_000,
+                },
+            })
+        }
+
+        fn page(key: &str, title: &str, episodes: Option<u32>) -> SearchHit {
+            SearchHit {
+                episode_count: episodes,
+                format: Some(MediaFormat::Tv),
+                ..SearchHit::new(ProviderKey::new(key), title)
+            }
+        }
+
+        /// A source with a page for each season: the first's twelve, and the sequel's
+        /// `listed`.
+        pub fn both(id: &str, listed: Vec<Episode>) -> MockProvider {
+            MockProvider::new(id)
+                .with_hits(vec![
+                    page("keep-1", "The Cloud Keep", Some(12)),
+                    page("keep-2", "The Cloud Keep: Final Chapter", None),
+                ])
+                .with_episodes_for("keep-1", bare(1..=12))
+                .with_episodes_for("keep-2", listed)
+        }
+
+        /// A source with only the first season's page, and no year or count for it: what its
+        /// search finds for the sequel is the first season.
+        pub fn first_only(id: &str) -> MockProvider {
+            let hit = SearchHit {
+                format: Some(MediaFormat::Tv),
+                ..SearchHit::new(ProviderKey::new("keep-1"), "Kumo no Shiro")
+            };
+            MockProvider::new(id).with_hits(vec![hit]).with_episodes_for("keep-1", bare(1..=12))
+        }
+    }
+
+    #[tokio::test]
+    async fn an_unreleased_sequel_lists_nothing_after_its_first_season_was_opened() {
+        let store = store();
+        let meta = sequel::meta(&store, sequel::unreleased());
+        let shelf = sequel::first_only("shelf");
+        let asked = shelf.call_count();
+        let registry =
+            ProviderRegistry::new(vec![sequel::both("batch", Vec::new()).arc(), shelf.arc()]);
+        let Ok(EpisodeLoad::Rows(first)) =
+            load_episodes(&meta, &store, &registry, sequel::FIRST).await
+        else {
+            panic!("the first season is listed")
+        };
+        assert_eq!(first.len(), 12);
+        let before = asked.load(std::sync::atomic::Ordering::SeqCst);
+
+        let rows = match load_episodes(&meta, &store, &registry, sequel::SECOND).await {
+            Ok(EpisodeLoad::Rows(rows) | EpisodeLoad::Unlisted { rows, .. }) => rows,
+            _ => panic!("a table"),
+        };
+        assert!(numbers(&rows).is_empty(), "nothing has aired: {:?}", numbers(&rows));
+        assert_eq!(
+            asked.load(std::sync::atomic::Ordering::SeqCst),
+            before,
+            "a title that has not started has nothing for a source to list"
+        );
+    }
+
+    #[tokio::test]
+    async fn an_airing_sequel_is_not_filled_from_the_season_before() {
+        let store = store();
+        let meta = sequel::meta(&store, sequel::airing());
+        let registry = ProviderRegistry::new(vec![
+            sequel::both("batch", bare(1..=2)).arc(),
+            sequel::first_only("shelf").arc(),
+        ]);
+        let Ok(EpisodeLoad::Rows(rows)) =
+            load_episodes(&meta, &store, &registry, sequel::SECOND).await
+        else {
+            panic!("rows")
+        };
+        assert!(rows.iter().all(|row| row.source.is_none()), "nothing from the first season");
+        assert_eq!(numbers(&rows)[..3], ["1", "2", "3"], "what aired, and no more");
+        assert!(rows.len() <= 4, "at most the next to air after it: {:?}", numbers(&rows));
+        assert!(rows[2].unsourced, "3 is out and on no source");
+    }
+
+    #[tokio::test]
+    async fn a_season_out_all_at_once_is_listed_from_the_page_the_user_chose() {
+        // The site has the whole season while AniList's schedule has three out: from the
+        // listing alone that is the season before matched by its name, so it is not taken...
+        let store = store();
+        let meta = sequel::meta(&store, sequel::airing());
+        let registry = ProviderRegistry::new(vec![sequel::both("batch", bare(1..=12)).arc()]);
+        let rows = match load_episodes(&meta, &store, &registry, sequel::SECOND).await {
+            Ok(EpisodeLoad::Rows(rows) | EpisodeLoad::Unlisted { rows, .. }) => rows,
+            _ => panic!("a table"),
+        };
+        assert_eq!(numbers(&rows)[..3], ["1", "2", "3"]);
+        assert!(rows.len() <= 4);
+
+        // ...until the user says this page is the title, and their correction stands.
+        let key = kaeri_core::ids::ProviderKey::new("keep-2");
+        store.set_override(sequel::SECOND, "batch", &key, 0).unwrap();
+        let Ok(EpisodeLoad::Rows(rows)) =
+            load_episodes(&meta, &store, &registry, sequel::SECOND).await
+        else {
+            panic!("rows")
+        };
+        assert_eq!(rows.len(), 12);
+        assert!(rows.iter().all(|row| !row.unsourced));
+    }
+
+    #[tokio::test]
+    async fn a_source_with_part_of_the_season_is_filled_from_the_next() {
+        let store = store();
+        let meta = coverage::meta(&store);
+        let registry = ProviderRegistry::new(vec![
+            coverage::source("batch", 1..=6).arc(),
+            coverage::source("shelf", 1..=13).arc(),
+        ]);
+        let load = load_episodes(&meta, &store, &registry, coverage::SHOW).await.unwrap();
+        let EpisodeLoad::Rows(rows) = load else { panic!("rows") };
+        assert_eq!(rows.len(), 13, "the whole season is listed");
+        let elsewhere: Vec<_> = rows
+            .iter()
+            .filter(|row| row.source.is_some())
+            .map(|row| row.number.as_str())
+            .collect();
+        assert_eq!(elsewhere, ["7", "8", "9", "10", "11", "12", "13"]);
+        assert!(rows.iter().all(|row| !row.unsourced));
+    }
+
+    #[tokio::test]
+    async fn an_episode_no_source_lists_stays_in_the_table_marked() {
+        let store = store();
+        let meta = coverage::meta(&store);
+        let registry = ProviderRegistry::new(vec![
+            coverage::source("batch", 1..=6).arc(),
+            coverage::source("shelf", 1..=9).arc(),
+        ]);
+        let Ok(EpisodeLoad::Rows(rows)) =
+            load_episodes(&meta, &store, &registry, coverage::SHOW).await
+        else {
+            panic!("rows")
+        };
+        let unsourced: Vec<_> =
+            rows.iter().filter(|row| row.unsourced).map(|r| r.number.as_str()).collect();
+        assert_eq!(unsourced, ["10", "11", "12", "13"]);
+    }
+
+    #[tokio::test]
+    async fn a_pin_ranks_a_source_first_and_the_others_still_fill_its_gaps() {
+        let store = store();
+        let meta = coverage::meta(&store);
+        let registry = ProviderRegistry::new(vec![
+            coverage::source("shelf", 1..=13).arc(),
+            coverage::source("batch", 1..=6).arc(),
+        ]);
+        store.set_provider_preference(coverage::SHOW, "batch", 0).unwrap();
+        let Ok(EpisodeLoad::Rows(rows)) =
+            load_episodes(&meta, &store, &registry, coverage::SHOW).await
+        else {
+            panic!("rows")
+        };
+        assert_eq!(rows.len(), 13);
+        assert!(rows[..6].iter().all(|row| row.source.is_none()), "the pinned source's own");
+        assert!(rows[6..].iter().all(|row| row.source.as_deref() == Some("shelf")));
+
+        // Back to automatic: the order decides again, and the first source has all of it.
+        store.clear_provider_preference(coverage::SHOW).unwrap();
+        let Ok(EpisodeLoad::Rows(rows)) =
+            load_episodes(&meta, &store, &registry, coverage::SHOW).await
+        else {
+            panic!("rows")
+        };
+        assert!(rows.iter().all(|row| row.source.is_none()));
+    }
+
+    #[test]
+    fn a_pin_on_a_source_that_is_off_or_gone_is_unavailable_not_an_error() {
+        let store = store();
+        let registry = ProviderRegistry::new(vec![coverage::source("shelf", 1..=13).arc()]);
+        assert_eq!(pin_of(&store, &registry, coverage::SHOW), Pin::Automatic);
+        store.set_provider_preference(coverage::SHOW, "gone", 0).unwrap();
+        assert_eq!(pin_of(&store, &registry, coverage::SHOW), Pin::Unavailable("gone".into()));
+        store.set_provider_preference(coverage::SHOW, "shelf", 0).unwrap();
+        assert_eq!(pin_of(&store, &registry, coverage::SHOW), Pin::Held("shelf".into()));
+        registry.set_disabled(["shelf".to_owned()]);
+        assert_eq!(pin_of(&store, &registry, coverage::SHOW), Pin::Unavailable("shelf".into()));
+    }
+
+    #[test]
+    fn with_no_source_a_finished_show_has_every_episode_its_count_says() {
+        let store = store();
+        let media = fixtures::media(FINISHED);
+        let rows = from_metadata(&media, &store);
+        let expected: Vec<String> = (1..=12).map(|n| n.to_string()).collect();
+        assert_eq!(numbers(&rows), expected);
+        assert!(rows.iter().all(|row| row.metadata_only), "every row is AniList's alone");
+        // Named and given stills by the streaming listings, as long as AniList says.
+        assert_eq!(rows[2].title.as_deref(), Some("The Ferryman's Ledger"));
+        assert_eq!(rows[2].thumbnail.as_deref(), Some("https://img.example/ep/900001/3.jpg"));
+        assert_eq!(rows[2].duration_secs, Some(24 * 60));
+        // And dated by the broadcasts the title carries, all of them out.
+        assert!(rows.iter().all(|row| row.airs_at.is_some_and(|at| at <= FIXTURE_NOW)));
+    }
+
+    #[test]
+    fn with_no_source_an_airing_show_has_what_aired_and_the_next_to_come() {
+        let store = store();
+        let rows = from_metadata(&fixtures::media(AIRING), &store);
+        assert_eq!(numbers(&rows), ["1", "2", "3", "4", "5", "6"]);
+        let (next, out) = rows.split_last().unwrap();
+        assert!(out.iter().all(|row| row.airs_at.is_some_and(|at| at <= FIXTURE_NOW)));
+        assert!(next.airs_at.is_some_and(|at| at > FIXTURE_NOW), "the next one is not out yet");
+        assert!(rows.iter().all(|row| row.metadata_only));
+    }
+
+    #[test]
+    fn a_show_whose_count_and_schedule_say_nothing_has_no_episodes() {
+        let store = store();
+        // Still to finish and no schedule: how many are out is not known, so none are said to
+        // be. Nor for one that finished without a count.
+        for status in ["RELEASING", "FINISHED", "HIATUS"] {
+            let unknown = media(serde_json::json!({ "status": status, "duration": 24 }));
+            assert!(from_metadata(&unknown, &store).is_empty(), "{status}");
+        }
+        // The schedule alone is enough, without a count.
+        let counted_by_schedule = media(serde_json::json!({
+            "status": "RELEASING",
+            "nextAiringEpisode": { "episode": 3, "airingAt": 600, "timeUntilAiring": 50 },
+        }));
+        assert_eq!(numbers(&from_metadata(&counted_by_schedule, &store)), ["1", "2", "3"]);
+    }
+
+    #[test]
+    fn a_mark_shows_on_a_row_from_anilist_by_its_number() {
+        let store = store();
+        let mut event = kaeri_store::WatchEvent::new(FINISHED, "3", 0.0);
+        event.completed = true;
+        store.record_event(&event).unwrap();
+        let rows = from_metadata(&fixtures::media(FINISHED), &store);
+        let done: Vec<_> = rows.iter().filter(|row| row.completed).map(|r| &r.number).collect();
+        assert_eq!(done, ["3"]);
+    }
+
+    #[test]
+    fn a_table_from_anilist_is_said_quietly_and_why_only_to_an_action_that_asked_a_source() {
+        let id = FINISHED;
+        let rows = from_metadata(&fixtures::media(FINISHED), &store());
+        let unlisted = |reason: Option<&str>| EpisodeLoad::Unlisted {
+            rows: rows.clone(),
+            reason: reason.map(str::to_owned),
+        };
+        for asked in [Asked::Looking, Asked::Acting] {
+            let none_set_up = said(id, Ok(unlisted(None)), asked);
+            assert!(
+                matches!(&none_set_up[..], [Event::Episodes { rows, .. }] if rows.len() == 12)
+            );
+        }
+        // A hover card, a title page or a source change: the miss is not a notice.
+        let looking = said(id, Ok(unlisted(Some("fixture found no matches"))), Asked::Looking);
+        assert!(
+            matches!(&looking[..], [Event::Episodes { rows, failed: None, .. }] if rows.len() == 12),
+            "the table alone: {looking:?}"
+        );
+        let acting = said(id, Ok(unlisted(Some("fixture found no matches"))), Asked::Acting);
+        let [Event::Episodes { .. }, Event::Toast(notice)] = &acting[..] else {
+            panic!("the table, then why: {acting:?}")
+        };
+        assert_eq!(notice.kind, kaeri_model::notice::NoticeKind::Info, "quiet, not an alert");
+        assert_eq!(
+            notice.message(),
+            Msg::NoticeNoSourceCouldList { reason: "fixture found no matches".into() }
+        );
+    }
+
+    #[test]
+    fn a_match_no_source_could_make_still_leaves_the_page_with_anilists_table() {
+        let id = FINISHED;
+        let rows = from_metadata(&fixtures::media(FINISHED), &store());
+        let (provider_id, source) = ("fixture".to_owned(), "Fixture Source".to_owned());
+        let load = EpisodeLoad::Choose { provider_id, source, candidates: Vec::new(), rows };
+        let seen = said(id, Ok(load), Asked::Looking);
+        let [
+            Event::MatchChoices { .. },
+            Event::Episodes { rows, failed: None, .. },
+            Event::Toast(n),
+        ] = &seen[..]
+        else {
+            panic!("the candidates, AniList's table, then why: {seen:?}")
+        };
+        assert_eq!(rows.len(), 12);
+        assert!(rows.iter().all(|row| row.metadata_only), "AniList's rows, marked as such");
+        assert_eq!(n.message(), Msg::NoticeMatchUncertain { source: "Fixture Source".into() });
+    }
+
+    #[test]
+    fn a_table_that_could_not_load_says_so_rather_than_that_there_are_no_episodes() {
+        let seen = said(FINISHED, Err("AniList is resting".to_owned()), Asked::Looking);
+        let [Event::Episodes { rows, failed: Some(failed), .. }, Event::Toast(notice)] =
+            &seen[..]
+        else {
+            panic!("the failed table, then the toast: {seen:?}")
+        };
+        assert!(rows.is_empty());
+        assert_eq!(*failed, Msg::NoticeEpisodesFailed { reason: "AniList is resting".into() });
+        assert_eq!(notice.message(), *failed);
+    }
+
+    #[test]
+    fn a_source_numbered_as_anilist_is_named_by_its_own_numbers() {
+        let media = finished_season();
+        for numbers in [1..=12, 1..=3, 5..=12] {
+            let mut episodes = bare(numbers.clone());
+            assert_eq!(data::enrich_episodes(&mut episodes, &media, 0), Numbering::Same);
+            let first = *numbers.start();
+            assert_eq!(episodes[0].title, Some(format!("Chapter {first}")), "{numbers:?}");
+        }
+    }
+
+    #[test]
+    fn a_season_numbered_on_from_the_one_before_lines_up_by_its_count_and_schedule() {
+        let store = store();
+        // A finished season the source has whole, as 13 to 24.
+        let media = finished_season();
+        let mut episodes = bare(13..=24);
+        let numbering = data::enrich_episodes(&mut episodes, &media, 0);
+        assert_eq!(numbering, Numbering::After(12));
+        assert_eq!(episodes[0].title.as_deref(), Some("Chapter 1"));
+        assert_eq!(episodes[11].thumbnail.as_deref(), Some("https://img.example/ep/1/12.jpg"));
+        // Dated by AniList's numbers through the same offset, and kept by the source's.
+        let rows = dated(
+            data::episode_rows(&episodes, &store, media.id),
+            &media,
+            numbering,
+            &store,
+            media.id,
+            0,
+        );
+        assert_eq!(rows[0].number, "13");
+        assert_eq!(rows[0].airs_at, Some(1_000_001));
+        assert_eq!(rows[11].airs_at, Some(1_000_012));
+
+        // One on the air the source is up to date with, as 13 to 17.
+        let mut episodes = bare(13..=17);
+        let numbering = data::enrich_episodes(&mut episodes, &airing_season(), 0);
+        assert_eq!(numbering, Numbering::After(12));
+        assert_eq!(episodes[4].title.as_deref(), Some("Chapter 5"));
+    }
+
+    #[test]
+    fn a_numbering_that_reads_either_way_or_neither_names_nothing() {
+        let store = store();
+        // Three to seven of a season five episodes in: its own 3 to 7, ahead of the schedule,
+        // or 1 to 5 counted on from two before. Either could be.
+        let media = airing_season();
+        let mut episodes = bare(3..=7);
+        assert_eq!(data::enrich_episodes(&mut episodes, &media, 0), Numbering::Unknown);
+        assert!(episodes.iter().all(|e| e.title.is_none() && e.thumbnail.is_none()));
+        let rows = dated(
+            data::episode_rows(&episodes, &store, media.id),
+            &media,
+            Numbering::Unknown,
+            &store,
+            media.id,
+            0,
+        );
+        assert!(rows.iter().all(|row| row.airs_at.is_none()), "nor dated by a guess");
+        // Eight past the end of a season of twelve: not its own numbers, and not all of it.
+        let mut episodes = bare(13..=20);
+        assert_eq!(
+            data::enrich_episodes(&mut episodes, &finished_season(), 0),
+            Numbering::Unknown
+        );
+        assert!(episodes.iter().all(|e| e.title.is_none()));
+        // The length needs no number, so it is filled in all the same.
+        assert!(episodes.iter().all(|e| e.duration == Some(Duration::from_secs(24 * 60))));
+    }
+
+    #[test]
+    fn what_a_source_says_stands_and_anilist_fills_only_what_it_left_out() {
+        let media = finished_season();
+        let with = |title: Option<&str>, duration: Option<u64>| Episode {
+            title: title.map(str::to_owned),
+            duration: duration.map(Duration::from_secs),
+            ..Episode::new(3)
+        };
+        let mut episodes = vec![
+            with(Some("Director's Cut"), Some(1_401)),
+            with(Some("Episode 3 - Embers in the Snow"), None),
+            with(Some("Ep. 3"), Some(0)),
+            with(Some("  "), None),
+        ];
+        data::enrich_episodes(&mut episodes, &media, 0);
+        let said: Vec<_> = episodes
+            .iter()
+            .map(|e| (e.title.as_deref(), e.duration.map(|d| d.as_secs())))
+            .collect();
+        assert_eq!(
+            said,
+            [
+                (Some("Director's Cut"), Some(1_401)),
+                // The numbering is not part of a title, whoever put it there.
+                (Some("Embers in the Snow"), Some(1_440)),
+                // Numbering alone, or nothing, is no title: AniList's stands in.
+                (Some("Chapter 3"), Some(1_440)),
+                (Some("Chapter 3"), Some(1_440)),
+            ]
+        );
+    }
+}

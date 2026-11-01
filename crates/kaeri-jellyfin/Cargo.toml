@@ -1,0 +1,34 @@
+[package]
+name = "kaeri-jellyfin"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "A client for a Jellyfin server the user runs: sign-in, libraries, playback addresses and progress"
+
+[lib]
+doctest = false
+
+[dependencies]
+kaeri-core.workspace = true
+async-trait.workspace = true
+kaeri-net.workspace = true
+reqwest.workspace = true
+# A certificate the person allows is pinned by its SHA-256 fingerprint: a verifier of our own,
+# on ring as the cast and party crates have it, handed to reqwest as a preconfigured backend.
+rustls = { version = "0.23.46", default-features = false, features = ["ring", "std", "logging", "tls12"] }
+serde.workspace = true
+serde_json.workspace = true
+sha2 = "0.11"
+thiserror.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+url = "2"
+webpki-roots = "1"
+
+[dev-dependencies]
+kaeri-testkit = { path = "../kaeri-testkit" }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
+
+[lints]
+workspace = true

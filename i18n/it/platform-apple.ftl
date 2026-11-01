@@ -1,0 +1,8 @@
+menu-show-library = Mostra { -library-cap }
+menu-source-for-title = { -source-cap } per questo titolo
+menu-fix-match = Correggi abbinamento…
+source-release-seeders = { $count ->
+    [one] Un seeder
+    [many] { $count } seeder
+   *[other] { $count } seeder
+ }

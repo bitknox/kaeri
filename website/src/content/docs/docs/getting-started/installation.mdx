@@ -1,0 +1,394 @@
+---
+title: Installation
+description: The apps for Mac, iPhone, iPad, Android, Android TV, Windows and Linux, and the terminal app for macOS, Linux and Windows, from the releases on GitHub or from source.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Every release on the [releases page](https://github.com/bitknox/kaeri/releases/latest) has the
+apps and the terminal app. Each file has a `.sha256` beside it. With both in one folder,
+`shasum -a 256 -c <file>.sha256` checks the file on macOS, and `sha256sum -c <file>.sha256` on
+Linux.
+
+## The apps
+
+The apps are not in the App Store, on Google Play or in the Microsoft Store. Download them from the
+[latest release](https://github.com/bitknox/kaeri/releases/latest) and allow them once, as
+below. The [features page](/features/#platforms) shows what each one looks like.
+
+### Mac
+
+`kaeri-<version>-macos.dmg`, for macOS 26 or later on a Mac with Apple silicon.
+
+Open the disk image and drag Kaeri to Applications. The app is signed without an Apple
+developer account and is not notarized, so macOS stops it the first time it opens:
+
+1. Open Kaeri, and choose **Done** when macOS says it cannot verify the app.
+2. Open **System Settings › Privacy & Security**. Under Security, choose **Open Anyway** beside
+   the line about Kaeri, and confirm with your password or Touch ID.
+
+That is once for each version you download. Right-click › Open no longer skips the check since
+macOS 15. From a terminal, `xattr -dr com.apple.quarantine /Applications/Kaeri.app` does the
+same as Open Anyway.
+
+After an update, macOS may ask whether Kaeri can use what it keeps in your keychain. Choose
+**Always Allow**.
+
+The Mac app and the terminal app share one history and one config, in
+`~/Library/Application Support/kaeri`.
+
+### iPhone and iPad
+
+`kaeri-<version>-ios-unsigned.ipa`, for iOS or iPadOS 26 or later.
+
+The `.ipa` is unsigned. [AltStore](https://altstore.io) or [SideStore](https://sidestore.io) signs
+it with your own Apple ID as it installs it:
+
+1. Set up AltStore or SideStore on the iPhone or iPad, as its own guide describes.
+2. Add Kaeri's source to it. In SideStore or AltStore, go to **Sources**, choose **+** and
+   paste this address:
+
+   ```
+   https://github.com/bitknox/kaeri/releases/latest/download/sidestore.json
+   ```
+
+3. Install Kaeri from the source. You can also download the `.ipa` on the device and open it
+   in AltStore or SideStore, but then it does not offer you new releases.
+4. If iOS asks for Developer Mode, turn it on under **Settings › Privacy & Security › Developer
+   Mode** and restart when it asks. Apps signed with a personal Apple ID need it.
+
+With a free Apple ID the signature lasts 7 days. AltStore or SideStore has to refresh the app
+within that time, or it will not open until they do. Your data stays either way. A free Apple ID
+also allows only three apps signed this way at a time, AltStore or SideStore among them.
+
+### Android
+
+`kaeri-<version>-android-arm64.apk`, for Android 15 or later on a 64-bit ARM phone or tablet.
+
+1. Download the APK on the device and open it.
+2. Android asks once whether the app you opened it from, your browser or your file manager, may
+   install apps. Allow it, go back, and choose **Install**.
+
+The APK is signed with Kaeri’s release key, so each release installs over the one before and
+keeps your data. It is not on Google Play, and Play Protect may offer to scan it. To take the
+permission back afterwards, go to **Settings › Apps › Special app access › Install unknown apps**.
+
+### Android TV
+
+`kaeri-<version>-android-tv-arm64.apk` or `kaeri-<version>-android-tv-armv7.apk`, for
+Android TV or Google TV 11 or later. Most TV boxes, including the Chromecast with Google TV, run a
+32-bit system and take the armv7 file; the Nvidia Shield and newer boxes take the arm64 file. If
+the install says the app is not compatible, try the other one. It is a separate app from the phone one, made for the remote.
+
+With the Downloader app, on the TV itself:
+
+1. Install **Downloader** from Google Play on the TV.
+2. In Downloader, enter `github.com/bitknox/kaeri/releases/latest`. The release page opens.
+   Under **Assets**, choose the file that ends in `-android-tv-armv7.apk` or `-android-tv-arm64.apk`.
+3. Android asks whether Downloader may install apps. Allow it, go back, and choose **Install**. On
+   most TVs the setting is under **Settings › Apps › Security & restrictions › Unknown sources**.
+
+With adb, from a computer on the same network:
+
+1. On the TV, open **Settings › Device Preferences › About** (on Google TV, **Settings › System ›
+   About**) and select **Build** seven times to turn on the developer options.
+2. In the developer options, turn on **USB debugging** (some TVs call it network debugging), and
+   note the TV's address from its network settings.
+3. On the computer, run `adb connect <the TV's address>` and accept the prompt on the TV, then:
+
+   ```sh
+   adb install kaeri-<version>-android-tv-armv7.apk
+   ```
+
+   If the TV offers **Wireless debugging** with a pairing code instead, run
+   `adb pair <address>:<port>` with the address and code it shows, and then `adb connect`.
+
+The APK is signed with Kaeri's release key, so a newer one installs over the one before and
+keeps your data. After the first install the TV app updates itself from **Settings › About**, as
+[Updating](#updating) describes.
+
+To use **Play on TV** from the Mac, iPhone, iPad, Android, Windows or Linux app, pair it with the
+TV once. On the TV, go to **Settings › Remotes › Pair a phone** and scan the QR code with a phone,
+or choose the TV in the app's **Play on TV** list and enter the code the TV shows. Both need to be
+on the same network. On Windows and Linux, paired TVs are listed under
+**Settings › Integrations**.
+
+Torrents on the TV are off until you turn them on under **Settings › Sources**. The TV shows a QR
+code that opens a page on your phone, where you type the torrent index and, if you use one, the
+proxy; you can also type them with the TV's keyboard. The proxy is checked before it is saved, as
+in [Torrents and the VPN guard](/docs/guides/torrents-vpn/#in-the-apps).
+
+### Windows
+
+`kaeri-<version>-windows-x64-setup.exe` for most PCs, or
+`kaeri-<version>-windows-arm64-setup.exe` for Windows on Arm. Both need Windows 10 version 2004
+or later.
+
+Run the installer. It installs for your account only, so it asks for no administrator password.
+It adds Kaeri to the Start menu and to **Settings › Apps**, where you can uninstall it, and it
+lets the app open `kaeri://` links. The installer is not code-signed, so SmartScreen stops it
+the first time:
+
+1. When Windows says “Windows protected your PC”, choose **More info**.
+2. Choose **Run anyway**.
+
+A new release installs over the one before and keeps your library and settings. Uninstalling
+keeps them too.
+
+### Linux
+
+`kaeri-<version>-linux-x86_64.AppImage`, or `kaeri-<version>-linux-aarch64.AppImage` on
+64-bit ARM. It carries GTK 4, libadwaita 1.7 and the player, so there is nothing to install first.
+It needs glibc 2.41 or newer, which means one of these or later:
+
+- Ubuntu 25.04, including Ubuntu 26.04 LTS
+- Fedora 42
+- Debian 13
+
+Ubuntu 24.04 and other systems with an older glibc are not supported. There the AppImage says so
+and stops, and the terminal app is the way to run Kaeri.
+
+Make the file executable once, then open it:
+
+```sh
+chmod +x kaeri-<version>-linux-x86_64.AppImage
+./kaeri-<version>-linux-x86_64.AppImage
+```
+
+The first time it runs, it registers itself for `kaeri://` links. If you move the file, the
+next run registers the new place. After that it updates itself, as [Updating](#updating)
+describes. An AppImage needs FUSE, which most desktops have. Without it, run
+the file with `--appimage-extract-and-run`.
+
+## The terminal app
+
+The terminal app comes several ways in each release:
+
+- An installer: `.pkg` on macOS, `setup.exe` on Windows, `.deb` on Debian and Ubuntu. Each one
+  puts `kaeri` on your `PATH` and adds a launcher, so you can type it or click it. The
+  launcher opens your terminal, since that is where Kaeri lives.
+- An AppImage for every other Linux distro. `chmod +x` it and run it from a terminal. Nothing is
+  installed. Like the `.deb` and the `.tar.gz`, it needs glibc 2.28 or newer: Debian 10, Ubuntu
+  20.04, RHEL 8 or later.
+- An archive, `.tar.gz` or `.zip`, for putting the binary on `PATH` yourself. It holds the binary,
+  the README, the licence and a `third-party` folder with the notices for what Kaeri bundles.
+
+:::caution[Not code-signed]
+The terminal app is not signed either, so the first open takes one extra step:
+
+- On macOS, opening the `.pkg` says Apple could not verify it. Choose **Done**, go to
+  **System Settings › Privacy & Security**, find the line about Kaeri near the bottom and
+  choose **Open Anyway**.
+- On macOS, a binary from an archive downloaded with a browser is refused the first time it runs.
+  Clear the download flag once with `xattr -d com.apple.quarantine kaeri`.
+- On Windows, SmartScreen shows “Windows protected your PC”. Choose **More info**, then
+  **Run anyway**.
+
+Updates through `kaeri --update` are not downloaded by a browser and open without these
+steps.
+:::
+
+mpv and ffmpeg are not bundled with the terminal app. It drives mpv for playback and shells out to
+ffmpeg when muxing subtitles into a completed download. The `.deb` declares both as dependencies.
+On macOS and Windows, install them yourself, as in Prerequisites below. The apps have mpv built in
+and need neither.
+
+Kaeri's [player interface](/docs/guides/player/), with the skip button, Up next, menus and
+thumbnails, needs mpv 0.36 or newer. Older versions play with mpv's own controls; Ubuntu 24.04
+ships 0.37 and Debian 12 ships 0.35. `kaeri --doctor` says which version you have.
+
+There is no Homebrew formula and no `cargo install` yet. To build from source instead, install the
+prerequisites and then build.
+
+## Updating
+
+The apps check GitHub for a new release once a day and say when one is out. Settings shows it too,
+with **Check now**. Except on Windows, nothing is downloaded until you choose to update, and an
+update keeps your history and settings. Turn the daily check off with **Check for updates** in
+Settings.
+
+On the Mac, choose **Update** in the notice, or **Update to** the new version under
+**Settings › Integrations › Updates**. Kaeri downloads the new release, checks its signature,
+replaces itself and opens again. macOS does not ask for Open Anyway again, since a browser did not
+download it. It may still ask whether Kaeri can use what it keeps in your keychain.
+
+On iPhone and iPad, updates come through SideStore or AltStore, from the source you added. Choose
+**Update in SideStore** in the notice, under **Settings › About** on iPhone or under
+**Settings › Advanced** on iPad. It opens SideStore with Kaeri's source, where you update the
+app. Without SideStore or AltStore it opens the release page.
+
+On Android, choose **Update** in the notice, or **Update to** the new version under
+**Settings › About**. The first time, Android asks you to turn on **Allow from this source** for
+Kaeri. Kaeri downloads the APK, checks it against the published SHA-256 and the key the
+installed app is signed with, and installs it over the version before. Android closes the app as
+the update goes in, and a notification says when it is done.
+
+On Android TV, the TV says when an update is out. Go to **Settings › About**, choose **Update to**
+the new version, then **Update**. The first time, Android asks you to allow Kaeri to install
+apps, and the TV shows where that switch is. Kaeri downloads the APK, checks its size and
+SHA-256 and that it is signed with the same key, then hands it to Android's installer, which asks
+you to confirm.
+
+On Windows, the app downloads a new release once it finds one and checks it against the
+published size and SHA-256. Then it says the version is ready to install. Choose
+**Restart to update**, in the notice or under **Settings › About**, and the installer runs without
+asking anything, then opens the new version. Your library and settings stay.
+
+On Linux, **Settings › Integrations › Updates** says when a new release is out. Choose
+**Download update**, and the app checks the new AppImage against the published size and SHA-256.
+**Restart to update** then puts it in place of the one you run and opens it. If the AppImage's
+folder cannot be written to, the new version is saved to Downloads instead, and the app says so.
+
+The terminal app updates itself:
+
+```sh
+kaeri --update
+```
+
+That downloads the latest release for your platform, checks it against the published SHA-256,
+and replaces the binary in place. Restart Kaeri to use it. The terminal app also checks GitHub
+for a new release once a day (one cached HTTPS request, nothing downloaded) and mentions it in a toast.
+Turn the check off with:
+
+```toml
+[updates]
+check = false
+```
+
+### Beta updates
+
+Every change that lands is built as a numbered beta first. The beta becomes the stable release
+the next Tuesday if nothing went wrong in between, so betas arrive with every change and stable
+releases come about once a week. By default an app only sees stable releases.
+
+To get betas, turn on **Beta updates** in Settings. It is a switch on each device, so it can be on
+for your phone and off for your Mac. The app then offers the newest release, beta or stable. The
+same screen labels the build you run as a beta when it is one.
+
+Turning it off does not downgrade anything. The app stays on the beta it has, says that updates
+resume with the next stable release, and updates again when a stable newer than your build is out.
+
+The AppImage update information and the SideStore source follow stable
+releases only. On iPhone and iPad, a beta comes from its page on GitHub, which the update notice
+opens. In the terminal app, `kaeri --update --beta` takes the newest beta, and `updates.beta = true`
+under `[updates]` in the config makes the daily check look for betas.
+
+## Prerequisites
+
+<Tabs syncKey="platform">
+<TabItem label="macOS">
+
+```sh
+brew install mpv ffmpeg cmake
+rustup toolchain install 1.99.1    # pinned by rust-toolchain.toml
+```
+
+</TabItem>
+<TabItem label="Linux">
+
+```sh
+# Debian / Ubuntu
+sudo apt install mpv ffmpeg cmake build-essential pkg-config
+
+# Fedora
+sudo dnf install mpv ffmpeg cmake gcc-c++
+
+# Arch
+sudo pacman -S mpv ffmpeg cmake base-devel
+```
+
+Install Rust from [rustup.rs](https://rustup.rs) if it is not already there. The toolchain version
+comes from `rust-toolchain.toml`.
+
+</TabItem>
+<TabItem label="Windows">
+
+```powershell
+winget install --id Rustlang.Rustup
+winget install --id Kitware.CMake
+winget install --id NASM.NASM
+winget install --id Gyan.FFmpeg
+winget install --id shinchiro.mpv
+winget install --id Microsoft.VisualStudio.2022.BuildTools
+```
+
+The Visual Studio installer needs the **Desktop development with C++** workload. The bare package
+does not include the C compiler on its own. NASM is there because the torrent stack's crypto
+assembles its own primitives on Windows.
+
+Open a new terminal afterwards so the `PATH` changes apply, and check that `mpv` and `ffmpeg`
+resolve. Some winget packages install the binary without adding it to `PATH`, and Kaeri looks
+for both there.
+
+</TabItem>
+</Tabs>
+
+## Build from source
+
+```sh
+git clone https://github.com/bitknox/kaeri
+cd kaeri
+cargo run --release
+```
+
+The first build is slow, since BoringSSL, librqbit and a WASM runtime are in the tree, and
+incremental after that. The binary ends up at `target/release/kaeri` if you want it on your
+`PATH`.
+
+## Where things live
+
+<Tabs syncKey="platform">
+<TabItem label="macOS">
+
+| | |
+|---|---|
+| Config | `~/Library/Application Support/kaeri/config.toml` |
+| History database | `~/Library/Application Support/kaeri/kaeri.db` |
+| Plugins | `~/Library/Application Support/kaeri/plugins/*.wasm` |
+| Joined plugin stores | `~/Library/Application Support/kaeri/plugin-stores.json` |
+| Player files and shaders | `~/Library/Caches/kaeri/mpv/` and `~/Library/Caches/kaeri/shaders/` |
+| Logs | `~/Library/Caches/kaeri/logs/` |
+
+</TabItem>
+<TabItem label="Linux">
+
+| | |
+|---|---|
+| Config | `~/.config/kaeri/config.toml` |
+| History database | `~/.local/share/kaeri/kaeri.db` |
+| Plugins | `~/.config/kaeri/plugins/*.wasm` |
+| Joined plugin stores | `~/.local/share/kaeri/plugin-stores.json` |
+| Player files and shaders | `~/.cache/kaeri/mpv/` and `~/.cache/kaeri/shaders/` |
+| Logs | `~/.cache/kaeri/logs/` |
+
+</TabItem>
+<TabItem label="Windows">
+
+| | |
+|---|---|
+| Config | `%APPDATA%\kaeri\config\config.toml` |
+| History database | `%APPDATA%\kaeri\data\kaeri.db` |
+| Plugins | `%APPDATA%\kaeri\config\plugins\*.wasm` |
+| Joined plugin stores | `%APPDATA%\kaeri\data\plugin-stores.json` |
+| Player files and shaders | `%LOCALAPPDATA%\kaeri\cache\mpv\` and `%LOCALAPPDATA%\kaeri\cache\shaders\` |
+| Logs | `%LOCALAPPDATA%\kaeri\cache\logs\` |
+
+</TabItem>
+</Tabs>
+
+Plugins always sit beside `config.toml`, whatever that path is. `kaeri --plugins` prints the
+directory in use. Logs roll daily, at `info` unless `KAERI_LOG` says otherwise.
+
+The player's controls, fonts and scripts and the upscaling shaders ship inside the binary, and
+Kaeri writes them into the cache directory when it needs them. `kaeri --doctor` prints
+where the player files are. The tokens for joined plugin stores are kept wherever tracker tokens
+are, which `trackers.token_storage` decides.
+
+No config file is required. One is only written when you change something in the Settings screen,
+and those writes are format-preserving, so comments you add by hand survive.
+
+:::note[Running from cargo]
+Running from `cargo` rather than an installed binary has one consequence for tracker and store
+tokens: macOS keys keychain access on the binary, and every rebuild produces a new one. See
+[token storage](/docs/guides/trackers-sync/#token-storage).
+:::

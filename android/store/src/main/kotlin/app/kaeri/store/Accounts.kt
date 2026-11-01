@@ -1,0 +1,567 @@
+// Accounts, plugin stores and downloads, as far as the browse screens need them: whether a
+// tracker is connected, which stores are joined, and what the downloads take.
+
+package app.kaeri.store
+
+import android.content.Context
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import app.kaeri.engine.model.Command
+import app.kaeri.engine.model.ConflictRow
+import app.kaeri.engine.model.DeviceCodePrompt
+import app.kaeri.engine.model.DownloadRow
+import app.kaeri.engine.model.DownloadState
+import app.kaeri.engine.model.SeedRow
+import app.kaeri.engine.model.InviteLinkView
+import app.kaeri.engine.model.StoreInviteRow
+import app.kaeri.engine.model.StoreMemberRow
+import app.kaeri.engine.model.InvitePreview
+import app.kaeri.engine.model.InvitedStore
+import app.kaeri.engine.model.StorePluginRow
+import app.kaeri.engine.model.StorePluginStatus
+import app.kaeri.engine.model.JobId
+import app.kaeri.engine.model.Msg
+import app.kaeri.engine.model.Notice
+import app.kaeri.engine.model.StoreRow
+import app.kaeri.engine.model.SyncState
+import app.kaeri.engine.model.TitleLanguage
+import app.kaeri.i18n.R
+import app.kaeri.i18n.Strings
+
+/**
+ * A sign-in the engine asked the browser for (`Event::Authorize`): open [url] in it, and hand
+ * back the redirect it ends on, the one to [callbackScheme].
+ */
+data class SignInRequest(val tracker: String, val url: String, val callbackScheme: String) {
+    /**
+     * Whether [callback] is this request's own redirect: for its tracker, and carrying back the
+     * `state` it asked with, in the query or the fragment, when it asked with one. The engine checks
+     * the same, and goes on waiting for a redirect that is not.
+     */
+    fun answeredBy(tracker: String, callback: String): Boolean {
+        if (tracker != this.tracker) return false
+        val asked = parameter(url, "state") ?: return true
+        return parameter(callback, "state") == asked
+    }
+
+    private companion object {
+        /** [name]'s value among [url]'s query and fragment parameters, decoded. */
+        fun parameter(url: String, name: String): String? {
+            val uri = runCatching { java.net.URI(url) }.getOrNull() ?: return null
+            return listOfNotNull(uri.rawQuery, uri.rawFragment)
+                .flatMap { it.split('&') }
+                .map { it.substringBefore('=') to it.substringAfter('=', "") }
+                .firstOrNull { it.first == name }
+                ?.let { java.net.URLDecoder.decode(it.second, "UTF-8") }
+        }
+    }
+}
+
+/** Each tracker's sync, as the engine last said it, and the sign-ins and codes waited on. */
+class AccountsModel(private val clock: () -> Long = { System.currentTimeMillis() }) {
+    private val _trackers = MutableStateFlow<Map<String, SyncState>>(emptyMap())
+
+    /** By tracker id: `anilist`, `mal`, `kitsu`, `simkl`, `trakt`. */
+    val trackers: StateFlow<Map<String, SyncState>> = _trackers.asStateFlow()
+
+    /** The first connected tracker's user name, for the account button. */
+    val signedIn: SyncState? get() = _trackers.value.values.firstOrNull { it.connected }
+
+    /**
+     * Whether no tracker is signed in, once the engine has said the trackers at all, which it
+     * does at launch: before that, `false`, so a screen does not flash its signed-out state.
+     */
+    fun signedOut(trackers: Map<String, SyncState>): Boolean =
+        trackers.isNotEmpty() && trackers.values.none { it.connected }
+
+    private val _syncedAt = MutableStateFlow<Map<String, Long>>(emptyMap())
+
+    /**
+     * When each tracker last said a sync went through with nothing left to send, in milliseconds
+     * on [clock]: "synced 2 min ago".
+     */
+    val syncedAt: StateFlow<Map<String, Long>> = _syncedAt.asStateFlow()
+
+    private val _viewerTitleLanguage = MutableStateFlow<TitleLanguage?>(null)
+
+    /**
+     * The title language the signed-in viewer set on AniList, once asked (`LoadTitleLanguage`):
+     * `null` signed out, or when AniList did not say.
+     */
+    val viewerTitleLanguage: StateFlow<TitleLanguage?> = _viewerTitleLanguage.asStateFlow()
+
+    private val _working = MutableStateFlow<Map<JobId, String>>(emptyMap())
+
+    /** The sign-ins and syncs under way, by job: the tracker each is for, or `sync`. */
+    val working: StateFlow<Map<JobId, String>> = _working.asStateFlow()
+
+    internal fun apply(state: SyncState) {
+        _trackers.value = _trackers.value + (state.tracker to state)
+        if (!state.connected) {
+            _syncedAt.value = _syncedAt.value - state.tracker
+        } else if (state.last != null && state.outbox == 0u && state.pullError == null) {
+            _syncedAt.value = _syncedAt.value + (state.tracker to clock())
+        }
+    }
+
+    private val _signIn = MutableStateFlow<SignInRequest?>(null)
+
+    /** The sign-in the browser is open for, AniList's or MyAnimeList's, until it comes back. */
+    val signIn: StateFlow<SignInRequest?> = _signIn.asStateFlow()
+
+    private val _deviceCode = MutableStateFlow<DeviceCodePrompt?>(null)
+
+    /** The code Simkl or Trakt waits to be typed on another screen, until the sign-in ends. */
+    val deviceCode: StateFlow<DeviceCodePrompt?> = _deviceCode.asStateFlow()
+
+    private val _conflicts = MutableStateFlow<List<ConflictRow>>(emptyList())
+
+    /** What the last library pull found different here and on AniList. */
+    val conflicts: StateFlow<List<ConflictRow>> = _conflicts.asStateFlow()
+
+    internal fun authorize(request: SignInRequest) {
+        _signIn.value = request
+    }
+
+    /** The browser came back from [request], or was closed. */
+    internal fun signInEnded(request: SignInRequest) {
+        if (_signIn.value == request) _signIn.value = null
+        if (tab == request) {
+            tab = null
+            leftForTab = false
+        }
+    }
+
+    /**
+     * The sign-in a browser tab is open for, until its own redirect comes back or the tab is
+     * closed. Kept here rather than by the activity, so one made again while the tab is open
+     * neither opens a second tab nor loses track of the first.
+     */
+    var tab: SignInRequest? = null
+        private set
+
+    /** The app left for the tab: coming back to it without the redirect means the tab was closed. */
+    var leftForTab = false
+
+    /** The sign-in to open a tab for now: [request], unless a tab is open for it already. */
+    fun toOpen(request: SignInRequest?): SignInRequest? = request?.takeIf { it != tab }
+
+    /** A tab was opened for [request]. */
+    fun tabOpened(request: SignInRequest) {
+        tab = request
+        leftForTab = true
+    }
+
+    internal fun deviceCode(prompt: DeviceCodePrompt?) {
+        _deviceCode.value = prompt
+    }
+
+    internal fun conflicts(rows: List<ConflictRow>) {
+        _conflicts.value = rows
+    }
+
+    internal fun viewerTitleLanguage(language: TitleLanguage?) {
+        _viewerTitleLanguage.value = language
+    }
+
+    internal fun started(tracker: String, job: JobId?) {
+        if (tracker == credentialsSheet) _signInFailure.value = null
+        job ?: return
+        _working.value = _working.value + (job to tracker)
+    }
+
+    /** The tracker whose user name and password sheet is open (Kitsu's), if one is. */
+    private var credentialsSheet: String? = null
+
+    private val _signInFailure = MutableStateFlow<String?>(null)
+
+    /**
+     * Why the sign-in from the open credentials sheet failed, in the engine's words, for the sheet
+     * to say in its own place: the notice would draw under it. Cleared by the next try.
+     */
+    val signInFailure: StateFlow<String?> = _signInFailure.asStateFlow()
+
+    /** [tracker]'s credentials sheet opened, or closed (`null`). */
+    fun credentialsSheet(tracker: String?) {
+        credentialsSheet = tracker
+        _signInFailure.value = null
+    }
+
+    /**
+     * Whether [notice] is a failed sign-in the open credentials sheet says, which it then holds.
+     * The notice still goes to Messages, but not to the snackbar under the sheet.
+     */
+    internal fun tookSignInFailure(notice: Notice): Boolean {
+        val failed = notice.msg as? Msg.NoticeSignInFailed ?: return false
+        val tracker = credentialsSheet ?: return false
+        if (failed.tracker != name(tracker)) return false
+        _signInFailure.value = failed.reason
+        return true
+    }
+
+    internal fun done(job: JobId) {
+        if (job in _working.value) _working.value = _working.value - job
+    }
+
+    /** Whether a sign-in or a sync for [tracker] is under way. */
+    fun isWorking(working: Map<JobId, String>, tracker: String): Boolean = tracker in working.values
+
+    companion object {
+        /** The trackers, in the order the Accounts page lists them: AniList, then the others. */
+        val order = listOf("anilist", "mal", "kitsu", "simkl", "trakt")
+
+        /** A tracker's name as a person writes it. */
+        fun name(tracker: String): String = when (tracker) {
+            "anilist" -> "AniList"
+            "mal", "myanimelist" -> "MyAnimeList"
+            "kitsu" -> "Kitsu"
+            "simkl" -> "Simkl"
+            "trakt" -> "Trakt"
+            else -> tracker.replaceFirstChar { it.uppercase() }
+        }
+
+        /**
+         * What a credentials sheet says of a failed sign-in to [tracker], from the engine's
+         * [reason]: refused credentials in plain words (OAuth's `invalid_grant`, which the engine
+         * keeps in the reason), anything else as other failures say it.
+         */
+        fun signInProblem(context: Context, tracker: String, reason: String): String =
+            if ("invalid_grant" in reason) Strings.accountsCredentialsRefused(context, name(tracker)) else plainReason(context, reason)
+    }
+}
+
+/** The plugin stores, as the engine last said them, and an invite link being checked or spent. */
+class StoresModel {
+    /** What a pasted invite link leads to. */
+    sealed interface Preview {
+        /** Being checked against the store it names. */
+        data class Checking(val link: String) : Preview
+
+        /** The store, checked against the key the link carries. */
+        data class Store(val store: InvitedStore) : Preview
+
+        /** Why it leads nowhere, in words to show in its place. */
+        data class Failed(val reason: String, val contact: String? = null) : Preview
+    }
+
+    /** What a store screen waits on, by the job the engine runs it as. */
+    sealed interface Work {
+        data object Join : Work
+        data class Leave(val store: String) : Work
+        data class Install(val store: String, val plugin: String) : Work
+        data class Remove(val plugin: String) : Work
+        data class Invite(val store: String) : Work
+    }
+
+    private val _stores = MutableStateFlow<List<StoreRow>>(emptyList())
+
+    /** Every joined store, in the order the engine lists them. */
+    val stores: StateFlow<List<StoreRow>> = _stores.asStateFlow()
+
+    private val _loaded = MutableStateFlow(false)
+
+    /** Whether the engine has said the stores at all. */
+    val loaded: StateFlow<Boolean> = _loaded.asStateFlow()
+
+    private val _preview = MutableStateFlow<Preview?>(null)
+
+    /** The invite link being checked, and what it leads to. */
+    val preview: StateFlow<Preview?> = _preview.asStateFlow()
+
+    private val _deviceName = MutableStateFlow("")
+
+    /**
+     * What the store will call this device, as the join sheet's field holds it: the kind of device
+     * the engine offers with the preview, until the person joining types over it. An open link
+     * sends no name, and this goes with nothing.
+     */
+    val deviceName: StateFlow<String> = _deviceName.asStateFlow()
+
+    /** The kind of device the last preview offered, so a name typed over it survives a recheck. */
+    private var offeredName = ""
+
+    private val _joined = MutableStateFlow<String?>(null)
+
+    /** The store just joined, for the screen to move into, until it is shown. */
+    val joined: StateFlow<String?> = _joined.asStateFlow()
+
+    private val _invite = MutableStateFlow<InviteLinkView?>(null)
+
+    /** An invite link to show and send: another device of yours, from a store's page. */
+    val invite: StateFlow<InviteLinkView?> = _invite.asStateFlow()
+
+    private val _members = MutableStateFlow<Members?>(null)
+
+    /** A store's members and invite links, for its owner, as the engine last said them. */
+    val members: StateFlow<Members?> = _members.asStateFlow()
+
+    /** `Event::StoreMembers`. */
+    data class Members(
+        val store: String,
+        val members: List<StoreMemberRow>,
+        val invites: List<StoreInviteRow>,
+        val ended: List<StoreInviteRow>,
+        val inviteChoices: Boolean,
+    )
+
+    private val _joining = MutableStateFlow<String?>(null)
+
+    /**
+     * The invite link the join sheet is open with: `""` for an empty sheet, a link for one the
+     * app was opened with, `null` while it is closed.
+     */
+    val joining: StateFlow<String?> = _joining.asStateFlow()
+
+    private val _working = MutableStateFlow<Map<JobId, Work>>(emptyMap())
+
+    /** What is under way. */
+    val working: StateFlow<Map<JobId, Work>> = _working.asStateFlow()
+
+    internal fun apply(rows: List<StoreRow>) {
+        _stores.value = rows
+        _loaded.value = true
+    }
+
+    internal fun checking(link: String) {
+        _preview.value = Preview.Checking(link)
+    }
+
+    internal fun previewed(answer: InvitePreview) {
+        _preview.value = when (answer) {
+            is InvitePreview.Store -> Preview.Store(answer.v1)
+            is InvitePreview.Failed -> Preview.Failed(answer.reason, answer.contact)
+        }
+        if (answer is InvitePreview.Store) {
+            // A link that works more than once asks for the person's own name, not a kind of device.
+            val offer = if (answer.v1.namesJoiner) "" else answer.v1.deviceLabel
+            if (_deviceName.value == offeredName) _deviceName.value = offer
+            offeredName = offer
+        }
+    }
+
+    /** The join sheet's device name, as typed. */
+    fun nameDevice(name: String) {
+        _deviceName.value = name
+    }
+
+    /** The join for [link]: an invite sends this device's name as the field holds it, an open link none. */
+    internal fun joinCommand(link: String): Command {
+        val invited = (_preview.value as? Preview.Store)?.store
+        val named = invited?.takeIf { !it.anonymous }?.let { _deviceName.value }
+        // Someone joining a group invite may leave their name out; the store then uses the device's.
+        val sent = if (invited?.namesJoiner == true) named?.trim()?.ifEmpty { null } else named
+        return Command.JoinStore(link.trim(), sent, null)
+    }
+
+    internal fun joined(store: String) {
+        _joined.value = store
+        _preview.value = null
+        _joining.value = null
+    }
+
+    internal fun membersSaid(said: Members) {
+        _members.value = said
+    }
+
+    internal fun invited(link: InviteLinkView) {
+        _invite.value = link
+    }
+
+    internal fun started(work: Work, job: JobId?) {
+        job ?: return
+        _working.value = _working.value + (job to work)
+    }
+
+    internal fun done(job: JobId) {
+        if (job in _working.value) _working.value = _working.value - job
+    }
+
+    /** Open the join sheet, with [link] in it when the app was handed one. */
+    fun openJoin(link: String = "") {
+        _joining.value = link
+    }
+
+    /** Forget the link being checked: the field no longer holds an invite. */
+    fun clearPreview() {
+        _preview.value = null
+        forgetDeviceName()
+    }
+
+    /** The join sheet closed: forget the link being checked. */
+    fun closeJoin() {
+        _joining.value = null
+        _preview.value = null
+        forgetDeviceName()
+    }
+
+    private fun forgetDeviceName() {
+        _deviceName.value = ""
+        offeredName = ""
+    }
+
+    /** The store just joined has been shown. */
+    fun clearJoined() {
+        _joined.value = null
+    }
+
+    /** The invite link has been shown and closed. */
+    fun clearInvite() {
+        _invite.value = null
+    }
+
+    fun isWorking(working: Map<JobId, Work>, work: Work): Boolean = work in working.values
+
+    fun store(id: String): StoreRow? = _stores.value.firstOrNull { it.id == id }
+}
+
+/** Updates waiting in this store. `StoreRow::updates`. */
+val StoreRow.updates: Int get() = plugins.count { it.status is StorePluginStatus.Update }
+
+/** What a plugin may contact, in a line: "Contacts open-archive.example and 1 more". */
+fun StorePluginRow.contactsLine(context: Context): String {
+    val first = hosts.firstOrNull() ?: return Strings.sourcesContactsNone(context)
+    return if (hosts.size > 1) {
+        context.resources.getQuantityString(R.plurals.sources_contacts_line, hosts.size - 1, first, hosts.size - 1)
+    } else {
+        Strings.sourcesContactsOne(context, first)
+    }
+}
+
+/** The version installed here: the one an update replaces, or the store's own. */
+val StorePluginRow.installedVersion: String
+    get() = (status as? StorePluginStatus.Update)?.from ?: version
+
+/**
+ * Where a plugin stands on this device, in a word or two, when it is here at all: "Installed",
+ * "1.4.0 installed", "Added by hand", "From Kumo". Null for one not installed.
+ */
+fun StorePluginRow.standing(context: Context): String? = when (val status = status) {
+    StorePluginStatus.Available -> null
+    StorePluginStatus.Installed -> Strings.storesPluginStateInstalled(context)
+    is StorePluginStatus.Update -> Strings.storesPluginUpdateLine(context, status.from, version)
+    StorePluginStatus.AddedByHand -> Strings.sourcesOriginByHand(context)
+    is StorePluginStatus.OtherStore -> Strings.storesPluginFrom(context, status.v1)
+}
+
+/** Who runs a store a link leads to and where it answers: "Run by Ren · plugins.example", or its host. */
+fun InvitedStore.runByLine(context: Context): String =
+    if (owners.isEmpty()) host else Strings.storesRunBy(context, Wording.list(owners), host)
+
+/** What an invite link the app was handed holds: the store's own `https://…/join/{code}#{key}`. */
+object InviteLinks {
+    /**
+     * The https invite in [url], when it is one: an https link as the store makes it, or one the
+     * app was opened with, `kaeri://join?link=<the https link>`, or the https link with the
+     * app's scheme in front of its host, `kaeri://plugins.example/join/{code}#{key}`.
+     */
+    fun invite(url: String): String? {
+        val uri = runCatching { java.net.URI(url.trim()) }.getOrNull() ?: return null
+        return when (uri.scheme?.lowercase()) {
+            "https" -> url.trim().takeIf { (uri.rawPath ?: "").contains("/join/") }
+            // A test store answers on this device, over plain http.
+            "http" -> url.trim().takeIf { loopback(uri.host) && (uri.rawPath ?: "").contains("/join/") }
+            "kaeri" -> when (uri.host) {
+                "join" -> uri.rawQuery?.split('&')
+                    ?.firstOrNull { it.startsWith("link=") }
+                    ?.removePrefix("link=")
+                    ?.let { java.net.URLDecoder.decode(it, "UTF-8") }
+                    ?.let(::invite)
+                "auth", null -> null
+                else -> invite("https" + url.trim().substring("kaeri".length))
+            }
+            else -> null
+        }
+    }
+
+    private fun loopback(host: String?): Boolean =
+        host != null && (host == "localhost" || host == "127.0.0.1" || host == "[::1]" || host == "::1")
+
+    /** Whether pasted [text] reads as an invite link, before the engine checks it. */
+    fun looksLikeInvite(text: String): Boolean = invite(text) != null
+}
+
+/**
+ * The downloads, as the engine last said them: the queue, what is still seeding, and each running
+ * download's speed, worked out from how far it moved between two updates. The Library's Downloads
+ * row reads their size.
+ */
+class DownloadsModel(private val clock: () -> Long = { System.currentTimeMillis() }) {
+    private val _rows = MutableStateFlow<List<DownloadRow>>(emptyList())
+
+    /** The queue, in the engine's order. */
+    val rows: StateFlow<List<DownloadRow>> = _rows.asStateFlow()
+
+    private val _loaded = MutableStateFlow(false)
+    val loaded: StateFlow<Boolean> = _loaded.asStateFlow()
+
+    private val _seeding = MutableStateFlow<List<SeedRow>>(emptyList())
+
+    /** Watched episodes still seeding. */
+    val seeding: StateFlow<List<SeedRow>> = _seeding.asStateFlow()
+
+    private val _rates = MutableStateFlow<Map<Long, Double>>(emptyMap())
+
+    /** Bytes a second for each running download, by its id. */
+    val rates: StateFlow<Map<Long, Double>> = _rates.asStateFlow()
+
+    private var last: Map<Long, Pair<ULong, Long>> = emptyMap()
+
+    /** The bytes the downloads take on this device. */
+    fun bytes(rows: List<DownloadRow>): Long = rows.sumOf { it.bytesOnDisk.toLong() }
+
+    internal fun apply(rows: List<DownloadRow>) {
+        val now = clock()
+        val rates = mutableMapOf<Long, Double>()
+        val seen = mutableMapOf<Long, Pair<ULong, Long>>()
+        for (row in rows.filter { it.state == DownloadState.ACTIVE }) {
+            seen[row.id] = row.downloaded to now
+            val before = last[row.id] ?: continue
+            val seconds = (now - before.second) / 1000.0
+            if (seconds <= 0.2 || row.downloaded < before.first) {
+                _rates.value[row.id]?.let { rates[row.id] = it }
+                seen[row.id] = before
+                continue
+            }
+            val rate = (row.downloaded - before.first).toDouble() / seconds
+            // Half the last reading and half this one: steady enough to read, quick to follow.
+            rates[row.id] = _rates.value[row.id]?.let { (it + rate) / 2 } ?: rate
+        }
+        last = seen
+        _rates.value = rates
+        _rows.value = rows
+        _loaded.value = true
+    }
+
+    internal fun seeding(rows: List<SeedRow>) {
+        _seeding.value = rows
+    }
+
+    /** Seconds until a running download finishes, at its speed. */
+    fun secondsLeft(row: DownloadRow, rates: Map<Long, Double>): Long? {
+        if (row.state != DownloadState.ACTIVE || row.total <= row.downloaded) return null
+        val rate = rates[row.id]?.takeIf { it > 0 } ?: return null
+        return kotlin.math.ceil((row.total - row.downloaded).toDouble() / rate).toLong()
+    }
+
+    companion object {
+        /** The queue by title, each title where its first row is. */
+        fun groups(rows: List<DownloadRow>): List<DownloadGroup> =
+            rows.groupBy { it.anilistId }.map { (id, rows) -> DownloadGroup(id, rows) }
+
+        /** Whether anything waits or runs: what keeps the download job going. */
+        fun busy(rows: List<DownloadRow>): Boolean =
+            rows.any { it.state == DownloadState.ACTIVE || it.state == DownloadState.QUEUED }
+    }
+}
+
+/** One title's downloads. */
+data class DownloadGroup(val id: app.kaeri.engine.core.AnilistId, val rows: List<DownloadRow>) {
+    /** The title, as the queue names it. */
+    val title: String get() = rows.firstOrNull()?.title.orEmpty()
+
+    val bytesOnDisk: Long get() = rows.sumOf { it.bytesOnDisk.toLong() }
+}
+
+/** What a download takes on disk now: a finished one's size, and what the rest have so far. */
+val DownloadRow.bytesOnDisk: ULong get() = if (state == DownloadState.DONE) maxOf(total, downloaded) else downloaded

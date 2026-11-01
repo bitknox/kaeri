@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="Kaeri.Windows.Player.PlayerView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:app="using:Kaeri.App"
+    xmlns:player="using:Kaeri.Windows.Player"
+    RequestedTheme="Dark" IsTabStop="True" TabFocusNavigation="Cycle"
+    KeyboardAcceleratorPlacementMode="Hidden">
+  <UserControl.KeyboardAccelerators>
+    <KeyboardAccelerator Key="Space" Invoked="OnKeyPause" />
+    <KeyboardAccelerator Key="K" Invoked="OnKeyPause" />
+    <KeyboardAccelerator Key="J" Invoked="OnKeyBack10" />
+    <KeyboardAccelerator Key="L" Invoked="OnKeyForward10" />
+    <KeyboardAccelerator Key="Left" Invoked="OnKeyBack5" />
+    <KeyboardAccelerator Key="Right" Invoked="OnKeyForward5" />
+    <KeyboardAccelerator Key="Left" Modifiers="Shift" Invoked="OnKeyBack30" />
+    <KeyboardAccelerator Key="Right" Modifiers="Shift" Invoked="OnKeyForward30" />
+    <KeyboardAccelerator Key="Up" Invoked="OnKeyVolumeUp" />
+    <KeyboardAccelerator Key="Down" Invoked="OnKeyVolumeDown" />
+    <KeyboardAccelerator Key="F" Invoked="OnKeyFullscreen" />
+    <KeyboardAccelerator Key="F11" Invoked="OnKeyFullscreen" />
+    <KeyboardAccelerator Key="Escape" Invoked="OnKeyEscape" />
+    <KeyboardAccelerator Key="Enter" Invoked="OnKeyEnter" />
+    <KeyboardAccelerator Key="S" Invoked="OnKeySkip" />
+    <KeyboardAccelerator Key="K" Modifiers="Menu" Invoked="OnKeyMark" />
+    <KeyboardAccelerator Key="N" Invoked="OnKeyNext" />
+    <KeyboardAccelerator Key="N" Modifiers="Shift" Invoked="OnKeyPrevious" />
+    <KeyboardAccelerator Key="Left" Modifiers="Menu" Invoked="OnKeyClose" />
+    <KeyboardAccelerator Key="P" Invoked="OnKeyMini" />
+    <KeyboardAccelerator Key="M" Invoked="OnKeyMute" />
+    <KeyboardAccelerator Key="U" Invoked="OnKeyUndo" />
+    <KeyboardAccelerator Key="Z" Modifiers="Control" Invoked="OnKeyUndo" />
+    <KeyboardAccelerator Key="E" Invoked="OnKeyEpisodes" />
+    <KeyboardAccelerator Key="T" Invoked="OnKeyTracks" />
+    <KeyboardAccelerator Key="I" Invoked="OnKeyStats" />
+    <KeyboardAccelerator Key="Back" Invoked="OnKeySpeedNormal" />
+    <!-- ] and [ have no VirtualKey names: they are added in code. -->
+  </UserControl.KeyboardAccelerators>
+  <Grid x:Name="Root" Background="Black" PointerMoved="OnPointerMoved" Tapped="OnVideoTapped"
+        DoubleTapped="OnVideoDoubleTapped" PointerWheelChanged="OnWheel" SizeChanged="OnStatsSized">
+    <!-- The video takes what the discussion pane leaves, so the controls stay on the picture. -->
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="*" />
+      <ColumnDefinition Width="Auto" />
+    </Grid.ColumnDefinitions>
+    <!-- The video is the bottom layer; the bars are XAML inside the SwapChainPanel, which
+         composition draws under with no airspace. -->
+    <SwapChainPanel x:Name="VideoPanel" SizeChanged="OnPanelSizeChanged">
+
+      <!-- The starting screen: the banner full frame, the episode and a 32 px ring. -->
+      <Grid x:Name="Starting" Background="{ThemeResource GroundBrush}" Visibility="Collapsed">
+        <Image x:Name="StartingArt" Stretch="UniformToFill" Opacity="0.45" AutomationProperties.AccessibilityView="Raw" />
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="16">
+          <TextBlock x:Name="StartingShow" Style="{StaticResource ShowTitleLargeStyle}" HorizontalAlignment="Center" TextAlignment="Center" />
+          <TextBlock x:Name="StartingLine" Style="{StaticResource BodyLargeTextBlockStyle}" HorizontalAlignment="Center"
+                     Typography.NumeralAlignment="Tabular" AutomationProperties.LiveSetting="Polite" />
+          <!-- The demo's credit line, because CC BY asks for the credit where the work is used. -->
+          <TextBlock x:Name="StartingCredit" Text="{x:Bind app:T.PlayerDemoCredit}" Style="{StaticResource HazeBodyStyle}" HorizontalAlignment="Center" Visibility="Collapsed" />
+          <ProgressRing x:Name="StartingRing" IsActive="True" Width="32" Height="32" HorizontalAlignment="Center" />
+          <!-- No first frame after 20 s: another source, or stop. -->
+          <StackPanel x:Name="StartingChoices" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" Visibility="Collapsed">
+            <Button Content="{x:Bind app:T.ActionStop}" Click="OnStartingStop" />
+            <Button x:Name="StartingChoose" Content="{x:Bind app:T.PlayerChooseSource}" Style="{StaticResource AccentButtonStyle}" Click="OnStartingChoose">
+              <Button.Flyout>
+                <MenuFlyout x:Name="StartingSources" Placement="Bottom" Opening="OnStartingSourcesOpening" />
+              </Button.Flyout>
+            </Button>
+          </StackPanel>
+        </StackPanel>
+      </Grid>
+
+      <!-- The controls on a 35% dim of the ground, collapsed when they fade so nothing sits
+           over the video. -->
+      <Grid x:Name="Chrome" Background="{ThemeResource PlayerScrimBrush}">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Top bar: back, the show and the episode, then subtitles, episodes, fullscreen. -->
+        <Grid x:Name="TopBar" Padding="8,8,148,8" ColumnSpacing="8" PointerEntered="OnBarEntered" PointerExited="OnBarExited">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <Button x:Name="BackButton" Style="{StaticResource PlayerButtonStyle}" Click="OnClose" AutomationProperties.Name="{x:Bind app:T.ActionBack}">
+            <FontIcon Glyph="&#xE72B;" FontSize="16" />
+          </Button>
+          <StackPanel x:Name="TitleArea" Grid.Column="1" VerticalAlignment="Center" Spacing="0" Background="Transparent">
+            <TextBlock x:Name="ShowTitle" Style="{StaticResource ShowTitleStyle}" FontSize="18" LineHeight="24" />
+            <TextBlock x:Name="EpisodeTitle" Style="{StaticResource HazeCaptionStyle}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" Opacity="0.8" />
+          </StackPanel>
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
+            <!-- Watch party: the form that starts a party, or the party's panel once in one. -->
+            <Button x:Name="PartyButton" Style="{StaticResource PlayerButtonStyle}" Click="OnParty" ToolTipService.ToolTip="{x:Bind app:T.PartyTitle}" AutomationProperties.Name="{x:Bind app:T.PartyTitle}">
+              <Grid>
+                <FontIcon Glyph="&#xE716;" FontSize="16" />
+                <!-- In a party: a dot on the people, faded rather than added so nothing moves. -->
+                <Ellipse x:Name="PartyDot" Width="6" Height="6" Fill="{ThemeResource TextFillColorPrimaryBrush}"
+                         HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-3,-5,0" Opacity="0" />
+              </Grid>
+            </Button>
+            <!-- Play on TV: what plays here, handed to a TV. There once the engine gives a sender. -->
+            <Button x:Name="TvButton" Style="{StaticResource PlayerButtonStyle}" Click="OnPlayOnTv" Visibility="Collapsed"
+                    ToolTipService.ToolTip="{x:Bind app:T.TvPlayOn}" AutomationProperties.Name="{x:Bind app:T.TvPlayOn}">
+              <FontIcon Glyph="&#xE7F4;" FontSize="16" />
+            </Button>
+            <Button x:Name="TracksButton" Style="{StaticResource PlayerButtonStyle}" AutomationProperties.Name="{x:Bind app:T.PlayerSubtitlesAndAudio}">
+              <FontIcon Glyph="&#xE7F0;" FontSize="16" />
+              <Button.Flyout>
+                <MenuFlyout x:Name="TracksMenu" Placement="BottomEdgeAlignedRight" Opened="OnMenuOpened" Closed="OnMenuClosed" />
+              </Button.Flyout>
+            </Button>
+            <Button x:Name="EpisodesButton" Style="{StaticResource PlayerButtonStyle}" AutomationProperties.Name="{x:Bind app:T.PlayerEpisodes}">
+              <FontIcon Glyph="&#xE8FD;" FontSize="16" />
+              <Button.Flyout>
+                <MenuFlyout x:Name="EpisodesMenu" Placement="BottomEdgeAlignedRight" Opened="OnMenuOpened" Closed="OnMenuClosed" />
+              </Button.Flyout>
+            </Button>
+            <Button x:Name="MiniButton" Style="{StaticResource PlayerButtonStyle}" Click="OnMini" AutomationProperties.Name="{x:Bind app:T.PlayerMiniPlayer}">
+              <FontIcon x:Name="MiniIcon" Glyph="&#xE8A7;" FontSize="16" />
+            </Button>
+            <Button x:Name="FullscreenButton" Style="{StaticResource PlayerButtonStyle}" Click="OnFullscreen" AutomationProperties.Name="{x:Bind app:T.PlayerFullscreen}">
+              <FontIcon x:Name="FullscreenIcon" Glyph="&#xE740;" FontSize="16" />
+            </Button>
+          </StackPanel>
+        </Grid>
+
+        <!-- The frame under the pointer on the timeline, from a second, hidden mpv. -->
+        <Border x:Name="PreviewBox" Grid.Row="1" Visibility="Collapsed" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                Margin="0,0,0,8" Background="{ThemeResource RaisedBrush}" CornerRadius="8" Padding="4" IsHitTestVisible="False">
+          <StackPanel Spacing="4">
+            <Border CornerRadius="4" Width="160" Height="90" Background="Black">
+              <SwapChainPanel x:Name="PreviewPanel" Width="160" Height="90" />
+            </Border>
+            <TextBlock x:Name="PreviewTime" HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" />
+          </StackPanel>
+        </Border>
+
+        <!-- Bottom bar: play, back and forward 10 s, the timeline and the times, volume and settings. -->
+        <Grid x:Name="BottomBar" Grid.Row="2" Padding="12,0,12,12" ColumnSpacing="6" SizeChanged="OnBottomBarSized" PointerEntered="OnBarEntered" PointerExited="OnBarExited">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <Button x:Name="PlayPause" Style="{StaticResource PlayerButtonStyle}" Click="OnPlayPause" AutomationProperties.Name="{x:Bind app:T.ActionPause}">
+            <FontIcon x:Name="PlayPauseIcon" Glyph="&#xE769;" FontSize="18" />
+          </Button>
+          <Button x:Name="Back10Button" Grid.Column="1" Style="{StaticResource PlayerButtonStyle}" Click="OnBack10" AutomationProperties.Name="{x:Bind app:T.PlayerBack10}">
+            <Grid>
+              <FontIcon Glyph="&#xE72C;" FontSize="22" RenderTransformOrigin="0.5,0.5">
+                <FontIcon.RenderTransform><ScaleTransform ScaleX="-1" /></FontIcon.RenderTransform>
+              </FontIcon>
+              <TextBlock Text="10" Style="{StaticResource SkipDigitsStyle}" />
+            </Grid>
+          </Button>
+          <Button x:Name="Forward10Button" Grid.Column="2" Style="{StaticResource PlayerButtonStyle}" Click="OnForward10" AutomationProperties.Name="{x:Bind app:T.PlayerForward10}">
+            <Grid>
+              <FontIcon Glyph="&#xE72C;" FontSize="22" />
+              <TextBlock Text="10" Style="{StaticResource SkipDigitsStyle}" />
+            </Grid>
+          </Button>
+          <TextBlock x:Name="Elapsed" Grid.Column="3" Text="0:00" VerticalAlignment="Center" Margin="6,0,4,0" Style="{StaticResource BodyTextBlockStyle}"
+                     Typography.NumeralAlignment="Tabular" AutomationProperties.AccessibilityView="Raw" />
+          <!-- The seek bar over its own track: the whole length, what is buffered, what has played,
+               and the opening and ending marks on top, drawn under the slider, whose own track and
+               fill are clear so only its thumb shows. -->
+          <Grid Grid.Column="4" VerticalAlignment="Center">
+            <Canvas x:Name="TimelineUnder" IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw" />
+            <player:SpokenSlider x:Name="Timeline" VerticalAlignment="Center" Minimum="0" Maximum="1" StepFrequency="1" SmallChange="5" LargeChange="30"
+                    IsThumbToolTipEnabled="False" ValueChanged="OnTimelineChanged" AutomationProperties.Name="{x:Bind app:T.PlayerPosition}"
+                    PointerExited="OnTimelineExited" SizeChanged="OnTimelineSized">
+              <Slider.Resources>
+                <SolidColorBrush x:Key="SliderTrackFill" Color="Transparent" />
+                <SolidColorBrush x:Key="SliderTrackFillPointerOver" Color="Transparent" />
+                <SolidColorBrush x:Key="SliderTrackFillPressed" Color="Transparent" />
+                <SolidColorBrush x:Key="SliderTrackValueFill" Color="Transparent" />
+                <SolidColorBrush x:Key="SliderTrackValueFillPointerOver" Color="Transparent" />
+                <SolidColorBrush x:Key="SliderTrackValueFillPressed" Color="Transparent" />
+              </Slider.Resources>
+            </player:SpokenSlider>
+          </Grid>
+          <TextBlock x:Name="Remaining" Grid.Column="5" Text="-0:00" VerticalAlignment="Center" Margin="4,0,6,0" Style="{StaticResource BodyTextBlockStyle}"
+                     Typography.NumeralAlignment="Tabular" AutomationProperties.AccessibilityView="Raw" />
+          <Button x:Name="VolumeButton" Grid.Column="6" Style="{StaticResource PlayerButtonStyle}" ToolTipService.ToolTip="{x:Bind app:T.PlayerVolume}" AutomationProperties.Name="{x:Bind app:T.PlayerVolume}">
+            <FontIcon x:Name="VolumeIcon" Glyph="&#xE767;" FontSize="16" />
+            <Button.Flyout>
+              <Flyout Placement="Top" Opened="OnMenuOpened" Closed="OnMenuClosed">
+                <player:SpokenSlider x:Name="VolumeSlider" Width="160" Minimum="0" Maximum="100" StepFrequency="5" Value="100"
+                        ValueChanged="OnVolumeChanged" AutomationProperties.Name="{x:Bind app:T.PlayerVolume}" />
+              </Flyout>
+            </Button.Flyout>
+          </Button>
+          <Button x:Name="SettingsButton" Grid.Column="7" Style="{StaticResource PlayerButtonStyle}" ToolTipService.ToolTip="{x:Bind app:T.SettingsTitle}" AutomationProperties.Name="{x:Bind app:T.PlayerPlaybackSettings}">
+            <FontIcon Glyph="&#xE713;" FontSize="16" />
+            <Button.Flyout>
+              <MenuFlyout x:Name="SettingsMenu" Placement="TopEdgeAlignedRight" Opening="OnSettingsMenuOpening" Opened="OnMenuOpened" Closed="OnMenuClosed" />
+            </Button.Flyout>
+          </Button>
+        </Grid>
+      </Grid>
+
+      <!-- Stats for nerds (I, or Settings): the engine's rows, top trailing on the raised surface
+           the corner cards use, solid so no frame shows through. It stays up while the controls
+           hide and ends above the subtitles' band, where its rows scroll first. Over the dim, so
+           the controls coming and going never shade it; under the corner cards. -->
+      <Grid x:Name="StatsLayer" Visibility="Collapsed" HorizontalAlignment="Right" VerticalAlignment="Top" Width="400"
+            Margin="0,64,16,0" Padding="16,6,6,14" Background="{ThemeResource RaisedBrush}" CornerRadius="8"
+            AutomationProperties.Name="{x:Bind app:T.PlayerStats}">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid ColumnSpacing="8">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <TextBlock Text="{x:Bind app:T.PlayerStats}" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center"
+                     AutomationProperties.HeadingLevel="Level2" />
+          <Button x:Name="StatsClose" Grid.Column="1" Style="{StaticResource PlayerButtonStyle}" Width="32" Height="32"
+                  Click="OnStatsClose" AutomationProperties.Name="{x:Bind app:T.PlayerStatsClose}">
+            <FontIcon Glyph="&#xE711;" FontSize="12" />
+          </Button>
+        </Grid>
+        <TextBlock x:Name="StatsWaiting" Grid.Row="1" Text="{x:Bind app:T.PlayerStatsWaiting}" Style="{StaticResource HazeBodyStyle}"
+                   FontSize="13" LineHeight="20" Margin="0,0,10,0" Visibility="Collapsed" AutomationProperties.LiveSetting="Polite" />
+        <!-- Label and value: the labels' column as wide as its longest label, each value on one
+             line in tabular figures, so a second's new figures change in place without moving. -->
+        <ScrollViewer x:Name="StatsScroll" Grid.Row="2" Margin="0,8,0,0" Padding="0,0,10,0"
+                      HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollMode="Auto" VerticalScrollBarVisibility="Auto">
+          <Grid x:Name="StatsRows" ColumnSpacing="14" RowSpacing="4" AutomationProperties.Name="{x:Bind app:T.PlayerStatsHeading}">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+          </Grid>
+        </ScrollViewer>
+        <!-- Copy stats, a button, and "Copied" in its place for a moment after: one cell as tall
+             as the button, so nothing moves, with the word where the button's was. -->
+        <Grid Grid.Row="3" Margin="0,12,0,0" MinHeight="32" HorizontalAlignment="Left">
+          <Button x:Name="StatsCopy" Content="{x:Bind app:T.PlayerStatsCopy}" Click="OnCopyStats" />
+          <TextBlock x:Name="StatsCopied" Text="{x:Bind app:T.ActionCopied}" Style="{StaticResource HazeBodyStyle}" VerticalAlignment="Center"
+                     Margin="12,0,0,0" Visibility="Collapsed" AutomationProperties.LiveSetting="Polite" />
+        </Grid>
+      </Grid>
+
+      <!-- The corner at the bottom end holds one card at a time, by rank: the stall prompt, the
+           Undo note, Up next, the Skip button. A grid, so a card fading out sits under the next. -->
+      <Grid x:Name="Corner" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,24,80">
+        <Border x:Name="SkipSlot" Visibility="Collapsed" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+          <Button x:Name="SkipCard" Style="{StaticResource AccentButtonStyle}" Click="OnSkip" MinHeight="40" Padding="16,0"
+                  PointerEntered="OnSkipEntered" PointerExited="OnSkipExited" />
+        </Border>
+        <Grid x:Name="UndoCard" Visibility="Collapsed" Background="{ThemeResource RaisedBrush}" CornerRadius="8" Padding="16,8,8,8"
+              ColumnSpacing="12" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <TextBlock x:Name="UndoLine" VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite" />
+          <Button x:Name="UndoButton" Grid.Column="1" Content="{x:Bind app:T.ActionUndo}" Click="OnUndo" />
+        </Grid>
+        <Grid x:Name="UpNextCard" Visibility="Collapsed" Background="{ThemeResource RaisedBrush}" CornerRadius="8" Padding="12" Width="380"
+              RowSpacing="10" ColumnSpacing="12" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <Border x:Name="UpNextStillFrame" Width="160" Height="90" CornerRadius="4" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+            <Image x:Name="UpNextStill" Stretch="UniformToFill" AutomationProperties.AccessibilityView="Raw" />
+          </Border>
+          <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+            <TextBlock Text="{x:Bind app:T.PlayerUpNext}" Style="{StaticResource HazeCaptionStyle}" />
+            <TextBlock x:Name="UpNextTitle" Style="{StaticResource BodyStrongTextBlockStyle}" TextWrapping="WrapWholeWords"
+                       MaxLines="3" TextTrimming="CharacterEllipsis" AutomationProperties.LiveSetting="Polite" />
+            <TextBlock x:Name="UpNextLine" Style="{StaticResource HazeCaptionStyle}" Typography.NumeralAlignment="Tabular" Margin="0,4,0,0" />
+          </StackPanel>
+          <ProgressBar x:Name="UpNextBar" Grid.Row="1" Grid.ColumnSpan="2" Maximum="1" Visibility="Collapsed" AutomationProperties.AccessibilityView="Raw" />
+          <StackPanel x:Name="UpNextButtons" Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+            <Button x:Name="UpNextCancel" Content="{x:Bind app:T.ActionCancel}" Click="OnCancelNext" />
+            <Button Content="{x:Bind app:T.ActionPlayNow}" Style="{StaticResource AccentButtonStyle}" Click="OnPlayNext" />
+          </StackPanel>
+        </Grid>
+        <Grid x:Name="StallCard" Visibility="Collapsed" Background="{ThemeResource RaisedBrush}" CornerRadius="8" Padding="16" Width="300"
+              RowSpacing="10" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+          <TextBlock x:Name="StallLine" TextWrapping="WrapWholeWords" Typography.NumeralAlignment="Tabular" />
+          <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+            <Button Content="{x:Bind app:T.PlayerKeepWaiting}" Click="OnStallWait" />
+            <Button Content="{x:Bind app:T.PlayerSwitchSource}" Style="{StaticResource AccentButtonStyle}" Click="OnStallSwitch" />
+          </StackPanel>
+        </Grid>
+      </Grid>
+
+      <!-- Still watching: after a run of episodes nobody was there for, paused until answered. -->
+      <Grid x:Name="StillLayer" Visibility="Collapsed" Background="{ThemeResource ScrimBrush}">
+        <Grid Background="{ThemeResource RaisedBrush}" CornerRadius="12" Padding="24,20,24,16" Width="340"
+              HorizontalAlignment="Center" VerticalAlignment="Center" RowSpacing="6">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+          <TextBlock Text="{x:Bind app:T.PlayerStillWatching}" Style="{StaticResource SubtitleTextBlockStyle}" HorizontalAlignment="Center" />
+          <TextBlock x:Name="StillLine" Grid.Row="1" Style="{StaticResource HazeBodyStyle}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="WrapWholeWords" />
+          <Grid Grid.Row="2" Margin="0,14,0,0" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Button x:Name="StillStop" Content="{x:Bind app:T.ActionStop}" HorizontalAlignment="Stretch" Click="OnStillStop" />
+            <Button x:Name="StillContinue" Grid.Column="1" Content="{x:Bind app:T.PlayerStillWatchingContinue}" HorizontalAlignment="Stretch"
+                    Style="{StaticResource AccentButtonStyle}" Click="OnStillContinue" />
+          </Grid>
+        </Grid>
+      </Grid>
+
+      <TeachingTip x:Name="MiniTip" Target="{x:Bind MiniButton}" Title="{x:Bind app:T.PlayerMiniPlayer}"
+                   PreferredPlacement="Bottom" IsLightDismissEnabled="True" MaxWidth="260" />
+
+      <!-- What the player says on the video: an alert, briefly, in the top leading corner. -->
+      <Border x:Name="AlertCard" Visibility="Collapsed" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="24,72,0,0"
+              Background="{ThemeResource RaisedBrush}" CornerRadius="8" Padding="16,10">
+        <TextBlock x:Name="AlertText" TextWrapping="WrapWholeWords" MaxWidth="480" AutomationProperties.LiveSetting="Assertive" />
+      </Border>
+
+      <!-- What a key did while the controls stay hidden: the time after a seek, the volume, the
+           speed, a skip. Shown for 1.2 s. -->
+      <Border x:Name="Flash" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center"
+              Background="{ThemeResource RaisedBrush}" CornerRadius="8" Padding="16,8" IsHitTestVisible="False">
+        <TextBlock x:Name="FlashText" Style="{StaticResource BodyStrongTextBlockStyle}" Typography.NumeralAlignment="Tabular"
+                   AutomationProperties.LiveSetting="Polite" />
+      </Border>
+    </SwapChainPanel>
+  </Grid>
+</UserControl>

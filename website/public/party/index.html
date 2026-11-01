@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<title>Kaeri watch party</title>
+<meta name="description" content="Open the invite in Kaeri">
+<meta property="og:title" content="Kaeri watch party">
+<meta property="og:description" content="Open the invite in Kaeri">
+<meta property="og:image" content="https://kaeri.app/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://kaeri.app/og.png">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#10131f">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f0ede4">
+<script>
+  try { var t = localStorage.getItem("starlight-theme"); if (t === "dark" || t === "light") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+  @font-face { font-family: "Zen Kaku Gothic New"; font-weight: 500; font-display: swap;
+               src: url(/fonts/zen-kaku-gothic-new-latin-500.woff2) format("woff2"); }
+  :root { color-scheme: dark light; --ground: #10131f; --text: #e4e0d6; --dim: #9298b5; --amber: #f2a64b;
+          --amber-hover: #f5b467; --on-amber: #161a2e; --well: #161a2e; --band: #222638; --rule: #434653; --focus: #f5b467; }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) { --ground: #f0ede4; --text: #1e2033; --dim: #4f546e; --on-amber: #1e2033;
+            --well: #e3e1d9; --band: #e3e1d9; --rule: #c2c0bd; --focus: #7a4309; }
+  }
+  :root[data-theme="light"] { color-scheme: light; --ground: #f0ede4; --text: #1e2033; --dim: #4f546e; --on-amber: #1e2033;
+            --well: #e3e1d9; --band: #e3e1d9; --rule: #c2c0bd; --focus: #7a4309; }
+  :root[data-theme="dark"] { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: var(--ground); color: var(--text);
+         font: 17px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, Roboto, sans-serif; }
+  main { width: 100%; max-width: 40rem; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+  .brand { display: inline-flex; align-items: center; gap: .625rem; margin: 0 0 3rem; color: var(--text); text-decoration: none;
+           font: 500 1.375rem/1 "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", system-ui, sans-serif; }
+  .brand img { width: 32px; height: 32px; }
+  h1 { font: 500 clamp(2rem, 5vw, 2.75rem)/1.12 "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", system-ui, sans-serif;
+       letter-spacing: -.015em; margin: 0 0 .75rem; text-wrap: balance; }
+  h2 { font-size: 1rem; font-weight: 600; margin: 2rem 0 .25rem; }
+  .what { margin: 0 0 1.5rem; font-size: 1.25rem; color: var(--text); }
+  p { margin: 0 0 1rem; color: var(--dim); }
+  ol { margin: 0 0 1rem; padding-left: 1.5rem; }
+  strong { font-weight: 600; }
+  li + li { margin-top: .375rem; }
+  .actions { display: flex; flex-wrap: wrap; gap: .75rem; margin: 1.5rem 0 2rem; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 1.5rem; border-radius: 999px; font-weight: 600;
+         text-decoration: none; color: var(--text); border: 1px solid var(--rule); background: transparent;
+         transition: color 120ms cubic-bezier(.2,.8,.2,1), background-color 120ms cubic-bezier(.2,.8,.2,1), border-color 120ms cubic-bezier(.2,.8,.2,1); }
+  .btn:hover { border-color: var(--text); }
+  .btn-primary { background: var(--amber); border-color: var(--amber); color: var(--on-amber); }
+  .btn-primary:hover { background: var(--amber-hover); border-color: var(--amber-hover); }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; transition: none; }
+  .box { margin: 0 0 1.5rem; padding: 1.25rem 1rem; border-radius: 12px; background: var(--band); }
+  .box > :last-child { margin-bottom: 0; }
+  .box h2 { margin-top: 0; }
+  .code { display: block; margin: 0 0 1.5rem; color: var(--text);
+          font: 1.5rem/1.3 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-wrap: anywhere; }
+  .label { display: block; margin: 0 0 .25rem; font-size: .9375rem; color: var(--dim); }
+  a { color: var(--text); text-underline-offset: 3px; }
+  small { color: var(--dim); font-size: .9375rem; }
+  [hidden] { display: none !important; }
+  @media (max-width: 600px) { .actions { flex-direction: column; } .btn { min-height: 50px; } }
+  @media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <a class="brand" href="/"><img src="/favicon.svg" alt="" width="32" height="32"><span>Kaeri</span></a>
+
+  <section id="invite" hidden>
+    <h1 id="title"></h1>
+    <p class="what" id="what"></p>
+    <p>Each of you plays the episode from your own sources in Kaeri, and Syncplay keeps you in step.</p>
+    <div class="actions">
+      <a class="btn btn-primary" id="open" href="#">Open in Kaeri</a>
+      <a class="btn" href="/download/">Get Kaeri</a>
+    </div>
+    <div class="box">
+      <span class="label">Room code</span>
+      <code class="code" id="code"></code>
+      <h2>If nothing opens</h2>
+      <ol>
+        <li>Get Kaeri for this device, then open this link again.</li>
+        <li>Or in Kaeri, choose <strong>Join watch party</strong> and paste the whole link.</li>
+      </ol>
+      <p id="syncplay"></p>
+    </div>
+  </section>
+
+  <section id="broken" hidden>
+    <h1>This invite is missing its room.</h1>
+    <p>Ask for the link again.</p>
+    <div class="actions"><a class="btn" href="/download/">Get Kaeri</a></div>
+  </section>
+
+  <noscript>
+    <h1>This page needs JavaScript</h1>
+    <p>The invite is in the part of the link after the # sign, which only your browser can read. Turn JavaScript on to see it, or paste the whole link into Kaeri's Join watch party field.</p>
+    <div class="actions"><a class="btn" href="/download/">Get Kaeri</a></div>
+  </noscript>
+
+  <p><small>This page reads the invite in your browser and sends it nowhere. See the <a href="/docs/privacy/#watch-parties">privacy page</a>.</small></p>
+</main>
+<script>
+  // The invite is in the fragment, which browsers never send to a server. It is read here and
+  // handed to the app on this device, and nothing on this page makes a request that carries it.
+  (function () {
+    var q = new URLSearchParams(location.hash.slice(1));
+    var server = (q.get("s") || "").trim();
+    var room = (q.get("r") || "").trim();
+    var ok = /^[A-Za-z0-9.\-]{1,253}(:\d{1,5})?$/.test(server) && /^[A-Za-z0-9._~\-]{1,80}$/.test(room);
+    var $ = function (id) { return document.getElementById(id); };
+    if (!ok) { $("broken").hidden = false; return; }
+
+    var by = (q.get("by") || "").trim().slice(0, 40);
+    var name = (q.get("n") || "").trim().slice(0, 120);
+    var ep = (q.get("e") || "").trim();
+    var hasEp = /^\d{1,4}$/.test(ep);
+
+    $("title").textContent = by ? by + " invited you to a watch party." : "You’re invited to a watch party.";
+    var what = [];
+    if (name) what.push(name);
+    if (hasEp) what.push("Episode " + ep);
+    if (what.length) $("what").textContent = what.join(" · "); else $("what").hidden = true;
+    $("code").textContent = room;
+    $("syncplay").textContent = "Using Syncplay’s own app? Server " + server + ", room " + room + ".";
+    $("open").href = "kaeri://party#" + location.hash.slice(1);
+    $("invite").hidden = false;
+    document.title = "Kaeri watch party";
+  })();
+</script>
+</body>
+</html>

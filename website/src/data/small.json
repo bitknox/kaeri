@@ -1,0 +1,50 @@
+[
+ {
+  "id": "watching",
+  "items": [
+   "skipAndUpNext",
+   "resume",
+   "pickASource",
+   "subbedOrDubbedPerShow",
+   "subtitleAndAudioTracks",
+   "watchParties"
+  ]
+ },
+ {
+  "id": "titlePages",
+  "items": [
+   "trailers",
+   "theFacts",
+   "moreAboutThisShow",
+   "episodeDiscussions",
+   "upNextForYou",
+   "watchAgain"
+  ]
+ },
+ {
+  "id": "downloads",
+  "items": [
+   "nextEpisodes",
+   "startNow",
+   "sameHistoryOffline"
+  ]
+ },
+ {
+  "id": "alertsAndWidgets",
+  "items": [
+   "newEpisodeAlerts",
+   "widgets",
+   "handoffSpotlightShortcuts",
+   "liveActivities"
+  ]
+ },
+ {
+  "id": "other",
+  "items": [
+   "updates",
+   "torrentsOnTheTv",
+   "englishOrRomaji",
+   "commandLine"
+  ]
+ }
+]

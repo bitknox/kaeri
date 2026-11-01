@@ -1,0 +1,260 @@
+//! The engine started for a test: on a fake AniList, with nothing able to leave the machine.
+
+use std::sync::Arc;
+
+use kaeri_core::config::NetworkConfig;
+use kaeri_engine::{
+    clock::Clock,
+    options::{Background, EngineOptions, Parts},
+    plugin_stores, tracking,
+};
+use kaeri_meta::Meta;
+use kaeri_model::{Msg, command::Command};
+use kaeri_net::HttpClient;
+use kaeri_providers::ProviderRegistry;
+use kaeri_testkit::{FakeAniList, anilist::Failure};
+use kaeri_track::{
+    AniListTracker,
+    secret::{Backend, TokenStore},
+};
+
+use crate::{
+    engine::{FfiEngine, Opened, RemoteHome, runtime},
+    host::{Adapter, FfiHost},
+    start::{FfiDirs, FfiError, FfiStart, SecretsMode},
+};
+
+#[uniffi::export]
+impl FfiEngine {
+    /// [`FfiEngine::start`], for a test: the engine on the app's directories as the app's, but
+    /// with what it reaches beyond them stood in for.
+    ///
+    /// - Metadata comes from the test kit's fake AniList on loopback, with its fixture titles:
+    ///   a search for "hoshikuzu" finds two. It serves their art too, so covers, banners and
+    ///   stills arrive as real images.
+    /// - The only source is the test kit's fixture provider.
+    /// - Every request goes through a client that cannot resolve a host name, so one the test
+    ///   did not think of fails at once instead of leaving the machine.
+    /// - Tokens are files under `dirs.data`, never the keychain, whatever `start.secrets` says.
+    /// - None of the engine's own work runs beside the commands: no update check, no sync loops,
+    ///   no check of the player.
+    /// - A play opens the app's hosted player, in any build: its ops come as
+    ///   `Event::PlayerOps`, for the test to answer with `Command::PlayerReport`.
+    ///
+    /// The rest of `start` is taken as [`FfiEngine::start`] takes it, the player's theme and the
+    /// sign-in clients. Only in a build with the `testing` feature, which an app never turns on.
+    #[uniffi::constructor(default(start))]
+    pub fn start_testing(
+        dirs: FfiDirs,
+        host: Arc<dyn FfiHost>,
+        start: FfiStart,
+    ) -> Result<Arc<Self>, FfiError> {
+        Self::start_testing_from(dirs, host, start, None)
+    }
+}
+
+#[uniffi::export]
+impl FfiEngine {
+    /// What the fake AniList has been asked so far, an operation's name a request ("Detail",
+    /// "Many", "LastAired", …) in arrival order, for counting what an action in the app costs
+    /// against AniList's rate limit. Empty on an engine that is not on the fake. Only in a build
+    /// with the `testing` feature.
+    pub fn testing_anilist_requests(&self) -> Vec<String> {
+        self.kept::<Testing>()
+            .map(|kept| {
+                kept.server.requests().iter().map(|r| format!("{:?}", r.operation)).collect()
+            })
+            .unwrap_or_default()
+    }
+
+    /// Let `secs` pass, for the engine and the fake AniList alike: the broadcasts stay where
+    /// they are, so an episode due in an hour has aired once an hour is let pass. What the
+    /// new-episode check and the widgets' record are dated by moves on; nothing else in the
+    /// engine does. Does nothing on an engine that is not on the fake. Only in a build with the
+    /// `testing` feature.
+    pub fn testing_advance_clock(&self, secs: i64) {
+        if let Some(kept) = self.kept::<Testing>() {
+            kept.clock.advance(secs);
+            kept.server.advance(secs);
+        }
+    }
+
+    /// The host names the engine tried to reach and was refused, oldest first: every request
+    /// for a name, rather than for the fake on loopback. A fixture build must never aim at a real
+    /// host, so a test reads this after a flow to see that nothing did. Empty on an engine that is
+    /// not on the fake. Only in a build with the `testing` feature.
+    pub fn testing_refused_hosts(&self) -> Vec<String> {
+        self.kept::<Testing>()
+            .and_then(|kept| kept.http.get().map(HttpClient::refused_names))
+            .unwrap_or_default()
+    }
+
+    /// Take the scene offline, or bring it back: offline, the fake AniList hangs up on every
+    /// request and the engine is told the path is offline, whatever the host's own monitor says
+    /// after. For Home's offline line over what it last loaded, and its offline state with
+    /// nothing saved. Back online, the fake answers again and the engine is told so. Does
+    /// nothing on an engine that is not on the fake. Only in a build with the `testing` feature.
+    pub fn testing_set_offline(&self, offline: bool) {
+        let Some(kept) = self.kept::<Testing>() else { return };
+        kept.offline.store(offline, std::sync::atomic::Ordering::Relaxed);
+        if offline {
+            kept.server.fail_always(Failure::Disconnect);
+        } else {
+            kept.server.heal();
+        }
+        self.send(Command::NetworkPath { cellular: false, constrained: false, offline });
+    }
+
+    /// The plugin store scenes' Book club link, which works five times: for the join sheet's
+    /// name field, pasted into Join a plugin store. `None` on any other scene. Only in a build
+    /// with the `testing` feature.
+    pub fn testing_store_invite(&self) -> Option<String> {
+        self.kept::<Testing>().and_then(|kept| kept.store_invite.get().cloned())
+    }
+
+    /// Serve the fixtures' art badly from now on, as a busy CDN would: every second image is
+    /// answered `503` its first `fail_first` times, and every image waits `delay_ms` before it
+    /// is answered. For a test or the dev harness that art on screen still arrives. Does nothing
+    /// on an engine that is not on the fake. Only in a build with the `testing` feature.
+    pub fn testing_trouble_art(&self, fail_first: u32, delay_ms: u32) {
+        if let Some(kept) = self.kept::<Testing>() {
+            kept.server
+                .trouble_art(fail_first, std::time::Duration::from_millis(u64::from(delay_ms)));
+        }
+    }
+}
+
+/// What a test's engine is kept beside: the fake AniList it asks, and the clock it goes by.
+pub(crate) struct Testing {
+    pub(crate) server: FakeAniList,
+    pub(crate) clock: Clock,
+    /// The engine's one client, which resolves no name, once [`options`] has made it.
+    pub(crate) http: std::sync::OnceLock<HttpClient>,
+    /// Whether the scene is offline: see [`FfiEngine::testing_set_offline`].
+    pub(crate) offline: std::sync::atomic::AtomicBool,
+    /// The plugin store scenes' link that works more than once: see
+    /// [`FfiEngine::testing_store_invite`].
+    pub(crate) store_invite: std::sync::OnceLock<String>,
+}
+
+impl Testing {
+    pub(crate) fn new(server: FakeAniList, clock: Clock) -> Self {
+        Self {
+            server,
+            clock,
+            http: std::sync::OnceLock::new(),
+            offline: std::sync::atomic::AtomicBool::new(false),
+            store_invite: std::sync::OnceLock::new(),
+        }
+    }
+
+    /// `command` as the scene has it: while it is offline, every network path the host reports
+    /// is an offline one, so the device's own connection cannot bring it back.
+    pub(crate) fn pin(&self, command: Command) -> Command {
+        match command {
+            Command::NetworkPath { cellular, constrained, .. }
+                if self.offline.load(std::sync::atomic::Ordering::Relaxed) =>
+            {
+                Command::NetworkPath { cellular, constrained, offline: true }
+            }
+            command => command,
+        }
+    }
+}
+
+impl FfiEngine {
+    /// [`FfiEngine::start_testing`] with `sources` in place of the fixture provider alone, for a
+    /// Rust test that scripts the streams an episode has. Not in the bindings.
+    pub fn start_testing_with(
+        dirs: FfiDirs,
+        host: Arc<dyn FfiHost>,
+        sources: ProviderRegistry,
+    ) -> Result<Arc<Self>, FfiError> {
+        Self::start_testing_from(dirs, host, FfiStart::default(), Some(sources))
+    }
+
+    fn start_testing_from(
+        dirs: FfiDirs,
+        host: Arc<dyn FfiHost>,
+        start: FfiStart,
+        sources: Option<ProviderRegistry>,
+    ) -> Result<Arc<Self>, FfiError> {
+        let opened = Opened::open(&dirs)?;
+        // The test's token files are the trackers' and the stores' own, so the host's keychain
+        // is never asked.
+        let host = Adapter::new(host, SecretsMode::Host, &opened.config, &opened.paths);
+        let home = RemoteHome::of(&host, &opened.paths);
+        let runtime = runtime()?;
+        let started = runtime.block_on(async {
+            // The fake answers on the engine's runtime, for as long as the engine holds it.
+            let testing = Testing::new(FakeAniList::start().await, Clock::default());
+            let options = options(opened, &testing, &start, sources)?;
+            Ok::<_, FfiError>((Self::launch(options, host).await?, testing))
+        });
+        match started {
+            Ok((started, testing)) => {
+                Self::hold(runtime, Ok(started), Some(Box::new(testing)), home)
+            }
+            Err(e) => Self::hold(runtime, Err(e), None, home),
+        }
+    }
+}
+
+/// The options [`FfiEngine::start_testing`] starts from: the harness's in the binary, on the
+/// app's directories rather than a temporary one, asking `testing`'s fake and going by its clock.
+/// `sources` stands in for the fixture provider, whose stills the fake serves, when given.
+pub(crate) fn options(
+    opened: Opened,
+    testing: &Testing,
+    start: &FfiStart,
+    sources: Option<ProviderRegistry>,
+) -> Result<EngineOptions, FfiError> {
+    let server = &testing.server;
+    let Opened { paths, config, store, set_aside } = opened;
+    // The fixtures' covers, banners and stills, from the fake, for an app that shows them.
+    server.serve_art();
+    // The one forum thread the apps' discussion shots read: episode 7 of the finished title.
+    server.add_fixture_thread(kaeri_engine::now_epoch());
+    let http =
+        HttpClient::offline(&NetworkConfig { timeout_secs: 5, ..config.network.clone() })
+            .map_err(|e| FfiError::client(Msg::StartFailedNetwork { reason: e.to_string() }))?;
+    let meta = Meta::new(
+        server.anilist(&http),
+        config.meta.fallback.then(|| server.tenrai(&http, &store)),
+        store.clone(),
+    );
+    let tokens = TokenStore::with_backend(paths.data_dir.join("tokens"), Backend::File);
+    // The trackers as the app's own sign-in clients turn them on, as the engine builds them.
+    let tracked = tracking::native::with_app_clients(&config, &start.app_clients());
+    let mut sync = tracking::Sync::with_tokens(&tracked, &store, &http, tokens.clone())
+        // Kitsu on the fake as well: a password typed into a fixture build goes nowhere else.
+        .with_kitsu_at(kaeri_track::kitsu::Site::at(&server.kitsu_base()));
+    // AniList's on the fake rather than AniList itself, signed in or not: a scene can leave it
+    // signed in, so the Library is the fake's, and a sign-in from the app reaches the fake.
+    if let Some(at) = sync.trackers.iter().position(|t| t.id() == "anilist") {
+        let client = server.anilist(&http).with_token(tokens.get("anilist").ok());
+        let tracker = Arc::new(AniListTracker::new(client));
+        sync.trackers[at] = tracker.clone();
+        sync.anilist = Some(tracker);
+    }
+    let _ = testing.http.set(http.clone());
+    let stores = plugin_stores::Stores::with_offline_tokens(&config, &paths, tokens)
+        .map_err(|reason| FfiError::engine(Msg::StartFailed { reason: reason.english() }))?;
+
+    let mut options = Opened { paths, config, store, set_aside }.options(http, start);
+    options.sources = Some(
+        sources
+            .unwrap_or_else(|| kaeri_testkit::sources::registry_with_art(&server.art_base())),
+    );
+    options.background = Background::none();
+    options.hosted_player = true;
+    options.parts = Some(Parts {
+        meta,
+        sync,
+        stores,
+        clock: testing.clock.clone(),
+        fixture_exit: Some(kaeri_providers::vpn::VpnGuard::fixture_egress()),
+        windows: None,
+    });
+    Ok(options)
+}

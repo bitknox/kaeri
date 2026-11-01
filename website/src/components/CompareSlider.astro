@@ -1,0 +1,239 @@
+---
+/**
+ * One frame, shown as a 480p stream on the left and upscaled on the right, with a divider that
+ * follows the pointer directly. The divider is a slider for the keyboard: the arrow keys move it in
+ * steps of 5%, Home and End go to the ends. The buttons below pick the look the right side shows.
+ */
+import { useSite } from '../i18n/site';
+
+const { t } = useSite(Astro);
+const looks = [
+	{ id: 'natural', src: '/player/compare-natural.webp' },
+	{ id: 'sharp', src: '/player/compare-sharp.webp' },
+	{ id: 'original', src: '/player/compare-original.webp' },
+] as const;
+---
+
+<div class="compare" data-compare style="view-transition-name: shot-player">
+	<div class="compare-frame" data-frame>
+		<img class="compare-look" src={looks[0].src} width="720" height="480" alt={t('compare.alt')} loading="lazy" decoding="async" />
+		<img class="compare-off" src="/player/compare-off.webp" width="720" height="480" alt="" loading="lazy" decoding="async" />
+		<span class="compare-tag compare-tag-off" aria-hidden="true">{t('compare.off')}</span>
+		<span class="compare-tag compare-tag-look" aria-hidden="true" data-look-tag>{t(`compare.look.${looks[0].id}.name`)}</span>
+		<div
+			class="compare-handle"
+			role="slider"
+			tabindex="0"
+			aria-label={t('compare.slider')}
+			aria-valuemin="0"
+			aria-valuemax="100"
+			aria-valuenow="50"
+			aria-valuetext={t('compare.valuetext', { percent: 50 })}
+			data-handle
+			data-valuetext={t('compare.valuetext', { percent: '{{percent}}' })}
+		>
+			<span class="compare-line"></span>
+			<span class="compare-knob">
+				<svg width="18" height="12" viewBox="0 0 18 12" aria-hidden="true"><path d="M6 1 1 6l5 5M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"></path></svg>
+			</span>
+		</div>
+	</div>
+	<div class="compare-looks" role="group" aria-label={t('compare.group')}>
+		{
+			looks.map((look, i) => (
+				<button type="button" aria-pressed={i === 0 ? 'true' : 'false'} data-src={look.src} data-name={t(`compare.look.${look.id}.name`)}>
+					{t(`compare.look.${look.id}.name`)} <span>{t(`compare.look.${look.id}.note`)}</span>
+				</button>
+			))
+		}
+	</div>
+</div>
+
+<style is:global>
+	.compare {
+		margin-inline: auto;
+	}
+
+	.compare-frame {
+		position: relative;
+		aspect-ratio: 720 / 480;
+		overflow: hidden;
+		border-radius: 12px;
+		border: 1px solid var(--ani-bezel-edge);
+		background: var(--ani-crop-a);
+		touch-action: pan-y;
+		cursor: ew-resize;
+		--pos: 50%;
+		-webkit-user-select: none;
+		user-select: none;
+	}
+
+	.compare-frame img {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		max-width: none;
+		pointer-events: none;
+	}
+
+	.compare-off {
+		clip-path: inset(0 calc(100% - var(--pos)) 0 0);
+	}
+
+	.compare-tag {
+		position: absolute;
+		top: 14px;
+		padding: 4px 10px;
+		border-radius: 6px;
+		background: #10131f;
+		color: #e4e0d6;
+		font-size: 13px;
+	}
+
+	.compare-tag-off {
+		left: 16px;
+	}
+
+	.compare-tag-look {
+		right: 16px;
+	}
+
+	.compare-handle {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: var(--pos);
+		width: 44px;
+		margin-left: -22px;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		color: #10131f;
+	}
+
+	.compare-line {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		width: 2px;
+		background: #e4e0d6;
+	}
+
+	.compare-knob {
+		position: relative;
+		width: 36px;
+		height: 36px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 18px;
+		background: #e4e0d6;
+	}
+
+	.compare-looks {
+		margin-top: 16px;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+
+	.compare-looks button {
+		height: 40px;
+		padding: 0 16px;
+		border: 1px solid var(--ani-dim);
+		border-radius: 20px;
+		background: none;
+		color: var(--ani-text);
+		font: inherit;
+		font-size: 15px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+	}
+
+	.compare-looks button span {
+		font-weight: 400;
+		color: var(--ani-dim);
+	}
+
+	.compare-looks button:hover {
+		border-color: var(--ani-link-hover);
+	}
+
+	.compare-looks button[aria-pressed='true'] {
+		border-color: var(--ani-text);
+		background: var(--ani-text);
+		color: var(--ani-ground);
+	}
+
+	.compare-looks button[aria-pressed='true'] span {
+		color: inherit;
+	}
+
+	@media (max-width: 700px) {
+		.compare-tag {
+			top: 8px;
+			font-size: 12px;
+		}
+
+		.compare-tag-off {
+			left: 8px;
+		}
+
+		.compare-tag-look {
+			right: 8px;
+		}
+	}
+</style>
+
+<script>
+	for (const root of document.querySelectorAll<HTMLElement>('[data-compare]')) {
+		const frame = root.querySelector<HTMLElement>('[data-frame]')!;
+		const handle = root.querySelector<HTMLElement>('[data-handle]')!;
+		const look = root.querySelector<HTMLImageElement>('.compare-look')!;
+		const tag = root.querySelector<HTMLElement>('[data-look-tag]')!;
+		const text = handle.dataset.valuetext!;
+		let pos = 50;
+
+		// No easing: the divider is wherever the pointer is.
+		const set = (value: number) => {
+			pos = Math.max(0, Math.min(100, value));
+			frame.style.setProperty('--pos', `${pos}%`);
+			handle.setAttribute('aria-valuenow', String(Math.round(pos)));
+			handle.setAttribute('aria-valuetext', text.replace('{{percent}}', String(Math.round(pos))));
+		};
+		const fromPointer = (e: PointerEvent) => {
+			const box = frame.getBoundingClientRect();
+			set(((e.clientX - box.left) / box.width) * 100);
+		};
+
+		frame.addEventListener('pointerdown', (e) => {
+			frame.setPointerCapture(e.pointerId);
+			fromPointer(e);
+		});
+		frame.addEventListener('pointermove', (e) => {
+			if (frame.hasPointerCapture(e.pointerId)) fromPointer(e);
+		});
+		// A mouse moves the divider without a press, as the apps' own comparison does.
+		frame.addEventListener('mousemove', (e) => {
+			if (e.buttons === 0 && matchMedia('(hover: hover)').matches) fromPointer(e as unknown as PointerEvent);
+		});
+		handle.addEventListener('keydown', (e) => {
+			const step = { ArrowLeft: -5, ArrowDown: -5, ArrowRight: 5, ArrowUp: 5 }[e.key];
+			if (step !== undefined) set(pos + step);
+			else if (e.key === 'Home') set(0);
+			else if (e.key === 'End') set(100);
+			else return;
+			e.preventDefault();
+		});
+
+		for (const button of root.querySelectorAll<HTMLButtonElement>('.compare-looks button')) {
+			button.addEventListener('click', () => {
+				for (const other of root.querySelectorAll('.compare-looks button')) other.setAttribute('aria-pressed', String(other === button));
+				look.src = button.dataset.src!;
+				tag.textContent = button.dataset.name!;
+			});
+		}
+	}
+</script>

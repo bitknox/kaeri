@@ -1,0 +1,20 @@
+[workspace]
+
+[package]
+name = "kaeri-hostile-plugin"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "A deliberately misbehaving plugin, used to prove the sandbox holds"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wit-bindgen = "0.63"
+
+[profile.release]
+opt-level = "s"
+lto = true
+strip = true
