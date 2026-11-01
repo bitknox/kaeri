@@ -92,8 +92,9 @@ impl Window {
 #[derive(Clone, Default)]
 pub struct CalendarMemory {
     inner: Arc<Mutex<Option<Remembered>>>,
-    /// Held while a page is asked for, so two readers wanting the same page ask once.
-    gate: Arc<tokio::sync::Mutex<()>>,
+    /// Held while a page of the past, and of the days ahead, is asked for, so two readers
+    /// wanting the same page ask once. One for each side, so the two go out side by side.
+    gates: Arc<[tokio::sync::Mutex<()>; 2]>,
 }
 
 struct Remembered {
@@ -224,7 +225,7 @@ impl CalendarMemory {
                 let (me, meta) = (&me, &meta);
                 async move {
                     loop {
-                        let _gate = me.gate.lock().await;
+                        let _gate = me.gates[usize::from(ahead)].lock().await;
                         // Looked at again behind the gate: the page may have arrived.
                         let next = {
                             let kept = me.lock();
