@@ -98,6 +98,10 @@ struct TitleSearchField: ViewModifier {
     let text: Binding<String>
     /// Whether the field searches titles: not while it searches Settings.
     var titles = true
+    /// Whether the genres and tags set show in the field as tokens. On the iPhone the field holds
+    /// only what was typed, and the pinned row's pills name the genres and tags; a suggestion
+    /// picked there still adds its filter.
+    var tokensShown = true
     var placement: SearchFieldPlacement = .automatic
     let prompt: String
 
@@ -128,13 +132,16 @@ struct TitleSearchField: ViewModifier {
 
     private var tokens: Binding<[SearchToken]> {
         Binding(
-            get: { titles ? SearchToken.of(store.search.query) : [] },
+            get: { titles && tokensShown ? SearchToken.of(store.search.query) : [] },
             set: { tokens in
                 guard titles else { return }
                 var query = store.search.query
-                let added = tokens.count > SearchToken.of(query).count
-                query.genres = tokens.filter { $0.kind == .genre }.map(\.name)
-                query.tags = tokens.filter { $0.kind == .tag }.map(\.name)
+                let present = SearchToken.of(query)
+                // Without tokens shown the field only ever adds: what it hands back is the pick.
+                let all = tokensShown ? tokens : present + tokens.filter { !present.contains($0) }
+                let added = all.count > present.count
+                query.genres = all.filter { $0.kind == .genre }.map(\.name)
+                query.tags = all.filter { $0.kind == .tag }.map(\.name)
                 query.genresExcluded.removeAll { query.genres.contains($0) }
                 query.tagsExcluded.removeAll { query.tags.contains($0) }
                 // A token chosen stands for the words that found it.
@@ -158,9 +165,10 @@ struct TitleSearchField: ViewModifier {
 
 extension View {
     func titleSearchField(
-        text: Binding<String>, titles: Bool = true, placement: SearchFieldPlacement = .automatic, prompt: String
+        text: Binding<String>, titles: Bool = true, tokensShown: Bool = true,
+        placement: SearchFieldPlacement = .automatic, prompt: String
     ) -> some View {
-        modifier(TitleSearchField(text: text, titles: titles, placement: placement, prompt: prompt))
+        modifier(TitleSearchField(text: text, titles: titles, tokensShown: tokensShown, placement: placement, prompt: prompt))
     }
 }
 
@@ -211,6 +219,9 @@ struct SearchScreen: View {
     /// Whether the results are scrolled away from the top.
     @State private var scrolled = false
     @State private var scrollPosition = ScrollPosition()
+    /// A filter changed with the results scrolled: the answer, when it comes, starts at the
+    /// first row.
+    @State private var toFirstRow = false
 
     /// The filters asked for, without the words: they change when a filter does.
     private var filtersAsked: SearchQuery {
@@ -276,9 +287,15 @@ struct SearchScreen: View {
                 .id(Self.firstRow)
             }
             // A filter changed with the results scrolled brings its answer in at the first row,
-            // under the pinned row, and the large title stays folded. Typing is left to the field.
+            // under the pinned row, and the large title stays folded. The earlier answer stays
+            // where it is until then, so the move happens inside the results' crossfade (or as
+            // the placeholders take over). Typing is left to the field.
             .onChange(of: filtersAsked) {
-                guard pinned, scrolled else { return }
+                toFirstRow = pinned && scrolled
+            }
+            .onChange(of: AnswerShown(store.search)) {
+                guard toFirstRow, !store.search.pending || store.search.overdue else { return }
+                toFirstRow = false
                 proxy.scrollTo(Self.firstRow, anchor: .top)
             }
             // A filter added, changed or taken off moves the row on standard: each capsule takes
@@ -308,10 +325,12 @@ struct SearchScreen: View {
         .scrollPosition($scrollPosition)
         .scrollIndicators(.never)
         #if os(iOS)
-        // On the iPhone the filters stay under the field, sharing the bar's soft scroll edge.
+        // On the iPhone the filters stay under the field, sharing the bar's soft scroll edge:
+        // the covers blur and fade into the ground under the row, with no line where they stop.
         .safeAreaBar(edge: .top, spacing: 8) {
             if pinned { SearchFilterRow(compact: true, pinned: true) }
         }
+        .scrollEdgeEffectStyle(pinned ? .soft : nil, for: .top)
         .screenSubtitle(store.search.searchingLine ?? "")
         // The ground inside the inspector: it hosts the screen in a column of its own, which
         // draws the system's black over the ground TabStack puts behind it.
@@ -408,6 +427,18 @@ private struct LivePaused: View {
         )
         .font(compact ? .ui(15) : .mac(13))
         .foregroundStyle(.haze)
+    }
+}
+
+/// What the results show: the answer on screen, or placeholders once it is overdue. A change
+/// is when the results crossfade.
+private struct AnswerShown: Equatable {
+    let answered: SearchQuery?
+    let overdue: Bool
+
+    @MainActor init(_ search: SearchModel) {
+        answered = search.answered
+        overdue = search.overdue
     }
 }
 
@@ -600,6 +631,9 @@ struct SearchFilterRow: View {
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .onChange(of: query.text) {
             withAnimation(reduceMotion ? nil : .standard) { position.scrollTo(edge: .leading) }
+        }
+        .onChange(of: navigator.searchRowToEnd) {
+            withAnimation(reduceMotion ? nil : .standard) { position.scrollTo(edge: .trailing) }
         }
     }
 
@@ -835,7 +869,7 @@ struct SearchFilterRow: View {
         } label: {
             FilterCapsule(
                 title: searchSortLabel(sort: current), active: query.sort != nil, compact: compact,
-                symbol: "arrow.up.arrow.down"
+                symbol: "arrow.up.arrow.down", pinned: pinned
             )
         }
         .filterMenu()
@@ -1292,8 +1326,22 @@ struct SearchFiltersPanel: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
     var compact = false
+    #if os(iOS)
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    #endif
     @State private var find = ""
     @State private var spoilers = false
+
+    /// The iPhone's sheet, under the pinned row: an included genre takes the neutral fill like
+    /// the row's set pills, leaving amber to the switches and the action. The iPad and the Mac
+    /// keep amber for now.
+    private var neutralPicks: Bool {
+        #if os(iOS)
+        compact && sizeClass == .compact
+        #else
+        false
+        #endif
+    }
 
     var body: some View {
         form
@@ -1316,7 +1364,7 @@ struct SearchFiltersPanel: View {
                 PanelSection(compact: compact, L.filterGenres) {
                     FlowLayout(spacing: 6, lineSpacing: 6) {
                         ForEach(facets?.genres ?? [], id: \.self) { name in
-                            PickChip(name: name, pick: query.genrePick(name: name), compact: compact) { pick in
+                            PickChip(name: name, pick: query.genrePick(name: name), compact: compact, neutral: neutralPicks) { pick in
                                 store.searchLive(store.search.query.pickingGenre(name: name, pick: pick))
                             }
                         }
@@ -1715,11 +1763,13 @@ private struct TagRow: View {
     }
 }
 
-/// A genre as a chip: off, in or out, a tap moving it on.
+/// A genre as a chip: off, in or out, a tap moving it on. `neutral` draws an included genre in
+/// the raised fill with silk words rather than amber.
 private struct PickChip: View {
     let name: String
     let pick: Pick
     var compact = false
+    var neutral = false
     let set: (Pick) -> Void
 
     var body: some View {
@@ -1735,7 +1785,7 @@ private struct PickChip: View {
                 Text(name)
             }
             .font(compact ? .ui(15) : .mac(12))
-            .foregroundStyle(pick == .off ? .silk : pick == .include ? .amber : .vermilion)
+            .foregroundStyle(pick == .off || (pick == .include && neutral) ? .silk : pick == .include ? .amber : .vermilion)
             .padding(.horizontal, 10)
             .frame(height: compact ? 32 : 24)
             .background(background, in: .capsule)
@@ -1754,7 +1804,7 @@ private struct PickChip: View {
     private var background: Color {
         switch pick {
         case .off: .clear
-        case .include: Palette.selection
+        case .include: neutral ? Palette.raisedSelected : Palette.selection
         case .exclude: Palette.vermilion.opacity(0.14)
         }
     }

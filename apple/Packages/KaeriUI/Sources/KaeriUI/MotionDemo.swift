@@ -42,6 +42,10 @@ public enum MotionDemo: String, CaseIterable, Sendable {
     /// Search: the filters changed three times, 1.2 s apart, as clicks in their menus and on a
     /// chip do: TV added, then TV changed to Movie, then the genres taken off.
     case pills
+    /// Search: Clear all, as a tap on the pinned row's first pill does.
+    case clear
+    /// Search: the iPhone's pinned row scrolled sideways to its end.
+    case rowEnd
     /// The Mac's hover card: a pointer path rests on a cover, hands the card to the next cover
     /// and leaves it (the hover card board's Motion studies).
     case hover
@@ -152,6 +156,10 @@ public enum MotionDemo: String, CaseIterable, Sendable {
                 try? await Task.sleep(for: .milliseconds(1200))
                 store.editSearch { $0.genres = []; $0.genresExcluded = [] }
             }
+        case .clear:
+            store.searchLive(store.search.query.cleared())
+        case .rowEnd:
+            navigator.searchRowToEnd += 1
         case .hover:
             #if os(macOS)
             HoverCardScript.requested = true
