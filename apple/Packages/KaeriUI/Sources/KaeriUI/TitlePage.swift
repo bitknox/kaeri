@@ -207,7 +207,7 @@ struct TitlePage: View {
                     .animation(.fadeIn, value: underFlyer)
                 let family = TitleFamily(kin, this: id)
                 if !family.seasons.isEmpty || !family.related.isEmpty {
-                    TitleFamilyRow(entry: kin, family: family)
+                    TitleFamilyRow(entry: kin, family: family, faded: between)
                         .padding(.top, 20)
                 }
                 HStack(alignment: .top, spacing: 32) {
@@ -626,6 +626,10 @@ struct TitleFamilyRow: View {
     @Environment(Navigator.self) private var navigator
     let entry: Entry
     let family: TitleFamily
+    /// Whether Related is faded out, as the page changes title. It is the last title's until
+    /// then, so it fades through the ground with the words and episodes rather than going at
+    /// once; the seasons stay, their pick moving on the click.
+    var faded = false
 
     /// A related card's cover: 36 by 54 on the Mac, 40 by 60 on iPad.
     static var cover: CGSize {
@@ -659,14 +663,14 @@ struct TitleFamilyRow: View {
                     }
                 }
                 if hasRelated {
-                    related.frame(minWidth: Self.relatedRoom, idealWidth: Self.relatedRoom, maxWidth: .infinity, alignment: .leading)
+                    fadingRelated.frame(minWidth: Self.relatedRoom, idealWidth: Self.relatedRoom, maxWidth: .infinity, alignment: .leading)
                 }
             }
             VStack(alignment: .leading, spacing: 20) {
                 if !family.seasons.isEmpty {
                     seasonsGroup { SeasonScroller(family: family) { index, season in seasonCell(index, season) } }
                 }
-                related
+                fadingRelated
             }
         }
     }
@@ -693,6 +697,10 @@ struct TitleFamilyRow: View {
             fraction: season.id == entry.id ? entry.watchedFraction : nil,
             selected: season.isThis
         )
+    }
+
+    private var fadingRelated: some View {
+        related.opacity(faded ? 0 : 1)
     }
 
     @ViewBuilder private var related: some View {
