@@ -94,7 +94,7 @@ const BOUNDS: &[(&str, usize)] = &[
     ("Library", 0),
     ("Calendar", 6),
     ("Search start", 1),
-    ("hover 10 covers", 10),
+    ("hover 10 covers", 1),
     ("sync tick", 0),
     ("warm launch: airing digest", 2),
     ("warm launch: launch pull", 1),
@@ -263,7 +263,8 @@ async fn anilist_budget_per_journey() {
     run(&mut h, vec![Command::LoadBrowse, Command::LoadSearchFacets]).await;
     tally.take(&h, "Search start (rails + facets)");
 
-    // Hover ten covers: the hover card asks for the page and the episodes.
+    // Hover ten covers: the hover card's data comes from what the lists brought, in one command
+    // for the covers on screen. The page's Detail waits for the page to open.
     let hovered: Vec<AnilistId> = world
         .titles
         .iter()
@@ -271,11 +272,12 @@ async fn anilist_budget_per_journey() {
         .filter(|id| *id != third && *id != fourth)
         .take(10)
         .collect();
-    let hover: Vec<Command> = hovered
+    let updates = run(&mut h, vec![Command::LoadCards { ids: hovered.clone() }]).await;
+    let carded: usize = updates
         .iter()
-        .flat_map(|id| [Command::LoadDetail(*id), Command::LoadEpisodes(*id)])
-        .collect();
-    run(&mut h, hover).await;
+        .map(|u| if let Event::Cards(entries) = u { entries.len() } else { 0 })
+        .sum();
+    assert!(carded >= 1, "the cards of the covers on screen are answered");
     tally.take(&h, "hover 10 covers");
 
     // A sync tick as the 15-minute loop and Sync now run it, and the widgets' record a sync
@@ -334,4 +336,37 @@ async fn anilist_budget_per_journey() {
     tally.print();
     tally.check();
     let _ = h.quit().await;
+}
+
+#[tokio::test]
+async fn hover_cards_for_unlisted_covers_cost_one_batched_lookup() {
+    let now = kaeri_store::now();
+    let world = HomeWorld::at(HomeClock::in_zone(now, &jiff::tz::TimeZone::UTC));
+    let mut h = launch(now, None, &world, false, 0).await;
+    let ids: Vec<AnilistId> = world
+        .titles
+        .iter()
+        .filter_map(|t| t["id"].as_u64().map(|n| AnilistId::new(n as u32)))
+        .take(6)
+        .collect();
+    let mut tally = Tally::default();
+    tally.take(&h, "before");
+    let updates = run(&mut h, vec![Command::LoadCards { ids: ids.clone() }]).await;
+    tally.take(&h, "cards for six covers no list brought");
+    let carded: usize = updates
+        .iter()
+        .map(|u| if let Event::Cards(entries) = u { entries.len() } else { 0 })
+        .sum();
+    assert_eq!(carded, ids.len(), "every card is answered");
+    assert_eq!(
+        tally.rows[1].2.get("Many"),
+        Some(&1),
+        "by one batched lookup: {:?}",
+        tally.rows[1].2
+    );
+    assert_eq!(tally.rows[1].2.get("Detail"), None, "and no page for any of them");
+    let again = run(&mut h, vec![Command::LoadCards { ids }]).await;
+    tally.take(&h, "the same again");
+    assert!(again.iter().any(|u| matches!(u, Event::Cards(_))));
+    assert_eq!(tally.rows[2].1, 0, "and the second time none");
 }

@@ -249,6 +249,8 @@ mod tests {
             Command::RestoreUpNext { id: AnilistId::new(900_004) },
             Command::LoadSearchFacets,
             Command::LoadHome { refresh: true },
+            Command::LoadCards { ids: vec![AnilistId::new(900_004)] },
+            Command::SyncVisible { visible: false },
             Command::ProbeTitle { id: AnilistId::new(900_004) },
             Command::LoadHiddenTitles,
         ];

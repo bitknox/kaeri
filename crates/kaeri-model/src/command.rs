@@ -48,6 +48,7 @@ impl Command {
             Self::LoadUpNext => "finding what is up next".into(),
             Self::LoadHome { .. } => "loading home".into(),
             Self::LoadDetail(_) => "loading the title".into(),
+            Self::LoadCards { .. } => "loading hover cards".into(),
             Self::LoadEpisodes(_) => "loading episodes".into(),
             Self::ClearMatch { .. } | Self::FixMatch { .. } => "rematching sources".into(),
             Self::CheckProviders => "checking providers".into(),
@@ -220,6 +221,17 @@ pub enum Command {
     ForgetRecentSearch(SearchQuery),
     ClearRecentSearches,
     LoadDetail(AnilistId),
+    /// What a hover card or preview shows for these covers (at most fifty): the synopsis, the
+    /// trailer and the airing and episode facts. Answered with one [`Event::Cards`], at once from
+    /// what lists already brought and the metadata cache kept, and for the titles that
+    /// leaves out by one batched lookup at low priority. Costs no request on a hover when the
+    /// list that showed the cover carried them. The page still asks [`Command::LoadDetail`] on
+    /// opening.
+    ///
+    /// [`Event::Cards`]: crate::event::Event::Cards
+    LoadCards {
+        ids: Vec<AnilistId>,
+    },
     /// Ask the signed-in AniList viewer's title language, answered by
     /// [`Event::ViewerTitleLanguage`](crate::event::Event::ViewerTitleLanguage). Costs no request
     /// when the viewer was already looked up for their library.
@@ -248,6 +260,13 @@ pub enum Command {
     LoadLibrary(LibrarySegment),
     /// Drain the outbox and pull the library now, rather than waiting for the interval.
     SyncNow,
+    /// The window is on screen (`true`) or hidden or minimised (`false`): for a desktop app,
+    /// which has no [`Command::AppPhase`] to send because downloads and torrents go on while
+    /// the window is away. Only the tracker pull loop rests while hidden, and one pull runs on
+    /// return. Nothing else is held.
+    SyncVisible {
+        visible: bool,
+    },
     /// Set a title's list status.
     SetStatus {
         id: AnilistId,

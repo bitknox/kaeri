@@ -360,6 +360,9 @@ pub(crate) fn dispatch(
             engine.names.leave_for(id);
             spawn(job, services, tx, move |lent| load_detail(lent, id))
         }
+        Command::LoadCards { ids } => {
+            spawn(job, services, tx, move |lent| crate::catalog::cards::load_cards(lent, ids))
+        }
         Command::LoadTitleLanguage => load_title_language(services, tx),
         Command::PlayTrailer { url, title } => {
             play_trailer(url, title, job, engine, services, tx)
@@ -585,6 +588,10 @@ pub(crate) fn dispatch(
 
         // The trackers.
         Command::SyncNow => sync_now(job, services, tx),
+        Command::SyncVisible { visible } => {
+            services.sync.pulls.set_away(!visible);
+            drop(job);
+        }
         Command::Connect { tracker } => connect(tracker, job, services, tx),
         Command::FinishSignIn { tracker, callback } => {
             finish_sign_in(tracker, callback, job, services, tx)
