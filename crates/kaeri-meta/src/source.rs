@@ -148,15 +148,18 @@ impl Answered {
 
     /// The answer as of `now`, its countdown run on by the time since.
     fn as_of(&self, now: Instant) -> Result<Media> {
-        let age =
-            i64::try_from(now.saturating_duration_since(self.at).as_secs()).unwrap_or(i64::MAX);
-        self.outcome.clone().map(|mut media| {
-            if let Some(next) = &mut media.next_airing_episode {
-                next.time_until_airing = next.time_until_airing.saturating_sub(age);
-            }
-            media
-        })
+        let age = now.saturating_duration_since(self.at);
+        self.outcome.clone().map(|media| as_of(media, age))
     }
+}
+
+/// `media` as of `age` after it came: its countdown run on by that much.
+fn as_of(mut media: Media, age: Duration) -> Media {
+    let age = i64::try_from(age.as_secs()).unwrap_or(i64::MAX);
+    if let Some(next) = &mut media.next_airing_episode {
+        next.time_until_airing = next.time_until_airing.saturating_sub(age);
+    }
+    media
 }
 
 /// The asks for single titles under way, and AniList's answers from the last
@@ -259,6 +262,33 @@ pub struct Meta {
     many: Arc<Mutex<Many>>,
     /// When each title last aired, kept until its next broadcast: see [`Self::last_aired_kept`].
     aired: Arc<Mutex<HashMap<AnilistId, (LastAired, i64)>>>,
+    /// What the episode tables of the covers on screen need, asked together: see
+    /// [`Self::media_tables`].
+    tables: Arc<Mutex<Tables>>,
+}
+
+/// What [`Meta::media_tables`] brought, in memory only, and what it is still asking.
+#[derive(Default)]
+struct Tables {
+    /// Each title's record and when it came, for titles whose past broadcasts came whole.
+    kept: HashMap<AnilistId, (Instant, Media)>,
+    /// The titles of a lookup under way, each with word of when it is done.
+    asking: HashMap<AnilistId, tokio::sync::watch::Receiver<bool>>,
+}
+
+/// How long a record [`Meta::media_tables`] brought builds an episode table: a screen's covers
+/// are hovered over minutes, and what the table reads of AniList changes when an episode airs,
+/// which ends it early.
+pub const TABLE_FOR: Duration = Duration::from_secs(30 * 60);
+
+/// Whether a record that came at `at` still builds a table at `now`: younger than
+/// [`TABLE_FOR`], and no episode has aired since.
+fn table_serves(at: Instant, media: &Media, now: Instant) -> bool {
+    let age = now.saturating_duration_since(at);
+    let aired = media.next_airing_episode.as_ref().is_some_and(|next| {
+        next.time_until_airing <= i64::try_from(age.as_secs()).unwrap_or(i64::MAX)
+    });
+    age < TABLE_FOR && !aired
 }
 
 /// The titles asked for in one go.
@@ -298,6 +328,7 @@ impl Meta {
             season_hold: franchise::HOLD,
             many: Arc::default(),
             aired: Arc::default(),
+            tables: Arc::default(),
         }
     }
 
@@ -606,6 +637,97 @@ impl Meta {
             })
             .await;
         answered.as_of(Instant::now()).map(|media| (media, answered.fresh))
+    }
+
+    /// The covers a screen shows, with what each one's episode table needs, at low priority and
+    /// fifty to a request: the cards to show, and the records [`Self::table_media`] builds the
+    /// tables from later, so a hover card's Play line and stills ask nothing of their own.
+    /// Titles kept or asked already are not asked again. AniList only: the cache and Tenrai have
+    /// none of the listings, and a failure leaves each table to be asked when it is wanted.
+    pub async fn media_tables(&self, ids: &[AnilistId]) -> Vec<Media> {
+        let now = Instant::now();
+        let (done, word) = tokio::sync::watch::channel(false);
+        let (wanted, mut found) = {
+            let Ok(mut tables) = self.tables.lock() else { return Vec::new() };
+            tables.kept.retain(|_, (at, media)| table_serves(*at, media, now));
+            let mut wanted: Vec<AnilistId> = Vec::new();
+            let mut kept = Vec::new();
+            for id in ids {
+                if let Some((at, media)) = tables.kept.get(id) {
+                    kept.push(as_of(media.clone(), now.saturating_duration_since(*at)));
+                } else if !tables.asking.contains_key(id)
+                    && !wanted.contains(id)
+                    && !crate::demo::is_demo(*id)
+                {
+                    wanted.push(*id);
+                }
+            }
+            for id in &wanted {
+                tables.asking.insert(*id, word.clone());
+            }
+            (wanted, kept)
+        };
+        for chunk in wanted.chunks(50) {
+            let asked = crate::anilist::in_background(self.anilist.media_tables(chunk));
+            match self.ask_anilist(asked).await {
+                Ok(list) => {
+                    self.went(FRESH);
+                    let at = Instant::now();
+                    for (media, whole) in list {
+                        self.remember(&media);
+                        if whole && let Ok(mut tables) = self.tables.lock() {
+                            tables.kept.insert(media.id, (at, media.clone()));
+                        }
+                        found.push(media);
+                    }
+                }
+                Err(e) => {
+                    tracing::debug!(error = %e, "the screen's episode tables were not asked")
+                }
+            }
+        }
+        if let Ok(mut tables) = self.tables.lock() {
+            for id in &wanted {
+                tables.asking.remove(id);
+            }
+        }
+        let _ = done.send(true);
+        found
+    }
+
+    /// Title `id` for its episode table: AniList's answer for its page when one is in or under
+    /// way, else what [`Self::media_tables`] brought for the screen (waited for while it is
+    /// coming), else [`Self::media`].
+    pub async fn table_media(&self, id: AnilistId) -> Result<Media> {
+        if !self.detail_under_way(id) {
+            let word = self.tables.lock().ok().and_then(|t| t.asking.get(&id).cloned());
+            if let Some(mut word) = word {
+                let _ = word.wait_for(|done| *done).await;
+            }
+            let now = Instant::now();
+            let kept = self.tables.lock().ok().and_then(|tables| {
+                let (at, media) = tables.kept.get(&id)?;
+                table_serves(*at, media, now)
+                    .then(|| as_of(media.clone(), now.saturating_duration_since(*at)))
+            });
+            if let Some(media) = kept {
+                return Ok(media);
+            }
+        }
+        self.media(id).await
+    }
+
+    /// Whether an ask for title `id`'s page is under way, or its answer still serves.
+    fn detail_under_way(&self, id: AnilistId) -> bool {
+        let now = Instant::now();
+        let signed_in = self.anilist.is_authenticated();
+        self.recent.lock().is_ok_and(|recent| {
+            recent.titles.get(&id).is_some_and(|flight| {
+                flight
+                    .get()
+                    .is_none_or(|answered| answered.serves(now, self.reuse_for, signed_in))
+            })
+        })
     }
 
     /// The cards of these titles, at most fifty, each with its relations two levels deep: one

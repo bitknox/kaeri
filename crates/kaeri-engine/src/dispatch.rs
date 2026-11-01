@@ -389,6 +389,9 @@ pub(crate) fn dispatch(
         Command::LoadCards { ids } => {
             spawn(job, services, tx, move |lent| crate::catalog::cards::load_cards(lent, ids))
         }
+        Command::PrepareCards { ids } => spawn(job, services, tx, move |lent| {
+            crate::catalog::cards::prepare_cards(lent, ids)
+        }),
         Command::LoadTitleLanguage => load_title_language(services, tx),
         Command::PlayTrailer { url, title } => {
             play_trailer(url, title, job, engine, services, tx)

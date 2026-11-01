@@ -13,12 +13,7 @@ const AT_MOST: usize = 50;
 /// is left out, and the card keeps what the list row had.
 pub async fn load_cards(lent: Lent, ids: Vec<AnilistId>) {
     let Lent { meta, store, tx, .. } = lent;
-    let mut wanted: Vec<AnilistId> = Vec::new();
-    for id in ids {
-        if !wanted.contains(&id) && wanted.len() < AT_MOST {
-            wanted.push(id);
-        }
-    }
+    let wanted = at_most(ids);
     if wanted.is_empty() {
         return;
     }
@@ -47,4 +42,32 @@ pub async fn load_cards(lent: Lent, ids: Vec<AnilistId>) {
         Ok(_) => {}
         Err(e) => tracing::debug!(error = %e, "the hover cards could not be filled"),
     }
+}
+
+/// Say the cards of the covers a screen shows, with what each one's episode table needs, from
+/// one batched lookup at low priority: see `Meta::media_tables`. The tables are then built from
+/// it when a hover asks, with no request of their own. Titles it brought already are said
+/// again from memory.
+pub async fn prepare_cards(lent: Lent, ids: Vec<AnilistId>) {
+    let Lent { meta, store, tx, .. } = lent;
+    let wanted = at_most(ids);
+    if wanted.is_empty() {
+        return;
+    }
+    let found = kaeri_meta::in_background(meta.media_tables(&wanted)).await;
+    if !found.is_empty() {
+        let entries = found.iter().map(|media| data::entry_from(media, Some(&store))).collect();
+        let _ = tx.send(Event::Cards(entries));
+    }
+}
+
+/// `ids` once each, the first [`AT_MOST`] of them.
+fn at_most(ids: Vec<AnilistId>) -> Vec<AnilistId> {
+    let mut wanted: Vec<AnilistId> = Vec::new();
+    for id in ids {
+        if !wanted.contains(&id) && wanted.len() < AT_MOST {
+            wanted.push(id);
+        }
+    }
+    wanted
 }

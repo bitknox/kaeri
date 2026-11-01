@@ -141,6 +141,34 @@ pub fn by_ids() -> String {
     )
 }
 
+/// What a title's episode table asks of AniList beyond [`MEDIA_FIELDS`]: the listings' names
+/// and stills, and the broadcasts. [`by_ids_with_tables`] asks it of the covers a screen shows,
+/// so a hover card's Play line and stills cost no request of their own.
+///
+/// The broadcasts already out come oldest first and fifty at most, as this connection takes no
+/// sort: a title with fifty or more is left to [`by_id`], which asks for the newest.
+pub const TABLE_FIELDS: &str = r"
+    streamingEpisodes { title url site thumbnail }
+    upcoming: airingSchedule(notYetAired: true, perPage: 50) { nodes { episode airingAt } }
+    past: airingSchedule(notYetAired: false, perPage: 50) { nodes { episode airingAt } }
+";
+
+/// The most broadcasts [`TABLE_FIELDS`] brings of a title's past: one that brings this many may
+/// have more.
+pub const TABLE_PAST_AT_MOST: usize = 50;
+
+/// [`by_ids`] with [`TABLE_FIELDS`]: the cards of the covers a screen shows and what their
+/// episode tables need, fifty titles in one request.
+pub fn by_ids_with_tables() -> String {
+    format!(
+        r"query ($ids: [Int], $perPage: Int) {{
+            Page(perPage: $perPage) {{
+                media(id_in: $ids, type: ANIME) {{ {MEDIA_FIELDS} {TABLE_FIELDS} }}
+            }}
+        }}"
+    )
+}
+
 /// What people who liked each of these titles rated highest, by id alone: "Up next for you"
 /// asks it of the titles the viewer finished, then looks the answers up with [`by_ids`].
 ///

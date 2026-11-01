@@ -94,7 +94,7 @@ const BOUNDS: &[(&str, usize)] = &[
     ("Library", 0),
     ("Calendar", 6),
     ("Search start", 1),
-    ("hover 10 covers on the Mac", 10),
+    ("hover 10 covers on the Mac", 1),
     ("hover 10 covers", 1),
     ("sync tick", 0),
     ("warm launch: airing digest", 2),
@@ -280,10 +280,26 @@ async fn anilist_budget_per_journey() {
         .sum();
     assert!(carded >= 1, "the cards of the covers on screen are answered");
     tally.take(&h, "hover 10 covers");
-    // The Mac's hover card also asks for the episode table its Play line reads, which looks the
-    // title up whole: counted on its own so the card's own cost above stays honest.
-    run(&mut h, hovered.iter().map(|id| Command::LoadEpisodes(*id)).collect()).await;
-    tally.take(&h, "hover 10 covers on the Mac: the Play line's tables");
+    // The Mac's hover card also reads the episode table for its Play line and stills. The
+    // screen asks what the tables need with its covers' cards, in one request, and the hovers'
+    // tables are then built from that: counted on its own so the card's own cost above stays
+    // honest.
+    run(&mut h, vec![Command::PrepareCards { ids: hovered.clone() }]).await;
+    let updates =
+        run(&mut h, hovered.iter().map(|id| Command::LoadStills(*id)).collect()).await;
+    let tabled = hovered
+        .iter()
+        .filter(|id| {
+            updates
+                .iter()
+                .any(|u| matches!(u, Event::Episodes { id: of, failed: None, .. } if of == *id))
+        })
+        .count();
+    assert_eq!(tabled, hovered.len(), "every hovered title's table is built");
+    tally.take(
+        &h,
+        "hover 10 covers on the Mac: cards and tables for the screen, then the hovers",
+    );
 
     // A sync tick as the 15-minute loop and Sync now run it, and the widgets' record a sync
     // state sets off. Within five minutes of the last, so the schedule is still kept.

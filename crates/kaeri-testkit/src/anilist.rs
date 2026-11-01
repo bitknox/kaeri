@@ -64,6 +64,9 @@ pub enum Operation {
     Detail,
     /// `query::by_ids`: several titles at once, for the Continue rail.
     Many,
+    /// `query::by_ids_with_tables`: the covers a screen shows, with what their episode tables
+    /// need, for the Mac's hover cards.
+    Tables,
     /// `query::relations`: several titles' relations, two levels deep, for the season walk.
     Relations,
     /// `query::recommended_from`: what people who liked each title rated highest, by id.
@@ -142,6 +145,8 @@ impl Operation {
             Self::Recommended
         } else if has("media(id_in:") && has("relations {") && !has("prequels:") {
             Self::Relations
+        } else if has("media(id_in:") && has("streamingEpisodes") {
+            Self::Tables
         } else if has("media(id_in:") {
             Self::Many
         } else if has("GenreCollection") {
@@ -1109,23 +1114,35 @@ fn respond(
             }
         }
         Operation::Many => {
-            let asked = ids(&vars["ids"]);
-            // In the catalogue's order, not the order asked: the client puts them back, and
-            // answering in the asked order would let a client that forgot pass anyway. The
-            // titles a test added come after the fixtures, newest id first.
-            let mut added: Vec<AnilistId> = asked
-                .iter()
-                .copied()
-                .filter(|id| !fixtures::ALL.contains(id))
-                .filter(|id| catalogue.extra.contains_key(&u64::from(id.get())))
-                .collect();
-            added.sort_by_key(|id| std::cmp::Reverse(id.get()));
-            let media: Vec<Value> = fixtures::ALL
-                .iter()
-                .filter(|id| asked.contains(id))
-                .filter_map(|id| fixtures::listed_wire(*id))
-                .chain(added.iter().filter_map(|id| catalogue.listed(*id)))
+            let media: Vec<Value> = catalogue_order(&ids(&vars["ids"]), catalogue)
+                .into_iter()
+                .filter_map(|id| {
+                    if fixtures::ALL.contains(&id) {
+                        fixtures::listed_wire(id)
+                    } else {
+                        catalogue.listed(id)
+                    }
+                })
                 .map(|m| clock.media(m))
+                .collect();
+            Reply::ok(json!({ "Page": { "media": media } }))
+        }
+        Operation::Tables => {
+            let media: Vec<Value> = catalogue_order(&ids(&vars["ids"]), catalogue)
+                .into_iter()
+                .filter_map(|id| Some((catalogue.listed(id)?, catalogue.wire(id)?)))
+                .map(|(listed, wire)| {
+                    let whole = clock.media(wire.clone());
+                    let mut media = clock.media(listed);
+                    media["streamingEpisodes"] = whole["streamingEpisodes"].clone();
+                    media["upcoming"] = whole["upcoming"].clone();
+                    // The connection takes no sort: oldest first, fifty at most.
+                    let mut past = whole["aired"].as_array().cloned().unwrap_or_default();
+                    past.sort_by_key(|row| row["episode"].as_u64());
+                    past.truncate(50);
+                    media["past"] = json!({ "nodes": past });
+                    media
+                })
                 .collect();
             Reply::ok(json!({ "Page": { "media": media } }))
         }
@@ -1230,6 +1247,20 @@ impl Clock {
             row["airingAt"] = at.into();
         }
     }
+}
+
+/// The titles of `asked` the fake has, in the catalogue's order rather than the order asked: the
+/// client puts them back, and answering in the asked order would let a client that forgot pass
+/// anyway. The titles a test added come after the fixtures, newest id first.
+fn catalogue_order(asked: &[AnilistId], catalogue: Catalogue<'_>) -> Vec<AnilistId> {
+    let mut added: Vec<AnilistId> = asked
+        .iter()
+        .copied()
+        .filter(|id| !fixtures::ALL.contains(id))
+        .filter(|id| catalogue.extra.contains_key(&u64::from(id.get())))
+        .collect();
+    added.sort_by_key(|id| std::cmp::Reverse(id.get()));
+    fixtures::ALL.iter().copied().filter(|id| asked.contains(id)).chain(added).collect()
 }
 
 /// One entry of the people the viewer follows, as AniList answers it: for
@@ -1704,6 +1735,7 @@ mod tests {
             (query::by_id(false), Operation::Detail),
             (query::by_id(true), Operation::Detail),
             (query::by_ids(), Operation::Many),
+            (query::by_ids_with_tables(), Operation::Tables),
             (query::relations(), Operation::Relations),
             (query::recommended_from(), Operation::Recommended),
             (query::airing_schedule(), Operation::Schedule),

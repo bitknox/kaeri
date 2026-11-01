@@ -48,7 +48,7 @@ impl Command {
             Self::LoadUpNext => "finding what is up next".into(),
             Self::LoadHome { .. } => "loading home".into(),
             Self::LoadDetail(_) => "loading the title".into(),
-            Self::LoadCards { .. } => "loading hover cards".into(),
+            Self::LoadCards { .. } | Self::PrepareCards { .. } => "loading hover cards".into(),
             Self::LoadEpisodes(_) | Self::LoadStills(_) => "loading episodes".into(),
             Self::ClearMatch { .. } | Self::FixMatch { .. } => "rematching sources".into(),
             Self::CheckProviders => "checking providers".into(),
@@ -230,6 +230,16 @@ pub enum Command {
     ///
     /// [`Event::Cards`]: crate::event::Event::Cards
     LoadCards {
+        ids: Vec<AnilistId>,
+    },
+    /// The covers a screen shows (at most fifty), for their hover cards: [`Command::LoadCards`]
+    /// with what each title's episode table needs from AniList, in one batched request at low
+    /// priority. Answered with [`Event::Cards`]; a [`Command::LoadEpisodes`] or
+    /// [`Command::LoadStills`] for one of them then asks AniList nothing. Sent when the covers
+    /// on screen change, so a hover costs no request once a screen is loaded.
+    ///
+    /// [`Event::Cards`]: crate::event::Event::Cards
+    PrepareCards {
         ids: Vec<AnilistId>,
     },
     /// Ask the signed-in AniList viewer's title language, answered by

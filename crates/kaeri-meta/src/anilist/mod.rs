@@ -643,6 +643,36 @@ impl AniList {
         Ok(ordered)
     }
 
+    /// [`Self::media_many`] with what each title's episode table needs ([`query::TABLE_FIELDS`]),
+    /// in the order asked. Each title says whether it came whole: `false` when its past
+    /// broadcasts may run past the fifty this query brings, so only [`Self::media`] has the
+    /// newest of them.
+    pub async fn media_tables(&self, ids: &[AnilistId]) -> Result<Vec<(Media, bool)>> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
+        let raw: Vec<i64> = ids.iter().map(|id| i64::from(id.get())).collect();
+        let data: serde_json::Value = self
+            .execute(
+                &query::by_ids_with_tables(),
+                serde_json::json!({ "ids": raw, "perPage": ids.len().min(50) }),
+            )
+            .await?;
+        let mut found: Vec<(Media, bool)> = data["Page"]["media"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|wire| tabled(wire.clone()))
+            .collect();
+        let mut ordered = Vec::with_capacity(found.len());
+        for id in ids {
+            if let Some(index) = found.iter().position(|(m, _)| m.id == *id) {
+                ordered.push(found.remove(index));
+            }
+        }
+        Ok(ordered)
+    }
+
     /// What people who liked each of `ids` (at most [`query::RECOMMENDED_FROM`]) rated highest:
     /// each title with its name and the ids recommended off it, best rated first. Titles
     /// AniList has nothing recommended for come back with none. See [`query::recommended_from`].
@@ -1004,6 +1034,28 @@ fn decode_library_entry(entry: &serde_json::Value) -> Option<LibraryEntry> {
     })
 }
 
+/// One title of [`AniList::media_tables`]: its past broadcasts moved where [`Media`] keeps them,
+/// newest first as [`AniList::media`] gives them, and whether they are all there. `None` for an
+/// entry that does not read, which is passed over as a page's are.
+fn tabled(mut wire: serde_json::Value) -> Option<(Media, bool)> {
+    let past = wire.as_object_mut().and_then(|fields| fields.remove("past"));
+    let mut media: Media = match serde_json::from_value(wire) {
+        Ok(media) => media,
+        Err(e) => {
+            tracing::warn!(error = %e, "skipping undecodable media entry");
+            return None;
+        }
+    };
+    let mut aired: Vec<Broadcast> = past
+        .and_then(|past| serde_json::from_value::<model::BroadcastConnection>(past).ok())
+        .map(|past| past.nodes)
+        .unwrap_or_default();
+    let whole = aired.len() < query::TABLE_PAST_AT_MOST;
+    aired.sort_by_key(|b| std::cmp::Reverse(b.episode));
+    media.aired = aired;
+    Some((media, whole))
+}
+
 fn decode_media_page(page: &serde_json::Value) -> Result<Page<Media>> {
     let items = page["media"]
         .as_array()
@@ -1058,6 +1110,22 @@ fn now_epoch() -> i64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_table_whose_past_may_run_on_is_not_whole() {
+        let wire = |aired: u32| {
+            let nodes: Vec<serde_json::Value> = (1..=aired)
+                .map(|n| serde_json::json!({ "episode": n, "airingAt": 1_000 * i64::from(n) }))
+                .collect();
+            serde_json::json!({ "id": 7, "past": { "nodes": nodes } })
+        };
+        let (media, whole) = tabled(wire(12)).unwrap();
+        assert!(whole);
+        assert_eq!(media.aired.first().map(|b| b.episode), Some(12), "newest first");
+        assert_eq!(media.aired.len(), 12);
+        let (_, whole) = tabled(wire(50)).unwrap();
+        assert!(!whole, "fifty may be the first fifty of more");
+    }
 
     #[test]
     fn seasons_cycle_in_both_directions() {

@@ -291,6 +291,36 @@ async fn a_title_from_a_list_is_still_asked_for_its_page() {
 }
 
 #[tokio::test]
+async fn a_screens_covers_bring_their_tables_and_a_hover_asks_nothing_more() {
+    let kit = MetaKit::start().await;
+    let cards = kit.meta.media_tables(&[AIRING, FINISHED, MISSING]).await;
+    assert_eq!(ids(&cards), [AIRING.get(), FINISHED.get()]);
+    assert_eq!(kit.server.requests_for(Operation::Tables).len(), 1);
+
+    // Asked again, the screen costs nothing: they are kept.
+    assert_eq!(kit.meta.media_tables(&[AIRING, FINISHED]).await.len(), 2);
+    assert_eq!(kit.server.requests_for(Operation::Tables).len(), 1);
+
+    // The tables read what the page's lookup would give them, and ask nothing of their own.
+    let airing = kit.meta.table_media(AIRING).await.unwrap();
+    let finished = kit.meta.table_media(FINISHED).await.unwrap();
+    assert!(kit.server.requests_for(Operation::Detail).is_empty());
+    for (tabled, id) in [(airing, AIRING), (finished, FINISHED)] {
+        let page = kit.meta.media(id).await.unwrap();
+        assert_eq!(tabled.air_times(), page.air_times());
+        assert_eq!(tabled.aired, page.aired, "newest first, as the page has them");
+        assert_eq!(tabled.streaming_episodes, page.streaming_episodes);
+        assert_eq!(tabled.upcoming, page.upcoming);
+    }
+    // The page still asks for itself.
+    assert_eq!(kit.server.requests_for(Operation::Detail).len(), 2);
+
+    // A title the screen did not bring is looked up whole.
+    kit.meta.table_media(MOVIE).await.unwrap();
+    assert_eq!(kit.server.requests_for(Operation::Detail).len(), 3);
+}
+
+#[tokio::test]
 async fn an_unknown_title_is_refused_as_anilist_refuses_one() {
     let kit = MetaKit::start().await;
     let error = kit.meta.media(MISSING).await.unwrap_err();
