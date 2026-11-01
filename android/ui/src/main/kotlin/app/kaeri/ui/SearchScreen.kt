@@ -73,7 +73,6 @@ import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -234,6 +233,7 @@ fun SearchScreen(
     // window keeps the row it had.
     val phone = !wideWindow()
     val grid = rememberLazyGridState()
+    val startGrid = rememberLazyGridState()
     val rowScroll = rememberLazyListState()
 
     LaunchedEffect(Unit) {
@@ -298,12 +298,22 @@ fun SearchScreen(
 
     // The destination's name for TalkBack; the bar says the rest.
     val searchTitle = stringResource(R.string.nav_search)
-    // A new search starts the row at its first pill; a change of filter shows its answer from the
-    // first title, just under the row.
-    LaunchedEffect(status.query.text) { rowScroll.scrollToItem(0) }
-    LaunchedEffect(status.query) { if (phone) grid.scrollToItem(0) }
-    // The field and the row sit on the screen until results scroll under them, then on a surface.
-    val scrolledUnder by remember { derivedStateOf { phone && grid.canScrollBackward } }
+    // A new search starts the row at its first pill; a new answer shows from the first title, just
+    // under the row, as it replaces the one before (the earlier answer stays where it was until
+    // then). Only changes count: coming back from a title page keeps both where they were.
+    LaunchedEffect(rowScroll) {
+        snapshotFlow { status.query.text }.drop(1).collect { rowScroll.scrollToItem(0) }
+    }
+    LaunchedEffect(grid, phone) {
+        if (phone) snapshotFlow { status.answered }.drop(1).collect { grid.scrollToItem(0) }
+    }
+    val overdue = searchOverdue(status)
+    // The start stays while a first search is under 600 ms away, then gives way to the
+    // results or their placeholders in one crossfade.
+    val startShown = status.atStart || (status.answered == null && status.pending && !overdue)
+    // The field and the row sit on the screen until the start or the results scroll under them,
+    // then on a surface.
+    val scrolledUnder = phone && (if (startShown) startGrid else grid).canScrollBackward
     val barSurface by animateColorAsState(
         if (scrolledUnder) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.surface,
         Motion.standard(),
@@ -329,12 +339,8 @@ fun SearchScreen(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
         }
-        val overdue = searchOverdue(status)
-        // The start stays while a first search is under 600 ms away, then gives way to the
-        // results or their placeholders in one crossfade.
-        val startShown = status.atStart || (status.answered == null && status.pending && !overdue)
         Crossfade(startShown, Modifier.weight(1f), animationSpec = Motion.standard(), label = "search") { start -> // i18n-skip
-            if (start) SearchStart() else SearchResults(status.query, overdue, phone, grid)
+            if (start) SearchStart(startGrid) else SearchResults(status.query, overdue, phone, grid)
         }
     }
     ExpandedFullScreenSearchBar(state = bar, inputField = input, colors = colors) {
@@ -850,11 +856,11 @@ private fun NothingFound(query: SearchQuery) {
 /** Before anything is asked: the recent searches, the rails, and the genres. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun SearchStart() {
+private fun SearchStart(gridState: LazyGridState) {
     val store = LocalAppStore.current
     val status by store.search.status.collectAsStateWithLifecycle()
     val titles by store.titles.entries.collectAsStateWithLifecycle()
-    PosterGrid(PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp)) {
+    PosterGrid(PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp), gridState) {
         recentSearches(status.recents)
         val rails = status.rails
         if (rails == null) {
