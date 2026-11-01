@@ -1235,7 +1235,11 @@ where
 {
     let mut tries = 0;
     loop {
-        match run().await {
+        // The first go is the screen's; the goes after a wait are background work, behind
+        // whatever is on screen by then.
+        let outcome =
+            if tries == 0 { run().await } else { kaeri_meta::in_background(run()).await };
+        match outcome {
             Ok(true) => return Ok(()),
             Ok(false) if tries >= crate::catalog::RETRIES => return Ok(()),
             Ok(false) => partial(),

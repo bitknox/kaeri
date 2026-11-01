@@ -99,10 +99,14 @@ pub async fn load_up_next(lent: Lent, ask: Ask) {
     // A lookup that failed is asked for again after AniList's own wait, a few times, and the
     // shelf is sent again as each answer fills it in.
     for attempt in 0..=crate::catalog::RETRIES {
-        if attempt > 0 {
+        let done = if attempt == 0 {
+            up_next_once(&lent, &ask).await
+        } else {
+            // Asked again behind whatever is on screen by then.
             tokio::time::sleep(crate::catalog::retry_wait(&lent.meta).await).await;
-        }
-        if up_next_once(&lent, &ask).await {
+            kaeri_meta::in_background(up_next_once(&lent, &ask)).await
+        };
+        if done {
             return;
         }
     }
