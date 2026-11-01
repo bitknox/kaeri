@@ -273,14 +273,16 @@ pub fn parse_rate_headers(
     let remaining = get("x-ratelimit-remaining").and_then(|v| v.trim().parse::<u32>().ok());
 
     let reset =
-        get("x-ratelimit-reset").and_then(|v| v.trim().parse::<i64>().ok()).map(|reset| {
-            // Values far in the future are epoch timestamps; small ones are durations.
+        get("x-ratelimit-reset").and_then(|v| v.trim().parse::<i64>().ok()).and_then(|reset| {
+            // Values far in the future are epoch timestamps; small ones are durations. An epoch
+            // reset already past says nothing about the wait, only that the clocks disagree, so
+            // it is not read as one: a refusal then waits as `Retry-After` or the minute says.
             let secs = if reset > now_epoch.saturating_sub(86_400) && reset > 100_000 {
-                (reset - now_epoch).max(0)
+                (reset > now_epoch).then(|| reset - now_epoch)?
             } else {
                 reset.max(0)
             };
-            Duration::from_secs(secs as u64)
+            Some(Duration::from_secs(secs as u64))
         });
     let retry_after =
         get("retry-after").and_then(|v| v.trim().parse::<u64>().ok()).map(Duration::from_secs);
@@ -493,12 +495,19 @@ mod tests {
 
     #[test]
     fn a_reset_never_reads_as_zero_seconds() {
-        // An epoch reset against a clock that runs ahead, and a literal zero.
-        for reset in ["1784999990", "0"] {
-            let (_, wait) =
-                parse_rate_headers(headers(&[("x-ratelimit-reset", reset)]), 1_785_000_000);
-            assert_eq!(wait, Some(MIN_HOLD), "reset {reset}");
-        }
+        let now = 1_785_000_000;
+        let (_, wait) = parse_rate_headers(headers(&[("x-ratelimit-reset", "0")]), now);
+        assert_eq!(wait, Some(MIN_HOLD), "a literal zero waits a second");
+        // An epoch reset against a clock that runs ahead is no wait at all: the caller's own
+        // default (a minute, for a refusal) stands, not a retry at once.
+        let (_, wait) =
+            parse_rate_headers(headers(&[("x-ratelimit-reset", "1784999990")]), now);
+        assert_eq!(wait, None);
+        let (_, wait) = parse_rate_headers(
+            headers(&[("x-ratelimit-reset", "1784999990"), ("retry-after", "60")]),
+            now,
+        );
+        assert_eq!(wait, Some(Duration::from_secs(60)));
     }
 
     #[test]
