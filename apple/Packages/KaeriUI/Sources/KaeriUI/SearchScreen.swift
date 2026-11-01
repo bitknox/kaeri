@@ -223,6 +223,13 @@ struct SearchScreen: View {
         #endif
     }
 
+    /// The filters and the sort as set, without the words typed.
+    private var filterLook: SearchQuery {
+        var look = store.search.query
+        look.text = ""
+        return look
+    }
+
     var body: some View {
         @Bindable var navigator = navigator
         let startShown = store.search.startShown
@@ -245,6 +252,11 @@ struct SearchScreen: View {
                 }
                 .animation(.standard, value: startShown)
             }
+            // A filter added, changed or taken off moves the row on standard: each capsule takes
+            // its new width and words, the chips flow to their places, a new one fading in and a
+            // gone one out, and what is under them glides with them. Typing moves none of it.
+            // With Reduce Motion it changes at once.
+            .animation(reduceMotion || navigator.motionReduced ? nil : .standard, value: filterLook)
             .frame(width: settledWidth, alignment: .leading)
             .environment(\.searchSettledWidth, settledWidth)
             // With Reduce Motion the results take their new width at once while the panel fades.
@@ -681,6 +693,8 @@ extension View {
 /// What is set, each as the engine words it, each taken off with a tap.
 struct ActiveFilters: View {
     @Environment(AppStore.self) private var store
+    @Environment(Navigator.self) private var navigator
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var compact = false
 
     var body: some View {
@@ -710,6 +724,7 @@ struct ActiveFilters: View {
                     .buttonStyle(.plain)
                     .pointerHover()
                     .accessibilityLabel(L.filterRemove(filter: filter.label))
+                    .transition(chip)
                 }
                 if active.count > 1 {
                     Button {
@@ -722,9 +737,17 @@ struct ActiveFilters: View {
                     .buttonStyle(.plain)
                     .font(compact ? .ui(15, weight: .semibold) : .mac(12, weight: .semibold))
                     .foregroundStyle(.silk)
+                    .transition(chip)
                 }
             }
         }
+    }
+
+    /// A chip fades in as the row makes room, and out on quick: gone before the chips after it
+    /// have slid over its place. With Reduce Motion it goes at once, as the row changes.
+    private var chip: AnyTransition {
+        let reduced = reduceMotion || navigator.motionReduced
+        return .asymmetric(insertion: .opacity, removal: .opacity.animation(reduced ? nil : .quick))
     }
 }
 
