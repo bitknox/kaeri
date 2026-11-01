@@ -318,6 +318,12 @@ extension AppDelegate: NSApplicationDelegate {
         MainWindow.open?()
     }
 
+    /// Hidden, minimised or covered, the tracker pull rests, and it pulls once when a window is
+    /// on screen again. Nothing else waits.
+    func applicationDidChangeOcclusionState(_ notification: Notification) {
+        phases.windowsVisible(NSApp.occlusionState.contains(.visible))
+    }
+
     /// Quitting in a watch party leaves it: asked first, with Stay the default.
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         if store.party.asksBeforeQuitting() { return .terminateCancel }

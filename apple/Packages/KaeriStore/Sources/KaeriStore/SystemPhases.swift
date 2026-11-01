@@ -15,6 +15,7 @@ import Network
 ///   It alone tells the engine where the app is, so the two never say different things.
 /// - The Mac: always in the foreground. A Mac app keeps running behind other windows, minimised
 ///   or hidden, and its downloads and seeding with it; nothing takes its loopback servers away.
+///   Only the tracker pull follows whether its windows are on screen (`windowsVisible`).
 /// - Both: the network from `NWPathMonitor`, an expensive path as cellular (a phone's own, or
 ///   the Mac on a phone's hotspot), a constrained one as Low Data Mode, and no usable path as
 ///   offline, which the engine says back to every screen (`Event::Connectivity`).
@@ -31,6 +32,8 @@ public final class SystemPhases {
     private let backgrounds: Bool
     private var away = false
     private var said: AppState?
+    /// Whether the Mac's windows were last said to be on screen; they are at launch.
+    private var shown = true
     private var path: (cellular: Bool, constrained: Bool, offline: Bool)?
     private var monitor: NWPathMonitor?
 
@@ -100,6 +103,16 @@ public final class SystemPhases {
         let how = offline ? "offline" : "\(expensive ? "cellular" : "not cellular")\(constrained ? ", low data mode" : "")"
         AppLog.info("phases", "network: \(how)")
         send(.networkPath(cellular: expensive, constrained: constrained, offline: offline))
+    }
+
+    /// The Mac's windows came on screen, or all went off it (hidden, minimised or covered): the
+    /// tracker pull rests while they are away and pulls once on return (`Command::SyncVisible`).
+    /// Downloads, seeding and playback go on; the phase stays the foreground.
+    public func windowsVisible(_ visible: Bool) {
+        guard visible != shown else { return }
+        shown = visible
+        AppLog.info("phases", visible ? "windows on screen" : "windows off screen")
+        send(.syncVisible(visible: visible))
     }
 
     /// Follow the system's network path from now on, said once as it first stands.
