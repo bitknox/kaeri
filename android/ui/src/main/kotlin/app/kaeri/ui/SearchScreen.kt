@@ -1146,13 +1146,16 @@ private fun TagsSection(query: SearchQuery) {
 }
 
 /**
- * A genre or tag with three states: outlined when off, on primaryContainer with a check when
- * included, and struck through on the raised fill when left out.
+ * A genre or tag with three states: outlined when off, filled with a check when included, and
+ * struck through on the raised fill when left out. On a phone the included fill is the neutral
+ * secondaryContainer of the pinned row's set pills, leaving amber to the sheet's switches and
+ * its action; a wide window keeps primaryContainer for now.
  */
 @Composable
 private fun PickChip(name: String, pick: Pick, onClick: () -> Unit) {
     val words = pick.words(LocalContext.current)
     val colors = MaterialTheme.colorScheme
+    val phone = !wideWindow()
     val shape = MaterialTheme.shapes.small
     Box(
         Modifier
@@ -1166,12 +1169,12 @@ private fun PickChip(name: String, pick: Pick, onClick: () -> Unit) {
     ) {
         val background = when (pick) {
             Pick.OFF -> Modifier.border(1.dp, colors.outline, shape)
-            Pick.INCLUDE -> Modifier.background(colors.primaryContainer)
+            Pick.INCLUDE -> Modifier.background(if (phone) colors.secondaryContainer else colors.primaryContainer)
             Pick.EXCLUDE -> Modifier.background(colors.surfaceContainerHighest)
         }
         val content = when (pick) {
             Pick.OFF -> colors.onSurfaceVariant
-            Pick.INCLUDE -> colors.onPrimaryContainer
+            Pick.INCLUDE -> if (phone) colors.onSecondaryContainer else colors.onPrimaryContainer
             Pick.EXCLUDE -> colors.onSurface
         }
         Row(
