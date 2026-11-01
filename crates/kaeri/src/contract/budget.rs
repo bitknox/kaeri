@@ -1,5 +1,6 @@
-//! Measurement only, not a contract: how many AniList requests each journey costs, against the
-//! fake, in the world the Fixtures apps show. Run with `--nocapture` and read the table.
+//! How many AniList requests each journey costs, against the fake, in the world the Fixtures
+//! apps show. Each journey has an upper bound ([`BOUNDS`]): a change that costs more fails here,
+//! and one that costs less lowers the bound. Run with `--nocapture` to read the table.
 
 use std::collections::BTreeMap;
 
@@ -78,6 +79,35 @@ async fn launch(
     h
 }
 
+/// The most requests a journey may cost, by the start of its label.
+const BOUNDS: &[(&str, usize)] = &[
+    ("cold launch: launch pull", 2),
+    ("cold launch: LoadHome", 9),
+    ("cold launch: WidgetSnapshot", 4),
+    ("cold launch: Continue stills", 0),
+    ("Home again within 30 min", 0),
+    ("Home after the player closes", 5),
+    ("Home again after 31 min", 8),
+    ("open a title (5-season", 2),
+    ("switch season", 1),
+    ("open a title (12-season", 4),
+    ("Library", 0),
+    ("Calendar", 6),
+    ("Search start", 1),
+    ("hover 10 covers", 10),
+    ("sync tick", 0),
+    ("warm launch: airing digest", 2),
+    ("warm launch: launch pull", 1),
+    ("warm launch: LoadHome", 1),
+    ("warm launch: WidgetSnapshot", 3),
+    ("warm launch: Continue stills", 0),
+    ("warm launch: Calendar", 2),
+    ("warm launch: Search start", 0),
+    ("warm launch: open the same title", 2),
+    ("new-episode check", 0),
+    ("warm: Home after its half hour", 8),
+];
+
 #[derive(Default)]
 struct Tally {
     rows: Vec<(String, usize, BTreeMap<String, usize>)>,
@@ -99,6 +129,15 @@ impl Tally {
 
     fn reset(&mut self) {
         self.seen = 0;
+    }
+
+    /// Every journey stays within its bound.
+    fn check(&self) {
+        for (label, n, _) in &self.rows {
+            let bound = BOUNDS.iter().find(|(prefix, _)| label.starts_with(prefix));
+            let Some((_, max)) = bound else { panic!("no bound for the journey {label:?}") };
+            assert!(n <= max, "{label} took {n} AniList requests, the bound is {max}");
+        }
     }
 
     fn print(&self) {
@@ -293,5 +332,6 @@ async fn anilist_budget_per_journey() {
     println!("continue rows: {}", store.continue_list(15).unwrap_or_default().len());
 
     tally.print();
+    tally.check();
     let _ = h.quit().await;
 }
