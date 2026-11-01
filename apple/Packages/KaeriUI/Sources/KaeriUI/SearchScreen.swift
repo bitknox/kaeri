@@ -829,7 +829,7 @@ struct SearchFilterRow: View {
         } label: {
             FilterCapsule(
                 title: searchSortLabel(sort: current), active: query.sort != nil, compact: compact,
-                symbol: "arrow.up.arrow.down"
+                symbol: "arrow.up.arrow.down", pinned: pinned
             )
         }
         .filterMenu()
