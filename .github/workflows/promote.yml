@@ -48,8 +48,8 @@ permissions:
   contents: read
 
 env:
-  # The files a release carries (packaging/publish.sh).
-  RELEASE_FILES: 31
+  # The files a release carries: every name in packaging/publish.sh's expect lists.
+  RELEASE_FILES: 47
   # How long a beta waits before the schedule promotes it.
   SOAK_HOURS: 24
   IMAGE: ghcr.io/bitknox/kaeri-store
