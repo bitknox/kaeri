@@ -75,6 +75,9 @@ pub struct Sync {
     /// the previous one whole: the next drain tick would otherwise wipe the error off the
     /// Accounts screen a minute after it appeared.
     pub pull_errors: Arc<std::sync::Mutex<std::collections::HashMap<String, PullError>>>,
+    /// When the library was last pulled and whether the app is away: the 15-minute loop rests
+    /// while it is, and Sync now does not pull again within [`PULL_COALESCE`] of a pull.
+    pub pulls: Arc<PullGate>,
     /// The sign-ins a native app's sheet is showing, each waiting for its redirect.
     pub pending: native::PendingSignIns,
     /// The device-code sign-ins running, one per tracker: see [`device`].
@@ -218,6 +221,7 @@ impl Sync {
             config: config.clone(),
             http: http.clone(),
             pull_errors: Arc::default(),
+            pulls: Arc::default(),
             pending: native::PendingSignIns::default(),
             device: device::DeviceFlows::default(),
         }
@@ -547,6 +551,47 @@ fn keep_statuses(
     }
 }
 
+/// A pull this recent answers Sync now without another.
+pub const PULL_COALESCE: std::time::Duration = std::time::Duration::from_secs(30);
+
+/// Whether the app is on screen, when the library was last pulled, and the wake-up for a return.
+#[derive(Debug, Default)]
+pub struct PullGate {
+    away: std::sync::atomic::AtomicBool,
+    last: std::sync::Mutex<Option<std::time::Instant>>,
+    back: tokio::sync::Notify,
+}
+
+impl PullGate {
+    /// The app went off screen or came back; a return wakes the loop for one pull.
+    pub fn set_away(&self, away: bool) {
+        use std::sync::atomic::Ordering;
+        let was = self.away.swap(away, Ordering::SeqCst);
+        if was && !away {
+            self.back.notify_one();
+        }
+    }
+
+    fn is_away(&self) -> bool {
+        self.away.load(std::sync::atomic::Ordering::SeqCst)
+    }
+
+    fn mark(&self) {
+        if let Ok(mut last) = self.last.lock() {
+            *last = Some(std::time::Instant::now());
+        }
+    }
+
+    /// Whether a pull ran within [`PULL_COALESCE`].
+    pub fn recent(&self) -> bool {
+        self.last
+            .lock()
+            .ok()
+            .and_then(|last| *last)
+            .is_some_and(|at| at.elapsed() < PULL_COALESCE)
+    }
+}
+
 pub fn spawn_loops(sync: Sync, tx: Outbox) {
     if sync.trackers.is_empty() {
         return;
@@ -571,11 +616,19 @@ pub fn spawn_loops(sync: Sync, tx: Outbox) {
     }
 
     tokio::spawn(async move {
-        let mut ticker = tokio::time::interval(pull_every);
-        // The first tick is immediate: a pull at startup is what makes "watched two on my
-        // phone" show up when you open the app.
+        // A pull at startup is what makes "watched two on my phone" show up when you open the
+        // app, so launch always pulls.
+        kaeri_meta::in_background(pull_once(&sync, &tx)).await;
         loop {
-            ticker.tick().await;
+            let gate = sync.pulls.clone();
+            let returned = tokio::select! {
+                () = tokio::time::sleep(pull_every) => false,
+                () = gate.back.notified() => true,
+            };
+            // Hidden or in the background the loop rests: the return pulls once instead.
+            if gate.is_away() || (returned && gate.recent()) {
+                continue;
+            }
             kaeri_meta::in_background(pull_once(&sync, &tx)).await;
         }
     });
@@ -720,6 +773,7 @@ pub async fn drain_once(sync: &Sync, tx: &Outbox) {
 /// One library pull across every tracker.
 pub async fn pull_once(sync: &Sync, tx: &Outbox) {
     let now = kaeri_store::now();
+    sync.pulls.mark();
     // The libraries are fetched at once — separate hosts, and a pull can be several pages —
     // but merged one at a time in tracker order. Every merge reads and writes the same local
     // history, so merging in arrival order would let network timing decide which tracker's
@@ -753,16 +807,21 @@ pub async fn pull_once(sync: &Sync, tx: &Outbox) {
         match reconciled {
             Ok(report) => {
                 adopted += report.adopted;
+                let had_error = sync.pull_error(tracker.id()).is_some();
                 sync.note_pull(tracker.id(), None);
                 let _ = sync.store.set_meta_i64(&pull_key(tracker.id()), now);
-                let _ = tx.send(Event::Sync(Box::new(sync.state_for(
-                    tracker.as_ref(),
-                    false,
-                    Some(format!(
-                        "pulled {}",
-                        kaeri_model::wording::plural(report.seen as usize, "title")
-                    )),
-                ))));
+                // One state per pull, and only when the pull changed something: titles
+                // adopted, conflicts found, or a failure cleared.
+                if report.adopted > 0 || !report.conflicts.is_empty() || had_error {
+                    let _ = tx.send(Event::Sync(Box::new(sync.state_for(
+                        tracker.as_ref(),
+                        false,
+                        Some(format!(
+                            "pulled {}",
+                            kaeri_model::wording::plural(report.seen as usize, "title")
+                        )),
+                    ))));
+                }
 
                 // Conflicts are titles, so they need names — which means resolving each id
                 // against what we already have locally rather than making more requests.
@@ -1370,6 +1429,34 @@ pub fn token_store(config: &Config, paths: &Paths) -> TokenStore {
 /// directory of its own, and a test with a temporary one, keep their tokens there.
 pub fn token_dir(paths: &Paths) -> std::path::PathBuf {
     paths.data_dir.join("tokens")
+}
+
+#[cfg(test)]
+mod pull_gate_tests {
+    use super::PullGate;
+
+    #[test]
+    fn a_pull_just_made_answers_sync_now() {
+        let gate = PullGate::default();
+        assert!(!gate.recent(), "nothing pulled yet");
+        gate.mark();
+        assert!(gate.recent());
+    }
+
+    #[tokio::test]
+    async fn only_a_return_wakes_the_loop() {
+        let gate = PullGate::default();
+        gate.set_away(false);
+        let quiet =
+            tokio::time::timeout(std::time::Duration::from_millis(50), gate.back.notified());
+        assert!(quiet.await.is_err(), "staying on screen wakes nothing");
+        gate.set_away(true);
+        assert!(gate.is_away());
+        gate.set_away(false);
+        let woken =
+            tokio::time::timeout(std::time::Duration::from_millis(500), gate.back.notified());
+        assert!(woken.await.is_ok(), "coming back wakes the loop once");
+    }
 }
 
 #[cfg(test)]

@@ -538,6 +538,7 @@ pub(crate) fn dispatch(
         Command::Control { playback, command } => control_playback(playback, command, engine),
         // Where the app is and its network: which torrents wait, and whether keep next runs.
         Command::AppPhase { phase } => {
+            services.sync.pulls.set_away(phase != kaeri_model::command::AppState::Foreground);
             crate::phases::app_phase(phase, engine, tx);
             ahead::top_up(engine, services, tx);
         }
