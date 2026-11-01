@@ -1307,8 +1307,22 @@ struct SearchFiltersPanel: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
     var compact = false
+    #if os(iOS)
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    #endif
     @State private var find = ""
     @State private var spoilers = false
+
+    /// The iPhone's sheet, under the pinned row: an included genre takes the neutral fill like
+    /// the row's set pills, leaving amber to the switches and the action. The iPad and the Mac
+    /// keep amber for now.
+    private var neutralPicks: Bool {
+        #if os(iOS)
+        compact && sizeClass == .compact
+        #else
+        false
+        #endif
+    }
 
     var body: some View {
         form
@@ -1331,7 +1345,7 @@ struct SearchFiltersPanel: View {
                 PanelSection(compact: compact, L.filterGenres) {
                     FlowLayout(spacing: 6, lineSpacing: 6) {
                         ForEach(facets?.genres ?? [], id: \.self) { name in
-                            PickChip(name: name, pick: query.genrePick(name: name), compact: compact) { pick in
+                            PickChip(name: name, pick: query.genrePick(name: name), compact: compact, neutral: neutralPicks) { pick in
                                 store.searchLive(store.search.query.pickingGenre(name: name, pick: pick))
                             }
                         }
@@ -1730,11 +1744,13 @@ private struct TagRow: View {
     }
 }
 
-/// A genre as a chip: off, in or out, a tap moving it on.
+/// A genre as a chip: off, in or out, a tap moving it on. `neutral` draws an included genre in
+/// the raised fill with silk words rather than amber.
 private struct PickChip: View {
     let name: String
     let pick: Pick
     var compact = false
+    var neutral = false
     let set: (Pick) -> Void
 
     var body: some View {
@@ -1750,7 +1766,7 @@ private struct PickChip: View {
                 Text(name)
             }
             .font(compact ? .ui(15) : .mac(12))
-            .foregroundStyle(pick == .off ? .silk : pick == .include ? .amber : .vermilion)
+            .foregroundStyle(pick == .off || (pick == .include && neutral) ? .silk : pick == .include ? .amber : .vermilion)
             .padding(.horizontal, 10)
             .frame(height: compact ? 32 : 24)
             .background(background, in: .capsule)
@@ -1769,7 +1785,7 @@ private struct PickChip: View {
     private var background: Color {
         switch pick {
         case .off: .clear
-        case .include: Palette.selection
+        case .include: neutral ? Palette.raisedSelected : Palette.selection
         case .exclude: Palette.vermilion.opacity(0.14)
         }
     }
