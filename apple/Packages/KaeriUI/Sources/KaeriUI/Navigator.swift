@@ -56,6 +56,8 @@ public final class Navigator {
     public var launchSearch: SearchQuery?
     /// Points to scroll Search's results at launch, for shots.
     public var launchScroll: Int?
+    /// Counts the asks to scroll the iPhone's pinned filter row to its end, for the motion audit.
+    public var searchRowToEnd = 0
     /// Whether Downloads is pushed over the Library, as its first row does on iPhone.
     public var downloadsPushed = false
     /// Counts the viewer's own marks of an episode as watched, for the light impact on iPhone:
@@ -131,9 +133,11 @@ public final class Navigator {
                 text: route.query ?? "", available: available == "services" ? .onYourServices : .playsHere)
         }
         if route.filters == "set" {
+            // Every row filter set, and two of the sheet's, which the fixtures' catalogue answers
+            // with two titles (the shot route adds -KaeriCatalogue).
             launchSearch = SearchQuery(
-                text: route.query ?? "", genres: ["Fantasy"], formats: [.tv], season: .fall, years: Bounds(min: 2026, max: 2026),
-                minScore: 70, minPopularity: obscureBelow)
+                text: route.query ?? "", genres: ["Fantasy"], formats: [.tv], season: .spring, years: Bounds(min: 2024, max: 2024),
+                minScore: 70, licensedOnly: true)
         }
         launchScroll = route.scroll
         if let genre = route.genre { launchSearch = SearchQuery(text: route.query ?? "", genres: [genre]) }

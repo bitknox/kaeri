@@ -618,6 +618,9 @@ struct SearchFilterRow: View {
         .onChange(of: query.text) {
             withAnimation(reduceMotion ? nil : .standard) { position.scrollTo(edge: .leading) }
         }
+        .onChange(of: navigator.searchRowToEnd) {
+            withAnimation(reduceMotion ? nil : .standard) { position.scrollTo(edge: .trailing) }
+        }
     }
 
     private func capsules(_ query: SearchQuery, _ state: PinnedFilterState) -> some View {

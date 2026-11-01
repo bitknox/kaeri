@@ -29,6 +29,10 @@ public enum MotionDemo: String, CaseIterable, Sendable {
     case filters
     /// Search: TV toggled in the format filter, as a click in its menu does.
     case refine
+    /// Search: Clear all, as a tap on the pinned row's first pill does.
+    case clear
+    /// Search: the iPhone's pinned row scrolled sideways to its end.
+    case rowEnd
     /// The Mac's hover card: a pointer path rests on a cover, hands the card to the next cover
     /// and leaves it (the hover card board's Motion studies).
     case hover
@@ -95,6 +99,10 @@ public enum MotionDemo: String, CaseIterable, Sendable {
             navigator.searchFiltersShown.toggle()
         case .refine:
             store.searchLive(store.search.query.togglingFormat(format: .tv))
+        case .clear:
+            store.searchLive(store.search.query.cleared())
+        case .rowEnd:
+            navigator.searchRowToEnd += 1
         case .hover:
             #if os(macOS)
             HoverCardScript.requested = true
