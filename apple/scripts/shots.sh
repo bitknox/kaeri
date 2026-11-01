@@ -9,7 +9,7 @@
 # match sheet), storeowner (your plugin store with invites in use, used up and cancelled; sheet=members|invite), storeinvited (sheet=join-invited pastes its link), fresh (a first launch) or playing (the player's
 # generated episode first on Continue), then after a colon a section (calendar, seasonal, search, library,
 # downloads, providers, pluginStores, settings) or title=<id>, select=<id>, query=<words>,
-# genre=<name> (Search browsing a genre), available=<here|services> (Search with its Available filter set) or palette=<words>, with more joined by +: pane=<Settings
+# genre=<name> (Search browsing a genre), filters=set (Search with Fantasy, 2026, Fall, TV and two sheet filters set), scroll=<points> (Search's results scrolled), available=<here|services> (Search with its Available filter set) or palette=<words>, with more joined by +: pane=<Settings
 # pane>, notice=alert (a failure toast), sheet=<torrent|proxy|join|kitsu|update|show|about|report|welcome-sources|filters|messages|discussion-<episode>>,
 # tv=<paired|picker|code|expired|remote|lost|refused|empty|bar|away>, Play on TV with the Fixtures app's
 # fake TVs (FixtureTVs.swift says what each shows), cast=<scene>, casting to the made-up TVs with
@@ -115,6 +115,8 @@ arguments() {
       query=*) printf '%s\n' -KaeriSection search -KaeriQuery "${screen#query=}" ;;
       genre=*) printf '%s\n' -KaeriSection search -KaeriGenre "${screen#genre=}" ;;
       available=*) printf '%s\n' -KaeriSection search -KaeriAvailable "${screen#available=}" ;;
+      filters=*) printf '%s\n' -KaeriSection search -KaeriFilters "${screen#filters=}" ;;
+      scroll=*) printf '%s\n' -KaeriScroll "${screen#scroll=}" ;;
       palette=*) printf '%s\n' -KaeriPalette "${screen#palette=}" ;;
       pane=*) printf '%s\n' -KaeriPane "${screen#pane=}" ;;
       notice=*) printf '%s\n' -KaeriNotice "${screen#notice=}" ;;

@@ -136393,6 +136393,18 @@
         }
       }
     },
+    "search-all-filters" : {
+      "comment" : "Accessible label of the pinned filter button on iPhone, which shows only a glyph. The count of filters set follows it, as \"All filters, 2 set\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All filters"
+          }
+        }
+      }
+    },
     "search-available" : {
       "comment" : "Label of Search's filter for where a title can be watched.",
       "extractionState" : "manual",

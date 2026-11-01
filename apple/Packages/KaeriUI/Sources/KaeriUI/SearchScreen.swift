@@ -188,10 +188,36 @@ struct SearchScreen: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// The iPhone's: sentence case, larger type, three columns.
     var compact = false
+    #if os(iOS)
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    #endif
     #if os(macOS)
     /// The screen's width with the filters panel closed, which opening it does not change.
     @State private var fullWidth: CGFloat?
     #endif
+
+    /// The iPhone's filters: the row pinned under the search field, the pill for every filter at
+    /// its end, and no removable chips under it. The iPad and the Mac keep the row in the page.
+    private var pinned: Bool {
+        #if os(iOS)
+        compact && sizeClass == .compact
+        #else
+        false
+        #endif
+    }
+
+    private static let firstRow = "search-first-row"
+
+    /// Whether the results are scrolled away from the top.
+    @State private var scrolled = false
+    @State private var scrollPosition = ScrollPosition()
+
+    /// The filters asked for, without the words: they change when a filter does.
+    private var filtersAsked: SearchQuery {
+        var query = store.search.query
+        query.text = ""
+        return query
+    }
 
     private var margins: EdgeInsets {
         compact ? EdgeInsets(top: 8, leading: 16, bottom: 24, trailing: 16)
@@ -234,9 +260,12 @@ struct SearchScreen: View {
         @Bindable var navigator = navigator
         let startShown = store.search.startShown
         ScrollView {
+            ScrollViewReader { proxy in
             VStack(alignment: .leading, spacing: compact ? 16 : 20) {
-                SearchFilterRow(compact: compact)
-                ActiveFilters(compact: compact)
+                if !pinned {
+                    SearchFilterRow(compact: compact)
+                    ActiveFilters(compact: compact)
+                }
                 if store.search.livePaused, !store.search.query.isBrowse() {
                     LivePaused(compact: compact)
                 }
@@ -251,6 +280,13 @@ struct SearchScreen: View {
                     }
                 }
                 .animation(.standard, value: startShown)
+                .id(Self.firstRow)
+            }
+            // A filter changed with the results scrolled brings its answer in at the first row,
+            // under the pinned row, and the large title stays folded. Typing is left to the field.
+            .onChange(of: filtersAsked) {
+                guard pinned, scrolled else { return }
+                proxy.scrollTo(Self.firstRow, anchor: .top)
             }
             // A filter added, changed or taken off moves the row on standard: each capsule takes
             // its new width and words, the chips flow to their places, a new one fading in and a
@@ -268,9 +304,20 @@ struct SearchScreen: View {
             // Wider than the scroll view while the panel slides away: from the leading edge,
             // under the panel, never centred.
             .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+            }
         }
+        .onScrollGeometryChange(for: Bool.self) { geometry in
+            geometry.contentOffset.y + geometry.contentInsets.top > 40
+        } action: { _, scrolled in
+            self.scrolled = scrolled
+        }
+        .scrollPosition($scrollPosition)
         .scrollIndicators(.never)
         #if os(iOS)
+        // On the iPhone the filters stay under the field, sharing the bar's soft scroll edge.
+        .safeAreaBar(edge: .top, spacing: 8) {
+            if pinned { SearchFilterRow(compact: true, pinned: true) }
+        }
         .screenSubtitle(store.search.searchingLine ?? "")
         // The ground inside the inspector: it hosts the screen in a column of its own, which
         // draws the system's black over the ground TabStack puts behind it.
@@ -280,6 +327,9 @@ struct SearchScreen: View {
                 .inspectorColumnWidth(min: 300, ideal: 340, max: 420)
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
+                // At half height the results behind stay lit and scroll, so each pick shows in
+                // the row and the covers; pulled to full height the sheet dims them.
+                .presentationBackgroundInteraction(.enabled(upThrough: .medium))
         }
         #else
         // The card stays clear of the open filters panel, inside the results' width.
@@ -312,6 +362,11 @@ struct SearchScreen: View {
                 navigator.search(launch, in: store)
             } else if store.search.asked == nil, !navigator.query.isEmpty {
                 store.search(text: navigator.query)
+            }
+            if let points = navigator.launchScroll {
+                navigator.launchScroll = nil
+                try? await Task.sleep(for: .milliseconds(1_500))
+                scrollPosition.scrollTo(y: CGFloat(points))
             }
             if navigator.launchSheet == "typing" {
                 navigator.launchSheet = nil
@@ -364,7 +419,9 @@ private struct LivePaused: View {
 
 // MARK: - The filters up front
 
-/// A filter's capsule: its name, or what it is set to in amber.
+/// A filter's capsule: its name, or what it is set to in amber. On the iPhone's pinned row
+/// (`pinned`) a set capsule takes the neutral fill and silk words instead, so the row holds no
+/// amber, and it shows its words in the large content viewer.
 struct FilterCapsule: View {
     let title: String
     var active = false
@@ -372,13 +429,15 @@ struct FilterCapsule: View {
     var symbol: String?
     var badge: UInt32 = 0
     var chevron = true
+    var pinned = false
 
     var body: some View {
         HStack(spacing: 6) {
             if let symbol { Image(systemName: symbol) }
-            Text(title).lineLimit(1)
+            if !title.isEmpty { Text(title).lineLimit(1) }
             if badge > 0 {
-                Text("\(badge)").monospacedDigit().foregroundStyle(.haze)
+                Text("\(badge)").monospacedDigit().foregroundStyle(pinned ? .silk : .haze)
+                    .contentTransition(.numericText())
             }
             if chevron {
                 Image(systemName: "chevron.down")
@@ -386,16 +445,44 @@ struct FilterCapsule: View {
             }
         }
         .font(compact ? .ui(15) : .mac(13))
-        .foregroundStyle(active ? .amber : .silk)
+        .foregroundStyle(active && !pinned ? .amber : .silk)
         .padding(.horizontal, compact ? 14 : 12)
         // Taller than its 34 or 28 points only when larger text needs it.
         .padding(.vertical, 4)
-        .frame(minHeight: compact ? 34 : 28)
-        .background(active ? Palette.selection : .clear, in: .capsule)
+        .frame(minWidth: pinned && title.isEmpty ? 44 : nil, minHeight: compact ? 34 : 28)
+        .background(fill, in: .capsule)
         .overlay(Capsule().strokeBorder(active ? .clear : Palette.edge))
         // A 44 point target on touch around a smaller capsule.
         .frame(minHeight: compact ? 44 : 28)
         .contentShape(.rect)
+        .modifier(PinnedCapsule(pinned: pinned, active: active, title: title, symbol: symbol))
+    }
+
+    private var fill: Color {
+        guard active else { return .clear }
+        return pinned ? Palette.raisedSelected : Palette.selection
+    }
+}
+
+/// What only a pinned capsule adds: the fill changes on quick, and a long press shows its words
+/// large past the sizes the row stops growing at.
+private struct PinnedCapsule: ViewModifier {
+    let pinned: Bool
+    let active: Bool
+    let title: String
+    let symbol: String?
+
+    func body(content: Content) -> some View {
+        if pinned {
+            content
+                .animation(.quick, value: active)
+                .accessibilityShowsLargeContentViewer {
+                    if let symbol { Image(systemName: symbol) }
+                    if !title.isEmpty { Text(title) }
+                }
+        } else {
+            content
+        }
     }
 }
 
@@ -435,11 +522,17 @@ struct ScrollEdgeFade: View {
 struct SearchFilterRow: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var compact = false
+    /// The iPhone's pinned row: held under the search field while the results scroll, the
+    /// filter pill fixed at its end, Clear all in front once anything is set.
+    var pinned = false
 
     var body: some View {
         let query = store.search.query
-        if compact {
+        if pinned {
+            pinnedRow(query)
+        } else if compact {
             // On a phone the row scrolls, to the screen's edge, the sort first.
             ScrollView(.horizontal) {
                 HStack(spacing: 8) {
@@ -479,6 +572,83 @@ struct SearchFilterRow: View {
 
     /// Whether the capsules run on past either edge of the row.
     @State private var more = ScrollEdges()
+    /// Where the pinned row's capsules are scrolled to, kept across the results' scrolling and the
+    /// sheet, and put back to the start by a new search.
+    @State private var position = ScrollPosition(edge: .leading)
+
+    /// The pinned row: one 44 point line of capsules that scrolls under a fade at an edge with
+    /// more beyond it, then the filter pill, which never scrolls. The capsules are keyed by what
+    /// they filter, so one set or taken off moves its neighbours rather than redrawing them.
+    private func pinnedRow(_ query: SearchQuery) -> some View {
+        let state = PinnedFilterState(query)
+        return HStack(spacing: 0) {
+            ScrollView(.horizontal) {
+                capsules(query, state)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 1)
+                    // Width and reflow on standard. With Reduce Motion the old row crossfades into
+                    // the new, and nothing slides or scales.
+                    .modifier(RowReflow(layout: .init(query), reduceMotion: reduceMotion))
+            }
+            .scrollIndicators(.never)
+            .scrollPosition($position)
+            .onScrollGeometryChange(for: ScrollEdges.self) { geometry in
+                ScrollEdges(geometry)
+            } action: { _, edges in
+                more = edges
+            }
+            .mask { ScrollEdgeFade(edges: more) }
+            filterPill(state)
+        }
+        .frame(maxWidth: .infinity)
+        // The row grows with the text to extra-extra-extra large and stops there, as the tab bar
+        // does; past it a long press shows a capsule's words large.
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        .onChange(of: query.text) {
+            withAnimation(reduceMotion ? nil : .standard) { position.scrollTo(edge: .leading) }
+        }
+    }
+
+    private func capsules(_ query: SearchQuery, _ state: PinnedFilterState) -> some View {
+        HStack(spacing: 8) {
+            if state.showsClearAll { clearAll }
+            sort(query).id(PinnedFilterState.Pill.sort)
+            genres(query).id(PinnedFilterState.Pill.genres)
+            year(query).id(PinnedFilterState.Pill.year)
+            season(query).id(PinnedFilterState.Pill.season)
+            formats(query).id(PinnedFilterState.Pill.formats)
+            statuses(query).id(PinnedFilterState.Pill.statuses)
+            available(query).id(PinnedFilterState.Pill.available)
+        }
+    }
+
+    private var clearAll: some View {
+        Button {
+            store.searchLive(store.search.query.cleared())
+        } label: {
+            FilterCapsule(title: L.searchClearAll, compact: true, symbol: "xmark", chevron: false, pinned: true)
+        }
+        .buttonStyle(.plain)
+        .transition(reduceMotion ? .opacity : .scale.combined(with: .opacity))
+    }
+
+    /// The filter pill: the sheet's glyph alone, and with the count of what the sheet holds once
+    /// it holds something.
+    private func filterPill(_ state: PinnedFilterState) -> some View {
+        Button {
+            navigator.searchFiltersShown.toggle()
+        } label: {
+            FilterCapsule(
+                title: "", active: state.filterCount > 0, compact: true,
+                symbol: "line.3.horizontal.decrease", badge: state.filterCount, chevron: false, pinned: true
+            )
+        }
+        .buttonStyle(.plain)
+        .padding(.trailing, 16)
+        .padding(.leading, 4)
+        .accessibilityLabel(state.filtersLabel)
+        .animation(.standard, value: state.filterCount)
+    }
 
     @ViewBuilder
     private func capsules(_ query: SearchQuery) -> some View {
@@ -521,7 +691,7 @@ struct SearchFilterRow: View {
                 }
             }
         } label: {
-            FilterCapsule(title: title, active: set > 0, compact: compact)
+            FilterCapsule(title: title, active: set > 0, compact: compact, pinned: pinned)
         }
         .filterMenu()
     }
@@ -546,7 +716,7 @@ struct SearchFilterRow: View {
                 ))
             }
         } label: {
-            FilterCapsule(title: label ?? L.filterYear, active: label != nil, compact: compact)
+            FilterCapsule(title: label ?? L.filterYear, active: label != nil, compact: compact, pinned: pinned)
         }
         .filterMenu()
     }
@@ -564,7 +734,7 @@ struct SearchFilterRow: View {
         } label: {
             FilterCapsule(
                 title: query.season.map { searchSeasonLabel(season: $0) } ?? L.filterSeason,
-                active: query.season != nil, compact: compact
+                active: query.season != nil, compact: compact, pinned: pinned
             )
         }
         .filterMenu()
@@ -590,7 +760,7 @@ struct SearchFilterRow: View {
             FilterCapsule(
                 title: count == 0 ? L.filterFormat : count <= 2 ? (query.label(.formats) ?? L.filterFormat)
                     : L.searchFormatsCount(count: count),
-                active: count > 0, compact: compact
+                active: count > 0, compact: compact, pinned: pinned
             )
         }
         .filterMenu()
@@ -611,7 +781,7 @@ struct SearchFilterRow: View {
         } label: {
             FilterCapsule(
                 title: query.available == nil ? L.searchAvailable : (query.label(.available) ?? L.searchAvailable),
-                active: query.available != nil, compact: compact
+                active: query.available != nil, compact: compact, pinned: pinned
             )
         }
         .filterMenu()
@@ -634,7 +804,7 @@ struct SearchFilterRow: View {
             FilterCapsule(
                 title: count == 0 ? L.filterStatus : count == 1 ? (query.label(.statuses) ?? L.filterStatus)
                     : L.searchStatusesCount(count: count),
-                active: count > 0, compact: compact
+                active: count > 0, compact: compact, pinned: pinned
             )
         }
         .filterMenu()
@@ -687,6 +857,22 @@ extension View {
             .menuIndicator(.hidden)
             .fixedSize()
             .pointerHover()
+    }
+}
+
+/// The pinned row's change of layout: the capsules take their new widths and places on standard;
+/// with Reduce Motion the whole row is replaced, the old one fading into the new.
+private struct RowReflow: ViewModifier {
+    let layout: PinnedFilterState.Layout
+    let reduceMotion: Bool
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if reduceMotion {
+            content.id(layout).transition(.opacity).animation(.standard, value: layout)
+        } else {
+            content.animation(.standard, value: layout)
+        }
     }
 }
 
