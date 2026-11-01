@@ -400,6 +400,8 @@ impl Engine {
                 state.config.effective().notifications.desktop,
                 services.store.clone(),
                 services.meta.clone(),
+                state.calendar.clone(),
+                services.clock.clone(),
                 services.host.clone(),
                 inbox.sender(),
             );

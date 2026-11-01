@@ -12,6 +12,8 @@ use kaeri_model::{Msg, event::Event, notice::Notice};
 use kaeri_store::Store;
 
 use crate::{
+    catalog::calendar::{CalendarMemory, Need},
+    clock::Clock,
     host::Host,
     outbox::{Internal, Outbox},
 };
@@ -33,6 +35,8 @@ pub fn spawn(
     desktop: bool,
     store: Store,
     meta: Meta,
+    schedule: CalendarMemory,
+    clock: Clock,
     host: Arc<dyn Host>,
     tx: Outbox,
 ) {
@@ -67,24 +71,20 @@ pub fn spawn(
             return;
         }
 
-        // A busy week is hundreds of airings; walk a few pages rather than trusting one.
-        // The cap is a courtesy to the rate budget — four pages covers any real window.
-        let mut hits: Vec<(String, u32)> = Vec::new();
-        for page in 1..=4 {
-            let Ok(batch) = meta.airing_between(from, now, page, 50).await else {
-                return;
-            };
-            hits.extend(
-                batch
-                    .items
-                    .iter()
-                    .filter(|e| watching.contains(&e.media.id))
-                    .map(|e| (meta.titles().pick(&e.media.title).to_owned(), e.episode)),
-            );
-            if !batch.has_next {
-                break;
-            }
+        // Read from the schedule the Calendar, the widgets and the notices share: the page or
+        // two of the past it holds already, and as background work, behind what is on screen.
+        let need = Need { past_to: Some(from), ..Need::default() };
+        let covered = schedule.cover(&meta, clock.now(), now, need, false, true).await;
+        if let Some(failure) = &covered.failure {
+            tracing::info!(%failure, "the airing digest could not read all of the schedule");
         }
+        let hits: Vec<(String, u32)> = covered
+            .window
+            .between(from, now)
+            .iter()
+            .filter(|e| watching.contains(&e.media.id))
+            .map(|e| (meta.titles().pick(&e.media.title).to_owned(), e.episode))
+            .collect();
         if hits.is_empty() {
             return;
         }
