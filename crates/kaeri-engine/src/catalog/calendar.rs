@@ -237,7 +237,7 @@ impl CalendarMemory {
                                 }
                             })
                         };
-                        let Some(page) = next else { return None };
+                        let page = next?;
                         let block = if ahead {
                             fetch_ahead(meta, anchor, page).await
                         } else {

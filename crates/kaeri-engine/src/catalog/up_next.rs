@@ -120,7 +120,7 @@ async fn up_next_once(lent: &Lent, ask: &Ask) -> bool {
     }
     let dismissed = dismissed(store);
     let from = signature(store, &queue, &dismissed, ask, room);
-    if let Some(kept) = kept(&store)
+    if let Some(kept) = kept(store)
         && kept.from == from
         && ask.now - kept.at < KEPT_FOR
         && let Some(items) = items_from_cache(meta, store, &kept.picks)

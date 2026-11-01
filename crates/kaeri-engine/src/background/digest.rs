@@ -30,6 +30,7 @@ const WATCHED_ROWS: u32 = 100;
 
 /// Look for what aired since the last launch, in the background, and say it once: as a toast,
 /// and on the desktop too when `desktop` asks for it, through the host.
+#[allow(clippy::too_many_arguments)]
 pub fn spawn(
     enabled: bool,
     desktop: bool,
