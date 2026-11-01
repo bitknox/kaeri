@@ -293,7 +293,9 @@ private struct HoverCardLayer: ViewModifier {
             .onAppear {
                 cards.cue = { [store, trailer, navigator] id in
                     guard let entry = store.titles[id] else { return }
-                    if !store.titles.detailed.contains(id) { store.loadDetail(id) }
+                    // A hover costs no request when the list that showed the cover carried the
+                    // card's data: the page waits for the page to open.
+                    store.loadCards([id])
                     if store.titles.episodes[id] == nil { store.loadEpisodes(id) }
                     // Interest shown on Home: whether a source has it, for the card's quiet line.
                     if navigator.section == .home { store.probe(id) }
@@ -458,7 +460,7 @@ extension AppStore {
     func hoverCardHeight(_ id: AnilistId, handedOff: HandedOff?, onHome: Bool = false) -> CGFloat {
         guard let entry = titles[id] else { return HoverCardSize.height(synopsis: true, action: true) }
         let reason = onHome && HomeHover(self, id)?.line != nil
-        let synopsis = !(titles.detailed.contains(id) && entry.shownSynopsis.isEmpty)
+        let synopsis = !((titles.detailed.contains(id) || titles.cardedIds.contains(id)) && entry.shownSynopsis.isEmpty)
         let action = TitleAction(entry, handedOff: handedOff, episodes: titles.episodes[id]).playable
             || (onHome && HomeHover(self, id)?.action == .addToPlanning)
         return HoverCardSize.height(synopsis: synopsis, action: action, reason: reason)

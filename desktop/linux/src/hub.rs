@@ -238,6 +238,14 @@ impl Known {
             Event::Detail(entry) => {
                 self.entries.insert(entry.id.get(), with_fixture_trailer((**entry).clone()));
             }
+            Event::Cards(cards) => {
+                // Card data for covers the lists did not bring: a known title keeps its row.
+                for card in cards {
+                    self.entries
+                        .entry(card.id.get())
+                        .or_insert_with(|| with_fixture_trailer(card.clone()));
+                }
+            }
             Event::Progress { id, progress, resume, .. } => {
                 if let Some(entry) = self.entries.get_mut(&id.get()) {
                     entry.progress = *progress;

@@ -49,7 +49,7 @@ impl Command {
             Self::LoadHome { .. } => "loading home".into(),
             Self::LoadDetail(_) => "loading the title".into(),
             Self::LoadCards { .. } => "loading hover cards".into(),
-            Self::LoadEpisodes(_) => "loading episodes".into(),
+            Self::LoadEpisodes(_) | Self::LoadStills(_) => "loading episodes".into(),
             Self::ClearMatch { .. } | Self::FixMatch { .. } => "rematching sources".into(),
             Self::CheckProviders => "checking providers".into(),
             Self::LoadLibrary(segment) => format!("loading your {} list", segment.label()),
@@ -237,6 +237,10 @@ pub enum Command {
     /// when the viewer was already looked up for their library.
     LoadTitleLanguage,
     LoadEpisodes(AnilistId),
+    /// [`Command::LoadEpisodes`] for the stills that stand in for a missing banner on a card
+    /// nobody has opened: the same answer, asked of AniList at low priority so a screen's own
+    /// requests go first.
+    LoadStills(AnilistId),
     // How far a title's dub goes, for the title page's "Dub to episode 6": answered by one
     // [`Event::TitleDub`](crate::event::Event::TitleDub), with no job. Sent when the page
     // opens, beside [`Command::LoadEpisodes`], and again when it comes back into view.

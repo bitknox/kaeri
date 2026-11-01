@@ -581,6 +581,14 @@ public final class AppStore {
         send(.loadDetail(id))
     }
 
+    /// The data a hover card shows for `ids`: from what the lists brought, else one batched lookup
+    /// at low priority. Not asked again for a title whose card is in.
+    public func loadCards(_ ids: [AnilistId]) {
+        let wanted = ids.filter { !titles.cardedIds.contains($0) && !titles.detailed.contains($0) }
+        guard !wanted.isEmpty else { return }
+        send(.loadCards(ids: wanted))
+    }
+
     public func loadEpisodes(_ id: AnilistId) {
         guard ask(.episodes(id)) else { return }
         send(.loadEpisodes(id))
@@ -626,7 +634,7 @@ public final class AppStore {
         guard titles[id]?.bannerUrl == nil, titles.episodes[id] == nil,
               stillsAsked.insert(id).inserted, ask(.episodes(id))
         else { return false }
-        send(.loadEpisodes(id))
+        send(.loadStills(id))
         return true
     }
 
@@ -836,6 +844,9 @@ public final class AppStore {
             calendar.backfill(page: page, entries: entries, morePast: morePast, titles: titles)
         case .detail(let entry):
             titles.merge(detail: entry)
+        case .cards(let entries):
+            titles.merge(entries)
+            titles.carded(entries.map(\.id))
         case .progress(let id, let progress, let resume, let episodes):
             titles.progress(id: id, progress: progress, resume: resume, episodes: episodes)
             widgetsChanged()

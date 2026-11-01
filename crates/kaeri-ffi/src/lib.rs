@@ -251,6 +251,7 @@ mod tests {
             Command::LoadHome { refresh: true },
             Command::LoadCards { ids: vec![AnilistId::new(900_004)] },
             Command::SyncVisible { visible: false },
+            Command::LoadStills(AnilistId::new(900_004)),
             Command::ProbeTitle { id: AnilistId::new(900_004) },
             Command::LoadHiddenTitles,
         ];

@@ -274,6 +274,11 @@ public sealed class Known
             case Event.Detail d:
                 Entries[d.V1.Id] = Fixed(d.V1);
                 break;
+            case Event.Cards c:
+                // Card data for covers the lists did not bring: a title already known keeps its row.
+                foreach (var card in c.V1)
+                    Entries.TryAdd(card.Id, Fixed(card));
+                break;
             case Event.Episodes ep:
                 Episodes[ep.Id] = ep.Rows;
                 break;
