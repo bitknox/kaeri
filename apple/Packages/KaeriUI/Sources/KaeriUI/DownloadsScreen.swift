@@ -11,12 +11,25 @@ struct DownloadsScreen: View {
     @Environment(AppStore.self) private var store
     @Namespace private var rotor
 
+    /// What the screen shows: nothing before the engine's first answer, its empty state, or
+    /// the downloads.
+    private enum Phase { case waiting, empty, rows }
+
     var body: some View {
         let groups = store.downloads.groups
-        Group {
-            if store.downloads.loaded, groups.isEmpty, store.downloads.seeding.isEmpty {
+        let phase = !store.downloads.loaded ? Phase.waiting
+            : groups.isEmpty && store.downloads.seeding.isEmpty ? .empty : .rows
+        // A stack, not a Group, so what the engine answers fades in over the ground rather than
+        // cutting in, and the empty state and the list crossfade.
+        ZStack(alignment: .topLeading) {
+            switch phase {
+            case .waiting:
+                // The engine's own list, which answers well inside 600 ms: the ground meanwhile.
+                Color.clear
+            case .empty:
                 NoDownloads()
-            } else {
+                    .transition(.opacity)
+            case .rows:
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
                         #if os(iOS)
@@ -41,8 +54,10 @@ struct DownloadsScreen: View {
                 }
                 .scrollIndicators(.never)
                 .inProgressRotor(groups, titles: store.titles, in: rotor)
+                .transition(.opacity)
             }
         }
+        .animation(.fadeIn, value: phase)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .pullToRefresh(store, .downloads)
         .task { store.loadDownloads() }

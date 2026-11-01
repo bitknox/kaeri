@@ -119,6 +119,13 @@ struct TitlePage: View {
     @State private var laidOut: AnilistId?
     /// The title that has been waited for long enough, laid out with what is known of it.
     @State private var waited: AnilistId?
+    /// The title the page's words, episodes and facts are drawn for: the one laid out, once the
+    /// last one's have faded out.
+    @State private var drawn: AnilistId?
+    /// The title laid out last, which a fade under way swaps to at its end.
+    @State private var drawing: AnilistId?
+    /// Whether those parts are faded out, between one title's and the next's.
+    @State private var between = false
     /// The wide art on screen and the title it is of. Across a season switch the last season's
     /// stays until the next one's is known and here, then crossfades to it, as a visited season's
     /// does at once.
@@ -160,20 +167,26 @@ struct TitlePage: View {
 
     /// How long a season or related title picked waits for its page before it shows what is
     /// known of it. Meanwhile the last one's page stays, and only the selection moves.
-    static let waitFor: Duration = .seconds(1)
+    static let waitFor: Duration = .milliseconds(150)
 
     var body: some View {
-        // A season picked on the page shows whole when its page is here, in one change, rather
-        // than first as the card the picker had for it and again as itself, everything that
-        // differs between the two moving twice. Only the selection moves at once. Its page is
-        // its title, its episodes, what the services say, its cover and its wide art.
+        // A season picked on the page moves the selection at once. When its page is here within
+        // a moment it shows whole, in one change. Past that it shows what its picker's card
+        // knows, its title and cover, and keeps room for the rest, each part coming in once as
+        // it arrives: never the card's version first and then again as itself. Its page is its
+        // title, its episodes, what the services say, its cover and its wide art.
         let ready = laidOut == nil || laidOut == id || waited == id || Self.pageHere(id, in: store)
-        let entry = store.titles.page(ready ? id : laidOut ?? id)
+        let laid = store.titles.page(ready ? id : laidOut ?? id)
+        // The words, episodes and facts change title by fading through the ground (`between`):
+        // the last title's leave, then the next one's come in where they stood, so two titles'
+        // words are never on screen at once and the page never dissolves whole.
+        let entry = drawn.map { $0 == laid.id ? laid : store.titles.page($0) } ?? laid
         // A season's stand-in, from its picker's card, knows no banner, and a cover or a banner
-        // on its way would show as a plate first: the last art stays until the next is whole.
-        let next = ArtKey(id: entry.id, art: store.heroArt(entry))
+        // on its way would show as a plate first: the last art stays until the next is whole, or
+        // until it is known there is none.
+        let next = ArtKey(id: entry.id, art: store.pageArt(entry))
         let shown = shownArt.flatMap { held in
-            held.key != next && !Self.artReady(next, in: store) && artWaited != next.id ? held : nil
+            held.key != next && !Self.artReady(next, in: store) && (artWaited != next.id || next.art == .waiting) ? held : nil
         } ?? ShownArt(key: next, entry: entry)
         let art = shown.key.art
         // A related title shown as its card knows no seasons and no related titles of its own:
@@ -181,22 +194,37 @@ struct TitlePage: View {
         let kin = Self.kin(of: entry, last: familyOf, in: store)
         // What the title picked shows with, asked for while the last one's page stays.
         let picked = ready ? nil : store.titles.page(id)
-        let coming = Coming(cover: picked?.coverUrl, wide: picked.flatMap { store.heroArt($0).url })
+        let coming = Coming(cover: picked?.coverUrl, wide: picked.flatMap { store.pageArt($0).url })
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 // With no wide art the page starts higher: under the toolbar, not under a banner.
                 Color.clear.frame(height: art.isCompact ? 64 : 96)
-                TitleHero(entry: entry)
+                // Art flying onto the banner covers the cover and the words over it: they come in
+                // once it has landed, rather than at once with the art drawn under them.
+                let underFlyer = navigator.awaits(entry.id, .banner)
+                TitleHero(entry: entry, faded: between)
+                    .opacity(underFlyer ? 0 : 1)
+                    .animation(.fadeIn, value: underFlyer)
                 let family = TitleFamily(kin, this: id)
                 if !family.seasons.isEmpty || !family.related.isEmpty {
-                    TitleFamilyRow(entry: kin, family: family)
+                    TitleFamilyRow(entry: kin, family: family, faded: between)
                         .padding(.top, 20)
                 }
                 HStack(alignment: .top, spacing: 32) {
                     EpisodeList(entry: entry, rotor: rotor)
-                    TitleDetails(entry: entry)
-                        .frame(width: 260)
+                    // The synopsis and the facts once the title itself is here: a title picked
+                    // keeps their room empty meanwhile, as its card knows none of them.
+                    let known = store.titles[entry.id] != nil
+                    ZStack(alignment: .top) {
+                        if known { TitleDetails(entry: entry).transition(.opacity) }
+                    }
+                    .animation(.fadeIn, value: known)
+                    .frame(width: 260, alignment: .top)
+                    // Another title's facts are other views: they never fade out over these.
+                    .id(entry.id)
+                    .transition(.identity)
                 }
+                .opacity(between ? 0 : 1)
                 .padding(.top, 24)
             }
             .padding(EdgeInsets(top: 0, leading: 24, bottom: 20, trailing: 28))
@@ -204,9 +232,12 @@ struct TitlePage: View {
             // spring that opens a title. Carried into the page, it would spring every view from
             // where it stood on the last season's: the titles' words sliding over each other, the
             // rows sliding past the Episodes header. The page stands still instead, and only what
-            // differs changes, by its own animation: the season picked (quick), the hero's words
-            // (quick), the episodes as one block (standard), and the art as it lands (fade-in).
+            // differs changes, by its own animation: the season picked (quick), then the words,
+            // episodes and facts fading through (`between`), and the art as it lands (fade-in).
             .transaction(value: id) { $0.animation = nil }
+            // A title known to have no wide art, or that has some after all, moves the page to
+            // its place on standard.
+            .animation(.standard, value: art.isCompact)
             .background(alignment: .top) {
                 // The wide art, under the clear toolbar, with the ground over its lower part,
                 // where the cover and the title sit, and fading up into the art above that, where
@@ -234,7 +265,11 @@ struct TitlePage: View {
         .background(.ground)
         .unwatchedRotor(store.titles.episodes[entry.id] ?? [], in: rotor)
         .handsOff(title: entry)
-        .onChange(of: entry.id, initial: true) { laidOut = entry.id }
+        .onChange(of: laid.id, initial: true) {
+            laidOut = laid.id
+            if drawn == nil { drawn = laid.id }
+        }
+        .onChange(of: laid.id) { _, now in fadeThrough(to: now) }
         .onChange(of: kin.id, initial: true) { familyOf = kin.id }
         .onChange(of: shown.key, initial: true) {
             shownArt = shown
@@ -270,6 +305,21 @@ struct TitlePage: View {
         }
     }
 
+    /// Fade the words, episodes and facts out on quick, draw them for `id`, and fade them in on
+    /// fade-in. The swap itself is not animated: an animated one would keep the last title's
+    /// parts on screen, under the next one's, for as long as it ran. A newer title laid out
+    /// meanwhile is swapped to instead.
+    private func fadeThrough(to id: AnilistId) {
+        drawing = id
+        guard !between else { return }
+        withAnimation(.quick) { between = true } completion: {
+            var swap = Transaction()
+            swap.disablesAnimations = true
+            withTransaction(swap) { drawn = drawing }
+            withAnimation(.fadeIn) { between = false }
+        }
+    }
+
     /// Whether `id`'s page is here whole: its title, its episodes and what the services say
     /// (which decide its main button and the lines under it), its cover and its wide art. Each
     /// landing alone would move or swap something.
@@ -277,7 +327,7 @@ struct TitlePage: View {
         guard store.titles.detailed.contains(id), store.offersKnown(id) else { return false }
         let page = store.titles.page(id)
         let cover = page.coverUrl.map { store.artwork.image($0) != nil } ?? true
-        return cover && artReady(ArtKey(id: id, art: store.heroArt(page)), in: store)
+        return cover && artReady(ArtKey(id: id, art: store.pageArt(page)), in: store)
     }
 
     /// The title whose seasons and related titles the row shows for `entry`: itself once its page
@@ -319,6 +369,8 @@ struct TitleHero: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
     let entry: Entry
+    /// Whether the words are faded out, as the page changes title.
+    var faded = false
     /// The title waited for long enough to show its main button without the services' word,
     /// as when it never comes offline.
     @State private var offersWaited: AnilistId?
@@ -386,6 +438,10 @@ struct TitleHero: View {
         // only to give way to the other. Its room is kept, so nothing beside it moves.
         let offersHeld = !store.offersKnown(entry.id) && offersWaited != entry.id
             && (serviceMain != nil || (action.playable && store.titles.unlisted(entry.id) && !store.match.asks(entry.id)))
+        // A title picked on the page, shown as its picker's card until it is here: its line and
+        // its actions rest on what the card does not know, so their room is kept empty until
+        // they are, rather than showing the card's and changing again.
+        let cardOnly = store.titles[entry.id] == nil && offersWaited != entry.id
         HStack(alignment: .bottom, spacing: 28) {
             // Across a season switch the last season's cover stays until the next one's lands.
             ArtworkView(url: entry.coverUrl, color: entry.plateColor, maxPixelSize: Self.coverPixels, holds: true)
@@ -406,10 +462,14 @@ struct TitleHero: View {
                     .accessibilityAddTraits(.isHeader)
                 OtherTitlesLine(entry: entry)
                     .padding(.top, 6)
+                // Kept empty while the title is its card. When the title comes, the lines under the
+                // actions can move the words up: the line fades in once they have, as text drawn
+                // while it moved would be drawn at its end, over the line above.
                 Text(entry.titleMetadata.isEmpty ? " " : entry.titleMetadata)
                     .groupHeaderStyle()
                     .macLineHeight(14)
                     .padding(.top, 4)
+                    .animation(cardOnly ? nil : .fadeIn.delay(0.2)) { $0.opacity(cardOnly ? 0 : 1) }
                 HStack(spacing: 10) {
                     mainAction(action)
                         .opacity(offersHeld ? 0 : 1)
@@ -446,14 +506,22 @@ struct TitleHero: View {
                     #endif
                 }
                 .padding(.top, Self.pad ? 16 : 12)
+                .opacity(cardOnly ? 0 : 1)
+                .disabled(cardOnly)
+                .accessibilityHidden(cardOnly)
                 LicensedLines(id: entry.id, font: Self.pad ? .ui(15) : .mac(13))
                 MatchUncertainLine(id: entry.id, font: Self.pad ? .ui(15) : .mac(13), top: 10)
             }
-            // Another season's words swap in place: one short fade.
-            .contentTransition(.opacity)
-            .animation(.quick, value: entry.id)
+            .animation(.fadeIn, value: cardOnly)
+            // Another title's words are other views, drawn while the page has them faded out.
+            .id(entry.id)
+            .transition(.identity)
+            .opacity(faded ? 0 : 1)
             .padding(.bottom, 4)
         }
+        // Where it plays comes after the page, in lines under the actions: the words above glide
+        // up to make room (standard) while the lines fade in, rather than jumping.
+        .animation(navigator.motionReduced ? nil : .standard, value: store.licensed.availability[entry.id])
         .task(id: entry.id) {
             try? await Task.sleep(for: Self.offersWaitFor)
             offersWaited = entry.id
@@ -558,6 +626,10 @@ struct TitleFamilyRow: View {
     @Environment(Navigator.self) private var navigator
     let entry: Entry
     let family: TitleFamily
+    /// Whether Related is faded out, as the page changes title. It is the last title's until
+    /// then, so it fades through the ground with the words and episodes rather than going at
+    /// once; the seasons stay, their pick moving on the click.
+    var faded = false
 
     /// A related card's cover: 36 by 54 on the Mac, 40 by 60 on iPad.
     static var cover: CGSize {
@@ -591,14 +663,14 @@ struct TitleFamilyRow: View {
                     }
                 }
                 if hasRelated {
-                    related.frame(minWidth: Self.relatedRoom, idealWidth: Self.relatedRoom, maxWidth: .infinity, alignment: .leading)
+                    fadingRelated.frame(minWidth: Self.relatedRoom, idealWidth: Self.relatedRoom, maxWidth: .infinity, alignment: .leading)
                 }
             }
             VStack(alignment: .leading, spacing: 20) {
                 if !family.seasons.isEmpty {
                     seasonsGroup { SeasonScroller(family: family) { index, season in seasonCell(index, season) } }
                 }
-                related
+                fadingRelated
             }
         }
     }
@@ -621,9 +693,14 @@ struct TitleFamilyRow: View {
             id: season.id,
             name: L.seasonNumber(number: index + 1),
             detail: seasonDetail(season),
+            counts: season.id == entry.id && entry.progress?.done != nil && entry.progressOf != nil,
             fraction: season.id == entry.id ? entry.watchedFraction : nil,
             selected: season.isThis
         )
+    }
+
+    private var fadingRelated: some View {
+        related.opacity(faded ? 0 : 1)
     }
 
     @ViewBuilder private var related: some View {
@@ -679,7 +756,7 @@ struct TitleFamilyRow: View {
     }
 
     private func familyCell(
-        id: AnilistId, name: String, detail: String, fraction: Double?, selected: Bool
+        id: AnilistId, name: String, detail: String, counts: Bool = false, fraction: Double?, selected: Bool
     ) -> some View {
         Button {
             if !selected { navigator.openTitle(id) }
@@ -687,7 +764,9 @@ struct TitleFamilyRow: View {
             HStack(spacing: 10) {
                 let known = store.titles[id]
                 let linked = card(id)
-                ArtworkView(url: known?.coverUrl ?? linked?.coverUrl, color: known?.plateColor, maxPixelSize: 108)
+                // The card's cover stays while the page's own is on its way, as a season's page
+                // comes in: never the plate between them.
+                ArtworkView(url: known?.coverUrl ?? linked?.coverUrl, color: known?.plateColor, maxPixelSize: 108, holds: true)
                     .frame(width: 36, height: 54)
                     .clipShape(.rect(cornerRadius: 6))
                 VStack(alignment: .leading, spacing: 0) {
@@ -701,9 +780,13 @@ struct TitleFamilyRow: View {
                         .macLineHeight(16)
                         .foregroundStyle(.haze)
                         .lineLimit(1)
-                        // "6 / 12" to "7 / 12", the changed digit rolling (T9).
+                        // "6 / 12" to "7 / 12", the changed digit rolling (T9). A count to a
+                        // date, as the selection leaves a season, is another line: it comes in
+                        // on fade-in where the last one went at once, never over it.
                         .contentTransition(.numericText())
                         .animation(.standard, value: detail)
+                        .id(counts)
+                        .transition(.asymmetric(insertion: .opacity.animation(.fadeIn), removal: .identity))
                     if let fraction {
                         Meter(fraction: fraction, height: 3).frame(width: 112).padding(.top, 6)
                     }
@@ -763,6 +846,9 @@ struct EpisodeList: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
     @State private var unwatchedOnly = false
+    /// The last title whose rows were on screen, and how tall they stood: another title's
+    /// placeholders keep that room, so nothing below or beside them moves until its rows come.
+    @State private var lastRows: (id: AnilistId, height: CGFloat)?
     let entry: Entry
     /// Where the page's Unwatched episodes rotor finds the rows.
     let rotor: Namespace.ID
@@ -776,53 +862,59 @@ struct EpisodeList: View {
                     .foregroundStyle(.silk)
                     .accessibilityAddTraits(.isHeader)
                 // How far the dub goes, when the engine has said: faded in, where it moves nothing.
-                if let dub = store.titles.dubLines[entry.id] {
-                    Text(dub)
-                        .font(.mac(13))
-                        .foregroundStyle(.haze)
-                        .lineLimit(1)
-                        .transition(.opacity.animation(.fadeIn))
+                // Another title's line is another view, gone at once rather than faded out.
+                let dub = store.titles.dubLines[entry.id]
+                ZStack(alignment: .leading) {
+                    if let dub {
+                        Text(dub)
+                            .font(.mac(13))
+                            .foregroundStyle(.haze)
+                            .lineLimit(1)
+                            .transition(.opacity)
+                    }
                 }
+                .animation(.fadeIn, value: dub)
+                .id(entry.id)
+                .transition(.identity)
                 Spacer()
                 SegmentedCapsule(selection: $unwatchedOnly, options: [(false, L.titleEpisodesAll), (true, L.titleEpisodesUnwatched)])
             }
             .frame(height: 28)
             .padding(.bottom, 6)
-            .animation(.fadeIn, value: store.titles.dubLines[entry.id])
             let loaded = store.titles.episodes[entry.id] != nil
-            // The placeholders and the rows in one place, one crossfading into the other (T8), and
-            // another season's rows into this one's as one block: none slides or comes in alone.
+            // The placeholders and the rows in one place, one crossfading into the other (T8):
+            // none slides or comes in alone.
             ZStack(alignment: .topLeading) {
-                Group {
-                    if loaded {
-                        VStack(alignment: .leading, spacing: 0) {
-                            if rows.isEmpty {
-                                QuietLine(unwatchedOnly ? L.titleAllWatched : L.titleNoEpisodes)
-                            }
-                            // The watched run folds away above the last episode watched; Unwatched
-                            // has none.
-                            let fold = unwatchedOnly ? nil : WatchedFold(rows)
-                            if let fold {
-                                WatchedFoldSection(
-                                    fold: fold, shown: navigator.watchedShown(entry.id), phone: false,
-                                    toggle: { navigator.toggleWatched(entry.id) }
-                                ) {
-                                    ForEach(rows.prefix(fold.count), id: \.number) { row($0) }
-                                }
-                            }
-                            ForEach(rows.dropFirst(fold?.count ?? 0), id: \.number) { row($0) }
+                if loaded {
+                    VStack(alignment: .leading, spacing: 0) {
+                        if rows.isEmpty {
+                            QuietLine(unwatchedOnly ? L.titleAllWatched : L.titleNoEpisodes)
                         }
-                        .transition(.opacity)
-                    } else {
-                        EpisodePlaceholders(count: entry.episodes)
-                            .transition(.opacity)
+                        // The watched run folds away above the last episode watched; Unwatched
+                        // has none.
+                        let fold = unwatchedOnly ? nil : WatchedFold(rows)
+                        if let fold {
+                            WatchedFoldSection(
+                                fold: fold, shown: navigator.watchedShown(entry.id), phone: false,
+                                toggle: { navigator.toggleWatched(entry.id) }
+                            ) {
+                                ForEach(rows.prefix(fold.count), id: \.number) { row($0) }
+                            }
+                        }
+                        ForEach(rows.dropFirst(fold?.count ?? 0), id: \.number) { row($0) }
                     }
+                    .transition(.opacity)
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { lastRows = (entry.id, $0) }
+                } else {
+                    EpisodePlaceholders(count: entry.episodes)
+                        .frame(minHeight: lastRows.flatMap { $0.id == entry.id ? nil : $0.height }, alignment: .top)
+                        .transition(.opacity)
                 }
-                .id(entry.id)
-                .transition(.opacity)
             }
             .animation(.standard, value: loaded)
-            .animation(.standard, value: entry.id)
+            // Another title's rows are other views, drawn while the page has them faded out.
+            .id(entry.id)
+            .transition(.identity)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -1080,9 +1172,6 @@ struct TitleDetails: View {
             MoreAboutButton(entry: entry)
                 .padding(.top, 4)
         }
-        // Another season's synopsis and facts swap in place, by one short fade.
-        .contentTransition(.opacity)
-        .animation(.quick, value: entry.id)
         .padding(.top, 4)
     }
 }

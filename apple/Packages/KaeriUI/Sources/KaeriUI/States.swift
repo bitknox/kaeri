@@ -127,7 +127,8 @@ struct OfflineLine: View {
     @Environment(AppStore.self) private var store
 
     var body: some View {
-        Group {
+        // A stack, not a Group, so the line's coming and going is animated.
+        VStack(alignment: .leading, spacing: 0) {
             if store.offline {
                 HStack(spacing: 6) {
                     Image(systemName: "wifi.slash")

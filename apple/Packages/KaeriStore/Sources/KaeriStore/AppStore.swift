@@ -698,6 +698,20 @@ public final class AppStore {
                 }
             }
         }
+        if let delay = listDelay {
+            // The lists held back, as a slow AniList answers them: Home, the calendar, Seasonal
+            // and the Library.
+            let answers = events.filter(\.isListAnswer)
+            events.removeAll(where: \.isListAnswer)
+            if !answers.isEmpty {
+                Task { [weak self] in
+                    try? await Task.sleep(for: delay)
+                    guard let self else { return }
+                    for event in answers { apply(event) }
+                    lastApplied = .now
+                }
+            }
+        }
         if let delay = searchDelay {
             // Search's answers held back, as a slow network answers them.
             let answers = events.filter(\.isSearchAnswer)
@@ -731,6 +745,10 @@ public final class AppStore {
     /// How long each search answer waits before the screens see it: the dev harness's slow
     /// network (`--search-delay`). The testing engine only.
     public var searchDelay: Duration?
+
+    /// How long Home, the calendar, Seasonal and each Library list wait before the screens see
+    /// them: the dev harness's slow lists (`--list-delay`). The testing engine only.
+    public var listDelay: Duration?
     #endif
 
     /// Show the invented rows the launch arguments ask for, on the testing engine only, and keep
@@ -1045,6 +1063,14 @@ extension Event {
     fileprivate var isSearchAnswer: Bool {
         switch self {
         case .content(.search, _), .caption(.search, _), .searchPaging, .searchMore: true
+        default: false
+        }
+    }
+
+    /// An answer to one of the lists the screens browse, which the slow lists hold back.
+    fileprivate var isListAnswer: Bool {
+        switch self {
+        case .content(.seasonal, _), .content(.calendar, _), .content(.library, _), .home, .calendarWindow: true
         default: false
         }
     }

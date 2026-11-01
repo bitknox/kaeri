@@ -48,6 +48,15 @@ public final class HomeModel {
         askedAt = .now
     }
 
+    /// Home as it was before its first answer: a motion demo's way to watch it arrive again. The
+    /// testing engine's flavour only; elsewhere it keeps what it has.
+    public func forgetForDemo() {
+        #if FIXTURES
+        view = nil
+        answeredAt = nil
+        #endif
+    }
+
     /// Take the engine's view. A title that left the view is no longer on its way out.
     func apply(_ next: HomeView, titles: TitleCache) {
         if let before = view, next.spotlightMoved(from: before) { spotlightChanges += 1 }
