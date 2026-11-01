@@ -98,6 +98,10 @@ struct TitleSearchField: ViewModifier {
     let text: Binding<String>
     /// Whether the field searches titles: not while it searches Settings.
     var titles = true
+    /// Whether the genres and tags set show in the field as tokens. On the iPhone the field holds
+    /// only what was typed, and the pinned row's pills name the genres and tags; a suggestion
+    /// picked there still adds its filter.
+    var tokensShown = true
     var placement: SearchFieldPlacement = .automatic
     let prompt: String
 
@@ -128,13 +132,16 @@ struct TitleSearchField: ViewModifier {
 
     private var tokens: Binding<[SearchToken]> {
         Binding(
-            get: { titles ? SearchToken.of(store.search.query) : [] },
+            get: { titles && tokensShown ? SearchToken.of(store.search.query) : [] },
             set: { tokens in
                 guard titles else { return }
                 var query = store.search.query
-                let added = tokens.count > SearchToken.of(query).count
-                query.genres = tokens.filter { $0.kind == .genre }.map(\.name)
-                query.tags = tokens.filter { $0.kind == .tag }.map(\.name)
+                let present = SearchToken.of(query)
+                // Without tokens shown the field only ever adds: what it hands back is the pick.
+                let all = tokensShown ? tokens : present + tokens.filter { !present.contains($0) }
+                let added = all.count > present.count
+                query.genres = all.filter { $0.kind == .genre }.map(\.name)
+                query.tags = all.filter { $0.kind == .tag }.map(\.name)
                 query.genresExcluded.removeAll { query.genres.contains($0) }
                 query.tagsExcluded.removeAll { query.tags.contains($0) }
                 // A token chosen stands for the words that found it.
@@ -158,9 +165,10 @@ struct TitleSearchField: ViewModifier {
 
 extension View {
     func titleSearchField(
-        text: Binding<String>, titles: Bool = true, placement: SearchFieldPlacement = .automatic, prompt: String
+        text: Binding<String>, titles: Bool = true, tokensShown: Bool = true,
+        placement: SearchFieldPlacement = .automatic, prompt: String
     ) -> some View {
-        modifier(TitleSearchField(text: text, titles: titles, placement: placement, prompt: prompt))
+        modifier(TitleSearchField(text: text, titles: titles, tokensShown: tokensShown, placement: placement, prompt: prompt))
     }
 }
 
