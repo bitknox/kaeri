@@ -543,23 +543,30 @@ jobs:
       - run: rustup toolchain install
       - run: cargo clippy -p kaeri-model --features ffi --all-targets -- -D warnings
 
-  # Everything the Apple apps are held to, in one job on one Mac. macOS runners are five at a
-  # time for the whole account, so two jobs that each set up a Mac, restored the same libmpv and
-  # compiled the same dependencies queued twice as long and cost twice the minutes. Each group of
-  # steps below is named for what it checks, so a failure reads as it did when they were two jobs:
+  # Everything the Apple apps are held to, in three jobs that run side by side on a pull request,
+  # each named for what it checks:
   #
-  #   Swift  the Swift packages' tests over a real engine (apple/scripts/test.sh builds the testing
+  #   swift  the Swift packages' tests over a real engine (apple/scripts/test.sh builds the testing
   #          engine for macOS with apple/scripts/engine.sh, the static library as an XCFramework
   #          with each crate's Swift bindings generated from it, and runs every package's tests:
   #          the bindings, the design tokens, the app's store over a real engine on the fake
-  #          AniList), then the Fixtures app's tests, which link it too, the Mac player's controls
-  #          clicked, and the FFI's tests as the apps build it. The FFI's tests with the desktop
-  #          feature are the macOS test job's.
-  #   Apple  the app itself, from the XcodeGen project: built for an iPhone with signing off, and
-  #          for the Mac in Release. The Xcode is named outright, since the runner's default moves.
+  #          AniList), then the Fixtures app's tests, which link it too, and the Mac player's
+  #          controls clicked.
+  #   apps   the app itself, from the XcodeGen project: built for an iPhone with signing off, and
+  #          for the Mac in Release, on the engines the apps ship.
+  #   audit  the accessibility audit on an iPhone Simulator, on the Simulator's testing engine, and
+  #          the FFI's tests as the apps build it, in the macOS testing engine's build that the
+  #          Simulator's engine makes first. The FFI's tests with the desktop feature are the macOS
+  #          test job's.
   #
-  # A group does not wait for the other to pass: its steps run after the other's failure, so one
-  # run reports both.
+  # One job did all three in turn, and took most of an hour warm. Split, the longest is the swift
+  # job, and the three share nothing they would have to wait for: each builds only the engines
+  # its checks link (the macOS testing engine is built by two of them, a few minutes each on a
+  # warm Rust cache), and all three restore the same caches. With the macOS test job that is
+  # four macOS runners for a pull request, of the five the account has at a time.
+  #
+  # A job's steps run after an earlier step's failure, so one run reports every check it can.
+  # The Xcode is named outright, since the runner's default moves.
   #
   # Built for an iPhone rather than the Simulator, so the C beneath the engine is built for the
   # SDK the app ships on: BoringSSL with cmake and bindgen, aws-lc, SQLite, zstd and wasmtime's
@@ -567,24 +574,27 @@ jobs:
   # break is the Swift, which the cargo profile beneath it does not change, and a second engine
   # in the release profile took ten minutes. The apps' release builds that one.
   #
-  # The testing engine, the release engines and libmpv are saved from main, for the next pull
+  # The testing engines, the release engines and libmpv are saved from main, for the next pull
   # request, keyed by what their scripts build them from: a pull request that leaves the engine's
-  # crates alone takes the engines from there and compiles no Rust at all. Both flavours are one
-  # cache, as they are built here together, and the macOS slices of the two share every
-  # dependency but the test kit. A push to main builds only what those caches lack, and no app,
-  # and only when its change would make a new cache (the changes job).
+  # crates alone takes the engines from there and compiles no Rust at all. A push to main runs
+  # one job, caches, which builds what those caches lack, every slice in one Rust build that it
+  # saves for the three jobs above, and the FFI test build's dependencies with it, and tests
+  # nothing. It runs only when its change would make a new cache (the changes job).
   apple:
     needs: changes
     if: needs.changes.outputs.apple == 'true'
+    name: apple (${{ matrix.part }})
     # Xcode 27.1, the build the app is developed with, so CI compiles what a local build does.
     runs-on: xcode-27
+    strategy:
+      fail-fast: false
+      matrix:
+        part: ${{ fromJSON(github.event_name == 'pull_request' && '["swift", "apps", "audit"]' || '["caches"]') }}
     env:
       XCODE: "27.1"
       DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
       CARGO_TARGET_DIR: ${{ github.workspace }}/target
-      # A push to main builds the engines for their caches, if the cache lacks them, and tests
-      # nothing.
-      CHECKS: ${{ github.event_name == 'pull_request' }}
+      PART: ${{ matrix.part }}
     steps:
       - uses: actions/checkout@v7
       - run: tools/ci-toolchain.sh
@@ -602,15 +612,16 @@ jobs:
           key: ci-apple-engines-sim-xcode${{ env.XCODE }}-${{ steps.sources.outputs.hash }}
           lookup-only: ${{ github.event_name == 'push' }}
       # Not read when every engine came from the cache above and the Rust tests below are
-      # skipped, since nothing here compiles but engine.sh.
+      # skipped, since nothing here compiles but engine.sh. One cache for every job here, saved
+      # by the caches job, which builds every slice.
       - uses: Swatinem/rust-cache@v2
-        if: steps.engine.outputs.cache-hit != 'true' || (env.CHECKS == 'true' && needs.changes.outputs.engine == 'true')
+        if: steps.engine.outputs.cache-hit != 'true' || (env.PART == 'audit' && needs.changes.outputs.engine == 'true')
         with:
           shared-key: apple
           save-if: ${{ github.ref == 'refs/heads/main' }}
-      - if: env.CHECKS == 'true'
+      - if: env.PART != 'caches'
         run: xcodebuild -version
-      - if: env.CHECKS == 'true'
+      - if: env.PART != 'caches'
         run: brew install xcodegen
       # libmpv, which both apps embed and their player frameworks check for, kept by what
       # mpv.sh's stamp is made from. Before the Swift tests, which find it current.
@@ -624,8 +635,8 @@ jobs:
           key: ci-apple-mpv-macos-ios-sim-xcode${{ env.XCODE }}-${{ hashFiles('apple/scripts/mpv.sh', 'apple/patches/**') }}
           lookup-only: ${{ github.event_name == 'push' }}
       - name: libmpv
-        if: env.CHECKS == 'true' || steps.mpv.outputs.cache-hit != 'true'
-        # The Simulator's slice too, for the accessibility audit below.
+        if: env.PART != 'caches' || steps.mpv.outputs.cache-hit != 'true'
+        # The Simulator's slice too, for the accessibility audit.
         run: apple/scripts/mpv.sh macos ios ios-sim
       - name: Keep libmpv
         if: github.ref == 'refs/heads/main' && steps.mpv.outputs.cache-hit != 'true'
@@ -636,29 +647,23 @@ jobs:
 
       # Swift: the player's tests play media apple/scripts/player-media.sh makes with ffmpeg.
       - name: Swift, ffmpeg for the player's media
-        if: env.CHECKS == 'true'
+        if: env.PART == 'swift'
         run: brew install ffmpeg
-      # First, so a Swift change that does not compile says so in minutes. The deployment target
-      # is the engine's, so the Rust tests below share its build.
+      # First, so a Swift change that does not compile says so in minutes.
       - name: Swift, the packages' tests
-        if: env.CHECKS == 'true'
+        if: env.PART == 'swift'
         env:
           MACOSX_DEPLOYMENT_TARGET: "26.0"
         run: apple/scripts/test.sh
-      # What test.sh builds first, for the cache.
-      - name: The testing engine
-        if: env.CHECKS != 'true' && steps.engine.outputs.cache-hit != 'true'
-        env:
-          MACOSX_DEPLOYMENT_TARGET: "26.0"
-        run: apple/scripts/engine.sh testing macos
+      # The XcodeGen project every job below builds from.
+      - name: The project
+        if: ${{ !cancelled() && env.PART != 'caches' }}
+        run: cd apple && xcodegen generate
       # The Fixtures app from the XcodeGen project, its tests on the Mac (Swift Testing over the
       # testing engine test.sh built, signed to run locally), with the libmpv and subtitle font
       # test.sh made for the player's tests.
-      - name: The project
-        if: ${{ !cancelled() && env.CHECKS == 'true' }}
-        run: cd apple && xcodegen generate
       - name: Swift, the Fixtures app on the Mac
-        if: ${{ !cancelled() && env.CHECKS == 'true' }}
+        if: ${{ !cancelled() && env.PART == 'swift' }}
         env:
           MACOSX_DEPLOYMENT_TARGET: "26.0"
         run: >-
@@ -671,7 +676,7 @@ jobs:
       # where it cannot be, the step fails saying so rather than waiting on a password prompt.
       # Time-boxed all the same: a run that hangs ends with the step, not the job.
       - name: Swift, the Mac player's controls clicked
-        if: ${{ !cancelled() && env.CHECKS == 'true' }}
+        if: ${{ !cancelled() && env.PART == 'swift' }}
         timeout-minutes: 20
         env:
           MACOSX_DEPLOYMENT_TARGET: "26.0"
@@ -689,37 +694,41 @@ jobs:
       # What a failed click saw: XCTest keeps a screenshot of the screen at each failure in the
       # result bundle, which Xcode opens.
       - uses: actions/upload-artifact@v7
-        if: failure()
+        if: failure() && env.PART == 'swift'
         with:
           name: mac-player-clicks
           path: ${{ runner.temp }}/mac-player.xcresult
           if-no-files-found: ignore
           retention-days: 7
+
+      # Apple: the engines the apps ship, the schemes' pre-actions build these too, but quietly,
+      # into a log; built here, a failure says why in the job.
+      - name: Apple, the engines
+        if: ${{ !cancelled() && (env.PART == 'apps' || (env.PART == 'caches' && steps.engine.outputs.cache-hit != 'true')) }}
+        run: apple/scripts/engine.sh release macos ios
+      # The Simulator's testing engine, which the accessibility audit builds the Fixtures app on,
+      # with the macOS slice engine.sh always builds beside it, which the Rust tests below share.
+      - name: Apple, the testing engine for the Simulator
+        if: ${{ !cancelled() && (env.PART == 'audit' || (env.PART == 'caches' && steps.engine.outputs.cache-hit != 'true')) }}
+        run: apple/scripts/engine.sh testing ios-sim
       # The apps build the engine without the desktop feature, so its hosted player has to pass
-      # its contract in that build too: the FFI's own tests in the build test.sh just made, with
-      # the features, target and profile engine.sh gives the Mac's slice, so nothing beneath the
-      # FFI compiles again. Only when the engine changed: a change to apple/ alone cannot move
-      # them. Without the image's ANDROID_NDK_HOME, as engine.sh's clean environment has it:
-      # BoringSSL's build script watches it, and seeing it change built BoringSSL again.
+      # its contract in that build too: the FFI's own tests in the build engine.sh just made for
+      # the Mac's slice, with its features, target and profile, so nothing beneath the FFI
+      # compiles again but what the tests' own dependencies turn on. Only when the engine changed:
+      # a change to apple/ alone cannot move them. On main, only built, so the Rust cache holds
+      # those dependencies too. Without the image's ANDROID_NDK_HOME, as engine.sh's clean
+      # environment has it: BoringSSL's build script watches it, and seeing it change built
+      # BoringSSL again.
       - name: Swift, Rust tests, the apps' build
-        if: ${{ !cancelled() && env.CHECKS == 'true' && needs.changes.outputs.engine == 'true' }}
+        if: >-
+          ${{ !cancelled() && ((env.PART == 'audit' && needs.changes.outputs.engine == 'true')
+          || (env.PART == 'caches' && steps.engine.outputs.cache-hit != 'true')) }}
         env:
           MACOSX_DEPLOYMENT_TARGET: "26.0"
         run: >-
           env -u ANDROID_NDK_HOME
           cargo test -p kaeri-ffi --no-default-features --features testing,cli
-          --target aarch64-apple-darwin --profile app-dev
-
-      # Apple: the engines the apps ship, the schemes' pre-actions build these too, but quietly,
-      # into a log; built here, a failure says why in the job.
-      - name: Apple, the engines
-        if: ${{ !cancelled() && (env.CHECKS == 'true' || steps.engine.outputs.cache-hit != 'true') }}
-        run: apple/scripts/engine.sh release macos ios
-      # The Simulator's testing engine, which the accessibility audit below builds the Fixtures app
-      # on. Here, so a push to main saves it with the others.
-      - name: Apple, the testing engine for the Simulator
-        if: ${{ !cancelled() && (env.CHECKS == 'true' || steps.engine.outputs.cache-hit != 'true') }}
-        run: apple/scripts/engine.sh testing ios-sim
+          --target aarch64-apple-darwin --profile app-dev${{ env.PART == 'caches' && ' --no-run' || '' }}
       # Every slice above, testing and release, for the pull requests after this push.
       - name: Keep the engines
         if: github.ref == 'refs/heads/main' && steps.engine.outputs.cache-hit != 'true'
@@ -729,17 +738,17 @@ jobs:
           key: ${{ steps.engine.outputs.cache-primary-key }}
       # The CJK subtitle font the iOS app bundles, which its iOS builds check for.
       - name: Apple, the subtitle font
-        if: ${{ !cancelled() && env.CHECKS == 'true' }}
+        if: ${{ !cancelled() && (env.PART == 'apps' || env.PART == 'audit') }}
         run: apple/scripts/fonts.sh
       - name: Apple, the app for an iPhone
-        if: ${{ !cancelled() && env.CHECKS == 'true' }}
+        if: ${{ !cancelled() && env.PART == 'apps' }}
         run: >-
           xcodebuild -project apple/Kaeri.xcodeproj -scheme Kaeri
           -destination generic/platform=iOS build CODE_SIGNING_ALLOWED=NO
       # In Release, as the app is kept, on the app-dev engine above (KAERI_ENGINE_PROFILE
       # names the profile the Release configuration's engine check expects).
       - name: Apple, the app for the Mac in Release
-        if: ${{ !cancelled() && env.CHECKS == 'true' }}
+        if: ${{ !cancelled() && env.PART == 'apps' }}
         run: >-
           xcodebuild -project apple/Kaeri.xcodeproj -scheme Kaeri -configuration Release
           -destination platform=macOS build CODE_SIGNING_ALLOWED=NO KAERI_ENGINE_PROFILE=app-dev
@@ -748,7 +757,7 @@ jobs:
       # fail the job: the findings are listed in the job summary, and KAERI_A11Y_STRICT=1 on
       # this step makes an issue fail it. A build that does not compile always fails it.
       - name: Apple, the accessibility audit on an iPhone Simulator
-        if: ${{ !cancelled() && env.CHECKS == 'true' }}
+        if: ${{ !cancelled() && env.PART == 'audit' }}
         timeout-minutes: 30
         env:
           MACOSX_DEPLOYMENT_TARGET: "26.0"
@@ -782,7 +791,7 @@ jobs:
           fi
           exit 0
       - uses: actions/upload-artifact@v7
-        if: ${{ !cancelled() && env.CHECKS == 'true' }}
+        if: ${{ !cancelled() && env.PART == 'audit' }}
         with:
           name: apple-accessibility-audit
           path: ${{ runner.temp }}/audit.xcresult
