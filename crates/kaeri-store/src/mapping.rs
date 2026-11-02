@@ -83,7 +83,13 @@ impl Store {
         title: Option<&str>,
         at: i64,
     ) -> Result<()> {
-        self.with_conn(|c| {
+        self.with_tx(|c| {
+            self.emit_reg(
+                c,
+                crate::sync::kinds::MATCH,
+                &format!("{}/{provider_id}", anilist_id.get()),
+                Some(&crate::sync::match_json(provider_key.as_str(), title.map(str::to_owned))),
+            )?;
             c.execute(
                 "INSERT INTO mapping_override
                     (anilist_id, provider_id, provider_key, created_at, title)
@@ -112,6 +118,19 @@ impl Store {
         // statements produce when the second fails: the override gone and the cached
         // resolution left behind, still answering with the key the user just asked to forget.
         self.with_tx(|tx| {
+            if crate::sync::device_of(tx)?.is_some() {
+                let providers: Vec<String> = {
+                    let mut stmt = tx.prepare(
+                        "SELECT provider_id FROM mapping_override WHERE anilist_id = ?1",
+                    )?;
+                    stmt.query_map([anilist_id.get()], |r| r.get(0))?
+                        .collect::<rusqlite::Result<_>>()?
+                };
+                for provider in providers {
+                    let key = format!("{}/{provider}", anilist_id.get());
+                    self.emit_reg(tx, crate::sync::kinds::MATCH, &key, None)?;
+                }
+            }
             tx.execute(
                 "DELETE FROM mapping_override WHERE anilist_id = ?1",
                 [anilist_id.get()],
@@ -125,7 +144,9 @@ impl Store {
     }
 
     pub fn clear_override(&self, anilist_id: AnilistId, provider_id: &str) -> Result<()> {
-        self.with_conn(|c| {
+        self.with_tx(|c| {
+            let key = format!("{}/{provider_id}", anilist_id.get());
+            self.emit_reg(c, crate::sync::kinds::MATCH, &key, None)?;
             c.execute(
                 "DELETE FROM mapping_override WHERE anilist_id = ?1 AND provider_id = ?2",
                 rusqlite::params![anilist_id.get(), provider_id],

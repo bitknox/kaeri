@@ -116,6 +116,16 @@ impl Store {
     /// `episodes_done` counts *distinct* completed episodes from the log rather than
     /// incrementing a counter, so rewatching an episode cannot inflate it.
     pub fn record_event(&self, event: &WatchEvent) -> Result<()> {
+        self.record_event_queued(event, Vec::new())
+    }
+
+    /// [`Self::record_event`], saying which trackers the watch was queued for, so that devices
+    /// that receive it know which trackers its origin already covers.
+    pub fn record_event_queued(
+        &self,
+        event: &WatchEvent,
+        queued_for: Vec<String>,
+    ) -> Result<()> {
         self.with_tx(|tx| {
             tx.execute(
                 "INSERT INTO watch_event
@@ -134,6 +144,12 @@ impl Store {
                     event.at,
                 ],
             )?;
+
+            // With sync on, the op, the event's id and the projection are the sync log's.
+            let rowid = tx.last_insert_rowid();
+            if self.sync_local_watch(tx, rowid, event, queued_for)? {
+                return Ok(());
+            }
 
             let episodes_done: u32 = tx.query_row(
                 "SELECT COUNT(DISTINCT episode) FROM watch_event
@@ -193,6 +209,9 @@ impl Store {
     /// inflate the count. Returns how many episodes were newly marked.
     pub fn adopt_progress(&self, anilist_id: AnilistId, upto: u32, at: i64) -> Result<u32> {
         self.with_tx(|tx| {
+            if let Some(device) = crate::sync::device_of(tx)? {
+                return self.adopt_synced(tx, &device, anilist_id, upto, at);
+            }
             // One statement over a generated series rather than a query per episode: a
             // catch-up can be hundreds of episodes, and the per-episode form spent a
             // round trip on each one.
@@ -247,10 +266,12 @@ impl Store {
     /// watched of an episode only marked.
     pub fn forget_episode(&self, anilist_id: AnilistId, episode: &str) -> Result<()> {
         self.with_tx(|tx| {
+            let removed = Self::sync_event_uids(tx, anilist_id.get(), episode, false)?;
             tx.execute(
                 "DELETE FROM watch_event WHERE anilist_id = ?1 AND episode = ?2",
                 rusqlite::params![anilist_id.get(), episode],
             )?;
+            self.sync_local_unwatch(tx, anilist_id.get(), episode, removed)?;
             reproject(tx, anilist_id)
         })
     }
@@ -282,6 +303,8 @@ impl Store {
                 params,
                 |r| r.get(0),
             )?;
+            let removed =
+                Self::sync_event_uids(tx, anilist_id.get(), episode, !played_through)?;
             if played_through {
                 tx.execute(
                     "DELETE FROM watch_event WHERE anilist_id = ?1 AND episode = ?2",
@@ -294,6 +317,7 @@ impl Store {
                     params,
                 )?;
             }
+            self.sync_local_unwatch(tx, anilist_id.get(), episode, removed)?;
             reproject(tx, anilist_id)?;
             Ok(tx
                 .query_row(
@@ -399,10 +423,16 @@ impl Store {
     /// so the meter and resume point are intact wherever else they show. The next recorded
     /// watch clears the flag — a dismissed title earns its way back by being watched.
     pub fn hide_from_continue(&self, anilist_id: AnilistId) -> Result<()> {
-        self.with_conn(|c| {
-            c.execute(
+        self.with_tx(|tx| {
+            tx.execute(
                 "UPDATE watch_progress SET hidden = 1 WHERE anilist_id = ?1",
                 [anilist_id.get()],
+            )?;
+            self.emit_reg(
+                tx,
+                crate::sync::kinds::HIDE,
+                &anilist_id.get().to_string(),
+                Some("1"),
             )?;
             Ok(())
         })
@@ -537,6 +567,10 @@ fn row_to_event(r: &rusqlite::Row<'_>) -> rusqlite::Result<WatchEvent> {
 /// with nothing behind it and no resume point to return to. Rebuilt from the newest surviving
 /// event, or dropped when the last one is gone.
 fn reproject(tx: &rusqlite::Transaction<'_>, anilist_id: AnilistId) -> Result<()> {
+    // With sync on the projection is the sync log's: newest by stamp, and hidden by its register.
+    if crate::sync::device_of(tx)?.is_some() {
+        return Ok(crate::sync::refresh_title(tx, anilist_id.get())?);
+    }
     let episodes_done: u32 = tx.query_row(
         "SELECT COUNT(DISTINCT episode) FROM watch_event
           WHERE anilist_id = ?1 AND completed = 1",

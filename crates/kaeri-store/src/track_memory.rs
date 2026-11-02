@@ -51,7 +51,13 @@ impl Store {
     ) -> Result<()> {
         let json = serde_json::to_string(memory)
             .map_err(|source| StoreError::Encode { what: "track memory", source })?;
-        self.with_conn(|c| {
+        self.with_tx(|c| {
+            self.emit_reg(
+                c,
+                crate::sync::kinds::TRACK_MEMORY,
+                &format!("{}/{}", anilist_id.get(), translation.as_str()),
+                Some(&json),
+            )?;
             c.execute(
                 "INSERT INTO track_memory (anilist_id, translation, memory, updated_at)
                  VALUES (?1, ?2, ?3, ?4)

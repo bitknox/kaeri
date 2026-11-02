@@ -522,10 +522,107 @@ const MIGRATIONS: &[(&str, &str)] = &[
     );
     "#,
     ),
+    (
+        "0021_sync_log",
+        r#"
+    -- Cross-device sync. Nothing here is written until `Store::sync_enable` has run, so an
+    -- install that never turns sync on carries empty tables and the two event columns.
+    ALTER TABLE watch_event ADD COLUMN uid   TEXT;
+    ALTER TABLE watch_event ADD COLUMN stamp INTEGER;
+    CREATE UNIQUE INDEX idx_event_uid ON watch_event(uid) WHERE uid IS NOT NULL;
+
+    CREATE TABLE sync_meta (
+        key   TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+    );
+
+    -- Every change this group has seen: one device's ops are numbered from 1 with no gaps.
+    -- `body` is JSON; compaction rewrites a superseded body to a no-op and keeps the number.
+    CREATE TABLE sync_op (
+        device   TEXT    NOT NULL,
+        seq      INTEGER NOT NULL,
+        stamp    INTEGER NOT NULL,
+        body     TEXT    NOT NULL,
+        received INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (device, seq)
+    ) WITHOUT ROWID;
+
+    -- Last-writer-wins registers: the winning stamp and writer, and the value when it is not
+    -- held in a table of its own. A `NULL` value is a cleared register.
+    CREATE TABLE sync_reg (
+        kind   TEXT    NOT NULL,
+        key    TEXT    NOT NULL,
+        stamp  INTEGER NOT NULL,
+        device TEXT    NOT NULL,
+        value  TEXT,
+        PRIMARY KEY (kind, key)
+    ) WITHOUT ROWID;
+
+    -- Events an unwatch removed, kept so that the event arriving later is not put back.
+    CREATE TABLE sync_tomb (
+        uid   TEXT PRIMARY KEY,
+        stamp INTEGER NOT NULL
+    ) WITHOUT ROWID;
+
+    -- The newest unwatch of an episode and who wrote it, for noticing a kept watch.
+    CREATE TABLE sync_unwatch (
+        anilist_id INTEGER NOT NULL,
+        episode    TEXT    NOT NULL,
+        stamp      INTEGER NOT NULL,
+        device     TEXT    NOT NULL,
+        PRIMARY KEY (anilist_id, episode)
+    ) WITHOUT ROWID;
+
+    CREATE TABLE sync_mark (
+        tracker    TEXT    NOT NULL,
+        anilist_id INTEGER NOT NULL,
+        episode    INTEGER NOT NULL,
+        PRIMARY KEY (tracker, anilist_id)
+    ) WITHOUT ROWID;
+
+    CREATE TABLE sync_peer (
+        device    TEXT PRIMARY KEY,
+        name      TEXT,
+        pubkey    TEXT,
+        removed   INTEGER NOT NULL DEFAULT 0,
+        trackers  TEXT    NOT NULL DEFAULT '[]',
+        name_stamp INTEGER NOT NULL DEFAULT 0,
+        added_at  INTEGER,
+        last_seen INTEGER
+    ) WITHOUT ROWID;
+
+    -- What other devices hold downloaded: facts only they can state.
+    CREATE TABLE sync_remote_download (
+        device     TEXT    NOT NULL,
+        anilist_id INTEGER NOT NULL,
+        episode    TEXT    NOT NULL,
+        done       INTEGER NOT NULL,
+        stamp      INTEGER NOT NULL,
+        PRIMARY KEY (device, anilist_id, episode)
+    ) WITHOUT ROWID;
+
+    -- A watch kept against an unwatch it had not seen: surfaced for seven days.
+    CREATE TABLE sync_note (
+        id             INTEGER PRIMARY KEY AUTOINCREMENT,
+        anilist_id     INTEGER NOT NULL,
+        episode        TEXT    NOT NULL,
+        unwatch_device TEXT    NOT NULL,
+        watch_device   TEXT    NOT NULL,
+        at             INTEGER NOT NULL,
+        UNIQUE (anilist_id, episode, unwatch_device, watch_device)
+    );
+    "#,
+    ),
 ];
 
 /// Apply any migrations the database has not yet seen.
 pub fn migrate(conn: &Connection) -> rusqlite::Result<u32> {
+    migrate_until(conn, None)
+}
+
+/// [`migrate`], stopping before the migration called `stop`: a database as an older release left
+/// it, for the tests of what a migration does to existing data.
+pub fn migrate_until(conn: &Connection, stop: Option<&str>) -> rusqlite::Result<u32> {
     conn.pragma_update(None, "journal_mode", "WAL")?;
     conn.pragma_update(None, "foreign_keys", "ON")?;
     conn.pragma_update(None, "synchronous", "NORMAL")?;
@@ -539,6 +636,9 @@ pub fn migrate(conn: &Connection) -> rusqlite::Result<u32> {
 
     let mut applied = 0;
     for (name, sql) in MIGRATIONS {
+        if Some(*name) == stop {
+            break;
+        }
         let already: bool = conn.query_row(
             "SELECT EXISTS(SELECT 1 FROM schema_migration WHERE name = ?1)",
             [name],

@@ -10,6 +10,41 @@ use kaeri_core::ids::AnilistId;
 use crate::{Result, Store};
 
 impl Store {
+    /// Clear each register a show reset is about to delete, so other devices reset too.
+    fn sync_reset_show(&self, tx: &rusqlite::Transaction<'_>, id: u32) -> Result<()> {
+        use crate::sync::kinds;
+        let mut keys: Vec<(&str, String)> = Vec::new();
+        let mut gather = |kind: &'static str,
+                          sql: &str,
+                          fmt: &dyn Fn(&rusqlite::Row<'_>) -> rusqlite::Result<String>|
+         -> rusqlite::Result<()> {
+            let mut stmt = tx.prepare(sql)?;
+            for row in stmt.query_map([id], |r| fmt(r))? {
+                keys.push((kind, row?));
+            }
+            Ok(())
+        };
+        gather(
+            kinds::SHOW_SETTING,
+            "SELECT setting FROM show_setting WHERE anilist_id = ?1",
+            &|r| Ok(format!("{id}/{}", r.get::<_, String>(0)?)),
+        )?;
+        gather(
+            kinds::TRACK_MEMORY,
+            "SELECT translation FROM track_memory WHERE anilist_id = ?1",
+            &|r| Ok(format!("{id}/{}", r.get::<_, String>(0)?)),
+        )?;
+        gather(
+            kinds::PIN,
+            "SELECT anilist_id FROM provider_preference WHERE anilist_id = ?1",
+            &|_| Ok(id.to_string()),
+        )?;
+        for (kind, key) in keys {
+            self.emit_reg(tx, kind, &key, None)?;
+        }
+        Ok(())
+    }
+
     /// What show `anilist_id` sets for itself: each setting's name and its value as text, by
     /// name.
     pub fn show_settings(&self, anilist_id: AnilistId) -> Result<Vec<(String, String)>> {
@@ -33,7 +68,9 @@ impl Store {
         value: Option<&str>,
         at: i64,
     ) -> Result<()> {
-        self.with_conn(|c| {
+        self.with_tx(|c| {
+            let key = format!("{}/{setting}", anilist_id.get());
+            self.emit_reg(c, crate::sync::kinds::SHOW_SETTING, &key, value)?;
             match value {
                 Some(value) => c.execute(
                     "INSERT INTO show_setting (anilist_id, setting, value, updated_at)
@@ -73,6 +110,9 @@ impl Store {
     /// the tracks remembered for it, all forgotten together or none of them.
     pub fn reset_show(&self, anilist_id: AnilistId) -> Result<()> {
         self.with_tx(|tx| {
+            if crate::sync::device_of(tx)?.is_some() {
+                self.sync_reset_show(tx, anilist_id.get())?;
+            }
             for table in ["show_setting", "provider_preference", "track_memory"] {
                 tx.execute(
                     &format!("DELETE FROM {table} WHERE anilist_id = ?1"),

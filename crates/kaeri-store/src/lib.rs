@@ -29,6 +29,7 @@ pub mod show_setting;
 pub mod skip_mark;
 pub mod state;
 pub mod stats;
+pub mod sync;
 pub mod track_memory;
 
 use std::{
@@ -92,6 +93,8 @@ pub type Result<T> = std::result::Result<T, StoreError>;
 #[derive(Clone)]
 pub struct Store {
     conn: Arc<Mutex<Connection>>,
+    /// The sync log's clock; the log itself is in the database.
+    sync: Arc<sync::SyncCtx>,
 }
 
 impl std::fmt::Debug for Store {
@@ -168,7 +171,7 @@ impl Store {
         }
         let conn = Connection::open(path)?;
         schema::migrate(&conn)?;
-        Ok(Self { conn: Arc::new(Mutex::new(conn)) })
+        Ok(Self { conn: Arc::new(Mutex::new(conn)), sync: Arc::new(sync::SyncCtx::new()) })
     }
 
     /// [`Self::open`], with a database too damaged to open moved aside and a new one started in
@@ -193,7 +196,7 @@ impl Store {
     pub fn open_in_memory() -> Result<Self> {
         let conn = Connection::open_in_memory()?;
         schema::migrate(&conn)?;
-        Ok(Self { conn: Arc::new(Mutex::new(conn)) })
+        Ok(Self { conn: Arc::new(Mutex::new(conn)), sync: Arc::new(sync::SyncCtx::new()) })
     }
 
     /// Run `f` with the connection held.

@@ -86,6 +86,42 @@ impl Download {
 }
 
 impl Store {
+    /// Tell the sync log what this device holds, for the rows matching `filter`: whether each is
+    /// held now, and whether letting it go is also a let-go for keep next.
+    fn sync_download_rows(
+        &self,
+        tx: &rusqlite::Transaction<'_>,
+        filter: &str,
+        params: impl rusqlite::Params,
+        done: bool,
+        let_go: bool,
+    ) -> Result<()> {
+        if crate::sync::device_of(tx)?.is_none() {
+            return Ok(());
+        }
+        let rows: Vec<(u32, String)> = {
+            let mut stmt = tx
+                .prepare(&format!("SELECT anilist_id, episode FROM download WHERE {filter}"))?;
+            stmt.query_map(params, |r| Ok((r.get(0)?, r.get(1)?)))?
+                .collect::<rusqlite::Result<_>>()?
+        };
+        for (anilist_id, episode) in rows {
+            self.emit(
+                tx,
+                crate::sync::OpBody::DownloadState {
+                    anilist_id,
+                    episode: episode.clone(),
+                    done,
+                },
+            )?;
+            if let_go {
+                let key = format!("{anilist_id}/{episode}");
+                self.emit_reg(tx, crate::sync::kinds::LET_GO, &key, Some("1"))?;
+            }
+        }
+        Ok(())
+    }
+
     /// Add an episode to the queue, or return the existing row.
     ///
     /// Idempotent on `(anilist_id, episode)`. A held-down key must not queue the same file eight
@@ -125,10 +161,14 @@ impl Store {
         self.with_tx(|c| {
             // Asked for by the viewer: theirs to keep, whatever they let go of before.
             if !ahead {
-                c.execute(
+                let freed = c.execute(
                     "DELETE FROM download_dismissed WHERE anilist_id = ?1 AND episode = ?2",
                     rusqlite::params![anilist_id.get(), episode],
                 )?;
+                if freed > 0 {
+                    let key = format!("{}/{episode}", anilist_id.get());
+                    self.emit_reg(c, crate::sync::kinds::LET_GO, &key, None)?;
+                }
             }
             c.execute(
                 "INSERT INTO download
@@ -288,7 +328,7 @@ impl Store {
 
     /// Mark a download finished, recording where the file ended up.
     pub fn finish_download(&self, id: i64, path: Option<&str>) -> Result<()> {
-        self.with_conn(|c| {
+        self.with_tx(|c| {
             c.execute(
                 // `downloaded = total` reads as "it is all here", and is right whenever the
                 // total was learned. It was unconditional, so a download that finished before
@@ -304,6 +344,7 @@ impl Store {
                   WHERE id = ?1",
                 rusqlite::params![id, path, now()],
             )?;
+            self.sync_download_rows(c, "id = ?1", rusqlite::params![id], true, false)?;
             Ok(())
         })
     }
@@ -322,6 +363,7 @@ impl Store {
     /// episode again unless they ask for it themselves.
     pub fn remove_download(&self, id: i64) -> Result<()> {
         self.with_tx(|tx| {
+            self.sync_download_rows(tx, "id = ?1", rusqlite::params![id], false, true)?;
             tx.execute(
                 "INSERT OR REPLACE INTO download_dismissed (anilist_id, episode, at)
                  SELECT anilist_id, episode, ?2 FROM download WHERE id = ?1",
@@ -336,6 +378,7 @@ impl Store {
     /// keep next does not fetch their episodes again either.
     pub fn clear_completed_downloads(&self) -> Result<usize> {
         self.with_tx(|tx| {
+            self.sync_download_rows(tx, "state = 'done'", rusqlite::params![], false, true)?;
             tx.execute(
                 "INSERT OR REPLACE INTO download_dismissed (anilist_id, episode, at)
                  SELECT anilist_id, episode, ?1 FROM download WHERE state = 'done'",
