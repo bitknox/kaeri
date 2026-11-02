@@ -26,7 +26,7 @@
 //! asks for it three times over — its page, its episodes, then the play — and each was a
 //! request against thirty a minute for an answer a moment old. See [`Recent`].
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant, SystemTime};
@@ -171,6 +171,9 @@ fn as_of(mut media: Media, age: Duration) -> Media {
 #[derive(Default)]
 struct Recent {
     titles: HashMap<AnilistId, Flight>,
+    /// The class each ask under way goes in, raised by whoever joins it: see
+    /// [`crate::anilist::Lane`].
+    lanes: HashMap<AnilistId, crate::anilist::Lane>,
 }
 
 /// A circuit breaker for one fresh source.
@@ -265,6 +268,8 @@ pub struct Meta {
     /// What the episode tables of the covers on screen need, asked together: see
     /// [`Self::media_tables`].
     tables: Arc<Mutex<Tables>>,
+    /// The seasons whose headers are being asked for: see [`Self::season_headers`].
+    headers_asking: Arc<Mutex<HashSet<AnilistId>>>,
 }
 
 /// What [`Meta::media_tables`] brought, in memory only, and what it is still asking.
@@ -287,11 +292,22 @@ pub const TABLE_FOR: Duration = Duration::from_secs(30 * 60);
 /// Whether a record that came at `at` still builds a table at `now`: younger than
 /// [`TABLE_FOR`], and no episode has aired since.
 fn table_serves(at: Instant, media: &Media, now: Instant) -> bool {
+    now.saturating_duration_since(at) < TABLE_FOR && !aired_since(at, media, now)
+}
+
+/// Whether `media`, which came at `at`, has aired an episode by `now`.
+fn aired_since(at: Instant, media: &Media, now: Instant) -> bool {
     let age = now.saturating_duration_since(at);
-    let aired = media.next_airing_episode.as_ref().is_some_and(|next| {
+    media.next_airing_episode.as_ref().is_some_and(|next| {
         next.time_until_airing <= i64::try_from(age.as_secs()).unwrap_or(i64::MAX)
-    });
-    age < TABLE_FOR && !aired
+    })
+}
+
+/// Whether a header that came at `at` still heads its page at `now`: no episode has aired
+/// since, which moves its count and its countdown. How long it is kept is the franchise's
+/// ([`franchise::Relations::header`]).
+fn header_serves(at: Instant, media: &Media, now: Instant) -> bool {
+    !aired_since(at, media, now)
 }
 
 /// A title recommendations were asked from: its id, its name and the ids recommended off it,
@@ -318,8 +334,8 @@ type BatchAnswer = Arc<Result<Vec<Media>>>;
 
 struct Batch {
     ids: Vec<AnilistId>,
-    /// Nobody on a screen is waiting for any of it.
-    low: bool,
+    /// The class it goes in: the most urgent of those waiting on it.
+    lane: crate::anilist::Lane,
     answer: Arc<tokio::sync::watch::Sender<Option<BatchAnswer>>>,
 }
 
@@ -345,6 +361,7 @@ impl Meta {
             many: Arc::default(),
             aired: Arc::default(),
             tables: Arc::default(),
+            headers_asking: Arc::default(),
         }
     }
 
@@ -645,11 +662,14 @@ impl Meta {
     /// fallback or the cache, which may be a list's row with none of the page's fields.
     pub async fn media_answered(&self, id: AnilistId) -> Result<(Media, bool)> {
         let flight = self.flight(id);
+        let lane = self.flight_lane(id);
         let signed_in = self.anilist.is_authenticated();
         let answered = flight
-            .get_or_init(|| async {
-                let (outcome, fresh) = self.ask_media(id).await;
-                Answered { at: Instant::now(), outcome, fresh, signed_in }
+            .get_or_init(|| {
+                lane.run(async {
+                    let (outcome, fresh) = self.ask_media(id).await;
+                    Answered { at: Instant::now(), outcome, fresh, signed_in }
+                })
             })
             .await;
         answered.as_of(Instant::now()).map(|media| (media, answered.fresh))
@@ -821,6 +841,114 @@ impl Meta {
         franchise::seasons(&self.relations, media, fresh, hold, ask, say).await;
     }
 
+    /// The headers of the seasons of `id`'s franchise, for each season's page to show its top at
+    /// once when it is opened: its title, art, facts and synopsis, before AniList answers for
+    /// the page. Those not kept already go in one request at low priority (see
+    /// [`AniList::media_many`]), and are kept with the franchise for as long as it is
+    /// ([`franchise::Relations::header`]), so the other seasons' pages cost nothing more.
+    ///
+    /// Every season's header that is known comes back, `id`'s own left out, so a screen can
+    /// fetch their art ahead. Nothing while the walk along the franchise is still under way, and
+    /// nothing is asked when AniList fails: each page is then asked for when it is opened, as
+    /// before. AniList only, since the fallbacks have no franchise.
+    pub async fn season_headers(&self, id: AnilistId) -> Vec<Media> {
+        if crate::demo::is_demo(id) {
+            return Vec::new();
+        }
+        let now = Instant::now();
+        let Some(seasons) = franchise::lock(&self.relations).seasons_known(id, now) else {
+            return Vec::new();
+        };
+        let others: Vec<AnilistId> =
+            seasons.iter().map(|card| card.id).filter(|season| *season != id).collect();
+        let wanted: Vec<AnilistId> = {
+            let Ok(mut asking) = self.headers_asking.lock() else { return Vec::new() };
+            let relations = franchise::lock(&self.relations);
+            let wanted: Vec<AnilistId> = others
+                .iter()
+                .copied()
+                .filter(|season| {
+                    relations
+                        .header(*season, now)
+                        .is_none_or(|(media, at)| !header_serves(at, &media, now))
+                        && !self.answered(*season)
+                        && !asking.contains(season)
+                        && !crate::demo::is_demo(*season)
+                })
+                .collect();
+            asking.extend(wanted.iter().copied());
+            wanted
+        };
+        if !wanted.is_empty() {
+            self.preload_season_headers(&wanted).await;
+            if let Ok(mut asking) = self.headers_asking.lock() {
+                for season in &wanted {
+                    asking.remove(season);
+                }
+            }
+        }
+        let now = Instant::now();
+        let relations = franchise::lock(&self.relations);
+        others
+            .iter()
+            .filter_map(|season| relations.header(*season, now))
+            .filter(|(media, at)| header_serves(*at, media, now))
+            .map(|(media, at)| as_of(media, now.saturating_duration_since(at)))
+            .collect()
+    }
+
+    /// The one request of [`Self::season_headers`]: the headers of `ids`, as work for the page
+    /// on screen (see [`crate::anilist::on_screen`]): ahead of the background queue, but never
+    /// into the share of the limit kept for screens. Kept with the franchise when they come; a
+    /// failure asks nothing else, and each page is asked for when it is opened.
+    async fn preload_season_headers(&self, ids: &[AnilistId]) {
+        let asked = crate::anilist::on_screen(self.anilist.media_many(ids));
+        match self.ask_anilist(asked).await {
+            Ok(found) => {
+                self.went(FRESH);
+                for media in &found {
+                    self.remember(media);
+                }
+                franchise::lock(&self.relations).learn_headers(&found, Instant::now());
+            }
+            Err(e) => tracing::debug!(error = %e, "the seasons' headers were not asked"),
+        }
+    }
+
+    /// Title `id`'s header as [`Self::season_headers`] kept it, with its franchise's seasons, for
+    /// its page to show at once while AniList is asked for the rest. `None` when the page itself
+    /// answers at once (AniList's answer for it still serves), when no header is kept or one
+    /// has aired an episode since, and while its franchise's seasons are not all known.
+    pub fn season_header(
+        &self,
+        id: AnilistId,
+    ) -> Option<(Media, Vec<crate::anilist::model::RelationNode>)> {
+        if self.answered(id) || crate::demo::is_demo(id) {
+            return None;
+        }
+        let now = Instant::now();
+        let relations = franchise::lock(&self.relations);
+        let (media, at) = relations.header(id, now)?;
+        if !header_serves(at, &media, now) {
+            return None;
+        }
+        let seasons = relations.seasons_known(id, now)?;
+        Some((as_of(media, now.saturating_duration_since(at)), seasons))
+    }
+
+    /// Whether AniList's answer for title `id`'s page is in and still serves.
+    fn answered(&self, id: AnilistId) -> bool {
+        let now = Instant::now();
+        let signed_in = self.anilist.is_authenticated();
+        self.recent.lock().is_ok_and(|recent| {
+            recent
+                .titles
+                .get(&id)
+                .and_then(|flight| flight.get())
+                .is_some_and(|answered| answered.serves(now, self.reuse_for, signed_in))
+        })
+    }
+
     /// The ask for `id` to join: one under way, or an answer that still serves, or else a
     /// new one. Answers that serve no longer are let go on the way.
     fn flight(&self, id: AnilistId) -> Flight {
@@ -830,7 +958,20 @@ impl Meta {
         recent.titles.retain(|_, flight| {
             flight.get().is_none_or(|answered| answered.serves(now, self.reuse_for, signed_in))
         });
+        let Recent { titles, lanes } = &mut *recent;
+        lanes.retain(|id, _| titles.get(id).is_some_and(|flight| !flight.initialized()));
         Arc::clone(recent.titles.entry(id).or_default())
+    }
+
+    /// The class the ask for `id` goes in, raised to the caller's: a page that opens on a title
+    /// asked for in the background is not left waiting in the queue.
+    fn flight_lane(&self, id: AnilistId) -> crate::anilist::Lane {
+        let mine = crate::anilist::priority();
+        let Ok(mut recent) = self.recent.lock() else { return crate::anilist::Lane::current() };
+        let lane =
+            recent.lanes.entry(id).or_insert_with(|| crate::anilist::Lane::new(mine)).clone();
+        lane.raise(mine);
+        lane
     }
 
     /// The ladder, for one title. Returns whether AniList itself answered.
@@ -883,20 +1024,21 @@ impl Meta {
         if ids.is_empty() {
             return Ok(Vec::new());
         }
-        let low = crate::anilist::is_background();
+        let mine = crate::anilist::priority();
         let mut rx = {
             let Ok(mut many) = self.many.lock() else {
                 return self.media_many_direct(ids).await;
             };
             let batch = many.open.get_or_insert_with(|| {
                 let (tx, _) = tokio::sync::watch::channel(None);
-                let batch = Batch { ids: Vec::new(), low, answer: Arc::new(tx) };
+                let lane = crate::anilist::Lane::new(mine);
+                let batch = Batch { ids: Vec::new(), lane, answer: Arc::new(tx) };
                 let (me, answer) = (self.clone(), batch.answer.clone());
                 tokio::spawn(async move { me.send_batch(answer).await });
                 batch
             });
             // One screen's lookup in the batch makes the whole of it a screen's.
-            batch.low &= low;
+            batch.lane.raise(mine);
             for id in ids {
                 if !batch.ids.contains(id) {
                     batch.ids.push(*id);
@@ -934,8 +1076,7 @@ impl Meta {
                 _ => Ok(found),
             }
         };
-        let result =
-            if batch.low { crate::anilist::in_background(ask).await } else { ask.await };
+        let result = batch.lane.run(ask).await;
         let _ = answer.send(Some(Arc::new(result)));
     }
 
@@ -1236,6 +1377,19 @@ impl Meta {
         Ok(pages)
     }
 
+    /// Several browses in one request, each its own page of its own size: see
+    /// [`AniList::browse_pages`].
+    pub async fn browse_pages(
+        &self,
+        browses: &[(&str, &BrowseFilter, u32, u32)],
+    ) -> Result<Vec<Page<Media>>> {
+        let pages = self.weathered(self.anilist.browse_pages(browses)).await?;
+        for page in &pages {
+            self.remember_page(page);
+        }
+        Ok(pages)
+    }
+
     /// What the cache holds of `ids`, in that order, asking nobody: titles a screen showed
     /// before, to show again at once while a fresh answer is on its way.
     pub fn cached(&self, ids: &[AnilistId]) -> Vec<Media> {
@@ -1277,8 +1431,15 @@ impl Meta {
             Ok(found) => found.into_iter().map(Ok).collect(),
             Err(AniListError::Api(e)) => {
                 tracing::info!(error = %e, "the calendar's pages were refused together");
-                let mut found = Vec::with_capacity(pages.len());
+                let mut found: Vec<Result<Page<AiringEntry>>> = Vec::with_capacity(pages.len());
                 for p in pages {
+                    // A page refused on its own too says the trouble is not the request's size:
+                    // the pages after it are given the same answer, not asked into a failing
+                    // service one by one.
+                    if let Some(Err(e)) = found.last() {
+                        found.push(Err(e.clone()));
+                        continue;
+                    }
                     let one = self.airing_between_sorted(
                         p.from,
                         p.to,

@@ -196,6 +196,40 @@ struct ReducerTests {
         #expect(store.titles[900_001]?.trailerUrl == "https://video.example/trailer")
     }
 
+    @Test func aSeasonsHeaderShowsAheadOfItsPageAndNeverOverAWholeOne() {
+        let store = AppStore()
+        let seasons = [LinkedTitle(
+            id: 920_002, title: "Cloudcutter Airship Season 2", titleRomaji: nil, titleEnglish: nil,
+            titleNative: nil, relation: nil, format: "TV", coverUrl: nil, coverColor: nil,
+            season: nil, year: nil, listStatus: nil
+        )]
+        let header = entry(920_002, "Cloudcutter Airship Season 2") {
+            $0.bannerUrl = "https://img.example/banner/920002.jpg"
+            $0.detail = TitleDetail(seasons: seasons, partial: true)
+        }
+        store.apply(.detail(header))
+        #expect(store.titles.headed.contains(920_002))
+        #expect(!store.titles.detailed.contains(920_002), "the rest of the page is still coming")
+        #expect(store.titles.headerHere(920_002))
+        #expect(store.titles[920_002]?.bannerUrl == "https://img.example/banner/920002.jpg")
+        // A season's card said later keeps the header's seasons.
+        store.apply(.cards([entry(920_002, "Cloudcutter Airship Season 2")]))
+        #expect(store.titles[920_002]?.detail?.seasons?.map(\.id) == [920_002])
+
+        let whole = entry(920_002, "Cloudcutter Airship Season 2") {
+            $0.detail = TitleDetail(seasons: seasons, characters: [], partial: false)
+            $0.trailerUrl = "https://video.example/trailer"
+        }
+        store.apply(.detail(whole))
+        #expect(store.titles.detailed.contains(920_002))
+        #expect(!store.titles.headed.contains(920_002))
+        // A header coming after the whole page leaves the page as it is.
+        store.apply(.detail(header))
+        #expect(store.titles[920_002]?.trailerUrl == "https://video.example/trailer")
+        #expect(store.titles[920_002]?.detail?.partial == false)
+        #expect(!store.titles.headed.contains(920_002))
+    }
+
     @Test func aSlowAnswerToAnEarlierSearchIsNotShown() {
         let store = AppStore()
         store.search(SearchQuery(text: "hoshi"))

@@ -32,7 +32,8 @@ pub(crate) fn answer(engine: &EngineState, services: &Services, tx: &Outbox) {
         (services.store.clone(), services.meta.clone(), services.clock.clone());
     let schedule = engine.calendar.clone();
     let tx = tx.clone();
-    tokio::spawn(async move {
+    // Background work, as the notices are scheduled from it rather than read.
+    tokio::spawn(kaeri_meta::in_background(async move {
         // Said at once with the week as far as it is held, and again as the rest fills in.
         let mut tries = 0;
         loop {
@@ -61,7 +62,7 @@ pub(crate) fn answer(engine: &EngineState, services: &Services, tx: &Outbox) {
             let wait = meta.rate_limit_wait().await.unwrap_or_default();
             tokio::time::sleep(wait.max(crate::widgets::FILL_IN_AFTER)).await;
         }
-    });
+    }));
 }
 
 /// What the week is made from.

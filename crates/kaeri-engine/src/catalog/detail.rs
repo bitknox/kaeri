@@ -14,11 +14,23 @@ use crate::{
 /// first time one of its pages is opened: see [`kaeri_meta::Meta::seasons`]. The page waits
 /// a moment for it, so it arrives whole; past that it is sent without its seasons, which come
 /// on a second page once the walk is done. Never seasons that a later page renumbers.
+///
+/// A season whose header was kept with its franchise ([`kaeri_meta::Meta::season_headers`])
+/// has that sent first, as a partial page, so its top is on screen at once while AniList is
+/// asked for the rest. Once the seasons are known, the headers of the others are asked for
+/// together and said as cards, for the screens to fetch their art ahead.
 pub async fn load_detail(lent: Lent, id: AnilistId) {
     let Lent { meta, store, tx, .. } = lent;
     // Sent before the detail itself, so the picker knows the current choice the
     // moment the title is on screen rather than only after it is opened once.
     let _ = tx.send(Event::ProviderPreference(store.provider_preference(id).ok().flatten()));
+    if let Some((header, seasons)) = meta.season_header(id) {
+        let mut page = data::entry_with_detail(&header, Some(&store), Some(&seasons));
+        if let Some(detail) = page.detail.as_mut() {
+            detail.partial = true;
+        }
+        let _ = tx.send(Event::Detail(Box::new(page)));
+    }
     let (media, fresh) = match meta.media_answered(id).await {
         Ok(answered) => answered,
         Err(e) => {
@@ -27,12 +39,25 @@ pub async fn load_detail(lent: Lent, id: AnilistId) {
             return;
         }
     };
-    meta.seasons(&media, fresh, |seasons| {
+    // The walk along the franchise serves the page on screen: it goes right after the page's
+    // own requests, never into the share kept for screens.
+    kaeri_meta::on_screen(meta.seasons(&media, fresh, |seasons| {
         // Each page read as it is sent, so a second one is no older than the first.
         let page = data::entry_with_detail(&media, Some(&store), seasons.as_deref());
         let _ = tx.send(Event::Detail(Box::new(page)));
-    })
+    }))
     .await;
+    if fresh {
+        // Apart from the page's job, which is done: nobody waits on this.
+        tokio::spawn(async move {
+            // As work for the page on screen: see `Meta::preload_season_headers`.
+            let headers = meta.season_headers(id).await;
+            if !headers.is_empty() {
+                let cards = headers.iter().map(|media| data::entry_from(media, Some(&store)));
+                let _ = tx.send(Event::Cards(cards.collect()));
+            }
+        });
+    }
 }
 
 /// Play a title's trailer in mpv, or open it in the browser when mpv cannot stream it.

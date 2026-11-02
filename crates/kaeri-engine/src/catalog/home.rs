@@ -80,10 +80,8 @@ const STARTING_BEFORE: i64 = 14 * DAY;
 const FOLLOWED_FOR: i64 = 21 * DAY;
 /// The titles of the season before, asked for when nothing of this one has aired yet.
 const PREVIOUS_ASKED: u32 = 20;
-/// How many titles one page further down a shelf's order holds, AniList's most.
-const DEEPER_ASKED: u32 = 50;
-/// The most pages asked after the first for one shelf, so a viewer who follows most of the
-/// season costs a few requests, never the whole season.
+/// The deepest page of a shelf's order asked, fifty titles each, the first with the rails, so a
+/// viewer who follows most of the season costs a request or two more, never the whole season.
 const DEEPER_PAGES: u32 = 3;
 /// What a shelf is filled to before it stops asking further down its order: a full shelf with
 /// room left for the titles the shelves above it take.
@@ -1166,11 +1164,32 @@ fn due(meta: &Meta, store: &Store, ask: &HomeAsk) -> HashSet<HomePart> {
     due
 }
 
+/// Whether part `part` has an answer kept, which Home shows while it is asked again.
+fn has_kept(store: &Store, ask: &HomeAsk, part: HomePart) -> bool {
+    match part {
+        HomePart::Season => season_part(store, ask).is_some(),
+        HomePart::Suggestions => kept::<PersonalPart>(store, PERSONAL_KEY).is_some(),
+        HomePart::Week if fresh(store, ask) => {
+            kept::<SchedulePart>(store, POPULAR_WEEK_KEY).is_some()
+        }
+        HomePart::Week => kept::<SchedulePart>(store, WEEK_KEY).is_some(),
+        HomePart::Today => false,
+    }
+}
+
 /// Home: at once from what is local and kept, then again as each part due lands.
+///
+/// A part with nothing kept is asked at once, for the screen. A part kept from before, which
+/// Home shows meanwhile, is asked again in the background queue and replaced in place when it
+/// lands, unless the viewer asked for a refresh: the launch asks AniList only for what it has
+/// no answer to at all. Continue's records likewise: those missing are asked at once, and those
+/// kept but old are asked again behind. Once the screen's parts are in, the launch's background
+/// work may begin.
 pub async fn load(lent: Lent, memory: HomeMemory, ask: HomeAsk) {
     let Lent { meta, store, tx, .. } = lent;
     let mut due = if ask.offline { HashSet::new() } else { due(&meta, &store, &ask) };
-    let stale = if ask.offline { Vec::new() } else { stale_continue(&store) };
+    let (missing, old) =
+        if ask.offline { (Vec::new(), Vec::new()) } else { stale_continue(&store) };
     let season = due.contains(&HomePart::Season).then(|| season_inputs(&meta, &store, &ask));
     // A season part already on its way from the same inputs brings what this load would ask
     // for, and its end sends Home: this load waits for that end rather than asking twice.
@@ -1195,82 +1214,180 @@ pub async fn load(lent: Lent, memory: HomeMemory, ask: HomeAsk) {
         mem.loading.extend(due.iter().copied());
         // Asked for, so sent, even when it is what was sent last: the view may be new.
         mem.last = None;
-        mem.continuing |= !stale.is_empty();
+        mem.continuing |= !missing.is_empty();
     }
     send(&meta, &store, &tx, &ask, &memory, false);
     if ask.offline {
+        meta.anilist().launched();
         return;
     }
-    let finish = |part: Option<HomePart>, outcome: Result<(), String>| {
-        if let Err(e) = &outcome {
-            tracing::warn!(error = %e, ?part, "part of Home failed");
-        }
-        match part {
-            Some(part) => {
-                memory.lock().loading.remove(&part);
-            }
-            None => memory.lock().continuing = false,
-        }
-        send(&meta, &store, &tx, &ask, &memory, outcome.is_err());
-        outcome.is_ok()
+    let (queued, asked): (HashSet<HomePart>, HashSet<HomePart>) =
+        due.into_iter().partition(|part| !ask.refresh && has_kept(&store, &ask, *part));
+    let (old, missing) =
+        if ask.refresh { (Vec::new(), [missing, old].concat()) } else { (old, missing) };
+    let parts = |due: HashSet<HomePart>, continue_ids: Vec<AnilistId>| Parts {
+        meta: meta.clone(),
+        store: store.clone(),
+        tx: tx.clone(),
+        ask: ask.clone(),
+        memory: memory.clone(),
+        season: due.contains(&HomePart::Season).then(|| season.clone()).flatten(),
+        due,
+        continue_ids,
+        continuing: false,
+        season_waits: None,
+        season_ends: None,
     };
-    // A part that fails, or comes back short of a lookup, is not given up on: what is kept is
-    // on screen already, and the part is asked for again after AniList's own wait, a few times.
-    // A short part is sent as it is, and again when it is whole.
-    let partial = || send(&meta, &store, &tx, &ask, &memory, false);
-    let wanted = |part| due.contains(&part);
-    tokio::join!(
-        async {
-            if stale.is_empty() {
-                return true;
+    let mut screen = parts(asked, missing);
+    screen.continuing = !screen.continue_ids.is_empty();
+    let mut behind = parts(queued, old);
+    // The wait for a season part on its way goes with the screen's: it is one.
+    screen.season_waits = season_waits;
+    if behind.due.contains(&HomePart::Season) {
+        behind.season_ends = season_ends;
+    } else {
+        screen.season_ends = season_ends;
+    }
+    if !behind.is_empty() {
+        tokio::spawn(kaeri_meta::in_background(behind.run()));
+    }
+    screen.run().await;
+    // The screen's parts are in: the launch's background work may begin.
+    meta.anilist().launched();
+}
+
+/// The parts one pass of a Home load asks for, at the screen's priority or in the background.
+struct Parts {
+    meta: Meta,
+    store: Store,
+    tx: Outbox,
+    ask: HomeAsk,
+    memory: HomeMemory,
+    due: HashSet<HomePart>,
+    /// Continue's records to ask again.
+    continue_ids: Vec<AnilistId>,
+    /// Home waits for these, as "not known yet", until they are in.
+    continuing: bool,
+    /// What the season part is asked from, while this pass asks for it.
+    season: Option<SeasonInputs>,
+    /// The end of a season part another load is asking for, which this one waits for.
+    season_waits: Option<tokio::sync::watch::Receiver<bool>>,
+    /// Said when this pass's season part is sent.
+    season_ends: Option<tokio::sync::watch::Sender<bool>>,
+}
+
+impl Parts {
+    fn is_empty(&self) -> bool {
+        self.due.is_empty() && self.continue_ids.is_empty() && self.season_waits.is_none()
+    }
+
+    /// Ask for every part, each sent as it lands.
+    async fn run(self) {
+        let Self {
+            meta,
+            store,
+            tx,
+            ask,
+            memory,
+            due,
+            continue_ids,
+            continuing,
+            season,
+            season_waits,
+            season_ends,
+        } = self;
+        let finish = |part: Option<HomePart>, outcome: Result<(), String>| {
+            if let Err(e) = &outcome {
+                tracing::warn!(error = %e, ?part, "part of Home failed");
             }
-            let run = || async { refresh_continue(&meta, &stale).await.map(|()| true) };
-            finish(None, retried(&meta, run, partial).await)
-        },
-        async {
-            if let Some(mut end) = season_waits {
-                // Sent by the load that asked; a load that went away ends the wait too.
-                let _ = end.wait_for(|sent| *sent).await;
-                return true;
-            }
-            if !wanted(HomePart::Season) {
-                return true;
-            }
-            let run = || async { load_season(&meta, &store, &ask).await.map(|()| true) };
-            let outcome = retried(&meta, run, partial).await;
-            {
-                let mut mem = memory.lock();
-                if mem.season_running.as_ref().map(|(inputs, _)| inputs) == season.as_ref() {
-                    mem.season_running = None;
+            match part {
+                Some(part) => {
+                    memory.lock().loading.remove(&part);
                 }
+                None if continuing => memory.lock().continuing = false,
+                None => {}
             }
-            let whole = finish(Some(HomePart::Season), outcome);
-            if let Some(end) = season_ends {
-                let _ = end.send(true);
-            }
-            whole
-        },
-        async {
-            if !wanted(HomePart::Suggestions) {
-                return true;
-            }
-            let run = || load_personal(&meta, &store, &ask);
-            finish(Some(HomePart::Suggestions), retried(&meta, run, partial).await)
-        },
-        async {
-            if !wanted(HomePart::Week) {
-                return true;
-            }
-            let run = || async {
-                if fresh(&store, &ask) {
-                    load_popular_week(&meta, &store, &ask).await.map(|()| true)
-                } else {
-                    load_week(&meta, &store, &ask).await.map(|()| true)
+            send(&meta, &store, &tx, &ask, &memory, outcome.is_err());
+            outcome.is_ok()
+        };
+        // A part that fails, or comes back short of a lookup, is not given up on: what is kept
+        // is on screen already, and the part is asked for again after AniList's own wait, a
+        // few times. A short part is sent as it is, and again when it is whole.
+        let partial = || send(&meta, &store, &tx, &ask, &memory, false);
+        let wanted = |part| due.contains(&part);
+        tokio::join!(
+            async {
+                if continue_ids.is_empty() {
+                    return true;
                 }
-            };
-            finish(Some(HomePart::Week), retried(&meta, run, partial).await)
-        },
-    );
+                let run =
+                    || async { refresh_continue(&meta, &continue_ids).await.map(|()| true) };
+                finish(None, retried(&meta, run, partial).await)
+            },
+            async {
+                if let Some(mut end) = season_waits {
+                    // Sent by the load that asked; a load that went away ends the wait too.
+                    let _ = end.wait_for(|sent| *sent).await;
+                    return true;
+                }
+                if !wanted(HomePart::Season) {
+                    return true;
+                }
+                let deeper = std::sync::Mutex::new(None);
+                let run = || async {
+                    let shelves = load_season(&meta, &store, &ask).await?;
+                    *deeper.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = shelves;
+                    Ok(true)
+                };
+                let outcome = retried(&meta, run, partial).await;
+                {
+                    let mut mem = memory.lock();
+                    if mem.season_running.as_ref().map(|(inputs, _)| inputs) == season.as_ref()
+                    {
+                        mem.season_running = None;
+                    }
+                }
+                let whole = finish(Some(HomePart::Season), outcome);
+                if let Some(end) = season_ends {
+                    let _ = end.send(true);
+                }
+                // Further down the shelves' order, behind whatever is on screen: the shelves
+                // are shown from their first page meanwhile, and filled out in place.
+                let deeper =
+                    deeper.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner);
+                if let Some(deeper) = deeper {
+                    let (meta, store, tx, ask, memory) =
+                        (meta.clone(), store.clone(), tx.clone(), ask.clone(), memory.clone());
+                    tokio::spawn(kaeri_meta::in_background(async move {
+                        if deepen(&meta, &store, &ask, deeper).await {
+                            send(&meta, &store, &tx, &ask, &memory, false);
+                        }
+                    }));
+                }
+                whole
+            },
+            async {
+                if !wanted(HomePart::Suggestions) {
+                    return true;
+                }
+                let run = || load_personal(&meta, &store, &ask);
+                finish(Some(HomePart::Suggestions), retried(&meta, run, partial).await)
+            },
+            async {
+                if !wanted(HomePart::Week) {
+                    return true;
+                }
+                let run = || async {
+                    if fresh(&store, &ask) {
+                        load_popular_week(&meta, &store, &ask).await.map(|()| true)
+                    } else {
+                        load_week(&meta, &store, &ask).await.map(|()| true)
+                    }
+                };
+                finish(Some(HomePart::Week), retried(&meta, run, partial).await)
+            },
+        );
+    }
 }
 
 /// Run a part until it is whole: `run` says whether it was, a failure or a short answer is run
@@ -1301,8 +1418,12 @@ where
 
 /// Continue's titles whose cached record is missing or old: their airing is what says an
 /// episode is waiting.
-fn stale_continue(store: &Store) -> Vec<AnilistId> {
+/// Split into those with no record kept, which Home asks for at once, and those kept but old,
+/// which it asks again behind.
+fn stale_continue(store: &Store) -> (Vec<AnilistId>, Vec<AnilistId>) {
     stale_among(store, continue_ids(store))
+        .into_iter()
+        .partition(|id| store.cached_media(*id).ok().flatten().is_none())
 }
 
 /// The titles among `ids` whose cached record is missing or older than [`CONTINUE_FRESH`].
@@ -1325,8 +1446,15 @@ async fn refresh_continue(meta: &Meta, stale: &[AnilistId]) -> Result<(), String
 }
 
 /// The season's rails: Search's, in one request with the taste rail beside them, and the
-/// season before when nothing of this one has aired.
-async fn load_season(meta: &Meta, store: &Store, ask: &HomeAsk) -> Result<(), String> {
+/// season before when nothing of this one has aired. This season and what is trending are asked
+/// fifty deep, AniList's page, so their shelves fill for a viewer who follows much of the
+/// season. When they still fall short, what to ask further down their order comes back, for
+/// [`deepen`] to ask behind the screen.
+async fn load_season(
+    meta: &Meta,
+    store: &Store,
+    ask: &HomeAsk,
+) -> Result<Option<Deeper>, String> {
     let (season, year) = season_on(ask.now, &ask.zone);
     let finished = viewer(meta, store, ask).finished;
     let genre = favourite_genre(meta, store, &finished);
@@ -1347,19 +1475,6 @@ async fn load_season(meta: &Meta, store: &Store, ask: &HomeAsk) -> Result<(), St
         genre: genre.map(|name| Rail { name, ids: ids(extra.first()) }),
         trending: ids(rails.first()),
     };
-    // One page of the season's order is mostly what a viewer who follows the season already
-    // has, so ask further down until the shelves can fill.
-    let who = viewer(meta, store, ask);
-    let queries = browse::rails(season, year);
-    let rail = |at: usize| rails.get(at).map_or(0, Vec::len);
-    if let Some((_, _, query)) = queries.get(1) {
-        let first = rail(1);
-        deepen(meta, store, ask, &who, query, first, &mut part.this).await;
-    }
-    if let Some((_, _, query)) = queries.first() {
-        let first = rail(0);
-        deepen(meta, store, ask, &who, query, first, &mut part.trending).await;
-    }
     // Until a title of the new season has an episode out, the pick stays with the season
     // before, which this asks for once.
     keep(store, SEASON_KEY, &part);
@@ -1372,44 +1487,90 @@ async fn load_season(meta: &Meta, store: &Store, ask: &HomeAsk) -> Result<(), St
         part.previous = found.page.items.iter().map(|m| m.id.get()).collect();
         keep(store, SEASON_KEY, &part);
     }
-    Ok(())
+    // A first page short of AniList's whole page was the whole order already.
+    let queries = browse::rails(season, year);
+    let full =
+        |at: usize| rails.get(at).is_some_and(|r| r.len() >= browse::SHELF_PAGE as usize);
+    let shelves: Vec<(Shelf, SearchQuery)> = [(Shelf::This, 1), (Shelf::Trending, 0)]
+        .into_iter()
+        .filter(|(_, at)| full(*at))
+        .filter_map(|(shelf, at)| Some((shelf, queries.get(at)?.2.clone())))
+        .collect();
+    Ok((!shelves.is_empty()).then_some(Deeper { at: part.at, shelves }))
 }
 
-/// Asks further down `query`'s order, after a first rail that held `first` titles, until `ids`
-/// hold [`DEEPER_WANTED`] titles `viewer` may be shown, the order runs out or
-/// [`DEEPER_PAGES`] more pages were asked. A page that fails ends it with what was found.
-async fn deepen(
-    meta: &Meta,
-    store: &Store,
-    ask: &HomeAsk,
-    viewer: &Viewer<'_>,
-    query: &SearchQuery,
-    first: usize,
-    ids: &mut Vec<u32>,
-) {
+/// One of the shelves [`deepen`] fills out.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum Shelf {
+    This,
+    Trending,
+}
+
+/// What [`deepen`] asks further down: the shelves of the season part kept at `at`.
+struct Deeper {
+    at: i64,
+    shelves: Vec<(Shelf, SearchQuery)>,
+}
+
+/// Asks further down the shelves' order, every shelf's next page in one request, until each
+/// holds [`DEEPER_WANTED`] titles Home may show, its order runs out, or [`DEEPER_PAGES`] pages
+/// were asked in all. Updates the season part kept, if it is still the one asked from, and says
+/// whether it did. A page that fails ends it with what was found.
+async fn deepen(meta: &Meta, store: &Store, ask: &HomeAsk, deeper: Deeper) -> bool {
+    let Some(mut part) = season_part(store, ask).filter(|p| p.at == deeper.at) else {
+        return false;
+    };
+    let who = viewer(meta, store, ask);
     let shown =
-        |ids: &[u32]| entries(meta, store, ids).iter().filter(|e| viewer.eligible(e)).count();
-    // A first page short of a full rail was the whole order already.
-    let mut more = first >= browse::RAIL as usize;
-    let mut page = 1;
-    let filter = crate::catalog::search::browse_filter(query, ask.adult);
-    while more && page <= DEEPER_PAGES && shown(ids) < DEEPER_WANTED {
-        // The first page of DEEPER_ASKED holds the rail again, and more past it.
-        let found = match meta.find("", &filter, page, DEEPER_ASKED).await {
+        |ids: &[u32]| entries(meta, store, ids).iter().filter(|e| who.eligible(e)).count();
+    let filters: Vec<(Shelf, kaeri_meta::BrowseFilter)> = deeper
+        .shelves
+        .iter()
+        .map(|(shelf, query)| (*shelf, crate::catalog::search::browse_filter(query, ask.adult)))
+        .collect();
+    let mut open: Vec<Shelf> = filters.iter().map(|(shelf, _)| *shelf).collect();
+    let mut changed = false;
+    for page in 2..=DEEPER_PAGES {
+        open.retain(|shelf| {
+            let ids = if *shelf == Shelf::This { &part.this } else { &part.trending };
+            shown(ids) < DEEPER_WANTED
+        });
+        if open.is_empty() {
+            break;
+        }
+        let asked: Vec<(&str, &kaeri_meta::BrowseFilter, u32, u32)> = filters
+            .iter()
+            .filter(|(shelf, _)| open.contains(shelf))
+            .map(|(_, filter)| ("", filter, page, browse::SHELF_PAGE))
+            .collect();
+        let found = match meta.browse_pages(&asked).await {
             Ok(found) => found,
             Err(e) => {
-                tracing::info!(error = %e, page, "a shelf could not ask further down its order");
-                return;
+                tracing::info!(error = %e, page, "the shelves could not ask further down");
+                break;
             }
         };
-        for media in &found.page.items {
-            if !ids.contains(&media.id.get()) {
-                ids.push(media.id.get());
+        let mut more = Vec::new();
+        for (shelf, found) in open.iter().zip(found) {
+            let ids = if *shelf == Shelf::This { &mut part.this } else { &mut part.trending };
+            for media in &found.items {
+                if !ids.contains(&media.id.get()) {
+                    ids.push(media.id.get());
+                    changed = true;
+                }
+            }
+            if found.has_next {
+                more.push(*shelf);
             }
         }
-        more = found.page.has_next;
-        page += 1;
+        open = more;
     }
+    // Kept only over the part it was asked from: a newer load's answer stands.
+    if changed && season_part(store, ask).is_some_and(|p| p.at == deeper.at) {
+        keep(store, SEASON_KEY, &part);
+        return true;
+    }
+    false
 }
 
 /// What the suggestions depend on, for telling kept ones from stale: the history, the lists,

@@ -600,7 +600,9 @@ impl PullGate {
     }
 }
 
-pub fn spawn_loops(sync: Sync, tx: Outbox) {
+/// The drain and the pull, each on its tick. The launch's pull waits for the launch's screens,
+/// `launch` being the AniList client whose launch they are, and goes in the background queue.
+pub fn spawn_loops(sync: Sync, launch: kaeri_meta::AniList, tx: Outbox) {
     if sync.trackers.is_empty() {
         return;
     }
@@ -625,7 +627,8 @@ pub fn spawn_loops(sync: Sync, tx: Outbox) {
 
     tokio::spawn(async move {
         // A pull at startup is what makes "watched two on my phone" show up when you open the
-        // app, so launch always pulls.
+        // app, so launch always pulls: once Home's first screen is in.
+        launch.launch_over().await;
         kaeri_meta::in_background(pull_once(&sync, &tx)).await;
         loop {
             let gate = sync.pulls.clone();

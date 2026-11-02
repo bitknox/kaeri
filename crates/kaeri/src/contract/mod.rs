@@ -101,14 +101,39 @@ pub fn failure(content: &ContentList) -> &str {
 /// That `job` was started, and ended exactly once, after everything its work sent.
 #[track_caller]
 pub fn ends(updates: &[Event], job: Option<JobId>) {
+    ends_besides(updates, job, |_| false);
+}
+
+/// [`ends`], for Home: the parts it showed from what was kept are refreshed in the queue behind
+/// the job, so what that refresh says of a failure may follow the job's end.
+#[track_caller]
+pub fn home_ends(updates: &[Event], job: Option<JobId>) {
+    ends_besides(updates, job, |update| {
+        matches!(update, Event::MetaStatus(_) | Event::Toast(_))
+    });
+}
+
+/// [`ends`], with the updates `later` picks free to follow the job's end.
+#[track_caller]
+fn ends_besides(updates: &[Event], job: Option<JobId>, later: impl Fn(&Event) -> bool) {
     let job = job.expect("work someone waits on starts a job");
     // The terminal asks the sources about a highlighted Home title by itself. Its answer, and
     // the Home the engine sends after it, come whenever the check finishes, not with the job
-    // that showed the title, so they may follow the job's end.
+    // that showed the title, so they may follow the job's end. So may a list's broadcast line,
+    // which is queued behind the screens and fills in when it lands, and the cards of a page's
+    // other seasons, asked for once the page is shown.
     let own: Vec<usize> = updates
         .iter()
         .enumerate()
-        .filter(|(_, update)| !matches!(update, Event::TitlePlayable { .. } | Event::Home(_)))
+        .filter(|(_, update)| {
+            !matches!(
+                update,
+                Event::TitlePlayable { .. }
+                    | Event::Home(_)
+                    | Event::LastAired(_)
+                    | Event::Cards(_)
+            ) && !later(update)
+        })
         .map(|(at, _)| at)
         .collect();
     let done: Vec<usize> = updates

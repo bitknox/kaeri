@@ -21,6 +21,12 @@ use crate::{catalog::search::browse_filter, data, dispatch::Lent};
 
 /// Titles a rail holds.
 pub(crate) const RAIL: u32 = 20;
+/// Titles Home asks for of the rails its shelves fill from, what is trending and this season:
+/// AniList's whole page, so a viewer who follows much of the season still has a full shelf
+/// without asking further down.
+pub(crate) const SHELF_PAGE: u32 = 50;
+/// The rails Home asks [`SHELF_PAGE`] deep: what is trending, and this season.
+const SHELF_RAILS: [usize; 2] = [0, 1];
 /// How long the rails serve before they are asked again.
 const RAILS_FOR: i64 = 30 * 60;
 /// How long the facets serve.
@@ -135,7 +141,9 @@ pub async fn load_browse(lent: Lent, adult: bool, now: i64) {
 }
 
 /// Search's rails for `season`, with `extra` queries asked in the same request, for Home: the
-/// rails are kept under Search's own key, so Search's start shows them at once after.
+/// rails are kept under Search's own key, so Search's start shows them at once after. What is
+/// trending and this season come [`SHELF_PAGE`] deep, for Home's shelves; Search keeps the
+/// first [`RAIL`] of each.
 pub(crate) async fn fetch_rails(
     meta: &Meta,
     store: &Store,
@@ -148,17 +156,23 @@ pub(crate) async fn fetch_rails(
         rails(season, year).into_iter().map(|(_, _, q)| q).collect();
     let filters: Vec<_> =
         queries.iter().chain(extra).map(|q| browse_filter(q, adult)).collect();
-    let asked: Vec<(&str, &kaeri_meta::BrowseFilter)> =
-        filters.iter().map(|f| ("", f)).collect();
+    let asked: Vec<(&str, &kaeri_meta::BrowseFilter, u32, u32)> = filters
+        .iter()
+        .enumerate()
+        .map(|(at, f)| ("", f, 1, if SHELF_RAILS.contains(&at) { SHELF_PAGE } else { RAIL }))
+        .collect();
     let mut media: Vec<Vec<Media>> = meta
-        .browse_many(&asked, RAIL)
+        .browse_pages(&asked)
         .await
         .map_err(|e| e.to_string())?
         .into_iter()
         .map(|p| p.items)
         .collect();
     let extra = media.split_off(queries.len().min(media.len()));
-    let ids = media.iter().map(|m| m.iter().map(|m| m.id.get()).collect()).collect();
+    let ids = media
+        .iter()
+        .map(|m| m.iter().take(RAIL as usize).map(|m| m.id.get()).collect())
+        .collect();
     let kept = KeptRails { at: now, adult, queries, ids };
     if let Ok(json) = serde_json::to_string(&kept)
         && let Err(e) = store.set_meta_text(RAILS_KEY, &json)

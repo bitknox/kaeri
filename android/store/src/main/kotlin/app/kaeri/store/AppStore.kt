@@ -573,18 +573,16 @@ class AppStore(
 
     fun loadDetail(id: AnilistId) {
         titles.detailAsked(id)
-        detailPending += id
         send(Command.LoadDetail(id))?.let { detailJobs[it] = id }
     }
 
     /** Each title page's fetch by the job that carries it, to tell an answer from none. */
     private val detailJobs = mutableMapOf<JobId, AnilistId>()
-    private val detailPending = mutableSetOf<AnilistId>()
 
-    /** A page's fetch ended: without the title, AniList did not answer. */
+    /** A page's fetch ended: without the whole page, AniList did not answer. */
     private fun detailDone(job: JobId) {
         val id = detailJobs.remove(job) ?: return
-        if (detailPending.remove(id)) titles.detailFailed(id)
+        titles.detailEnded(id)
     }
 
     /**
@@ -1288,10 +1286,8 @@ class AppStore(
             is Event.Browse -> search.rails(event.v1, titles)
             is Event.Facets -> search.facets(event.v1)
             is Event.RecentSearches -> search.recents(event.v1)
-            is Event.Detail -> {
-                detailPending -= event.v1.id
-                titles.merge(detail = event.v1)
-            }
+            // A page's head ahead of it leaves the whole page awaited: see TitleCache.merge.
+            is Event.Detail -> titles.merge(detail = event.v1)
             is Event.Cards -> titles.merge(list = event.v1)
             is Event.TitlesChanged -> titlesChanged()
             is Event.Progress -> titles.progress(event.id, event.progress, event.resume, event.episodes)

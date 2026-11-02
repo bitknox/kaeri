@@ -197,6 +197,7 @@ fn detail_from(
                 })
             })
             .collect(),
+        partial: false,
     }
 }
 

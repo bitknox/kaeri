@@ -156,7 +156,9 @@ fn episode_links(media: &kaeri_meta::Media) -> Vec<EpisodeLink> {
 /// Work out what title `id`'s page says, from the metadata AniList already gave.
 pub async fn load_availability(lent: Lent, id: AnilistId, plays_here: bool) {
     let Lent { meta, store, tx, .. } = lent;
-    let media = match meta.media(id).await {
+    // Queued: the page's own Detail asks for the same title at screen priority, and a queued
+    // ask joining that flight goes with it.
+    let media = match kaeri_meta::in_background(meta.media(id)).await {
         Ok(media) => media,
         Err(e) => {
             tracing::warn!(error = %e, %id, "could not load the title's licensed links");

@@ -44,7 +44,7 @@ pub fn spawn(
     if !enabled {
         return;
     }
-    tokio::spawn(async move {
+    tokio::spawn(kaeri_meta::in_background(async move {
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .map_or(0, |d| d.as_secs() as i64);
@@ -90,7 +90,7 @@ pub fn spawn(
             return;
         }
         say(&hits, desktop, host.as_ref(), &tx);
-    });
+    }));
 }
 
 /// Say what aired: as a toast, and through the host too when `desktop` asks for it.
