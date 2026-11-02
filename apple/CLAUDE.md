@@ -3,10 +3,10 @@
 - Mac, iPhone and iPad from one SwiftUI codebase, OS 26 minimum, Xcode 27.1 (Swift 6.4).
   No paid Apple account: the iPhone and iPad `.ipa` is signed ad hoc and sideloaded with
   SideStore or AltStore. Mac releases are signed with a self-signed certificate (CN "Kaeri")
-  when the `MAC_CODESIGN_P12` secrets reach the run, and ad hoc otherwise and in local builds
-  (`scripts/adhoc-sign.sh`, `scripts/signing-keychain.sh`). The certificate keeps the app's
-  designated requirement the same across releases (`identifier "app.kaeri.app" and certificate
-  leaf`), so the login keychain's "Always Allow" lasts across updates. A cdhash, which is what
+  when the `MAC_CODESIGN_P12` secrets reach the run, and ad hoc otherwise. Local review builds
+  are signed with it too, through `signing-keychain.sh sign` (`scripts/adhoc-sign.sh`,
+  `scripts/signing-keychain.sh`). The certificate keeps the app's designated requirement the
+  same across builds (`identifier "app.kaeri.app" and certificate leaf`), so the login keychain's "Always Allow" lasts across updates. A cdhash, which is what
   an ad hoc signature gives, changes every build. The terminal binary is signed with it too.
 - `Packages/`: KaeriKit (engine bindings), KaeriStore (the app's state on the engine),
   KaeriDesign (tokens, fonts, pointer), KaeriUI (screens), KaeriPlayer and
@@ -22,8 +22,9 @@
 
 - The signing identity lives in `~/.kaeri-signing/mac` on the maintainer's Mac (the `.p12`,
   its password, the certificate). Never print, copy or commit them, and never import them into
-  a keychain on the Mac: to try the signing locally, make a throwaway keychain outside the
-  search list and use `signing-keychain.sh import`. Nothing may show a keychain dialog.
+  a lasting keychain on the Mac: sign locally only through `signing-keychain.sh sign`, which
+  makes a throwaway keychain outside the search list and deletes it. Nothing may show a keychain
+  dialog.
 - Every secret the Mac app keeps is in one login keychain item (service `kaeri`, account
   `kaeri-secrets`), read once per launch (`crates/kaeri-track/src/secret.rs`). Don't add
   another item or a later read: each one is a prompt after an update.

@@ -197,6 +197,19 @@ on its own (`crates/kaeri-engine/src/updates.rs`) and tells the apps, which then
   Without the secrets the builds are signed ad hoc. Losing the certificate means one more
   keychain prompt for everyone, on the update signed with its replacement. The maintainer keeps
   it, with a backup, in `~/.kaeri-signing/mac`.
+
+  Local review builds, such as a merge train's, are signed with the same certificate, so the
+  maintainer's keychain access lasts from one to the next as it does across releases:
+
+  ```bash
+  apple/scripts/signing-keychain.sh sign ~/.kaeri-signing/mac <derived data>/Build/Products/Release/Kaeri.app
+  ```
+
+  It imports the certificate into a keychain made with a random password in a temporary
+  directory, signs the app with `adhoc-sign.sh` through that keychain, and deletes it when it
+  ends. It never touches the login keychain or the keychain search list, and nothing asks for a
+  password. Inside the HOME guard, `~` is the temporary HOME, so name the real one there
+  (`$real/.kaeri-signing/mac`).
 - iPhone and iPad through SideStore or AltStore, from the source. The app links to SideStore's
   `sidestore://source?url=` and AltStore's `altstore://source?url=`, and to the release page
   when neither is installed.
