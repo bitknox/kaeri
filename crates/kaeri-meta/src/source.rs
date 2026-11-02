@@ -874,17 +874,7 @@ impl Meta {
             wanted
         };
         if !wanted.is_empty() {
-            let asked = crate::anilist::in_background(self.anilist.media_many(&wanted));
-            match self.ask_anilist(asked).await {
-                Ok(found) => {
-                    self.went(FRESH);
-                    for media in &found {
-                        self.remember(media);
-                    }
-                    franchise::lock(&self.relations).learn_headers(&found, Instant::now());
-                }
-                Err(e) => tracing::debug!(error = %e, "the seasons' headers were not asked"),
-            }
+            self.preload_season_headers(&wanted).await;
             if let Ok(mut asking) = self.headers_asking.lock() {
                 for season in &wanted {
                     asking.remove(season);
@@ -899,6 +889,23 @@ impl Meta {
             .filter(|(media, at)| header_serves(*at, media, now))
             .map(|(media, at)| as_of(media, now.saturating_duration_since(at)))
             .collect()
+    }
+
+    /// The one request of [`Self::season_headers`]: the headers of `ids`, at low priority, as
+    /// nobody is waiting on them yet. Kept with the franchise when they come; a failure asks
+    /// nothing else, and each page is asked for when it is opened.
+    async fn preload_season_headers(&self, ids: &[AnilistId]) {
+        let asked = crate::anilist::in_background(self.anilist.media_many(ids));
+        match self.ask_anilist(asked).await {
+            Ok(found) => {
+                self.went(FRESH);
+                for media in &found {
+                    self.remember(media);
+                }
+                franchise::lock(&self.relations).learn_headers(&found, Instant::now());
+            }
+            Err(e) => tracing::debug!(error = %e, "the seasons' headers were not asked"),
+        }
     }
 
     /// Title `id`'s header as [`Self::season_headers`] kept it, with its franchise's seasons, for

@@ -48,7 +48,8 @@ pub async fn load_detail(lent: Lent, id: AnilistId) {
     if fresh {
         // Apart from the page's job, which is done: nobody waits on this.
         tokio::spawn(async move {
-            let headers = kaeri_meta::in_background(meta.season_headers(id)).await;
+            // At low priority inside: see `Meta::preload_season_headers`.
+            let headers = meta.season_headers(id).await;
             if !headers.is_empty() {
                 let cards = headers.iter().map(|media| data::entry_from(media, Some(&store)));
                 let _ = tx.send(Event::Cards(cards.collect()));
