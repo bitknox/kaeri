@@ -256,25 +256,28 @@ fun TitleScreen(
                     }
                 }
             }
+            // The header brings the relations by kind and id, so the row is there or gone as the
+            // whole page will have it, with its cards' places: a card whose title is not here yet
+            // is a placeholder of its size, and crossfades into the card when the page fills it in.
             val related = entry.detail?.relations.orEmpty()
-            // A head come ahead of its page has no relations yet: their places, until they come.
-            val relatedComing = entry.detail?.partial == true
-            if (related.isNotEmpty() || relatedComing) {
+            if (related.isNotEmpty()) {
                 item(key = "related", contentType = "row") {
                     BrowseRow(stringResource(R.string.title_related), modifier = swapFade().settlesAt(list, scope, "related", rowTop)) {
-                        if (relatedComing) {
-                            items(PLACEHOLDER_CARDS, key = { "placeholder/$it" }) { Box(swapFade()) { app.kaeri.tv.ui.CardPlaceholder(Canvas.PosterWidth, Canvas.PosterHeight) } }
-                            return@BrowseRow
-                        }
                         items(related, key = { it.id.toLong() }, contentType = { "poster" }) { linked ->
-                            PosterCard(
-                                linked.title,
-                                linked.coverUrl,
-                                linked.coverColor,
-                                onClick = { onOpen(linked.id) },
-                                line = linked.relation?.name?.lowercase()?.replace('_', ' ')?.replaceFirstChar { it.uppercase() },
-                                modifier = Modifier.remembered(memory, "related/${linked.id}"),
-                            )
+                            androidx.compose.animation.Crossfade(linked.title.isNotEmpty(), animationSpec = Motion.standard(), label = "related-card") { named -> // i18n-skip
+                                if (named) {
+                                    PosterCard(
+                                        linked.title,
+                                        linked.coverUrl,
+                                        linked.coverColor,
+                                        onClick = { onOpen(linked.id) },
+                                        line = linked.relation?.name?.lowercase()?.replace('_', ' ')?.replaceFirstChar { it.uppercase() },
+                                        modifier = Modifier.remembered(memory, "related/${linked.id}"),
+                                    )
+                                } else {
+                                    app.kaeri.tv.ui.CardPlaceholder(Canvas.PosterWidth, Canvas.PosterHeight)
+                                }
+                            }
                         }
                     }
                 }

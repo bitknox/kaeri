@@ -89,6 +89,9 @@ class TvSeasonSwitchFrames {
     @Test
     fun season_1_to_season_2() = record("tv-neighbour", from = 920001u, to = 920002u)
 
+    @Test
+    fun season_8_to_season_1() = record("tv-back", from = 920008u, to = 920001u)
+
     private fun whole(id: AnilistId): Entry? = recorded.events.filterIsInstance<Event.Detail>()
         .lastOrNull { it.v1.id == id && it.v1.detail?.partial != true }?.v1
 
@@ -102,7 +105,12 @@ class TvSeasonSwitchFrames {
     /** [id]'s head sent ahead of its page, as the engine builds it from the card it kept. */
     private fun head(id: AnilistId): Entry? {
         val card = cards.firstOrNull { it.id == id } ?: return null
-        return card.copy(detail = TitleDetail(seasons = whole(920001u)?.detail?.seasons, partial = true))
+        // Its relations by kind, id and format; a node the walk met (a card) keeps its title and cover.
+        val relations = whole(id)?.detail?.relations.orEmpty().map { node ->
+            if (cards.any { it.id == node.id }) node
+            else node.copy(title = "", titleRomaji = null, titleEnglish = null, titleNative = null, coverUrl = null, coverColor = null, season = null, year = null, listStatus = null)
+        }
+        return card.copy(detail = TitleDetail(seasons = whole(920001u)?.detail?.seasons, relations = relations, partial = true))
     }
 
     /** The engine, answering what the store asks for after the latency it would take. */

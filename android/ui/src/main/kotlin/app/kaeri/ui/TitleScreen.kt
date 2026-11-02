@@ -806,7 +806,14 @@ private fun SeasonPage(
                 // In the layout of what replaces them, so the picker stands where it will: at once
                 // on a page composed ahead, and after 600 ms on the one on screen (T8). A head that
                 // came ahead of the page brings its synopsis, in its place among them.
-                item(key = "actions-placeholder", contentType = "actions-placeholder") { Box(itemMotion()) { WaitFor(!ahead) { ActionsPlaceholder() } } }
+                // A season whose head is here has its buttons from it, as the page will: hold state,
+                // never blank. Play says the season's own episode, and crossfades if the page
+                // says another. Only a season with no head yet has the buttons' places.
+                if (entry.detail != null) {
+                    item(key = "actions", contentType = "actions") { Box(itemMotion()) { TitleActions(entry, actions, episodes?.firstOrNull()?.metadataOnly == true) } }
+                } else {
+                    item(key = "actions-placeholder", contentType = "actions-placeholder") { Box(itemMotion()) { WaitFor(!ahead) { ActionsPlaceholder() } } }
+                }
                 val synopsis = synopsisWithoutSpoilers(entry.synopsis)
                 if (synopsis.isNotEmpty()) item(key = "synopsis", contentType = "synopsis") { Box(itemMotion()) { Synopsis(synopsis) } }
                 item(key = "facts-placeholder", contentType = "facts-placeholder") { Box(itemMotion()) { WaitFor(!ahead) { FactsPlaceholder() } } }
@@ -1043,10 +1050,24 @@ private fun RelatedRail(related: List<app.kaeri.engine.model.LinkedTitle>) {
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    ArtworkImage(linked.coverUrl, plate = linked.plate(), maxPixelSize = 120, modifier = Modifier.size(40.dp, 60.dp).clip(ArtShape.cover(40.dp)))
-                    Column {
-                        Text(linked.title, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 220.dp))
-                        Text(linked.cardLine(LocalContext.current), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 1)
+                    // A relation the header names but whose title is not here yet holds the
+                    // card's place, and crossfades into the card when the page fills it in.
+                    Crossfade(linked.title.isNotEmpty(), animationSpec = Motion.standard(), label = "related-card") { named -> // i18n-skip
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            if (named) {
+                                ArtworkImage(linked.coverUrl, plate = linked.plate(), maxPixelSize = 120, modifier = Modifier.size(40.dp, 60.dp).clip(ArtShape.cover(40.dp)))
+                                Column {
+                                    Text(linked.title, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 220.dp))
+                                    Text(linked.cardLine(LocalContext.current), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 1)
+                                }
+                            } else {
+                                Box(Modifier.size(40.dp, 60.dp).clip(ArtShape.cover(40.dp)).background(colors.surfaceContainer))
+                                Column(Modifier.width(140.dp)) {
+                                    TextPlaceholder(0.8f, 20.dp)
+                                    TextPlaceholder(0.55f, 20.dp)
+                                }
+                            }
+                        }
                     }
                 }
             }
