@@ -887,3 +887,27 @@ async fn with_no_source_the_closing_line_says_to_add_one() {
 
     assert_eq!(home.end, Some(HomeEnd::NoSources));
 }
+
+#[tokio::test]
+async fn home_asked_again_while_its_season_is_on_the_way_asks_for_the_season_once() {
+    let now = autumn();
+    let mut h = at(now, None).await;
+    season(&h, []);
+    watch(&h, WATCHING, 1..=3, now, 600);
+    // Slow enough that the second ask comes while the first's season is out.
+    h.server().answer_slowly(Operation::Browse, Duration::from_millis(300));
+
+    h.send(Command::LoadHome { refresh: false });
+    let job = h.send(Command::LoadHome { refresh: false }).expect("a job");
+    let updates = h.settle().await;
+    assert_eq!(h.server().requests_for(Operation::Browse).len(), 1);
+    // The second ask ends once Home is whole, as it would had it asked for the season itself.
+    let whole = updates
+        .iter()
+        .position(|u| matches!(u, Event::Home(home) if home.pending.is_empty()))
+        .expect("Home was sent whole");
+    let done = updates.iter().position(|u| matches!(u, Event::JobDone(id) if *id == job));
+    assert!(done.is_some_and(|done| done > whole), "{updates:?}");
+    let home = homes(&updates).pop().expect("Home was sent");
+    assert!(!shelf(&home, SectionKind::ThisSeason).is_empty());
+}

@@ -127,6 +127,9 @@ struct Memory {
     hidden_asked: bool,
     /// The parts on their way.
     loading: HashSet<HomePart>,
+    /// What the season part on its way was asked from, while one is (see [`season_inputs`]),
+    /// and its end: true once it has been sent.
+    season_running: Option<(SeasonInputs, tokio::sync::watch::Receiver<bool>)>,
     /// Continue's records are being asked for again, so what is waiting in it is not known yet.
     continuing: bool,
     /// The last Home sent, with `failed` off.
@@ -613,6 +616,17 @@ fn popular(meta: &Meta, viewer: &Viewer<'_>, ids: &[u32]) -> Option<Entry> {
 }
 
 /// The season's part as kept, when it is this season's under these settings.
+/// What a run of the season part is asked from: the season, its year, whether adult titles
+/// count, and the genre finished most.
+type SeasonInputs = (String, u16, bool, Option<String>);
+
+/// [`SeasonInputs`] now.
+fn season_inputs(meta: &Meta, store: &Store, ask: &HomeAsk) -> SeasonInputs {
+    let (season, year) = season_on(ask.now, &ask.zone);
+    let genre = favourite_genre(meta, store, &viewer(meta, store, ask).finished);
+    (season_wire(season).to_owned(), year, ask.adult, genre)
+}
+
 fn season_part(store: &Store, ask: &HomeAsk) -> Option<SeasonPart> {
     let (season, year) = season_on(ask.now, &ask.zone);
     kept::<SeasonPart>(store, SEASON_KEY).filter(|part| {
@@ -1155,10 +1169,28 @@ fn due(meta: &Meta, store: &Store, ask: &HomeAsk) -> HashSet<HomePart> {
 /// Home: at once from what is local and kept, then again as each part due lands.
 pub async fn load(lent: Lent, memory: HomeMemory, ask: HomeAsk) {
     let Lent { meta, store, tx, .. } = lent;
-    let due = if ask.offline { HashSet::new() } else { due(&meta, &store, &ask) };
+    let mut due = if ask.offline { HashSet::new() } else { due(&meta, &store, &ask) };
     let stale = if ask.offline { Vec::new() } else { stale_continue(&store) };
+    let season = due.contains(&HomePart::Season).then(|| season_inputs(&meta, &store, &ask));
+    // A season part already on its way from the same inputs brings what this load would ask
+    // for, and its end sends Home: this load waits for that end rather than asking twice.
+    let mut season_waits = None;
+    let mut season_ends = None;
     {
         let mut mem = memory.lock();
+        if let Some(inputs) = &season {
+            match &mem.season_running {
+                Some((running, end)) if running == inputs => {
+                    season_waits = Some(end.clone());
+                    due.remove(&HomePart::Season);
+                }
+                _ => {
+                    let (end, ended) = tokio::sync::watch::channel(false);
+                    mem.season_running = Some((inputs.clone(), ended));
+                    season_ends = Some(end);
+                }
+            }
+        }
         mem.asked = true;
         mem.loading.extend(due.iter().copied());
         // Asked for, so sent, even when it is what was sent last: the view may be new.
@@ -1196,11 +1228,27 @@ pub async fn load(lent: Lent, memory: HomeMemory, ask: HomeAsk) {
             finish(None, retried(&meta, run, partial).await)
         },
         async {
+            if let Some(mut end) = season_waits {
+                // Sent by the load that asked; a load that went away ends the wait too.
+                let _ = end.wait_for(|sent| *sent).await;
+                return true;
+            }
             if !wanted(HomePart::Season) {
                 return true;
             }
             let run = || async { load_season(&meta, &store, &ask).await.map(|()| true) };
-            finish(Some(HomePart::Season), retried(&meta, run, partial).await)
+            let outcome = retried(&meta, run, partial).await;
+            {
+                let mut mem = memory.lock();
+                if mem.season_running.as_ref().map(|(inputs, _)| inputs) == season.as_ref() {
+                    mem.season_running = None;
+                }
+            }
+            let whole = finish(Some(HomePart::Season), outcome);
+            if let Some(end) = season_ends {
+                let _ = end.send(true);
+            }
+            whole
         },
         async {
             if !wanted(HomePart::Suggestions) {
