@@ -768,10 +768,19 @@ struct LicensedLines: View {
     let font: Font
     /// The last answer shown, whose room is kept while the next is on its way.
     @State private var held: TitleAvailability?
+    /// The title waited for long enough to show the services' answer without its episodes, as
+    /// when they never come offline.
+    @State private var waited: AnilistId?
 
     var body: some View {
         let playsHere = !store.titles.unlisted(id)
-        let known = store.licensed.availability[id]
+        // The answer counts once it is for what the episodes say of the sources. Before they come
+        // the title is taken to play here, and the answer for that would show only to give way to
+        // the next: across a season switch the words would glide down and back up.
+        let answered = store.licensed.availability[id]
+        let sourcesKnown = store.titles.episodes[id] != nil
+        let counts = sourcesKnown ? answered?.playsHere == playsHere : waited == id
+        let known = counts ? answered : nil
         let shown = known ?? held
         lines(shown)
             .opacity(known == nil ? 0 : 1)
@@ -783,6 +792,10 @@ struct LicensedLines: View {
             .onChange(of: known, initial: true) { if let known { held = known } }
             .task(id: "\(id)-\(playsHere)-\(store.licensed.yours)") {
                 store.loadAvailability(id, playsHere: playsHere)
+            }
+            .task(id: id) {
+                try? await Task.sleep(for: TitleHero.offersWaitFor)
+                waited = id
             }
     }
 

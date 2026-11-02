@@ -219,9 +219,9 @@ struct TitlePage: View {
             // differs changes, by its own animation: the season picked (quick), the hero's words
             // (quick), the episodes as one block (standard), and the art as it lands (fade-in).
             .transaction(value: id) { $0.animation = nil }
-            // A season shown from its header keeps the last one's seasons and Related until its
-            // page comes. When the page brings Related of its own, or none, the episodes move to
-            // their place with the row as its cards dissolve, rather than jumping under them.
+            // A title picked from Related, shown as its card, keeps the last page's row until its
+            // own page comes. When the row changes then, or with a season's header, the episodes
+            // move to their place with it as its cards dissolve, rather than jumping under them.
             .animation(.quick, value: kin.id)
             // With Reduce Motion a season picked changes the page at once: the selection, the
             // words, the episodes and Related, each without its own animation.
@@ -339,9 +339,11 @@ struct TitlePage: View {
     }
 
     /// The title whose seasons and related titles the row shows for `entry`: itself once its page
-    /// is here, until then `last`, the title shown before it whose page was.
+    /// or its kept header is here, until then `last`, the title shown before it whose page was.
+    /// A header names its seasons and its relations, so the row takes its place with the header.
     static func kin(of entry: Entry, last: AnilistId?, in store: AppStore) -> Entry {
-        store.titles.detailed.contains(entry.id) ? entry : store.titles.page(last ?? entry.id)
+        store.titles.detailed.contains(entry.id) || store.titles.headed.contains(entry.id)
+            ? entry : store.titles.page(last ?? entry.id)
     }
 
     /// Whether `key`'s art can show whole: resolved from the title itself, not a card's
