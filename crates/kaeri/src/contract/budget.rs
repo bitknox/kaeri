@@ -77,12 +77,18 @@ async fn launch(
     })
     .await;
     install(&h, world);
+    // Signed in on an earlier run, as an installed app's launch is: the viewer's AniList id
+    // is kept from it, so the launch's list rides with its viewer lookup.
+    if h.store().get_meta_text(kaeri_track::anilist::VIEWER_ID_KEY).unwrap().is_none() {
+        let viewer = fixtures::library_viewer_id().to_string();
+        h.store().set_meta_text(kaeri_track::anilist::VIEWER_ID_KEY, &viewer).unwrap();
+    }
     h
 }
 
 /// The most requests a journey may cost, by the start of its label.
 const BOUNDS: &[(&str, usize)] = &[
-    ("cold launch: launch pull", 2),
+    ("cold launch: launch pull", 1),
     ("cold launch: LoadHome", 7),
     ("cold launch: WidgetSnapshot", 2),
     ("cold launch: Continue stills", 0),
@@ -99,7 +105,7 @@ const BOUNDS: &[(&str, usize)] = &[
     ("hover 10 covers", 1),
     ("sync tick", 0),
     ("warm launch: airing digest", 2),
-    ("warm launch: launch pull", 1),
+    ("warm launch: launch pull", 0),
     ("warm launch: LoadHome", 1),
     ("warm launch: WidgetSnapshot", 2),
     ("warm launch: Continue stills", 0),
@@ -554,9 +560,10 @@ async fn anilist_cold_launch_over_a_tight_limit_waits_and_says_nothing() {
 }
 
 /// The most AniList requests the Mac's cold launch may make: [`anilist_cold_launch_on_the_mac`].
-/// It makes 15 when Home's, Continue's, Up next's and the widgets' title lookups meet in one
-/// batch window and up to 18 when they each miss the others' (three to six `Many`), as the tasks
+/// It makes 13 when Home's, Continue's, Up next's and the widgets' title lookups meet in one
+/// batch window and up to 16 when they each miss the others' (two to five `Many`), as the tasks
 /// happen to be scheduled. The two runs of Home's suggestions, before the launch pull and after
-/// it, share their last lookup only when they reach it within the same window, so 16 is as
-/// common as 15.
-const COLD_LAUNCH: usize = 18;
+/// it, share their last lookup only when they reach it within the same window, so 14 is more
+/// common than 13. The viewer's id is kept from an earlier run, so the list rides with the
+/// viewer lookup.
+const COLD_LAUNCH: usize = 16;
