@@ -575,6 +575,8 @@ struct SearchFilterRow: View {
             // with more beyond it; the sort stays at the end, outside the scroll, so none slides
             // under it. Filters sits beside it, so the button that closes the panel is never
             // scrolled or clipped away; the menus scroll behind the edge fade, as on a phone.
+            // Where the capsules would not all fit, as beside the open filters, Filters and then
+            // the sort give up their words for their glyphs first, as a toolbar's items do.
             HStack(spacing: 8) {
                 ScrollView(.horizontal) {
                     HStack(spacing: 8) {
@@ -588,15 +590,62 @@ struct SearchFilterRow: View {
                 } action: { _, edges in
                     more = edges
                 }
+                .onScrollGeometryChange(for: CGFloat.self) { $0.contentSize.width } action: { _, width in
+                    widths.capsules = width
+                }
                 .mask { ScrollEdgeFade(edges: more) }
-                filters(query)
-                sort(query)
+                filters(query, glyph: condensed >= 1)
+                sort(query, glyph: condensed >= 2)
+            }
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { widths.row = $0 }
+            .background {
+                // The buttons' widths with their words and as glyphs alone, measured unseen.
+                HStack(spacing: 8) {
+                    measured(filtersCapsule(query, glyph: false), \.filters)
+                    measured(filtersCapsule(query, glyph: true), \.filtersGlyph)
+                    measured(sortCapsule(query, glyph: false), \.sort)
+                    measured(sortCapsule(query, glyph: true), \.sortGlyph)
+                }
+                .fixedSize()
+                .hidden()
+                .accessibilityHidden(true)
+            }
+            .onChange(of: widths.condensed, initial: true) { _, now in
+                withAnimation(reduceMotion || navigator.motionReduced ? nil : .standard) { condensed = now }
             }
         }
     }
 
     /// Whether the capsules run on past either edge of the row.
     @State private var more = ScrollEdges()
+    /// The widths the Mac's row is laid out by.
+    @State private var widths = RowWidths()
+    /// How many of Filters and the sort show their glyphs alone: none, Filters, or both.
+    @State private var condensed = 0
+
+    /// The Mac's row and what is in it, by width.
+    struct RowWidths: Equatable {
+        var row: CGFloat = 0
+        var capsules: CGFloat = 0
+        var filters: CGFloat = 0
+        var filtersGlyph: CGFloat = 0
+        var sort: CGFloat = 0
+        var sortGlyph: CGFloat = 0
+
+        /// How many of Filters and the sort give up their words so the capsules fit beside them:
+        /// none where all fits, both where even that does not, and the capsules scroll.
+        var condensed: Int {
+            guard row > 0, capsules > 0 else { return 0 }
+            let gaps: CGFloat = 16
+            if capsules + filters + sort + gaps <= row { return 0 }
+            if capsules + filtersGlyph + sort + gaps <= row { return 1 }
+            return 2
+        }
+    }
+
+    private func measured(_ view: some View, _ width: WritableKeyPath<RowWidths, CGFloat>) -> some View {
+        view.onGeometryChange(for: CGFloat.self) { $0.size.width } action: { widths[keyPath: width] = $0 }
+    }
     /// Where the pinned row's capsules are scrolled to, kept across the results' scrolling and the
     /// sheet, and put back to the start by a new search.
     @State private var position = ScrollPosition(edge: .leading)
@@ -838,23 +887,31 @@ struct SearchFilterRow: View {
         .filterMenu()
     }
 
-    private func filters(_ query: SearchQuery) -> some View {
+    /// Filters, with its word, or its glyph alone (`glyph`) where the row is short of room.
+    private func filters(_ query: SearchQuery, glyph: Bool = false) -> some View {
         let count = query.advancedCount()
         return Button {
             navigator.searchFiltersShown.toggle()
         } label: {
-            FilterCapsule(
-                title: L.filtersTitle, active: count > 0, compact: compact,
-                symbol: "line.3.horizontal.decrease", badge: count, chevron: false
-            )
+            filtersCapsule(query, glyph: glyph)
         }
         .buttonStyle(.plain)
         .pointerHover()
+        .accessibilityLabel(L.filtersTitle)
         .accessibilityValue(count == 0 ? "" : L.searchFiltersSet(count: Int(count)))
         .help(L.searchFiltersHelp)
     }
 
-    private func sort(_ query: SearchQuery) -> some View {
+    private func filtersCapsule(_ query: SearchQuery, glyph: Bool) -> some View {
+        let count = query.advancedCount()
+        return FilterCapsule(
+            title: glyph ? "" : L.filtersTitle, active: count > 0, compact: compact,
+            symbol: "line.3.horizontal.decrease", badge: count, chevron: false
+        )
+    }
+
+    /// The sort, with what it sorts by, or its glyph alone (`glyph`) where the row is short of room.
+    private func sort(_ query: SearchQuery, glyph: Bool = false) -> some View {
         let current = query.sortInEffect()
         return Menu {
             Picker(L.searchSortBy, selection: Binding(
@@ -867,13 +924,18 @@ struct SearchFilterRow: View {
             }
             .pickerStyle(.inline)
         } label: {
-            FilterCapsule(
-                title: searchSortLabel(sort: current), active: query.sort != nil, compact: compact,
-                symbol: "arrow.up.arrow.down", pinned: pinned
-            )
+            sortCapsule(query, glyph: glyph)
         }
         .filterMenu()
         .accessibilityLabel(L.sortLabel(sort: searchSortLabel(sort: current)))
+        .help(glyph ? L.sortLabel(sort: searchSortLabel(sort: current)) : "")
+    }
+
+    private func sortCapsule(_ query: SearchQuery, glyph: Bool) -> some View {
+        FilterCapsule(
+            title: glyph ? "" : searchSortLabel(sort: query.sortInEffect()), active: query.sort != nil,
+            compact: compact, symbol: "arrow.up.arrow.down", pinned: pinned
+        )
     }
 }
 
