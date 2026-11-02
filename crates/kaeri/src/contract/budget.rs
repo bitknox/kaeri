@@ -83,17 +83,17 @@ async fn launch(
 /// The most requests a journey may cost, by the start of its label.
 const BOUNDS: &[(&str, usize)] = &[
     ("cold launch: launch pull", 2),
-    ("cold launch: LoadHome", 9),
-    ("cold launch: WidgetSnapshot", 4),
+    ("cold launch: LoadHome", 7),
+    ("cold launch: WidgetSnapshot", 2),
     ("cold launch: Continue stills", 0),
     ("Home again within 30 min", 0),
-    ("Home after the player closes", 5),
-    ("Home again after 31 min", 8),
+    ("Home after the player closes", 3),
+    ("Home again after 31 min", 6),
     ("open a title (5-season", 2),
     ("switch season", 1),
     ("open a title (12-season", 4),
     ("Library", 0),
-    ("Calendar", 6),
+    ("Calendar", 3),
     ("Search start", 1),
     ("hover 10 covers on the Mac", 1),
     ("hover 10 covers", 1),
@@ -101,13 +101,13 @@ const BOUNDS: &[(&str, usize)] = &[
     ("warm launch: airing digest", 2),
     ("warm launch: launch pull", 1),
     ("warm launch: LoadHome", 1),
-    ("warm launch: WidgetSnapshot", 3),
+    ("warm launch: WidgetSnapshot", 2),
     ("warm launch: Continue stills", 0),
-    ("warm launch: Calendar", 2),
+    ("warm launch: Calendar", 1),
     ("warm launch: Search start", 0),
     ("warm launch: open the same title", 2),
     ("new-episode check", 0),
-    ("warm: Home after its half hour", 8),
+    ("warm: Home after its half hour", 6),
 ];
 
 #[derive(Default)]
@@ -542,7 +542,9 @@ async fn anilist_cold_launch_on_the_mac() {
 async fn anilist_cold_launch_over_a_tight_limit_waits_and_says_nothing() {
     let roomy = cold_launch_on_the_mac(|server| server.limit_per_minute(30)).await;
     let tight = cold_launch_on_the_mac(|server| {
-        server.limit_per(6, std::time::Duration::from_secs(2));
+        // Four in two seconds: a launch's opening requests come closer together than that, even
+        // on a busy machine, so some are refused.
+        server.limit_per(4, std::time::Duration::from_secs(2));
     })
     .await;
     assert!(tight.refused > 0, "the tight limit refused some");
@@ -552,7 +554,9 @@ async fn anilist_cold_launch_over_a_tight_limit_waits_and_says_nothing() {
 }
 
 /// The most AniList requests the Mac's cold launch may make: [`anilist_cold_launch_on_the_mac`].
-/// It makes 20 when Home's, Continue's, Up next's and the widgets' title lookups meet in one
-/// batch window and up to 23 when they each miss the others' (four to seven `Many`), as the
-/// tasks happen to be scheduled.
-const COLD_LAUNCH: usize = 23;
+/// It makes 15 when Home's, Continue's, Up next's and the widgets' title lookups meet in one
+/// batch window and up to 18 when they each miss the others' (three to six `Many`), as the tasks
+/// happen to be scheduled. The two runs of Home's suggestions, before the launch pull and after
+/// it, share their last lookup only when they reach it within the same window, so 16 is as
+/// common as 15.
+const COLD_LAUNCH: usize = 18;
