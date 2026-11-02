@@ -72,16 +72,25 @@ internal fun WatchOnButton(entry: app.kaeri.engine.model.Entry, link: ServiceLin
     }
 }
 
+/** Whether there is a line to draw under the actions: services to name, or where it is listed. */
+internal val TitleAvailability?.hasLine: Boolean
+    get() = when (this?.case) {
+        AvailabilityCase.PLAYS_ALSO_ON, AvailabilityCase.ON_SERVICE -> alsoOn.isNotEmpty()
+        AvailabilityCase.NOT_IN_SOURCES -> others.isNotEmpty()
+        AvailabilityCase.PLAYS_HERE, null -> false
+    }
+
 /**
  * The haze line under the actions. Case A and B name the person's other services, each case C
  * names where the title is listed, and offers the choice of services while none is ticked.
+ * Nothing at all while there is no line, so the page below sits where it does without one.
  */
 @Composable
 internal fun ServiceLines(availability: TitleAvailability?, entry: app.kaeri.engine.model.Entry, modifier: Modifier = Modifier) {
     val store = LocalAppStore.current
     val navigator = LocalNavigator.current
     val colors = MaterialTheme.colorScheme
-    Crossfade(availability, animationSpec = Motion.standard(), label = "service-lines", modifier = modifier) { shown -> // i18n-skip
+    Crossfade(availability?.takeIf { it.hasLine }, animationSpec = Motion.standard(), label = "service-lines", modifier = modifier) { shown -> // i18n-skip
         if (shown == null) return@Crossfade
         Column(Modifier.padding(top = 8.dp)) {
             val also = shown.alsoOn
