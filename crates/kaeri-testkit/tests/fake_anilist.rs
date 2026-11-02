@@ -321,6 +321,31 @@ async fn a_screens_covers_bring_their_tables_and_a_hover_asks_nothing_more() {
 }
 
 #[tokio::test]
+async fn quiet_table_lookups_made_together_share_one_request() {
+    let kit = MetaKit::start().await;
+    // A row of cards asking for their stills at once, as the Mac's Continue row does.
+    let (airing, finished) = tokio::join!(
+        kaeri_meta::in_background(kit.meta.table_media(AIRING)),
+        kaeri_meta::in_background(kit.meta.table_media(FINISHED)),
+    );
+    assert_eq!((airing.unwrap().id, finished.unwrap().id), (AIRING, FINISHED));
+    assert_eq!(kit.server.requests_for(Operation::Tables).len(), 1);
+    assert!(kit.server.requests_for(Operation::Detail).is_empty());
+
+    // A title the batch could not bring is still looked up whole.
+    let (movie, missing) = tokio::join!(
+        kaeri_meta::in_background(kit.meta.table_media(MOVIE)),
+        kaeri_meta::in_background(kit.meta.table_media(MISSING)),
+    );
+    assert_eq!(movie.unwrap().id, MOVIE);
+    assert!(missing.is_err());
+    assert_eq!(kit.server.requests_for(Operation::Tables).len(), 2);
+    // A screen's lookup is not held for a batch.
+    kit.meta.table_media(AIRING).await.unwrap();
+    assert_eq!(kit.server.requests_for(Operation::Tables).len(), 2);
+}
+
+#[tokio::test]
 async fn an_unknown_title_is_refused_as_anilist_refuses_one() {
     let kit = MetaKit::start().await;
     let error = kit.meta.media(MISSING).await.unwrap_err();

@@ -274,6 +274,9 @@ struct Tables {
     kept: HashMap<AnilistId, (Instant, Media)>,
     /// The titles of a lookup under way, each with word of when it is done.
     asking: HashMap<AnilistId, tokio::sync::watch::Receiver<bool>>,
+    /// The titles quiet lookups want tables for, gathered for [`BATCH_WAIT`] into one
+    /// [`Meta::media_tables`], with word of when it is done: see [`Meta::table_media`].
+    gathering: Option<(Vec<AnilistId>, tokio::sync::watch::Receiver<bool>)>,
 }
 
 /// How long a record [`Meta::media_tables`] brought builds an episode table: a screen's covers
@@ -697,9 +700,14 @@ impl Meta {
 
     /// Title `id` for its episode table: AniList's answer for its page when one is in or under
     /// way, else what [`Self::media_tables`] brought for the screen (waited for while it is
-    /// coming), else [`Self::media`].
+    /// coming), else [`Self::media`]. A quiet lookup (see [`crate::in_background`]) of a title
+    /// with none of these joins the others made within [`BATCH_WAIT`] in one
+    /// [`Self::media_tables`], so the stills of a row of cards cost one request, not one each.
     pub async fn table_media(&self, id: AnilistId) -> Result<Media> {
         if !self.detail_under_way(id) {
+            if crate::anilist::is_background() {
+                self.gather_table(id).await;
+            }
             let word = self.tables.lock().ok().and_then(|t| t.asking.get(&id).cloned());
             if let Some(mut word) = word {
                 let _ = word.wait_for(|done| *done).await;
@@ -715,6 +723,39 @@ impl Meta {
             }
         }
         self.media(id).await
+    }
+
+    /// Put title `id` in the tables being gathered, unless its table is kept or asked already,
+    /// and wait until they have been asked.
+    async fn gather_table(&self, id: AnilistId) {
+        let word = {
+            let Ok(mut tables) = self.tables.lock() else { return };
+            let now = Instant::now();
+            let served =
+                tables.kept.get(&id).is_some_and(|(at, media)| table_serves(*at, media, now));
+            if served || tables.asking.contains_key(&id) || crate::demo::is_demo(id) {
+                return;
+            }
+            let (ids, word) = tables.gathering.get_or_insert_with(|| {
+                let (done, word) = tokio::sync::watch::channel(false);
+                let me = self.clone();
+                tokio::spawn(async move {
+                    tokio::time::sleep(BATCH_WAIT).await;
+                    let ids = me.tables.lock().ok().and_then(|mut t| t.gathering.take());
+                    if let Some((ids, _)) = ids {
+                        me.media_tables(&ids).await;
+                    }
+                    let _ = done.send(true);
+                });
+                (Vec::new(), word)
+            });
+            if !ids.contains(&id) {
+                ids.push(id);
+            }
+            word.clone()
+        };
+        let mut word = word;
+        let _ = word.wait_for(|done| *done).await;
     }
 
     /// Whether an ask for title `id`'s page is under way, or its answer still serves.
