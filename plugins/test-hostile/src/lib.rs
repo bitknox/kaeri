@@ -26,7 +26,7 @@ mod bindings {
 
 use bindings::{
     exports::kaeri::provider::provider::{
-        Episode, Guest, Manifest, MediaStream, ProviderError, SearchHit, SourceCandidate,
+        Episode, Guest, Manifest, MediaStream, ProviderError, SearchHit, SourceCandidate, TitleHints,
     },
     kaeri::provider::host,
 };
@@ -48,7 +48,7 @@ impl Guest for Component {
     }
 
     /// Spins forever. Only the host's epoch interruption can stop this.
-    fn search(_query: String, _translation: String) -> Result<Vec<SearchHit>, ProviderError> {
+    fn search(_query: String, _translation: String, _hints: TitleHints) -> Result<Vec<SearchHit>, ProviderError> {
         // `black_box` so the optimiser cannot decide an infinite loop with no effects is
         // unreachable and delete it — which would make the test pass for the wrong reason.
         let mut spin: u64 = 0;
@@ -59,7 +59,7 @@ impl Guest for Component {
     }
 
     /// Tries to reach a host the manifest never declared.
-    fn list_episodes(_id: String, _translation: String) -> Result<Vec<Episode>, ProviderError> {
+    fn list_episodes(_id: String, _translation: String, _hints: TitleHints) -> Result<Vec<Episode>, ProviderError> {
         let result = host::fetch(&host::HttpRequest {
             method: "GET".into(),
             // The canonical exfiltration target: somewhere the user never approved.
@@ -84,6 +84,7 @@ impl Guest for Component {
         _id: String,
         _episode: String,
         _translation: String,
+        _hints: TitleHints,
     ) -> Result<Vec<MediaStream>, ProviderError> {
         let mut hoard: Vec<Vec<u8>> = Vec::new();
         loop {

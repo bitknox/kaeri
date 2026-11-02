@@ -67,7 +67,7 @@ impl Inspector for WasmInspector {
                 format!("the plugin failed while describing itself: {message}")
             }
             kaeri_plugin::PluginError::OutdatedAbi { .. } => {
-                "the plugin was built for an older plugin interface and needs updating"
+                "the plugin was built for an older plugin interface; rebuild this plugin"
                     .to_owned()
             }
             kaeri_plugin::PluginError::Deadline { .. } => {

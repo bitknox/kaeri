@@ -1029,6 +1029,19 @@ impl Media {
             episode_count: self.episodes,
             year: self.season_year,
             format: self.format,
+            hints: self.title_hints(),
+        }
+    }
+
+    /// The ids and names a source is told about this title.
+    pub fn title_hints(&self) -> kaeri_core::media::TitleHints {
+        let known = |t: &Option<String>| t.clone().filter(|t| !t.is_empty());
+        kaeri_core::media::TitleHints {
+            anilist_id: Some(self.id),
+            romaji: known(&self.title.romaji),
+            english: known(&self.title.english),
+            native: known(&self.title.native),
+            synonyms: self.synonyms.iter().filter(|s| !s.is_empty()).cloned().collect(),
         }
     }
 }
@@ -1583,6 +1596,16 @@ mod tests {
         assert_eq!(t.year, Some(2023));
         assert_eq!(t.format, Some(MediaFormat::Tv));
         assert!(t.titles.len() >= 3);
+    }
+
+    #[test]
+    fn match_target_hands_sources_the_id_and_every_name() {
+        let hints = hoshikuzu().match_target().hints;
+        assert_eq!(hints.anilist_id.map(|id| id.get()), Some(154587));
+        assert_eq!(hints.romaji.as_deref(), Some("Hoshikuzu no Tabibito"));
+        assert_eq!(hints.english.as_deref(), Some("Stardust Wayfarer"));
+        assert_eq!(hints.native.as_deref(), Some("星屑の旅人"));
+        assert_eq!(hints.synonyms, ["Hoshitabi"]);
     }
 
     #[test]

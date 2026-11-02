@@ -10,7 +10,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use kaeri_core::{
     error::ProviderError,
     ids::{AnilistId, ProviderKey},
-    media::{Episode, MediaStatus, Translation},
+    media::{Episode, MediaStatus, TitleHints, Translation},
 };
 use kaeri_meta::anilist::Media;
 use kaeri_providers::{Attempt, Contribution, ProviderRegistry};
@@ -72,6 +72,7 @@ pub fn runs_ahead(media: &Media, listing: &[Episode], now: i64) -> bool {
 pub async fn listing(
     source: ProviderRegistry,
     key: ProviderKey,
+    hints: TitleHints,
     translation: Translation,
     (store, id): (&Store, AnilistId),
     media: &Media,
@@ -85,7 +86,7 @@ pub async fn listing(
             })
         })
     };
-    let mut attempt = source.episodes(&key, translation, now).await;
+    let mut attempt = source.episodes(&key, translation, &hints, now).await;
     if let Some(episodes) = &attempt.value
         && runs_ahead(media, episodes, now)
         && !corrected()

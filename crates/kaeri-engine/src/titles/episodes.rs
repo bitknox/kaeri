@@ -161,8 +161,8 @@ async fn load_listed(
         &media.match_target(),
         Translation::Sub,
         now,
-        |source, key| {
-            coverage::listing(source, key, Translation::Sub, (store, id), &media, now)
+        |source, key, hints| {
+            coverage::listing(source, key, hints, Translation::Sub, (store, id), &media, now)
         },
         |answers| coverage::is_whole(&media, answers, now),
         |answers| progress(build(&media, store, registry, id, answers, now).rows),
@@ -397,12 +397,19 @@ pub(crate) async fn dub_answer(
         &media.match_target(),
         Translation::Dub,
         now,
-        |source, key| {
+        |source, key, hints| {
             let (asked, nothing) = (asked.clone(), nothing.clone());
             async move {
-                let attempt =
-                    coverage::listing(source, key, Translation::Dub, (store, id), media, now)
-                        .await;
+                let attempt = coverage::listing(
+                    source,
+                    key,
+                    hints,
+                    Translation::Dub,
+                    (store, id),
+                    media,
+                    now,
+                )
+                .await;
                 asked.fetch_add(1, Ordering::SeqCst);
                 let not_found = attempt.failures.iter().all(|(_, error)| {
                     matches!(error, kaeri_core::error::ProviderError::NotFound)

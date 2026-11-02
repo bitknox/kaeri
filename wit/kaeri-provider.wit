@@ -14,16 +14,18 @@
 // implementation would be enormous. A plugin that needs anything more specialised brings its
 // own.
 //
-// **Versioning.** Major 2, because the component model's semver rules treat every
-// `0.x` minor as a different world — at major ≥ 1 the host can grow the `host` interface without
-// stranding components built against an older minor. What can never grow is the *export* set:
-// a new required export breaks every shipped plugin at instantiation. So the exports below are the
-// frozen surface, records prefer `option<>` fields over new shapes, open sets (stream `kind`,
-// `translation`, `capabilities`) are strings rather than enums, and anything a future host wants
-// to switch on is a declared capability rather than a new function. Removing an import is a
-// major bump too: the host refuses plugins built for another major.
+// **Versioning.** Major 3. Title hints were added to `search`, `list-episodes` and `resolve`, which
+// changed the export set, so plugins built for major 2 need rebuilding. The major is what the host
+// checks: the component model's semver rules treat every `0.x` minor as a different world, but at
+// major >= 1 the host can grow the `host` interface without stranding components built against an
+// older minor. What can never grow without a major bump is the *export* set: a new required export
+// breaks every shipped plugin at instantiation. So records prefer `option<>` fields over new
+// shapes, open sets (stream `kind`, `translation`, `capabilities`) are strings rather than enums,
+// and anything a future host wants to switch on is a declared capability rather than a new
+// function. Removing an import is a major bump too: the host refuses plugins built for another
+// major.
 
-package kaeri:provider@2.0.0;
+package kaeri:provider@3.0.0;
 
 interface host {
     record http-request {
@@ -99,6 +101,22 @@ interface provider {
         /// them only while the person has torrent playback on and its protection check passes,
         /// and drops torrent streams from a plugin that does not declare it.
         capabilities: list<string>,
+    }
+
+    /// What the host knows about the title being asked for, passed along with `search`,
+    /// `list-episodes` and `resolve`. Every field is optional, and a plugin may ignore all of it.
+    ///
+    /// A source with its own index can look a title up by `anilist-id` instead of searching for it,
+    /// and one that searches can try each name in turn. Names the host does not know are `none` or
+    /// empty. Nothing here is a promise that a name is complete or spelled the way a source spells it.
+    record title-hints {
+        /// The AniList id of the title, when the host has matched one.
+        anilist-id: option<u32>,
+        romaji: option<string>,
+        english: option<string>,
+        native: option<string>,
+        /// Other known names for the same title.
+        synonyms: list<string>,
     }
 
     record search-hit {
@@ -211,12 +229,15 @@ interface provider {
 
     describe: func() -> manifest;
 
-    search: func(query: string, translation: string) -> result<list<search-hit>, provider-error>;
+    /// `query` is the host's first choice of words. `hints` carries the rest of what is known
+    /// about the title, so a plugin can try another name when the first finds nothing.
+    search: func(query: string, translation: string, hints: title-hints)
+        -> result<list<search-hit>, provider-error>;
 
-    list-episodes: func(id: string, translation: string)
+    list-episodes: func(id: string, translation: string, hints: title-hints)
         -> result<list<episode>, provider-error>;
 
-    resolve: func(id: string, episode: string, translation: string)
+    resolve: func(id: string, episode: string, translation: string, hints: title-hints)
         -> result<list<media-stream>, provider-error>;
 
     /// The selectable releases for an episode, best-first, without starting any of them.

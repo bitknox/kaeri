@@ -23,12 +23,23 @@ mod bindings {
 use bindings::{
     exports::kaeri::provider::provider::{
         Episode, Guest, Manifest, MediaStream, ProviderError, SearchHit, SourceCandidate,
-        Subtitle,
+        Subtitle, TitleHints,
     },
     kaeri::provider::host,
 };
 
 struct Component;
+
+/// The names the host passed, for the log line. Any of them may be missing.
+fn known_names(hints: &TitleHints) -> String {
+    [&hints.romaji, &hints.english, &hints.native]
+        .into_iter()
+        .flatten()
+        .chain(hints.synonyms.iter())
+        .cloned()
+        .collect::<Vec<_>>()
+        .join(", ")
+}
 
 /// The one host this plugin may reach. Declared here and enforced by the host, so asking for more
 /// than it needs would be visible in `kaeri plugin inspect`.
@@ -48,8 +59,18 @@ impl Guest for Component {
         }
     }
 
-    fn search(query: String, translation: String) -> Result<Vec<SearchHit>, ProviderError> {
+    fn search(
+        query: String,
+        translation: String,
+        hints: TitleHints,
+    ) -> Result<Vec<SearchHit>, ProviderError> {
         host::log("debug", &format!("search {query:?} ({translation})"));
+
+        // Everything in `hints` is optional and may be ignored. A source with its own index
+        // could look `hints.anilist_id` up directly; one that searches by text could retry with
+        // `hints.english`, `hints.native` or `hints.synonyms` when `query` finds nothing.
+        // This example only notes what it was told.
+        host::log("debug", &format!("known names: {}", known_names(&hints)));
 
         // A real provider would request the site's search endpoint. Here the query is echoed
         // back, which still exercises the whole round trip: request construction, the host's
@@ -77,7 +98,11 @@ impl Guest for Component {
         }])
     }
 
-    fn list_episodes(id: String, _translation: String) -> Result<Vec<Episode>, ProviderError> {
+    fn list_episodes(
+        id: String,
+        _translation: String,
+        hints: TitleHints,
+    ) -> Result<Vec<Episode>, ProviderError> {
         // `not-found` rather than an empty list: the distinction is load-bearing in the host,
         // where `not-found` deliberately does *not* trigger failover to the next provider.
         let slug = id.strip_prefix("example:").ok_or(ProviderError::NotFound)?;
@@ -88,9 +113,16 @@ impl Guest for Component {
                 number: n.to_string(),
                 title: Some(format!("{slug} — part {n}")),
                 duration_secs: Some(1_440),
-                description: Some(format!(
-                    "In which {slug} is echoed for the {n}th time, and nothing else happens."
-                )),
+                description: Some(match hints.anilist_id {
+                    // The one place the example uses a hint: a catalogue keyed by AniList id
+                    // would look the title up with it instead of by the opaque `id`.
+                    Some(anilist) => format!(
+                        "In which {slug} (AniList {anilist}) is echoed for the {n}th time, and nothing else happens."
+                    ),
+                    None => format!(
+                        "In which {slug} is echoed for the {n}th time, and nothing else happens."
+                    ),
+                }),
                 thumbnail: None,
                 air_date: Some(format!("2026-01-{n:02}")),
                 // `None` would mean "no claim"; this catalogue positively claims canon.
@@ -103,6 +135,7 @@ impl Guest for Component {
         id: String,
         episode: String,
         translation: String,
+        _hints: TitleHints,
     ) -> Result<Vec<MediaStream>, ProviderError> {
         let slug = id.strip_prefix("example:").ok_or(ProviderError::NotFound)?;
 
@@ -188,7 +221,15 @@ impl Guest for Component {
             .next()
             .and_then(|q| q.parse().ok())
             .ok_or(ProviderError::NotFound)?;
-        let mut streams = Self::resolve(id, episode, translation)?;
+        // `resolve` ignores its hints, so none are passed along.
+        let nothing = TitleHints {
+            anilist_id: None,
+            romaji: None,
+            english: None,
+            native: None,
+            synonyms: Vec::new(),
+        };
+        let mut streams = Self::resolve(id, episode, translation, nothing)?;
         for stream in &mut streams {
             stream.quality = Some(quality);
         }

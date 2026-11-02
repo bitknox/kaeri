@@ -194,16 +194,18 @@ impl Provider for TorrentBridge {
         &self,
         query: &str,
         translation: Translation,
+        hints: &kaeri_core::media::TitleHints,
     ) -> Result<Vec<SearchHit>, ProviderError> {
-        self.inner.search(query, translation).await
+        self.inner.search(query, translation, hints).await
     }
 
     async fn episodes(
         &self,
         key: &ProviderKey,
         translation: Translation,
+        hints: &kaeri_core::media::TitleHints,
     ) -> Result<Vec<Episode>, ProviderError> {
-        self.inner.episodes(key, translation).await
+        self.inner.episodes(key, translation, hints).await
     }
 
     async fn resolve(
@@ -211,8 +213,9 @@ impl Provider for TorrentBridge {
         key: &ProviderKey,
         episode: &str,
         translation: Translation,
+        hints: &kaeri_core::media::TitleHints,
     ) -> Result<Vec<Stream>, ProviderError> {
-        let streams = self.inner.resolve(key, episode, translation).await?;
+        let streams = self.inner.resolve(key, episode, translation, hints).await?;
         self.started(streams, episode).await
     }
 
@@ -287,7 +290,7 @@ mod tests {
     async fn a_torrent_never_reaches_the_player_unstarted() {
         // The session went as the call was under way: the torrent is not handed on as it was.
         let streams = bridged(vec![torrent(LINK)])
-            .resolve(&ProviderKey::new("k"), "1", Translation::Sub)
+            .resolve(&ProviderKey::new("k"), "1", Translation::Sub, &Default::default())
             .await;
         assert_eq!(streams, Err(ProviderError::Unavailable(PLAYBACK_OFF.into())));
 
@@ -296,7 +299,7 @@ mod tests {
             ..Stream::new("https://cdn.example/1.m3u8", StreamKind::Hls)
         };
         let streams = bridged(vec![torrent(LINK), web.clone()])
-            .resolve(&ProviderKey::new("k"), "1", Translation::Sub)
+            .resolve(&ProviderKey::new("k"), "1", Translation::Sub, &Default::default())
             .await
             .unwrap();
         assert_eq!(streams, vec![web], "what is not a torrent keeps its place");

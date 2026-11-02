@@ -100,7 +100,7 @@ async fn assert_reference_behaviour(plugin: &LoadedPlugin, expected_id: &str) {
 
     // Records cross the ABI intact, including `option` fields.
     let episodes = plugin
-        .list_episodes("example:hoshikuzu", "sub")
+        .list_episodes("example:hoshikuzu", "sub", &nothing())
         .await
         .expect("no trap")
         .expect("episodes");
@@ -113,13 +113,35 @@ async fn assert_reference_behaviour(plugin: &LoadedPlugin, expected_id: &str) {
         episodes[0].title
     );
 
+    // Title hints cross the ABI in the same way: an `option` that is set arrives set, one that is
+    // not arrives absent, and a plugin that ignores them behaves as above.
+    let hints = kaeri_plugin::engine::TitleHints {
+        anilist_id: Some(154_587),
+        romaji: Some("Hoshikuzu no Tabibito".into()),
+        english: None,
+        native: None,
+        synonyms: vec!["Wayfarer".into()],
+    };
+    let hinted = plugin
+        .list_episodes("example:hoshikuzu", "sub", &hints)
+        .await
+        .expect("no trap")
+        .expect("episodes");
+    assert_eq!(hinted.len(), 3);
+    let note = hinted[0].description.as_deref().unwrap();
+    assert!(note.contains("AniList 154587"), "the id should arrive, got {note:?}");
+    assert!(!episodes[0].description.as_deref().unwrap().contains("AniList"));
+    // Search needs the network, which this host has none of; the call must still not trap.
+    let _ = plugin.search("hoshikuzu", "sub", &hints).await.expect("no trap");
+
     // `not-found` survives, which the host's failover rules depend on.
-    let missing = plugin.list_episodes("not-an-example-id", "sub").await.expect("no trap");
+    let missing =
+        plugin.list_episodes("not-an-example-id", "sub", &nothing()).await.expect("no trap");
     assert!(matches!(missing, Err(GuestError::NotFound)), "got {missing:?}");
 
     // A resolved stream with its headers and subtitles.
     let streams = plugin
-        .resolve("example:hoshikuzu", "1", "sub")
+        .resolve("example:hoshikuzu", "1", "sub", &nothing())
         .await
         .expect("no trap")
         .expect("streams");
@@ -199,7 +221,7 @@ async fn a_guest_calling_a_disallowed_host_is_denied() {
     // With `http: None` the host reports a transport failure, which the guest maps to `blocked`.
     // Either way the call returns cleanly rather than trapping, which is the point: a guest
     // cannot distinguish "denied" from "unreachable" by crashing the host.
-    let result = plugin.search("hoshikuzu", "sub").await.expect("no trap");
+    let result = plugin.search("hoshikuzu", "sub", &nothing()).await.expect("no trap");
     assert!(
         matches!(result, Err(GuestError::Blocked(_)) | Err(GuestError::Other(_))),
         "expected a clean provider error, got {result:?}"
@@ -214,7 +236,8 @@ async fn the_error_vocabulary_survives_the_abi() {
     let host = PluginHost::new(Limits::default(), None).unwrap();
     let plugin = host.load(&path).await.expect("load");
 
-    let result = plugin.list_episodes("not-an-example-id", "sub").await.expect("no trap");
+    let result =
+        plugin.list_episodes("not-an-example-id", "sub", &nothing()).await.expect("no trap");
     assert!(matches!(result, Err(GuestError::NotFound)), "got {result:?}");
 }
 
@@ -226,7 +249,7 @@ async fn a_guest_can_return_structured_results() {
     let plugin = host.load(&path).await.expect("load");
 
     let episodes = plugin
-        .list_episodes("example:hoshikuzu", "sub")
+        .list_episodes("example:hoshikuzu", "sub", &nothing())
         .await
         .expect("no trap")
         .expect("episodes");
@@ -243,7 +266,7 @@ async fn a_guest_resolves_a_stream_with_headers_and_subtitles() {
     let plugin = host.load(&path).await.expect("load");
 
     let streams = plugin
-        .resolve("example:hoshikuzu", "1", "sub")
+        .resolve("example:hoshikuzu", "1", "sub", &nothing())
         .await
         .expect("no trap")
         .expect("streams");
@@ -265,8 +288,8 @@ async fn calls_do_not_leak_state_into_one_another() {
     let host = PluginHost::new(Limits::default(), None).unwrap();
     let plugin = host.load(&path).await.expect("load");
 
-    let first = plugin.list_episodes("example:a", "sub").await.unwrap().unwrap();
-    let second = plugin.list_episodes("example:a", "sub").await.unwrap().unwrap();
+    let first = plugin.list_episodes("example:a", "sub", &nothing()).await.unwrap().unwrap();
+    let second = plugin.list_episodes("example:a", "sub", &nothing()).await.unwrap().unwrap();
     assert_eq!(first.len(), second.len());
     assert_eq!(first[0].title, second[0].title);
 }
@@ -308,7 +331,7 @@ async fn a_generous_memory_ceiling_permits_normal_work() {
         PluginHost::new(Limits { memory_bytes: 32 * 1024 * 1024, ..Limits::default() }, None)
             .unwrap();
     let plugin = host.load(&path).await.expect("load");
-    assert!(plugin.list_episodes("example:a", "sub").await.unwrap().is_ok());
+    assert!(plugin.list_episodes("example:a", "sub", &nothing()).await.unwrap().is_ok());
 }
 
 #[tokio::test]
@@ -400,7 +423,7 @@ async fn granted_settings_reach_the_guest_and_only_the_guest_they_name() {
     };
     let resolved_cdn = |plugin: LoadedPlugin| async move {
         let streams = plugin
-            .resolve("example:hoshikuzu", "1", "sub")
+            .resolve("example:hoshikuzu", "1", "sub", &nothing())
             .await
             .expect("no trap")
             .expect("streams");
@@ -469,8 +492,10 @@ async fn an_infinite_loop_is_stopped_by_the_deadline() {
     let plugin = host.load(&path).await.expect("load");
 
     let started = std::time::Instant::now();
-    let error =
-        plugin.search("anything", "sub").await.expect_err("the guest should be stopped");
+    let error = plugin
+        .search("anything", "sub", &nothing())
+        .await
+        .expect_err("the guest should be stopped");
     let elapsed = started.elapsed();
 
     assert!(
@@ -491,7 +516,7 @@ async fn a_fetch_to_an_undeclared_host_is_denied_before_any_connection() {
     let plugin = host.load(&path).await.expect("load");
     assert_eq!(plugin.manifest().allowed_hosts, vec!["allowed.example"]);
 
-    let result = plugin.list_episodes("x", "sub").await.expect("no trap");
+    let result = plugin.list_episodes("x", "sub", &nothing()).await.expect("no trap");
     let Err(GuestError::Other(message)) = result else {
         panic!("expected the guest to report the denial, got {result:?}");
     };
@@ -518,7 +543,7 @@ async fn unbounded_allocation_is_stopped_by_the_memory_ceiling() {
     .unwrap();
     let plugin = host.load(&path).await.expect("load");
 
-    match plugin.resolve("x", "1", "sub").await {
+    match plugin.resolve("x", "1", "sub", &nothing()).await {
         // Trapped on a failed allocation, or cut off by the deadline.
         Err(PluginError::Trap { .. } | PluginError::Deadline { .. }) => {}
         Err(other) => panic!("unexpected host error: {other:?}"),
@@ -567,7 +592,7 @@ async fn a_stopped_plugin_can_be_called_again() {
     .unwrap();
     let plugin = host.load(&path).await.expect("load");
 
-    assert!(plugin.search("a", "sub").await.is_err());
+    assert!(plugin.search("a", "sub", &nothing()).await.is_err());
     // `describe` is trivial and must still work afterwards.
     assert_eq!(plugin.describe().await.expect("describe after a deadline").id, "test-hostile");
 }
@@ -588,27 +613,34 @@ async fn a_load_failure_names_the_file() {
 
 #[tokio::test]
 async fn a_plugin_built_for_the_old_abi_major_is_refused_with_a_clear_error() {
-    // A component that imports `kaeri:provider/host@1.1.0`, as a plugin built for an older
-    // major would. It never gets as far as the linker: the host names the problem instead.
+    // Components that import `kaeri:provider/host@<old>`, as plugins built for an older major
+    // would, including the major just before the one that added title hints. None gets as far as
+    // the linker: the host names the problem instead and says to rebuild.
     use wasm_encoder::{
         Component, ComponentImportSection, ComponentTypeRef, ComponentTypeSection, InstanceType,
     };
-    let mut types = ComponentTypeSection::new();
-    types.instance(&InstanceType::new());
-    let mut imports = ComponentImportSection::new();
-    imports.import("kaeri:provider/host@1.1.0", ComponentTypeRef::Instance(0));
-    let mut old = Component::new();
-    old.section(&types);
-    old.section(&imports);
+    for version in ["1.1.0", "2.0.0"] {
+        let mut types = ComponentTypeSection::new();
+        types.instance(&InstanceType::new());
+        let mut imports = ComponentImportSection::new();
+        imports.import(format!("kaeri:provider/host@{version}"), ComponentTypeRef::Instance(0));
+        let mut old = Component::new();
+        old.section(&types);
+        old.section(&imports);
 
-    let dir = tempfile::tempdir().unwrap();
-    let path = dir.path().join("old-plugin.wasm");
-    std::fs::write(&path, old.finish()).unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("old-plugin.wasm");
+        std::fs::write(&path, old.finish()).unwrap();
 
-    let host = PluginHost::new(Limits::default(), None).unwrap();
-    match host.load(&path).await {
-        Err(PluginError::OutdatedAbi { found, .. }) => assert_eq!(found, "1.1.0"),
-        other => panic!("expected OutdatedAbi, got {:?}", other.map(|_| ())),
+        let host = PluginHost::new(Limits::default(), None).unwrap();
+        match host.load(&path).await {
+            Err(error @ PluginError::OutdatedAbi { .. }) => {
+                let PluginError::OutdatedAbi { found, .. } = &error else { unreachable!() };
+                assert_eq!(found, version);
+                assert!(error.to_string().contains("rebuild this plugin"), "{error}");
+            }
+            other => panic!("expected OutdatedAbi, got {:?}", other.map(|_| ())),
+        }
     }
 }
 
@@ -645,7 +677,10 @@ async fn a_source_that_declares_torrents_names_them_as_magnet_links_with_the_fil
 
     let key = ProviderKey::new("hoshikuzu");
     // Episode 1 is in the season torrent only, the plugin's pick, given as a bare hash.
-    let streams = source.resolve(&key, "1", Translation::Sub).await.expect("resolve");
+    let streams = source
+        .resolve(&key, "1", Translation::Sub, &Default::default())
+        .await
+        .expect("resolve");
     assert_eq!(streams.len(), 1);
     assert_eq!(streams[0].kind, StreamKind::Torrent, "not started by the plugin call");
     assert_eq!(
@@ -654,7 +689,10 @@ async fn a_source_that_declares_torrents_names_them_as_magnet_links_with_the_fil
     );
 
     // Episode 2 has two, and the plugin's pick is its own: the one with more peers.
-    let streams = source.resolve(&key, "2", Translation::Sub).await.expect("resolve");
+    let streams = source
+        .resolve(&key, "2", Translation::Sub, &Default::default())
+        .await
+        .expect("resolve");
     assert_eq!(
         streams[0].url,
         "magnet:?xt=urn:btih:2222222222222222222222222222222222222222&dn=Hoshikuzu%2002"
@@ -675,4 +713,15 @@ async fn a_torrent_sources_candidates_keep_its_order_and_its_own_words() {
     let streams =
         source.resolve_source(&key, "2", Translation::Sub, "season").await.expect("resolve");
     assert!(streams[0].url.ends_with("&so=1"), "{}", streams[0].url);
+}
+
+/// No hints, as a caller that knows nothing about the title would pass.
+fn nothing() -> kaeri_plugin::engine::TitleHints {
+    kaeri_plugin::engine::TitleHints {
+        anilist_id: None,
+        romaji: None,
+        english: None,
+        native: None,
+        synonyms: Vec::new(),
+    }
 }

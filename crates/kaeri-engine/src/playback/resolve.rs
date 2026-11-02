@@ -330,8 +330,10 @@ pub async fn resolve_for_playback(
                         &target,
                         playback.translation,
                         now,
-                        |source, key| async move {
-                            source.resolve(&key, episode, playback.translation, now).await
+                        |source, key, hints| async move {
+                            source
+                                .resolve(&key, episode, playback.translation, &hints, now)
+                                .await
                         },
                     )
                     .await;

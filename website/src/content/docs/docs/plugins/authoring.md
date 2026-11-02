@@ -26,7 +26,7 @@ only parses. [The plugin sandbox](/docs/plugins/sandbox/) covers what is enforce
 
 ## The interface
 
-`wit/kaeri-provider.wit` is the contract, package `kaeri:provider@2.0.0`:
+`wit/kaeri-provider.wit` is the contract, package `kaeri:provider@3.0.0`:
 
 ```wit
 interface host {                          // what you may call
@@ -39,9 +39,11 @@ interface host {                          // what you may call
 
 interface provider {                      // what you must export
     describe:       func() -> manifest;
-    search:         func(query: string, translation: string) -> result<list<search-hit>, provider-error>;
-    list-episodes:  func(id: string, translation: string) -> result<list<episode>, provider-error>;
-    resolve:        func(id: string, episode: string, translation: string)
+    search:         func(query: string, translation: string, hints: title-hints)
+                      -> result<list<search-hit>, provider-error>;
+    list-episodes:  func(id: string, translation: string, hints: title-hints)
+                      -> result<list<episode>, provider-error>;
+    resolve:        func(id: string, episode: string, translation: string, hints: title-hints)
                       -> result<list<media-stream>, provider-error>;
     sources:        func(id: string, episode: string, translation: string)
                       -> result<list<source-candidate>, provider-error>;
@@ -53,6 +55,12 @@ interface provider {                      // what you must export
 - `fetch-many`: several requests concurrently, results in request order. Same allowlist and
   fetch budget, per request. Return *all* your streams from `resolve`: playback falls over to
   the next stream when one produces no frames, so the order only sets which stream is tried first.
+- `hints`: what the host knows about the title, passed to `search`, `list-episodes` and `resolve`:
+  an optional AniList id (`anilist-id`), the romaji, English and native titles (each optional) and
+  a list of synonyms. `query` stays the host's first choice of words. Every field is optional and
+  you can ignore all of it. A source with its own index can look the title up by AniList id, and
+  one that searches by text can retry with another name when the first finds nothing. A title
+  Kaeri made up for a file it could not match has no AniList id, so the field is absent.
 - `sources`: the selectable releases for the Sources overlay, best-first. An empty list means there is
   nothing to choose between, and it is not an error.
 - `resolve-source`: one candidate's id back into streams. Never fall back to the automatic pick.
@@ -96,7 +104,7 @@ cd plugins/example-ts && npm install && npm run build
 
 Five differences from Rust:
 
-- Imports carry the package version: `kaeri:provider/host@2.0.0`.
+- Imports carry the package version: `kaeri:provider/host@3.0.0`.
 - Names are lowerCamelCase: `list-episodes` → `listEpisodes`.
 - Errors are thrown, not returned: `throw { tag: 'not-found' }`. `fetch` needs `try`/`catch`.
 - Exports run without a receiver: `this.resolve(…)` traps, so share a plain function.
@@ -106,6 +114,10 @@ Five differences from Rust:
 
 A plugin is built against one major version of the WIT file. The host refuses a plugin built for
 another major with a message that says it needs rebuilding against the current WIT file.
+
+Major 3 added the `hints` argument to `search`, `list-episodes` and `resolve`. A plugin built for
+major 2 is refused with a message that says to rebuild it; rebuild against the current WIT file and
+add the argument to those three functions.
 
 ## Cost
 

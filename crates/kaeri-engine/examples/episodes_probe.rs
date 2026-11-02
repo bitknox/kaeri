@@ -89,7 +89,7 @@ async fn main() {
 
     println!();
     println!("── episodes ───────────────────────────────────────────");
-    let attempt = registry.episodes(&key, Translation::Sub, now).await;
+    let attempt = registry.episodes(&key, Translation::Sub, &Default::default(), now).await;
     println!("  summary      {}", attempt.summary());
     let episodes = match attempt.value {
         Some(list) => list,
@@ -118,7 +118,9 @@ async fn main() {
     println!();
     println!("── resolve (first episode) ────────────────────────────");
     let first = &episodes[0];
-    let attempt = registry.resolve(&key, first.number.as_str(), Translation::Sub, now).await;
+    let attempt = registry
+        .resolve(&key, first.number.as_str(), Translation::Sub, &Default::default(), now)
+        .await;
     println!("  summary      {}", attempt.summary());
     match attempt.value {
         Some(streams) if streams.is_empty() => {

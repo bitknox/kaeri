@@ -219,6 +219,7 @@ impl Provider for RemoteHttpProvider {
         &self,
         query: &str,
         _translation: Translation,
+        _hints: &kaeri_core::media::TitleHints,
     ) -> Result<Vec<SearchHit>, ProviderError> {
         let payload = self.get(&format!("search/{}", urlencode(query))).await?;
         Ok(parse_hits(&payload))
@@ -228,6 +229,7 @@ impl Provider for RemoteHttpProvider {
         &self,
         key: &ProviderKey,
         _translation: Translation,
+        _hints: &kaeri_core::media::TitleHints,
     ) -> Result<Vec<Episode>, ProviderError> {
         let payload = self.get(&format!("info/{}", urlencode(key.as_str()))).await?;
         Ok(parse_episodes(&payload))
@@ -238,6 +240,7 @@ impl Provider for RemoteHttpProvider {
         key: &ProviderKey,
         episode: &str,
         _translation: Translation,
+        _hints: &kaeri_core::media::TitleHints,
     ) -> Result<Vec<Stream>, ProviderError> {
         let payload = self
             .get(&format!("watch/{}-episode-{}", urlencode(key.as_str()), urlencode(episode)))

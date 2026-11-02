@@ -18,14 +18,14 @@
 //      of `provider-error` becomes a thrown variant object, and the host receives it as the same
 //      typed error a Rust plugin would return.
 
-// The version is part of the specifier: the WIT package is `kaeri:provider@2.0.0`, and jco
+// The version is part of the specifier: the WIT package is `kaeri:provider@3.0.0`, and jco
 // resolves imports against the fully-qualified interface name.
 import {
   fetch,
   log,
   regexCaptures,
   configGet,
-} from 'kaeri:provider/host@2.0.0';
+} from 'kaeri:provider/host@3.0.0';
 
 // The one host this plugin may reach. Declared here, enforced by the host — visible in
 // `kaeri --plugins` without reading this file.
@@ -101,8 +101,18 @@ export const provider = {
     };
   },
 
-  search(query, translation) {
+  // `hints` carries what the host knows about the title: `anilistId`, `romaji`, `english`,
+  // `native` (each `undefined` when unknown) and `synonyms` (a list, maybe empty). All of it is
+  // optional and may be ignored. A source with its own index could look `anilistId` up directly;
+  // one that searches by text could retry with another name when `query` finds nothing.
+  search(query, translation, hints) {
     log('debug', `search ${JSON.stringify(query)} (${translation})`);
+    log(
+      'debug',
+      `known names: ${[hints.romaji, hints.english, hints.native, ...hints.synonyms]
+        .filter(Boolean)
+        .join(', ')}`,
+    );
 
     const body = get(`https://${ALLOWED_HOST}/get?q=${encode(query)}`);
 
@@ -128,7 +138,7 @@ export const provider = {
     ];
   },
 
-  listEpisodes(id, _translation) {
+  listEpisodes(id, _translation, hints) {
     // `not-found` rather than an empty list: the distinction is load-bearing in the host, where
     // `not-found` deliberately does *not* trigger failover to the next provider.
     if (!id.startsWith('example:')) {
@@ -141,7 +151,12 @@ export const provider = {
       number: String(n),
       title: `${slug} — part ${n}`,
       durationSecs: 1440,
-      description: `In which ${slug} is echoed for the ${n}th time, and nothing else happens.`,
+      // The one place the example uses a hint: a catalogue keyed by AniList id would look the
+      // title up with it instead of by the opaque `id`.
+      description:
+        hints.anilistId === undefined
+          ? `In which ${slug} is echoed for the ${n}th time, and nothing else happens.`
+          : `In which ${slug} (AniList ${hints.anilistId}) is echoed for the ${n}th time, and nothing else happens.`,
       thumbnail: undefined,
       airDate: `2026-01-${String(n).padStart(2, '0')}`,
       // `undefined` would mean "no claim"; this catalogue positively claims canon.
@@ -149,7 +164,7 @@ export const provider = {
     }));
   },
 
-  resolve(id, episode, translation) {
+  resolve(id, episode, translation, _hints) {
     return resolveStreams(id, episode, translation);
   },
 

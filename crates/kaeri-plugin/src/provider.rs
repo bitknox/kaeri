@@ -180,6 +180,18 @@ fn stream_kind_from(kind: &str) -> StreamKind {
     }
 }
 
+/// The hints as the guest sees them. An id Kaeri made up for a title AniList does not have is left
+/// out: to a plugin it would look like a real AniList id that matches nothing, or the wrong show.
+fn guest_hints(hints: &kaeri_core::media::TitleHints) -> engine::TitleHints {
+    engine::TitleHints {
+        anilist_id: hints.anilist_id.filter(|id| !id.is_own()).map(|id| id.get()),
+        romaji: hints.romaji.clone(),
+        english: hints.english.clone(),
+        native: hints.native.clone(),
+        synonyms: hints.synonyms.clone(),
+    }
+}
+
 #[async_trait::async_trait]
 impl Provider for WasmProvider {
     fn manifest(&self) -> &ProviderManifest {
@@ -190,8 +202,11 @@ impl Provider for WasmProvider {
         &self,
         query: &str,
         translation: Translation,
+        hints: &kaeri_core::media::TitleHints,
     ) -> Result<Vec<SearchHit>, ProviderError> {
-        let hits = flatten(self.plugin.search(query, translation_tag(translation)).await)?;
+        let hits = flatten(
+            self.plugin.search(query, translation_tag(translation), &guest_hints(hints)).await,
+        )?;
         Ok(hits
             .into_iter()
             .map(|hit| SearchHit {
@@ -209,9 +224,12 @@ impl Provider for WasmProvider {
         &self,
         key: &ProviderKey,
         translation: Translation,
+        hints: &kaeri_core::media::TitleHints,
     ) -> Result<Vec<Episode>, ProviderError> {
         let episodes = flatten(
-            self.plugin.list_episodes(key.as_str(), translation_tag(translation)).await,
+            self.plugin
+                .list_episodes(key.as_str(), translation_tag(translation), &guest_hints(hints))
+                .await,
         )?;
         Ok(episodes
             .into_iter()
@@ -236,9 +254,17 @@ impl Provider for WasmProvider {
         key: &ProviderKey,
         episode: &str,
         translation: Translation,
+        hints: &kaeri_core::media::TitleHints,
     ) -> Result<Vec<Stream>, ProviderError> {
         let streams = flatten(
-            self.plugin.resolve(key.as_str(), episode, translation_tag(translation)).await,
+            self.plugin
+                .resolve(
+                    key.as_str(),
+                    episode,
+                    translation_tag(translation),
+                    &guest_hints(hints),
+                )
+                .await,
         )?;
 
         Ok(streams.into_iter().filter_map(|stream| self.stream_from(stream)).collect())

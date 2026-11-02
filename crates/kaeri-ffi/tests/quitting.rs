@@ -232,16 +232,22 @@ impl Provider for Slow {
         self.inner.manifest()
     }
 
-    async fn search(&self, q: &str, t: Translation) -> Result<Vec<SearchHit>, ProviderError> {
-        self.inner.search(q, t).await
+    async fn search(
+        &self,
+        q: &str,
+        t: Translation,
+        hints: &kaeri_core::media::TitleHints,
+    ) -> Result<Vec<SearchHit>, ProviderError> {
+        self.inner.search(q, t, hints).await
     }
 
     async fn episodes(
         &self,
         key: &ProviderKey,
         t: Translation,
+        hints: &kaeri_core::media::TitleHints,
     ) -> Result<Vec<Episode>, ProviderError> {
-        self.inner.episodes(key, t).await
+        self.inner.episodes(key, t, hints).await
     }
 
     async fn resolve(
@@ -249,11 +255,12 @@ impl Provider for Slow {
         key: &ProviderKey,
         episode: &str,
         t: Translation,
+        hints: &kaeri_core::media::TitleHints,
     ) -> Result<Vec<Stream>, ProviderError> {
         if let Some(delay) = self.delays.get(episode) {
             tokio::time::sleep(*delay).await;
         }
-        self.inner.resolve(key, episode, t).await
+        self.inner.resolve(key, episode, t, hints).await
     }
 
     async fn sources(

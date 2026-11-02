@@ -182,6 +182,7 @@ pub fn manual_search(
     let translation = config.playback.translation;
     tokio::spawn(async move {
         let _job = job;
+        let hints = kaeri_core::media::TitleHints::default().with_anilist(id);
         let failed = |reason| Event::MatchSearchFailed { id, query: query.clone(), reason };
         let chain = match provider_id.as_deref() {
             None => Some(registry.clone()),
@@ -191,7 +192,7 @@ pub fn manual_search(
             let _ = tx.send(failed(Msg::MatchSearchSourceOff));
             return;
         };
-        let attempt = chain.search(&query, translation, now_epoch()).await;
+        let attempt = chain.search(&query, translation, &hints, now_epoch()).await;
         let answered = |provider_id: String, candidates| Event::MatchChoices {
             id,
             source: source_name(&registry, &provider_id),

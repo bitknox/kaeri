@@ -65,10 +65,11 @@ pub fn load_source_options(
             &media.match_target(),
             Translation::Sub,
             now,
-            |source, key| {
+            |source, key, hints| {
                 crate::titles::coverage::listing(
                     source,
                     key,
+                    hints,
                     Translation::Sub,
                     (&store, id),
                     &media,

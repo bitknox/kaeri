@@ -16,7 +16,7 @@ use kaeri_core::{
     Error,
     error::ProviderError,
     ids::ProviderKey,
-    media::{Episode, SearchHit, Translation},
+    media::{Episode, SearchHit, TitleHints, Translation},
     stream::Stream,
     traits::{Provider, ProviderKind, SourceCandidate},
 };
@@ -449,11 +449,12 @@ impl ProviderRegistry {
         &self,
         query: &str,
         translation: Translation,
+        hints: &TitleHints,
         now: i64,
     ) -> Attempt<Vec<SearchHit>> {
         self.walk(now, |p| {
             let query = query.to_owned();
-            async move { p.search(&query, translation).await }
+            async move { p.search(&query, translation, hints).await }
         })
         .await
     }
@@ -462,11 +463,12 @@ impl ProviderRegistry {
         &self,
         key: &ProviderKey,
         translation: Translation,
+        hints: &TitleHints,
         now: i64,
     ) -> Attempt<Vec<Episode>> {
         self.walk(now, |p| {
             let key = key.clone();
-            async move { p.episodes(&key, translation).await }
+            async move { p.episodes(&key, translation, hints).await }
         })
         .await
     }
@@ -546,13 +548,14 @@ impl ProviderRegistry {
         key: &ProviderKey,
         episode: &str,
         translation: Translation,
+        hints: &TitleHints,
         now: i64,
     ) -> Attempt<Vec<Stream>> {
         self.walk(now, |p| {
             let key = key.clone();
             let episode = episode.to_owned();
             async move {
-                let streams = p.resolve(&key, &episode, translation).await?;
+                let streams = p.resolve(&key, &episode, translation, hints).await?;
                 // A provider returning zero streams has not succeeded. Treating an empty
                 // list as success would end the walk and leave nothing to play.
                 if streams.is_empty() {
@@ -674,7 +677,9 @@ mod tests {
         assert_eq!(r.ids(), ["off", "on"], "kept in the chain, where it was");
         assert_eq!(r.usable_ids(), ["on"]);
         assert!(r.is_disabled("off") && !r.is_disabled("on"));
-        let attempt = r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        let attempt = r
+            .resolve(&ProviderKey::new("k"), "1", Translation::Sub, &Default::default(), 0)
+            .await;
         assert_eq!(attempt.provider.as_deref(), Some("on"));
         r.check_all(0).await;
         assert_eq!(
@@ -687,7 +692,9 @@ mod tests {
         // Back on, at once: nothing to load again.
         r.set_disabled(Vec::new());
         assert_eq!(r.usable_ids(), ["off", "on"]);
-        let attempt = r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        let attempt = r
+            .resolve(&ProviderKey::new("k"), "1", Translation::Sub, &Default::default(), 0)
+            .await;
         assert_eq!(attempt.provider.as_deref(), Some("off"));
     }
 
@@ -697,7 +704,9 @@ mod tests {
             MockProvider::new("index").torrents().with_streams(vec![stream("index's")]).arc(),
             MockProvider::new("site").with_streams(vec![stream("site's")]).arc(),
         ]);
-        let attempt = r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        let attempt = r
+            .resolve(&ProviderKey::new("k"), "1", Translation::Sub, &Default::default(), 0)
+            .await;
         assert_eq!(attempt.provider.as_deref(), Some("site"), "passed over, not failed");
         let index = r.health().get("index").unwrap();
         assert_eq!(index.held_back.as_deref(), Some(crate::torrent::bridge::PLAYBACK_OFF));
@@ -719,7 +728,9 @@ mod tests {
         let view = r.without_torrents();
         assert_eq!(view.ids(), ["site"]);
         assert_eq!(r.ids(), ["swarm", "site"], "the registry itself keeps them");
-        let attempt = view.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        let attempt = view
+            .resolve(&ProviderKey::new("k"), "1", Translation::Sub, &Default::default(), 0)
+            .await;
         assert_eq!(attempt.provider.as_deref(), Some("site"));
         r.set_disabled(["site".to_owned()]);
         assert!(view.usable_ids().is_empty(), "switched off in the view too");
@@ -796,7 +807,9 @@ mod tests {
             MockProvider::new("a").with_streams(vec![stream("from-a")]).arc(),
             MockProvider::new("b").with_streams(vec![stream("from-b")]).arc(),
         ]);
-        let attempt = r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        let attempt = r
+            .resolve(&ProviderKey::new("k"), "1", Translation::Sub, &Default::default(), 0)
+            .await;
         assert_eq!(attempt.provider.as_deref(), Some("a"));
         assert_eq!(attempt.value.unwrap()[0].url, "from-a");
         assert!(attempt.failures.is_empty());
@@ -809,7 +822,9 @@ mod tests {
             MockProvider::new("b").with_streams(vec![stream("from-b")]).arc(),
         ]);
         let pinned = r.pinned("b").expect("b is registered");
-        let attempt = pinned.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        let attempt = pinned
+            .resolve(&ProviderKey::new("k"), "1", Translation::Sub, &Default::default(), 0)
+            .await;
         assert_eq!(attempt.provider.as_deref(), Some("b"));
         assert_eq!(attempt.value.unwrap()[0].url, "from-b");
     }
@@ -823,7 +838,9 @@ mod tests {
             MockProvider::new("b").failing(ProviderError::Blocked("down".into())).arc(),
         ]);
         let pinned = r.pinned("b").expect("b is registered");
-        let attempt = pinned.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        let attempt = pinned
+            .resolve(&ProviderKey::new("k"), "1", Translation::Sub, &Default::default(), 0)
+            .await;
         assert!(attempt.value.is_none(), "must not quietly serve a's stream instead");
         assert_eq!(attempt.failures.len(), 1);
     }
@@ -847,7 +864,9 @@ mod tests {
             registry(vec![MockProvider::new("a").with_streams(vec![stream("from-a")]).arc()]);
         r.health().hold_back("a", "vpn guard failing");
 
-        let attempt = r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        let attempt = r
+            .resolve(&ProviderKey::new("k"), "1", Translation::Sub, &Default::default(), 0)
+            .await;
 
         assert_eq!(
             attempt.provider.as_deref(),
@@ -867,7 +886,9 @@ mod tests {
         let calls = provider.call_count();
         let r = registry(vec![provider.arc()]);
 
-        let attempt = r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        let attempt = r
+            .resolve(&ProviderKey::new("k"), "1", Translation::Sub, &Default::default(), 0)
+            .await;
 
         assert!(attempt.value.is_none(), "a withheld provider must not serve");
         assert_eq!(calls.load(std::sync::atomic::Ordering::Relaxed), 0, "it was contacted");
@@ -886,7 +907,9 @@ mod tests {
             MockProvider::new("b").failing(ProviderError::Blocked("down".into())).arc(),
         ]);
         let pinned = r.pinned("b").expect("b is registered");
-        let _ = pinned.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        let _ = pinned
+            .resolve(&ProviderKey::new("k"), "1", Translation::Sub, &Default::default(), 0)
+            .await;
         let recorded = r.health().get("b").expect("b is tracked");
         assert!(
             recorded.consecutive_failures > 0,
@@ -900,7 +923,9 @@ mod tests {
             MockProvider::new("a").failing(ProviderError::Blocked("cloudflare".into())).arc(),
             MockProvider::new("b").with_streams(vec![stream("from-b")]).arc(),
         ]);
-        let attempt = r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        let attempt = r
+            .resolve(&ProviderKey::new("k"), "1", Translation::Sub, &Default::default(), 0)
+            .await;
         assert_eq!(attempt.provider.as_deref(), Some("b"));
         assert_eq!(attempt.failures.len(), 1, "the failure is carried, not discarded");
         assert_eq!(attempt.failures[0].0, "a");
@@ -916,7 +941,7 @@ mod tests {
                 .arc(),
         ]);
 
-        let attempt = r.search("x", Translation::Sub, 0).await;
+        let attempt = r.search("x", Translation::Sub, &Default::default(), 0).await;
         assert_eq!(attempt.provider.as_deref(), Some("b"));
         assert_eq!(attempt.failures, [("a".to_owned(), ProviderError::NotFound)]);
         assert!(r.health().get("a").is_some_and(|h| h.is_usable()), "an answer is not a fault");
@@ -929,7 +954,9 @@ mod tests {
             MockProvider::new("b").failing(ProviderError::Parse("no url".into())).arc(),
             MockProvider::new("c").failing(ProviderError::Transport("timeout".into())).arc(),
         ]);
-        let attempt = r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        let attempt = r
+            .resolve(&ProviderKey::new("k"), "1", Translation::Sub, &Default::default(), 0)
+            .await;
         assert!(!attempt.is_success());
         assert_eq!(attempt.failures.len(), 3);
 
@@ -948,7 +975,9 @@ mod tests {
                 .failing(ProviderError::Blocked("operation timed out".into()))
                 .arc(),
         ]);
-        let attempt = r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        let attempt = r
+            .resolve(&ProviderKey::new("k"), "1", Translation::Sub, &Default::default(), 0)
+            .await;
         assert_eq!(attempt.summary(), "a: timed out");
     }
 
@@ -959,7 +988,9 @@ mod tests {
             MockProvider::new("a").with_streams(vec![]).arc(),
             MockProvider::new("b").with_streams(vec![stream("from-b")]).arc(),
         ]);
-        let attempt = r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        let attempt = r
+            .resolve(&ProviderKey::new("k"), "1", Translation::Sub, &Default::default(), 0)
+            .await;
         // Empty maps to NotFound, so the walk moves on to a source that has something.
         assert_eq!(attempt.provider.as_deref(), Some("b"));
         assert_eq!(attempt.failures[0].1, ProviderError::NotFound);
@@ -977,7 +1008,9 @@ mod tests {
             torrent.arc(),
             MockProvider::new("remote").with_streams(vec![stream("safe")]).arc(),
         ]);
-        let attempt = r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        let attempt = r
+            .resolve(&ProviderKey::new("k"), "1", Translation::Sub, &Default::default(), 0)
+            .await;
 
         assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), 0, "no request may leave");
         assert_eq!(attempt.provider.as_deref(), Some("remote"));
@@ -995,12 +1028,13 @@ mod tests {
 
         // Three failures take it down.
         for i in 0..3 {
-            r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, i).await;
+            r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, &Default::default(), i)
+                .await;
         }
         let before = calls.load(std::sync::atomic::Ordering::SeqCst);
         assert_eq!(before, 3);
 
-        r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 4).await;
+        r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, &Default::default(), 4).await;
         assert_eq!(
             calls.load(std::sync::atomic::Ordering::SeqCst),
             before,
@@ -1011,14 +1045,16 @@ mod tests {
     #[tokio::test]
     async fn success_records_latency_for_the_providers_screen() {
         let r = registry(vec![MockProvider::new("a").with_streams(vec![stream("x")]).arc()]);
-        r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, &Default::default(), 0).await;
         assert!(r.health().get("a").unwrap().last_latency.is_some());
     }
 
     #[tokio::test]
     async fn an_empty_registry_reports_that_rather_than_hanging() {
         let r = registry(vec![]);
-        let attempt = r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
+        let attempt = r
+            .resolve(&ProviderKey::new("k"), "1", Translation::Sub, &Default::default(), 0)
+            .await;
         assert!(!attempt.is_success());
         assert_eq!(attempt.summary(), "no providers configured");
         assert!(r.is_empty());
@@ -1034,11 +1070,17 @@ mod tests {
                 .arc(),
         ]);
         assert_eq!(
-            r.search("hoshikuzu", Translation::Sub, 0).await.provider.as_deref(),
+            r.search("hoshikuzu", Translation::Sub, &Default::default(), 0)
+                .await
+                .provider
+                .as_deref(),
             Some("b")
         );
         assert_eq!(
-            r.episodes(&ProviderKey::new("k"), Translation::Sub, 0).await.provider.as_deref(),
+            r.episodes(&ProviderKey::new("k"), Translation::Sub, &Default::default(), 0)
+                .await
+                .provider
+                .as_deref(),
             Some("b")
         );
     }

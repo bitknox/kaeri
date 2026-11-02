@@ -715,7 +715,9 @@ pub async fn enqueue(
         &media.match_target(),
         translation,
         now,
-        |source, key| async move { source.resolve(&key, episode, translation, now).await },
+        |source, key, hints| async move {
+            source.resolve(&key, episode, translation, &hints, now).await
+        },
     )
     .await;
     // Explained before the value is taken: the reasons name which providers failed, and that is
