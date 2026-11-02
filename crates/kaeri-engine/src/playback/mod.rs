@@ -16,6 +16,7 @@
 
 mod context;
 mod session;
+mod webvtt;
 
 pub mod autonext;
 pub mod handoff;

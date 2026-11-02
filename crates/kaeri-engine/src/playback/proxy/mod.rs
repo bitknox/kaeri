@@ -26,7 +26,7 @@
 //! host, and the thumbnailer's rules each have a file of their own.
 
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     sync::{Arc, Mutex, atomic::AtomicU64},
     time::Instant,
 };
@@ -153,6 +153,9 @@ struct Upstream {
     /// request refused, with when. See [`Upstream::refused_successor`].
     successors: Mutex<HashMap<String, String>>,
     last_refused: Mutex<Option<(String, Instant)>>,
+    /// The URLs the playlists served so far list as subtitles, and the segments of the ones that
+    /// are playlists: what is mended when it is WebVTT. See [`Upstream::note_subtitles`].
+    subtitles: Mutex<HashSet<String>>,
     /// The last `4xx` or `5xx` the host answered a playback request with. Only playback's: a
     /// thumbnail refused says nothing of whether the stream plays.
     refused: Mutex<Option<u16>>,
@@ -174,6 +177,7 @@ impl Upstream {
             thumbnail_newest: AtomicU64::new(0),
             successors: Mutex::new(HashMap::new()),
             last_refused: Mutex::new(None),
+            subtitles: Mutex::new(HashSet::new()),
             refused: Mutex::new(None),
         }
     }
@@ -182,6 +186,34 @@ impl Upstream {
     fn answered(&self, status: u16) {
         if (400..600).contains(&status) {
             *lock(&self.refused) = Some(status);
+        }
+    }
+
+    /// Remember which URLs a playlist lists as subtitles: the ones it names under
+    /// `TYPE=SUBTITLES`, and, when it is itself one of those, its own segments.
+    fn note_subtitles(&self, body: &str, base: &str) {
+        let mut known = lock(&self.subtitles);
+        if known.contains(base) {
+            known.extend(playlist::segment_urls(body, base));
+        }
+        known.extend(playlist::subtitle_uris(body, base));
+    }
+
+    /// `fetched` as playback should get it: a WebVTT file listed as a subtitle by a playlist,
+    /// mended the way a plugin's subtitles are. Everything else is as it came.
+    fn mended(&self, url: &str, fetched: Fetched) -> Fetched {
+        let body = fetched.body.strip_prefix(b"\xEF\xBB\xBF").unwrap_or(&fetched.body);
+        if !body.starts_with(b"WEBVTT") || !lock(&self.subtitles).contains(url) {
+            return fetched;
+        }
+        let mended =
+            std::str::from_utf8(body).ok().and_then(crate::playback::webvtt::mend_webvtt);
+        match mended {
+            Some(text) => {
+                tracing::debug!(url = %url, "playlist subtitle mended");
+                Fetched { content_type: fetched.content_type, body: text.into_bytes() }
+            }
+            None => fetched,
         }
     }
 
@@ -351,6 +383,7 @@ async fn handle_connection(socket: TcpStream, upstream: Arc<Upstream>) -> std::i
             let body = if looks_like_playlist(content_type, &fetched.body) {
                 let text = String::from_utf8_lossy(&fetched.body);
                 upstream.learn_order(&text, &url);
+                upstream.note_subtitles(&text, &url);
                 let proxy = |u: &str| upstream.proxied(u, class);
                 rewrite_playlist(&text, &url, &proxy).into_bytes()
             } else {
@@ -716,5 +749,123 @@ mod tests {
         let split = raw.windows(4).position(|w| w == b"\r\n\r\n").unwrap() + 4;
         assert!(raw.starts_with(b"HTTP/1.1 200"));
         assert_eq!(&raw[split..], &body[..]);
+    }
+
+    /// A host on loopback answering each path with its file, and `404` otherwise; the proxy
+    /// fronting its `/master.m3u8`.
+    async fn serve_files(files: Vec<(&'static str, String)>) -> (ProxyServer, String) {
+        let host = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).await.unwrap();
+        let address = host.local_addr().unwrap();
+        tokio::spawn(async move {
+            while let Ok((mut socket, _)) = host.accept().await {
+                let files = files.clone();
+                tokio::spawn(async move {
+                    let mut request = [0u8; 4096];
+                    let n = socket.read(&mut request).await.unwrap_or(0);
+                    let head = String::from_utf8_lossy(&request[..n]).into_owned();
+                    let path = head.split_whitespace().nth(1).unwrap_or("/").to_owned();
+                    let response = match files.iter().find(|(name, _)| *name == path) {
+                        Some((_, body)) => format!(
+                            "HTTP/1.1 200 OK\r\nContent-Type: text/vtt\r\nContent-Length: {}\r\n\
+                             Connection: close\r\n\r\n{body}",
+                            body.len()
+                        ),
+                        None => "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\
+                                 Connection: close\r\n\r\n"
+                            .to_owned(),
+                    };
+                    let _ = socket.write_all(response.as_bytes()).await;
+                });
+            }
+        });
+        let http = HttpClient::new(&kaeri_core::config::NetworkConfig::default()).unwrap();
+        let origin = format!("http://{address}");
+        let server =
+            serve(http, &format!("{origin}/master.m3u8"), Vec::new(), "tok").await.unwrap();
+        (server, origin)
+    }
+
+    /// The body of a `GET` of `url` on the proxy.
+    async fn get(url: &str) -> String {
+        let authority = url.trim_start_matches("http://").split('/').next().unwrap().to_owned();
+        let path = &url[url.find("/m/").unwrap()..];
+        let mut socket = TcpStream::connect(&authority).await.unwrap();
+        socket
+            .write_all(format!("GET {path} HTTP/1.1\r\nHost: {authority}\r\n\r\n").as_bytes())
+            .await
+            .unwrap();
+        let mut raw = Vec::new();
+        socket.read_to_end(&mut raw).await.unwrap();
+        let raw = String::from_utf8_lossy(&raw).into_owned();
+        assert!(raw.starts_with("HTTP/1.1 200"), "{raw}");
+        raw.split_once("\r\n\r\n").unwrap().1.to_owned()
+    }
+
+    /// The first proxied URL in `playlist` whose upstream path ends with `suffix`.
+    fn proxied_ending(playlist: &str, suffix: &str) -> String {
+        let urls = playlist.match_indices("http://127.0.0.1").map(|(i, _)| {
+            let rest = &playlist[i..];
+            rest[..rest.find(['"', '\n']).unwrap_or(rest.len())].to_owned()
+        });
+        urls.into_iter()
+            .find(|u| {
+                let encoded = u.rsplit('/').next().unwrap();
+                decode_path(encoded).ends_with(suffix)
+            })
+            .unwrap_or_else(|| panic!("no {suffix} in {playlist}"))
+    }
+
+    #[tokio::test]
+    async fn a_subtitle_the_playlist_lists_is_mended_and_keeps_its_header() {
+        use crate::playback::webvtt::{BROKEN, MENDED};
+        let mapped = |body: &str| {
+            body.replacen(
+                "WEBVTT\n",
+                "WEBVTT\nX-TIMESTAMP-MAP=MPEGTS:900000,LOCAL:00:00:00.000\n",
+                1,
+            )
+        };
+        let (server, _) = serve_files(vec![
+            (
+                "/master.m3u8",
+                "#EXTM3U\n#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID=\"s\",NAME=\"de\",URI=\"de.m3u8\"\n\
+                 #EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID=\"s\",NAME=\"en\",URI=\"en.vtt\"\n\
+                 #EXT-X-STREAM-INF:BANDWIDTH=1,SUBTITLES=\"s\"\nvideo.m3u8\n"
+                    .to_owned(),
+            ),
+            ("/de.m3u8", "#EXTM3U\n#EXTINF:1500,\nde.vtt\n#EXT-X-ENDLIST\n".to_owned()),
+            ("/de.vtt", format!("\u{feff}{}", mapped(BROKEN))),
+            ("/en.vtt", mapped(BROKEN)),
+            ("/other.vtt", BROKEN.to_owned()),
+        ])
+        .await;
+
+        let master = get(server.url()).await;
+        // A segment of a subtitle playlist, once that playlist has been served.
+        let de = get(&proxied_ending(&master, "/de.m3u8")).await;
+        let segment = get(&proxied_ending(&de, "/de.vtt")).await;
+        assert_eq!(
+            segment,
+            mapped(MENDED),
+            "mended, with the header and its timestamp map kept"
+        );
+        // One the master names directly.
+        assert_eq!(get(&proxied_ending(&master, "/en.vtt")).await, mapped(MENDED));
+    }
+
+    #[tokio::test]
+    async fn a_webvtt_file_no_playlist_listed_as_a_subtitle_is_served_as_it_came() {
+        use crate::playback::webvtt::BROKEN;
+        let (server, origin) = serve_files(vec![
+            ("/master.m3u8", "#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=1\nvideo.m3u8\n".to_owned()),
+            ("/other.vtt", BROKEN.to_owned()),
+        ])
+        .await;
+        get(server.url()).await;
+        let other = server.url().replace(
+            &server.url()[server.url().rfind('/').unwrap() + 1..],
+            &encode_path(&format!("{origin}/other.vtt")),
+        );
+        assert_eq!(get(&other).await, BROKEN);
     }
 }
