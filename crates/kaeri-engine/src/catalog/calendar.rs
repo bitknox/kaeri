@@ -8,7 +8,10 @@ use std::{
 };
 
 use kaeri_core::ids::AnilistId;
-use kaeri_meta::{Meta, anilist::AiringEntry};
+use kaeri_meta::{
+    Meta,
+    anilist::{AiringEntry, AiringPage},
+};
 use kaeri_model::{
     catalog::{AiringStatus, ContentFor, ContentList, Entry},
     event::Event,
@@ -149,6 +152,38 @@ impl Window {
         (wanted && more && count < CALENDAR_JOB_PAGES * 2).then_some(count + 1)
     }
 
+    /// The pages of one side this window still needs for `need`, in order: the next one, and
+    /// those after it that are sure to be wanted too. A count of pages says how many; an instant
+    /// to reach is reckoned from how far the pages held went each, so a page that turns out not
+    /// to be needed is left unread. Empty when nothing more is needed.
+    fn wanted(&self, need: &Need, ahead: bool) -> Vec<u32> {
+        let next = if ahead { self.next_ahead(need) } else { self.next_past(need) };
+        let Some(next) = next else { return Vec::new() };
+        let pages = if ahead { &self.ahead } else { &self.past };
+        let (count, _) = Self::run(pages);
+        let counted = if ahead { need.ahead_pages } else { need.past_pages };
+        let mut more = counted.saturating_sub(count).max(1);
+        let to = if ahead { need.ahead_to } else { need.past_to };
+        let reached = pages.get(&count).and_then(|b| b.items.last()).map(|a| a.airing_at);
+        if let (Some(to), Some(reached)) = (to, reached)
+            && count > 0
+        {
+            // How far a page went, on average, and how many such pages the rest would take.
+            let (went, left) = if ahead {
+                (reached - self.anchor, to - reached)
+            } else {
+                (self.anchor - reached, reached - to)
+            };
+            let each = went / i64::from(count);
+            if each > 0 && left > 0 {
+                let pages = u32::try_from((left + each - 1) / each).unwrap_or(u32::MAX);
+                more = more.max(pages);
+            }
+        }
+        let last = (CALENDAR_JOB_PAGES * 2).min(next.saturating_add(more - 1));
+        (next..=last).collect()
+    }
+
     /// The broadcasts held, in time order, strictly between `from` and `to`.
     pub fn between(&self, from: i64, to: i64) -> Vec<AiringEntry> {
         self.broadcasts()
@@ -221,15 +256,57 @@ impl CalendarMemory {
                         Some(Remembered { at, window: Window { anchor, ..Window::default() } });
                 }
             }
-            let side = |ahead: bool| {
-                let (me, meta) = (&me, &meta);
-                async move {
-                    loop {
-                        let _gate = me.gates[usize::from(ahead)].lock().await;
-                        // Looked at again behind the gate: the page may have arrived.
+            // The pages each side lacks go out together, two to a request: the first page of
+            // the past and of the days ahead in one, and the pages a side is sure to need after
+            // it in the next. A side whose gate another reader holds is not waited for while the
+            // other has pages to ask.
+            let mut errors: [Option<String>; 2] = [None, None];
+            loop {
+                let wanted = |ahead: bool| {
+                    let kept = me.lock();
+                    let window = kept.as_ref().filter(|k| k.window.anchor == anchor);
+                    window.map(|k| k.window.wanted(&need, ahead)).unwrap_or_default()
+                };
+                let sides: Vec<bool> = [false, true]
+                    .into_iter()
+                    .filter(|ahead| errors[usize::from(*ahead)].is_none())
+                    .filter(|ahead| !wanted(*ahead).is_empty())
+                    .collect();
+                let Some(first) = sides.first().copied() else { break };
+                let mut gates = Vec::new();
+                for ahead in &sides {
+                    if let Ok(gate) = me.gates[usize::from(*ahead)].try_lock() {
+                        gates.push((*ahead, gate));
+                    }
+                }
+                if gates.is_empty() {
+                    gates.push((first, me.gates[usize::from(first)].lock().await));
+                }
+                // Looked at again behind the gates: a page may have arrived.
+                let mut asked: Vec<(bool, u32)> = Vec::new();
+                let lists: Vec<(bool, Vec<u32>)> =
+                    gates.iter().map(|(ahead, _)| (*ahead, wanted(*ahead))).collect();
+                for n in 0..CALENDAR_PAGES_TOGETHER {
+                    for (ahead, pages) in &lists {
+                        if let Some(page) = pages.get(n) {
+                            asked.push((*ahead, *page));
+                        }
+                    }
+                }
+                asked.truncate(CALENDAR_PAGES_TOGETHER);
+                if asked.is_empty() {
+                    continue;
+                }
+                let found = fetch_pages(&meta, anchor, &asked).await;
+                for ahead in [false, true] {
+                    // In page order, and only as far as the need reaches, as asked one by one.
+                    for ((side, page), block) in asked.iter().zip(&found) {
+                        if *side != ahead {
+                            continue;
+                        }
                         let next = {
                             let kept = me.lock();
-                            let window = &kept.as_ref().filter(|k| k.window.anchor == anchor);
+                            let window = kept.as_ref().filter(|k| k.window.anchor == anchor);
                             window.and_then(|k| {
                                 if ahead {
                                     k.window.next_ahead(&need)
@@ -238,20 +315,22 @@ impl CalendarMemory {
                                 }
                             })
                         };
-                        let page = next?;
-                        let block = if ahead {
-                            fetch_ahead(meta, anchor, page).await
-                        } else {
-                            fetch_past(meta, anchor, page).await
-                        };
+                        if next != Some(*page) {
+                            break;
+                        }
                         match block {
-                            Ok(block) => me.add(anchor, ahead, &[(page, block)]),
-                            Err(e) => return Some(e),
+                            Ok(block) => me.add(anchor, ahead, &[(*page, block.clone())]),
+                            Err(e) => {
+                                errors[usize::from(ahead)] = Some(e.clone());
+                                break;
+                            }
                         }
                     }
                 }
-            };
-            tokio::join!(side(false), side(true))
+                drop(gates);
+            }
+            let [past, ahead] = errors;
+            (past, ahead)
         };
         let walk =
             async move { if low { kaeri_meta::in_background(walk).await } else { walk.await } };
@@ -410,6 +489,42 @@ pub async fn load_calendar_ahead(
         }
     };
     let _ = tx.send(update);
+}
+
+/// Pages of the past (`false`) and the days ahead (`true`), each as [`fetch_past`] and
+/// [`fetch_ahead`] ask for one, in one request: see [`Meta::airing_pages`].
+async fn fetch_pages(
+    meta: &Meta,
+    anchor: i64,
+    pages: &[(bool, u32)],
+) -> Vec<Result<Block, String>> {
+    let asked: Vec<AiringPage> = pages
+        .iter()
+        .map(|(ahead, page)| match ahead {
+            true => AiringPage {
+                from: anchor,
+                to: anchor + CALENDAR_CEILING,
+                page: *page,
+                per_page: CALENDAR_PER_PAGE,
+                newest_first: false,
+            },
+            false => AiringPage {
+                from: anchor - CALENDAR_MAX_PAST,
+                to: anchor,
+                page: *page,
+                per_page: CALENDAR_PER_PAGE,
+                newest_first: true,
+            },
+        })
+        .collect();
+    meta.airing_pages(&asked)
+        .await
+        .into_iter()
+        .map(|found| {
+            let found = found.map_err(|e| e.to_string())?;
+            Ok(Block { items: found.items, has_next: found.has_next })
+        })
+        .collect()
 }
 
 /// One page of past broadcasts, newest first.
@@ -628,6 +743,9 @@ const CALENDAR_FUTURE_PAGES: u32 = 3;
 /// The most pages one job walks to reach its `through`. About a week and a half of broadcasts
 /// is three pages, so this is several weeks; a job that stops short says there is more.
 const CALENDAR_JOB_PAGES: u32 = 12;
+/// The most pages of the schedule asked in one request: a hundred broadcasts, each with its
+/// title, which is what Search's start asks in its five rails of twenty, measured to answer.
+const CALENDAR_PAGES_TOGETHER: usize = 2;
 /// How long the last window is kept (seconds), so a return to the calendar asks AniList nothing.
 const REMEMBERED_FOR: i64 = 600;
 

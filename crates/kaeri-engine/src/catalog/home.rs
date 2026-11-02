@@ -1394,9 +1394,9 @@ async fn load_personal(meta: &Meta, store: &Store, ask: &HomeAsk) -> Result<bool
                 .iter()
                 .any(|s| store.library_with_status(s).is_ok_and(|ids| !ids.is_empty())));
     if !anything {
-        keep(
+        keep_personal(
             store,
-            PERSONAL_KEY,
+            ask,
             &PersonalPart { at: ask.now, from, ..PersonalPart::default() },
         );
         return Ok(true);
@@ -1408,23 +1408,24 @@ async fn load_personal(meta: &Meta, store: &Store, ask: &HomeAsk) -> Result<bool
         zone: ask.zone.clone(),
     };
     // Every dismissal is left in, and taken out as Home is composed, so an Undo needs no request.
-    let found = up_next::find(meta, store, &queue, &[], &up_ask, SUGGESTIONS_FOUND).await?;
+    // "Because you finished" is asked with the suggestions, in their requests.
+    let because = up_next::Because { score: BECAUSE_SCORE, each: BECAUSE_ASKED };
+    let found =
+        up_next::find(meta, store, &queue, &[], &up_ask, SUGGESTIONS_FOUND, Some(because))
+            .await?;
     let mut complete = found.complete;
-    let because =
-        match found.finished.iter().find(|e| e.score.is_some_and(|s| s >= BECAUSE_SCORE)) {
-            Some(source) => match meta.recommended_titles(source.id, BECAUSE_ASKED).await {
-                Ok(media) => Some(Rail {
-                    name: source.title.clone(),
-                    ids: media.iter().map(|m| m.id.get()).collect(),
-                }),
-                Err(e) => {
-                    complete = false;
-                    tracing::warn!(error = %e, "Because you finished failed");
-                    None
-                }
-            },
-            None => None,
-        };
+    let because = match found.because {
+        Some((source, Ok(media))) => Some(Rail {
+            name: source.title.clone(),
+            ids: media.iter().map(|m| m.id.get()).collect(),
+        }),
+        Some((_, Err(e))) => {
+            complete = false;
+            tracing::warn!(error = %e, "Because you finished failed");
+            None
+        }
+        None => None,
+    };
     let part = PersonalPart {
         at: ask.now,
         from,
@@ -1433,8 +1434,25 @@ async fn load_personal(meta: &Meta, store: &Store, ask: &HomeAsk) -> Result<bool
         finished: found.finished_ids.iter().map(|id| id.get()).collect(),
         incomplete: !complete,
     };
-    keep(store, PERSONAL_KEY, &part);
-    Ok(complete)
+    // Not kept for a newer run's answer, this one is not asked again: the newer one stands.
+    Ok(!keep_personal(store, ask, &part) || complete)
+}
+
+/// Keep `part` unless the history or the lists changed while it was found and a run since has
+/// kept what they are now: two runs a launch makes, before the pull and after it, can share
+/// their last request and land together, and the later inputs' answer is the one Home shows.
+/// Whether `part` was kept.
+fn keep_personal(store: &Store, ask: &HomeAsk, part: &PersonalPart) -> bool {
+    static KEEPING: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    let _one = KEEPING.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let now = personal_signature(store, ask);
+    if part.from != now
+        && kept::<PersonalPart>(store, PERSONAL_KEY).is_some_and(|k| k.from == now)
+    {
+        return false;
+    }
+    keep(store, PERSONAL_KEY, part);
+    true
 }
 
 /// The shows that may be followed: Watching on the tracker's list, and the history. What This
@@ -1634,12 +1652,63 @@ mod tests {
     use super::*;
 
     #[test]
+    fn suggestions_found_from_older_lists_do_not_replace_newer_ones() {
+        let store = Store::open_in_memory().unwrap();
+        let ask = HomeAsk {
+            listed: true,
+            adult: false,
+            now: 1_000,
+            zone: jiff::tz::TimeZone::UTC,
+            offline: false,
+            refresh: false,
+            sources: true,
+            demo: Default::default(),
+        };
+        let part = |from: u64, id: u32| PersonalPart {
+            at: ask.now,
+            from,
+            picks: Vec::new(),
+            because: Some(Rail { name: String::new(), ids: vec![id] }),
+            finished: Vec::new(),
+            incomplete: false,
+        };
+        let kept_rail = || kept::<PersonalPart>(&store, PERSONAL_KEY).and_then(|p| p.because);
+        // Before the pull: found from an empty list, and kept while the lists stay so.
+        let before = personal_signature(&store, &ask);
+        assert!(keep_personal(&store, &ask, &part(before, 1)));
+        // The pull lands; the run after it keeps what it found from the list.
+        store
+            .replace_library_statuses("anilist", &[(AnilistId::new(7), "COMPLETED")], 1_000)
+            .unwrap();
+        let after = personal_signature(&store, &ask);
+        assert_ne!(before, after);
+        assert!(keep_personal(&store, &ask, &part(after, 2)));
+        // The run from before the pull lands last, and the newer answer stays.
+        assert!(!keep_personal(&store, &ask, &part(before, 1)));
+        assert_eq!(kept_rail().map(|r| r.ids), Some(vec![2]));
+    }
+
+    #[test]
     fn because_you_finished_asks_within_anilists_complexity() {
-        let variables = serde_json::json!({ "ids": [1], "perPage": 1, "each": BECAUSE_ASKED });
-        let cost = kaeri_testkit::complexity(
-            &kaeri_meta::anilist::query::recommended_titles(),
-            &variables,
-        );
-        assert!(cost <= kaeri_testkit::COMPLEXITY_LIMIT, "{cost}");
+        // Its ids ride with Up next's other lookups at that step, at the most each asks.
+        let most = kaeri_meta::anilist::query::RECOMMENDED_FROM;
+        let ids: Vec<u32> = (1..=50).collect();
+        let parts = [
+            (
+                kaeri_meta::anilist::query::by_ids(),
+                serde_json::json!({ "ids": ids, "perPage": 50 }),
+            ),
+            (
+                kaeri_meta::anilist::query::recommended_from(),
+                serde_json::json!({ "ids": (0..most).collect::<Vec<_>>(), "perPage": most }),
+            ),
+            (
+                kaeri_meta::anilist::query::recommended_ids(),
+                serde_json::json!({ "ids": [1], "perPage": 1, "each": BECAUSE_ASKED }),
+            ),
+        ];
+        let (document, variables) = kaeri_meta::anilist::query::together(&parts);
+        let cost = kaeri_testkit::complexity(&document, &variables);
+        assert!(cost <= kaeri_testkit::COMPLEXITY_LIMIT / 2, "{cost}");
     }
 }
