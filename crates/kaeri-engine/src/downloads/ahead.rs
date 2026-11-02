@@ -19,12 +19,14 @@
 //! asked for themselves, and never one at or after where the viewer is, as in a rewatch, where
 //! the episodes ahead were watched long ago and are about to be again.
 //!
-//! **When it runs.** On start; after an episode is marked watched, counts as watched in the
-//! player, or plays to its end; when the number to keep changes; when the network or the app's
-//! phase lets downloads run again; and after a list sync moves a show's progress or where it is
-//! on the list. Not when the new-episode check or the airing digest finds a new episode: an
-//! episode out is fetched once the viewer has watched the one before it. Asked for again while
-//! a top-up runs, the latest ask runs once it is done.
+//! **When it runs.** Only when the viewer starts an episode of a show, or finishes one (it
+//! counts as watched in the player, or plays to its end), and then only for that show: downloads
+//! follow what the viewer watches. Nothing else starts it: not a launch, a list sync, a change
+//! of setting, the new-episode check or the airing digest. A top-up asked for while downloads
+//! wait runs for its shows once they may run again. Asked for again while a top-up runs, the
+//! latest ask runs once it is done, for every show asked for meanwhile.
+//!
+//! On launch it only lets go of what was watched, and queues nothing.
 //!
 //! **What it skips.** Nothing, with no source set up, and no show whose episode table no source
 //! could list, as its last load found: its episodes are AniList's alone, with nothing to download
@@ -94,6 +96,8 @@ struct Inner {
     /// What a test takes to be free on the device, in place of asking the disk.
     free: Option<u64>,
     queue: Mutex<Queue>,
+    /// The shows a top-up was asked for while downloads waited: topped up once they may run.
+    waiting: Mutex<HashSet<AnilistId>>,
     /// A full device has been said, and is not said again until there is room.
     said_full: AtomicBool,
     /// The shows whose episode table was last listed from AniList's data alone, because no
@@ -111,6 +115,8 @@ struct Queue {
     /// What the next top-up runs on: the config in effect when it was asked for, and whether
     /// the list was a signed-in tracker's then.
     next: Option<(Config, bool)>,
+    /// The shows asked for since the last top-up started.
+    shows: HashSet<AnilistId>,
     running: bool,
 }
 
@@ -174,11 +180,20 @@ impl Ahead {
         self.0.unlisted.lock().unwrap_or_else(|e| e.into_inner()).contains(&id)
     }
 
-    /// Run a top-up on `config`, now or after the one under way, which then runs no more than
-    /// once for every ask that came while it ran: on the config of the latest.
-    fn ask(&self, config: Config, listed: bool, services: &Services, tx: &Outbox) {
+    /// Run a top-up of `shows` on `config`, now or after the one under way, which then runs no
+    /// more than once for every ask that came while it ran: on the config of the latest, for
+    /// every show asked for.
+    fn ask(
+        &self,
+        config: Config,
+        listed: bool,
+        shows: HashSet<AnilistId>,
+        services: &Services,
+        tx: &Outbox,
+    ) {
         let mut queue = self.0.queue.lock().unwrap_or_else(|e| e.into_inner());
         queue.next = Some((config, listed));
+        queue.shows.extend(shows);
         if queue.running {
             return;
         }
@@ -196,10 +211,12 @@ impl Ahead {
         let (clock, tx) = (services.clock.clone(), tx.clone());
         tokio::spawn(async move {
             loop {
-                let (config, listed) = {
+                let (config, listed, shows) = {
                     let mut queue = inner.queue.lock().unwrap_or_else(|e| e.into_inner());
                     match queue.next.take() {
-                        Some(next) => next,
+                        Some((config, listed)) => {
+                            (config, listed, std::mem::take(&mut queue.shows))
+                        }
                         None => {
                             queue.running = false;
                             return;
@@ -207,17 +224,19 @@ impl Ahead {
                     }
                 };
                 let viewer = Viewer { now: clock.now(), listed };
-                run(&config, viewer, &live, &live.store, &inner.said_full, &tx).await;
+                run(&config, viewer, Some(&shows), &live, &live.store, &inner.said_full, &tx)
+                    .await;
             }
         });
     }
 }
 
-/// Let go of the episodes kept ahead that were watched a day ago, then top up the shows being
-/// watched: when keep next runs, downloads may run now, and a show has an episode to keep that
-/// is not in the queue. What goes, and what is missing, is read here, from the database; finding
-/// which of it is out, and queueing it, runs off the actor.
-pub fn top_up(engine: &EngineState, services: &Services, tx: &Outbox) {
+/// Let go of the episodes kept ahead that were watched a day ago, then top up show `id`, whose
+/// episode the viewer has just started or finished: when keep next runs, downloads may run now,
+/// and the show has an episode to keep that is not in the queue. While downloads wait, the show
+/// is kept for [`resume`]. What goes, and what is missing, is read here, from the database;
+/// finding which of it is out, and queueing it, runs off the actor.
+pub fn top_up(id: AnilistId, engine: &EngineState, services: &Services, tx: &Outbox) {
     if !engine.ahead.0.on {
         return;
     }
@@ -225,8 +244,41 @@ pub fn top_up(engine: &EngineState, services: &Services, tx: &Outbox) {
     // Whatever downloads may do: letting go asks nothing of the network.
     expire(&services.store, viewer, tx);
     if downloads_wait(engine) {
+        engine.ahead.0.waiting.lock().unwrap_or_else(|e| e.into_inner()).insert(id);
         return;
     }
+    top_up_shows(HashSet::from([id]), viewer, engine, services, tx);
+}
+
+/// Top up the shows asked for while downloads waited, now that they may run: after a change of
+/// the app's phase or its network. Nothing, if none was asked for or downloads still wait.
+pub fn resume(engine: &EngineState, services: &Services, tx: &Outbox) {
+    if !engine.ahead.0.on || downloads_wait(engine) {
+        return;
+    }
+    let shows =
+        std::mem::take(&mut *engine.ahead.0.waiting.lock().unwrap_or_else(|e| e.into_inner()));
+    if shows.is_empty() {
+        return;
+    }
+    top_up_shows(shows, Viewer::now(services), engine, services, tx);
+}
+
+/// Let go of the episodes kept ahead that were watched a day ago, and queue nothing: what the
+/// engine does of keep next as it starts.
+pub fn let_go(engine: &EngineState, services: &Services, tx: &Outbox) {
+    if engine.ahead.0.on {
+        expire(&services.store, Viewer::now(services), tx);
+    }
+}
+
+fn top_up_shows(
+    shows: HashSet<AnilistId>,
+    viewer: Viewer,
+    engine: &EngineState,
+    services: &Services,
+    tx: &Outbox,
+) {
     // With no source set up there is nothing to download from, and every show's episodes are
     // AniList's alone.
     if services.registry.is_empty() && !services.registry.is_arriving() {
@@ -238,10 +290,10 @@ pub fn top_up(engine: &EngineState, services: &Services, tx: &Outbox) {
     if config.downloads.keep_next == 0 && kept_by_shows == 0 {
         return;
     }
-    if missing(config, &services.store, viewer).is_empty() {
+    if missing(config, &services.store, viewer, Some(&shows)).is_empty() {
         return;
     }
-    engine.ahead.ask(config.clone(), viewer.listed, services, tx);
+    engine.ahead.ask(config.clone(), viewer.listed, shows, services, tx);
 }
 
 /// Whether downloads wait now, as the torrent session is told: off screen but for a downloads
@@ -251,16 +303,11 @@ pub(crate) fn downloads_wait(engine: &EngineState) -> bool {
     crate::phases::gate_for(engine.phase, engine.network, config).hold.downloads
 }
 
-/// Whether `event` moves where a viewer is in a show: an episode that counts as watched in the
-/// player, or one played to its end. A new episode out is not one: it is fetched once the
+/// Whether `event`, from a playback, says the viewer finished its episode: it counts as watched
+/// in the player, or played to its end. A new episode out is not one: it is fetched once the
 /// viewer has watched the one before it.
 pub fn after(event: &Event) -> bool {
     matches!(event, Event::ProgressQueued | Event::PlaybackEnded { watched: true, .. })
-}
-
-/// Whether a change to setting `key` can change what keep next keeps, or whether it may run.
-pub fn follows(key: SettingKey) -> bool {
-    matches!(key, SettingKey::KeepNextEpisodes | SettingKey::DownloadsOnCellular)
 }
 
 /// A show being watched, and whether the list has it as rewatched.
@@ -296,10 +343,16 @@ pub(crate) struct Missing {
 }
 
 /// What each show being watched wants kept and the queue does not have, on `config`, the one
-/// in effect: the most recently watched show first.
-pub(crate) fn missing(config: &Config, store: &Store, viewer: Viewer) -> Vec<Missing> {
+/// in effect: the most recently watched show first. Only `only`'s shows, when it names some.
+pub(crate) fn missing(
+    config: &Config,
+    store: &Store,
+    viewer: Viewer,
+    only: Option<&HashSet<AnilistId>>,
+) -> Vec<Missing> {
     followed(store, viewer)
         .into_iter()
+        .filter(|show| only.is_none_or(|only| only.contains(&show.id)))
         .filter_map(|show| {
             let config = show_settings::for_show(config, store, show.id);
             let keep = config.downloads.keep_next;
@@ -556,12 +609,13 @@ fn free_space(_: &Path) -> Option<u64> {
 pub(crate) async fn run(
     config: &Config,
     viewer: Viewer,
+    only: Option<&HashSet<AnilistId>>,
     work: &impl Work,
     store: &Store,
     said_full: &AtomicBool,
     tx: &Outbox,
 ) {
-    for show in missing(config, store, viewer) {
+    for show in missing(config, store, viewer, only) {
         // Its episodes are AniList's alone: no source here has it to download.
         if work.unlisted(show.id) {
             continue;
@@ -655,7 +709,7 @@ mod tests {
 
     /// Each show and what it is missing.
     fn wants(config: &Config, store: &Store, viewer: Viewer) -> Vec<(AnilistId, Vec<u32>)> {
-        missing(config, store, viewer).into_iter().map(|m| (m.id, m.episodes)).collect()
+        missing(config, store, viewer, None).into_iter().map(|m| (m.id, m.episodes)).collect()
     }
 
     /// The episodes of `id` in the queue, each with whether it was queued ahead.
@@ -754,7 +808,7 @@ mod tests {
     /// Run one top-up on `config` with `work`, signed in, and return what it said.
     async fn top_up_with(config: &Config, work: &Fake, said_full: &AtomicBool) -> Vec<Event> {
         let (tx, mut rx) = mpsc::unbounded_channel();
-        run(config, SIGNED_IN, work, &work.store, said_full, &Outbox::from(tx)).await;
+        run(config, SIGNED_IN, None, work, &work.store, said_full, &Outbox::from(tx)).await;
         std::iter::from_fn(|| rx.try_recv().ok()).collect()
     }
 
@@ -853,6 +907,18 @@ mod tests {
         let cancelled = store.download_for(FINISHED, "7").unwrap().unwrap();
         store.remove_download(cancelled.id).unwrap();
         assert_eq!(wants(&keeping(6), &store, SIGNED_IN), [(FINISHED, vec![4, 8])]);
+    }
+
+    #[test]
+    fn a_top_up_for_one_show_reads_only_that_show() {
+        let store = listed(&[(FINISHED, "CURRENT"), (AIRING, "CURRENT")]);
+        watched(&store, FINISHED, 4, NOW - DAY);
+        watched(&store, AIRING, 2, NOW - DAY);
+        let only = HashSet::from([FINISHED]);
+        let shows: Vec<_> =
+            missing(&keeping(2), &store, SIGNED_IN, Some(&only)).iter().map(|m| m.id).collect();
+        assert_eq!(shows, [FINISHED]);
+        assert_eq!(wants(&keeping(2), &store, SIGNED_IN).len(), 2, "both, when none is named");
     }
 
     #[tokio::test]
@@ -1124,7 +1190,7 @@ mod tests {
     }
 
     #[test]
-    fn what_moves_a_viewer_on_and_the_settings_keep_next_follows() {
+    fn what_says_an_episode_was_finished_and_what_does_not() {
         use kaeri_model::playback::Ending;
         assert!(after(&Event::ProgressQueued));
         assert!(after(&Event::playback_ended(true, Ending::Complete { next: None })));
@@ -1141,8 +1207,5 @@ mod tests {
             banner_url: None,
         };
         assert!(!after(&Event::NewEpisodes(vec![new])), "an episode out is not watched");
-        assert!(follows(SettingKey::KeepNextEpisodes));
-        assert!(follows(SettingKey::DownloadsOnCellular));
-        assert!(!follows(SettingKey::DownloadQuality));
     }
 }

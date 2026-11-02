@@ -645,12 +645,19 @@ internal fun SourcesPane(actions: AppActions) {
     if (proxySheet) TorrentSheet { proxySheet = false }
 }
 
-/** The torrent source's switch: on and off at once, with where traffic goes under it. */
+/**
+ * The torrent source's switch: on and off at once. Under it, off says so and on says torrents
+ * connect directly; with a proxy set, nothing, as the proxy's own rows below say where traffic goes.
+ */
 @Composable
 private fun TorrentSourceRow(place: Place, on: Boolean, proxy: ProxyView?) {
     val store = LocalAppStore.current
     val context = LocalContext.current
-    val note = if (on) TorrentWords.summary(context, proxy?.host, proxy?.port?.toString()) else stringResource(TorrentWords.OFF_NOTE)
+    val note = when {
+        !on -> stringResource(TorrentWords.OFF_NOTE)
+        proxy == null -> TorrentWords.summary(context, null, null)
+        else -> null
+    }
     SwitchRow(place, stringResource(R.string.sources_torrent_source), checked = on, note = note) { wanted ->
         store.setSwitch(SettingKey.TORRENTS, wanted)
     }

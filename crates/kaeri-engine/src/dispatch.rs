@@ -13,7 +13,6 @@ use kaeri_model::{
     event::Event,
     notice::Notice,
     settings::SettingKey,
-    show::ShowSettingKey,
 };
 use kaeri_providers::ProviderRegistry;
 use kaeri_store::Store;
@@ -412,7 +411,6 @@ pub(crate) fn dispatch(
         }
         Command::SetWatched { id, episodes, watched } => {
             set_watched(id, &episodes, watched, engine, services, tx);
-            ahead::top_up(engine, services, tx);
         }
         // A title matched afresh may be another title on the source, so its dub is too.
         Command::ClearMatch { id } => {
@@ -536,17 +534,18 @@ pub(crate) fn dispatch(
         Command::Player(command) => control_player(command, engine),
         // The same, aimed: let go when another playback has followed the one it names.
         Command::Control { playback, command } => control_playback(playback, command, engine),
-        // Where the app is and its network: which torrents wait, and whether keep next runs.
+        // Where the app is and its network: which torrents wait, and whether keep next runs
+        // for the shows it was asked for while downloads waited.
         Command::AppPhase { phase } => {
             crate::phases::app_phase(phase, engine);
-            ahead::top_up(engine, services, tx);
+            ahead::resume(engine, services, tx);
         }
         Command::NetworkPath { cellular, constrained, offline } => {
             let network = crate::phases::Network { cellular, constrained, offline };
             let moved = engine.network.offline != offline;
             services.offline.store(offline, std::sync::atomic::Ordering::Relaxed);
             crate::phases::network_path(network, engine, tx);
-            ahead::top_up(engine, services, tx);
+            ahead::resume(engine, services, tx);
             // Home open says it is offline, and since when, or stops saying so, at once.
             if moved && engine.home.asked() {
                 let (ask, memory) = (home_ask(engine, services, false), engine.home.clone());
@@ -622,9 +621,6 @@ pub(crate) fn dispatch(
         // Settings.
         Command::StepSetting { key, delta } => {
             step_setting(key, delta, engine, services, tx);
-            if ahead::follows(key) {
-                ahead::top_up(engine, services, tx);
-            }
             if key == SettingKey::UpdateBeta {
                 crate::updates::check_now(
                     &services.paths.cache_dir,
@@ -636,9 +632,6 @@ pub(crate) fn dispatch(
         }
         Command::SetSetting { key, value } => {
             set_setting(key, value, engine, services, tx);
-            if ahead::follows(key) {
-                ahead::top_up(engine, services, tx);
-            }
             // Turning beta updates on or off asks GitHub at once for the other channel's newest.
             if key == SettingKey::UpdateBeta {
                 crate::updates::check_now(
@@ -658,13 +651,9 @@ pub(crate) fn dispatch(
         Command::LoadShowSettings { id } => load_show_settings(id, engine, services, tx),
         Command::SetShowSetting { id, key, value } => {
             set_show_setting(id, key, value, engine, services, tx);
-            if key == ShowSettingKey::KeepNext {
-                ahead::top_up(engine, services, tx);
-            }
         }
         Command::ResetShowSettings { id } => {
             reset_show_settings(id, engine, services, tx);
-            ahead::top_up(engine, services, tx);
         }
         Command::SetShowSubtitles { id, translation, subtitles } => {
             set_show_subtitles(id, translation, subtitles, engine, services, tx)
@@ -836,7 +825,7 @@ pub(crate) async fn handle_internal(
     match message {
         // What runs on cellular may have changed with it.
         Internal::SettingsSaved => crate::phases::settings_saved(engine, tx),
-        Internal::TopUp => ahead::top_up(engine, services, tx),
+        Internal::LetGo => ahead::let_go(engine, services, tx),
         // Only the order changed: the chain as it stands is put in it, with no rebuild.
         Internal::SourcesReordered => {
             sources::arrange(&services.registry, engine.config.effective());

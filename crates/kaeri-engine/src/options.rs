@@ -165,8 +165,8 @@ pub struct Background {
     /// Check that mpv is there to play, and new enough to wear Kaeri's interface, and say
     /// so at launch. Only with the `desktop` feature: without it there is no player to check.
     pub player_check: bool,
-    /// Keep next: queue the next episodes of each show being watched, at launch and as the
-    /// viewer moves on, as many as the show or Settings keeps. See
+    /// Keep next: queue the next episodes of a show being watched as one of its episodes starts
+    /// or finishes, as many as the show or Settings keeps. See
     /// [`crate::downloads::ahead`].
     pub keep_next: bool,
 }

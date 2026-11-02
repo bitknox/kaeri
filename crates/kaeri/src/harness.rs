@@ -651,7 +651,7 @@ impl Harness {
             Internal::SettingsSaved => self.trace.push("SettingsSaved"),
             Internal::SourcesReordered => self.trace.push("SourcesReordered"),
             // What it leads to, it says: keep next's rows on the queue.
-            Internal::SourcesChanged | Internal::TopUp => {}
+            Internal::SourcesChanged | Internal::LetGo => {}
         }
     }
 

@@ -303,7 +303,8 @@ pub struct DownloadsConfig {
     /// How many of the next episodes of each show being watched are kept downloaded, `0` for
     /// none, where a show keeps no number of its own. Set from the native apps' Downloads
     /// settings, and acted on by the engine wherever it runs, the terminal's included: it queues
-    /// what is missing as the viewer moves on, and deletes nothing.
+    /// what is missing as the viewer starts or finishes an episode of the show, and deletes
+    /// nothing.
     pub keep_next: u32,
     /// Whether downloads run over a cellular connection. Off by default, so a phone does not
     /// spend a data plan on its own. Only the native apps know which network they are on; the

@@ -548,7 +548,12 @@ private fun LazyListScope.torrents(nav: TvNavigator, store: AppStore, view: Sett
             TvListRow(
                 stringResource(R.string.sources_torrent_source),
                 onClick = { store.setSwitch(SettingKey.TORRENTS, !on) },
-                supporting = if (on) TorrentWords.summary(context, proxy?.host, proxy?.port?.toString()) else stringResource(TorrentWords.OFF_NOTE),
+                // With a proxy set, its own rows below say where traffic goes.
+                supporting = when {
+                    !on -> stringResource(TorrentWords.OFF_NOTE)
+                    proxy == null -> TorrentWords.summary(context, null, null)
+                    else -> null
+                },
                 supportingLines = 2,
                 height = 88.dp,
                 switch = on,

@@ -410,10 +410,10 @@ impl Engine {
         if background.store_refresh && joined {
             refresh_joined(services.stores.clone(), inbox.sender());
         }
-        // Keep next, topped up from the inbox rather than now: commands are routed first, so
-        // where the app is and its network, sent as the front end starts, are in effect for it.
+        // Keep next lets go of what was watched, from the inbox rather than now, and queues
+        // nothing: it tops a show up only as one of its episodes starts or finishes.
         if background.keep_next {
-            let _ = inbox.sender().internal(Internal::TopUp);
+            let _ = inbox.sender().internal(Internal::LetGo);
         }
 
         for tracker in services.sync.initial_states() {
@@ -1027,7 +1027,13 @@ impl Actor {
     fn forward(&mut self, mut event: Event, played: Option<Played>) {
         // Named as the titles are shown now, before the record takes the names in.
         crate::title_language::retitle(&mut event, self.services.meta.titles().language());
-        let moved_on = crate::downloads::ahead::after(&event);
+        // A show whose episode starts, or is finished: keep next tops that show up.
+        let kept = match &event {
+            Event::PlaybackStaged { id, .. } | Event::CastStaged { id, .. } => Some(*id),
+            _ => {
+                played.as_ref().filter(|_| crate::downloads::ahead::after(&event)).map(|p| p.id)
+            }
+        };
         // Where a viewer is in a show: what the Continue queue is made of.
         let queue_moves = matches!(
             event,
@@ -1072,10 +1078,10 @@ impl Actor {
             self.refresh_up_next();
             self.refresh_home();
         }
-        // An episode watched: the episodes after it, kept.
-        if moved_on {
+        // An episode started or finished: the episodes after where the viewer is, kept.
+        if let Some(id) = kept {
             let tx = self.inbox.sender();
-            crate::downloads::ahead::top_up(&self.state, &self.services, &tx);
+            crate::downloads::ahead::top_up(id, &self.state, &self.services, &tx);
         }
     }
 
