@@ -1543,7 +1543,7 @@ struct SearchFiltersPanel: View {
                     let set = group.tags.filter { query.tagPick(name: $0.name) != .off }.count
                     DisclosureGroup {
                         ForEach(group.tags.filter { spoilers || !$0.spoiler }, id: \.name) { tag in
-                            TagRow(tag: tag, pick: query.tagPick(name: tag.name), compact: compact) { pick in
+                            TagRow(tag: tag, pick: query.tagPick(name: tag.name), compact: compact, neutral: neutralPicks) { pick in
                                 store.searchLive(store.search.query.pickingTag(name: tag.name, pick: pick))
                             }
                         }
@@ -1564,7 +1564,7 @@ struct SearchFiltersPanel: View {
                     Text(L.filterTagNone).foregroundStyle(.haze)
                 }
                 ForEach(Array(found), id: \.name) { tag in
-                    TagRow(tag: tag, pick: query.tagPick(name: tag.name), compact: compact) { pick in
+                    TagRow(tag: tag, pick: query.tagPick(name: tag.name), compact: compact, neutral: neutralPicks) { pick in
                         store.searchLive(store.search.query.pickingTag(name: tag.name, pick: pick))
                     }
                 }
@@ -1705,6 +1705,8 @@ private struct TagRow: View {
     let tag: FacetTag
     let pick: Pick
     var compact = false
+    /// An included tag's mark in silk rather than amber, as on the iPhone's sheet.
+    var neutral = false
     let set: (Pick) -> Void
 
     var body: some View {
@@ -1713,7 +1715,7 @@ private struct TagRow: View {
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: symbol)
-                    .foregroundStyle(pick == .off ? .haze : pick == .include ? .amber : .vermilion)
+                    .foregroundStyle(pick == .off ? .haze : pick == .include ? (neutral ? .silk : .amber) : .vermilion)
                     .frame(width: 18)
                 Text(tag.name).foregroundStyle(.silk)
                 Spacer()
