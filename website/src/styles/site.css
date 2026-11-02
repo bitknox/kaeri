@@ -1,6 +1,7 @@
 /* Kaeri's site: tokens, type, the top bar, the footer and the parts every page shares. The two themes
-   are `:root` (dark, the default before a theme is known) and `[data-theme='light']`. The docs' own
-   variables are mapped onto these in docs.css, so Starlight and the custom pages read one setting. */
+   are `:root`, light, which every visitor gets until they pick dark (and before a theme is known, and
+   without a script), and `[data-theme='dark']`. The docs' own variables are mapped onto these in
+   docs.css, so Starlight and the custom pages read one setting. */
 
 /* Only the headings use Zen, at 500 and in Latin and Cyrillic; the Japanese subsets would add
    240 font faces to every page's stylesheet. */
@@ -9,6 +10,46 @@
 @import '@fontsource/zen-kaku-gothic-new/cyrillic-500.css';
 
 :root {
+	color-scheme: light;
+	--ani-ground: #f0ede4;
+	--ani-text: #1e2033;
+	--ani-dim: #4f546e;
+	--ani-rule: #c2c0bd;
+	--ani-rule-faint: #d7d4cf;
+	--ani-raised: #e9e6de;
+	--ani-well: #e3e1d9;
+	/* In light the bands and rules are paper tones with a faint hue, so the page reads as one
+	   surface and the type carries the hierarchy. Dark keeps its colours for contrast. */
+	--ani-band: #e3e1d9;
+	--ani-band-green: #e1e3d8;
+	--ani-band-red: #e8e0d9;
+	--ani-band-plum: #e6e0de;
+	--ani-band-blue: #dfe1e2;
+	--ani-rule-violet: #adadbf;
+	--ani-rule-sky: #a9b6bc;
+	--ani-bezel: #1e2033;
+	--ani-bezel-edge: #1e2033;
+	--ani-crop-a: #10131f;
+	--ani-crop-b: #161a2e;
+	--ani-obi: #f2a64b;
+	--ani-obi-hover: #f5b467;
+	--ani-on-obi: #1e2033;
+	--ani-link-hover: #7a4309;
+	--ani-focus: #7a4309;
+	--ani-foot: #e3e1d9;
+	--ani-foot-text: #1e2033;
+	--ani-foot-dim: #4f546e;
+
+	--ani-font-display: 'Zen Kaku Gothic New', 'Hiragino Kaku Gothic ProN', sans-serif;
+	--ani-font-ui: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, Roboto, sans-serif;
+	--ani-font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+	--ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+	--t-fast: 120ms;
+	--t-base: 200ms;
+}
+
+:root[data-theme='dark'] {
 	color-scheme: dark;
 	--ani-ground: #10131f;
 	--ani-text: #e4e0d6;
@@ -26,47 +67,12 @@
 	--ani-rule-sky: #a9c7d6;
 	--ani-bezel: #161a2e;
 	--ani-bezel-edge: #434653;
-	--ani-crop-a: #10131f;
-	--ani-crop-b: #161a2e;
-	--ani-obi: #f2a64b;
-	--ani-obi-hover: #f5b467;
 	--ani-on-obi: #161a2e;
 	--ani-link-hover: #f5b467;
 	--ani-focus: #f5b467;
 	--ani-foot: #161a2e;
 	--ani-foot-text: #e4e0d6;
 	--ani-foot-dim: #9298b5;
-
-	--ani-font-display: 'Zen Kaku Gothic New', 'Hiragino Kaku Gothic ProN', sans-serif;
-	--ani-font-ui: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, Roboto, sans-serif;
-	--ani-font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-
-	--ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-	--t-fast: 120ms;
-	--t-base: 200ms;
-}
-
-:root[data-theme='light'] {
-	color-scheme: light;
-	--ani-ground: #f0ede4;
-	--ani-text: #1e2033;
-	--ani-dim: #4f546e;
-	--ani-rule: #c2c0bd;
-	--ani-rule-faint: #d7d4cf;
-	--ani-raised: #e9e6de;
-	--ani-well: #e3e1d9;
-	--ani-band: #e3e1d9;
-	--ani-band-green: #d7eadf;
-	--ani-band-red: #ead7d8;
-	--ani-band-plum: #ecdde0;
-	--ani-band-blue: #dadef0;
-	--ani-rule-violet: #5e69ba;
-	--ani-rule-sky: #5e9cba;
-	--ani-bezel: #1e2033;
-	--ani-bezel-edge: #1e2033;
-	--ani-on-obi: #1e2033;
-	--ani-link-hover: #7a4309;
-	--ani-focus: #7a4309;
 }
 
 *,
@@ -413,8 +419,8 @@ body.k-body {
 }
 
 /* The glyph shows the theme the button switches to, as the label says. */
-:root:not([data-theme='light']) .theme-toggle .glyph-sun,
-:root[data-theme='light'] .theme-toggle .glyph-moon {
+:root[data-theme='dark'] .theme-toggle .glyph-sun,
+:root:not([data-theme='dark']) .theme-toggle .glyph-moon {
 	display: block;
 }
 
@@ -550,7 +556,7 @@ body.k-body {
 }
 
 .site-footer :focus-visible {
-	outline-color: #f5b467;
+	outline-color: var(--ani-focus);
 }
 
 /* ── Disclosures (the FAQ and docs): the height eases open, the pixel chevron turns in two steps ── */

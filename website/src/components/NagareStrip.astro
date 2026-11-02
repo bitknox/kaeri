@@ -4,6 +4,11 @@
  * now and then while the strip is on screen, and runs along it and back once when she is tapped or
  * pressed. Her pixels and run cycle are the hero runner's (src/game/sprites.ts), drawn at the strip's
  * own scale: no game, no score, no obstacles. Without a script, or under Reduce Motion, she stands still.
+ *
+ * The city is at dusk in the dark theme and by day in the light one (scripts/strip-day.ts makes the
+ * day strips from the dusk ones). Without a script the page is always in the light theme, so the
+ * baked day strip is in a noscript. With one, the script gives the bare strips their sources and the
+ * theme shows one of them; they are lazy, so the browser fetches only the one on show.
  */
 import { useSite } from '../i18n/site';
 
@@ -11,8 +16,9 @@ const { t } = useSite(Astro);
 ---
 
 <div class="strip" data-strip>
-	<img class="strip-baked" src="/scene-strip.png" width="480" height="44" alt={t('home.strip.alt')} loading="lazy" decoding="async" />
-	<img class="strip-bare" src="/scene-strip-bare.png" width="480" height="44" alt={t('home.strip.alt')} loading="lazy" decoding="async" />
+	<noscript><img class="strip-baked" src="/scene-strip-day.png" width="480" height="44" alt={t('home.strip.alt')} loading="lazy" decoding="async" /></noscript>
+	<img class="strip-dusk" data-src="/scene-strip-bare.png" width="480" height="44" alt={t('home.strip.alt')} loading="lazy" decoding="async" />
+	<img class="strip-day" data-src="/scene-strip-day-bare.png" width="480" height="44" alt={t('home.strip.alt')} loading="lazy" decoding="async" />
 	<canvas class="strip-canvas" width="480" height="44" aria-hidden="true"></canvas>
 	<button type="button" class="strip-nagare" aria-label={t('home.strip.run')} hidden></button>
 </div>
@@ -22,7 +28,7 @@ const { t } = useSite(Astro);
 		position: relative;
 		width: 100%;
 		aspect-ratio: 480 / 44;
-		background: #10131f;
+		background: var(--ani-ground);
 		overflow: hidden;
 	}
 
@@ -30,24 +36,19 @@ const { t } = useSite(Astro);
 	.strip canvas {
 		position: absolute;
 		inset: 0;
-		display: block;
+		display: none;
 		width: 100%;
 		height: 100%;
 		image-rendering: pixelated;
 	}
 
-	.strip-bare,
-	.strip-canvas {
-		display: none !important;
-	}
-
-	.js .strip-bare,
-	.js .strip-canvas {
-		display: block !important;
-	}
-
-	.js .strip-baked {
-		display: none;
+	/* One image shows: without a script the baked strip, with Nagare in it, and with one the bare
+	   strip of the theme, dusk or day, with her on the canvas. */
+	:root:not(.js) .strip-baked,
+	:root.js[data-theme='dark'] .strip-dusk[src],
+	:root.js:not([data-theme='dark']) .strip-day[src],
+	:root.js .strip canvas {
+		display: block;
 	}
 
 	.strip-nagare {
@@ -63,7 +64,7 @@ const { t } = useSite(Astro);
 	}
 
 	.strip-nagare:focus-visible {
-		outline: 2px solid #f5b467;
+		outline: 2px solid var(--ani-focus);
 		outline-offset: -2px;
 	}
 </style>
@@ -72,6 +73,7 @@ const { t } = useSite(Astro);
 	import { NAGARE } from '../game/sprites';
 
 	const strip = document.querySelector<HTMLElement>('[data-strip]');
+	for (const img of strip?.querySelectorAll<HTMLImageElement>('img[data-src]') ?? []) img.src = img.dataset.src!;
 	const canvas = strip?.querySelector<HTMLCanvasElement>('canvas');
 	const button = strip?.querySelector<HTMLButtonElement>('button');
 	const ctx = canvas?.getContext('2d');

@@ -4,8 +4,8 @@
 
 :root {
 	--sl-nav-height: 4rem;
-	--ani-raised-selected: #343a57;
-	--ani-select: rgb(242 166 75 / 0.14);
+	--ani-raised-selected: #d9d5c9;
+	--ani-select: #f0ddc2;
 	--ani-over-art: rgb(16 19 31 / 0.72);
 	--ani-r-chip: 4px;
 	--ani-r-row: 8px;
@@ -16,9 +16,9 @@
 	--ani-spring: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-:root[data-theme='light'] {
-	--ani-raised-selected: #d9d5c9;
-	--ani-select: #f0ddc2;
+:root[data-theme='dark'] {
+	--ani-raised-selected: #343a57;
+	--ani-select: rgb(242 166 75 / 0.14);
 }
 
 /* The bar is 56 px tall up to 820 px wide, as on the other pages. */
@@ -37,22 +37,24 @@
 }
 
 /* ── Starlight's palette ───────────────────────────────────────────────────
-   Dark: --sl-color-white is the text end of the ramp, --sl-color-black the ground. */
+   Light, the base: Starlight inverts the ramp in light, so the whole scale is written out.
+   --sl-color-white is the text end of the ramp, --sl-color-black the ground. */
 :root {
-	--sl-color-accent-low: #352e32;
-	--sl-color-accent: #f2a64b;
-	--sl-color-accent-high: #f7c88f;
-	--sl-color-white: #e4e0d6;
-	--sl-color-gray-1: #e4e0d6;
-	--sl-color-gray-2: #e4e0d6;
-	--sl-color-gray-3: #9298b5;
-	--sl-color-gray-4: #434653;
-	--sl-color-gray-5: #2f3242;
-	--sl-color-gray-6: #222638;
-	--sl-color-black: #10131f;
+	--sl-color-accent-low: #f0ddc2;
+	--sl-color-accent: #7a4309;
+	--sl-color-accent-high: #5e3407;
+	--sl-color-white: #1e2033;
+	--sl-color-gray-1: #1e2033;
+	--sl-color-gray-2: #1e2033;
+	--sl-color-gray-3: #4f546e;
+	--sl-color-gray-4: #c2c0bd;
+	--sl-color-gray-5: #d7d4cf;
+	--sl-color-gray-6: #e3e1d9;
+	--sl-color-gray-7: #e8e5dd;
+	--sl-color-black: #f0ede4;
 
 	--sl-color-text-accent: var(--ani-text);
-	--sl-color-text-invert: #161a2e;
+	--sl-color-text-invert: #f0ede4;
 	--sl-color-bg-nav: var(--sl-color-black);
 	--sl-color-bg-sidebar: var(--sl-color-black);
 	--sl-color-bg-inline-code: var(--ani-raised);
@@ -61,15 +63,15 @@
 	--sl-color-hairline-shade: var(--ani-rule-faint);
 	--sl-color-backdrop-overlay: var(--ani-over-art);
 
-	--sl-color-blue: #7fc7d9;
-	--sl-color-blue-low: color-mix(in srgb, #7fc7d9 14%, var(--ani-ground));
-	--sl-color-blue-high: #a8dbe8;
-	--sl-color-orange: #f2a64b;
-	--sl-color-orange-low: color-mix(in srgb, #f2a64b 14%, var(--ani-ground));
-	--sl-color-orange-high: #f7c88f;
-	--sl-color-red: #e06b54;
-	--sl-color-red-low: color-mix(in srgb, #e06b54 14%, var(--ani-ground));
-	--sl-color-red-high: #eb9a8a;
+	--sl-color-blue: #1f5d6e;
+	--sl-color-blue-low: #dce8e4;
+	--sl-color-blue-high: #174754;
+	--sl-color-orange: #7a4309;
+	--sl-color-orange-low: #f0dfc4;
+	--sl-color-orange-high: #5e3407;
+	--sl-color-red: #94301f;
+	--sl-color-red-low: #f0ddd2;
+	--sl-color-red-high: #732517;
 
 	--sl-shadow-sm: none;
 	--sl-shadow-md: none;
@@ -94,35 +96,35 @@
 	}
 }
 
-/* Light: Starlight inverts the ramp, so the whole scale is written out. --sl-color-white is
-   the text end here too. */
-:root[data-theme='light'] {
-	--sl-color-accent-low: #f0ddc2;
-	--sl-color-accent: #7a4309;
-	--sl-color-accent-high: #5e3407;
-	--sl-color-white: #1e2033;
-	--sl-color-gray-1: #1e2033;
-	--sl-color-gray-2: #1e2033;
-	--sl-color-gray-3: #4f546e;
-	--sl-color-gray-4: #c2c0bd;
-	--sl-color-gray-5: #d7d4cf;
-	--sl-color-gray-6: #e3e1d9;
-	--sl-color-gray-7: #e8e5dd;
-	--sl-color-black: #f0ede4;
+/* Dark: --sl-color-white is the text end here too. Starlight's dark ramp has no gray-7. */
+:root[data-theme='dark'] {
+	--sl-color-accent-low: #352e32;
+	--sl-color-accent: #f2a64b;
+	--sl-color-accent-high: #f7c88f;
+	--sl-color-white: #e4e0d6;
+	--sl-color-gray-1: #e4e0d6;
+	--sl-color-gray-2: #e4e0d6;
+	--sl-color-gray-3: #9298b5;
+	--sl-color-gray-4: #434653;
+	--sl-color-gray-5: #2f3242;
+	--sl-color-gray-6: #222638;
+	--sl-color-gray-7: initial;
+	--sl-color-black: #10131f;
 
 	--sl-color-text-accent: var(--ani-text);
-	--sl-color-text-invert: #f0ede4;
+	--sl-color-text-invert: #161a2e;
 	--sl-color-bg-nav: var(--sl-color-black);
 	--sl-color-bg-sidebar: var(--sl-color-black);
-	--sl-color-blue: #1f5d6e;
-	--sl-color-blue-low: #dce8e4;
-	--sl-color-blue-high: #174754;
-	--sl-color-orange: #7a4309;
-	--sl-color-orange-low: #f0dfc4;
-	--sl-color-orange-high: #5e3407;
-	--sl-color-red: #94301f;
-	--sl-color-red-low: #f0ddd2;
-	--sl-color-red-high: #732517;
+
+	--sl-color-blue: #7fc7d9;
+	--sl-color-blue-low: color-mix(in srgb, #7fc7d9 14%, var(--ani-ground));
+	--sl-color-blue-high: #a8dbe8;
+	--sl-color-orange: #f2a64b;
+	--sl-color-orange-low: color-mix(in srgb, #f2a64b 14%, var(--ani-ground));
+	--sl-color-orange-high: #f7c88f;
+	--sl-color-red: #e06b54;
+	--sl-color-red-low: color-mix(in srgb, #e06b54 14%, var(--ani-ground));
+	--sl-color-red-high: #eb9a8a;
 }
 
 /* ── Focus, everywhere ─────────────────────────────────────────────────── */

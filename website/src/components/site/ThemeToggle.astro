@@ -1,7 +1,7 @@
 ---
-// The theme switch: a real button, the pixel sun or moon for the theme it switches to. The choice
-// is kept under Starlight's own key, so the docs and the other pages read one setting, and it
-// follows the system until the visitor picks one that differs from it.
+// The theme switch: a real button, the pixel sun or moon for the theme it switches to. The site is
+// light until the visitor picks dark, whatever the system's theme. Dark is kept under Starlight's
+// own key, so the docs and the other pages read one setting; picking light again clears it.
 import { useSite } from '../../i18n/site';
 
 const { t } = useSite(Astro);
@@ -13,8 +13,8 @@ const { t } = useSite(Astro);
 	data-theme-toggle
 	data-to-light={t('site.theme.toLight')}
 	data-to-dark={t('site.theme.toDark')}
-	aria-label={t('site.theme.toLight')}
-	title={t('site.theme.toLight')}
+	aria-label={t('site.theme.toDark')}
+	title={t('site.theme.toDark')}
 >
 	<svg class="glyph glyph-sun" aria-hidden="true" width="18" height="18" viewBox="0 0 9 9" shape-rendering="crispEdges"
 		><path fill="currentColor" d="M2 0h4v1h-4zM1 1h2v1h-2zM0 2h2v1h-2zM0 3h2v1h-2zM0 4h2v1h-2zM0 5h2v1h-2zM0 6h2v1h-2zM8 6h1v1h-1zM1 7h2v1h-2zM6 7h2v1h-2zM2 8h4v1h-4z"></path></svg
@@ -27,19 +27,12 @@ const { t } = useSite(Astro);
 <script>
 	const KEY = 'starlight-theme';
 	const root = document.documentElement;
-	const systemDark = window.matchMedia('(prefers-color-scheme: dark)');
 	const still = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-	const stored = (): string | null => {
-		try {
-			const v = localStorage.getItem(KEY);
-			return v === 'light' || v === 'dark' ? v : null;
-		} catch {
-			return null;
-		}
-	};
-	const system = () => (systemDark.matches ? 'dark' : 'light');
-	const current = () => (root.dataset.theme === 'light' ? 'light' : 'dark');
+	const current = () => (root.dataset.theme === 'dark' ? 'dark' : 'light');
+	const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+	const paint = () => themeColor?.setAttribute('content', current() === 'dark' ? '#10131f' : '#f0ede4');
+	paint();
 
 	function label(button: HTMLElement) {
 		const text = current() === 'dark' ? button.dataset.toLight! : button.dataset.toDark!;
@@ -47,13 +40,12 @@ const { t } = useSite(Astro);
 		button.title = text;
 	}
 
-	function set(theme: string, remember: boolean) {
+	function set(theme: string) {
 		root.dataset.theme = theme;
-		if (!remember) return;
+		paint();
 		try {
-			// Choosing what the system already says goes back to following the system.
-			if (theme === system()) localStorage.removeItem(KEY);
-			else localStorage.setItem(KEY, theme);
+			if (theme === 'dark') localStorage.setItem(KEY, theme);
+			else localStorage.removeItem(KEY);
 		} catch {
 			// No storage here: the choice lasts for this page.
 		}
@@ -65,7 +57,7 @@ const { t } = useSite(Astro);
 		button.addEventListener('click', () => {
 			const next = current() === 'dark' ? 'light' : 'dark';
 			const apply = () => {
-				set(next, true);
+				set(next);
 				for (const b of buttons) {
 					label(b);
 					b.classList.remove('swap');
@@ -83,11 +75,4 @@ const { t } = useSite(Astro);
 			}
 		});
 	}
-
-	// With no choice kept, the page follows the system as it changes.
-	systemDark.addEventListener('change', () => {
-		if (stored()) return;
-		root.dataset.theme = system();
-		for (const b of buttons) label(b);
-	});
 </script>
