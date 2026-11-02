@@ -353,33 +353,30 @@ mod tests {
     #[test]
     fn the_native_apps_settings_cross_intact() {
         use kaeri_model::{
-            protection::{FailedCheck, TorrentProtection, TorrentProxy},
+            proxy::TorrentProxy,
             settings::SettingsView,
             show::{RememberedSubtitles, RememberedTrack, RememberedTracks, ShowSettingKey},
         };
         let id = AnilistId::new(900_001);
         let commands = [
-            Command::SetTorrentProtection {
-                mode: TorrentProtection::Proxy,
+            Command::SetTorrentProxy {
                 proxy: Some(TorrentProxy {
-                    host: "10.64.0.1".into(),
+                    host: "192.0.2.10".into(),
                     port: 1080,
                     user: Some("nagare".into()),
                     password: Some(Secret("lantern".into())),
                 }),
-                on_failure: FailedCheck::Warn,
-                acknowledged: true,
             },
-            Command::CheckTorrentProtection {
-                mode: TorrentProtection::Proxy,
-                proxy: Some(TorrentProxy {
-                    host: "10.64.0.2".into(),
+            Command::SetTorrentProxy { proxy: None },
+            Command::CheckTorrentProxy {
+                proxy: TorrentProxy {
+                    host: "192.0.2.11".into(),
                     port: 1080,
                     user: None,
                     password: None,
-                }),
+                },
             },
-            Command::CheckTorrentProtection { mode: TorrentProtection::Device, proxy: None },
+            Command::CheckProxy,
             Command::LoadShowSettings { id },
             Command::SetShowSetting {
                 id,
@@ -431,11 +428,10 @@ mod tests {
         let sheet = kaeri_model::show::view(id, &config, &own, remembered, None);
         assert_eq!(crossed(sheet.clone()), sheet);
         crosses_intact(Event::ShowSettings(sheet));
-        let exit = "192.0.2.7 · Tunnel Co.".to_owned();
-        crosses_intact(Event::ProtectionChecked(kaeri_model::sources::GuardView::Protected {
-            exit,
-        }));
-        crosses_intact(Event::ProtectionChecked(kaeri_model::sources::GuardView::Leaking));
+        crosses_intact(Event::ProxyChecked(kaeri_model::sources::ProxyStatus::Passed));
+        crosses_intact(Event::ProxyChecked(kaeri_model::sources::ProxyStatus::Failed));
+        crosses_intact(Event::TorrentProxy(Some(kaeri_model::sources::ProxyStatus::Direct)));
+        crosses_intact(Event::TorrentProxy(None));
         let view = SettingsView::default();
         assert_eq!(crossed(view.clone()), view);
         // With the shows that switch new-episode notifications on for themselves counted.

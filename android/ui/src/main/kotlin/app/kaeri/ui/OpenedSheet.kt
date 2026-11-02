@@ -58,15 +58,13 @@ internal fun OpenedSheetHost() {
     val store = LocalAppStore.current
     val stage by store.opened.stage.collectAsStateWithLifecycle()
     val shown = stage ?: return
-    var turningOn by rememberSaveable { mutableStateOf(false) }
     SettingsSheet(onDismiss = store.opened::close, tall = true) {
         when (shown) {
             is OpenedModel.Stage.Paste -> PasteStage(shown)
-            is OpenedModel.Stage.Confirm -> ConfirmStage(shown, onTurnOn = { turningOn = true })
+            is OpenedModel.Stage.Confirm -> ConfirmStage(shown, onTurnOn = { store.setSwitch(SettingKey.TORRENTS, true) })
             is OpenedModel.Stage.Change -> ChangeStage(shown)
         }
     }
-    if (turningOn) TorrentSheet(TorrentSheetMode.TurnOn) { turningOn = false }
 }
 
 @Composable

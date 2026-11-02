@@ -1,5 +1,5 @@
-## Torrents: switching them on, protecting the connection, the check, and opening your own links.
-## Engine notices about the check (torrent-vpn-waiting and so on) are in engine*.ftl.
+## Torrents: switching them on, the optional proxy, its check, and opening your own links.
+## Engine notices about the proxy check (torrent-proxy-waiting and so on) are in engine*.ftl.
 
 # Title of the settings group and the screen.
 torrents-title = Torrents
@@ -8,67 +8,32 @@ torrents-title = Torrents
 torrents-on = Torrents are on
 
 # Line under the switch while torrents are off.
-torrents-off-detail = Off by default. Turning this on asks how to protect your connection first.
+torrents-off-detail = Off by default. Torrents connect directly unless you route them through a proxy.
 
-# Line explaining the risk, before torrents start.
-torrents-risk = Other people can see your IP address while you download and share a torrent. Choose what protects it before torrents start.
+# Line about privacy in the torrent sheet, before torrents start.
+torrents-risk = Other people in a torrent can see your IP address. To keep it private, route torrent traffic through a proxy.
 
 # Line in the Apple sources screen: torrents belong to the app, not to a plugin.
-torrents-not-a-plugin = Torrents are part of { -app-name }, not a { -plugin }. What protects their traffic, the connection check and seeding are set in Settings, under { -source-cap-pl }.
+torrents-not-a-plugin = Torrents are part of { -app-name }, not a { -plugin }. The proxy and seeding are set in Settings, under { -source-cap-pl }.
 
-## Protection
+## Proxy
 
-# Label of the choice of protection.
-torrents-protect-with = Protect with
+# Switch: send torrent traffic through a SOCKS5 proxy. Off by default.
+torrents-proxy-route = Route torrent traffic through a proxy
 
-# Option: no protection.
-torrents-protect-none = No protection
+# Line under the switch.
+torrents-proxy-route-detail = Torrent traffic goes through a SOCKS5 proxy you run or rent. While this is off, torrents connect directly.
 
-# Option: a proxy.
-torrents-protect-proxy = Proxy
-
-# Option: a VPN already running on the device.
-torrents-protect-vpn = VPN
-
-# Line under the proxy option.
-torrents-protect-proxy-detail = Torrent traffic goes through a proxy you run or rent.
-
-# Line under the VPN option.
-torrents-protect-vpn-detail = Uses the VPN already running on this { -device }.
-
-# Line under the no-protection option.
-torrents-protect-none-detail = Your address is visible to everyone in the torrent.
-
-# Line when no protection is set.
-torrents-protect-none-note = With no protection, { -app-name } doesn't check the connection.
-
-# Summary: a proxy protects. Host and port are already formatted.
+# Summary: torrents go through a proxy. Host and port are already formatted.
 # @arg host: text
 # @arg port: text
-torrents-summary-proxy-at = Protected by a SOCKS5 proxy at { $host }:{ $port }.
+torrents-summary-proxy-at = Through a SOCKS5 proxy at { $host }:{ $port }.
 
-# Summary: a proxy protects, address not shown.
-torrents-summary-proxy = Protected by a SOCKS5 proxy.
+# Summary: torrents go through a proxy, address not shown.
+torrents-summary-proxy = Through a SOCKS5 proxy.
 
-# Summary: a VPN protects.
-torrents-summary-vpn = Protected by the VPN on this { -device }.
-
-# Summary: nothing protects.
-torrents-summary-none = Not protected. Your address is visible to everyone in the torrent.
-
-# Title of the question when torrents are turned on without protection.
-torrents-unprotected-title = Use torrents without protection?
-
-# Line under it.
-torrents-unprotected-detail = Other people can see your IP address while you download and share a torrent, and { -app-name } doesn't check the connection.
-
-# Button that confirms turning torrents on without protection.
-# @max 40
-torrents-turn-on-unprotected = Turn on without protection
-
-# Button that confirms using no protection.
-# @max 40
-torrents-use-unprotected = Use without protection
+# Summary: no proxy is set.
+torrents-summary-direct = Connecting directly, without a proxy.
 
 ## Proxy form
 
@@ -89,7 +54,7 @@ torrents-password-keep = Leave the password empty to keep the saved one.
 
 # Line under the proxy form: what happens while the new proxy is checked.
 # @allow proceed
-torrents-proxy-keeps-saved = Torrents keep using the saved proxy until the new one passes the connection check.
+torrents-proxy-keeps-saved = Torrents keep using the saved proxy until the new one passes the proxy check.
 
 # Line when the host or port is wrong.
 torrents-proxy-invalid = The proxy needs a host and a port from 1 to 65535.
@@ -100,19 +65,12 @@ torrents-checking-proxy = Checking the proxy…
 # Notice after the proxy was saved.
 torrents-proxy-saved = Proxy saved
 
-# Why a save was refused: traffic left outside the proxy.
-torrents-left-outside-proxy = Torrent traffic left outside this proxy
-
-# Why a save was refused: the check could not run through the proxy.
-torrents-check-not-made-proxy = The check couldn't be made through this proxy
+# Why a save was refused: the proxy check failed. A sentence fragment.
+torrents-check-not-made-proxy = The proxy check failed
 
 # Notice when a proxy was not saved. The reason is a sentence fragment.
 # @arg why: cause
 torrents-proxy-not-saved = Not saved. { $why }, so the saved proxy stays.
-
-# Notice when protection was not saved. The reason is a sentence fragment.
-# @arg why: cause
-torrents-protection-not-saved = Not saved. { $why }, so the saved protection stays.
 
 # Notice when torrents stayed off. The reason is a sentence fragment.
 # @arg why: cause
@@ -138,69 +96,25 @@ torrents-index-scheme = Use an http or https address.
 # Notice after the index was saved.
 torrents-index-saved = { -torrent-index-cap } saved
 
-## The check
+## The proxy check
 
-# Label of the choice of what to do when a check fails.
-torrents-if-check-fails = If a check fails
+# Under the proxy form: what the app checks.
+torrents-check-note = { -app-name } checks that it can reach the proxy before torrents start. Torrents wait while that check fails.
 
-# Title of the question that asks whether torrents may keep running.
-# @allow proceed
-torrents-keep-running-title = Keep torrents running if a check fails?
-
-# Line under the question: what the choice is about.
-torrents-keep-running-detail = What happens to torrents when the check finds traffic leaving outside your VPN or proxy.
-
-# Option: pause torrents.
-torrents-fail-pause = Pause torrents
-
-# Option: stop torrents.
-torrents-fail-stop = Stop torrents
-
-# Option: only warn.
-torrents-fail-warn = Warn only
-
-# Result of the choice: torrents run.
-# @allow proceed
-torrents-fail-warn-result = Torrents keep running.
-
-# Result of the choice: torrents stop.
-torrents-fail-stop-result = Torrents are stopped.
-
-# Result of the choice: torrents pause.
-torrents-fail-pause-result = Torrents are paused.
-
-# Label of the last check.
-torrents-last-check = Last check
-
-# Check passed. The exit is where the traffic leaves from, already formatted.
-# @arg exit: text
-torrents-check-passed-exit = Leaving through { $exit }
+# Label of the proxy check's result.
+torrents-last-check = Proxy check
 
 # Check passed.
 torrents-check-passed = Passed
 
-# Check running: the line.
-torrents-check-running-line = Checking where torrent traffic leaves from
-
 # Check running: the short word.
 torrents-check-running = Checking
 
-# Check failed: traffic left outside. The consequence follows.
-# @arg then: text
-torrents-check-leaked = Traffic left outside the protection. { $then }
-
-# Check failed: the check could not be made. The consequence follows.
-# @arg then: text
-torrents-check-unmade = The check couldn't be made. { $then }
+# Check failed: the line.
+torrents-check-failed-line = The proxy check failed. Torrents start once it passes.
 
 # Short word: the check failed.
 torrents-check-failed = Failed
-
-# Line: no protection is set, so nothing was checked.
-torrents-check-none-line = No protection is set
-
-# Short word: unprotected.
-torrents-check-none = Unprotected
 
 # Line: no check yet.
 torrents-check-waiting-line = Not checked yet
@@ -244,13 +158,6 @@ torrents-page-unreadable = The TV couldn't read this. Scan the QR code on the TV
 
 # Line when the page needs script.
 torrents-page-needs-script = This page needs JavaScript to send the form to the TV safely.
-
-# Under the proxy form when turning torrents on: what the app checks, and that the VPN or proxy is what protects.
-torrents-check-note = { -app-name } checks where torrent traffic leaves from when a torrent starts and every minute while it runs, and pauses torrents if that check fails. Your VPN or proxy is what protects you.
-
-
-# Notice after the protection was saved.
-torrents-protection-saved = Torrent protection saved
 
 ## Opening your own magnet link or torrent file
 

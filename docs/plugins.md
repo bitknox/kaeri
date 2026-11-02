@@ -62,8 +62,8 @@ when the torrent holds more than one. Without it the host plays the file whose n
 episode number, else the largest video.
 
 The host turns each into a magnet link, adds the user's trackers and plays it through torrent
-playback, behind the user's proxy or VPN check. It starts the first torrent in your order and
-tries the next only when that one fails. While torrent playback is off or the check has not
+playback, through the user's proxy when one is set. It starts the first torrent in your order and
+tries the next only when that one fails. While torrent playback is off or a proxy check has not
 passed, your source is passed over as unavailable, which is not counted against it. A plugin
 without the capability has its torrent streams dropped. `torrent-http` is the host's own
 loopback stream and is not accepted from a plugin.

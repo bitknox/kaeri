@@ -537,33 +537,27 @@ struct PhoneJoinStoreSheet: View {
     }
 }
 
-/// Turning torrents on, on iPhone: as the Mac's sheet, in a list. And the same, asking for a
-/// proxy once torrents are on, or editing the saved one. A proxy is saved only once the
-/// connection check through it passes.
-struct PhoneTorrentSheet: View {
+/// The proxy form on iPhone, in a list: asked for when the route switch goes on, or editing the
+/// saved proxy. A proxy is saved only once the check through it passes.
+struct PhoneProxySheet: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
-    var mode: TorrentSheetMode = .turnOn
-    var start: TorrentProtection?
-    @State private var draft: TorrentDraft?
+    var mode: ProxyFormMode = .add
+    @State private var draft: ProxyDraft?
     /// What the check under way is for, saved once it passes.
-    @State private var checking: TorrentDraft?
-    /// The draft as the sheet opened, to tell a change from it.
-    @State private var opened: TorrentDraft?
-    @State private var confirmingNone = false
+    @State private var checking: ProxyDraft?
+    /// The draft as the form opened, to tell a change from it.
+    @State private var opened: ProxyDraft?
 
-    private var turningOn: Bool { mode == .turnOn }
-    private var editing: Bool { mode == .editProxy }
+    private var editing: Bool { mode == .edit }
 
     var body: some View {
-        let draft = Binding(get: { self.draft ?? TorrentDraft(store) }, set: { self.draft = $0 })
+        let draft = Binding(get: { self.draft ?? ProxyDraft(store) }, set: { self.draft = $0 })
         let trial = store.providers.trial
         NavigationStack {
             PhoneList {
                 Section {
-                    Text(editing
-                         ? ProtectionWords.editNote
-                         : L.torrentsRisk)
+                    Text(editing ? ProxyWords.editNote : L.torrentsRisk)
                         .font(.ui(17))
                         .foregroundStyle(.silk)
                         .fixedSize(horizontal: false, vertical: true)
@@ -571,58 +565,43 @@ struct PhoneTorrentSheet: View {
                         // In line with the section headers and the rows' words below.
                         .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
                 }
-                if !editing {
-                    Section {
-                        ForEach(ProtectionWords.order, id: \.self) { choice in
-                            Button { draft.wrappedValue.protection = choice } label: {
-                                self.choice(ProtectionWords.label(choice), on: draft.wrappedValue.protection == choice)
-                            }
-                            .listRowBackground(Palette.raised)
-                        }
-                    } header: {
-                        PhoneSectionHeader(L.torrentsProtectWith)
-                    } footer: {
-                        // With none, nothing checks the connection, so the check's note would mislead.
-                        Text(draft.wrappedValue.protection == TorrentProtection.none
-                             ? L.torrentsProtectNoneNote
-                             : ProtectionWords.checkNote)
+                // Each field named beside it, so a filled-in one still says what it is.
+                Section {
+                    LabeledContent(L.torrentsProxyHost) {
+                        TextField(L.torrentsProxyHost, text: draft.host, prompt: Text("proxy.example")) // i18n-skip
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .multilineTextAlignment(.trailing)
+                    }
+                    LabeledContent(L.torrentsProxyPort) {
+                        TextField(L.torrentsProxyPort, text: draft.port, prompt: Text("1080"))
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                    }
+                    LabeledContent(L.torrentsProxyUser) {
+                        TextField(L.torrentsProxyUser, text: draft.user, prompt: Text(L.torrentsProxyOptional))
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .multilineTextAlignment(.trailing)
+                    }
+                    LabeledContent(L.torrentsProxyPassword) {
+                        SecureField(L.torrentsProxyPassword, text: draft.password, prompt: Text(L.torrentsProxyOptional))
+                            .multilineTextAlignment(.trailing)
+                    }
+                } header: {
+                    PhoneSectionHeader(L.torrentsProxyRoute)
+                } footer: {
+                    VStack(alignment: .leading, spacing: 6) {
+                        if editing { Text(ProxyWords.passwordKept) }
+                        Text(ProxyWords.checkNote)
+                        if draft.wrappedValue.invalid { Text(L.torrentsProxyInvalid) }
                     }
                 }
-                if draft.wrappedValue.protection == .proxy {
-                    // Each field named beside it, so a filled-in one still says what it is.
-                    Section {
-                        LabeledContent(L.torrentsProxyHost) {
-                            TextField(L.torrentsProxyHost, text: draft.host, prompt: Text("proxy.example")) // i18n-skip
-                                .textInputAutocapitalization(.never)
-                                .autocorrectionDisabled()
-                                .multilineTextAlignment(.trailing)
-                        }
-                        LabeledContent(L.torrentsProxyPort) {
-                            TextField(L.torrentsProxyPort, text: draft.port, prompt: Text("1080"))
-                                .keyboardType(.numberPad)
-                                .multilineTextAlignment(.trailing)
-                        }
-                        LabeledContent(L.torrentsProxyUser) {
-                            TextField(L.torrentsProxyUser, text: draft.user, prompt: Text(L.torrentsProxyOptional))
-                                .textInputAutocapitalization(.never)
-                                .autocorrectionDisabled()
-                                .multilineTextAlignment(.trailing)
-                        }
-                        LabeledContent(L.torrentsProxyPassword) {
-                            SecureField(L.torrentsProxyPassword, text: draft.password, prompt: Text(L.torrentsProxyOptional))
-                                .multilineTextAlignment(.trailing)
-                        }
-                    } header: {
-                        PhoneSectionHeader(L.torrentsProtectProxy)
-                    } footer: {
-                        if editing { Text(ProtectionWords.passwordKept) }
-                    }
-                    .listRowBackground(Palette.raised)
-                }
+                .listRowBackground(Palette.raised)
             }
             // Held still while the check through the proxy runs.
             .disabled(trial == .checking)
-            .navigationTitle(editing ? L.torrentsSheetEditProxy : turningOn ? L.torrentsSheetTurnOn : L.torrentsSheetProtect)
+            .navigationTitle(editing ? L.torrentsSheetEditProxy : L.torrentsProxyRoute)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) { Button(L.actionCancel) { dismiss() }.tint(.silk) }
@@ -630,16 +609,12 @@ struct PhoneTorrentSheet: View {
             .safeAreaInset(edge: .bottom) {
                 VStack(alignment: .leading, spacing: 12) {
                     if ProxyCheckLine.shows(trial) {
-                        ProxyCheckLine(trial: trial, mode: mode, phone: true).padding(.horizontal, 20)
+                        ProxyCheckLine(trial: trial, phone: true).padding(.horizontal, 20)
                     }
                     Button {
-                        if draft.wrappedValue.protection == TorrentProtection.none {
-                            confirmingNone = true
-                        } else {
-                            send(draft.wrappedValue)
-                        }
+                        send(draft.wrappedValue)
                     } label: {
-                        Text(turningOn ? L.torrentsTurnOnButton : L.actionSave).frame(maxWidth: .infinity)
+                        Text(L.actionSave).frame(maxWidth: .infinity)
                     }
                     .buttonStyle(PrimaryCapsuleStyle(height: 50, fontSize: 17))
                     .disabled(!draft.wrappedValue.complete || trial == .checking)
@@ -650,40 +625,18 @@ struct PhoneTorrentSheet: View {
         }
         .tint(.silk)
         .onAppear {
-            var first = TorrentDraft(store)
-            if let start { first.protection = start }
+            let first = ProxyDraft(store)
             self.draft = first
             opened = first
         }
-        .modifier(TorrentSaving(checking: checking, draft: self.draft, mode: mode) { dismiss() })
+        .modifier(ProxySaving(checking: checking, draft: self.draft) { dismiss() })
         // Changed from what it opened with, or with a check under way, it stays open.
         .holdsInput(when: self.draft != opened || checking != nil)
-        .confirmationDialog(ProtectionWords.noneTitle, isPresented: $confirmingNone, titleVisibility: .visible) {
-            Button(L.torrentsProtectNone, role: .destructive) {
-                send(draft.wrappedValue)
-            }
-            Button(L.actionCancel, role: .cancel) {}
-        } message: {
-            Text(ProtectionWords.noneMessage)
-        }
     }
 
-    private func send(_ draft: TorrentDraft) {
-        if store.save(draft, mode) {
-            dismiss()
-        } else {
-            checking = draft
-        }
-    }
-
-    private func choice(_ title: String, on: Bool) -> some View {
-        HStack {
-            Text(title).font(.ui(17)).foregroundStyle(.silk)
-            Spacer()
-            if on { Image(systemName: "checkmark").foregroundStyle(.amber) }
-        }
-        .contentShape(.rect)
-        .accessibilityAddTraits(on ? .isSelected : [])
+    private func send(_ draft: ProxyDraft) {
+        checking = draft
+        store.check(draft)
     }
 }
 #endif

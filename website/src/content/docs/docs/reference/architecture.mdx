@@ -91,14 +91,13 @@ cargo run -p kaeri-plugin --example plugin_bench --release        # what a plugi
 There are also live probes. They need real services and are not part of `cargo test`:
 
 ```sh
-cargo run -p kaeri-providers --example stream_probe          # torrent path through the VPN
+cargo run -p kaeri-providers --example stream_probe          # torrent path, through a proxy if set
 cargo run -p kaeri-engine --example playback_probe           # torrent → mpv → history
 cargo run -p kaeri-engine --example sync_probe -- --write    # AniList push, then undo
 cargo run -p kaeri-engine --example mal_probe -- --write     # MAL push, then undo
 cargo run -p kaeri-engine --example simkl_probe -- --write   # Simkl push, then undo
 cargo run -p kaeri-engine --example kitsu_probe -- --write   # Kitsu push, then undo
 cargo run -p kaeri-engine --example mend_probe -- <url>      # HLS behind an image header → mpv
-cargo run -p kaeri-providers --example halt_probe            # the guard pausing torrents
 cargo run -p kaeri-meta --example filler_probe               # filler parsing
 cargo run -p kaeri-meta --example episode_meta_probe         # episode titles, stills, numbering
 cargo run -p kaeri-meta --example anilist_probe              # the AniList client

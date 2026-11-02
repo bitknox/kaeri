@@ -353,7 +353,7 @@ pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<St
         sync,
         stores,
         clock,
-        fixture_exit: Some(kaeri_providers::vpn::VpnGuard::fixture_egress()),
+        fixture_route: true,
         windows: None,
     });
     let (engine, events): (Engine, _) =

@@ -205,8 +205,8 @@ public final class AppStore {
     }
 
     /// Reset settings on the start-failed screen, once the viewer has confirmed it: `config.toml`
-    /// is kept aside as `config.damaged-<date>`, and the engine starts again on the defaults, VPN
-    /// and proxy included. The database, and the watch history in it, stay.
+    /// is kept aside as `config.damaged-<date>`, and the engine starts again on the defaults, the torrent
+    /// proxy included. The database, and the watch history in it, stay.
     public func resetSettings() async {
         guard let launched, settingsUnusable, phase != .starting, phase != .running else { return }
         let dirs = launched.launch.home.dirs
@@ -762,11 +762,11 @@ public final class AppStore {
         self.held = []
         for event in events { apply(event) }
         self.held = held
-        // An edited proxy's check, which no sheet asked for: under way, or failed.
+        // An edited proxy's check, which no form asked for: under way, or failed.
         if showcase == .checking || showcase == .unsaved {
-            _ = providers.trialStarted(ProtectionCheck(mode: .proxy, proxy: nil))
+            _ = providers.trialStarted(TorrentProxy(host: "proxy.example", port: 1080, user: nil, password: nil))
         }
-        if showcase == .unsaved { _ = providers.trialSaid(.unreachable) }
+        if showcase == .unsaved { _ = providers.trialSaid(.failed) }
         #endif
     }
 
@@ -923,10 +923,10 @@ public final class AppStore {
             sourceChoices.apply(id: id, options: options)
         case .pinUnavailable(let id, let providerId, let name):
             sourceChoices.pinUnavailable(id: id, providerId: providerId, name: name)
-        case .vpn(let view):
-            providers.guardSaid(view)
-        case .protectionChecked(let view):
-            if let next = providers.trialSaid(view) { send(next) }
+        case .torrentProxy(let status):
+            providers.proxySaid(status)
+        case .proxyChecked(let status):
+            if let next = providers.trialSaid(status) { send(.checkTorrentProxy(proxy: next)) }
 
         case .licensed, .availability, .licensedReturn, .server, .local:
             applyFirstParty(event)

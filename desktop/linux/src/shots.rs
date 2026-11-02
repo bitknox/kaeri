@@ -19,7 +19,7 @@ const TITLE: u32 = 900_001;
 const PLAYING: (u32, &str) = (900_002, "4");
 
 /// Every shot by name, in the order a run takes them.
-pub const ALL: [&str; 93] = [
+pub const ALL: [&str; 92] = [
     "home",
     "welcome",
     "offline",
@@ -80,7 +80,6 @@ pub const ALL: [&str; 93] = [
     "accounts-kitsu",
     "accounts-code",
     "torrents-setup",
-    "torrents-none",
     "torrents-on",
     "torrents-edit-proxy",
     "torrents-checking",
@@ -952,22 +951,7 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
         }
         "torrents-setup" => {
             shell.settings_pane("sources");
-            crate::pages::torrents::setup(&shell.ctx, true, None, Rc::new(|| {}));
-            1.5
-        }
-        "torrents-none" => {
-            shell.settings_pane("sources");
-            crate::pages::torrents::setup(
-                &shell.ctx,
-                true,
-                Some(kaeri_model::protection::TorrentProtection::None),
-                Rc::new(|| {}),
-            );
-            if let Some(dialog) = shell.ctx.window.visible_dialog()
-                && let Some(send) = default_button(&dialog)
-            {
-                send.emit_clicked();
-            }
+            crate::pages::torrents::setup(&shell.ctx, Rc::new(|| {}));
             1.5
         }
         "torrents-on" => {
@@ -986,14 +970,14 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
         }
         #[cfg(feature = "fixtures")]
         "torrents-checking" | "torrents-check-failed" | "torrents-saved" => {
-            use kaeri_model::sources::GuardView;
+            use kaeri_model::sources::ProxyStatus;
             by_proxy(shell);
             shell.settings_pane("sources");
             // Answered here, never through the proxy typed in.
             shell.ctx.hub.check_answer.replace(Some(match shot {
                 "torrents-checking" => None,
-                "torrents-check-failed" => Some(GuardView::Leaking),
-                _ => Some(GuardView::Protected { exit: "proxy.example".into() }),
+                "torrents-check-failed" => Some(ProxyStatus::Failed),
+                _ => Some(ProxyStatus::Passed),
             }));
             once_proxy_saved(shell, |ctx| {
                 let dialog = crate::pages::torrents::edit_proxy(ctx);
@@ -1202,8 +1186,7 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
             crate::showcase::set_mood(crate::showcase::Mood::Usual);
             shell.search_page().browse(&kaeri_model::search::SearchQuery::default());
         }
-        "torrents-none"
-        | "torrent-open-link"
+        "torrent-open-link"
         | "torrent-open-confirm"
         | "torrent-open-on"
         | "torrent-open-change" => {
@@ -1222,6 +1205,7 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
                 shell.ctx.hub.check_answer.replace(None);
                 crate::pages::torrents::forget_checks();
             }
+            shell.ctx.hub.send(Command::SetTorrentProxy { proxy: None });
             shell.ctx.hub.send(Command::SetSetting {
                 key: kaeri_model::settings::SettingKey::Torrents,
                 value: kaeri_core::settings::SettingValue::Bool(false),
@@ -1609,17 +1593,14 @@ fn once_proxy_saved(shell: &Rc<Shell>, then: impl FnOnce(&Rc<crate::window::Ctx>
 /// looks up where the run's own traffic leaves from.
 fn by_proxy(shell: &Rc<Shell>) {
     use kaeri_core::settings::SettingValue;
-    use kaeri_model::protection::{FailedCheck, TorrentProtection, TorrentProxy};
-    shell.ctx.hub.send(Command::SetTorrentProtection {
-        mode: TorrentProtection::Proxy,
+    use kaeri_model::proxy::TorrentProxy;
+    shell.ctx.hub.send(Command::SetTorrentProxy {
         proxy: Some(TorrentProxy {
             host: "127.0.0.1".into(),
             port: 9,
             user: None,
             password: None,
         }),
-        on_failure: FailedCheck::Pause,
-        acknowledged: false,
     });
     shell.ctx.hub.send(Command::SetSetting {
         key: kaeri_model::settings::SettingKey::Torrents,

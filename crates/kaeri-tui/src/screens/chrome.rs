@@ -38,11 +38,11 @@ pub(super) fn render_header(buf: &mut Buffer, app: &App, geometry: &Frame) {
         chips.push((format!("{} {}", source, mark), role));
     }
 
-    // VPN state sits next to the source it governs. Always shown when torrenting is
-    // configured — discovering a failing guard only when playback refuses would be far
-    // worse than a badge.
-    if let Some(badge) = &app.vpn_badge {
-        chips.push((badge.clone(), if app.vpn_leaking { Role::Alert } else { Role::State }));
+    // The proxy check sits next to the source it governs. Always shown while torrents go
+    // through a proxy: discovering a failing check only when playback does not start would be
+    // far worse than a badge.
+    if let Some(badge) = &app.proxy_badge {
+        chips.push((badge.clone(), if app.proxy_failed { Role::Alert } else { Role::State }));
     }
 
     // Only while degraded: a healthy ladder is the resting state and saying so on every frame
@@ -53,7 +53,7 @@ pub(super) fn render_header(buf: &mut Buffer, app: &App, geometry: &Frame) {
 
     // One chip per tracker, carrying the queue depth — the answer to "did my progress actually
     // go anywhere?", which is the only sync question anyone asks. Trackers are a different kind
-    // of information from the source/VPN cluster before them, so the groups get a hairline
+    // of information from the source and proxy cluster before them, so the groups get a hairline
     // interpunct between them rather than reading as one undifferentiated string.
     if !chips.is_empty() && !app.sync.is_empty() {
         chips.push(("·".into(), Role::Rule));
@@ -311,7 +311,7 @@ mod tests {
         downloads::DownloadState,
         event::Event,
         progress::TitleProgress,
-        sources::GuardView,
+        sources::ProxyStatus,
     };
 
     use crate::{
@@ -515,37 +515,41 @@ mod tests {
     }
 
     #[test]
-    fn the_vpn_badge_is_shown_and_alerts_when_leaking() {
-        // Discovering a failing guard only when playback refuses would be far worse than
-        // a badge that is always visible.
+    fn the_proxy_badge_is_shown_and_alerts_when_its_check_fails() {
+        // Discovering a failing check only when playback does not start would be far worse
+        // than a badge that is always visible.
         let mut app = app_with(ContentList::Entries(vec![entry(1, "Hoshikuzu")]));
-        app.apply(Event::Vpn(Some(GuardView::Protected { exit: "Mullvad · SE".into() })));
+        app.apply(Event::TorrentProxy(Some(ProxyStatus::Passed)));
 
         let buf = render_to_buffer(&mut app, 120, 20);
         let text = text_of(&buf);
-        assert!(text.contains("Mullvad"), "badge missing from the header");
+        assert!(text.contains("Proxy ●  Passed"), "badge missing from the header:\n{text}");
 
-        app.apply(Event::Vpn(Some(GuardView::Leaking)));
-        let leaking = render_to_buffer(&mut app, 120, 20);
-        let leaking_text = text_of(&leaking);
-        assert!(leaking_text.contains("Leaking"));
+        app.apply(Event::TorrentProxy(Some(ProxyStatus::Failed)));
+        let failed = text_of(&render_to_buffer(&mut app, 120, 20));
+        assert!(failed.contains("Check failed"), "{failed}");
 
-        // And a newly-failing guard interrupts, because torrents have just been paused.
+        // And a check that has just failed interrupts, because torrents wait for it.
         assert!(
-            app.toasts.iter().any(|t| t.notice.text.contains("paused")),
-            "a new leak must announce itself"
+            app.toasts.iter().any(|t| t.notice.text.contains("The proxy check failed")),
+            "a failed check must announce itself"
         );
+
+        // Connecting directly needs no chip.
+        app.apply(Event::TorrentProxy(Some(ProxyStatus::Direct)));
+        let direct = text_of(&render_to_buffer(&mut app, 120, 20));
+        assert!(!direct.contains("Proxy"), "{direct}");
     }
 
     #[test]
-    fn a_guard_that_was_already_leaking_does_not_re_announce() {
-        // Repeating the alert on every verification tick would be noise.
+    fn a_check_that_was_already_failing_does_not_re_announce() {
+        // Repeating the alert on every retry would be noise.
         let mut app = app_with(ContentList::Entries(vec![entry(1, "Hoshikuzu")]));
-        app.apply(Event::Vpn(Some(GuardView::Leaking)));
+        app.apply(Event::TorrentProxy(Some(ProxyStatus::Failed)));
         let announced = |a: &App| a.logs.iter().map(|l| l.count).sum::<u32>();
         let after_first = announced(&app);
-        app.apply(Event::Vpn(Some(GuardView::Leaking)));
-        assert_eq!(announced(&app), after_first, "re-announced an unchanged leak");
+        app.apply(Event::TorrentProxy(Some(ProxyStatus::Failed)));
+        assert_eq!(announced(&app), after_first, "re-announced an unchanged failure");
     }
 
     #[test]

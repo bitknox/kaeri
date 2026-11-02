@@ -16,7 +16,7 @@ use kaeri_i18n::t;
 use kaeri_model::{
     command::Command,
     event::Event,
-    protection::{ProtectionView, TorrentProtection},
+    proxy::ProxyView,
     settings::{SettingChange, SettingKey, SettingRow},
     updates::UpdateStatus,
 };
@@ -157,9 +157,9 @@ const PANES: [Pane; 10] = [
         name: "sources",
         icon: "network-server-symbolic", // i18n-skip
         groups: &[
-            // Laid out by `torrents_group`: the switch, the index, what protects them, the last
-            // check and what a failed one does.
-            (Group::Torrents, &[K::Torrents, K::VpnMode, K::VpnOnFailure]),
+            // Laid out by `torrents_group`: the switch, the proxy switch, the proxy check and
+            // the casting row.
+            (Group::Torrents, &[K::Torrents, K::TorrentProxy]),
             (Group::Seeding, &[K::KeepSeeding, K::SeedRatio, K::SeedHours, K::UploadLimit]),
         ],
     },
@@ -271,7 +271,7 @@ struct Inner {
     /// The buttons that open a row's preview on a page of its own, hidden while the column
     /// shows it.
     openers: RefCell<Vec<gtk::Button>>,
-    /// Shows the torrent check's verdict again, while Sources is on screen.
+    /// Shows the proxy check's verdict again, while Sources is on screen.
     guard: RefCell<Option<Rc<dyn Fn()>>>,
     /// Shows the update check's word again, while a pane with it is on screen.
     update: RefCell<Option<Rc<dyn Fn()>>>,
@@ -438,7 +438,7 @@ impl Inner {
                     shown();
                 }
             }
-            Event::Vpn(_) => {
+            Event::TorrentProxy(_) => {
                 let shown = self.guard.borrow().clone();
                 if let Some(shown) = shown {
                     shown();
@@ -753,15 +753,6 @@ impl Inner {
                 let inner = Rc::downgrade(self);
                 move |line| {
                     let Some(inner) = inner.upgrade() else { return };
-                    if key == K::Torrents && line.is_active() && !inner.quiet.get() {
-                        // Turning torrents on asks first how to protect them: the switch stays
-                        // off until the engine says they are on.
-                        inner.quiet.set(true);
-                        line.set_active(false);
-                        inner.quiet.set(false);
-                        torrents::setup(&inner.ctx, true, None, Rc::new(|| {}));
-                        return;
-                    }
                     inner.set(key, SettingValue::Bool(line.is_active()));
                 }
             });
@@ -1166,60 +1157,32 @@ impl Inner {
         }
     }
 
-    /// Torrents: the switch, and once they are on, what protects them, the last check
-    /// and what a failed one does. Turning them on opens the dialog that asks how to protect them.
+    /// Torrents: the switch, the optional proxy and, once torrents are on, how they connect, the
+    /// proxy's last check and whether a cast plays them. Turning the proxy on opens the form
+    /// that checks it first.
     fn torrents_group(self: &Rc<Self>, known: &Known) -> Option<adw::PreferencesGroup> {
         let row = known.setting(K::Torrents)?;
         let on = catalog::is_on(&row);
-        let protection =
-            known.settings.as_ref().map(|v| (*v.torrent).clone()).unwrap_or_default();
-        let note = |on: bool, view: &ProtectionView| {
-            if on { torrents::on_note(view) } else { torrents::off_note() }
+        let torrent = known.settings.as_ref().map(|v| (*v.torrent).clone()).unwrap_or_default();
+        let note = |on: bool, proxy: Option<&ProxyView>| {
+            if on { torrents::on_note(proxy) } else { torrents::off_note() }
         };
         let group = adw::PreferencesGroup::builder()
             .title(t::torrents_title())
-            .description(note(on, &protection))
+            .description(note(on, torrent.proxy.as_ref()))
             .build();
         group.add(&self.row(&row));
         let mut while_on: Vec<gtk::Widget> = Vec::new();
 
-        // Protect with: the device's VPN at once, a proxy through the dialog, none confirmed.
-        let labels: Vec<String> =
-            torrents::PROTECTIONS.iter().map(|p| torrents::label(*p).to_string()).collect();
-        let labels: Vec<&str> = labels.iter().map(String::as_str).collect();
-        let protect = adw::ComboRow::builder()
-            .title(t::torrents_protect_with())
-            .model(&gtk::StringList::new(&labels))
+        // Route torrent traffic through a proxy: on opens the form, off removes the proxy.
+        let route = adw::SwitchRow::builder()
+            .title(t::torrents_proxy_route())
+            .subtitle(t::torrents_proxy_route_detail())
+            .active(torrent.proxy.is_some())
             .build();
-        let at = |p| torrents::PROTECTIONS.iter().position(|c| *c == p).unwrap_or(0) as u32;
-        protect.set_selected(at(protection.protection));
-        let put_back = {
-            let (inner, protect) = (Rc::downgrade(self), protect.clone());
-            move || {
-                let Some(inner) = inner.upgrade() else { return };
-                inner.quiet.set(true);
-                protect.set_selected(at(torrents::current(&inner.ctx).protection));
-                inner.quiet.set(false);
-            }
-        };
-        let put_back: Rc<dyn Fn()> = Rc::new(put_back);
-        protect.connect_selected_notify({
-            let (inner, put_back) = (Rc::downgrade(self), Rc::clone(&put_back));
-            move |protect| {
-                let Some(inner) = inner.upgrade() else { return };
-                let Some(choice) = torrents::PROTECTIONS.get(protect.selected() as usize)
-                else {
-                    return;
-                };
-                if inner.quiet.get() || *choice == torrents::current(&inner.ctx).protection {
-                    return;
-                }
-                torrents::choose_protection(&inner.ctx, *choice, Rc::clone(&put_back));
-            }
-        });
-        // Edit Proxy: the proxy set, checked again before it is saved.
         let edit = gtk::Button::with_label(&t::settings_edit_proxy());
         edit.set_valign(gtk::Align::Center);
+        edit.set_visible(torrent.proxy.is_some());
         edit.connect_clicked({
             let inner = Rc::downgrade(self);
             move |_| {
@@ -1228,16 +1191,41 @@ impl Inner {
                 }
             }
         });
-        let by_proxy = |view: &ProtectionView| {
-            view.protection == TorrentProtection::Proxy && view.proxy.is_some()
-        };
-        edit.set_visible(by_proxy(&protection));
-        protect.add_suffix(&edit);
-        group.add(&protect);
-        while_on.push(protect.clone().upcast());
+        route.add_suffix(&edit);
+        route.connect_active_notify({
+            let inner = Rc::downgrade(self);
+            move |route| {
+                let Some(inner) = inner.upgrade() else { return };
+                if inner.quiet.get() {
+                    return;
+                }
+                let has_proxy = torrents::current(&inner.ctx).proxy.is_some();
+                if route.is_active() == has_proxy {
+                    return;
+                }
+                if route.is_active() {
+                    // The switch stays off until the proxy passes its check and is saved.
+                    let put_back = {
+                        let (inner, route) = (Rc::downgrade(&inner), route.clone());
+                        move || {
+                            let Some(inner) = inner.upgrade() else { return };
+                            inner.quiet.set(true);
+                            route.set_active(torrents::current(&inner.ctx).proxy.is_some());
+                            inner.quiet.set(false);
+                        }
+                    };
+                    inner.quiet.set(true);
+                    route.set_active(false);
+                    inner.quiet.set(false);
+                    torrents::setup(&inner.ctx, Rc::new(put_back));
+                } else {
+                    inner.ctx.hub.send(Command::SetTorrentProxy { proxy: None });
+                }
+            }
+        });
+        group.add(&route);
 
-        // The last check: where traffic left through and when, and how it went.
-        // A failed one: the glyph in vermilion, the word in haze, and Try Again.
+        // The proxy check: how it went, and Check now. Only with a proxy set and torrents on.
         let check = adw::ActionRow::builder().title(t::torrents_last_check()).build();
         let glyph = gtk::Label::new(Some("\u{25CF}"));
         glyph.add_css_class("error");
@@ -1247,13 +1235,13 @@ impl Inner {
         let verdict = widgets::haze("", "");
         verdict.set_valign(gtk::Align::Center);
         check.add_suffix(&verdict);
-        let again = gtk::Button::with_label(&t::action_try_again());
+        let again = gtk::Button::with_label(&t::torrents_check_now());
         again.set_valign(gtk::Align::Center);
         again.connect_clicked({
             let hub = Rc::downgrade(&self.ctx.hub);
             move |_| {
                 if let Some(hub) = hub.upgrade() {
-                    hub.send(Command::CheckConnection);
+                    hub.send(Command::CheckProxy);
                 }
             }
         });
@@ -1264,69 +1252,25 @@ impl Inner {
             move || {
                 let Some(hub) = hub.upgrade() else { return };
                 let known = hub.known.borrow();
-                let guard = known.guard.as_ref();
-                let ago = guard.map(|(_, at)| at.elapsed().as_secs() as i64);
-                let (note, word, failed) = torrents::guard_words(guard.map(|(g, _)| g), ago);
+                let proxied =
+                    known.settings.as_ref().is_some_and(|v| v.torrent.proxy.is_some());
+                let torrents_on =
+                    known.setting(K::Torrents).is_some_and(|r| catalog::is_on(&r));
+                let words = if proxied && torrents_on {
+                    torrents::check_words(known.proxy)
+                } else {
+                    None
+                };
+                check.set_visible(words.is_some());
+                let Some((note, word, failed)) = words else { return };
                 check.set_subtitle(&note);
                 verdict.set_label(&word);
                 glyph.set_visible(failed);
-                again.set_visible(failed);
             }
         });
         shown();
         self.guard.replace(Some(Rc::clone(&shown)));
-        // "· 2 min ago" moves on while the row is on screen.
-        glib::timeout_add_seconds_local(30, {
-            let (check, shown) = (check.downgrade(), Rc::downgrade(&shown));
-            move || match (check.upgrade(), shown.upgrade()) {
-                (Some(_), Some(shown)) => {
-                    shown();
-                    glib::ControlFlow::Continue
-                }
-                _ => glib::ControlFlow::Break,
-            }
-        });
         group.add(&check);
-        while_on.push(check.clone().upcast());
-
-        // If a check fails: pause or stop at once, Warn only once confirmed.
-        let labels: Vec<String> = torrents::FAILED_CHECKS
-            .iter()
-            .map(|c| torrents::failed_label(*c).to_string())
-            .collect();
-        let labels: Vec<&str> = labels.iter().map(String::as_str).collect();
-        let failed = adw::ComboRow::builder()
-            .title(catalog::label(K::VpnOnFailure))
-            .model(&gtk::StringList::new(&labels))
-            .build();
-        let at_check =
-            |c| torrents::FAILED_CHECKS.iter().position(|f| *f == c).unwrap_or(0) as u32;
-        failed.set_selected(at_check(protection.on_failure));
-        failed.connect_selected_notify({
-            let inner = Rc::downgrade(self);
-            move |failed| {
-                let Some(inner) = inner.upgrade() else { return };
-                let Some(check) = torrents::FAILED_CHECKS.get(failed.selected() as usize)
-                else {
-                    return;
-                };
-                if inner.quiet.get() {
-                    return;
-                }
-                let put_back = {
-                    let (inner, failed) = (Rc::downgrade(&inner), failed.clone());
-                    move || {
-                        let Some(inner) = inner.upgrade() else { return };
-                        inner.quiet.set(true);
-                        failed.set_selected(at_check(torrents::current(&inner.ctx).on_failure));
-                        inner.quiet.set(false);
-                    }
-                };
-                torrents::set_failed_check(&inner.ctx, *check, put_back);
-            }
-        });
-        group.add(&failed);
-        while_on.push(failed.clone().upcast());
 
         // Whether a cast plays torrents, which this computer then serves to the TV.
         if let Some(casting) = known.setting(K::TorrentsWhileCasting) {
@@ -1338,9 +1282,15 @@ impl Inner {
         for widget in &while_on {
             widget.set_visible(on);
         }
-        self.keep(K::Torrents, {
-            let (group, inner) = (group.clone(), Rc::downgrade(self));
-            move |row| {
+        let sync = {
+            let (group, inner, route, edit, shown) = (
+                group.clone(),
+                Rc::downgrade(self),
+                route.clone(),
+                edit.clone(),
+                Rc::clone(&shown),
+            );
+            move |row: &SettingRow| {
                 let on = catalog::is_on(row);
                 for widget in &while_on {
                     widget.set_visible(on);
@@ -1348,10 +1298,27 @@ impl Inner {
                 let Some(inner) = inner.upgrade() else { return };
                 let known = inner.ctx.hub.known.borrow();
                 let Some(view) = known.settings.as_ref() else { return };
-                group.set_description(Some(&note(on, &view.torrent)));
-                protect.set_selected(at(view.torrent.protection));
-                edit.set_visible(by_proxy(&view.torrent));
-                failed.set_selected(at_check(view.torrent.on_failure));
+                group.set_description(Some(&note(on, view.torrent.proxy.as_ref())));
+                route.set_active(view.torrent.proxy.is_some());
+                edit.set_visible(view.torrent.proxy.is_some());
+                drop(known);
+                shown();
+            }
+        };
+        let sync = Rc::new(sync);
+        self.keep(K::Torrents, {
+            let sync = Rc::clone(&sync);
+            move |row| sync(row)
+        });
+        // The proxy changes without the switch: the same rows follow it.
+        self.keep(K::TorrentProxy, {
+            let (inner, sync) = (Rc::downgrade(self), sync);
+            move |_| {
+                let Some(inner) = inner.upgrade() else { return };
+                let row = inner.ctx.hub.known.borrow().setting(K::Torrents);
+                if let Some(row) = row {
+                    sync(&row);
+                }
             }
         });
         Some(group)

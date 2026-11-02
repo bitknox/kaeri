@@ -27,7 +27,7 @@
 //!   the tokens above are its store's.
 //!
 //! The engine is started from those parts, with none of the work it does on its own at launch.
-//! What it does not stand up: a torrent session, a VPN guard, mpv or a browser. A config that
+//! What it does not stand up: a torrent session, mpv or a browser. A config that
 //! asks for torrents is refused, and so are the tasks that would start a player or open a page.
 
 use std::{
@@ -202,7 +202,7 @@ impl Harness {
         };
         assert!(
             !sources::torrent_wanted(&config),
-            "the harness has no torrent session or VPN guard to bring up"
+            "the harness has no torrent session to bring up"
         );
 
         let http =
@@ -282,7 +282,7 @@ impl Harness {
             sync,
             stores,
             clock: engine_clock.clone(),
-            fixture_exit: Some(kaeri_providers::vpn::VpnGuard::fixture_egress()),
+            fixture_route: true,
             windows: Some(windows.clone()),
         });
         start.free_space = Some(1_000_000_000_000);
@@ -645,7 +645,7 @@ impl Harness {
         let torrent_wanted = configured.torrent;
         assert!(
             message != Internal::SourcesChanged || !torrent_wanted,
-            "the harness has no torrent session or VPN guard to bring up"
+            "the harness has no torrent session to bring up"
         );
         match message {
             Internal::SettingsSaved => self.trace.push("SettingsSaved"),
@@ -849,8 +849,8 @@ pub fn name(update: &Event) -> &'static str {
         Event::Episodes { .. } => "Episodes",
         Event::TitleDub { .. } => "TitleDub",
         Event::Progress { .. } => "Progress",
-        Event::Vpn(_) => "Vpn",
-        Event::ProtectionChecked(_) => "ProtectionChecked",
+        Event::TorrentProxy(_) => "TorrentProxy",
+        Event::ProxyChecked(_) => "ProxyChecked",
         Event::ArtworkReady { .. } => "ArtworkReady",
         Event::ImageFailed { .. } => "ImageFailed",
         Event::Downloads(_) => "Downloads",
@@ -1102,8 +1102,8 @@ fn copy(update: &Event) -> Event {
             resume: *resume,
             episodes: episodes.clone(),
         },
-        Event::Vpn(guard) => Event::Vpn(guard.clone()),
-        Event::ProtectionChecked(verdict) => Event::ProtectionChecked(verdict.clone()),
+        Event::TorrentProxy(status) => Event::TorrentProxy(*status),
+        Event::ProxyChecked(status) => Event::ProxyChecked(*status),
         Event::ArtworkReady { url, bytes } => {
             Event::ArtworkReady { url: url.clone(), bytes: bytes.clone() }
         }

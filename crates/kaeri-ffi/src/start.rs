@@ -250,7 +250,7 @@ pub enum FfiError {
     #[error("{reason}")]
     Dirs { reason: String, msg: Msg },
     /// `config.toml` could not be read, or says something unsafe or self-contradictory. Refused
-    /// rather than replaced by the defaults, which could mean ignoring a VPN setting.
+    /// rather than replaced by the defaults, which could mean ignoring a proxy setting.
     #[error("{reason}")]
     Config { reason: String, msg: Msg },
     /// The database could not be opened.

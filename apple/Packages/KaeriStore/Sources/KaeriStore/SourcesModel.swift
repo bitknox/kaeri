@@ -1,5 +1,5 @@
 // Where streams come from, as Providers and Settings show it: each provider, why there are none,
-// the VPN guard's verdict, and the source pinned for the title on screen.
+// the torrent proxy's check, and the source pinned for the title on screen.
 
 import KaeriKit
 import Foundation
@@ -17,16 +17,14 @@ public final class ProvidersModel {
     /// Whether the sources are being rebuilt, because a setting changed which ones exist: from
     /// `SourcesChanged` until the rebuilt list.
     public private(set) var rebuilding = false
-    /// The VPN guard's verdict for torrents, `nil` while torrents are off or before it said.
-    public private(set) var guardView: GuardView?
-    /// When the guard last said it.
-    public private(set) var guardAt: Date?
-    /// A protection checked before it is saved, `nil` until a sheet asks and once it is done.
-    public private(set) var trial: ProtectionTrial?
-    /// Whether a check went to the engine and its verdict is still to come.
+    /// The saved torrent proxy's check, `nil` while torrents are off or before it said.
+    public private(set) var proxyStatus: ProxyStatus?
+    /// A proxy checked before it is saved, `nil` until a form asks and once it is done.
+    public private(set) var trial: ProxyTrial?
+    /// Whether a check went to the engine and its answer is still to come.
     @ObservationIgnored private var checkSent = false
-    /// The check asked for while another was out, sent once that one's verdict is in.
-    @ObservationIgnored private var waiting: ProtectionCheck?
+    /// The check asked for while another was out, sent once that one's answer is in.
+    @ObservationIgnored private var waiting: TorrentProxy?
     /// The source pinned for the title on screen, `nil` for automatic.
     public private(set) var preference: String?
     /// The metadata ladder's rungs.
@@ -49,35 +47,34 @@ public final class ProvidersModel {
         rebuilding = true
     }
 
-    func guardSaid(_ view: GuardView?, at date: Date = .now) {
-        guardView = view
-        guardAt = view == nil ? nil : date
+    func proxySaid(_ status: ProxyStatus?) {
+        proxyStatus = status
     }
 
-    /// A check asked for: the check to send now, or `nil` while an earlier one's verdict is still
-    /// to come. The engine checks off its loop, so verdicts can come back in any order: one check
-    /// at a time is the only way to know which check a verdict answers. The newest waits for its
-    /// turn, and one it replaces is never sent.
-    func trialStarted(_ check: ProtectionCheck) -> ProtectionCheck? {
+    /// A check asked for: the proxy to send now, or `nil` while an earlier check's answer is
+    /// still to come. The engine checks off its loop, so answers can come back in any order: one
+    /// check at a time is the only way to know which check an answer is for. The newest waits for
+    /// its turn, and one it replaces is never sent.
+    func trialStarted(_ proxy: TorrentProxy) -> TorrentProxy? {
         trial = .checking
         guard !checkSent else {
-            waiting = check
+            waiting = proxy
             return nil
         }
         checkSent = true
-        return check
+        return proxy
     }
 
-    /// The verdict on the check sent: the check waiting to go next, if any. A verdict is kept
-    /// only when it answers the check a sheet still waits for, never an earlier one.
-    func trialSaid(_ view: GuardView) -> ProtectionCheck? {
+    /// The answer to the check sent: the check waiting to go next, if any. An answer is kept
+    /// only when it is for the check a form still waits for, never an earlier one.
+    func trialSaid(_ status: ProxyStatus) -> TorrentProxy? {
         checkSent = false
         if let next = waiting {
             waiting = nil
             checkSent = true
             return next
         }
-        if trial == .checking { trial = .said(view) }
+        if trial == .checking { trial = .said(status) }
         return nil
     }
 
@@ -112,25 +109,19 @@ extension ProviderRow {
     }
 }
 
-/// What a check is asked about: a protection, through a proxy when it is one.
-struct ProtectionCheck {
-    let mode: TorrentProtection
-    let proxy: TorrentProxy?
-}
-
-/// A protection checked before anything is saved: under way, then the check's verdict on it.
-public enum ProtectionTrial: Equatable, Sendable {
+/// A proxy checked before anything is saved: under way, then the check's answer.
+public enum ProxyTrial: Equatable, Sendable {
     case checking
-    case said(GuardView)
+    case said(ProxyStatus)
 
-    /// The check passed: what was checked may be saved.
+    /// The check passed: the proxy may be saved.
     public var passed: Bool {
-        if case .said(.protected) = self { true } else { false }
+        if case .said(.passed) = self { true } else { false }
     }
 
     /// The check failed, and nothing was saved.
-    public var failed: GuardView? {
-        if case .said(let view) = self, !passed { view } else { nil }
+    public var failed: Bool {
+        if case .said(let status) = self { status != .passed } else { false }
     }
 }
 
@@ -139,14 +130,4 @@ public enum ProviderStanding: Equatable, Sendable {
     case working, slow, failing, heldBack
     /// Switched off by name: kept, and not tried until it is on again.
     case off
-}
-
-extension GuardView {
-    /// Whether torrents may run: the guard passed, or the config accepts no protection.
-    public var passes: Bool {
-        switch self {
-        case .protected, .unprotected: true
-        case .checking, .leaking, .unreachable: false
-        }
-    }
 }

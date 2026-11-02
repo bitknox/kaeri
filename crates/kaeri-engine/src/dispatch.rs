@@ -42,7 +42,7 @@ use crate::{
     outbox::{Internal, Outbox},
     playback::{prefetch::prefetch, resolve::load_sources},
     plugin_stores::tasks::{StoreTaskContext, store_task},
-    protection::set_torrent_protection,
+    proxy::{check_torrent_proxy, set_torrent_proxy},
     services::Services,
     settings::{set_setting, set_translation, step_setting},
     show_settings::{
@@ -538,7 +538,7 @@ pub(crate) fn dispatch(
         Command::Control { playback, command } => control_playback(playback, command, engine),
         // Where the app is and its network: which torrents wait, and whether keep next runs.
         Command::AppPhase { phase } => {
-            crate::phases::app_phase(phase, engine, tx);
+            crate::phases::app_phase(phase, engine);
             ahead::top_up(engine, services, tx);
         }
         Command::NetworkPath { cellular, constrained, offline } => {
@@ -578,7 +578,7 @@ pub(crate) fn dispatch(
 
         // The sources.
         Command::CheckProviders => spawn(job, services, tx, check_providers),
-        Command::CheckConnection => {
+        Command::CheckProxy => {
             engine.torrent_tasks.check_now(engine.config.effective(), services, tx);
         }
 
@@ -650,12 +650,10 @@ pub(crate) fn dispatch(
             }
         }
         Command::SetTranslation { translation } => set_translation(translation, engine, tx),
-        Command::SetTorrentProtection { mode, proxy, on_failure, acknowledged } => {
-            set_torrent_protection(mode, proxy, on_failure, acknowledged, engine, services, tx)
-        }
+        Command::SetTorrentProxy { proxy } => set_torrent_proxy(proxy, engine, services, tx),
         // Off the loop, with no job: the verdict is the answer.
-        Command::CheckTorrentProtection { mode, proxy } => {
-            crate::protection::check_torrent_protection(mode, proxy, engine, services, tx)
+        Command::CheckTorrentProxy { proxy } => {
+            check_torrent_proxy(proxy, engine, services, tx);
         }
         Command::LoadShowSettings { id } => load_show_settings(id, engine, services, tx),
         Command::SetShowSetting { id, key, value } => {
@@ -849,14 +847,14 @@ pub(crate) async fn handle_internal(
             )));
             said.push(Event::Demo(crate::demo::state(engine, services)));
         }
-        // Awaited rather than spawned: this owns the session and the guard, and two
+        // Awaited rather than spawned: this owns the session and its route, and two
         // rebuilds racing would leave one of their sessions running with nothing holding
         // it. Quick: torrent playback comes up behind the interface, as at launch.
         Internal::SourcesChanged => {
             reload_sources(
                 services,
                 &mut engine.torrent_tasks,
-                &mut engine.vpn_guard,
+                &mut engine.torrent_route,
                 &engine.shared_config,
                 tx,
                 &engine.arrivals,

@@ -127,7 +127,7 @@ mod party_identify;
 pub mod phases;
 pub mod playback;
 pub mod plugin_stores;
-pub mod protection;
+pub mod proxy;
 #[cfg(feature = "remote")]
 pub mod remote;
 pub mod servers;

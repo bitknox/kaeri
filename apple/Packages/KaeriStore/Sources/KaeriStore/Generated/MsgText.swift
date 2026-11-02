@@ -166,13 +166,13 @@ extension Msg {
         case .noticeSignedOutQueue(let tracker, let count): L.noticeSignedOutQueue(tracker: tracker, count: Int(count))
         case .noticeSignOutFailed(let tracker, let reason): L.noticeSignOutFailed(tracker: tracker, reason: reason)
         case .noticeNotSavedBecause(let cause): L.noticeNotSavedBecause(cause: cause.text)
-        case .noticeProtectionSaved: L.noticeProtectionSaved
-        case .noticeProtectionNotChecked(let cause): L.noticeProtectionNotChecked(cause: cause.text)
+        case .noticeProxySaved: L.noticeProxySaved
+        case .noticeProxyRemoved: L.noticeProxyRemoved
+        case .noticeProxyNotChecked(let cause): L.noticeProxyNotChecked(cause: cause.text)
         case .noticeProxyPasswordNotKept(let reason): L.noticeProxyPasswordNotKept(reason: reason)
         case .noticeShowSettingRefused(let value, let setting): L.noticeShowSettingRefused(value: value, setting: setting)
         case .noticeShowNotReset(let reason): L.noticeShowNotReset(reason: reason)
         case .noticeShowNoSuchSubtitles: L.noticeShowNoSuchSubtitles
-        case .noticeTorrentsWaitingForCheck: L.noticeTorrentsWaitingForCheck
         case .noticeMappingDataRefreshed: L.noticeMappingDataRefreshed
         case .noticeMappingDataFailed(let datasets, let wait, let cause): L.noticeMappingDataFailed(datasets: datasets, wait: spanText(wait), cause: cause.text)
         case .noticeEpisodeAired(let title, let episode): L.noticeEpisodeAired(title: title, episode: Int(episode))
@@ -265,17 +265,15 @@ extension StoreMsg {
         case .pluginNotLoaded(let id): L.pluginNotLoaded(id: id)
         case .releasePinned(let name): L.releasePinned(name: name)
         case .noticeChoiceNotSaved(let reason): L.noticeChoiceNotSaved(reason: reason)
-        case .torrentCheckFailedRunning: L.torrentCheckFailedRunning
-        case .torrentVpnWaiting(let reason): L.torrentVpnWaiting(reason: reason)
-        case .torrentVpnUnverified: L.torrentVpnUnverified
+        case .torrentProxyWaiting: L.torrentProxyWaiting
+        case .torrentProxyUnchecked: L.torrentProxyUnchecked
         case .torrentLinkUnusable: L.torrentLinkUnusable
         case .torrentLinkPlaybackOff: L.torrentLinkPlaybackOff
         case .openedSearchFailed(let reason): L.openedSearchFailed(reason: reason)
         case .torrentInterfaceClosed: L.torrentInterfaceClosed
         case .torrentSessionFailed(let reason): L.torrentSessionFailed(reason: reason)
-        case .torrentNoKillSwitch: L.torrentNoKillSwitch
-        case .torrentNotChecked(let reason): L.torrentNotChecked(reason: reason)
-        case .sourcesReloadedTorrentsPending: L.sourcesReloadedTorrentsPending
+        case .torrentProxyUnusable(let reason): L.torrentProxyUnusable(reason: reason)
+        case .sourcesReloadedTorrentsChecking: L.sourcesReloadedTorrentsChecking
         case .sourcesReloadedTorrentsOff: L.sourcesReloadedTorrentsOff
         case .jobAnilistLimit: L.jobAnilistLimit
         case .noticeAnilistLimit(let wait): L.noticeAnilistLimit(wait: spanText(wait))
@@ -308,8 +306,6 @@ extension Cause {
         case .subtitlesMerged(let tracks): L.causeSubtitlesMerged(tracks: Int(tracks))
         case .subtitlesLeftApart(let reason): L.causeSubtitlesLeftApart(reason: reason)
         case .alreadyInDownloads(let count): L.causeAlreadyInDownloads(count: Int(count))
-        case .confirmNoProtection: L.causeConfirmNoProtection
-        case .confirmWarnOnly: L.causeConfirmWarnOnly
         case .proxyNeedsAddress: L.causeProxyNeedsAddress
         case .proxyAddressUnusable: L.causeProxyAddressUnusable
         case .serverUnreachable: L.causeServerUnreachable

@@ -3,40 +3,10 @@
 
 ## Torrents
 
-# Note under the connection-check group of the torrents dialog: what the check does.
-# @only linux
-# @max 300
-torrents-linux-check-note = { -app-name } checks where torrent traffic leaves from when a torrent starts and every minute while it runs, and pauses torrents if that check fails. Your VPN or proxy is what protects you.
-
-# Confirmation text when choosing "Warn only" for a failed check.
-# @only linux
-# @max 200
-torrents-linux-warn-confirm = { -app-name } will warn you instead of pausing. If your VPN or proxy is down, other people can see your IP address.
-
-# Status line once the protection has been checked and saved.
-# @only linux
-# @max 60
-torrents-linux-protection-saved = Torrent protection saved
-
-# Title of the dialog that turns torrents on.
-# @only linux
-# @max 40
-torrents-linux-turn-on-title = Turn on torrents
-
-# Title of the dialog that changes what protects torrents.
-# @only linux
-# @max 40
-torrents-linux-protect-title = Protect torrents
-
 # Title of the dialog that edits the proxy.
 # @only linux
 # @max 40
 torrents-linux-edit-proxy-title = Edit proxy
-
-# Button that turns torrents on in the dialog.
-# @only linux
-# @max 20
-torrents-linux-turn-on-button = Turn on
 
 ## Downloads
 

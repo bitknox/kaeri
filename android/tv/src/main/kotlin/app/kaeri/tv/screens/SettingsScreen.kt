@@ -58,12 +58,7 @@ import kotlinx.coroutines.launch
 import app.kaeri.design.Nagare
 import app.kaeri.design.ObiSilk
 import app.kaeri.engine.model.ProviderOrigin
-import app.kaeri.engine.model.FailedCheck
-import app.kaeri.engine.model.GuardView
-import app.kaeri.engine.model.TorrentProtection
-import app.kaeri.engine.model.TorrentProxy
 import app.kaeri.store.TorrentWords
-import app.kaeri.tv.signin.TorrentMode
 import app.kaeri.engine.model.ProviderRow
 import app.kaeri.engine.model.StoreRow
 import app.kaeri.engine.model.StoreState
@@ -71,6 +66,7 @@ import app.kaeri.store.ProviderStanding
 import app.kaeri.store.standing
 import app.kaeri.engine.ffi.FfiPairedPhone
 import app.kaeri.engine.model.SettingChange
+import app.kaeri.engine.model.ProxyStatus
 import app.kaeri.engine.model.SettingKey
 import app.kaeri.engine.model.SettingRow
 import app.kaeri.engine.model.SettingsView
@@ -538,57 +534,46 @@ private fun LazyListScope.pluginStores(nav: TvNavigator, memory: FocusMemory, fi
 }
 
 /**
- * Torrents, the phone's group under its sources: the switch, which asks for protection before it
- * turns on, then while on Protect with, the last check and what a failed one does,
- * and Seeding.
+ * Torrents, the phone's group under its sources: the switch, which turns on at once, then the
+ * proxy toggle (Edit proxy and the proxy check while one is set), and Seeding while on.
  */
 private fun LazyListScope.torrents(nav: TvNavigator, store: AppStore, view: SettingsView?, memory: FocusMemory) {
     val on = store.settings.isOn(SettingKey.TORRENTS, view)
     item(key = "torrents", contentType = "list") {
-        val actions = LocalActions.current
         val context = LocalContext.current
-        val torrent = view?.torrent
+        val proxy = view?.torrent?.proxy
+        val check by store.providers.check.collectAsStateWithLifecycle()
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             GroupLabel(stringResource(R.string.sources_torrents))
             TvListRow(
                 stringResource(R.string.sources_torrent_source),
-                onClick = { if (on) store.setSwitch(SettingKey.TORRENTS, false) else nav.openTorrents(TorrentMode.TurnOn) },
+                onClick = { store.setSwitch(SettingKey.TORRENTS, !on) },
+                supporting = if (on) TorrentWords.summary(context, proxy?.host, proxy?.port?.toString()) else stringResource(TorrentWords.OFF_NOTE),
+                supportingLines = 2,
+                height = 88.dp,
                 switch = on,
                 modifier = Modifier.remembered(memory, "torrent/source"),
             )
-            if (on) {
+            // Always there, so a proxy can be set before the first torrent starts.
+            TvListRow(
+                stringResource(R.string.torrents_proxy_route),
+                onClick = { if (proxy != null) store.setTorrentProxy(null) else nav.openTorrents() },
+                supporting = stringResource(R.string.torrents_proxy_route_detail),
+                supportingLines = 2,
+                height = 88.dp,
+                switch = proxy != null,
+                modifier = Modifier.remembered(memory, "torrent/route"),
+            )
+            // Beside the toggle, once a proxy is saved: its details, applied only once they pass the check.
+            if (proxy != null) {
                 TvListRow(
-                    stringResource(R.string.torrents_protect_with),
-                    onClick = {
-                        actions?.open(
-                            ActionSheet(
-                                Strings.torrentsProtectWith(context),
-                                TorrentProtections.map { each ->
-                                    CardAction(TorrentWords.protection(context, each), selected = each == torrent?.protection) {
-                                        // Another protection asks for what it needs before it applies.
-                                        if (each != torrent?.protection) nav.openTorrents(TorrentMode.Change, each)
-                                    }
-                                },
-                            ),
-                        )
-                    },
-                    value = TorrentWords.protection(context, torrent?.protection),
-                    modifier = Modifier.remembered(memory, "torrent/protect"),
+                    stringResource(R.string.settings_edit_proxy),
+                    onClick = { nav.openTorrents() },
+                    supporting = TorrentWords.proxyLine(context, proxy.host, proxy.port.toString(), proxy.user.orEmpty()),
+                    modifier = Modifier.remembered(memory, "torrent/proxy"),
                 )
-                // Beside the choice, once a proxy is saved: its details, applied only once they pass the check.
-                val proxy = torrent?.proxy
-                if (torrent?.protection == TorrentProtection.PROXY && proxy != null) {
-                    TvListRow(
-                        stringResource(R.string.settings_edit_proxy),
-                        onClick = { nav.openTorrents(TorrentMode.EditProxy) },
-                        supporting = TorrentWords.proxyLine(context, proxy.host, proxy.port.toString(), proxy.user.orEmpty()),
-                        modifier = Modifier.remembered(memory, "torrent/proxy"),
-                    )
-                }
-                LastCheckRow(store, view, memory)
-                FailedCheckRow(store, view, memory)
+                if (on && check != null && check != ProxyStatus.DIRECT) LastCheckRow(store, check, memory)
             }
-            Quiet(if (on) TorrentWords.checkNote(context, torrent?.onFailure, torrent?.protection) else stringResource(TorrentWords.OFF_NOTE))
         }
     }
     if (on) {
@@ -619,9 +604,6 @@ private fun LazyListScope.torrents(nav: TvNavigator, store: AppStore, view: Sett
     }
 }
 
-/** The protections, in the phone's order. */
-private val TorrentProtections = listOf(TorrentProtection.PROXY, TorrentProtection.DEVICE, TorrentProtection.NONE)
-
 /** Seeding's rows, the phone's. */
 private val SeedingRows = listOf(
     SettingKey.SEED_RATIO to R.string.settings_seed_after,
@@ -630,18 +612,17 @@ private val SeedingRows = listOf(
 )
 
 /**
- * The connection check's last word: its dot, vermilion for a failed check and water for a passed
- * one, where traffic leaves from, and Center to check now.
+ * The saved proxy's check: its dot, vermilion for a failed check and water for a passed one, and
+ * Center to check now.
  */
 @Composable
-private fun LastCheckRow(store: AppStore, view: SettingsView?, memory: FocusMemory) {
-    val check by store.providers.check.collectAsStateWithLifecycle()
+private fun LastCheckRow(store: AppStore, check: ProxyStatus?, memory: FocusMemory) {
     val context = LocalContext.current
-    val words = TorrentWords.check(context, check, now = AppClock.now().toEpochMilli(), onFailure = view?.torrent?.onFailure)
-    val checking = check?.view == GuardView.Checking
+    val words = TorrentWords.check(context, check)
+    val checking = check == ProxyStatus.CHECKING
     TvListRow(
         stringResource(R.string.torrents_last_check),
-        onClick = { if (!checking) store.checkConnection() },
+        onClick = { if (!checking) store.checkProxy() },
         supporting = listOfNotNull(words.status, words.note).joinToString(" · "),
         supportingLines = 2,
         height = 88.dp,
@@ -653,63 +634,6 @@ private fun LastCheckRow(store: AppStore, view: SettingsView?, memory: FocusMemo
         value = if (checking) null else stringResource(R.string.action_check_now),
         modifier = Modifier.remembered(memory, "torrent/check"),
     )
-}
-
-/**
- * If a check fails: pause or stop as a setting, or warn only, which keeps torrents running on
- * what may be the TV's own address, so it is confirmed first.
- */
-@Composable
-private fun FailedCheckRow(store: AppStore, view: SettingsView?, memory: FocusMemory) {
-    val actions = LocalActions.current
-    val torrent = view?.torrent
-    val current = torrent?.onFailure ?: FailedCheck.PAUSE
-    val context = LocalContext.current
-    var warning by remember { mutableStateOf(false) }
-    TvListRow(
-        stringResource(R.string.torrents_if_check_fails),
-        onClick = {
-            actions?.open(
-                ActionSheet(
-                    Strings.torrentsIfCheckFails(context),
-                    FailedCheck.entries.map { each ->
-                        CardAction(TorrentWords.failed(context, each), selected = each == current) {
-                            when (each) {
-                                current -> {}
-                                FailedCheck.WARN -> warning = true
-                                FailedCheck.PAUSE -> store.setSetting(SettingKey.VPN_ON_FAILURE, SettingValue.Str("pause"))
-                                FailedCheck.STOP -> store.setSetting(SettingKey.VPN_ON_FAILURE, SettingValue.Str("stop"))
-                            }
-                        }
-                    },
-                ),
-            )
-        },
-        value = TorrentWords.failed(context, current),
-        enabled = torrent != null,
-        modifier = Modifier.remembered(memory, "torrent/failed"),
-    )
-    if (warning && torrent != null) {
-        ConfirmDialog(
-            title = stringResource(TorrentWords.WARN_TITLE),
-            body = stringResource(TorrentWords.WARN_BODY),
-            action = stringResource(R.string.torrents_fail_warn),
-            onConfirm = {
-                warning = false
-                store.setTorrentProtection(
-                    torrent.protection,
-                    proxy = torrent.proxy?.let { TorrentProxy(host = it.host, port = it.port, user = it.user, password = null) },
-                    onFailure = FailedCheck.WARN,
-                    acknowledged = true,
-                )
-                memory.focus("torrent/failed")
-            },
-            onCancel = {
-                warning = false
-                memory.focus("torrent/failed")
-            },
-        )
-    }
 }
 
 /** A group's name over its rows, the phone's settings groups. */

@@ -1,10 +1,4 @@
-torrents-linux-check-note = { -app-name } memeriksa dari mana lalu lintas torrent keluar saat torrent dimulai dan setiap menit saat berjalan, lalu menjeda torrent jika pemeriksaan gagal. VPN atau proxy Anda yang melindungi Anda.
-torrents-linux-warn-confirm = { -app-name } akan memberi peringatan, bukan menjeda. Jika VPN atau proxy Anda mati, orang lain bisa melihat alamat IP Anda.
-torrents-linux-protection-saved = Perlindungan torrent disimpan
-torrents-linux-turn-on-title = Nyalakan torrent
-torrents-linux-protect-title = Lindungi torrent
 torrents-linux-edit-proxy-title = Ubah proxy
-torrents-linux-turn-on-button = Nyalakan
 downloads-linux-seed-left = Sisa { $span }
 downloads-linux-seed-left-soon = Sisa kurang dari satu jam
 downloads-linux-space-free = { $free } dari { $total } kosong · unduhan memakai { $taken }

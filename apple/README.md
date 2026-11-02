@@ -496,7 +496,7 @@ launch), and after a colon the screen: a section (`calendar`, `seasonal`, `searc
 `query=<words>` or `palette=<words>`, with more joined by `+`: `pane=<Settings pane>`,
 `sheet=<torrent|join|kitsu|update|show>` and `showcase=<sources|stores|downloads|invite|all>`, the
 invented rows `Showcase` shows on the testing engine where it has none of its own (plugin stores, a
-download queue, the VPN guard's verdict).
+download queue, the proxy check).
 
 The player's states are `player-starting`, `player-playing`, `player-skip`, `player-up-next`,
 `player-still-watching`, `player-stall`, `player-scrubbing` and `player-picture-in-picture`: the

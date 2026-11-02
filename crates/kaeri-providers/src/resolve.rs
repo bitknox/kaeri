@@ -380,7 +380,7 @@ impl<T> Gathered<T> {
 
 /// How long a source ranked below the first waits to be asked, when the sources above it have
 /// not yet shown they fall short. Most titles are whole on the first source, and asking the
-/// rest would be a search for nothing, on a torrent source one behind a tunnel.
+/// rest would be a search for nothing, on a torrent source one through a proxy.
 const HEDGE: std::time::Duration = std::time::Duration::from_millis(400);
 
 /// How long [`gather`] keeps waiting on better-ranked sources once one has answered. A source

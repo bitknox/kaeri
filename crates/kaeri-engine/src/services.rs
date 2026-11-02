@@ -84,9 +84,9 @@ pub struct Services {
     /// The time the new-episode check and the widgets' record go by: the system's, except in a
     /// test that moves it on.
     pub clock: crate::clock::Clock,
-    /// The exit network the connection check answers with, in a fixture build or a test: the
-    /// guard then makes no lookup. `None` for the app, which looks it up.
-    pub fixture_exit: Option<kaeri_providers::vpn::Egress>,
+    /// A fixture build or a test: a proxy's check passes without connecting anywhere, and no
+    /// torrent session comes up. `false` for the app.
+    pub fixture_route: bool,
     /// Where playbacks find the watch party, when there is one. Opened by the `party` feature's
     /// party, and never without it.
     pub party: crate::playback::seat::PartyHub,
@@ -153,7 +153,7 @@ impl Services {
             app_clients: AppClients::default(),
             host,
             clock: Default::default(),
-            fixture_exit: None,
+            fixture_route: false,
             party: Default::default(),
             #[cfg(feature = "testing")]
             windows: None,

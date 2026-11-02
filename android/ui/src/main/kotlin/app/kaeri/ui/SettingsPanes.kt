@@ -49,14 +49,12 @@ import app.kaeri.engine.core.SettingValue
 import app.kaeri.engine.model.NoticeReason
 import app.kaeri.engine.model.UpcomingNotice
 import app.kaeri.engine.model.Entry
-import app.kaeri.engine.model.FailedCheck
-import app.kaeri.engine.model.GuardView
 import app.kaeri.engine.model.Command
+import app.kaeri.engine.model.ProxyStatus
+import app.kaeri.engine.model.ProxyView
 import app.kaeri.engine.model.SettingKey
 import app.kaeri.engine.model.StorePluginStatus
 import app.kaeri.engine.model.TitleLanguage
-import app.kaeri.engine.model.TorrentProtection
-import app.kaeri.engine.model.TorrentProxy
 import app.kaeri.i18n.R
 import app.kaeri.i18n.Strings
 import android.content.Context
@@ -67,7 +65,6 @@ import app.kaeri.store.AirTime
 import app.kaeri.store.ComingModel
 import app.kaeri.store.DevicePreferences
 import app.kaeri.store.LibraryModel
-import app.kaeri.store.ProvidersModel
 import app.kaeri.store.TorrentWords
 import app.kaeri.store.SettingsCatalog
 import app.kaeri.store.Wording
@@ -583,9 +580,9 @@ internal fun SourcesPane(actions: AppActions) {
     }
     val torrents = store.settings.isOn(SettingKey.TORRENTS, view)
     val updates = stores.sumOf { it.updates }
-    var sheet by rememberSaveable { mutableStateOf<TorrentSheetMode?>(null) }
-    // The protection picked in the menu, which the sheet then starts from.
-    var picked by rememberSaveable { mutableStateOf<TorrentProtection?>(null) }
+    var proxySheet by rememberSaveable { mutableStateOf(false) }
+    val proxy = view?.torrent?.proxy
+    val check by store.providers.check.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val cellular = remember { context.packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_TELEPHONY) }
     Pane {
@@ -613,38 +610,22 @@ internal fun SourcesPane(actions: AppActions) {
         )
         SettingsGroup(
             title = stringResource(R.string.torrents_title),
-            footer = if (torrents) checkNote(context, view?.torrent?.onFailure, view?.torrent?.protection) else stringResource(TorrentWords.OFF_NOTE),
             rows = listOfNotNull(
-                @Composable { place: Place -> TorrentSourceRow(place, torrents) { sheet = TorrentSheetMode.TurnOn } },
-                if (torrents) @Composable { place: Place ->
-                    MenuRow(
-                        place,
-                        stringResource(R.string.torrents_protect_with),
-                        protectionWords(context, view?.torrent?.protection),
-                        listOf(TorrentProtection.PROXY, TorrentProtection.DEVICE, TorrentProtection.NONE).map { MenuChoice(it, protectionWords(context, it)) },
-                        view?.torrent?.protection,
-                    ) { choice ->
-                        if (choice != view?.torrent?.protection) {
-                            picked = choice
-                            sheet = TorrentSheetMode.Change
-                        }
-                    }
-                } else null,
-                // Beside the choice, once a proxy is saved: its details, applied only once they pass the check.
-                if (torrents && view?.torrent?.protection == TorrentProtection.PROXY) @Composable { place: Place ->
-                    val proxy = view?.torrent?.proxy
+                @Composable { place: Place -> TorrentSourceRow(place, torrents, proxy) },
+                @Composable { place: Place -> ProxyRouteRow(place, proxy != null) { proxySheet = true } },
+                // Beside the toggle, once a proxy is saved: its details, applied only once they pass the check.
+                if (proxy != null) @Composable { place: Place ->
                     InfoRow(
                         place,
                         stringResource(R.string.settings_edit_proxy),
-                        proxy?.let { TorrentWords.proxyLine(context, it.host, it.port.toString(), it.user.orEmpty()) },
-                        onClick = { picked = null; sheet = TorrentSheetMode.EditProxy },
+                        TorrentWords.proxyLine(context, proxy.host, proxy.port.toString(), proxy.user.orEmpty()),
+                        onClick = { proxySheet = true },
                     )
                 } else null,
                 if (torrents && store.cast.available) @Composable { place: Place ->
                     SettingSwitch(place, SettingKey.TORRENTS_WHILE_CASTING, stringResource(R.string.cast_settings_torrents), note = stringResource(R.string.cast_settings_torrents_note))
                 } else null,
-                if (torrents) @Composable { place: Place -> LastCheckRow(place) } else null,
-                if (torrents) @Composable { place: Place -> FailedCheckRow(place) } else null,
+                if (torrents && proxy != null && check != null && check != ProxyStatus.DIRECT) @Composable { place: Place -> LastCheckRow(place) } else null,
                 // Only where the device has a cellular radio to spare.
                 if (torrents && cellular) @Composable { place: Place -> SettingSwitch(place, SettingKey.TORRENTS_ON_CELLULAR, stringResource(R.string.settings_torrents_cellular)) } else null,
             ),
@@ -661,81 +642,35 @@ internal fun SourcesPane(actions: AppActions) {
             )
         }
     }
-    sheet?.let { mode ->
-        TorrentSheet(mode, start = picked) {
-            sheet = null
-            picked = null
-        }
-    }
+    if (proxySheet) TorrentSheet { proxySheet = false }
 }
 
-/** The check's note for what a failed check does, and that none runs with no protection. */
-internal fun checkNote(context: Context, onFailure: FailedCheck?, protection: TorrentProtection?): String = TorrentWords.checkNote(context, onFailure, protection)
-
-/** The torrent source's switch. Turning it off is a switch; turning it on asks for protection first. */
+/** The torrent source's switch: on and off at once, with where traffic goes under it. */
 @Composable
-private fun TorrentSourceRow(place: Place, on: Boolean, turnOn: () -> Unit) {
+private fun TorrentSourceRow(place: Place, on: Boolean, proxy: ProxyView?) {
     val store = LocalAppStore.current
-    SwitchRow(place, stringResource(R.string.sources_torrent_source), checked = on) { wanted ->
-        if (wanted) turnOn() else store.setSwitch(SettingKey.TORRENTS, false)
+    val context = LocalContext.current
+    val note = if (on) TorrentWords.summary(context, proxy?.host, proxy?.port?.toString()) else stringResource(TorrentWords.OFF_NOTE)
+    SwitchRow(place, stringResource(R.string.sources_torrent_source), checked = on, note = note) { wanted ->
+        store.setSwitch(SettingKey.TORRENTS, wanted)
     }
 }
 
-/**
- * If a check fails: pause or stop torrents as a setting, or warn only, which keeps them running
- * on what may be the viewer's own address and so is confirmed first and asked for with the
- * protection it goes with.
- */
+/** Route torrent traffic through a proxy: on opens the proxy's form, off removes the proxy at once. */
 @Composable
-private fun FailedCheckRow(place: Place) {
+private fun ProxyRouteRow(place: Place, on: Boolean, ask: () -> Unit) {
     val store = LocalAppStore.current
-    val view by store.settings.view.collectAsStateWithLifecycle()
-    val torrent = view?.torrent
-    var warning by remember { mutableStateOf(false) }
-    val choices = listOf(
-        MenuChoice(FailedCheck.PAUSE, stringResource(R.string.torrents_fail_pause)),
-        MenuChoice(FailedCheck.STOP, stringResource(R.string.torrents_fail_stop)),
-        MenuChoice(FailedCheck.WARN, stringResource(R.string.torrents_fail_warn)),
-    )
-    val current = torrent?.onFailure ?: FailedCheck.PAUSE
-    MenuRow(
-        place,
-        stringResource(R.string.torrents_if_check_fails),
-        choices.firstOrNull { it.value == current }?.label,
-        choices,
-        current,
-        enabled = torrent != null,
-    ) { picked ->
-        when (picked) {
-            current -> {}
-            FailedCheck.WARN -> warning = true
-            FailedCheck.PAUSE -> store.setSetting(SettingKey.VPN_ON_FAILURE, SettingValue.Str("pause"))
-            FailedCheck.STOP -> store.setSetting(SettingKey.VPN_ON_FAILURE, SettingValue.Str("stop"))
-        }
-    }
-    if (warning && torrent != null) {
-        WarnOnlyDialog(onDismiss = { warning = false }) {
-            warning = false
-            store.setTorrentProtection(
-                torrent.protection,
-                proxy = torrent.proxy?.let { TorrentProxy(host = it.host, port = it.port, user = it.user, password = null) },
-                onFailure = FailedCheck.WARN,
-                acknowledged = true,
-            )
-        }
+    SwitchRow(place, stringResource(R.string.torrents_proxy_route), checked = on, note = stringResource(R.string.torrents_proxy_route_detail)) { wanted ->
+        if (wanted) ask() else store.setTorrentProxy(null)
     }
 }
 
-/** "SOCKS5 proxy", "VPN on this device", "No protection". */
-internal fun protectionWords(context: Context, protection: TorrentProtection?): String = TorrentWords.protection(context, protection)
-
-/** The connection check's last word, with its dot, where traffic leaves from, and Check now. */
+/** The saved proxy's check, with its dot and Check now. */
 @Composable
 private fun LastCheckRow(place: Place) {
     val store = LocalAppStore.current
     val check by store.providers.check.collectAsStateWithLifecycle()
-    val view by store.settings.view.collectAsStateWithLifecycle()
-    val words = guardWords(LocalContext.current, check, onFailure = view?.torrent?.onFailure)
+    val words = TorrentWords.check(LocalContext.current, check)
     val colors = MaterialTheme.colorScheme
     RowFrame(place, onClick = null, modifier = Modifier.heightIn(min = 88.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -753,18 +688,15 @@ private fun LastCheckRow(place: Place) {
                 }
                 words.note?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant) }
             }
-            TextButton(onClick = store::checkConnection, enabled = check?.view != GuardView.Checking) {
+            TextButton(onClick = store::checkProxy, enabled = check != ProxyStatus.CHECKING) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    WorkRing(check?.view == GuardView.Checking)
+                    WorkRing(check == ProxyStatus.CHECKING)
                     Text(stringResource(R.string.torrents_check_now), style = MaterialTheme.typography.titleMedium, color = colors.onSurface)
                 }
             }
         }
     }
 }
-
-internal fun guardWords(context: Context, check: ProvidersModel.Check?, now: Long = System.currentTimeMillis(), onFailure: FailedCheck? = null): TorrentWords.Check =
-    TorrentWords.check(context, check, now, onFailure)
 
 // Accounts
 

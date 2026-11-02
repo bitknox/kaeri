@@ -295,10 +295,6 @@ tv-page-not-allowed-text = This page only accepts the form it shows. Scan the co
 # @only android
 tv-page-next-link = it shows the { -plugin-store }, to join there
 
-# What the TV does next once the phone sent the torrent details
-# @only android
-tv-page-next-torrent = check the details there, then Turn on
-
 # What the TV does next once the phone sent a proxy
 # @only android
 tv-page-next-proxy = check the proxy there, then Save
@@ -334,14 +330,6 @@ tv-page-password = Your { $tracker } user name or email, and password. They go t
 # Intro on the phone page that takes a plugin store link
 # @only android
 tv-page-link = Paste the { -plugin-store }'s invite link. The TV shows the { -plugin-store } before it joins.
-
-# Intro on the phone page that takes the torrent index
-# @only android
-tv-page-torrent = The { -torrent-index } { -app-name } asks for torrents.
-
-# Intro on the phone page that takes the torrent index and a proxy
-# @only android
-tv-page-torrent-proxy = The { -torrent-index } { -app-name } asks for torrents, and the SOCKS5 proxy torrent traffic goes through.
 
 # Intro on the phone page that takes a proxy
 # @only android
@@ -391,10 +379,6 @@ tv-qr-label-proxy = QR code for the page that takes the proxy
 # Spoken label of the QR code for the torrent index page
 # @only android
 tv-qr-label-index = QR code for the page that takes the { -torrent-index }
-
-# Beside the QR code on the TV
-# @only android
-tv-scan-torrent-proxy = Scan with your phone, then fill in the { -torrent-index } and the proxy on the page that opens.
 
 # Beside the QR code on the TV
 # @only android

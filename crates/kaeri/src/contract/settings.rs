@@ -7,7 +7,7 @@
 //! `SettingsSaved`, and by `SourcesReordered` or `SourcesChanged` when it touched the chain.
 
 use kaeri_core::{
-    config::{Config, LeakAction},
+    config::Config,
     ids::AnilistId,
     media::Translation,
     settings::SettingValue,
@@ -16,10 +16,10 @@ use kaeri_core::{
 use kaeri_model::{
     command::Command,
     event::Event,
-    protection::{FailedCheck, PROXY_SECRET, TorrentProtection, TorrentProxy},
+    proxy::{PROXY_SECRET, ProxyView, TorrentProxy},
     settings::{SettingKey, SettingOverride, SettingsView},
     show::{RememberedSubtitles, RememberedTrack, ShowSettingKey, ShowSettingsView},
-    sources::GuardView,
+    sources::ProxyStatus,
     stores::Secret,
 };
 use kaeri_providers::{MockProvider, ProviderRegistry};
@@ -312,12 +312,12 @@ async fn an_order_that_takes_a_source_away_rebuilds_the_chain() {
             "SettingsSaved",
             "SourcesChanged",
             "Demo",
-            "Vpn",
+            "TorrentProxy",
             "ProviderNote",
             "Providers"
         ]
     );
-    assert!(matches!(&updates[4], Event::Vpn(None)));
+    assert!(matches!(&updates[4], Event::TorrentProxy(None)));
     let Event::ProviderNote(note) = &updates[5] else { unreachable!() };
     assert_eq!(note.english(), "Torrents are off. The session was stopped.");
     // Rebuilt from the config, which describes no source the fixture one could be.
@@ -329,53 +329,28 @@ async fn an_order_that_takes_a_source_away_rebuilds_the_chain() {
 #[tokio::test]
 async fn a_write_the_config_refuses_leaves_the_file_alone_and_alerts() {
     let mut h = Harness::new().await;
-    // A source-defining key, refused by validation: no rebuild follows.
-    h.send(Command::SetSetting { key: SettingKey::Torrents, value: SettingValue::Bool(true) });
+    // Refused by validation: nothing is saved, so nothing follows.
+    let value = SettingValue::Float(9.0);
+    h.send(Command::SetSetting { key: SettingKey::CommitThreshold, value });
     let updates = h.settle().await;
 
     assert_eq!(h.trace(), ["Settings", "Toast"]);
     let view = settings(&updates[0]);
-    assert_eq!(view.refused, Some(SettingKey::Torrents));
-    assert!(!view.sources.torrent, "put back to what the file holds");
-    assert_eq!(shown(view, SettingKey::Torrents), "off");
+    assert_eq!(view.refused, Some(SettingKey::CommitThreshold));
+    assert_ne!(
+        shown(view, SettingKey::CommitThreshold),
+        "900%",
+        "put back to what the file holds"
+    );
     let said = toasts(&updates);
     assert!(
-        said[0].starts_with("alert: Couldn't save that setting. providers.torrent.vpn.mode"),
+        said[0].starts_with("alert: Couldn't save that setting. playback.commit_threshold"),
         "{said:?}"
     );
     assert!(!h.paths().config_file.exists(), "nothing was written");
 }
 
-#[tokio::test]
-async fn a_protection_is_written_as_one_change_and_read_back_as_the_terminal_reads_it() {
-    let mut h = Harness::new().await;
-    h.send(Command::SetTorrentProtection {
-        mode: TorrentProtection::Device,
-        proxy: None,
-        on_failure: FailedCheck::Stop,
-        acknowledged: false,
-    });
-    let updates = h.settle().await;
-
-    // Torrents are off, so nothing is brought back up.
-    assert_eq!(h.trace(), ["Settings", "Toast", "SettingsSaved"]);
-    let view = settings(&updates[0]);
-    assert_eq!(
-        (view.torrent.protection, view.torrent.on_failure),
-        (TorrentProtection::Device, FailedCheck::Stop)
-    );
-    assert_eq!(shown(view, SettingKey::VpnMode), "external", "the terminal's row says it too");
-    assert_eq!(toasts(&updates), ["info: Saved torrent protection."]);
-    let file = written_config(&h);
-    assert_eq!(
-        file,
-        "[providers.torrent.vpn]\nmode = \"external\"\ni_understand_my_ip_is_exposed = false\n\
-         on_leak = \"stop\"\ni_understand_a_failed_check_keeps_torrents_running = false\n"
-    );
-    assert_eq!(on_disk(&h).providers.torrent.vpn.on_leak, LeakAction::Stop);
-}
-
-/// A proxy for the check below, with `password` given or left to the one kept.
+/// A proxy for the checks below, with `password` given or left to the one kept.
 fn proxy(host: &str, password: Option<&str>) -> TorrentProxy {
     TorrentProxy {
         host: host.into(),
@@ -386,19 +361,66 @@ fn proxy(host: &str, password: Option<&str>) -> TorrentProxy {
 }
 
 #[tokio::test]
+async fn a_proxy_is_written_as_one_change_and_read_back_as_the_terminal_reads_it() {
+    let mut h = Harness::new().await;
+    h.send(Command::SetTorrentProxy { proxy: Some(proxy("192.0.2.10", Some("lantern"))) });
+    let updates = h.settle().await;
+
+    // Torrents are off, so nothing is brought back up.
+    assert_eq!(h.trace(), ["Settings", "Toast", "SettingsSaved"]);
+    let view = settings(&updates[0]);
+    let shown_proxy =
+        ProxyView { host: "192.0.2.10".into(), port: 1080, user: Some("mika".into()) };
+    assert_eq!(view.torrent.proxy, Some(shown_proxy));
+    assert_eq!(
+        shown(view, SettingKey::TorrentProxy),
+        "192.0.2.10:1080",
+        "the terminal's row too"
+    );
+    assert_eq!(toasts(&updates), ["info: Torrent traffic now goes through the proxy."]);
+    assert_eq!(
+        written_config(&h),
+        "[providers.torrent]\nproxy = \"socks5://mika@192.0.2.10:1080\"\n"
+    );
+    assert_eq!(
+        on_disk(&h).providers.torrent.proxy.as_deref(),
+        Some("socks5://mika@192.0.2.10:1080")
+    );
+    assert_eq!(h.secrets().get(PROXY_SECRET).unwrap().as_deref(), Some("lantern"));
+
+    // No proxy: the key goes, and so does the password kept for it.
+    h.send(Command::SetTorrentProxy { proxy: None });
+    let updates = h.settle().await;
+    assert_eq!(toasts(&updates), ["info: Torrents now connect directly, without a proxy."]);
+    assert_eq!(shown(settings(&updates[0]), SettingKey::TorrentProxy), "none");
+    assert!(!written_config(&h).contains("proxy"), "{}", written_config(&h));
+    assert_eq!(h.secrets().get(PROXY_SECRET).unwrap(), None);
+}
+
+#[tokio::test]
+async fn an_earlier_vpn_table_is_dropped_on_the_next_write_and_its_proxy_kept() {
+    let file = "[providers.torrent.vpn]\nmode = \"socks5\"\nsocks_url = \"socks5://192.0.2.12:1080\"\n\
+                i_understand_my_ip_is_exposed = true\n";
+    let mut h =
+        Harness::with(Options { config: Some(file.into()), ..Options::default() }).await;
+    h.send(Command::SetSetting { key: SettingKey::Quality, value: SettingValue::Int(720) });
+    h.settle().await;
+
+    let written = written_config(&h);
+    assert!(!written.contains("vpn"), "{written}");
+    assert!(!written.contains("i_understand"), "{written}");
+    assert!(written.contains("proxy = \"socks5://192.0.2.12:1080\""), "{written}");
+}
+
+#[tokio::test]
 async fn a_proxy_is_checked_before_it_is_saved_and_nothing_is_written() {
     let mut h = Harness::new().await;
-    let mode = TorrentProtection::Proxy;
-    h.send(Command::CheckTorrentProtection {
-        mode,
-        proxy: Some(proxy("10.64.0.1", Some("lantern"))),
-    });
-    let updates = h.settle_until(|e| matches!(e, Event::ProtectionChecked(_))).await;
+    h.send(Command::CheckTorrentProxy { proxy: proxy("192.0.2.10", Some("lantern")) });
+    let updates = h.settle_until(|e| matches!(e, Event::ProxyChecked(_))).await;
 
-    let exit = kaeri_providers::vpn::VpnGuard::fixture_egress().describe();
     assert!(
-        matches!(&updates[..], [Event::ProtectionChecked(GuardView::Protected { exit: seen })] if *seen == exit),
-        "the verdict alone: {updates:?}"
+        matches!(&updates[..], [Event::ProxyChecked(ProxyStatus::Passed)]),
+        "the result alone: {updates:?}"
     );
     assert!(!h.paths().config_file.exists(), "nothing was written");
     assert_eq!(h.secrets().get(PROXY_SECRET).unwrap(), None, "nor the password kept");
@@ -406,39 +428,22 @@ async fn a_proxy_is_checked_before_it_is_saved_and_nothing_is_written() {
 
 #[tokio::test]
 async fn a_failed_check_leaves_the_file_and_the_kept_password_as_they_were() {
-    // A rule the fixture's exit does not meet.
-    let file = "[providers.torrent.vpn]\nrequire_asn_org = [\"Other Co\"]\n";
+    let file = "[providers.torrent]\nproxy = \"socks5://mika@192.0.2.11:1080\"\n";
     let mut h =
         Harness::with(Options { config: Some(file.into()), ..Options::default() }).await;
     h.secrets().set(PROXY_SECRET, "before").unwrap();
-    let mode = TorrentProtection::Proxy;
-    h.send(Command::CheckTorrentProtection {
-        mode,
-        proxy: Some(proxy("10.64.0.2", Some("after"))),
-    });
-    let updates = h.settle_until(|e| matches!(e, Event::ProtectionChecked(_))).await;
-
-    assert!(
-        matches!(&updates[..], [Event::ProtectionChecked(GuardView::Leaking)]),
-        "{updates:?}"
-    );
-    assert_eq!(written_config(&h), file);
-    assert_eq!(h.secrets().get(PROXY_SECRET).unwrap().as_deref(), Some("before"));
 
     // A proxy with no address is not checked at all, and the notice says why.
     let empty = TorrentProxy { host: String::new(), port: 0, user: None, password: None };
-    h.send(Command::CheckTorrentProtection { mode, proxy: Some(empty) });
+    h.send(Command::CheckTorrentProxy { proxy: empty });
     let updates = h.settle_until(|e| matches!(e, Event::Toast(_))).await;
     assert!(
-        matches!(
-            &updates[..],
-            [Event::ProtectionChecked(GuardView::Unreachable), Event::Toast(_)]
-        ),
+        matches!(&updates[..], [Event::ProxyChecked(ProxyStatus::Failed), Event::Toast(_)]),
         "{updates:?}"
     );
     assert_eq!(
         toasts(&updates),
-        ["alert: Couldn't check the torrent protection. A proxy needs a host and a port."]
+        ["alert: Couldn't check the proxy. A proxy needs a host and a port."]
     );
     assert_eq!(written_config(&h), file);
     assert_eq!(h.secrets().get(PROXY_SECRET).unwrap().as_deref(), Some("before"));
@@ -576,13 +581,13 @@ fn last_sheet(updates: &[Event]) -> &ShowSettingsView {
 }
 
 #[tokio::test]
-async fn check_now_with_torrents_off_says_there_is_no_guard() {
+async fn check_now_with_torrents_off_says_there_is_no_proxy_to_check() {
     // The rest is the torrent tasks', which the harness has none of: see `sources::torrent`.
     let mut h = Harness::new().await;
-    h.send(Command::CheckConnection);
+    h.send(Command::CheckProxy);
     let updates = h.settle().await;
-    assert_eq!(h.trace(), ["Vpn"]);
-    assert!(matches!(&updates[0], Event::Vpn(None)), "{updates:?}");
+    assert_eq!(h.trace(), ["TorrentProxy"]);
+    assert!(matches!(&updates[0], Event::TorrentProxy(None)), "{updates:?}");
 }
 
 #[tokio::test]

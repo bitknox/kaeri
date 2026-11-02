@@ -1025,19 +1025,14 @@ pub fn notice_choice_not_saved(reason: &str) -> String {
     text("notice-choice-not-saved", &[("reason", Arg::Text(reason))])
 }
 
-/// Toast while torrents are running but the connection check failed, and the settings say to warn only.
-pub fn torrent_check_failed_running() -> String {
-    text("torrent-check-failed-running", &[])
+/// Note on the sources screen: the proxy for torrent traffic failed its check, so torrents wait.
+pub fn torrent_proxy_waiting() -> String {
+    text("torrent-proxy-waiting", &[])
 }
 
-/// Note on the sources screen: torrents are waiting for the VPN guard. The reason comes from the guard.
-pub fn torrent_vpn_waiting(reason: &str) -> String {
-    text("torrent-vpn-waiting", &[("reason", Arg::Text(reason))])
-}
-
-/// Note on the sources screen: the VPN guard has no verdict yet.
-pub fn torrent_vpn_unverified() -> String {
-    text("torrent-vpn-unverified", &[])
+/// Note on the sources screen: the proxy for torrent traffic hasn't been checked yet.
+pub fn torrent_proxy_unchecked() -> String {
+    text("torrent-proxy-unchecked", &[])
 }
 
 /// Error: the link or file given to open is not a magnet link, an info hash or a torrent file.
@@ -1065,19 +1060,14 @@ pub fn torrent_session_failed(reason: &str) -> String {
     text("torrent-session-failed", &[("reason", Arg::Text(reason))])
 }
 
-/// Toast when torrents are up but no operating-system firewall rule backs the VPN guard. Terminal only: the engine never sends it to the apps.
-pub fn torrent_no_kill_switch() -> String {
-    text("torrent-no-kill-switch", &[])
+/// Toast when the proxy setting can't be used. The reason comes from the proxy setting.
+pub fn torrent_proxy_unusable(reason: &str) -> String {
+    text("torrent-proxy-unusable", &[("reason", Arg::Text(reason))])
 }
 
-/// Toast when the connection check could not run. The reason comes from the VPN settings.
-pub fn torrent_not_checked(reason: &str) -> String {
-    text("torrent-not-checked", &[("reason", Arg::Text(reason))])
-}
-
-/// Note on the sources screen after the source chain is rebuilt with torrents on.
-pub fn sources_reloaded_torrents_pending() -> String {
-    text("sources-reloaded-torrents-pending", &[])
+/// Note on the sources screen after the source chain is rebuilt with torrents on and a proxy set.
+pub fn sources_reloaded_torrents_checking() -> String {
+    text("sources-reloaded-torrents-checking", &[])
 }
 
 /// Note on the sources screen after the source chain is rebuilt with torrents off.
@@ -1260,14 +1250,19 @@ pub fn notice_not_saved_because(cause: &str) -> String {
     text("notice-not-saved-because", &[("cause", Arg::Text(cause))])
 }
 
-/// Toast when the torrent protection choice was saved.
-pub fn notice_protection_saved() -> String {
-    text("notice-protection-saved", &[])
+/// Toast when the proxy for torrent traffic was saved.
+pub fn notice_proxy_saved() -> String {
+    text("notice-proxy-saved", &[])
 }
 
-/// Toast when the torrent protection could not be checked. The cause says why.
-pub fn notice_protection_not_checked(cause: &str) -> String {
-    text("notice-protection-not-checked", &[("cause", Arg::Text(cause))])
+/// Toast when the proxy for torrent traffic was turned off.
+pub fn notice_proxy_removed() -> String {
+    text("notice-proxy-removed", &[])
+}
+
+/// Toast when the proxy could not be checked. The cause says why.
+pub fn notice_proxy_not_checked(cause: &str) -> String {
+    text("notice-proxy-not-checked", &[("cause", Arg::Text(cause))])
 }
 
 /// Toast when the proxy's password could not be stored. The reason comes from the system.
@@ -1288,11 +1283,6 @@ pub fn notice_show_not_reset(reason: &str) -> String {
 /// Toast when a subtitle choice names subtitles the show has not used.
 pub fn notice_show_no_such_subtitles() -> String {
     text("notice-show-no-such-subtitles", &[])
-}
-
-/// Toast while torrents are held until the connection check passes.
-pub fn notice_torrents_waiting_for_check() -> String {
-    text("notice-torrents-waiting-for-check", &[])
 }
 
 /// Toast when the mapping data downloads work again after a failure.
@@ -1318,16 +1308,6 @@ pub fn notice_episodes_aired(count: i64) -> String {
 /// Toast when a new release of Kaeri is out, on the terminal app. The command is not translated. Terminal only: the engine never sends it to the apps.
 pub fn notice_update_available(tag: &str) -> String {
     text("notice-update-available", &[("tag", Arg::Text(tag))])
-}
-
-/// The reason a setting was refused until the person confirms having no protection.
-pub fn cause_confirm_no_protection() -> String {
-    text("cause-confirm-no-protection", &[])
-}
-
-/// The reason a setting was refused until the person confirms the "warn only" choice.
-pub fn cause_confirm_warn_only() -> String {
-    text("cause-confirm-warn-only", &[])
 }
 
 /// The reason a proxy was refused: it has no host or no port.
@@ -1440,39 +1420,9 @@ pub fn crash_notice_tv() -> String {
     text("crash-notice-tv", &[])
 }
 
-/// Note under the connection-check group of the torrents dialog: what the check does.
-pub fn torrents_linux_check_note() -> String {
-    text("torrents-linux-check-note", &[])
-}
-
-/// Confirmation text when choosing "Warn only" for a failed check.
-pub fn torrents_linux_warn_confirm() -> String {
-    text("torrents-linux-warn-confirm", &[])
-}
-
-/// Status line once the protection has been checked and saved.
-pub fn torrents_linux_protection_saved() -> String {
-    text("torrents-linux-protection-saved", &[])
-}
-
-/// Title of the dialog that turns torrents on.
-pub fn torrents_linux_turn_on_title() -> String {
-    text("torrents-linux-turn-on-title", &[])
-}
-
-/// Title of the dialog that changes what protects torrents.
-pub fn torrents_linux_protect_title() -> String {
-    text("torrents-linux-protect-title", &[])
-}
-
 /// Title of the dialog that edits the proxy.
 pub fn torrents_linux_edit_proxy_title() -> String {
     text("torrents-linux-edit-proxy-title", &[])
-}
-
-/// Button that turns torrents on in the dialog.
-pub fn torrents_linux_turn_on_button() -> String {
-    text("torrents-linux-turn-on-button", &[])
 }
 
 /// Seeding row: time left until the goal, in a span already worded ("18h", "1d 6h").
@@ -1798,16 +1748,6 @@ pub fn settings_notify_note_on(tracker: &str) -> String {
 /// Preview note for new-episode notifications when they are off.
 pub fn settings_notify_note_off() -> String {
     text("settings-notify-note-off", &[])
-}
-
-/// Heading of the preview note beside the sources settings while torrents are on.
-pub fn settings_connection_check_title() -> String {
-    text("settings-connection-check-title", &[])
-}
-
-/// Preview note beside the sources settings while torrents are on.
-pub fn settings_connection_check_note() -> String {
-    text("settings-connection-check-note", &[])
 }
 
 /// Preview note beside the accounts settings.
@@ -4953,7 +4893,7 @@ pub fn sources_state_unchecked() -> String {
     text("sources-state-unchecked", &[])
 }
 
-/// State of a source: it works but local rules (the VPN check) are withholding it.
+/// State of a source: it works but waits for the proxy check.
 pub fn sources_state_held_back() -> String {
     text("sources-state-held-back", &[])
 }
@@ -5043,39 +4983,24 @@ pub fn sources_meta_next_request(cause: &str) -> String {
     text("sources-meta-next-request", &[("cause", Arg::Text(cause))])
 }
 
-/// Header chip while the VPN check is running. The mark is a status glyph.
-pub fn sources_vpn_checking(mark: &str) -> String {
-    text("sources-vpn-checking", &[("mark", Arg::Text(mark))])
+/// Header chip while the proxy check is running. The mark is a status glyph.
+pub fn sources_proxy_checking(mark: &str) -> String {
+    text("sources-proxy-checking", &[("mark", Arg::Text(mark))])
 }
 
-/// Header chip when the VPN protects the connection. The name is where traffic leaves the network.
-pub fn sources_vpn_protected(mark: &str, exit: &str) -> String {
-    text("sources-vpn-protected", &[("mark", Arg::Text(mark)), ("exit", Arg::Text(exit))])
+/// Header chip when the proxy check passed.
+pub fn sources_proxy_passed(mark: &str) -> String {
+    text("sources-proxy-passed", &[("mark", Arg::Text(mark))])
 }
 
-/// Header chip when the VPN check found traffic leaving outside the tunnel.
-pub fn sources_vpn_leaking(mark: &str) -> String {
-    text("sources-vpn-leaking", &[("mark", Arg::Text(mark))])
+/// Header chip when the proxy check failed.
+pub fn sources_proxy_failed(mark: &str) -> String {
+    text("sources-proxy-failed", &[("mark", Arg::Text(mark))])
 }
 
-/// Header chip when the VPN check could not be completed.
-pub fn sources_vpn_unreachable(mark: &str) -> String {
-    text("sources-vpn-unreachable", &[("mark", Arg::Text(mark))])
-}
-
-/// Header chip when the configuration runs with no VPN on purpose.
-pub fn sources_vpn_unprotected(mark: &str) -> String {
-    text("sources-vpn-unprotected", &[("mark", Arg::Text(mark))])
-}
-
-/// Notice when the VPN check finds a leak and torrents are paused.
-pub fn sources_vpn_leak_paused() -> String {
-    text("sources-vpn-leak-paused", &[])
-}
-
-/// Notice when the VPN check cannot be completed and torrents are paused.
-pub fn sources_vpn_unreachable_paused() -> String {
-    text("sources-vpn-unreachable-paused", &[])
+/// Notice when the proxy check fails and torrents wait.
+pub fn sources_proxy_failed_note() -> String {
+    text("sources-proxy-failed-note", &[])
 }
 
 /// Notice after the person submits an empty value for a text setting.
@@ -5191,16 +5116,6 @@ pub fn settings_value_download_dir_default() -> String {
 /// Value of the Syncplay room setting when no room is set.
 pub fn settings_value_room_unset() -> String {
     text("settings-value-room-unset", &[])
-}
-
-/// Value of the VPN mode setting: traffic goes through a proxy server (SOCKS5).
-pub fn settings_value_vpn_socks5() -> String {
-    text("settings-value-vpn-socks5", &[])
-}
-
-/// Value of the VPN mode setting: a tunnel set up outside the app.
-pub fn settings_value_vpn_external() -> String {
-    text("settings-value-vpn-external", &[])
 }
 
 /// Value of the seeding ratio setting: seed until the ratio is reached.
@@ -5423,9 +5338,9 @@ pub fn settings_label_upload_limit() -> String {
     text("settings-label-upload-limit", &[])
 }
 
-/// Settings row: how traffic is protected by a VPN.
-pub fn settings_label_vpn_mode() -> String {
-    text("settings-label-vpn-mode", &[])
+/// Settings row: the SOCKS5 proxy torrent traffic goes through, if any.
+pub fn settings_label_torrent_proxy() -> String {
+    text("settings-label-torrent-proxy", &[])
 }
 
 /// Settings row: where sign-in tokens are kept.
@@ -5466,11 +5381,6 @@ pub fn settings_label_downloads_on_cellular() -> String {
 /// Settings row: whether torrents run on a mobile connection.
 pub fn settings_label_torrents_on_cellular() -> String {
     text("settings-label-torrents-on-cellular", &[])
-}
-
-/// Settings row: what happens to torrents when the VPN check fails.
-pub fn settings_label_vpn_on_failure() -> String {
-    text("settings-label-vpn-on-failure", &[])
 }
 
 /// Settings row: whether the app notifies of new episodes.
@@ -5558,7 +5468,7 @@ pub fn settings_note_merge_subtitles() -> String {
     text("settings-note-merge-subtitles", &[])
 }
 
-/// Note under the keep seeding row. It is a privacy choice.
+/// Note under the keep seeding row.
 pub fn settings_note_keep_seeding() -> String {
     text("settings-note-keep-seeding", &[])
 }
@@ -5613,9 +5523,9 @@ pub fn settings_note_torrents() -> String {
     text("settings-note-torrents", &[])
 }
 
-/// Note under the VPN mode row.
-pub fn settings_note_vpn_mode() -> String {
-    text("settings-note-vpn-mode", &[])
+/// Note under the torrent proxy row. config.toml is a file name and is not translated.
+pub fn settings_note_torrent_proxy() -> String {
+    text("settings-note-torrent-proxy", &[])
 }
 
 /// Note under the seed after watching row.
@@ -13287,7 +13197,7 @@ pub fn source_note_ambiguous() -> String {
     text("source-note-ambiguous", &[])
 }
 
-/// Under a source held back by the VPN check in Settings.
+/// Under a source that waits for the proxy check in Settings.
 pub fn source_note_held_back() -> String {
     text("source-note-held-back", &[])
 }
@@ -13432,7 +13342,7 @@ pub fn sources_detail_not_answering_plain() -> String {
     text("sources-detail-not-answering-plain", &[])
 }
 
-/// Status line: held back by the check.
+/// Status line: waiting for the proxy check.
 pub fn sources_detail_held_back() -> String {
     text("sources-detail-held-back", &[])
 }
@@ -15117,7 +15027,7 @@ pub fn torrents_off_detail() -> String {
     text("torrents-off-detail", &[])
 }
 
-/// Line explaining the risk, before torrents start.
+/// Line about privacy in the torrent sheet, before torrents start.
 pub fn torrents_risk() -> String {
     text("torrents-risk", &[])
 }
@@ -15127,84 +15037,29 @@ pub fn torrents_not_a_plugin() -> String {
     text("torrents-not-a-plugin", &[])
 }
 
-/// Label of the choice of protection.
-pub fn torrents_protect_with() -> String {
-    text("torrents-protect-with", &[])
+/// Switch: send torrent traffic through a SOCKS5 proxy. Off by default.
+pub fn torrents_proxy_route() -> String {
+    text("torrents-proxy-route", &[])
 }
 
-/// Option: no protection.
-pub fn torrents_protect_none() -> String {
-    text("torrents-protect-none", &[])
+/// Line under the switch.
+pub fn torrents_proxy_route_detail() -> String {
+    text("torrents-proxy-route-detail", &[])
 }
 
-/// Option: a proxy.
-pub fn torrents_protect_proxy() -> String {
-    text("torrents-protect-proxy", &[])
-}
-
-/// Option: a VPN already running on the device.
-pub fn torrents_protect_vpn() -> String {
-    text("torrents-protect-vpn", &[])
-}
-
-/// Line under the proxy option.
-pub fn torrents_protect_proxy_detail() -> String {
-    text("torrents-protect-proxy-detail", &[])
-}
-
-/// Line under the VPN option.
-pub fn torrents_protect_vpn_detail() -> String {
-    text("torrents-protect-vpn-detail", &[])
-}
-
-/// Line under the no-protection option.
-pub fn torrents_protect_none_detail() -> String {
-    text("torrents-protect-none-detail", &[])
-}
-
-/// Line when no protection is set.
-pub fn torrents_protect_none_note() -> String {
-    text("torrents-protect-none-note", &[])
-}
-
-/// Summary: a proxy protects. Host and port are already formatted.
+/// Summary: torrents go through a proxy. Host and port are already formatted.
 pub fn torrents_summary_proxy_at(host: &str, port: &str) -> String {
     text("torrents-summary-proxy-at", &[("host", Arg::Text(host)), ("port", Arg::Text(port))])
 }
 
-/// Summary: a proxy protects, address not shown.
+/// Summary: torrents go through a proxy, address not shown.
 pub fn torrents_summary_proxy() -> String {
     text("torrents-summary-proxy", &[])
 }
 
-/// Summary: a VPN protects.
-pub fn torrents_summary_vpn() -> String {
-    text("torrents-summary-vpn", &[])
-}
-
-/// Summary: nothing protects.
-pub fn torrents_summary_none() -> String {
-    text("torrents-summary-none", &[])
-}
-
-/// Title of the question when torrents are turned on without protection.
-pub fn torrents_unprotected_title() -> String {
-    text("torrents-unprotected-title", &[])
-}
-
-/// Line under it.
-pub fn torrents_unprotected_detail() -> String {
-    text("torrents-unprotected-detail", &[])
-}
-
-/// Button that confirms turning torrents on without protection.
-pub fn torrents_turn_on_unprotected() -> String {
-    text("torrents-turn-on-unprotected", &[])
-}
-
-/// Button that confirms using no protection.
-pub fn torrents_use_unprotected() -> String {
-    text("torrents-use-unprotected", &[])
+/// Summary: no proxy is set.
+pub fn torrents_summary_direct() -> String {
+    text("torrents-summary-direct", &[])
 }
 
 /// Label of the proxy host field.
@@ -15252,12 +15107,7 @@ pub fn torrents_proxy_saved() -> String {
     text("torrents-proxy-saved", &[])
 }
 
-/// Why a save was refused: traffic left outside the proxy.
-pub fn torrents_left_outside_proxy() -> String {
-    text("torrents-left-outside-proxy", &[])
-}
-
-/// Why a save was refused: the check could not run through the proxy.
+/// Why a save was refused: the proxy check failed. A sentence fragment.
 pub fn torrents_check_not_made_proxy() -> String {
     text("torrents-check-not-made-proxy", &[])
 }
@@ -15265,11 +15115,6 @@ pub fn torrents_check_not_made_proxy() -> String {
 /// Notice when a proxy was not saved. The reason is a sentence fragment.
 pub fn torrents_proxy_not_saved(why: &str) -> String {
     text("torrents-proxy-not-saved", &[("why", Arg::Text(why))])
-}
-
-/// Notice when protection was not saved. The reason is a sentence fragment.
-pub fn torrents_protection_not_saved(why: &str) -> String {
-    text("torrents-protection-not-saved", &[("why", Arg::Text(why))])
 }
 
 /// Notice when torrents stayed off. The reason is a sentence fragment.
@@ -15307,59 +15152,14 @@ pub fn torrents_index_saved() -> String {
     text("torrents-index-saved", &[])
 }
 
-/// Label of the choice of what to do when a check fails.
-pub fn torrents_if_check_fails() -> String {
-    text("torrents-if-check-fails", &[])
+/// Under the proxy form: what the app checks.
+pub fn torrents_check_note() -> String {
+    text("torrents-check-note", &[])
 }
 
-/// Title of the question that asks whether torrents may keep running.
-pub fn torrents_keep_running_title() -> String {
-    text("torrents-keep-running-title", &[])
-}
-
-/// Line under the question: what the choice is about.
-pub fn torrents_keep_running_detail() -> String {
-    text("torrents-keep-running-detail", &[])
-}
-
-/// Option: pause torrents.
-pub fn torrents_fail_pause() -> String {
-    text("torrents-fail-pause", &[])
-}
-
-/// Option: stop torrents.
-pub fn torrents_fail_stop() -> String {
-    text("torrents-fail-stop", &[])
-}
-
-/// Option: only warn.
-pub fn torrents_fail_warn() -> String {
-    text("torrents-fail-warn", &[])
-}
-
-/// Result of the choice: torrents run.
-pub fn torrents_fail_warn_result() -> String {
-    text("torrents-fail-warn-result", &[])
-}
-
-/// Result of the choice: torrents stop.
-pub fn torrents_fail_stop_result() -> String {
-    text("torrents-fail-stop-result", &[])
-}
-
-/// Result of the choice: torrents pause.
-pub fn torrents_fail_pause_result() -> String {
-    text("torrents-fail-pause-result", &[])
-}
-
-/// Label of the last check.
+/// Label of the proxy check's result.
 pub fn torrents_last_check() -> String {
     text("torrents-last-check", &[])
-}
-
-/// Check passed. The exit is where the traffic leaves from, already formatted.
-pub fn torrents_check_passed_exit(exit: &str) -> String {
-    text("torrents-check-passed-exit", &[("exit", Arg::Text(exit))])
 }
 
 /// Check passed.
@@ -15367,39 +15167,19 @@ pub fn torrents_check_passed() -> String {
     text("torrents-check-passed", &[])
 }
 
-/// Check running: the line.
-pub fn torrents_check_running_line() -> String {
-    text("torrents-check-running-line", &[])
-}
-
 /// Check running: the short word.
 pub fn torrents_check_running() -> String {
     text("torrents-check-running", &[])
 }
 
-/// Check failed: traffic left outside. The consequence follows.
-pub fn torrents_check_leaked(then: &str) -> String {
-    text("torrents-check-leaked", &[("then", Arg::Text(then))])
-}
-
-/// Check failed: the check could not be made. The consequence follows.
-pub fn torrents_check_unmade(then: &str) -> String {
-    text("torrents-check-unmade", &[("then", Arg::Text(then))])
+/// Check failed: the line.
+pub fn torrents_check_failed_line() -> String {
+    text("torrents-check-failed-line", &[])
 }
 
 /// Short word: the check failed.
 pub fn torrents_check_failed() -> String {
     text("torrents-check-failed", &[])
-}
-
-/// Line: no protection is set, so nothing was checked.
-pub fn torrents_check_none_line() -> String {
-    text("torrents-check-none-line", &[])
-}
-
-/// Short word: unprotected.
-pub fn torrents_check_none() -> String {
-    text("torrents-check-none", &[])
 }
 
 /// Line: no check yet.
@@ -15465,16 +15245,6 @@ pub fn torrents_page_unreadable() -> String {
 /// Line when the page needs script.
 pub fn torrents_page_needs_script() -> String {
     text("torrents-page-needs-script", &[])
-}
-
-/// Under the proxy form when turning torrents on: what the app checks, and that the VPN or proxy is what protects.
-pub fn torrents_check_note() -> String {
-    text("torrents-check-note", &[])
-}
-
-/// Notice after the protection was saved.
-pub fn torrents_protection_saved() -> String {
-    text("torrents-protection-saved", &[])
 }
 
 /// Menu item and button: open a magnet link or a torrent file the viewer has.

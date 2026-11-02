@@ -52,7 +52,7 @@ async fn main() {
     if let Some(note) = &plugin_note {
         println!("  plugins      ✕ {}", note.english());
     }
-    println!("  vpn guard    {}", if guard.is_some() { "running" } else { "not running" });
+    println!("  torrents     {}", if guard.is_some() { "running" } else { "not running" });
     if let Some(note) = &note {
         println!("  note         {note}");
     }

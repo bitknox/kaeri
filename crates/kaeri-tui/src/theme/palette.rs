@@ -33,7 +33,7 @@ pub enum Role {
     Obi,
     /// State and progress indication.
     State,
-    /// Something is broken — a dead provider, a VPN leak, a failed sync.
+    /// Something is broken — a dead provider, a failed proxy check, a failed sync.
     ///
     /// Provider death is this app's defining failure mode, so a dedicated colour for it
     /// is functional rather than decorative.

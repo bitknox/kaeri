@@ -119,7 +119,7 @@ pub async fn open_torrent(
 
     let link = sources::torrent_to_open(input).map_err(|msg| anyhow::anyhow!("{msg}"))?;
     if !sources::torrent_wanted(config) {
-        anyhow::bail!("torrent playback is off: set providers.torrent.enabled and a VPN mode");
+        anyhow::bail!("torrent playback is off: set providers.torrent.enabled to turn it on");
     }
     let (registry, guard, note, _) = sources::build_registry(config, http, paths, store).await;
     if guard.is_none() {
@@ -169,7 +169,7 @@ pub async fn play_cli(
     if registry.is_empty() {
         anyhow::bail!("no sources registered — see --doctor");
     }
-    // Kept alive for the whole session: dropping the VPN guard would drop its checks.
+    // Kept alive for the whole session: dropping it would close the torrent session.
     let _guard = guard;
 
     let mpv = player(config, paths, &player_theme());

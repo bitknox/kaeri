@@ -20,19 +20,19 @@
 //! the episodes ahead were watched long ago and are about to be again.
 //!
 //! **When it runs.** On start; after an episode is marked watched, counts as watched in the
-//! player, or plays to its end; after the new-episode check or the airing digest finds a new
-//! episode; when the number to
-//! keep changes; when the network, the app's phase or the connection check lets downloads run
-//! again; and after a list sync moves a show's progress or where it is on the list. Asked for
-//! again while a top-up runs, the latest ask runs once it is done.
+//! player, or plays to its end; when the number to keep changes; when the network or the app's
+//! phase lets downloads run again; and after a list sync moves a show's progress or where it is
+//! on the list. Not when the new-episode check or the airing digest finds a new episode: an
+//! episode out is fetched once the viewer has watched the one before it. Asked for again while
+//! a top-up runs, the latest ask runs once it is done.
 //!
 //! **What it skips.** Nothing, with no source set up, and no show whose episode table no source
 //! could list, as its last load found: its episodes are AniList's alone, with nothing to download
 //! them from.
 //!
 //! **What it waits for.** Nothing is topped up while downloads wait: off screen but for a
-//! downloads window, on cellular unless downloads may run there, in Low Data Mode, or while the
-//! connection check that guards torrents fails. And it stops before the
+//! downloads window, on cellular unless downloads may run there, or in Low Data Mode. And it
+//! stops before the
 //! device would be full: what is free, less what the queue still has to fetch and an episode
 //! more, has to leave [`KEEP_FREE`]. It says so once, until there is room again.
 
@@ -245,24 +245,17 @@ pub fn top_up(engine: &EngineState, services: &Services, tx: &Outbox) {
 }
 
 /// Whether downloads wait now, as the torrent session is told: off screen but for a downloads
-/// window, on cellular unless downloads may run there, in Low Data Mode, or while the
-/// connection check that guards torrents fails.
+/// window, on cellular unless downloads may run there, or in Low Data Mode.
 pub(crate) fn downloads_wait(engine: &EngineState) -> bool {
     let config = engine.config.effective();
-    let held = crate::phases::gate_for(engine.phase, engine.network, config).hold.downloads;
-    let refused = engine.vpn_guard.as_ref().is_some_and(|(guard, _)| guard.permit().is_err());
-    held || refused
+    crate::phases::gate_for(engine.phase, engine.network, config).hold.downloads
 }
 
-/// Whether `event` moves where a viewer is in a show, or what is out of one: an episode that
-/// counts as watched in the player, one played to its end, or the new-episode check finding
-/// one.
+/// Whether `event` moves where a viewer is in a show: an episode that counts as watched in the
+/// player, or one played to its end. A new episode out is not one: it is fetched once the
+/// viewer has watched the one before it.
 pub fn after(event: &Event) -> bool {
-    match event {
-        Event::ProgressQueued | Event::PlaybackEnded { watched: true, .. } => true,
-        Event::NewEpisodes(found) => !found.is_empty(),
-        _ => false,
-    }
+    matches!(event, Event::ProgressQueued | Event::PlaybackEnded { watched: true, .. })
 }
 
 /// Whether a change to setting `key` can change what keep next keeps, or whether it may run.
@@ -1137,7 +1130,6 @@ mod tests {
         assert!(after(&Event::playback_ended(true, Ending::Complete { next: None })));
         assert!(!after(&Event::playback_ended(false, Ending::Stopped)));
         assert!(!after(&Event::Downloads(Vec::new())));
-        assert!(!after(&Event::NewEpisodes(Vec::new())), "nothing new");
         let new = kaeri_model::notifications::NewEpisode {
             id: AIRING,
             title: "Show".into(),
@@ -1148,7 +1140,7 @@ mod tests {
             translation: None,
             banner_url: None,
         };
-        assert!(after(&Event::NewEpisodes(vec![new])));
+        assert!(!after(&Event::NewEpisodes(vec![new])), "an episode out is not watched");
         assert!(follows(SettingKey::KeepNextEpisodes));
         assert!(follows(SettingKey::DownloadsOnCellular));
         assert!(!follows(SettingKey::DownloadQuality));

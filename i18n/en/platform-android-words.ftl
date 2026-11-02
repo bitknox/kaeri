@@ -84,28 +84,6 @@ settings-coming-up-switched-off = { $count ->
 # @only android
 settings-coming-up-opens = A show opens its settings.
 
-# The same note when a failed check only warns.
-# @only android
-torrents-check-note-warn = { -app-name } checks where torrent traffic leaves from when a torrent starts and every minute while it runs, and warns you if that check fails. Your VPN or proxy is what protects you.
-
-# The same note when a failed check stops torrents.
-# @only android
-torrents-check-note-stop = { -app-name } checks where torrent traffic leaves from when a torrent starts and every minute while it runs, and stops torrents if that check fails. Your VPN or proxy is what protects you.
-
-# Name of the proxy protection.
-# @only android
-# @max 28
-torrents-protect-proxy-name = SOCKS5 proxy
-
-# Name of the VPN protection.
-# @only android
-# @max 28
-torrents-protect-vpn-name = VPN on this { -device }
-
-# Body of the question asked before a failed check only warns.
-# @only android
-torrents-warn-body = { -app-name } will warn you instead of pausing. If your VPN or proxy is down, other people can see your IP address.
-
 # Part of a proxy's line: the user it lets in.
 # @only android
 # @arg user: text
@@ -647,10 +625,6 @@ settings-aside-notifications = One notification when an episode of a show you fo
 # @only android
 settings-aside-downloads = Downloads stay in { -app-name }'s own space on this { -device }, which other apps cannot read. Removing the app removes them.
 
-# Settings aside on a tablet, Sources: the title over the connection check note.
-# @only android
-settings-aside-connection-check = Connection check
-
 # Settings aside on a tablet, Sources: how sources are tried.
 # @only android
 settings-aside-sources = { -source-cap-pl } are tried in order, top to bottom. A show can keep its own { -source }, chosen from its title page.
@@ -668,29 +642,6 @@ settings-upscaling-source = Original 480p
 # Settings aside on a tablet, upscaling: what no processing does.
 # @only android
 settings-upscaling-note-off-original = The original 480p, scaled to fit without processing.
-
-# Torrent sheet: the title when torrents are being turned on.
-# @only android
-torrents-sheet-turn-on-title = Turn on torrents
-
-# Torrent sheet: the title when only the protection changes.
-# @only android
-torrents-sheet-protect-title = Protect torrent traffic
-
-# Torrent sheet: the button that turns torrents on.
-# @only android
-# @max 20
-torrents-sheet-turn-on-button = Turn on
-
-# Torrent sheet: the proxy's host field.
-# @only android
-# @max 20
-torrents-sheet-host = Host
-
-# Torrent sheet: the proxy's port field.
-# @only android
-# @max 20
-torrents-sheet-port = Port
 
 # Torrent sheet: the note under the proxy fields.
 # @only android

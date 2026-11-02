@@ -1,5 +1,5 @@
 //! Where streams come from, as the Providers screen shows it: each provider, the metadata ladder,
-//! the VPN guard's verdict, and the candidates offered when a title's match was too close to call.
+//! the torrent proxy's check, and the candidates offered when a title's match was too close to call.
 
 /// One provider, as the Providers screen shows it.
 ///
@@ -17,7 +17,7 @@ pub struct ProviderRow {
     pub last_error: Option<String>,
     /// Whether resolution will actually try this source: not while it is switched off.
     pub usable: bool,
-    /// Withheld by local policy rather than broken — a failing VPN guard, say.
+    /// Withheld by local policy rather than broken: torrents waiting for their proxy, say.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub held_back: bool,
     /// The name it goes by: the plugin's own, or the built-in source's.
@@ -420,7 +420,7 @@ pub struct SourceChip {
 /// Each configured source, in the order failover walks them, and how it stands.
 ///
 /// The header's chips. Read from the registered providers' `rows` rather than the config alone:
-/// a configured source can be ready, failing, held back by the VPN guard, still loading, or off
+/// a configured source can be ready, failing, held back, still loading, or off
 /// on purpose — and only the last is something the config can say by itself.
 pub fn source_states(configured: &ConfiguredSources, rows: &[ProviderRow]) -> Vec<SourceChip> {
     let of_kind = |kind: &str| -> SourceState {
@@ -463,7 +463,7 @@ pub enum SourceState {
     Ready,
     /// Switched off in config. Said quietly: off is a choice, not a fault.
     Off,
-    /// Working, but withheld by local policy — the VPN guard.
+    /// Working, but withheld by local policy, as torrents wait for their proxy's check.
     HeldBack,
     /// Registered and not answering, or refused at startup.
     Failing,
@@ -471,24 +471,22 @@ pub enum SourceState {
     Pending,
 }
 
-/// The VPN guard's verdict, for the badge beside the torrent source.
+/// The torrent proxy's check, for the line beside torrent playback.
 ///
-/// What the guard found and nothing about how it is shown: the badge's words, its marks and
-/// when it alerts are the front end's, as the terminal's `vpn_badge` has them.
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// What the check found and nothing about how it is shown: the words and marks are the front
+/// end's.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
-pub enum GuardView {
-    /// Not answered yet. Nothing runs until it passes, so nothing can have leaked.
+pub enum ProxyStatus {
+    /// Not answered yet. Torrents wait for it.
     Checking,
-    /// Traffic leaves where it should, through the network `exit` names.
-    Protected { exit: String },
-    /// Traffic was seen leaving where it should not. Torrents are halted.
-    Leaking,
-    /// The check could not be made: the proxy is down, or the lookup did not answer. Failing
-    /// all the same, and told apart from a leak.
-    Unreachable,
-    /// The configuration accepts an unprotected connection.
-    Unprotected,
+    /// The proxy took a connection: torrents go through it.
+    Passed,
+    /// The proxy check failed: the proxy could not be reached, or refused the connection.
+    /// Torrents wait for the next check.
+    Failed,
+    /// No proxy is set: torrents connect directly, with nothing to check.
+    Direct,
 }
 
 /// One rung of the metadata ladder, as the Providers screen shows it.

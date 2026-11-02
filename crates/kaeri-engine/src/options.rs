@@ -55,7 +55,7 @@ pub struct EngineOptions {
     /// waits for every source before it starts, and a test brings sources of its own.
     ///
     /// `None` for the app's launch, where the engine builds the chain config describes. The
-    /// torrent source joins it once its VPN guard has passed, and the plugins once compiled,
+    /// torrent source joins it once its session is up, and the plugins once compiled,
     /// so that the first frame waits for neither. A chain given whole is final: nothing joins
     /// it, and its rows are said at launch.
     pub sources: Option<ProviderRegistry>,
@@ -222,9 +222,9 @@ pub struct Parts {
     /// The clock the new-episode check, the widgets' record and the notifications' week go by,
     /// which the test can move on, and the zone they read days in, which it can choose.
     pub clock: crate::clock::Clock,
-    /// The exit network the connection check answers with, so that it makes no lookup and brings
-    /// no torrent session up: fixtures, never a real one.
-    pub fixture_exit: Option<kaeri_providers::vpn::Egress>,
+    /// Whether a proxy's check passes without connecting anywhere and no torrent session comes
+    /// up: fixtures, never a real one.
+    pub fixture_route: bool,
     /// Counted into as each player window opens, when given.
     pub windows: Option<std::sync::Arc<std::sync::atomic::AtomicUsize>>,
 }

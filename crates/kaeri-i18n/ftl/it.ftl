@@ -672,15 +672,6 @@ release-pinned = { $name } sarà usato per questo titolo.
 # Toast when the chosen source or release for a title could not be saved. The reason comes from the database.
 notice-choice-not-saved = Impossibile salvare quella scelta. { $reason }
 
-# Toast while torrents are running but the connection check failed, and the settings say to warn only.
-torrent-check-failed-running = La verifica della connessione non è riuscita. I torrent continuano a funzionare.
-
-# Note on the sources screen: torrents are waiting for the VPN guard. The reason comes from the guard.
-torrent-vpn-waiting = I torrent partono quando il controllo VPN è superato. { $reason }
-
-# Note on the sources screen: the VPN guard has no verdict yet.
-torrent-vpn-unverified = I torrent partono quando il controllo VPN è superato. La connessione non è ancora stata verificata.
-
 # Error: the link or file given to open is not a magnet link, an info hash or a torrent file.
 torrent-link-unusable = Non è un link magnet né un file torrent.
 
@@ -695,15 +686,6 @@ torrent-interface-closed = Kaeri si è chiuso prima che partissero i torrent.
 
 # Error: the torrent session could not start. The reason comes from the torrent engine.
 torrent-session-failed = Impossibile avviare la sessione torrent. { $reason }
-
-# Toast when torrents are up but no operating-system firewall rule backs the VPN guard. Terminal only: the engine never sends it to the apps.
-torrent-no-kill-switch = Nulla su questo dispositivo ferma il traffico torrent se la VPN cade. Esegui "kaeri --doctor" per configurarlo.
-
-# Toast when the connection check could not run. The reason comes from the VPN settings.
-torrent-not-checked = Impossibile verificare la connessione. { $reason }
-
-# Note on the sources screen after the source chain is rebuilt with torrents on.
-sources-reloaded-torrents-pending = Fonti ricaricate. I torrent partono quando il controllo VPN è superato.
 
 # Note on the sources screen after the source chain is rebuilt with torrents off.
 sources-reloaded-torrents-off = I torrent sono disattivati. La sessione è stata fermata.
@@ -818,12 +800,6 @@ notice-sign-out-failed = Impossibile disconnettersi da { $tracker }. Riprova. { 
 # Toast when a setting could not be stored. The cause says why and what to do.
 notice-not-saved-because = Impossibile salvare questa impostazione. { $cause }
 
-# Toast when the torrent protection choice was saved.
-notice-protection-saved = Protezione torrent salvata.
-
-# Toast when the torrent protection could not be checked. The cause says why.
-notice-protection-not-checked = Impossibile verificare la protezione torrent. { $cause }
-
 # Toast when the proxy's password could not be stored. The reason comes from the system.
 notice-proxy-password-not-kept = Impossibile conservare la password del proxy. Inseriscila di nuovo per provare a salvarla. { $reason }
 
@@ -835,9 +811,6 @@ notice-show-not-reset = Impossibile ripristinare le impostazioni di questa serie
 
 # Toast when a subtitle choice names subtitles the show has not used.
 notice-show-no-such-subtitles = Impossibile salvare questa scelta di sottotitoli. Questa serie non ha mai usato quei sottotitoli.
-
-# Toast while torrents are held until the connection check passes.
-notice-torrents-waiting-for-check = I torrent attendono che il controllo della connessione torni positivo.
 
 # Toast when the mapping data downloads work again after a failure.
 notice-mapping-data-refreshed = Dati di mappatura aggiornati.
@@ -858,12 +831,6 @@ notice-episodes-aired =
 
 # Toast when a new release of Kaeri is out, on the terminal app. The command is not translated. Terminal only: the engine never sends it to the apps.
 notice-update-available = È disponibile { $tag }. Esegui kaeri --update per installarla.
-
-# The reason a setting was refused until the person confirms having no protection.
-cause-confirm-no-protection = Conferma prima che non vuoi alcuna protezione.
-
-# The reason a setting was refused until the person confirms the "warn only" choice.
-cause-confirm-warn-only = Conferma prima che vuoi solo un avviso.
 
 # The reason a proxy was refused: it has no host or no port.
 cause-proxy-needs-address = Un proxy richiede un host e una porta.
@@ -936,26 +903,8 @@ crash-notice = Kaeri si è chiuso a causa di un problema.
 # The same notice on the TV, which has no button.
 crash-notice-tv = Kaeri si è chiuso a causa di un problema. Puoi segnalarlo da Impostazioni, Informazioni.
 
-# Note under the connection-check group of the torrents dialog: what the check does.
-torrents-linux-check-note = Kaeri controlla da dove esce il traffico torrent all'avvio di un torrent e ogni minuto mentre è in corso, e mette in pausa i torrent se il controllo fallisce. La tua VPN o il tuo proxy è ciò che ti protegge.
-
-# Confirmation text when choosing "Warn only" for a failed check.
-torrents-linux-warn-confirm = Kaeri ti avviserà invece di mettere in pausa. Se la VPN o il proxy è disattivato, altre persone possono vedere il tuo indirizzo IP.
-
-# Status line once the protection has been checked and saved.
-torrents-linux-protection-saved = Protezione dei torrent salvata
-
-# Title of the dialog that turns torrents on.
-torrents-linux-turn-on-title = Attiva i torrent
-
-# Title of the dialog that changes what protects torrents.
-torrents-linux-protect-title = Proteggi i torrent
-
 # Title of the dialog that edits the proxy.
 torrents-linux-edit-proxy-title = Modifica proxy
-
-# Button that turns torrents on in the dialog.
-torrents-linux-turn-on-button = Attiva
 
 # Seeding row: time left until the goal, in a span already worded ("18h", "1d 6h").
 downloads-linux-seed-left = Mancano { $span }
@@ -1181,12 +1130,6 @@ settings-notify-note-on = Una notifica quando esce un episodio di una serie nell
 
 # Preview note for new-episode notifications when they are off.
 settings-notify-note-off = Disattivate. Solo le serie attivate nelle loro impostazioni inviano notifiche.
-
-# Heading of the preview note beside the sources settings while torrents are on.
-settings-connection-check-title = Controllo della connessione
-
-# Preview note beside the sources settings while torrents are on.
-settings-connection-check-note = Kaeri controlla da dove esce il traffico torrent all'avvio di un torrent e ogni minuto mentre è attivo, e mette in pausa i torrent se il controllo fallisce. A proteggerti sono la tua VPN o il tuo proxy.
 
 # Preview note beside the accounts settings.
 settings-accounts-note = Kaeri funziona senza account. La cronologia resta su questo computer quando esci.
@@ -3110,9 +3053,6 @@ sources-too-small = Serve un terminale più grande.
 # Heading shown on the Sources screen when there is nothing to list, in the alert colour.
 sources-none-available = Nessuna fonte disponibile
 
-# Reason shown when no source is available and the engine gave none. The setting is the name of a key in the config file and is not translated.
-sources-torrents-off = I torrent sono disattivati finché non imposti { $setting } e una modalità VPN.
-
 # Column heading in the Sources table: the name of the source.
 sources-column-source = Fonte
 
@@ -3158,7 +3098,7 @@ sources-state-down = Non risponde
 # State of a source: it has not been tried yet.
 sources-state-unchecked = Non ancora verificata
 
-# State of a source: it works but local rules (the VPN check) are withholding it.
+# State of a source: it works but waits for the proxy check.
 sources-state-held-back = Trattenuta
 
 # Heading of the line about { -plugin-store-pl }.
@@ -3221,27 +3161,6 @@ sources-meta-skipped-until = In pausa fino alle { $time } ({ $cause })
 
 # Detail for a metadata service whose wait is over: it is asked again when something needs it. The cause is the service's own error text.
 sources-meta-next-request = Riprova alla prossima richiesta ({ $cause })
-
-# Header chip while the VPN check is running. The mark is a status glyph.
-sources-vpn-checking = VPN { $mark }  Verifica in corso
-
-# Header chip when the VPN protects the connection. The name is where traffic leaves the network.
-sources-vpn-protected = VPN { $mark }  { $exit }
-
-# Header chip when the VPN check found traffic leaving outside the tunnel.
-sources-vpn-leaking = VPN { $mark }  Perdita
-
-# Header chip when the VPN check could not be completed.
-sources-vpn-unreachable = VPN { $mark }  Non raggiungibile
-
-# Header chip when the configuration runs with no VPN on purpose.
-sources-vpn-unprotected = VPN { $mark }  Senza protezione
-
-# Notice when the VPN check finds a leak and torrents are paused.
-sources-vpn-leak-paused = La VPN perde traffico. I torrent sono in pausa finché la connessione non è di nuovo protetta.
-
-# Notice when the VPN check cannot be completed and torrents are paused.
-sources-vpn-unreachable-paused = La VPN non è raggiungibile. I torrent sono in pausa finché non torna raggiungibile.
 
 # Notice after the person submits an empty value for a text setting.
 settings-unchanged = Nessuna modifica. Elimina la riga in config.toml per rimuovere il valore.
@@ -3311,12 +3230,6 @@ settings-value-download-dir-default = Insieme alla cache dei torrent
 
 # Value of the Syncplay room setting when no room is set.
 settings-value-room-unset = Non impostata (serve per watch party)
-
-# Value of the VPN mode setting: traffic goes through a proxy server (SOCKS5).
-settings-value-vpn-socks5 = Proxy
-
-# Value of the VPN mode setting: a tunnel set up outside the app.
-settings-value-vpn-external = Esterna
 
 # Value of the seeding ratio setting: seed until the ratio is reached.
 settings-value-seed-ratio = Fino al rapporto { $ratio }
@@ -3450,9 +3363,6 @@ settings-label-seed-hours = Condividi per al massimo
 # Settings row: the cap on torrent upload speed.
 settings-label-upload-limit = Limite di caricamento
 
-# Settings row: how traffic is protected by a VPN.
-settings-label-vpn-mode = Modalità VPN
-
 # Settings row: where sign-in tokens are kept.
 settings-label-token-storage = Archiviazione dei token
 
@@ -3476,9 +3386,6 @@ settings-label-downloads-on-cellular = Download con dati mobili
 
 # Settings row: whether torrents run on a mobile connection.
 settings-label-torrents-on-cellular = Torrent con dati mobili
-
-# Settings row: what happens to torrents when the VPN check fails.
-settings-label-vpn-on-failure = Se un controllo fallisce
 
 # Settings row: whether the app notifies of new episodes.
 settings-label-episode-notifications = Notifiche di nuovi episodi
@@ -3531,9 +3438,6 @@ settings-note-download-dir = Premi Invio per digitare un percorso. Si applica al
 # Note under the merge subtitles row.
 settings-note-merge-subtitles = Si applica al download successivo che termina.
 
-# Note under the keep seeding row. It is a privacy choice.
-settings-note-keep-seeding = Se attiva, resti elencato come seeder. Si applica subito.
-
 # Note under the after each download row.
 settings-note-download-hook = Premi Invio per digitare un comando. Viene eseguito dopo ogni download completato.
 
@@ -3560,12 +3464,6 @@ settings-note-presence-title = Disattivato mostra “Guarda anime” senza nomin
 
 # Note under the rich presence row.
 settings-note-presence-rich = Aggiunge la copertina, una barra di avanzamento e un link ad AniList. Richiede il titolo visibile.
-
-# Note under the torrent playback row.
-settings-note-torrents = Richiede una VPN configurata. Ha effetto subito.
-
-# Note under the VPN mode row.
-settings-note-vpn-mode = Modifica config.toml per cambiare. Disattivare la protezione richiede un passaggio esplicito.
 
 # Note under the seed after watching row.
 settings-note-seed-ratio = Mantiene in condivisione gli episodi visti mentre Kaeri è aperta.
@@ -8164,9 +8062,6 @@ settings-reset = Ripristina le impostazioni
 # Title of the confirmation for resetting the settings.
 settings-reset-title = Ripristinare le impostazioni?
 
-# Line under it. The old settings file is moved aside, not deleted.
-settings-reset-detail = Ogni impostazione torna al valore predefinito, VPN e proxy compresi. La cronologia resta e il vecchio file delle impostazioni viene conservato.
-
 # Notice once Kaeri has started again on the default settings. The file is the name the old settings file is kept under, beside the new one, such as config.damaged-2026-10-30.
 settings-reset-done = Le impostazioni sono tornate ai valori predefiniti. Il vecchio file è conservato come { $file }.
 
@@ -8337,9 +8232,6 @@ source-note-gone = Non installata
 # Under a source that found more than one show by this name and could not tell which is this one.
 source-note-ambiguous = Impossibile abbinare questo titolo
 
-# Under a source held back by the VPN check in Settings.
-source-note-held-back = Trattenuta dal controllo VPN
-
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 source-picker-releases = Versioni
 
@@ -8424,9 +8316,6 @@ sources-detail-not-answering = Non risponde. { $why }
 # Status line: no answer.
 sources-detail-not-answering-plain = Non risponde.
 
-# Status line: held back by the check.
-sources-detail-held-back = Trattenuta finché il controllo della connessione non passa.
-
 # Status line: disabled.
 sources-detail-disabled = Disattivata. Mantiene il suo posto e non viene provata.
 
@@ -8502,9 +8391,6 @@ sources-torrent-source = Riproduzione torrent
 
 # Row: where the plugin's page stands.
 sources-source-order-row = Posizione nell'ordine
-
-# Note under the facts on the Torrents page in Sources. Torrents are built in, not a plugin.
-sources-torrents-note = I torrent fanno parte di Kaeri, non sono un plugin. La protezione del loro traffico, il controllo della connessione e il seeding si impostano nelle Impostazioni, sotto Fonti.
 
 # Over the { -source } list while the { -source-pl } are set up again after a change.
 sources-rebuilding = Fonti sono in fase di nuova configurazione
@@ -9475,63 +9361,6 @@ torrents-title = Torrent
 # Label and short value for the switch.
 torrents-on = Torrent attivi
 
-# Line under the switch while torrents are off.
-torrents-off-detail = Disattivati per impostazione predefinita. Attivandoli, prima ti viene chiesto come proteggere la connessione.
-
-# Line explaining the risk, before torrents start.
-torrents-risk = Altre persone possono vedere il tuo indirizzo IP mentre scarichi e condividi un torrent. Scegli cosa lo protegge prima che i torrent partano.
-
-# Line in the Apple sources screen: torrents belong to the app, not to a plugin.
-torrents-not-a-plugin = I torrent fanno parte di Kaeri, non di un plugin. Protezione del traffico, controllo della connessione e condivisione si impostano in Impostazioni, sotto Fonti.
-
-# Label of the choice of protection.
-torrents-protect-with = Proteggi con
-
-# Option: no protection.
-torrents-protect-none = Nessuna protezione
-
-# Option: a proxy.
-torrents-protect-proxy = Proxy
-
-# Option: a VPN already running on the device.
-torrents-protect-vpn = VPN
-
-# Line under the proxy option.
-torrents-protect-proxy-detail = Il traffico torrent passa da un proxy che gestisci o che noleggi.
-
-# Line under the VPN option.
-torrents-protect-vpn-detail = Usa la VPN già attiva su questo dispositivo.
-
-# Line under the no-protection option.
-torrents-protect-none-detail = Il tuo indirizzo è visibile a tutti nel torrent.
-
-# Line when no protection is set.
-torrents-protect-none-note = Senza protezione, Kaeri non controlla la connessione.
-
-# Summary: a proxy protects. Host and port are already formatted.
-torrents-summary-proxy-at = Protetto da un proxy SOCKS5 su { $host }:{ $port }.
-
-# Summary: a proxy protects, address not shown.
-torrents-summary-proxy = Protetto da un proxy SOCKS5.
-
-# Summary: a VPN protects.
-torrents-summary-vpn = Protetto dalla VPN su questo dispositivo.
-
-# Summary: nothing protects.
-torrents-summary-none = Non protetto. Il tuo indirizzo è visibile a tutti nel torrent.
-
-# Title of the question when torrents are turned on without protection.
-torrents-unprotected-title = Usare i torrent senza protezione?
-
-# Line under it.
-torrents-unprotected-detail = Altre persone possono vedere il tuo indirizzo IP mentre scarichi e condividi un torrent, e Kaeri non controlla la connessione.
-
-# Button that confirms turning torrents on without protection.
-torrents-turn-on-unprotected = Attiva senza protezione
-
-# Button that confirms using no protection.
-torrents-use-unprotected = Usa senza protezione
-
 # Label of the proxy host field.
 torrents-proxy-host = Host del proxy
 
@@ -9547,9 +9376,6 @@ torrents-proxy-password = Password
 # Line under the password field.
 torrents-password-keep = Lascia vuota la password per mantenere quella salvata.
 
-# Line under the proxy form: what happens while the new proxy is checked.
-torrents-proxy-keeps-saved = I torrent continuano a usare il proxy salvato finché il nuovo non supera il controllo della connessione.
-
 # Line when the host or port is wrong.
 torrents-proxy-invalid = Il proxy richiede un host e una porta da 1 a 65535.
 
@@ -9559,17 +9385,8 @@ torrents-checking-proxy = Verifica del proxy…
 # Notice after the proxy was saved.
 torrents-proxy-saved = Proxy salvato
 
-# Why a save was refused: traffic left outside the proxy.
-torrents-left-outside-proxy = Il traffico torrent è uscito al di fuori di questo proxy
-
-# Why a save was refused: the check could not run through the proxy.
-torrents-check-not-made-proxy = Non è stato possibile eseguire il controllo tramite questo proxy
-
 # Notice when a proxy was not saved. The reason is a sentence fragment.
 torrents-proxy-not-saved = Non salvato. { $why }, quindi resta il proxy salvato.
-
-# Notice when protection was not saved. The reason is a sentence fragment.
-torrents-protection-not-saved = Non salvato. { $why }, quindi resta la protezione salvata.
 
 # Notice when torrents stayed off. The reason is a sentence fragment.
 torrents-still-off = I torrent restano disattivati. { $why }.
@@ -9592,62 +9409,14 @@ torrents-index-scheme = Usa un indirizzo http o https.
 # Notice after the index was saved.
 torrents-index-saved = Indice torrent salvato
 
-# Label of the choice of what to do when a check fails.
-torrents-if-check-fails = Se un controllo fallisce
-
-# Title of the question that asks whether torrents may keep running.
-torrents-keep-running-title = Mantenere attivi i torrent se un controllo fallisce?
-
-# Line under the question: what the choice is about.
-torrents-keep-running-detail = Cosa succede ai torrent quando il controllo rileva traffico che esce al di fuori della VPN o del proxy.
-
-# Option: pause torrents.
-torrents-fail-pause = Metti in pausa i torrent
-
-# Option: stop torrents.
-torrents-fail-stop = Ferma i torrent
-
-# Option: only warn.
-torrents-fail-warn = Solo avviso
-
-# Result of the choice: torrents run.
-torrents-fail-warn-result = I torrent restano attivi.
-
-# Result of the choice: torrents stop.
-torrents-fail-stop-result = I torrent sono fermati.
-
-# Result of the choice: torrents pause.
-torrents-fail-pause-result = I torrent sono in pausa.
-
-# Label of the last check.
-torrents-last-check = Ultimo controllo
-
-# Check passed. The exit is where the traffic leaves from, already formatted.
-torrents-check-passed-exit = Esce da { $exit }
-
 # Check passed.
 torrents-check-passed = Superato
-
-# Check running: the line.
-torrents-check-running-line = Verifica da dove esce il traffico torrent
 
 # Check running: the short word.
 torrents-check-running = Verifica in corso
 
-# Check failed: traffic left outside. The consequence follows.
-torrents-check-leaked = Il traffico è uscito al di fuori della protezione. { $then }
-
-# Check failed: the check could not be made. The consequence follows.
-torrents-check-unmade = Non è stato possibile eseguire il controllo. { $then }
-
 # Short word: the check failed.
 torrents-check-failed = Fallito
-
-# Line: no protection is set, so nothing was checked.
-torrents-check-none-line = Nessuna protezione impostata
-
-# Short word: unprotected.
-torrents-check-none = Senza protezione
 
 # Line: no check yet.
 torrents-check-waiting-line = Ancora nessun controllo
@@ -9687,12 +9456,6 @@ torrents-page-unreadable = La TV non è riuscita a leggere questo. Scansiona di 
 
 # Line when the page needs script.
 torrents-page-needs-script = Questa pagina richiede JavaScript per inviare il modulo alla TV in sicurezza.
-
-# Under the proxy form when turning torrents on: what the app checks, and that the VPN or proxy is what protects.
-torrents-check-note = Kaeri controlla da dove esce il traffico torrent quando un torrent parte e ogni minuto mentre è in corso, e mette in pausa i torrent se il controllo fallisce. A proteggerti sono la VPN o il proxy.
-
-# Notice after the protection was saved.
-torrents-protection-saved = Protezione dei torrent salvata
 
 # Menu item and button: open a magnet link or a torrent file the viewer has.
 opened-open = Apri link o file

@@ -76,8 +76,6 @@ import app.kaeri.engine.model.ContentList
 import app.kaeri.engine.model.Ending
 import app.kaeri.engine.model.Event
 import app.kaeri.engine.model.HiddenTitle
-import app.kaeri.engine.model.FailedCheck
-import app.kaeri.engine.model.GuardView
 import app.kaeri.engine.model.MenuChoices
 import app.kaeri.engine.model.MenuSource
 import app.kaeri.engine.model.NextEpisode
@@ -89,17 +87,17 @@ import app.kaeri.engine.model.SkipMarkFixture
 import app.kaeri.engine.model.SkipOrigin
 import app.kaeri.engine.model.SkipPrompt
 import app.kaeri.engine.ffi.skipMarkFixture
-import app.kaeri.engine.model.ProtectionView
+import app.kaeri.engine.model.ProxyStatus
 import app.kaeri.engine.model.ProxyView
 import app.kaeri.engine.core.SourceCandidate
 import app.kaeri.engine.model.SettingKey
+import app.kaeri.engine.model.TorrentView
 import app.kaeri.engine.model.SourceNote
 import app.kaeri.engine.model.SourceOption
 import app.kaeri.engine.model.SkipKind
 import app.kaeri.engine.model.StatsFixture
 import app.kaeri.engine.ffi.playerStatsFixture
 import app.kaeri.player.MpvCall
-import app.kaeri.engine.model.TorrentProtection
 import app.kaeri.player.MpvEvent
 import app.kaeri.player.MpvNative
 import app.kaeri.player.MpvValue
@@ -130,6 +128,7 @@ import app.kaeri.engine.core.SubtitleColour
 import app.kaeri.engine.core.SubtitleEdge
 import app.kaeri.engine.core.SubtitleFont
 import app.kaeri.engine.core.SubtitleThickness
+import app.kaeri.engine.core.SettingValue
 import app.kaeri.engine.model.Command
 import app.kaeri.engine.model.InvitePreview
 import app.kaeri.engine.model.InvitedStore
@@ -617,52 +616,43 @@ class TvShots {
         settle()
     }
 
-    /** Settings › Sources, torrents off: the switch, and that turning on asks for protection first. */
+    /** Settings › Sources, torrents off: the switch, and that torrents connect directly unless a proxy is set. */
     @Test
     fun torrents_off() = shoot("tv-torrents-off", section = "Sources") {
         press(Key.DirectionRight)
         downTo("Torrent playback")
     }
 
+    /** Torrents on with no proxy: they connect directly, and the proxy toggle is off with no check row. */
+    @Test
+    fun torrents_direct() = shoot("tv-torrents-direct", section = "Sources", torrents = ProxyStatus.DIRECT) {
+        press(Key.DirectionRight)
+        downTo("Route torrent traffic through a proxy")
+    }
+
+    /** The switch turns torrents on at once, with nothing asked. */
+    @Test
+    fun torrents_switch_turns_on_at_once() = shoot(null, section = "Sources") {
+        press(Key.DirectionRight)
+        downTo("Torrent playback")
+        press(Key.DirectionCenter)
+        settle()
+        assertTrue(shot.waiting.contains(Command.SetSetting(SettingKey.TORRENTS, SettingValue.Bool(true))))
+    }
+
     /**
-     * Turning torrents on: Protect with on the left, VPN on this device focused, and the page for
-     * the details, here on a TV no phone can reach, as the JVM has no network.
+     * The proxy toggle turned on: the form, the page for the details (here on a TV no phone can
+     * reach, as the JVM has no network), then Type it for the fields as pills and the password as dots.
      */
     @Test
-    fun torrents_turn_on() = shoot(null, section = "Sources") {
+    fun torrents_proxy_form() = shoot(null, section = "Sources", torrents = ProxyStatus.DIRECT) {
         press(Key.DirectionRight)
-        downTo("Torrent playback")
+        downTo("Route torrent traffic through a proxy")
         press(Key.DirectionCenter)
         settle()
-        assertTrue(focusedText().startsWith("VPN on this device"))
-        compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-torrents-turn-on.png")
-    }
-
-    /** No protection, asked for: confirmed first, Cancel focused. */
-    @Test
-    fun torrents_no_protection() = shoot(null, section = "Sources") {
-        press(Key.DirectionRight)
-        downTo("Torrent playback")
-        press(Key.DirectionCenter)
-        settle()
-        downTo("No protection")
-        press(Key.DirectionCenter)
-        settle()
-        // The dialog's window has its own focus, over the screen's.
-        assertTrue(focusedTexts().contains("Cancel"))
-        captureScreenRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-torrents-no-protection.png")
-    }
-
-    /** Type it, for a proxy: the proxy's fields as pills, the password as dots. */
-    @Test
-    fun torrents_type_it() = shoot(null, section = "Sources") {
-        press(Key.DirectionRight)
-        downTo("Torrent playback")
-        press(Key.DirectionCenter)
-        settle()
-        press(Key.DirectionUp)
-        assertTrue(focusedText().startsWith("SOCKS5 proxy"))
-        press(Key.DirectionCenter)
+        assertEquals("Type it", focusedText())
+        compose.onNodeWithText("Route torrent traffic through a proxy").assertExists()
+        compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-torrents-proxy-form.png")
         compose.onNodeWithText("Type it").performSemanticsAction(SemanticsActions.OnClick)
         settle()
         // The proxy's host and port, its user name, its password.
@@ -681,41 +671,32 @@ class TvShots {
         assertEquals("Type it", focusedText())
         compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-torrents-ready.png")
 
-        // Turn on checks the new proxy first, the other buttons locked and focus kept on it.
-        repeat(4) { if (focusedText() != "Turn on") press(Key.DirectionLeft) }
-        assertEquals("Turn on", focusedText())
+        // Save checks the new proxy first, the other buttons locked and focus kept on it.
+        repeat(4) { if (focusedText() != "Save") press(Key.DirectionLeft) }
+        assertEquals("Save", focusedText())
         press(Key.DirectionCenter)
         compose.mainClock.advanceTimeBy(1_000)
         settle()
-        assertEquals("Turn on", focusedText())
+        assertEquals("Save", focusedText())
         compose.onNodeWithText(context.getString(TorrentWords.CHECKING_PROXY)).assertExists()
         compose.onNodeWithText("Type it").assertIsNotEnabled()
-        compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-torrents-turn-on-checking.png")
+        compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-torrents-proxy-form-checking.png")
 
-        // Failed: nothing saved, torrents still off, and focus where it was.
-        compose.runOnUiThread { shot.apply(listOf(Event.ProtectionChecked(GuardView.Leaking))) }
+        // Failed: nothing saved, the form stays open, and focus where it was.
+        compose.runOnUiThread { shot.apply(listOf(Event.ProxyChecked(ProxyStatus.FAILED))) }
         settle()
-        assertEquals("Turn on", focusedText())
-        compose.onNodeWithText("Torrents are still off", substring = true).assertExists()
-        compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-torrents-turn-on-failed.png")
+        assertEquals("Save", focusedText())
+        compose.onNodeWithText("Not saved", substring = true).assertExists()
+        compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-torrents-proxy-form-failed.png")
     }
 
-    /**
-     * Protect with, from Settings: its panel, then the proxy picked, which asks for its details on
-     * a page behind a real QR code with its address; after 10 minutes the code expires.
-     */
+    /** The page behind a real QR code with its address; after 10 minutes the code expires. */
     @Test
-    fun torrents_change_protection() = shoot(null, section = "Sources", torrents = GuardView.Protected("203.0.113.24"), pageHost = "192.0.2.10") {
+    fun torrents_proxy_page() = shoot(null, section = "Sources", torrents = ProxyStatus.DIRECT, pageHost = "192.0.2.10") {
         press(Key.DirectionRight)
-        downTo("Protect with")
+        downTo("Route torrent traffic through a proxy")
         press(Key.DirectionCenter)
         settle()
-        captureScreenRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-torrents-protect-with-panel.png")
-        press(Key.DirectionUp)
-        assertTrue(focusedTexts().any { it.startsWith("SOCKS5 proxy") })
-        press(Key.DirectionCenter)
-        settle()
-        compose.onNodeWithText("Protect torrent traffic").assertExists()
         awaitText("http://192.0.2.10:")
         compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-torrents-change.png")
         compose.mainClock.advanceTimeBy(SignInPage.LIFETIME_MILLIS + 1_000)
@@ -724,44 +705,40 @@ class TvShots {
         compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-torrents-code-expired.png")
     }
 
-    /** Torrents on, the check passed 12 s ago: its water dot, where traffic leaves from, Check now. */
+    /** Turning the toggle off removes the proxy at once. */
     @Test
-    fun torrents_on() = shoot("tv-torrents-on", section = "Sources", torrents = GuardView.Protected("203.0.113.24")) {
+    fun torrents_proxy_toggle_off() = shoot(null, section = "Sources", torrents = ProxyStatus.PASSED, proxy = true) {
         press(Key.DirectionRight)
-        downTo("Last check")
+        downTo("Route torrent traffic through a proxy")
+        press(Key.DirectionCenter)
+        settle()
+        assertTrue(shot.waiting.contains(Command.SetTorrentProxy(null)))
+    }
+
+    /** Torrents on behind a proxy, the check passed: its water dot and Check now. */
+    @Test
+    fun torrents_on() = shoot("tv-torrents-on", section = "Sources", torrents = ProxyStatus.PASSED, proxy = true) {
+        press(Key.DirectionRight)
+        downTo("Proxy check")
     }
 
     /** The check under way. */
     @Test
-    fun torrents_checking() = shoot("tv-torrents-checking", section = "Sources", torrents = GuardView.Checking) {
+    fun torrents_checking() = shoot("tv-torrents-checking", section = "Sources", torrents = ProxyStatus.CHECKING, proxy = true) {
         press(Key.DirectionRight)
-        downTo("Last check")
+        downTo("Proxy check")
     }
 
-    /** A failed check: its vermilion dot, and that torrents are paused, with focus on what that does. */
+    /** A failed check: its vermilion dot, and that torrents start once it passes. */
     @Test
-    fun torrents_check_failed() = shoot("tv-torrents-check-failed", section = "Sources", torrents = GuardView.Leaking) {
+    fun torrents_check_failed() = shoot("tv-torrents-check-failed", section = "Sources", torrents = ProxyStatus.FAILED, proxy = true) {
         press(Key.DirectionRight)
-        downTo("If a check fails")
+        downTo("Proxy check")
     }
 
-    /** Warn only, asked for: confirmed first, Cancel focused. */
+    /** A saved proxy: Edit proxy… beside the proxy toggle, where it is and who it lets in. */
     @Test
-    fun torrents_warn_only() = shoot(null, section = "Sources", torrents = GuardView.Unreachable) {
-        press(Key.DirectionRight)
-        downTo("If a check fails")
-        press(Key.DirectionCenter)
-        downTo("Warn only")
-        press(Key.DirectionCenter)
-        settle()
-        // The dialog's window has its own focus, over the screen's.
-        assertTrue(focusedTexts().contains("Cancel"))
-        captureScreenRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-torrents-warn-only.png")
-    }
-
-    /** A saved proxy: Edit proxy… beside Protect with, where it is and who it lets in. */
-    @Test
-    fun torrents_edit_proxy_row() = shoot("tv-torrents-edit-proxy-row", section = "Sources", torrents = GuardView.Protected("203.0.113.24"), proxy = true) {
+    fun torrents_edit_proxy_row() = shoot("tv-torrents-edit-proxy-row", section = "Sources", torrents = ProxyStatus.PASSED, proxy = true) {
         press(Key.DirectionRight)
         downTo("Edit proxy…")
     }
@@ -771,7 +748,7 @@ class TvShots {
      * then a failed check's reason with the saved proxy kept, then a passed one saves and closes.
      */
     @Test
-    fun torrents_edit_proxy() = shoot(null, section = "Sources", torrents = GuardView.Protected("203.0.113.24"), proxy = true) {
+    fun torrents_edit_proxy() = shoot(null, section = "Sources", torrents = ProxyStatus.PASSED, proxy = true) {
         press(Key.DirectionRight)
         downTo("Edit proxy…")
         press(Key.DirectionCenter)
@@ -787,7 +764,7 @@ class TvShots {
         compose.onNodeWithText(context.getString(TorrentWords.CHECKING_PROXY)).assertExists()
         compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-torrents-edit-proxy-checking.png")
 
-        compose.runOnUiThread { shot.apply(listOf(Event.ProtectionChecked(GuardView.Leaking))) }
+        compose.runOnUiThread { shot.apply(listOf(Event.ProxyChecked(ProxyStatus.FAILED))) }
         settle()
         assertEquals("Save", focusedText())
         compose.onNodeWithText("Not saved", substring = true).assertExists()
@@ -796,7 +773,7 @@ class TvShots {
         // Tried again and passed: saved, and back on the row it came from.
         press(Key.DirectionCenter)
         settle()
-        compose.runOnUiThread { shot.apply(listOf(Event.ProtectionChecked(GuardView.Protected("203.0.113.24")))) }
+        compose.runOnUiThread { shot.apply(listOf(Event.ProxyChecked(ProxyStatus.PASSED))) }
         settle()
         assertTrue(focusedText().startsWith("Edit proxy…"))
         compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-torrents-edit-proxy-saved.png")
@@ -804,7 +781,7 @@ class TvShots {
 
     /** Closing a torrents page puts focus back on the row that opened it, not on the section's first row. */
     @Test
-    fun torrents_page_returns_to_its_row() = shoot(null, section = "Sources", torrents = GuardView.Protected("203.0.113.24"), proxy = true) {
+    fun torrents_page_returns_to_its_row() = shoot(null, section = "Sources", torrents = ProxyStatus.PASSED, proxy = true) {
         press(Key.DirectionRight)
         downTo("Edit proxy…")
         press(Key.DirectionCenter)
@@ -816,7 +793,7 @@ class TvShots {
 
     /** Edit proxy's Type it: the proxy's fields, and focus back on Type it once they are done. */
     @Test
-    fun torrents_edit_proxy_type_it() = shoot(null, section = "Sources", torrents = GuardView.Protected("203.0.113.24"), proxy = true) {
+    fun torrents_edit_proxy_type_it() = shoot(null, section = "Sources", torrents = ProxyStatus.PASSED, proxy = true) {
         press(Key.DirectionRight)
         downTo("Edit proxy…")
         press(Key.DirectionCenter)
@@ -832,9 +809,9 @@ class TvShots {
         assertEquals("Type it", focusedText())
     }
 
-    /** Offline, Edit proxy's check cannot reach the proxy: Unreachable, and the saved proxy kept. */
+    /** Offline, Edit proxy's check cannot reach the proxy: it fails, and the saved proxy is kept. */
     @Test
-    fun torrents_edit_proxy_offline() = shoot(null, section = "Sources", torrents = GuardView.Protected("203.0.113.24"), proxy = true, offline = true) {
+    fun torrents_edit_proxy_offline() = shoot(null, section = "Sources", torrents = ProxyStatus.PASSED, proxy = true, offline = true) {
         press(Key.DirectionRight)
         downTo("Edit proxy…")
         press(Key.DirectionCenter)
@@ -845,16 +822,16 @@ class TvShots {
         settle()
         compose.onNodeWithText(context.getString(TorrentWords.CHECKING_PROXY)).assertExists()
         compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-torrents-edit-proxy-slow.png")
-        compose.runOnUiThread { shot.apply(listOf(Event.ProtectionChecked(GuardView.Unreachable))) }
+        compose.runOnUiThread { shot.apply(listOf(Event.ProxyChecked(ProxyStatus.FAILED))) }
         settle()
         assertEquals("Save", focusedText())
         compose.onNodeWithText("Not saved", substring = true).assertExists()
-        compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-torrents-edit-proxy-unreachable.png")
+        compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-torrents-edit-proxy-failed-offline.png")
     }
 
     /** Edit proxy's Use a phone: the page for the proxy alone, here on a TV no phone can reach, focus on Type it. */
     @Test
-    fun torrents_edit_proxy_page() = shoot(null, section = "Sources", torrents = GuardView.Protected("203.0.113.24"), proxy = true) {
+    fun torrents_edit_proxy_page() = shoot(null, section = "Sources", torrents = ProxyStatus.PASSED, proxy = true) {
         press(Key.DirectionRight)
         downTo("Edit proxy…")
         press(Key.DirectionCenter)
@@ -870,7 +847,7 @@ class TvShots {
 
     /** Seeding, under Torrents while they are on, with its best-effort line. */
     @Test
-    fun torrents_seeding() = shoot("tv-torrents-seeding", section = "Sources", torrents = GuardView.Protected("203.0.113.24")) {
+    fun torrents_seeding() = shoot("tv-torrents-seeding", section = "Sources", torrents = ProxyStatus.DIRECT) {
         press(Key.DirectionRight)
         downTo("Upload limit")
     }
@@ -1127,9 +1104,9 @@ class TvShots {
         scene: String = WATCHING,
         /** The Settings section to open at, by its name. */
         section: String? = null,
-        /** Torrents on, behind the VPN on this device, with this the check's last word, 12 s ago. */
-        torrents: GuardView? = null,
-        /** With torrents on, behind a saved SOCKS5 proxy rather than the VPN on this device. */
+        /** Torrents on, with this the proxy check's last word (Direct: no proxy set). */
+        torrents: ProxyStatus? = null,
+        /** With torrents on, behind a saved SOCKS5 proxy rather than connecting directly. */
         proxy: Boolean = false,
         /** The TV's address on the network, so a QR page has one: none, as the JVM has no network, when null. */
         pageHost: String? = null,
@@ -1141,12 +1118,8 @@ class TvShots {
         shot = store
         val events = recorded.events.filter(::replayed).map { if (dub) dubbed(it) else it }.map { if (torrents != null) torrentsOn(it, proxy) else it } +
             listOfNotNull(Event.Connectivity(true).takeIf { offline })
-        // The check's last word, said 12 s before the scene's now, once.
-        torrents?.let {
-            AppClock.clock = Clock.fixed(recorded.recordedAt.minusSeconds(12), ZONE)
-            store.apply(listOf(Event.Vpn(it)))
-            AppClock.clock = Clock.fixed(recorded.recordedAt, ZONE)
-        }
+        // The proxy check's last word, said once.
+        torrents?.let { store.apply(listOf(Event.TorrentProxy(it))) }
         store.apply(events)
         val player = PlayerModel(send = {}, backend = { ScriptedMpv() }, scope = scope, now = { 0L }, hwdec = "no")
         nav = TvNavigator(if (query != null) Destination.Search else start).apply {
@@ -1278,17 +1251,13 @@ class TvShots {
     }
 }
 
-/** [event], when it is the settings, with torrents on, behind the VPN on this device or a [proxy]. */
+/** [event], when it is the settings, with torrents on, connecting directly or behind a [proxy]. */
 private fun torrentsOn(event: Event, proxy: Boolean = false): Event = when (event) {
     is Event.Settings -> Event.Settings(
         event.v1.copy(
             rows = event.v1.rows.map { if (it.key == SettingKey.TORRENTS) it.copy(value = "on") else it },
             sources = event.v1.sources.copy(torrent = true),
-            torrent = if (proxy) {
-                ProtectionView(TorrentProtection.PROXY, ProxyView("proxy.example", 1080u, "mika"), FailedCheck.PAUSE)
-            } else {
-                ProtectionView(TorrentProtection.DEVICE, null, FailedCheck.PAUSE)
-            },
+            torrent = TorrentView(if (proxy) ProxyView("proxy.example", 1080u, "mika") else null),
         ),
     )
     else -> event

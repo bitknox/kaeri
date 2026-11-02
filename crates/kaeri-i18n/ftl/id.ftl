@@ -648,15 +648,6 @@ release-pinned = { $name } akan dipakai untuk judul ini.
 # Toast when the chosen source or release for a title could not be saved. The reason comes from the database.
 notice-choice-not-saved = Pilihan itu tidak bisa disimpan. { $reason }
 
-# Toast while torrents are running but the connection check failed, and the settings say to warn only.
-torrent-check-failed-running = Pemeriksaan koneksi gagal. Torrent tetap berjalan.
-
-# Note on the sources screen: torrents are waiting for the VPN guard. The reason comes from the guard.
-torrent-vpn-waiting = Torrent mulai setelah penjaga VPN lolos. { $reason }
-
-# Note on the sources screen: the VPN guard has no verdict yet.
-torrent-vpn-unverified = Torrent mulai setelah penjaga VPN lolos. Koneksi belum diverifikasi.
-
 # Error: the link or file given to open is not a magnet link, an info hash or a torrent file.
 torrent-link-unusable = Itu bukan tautan magnet atau berkas torrent.
 
@@ -671,15 +662,6 @@ torrent-interface-closed = Kaeri ditutup sebelum torrent mulai.
 
 # Error: the torrent session could not start. The reason comes from the torrent engine.
 torrent-session-failed = Tidak bisa memulai sesi torrent. { $reason }
-
-# Toast when torrents are up but no operating-system firewall rule backs the VPN guard. Terminal only: the engine never sends it to the apps.
-torrent-no-kill-switch = Tidak ada yang menghentikan lalu lintas torrent di perangkat ini jika VPN terputus. Jalankan "kaeri --doctor" untuk mengaturnya.
-
-# Toast when the connection check could not run. The reason comes from the VPN settings.
-torrent-not-checked = Tidak bisa memeriksa koneksi. { $reason }
-
-# Note on the sources screen after the source chain is rebuilt with torrents on.
-sources-reloaded-torrents-pending = Sumber-sumber dimuat ulang. Torrent mulai setelah penjaga VPN lolos.
 
 # Note on the sources screen after the source chain is rebuilt with torrents off.
 sources-reloaded-torrents-off = Torrent dimatikan. Sesinya dihentikan.
@@ -792,12 +774,6 @@ notice-sign-out-failed = Tidak dapat keluar dari { $tracker }. Coba lagi. { $rea
 # Toast when a setting could not be stored. The cause says why and what to do.
 notice-not-saved-because = Tidak dapat menyimpan pengaturan itu. { $cause }
 
-# Toast when the torrent protection choice was saved.
-notice-protection-saved = Perlindungan torrent disimpan.
-
-# Toast when the torrent protection could not be checked. The cause says why.
-notice-protection-not-checked = Tidak dapat memeriksa perlindungan torrent. { $cause }
-
 # Toast when the proxy's password could not be stored. The reason comes from the system.
 notice-proxy-password-not-kept = Tidak dapat menyimpan kata sandi proxy. Masukkan lagi untuk mencoba menyimpannya. { $reason }
 
@@ -809,9 +785,6 @@ notice-show-not-reset = Tidak dapat mengatur ulang pengaturan judul ini. { $reas
 
 # Toast when a subtitle choice names subtitles the show has not used.
 notice-show-no-such-subtitles = Tidak dapat menyimpan pilihan subtitle itu. Judul ini belum pernah memakai subtitle tersebut.
-
-# Toast while torrents are held until the connection check passes.
-notice-torrents-waiting-for-check = Torrent menunggu sampai pemeriksaan koneksi lolos lagi.
 
 # Toast when the mapping data downloads work again after a failure.
 notice-mapping-data-refreshed = Data pemetaan diperbarui.
@@ -830,12 +803,6 @@ notice-episodes-aired =
 
 # Toast when a new release of Kaeri is out, on the terminal app. The command is not translated. Terminal only: the engine never sends it to the apps.
 notice-update-available = { $tag } sudah tersedia. Jalankan kaeri --update untuk memasangnya.
-
-# The reason a setting was refused until the person confirms having no protection.
-cause-confirm-no-protection = Konfirmasikan dulu bahwa Anda memang ingin tanpa perlindungan.
-
-# The reason a setting was refused until the person confirms the "warn only" choice.
-cause-confirm-warn-only = Konfirmasikan dulu bahwa Anda hanya ingin diperingatkan.
 
 # The reason a proxy was refused: it has no host or no port.
 cause-proxy-needs-address = Proxy memerlukan host dan port.
@@ -906,26 +873,8 @@ crash-notice = Kaeri tertutup karena masalah.
 # The same notice on the TV, which has no button.
 crash-notice-tv = Kaeri tertutup karena masalah. Anda bisa melaporkannya di Pengaturan, Tentang.
 
-# Note under the connection-check group of the torrents dialog: what the check does.
-torrents-linux-check-note = Kaeri memeriksa dari mana lalu lintas torrent keluar saat torrent dimulai dan setiap menit saat berjalan, lalu menjeda torrent jika pemeriksaan gagal. VPN atau proxy Anda yang melindungi Anda.
-
-# Confirmation text when choosing "Warn only" for a failed check.
-torrents-linux-warn-confirm = Kaeri akan memberi peringatan, bukan menjeda. Jika VPN atau proxy Anda mati, orang lain bisa melihat alamat IP Anda.
-
-# Status line once the protection has been checked and saved.
-torrents-linux-protection-saved = Perlindungan torrent disimpan
-
-# Title of the dialog that turns torrents on.
-torrents-linux-turn-on-title = Nyalakan torrent
-
-# Title of the dialog that changes what protects torrents.
-torrents-linux-protect-title = Lindungi torrent
-
 # Title of the dialog that edits the proxy.
 torrents-linux-edit-proxy-title = Ubah proxy
-
-# Button that turns torrents on in the dialog.
-torrents-linux-turn-on-button = Nyalakan
 
 # Seeding row: time left until the goal, in a span already worded ("18h", "1d 6h").
 downloads-linux-seed-left = Sisa { $span }
@@ -1139,12 +1088,6 @@ settings-notify-note-on = Satu notifikasi saat episode dari acara dalam daftar y
 
 # Preview note for new-episode notifications when they are off.
 settings-notify-note-off = Nonaktif. Hanya acara yang diaktifkan di pengaturannya sendiri yang memberi notifikasi.
-
-# Heading of the preview note beside the sources settings while torrents are on.
-settings-connection-check-title = Pemeriksaan koneksi
-
-# Preview note beside the sources settings while torrents are on.
-settings-connection-check-note = Kaeri memeriksa dari mana lalu lintas torrent keluar saat torrent dimulai dan setiap menit selama berjalan, lalu menjeda torrent jika pemeriksaan itu gagal. VPN atau proxy Anda yang melindungi Anda.
 
 # Preview note beside the accounts settings.
 settings-accounts-note = Kaeri berfungsi tanpa akun. Riwayat tontonan Anda tetap tersimpan di komputer ini saat Anda keluar.
@@ -3034,9 +2977,6 @@ sources-too-small = Perlu terminal yang lebih besar.
 # Heading shown on the Sources screen when there is nothing to list, in the alert colour.
 sources-none-available = Tidak ada sumber-sumber yang tersedia
 
-# Reason shown when no source is available and the engine gave none. The setting is the name of a key in the config file and is not translated.
-sources-torrents-off = Torrent nonaktif sampai { $setting } dan mode VPN diatur.
-
 # Column heading in the Sources table: the name of the source.
 sources-column-source = Sumber
 
@@ -3082,7 +3022,7 @@ sources-state-down = Tidak aktif
 # State of a source: it has not been tried yet.
 sources-state-unchecked = Belum diperiksa
 
-# State of a source: it works but local rules (the VPN check) are withholding it.
+# State of a source: it works but waits for the proxy check.
 sources-state-held-back = Ditahan
 
 # Heading of the line about { -plugin-store-pl }.
@@ -3141,27 +3081,6 @@ sources-meta-skipped-until = Dilewati sampai { $time } ({ $cause })
 
 # Detail for a metadata service whose wait is over: it is asked again when something needs it. The cause is the service's own error text.
 sources-meta-next-request = Dicoba lagi pada permintaan berikutnya ({ $cause })
-
-# Header chip while the VPN check is running. The mark is a status glyph.
-sources-vpn-checking = VPN { $mark }  Memeriksa
-
-# Header chip when the VPN protects the connection. The name is where traffic leaves the network.
-sources-vpn-protected = VPN { $mark }  { $exit }
-
-# Header chip when the VPN check found traffic leaving outside the tunnel.
-sources-vpn-leaking = VPN { $mark }  Bocor
-
-# Header chip when the VPN check could not be completed.
-sources-vpn-unreachable = VPN { $mark }  Tidak terjangkau
-
-# Header chip when the configuration runs with no VPN on purpose.
-sources-vpn-unprotected = VPN { $mark }  Tidak terlindungi
-
-# Notice when the VPN check finds a leak and torrents are paused.
-sources-vpn-leak-paused = VPN bocor. Torrent dijeda sampai terlindungi kembali.
-
-# Notice when the VPN check cannot be completed and torrents are paused.
-sources-vpn-unreachable-paused = VPN tidak dapat dihubungi. Torrent dijeda sampai VPN bisa dihubungi kembali.
 
 # Notice after the person submits an empty value for a text setting.
 settings-unchanged = Tidak diubah. Hapus baris di config.toml untuk mengosongkan pengaturan ini.
@@ -3231,12 +3150,6 @@ settings-value-download-dir-default = Disimpan di cache torrent
 
 # Value of the Syncplay room setting when no room is set.
 settings-value-room-unset = Belum diatur (diperlukan untuk nonton bareng)
-
-# Value of the VPN mode setting: traffic goes through a proxy server (SOCKS5).
-settings-value-vpn-socks5 = Proxy
-
-# Value of the VPN mode setting: a tunnel set up outside the app.
-settings-value-vpn-external = Eksternal
 
 # Value of the seeding ratio setting: seed until the ratio is reached.
 settings-value-seed-ratio = Sampai rasio { $ratio }
@@ -3370,9 +3283,6 @@ settings-label-seed-hours = Seed paling lama
 # Settings row: the cap on torrent upload speed.
 settings-label-upload-limit = Batas unggah
 
-# Settings row: how traffic is protected by a VPN.
-settings-label-vpn-mode = Mode VPN
-
 # Settings row: where sign-in tokens are kept.
 settings-label-token-storage = Penyimpanan token
 
@@ -3396,9 +3306,6 @@ settings-label-downloads-on-cellular = Unduhan lewat data seluler
 
 # Settings row: whether torrents run on a mobile connection.
 settings-label-torrents-on-cellular = Torrent lewat data seluler
-
-# Settings row: what happens to torrents when the VPN check fails.
-settings-label-vpn-on-failure = Jika pemeriksaan gagal
 
 # Settings row: whether the app notifies of new episodes.
 settings-label-episode-notifications = Notifikasi episode baru
@@ -3451,9 +3358,6 @@ settings-note-download-dir = Tekan Enter untuk mengetik lokasi. Berlaku untuk un
 # Note under the merge subtitles row.
 settings-note-merge-subtitles = Berlaku untuk unduhan berikutnya yang selesai.
 
-# Note under the keep seeding row. It is a privacy choice.
-settings-note-keep-seeding = Saat aktif, Anda tetap tercatat sebagai seeder. Berlaku segera.
-
 # Note under the after each download row.
 settings-note-download-hook = Tekan Enter untuk mengetik perintah. Perintah dijalankan setelah setiap unduhan selesai.
 
@@ -3480,12 +3384,6 @@ settings-note-presence-title = Nonaktif menampilkan “Sedang menonton anime” 
 
 # Note under the rich presence row.
 settings-note-presence-rich = Menambahkan sampul, bilah kemajuan, dan tautan AniList. Perlu judul ditampilkan.
-
-# Note under the torrent playback row.
-settings-note-torrents = Perlu VPN yang sudah diatur. Berlaku segera.
-
-# Note under the VPN mode row.
-settings-note-vpn-mode = Ubah config.toml untuk mengganti ini. Mematikan perlindungan perlu langkah tersendiri.
 
 # Note under the seed after watching row.
 settings-note-seed-ratio = Menjaga episode yang sudah ditonton tetap seeding selama Kaeri terbuka.
@@ -8016,9 +7914,6 @@ settings-reset = Atur ulang pengaturan
 # Title of the confirmation for resetting the settings.
 settings-reset-title = Atur ulang pengaturan?
 
-# Line under it. The old settings file is moved aside, not deleted.
-settings-reset-detail = Semua pengaturan kembali ke bawaan, termasuk VPN dan proksi. Riwayat tontonan Anda tetap ada, dan berkas pengaturan lama disimpan.
-
 # Notice once Kaeri has started again on the default settings. The file is the name the old settings file is kept under, beside the new one, such as config.damaged-2026-10-30.
 settings-reset-done = Pengaturan sudah kembali ke bawaan. Berkas lama disimpan sebagai { $file }.
 
@@ -8187,9 +8082,6 @@ source-note-gone = Tidak terpasang
 # Under a source that found more than one show by this name and could not tell which is this one.
 source-note-ambiguous = Tidak bisa mencocokkan judul ini
 
-# Under a source held back by the VPN check in Settings.
-source-note-held-back = Ditahan oleh pemeriksaan VPN
-
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 source-picker-releases = Rilis
 
@@ -8274,9 +8166,6 @@ sources-detail-not-answering = Tidak merespons. { $why }
 # Status line: no answer.
 sources-detail-not-answering-plain = Tidak merespons.
 
-# Status line: held back by the check.
-sources-detail-held-back = Ditahan sampai pemeriksaan koneksi lolos.
-
 # Status line: disabled.
 sources-detail-disabled = Mati. Posisinya tetap, dan tidak dicoba.
 
@@ -8348,9 +8237,6 @@ sources-torrent-source = Pemutaran torrent
 
 # Row: where the plugin's page stands.
 sources-source-order-row = Urutan Sumber
-
-# Note under the facts on the Torrents page in Sources. Torrents are built in, not a plugin.
-sources-torrents-note = Torrent adalah bagian dari Kaeri, bukan plugin. Pelindung lalu lintasnya, pemeriksaan koneksi, dan seeding diatur di Pengaturan, di bawah Sumber-sumber.
 
 # Over the { -source } list while the { -source-pl } are set up again after a change.
 sources-rebuilding = Sumber-sumber sedang disiapkan ulang
@@ -9307,63 +9193,6 @@ torrents-title = Torrent
 # Label and short value for the switch.
 torrents-on = Torrent aktif
 
-# Line under the switch while torrents are off.
-torrents-off-detail = Nonaktif secara default. Mengaktifkannya akan menanyakan dulu cara melindungi koneksi Anda.
-
-# Line explaining the risk, before torrents start.
-torrents-risk = Orang lain dapat melihat alamat IP Anda saat Anda mengunduh dan membagikan torrent. Pilih apa yang melindunginya sebelum torrent dimulai.
-
-# Line in the Apple sources screen: torrents belong to the app, not to a plugin.
-torrents-not-a-plugin = Torrent adalah bagian dari Kaeri, bukan plugin. Perlindungan lalu lintasnya, pemeriksaan koneksi, dan seeding diatur di Pengaturan, di bawah Sumber-sumber.
-
-# Label of the choice of protection.
-torrents-protect-with = Lindungi dengan
-
-# Option: no protection.
-torrents-protect-none = Tanpa perlindungan
-
-# Option: a proxy.
-torrents-protect-proxy = Proksi
-
-# Option: a VPN already running on the device.
-torrents-protect-vpn = VPN
-
-# Line under the proxy option.
-torrents-protect-proxy-detail = Lalu lintas torrent melewati proksi yang Anda jalankan atau sewa.
-
-# Line under the VPN option.
-torrents-protect-vpn-detail = Menggunakan VPN yang sudah berjalan di perangkat ini.
-
-# Line under the no-protection option.
-torrents-protect-none-detail = Alamat Anda terlihat oleh semua orang dalam torrent.
-
-# Line when no protection is set.
-torrents-protect-none-note = Tanpa perlindungan, Kaeri tidak memeriksa koneksi.
-
-# Summary: a proxy protects. Host and port are already formatted.
-torrents-summary-proxy-at = Dilindungi oleh proksi SOCKS5 di { $host }:{ $port }.
-
-# Summary: a proxy protects, address not shown.
-torrents-summary-proxy = Dilindungi oleh proksi SOCKS5.
-
-# Summary: a VPN protects.
-torrents-summary-vpn = Dilindungi oleh VPN di perangkat ini.
-
-# Summary: nothing protects.
-torrents-summary-none = Tidak dilindungi. Alamat Anda terlihat oleh semua orang dalam torrent.
-
-# Title of the question when torrents are turned on without protection.
-torrents-unprotected-title = Gunakan torrent tanpa perlindungan?
-
-# Line under it.
-torrents-unprotected-detail = Orang lain dapat melihat alamat IP Anda saat Anda mengunduh dan membagikan torrent, dan Kaeri tidak memeriksa koneksi.
-
-# Button that confirms turning torrents on without protection.
-torrents-turn-on-unprotected = Aktifkan tanpa perlindungan
-
-# Button that confirms using no protection.
-torrents-use-unprotected = Gunakan tanpa perlindungan
-
 # Label of the proxy host field.
 torrents-proxy-host = Host proksi
 
@@ -9379,9 +9208,6 @@ torrents-proxy-password = Kata sandi
 # Line under the password field.
 torrents-password-keep = Kosongkan kata sandi untuk mempertahankan yang tersimpan.
 
-# Line under the proxy form: what happens while the new proxy is checked.
-torrents-proxy-keeps-saved = Torrent tetap memakai proksi yang tersimpan sampai proksi baru lolos pemeriksaan koneksi.
-
 # Line when the host or port is wrong.
 torrents-proxy-invalid = Proksi memerlukan host dan port dari 1 sampai 65535.
 
@@ -9391,17 +9217,8 @@ torrents-checking-proxy = Memeriksa proksi…
 # Notice after the proxy was saved.
 torrents-proxy-saved = Proksi disimpan
 
-# Why a save was refused: traffic left outside the proxy.
-torrents-left-outside-proxy = Lalu lintas torrent keluar di luar proksi ini
-
-# Why a save was refused: the check could not run through the proxy.
-torrents-check-not-made-proxy = Pemeriksaan tidak dapat dilakukan melalui proksi ini
-
 # Notice when a proxy was not saved. The reason is a sentence fragment.
 torrents-proxy-not-saved = Tidak tersimpan. { $why }, jadi proksi yang tersimpan tetap dipakai.
-
-# Notice when protection was not saved. The reason is a sentence fragment.
-torrents-protection-not-saved = Tidak tersimpan. { $why }, jadi perlindungan yang tersimpan tetap dipakai.
 
 # Notice when torrents stayed off. The reason is a sentence fragment.
 torrents-still-off = Torrent masih nonaktif. { $why }.
@@ -9424,62 +9241,14 @@ torrents-index-scheme = Gunakan alamat http atau https.
 # Notice after the index was saved.
 torrents-index-saved = Indeks torrent disimpan
 
-# Label of the choice of what to do when a check fails.
-torrents-if-check-fails = Jika pemeriksaan gagal
-
-# Title of the question that asks whether torrents may keep running.
-torrents-keep-running-title = Tetap jalankan torrent jika pemeriksaan gagal?
-
-# Line under the question: what the choice is about.
-torrents-keep-running-detail = Yang terjadi pada torrent saat pemeriksaan menemukan lalu lintas keluar di luar VPN atau proksi Anda.
-
-# Option: pause torrents.
-torrents-fail-pause = Jeda torrent
-
-# Option: stop torrents.
-torrents-fail-stop = Hentikan torrent
-
-# Option: only warn.
-torrents-fail-warn = Hanya peringatkan
-
-# Result of the choice: torrents run.
-torrents-fail-warn-result = Torrent tetap berjalan.
-
-# Result of the choice: torrents stop.
-torrents-fail-stop-result = Torrent dihentikan.
-
-# Result of the choice: torrents pause.
-torrents-fail-pause-result = Torrent dijeda.
-
-# Label of the last check.
-torrents-last-check = Pemeriksaan terakhir
-
-# Check passed. The exit is where the traffic leaves from, already formatted.
-torrents-check-passed-exit = Keluar melalui { $exit }
-
 # Check passed.
 torrents-check-passed = Lolos
-
-# Check running: the line.
-torrents-check-running-line = Memeriksa dari mana lalu lintas torrent keluar
 
 # Check running: the short word.
 torrents-check-running = Memeriksa
 
-# Check failed: traffic left outside. The consequence follows.
-torrents-check-leaked = Lalu lintas keluar di luar perlindungan. { $then }
-
-# Check failed: the check could not be made. The consequence follows.
-torrents-check-unmade = Pemeriksaan tidak dapat dilakukan. { $then }
-
 # Short word: the check failed.
 torrents-check-failed = Gagal
-
-# Line: no protection is set, so nothing was checked.
-torrents-check-none-line = Belum ada perlindungan yang diatur
-
-# Short word: unprotected.
-torrents-check-none = Tanpa perlindungan
 
 # Line: no check yet.
 torrents-check-waiting-line = Belum diperiksa
@@ -9519,12 +9288,6 @@ torrents-page-unreadable = TV tidak dapat membaca ini. Pindai lagi kode QR di TV
 
 # Line when the page needs script.
 torrents-page-needs-script = Halaman ini memerlukan JavaScript untuk mengirim formulir ke TV dengan aman.
-
-# Under the proxy form when turning torrents on: what the app checks, and that the VPN or proxy is what protects.
-torrents-check-note = Kaeri memeriksa dari mana lalu lintas torrent keluar saat torrent dimulai dan setiap menit selama berjalan, dan menjeda torrent jika pemeriksaan itu gagal. VPN atau proksi Anda yang melindungi Anda.
-
-# Notice after the protection was saved.
-torrents-protection-saved = Perlindungan torrent disimpan
 
 # Menu item and button: open a magnet link or a torrent file the viewer has.
 opened-open = Buka tautan atau berkas

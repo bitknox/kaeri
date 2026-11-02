@@ -446,12 +446,10 @@
     <string name="release_pinned">%1$s will be used for this title.</string>
     <!-- Toast when the chosen source or release for a title could not be saved. The reason comes from the database. -->
     <string name="notice_choice_not_saved">Couldn\'t save that choice. %1$s</string>
-    <!-- Toast while torrents are running but the connection check failed, and the settings say to warn only. -->
-    <string name="torrent_check_failed_running">The connection check failed. Torrents keep running.</string>
-    <!-- Note on the sources screen: torrents are waiting for the VPN guard. The reason comes from the guard. -->
-    <string name="torrent_vpn_waiting">Torrents start once the VPN guard passes. %1$s</string>
-    <!-- Note on the sources screen: the VPN guard has no verdict yet. -->
-    <string name="torrent_vpn_unverified">Torrents start once the VPN guard passes. The connection hasn\'t been verified yet.</string>
+    <!-- Note on the sources screen: the proxy for torrent traffic failed its check, so torrents wait. -->
+    <string name="torrent_proxy_waiting">The proxy check failed. Torrents start once it passes.</string>
+    <!-- Note on the sources screen: the proxy for torrent traffic hasn't been checked yet. -->
+    <string name="torrent_proxy_unchecked">Torrents start once the proxy check passes.</string>
     <!-- Error: the link or file given to open is not a magnet link, an info hash or a torrent file. -->
     <string name="torrent_link_unusable">That isn\'t a magnet link or a torrent file.</string>
     <!-- Error: a link the viewer opened can't play or download while torrent playback is off. -->
@@ -462,12 +460,10 @@
     <string name="torrent_interface_closed">Kaeri closed before torrents started.</string>
     <!-- Error: the torrent session could not start. The reason comes from the torrent engine. -->
     <string name="torrent_session_failed">Couldn\'t start the torrent session. %1$s</string>
-    <!-- Toast when torrents are up but no operating-system firewall rule backs the VPN guard. Terminal only: the engine never sends it to the apps. -->
-    <string name="torrent_no_kill_switch">Nothing on this device stops torrent traffic if the VPN drops. Run \"kaeri --doctor\" to set that up.</string>
-    <!-- Toast when the connection check could not run. The reason comes from the VPN settings. -->
-    <string name="torrent_not_checked">Couldn\'t check the connection. %1$s</string>
-    <!-- Note on the sources screen after the source chain is rebuilt with torrents on. -->
-    <string name="sources_reloaded_torrents_pending">Sources reloaded. Torrents start once the VPN guard passes.</string>
+    <!-- Toast when the proxy setting can't be used. The reason comes from the proxy setting. -->
+    <string name="torrent_proxy_unusable">The proxy setting can\'t be used. %1$s</string>
+    <!-- Note on the sources screen after the source chain is rebuilt with torrents on and a proxy set. -->
+    <string name="sources_reloaded_torrents_checking">Sources reloaded. Torrents start once the proxy check passes.</string>
     <!-- Note on the sources screen after the source chain is rebuilt with torrents off. -->
     <string name="sources_reloaded_torrents_off">Torrents are off. The session was stopped.</string>
     <!-- Note on a running job: requests to AniList are being slowed to stay within its limit. A countdown follows. -->
@@ -543,10 +539,12 @@
     <string name="notice_sign_out_failed">Couldn\'t sign out of %1$s. Try again. %2$s</string>
     <!-- Toast when a setting could not be stored. The cause says why and what to do. -->
     <string name="notice_not_saved_because">Couldn\'t save that setting. %1$s</string>
-    <!-- Toast when the torrent protection choice was saved. -->
-    <string name="notice_protection_saved">Saved torrent protection.</string>
-    <!-- Toast when the torrent protection could not be checked. The cause says why. -->
-    <string name="notice_protection_not_checked">Couldn\'t check the torrent protection. %1$s</string>
+    <!-- Toast when the proxy for torrent traffic was saved. -->
+    <string name="notice_proxy_saved">Torrent traffic now goes through the proxy.</string>
+    <!-- Toast when the proxy for torrent traffic was turned off. -->
+    <string name="notice_proxy_removed">Torrents now connect directly, without a proxy.</string>
+    <!-- Toast when the proxy could not be checked. The cause says why. -->
+    <string name="notice_proxy_not_checked">Couldn\'t check the proxy. %1$s</string>
     <!-- Toast when the proxy's password could not be stored. The reason comes from the system. -->
     <string name="notice_proxy_password_not_kept">Couldn\'t keep the proxy\'s password. Enter it again to try saving it. %1$s</string>
     <!-- Toast when a show's setting was given a value it does not take. The value is what was given. -->
@@ -555,8 +553,6 @@
     <string name="notice_show_not_reset">Couldn\'t reset this show\'s settings. %1$s</string>
     <!-- Toast when a subtitle choice names subtitles the show has not used. -->
     <string name="notice_show_no_such_subtitles">Couldn\'t save that subtitle choice. This show hasn\'t used those subtitles before.</string>
-    <!-- Toast while torrents are held until the connection check passes. -->
-    <string name="notice_torrents_waiting_for_check">Torrents are waiting for the connection check to pass again.</string>
     <!-- Toast when the mapping data downloads work again after a failure. -->
     <string name="notice_mapping_data_refreshed">Mapping data refreshed.</string>
     <!-- Toast when the mapping data could not be downloaded. It is said once; the retries are silent. -->
@@ -570,10 +566,6 @@
     </plurals>
     <!-- Toast when a new release of Kaeri is out, on the terminal app. The command is not translated. Terminal only: the engine never sends it to the apps. -->
     <string name="notice_update_available">%1$s is out. Run kaeri --update to install it.</string>
-    <!-- The reason a setting was refused until the person confirms having no protection. -->
-    <string name="cause_confirm_no_protection">Confirm that you want no protection first.</string>
-    <!-- The reason a setting was refused until the person confirms the "warn only" choice. -->
-    <string name="cause_confirm_warn_only">Confirm that you want to be warned only first.</string>
     <!-- The reason a proxy was refused: it has no host or no port. -->
     <string name="cause_proxy_needs_address">A proxy needs a host and a port.</string>
     <!-- The reason a proxy could not be checked: its address is not one the check can use. -->
@@ -857,8 +849,6 @@
     <string name="tv_page_not_allowed_text">This page only accepts the form it shows. Scan the code on the TV again.</string>
     <!-- What the TV does next once the phone sent a plugin store link, for the line telling to look at the TV -->
     <string name="tv_page_next_link">it shows the plugin store, to join there</string>
-    <!-- What the TV does next once the phone sent the torrent details -->
-    <string name="tv_page_next_torrent">check the details there, then Turn on</string>
     <!-- What the TV does next once the phone sent a proxy -->
     <string name="tv_page_next_proxy">check the proxy there, then Save</string>
     <!-- What the TV does next once the phone sent a sign-in -->
@@ -875,10 +865,6 @@
     <string name="tv_page_password">Your %1$s user name or email, and password. They go to the TV, which signs in to %1$s with them and keeps only the token.</string>
     <!-- Intro on the phone page that takes a plugin store link -->
     <string name="tv_page_link">Paste the plugin store\'s invite link. The TV shows the plugin store before it joins.</string>
-    <!-- Intro on the phone page that takes the torrent index -->
-    <string name="tv_page_torrent">The torrent index Kaeri asks for torrents.</string>
-    <!-- Intro on the phone page that takes the torrent index and a proxy -->
-    <string name="tv_page_torrent_proxy">The torrent index Kaeri asks for torrents, and the SOCKS5 proxy torrent traffic goes through.</string>
     <!-- Intro on the phone page that takes a proxy -->
     <string name="tv_page_proxy">The SOCKS5 proxy torrent traffic goes through. %1$s The TV checks the proxy before it saves it.</string>
     <!-- Label of the code field on the phone page -->
@@ -903,8 +889,6 @@
     <string name="tv_qr_label_proxy">QR code for the page that takes the proxy</string>
     <!-- Spoken label of the QR code for the torrent index page -->
     <string name="tv_qr_label_index">QR code for the page that takes the torrent index</string>
-    <!-- Beside the QR code on the TV -->
-    <string name="tv_scan_torrent_proxy">Scan with your phone, then fill in the torrent index and the proxy on the page that opens.</string>
     <!-- Beside the QR code on the TV -->
     <string name="tv_scan_proxy">Scan with your phone, then change the proxy on the page that opens.</string>
     <!-- Beside the QR code on the TV -->
@@ -1000,16 +984,6 @@
     </plurals>
     <!-- Footer under the week's notifications: what a row does. -->
     <string name="settings_coming_up_opens">A show opens its settings.</string>
-    <!-- The same note when a failed check only warns. -->
-    <string name="torrents_check_note_warn">Kaeri checks where torrent traffic leaves from when a torrent starts and every minute while it runs, and warns you if that check fails. Your VPN or proxy is what protects you.</string>
-    <!-- The same note when a failed check stops torrents. -->
-    <string name="torrents_check_note_stop">Kaeri checks where torrent traffic leaves from when a torrent starts and every minute while it runs, and stops torrents if that check fails. Your VPN or proxy is what protects you.</string>
-    <!-- Name of the proxy protection. -->
-    <string name="torrents_protect_proxy_name">SOCKS5 proxy</string>
-    <!-- Name of the VPN protection. -->
-    <string name="torrents_protect_vpn_name">VPN on this device</string>
-    <!-- Body of the question asked before a failed check only warns. -->
-    <string name="torrents_warn_body">Kaeri will warn you instead of pausing. If your VPN or proxy is down, other people can see your IP address.</string>
     <!-- Part of a proxy's line: the user it lets in. -->
     <string name="torrents_proxy_as">as %1$s</string>
     <!-- Title facts: a finished title and when it aired. The dates are already formatted. -->
@@ -1257,8 +1231,6 @@
     <string name="settings_aside_notifications">One notification when an episode of a show you follow comes out: the show and the episode\'s number, never its name. A show can turn its own off in its settings.</string>
     <!-- Settings aside on a tablet, Downloads: where downloads live. -->
     <string name="settings_aside_downloads">Downloads stay in Kaeri\'s own space on this device, which other apps cannot read. Removing the app removes them.</string>
-    <!-- Settings aside on a tablet, Sources: the title over the connection check note. -->
-    <string name="settings_aside_connection_check">Connection check</string>
     <!-- Settings aside on a tablet, Sources: how sources are tried. -->
     <string name="settings_aside_sources">Sources are tried in order, top to bottom. A show can keep its own source, chosen from its title page.</string>
     <!-- Settings aside on a tablet, upscaling picture: what a screen reader hears. -->
@@ -1267,16 +1239,6 @@
     <string name="settings_upscaling_source">Original 480p</string>
     <!-- Settings aside on a tablet, upscaling: what no processing does. -->
     <string name="settings_upscaling_note_off_original">The original 480p, scaled to fit without processing.</string>
-    <!-- Torrent sheet: the title when torrents are being turned on. -->
-    <string name="torrents_sheet_turn_on_title">Turn on torrents</string>
-    <!-- Torrent sheet: the title when only the protection changes. -->
-    <string name="torrents_sheet_protect_title">Protect torrent traffic</string>
-    <!-- Torrent sheet: the button that turns torrents on. -->
-    <string name="torrents_sheet_turn_on_button">Turn on</string>
-    <!-- Torrent sheet: the proxy's host field. -->
-    <string name="torrents_sheet_host">Host</string>
-    <!-- Torrent sheet: the proxy's port field. -->
-    <string name="torrents_sheet_port">Port</string>
     <!-- Torrent sheet: the note under the proxy fields. -->
     <string name="torrents_sheet_proxy_auth_note">User name and password only if the proxy asks for them.</string>
     <!-- Torrent sheet: the title when a saved proxy is edited. -->
@@ -4115,7 +4077,7 @@
     <!-- Title of the confirmation for resetting the settings. -->
     <string name="settings_reset_title">Reset settings?</string>
     <!-- Line under it. The old settings file is moved aside, not deleted. -->
-    <string name="settings_reset_detail">Every setting goes back to its default, VPN and proxy included. Your watch history stays, and the old settings file is kept.</string>
+    <string name="settings_reset_detail">Every setting goes back to its default, the torrent proxy included. Your watch history stays, and the old settings file is kept.</string>
     <!-- Notice once Kaeri has started again on the default settings. The file is the name the old settings file is kept under, beside the new one, such as config.damaged-2026-10-30. -->
     <string name="settings_reset_done">Settings are back to their defaults. The old file is kept as %1$s.</string>
     <!-- Heading of the Subtitles group in Settings, Playback. -->
@@ -4229,8 +4191,8 @@
     <string name="source_note_gone">Not installed</string>
     <!-- Under a source that found more than one show by this name and could not tell which is this one. -->
     <string name="source_note_ambiguous">Couldn\'t match this title</string>
-    <!-- Under a source held back by the VPN check in Settings. -->
-    <string name="source_note_held_back">Held back by the VPN check</string>
+    <!-- Under a source that waits for the proxy check in Settings. -->
+    <string name="source_note_held_back">Waiting for the proxy check</string>
     <!-- Heading over one source's releases, for a source that offers several (a batch, single episodes). -->
     <string name="source_picker_releases">Releases</string>
     <!-- Accessibility label and badge for the chosen row. -->
@@ -4287,8 +4249,8 @@
     <string name="sources_detail_not_answering">Not answering. %1$s</string>
     <!-- Status line: no answer. -->
     <string name="sources_detail_not_answering_plain">Not answering.</string>
-    <!-- Status line: held back by the check. -->
-    <string name="sources_detail_held_back">Held back until the connection check passes.</string>
+    <!-- Status line: waiting for the proxy check. -->
+    <string name="sources_detail_held_back">Waiting until the proxy check passes.</string>
     <!-- Status line: disabled. -->
     <string name="sources_detail_disabled">Off. It keeps its place and isn\'t tried.</string>
     <!-- Status line: the source is gone. -->
@@ -4340,7 +4302,7 @@
     <!-- Row: where the plugin's page stands. -->
     <string name="sources_source_order_row">Source order</string>
     <!-- Note under the facts on the Torrents page in Sources. Torrents are built in, not a plugin. -->
-    <string name="sources_torrents_note">Torrents are part of Kaeri, not a plugin. What protects their traffic, the connection check and seeding are set in Settings, under Sources.</string>
+    <string name="sources_torrents_note">Torrents are part of Kaeri, not a plugin. The proxy and seeding are set in Settings, under Sources.</string>
     <!-- Over the { -source } list while the { -source-pl } are set up again after a change. -->
     <string name="sources_rebuilding">Sources are being set up again</string>
     <!-- Value of a plugin's response time, in milliseconds. -->
@@ -4986,43 +4948,21 @@
     <!-- Label and short value for the switch. -->
     <string name="torrents_on">Torrents are on</string>
     <!-- Line under the switch while torrents are off. -->
-    <string name="torrents_off_detail">Off by default. Turning this on asks how to protect your connection first.</string>
-    <!-- Line explaining the risk, before torrents start. -->
-    <string name="torrents_risk">Other people can see your IP address while you download and share a torrent. Choose what protects it before torrents start.</string>
+    <string name="torrents_off_detail">Off by default. Torrents connect directly unless you route them through a proxy.</string>
+    <!-- Line about privacy in the torrent sheet, before torrents start. -->
+    <string name="torrents_risk">Other people in a torrent can see your IP address. To keep it private, route torrent traffic through a proxy.</string>
     <!-- Line in the Apple sources screen: torrents belong to the app, not to a plugin. -->
-    <string name="torrents_not_a_plugin">Torrents are part of Kaeri, not a plugin. What protects their traffic, the connection check and seeding are set in Settings, under Sources.</string>
-    <!-- Label of the choice of protection. -->
-    <string name="torrents_protect_with">Protect with</string>
-    <!-- Option: no protection. -->
-    <string name="torrents_protect_none">No protection</string>
-    <!-- Option: a proxy. -->
-    <string name="torrents_protect_proxy">Proxy</string>
-    <!-- Option: a VPN already running on the device. -->
-    <string name="torrents_protect_vpn">VPN</string>
-    <!-- Line under the proxy option. -->
-    <string name="torrents_protect_proxy_detail">Torrent traffic goes through a proxy you run or rent.</string>
-    <!-- Line under the VPN option. -->
-    <string name="torrents_protect_vpn_detail">Uses the VPN already running on this device.</string>
-    <!-- Line under the no-protection option. -->
-    <string name="torrents_protect_none_detail">Your address is visible to everyone in the torrent.</string>
-    <!-- Line when no protection is set. -->
-    <string name="torrents_protect_none_note">With no protection, Kaeri doesn\'t check the connection.</string>
-    <!-- Summary: a proxy protects. Host and port are already formatted. -->
-    <string name="torrents_summary_proxy_at">Protected by a SOCKS5 proxy at %1$s:%2$s.</string>
-    <!-- Summary: a proxy protects, address not shown. -->
-    <string name="torrents_summary_proxy">Protected by a SOCKS5 proxy.</string>
-    <!-- Summary: a VPN protects. -->
-    <string name="torrents_summary_vpn">Protected by the VPN on this device.</string>
-    <!-- Summary: nothing protects. -->
-    <string name="torrents_summary_none">Not protected. Your address is visible to everyone in the torrent.</string>
-    <!-- Title of the question when torrents are turned on without protection. -->
-    <string name="torrents_unprotected_title">Use torrents without protection?</string>
-    <!-- Line under it. -->
-    <string name="torrents_unprotected_detail">Other people can see your IP address while you download and share a torrent, and Kaeri doesn\'t check the connection.</string>
-    <!-- Button that confirms turning torrents on without protection. -->
-    <string name="torrents_turn_on_unprotected">Turn on without protection</string>
-    <!-- Button that confirms using no protection. -->
-    <string name="torrents_use_unprotected">Use without protection</string>
+    <string name="torrents_not_a_plugin">Torrents are part of Kaeri, not a plugin. The proxy and seeding are set in Settings, under Sources.</string>
+    <!-- Switch: send torrent traffic through a SOCKS5 proxy. Off by default. -->
+    <string name="torrents_proxy_route">Route torrent traffic through a proxy</string>
+    <!-- Line under the switch. -->
+    <string name="torrents_proxy_route_detail">Torrent traffic goes through a SOCKS5 proxy you run or rent. While this is off, torrents connect directly.</string>
+    <!-- Summary: torrents go through a proxy. Host and port are already formatted. -->
+    <string name="torrents_summary_proxy_at">Through a SOCKS5 proxy at %1$s:%2$s.</string>
+    <!-- Summary: torrents go through a proxy, address not shown. -->
+    <string name="torrents_summary_proxy">Through a SOCKS5 proxy.</string>
+    <!-- Summary: no proxy is set. -->
+    <string name="torrents_summary_direct">Connecting directly, without a proxy.</string>
     <!-- Label of the proxy host field. -->
     <string name="torrents_proxy_host">Proxy host</string>
     <!-- Label of the proxy port field. -->
@@ -5034,21 +4974,17 @@
     <!-- Line under the password field. -->
     <string name="torrents_password_keep">Leave the password empty to keep the saved one.</string>
     <!-- Line under the proxy form: what happens while the new proxy is checked. -->
-    <string name="torrents_proxy_keeps_saved">Torrents keep using the saved proxy until the new one passes the connection check.</string>
+    <string name="torrents_proxy_keeps_saved">Torrents keep using the saved proxy until the new one passes the proxy check.</string>
     <!-- Line when the host or port is wrong. -->
     <string name="torrents_proxy_invalid">The proxy needs a host and a port from 1 to 65535.</string>
     <!-- Line while the proxy is checked. -->
     <string name="torrents_checking_proxy">Checking the proxy…</string>
     <!-- Notice after the proxy was saved. -->
     <string name="torrents_proxy_saved">Proxy saved</string>
-    <!-- Why a save was refused: traffic left outside the proxy. -->
-    <string name="torrents_left_outside_proxy">Torrent traffic left outside this proxy</string>
-    <!-- Why a save was refused: the check could not run through the proxy. -->
-    <string name="torrents_check_not_made_proxy">The check couldn\'t be made through this proxy</string>
+    <!-- Why a save was refused: the proxy check failed. A sentence fragment. -->
+    <string name="torrents_check_not_made_proxy">The proxy check failed</string>
     <!-- Notice when a proxy was not saved. The reason is a sentence fragment. -->
     <string name="torrents_proxy_not_saved">Not saved. %1$s, so the saved proxy stays.</string>
-    <!-- Notice when protection was not saved. The reason is a sentence fragment. -->
-    <string name="torrents_protection_not_saved">Not saved. %1$s, so the saved protection stays.</string>
     <!-- Notice when torrents stayed off. The reason is a sentence fragment. -->
     <string name="torrents_still_off">Torrents are still off. %1$s.</string>
     <!-- Label of the index address field. -->
@@ -5063,44 +4999,18 @@
     <string name="torrents_index_scheme">Use an http or https address.</string>
     <!-- Notice after the index was saved. -->
     <string name="torrents_index_saved">Torrent index saved</string>
-    <!-- Label of the choice of what to do when a check fails. -->
-    <string name="torrents_if_check_fails">If a check fails</string>
-    <!-- Title of the question that asks whether torrents may keep running. -->
-    <string name="torrents_keep_running_title">Keep torrents running if a check fails?</string>
-    <!-- Line under the question: what the choice is about. -->
-    <string name="torrents_keep_running_detail">What happens to torrents when the check finds traffic leaving outside your VPN or proxy.</string>
-    <!-- Option: pause torrents. -->
-    <string name="torrents_fail_pause">Pause torrents</string>
-    <!-- Option: stop torrents. -->
-    <string name="torrents_fail_stop">Stop torrents</string>
-    <!-- Option: only warn. -->
-    <string name="torrents_fail_warn">Warn only</string>
-    <!-- Result of the choice: torrents run. -->
-    <string name="torrents_fail_warn_result">Torrents keep running.</string>
-    <!-- Result of the choice: torrents stop. -->
-    <string name="torrents_fail_stop_result">Torrents are stopped.</string>
-    <!-- Result of the choice: torrents pause. -->
-    <string name="torrents_fail_pause_result">Torrents are paused.</string>
-    <!-- Label of the last check. -->
-    <string name="torrents_last_check">Last check</string>
-    <!-- Check passed. The exit is where the traffic leaves from, already formatted. -->
-    <string name="torrents_check_passed_exit">Leaving through %1$s</string>
+    <!-- Under the proxy form: what the app checks. -->
+    <string name="torrents_check_note">Kaeri checks that it can reach the proxy before torrents start. Torrents wait while that check fails.</string>
+    <!-- Label of the proxy check's result. -->
+    <string name="torrents_last_check">Proxy check</string>
     <!-- Check passed. -->
     <string name="torrents_check_passed">Passed</string>
-    <!-- Check running: the line. -->
-    <string name="torrents_check_running_line">Checking where torrent traffic leaves from</string>
     <!-- Check running: the short word. -->
     <string name="torrents_check_running">Checking</string>
-    <!-- Check failed: traffic left outside. The consequence follows. -->
-    <string name="torrents_check_leaked">Traffic left outside the protection. %1$s</string>
-    <!-- Check failed: the check could not be made. The consequence follows. -->
-    <string name="torrents_check_unmade">The check couldn\'t be made. %1$s</string>
+    <!-- Check failed: the line. -->
+    <string name="torrents_check_failed_line">The proxy check failed. Torrents start once it passes.</string>
     <!-- Short word: the check failed. -->
     <string name="torrents_check_failed">Failed</string>
-    <!-- Line: no protection is set, so nothing was checked. -->
-    <string name="torrents_check_none_line">No protection is set</string>
-    <!-- Short word: unprotected. -->
-    <string name="torrents_check_none">Unprotected</string>
     <!-- Line: no check yet. -->
     <string name="torrents_check_waiting_line">Not checked yet</string>
     <!-- Short word: waiting for the first check. -->
@@ -5127,10 +5037,6 @@
     <string name="torrents_page_unreadable">The TV couldn\'t read this. Scan the QR code on the TV again.</string>
     <!-- Line when the page needs script. -->
     <string name="torrents_page_needs_script">This page needs JavaScript to send the form to the TV safely.</string>
-    <!-- Under the proxy form when turning torrents on: what the app checks, and that the VPN or proxy is what protects. -->
-    <string name="torrents_check_note">Kaeri checks where torrent traffic leaves from when a torrent starts and every minute while it runs, and pauses torrents if that check fails. Your VPN or proxy is what protects you.</string>
-    <!-- Notice after the protection was saved. -->
-    <string name="torrents_protection_saved">Torrent protection saved</string>
     <!-- Menu item and button: open a magnet link or a torrent file the viewer has. -->
     <string name="opened_open">Open link or file</string>
     <!-- Title of the sheet where the viewer pastes a magnet link. -->
