@@ -13,8 +13,12 @@ public enum MotionDemo: String, CaseIterable, Sendable {
     case t1Poster
     /// T1 from Home's spotlight, whose title is often on a shelf too: out of the spotlight.
     case t1Spotlight
-    /// T1 from the first cover of the grid on screen: the Library's list, or Seasonal.
+    /// T1 from the first cover of the grid on screen: the Library's list, Seasonal, or Search's
+    /// results.
     case t1Grid
+    /// The first title of the screen opened with no element to fly from, as a calendar row does:
+    /// the calendar's first broadcast there, else Continue's first title.
+    case t1Nowhere
     /// M1 to a section `-KaeriTo` names, as a click in the sidebar does: its first load.
     case section
     /// Home asked for again as on its first visit, with nothing kept: its placeholders, then its
@@ -29,6 +33,9 @@ public enum MotionDemo: String, CaseIterable, Sendable {
     /// Back from the page of Home's spotlight, opened from the spotlight first (`prelude`): its
     /// art flies home.
     case backSpotlight
+    /// Back from the spotlight's page as `backSpotlight`, and the spotlight clicked again while
+    /// its art is still flying home: the second flight takes off from where the first one is.
+    case backReopen
     /// T9: the title's next episode is marked watched.
     case t9
     /// The title page's next season opened from its season picker, as a click on its cell does.
@@ -68,7 +75,7 @@ public enum MotionDemo: String, CaseIterable, Sendable {
     @MainActor
     public func prelude(navigator: Navigator, store: AppStore) async {
         switch self {
-        case .backSpotlight:
+        case .backSpotlight, .backReopen:
             MotionDemo.t1Spotlight.run(navigator: navigator, store: store)
             try? await Task.sleep(for: .seconds(2))
         case .season:
@@ -101,11 +108,19 @@ public enum MotionDemo: String, CaseIterable, Sendable {
             let entry = store.titles[spot.entry.id] ?? spot.entry
             navigator.openTitle(entry.id, from: TitleSource(entry.id, .spotlight, art: store.heroArt(entry).isCompact ? .poster : .banner))
         case .t1Grid:
-            let ids = navigator.section == .seasonal
-                ? store.seasonal.state.ids
-                : store.library.segment(navigator.librarySegment).state.ids
+            let ids = switch navigator.section {
+            case .seasonal: store.seasonal.state.ids
+            case .search: store.search.list.state.ids
+            default: store.library.segment(navigator.librarySegment).state.ids
+            }
             guard let id = ids.first else { return }
             navigator.openTitle(id, from: TitleSource(id, .grid, art: .poster))
+        case .t1Nowhere:
+            let first = navigator.section == .calendar
+                ? store.broadcasts(mine: store.calendarMine).first?.entry.id
+                : queue.first ?? store.seasonal.state.ids.first
+            guard let id = first else { return }
+            navigator.openTitle(id)
         case .section:
             let arguments = ProcessInfo.processInfo.arguments
             guard let at = arguments.firstIndex(of: "-KaeriTo"), arguments.indices.contains(at + 1),
@@ -123,6 +138,12 @@ public enum MotionDemo: String, CaseIterable, Sendable {
             if let id = navigator.focusedTitle ?? queue.first { navigator.openTitle(id) }
         case .back, .backSpotlight:
             navigator.back()
+        case .backReopen:
+            navigator.back()
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(200))
+                MotionDemo.t1Spotlight.run(navigator: navigator, store: store)
+            }
         case .t9:
             guard let id = navigator.focusedTitle, let entry = store.titles[id] else { return }
             let next = entry.progress?.next ?? 1

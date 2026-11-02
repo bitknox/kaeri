@@ -79,6 +79,15 @@ public struct TitleFlight: Equatable, Sendable {
     /// its cover where the page has no banner.
     public var landing: TitleSource.Art
 
+    /// Which trip it is: where from, and which way. It stays the same as the art moves and
+    /// settles on its landing, and differs for the next flight.
+    public struct Trip: Hashable, Sendable {
+        let source: TitleSource
+        let opening: Bool
+    }
+
+    public var trip: Trip { Trip(source: source, opening: opening) }
+
     public init(source: TitleSource, opening: Bool, atPage: Bool, landing: TitleSource.Art? = nil) {
         self.source = source
         self.opening = opening
