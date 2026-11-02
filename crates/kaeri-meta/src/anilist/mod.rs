@@ -358,6 +358,29 @@ pub struct Page<T> {
     pub has_next: bool,
 }
 
+/// One page of broadcasts to ask for: see [`AniList::airing_pages`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AiringPage {
+    pub from: i64,
+    pub to: i64,
+    pub page: u32,
+    pub per_page: u32,
+    /// Newest first, for the past: see [`query::airing_schedule`].
+    pub newest_first: bool,
+}
+
+/// What [`AniList::suggestions`] found.
+#[derive(Debug, Clone, Default)]
+pub struct Suggestions {
+    /// The titles asked for, in the order asked.
+    pub titles: Vec<Media>,
+    /// Each title recommendations were asked from, with its name and the ids recommended off
+    /// it, in the order asked.
+    pub from: Vec<(AnilistId, String, Vec<AnilistId>)>,
+    /// The ids rated highest off the `because` title, best first, when one was asked about.
+    pub because: Option<Vec<AnilistId>>,
+}
+
 /// One row of the authenticated user's list.
 ///
 /// Carries the full `Media` as well as the list state, so a library pull populates the Library
@@ -625,22 +648,9 @@ impl AniList {
         if ids.is_empty() {
             return Ok(Vec::new());
         }
-        let raw: Vec<i64> = ids.iter().map(|id| i64::from(id.get())).collect();
-        let data: serde_json::Value = self
-            .execute(
-                &query::by_ids(),
-                serde_json::json!({ "ids": raw, "perPage": ids.len().min(50) }),
-            )
-            .await?;
-        let page: Page<Media> = decode_media_page(&data["Page"])?;
-        let mut found = page.items;
-        let mut ordered = Vec::with_capacity(found.len());
-        for id in ids {
-            if let Some(index) = found.iter().position(|m| m.id == *id) {
-                ordered.push(found.remove(index));
-            }
-        }
-        Ok(ordered)
+        let (document, variables) = many_part(ids);
+        let data: serde_json::Value = self.execute(&document, variables).await?;
+        decode_many(&data, ids)
     }
 
     /// [`Self::media_many`] with what each title's episode table needs ([`query::TABLE_FIELDS`]),
@@ -684,59 +694,83 @@ impl AniList {
         if ids.is_empty() {
             return Ok(Vec::new());
         }
-        let raw: Vec<i64> = ids.iter().map(|id| i64::from(id.get())).collect();
-        let data: serde_json::Value = self
-            .execute(
-                &query::recommended_from(),
-                serde_json::json!({ "ids": raw, "perPage": ids.len() }),
-            )
-            .await?;
-        let id_of = |v: &serde_json::Value| v.as_u64().map(|n| AnilistId::new(n as u32));
-        let mut found: Vec<(AnilistId, String, Vec<AnilistId>)> = data["Page"]["media"]
-            .as_array()
-            .map(|media| {
-                media
-                    .iter()
-                    .filter_map(|m| {
-                        let name = ["english", "romaji", "native"]
-                            .iter()
-                            .find_map(|k| m["title"][*k].as_str())
-                            .unwrap_or_default()
-                            .to_owned();
-                        let recommended = m["recommendations"]["nodes"]
-                            .as_array()
-                            .map(|nodes| {
-                                nodes
-                                    .iter()
-                                    .filter_map(|n| id_of(&n["mediaRecommendation"]["id"]))
-                                    .collect()
-                            })
-                            .unwrap_or_default();
-                        Some((id_of(&m["id"])?, name, recommended))
-                    })
-                    .collect()
-            })
-            .unwrap_or_default();
-        // In the order asked, as `media_many` does: the caller asked most recent first.
-        found.sort_by_key(|(id, ..)| ids.iter().position(|asked| asked == id));
-        Ok(found)
+        let (document, variables) = recommended_from_part(ids);
+        let data: serde_json::Value = self.execute(&document, variables).await?;
+        Ok(decode_recommended_from(&data, ids))
     }
 
-    /// What people who liked `id` rated highest, best rated first, at most `each`, each a whole
-    /// title. See [`query::recommended_titles`].
-    pub async fn recommended_titles(&self, id: AnilistId, each: u32) -> Result<Vec<Media>> {
-        let data: serde_json::Value = self
-            .execute(
-                &query::recommended_titles(),
+    /// What one step of Up next asks, in one request (see [`query::together`]): the cards of
+    /// `titles` (at most fifty), what people who liked each of `from` rated highest (as
+    /// [`Self::recommended_from`]), and with `because` the ids of the `each` titles rated
+    /// highest off that one (as [`query::recommended_ids`]). A part with nothing to ask is
+    /// left out and answered empty.
+    pub async fn suggestions(
+        &self,
+        titles: &[AnilistId],
+        from: &[AnilistId],
+        because: Option<(AnilistId, u32)>,
+    ) -> Result<Suggestions> {
+        let titles = &titles[..titles.len().min(50)];
+        let from = &from[..from.len().min(query::RECOMMENDED_FROM)];
+        let mut parts = Vec::new();
+        if !titles.is_empty() {
+            parts.push(many_part(titles));
+        }
+        if !from.is_empty() {
+            parts.push(recommended_from_part(from));
+        }
+        if let Some((id, each)) = because {
+            parts.push((
+                query::recommended_ids(),
                 serde_json::json!({ "ids": [id.get()], "perPage": 1, "each": each }),
-            )
-            .await?;
-        let nodes = data["Page"]["media"][0]["recommendations"]["nodes"].clone();
-        let nodes: Vec<serde_json::Value> = serde_json::from_value(nodes).unwrap_or_default();
-        Ok(nodes
-            .into_iter()
-            .filter_map(|n| serde_json::from_value(n["mediaRecommendation"].clone()).ok())
-            .collect())
+            ));
+        }
+        let mut answers = self.execute_together(&parts).await?.into_iter();
+        let mut next = || answers.next().unwrap_or(serde_json::Value::Null);
+        let titles = if titles.is_empty() { Vec::new() } else { decode_many(&next(), titles)? };
+        let from =
+            if from.is_empty() { Vec::new() } else { decode_recommended_from(&next(), from) };
+        let because = because.map(|_| {
+            next()["Page"]["media"][0]["recommendations"]["nodes"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(|n| n["mediaRecommendation"]["id"].as_u64())
+                .map(|n| AnilistId::new(n as u32))
+                .collect()
+        });
+        Ok(Suggestions { titles, from, because })
+    }
+
+    /// Run `parts`, each a query of one root field, as one request (see [`query::together`]),
+    /// and give each its answer as it would have come alone: its root field under its own name.
+    /// One part goes as it is.
+    async fn execute_together(
+        &self,
+        parts: &[(String, serde_json::Value)],
+    ) -> Result<Vec<serde_json::Value>> {
+        match parts {
+            [] => Ok(Vec::new()),
+            [(document, variables)] => {
+                Ok(vec![self.execute(document, variables.clone()).await?])
+            }
+            _ => {
+                let (document, variables) = query::together(parts);
+                let data: serde_json::Value = self.execute(&document, variables).await?;
+                Ok(parts
+                    .iter()
+                    .enumerate()
+                    .map(|(i, (document, _))| {
+                        let mut answer = serde_json::Map::new();
+                        answer.insert(
+                            query::root_of(document).to_owned(),
+                            data[format!("q{i}")].clone(),
+                        );
+                        serde_json::Value::Object(answer)
+                    })
+                    .collect())
+            }
+        }
     }
 
     pub async fn media(&self, id: AnilistId) -> Result<Media> {
@@ -798,17 +832,29 @@ impl AniList {
         per_page: u32,
         newest_first: bool,
     ) -> Result<Page<AiringEntry>> {
-        let sort = if newest_first { "TIME_DESC" } else { "TIME" };
-        let data: serde_json::Value = self
-            .execute(
-                &query::airing_schedule(),
-                serde_json::json!({
-                    "from": from, "to": to, "page": page.max(1), "perPage": per_page,
-                    "sort": [sort]
-                }),
-            )
-            .await?;
-        Ok(airing_page(&data["Page"]))
+        let mut pages =
+            self.airing_pages(&[AiringPage { from, to, page, per_page, newest_first }]).await?;
+        Ok(pages.pop().unwrap_or(Page { items: Vec::new(), has_next: false }))
+    }
+
+    /// Several pages of broadcasts, each as [`Self::airing_between_sorted`] asks for one, in
+    /// one request and in the order asked (see [`query::together`]).
+    pub async fn airing_pages(&self, pages: &[AiringPage]) -> Result<Vec<Page<AiringEntry>>> {
+        let parts: Vec<_> = pages
+            .iter()
+            .map(|p| {
+                let sort = if p.newest_first { "TIME_DESC" } else { "TIME" };
+                (
+                    query::airing_schedule(),
+                    serde_json::json!({
+                        "from": p.from, "to": p.to, "page": p.page.max(1),
+                        "perPage": p.per_page, "sort": [sort]
+                    }),
+                )
+            })
+            .collect();
+        let answers = self.execute_together(&parts).await?;
+        Ok(answers.iter().map(|data| airing_page(&data["Page"])).collect())
     }
 
     /// What aired for `ids` after `from` and before `to`, oldest first: a page of at most
@@ -973,6 +1019,67 @@ impl AniList {
             self.execute(query::VIEWER, serde_json::json!({})).await?;
         decode_viewer(&data["Viewer"])
     }
+}
+
+/// [`query::by_ids`] for `ids`, at most fifty: the document and its variables.
+fn many_part(ids: &[AnilistId]) -> (String, serde_json::Value) {
+    let raw: Vec<i64> = ids.iter().map(|id| i64::from(id.get())).collect();
+    (query::by_ids(), serde_json::json!({ "ids": raw, "perPage": ids.len().min(50) }))
+}
+
+/// [`query::by_ids`]'s answer, in the order of `ids`.
+fn decode_many(data: &serde_json::Value, ids: &[AnilistId]) -> Result<Vec<Media>> {
+    let page: Page<Media> = decode_media_page(&data["Page"])?;
+    let mut found = page.items;
+    let mut ordered = Vec::with_capacity(found.len());
+    for id in ids {
+        if let Some(index) = found.iter().position(|m| m.id == *id) {
+            ordered.push(found.remove(index));
+        }
+    }
+    Ok(ordered)
+}
+
+/// [`query::recommended_from`] for `ids`: the document and its variables.
+fn recommended_from_part(ids: &[AnilistId]) -> (String, serde_json::Value) {
+    let raw: Vec<i64> = ids.iter().map(|id| i64::from(id.get())).collect();
+    (query::recommended_from(), serde_json::json!({ "ids": raw, "perPage": ids.len() }))
+}
+
+/// [`query::recommended_from`]'s answer, in the order of `ids`.
+fn decode_recommended_from(
+    data: &serde_json::Value,
+    ids: &[AnilistId],
+) -> Vec<(AnilistId, String, Vec<AnilistId>)> {
+    let id_of = |v: &serde_json::Value| v.as_u64().map(|n| AnilistId::new(n as u32));
+    let mut found: Vec<(AnilistId, String, Vec<AnilistId>)> = data["Page"]["media"]
+        .as_array()
+        .map(|media| {
+            media
+                .iter()
+                .filter_map(|m| {
+                    let name = ["english", "romaji", "native"]
+                        .iter()
+                        .find_map(|k| m["title"][*k].as_str())
+                        .unwrap_or_default()
+                        .to_owned();
+                    let recommended = m["recommendations"]["nodes"]
+                        .as_array()
+                        .map(|nodes| {
+                            nodes
+                                .iter()
+                                .filter_map(|n| id_of(&n["mediaRecommendation"]["id"]))
+                                .collect()
+                        })
+                        .unwrap_or_default();
+                    Some((id_of(&m["id"])?, name, recommended))
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    // In the order asked, as `media_many` does: the caller asked most recent first.
+    found.sort_by_key(|(id, ..)| ids.iter().position(|asked| asked == id));
+    found
 }
 
 /// The single-title answer: the title, with the broadcasts already out that were asked for

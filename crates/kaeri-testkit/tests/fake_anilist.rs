@@ -598,3 +598,76 @@ async fn art_served_badly_fails_every_second_image_a_few_times_first() {
     assert!(fetch(&first).await.is_none(), "twice");
     assert!(fetch(&first).await.is_some(), "and then it is served");
 }
+
+#[tokio::test]
+async fn pages_of_the_calendar_asked_together_are_each_answered_as_alone() {
+    use kaeri_meta::anilist::AiringPage;
+    let kit = MetaKit::start().await;
+    let page = |page, newest_first| AiringPage {
+        from: FIXTURE_NOW - 14 * DAY,
+        to: FIXTURE_NOW + 14 * DAY,
+        page,
+        per_page: 2,
+        newest_first,
+    };
+    let asked = [page(1, true), page(1, false), page(2, false)];
+    let together = kit.meta.airing_pages(&asked).await;
+    assert_eq!(kit.server.requests_for(Operation::Schedule).len(), 1, "one request");
+    let rows = |found: &kaeri_meta::anilist::Page<kaeri_meta::anilist::AiringEntry>| {
+        found
+            .items
+            .iter()
+            .map(|a| (a.media.id.get(), a.episode, a.airing_at))
+            .collect::<Vec<_>>()
+    };
+    for (one, found) in asked.iter().zip(&together) {
+        let alone = kit
+            .meta
+            .airing_between_sorted(one.from, one.to, one.page, one.per_page, one.newest_first)
+            .await
+            .unwrap();
+        let found = found.as_ref().unwrap();
+        assert!(!alone.items.is_empty());
+        assert_eq!(rows(found), rows(&alone), "{one:?}");
+        assert_eq!(found.has_next, alone.has_next);
+    }
+
+    // Refused as a whole, they are asked one by one and still come.
+    kit.server.clear_requests();
+    kit.server.fail_next(Failure::GraphQl("Max query complexity of 500 exceeded".into()));
+    let apart = kit.meta.airing_pages(&asked).await;
+    assert!(apart.iter().all(Result::is_ok));
+    assert_eq!(kit.server.requests_for(Operation::Schedule).len(), 4, "refused, then three");
+}
+
+#[tokio::test]
+async fn up_next_lookups_asked_together_are_each_answered_as_alone() {
+    let kit = MetaKit::start().await;
+    let found = kit.meta.suggestions(&[AIRING, MOVIE], &[FINISHED], Some((FINISHED, 9))).await;
+    assert_eq!(kit.server.requests().len(), 1, "one request for the three");
+    assert_eq!(kit.server.requests_for(Operation::Recommended).len(), 1);
+
+    let titles = found.titles.unwrap();
+    assert_eq!(ids(&titles), [AIRING.get(), MOVIE.get()]);
+    let from = found.from.unwrap().unwrap();
+    let alone = kit.meta.recommended_from(&[FINISHED]).await.unwrap();
+    assert_eq!(from, alone);
+    assert!(!from[0].2.is_empty(), "the fixture has recommendations");
+    let because = found.because.unwrap().unwrap();
+    assert_eq!(because, from[0].2, "the same titles, best first");
+
+    // Refused as a whole, each part is asked on its own.
+    kit.server.clear_requests();
+    kit.server.fail_next(Failure::GraphQl("Max query complexity of 500 exceeded".into()));
+    let apart = kit.meta.suggestions(&[AIRING, MOVIE], &[FINISHED], Some((FINISHED, 9))).await;
+    assert_eq!(ids(&apart.titles.unwrap()), [AIRING.get(), MOVIE.get()]);
+    assert_eq!(apart.from.unwrap().unwrap(), alone);
+    assert_eq!(apart.because.unwrap().unwrap(), because);
+    assert_eq!(kit.server.requests().len(), 4, "refused, then one for each");
+
+    // Over the network, a failure is each part's, and the titles fall to what is kept.
+    kit.server.fail_next(Failure::Disconnect);
+    let failed = kit.meta.suggestions(&[AIRING], &[FINISHED], None).await;
+    assert!(failed.from.unwrap().is_err());
+    assert_eq!(ids(&failed.titles.unwrap()), [AIRING.get()], "from the cache");
+}

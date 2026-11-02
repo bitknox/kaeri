@@ -560,8 +560,8 @@ impl Drop for FakeAniList {
 pub const COMPLEXITY_LIMIT: u64 = 500;
 
 /// What `document` costs as AniList counts it, as far as the fake can tell: one for every field,
-/// and a field with a `perPage` argument (a literal or a variable of `variables`) multiplies what
-/// is selected under it by that many. An estimate of the rule AniList documents, not a replay of
+/// and a connection with a `perPage` argument (a literal or a variable of `variables`)
+/// multiplies what is selected under it by that many. A root `Page` does not. An estimate of the rule AniList documents, not a replay of
 /// it: the real service is the judge, and a live probe is the way to measure it.
 pub fn complexity(document: &str, variables: &Value) -> u64 {
     let mut tokens: Vec<String> = Vec::new();
@@ -601,6 +601,10 @@ fn selection(tokens: &[String], at: &mut usize, variables: &Value) -> u64 {
                 if tokens.get(*at + 1).is_some_and(|t| t == ":") {
                     *at += 2;
                 }
+                // A `Page` is not a connection: its titles are counted once, however many it
+                // holds. Fifty whole titles in one page answer, as do five pages of twenty,
+                // while sixteen whole titles under one title's recommendations were refused.
+                let page = tokens.get(*at).is_some_and(|t| t == "Page");
                 *at += 1;
                 let mut times = 1;
                 if tokens.get(*at).is_some_and(|t| t == "(") {
@@ -630,11 +634,113 @@ fn selection(tokens: &[String], at: &mut usize, variables: &Value) -> u64 {
                     *at += 1;
                     children = selection(tokens, at, variables);
                 }
-                total += 1 + children * times;
+                total += 1 + children * if page { 1 } else { times };
             }
         }
     }
     total
+}
+
+/// The roots of a document that asks several queries at once, as `query::together` writes one:
+/// each root under an alias `q0`, `q1` and on, its variables named after it (`$q0_ids`). Each
+/// comes back as its alias, a document of that root alone with its variables named as the query
+/// names them, and those variables. `None` for any other document, the aliased pages of a search
+/// included.
+fn together(document: &str, variables: &Value) -> Option<Vec<(String, String, Value)>> {
+    let open = document.find('{')?;
+    let head = &document[..open];
+    let declared: Vec<(String, String)> = match (head.find('('), head.rfind(')')) {
+        (Some(from), Some(to)) if from < to => head[from + 1..to]
+            .split(',')
+            .filter_map(|d| {
+                let (name, kind) = d.split_once(':')?;
+                Some((name.trim().trim_start_matches('$').to_owned(), kind.trim().to_owned()))
+            })
+            .collect(),
+        _ => Vec::new(),
+    };
+    let body: Vec<char> = document[open + 1..document.rfind('}')?].chars().collect();
+    let mut parts = Vec::new();
+    let mut at = 0;
+    let skip = |at: &mut usize| {
+        while body.get(*at).is_some_and(|c| c.is_whitespace() || *c == ',') {
+            *at += 1;
+        }
+    };
+    let word = |at: &mut usize| {
+        let from = *at;
+        while body.get(*at).is_some_and(|c| c.is_alphanumeric() || *c == '_') {
+            *at += 1;
+        }
+        body[from..*at].iter().collect::<String>()
+    };
+    // Past the bracket that closes the one at `at`.
+    let close = |at: &mut usize, open: char, shut: char| {
+        let mut depth = 0;
+        while let Some(c) = body.get(*at) {
+            *at += 1;
+            if *c == open {
+                depth += 1;
+            } else if *c == shut {
+                depth -= 1;
+                if depth == 0 {
+                    return;
+                }
+            }
+        }
+    };
+    loop {
+        skip(&mut at);
+        if at >= body.len() {
+            break;
+        }
+        let alias = word(&mut at);
+        if !alias
+            .strip_prefix('q')
+            .is_some_and(|n| !n.is_empty() && n.chars().all(|c| c.is_ascii_digit()))
+        {
+            return None;
+        }
+        skip(&mut at);
+        if body.get(at) != Some(&':') {
+            return None;
+        }
+        at += 1;
+        skip(&mut at);
+        let from = at;
+        word(&mut at);
+        skip(&mut at);
+        if body.get(at) == Some(&'(') {
+            close(&mut at, '(', ')');
+            skip(&mut at);
+        }
+        if body.get(at) != Some(&'{') {
+            return None;
+        }
+        close(&mut at, '{', '}');
+        let prefix = format!("{alias}_");
+        let root: String =
+            body[from..at].iter().collect::<String>().replace(&format!("${prefix}"), "$");
+        let mut vars = serde_json::Map::new();
+        let mut declarations = Vec::new();
+        for (name, kind) in &declared {
+            if let Some(own) = name.strip_prefix(&prefix) {
+                declarations.push(format!("${own}: {kind}"));
+                if let Some(value) = variables.get(name) {
+                    vars.insert(own.to_owned(), value.clone());
+                }
+            }
+        }
+        let document = format!("query ({}) {{ {root} }}", declarations.join(", "));
+        parts.push((alias, document, Value::Object(vars)));
+    }
+    (parts.len() > 1).then_some(parts)
+}
+
+/// The root field a document of one root answers under.
+fn root_field(document: &str) -> String {
+    let body = document.split_once('{').map_or("", |(_, b)| b).trim_start();
+    body.chars().take_while(|c| c.is_alphanumeric() || *c == '_').collect()
 }
 
 /// A poisoned lock means a test already panicked; the state is still worth reading.
@@ -882,7 +988,7 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
         state.requests.push(Request {
             operation,
             path: head.path.clone(),
-            query,
+            query: query.clone(),
             variables: variables.clone(),
             authorization: head.authorization.clone(),
             at,
@@ -933,15 +1039,36 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
             } else {
                 threads::respond(&mut lock(state), operation, &variables, clock.now)
             };
-            let mut reply = thread.unwrap_or_else(|| {
-                respond(
+            let mut reply = thread.unwrap_or_else(|| match together(&query, &variables) {
+                // Each root of several in one request, answered as it would be alone.
+                Some(parts) => {
+                    let mut data = serde_json::Map::new();
+                    for (alias, document, vars) in parts {
+                        let operation = Operation::of(&document);
+                        let reply = respond(
+                            operation, &document, &vars, authorized, clock, catalogue, None,
+                        );
+                        match reply {
+                            Reply::Answer { status: 200, mut body, .. }
+                                if body.get("errors").is_none() =>
+                            {
+                                let root = root_field(&document);
+                                data.insert(alias, body["data"][root].take());
+                            }
+                            failed => return failed,
+                        }
+                    }
+                    Reply::ok(Value::Object(data))
+                }
+                None => respond(
                     operation,
+                    &query,
                     &variables,
                     authorized,
                     clock,
                     catalogue,
                     asks_following.then_some(&following),
-                )
+                ),
             });
             if let Reply::Answer { body, .. } = &mut reply {
                 retitle(body, &titles);
@@ -1140,6 +1267,7 @@ impl<'a> Catalogue<'a> {
 
 fn respond(
     operation: Operation,
+    document: &str,
     vars: &Value,
     authorized: bool,
     clock: Clock,
@@ -1224,24 +1352,35 @@ fn respond(
         }
         Operation::Recommended => {
             let per_page = vars["perPage"].as_u64().unwrap_or(MAX_PER_PAGE as u64) as usize;
+            let document = document.split_whitespace().collect::<Vec<_>>().join(" ");
+            // Asked for more than their ids, the titles come whole, as Home's "Because you
+            // finished" once asked. As many as the connection's `perPage` says.
+            let whole = !document.contains("mediaRecommendation { id }");
+            let each = document
+                .split_once("recommendations(perPage: ")
+                .map(|(_, rest)| rest.split([',', ')']).next().unwrap_or_default())
+                .and_then(|n| match n.strip_prefix('$') {
+                    Some(name) => vars[name].as_u64(),
+                    None => n.trim().parse().ok(),
+                })
+                .unwrap_or(MAX_PER_PAGE as u64) as usize;
             let media: Vec<Value> = ids(&vars["ids"])
                 .into_iter()
                 .take(per_page)
                 .filter_map(|id| catalogue.wire(id))
                 .map(|m| {
-                    // Asked with `$each`, the titles come whole, as many as asked for: Home's
-                    // "Because you finished". Otherwise each is its id, under its card.
-                    let nodes = match vars["each"].as_u64() {
-                        Some(each) => m["recommendations"]["nodes"]
-                            .as_array()
-                            .into_iter()
-                            .flatten()
-                            .filter_map(|n| n["mediaRecommendation"]["id"].as_u64())
-                            .filter_map(|id| catalogue.listed(AnilistId::new(id as u32)))
-                            .take(each as usize)
+                    let ids = m["recommendations"]["nodes"]
+                        .as_array()
+                        .into_iter()
+                        .flatten()
+                        .filter_map(|n| n["mediaRecommendation"]["id"].as_u64());
+                    let nodes: Vec<Value> = if whole {
+                        ids.filter_map(|id| catalogue.listed(AnilistId::new(id as u32)))
+                            .take(each)
                             .map(|title| json!({ "mediaRecommendation": clock.media(title) }))
-                            .collect(),
-                        None => m["recommendations"]["nodes"].clone(),
+                            .collect()
+                    } else {
+                        ids.take(each).map(|id| json!({ "mediaRecommendation": { "id": id } })).collect()
                     };
                     json!({
                         "id": m["id"],

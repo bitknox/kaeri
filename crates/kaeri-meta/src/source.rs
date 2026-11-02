@@ -36,8 +36,8 @@ use kaeri_store::Store;
 
 use crate::{
     anilist::{
-        AiringEntry, AniList, AniListError, BrowseFilter, Facets, LastAired, Media, Page,
-        Season,
+        AiringEntry, AiringPage, AniList, AniListError, BrowseFilter, Facets, LastAired, Media,
+        Page, Season,
     },
     franchise,
     tenrai::{Tenrai, TenraiError},
@@ -292,6 +292,19 @@ fn table_serves(at: Instant, media: &Media, now: Instant) -> bool {
         next.time_until_airing <= i64::try_from(age.as_secs()).unwrap_or(i64::MAX)
     });
     age < TABLE_FOR && !aired
+}
+
+/// A title recommendations were asked from: its id, its name and the ids recommended off it,
+/// best rated first.
+pub type Recommended = (AnilistId, String, Vec<AnilistId>);
+
+/// What [`Meta::suggestions`] found, part by part, each as it would have come alone. A part
+/// that was not asked for is `None`.
+#[derive(Debug)]
+pub struct Suggested {
+    pub titles: Result<Vec<Media>>,
+    pub from: Option<Result<Vec<Recommended>>>,
+    pub because: Option<Result<Vec<AnilistId>>>,
 }
 
 /// The titles asked for in one go.
@@ -954,7 +967,16 @@ impl Meta {
             Err(e) if !Self::descends(&e) => return Err(e.into()),
             Err(e) => e,
         };
+        self.media_many_below(ids, primary).await
+    }
 
+    /// The rungs below AniList for [`Self::media_many_direct`], which AniList failed with
+    /// `primary`.
+    async fn media_many_below(
+        &self,
+        ids: &[AnilistId],
+        primary: AniListError,
+    ) -> Result<Vec<Media>> {
         let mut assembled = Vec::with_capacity(ids.len());
         let mut tenrai_error = None;
         let mut rung = CACHE;
@@ -994,14 +1016,107 @@ impl Meta {
         self.weathered(self.anilist.recommended_from(ids)).await
     }
 
-    /// What people who liked `id` rated highest, each a whole title. AniList only, as
-    /// [`Self::recommended_from`] is.
-    pub async fn recommended_titles(&self, id: AnilistId, each: u32) -> Result<Vec<Media>> {
-        let found = self.weathered(self.anilist.recommended_titles(id, each)).await?;
-        for media in &found {
-            self.remember(media);
+    /// What one step of Up next asks, in one request where AniList takes it: the titles (as
+    /// [`Self::media_many`]), what people who liked each of `from` rated highest (as
+    /// [`Self::recommended_from`]), and with `because` the ids of the `each` titles rated highest
+    /// off that one. See [`AniList::suggestions`].
+    ///
+    /// Each part is answered as it would be alone. Refused as a whole (a GraphQL error, such as
+    /// one for what the query costs), the parts are asked apart. Failed for any other reason,
+    /// each part fails as it would have alone, the titles falling to the cache and Tenrai.
+    pub async fn suggestions(
+        &self,
+        titles: &[AnilistId],
+        from: &[AnilistId],
+        because: Option<(AnilistId, u32)>,
+    ) -> Suggested {
+        let from = &from[..from.len().min(crate::anilist::query::RECOMMENDED_FROM)];
+        // More than one request holds, or the demo's: the titles are asked as before, beside it.
+        let carried = titles.len() <= 50 && !titles.iter().any(|id| crate::demo::is_demo(*id));
+        let in_request: &[AnilistId] = if carried { titles } else { &[] };
+        let parts = usize::from(!in_request.is_empty())
+            + usize::from(!from.is_empty())
+            + usize::from(because.is_some());
+        if parts < 2 {
+            return self.suggestions_apart(titles, from, because).await;
         }
-        Ok(found)
+        let alone = async {
+            match carried {
+                true => None,
+                false => Some(self.media_many(titles).await),
+            }
+        };
+        let asked = self.ask_together(self.anilist.suggestions(in_request, from, because));
+        let (alone, asked) = tokio::join!(alone, asked);
+        match asked {
+            Ok(found) => {
+                self.went(FRESH);
+                for media in &found.titles {
+                    self.remember(media);
+                }
+                Suggested {
+                    titles: alone.unwrap_or(Ok(found.titles)),
+                    from: (!from.is_empty()).then_some(Ok(found.from)),
+                    because: found.because.map(Ok),
+                }
+            }
+            Err(AniListError::Api(e)) => {
+                tracing::info!(error = %e, "Up next's lookups were refused together; asking apart");
+                let apart = self.suggestions_apart(in_request, from, because).await;
+                Suggested { titles: alone.unwrap_or(apart.titles), ..apart }
+            }
+            Err(e) => {
+                let titles = match alone {
+                    Some(titles) => titles,
+                    None if Self::descends(&e) => {
+                        self.media_many_below(titles, e.clone()).await
+                    }
+                    None => Err(e.clone().into()),
+                };
+                Suggested {
+                    titles,
+                    from: (!from.is_empty()).then(|| Err(e.clone().into())),
+                    because: because.map(|_| Err(e.into())),
+                }
+            }
+        }
+    }
+
+    /// [`Self::suggestions`]' parts, each asked on its own.
+    async fn suggestions_apart(
+        &self,
+        titles: &[AnilistId],
+        from: &[AnilistId],
+        because: Option<(AnilistId, u32)>,
+    ) -> Suggested {
+        let titles = self.media_many(titles).await;
+        let from = if from.is_empty() { None } else { Some(self.recommended_from(from).await) };
+        let because = match because {
+            Some((id, each)) => Some(
+                self.weathered(self.anilist.suggestions(&[], &[], Some((id, each))))
+                    .await
+                    .map(|found| found.because.unwrap_or_default()),
+            ),
+            None => None,
+        };
+        Suggested { titles, from, because }
+    }
+
+    /// [`Self::ask_anilist`] for a request that carries several lookups: a GraphQL error is
+    /// AniList refusing this request's shape, not an outage, so the breaker is not told of it
+    /// and the caller asks the parts apart.
+    async fn ask_together<T>(
+        &self,
+        call: impl std::future::Future<Output = std::result::Result<T, AniListError>>,
+    ) -> std::result::Result<T, AniListError> {
+        if let Some(wait) = self.skip("anilist") {
+            return Err(AniListError::Network(skipped("anilist", wait)));
+        }
+        let result = call.await;
+        if matches!(result, Err(AniListError::Api(_))) {
+            return result;
+        }
+        self.ask_anilist(std::future::ready(result)).await
     }
 
     /// One page of a search for `term` with `filter`, or a browse when `term` is empty.
@@ -1142,6 +1257,41 @@ impl Meta {
         per_page: u32,
     ) -> Result<Page<AiringEntry>> {
         self.weathered(self.anilist.airing_between(from, to, page, per_page)).await
+    }
+
+    /// Several pages of the calendar, in one request where AniList takes it (see
+    /// [`AniList::airing_pages`]), each answered as it would be alone, in the order asked.
+    /// Refused as a whole, the pages are asked one by one.
+    pub async fn airing_pages(&self, pages: &[AiringPage]) -> Vec<Result<Page<AiringEntry>>> {
+        if let [page] = pages {
+            let one = self.airing_between_sorted(
+                page.from,
+                page.to,
+                page.page,
+                page.per_page,
+                page.newest_first,
+            );
+            return vec![one.await];
+        }
+        match self.ask_together(self.anilist.airing_pages(pages)).await {
+            Ok(found) => found.into_iter().map(Ok).collect(),
+            Err(AniListError::Api(e)) => {
+                tracing::info!(error = %e, "the calendar's pages were refused together");
+                let mut found = Vec::with_capacity(pages.len());
+                for p in pages {
+                    let one = self.airing_between_sorted(
+                        p.from,
+                        p.to,
+                        p.page,
+                        p.per_page,
+                        p.newest_first,
+                    );
+                    found.push(one.await);
+                }
+                found
+            }
+            Err(e) => pages.iter().map(|_| Err(e.clone().into())).collect(),
+        }
     }
 
     /// The same window, with the sort direction chosen by the caller.
