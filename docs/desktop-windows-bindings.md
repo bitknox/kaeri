@@ -179,7 +179,7 @@ engine until it does.
 ## Left for the Windows VM
 
 - Build the engine for `x86_64-pc-windows-msvc` and `aarch64-pc-windows-msvc` with MSVC. The
-  HTTP client's BoringSSL needs CMake and NASM there. Then run `bindings.sh` and `test.sh` from Git
+  torrent engine's aws-lc needs CMake and NASM there. Then run `bindings.sh` and `test.sh` from Git
   Bash, which they already account for (the DLL's name, and `USERPROFILE` for the HOME guard), and
   add a Windows CI job for them. Windows reads known folders without looking at `USERPROFILE`, so
   the guard needs a second look there.

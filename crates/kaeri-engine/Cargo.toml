@@ -72,8 +72,8 @@ tokio.workspace = true
 tracing.workspace = true
 # Random tokens for the mending proxy's loopback path.
 rand = "0.10"
-# Named by the mending proxy, whose upstream requests go through `HttpClient::emulated`.
-wreq.workspace = true
+# Named by the mending proxy, whose upstream requests go through `HttpClient::sources`.
+reqwest.workspace = true
 
 # What is free on the disk downloads land on, which keep next stops short of. Safe statvfs: the
 # workspace forbids unsafe code. Already in the tree through wasmtime and tempfile.

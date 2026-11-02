@@ -225,7 +225,7 @@ See [plugin stores](https://kaeri.app/docs/plugins/stores/),
 ## Build from source
 
 The Rust toolchain version is pinned in `rust-toolchain.toml`, and `rustup` installs it. For the
-terminal app, install mpv and ffmpeg, and cmake for the TLS library, then:
+terminal app, install mpv and ffmpeg, and cmake for the torrent engine's crypto library, then:
 
 ```sh
 cargo run --release                      # the terminal app, from a checkout

@@ -426,8 +426,7 @@ impl AniList {
 
     /// Execute a GraphQL operation.
     ///
-    /// Uses the plain client: AniList has no bot protection, so fingerprint emulation would
-    /// only add handshake cost.
+    /// Uses the plain client, which follows redirects.
     async fn execute<T: DeserializeOwned>(
         &self,
         document: &str,

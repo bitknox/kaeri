@@ -11,8 +11,7 @@ and the player, the history and the trackers are stable again.
 
 <ArchitectureDiagram kind="flow" />
 
-`kaeri-core` (types and traits) · `-net` (HTTP, with a client that matches a browser's TLS
-handshake for hosts that answer differently by client, and rate limiting) · `-meta` (AniList, the
+`kaeri-core` (types and traits) · `-net` (HTTP and rate limiting) · `-meta` (AniList, the
 metadata failover, ID mapping, filler) · `-store` (SQLite: the history and the sync outbox) ·
 `-providers` (torrent, remote, mock) · `-player` (mpv IPC, the companion-script protocol, the
 bundled player files, track selection, aniskip) · `-discord` (Discord rich presence over its

@@ -1,8 +1,7 @@
 //! Configuration, loaded from `~/.config/kaeri/config.toml`.
 //!
-//! Two principles run through this module. First, every volatile thing is *addressable
-//! from config* — provider order, emulation profile, dataset URLs — so a dead source or
-//! a rotated fingerprint is a config edit rather than a release. Second, anything with a
+//! Two principles run through this module. First, source order and dataset addresses live
+//! in config, so changing them needs no release. Second, anything with a
 //! privacy or safety consequence **fails closed**: see [`VpnConfig`] and
 //! [`Config::validate`], where torrenting is unreachable until a VPN mode is chosen and
 //! `mode = "none"` requires an explicit acknowledgement that cannot be reached by
@@ -1499,9 +1498,6 @@ impl TrackersConfig {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct NetworkConfig {
-    /// Browser fingerprint to emulate for Cloudflare-fronted providers. Exposed as
-    /// config because this is an arms race — rotating it should not need a rebuild.
-    pub emulation: String,
     pub timeout_secs: u64,
     /// Requests per minute against AniList. Their observed limit is 30.
     pub anilist_rate_limit: u32,
@@ -1509,7 +1505,7 @@ pub struct NetworkConfig {
 
 impl Default for NetworkConfig {
     fn default() -> Self {
-        Self { emulation: "chrome".into(), timeout_secs: 20, anilist_rate_limit: 30 }
+        Self { timeout_secs: 20, anilist_rate_limit: 30 }
     }
 }
 

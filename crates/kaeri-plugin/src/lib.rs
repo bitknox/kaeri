@@ -37,8 +37,7 @@ pub type HttpClient = kaeri_net::HttpClient;
 
 /// Without the `fetch` feature there is no client to lend, so there are none of these: a host
 /// built that way loads plugins and asks them to describe themselves, and nothing more. That is
-/// all a plugin store's server needs, and it leaves the browser-emulating network stack out of
-/// its build.
+/// all a plugin store's server needs, and it leaves the network stack out of its build.
 #[cfg(not(feature = "fetch"))]
 #[derive(Debug, Clone)]
 pub enum HttpClient {}

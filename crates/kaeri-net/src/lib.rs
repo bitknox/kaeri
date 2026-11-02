@@ -1,18 +1,15 @@
 //! HTTP layer.
 //!
-//! Two clients, chosen per host. Most of what Kaeri talks to — AniList, its image CDN,
-//! `raw.githubusercontent.com`, the mapping datasets — is a plain documented API, and those
-//! use a plain [`reqwest`] client.
-//!
-//! The second client goes through [`wreq`], which presents a browser's TLS and HTTP/2 handshake.
-//! It is slower to set up, so it is opt-in per host rather than the default.
+//! One [`reqwest`] client with rustls, shared by everything Kaeri fetches: AniList and its image
+//! CDN, the trackers, the plugin stores, the mapping datasets, plugin `fetch` calls and the
+//! streams the loopback proxy relays. It honours the system's proxy settings.
 
 pub mod client;
 pub mod fetch;
 pub mod loopback;
 pub mod ratelimit;
 
-pub use client::{HttpClient, NetError, Profile, trusted_roots};
+pub use client::{HttpClient, NetError, trusted_roots};
 pub use fetch::{Conditional, ConditionalResponse};
 pub use ratelimit::RateLimiter;
 

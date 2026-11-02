@@ -195,8 +195,8 @@ on its own (`crates/kaeri-engine/src/updates.rs`) and tells the apps, which then
 `rust-licences/generate.sh` lists every Rust crate compiled into a build, under the licence it is
 used under, with that licence's text as the crate ships it: for the terminal binary per target,
 and for the apps' engine. It runs cargo-about 0.9.2. `rust-licences/about.toml` says which
-licences are accepted, and adds the C some crates vendor under licences of their own (BoringSSL
-in `btls-sys`, zstd in `zstd-sys`); a crate under anything else, or a clarification that no
+licences are accepted, and adds the C some crates vendor under licences of their own (zstd in
+`zstd-sys`); a crate under anything else, or a clarification that no
 longer matches its crate, fails the build. CI runs it whenever the Rust changes; each terminal
 package carries its target's in `third-party/THIRD-PARTY-rust.txt`, a release attaches
 `kaeri-<version>-rust-licences.txt` for all four, and the apps' notices zip carries the

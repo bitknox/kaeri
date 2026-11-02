@@ -1,7 +1,7 @@
 //! Where the relay and the probe fetch from: an [`Upstream`] that answers a GET with a streamed
-//! body. The engine hands its own, over the HTTP client every source is fetched with (its TLS,
-//! its emulated browser); [`PlainHttp`] is the plain HTTP the mender and the torrent server speak
-//! on loopback, and what the tests use.
+//! body. The engine hands its own, over the HTTP client every source is fetched with;
+//! [`PlainHttp`] is the plain HTTP the mender and the torrent server speak on loopback, and what
+//! the tests use.
 //!
 //! [`RangeFile`] reads one resource as `Read + Seek`, by ranges, for the remuxer: a torrent's
 //! file through its loopback server, or a file on disk.

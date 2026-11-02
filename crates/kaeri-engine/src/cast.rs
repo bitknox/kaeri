@@ -552,7 +552,7 @@ impl CastHub {
     }
 }
 
-/// What the relay fetches upstream with: the emulated client for the source's own hosts, with
+/// What the relay fetches upstream with: the sources client for the source's own hosts, with
 /// the headers they want, and plain HTTP for the mender and the torrent server on loopback.
 struct HttpUpstream(HttpClient);
 
@@ -566,7 +566,7 @@ impl Upstream for HttpUpstream {
         if is_loopback_url(url) {
             return PlainHttp.get(url, headers).await;
         }
-        let mut request = self.0.emulated().get(url);
+        let mut request = self.0.sources().get(url);
         for (name, value) in headers {
             request = request.header(name.as_str(), value.as_str());
         }
