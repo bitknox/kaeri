@@ -29,10 +29,7 @@ fn header(kind: Kind, epoch: u32, device: &[u8; 8], number: u64) -> Vec<u8> {
 }
 
 pub(crate) fn device_bytes(id: &str) -> Result<[u8; 8]> {
-    hex::decode(id)
-        .ok()
-        .and_then(|b| b.try_into().ok())
-        .ok_or(SyncError::Damaged("device id"))
+    hex::decode(id).ok().and_then(|b| b.try_into().ok()).ok_or(SyncError::Damaged("device id"))
 }
 
 fn file_key(group_key: &[u8; 32], header: &[u8]) -> [u8; 32] {
@@ -40,7 +37,13 @@ fn file_key(group_key: &[u8; 32], header: &[u8]) -> [u8; 32] {
 }
 
 /// Seal `plain` as file `number` of `device`, under the keyring's current key.
-pub fn seal(ring: &Keyring, kind: Kind, device: &str, number: u64, plain: &[u8]) -> Result<Vec<u8>> {
+pub fn seal(
+    ring: &Keyring,
+    kind: Kind,
+    device: &str,
+    number: u64,
+    plain: &[u8],
+) -> Result<Vec<u8>> {
     let epoch = ring.current_epoch();
     let h = header(kind, epoch, &device_bytes(device)?, number);
     let mut out = h.clone();
@@ -94,7 +97,10 @@ mod tests {
         let ring = Keyring::generate();
         let sealed = seal(&ring, Kind::Segment, "aaaa0000aaaa0000", 7, b"ops").unwrap();
         let opened = open(&ring, &sealed).unwrap();
-        assert_eq!((opened.number, opened.device.as_str(), opened.plain.as_slice()), (7, "aaaa0000aaaa0000", &b"ops"[..]));
+        assert_eq!(
+            (opened.number, opened.device.as_str(), opened.plain.as_slice()),
+            (7, "aaaa0000aaaa0000", &b"ops"[..])
+        );
         // The name is in the header: change the number or the device and it no longer opens.
         let mut other = sealed.clone();
         other[24] ^= 1;
@@ -124,7 +130,9 @@ mod tests {
     #[test]
     fn a_file_shows_a_stranger_no_titles() {
         let ring = Keyring::generate();
-        let sealed = seal(&ring, Kind::Segment, "aaaa0000aaaa0000", 1, b"Made Up Show episode 4").unwrap();
+        let sealed =
+            seal(&ring, Kind::Segment, "aaaa0000aaaa0000", 1, b"Made Up Show episode 4")
+                .unwrap();
         assert!(!sealed.windows(7).any(|w| w == b"Made Up"));
     }
 }

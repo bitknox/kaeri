@@ -36,7 +36,8 @@ pub(crate) fn derive<const N: usize>(salt: &[u8], ikm: &[u8], info: &[&[u8]]) ->
 
 pub(crate) fn seal_with(key: &[u8; 32], aad: &[u8], plain: &[u8]) -> Vec<u8> {
     let nonce: [u8; 12] = random();
-    let key = LessSafeKey::new(UnboundKey::new(&aead::CHACHA20_POLY1305, key).expect("32 bytes"));
+    let key =
+        LessSafeKey::new(UnboundKey::new(&aead::CHACHA20_POLY1305, key).expect("32 bytes"));
     let mut buf = plain.to_vec();
     key.seal_in_place_append_tag(Nonce::assume_unique_for_key(nonce), Aad::from(aad), &mut buf)
         .expect("sealing in memory");
@@ -50,7 +51,8 @@ pub(crate) fn open_with(key: &[u8; 32], aad: &[u8], sealed: &[u8]) -> Option<Vec
         return None;
     }
     let (nonce, rest) = sealed.split_at(12);
-    let key = LessSafeKey::new(UnboundKey::new(&aead::CHACHA20_POLY1305, key).expect("32 bytes"));
+    let key =
+        LessSafeKey::new(UnboundKey::new(&aead::CHACHA20_POLY1305, key).expect("32 bytes"));
     let mut buf = rest.to_vec();
     let plain = key
         .open_in_place(Nonce::try_assume_unique_for_key(nonce).ok()?, Aad::from(aad), &mut buf)
@@ -176,7 +178,10 @@ impl RecoveryKey {
                 'I' | 'L' => '1',
                 other => other,
             };
-            let v = ALPHABET.iter().position(|a| *a as char == c).ok_or(SyncError::BadRecoveryKey)?;
+            let v = ALPHABET
+                .iter()
+                .position(|a| *a as char == c)
+                .ok_or(SyncError::BadRecoveryKey)?;
             count += 1;
             bits = (bits << 5) | v as u32;
             n += 5;
@@ -235,7 +240,8 @@ impl DeviceKey {
         let (eph, sealed) = wrapped.split_at(32);
         let eph: [u8; 32] = eph.try_into().expect("split at 32");
         let key = wrap_key(&self.shared(&eph), &eph, &self.public());
-        let plain = open_with(&key, device_id.as_bytes(), sealed).ok_or(SyncError::KeyMismatch)?;
+        let plain =
+            open_with(&key, device_id.as_bytes(), sealed).ok_or(SyncError::KeyMismatch)?;
         Keyring::from_bytes(&plain)
     }
 }
@@ -267,7 +273,10 @@ mod tests {
         assert_eq!(RecoveryKey::parse(&text.to_lowercase().replace('-', " ")).unwrap(), key);
         assert!(RecoveryKey::parse("ABCD-EFGH").is_err());
         assert!(RecoveryKey::parse(&format!("{text}A")).is_err());
-        assert!(RecoveryKey::parse("UUUU-UUUU-UUUU-UUUU-UUUU-UUUU").is_err(), "no U in the alphabet");
+        assert!(
+            RecoveryKey::parse("UUUU-UUUU-UUUU-UUUU-UUUU-UUUU").is_err(),
+            "no U in the alphabet"
+        );
         assert_ne!(RecoveryKey::generate(), key);
     }
 

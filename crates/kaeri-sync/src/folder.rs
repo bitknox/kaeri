@@ -115,7 +115,10 @@ impl MemoryTarget {
 
     /// Overwrite a file as a hostile or broken store would. Tests only.
     pub fn put_raw(&self, path: &str, bytes: Vec<u8>) {
-        self.files.lock().unwrap_or_else(PoisonError::into_inner).insert(path.to_owned(), bytes);
+        self.files
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .insert(path.to_owned(), bytes);
     }
 }
 
@@ -140,7 +143,11 @@ impl FolderTarget for MemoryTarget {
                 None => {
                     out.insert(
                         rest.to_owned(),
-                        Entry { name: rest.to_owned(), is_dir: false, size: bytes.len() as u64 },
+                        Entry {
+                            name: rest.to_owned(),
+                            is_dir: false,
+                            size: bytes.len() as u64,
+                        },
                     );
                 }
             }
@@ -203,7 +210,10 @@ impl DirTarget {
 
     fn resolve(&self, path: &str) -> Result<PathBuf, FolderError> {
         check_path(path)?;
-        Ok(path.split('/').filter(|p| !p.is_empty()).fold(self.root.clone(), |p, part| p.join(part)))
+        Ok(path
+            .split('/')
+            .filter(|p| !p.is_empty())
+            .fold(self.root.clone(), |p, part| p.join(part)))
     }
 }
 
@@ -254,7 +264,10 @@ impl FolderTarget for DirTarget {
             }
             let parent = target.parent().ok_or_else(|| FolderError::BadPath("root".into()))?;
             std::fs::create_dir_all(parent)?;
-            let name = target.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+            let name = target
+                .file_name()
+                .map(|n| n.to_string_lossy().into_owned())
+                .unwrap_or_default();
             let tmp = parent.join(format!(".kaeri-tmp-{name}"));
             std::fs::write(&tmp, &bytes)?;
             // `hard_link` fails when the name is taken, which `rename` would silently overwrite.
@@ -289,7 +302,9 @@ impl FolderTarget for DirTarget {
     }
 
     fn describe(&self) -> String {
-        self.root.file_name().map_or_else(|| "folder".into(), |n| n.to_string_lossy().into_owned())
+        self.root
+            .file_name()
+            .map_or_else(|| "folder".into(), |n| n.to_string_lossy().into_owned())
     }
 }
 
@@ -313,7 +328,10 @@ mod tests {
         assert_eq!(root.len(), 1);
         assert!(root[0].is_dir);
         let a = t.list("a").await.unwrap();
-        assert_eq!(a.iter().map(|e| (e.name.as_str(), e.is_dir)).collect::<Vec<_>>(), [("b", true), ("two.seg", false)]);
+        assert_eq!(
+            a.iter().map(|e| (e.name.as_str(), e.is_dir)).collect::<Vec<_>>(),
+            [("b", true), ("two.seg", false)]
+        );
         assert_eq!(t.read("a/two.seg").await.unwrap(), b"22");
         t.rename("a/two.seg", "a/three.seg").await.unwrap();
         assert!(matches!(t.read("a/two.seg").await, Err(FolderError::NotFound(_))));

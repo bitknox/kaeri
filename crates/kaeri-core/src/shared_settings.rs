@@ -52,9 +52,30 @@ mod tests {
     #[test]
     fn nothing_bound_to_a_device_is_shared() {
         let bound = [
-            "vpn", "torrent", "mpv", "directory", "dir", "path", "binary", "key", "bind",
-            "controller", "cast", "quality", "cellular", "token", "port", "upload", "seed",
-            "fullscreen", "upscaling", "player_ui", "night_mode", "presence", "hook", "on_complete",
+            "vpn",
+            "torrent",
+            "mpv",
+            "directory",
+            "dir",
+            "path",
+            "binary",
+            "key",
+            "bind",
+            "controller",
+            "cast",
+            "quality",
+            "cellular",
+            "token",
+            "port",
+            "upload",
+            "seed",
+            "fullscreen",
+            "upscaling",
+            "player_ui",
+            "night_mode",
+            "presence",
+            "hook",
+            "on_complete",
         ];
         for (table, key) in SHARED {
             let name = id(table, key);
@@ -83,7 +104,10 @@ mod tests {
         for (table, key) in SHARED {
             let mut at = &doc;
             for part in *table {
-                at = at.get(*part).and_then(|v| v.as_table()).unwrap_or_else(|| panic!("{part}"));
+                at = at
+                    .get(*part)
+                    .and_then(|v| v.as_table())
+                    .unwrap_or_else(|| panic!("{part}"));
             }
             // Optional keys serialise only when set; the table has to exist.
             let _ = (at, key);

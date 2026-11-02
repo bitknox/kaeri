@@ -113,6 +113,9 @@ pub(crate) fn is_on(tx: &rusqlite::Connection) -> rusqlite::Result<bool> {
     Ok(log::device(tx)?.is_some())
 }
 
+/// A device: id, name, public key, removed.
+pub type PeerRow = (String, Option<String>, Option<String>, bool);
+
 impl Store {
     /// A watch recorded here (row `rowid`): its op, its id and stamp, and the projection. `false`
     /// when sync is off, and the caller keeps its own projection.
@@ -180,7 +183,7 @@ impl Store {
     }
 
     /// The group's devices as the log has them: `(device, name, public key, removed)`.
-    pub fn sync_peers(&self) -> Result<Vec<(String, Option<String>, Option<String>, bool)>> {
+    pub fn sync_peers(&self) -> Result<Vec<PeerRow>> {
         self.with_conn(|c| {
             let mut stmt = c.prepare(
                 "SELECT device, name, pubkey, removed FROM sync_peer ORDER BY device",

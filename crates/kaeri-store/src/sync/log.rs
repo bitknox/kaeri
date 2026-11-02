@@ -402,19 +402,17 @@ fn backfill(tx: &Transaction<'_>, device: &str, wall_ms: i64) -> Result<()> {
     }
 
     // Registers from the per-show tables, dated by their own `updated_at`.
-    let mut regs: Vec<(String, String, Option<String>, i64)> = Vec::new();
-    let mut collect =
-        |sql: &str,
-         f: &dyn Fn(
-            &rusqlite::Row<'_>,
-        ) -> rusqlite::Result<(String, String, Option<String>, i64)>|
-         -> rusqlite::Result<()> {
-            let mut stmt = tx.prepare(sql)?;
-            for row in stmt.query_map([], |r| f(r))? {
-                regs.push(row?);
-            }
-            Ok(())
-        };
+    type Backfill = (String, String, Option<String>, i64);
+    let mut regs: Vec<Backfill> = Vec::new();
+    let mut collect = |sql: &str,
+                       f: &dyn Fn(&rusqlite::Row<'_>) -> rusqlite::Result<Backfill>|
+     -> rusqlite::Result<()> {
+        let mut stmt = tx.prepare(sql)?;
+        for row in stmt.query_map([], |r| f(r))? {
+            regs.push(row?);
+        }
+        Ok(())
+    };
     collect("SELECT anilist_id, setting, value, updated_at FROM show_setting", &|r| {
         Ok((
             op::kinds::SHOW_SETTING.into(),

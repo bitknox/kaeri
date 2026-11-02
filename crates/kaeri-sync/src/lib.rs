@@ -10,6 +10,7 @@ pub mod folder;
 pub mod google;
 pub mod keys;
 pub mod nextcloud;
+pub mod peer;
 pub mod road;
 pub mod seal;
 pub mod webdav;

@@ -97,7 +97,11 @@ impl FolderRoad {
     }
 
     fn meta_u64(&self, what: &str) -> Result<u64> {
-        Ok(self.store.sync_meta_get(&self.meta(what))?.and_then(|v| v.parse().ok()).unwrap_or(0))
+        Ok(self
+            .store
+            .sync_meta_get(&self.meta(what))?
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(0))
     }
 
     /// Whether the folder already holds a group: what decides between setting one up and asking
@@ -125,7 +129,9 @@ impl FolderRoad {
         let ring = Keyring::generate();
         let recovery = RecoveryKey::generate();
         let group: [u8; 16] = random();
-        target.write_new(&join(prefix, "group.bin"), &group_file(&group, &recovery, &ring)).await?;
+        target
+            .write_new(&join(prefix, "group.bin"), &group_file(&group, &recovery, &ring))
+            .await?;
         let road = Self::open(target, prefix, store, device, key, ring);
         road.write_own_keys().await?;
         Ok((road, recovery))
@@ -222,7 +228,9 @@ impl FolderRoad {
         }
         self.write_segments(&mut report).await?;
         self.write_acks().await?;
-        report.compacted = self.compact(&devices.iter().map(|e| e.name.clone()).collect::<Vec<_>>(), &removed).await?;
+        report.compacted = self
+            .compact(&devices.iter().map(|e| e.name.clone()).collect::<Vec<_>>(), &removed)
+            .await?;
         Ok(report)
     }
 
@@ -304,10 +312,12 @@ impl FolderRoad {
             }
             batch.truncate(keep);
             let last = batch.last().map_or(published, |o| o.seq);
-            let plain = serde_json::to_vec(&batch).map_err(|_| SyncError::Damaged("encoding"))?;
+            let plain =
+                serde_json::to_vec(&batch).map_err(|_| SyncError::Damaged("encoding"))?;
             let mut number = self.meta_u64("segno")? + 1;
             loop {
-                let sealed = seal::seal(&self.keyring(), Kind::Segment, &self.device, number, &plain)?;
+                let sealed =
+                    seal::seal(&self.keyring(), Kind::Segment, &self.device, number, &plain)?;
                 let path = self.path(&format!("devices/{}/{number:06}.seg", self.device));
                 match self.target.write_new(&path, &sealed).await {
                     Ok(()) => break,
@@ -325,7 +335,9 @@ impl FolderRoad {
     async fn write_acks(&self) -> Result<()> {
         let vector = self.store.version_vector()?;
         let plain = serde_json::to_vec(&vector).map_err(|_| SyncError::Damaged("encoding"))?;
-        if self.store.sync_meta_get(&self.meta("acked"))?.as_deref() == Some(&hex::encode(&plain)) {
+        if self.store.sync_meta_get(&self.meta("acked"))?.as_deref()
+            == Some(&hex::encode(&plain))
+        {
             return Ok(());
         }
         let sealed = seal::seal(&self.keyring(), Kind::Acks, &self.device, 0, &plain)?;
@@ -350,7 +362,8 @@ impl FolderRoad {
             floor = Some(match floor {
                 None => vector,
                 Some(mut min) => {
-                    let keys: Vec<String> = min.keys().cloned().chain(vector.keys().cloned()).collect();
+                    let keys: Vec<String> =
+                        min.keys().cloned().chain(vector.keys().cloned()).collect();
                     for k in keys {
                         let a = min.get(&k).copied().unwrap_or(0);
                         let b = vector.get(&k).copied().unwrap_or(0);
@@ -377,7 +390,10 @@ impl FolderRoad {
             if removed || device == self.device {
                 continue;
             }
-            let Some(pubkey) = pubkey.and_then(|p| hex::decode(p).ok()).and_then(|p| <[u8; 32]>::try_from(p).ok()) else {
+            let Some(pubkey) = pubkey
+                .and_then(|p| hex::decode(p).ok())
+                .and_then(|p| <[u8; 32]>::try_from(p).ok())
+            else {
                 continue;
             };
             let wrapped = wrap_for(&pubkey, &device, &ring);
@@ -397,7 +413,10 @@ impl FolderRoad {
     async fn write_group(&self, recovery: &RecoveryKey, ring: &Keyring) -> Result<()> {
         let path = self.path("group.bin");
         let old = self.target.read(&path).await?;
-        let group: [u8; 16] = old.get(4..20).and_then(|g| g.try_into().ok()).ok_or(SyncError::Damaged("group.bin"))?;
+        let group: [u8; 16] = old
+            .get(4..20)
+            .and_then(|g| g.try_into().ok())
+            .ok_or(SyncError::Damaged("group.bin"))?;
         self.replace(&path, &group_file(&group, recovery, ring)).await
     }
 }
@@ -407,17 +426,24 @@ impl FolderRoad {
 pub fn export_backup(store: &Store, recovery: &RecoveryKey) -> Result<Vec<u8>> {
     let ops = store.ops_after(&BTreeMap::new(), usize::MAX)?;
     let plain = serde_json::to_vec(&ops).map_err(|_| SyncError::Damaged("encoding"))?;
-    seal::seal(&Keyring::single(recovery.wrap_key()), Kind::Backup, "0000000000000000", 0, &plain)
+    seal::seal(
+        &Keyring::single(recovery.wrap_key()),
+        Kind::Backup,
+        "0000000000000000",
+        0,
+        &plain,
+    )
 }
 
 /// Read a backup back. A wrong recovery key is `WrongRecoveryKey`, and nothing is applied.
 pub fn import_backup(store: &Store, recovery: &RecoveryKey, bytes: &[u8]) -> Result<Applied> {
-    let opened = seal::open(&Keyring::single(recovery.wrap_key()), bytes).map_err(|e| match e {
-        SyncError::KeyMismatch => SyncError::WrongRecoveryKey,
-        other => other,
-    })?;
-    let ops: Vec<Op> =
-        serde_json::from_slice(&opened.plain).map_err(|_| SyncError::Damaged("backup contents"))?;
+    let opened =
+        seal::open(&Keyring::single(recovery.wrap_key()), bytes).map_err(|e| match e {
+            SyncError::KeyMismatch => SyncError::WrongRecoveryKey,
+            other => other,
+        })?;
+    let ops: Vec<Op> = serde_json::from_slice(&opened.plain)
+        .map_err(|_| SyncError::Damaged("backup contents"))?;
     Ok(store.apply_ops(ops)?)
 }
 
@@ -481,14 +507,25 @@ mod tests {
         }
     }
 
-    async fn pair(target: &Arc<dyn FolderTarget>) -> (Dev, FolderRoad, Dev, FolderRoad, RecoveryKey) {
+    async fn pair(
+        target: &Arc<dyn FolderTarget>,
+    ) -> (Dev, FolderRoad, Dev, FolderRoad, RecoveryKey) {
         let a = dev("00000000000000a1", 1_000);
         let b = dev("00000000000000b2", 1_000);
         let (ra, recovery) =
-            FolderRoad::create(target.clone(), "kaeri", a.store.clone(), &a.id, a.identity()).await.unwrap();
-        let rb = FolderRoad::join(target.clone(), "kaeri", b.store.clone(), &b.id, b.identity(), &recovery)
-            .await
-            .unwrap();
+            FolderRoad::create(target.clone(), "kaeri", a.store.clone(), &a.id, a.identity())
+                .await
+                .unwrap();
+        let rb = FolderRoad::join(
+            target.clone(),
+            "kaeri",
+            b.store.clone(),
+            &b.id,
+            b.identity(),
+            &recovery,
+        )
+        .await
+        .unwrap();
         (a, ra, b, rb, recovery)
     }
 
@@ -530,13 +567,27 @@ mod tests {
         let target: Arc<dyn FolderTarget> = Arc::new(MemoryTarget::default());
         let (_a, _ra, _b, _rb, _) = pair(&target).await;
         let c = dev("00000000000000c3", 1_000);
-        let err = FolderRoad::join(target.clone(), "kaeri", c.store.clone(), &c.id, c.identity(), &RecoveryKey::generate())
-            .await
-            .unwrap_err();
+        let err = FolderRoad::join(
+            target.clone(),
+            "kaeri",
+            c.store.clone(),
+            &c.id,
+            c.identity(),
+            &RecoveryKey::generate(),
+        )
+        .await
+        .unwrap_err();
         assert!(matches!(err, SyncError::WrongRecoveryKey));
-        let err = FolderRoad::join(target.clone(), "empty", c.store.clone(), &c.id, c.identity(), &RecoveryKey::generate())
-            .await
-            .unwrap_err();
+        let err = FolderRoad::join(
+            target.clone(),
+            "empty",
+            c.store.clone(),
+            &c.id,
+            c.identity(),
+            &RecoveryKey::generate(),
+        )
+        .await
+        .unwrap_err();
         assert!(matches!(err, SyncError::NoGroup));
     }
 
@@ -545,7 +596,10 @@ mod tests {
         let target: Arc<dyn FolderTarget> = Arc::new(MemoryTarget::default());
         let (_a, _ra, ..) = pair(&target).await;
         let c = dev("00000000000000c3", 1_000);
-        let err = FolderRoad::create(target.clone(), "kaeri", c.store.clone(), &c.id, c.identity()).await.unwrap_err();
+        let err =
+            FolderRoad::create(target.clone(), "kaeri", c.store.clone(), &c.id, c.identity())
+                .await
+                .unwrap_err();
         assert!(matches!(err, SyncError::GroupExists));
     }
 
@@ -561,7 +615,14 @@ mod tests {
         }
         // A device holding some other group's keyring reads the folder and gets a mismatch.
         let s = dev("00000000000000d4", 1_000);
-        let other = FolderRoad::open(target.clone(), "kaeri", s.store.clone(), &s.id, s.identity(), Keyring::generate());
+        let other = FolderRoad::open(
+            target.clone(),
+            "kaeri",
+            s.store.clone(),
+            &s.id,
+            s.identity(),
+            Keyring::generate(),
+        );
         // Its own keys.bin does not exist, so a first sync lists devices and fails on the first segment.
         let err = other.sync().await.unwrap_err();
         assert!(matches!(err, SyncError::KeyMismatch), "{err:?}");
@@ -573,9 +634,16 @@ mod tests {
         let target: Arc<dyn FolderTarget> = Arc::new(MemoryTarget::default());
         let (a, ra, b, rb, recovery) = pair(&target).await;
         let c = dev("00000000000000c3", 1_000);
-        let rc = FolderRoad::join(target.clone(), "kaeri", c.store.clone(), &c.id, c.identity(), &recovery)
-            .await
-            .unwrap();
+        let rc = FolderRoad::join(
+            target.clone(),
+            "kaeri",
+            c.store.clone(),
+            &c.id,
+            c.identity(),
+            &recovery,
+        )
+        .await
+        .unwrap();
         for d in [&b, &c] {
             a.store.sync_device_add(&d.id, "device", &d.identity().public_hex()).unwrap();
         }
@@ -631,7 +699,20 @@ mod tests {
         let fresh = ra.new_recovery_key().await.unwrap();
         let c = dev("00000000000000c3", 1_000);
         let old = RecoveryKey::generate();
-        assert!(FolderRoad::join(target.clone(), "kaeri", c.store.clone(), &c.id, c.identity(), &old).await.is_err());
-        FolderRoad::join(target.clone(), "kaeri", c.store.clone(), &c.id, c.identity(), &fresh).await.unwrap();
+        assert!(
+            FolderRoad::join(
+                target.clone(),
+                "kaeri",
+                c.store.clone(),
+                &c.id,
+                c.identity(),
+                &old
+            )
+            .await
+            .is_err()
+        );
+        FolderRoad::join(target.clone(), "kaeri", c.store.clone(), &c.id, c.identity(), &fresh)
+            .await
+            .unwrap();
     }
 }
