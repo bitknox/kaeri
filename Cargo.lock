@@ -3502,6 +3502,7 @@ dependencies = [
  "kaeri-store",
  "reqwest 0.13.1",
  "ring",
+ "roxmltree",
  "serde",
  "serde_json",
  "tempfile",
