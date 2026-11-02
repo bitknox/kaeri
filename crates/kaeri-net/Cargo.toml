@@ -16,10 +16,8 @@ reqwest.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
 tracing.workspace = true
-wreq.workspace = true
-wreq-util.workspace = true
 # The Mozilla roots as certificates, which Android's plain clients trust in place of the
-# platform's verifier: see `client::trusted_roots`. Already built for wreq, on every platform.
+# platform's verifier: see `client::trusted_roots`.
 webpki-root-certs = "1"
 
 [dev-dependencies]

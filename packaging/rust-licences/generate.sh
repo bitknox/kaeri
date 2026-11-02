@@ -17,7 +17,7 @@
 # Each crate is listed under the licence it is used under, with that licence's text as the crate
 # ships it. about.toml beside this says which licences are accepted and fills in what some crates'
 # own files leave out. It fails on a crate under a licence not accepted, or whose licence cannot
-# be read, and when the notices about.toml adds for the C a crate vendors (BoringSSL's, zstd's)
+# be read, and when the notices about.toml adds for the C a crate vendors (zstd's)
 # are missing from the output, as they would be once a new version of the crate no longer
 # matches the checksums they were clarified with.
 #
@@ -96,7 +96,6 @@ require_licence() {
     END { exit !found }
   ' "$body" || stale "$krate" "licence ($licence)"
 }
-require_licence btls-sys "Apache License 2.0"
 require zstd-sys "For Zstandard software"
 
 commit="$(git rev-parse HEAD 2>/dev/null || echo unknown)"

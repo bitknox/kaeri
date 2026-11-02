@@ -1,6 +1,6 @@
-//! The relay a TV fetches from while a cast lasts: the mender's and the torrent server's loopback
-//! addresses, a file on this device, and what the remuxer and the subtitle converter make, on the
-//! interface that faces the TV.
+//! The relay a TV fetches from while a cast lasts: the stream proxy's and the torrent server's
+//! loopback addresses, a file on this device, and what the remuxer and the subtitle converter
+//! make, on the interface that faces the TV.
 //!
 //! What it guards with:
 //! - It binds the one local address that routes to the TV, never `0.0.0.0`, on a fresh port.

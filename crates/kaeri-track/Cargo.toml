@@ -23,8 +23,7 @@ kaeri-meta.workspace = true
 kaeri-store.workspace = true
 async-trait.workspace = true
 rand = "0.10"
-# The plain client, for the token exchange. AniList has no bot protection, so fingerprint
-# emulation would only add handshake cost.
+# The plain client, for the token exchange.
 reqwest.workspace = true
 serde.workspace = true
 serde_json.workspace = true

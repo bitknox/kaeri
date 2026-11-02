@@ -14,8 +14,8 @@ use tokio::sync::mpsc;
 /// **A stream's headers are its subtitles' headers.** A provider returns whatever a track needs
 /// alongside the stream it belongs to, and getting that right is the provider's job, not this
 /// one's. So nothing is guessed here: each track is requested with exactly what the stream
-/// declared, through the emulated client, so a subtitle behind the same protection as its video
-/// is fetched the same way the video would be.
+/// declared, through the client the stream proxy uses, so a subtitle is fetched the same way the
+/// video would be.
 ///
 /// **What this buys over handing the URL to mpv** is that a track which cannot actually be
 /// retrieved is never offered. A provider may list a track that its chosen stream's headers do
@@ -132,7 +132,7 @@ async fn localise_one(
         return Some(subtitle);
     }
 
-    let mut request = http.emulated().get(&subtitle.url);
+    let mut request = http.sources().get(&subtitle.url);
     for (name, value) in headers {
         request = request.header(name.as_str(), value.as_str());
     }

@@ -139,7 +139,7 @@ pub(super) async fn send(
     upstream: &Upstream,
     url: &str,
     range: Option<&str>,
-) -> Result<wreq::Response, String> {
+) -> Result<reqwest::Response, String> {
     let deadline = Instant::now() + RATE_LIMIT_BUDGET;
     loop {
         let not_before = *upstream.cooldown.lock().unwrap_or_else(|e| e.into_inner());
@@ -167,7 +167,7 @@ pub(super) async fn send(
 
 /// A `Retry-After` given in seconds. The HTTP-date form is rare for rate limits and falls back
 /// to the default.
-fn retry_after(response: &wreq::Response) -> Option<Duration> {
+fn retry_after(response: &reqwest::Response) -> Option<Duration> {
     let value = response.headers().get("retry-after")?.to_str().ok()?;
     parse_retry_after(value)
 }
@@ -195,7 +195,7 @@ pub(super) async fn send_once(
     upstream: &Upstream,
     url: &str,
     range: Option<&str>,
-) -> Result<wreq::Response, String> {
+) -> Result<reqwest::Response, String> {
     let response = request(upstream, url, range).await?;
     if response.status().as_u16() == 429 {
         let wait = retry_after(&response).unwrap_or(DEFAULT_RETRY_AFTER);
@@ -211,8 +211,8 @@ async fn request(
     upstream: &Upstream,
     url: &str,
     range: Option<&str>,
-) -> Result<wreq::Response, String> {
-    let mut request = upstream.http.emulated().get(url);
+) -> Result<reqwest::Response, String> {
+    let mut request = upstream.http.sources().get(url);
     if let Some(range) = range {
         request = request.header("range", range);
     }
@@ -223,7 +223,7 @@ async fn request(
 }
 
 /// Read a whole response body, refusing anything that is not a success or is too large.
-async fn read_body(response: wreq::Response) -> Result<Fetched, String> {
+async fn read_body(response: reqwest::Response) -> Result<Fetched, String> {
     if !response.status().is_success() {
         return Err(format!("status {}", response.status()));
     }
@@ -266,7 +266,7 @@ mod tests {
     use tokio::net::TcpListener;
 
     use super::*;
-    use crate::playback::mend::{tests::transport_stream, *};
+    use crate::playback::proxy::{tests::transport_stream, *};
 
     #[test]
     fn a_retry_after_in_seconds_is_honoured_within_bounds() {

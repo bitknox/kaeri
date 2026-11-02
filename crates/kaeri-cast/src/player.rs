@@ -120,7 +120,7 @@ pub struct CastSubtitle {
 pub struct CastLoad {
     /// The stream as its source gave it.
     pub source: CastSource,
-    /// What a local player would open: the mender's or the torrent server's loopback address,
+    /// What a local player would open: the stream proxy's or the torrent server's loopback address,
     /// or the file's path.
     pub url: String,
     /// The headers `url` wants.

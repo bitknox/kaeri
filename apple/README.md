@@ -77,7 +77,7 @@ Cargo runs with a clean environment: only `PATH`, `HOME`, rustup's and cargo's o
 (`CARGO_BUILD_JOBS` among them), a compiler cache's (`RUSTC_WRAPPER` and sccache's `SCCACHE_*`)
 and the deployment targets go through, and an iOS slice gets the Xcode its SDK is in. From an Xcode build
 phase or scheme action the environment holds Xcode's `SDKROOT` and architectures, which the C builds
-beneath BoringSSL, SQLite and the rest would otherwise pick up and build for the wrong platform.
+beneath aws-lc, SQLite and the rest would otherwise pick up and build for the wrong platform.
 
 It builds with the `app-dev` profile (opt-level 1, line tables only), or the one
 `KAERI_ENGINE_PROFILE` names, `release` for a build to keep. The Xcode project sets it per
@@ -115,7 +115,7 @@ patches:
 
 Every other library is MPVKit's own prebuilt static build, from the releases MPVKit pins, checked
 against its SHA-256: FFmpeg, libplacebo, MoltenVK, shaderc, OpenSSL, GnuTLS and the rest. The link
-keeps them inside the framework, so the OpenSSL there never meets the engine's BoringSSL, and the
+keeps them inside the framework, so the OpenSSL there never meets the engine's own C, and the
 framework stays dynamic, as the LGPL asks. `apple/.mpv/<pin>/contents` lists which libraries each
 slice took code from, and `ThirdParty/NOTICES-libmpv.txt`, which `scripts/notices.sh` writes and
 the app bundles, has their licences.

@@ -34,11 +34,11 @@ rules=(
   "kaeri-ffi|$terminal"
   # Light enough for a TV box: the protocol and its TLS, never the engine or an HTTP stack.
   "kaeri-remote|$terminal"
-  "kaeri-remote|^(kaeri-engine|kaeri-net|wreq|reqwest|hyper) "
+  "kaeri-remote|^(kaeri-engine|kaeri-net|reqwest|hyper) "
   # The Syncplay client: the protocol and its TLS, for any front end's player. Never the
   # engine, a player or an HTTP stack.
   "kaeri-party|$terminal"
-  "kaeri-party|^(kaeri-engine|kaeri-player|kaeri-net|wreq|reqwest|hyper) "
+  "kaeri-party|^(kaeri-engine|kaeri-player|kaeri-net|reqwest|hyper) "
   "kaeri-tui|^kaeri-engine "
 )
 

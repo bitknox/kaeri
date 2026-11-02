@@ -69,7 +69,7 @@ pub enum FfiScene {
     /// libmpv has no device for). Skipping the opening is off, so the skip is offered rather
     /// than taken, unless the config says otherwise. An address ending `.m3u8` is a web stream:
     /// HLS behind a referer lock, as provider CDNs have them, which goes through the engine's
-    /// mender with its header ([`SCENE_REFERER`]).
+    /// stream proxy with its header ([`SCENE_REFERER`]).
     Playing { media: String },
     /// [`Self::Playing`], with skip times the viewer marked on episode 7, `length_secs` long as
     /// `media` is: a recap from 0:00 to 0:08 and an opening from 0:10 to 0:40. The seek line

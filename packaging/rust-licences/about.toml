@@ -18,23 +18,6 @@ accepted = [
 ]
 ignore-dev-dependencies = true
 
-# MIT itself, and it builds the BoringSSL it vendors into the binary, under BoringSSL's own terms:
-# Apache-2.0, which BoringSSL moved its code to from the OpenSSL, SSLeay and ISC licences. The
-# test suite's Go licence, after it in the same file, covers nothing compiled in.
-[btls-sys.clarify]
-license = "MIT AND Apache-2.0"
-
-[[btls-sys.clarify.files]]
-path = "LICENSE-MIT"
-license = "MIT"
-checksum = "2f55c7cce4da9f8334dce14d53e35410f67973510bc9793ac2dafa5e8cddd3c3"
-
-[[btls-sys.clarify.files]]
-path = "deps/boringssl/LICENSE"
-license = "Apache-2.0"
-checksum = "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
-end = "   limitations under the License.\n"
-
 # MIT or Apache-2.0 itself, and it builds the zstd it vendors in, which is BSD-3-Clause.
 [zstd-sys.clarify]
 license = "(MIT OR Apache-2.0) AND BSD-3-Clause"

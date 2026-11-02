@@ -19,7 +19,7 @@
 # Every other library is MPVKit's own prebuilt static build, from the releases MPVKit pins, each
 # checked against its SHA-256: FFmpeg, libplacebo, MoltenVK, shaderc, OpenSSL, GnuTLS and the rest.
 # The link exports only `_mpv_*`, so the OpenSSL inside is bound within the framework and never
-# meets the engine's BoringSSL; the framework stays dynamic, as the LGPL asks of mpv and FFmpeg.
+# meets the engine's own C; the framework stays dynamic, as the LGPL asks of mpv and FFmpeg.
 #
 # The output, all of it generated and gitignored:
 #
