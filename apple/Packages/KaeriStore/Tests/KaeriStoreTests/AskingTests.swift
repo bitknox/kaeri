@@ -31,6 +31,19 @@ struct AskingTests {
         #expect(store.titles[900_001]?.title == "Stardust Wayfarer")
     }
 
+    @Test func aScreensCoversAskForTheirCardsAndTablesOnceAndAHoverAsksQuietly() {
+        let store = AppStore()
+        store.prepareCards([900_001, 900_002, 900_001])
+        store.prepareCards([900_001, 900_002])
+        #expect(store.sentLog == ["prepareCards"], "a screen shown again asks nothing")
+        store.prepareCards([900_002, 900_003])
+        #expect(store.sentLog == ["prepareCards", "prepareCards"], "only the cover not asked yet")
+        store.loadHoverEpisodes(900_001)
+        store.loadHoverEpisodes(900_001)
+        #expect(store.sentLog.last == "loadStills", "at low priority, behind the screen's own requests")
+        #expect(store.sentLog.count == 3)
+    }
+
     @Test func aQuestionAboutATitleIsNotPutAgainWhileItsAnswerIsOnItsWay() {
         let store = AppStore()
         store.loadDetail(900_001)

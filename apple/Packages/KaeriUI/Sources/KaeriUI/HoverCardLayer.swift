@@ -286,7 +286,12 @@ private struct HoverCardLayer: ViewModifier {
             }
             .onContinuousHover(coordinateSpace: .global) { phase in
                 switch phase {
-                case .active(let location): cards.hover(location)
+                case .active(let location):
+                    // The pointer over the grid: the covers on screen bring their cards and tables
+                    // in one request, so the card it settles on asks nothing. Not at launch, where
+                    // nobody has pointed yet; covers asked lately are left out.
+                    if store.hoverCardsOn { store.prepareCards(cards.layout.covers.map(\.id)) }
+                    cards.hover(location)
                 case .ended: cards.hover(nil)
                 }
             }
@@ -296,7 +301,7 @@ private struct HoverCardLayer: ViewModifier {
                     // A hover costs no request when the list that showed the cover carried the
                     // card's data: the page waits for the page to open.
                     store.loadCards([id])
-                    if store.titles.episodes[id] == nil { store.loadEpisodes(id) }
+                    store.loadHoverEpisodes(id)
                     // Interest shown on Home: whether a source has it, for the card's quiet line.
                     if navigator.section == .home { store.probe(id) }
                     if let url = entry.coverUrl, let image = store.artwork.image(url) {
