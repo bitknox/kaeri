@@ -49,7 +49,7 @@ fun openOnTv(context: Context, store: AppStore, host: ActionsHost?, id: AnilistI
 }
 
 /**
- * "Hikari Stream isn't installed on this TV." with the address as a QR code, "Open on your phone",
+ * "Hikari Library isn't installed on this TV." with the address as a QR code, "Open on your phone",
  * and Send to phone beside it when a phone is paired: [send] hands the link to the paired phones.
  */
 fun notInstalledPanel(context: Context, service: String, url: String, send: ((String) -> FfiLinkSent)? = null): ActionSheet =

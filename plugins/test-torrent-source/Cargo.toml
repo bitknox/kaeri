@@ -1,11 +1,11 @@
 [workspace]
 
 [package]
-name = "kaeri-torrent-index-fixture"
+name = "kaeri-torrent-source-fixture"
 version = "0.1.0"
 edition = "2024"
 license = "MIT"
-description = "A made-up torrent index on index.example, used to test torrent playback through the plugin ABI"
+description = "A made-up listing source on index.example, used to test torrent playback through the plugin ABI"
 publish = false
 
 [lib]

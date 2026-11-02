@@ -204,7 +204,7 @@ extension Entry {
         }
     }
 
-    /// "Hikari Stream", or "Hikari Stream and 1 more" with more than one.
+    /// "Hikari Library", or "Hikari Library and 1 more" with more than one.
     var alsoOnFact: String? {
         guard let first = availableOn.first else { return nil }
         return availableOn.count > 1 ? L.titleAlsoOnMoreApple(first: first, count: availableOn.count - 1) : first

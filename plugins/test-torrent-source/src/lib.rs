@@ -1,6 +1,6 @@
-//! A made-up torrent index, for tests.
+//! A made-up torrent source, for tests.
 //!
-//! Test infrastructure, not an example, and it points at nothing real: its "index" is a table
+//! Test infrastructure, not an example, and it points at nothing real: its listings are a table
 //! below, its host is `index.example`, and its info hashes are counting patterns. It shows the
 //! shape the plugin ABI gives a source that finds torrents:
 //!
@@ -22,7 +22,7 @@ use bindings::exports::kaeri::provider::provider::{
     Episode, Guest, Manifest, MediaStream, ProviderError, SearchHit, SourceCandidate,
 };
 
-/// One torrent the made-up index lists.
+/// One torrent the made-up source lists.
 struct Listing {
     id: &'static str,
     title: &'static str,
@@ -38,7 +38,7 @@ struct Listing {
 
 const SHOW: &str = "hoshikuzu";
 
-const INDEX: &[Listing] = &[
+const LISTINGS: &[Listing] = &[
     Listing {
         id: "season",
         title: "Hoshikuzu no Tabibito, season one",
@@ -63,7 +63,7 @@ const INDEX: &[Listing] = &[
 
 /// This plugin's own order for an episode: more peers first. Nothing outside it ranks anything.
 fn ranked(episode: u32) -> Vec<&'static Listing> {
-    let mut found: Vec<&Listing> = INDEX
+    let mut found: Vec<&Listing> = LISTINGS
         .iter()
         .filter(|l| (l.season && (1..=3).contains(&episode)) || l.episode == episode)
         .collect();
@@ -93,8 +93,8 @@ struct Component;
 impl Guest for Component {
     fn describe() -> Manifest {
         Manifest {
-            id: "test-torrent-index".into(),
-            display_name: "Torrent index (test only)".into(),
+            id: "test-torrent-source".into(),
+            display_name: "Torrent source (test only)".into(),
             version: "0.1.0".into(),
             allowed_hosts: vec!["index.example".into()],
             translation_types: vec!["sub".into()],
@@ -180,7 +180,7 @@ impl Guest for Component {
             return Err(ProviderError::NotFound);
         }
         let listing =
-            INDEX.iter().find(|l| l.id == source_id).ok_or(ProviderError::NotFound)?;
+            LISTINGS.iter().find(|l| l.id == source_id).ok_or(ProviderError::NotFound)?;
         Ok(vec![stream(listing, episode)])
     }
 }

@@ -117,7 +117,7 @@ internal fun LicensedScreen() {
 
 /**
  * Coming back to the app asks the engine whether an episode on a service was probably watched;
- * its answer is the notice "Watched episode 4 on Hikari Stream?" holding Mark as watched for 8 s.
+ * its answer is the notice "Watched episode 4 on Hikari Library?" holding Mark as watched for 8 s.
  */
 @Composable
 internal fun LicensedReturnNotice() {
