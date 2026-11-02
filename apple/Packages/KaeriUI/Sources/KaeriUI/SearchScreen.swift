@@ -1444,9 +1444,9 @@ struct SearchFiltersPanel: View {
     @State private var find = ""
     @State private var spoilers = false
 
-    /// The iPhone's sheet, under the pinned row: an included genre takes the neutral fill like
-    /// the row's set pills, leaving amber to the switches and the action. The iPad and the Mac
-    /// keep amber for now.
+    /// The iPhone's sheet, under the pinned row: an included genre or tag and a chosen source,
+    /// country, service or range take the neutral fill like the row's set pills, leaving amber to
+    /// the switches and the action. The iPad and the Mac keep amber for now.
     private var neutralPicks: Bool {
         #if os(iOS)
         compact && sizeClass == .compact
@@ -1498,14 +1498,16 @@ struct SearchFiltersPanel: View {
                     }
                     Presets(
                         choices: [Bounds(min: 1, max: 1), Bounds(min: nil, max: 12), Bounds(min: 13, max: 26), Bounds(min: 50, max: nil)],
-                        current: query.episodes, words: { SearchQuery(episodes: $0).label(.episodes) }, compact: compact
+                        current: query.episodes, words: { SearchQuery(episodes: $0).label(.episodes) }, compact: compact,
+                        neutral: neutralPicks
                     ) { bounds in store.editSearch { $0.episodes = bounds } }
                     RangeFields(title: L.filterEpisodeLength, bounds: query.minutes, unit: L.filterMinutesUnit, compact: compact) { bounds in
                         store.editSearch { $0.minutes = bounds }
                     }
                     Presets(
                         choices: [Bounds(min: nil, max: 15), Bounds(min: 20, max: 30), Bounds(min: 60, max: nil)],
-                        current: query.minutes, words: { SearchQuery(minutes: $0).label(.minutes) }, compact: compact
+                        current: query.minutes, words: { SearchQuery(minutes: $0).label(.minutes) }, compact: compact,
+                        neutral: neutralPicks
                     ) { bounds in store.editSearch { $0.minutes = bounds } }
                 }
                 PanelSection(compact: compact, L.filterReception) {
@@ -1536,7 +1538,7 @@ struct SearchFiltersPanel: View {
                         Text(L.titleBasedOn).foregroundStyle(.haze)
                         FlowLayout(spacing: 6, lineSpacing: 6) {
                             ForEach(searchSources(), id: \.self) { source in
-                                ToggleChip(name: searchSourceLabel(source: source), on: query.sources.contains(source), compact: compact) {
+                                ToggleChip(name: searchSourceLabel(source: source), on: query.sources.contains(source), compact: compact, neutral: neutralPicks) {
                                     store.searchLive(store.search.query.togglingSource(source: source))
                                 }
                             }
@@ -1547,7 +1549,7 @@ struct SearchFiltersPanel: View {
                         Text(L.filterCountry).foregroundStyle(.haze)
                         FlowLayout(spacing: 6, lineSpacing: 6) {
                             ForEach(searchCountries(), id: \.self) { code in
-                                ToggleChip(name: searchCountryLabel(code: code), on: query.countries.contains(code), compact: compact) {
+                                ToggleChip(name: searchCountryLabel(code: code), on: query.countries.contains(code), compact: compact, neutral: neutralPicks) {
                                     store.searchLive(store.search.query.togglingCountry(code: code))
                                 }
                             }
@@ -1560,7 +1562,7 @@ struct SearchFiltersPanel: View {
                     if !sites.isEmpty {
                         FlowLayout(spacing: 6, lineSpacing: 6) {
                             ForEach(sites, id: \.self) { site in
-                                ToggleChip(name: site, on: query.streamingOn.contains(site), compact: compact) {
+                                ToggleChip(name: site, on: query.streamingOn.contains(site), compact: compact, neutral: neutralPicks) {
                                     store.searchLive(store.search.query.togglingStreaming(site: site))
                                 }
                             }
@@ -1674,7 +1676,7 @@ struct SearchFiltersPanel: View {
                     let set = group.tags.filter { query.tagPick(name: $0.name) != .off }.count
                     DisclosureGroup {
                         ForEach(group.tags.filter { spoilers || !$0.spoiler }, id: \.name) { tag in
-                            TagRow(tag: tag, pick: query.tagPick(name: tag.name), compact: compact) { pick in
+                            TagRow(tag: tag, pick: query.tagPick(name: tag.name), compact: compact, neutral: neutralPicks) { pick in
                                 store.searchLive(store.search.query.pickingTag(name: tag.name, pick: pick))
                             }
                         }
@@ -1695,7 +1697,7 @@ struct SearchFiltersPanel: View {
                     Text(L.filterTagNone).foregroundStyle(.haze)
                 }
                 ForEach(Array(found), id: \.name) { tag in
-                    TagRow(tag: tag, pick: query.tagPick(name: tag.name), compact: compact) { pick in
+                    TagRow(tag: tag, pick: query.tagPick(name: tag.name), compact: compact, neutral: neutralPicks) { pick in
                         store.searchLive(store.search.query.pickingTag(name: tag.name, pick: pick))
                     }
                 }
@@ -1836,6 +1838,8 @@ private struct TagRow: View {
     let tag: FacetTag
     let pick: Pick
     var compact = false
+    /// An included tag's mark in silk rather than amber, as on the iPhone's sheet.
+    var neutral = false
     let set: (Pick) -> Void
 
     var body: some View {
@@ -1844,7 +1848,7 @@ private struct TagRow: View {
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: symbol)
-                    .foregroundStyle(pick == .off ? .haze : pick == .include ? .amber : .vermilion)
+                    .foregroundStyle(pick == .off ? .haze : pick == .include ? (neutral ? .silk : .amber) : .vermilion)
                     .frame(width: 18)
                 Text(tag.name).foregroundStyle(.silk)
                 Spacer()
@@ -1922,21 +1926,23 @@ private struct PickChip: View {
     }
 }
 
-/// A choice that is on or off, as a chip.
+/// A choice that is on or off, as a chip. `neutral` draws it on in the raised fill with silk
+/// words rather than amber.
 private struct ToggleChip: View {
     let name: String
     let on: Bool
     var compact = false
+    var neutral = false
     let toggle: () -> Void
 
     var body: some View {
         Button(action: toggle) {
             Text(name)
                 .font(compact ? .ui(15) : .mac(12))
-                .foregroundStyle(on ? .amber : .silk)
+                .foregroundStyle(on && !neutral ? .amber : .silk)
                 .padding(.horizontal, 10)
                 .frame(height: compact ? 32 : 24)
-                .background(on ? Palette.selection : .clear, in: .capsule)
+                .background(on ? (neutral ? Palette.raisedSelected : Palette.selection) : .clear, in: .capsule)
                 .overlay(Capsule().strokeBorder(on ? .clear : Palette.faintRule))
                 .contentShape(.capsule)
         }
@@ -1989,12 +1995,13 @@ private struct Presets: View {
     let current: Bounds
     let words: (Bounds) -> String?
     var compact = false
+    var neutral = false
     let set: (Bounds) -> Void
 
     var body: some View {
         FlowLayout(spacing: 6, lineSpacing: 6) {
             ForEach(choices, id: \.self) { bounds in
-                ToggleChip(name: words(bounds) ?? "", on: current == bounds, compact: compact) {
+                ToggleChip(name: words(bounds) ?? "", on: current == bounds, compact: compact, neutral: neutral) {
                     set(current == bounds ? Bounds() : bounds)
                 }
             }
