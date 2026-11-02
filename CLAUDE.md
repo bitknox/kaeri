@@ -34,7 +34,8 @@ Folder guides: `crates/CLAUDE.md`, `apple/CLAUDE.md`, `android/CLAUDE.md`, `webs
 - Copy and docs: plain sentences and headings, no em dashes, no "honestly", "deliberately" or
   "concretely", no bold-label-then-dash list items, no asides about past bugs.
 - Never print secrets: the release keystore and its passwords (`~/.kaeri-signing`,
-  `~/.gradle/gradle.properties`), the Mac update key, tracker client secrets in config.
+  `~/.gradle/gradle.properties`), the Mac signing certificate's `.p12` and its password
+  (`~/.kaeri-signing/mac`), the Mac update key, tracker client secrets in config.
 - Tests never run against the real HOME or `~/Library/Application Support/kaeri`. Use the
   HOME guard from the `local-checks` skill. Never launch the real app id `app.kaeri.app`, and
   never post real notifications on the Mac; use the Fixtures app and fakes.
