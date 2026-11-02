@@ -1718,6 +1718,7 @@ fn close_dialogs(window: &adw::ApplicationWindow) {
 }
 
 /// A dialog's default button: what Return presses.
+#[cfg(feature = "fixtures")]
 fn default_button(dialog: &adw::Dialog) -> Option<gtk::Button> {
     dialog.default_widget()?.downcast().ok()
 }
