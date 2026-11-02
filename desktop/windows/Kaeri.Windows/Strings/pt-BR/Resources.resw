@@ -5405,9 +5405,6 @@
   <data name="SettingsSpoiler" xml:space="preserve">
     <value>Proteção contra spoilers</value>
   </data>
-  <data name="SettingsSpoilerDetail" xml:space="preserve">
-    <value>Embaça as imagens de episódios não assistidos depois do próximo</value>
-  </data>
   <data name="SettingsAudioDetail" xml:space="preserve">
     <value>Cada série guarda o próprio áudio e as próprias legendas.</value>
   </data>
@@ -5554,9 +5551,6 @@
   </data>
   <data name="ShowSettingsShowEverything" xml:space="preserve">
     <value>Mostrar tudo</value>
-  </data>
-  <data name="ShowSettingsSpoilerDetail" xml:space="preserve">
-    <value>Embaça as imagens depois do próximo episódio.</value>
   </data>
   <data name="ShowSettingsAlways" xml:space="preserve">
     <value>Sempre</value>

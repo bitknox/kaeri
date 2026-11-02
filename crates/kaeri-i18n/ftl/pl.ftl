@@ -7935,9 +7935,6 @@ settings-counts-watched-detail = Albo gdy zaczyna się zakończenie, jeśli jest
 # Row: spoiler protection.
 settings-spoiler = Ochrona przed spoilerami
 
-# Line under it.
-settings-spoiler-detail = Rozmywa kadry odcinków, których nie obejrzano, dalszych niż następny
-
 # Line under the audio row.
 settings-audio-detail = Każdy tytuł pamięta własny dźwięk i napisy.
 
@@ -8084,9 +8081,6 @@ show-settings-blur-ahead = Rozmywaj kadry z wyprzedzeniem
 
 # Option: show everything.
 show-settings-show-everything = Pokazuj wszystko
-
-# Line under spoiler protection.
-show-settings-spoiler-detail = Rozmywa kadry odcinków dalszych niż następny.
 
 # Option: always.
 show-settings-always = Zawsze

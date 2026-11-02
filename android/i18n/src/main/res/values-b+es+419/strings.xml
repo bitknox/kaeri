@@ -2107,7 +2107,6 @@
     <string name="settings_counts_watched">Cuenta como visto a partir de</string>
     <string name="settings_counts_watched_detail">O cuando empieza el cierre, si está marcado</string>
     <string name="settings_spoiler">Protección contra spoilers</string>
-    <string name="settings_spoiler_detail">Desenfoca las miniaturas de episodios no vistos después del siguiente</string>
     <string name="settings_audio_detail">Cada serie recuerda su propio audio y sus subtítulos.</string>
     <string name="settings_system_captions">Seguir el estilo de subtítulos del sistema</string>
     <string name="settings_system_captions_detail">Los subtítulos simples usan tus preferencias de subtítulos de Accesibilidad. Los subtítulos con estilo mantienen su propio aspecto.</string>
@@ -2159,7 +2158,6 @@
     <string name="show_settings_skip_filler">Saltar relleno</string>
     <string name="show_settings_blur_ahead">Desenfocar miniaturas siguientes</string>
     <string name="show_settings_show_everything">Mostrar todo</string>
-    <string name="show_settings_spoiler_detail">Desenfoca las miniaturas posteriores al siguiente.</string>
     <string name="show_settings_always">Siempre</string>
     <string name="show_settings_never">Nunca</string>
     <string name="show_settings_subs_remembered">Recordado del último episodio.</string>

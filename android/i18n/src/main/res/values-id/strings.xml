@@ -1991,7 +1991,6 @@
     <string name="settings_counts_watched">Dihitung sebagai ditonton pada</string>
     <string name="settings_counts_watched_detail">Atau saat penutup mulai, jika sudah ditandai</string>
     <string name="settings_spoiler">Perlindungan spoiler</string>
-    <string name="settings_spoiler_detail">Mengaburkan cuplikan episode yang belum ditonton setelah episode berikutnya</string>
     <string name="settings_audio_detail">Setiap serial mengingat audio dan subtitelnya sendiri.</string>
     <string name="settings_system_captions">Ikuti gaya teks sistem</string>
     <string name="settings_system_captions_detail">Subtitel biasa memakai preferensi teks dari Aksesibilitas. Subtitel bergaya tetap memakai tampilannya sendiri.</string>
@@ -2041,7 +2040,6 @@
     <string name="show_settings_skip_filler">Lewati filler</string>
     <string name="show_settings_blur_ahead">Kaburkan cuplikan episode mendatang</string>
     <string name="show_settings_show_everything">Tampilkan semua</string>
-    <string name="show_settings_spoiler_detail">Mengaburkan cuplikan setelah episode berikutnya.</string>
     <string name="show_settings_always">Selalu</string>
     <string name="show_settings_never">Tidak pernah</string>
     <string name="show_settings_subs_remembered">Diingat dari episode terakhir Anda.</string>

@@ -5117,9 +5117,6 @@
   <data name="SettingsSpoiler" xml:space="preserve">
     <value>ネタバレ防止</value>
   </data>
-  <data name="SettingsSpoilerDetail" xml:space="preserve">
-    <value>次のエピソードより後の未視聴エピソードの静止画をぼかします。</value>
-  </data>
   <data name="SettingsAudioDetail" xml:space="preserve">
     <value>作品ごとに、音声と字幕の設定を記憶します。</value>
   </data>
@@ -5260,9 +5257,6 @@
   </data>
   <data name="ShowSettingsShowEverything" xml:space="preserve">
     <value>すべて表示</value>
-  </data>
-  <data name="ShowSettingsSpoilerDetail" xml:space="preserve">
-    <value>次のエピソードより後の静止画をぼかします。</value>
   </data>
   <data name="ShowSettingsAlways" xml:space="preserve">
     <value>常に</value>

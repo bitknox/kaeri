@@ -5117,9 +5117,6 @@
   <data name="SettingsSpoiler" xml:space="preserve">
     <value>Bảo vệ tiết lộ nội dung</value>
   </data>
-  <data name="SettingsSpoilerDetail" xml:space="preserve">
-    <value>Làm mờ ảnh của các tập chưa xem sau tập kế tiếp</value>
-  </data>
   <data name="SettingsAudioDetail" xml:space="preserve">
     <value>Mỗi tựa tự nhớ âm thanh và phụ đề riêng.</value>
   </data>
@@ -5260,9 +5257,6 @@
   </data>
   <data name="ShowSettingsShowEverything" xml:space="preserve">
     <value>Hiện tất cả</value>
-  </data>
-  <data name="ShowSettingsSpoilerDetail" xml:space="preserve">
-    <value>Làm mờ ảnh sau tập kế tiếp.</value>
   </data>
   <data name="ShowSettingsAlways" xml:space="preserve">
     <value>Luôn</value>

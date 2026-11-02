@@ -7719,9 +7719,6 @@ settings-counts-watched-detail = Hoặc khi phần kết thúc bắt đầu, n�
 # Row: spoiler protection.
 settings-spoiler = Bảo vệ tiết lộ nội dung
 
-# Line under it.
-settings-spoiler-detail = Làm mờ ảnh của các tập chưa xem sau tập kế tiếp
-
 # Line under the audio row.
 settings-audio-detail = Mỗi tựa tự nhớ âm thanh và phụ đề riêng.
 
@@ -7865,9 +7862,6 @@ show-settings-blur-ahead = Làm mờ ảnh trước
 
 # Option: show everything.
 show-settings-show-everything = Hiện tất cả
-
-# Line under spoiler protection.
-show-settings-spoiler-detail = Làm mờ ảnh sau tập kế tiếp.
 
 # Option: always.
 show-settings-always = Luôn

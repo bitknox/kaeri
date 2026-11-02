@@ -1991,7 +1991,6 @@
     <string name="settings_counts_watched">Tính là đã xem khi</string>
     <string name="settings_counts_watched_detail">Hoặc khi phần kết thúc bắt đầu, nếu đã được đánh dấu</string>
     <string name="settings_spoiler">Bảo vệ tiết lộ nội dung</string>
-    <string name="settings_spoiler_detail">Làm mờ ảnh của các tập chưa xem sau tập kế tiếp</string>
     <string name="settings_audio_detail">Mỗi tựa tự nhớ âm thanh và phụ đề riêng.</string>
     <string name="settings_system_captions">Theo kiểu phụ đề của hệ thống</string>
     <string name="settings_system_captions_detail">Phụ đề thường dùng tùy chọn phụ đề trong Trợ năng. Phụ đề có kiểu riêng giữ nguyên kiểu của chúng.</string>
@@ -2041,7 +2040,6 @@
     <string name="show_settings_skip_filler">Bỏ qua tập độn</string>
     <string name="show_settings_blur_ahead">Làm mờ ảnh trước</string>
     <string name="show_settings_show_everything">Hiện tất cả</string>
-    <string name="show_settings_spoiler_detail">Làm mờ ảnh sau tập kế tiếp.</string>
     <string name="show_settings_always">Luôn</string>
     <string name="show_settings_never">Không bao giờ</string>
     <string name="show_settings_subs_remembered">Ghi nhớ từ tập gần nhất của bạn.</string>

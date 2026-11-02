@@ -7205,7 +7205,7 @@ public enum L {
     public static var settingsSpoiler: String { string("settings-spoiler", fallback: "Spoiler protection") }
 
     /// Line under it.
-    public static var settingsSpoilerDetail: String { string("settings-spoiler-detail", fallback: "Blurs stills of unwatched episodes after the next one") }
+    public static var settingsSpoilerDetail: String { string("settings-spoiler-detail", fallback: "Hides stills and synopses of unwatched episodes after the next one") }
 
     /// Line under the audio row.
     public static var settingsAudioDetail: String { string("settings-audio-detail", fallback: "Each show remembers its own audio and subtitles.") }
@@ -7351,7 +7351,7 @@ public enum L {
     public static var showSettingsShowEverything: String { string("show-settings-show-everything", fallback: "Show everything") }
 
     /// Line under spoiler protection.
-    public static var showSettingsSpoilerDetail: String { string("show-settings-spoiler-detail", fallback: "Blurs stills after the next episode.") }
+    public static var showSettingsSpoilerDetail: String { string("show-settings-spoiler-detail", fallback: "Hides stills and synopses after the next episode.") }
 
     /// Option: always.
     public static var showSettingsAlways: String { string("show-settings-always", fallback: "Always") }
@@ -8824,6 +8824,53 @@ public enum L {
 
     /// Accessibility label of an episode's still while spoiler protection hides it.
     public static var episodeSpoilerHidden: String { string("episode-spoiler-hidden", fallback: "Hidden by spoiler protection") }
+
+    /// Hint of a protected episode's row, and its still's label in a preview: the synopsis is hidden.
+    public static var episodeSynopsisHidden: String { string("episode-synopsis-hidden", fallback: "Synopsis hidden by spoiler protection") }
+
+    /// Menu item, button and screen reader action that reveals one protected episode's still and synopsis.
+    public static var episodeSynopsisShow: String { string("episode-synopsis-show", fallback: "Show synopsis") }
+
+    /// Screen reader hint of that action.
+    public static var episodeSynopsisShowHint: String { string("episode-synopsis-show-hint", fallback: "Shows this episode's still and synopsis") }
+
+    /// Facts line of an episode with a length and an air date. The date is already formatted.
+    public static func episodeFacts(minutes: Int, date: String) -> String {
+        Self.format("episode-facts", fallback: "%1$lld min · Aired %2$@", minutes, date)
+    }
+
+    /// Facts line of an episode with a length only.
+    public static func episodeFactsLength(minutes: Int) -> String {
+        Self.format("episode-facts-length", fallback: "%1$lld min", minutes)
+    }
+
+    /// Facts line of an episode that is part-watched.
+    public static func episodeFactsLeft(minutes: Int) -> String {
+        Self.format("episode-facts-left", fallback: "%1$lld min left", minutes)
+    }
+
+    /// One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.
+    public static func episodeProtectionLine(episode: Int) -> String {
+        Self.format("episode-protection-line", fallback: "Spoiler protection hides what comes after episode %1$lld.", episode)
+    }
+
+    /// The same line on phones.
+    public static func episodeProtectionLineShort(episode: Int) -> String {
+        Self.format("episode-protection-line-short", fallback: "Hidden after episode %1$lld", episode)
+    }
+
+    /// Label of an episode range of a long series, in the range menu.
+    public static func episodeRange(from: Int, to: Int) -> String {
+        Self.format("episode-range", fallback: "Episodes %1$lld to %2$lld", from, to)
+    }
+
+    /// Label of the control that picks an episode range.
+    public static var episodeRangeLabel: String { string("episode-range-label", fallback: "Episode range") }
+
+    /// One line that stands for the watched episodes at the top of a range. Opening it shows them.
+    public static func episodeFold(count: Int) -> String {
+        Self.format("episode-fold", fallback: "%1$lld watched episodes", count)
+    }
 
     /// Accessibility label of the button that opens an episode's menu.
     public static var episodeOptions: String { string("episode-options", fallback: "Episode options") }

@@ -1114,6 +1114,7 @@ mod tests {
                 source: None,
                 unsourced: false,
                 past_progress: false,
+                synopsis_pending: false,
                 thumbnail: None,
                 description: None,
             },
@@ -1131,6 +1132,7 @@ mod tests {
                 source: None,
                 unsourced: false,
                 past_progress: false,
+                synopsis_pending: false,
                 thumbnail: None,
                 description: None,
             },
@@ -1192,6 +1194,7 @@ mod tests {
                         source: None,
                         unsourced: false,
                         past_progress: false,
+                        synopsis_pending: false,
                         thumbnail: None,
                         description: None,
                     })
@@ -1333,6 +1336,7 @@ mod tests {
             source: None,
             unsourced: false,
             past_progress: false,
+            synopsis_pending: false,
             thumbnail: None,
             description: None,
         }]));
@@ -1385,6 +1389,7 @@ mod tests {
             source: None,
             unsourced: false,
             past_progress: false,
+            synopsis_pending: false,
             thumbnail: None,
             description: None,
         };

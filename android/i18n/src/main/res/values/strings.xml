@@ -3915,7 +3915,7 @@
     <!-- Row: spoiler protection. -->
     <string name="settings_spoiler">Spoiler protection</string>
     <!-- Line under it. -->
-    <string name="settings_spoiler_detail">Blurs stills of unwatched episodes after the next one</string>
+    <string name="settings_spoiler_detail">Hides stills and synopses of unwatched episodes after the next one</string>
     <!-- Line under the audio row. -->
     <string name="settings_audio_detail">Each show remembers its own audio and subtitles.</string>
     <!-- Row: follow the system's caption style. -->
@@ -4014,7 +4014,7 @@
     <!-- Option: show everything. -->
     <string name="show_settings_show_everything">Show everything</string>
     <!-- Line under spoiler protection. -->
-    <string name="show_settings_spoiler_detail">Blurs stills after the next episode.</string>
+    <string name="show_settings_spoiler_detail">Hides stills and synopses after the next episode.</string>
     <!-- Option: always. -->
     <string name="show_settings_always">Always</string>
     <!-- Option: never. -->
@@ -4900,6 +4900,31 @@
     <string name="episode_row_airs">Airs %1$s</string>
     <!-- Accessibility label of an episode's still while spoiler protection hides it. -->
     <string name="episode_spoiler_hidden">Hidden by spoiler protection</string>
+    <!-- Hint of a protected episode's row, and its still's label in a preview: the synopsis is hidden. -->
+    <string name="episode_synopsis_hidden">Synopsis hidden by spoiler protection</string>
+    <!-- Menu item, button and screen reader action that reveals one protected episode's still and synopsis. -->
+    <string name="episode_synopsis_show">Show synopsis</string>
+    <!-- Screen reader hint of that action. -->
+    <string name="episode_synopsis_show_hint">Shows this episode\'s still and synopsis</string>
+    <!-- Facts line of an episode with a length and an air date. The date is already formatted. -->
+    <string name="episode_facts">%1$d min · Aired %2$s</string>
+    <!-- Facts line of an episode with a length only. -->
+    <string name="episode_facts_length">%1$d min</string>
+    <!-- Facts line of an episode that is part-watched. -->
+    <string name="episode_facts_left">%1$d min left</string>
+    <!-- One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden. -->
+    <string name="episode_protection_line">Spoiler protection hides what comes after episode %1$d.</string>
+    <!-- The same line on phones. -->
+    <string name="episode_protection_line_short">Hidden after episode %1$d</string>
+    <!-- Label of an episode range of a long series, in the range menu. -->
+    <string name="episode_range">Episodes %1$d to %2$d</string>
+    <!-- Label of the control that picks an episode range. -->
+    <string name="episode_range_label">Episode range</string>
+    <!-- One line that stands for the watched episodes at the top of a range. Opening it shows them. -->
+    <plurals name="episode_fold">
+        <item quantity="one">One watched episode</item>
+        <item quantity="other">%1$d watched episodes</item>
+    </plurals>
     <!-- Accessibility label of the button that opens an episode's menu. -->
     <string name="episode_options">Episode options</string>
     <!-- Menu item that marks an episode as watched. -->

@@ -7863,9 +7863,6 @@ settings-counts-watched-detail = Oppure all'inizio dei titoli di coda, se sono s
 # Row: spoiler protection.
 settings-spoiler = Protezione dagli spoiler
 
-# Line under it.
-settings-spoiler-detail = Sfoca le anteprime degli episodi non visti dopo il successivo
-
 # Line under the audio row.
 settings-audio-detail = Ogni serie ricorda il proprio audio e i propri sottotitoli.
 
@@ -8011,9 +8008,6 @@ show-settings-blur-ahead = Sfoca le anteprime successive
 
 # Option: show everything.
 show-settings-show-everything = Mostra tutto
-
-# Line under spoiler protection.
-show-settings-spoiler-detail = Sfoca le anteprime dopo l'episodio successivo.
 
 # Option: always.
 show-settings-always = Sempre

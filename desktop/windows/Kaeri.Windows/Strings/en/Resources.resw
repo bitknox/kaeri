@@ -6988,7 +6988,7 @@
     <comment>Row: spoiler protection.</comment>
   </data>
   <data name="SettingsSpoilerDetail" xml:space="preserve">
-    <value>Blurs stills of unwatched episodes after the next one</value>
+    <value>Hides stills and synopses of unwatched episodes after the next one</value>
     <comment>Line under it.</comment>
   </data>
   <data name="SettingsAudioDetail" xml:space="preserve">
@@ -7184,7 +7184,7 @@
     <comment>Option: show everything.</comment>
   </data>
   <data name="ShowSettingsSpoilerDetail" xml:space="preserve">
-    <value>Blurs stills after the next episode.</value>
+    <value>Hides stills and synopses after the next episode.</value>
     <comment>Line under spoiler protection.</comment>
   </data>
   <data name="ShowSettingsAlways" xml:space="preserve">
@@ -8937,6 +8937,54 @@
   <data name="EpisodeSpoilerHidden" xml:space="preserve">
     <value>Hidden by spoiler protection</value>
     <comment>Accessibility label of an episode's still while spoiler protection hides it.</comment>
+  </data>
+  <data name="EpisodeSynopsisHidden" xml:space="preserve">
+    <value>Synopsis hidden by spoiler protection</value>
+    <comment>Hint of a protected episode's row, and its still's label in a preview: the synopsis is hidden.</comment>
+  </data>
+  <data name="EpisodeSynopsisShow" xml:space="preserve">
+    <value>Show synopsis</value>
+    <comment>Menu item, button and screen reader action that reveals one protected episode's still and synopsis.</comment>
+  </data>
+  <data name="EpisodeSynopsisShowHint" xml:space="preserve">
+    <value>Shows this episode's still and synopsis</value>
+    <comment>Screen reader hint of that action.</comment>
+  </data>
+  <data name="EpisodeFacts" xml:space="preserve">
+    <value>{minutes} min · Aired {date}</value>
+    <comment>Facts line of an episode with a length and an air date. The date is already formatted.</comment>
+  </data>
+  <data name="EpisodeFactsLength" xml:space="preserve">
+    <value>{minutes} min</value>
+    <comment>Facts line of an episode with a length only.</comment>
+  </data>
+  <data name="EpisodeFactsLeft" xml:space="preserve">
+    <value>{minutes} min left</value>
+    <comment>Facts line of an episode that is part-watched.</comment>
+  </data>
+  <data name="EpisodeProtectionLine" xml:space="preserve">
+    <value>Spoiler protection hides what comes after episode {episode}.</value>
+    <comment>One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.</comment>
+  </data>
+  <data name="EpisodeProtectionLineShort" xml:space="preserve">
+    <value>Hidden after episode {episode}</value>
+    <comment>The same line on phones.</comment>
+  </data>
+  <data name="EpisodeRange" xml:space="preserve">
+    <value>Episodes {from} to {to}</value>
+    <comment>Label of an episode range of a long series, in the range menu.</comment>
+  </data>
+  <data name="EpisodeRangeLabel" xml:space="preserve">
+    <value>Episode range</value>
+    <comment>Label of the control that picks an episode range.</comment>
+  </data>
+  <data name="EpisodeFold_one" xml:space="preserve">
+    <value>One watched episode</value>
+    <comment>One line that stands for the watched episodes at the top of a range. Opening it shows them.</comment>
+  </data>
+  <data name="EpisodeFold_other" xml:space="preserve">
+    <value>{count} watched episodes</value>
+    <comment>One line that stands for the watched episodes at the top of a range. Opening it shows them.</comment>
   </data>
   <data name="EpisodeOptions" xml:space="preserve">
     <value>Episode options</value>

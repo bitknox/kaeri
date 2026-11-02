@@ -5549,9 +5549,6 @@
   <data name="SettingsSpoiler" xml:space="preserve">
     <value>Ochrona przed spoilerami</value>
   </data>
-  <data name="SettingsSpoilerDetail" xml:space="preserve">
-    <value>Rozmywa kadry odcinków, których nie obejrzano, dalszych niż następny</value>
-  </data>
   <data name="SettingsAudioDetail" xml:space="preserve">
     <value>Każdy tytuł pamięta własny dźwięk i napisy.</value>
   </data>
@@ -5701,9 +5698,6 @@
   </data>
   <data name="ShowSettingsShowEverything" xml:space="preserve">
     <value>Pokazuj wszystko</value>
-  </data>
-  <data name="ShowSettingsSpoilerDetail" xml:space="preserve">
-    <value>Rozmywa kadry odcinków dalszych niż następny.</value>
   </data>
   <data name="ShowSettingsAlways" xml:space="preserve">
     <value>Zawsze</value>

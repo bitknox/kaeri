@@ -7719,9 +7719,6 @@ settings-counts-watched-detail = エンディングに印が付いていれば�
 # Row: spoiler protection.
 settings-spoiler = ネタバレ防止
 
-# Line under it.
-settings-spoiler-detail = 次のエピソードより後の未視聴エピソードの静止画をぼかします。
-
 # Line under the audio row.
 settings-audio-detail = 作品ごとに、音声と字幕の設定を記憶します。
 
@@ -7865,9 +7862,6 @@ show-settings-blur-ahead = 先の静止画をぼかす
 
 # Option: show everything.
 show-settings-show-everything = すべて表示
-
-# Line under spoiler protection.
-show-settings-spoiler-detail = 次のエピソードより後の静止画をぼかします。
 
 # Option: always.
 show-settings-always = 常に

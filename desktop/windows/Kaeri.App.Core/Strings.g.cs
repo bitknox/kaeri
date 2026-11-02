@@ -6510,6 +6510,39 @@ public static partial class T
     /// <summary>Accessibility label of an episode's still while spoiler protection hides it.</summary>
     public static string EpisodeSpoilerHidden => Get("EpisodeSpoilerHidden");
 
+    /// <summary>Hint of a protected episode's row, and its still's label in a preview: the synopsis is hidden.</summary>
+    public static string EpisodeSynopsisHidden => Get("EpisodeSynopsisHidden");
+
+    /// <summary>Menu item, button and screen reader action that reveals one protected episode's still and synopsis.</summary>
+    public static string EpisodeSynopsisShow => Get("EpisodeSynopsisShow");
+
+    /// <summary>Screen reader hint of that action.</summary>
+    public static string EpisodeSynopsisShowHint => Get("EpisodeSynopsisShowHint");
+
+    /// <summary>Facts line of an episode with a length and an air date. The date is already formatted.</summary>
+    public static string EpisodeFacts(long minutes, string date) => Fill(Get("EpisodeFacts"), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("date", date));
+
+    /// <summary>Facts line of an episode with a length only.</summary>
+    public static string EpisodeFactsLength(long minutes) => Fill(Get("EpisodeFactsLength"), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Facts line of an episode that is part-watched.</summary>
+    public static string EpisodeFactsLeft(long minutes) => Fill(Get("EpisodeFactsLeft"), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.</summary>
+    public static string EpisodeProtectionLine(long episode) => Fill(Get("EpisodeProtectionLine"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The same line on phones.</summary>
+    public static string EpisodeProtectionLineShort(long episode) => Fill(Get("EpisodeProtectionLineShort"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Label of an episode range of a long series, in the range menu.</summary>
+    public static string EpisodeRange(long from, long to) => Fill(Get("EpisodeRange"), ("from", from.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("to", to.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Label of the control that picks an episode range.</summary>
+    public static string EpisodeRangeLabel => Get("EpisodeRangeLabel");
+
+    /// <summary>One line that stands for the watched episodes at the top of a range. Opening it shows them.</summary>
+    public static string EpisodeFold(long count) => Fill(GetPlural("EpisodeFold", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
     /// <summary>Accessibility label of the button that opens an episode's menu.</summary>
     public static string EpisodeOptions => Get("EpisodeOptions");
 
@@ -9292,7 +9325,7 @@ public static partial class T
         ["SettingsCountsWatched"] = "Counts as watched at",
         ["SettingsCountsWatchedDetail"] = "Or when the ending starts, if it is marked",
         ["SettingsSpoiler"] = "Spoiler protection",
-        ["SettingsSpoilerDetail"] = "Blurs stills of unwatched episodes after the next one",
+        ["SettingsSpoilerDetail"] = "Hides stills and synopses of unwatched episodes after the next one",
         ["SettingsAudioDetail"] = "Each show remembers its own audio and subtitles.",
         ["SettingsSystemCaptions"] = "Follow system caption style",
         ["SettingsSystemCaptionsDetail"] = "Plain subtitles use your caption preferences from Accessibility. Styled subtitles keep their own look.",
@@ -9341,7 +9374,7 @@ public static partial class T
         ["ShowSettingsSkipFiller"] = "Skip filler",
         ["ShowSettingsBlurAhead"] = "Blur stills ahead",
         ["ShowSettingsShowEverything"] = "Show everything",
-        ["ShowSettingsSpoilerDetail"] = "Blurs stills after the next episode.",
+        ["ShowSettingsSpoilerDetail"] = "Hides stills and synopses after the next episode.",
         ["ShowSettingsAlways"] = "Always",
         ["ShowSettingsNever"] = "Never",
         ["ShowSettingsSubsRemembered"] = "Remembered from your last episode.",
@@ -9781,6 +9814,18 @@ public static partial class T
         ["EpisodeRowNotOut"] = "Not out yet",
         ["EpisodeRowAirs"] = "Airs {when}",
         ["EpisodeSpoilerHidden"] = "Hidden by spoiler protection",
+        ["EpisodeSynopsisHidden"] = "Synopsis hidden by spoiler protection",
+        ["EpisodeSynopsisShow"] = "Show synopsis",
+        ["EpisodeSynopsisShowHint"] = "Shows this episode's still and synopsis",
+        ["EpisodeFacts"] = "{minutes} min · Aired {date}",
+        ["EpisodeFactsLength"] = "{minutes} min",
+        ["EpisodeFactsLeft"] = "{minutes} min left",
+        ["EpisodeProtectionLine"] = "Spoiler protection hides what comes after episode {episode}.",
+        ["EpisodeProtectionLineShort"] = "Hidden after episode {episode}",
+        ["EpisodeRange"] = "Episodes {from} to {to}",
+        ["EpisodeRangeLabel"] = "Episode range",
+        ["EpisodeFold_one"] = "One watched episode",
+        ["EpisodeFold_other"] = "{count} watched episodes",
         ["EpisodeOptions"] = "Episode options",
         ["EpisodeMarkWatched"] = "Mark watched",
         ["EpisodeMarkUnwatched"] = "Mark unwatched",

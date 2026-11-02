@@ -7792,7 +7792,7 @@ settings-counts-watched-detail = [Öŕ ŵĥéñ ţĥé éñðîñĝ šţàŕţš
 settings-spoiler = [Šþöîļéŕ þŕöţéçţîöñ~~~~~~]
 
 # Line under it.
-settings-spoiler-detail = [Ɓļüŕš šţîļļš öƒ üñŵàţçĥéð éþîšöðéš àƒţéŕ ţĥé ñéẋţ öñé~~~~~~~~~~~~~~~~]
+settings-spoiler-detail = [Ĥîðéš šţîļļš àñð šýñöþšéš öƒ üñŵàţçĥéð éþîšöðéš àƒţéŕ ţĥé ñéẋţ öñé~~~~~~~~~~~~~~~~~~~~]
 
 # Line under the audio row.
 settings-audio-detail = [Éàçĥ šĥöŵ ŕéɱéɱƀéŕš îţš öŵñ àüðîö àñð šüƀţîţļéš.~~~~~~~~~~~~~~~]
@@ -7940,7 +7940,7 @@ show-settings-blur-ahead = [Ɓļüŕ šţîļļš àĥéàð~~~~~~]
 show-settings-show-everything = [Šĥöŵ éṽéŕýţĥîñĝ~~~~~]
 
 # Line under spoiler protection.
-show-settings-spoiler-detail = [Ɓļüŕš šţîļļš àƒţéŕ ţĥé ñéẋţ éþîšöðé.~~~~~~~~~~~]
+show-settings-spoiler-detail = [Ĥîðéš šţîļļš àñð šýñöþšéš àƒţéŕ ţĥé ñéẋţ éþîšöðé.~~~~~~~~~~~~~~~]
 
 # Option: always.
 show-settings-always = [Åļŵàýš~~]
@@ -9263,6 +9263,43 @@ episode-row-airs = [Åîŕš { $when }~~~]
 
 # Accessibility label of an episode's still while spoiler protection hides it.
 episode-spoiler-hidden = [Ĥîððéñ ƀý šþöîļéŕ þŕöţéçţîöñ~~~~~~~~~]
+
+# Hint of a protected episode's row, and its still's label in a preview: the synopsis is hidden.
+episode-synopsis-hidden = [Šýñöþšîš ĥîððéñ ƀý šþöîļéŕ þŕöţéçţîöñ~~~~~~~~~~~~]
+
+# Menu item, button and screen reader action that reveals one protected episode's still and synopsis.
+episode-synopsis-show = [Šĥöŵ šýñöþšîš~~~~]
+
+# Screen reader hint of that action.
+episode-synopsis-show-hint = [Šĥöŵš ţĥîš éþîšöðé'š šţîļļ àñð šýñöþšîš~~~~~~~~~~~~]
+
+# Facts line of an episode with a length and an air date. The date is already formatted.
+episode-facts = [{ $minutes } ɱîñ · Åîŕéð { $date }~~~~~~]
+
+# Facts line of an episode with a length only.
+episode-facts-length = [{ $minutes } ɱîñ~~~]
+
+# Facts line of an episode that is part-watched.
+episode-facts-left = [{ $minutes } ɱîñ ļéƒţ~~~~]
+
+# One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.
+episode-protection-line = [Šþöîļéŕ þŕöţéçţîöñ ĥîðéš ŵĥàţ çöɱéš àƒţéŕ éþîšöðé { $episode }.~~~~~~~~~~~~~~~~~]
+
+# The same line on phones.
+episode-protection-line-short = [Ĥîððéñ àƒţéŕ éþîšöðé { $episode }~~~~~~~~]
+
+# Label of an episode range of a long series, in the range menu.
+episode-range = [Éþîšöðéš { $from } ţö { $to }~~~~~~]
+
+# Label of the control that picks an episode range.
+episode-range-label = [Éþîšöðé ŕàñĝé~~~~]
+
+# One line that stands for the watched episodes at the top of a range. Opening it shows them.
+episode-fold =
+    { $count ->
+        [one] [Öñé ŵàţçĥéð éþîšöðé~~~~~~]
+       *[other] [{ $count } ŵàţçĥéð éþîšöðéš~~~~~~]
+    }
 
 # Accessibility label of the button that opens an episode's menu.
 episode-options = [Éþîšöðé öþţîöñš~~~~~]

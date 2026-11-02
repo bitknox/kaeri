@@ -5549,9 +5549,6 @@
   <data name="SettingsSpoiler" xml:space="preserve">
     <value>Защита от спойлеров</value>
   </data>
-  <data name="SettingsSpoilerDetail" xml:space="preserve">
-    <value>Размывает кадры непросмотренных серий после следующей.</value>
-  </data>
   <data name="SettingsAudioDetail" xml:space="preserve">
     <value>Каждый сериал помнит свою аудиодорожку и субтитры.</value>
   </data>
@@ -5701,9 +5698,6 @@
   </data>
   <data name="ShowSettingsShowEverything" xml:space="preserve">
     <value>Показывать всё</value>
-  </data>
-  <data name="ShowSettingsSpoilerDetail" xml:space="preserve">
-    <value>Размывает кадры после следующей серии.</value>
   </data>
   <data name="ShowSettingsAlways" xml:space="preserve">
     <value>Всегда</value>

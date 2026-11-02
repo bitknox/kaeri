@@ -5261,9 +5261,6 @@
   <data name="SettingsSpoiler" xml:space="preserve">
     <value>Spoiler koruması</value>
   </data>
-  <data name="SettingsSpoilerDetail" xml:space="preserve">
-    <value>Sıradakinden sonraki izlenmemiş bölümlerin kareleri bulanıklaştırılır</value>
-  </data>
   <data name="SettingsAudioDetail" xml:space="preserve">
     <value>Her dizi kendi ses ve altyazı tercihini hatırlar.</value>
   </data>
@@ -5407,9 +5404,6 @@
   </data>
   <data name="ShowSettingsShowEverything" xml:space="preserve">
     <value>Her şeyi göster</value>
-  </data>
-  <data name="ShowSettingsSpoilerDetail" xml:space="preserve">
-    <value>Sıradakinden sonraki bölümlerin karelerini bulanıklaştırır.</value>
   </data>
   <data name="ShowSettingsAlways" xml:space="preserve">
     <value>Her zaman</value>

@@ -7791,9 +7791,6 @@ settings-counts-watched-detail = Oder wenn der Abspann beginnt, sofern er markie
 # Row: spoiler protection.
 settings-spoiler = Spoiler-Schutz
 
-# Line under it.
-settings-spoiler-detail = Verwischt Standbilder von nicht gesehenen Folgen nach der nächsten.
-
 # Line under the audio row.
 settings-audio-detail = Jede Serie merkt sich ihr eigenes Audio und ihre Untertitel.
 
@@ -7938,9 +7935,6 @@ show-settings-blur-ahead = Standbilder vorab verwischen
 
 # Option: show everything.
 show-settings-show-everything = Alles zeigen
-
-# Line under spoiler protection.
-show-settings-spoiler-detail = Verwischt Standbilder nach der nächsten Folge.
 
 # Option: always.
 show-settings-always = Immer

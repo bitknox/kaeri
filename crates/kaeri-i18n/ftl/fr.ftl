@@ -7863,9 +7863,6 @@ settings-counts-watched-detail = Ou au début du générique de fin, s’il est 
 # Row: spoiler protection.
 settings-spoiler = Protection contre les spoilers
 
-# Line under it.
-settings-spoiler-detail = Floute les images des épisodes non vus, après le suivant
-
 # Line under the audio row.
 settings-audio-detail = Chaque série garde son propre audio et ses sous-titres.
 
@@ -8011,9 +8008,6 @@ show-settings-blur-ahead = Flouter les images à venir
 
 # Option: show everything.
 show-settings-show-everything = Tout afficher
-
-# Line under spoiler protection.
-show-settings-spoiler-detail = Floute les images après l’épisode suivant.
 
 # Option: always.
 show-settings-always = Toujours

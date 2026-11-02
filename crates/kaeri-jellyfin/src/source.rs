@@ -198,6 +198,8 @@ impl Provider for JellyfinSource {
             .map(|(number, item)| {
                 let mut episode = Episode::new(number);
                 episode.title = Some(item.name).filter(|name| !name.is_empty());
+                episode.description =
+                    item.overview.map(|text| text.trim().to_owned()).filter(|t| !t.is_empty());
                 episode.duration = item
                     .run_time_ticks
                     .filter(|t| *t > 0)
@@ -257,6 +259,7 @@ mod tests {
             season: Some(season),
             number: Some(number),
             run_time_ticks: None,
+            overview: None,
             user_data: None,
         }
     }

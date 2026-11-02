@@ -128,6 +128,52 @@ episode-row-airs = Airs { $when }
 # Accessibility label of an episode's still while spoiler protection hides it.
 episode-spoiler-hidden = Hidden by spoiler protection
 
+# Hint of a protected episode's row, and its still's label in a preview: the synopsis is hidden.
+episode-synopsis-hidden = Synopsis hidden by spoiler protection
+
+# Menu item, button and screen reader action that reveals one protected episode's still and synopsis.
+episode-synopsis-show = Show synopsis
+
+# Screen reader hint of that action.
+episode-synopsis-show-hint = Shows this episode's still and synopsis
+
+# Facts line of an episode with a length and an air date. The date is already formatted.
+# @arg minutes: int
+# @arg date: text
+episode-facts = { $minutes } min · Aired { $date }
+
+# Facts line of an episode with a length only.
+# @arg minutes: int
+episode-facts-length = { $minutes } min
+
+# Facts line of an episode that is part-watched.
+# @arg minutes: int
+episode-facts-left = { $minutes } min left
+
+# One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.
+# @arg episode: int
+episode-protection-line = Spoiler protection hides what comes after episode { $episode }.
+
+# The same line on phones.
+# @arg episode: int
+# @max 40
+episode-protection-line-short = Hidden after episode { $episode }
+
+# Label of an episode range of a long series, in the range menu.
+# @arg from: int
+# @arg to: int
+episode-range = Episodes { $from } to { $to }
+
+# Label of the control that picks an episode range.
+episode-range-label = Episode range
+
+# One line that stands for the watched episodes at the top of a range. Opening it shows them.
+# @arg count: int
+episode-fold = { $count ->
+    [one] One watched episode
+   *[other] { $count } watched episodes
+ }
+
 # Accessibility label of the button that opens an episode's menu.
 episode-options = Episode options
 

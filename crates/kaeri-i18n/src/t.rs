@@ -14907,6 +14907,61 @@ pub fn episode_spoiler_hidden() -> String {
     text("episode-spoiler-hidden", &[])
 }
 
+/// Hint of a protected episode's row, and its still's label in a preview: the synopsis is hidden.
+pub fn episode_synopsis_hidden() -> String {
+    text("episode-synopsis-hidden", &[])
+}
+
+/// Menu item, button and screen reader action that reveals one protected episode's still and synopsis.
+pub fn episode_synopsis_show() -> String {
+    text("episode-synopsis-show", &[])
+}
+
+/// Screen reader hint of that action.
+pub fn episode_synopsis_show_hint() -> String {
+    text("episode-synopsis-show-hint", &[])
+}
+
+/// Facts line of an episode with a length and an air date. The date is already formatted.
+pub fn episode_facts(minutes: i64, date: &str) -> String {
+    text("episode-facts", &[("minutes", Arg::Int(minutes)), ("date", Arg::Text(date))])
+}
+
+/// Facts line of an episode with a length only.
+pub fn episode_facts_length(minutes: i64) -> String {
+    text("episode-facts-length", &[("minutes", Arg::Int(minutes))])
+}
+
+/// Facts line of an episode that is part-watched.
+pub fn episode_facts_left(minutes: i64) -> String {
+    text("episode-facts-left", &[("minutes", Arg::Int(minutes))])
+}
+
+/// One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.
+pub fn episode_protection_line(episode: i64) -> String {
+    text("episode-protection-line", &[("episode", Arg::Int(episode))])
+}
+
+/// The same line on phones.
+pub fn episode_protection_line_short(episode: i64) -> String {
+    text("episode-protection-line-short", &[("episode", Arg::Int(episode))])
+}
+
+/// Label of an episode range of a long series, in the range menu.
+pub fn episode_range(from: i64, to: i64) -> String {
+    text("episode-range", &[("from", Arg::Int(from)), ("to", Arg::Int(to))])
+}
+
+/// Label of the control that picks an episode range.
+pub fn episode_range_label() -> String {
+    text("episode-range-label", &[])
+}
+
+/// One line that stands for the watched episodes at the top of a range. Opening it shows them.
+pub fn episode_fold(count: i64) -> String {
+    text("episode-fold", &[("count", Arg::Int(count))])
+}
+
 /// Accessibility label of the button that opens an episode's menu.
 pub fn episode_options() -> String {
     text("episode-options", &[])

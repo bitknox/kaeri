@@ -5261,9 +5261,6 @@
   <data name="SettingsSpoiler" xml:space="preserve">
     <value>Spoiler-Schutz</value>
   </data>
-  <data name="SettingsSpoilerDetail" xml:space="preserve">
-    <value>Verwischt Standbilder von nicht gesehenen Folgen nach der nächsten.</value>
-  </data>
   <data name="SettingsAudioDetail" xml:space="preserve">
     <value>Jede Serie merkt sich ihr eigenes Audio und ihre Untertitel.</value>
   </data>
@@ -5407,9 +5404,6 @@
   </data>
   <data name="ShowSettingsShowEverything" xml:space="preserve">
     <value>Alles zeigen</value>
-  </data>
-  <data name="ShowSettingsSpoilerDetail" xml:space="preserve">
-    <value>Verwischt Standbilder nach der nächsten Folge.</value>
   </data>
   <data name="ShowSettingsAlways" xml:space="preserve">
     <value>Immer</value>

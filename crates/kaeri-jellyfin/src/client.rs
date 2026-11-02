@@ -252,7 +252,7 @@ impl Jellyfin {
         let path = format!("/Shows/{series_id}/Episodes");
         let request = self
             .request(Method::GET, &path)
-            .query(&[("userId", user.user_id.as_str()), ("fields", "RunTimeTicks")]);
+            .query(&[("userId", user.user_id.as_str()), ("fields", "RunTimeTicks,Overview")]);
         Ok(self.json::<Items<EpisodeItem>>(request).await?.items)
     }
 

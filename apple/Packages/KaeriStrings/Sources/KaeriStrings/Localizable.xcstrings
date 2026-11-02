@@ -39809,6 +39809,42 @@
         }
       }
     },
+    "episode-facts" : {
+      "comment" : "Facts line of an episode with a length and an air date. The date is already formatted. Argument 1: minutes (Int). Argument 2: date (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld min · Aired %2$@"
+          }
+        }
+      }
+    },
+    "episode-facts-left" : {
+      "comment" : "Facts line of an episode that is part-watched. Argument 1: minutes (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld min left"
+          }
+        }
+      }
+    },
+    "episode-facts-length" : {
+      "comment" : "Facts line of an episode with a length only. Argument 1: minutes (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld min"
+          }
+        }
+      }
+    },
     "episode-filler" : {
       "comment" : "Badge on an episode that is filler.",
       "extractionState" : "manual",
@@ -39889,6 +39925,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tập phụ"
+          }
+        }
+      }
+    },
+    "episode-fold" : {
+      "comment" : "One line that stands for the watched episodes at the top of a range. Opening it shows them. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "One watched episode"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld watched episodes"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -41069,6 +41139,54 @@
         }
       }
     },
+    "episode-protection-line" : {
+      "comment" : "One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden. Argument 1: episode (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spoiler protection hides what comes after episode %1$lld."
+          }
+        }
+      }
+    },
+    "episode-protection-line-short" : {
+      "comment" : "The same line on phones. Argument 1: episode (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hidden after episode %1$lld"
+          }
+        }
+      }
+    },
+    "episode-range" : {
+      "comment" : "Label of an episode range of a long series, in the range menu. Argument 1: from (Int). Argument 2: to (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episodes %1$lld to %2$lld"
+          }
+        }
+      }
+    },
+    "episode-range-label" : {
+      "comment" : "Label of the control that picks an episode range.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episode range"
+          }
+        }
+      }
+    },
     "episode-row-airs" : {
       "comment" : "Row note for an episode that has not aired, with when it does. Argument 1: when (Text).",
       "extractionState" : "manual",
@@ -41317,6 +41435,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đã ẩn bởi chế độ chống tiết lộ"
+          }
+        }
+      }
+    },
+    "episode-synopsis-hidden" : {
+      "comment" : "Hint of a protected episode's row, and its still's label in a preview: the synopsis is hidden.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synopsis hidden by spoiler protection"
+          }
+        }
+      }
+    },
+    "episode-synopsis-show" : {
+      "comment" : "Menu item, button and screen reader action that reveals one protected episode's still and synopsis.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show synopsis"
+          }
+        }
+      }
+    },
+    "episode-synopsis-show-hint" : {
+      "comment" : "Screen reader hint of that action.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows this episode's still and synopsis"
           }
         }
       }
@@ -164961,82 +165115,10 @@
       "comment" : "Line under it.",
       "extractionState" : "manual",
       "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verwischt Standbilder von nicht gesehenen Folgen nach der nächsten."
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blurs stills of unwatched episodes after the next one"
-          }
-        },
-        "es-419" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Desenfoca las miniaturas de episodios no vistos después del siguiente"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Floute les images des épisodes non vus, après le suivant"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mengaburkan cuplikan episode yang belum ditonton setelah episode berikutnya"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sfoca le anteprime degli episodi non visti dopo il successivo"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "次のエピソードより後の未視聴エピソードの静止画をぼかします。"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rozmywa kadry odcinków, których nie obejrzano, dalszych niż następny"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Embaça as imagens de episódios não assistidos depois do próximo"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Размывает кадры непросмотренных серий после следующей."
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Suddar bilder från osedda avsnitt efter nästa"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sıradakinden sonraki izlenmemiş bölümlerin kareleri bulanıklaştırılır"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Làm mờ ảnh của các tập chưa xem sau tập kế tiếp"
+            "value" : "Hides stills and synopses of unwatched episodes after the next one"
           }
         }
       }
@@ -178653,82 +178735,10 @@
       "comment" : "Line under spoiler protection.",
       "extractionState" : "manual",
       "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verwischt Standbilder nach der nächsten Folge."
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blurs stills after the next episode."
-          }
-        },
-        "es-419" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Desenfoca las miniaturas posteriores al siguiente."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Floute les images après l’épisode suivant."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mengaburkan cuplikan setelah episode berikutnya."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sfoca le anteprime dopo l'episodio successivo."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "次のエピソードより後の静止画をぼかします。"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rozmywa kadry odcinków dalszych niż następny."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Embaça as imagens depois do próximo episódio."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Размывает кадры после следующей серии."
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Suddar bilder efter nästa avsnitt."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sıradakinden sonraki bölümlerin karelerini bulanıklaştırır."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Làm mờ ảnh sau tập kế tiếp."
+            "value" : "Hides stills and synopses after the next episode."
           }
         }
       }

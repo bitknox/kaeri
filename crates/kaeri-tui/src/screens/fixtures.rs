@@ -66,6 +66,7 @@ pub(super) fn episode(
         source: None,
         unsourced: false,
         past_progress: false,
+        synopsis_pending: false,
         thumbnail: None,
         description: None,
     }

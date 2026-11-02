@@ -7791,9 +7791,6 @@ settings-counts-watched-detail = Ya da bitiş işaretliyse, bitiş başladığı
 # Row: spoiler protection.
 settings-spoiler = Spoiler koruması
 
-# Line under it.
-settings-spoiler-detail = Sıradakinden sonraki izlenmemiş bölümlerin kareleri bulanıklaştırılır
-
 # Line under the audio row.
 settings-audio-detail = Her dizi kendi ses ve altyazı tercihini hatırlar.
 
@@ -7938,9 +7935,6 @@ show-settings-blur-ahead = İleriki bölümlerin karelerini bulanıklaştır
 
 # Option: show everything.
 show-settings-show-everything = Her şeyi göster
-
-# Line under spoiler protection.
-show-settings-spoiler-detail = Sıradakinden sonraki bölümlerin karelerini bulanıklaştırır.
 
 # Option: always.
 show-settings-always = Her zaman

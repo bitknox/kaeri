@@ -145,6 +145,7 @@ pub(super) fn app_at_episodes() -> App {
                     source: None,
                     unsourced: false,
                     past_progress: false,
+                    synopsis_pending: false,
                     thumbnail: None,
                     description: None,
                 })

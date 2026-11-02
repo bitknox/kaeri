@@ -7791,9 +7791,6 @@ settings-counts-watched-detail = Eller när avslutningen börjar, om den är mar
 # Row: spoiler protection.
 settings-spoiler = Spoilerskydd
 
-# Line under it.
-settings-spoiler-detail = Suddar bilder från osedda avsnitt efter nästa
-
 # Line under the audio row.
 settings-audio-detail = Varje serie minns sitt eget ljud och sina undertexter.
 
@@ -7938,9 +7935,6 @@ show-settings-blur-ahead = Sudda bilder i förväg
 
 # Option: show everything.
 show-settings-show-everything = Visa allt
-
-# Line under spoiler protection.
-show-settings-spoiler-detail = Suddar bilder efter nästa avsnitt.
 
 # Option: always.
 show-settings-always = Alltid

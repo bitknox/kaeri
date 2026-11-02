@@ -928,6 +928,7 @@ mod tests {
             source: None,
             unsourced: false,
             past_progress: false,
+            synopsis_pending: false,
         };
         Event::Episodes { id, rows: (1..=12).map(row).collect(), failed: None }
     }

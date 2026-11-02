@@ -9412,6 +9412,50 @@ object Strings {
     fun episodeSpoilerHidden(context: Context): String =
         context.getString(R.string.episode_spoiler_hidden)
 
+    /** Hint of a protected episode's row, and its still's label in a preview: the synopsis is hidden. */
+    fun episodeSynopsisHidden(context: Context): String =
+        context.getString(R.string.episode_synopsis_hidden)
+
+    /** Menu item, button and screen reader action that reveals one protected episode's still and synopsis. */
+    fun episodeSynopsisShow(context: Context): String =
+        context.getString(R.string.episode_synopsis_show)
+
+    /** Screen reader hint of that action. */
+    fun episodeSynopsisShowHint(context: Context): String =
+        context.getString(R.string.episode_synopsis_show_hint)
+
+    /** Facts line of an episode with a length and an air date. The date is already formatted. */
+    fun episodeFacts(context: Context, minutes: Int, date: String): String =
+        context.getString(R.string.episode_facts, minutes, date)
+
+    /** Facts line of an episode with a length only. */
+    fun episodeFactsLength(context: Context, minutes: Int): String =
+        context.getString(R.string.episode_facts_length, minutes)
+
+    /** Facts line of an episode that is part-watched. */
+    fun episodeFactsLeft(context: Context, minutes: Int): String =
+        context.getString(R.string.episode_facts_left, minutes)
+
+    /** One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden. */
+    fun episodeProtectionLine(context: Context, episode: Int): String =
+        context.getString(R.string.episode_protection_line, episode)
+
+    /** The same line on phones. */
+    fun episodeProtectionLineShort(context: Context, episode: Int): String =
+        context.getString(R.string.episode_protection_line_short, episode)
+
+    /** Label of an episode range of a long series, in the range menu. */
+    fun episodeRange(context: Context, from: Int, to: Int): String =
+        context.getString(R.string.episode_range, from, to)
+
+    /** Label of the control that picks an episode range. */
+    fun episodeRangeLabel(context: Context): String =
+        context.getString(R.string.episode_range_label)
+
+    /** One line that stands for the watched episodes at the top of a range. Opening it shows them. */
+    fun episodeFold(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.episode_fold, count, count)
+
     /** Accessibility label of the button that opens an episode's menu. */
     fun episodeOptions(context: Context): String =
         context.getString(R.string.episode_options)

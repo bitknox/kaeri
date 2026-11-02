@@ -5261,9 +5261,6 @@
   <data name="SettingsSpoiler" xml:space="preserve">
     <value>Spoilerskydd</value>
   </data>
-  <data name="SettingsSpoilerDetail" xml:space="preserve">
-    <value>Suddar bilder från osedda avsnitt efter nästa</value>
-  </data>
   <data name="SettingsAudioDetail" xml:space="preserve">
     <value>Varje serie minns sitt eget ljud och sina undertexter.</value>
   </data>
@@ -5407,9 +5404,6 @@
   </data>
   <data name="ShowSettingsShowEverything" xml:space="preserve">
     <value>Visa allt</value>
-  </data>
-  <data name="ShowSettingsSpoilerDetail" xml:space="preserve">
-    <value>Suddar bilder efter nästa avsnitt.</value>
   </data>
   <data name="ShowSettingsAlways" xml:space="preserve">
     <value>Alltid</value>

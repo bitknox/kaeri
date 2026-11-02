@@ -2107,7 +2107,6 @@
     <string name="settings_counts_watched">Compte comme vu à</string>
     <string name="settings_counts_watched_detail">Ou au début du générique de fin, s’il est marqué</string>
     <string name="settings_spoiler">Protection contre les spoilers</string>
-    <string name="settings_spoiler_detail">Floute les images des épisodes non vus, après le suivant</string>
     <string name="settings_audio_detail">Chaque série garde son propre audio et ses sous-titres.</string>
     <string name="settings_system_captions">Suivre le style de sous-titres du système</string>
     <string name="settings_system_captions_detail">Les sous-titres simples utilisent vos préférences de sous-titrage de l’Accessibilité. Les sous-titres stylisés gardent leur propre aspect.</string>
@@ -2159,7 +2158,6 @@
     <string name="show_settings_skip_filler">Passer les épisodes de remplissage</string>
     <string name="show_settings_blur_ahead">Flouter les images à venir</string>
     <string name="show_settings_show_everything">Tout afficher</string>
-    <string name="show_settings_spoiler_detail">Floute les images après l’épisode suivant.</string>
     <string name="show_settings_always">Toujours</string>
     <string name="show_settings_never">Jamais</string>
     <string name="show_settings_subs_remembered">Mémorisés depuis votre dernier épisode.</string>

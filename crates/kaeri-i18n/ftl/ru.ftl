@@ -7935,9 +7935,6 @@ settings-counts-watched-detail = Или когда начинается энди
 # Row: spoiler protection.
 settings-spoiler = Защита от спойлеров
 
-# Line under it.
-settings-spoiler-detail = Размывает кадры непросмотренных серий после следующей.
-
 # Line under the audio row.
 settings-audio-detail = Каждый сериал помнит свою аудиодорожку и субтитры.
 
@@ -8084,9 +8081,6 @@ show-settings-blur-ahead = Размывать кадры следующих се
 
 # Option: show everything.
 show-settings-show-everything = Показывать всё
-
-# Line under spoiler protection.
-show-settings-spoiler-detail = Размывает кадры после следующей серии.
 
 # Option: always.
 show-settings-always = Всегда

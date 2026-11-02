@@ -2165,7 +2165,6 @@
     <string name="settings_counts_watched">Засчитывать как просмотренное на</string>
     <string name="settings_counts_watched_detail">Или когда начинается эндинг, если он отмечен.</string>
     <string name="settings_spoiler">Защита от спойлеров</string>
-    <string name="settings_spoiler_detail">Размывает кадры непросмотренных серий после следующей.</string>
     <string name="settings_audio_detail">Каждый сериал помнит свою аудиодорожку и субтитры.</string>
     <string name="settings_system_captions">Использовать стиль субтитров системы</string>
     <string name="settings_system_captions_detail">Обычные субтитры берут настройки из «Универсального доступа». Субтитры с собственным оформлением сохраняют свой вид.</string>
@@ -2218,7 +2217,6 @@
     <string name="show_settings_skip_filler">Пропускать филлеры</string>
     <string name="show_settings_blur_ahead">Размывать кадры следующих серий</string>
     <string name="show_settings_show_everything">Показывать всё</string>
-    <string name="show_settings_spoiler_detail">Размывает кадры после следующей серии.</string>
     <string name="show_settings_always">Всегда</string>
     <string name="show_settings_never">Никогда</string>
     <string name="show_settings_subs_remembered">Запомнено с вашей последней серии.</string>

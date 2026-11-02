@@ -7792,7 +7792,7 @@ settings-counts-watched-detail = Or when the ending starts, if it is marked
 settings-spoiler = Spoiler protection
 
 # Line under it.
-settings-spoiler-detail = Blurs stills of unwatched episodes after the next one
+settings-spoiler-detail = Hides stills and synopses of unwatched episodes after the next one
 
 # Line under the audio row.
 settings-audio-detail = Each show remembers its own audio and subtitles.
@@ -7940,7 +7940,7 @@ show-settings-blur-ahead = Blur stills ahead
 show-settings-show-everything = Show everything
 
 # Line under spoiler protection.
-show-settings-spoiler-detail = Blurs stills after the next episode.
+show-settings-spoiler-detail = Hides stills and synopses after the next episode.
 
 # Option: always.
 show-settings-always = Always
@@ -9263,6 +9263,43 @@ episode-row-airs = Airs { $when }
 
 # Accessibility label of an episode's still while spoiler protection hides it.
 episode-spoiler-hidden = Hidden by spoiler protection
+
+# Hint of a protected episode's row, and its still's label in a preview: the synopsis is hidden.
+episode-synopsis-hidden = Synopsis hidden by spoiler protection
+
+# Menu item, button and screen reader action that reveals one protected episode's still and synopsis.
+episode-synopsis-show = Show synopsis
+
+# Screen reader hint of that action.
+episode-synopsis-show-hint = Shows this episode's still and synopsis
+
+# Facts line of an episode with a length and an air date. The date is already formatted.
+episode-facts = { $minutes } min · Aired { $date }
+
+# Facts line of an episode with a length only.
+episode-facts-length = { $minutes } min
+
+# Facts line of an episode that is part-watched.
+episode-facts-left = { $minutes } min left
+
+# One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.
+episode-protection-line = Spoiler protection hides what comes after episode { $episode }.
+
+# The same line on phones.
+episode-protection-line-short = Hidden after episode { $episode }
+
+# Label of an episode range of a long series, in the range menu.
+episode-range = Episodes { $from } to { $to }
+
+# Label of the control that picks an episode range.
+episode-range-label = Episode range
+
+# One line that stands for the watched episodes at the top of a range. Opening it shows them.
+episode-fold =
+    { $count ->
+        [one] One watched episode
+       *[other] { $count } watched episodes
+    }
 
 # Accessibility label of the button that opens an episode's menu.
 episode-options = Episode options

@@ -45,6 +45,7 @@ mod scenes;
 #[cfg(feature = "remote")]
 mod sender;
 mod start;
+mod synopsis;
 #[cfg(feature = "testing")]
 mod testing;
 mod trailer;
@@ -1376,6 +1377,7 @@ mod tests {
             source: None,
             unsourced: false,
             past_progress: false,
+            synopsis_pending: false,
         };
         assert_eq!(crossed(row.clone()), row);
         let dub = DubExtent { through: 6, complete: false };

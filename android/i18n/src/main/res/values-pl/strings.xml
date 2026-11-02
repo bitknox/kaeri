@@ -2165,7 +2165,6 @@
     <string name="settings_counts_watched">Liczy się jako obejrzany po</string>
     <string name="settings_counts_watched_detail">Albo gdy zaczyna się zakończenie, jeśli jest oznaczone</string>
     <string name="settings_spoiler">Ochrona przed spoilerami</string>
-    <string name="settings_spoiler_detail">Rozmywa kadry odcinków, których nie obejrzano, dalszych niż następny</string>
     <string name="settings_audio_detail">Każdy tytuł pamięta własny dźwięk i napisy.</string>
     <string name="settings_system_captions">Używaj stylu napisów z systemu</string>
     <string name="settings_system_captions_detail">Zwykłe napisy korzystają z ustawień napisów z Ułatwień dostępu. Napisy ze stylem zachowują własny wygląd.</string>
@@ -2218,7 +2217,6 @@
     <string name="show_settings_skip_filler">Pomijaj wypełniacze</string>
     <string name="show_settings_blur_ahead">Rozmywaj kadry z wyprzedzeniem</string>
     <string name="show_settings_show_everything">Pokazuj wszystko</string>
-    <string name="show_settings_spoiler_detail">Rozmywa kadry odcinków dalszych niż następny.</string>
     <string name="show_settings_always">Zawsze</string>
     <string name="show_settings_never">Nigdy</string>
     <string name="show_settings_subs_remembered">Zapamiętane z ostatniego odcinka.</string>

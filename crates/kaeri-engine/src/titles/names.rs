@@ -63,6 +63,7 @@ const KEPT: usize = 512;
 pub struct Borrowed {
     titles: BTreeMap<u32, String>,
     stills: BTreeMap<u32, String>,
+    synopses: BTreeMap<u32, String>,
 }
 
 impl Borrowed {
@@ -88,11 +89,20 @@ impl Borrowed {
                 borrowed.stills.entry(number).or_insert_with(|| still.to_owned());
             }
         }
+        // Synopses ride along on the same listing, cleaned as the table's own are.
+        let mut tidy = listed.to_vec();
+        data::tidy_synopses(&mut tidy, &media.plain_description());
+        for episode in &tidy {
+            let Some(number) = numbering.anilist(episode.number.as_str()) else { continue };
+            if let Some(text) = &episode.description {
+                borrowed.synopses.entry(number).or_insert_with(|| text.clone());
+            }
+        }
         borrowed
     }
 
     fn is_empty(&self) -> bool {
-        self.titles.is_empty() && self.stills.is_empty()
+        self.titles.is_empty() && self.stills.is_empty() && self.synopses.is_empty()
     }
 }
 
@@ -148,12 +158,26 @@ impl Unnamed {
             &self.numbering.rekey(&borrowed.titles),
             &self.numbering.rekey(&borrowed.stills),
         );
+        data::name_synopses(&mut episodes, &self.numbering.rekey(&borrowed.synopses));
         episodes
     }
 
     /// `episodes`' rows, as a load makes them: watched as the store has it now, and dated.
-    fn rows(&self, episodes: &[Episode], store: &Store, id: AnilistId) -> Vec<EpisodeRow> {
+    ///
+    /// `pending` says a lookup is still running that may bring synopses the rows lack.
+    fn rows(
+        &self,
+        episodes: &[Episode],
+        store: &Store,
+        id: AnilistId,
+        pending: bool,
+    ) -> Vec<EpisodeRow> {
         let mut rows = data::episode_rows(episodes, store, id);
+        if pending {
+            for row in rows.iter_mut().filter(|row| row.description.is_none()) {
+                row.synopsis_pending = true;
+            }
+        }
         self.marks.apply(&mut rows);
         episodes::dated(rows, &self.media, self.numbering, store, id, self.now)
     }
@@ -353,11 +377,12 @@ impl Naming {
             Some((borrowed, _)) => unnamed.named(borrowed),
             None => unnamed.episodes.clone(),
         };
+        let fresh = kept.is_some_and(|(_, fresh)| fresh);
+        let pending = !(offline || fresh || others.is_empty());
         ticket.send(
             tx,
-            Event::Episodes { id, rows: unnamed.rows(&sent, store, id), failed: None },
+            Event::Episodes { id, rows: unnamed.rows(&sent, store, id, pending), failed: None },
         );
-        let fresh = kept.is_some_and(|(_, fresh)| fresh);
         if offline || fresh || others.is_empty() {
             return;
         }
@@ -395,16 +420,21 @@ impl Naming {
                 }
             }
             let named = unnamed.named(&borrowed);
-            let shown = |episodes: &[Episode]| -> Vec<(Option<String>, Option<String>)> {
-                episodes.iter().map(|e| (e.title.clone(), e.thumbnail.clone())).collect()
+            type Shown = (Option<String>, Option<String>, Option<String>);
+            let shown = |episodes: &[Episode]| -> Vec<Shown> {
+                episodes
+                    .iter()
+                    .map(|e| (e.title.clone(), e.thumbnail.clone(), e.description.clone()))
+                    .collect()
             };
-            // Said only when it names more than the table already showed.
-            if shown(&named) != shown(&sent) {
+            // Said when it names more than the table already showed, and when it ends the wait
+            // for synopses that did not come.
+            if shown(&named) != shown(&sent) || pending {
                 ticket.send(
                     &tx,
                     Event::Episodes {
                         id,
-                        rows: unnamed.rows(&named, &store, id),
+                        rows: unnamed.rows(&named, &store, id, false),
                         failed: None,
                     },
                 );
@@ -466,6 +496,7 @@ mod tests {
         ids::ProviderKey,
         media::{MediaFormat, SearchHit},
     };
+    use kaeri_model::episodes::EpisodeText;
     use kaeri_providers::MockProvider;
     use tokio::sync::mpsc;
 
@@ -544,6 +575,9 @@ mod tests {
         media: Media,
         tx: Outbox,
         rx: mpsc::UnboundedReceiver<Event>,
+        /// The last table's titles and stills, to tell a table that only ends the wait for
+        /// synopses from one that names more.
+        last: Vec<(Option<String>, Option<String>)>,
     }
 
     impl Page {
@@ -557,6 +591,7 @@ mod tests {
                 media: media(airing),
                 tx: Outbox::from(tx),
                 rx,
+                last: Vec::new(),
             }
         }
 
@@ -595,14 +630,28 @@ mod tests {
                 .expect("a table")
                 .expect("the channel open");
             match event {
-                Event::Episodes { id: SHOW, rows, .. } => rows,
+                Event::Episodes { id: SHOW, rows, .. } => {
+                    self.last =
+                        rows.iter().map(|r| (r.title.clone(), r.thumbnail.clone())).collect();
+                    rows
+                }
                 other => panic!("only tables are said: {other:?}"),
             }
         }
 
-        /// No more is said within a while.
+        /// No more is said within a while, bar a table that only ends the wait for synopses.
         async fn quiet(&mut self) -> bool {
-            tokio::time::timeout(Duration::from_millis(300), self.rx.recv()).await.is_err()
+            while let Ok(Some(event)) =
+                tokio::time::timeout(Duration::from_millis(300), self.rx.recv()).await
+            {
+                let Event::Episodes { rows, .. } = &event else { return false };
+                let named: Vec<_> =
+                    rows.iter().map(|r| (r.title.clone(), r.thumbnail.clone())).collect();
+                if named != self.last || rows.iter().any(|r| r.synopsis_pending) {
+                    return false;
+                }
+            }
+            true
         }
     }
 
@@ -635,6 +684,34 @@ mod tests {
             named[11].thumbnail.as_deref(),
             Some("https://img.shelf.example/still/12.jpg")
         );
+        assert!(page.quiet().await);
+    }
+
+    #[tokio::test]
+    async fn synopses_come_with_the_names_and_the_wait_for_them_is_said_to_end() {
+        let mut listed = catalogued(1..=12, "img.shelf.example");
+        listed[2].description = Some("<p>A lamplighter &amp; her lantern.</p>".into());
+        let mut page = Page::new(registry(vec![torrent(), catalogue("shelf", listed)]), false);
+        page.load(bare(1..=12), false);
+
+        let first = page.table().await;
+        assert!(first.iter().all(|row| row.synopsis_pending), "text may still come");
+        assert_eq!(kaeri_model::episodes::episode_text(&first), EpisodeText::Expected);
+        let named = page.table().await;
+        assert_eq!(named[2].description.as_deref(), Some("A lamplighter & her lantern."));
+        assert_eq!(kaeri_model::episodes::episode_text(&named), EpisodeText::Present);
+        assert!(named.iter().all(|row| !row.synopsis_pending));
+    }
+
+    #[tokio::test]
+    async fn a_lookup_with_no_text_ends_the_wait_in_a_table_of_its_own() {
+        let mut page =
+            Page::new(registry(vec![torrent(), catalogue("shelf", Vec::new())]), false);
+        page.load(bare(1..=3), false);
+        let first = page.table().await;
+        assert_eq!(kaeri_model::episodes::episode_text(&first), EpisodeText::Expected);
+        let last = page.table().await;
+        assert_eq!(kaeri_model::episodes::episode_text(&last), EpisodeText::None);
         assert!(page.quiet().await);
     }
 
@@ -905,7 +982,7 @@ mod tests {
             Unnamed::of(&media(false), &episodes, Numbering::Same, "torrent", marks, 0)
                 .expect("nothing is named");
         let store = Store::open_in_memory().unwrap();
-        let rows = unnamed.rows(&episodes, &store, SHOW);
+        let rows = unnamed.rows(&episodes, &store, SHOW, false);
         assert_eq!(rows[1].source.as_deref(), Some("Shelf"));
         assert!(rows[2].unsourced && !rows[0].unsourced);
     }

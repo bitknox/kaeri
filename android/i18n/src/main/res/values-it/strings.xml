@@ -2107,7 +2107,6 @@
     <string name="settings_counts_watched">Conta come visto a</string>
     <string name="settings_counts_watched_detail">Oppure all\'inizio dei titoli di coda, se sono segnati</string>
     <string name="settings_spoiler">Protezione dagli spoiler</string>
-    <string name="settings_spoiler_detail">Sfoca le anteprime degli episodi non visti dopo il successivo</string>
     <string name="settings_audio_detail">Ogni serie ricorda il proprio audio e i propri sottotitoli.</string>
     <string name="settings_system_captions">Usa lo stile dei sottotitoli di sistema</string>
     <string name="settings_system_captions_detail">I sottotitoli semplici usano le tue preferenze per i sottotitoli in Accessibilità. I sottotitoli con stile mantengono il proprio aspetto.</string>
@@ -2159,7 +2158,6 @@
     <string name="show_settings_skip_filler">Salta i filler</string>
     <string name="show_settings_blur_ahead">Sfoca le anteprime successive</string>
     <string name="show_settings_show_everything">Mostra tutto</string>
-    <string name="show_settings_spoiler_detail">Sfoca le anteprime dopo l\'episodio successivo.</string>
     <string name="show_settings_always">Sempre</string>
     <string name="show_settings_never">Mai</string>
     <string name="show_settings_subs_remembered">Ricordati dal tuo ultimo episodio.</string>

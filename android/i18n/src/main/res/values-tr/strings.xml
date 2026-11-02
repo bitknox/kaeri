@@ -2049,7 +2049,6 @@
     <string name="settings_counts_watched">Şu noktada izlenmiş sayılır</string>
     <string name="settings_counts_watched_detail">Ya da bitiş işaretliyse, bitiş başladığında</string>
     <string name="settings_spoiler">Spoiler koruması</string>
-    <string name="settings_spoiler_detail">Sıradakinden sonraki izlenmemiş bölümlerin kareleri bulanıklaştırılır</string>
     <string name="settings_audio_detail">Her dizi kendi ses ve altyazı tercihini hatırlar.</string>
     <string name="settings_system_captions">Sistem altyazı stilini kullan</string>
     <string name="settings_system_captions_detail">Düz altyazılar, Erişilebilirlik\'teki altyazı tercihlerinizi kullanır. Stilli altyazılar kendi görünümünü korur.</string>
@@ -2100,7 +2099,6 @@
     <string name="show_settings_skip_filler">Dolgu bölümlerini atla</string>
     <string name="show_settings_blur_ahead">İleriki bölümlerin karelerini bulanıklaştır</string>
     <string name="show_settings_show_everything">Her şeyi göster</string>
-    <string name="show_settings_spoiler_detail">Sıradakinden sonraki bölümlerin karelerini bulanıklaştırır.</string>
     <string name="show_settings_always">Her zaman</string>
     <string name="show_settings_never">Hiçbir zaman</string>
     <string name="show_settings_subs_remembered">Son bölümünüzden hatırlandı.</string>

@@ -5405,9 +5405,6 @@
   <data name="SettingsSpoiler" xml:space="preserve">
     <value>Protezione dagli spoiler</value>
   </data>
-  <data name="SettingsSpoilerDetail" xml:space="preserve">
-    <value>Sfoca le anteprime degli episodi non visti dopo il successivo</value>
-  </data>
   <data name="SettingsAudioDetail" xml:space="preserve">
     <value>Ogni serie ricorda il proprio audio e i propri sottotitoli.</value>
   </data>
@@ -5554,9 +5551,6 @@
   </data>
   <data name="ShowSettingsShowEverything" xml:space="preserve">
     <value>Mostra tutto</value>
-  </data>
-  <data name="ShowSettingsSpoilerDetail" xml:space="preserve">
-    <value>Sfoca le anteprime dopo l'episodio successivo.</value>
   </data>
   <data name="ShowSettingsAlways" xml:space="preserve">
     <value>Sempre</value>

@@ -7863,9 +7863,6 @@ settings-counts-watched-detail = O cuando empieza el cierre, si está marcado
 # Row: spoiler protection.
 settings-spoiler = Protección contra spoilers
 
-# Line under it.
-settings-spoiler-detail = Desenfoca las miniaturas de episodios no vistos después del siguiente
-
 # Line under the audio row.
 settings-audio-detail = Cada serie recuerda su propio audio y sus subtítulos.
 
@@ -8011,9 +8008,6 @@ show-settings-blur-ahead = Desenfocar miniaturas siguientes
 
 # Option: show everything.
 show-settings-show-everything = Mostrar todo
-
-# Line under spoiler protection.
-show-settings-spoiler-detail = Desenfoca las miniaturas posteriores al siguiente.
 
 # Option: always.
 show-settings-always = Siempre

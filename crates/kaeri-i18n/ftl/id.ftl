@@ -7719,9 +7719,6 @@ settings-counts-watched-detail = Atau saat penutup mulai, jika sudah ditandai
 # Row: spoiler protection.
 settings-spoiler = Perlindungan spoiler
 
-# Line under it.
-settings-spoiler-detail = Mengaburkan cuplikan episode yang belum ditonton setelah episode berikutnya
-
 # Line under the audio row.
 settings-audio-detail = Setiap serial mengingat audio dan subtitelnya sendiri.
 
@@ -7865,9 +7862,6 @@ show-settings-blur-ahead = Kaburkan cuplikan episode mendatang
 
 # Option: show everything.
 show-settings-show-everything = Tampilkan semua
-
-# Line under spoiler protection.
-show-settings-spoiler-detail = Mengaburkan cuplikan setelah episode berikutnya.
 
 # Option: always.
 show-settings-always = Selalu

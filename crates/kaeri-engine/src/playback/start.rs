@@ -914,6 +914,7 @@ mod tests {
                 source: None,
                 unsourced: false,
                 past_progress: false,
+                synopsis_pending: false,
             })
             .collect();
         assert_eq!(following(&rows, "1").as_deref(), Some("2"));

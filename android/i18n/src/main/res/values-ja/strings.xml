@@ -1991,7 +1991,6 @@
     <string name="settings_counts_watched">視聴済みとみなす位置</string>
     <string name="settings_counts_watched_detail">エンディングに印が付いていれば、エンディングの開始時点でも視聴済みとみなします。</string>
     <string name="settings_spoiler">ネタバレ防止</string>
-    <string name="settings_spoiler_detail">次のエピソードより後の未視聴エピソードの静止画をぼかします。</string>
     <string name="settings_audio_detail">作品ごとに、音声と字幕の設定を記憶します。</string>
     <string name="settings_system_captions">システムの字幕スタイルに従う</string>
     <string name="settings_system_captions_detail">装飾のない字幕は、アクセシビリティの字幕設定に従います。装飾された字幕は、独自の見た目のままです。</string>
@@ -2041,7 +2040,6 @@
     <string name="show_settings_skip_filler">フィラーをスキップ</string>
     <string name="show_settings_blur_ahead">先の静止画をぼかす</string>
     <string name="show_settings_show_everything">すべて表示</string>
-    <string name="show_settings_spoiler_detail">次のエピソードより後の静止画をぼかします。</string>
     <string name="show_settings_always">常に</string>
     <string name="show_settings_never">しない</string>
     <string name="show_settings_subs_remembered">最後に見たエピソードの設定を記憶しています。</string>

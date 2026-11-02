@@ -7863,9 +7863,6 @@ settings-counts-watched-detail = Ou quando o encerramento começa, se ele estive
 # Row: spoiler protection.
 settings-spoiler = Proteção contra spoilers
 
-# Line under it.
-settings-spoiler-detail = Embaça as imagens de episódios não assistidos depois do próximo
-
 # Line under the audio row.
 settings-audio-detail = Cada série guarda o próprio áudio e as próprias legendas.
 
@@ -8011,9 +8008,6 @@ show-settings-blur-ahead = Embaçar imagens à frente
 
 # Option: show everything.
 show-settings-show-everything = Mostrar tudo
-
-# Line under spoiler protection.
-show-settings-spoiler-detail = Embaça as imagens depois do próximo episódio.
 
 # Option: always.
 show-settings-always = Sempre
