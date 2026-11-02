@@ -175,11 +175,15 @@ struct StartingCurtain: View {
 
 /// Indeterminate progress as a thin amber line: a stretch of amber easing across a faint track,
 /// back and forth, calm. Still, with Reduce Motion.
+///
+/// The stretch's place is worked out from a clock on every frame rather than animated, so the
+/// line takes its size and place at once wherever it is laid out, and only the stretch moves.
 struct LoaderLine: View {
     let reduceMotion: Bool
     /// What VoiceOver says it is.
     var label = L.playerLoadingAnnounce
-    @State private var across = false
+    /// When the stretch set off from the left.
+    @State private var began = Date.now
 
     var body: some View {
         GeometryReader { proxy in
@@ -189,21 +193,46 @@ struct LoaderLine: View {
                 if reduceMotion {
                     Capsule().fill(Palette.amber.opacity(0.8))
                 } else {
-                    Capsule()
-                        .fill(Palette.amber)
-                        .frame(width: stretch)
-                        .offset(x: across ? proxy.size.width - stretch : 0)
+                    TimelineView(.animation) { context in
+                        let travel = proxy.size.width - stretch
+                        Capsule()
+                            .fill(Palette.amber)
+                            .frame(width: stretch)
+                            .offset(x: travel * Self.across(after: context.date.timeIntervalSince(began), travel: travel))
+                    }
                 }
             }
-        }
-        .onAppear {
-            guard !reduceMotion else { return }
-            // The standard spring's shape, slowed to a calm sweep; never a bounce.
-            withAnimation(.spring(duration: 1.4, bounce: 0).repeatForever(autoreverses: true)) { across = true }
         }
         .accessibilityElement()
         .accessibilityLabel(label)
         .accessibilityAddTraits(.updatesFrequently)
+    }
+
+    /// The standard spring's shape, slowed to a calm sweep; never a bounce.
+    nonisolated static let sweep = Spring(duration: 1.4, bounce: 0)
+
+    /// How far across the stretch is, from 0 at the left to 1 at the right, `elapsed` seconds
+    /// after it set off, when it has `travel` points to go: each way the spring, held until the
+    /// stretch is within a fifth of a point of the end, then back.
+    nonisolated static func across(after elapsed: TimeInterval, travel: CGFloat) -> Double {
+        let leg = self.leg(travel: travel)
+        guard leg > 0 else { return 0 }
+        let into = max(0, elapsed).truncatingRemainder(dividingBy: 2 * leg)
+        let there = min(1, max(0, sweep.value(target: 1.0, time: into < leg ? into : into - leg)))
+        return into < leg ? there : 1 - there
+    }
+
+    /// How long one way takes over `travel` points: until the spring is within a fifth of a point
+    /// of the end, where it looks still.
+    nonisolated static func leg(travel: CGFloat) -> TimeInterval {
+        let near = 0.2 / Double(travel)
+        guard near < 1 else { return 0 }
+        var (low, high) = (0.0, 10.0)
+        for _ in 0..<40 {
+            let mid = (low + high) / 2
+            if 1 - sweep.value(target: 1.0, time: mid) > near { low = mid } else { high = mid }
+        }
+        return high
     }
 }
 
