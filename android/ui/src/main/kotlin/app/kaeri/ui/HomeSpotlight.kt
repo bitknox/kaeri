@@ -166,9 +166,12 @@ internal fun SpotlightBlock(spot: Spotlight, h: HomeHandlers) {
             }
         }
     }
+    // The whole spotlight is what the title page grows out of, as the Continue hero was: the
+    // page's bounds from the block, its art from the spotlight's art.
+    val page = Modifier.shared(Shared.Page, id, "home-spotlight")
     if (side) {
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp).then(page),
             horizontalArrangement = Arrangement.spacedBy(24.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -181,7 +184,7 @@ internal fun SpotlightBlock(spot: Spotlight, h: HomeHandlers) {
             }
         }
     } else {
-        Column(Modifier.padding(horizontal = 16.dp)) {
+        Column(Modifier.padding(horizontal = 16.dp).then(page)) {
             art(Modifier.fillMaxWidth())
             text(Modifier.padding(top = 12.dp))
         }

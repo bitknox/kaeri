@@ -33,6 +33,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -69,6 +74,7 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import kotlinx.coroutines.launch
 import app.kaeri.design.CoverPlate
+import app.kaeri.design.Motion
 import app.kaeri.design.ObiSilk
 import app.kaeri.engine.core.AnilistId
 import app.kaeri.engine.model.Entry
@@ -336,19 +342,31 @@ private fun Header(
     }
 }
 
-/** The haze line under the actions: where else it is, or where it is listed when not in your sources. */
+/**
+ * The haze line under the actions: where else it is, or where it is listed when not in your
+ * sources. The answer comes after the page, so the line opens on standard and fades in, and
+ * Seasons and Episodes below move down with it rather than jumping.
+ */
 @Composable
 private fun ServiceLine(availability: app.kaeri.engine.model.TitleAvailability?, memory: FocusMemory) {
-    availability ?: return
-    val line = when (availability.case) {
+    val line = when (availability?.case) {
         AvailabilityCase.PLAYS_ALSO_ON, AvailabilityCase.ON_SERVICE ->
             availability.alsoOn.takeIf { it.isNotEmpty() }?.let { stringResource(R.string.licensed_also_on, app.kaeri.tv.signin.joinServices(it.map { link -> link.service })) }
         AvailabilityCase.NOT_IN_SOURCES ->
             availability.others.takeIf { it.isNotEmpty() }?.let { stringResource(R.string.title_listed_on, app.kaeri.tv.signin.joinServices(it)) }
-        AvailabilityCase.PLAYS_HERE -> null
-    } ?: return
-    Spacer(Modifier.height(12.dp))
-    Text(line, style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, maxLines = 2, modifier = Modifier.widthIn(max = 640.dp))
+        AvailabilityCase.PLAYS_HERE, null -> null
+    }
+    // The last line shown, kept while it closes.
+    var kept by remember { mutableStateOf(line) }
+    if (line != null) kept = line
+    AnimatedVisibility(
+        line != null,
+        enter = expandVertically(Motion.standard(), expandFrom = Alignment.Top) + fadeIn(Motion.fadeIn()),
+        exit = shrinkVertically(Motion.standard(), shrinkTowards = Alignment.Top) + fadeOut(Motion.fadeOut()),
+        label = "service-line", // i18n-skip
+    ) {
+        Text(kept.orEmpty(), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, maxLines = 2, modifier = Modifier.padding(top = 12.dp).widthIn(max = 640.dp))
+    }
 }
 
 /**

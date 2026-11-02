@@ -4,7 +4,12 @@
 
 package app.kaeri.ui
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +26,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -72,49 +80,73 @@ internal fun WatchOnButton(entry: app.kaeri.engine.model.Entry, link: ServiceLin
     }
 }
 
+/** Whether there is a line to draw under the actions: services to name, or where it is listed. */
+internal val TitleAvailability?.hasLine: Boolean
+    get() = when (this?.case) {
+        AvailabilityCase.PLAYS_ALSO_ON, AvailabilityCase.ON_SERVICE -> alsoOn.isNotEmpty()
+        AvailabilityCase.NOT_IN_SOURCES -> others.isNotEmpty()
+        AvailabilityCase.PLAYS_HERE, null -> false
+    }
+
 /**
  * The haze line under the actions. Case A and B name the person's other services, each case C
  * names where the title is listed, and offers the choice of services while none is ticked.
+ * Nothing at all while there is no line. An answer that comes after the page opens the line on
+ * standard and fades it in, so what is below moves down with it, as Home's "Not found" line does.
  */
 @Composable
 internal fun ServiceLines(availability: TitleAvailability?, entry: app.kaeri.engine.model.Entry, modifier: Modifier = Modifier) {
     val store = LocalAppStore.current
     val navigator = LocalNavigator.current
     val colors = MaterialTheme.colorScheme
-    Crossfade(availability, animationSpec = Motion.standard(), label = "service-lines", modifier = modifier) { shown -> // i18n-skip
-        if (shown == null) return@Crossfade
-        Column(Modifier.padding(top = 8.dp)) {
-            val also = shown.alsoOn
-            when (shown.case) {
-                AvailabilityCase.PLAYS_ALSO_ON, AvailabilityCase.ON_SERVICE -> if (also.isNotEmpty()) {
-                    // The first of them opens: the line is a link to the service.
-                    TextButton(
-                        onClick = { store.openService(entry.id, also.first()) },
-                        contentPadding = PaddingValues(horizontal = 0.dp),
-                        modifier = Modifier.heightIn(min = 48.dp),
-                    ) {
+    // The last answer that had a line, which the lines keep showing while they close.
+    var kept by remember(entry.id) { mutableStateOf(availability?.takeIf { it.hasLine }) }
+    if (availability.hasLine) kept = availability
+    // The line opens on standard as the page's items below move down on standard, so the two
+    // keep together: nothing below is drawn over, and nothing jumps.
+    AnimatedVisibility(
+        availability.hasLine,
+        modifier = modifier,
+        enter = expandVertically(Motion.standard(), expandFrom = Alignment.Top) + fadeIn(Motion.fadeIn()),
+        exit = shrinkVertically(Motion.standard(), shrinkTowards = Alignment.Top) + fadeOut(Motion.fadeOut()),
+        label = "service-lines", // i18n-skip
+    ) {
+        val lines = kept ?: return@AnimatedVisibility
+        // One answer with a line giving way to another crossfades in place.
+        Crossfade(lines, animationSpec = Motion.standard(), label = "service-lines-change") { shown -> // i18n-skip
+            Column(Modifier.padding(top = 8.dp)) {
+                val also = shown.alsoOn
+                when (shown.case) {
+                    AvailabilityCase.PLAYS_ALSO_ON, AvailabilityCase.ON_SERVICE -> if (also.isNotEmpty()) {
+                        // The first of them opens: the line is a link to the service.
+                        TextButton(
+                            onClick = { store.openService(entry.id, also.first()) },
+                            contentPadding = PaddingValues(horizontal = 0.dp),
+                            modifier = Modifier.heightIn(min = 48.dp),
+                        ) {
+                            Text(
+                                stringResource(R.string.licensed_also_on, joinServices(also.map { it.service })),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = colors.onSurfaceVariant,
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Icon(Icons.External, contentDescription = stringResource(R.string.licensed_opens_service), tint = colors.onSurfaceVariant, modifier = Modifier.size(16.dp))
+                        }
+                    }
+                    AvailabilityCase.NOT_IN_SOURCES -> if (shown.others.isNotEmpty()) {
                         Text(
-                            stringResource(R.string.licensed_also_on, joinServices(also.map { it.service })),
+                            stringResource(R.string.title_listed_on, joinServices(shown.others)),
                             style = MaterialTheme.typography.bodyMedium,
                             color = colors.onSurfaceVariant,
                         )
-                        Spacer(Modifier.width(6.dp))
-                        Icon(Icons.External, contentDescription = stringResource(R.string.licensed_opens_service), tint = colors.onSurfaceVariant, modifier = Modifier.size(16.dp))
+                        TextButton(
+                            onClick = { navigator.open(LICENSED_ROUTE) },
+                            contentPadding = PaddingValues(horizontal = 0.dp),
+                            modifier = Modifier.heightIn(min = 48.dp),
+                        ) { Text(stringResource(R.string.title_choose_services), color = colors.onSurface) }
                     }
+                    AvailabilityCase.PLAYS_HERE -> {}
                 }
-                AvailabilityCase.NOT_IN_SOURCES -> if (shown.others.isNotEmpty()) {
-                    Text(
-                        stringResource(R.string.title_listed_on, joinServices(shown.others)),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = colors.onSurfaceVariant,
-                    )
-                    TextButton(
-                        onClick = { navigator.open(LICENSED_ROUTE) },
-                        contentPadding = PaddingValues(horizontal = 0.dp),
-                        modifier = Modifier.heightIn(min = 48.dp),
-                    ) { Text(stringResource(R.string.title_choose_services), color = colors.onSurface) }
-                }
-                AvailabilityCase.PLAYS_HERE -> {}
             }
         }
     }
