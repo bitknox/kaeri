@@ -9,13 +9,13 @@ use crate::{episodes::EpisodeAiring, progress::TitleProgress, search::SearchQuer
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
 pub enum AvailableAt {
-    /// "Plays here": a free catalogue or the demo has it.
+    /// "Plays here": an open catalogue or the demo has it.
     PlaysHere,
     /// "In your library": files on this device.
     InLibrary,
     /// "On Mika's Jellyfin": a media server, by the name it gave.
     OnServer { server: String },
-    /// "On Hikari Stream": one of the viewer's licensed services, which opens outside Kaeri.
+    /// "On Hikari Library": one of the viewer's licensed services, which opens outside Kaeri.
     OnService { service: String },
 }
 

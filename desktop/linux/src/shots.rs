@@ -2942,7 +2942,7 @@ fn source_options(
             "machi-library-films",
             "Machi Library Films",
             0,
-            Some(SourceNote::Failed { reason: "the site did not answer in 15 s.".into() }),
+            Some(SourceNote::Failed { reason: "the source did not answer in 15 s.".into() }),
             Vec::new(),
         ),
         option(

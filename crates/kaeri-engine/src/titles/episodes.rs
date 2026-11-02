@@ -791,7 +791,7 @@ mod tests {
 
     #[tokio::test]
     async fn a_season_out_all_at_once_is_listed_from_the_page_the_user_chose() {
-        // The site has the whole season while AniList's schedule has three out: from the
+        // The source has the whole season while AniList's schedule has three out: from the
         // listing alone that is the season before matched by its name, so it is not taken...
         let store = store();
         let meta = sequel::meta(&store, sequel::airing());

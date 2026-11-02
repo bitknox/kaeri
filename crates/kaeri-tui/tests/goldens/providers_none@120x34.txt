@@ -7,7 +7,7 @@ Kaeri                                                                           
   ▥  Library                │  Torrents are off until providers.torrent.enabled and a VPN mode are set.
   ↓  Downloads              │
 ▌ ◇  Sources                │  Plugin stores
-  ◎  Accounts               │    Plugins shared by people you know. Join with an invite link.                  ↵ Open
+  ◎  Accounts               │    Plugins for your own devices. Join with an invite link.                       ↵ Open
   ≡  Settings               │
   ⇄  Together               │
                             │
@@ -69,7 +69,7 @@ r08 c31-43 fg=text mod=BOLD
 r09 c02-02 fg=text-dim
 r09 c05-12 fg=text-dim
 r09 c28-28 fg=rule
-r09 c33-92 fg=text-dim
+r09 c33-87 fg=text-dim
 r09 c111-116 fg=text-dim
 r10 c02-02 fg=text-dim
 r10 c05-12 fg=text-dim

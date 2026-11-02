@@ -52,7 +52,7 @@
   },
   "externalLinks": [
     {
-      "site": "Lantern Stream",
+      "site": "Lantern Library",
       "url": "https://stream.example/series/kumo-toshokan",
       "type": "STREAMING",
       "language": "Japanese"
@@ -68,31 +68,31 @@
     {
       "title": "Episode 1 - The Borrowed Sky",
       "url": "https://stream.example/watch/kumo-toshokan-1",
-      "site": "Lantern Stream",
+      "site": "Lantern Library",
       "thumbnail": "https://img.example/ep/900002/1.jpg"
     },
     {
       "title": "Episode 2 - Overdue by a Century",
       "url": "https://stream.example/watch/kumo-toshokan-2",
-      "site": "Lantern Stream",
+      "site": "Lantern Library",
       "thumbnail": "https://img.example/ep/900002/2.jpg"
     },
     {
       "title": "Episode 3 - The Index of Winds",
       "url": "https://stream.example/watch/kumo-toshokan-3",
-      "site": "Lantern Stream",
+      "site": "Lantern Library",
       "thumbnail": "https://img.example/ep/900002/3.jpg"
     },
     {
       "title": "Episode 4 - A Reading Room for Storms",
       "url": "https://stream.example/watch/kumo-toshokan-4",
-      "site": "Lantern Stream",
+      "site": "Lantern Library",
       "thumbnail": "https://img.example/ep/900002/4.jpg"
     },
     {
       "title": "Episode 5 - The Librarian Who Never Sleeps",
       "url": "https://stream.example/watch/kumo-toshokan-5",
-      "site": "Lantern Stream",
+      "site": "Lantern Library",
       "thumbnail": "https://img.example/ep/900002/5.jpg"
     }
   ],

@@ -326,13 +326,13 @@ mod tests {
     #[test]
     fn availability_badges_appear_when_a_title_has_them() {
         let mut app = app_with(ContentList::Entries(vec![Entry {
-            available_on: vec!["Hikari Stream".into(), "Nami TV".into()],
+            available_on: vec!["Hikari Library".into(), "Nami TV".into()],
             ..entry(1, "Hoshikuzu")
         }]));
         app.nav.focus_stage();
         app.handle(crate::keymap::Action::Open, 20);
         let text = text_of(&render_to_buffer(&mut app, 120, 34));
-        assert!(text.contains("Hikari Stream"));
+        assert!(text.contains("Hikari Library"));
         assert!(text.contains("Nami TV"));
     }
 

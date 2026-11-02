@@ -58,7 +58,7 @@ pub const MEDIA_DETAIL_FIELDS: &str = r"
     staff(sort: RELEVANCE, perPage: 8) { edges { role node { name { full } } } }
 ";
 
-/// A list result's services, for Search's Available filter and a result's "On Hikari Stream":
+/// A list result's services, for Search's Available filter and a result's "On Hikari Library":
 /// the links alone, without the episode listings the Title screen asks for.
 const LIST_LINKS: &str = "externalLinks { site url type isDisabled }";
 

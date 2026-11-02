@@ -1,7 +1,7 @@
 //! What a plugin is allowed to do.
 //!
 //! A plugin registry is a supply-chain surface: a `.wasm` file dropped into a config directory
-//! runs code the user did not write, to parse HTML from sites that change without notice. So the
+//! runs code the user did not write. So the
 //! limits here are not configuration, they are the contract — and every one of them is enforced
 //! **host-side**, because a limit a guest could check for itself is a limit a compromised guest
 //! ignores.
@@ -10,7 +10,7 @@
 //!
 //! | Limit | Why |
 //! |---|---|
-//! | [`is_allowed`] — hostnames | A parser has no business reaching anything but the site it parses. |
+//! | [`is_allowed`] — hostnames | A plugin reaches only the hosts it declares. |
 //! | [`Limits::memory_bytes`] | A guest that allocates without bound would take the process down. |
 //! | [`Limits::deadline`] | A guest that loops forever must not wedge the UI. |
 //! | no filesystem, no sockets | Not in the WIT world, and not in the linker — see [`crate::engine`] for what the empty WASI floor does and does not include. |
@@ -246,8 +246,8 @@ mod tests {
 
     #[test]
     fn a_subdomain_of_a_declared_host_is_reachable() {
-        // Provider CDNs live on subdomains, and forcing every one to be declared would make
-        // manifests wrong the first time a site adds an edge node.
+        // Media hosts live on subdomains, and forcing every one to be declared would make
+        // manifests wrong the first time a host adds an edge node.
         assert!(is_allowed("https://cdn.example.com/v.m3u8", &allowed()));
         assert!(is_allowed("https://a.b.example.com/", &allowed()));
     }

@@ -12,7 +12,7 @@ Kaeri                                                  plugins ●  ·  anilist 
 ▌ tsubame  ·  plugin                                                  Chosen
 
    │
-   │  Available on Hikari Stream
+   │  Available on Hikari Library
    │
    │  A postwoman in a hill town reads the wind for letters nobody sent. When
    │  one arrives addressed to her in her own hand, dated ten years from now,…

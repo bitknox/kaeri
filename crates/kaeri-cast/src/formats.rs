@@ -368,7 +368,7 @@ pub struct AudioTrack {
 }
 
 /// What the engine read from the stream: the MKV's tracks, the HLS master's `CODECS`, an MP4's
-/// sample entries. Unknown parts are taken to be H.264 and AAC, what nearly every web source
+/// sample entries. Unknown parts are taken to be H.264 and AAC, what nearly every source
 /// sends, and a TV's answer corrects the guess.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct MediaInfo {

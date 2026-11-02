@@ -55,8 +55,8 @@ interface host {
 
     /// Several requests in one call, made concurrently. Results return in request order.
     ///
-    /// The concurrency a synchronous guest cannot express itself: a provider that must ask
-    /// several mirrors for the same episode pays one round trip instead of one per mirror.
+    /// The concurrency a synchronous guest cannot express itself: a plugin that asks several
+    /// hosts at once pays one round trip instead of one per host.
     /// Each request is authorised independently and counts against the same per-call fetch
     /// budget as `fetch`.
     fetch-many: func(reqs: list<http-request>) -> list<result<http-response, host-error>>;
@@ -73,7 +73,7 @@ interface host {
     /// A value from this plugin's own section of the user's configuration —
     /// `[providers.plugins.settings.<plugin-id>]` in config.toml.
     ///
-    /// How a source that needs an account, an API key or a mirror choice receives it. `none`
+    /// How a source that needs an account, an API key or a server address receives it. `none`
     /// for anything unset, which is the answer a plugin must be able to work without: settings
     /// tune a source, they are not permitted to be the only way it functions.
     config-get: func(key: string) -> option<string>;
@@ -204,7 +204,7 @@ interface provider {
         not-found,
         /// The host refused the request or asked the client to slow down.
         blocked(string),
-        /// The response arrived but did not look like what we expected — the site changed.
+        /// The response arrived but did not have the expected shape.
         parse(string),
         other(string),
     }

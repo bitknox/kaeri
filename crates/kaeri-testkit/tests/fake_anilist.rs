@@ -112,7 +112,7 @@ async fn every_filter_is_applied_as_anilist_applies_it() {
     let manga = BrowseFilter { sources: vec!["MANGA".into()], ..Default::default() };
     assert_eq!(find(manga).await, [FINISHED.get(), SEQUEL.get()]);
     let streaming =
-        BrowseFilter { licensed_by: vec!["Lantern Stream".into()], ..Default::default() };
+        BrowseFilter { licensed_by: vec!["Lantern Library".into()], ..Default::default() };
     assert_eq!(find(streaming).await, [FINISHED.get(), AIRING.get(), SEQUEL.get()]);
     let korean = BrowseFilter { countries: vec!["KR".into()], ..Default::default() };
     assert!(find(korean).await.is_empty(), "the fixtures are all made in Japan");
@@ -149,7 +149,7 @@ async fn the_rails_come_in_one_request_and_the_facets_in_another() {
     assert!(facets.tags.iter().any(|t| t.name == "Nudity" && t.adult));
     assert_eq!(
         facets.streaming,
-        ["Lantern Stream", "Hikari Stream"],
+        ["Lantern Library", "Hikari Library"],
         "once each, none disabled"
     );
     assert_eq!(kit.server.requests().len(), 2);

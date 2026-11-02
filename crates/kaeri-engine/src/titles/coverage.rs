@@ -1,7 +1,7 @@
 //! A title's episodes across every source that lists some of them.
 //!
 //! One source rarely has a whole season. A source that names torrents lists the releases it
-//! finds, and a web source may lag behind the broadcast. The table a title shows is
+//! finds, and a source may lag behind the schedule. The table a title shows is
 //! the union: each episode comes from the highest-ranked source that has it, and an episode
 //! AniList says is out that no source lists stays in the table, marked, so the season is whole.
 
@@ -27,13 +27,13 @@ pub fn unstarted(media: &Media, now: i64) -> bool {
 }
 
 /// How many episodes past a finished title's count a source can list and still be listing it.
-/// Sites often number a bonus episode, a recap or an OVA on from the last episode, so a season
+/// Sources often number a bonus episode, a recap or an OVA on from the last episode, so a season
 /// of 12 is listed as 13 or 14; a listing further past the count is a longer work. The same
 /// slack the ladder gives a search hit's episode count before calling it another title.
 const FINISHED_EXTRAS: u32 = 2;
 
 /// How far a source can list title `media`, in AniList's numbers: a finished title's count and
-/// the extras sites number on from it ([`FINISHED_EXTRAS`]), or on a show not yet finished what
+/// the extras sources number on from it ([`FINISHED_EXTRAS`]), or on a show not yet finished what
 /// is out and the episode airing next, which a source can carry a little before AniList's
 /// schedule says it is out. `None` when AniList cannot say: a show on the air with no count or
 /// schedule to go by.
@@ -66,7 +66,7 @@ pub fn runs_ahead(media: &Media, listing: &[Episode], now: i64) -> bool {
 /// instead.
 ///
 /// Unless the user chose the source's page for the title themselves: their correction stands,
-/// as it does on the ladder. A season released on a site all at once while AniList's schedule
+/// as it does on the ladder. A season released by a source all at once while AniList's schedule
 /// still goes by the weekly broadcast looks, from the listing and AniList alone, just like the
 /// season before matched by its name, and a correction is how such a title is set right.
 pub async fn listing(
@@ -324,7 +324,7 @@ mod tests {
         // Nothing to go by.
         let unknown = title(serde_json::json!({ "status": "RELEASING" }));
         assert!(!runs_ahead(&unknown, &listed(1..=40), 0));
-        // A finished season of 12, listed with the extras sites number on from it, and a
+        // A finished season of 12, listed with the extras sources number on from it, and a
         // listing twice as long, which is a longer work.
         let finished = title(serde_json::json!({ "status": "FINISHED", "episodes": 12 }));
         assert!(!runs_ahead(&finished, &listed(1..=12), 0));

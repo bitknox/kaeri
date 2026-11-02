@@ -551,7 +551,7 @@ pub fn file_options(
     let mut options = Vec::new();
     let mut set = |key: &str, value: String| options.push((key.to_owned(), value));
 
-    // Referer-locked CDNs turn into a 403 without these, which looks like a dead source.
+    // A stream that needs these answers 403 without them, which looks like a dead source.
     if !headers.is_empty() {
         let joined = headers
             .iter()
