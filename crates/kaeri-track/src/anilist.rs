@@ -23,6 +23,10 @@ use kaeri_meta::anilist::{AniList, AniListError, LibraryEntry, TitleLanguage, Vi
 /// list is the remote one and this screen is how its changes are seen.
 pub const LIBRARY_REUSE: Duration = Duration::from_secs(30);
 
+/// Where the signed-in viewer's AniList id is kept between launches: the id alone, so a
+/// launch's list can ride with its viewer lookup. See [`AniListTracker::with_store`].
+pub const VIEWER_ID_KEY: &str = "anilist:viewer_id";
+
 /// The library as last asked for, and for whom.
 struct LastLibrary {
     /// [`AniListTracker::changes`] when it was asked for: a sign-in, a sign-out or a change
@@ -83,6 +87,8 @@ pub struct AniListTracker {
     /// Counted up on every sign-in, sign-out and change written to the list, each of which
     /// makes the last library answer someone else's or out of date.
     changes: AtomicU64,
+    /// Where the viewer's id is kept between launches, when given: see [`VIEWER_ID_KEY`].
+    store: Option<kaeri_store::Store>,
 }
 
 impl AniListTracker {
@@ -94,14 +100,47 @@ impl AniListTracker {
             signed_out: std::sync::atomic::AtomicBool::new(false),
             library: tokio::sync::Mutex::new(None),
             changes: AtomicU64::new(0),
+            store: None,
         }
+    }
+
+    /// Keep the signed-in viewer's id in `store` between launches, and nothing else of theirs.
+    /// With it, the first viewer lookup of a launch asks for the list in the same request, and
+    /// the list's pull takes that answer. A sign-in or a sign-out drops it, and so does an
+    /// answer for someone else.
+    #[must_use]
+    pub fn with_store(mut self, store: kaeri_store::Store) -> Self {
+        self.store = Some(store);
+        self
     }
 
     /// This tracker, asking against `base`'s budget and endpoint, with its own token: the app has
     /// one AniList budget, and the list's pulls and writes are counted with every other request.
     #[must_use]
     pub fn on_budget_of(&self, base: &AniList) -> Self {
-        Self::new(self.client.on_budget_of(base))
+        let tracker = Self::new(self.client.on_budget_of(base));
+        match &self.store {
+            Some(store) => tracker.with_store(store.clone()),
+            None => tracker,
+        }
+    }
+
+    /// The viewer's id as kept from an earlier launch.
+    fn remembered(&self) -> Option<u32> {
+        let store = self.store.as_ref()?;
+        store.get_meta_text(VIEWER_ID_KEY).ok().flatten()?.parse().ok()
+    }
+
+    /// Keep `id` as the viewer's, or with `None` drop what was kept.
+    fn remember(&self, id: Option<u32>) {
+        let Some(store) = &self.store else { return };
+        let kept = match id {
+            Some(id) => store.set_meta_text(VIEWER_ID_KEY, &id.to_string()),
+            None => store.delete_meta(VIEWER_ID_KEY),
+        };
+        if let Err(e) = kept {
+            tracing::warn!(error = %e, "could not keep the AniList viewer's id");
+        }
     }
 
     /// The full library, with media attached, for the Library screen.
@@ -113,6 +152,9 @@ impl AniListTracker {
     /// out, a failure included: an ask that waited for one is not made again.
     pub async fn library(&self) -> Result<Vec<LibraryEntry>, kaeri_core::Error> {
         let asked = Instant::now();
+        // The viewer first, outside the list's lock: with the id kept from before, the
+        // viewer's request brings the list as well, and leaves it as the last answer.
+        let viewer = self.viewer().await;
         let mut last = self.library.lock().await;
         let changes = self.changes.load(Ordering::SeqCst);
         if let Some(last) = last.as_ref()
@@ -121,7 +163,7 @@ impl AniListTracker {
         {
             return last.answer.clone().map_err(to_core);
         }
-        let answer = match self.viewer().await {
+        let answer = match viewer {
             Ok(viewer) => self.client.library(viewer.id).await,
             Err(e) => Err(e),
         };
@@ -174,7 +216,39 @@ impl AniListTracker {
         if let Some(viewer) = cached.as_ref() {
             return Ok(viewer.clone());
         }
+        if let Some(id) = self.remembered() {
+            // Held across the request, so a pull made meanwhile waits for this list.
+            let mut last = self.library.lock().await;
+            let changes = self.changes.load(Ordering::SeqCst);
+            match self.client.viewer_and_library(id).await {
+                Ok((viewer, library)) => {
+                    if viewer.id == id {
+                        *last = Some(LastLibrary {
+                            changes,
+                            at: Instant::now(),
+                            answer: Ok(library),
+                        });
+                    } else {
+                        // Someone else is signed in now: their list is asked for anew.
+                        tracing::info!("AniList answered for another viewer than the one kept");
+                        self.remember(Some(viewer.id));
+                    }
+                    *cached = Some(viewer.clone());
+                    return Ok(viewer);
+                }
+                // Refused, as it would be for another account's private list or one that is
+                // gone, or signed out: the id is dropped and the viewer asked alone.
+                Err(
+                    AniListError::Api(_)
+                    | AniListError::NotFound
+                    | AniListError::Decode(_)
+                    | AniListError::Unauthenticated,
+                ) => self.remember(None),
+                Err(e) => return Err(e),
+            }
+        }
         let viewer = self.client.viewer().await?;
+        self.remember(Some(viewer.id));
         *cached = Some(viewer.clone());
         Ok(viewer)
     }
@@ -202,6 +276,7 @@ impl Tracker for AniListTracker {
         // The cached viewer id belonged to whoever was signed in before, and a library pull keyed on
         // it would fetch the wrong account's list. So did the last library answer.
         *self.viewer.lock().await = None;
+        self.remember(None);
         self.changed();
     }
 
@@ -210,6 +285,7 @@ impl Tracker for AniListTracker {
         // Drop the cached viewer id too, so signing into a *different* account cannot inherit the
         // previous one's list.
         *self.viewer.lock().await = None;
+        self.remember(None);
         self.changed();
     }
 

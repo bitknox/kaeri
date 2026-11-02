@@ -129,7 +129,7 @@ impl Sync {
             }
             let client =
                 AniList::new(http.clone(), config.network.anilist_rate_limit).with_token(token);
-            let tracker = Arc::new(AniListTracker::new(client));
+            let tracker = Arc::new(AniListTracker::new(client).with_store(store.clone()));
             trackers.push(tracker.clone());
             anilist = Some(tracker);
         }

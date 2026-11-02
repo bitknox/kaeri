@@ -152,6 +152,11 @@ pub(crate) fn library_wire() -> &'static Value {
     &LIBRARY
 }
 
+/// The signed-in viewer's AniList id, as the fake answers it.
+pub fn library_viewer_id() -> u64 {
+    library_wire()["viewer"]["id"].as_u64().expect("the fixture viewer has an id")
+}
+
 /// The fixture library's titles and their statuses, as AniList words them (`COMPLETED`): what a
 /// sync of the viewer's list leaves in the store.
 pub fn library_statuses() -> Vec<(AnilistId, &'static str)> {

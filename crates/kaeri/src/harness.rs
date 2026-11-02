@@ -247,7 +247,7 @@ impl Harness {
                 .anilist(&http)
                 .with_token(tokens.get("anilist").ok())
                 .on_budget_of(meta.anilist());
-            let tracker = Arc::new(AniListTracker::new(client));
+            let tracker = Arc::new(AniListTracker::new(client).with_store(store.clone()));
             sync.trackers[at] = tracker.clone();
             sync.anilist = Some(tracker);
         }

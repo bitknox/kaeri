@@ -932,23 +932,26 @@ impl AniList {
         let data: serde_json::Value = self
             .execute(&query::user_library(), serde_json::json!({ "userId": user_id }))
             .await?;
+        decode_library(&data)
+    }
 
-        let lists = data["MediaListCollection"]["lists"]
-            .as_array()
-            .ok_or_else(|| AniListError::Decode("library had no lists".into()))?;
-
-        let mut out = Vec::new();
-        for list in lists {
-            for entry in list["entries"].as_array().into_iter().flatten() {
-                // One malformed entry must not blank a whole library. Someone with 800 titles
-                // and one broken row should still see 799.
-                match decode_library_entry(entry) {
-                    Some(decoded) => out.push(decoded),
-                    None => tracing::warn!("skipping undecodable library entry"),
-                }
-            }
+    /// The signed-in viewer and the list of `user_id`, in one request: for a viewer whose id
+    /// is known from before, so the list need not wait for the viewer's answer. The list is the
+    /// viewer's only when the viewer's id is `user_id`, which the caller checks.
+    pub async fn viewer_and_library(
+        &self,
+        user_id: u32,
+    ) -> Result<(Viewer, Vec<LibraryEntry>)> {
+        if self.token().is_none() {
+            return Err(AniListError::Unauthenticated);
         }
-        Ok(out)
+        let parts = [
+            (query::VIEWER.to_owned(), serde_json::json!({})),
+            (query::user_library(), serde_json::json!({ "userId": user_id })),
+        ];
+        let answers = self.execute_together(&parts).await?;
+        let viewer = decode_viewer(&answers[0]["Viewer"])?;
+        Ok((viewer, decode_library(&answers[1])?))
     }
 
     /// Write progress, status and/or score for one title.
@@ -1121,6 +1124,25 @@ fn decode_viewer(node: &serde_json::Value) -> Result<Viewer> {
             .as_str()
             .and_then(TitleLanguage::from_wire),
     })
+}
+
+/// A `MediaListCollection` answer, every list's rows in one.
+fn decode_library(data: &serde_json::Value) -> Result<Vec<LibraryEntry>> {
+    let lists = data["MediaListCollection"]["lists"]
+        .as_array()
+        .ok_or_else(|| AniListError::Decode("library had no lists".into()))?;
+    let mut out = Vec::new();
+    for list in lists {
+        for entry in list["entries"].as_array().into_iter().flatten() {
+            // One malformed entry must not blank a whole library. Someone with 800 titles
+            // and one broken row should still see 799.
+            match decode_library_entry(entry) {
+                Some(decoded) => out.push(decoded),
+                None => tracing::warn!("skipping undecodable library entry"),
+            }
+        }
+    }
+    Ok(out)
 }
 
 /// Decode one `MediaList` row.

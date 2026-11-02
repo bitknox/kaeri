@@ -228,6 +228,8 @@ struct State {
     titles: HashMap<u64, Value>,
     /// The viewer's own title language, in place of the fixture's.
     viewer_language: Option<String>,
+    /// The viewer's id, in place of the fixture's: see [`FakeAniList::answer_as_viewer`].
+    viewer_id: Option<u64>,
     /// Titles beside the fixtures, by id, which a test made up: see [`FakeAniList::add_titles`].
     extra: HashMap<u64, Value>,
     /// Titles that are also in the search and browse pool: see [`FakeAniList::add_catalogue`].
@@ -281,6 +283,7 @@ impl FakeAniList {
             ahead: 0,
             titles: HashMap::new(),
             viewer_language: None,
+            viewer_id: None,
             extra: HashMap::new(),
             catalogue: Vec::new(),
             broadcasts: Vec::new(),
@@ -447,6 +450,12 @@ impl FakeAniList {
     /// `NATIVE` or a stylised form, as AniList names them.
     pub fn set_viewer_title_language(&self, language: &str) {
         lock(&self.state).viewer_language = Some(language.to_owned());
+    }
+
+    /// The token is someone else's from now on: the viewer AniList answers with has `id`, as
+    /// after a sign-in to another account elsewhere.
+    pub fn answer_as_viewer(&self, id: u64) {
+        lock(&self.state).viewer_id = Some(id);
     }
 
     /// The people the signed-in viewer follows who have `id` on a list, as `mediaList` entries in
@@ -737,6 +746,16 @@ fn together(document: &str, variables: &Value) -> Option<Vec<(String, String, Va
     (parts.len() > 1).then_some(parts)
 }
 
+/// The viewer as a test set it: its title language and its id, where one was given.
+fn as_viewer(viewer: &mut Value, language: Option<&str>, id: Option<u64>) {
+    if let Some(language) = language {
+        viewer["options"] = json!({ "titleLanguage": language });
+    }
+    if let Some(id) = id {
+        viewer["id"] = json!(id);
+    }
+}
+
 /// The root field a document of one root answers under.
 fn root_field(document: &str) -> String {
     let body = document.split_once('{').map_or("", |(_, b)| b).trim_start();
@@ -946,7 +965,7 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
         failure,
         (now, ahead),
         titles,
-        viewer_language,
+        (viewer_language, viewer_id),
         extra,
         pool,
         rows,
@@ -1007,7 +1026,7 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
             failure,
             clock,
             state.titles.clone(),
-            state.viewer_language.clone(),
+            (state.viewer_language.clone(), state.viewer_id),
             extra,
             pool,
             rows,
@@ -1053,7 +1072,15 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
                                 if body.get("errors").is_none() =>
                             {
                                 let root = root_field(&document);
-                                data.insert(alias, body["data"][root].take());
+                                let mut answer = body["data"][&root].take();
+                                if root == "Viewer" {
+                                    as_viewer(
+                                        &mut answer,
+                                        viewer_language.as_deref(),
+                                        viewer_id,
+                                    );
+                                }
+                                data.insert(alias, answer);
                             }
                             failed => return failed,
                         }
@@ -1072,11 +1099,9 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
             });
             if let Reply::Answer { body, .. } = &mut reply {
                 retitle(body, &titles);
-                if let Some(language) = viewer_language
-                    && let Some(viewer) =
-                        body.pointer_mut("/data/Viewer").filter(|v| v.is_object())
+                if let Some(viewer) = body.pointer_mut("/data/Viewer").filter(|v| v.is_object())
                 {
-                    viewer["options"] = json!({ "titleLanguage": language });
+                    as_viewer(viewer, viewer_language.as_deref(), viewer_id);
                 }
             }
             reply
