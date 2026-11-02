@@ -249,6 +249,18 @@ struct SearchScreen: View {
         #endif
     }
 
+    /// How wide a cover is on the Mac: a column of the results grid with the panel shut. It stays
+    /// so with the panel open, which leaves room for fewer covers rather than larger ones, so the
+    /// panel pushes the covers aside without scaling them.
+    private var coverWidth: CGFloat? {
+        #if os(macOS)
+        guard let fullWidth else { return nil }
+        return RailCover.width(in: max(0, fullWidth - margins.leading - margins.trailing))
+        #else
+        return nil
+        #endif
+    }
+
     /// The trailing room the panel takes before the screen is measured: a screen that comes back
     /// with the panel already open (from a title's page) lays out once at the full width, which is
     /// under the panel, until its width is known.
@@ -306,6 +318,7 @@ struct SearchScreen: View {
             .animation(reduceMotion || navigator.motionReduced || pinned ? nil : .standard, value: filtersAsked)
             .frame(width: settledWidth, alignment: .leading)
             .environment(\.searchSettledWidth, settledWidth)
+            .environment(\.searchCoverWidth, coverWidth)
             // With Reduce Motion the results take their new width at once while the panel fades.
             .transaction(value: navigator.searchFiltersShown) { transaction in
                 if reduceMotion { transaction.animation = nil }
@@ -1032,11 +1045,16 @@ struct ActiveFilters: View {
 /// The titles found, a page at a time: the next is asked for as the end comes near.
 struct SearchResults: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.searchCoverWidth) private var cover
     var compact = false
 
     var body: some View {
         let search = store.search
-        let minimum: CGFloat = compact ? 100 : 128
+        // On the Mac every column is the cover's steady width (`searchCoverWidth`): the panel
+        // takes columns away rather than widening the ones left. A hair under it is the least,
+        // so a width that fits a whole number of covers never loses one to rounding.
+        let minimum: CGFloat = cover.map { $0 - 0.5 } ?? (compact ? 100 : 128)
+        let maximum: CGFloat? = cover
         let spacing: CGFloat = compact ? 12 : 20
         // The earlier results stay while the answer is under 600 ms away, then give way to
         // placeholders at once: never results that answer something else for long. The model has
@@ -1058,12 +1076,12 @@ struct SearchResults: View {
             ListStates(
                 state: state,
                 waited: search.overdue,
-                placeholder: AnyView(PosterGridPlaceholder(count: compact ? 12 : 14, minimum: minimum, spacing: spacing)),
+                placeholder: AnyView(PosterGridPlaceholder(count: compact ? 12 : 14, minimum: minimum, maximum: maximum, spacing: spacing)),
                 retry: { store.retrySearch() }
             ) { ids in
                 VStack(alignment: .leading, spacing: 24) {
-                    PosterGrid(entries: ids.compactMap { store.titles[$0] }, minimum: minimum, spacing: spacing) { entry in
-                        PosterCell(entry: entry, detail: searchLine(entry), width: minimum)
+                    PosterGrid(entries: ids.compactMap { store.titles[$0] }, minimum: minimum, maximum: maximum, spacing: spacing) { entry in
+                        PosterCell(entry: entry, detail: searchLine(entry), width: maximum ?? minimum)
                     }
                     // One answer replaces another in one crossfade, not cell by cell.
                     .id(search.answered)
@@ -1071,7 +1089,7 @@ struct SearchResults: View {
                     if search.hasNext {
                         // The next page's covers to come, in the grid's own columns: they ask
                         // for it as they come into sight.
-                        PosterGridPlaceholder(count: compact ? 6 : 8, minimum: minimum, spacing: spacing)
+                        PosterGridPlaceholder(count: compact ? 6 : 8, minimum: minimum, maximum: maximum, spacing: spacing)
                             // Anew for each page, so a page that still leaves them in sight
                             // asks for the next.
                             .id(search.pages)
@@ -1283,6 +1301,7 @@ private struct RailRow: View {
             .scrollIndicators(.never)
             .padding(.horizontal, compact ? -16 : -12)
         }
+        .railColumns()
     }
 
     private func line(_ entry: Entry) -> String? {
@@ -1316,6 +1335,7 @@ private struct RailPlaceholder: View {
                     .scrollIndicators(.never)
                     .padding(.horizontal, compact ? -16 : -12)
                 }
+                .railColumns()
             }
         }
         .redacted(reason: .placeholder)
@@ -1338,17 +1358,16 @@ struct RailCover: ViewModifier {
     /// How far the rail's scroll view reaches past the column on each side, where the covers pass
     /// as they scroll.
     var bleed: CGFloat = 12
-    @Environment(\.searchSettledWidth) private var settled
+    @Environment(\.searchCoverWidth) private var cover
 
     func body(content: Content) -> some View {
         if compact {
             content.frame(width: 112)
-        } else if let settled {
-            // The Mac: the width the results take once the panel has moved, set at once, so the
-            // covers glide to their new size with the panel rather than stepping through every
-            // column count between, as the grid's do.
+        } else if let cover {
+            // The Mac: the grid's column with the panel shut, the same with it open. The panel
+            // leaves room for fewer covers (`RailColumns`), never larger ones.
             content
-                .frame(width: Self.width(in: settled))
+                .frame(width: cover)
                 .geometryGroup()
         } else {
             content
@@ -1368,15 +1387,46 @@ struct RailCover: ViewModifier {
     }
 }
 
+/// A rail on the Mac as wide as the whole covers that fit in Search's column, its heading and
+/// See All with them: with the filters panel open the rail ends after its last whole cover, never
+/// with one cut at the panel's edge. The column's width is set at once and the rail moves to its
+/// width with the panel. On iPhone and iPad the rail takes the column.
+struct RailColumns: ViewModifier {
+    @Environment(\.searchSettledWidth) private var settled
+    @Environment(\.searchCoverWidth) private var cover
+
+    func body(content: Content) -> some View {
+        if let settled, let cover {
+            content.frame(width: Self.width(of: cover, in: settled), alignment: .leading)
+        } else {
+            content
+        }
+    }
+
+    /// The width of as many covers `cover` wide as fit across `width`, `spacing` apart: at least
+    /// one. A hair of slack keeps a width that fits them exactly from losing one to rounding.
+    static func width(of cover: CGFloat, in width: CGFloat, spacing: CGFloat = 20) -> CGFloat {
+        let columns = max(1, ((width + spacing + 0.5) / (cover + spacing)).rounded(.down))
+        return columns * cover + (columns - 1) * spacing
+    }
+}
+
 extension EnvironmentValues {
     /// The width Search's column takes once the Mac's filters panel has opened or closed. `nil`
     /// before the screen is measured, and on iPhone and iPad.
     @Entry var searchSettledWidth: CGFloat?
+    /// The width of a cover in Search on the Mac, the same with the filters panel open or shut.
+    /// `nil` before the screen is measured, and on iPhone and iPad.
+    @Entry var searchCoverWidth: CGFloat?
 }
 
 extension View {
     func railCover(compact: Bool) -> some View {
         modifier(RailCover(compact: compact))
+    }
+
+    func railColumns() -> some View {
+        modifier(RailColumns())
     }
 }
 

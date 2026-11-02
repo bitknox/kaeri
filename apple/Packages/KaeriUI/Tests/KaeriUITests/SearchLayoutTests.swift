@@ -171,6 +171,67 @@ struct SearchLayoutTests {
         #expect(left.isEmpty, "the earlier results still showing past 600 ms: \(left.prefix(4))")
     }
 
+    @Test func theCoversKeepTheirSizeAsThePanelOpens() async throws {
+        _ = NSApplication.shared
+        let store = AppStore()
+        startShowing(store)
+        let navigator = Navigator()
+        navigator.section = .search
+        let window = window(store, navigator)
+        defer { window.close() }
+        try await settle(window)
+        let shut = try #require(firstCoverWidth(try drawn(window)))
+        // Open, the start's covers are as wide as they were: fewer of them, none larger.
+        navigator.searchFiltersShown = true
+        try await settle(window)
+        let open = try #require(firstCoverWidth(try drawn(window)))
+        #expect(abs(open - shut) <= 1, "a cover \(shut) points wide with the panel shut, \(open) open")
+
+        // The results' columns are the same width, open or shut.
+        let mecha = SearchQuery(genres: ["Mecha"])
+        store.searchLive(mecha)
+        store.apply(.content(view: .search(query: mecha), content: .entries(titles(from: 40, count: 20))))
+        try await settle(window, turns: 60)
+        let results = try #require(firstCoverWidth(try drawn(window)))
+        #expect(abs(results - shut) <= 1, "a result \(results) points wide, a rail's cover \(shut)")
+        navigator.searchFiltersShown = false
+        try await settle(window)
+        let resultsShut = try #require(firstCoverWidth(try drawn(window)))
+        #expect(abs(resultsShut - shut) <= 1, "a result \(resultsShut) points wide with the panel shut")
+    }
+
+    /// How wide the first cover drawn is, in points: its widest run of cover colour, on the rows
+    /// a little below its top, where the rounded corners no longer narrow it. Runs narrower than a
+    /// cover could be, such as an accent mark, are passed over.
+    private func firstCoverWidth(_ image: NSBitmapImageRep) -> CGFloat? {
+        func firstRun(at y: CGFloat) -> CGFloat? {
+            let hits = covers(in: image, xs: stride(from: 0, through: Self.size.width - 1, by: 1), ys: stride(from: y, through: y, by: 1))
+            var runs: [(start: CGFloat, end: CGFloat)] = []
+            for point in hits {
+                if let last = runs.last, point.x == last.end + 1 {
+                    runs[runs.count - 1].end = point.x
+                } else {
+                    runs.append((point.x, point.x))
+                }
+            }
+            return runs.first(where: { $0.end - $0.start + 1 >= 60 }).map { $0.end - $0.start + 1 }
+        }
+        for y in stride(from: CGFloat(150), through: Self.size.height - 50, by: 4) where firstRun(at: y) != nil {
+            return stride(from: y, through: y + 40, by: 4).compactMap(firstRun).max()
+        }
+        return nil
+    }
+
+    @Test func aRailEndsAfterItsLastWholeCover() {
+        // Seven covers of 130 points fit across 1,030 with 20 between them; four across 700.
+        #expect(RailColumns.width(of: 130, in: 1_030) == 1_030)
+        #expect(RailColumns.width(of: 130, in: 700) == 580)
+        // A width that fits them exactly keeps them all, rounding or not.
+        #expect(RailColumns.width(of: RailCover.width(in: 1_000), in: 1_000) == 1_000)
+        // Never fewer than one.
+        #expect(RailColumns.width(of: 130, in: 100) == 130)
+    }
+
     @Test func aRailsCoversAreTheGridsColumns() {
         // As many columns of at least 128 points as fit with 20 between them, sharing the width.
         #expect(RailCover.width(in: 1_000) == 150)
