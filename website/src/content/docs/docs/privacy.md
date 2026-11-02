@@ -153,7 +153,7 @@ Tokens are kept here:
 | App | Where |
 |---|---|
 | iPhone and iPad | The system Keychain |
-| Mac | Where the terminal app keeps them, so one sign-in serves both: the Keychain, or files if `token_storage = "file"` |
+| Mac | Where the terminal app keeps them, so one sign-in serves both: the Keychain, as one item named `kaeri-secrets` that holds them all, or files if `token_storage = "file"` |
 | Android and Android TV | A private file in the app, sealed with a key that the Android Keystore holds and never lets out |
 | Windows | Windows Credential Manager, as generic credentials named `kaeri/` and the token's id, kept for your user on that computer |
 | Linux | Files only you can read, in the data directory the terminal app uses, `~/.local/share/kaeri` |

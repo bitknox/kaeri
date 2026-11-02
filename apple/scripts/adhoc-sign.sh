@@ -15,6 +15,15 @@
 #
 # Then `codesign --verify --deep --strict`. (`-iphonesimulator` products are signed the same way.)
 #
+# The Mac's release signs with a certificate instead when KAERI_SIGN_IDENTITY names one, by its
+# SHA-1, in the keychain KAERI_SIGN_KEYCHAIN (both from signing-keychain.sh ci-setup): the
+# self-signed Kaeri certificate, every piece the same way. The app's designated requirement is
+# then `identifier "app.kaeri.app" and certificate leaf = H"<SHA-1>"`, the same for every
+# release, so the login keychain's "Always Allow" lasts across updates, which a cdhash never
+# does. This checks that it is. Sparkle's EdDSA signature is the update's trust either way, and
+# lets the signing identity change. iPhone and iPad builds are signed ad hoc whatever these say:
+# AltStore and SideStore sign them again.
+#
 # The Mac app is released signed so. So is the iPhone's .ipa, though no device installs it as it
 # is: AltStore and SideStore read each bundle's entitlements from its signature, set up on the
 # person's own Apple ID what they name, the App Group among them, and sign each bundle again with
@@ -78,6 +87,16 @@ unbacked=(
   keychain-access-groups
 )
 if [[ "$sdk" == macosx ]]; then unbacked+=(com.apple.security.application-groups); fi
+
+# What every piece is signed with: the certificate KAERI_SIGN_IDENTITY names, on the Mac, or ad
+# hoc. Expanded as ${keychain[@]+"${keychain[@]}"}, as bash 3.2 has empty arrays under set -u.
+identity=-
+keychain=()
+if [[ "$sdk" == macosx && -n "${KAERI_SIGN_IDENTITY:-}" ]]; then
+  identity="$KAERI_SIGN_IDENTITY"
+  if [[ -n "${KAERI_SIGN_KEYCHAIN:-}" ]]; then keychain=(--keychain "$KAERI_SIGN_KEYCHAIN"); fi
+  echo "adhoc-sign.sh: signing with the certificate $identity, not ad hoc"
+fi
 
 # `path` as the log names it: inside the app, from the app.
 label() {
@@ -186,7 +205,7 @@ check_group() {
 
 sign() {
   local path="$1" with="${2:-}"
-  local flags=(--force --sign - --timestamp=none)
+  local flags=(--force --sign "$identity" ${keychain[@]+"${keychain[@]}"} --timestamp=none)
   if [[ -n "$with" ]]; then flags+=(--entitlements "$with"); fi
   codesign "${flags[@]}" "$path"
   echo "adhoc-sign.sh: signed $(label "$path")${with:+ with its entitlements}"
@@ -195,7 +214,8 @@ sign() {
 # Sign `path` again, keeping what its signature says of it: its identifier, its entitlements, and
 # its flags, such as the hardened runtime Sparkle builds its helpers with.
 sign_keeping() {
-  codesign --force --sign - --timestamp=none --preserve-metadata=identifier,entitlements,flags "$1"
+  codesign --force --sign "$identity" ${keychain[@]+"${keychain[@]}"} --timestamp=none \
+    --preserve-metadata=identifier,entitlements,flags "$1"
   echo "adhoc-sign.sh: signed $(label "$1"), keeping its identifier, entitlements and flags"
 }
 
@@ -261,6 +281,19 @@ check_group "$app" "$with"
 sign "$app" "$with"
 
 codesign --verify --deep --strict --verbose=2 "$app"
+# Signed with the certificate, the app's designated requirement is its identifier and that
+# certificate, not its cdhash: what the keychain's "Always Allow" remembers.
+if [[ "$identity" != - ]]; then
+  bundle_id="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$app/${contents}Info.plist")"
+  sha="$(tr '[:upper:]' '[:lower:]' <<<"$identity")"
+  want="designated => identifier \"$bundle_id\" and certificate leaf = H\"$sha\""
+  got="$(codesign --display --requirements - "$app" 2>/dev/null | grep '^designated => ' || true)"
+  if [[ "$got" != "$want" ]]; then
+    echo "error: $(label "$app")'s designated requirement is \"$got\", not \"$want\"" >&2
+    exit 1
+  fi
+  echo "adhoc-sign.sh: $(label "$app") is $got"
+fi
 for bundle in "$app/${contents}PlugIns"/*.appex "$app"; do
   [[ -d "$bundle" ]] || continue
   echo "adhoc-sign.sh: $(label "$bundle")'s entitlements:"

@@ -335,6 +335,37 @@ jobs:
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-about@0.9.2
+      # The terminal binary keeps its tokens in the login keychain on macOS, so it is signed with
+      # the same self-signed certificate as the Mac app (apple/scripts/signing-keychain.sh) when
+      # the secrets reach this run. Its designated requirement is then `identifier
+      # "app.kaeri.kaeri" and certificate leaf`, the same for every release, and the keychain's
+      # "Always Allow" lasts across updates. Without them it keeps the linker's ad hoc signature.
+      - name: The Mac signing identity
+        if: env.PACKAGE == 'true' && runner.os == 'macOS'
+        shell: bash
+        env:
+          MAC_CODESIGN_P12: ${{ secrets.MAC_CODESIGN_P12 }}
+          MAC_CODESIGN_P12_PASSWORD: ${{ secrets.MAC_CODESIGN_P12_PASSWORD }}
+        run: apple/scripts/signing-keychain.sh ci-setup
+
+      - name: Sign (macOS)
+        if: env.PACKAGE == 'true' && runner.os == 'macOS' && env.KAERI_SIGN_IDENTITY != ''
+        shell: bash
+        run: |
+          bin="target/${{ matrix.target }}/release/kaeri"
+          codesign --force --sign "$KAERI_SIGN_IDENTITY" --keychain "$KAERI_SIGN_KEYCHAIN" \
+            --identifier app.kaeri.kaeri --timestamp=none "$bin"
+          codesign --verify --strict --verbose=2 "$bin"
+          sha="$(tr '[:upper:]' '[:lower:]' <<<"$KAERI_SIGN_IDENTITY")"
+          want="designated => identifier \"app.kaeri.kaeri\" and certificate leaf = H\"$sha\""
+          got="$(codesign --display --requirements - "$bin" 2>/dev/null | grep '^designated => ')"
+          [[ "$got" == "$want" ]] || { echo "::error::$bin is \"$got\", not \"$want\""; exit 1; }
+
+      - name: Forget the Mac signing identity
+        if: always() && env.PACKAGE == 'true' && runner.os == 'macOS'
+        shell: bash
+        run: apple/scripts/signing-keychain.sh ci-delete
+
       - name: The Rust crates' licences
         shell: bash
         run: bash packaging/rust-licences/generate.sh terminal target/THIRD-PARTY-rust.txt ${{ matrix.target }}
@@ -549,6 +580,8 @@ jobs:
       ANDROID_RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
       ANDROID_RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
       MAC_UPDATE_ED25519_KEY: ${{ secrets.MAC_UPDATE_ED25519_KEY }}
+      MAC_CODESIGN_P12: ${{ secrets.MAC_CODESIGN_P12 }}
+      MAC_CODESIGN_P12_PASSWORD: ${{ secrets.MAC_CODESIGN_P12_PASSWORD }}
 
   # Once every build has succeeded: the terminal's files and the apps', with the notes, as a
   # draft, which publishing turns into the release and its tag, as a pre-release that is never

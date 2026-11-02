@@ -26,7 +26,7 @@ use kaeri_core::config::Config;
 use kaeri_core::config::Paths;
 use kaeri_track::secret::LocalSecrets;
 
-pub use kaeri_track::secret::{Backend, SecretError, SecretStore, Storage};
+pub use kaeri_track::secret::{BUNDLE, Backend, SecretError, SecretStore, Storage};
 
 /// The machine the engine runs on, as the front end offers it.
 ///
@@ -69,8 +69,9 @@ pub(crate) fn file_secrets(paths: &Paths) -> Arc<dyn SecretStore> {
 ///
 /// - [`Backend::File`]: `0600` files under the data directory, the very files the terminal reads
 ///   and writes. `keychain` is never asked.
-/// - [`Backend::Keychain`]: `keychain`, which on macOS keeps the items `keyring` keeps for the
-///   terminal, under service `kaeri` and the token's id. The same files are the fallback
+/// - [`Backend::Keychain`]: `keychain`, which on macOS keeps the item `keyring` keeps for the
+///   terminal, the one [`BUNDLE`] under service `kaeri` that holds every secret, read once per
+///   process. The same files are the fallback
 ///   where it refuses a token, and are read where it holds none, as on the desktop.
 pub fn shared_secrets(
     backend: Backend,

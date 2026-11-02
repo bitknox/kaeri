@@ -151,7 +151,7 @@ or on Google Play, so each one needs a one-time step the first time you open it.
 
 | Platform | File | First open |
 | --- | --- | --- |
-| Mac, macOS 26 or later, Apple silicon | `kaeri-<version>-macos.dmg` | Drag Kaeri to Applications. The app is ad-hoc signed and not notarized, so macOS stops it once. Choose **Done**, then open **System Settings › Privacy & Security** and choose **Open Anyway**. |
+| Mac, macOS 26 or later, Apple silicon | `kaeri-<version>-macos.dmg` | Drag Kaeri to Applications. The app isn't signed with an Apple developer account and isn't notarized, so macOS stops it once. Choose **Done**, then open **System Settings › Privacy & Security** and choose **Open Anyway**. |
 | iPhone and iPad, iOS or iPadOS 26 or later | `kaeri-<version>-ios-unsigned.ipa` | Add the source below in [SideStore](https://sidestore.io) or [AltStore](https://altstore.io), then install Kaeri from it. They sign the app with your own Apple ID. |
 | Android 15 or later, 64-bit ARM | `kaeri-<version>-android-arm64.apk` | Open the APK on the device and allow installs from your browser or file manager once. |
 | Android TV and Google TV, Android 11 or later, 64-bit ARM or 32-bit ARM | `kaeri-<version>-android-tv-arm64.apk` or `kaeri-<version>-android-tv-armv7.apk` | Install it with a sideloading app or `adb install`. |
