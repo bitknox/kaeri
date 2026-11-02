@@ -33,12 +33,6 @@ torrents-check-not-made-proxy = このプロキシ経由では接続を確認で
 torrents-proxy-not-saved = 保存されませんでした。{ $why }ため、保存済みのプロキシはそのまま残ります。
 torrents-protection-not-saved = 保存されませんでした。{ $why }ため、保存済みの保護設定はそのまま残ります。
 torrents-still-off = { $why }ため、トレントはまだオフです。
-torrents-index = { -torrent-index-cap }
-torrents-index-detail = { -app-name }がトレントを探すために使うRSS検索のアドレスです。
-torrents-index-hint = https://…/?q={ "{" }query{ "}" }
-torrents-index-needed = トレントには、{ -torrent-index-cap }のアドレスが必要です。
-torrents-index-scheme = httpまたはhttpsのアドレスを使用してください。
-torrents-index-saved = { -torrent-index-cap }を保存しました
 torrents-if-check-fails = 接続確認に失敗した場合
 torrents-keep-running-title = 確認に失敗した場合も、トレントを動かし続けますか？
 torrents-keep-running-detail = 接続確認で、VPNまたはプロキシの外に通信が出ていることがわかった場合、トレントをどうするかを選びます。

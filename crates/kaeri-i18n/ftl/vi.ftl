@@ -162,7 +162,7 @@ home-more-genre = Thêm { $genre }
 # Line over the spotlight's title when it is the built-in demo.
 home-spotlight-demo = Bản demo, chia sẻ thoải mái
 
-# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Stream.
+# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.
 licensed-return = Bạn đã xem tập { $episode } trên { $service } chưa?
 
 # Notice after Mark as watched on the return notice. It holds Undo.
@@ -3087,9 +3087,6 @@ sources-state-held-back = Bị giữ lại
 
 # Heading of the line about { -plugin-store-pl }.
 sources-stores-title = Các cửa hàng plugin
-
-# Under the heading when no { -plugin-store } is joined or the list has not arrived.
-sources-stores-invite = Các plugin do người bạn chia sẻ. Tham gia bằng liên kết mời.
 
 # Part of the { -plugin-store } summary: how many { -plugin-store-pl } are joined.
 sources-stores-joined = { $count } đã tham gia
@@ -6097,9 +6094,6 @@ onboarding-own-heading = Có phim của riêng bạn?
 # Heading of the group that joins a store with an invite.
 onboarding-invite-heading = Có liên kết mời?
 
-# Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-onboarding-where-stores = Các plugin đến từ các cửa hàng plugin. Một cửa hàng plugin do một người vận hành cho những người họ mời, nên bạn tham gia bằng liên kết mời từ chủ sở hữu.
-
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = Dùng thử ngay
 
@@ -8232,12 +8226,6 @@ sources-empty-detail = Tham gia một cửa hàng plugin bằng liên kết mờ
 # Row for the built-in torrent source.
 sources-torrents = Torrent
 
-# Label of a source that is not a plugin and controls this device.
-sources-remote = Từ xa
-
-# Origin: set in the config file.
-sources-origin-config = Đặt trong tệp cấu hình
-
 # Origin: built into the app.
 sources-origin-built-in = Có sẵn trong ứng dụng
 
@@ -8283,7 +8271,7 @@ sources-detail-disabled = Đã tắt. Vẫn giữ vị trí nhưng không đư�
 # Status line: the source is gone.
 sources-detail-gone = Nguồn này không còn ở đây.
 
-# Status line: the site did not answer.
+# Status line: the source did not answer.
 sources-detail-site = Nguồn không phản hồi.
 
 # Row label: version.
@@ -8544,9 +8532,6 @@ sources-your-intro = Tập phim được phát từ nguồn đầu tiên có ch�
 # Heading of the section that lists the plugins.
 sources-section-plugins = Các plugin
 
-# Section heading: Internet Archive collections and PeerTube channels.
-sources-section-catalogues = Danh mục miễn phí
-
 # Link in the empty state.
 sources-add-demo = Thêm bản demo
 
@@ -8558,9 +8543,6 @@ stores-joined = Đã tham gia
 
 # Title of the empty list.
 stores-empty-title = Chưa có các cửa hàng plugin
-
-# Line under the empty title.
-stores-empty-detail = Các cửa hàng plugin do những người bạn quen điều hành. Tham gia bằng liên kết mời mà chủ của nó gửi cho bạn.
 
 # Line under the title of the screen when plugins add sources.
 stores-intro = Các plugin thêm các nguồn. Trước khi bạn cài đặt, mỗi thứ đều liệt kê các máy chủ mà nó kết nối tới.
@@ -9049,9 +9031,6 @@ stores-offers-plugins =
 # Button of a notice that opens the plugin stores page.
 notice-open-stores = Mở các cửa hàng plugin
 
-# Explainer on the empty plugin stores page.
-stores-what-is = Cửa hàng plugin là một máy chủ nhỏ do một người vận hành cho những người họ mời. Nó cung cấp các nguồn dưới dạng các plugin. Kaeri không vận hành và không liệt kê các cửa hàng plugin nào, nên bạn tham gia bằng liên kết mời từ chủ sở hữu.
-
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = Cửa hàng plugin là gì?
 
@@ -9405,24 +9384,6 @@ torrents-protection-not-saved = Chưa lưu. { $why }, nên cách bảo vệ đã
 
 # Notice when torrents stayed off. The reason is a sentence fragment.
 torrents-still-off = Torrent vẫn tắt. { $why }.
-
-# Label of the index address field.
-torrents-index = Chỉ mục torrent
-
-# Line under the index field.
-torrents-index-detail = Địa chỉ tìm kiếm RSS mà Kaeri dùng để lấy torrent.
-
-# Hint inside the index field.
-torrents-index-hint = https://…/?q=…
-
-# Line when no index address is set.
-torrents-index-needed = Torrent cần có địa chỉ chỉ mục.
-
-# Line when the index address has the wrong scheme.
-torrents-index-scheme = Dùng địa chỉ http hoặc https.
-
-# Notice after the index was saved.
-torrents-index-saved = Chỉ mục torrent đã lưu.
 
 # Label of the choice of what to do when a check fails.
 torrents-if-check-fails = Khi kiểm tra thất bại

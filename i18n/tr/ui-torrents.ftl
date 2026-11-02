@@ -33,12 +33,6 @@ torrents-check-not-made-proxy = Denetim bu proxy üzerinden yapılamadı
 torrents-proxy-not-saved = Kaydedilmedi. { $why }, bu yüzden kayıtlı proxy kalır.
 torrents-protection-not-saved = Kaydedilmedi. { $why }, bu yüzden kayıtlı koruma kalır.
 torrents-still-off = Torrentler hâlâ kapalı. { $why }.
-torrents-index = { -torrent-index-cap }
-torrents-index-detail = Torrentler için { -app-name }'in istediği RSS arama adresi.
-torrents-index-hint = https://…/?q=…
-torrents-index-needed = Torrentler için bir { -torrent-index } adresi gerekir.
-torrents-index-scheme = Bir http ya da https adresi kullanın.
-torrents-index-saved = { -torrent-index-cap } kaydedildi
 torrents-if-check-fails = Denetim başarısız olursa
 torrents-keep-running-title = Denetim başarısız olursa torrentler çalışmaya devam etsin mi?
 torrents-keep-running-detail = Denetim, VPN'iniz ya da proxy'niz dışında trafik bulursa torrentlere ne olacağı.

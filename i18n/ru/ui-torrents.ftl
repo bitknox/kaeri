@@ -33,12 +33,6 @@ torrents-check-not-made-proxy = Проверку не удалось прове�
 torrents-proxy-not-saved = Не сохранено. { $why }, поэтому остаётся сохранённый прокси.
 torrents-protection-not-saved = Не сохранено. { $why }, поэтому остаётся прежняя защита.
 torrents-still-off = Торренты всё ещё выключены. { $why }.
-torrents-index = { -torrent-index-cap }
-torrents-index-detail = Адрес RSS-поиска, по которому { -app-name } ищет торренты.
-torrents-index-hint = https://…/?q={ "{query}" }
-torrents-index-needed = Для торрентов нужен адрес индекса.
-torrents-index-scheme = Используйте адрес http или https.
-torrents-index-saved = { -torrent-index-cap } сохранён
 torrents-if-check-fails = Если проверка не прошла
 torrents-keep-running-title = Продолжать работу торрентов, если проверка не прошла?
 torrents-keep-running-detail = Что будет с торрентами, если проверка найдёт трафик вне VPN или прокси.

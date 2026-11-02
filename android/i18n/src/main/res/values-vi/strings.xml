@@ -444,8 +444,6 @@
     <string name="tv_page_step_paste">Dán vào đây rồi gửi tới TV.</string>
     <string name="tv_page_password">Tên người dùng hoặc email và mật khẩu %1$s của bạn. Các thông tin này được gửi tới TV, TV dùng chúng để đăng nhập vào %1$s và chỉ giữ lại mã thông báo.</string>
     <string name="tv_page_link">Dán liên kết mời của cửa hàng plugin. TV sẽ hiện cửa hàng plugin trước khi tham gia.</string>
-    <string name="tv_page_torrent">Kaeri tìm torrent qua chỉ mục torrent.</string>
-    <string name="tv_page_torrent_proxy">Kaeri tìm torrent qua chỉ mục torrent, và lưu lượng torrent đi qua proxy SOCKS5.</string>
     <string name="tv_page_proxy">Lưu lượng torrent đi qua proxy SOCKS5. %1$s TV kiểm tra proxy trước khi lưu.</string>
     <string name="tv_page_label_code">Mã</string>
     <string name="tv_page_title_torrents">Torrent cho Kaeri</string>
@@ -457,10 +455,7 @@
     <string name="tv_use_phone">Dùng điện thoại</string>
     <string name="tv_type_it">Nhập</string>
     <string name="tv_qr_label_proxy">Mã QR cho trang nhập proxy</string>
-    <string name="tv_qr_label_index">Mã QR cho trang nhập chỉ mục torrent</string>
-    <string name="tv_scan_torrent_proxy">Quét bằng điện thoại, rồi điền chỉ mục torrent và proxy trên trang mở ra.</string>
     <string name="tv_scan_proxy">Quét bằng điện thoại, rồi đổi proxy trên trang mở ra.</string>
-    <string name="tv_scan_torrent">Quét bằng điện thoại, rồi điền chỉ mục torrent trên trang mở ra.</string>
     <string name="tv_field_user_optional">Tên người dùng, nếu được yêu cầu</string>
     <string name="tv_field_password_optional">Mật khẩu, nếu được yêu cầu</string>
     <string name="tv_qr_label_link">Mã QR cho trang nhập liên kết</string>
@@ -623,7 +618,6 @@
     <string name="settings_titles_note_english_missing">%1$s không có tên tiếng Anh trên AniList, nên vẫn dùng tên romaji.</string>
     <string name="settings_titles_note_english">Tên tiếng Anh như AniList ghi, và romaji nếu không có tên tiếng Anh.</string>
     <string name="settings_titles_note_romaji">Tên tiếng Nhật viết bằng chữ Latin, như AniList ghi.</string>
-    <string name="settings_index_none">Chưa đặt</string>
     <string name="settings_stores_with_updates">%1$d · %2$s</string>
     <string name="settings_seeding_best_effort">Cố gắng hết sức trên thiết bị này: seed chỉ chạy khi Kaeri đang mở.</string>
     <plurals name="settings_downloads_count">
@@ -1438,7 +1432,6 @@
     <string name="onboarding_where_hosts">Kaeri phát những gì bạn đã có: tệp trên thiết bị này, máy chủ Jellyfin của bạn, và các plugin từ các cửa hàng plugin bạn tham gia.</string>
     <string name="onboarding_own_heading">Có phim của riêng bạn?</string>
     <string name="onboarding_invite_heading">Có liên kết mời?</string>
-    <string name="onboarding_where_stores">Các plugin đến từ các cửa hàng plugin. Một cửa hàng plugin do một người vận hành cho những người họ mời, nên bạn tham gia bằng liên kết mời từ chủ sở hữu.</string>
     <string name="onboarding_demo_heading">Dùng thử ngay</string>
     <string name="onboarding_demo_detail">Bản demo phát こうしす！, một series mà nhóm làm phim chia sẻ theo CC BY 4.0, từ Wikimedia Commons.</string>
     <string name="onboarding_play_demo">Phát bản demo</string>
@@ -2165,8 +2158,6 @@
     <string name="sources_empty_title">Chưa có các nguồn</string>
     <string name="sources_empty_detail">Tham gia một cửa hàng plugin bằng liên kết mời mà chủ sở hữu gửi cho bạn.</string>
     <string name="sources_torrents">Torrent</string>
-    <string name="sources_remote">Từ xa</string>
-    <string name="sources_origin_config">Đặt trong tệp cấu hình</string>
     <string name="sources_origin_built_in">Có sẵn trong ứng dụng</string>
     <string name="sources_origin_left_store">Từ cửa hàng plugin bạn đã rời</string>
     <string name="sources_origin_by_hand">Thêm thủ công</string>
@@ -2273,12 +2264,10 @@
     <string name="sources_your">Các nguồn của bạn</string>
     <string name="sources_your_intro">Tập phim được phát từ nguồn đầu tiên có chúng, theo thứ tự này.</string>
     <string name="sources_section_plugins">Các plugin</string>
-    <string name="sources_section_catalogues">Danh mục miễn phí</string>
     <string name="sources_add_demo">Thêm bản demo</string>
     <string name="sources_order_all">Mọi nguồn đều được thử theo thứ tự này, bất kể loại nào.</string>
     <string name="stores_joined">Đã tham gia</string>
     <string name="stores_empty_title">Chưa có các cửa hàng plugin</string>
-    <string name="stores_empty_detail">Các cửa hàng plugin do những người bạn quen điều hành. Tham gia bằng liên kết mời mà chủ của nó gửi cho bạn.</string>
     <string name="stores_intro">Các plugin thêm các nguồn. Trước khi bạn cài đặt, mỗi thứ đều liệt kê các máy chủ mà nó kết nối tới.</string>
     <string name="stores_not_from_app">Các plugin đến từ chủ của cửa hàng plugin, không phải từ Kaeri. Bạn có thể rời cửa hàng plugin bất cứ lúc nào.</string>
     <string name="stores_join_owner_responsible">%1$s vận hành cửa hàng plugin này và chọn các các plugin của nó. Kaeri không tạo, xét duyệt hay chấp thuận chúng.</string>
@@ -2448,7 +2437,6 @@
         <item quantity="other">Cung cấp %1$d plugin</item>
     </plurals>
     <string name="notice_open_stores">Mở các cửa hàng plugin</string>
-    <string name="stores_what_is">Cửa hàng plugin là một máy chủ nhỏ do một người vận hành cho những người họ mời. Nó cung cấp các nguồn dưới dạng các plugin. Kaeri không vận hành và không liệt kê các cửa hàng plugin nào, nên bạn tham gia bằng liên kết mời từ chủ sở hữu.</string>
     <string name="stores_what_is_link">Cửa hàng plugin là gì?</string>
     <string name="stores_invite_rules">Liên kết mời dùng được một lần, cho một người, và có hiệu lực bảy ngày. Hãy xin chủ sở hữu cửa hàng plugin liên kết mới nếu liên kết của bạn đã hết hạn.</string>
     <string name="stores_qr_label">Mã QR cho liên kết mời</string>
@@ -2568,12 +2556,6 @@
     <string name="torrents_proxy_not_saved">Chưa lưu. %1$s, nên proxy đã lưu vẫn được giữ.</string>
     <string name="torrents_protection_not_saved">Chưa lưu. %1$s, nên cách bảo vệ đã lưu vẫn được giữ.</string>
     <string name="torrents_still_off">Torrent vẫn tắt. %1$s.</string>
-    <string name="torrents_index">Chỉ mục torrent</string>
-    <string name="torrents_index_detail">Địa chỉ tìm kiếm RSS mà Kaeri dùng để lấy torrent.</string>
-    <string name="torrents_index_hint">https://…/?q=…</string>
-    <string name="torrents_index_needed">Torrent cần có địa chỉ chỉ mục.</string>
-    <string name="torrents_index_scheme">Dùng địa chỉ http hoặc https.</string>
-    <string name="torrents_index_saved">Chỉ mục torrent đã lưu.</string>
     <string name="torrents_if_check_fails">Khi kiểm tra thất bại</string>
     <string name="torrents_keep_running_title">Giữ torrent chạy nếu kiểm tra thất bại?</string>
     <string name="torrents_keep_running_detail">Điều gì xảy ra với torrent khi kiểm tra phát hiện lưu lượng đi ra ngoài VPN hoặc proxy của bạn.</string>

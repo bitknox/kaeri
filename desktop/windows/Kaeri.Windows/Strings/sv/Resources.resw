@@ -1487,9 +1487,6 @@
   <data name="SourcesStatusWorking" xml:space="preserve">
     <value>Redo</value>
   </data>
-  <data name="SourcesTorrentIndexes" xml:space="preserve">
-    <value>Söker i de torrentindex du har slagit på under Inställningar.</value>
-  </data>
   <data name="SourcesVersionReady" xml:space="preserve">
     <value>Version {version} är redo</value>
   </data>
@@ -3622,9 +3619,6 @@
   </data>
   <data name="OnboardingInviteHeading" xml:space="preserve">
     <value>Har du en inbjudningslänk?</value>
-  </data>
-  <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>Tillägg kommer från tilläggsbutiker. En tilläggsbutik drivs av en person åt dem hen bjuder in, så du går med i en via en inbjudningslänk från ägaren.</value>
   </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>Prova direkt</value>
@@ -5774,12 +5768,6 @@
   <data name="SourcesTorrents" xml:space="preserve">
     <value>Torrent</value>
   </data>
-  <data name="SourcesRemote" xml:space="preserve">
-    <value>Fjärrstyrd</value>
-  </data>
-  <data name="SourcesOriginConfig" xml:space="preserve">
-    <value>Angiven i konfigurationsfilen</value>
-  </data>
   <data name="SourcesOriginBuiltIn" xml:space="preserve">
     <value>Inbyggd</value>
   </data>
@@ -6086,9 +6074,6 @@
   <data name="SourcesSectionPlugins" xml:space="preserve">
     <value>Tillägg</value>
   </data>
-  <data name="SourcesSectionCatalogues" xml:space="preserve">
-    <value>Fria kataloger</value>
-  </data>
   <data name="SourcesAddDemo" xml:space="preserve">
     <value>Lägg till demon</value>
   </data>
@@ -6100,9 +6085,6 @@
   </data>
   <data name="StoresEmptyTitle" xml:space="preserve">
     <value>Inga tilläggsbutiker än</value>
-  </data>
-  <data name="StoresEmptyDetail" xml:space="preserve">
-    <value>Tilläggsbutiker drivs av personer du känner. Gå med i en av dem med inbjudningslänken som ägaren skickar till dig.</value>
   </data>
   <data name="StoresIntro" xml:space="preserve">
     <value>Tillägg lägger till källor. Varje visar vilka värdar den kontaktar innan du installerar den.</value>
@@ -6596,9 +6578,6 @@
   <data name="NoticeOpenStores" xml:space="preserve">
     <value>Öppna tilläggsbutiker</value>
   </data>
-  <data name="StoresWhatIs" xml:space="preserve">
-    <value>En tilläggsbutik är en liten server som en person driver åt dem hen bjuder in. Den erbjuder källor som tillägg. Kaeri driver inga tilläggsbutiker och listar inga, så du går med i en via en inbjudningslänk från ägaren.</value>
-  </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>Vad är en tilläggsbutik?</value>
   </data>
@@ -6952,24 +6931,6 @@
   </data>
   <data name="TorrentsStillOff" xml:space="preserve">
     <value>Torrenter är fortfarande av. {why}.</value>
-  </data>
-  <data name="TorrentsIndex" xml:space="preserve">
-    <value>Torrentindex</value>
-  </data>
-  <data name="TorrentsIndexDetail" xml:space="preserve">
-    <value>RSS-sökadressen som Kaeri frågar efter torrenter från.</value>
-  </data>
-  <data name="TorrentsIndexHint" xml:space="preserve">
-    <value>https://…/?q={{query}}</value>
-  </data>
-  <data name="TorrentsIndexNeeded" xml:space="preserve">
-    <value>Torrenter behöver en indexadress.</value>
-  </data>
-  <data name="TorrentsIndexScheme" xml:space="preserve">
-    <value>Använd en http- eller https-adress.</value>
-  </data>
-  <data name="TorrentsIndexSaved" xml:space="preserve">
-    <value>Torrentindex sparades</value>
   </data>
   <data name="TorrentsIfCheckFails" xml:space="preserve">
     <value>Om en kontroll misslyckas</value>

@@ -211,7 +211,7 @@ struct SettingsResults: View {
         (L.downloadsFolder, .downloads), (L.downloadsQuality, .downloads), (L.settingsMergeSubtitles, .downloads),
         (L.settingsKeepSeeding, .downloads), (L.settingsAfterDownload, .downloads), (L.settingsWatchedDownloads, .downloads),
         (L.settingsNewEpisodes, .notifications), (L.settingsSystemNotifications, .notifications),
-        (L.sourcesSourceOrderRow, .sources), (L.sourcesTorrentSource, .sources), (L.torrentsIndex, .sources),
+        (L.sourcesSourceOrderRow, .sources), (L.sourcesTorrentSource, .sources),
         (L.torrentsProtectWith, .sources), (L.torrentsLastCheck, .sources), (L.torrentsIfCheckFails, .sources),
         (L.settingsSeedAfter, .sources), (L.settingsSeedFor, .sources), (L.settingsUploadLimit, .sources),
         (AccountsModel.name("anilist"), .accounts), (AccountsModel.name("mal"), .accounts),

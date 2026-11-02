@@ -88,7 +88,7 @@ static class Showcase
                 Option("hotaru-open-archive", "Hotaru Open Archive", 13),
                 Option("mukashi-archive", "Mukashi Archive", 9),
                 torrent,
-                Option("machi-library-films", "Machi Library Films", 0, new SourceNote.Failed("the site did not answer in 15 s.")),
+                Option("machi-library-films", "Machi Library Films", 0, new SourceNote.Failed("the source did not answer in 15 s.")),
                 Option("sora-festival", "Sora Animation Festival", 0, new SourceNote.Off()),
             ],
             _ =>
@@ -96,7 +96,7 @@ static class Showcase
                 Option("hotaru-open-archive", "Hotaru Open Archive", 13),
                 Option("mukashi-archive", "Mukashi Archive", 9),
                 torrent,
-                Option("machi-library-films", "Machi Library Films", 0, new SourceNote.Failed("the site did not answer in 15 s.")),
+                Option("machi-library-films", "Machi Library Films", 0, new SourceNote.Failed("the source did not answer in 15 s.")),
             ],
         };
     }
@@ -127,7 +127,7 @@ static class Showcase
         Plugin("mukashi-archive", "Mukashi Archive", "1.4.0", ["mukashi-archive.example"], Hotaru, latency: 320,
             update: new ProviderUpdate("1.5.0", ["media2.mukashi-archive.example"])),
         Plugin("machi-library-films", "Machi Library Films", "0.3.0", ["films.machi-library.example"],
-            new ProviderOrigin.ByHand(), state: "down", error: "the site did not answer in 15 s."),
+            new ProviderOrigin.ByHand(), state: "down", error: "the source did not answer in 15 s."),
         new ProviderRow(Id: "torrent", Kind: "torrent", State: "ready", Usable: true, Name: "Torrent source",
             Origin: new ProviderOrigin.BuiltIn(), Hosts: [], Version: null),
     ];

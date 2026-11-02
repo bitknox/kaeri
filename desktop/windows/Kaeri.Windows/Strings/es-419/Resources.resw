@@ -1556,9 +1556,6 @@
   <data name="SourcesStatusWorking" xml:space="preserve">
     <value>Listo</value>
   </data>
-  <data name="SourcesTorrentIndexes" xml:space="preserve">
-    <value>Busca en los índices de torrents activados en Configuración.</value>
-  </data>
   <data name="SourcesVersionReady" xml:space="preserve">
     <value>La versión {version} está lista</value>
   </data>
@@ -3746,9 +3743,6 @@
   <data name="OnboardingInviteHeading" xml:space="preserve">
     <value>¿Tienes un enlace de invitación?</value>
   </data>
-  <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>Complementos vienen de tiendas de complementos. Una tienda de complementos la administra una persona para quienes invita, así que te unes con un enlace de invitación de su dueño.</value>
-  </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>Pruébalo ahora</value>
   </data>
@@ -5927,12 +5921,6 @@
   <data name="SourcesTorrents" xml:space="preserve">
     <value>Torrents</value>
   </data>
-  <data name="SourcesRemote" xml:space="preserve">
-    <value>Remota</value>
-  </data>
-  <data name="SourcesOriginConfig" xml:space="preserve">
-    <value>Definida en el archivo de configuración</value>
-  </data>
   <data name="SourcesOriginBuiltIn" xml:space="preserve">
     <value>Integrada</value>
   </data>
@@ -6248,9 +6236,6 @@
   <data name="SourcesSectionPlugins" xml:space="preserve">
     <value>Complementos</value>
   </data>
-  <data name="SourcesSectionCatalogues" xml:space="preserve">
-    <value>Catálogos gratuitos</value>
-  </data>
   <data name="SourcesAddDemo" xml:space="preserve">
     <value>Agregar la demo</value>
   </data>
@@ -6262,9 +6247,6 @@
   </data>
   <data name="StoresEmptyTitle" xml:space="preserve">
     <value>Todavía no hay tiendas de complementos</value>
-  </data>
-  <data name="StoresEmptyDetail" xml:space="preserve">
-    <value>Tiendas de complementos las administran personas que conoces. Únete con el enlace de invitación que te envíe su propietario.</value>
   </data>
   <data name="StoresIntro" xml:space="preserve">
     <value>Los complementos añaden fuentes. Cada uno muestra los hosts a los que se conecta antes de que lo instales.</value>
@@ -6773,9 +6755,6 @@
   <data name="NoticeOpenStores" xml:space="preserve">
     <value>Abrir tiendas de complementos</value>
   </data>
-  <data name="StoresWhatIs" xml:space="preserve">
-    <value>Una tienda de complementos es un servidor pequeño que administra una persona para quienes invita. Ofrece fuentes como complementos. Kaeri no administra tiendas de complementos ni lista ninguna, así que te unes con un enlace de invitación de su dueño.</value>
-  </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>¿Qué es esto?</value>
   </data>
@@ -7132,24 +7111,6 @@
   </data>
   <data name="TorrentsStillOff" xml:space="preserve">
     <value>Los torrents siguen desactivados. {why}.</value>
-  </data>
-  <data name="TorrentsIndex" xml:space="preserve">
-    <value>Índice de torrents</value>
-  </data>
-  <data name="TorrentsIndexDetail" xml:space="preserve">
-    <value>La dirección de búsqueda RSS que Kaeri usa para los torrents.</value>
-  </data>
-  <data name="TorrentsIndexHint" xml:space="preserve">
-    <value>https://…/?q={{query}}</value>
-  </data>
-  <data name="TorrentsIndexNeeded" xml:space="preserve">
-    <value>Los torrents necesitan una dirección de índice.</value>
-  </data>
-  <data name="TorrentsIndexScheme" xml:space="preserve">
-    <value>Usa una dirección http o https.</value>
-  </data>
-  <data name="TorrentsIndexSaved" xml:space="preserve">
-    <value>Índice de torrents guardado</value>
   </data>
   <data name="TorrentsIfCheckFails" xml:space="preserve">
     <value>Si falla una comprobación</value>

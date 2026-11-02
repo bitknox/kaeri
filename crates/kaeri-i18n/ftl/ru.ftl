@@ -162,7 +162,7 @@ home-more-genre = Ещё: { $genre }
 # Line over the spotlight's title when it is the built-in demo.
 home-spotlight-demo = Демо, можно делиться
 
-# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Stream.
+# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.
 licensed-return = Посмотрели эпизод { $episode } на { $service }?
 
 # Notice after Mark as watched on the return notice. It holds Undo.
@@ -3201,9 +3201,6 @@ sources-state-held-back = Задержан
 
 # Heading of the line about { -plugin-store-pl }.
 sources-stores-title = Магазины плагинов
-
-# Under the heading when no { -plugin-store } is joined or the list has not arrived.
-sources-stores-invite = Плагины от знакомых. Присоединяйтесь по ссылке-приглашению.
 
 # Part of the { -plugin-store } summary: how many { -plugin-store-pl } are joined.
 sources-stores-joined = Подключено: { $count }
@@ -6292,9 +6289,6 @@ onboarding-own-heading = Есть свои медиафайлы?
 # Heading of the group that joins a store with an invite.
 onboarding-invite-heading = Есть ссылка-приглашение?
 
-# Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-onboarding-where-stores = Плагины приходят из магазинов плагинов. Магазин плагинов ведёт один человек для тех, кого он приглашает, поэтому присоединиться можно по ссылке-приглашению от его владельца.
-
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = Попробуйте сразу
 
@@ -8457,12 +8451,6 @@ sources-empty-detail = Присоединитесь к магазину плаг
 # Row for the built-in torrent source.
 sources-torrents = Торренты
 
-# Label of a source that is not a plugin and controls this device.
-sources-remote = Удалённый
-
-# Origin: set in the config file.
-sources-origin-config = Задан в файле настроек
-
 # Origin: built into the app.
 sources-origin-built-in = Встроен в приложение
 
@@ -8508,7 +8496,7 @@ sources-detail-disabled = Выключен. Он сохраняет своё м�
 # Status line: the source is gone.
 sources-detail-gone = Этого источника больше нет.
 
-# Status line: the site did not answer.
+# Status line: the source did not answer.
 sources-detail-site = Источник не ответил.
 
 # Row label: version.
@@ -8778,9 +8766,6 @@ sources-your-intro = Эпизоды воспроизводятся из перв
 # Heading of the section that lists the plugins.
 sources-section-plugins = Плагины
 
-# Section heading: Internet Archive collections and PeerTube channels.
-sources-section-catalogues = Бесплатные каталоги
-
 # Link in the empty state.
 sources-add-demo = Добавить демо
 
@@ -8792,9 +8777,6 @@ stores-joined = Подключён
 
 # Title of the empty list.
 stores-empty-title = Магазины плагинов пока не подключены
-
-# Line under the empty title.
-stores-empty-detail = Магазины плагинов ведут люди, которых вы знаете. Подключиться можно по пригласительной ссылке, которую присылает владелец.
 
 # Line under the title of the screen when plugins add sources.
 stores-intro = Плагины добавляют источники. Каждый показывает серверы, с которыми связывается, до установки.
@@ -9298,9 +9280,6 @@ stores-offers-plugins =
 # Button of a notice that opens the plugin stores page.
 notice-open-stores = Открыть магазины плагинов
 
-# Explainer on the empty plugin stores page.
-stores-what-is = Магазин плагинов: небольшой сервер, который один человек ведёт для тех, кого приглашает. Он предлагает источники в виде плагины. Kaeri не ведёт магазинов плагинов и не публикует их список, поэтому присоединиться к магазину можно по ссылке-приглашению от его владельца.
-
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = Что такое магазин плагинов?
 
@@ -9657,24 +9636,6 @@ torrents-protection-not-saved = Не сохранено. { $why }, поэтом�
 
 # Notice when torrents stayed off. The reason is a sentence fragment.
 torrents-still-off = Торренты всё ещё выключены. { $why }.
-
-# Label of the index address field.
-torrents-index = Торрент-индекс
-
-# Line under the index field.
-torrents-index-detail = Адрес RSS-поиска, по которому Kaeri ищет торренты.
-
-# Hint inside the index field.
-torrents-index-hint = https://…/?q={ "{" }query{ "}" }
-
-# Line when no index address is set.
-torrents-index-needed = Для торрентов нужен адрес индекса.
-
-# Line when the index address has the wrong scheme.
-torrents-index-scheme = Используйте адрес http или https.
-
-# Notice after the index was saved.
-torrents-index-saved = Торрент-индекс сохранён
 
 # Label of the choice of what to do when a check fails.
 torrents-if-check-fails = Если проверка не прошла

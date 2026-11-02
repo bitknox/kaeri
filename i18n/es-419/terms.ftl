@@ -43,8 +43,6 @@
 -watch-together-cap = Ver juntos
 
 # Where releases are looked up.
--torrent-index = índice de torrents
--torrent-index-cap = Índice de torrents
 
 # One downloadable file in a torrent index. Not a place episodes come from.
 -release = lanzamiento

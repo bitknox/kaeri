@@ -482,8 +482,6 @@
     <string name="tv_page_step_paste">Cole aqui e envie para a TV.</string>
     <string name="tv_page_password">Seu usuário ou e-mail e sua senha em %1$s. Eles vão para a TV, que entra em %1$s com eles e guarda só o token.</string>
     <string name="tv_page_link">Cole o link de convite da loja de plugins. A TV mostra a loja de plugins antes de entrar.</string>
-    <string name="tv_page_torrent">A Kaeri pede torrents ao índice de torrents.</string>
-    <string name="tv_page_torrent_proxy">A Kaeri pede torrents ao índice de torrents, e o tráfego de torrents passa pelo proxy SOCKS5.</string>
     <string name="tv_page_proxy">O tráfego de torrents passa pelo proxy SOCKS5. %1$s A TV testa o proxy antes de salvar.</string>
     <string name="tv_page_label_code">Código</string>
     <string name="tv_page_title_torrents">Torrents para a Kaeri</string>
@@ -495,10 +493,7 @@
     <string name="tv_use_phone">Usar um celular</string>
     <string name="tv_type_it">Digitar</string>
     <string name="tv_qr_label_proxy">QR code da página que recebe o proxy</string>
-    <string name="tv_qr_label_index">QR code da página que recebe o índice de torrents</string>
-    <string name="tv_scan_torrent_proxy">Escaneie com o celular e preencha o índice de torrents e o proxy na página que abrir.</string>
     <string name="tv_scan_proxy">Escaneie com o celular e troque o proxy na página que abrir.</string>
-    <string name="tv_scan_torrent">Escaneie com o celular e preencha o índice de torrents na página que abrir.</string>
     <string name="tv_field_user_optional">Usuário, se pedido</string>
     <string name="tv_field_password_optional">Senha, se pedida</string>
     <string name="tv_qr_label_link">QR code da página que recebe o link</string>
@@ -685,7 +680,6 @@
     <string name="settings_titles_note_english_missing">%1$s não tem título em inglês no AniList, então mantém o título em romaji.</string>
     <string name="settings_titles_note_english">Títulos em inglês como o AniList os lista, e romaji quando não houver.</string>
     <string name="settings_titles_note_romaji">Títulos japoneses em letras latinas, como o AniList os lista.</string>
-    <string name="settings_index_none">Nenhum definido</string>
     <string name="settings_stores_with_updates">%1$d · %2$s</string>
     <string name="settings_seeding_best_effort">Melhor esforço neste dispositivo: o compartilhamento só funciona enquanto o Kaeri estiver aberto.</string>
     <plurals name="settings_downloads_count">
@@ -1540,7 +1534,6 @@
     <string name="onboarding_where_hosts">O Kaeri reproduz o que você já tem: arquivos neste dispositivo, seu servidor Jellyfin e plugins de lojas em que você entrar.</string>
     <string name="onboarding_own_heading">Tem seus próprios arquivos?</string>
     <string name="onboarding_invite_heading">Tem um link de convite?</string>
-    <string name="onboarding_where_stores">Plugins vêm de lojas de plugins. Uma loja de plugins é mantida por uma pessoa para quem ela convida, então você entra em uma com um link de convite do dono.</string>
     <string name="onboarding_demo_heading">Experimente agora</string>
     <string name="onboarding_demo_detail">A demo reproduz こうしす！, uma série que seus criadores compartilham sob a CC BY 4.0, do Wikimedia Commons.</string>
     <string name="onboarding_play_demo">Reproduzir a demo</string>
@@ -2287,8 +2280,6 @@
     <string name="sources_empty_title">Ainda não há fontes</string>
     <string name="sources_empty_detail">Entre numa loja de plugins com o link de convite que o dono enviar para você.</string>
     <string name="sources_torrents">Torrents</string>
-    <string name="sources_remote">Remota</string>
-    <string name="sources_origin_config">Definida no arquivo de configuração</string>
     <string name="sources_origin_built_in">Integrada ao app</string>
     <string name="sources_origin_left_store">De uma loja de plugins da qual você saiu</string>
     <string name="sources_origin_by_hand">Adicionada manualmente</string>
@@ -2401,12 +2392,10 @@
     <string name="sources_your">Suas fontes</string>
     <string name="sources_your_intro">Os episódios são reproduzidos da primeira fonte que os tiver, nesta ordem.</string>
     <string name="sources_section_plugins">Plugins</string>
-    <string name="sources_section_catalogues">Catálogos gratuitos</string>
     <string name="sources_add_demo">Adicionar a demo</string>
     <string name="sources_order_all">Cada fonte é tentada nesta ordem, seja qual for o tipo.</string>
     <string name="stores_joined">Entrou</string>
     <string name="stores_empty_title">Ainda não há lojas de plugins</string>
-    <string name="stores_empty_detail">Lojas de plugins são mantidas por pessoas que você conhece. Entre em uma com o link de convite que o dono enviar para você.</string>
     <string name="stores_intro">Plugins adicionam fontes. Cada um lista os endereços com que se conecta antes que você o instale.</string>
     <string name="stores_not_from_app">Plugins vêm do dono da loja de plugins, e não do Kaeri. Você pode sair de uma loja de plugins a qualquer momento.</string>
     <string name="stores_join_owner_responsible">%1$s mantém esta loja de plugins e escolheu os plugins dela. O Kaeri não os criou, não os revisou nem os aprovou.</string>
@@ -2586,7 +2575,6 @@
         <item quantity="other">%1$d plugins</item>
     </plurals>
     <string name="notice_open_stores">Abrir lojas de plugins</string>
-    <string name="stores_what_is">Uma loja de plugins é um pequeno servidor mantido por uma pessoa para quem ela convida. Ela oferece fontes como plugins. O Kaeri não mantém lojas de plugins e não lista nenhuma, então você entra em uma com um link de convite do dono.</string>
     <string name="stores_what_is_link">O que é uma loja de plugins?</string>
     <string name="stores_invite_rules">Um link de convite vale uma vez, para uma pessoa, e dura sete dias. Peça um novo ao dono da loja de plugins se o seu expirou.</string>
     <string name="stores_qr_label">Código QR do link de convite</string>
@@ -2708,12 +2696,6 @@
     <string name="torrents_proxy_not_saved">Não salvo. %1$s, então o proxy salvo continua.</string>
     <string name="torrents_protection_not_saved">Não salva. %1$s, então a proteção salva continua.</string>
     <string name="torrents_still_off">Os torrents continuam desativados. %1$s.</string>
-    <string name="torrents_index">Índice de torrents</string>
-    <string name="torrents_index_detail">O endereço de busca RSS que o Kaeri consulta para os torrents.</string>
-    <string name="torrents_index_hint">https://…/?q={query}</string>
-    <string name="torrents_index_needed">Os torrents precisam de um endereço de índice.</string>
-    <string name="torrents_index_scheme">Use um endereço http ou https.</string>
-    <string name="torrents_index_saved">Índice de torrents salvo</string>
     <string name="torrents_if_check_fails">Se uma verificação falhar</string>
     <string name="torrents_keep_running_title">Manter os torrents ativos se uma verificação falhar?</string>
     <string name="torrents_keep_running_detail">O que acontece com os torrents quando a verificação encontra tráfego saindo fora da sua VPN ou do seu proxy.</string>

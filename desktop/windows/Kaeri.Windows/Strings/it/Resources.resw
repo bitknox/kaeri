@@ -1556,9 +1556,6 @@
   <data name="SourcesStatusWorking" xml:space="preserve">
     <value>Pronta</value>
   </data>
-  <data name="SourcesTorrentIndexes" xml:space="preserve">
-    <value>Cerca negli indici torrent attivati in Impostazioni.</value>
-  </data>
   <data name="SourcesVersionReady" xml:space="preserve">
     <value>Versione {version} è pronta</value>
   </data>
@@ -3746,9 +3743,6 @@
   <data name="OnboardingInviteHeading" xml:space="preserve">
     <value>Hai un link d'invito?</value>
   </data>
-  <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>Plugin provengono da negozi di plugin. Un negozio di plugin è gestito da una persona per chi invita, quindi ci si unisce con un link d'invito del suo proprietario.</value>
-  </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>Provalo subito</value>
   </data>
@@ -5927,12 +5921,6 @@
   <data name="SourcesTorrents" xml:space="preserve">
     <value>Torrent</value>
   </data>
-  <data name="SourcesRemote" xml:space="preserve">
-    <value>Remota</value>
-  </data>
-  <data name="SourcesOriginConfig" xml:space="preserve">
-    <value>Impostata nel file di configurazione</value>
-  </data>
   <data name="SourcesOriginBuiltIn" xml:space="preserve">
     <value>Integrata nell'app</value>
   </data>
@@ -6248,9 +6236,6 @@
   <data name="SourcesSectionPlugins" xml:space="preserve">
     <value>Plugin</value>
   </data>
-  <data name="SourcesSectionCatalogues" xml:space="preserve">
-    <value>Cataloghi gratuiti</value>
-  </data>
   <data name="SourcesAddDemo" xml:space="preserve">
     <value>Aggiungi la demo</value>
   </data>
@@ -6262,9 +6247,6 @@
   </data>
   <data name="StoresEmptyTitle" xml:space="preserve">
     <value>Ancora nessun negozio di plugin</value>
-  </data>
-  <data name="StoresEmptyDetail" xml:space="preserve">
-    <value>I Negozi di plugin sono gestiti da persone che conosci. Unisciti con il link di invito che ti manda il proprietario.</value>
   </data>
   <data name="StoresIntro" xml:space="preserve">
     <value>I Plugin aggiungono fonti. Ognuno elenca gli host che contatta prima che tu lo installi.</value>
@@ -6773,9 +6755,6 @@
   <data name="NoticeOpenStores" xml:space="preserve">
     <value>Apri i negozi di plugin</value>
   </data>
-  <data name="StoresWhatIs" xml:space="preserve">
-    <value>Un negozio di plugin è un piccolo server gestito da una persona per chi invita. Offre fonti sotto forma di plugin. Kaeri non gestisce negozi di plugin e non ne elenca, quindi ti unisci a uno con un link d'invito del suo proprietario.</value>
-  </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>Che cos'è un negozio di plugin?</value>
   </data>
@@ -7132,24 +7111,6 @@
   </data>
   <data name="TorrentsStillOff" xml:space="preserve">
     <value>I torrent restano disattivati. {why}.</value>
-  </data>
-  <data name="TorrentsIndex" xml:space="preserve">
-    <value>Indice torrent</value>
-  </data>
-  <data name="TorrentsIndexDetail" xml:space="preserve">
-    <value>L'indirizzo di ricerca RSS che Kaeri usa per i torrent.</value>
-  </data>
-  <data name="TorrentsIndexHint" xml:space="preserve">
-    <value>https://…/?q={{query}}</value>
-  </data>
-  <data name="TorrentsIndexNeeded" xml:space="preserve">
-    <value>I torrent richiedono un indirizzo dell'indice.</value>
-  </data>
-  <data name="TorrentsIndexScheme" xml:space="preserve">
-    <value>Usa un indirizzo http o https.</value>
-  </data>
-  <data name="TorrentsIndexSaved" xml:space="preserve">
-    <value>Indice torrent salvato</value>
   </data>
   <data name="TorrentsIfCheckFails" xml:space="preserve">
     <value>Se un controllo fallisce</value>

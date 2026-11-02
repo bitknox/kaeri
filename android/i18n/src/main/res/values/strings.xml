@@ -110,7 +110,7 @@
     <string name="home_more_genre">More %1$s</string>
     <!-- Line over the spotlight's title when it is the built-in demo. -->
     <string name="home_spotlight_demo">Demo, free to share</string>
-    <!-- Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Stream. -->
+    <!-- Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library. -->
     <string name="licensed_return">Watched episode %1$d on %2$s?</string>
     <!-- Notice after Mark as watched on the return notice. It holds Undo. -->
     <string name="licensed_marked">Episode %1$d marked as watched.</string>
@@ -875,10 +875,8 @@
     <string name="tv_page_password">Your %1$s user name or email, and password. They go to the TV, which signs in to %1$s with them and keeps only the token.</string>
     <!-- Intro on the phone page that takes a plugin store link -->
     <string name="tv_page_link">Paste the plugin store\'s invite link. The TV shows the plugin store before it joins.</string>
-    <!-- Intro on the phone page that takes the torrent index -->
-    <string name="tv_page_torrent">The torrent index Kaeri asks for torrents.</string>
-    <!-- Intro on the phone page that takes the torrent index and a proxy -->
-    <string name="tv_page_torrent_proxy">The torrent index Kaeri asks for torrents, and the SOCKS5 proxy torrent traffic goes through.</string>
+    <!-- Intro on the phone page that takes a proxy when torrents turn on -->
+    <string name="tv_page_torrent_proxy">The SOCKS5 proxy torrent traffic goes through.</string>
     <!-- Intro on the phone page that takes a proxy -->
     <string name="tv_page_proxy">The SOCKS5 proxy torrent traffic goes through. %1$s The TV checks the proxy before it saves it.</string>
     <!-- Label of the code field on the phone page -->
@@ -901,14 +899,10 @@
     <string name="tv_type_it">Type it</string>
     <!-- Spoken label of the QR code for the proxy page -->
     <string name="tv_qr_label_proxy">QR code for the page that takes the proxy</string>
-    <!-- Spoken label of the QR code for the torrent index page -->
-    <string name="tv_qr_label_index">QR code for the page that takes the torrent index</string>
     <!-- Beside the QR code on the TV -->
-    <string name="tv_scan_torrent_proxy">Scan with your phone, then fill in the torrent index and the proxy on the page that opens.</string>
+    <string name="tv_scan_torrent_proxy">Scan with your phone, then fill in the proxy on the page that opens.</string>
     <!-- Beside the QR code on the TV -->
     <string name="tv_scan_proxy">Scan with your phone, then change the proxy on the page that opens.</string>
-    <!-- Beside the QR code on the TV -->
-    <string name="tv_scan_torrent">Scan with your phone, then fill in the torrent index on the page that opens.</string>
     <!-- Name of the proxy user field on the TV -->
     <string name="tv_field_user_optional">User name, if asked</string>
     <!-- Name of the proxy password field on the TV -->
@@ -1221,8 +1215,6 @@
     <string name="settings_titles_note_english">English titles as AniList lists them, and romaji where there is none.</string>
     <!-- Title language note: what the Romaji choice does. -->
     <string name="settings_titles_note_romaji">Japanese titles written in Latin letters, as AniList lists them.</string>
-    <!-- Settings, Sources: no torrent index address is set. -->
-    <string name="settings_index_none">None set</string>
     <!-- Settings, Sources: how many plugin stores, and how many updates wait in them. -->
     <string name="settings_stores_with_updates">%1$d · %2$s</string>
     <!-- Settings, Sources: the note under the seeding group. -->
@@ -2832,7 +2824,7 @@
     <!-- Heading of the group that joins a store with an invite. -->
     <string name="onboarding_invite_heading">Have an invite link?</string>
     <!-- Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link. -->
-    <string name="onboarding_where_stores">Plugins come from plugin stores. A plugin store is run by one person for the people they invite, so you join one with an invite link from its owner.</string>
+    <string name="onboarding_where_stores">Plugins come from plugin stores. A plugin store is signed and gives each device its own token, so you join one with an invite link from its owner.</string>
     <!-- Heading above the Play the demo button on the welcome page. -->
     <string name="onboarding_demo_heading">Try it now</string>
     <!-- Line under that heading. Names the demo work and its licence. -->
@@ -4259,10 +4251,6 @@
     <string name="sources_empty_detail">Join a plugin store with the invite link its owner sends you.</string>
     <!-- Row for the built-in torrent source. -->
     <string name="sources_torrents">Torrents</string>
-    <!-- Label of a source that is not a plugin and controls this device. -->
-    <string name="sources_remote">Remote</string>
-    <!-- Origin: set in the config file. -->
-    <string name="sources_origin_config">Set in the config file</string>
     <!-- Origin: built into the app. -->
     <string name="sources_origin_built_in">Built in</string>
     <!-- Origin: from a store the user left. -->
@@ -4293,7 +4281,7 @@
     <string name="sources_detail_disabled">Off. It keeps its place and isn\'t tried.</string>
     <!-- Status line: the source is gone. -->
     <string name="sources_detail_gone">This source is no longer here.</string>
-    <!-- Status line: the site did not answer. -->
+    <!-- Status line: the source did not answer. -->
     <string name="sources_detail_site">The source didn\'t answer.</string>
     <!-- Row label: version. -->
     <string name="sources_version">Version</string>
@@ -4473,7 +4461,7 @@
     <!-- Heading of the section that lists the plugins. -->
     <string name="sources_section_plugins">Plugins</string>
     <!-- Section heading: Internet Archive collections and PeerTube channels. -->
-    <string name="sources_section_catalogues">Free catalogues</string>
+    <string name="sources_section_catalogues">Open catalogues</string>
     <!-- Link in the empty state. -->
     <string name="sources_add_demo">Add the demo</string>
     <!-- Line under the sources page's list when a source is dragged: first-party sources are tried in this order too. -->
@@ -4483,7 +4471,7 @@
     <!-- Title of the empty list. -->
     <string name="stores_empty_title">No plugin stores yet</string>
     <!-- Line under the empty title. -->
-    <string name="stores_empty_detail">Plugin stores are run by people you know. Join one with the invite link its owner sends you.</string>
+    <string name="stores_empty_detail">Plugin stores hold signed plugins and give each device its own token. Join one with the invite link its owner sends you.</string>
     <!-- Line under the title of the screen when plugins add sources. -->
     <string name="stores_intro">Plugins add sources. Each one lists the hosts it contacts before you install it.</string>
     <!-- Line under the join form: who supplies plugins. -->
@@ -4813,7 +4801,7 @@
     <!-- Button of a notice that opens the plugin stores page. -->
     <string name="notice_open_stores">Open plugin stores</string>
     <!-- Explainer on the empty plugin stores page. -->
-    <string name="stores_what_is">A plugin store is a small server one person runs for the people they invite. It offers sources as plugins. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.</string>
+    <string name="stores_what_is">A plugin store is a small server that holds signed plugins and gives each device its own token. It offers sources as plugins. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.</string>
     <!-- Button on the empty plugin stores page that opens the docs page in the browser. -->
     <string name="stores_what_is_link">What is a plugin store?</string>
     <!-- Line above the invite field in the Join sheet. -->
@@ -5051,18 +5039,6 @@
     <string name="torrents_protection_not_saved">Not saved. %1$s, so the saved protection stays.</string>
     <!-- Notice when torrents stayed off. The reason is a sentence fragment. -->
     <string name="torrents_still_off">Torrents are still off. %1$s.</string>
-    <!-- Label of the index address field. -->
-    <string name="torrents_index">Torrent index</string>
-    <!-- Line under the index field. -->
-    <string name="torrents_index_detail">The RSS search address Kaeri asks for torrents.</string>
-    <!-- Hint inside the index field. -->
-    <string name="torrents_index_hint">https://…/?q={query}</string>
-    <!-- Line when no index address is set. -->
-    <string name="torrents_index_needed">Torrents need an index address.</string>
-    <!-- Line when the index address has the wrong scheme. -->
-    <string name="torrents_index_scheme">Use an http or https address.</string>
-    <!-- Notice after the index was saved. -->
-    <string name="torrents_index_saved">Torrent index saved</string>
     <!-- Label of the choice of what to do when a check fails. -->
     <string name="torrents_if_check_fails">If a check fails</string>
     <!-- Title of the question that asks whether torrents may keep running. -->

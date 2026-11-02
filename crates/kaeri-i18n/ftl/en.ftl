@@ -162,7 +162,7 @@ home-more-genre = More { $genre }
 # Line over the spotlight's title when it is the built-in demo.
 home-spotlight-demo = Demo, free to share
 
-# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Stream.
+# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.
 licensed-return = Watched episode { $episode } on { $service }?
 
 # Notice after Mark as watched on the return notice. It holds Undo.
@@ -3127,7 +3127,7 @@ sources-state-held-back = Held back
 sources-stores-title = Plugin stores
 
 # Under the heading when no { -plugin-store } is joined or the list has not arrived.
-sources-stores-invite = Plugins shared by people you know. Join with an invite link.
+sources-stores-invite = Plugins for your own devices. Join with an invite link.
 
 # Part of the { -plugin-store } summary: how many { -plugin-store-pl } are joined.
 sources-stores-joined = { $count } joined
@@ -6163,7 +6163,7 @@ onboarding-own-heading = Have your own media?
 onboarding-invite-heading = Have an invite link?
 
 # Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-onboarding-where-stores = Plugins come from plugin stores. A plugin store is run by one person for the people they invite, so you join one with an invite link from its owner.
+onboarding-where-stores = Plugins come from plugin stores. A plugin store is signed and gives each device its own token, so you join one with an invite link from its owner.
 
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = Try it now
@@ -8307,12 +8307,6 @@ sources-empty-detail = Join a plugin store with the invite link its owner sends 
 # Row for the built-in torrent source.
 sources-torrents = Torrents
 
-# Label of a source that is not a plugin and controls this device.
-sources-remote = Remote
-
-# Origin: set in the config file.
-sources-origin-config = Set in the config file
-
 # Origin: built into the app.
 sources-origin-built-in = Built in
 
@@ -8358,7 +8352,7 @@ sources-detail-disabled = Off. It keeps its place and isn't tried.
 # Status line: the source is gone.
 sources-detail-gone = This source is no longer here.
 
-# Status line: the site did not answer.
+# Status line: the source did not answer.
 sources-detail-site = The source didn't answer.
 
 # Row label: version.
@@ -8623,7 +8617,7 @@ sources-your-intro = Episodes play from the first source that has them, in this 
 sources-section-plugins = Plugins
 
 # Section heading: Internet Archive collections and PeerTube channels.
-sources-section-catalogues = Free catalogues
+sources-section-catalogues = Open catalogues
 
 # Link in the empty state.
 sources-add-demo = Add the demo
@@ -8638,7 +8632,7 @@ stores-joined = Joined
 stores-empty-title = No plugin stores yet
 
 # Line under the empty title.
-stores-empty-detail = Plugin stores are run by people you know. Join one with the invite link its owner sends you.
+stores-empty-detail = Plugin stores hold signed plugins and give each device its own token. Join one with the invite link its owner sends you.
 
 # Line under the title of the screen when plugins add sources.
 stores-intro = Plugins add sources. Each one lists the hosts it contacts before you install it.
@@ -9133,7 +9127,7 @@ stores-offers-plugins =
 notice-open-stores = Open plugin stores
 
 # Explainer on the empty plugin stores page.
-stores-what-is = A plugin store is a small server one person runs for the people they invite. It offers sources as plugins. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.
+stores-what-is = A plugin store is a small server that holds signed plugins and gives each device its own token. It offers sources as plugins. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.
 
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = What is a plugin store?
@@ -9489,24 +9483,6 @@ torrents-protection-not-saved = Not saved. { $why }, so the saved protection sta
 
 # Notice when torrents stayed off. The reason is a sentence fragment.
 torrents-still-off = Torrents are still off. { $why }.
-
-# Label of the index address field.
-torrents-index = Torrent index
-
-# Line under the index field.
-torrents-index-detail = The RSS search address Kaeri asks for torrents.
-
-# Hint inside the index field.
-torrents-index-hint = https://…/?q={ "{" }query{ "}" }
-
-# Line when no index address is set.
-torrents-index-needed = Torrents need an index address.
-
-# Line when the index address has the wrong scheme.
-torrents-index-scheme = Use an http or https address.
-
-# Notice after the index was saved.
-torrents-index-saved = Torrent index saved
 
 # Label of the choice of what to do when a check fails.
 torrents-if-check-fails = If a check fails

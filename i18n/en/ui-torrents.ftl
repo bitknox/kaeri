@@ -118,26 +118,6 @@ torrents-protection-not-saved = Not saved. { $why }, so the saved protection sta
 # @arg why: cause
 torrents-still-off = Torrents are still off. { $why }.
 
-## Torrent index
-
-# Label of the index address field.
-torrents-index = { -torrent-index-cap }
-
-# Line under the index field.
-torrents-index-detail = The RSS search address { -app-name } asks for torrents.
-
-# Hint inside the index field.
-torrents-index-hint = https://…/?q={ "{query}" }
-
-# Line when no index address is set.
-torrents-index-needed = Torrents need an index address.
-
-# Line when the index address has the wrong scheme.
-torrents-index-scheme = Use an http or https address.
-
-# Notice after the index was saved.
-torrents-index-saved = { -torrent-index-cap } saved
-
 ## The check
 
 # Label of the choice of what to do when a check fails.
@@ -247,7 +227,6 @@ torrents-page-needs-script = This page needs JavaScript to send the form to the 
 
 # Under the proxy form when turning torrents on: what the app checks, and that the VPN or proxy is what protects.
 torrents-check-note = { -app-name } checks where torrent traffic leaves from when a torrent starts and every minute while it runs, and pauses torrents if that check fails. Your VPN or proxy is what protects you.
-
 
 # Notice after the protection was saved.
 torrents-protection-saved = Torrent protection saved

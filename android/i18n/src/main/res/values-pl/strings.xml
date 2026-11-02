@@ -501,8 +501,6 @@
     <string name="tv_page_step_paste">Wklej go tutaj i wyślij do telewizora.</string>
     <string name="tv_page_password">Nazwa użytkownika lub e-mail w %1$s i hasło. Trafiają do telewizora, który loguje się nimi w %1$s i zachowuje tylko token.</string>
     <string name="tv_page_link">Wklej link zaproszenia. Telewizor pokazuje sklep z wtyczkami, zanim dołączy.</string>
-    <string name="tv_page_torrent">Kaeri pyta indeks torrentów o torrenty.</string>
-    <string name="tv_page_torrent_proxy">Kaeri pyta indeks torrentów o torrenty. Ruch torrentów przechodzi przez proxy SOCKS5.</string>
     <string name="tv_page_proxy">Ruch torrentów przechodzi przez proxy SOCKS5. %1$s Telewizor sprawdza proxy, zanim je zapisze.</string>
     <string name="tv_page_label_code">Kod</string>
     <string name="tv_page_title_torrents">Torrenty dla Kaeri</string>
@@ -514,10 +512,7 @@
     <string name="tv_use_phone">Użyj telefonu</string>
     <string name="tv_type_it">Wpisz</string>
     <string name="tv_qr_label_proxy">Kod QR strony z proxy</string>
-    <string name="tv_qr_label_index">Kod QR strony: indeks torrentów</string>
-    <string name="tv_scan_torrent_proxy">Zeskanuj telefonem, potem uzupełnij indeks torrentów i proxy na otwartej stronie.</string>
     <string name="tv_scan_proxy">Zeskanuj telefonem, potem zmień proxy na otwartej stronie.</string>
-    <string name="tv_scan_torrent">Zeskanuj telefonem, potem uzupełnij indeks torrentów na otwartej stronie.</string>
     <string name="tv_field_user_optional">Nazwa użytkownika, jeśli jest wymagana</string>
     <string name="tv_field_password_optional">Hasło, jeśli jest wymagane</string>
     <string name="tv_qr_label_link">Kod QR strony z linkiem</string>
@@ -716,7 +711,6 @@
     <string name="settings_titles_note_english_missing">%1$s nie ma tytułu angielskiego w AniList, więc zostaje tytuł romaji.</string>
     <string name="settings_titles_note_english">Tytuły angielskie tak, jak je podaje AniList, a tam, gdzie ich nie ma, romaji.</string>
     <string name="settings_titles_note_romaji">Tytuły japońskie w alfabecie łacińskim, tak jak podaje AniList.</string>
-    <string name="settings_index_none">Nie ustawiono</string>
     <string name="settings_stores_with_updates">%1$d · %2$s</string>
     <string name="settings_seeding_best_effort">Działa w miarę możliwości: seedowanie trwa tylko wtedy, gdy aplikacja Kaeri jest otwarta.</string>
     <plurals name="settings_downloads_count">
@@ -1591,7 +1585,6 @@
     <string name="onboarding_where_hosts">Kaeri odtwarza to, co już masz: pliki na tym urządzeniu, twój serwer Jellyfin i wtyczki ze sklepów, do których dołączysz.</string>
     <string name="onboarding_own_heading">Masz własne media?</string>
     <string name="onboarding_invite_heading">Masz link z zaproszeniem?</string>
-    <string name="onboarding_where_stores">Wtyczki pochodzą ze sklepów. Każdy sklep z wtyczkami prowadzi jedna osoba dla zaproszonych ludzi, więc dołącza się do niego przez link z zaproszeniem od właściciela.</string>
     <string name="onboarding_demo_heading">Wypróbuj teraz</string>
     <string name="onboarding_demo_detail">Demo odtwarza こうしす！, serial udostępniony przez twórców na licencji CC BY 4.0, z Wikimedia Commons.</string>
     <string name="onboarding_play_demo">Odtwórz demo</string>
@@ -2348,8 +2341,6 @@
     <string name="sources_empty_title">Nie masz jeszcze źródła</string>
     <string name="sources_empty_detail">Dołącz do sklepu z wtyczkami przez link z zaproszeniem od jego właściciela.</string>
     <string name="sources_torrents">Torrenty</string>
-    <string name="sources_remote">Zdalne</string>
-    <string name="sources_origin_config">Ustawione w pliku konfiguracyjnym</string>
     <string name="sources_origin_built_in">Wbudowane</string>
     <string name="sources_origin_left_store">Opuszczony sklep z wtyczkami</string>
     <string name="sources_origin_by_hand">Dodane ręcznie</string>
@@ -2465,12 +2456,10 @@
     <string name="sources_your">Twoje źródła</string>
     <string name="sources_your_intro">Odcinki odtwarza pierwsze źródło, które je ma, w tej kolejności.</string>
     <string name="sources_section_plugins">Wtyczki</string>
-    <string name="sources_section_catalogues">Darmowe katalogi</string>
     <string name="sources_add_demo">Dodaj demo</string>
     <string name="sources_order_all">Każde źródło jest próbowane w tej kolejności, niezależnie od rodzaju.</string>
     <string name="stores_joined">Dołączono</string>
     <string name="stores_empty_title">Nie masz jeszcze sklepy z wtyczkami</string>
-    <string name="stores_empty_detail">Sklepy z wtyczkami prowadzą osoby, które znasz. Dołącz do jednego z nich linkiem z zaproszeniem od właściciela.</string>
     <string name="stores_intro">Wtyczki dodają źródła. Każda z nich pokazuje hosty, z którymi się łączy, zanim ją zainstalujesz.</string>
     <string name="stores_not_from_app">Wtyczki pochodzą od osoby, która prowadzi sklep z wtyczkami, nie od Kaeri. Możesz opuścić sklep z wtyczkami w każdej chwili.</string>
     <string name="stores_join_owner_responsible">%1$s prowadzi ten sklep z wtyczkami i wybrał jego wtyczki. Kaeri ich nie tworzył, nie sprawdzał ani nie zatwierdzał.</string>
@@ -2655,7 +2644,6 @@
         <item quantity="other">Wtyczki: %1$d</item>
     </plurals>
     <string name="notice_open_stores">Otwórz sklepy z wtyczkami</string>
-    <string name="stores_what_is">Sklep z wtyczkami to mały serwer, który prowadzi jedna osoba dla zaproszonych ludzi. Oferuje źródła jako wtyczki. Kaeri nie prowadzi żadnych sklepów z wtyczkami ani ich nie wymienia, więc dołączasz do jednego przez link z zaproszeniem od właściciela.</string>
     <string name="stores_what_is_link">Czym jest sklep z wtyczkami?</string>
     <string name="stores_invite_rules">Link z zaproszeniem działa raz, dla jednej osoby, przez siedem dni. Jeśli twój wygasł, poproś właściciela sklepu o nowy.</string>
     <string name="stores_qr_label">Kod QR linku z zaproszeniem</string>
@@ -2778,12 +2766,6 @@
     <string name="torrents_proxy_not_saved">Nie zapisano. %1$s, więc zapisane proxy pozostaje.</string>
     <string name="torrents_protection_not_saved">Nie zapisano. %1$s, więc zapisana ochrona pozostaje.</string>
     <string name="torrents_still_off">Torrenty nadal są wyłączone. %1$s.</string>
-    <string name="torrents_index">Indeks torrentów</string>
-    <string name="torrents_index_detail">Adres wyszukiwania RSS, o który Kaeri pyta o torrenty.</string>
-    <string name="torrents_index_hint">https://…/?q={query}</string>
-    <string name="torrents_index_needed">Torrenty wymagają adresu indeksu.</string>
-    <string name="torrents_index_scheme">Użyj adresu http lub https.</string>
-    <string name="torrents_index_saved">Indeks torrentów zapisany</string>
     <string name="torrents_if_check_fails">Gdy sprawdzenie się nie powiedzie</string>
     <string name="torrents_keep_running_title">Czy torrenty mają działać dalej, gdy sprawdzenie się nie powiedzie?</string>
     <string name="torrents_keep_running_detail">Co dzieje się z torrentami, gdy sprawdzenie wykryje ruch poza VPN lub proxy.</string>

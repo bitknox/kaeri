@@ -109,12 +109,12 @@ sealed class Ctx
         if (command is Command.Licensed { V1: LicensedCommand.LoadAvailability ask } && show?.StartsWith("lawful-title-", StringComparison.Ordinal) == true)
         {
             var main = new ServiceLink("Lumen Plus", "https://lumen.example/watch/1", null);
-            var other = new ServiceLink("Harbor Stream", "https://harbor.example/watch/1", null);
+            var other = new ServiceLink("Harbor Library", "https://harbor.example/watch/1", null);
             var found = show switch
             {
                 "lawful-title-a" => new TitleAvailability(Id: ask.Id, Case: AvailabilityCase.PlaysAlsoOn, Main: null, AlsoOn: [main, other], Yours: [], Others: [], Episodes: [], ChooseServices: false),
                 "lawful-title-b" => new TitleAvailability(Id: ask.Id, Case: AvailabilityCase.OnService, Main: main, AlsoOn: [other], Yours: [], Others: [], Episodes: [], ChooseServices: false),
-                _ => new TitleAvailability(Id: ask.Id, Case: AvailabilityCase.NotInSources, Main: null, AlsoOn: [], Yours: [], Others: ["Lumen Plus", "Harbor Stream"], Episodes: [], ChooseServices: true),
+                _ => new TitleAvailability(Id: ask.Id, Case: AvailabilityCase.NotInSources, Main: null, AlsoOn: [], Yours: [], Others: ["Lumen Plus", "Harbor Library"], Episodes: [], ChooseServices: true),
             };
             return [new Event.Availability(found)];
         }

@@ -166,7 +166,7 @@ sources-stores-title = { -plugin-store-cap-pl }
 
 # Under the heading when no { -plugin-store } is joined or the list has not arrived.
 # @max 80
-sources-stores-invite = { -plugin-cap-pl } shared by people you know. Join with an invite link.
+sources-stores-invite = { -plugin-cap-pl } for your own { -device-pl }. Join with an invite link.
 
 # Part of the { -plugin-store } summary: how many { -plugin-store-pl } are joined.
 # @arg count: int

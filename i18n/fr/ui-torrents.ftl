@@ -33,12 +33,6 @@ torrents-check-not-made-proxy = La vérification n’a pas pu être faite via ce
 torrents-proxy-not-saved = Non enregistré. { $why }, le proxy enregistré reste en place.
 torrents-protection-not-saved = Non enregistré. { $why }, la protection enregistrée reste en place.
 torrents-still-off = Les torrents restent désactivés. { $why }.
-torrents-index = { -torrent-index-cap }
-torrents-index-detail = L’adresse de recherche RSS que { -app-name } utilise pour les torrents.
-torrents-index-hint = https://…/?q={ "{" }query{ "}" }
-torrents-index-needed = Les torrents ont besoin d’une adresse d’index.
-torrents-index-scheme = Utilisez une adresse http ou https.
-torrents-index-saved = { -torrent-index-cap } enregistré
 torrents-if-check-fails = En cas d’échec de la vérification
 torrents-keep-running-title = Garder les torrents actifs en cas d’échec de la vérification ?
 torrents-keep-running-detail = Ce qui arrive aux torrents lorsque la vérification trouve du trafic hors de votre VPN ou de votre proxy.

@@ -225,7 +225,7 @@ public enum L {
     /// Line over the spotlight's title when it is the built-in demo.
     public static var homeSpotlightDemo: String { string("home-spotlight-demo", fallback: "Demo, free to share") }
 
-    /// Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Stream.
+    /// Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.
     public static func licensedReturn(episode: Int, service: String) -> String {
         Self.format("licensed-return", fallback: "Watched episode %1$lld on %2$@?", episode, service)
     }
@@ -1356,7 +1356,7 @@ public enum L {
         Self.format("downloads-continued-left", fallback: "%1$lld episodes left", count)
     }
 
-    /// Line on the title page and in a Continue preview: where else the show streams. The places are already joined, such as "Lantern Stream and Hikari Stream".
+    /// Line on the title page and in a Continue preview: where else the show streams. The places are already joined, such as "Lantern Library and Hikari Library".
     public static func titleAlsoOn(places: String) -> String {
         Self.format("title-also-on", fallback: "Also on %1$@", places)
     }
@@ -5374,7 +5374,7 @@ public enum L {
     public static var onboardingInviteHeading: String { string("onboarding-invite-heading", fallback: "Have an invite link?") }
 
     /// Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-    public static var onboardingWhereStores: String { string("onboarding-where-stores", fallback: "Plugins come from plugin stores. A plugin store is run by one person for the people they invite, so you join one with an invite link from its owner.") }
+    public static var onboardingWhereStores: String { string("onboarding-where-stores", fallback: "Plugins come from plugin stores. A plugin store is signed and gives each device its own token, so you join one with an invite link from its owner.") }
 
     /// Heading above the Play the demo button on the welcome page.
     public static var onboardingDemoHeading: String { string("onboarding-demo-heading", fallback: "Try it now") }
@@ -7736,12 +7736,6 @@ public enum L {
     /// Row for the built-in torrent source.
     public static var sourcesTorrents: String { string("sources-torrents", fallback: "Torrents") }
 
-    /// Label of a source that is not a plugin and controls this device.
-    public static var sourcesRemote: String { string("sources-remote", fallback: "Remote") }
-
-    /// Origin: set in the config file.
-    public static var sourcesOriginConfig: String { string("sources-origin-config", fallback: "Set in the config file") }
-
     /// Origin: built into the app.
     public static var sourcesOriginBuiltIn: String { string("sources-origin-built-in", fallback: "Built in") }
 
@@ -7793,7 +7787,7 @@ public enum L {
     /// Status line: the source is gone.
     public static var sourcesDetailGone: String { string("sources-detail-gone", fallback: "This source is no longer here.") }
 
-    /// Status line: the site did not answer.
+    /// Status line: the source did not answer.
     public static var sourcesDetailSite: String { string("sources-detail-site", fallback: "The source didn't answer.") }
 
     /// Row label: version.
@@ -8096,7 +8090,7 @@ public enum L {
     public static var sourcesSectionPlugins: String { string("sources-section-plugins", fallback: "Plugins") }
 
     /// Section heading: Internet Archive collections and PeerTube channels.
-    public static var sourcesSectionCatalogues: String { string("sources-section-catalogues", fallback: "Free catalogues") }
+    public static var sourcesSectionCatalogues: String { string("sources-section-catalogues", fallback: "Open catalogues") }
 
     /// Link in the empty state.
     public static var sourcesAddDemo: String { string("sources-add-demo", fallback: "Add the demo") }
@@ -8111,7 +8105,7 @@ public enum L {
     public static var storesEmptyTitle: String { string("stores-empty-title", fallback: "No plugin stores yet") }
 
     /// Line under the empty title.
-    public static var storesEmptyDetail: String { string("stores-empty-detail", fallback: "Plugin stores are run by people you know. Join one with the invite link its owner sends you.") }
+    public static var storesEmptyDetail: String { string("stores-empty-detail", fallback: "Plugin stores hold signed plugins and give each device its own token. Join one with the invite link its owner sends you.") }
 
     /// Line under the title of the screen when plugins add sources.
     public static var storesIntro: String { string("stores-intro", fallback: "Plugins add sources. Each one lists the hosts it contacts before you install it.") }
@@ -8678,7 +8672,7 @@ public enum L {
     public static var noticeOpenStores: String { string("notice-open-stores", fallback: "Open plugin stores") }
 
     /// Explainer on the empty plugin stores page.
-    public static var storesWhatIs: String { string("stores-what-is", fallback: "A plugin store is a small server one person runs for the people they invite. It offers sources as plugins. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.") }
+    public static var storesWhatIs: String { string("stores-what-is", fallback: "A plugin store is a small server that holds signed plugins and gives each device its own token. It offers sources as plugins. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.") }
 
     /// Button on the empty plugin stores page that opens the docs page in the browser.
     public static var storesWhatIsLink: String { string("stores-what-is-link", fallback: "What is a plugin store?") }
@@ -9082,24 +9076,6 @@ public enum L {
     public static func torrentsStillOff(why: String) -> String {
         Self.format("torrents-still-off", fallback: "Torrents are still off. %1$@.", why)
     }
-
-    /// Label of the index address field.
-    public static var torrentsIndex: String { string("torrents-index", fallback: "Torrent index") }
-
-    /// Line under the index field.
-    public static var torrentsIndexDetail: String { string("torrents-index-detail", fallback: "The RSS search address Kaeri asks for torrents.") }
-
-    /// Hint inside the index field.
-    public static var torrentsIndexHint: String { string("torrents-index-hint", fallback: "https://…/?q={query}") }
-
-    /// Line when no index address is set.
-    public static var torrentsIndexNeeded: String { string("torrents-index-needed", fallback: "Torrents need an index address.") }
-
-    /// Line when the index address has the wrong scheme.
-    public static var torrentsIndexScheme: String { string("torrents-index-scheme", fallback: "Use an http or https address.") }
-
-    /// Notice after the index was saved.
-    public static var torrentsIndexSaved: String { string("torrents-index-saved", fallback: "Torrent index saved") }
 
     /// Label of the choice of what to do when a check fails.
     public static var torrentsIfCheckFails: String { string("torrents-if-check-fails", fallback: "If a check fails") }

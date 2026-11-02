@@ -131,7 +131,6 @@ settings-titles-note-follows = Theo tài khoản AniList của bạn. Khi chưa 
 settings-titles-note-english-missing = { $title } không có tên tiếng Anh trên AniList, nên vẫn dùng tên romaji.
 settings-titles-note-english = Tên tiếng Anh như AniList ghi, và romaji nếu không có tên tiếng Anh.
 settings-titles-note-romaji = Tên tiếng Nhật viết bằng chữ Latin, như AniList ghi.
-settings-index-none = Chưa đặt
 settings-stores-with-updates = { $stores } · { $updates }
 settings-seeding-best-effort = Cố gắng hết sức trên { -device } này: seed chỉ chạy khi { -app-name } đang mở.
 settings-downloads-count = { $count ->

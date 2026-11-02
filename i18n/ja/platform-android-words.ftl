@@ -131,7 +131,6 @@ settings-titles-note-follows = AniListアカウントの設定に従います。
 settings-titles-note-english-missing = { $title }にはAniListで英語のタイトルがないため、ローマ字のタイトルのままです。
 settings-titles-note-english = AniListに登録されている英語のタイトルを表示します。英語がない場合はローマ字を表示します。
 settings-titles-note-romaji = AniListに登録されている日本語のタイトルを、ローマ字で表示します。
-settings-index-none = 未設定
 settings-stores-with-updates = { $stores }件 · { $updates }
 settings-seeding-best-effort = この{ -device }ではベストエフォートです。シーディングは{ -app-name }を開いている間だけ行われます。
 settings-downloads-count = { $count ->

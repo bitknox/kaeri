@@ -148,13 +148,13 @@ the Downloads screen, and `page=settings/downloads` the storage meter.
 ### Checking downloads on a phone
 
 The real transfer, the download job and Wi-Fi only need a torrent source, which only a phone with
-its own VPN and index has:
+its own VPN has:
 
 1. Build and install the app flavour: `android/scripts/engine.sh release`, then
    `cd android && ./gradlew assembleAppDebug` and
    `adb install -r app/build/outputs/apk/app/debug/app-app-debug.apk`.
 2. With the phone's VPN on, open Settings › Sources, turn on Torrent source, pick VPN on this
-   device, enter the torrent index, and Turn on. Wait for Last check to say Passed.
+   device, and Turn on. Wait for Last check to say Passed.
 3. On a title page, long-press an episode and pick Download. Downloads lists it as Queued, then
    running, with its speed and the time left.
 4. The download notification is up: on Android 16 a Live Update at the top of the shade and the

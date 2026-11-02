@@ -131,7 +131,6 @@ settings-titles-note-follows = Mengikuti akun AniList Anda. Saat Anda belum masu
 settings-titles-note-english-missing = { $title } tidak punya judul Inggris di AniList, jadi tetap memakai judul romaji-nya.
 settings-titles-note-english = Judul Inggris sebagaimana tercantum di AniList, dan romaji jika tidak ada.
 settings-titles-note-romaji = Judul Jepang dalam huruf Latin, sebagaimana tercantum di AniList.
-settings-index-none = Belum diatur
 settings-stores-with-updates = { $stores } · { $updates }
 settings-seeding-best-effort = Sebisa mungkin di { -device } ini: seeding hanya berjalan selama { -app-name } terbuka.
 settings-downloads-count = { $count ->

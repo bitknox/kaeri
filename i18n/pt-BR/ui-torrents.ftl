@@ -33,12 +33,6 @@ torrents-check-not-made-proxy = Não foi possível fazer a verificação por est
 torrents-proxy-not-saved = Não salvo. { $why }, então o proxy salvo continua.
 torrents-protection-not-saved = Não salva. { $why }, então a proteção salva continua.
 torrents-still-off = Os torrents continuam desativados. { $why }.
-torrents-index = { -torrent-index-cap }
-torrents-index-detail = O endereço de busca RSS que o { -app-name } consulta para os torrents.
-torrents-index-hint = https://…/?q={"{"}query{"}"}
-torrents-index-needed = Os torrents precisam de um endereço de índice.
-torrents-index-scheme = Use um endereço http ou https.
-torrents-index-saved = { -torrent-index-cap } salvo
 torrents-if-check-fails = Se uma verificação falhar
 torrents-keep-running-title = Manter os torrents ativos se uma verificação falhar?
 torrents-keep-running-detail = O que acontece com os torrents quando a verificação encontra tráfego saindo fora da sua VPN ou do seu proxy.

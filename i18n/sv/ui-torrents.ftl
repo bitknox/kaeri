@@ -33,12 +33,6 @@ torrents-check-not-made-proxy = Kontrollen kunde inte göras genom den här prox
 torrents-proxy-not-saved = Inte sparad. { $why }, så den sparade proxyn finns kvar.
 torrents-protection-not-saved = Inte sparat. { $why }, så det sparade skyddet finns kvar.
 torrents-still-off = Torrenter är fortfarande av. { $why }.
-torrents-index = { -torrent-index-cap }
-torrents-index-detail = RSS-sökadressen som { -app-name } frågar efter torrenter från.
-torrents-index-hint = https://…/?q={ "{" }query{ "}" }
-torrents-index-needed = Torrenter behöver en indexadress.
-torrents-index-scheme = Använd en http- eller https-adress.
-torrents-index-saved = { -torrent-index-cap } sparades
 torrents-if-check-fails = Om en kontroll misslyckas
 torrents-keep-running-title = Ska torrenter fortsätta att köras om en kontroll misslyckas?
 torrents-keep-running-detail = Vad som händer med torrenter när kontrollen hittar trafik som går utanför ditt VPN eller din proxy.

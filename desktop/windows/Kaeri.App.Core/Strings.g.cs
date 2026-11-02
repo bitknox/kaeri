@@ -177,7 +177,7 @@ public static partial class T
     /// <summary>Line over the spotlight's title when it is the built-in demo.</summary>
     public static string HomeSpotlightDemo => Get("HomeSpotlightDemo");
 
-    /// <summary>Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Stream.</summary>
+    /// <summary>Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.</summary>
     public static string LicensedReturn(long episode, string service) => Fill(Get("LicensedReturn"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("service", service));
 
     /// <summary>Notice after Mark as watched on the return notice. It holds Undo.</summary>
@@ -981,7 +981,7 @@ public static partial class T
     /// <summary>Search: Available choice that keeps titles one of the viewer's own sources has.</summary>
     public static string SearchAvailablePlaysHere => Get("SearchAvailablePlaysHere");
 
-    /// <summary>Search: end of a result's line when a free catalogue or the demo has the title.</summary>
+    /// <summary>Search: end of a result's line when an open catalogue or the demo has the title.</summary>
     public static string SearchResultPlaysHere => Get("SearchResultPlaysHere");
 
     /// <summary>Search: end of a result's line when files on this device have the title.</summary>
@@ -1397,9 +1397,6 @@ public static partial class T
 
     /// <summary>How a { -source } stands when nothing is wrong with it.</summary>
     public static string SourcesStatusWorking => Get("SourcesStatusWorking");
-
-    /// <summary>In the torrent { -source }'s detail, in place of the hosts it contacts.</summary>
-    public static string SourcesTorrentIndexes => Get("SourcesTorrentIndexes");
 
     /// <summary>Heading of the card in a { -source }'s detail when a newer version can be installed.</summary>
     public static string SourcesVersionReady(string version) => Fill(Get("SourcesVersionReady"), ("version", version));
@@ -5585,12 +5582,6 @@ public static partial class T
     /// <summary>Row for the built-in torrent source.</summary>
     public static string SourcesTorrents => Get("SourcesTorrents");
 
-    /// <summary>Label of a source that is not a plugin and controls this device.</summary>
-    public static string SourcesRemote => Get("SourcesRemote");
-
-    /// <summary>Origin: set in the config file.</summary>
-    public static string SourcesOriginConfig => Get("SourcesOriginConfig");
-
     /// <summary>Origin: built into the app.</summary>
     public static string SourcesOriginBuiltIn => Get("SourcesOriginBuiltIn");
 
@@ -5636,7 +5627,7 @@ public static partial class T
     /// <summary>Status line: the source is gone.</summary>
     public static string SourcesDetailGone => Get("SourcesDetailGone");
 
-    /// <summary>Status line: the site did not answer.</summary>
+    /// <summary>Status line: the source did not answer.</summary>
     public static string SourcesDetailSite => Get("SourcesDetailSite");
 
     /// <summary>Row label: version.</summary>
@@ -6731,24 +6722,6 @@ public static partial class T
 
     /// <summary>Notice when torrents stayed off. The reason is a sentence fragment.</summary>
     public static string TorrentsStillOff(string why) => Fill(Get("TorrentsStillOff"), ("why", why));
-
-    /// <summary>Label of the index address field.</summary>
-    public static string TorrentsIndex => Get("TorrentsIndex");
-
-    /// <summary>Line under the index field.</summary>
-    public static string TorrentsIndexDetail => Get("TorrentsIndexDetail");
-
-    /// <summary>Hint inside the index field.</summary>
-    public static string TorrentsIndexHint => Get("TorrentsIndexHint");
-
-    /// <summary>Line when no index address is set.</summary>
-    public static string TorrentsIndexNeeded => Get("TorrentsIndexNeeded");
-
-    /// <summary>Line when the index address has the wrong scheme.</summary>
-    public static string TorrentsIndexScheme => Get("TorrentsIndexScheme");
-
-    /// <summary>Notice after the index was saved.</summary>
-    public static string TorrentsIndexSaved => Get("TorrentsIndexSaved");
 
     /// <summary>Label of the choice of what to do when a check fails.</summary>
     public static string TorrentsIfCheckFails => Get("TorrentsIfCheckFails");
@@ -8034,7 +8007,6 @@ public static partial class T
         ["SourcesOriginVersion"] = "{origin} · version {version}",
         ["SourcesStanding"] = "Standing",
         ["SourcesStatusWorking"] = "Ready",
-        ["SourcesTorrentIndexes"] = "Searches the torrent indexes you have turned on under Settings.",
         ["SourcesVersionReady"] = "Version {version} is ready",
         ["SourcesUseThis"] = "Use this source",
         ["SourcesUseName"] = "{name} on",
@@ -8746,7 +8718,7 @@ public static partial class T
         ["OnboardingWhereHosts"] = "Kaeri plays what you already have: files on this device, your Jellyfin server, and plugins from stores you join.",
         ["OnboardingOwnHeading"] = "Have your own media?",
         ["OnboardingInviteHeading"] = "Have an invite link?",
-        ["OnboardingWhereStores"] = "Plugins come from plugin stores. A plugin store is run by one person for the people they invite, so you join one with an invite link from its owner.",
+        ["OnboardingWhereStores"] = "Plugins come from plugin stores. A plugin store is signed and gives each device its own token, so you join one with an invite link from its owner.",
         ["OnboardingDemoHeading"] = "Try it now",
         ["OnboardingDemoDetail"] = "The demo plays こうしす！, a series its makers share under CC BY 4.0, from Wikimedia Commons.",
         ["OnboardingPlayDemo"] = "Play the demo",
@@ -9463,8 +9435,6 @@ public static partial class T
         ["SourcesEmptyTitle"] = "No sources yet",
         ["SourcesEmptyDetail"] = "Join a plugin store with the invite link its owner sends you.",
         ["SourcesTorrents"] = "Torrents",
-        ["SourcesRemote"] = "Remote",
-        ["SourcesOriginConfig"] = "Set in the config file",
         ["SourcesOriginBuiltIn"] = "Built in",
         ["SourcesOriginLeftStore"] = "From a plugin store you left",
         ["SourcesOriginByHand"] = "Added by hand",
@@ -9567,12 +9537,12 @@ public static partial class T
         ["SourcesYour"] = "Your sources",
         ["SourcesYourIntro"] = "Episodes play from the first source that has them, in this order.",
         ["SourcesSectionPlugins"] = "Plugins",
-        ["SourcesSectionCatalogues"] = "Free catalogues",
+        ["SourcesSectionCatalogues"] = "Open catalogues",
         ["SourcesAddDemo"] = "Add the demo",
         ["SourcesOrderAll"] = "Every source is tried in this order, whatever its kind.",
         ["StoresJoined"] = "Joined",
         ["StoresEmptyTitle"] = "No plugin stores yet",
-        ["StoresEmptyDetail"] = "Plugin stores are run by people you know. Join one with the invite link its owner sends you.",
+        ["StoresEmptyDetail"] = "Plugin stores hold signed plugins and give each device its own token. Join one with the invite link its owner sends you.",
         ["StoresIntro"] = "Plugins add sources. Each one lists the hosts it contacts before you install it.",
         ["StoresNotFromApp"] = "Plugins come from the plugin store's owner, not from Kaeri. You can leave a plugin store at any time.",
         ["StoresJoinOwnerResponsible"] = "{owner} runs this plugin store and chose its plugins. Kaeri did not make, review or approve them.",
@@ -9737,7 +9707,7 @@ public static partial class T
         ["StoresOffersPlugins_one"] = "One plugin",
         ["StoresOffersPlugins_other"] = "{count} plugins",
         ["NoticeOpenStores"] = "Open plugin stores",
-        ["StoresWhatIs"] = "A plugin store is a small server one person runs for the people they invite. It offers sources as plugins. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.",
+        ["StoresWhatIs"] = "A plugin store is a small server that holds signed plugins and gives each device its own token. It offers sources as plugins. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.",
         ["StoresWhatIsLink"] = "What is a plugin store?",
         ["StoresInviteRules"] = "An invite link works once, for one person, and lasts seven days. Ask the plugin store's owner for a new one if yours has expired.",
         ["StoresQrLabel"] = "QR code for the invite link",
@@ -9856,12 +9826,6 @@ public static partial class T
         ["TorrentsProxyNotSaved"] = "Not saved. {why}, so the saved proxy stays.",
         ["TorrentsProtectionNotSaved"] = "Not saved. {why}, so the saved protection stays.",
         ["TorrentsStillOff"] = "Torrents are still off. {why}.",
-        ["TorrentsIndex"] = "Torrent index",
-        ["TorrentsIndexDetail"] = "The RSS search address Kaeri asks for torrents.",
-        ["TorrentsIndexHint"] = "https://…/?q={{query}}",
-        ["TorrentsIndexNeeded"] = "Torrents need an index address.",
-        ["TorrentsIndexScheme"] = "Use an http or https address.",
-        ["TorrentsIndexSaved"] = "Torrent index saved",
         ["TorrentsIfCheckFails"] = "If a check fails",
         ["TorrentsKeepRunningTitle"] = "Keep torrents running if a check fails?",
         ["TorrentsKeepRunningDetail"] = "What happens to torrents when the check finds traffic leaving outside your VPN or proxy.",

@@ -1487,9 +1487,6 @@
   <data name="SourcesStatusWorking" xml:space="preserve">
     <value>Hazır</value>
   </data>
-  <data name="SourcesTorrentIndexes" xml:space="preserve">
-    <value>Ayarlarda açık olan dizinlerde arar.</value>
-  </data>
   <data name="SourcesVersionReady" xml:space="preserve">
     <value>Versiyon {version} hazır</value>
   </data>
@@ -3622,9 +3619,6 @@
   </data>
   <data name="OnboardingInviteHeading" xml:space="preserve">
     <value>Davet bağlantınız var mı?</value>
-  </data>
-  <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>Eklentiler, eklenti mağazaları üzerinden gelir. Bir eklenti mağazası, bir kişi tarafından davet ettiği kişiler için işletilir; bu yüzden sahibinden aldığınız davet bağlantısıyla katılırsınız.</value>
   </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>Şimdi deneyin</value>
@@ -5774,12 +5768,6 @@
   <data name="SourcesTorrents" xml:space="preserve">
     <value>Torrent'ler</value>
   </data>
-  <data name="SourcesRemote" xml:space="preserve">
-    <value>Uzak</value>
-  </data>
-  <data name="SourcesOriginConfig" xml:space="preserve">
-    <value>Yapılandırma dosyasında ayarlandı</value>
-  </data>
   <data name="SourcesOriginBuiltIn" xml:space="preserve">
     <value>Uygulamaya dahil</value>
   </data>
@@ -6086,9 +6074,6 @@
   <data name="SourcesSectionPlugins" xml:space="preserve">
     <value>Eklentiler</value>
   </data>
-  <data name="SourcesSectionCatalogues" xml:space="preserve">
-    <value>Ücretsiz kataloglar</value>
-  </data>
   <data name="SourcesAddDemo" xml:space="preserve">
     <value>Demoyu ekle</value>
   </data>
@@ -6100,9 +6085,6 @@
   </data>
   <data name="StoresEmptyTitle" xml:space="preserve">
     <value>Henüz eklenti mağazaları yok</value>
-  </data>
-  <data name="StoresEmptyDetail" xml:space="preserve">
-    <value>Eklenti mağazaları sizin tanıdığınız kişiler tarafından işletilir. Sahibinin gönderdiği davet bağlantısıyla birine katılabilirsiniz.</value>
   </data>
   <data name="StoresIntro" xml:space="preserve">
     <value>Eklentiler kaynaklar ekler. Her biri, kurmadan önce bağlanacağı sunucuları listeler.</value>
@@ -6596,9 +6578,6 @@
   <data name="NoticeOpenStores" xml:space="preserve">
     <value>eklenti mağazalarını aç</value>
   </data>
-  <data name="StoresWhatIs" xml:space="preserve">
-    <value>Bir eklenti mağazası, bir kişinin davet ettiği insanlar için işlettiği küçük bir sunucudur. kaynakları eklentiler olarak sunar. Kaeri hiçbir eklenti mağazası işletmez ve listelemez; bu yüzden sahibinden aldığınız davet bağlantısıyla katılırsınız.</value>
-  </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>eklenti mağazası nedir?</value>
   </data>
@@ -6952,24 +6931,6 @@
   </data>
   <data name="TorrentsStillOff" xml:space="preserve">
     <value>Torrentler hâlâ kapalı. {why}.</value>
-  </data>
-  <data name="TorrentsIndex" xml:space="preserve">
-    <value>Torrent dizini</value>
-  </data>
-  <data name="TorrentsIndexDetail" xml:space="preserve">
-    <value>Torrentler için Kaeri'in istediği RSS arama adresi.</value>
-  </data>
-  <data name="TorrentsIndexHint" xml:space="preserve">
-    <value>https://…/?q=…</value>
-  </data>
-  <data name="TorrentsIndexNeeded" xml:space="preserve">
-    <value>Torrentler için bir torrent dizini adresi gerekir.</value>
-  </data>
-  <data name="TorrentsIndexScheme" xml:space="preserve">
-    <value>Bir http ya da https adresi kullanın.</value>
-  </data>
-  <data name="TorrentsIndexSaved" xml:space="preserve">
-    <value>Torrent dizini kaydedildi</value>
   </data>
   <data name="TorrentsIfCheckFails" xml:space="preserve">
     <value>Denetim başarısız olursa</value>

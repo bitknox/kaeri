@@ -14830,12 +14830,6 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "settings-index-none": {
-    "source": "d48719159084",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "settings-keep-next": {
     "source": "9b7142165739",
     "state": "draft",
@@ -18382,12 +18376,6 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "sources-origin-config": {
-    "source": "3ea0e4cb57d6",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "sources-origin-from": {
     "source": "09c4ff5bf087",
     "state": "draft",
@@ -18438,12 +18426,6 @@
   },
   "sources-reloaded-torrents-pending": {
     "source": "60be55ad4860",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "sources-remote": {
-    "source": "ea47f4110bb2",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
@@ -18666,12 +18648,6 @@
   },
   "sources-too-small": {
     "source": "faa845476519",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "sources-torrent-indexes": {
-    "source": "930784d9b438",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
@@ -22786,42 +22762,6 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "torrents-index": {
-    "source": "3e137d7a1f87",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-index-detail": {
-    "source": "9be9bea9e53a",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-index-hint": {
-    "source": "ffaafba956bf",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-index-needed": {
-    "source": "9672b1c5f873",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-index-saved": {
-    "source": "2ef032a8e29c",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-index-scheme": {
-    "source": "6fbcf1a12aa2",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "torrents-keep-running-detail": {
     "source": "c88d23ab9922",
     "state": "draft",
@@ -24022,18 +23962,6 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "tv-page-torrent": {
-    "source": "a88ffdbb31f2",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "tv-page-torrent-proxy": {
-    "source": "047ccd41a467",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "tv-pair": {
     "source": "2df72619ecf9",
     "state": "draft",
@@ -24364,12 +24292,6 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "tv-qr-label-index": {
-    "source": "9f51752e624b",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "tv-qr-label-link": {
     "source": "7b794027a307",
     "state": "draft",
@@ -24510,18 +24432,6 @@
   },
   "tv-scan-proxy": {
     "source": "8d05d1318a72",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "tv-scan-torrent": {
-    "source": "0c85f76b36c7",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "tv-scan-torrent-proxy": {
-    "source": "d1e8f0ad0356",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"

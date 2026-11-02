@@ -162,7 +162,7 @@ home-more-genre = Lebih banyak { $genre }
 # Line over the spotlight's title when it is the built-in demo.
 home-spotlight-demo = Demo, bebas dibagikan
 
-# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Stream.
+# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.
 licensed-return = Sudah menonton episode { $episode } di { $service }?
 
 # Notice after Mark as watched on the return notice. It holds Undo.
@@ -3087,9 +3087,6 @@ sources-state-held-back = Ditahan
 
 # Heading of the line about { -plugin-store-pl }.
 sources-stores-title = Toko-toko plugin
-
-# Under the heading when no { -plugin-store } is joined or the list has not arrived.
-sources-stores-invite = Plugin-plugin dibagikan kenalan Anda. Bergabung dengan tautan undangan.
 
 # Part of the { -plugin-store } summary: how many { -plugin-store-pl } are joined.
 sources-stores-joined = { $count } bergabung
@@ -6097,9 +6094,6 @@ onboarding-own-heading = Punya media sendiri?
 # Heading of the group that joins a store with an invite.
 onboarding-invite-heading = Punya tautan undangan?
 
-# Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-onboarding-where-stores = Plugin-plugin berasal dari toko-toko plugin. Satu toko plugin dikelola oleh satu orang untuk orang yang ia undang, jadi Anda bergabung lewat tautan undangan dari pemiliknya.
-
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = Coba sekarang
 
@@ -8232,12 +8226,6 @@ sources-empty-detail = Gabung ke toko plugin dengan tautan undangan yang dikirim
 # Row for the built-in torrent source.
 sources-torrents = Torrent
 
-# Label of a source that is not a plugin and controls this device.
-sources-remote = Jarak jauh
-
-# Origin: set in the config file.
-sources-origin-config = Diatur di berkas konfigurasi
-
 # Origin: built into the app.
 sources-origin-built-in = Bawaan aplikasi
 
@@ -8283,7 +8271,7 @@ sources-detail-disabled = Mati. Posisinya tetap, dan tidak dicoba.
 # Status line: the source is gone.
 sources-detail-gone = Sumber ini tidak ada lagi.
 
-# Status line: the site did not answer.
+# Status line: the source did not answer.
 sources-detail-site = Sumber tidak merespons.
 
 # Row label: version.
@@ -8544,9 +8532,6 @@ sources-your-intro = Episode diputar dari sumber pertama yang memilikinya, denga
 # Heading of the section that lists the plugins.
 sources-section-plugins = Plugin-plugin
 
-# Section heading: Internet Archive collections and PeerTube channels.
-sources-section-catalogues = Katalog gratis
-
 # Link in the empty state.
 sources-add-demo = Tambah demo
 
@@ -8558,9 +8543,6 @@ stores-joined = Sudah bergabung
 
 # Title of the empty list.
 stores-empty-title = Belum ada toko-toko plugin
-
-# Line under the empty title.
-stores-empty-detail = Toko-toko plugin dijalankan oleh orang yang Anda kenal. Gabung ke salah satunya dengan tautan undangan yang dikirim pemiliknya.
 
 # Line under the title of the screen when plugins add sources.
 stores-intro = Plugin-plugin menambahkan sumber-sumber. Setiap plugin mencantumkan host yang dihubunginya sebelum Anda memasangnya.
@@ -9049,9 +9031,6 @@ stores-offers-plugins =
 # Button of a notice that opens the plugin stores page.
 notice-open-stores = Buka toko-toko plugin
 
-# Explainer on the empty plugin stores page.
-stores-what-is = Toko plugin adalah server kecil yang dikelola satu orang untuk orang yang ia undang. Ia menawarkan sumber-sumber berupa plugin-plugin. Kaeri tidak menjalankan dan tidak mendaftar toko-toko plugin mana pun, jadi Anda bergabung lewat tautan undangan dari pemiliknya.
-
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = Apa itu toko plugin?
 
@@ -9405,24 +9384,6 @@ torrents-protection-not-saved = Tidak tersimpan. { $why }, jadi perlindungan yan
 
 # Notice when torrents stayed off. The reason is a sentence fragment.
 torrents-still-off = Torrent masih nonaktif. { $why }.
-
-# Label of the index address field.
-torrents-index = Indeks torrent
-
-# Line under the index field.
-torrents-index-detail = Alamat pencarian RSS yang diminta Kaeri untuk torrent.
-
-# Hint inside the index field.
-torrents-index-hint = https://…/?q={ "{" }query{ "}" }
-
-# Line when no index address is set.
-torrents-index-needed = Torrent memerlukan alamat indeks.
-
-# Line when the index address has the wrong scheme.
-torrents-index-scheme = Gunakan alamat http atau https.
-
-# Notice after the index was saved.
-torrents-index-saved = Indeks torrent disimpan
 
 # Label of the choice of what to do when a check fails.
 torrents-if-check-fails = Jika pemeriksaan gagal

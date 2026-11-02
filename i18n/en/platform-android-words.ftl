@@ -574,10 +574,6 @@ settings-titles-note-english = English titles as AniList lists them, and romaji 
 # @only android
 settings-titles-note-romaji = Japanese titles written in Latin letters, as AniList lists them.
 
-# Settings, Sources: no torrent index address is set.
-# @only android
-settings-index-none = None set
-
 # Settings, Sources: how many plugin stores, and how many updates wait in them.
 # @only android
 # @arg stores: int

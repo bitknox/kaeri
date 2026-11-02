@@ -501,8 +501,6 @@
     <string name="tv_page_step_paste">Вставьте его здесь и отправьте на телевизор.</string>
     <string name="tv_page_password">Имя пользователя или почта и пароль от %1$s. Они передаются на телевизор, который входит в %1$s и сохраняет только токен доступа.</string>
     <string name="tv_page_link">Вставьте пригласительную ссылку. Телевизор покажет магазин плагинов, прежде чем подключиться.</string>
-    <string name="tv_page_torrent">торрент-индекс: Kaeri запрашивает торренты.</string>
-    <string name="tv_page_torrent_proxy">торрент-индекс: Kaeri запрашивает торренты. Их трафик идёт через прокси SOCKS5.</string>
     <string name="tv_page_proxy">Трафик торрентов идёт через прокси SOCKS5. %1$s Телевизор проверит прокси, прежде чем сохранить его.</string>
     <string name="tv_page_label_code">Код</string>
     <string name="tv_page_title_torrents">Торренты для Kaeri</string>
@@ -514,10 +512,7 @@
     <string name="tv_use_phone">Использовать телефон</string>
     <string name="tv_type_it">Ввести вручную</string>
     <string name="tv_qr_label_proxy">QR-код страницы: прокси</string>
-    <string name="tv_qr_label_index">QR-код страницы: торрент-индекс</string>
-    <string name="tv_scan_torrent_proxy">Отсканируйте камерой телефона, затем заполните торрент-индекс и прокси на открывшейся странице.</string>
     <string name="tv_scan_proxy">Отсканируйте камерой телефона, затем измените прокси на открывшейся странице.</string>
-    <string name="tv_scan_torrent">Отсканируйте камерой телефона, затем заполните торрент-индекс на открывшейся странице.</string>
     <string name="tv_field_user_optional">Имя пользователя, если требуется</string>
     <string name="tv_field_password_optional">Пароль, если требуется</string>
     <string name="tv_qr_label_link">QR-код страницы со ссылкой</string>
@@ -716,7 +711,6 @@
     <string name="settings_titles_note_english_missing">У %1$s нет английского названия в AniList, поэтому оно остаётся в ромадзи.</string>
     <string name="settings_titles_note_english">Английские названия, как их указывает AniList, а там, где их нет, ромадзи.</string>
     <string name="settings_titles_note_romaji">Японские названия латиницей, как их указывает AniList.</string>
-    <string name="settings_index_none">Не задано</string>
     <string name="settings_stores_with_updates">%1$d · %2$s</string>
     <string name="settings_seeding_best_effort">По возможности: раздача идёт, только пока открыт Kaeri.</string>
     <plurals name="settings_downloads_count">
@@ -1591,7 +1585,6 @@
     <string name="onboarding_where_hosts">Kaeri воспроизводит то, что у вас уже есть: файлы на этом устройстве, ваш сервер Jellyfin и плагины из магазинов, к которым вы присоединились.</string>
     <string name="onboarding_own_heading">Есть свои медиафайлы?</string>
     <string name="onboarding_invite_heading">Есть ссылка-приглашение?</string>
-    <string name="onboarding_where_stores">Плагины приходят из магазинов плагинов. Магазин плагинов ведёт один человек для тех, кого он приглашает, поэтому присоединиться можно по ссылке-приглашению от его владельца.</string>
     <string name="onboarding_demo_heading">Попробуйте сразу</string>
     <string name="onboarding_demo_detail">Демо воспроизводит こうしす！, сериал, которым его авторы делятся по лицензии CC BY 4.0, из Wikimedia Commons.</string>
     <string name="onboarding_play_demo">Смотреть демо</string>
@@ -2348,8 +2341,6 @@
     <string name="sources_empty_title">Источники пока не установлены</string>
     <string name="sources_empty_detail">Присоединитесь к магазину плагинов по ссылке-приглашению, которую присылает его владелец.</string>
     <string name="sources_torrents">Торренты</string>
-    <string name="sources_remote">Удалённый</string>
-    <string name="sources_origin_config">Задан в файле настроек</string>
     <string name="sources_origin_built_in">Встроен в приложение</string>
     <string name="sources_origin_left_store">Магазин плагинов, который вы покинули</string>
     <string name="sources_origin_by_hand">Добавлен вручную</string>
@@ -2465,12 +2456,10 @@
     <string name="sources_your">Ваши источники</string>
     <string name="sources_your_intro">Эпизоды воспроизводятся из первого источника, в котором они есть, в этом порядке.</string>
     <string name="sources_section_plugins">Плагины</string>
-    <string name="sources_section_catalogues">Бесплатные каталоги</string>
     <string name="sources_add_demo">Добавить демо</string>
     <string name="sources_order_all">Каждый источник пробуется в этом порядке, независимо от его типа.</string>
     <string name="stores_joined">Подключён</string>
     <string name="stores_empty_title">Магазины плагинов пока не подключены</string>
-    <string name="stores_empty_detail">Магазины плагинов ведут люди, которых вы знаете. Подключиться можно по пригласительной ссылке, которую присылает владелец.</string>
     <string name="stores_intro">Плагины добавляют источники. Каждый показывает серверы, с которыми связывается, до установки.</string>
     <string name="stores_not_from_app">Плагины приходят от владельца магазина, а не от Kaeri. Выйти из магазина можно в любой момент.</string>
     <string name="stores_join_owner_responsible">%1$s ведёт этот магазин плагинов и выбрал его плагины. Kaeri не создавал, не проверял и не одобрял их.</string>
@@ -2655,7 +2644,6 @@
         <item quantity="other">Плагины: %1$d</item>
     </plurals>
     <string name="notice_open_stores">Открыть магазины плагинов</string>
-    <string name="stores_what_is">Магазин плагинов: небольшой сервер, который один человек ведёт для тех, кого приглашает. Он предлагает источники в виде плагины. Kaeri не ведёт магазинов плагинов и не публикует их список, поэтому присоединиться к магазину можно по ссылке-приглашению от его владельца.</string>
     <string name="stores_what_is_link">Что такое магазин плагинов?</string>
     <string name="stores_invite_rules">Ссылка-приглашение действует один раз, для одного человека, и семь дней. Если срок вашей истёк, попросите у владельца магазина плагинов новую.</string>
     <string name="stores_qr_label">QR-код ссылки-приглашения</string>
@@ -2778,12 +2766,6 @@
     <string name="torrents_proxy_not_saved">Не сохранено. %1$s, поэтому остаётся сохранённый прокси.</string>
     <string name="torrents_protection_not_saved">Не сохранено. %1$s, поэтому остаётся прежняя защита.</string>
     <string name="torrents_still_off">Торренты всё ещё выключены. %1$s.</string>
-    <string name="torrents_index">Торрент-индекс</string>
-    <string name="torrents_index_detail">Адрес RSS-поиска, по которому Kaeri ищет торренты.</string>
-    <string name="torrents_index_hint">https://…/?q={query}</string>
-    <string name="torrents_index_needed">Для торрентов нужен адрес индекса.</string>
-    <string name="torrents_index_scheme">Используйте адрес http или https.</string>
-    <string name="torrents_index_saved">Торрент-индекс сохранён</string>
     <string name="torrents_if_check_fails">Если проверка не прошла</string>
     <string name="torrents_keep_running_title">Продолжать работу торрентов, если проверка не прошла?</string>
     <string name="torrents_keep_running_detail">Что будет с торрентами, если проверка найдёт трафик вне VPN или прокси.</string>

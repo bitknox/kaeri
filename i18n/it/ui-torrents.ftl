@@ -33,12 +33,6 @@ torrents-check-not-made-proxy = Non è stato possibile eseguire il controllo tra
 torrents-proxy-not-saved = Non salvato. { $why }, quindi resta il proxy salvato.
 torrents-protection-not-saved = Non salvato. { $why }, quindi resta la protezione salvata.
 torrents-still-off = I torrent restano disattivati. { $why }.
-torrents-index = { -torrent-index-cap }
-torrents-index-detail = L'indirizzo di ricerca RSS che { -app-name } usa per i torrent.
-torrents-index-hint = https://…/?q={ "{query}" }
-torrents-index-needed = I torrent richiedono un indirizzo dell'indice.
-torrents-index-scheme = Usa un indirizzo http o https.
-torrents-index-saved = { -torrent-index-cap } salvato
 torrents-if-check-fails = Se un controllo fallisce
 torrents-keep-running-title = Mantenere attivi i torrent se un controllo fallisce?
 torrents-keep-running-detail = Cosa succede ai torrent quando il controllo rileva traffico che esce al di fuori della VPN o del proxy.
