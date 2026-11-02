@@ -224,7 +224,15 @@ public final class PlayerModel {
     /// The app's discussions, for the More menu and the Playback menu.
     public var discussionHost: DiscussionHost?
     public private(set) var speed: Double = 1
+    /// The volume as mpv last reported it.
     public private(set) var volume: Double = 100
+    /// The volume the viewer last asked for, until mpv reports it: the line moves on the step
+    /// rather than after the engine's round trip, and steps taken meanwhile build on it.
+    private(set) var volumeAsked: (volume: Double, at: ContinuousClock.Instant)?
+    /// What the volume line shows: the step asked for, then mpv's word.
+    public var shownVolume: Double { volumeAsked?.volume ?? volume }
+    /// mpv's `volume-max`, which `add volume` stops at.
+    static let volumeMax: Double = 130
     public private(set) var muted = false
     public private(set) var chapters: [Chapter] = []
     /// The openings and endings the engine marked, by playback: the ones skipping goes by. Until
@@ -649,7 +657,10 @@ public final class PlayerModel {
             PlaybackSession.begin()
         }
         if let speed { enqueue(.call(.set(property: "speed", value: .double(speed)))) }
-        if let volume { enqueue(.call(.set(property: "volume", value: .double(volume)))) }
+        if let volume {
+            volumeAsked = nil
+            enqueue(.call(.set(property: "volume", value: .double(volume))))
+        }
         present()
     }
 
@@ -773,6 +784,7 @@ public final class PlayerModel {
         sources = [:]
         timelines = [:]
         thumbnails = nil
+        volumeAsked = nil
         guard awaitingVerdict, isPresented else {
             dismiss()
             return
@@ -944,6 +956,12 @@ public final class PlayerModel {
             nowPlaying.update()
         case "volume":
             volume = value.double ?? volume
+            // Reached, or mpv settled somewhere else: a step it clamped or never had.
+            if let asked = volumeAsked,
+                abs(asked.volume - volume) < 0.01 || asked.at.duration(to: time.now()) >= .seconds(1)
+            {
+                volumeAsked = nil
+            }
         case "chapter-list":
             chapters = value.array.map { Chapter(title: $0["title"].string ?? "", time: $0["time"].double ?? 0) }
         case "track-list":
@@ -1541,9 +1559,21 @@ public final class PlayerModel {
         control(.speedTo(target))
     }
 
+    /// Step the volume by `points`, from the step asked for last while mpv has not reported it
+    /// yet, held within mpv's 0 to `volume-max`. The engine still sets it: the line shows the
+    /// step at once and mpv's report after.
     public func stepVolume(by points: Double) {
         input()
-        control(.volume(points))
+        let from = shownVolume
+        let to = min(max(from + points, 0), Self.volumeMax)
+        guard to != from else { return }
+        volumeAsked = (to, time.now())
+        control(.volume(to - from))
+    }
+
+    /// Set the volume to `level`, as a drag on the volume line asks: a step from where it shows.
+    public func setVolume(_ level: Double) {
+        stepVolume(by: level.rounded() - shownVolume)
     }
 
     public func toggleMute() {
