@@ -206,6 +206,7 @@ async fn a_season_opened_after_its_franchise_is_headed_at_once_and_whole_moments
     assert!(cards.iter().all(|card| card.cover_url.is_some()));
     assert_eq!(h.server().requests_for(Operation::Many).len(), 1);
 
+    let mut headed_related = 0;
     for id in others {
         h.send(Command::LoadDetail(id));
         let updates = h.settle().await;
@@ -236,6 +237,14 @@ async fn a_season_opened_after_its_franchise_is_headed_at_once_and_whole_moments
             )
         };
         assert_eq!(top(header), top(page), "{id}");
+        // Its relations too, by kind and id: whether the page has a Related row, and how many
+        // cards it holds, is known with the header.
+        let related = |entry: &kaeri_model::catalog::Entry| {
+            let detail = entry.detail.as_ref().unwrap();
+            detail.relations.iter().map(|r| (r.id, r.relation)).collect::<Vec<_>>()
+        };
+        assert_eq!(related(header), related(page), "{id}: the header's relations");
+        headed_related += related(header).len();
         assert_eq!(
             seasons_said(&updates),
             [Some(LONG_FRANCHISE_SEASONS.to_vec())],
@@ -245,6 +254,7 @@ async fn a_season_opened_after_its_franchise_is_headed_at_once_and_whole_moments
         let seasons: Vec<AnilistId> = seasons.unwrap().iter().map(|s| s.id).collect();
         assert_eq!(seasons, LONG_FRANCHISE_SEASONS.to_vec(), "{id}: the header's seasons");
     }
+    assert!(headed_related > 0, "the franchise's own Related, beside its seasons");
     assert_eq!(h.server().requests_for(Operation::Many).len(), 1, "no header asked again");
 
     // A page AniList answered moments ago comes at once, with no header ahead of it.

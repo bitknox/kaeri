@@ -122,13 +122,16 @@ pub(crate) fn listed_wire(id: AnilistId) -> Option<Value> {
 /// `media` as a list query answers it: the detail-only fields left out.
 pub(crate) fn listed_form(media: &Value) -> Value {
     let mut media = media.clone();
-    // The relations by kind and id alone, as the list fields ask for them.
+    // The relations by kind, id and format alone, as the list fields ask for them.
     let prequels: Vec<Value> = media["relations"]["edges"]
         .as_array()
         .map(|edges| {
             edges
                 .iter()
-                .map(|e| serde_json::json!({ "relationType": e["relationType"], "node": { "id": e["node"]["id"] } }))
+                .map(|e| {
+                    serde_json::json!({ "relationType": e["relationType"],
+                    "node": { "id": e["node"]["id"], "format": e["node"]["format"] } })
+                })
                 .collect()
         })
         .unwrap_or_default();

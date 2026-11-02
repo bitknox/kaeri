@@ -32,7 +32,7 @@ pub const MEDIA_FIELDS: &str = r"
     nextAiringEpisode { episode airingAt timeUntilAiring }
     studios(isMain: true) { nodes { name } }
     trailer { id site }
-    prequels: relations { edges { relationType node { id } } }
+    prequels: relations { edges { relationType node { id format } } }
 ";
 
 /// Extra fields only the Title screen needs. Excluded from list queries because
@@ -136,6 +136,25 @@ pub fn by_ids() -> String {
         r"query ($ids: [Int], $perPage: Int) {{
             Page(perPage: $perPage) {{
                 media(id_in: $ids, type: ANIME) {{ {MEDIA_FIELDS} }}
+            }}
+        }}"
+    )
+}
+
+/// What a season's header asks beyond [`MEDIA_FIELDS`]: its related titles, each with its card,
+/// so its page's Related row stands whole with the header, the names and covers the page will
+/// show, rather than placeholders whose widths change when the page comes.
+pub const HEADER_RELATIONS: &str = r"relations { edges { relationType node {
+    id title { romaji english native } format coverImage { large color } season seasonYear
+} } }";
+
+/// [`by_ids`] with each title's related titles ([`HEADER_RELATIONS`]): the season headers a
+/// title page asks ahead, in one request.
+pub fn headers_by_ids() -> String {
+    format!(
+        r"query ($ids: [Int], $perPage: Int) {{
+            Page(perPage: $perPage) {{
+                media(id_in: $ids, type: ANIME) {{ {MEDIA_FIELDS} {HEADER_RELATIONS} }}
             }}
         }}"
     )
@@ -629,6 +648,7 @@ mod tests {
             ("search_filtered", search_filtered()),
             ("facets", FACETS.to_string()),
             ("by_ids", by_ids()),
+            ("headers_by_ids", headers_by_ids()),
             ("by_id", by_id(false)),
             ("by_id_following", by_id(true)),
             ("relations", relations()),
@@ -734,9 +754,10 @@ mod tests {
     }
 
     #[test]
-    fn the_list_fields_ask_for_prequels_by_id_alone() {
+    fn the_list_fields_ask_for_relations_by_id_and_format_alone() {
         assert!(
-            MEDIA_FIELDS.contains("prequels: relations { edges { relationType node { id } } }")
+            MEDIA_FIELDS
+                .contains("prequels: relations { edges { relationType node { id format } } }")
         );
         // One request for the list as before: the ids ride in it, no query of their own.
         assert_eq!(by_ids().matches("media(").count(), 1);

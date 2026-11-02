@@ -73,6 +73,9 @@ class SeasonSwitchFrames {
     @Test
     fun season_1_to_season_2() = record("neighbour", from = 920001u, pill = "Season 2")
 
+    @Test
+    fun season_8_to_season_1() = record("back", from = 920008u, pill = "Season 1")
+
     private fun whole(id: AnilistId): Entry? = recorded.events.filterIsInstance<Event.Detail>()
         .lastOrNull { it.v1.id == id && it.v1.detail?.partial != true }?.v1 // after-only: the partial check
 
@@ -88,7 +91,12 @@ class SeasonSwitchFrames {
     private fun head(id: AnilistId): Entry? {
         val card = cards.firstOrNull { it.id == id } ?: return null
         val seasons = whole(920001u)?.detail?.seasons
-        return card.copy(detail = TitleDetail(seasons = seasons, partial = true))
+        // Its relations by kind, id and format; a node the walk met (a card) keeps its title and cover.
+        val relations = whole(id)?.detail?.relations.orEmpty().map { node ->
+            if (cards.any { it.id == node.id }) node
+            else node.copy(title = "", titleRomaji = null, titleEnglish = null, titleNative = null, coverUrl = null, coverColor = null, season = null, year = null, listStatus = null)
+        }
+        return card.copy(detail = TitleDetail(seasons = seasons, relations = relations, partial = true))
     }
     // after-only to here
 

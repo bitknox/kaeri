@@ -902,7 +902,7 @@ impl Meta {
     /// into the share of the limit kept for screens. Kept with the franchise when they come; a
     /// failure asks nothing else, and each page is asked for when it is opened.
     async fn preload_season_headers(&self, ids: &[AnilistId]) {
-        let asked = crate::anilist::on_screen(self.anilist.media_many(ids));
+        let asked = crate::anilist::on_screen(self.anilist.media_headers(ids));
         match self.ask_anilist(asked).await {
             Ok(found) => {
                 self.went(FRESH);

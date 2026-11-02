@@ -220,9 +220,9 @@ struct TitlePage: View {
             // differs changes, by its own animation: the season picked (quick), the hero's words
             // (quick), the episodes as one block (standard), and the art as it lands (fade-in).
             .transaction(value: id) { $0.animation = nil }
-            // A season shown from its header keeps the last one's seasons and Related until its
-            // page comes. When the page brings Related of its own, or none, the episodes move to
-            // their place with the row as its cards dissolve, rather than jumping under them.
+            // A title picked from Related, shown as its card, keeps the last page's row until its
+            // own page comes. When the row changes then, or with a season's header, the episodes
+            // move to their place with it as its cards dissolve, rather than jumping under them.
             .animation(.quick, value: kin.id)
             // With Reduce Motion a season picked changes the page at once: the selection, the
             // words, the episodes and Related, each without its own animation.
@@ -340,9 +340,11 @@ struct TitlePage: View {
     }
 
     /// The title whose seasons and related titles the row shows for `entry`: itself once its page
-    /// is here, until then `last`, the title shown before it whose page was.
+    /// or its kept header is here, until then `last`, the title shown before it whose page was.
+    /// A header names its seasons and its relations, so the row takes its place with the header.
     static func kin(of entry: Entry, last: AnilistId?, in store: AppStore) -> Entry {
-        store.titles.detailed.contains(entry.id) ? entry : store.titles.page(last ?? entry.id)
+        store.titles.detailed.contains(entry.id) || store.titles.headed.contains(entry.id)
+            ? entry : store.titles.page(last ?? entry.id)
     }
 
     /// Whether `key`'s art can show whole: resolved from the title itself, not a card's
@@ -383,6 +385,9 @@ struct TitleHero: View {
     @State private var offersWaited: AnilistId?
     /// Whether Play on TV was showing, kept while the next season's episodes are on their way.
     @State private var tvShown = false
+    /// The service the main button last named, kept while the next season's offers are on
+    /// their way, so a season on the same service keeps its button rather than blinking.
+    @State private var heldMain: ServiceLink?
 
     /// How long the main button waits for what the services say before it shows without it.
     static let offersWaitFor: Duration = .seconds(2)
@@ -405,8 +410,8 @@ struct TitleHero: View {
 
     /// The main button: Watch on a service, Choose the match, Add a source, Play, or when it airs.
     @ViewBuilder
-    private func mainAction(_ action: TitleAction) -> some View {
-        if let main = serviceMain {
+    private func mainAction(_ action: TitleAction, held: ServiceLink?) -> some View {
+        if let main = serviceMain ?? held {
             // It does not play here, and it is on a service they use: Watch on it.
             Button { store.openService(entry.id, link: main, episode: nil) } label: {
                 HStack(spacing: 8) {
@@ -445,7 +450,11 @@ struct TitleHero: View {
         // Add a source and Watch on a service rest on whether a source lists the title and on
         // what the services say about that: until both are known neither shows, as one would
         // only to give way to the other. Its room is kept, so nothing beside it moves.
-        let offersHeld = !store.offersKnown(entry.id) && offersWaited != entry.id
+        let offersPending = !store.offersKnown(entry.id) && offersWaited != entry.id
+        // A season switched to from one shown on a service keeps that button until its own
+        // offers say otherwise.
+        let held = serviceMain == nil && offersPending ? heldMain : nil
+        let offersHeld = offersPending && heldMain == nil
             && (serviceMain != nil || (action.playable && store.titles.unlisted(entry.id) && !store.match.asks(entry.id)))
         // Whether a source lists the title is known once its episodes are. Until then Play on TV
         // stays as it was, so a season shown from its header keeps the button it will have, or
@@ -477,9 +486,10 @@ struct TitleHero: View {
                     .macLineHeight(14)
                     .padding(.top, 4)
                 HStack(spacing: 10) {
-                    mainAction(action)
+                    mainAction(action, held: held)
                         .opacity(offersHeld ? 0 : 1)
                         .disabled(offersHeld)
+                        .allowsHitTesting(held == nil)
                         .accessibilityHidden(offersHeld)
                         .animation(.fadeIn, value: offersHeld)
                     if entry.trailerUrl != nil {
@@ -525,6 +535,8 @@ struct TitleHero: View {
         // up to make room (standard) while the lines fade in, rather than jumping.
         .animation(navigator.motionReduced ? nil : .standard, value: store.licensed.availability[entry.id])
         .onChange(of: playsOnTV, initial: true) { tvShown = playsOnTV }
+        .onChange(of: serviceMain, initial: true) { if let serviceMain { heldMain = serviceMain } }
+        .onChange(of: offersPending) { if !offersPending, serviceMain == nil { heldMain = nil } }
         .task(id: entry.id) {
             try? await Task.sleep(for: Self.offersWaitFor)
             offersWaited = entry.id

@@ -759,6 +759,18 @@ impl AniList {
     /// Past fifty, AniList's page, the titles go as pages of fifty under aliases in one request
     /// (see [`query::together`]), [`MANY_PER_REQUEST`] to a request.
     pub async fn media_many(&self, ids: &[AnilistId]) -> Result<Vec<Media>> {
+        self.many_of(ids, query::by_ids).await
+    }
+
+    /// [`Self::media_many`] with each title's related titles named (see
+    /// [`query::HEADER_RELATIONS`]): the season headers a title page asks ahead.
+    pub async fn media_headers(&self, ids: &[AnilistId]) -> Result<Vec<Media>> {
+        self.many_of(ids, query::headers_by_ids).await
+    }
+
+    /// `ids` asked with `document`, a page of fifty at most to a part, in the order asked.
+    async fn many_of(&self, ids: &[AnilistId], document: fn() -> String) -> Result<Vec<Media>> {
+        let many_part = |chunk: &[AnilistId]| many_part_of(chunk, document());
         if ids.is_empty() {
             return Ok(Vec::new());
         }
@@ -1151,8 +1163,13 @@ impl AniList {
 
 /// [`query::by_ids`] for `ids`, at most fifty: the document and its variables.
 fn many_part(ids: &[AnilistId]) -> (String, serde_json::Value) {
+    many_part_of(ids, query::by_ids())
+}
+
+/// `document`, [`query::by_ids`] or its like, for `ids`, at most fifty.
+fn many_part_of(ids: &[AnilistId], document: String) -> (String, serde_json::Value) {
     let raw: Vec<i64> = ids.iter().map(|id| i64::from(id.get())).collect();
-    (query::by_ids(), serde_json::json!({ "ids": raw, "perPage": ids.len().min(50) }))
+    (document, serde_json::json!({ "ids": raw, "perPage": ids.len().min(50) }))
 }
 
 /// [`query::by_ids`]'s answer, in the order of `ids`.
