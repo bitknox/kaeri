@@ -17,6 +17,8 @@ import SwiftUI
 public struct MacPlayerView: View {
     let model: PlayerModel
     @State private var panel: Panel?
+    /// Whether the Subtitles and audio panel's Style submenu is open beside it.
+    @State private var styleOpen = false
     @State private var overBar = false
     @State private var window: NSWindow?
     @State private var height: CGFloat = 0
@@ -171,6 +173,7 @@ public struct MacPlayerView: View {
             }
         }
         .animation(panel != nil ? .fadeIn : .fadeOut, value: panel)
+        .onChange(of: panel) { styleOpen = false }
     }
 
     private func scrim(stops: [Gradient.Stop]) -> some View {
@@ -408,7 +411,7 @@ public struct MacPlayerView: View {
                 MenuScroll {
                     VStack(alignment: .leading, spacing: 0) {
                         switch which {
-                        case .tracks: TrackLists(model: model, metrics: metrics)
+                        case .tracks: TrackLists(model: model, metrics: metrics, style: $styleOpen)
                         case .episodes: EpisodeList(model: model, metrics: metrics)
                         case .speed: SpeedList(model: model, metrics: metrics)
                         case .picture: PictureLists(model: model, metrics: metrics)
@@ -416,6 +419,8 @@ public struct MacPlayerView: View {
                     }
                     .padding(5)
                     .environment(\.pointedMenuRow, model.pointedRow)
+                    // The pointer moving on to another row closes the submenu, as in a menu.
+                    .environment(\.menuRowEntered) { styleOpen = false }
                 }
                 .onAppear {
                     if let row = selectedRow(which) { list.scrollTo(row, anchor: .center) }
@@ -423,9 +428,18 @@ public struct MacPlayerView: View {
             }
         }
         .frame(width: Self.panelWidth(which))
-        .background(.glassFill, in: .rect(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Palette.glassEdge, lineWidth: 1))
-        .shadow(color: Color(rgb: 0x0A0C18, opacity: 0.4), radius: 12, y: 8)
+        .menuPanelGlass()
+        // The Style submenu, beside the panel on the side away from the window's edge, its first
+        // row level with the row it opens from, as a Mac menu's submenu opens.
+        .overlayPreferenceValue(SubmenuAnchor.self) { anchor in
+            if which == .tracks, let anchor, styleOpen || model.pointedRow == L.playerSubsStyle {
+                GeometryReader { proxy in
+                    styleSubmenu
+                        .offset(x: -(Self.panelWidth(.tracks) + 4), y: proxy[anchor].minY - 5)
+                }
+                .transition(.opacity.animation(.quick))
+            }
+        }
         // Below the title strip and above the control row, whichever end it hangs from: the top
         // bar's menus under the capsule, the control row's over their buttons.
         .padding(EdgeInsets(top: 50, leading: 0, bottom: 60, trailing: Self.panelTrailing(which, playOnTV: model.playOnTVAvailable)))
@@ -434,6 +448,18 @@ public struct MacPlayerView: View {
         // the same panel across.
         .id(which)
         .transition(.opacity)
+    }
+
+    /// The subtitle style's rows, in a panel of their own.
+    private var styleSubmenu: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            SubtitleStyleRows(model: model, metrics: metrics, submenu: true)
+        }
+        .padding(5)
+        .environment(\.pointedMenuRow, model.pointedRow)
+        .frame(width: Self.panelWidth(.tracks))
+        .fixedSize(horizontal: false, vertical: true)
+        .menuPanelGlass()
     }
 
     /// How far in from the trailing edge a panel ends: the control row's in line with the end of
@@ -805,6 +831,15 @@ struct ScrollMonitor: NSViewRepresentable {
         isolated deinit {
             if let monitor { NSEvent.removeMonitor(monitor) }
         }
+    }
+}
+
+private extension View {
+    /// A panel's glass: its fill, its edge and its shadow over the video.
+    func menuPanelGlass() -> some View {
+        background(.glassFill, in: .rect(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Palette.glassEdge, lineWidth: 1))
+            .shadow(color: Color(rgb: 0x0A0C18, opacity: 0.4), radius: 12, y: 8)
     }
 }
 #endif
