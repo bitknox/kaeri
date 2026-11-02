@@ -42,7 +42,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -50,6 +49,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.focusGroup
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.key.Key
@@ -157,10 +159,16 @@ fun TitleScreen(
     val dubs by store.titles.dubLines.collectAsStateWithLifecycle()
     val settings by store.settings.view.collectAsStateWithLifecycle()
     val failed by store.titles.failed.collectAsStateWithLifecycle()
-    // Another season comes in place: the one showing stays until the new one's detail arrives,
-    // so the page never blanks, the list keeps its place and focus stays on the chip pressed.
+    // Another season comes in place: the one showing stays until the new one's head arrives, so
+    // the page never blanks, the list keeps its place and focus stays on the chip pressed. A head
+    // the engine kept comes at once, ahead of the page (detail.partial), and the season changes
+    // then: its head crossfades in, and the rest crossfades in as it comes.
     var shownId by remember { mutableStateOf(id) }
+    // The season the page was opened as: its rows wait 600 ms for placeholders, as T8 has it,
+    // while another season's come at once, in the crossfade, for the rows they stand for.
+    val openedAs = remember { id }
     if (shownId != id && (entries[id]?.detail != null || id in failed)) shownId = id
+    val reduced = app.kaeri.tv.ui.LocalReducedMotion.current
     val switching = shownId != id
     val entry = entries[shownId]
     val rows = tables[shownId]
@@ -192,6 +200,13 @@ fun TitleScreen(
         return
     }
     val action = remember(entry, rows) { PlayAction.of(entry, rows = rows) }
+    val seasons = entry.detail?.seasons.orEmpty()
+    SeasonArt(seasons, shownId, entries)
+    // The episodes the head reads for its art: the season's once they are here. Before that, a
+    // season with no banner whose franchise has no stills in the episodes the app has is compact,
+    // as it will be, rather than keeping the banner's place for a still that will not come.
+    val artRows = rows ?: seasons.firstNotNullOfOrNull { tables[it.id] }
+        ?.takeIf { known -> known.none { it.thumbnail != null } }?.let { emptyList() }
     ScrollRule(HeldScroll) {
         LazyColumn(
             state = list,
@@ -200,29 +215,57 @@ fun TitleScreen(
             verticalArrangement = Arrangement.spacedBy(Canvas.RowGap),
         ) {
             item(key = "header", contentType = "header") {
-                Header(entry, rows, action, noSources, memory, onPlay, onAddStore, swapFade().onFocusChanged {
+                Header(entry, rows, artRows, action, noSources, memory, onPlay, onAddStore, modifier = swapFade().onFocusChanged {
                     if (it.hasFocus) scope.launch { list.animateScrollToItem(0) }
                 })
             }
-            val seasons = entry.detail?.seasons.orEmpty()
             if (seasons.size > 1) {
                 item(key = "seasons", contentType = "seasons") {
                     // The chip pressed shows chosen at once, before its season arrives.
-                    Seasons(id, seasons, memory, onSeason, swapFade().settlesAt(list, scope, "seasons", rowTop))
+                    Seasons(id, seasons, memory, onSeason, swapFade().settlesAt(list, scope, "seasons", rowTop)) { season ->
+                        // The banner of the chip in focus, decoded for the press.
+                        entries[season]?.bannerUrl?.let { store.artwork.request(it, app.kaeri.tv.ui.BANNER_PIXELS) }
+                    }
                 }
             }
             if (rows == null || rows.isNotEmpty()) {
                 item(key = "episodes", contentType = "row") {
-                    // Each season's row starts at its own next episode.
-                    key(shownId) {
-                        Episodes(entry, rows, if (switching) stringResource(R.string.state_loading) else dubs[shownId]?.line(LocalContext.current), action, spoilers, memory, onPlay, onPlayFromStart, swapFade().settlesAt(list, scope, "episodes", rowTop))
+                    val placed = swapFade().settlesAt(list, scope, "episodes", rowTop)
+                    // Each season's row starts at its own next episode, and crossfades in over the
+                    // last season's. The row leaving takes no focus.
+                    androidx.compose.animation.AnimatedContent(
+                        shownId,
+                        transitionSpec = {
+                            if (reduced) androidx.compose.animation.EnterTransition.None togetherWith androidx.compose.animation.ExitTransition.None
+                            else fadeIn(Motion.standard()) togetherWith fadeOut(Motion.standard())
+                        },
+                        label = "season-episodes", // i18n-skip
+                    ) { season ->
+                        val leaving = transition
+                        val seasonEntry = entries[season] ?: entry
+                        val seasonRows = tables[season]
+                        val seasonAction = remember(seasonEntry, seasonRows) { PlayAction.of(seasonEntry, rows = seasonRows) }
+                        Box(Modifier.closedWhile { leaving.targetState != androidx.compose.animation.EnterExitState.Visible }) {
+                            Episodes(
+                                seasonEntry, seasonRows,
+                                if (season == shownId && switching) stringResource(R.string.state_loading) else dubs[season]?.line(LocalContext.current),
+                                seasonAction, spoilers, memory, onPlay, onPlayFromStart, placed,
+                                placeholdersAtOnce = season != openedAs,
+                            )
+                        }
                     }
                 }
             }
             val related = entry.detail?.relations.orEmpty()
-            if (related.isNotEmpty()) {
+            // A head come ahead of its page has no relations yet: their places, until they come.
+            val relatedComing = entry.detail?.partial == true
+            if (related.isNotEmpty() || relatedComing) {
                 item(key = "related", contentType = "row") {
                     BrowseRow(stringResource(R.string.title_related), modifier = swapFade().settlesAt(list, scope, "related", rowTop)) {
+                        if (relatedComing) {
+                            items(PLACEHOLDER_CARDS, key = { "placeholder/$it" }) { Box(swapFade()) { app.kaeri.tv.ui.CardPlaceholder(Canvas.PosterWidth, Canvas.PosterHeight) } }
+                            return@BrowseRow
+                        }
                         items(related, key = { it.id.toLong() }, contentType = { "poster" }) { linked ->
                             PosterCard(
                                 linked.title,
@@ -250,6 +293,8 @@ fun TitleScreen(
 private fun Header(
     entry: Entry,
     rows: List<EpisodeRow>?,
+    /** The episodes the head's art reads: [rows], or a guess while they come. */
+    artRows: List<EpisodeRow>?,
     action: PlayAction,
     noSources: Boolean,
     memory: FocusMemory,
@@ -257,13 +302,17 @@ private fun Header(
     onAddStore: () -> Unit,
     modifier: Modifier,
 ) {
+    // Another season's head crossfades in over this one's, as after a season change.
+    val crossfade = true
     val store = LocalAppStore.current
     val actions = LocalActions.current
     val context = LocalContext.current
     var watching by remember { mutableStateOf(false) }
-    HeroHeader(entry, rows, modifier) {
+    HeroHeader(entry, artRows, modifier, crossfade = crossfade) {
         Spacer(Modifier.height(6.dp))
-        Text(entry.metadataLine(context), style = MaterialTheme.typography.labelSmall, color = ObiSilk.Haze, maxLines = 1)
+        app.kaeri.tv.ui.Swap(entry.metadataLine(context), crossfade) {
+            Text(it, style = MaterialTheme.typography.labelSmall, color = ObiSilk.Haze, maxLines = 1)
+        }
         val uncertain = store.match.state.collectAsStateWithLifecycle().value.asked[entry.id]
         if (uncertain != null) {
             Spacer(Modifier.height(8.dp))
@@ -370,6 +419,34 @@ private fun ServiceLine(availability: app.kaeri.engine.model.TitleAvailability?,
 }
 
 /**
+ * Every season's banner and cover, once the app has its head (the engine says the franchise's
+ * heads as cards once a page knows its seasons), so a season changed to shows its art at once: the
+ * banners of the two either side of [here] decoded, and the rest fetched only to the disk, which
+ * a chip coming into focus then decodes in a moment. A TV has 40 MB of art to share.
+ */
+@Composable
+private fun SeasonArt(seasons: List<LinkedTitle>, here: AnilistId, entries: Map<AnilistId, Entry>) {
+    val store = LocalAppStore.current
+    val order = remember(seasons, here) {
+        val at = seasons.indexOfFirst { it.id == here }.coerceAtLeast(0)
+        seasons.withIndex().filter { it.value.id != here }.sortedBy { kotlin.math.abs(it.index - at) }.map { it.value.id }
+    }
+    val art = order.map { season -> entries[season]?.let { it.bannerUrl to it.coverUrl } }
+    LaunchedEffect(art) {
+        art.forEachIndexed { index, urls ->
+            val (banner, cover) = urls ?: return@forEachIndexed
+            if (banner != null) {
+                if (index < DECODED_AHEAD) store.artwork.request(banner, app.kaeri.tv.ui.BANNER_PIXELS) else store.artwork.warm(banner)
+            }
+            cover?.let(store.artwork::warm)
+        }
+    }
+}
+
+/** How many seasons nearest the one on screen have their banners decoded ahead. */
+private const val DECODED_AHEAD = 2
+
+/**
  * The season picker: the franchise's seasons in watch order as tabs, "Season 1" first, the one on
  * screen selected; a film or an OVA, which is none of them, has none selected. Focus comes in on
  * the selected tab, and Center on another shows that season's page in this one's place.
@@ -381,6 +458,8 @@ private fun Seasons(
     memory: FocusMemory,
     onSeason: (AnilistId) -> Unit,
     modifier: Modifier,
+    /** A chip came into focus, for its season's art to be ready for the press. */
+    onFocusSeason: (AnilistId) -> Unit = {},
 ) {
     val at = seasons.indexOfFirst { it.id == id }
     // The season before this one shows too, so the row says there are earlier ones.
@@ -405,6 +484,7 @@ private fun Seasons(
                 count = season.year?.toString(),
                 modifier = Modifier
                     .then(if (chosen) Modifier.focusRequester(selected) else Modifier)
+                    .onFocusChanged { if (it.isFocused && !chosen) onFocusSeason(season.id) }
                     .remembered(memory, "season/${season.id}"),
             )
         }
@@ -422,14 +502,20 @@ private fun Episodes(
     onPlay: (AnilistId, UInt) -> Unit,
     onPlayFromStart: (AnilistId, UInt) -> Unit,
     modifier: Modifier,
+    /** Placeholders at once while the rows come, rather than after T8's 600 ms: for a season changed to. */
+    placeholdersAtOnce: Boolean = false,
 ) {
     val store = LocalAppStore.current
     val host = LocalActions.current
     val context = LocalContext.current
     val next = rows?.indexOfFirst { it.number == action.episode.toString() }?.takeIf { it >= 0 } ?: 0
     val state = rememberLazyListState(initialFirstVisibleItemIndex = next)
+    // A row that came before its episodes starts at its next one once they come.
+    val cameEmpty = remember { rows == null }
+    LaunchedEffect(rows != null) { if (cameEmpty && rows != null && next > 0) state.scrollToItem(next) }
     val nextRequester = remember { FocusRequester() }
-    val placeholders = placeholdersAfterWait(rows == null)
+    val waited = placeholdersAfterWait(rows == null && !placeholdersAtOnce)
+    val placeholders = if (placeholdersAtOnce) rows == null else waited
     val failed = store.titles.episodesFailed.collectAsStateWithLifecycle().value[entry.id]
     val found by store.discussion.found.collectAsStateWithLifecycle()
     val settings by store.settings.view.collectAsStateWithLifecycle()
@@ -558,26 +644,40 @@ private fun Details(entry: Entry, memory: FocusMemory, modifier: Modifier) {
             ),
             scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
         ) {
-            Column(Modifier.padding(16.dp)) {
-                val synopsis = synopsisWithoutSpoilers(entry.synopsis)
-                if (synopsis.isNotEmpty()) {
-                    Text(synopsis, style = MaterialTheme.typography.bodyLarge, maxLines = 6, overflow = TextOverflow.Ellipsis)
-                    Spacer(Modifier.height(16.dp))
-                }
+            // Another season's details, or the rest of a season's as its page comes after its
+            // head, crossfade in over these.
+            val shown = DetailsShown(
+                synopsisWithoutSpoilers(entry.synopsis),
                 listOfNotNull(
                     entry.studio?.let { stringResource(R.string.title_studio) to it },
                     entry.genres.takeIf { it.isNotEmpty() }?.let { stringResource(R.string.filter_genres) to it.joinToString(", ") }, // i18n-skip
                     entry.source?.words(LocalContext.current)?.let { stringResource(R.string.title_based_on) to it },
-                ).forEach { (label, value) ->
-                    Row(Modifier.padding(vertical = 2.dp)) {
-                        Text(label, style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, modifier = Modifier.width(96.dp))
-                        Text(value, style = MaterialTheme.typography.bodyMedium, maxLines = 2)
+                ),
+            )
+            app.kaeri.tv.ui.Swap(shown, crossfade = true) { (synopsis, lines) ->
+                Column(Modifier.padding(16.dp)) {
+                    if (synopsis.isNotEmpty()) {
+                        Text(synopsis, style = MaterialTheme.typography.bodyLarge, maxLines = 6, overflow = TextOverflow.Ellipsis)
+                        Spacer(Modifier.height(16.dp))
+                    }
+                    lines.forEach { (label, value) ->
+                        Row(Modifier.padding(vertical = 2.dp)) {
+                            Text(label, style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, modifier = Modifier.width(96.dp))
+                            Text(value, style = MaterialTheme.typography.bodyMedium, maxLines = 2)
+                        }
                     }
                 }
             }
         }
     }
 }
+
+/** A group focus does not go into while [closed] says so, as a row crossfading out. */
+private fun Modifier.closedWhile(closed: () -> Boolean): Modifier =
+    focusProperties { onEnter = { if (closed()) cancelFocusChange() } }.focusGroup()
+
+/** What the details say: the synopsis, then each line's label and value. */
+private data class DetailsShown(val synopsis: String, val lines: List<Pair<String, String>>)
 
 /** The whole synopsis in a panel: focusable, so Up and Down scroll it. */
 @Composable
