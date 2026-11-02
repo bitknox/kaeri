@@ -18,13 +18,15 @@
 	--ani-rule-faint: #d7d4cf;
 	--ani-raised: #e9e6de;
 	--ani-well: #e3e1d9;
+	/* In light the bands and rules are paper tones with a faint hue, so the page reads as one
+	   surface and the type carries the hierarchy. Dark keeps its colours for contrast. */
 	--ani-band: #e3e1d9;
-	--ani-band-green: #d7eadf;
-	--ani-band-red: #ead7d8;
-	--ani-band-plum: #ecdde0;
-	--ani-band-blue: #dadef0;
-	--ani-rule-violet: #5e69ba;
-	--ani-rule-sky: #5e9cba;
+	--ani-band-green: #e1e3d8;
+	--ani-band-red: #e8e0d9;
+	--ani-band-plum: #e6e0de;
+	--ani-band-blue: #dfe1e2;
+	--ani-rule-violet: #adadbf;
+	--ani-rule-sky: #a9b6bc;
 	--ani-bezel: #1e2033;
 	--ani-bezel-edge: #1e2033;
 	--ani-crop-a: #10131f;
