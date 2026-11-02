@@ -1340,14 +1340,32 @@ fn respond(
             }
         }
         Operation::Many => {
+            // The season headers ask each title's related titles too, each with its card.
+            let headers = document.contains(kaeri_meta::anilist::query::HEADER_RELATIONS);
             let media: Vec<Value> = catalogue_order(&ids(&vars["ids"]), catalogue)
                 .into_iter()
                 .filter_map(|id| {
-                    if fixtures::ALL.contains(&id) {
+                    let mut listed = if fixtures::ALL.contains(&id) {
                         fixtures::listed_wire(id)
                     } else {
                         catalogue.listed(id)
+                    }?;
+                    if headers {
+                        let edges: Vec<Value> = catalogue
+                            .get(u64::from(id.get()))
+                            .and_then(|title| title["relations"]["edges"].as_array().cloned())
+                            .unwrap_or_default()
+                            .into_iter()
+                            .map(|mut edge| {
+                                if let Some(node) = edge["node"].as_object_mut() {
+                                    node.remove("relations");
+                                }
+                                edge
+                            })
+                            .collect();
+                        listed["relations"] = json!({ "edges": edges });
                     }
+                    Some(listed)
                 })
                 .map(|m| clock.media(m))
                 .collect();
@@ -1975,6 +1993,7 @@ mod tests {
             (query::by_id(false), Operation::Detail),
             (query::by_id(true), Operation::Detail),
             (query::by_ids(), Operation::Many),
+            (query::headers_by_ids(), Operation::Many),
             (query::by_ids_with_tables(), Operation::Tables),
             (query::relations(), Operation::Relations),
             (query::recommended_from(), Operation::Recommended),

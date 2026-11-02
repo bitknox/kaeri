@@ -694,6 +694,19 @@ async fn titles_past_a_page_go_as_pages_in_one_request_within_the_complexity_lim
 }
 
 #[tokio::test]
+async fn season_headers_with_their_named_relations_stay_within_the_complexity_limit() {
+    let kit = MetaKit::start().await;
+    let ids = invented_run(&kit, 972_000, 200);
+    let found = kit.meta.anilist().media_headers(&ids).await.unwrap();
+    assert_eq!(found.len(), ids.len());
+    let asked = kit.server.requests_for(Operation::Many);
+    assert_eq!(asked.len(), 1, "four pages of fifty in one request");
+    assert!(asked[0].query.contains(kaeri_meta::anilist::query::HEADER_RELATIONS));
+    let cost = kaeri_testkit::complexity(&asked[0].query, &asked[0].variables);
+    assert!(cost < kaeri_testkit::COMPLEXITY_LIMIT, "{cost}");
+}
+
+#[tokio::test]
 async fn the_largest_season_list_the_walk_allows_is_asked_within_the_complexity_limit() {
     let kit = MetaKit::start().await;
     // The most titles a walk can learn of: every one of its requests full.
@@ -740,6 +753,13 @@ async fn a_franchise_s_season_headers_come_in_one_request_and_head_each_season_s
                 .banner_image
         );
         assert_eq!(seasons.len(), SEASONS.len());
+        // Its related titles came with it, each named, as its page will show them.
+        let page = fixtures::long_franchise_media().into_iter().find(|m| m.id == *id).unwrap();
+        let ids = |m: &kaeri_meta::anilist::Media| {
+            m.relations.edges.iter().map(|e| e.node.id).collect::<Vec<_>>()
+        };
+        assert_eq!(ids(&header), ids(&page));
+        assert!(header.relations.edges.iter().all(|e| !e.node.title.all().is_empty()));
         assert_eq!(kit.meta.season_headers(*id).await.len(), SEASONS.len() - 1);
     }
     assert_eq!(kit.server.requests_for(Operation::Many).len(), 1);

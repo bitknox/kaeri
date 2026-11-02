@@ -141,6 +141,25 @@ pub fn by_ids() -> String {
     )
 }
 
+/// What a season's header asks beyond [`MEDIA_FIELDS`]: its related titles, each with its card,
+/// so its page's Related row stands whole with the header, the names and covers the page will
+/// show, rather than placeholders whose widths change when the page comes.
+pub const HEADER_RELATIONS: &str = r"relations { edges { relationType node {
+    id title { romaji english native } format coverImage { large color } season seasonYear
+} } }";
+
+/// [`by_ids`] with each title's related titles ([`HEADER_RELATIONS`]): the season headers a
+/// title page asks ahead, in one request.
+pub fn headers_by_ids() -> String {
+    format!(
+        r"query ($ids: [Int], $perPage: Int) {{
+            Page(perPage: $perPage) {{
+                media(id_in: $ids, type: ANIME) {{ {MEDIA_FIELDS} {HEADER_RELATIONS} }}
+            }}
+        }}"
+    )
+}
+
 /// What a title's episode table asks of AniList beyond [`MEDIA_FIELDS`]: the listings' names
 /// and stills, and the broadcasts. [`by_ids_with_tables`] asks it of the covers a screen shows,
 /// so a hover card's Play line and stills cost no request of their own.
@@ -629,6 +648,7 @@ mod tests {
             ("search_filtered", search_filtered()),
             ("facets", FACETS.to_string()),
             ("by_ids", by_ids()),
+            ("headers_by_ids", headers_by_ids()),
             ("by_id", by_id(false)),
             ("by_id_following", by_id(true)),
             ("relations", relations()),

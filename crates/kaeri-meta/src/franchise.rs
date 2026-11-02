@@ -181,33 +181,32 @@ impl Relations {
 
     /// Title `id`'s header and when it came, while it is believed: younger than [`KEEP_FOR`].
     ///
-    /// Its relations are the ones its header came with, by kind, id and format, each named by
-    /// its card where the walk met it: so its page knows at once whether it has a Related row
-    /// and how many it holds, and the page fills in the names the walk did not learn.
+    /// Its relations are the ones its header came with, each with its card (see
+    /// [`crate::anilist::query::HEADER_RELATIONS`]), so its page's Related row stands whole with
+    /// the header. A header that came without them has them from its `prequels`, only those the
+    /// walk named: a card short that the page brings fades in, where a placeholder the page then
+    /// takes away would be a card that comes and goes.
     pub fn header(&self, id: AnilistId, now: Instant) -> Option<(Media, Instant)> {
         let (media, at) = self.titles.get(&id)?.header.as_ref()?;
         (now.saturating_duration_since(*at) < KEEP_FOR).then(|| (self.related(media), *at))
     }
 
-    /// `media` with its relations from its `prequels`, named by the cards known.
+    /// `media` with its relations: its own when it came with them, or else from its
+    /// `prequels`, those with a card known.
     fn related(&self, media: &Media) -> Media {
+        if !media.relations.edges.is_empty() {
+            return media.clone();
+        }
         let edges = media
             .prequels
             .edges
             .iter()
-            .map(|edge| RelationEdge {
-                relation_type: edge.relation_type.clone(),
-                node: self
-                    .titles
-                    .get(&edge.node.id)
-                    .and_then(|known| known.card.clone())
-                    .map_or_else(
-                        || edge.node.clone(),
-                        |card| RelationNode {
-                            format: card.format.or(edge.node.format),
-                            ..card
-                        },
-                    ),
+            .filter_map(|edge| {
+                let card = self.titles.get(&edge.node.id)?.card.clone()?;
+                Some(RelationEdge {
+                    relation_type: edge.relation_type.clone(),
+                    node: RelationNode { format: card.format.or(edge.node.format), ..card },
+                })
             })
             .collect();
         Media { relations: RelationConnection { edges }, ..media.clone() }
@@ -399,10 +398,20 @@ impl Relations {
 /// recommendations and listings, which are the bulk of a page and would make a franchise's
 /// headers weigh what its pages do.
 fn header_of(media: &Media) -> Media {
+    // Each related title's card, without the relations a page asks of it a level further out.
+    let edges = media
+        .relations
+        .edges
+        .iter()
+        .map(|edge| RelationEdge {
+            relation_type: edge.relation_type.clone(),
+            node: RelationNode { relations: None, ..edge.node.clone() },
+        })
+        .collect();
     Media {
         external_links: Vec::new(),
         streaming_episodes: Vec::new(),
-        relations: RelationConnection::default(),
+        relations: RelationConnection { edges },
         recommendations: Default::default(),
         tags: Vec::new(),
         upcoming: Default::default(),
