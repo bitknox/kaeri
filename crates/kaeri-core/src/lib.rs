@@ -12,6 +12,7 @@ pub mod hash;
 pub mod ids;
 pub mod media;
 pub mod settings;
+pub mod shared_settings;
 pub mod stream;
 pub mod track_memory;
 pub mod traits;
