@@ -16,7 +16,7 @@ and deploys it to your Vercel account. It sets up two things:
   invites, the plugin list and the plugin files themselves
 
 Vercel connects the database to the project and gives it `DATABASE_URL`, so there is nothing to
-copy by hand. A store for a group of friends fits in Vercel's Hobby plan and Neon's free plan.
+copy by hand. A small store fits in Vercel's Hobby plan and Neon's free plan.
 Plugin files count toward the database's storage.
 
 If you skipped the database during the deploy, open the project, go to Storage, create a Neon

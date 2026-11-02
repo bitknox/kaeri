@@ -118,7 +118,7 @@ and `jq`. An option given without the command it belongs to, such as `--json` or
 | `plugin stamp <file.wasm> [-o <out>]` | Write a plugin's manifest into it, for [stores](/docs/plugins/running-a-store/) that cannot run plugins |
 | `store serve <dir> --url <address>` | Run a [plugin store](/docs/plugins/running-a-store/) for the people you invite |
 | `store invite` \| `store publish` \| `store admin` | An invite link, a plugin published, a sign-in link for the admin page, from the store's machine |
-| `--stream-url <id> [--episode N]` | Resolve one episode to a URL and hold it open, so `mpv`/`curl` can be pointed at it directly |
+| `--stream-url <id> [--episode N]` | Resolve one episode to a URL and hold it open, so another player can open it |
 | `--open-torrent <link or file>` | Play a magnet link, an info hash or a torrent file you have in mpv, through torrent playback and the VPN guard |
 | `--preview 120x34 --screen home` | Render any screen as one frame of text, reached the way the app reaches it: home, calendar, seasonal, search, library, downloads, providers, accounts, settings, title, episodes, help, palette |
 | `--refresh-data` | Refresh the ID-mapping datasets |

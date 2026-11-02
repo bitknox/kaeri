@@ -9,9 +9,9 @@ friends, and an open store whose link travels further can outgrow a free plan.
 
 | Where | How | Keeps its data in | Cost |
 | --- | --- | --- | --- |
-| Cloudflare | Button in [`cloudflare/`](cloudflare/) | D1 and R2 | A group of friends fits in the free tier |
-| Vercel | Button in [`vercel/`](vercel/) | Neon Postgres | A group of friends fits in the Hobby plan and Neon's free plan |
-| Netlify | Button in [`netlify/`](netlify/) | Netlify Database (Postgres) | A group of friends fits in the Free plan |
+| Cloudflare | Button in [`cloudflare/`](cloudflare/) | D1 and R2 | A small store fits in the free tier |
+| Vercel | Button in [`vercel/`](vercel/) | Neon Postgres | A small store fits in the Hobby plan and Neon's free plan |
+| Netlify | Button in [`netlify/`](netlify/) | Netlify Database (Postgres) | A small store fits in the Free plan |
 | Fly.io | [`fly launch`](#flyio) | A 1 GB volume | Billed by usage; the machine stops when idle |
 | Render | [Button](#render) | A 1 GB disk | Disks need a paid instance |
 | Railway | A template, made once from [`railway/`](railway/) | A volume | Billed by usage |
