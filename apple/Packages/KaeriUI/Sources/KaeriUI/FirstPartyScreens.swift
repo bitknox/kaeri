@@ -781,14 +781,18 @@ struct LicensedLines: View {
         let sourcesKnown = store.titles.episodes[id] != nil
         let counts = sourcesKnown ? answered?.playsHere == playsHere : waited == id
         let known = counts ? answered : nil
+        // Across a season switch the last season's lines stay, untouchable, until the next
+        // season's answer replaces them, so a line both seasons have never blinks. With no
+        // answer by the time the main button stops waiting, they fade and keep their room.
         let shown = known ?? held
         lines(shown)
-            .opacity(known == nil ? 0 : 1)
+            .opacity(known == nil && waited == id ? 0 : 1)
             .allowsHitTesting(known != nil)
             .accessibilityHidden(known == nil)
             .font(font)
             .padding(.top, shown.map { $0.case == .playsHere && $0.others.isEmpty ? 0 : 10 } ?? 0)
             .animation(.fadeIn, value: known)
+            .animation(.fadeIn, value: waited)
             .onChange(of: known, initial: true) { if let known { held = known } }
             .task(id: "\(id)-\(playsHere)-\(store.licensed.yours)") {
                 store.loadAvailability(id, playsHere: playsHere)

@@ -168,7 +168,10 @@ struct RelatedCard: View {
     let cover: CGSize
     var phone = false
 
-    private var named: Bool { !linked.shownTitle.isEmpty }
+    /// A season's header knows a related title's kind and format but not its name.
+    private var named: Bool {
+        linked.titleRomaji != nil || linked.titleEnglish != nil || linked.titleNative != nil
+    }
 
     var body: some View {
         Button {
