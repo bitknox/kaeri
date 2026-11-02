@@ -541,7 +541,7 @@ struct Live {
 
 impl Work for Live {
     async fn media(&self, id: AnilistId) -> Option<Media> {
-        match self.meta.media(id).await {
+        match kaeri_meta::in_background(self.meta.media(id)).await {
             Ok(media) => Some(media),
             Err(error) => {
                 tracing::info!(%id, %error, "keep next could not read a show's schedule");

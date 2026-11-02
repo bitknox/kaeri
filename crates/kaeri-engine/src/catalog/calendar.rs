@@ -98,6 +98,9 @@ pub struct CalendarMemory {
     /// Held while a page of the past, and of the days ahead, is asked for, so two readers
     /// wanting the same page ask once. One for each side, so the two go out side by side.
     gates: Arc<[tokio::sync::Mutex<()>; 2]>,
+    /// The lanes of the background walks under way, raised to the page on screen's when the
+    /// Calendar comes to read: see [`kaeri_meta::Lane`].
+    walking: Arc<Mutex<Vec<kaeri_meta::Lane>>>,
 }
 
 struct Remembered {
@@ -199,6 +202,10 @@ impl CalendarMemory {
         self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
     }
 
+    fn walks(&self) -> std::sync::MutexGuard<'_, Vec<kaeri_meta::Lane>> {
+        self.walking.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+    }
+
     /// The window held, however old: what stands in while the schedule is asked for again.
     pub fn held(&self) -> Option<Window> {
         self.lock().as_ref().map(|k| k.window.clone())
@@ -231,7 +238,9 @@ impl CalendarMemory {
     /// Read the schedule with `need` held: the pages it lacks asked for one at a time, each
     /// once however many readers want it, and what is held handed back with the reason it
     /// falls short, if it does. Asked of AniList as background work when `low`: the widgets,
-    /// the notices and the digest wait behind what is on screen.
+    /// the notices and the digest wait behind what is on screen. A reader that is not `low`, the
+    /// Calendar on screen, raises the background walks under way to the page on screen's class,
+    /// as it may wait on their pages.
     ///
     /// The walk goes on if the caller stops waiting, so a reader that gave up on a slow answer
     /// finds the pages held when it comes back.
@@ -245,6 +254,16 @@ impl CalendarMemory {
         low: bool,
     ) -> Covered {
         let (anchor, stale) = self.window_for(at, anchor, renew);
+        let lane = if low {
+            let lane = kaeri_meta::Lane::new(kaeri_meta::Priority::Background);
+            self.walks().push(lane.clone());
+            Some(lane)
+        } else {
+            for walk in self.walks().iter() {
+                walk.raise(kaeri_meta::Priority::OnScreen);
+            }
+            None
+        };
         let me = self.clone();
         let meta = meta.clone();
         let walk = async move {
@@ -332,8 +351,14 @@ impl CalendarMemory {
             let [past, ahead] = errors;
             (past, ahead)
         };
-        let walk =
-            async move { if low { kaeri_meta::in_background(walk).await } else { walk.await } };
+        let walking = self.walking.clone();
+        let walk = async move {
+            let Some(lane) = lane else { return walk.await };
+            let errors = lane.run(walk).await;
+            let mut walks = walking.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            walks.retain(|other| !other.same(&lane));
+            errors
+        };
         let (past_error, ahead_error) = match tokio::spawn(walk).await {
             Ok(errors) => errors,
             Err(e) => (Some(e.to_string()), None),
@@ -743,9 +768,11 @@ const CALENDAR_FUTURE_PAGES: u32 = 3;
 /// The most pages one job walks to reach its `through`. About a week and a half of broadcasts
 /// is three pages, so this is several weeks; a job that stops short says there is more.
 const CALENDAR_JOB_PAGES: u32 = 12;
-/// The most pages of the schedule asked in one request: a hundred broadcasts, each with its
-/// title, which is what Search's start asks in its five rails of twenty, measured to answer.
-const CALENDAR_PAGES_TOGETHER: usize = 2;
+/// The most pages of the schedule asked in one request: two hundred broadcasts, each with its
+/// title. AniList counts each page's titles once against its query complexity, as it does
+/// Search's start's five rails, so four pages fit where two did. Refused together, the pages are
+/// asked one by one.
+const CALENDAR_PAGES_TOGETHER: usize = 4;
 /// How long the last window is kept (seconds), so a return to the calendar asks AniList nothing.
 const REMEMBERED_FOR: i64 = 600;
 

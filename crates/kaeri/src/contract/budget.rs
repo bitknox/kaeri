@@ -64,6 +64,18 @@ async fn launch(
     digest: bool,
     ahead: i64,
 ) -> Harness {
+    launch_paced(now, store, world, digest, ahead, None).await
+}
+
+/// [`launch`], with AniList's queued work paced by `pacing`.
+async fn launch_paced(
+    now: i64,
+    store: Option<Store>,
+    world: &HomeWorld,
+    digest: bool,
+    ahead: i64,
+    pacing: Option<kaeri_meta::Pacing>,
+) -> Harness {
     let clock = kaeri_engine::clock::Clock::default();
     clock.advance(ahead);
     let h = Harness::with(Options {
@@ -73,6 +85,7 @@ async fn launch(
         store,
         digest,
         clock: Some(clock),
+        pacing,
         ..Options::default()
     })
     .await;
@@ -89,17 +102,17 @@ async fn launch(
 /// The most requests a journey may cost, by the start of its label.
 const BOUNDS: &[(&str, usize)] = &[
     ("cold launch: launch pull", 1),
-    ("cold launch: LoadHome", 7),
+    ("cold launch: LoadHome", 6),
     ("cold launch: WidgetSnapshot", 2),
     ("cold launch: Continue stills", 0),
     ("Home again within 30 min", 0),
     ("Home after the player closes", 3),
-    ("Home again after 31 min", 6),
+    ("Home again after 31 min", 5),
     ("open a title (5-season", 2),
     ("switch season", 1),
     ("open a title (12-season", 4),
     ("Library", 0),
-    ("Calendar", 3),
+    ("Calendar", 2),
     ("Search start", 1),
     ("hover 10 covers on the Mac", 1),
     ("hover 10 covers", 1),
@@ -113,7 +126,7 @@ const BOUNDS: &[(&str, usize)] = &[
     ("warm launch: Search start", 0),
     ("warm launch: open the same title", 2),
     ("new-episode check", 0),
-    ("warm: Home after its half hour", 6),
+    ("warm: Home after its half hour", 5),
 ];
 
 #[derive(Default)]
@@ -540,6 +553,77 @@ async fn anilist_cold_launch_on_the_mac() {
         launch.asked.len()
     );
 }
+
+/// What a launch asks before anything queued may go: Home's first screen as the Mac's Home tab
+/// asks for it, with the week's notices and the widgets' record beside it. Cold, every part of
+/// Home is asked. A launch past Home's half hour shows the parts it kept and refreshes them in
+/// the queue, so it asks only what was never kept. The queued work waits two seconds after
+/// Home's screens are answered, so the launch set is what came before that gap. The launch pull
+/// is left out: it waits for the launch by design.
+#[tokio::test]
+async fn the_launch_asks_for_homes_first_screen_before_anything_queued() {
+    let now = kaeri_store::now();
+    let world = HomeWorld::at(HomeClock::in_zone(now, &jiff::tz::TimeZone::UTC));
+    let gap = std::time::Duration::from_secs(2);
+    let pacing = kaeri_meta::Pacing {
+        quiet: std::time::Duration::ZERO,
+        launch_after: gap,
+        ..kaeri_meta::Pacing::APP
+    };
+    let first_screen = || {
+        vec![
+            Command::LoadHome { refresh: false },
+            Command::LoadContinue,
+            Command::UpcomingNotices,
+            Command::WidgetSnapshot,
+        ]
+    };
+    // The requests before the launch's gap, and after it, by operation.
+    let split = |h: &Harness| {
+        let asked: Vec<_> =
+            h.server().requests().into_iter().filter(|r| r.path == "/graphql").collect();
+        let at = asked
+            .windows(2)
+            .position(|pair| pair[1].at.duration_since(pair[0].at) >= gap * 3 / 4)
+            .map_or(asked.len(), |at| at + 1);
+        let by = |part: &[kaeri_testkit::Request]| {
+            let mut by: BTreeMap<String, usize> = BTreeMap::new();
+            for r in part {
+                *by.entry(format!("{:?}", r.operation)).or_default() += 1;
+            }
+            by
+        };
+        (by(&asked[..at]), by(&asked[at..]))
+    };
+
+    let mut h = launch_paced(now, None, &world, false, 0, Some(pacing)).await;
+    world.seed_history(h.store(), now);
+    let store = h.store().clone();
+    let updates = run(&mut h, first_screen()).await;
+    let (cold, cold_queued) = split(&h);
+    let shelves = home_items(&updates);
+    assert!(!shelves.is_empty(), "Home came whole");
+    let _ = h.quit().await;
+
+    let mut h = launch_paced(now, Some(store), &world, false, 31 * 60, Some(pacing)).await;
+    let updates = run(&mut h, first_screen()).await;
+    let (kept, kept_queued) = split(&h);
+    assert_eq!(home_items(&updates), shelves, "Home shows what it kept, then refreshed");
+    let _ = h.quit().await;
+
+    let count = |by: &BTreeMap<String, usize>| by.values().sum::<usize>();
+    println!("launch set, cold: {} {cold:?}; queued after it: {cold_queued:?}", count(&cold));
+    println!("launch set, kept: {} {kept:?}; queued after it: {kept_queued:?}", count(&kept));
+    assert!(count(&cold) <= LAUNCH_SET_COLD, "the cold launch set: {cold:?}");
+    assert!(count(&kept) <= LAUNCH_SET_KEPT, "the kept launch set: {kept:?}");
+    assert!(count(&kept_queued) > 0, "the kept parts are refreshed in the queue");
+}
+
+/// The most requests a cold launch sends before queued work may go: see
+/// [`the_launch_asks_for_homes_first_screen_before_anything_queued`].
+const LAUNCH_SET_COLD: usize = 6;
+/// The same for a launch whose Home was kept past its half hour.
+const LAUNCH_SET_KEPT: usize = 1;
 
 /// A launch over a limit far tighter than AniList's, as a second launch inside the minute of
 /// the first meets: each refusal is a wait as the server says and another go, so Home comes

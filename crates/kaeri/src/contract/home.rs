@@ -29,7 +29,7 @@ use kaeri_providers::{MockProvider, ProviderRegistry};
 use kaeri_testkit::{Operation, anilist::Failure, fixtures::invented};
 use serde_json::{Value, json};
 
-use super::ends;
+use super::home_ends;
 use crate::harness::{Harness, Options};
 
 const DAY: i64 = 86_400;
@@ -165,7 +165,7 @@ fn homes(updates: &[Event]) -> Vec<HomeView> {
 async fn load(h: &mut Harness) -> Vec<HomeView> {
     let job = h.send(Command::LoadHome { refresh: false });
     let updates = h.settle().await;
-    ends(&updates, job);
+    home_ends(&updates, job);
     let sent = homes(&updates);
     assert!(!sent.is_empty(), "Home was sent");
     sent
@@ -176,7 +176,7 @@ async fn load(h: &mut Harness) -> Vec<HomeView> {
 async fn load_all(h: &mut Harness) -> Vec<Event> {
     let job = h.send(Command::LoadHome { refresh: false });
     let updates = h.settle().await;
-    ends(&updates, job);
+    home_ends(&updates, job);
     updates
 }
 

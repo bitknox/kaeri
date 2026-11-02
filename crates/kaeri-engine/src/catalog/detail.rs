@@ -27,11 +27,13 @@ pub async fn load_detail(lent: Lent, id: AnilistId) {
             return;
         }
     };
-    meta.seasons(&media, fresh, |seasons| {
+    // The walk along the franchise serves the page on screen: it goes right after the page's
+    // own requests, never into the share kept for screens.
+    kaeri_meta::on_screen(meta.seasons(&media, fresh, |seasons| {
         // Each page read as it is sent, so a second one is no older than the first.
         let page = data::entry_with_detail(&media, Some(&store), seasons.as_deref());
         let _ = tx.send(Event::Detail(Box::new(page)));
-    })
+    }))
     .await;
 }
 

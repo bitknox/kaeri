@@ -243,6 +243,9 @@ struct State {
     entries: Vec<Value>,
     /// How long each operation's answers are held back: see [`FakeAniList::answer_slowly`].
     slow: HashMap<Operation, std::time::Duration>,
+    /// What the next answers say of the limit, as `(limit, remaining)`, with no reset: see
+    /// [`FakeAniList::say_left`].
+    said: VecDeque<(u32, u32)>,
     /// Where image URLs point once the fake serves art: its own `/art/`.
     art: Option<String>,
     /// How the art is served when it is served badly: see [`FakeAniList::trouble_art`].
@@ -290,6 +293,7 @@ impl FakeAniList {
             season: Vec::new(),
             entries: Vec::new(),
             slow: HashMap::new(),
+            said: VecDeque::new(),
             failing: HashMap::new(),
             art: None,
             art_trouble: ArtTrouble::default(),
@@ -319,9 +323,17 @@ impl FakeAniList {
         format!("http://{}/tenrai/v1", self.addr)
     }
 
-    /// An AniList client that talks to this server, with [`crate::TEST_RATE_LIMIT`].
+    /// An AniList client that talks to this server, with [`crate::TEST_RATE_LIMIT`] and no
+    /// pacing of queued work, so a test's background requests go as soon as the limit allows.
     pub fn anilist(&self, http: &HttpClient) -> AniList {
-        AniList::new(http.clone(), crate::TEST_RATE_LIMIT).with_endpoint(self.endpoint())
+        self.anilist_paced(http, kaeri_meta::Pacing::UNPACED)
+    }
+
+    /// [`Self::anilist`], with queued work paced by `pacing`, as the app paces it.
+    pub fn anilist_paced(&self, http: &HttpClient, pacing: kaeri_meta::Pacing) -> AniList {
+        AniList::new(http.clone(), crate::TEST_RATE_LIMIT)
+            .with_endpoint(self.endpoint())
+            .with_pacing(pacing)
     }
 
     /// Where the fake Kitsu answers, for [`kaeri_track`]'s `kitsu::Site::at`: its token
@@ -477,6 +489,14 @@ impl FakeAniList {
     /// what a refusal sets off waits seconds rather than a minute for the window to pass.
     pub fn limit_per(&self, most: u32, window: std::time::Duration) {
         lock(&self.state).limit = Some((most.max(1), window));
+    }
+
+    /// Answer the next GraphQL requests as usual, each saying the next of `remaining` is left
+    /// of `limit` a minute, with no reset, as AniList's answers do. Its nodes count apart, so
+    /// one may say nothing is left while the window still has room: for a test of how the
+    /// client reads what it is told.
+    pub fn say_left(&self, limit: u32, remaining: impl IntoIterator<Item = u32>) {
+        lock(&self.state).said.extend(remaining.into_iter().map(|left| (limit, left)));
     }
 
     /// Hold every answer to `operation` back by `wait` from now on, as a slow AniList would: for
@@ -1003,6 +1023,11 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
                     .then(|| frees(&state.counted));
                 limit_headers = Some((per_minute, remaining, reset));
             }
+        }
+        if head.path == "/graphql"
+            && let Some((limit, left)) = state.said.pop_front()
+        {
+            limit_headers = Some((limit, left as usize, None));
         }
         state.requests.push(Request {
             operation,

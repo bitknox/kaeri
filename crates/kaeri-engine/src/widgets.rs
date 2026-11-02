@@ -60,7 +60,9 @@ pub(crate) fn snapshot(engine: &EngineState, services: &Services, tx: &Outbox) {
         schedule: engine.calendar.clone(),
     };
     let tx = tx.clone();
-    tokio::spawn(async move {
+    // Nobody is looking at a widget's record while it is made: it is background work, and the
+    // widgets show the record they hold until it is said.
+    tokio::spawn(kaeri_meta::in_background(async move {
         // Said at once with what is kept, and again as the week fills in: a week cut short by a
         // rate limit or a slow answer still shows what it had, and is made whole behind it.
         let mut tries = 0;
@@ -74,7 +76,7 @@ pub(crate) fn snapshot(engine: &EngineState, services: &Services, tx: &Outbox) {
             let wait = make.meta.rate_limit_wait().await.unwrap_or_default();
             tokio::time::sleep(wait.max(FILL_IN_AFTER)).await;
         }
-    });
+    }));
 }
 
 /// What making the record works with.

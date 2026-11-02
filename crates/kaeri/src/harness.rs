@@ -134,6 +134,9 @@ pub struct Options {
     /// Operations the fake answers this much later from launch on: for what the app shows
     /// before an answer the launch asks for.
     pub slow: Vec<(kaeri_testkit::Operation, Duration)>,
+    /// How AniList's queued work is paced, or `None` for not at all: see
+    /// [`kaeri_meta::Pacing`].
+    pub pacing: Option<kaeri_meta::Pacing>,
 }
 
 impl Default for Options {
@@ -152,6 +155,7 @@ impl Default for Options {
             store: None,
             digest: false,
             slow: Vec::new(),
+            pacing: None,
         }
     }
 }
@@ -229,7 +233,7 @@ impl Harness {
         }
         // `build_meta`, pointed at the fake.
         let mut meta = Meta::new(
-            server.anilist(&http),
+            server.anilist_paced(&http, options.pacing.unwrap_or(kaeri_meta::Pacing::UNPACED)),
             config.meta.fallback.then(|| server.tenrai(&http, &store)),
             store.clone(),
         );

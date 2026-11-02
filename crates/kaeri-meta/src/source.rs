@@ -171,6 +171,9 @@ fn as_of(mut media: Media, age: Duration) -> Media {
 #[derive(Default)]
 struct Recent {
     titles: HashMap<AnilistId, Flight>,
+    /// The class each ask under way goes in, raised by whoever joins it: see
+    /// [`crate::anilist::Lane`].
+    lanes: HashMap<AnilistId, crate::anilist::Lane>,
 }
 
 /// A circuit breaker for one fresh source.
@@ -318,8 +321,8 @@ type BatchAnswer = Arc<Result<Vec<Media>>>;
 
 struct Batch {
     ids: Vec<AnilistId>,
-    /// Nobody on a screen is waiting for any of it.
-    low: bool,
+    /// The class it goes in: the most urgent of those waiting on it.
+    lane: crate::anilist::Lane,
     answer: Arc<tokio::sync::watch::Sender<Option<BatchAnswer>>>,
 }
 
@@ -645,11 +648,14 @@ impl Meta {
     /// fallback or the cache, which may be a list's row with none of the page's fields.
     pub async fn media_answered(&self, id: AnilistId) -> Result<(Media, bool)> {
         let flight = self.flight(id);
+        let lane = self.flight_lane(id);
         let signed_in = self.anilist.is_authenticated();
         let answered = flight
-            .get_or_init(|| async {
-                let (outcome, fresh) = self.ask_media(id).await;
-                Answered { at: Instant::now(), outcome, fresh, signed_in }
+            .get_or_init(|| {
+                lane.run(async {
+                    let (outcome, fresh) = self.ask_media(id).await;
+                    Answered { at: Instant::now(), outcome, fresh, signed_in }
+                })
             })
             .await;
         answered.as_of(Instant::now()).map(|media| (media, answered.fresh))
@@ -830,7 +836,20 @@ impl Meta {
         recent.titles.retain(|_, flight| {
             flight.get().is_none_or(|answered| answered.serves(now, self.reuse_for, signed_in))
         });
+        let Recent { titles, lanes } = &mut *recent;
+        lanes.retain(|id, _| titles.get(id).is_some_and(|flight| !flight.initialized()));
         Arc::clone(recent.titles.entry(id).or_default())
+    }
+
+    /// The class the ask for `id` goes in, raised to the caller's: a page that opens on a title
+    /// asked for in the background is not left waiting in the queue.
+    fn flight_lane(&self, id: AnilistId) -> crate::anilist::Lane {
+        let mine = crate::anilist::priority();
+        let Ok(mut recent) = self.recent.lock() else { return crate::anilist::Lane::current() };
+        let lane =
+            recent.lanes.entry(id).or_insert_with(|| crate::anilist::Lane::new(mine)).clone();
+        lane.raise(mine);
+        lane
     }
 
     /// The ladder, for one title. Returns whether AniList itself answered.
@@ -883,20 +902,21 @@ impl Meta {
         if ids.is_empty() {
             return Ok(Vec::new());
         }
-        let low = crate::anilist::is_background();
+        let mine = crate::anilist::priority();
         let mut rx = {
             let Ok(mut many) = self.many.lock() else {
                 return self.media_many_direct(ids).await;
             };
             let batch = many.open.get_or_insert_with(|| {
                 let (tx, _) = tokio::sync::watch::channel(None);
-                let batch = Batch { ids: Vec::new(), low, answer: Arc::new(tx) };
+                let lane = crate::anilist::Lane::new(mine);
+                let batch = Batch { ids: Vec::new(), lane, answer: Arc::new(tx) };
                 let (me, answer) = (self.clone(), batch.answer.clone());
                 tokio::spawn(async move { me.send_batch(answer).await });
                 batch
             });
             // One screen's lookup in the batch makes the whole of it a screen's.
-            batch.low &= low;
+            batch.lane.raise(mine);
             for id in ids {
                 if !batch.ids.contains(id) {
                     batch.ids.push(*id);
@@ -934,8 +954,7 @@ impl Meta {
                 _ => Ok(found),
             }
         };
-        let result =
-            if batch.low { crate::anilist::in_background(ask).await } else { ask.await };
+        let result = batch.lane.run(ask).await;
         let _ = answer.send(Some(Arc::new(result)));
     }
 
@@ -1236,6 +1255,19 @@ impl Meta {
         Ok(pages)
     }
 
+    /// Several browses in one request, each its own page of its own size: see
+    /// [`AniList::browse_pages`].
+    pub async fn browse_pages(
+        &self,
+        browses: &[(&str, &BrowseFilter, u32, u32)],
+    ) -> Result<Vec<Page<Media>>> {
+        let pages = self.weathered(self.anilist.browse_pages(browses)).await?;
+        for page in &pages {
+            self.remember_page(page);
+        }
+        Ok(pages)
+    }
+
     /// What the cache holds of `ids`, in that order, asking nobody: titles a screen showed
     /// before, to show again at once while a fresh answer is on its way.
     pub fn cached(&self, ids: &[AnilistId]) -> Vec<Media> {
@@ -1277,8 +1309,15 @@ impl Meta {
             Ok(found) => found.into_iter().map(Ok).collect(),
             Err(AniListError::Api(e)) => {
                 tracing::info!(error = %e, "the calendar's pages were refused together");
-                let mut found = Vec::with_capacity(pages.len());
+                let mut found: Vec<Result<Page<AiringEntry>>> = Vec::with_capacity(pages.len());
                 for p in pages {
+                    // A page refused on its own too says the trouble is not the request's size:
+                    // the pages after it are given the same answer, not asked into a failing
+                    // service one by one.
+                    if let Some(Err(e)) = found.last() {
+                        found.push(Err(e.clone()));
+                        continue;
+                    }
                     let one = self.airing_between_sorted(
                         p.from,
                         p.to,

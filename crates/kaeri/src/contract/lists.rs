@@ -65,11 +65,11 @@ async fn continue_lists_the_latest_first_then_dates_what_is_airing() {
     let job = h.send(Command::LoadContinue);
     let updates = h.settle().await;
 
-    assert_eq!(names(&updates), ["Content", "LastAired", "JobDone"]);
+    assert_eq!(names(&updates), ["Content", "JobDone", "LastAired"]);
     assert!(matches!(&updates[0], Event::Content { view: ContentFor::Continue, .. }));
     assert_eq!(ids(content(&updates)), [AIRING, FINISHED], "most recent first");
     // Asked about the airing title only; the age is the real clock's, so only its sign is read.
-    let Event::LastAired(rows) = &updates[1] else { unreachable!() };
+    let Event::LastAired(rows) = &updates[2] else { unreachable!() };
     let aired: Vec<_> = rows.iter().map(|row| (row.id, row.aired.episode)).collect();
     assert_eq!(aired, [(AIRING, 5)]);
     assert!(rows.iter().all(|row| row.aired.ago >= 0));
@@ -97,7 +97,7 @@ async fn seasonal_names_its_season_before_the_list_and_dates_it_after() {
     let job = h.send(Command::LoadSeasonal);
     let updates = h.settle().await;
 
-    assert_eq!(names(&updates), ["Caption", "Content", "LastAired", "JobDone"]);
+    assert_eq!(names(&updates), ["Caption", "Content", "JobDone", "LastAired"]);
     // The season is the real clock's, as the app asks for the one it is in.
     let (season, year) = kaeri_engine::catalog::lists::current_season();
     let Event::Caption { view: ContentFor::Seasonal, text } = &updates[0] else {
@@ -109,7 +109,7 @@ async fn seasonal_names_its_season_before_the_list_and_dates_it_after() {
         "one page held all"
     );
     assert_eq!(ids(content(&updates)), SEASONAL);
-    let Event::LastAired(rows) = &updates[2] else { unreachable!() };
+    let Event::LastAired(rows) = &updates[3] else { unreachable!() };
     let aired: Vec<_> = rows.iter().map(|row| (row.id, row.aired.episode)).collect();
     assert_eq!(aired, [(AIRING, 5), (AIRING_NO_MAL, 8)]);
     ends(&updates, job);
@@ -156,7 +156,7 @@ async fn a_metadata_notice_comes_just_before_the_update_it_arrived_with() {
     let back = h.settle().await;
     assert_eq!(
         names(&back),
-        ["MetaStatus", "Toast", "Caption", "Content", "LastAired", "JobDone"]
+        ["MetaStatus", "Toast", "Caption", "Content", "JobDone", "LastAired"]
     );
     assert_eq!(toasts(&back), ["info: AniList is back."]);
     assert_eq!(ids(content(&back)), SEASONAL);
@@ -500,7 +500,7 @@ async fn browsing_with_no_words_lists_everything_and_dates_what_airs() {
     let updates = h.settle().await;
 
     // Nothing to keep among the recent searches.
-    assert_eq!(names(&updates), ["SearchPaging", "Caption", "Content", "LastAired", "JobDone"]);
+    assert_eq!(names(&updates), ["SearchPaging", "Caption", "Content", "JobDone", "LastAired"]);
     assert_eq!(ids(content(&updates)).len(), 6);
     ends(&updates, job);
 }

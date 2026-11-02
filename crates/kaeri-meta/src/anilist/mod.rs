@@ -17,7 +17,7 @@ use std::sync::Arc;
 use kaeri_core::ids::AnilistId;
 use kaeri_net::{
     HttpClient, RateLimiter,
-    ratelimit::{parse_rate_headers, parse_rate_limit},
+    ratelimit::{Pacing, Priority, parse_rate_headers, parse_rate_limit},
 };
 use serde::de::DeserializeOwned;
 
@@ -316,24 +316,94 @@ pub struct FacetTag {
 }
 
 tokio::task_local! {
-    /// Set for work nobody is looking at: see [`in_background`].
-    static BACKGROUND: ();
+    /// The class the caller's AniList requests go in: see [`Lane`].
+    static LANE: Lane;
 }
 
-/// AniList requests made inside `work` leave the last few tokens of the budget for whatever
-/// someone is looking at: a sync, a relations walk or the new-episode check never makes a
-/// search wait.
+/// The class a piece of work's AniList requests go in, shared by everything the work asks, and
+/// raised when someone more urgent comes to wait on it. Work outside any lane is a screen's.
+///
+/// A lane is what lets a background ask be joined: a title's page asked for in the background
+/// that its page then opens on is raised to the screen's class while it waits, rather than
+/// keeping the page in the queue.
+#[derive(Clone, Debug)]
+pub struct Lane(Arc<std::sync::atomic::AtomicU8>);
+
+impl Lane {
+    pub fn new(priority: Priority) -> Self {
+        Self(Arc::new(std::sync::atomic::AtomicU8::new(rank(priority))))
+    }
+
+    /// The caller's own lane, or a new one in the caller's class.
+    pub fn current() -> Self {
+        LANE.try_with(Clone::clone).unwrap_or_else(|_| Self::new(Priority::Screen))
+    }
+
+    pub fn priority(&self) -> Priority {
+        match self.0.load(std::sync::atomic::Ordering::SeqCst) {
+            0 => Priority::Screen,
+            1 => Priority::OnScreen,
+            _ => Priority::Background,
+        }
+    }
+
+    /// Whether `other` is this lane, rather than one in the same class.
+    pub fn same(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.0, &other.0)
+    }
+
+    /// Raise the lane to `priority`, if that is more urgent than it is.
+    pub fn raise(&self, priority: Priority) {
+        self.0.fetch_min(rank(priority), std::sync::atomic::Ordering::SeqCst);
+    }
+
+    /// Run `work` in this lane.
+    pub async fn run<F: Future>(&self, work: F) -> F::Output {
+        LANE.scope(self.clone(), work).await
+    }
+}
+
+const fn rank(priority: Priority) -> u8 {
+    match priority {
+        Priority::Screen => 0,
+        Priority::OnScreen => 1,
+        Priority::Background => 2,
+    }
+}
+
+/// AniList requests made inside `work` are background work: queued behind what is on screen,
+/// paced, and kept out of the share left for screens (see [`kaeri_net::ratelimit::Pacing`]). A
+/// sync, a relations walk or the new-episode check never makes a search wait.
+///
+/// Inside work for the page on screen ([`on_screen`]) this changes nothing: that caller knows
+/// the work has someone looking at it.
 pub async fn in_background<F: Future>(work: F) -> F::Output {
-    BACKGROUND.scope((), work).await
+    match LANE.try_with(Clone::clone) {
+        Ok(lane) if lane.priority() != Priority::Screen => lane.run(work).await,
+        _ => Lane::new(Priority::Background).run(work).await,
+    }
+}
+
+/// AniList requests made inside `work` serve the page on screen, which shows without them and
+/// fills in as they land: the page's franchise walk, its seasons' headers, the open Calendar's
+/// walk. They go right after any screen request waiting, without the background's spacing,
+/// while more than the screens' share is left.
+pub async fn on_screen<F: Future>(work: F) -> F::Output {
+    match LANE.try_with(Clone::clone) {
+        Ok(lane) if lane.priority() == Priority::OnScreen => lane.run(work).await,
+        _ => Lane::new(Priority::OnScreen).run(work).await,
+    }
+}
+
+/// The class the caller's requests go in.
+pub fn priority() -> Priority {
+    LANE.try_with(Lane::priority).unwrap_or(Priority::Screen)
 }
 
 /// Whether the caller is doing work nobody is looking at: see [`in_background`].
 pub fn is_background() -> bool {
-    BACKGROUND.try_with(|()| ()).is_ok()
+    priority() == Priority::Background
 }
-
-/// How many tokens background work leaves in the bucket.
-const INTERACTIVE_RESERVE: f64 = 6.0;
 
 /// What AniList allows a minute when it is not degraded: the most the bucket follows the
 /// server's `X-RateLimit-Limit` up to.
@@ -463,6 +533,34 @@ impl AniList {
         self.token.read().unwrap_or_else(|e| e.into_inner()).clone()
     }
 
+    /// Pace background work as `pacing` says, on every client that shares this one's budget.
+    pub fn with_pacing(self, pacing: Pacing) -> Self {
+        self.limiter.set_pacing(pacing);
+        self
+    }
+
+    /// The app is launching: background work waits for the launch's screens. See
+    /// [`RateLimiter::launching`].
+    pub fn launching(&self) {
+        self.limiter.launching();
+    }
+
+    /// The launch's screens were answered: background work begins shortly. See
+    /// [`RateLimiter::launched`].
+    pub fn launched(&self) {
+        self.limiter.launched();
+    }
+
+    /// Whether the launch holds background work back now.
+    pub fn in_launch(&self) -> bool {
+        self.limiter.in_launch()
+    }
+
+    /// Wait until the launch no longer holds background work back.
+    pub async fn launch_over(&self) {
+        self.limiter.launch_over().await;
+    }
+
     /// How long the next request would spend waiting on the rate limit.
     ///
     /// Surfaced so a slow screen can say *why* it is slow. AniList's measured budget is 30 requests
@@ -481,12 +579,11 @@ impl AniList {
         variables: serde_json::Value,
     ) -> Result<T> {
         let mut refused = 0;
+        let lane = LANE.try_with(Clone::clone).ok();
         loop {
-            if BACKGROUND.try_with(|()| ()).is_ok() {
-                self.limiter.acquire_leaving(INTERACTIVE_RESERVE).await;
-            } else {
-                self.limiter.acquire().await;
-            }
+            self.limiter
+                .acquire_by(|| lane.as_ref().map_or(Priority::Screen, Lane::priority))
+                .await;
 
             let mut request = self
                 .http
@@ -590,12 +687,23 @@ impl AniList {
         page: u32,
         per_page: u32,
     ) -> Result<Vec<Page<Media>>> {
+        let browses: Vec<_> =
+            browses.iter().map(|(term, filter)| (*term, *filter, page, per_page)).collect();
+        self.browse_pages(&browses).await
+    }
+
+    /// Several browses in one request, each its own page of its own size, in the order asked:
+    /// Home's shelves, which ask further down two of the rails than the others.
+    pub async fn browse_pages(
+        &self,
+        browses: &[(&str, &BrowseFilter, u32, u32)],
+    ) -> Result<Vec<Page<Media>>> {
         if browses.is_empty() {
             return Ok(Vec::new());
         }
         let arguments: Vec<_> = browses
             .iter()
-            .map(|(term, filter)| filter.arguments(term, page, per_page))
+            .map(|(term, filter, page, per_page)| filter.arguments(term, *page, *per_page))
             .collect();
         let (document, variables) = query::media_pages(&arguments);
         let data: serde_json::Value = self.execute(&document, variables).await?;

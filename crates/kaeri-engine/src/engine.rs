@@ -421,6 +421,8 @@ impl Engine {
         for tracker in services.sync.initial_states() {
             launch.push_back(Event::Sync(Box::new(tracker)));
         }
+        // Home's first screen goes first: AniList's background work waits for it.
+        services.meta.anilist().launching();
         // How titles are named: the setting, and under `anilist` the signed-in viewer's own
         // choice, which comes with the viewer lookup the library pull makes anyway.
         services.meta.titles().choose(state.config.effective().meta.title_language);
@@ -432,7 +434,11 @@ impl Engine {
             crate::title_language::follow_viewer(&services, &inbox.sender());
         }
         if background.sync_loops {
-            tracking::spawn_loops(services.sync.clone(), inbox.sender());
+            tracking::spawn_loops(
+                services.sync.clone(),
+                services.meta.anilist().clone(),
+                inbox.sender(),
+            );
             // What waits for AniSkip from the last run, as the tracker queues are sent.
             if state.config.effective().playback.share_skip_times == Some(true) {
                 crate::aniskip::Sharing::shared()

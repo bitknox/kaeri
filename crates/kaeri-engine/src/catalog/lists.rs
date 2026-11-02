@@ -179,11 +179,13 @@ pub async fn follow_aired(
     if titles.is_empty() {
         return;
     }
-    if say_aired(meta, tx, &titles, now).await {
-        return;
-    }
+    // Queued, and not awaited: the list is already on screen, kept answers cost no request,
+    // and the line fills in when the rest lands.
     let (meta, tx) = (meta.clone(), tx.clone());
-    tokio::spawn(async move {
+    tokio::spawn(kaeri_meta::in_background(async move {
+        if say_aired(&meta, &tx, &titles, now).await {
+            return;
+        }
         for _ in 0..AIRED_RETRIES {
             let wait = meta.rate_limit_wait().await.unwrap_or_default();
             tokio::time::sleep(wait.max(AIRED_RETRY_AFTER)).await;
@@ -191,7 +193,7 @@ pub async fn follow_aired(
                 return;
             }
         }
-    });
+    }));
 }
 
 /// How many more times a last-aired lookup that failed is asked for, and the least it waits.

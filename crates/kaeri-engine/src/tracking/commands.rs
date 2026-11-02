@@ -10,15 +10,26 @@ use crate::{jobs::JobGuard, outbox::Outbox, services::Services, tracking};
 ///
 /// Not through [`spawn`]: sync work needs the tracker set, which `spawn` deliberately does not
 /// move into its task.
+///
+/// One sent while the app launches, as the apps send one with Home, joins the launch's pull:
+/// it waits for Home's first screen and goes in the background queue.
 pub fn sync_now(job: Option<JobGuard>, services: &Services, tx: &Outbox) {
-    let Services { sync, .. } = services;
-    let (sync, tx) = (sync.clone(), tx.clone());
+    let Services { sync, meta, .. } = services;
+    let (sync, tx, anilist) = (sync.clone(), tx.clone(), meta.anilist().clone());
     tokio::spawn(async move {
         let _job = job;
-        tracking::drain_once(&sync, &tx).await;
-        // A pull within the last 30 seconds already answers this one.
-        if !sync.pulls.recent() {
-            tracking::pull_once(&sync, &tx).await;
+        let sync_now = async {
+            tracking::drain_once(&sync, &tx).await;
+            // A pull within the last 30 seconds already answers this one.
+            if !sync.pulls.recent() {
+                tracking::pull_once(&sync, &tx).await;
+            }
+        };
+        if anilist.in_launch() {
+            anilist.launch_over().await;
+            kaeri_meta::in_background(sync_now).await;
+        } else {
+            sync_now.await;
         }
     });
 }
