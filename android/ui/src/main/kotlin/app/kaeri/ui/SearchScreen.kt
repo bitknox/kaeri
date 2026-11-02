@@ -5,7 +5,17 @@
 package app.kaeri.ui
 
 import app.kaeri.store.plainReason
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,8 +36,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.items
@@ -68,7 +84,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.paneTitle
@@ -210,6 +229,12 @@ fun SearchScreen(
     val bar = rememberSearchBarState()
     val scope = rememberCoroutineScope()
     var filtersShown by rememberSaveable { mutableStateOf(false) }
+    // The phone pins its pill row under the field, with the filters button at its end. A wide
+    // window keeps the row it had.
+    val phone = !wideWindow()
+    val grid = rememberLazyGridState()
+    val startGrid = rememberLazyGridState()
+    val rowScroll = rememberLazyListState()
 
     LaunchedEffect(Unit) {
         store.loadSearchStart()
@@ -273,14 +298,37 @@ fun SearchScreen(
 
     // The destination's name for TalkBack; the bar says the rest.
     val searchTitle = stringResource(R.string.nav_search)
-    Column(Modifier.windowInsetsPadding(WindowInsets.statusBars).semantics { paneTitle = searchTitle }) {
-        SearchBar(
-            state = bar,
-            inputField = input,
-            colors = colors,
-            modifier = Modifier.padding(horizontal = 16.dp).padding(top = 8.dp).fillMaxWidth(),
-        )
-        FilterRow(status.query, onFilters = { filtersShown = true })
+    // A new search starts the row at its first pill; a new answer shows from the first title, just
+    // under the row, as it replaces the one before (the earlier answer stays where it was until
+    // then). Only changes count: coming back from a title page keeps both where they were.
+    LaunchedEffect(rowScroll) {
+        snapshotFlow { status.query.text }.drop(1).collect { rowScroll.scrollToItem(0) }
+    }
+    LaunchedEffect(grid, phone) {
+        if (phone) snapshotFlow { status.answered }.drop(1).collect { grid.scrollToItem(0) }
+    }
+    val overdue = searchOverdue(status)
+    // The start stays while a first search is under 600 ms away, then gives way to the
+    // results or their placeholders in one crossfade.
+    val startShown = status.atStart || (status.answered == null && status.pending && !overdue)
+    // The field and the row sit on the screen until the start or the results scroll under them,
+    // then on a surface.
+    val scrolledUnder = phone && (if (startShown) startGrid else grid).canScrollBackward
+    val barSurface by animateColorAsState(
+        if (scrolledUnder) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.surface,
+        Motion.standard(),
+        label = "search bar surface", // i18n-skip
+    )
+    Column(Modifier.semantics { paneTitle = searchTitle }) {
+        Column(Modifier.then(if (phone) Modifier.background(barSurface) else Modifier).windowInsetsPadding(WindowInsets.statusBars)) {
+            SearchBar(
+                state = bar,
+                inputField = input,
+                colors = colors,
+                modifier = Modifier.padding(horizontal = 16.dp).padding(top = 8.dp).fillMaxWidth(),
+            )
+            FilterRow(status.query, phone, rowScroll, onFilters = { filtersShown = true })
+        }
         // While the demo is the only source: other titles play once a plugin store is joined.
         val demo by store.demo.collectAsStateWithLifecycle()
         androidx.compose.animation.AnimatedVisibility(demo.only, enter = androidx.compose.animation.fadeIn(Motion.standard()), exit = androidx.compose.animation.fadeOut(Motion.quick())) {
@@ -291,12 +339,8 @@ fun SearchScreen(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
         }
-        val overdue = searchOverdue(status)
-        // The start stays while a first search is under 600 ms away, then gives way to the
-        // results or their placeholders in one crossfade.
-        val startShown = status.atStart || (status.answered == null && status.pending && !overdue)
         Crossfade(startShown, Modifier.weight(1f), animationSpec = Motion.standard(), label = "search") { start -> // i18n-skip
-            if (start) SearchStart() else SearchResults(status.query, overdue)
+            if (start) SearchStart(startGrid) else SearchResults(status.query, overdue, phone, grid)
         }
     }
     ExpandedFullScreenSearchBar(state = bar, inputField = input, colors = colors) {
@@ -339,7 +383,7 @@ private fun Typing(typed: String, onPicked: () -> Unit) {
                 words.isEmpty() && status.recents.isNotEmpty() -> PosterGrid(PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp)) {
                     recentSearches(status.recents)
                 }
-                !status.atStart -> SearchResults(status.query, searchOverdue(status))
+                !status.atStart -> SearchResults(status.query, searchOverdue(status), phone = false, gridState = rememberLazyGridState())
                 else -> {}
             }
         }
@@ -361,122 +405,180 @@ private fun Suggestion(name: String, kind: String, onClick: () -> Unit) {
 // The filters up front
 
 /**
- * The filters up front: the sort, genres, year, season, format and status, each a menu, then All
- * filters for the rest. Changing one searches.
+ * The filters up front: the sort, genres, year, season, format and status, each a menu. On a phone
+ * the row sits under the field and scrolls sideways, with Clear all first while anything is set
+ * and the filters button pinned at its end, outside the scrolling; a wide window keeps the filters
+ * button as the last chip. Changing one searches.
  */
 @Composable
-private fun FilterRow(query: SearchQuery, onFilters: () -> Unit) {
+private fun FilterRow(query: SearchQuery, phone: Boolean, rowScroll: LazyListState, onFilters: () -> Unit) {
     val store = LocalAppStore.current
     val status by store.search.status.collectAsStateWithLifecycle()
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.padding(top = 8.dp),
-    ) {
-        item(key = "sort") {
-            val current = query.sortInEffect()
-            MenuChip(SearchWords.sort(LocalContext.current, current), selected = query.sort != null, describe = stringResource(R.string.sort_label, SearchWords.sort(LocalContext.current, current))) { close ->
-                for (sort in searchSorts(!query.isBrowse())) {
-                    Choice(SearchWords.sort(LocalContext.current, sort), sort == current) {
+    val context = LocalContext.current
+    val words = filterRowState(context, query, phone)
+    // A pill keeps its place by its key; on a phone the others make room as its width changes.
+    fun LazyItemScope.slot(): Modifier =
+        if (phone) Modifier.animateItem(fadeInSpec = Motion.standard(), placementSpec = Motion.standard(), fadeOutSpec = Motion.quick()).padding(end = 8.dp) else Modifier
+    Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        LazyRow(
+            state = rowScroll,
+            contentPadding = PaddingValues(start = 16.dp, end = if (phone) 0.dp else 16.dp),
+            horizontalArrangement = if (phone) Arrangement.Start else Arrangement.spacedBy(8.dp),
+            modifier = Modifier.weight(1f).then(if (phone) Modifier.edgeFades(rowScroll) else Modifier),
+        ) {
+            if (phone) {
+                item(key = "clear") {
+                    AnimatedVisibility(
+                        words.clearAll,
+                        enter = fadeIn(Motion.standard()) + scaleIn(Motion.standard()) + expandHorizontally(Motion.standard()),
+                        exit = fadeOut(Motion.quick()) + scaleOut(Motion.standard()) + shrinkHorizontally(Motion.standard()),
+                    ) {
+                        Row {
+                            SearchChip(
+                                stringResource(R.string.action_clear_all),
+                                selected = false,
+                                phone = true,
+                                leading = Icons.Clear,
+                                describe = Strings.searchPillClear(context),
+                            ) { store.searchLive(store.search.status.value.query.cleared()) }
+                            Spacer(Modifier.width(8.dp))
+                        }
+                    }
+                }
+            }
+            item(key = "sort") {
+                val current = query.sortInEffect()
+                MenuChip(words.sort.label, selected = words.sort.set, phone = phone, describe = words.sort.spoken, modifier = slot()) { close ->
+                    for (sort in searchSorts(!query.isBrowse())) {
+                        Choice(SearchWords.sort(LocalContext.current, sort), sort == current) {
+                            close()
+                            store.editSearch { it.copy(sort = sort) }
+                        }
+                    }
+                }
+            }
+            item(key = "genres") {
+                val set = query.genres.size + query.genresExcluded.size
+                MenuChip(words.genres.label, selected = words.genres.set, phone = phone, describe = words.genres.spoken, modifier = slot()) { _ ->
+                    if (set > 0) Choice(stringResource(R.string.filter_any_genre), false) { store.editSearch { it.copy(genres = emptyList(), genresExcluded = emptyList()) } }
+                    val names = status.facets?.genres.orEmpty()
+                    if (names.isEmpty()) DropdownMenuItem(text = { Text(stringResource(R.string.search_loading_genres)) }, onClick = {}, enabled = false)
+                    for (name in names) {
+                        Choice(name, query.genrePick(name) == Pick.INCLUDE) {
+                            val now = store.search.status.value.query
+                            store.searchLive(now.pickingGenre(name, if (now.genrePick(name) == Pick.INCLUDE) Pick.OFF else Pick.INCLUDE))
+                        }
+                    }
+                }
+            }
+            item(key = "year") {
+                MenuChip(words.year.label, selected = words.year.set, phone = phone, describe = words.year.spoken, modifier = slot()) { close ->
+                    Choice(stringResource(R.string.filter_any_year), false) {
                         close()
-                        store.editSearch { it.copy(sort = sort) }
+                        store.searchLive(query.inYear(null))
+                    }
+                    for (year in (AppClock.now().atZone(AppClock.zone).year + 1) downTo FIRST_YEAR) {
+                        Choice(year.toString(), query.singleYear == year.toUInt()) {
+                            close()
+                            store.searchLive(query.inYear(year.toUInt()))
+                        }
                     }
                 }
             }
-        }
-        item(key = "genres") {
-            val set = query.genres.size + query.genresExcluded.size
-            val title = when (set) {
-                0 -> stringResource(R.string.filter_genres)
-                else -> pluralStringResource(R.plurals.search_genres_picked, set, set)
-            }
-            MenuChip(title, selected = set > 0) { _ ->
-                if (set > 0) Choice(stringResource(R.string.filter_any_genre), false) { store.editSearch { it.copy(genres = emptyList(), genresExcluded = emptyList()) } }
-                val names = status.facets?.genres.orEmpty()
-                if (names.isEmpty()) DropdownMenuItem(text = { Text(stringResource(R.string.search_loading_genres)) }, onClick = {}, enabled = false)
-                for (name in names) {
-                    Choice(name, query.genrePick(name) == Pick.INCLUDE) {
-                        val now = store.search.status.value.query
-                        store.searchLive(now.pickingGenre(name, if (now.genrePick(name) == Pick.INCLUDE) Pick.OFF else Pick.INCLUDE))
-                    }
-                }
-            }
-        }
-        item(key = "year") {
-            val label = query.label(FilterKey.Years)
-            MenuChip(label ?: stringResource(R.string.filter_year), selected = label != null) { close ->
-                Choice(stringResource(R.string.filter_any_year), false) {
-                    close()
-                    store.searchLive(query.inYear(null))
-                }
-                for (year in (AppClock.now().atZone(AppClock.zone).year + 1) downTo FIRST_YEAR) {
-                    Choice(year.toString(), query.singleYear == year.toUInt()) {
-                        close()
-                        store.searchLive(query.inYear(year.toUInt()))
-                    }
-                }
-            }
-        }
-        item(key = "season") {
-            val season = query.season
-            MenuChip(
-                season?.let { SearchWords.season(LocalContext.current, it) } ?: stringResource(R.string.filter_season),
-                selected = season != null,
+            item(key = "season") {
+                val season = query.season
                 // A season is a season of one year.
-                enabled = query.singleYear != null || season != null,
-                describe = if (query.singleYear == null && season == null) stringResource(R.string.filter_season) + ", " + stringResource(R.string.filter_season_pick_year) else null, // i18n-skip
-            ) { close ->
-                Choice(stringResource(R.string.filter_any_season), false) {
-                    close()
-                    store.editSearch { it.copy(season = null) }
-                }
-                for (each in SEASONS) {
-                    Choice(SearchWords.season(LocalContext.current, each), each == season) {
+                MenuChip(words.season.label, selected = words.season.set, enabled = words.season.enabled, phone = phone, describe = words.season.spoken, modifier = slot()) { close ->
+                    Choice(stringResource(R.string.filter_any_season), false) {
                         close()
-                        store.editSearch { it.copy(season = each) }
+                        store.editSearch { it.copy(season = null) }
+                    }
+                    for (each in SEASONS) {
+                        Choice(SearchWords.season(LocalContext.current, each), each == season) {
+                            close()
+                            store.editSearch { it.copy(season = each) }
+                        }
                     }
                 }
             }
-        }
-        item(key = "format") {
-            val count = query.formats.size
-            val title = when {
-                count == 0 -> stringResource(R.string.filter_format)
-                else -> if (count == 1) SearchWords.format(LocalContext.current, query.formats.first()) else pluralStringResource(R.plurals.search_formats_picked, count, count)
-            }
-            MenuChip(title, selected = count > 0) { _ ->
-                if (count > 0) Choice(stringResource(R.string.filter_any_format), false) { store.editSearch { it.copy(formats = emptyList()) } }
-                for (format in searchFormats()) {
-                    Choice(SearchWords.format(LocalContext.current, format), format in query.formats) {
-                        store.editSearch { it.togglingFormat(format) }
+            item(key = "format") {
+                MenuChip(words.format.label, selected = words.format.set, phone = phone, describe = words.format.spoken, modifier = slot()) { _ ->
+                    if (words.format.set) Choice(stringResource(R.string.filter_any_format), false) { store.editSearch { it.copy(formats = emptyList()) } }
+                    for (format in searchFormats()) {
+                        Choice(SearchWords.format(LocalContext.current, format), format in query.formats) {
+                            store.editSearch { it.togglingFormat(format) }
+                        }
                     }
                 }
             }
-        }
-        item(key = "status") {
-            val count = query.statuses.size
-            val title = when (count) {
-                0 -> stringResource(R.string.filter_status)
-                1 -> SearchWords.status(LocalContext.current, query.statuses.first())
-                else -> pluralStringResource(R.plurals.search_statuses_picked, count, count)
-            }
-            MenuChip(title, selected = count > 0) { _ ->
-                if (count > 0) Choice(stringResource(R.string.filter_any_status), false) { store.editSearch { it.copy(statuses = emptyList()) } }
-                for (each in searchStatuses()) {
-                    Choice(SearchWords.status(LocalContext.current, each), each in query.statuses) {
-                        store.editSearch { it.togglingStatus(each) }
+            item(key = "status") {
+                MenuChip(words.status.label, selected = words.status.set, phone = phone, describe = words.status.spoken, modifier = slot()) { _ ->
+                    if (words.status.set) Choice(stringResource(R.string.filter_any_status), false) { store.editSearch { it.copy(statuses = emptyList()) } }
+                    for (each in searchStatuses()) {
+                        Choice(SearchWords.status(LocalContext.current, each), each in query.statuses) {
+                            store.editSearch { it.togglingStatus(each) }
+                        }
                     }
                 }
             }
+            if (!phone) {
+                item(key = "filters") {
+                    val count = query.advancedCount()
+                    SearchChip(
+                        if (count == 0u) stringResource(R.string.filters_button) else stringResource(R.string.filters_button_count, count.toInt()),
+                        selected = count > 0u,
+                        describe = if (count > 0u) stringResource(R.string.filters_button_count, count.toInt()) else stringResource(R.string.filters_button),
+                        onClick = onFilters,
+                    )
+                }
+            }
         }
-        item(key = "filters") {
-            val count = query.advancedCount()
-            SearchChip(
-                if (count == 0u) stringResource(R.string.filters_button) else stringResource(R.string.filters_button_count, count.toInt()),
-                selected = count > 0u,
-                describe = if (count > 0u) stringResource(R.string.filters_button_count, count.toInt()) else stringResource(R.string.filters_button),
-                onClick = onFilters,
-            )
+        if (phone) FiltersPill(words.sheetCount, words.sheetSpoken, onFilters)
+    }
+}
+
+/**
+ * The filters button of a phone's row, pinned at its end: the glyph alone, then with how many
+ * filters only the sheet holds are set, on the neutral fill the set pills have.
+ */
+@Composable
+internal fun FiltersPill(count: Int, spoken: String, onClick: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    val shape = MaterialTheme.shapes.small
+    val set = count > 0
+    val fill by animateColorAsState(if (set) colors.secondaryContainer else Color.Transparent, Motion.quick(), label = "filters fill") // i18n-skip
+    val edge by animateColorAsState(if (set) Color.Transparent else colors.outline, Motion.quick(), label = "filters edge") // i18n-skip
+    val content by animateColorAsState(if (set) colors.onSecondaryContainer else colors.onSurfaceVariant, Motion.quick(), label = "filters content") // i18n-skip
+    Box(
+        Modifier
+            .padding(start = 4.dp, end = 16.dp)
+            .heightIn(min = 48.dp)
+            .widthIn(min = 48.dp)
+            .clickable(onClick = onClick)
+            .semantics {
+                selected = set
+                contentDescription = spoken
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Row(
+            Modifier
+                .padding(vertical = 8.dp)
+                .animateContentSize(Motion.standard())
+                .heightIn(min = with(LocalDensity.current) { 32.sp.toDp() })
+                .clip(shape)
+                .background(fill)
+                .border(1.dp, edge, shape)
+                .padding(horizontal = 12.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(Icons.Sort, contentDescription = null, tint = content, modifier = Modifier.size(with(LocalDensity.current) { 18.sp.toDp() }))
+            if (set) {
+                Crossfade(count, animationSpec = Motion.quick(), label = "filters count") { n -> // i18n-skip
+                    Text(n.toString(), style = MaterialTheme.typography.labelMedium.tabular(), color = content, maxLines = 1)
+                }
+            }
         }
     }
 }
@@ -488,11 +590,13 @@ private fun MenuChip(
     selected: Boolean,
     enabled: Boolean = true,
     describe: String? = null,
+    phone: Boolean = false,
+    modifier: Modifier = Modifier,
     choices: @Composable ColumnScope.(close: () -> Unit) -> Unit,
 ) {
     var open by remember { mutableStateOf(false) }
-    Box {
-        SearchChip(title, selected, enabled = enabled, menu = true, describe = describe) { open = true }
+    Box(modifier) {
+        SearchChip(title, selected, enabled = enabled, menu = true, describe = describe, phone = phone) { open = true }
         Menu(expanded = open, onDismissRequest = { open = false }, modifier = Modifier.heightIn(max = 420.dp)) {
             choices { open = false }
         }
@@ -515,9 +619,11 @@ private fun Choice(text: String, chosen: Boolean, onClick: () -> Unit) {
 }
 
 /**
- * A filter chip, 32 high in a 48 target: outlined with haze words, or once set, on
- * primaryContainer with a check, as the Library's chips are. [menu] adds the arrow of a chip that
- * opens a menu.
+ * A filter chip, 32 high in a 48 target: outlined with haze words, or once set, filled with a
+ * check. A wide window fills it with primaryContainer, as the Library's chips are; a [phone] fills
+ * it with secondaryContainer, so the row has no amber, and moves it on the motion tokens: the fill
+ * on quick, the width and the words on quick and standard. [menu] adds the arrow of a chip that
+ * opens a menu; a [leading] glyph takes the check's place on a chip that is never set.
  */
 @Composable
 private fun SearchChip(
@@ -526,15 +632,26 @@ private fun SearchChip(
     enabled: Boolean = true,
     menu: Boolean = false,
     describe: String? = null,
+    phone: Boolean = false,
+    leading: ImageVector? = null,
     onClick: () -> Unit,
 ) {
     val colors = MaterialTheme.colorScheme
     val shape = MaterialTheme.shapes.small
     val content = when {
         !enabled -> colors.onSurfaceVariant.copy(alpha = 0.38f)
-        selected -> colors.onPrimaryContainer
+        selected -> if (phone) colors.onSecondaryContainer else colors.onPrimaryContainer
+        leading != null -> colors.onSurface
         else -> colors.onSurfaceVariant
     }
+    val setFill = if (phone) colors.secondaryContainer else colors.primaryContainer
+    val fill = if (selected) setFill else Color.Transparent
+    val edge = if (selected) Color.Transparent else colors.outline
+    // A wide window changes at once, as it always did.
+    val fillShown by animateColorAsState(fill, if (phone) Motion.quick() else snap(), label = "chip fill") // i18n-skip
+    val edgeShown by animateColorAsState(edge, if (phone) Motion.quick() else snap(), label = "chip edge") // i18n-skip
+    val contentShown by animateColorAsState(content, if (phone) Motion.quick() else snap(), label = "chip content") // i18n-skip
+    val glyph = if (selected) Icons.Check else leading
     Box(
         Modifier
             .heightIn(min = 48.dp)
@@ -547,16 +664,25 @@ private fun SearchChip(
     ) {
         Row(
             Modifier
+                .padding(vertical = 8.dp)
+                .then(if (phone) Modifier.animateContentSize(Motion.standard()) else Modifier)
                 .heightIn(min = 32.dp)
                 .clip(shape)
-                .then(if (selected) Modifier.background(colors.primaryContainer) else Modifier.border(1.dp, colors.outline, shape))
-                .padding(start = if (selected) 8.dp else 16.dp, end = if (menu) 8.dp else 16.dp),
+                .background(fillShown)
+                .border(1.dp, edgeShown, shape)
+                .padding(start = if (glyph != null) 8.dp else 16.dp, end = if (menu) 8.dp else 16.dp, top = 6.dp, bottom = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (selected) Icon(Icons.Check, contentDescription = null, tint = content, modifier = Modifier.size(18.dp))
-            Text(text, style = MaterialTheme.typography.labelMedium, color = content, maxLines = 1)
-            if (menu) Icon(Icons.Down, contentDescription = null, tint = content, modifier = Modifier.size(18.dp))
+            if (glyph != null) Icon(glyph, contentDescription = null, tint = contentShown, modifier = Modifier.size(18.dp))
+            if (phone) {
+                Crossfade(text, animationSpec = Motion.quick(), label = "chip words") { words -> // i18n-skip
+                    Text(words, style = MaterialTheme.typography.labelMedium, color = contentShown, maxLines = 1)
+                }
+            } else {
+                Text(text, style = MaterialTheme.typography.labelMedium, color = contentShown, maxLines = 1)
+            }
+            if (menu) Icon(Icons.Down, contentDescription = null, tint = contentShown, modifier = Modifier.size(18.dp))
         }
     }
 }
@@ -605,8 +731,9 @@ private fun ActiveFilters(query: SearchQuery) {
 // The titles found
 
 /** The filters set and what is said above the titles, as the first rows of the grid. */
-private fun LazyGridScope.resultsHeader(query: SearchQuery, caption: String?, livePaused: Boolean) {
-    if (query.active().isNotEmpty()) {
+private fun LazyGridScope.resultsHeader(query: SearchQuery, caption: String?, livePaused: Boolean, phone: Boolean) {
+    // The phone's row says what is set and takes it off from its own pills and Clear all.
+    if (!phone && query.active().isNotEmpty()) {
         item(span = { GridItemSpan(maxLineSpan) }, key = "active", contentType = "active") { ActiveFilters(query) }
     }
     if (livePaused && !query.isBrowse()) {
@@ -659,7 +786,7 @@ private fun SearchQuery.searchingLine(context: Context): String {
  * Past [overdue], placeholders in place of results that answer an earlier search.
  */
 @Composable
-private fun SearchResults(query: SearchQuery, overdue: Boolean) {
+private fun SearchResults(query: SearchQuery, overdue: Boolean, phone: Boolean, gridState: LazyGridState) {
     val store = LocalAppStore.current
     val context = LocalContext.current
     val state by store.search.list.state.collectAsStateWithLifecycle()
@@ -674,14 +801,14 @@ private fun SearchResults(query: SearchQuery, overdue: Boolean) {
         returns = true,
         waited = overdue,
         placeholders = {
-            PosterGrid(grid) {
-                resultsHeader(query, searching, status.livePaused)
+            PosterGrid(grid, gridState) {
+                resultsHeader(query, searching, status.livePaused, phone)
                 items(9, contentType = { "placeholder" }) { PosterPlaceholder() }
             }
         },
     ) { list ->
-        PosterGrid(grid) {
-            resultsHeader(query, caption, status.livePaused)
+        PosterGrid(grid, gridState) {
+            resultsHeader(query, caption, status.livePaused, phone)
             when (list) {
                 is ListState.Loaded -> {
                     val entries = list.ids.mapNotNull { titles[it] }
@@ -729,11 +856,11 @@ private fun NothingFound(query: SearchQuery) {
 /** Before anything is asked: the recent searches, the rails, and the genres. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun SearchStart() {
+private fun SearchStart(gridState: LazyGridState) {
     val store = LocalAppStore.current
     val status by store.search.status.collectAsStateWithLifecycle()
     val titles by store.titles.entries.collectAsStateWithLifecycle()
-    PosterGrid(PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp)) {
+    PosterGrid(PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp), gridState) {
         recentSearches(status.recents)
         val rails = status.rails
         if (rails == null) {
@@ -1019,13 +1146,16 @@ private fun TagsSection(query: SearchQuery) {
 }
 
 /**
- * A genre or tag with three states: outlined when off, on primaryContainer with a check when
- * included, and struck through on the raised fill when left out.
+ * A genre or tag with three states: outlined when off, filled with a check when included, and
+ * struck through on the raised fill when left out. On a phone the included fill is the neutral
+ * secondaryContainer of the pinned row's set pills, leaving amber to the sheet's switches and
+ * its action; a wide window keeps primaryContainer for now.
  */
 @Composable
 private fun PickChip(name: String, pick: Pick, onClick: () -> Unit) {
     val words = pick.words(LocalContext.current)
     val colors = MaterialTheme.colorScheme
+    val phone = !wideWindow()
     val shape = MaterialTheme.shapes.small
     Box(
         Modifier
@@ -1039,12 +1169,12 @@ private fun PickChip(name: String, pick: Pick, onClick: () -> Unit) {
     ) {
         val background = when (pick) {
             Pick.OFF -> Modifier.border(1.dp, colors.outline, shape)
-            Pick.INCLUDE -> Modifier.background(colors.primaryContainer)
+            Pick.INCLUDE -> Modifier.background(if (phone) colors.secondaryContainer else colors.primaryContainer)
             Pick.EXCLUDE -> Modifier.background(colors.surfaceContainerHighest)
         }
         val content = when (pick) {
             Pick.OFF -> colors.onSurfaceVariant
-            Pick.INCLUDE -> colors.onPrimaryContainer
+            Pick.INCLUDE -> if (phone) colors.onSecondaryContainer else colors.onPrimaryContainer
             Pick.EXCLUDE -> colors.onSurface
         }
         Row(

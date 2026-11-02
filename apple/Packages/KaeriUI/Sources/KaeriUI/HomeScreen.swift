@@ -192,16 +192,23 @@ extension AppStore {
 private struct HomeContent: View {
     @Environment(AppStore.self) private var store
     @Environment(\.homeWide) private var wide
+    @Environment(\.homeLayout) private var layout
     let contentWidth: CGFloat
 
     var body: some View {
         let home = store.discovery
-        Group {
+        // Stacks, not a Group: a Group hands its animations to each of its branches, so Home
+        // arriving cut in over the placeholders, and a section coming or going never animated.
+        // The placeholders and the sections share a place while they crossfade, so nothing
+        // reflows.
+        ZStack(alignment: .topLeading) {
             if let view = home.view {
                 if view.offline, view.offlineSince == nil, view.spotlight == nil, view.sections.isEmpty {
                     HomeOfflineEmpty()
                 } else {
-                    loaded(view)
+                    VStack(alignment: .leading, spacing: layout.shelfGap) {
+                        loaded(view)
+                    }
                 }
             } else {
                 HomeWait(active: home.isLoading || home.view == nil, activity: "loading home") {
@@ -274,8 +281,11 @@ private struct HomeWait<Placeholder: View>: View {
     @State private var slow = false
 
     var body: some View {
-        Group {
-            if active, stage == .placeholders {
+        // A stack, not a Group, so the task runs while nothing shows yet. The placeholders hold
+        // their place unseen for the first 600 ms, as a list's do, so nothing moves when they
+        // show.
+        ZStack(alignment: .topLeading) {
+            if active {
                 VStack(alignment: .leading, spacing: layout.shelfGap) {
                     placeholder()
                     if slow { ActivityLine(activity: activity).padding(.top, -12) }
@@ -283,6 +293,7 @@ private struct HomeWait<Placeholder: View>: View {
                 .redacted(reason: .placeholder)
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
+                .opacity(stage == .placeholders ? 1 : 0)
                 .transition(.opacity)
             }
         }
@@ -294,7 +305,7 @@ private struct HomeWait<Placeholder: View>: View {
             }
             try? await Task.sleep(for: JobsModel.delay)
             guard !Task.isCancelled else { return }
-            withAnimation(.standard) { stage = .placeholders }
+            withAnimation(.fadeIn) { stage = .placeholders }
             try? await Task.sleep(for: .seconds(4) - JobsModel.delay)
             guard !Task.isCancelled else { return }
             withAnimation(.fadeIn) { slow = true }

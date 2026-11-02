@@ -95,6 +95,10 @@ internal object Flavour {
         if (named != null && FixtureScene.named(named) == null) Log.w(KaeriApp.TAG, "no scene named $named")
         // Home's world: invented titles dated by the scene's clock, for Home's shots.
         if (intent.getStringExtra("world") == "1") android.system.Os.setenv("KAERI_FIXTURES_HOME_WORLD", "1", true)
+        // The fuller catalogue, which Search's filters=set route needs for titles that match.
+        if (intent.getStringExtra("catalogue") == "1" || intent.getStringExtra(MainActivity.FILTERS) != null) {
+            android.system.Os.setenv("KAERI_FIXTURES_CATALOGUE", "1", true)
+        }
         intent.getStringExtra("media")?.let { fixtureMedia = it }
         FixtureCasts.scene = CastScene.named(intent.getStringExtra("cast"))
         if (intent.getStringExtra("downloads") != null) fixtureDownloadClip = downloadClip(context)

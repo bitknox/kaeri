@@ -110,7 +110,9 @@ struct StagedLoad<Placeholder: View, Answer: View>: View {
     @State private var slow = false
 
     var body: some View {
-        Group {
+        // A stack, not a Group: a Group hands the task to whichever branch shows, so each change
+        // of stage restarted it, and the placeholders went back to waiting every 600 ms.
+        ZStack(alignment: .topLeading) {
             switch stage {
             case .waiting:
                 answer()
@@ -139,11 +141,11 @@ struct StagedLoad<Placeholder: View, Answer: View>: View {
             stage = .waiting
             try? await Task.sleep(for: JobsModel.delay)
             guard !Task.isCancelled else { return }
-            withAnimation(.easeOut(duration: 0.2)) { stage = .placeholders }
+            withAnimation(.fadeIn) { stage = .placeholders }
             since = .now
             try? await Task.sleep(for: .seconds(4) - JobsModel.delay)
             guard !Task.isCancelled else { return }
-            withAnimation(.easeOut(duration: 0.2)) { slow = true }
+            withAnimation(.fadeIn) { slow = true }
         } else if stage == .placeholders {
             if let since {
                 let held = ContinuousClock.now - since

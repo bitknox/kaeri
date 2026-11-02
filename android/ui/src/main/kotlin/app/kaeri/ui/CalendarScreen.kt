@@ -100,9 +100,10 @@ import app.kaeri.engine.model.Command
 import app.kaeri.engine.model.Entry
 import app.kaeri.engine.model.LibrarySegment
 
-/** Whether a title is yours: under way here, or on your Watching or Planning list. */
+/** Whether a title is yours: under way here, or on your Watching or Planning list, and not dropped. */
 fun Entry.isMine(): Boolean =
-    progress != null || listStatus == LibrarySegment.WATCHING || listStatus == LibrarySegment.PLANNING
+    listStatus != LibrarySegment.DROPPED &&
+        (progress != null || listStatus == LibrarySegment.WATCHING || listStatus == LibrarySegment.PLANNING)
 
 private val dayHeading = DateTimeFormatter.ofPattern("EEEE d MMMM", AirTime.locale)
 

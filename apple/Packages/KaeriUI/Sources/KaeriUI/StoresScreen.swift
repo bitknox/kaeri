@@ -13,12 +13,23 @@ struct PluginStoresScreen: View {
     @Environment(Navigator.self) private var navigator
     @State private var selection: String?
 
+    /// What the screen shows: nothing before the engine's first answer, its empty state, or
+    /// the stores.
+    private enum Phase { case waiting, empty, stores }
+
     var body: some View {
         let stores = store.stores.stores
-        Group {
-            if store.stores.loaded, stores.isEmpty {
+        let phase = !store.stores.loaded && stores.isEmpty ? Phase.waiting : stores.isEmpty ? .empty : .stores
+        // A stack, not a Group, so the first answer fades in over the ground rather than
+        // cutting in, and the empty state and the stores crossfade.
+        ZStack(alignment: .topLeading) {
+            switch phase {
+            case .waiting:
+                Color.clear
+            case .empty:
                 NoStores()
-            } else {
+                    .transition(.opacity)
+            case .stores:
                 HStack(alignment: .top, spacing: 0) {
                     StoreList(selection: $selection)
                         .frame(width: 300)
@@ -28,8 +39,10 @@ struct PluginStoresScreen: View {
                     }
                 }
                 .padding(.leading, 12)
+                .transition(.opacity)
             }
         }
+        .animation(.fadeIn, value: phase)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .task { store.loadStores() }
         .onChange(of: store.stores.joined, initial: true) { _, joined in

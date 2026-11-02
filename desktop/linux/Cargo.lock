@@ -2665,7 +2665,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-cast"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "async-trait",
  "futures",
@@ -2682,7 +2682,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "async-trait",
  "directories",
@@ -2737,7 +2737,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-discord"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "serde_json",
  "tokio",
@@ -2746,7 +2746,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-engine"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "async-trait",
  "futures",
@@ -2780,7 +2780,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-i18n"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "fluent-bundle",
  "unic-langid",
@@ -2788,7 +2788,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-jellyfin"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "async-trait",
  "kaeri-core",
@@ -2807,7 +2807,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-meta"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "kaeri-core",
  "kaeri-net",
@@ -2822,7 +2822,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-model"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "kaeri-core",
  "kaeri-i18n",
@@ -2832,7 +2832,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-mpv-host"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "find-msvc-tools",
  "kaeri-model",
@@ -2843,7 +2843,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-net"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "kaeri-core",
  "reqwest 0.13.1",
@@ -2857,7 +2857,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-party"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "rustls",
  "serde",
@@ -2871,7 +2871,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-playback"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "kaeri-core",
  "serde",
@@ -2880,7 +2880,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-plugin"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2899,7 +2899,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-plugin-store"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "async-trait",
  "bytes",
@@ -2925,7 +2925,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-providers"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "async-trait",
  "futures",
@@ -2943,7 +2943,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-remote"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.23.1",
  "hex",
@@ -2962,7 +2962,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-store"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "kaeri-core",
  "rusqlite",
@@ -2974,7 +2974,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-store-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -2990,7 +2990,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-store-server"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "async-trait",
  "clap",
@@ -3005,7 +3005,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-testkit"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "jiff",
  "kaeri-core",
@@ -3019,7 +3019,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-track"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "async-trait",
  "kaeri-core",

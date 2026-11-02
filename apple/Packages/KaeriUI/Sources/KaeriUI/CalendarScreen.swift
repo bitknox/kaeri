@@ -130,9 +130,10 @@ extension AppStore {
         }
     }
 
-    /// Whether a title is yours: under way here, or on your Watching or Planning list.
+    /// Whether a title is yours: under way here, or on your Watching or Planning list, and not dropped.
     static func isMine(_ entry: Entry) -> Bool {
-        entry.progress != nil || entry.listStatus == .watching || entry.listStatus == .planning
+        if entry.listStatus == .dropped { return false }
+        return entry.progress != nil || entry.listStatus == .watching || entry.listStatus == .planning
     }
 }
 

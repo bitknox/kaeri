@@ -205,7 +205,8 @@ struct DiscussionPanel: View {
 
     @ViewBuilder
     private var content: some View {
-        Group {
+        // A stack, not a Group, so a change of state crossfades.
+        ZStack {
             switch view?.state ?? .loading {
             case .loading:
                 placeholders(note: slow ? L.discussionStillLoading : nil)

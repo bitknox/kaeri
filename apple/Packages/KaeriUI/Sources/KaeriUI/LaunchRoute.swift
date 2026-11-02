@@ -13,6 +13,9 @@ import Foundation
 ///     -KaeriQuery hoshikuzu     what Search searches for
 ///     -KaeriGenre Fantasy       Search browses a genre, with any query's words
 ///     -KaeriAvailable here      Search's Available filter: here or services
+///     -KaeriFilters set         Search with a row of filters and the sheet's set: Fantasy, 2024, Spring, TV,
+///                                   score 70% and Licensed only
+///     -KaeriScroll 420          Search's results scrolled this many points once they are drawn
 ///     -KaeriLibrary planning    the Library's list
 ///     -KaeriPalette hoshi       the ⌘K palette, open on these words
 ///     -KaeriPane accounts       Settings' pane, or on iPhone the Settings sheet at its page
@@ -34,6 +37,8 @@ public struct LaunchRoute: Equatable, Sendable {
     public var query: String?
     public var genre: String?
     public var available: String?
+    public var filters: String?
+    public var scroll: Int?
     public var library: LibrarySegment?
     public var palette: String?
     public var pane: String?
@@ -60,6 +65,8 @@ public struct LaunchRoute: Equatable, Sendable {
         query = value("-KaeriQuery")
         genre = value("-KaeriGenre")
         available = value("-KaeriAvailable")
+        filters = value("-KaeriFilters")
+        scroll = value("-KaeriScroll").flatMap { Int($0) }
         palette = value("-KaeriPalette")
         pane = value("-KaeriPane")
         sheet = value("-KaeriSheet")

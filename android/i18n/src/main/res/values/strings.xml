@@ -664,6 +664,14 @@
     </plurals>
     <!-- Player, More menu: under Discussion when the comment count is not known yet; opening it pauses the video. -->
     <string name="player_more_discussion_pauses">Pauses the video</string>
+    <!-- Spoken name of a filter pill in the search row that has a value: Genres, Fantasy. -->
+    <string name="search_pill_set">%1$s, %2$s</string>
+    <!-- Spoken name of a filter pill in the search row that has no value. -->
+    <string name="search_pill_any">%1$s, any</string>
+    <!-- Spoken name of the pinned filters button when the sheet holds filters that are set. -->
+    <string name="search_pill_all_set">All filters, %1$d set</string>
+    <!-- Spoken name of the pill in the search row that takes every filter off. -->
+    <string name="search_pill_clear">Clear all filters</string>
     <!-- Play on TV sheet: the heading over the TVs with Chromecast built in. -->
     <string name="cast_sheet_group">Chromecast</string>
     <!-- Play on TV sheet: the line under a Chromecast row when the stream goes out through this phone. -->

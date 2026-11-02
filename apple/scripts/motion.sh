@@ -3,7 +3,8 @@
 #
 #   apple/scripts/motion.sh <iphone|ipad> <demo> [--reduce-motion] [launch argument…]
 #
-# The demo is one of MotionDemo's: t1 (a cover zooms into its title), m2, m3, back, t9. The app
+# The demo is one of MotionDemo's: t1 (a cover zooms into its title), m2, m3, back, t9, and
+# Search's refine, clear and rowEnd. KAERI_SIMULATOR picks the Simulator, as for shots.sh. The app
 # runs it two seconds after its screen is up; the Simulator's screen is recorded meanwhile, and
 # the frames from the moment it starts are tiled into one image, eight frames at 30 per second
 # a row: apple/.shots/motion/<device>-<demo>[-reduced].png. --reduce-motion turns Reduce Motion
@@ -28,6 +29,8 @@ case "$device" in
   iphone) name="Kaeri iPhone" ;;
   ipad) name="Kaeri iPad" ;;
 esac
+# The Simulator shots.sh used, when KAERI_SIMULATOR named one of your own.
+name="${KAERI_SIMULATOR:-$name}"
 udid="$(xcrun simctl list devices -j | /usr/bin/python3 -I -c '
 import json, sys
 for devices in json.load(sys.stdin)["devices"].values():

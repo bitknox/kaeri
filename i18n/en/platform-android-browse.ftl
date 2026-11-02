@@ -107,3 +107,23 @@ player-more-discussion-note = { $count ->
 # @only android
 # @max 40
 player-more-discussion-pauses = Pauses the video
+
+# Spoken name of a filter pill in the search row that has a value: Genres, Fantasy.
+# @only android
+# @arg filter: text
+# @arg value: text
+search-pill-set = { $filter }, { $value }
+
+# Spoken name of a filter pill in the search row that has no value.
+# @only android
+# @arg filter: text
+search-pill-any = { $filter }, any
+
+# Spoken name of the pinned filters button when the sheet holds filters that are set.
+# @only android
+# @arg count: int
+search-pill-all-set = All filters, { $count } set
+
+# Spoken name of the pill in the search row that takes every filter off.
+# @only android
+search-pill-clear = Clear all filters

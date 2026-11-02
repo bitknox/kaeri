@@ -75,5 +75,11 @@ extension AppStore {
         HeroArt.resolve(entry, episodes: titles.episodes[entry.id])
         #endif
     }
+
+    /// The wide art over `entry`'s own page: never its cover, which the page shows beside its
+    /// title. With no banner and no still the page has no band at all.
+    public func pageArt(_ entry: Entry) -> HeroArt {
+        HeroArt.resolve(entry, episodes: titles.episodes[entry.id])
+    }
 }
 

@@ -48,8 +48,8 @@ permissions:
   contents: read
 
 env:
-  # The files a release carries (packaging/publish.sh).
-  RELEASE_FILES: 31
+  # The files a release carries: every name in packaging/publish.sh's expect lists.
+  RELEASE_FILES: 47
   # How long a beta waits before the schedule promotes it.
   SOAK_HOURS: 24
   IMAGE: ghcr.io/bitknox/kaeri-store
@@ -237,6 +237,11 @@ jobs:
       - name: The SideStore source's notes
         run: |
           set -euo pipefail
+          # An immutable release's files can't change; it keeps the source publish.sh wrote.
+          if [[ "$(gh api "repos/$GH_REPO/releases/tags/$TAG" --jq .immutable)" == true ]]; then
+            echo "::notice::$TAG is immutable, so its SideStore source keeps the beta's notes."
+            exit 0
+          fi
           mkdir source
           gh release download "$TAG" --pattern sidestore.json --dir source
           packaging/apps/sidestore-notes.sh source/sidestore.json stable-notes.md "$(date -u +%Y-%m-%dT%H:%M:%SZ)"

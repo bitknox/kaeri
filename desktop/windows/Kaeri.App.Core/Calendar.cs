@@ -55,9 +55,10 @@ public sealed record Broadcast(Entry Entry, uint Episode, long Airs, long? Was)
 /// <summary>The calendar's week: Monday first, in the viewer's time zone.</summary>
 public static class Calendar
 {
-    /// <summary>A title is yours when it is under way here or on your Watching or Planning list.</summary>
+    /// <summary>A title is yours when it is under way here or on your Watching or Planning list, and not dropped.</summary>
     public static bool IsMine(Entry entry) =>
-        entry.Progress is not null || entry.ListStatus is LibrarySegment.Watching or LibrarySegment.Planning;
+        entry.ListStatus is not LibrarySegment.Dropped &&
+        (entry.Progress is not null || entry.ListStatus is LibrarySegment.Watching or LibrarySegment.Planning);
 
     /// <summary>The broadcasts in <paramref name="rows"/>, oldest first, each title as it now stands.</summary>
     public static List<Broadcast> Broadcasts(IEnumerable<Entry> rows, long anchor, Known known, bool mine)

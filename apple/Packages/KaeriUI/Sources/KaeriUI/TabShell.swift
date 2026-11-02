@@ -66,7 +66,15 @@ struct TabShell: View {
             }
             Tab(value: AppSection.search, role: .search) {
                 TabStack(section: .search) { PhoneSearch() }
-                    .titleSearchField(text: $navigator.query, prompt: L.searchPlaceholder)
+                    .titleSearchField(
+                        text: $navigator.query,
+                        // The iPhone's field holds only what was typed; the pinned row names the
+                        // genres and tags.
+                        tokensShown: sizeClass != .compact,
+                        // On the iPhone the field always shows under the large title, with the
+                        // pinned filter row beneath it, instead of waiting for a pull.
+                        placement: sizeClass == .compact ? .navigationBarDrawer(displayMode: .always) : .automatic,
+                        prompt: L.searchPlaceholder)
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
