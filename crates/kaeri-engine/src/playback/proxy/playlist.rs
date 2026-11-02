@@ -62,15 +62,22 @@ fn rewrite_uri_attribute(
 
 /// Resolve a possibly-relative URI against the URL it was found in.
 ///
-/// Hand-rolled rather than pulled from a URL crate: playlists use three forms — absolute,
-/// root-relative and path-relative — and this handles exactly those without adding a
-/// dependency for the sake of it.
+/// Hand-rolled rather than pulled from a URL crate: playlists use four forms (absolute,
+/// scheme-relative, root-relative and path-relative), and this handles exactly those without
+/// adding a dependency for the sake of it.
 pub fn resolve_url(base: &str, reference: &str) -> String {
     if reference.starts_with("http://") || reference.starts_with("https://") {
         return reference.to_owned();
     }
 
     let scheme_end = base.find("://").map(|i| i + 3).unwrap_or(0);
+
+    // Scheme-relative: the playlist's scheme, and the host the reference names.
+    if reference.starts_with("//") {
+        let scheme = base.get(..scheme_end.saturating_sub(3)).filter(|s| !s.is_empty());
+        return format!("{}:{reference}", scheme.unwrap_or("https"));
+    }
+
     let authority_end =
         base[scheme_end..].find('/').map(|i| scheme_end + i).unwrap_or(base.len());
 
@@ -158,5 +165,57 @@ mod tests {
         assert_eq!(resolve_url(base, "seg.ts"), "https://cdn.test/a/b/seg.ts");
         assert_eq!(resolve_url(base, "/root/seg.ts"), "https://cdn.test/root/seg.ts");
         assert_eq!(resolve_url(base, "https://x.test/s.ts"), "https://x.test/s.ts");
+    }
+
+    #[test]
+    fn a_scheme_relative_reference_keeps_its_own_host() {
+        let base = "https://cdn.test/a/b/index.m3u8?token=1";
+        assert_eq!(resolve_url(base, "//media.test/v/seg.ts"), "https://media.test/v/seg.ts");
+        assert_eq!(
+            resolve_url("http://cdn.test/index.m3u8", "//media.test/seg.ts?x=1"),
+            "http://media.test/seg.ts?x=1"
+        );
+    }
+
+    #[test]
+    fn segments_and_keys_resolve_in_every_form() {
+        let playlist = "#EXTM3U\n\
+             #EXT-X-KEY:METHOD=AES-128,URI=\"//keys.test/k1.bin\"\n\
+             #EXTINF:4.0,\n\
+             //media.test/v/seg1.ts\n\
+             #EXT-X-KEY:METHOD=AES-128,URI=\"/keys/k2.bin\"\n\
+             #EXTINF:4.0,\n\
+             /v/seg2.ts\n\
+             #EXT-X-KEY:METHOD=AES-128,URI=\"k3.bin\"\n\
+             #EXTINF:4.0,\n\
+             seg3.ts\n\
+             #EXT-X-KEY:METHOD=AES-128,URI=\"https://keys.test/k4.bin\"\n\
+             #EXTINF:4.0,\n\
+             https://other.test/seg4.ts\n";
+        let base = "https://cdn.test/hls/index.m3u8";
+        let proxy = |u: &str| format!("proxied:{u}");
+        let out = rewrite_playlist(playlist, base, &proxy);
+
+        for expected in [
+            "https://keys.test/k1.bin",
+            "https://media.test/v/seg1.ts",
+            "https://cdn.test/keys/k2.bin",
+            "https://cdn.test/v/seg2.ts",
+            "https://cdn.test/hls/k3.bin",
+            "https://cdn.test/hls/seg3.ts",
+            "https://keys.test/k4.bin",
+            "https://other.test/seg4.ts",
+        ] {
+            assert!(out.contains(&proxy(expected)), "{expected} missing from {out}");
+        }
+        assert_eq!(
+            segment_urls(playlist, base),
+            [
+                "https://media.test/v/seg1.ts",
+                "https://cdn.test/v/seg2.ts",
+                "https://cdn.test/hls/seg3.ts",
+                "https://other.test/seg4.ts",
+            ]
+        );
     }
 }
