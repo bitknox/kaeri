@@ -587,9 +587,13 @@ The engine object is `FfiEngine`:
 The app hands the engine an `FfiHost`, which opens links, posts notifications and keeps the
 trackers' and plugin stores' tokens for it, in the keychain: `secretGet`, `secretSet` and
 `secretDelete`, by id. The engine calls it on its own threads. With `.followConfig` and
-`token_storage = "keychain"`, the items to keep them as are the terminal's: generic passwords
-under service `kaeri`, with the id as the account, in the login keychain, where the
-`keyring` crate keeps them on macOS. With `"file"` the host is never asked.
+`token_storage = "keychain"`, the item to keep them in is the terminal's: one generic password
+under service `kaeri` and account `kaeri-secrets`, in the login keychain, where the `keyring`
+crate keeps it on macOS. It holds every secret, as JSON, so that an update, which is a new app
+to the keychain, asks for the password once rather than once per secret. The engine reads it
+once per launch and writes it back whole when a secret changes, and moves an item per secret
+from an earlier build into it the first time each is asked for. With `"file"` the host is never
+asked.
 
 The app hosts the player, libmpv embedded, and the engine drives it as it drives the terminal's
 mpv, in mpv's own vocabulary:

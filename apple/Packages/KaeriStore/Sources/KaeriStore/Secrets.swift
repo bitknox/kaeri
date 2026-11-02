@@ -20,7 +20,9 @@ public protocol SecretBackend: Sendable {
 /// in one app signs in the other.
 ///
 /// On macOS these are in the login keychain, where the terminal's are. An item the terminal made
-/// trusts the terminal, so the first read from the app asks the user to allow it.
+/// trusts the terminal, so the first read from the app asks the user to allow it. The engine
+/// asks for one id there, `kaeri-secrets`, which holds every secret, and reads it once per
+/// launch: an ad hoc signed update is a new app to the keychain, and one item is one prompt.
 ///
 /// On iOS each is readable from the first unlock after a restart until the next: a token is read
 /// and renewed while the phone is locked, as it is through an episode's audio in the background,
