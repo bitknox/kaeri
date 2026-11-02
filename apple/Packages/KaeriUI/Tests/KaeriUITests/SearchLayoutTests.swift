@@ -123,6 +123,13 @@ struct SearchLayoutTests {
         #expect(store.search.atStart)
         let start = covers(in: try drawn(window), xs: strip, ys: rows)
         #expect(start.isEmpty, "covers at the panel's edge at Search's start: \(start.prefix(4))")
+        // The rails still run to that margin, cutting their last cover there: every rail has
+        // a cover in the last 24 points before it, wider than the gap between two covers.
+        let reach = try railEnds(in: try drawn(window))
+        #expect(reach.count == 2, "the rails' rows: \(reach)")
+        for end in reach {
+            #expect(abs(end - (edge - 16)) <= 1.5, "a rail ends at \(end), the margin before the panel at \(edge - 16)")
+        }
 
         // The same with results.
         let mecha = SearchQuery(genres: ["Mecha"])
@@ -171,6 +178,33 @@ struct SearchLayoutTests {
         #expect(left.isEmpty, "the earlier results still showing past 600 ms: \(left.prefix(4))")
     }
 
+    /// Where each row of covers ends, in window points: the last cover colour on a line through
+    /// each rail's covers, or each row of the grid's, top to bottom. Only the column's end is
+    /// looked at, clear of the sidebar's accent.
+    private func railEnds(in image: NSBitmapImageRep) throws -> [CGFloat] {
+        let xs = stride(from: Self.panelEdge - 300, through: Self.size.width - 1, by: 1)
+        var ends: [CGFloat] = []
+        var y: CGFloat = 150
+        while y < Self.size.height - 10 {
+            if !covers(in: image, xs: xs, ys: stride(from: y, through: y, by: 1)).isEmpty {
+                // A little below the covers' tops, where the rounded corners no longer narrow them.
+                let lines = stride(from: y, through: y + 40, by: 4).compactMap {
+                    covers(in: image, xs: xs, ys: stride(from: $0, through: $0, by: 1)).last?.x
+                }
+                ends.append(try #require(lines.max()) + 1)
+                // Past this row's covers and its captions, to the next.
+                while y < Self.size.height - 10,
+                      !covers(in: image, xs: xs, ys: stride(from: y, through: y, by: 1)).isEmpty {
+                    y += 2
+                }
+                y += 40
+            } else {
+                y += 2
+            }
+        }
+        return ends
+    }
+
     @Test func theCoversKeepTheirSizeAsThePanelOpens() async throws {
         _ = NSApplication.shared
         let store = AppStore()
@@ -187,13 +221,17 @@ struct SearchLayoutTests {
         let open = try #require(firstCoverWidth(try drawn(window)))
         #expect(abs(open - shut) <= 1, "a cover \(shut) points wide with the panel shut, \(open) open")
 
-        // The results' columns are the same width, open or shut.
+        // The results fill the column to the margin before the panel, their columns flexing a
+        // little at most from the covers' width with it shut.
         let mecha = SearchQuery(genres: ["Mecha"])
         store.searchLive(mecha)
         store.apply(.content(view: .search(query: mecha), content: .entries(titles(from: 40, count: 20))))
         try await settle(window, turns: 60)
-        let results = try #require(firstCoverWidth(try drawn(window)))
-        #expect(abs(results - shut) <= 1, "a result \(results) points wide, a rail's cover \(shut)")
+        let image = try drawn(window)
+        let results = try #require(firstCoverWidth(image))
+        #expect(abs(results / shut - 1) <= SearchGridColumns.flex + 0.01, "a result \(results) points wide, a rail's cover \(shut)")
+        let end = try #require(try railEnds(in: image).first)
+        #expect(abs(end - (Self.panelEdge - 16)) <= 1.5, "the results end at \(end), the margin before the panel at \(Self.panelEdge - 16)")
         navigator.searchFiltersShown = false
         try await settle(window)
         let resultsShut = try #require(firstCoverWidth(try drawn(window)))
@@ -222,14 +260,26 @@ struct SearchLayoutTests {
         return nil
     }
 
-    @Test func aRailEndsAfterItsLastWholeCover() {
-        // Seven covers of 130 points fit across 1,030 with 20 between them; four across 700.
-        #expect(RailColumns.width(of: 130, in: 1_030) == 1_030)
-        #expect(RailColumns.width(of: 130, in: 700) == 580)
-        // A width that fits them exactly keeps them all, rounding or not.
-        #expect(RailColumns.width(of: RailCover.width(in: 1_000), in: 1_000) == 1_000)
-        // Never fewer than one.
-        #expect(RailColumns.width(of: 130, in: 100) == 130)
+    @Test func theResultsFillTheColumnNearTheCoversWidth() {
+        // A width that fits whole covers keeps them exactly: the panel shut.
+        let shut = SearchGridColumns.columns(cover: RailCover.width(in: 1_000), in: 1_000)
+        #expect(shut == GridColumns(count: 6, width: 150, spacing: 20))
+        // The count whose columns come nearest the cover: six of 135 across 910, not five of 166.
+        #expect(SearchGridColumns.columns(cover: 140, in: 910) == GridColumns(count: 6, width: 135, spacing: 20))
+        // Neither count within the flex: the columns keep to it and the gaps widen.
+        let wide = SearchGridColumns.columns(cover: 150, in: 372)
+        #expect(wide.count == 2 && wide.width == 162 && wide.spacing == 48)
+        // Across any width at least a cover wide, the columns fill it edge to edge, within the
+        // flex of the cover's width, the gaps never narrower than asked.
+        for cover in [128.0, 141.5, 150, 170] as [CGFloat] {
+            for width in stride(from: cover, through: 2_400, by: 7) {
+                let columns = SearchGridColumns.columns(cover: cover, in: width)
+                let filled = CGFloat(columns.count) * columns.width + CGFloat(columns.count - 1) * columns.spacing
+                #expect(abs(filled - width) < 0.01 || columns.count == 1, "\(columns) across \(width)")
+                #expect(abs(columns.width / cover - 1) <= SearchGridColumns.flex + 0.0001, "\(columns) for a cover of \(cover)")
+                #expect(columns.spacing >= 20 - 0.0001, "\(columns) across \(width)")
+            }
+        }
     }
 
     @Test func aRailsCoversAreTheGridsColumns() {
