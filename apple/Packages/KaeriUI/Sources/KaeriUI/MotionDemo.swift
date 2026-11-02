@@ -19,6 +19,8 @@ public enum MotionDemo: String, CaseIterable, Sendable {
     /// T1 from the first cover of the grid on screen: the Library's list, Seasonal, or Search's
     /// results.
     case t1Grid
+    /// `t1Grid` double clicked: the same cover clicked again 50 ms later.
+    case t1GridTwice
     /// The first title of the screen opened with no element to fly from, as a calendar row does:
     /// the calendar's first broadcast there, else Continue's first title.
     case t1Nowhere
@@ -124,6 +126,12 @@ public enum MotionDemo: String, CaseIterable, Sendable {
             }
             guard let id = ids.first else { return }
             navigator.openTitle(id, from: TitleSource(id, .grid, art: .poster))
+        case .t1GridTwice:
+            MotionDemo.t1Grid.run(navigator: navigator, store: store)
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(50))
+                MotionDemo.t1Grid.run(navigator: navigator, store: store)
+            }
         case .t1Nowhere:
             let first = navigator.section == .calendar
                 ? store.broadcasts(mine: store.calendarMine).first?.entry.id

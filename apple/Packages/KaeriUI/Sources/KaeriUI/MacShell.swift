@@ -47,6 +47,7 @@ struct MacShell: View {
                         // Nor is the page's banner until the page has come in: the player never
                         // pairs the two, and the page's art never grows out of the section's.
                         .environment(\.playerZoomAside, navigator.pageSettled ? nil : "page")
+                        .environment(\.titleAwaited, navigator.awaited)
                 }
                 if let flight = navigator.flight {
                     TitleFlyer(flight: flight, space: titleSpace)
