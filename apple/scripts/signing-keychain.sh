@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The Mac release's signing identity, in a keychain made for the one job and deleted after it.
+# The Mac app's signing identity, in a keychain made for one build and deleted after it.
 #
 # The identity is a self-signed code-signing certificate, CN "Kaeri", with no Apple account behind
 # it. It isn't Developer ID, so Gatekeeper treats the app as it treats an ad hoc signed one. What
@@ -19,8 +19,15 @@
 #       Deletes that keychain, which takes it out of the search list.
 #   apple/scripts/signing-keychain.sh import <keychain> <p12> <password file>
 #       The identity into a keychain made and unlocked beforehand, its password in
-#       KAERI_KEYCHAIN_PASSWORD; prints the identity's SHA-1. What ci-setup does after making the
-#       keychain, and how to try the signing on a Mac without touching its own keychains.
+#       KAERI_KEYCHAIN_PASSWORD; prints the identity's SHA-1. What ci-setup and sign do after
+#       making the keychain.
+#   apple/scripts/signing-keychain.sh sign <dir> <Kaeri.app>
+#       A local build of the Mac app, such as a merge train's review build, signed as a release
+#       is: the identity from <dir>, which holds kaeri.p12 and p12-password (the maintainer's
+#       ~/.kaeri-signing/mac), into a keychain made with a random password in a temporary
+#       directory and never put in the search list, then adhoc-sign.sh with it. The keychain is
+#       deleted when this ends, however it ends. The login keychain and the search list are left
+#       as they were, and nothing asks for a password.
 #
 # Nothing here prints the key, the .p12 or a password.
 set -euo pipefail
@@ -96,6 +103,32 @@ case "${1:-}" in
   import)
     [[ $# -eq 4 && -f "$2" && -f "$3" && -f "$4" ]] || usage
     import_identity "$2" "$3" "$4"
+    ;;
+  sign)
+    [[ $# -eq 3 && -d "$2" && -d "$3" ]] || usage
+    dir="$2"
+    app="$3"
+    for file in kaeri.p12 p12-password; do
+      if [[ ! -f "$dir/$file" ]]; then
+        echo "error: $dir has no $file" >&2
+        exit 1
+      fi
+    done
+    work="$(mktemp -d)"
+    chmod 700 "$work"
+    keychain="$work/signing.keychain-db"
+    trap 'security delete-keychain "$keychain" 2>/dev/null || true; rm -rf "$work"' EXIT
+    KAERI_KEYCHAIN_PASSWORD="$(openssl rand -hex 24)"
+    export KAERI_KEYCHAIN_PASSWORD
+    # With its path, create-keychain leaves the search list and the default keychain alone.
+    security create-keychain -p "$KAERI_KEYCHAIN_PASSWORD" "$keychain"
+    security set-keychain-settings "$keychain"
+    security unlock-keychain -p "$KAERI_KEYCHAIN_PASSWORD" "$keychain"
+    identity="$(import_identity "$keychain" "$dir/kaeri.p12" "$dir/p12-password")"
+    unset KAERI_KEYCHAIN_PASSWORD
+    # adhoc-sign.sh finds the identity through --keychain, so the search list never needs it.
+    KAERI_SIGN_IDENTITY="$identity" KAERI_SIGN_KEYCHAIN="$keychain" \
+      "$(dirname "$0")/adhoc-sign.sh" "$app"
     ;;
   *) usage ;;
 esac
