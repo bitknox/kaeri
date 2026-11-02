@@ -382,7 +382,7 @@ struct ReducerTests {
             .content(view: .library(.planning), content: .entries([entry(900_003, "Moonlit Platform")])),
             .calendarWindow(anchor: 1_800_000_000, pages: 1, morePast: true, floor: 1_792_224_000, ceiling: 1_802_419_200, aheadPages: 1, moreAhead: false),
             .content(view: .calendar, content: .entries([entry(900_006, "Summer Wind Relay")])),
-            .calendarBackfill(page: 1, entries: [entry(900_002, "The Library Above the Clouds")], morePast: false),
+            .calendarBackfill(page: 2, entries: [entry(900_002, "The Library Above the Clouds")], morePast: false),
         ])
         #expect(store.seasonal.caption == "autumn 2026")
         #expect(store.seasonal.state == .loaded([900_002]))
@@ -402,13 +402,54 @@ struct ReducerTests {
         // A later page that failed keeps what arrived and says so, until the next ask.
         store.apply([.calendarAhead(page: nil, entries: [], moreAhead: true)])
         #expect(store.calendar.aheadFailed && store.calendar.rows.map(\.id) == [900_006])
-        store.apply([.calendarAhead(page: 1, entries: [entry(900_003, "Moonlit Platform")], moreAhead: false)])
+        store.apply([.calendarAhead(page: 2, entries: [entry(900_003, "Moonlit Platform")], moreAhead: false)])
         #expect(!store.calendar.aheadFailed && !store.calendar.moreAhead)
         #expect(store.calendar.rows.map(\.id) == [900_006, 900_003])
         #expect(store.calendar.aheadPages == 2)
         // An earlier page that failed marks the past side only.
         store.apply([.calendarBackfill(page: nil, entries: [], morePast: true)])
         #expect(store.calendar.pastFailed && !store.calendar.aheadFailed)
+    }
+
+    @Test func calendarAsksForThePageAfterTheLastHeldAndShowsEachBroadcastOnce() {
+        func aired(_ id: AnilistId, _ title: String, _ episode: UInt32, _ at: Int64) -> Entry {
+            entry(id, title) { $0.airingEpisode = episode; $0.airingIn = at }
+        }
+        let store = AppStore()
+        store.apply([
+            .calendarWindow(anchor: 1_800_000_000, pages: 3, morePast: true, floor: 1_792_224_000, ceiling: 1_802_419_200, aheadPages: 3, moreAhead: true),
+            .content(view: .calendar, content: .entries([
+                aired(900_011, "Paper Lantern Club", 4, -500_000), aired(900_012, "Tidepool Courier", 4, -400_000),
+                aired(900_013, "Clockwork Orchard", 5, 400_000),
+            ])),
+        ])
+        // Three pages held each way: the next asks are for page four, never page three again.
+        #expect(store.calendar.nextPastPage == 4 && store.calendar.nextAheadPage == 4)
+
+        store.apply([.calendarBackfill(page: 5, entries: [aired(900_014, "Saltwind Diner", 3, -900_000)], morePast: true)])
+        #expect(store.calendar.pages == 5 && store.calendar.nextPastPage == 6)
+        #expect(store.calendar.rows.map(\.id) == [900_014, 900_011, 900_012, 900_013])
+
+        // A page already held, as when a fresh window came in while it was on its way, adds
+        // nothing, and broadcasts already held are not added again.
+        store.apply([.calendarBackfill(page: 4, entries: [aired(900_014, "Saltwind Diner", 3, -900_000)], morePast: true)])
+        store.apply([.calendarBackfill(page: 6, entries: [
+            aired(900_015, "Harbour Lights Relay", 2, -1_200_000), aired(900_014, "Saltwind Diner", 3, -900_000),
+        ], morePast: false)])
+        store.apply([.calendarAhead(page: 4, entries: [
+            aired(900_013, "Clockwork Orchard", 5, 400_000), aired(900_013, "Clockwork Orchard", 6, 1_000_000),
+        ], moreAhead: false)])
+        let shown = store.calendar.rows.map { "\($0.id) \($0.airingEpisode ?? 0)" }
+        #expect(shown == ["900015 2", "900014 3", "900011 4", "900012 4", "900013 5", "900013 6"])
+        #expect(store.calendar.pages == 6 && !store.calendar.morePast)
+        #expect(store.calendar.aheadPages == 4 && !store.calendar.moreAhead)
+
+        // A new answer replaces every row before it.
+        store.apply([
+            .calendarWindow(anchor: 1_800_000_600, pages: 3, morePast: true, floor: 1_792_224_600, ceiling: 1_802_419_800, aheadPages: 3, moreAhead: true),
+            .content(view: .calendar, content: .entries([aired(900_012, "Tidepool Courier", 4, -400_600)])),
+        ])
+        #expect(store.calendar.rows.map(\.id) == [900_012] && store.calendar.nextPastPage == 4)
     }
 
     @Test func noticesAreKeptNewestFirstAndTheCapsuleShowsTheLatest() {
