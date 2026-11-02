@@ -467,14 +467,14 @@ public final class AppStore {
     public func loadCalendarPast(through: Date? = nil) {
         guard let anchor = calendar.anchor, calendar.morePast, !calendar.loadingPast else { return }
         calendar.askedPast()
-        send(.loadCalendarPast(anchor: anchor, page: calendar.pages, through: through.map { Int64($0.timeIntervalSince1970) }))
+        send(.loadCalendarPast(anchor: anchor, page: calendar.nextPastPage, through: through.map { Int64($0.timeIntervalSince1970) }))
     }
 
     /// Later broadcasts, walking forward until `through` is covered (one page without it).
     public func loadCalendarAhead(through: Date? = nil) {
         guard let anchor = calendar.anchor, calendar.moreAhead, !calendar.loadingAhead else { return }
         calendar.askedAhead()
-        send(.loadCalendarAhead(anchor: anchor, page: calendar.aheadPages, through: through.map { Int64($0.timeIntervalSince1970) }))
+        send(.loadCalendarAhead(anchor: anchor, page: calendar.nextAheadPage, through: through.map { Int64($0.timeIntervalSince1970) }))
     }
 
     /// Asks for whatever of `start...end` is not loaded yet. Stops where a page failed, until
