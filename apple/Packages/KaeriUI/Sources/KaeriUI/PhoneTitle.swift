@@ -281,6 +281,13 @@ struct PhoneTitle: View {
             // What the show sets for itself, its spoiler protection among it: from the database.
             store.loadShowSettings(id)
         }
+        .task(id: TitlePage.seasonArt(around: id, in: TitleFamily(entry), store: store)) {
+            // The seasons' headers came as cards with this page: their art is asked now, so the
+            // page a chip opens has its banner and cover whole.
+            for art in TitlePage.seasonArt(around: id, in: TitleFamily(entry), store: store) {
+                store.artwork.request(art.url, maxPixelSize: art.pixels)
+            }
+        }
     }
 
     private func seasonChip(index: Int, season: TitleFamily.Season, entry: Entry) -> some View {
