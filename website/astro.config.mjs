@@ -26,6 +26,7 @@ export default defineConfig({
 				PageFrame: './src/components/starlight/PageFrame.astro',
 				MobileMenuFooter: './src/components/starlight/MobileMenuFooter.astro',
 				PageTitle: './src/components/starlight/PageTitle.astro',
+				ThemeProvider: './src/components/starlight/ThemeProvider.astro',
 			},
 			head: [
 				{ tag: 'link', attrs: { rel: 'icon', href: '/favicon.ico', sizes: '16x16 32x32 48x48' } },
@@ -36,22 +37,7 @@ export default defineConfig({
 				{ tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' } },
 				{ tag: 'meta', attrs: { name: 'twitter:image', content: 'https://kaeri.app/og.png' } },
 				{ tag: 'meta', attrs: { property: 'og:image:alt', content: 'Kaeri, on every screen: the Mac app with the iPhone app in front of it' } },
-				{
-					tag: 'meta',
-					attrs: {
-						name: 'theme-color',
-						media: '(prefers-color-scheme: dark)',
-						content: '#10131f',
-					},
-				},
-				{
-					tag: 'meta',
-					attrs: {
-						name: 'theme-color',
-						media: '(prefers-color-scheme: light)',
-						content: '#f0ede4',
-					},
-				},
+				{ tag: 'meta', attrs: { name: 'theme-color', content: '#f0ede4' } },
 			],
 			sidebar: [
 				entry('Overview', 'overview', 'docs/'),

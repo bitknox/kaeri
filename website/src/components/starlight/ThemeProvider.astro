@@ -1,0 +1,14 @@
+---
+// The docs' theme before the first paint, as on the other pages (SiteHead): light, unless the
+// visitor picked dark with the theme switch. Starlight's own provider follows the system instead.
+// The docs have no theme select of Starlight's, so its pickers have nothing to update.
+---
+
+<script is:inline>
+	try {
+		document.documentElement.dataset.theme = localStorage.getItem('starlight-theme') === 'dark' ? 'dark' : 'light';
+	} catch (e) {
+		document.documentElement.dataset.theme = 'light';
+	}
+	window.StarlightThemeProvider = { updatePickers() {} };
+</script>

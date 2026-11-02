@@ -6,8 +6,8 @@
  * own scale: no game, no score, no obstacles. Without a script, or under Reduce Motion, she stands still.
  *
  * The city is at dusk in the dark theme and by day in the light one (scripts/strip-day.ts makes the
- * day strips from the dusk ones). Without a script the page is always in the dark theme, so the
- * baked dusk strip is in a noscript. With one, the script gives the bare strips their sources and the
+ * day strips from the dusk ones). Without a script the page is always in the light theme, so the
+ * baked day strip is in a noscript. With one, the script gives the bare strips their sources and the
  * theme shows one of them; they are lazy, so the browser fetches only the one on show.
  */
 import { useSite } from '../i18n/site';
@@ -16,7 +16,7 @@ const { t } = useSite(Astro);
 ---
 
 <div class="strip" data-strip>
-	<noscript><img class="strip-baked" src="/scene-strip.png" width="480" height="44" alt={t('home.strip.alt')} loading="lazy" decoding="async" /></noscript>
+	<noscript><img class="strip-baked" src="/scene-strip-day.png" width="480" height="44" alt={t('home.strip.alt')} loading="lazy" decoding="async" /></noscript>
 	<img class="strip-dusk" data-src="/scene-strip-bare.png" width="480" height="44" alt={t('home.strip.alt')} loading="lazy" decoding="async" />
 	<img class="strip-day" data-src="/scene-strip-day-bare.png" width="480" height="44" alt={t('home.strip.alt')} loading="lazy" decoding="async" />
 	<canvas class="strip-canvas" width="480" height="44" aria-hidden="true"></canvas>
@@ -45,8 +45,8 @@ const { t } = useSite(Astro);
 	/* One image shows: without a script the baked strip, with Nagare in it, and with one the bare
 	   strip of the theme, dusk or day, with her on the canvas. */
 	:root:not(.js) .strip-baked,
-	:root.js:not([data-theme='light']) .strip-dusk[src],
-	:root.js[data-theme='light'] .strip-day[src],
+	:root.js[data-theme='dark'] .strip-dusk[src],
+	:root.js:not([data-theme='dark']) .strip-day[src],
 	:root.js .strip canvas {
 		display: block;
 	}
