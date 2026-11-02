@@ -1,7 +1,8 @@
 //! Keep next: the next episodes of a show being watched, queued ahead of the viewer only as an
-//! episode of that show starts or finishes (counted watched, or played to its end), and not
-//! while downloads wait; and let go of a day after they are watched. Nothing else queues them:
-//! not a launch, a change of setting, a mark, a list sync or the new-episode check.
+//! episode of that show starts or finishes (counted watched, played to its end, or marked
+//! watched on its own), and not while downloads wait; and let go of a day after they are
+//! watched. Nothing else queues them: not a launch, a change of setting, a mark of many episodes,
+//! a list sync or the new-episode check.
 //!
 //! Off in every other test, as the rest of the engine's own work is; on here, with the device
 //! taken to have a terabyte free. Nothing starts a torrent: the harness has no session, so what
@@ -155,7 +156,7 @@ async fn an_episode_starting_tops_that_show_up_and_no_other() {
 }
 
 #[tokio::test]
-async fn changing_the_number_kept_or_marking_an_episode_queues_nothing() {
+async fn changing_the_number_kept_or_marking_many_episodes_queues_nothing() {
     let mut h = keeping(Options::default()).await;
     four_in(h.store());
     h.send(Command::SetSetting {
@@ -167,21 +168,53 @@ async fn changing_the_number_kept_or_marking_an_episode_queues_nothing() {
         key: ShowSettingKey::KeepNext,
         value: Some(SettingValue::Int(3)),
     });
-    h.send(Command::SetWatched { id: FINISHED, episodes: vec!["5".into()], watched: true });
+    // A season marked at once is not an episode finished.
+    h.send(Command::SetWatched {
+        id: FINISHED,
+        episodes: vec!["5".into(), "6".into()],
+        watched: true,
+    });
     h.settle().await;
     assert!(queue(h.store(), FINISHED).is_empty(), "{:?}", queue(h.store(), FINISHED));
 
     // The show's own number, once one of its episodes starts.
-    starts(&mut h, FINISHED, "6");
+    starts(&mut h, FINISHED, "7");
     h.settle().await;
-    assert_eq!(queue(h.store(), FINISHED), ["6 ahead", "7 ahead", "8 ahead"]);
+    assert_eq!(queue(h.store(), FINISHED), ["7 ahead", "8 ahead", "9 ahead"]);
 
     // Fewer kept: nothing deleted.
     h.send(Command::StepSetting { key: SettingKey::KeepNextEpisodes, delta: -1 });
     h.send(Command::ResetShowSettings { id: FINISHED });
-    starts(&mut h, FINISHED, "6");
+    starts(&mut h, FINISHED, "7");
     h.settle().await;
-    assert_eq!(queue(h.store(), FINISHED), ["6 ahead", "7 ahead", "8 ahead"]);
+    assert_eq!(queue(h.store(), FINISHED), ["7 ahead", "8 ahead", "9 ahead"]);
+}
+
+#[tokio::test]
+async fn one_episode_marked_watched_tops_that_show_up_once() {
+    let mut h = keeping(Options {
+        config: keep(2),
+        before_start: Some(|store| {
+            four_in(store);
+            seed::watched(store, AIRING, 2, now() - 600);
+        }),
+        ..Options::default()
+    })
+    .await;
+    h.send(Command::SetWatched { id: FINISHED, episodes: vec!["5".into()], watched: true });
+    h.settle().await;
+    assert_eq!(queue(h.store(), FINISHED), ["6 ahead", "7 ahead"]);
+    assert!(queue(h.store(), AIRING).is_empty(), "only the show marked");
+
+    // Marked again with nothing new to keep: the one row each.
+    h.send(Command::SetWatched { id: FINISHED, episodes: vec!["5".into()], watched: true });
+    h.settle().await;
+    assert_eq!(queue(h.store(), FINISHED), ["6 ahead", "7 ahead"]);
+
+    // Marked unwatched: nothing more queued, nothing deleted.
+    h.send(Command::SetWatched { id: FINISHED, episodes: vec!["5".into()], watched: false });
+    h.settle().await;
+    assert_eq!(queue(h.store(), FINISHED), ["6 ahead", "7 ahead"]);
 }
 
 #[tokio::test]

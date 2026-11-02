@@ -20,9 +20,10 @@
 //! the episodes ahead were watched long ago and are about to be again.
 //!
 //! **When it runs.** Only when the viewer starts an episode of a show, or finishes one (it
-//! counts as watched in the player, or plays to its end), and then only for that show: downloads
-//! follow what the viewer watches. Nothing else starts it: not a launch, a list sync, a change
-//! of setting, the new-episode check or the airing digest. A top-up asked for while downloads
+//! counts as watched in the player, plays to its end, or is marked watched by hand on its own),
+//! and then only for that show: downloads follow what the viewer watches. Nothing else starts
+//! it: not a launch, a list sync, a mark of many episodes at once, a change of setting, the
+//! new-episode check or the airing digest. A top-up asked for while downloads
 //! wait runs for its shows once they may run again. Asked for again while a top-up runs, the
 //! latest ask runs once it is done, for every show asked for meanwhile.
 //!

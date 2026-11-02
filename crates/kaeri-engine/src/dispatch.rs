@@ -411,6 +411,11 @@ pub(crate) fn dispatch(
         }
         Command::SetWatched { id, episodes, watched } => {
             set_watched(id, &episodes, watched, engine, services, tx);
+            // One episode marked watched by hand is one finished: that show, topped up. A mark
+            // of many, such as a whole season, is not.
+            if watched && episodes.len() == 1 {
+                ahead::top_up(id, engine, services, tx);
+            }
         }
         // A title matched afresh may be another title on the source, so its dub is too.
         Command::ClearMatch { id } => {
