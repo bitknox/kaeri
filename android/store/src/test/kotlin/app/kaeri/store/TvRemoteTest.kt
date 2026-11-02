@@ -143,11 +143,11 @@ class TvRemoteTest {
         tv.card.until { it?.card?.phase == FfiLinkPhase.CONNECTED }
 
         val url = "https://watch.example/show/7"
-        val reached = (browser as FixtureTvBrowser).tvs[0].sendLink(url)
+        val reached = FixtureTvs.sendLink(browser, 0, url)
         assertEquals(1u, reached)
         assertEquals(url, withContext(Dispatchers.IO) { opened.poll(20, java.util.concurrent.TimeUnit.SECONDS) })
         // Only an https link is sent at all.
-        assertEquals(0u, (browser as FixtureTvBrowser).tvs[0].sendLink("http://watch.example/show/7"))
+        assertEquals(0u, FixtureTvs.sendLink(browser, 0, "http://watch.example/show/7"))
         assertNull(opened.poll())
     }
 
@@ -160,7 +160,7 @@ class TvRemoteTest {
         tv.card.until { it?.card?.now?.let { now -> !now.loading } == true }
         assertTrue(tv.card.value!!.live)
 
-        (browser as FixtureTvBrowser).tvs[0].stop()
+        FixtureTvs.stopTv(browser, 0)
         val lost = tv.card.until { it != null && it.card.phase != FfiLinkPhase.CONNECTED }!!
         assertFalse(lost.live)
         assertNotNull(lost.lostAt)
