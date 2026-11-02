@@ -104,11 +104,14 @@ pub fn ends(updates: &[Event], job: Option<JobId>) {
     let job = job.expect("work someone waits on starts a job");
     // The terminal asks the sources about a highlighted Home title by itself. Its answer, and
     // the Home the engine sends after it, come whenever the check finishes, not with the job
-    // that showed the title, so they may follow the job's end.
+    // that showed the title, so they may follow the job's end. So do the cards of a page's
+    // other seasons, asked for at low priority once the page is shown.
     let own: Vec<usize> = updates
         .iter()
         .enumerate()
-        .filter(|(_, update)| !matches!(update, Event::TitlePlayable { .. } | Event::Home(_)))
+        .filter(|(_, update)| {
+            !matches!(update, Event::TitlePlayable { .. } | Event::Home(_) | Event::Cards(_))
+        })
         .map(|(at, _)| at)
         .collect();
     let done: Vec<usize> = updates

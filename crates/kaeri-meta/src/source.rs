@@ -26,7 +26,7 @@
 //! asks for it three times over — its page, its episodes, then the play — and each was a
 //! request against thirty a minute for an answer a moment old. See [`Recent`].
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant, SystemTime};
@@ -265,6 +265,8 @@ pub struct Meta {
     /// What the episode tables of the covers on screen need, asked together: see
     /// [`Self::media_tables`].
     tables: Arc<Mutex<Tables>>,
+    /// The seasons whose headers are being asked for: see [`Self::season_headers`].
+    headers_asking: Arc<Mutex<HashSet<AnilistId>>>,
 }
 
 /// What [`Meta::media_tables`] brought, in memory only, and what it is still asking.
@@ -287,11 +289,22 @@ pub const TABLE_FOR: Duration = Duration::from_secs(30 * 60);
 /// Whether a record that came at `at` still builds a table at `now`: younger than
 /// [`TABLE_FOR`], and no episode has aired since.
 fn table_serves(at: Instant, media: &Media, now: Instant) -> bool {
+    now.saturating_duration_since(at) < TABLE_FOR && !aired_since(at, media, now)
+}
+
+/// Whether `media`, which came at `at`, has aired an episode by `now`.
+fn aired_since(at: Instant, media: &Media, now: Instant) -> bool {
     let age = now.saturating_duration_since(at);
-    let aired = media.next_airing_episode.as_ref().is_some_and(|next| {
+    media.next_airing_episode.as_ref().is_some_and(|next| {
         next.time_until_airing <= i64::try_from(age.as_secs()).unwrap_or(i64::MAX)
-    });
-    age < TABLE_FOR && !aired
+    })
+}
+
+/// Whether a header that came at `at` still heads its page at `now`: no episode has aired
+/// since, which moves its count and its countdown. How long it is kept is the franchise's
+/// ([`franchise::Relations::header`]).
+fn header_serves(at: Instant, media: &Media, now: Instant) -> bool {
+    !aired_since(at, media, now)
 }
 
 /// A title recommendations were asked from: its id, its name and the ids recommended off it,
@@ -345,6 +358,7 @@ impl Meta {
             many: Arc::default(),
             aired: Arc::default(),
             tables: Arc::default(),
+            headers_asking: Arc::default(),
         }
     }
 
@@ -819,6 +833,106 @@ impl Meta {
         };
         let ask = |ids: Vec<AnilistId>| async move { self.relations(&ids).await };
         franchise::seasons(&self.relations, media, fresh, hold, ask, say).await;
+    }
+
+    /// The headers of the seasons of `id`'s franchise, for each season's page to show its top at
+    /// once when it is opened: its title, art, facts and synopsis, before AniList answers for
+    /// the page. Those not kept already go in one request at low priority (see
+    /// [`AniList::media_many`]), and are kept with the franchise for as long as it is
+    /// ([`franchise::Relations::header`]), so the other seasons' pages cost nothing more.
+    ///
+    /// Every season's header that is known comes back, `id`'s own left out, so a screen can
+    /// fetch their art ahead. Nothing while the walk along the franchise is still under way, and
+    /// nothing is asked when AniList fails: each page is then asked for when it is opened, as
+    /// before. AniList only, since the fallbacks have no franchise.
+    pub async fn season_headers(&self, id: AnilistId) -> Vec<Media> {
+        if crate::demo::is_demo(id) {
+            return Vec::new();
+        }
+        let now = Instant::now();
+        let Some(seasons) = franchise::lock(&self.relations).seasons_known(id, now) else {
+            return Vec::new();
+        };
+        let others: Vec<AnilistId> =
+            seasons.iter().map(|card| card.id).filter(|season| *season != id).collect();
+        let wanted: Vec<AnilistId> = {
+            let Ok(mut asking) = self.headers_asking.lock() else { return Vec::new() };
+            let relations = franchise::lock(&self.relations);
+            let wanted: Vec<AnilistId> = others
+                .iter()
+                .copied()
+                .filter(|season| {
+                    relations
+                        .header(*season, now)
+                        .is_none_or(|(media, at)| !header_serves(at, &media, now))
+                        && !self.answered(*season)
+                        && !asking.contains(season)
+                        && !crate::demo::is_demo(*season)
+                })
+                .collect();
+            asking.extend(wanted.iter().copied());
+            wanted
+        };
+        if !wanted.is_empty() {
+            let asked = crate::anilist::in_background(self.anilist.media_many(&wanted));
+            match self.ask_anilist(asked).await {
+                Ok(found) => {
+                    self.went(FRESH);
+                    for media in &found {
+                        self.remember(media);
+                    }
+                    franchise::lock(&self.relations).learn_headers(&found, Instant::now());
+                }
+                Err(e) => tracing::debug!(error = %e, "the seasons' headers were not asked"),
+            }
+            if let Ok(mut asking) = self.headers_asking.lock() {
+                for season in &wanted {
+                    asking.remove(season);
+                }
+            }
+        }
+        let now = Instant::now();
+        let relations = franchise::lock(&self.relations);
+        others
+            .iter()
+            .filter_map(|season| relations.header(*season, now))
+            .filter(|(media, at)| header_serves(*at, media, now))
+            .map(|(media, at)| as_of(media, now.saturating_duration_since(at)))
+            .collect()
+    }
+
+    /// Title `id`'s header as [`Self::season_headers`] kept it, with its franchise's seasons, for
+    /// its page to show at once while AniList is asked for the rest. `None` when the page itself
+    /// answers at once (AniList's answer for it still serves), when no header is kept or one
+    /// has aired an episode since, and while its franchise's seasons are not all known.
+    pub fn season_header(
+        &self,
+        id: AnilistId,
+    ) -> Option<(Media, Vec<crate::anilist::model::RelationNode>)> {
+        if self.answered(id) || crate::demo::is_demo(id) {
+            return None;
+        }
+        let now = Instant::now();
+        let relations = franchise::lock(&self.relations);
+        let (media, at) = relations.header(id, now)?;
+        if !header_serves(at, &media, now) {
+            return None;
+        }
+        let seasons = relations.seasons_known(id, now)?;
+        Some((as_of(media, now.saturating_duration_since(at)), seasons))
+    }
+
+    /// Whether AniList's answer for title `id`'s page is in and still serves.
+    fn answered(&self, id: AnilistId) -> bool {
+        let now = Instant::now();
+        let signed_in = self.anilist.is_authenticated();
+        self.recent.lock().is_ok_and(|recent| {
+            recent
+                .titles
+                .get(&id)
+                .and_then(|flight| flight.get())
+                .is_some_and(|answered| answered.serves(now, self.reuse_for, signed_in))
+        })
     }
 
     /// The ask for `id` to join: one under way, or an answer that still serves, or else a
