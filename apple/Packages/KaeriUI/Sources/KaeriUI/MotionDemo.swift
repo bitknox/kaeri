@@ -9,6 +9,9 @@ import SwiftUI
 public enum MotionDemo: String, CaseIterable, Sendable {
     /// T1: a cover zooms into its title's page (iPhone and iPad): the first Continue card on Home.
     case t1
+    /// T2: the first Continue card's episode played, as its menu's Play does: the player grows
+    /// out of the card (iPhone and iPad).
+    case t2
     /// T1 from the first poster on Home's first shelf of posters: into the page's cover on the Mac.
     case t1Poster
     /// T1 from Home's spotlight, whose title is often on a shelf too: out of the spotlight.
@@ -99,6 +102,12 @@ public enum MotionDemo: String, CaseIterable, Sendable {
             let entry = store.titles[id]
             let wide = entry.map { !store.heroArt($0).isCompact } ?? false
             navigator.openTitle(id, from: .shelf(id, .continue, art: wide ? .banner : .poster))
+        case .t2:
+            guard let item = store.discovery.view?.sections.first(where: { $0.kind == .continue })?.items.first,
+                  let episode = item.episode
+            else { return }
+            navigator.playingFrom = .shelf(item.entry.id, .continue, art: .poster)
+            store.send(.play(id: item.entry.id, episode: String(episode)))
         case .t1Poster:
             let shelves = store.discovery.view?.sections.filter { $0.kind != .continue && $0.kind != .thisWeek } ?? []
             guard let shelf = shelves.first(where: { !$0.items.isEmpty }), let item = shelf.items.first else { return }
