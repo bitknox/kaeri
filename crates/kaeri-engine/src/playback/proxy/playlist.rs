@@ -7,7 +7,7 @@
 /// Segment URIs, initialisation segments and key URIs are all rewritten: a key that still
 /// pointed upstream would be fetched by mpv without the stream's referer and refused, and a
 /// nested playlist has to come back through here or its own segments would go direct and
-/// unmended.
+/// fetched without the stream's headers.
 ///
 /// **Rewriting rather than parsing** is deliberate. A full HLS parser (`m3u8-rs` is the good
 /// one) would round-trip the playlist through its own model and re-serialise it, which drops
@@ -111,12 +111,12 @@ pub(super) fn looks_like_playlist(content_type: &str, body: &[u8]) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::playback::mend::encode_path;
+    use crate::playback::proxy::encode_path;
 
     #[test]
     fn a_tag_this_code_never_heard_of_still_has_its_uri_rewritten() {
         // Any tag with a URI attribute, rather than a list of the ones known today — a tag
-        // added to the spec later would otherwise quietly point upstream, unmended.
+        // added to the spec later would otherwise quietly point upstream.
         let proxy = |u: &str| format!("proxied:{u}");
         let out = rewrite_playlist(
             "#EXTM3U\n#EXT-X-SOMETHING-NEW:URI=\"future.ts\",FLAG=1\n",

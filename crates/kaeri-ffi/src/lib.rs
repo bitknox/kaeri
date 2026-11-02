@@ -702,7 +702,7 @@ mod tests {
             ops: vec![
                 PlayerOp::Open { fullscreen: true, speed: Some(1.25), volume: None },
                 PlayerOp::Load {
-                    url: "http://127.0.0.1:45001/mend/abc/master.m3u8".into(),
+                    url: "http://127.0.0.1:45001/m/abc/master.m3u8".into(),
                     options: vec![MpvOption { name: "start".into(), value: "600".into() }],
                 },
                 PlayerOp::Set { property: "aid".into(), value: MpvValue::Int(2) },

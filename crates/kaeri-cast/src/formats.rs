@@ -328,7 +328,7 @@ pub enum SourceKind {
     DeepLink,
 }
 
-/// The stream as its source gave it, before the mender or the torrent server.
+/// The stream as its source gave it, before the stream proxy or the torrent server.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CastSource {
     /// The source's own address, or the file's path.

@@ -1,39 +1,29 @@
-//! A loopback proxy that repairs disguised media on its way to the player.
+//! A loopback proxy between the player and a stream's host.
 //!
-//! **The problem.** Some hosts serve video segments dressed as something else. The case that
-//! prompted this: every segment of an episode was a valid 1×1 PNG with the real MPEG-TS
-//! appended after `IEND`, served from an image CDN — an image host will carry an image, so the
-//! video is smuggled behind one. The site's own player strips the prefix in JavaScript before
-//! handing bytes to MediaSource. mpv has no such hook: libavformat probes the first bytes, sees
-//! PNG, decodes a 1×1 image and finds no video. The stream is not encrypted and there is no DRM
-//! here — the bytes are simply mislabelled, and this puts the label right.
+//! **What it is for.** mpv can be given one set of headers for a whole stream, but a source's
+//! stream may need its headers on every request: the playlist, each segment, each key. The
+//! proxy sends the stream's own headers with every upstream request, holds playback's requests
+//! through a host's rate limit rather than letting ffmpeg skip segments, and keeps what it fetched
+//! so the seek bar's thumbnailer can read from memory.
 //!
-//! **Why it is generic.** Nothing here knows about PNG, or about any particular source. It
-//! searches the head of each segment for the first offset where a *container signature* appears
-//! — MPEG-TS's repeating sync byte, or an ISO-BMFF box — and serves from there. A segment that
-//! is already valid matches at offset zero and passes through byte-for-byte, so routing a
-//! healthy stream through this changes nothing. Anything unrecognised is also passed through
-//! untouched: the player is the better judge, and refusing to serve bytes we merely do not
-//! recognise would break more than it fixed.
-//!
-//! **What it is not.** Not a rewriter of media, and not a way around encryption: an
-//! `#EXT-X-KEY` is proxied verbatim so encrypted HLS keeps working exactly as it did, and
-//! nothing attempts to decrypt anything.
+//! **What it changes.** Only the URIs in a playlist, so the player's next requests come back
+//! here. Every other byte is served as the host sent it: segments, keys and initialisation
+//! segments pass through unchanged, and an `#EXT-X-KEY` is proxied verbatim, so encrypted HLS
+//! keeps working exactly as it did. Nothing here decrypts anything.
 //!
 //! **Two players read through it.** The seek bar's thumbnailer is a second mpv opening the
 //! same stream, and left to itself it fetched whole segments at every hover — twice, since
 //! thumbfast seeks to a keyframe and then exactly — until the host answered `429` and the
 //! rate-limit hold below parked the thumbnailer, and with it the thumbnail, for ten seconds at
-//! a time. So the thumbnailer gets its own entry (see [`MendServer::thumbnail_url`]) and is
+//! a time. So the thumbnailer gets its own entry (see [`ProxyServer::thumbnail_url`]) and is
 //! served by different rules: from what playback already fetched when it can be, never held,
 //! and never the reason playback is held. See [`Class`].
 //!
 //! # Layout
 //!
 //! The server is here: the loopback listener, each connection read, routed by its entry and
-//! answered, and what every part of the proxy shares. Finding where a segment's media starts,
-//! rewriting a playlist, fetching from the host, and the thumbnailer's rules each have a file
-//! of their own.
+//! answered, and what every part of the proxy shares. Rewriting a playlist, fetching from the
+//! host, and the thumbnailer's rules each have a file of their own.
 
 use std::{
     collections::HashMap,
@@ -48,12 +38,10 @@ use tokio::{
 };
 
 mod playlist;
-mod segment;
 mod thumbnail;
 mod upstream;
 
 pub use playlist::{resolve_url, rewrite_playlist};
-pub use segment::payload_start;
 
 use playlist::looks_like_playlist;
 use upstream::{Cache, send, send_once};
@@ -71,8 +59,8 @@ const MAX_BODY: usize = 96 * 1024 * 1024;
 /// loaded part of the bar is answered from memory, with nothing sent upstream.
 const CACHE_BYTES: usize = 200 * 1024 * 1024;
 
-/// A running mender.
-pub struct MendServer {
+/// A running stream proxy.
+pub struct ProxyServer {
     url: String,
     thumbnail_url: String,
     upstream: Arc<Upstream>,
@@ -81,7 +69,7 @@ pub struct MendServer {
     _listener: Arc<kaeri_net::loopback::Loopback>,
 }
 
-impl MendServer {
+impl ProxyServer {
     /// The URL to hand to the player, in place of the stream's own.
     pub fn url(&self) -> &str {
         &self.url
@@ -126,7 +114,7 @@ impl Class {
     }
 }
 
-/// A resource as the upstream sent it, before any mending or rewriting.
+/// A resource as the upstream sent it, before a playlist is rewritten.
 #[derive(Debug)]
 struct Fetched {
     content_type: String,
@@ -197,7 +185,7 @@ impl Upstream {
         }
     }
 
-    /// The loopback URL that will fetch and mend `url` for a player of `class`.
+    /// The loopback URL that will fetch `url` for a player of `class`.
     fn proxied(&self, url: &str, class: Class) -> String {
         format!(
             "http://127.0.0.1:{}/{}/{}/{}",
@@ -249,17 +237,17 @@ fn decode_path(encoded: &str) -> String {
     String::from_utf8_lossy(&out).into_owned()
 }
 
-/// Serve `url` through a mending proxy on loopback, until the returned server is dropped.
+/// Serve `url` through a proxy on loopback, until the returned server is dropped.
 ///
 /// `headers` are the stream's own — the referer a locked CDN insists on travels with every
-/// upstream request, which is a second thing this fixes: mpv would otherwise have to be told
+/// upstream request: mpv would otherwise have to be told
 /// them, and it cannot be told different headers per host.
 pub async fn serve(
     http: HttpClient,
     url: &str,
     headers: Vec<(String, String)>,
     token: &str,
-) -> std::io::Result<MendServer> {
+) -> std::io::Result<ProxyServer> {
     // Loopback only, like every other server this app runs. The proxy is told its port once it
     // has one, for the URLs it rewrites a playlist with.
     let upstream: Arc<std::sync::OnceLock<Arc<Upstream>>> = Arc::default();
@@ -277,7 +265,7 @@ pub async fn serve(
                     // its segments, and a slow segment must not block the rest.
                     tokio::spawn(async move {
                         if let Err(e) = handle_connection(socket, upstream).await {
-                            tracing::debug!(error = %e, "mender connection ended");
+                            tracing::debug!(error = %e, "stream proxy connection ended");
                         }
                     });
                 }
@@ -290,8 +278,8 @@ pub async fn serve(
     let thumbnail_entry = proxy.proxied(url, Class::Thumbnail);
     let _ = upstream.set(Arc::clone(&proxy));
 
-    tracing::info!(%entry, "mending proxy listening on loopback");
-    Ok(MendServer {
+    tracing::info!(%entry, "stream proxy listening on loopback");
+    Ok(ProxyServer {
         url: entry,
         thumbnail_url: thumbnail_entry,
         upstream: proxy,
@@ -306,9 +294,9 @@ async fn handle_connection(socket: TcpStream, upstream: Arc<Upstream>) -> std::i
     let mut request_line = String::new();
     read_line(&mut reader, &mut request_line).await?;
 
-    // The `Range` header is the one thing carried through. A mended body has different offsets
-    // from the upstream one, so a range cannot be answered *and* mended — but ignoring it and
-    // replying `200` with the whole resource is worse than either: a playlist using
+    // The `Range` header is the one thing carried through. A whole resource is fetched once,
+    // kept, and a playlist rewritten, which a slice cannot be. But ignoring a range and replying
+    // `200` with the whole resource is worse: a playlist using
     // `#EXT-X-BYTERANGE` addresses many segments into one large file, so every segment request
     // returned the entire file, blew the body ceiling, and killed a stream that plays fine
     // without the proxy in the way. Such a resource is passed through untouched instead.
@@ -342,8 +330,8 @@ async fn handle_connection(socket: TcpStream, upstream: Arc<Upstream>) -> std::i
         return Ok(());
     };
 
-    // A ranged request asks for a slice of a resource, which is never the start of a segment,
-    // so there is nothing to mend and the upstream's own answer is the right one to relay.
+    // A ranged request asks for a slice of a resource, which is never a whole playlist, so the
+    // upstream's own answer is the right one to relay.
     //
     // Except the one mpv opens every resource with. `bytes=0-` asks for the whole thing and is
     // sent on the very first request, playlists included — relaying that meant the master
@@ -366,11 +354,7 @@ async fn handle_connection(socket: TcpStream, upstream: Arc<Upstream>) -> std::i
                 let proxy = |u: &str| upstream.proxied(u, class);
                 rewrite_playlist(&text, &url, &proxy).into_bytes()
             } else {
-                let start = payload_start(&fetched.body);
-                if start > 0 {
-                    tracing::debug!(url = %url, stripped = start, "mended a disguised segment");
-                }
-                fetched.body[start..].to_vec()
+                fetched.body.clone()
             };
             // The thumbnailer's refusals are logged and its answers were not, so a seek bar
             // showing no thumbnails could not be told from one that never asked.
@@ -399,7 +383,7 @@ async fn handle_connection(socket: TcpStream, upstream: Arc<Upstream>) -> std::i
             Ok(())
         }
         Err(e) => {
-            tracing::warn!(url = %url, error = %e, "mender upstream failed");
+            tracing::warn!(url = %url, error = %e, "stream proxy upstream failed");
             // The upstream's failure, reported as one. mpv treats 502 as a dead segment and
             // says so, which is more honest than an empty 200.
             write_half
@@ -413,7 +397,7 @@ async fn handle_connection(socket: TcpStream, upstream: Arc<Upstream>) -> std::i
 /// Whether a `Range` header asks for the entire resource.
 ///
 /// `bytes=0-` is what a player sends to open a file it intends to read through, so it carries no
-/// intent to slice and must not turn off mending.
+/// intent to slice: it gets the whole resource, its playlist rewritten.
 fn is_whole_resource(range: &str) -> bool {
     range
         .trim()
@@ -422,10 +406,9 @@ fn is_whole_resource(range: &str) -> bool {
         .is_some_and(|spec| spec == "0-" || spec.is_empty())
 }
 
-/// Relay a byte range from upstream, unmended.
+/// Relay a byte range from upstream.
 ///
-/// Mending is a whole-resource operation — it decides where a payload *starts* — so a request
-/// for bytes 800..1599 of a file has nothing to mend and must not be answered with the file.
+/// A request for bytes 800..1599 of a file must not be answered with the file.
 /// The upstream's status, content range and body are passed through as they came.
 async fn relay_range(
     upstream: &Upstream,
@@ -479,7 +462,7 @@ async fn relay_range(
             write_half.flush().await
         }
         Err(e) => {
-            tracing::warn!(url = %url, error = %e, "mender range relay failed");
+            tracing::warn!(url = %url, error = %e, "stream proxy range relay failed");
             write_half.write_all(b"HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n").await
         }
     }
@@ -525,14 +508,14 @@ async fn read_line<R: AsyncRead + Unpin>(
     Ok(total)
 }
 
-/// Registry of every mender kept alive for a playback, keyed by the URL it fronts.
+/// Registry of every stream proxy kept alive for a playback, keyed by the URL it fronts.
 ///
 /// A playback holds one; dropping it stops every proxy it started.
 #[derive(Default)]
-pub struct Menders(HashMap<String, MendServer>);
+pub struct Proxies(HashMap<String, ProxyServer>);
 
-impl Menders {
-    /// Route `url` through a mender, returning the URL to play instead.
+impl Proxies {
+    /// Route `url` through a stream proxy, returning the URL to play instead.
     ///
     /// Failure to start one is not fatal — the original URL is returned and playback proceeds
     /// exactly as it would have. A proxy that cannot start must not cost you the episode.
@@ -545,26 +528,26 @@ impl Menders {
     ) -> String {
         match serve(http.clone(), url, headers.to_vec(), token).await {
             Ok(server) => {
-                let mended = server.url().to_owned();
+                let proxied = server.url().to_owned();
                 self.0.insert(url.to_owned(), server);
-                mended
+                proxied
             }
             Err(e) => {
-                tracing::warn!(error = %e, "could not start the mender; playing direct");
+                tracing::warn!(error = %e, "could not start the stream proxy; playing direct");
                 url.to_owned()
             }
         }
     }
 
-    /// The thumbnailer's entry to the mender fronting `url`, when one is running.
+    /// The thumbnailer's entry to the proxy fronting `url`, when one is running.
     pub fn thumbnail_url(&self, url: &str) -> Option<String> {
         self.0.get(url).map(|server| server.thumbnail_url().to_owned())
     }
 
-    /// The error status the host answered the mender fronting `url` with, if it did: see
-    /// [`MendServer::refused`].
+    /// The error status the host answered the proxy fronting `url` with, if it did: see
+    /// [`ProxyServer::refused`].
     pub fn refused(&self, url: &str) -> Option<u16> {
-        self.0.get(url).and_then(MendServer::refused)
+        self.0.get(url).and_then(ProxyServer::refused)
     }
 }
 
@@ -575,7 +558,9 @@ mod tests {
     use tokio::net::TcpListener;
 
     use super::*;
-    use crate::playback::mend::segment::TS_PACKET;
+
+    /// MPEG-TS packets are this long.
+    const TS_PACKET: usize = 188;
 
     /// Several TS packets, the shape a real segment has: a PAT first, payload-unit-start set.
     pub(super) fn transport_stream() -> Vec<u8> {
@@ -590,7 +575,7 @@ mod tests {
     }
 
     #[test]
-    fn the_range_a_player_opens_with_does_not_turn_mending_off() {
+    fn the_range_a_player_opens_with_asks_for_the_whole_resource() {
         // mpv sends `Range: bytes=0-` on its first request for every resource, playlists
         // included. Treating that as a slice relayed the master playlist verbatim, so its
         // segment URIs were never rewritten and mpv resolved them against the proxy's own
@@ -598,7 +583,7 @@ mod tests {
         assert!(is_whole_resource("bytes=0-"));
         assert!(is_whole_resource(" bytes=0- "));
 
-        // A genuine slice, which has nothing to mend and must be relayed.
+        // A genuine slice, which must be relayed.
         assert!(!is_whole_resource("bytes=800-1599"));
         assert!(!is_whole_resource("bytes=-500"));
         assert!(!is_whole_resource("bytes=1000-"));
@@ -608,9 +593,9 @@ mod tests {
     fn a_url_survives_the_round_trip_through_a_path() {
         for url in [
             "https://cdn.test/a/b.ts?x=1&y=2",
-            // The opaque, extensionless form a segment takes on a CDN that is not serving
-            // it as video — no path to parse, so the round trip has to be exact.
-            "https://images.test/obj/site-i18n/202604045d0d1d30d738c249",
+            // An opaque, extensionless path: nothing to parse, so the round trip has to be
+            // exact.
+            "https://cdn.test/obj/a1/202604045d0d1d30d738c249",
             "https://cdn.test/spaced%20name.ts",
         ] {
             assert_eq!(decode_path(&encode_path(url)), url);
@@ -638,7 +623,7 @@ mod tests {
     }
 
     /// Ask `server`'s playback entry for what it fronts, and return the status line it answered.
-    async fn ask(server: &MendServer) -> String {
+    async fn ask(server: &ProxyServer) -> String {
         let authority =
             server.url().trim_start_matches("http://").split('/').next().unwrap().to_owned();
         let path = &server.url()[server.url().find("/m/").unwrap()..];
@@ -654,8 +639,8 @@ mod tests {
 
     #[tokio::test]
     async fn the_status_a_host_refused_playback_with_is_kept_for_its_record() {
-        // A host answering `502` reaches mpv as the mender's own `502`, which says nothing of
-        // the host; the server's record needs the host's status, so the mender keeps it.
+        // A host answering `502` reaches mpv as the proxy's own `502`, which says nothing of
+        // the host; the server's record needs the host's status, so the proxy keeps it.
         let host = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).await.unwrap();
         let address = host.local_addr().unwrap();
         tokio::spawn(async move {
@@ -691,5 +676,45 @@ mod tests {
         let server =
             serve(http, "https://example.test/x.m3u8", Vec::new(), "tok").await.unwrap();
         assert!(server.url().starts_with("http://127.0.0.1:"), "got {}", server.url());
+    }
+
+    #[tokio::test]
+    async fn a_segment_is_served_exactly_as_the_host_sent_it() {
+        // Whatever leads the body, the player gets every byte of it, in order: the proxy
+        // rewrites playlists and nothing else.
+        let mut body = b"\x89PNG\r\n\x1a\n header bytes".to_vec();
+        body.extend(transport_stream());
+        let sent = body.clone();
+        let host = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).await.unwrap();
+        let address = host.local_addr().unwrap();
+        tokio::spawn(async move {
+            let Ok((mut socket, _)) = host.accept().await else { return };
+            let mut request = [0u8; 4096];
+            let _ = socket.read(&mut request).await;
+            let head = format!(
+                "HTTP/1.1 200 OK\r\nContent-Type: image/png\r\nContent-Length: {}\r\n\
+                 Connection: close\r\n\r\n",
+                sent.len()
+            );
+            let _ = socket.write_all(head.as_bytes()).await;
+            let _ = socket.write_all(&sent).await;
+        });
+
+        let http = HttpClient::new(&kaeri_core::config::NetworkConfig::default()).unwrap();
+        let server =
+            serve(http, &format!("http://{address}/seg.ts"), Vec::new(), "tok").await.unwrap();
+        let authority =
+            server.url().trim_start_matches("http://").split('/').next().unwrap().to_owned();
+        let path = &server.url()[server.url().find("/m/").unwrap()..];
+        let mut socket = TcpStream::connect(&authority).await.unwrap();
+        socket
+            .write_all(format!("GET {path} HTTP/1.1\r\nHost: {authority}\r\n\r\n").as_bytes())
+            .await
+            .unwrap();
+        let mut raw = Vec::new();
+        socket.read_to_end(&mut raw).await.unwrap();
+        let split = raw.windows(4).position(|w| w == b"\r\n\r\n").unwrap() + 4;
+        assert!(raw.starts_with(b"HTTP/1.1 200"));
+        assert_eq!(&raw[split..], &body[..]);
     }
 }

@@ -64,7 +64,7 @@ pub enum PlayerTarget {
 /// sends its subtitles with the file, and shows the title on the TV.
 #[derive(Debug, Clone, PartialEq)]
 pub struct FileFacts {
-    /// The stream as its source gave it, before the mender's loopback address replaced an HLS
+    /// The stream as its source gave it, before the proxy's loopback address replaced an HLS
     /// stream's: what decides whether the TV can fetch it by itself.
     pub source: kaeri_core::stream::Stream,
     /// The stream as the player opens it, with its subtitles on disk.

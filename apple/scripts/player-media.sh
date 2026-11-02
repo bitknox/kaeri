@@ -17,7 +17,7 @@
 #                 Part A (20 s), Ending (42 s) and Preview (56 s), Japanese and English tones,
 #                 and English Full and Signs & Songs subtitles
 #   episode-hls/  the same episode as HLS (master.m3u8 and 6 s MPEG-TS segments), video and the
-#                 Japanese audio, for the Playing scene's web stream through the engine's mender
+#                 Japanese audio, for the Playing scene's web stream through the engine's proxy
 #
 # Needs ffmpeg with libx264 and libx265 (Homebrew's has both).
 set -euo pipefail

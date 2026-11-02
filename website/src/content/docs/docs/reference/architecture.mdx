@@ -33,7 +33,8 @@ consulted for it.
 The metadata, mapping, player, tracker and plugin layers use documented public APIs. Only the
 source layer *chooses* a content source, it is off by default, and every source is a
 config edit away from being removed. Two playback-side paths then fetch from whatever host a
-source named, sidecar subtitles and the HLS mender below, and both are source-agnostic.
+source named, sidecar subtitles and the HLS proxy, and both are source-agnostic. The proxy sends
+a stream's headers with every request and passes segments through unchanged.
 
 ## Layers
 
@@ -43,7 +44,7 @@ source named, sidecar subtitles and the HLS mender below, and both are source-ag
   sends, the events it gets back, the rows they carry, and the wording they are shown in. It
   depends only on the core and does no I/O.
 - `kaeri-engine` does the work behind the screens: playback and the player's setup, sources
-  and plugins, tracker sync, downloads, artwork, plugin stores, HLS mending, choosing the
+  and plugins, tracker sync, downloads, artwork, plugin stores, the HLS proxy, choosing the
   upscaling, and the background jobs, such as the daily update check.
 - `kaeri-tui` is the terminal front end: the screens, the keymap and the theme, on ratatui.
 - `kaeri` is the binary. It holds the command line, self-update, and the terminal's event
@@ -69,13 +70,6 @@ the `kaeri store …` commands and the standalone `kaeri-store` binary.
 `kaeri-store-wasm` is the store for Cloudflare Workers and Vercel or Netlify functions.
 Despite its name, `kaeri-store` is the local SQLite history and has nothing to do with them.
 
-## The HLS mender
-
-The mender sits on the default playback path: HLS goes through a loopback proxy that looks for
-where the media starts in each segment, since some hosts serve video behind an image header that
-mpv reads literally and refuses. A healthy segment matches at offset zero and passes through
-byte-for-byte, and nothing is decrypted. See `crates/kaeri-engine/src/playback/mend/`.
-
 ## Development
 
 ```sh
@@ -96,7 +90,6 @@ cargo run -p kaeri-engine --example sync_probe -- --write    # AniList push, the
 cargo run -p kaeri-engine --example mal_probe -- --write     # MAL push, then undo
 cargo run -p kaeri-engine --example simkl_probe -- --write   # Simkl push, then undo
 cargo run -p kaeri-engine --example kitsu_probe -- --write   # Kitsu push, then undo
-cargo run -p kaeri-engine --example mend_probe -- <url>      # HLS behind an image header → mpv
 cargo run -p kaeri-providers --example halt_probe            # the guard pausing torrents
 cargo run -p kaeri-meta --example filler_probe               # filler parsing
 cargo run -p kaeri-meta --example episode_meta_probe         # episode titles, stills, numbering

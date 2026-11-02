@@ -266,7 +266,7 @@ mod tests {
     use tokio::net::TcpListener;
 
     use super::*;
-    use crate::playback::mend::{tests::transport_stream, *};
+    use crate::playback::proxy::{tests::transport_stream, *};
 
     #[test]
     fn a_retry_after_in_seconds_is_honoured_within_bounds() {

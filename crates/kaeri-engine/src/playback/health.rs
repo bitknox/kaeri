@@ -266,7 +266,7 @@ impl Servers {
     }
 
     /// The attempt on `stream` ended before it showed a frame: see [`verdict`]. `refused` is the
-    /// error status the host answered the stream's requests with, when the mender saw one.
+    /// error status the host answered the stream's requests with, when the stream proxy saw one.
     pub(crate) fn unplayed(
         &mut self,
         store: &Store,

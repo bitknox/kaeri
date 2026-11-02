@@ -61,7 +61,7 @@ mod tests {
     #[test]
     fn an_address_keeps_its_host_and_port_only() {
         assert_eq!(address("https://cdn.example/a/b.m3u8?token=secret"), "https://cdn.example");
-        assert_eq!(address("http://user:pw@127.0.0.1:8123/mend/x"), "http://127.0.0.1:8123");
+        assert_eq!(address("http://user:pw@127.0.0.1:8123/m/x"), "http://127.0.0.1:8123");
         assert_eq!(address("/home/viewer/episode.mkv"), "a local file");
         assert_eq!(address("episode.mkv"), "an address");
     }

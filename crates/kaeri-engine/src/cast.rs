@@ -553,7 +553,7 @@ impl CastHub {
 }
 
 /// What the relay fetches upstream with: the sources client for the source's own hosts, with
-/// the headers they want, and plain HTTP for the mender and the torrent server on loopback.
+/// the headers they want, and plain HTTP for the stream proxy and the torrent server on loopback.
 struct HttpUpstream(HttpClient);
 
 #[async_trait]
