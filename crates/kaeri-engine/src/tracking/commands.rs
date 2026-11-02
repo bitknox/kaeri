@@ -16,7 +16,10 @@ pub fn sync_now(job: Option<JobGuard>, services: &Services, tx: &Outbox) {
     tokio::spawn(async move {
         let _job = job;
         tracking::drain_once(&sync, &tx).await;
-        tracking::pull_once(&sync, &tx).await;
+        // A pull within the last 30 seconds already answers this one.
+        if !sync.pulls.recent() {
+            tracking::pull_once(&sync, &tx).await;
+        }
     });
 }
 

@@ -48,7 +48,8 @@ impl Command {
             Self::LoadUpNext => "finding what is up next".into(),
             Self::LoadHome { .. } => "loading home".into(),
             Self::LoadDetail(_) => "loading the title".into(),
-            Self::LoadEpisodes(_) => "loading episodes".into(),
+            Self::LoadCards { .. } | Self::PrepareCards { .. } => "loading hover cards".into(),
+            Self::LoadEpisodes(_) | Self::LoadStills(_) => "loading episodes".into(),
             Self::ClearMatch { .. } | Self::FixMatch { .. } => "rematching sources".into(),
             Self::CheckProviders => "checking providers".into(),
             Self::LoadLibrary(segment) => format!("loading your {} list", segment.label()),
@@ -220,11 +221,36 @@ pub enum Command {
     ForgetRecentSearch(SearchQuery),
     ClearRecentSearches,
     LoadDetail(AnilistId),
+    /// What a hover card or preview shows for these covers (at most fifty): the synopsis, the
+    /// trailer and the airing and episode facts. Answered with one [`Event::Cards`], at once from
+    /// what lists already brought and the metadata cache kept, and for the titles that
+    /// leaves out by one batched lookup at low priority. Costs no request on a hover when the
+    /// list that showed the cover carried them. The page still asks [`Command::LoadDetail`] on
+    /// opening.
+    ///
+    /// [`Event::Cards`]: crate::event::Event::Cards
+    LoadCards {
+        ids: Vec<AnilistId>,
+    },
+    /// The covers a screen shows (at most fifty), for their hover cards: [`Command::LoadCards`]
+    /// with what each title's episode table needs from AniList, in one batched request at low
+    /// priority. Answered with [`Event::Cards`]; a [`Command::LoadEpisodes`] or
+    /// [`Command::LoadStills`] for one of them then asks AniList nothing. Sent when the covers
+    /// on screen change, so a hover costs no request once a screen is loaded.
+    ///
+    /// [`Event::Cards`]: crate::event::Event::Cards
+    PrepareCards {
+        ids: Vec<AnilistId>,
+    },
     /// Ask the signed-in AniList viewer's title language, answered by
     /// [`Event::ViewerTitleLanguage`](crate::event::Event::ViewerTitleLanguage). Costs no request
     /// when the viewer was already looked up for their library.
     LoadTitleLanguage,
     LoadEpisodes(AnilistId),
+    /// [`Command::LoadEpisodes`] for the stills that stand in for a missing banner on a card
+    /// nobody has opened: the same answer, asked of AniList at low priority so a screen's own
+    /// requests go first.
+    LoadStills(AnilistId),
     // How far a title's dub goes, for the title page's "Dub to episode 6": answered by one
     // [`Event::TitleDub`](crate::event::Event::TitleDub), with no job. Sent when the page
     // opens, beside [`Command::LoadEpisodes`], and again when it comes back into view.
@@ -248,6 +274,13 @@ pub enum Command {
     LoadLibrary(LibrarySegment),
     /// Drain the outbox and pull the library now, rather than waiting for the interval.
     SyncNow,
+    /// The window is on screen (`true`) or hidden or minimised (`false`): for a desktop app,
+    /// which has no [`Command::AppPhase`] to send because downloads and torrents go on while
+    /// the window is away. Only the tracker pull loop rests while hidden, and one pull runs on
+    /// return. Nothing else is held.
+    SyncVisible {
+        visible: bool,
+    },
     /// Set a title's list status.
     SetStatus {
         id: AnilistId,

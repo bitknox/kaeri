@@ -243,6 +243,32 @@ async fn after_dismissal(
     }
 }
 
+/// A title's episode table; `low` when nobody is waiting on it, as for a card's stills.
+fn episodes_job(
+    id: kaeri_core::ids::AnilistId,
+    low: bool,
+    job: Option<JobGuard>,
+    engine: &mut EngineState,
+    services: &Services,
+    tx: &Outbox,
+) {
+    engine.listed.note(id);
+    // A lookup of the title's dub waits for this.
+    let table = engine.dubs.table(id);
+    // Named from another source where its own left titles and stills out: see `titles::names`.
+    let naming = engine.names.naming(id, engine.network.offline, &services.clock);
+    let ticket = engine.listed.ticket(id);
+    spawn(job, services, tx, move |lent| async move {
+        let listing = list_episodes(lent, id, naming, ticket, true);
+        if low {
+            kaeri_meta::in_background(listing).await;
+        } else {
+            listing.await;
+        }
+        drop(table);
+    })
+}
+
 pub(crate) fn dispatch(
     task: Command,
     job: Option<JobGuard>,
@@ -360,6 +386,12 @@ pub(crate) fn dispatch(
             engine.names.leave_for(id);
             spawn(job, services, tx, move |lent| load_detail(lent, id))
         }
+        Command::LoadCards { ids } => {
+            spawn(job, services, tx, move |lent| crate::catalog::cards::load_cards(lent, ids))
+        }
+        Command::PrepareCards { ids } => spawn(job, services, tx, move |lent| {
+            crate::catalog::cards::prepare_cards(lent, ids)
+        }),
         Command::LoadTitleLanguage => load_title_language(services, tx),
         Command::PlayTrailer { url, title } => {
             play_trailer(url, title, job, engine, services, tx)
@@ -397,19 +429,9 @@ pub(crate) fn dispatch(
         // Quietly, with no job, and never in the way of the table or a play: see
         // `titles::dub`.
         Command::LoadDub(id) => engine.dubs.ask(id, engine.network.offline, services, tx),
-        Command::LoadEpisodes(id) => {
-            engine.listed.note(id);
-            // A lookup of the title's dub waits for this.
-            let table = engine.dubs.table(id);
-            // Named from another source where its own left titles and stills out: see
-            // `titles::names`.
-            let naming = engine.names.naming(id, engine.network.offline, &services.clock);
-            let ticket = engine.listed.ticket(id);
-            spawn(job, services, tx, move |lent| async move {
-                list_episodes(lent, id, naming, ticket, true).await;
-                drop(table);
-            })
-        }
+        Command::LoadEpisodes(id) => episodes_job(id, false, job, engine, services, tx),
+        // The same table for a card's stills, asked of AniList at low priority.
+        Command::LoadStills(id) => episodes_job(id, true, job, engine, services, tx),
         Command::SetWatched { id, episodes, watched } => {
             set_watched(id, &episodes, watched, engine, services, tx);
             ahead::top_up(engine, services, tx);
@@ -538,6 +560,7 @@ pub(crate) fn dispatch(
         Command::Control { playback, command } => control_playback(playback, command, engine),
         // Where the app is and its network: which torrents wait, and whether keep next runs.
         Command::AppPhase { phase } => {
+            services.sync.pulls.set_away(phase != kaeri_model::command::AppState::Foreground);
             crate::phases::app_phase(phase, engine, tx);
             ahead::top_up(engine, services, tx);
         }
@@ -584,6 +607,10 @@ pub(crate) fn dispatch(
 
         // The trackers.
         Command::SyncNow => sync_now(job, services, tx),
+        Command::SyncVisible { visible } => {
+            services.sync.pulls.set_away(!visible);
+            drop(job);
+        }
         Command::Connect { tracker } => connect(tracker, job, services, tx),
         Command::FinishSignIn { tracker, callback } => {
             finish_sign_in(tracker, callback, job, services, tx)

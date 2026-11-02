@@ -56,6 +56,13 @@ public final class TitleCache {
         }
     }
 
+    /// Titles whose hover card data came: their synopsis, trailer and airing facts are in.
+    public private(set) var cardedIds: Set<AnilistId> = []
+
+    func carded(_ ids: [AnilistId]) {
+        cardedIds.formUnion(ids)
+    }
+
     /// A title's page, whole.
     func merge(detail entry: Entry) {
         var entry = entry

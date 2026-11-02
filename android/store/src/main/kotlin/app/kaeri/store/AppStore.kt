@@ -1303,6 +1303,7 @@ class AppStore(
                 detailPending -= event.v1.id
                 titles.merge(detail = event.v1)
             }
+            is Event.Cards -> titles.merge(list = event.v1)
             is Event.TitlesChanged -> titlesChanged()
             is Event.Progress -> titles.progress(event.id, event.progress, event.resume, event.episodes)
             is Event.LastAired -> titles.lastAired(event.v1)

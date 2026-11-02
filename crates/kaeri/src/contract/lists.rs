@@ -841,3 +841,96 @@ async fn a_sequels_trailer_plays_once_its_prequel_is_watched_or_off_the_list() {
         assert!(trailer_may_autoplay(&rows[0], true), "{status:?}");
     }
 }
+
+/// The viewer's AniList id, as kept between launches.
+fn kept_viewer(h: &Harness) -> Option<String> {
+    h.store().get_meta_text(kaeri_track::anilist::VIEWER_ID_KEY).unwrap()
+}
+
+fn signed_in(store: Option<kaeri_store::Store>) -> Options {
+    Options {
+        config: Some(WITH_ANILIST.into()),
+        signed_in: vec!["anilist"],
+        store,
+        ..Options::default()
+    }
+}
+
+#[tokio::test]
+async fn a_launch_after_the_first_asks_the_viewer_and_the_list_in_one_request() {
+    let mut h = Harness::with(signed_in(None)).await;
+    h.send(Command::LoadLibrary(LibrarySegment::Watching));
+    h.settle().await;
+    assert_eq!(h.server().requests_for(Operation::Viewer).len(), 1);
+    assert_eq!(h.server().requests_for(Operation::Library).len(), 1);
+    // The id alone is kept, as AniList said it.
+    assert_eq!(kept_viewer(&h).as_deref(), Some("5150"));
+    let store = h.store().clone();
+    let _ = h.quit().await;
+
+    let mut h = Harness::with(signed_in(Some(store))).await;
+    h.send(Command::LoadTitleLanguage);
+    let job = h.send(Command::LoadLibrary(LibrarySegment::Planning));
+    let updates = h.settle().await;
+    assert_eq!(ids(content(&updates)), vec![MOVIE]);
+    ends(&updates, job);
+    let asked = h.server().requests_for(Operation::Library);
+    assert_eq!(asked.len(), 1, "the list rode with the viewer");
+    assert!(asked[0].query.contains("Viewer"), "{}", asked[0].query);
+    assert!(h.server().requests_for(Operation::Viewer).is_empty());
+}
+
+#[tokio::test]
+async fn a_kept_viewer_someone_else_has_replaced_is_dropped_and_their_list_asked_for() {
+    let mut h = Harness::with(signed_in(None)).await;
+    h.send(Command::LoadLibrary(LibrarySegment::Watching));
+    h.settle().await;
+    let store = h.store().clone();
+    let _ = h.quit().await;
+
+    // Signed in to another account elsewhere: AniList answers for viewer 777.
+    let mut h = Harness::with(signed_in(Some(store))).await;
+    h.server().answer_as_viewer(777);
+    let job = h.send(Command::LoadLibrary(LibrarySegment::Planning));
+    let updates = h.settle().await;
+    ends(&updates, job);
+    let asked = h.server().requests_for(Operation::Library);
+    assert_eq!(asked.len(), 2, "the list for the kept id is not used");
+    // Asked with the viewer, as every pull is, under the list's own alias.
+    let user = asked[1].variables.as_object().and_then(|vars| {
+        vars.iter().find(|(name, _)| name.ends_with("userId")).map(|(_, id)| id.clone())
+    });
+    assert_eq!(user, Some(777.into()), "the list asked for is the new viewer's");
+    assert_eq!(kept_viewer(&h).as_deref(), Some("777"));
+}
+
+#[tokio::test]
+async fn a_kept_viewer_refused_together_is_dropped_and_asked_for_alone() {
+    let mut h = Harness::with(signed_in(None)).await;
+    h.send(Command::LoadLibrary(LibrarySegment::Watching));
+    h.settle().await;
+    let store = h.store().clone();
+    let _ = h.quit().await;
+
+    // As AniList refuses another account's private list.
+    let mut h = Harness::with(signed_in(Some(store))).await;
+    h.server().fail_next(Failure::GraphQl("Private User".into()));
+    let job = h.send(Command::LoadLibrary(LibrarySegment::Planning));
+    let updates = h.settle().await;
+    assert_eq!(ids(content(&updates)), vec![MOVIE]);
+    ends(&updates, job);
+    assert_eq!(h.server().requests_for(Operation::Viewer).len(), 1, "the viewer alone");
+    assert_eq!(h.server().requests_for(Operation::Library).len(), 2);
+    assert_eq!(kept_viewer(&h).as_deref(), Some("5150"), "kept again from the answer");
+}
+
+#[tokio::test]
+async fn signing_out_of_anilist_drops_the_kept_viewer() {
+    let mut h = Harness::with(signed_in(None)).await;
+    h.send(Command::LoadLibrary(LibrarySegment::Watching));
+    h.settle().await;
+    assert!(kept_viewer(&h).is_some());
+    h.send(Command::Disconnect { tracker: "anilist".into() });
+    h.settle().await;
+    assert_eq!(kept_viewer(&h), None);
+}

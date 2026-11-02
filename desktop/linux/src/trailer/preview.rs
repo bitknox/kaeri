@@ -121,9 +121,11 @@ impl Rest {
     fn rest(self: &Rc<Self>, target: &gtk::Widget) {
         self.cancel();
         let Some(hub) = self.hub.upgrade() else { return };
-        // A title the lists have not shown is fetched while the pointer rests.
-        if hub.entry(kaeri_core::ids::AnilistId::new(self.id)).is_none() {
-            hub.send(Command::LoadDetail(kaeri_core::ids::AnilistId::new(self.id)));
+        // A title the lists have not shown has its card asked for while the pointer rests: the
+        // list's fields, from what is kept or one low-priority lookup, not the page.
+        let id = kaeri_core::ids::AnilistId::new(self.id);
+        if hub.entry(id).is_none() {
+            hub.send(Command::LoadCards { ids: vec![id] });
         }
         let this = Rc::clone(self);
         let target = target.downgrade();

@@ -170,6 +170,10 @@ pub enum Event {
     /// The recent searches, newest first: at launch when asked, and after each change.
     RecentSearches(Vec<SearchQuery>),
     Detail(Box<Entry>),
+    /// The titles a [`Command::LoadCards`](crate::command::Command::LoadCards) asked for, as a
+    /// list row has them (synopsis, trailer, airing facts) and without a page's fields. A front
+    /// end merges them as it merges a list.
+    Cards(Vec<Entry>),
     /// The title language the signed-in AniList viewer reads in, in answer to
     /// [`Command::LoadTitleLanguage`](crate::command::Command::LoadTitleLanguage). `None` when
     /// nobody is signed in to AniList, or AniList did not say.

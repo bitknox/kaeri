@@ -12,7 +12,10 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import app.kaeri.engine.model.Command
 import app.kaeri.engine.model.Event
 import app.kaeri.engine.model.WidgetData
@@ -37,8 +40,15 @@ class WidgetKeeper(private val context: Context, val record: WidgetRecord, val a
         keep(store, data)
     }
 
+    /** Held while a record is kept, so the one asked for and the same one followed are kept once. */
+    private val keeping = Mutex()
+
+    /** The record kept last. */
+    private var kept: WidgetData? = null
+
     /** Keep [data], made on [store]'s engine: the art it names that is not kept yet, then the record. */
-    suspend fun keep(store: AppStore, data: WidgetData) {
+    suspend fun keep(store: AppStore, data: WidgetData) = keeping.withLock {
+        if (data == kept) return@withLock
         val urls = artOf(data)
         val missing = urls.filterNot(art::has)
         if (missing.isNotEmpty()) {
@@ -46,6 +56,18 @@ class WidgetKeeper(private val context: Context, val record: WidgetRecord, val a
         }
         art.keepOnly(urls.toSet())
         record.write(data)
+        kept = data
+    }
+
+    /**
+     * Keep each record [store]'s engine says from now on in [scope], while the app runs: a record
+     * cut short by a rate limit is said again as the engine fills it in, after the ask that made
+     * it has kept the first.
+     */
+    fun followFillIns(store: AppStore, scope: CoroutineScope) {
+        scope.launch {
+            store.answers.filterIsInstance<Event.WidgetSnapshot>().collect { keep(store, it.v1) }
+        }
     }
 
     /** Draw the widgets again each time a record is written, from now on in [scope]. */

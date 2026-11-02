@@ -531,6 +531,8 @@ impl App {
             // Every way into a title sets a stand-in `detail` for it before the fetch goes out, so
             // a full record for any other id answers a title the user has already left.
             Event::Detail(entry) => self.apply_detail(entry),
+            // The terminal has no hover cards.
+            Event::Cards(_) => {}
             // The engine names every title as the setting says; nothing here asks the viewer's.
             Event::ViewerTitleLanguage(_) => {}
             Event::TitlesChanged(_) => self.titles_changed(),

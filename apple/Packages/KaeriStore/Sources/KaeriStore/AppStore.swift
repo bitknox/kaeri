@@ -104,6 +104,8 @@ public final class AppStore {
     @ObservationIgnored private var early: [Command] = []
     /// The titles whose episodes were asked for their stills.
     @ObservationIgnored private var stillsAsked: Set<AnilistId> = []
+    /// When each cover's card and table data was last asked with its screen's (see `prepareCards`).
+    @ObservationIgnored private var prepared: [AnilistId: ContinuousClock.Instant] = [:]
     /// When each question about a title last went out (see `ask`).
     @ObservationIgnored private var asked: [TitleQuestion: ContinuousClock.Instant] = [:]
     /// The kinds of the engine's events a showcase set aside, so its rows stay on screen.
@@ -581,9 +583,43 @@ public final class AppStore {
         send(.loadDetail(id))
     }
 
+    /// The data a hover card shows for `ids`: from what the lists brought, else one batched lookup
+    /// at low priority. Not asked again for a title whose card is in.
+    public func loadCards(_ ids: [AnilistId]) {
+        let wanted = ids.filter { !titles.cardedIds.contains($0) && !titles.detailed.contains($0) }
+        guard !wanted.isEmpty else { return }
+        send(.loadCards(ids: wanted))
+    }
+
     public func loadEpisodes(_ id: AnilistId) {
         guard ask(.episodes(id)) else { return }
         send(.loadEpisodes(id))
+    }
+
+    /// The covers a screen shows, for their hover cards: their cards and what their episode tables
+    /// need, in one batched request at low priority, so a hover asks nothing. Covers asked within
+    /// `preparedFor`, or whose table is here, are left out, so it may be called as the pointer moves.
+    public func prepareCards(_ ids: [AnilistId]) {
+        let now = ContinuousClock.now
+        var wanted: [AnilistId] = []
+        for id in ids where titles.episodes[id] == nil && !wanted.contains(id) && wanted.count < 50 {
+            if let at = prepared[id], now - at < Self.preparedFor { continue }
+            wanted.append(id)
+        }
+        guard !wanted.isEmpty else { return }
+        for id in wanted { prepared[id] = now }
+        send(.prepareCards(ids: wanted))
+    }
+
+    /// How long the engine keeps what `prepareCards` brought for a table, a little less.
+    static let preparedFor: Duration = .seconds(25 * 60)
+
+    /// A hover card's episode table, for its Play line and stills: built from what its screen's
+    /// `prepareCards` brought, and otherwise asked at low priority so the screen's own requests go
+    /// first.
+    public func loadHoverEpisodes(_ id: AnilistId) {
+        guard titles.episodes[id] == nil, ask(.episodes(id)) else { return }
+        send(.loadStills(id))
     }
 
     /// How far a title's dub goes. The engine answers in the background and the page shows it
@@ -626,7 +662,7 @@ public final class AppStore {
         guard titles[id]?.bannerUrl == nil, titles.episodes[id] == nil,
               stillsAsked.insert(id).inserted, ask(.episodes(id))
         else { return false }
-        send(.loadEpisodes(id))
+        send(.loadStills(id))
         return true
     }
 
@@ -854,6 +890,9 @@ public final class AppStore {
             calendar.backfill(page: page, entries: entries, morePast: morePast, titles: titles)
         case .detail(let entry):
             titles.merge(detail: entry)
+        case .cards(let entries):
+            titles.merge(entries)
+            titles.carded(entries.map(\.id))
         case .progress(let id, let progress, let resume, let episodes):
             titles.progress(id: id, progress: progress, resume: resume, episodes: episodes)
             widgetsChanged()

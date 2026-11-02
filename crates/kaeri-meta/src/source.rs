@@ -36,8 +36,8 @@ use kaeri_store::Store;
 
 use crate::{
     anilist::{
-        AiringEntry, AniList, AniListError, BrowseFilter, Facets, LastAired, Media, Page,
-        Season,
+        AiringEntry, AiringPage, AniList, AniListError, BrowseFilter, Facets, LastAired, Media,
+        Page, Season,
     },
     franchise,
     tenrai::{Tenrai, TenraiError},
@@ -148,15 +148,18 @@ impl Answered {
 
     /// The answer as of `now`, its countdown run on by the time since.
     fn as_of(&self, now: Instant) -> Result<Media> {
-        let age =
-            i64::try_from(now.saturating_duration_since(self.at).as_secs()).unwrap_or(i64::MAX);
-        self.outcome.clone().map(|mut media| {
-            if let Some(next) = &mut media.next_airing_episode {
-                next.time_until_airing = next.time_until_airing.saturating_sub(age);
-            }
-            media
-        })
+        let age = now.saturating_duration_since(self.at);
+        self.outcome.clone().map(|media| as_of(media, age))
     }
+}
+
+/// `media` as of `age` after it came: its countdown run on by that much.
+fn as_of(mut media: Media, age: Duration) -> Media {
+    let age = i64::try_from(age.as_secs()).unwrap_or(i64::MAX);
+    if let Some(next) = &mut media.next_airing_episode {
+        next.time_until_airing = next.time_until_airing.saturating_sub(age);
+    }
+    media
 }
 
 /// The asks for single titles under way, and AniList's answers from the last
@@ -255,7 +258,74 @@ pub struct Meta {
     relations: Arc<Mutex<franchise::Relations>>,
     /// How long a page waits for the season walk: [`franchise::HOLD`].
     season_hold: Duration,
+    /// Several titles asked for together, in one request: see [`Self::media_many`].
+    many: Arc<Mutex<Many>>,
+    /// When each title last aired, kept until its next broadcast: see [`Self::last_aired_kept`].
+    aired: Arc<Mutex<HashMap<AnilistId, (LastAired, i64)>>>,
+    /// What the episode tables of the covers on screen need, asked together: see
+    /// [`Self::media_tables`].
+    tables: Arc<Mutex<Tables>>,
 }
+
+/// What [`Meta::media_tables`] brought, in memory only, and what it is still asking.
+#[derive(Default)]
+struct Tables {
+    /// Each title's record and when it came, for titles whose past broadcasts came whole.
+    kept: HashMap<AnilistId, (Instant, Media)>,
+    /// The titles of a lookup under way, each with word of when it is done.
+    asking: HashMap<AnilistId, tokio::sync::watch::Receiver<bool>>,
+    /// The titles quiet lookups want tables for, gathered for [`BATCH_WAIT`] into one
+    /// [`Meta::media_tables`], with word of when it is done: see [`Meta::table_media`].
+    gathering: Option<(Vec<AnilistId>, tokio::sync::watch::Receiver<bool>)>,
+}
+
+/// How long a record [`Meta::media_tables`] brought builds an episode table: a screen's covers
+/// are hovered over minutes, and what the table reads of AniList changes when an episode airs,
+/// which ends it early.
+pub const TABLE_FOR: Duration = Duration::from_secs(30 * 60);
+
+/// Whether a record that came at `at` still builds a table at `now`: younger than
+/// [`TABLE_FOR`], and no episode has aired since.
+fn table_serves(at: Instant, media: &Media, now: Instant) -> bool {
+    let age = now.saturating_duration_since(at);
+    let aired = media.next_airing_episode.as_ref().is_some_and(|next| {
+        next.time_until_airing <= i64::try_from(age.as_secs()).unwrap_or(i64::MAX)
+    });
+    age < TABLE_FOR && !aired
+}
+
+/// A title recommendations were asked from: its id, its name and the ids recommended off it,
+/// best rated first.
+pub type Recommended = (AnilistId, String, Vec<AnilistId>);
+
+/// What [`Meta::suggestions`] found, part by part, each as it would have come alone. A part
+/// that was not asked for is `None`.
+#[derive(Debug)]
+pub struct Suggested {
+    pub titles: Result<Vec<Media>>,
+    pub from: Option<Result<Vec<Recommended>>>,
+    pub because: Option<Result<Vec<AnilistId>>>,
+}
+
+/// The titles asked for in one go.
+#[derive(Default)]
+struct Many {
+    /// The batch still taking titles, which goes out shortly after it opens.
+    open: Option<Batch>,
+}
+
+type BatchAnswer = Arc<Result<Vec<Media>>>;
+
+struct Batch {
+    ids: Vec<AnilistId>,
+    /// Nobody on a screen is waiting for any of it.
+    low: bool,
+    answer: Arc<tokio::sync::watch::Sender<Option<BatchAnswer>>>,
+}
+
+/// How long a batch waits for more titles before it goes out: long enough for the lookups a
+/// screen starts together, short enough not to be noticed.
+const BATCH_WAIT: Duration = Duration::from_millis(25);
 
 impl Meta {
     pub fn new(anilist: AniList, tenrai: Option<Tenrai>, store: Store) -> Self {
@@ -272,6 +342,9 @@ impl Meta {
             reuse_for: REUSE_FOR,
             relations: Arc::default(),
             season_hold: franchise::HOLD,
+            many: Arc::default(),
+            aired: Arc::default(),
+            tables: Arc::default(),
         }
     }
 
@@ -410,6 +483,9 @@ impl Meta {
         }
         let result = call.await;
         match &result {
+            // Over the limit is AniList asking for patience, not failing: no strike for the
+            // breaker, so it is never skipped for it. This call falls to what is kept.
+            Err(AniListError::RateLimited { .. }) => {}
             Err(e) if Self::descends(e) => {
                 self.note_anilist(Some(e.to_string()));
                 self.trip("anilist");
@@ -525,7 +601,10 @@ impl Meta {
     fn descends(error: &AniListError) -> bool {
         matches!(
             error,
-            AniListError::Network(_) | AniListError::Api(_) | AniListError::Decode(_)
+            AniListError::Network(_)
+                | AniListError::Api(_)
+                | AniListError::Decode(_)
+                | AniListError::RateLimited { .. }
         )
     }
 
@@ -574,6 +653,135 @@ impl Meta {
             })
             .await;
         answered.as_of(Instant::now()).map(|media| (media, answered.fresh))
+    }
+
+    /// The covers a screen shows, with what each one's episode table needs, at low priority and
+    /// fifty to a request: the cards to show, and the records [`Self::table_media`] builds the
+    /// tables from later, so a hover card's Play line and stills ask nothing of their own.
+    /// Titles kept or asked already are not asked again. AniList only: the cache and Tenrai have
+    /// none of the listings, and a failure leaves each table to be asked when it is wanted.
+    pub async fn media_tables(&self, ids: &[AnilistId]) -> Vec<Media> {
+        let now = Instant::now();
+        let (done, word) = tokio::sync::watch::channel(false);
+        let (wanted, mut found) = {
+            let Ok(mut tables) = self.tables.lock() else { return Vec::new() };
+            tables.kept.retain(|_, (at, media)| table_serves(*at, media, now));
+            let mut wanted: Vec<AnilistId> = Vec::new();
+            let mut kept = Vec::new();
+            for id in ids {
+                if let Some((at, media)) = tables.kept.get(id) {
+                    kept.push(as_of(media.clone(), now.saturating_duration_since(*at)));
+                } else if !tables.asking.contains_key(id)
+                    && !wanted.contains(id)
+                    && !crate::demo::is_demo(*id)
+                {
+                    wanted.push(*id);
+                }
+            }
+            for id in &wanted {
+                tables.asking.insert(*id, word.clone());
+            }
+            (wanted, kept)
+        };
+        for chunk in wanted.chunks(50) {
+            let asked = crate::anilist::in_background(self.anilist.media_tables(chunk));
+            match self.ask_anilist(asked).await {
+                Ok(list) => {
+                    self.went(FRESH);
+                    let at = Instant::now();
+                    for (media, whole) in list {
+                        self.remember(&media);
+                        if whole && let Ok(mut tables) = self.tables.lock() {
+                            tables.kept.insert(media.id, (at, media.clone()));
+                        }
+                        found.push(media);
+                    }
+                }
+                Err(e) => {
+                    tracing::debug!(error = %e, "the screen's episode tables were not asked")
+                }
+            }
+        }
+        if let Ok(mut tables) = self.tables.lock() {
+            for id in &wanted {
+                tables.asking.remove(id);
+            }
+        }
+        let _ = done.send(true);
+        found
+    }
+
+    /// Title `id` for its episode table: AniList's answer for its page when one is in or under
+    /// way, else what [`Self::media_tables`] brought for the screen (waited for while it is
+    /// coming), else [`Self::media`]. A quiet lookup (see [`crate::in_background`]) of a title
+    /// with none of these joins the others made within [`BATCH_WAIT`] in one
+    /// [`Self::media_tables`], so the stills of a row of cards cost one request, not one each.
+    pub async fn table_media(&self, id: AnilistId) -> Result<Media> {
+        if !self.detail_under_way(id) {
+            if crate::anilist::is_background() {
+                self.gather_table(id).await;
+            }
+            let word = self.tables.lock().ok().and_then(|t| t.asking.get(&id).cloned());
+            if let Some(mut word) = word {
+                let _ = word.wait_for(|done| *done).await;
+            }
+            let now = Instant::now();
+            let kept = self.tables.lock().ok().and_then(|tables| {
+                let (at, media) = tables.kept.get(&id)?;
+                table_serves(*at, media, now)
+                    .then(|| as_of(media.clone(), now.saturating_duration_since(*at)))
+            });
+            if let Some(media) = kept {
+                return Ok(media);
+            }
+        }
+        self.media(id).await
+    }
+
+    /// Put title `id` in the tables being gathered, unless its table is kept or asked already,
+    /// and wait until they have been asked.
+    async fn gather_table(&self, id: AnilistId) {
+        let word = {
+            let Ok(mut tables) = self.tables.lock() else { return };
+            let now = Instant::now();
+            let served =
+                tables.kept.get(&id).is_some_and(|(at, media)| table_serves(*at, media, now));
+            if served || tables.asking.contains_key(&id) || crate::demo::is_demo(id) {
+                return;
+            }
+            let (ids, word) = tables.gathering.get_or_insert_with(|| {
+                let (done, word) = tokio::sync::watch::channel(false);
+                let me = self.clone();
+                tokio::spawn(async move {
+                    tokio::time::sleep(BATCH_WAIT).await;
+                    let ids = me.tables.lock().ok().and_then(|mut t| t.gathering.take());
+                    if let Some((ids, _)) = ids {
+                        me.media_tables(&ids).await;
+                    }
+                    let _ = done.send(true);
+                });
+                (Vec::new(), word)
+            });
+            if !ids.contains(&id) {
+                ids.push(id);
+            }
+            word.clone()
+        };
+        let mut word = word;
+        let _ = word.wait_for(|done| *done).await;
+    }
+
+    /// Whether an ask for title `id`'s page is under way, or its answer still serves.
+    fn detail_under_way(&self, id: AnilistId) -> bool {
+        let now = Instant::now();
+        let signed_in = self.anilist.is_authenticated();
+        self.recent.lock().is_ok_and(|recent| {
+            recent.titles.get(&id).is_some_and(|flight| {
+                flight
+                    .get()
+                    .is_none_or(|answered| answered.serves(now, self.reuse_for, signed_in))
+            })
+        })
     }
 
     /// The cards of these titles, at most fifty, each with its relations two levels deep: one
@@ -642,7 +850,10 @@ impl Meta {
         };
 
         let mut tenrai_error = None;
-        if let Some(tenrai) = &self.tenrai {
+        // Over the limit is no reason to take a thinner record from Tenrai: what is cached
+        // stands in, and the page asks AniList again when it is let.
+        let patient = matches!(primary, AniListError::RateLimited { .. });
+        if let Some(tenrai) = self.tenrai.as_ref().filter(|_| !patient) {
             match self.ask_tenrai(tenrai.media(id)).await {
                 Ok(media) => {
                     self.note_tenrai(None);
@@ -664,10 +875,74 @@ impl Meta {
         (Err(self.exhausted(primary, tenrai_error)), false)
     }
 
+    /// Several titles, in the order asked, with lookups made together sharing one request: the
+    /// Continue rail, Home's refresh of it and Up next's probe ask for the same ids within
+    /// moments, and cost AniList one request between them. A title nothing can describe is left
+    /// out.
+    pub async fn media_many(&self, ids: &[AnilistId]) -> Result<Vec<Media>> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
+        let low = crate::anilist::is_background();
+        let mut rx = {
+            let Ok(mut many) = self.many.lock() else {
+                return self.media_many_direct(ids).await;
+            };
+            let batch = many.open.get_or_insert_with(|| {
+                let (tx, _) = tokio::sync::watch::channel(None);
+                let batch = Batch { ids: Vec::new(), low, answer: Arc::new(tx) };
+                let (me, answer) = (self.clone(), batch.answer.clone());
+                tokio::spawn(async move { me.send_batch(answer).await });
+                batch
+            });
+            // One screen's lookup in the batch makes the whole of it a screen's.
+            batch.low &= low;
+            for id in ids {
+                if !batch.ids.contains(id) {
+                    batch.ids.push(*id);
+                }
+            }
+            batch.answer.subscribe()
+        };
+        let answer = rx.wait_for(|a| a.is_some()).await.ok().and_then(|a| a.clone());
+        let Some(answer) = answer else { return self.media_many_direct(ids).await };
+        match answer.as_ref() {
+            Ok(found) => Ok(ids
+                .iter()
+                .filter_map(|id| found.iter().find(|m| m.id == *id).cloned())
+                .collect()),
+            Err(e) => Err(e.clone()),
+        }
+    }
+
+    /// Send the batch that is open, once it has had [`BATCH_WAIT`] to fill, and say the answer.
+    async fn send_batch(&self, answer: Arc<tokio::sync::watch::Sender<Option<BatchAnswer>>>) {
+        tokio::time::sleep(BATCH_WAIT).await;
+        let batch = self.many.lock().ok().and_then(|mut many| many.open.take());
+        let Some(batch) = batch else { return };
+        let ask = async {
+            let mut found = Vec::new();
+            let mut failure = None;
+            for chunk in batch.ids.chunks(50) {
+                match self.media_many_direct(chunk).await {
+                    Ok(list) => found.extend(list),
+                    Err(e) => failure = Some(e),
+                }
+            }
+            match failure {
+                Some(e) if found.is_empty() => Err(e),
+                _ => Ok(found),
+            }
+        };
+        let result =
+            if batch.low { crate::anilist::in_background(ask).await } else { ask.await };
+        let _ = answer.send(Some(Arc::new(result)));
+    }
+
     /// Several titles, in the order asked. Fallback assembles per title — the cache
     /// first, because these are almost always titles from the caller's own history,
     /// then Tenrai for the gaps. A title nothing can describe is omitted, not invented.
-    pub async fn media_many(&self, ids: &[AnilistId]) -> Result<Vec<Media>> {
+    async fn media_many_direct(&self, ids: &[AnilistId]) -> Result<Vec<Media>> {
         // The demo's title is the engine's own: asked of no one, and put back where it was asked.
         if ids.iter().any(|id| crate::demo::is_demo(*id)) {
             let others: Vec<AnilistId> =
@@ -675,7 +950,7 @@ impl Meta {
             let mut found = if others.is_empty() {
                 Vec::new()
             } else {
-                Box::pin(self.media_many(&others)).await.unwrap_or_default()
+                Box::pin(self.media_many_direct(&others)).await.unwrap_or_default()
             };
             let at = ids.iter().position(|id| crate::demo::is_demo(*id)).unwrap_or(0);
             found.insert(at.min(found.len()), crate::demo::media());
@@ -692,14 +967,24 @@ impl Meta {
             Err(e) if !Self::descends(&e) => return Err(e.into()),
             Err(e) => e,
         };
+        self.media_many_below(ids, primary).await
+    }
 
+    /// The rungs below AniList for [`Self::media_many_direct`], which AniList failed with
+    /// `primary`.
+    async fn media_many_below(
+        &self,
+        ids: &[AnilistId],
+        primary: AniListError,
+    ) -> Result<Vec<Media>> {
         let mut assembled = Vec::with_capacity(ids.len());
         let mut tenrai_error = None;
         let mut rung = CACHE;
+        let patient = matches!(primary, AniListError::RateLimited { .. });
         for id in ids {
             if let Some(media) = self.recall(*id) {
                 assembled.push(media);
-            } else if let Some(tenrai) = &self.tenrai {
+            } else if let Some(tenrai) = self.tenrai.as_ref().filter(|_| !patient) {
                 match self.ask_tenrai(tenrai.media(*id)).await {
                     Ok(media) => {
                         self.remember(&media);
@@ -731,14 +1016,107 @@ impl Meta {
         self.weathered(self.anilist.recommended_from(ids)).await
     }
 
-    /// What people who liked `id` rated highest, each a whole title. AniList only, as
-    /// [`Self::recommended_from`] is.
-    pub async fn recommended_titles(&self, id: AnilistId, each: u32) -> Result<Vec<Media>> {
-        let found = self.weathered(self.anilist.recommended_titles(id, each)).await?;
-        for media in &found {
-            self.remember(media);
+    /// What one step of Up next asks, in one request where AniList takes it: the titles (as
+    /// [`Self::media_many`]), what people who liked each of `from` rated highest (as
+    /// [`Self::recommended_from`]), and with `because` the ids of the `each` titles rated highest
+    /// off that one. See [`AniList::suggestions`].
+    ///
+    /// Each part is answered as it would be alone. Refused as a whole (a GraphQL error, such as
+    /// one for what the query costs), the parts are asked apart. Failed for any other reason,
+    /// each part fails as it would have alone, the titles falling to the cache and Tenrai.
+    pub async fn suggestions(
+        &self,
+        titles: &[AnilistId],
+        from: &[AnilistId],
+        because: Option<(AnilistId, u32)>,
+    ) -> Suggested {
+        let from = &from[..from.len().min(crate::anilist::query::RECOMMENDED_FROM)];
+        // More than one request holds, or the demo's: the titles are asked as before, beside it.
+        let carried = titles.len() <= 50 && !titles.iter().any(|id| crate::demo::is_demo(*id));
+        let in_request: &[AnilistId] = if carried { titles } else { &[] };
+        let parts = usize::from(!in_request.is_empty())
+            + usize::from(!from.is_empty())
+            + usize::from(because.is_some());
+        if parts < 2 {
+            return self.suggestions_apart(titles, from, because).await;
         }
-        Ok(found)
+        let alone = async {
+            match carried {
+                true => None,
+                false => Some(self.media_many(titles).await),
+            }
+        };
+        let asked = self.ask_together(self.anilist.suggestions(in_request, from, because));
+        let (alone, asked) = tokio::join!(alone, asked);
+        match asked {
+            Ok(found) => {
+                self.went(FRESH);
+                for media in &found.titles {
+                    self.remember(media);
+                }
+                Suggested {
+                    titles: alone.unwrap_or(Ok(found.titles)),
+                    from: (!from.is_empty()).then_some(Ok(found.from)),
+                    because: found.because.map(Ok),
+                }
+            }
+            Err(AniListError::Api(e)) => {
+                tracing::info!(error = %e, "Up next's lookups were refused together; asking apart");
+                let apart = self.suggestions_apart(in_request, from, because).await;
+                Suggested { titles: alone.unwrap_or(apart.titles), ..apart }
+            }
+            Err(e) => {
+                let titles = match alone {
+                    Some(titles) => titles,
+                    None if Self::descends(&e) => {
+                        self.media_many_below(titles, e.clone()).await
+                    }
+                    None => Err(e.clone().into()),
+                };
+                Suggested {
+                    titles,
+                    from: (!from.is_empty()).then(|| Err(e.clone().into())),
+                    because: because.map(|_| Err(e.into())),
+                }
+            }
+        }
+    }
+
+    /// [`Self::suggestions`]' parts, each asked on its own.
+    async fn suggestions_apart(
+        &self,
+        titles: &[AnilistId],
+        from: &[AnilistId],
+        because: Option<(AnilistId, u32)>,
+    ) -> Suggested {
+        let titles = self.media_many(titles).await;
+        let from = if from.is_empty() { None } else { Some(self.recommended_from(from).await) };
+        let because = match because {
+            Some((id, each)) => Some(
+                self.weathered(self.anilist.suggestions(&[], &[], Some((id, each))))
+                    .await
+                    .map(|found| found.because.unwrap_or_default()),
+            ),
+            None => None,
+        };
+        Suggested { titles, from, because }
+    }
+
+    /// [`Self::ask_anilist`] for a request that carries several lookups: a GraphQL error is
+    /// AniList refusing this request's shape, not an outage, so the breaker is not told of it
+    /// and the caller asks the parts apart.
+    async fn ask_together<T>(
+        &self,
+        call: impl std::future::Future<Output = std::result::Result<T, AniListError>>,
+    ) -> std::result::Result<T, AniListError> {
+        if let Some(wait) = self.skip("anilist") {
+            return Err(AniListError::Network(skipped("anilist", wait)));
+        }
+        let result = call.await;
+        if matches!(result, Err(AniListError::Api(_))) {
+            return result;
+        }
+        self.ask_anilist(std::future::ready(result)).await
     }
 
     /// One page of a search for `term` with `filter`, or a browse when `term` is empty.
@@ -881,6 +1259,41 @@ impl Meta {
         self.weathered(self.anilist.airing_between(from, to, page, per_page)).await
     }
 
+    /// Several pages of the calendar, in one request where AniList takes it (see
+    /// [`AniList::airing_pages`]), each answered as it would be alone, in the order asked.
+    /// Refused as a whole, the pages are asked one by one.
+    pub async fn airing_pages(&self, pages: &[AiringPage]) -> Vec<Result<Page<AiringEntry>>> {
+        if let [page] = pages {
+            let one = self.airing_between_sorted(
+                page.from,
+                page.to,
+                page.page,
+                page.per_page,
+                page.newest_first,
+            );
+            return vec![one.await];
+        }
+        match self.ask_together(self.anilist.airing_pages(pages)).await {
+            Ok(found) => found.into_iter().map(Ok).collect(),
+            Err(AniListError::Api(e)) => {
+                tracing::info!(error = %e, "the calendar's pages were refused together");
+                let mut found = Vec::with_capacity(pages.len());
+                for p in pages {
+                    let one = self.airing_between_sorted(
+                        p.from,
+                        p.to,
+                        p.page,
+                        p.per_page,
+                        p.newest_first,
+                    );
+                    found.push(one.await);
+                }
+                found
+            }
+            Err(e) => pages.iter().map(|_| Err(e.clone().into())).collect(),
+        }
+    }
+
     /// The same window, with the sort direction chosen by the caller.
     pub async fn airing_between_sorted(
         &self,
@@ -903,6 +1316,48 @@ impl Meta {
     /// When each title last aired. AniList only — nothing else knows; absent beats guessed.
     pub async fn last_aired(&self, ids: &[AnilistId]) -> Result<Vec<LastAired>> {
         self.weathered(self.anilist.last_aired(ids)).await
+    }
+
+    /// [`Self::last_aired`] for titles whose next broadcast is at `(id, next)`: an answer is kept
+    /// in memory until that broadcast, since nothing can have aired before it, and only the
+    /// titles without a kept answer are asked for, in one request as background work. The kept
+    /// answers come back with the new ones, and if the request fails, alone with the error.
+    pub async fn last_aired_kept(
+        &self,
+        titles: &[(AnilistId, i64)],
+        now: i64,
+    ) -> (Vec<LastAired>, Option<MetaError>) {
+        let (mut found, missing): (Vec<LastAired>, Vec<AnilistId>) = {
+            let aired = self.aired.lock().map(|a| a.clone()).unwrap_or_default();
+            let mut found = Vec::new();
+            let mut missing = Vec::new();
+            for (id, _) in titles {
+                match aired.get(id) {
+                    Some((row, until)) if now < *until => found.push(*row),
+                    _ => missing.push(*id),
+                }
+            }
+            (found, missing)
+        };
+        if missing.is_empty() {
+            return (found, None);
+        }
+        match crate::anilist::in_background(self.last_aired(&missing)).await {
+            Ok(rows) => {
+                if let Ok(mut aired) = self.aired.lock() {
+                    for row in &rows {
+                        if let Some((_, next)) =
+                            titles.iter().find(|(id, _)| *id == row.media_id)
+                        {
+                            aired.insert(row.media_id, (*row, *next));
+                        }
+                    }
+                }
+                found.extend(rows);
+                (found, None)
+            }
+            Err(e) => (found, Some(e)),
+        }
     }
 
     /// What aired for the titles followed, after `from` and before `to`: the new-episode check.
@@ -1155,6 +1610,24 @@ mod tests {
         let row = &meta.health()[1];
         assert_eq!(row.detail.as_deref(), Some("failing"));
         assert!(row.retry_at.is_some());
+    }
+
+    #[tokio::test]
+    async fn a_rate_limit_never_trips_the_breaker() {
+        let store = Store::open_in_memory().unwrap();
+        let http =
+            kaeri_net::HttpClient::new(&kaeri_core::config::NetworkConfig::default()).unwrap();
+        let meta = Meta::new(AniList::new(http, 30), None, store);
+        for _ in 0..BREAKER_THRESHOLD * 3 {
+            let answer = meta
+                .ask_anilist(async {
+                    Err::<(), _>(AniListError::RateLimited { retry_in_secs: 5 })
+                })
+                .await;
+            assert!(matches!(answer, Err(AniListError::RateLimited { .. })));
+        }
+        assert!(meta.skip("anilist").is_none(), "AniList is still asked after many refusals");
+        assert!(meta.health()[0].healthy, "{:?}", meta.health()[0]);
     }
 
     #[test]
