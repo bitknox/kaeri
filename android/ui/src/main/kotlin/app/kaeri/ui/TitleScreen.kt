@@ -264,10 +264,11 @@ fun TitleScreen(id: AnilistId, actions: AppActions) {
         androidx.compose.foundation.ScrollState(geometry.centred(family.seasons.indexOfFirst { it.id == shown }, viewport))
     }
     FollowChosen(pickerScroll, geometry, family, marked, viewport)
-    // What a page shows of [season], its title or its card: the stand-in's, the season it stands for.
+    // What a page shows of [season], its title or its card: the stand-in's, the season it stands
+    // for, whose head it shows when the app has it.
     val pageEntry: (AnilistId) -> Entry = { season ->
         val of = if (season == STAND_IN) standIn.value.season else season
-        titlesState.value[of]?.takeIf { season != STAND_IN } ?: cardEntry(of, families.value.card(of))
+        titlesState.value[of] ?: cardEntry(of, families.value.card(of))
     }
     // Line [season]'s page up with the one on screen, its picker [at] this one's place.
     val lineUp: (AnilistId, Int) -> Unit = lineUp@{ season, at ->
@@ -407,18 +408,30 @@ fun TitleScreen(id: AnilistId, actions: AppActions) {
             val list = lists[season]
             if (!onScreen || standing == null || list == null || standing.isScrollInProgress || ready[season] == null) return@snapshotFlow null
             // Laid out beneath with its picker in view, wherever the content above it let it stand.
-            season.takeIf { pickerAt(standing) != null && pickerAt(list) != null }
-        }.collect { season ->
-            if (season != null && season.toLong() == marked.longValue) fadeIn(season, lists[STAND_IN]?.let(::pickerAt))
+            val at = pickerAt(standing)
+            val there = pickerAt(list)
+            if (at == null || there == null) null else Triple(season, at, there)
+        }.collectLatest { found ->
+            val season = found?.first ?: return@collectLatest
+            // Once both pages have stood still a moment: the stand-in's own rows move as its
+            // season's page arrives, and the page beneath is lined up with it a frame after.
+            kotlinx.coroutines.delay(HANDOVER_STILL)
+            if (season.toLong() == marked.longValue) fadeIn(season, lists[STAND_IN]?.let(::pickerAt))
         }
     }
+    val bannerPixels = pixels(412.dp)
     val press: (AnilistId) -> Unit = { season ->
         if (season.toLong() != marked.longValue) {
             pressed.value = season
-            // A season with no page laid out: the stand-in takes its card now, unseen, ready for
-            // the tap, and its title is asked for.
+            // A season with no page laid out: the stand-in takes its head or its card now, unseen,
+            // ready for the tap, and its page is asked for, which brings a head the engine kept at
+            // once. Its art is decoded for the tap, from the disk when it was fetched ahead.
             if ((ready[season] == null || lists[season] == null) && !standInShown()) standIn.value = StandIn(season, crossfade = false)
-            if (store.titles[season] == null) ask(season)
+            ask(season)
+            store.titles[season]?.let { title ->
+                title.bannerUrl?.let { store.artwork.request(it, bannerPixels) }
+                title.coverUrl?.let { store.artwork.request(it, COVER_PIXELS) }
+            }
         }
     }
     // The finger lifted: unless that was a pick, the season it was on is let go.
@@ -458,6 +471,7 @@ fun TitleScreen(id: AnilistId, actions: AppActions) {
                 }
                 PageSlot(
                     season = season,
+                    opened = id,
                     onScreen = onScreen,
                     list = list,
                     standIn = standIn,
@@ -507,6 +521,8 @@ private fun rememberTitle(titles: androidx.compose.runtime.State<Map<AnilistId, 
 @Composable
 private fun PageSlot(
     season: AnilistId,
+    /** The title the page was opened as. */
+    opened: AnilistId,
     onScreen: Boolean,
     list: LazyListState,
     standIn: androidx.compose.runtime.State<StandIn>,
@@ -532,15 +548,36 @@ private fun PageSlot(
     // Composed beneath, not on screen: its placeholders are drawn from the start, so a change
     // into it shows them inside the crossfade.
     val ahead = remember { !onScreen }
-    val title = if (season == STAND_IN) null else rememberTitle(titles, season)
     val shows = if (season == STAND_IN) standIn.value.season else season
+    // The season's title as the app has it: its whole page, its head sent ahead of the page, or
+    // the card a list brought, each with the head's title, art, facts and synopsis. The stand-in
+    // shows it as well, so a pick crossfades the head straight to the season's own.
+    val title = rememberTitle(titles, shows)
+    val own = title.takeIf { season != STAND_IN }
+    // The rest of the page once its page is whole. The page opened from a list shows what the
+    // list knew of it at once, as it always has; another season keeps its placeholders under
+    // its head until its whole page comes, so nothing on it is taken back or added to. The
+    // stand-in shows the whole page as well once it comes, in its place among the placeholders,
+    // so its head and picker stand where the season's own page has them when it hands over.
+    val loaded = if (season == STAND_IN) title?.detail?.partial == false
+    else own != null && (season == opened || own.detail?.partial == false)
     val card = family.value.card(shows)
     val page = title ?: remember(shows, card) { cardEntry(shows, card) }
+    // The episodes a head reads for its art: its season's once they are here. Before that, a
+    // season with no banner whose franchise has no stills in the episodes the app has is compact,
+    // as it will be, rather than keeping the banner's place for a still that will not come, so
+    // the stand-in, the season's own page and the page it replaces hold their heads alike.
+    val headRows: (AnilistId, List<EpisodeRow>?) -> List<EpisodeRow>? = { of, rows ->
+        val all = episodes.value
+        rows ?: all[of] ?: family.value.seasons.firstNotNullOfOrNull { all[it.id] }
+            ?.takeIf { known -> known.none { it.thumbnail != null } }?.let { emptyList() }
+    }
     HeldRows(season, episodes, top, base, pressed) { rows ->
         SeasonPage(
             entry = page,
             episodes = if (season == STAND_IN) null else rows,
-            loaded = title != null,
+            headEpisodes = if (season == STAND_IN) ({ of -> headRows(of, null) }) else ({ of -> headRows(of, rows) }),
+            loaded = loaded,
             ahead = ahead,
             crossfadeHead = if (season == STAND_IN) ({ standIn.value.crossfade }) else null,
             hasSeasons = family.value.seasons.isNotEmpty(),
@@ -610,6 +647,9 @@ private const val AROUND_AFTER = 120L
 
 /** About how long [Motion.standard] takes to settle, for a change that has no fade of its own to wait on. */
 private const val STANDARD_MILLIS = 300L
+
+/** How long the stand-in and the season's own page stand still before one hands over to the other. */
+private const val HANDOVER_STILL = 100L
 
 /**
  * [content] with [season]'s episodes as they are, except while a finger is on its season in the
@@ -691,6 +731,8 @@ private class AheadPrefetch : androidx.compose.foundation.lazy.LazyListPrefetchS
 private fun SeasonPage(
     entry: Entry,
     episodes: List<EpisodeRow>?,
+    /** The episodes the head of a season reads for its art. */
+    headEpisodes: (AnilistId) -> List<EpisodeRow>?,
     loaded: Boolean,
     /** Composed beneath, off screen: its placeholders show from the start, with no wait. */
     ahead: Boolean,
@@ -728,7 +770,7 @@ private fun SeasonPage(
         LazyColumn(state = list, modifier = modifier.pageGround(MaterialTheme.colorScheme.surface), contentPadding = PaddingValues(bottom = 24.dp)) {
             item(key = "head", contentType = "head") {
                 if (crossfadeHead == null) {
-                    TitleHead(entry, episodes, list, inset, shared)
+                    TitleHead(entry, headEpisodes(entry.id), list, inset, shared)
                 } else {
                     androidx.compose.animation.AnimatedContent(
                         entry,
@@ -739,7 +781,7 @@ private fun SeasonPage(
                         contentAlignment = Alignment.TopStart,
                         label = "stand-in", // i18n-skip
                         contentKey = { it.id },
-                    ) { TitleHead(it, episodes, list, inset, shared) }
+                    ) { TitleHead(it, headEpisodes(it.id), list, inset, shared) }
                 }
             }
             if (loaded) {
@@ -753,6 +795,8 @@ private fun SeasonPage(
             } else if (failed && !ahead) {
                 // The fetch ended without the title: why, and Try again, in place of placeholders
                 // that would otherwise stand for good.
+                val synopsis = synopsisWithoutSpoilers(entry.synopsis)
+                if (synopsis.isNotEmpty()) item(key = "synopsis", contentType = "synopsis") { Box(itemMotion()) { Synopsis(synopsis) } }
                 item(key = "failed", contentType = "failed") {
                     Box(itemMotion()) {
                         FailedState(stringResource(R.string.title_load_failed), stringResource(R.string.title_fetch_failed_detail), retry = { store.loadDetail(entry.id) })
@@ -760,8 +804,11 @@ private fun SeasonPage(
                 }
             } else {
                 // In the layout of what replaces them, so the picker stands where it will: at once
-                // on a page composed ahead, and after 600 ms on the one on screen (T8).
+                // on a page composed ahead, and after 600 ms on the one on screen (T8). A head that
+                // came ahead of the page brings its synopsis, in its place among them.
                 item(key = "actions-placeholder", contentType = "actions-placeholder") { Box(itemMotion()) { WaitFor(!ahead) { ActionsPlaceholder() } } }
+                val synopsis = synopsisWithoutSpoilers(entry.synopsis)
+                if (synopsis.isNotEmpty()) item(key = "synopsis", contentType = "synopsis") { Box(itemMotion()) { Synopsis(synopsis) } }
                 item(key = "facts-placeholder", contentType = "facts-placeholder") { Box(itemMotion()) { WaitFor(!ahead) { FactsPlaceholder() } } }
                 item(key = "more-about-placeholder", contentType = "more-about-placeholder") { Box(itemMotion()) { WaitFor(!ahead) { MoreAboutPlaceholder() } } }
             }
@@ -835,28 +882,38 @@ private fun SeasonFade(entry: Entry, modifier: Modifier = Modifier, content: @Co
 }
 
 /**
- * The titles and art of the seasons either side of the one [around] marks, asked for ahead of a
- * pick, so a pick in the season picker hands over to a season that is already here: its words at
- * once, its art from the cache. Only a title the app has not seen is asked of AniList, as the
- * Mac's picker does, and only these two: as the season on screen moves along the picker, the ones
- * next to it are asked for in turn, never the whole franchise at once.
+ * The pages of the seasons either side of the one [around] marks, asked for ahead of a pick, so a
+ * pick in the season picker hands over to a season that is already here whole, and every season's
+ * art. Only a page not here whole is asked of AniList, and only these two: as the season on screen
+ * moves along the picker, the ones next to it are asked for in turn, never the whole franchise at
+ * once. Every season whose head the app has (the engine says the franchise's heads as cards once a
+ * page knows its seasons) has its banner and cover fetched: the nearest decoded at the sizes the
+ * page draws them, so a pick shows them at once, and the rest only to the disk, so a press on one
+ * decodes it in a moment without the memory holding a franchise's banners.
  */
 @Composable
 private fun PrefetchSeasons(family: TitleFamily, around: androidx.compose.runtime.State<Long>, wide: Boolean, ask: (AnilistId) -> Unit) {
     val store = LocalAppStore.current
     val titles = store.titles.entries.collectAsStateWithLifecycle()
-    val near = family.neighbours(around.value.toUInt())
+    val here = around.value.toUInt()
+    val near = family.neighbours(here)
     LaunchedEffect(near) {
         // Past the frame of the pick that moved them.
         androidx.compose.runtime.withFrameNanos { }
-        for (other in near) if (store.titles[other] == null) ask(other)
+        for (other in near) ask(other)
     }
     val banner = if (wide) 1600 else pixels(412.dp)
-    val cover = if (wide) 500 else 300
+    val cover = if (wide) 500 else COVER_PIXELS
+    // The other seasons, nearest the one marked first.
+    val order = remember(family, here) {
+        val ids = family.seasons.map { it.id }
+        val at = ids.indexOf(here).coerceAtLeast(0)
+        ids.withIndex().filter { it.value != here }.sortedBy { kotlin.math.abs(it.index - at) }.map { it.value }
+    }
     // Read through these seasons alone: another title changing asks for nothing again.
-    val art by remember(near, family, banner, cover) {
+    val art by remember(order, family, banner, cover) {
         derivedStateOf(structuralEqualityPolicy()) {
-            near.flatMap { other ->
+            order.map { other ->
                 val title = titles.value[other]
                 if (title != null) listOfNotNull(title.bannerUrl?.to(banner), title.coverUrl?.to(cover))
                 else listOfNotNull(family.card(other)?.coverUrl?.to(cover))
@@ -864,9 +921,19 @@ private fun PrefetchSeasons(family: TitleFamily, around: androidx.compose.runtim
         }
     }
     LaunchedEffect(art) {
-        for ((url, size) in art) store.artwork.request(url, size)
+        art.forEachIndexed { index, urls ->
+            for ((url, size) in urls) {
+                if (index < DECODED_AHEAD) store.artwork.request(url, size) else store.artwork.warm(url)
+            }
+        }
     }
 }
+
+/** How many seasons nearest the one on screen have their art decoded ahead: those in reach of a tap. */
+private const val DECODED_AHEAD = 6
+
+/** The pixels the page's cover is decoded to. */
+private const val COVER_PIXELS = 300
 
 /** The banner, the poster, the title and its other forms and metadata: the page's head. */
 @Composable
@@ -998,7 +1065,7 @@ private fun TitleHeader(entry: Entry, shared: Boolean, modifier: Modifier = Modi
         ArtworkImage(
             url = entry.coverUrl,
             plate = null,
-            maxPixelSize = 300,
+            maxPixelSize = COVER_PIXELS,
             modifier = Modifier
                 .size(80.dp, 120.dp)
                 .then(if (shared) Modifier.shared(Shared.Cover, entry.id) else Modifier)

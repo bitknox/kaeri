@@ -405,6 +405,11 @@ pub fn is_background() -> bool {
     priority() == Priority::Background
 }
 
+/// The most titles [`AniList::media_many`] asks after in one request: four pages of fifty.
+/// Each page's titles are counted once against AniList's complexity limit, so four stay well
+/// inside it (`kaeri-testkit` holds the document to that), and no franchise has more seasons.
+pub const MANY_PER_REQUEST: usize = 4 * 50;
+
 /// What AniList allows a minute when it is not degraded: the most the bucket follows the
 /// server's `X-RateLimit-Limit` up to.
 pub const MAX_PER_MINUTE: u32 = 90;
@@ -745,19 +750,32 @@ impl AniList {
         self.limiter.available().await
     }
 
-    /// One title, with relations, recommendations and streaming links.
     /// Several titles in one request, for the `CONTINUE` rail.
     ///
     /// Returned in *the order asked for*, not AniList's. The rail is ordered by when you last
     /// watched each title, and that ordering is the whole point of it — letting the API's own
     /// order through would shuffle it into something meaningless.
+    ///
+    /// Past fifty, AniList's page, the titles go as pages of fifty under aliases in one request
+    /// (see [`query::together`]), [`MANY_PER_REQUEST`] to a request.
     pub async fn media_many(&self, ids: &[AnilistId]) -> Result<Vec<Media>> {
         if ids.is_empty() {
             return Ok(Vec::new());
         }
-        let (document, variables) = many_part(ids);
-        let data: serde_json::Value = self.execute(&document, variables).await?;
-        decode_many(&data, ids)
+        if let [chunk] = ids.chunks(50).collect::<Vec<_>>()[..] {
+            let (document, variables) = many_part(chunk);
+            let data: serde_json::Value = self.execute(&document, variables).await?;
+            return decode_many(&data, chunk);
+        }
+        let mut found = Vec::with_capacity(ids.len());
+        for request in ids.chunks(MANY_PER_REQUEST) {
+            let parts: Vec<_> = request.chunks(50).map(many_part).collect();
+            let answers = self.execute_together(&parts).await?;
+            for (chunk, answer) in request.chunks(50).zip(answers) {
+                found.extend(decode_many(&answer, chunk)?);
+            }
+        }
+        Ok(found)
     }
 
     /// [`Self::media_many`] with what each title's episode table needs ([`query::TABLE_FIELDS`]),

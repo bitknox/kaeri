@@ -34,36 +34,53 @@ import app.kaeri.store.HeroArt
 val BannerHeight = 200.dp
 
 /** The banners are decoded 1920 px wide at most, the canvas's width in pixels. */
-private const val BANNER_PIXELS = 1920
+const val BANNER_PIXELS = 1920
 
+/**
+ * The banner, or the poster, and the title, with [below] under the title. With [crossfade], as
+ * on a title page whose seasons change in place, another title's art and name crossfade in over
+ * these on standard rather than replacing them in a frame; [below] stays as it is.
+ */
 @Composable
-fun HeroHeader(entry: Entry, rows: List<EpisodeRow>?, modifier: Modifier = Modifier, below: @Composable ColumnScope.() -> Unit) {
+fun HeroHeader(entry: Entry, rows: List<EpisodeRow>?, modifier: Modifier = Modifier, crossfade: Boolean = false, below: @Composable ColumnScope.() -> Unit) {
     val art = HeroArt.of(entry, rows)
     if (art == HeroArt.Compact) {
         Row(modifier.fillMaxWidth().padding(start = Canvas.Keyline, top = Canvas.SafeY + 20.dp, end = Canvas.SafeX)) {
-            ArtImage(
-                entry.coverUrl,
-                CoverPlate.parse(entry.coverColor),
-                pixels(Canvas.PosterHeight),
-                Modifier.size(Canvas.PosterWidth, Canvas.PosterHeight).clip(RoundedCornerShape(8.dp)),
-            )
+            Swap(entry.coverUrl to entry.coverColor, crossfade) { (cover, color) ->
+                ArtImage(
+                    cover,
+                    CoverPlate.parse(color),
+                    pixels(Canvas.PosterHeight),
+                    Modifier.size(Canvas.PosterWidth, Canvas.PosterHeight).clip(RoundedCornerShape(8.dp)),
+                )
+            }
             Spacer(Modifier.width(24.dp))
             Column(Modifier.padding(top = 8.dp)) {
-                HeaderTitle(entry.title)
+                Swap(entry.title, crossfade) { HeaderTitle(it) }
                 below()
             }
         }
         return
     }
     Column(modifier.fillMaxWidth()) {
-        Box(Modifier.fillMaxWidth().height(BannerHeight)) {
+        Swap(art.url, crossfade, Modifier.fillMaxWidth().height(BannerHeight)) { url ->
             // Waiting for the episode list keeps the ground: never a cover stretched across.
-            if (art.url != null) ArtImage(art.url, plate = ObiSilk.Ground, maxPixelSize = BANNER_PIXELS, modifier = Modifier.fillMaxSize())
+            if (url != null) ArtImage(url, plate = ObiSilk.Ground, maxPixelSize = BANNER_PIXELS, modifier = Modifier.fillMaxSize())
         }
         Column(Modifier.padding(start = Canvas.Keyline, end = Canvas.SafeX, top = 12.dp)) {
-            HeaderTitle(entry.title)
+            Swap(entry.title, crossfade) { HeaderTitle(it) }
             below()
         }
+    }
+}
+
+/** [content] for [value]; with [crossfade], a new value crossfades in over the old on standard. */
+@Composable
+fun <T> Swap(value: T, crossfade: Boolean, modifier: Modifier = Modifier, content: @Composable (T) -> Unit) {
+    if (crossfade && !LocalReducedMotion.current) {
+        androidx.compose.animation.Crossfade(value, modifier, animationSpec = app.kaeri.design.Motion.standard(), label = "swap") { content(it) } // i18n-skip
+    } else {
+        Box(modifier) { content(value) }
     }
 }
 

@@ -207,6 +207,9 @@ struct TitlePage: View {
                         .frame(width: 260)
                 }
                 .padding(.top, 24)
+                // On the ground, so Related cards dissolving as the episodes move up go under
+                // them rather than through their words.
+                .background(.ground)
             }
             .padding(EdgeInsets(top: 0, leading: 24, bottom: 20, trailing: 28))
             // On the Mac a season picked on the page changes the page that is open, in the
@@ -216,6 +219,10 @@ struct TitlePage: View {
             // differs changes, by its own animation: the season picked (quick), the hero's words
             // (quick), the episodes as one block (standard), and the art as it lands (fade-in).
             .transaction(value: id) { $0.animation = nil }
+            // A season shown from its header keeps the last one's seasons and Related until its
+            // page comes. When the page brings Related of its own, or none, the episodes move to
+            // their place with the row as its cards dissolve, rather than jumping under them.
+            .animation(.quick, value: kin.id)
             // With Reduce Motion a season picked changes the page at once: the selection, the
             // words, the episodes and Related, each without its own animation.
             .transaction(value: [id, entry.id, kin.id]) { if navigator.motionReduced { $0.disablesAnimations = true } }
@@ -263,6 +270,13 @@ struct TitlePage: View {
             try? await Task.sleep(for: ArtworkView.holdFor)
             artWaited = entry.id
         }
+        .task(id: Self.seasonArt(around: id, in: TitleFamily(kin, this: id), store: store)) {
+            // The seasons' headers came as cards with this page: their art is asked now, as the
+            // page would on showing them, so a season picked lands whole.
+            for art in Self.seasonArt(around: id, in: TitleFamily(kin, this: id), store: store) {
+                store.artwork.request(art.url, maxPixelSize: art.pixels)
+            }
+        }
         .task(id: coming) {
             if let cover = coming.cover { store.artwork.request(cover, maxPixelSize: TitleHero.coverPixels) }
             if let wide = coming.wide { store.artwork.request(wide, maxPixelSize: HeroArtView.prefetchPixels) }
@@ -288,8 +302,40 @@ struct TitlePage: View {
     /// Whether `id`'s page is here: its title and its episodes, which lay out the words, the facts
     /// and the rows. Its cover and its wide art crossfade in when they land, the last ones held
     /// until then, and its main button fades in once the services have said.
+    ///
+    /// A season whose header the engine kept is here at once: its words, facts, synopsis and art
+    /// are the page's own, so the page crossfades to it on the click, and its rows crossfade in
+    /// from their placeholders when the table comes.
     static func pageHere(_ id: AnilistId, in store: AppStore) -> Bool {
         store.titles.detailed.contains(id) && store.titles.episodes[id] != nil
+            || store.titles.headed.contains(id)
+    }
+
+    /// How many seasons either side of the one shown have their art decoded ahead, at the sizes
+    /// the page shows them, so a season picked near it has its banner and cover whole on the
+    /// click. Farther ones are asked when the pointer rests on them.
+    static let seasonArtAhead = 3
+
+    /// One picture asked ahead, at the size the page shows it.
+    struct ArtAhead: Hashable {
+        let url: String
+        let pixels: Int
+    }
+
+    /// The covers and wide art of the seasons around `id` in `family`, as the page would show
+    /// them, for the ones whose header is known: the nearest first, as a pick is likeliest there.
+    static func seasonArt(around id: AnilistId, in family: TitleFamily, store: AppStore) -> [ArtAhead] {
+        guard let at = family.seasons.firstIndex(where: { $0.id == id }) else { return [] }
+        let near = family.seasons.indices
+            .filter { $0 != at && abs($0 - at) <= seasonArtAhead }
+            .sorted { abs($0 - at) < abs($1 - at) }
+        return near.flatMap { index -> [ArtAhead] in
+            guard let known = store.titles[family.seasons[index].id] else { return [] }
+            return [
+                known.coverUrl.map { ArtAhead(url: $0, pixels: TitleHero.coverPixels) },
+                store.heroArt(known).url.map { ArtAhead(url: $0, pixels: HeroArtView.prefetchPixels) },
+            ].compactMap { $0 }
+        }
     }
 
     /// The title whose seasons and related titles the row shows for `entry`: itself once its page
@@ -334,6 +380,8 @@ struct TitleHero: View {
     /// The title waited for long enough to show its main button without the services' word,
     /// as when it never comes offline.
     @State private var offersWaited: AnilistId?
+    /// Whether Play on TV was showing, kept while the next season's episodes are on their way.
+    @State private var tvShown = false
 
     /// How long the main button waits for what the services say before it shows without it.
     static let offersWaitFor: Duration = .seconds(2)
@@ -398,6 +446,11 @@ struct TitleHero: View {
         // only to give way to the other. Its room is kept, so nothing beside it moves.
         let offersHeld = !store.offersKnown(entry.id) && offersWaited != entry.id
             && (serviceMain != nil || (action.playable && store.titles.unlisted(entry.id) && !store.match.asks(entry.id)))
+        // Whether a source lists the title is known once its episodes are. Until then Play on TV
+        // stays as it was, so a season shown from its header keeps the button it will have, or
+        // goes without it, rather than changing twice.
+        let playsOnTV = action.playable && store.tv.available
+            && (store.titles.episodes[entry.id] != nil ? !store.titles.unlisted(entry.id) : tvShown)
         HStack(alignment: .bottom, spacing: 28) {
             // Across a season switch the last season's cover stays until the next one's lands.
             ArtworkView(url: entry.coverUrl, color: entry.plateColor, maxPixelSize: Self.coverPixels, holds: true)
@@ -434,7 +487,7 @@ struct TitleHero: View {
                         }
                         .buttonStyle(SecondaryCapsuleStyle(height: Self.pad ? 48 : 28, fontSize: Self.pad ? 17 : 13))
                     }
-                    if action.playable, !store.titles.unlisted(entry.id), store.tv.available {
+                    if playsOnTV {
                         Button {
                             store.playOnTV(entry.id, episode: String(action.episode), from: action.resume?.position)
                         } label: {
@@ -457,6 +510,7 @@ struct TitleHero: View {
                     .buttonStyle(SecondaryCapsuleStyle(height: 48, fontSize: 17))
                     #endif
                 }
+                .animation(.fadeIn, value: playsOnTV)
                 .padding(.top, Self.pad ? 16 : 12)
                 LicensedLines(id: entry.id, font: Self.pad ? .ui(15) : .mac(13))
                 MatchUncertainLine(id: entry.id, font: Self.pad ? .ui(15) : .mac(13), top: 10)
@@ -469,6 +523,7 @@ struct TitleHero: View {
         // Where it plays comes after the page, in lines under the actions: the words above glide
         // up to make room (standard) while the lines fade in, rather than jumping.
         .animation(navigator.motionReduced ? nil : .standard, value: store.licensed.availability[entry.id])
+        .onChange(of: playsOnTV, initial: true) { tvShown = playsOnTV }
         .task(id: entry.id) {
             try? await Task.sleep(for: Self.offersWaitFor)
             offersWaited = entry.id
@@ -561,6 +616,14 @@ extension AppStore {
     func prefetchPage(_ id: AnilistId) {
         if !titles.detailed.contains(id) { loadDetail(id) }
         if licensed.availability[id] == nil { loadAvailability(id, playsHere: !titles.unlisted(id)) }
+        prefetchArt(id)
+    }
+
+    /// Ask for `id`'s cover and wide art at the sizes its page shows them, and nothing of
+    /// AniList: for a season cell under the pointer. The season's header is kept with its
+    /// franchise once the page is shown, so its page opens with its top at once and asks for
+    /// the rest when it opens.
+    func prefetchArt(_ id: AnilistId) {
         let entry = titles.page(id)
         if let cover = entry.coverUrl { artwork.request(cover, maxPixelSize: TitleHero.coverPixels) }
         if let banner = entry.bannerUrl { artwork.request(banner, maxPixelSize: HeroArtView.prefetchPixels) }
@@ -751,7 +814,7 @@ struct TitleFamilyRow: View {
         .pointerHover()
         // Pointed at, it is likely next: its page and its art asked for now, so the page opens
         // whole.
-        .onHover { inside in if inside, !selected { store.prefetchPage(id) } }
+        .onHover { inside in if inside, !selected { store.prefetchArt(id) } }
         // The cover, where the page's seasons and relations do not carry it.
         .task { if store.titles[id] == nil, card(id) == nil { store.loadDetail(id) } }
     }

@@ -716,10 +716,12 @@ public final class AppStore {
         }
         if let delay = detailDelay {
             // Title pages held back, as a slow AniList answers them, and what the services say
-            // of a title with them, which the engine answers from the same page.
+            // of a title with them, which the engine answers from the same page. A season's
+            // header sent ahead of its page comes from the engine's memory, and is not held.
             let held = { (event: Event) in
                 switch event {
-                case .detail, .availability: true
+                case .detail(let entry): entry.detail?.partial != true
+                case .availability: true
                 default: false
                 }
             }

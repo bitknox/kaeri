@@ -120,14 +120,18 @@ fn ends_besides(updates: &[Event], job: Option<JobId>, later: impl Fn(&Event) ->
     // The terminal asks the sources about a highlighted Home title by itself. Its answer, and
     // the Home the engine sends after it, come whenever the check finishes, not with the job
     // that showed the title, so they may follow the job's end. So may a list's broadcast line,
-    // which is queued behind the screens and fills in when it lands.
+    // which is queued behind the screens and fills in when it lands, and the cards of a page's
+    // other seasons, asked for once the page is shown.
     let own: Vec<usize> = updates
         .iter()
         .enumerate()
         .filter(|(_, update)| {
             !matches!(
                 update,
-                Event::TitlePlayable { .. } | Event::Home(_) | Event::LastAired(_)
+                Event::TitlePlayable { .. }
+                    | Event::Home(_)
+                    | Event::LastAired(_)
+                    | Event::Cards(_)
             ) && !later(update)
         })
         .map(|(at, _)| at)

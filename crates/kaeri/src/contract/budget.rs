@@ -108,9 +108,9 @@ const BOUNDS: &[(&str, usize)] = &[
     ("Home again within 30 min", 0),
     ("Home after the player closes", 3),
     ("Home again after 31 min", 5),
-    ("open a title (5-season", 2),
+    ("open a title (5-season", 3),
     ("switch season", 1),
-    ("open a title (12-season", 4),
+    ("open a title (12-season", 5),
     ("Library", 0),
     ("Calendar", 2),
     ("Search start", 1),
@@ -124,7 +124,7 @@ const BOUNDS: &[(&str, usize)] = &[
     ("warm launch: Continue stills", 0),
     ("warm launch: Calendar", 1),
     ("warm launch: Search start", 0),
-    ("warm launch: open the same title", 2),
+    ("warm launch: open the same title", 3),
     ("new-episode check", 0),
     ("warm: Home after its half hour", 5),
 ];
@@ -410,6 +410,47 @@ async fn hover_cards_for_unlisted_covers_cost_one_batched_lookup() {
     tally.take(&h, "the same again");
     assert!(again.iter().any(|u| matches!(u, Event::Cards(_))));
     assert_eq!(tally.rows[2].1, 0, "and the second time none");
+}
+
+/// A title page's seasons, as the page opens them: the first page asks for the other seasons'
+/// headers once, in one request beside what it asked before, and every season opened from it
+/// after asks for its own page alone, with its header already on screen. The cold launch makes
+/// no title page of a franchise, so its rows in [`BOUNDS`] stay as they were.
+#[tokio::test]
+async fn a_franchise_s_headers_cost_one_request_and_switching_seasons_none() {
+    let now = kaeri_store::now();
+    let world = HomeWorld::at(HomeClock::in_zone(now, &jiff::tz::TimeZone::UTC));
+    for seasons in [&fixtures::FRANCHISE_SEASONS[..], &fixtures::LONG_FRANCHISE_SEASONS[..]] {
+        let mut h = launch(now, None, &world, false, 0).await;
+        // The launch pull is done before counting, as it is by the time a page is opened.
+        run(&mut h, vec![Command::SyncNow]).await;
+        let mut tally = Tally::default();
+        tally.take(&h, "before");
+        let opened = seasons[seasons.len() / 2];
+        run(&mut h, open_title(opened)).await;
+        tally.take(&h, "open");
+        let (_, n, by) = &tally.rows[1];
+        let walked = by.get("Relations").copied().unwrap_or(0);
+        assert_eq!(
+            by.get("Many"),
+            Some(&1),
+            "{} seasons: one request of headers: {by:?}",
+            seasons.len()
+        );
+        assert_eq!(*n, 1 + walked + 1, "the page, its walk, and one more: {by:?}");
+        for id in seasons.iter().copied().filter(|id| *id != opened) {
+            let updates = run(&mut h, open_title(id)).await;
+            tally.take(&h, &format!("switch to {id}"));
+            let (_, n, by) = tally.rows.last().unwrap();
+            assert_eq!((*n, by.get("Detail")), (1, Some(&1)), "{id}: its page alone: {by:?}");
+            let headed = updates.iter().any(|u| {
+                matches!(u, Event::Detail(page) if page.detail.as_ref().is_some_and(|d| d.partial))
+            });
+            assert!(headed, "{id}: headed at once");
+        }
+        tally.print();
+        let _ = h.quit().await;
+    }
 }
 
 /// The Mac's cold launch, as the app makes it, against an AniList that answers 30 a minute and

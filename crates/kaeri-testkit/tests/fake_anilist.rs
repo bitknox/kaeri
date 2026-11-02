@@ -671,3 +671,81 @@ async fn up_next_lookups_asked_together_are_each_answered_as_alone() {
     assert!(failed.from.unwrap().is_err());
     assert_eq!(ids(&failed.titles.unwrap()), [AIRING.get()], "from the cache");
 }
+
+/// Made-up titles from `first`, `n` of them, for lookups larger than a page.
+fn invented_run(kit: &MetaKit, first: u32, n: u32) -> Vec<kaeri_core::ids::AnilistId> {
+    kit.server.add_titles(
+        (first..first + n)
+            .map(|id| fixtures::invented(id, "FINISHED", 12, (2020, 1, 1), &[], &[])),
+    );
+    (first..first + n).map(kaeri_core::ids::AnilistId::new).collect()
+}
+
+#[tokio::test]
+async fn titles_past_a_page_go_as_pages_in_one_request_within_the_complexity_limit() {
+    let kit = MetaKit::start().await;
+    let ids = invented_run(&kit, 970_000, 200);
+    let found = kit.meta.anilist().media_many(&ids).await.unwrap();
+    assert_eq!(found.iter().map(|m| m.id).collect::<Vec<_>>(), ids, "every one, in order");
+    let asked = kit.server.requests_for(Operation::Many);
+    assert_eq!(asked.len(), 1, "four pages of fifty in one request");
+    let cost = kaeri_testkit::complexity(&asked[0].query, &asked[0].variables);
+    assert!(cost < kaeri_testkit::COMPLEXITY_LIMIT, "{cost}");
+}
+
+#[tokio::test]
+async fn the_largest_season_list_the_walk_allows_is_asked_within_the_complexity_limit() {
+    let kit = MetaKit::start().await;
+    // The most titles a walk can learn of: every one of its requests full.
+    let most = kaeri_meta::franchise::MAX_REQUESTS * 50;
+    let ids = invented_run(&kit, 971_000, most as u32);
+    let found = kit.meta.anilist().media_many(&ids).await.unwrap();
+    assert_eq!(found.len(), most);
+    let asked = kit.server.requests_for(Operation::Many);
+    assert_eq!(asked.len(), most.div_ceil(kaeri_meta::anilist::MANY_PER_REQUEST));
+    for request in asked {
+        let cost = kaeri_testkit::complexity(&request.query, &request.variables);
+        assert!(cost < kaeri_testkit::COMPLEXITY_LIMIT, "{cost}");
+    }
+}
+
+#[tokio::test]
+async fn a_franchise_s_season_headers_come_in_one_request_and_head_each_season_s_page() {
+    use fixtures::LONG_FRANCHISE_SEASONS as SEASONS;
+    let kit = MetaKit::start().await;
+    kit.server.add_titles(fixtures::long_franchise());
+    let opened = SEASONS[5];
+    // Nothing is kept before the page has walked its franchise.
+    assert!(kit.meta.season_headers(opened).await.is_empty());
+    assert!(kit.server.requests_for(Operation::Many).is_empty());
+
+    let (media, fresh) = kit.meta.media_answered(opened).await.unwrap();
+    kit.meta.seasons(&media, fresh, |_| {}).await;
+    let headers = kit.meta.season_headers(opened).await;
+    let others: Vec<_> = SEASONS.iter().copied().filter(|id| *id != opened).collect();
+    assert_eq!(headers.iter().map(|m| m.id).collect::<Vec<_>>(), others, "in watch order");
+    assert_eq!(kit.server.requests_for(Operation::Many).len(), 1, "every season in one");
+    assert!(headers.iter().all(|m| m.cover_image.extra_large.is_some()));
+
+    // Each season's page is headed from what came, and nothing more is asked for headers.
+    for id in &others {
+        let (header, seasons) = kit.meta.season_header(*id).expect("a kept header");
+        assert_eq!(header.id, *id);
+        assert_eq!(
+            header.banner_image,
+            fixtures::long_franchise_media()
+                .into_iter()
+                .find(|m| m.id == *id)
+                .unwrap()
+                .banner_image
+        );
+        assert_eq!(seasons.len(), SEASONS.len());
+        assert_eq!(kit.meta.season_headers(*id).await.len(), SEASONS.len() - 1);
+    }
+    assert_eq!(kit.server.requests_for(Operation::Many).len(), 1);
+
+    // Once AniList has answered for a page, the page heads itself.
+    kit.meta.media(others[0]).await.unwrap();
+    assert!(kit.meta.season_header(others[0]).is_none());
+    assert!(kit.meta.season_header(opened).is_none());
+}

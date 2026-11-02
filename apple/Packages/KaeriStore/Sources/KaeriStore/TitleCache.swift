@@ -12,6 +12,10 @@ public final class TitleCache {
     public private(set) var entries: [AnilistId: Entry] = [:]
     /// The titles whose page has been loaded, so their detail-only fields are known.
     public private(set) var detailed: Set<AnilistId> = []
+    /// The titles whose page's header is here ahead of the page: the engine's kept header of a
+    /// franchise's season (`TitleDetail.partial`). Its title, art, facts, synopsis and seasons
+    /// are known; the rest of the page is still on its way.
+    public private(set) var headed: Set<AnilistId> = []
     /// Each title's episode table, as last loaded.
     public private(set) var episodes: [AnilistId: [EpisodeRow]] = [:]
     /// Each title's line on its dub ("Dub to episode 6"), where the source could say one.
@@ -42,7 +46,7 @@ public final class TitleCache {
                 kept.progress = watched
                 kept.resume = resume
             }
-            if detailed.contains(entry.id) {
+            if detailed.contains(entry.id) || headed.contains(entry.id) {
                 kept.related = related
                 kept.recommended = recommended
                 kept.trailerUrl = trailer
@@ -63,15 +67,28 @@ public final class TitleCache {
         cardedIds.formUnion(ids)
     }
 
-    /// A title's page, whole.
+    /// A title's page, whole, or its header ahead of it (`detail.partial`). A header never
+    /// replaces a whole page already here, which the page's own answer renews moments later.
     func merge(detail entry: Entry) {
+        let partial = entry.detail?.partial == true
+        if partial, detailed.contains(entry.id) { return }
         var entry = entry
         if let kept = entries[entry.id] {
             entry.listStatus = entry.listStatus ?? kept.listStatus
             entry.lastAired = entry.lastAired ?? kept.lastAired
         }
         entries[entry.id] = entry
-        detailed.insert(entry.id)
+        if partial {
+            headed.insert(entry.id)
+        } else {
+            detailed.insert(entry.id)
+            headed.remove(entry.id)
+        }
+    }
+
+    /// Whether `id`'s page can show its top: its header or the whole page is here.
+    public func headerHere(_ id: AnilistId) -> Bool {
+        detailed.contains(id) || headed.contains(id)
     }
 
     /// Where a title stands after something moved it.
