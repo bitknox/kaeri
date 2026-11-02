@@ -85,6 +85,20 @@ struct AskingTests {
         #expect(store.sentLog == ["loadEpisodes"])
     }
 
+    @Test func aPageOpenedAfterAHoverAsksForItsEpisodesAtThePagesPriority() {
+        let store = AppStore()
+        store.loadHoverEpisodes(900_001)
+        store.loadEpisodes(900_001)
+        #expect(store.sentLog == ["loadStills", "loadEpisodes"], "the page does not wait behind the hover's quiet ask")
+        #expect(store.loadStills(900_002))
+        store.loadEpisodes(900_002)
+        #expect(store.sentLog.suffix(2) == ["loadStills", "loadEpisodes"], "nor behind a card's stills")
+        store.loadEpisodes(900_003)
+        store.loadHoverEpisodes(900_003)
+        #expect(!store.loadStills(900_003))
+        #expect(store.sentLog.last == "loadEpisodes", "a slow page's own listing is never replaced by a quiet one")
+    }
+
     @Test func whatTheServicesSayIsAskedAgainWhenTheEpisodesSayOtherwise() {
         let store = AppStore()
         let row = EpisodeRow(number: "1", title: nil, thumbnail: nil, description: nil, durationSecs: nil,
