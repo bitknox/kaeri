@@ -48,6 +48,25 @@ pub fn rewrite_playlist(body: &str, base: &str, proxy: &dyn Fn(&str) -> String) 
     out
 }
 
+/// The URIs a playlist lists as subtitles: every `#EXT-X-MEDIA` of `TYPE=SUBTITLES`, as
+/// absolute URLs. What they name is a WebVTT file, or a playlist of them.
+pub(super) fn subtitle_uris(body: &str, base: &str) -> Vec<String> {
+    body.lines()
+        .map(str::trim)
+        .filter(|line| line.starts_with("#EXT-X-MEDIA:"))
+        .filter(|line| {
+            line["#EXT-X-MEDIA:".len()..]
+                .split(',')
+                .any(|attribute| attribute.trim().eq_ignore_ascii_case("TYPE=SUBTITLES"))
+        })
+        .filter_map(|line| {
+            let start = line.find("URI=\"")? + 5;
+            let end = start + line[start..].find('"')?;
+            Some(resolve_url(base, &line[start..end]))
+        })
+        .collect()
+}
+
 /// Rewrite the `URI="…"` attribute of one tag, if it has one.
 fn rewrite_uri_attribute(
     tag: &str,
@@ -157,6 +176,19 @@ mod tests {
         assert!(out.contains("METHOD=AES-128"), "{out}");
         assert!(out.contains("IV=0x00"), "{out}");
         assert!(out.contains("#EXTINF:10.0,"), "{out}");
+    }
+
+    #[test]
+    fn the_uris_listed_as_subtitles_are_found_among_the_other_media() {
+        let master = "#EXTM3U\n\
+             #EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"a\",NAME=\"Main\",URI=\"audio.m3u8\"\n\
+             #EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID=\"s\",NAME=\"Deutsch\",URI=\"de/index.m3u8\"\n\
+             #EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID=\"s\",NAME=\"Direct\",URI=\"https://s.example/x.vtt\"\n\
+             #EXT-X-STREAM-INF:BANDWIDTH=1\nv.m3u8\n";
+        assert_eq!(
+            subtitle_uris(master, "https://cdn.example/hls/master.m3u8"),
+            ["https://cdn.example/hls/de/index.m3u8", "https://s.example/x.vtt"]
+        );
     }
 
     #[test]

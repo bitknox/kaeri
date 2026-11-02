@@ -127,14 +127,18 @@ impl Upstream {
         // Playback always fetches for itself rather than waiting on another fetch: one led by
         // a thumbnail request gives up on a `429`, and playback must not.
         let cell = self.begin(url);
-        self.lead(url, cell, fetch(self, url)).await
+        self.lead(url, cell, async { fetch(self, url).await.map(|f| self.mended(url, f)) })
+            .await
     }
 }
 
 /// Send one upstream request with the stream's headers, waiting out a rate limit.
 ///
-/// Only `429` is waited on: it is the one status that says "this will work if you ask again
-/// later". Once the budget is spent the refusal is returned for the caller to report.
+/// `429` is waited on: it is the one status that says "this will work if you ask again later".
+/// So is a transport error before any response, a connection that could not be made or was
+/// reset, which a CDN does now and then and which a second try gets past; it waits the default
+/// delay. Once the budget is spent the refusal, or the error, is returned for the caller to
+/// report. Nothing is retried once a response has started: the body is read elsewhere.
 pub(super) async fn send(
     upstream: &Upstream,
     url: &str,
@@ -147,7 +151,21 @@ pub(super) async fn send(
             tokio::time::sleep_until(at.into()).await;
         }
 
-        let response = request(upstream, url, range).await?;
+        let response = match send_request(upstream, url, range).await {
+            Ok(response) => response,
+            Err(error) if error.is_builder() || error.is_redirect() => {
+                return Err(error.to_string());
+            }
+            Err(error) => {
+                let resume = Instant::now() + DEFAULT_RETRY_AFTER;
+                if resume > deadline {
+                    return Err(error.to_string());
+                }
+                tracing::info!(url = %url, %error, "upstream connection failed; trying again");
+                tokio::time::sleep_until(resume.into()).await;
+                continue;
+            }
+        };
         if response.status().as_u16() != 429 {
             return Ok(response);
         }
@@ -212,6 +230,15 @@ async fn request(
     url: &str,
     range: Option<&str>,
 ) -> Result<reqwest::Response, String> {
+    send_request(upstream, url, range).await.map_err(|e| e.to_string())
+}
+
+/// [`request`], with the error as it came.
+async fn send_request(
+    upstream: &Upstream,
+    url: &str,
+    range: Option<&str>,
+) -> Result<reqwest::Response, reqwest::Error> {
     let mut request = upstream.http.sources().get(url);
     if let Some(range) = range {
         request = request.header("range", range);
@@ -219,7 +246,7 @@ async fn request(
     for (name, value) in &upstream.headers {
         request = request.header(name.as_str(), value.as_str());
     }
-    request.send().await.map_err(|e| e.to_string())
+    request.send().await
 }
 
 /// Read a whole response body, refusing anything that is not a success or is too large.
@@ -328,6 +355,56 @@ mod tests {
         );
         assert!(raw.ends_with(&payload), "the retried body did not come through");
         assert!(started.elapsed() >= Duration::from_secs(1), "did not wait for Retry-After");
+    }
+
+    #[tokio::test]
+    async fn a_connection_dropped_before_any_response_is_tried_again() {
+        // A CDN now and then resets a connection before answering; the second try gets through,
+        // where answering 502 made ffmpeg skip the segment.
+        let upstream = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).await.unwrap();
+        let origin = format!("http://{}/seg.ts", upstream.local_addr().unwrap());
+        let payload = transport_stream();
+        let served = payload.clone();
+        tokio::spawn(async move {
+            for attempt in 0.. {
+                let Ok((mut socket, _)) = upstream.accept().await else { break };
+                if attempt == 0 {
+                    drop(socket);
+                    continue;
+                }
+                let mut request = [0u8; 4096];
+                let _ = socket.read(&mut request).await;
+                let head = format!(
+                    "HTTP/1.1 200 OK\r\nContent-Type: video/mp2t\r\nContent-Length: {}\r\n\
+                     Connection: close\r\n\r\n",
+                    served.len()
+                );
+                let _ = socket.write_all(head.as_bytes()).await;
+                let _ = socket.write_all(&served).await;
+            }
+        });
+
+        let http = HttpClient::new(&kaeri_core::config::NetworkConfig::default()).unwrap();
+        let server = serve(http, &origin, Vec::new(), "tok").await.unwrap();
+        let authority =
+            server.url().trim_start_matches("http://").split('/').next().unwrap().to_owned();
+        let path = &server.url()[server.url().find("/m/").unwrap()..];
+
+        let started = Instant::now();
+        let mut socket = TcpStream::connect(&authority).await.unwrap();
+        socket
+            .write_all(format!("GET {path} HTTP/1.1\r\nHost: {authority}\r\n\r\n").as_bytes())
+            .await
+            .unwrap();
+        let mut raw = Vec::new();
+        socket.read_to_end(&mut raw).await.unwrap();
+
+        assert!(
+            String::from_utf8_lossy(&raw).starts_with("HTTP/1.1 200"),
+            "answered a failure"
+        );
+        assert!(raw.ends_with(&payload), "the retried body did not come through");
+        assert!(started.elapsed() >= DEFAULT_RETRY_AFTER, "did not wait before trying again");
     }
 
     #[test]
