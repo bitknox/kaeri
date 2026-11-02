@@ -105,8 +105,8 @@ Running it copies the newest release's template over yours, keeps your `wrangler
 
 `ghcr.io/bitknox/kaeri-store`, for linux/amd64 and linux/arm64, built from
 [`container/Dockerfile`](container/Dockerfile) by `.github/workflows/store-image.yml`. Its tags
-are the release's version (`0.1.4`), its minor version (`0.1`) and `latest`. While the major version is 0 the
-templates use the minor tag, `0.1`, which follows every 0.1.x release. A new minor version means
+are the release's version (`0.2.0`), its minor version (`0.2`) and `latest`. While the major version is 0 the
+templates use the minor tag, `0.2`, which follows every 0.2.x release. A new minor version means
 changing the tag by hand, and `deploy/sync.sh --check` fails until every template names the
 workspace's minor version.
 
