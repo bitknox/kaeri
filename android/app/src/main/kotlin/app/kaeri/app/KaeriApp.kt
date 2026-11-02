@@ -213,6 +213,7 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
         }
         episodeAlerts.follow(scope)
         ContinueShortcut(this).follow(store, scope)
+        widgetKeeper.followFillIns(store, scope)
         recordWidgetsOnLeaving()
         watchNetwork()
         startTv()

@@ -235,9 +235,9 @@ pub enum SecretsMode {
     /// Where the terminal app keeps them, for a Mac app that shares its data: as
     /// `trackers.token_storage` says, with `KAERI_TOKEN_STORAGE` over it as the terminal
     /// has it. `"file"` is `0600` files in `tokens` under the data directory, the terminal's own;
-    /// `"keychain"` is the app's keychain through its host, which keeps the items under service
-    /// `kaeri` and the token's id, the ones the terminal keeps, with those files as the
-    /// fallback. Signing in through one app signs in the other.
+    /// `"keychain"` is the app's keychain through its host, which keeps the one item under
+    /// service `kaeri` that holds every secret, the one the terminal keeps, with those files as
+    /// the fallback. Signing in through one app signs in the other.
     FollowConfig,
 }
 
@@ -250,7 +250,7 @@ pub enum FfiError {
     #[error("{reason}")]
     Dirs { reason: String, msg: Msg },
     /// `config.toml` could not be read, or says something unsafe or self-contradictory. Refused
-    /// rather than replaced by the defaults, which could mean ignoring a VPN setting.
+    /// rather than replaced by the defaults, which could mean ignoring a proxy setting.
     #[error("{reason}")]
     Config { reason: String, msg: Msg },
     /// The database could not be opened.

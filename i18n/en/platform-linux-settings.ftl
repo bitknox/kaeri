@@ -46,15 +46,6 @@ settings-notify-note-on = One notification when an episode of a show in your Wat
 # @only linux
 settings-notify-note-off = Off. Only shows turned on in their own settings notify.
 
-# Heading of the preview note beside the sources settings while torrents are on.
-# @only linux
-# @max 30
-settings-connection-check-title = Connection check
-
-# Preview note beside the sources settings while torrents are on.
-# @only linux
-settings-connection-check-note = { -app-name } checks where torrent traffic leaves from when a torrent starts and every minute while it runs, and pauses torrents if that check fails. Your VPN or proxy is what protects you.
-
 # Preview note beside the accounts settings.
 # @only linux
 settings-accounts-note = { -app-name } works without an account. Your watch history stays on this computer when you sign out.

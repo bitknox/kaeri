@@ -43,8 +43,6 @@
 -watch-together-cap = 一緒に見る
 
 # Where releases are looked up.
--torrent-index = トレントインデックス
--torrent-index-cap = トレントインデックス
 
 # One downloadable file in a torrent index. Not a place episodes come from.
 -release = リリース

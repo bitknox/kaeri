@@ -10,9 +10,9 @@ Kaeri                                                                           
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ▌ Sources   Episode 4. Enter plays your pick.
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  [Example Group] Hoshikuzu no Tabibito - 04 (1080p)  ·  212 peers  ·  1.4 GiB  ·  Current pick                1080p
-▌ [Sample Team] Hoshikuzu no Tabibito 04 [Dual]  ·  14 peers  ·  2.1 GiB  ·  Subbed and dubbed                 1080p
-  [Test Team] Hoshikuzu no Tabibito - 04  ·  3 peers  ·  0.9 GiB                                               1080p
+  Hoshikuzu no Tabibito 04 (1080p)  ·  212 peers  ·  1.4 GiB  ·  Current pick                                  1080p
+▌ Hoshikuzu no Tabibito 04 (dual audio)  ·  14 peers  ·  2.1 GiB  ·  Subbed and dubbed                         1080p
+  Hoshikuzu no Tabibito 04 (720p)  ·  3 peers  ·  0.9 GiB                                                      1080p
   Hoshikuzu no Tabibito — episode 4 (dub)  ·  Dubbed                                                           1080p
 
    │    012   The Stardust Traveller                               --:--   ░░░░░░░░          the coach takes a road
@@ -59,19 +59,19 @@ r10 c02-44 fg=text bg=ground mod=BOLD
 r10 c45-119 fg=rule bg=ground
 r11 c00-119 fg=rule bg=ground
 r12 c00-01 fg=rule bg=ground
-r12 c02-94 fg=text-dim bg=ground
-r12 c95-110 fg=rule bg=ground
+r12 c02-76 fg=text-dim bg=ground
+r12 c77-110 fg=rule bg=ground
 r12 c111-115 fg=text bg=ground
 r12 c116-119 fg=rule bg=ground
 r13 c00-00 fg=obi bg=ground
 r13 c01-01 fg=rule bg=ground
-r13 c02-93 fg=text bg=ground mod=BOLD
-r13 c94-110 fg=rule bg=ground
+r13 c02-85 fg=text bg=ground mod=BOLD
+r13 c86-110 fg=rule bg=ground
 r13 c111-115 fg=text bg=ground
 r13 c116-119 fg=rule bg=ground
 r14 c00-01 fg=rule bg=ground
-r14 c02-63 fg=text-dim bg=ground
-r14 c64-110 fg=rule bg=ground
+r14 c02-56 fg=text-dim bg=ground
+r14 c57-110 fg=rule bg=ground
 r14 c111-115 fg=text bg=ground
 r14 c116-119 fg=rule bg=ground
 r15 c00-01 fg=rule bg=ground

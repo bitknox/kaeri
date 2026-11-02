@@ -455,6 +455,30 @@ impl Shell {
                 }
             }
         });
+        // Minimised, or suspended where the compositor says so (Wayland has no minimised
+        // state to report), the tracker pull rests and one pull runs on return; downloads and
+        // torrents go on.
+        {
+            use gtk::prelude::*;
+            let hub = Rc::downgrade(&shell.ctx.hub);
+            let watch = move |window: &adw::ApplicationWindow| {
+                let Some(surface) = window.surface() else { return };
+                let Ok(toplevel) = surface.dynamic_cast::<gtk::gdk::Toplevel>() else { return };
+                let hub = hub.clone();
+                toplevel.connect_state_notify(move |toplevel| {
+                    let away = toplevel.state().intersects(
+                        gtk::gdk::ToplevelState::MINIMIZED | gtk::gdk::ToplevelState::SUSPENDED,
+                    );
+                    if let Some(hub) = hub.upgrade() {
+                        hub.send(Command::SyncVisible { visible: !away });
+                    }
+                });
+            };
+            if shell.ctx.window.surface().is_some() {
+                watch(&shell.ctx.window);
+            }
+            shell.ctx.window.connect_realize(watch);
+        }
         shell.updates();
         if !fixtures {
             shell.watch_network();

@@ -4,11 +4,11 @@ Kaeri                                                  plugins ·  ·  anilist �
  ▤ │
  ▦ │  No sources available
  / │
- ▥ │  Torrents are off until providers.torrent.enabled and a VPN mode are
- ↓ │  set.
-▌◇ │
- ◎ │  Plugin stores
- ≡ │    Plugins shared by people you know. Join with an invite link.   ↵ Open
+ ▥ │  Torrents are off until providers.torrent.enabled is turned on.
+ ↓ │
+▌◇ │  Plugin stores
+ ◎ │    Plugins for your own devices. Join with an invite link.        ↵ Open
+ ≡ │
  ⇄ │
    │
    │
@@ -42,20 +42,19 @@ r05 c01-01 fg=text-dim
 r05 c03-03 fg=rule
 r06 c01-01 fg=text-dim
 r06 c03-03 fg=rule
-r06 c06-72 fg=text-dim
+r06 c06-67 fg=text-dim
 r07 c01-01 fg=text-dim
 r07 c03-03 fg=rule
-r07 c06-09 fg=text-dim
 r08 c00-00 fg=text-dim
 r08 c01-01 fg=text mod=BOLD
 r08 c03-03 fg=rule
+r08 c06-18 fg=text mod=BOLD
 r09 c01-01 fg=text-dim
 r09 c03-03 fg=rule
-r09 c06-18 fg=text mod=BOLD
+r09 c08-62 fg=text-dim
+r09 c71-76 fg=text-dim
 r10 c01-01 fg=text-dim
 r10 c03-03 fg=rule
-r10 c08-67 fg=text-dim
-r10 c71-76 fg=text-dim
 r11 c01-01 fg=text-dim
 r11 c03-03 fg=rule
 r12 c03-03 fg=rule

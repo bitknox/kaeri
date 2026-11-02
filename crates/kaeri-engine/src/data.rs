@@ -197,6 +197,7 @@ fn detail_from(
                 })
             })
             .collect(),
+        partial: false,
     }
 }
 
@@ -989,7 +990,7 @@ pub fn episode_rows_with_filler(
                 })
                 .unwrap_or(0.0);
 
-            // Only numeric episodes can be classified: AnimeFillerList indexes by number, and an
+            // Only numeric episodes can be classified: the filler index goes by number, and an
             // "OVA" has none.
             let classified = filler
                 .zip(episode.number.as_number())
@@ -1177,7 +1178,7 @@ mod tests {
             "bannerImage": "https://s4.anilist.co/banner.jpg",
             "genres": ["Adventure"],
             "externalLinks": [
-                {"site": "Hikari Stream", "url": "https://hikari.test", "type": "STREAMING"},
+                {"site": "Hikari Library", "url": "https://hikari.test", "type": "STREAMING"},
                 {"site": "Official Site", "url": "https://x.test", "type": "INFO"}
             ]
         }))
@@ -1445,10 +1446,10 @@ mod tests {
             .streaming_links
         };
         let found = links(serde_json::json!([
-            {"site": "Lantern Stream", "url": "https://stream.example/series/a", "type": "STREAMING",
+            {"site": "Lantern Library", "url": "https://stream.example/series/a", "type": "STREAMING",
              "language": "Japanese"},
-            {"site": "Lantern Stream", "url": "https://stream.example/series/a", "type": "STREAMING"},
-            {"site": "Lantern Stream", "url": "https://stream.example/series/b", "type": "STREAMING"},
+            {"site": "Lantern Library", "url": "https://stream.example/series/a", "type": "STREAMING"},
+            {"site": "Lantern Library", "url": "https://stream.example/series/b", "type": "STREAMING"},
             {"site": "Gone Stream", "url": "https://gone.example/a", "type": "STREAMING",
              "isDisabled": true},
             {"site": "Odd Stream", "url": "intent://odd.example/a", "type": "STREAMING"},
@@ -1459,8 +1460,8 @@ mod tests {
         assert_eq!(
             seen,
             [
-                ("Lantern Stream", "https://stream.example/series/a"),
-                ("Lantern Stream", "https://stream.example/series/b"),
+                ("Lantern Library", "https://stream.example/series/a"),
+                ("Lantern Library", "https://stream.example/series/b"),
             ]
         );
         assert_eq!(found[0].language.as_deref(), Some("Japanese"));
@@ -1761,7 +1762,7 @@ mod tests {
     #[test]
     fn only_streaming_links_become_availability_badges() {
         let e = entry_from(&media(), None);
-        assert_eq!(e.available_on, vec!["Hikari Stream"]);
+        assert_eq!(e.available_on, vec!["Hikari Library"]);
     }
 
     #[test]

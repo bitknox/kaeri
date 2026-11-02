@@ -577,11 +577,12 @@ struct PhoneDownloadRow: View {
 struct PhoneSourcesPage: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
-    @State private var turningOn = false
+    @State private var routing = false
     @State private var editingProxy = false
 
     var body: some View {
         let on = store.settings.isOn(.torrents)
+        let proxy = store.settings.torrent?.proxy
         PhoneList {
             Section {
                 NavigationLink(value: PhoneSettingsPage.providers) {
@@ -596,7 +597,7 @@ struct PhoneSourcesPage: View {
             Section {
                 Toggle(isOn: Binding(
                     get: { on },
-                    set: { wanted in if wanted { turningOn = true } else { store.setSwitch(.torrents, on: false) } }
+                    set: { store.setSwitch(.torrents, on: $0) }
                 )) {
                     PhoneRowTitle(title: SettingKey.torrents.title)
                 }
@@ -604,26 +605,34 @@ struct PhoneSourcesPage: View {
                 .listRowBackground(Palette.raised)
                 if on {
                     PhoneSettingSwitch(key: .torrentsOnCellular)
-                    menuRow(L.torrentsProtectWith) { ProtectionMenu(phone: true) }
-                    if let line = store.settings.torrent?.proxyLine {
-                        Button { editingProxy = true } label: {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(L.settingsEditProxy).font(.ui(17)).foregroundStyle(.silk)
-                                Text(line).font(.ui(13)).foregroundStyle(.haze)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .contentShape(.rect)
+                }
+                Toggle(isOn: Binding(
+                    get: { proxy != nil },
+                    set: { wanted in if wanted { routing = true } else { store.setTorrentProxy(nil) } }
+                )) {
+                    PhoneRowTitle(title: L.torrentsProxyRoute, note: L.torrentsProxyRouteDetail)
+                }
+                .tint(.amber)
+                .listRowBackground(Palette.raised)
+                if let proxy {
+                    Button { editingProxy = true } label: {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(L.settingsEditProxy).font(.ui(17)).foregroundStyle(.silk)
+                            Text(ProxyWords.proxyLine(proxy)).font(.ui(13)).foregroundStyle(.haze)
                         }
-                        .listRowBackground(Palette.raised)
-                        .onLaunchSheet("proxy", navigator) { editingProxy = true }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(.rect)
                     }
-                    menuRow(SettingKey.vpnOnFailure.title) { FailedCheckMenu(phone: true) }
-                    PhoneGuardRow()
+                    .listRowBackground(Palette.raised)
+                    .onLaunchSheet("proxy", navigator) { editingProxy = true }
+                    if let status = store.providers.proxyStatus, status != .direct {
+                        PhoneProxyCheckRow()
+                    }
                 }
             } header: {
                 PhoneSectionHeader(L.torrentsTitle)
             } footer: {
-                Text(on ? L.torrentsCheckNote : L.torrentsOffDetail)
+                Text(ProxyWords.summary(on: on, proxy: proxy))
             }
             if on {
                 Section {
@@ -638,9 +647,9 @@ struct PhoneSourcesPage: View {
         }
         .navigationTitle(L.sourcesTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(isPresented: $turningOn) { PhoneTorrentSheet() }
-        .sheet(isPresented: $editingProxy) { PhoneTorrentSheet(mode: .editProxy) }
-        .onLaunchSheet("torrent", navigator) { turningOn = true }
+        .sheet(isPresented: $routing) { PhoneProxySheet() }
+        .sheet(isPresented: $editingProxy) { PhoneProxySheet(mode: .edit) }
+        .onLaunchSheet("torrent", navigator) { routing = true }
         .task {
             store.checkProviders()
             if !store.stores.loaded { store.loadStores() }
@@ -660,23 +669,14 @@ struct PhoneSourcesPage: View {
             Text(value).font(.ui(17)).foregroundStyle(.haze)
         }
     }
-
-    private func menuRow(_ title: String, @ViewBuilder menu: () -> some View) -> some View {
-        HStack {
-            Text(title).font(.ui(17)).foregroundStyle(.silk)
-            Spacer()
-            menu()
-        }
-        .listRowBackground(Palette.raised)
-    }
 }
 
-/// The VPN guard's last word, in a list row.
-struct PhoneGuardRow: View {
+/// The saved proxy's check, in a list row.
+struct PhoneProxyCheckRow: View {
     @Environment(AppStore.self) private var store
 
     var body: some View {
-        let (note, status, color) = GuardWords.words(store.providers.guardView, at: store.providers.guardAt)
+        let (note, status, color) = ProxyWords.words(store.providers.proxyStatus)
         VStack(alignment: .leading, spacing: 6) {
             VStack(alignment: .leading, spacing: 2) {
                 HStack {
@@ -687,14 +687,14 @@ struct PhoneGuardRow: View {
                         Text(status).font(.ui(17)).foregroundStyle(.haze)
                     }
                 }
-                Text(note).font(.ui(13)).foregroundStyle(.haze)
+                if let note { Text(note).font(.ui(13)).foregroundStyle(.haze) }
             }
             .accessibilityElement(children: .combine)
-            Button(L.torrentsCheckNow) { store.checkConnection() }
+            Button(L.torrentsCheckNow) { store.checkProxy() }
                 .font(.ui(15, weight: .semibold))
                 .buttonStyle(.borderless)
                 .foregroundStyle(.silk)
-                .disabled(store.providers.guardView == .checking)
+                .disabled(store.providers.proxyStatus == .checking)
         }
         .listRowBackground(Palette.raised)
     }

@@ -154,7 +154,6 @@ private fun SourceRow(store: AppStore, id: AnilistId, name: String, view: ShowSe
 /** A source as a person names it: the plugin's own name, or Torrents. */
 private fun sourceName(context: Context, row: ProviderRow): String = when (row.kind) {
     "torrent" -> Strings.sourcesTorrents(context)
-    "remote" -> Strings.sourcesRemote(context)
     else -> row.name.ifEmpty { row.id }
 }
 

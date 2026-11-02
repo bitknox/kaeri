@@ -1,4 +1,4 @@
-//! End-to-end validation of the watch path: guard → torrent → loopback HTTP → mpv → SQLite.
+//! End-to-end validation of the watch path: route → torrent → loopback HTTP → mpv → SQLite.
 //!
 //! This is the one thing no unit test can establish — that a stream pulled from peers through
 //! a SOCKS5 proxy actually decodes in mpv, and that the position mpv reports over JSON IPC
@@ -25,7 +25,7 @@ use kaeri_core::{
 use kaeri_model::event::Event;
 use kaeri_net::HttpClient;
 use kaeri_player::Mpv;
-use kaeri_providers::{VpnGuard, torrent::TorrentSession};
+use kaeri_providers::{TorrentRoute, torrent::TorrentSession};
 use kaeri_store::Store;
 use tokio::sync::mpsc;
 
@@ -56,15 +56,15 @@ async fn main() {
     let store = Store::open(scratch.path().join("playback_probe.db")).expect("store");
     let http = HttpClient::new(&config.network).expect("http");
 
-    println!("── vpn guard ──────────────────────────────────────────");
-    let guard = match VpnGuard::new(config.providers.torrent.vpn.clone()) {
-        Ok(g) => g,
-        Err(e) => return println!("  ✕ misconfigured: {e}"),
+    println!("── torrent route ──────────────────────────────────────");
+    let route = match TorrentRoute::new(config.providers.torrent.proxy.clone()) {
+        Ok(route) => route,
+        Err(e) => return println!("  ✕ the proxy setting can't be used: {e}"),
     };
-    let state = guard.verify().await;
-    println!("  {}  ({:?})", state.badge(), state);
-    if !state.is_protected() {
-        println!("  ✕ guard refuses — nothing will be torrented. Fail-closed working.");
+    let state = route.verify().await;
+    println!("  {state:?}");
+    if !state.is_ready() {
+        println!("  ✕ The proxy check failed: nothing will be torrented.");
         return;
     }
 
@@ -82,7 +82,7 @@ async fn main() {
     println!("  Big Buck Bunny © Blender Foundation, CC-BY 3.0");
     let dir = scratch.path().join("torrents");
     let session = match TorrentSession::start(
-        guard,
+        route,
         dir,
         scratch.path().join("dht.json"),
         "probe".into(),

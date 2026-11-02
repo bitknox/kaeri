@@ -13,6 +13,9 @@ import Foundation
 ///     swift run KaeriDev --scene playing --player-shot up-next --snapshot shot.png
 ///                                                     play it to a state, render the player
 ///                                                     window, and quit
+///     swift run KaeriDev --scene playing --player-shot starting --snapshot shot.png --frames 0,40,80
+///                                                     the player's way in, shot from the moment
+///                                                     play is pressed
 ///     swift run KaeriDev --snapshot shot.png      render the window once settled, and quit
 ///     swift run KaeriDev --size 1440x900          another window size
 ///     swift run KaeriDev --scene playing --media <file>

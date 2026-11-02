@@ -9,8 +9,7 @@
 
 use std::{
     collections::{HashMap, HashSet},
-    sync::{Arc, Mutex},
-    time::{Duration, Instant},
+    time::Duration,
 };
 
 use kaeri_core::ids::AnilistId;
@@ -24,50 +23,25 @@ use kaeri_model::{
 use kaeri_store::Store;
 
 use crate::{
-    clock::Clock, data, new_episodes, outbox::Outbox, services::Services, state::EngineState,
+    catalog::calendar::{CalendarMemory, Need},
+    clock::Clock,
+    data, new_episodes,
+    outbox::Outbox,
+    services::Services,
+    state::EngineState,
 };
 
 /// How many titles to continue the widgets are given.
 const CONTINUE_ROWS: u32 = 5;
 
-/// How long the week's broadcasts, once fetched, answer for: AniList's answers are used again
-/// for as long, `kaeri_meta::source::REUSE_FOR`.
-const SCHEDULE_FOR: Duration = kaeri_meta::source::REUSE_FOR;
-
-/// Pages of broadcasts at most, of fifty each: a week has around 130.
-const SCHEDULE_PAGES: u32 = 4;
-
-/// The longest either half may take, inside a background task's time.
+/// The longest the record waits for the week's broadcasts, inside a background task's time. A
+/// slower answer goes on behind it, and the record is said again when the week is whole.
 const ASK_FOR: Duration = Duration::from_secs(15);
 
-/// The week's broadcasts as the widgets' record last fetched them, answered again for
-/// [`SCHEDULE_FOR`] while it is still the same day. Cheap to clone; clones share it.
-#[derive(Debug, Clone, Default)]
-pub struct Schedule(Arc<Mutex<Option<Fetched>>>);
-
-#[derive(Debug)]
-struct Fetched {
-    /// The start of the day the week starts on.
-    day: i64,
-    at: Instant,
-    rows: Vec<AiringEntry>,
-}
-
-impl Schedule {
-    /// What was fetched for the week from `day`, when that was less than [`SCHEDULE_FOR`] ago.
-    fn recent(&self, day: i64) -> Option<Vec<AiringEntry>> {
-        let fetched = self.0.lock().ok()?;
-        let fetched = fetched.as_ref()?;
-        (fetched.day == day && fetched.at.elapsed() < SCHEDULE_FOR)
-            .then(|| fetched.rows.clone())
-    }
-
-    fn keep(&self, day: i64, rows: &[AiringEntry]) {
-        if let Ok(mut fetched) = self.0.lock() {
-            *fetched = Some(Fetched { day, at: Instant::now(), rows: rows.to_vec() });
-        }
-    }
-}
+/// How many times a record that could not read the whole week asks again, and how long it
+/// waits before each: AniList's own word while it is rate limiting, and at least this.
+pub(crate) const FILL_IN_TRIES: u32 = 4;
+pub(crate) const FILL_IN_AFTER: Duration = Duration::from_secs(30);
 
 /// Make the record, off the actor, and say it as [`Event::WidgetSnapshot`]: once, with what
 /// could not be fetched left out.
@@ -83,12 +57,26 @@ pub(crate) fn snapshot(engine: &EngineState, services: &Services, tx: &Outbox) {
         meta: services.meta.clone(),
         tracker,
         clock: services.clock.clone(),
-        schedule: engine.widget_schedule.clone(),
+        schedule: engine.calendar.clone(),
     };
     let tx = tx.clone();
-    tokio::spawn(async move {
-        let _ = tx.send(Event::WidgetSnapshot(make.run().await));
-    });
+    // Nobody is looking at a widget's record while it is made: it is background work, and the
+    // widgets show the record they hold until it is said.
+    tokio::spawn(kaeri_meta::in_background(async move {
+        // Said at once with what is kept, and again as the week fills in: a week cut short by a
+        // rate limit or a slow answer still shows what it had, and is made whole behind it.
+        let mut tries = 0;
+        loop {
+            let (data, whole) = make.run().await;
+            let _ = tx.send(Event::WidgetSnapshot(data));
+            tries += 1;
+            if whole || tries > FILL_IN_TRIES {
+                break;
+            }
+            let wait = make.meta.rate_limit_wait().await.unwrap_or_default();
+            tokio::time::sleep(wait.max(FILL_IN_AFTER)).await;
+        }
+    }));
 }
 
 /// What making the record works with.
@@ -98,14 +86,15 @@ struct Make {
     /// The Library's tracker, when it is signed in.
     tracker: Option<String>,
     clock: Clock,
-    schedule: Schedule,
+    schedule: CalendarMemory,
 }
 
 impl Make {
-    async fn run(&self) -> WidgetData {
+    /// The record, and whether the whole week was read for it.
+    async fn run(&self) -> (WidgetData, bool) {
         let now = self.clock.now();
         let days = Days::of(now, &self.clock.zone());
-        let (continue_watching, broadcasts) =
+        let (continue_watching, (broadcasts, whole)) =
             tokio::join!(self.continuing(now), self.broadcasts(&days));
         let followed: HashSet<AnilistId> =
             new_episodes::followed(&self.store, self.tracker.is_some(), now, true)
@@ -115,7 +104,7 @@ impl Make {
         let next_airing = self.next_airing(&rows, &followed, now);
         let (airing_today, next_days) =
             rows.into_iter().partition(|row| row.airs_at < days.tomorrow);
-        WidgetData {
+        let data = WidgetData {
             version: WIDGET_DATA_VERSION,
             generated_at: now,
             continue_watching,
@@ -124,7 +113,8 @@ impl Make {
             tracker: self.tracker.clone(),
             next_airing,
             next_days,
-        }
+        };
+        (data, whole)
     }
 
     /// Continue's first titles, most recently watched first, as Continue counts where each
@@ -202,41 +192,42 @@ impl Make {
         serde_json::from_str(&payload).ok()
     }
 
-    /// The broadcasts from the start of today to a week on, aired or not, oldest first: the
-    /// calendar's window, a few pages of it, used again for a few minutes.
-    async fn broadcasts(&self, days: &Days) -> Vec<AiringEntry> {
-        if let Some(rows) = self.schedule.recent(days.today) {
-            return rows;
-        }
-        let mut rows = Vec::new();
-        let walked = tokio::time::timeout(ASK_FOR, async {
-            for page in 1..=SCHEDULE_PAGES {
-                // `airingAt_greater` is strict, and a broadcast at midnight is the new day's.
-                let asked = self.meta.airing_between_sorted(
-                    days.today - 1,
-                    days.week_end,
-                    page,
-                    50,
-                    false,
-                );
-                let fetched = asked.await?;
-                rows.extend(fetched.items);
-                if !fetched.has_next {
-                    break;
+    /// The broadcasts from the start of today to a week on, aired or not, oldest first, and
+    /// whether the whole week was read: the schedule the calendar, the notices and the digest
+    /// share, so only the pages it does not hold are asked for. What it held before stands in
+    /// for pages that cannot be had.
+    async fn broadcasts(&self, days: &Days) -> (Vec<AiringEntry>, bool) {
+        // `airingAt_greater` is strict, and a broadcast at midnight is the new day's.
+        let need = Need {
+            past_to: Some(days.today - 1),
+            ahead_to: Some(days.week_end),
+            ..Need::default()
+        };
+        let cover = self.schedule.cover(
+            &self.meta,
+            self.clock.now(),
+            crate::now_epoch(),
+            need,
+            false,
+            true,
+        );
+        match tokio::time::timeout(ASK_FOR, cover).await {
+            Ok(covered) => {
+                if let Some(error) = &covered.failure {
+                    tracing::warn!(%error, "the week's broadcasts were not all found");
                 }
+                (
+                    covered.window.between(days.today - 1, days.week_end),
+                    covered.failure.is_none(),
+                )
             }
-            Ok::<_, kaeri_meta::source::MetaError>(())
-        })
-        .await;
-        match walked {
-            // Kept only whole, so a week cut short is asked for again next time.
-            Ok(Ok(())) => self.schedule.keep(days.today, &rows),
-            Ok(Err(error)) => {
-                tracing::warn!(%error, "the week's broadcasts were not all found")
+            Err(_) => {
+                tracing::warn!("gave up waiting for the week's broadcasts; using what is held");
+                let held =
+                    self.schedule.held().map(|w| w.between(days.today - 1, days.week_end));
+                (held.unwrap_or_default(), false)
             }
-            Err(_) => tracing::warn!("gave up waiting for the week's broadcasts"),
         }
-        rows
     }
 
     /// The broadcasts as the widgets show them, each marked by whether its show is followed and
@@ -340,19 +331,21 @@ impl Days {
 
 const DAY: i64 = 24 * 3_600;
 
-/// The week's broadcasts as the record fetches them, from the start of today to the start of the
-/// day a week on, sharing what it fetched: for the notifications' week (`crate::upcoming`), so
-/// the two cost AniList one fetch. With the end of that week.
+/// The week's broadcasts as the record reads them, from the start of today to the start of the
+/// day a week on, from the schedule everything shares: for the notifications' week
+/// (`crate::upcoming`), so the two cost AniList one read. With the end of that week, and whether
+/// the whole week was read.
 pub(crate) async fn week(
     store: Store,
     meta: Meta,
     clock: Clock,
-    schedule: Schedule,
+    schedule: CalendarMemory,
     now: i64,
-) -> (Vec<AiringEntry>, i64) {
+) -> (Vec<AiringEntry>, i64, bool) {
     let days = Days::of(now, &clock.zone());
     let make = Make { store, meta, tracker: None, clock, schedule };
-    (make.broadcasts(&days).await, days.week_end)
+    let (rows, whole) = make.broadcasts(&days).await;
+    (rows, days.week_end, whole)
 }
 
 #[cfg(test)]

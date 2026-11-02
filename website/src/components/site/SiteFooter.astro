@@ -23,7 +23,6 @@ const links = [
 <footer class="site-footer">
 	<div class="site-footer-in">
 		<div class="site-footer-text">
-			<p>{t('site.legal')}</p>
 			<p set:html={credit ? t('site.footer.licenceCredit', { source: credit === 1 ? DEMO_PART_1 : DEMO_PART_2, part: `3.${credit}`, licence: CC }) : t('site.footer.licence')} />
 		</div>
 		<nav aria-label={t('site.footer.label')}>

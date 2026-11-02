@@ -104,6 +104,8 @@ public final class AppStore {
     @ObservationIgnored private var early: [Command] = []
     /// The titles whose episodes were asked for their stills.
     @ObservationIgnored private var stillsAsked: Set<AnilistId> = []
+    /// When each cover's card and table data was last asked with its screen's (see `prepareCards`).
+    @ObservationIgnored private var prepared: [AnilistId: ContinuousClock.Instant] = [:]
     /// When each question about a title last went out (see `ask`).
     @ObservationIgnored private var asked: [TitleQuestion: ContinuousClock.Instant] = [:]
     /// The kinds of the engine's events a showcase set aside, so its rows stay on screen.
@@ -205,8 +207,8 @@ public final class AppStore {
     }
 
     /// Reset settings on the start-failed screen, once the viewer has confirmed it: `config.toml`
-    /// is kept aside as `config.damaged-<date>`, and the engine starts again on the defaults, VPN
-    /// and proxy included. The database, and the watch history in it, stay.
+    /// is kept aside as `config.damaged-<date>`, and the engine starts again on the defaults, the torrent
+    /// proxy included. The database, and the watch history in it, stay.
     public func resetSettings() async {
         guard let launched, settingsUnusable, phase != .starting, phase != .running else { return }
         let dirs = launched.launch.home.dirs
@@ -467,14 +469,14 @@ public final class AppStore {
     public func loadCalendarPast(through: Date? = nil) {
         guard let anchor = calendar.anchor, calendar.morePast, !calendar.loadingPast else { return }
         calendar.askedPast()
-        send(.loadCalendarPast(anchor: anchor, page: calendar.pages, through: through.map { Int64($0.timeIntervalSince1970) }))
+        send(.loadCalendarPast(anchor: anchor, page: calendar.nextPastPage, through: through.map { Int64($0.timeIntervalSince1970) }))
     }
 
     /// Later broadcasts, walking forward until `through` is covered (one page without it).
     public func loadCalendarAhead(through: Date? = nil) {
         guard let anchor = calendar.anchor, calendar.moreAhead, !calendar.loadingAhead else { return }
         calendar.askedAhead()
-        send(.loadCalendarAhead(anchor: anchor, page: calendar.aheadPages, through: through.map { Int64($0.timeIntervalSince1970) }))
+        send(.loadCalendarAhead(anchor: anchor, page: calendar.nextAheadPage, through: through.map { Int64($0.timeIntervalSince1970) }))
     }
 
     /// Asks for whatever of `start...end` is not loaded yet. Stops where a page failed, until
@@ -581,9 +583,43 @@ public final class AppStore {
         send(.loadDetail(id))
     }
 
+    /// The data a hover card shows for `ids`: from what the lists brought, else one batched lookup
+    /// at low priority. Not asked again for a title whose card is in.
+    public func loadCards(_ ids: [AnilistId]) {
+        let wanted = ids.filter { !titles.cardedIds.contains($0) && !titles.detailed.contains($0) }
+        guard !wanted.isEmpty else { return }
+        send(.loadCards(ids: wanted))
+    }
+
     public func loadEpisodes(_ id: AnilistId) {
         guard ask(.episodes(id)) else { return }
         send(.loadEpisodes(id))
+    }
+
+    /// The covers a screen shows, for their hover cards: their cards and what their episode tables
+    /// need, in one batched request at low priority, so a hover asks nothing. Covers asked within
+    /// `preparedFor`, or whose table is here, are left out, so it may be called as the pointer moves.
+    public func prepareCards(_ ids: [AnilistId]) {
+        let now = ContinuousClock.now
+        var wanted: [AnilistId] = []
+        for id in ids where titles.episodes[id] == nil && !wanted.contains(id) && wanted.count < 50 {
+            if let at = prepared[id], now - at < Self.preparedFor { continue }
+            wanted.append(id)
+        }
+        guard !wanted.isEmpty else { return }
+        for id in wanted { prepared[id] = now }
+        send(.prepareCards(ids: wanted))
+    }
+
+    /// How long the engine keeps what `prepareCards` brought for a table, a little less.
+    static let preparedFor: Duration = .seconds(25 * 60)
+
+    /// A hover card's episode table, for its Play line and stills: built from what its screen's
+    /// `prepareCards` brought, and otherwise asked at low priority so the screen's own requests go
+    /// first.
+    public func loadHoverEpisodes(_ id: AnilistId) {
+        guard titles.episodes[id] == nil, asked[.episodes(id)] == nil, ask(.stills(id)) else { return }
+        send(.loadStills(id))
     }
 
     /// How far a title's dub goes. The engine answers in the background and the page shows it
@@ -602,10 +638,14 @@ public final class AppStore {
         }
     }
 
-    /// A question about one title.
+    /// A question about one title. Stills are the episodes asked at low priority, kept apart so a
+    /// page opened right after a hover still asks for its own at the page's priority. Once a page
+    /// has asked, stills ask nothing: the engine answers only the newest listing of a title, and a
+    /// quiet one would put the page's behind the background work.
     private enum TitleQuestion: Hashable {
         case detail(AnilistId)
         case episodes(AnilistId)
+        case stills(AnilistId)
         case dub(AnilistId)
     }
 
@@ -623,10 +663,10 @@ public final class AppStore {
     /// forth costs one request. Whether it asked.
     @discardableResult
     public func loadStills(_ id: AnilistId) -> Bool {
-        guard titles[id]?.bannerUrl == nil, titles.episodes[id] == nil,
-              stillsAsked.insert(id).inserted, ask(.episodes(id))
+        guard titles[id]?.bannerUrl == nil, titles.episodes[id] == nil, asked[.episodes(id)] == nil,
+              stillsAsked.insert(id).inserted, ask(.stills(id))
         else { return false }
-        send(.loadEpisodes(id))
+        send(.loadStills(id))
         return true
     }
 
@@ -680,10 +720,12 @@ public final class AppStore {
         }
         if let delay = detailDelay {
             // Title pages held back, as a slow AniList answers them, and what the services say
-            // of a title with them, which the engine answers from the same page.
+            // of a title with them, which the engine answers from the same page. A season's
+            // header sent ahead of its page comes from the engine's memory, and is not held.
             let held = { (event: Event) in
                 switch event {
-                case .detail, .availability: true
+                case .detail(let entry): entry.detail?.partial != true
+                case .availability: true
                 default: false
                 }
             }
@@ -762,11 +804,11 @@ public final class AppStore {
         self.held = []
         for event in events { apply(event) }
         self.held = held
-        // An edited proxy's check, which no sheet asked for: under way, or failed.
+        // An edited proxy's check, which no form asked for: under way, or failed.
         if showcase == .checking || showcase == .unsaved {
-            _ = providers.trialStarted(ProtectionCheck(mode: .proxy, proxy: nil))
+            _ = providers.trialStarted(TorrentProxy(host: "proxy.example", port: 1080, user: nil, password: nil))
         }
-        if showcase == .unsaved { _ = providers.trialSaid(.unreachable) }
+        if showcase == .unsaved { _ = providers.trialSaid(.failed) }
         #endif
     }
 
@@ -854,6 +896,9 @@ public final class AppStore {
             calendar.backfill(page: page, entries: entries, morePast: morePast, titles: titles)
         case .detail(let entry):
             titles.merge(detail: entry)
+        case .cards(let entries):
+            titles.merge(entries)
+            titles.carded(entries.map(\.id))
         case .progress(let id, let progress, let resume, let episodes):
             titles.progress(id: id, progress: progress, resume: resume, episodes: episodes)
             widgetsChanged()
@@ -923,10 +968,10 @@ public final class AppStore {
             sourceChoices.apply(id: id, options: options)
         case .pinUnavailable(let id, let providerId, let name):
             sourceChoices.pinUnavailable(id: id, providerId: providerId, name: name)
-        case .vpn(let view):
-            providers.guardSaid(view)
-        case .protectionChecked(let view):
-            if let next = providers.trialSaid(view) { send(next) }
+        case .torrentProxy(let status):
+            providers.proxySaid(status)
+        case .proxyChecked(let status):
+            if let next = providers.trialSaid(status) { send(.checkTorrentProxy(proxy: next)) }
 
         case .licensed, .availability, .licensedReturn, .server, .local:
             applyFirstParty(event)

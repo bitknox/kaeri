@@ -4,8 +4,7 @@
 //!
 //! librqbit ships an `http-api` feature that would do this, but it exposes the whole
 //! torrent *management* surface — add, delete, pause — on the same port. Even on loopback
-//! that lets any local process manipulate the session, which sits badly beside the
-//! fail-closed VPN guard. So this serves exactly one thing: `GET` on a single unguessable
+//! that lets any local process manipulate the session. So this serves exactly one thing: `GET` on a single unguessable
 //! path, read-only, bound to `127.0.0.1` on an ephemeral port.
 //!
 //! The risky part of writing this by hand is range handling, so that is a pure function
@@ -327,9 +326,8 @@ impl StreamServer {
 
     /// Close the listener *and* every connection it spawned.
     ///
-    /// Aborting the accept loop alone left the handed-off tasks running, so a server dropped
-    /// because the VPN guard started leaking went on feeding an already-connected player from
-    /// the torrent — the teardown half of `halt()` did not, in fact, tear anything down. Worse
+    /// Aborting the accept loop alone left the handed-off tasks running, so a dropped server
+    /// went on feeding an already-connected player from the torrent. Worse
     /// once the torrent was paused underneath them: the read stalls, no write is attempted, so
     /// a client that has gone away is never noticed and the task, its socket and its torrent
     /// stream stay for the life of the process.
@@ -359,7 +357,7 @@ pub async fn serve<S: StreamSource>(source: S, token: &str) -> std::io::Result<S
 /// Serve `source` as [`serve`] does, plus a thumbnail path on its own token.
 ///
 /// One server rather than two so the thumbnail path shares the stream's lifetime: dropping
-/// the server — a new episode, or the VPN guard's `halt()` — ends both, with the same
+/// the server, for a new episode or a session stopping, ends both, with the same
 /// cancellation, and there is no second listener to forget.
 pub async fn serve_with_thumbnails<S: StreamSource, R: ReadySource>(
     source: S,
@@ -928,8 +926,7 @@ mod tests {
     #[tokio::test]
     async fn dropping_the_server_stops_a_connection_already_serving() {
         // Dropping it aborted the accept loop and nothing else, so a player already connected
-        // kept being fed from the torrent — the teardown half of the VPN guard's `halt()` did
-        // not tear anything down. Worse once the torrent was paused underneath: the read
+        // kept being fed from the torrent. Worse once the torrent was paused underneath: the read
         // stalls, nothing is ever written, and the dead connection is never noticed.
         let server = serve(MemorySource(vec![7; 8 * 1024 * 1024]), "tok").await.unwrap();
         let url = server.url().to_owned();

@@ -15,7 +15,10 @@ pub mod threads;
 use std::sync::Arc;
 
 use kaeri_core::ids::AnilistId;
-use kaeri_net::{HttpClient, RateLimiter, ratelimit::parse_rate_headers};
+use kaeri_net::{
+    HttpClient, RateLimiter,
+    ratelimit::{Pacing, Priority, parse_rate_headers, parse_rate_limit},
+};
 use serde::de::DeserializeOwned;
 
 pub use model::{
@@ -38,6 +41,12 @@ pub enum AniListError {
 
     #[error("unexpected response shape: {0}")]
     Decode(String),
+
+    /// AniList refused the request for going over the limit, and kept refusing after waiting
+    /// as its headers said. Never a reason to stop asking AniList: the caller keeps what it
+    /// has, and asks again after `retry_in_secs`.
+    #[error("rate limited, retry in {retry_in_secs}s")]
+    RateLimited { retry_in_secs: u64 },
 
     #[error("not found")]
     NotFound,
@@ -273,7 +282,7 @@ impl BrowseFilter {
             min_popularity: Some(1000),
             sources: vec!["MANGA".into()],
             countries: vec!["JP".into(), "KR".into()],
-            licensed_by: vec!["Hikari Stream".into()],
+            licensed_by: vec!["Hikari Library".into()],
             licensed: Some(true),
             on_list: Some(false),
             adult: Some(false),
@@ -307,19 +316,107 @@ pub struct FacetTag {
 }
 
 tokio::task_local! {
-    /// Set for work nobody is looking at: see [`in_background`].
-    static BACKGROUND: ();
+    /// The class the caller's AniList requests go in: see [`Lane`].
+    static LANE: Lane;
 }
 
-/// AniList requests made inside `work` leave the last few tokens of the budget for whatever
-/// someone is looking at: a sync, a relations walk or the new-episode check never makes a
-/// search wait.
+/// The class a piece of work's AniList requests go in, shared by everything the work asks, and
+/// raised when someone more urgent comes to wait on it. Work outside any lane is a screen's.
+///
+/// A lane is what lets a background ask be joined: a title's page asked for in the background
+/// that its page then opens on is raised to the screen's class while it waits, rather than
+/// keeping the page in the queue.
+#[derive(Clone, Debug)]
+pub struct Lane(Arc<std::sync::atomic::AtomicU8>);
+
+impl Lane {
+    pub fn new(priority: Priority) -> Self {
+        Self(Arc::new(std::sync::atomic::AtomicU8::new(rank(priority))))
+    }
+
+    /// The caller's own lane, or a new one in the caller's class.
+    pub fn current() -> Self {
+        LANE.try_with(Clone::clone).unwrap_or_else(|_| Self::new(Priority::Screen))
+    }
+
+    pub fn priority(&self) -> Priority {
+        match self.0.load(std::sync::atomic::Ordering::SeqCst) {
+            0 => Priority::Screen,
+            1 => Priority::OnScreen,
+            _ => Priority::Background,
+        }
+    }
+
+    /// Whether `other` is this lane, rather than one in the same class.
+    pub fn same(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.0, &other.0)
+    }
+
+    /// Raise the lane to `priority`, if that is more urgent than it is.
+    pub fn raise(&self, priority: Priority) {
+        self.0.fetch_min(rank(priority), std::sync::atomic::Ordering::SeqCst);
+    }
+
+    /// Run `work` in this lane.
+    pub async fn run<F: Future>(&self, work: F) -> F::Output {
+        LANE.scope(self.clone(), work).await
+    }
+}
+
+const fn rank(priority: Priority) -> u8 {
+    match priority {
+        Priority::Screen => 0,
+        Priority::OnScreen => 1,
+        Priority::Background => 2,
+    }
+}
+
+/// AniList requests made inside `work` are background work: queued behind what is on screen,
+/// paced, and kept out of the share left for screens (see [`kaeri_net::ratelimit::Pacing`]). A
+/// sync, a relations walk or the new-episode check never makes a search wait.
+///
+/// Inside work for the page on screen ([`on_screen`]) this changes nothing: that caller knows
+/// the work has someone looking at it.
 pub async fn in_background<F: Future>(work: F) -> F::Output {
-    BACKGROUND.scope((), work).await
+    match LANE.try_with(Clone::clone) {
+        Ok(lane) if lane.priority() != Priority::Screen => lane.run(work).await,
+        _ => Lane::new(Priority::Background).run(work).await,
+    }
 }
 
-/// How many tokens background work leaves in the bucket.
-const INTERACTIVE_RESERVE: f64 = 6.0;
+/// AniList requests made inside `work` serve the page on screen, which shows without them and
+/// fills in as they land: the page's franchise walk, its seasons' headers, the open Calendar's
+/// walk. They go right after any screen request waiting, without the background's spacing,
+/// while more than the screens' share is left.
+pub async fn on_screen<F: Future>(work: F) -> F::Output {
+    match LANE.try_with(Clone::clone) {
+        Ok(lane) if lane.priority() == Priority::OnScreen => lane.run(work).await,
+        _ => Lane::new(Priority::OnScreen).run(work).await,
+    }
+}
+
+/// The class the caller's requests go in.
+pub fn priority() -> Priority {
+    LANE.try_with(Lane::priority).unwrap_or(Priority::Screen)
+}
+
+/// Whether the caller is doing work nobody is looking at: see [`in_background`].
+pub fn is_background() -> bool {
+    priority() == Priority::Background
+}
+
+/// The most titles [`AniList::media_many`] asks after in one request: four pages of fifty.
+/// Each page's titles are counted once against AniList's complexity limit, so four stay well
+/// inside it (`kaeri-testkit` holds the document to that), and no franchise has more seasons.
+pub const MANY_PER_REQUEST: usize = 4 * 50;
+
+/// What AniList allows a minute when it is not degraded: the most the bucket follows the
+/// server's `X-RateLimit-Limit` up to.
+pub const MAX_PER_MINUTE: u32 = 90;
+
+/// How many times a request refused for going over the limit waits as the headers say and goes
+/// again, before it says so.
+const RATE_LIMIT_RETRIES: u32 = 3;
 
 /// One upcoming broadcast, for the Calendar screen.
 #[derive(Debug, Clone)]
@@ -334,6 +431,29 @@ pub struct AiringEntry {
 pub struct Page<T> {
     pub items: Vec<T>,
     pub has_next: bool,
+}
+
+/// One page of broadcasts to ask for: see [`AniList::airing_pages`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AiringPage {
+    pub from: i64,
+    pub to: i64,
+    pub page: u32,
+    pub per_page: u32,
+    /// Newest first, for the past: see [`query::airing_schedule`].
+    pub newest_first: bool,
+}
+
+/// What [`AniList::suggestions`] found.
+#[derive(Debug, Clone, Default)]
+pub struct Suggestions {
+    /// The titles asked for, in the order asked.
+    pub titles: Vec<Media>,
+    /// Each title recommendations were asked from, with its name and the ids recommended off
+    /// it, in the order asked.
+    pub from: Vec<(AnilistId, String, Vec<AnilistId>)>,
+    /// The ids rated highest off the `because` title, best first, when one was asked about.
+    pub because: Option<Vec<AnilistId>>,
 }
 
 /// One row of the authenticated user's list.
@@ -374,7 +494,10 @@ impl AniList {
     pub fn new(http: HttpClient, requests_per_minute: u32) -> Self {
         Self {
             http,
-            limiter: Arc::new(RateLimiter::per_minute(requests_per_minute)),
+            limiter: Arc::new(RateLimiter::per_minute_up_to(
+                requests_per_minute,
+                MAX_PER_MINUTE,
+            )),
             token: Arc::new(std::sync::RwLock::new(None)),
             endpoint: Arc::from(ENDPOINT),
         }
@@ -415,6 +538,34 @@ impl AniList {
         self.token.read().unwrap_or_else(|e| e.into_inner()).clone()
     }
 
+    /// Pace background work as `pacing` says, on every client that shares this one's budget.
+    pub fn with_pacing(self, pacing: Pacing) -> Self {
+        self.limiter.set_pacing(pacing);
+        self
+    }
+
+    /// The app is launching: background work waits for the launch's screens. See
+    /// [`RateLimiter::launching`].
+    pub fn launching(&self) {
+        self.limiter.launching();
+    }
+
+    /// The launch's screens were answered: background work begins shortly. See
+    /// [`RateLimiter::launched`].
+    pub fn launched(&self) {
+        self.limiter.launched();
+    }
+
+    /// Whether the launch holds background work back now.
+    pub fn in_launch(&self) -> bool {
+        self.limiter.in_launch()
+    }
+
+    /// Wait until the launch no longer holds background work back.
+    pub async fn launch_over(&self) {
+        self.limiter.launch_over().await;
+    }
+
     /// How long the next request would spend waiting on the rate limit.
     ///
     /// Surfaced so a slow screen can say *why* it is slow. AniList's measured budget is 30 requests
@@ -426,82 +577,95 @@ impl AniList {
 
     /// Execute a GraphQL operation.
     ///
-    /// Uses the plain client: AniList has no bot protection, so fingerprint emulation would
-    /// only add handshake cost.
+    /// Uses the plain client, which follows redirects.
     async fn execute<T: DeserializeOwned>(
         &self,
         document: &str,
         variables: serde_json::Value,
     ) -> Result<T> {
-        if BACKGROUND.try_with(|()| ()).is_ok() {
-            self.limiter.acquire_leaving(INTERACTIVE_RESERVE).await;
-        } else {
-            self.limiter.acquire().await;
+        let mut refused = 0;
+        let lane = LANE.try_with(Clone::clone).ok();
+        loop {
+            self.limiter
+                .acquire_by(|| lane.as_ref().map_or(Priority::Screen, Lane::priority))
+                .await;
+
+            let mut request = self
+                .http
+                .plain()
+                .post(&*self.endpoint)
+                .header("content-type", "application/json")
+                .header("accept", "application/json");
+            if let Some(token) = &self.token() {
+                request = request.header("authorization", format!("Bearer {token}"));
+            }
+
+            let response = request
+                .json(&serde_json::json!({ "query": document, "variables": variables }))
+                .send()
+                .await
+                .map_err(|e| AniListError::Network(e.to_string()))?;
+
+            let status = response.status();
+
+            // Feed the server's own accounting back into the limiter before anything else —
+            // it is authoritative, and our local bucket is only an estimate.
+            let headers = response.headers().clone();
+            let get = |name: &str| -> Option<String> {
+                headers.get(name).and_then(|v| v.to_str().ok()).map(str::to_owned)
+            };
+            let (remaining, reset) = parse_rate_headers(get, now_epoch());
+            if let Some(limit) = parse_rate_limit(get) {
+                self.limiter.observe_limit(limit).await;
+            }
+            self.limiter.observe(remaining, reset).await;
+
+            if status.as_u16() == 429 {
+                // A wait and another go, never a failure: the limiter holds every request until
+                // the time the headers give, and the one that earned the refusal goes again.
+                let wait = reset.unwrap_or(std::time::Duration::from_secs(60));
+                self.limiter.back_off(wait).await;
+                refused += 1;
+                if refused > RATE_LIMIT_RETRIES {
+                    return Err(AniListError::RateLimited { retry_in_secs: wait.as_secs() });
+                }
+                tracing::info!(
+                    ?wait,
+                    "rate limited; waiting as AniList says, then asking again"
+                );
+                continue;
+            }
+
+            if status.as_u16() == 401 {
+                return Err(AniListError::Unauthenticated);
+            }
+
+            let body: serde_json::Value =
+                response.json().await.map_err(|e| AniListError::Decode(e.to_string()))?;
+
+            // GraphQL reports failure inside a 200, so this check is the real error path.
+            if let Some(errors) = body.get("errors").and_then(|e| e.as_array())
+                && !errors.is_empty()
+            {
+                let message = errors
+                    .iter()
+                    .filter_map(|e| e.get("message").and_then(|m| m.as_str()))
+                    .collect::<Vec<_>>()
+                    .join("; ");
+                return Err(AniListError::Api(if message.is_empty() {
+                    format!("request failed with HTTP {}", status.as_u16())
+                } else {
+                    message
+                }));
+            }
+
+            let data = body
+                .get("data")
+                .ok_or_else(|| AniListError::Decode("response had no data field".into()))?;
+
+            return serde_json::from_value(data.clone())
+                .map_err(|e| AniListError::Decode(e.to_string()));
         }
-
-        let mut request = self
-            .http
-            .plain()
-            .post(&*self.endpoint)
-            .header("content-type", "application/json")
-            .header("accept", "application/json");
-        if let Some(token) = &self.token() {
-            request = request.header("authorization", format!("Bearer {token}"));
-        }
-
-        let response = request
-            .json(&serde_json::json!({ "query": document, "variables": variables }))
-            .send()
-            .await
-            .map_err(|e| AniListError::Network(e.to_string()))?;
-
-        let status = response.status();
-
-        // Feed the server's own accounting back into the limiter before anything else —
-        // it is authoritative, and our local bucket is only an estimate.
-        let headers = response.headers().clone();
-        let (remaining, reset) = parse_rate_headers(
-            |name| headers.get(name).and_then(|v| v.to_str().ok()).map(str::to_owned),
-            now_epoch(),
-        );
-        self.limiter.observe(remaining, reset).await;
-
-        if status.as_u16() == 429 {
-            let wait = reset.unwrap_or(std::time::Duration::from_secs(60));
-            self.limiter.back_off(wait).await;
-            return Err(AniListError::Api(format!(
-                "rate limited, retry in {}s",
-                wait.as_secs()
-            )));
-        }
-        if status.as_u16() == 401 {
-            return Err(AniListError::Unauthenticated);
-        }
-
-        let body: serde_json::Value =
-            response.json().await.map_err(|e| AniListError::Decode(e.to_string()))?;
-
-        // GraphQL reports failure inside a 200, so this check is the real error path.
-        if let Some(errors) = body.get("errors").and_then(|e| e.as_array())
-            && !errors.is_empty()
-        {
-            let message = errors
-                .iter()
-                .filter_map(|e| e.get("message").and_then(|m| m.as_str()))
-                .collect::<Vec<_>>()
-                .join("; ");
-            return Err(AniListError::Api(if message.is_empty() {
-                format!("request failed with HTTP {}", status.as_u16())
-            } else {
-                message
-            }));
-        }
-
-        let data = body
-            .get("data")
-            .ok_or_else(|| AniListError::Decode("response had no data field".into()))?;
-
-        serde_json::from_value(data.clone()).map_err(|e| AniListError::Decode(e.to_string()))
     }
 
     /// Full-text search, with nothing else set.
@@ -528,12 +692,23 @@ impl AniList {
         page: u32,
         per_page: u32,
     ) -> Result<Vec<Page<Media>>> {
+        let browses: Vec<_> =
+            browses.iter().map(|(term, filter)| (*term, *filter, page, per_page)).collect();
+        self.browse_pages(&browses).await
+    }
+
+    /// Several browses in one request, each its own page of its own size, in the order asked:
+    /// Home's shelves, which ask further down two of the rails than the others.
+    pub async fn browse_pages(
+        &self,
+        browses: &[(&str, &BrowseFilter, u32, u32)],
+    ) -> Result<Vec<Page<Media>>> {
         if browses.is_empty() {
             return Ok(Vec::new());
         }
         let arguments: Vec<_> = browses
             .iter()
-            .map(|(term, filter)| filter.arguments(term, page, per_page))
+            .map(|(term, filter, page, per_page)| filter.arguments(term, *page, *per_page))
             .collect();
         let (document, variables) = query::media_pages(&arguments);
         let data: serde_json::Value = self.execute(&document, variables).await?;
@@ -575,28 +750,70 @@ impl AniList {
         self.limiter.available().await
     }
 
-    /// One title, with relations, recommendations and streaming links.
     /// Several titles in one request, for the `CONTINUE` rail.
     ///
     /// Returned in *the order asked for*, not AniList's. The rail is ordered by when you last
     /// watched each title, and that ordering is the whole point of it — letting the API's own
     /// order through would shuffle it into something meaningless.
+    ///
+    /// Past fifty, AniList's page, the titles go as pages of fifty under aliases in one request
+    /// (see [`query::together`]), [`MANY_PER_REQUEST`] to a request.
     pub async fn media_many(&self, ids: &[AnilistId]) -> Result<Vec<Media>> {
+        self.many_of(ids, query::by_ids).await
+    }
+
+    /// [`Self::media_many`] with each title's related titles named (see
+    /// [`query::HEADER_RELATIONS`]): the season headers a title page asks ahead.
+    pub async fn media_headers(&self, ids: &[AnilistId]) -> Result<Vec<Media>> {
+        self.many_of(ids, query::headers_by_ids).await
+    }
+
+    /// `ids` asked with `document`, a page of fifty at most to a part, in the order asked.
+    async fn many_of(&self, ids: &[AnilistId], document: fn() -> String) -> Result<Vec<Media>> {
+        let many_part = |chunk: &[AnilistId]| many_part_of(chunk, document());
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
+        if let [chunk] = ids.chunks(50).collect::<Vec<_>>()[..] {
+            let (document, variables) = many_part(chunk);
+            let data: serde_json::Value = self.execute(&document, variables).await?;
+            return decode_many(&data, chunk);
+        }
+        let mut found = Vec::with_capacity(ids.len());
+        for request in ids.chunks(MANY_PER_REQUEST) {
+            let parts: Vec<_> = request.chunks(50).map(many_part).collect();
+            let answers = self.execute_together(&parts).await?;
+            for (chunk, answer) in request.chunks(50).zip(answers) {
+                found.extend(decode_many(&answer, chunk)?);
+            }
+        }
+        Ok(found)
+    }
+
+    /// [`Self::media_many`] with what each title's episode table needs ([`query::TABLE_FIELDS`]),
+    /// in the order asked. Each title says whether it came whole: `false` when its past
+    /// broadcasts may run past the fifty this query brings, so only [`Self::media`] has the
+    /// newest of them.
+    pub async fn media_tables(&self, ids: &[AnilistId]) -> Result<Vec<(Media, bool)>> {
         if ids.is_empty() {
             return Ok(Vec::new());
         }
         let raw: Vec<i64> = ids.iter().map(|id| i64::from(id.get())).collect();
         let data: serde_json::Value = self
             .execute(
-                &query::by_ids(),
+                &query::by_ids_with_tables(),
                 serde_json::json!({ "ids": raw, "perPage": ids.len().min(50) }),
             )
             .await?;
-        let page: Page<Media> = decode_media_page(&data["Page"])?;
-        let mut found = page.items;
+        let mut found: Vec<(Media, bool)> = data["Page"]["media"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|wire| tabled(wire.clone()))
+            .collect();
         let mut ordered = Vec::with_capacity(found.len());
         for id in ids {
-            if let Some(index) = found.iter().position(|m| m.id == *id) {
+            if let Some(index) = found.iter().position(|(m, _)| m.id == *id) {
                 ordered.push(found.remove(index));
             }
         }
@@ -614,59 +831,83 @@ impl AniList {
         if ids.is_empty() {
             return Ok(Vec::new());
         }
-        let raw: Vec<i64> = ids.iter().map(|id| i64::from(id.get())).collect();
-        let data: serde_json::Value = self
-            .execute(
-                &query::recommended_from(),
-                serde_json::json!({ "ids": raw, "perPage": ids.len() }),
-            )
-            .await?;
-        let id_of = |v: &serde_json::Value| v.as_u64().map(|n| AnilistId::new(n as u32));
-        let mut found: Vec<(AnilistId, String, Vec<AnilistId>)> = data["Page"]["media"]
-            .as_array()
-            .map(|media| {
-                media
-                    .iter()
-                    .filter_map(|m| {
-                        let name = ["english", "romaji", "native"]
-                            .iter()
-                            .find_map(|k| m["title"][*k].as_str())
-                            .unwrap_or_default()
-                            .to_owned();
-                        let recommended = m["recommendations"]["nodes"]
-                            .as_array()
-                            .map(|nodes| {
-                                nodes
-                                    .iter()
-                                    .filter_map(|n| id_of(&n["mediaRecommendation"]["id"]))
-                                    .collect()
-                            })
-                            .unwrap_or_default();
-                        Some((id_of(&m["id"])?, name, recommended))
-                    })
-                    .collect()
-            })
-            .unwrap_or_default();
-        // In the order asked, as `media_many` does: the caller asked most recent first.
-        found.sort_by_key(|(id, ..)| ids.iter().position(|asked| asked == id));
-        Ok(found)
+        let (document, variables) = recommended_from_part(ids);
+        let data: serde_json::Value = self.execute(&document, variables).await?;
+        Ok(decode_recommended_from(&data, ids))
     }
 
-    /// What people who liked `id` rated highest, best rated first, at most `each`, each a whole
-    /// title. See [`query::recommended_titles`].
-    pub async fn recommended_titles(&self, id: AnilistId, each: u32) -> Result<Vec<Media>> {
-        let data: serde_json::Value = self
-            .execute(
-                &query::recommended_titles(),
+    /// What one step of Up next asks, in one request (see [`query::together`]): the cards of
+    /// `titles` (at most fifty), what people who liked each of `from` rated highest (as
+    /// [`Self::recommended_from`]), and with `because` the ids of the `each` titles rated
+    /// highest off that one (as [`query::recommended_ids`]). A part with nothing to ask is
+    /// left out and answered empty.
+    pub async fn suggestions(
+        &self,
+        titles: &[AnilistId],
+        from: &[AnilistId],
+        because: Option<(AnilistId, u32)>,
+    ) -> Result<Suggestions> {
+        let titles = &titles[..titles.len().min(50)];
+        let from = &from[..from.len().min(query::RECOMMENDED_FROM)];
+        let mut parts = Vec::new();
+        if !titles.is_empty() {
+            parts.push(many_part(titles));
+        }
+        if !from.is_empty() {
+            parts.push(recommended_from_part(from));
+        }
+        if let Some((id, each)) = because {
+            parts.push((
+                query::recommended_ids(),
                 serde_json::json!({ "ids": [id.get()], "perPage": 1, "each": each }),
-            )
-            .await?;
-        let nodes = data["Page"]["media"][0]["recommendations"]["nodes"].clone();
-        let nodes: Vec<serde_json::Value> = serde_json::from_value(nodes).unwrap_or_default();
-        Ok(nodes
-            .into_iter()
-            .filter_map(|n| serde_json::from_value(n["mediaRecommendation"].clone()).ok())
-            .collect())
+            ));
+        }
+        let mut answers = self.execute_together(&parts).await?.into_iter();
+        let mut next = || answers.next().unwrap_or(serde_json::Value::Null);
+        let titles = if titles.is_empty() { Vec::new() } else { decode_many(&next(), titles)? };
+        let from =
+            if from.is_empty() { Vec::new() } else { decode_recommended_from(&next(), from) };
+        let because = because.map(|_| {
+            next()["Page"]["media"][0]["recommendations"]["nodes"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(|n| n["mediaRecommendation"]["id"].as_u64())
+                .map(|n| AnilistId::new(n as u32))
+                .collect()
+        });
+        Ok(Suggestions { titles, from, because })
+    }
+
+    /// Run `parts`, each a query of one root field, as one request (see [`query::together`]),
+    /// and give each its answer as it would have come alone: its root field under its own name.
+    /// One part goes as it is.
+    async fn execute_together(
+        &self,
+        parts: &[(String, serde_json::Value)],
+    ) -> Result<Vec<serde_json::Value>> {
+        match parts {
+            [] => Ok(Vec::new()),
+            [(document, variables)] => {
+                Ok(vec![self.execute(document, variables.clone()).await?])
+            }
+            _ => {
+                let (document, variables) = query::together(parts);
+                let data: serde_json::Value = self.execute(&document, variables).await?;
+                Ok(parts
+                    .iter()
+                    .enumerate()
+                    .map(|(i, (document, _))| {
+                        let mut answer = serde_json::Map::new();
+                        answer.insert(
+                            query::root_of(document).to_owned(),
+                            data[format!("q{i}")].clone(),
+                        );
+                        serde_json::Value::Object(answer)
+                    })
+                    .collect())
+            }
+        }
     }
 
     pub async fn media(&self, id: AnilistId) -> Result<Media> {
@@ -728,17 +969,29 @@ impl AniList {
         per_page: u32,
         newest_first: bool,
     ) -> Result<Page<AiringEntry>> {
-        let sort = if newest_first { "TIME_DESC" } else { "TIME" };
-        let data: serde_json::Value = self
-            .execute(
-                &query::airing_schedule(),
-                serde_json::json!({
-                    "from": from, "to": to, "page": page.max(1), "perPage": per_page,
-                    "sort": [sort]
-                }),
-            )
-            .await?;
-        Ok(airing_page(&data["Page"]))
+        let mut pages =
+            self.airing_pages(&[AiringPage { from, to, page, per_page, newest_first }]).await?;
+        Ok(pages.pop().unwrap_or(Page { items: Vec::new(), has_next: false }))
+    }
+
+    /// Several pages of broadcasts, each as [`Self::airing_between_sorted`] asks for one, in
+    /// one request and in the order asked (see [`query::together`]).
+    pub async fn airing_pages(&self, pages: &[AiringPage]) -> Result<Vec<Page<AiringEntry>>> {
+        let parts: Vec<_> = pages
+            .iter()
+            .map(|p| {
+                let sort = if p.newest_first { "TIME_DESC" } else { "TIME" };
+                (
+                    query::airing_schedule(),
+                    serde_json::json!({
+                        "from": p.from, "to": p.to, "page": p.page.max(1),
+                        "perPage": p.per_page, "sort": [sort]
+                    }),
+                )
+            })
+            .collect();
+        let answers = self.execute_together(&parts).await?;
+        Ok(answers.iter().map(|data| airing_page(&data["Page"])).collect())
     }
 
     /// What aired for `ids` after `from` and before `to`, oldest first: a page of at most
@@ -816,23 +1069,26 @@ impl AniList {
         let data: serde_json::Value = self
             .execute(&query::user_library(), serde_json::json!({ "userId": user_id }))
             .await?;
+        decode_library(&data)
+    }
 
-        let lists = data["MediaListCollection"]["lists"]
-            .as_array()
-            .ok_or_else(|| AniListError::Decode("library had no lists".into()))?;
-
-        let mut out = Vec::new();
-        for list in lists {
-            for entry in list["entries"].as_array().into_iter().flatten() {
-                // One malformed entry must not blank a whole library. Someone with 800 titles
-                // and one broken row should still see 799.
-                match decode_library_entry(entry) {
-                    Some(decoded) => out.push(decoded),
-                    None => tracing::warn!("skipping undecodable library entry"),
-                }
-            }
+    /// The signed-in viewer and the list of `user_id`, in one request: for a viewer whose id
+    /// is known from before, so the list need not wait for the viewer's answer. The list is the
+    /// viewer's only when the viewer's id is `user_id`, which the caller checks.
+    pub async fn viewer_and_library(
+        &self,
+        user_id: u32,
+    ) -> Result<(Viewer, Vec<LibraryEntry>)> {
+        if self.token().is_none() {
+            return Err(AniListError::Unauthenticated);
         }
-        Ok(out)
+        let parts = [
+            (query::VIEWER.to_owned(), serde_json::json!({})),
+            (query::user_library(), serde_json::json!({ "userId": user_id })),
+        ];
+        let answers = self.execute_together(&parts).await?;
+        let viewer = decode_viewer(&answers[0]["Viewer"])?;
+        Ok((viewer, decode_library(&answers[1])?))
     }
 
     /// Write progress, status and/or score for one title.
@@ -905,6 +1161,72 @@ impl AniList {
     }
 }
 
+/// [`query::by_ids`] for `ids`, at most fifty: the document and its variables.
+fn many_part(ids: &[AnilistId]) -> (String, serde_json::Value) {
+    many_part_of(ids, query::by_ids())
+}
+
+/// `document`, [`query::by_ids`] or its like, for `ids`, at most fifty.
+fn many_part_of(ids: &[AnilistId], document: String) -> (String, serde_json::Value) {
+    let raw: Vec<i64> = ids.iter().map(|id| i64::from(id.get())).collect();
+    (document, serde_json::json!({ "ids": raw, "perPage": ids.len().min(50) }))
+}
+
+/// [`query::by_ids`]'s answer, in the order of `ids`.
+fn decode_many(data: &serde_json::Value, ids: &[AnilistId]) -> Result<Vec<Media>> {
+    let page: Page<Media> = decode_media_page(&data["Page"])?;
+    let mut found = page.items;
+    let mut ordered = Vec::with_capacity(found.len());
+    for id in ids {
+        if let Some(index) = found.iter().position(|m| m.id == *id) {
+            ordered.push(found.remove(index));
+        }
+    }
+    Ok(ordered)
+}
+
+/// [`query::recommended_from`] for `ids`: the document and its variables.
+fn recommended_from_part(ids: &[AnilistId]) -> (String, serde_json::Value) {
+    let raw: Vec<i64> = ids.iter().map(|id| i64::from(id.get())).collect();
+    (query::recommended_from(), serde_json::json!({ "ids": raw, "perPage": ids.len() }))
+}
+
+/// [`query::recommended_from`]'s answer, in the order of `ids`.
+fn decode_recommended_from(
+    data: &serde_json::Value,
+    ids: &[AnilistId],
+) -> Vec<(AnilistId, String, Vec<AnilistId>)> {
+    let id_of = |v: &serde_json::Value| v.as_u64().map(|n| AnilistId::new(n as u32));
+    let mut found: Vec<(AnilistId, String, Vec<AnilistId>)> = data["Page"]["media"]
+        .as_array()
+        .map(|media| {
+            media
+                .iter()
+                .filter_map(|m| {
+                    let name = ["english", "romaji", "native"]
+                        .iter()
+                        .find_map(|k| m["title"][*k].as_str())
+                        .unwrap_or_default()
+                        .to_owned();
+                    let recommended = m["recommendations"]["nodes"]
+                        .as_array()
+                        .map(|nodes| {
+                            nodes
+                                .iter()
+                                .filter_map(|n| id_of(&n["mediaRecommendation"]["id"]))
+                                .collect()
+                        })
+                        .unwrap_or_default();
+                    Some((id_of(&m["id"])?, name, recommended))
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    // In the order asked, as `media_many` does: the caller asked most recent first.
+    found.sort_by_key(|(id, ..)| ids.iter().position(|asked| asked == id));
+    found
+}
+
 /// The single-title answer: the title, with the broadcasts already out that were asked for
 /// beside it put on it. Those are best-effort, so a shape this build does not expect leaves the
 /// title without them rather than failing it.
@@ -946,6 +1268,25 @@ fn decode_viewer(node: &serde_json::Value) -> Result<Viewer> {
     })
 }
 
+/// A `MediaListCollection` answer, every list's rows in one.
+fn decode_library(data: &serde_json::Value) -> Result<Vec<LibraryEntry>> {
+    let lists = data["MediaListCollection"]["lists"]
+        .as_array()
+        .ok_or_else(|| AniListError::Decode("library had no lists".into()))?;
+    let mut out = Vec::new();
+    for list in lists {
+        for entry in list["entries"].as_array().into_iter().flatten() {
+            // One malformed entry must not blank a whole library. Someone with 800 titles
+            // and one broken row should still see 799.
+            match decode_library_entry(entry) {
+                Some(decoded) => out.push(decoded),
+                None => tracing::warn!("skipping undecodable library entry"),
+            }
+        }
+    }
+    Ok(out)
+}
+
 /// Decode one `MediaList` row.
 ///
 /// Returns `None` rather than an error: the caller skips the row and keeps the rest of the
@@ -962,6 +1303,28 @@ fn decode_library_entry(entry: &serde_json::Value) -> Option<LibraryEntry> {
         score: entry["score"].as_f64().map(|s| s as f32).filter(|s| *s > 0.0),
         updated_at: entry["updatedAt"].as_i64().unwrap_or(0),
     })
+}
+
+/// One title of [`AniList::media_tables`]: its past broadcasts moved where [`Media`] keeps them,
+/// newest first as [`AniList::media`] gives them, and whether they are all there. `None` for an
+/// entry that does not read, which is passed over as a page's are.
+fn tabled(mut wire: serde_json::Value) -> Option<(Media, bool)> {
+    let past = wire.as_object_mut().and_then(|fields| fields.remove("past"));
+    let mut media: Media = match serde_json::from_value(wire) {
+        Ok(media) => media,
+        Err(e) => {
+            tracing::warn!(error = %e, "skipping undecodable media entry");
+            return None;
+        }
+    };
+    let mut aired: Vec<Broadcast> = past
+        .and_then(|past| serde_json::from_value::<model::BroadcastConnection>(past).ok())
+        .map(|past| past.nodes)
+        .unwrap_or_default();
+    let whole = aired.len() < query::TABLE_PAST_AT_MOST;
+    aired.sort_by_key(|b| std::cmp::Reverse(b.episode));
+    media.aired = aired;
+    Some((media, whole))
 }
 
 fn decode_media_page(page: &serde_json::Value) -> Result<Page<Media>> {
@@ -1018,6 +1381,22 @@ fn now_epoch() -> i64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_table_whose_past_may_run_on_is_not_whole() {
+        let wire = |aired: u32| {
+            let nodes: Vec<serde_json::Value> = (1..=aired)
+                .map(|n| serde_json::json!({ "episode": n, "airingAt": 1_000 * i64::from(n) }))
+                .collect();
+            serde_json::json!({ "id": 7, "past": { "nodes": nodes } })
+        };
+        let (media, whole) = tabled(wire(12)).unwrap();
+        assert!(whole);
+        assert_eq!(media.aired.first().map(|b| b.episode), Some(12), "newest first");
+        assert_eq!(media.aired.len(), 12);
+        let (_, whole) = tabled(wire(50)).unwrap();
+        assert!(!whole, "fifty may be the first fifty of more");
+    }
 
     #[test]
     fn seasons_cycle_in_both_directions() {

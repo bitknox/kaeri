@@ -683,15 +683,6 @@
   <data name="NoticeChoiceNotSaved" xml:space="preserve">
     <value>Bu seçim kaydedilemedi. {reason}</value>
   </data>
-  <data name="TorrentCheckFailedRunning" xml:space="preserve">
-    <value>Bağlantı denetimi başarısız oldu. Torrentler çalışmaya devam ediyor.</value>
-  </data>
-  <data name="TorrentVpnWaiting" xml:space="preserve">
-    <value>Torrentler VPN korumasından geçince başlar. {reason}</value>
-  </data>
-  <data name="TorrentVpnUnverified" xml:space="preserve">
-    <value>Torrentler VPN korumasından geçince başlar. Bağlantı henüz doğrulanmadı.</value>
-  </data>
   <data name="TorrentLinkUnusable" xml:space="preserve">
     <value>Bu bir magnet bağlantısı ya da torrent dosyası değil.</value>
   </data>
@@ -706,15 +697,6 @@
   </data>
   <data name="TorrentSessionFailed" xml:space="preserve">
     <value>Torrent oturumu başlatılamadı. {reason}</value>
-  </data>
-  <data name="TorrentNoKillSwitch" xml:space="preserve">
-    <value>Bu cihazda VPN koparsa torrent trafiğini durduran bir şey yok. Kurulum için "kaeri --doctor" komutunu çalıştırın.</value>
-  </data>
-  <data name="TorrentNotChecked" xml:space="preserve">
-    <value>Bağlantı denetlenemedi. {reason}</value>
-  </data>
-  <data name="SourcesReloadedTorrentsPending" xml:space="preserve">
-    <value>Kaynaklar yeniden yüklendi. Torrentler VPN korumasından geçince başlar.</value>
   </data>
   <data name="SourcesReloadedTorrentsOff" xml:space="preserve">
     <value>Torrentler kapalı. Oturum durduruldu.</value>
@@ -827,12 +809,6 @@
   <data name="NoticeNotSavedBecause" xml:space="preserve">
     <value>Bu ayar kaydedilemedi. {cause}</value>
   </data>
-  <data name="NoticeProtectionSaved" xml:space="preserve">
-    <value>Torrent koruması kaydedildi.</value>
-  </data>
-  <data name="NoticeProtectionNotChecked" xml:space="preserve">
-    <value>Torrent koruması denetlenemedi. {cause}</value>
-  </data>
   <data name="NoticeProxyPasswordNotKept" xml:space="preserve">
     <value>Vekil sunucu parolası saklanamadı. Kaydetmeyi denemek için yeniden girin. {reason}</value>
   </data>
@@ -844,9 +820,6 @@
   </data>
   <data name="NoticeShowNoSuchSubtitles" xml:space="preserve">
     <value>Bu altyazı seçimi kaydedilemedi. Bu dizi bu altyazıları daha önce kullanmadı.</value>
-  </data>
-  <data name="NoticeTorrentsWaitingForCheck" xml:space="preserve">
-    <value>Torrentler bağlantı denetiminin yeniden geçmesini bekliyor.</value>
   </data>
   <data name="NoticeMappingDataRefreshed" xml:space="preserve">
     <value>Eşleme verileri yenilendi.</value>
@@ -865,12 +838,6 @@
   </data>
   <data name="NoticeUpdateAvailable" xml:space="preserve">
     <value>{tag} çıktı. Kurmak için kaeri --update komutunu çalıştırın.</value>
-  </data>
-  <data name="CauseConfirmNoProtection" xml:space="preserve">
-    <value>Önce korumasız kalmak istediğinizi onaylayın.</value>
-  </data>
-  <data name="CauseConfirmWarnOnly" xml:space="preserve">
-    <value>Önce yalnızca uyarılmak istediğinizi onaylayın.</value>
   </data>
   <data name="CauseProxyNeedsAddress" xml:space="preserve">
     <value>Vekil sunucu için bir ana makine ve bir bağlantı noktası gerekir.</value>
@@ -1175,9 +1142,6 @@
   <data name="SettingsPlayerInterface" xml:space="preserve">
     <value>Oynatıcı arayüzü</value>
   </data>
-  <data name="SettingsVpnMode" xml:space="preserve">
-    <value>VPN modu</value>
-  </data>
   <data name="SettingsTokenStorage" xml:space="preserve">
     <value>Belirteç depolama</value>
   </data>
@@ -1241,9 +1205,6 @@
   <data name="SettingsLibmpvLicence" xml:space="preserve">
     <value>GNU Lesser General Public License, sürüm 2.1 veya sonrası altında lisanslıdır.</value>
   </data>
-  <data name="TorrentsWarnInstead" xml:space="preserve">
-    <value>Kaeri durdurmak yerine sizi uyaracak. VPN'iniz ya da proxy'niz çalışmıyorsa başkaları IP adresinizi görebilir.</value>
-  </data>
   <data name="ShowSettingsLabel" xml:space="preserve">
     <value>Ayarlar: {title}</value>
   </data>
@@ -1268,20 +1229,8 @@
   <data name="SettingsDownloadHigher" xml:space="preserve">
     <value>Daha yüksek</value>
   </data>
-  <data name="TorrentsDialogTurnOn" xml:space="preserve">
-    <value>Torrentleri aç</value>
-  </data>
-  <data name="TorrentsDialogProtect" xml:space="preserve">
-    <value>Torrentleri koruma</value>
-  </data>
   <data name="TorrentsDialogEditProxy" xml:space="preserve">
     <value>Proxy'yi düzenle</value>
-  </data>
-  <data name="TorrentsDialogTurnOnAction" xml:space="preserve">
-    <value>Aç</value>
-  </data>
-  <data name="TorrentsChoiceSpoken" xml:space="preserve">
-    <value>{label}. {detail}</value>
   </data>
   <data name="SettingsNoteTrailersWindows" xml:space="preserve">
     <value>Fragmanlar YouTube'dan sessiz oynatılır ve YouTube IP adresinizi görür. Ölçümlü bağlantıda, animasyon efektleri kapalıyken, enerji tasarrufu modundayken ya da Anlatıcı çalışırken oynatılmaz.</value>
@@ -1486,9 +1435,6 @@
   </data>
   <data name="SourcesStatusWorking" xml:space="preserve">
     <value>Hazır</value>
-  </data>
-  <data name="SourcesTorrentIndexes" xml:space="preserve">
-    <value>Ayarlarda açık olan dizinlerde arar.</value>
   </data>
   <data name="SourcesVersionReady" xml:space="preserve">
     <value>Versiyon {version} hazır</value>
@@ -3623,9 +3569,6 @@
   <data name="OnboardingInviteHeading" xml:space="preserve">
     <value>Davet bağlantınız var mı?</value>
   </data>
-  <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>Eklentiler, eklenti mağazaları üzerinden gelir. Bir eklenti mağazası, bir kişi tarafından davet ettiği kişiler için işletilir; bu yüzden sahibinden aldığınız davet bağlantısıyla katılırsınız.</value>
-  </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>Şimdi deneyin</value>
   </data>
@@ -5558,9 +5501,6 @@
   <data name="SettingsResetTitle" xml:space="preserve">
     <value>Ayarlar sıfırlansın mı?</value>
   </data>
-  <data name="SettingsResetDetail" xml:space="preserve">
-    <value>Her ayar varsayılanına döner, VPN ve proxy dahil. İzleme geçmişiniz kalır ve eski ayar dosyası saklanır.</value>
-  </data>
   <data name="SettingsResetDone" xml:space="preserve">
     <value>Ayarlar varsayılanlara döndü. Eski dosya {file} adıyla saklandı.</value>
   </data>
@@ -5729,9 +5669,6 @@
   <data name="SourceNoteAmbiguous" xml:space="preserve">
     <value>Bu başlık eşleştirilemedi</value>
   </data>
-  <data name="SourceNoteHeldBack" xml:space="preserve">
-    <value>VPN denetimi nedeniyle bekletildi</value>
-  </data>
   <data name="SourcePickerReleases" xml:space="preserve">
     <value>Sürümler</value>
   </data>
@@ -5774,12 +5711,6 @@
   <data name="SourcesTorrents" xml:space="preserve">
     <value>Torrent'ler</value>
   </data>
-  <data name="SourcesRemote" xml:space="preserve">
-    <value>Uzak</value>
-  </data>
-  <data name="SourcesOriginConfig" xml:space="preserve">
-    <value>Yapılandırma dosyasında ayarlandı</value>
-  </data>
   <data name="SourcesOriginBuiltIn" xml:space="preserve">
     <value>Uygulamaya dahil</value>
   </data>
@@ -5815,9 +5746,6 @@
   </data>
   <data name="SourcesDetailNotAnsweringPlain" xml:space="preserve">
     <value>Yanıt vermiyor.</value>
-  </data>
-  <data name="SourcesDetailHeldBack" xml:space="preserve">
-    <value>Bağlantı denetimi geçilene kadar bekletildi.</value>
   </data>
   <data name="SourcesDetailDisabled" xml:space="preserve">
     <value>Kapalı. Yerini korur, denenmez.</value>
@@ -5890,9 +5818,6 @@
   </data>
   <data name="SourcesSourceOrderRow" xml:space="preserve">
     <value>Kaynak sırası</value>
-  </data>
-  <data name="SourcesTorrentsNote" xml:space="preserve">
-    <value>Torrent'ler Kaeri'ın parçasıdır, bir eklenti değil. Trafiklerini koruyan ayarlar, bağlantı denetimi ve paylaşım, Ayarlar'da, Kaynaklar altında yapılır.</value>
   </data>
   <data name="SourcesRebuilding" xml:space="preserve">
     <value>Kaynaklar yeniden hazırlanıyor</value>
@@ -6086,9 +6011,6 @@
   <data name="SourcesSectionPlugins" xml:space="preserve">
     <value>Eklentiler</value>
   </data>
-  <data name="SourcesSectionCatalogues" xml:space="preserve">
-    <value>Ücretsiz kataloglar</value>
-  </data>
   <data name="SourcesAddDemo" xml:space="preserve">
     <value>Demoyu ekle</value>
   </data>
@@ -6100,9 +6022,6 @@
   </data>
   <data name="StoresEmptyTitle" xml:space="preserve">
     <value>Henüz eklenti mağazaları yok</value>
-  </data>
-  <data name="StoresEmptyDetail" xml:space="preserve">
-    <value>Eklenti mağazaları sizin tanıdığınız kişiler tarafından işletilir. Sahibinin gönderdiği davet bağlantısıyla birine katılabilirsiniz.</value>
   </data>
   <data name="StoresIntro" xml:space="preserve">
     <value>Eklentiler kaynaklar ekler. Her biri, kurmadan önce bağlanacağı sunucuları listeler.</value>
@@ -6596,9 +6515,6 @@
   <data name="NoticeOpenStores" xml:space="preserve">
     <value>eklenti mağazalarını aç</value>
   </data>
-  <data name="StoresWhatIs" xml:space="preserve">
-    <value>Bir eklenti mağazası, bir kişinin davet ettiği insanlar için işlettiği küçük bir sunucudur. kaynakları eklentiler olarak sunar. Kaeri hiçbir eklenti mağazası işletmez ve listelemez; bu yüzden sahibinden aldığınız davet bağlantısıyla katılırsınız.</value>
-  </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>eklenti mağazası nedir?</value>
   </data>
@@ -6854,63 +6770,6 @@
   <data name="TorrentsOn" xml:space="preserve">
     <value>Torrentler açık</value>
   </data>
-  <data name="TorrentsOffDetail" xml:space="preserve">
-    <value>Varsayılan olarak kapalı. Açmak, önce bağlantınızın nasıl korunacağını sorar.</value>
-  </data>
-  <data name="TorrentsRisk" xml:space="preserve">
-    <value>Bir torrenti indirip paylaşırken başkaları IP adresinizi görebilir. Torrentler başlamadan önce bu adresi neyin koruyacağını seçin.</value>
-  </data>
-  <data name="TorrentsNotAPlugin" xml:space="preserve">
-    <value>Torrentler Kaeri'in bir parçası, bir eklenti değil. Trafiklerini neyin koruduğu, bağlantı denetimi ve paylaşım Ayarlar'da, Kaynaklar altında ayarlanır.</value>
-  </data>
-  <data name="TorrentsProtectWith" xml:space="preserve">
-    <value>Koruma yöntemi</value>
-  </data>
-  <data name="TorrentsProtectNone" xml:space="preserve">
-    <value>Koruma yok</value>
-  </data>
-  <data name="TorrentsProtectProxy" xml:space="preserve">
-    <value>Proxy</value>
-  </data>
-  <data name="TorrentsProtectVpn" xml:space="preserve">
-    <value>VPN</value>
-  </data>
-  <data name="TorrentsProtectProxyDetail" xml:space="preserve">
-    <value>Torrent trafiği, sizin çalıştırdığınız ya da kiraladığınız bir proxy üzerinden geçer.</value>
-  </data>
-  <data name="TorrentsProtectVpnDetail" xml:space="preserve">
-    <value>Bu cihazdaki zaten çalışan VPN'i kullanır.</value>
-  </data>
-  <data name="TorrentsProtectNoneDetail" xml:space="preserve">
-    <value>IP adresiniz torrentteki herkes tarafından görülür.</value>
-  </data>
-  <data name="TorrentsProtectNoneNote" xml:space="preserve">
-    <value>Koruma yoksa Kaeri bağlantıyı denetlemez.</value>
-  </data>
-  <data name="TorrentsSummaryProxyAt" xml:space="preserve">
-    <value>{host}:{port} adresindeki bir SOCKS5 proxy korur.</value>
-  </data>
-  <data name="TorrentsSummaryProxy" xml:space="preserve">
-    <value>Bir SOCKS5 proxy korur.</value>
-  </data>
-  <data name="TorrentsSummaryVpn" xml:space="preserve">
-    <value>Bu cihazdaki VPN korur.</value>
-  </data>
-  <data name="TorrentsSummaryNone" xml:space="preserve">
-    <value>Korunmuyor. IP adresiniz torrentteki herkes tarafından görülür.</value>
-  </data>
-  <data name="TorrentsUnprotectedTitle" xml:space="preserve">
-    <value>Torrentler koruma olmadan kullanılsın mı?</value>
-  </data>
-  <data name="TorrentsUnprotectedDetail" xml:space="preserve">
-    <value>Bir torrenti indirip paylaşırken başkaları IP adresinizi görebilir ve Kaeri bağlantıyı denetlemez.</value>
-  </data>
-  <data name="TorrentsTurnOnUnprotected" xml:space="preserve">
-    <value>Koruma olmadan aç</value>
-  </data>
-  <data name="TorrentsUseUnprotected" xml:space="preserve">
-    <value>Koruma olmadan kullan</value>
-  </data>
   <data name="TorrentsProxyHost" xml:space="preserve">
     <value>Proxy sunucusu</value>
   </data>
@@ -6926,9 +6785,6 @@
   <data name="TorrentsPasswordKeep" xml:space="preserve">
     <value>Kayıtlı parolayı korumak için parolayı boş bırakın.</value>
   </data>
-  <data name="TorrentsProxyKeepsSaved" xml:space="preserve">
-    <value>Yeni proxy bağlantı denetiminden geçene kadar torrentler kayıtlı proxy'yi kullanmaya devam eder.</value>
-  </data>
   <data name="TorrentsProxyInvalid" xml:space="preserve">
     <value>Proxy için bir sunucu adı ve 1 ile 65535 arasında bir bağlantı noktası gerekir.</value>
   </data>
@@ -6938,95 +6794,20 @@
   <data name="TorrentsProxySaved" xml:space="preserve">
     <value>Proxy kaydedildi</value>
   </data>
-  <data name="TorrentsLeftOutsideProxy" xml:space="preserve">
-    <value>Torrent trafiği bu proxy'nin dışına çıktı</value>
-  </data>
-  <data name="TorrentsCheckNotMadeProxy" xml:space="preserve">
-    <value>Denetim bu proxy üzerinden yapılamadı</value>
-  </data>
   <data name="TorrentsProxyNotSaved" xml:space="preserve">
     <value>Kaydedilmedi. {why}, bu yüzden kayıtlı proxy kalır.</value>
-  </data>
-  <data name="TorrentsProtectionNotSaved" xml:space="preserve">
-    <value>Kaydedilmedi. {why}, bu yüzden kayıtlı koruma kalır.</value>
   </data>
   <data name="TorrentsStillOff" xml:space="preserve">
     <value>Torrentler hâlâ kapalı. {why}.</value>
   </data>
-  <data name="TorrentsIndex" xml:space="preserve">
-    <value>Torrent dizini</value>
-  </data>
-  <data name="TorrentsIndexDetail" xml:space="preserve">
-    <value>Torrentler için Kaeri'in istediği RSS arama adresi.</value>
-  </data>
-  <data name="TorrentsIndexHint" xml:space="preserve">
-    <value>https://…/?q=…</value>
-  </data>
-  <data name="TorrentsIndexNeeded" xml:space="preserve">
-    <value>Torrentler için bir torrent dizini adresi gerekir.</value>
-  </data>
-  <data name="TorrentsIndexScheme" xml:space="preserve">
-    <value>Bir http ya da https adresi kullanın.</value>
-  </data>
-  <data name="TorrentsIndexSaved" xml:space="preserve">
-    <value>Torrent dizini kaydedildi</value>
-  </data>
-  <data name="TorrentsIfCheckFails" xml:space="preserve">
-    <value>Denetim başarısız olursa</value>
-  </data>
-  <data name="TorrentsKeepRunningTitle" xml:space="preserve">
-    <value>Denetim başarısız olursa torrentler çalışmaya devam etsin mi?</value>
-  </data>
-  <data name="TorrentsKeepRunningDetail" xml:space="preserve">
-    <value>Denetim, VPN'iniz ya da proxy'niz dışında trafik bulursa torrentlere ne olacağı.</value>
-  </data>
-  <data name="TorrentsFailPause" xml:space="preserve">
-    <value>Torrentleri duraklat</value>
-  </data>
-  <data name="TorrentsFailStop" xml:space="preserve">
-    <value>Torrentleri durdur</value>
-  </data>
-  <data name="TorrentsFailWarn" xml:space="preserve">
-    <value>Yalnızca uyar</value>
-  </data>
-  <data name="TorrentsFailWarnResult" xml:space="preserve">
-    <value>Torrentler çalışmaya devam eder.</value>
-  </data>
-  <data name="TorrentsFailStopResult" xml:space="preserve">
-    <value>Torrentler durduruldu.</value>
-  </data>
-  <data name="TorrentsFailPauseResult" xml:space="preserve">
-    <value>Torrentler duraklatıldı.</value>
-  </data>
-  <data name="TorrentsLastCheck" xml:space="preserve">
-    <value>Son denetim</value>
-  </data>
-  <data name="TorrentsCheckPassedExit" xml:space="preserve">
-    <value>{exit} üzerinden çıkıyor</value>
-  </data>
   <data name="TorrentsCheckPassed" xml:space="preserve">
     <value>Geçti</value>
-  </data>
-  <data name="TorrentsCheckRunningLine" xml:space="preserve">
-    <value>Torrent trafiğinin nereden çıktığı denetleniyor</value>
   </data>
   <data name="TorrentsCheckRunning" xml:space="preserve">
     <value>Denetleniyor</value>
   </data>
-  <data name="TorrentsCheckLeaked" xml:space="preserve">
-    <value>Trafik koruma dışına çıktı. {then}</value>
-  </data>
-  <data name="TorrentsCheckUnmade" xml:space="preserve">
-    <value>Denetim yapılamadı. {then}</value>
-  </data>
   <data name="TorrentsCheckFailed" xml:space="preserve">
     <value>Başarısız</value>
-  </data>
-  <data name="TorrentsCheckNoneLine" xml:space="preserve">
-    <value>Koruma ayarlanmamış</value>
-  </data>
-  <data name="TorrentsCheckNone" xml:space="preserve">
-    <value>Korunmuyor</value>
   </data>
   <data name="TorrentsCheckWaitingLine" xml:space="preserve">
     <value>Henüz denetlenmedi</value>
@@ -7066,12 +6847,6 @@
   </data>
   <data name="TorrentsPageNeedsScript" xml:space="preserve">
     <value>Bu sayfa, formu TV'ye güvenle göndermek için JavaScript gerektirir.</value>
-  </data>
-  <data name="TorrentsCheckNote" xml:space="preserve">
-    <value>Kaeri, bir torrent başladığında ve çalıştığı sürece her dakika torrent trafiğinin nereden çıktığını denetler. Denetim başarısız olursa torrentleri duraklatır. Sizi koruyan VPN'iniz ya da proxy'nizdir.</value>
-  </data>
-  <data name="TorrentsProtectionSaved" xml:space="preserve">
-    <value>Torrent koruması kaydedildi</value>
   </data>
   <data name="OpenedOpen" xml:space="preserve">
     <value>Bağlantı ya da dosya aç</value>

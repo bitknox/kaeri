@@ -52,31 +52,19 @@ extension AppStore {
         setSetting(key, to: .bool(on))
     }
 
-    /// How torrent traffic is protected, and what a failed check does. No protection and warning
-    /// only are each asked for with `acknowledged`, once the viewer has confirmed the risk; the
-    /// proxy left `nil` keeps the one the file has.
-    public func setTorrentProtection(
-        _ mode: TorrentProtection, proxy: TorrentProxy? = nil, onFailure: FailedCheck? = nil,
-        acknowledged: Bool = false
-    ) {
-        let current = settings.torrent
-        let proxy = proxy ?? current?.proxy.map { TorrentProxy(host: $0.host, port: $0.port, user: $0.user, password: nil) }
-        send(.setTorrentProtection(
-            mode: mode, proxy: mode == .proxy ? proxy : nil, onFailure: onFailure ?? current?.onFailure ?? .pause,
-            acknowledged: acknowledged))
+    /// Route torrent traffic through `proxy`, or with `nil` connect directly. A proxy with no
+    /// password keeps the one already saved.
+    public func setTorrentProxy(_ proxy: TorrentProxy?) {
+        send(.setTorrentProxy(proxy: proxy))
     }
 
-    /// Check `mode`, through `proxy` when it is one, before anything is saved: the verdict comes
-    /// to `providers.trial`, and nothing is written, the saved proxy and its password included.
-    /// A proxy with no password is checked with the one kept.
-    public func checkTorrentProtection(_ mode: TorrentProtection, proxy: TorrentProxy?) {
-        if let check = providers.trialStarted(ProtectionCheck(mode: mode, proxy: mode == .proxy ? proxy : nil)) {
-            send(check)
+    /// Check `proxy` before it is saved: the answer comes to `providers.trial`, and nothing is
+    /// written, the saved proxy and its password included. A proxy with no password is checked
+    /// with the one kept.
+    public func checkTorrentProxy(_ proxy: TorrentProxy) {
+        if let next = providers.trialStarted(proxy) {
+            send(.checkTorrentProxy(proxy: next))
         }
-    }
-
-    func send(_ check: ProtectionCheck) {
-        send(.checkTorrentProtection(mode: check.mode, proxy: check.proxy))
     }
 
     /// The notice after a crash, with Report… as its button: once per crash, and only while saving
@@ -163,9 +151,9 @@ extension AppStore {
     public func deleteComment(_ id: UInt32) { send(.deleteComment(id: id)) }
     public func likeComment(_ id: UInt32) { send(.likeComment(id: id)) }
 
-    /// Check where torrent traffic leaves from now, rather than at the guard's next check.
-    public func checkConnection() {
-        send(.checkConnection)
+    /// Check the saved torrent proxy now, rather than at the next check.
+    public func checkProxy() {
+        send(.checkProxy)
     }
 
     // MARK: Accounts

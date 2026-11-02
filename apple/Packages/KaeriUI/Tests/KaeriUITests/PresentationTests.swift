@@ -62,6 +62,6 @@ struct PresentationTests {
 
     @Test func whereElseItStreamsIsSaidOnce() {
         #expect(entry { _ in }.alsoOn == nil)
-        #expect(entry { $0.availableOn = ["Lantern Stream"] }.alsoOn == "Also on Lantern Stream")
+        #expect(entry { $0.availableOn = ["Lantern Library"] }.alsoOn == "Also on Lantern Library")
     }
 }

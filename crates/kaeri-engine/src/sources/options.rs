@@ -1,7 +1,7 @@
 //! The sources that could serve a title, side by side, and the pick of one.
 //!
 //! The title's source picker needs more than a list of names: "6 of 13" next to a torrent
-//! source and "13 of 13" next to a web source is what makes the choice an informed one. Picking a
+//! source and "13 of 13" next to a plugin is what makes the choice an informed one. Picking a
 //! source is `Command::SetProviderPreference`, back to automatic is the same with `None`, and
 //! one release of a source is [`pin_release`]. All three apply at once: see
 //! [`crate::titles::refresh`].

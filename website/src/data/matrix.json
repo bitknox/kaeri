@@ -141,7 +141,7 @@
    ]
   },
   {
-   "id": "trackingAndDownloads",
+   "id": "tracking",
    "rows": [
     {
      "id": "myanimelistAndKitsu",
@@ -167,32 +167,6 @@
       "y",
       "y",
       "sourceOnly"
-     ]
-    },
-    {
-     "id": "downloadAnEpisode",
-     "cells": [
-      "y",
-      "y",
-      "y",
-      "y",
-      "n",
-      "y",
-      "y",
-      "y"
-     ]
-    },
-    {
-     "id": "keepTheNextEpisodes",
-     "cells": [
-      "y",
-      "y",
-      "y",
-      "y",
-      "n",
-      "y",
-      "y",
-      "inConfig"
      ]
     }
    ]

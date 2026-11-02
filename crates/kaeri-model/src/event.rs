@@ -26,7 +26,7 @@ use crate::{
     settings::SettingsView,
     show::ShowSettingsView,
     sources::{
-        CurrentMatch, GuardView, MatchCandidate, MatchQuestion, MetaSourceRow, ProviderRow,
+        CurrentMatch, MatchCandidate, MatchQuestion, MetaSourceRow, ProviderRow, ProxyStatus,
     },
     stores::{
         InviteLinkView, InvitePreview, LocalPluginRow, OpenJoinView, StoreInviteRow,
@@ -170,6 +170,10 @@ pub enum Event {
     /// The recent searches, newest first: at launch when asked, and after each change.
     RecentSearches(Vec<SearchQuery>),
     Detail(Box<Entry>),
+    /// The titles a [`Command::LoadCards`](crate::command::Command::LoadCards) asked for, as a
+    /// list row has them (synopsis, trailer, airing facts) and without a page's fields. A front
+    /// end merges them as it merges a list.
+    Cards(Vec<Entry>),
     /// The title language the signed-in AniList viewer reads in, in answer to
     /// [`Command::LoadTitleLanguage`](crate::command::Command::LoadTitleLanguage). `None` when
     /// nobody is signed in to AniList, or AniList did not say.
@@ -502,14 +506,13 @@ pub enum Event {
         resume: Option<ResumePoint>,
         episodes: Vec<EpisodeProgress>,
     },
-    /// The VPN guard's verdict changed, or `None`: there is no guard any more, because
-    /// torrents were switched off.
-    Vpn(Option<GuardView>),
-    /// The verdict on settings [`Command::CheckTorrentProtection`] asked about, none of them
-    /// saved: `Protected` when they may be saved, anything else when they should not.
+    /// The torrent proxy's check changed, or `None`: torrent playback is off.
+    TorrentProxy(Option<ProxyStatus>),
+    /// The answer to [`Command::CheckTorrentProxy`], about a proxy not saved: `Passed` when it
+    /// may be saved, anything else when it should not.
     ///
-    /// [`Command::CheckTorrentProtection`]: crate::command::Command::CheckTorrentProtection
-    ProtectionChecked(GuardView),
+    /// [`Command::CheckTorrentProxy`]: crate::command::Command::CheckTorrentProxy
+    ProxyChecked(ProxyStatus),
     /// A cover or banner as it was fetched or read from the cache, not yet decoded.
     ///
     /// Bytes rather than pixels: what a cover becomes on screen is the front end's to decide.

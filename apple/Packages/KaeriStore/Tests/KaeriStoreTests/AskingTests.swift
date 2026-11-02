@@ -21,6 +21,29 @@ struct AskingTests {
         #expect(store.sentLog.count == 3, "a watch asks anyway")
     }
 
+    @Test func aHoverCardIsAskedForOnceAndNeverAsAPage() {
+        let store = AppStore()
+        store.loadCards([900_001])
+        #expect(store.sentLog == ["loadCards"], "the card, not the page")
+        store.apply(.cards([entry(900_001, "Stardust Wayfarer")]))
+        store.loadCards([900_001])
+        #expect(store.sentLog.count == 1, "its card is in")
+        #expect(store.titles[900_001]?.title == "Stardust Wayfarer")
+    }
+
+    @Test func aScreensCoversAskForTheirCardsAndTablesOnceAndAHoverAsksQuietly() {
+        let store = AppStore()
+        store.prepareCards([900_001, 900_002, 900_001])
+        store.prepareCards([900_001, 900_002])
+        #expect(store.sentLog == ["prepareCards"], "a screen shown again asks nothing")
+        store.prepareCards([900_002, 900_003])
+        #expect(store.sentLog == ["prepareCards", "prepareCards"], "only the cover not asked yet")
+        store.loadHoverEpisodes(900_001)
+        store.loadHoverEpisodes(900_001)
+        #expect(store.sentLog.last == "loadStills", "at low priority, behind the screen's own requests")
+        #expect(store.sentLog.count == 3)
+    }
+
     @Test func aQuestionAboutATitleIsNotPutAgainWhileItsAnswerIsOnItsWay() {
         let store = AppStore()
         store.loadDetail(900_001)
@@ -60,6 +83,20 @@ struct AskingTests {
         store.loadEpisodes(900_005)
         #expect(!store.loadStills(900_005), "the episodes are on their way")
         #expect(store.sentLog == ["loadEpisodes"])
+    }
+
+    @Test func aPageOpenedAfterAHoverAsksForItsEpisodesAtThePagesPriority() {
+        let store = AppStore()
+        store.loadHoverEpisodes(900_001)
+        store.loadEpisodes(900_001)
+        #expect(store.sentLog == ["loadStills", "loadEpisodes"], "the page does not wait behind the hover's quiet ask")
+        #expect(store.loadStills(900_002))
+        store.loadEpisodes(900_002)
+        #expect(store.sentLog.suffix(2) == ["loadStills", "loadEpisodes"], "nor behind a card's stills")
+        store.loadEpisodes(900_003)
+        store.loadHoverEpisodes(900_003)
+        #expect(!store.loadStills(900_003))
+        #expect(store.sentLog.last == "loadEpisodes", "a slow page's own listing is never replaced by a quiet one")
     }
 
     @Test func whatTheServicesSayIsAskedAgainWhenTheEpisodesSayOtherwise() {

@@ -328,7 +328,7 @@ pub enum SourceKind {
     DeepLink,
 }
 
-/// The stream as its source gave it, before the mender or the torrent server.
+/// The stream as its source gave it, before the stream proxy or the torrent server.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CastSource {
     /// The source's own address, or the file's path.
@@ -368,7 +368,7 @@ pub struct AudioTrack {
 }
 
 /// What the engine read from the stream: the MKV's tracks, the HLS master's `CODECS`, an MP4's
-/// sample entries. Unknown parts are taken to be H.264 and AAC, what nearly every web source
+/// sample entries. Unknown parts are taken to be H.264 and AAC, what nearly every source
 /// sends, and a TV's answer corrects the guess.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct MediaInfo {

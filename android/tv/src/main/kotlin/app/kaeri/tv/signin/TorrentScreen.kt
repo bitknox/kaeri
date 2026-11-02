@@ -1,9 +1,7 @@
-// TVTorrents: turning torrents on, or changing what protects them, on the TV. The phone's sheet on
-// the D-pad: Protect with as radio rows, no protection confirmed before it is picked, and the
-// SOCKS5 proxy's address, when that is the choice, from the TV's own page on a phone, or typed
-// with the system keyboard as the last resort. A new or changed proxy is saved only once the
-// connection check passes through it, and a failed check saves nothing. Edit proxy is the proxy's
-// form, filled in.
+// TVTorrents: the SOCKS5 proxy's form on the TV, opened by turning "Route torrent traffic through a
+// proxy" on and by Edit proxy once one is set. The proxy's address comes from the TV's own page on
+// a phone, or is typed with the system keyboard as the last resort. A new or changed proxy is saved
+// only once its check passes, and a failed check saves nothing and keeps the form open.
 
 package app.kaeri.tv.signin
 
@@ -68,17 +66,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import app.kaeri.design.ObiSilk
-import app.kaeri.engine.core.SettingValue
-import app.kaeri.engine.model.FailedCheck
-import app.kaeri.engine.model.GuardView
-import app.kaeri.engine.model.ProxyView
-import app.kaeri.engine.model.SettingKey
-import app.kaeri.engine.model.TorrentProtection
 import app.kaeri.engine.model.TorrentProxy
 import app.kaeri.store.ProvidersModel
 import app.kaeri.store.TorrentWords
 import app.kaeri.tv.player.Spinner
-import app.kaeri.tv.remote.ConfirmDialog
 import app.kaeri.tv.remote.QrCode
 import app.kaeri.tv.remote.localAddress
 import app.kaeri.tv.ui.AmberButton
@@ -91,166 +82,16 @@ import app.kaeri.tv.ui.TvInfoRow
 import app.kaeri.tv.ui.TvListRow
 import app.kaeri.tv.ui.focusSoon
 
-/**
- * Why the screen is open: torrents turning on, their protection changing, or
- * the saved proxy's details.
- */
-enum class TorrentMode { TurnOn, Change, EditProxy }
-
-/** The protections, in the phone's order. */
-private val Protections = listOf(TorrentProtection.PROXY, TorrentProtection.DEVICE, TorrentProtection.NONE)
-
 /** Where the QR page's address is reached on this network: this TV's own address, or none. */
 val LocalPageHost = staticCompositionLocalOf<(Context) -> String?> { ::localAddress }
 
 /**
- * TVTorrents, until Turn on (or Save) or Back, then [onDone]. [start] is the protection picked in
- * Settings, which the screen starts on; no protection is confirmed first.
+ * The proxy's form. With a proxy saved it is Edit proxy: the details filled in but for the
+ * password, changed from the page or typed. Save checks them first and only a passed check saves
+ * them; a failed one says why, and the saved proxy stays.
  */
 @Composable
-fun TorrentScreen(mode: TorrentMode, start: TorrentProtection?, onDone: () -> Unit) {
-    when (mode) {
-        TorrentMode.EditProxy -> EditProxyScreen(onDone)
-        TorrentMode.TurnOn, TorrentMode.Change -> ProtectScreen(mode, start, onDone)
-    }
-}
-
-/** Turn on torrents, or Protect torrent traffic: the protection, and a proxy's details. */
-@Composable
-private fun ProtectScreen(mode: TorrentMode, start: TorrentProtection?, onDone: () -> Unit) {
-    val context = LocalContext.current
-    val store = LocalAppStore.current
-    val notices = LocalNotices.current
-    val view by store.settings.view.collectAsStateWithLifecycle()
-    val torrent = view?.torrent
-    val saved = torrent?.proxy
-    val savedProtection = torrent?.protection?.takeIf { mode == TorrentMode.Change } ?: TorrentProtection.DEVICE
-    var acknowledged by remember { mutableStateOf(torrent?.protection == TorrentProtection.NONE) }
-    var protection by remember { mutableStateOf(start?.takeIf { it != TorrentProtection.NONE || acknowledged } ?: savedProtection) }
-    var asking by remember { mutableStateOf(start == TorrentProtection.NONE && !acknowledged) }
-    var host by remember { mutableStateOf(saved?.host.orEmpty()) }
-    var port by remember { mutableStateOf(saved?.port?.toString().orEmpty()) }
-    var user by remember { mutableStateOf(saved?.user.orEmpty()) }
-    // Never kept with the screen's state: it goes to the keystore-sealed store, and nowhere else.
-    var password by remember { mutableStateOf("") }
-    val form = rememberForm()
-    val proxy = protection == TorrentProtection.PROXY
-    val whole = !proxy || TorrentWords.proxyOk(host, port)
-    val details = if (proxy) proxyOf(host, port, user, password) else null
-    // A new or changed proxy is checked before anything is saved; the same saved one is not again.
-    val checks = proxy && (mode == TorrentMode.TurnOn || torrent?.protection != TorrentProtection.PROXY || !sameAs(saved, host, port, user) || password.isNotEmpty())
-    val done by rememberUpdatedState(onDone)
-    BackHandler { if (form.typing) form.stopTyping() else done() }
-
-    val save = { checked: TorrentProxy? ->
-        store.setTorrentProtection(
-            protection,
-            proxy = checked,
-            onFailure = torrent?.onFailure ?: FailedCheck.PAUSE,
-            acknowledged = protection == TorrentProtection.NONE && acknowledged,
-        )
-        password = ""
-        if (mode == TorrentMode.TurnOn) store.setSwitch(SettingKey.TORRENTS, true)
-        notices?.say(context.getString(if (mode == TorrentMode.TurnOn) TorrentWords.SAID_ON else TorrentWords.SAID_PROTECTION))
-        done()
-    }
-    val check = proxyCheck(details.takeIf { checks }, onPassed = save)
-    val press = {
-        when {
-            // Kept enabled while the check runs, so focus stays on it; a press then waits.
-            check.checking -> {}
-            checks && details != null -> store.checkTorrentProtection(TorrentProtection.PROXY, details)
-            else -> save(details)
-        }
-    }
-    LaunchedEffect(Unit) { form.first.focusSoon() }
-
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(ObiSilk.Ground)
-            .padding(start = Canvas.Keyline, end = Canvas.SafeX, top = 72.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp),
-    ) {
-        Text(
-            stringResource(if (mode == TorrentMode.TurnOn) R.string.torrents_sheet_turn_on_title else R.string.torrents_sheet_protect_title),
-            style = MaterialTheme.typography.titleLarge,
-            color = ObiSilk.Silk,
-            modifier = Modifier.semantics { heading() },
-        )
-        Text(stringResource(TorrentWords.WHY), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Silk, modifier = Modifier.widthIn(max = 640.dp))
-        if (form.typing) {
-            TypeDetails(
-                proxy = proxy,
-                host = host,
-                port = port,
-                user = user,
-                password = password,
-                onHost = { host = it },
-                onPort = { port = it.filter(Char::isDigit).take(5) },
-                onUser = { user = it },
-                onPassword = { password = it },
-                onDone = form::stopTyping,
-            )
-        } else {
-            Row(horizontalArrangement = Arrangement.spacedBy(32.dp)) {
-                ProtectWith(protection, form.first) { picked ->
-                    when {
-                        picked == protection || check.checking -> {}
-                        picked == TorrentProtection.NONE && !acknowledged -> asking = true
-                        else -> protection = picked
-                    }
-                }
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    // A proxy's details: from the page while they are not whole, or once a phone is asked again.
-                    if (proxy) {
-                        if (!whole || form.asked > 0) {
-                            DetailsPage(PageForm.TorrentProxy, opened = form.asked) { answer ->
-                                host = answer.host
-                                port = answer.port
-                                user = answer.user
-                                password = answer.password
-                                form.answered()
-                            }
-                        } else {
-                            TvInfoRow(stringResource(R.string.torrents_protect_proxy), supporting = proxyLine(context, host, port, user))
-                        }
-                    }
-                    Status(
-                        PROTECT_STATUS,
-                        checking = check.checking,
-                        failed = check.failed?.let {
-                            TorrentWords.proxyFailed(context, it, if (mode == TorrentMode.TurnOn) TorrentWords.Kept.TurningOn else TorrentWords.Kept.Protection)
-                        },
-                        otherwise = TorrentWords.checkNote(context, torrent?.onFailure, protection),
-                    )
-                    FormButtons(form, primary = stringResource(if (mode == TorrentMode.TurnOn) R.string.torrents_sheet_turn_on_button else R.string.action_save), whole = whole, checking = check.checking, onPrimary = press, onCancel = done)
-                }
-            }
-        }
-    }
-    if (asking) {
-        ConfirmDialog(
-            title = stringResource(TorrentWords.NONE_TITLE),
-            body = stringResource(TorrentWords.NONE_BODY),
-            action = stringResource(R.string.torrents_protect_none),
-            onConfirm = {
-                asking = false
-                acknowledged = true
-                protection = TorrentProtection.NONE
-            },
-            onCancel = { asking = false },
-        )
-    }
-}
-
-/**
- * Edit proxy: the saved proxy's details, filled in but for the password, changed from the page or
- * typed. Save checks them first and only a passed check saves them; a failed one says why, and the
- * saved proxy stays.
- */
-@Composable
-private fun EditProxyScreen(onDone: () -> Unit) {
+fun TorrentScreen(onDone: () -> Unit) {
     val context = LocalContext.current
     val store = LocalAppStore.current
     val notices = LocalNotices.current
@@ -266,13 +107,14 @@ private fun EditProxyScreen(onDone: () -> Unit) {
     val details = proxyOf(host, port, user, password)
     val done by rememberUpdatedState(onDone)
     val check = proxyCheck(details) { checked ->
-        store.setTorrentProtection(TorrentProtection.PROXY, checked, view?.torrent?.onFailure ?: FailedCheck.PAUSE, acknowledged = false)
+        store.setTorrentProxy(checked)
         password = ""
         notices?.say(context.getString(TorrentWords.SAID_PROXY))
         done()
     }
     BackHandler { if (form.typing) form.stopTyping() else done() }
-    LaunchedEffect(Unit) { form.first.focusSoon() }
+    // A form with nothing to save yet starts on Type it, which the page's Use a phone leaves room for.
+    LaunchedEffect(Unit) { if (whole) form.first.focusSoon() else form.type.focusSoon() }
 
     Column(
         Modifier
@@ -281,8 +123,8 @@ private fun EditProxyScreen(onDone: () -> Unit) {
             .padding(start = Canvas.Keyline, end = Canvas.SafeX, top = 72.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
-        Text(stringResource(R.string.torrents_sheet_edit_proxy_title), style = MaterialTheme.typography.titleLarge, color = ObiSilk.Silk, modifier = Modifier.semantics { heading() })
-        Text(stringResource(TorrentWords.EDIT_NOTE), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Silk, modifier = Modifier.widthIn(max = 640.dp))
+        Text(stringResource(if (saved != null) R.string.torrents_sheet_edit_proxy_title else R.string.torrents_proxy_route), style = MaterialTheme.typography.titleLarge, color = ObiSilk.Silk, modifier = Modifier.semantics { heading() })
+        Text(stringResource(if (saved != null) TorrentWords.EDIT_NOTE else TorrentWords.WHY), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Silk, modifier = Modifier.widthIn(max = 640.dp))
         if (form.typing) {
             TypeDetails(
                 proxy = true,
@@ -299,7 +141,7 @@ private fun EditProxyScreen(onDone: () -> Unit) {
         } else {
             Column(Modifier.widthIn(max = 880.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 if (form.asked > 0 || !whole) {
-                    DetailsPage(PageForm.Proxy, opened = form.asked, filled = mapOf("host" to host, "port" to port, "user" to user)) { answer ->
+                    DetailsPage(PageForm.Proxy, opened = form.asked, filled = if (saved != null) mapOf("host" to host, "port" to port, "user" to user) else emptyMap()) { answer ->
                         host = answer.host
                         port = answer.port
                         user = answer.user
@@ -307,15 +149,20 @@ private fun EditProxyScreen(onDone: () -> Unit) {
                         form.answered()
                     }
                 } else {
-                    TvInfoRow(stringResource(R.string.torrents_protect_proxy), supporting = proxyLine(context, host, port, user))
+                    TvInfoRow(stringResource(R.string.torrents_proxy_route), supporting = proxyLine(context, host, port, user))
                 }
-                Status(EDIT_STATUS, checking = check.checking, failed = check.failed?.let { TorrentWords.editFailed(context, it) }, otherwise = stringResource(TorrentWords.PASSWORD_KEPT))
+                Status(
+                    STATUS,
+                    checking = check.checking,
+                    failed = if (check.failed) TorrentWords.proxyFailed(context) else null,
+                    otherwise = stringResource(if (saved != null) TorrentWords.PASSWORD_KEPT else TorrentWords.CHECK_NOTE),
+                )
                 FormButtons(
                     form,
                     primary = stringResource(R.string.action_save),
                     whole = whole,
                     checking = check.checking,
-                    onPrimary = { if (!check.checking && details != null) store.checkTorrentProtection(TorrentProtection.PROXY, details) },
+                    onPrimary = { if (!check.checking && details != null) store.checkTorrentProxy(details) },
                     onCancel = done,
                     primaryFirst = true,
                 )
@@ -381,7 +228,6 @@ private fun FormButtons(
     // The page replaces Use a phone, and Type it moves into its place: focus goes with it.
     LaunchedEffect(form.asked) { if (form.asked > 0) form.type.focusSoon() }
     LaunchedEffect(form.typed) { if (form.typed > 0) form.type.focusSoon() }
-    // Four buttons fit beside Protect with only this close together.
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         AmberButton(onClick = onPrimary, icon = null, enabled = whole, modifier = if (primaryFirst) Modifier.focusRequester(form.first) else Modifier) {
             ButtonLabel(primary)
@@ -398,7 +244,7 @@ private fun FormButtons(
 private val BUTTON_HEIGHT = 56.dp
 
 /** What a proxy's check before saving says on screen: under way, or why it failed. */
-private class ProxyCheck(val checking: Boolean, val failed: GuardView?)
+private class ProxyCheck(val checking: Boolean, val failed: Boolean)
 
 /**
  * The check of [asked], the details the form holds now: a verdict on any other details, ones
@@ -409,20 +255,19 @@ private class ProxyCheck(val checking: Boolean, val failed: GuardView?)
 private fun proxyCheck(asked: TorrentProxy?, onPassed: (TorrentProxy) -> Unit): ProxyCheck {
     val store = LocalAppStore.current
     val trial by store.providers.trial.collectAsStateWithLifecycle()
-    val mine = trial?.takeIf { asked != null && it.isFor(TorrentProtection.PROXY, asked) }
+    val mine = trial?.takeIf { asked != null && it.proxy == asked }
     val passed by rememberUpdatedState(onPassed)
     DisposableEffect(Unit) { onDispose { store.providers.clearTrial() } }
     LaunchedEffect(mine) {
         val said = mine as? ProvidersModel.Trial.Said ?: return@LaunchedEffect
-        val checked = said.proxy
-        if (said.view is GuardView.Protected && checked != null) {
+        if (said.passed) {
             store.providers.clearTrial()
-            passed(checked)
+            passed(said.proxy)
         }
     }
     return ProxyCheck(
         checking = mine is ProvidersModel.Trial.Checking,
-        failed = (mine as? ProvidersModel.Trial.Said)?.view?.takeIf { it !is GuardView.Protected },
+        failed = (mine as? ProvidersModel.Trial.Said)?.passed == false,
     )
 }
 
@@ -436,10 +281,6 @@ private fun proxyOf(host: String, port: String, user: String, password: String):
         password = password.takeIf { it.isNotEmpty() },
     )
 }
-
-/** Whether the fields still say the [saved] proxy. */
-private fun sameAs(saved: ProxyView?, host: String, port: String, user: String): Boolean =
-    saved != null && saved.host == host.trim() && saved.port.toString() == port.trim() && saved.user.orEmpty() == user.trim()
 
 /** "proxy.example:1080 · as mika": where the proxy is, and who it lets in. */
 internal fun proxyLine(context: Context, host: String, port: String, user: String): String = TorrentWords.proxyLine(context, host, port, user)
@@ -469,11 +310,8 @@ private fun Status(height: Dp, checking: Boolean, failed: String?, otherwise: St
     }
 }
 
-/** Protect with's status: the check's three-line note, or what the check says in its place. */
-private val PROTECT_STATUS = 64.dp
-
-/** Edit proxy's status: the password's one line, or what the check says in its place. */
-private val EDIT_STATUS = 52.dp
+/** The status line's height: the note's two lines, or what the check says in its place. */
+private val STATUS = 64.dp
 
 /** Checking the proxy, its spinner after a moment so a quick answer never flashes it. */
 @Composable
@@ -493,32 +331,9 @@ private fun CheckingLine() {
 private const val SPINNER_WAIT = 400L
 
 /**
- * Protect with: the three protections as radio rows, the chosen one in the amber container. [first]
- * marks the chosen one, which the screen focuses as it opens.
- */
-@Composable
-private fun ProtectWith(chosen: TorrentProtection, first: FocusRequester, onPick: (TorrentProtection) -> Unit) {
-    val context = LocalContext.current
-    Column(Modifier.width(300.dp).selectableGroup(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(stringResource(R.string.torrents_protect_with), style = MaterialTheme.typography.labelLarge, color = ObiSilk.Haze, modifier = Modifier.padding(start = 16.dp, bottom = 4.dp))
-        Protections.forEach { each ->
-            TvListRow(
-                TorrentWords.protection(context, each),
-                onClick = { onPick(each) },
-                supporting = TorrentWords.protectionNote(context, each),
-                supportingLines = 2,
-                height = 88.dp,
-                selected = each == chosen,
-                modifier = if (each == chosen) Modifier.focusRequester(first) else Modifier,
-            )
-        }
-    }
-}
-
-/**
  * The TV's page for the details, behind a QR code: it takes one answer and closes, or closes
  * after its 10 minutes, "Code expired" then in the code's place. [opened] counts the pages asked
- * for; the form changes with the protection, and a new page opens with it.
+ * for, and a new page opens with each.
  */
 @Composable
 private fun DetailsPage(form: PageForm, opened: Int, filled: Map<String, String> = emptyMap(), onAnswer: (PageAnswer.Torrent) -> Unit) {
@@ -565,7 +380,7 @@ private fun DetailsPage(form: PageForm, opened: Int, filled: Map<String, String>
         }
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(
-                stringResource(if (form == PageForm.Proxy) R.string.tv_scan_proxy else R.string.tv_scan_torrent_proxy),
+                stringResource(R.string.tv_scan_proxy),
                 style = MaterialTheme.typography.bodyMedium,
                 color = ObiSilk.Silk,
             )
@@ -614,7 +429,7 @@ private fun TypeDetails(
         if (proxy) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Field(host, onHost, stringResource(R.string.torrents_proxy_host), KeyboardType.Uri, Modifier.weight(2f), focus = first)
-                Field(port, onPort, stringResource(R.string.torrents_sheet_port), KeyboardType.Number, Modifier.weight(1f))
+                Field(port, onPort, stringResource(R.string.torrents_proxy_port), KeyboardType.Number, Modifier.weight(1f))
             }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Field(user, onUser, stringResource(R.string.tv_field_user_optional), KeyboardType.Text, Modifier.weight(1f))

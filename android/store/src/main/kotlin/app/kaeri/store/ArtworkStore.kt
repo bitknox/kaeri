@@ -116,6 +116,21 @@ class ArtworkStore(
         ask(url)
     }
 
+    /**
+     * Fetch [url] ahead into the engine's disk cache without decoding it, for art a screen may
+     * show soon: a later [request] then decodes it from the disk in a moment, and memory holds
+     * nothing for it meanwhile. Once per URL; nothing when it is decoded or asked for already.
+     */
+    fun warm(url: String) {
+        if (url in cache || url in sizes || !warmed.add(url)) return
+        warming += url
+        ask(url)
+    }
+
+    /** The URLs fetched ahead with [warm], and those of them still on their way. */
+    private val warmed = mutableSetOf<String>()
+    private val warming = mutableSetOf<String>()
+
     /** Ask the engine for [url], unless it is on its way or failed a moment ago. */
     private fun ask(url: String) {
         if (url in inFlight) return
@@ -143,6 +158,11 @@ class ArtworkStore(
     }
 
     internal fun ready(url: String, bytes: ByteArray) {
+        // Fetched ahead and asked for by no screen since: on the disk now, which was the point.
+        if (warming.remove(url) && url !in sizes) {
+            inFlight -= url
+            return
+        }
         val size = sizes[url] ?: 1024
         scope.launch(decoding) {
             val decoded = runCatching { decoder.decode(bytes, size) }.getOrNull()
@@ -151,6 +171,7 @@ class ArtworkStore(
     }
 
     internal fun failed(url: String) {
+        warming -= url
         inFlight -= url
         failedAt[url] = now()
     }

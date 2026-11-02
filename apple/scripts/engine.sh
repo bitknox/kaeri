@@ -171,7 +171,7 @@ done
 
 # Cargo in a clean environment. Run from an Xcode build phase or scheme action, the environment
 # holds Xcode's SDKROOT, its architectures and its deployment targets, which the cc and cmake
-# builds beneath BoringSSL, SQLite and the rest pick up and then build for the wrong platform.
+# builds beneath aws-lc, SQLite and the rest pick up and then build for the wrong platform.
 # So only PATH, HOME, rustup's and cargo's own variables (CARGO_BUILD_JOBS among them), a compiler
 # cache's (RUSTC_WRAPPER and sccache's SCCACHE_*) and the deployment targets go through, and an
 # iOS slice also gets the Xcode its SDK is in.

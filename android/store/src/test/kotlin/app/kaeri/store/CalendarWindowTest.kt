@@ -6,6 +6,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import app.kaeri.engine.model.ContentList
 import app.kaeri.engine.model.Entry
 
 /** The calendar's window: how far it reaches, and the pages that come in at either end. */
@@ -27,12 +28,37 @@ class CalendarWindowTest {
     @Test
     fun an_earlier_page_is_asked_for_once_until_it_answers() {
         val m = model()
-        assertNotNull(m.askPast())
+        assertEquals(1_000L to 4u, m.askPast())
         assertNull(m.askPast())
-        m.backfill(3u, listOf(row(1, -10)), false, titles)
+        m.backfill(4u, listOf(row(1, -10)), false, titles)
         assertEquals(1, m.window.value.rows.size)
         assertFalse(m.window.value.morePast)
         assertNull(m.askPast())
+    }
+
+    @Test
+    fun each_broadcast_shows_once_however_the_pages_arrive() {
+        val m = model()
+        m.apply(ContentList.Entries(listOf(row(11, -500), row(12, -400), row(13, 400))), titles)
+        m.backfill(5u, listOf(row(14, -900)), true, titles)
+        assertEquals(1_000L to 6u, m.askPast())
+        // A page already held, as when a fresh window came in while it was on its way, adds
+        // nothing, and broadcasts already held are not added again.
+        m.backfill(4u, listOf(row(14, -900)), true, titles)
+        m.backfill(6u, listOf(row(15, -1_200), row(14, -900)), false, titles)
+        m.ahead(4u, listOf(row(13, 400), row(13, 1_000).copy(airingEpisode = 2u)), false, titles)
+        val w = m.window.value
+        assertEquals(
+            listOf(15 to 1, 14 to 1, 11 to 1, 12 to 1, 13 to 1, 13 to 2),
+            w.rows.map { it.id.toInt() to (it.airingEpisode ?: 0u).toInt() },
+        )
+        assertEquals(6u, w.pages)
+        assertEquals(4u, w.aheadPages)
+        // A new answer replaces every row before it.
+        m.window(2_000L, 3u, true, 200L, 6_000L, 3u, true)
+        m.apply(ContentList.Entries(listOf(row(12, -400))), titles)
+        assertEquals(listOf(12u), m.window.value.rows.map { it.id })
+        assertEquals(2_000L to 4u, m.askPast())
     }
 
     @Test

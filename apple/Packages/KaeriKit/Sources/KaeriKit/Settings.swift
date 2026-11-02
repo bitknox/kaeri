@@ -81,10 +81,6 @@ extension SettingKey {
             [0, 1, 2, 3, 5, 10].map {
                 SettingOption(value: .int(Int64($0)), label: $0 == 0 ? "off" : Wording.plural($0, "episode"))
             }
-        case .vpnOnFailure:
-            // Warn only is asked for with its acknowledgement, through `SetTorrentProtection`.
-            [("pause", "pause torrents"), ("stop", "stop torrents")]
-                .map { SettingOption(value: .str($0.0), label: $0.1) }
         default:
             isSwitch
                 ? [SettingOption(value: .bool(false), label: "off"), SettingOption(value: .bool(true), label: "on")] // i18n-skip

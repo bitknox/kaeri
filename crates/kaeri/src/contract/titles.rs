@@ -238,3 +238,68 @@ async fn signing_out_names_titles_in_english_again() {
     );
     assert_eq!(page(&mut h).await.title, "Stardust Wayfarer");
 }
+
+/// The viewer's title language, as kept between launches.
+fn kept_language(h: &Harness) -> Option<String> {
+    h.store().get_meta_text(kaeri_track::anilist::VIEWER_LANGUAGE_KEY).unwrap()
+}
+
+#[tokio::test]
+async fn a_launch_names_titles_as_the_viewer_last_read_until_a_pull_says_otherwise() {
+    // An earlier run, whose viewer read AniList in romaji.
+    let mut h = signed_in_reading("ROMAJI").await;
+    h.send(Command::SyncNow);
+    h.settle().await;
+    assert_eq!(kept_language(&h).as_deref(), Some("ROMAJI"));
+    let store = h.store().clone();
+    let _ = h.quit().await;
+
+    // The account reads native now, and the launch's viewer and list are slow to answer.
+    let wait = std::time::Duration::from_millis(800);
+    let mut h = Harness::with(Options {
+        config: Some(WITH_ANILIST.into()),
+        signed_in: vec!["anilist"],
+        viewer_title_language: Some("NATIVE"),
+        store: Some(store),
+        slow: vec![(Operation::Library, wait), (Operation::Viewer, wait)],
+        ..Options::default()
+    })
+    .await;
+    h.send(Command::LoadDetail(FINISHED));
+    let updates = h.settle_until(|update| matches!(update, Event::TitlesChanged(_))).await;
+    let named = updates.iter().position(|u| matches!(u, Event::Detail(_)));
+    let changed = updates.iter().position(|u| matches!(u, Event::TitlesChanged(_)));
+    let Some(Event::Detail(entry)) = named.map(|at| &updates[at]) else {
+        panic!("the page: {updates:?}")
+    };
+    assert_eq!(entry.title, "Hoshikuzu no Tabibito", "as kept, before AniList answers");
+    assert!(named < changed, "{updates:?}");
+    assert!(matches!(updates[changed.unwrap()], Event::TitlesChanged(TitleLanguage::Native)));
+    assert_eq!(
+        kept_language(&h).as_deref(),
+        Some("NATIVE"),
+        "the answer replaces the kept one"
+    );
+    assert_eq!(page(&mut h).await.title, "星屑の旅人");
+}
+
+#[tokio::test]
+async fn a_pull_carries_a_changed_title_language_and_signing_out_drops_the_kept_one() {
+    // Kept from the launch's lookup of the viewer.
+    let mut h = signed_in_reading("ROMAJI").await;
+    assert_eq!(kept_language(&h).as_deref(), Some("ROMAJI"));
+
+    // Changed on AniList mid-run: the next pull's answer says so.
+    h.server().set_viewer_title_language("NATIVE");
+    h.send(Command::SyncNow);
+    let updates = h.settle().await;
+    assert!(
+        updates.iter().any(|u| matches!(u, Event::TitlesChanged(TitleLanguage::Native))),
+        "{updates:?}"
+    );
+    assert_eq!(kept_language(&h).as_deref(), Some("NATIVE"));
+
+    h.send(Command::Disconnect { tracker: "anilist".into() });
+    h.settle().await;
+    assert_eq!(kept_language(&h), None);
+}

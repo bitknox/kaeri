@@ -30,13 +30,10 @@ notice-signed-out-queue = { $count ->
  }
 notice-sign-out-failed = Nie udało się wylogować z { $tracker }. Spróbuj ponownie. { $reason }
 notice-not-saved-because = Nie udało się zapisać tego ustawienia. { $cause }
-notice-protection-saved = Zapisano ustawienie ochrony torrentów.
-notice-protection-not-checked = Nie udało się sprawdzić ochrony torrentów. { $cause }
 notice-proxy-password-not-kept = Nie udało się zachować hasła do proxy. Wpisz je ponownie, aby spróbować zapisać. { $reason }
 notice-show-setting-refused = Nie udało się zapisać tego ustawienia. { $value } nie jest prawidłową wartością dla { $setting }.
 notice-show-not-reset = Nie udało się zresetować ustawień tego tytułu. { $reason }
 notice-show-no-such-subtitles = Nie udało się zapisać tego wyboru napisów. Ten tytuł nie używał wcześniej tych napisów.
-notice-torrents-waiting-for-check = Torrenty czekają, aż kontrola połączenia znów przejdzie.
 notice-mapping-data-refreshed = Odświeżono dane mapowania.
 notice-mapping-data-failed = Nie udało się odświeżyć danych mapowania ({ $datasets }). Ponowna próba za { $wait }. { $cause }
 notice-episode-aired = { $title }, odcinek { $episode }, został wyemitowany, gdy aplikacja była zamknięta.
@@ -47,8 +44,6 @@ notice-episodes-aired = { $count ->
    *[other] { $count } nowych odcinków z listy tytułów zostało wyemitowanych. Są w kalendarzu.
  }
 notice-update-available = Wydano { $tag }. Uruchom kaeri --update, aby zainstalować aktualizację.
-cause-confirm-no-protection = Najpierw trzeba potwierdzić, że ochrona ma być wyłączona.
-cause-confirm-warn-only = Najpierw trzeba potwierdzić wybór „tylko ostrzeżenie”.
 cause-proxy-needs-address = Proxy wymaga hosta i portu.
 cause-proxy-address-unusable = Adres proxy nie nadaje się do sprawdzenia.
 cause-server-unreachable = Nie udało się połączyć z serwerem.

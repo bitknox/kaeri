@@ -21,7 +21,7 @@ people who own them.
 
 :::note
 The sandbox has no sockets. The host makes requests for the plugin through `fetch`, so a plugin
-only parses. [The plugin sandbox](/docs/plugins/sandbox/) covers what is enforced.
+turns responses into results. [The plugin sandbox](/docs/plugins/sandbox/) covers what is enforced.
 :::
 
 ## The interface

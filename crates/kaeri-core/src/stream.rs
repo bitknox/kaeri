@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum StreamKind {
-    /// HLS manifest. The common case for web sources.
+    /// HLS manifest.
     Hls,
     /// Progressive MP4.
     Mp4,
@@ -128,8 +128,8 @@ pub struct Stream {
     pub kind: StreamKind,
     /// Vertical resolution, when known: `1080`, `720`, …
     pub quality: Option<u32>,
-    /// Headers the player must send. Many provider CDNs are referer-locked, so dropping
-    /// these turns a working stream into a 403.
+    /// Headers the player must send, such as authorization. Dropping them can turn a working
+    /// stream into a 403.
     #[serde(default)]
     pub headers: Vec<(String, String)>,
     #[serde(default)]
@@ -153,7 +153,7 @@ pub struct Stream {
     pub pick_note: Option<String>,
     /// Where a seekbar thumbnailer should read this stream instead of `url`, when that matters.
     ///
-    /// A thumbnailer is a second player seeking all over the file. Against a web source that
+    /// A thumbnailer is a second player seeking all over the file. Against a server that
     /// costs a few range requests; against a torrent, every read of `url` is a stream librqbit
     /// fetches ahead for, so the thumbnailer would pull the swarm away from the playback head.
     /// The torrent source sets this to a sibling loopback address that serves only the pieces

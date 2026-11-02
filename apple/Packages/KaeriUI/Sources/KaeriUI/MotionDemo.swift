@@ -9,12 +9,21 @@ import SwiftUI
 public enum MotionDemo: String, CaseIterable, Sendable {
     /// T1: a cover zooms into its title's page (iPhone and iPad): the first Continue card on Home.
     case t1
+    /// T2: the first Continue card's episode played, as its menu's Play does: the player grows
+    /// out of the card (iPhone and iPad).
+    case t2
     /// T1 from the first poster on Home's first shelf of posters: into the page's cover on the Mac.
     case t1Poster
     /// T1 from Home's spotlight, whose title is often on a shelf too: out of the spotlight.
     case t1Spotlight
-    /// T1 from the first cover of the grid on screen: the Library's list, or Seasonal.
+    /// T1 from the first cover of the grid on screen: the Library's list, Seasonal, or Search's
+    /// results.
     case t1Grid
+    /// `t1Grid` double clicked: the same cover clicked again 50 ms later.
+    case t1GridTwice
+    /// The first title of the screen opened with no element to fly from, as a calendar row does:
+    /// the calendar's first broadcast there, else Continue's first title.
+    case t1Nowhere
     /// M1 to a section `-KaeriTo` names, as a click in the sidebar does: its first load.
     case section
     /// Home asked for again as on its first visit, with nothing kept: its placeholders, then its
@@ -29,6 +38,9 @@ public enum MotionDemo: String, CaseIterable, Sendable {
     /// Back from the page of Home's spotlight, opened from the spotlight first (`prelude`): its
     /// art flies home.
     case backSpotlight
+    /// Back from the spotlight's page as `backSpotlight`, and the spotlight clicked again while
+    /// its art is still flying home: the second flight takes off from where the first one is.
+    case backReopen
     /// T9: the title's next episode is marked watched.
     case t9
     /// The title page's next season opened from its season picker, as a click on its cell does.
@@ -68,7 +80,7 @@ public enum MotionDemo: String, CaseIterable, Sendable {
     @MainActor
     public func prelude(navigator: Navigator, store: AppStore) async {
         switch self {
-        case .backSpotlight:
+        case .backSpotlight, .backReopen:
             MotionDemo.t1Spotlight.run(navigator: navigator, store: store)
             try? await Task.sleep(for: .seconds(2))
         case .season:
@@ -92,6 +104,12 @@ public enum MotionDemo: String, CaseIterable, Sendable {
             let entry = store.titles[id]
             let wide = entry.map { !store.heroArt($0).isCompact } ?? false
             navigator.openTitle(id, from: .shelf(id, .continue, art: wide ? .banner : .poster))
+        case .t2:
+            guard let item = store.discovery.view?.sections.first(where: { $0.kind == .continue })?.items.first,
+                  let episode = item.episode
+            else { return }
+            navigator.playingFrom = .shelf(item.entry.id, .continue, art: .poster)
+            store.send(.play(id: item.entry.id, episode: String(episode)))
         case .t1Poster:
             let shelves = store.discovery.view?.sections.filter { $0.kind != .continue && $0.kind != .thisWeek } ?? []
             guard let shelf = shelves.first(where: { !$0.items.isEmpty }), let item = shelf.items.first else { return }
@@ -101,11 +119,25 @@ public enum MotionDemo: String, CaseIterable, Sendable {
             let entry = store.titles[spot.entry.id] ?? spot.entry
             navigator.openTitle(entry.id, from: TitleSource(entry.id, .spotlight, art: store.heroArt(entry).isCompact ? .poster : .banner))
         case .t1Grid:
-            let ids = navigator.section == .seasonal
-                ? store.seasonal.state.ids
-                : store.library.segment(navigator.librarySegment).state.ids
+            let ids = switch navigator.section {
+            case .seasonal: store.seasonal.state.ids
+            case .search: store.search.list.state.ids
+            default: store.library.segment(navigator.librarySegment).state.ids
+            }
             guard let id = ids.first else { return }
             navigator.openTitle(id, from: TitleSource(id, .grid, art: .poster))
+        case .t1GridTwice:
+            MotionDemo.t1Grid.run(navigator: navigator, store: store)
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(50))
+                MotionDemo.t1Grid.run(navigator: navigator, store: store)
+            }
+        case .t1Nowhere:
+            let first = navigator.section == .calendar
+                ? store.broadcasts(mine: store.calendarMine).first?.entry.id
+                : queue.first ?? store.seasonal.state.ids.first
+            guard let id = first else { return }
+            navigator.openTitle(id)
         case .section:
             let arguments = ProcessInfo.processInfo.arguments
             guard let at = arguments.firstIndex(of: "-KaeriTo"), arguments.indices.contains(at + 1),
@@ -123,6 +155,12 @@ public enum MotionDemo: String, CaseIterable, Sendable {
             if let id = navigator.focusedTitle ?? queue.first { navigator.openTitle(id) }
         case .back, .backSpotlight:
             navigator.back()
+        case .backReopen:
+            navigator.back()
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(200))
+                MotionDemo.t1Spotlight.run(navigator: navigator, store: store)
+            }
         case .t9:
             guard let id = navigator.focusedTitle, let entry = store.titles[id] else { return }
             let next = entry.progress?.next ?? 1

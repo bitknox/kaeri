@@ -32,8 +32,7 @@ import {
 const ALLOWED_HOST = 'api.example';
 
 /// The stream a catalogue would name for any episode, on a host that does not exist. A real
-/// plugin reads it from the response; this keeps the example offline. The ABI lends no crypto, so a
-/// source that wraps its URLs in a cipher is the plugin's to unwrap with a library it bundles.
+/// plugin reads it from the response; this keeps the example offline.
 const STREAM_URL = 'https://cdn.example.test/master.m3u8';
 
 /// Percent-encode a query value. Hand-rolled for the same reason as in the Rust plugin: pulling a
@@ -63,7 +62,7 @@ function get(url) {
       body: undefined,
     });
   } catch (error) {
-    // A denial means the manifest and this code disagree — a bug here, not a site being down, so
+    // A denial means the manifest and this code disagree — a bug here, not a server being down, so
     // it is reported as `other` rather than `blocked`.
     if (error?.payload?.tag === 'denied') {
       throw { tag: 'other', val: `denied by the host: ${error.payload.val}` };
@@ -193,7 +192,7 @@ function resolveStreams(id, episode, translation) {
 
   const url = STREAM_URL;
 
-  // The lent settings: an optional mirror override from
+  // The lent settings: an optional server address override from
   // `[providers.plugins.settings.example-ts]`. The fallback is the pattern to copy — a
   // plugin must work with every setting unset, because most users never write any.
   const cdn = configGet('cdn') ?? 'cdn.example.test';
@@ -205,9 +204,8 @@ function resolveStreams(id, episode, translation) {
       url: url.replace('cdn.example.test', cdn),
       kind: 'hls',
       quality: 1080,
-      // Referer-locked CDNs 403 without this, which is why headers travel with the stream
-      // rather than being the player's guess.
-      headers: [['referer', `https://${ALLOWED_HOST}/`]],
+      // Headers travel with the stream, such as an authorization header your server needs.
+      headers: [['authorization', 'Bearer example-token']],
       subtitles: [
         {
           language: 'eng',

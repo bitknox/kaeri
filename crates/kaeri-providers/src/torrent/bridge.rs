@@ -246,7 +246,7 @@ impl Provider for TorrentBridge {
             .playback
             .session()
             .ok_or_else(|| ProviderError::Unavailable(PLAYBACK_OFF.into()))?;
-        session.guard().permit()?;
+        session.route().permit()?;
         session.network_permit()
     }
 }

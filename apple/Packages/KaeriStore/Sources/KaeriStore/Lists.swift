@@ -80,12 +80,15 @@ public final class CalendarModel {
     public let list = ListModel()
     /// The anchor the calendar's pages are numbered against.
     public private(set) var anchor: Int64?
+    /// Pages of the past held, numbered from 1 as the engine numbers them: the next to ask for
+    /// is `pages + 1` (`nextPastPage`).
     public private(set) var pages: UInt32 = 0
     public private(set) var morePast = false
     /// The furthest back and forward the calendar reaches, in epoch seconds, as the engine says.
     public private(set) var floor: Int64?
     public private(set) var ceiling: Int64?
-    /// Pages of the future loaded, and whether there is more behind them.
+    /// Pages of the future held, and whether there is more behind them. The next to ask for is
+    /// `aheadPages + 1` (`nextAheadPage`).
     public private(set) var aheadPages: UInt32 = 0
     public private(set) var moreAhead = false
     /// Whether earlier or later broadcasts are on their way, and whether the last ask failed.
@@ -98,6 +101,12 @@ public final class CalendarModel {
     public private(set) var rows: [Entry] = []
 
     public init() {}
+
+    /// The earlier page to ask for next: the one after the last held. Asking for `pages` would
+    /// fetch the oldest page held again and show its broadcasts twice.
+    public var nextPastPage: UInt32 { pages + 1 }
+    /// The later page to ask for next.
+    public var nextAheadPage: UInt32 { aheadPages + 1 }
 
     @discardableResult
     func apply(_ content: ContentList, titles: TitleCache) -> Bool {
@@ -124,7 +133,8 @@ public final class CalendarModel {
     }
 
     /// Older broadcasts, above what is there. A page of `nil` failed: nothing to add, and the
-    /// same page is asked for again when the person tries again.
+    /// same page is asked for again when the person tries again. A page already held, as when a
+    /// fresh window came in while it was on its way, adds nothing.
     func backfill(page: UInt32?, entries: [Entry], morePast: Bool, titles: TitleCache) {
         loadingPast = false
         guard let page else {
@@ -132,13 +142,16 @@ public final class CalendarModel {
             return
         }
         pastFailed = false
-        titles.merge(entries)
-        rows.insert(contentsOf: entries, at: 0)
-        pages = max(pages, page + 1)
+        guard page > pages else { return }
+        let added = unheld(entries)
+        titles.merge(added)
+        rows.insert(contentsOf: added, at: 0)
+        pages = page
         self.morePast = morePast
     }
 
-    /// Later broadcasts, after what is there; a page of `nil` failed.
+    /// Later broadcasts, after what is there; a page of `nil` failed, and one already held adds
+    /// nothing.
     func ahead(page: UInt32?, entries: [Entry], moreAhead: Bool, titles: TitleCache) {
         loadingAhead = false
         guard let page else {
@@ -146,10 +159,32 @@ public final class CalendarModel {
             return
         }
         aheadFailed = false
-        titles.merge(entries)
-        rows.append(contentsOf: entries)
-        aheadPages = max(aheadPages, page + 1)
+        guard page > aheadPages else { return }
+        let added = unheld(entries)
+        titles.merge(added)
+        rows.append(contentsOf: added)
+        aheadPages = page
         self.moreAhead = moreAhead
+    }
+
+    /// The broadcasts of `entries` not already among the rows: a broadcast is a title's episode,
+    /// AniList's own or one the calendar estimates, and shows once.
+    private func unheld(_ entries: [Entry]) -> [Entry] {
+        var held = Set(rows.compactMap(Self.broadcast))
+        return entries.filter { entry in
+            guard let key = Self.broadcast(entry) else { return true }
+            return held.insert(key).inserted
+        }
+    }
+
+    private struct Broadcast: Hashable {
+        let id: AnilistId
+        let episode: UInt32
+        let estimated: Bool
+    }
+
+    private static func broadcast(_ entry: Entry) -> Broadcast? {
+        entry.airingEpisode.map { Broadcast(id: entry.id, episode: $0, estimated: entry.airingApproximate) }
     }
 
     func clearFailures() {

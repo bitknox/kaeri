@@ -53,7 +53,7 @@ pub enum PlayerOp {
     /// Open `url` in place of whatever is playing, with `options` that belong to this file
     /// alone, as `loadfile`'s per-file options: the headers, the resume point as `start`, the
     /// title and the track languages. A web stream may come as a loopback address the engine
-    /// serves, which mends what its host sends.
+    /// serves, which sends the stream's headers to its host.
     Load { url: String, options: Vec<MpvOption> },
     /// Add an external subtitle track to the loaded file without selecting it, as `sub-add` with
     /// the `auto` flag. `url` may be a local path the engine wrote the track to.

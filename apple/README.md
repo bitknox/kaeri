@@ -77,7 +77,7 @@ Cargo runs with a clean environment: only `PATH`, `HOME`, rustup's and cargo's o
 (`CARGO_BUILD_JOBS` among them), a compiler cache's (`RUSTC_WRAPPER` and sccache's `SCCACHE_*`)
 and the deployment targets go through, and an iOS slice gets the Xcode its SDK is in. From an Xcode build
 phase or scheme action the environment holds Xcode's `SDKROOT` and architectures, which the C builds
-beneath BoringSSL, SQLite and the rest would otherwise pick up and build for the wrong platform.
+beneath aws-lc, SQLite and the rest would otherwise pick up and build for the wrong platform.
 
 It builds with the `app-dev` profile (opt-level 1, line tables only), or the one
 `KAERI_ENGINE_PROFILE` names, `release` for a build to keep. The Xcode project sets it per
@@ -115,7 +115,7 @@ patches:
 
 Every other library is MPVKit's own prebuilt static build, from the releases MPVKit pins, checked
 against its SHA-256: FFmpeg, libplacebo, MoltenVK, shaderc, OpenSSL, GnuTLS and the rest. The link
-keeps them inside the framework, so the OpenSSL there never meets the engine's BoringSSL, and the
+keeps them inside the framework, so the OpenSSL there never meets the engine's own C, and the
 framework stays dynamic, as the LGPL asks. `apple/.mpv/<pin>/contents` lists which libraries each
 slice took code from, and `ThirdParty/NOTICES-libmpv.txt`, which `scripts/notices.sh` writes and
 the app bundles, has their licences.
@@ -496,7 +496,7 @@ launch), and after a colon the screen: a section (`calendar`, `seasonal`, `searc
 `query=<words>` or `palette=<words>`, with more joined by `+`: `pane=<Settings pane>`,
 `sheet=<torrent|join|kitsu|update|show>` and `showcase=<sources|stores|downloads|invite|all>`, the
 invented rows `Showcase` shows on the testing engine where it has none of its own (plugin stores, a
-download queue, the VPN guard's verdict).
+download queue, the proxy check).
 
 The player's states are `player-starting`, `player-playing`, `player-skip`, `player-up-next`,
 `player-still-watching`, `player-stall`, `player-scrubbing` and `player-picture-in-picture`: the
@@ -587,9 +587,13 @@ The engine object is `FfiEngine`:
 The app hands the engine an `FfiHost`, which opens links, posts notifications and keeps the
 trackers' and plugin stores' tokens for it, in the keychain: `secretGet`, `secretSet` and
 `secretDelete`, by id. The engine calls it on its own threads. With `.followConfig` and
-`token_storage = "keychain"`, the items to keep them as are the terminal's: generic passwords
-under service `kaeri`, with the id as the account, in the login keychain, where the
-`keyring` crate keeps them on macOS. With `"file"` the host is never asked.
+`token_storage = "keychain"`, the item to keep them in is the terminal's: one generic password
+under service `kaeri` and account `kaeri-secrets`, in the login keychain, where the `keyring`
+crate keeps it on macOS. It holds every secret, as JSON, so that an update, which is a new app
+to the keychain, asks for the password once rather than once per secret. The engine reads it
+once per launch and writes it back whole when a secret changes, and moves an item per secret
+from an earlier build into it the first time each is asked for. With `"file"` the host is never
+asked.
 
 The app hosts the player, libmpv embedded, and the engine drives it as it drives the terminal's
 mpv, in mpv's own vocabulary:

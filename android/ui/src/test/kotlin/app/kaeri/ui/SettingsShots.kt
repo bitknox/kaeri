@@ -45,8 +45,6 @@ import app.kaeri.engine.model.DeviceCodePrompt
 import app.kaeri.engine.model.DownloadRow
 import app.kaeri.engine.model.DownloadState
 import app.kaeri.engine.model.Event
-import app.kaeri.engine.model.FailedCheck
-import app.kaeri.engine.model.GuardView
 import app.kaeri.engine.model.InviteEndReason
 import app.kaeri.engine.model.InviteEnded
 import app.kaeri.engine.model.InviteLinkView
@@ -54,19 +52,19 @@ import app.kaeri.engine.model.InvitePreview
 import app.kaeri.engine.model.InviteUseRow
 import app.kaeri.engine.model.StoreInviteRow
 import app.kaeri.engine.model.InvitedStore
-import app.kaeri.engine.model.ProtectionView
 import app.kaeri.engine.model.ProviderOrigin
 import app.kaeri.engine.model.ProviderRow
 import app.kaeri.engine.model.ProviderUpdate
+import app.kaeri.engine.model.ProxyStatus
 import app.kaeri.engine.model.ProxyView
 import app.kaeri.engine.model.Release
 import app.kaeri.engine.model.ReleaseAsset
 import app.kaeri.engine.model.SettingKey
+import app.kaeri.engine.model.TorrentView
 import app.kaeri.engine.model.StorePluginRow
 import app.kaeri.engine.model.StorePluginStatus
 import app.kaeri.engine.model.StoreRow
 import app.kaeri.engine.model.StoreState
-import app.kaeri.engine.model.TorrentProtection
 import app.kaeri.engine.model.UpdateStatus
 import app.kaeri.store.ApkFacts
 import app.kaeri.store.AppClock
@@ -173,6 +171,12 @@ class SettingsShots {
     @Config(qualifiers = PHONE)
     fun phone_settings_sources() = shoot("phone-settings-sources", settingsRoute(SettingsPane.Sources))
 
+    /** Torrents on and connecting directly: no proxy, so no Proxy check row. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_torrents_direct() = shoot("phone-torrents-direct", settingsRoute(SettingsPane.Sources), then = ::directOn)
+
+    /** A proxy set: Edit proxy and the Proxy check row, passed. */
     @Test
     @Config(qualifiers = PHONE)
     fun phone_torrents_edit_proxy_row() = shoot("phone-torrents-edit-proxy-row", settingsRoute(SettingsPane.Sources), then = ::proxyOn)
@@ -194,7 +198,7 @@ class SettingsShots {
         then = ::proxyOn,
         tap = "Edit proxy…",
         thenTap = "Save",
-        after = { it.apply(listOf(Event.ProtectionChecked(GuardView.Leaking))) },
+        after = { it.apply(listOf(Event.ProxyChecked(ProxyStatus.FAILED))) },
     )
 
     /** Edit proxy passed its check: saved, the sheet closed, and the snackbar says so. */
@@ -206,8 +210,17 @@ class SettingsShots {
         then = ::proxyOn,
         tap = "Edit proxy…",
         thenTap = "Save",
-        after = { it.apply(listOf(Event.ProtectionChecked(GuardView.Protected("203.0.113.24")))) },
+        after = { it.apply(listOf(Event.ProxyChecked(ProxyStatus.PASSED))) },
         check = { compose.onNodeWithText(context.getString(TorrentWords.SAID_PROXY)).assertExists() },
+    )
+
+    /** The proxy check failed on the saved proxy: the row says so and offers Check now. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_torrents_check_failed() = shoot(
+        "phone-torrents-check-failed",
+        settingsRoute(SettingsPane.Sources),
+        then = { proxyOn(it); it.apply(listOf(Event.TorrentProxy(ProxyStatus.FAILED))) },
     )
 
     /** Open link or file: the field for a magnet link, and the file picker beside it. */
@@ -225,44 +238,59 @@ class SettingsShots {
     @Config(qualifiers = PHONE)
     fun phone_open_link_change() = shoot("phone-open-link-change", settingsRoute(SettingsPane.Sources), scene = "link_opened", tap = "Change")
 
-    /** Turning torrents on behind a new proxy: checked first, the sheet locked while it runs. */
+    /** The proxy toggle turned on: the form, its check running and its fields locked. */
     @Test
     @Config(qualifiers = PHONE)
-    fun phone_torrents_turn_on_checking() = shoot(
-        "phone-torrents-turn-on-checking",
+    fun phone_torrents_proxy_form_checking() = shoot(
+        "phone-torrents-proxy-form-checking",
         settingsRoute(SettingsPane.Sources),
-        tap = "Torrent playback",
+        tap = "Route torrent traffic through a proxy",
         fill = ::proxyTyped,
-        thenTap = "Turn on",
+        thenTap = "Save",
         check = {
             compose.onNodeWithText(context.getString(TorrentWords.CHECKING_PROXY)).assertExists()
-            compose.onNodeWithText("Host").assertIsNotEnabled()
+            compose.onNodeWithText("Proxy host").assertIsNotEnabled()
         },
     )
 
-    /** The check failed: torrents still off, nothing saved, and why. */
+    /** The check failed: nothing saved, the form stays open and says why. */
     @Test
     @Config(qualifiers = PHONE)
-    fun phone_torrents_turn_on_failed() = shoot(
-        "phone-torrents-turn-on-failed",
+    fun phone_torrents_proxy_form_failed() = shoot(
+        "phone-torrents-proxy-form-failed",
         settingsRoute(SettingsPane.Sources),
-        tap = "Torrent playback",
+        tap = "Route torrent traffic through a proxy",
         fill = ::proxyTyped,
-        thenTap = "Turn on",
-        after = { it.apply(listOf(Event.ProtectionChecked(GuardView.Unreachable))) },
-        check = { compose.onNodeWithText("Torrents are still off", substring = true).assertExists() },
+        thenTap = "Save",
+        after = { it.apply(listOf(Event.ProxyChecked(ProxyStatus.FAILED))) },
+        check = { compose.onNodeWithText("Not saved", substring = true).assertExists() },
     )
 
-    /** SOCKS5 proxy picked in the sheet, and its host and port typed. */
+    /** The proxy form's host and port typed. */
     private fun proxyTyped() {
-        compose.onNodeWithText("SOCKS5 proxy").performClick()
-        compose.waitForIdle()
-        compose.onNodeWithText("Host").performTextInput("proxy.example")
-        compose.onNodeWithText("Port").performTextInput("1080")
+        compose.onNodeWithText("Proxy host").performTextInput("proxy.example")
+        compose.onNodeWithText("Proxy port").performTextInput("1080")
         compose.waitForIdle()
     }
 
-    /** Torrents on, behind a saved SOCKS5 proxy. */
+    /** Torrents on, connecting directly. */
+    private fun directOn(store: AppStore) {
+        val view = store.settings.view.value ?: return
+        store.apply(
+            listOf(
+                Event.Settings(
+                    view.copy(
+                        rows = view.rows.map { if (it.key == SettingKey.TORRENTS) it.copy(value = "on") else it },
+                        sources = view.sources.copy(torrent = true),
+                        torrent = TorrentView(null),
+                    ),
+                ),
+                Event.TorrentProxy(ProxyStatus.DIRECT),
+            ),
+        )
+    }
+
+    /** Torrents on, behind a saved SOCKS5 proxy whose check passed. */
     private fun proxyOn(store: AppStore) {
         val view = store.settings.view.value ?: return
         store.apply(
@@ -271,9 +299,10 @@ class SettingsShots {
                     view.copy(
                         rows = view.rows.map { if (it.key == SettingKey.TORRENTS) it.copy(value = "on") else it },
                         sources = view.sources.copy(torrent = true),
-                        torrent = ProtectionView(TorrentProtection.PROXY, ProxyView("proxy.example", 1080u, "mika"), FailedCheck.PAUSE),
+                        torrent = TorrentView(ProxyView("proxy.example", 1080u, "mika")),
                     ),
                 ),
+                Event.TorrentProxy(ProxyStatus.PASSED),
             ),
         )
     }

@@ -234,7 +234,7 @@ fn fill(
     column.append(&others);
 }
 
-/// The services' names in a line: "Hikari Stream, Tsuki TV".
+/// The services' names in a line: "Hikari Library, Tsuki TV".
 pub fn names(links: &[ServiceLink]) -> String {
     links.iter().map(|l| l.service.as_str()).collect::<Vec<_>>().join(", ") // i18n-skip
 }

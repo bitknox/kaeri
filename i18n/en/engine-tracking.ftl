@@ -1,4 +1,4 @@
-# Messages for signing in to trackers, saving settings, torrent protection, update and
+# Messages for signing in to trackers, saving settings, the torrent proxy, update and
 # background notices. Each one is a toast or a status line, unless it says otherwise.
 
 # Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
@@ -125,12 +125,15 @@ notice-sign-out-failed = Couldn't sign out of { $tracker }. Try again. { $reason
 # @arg cause: cause
 notice-not-saved-because = Couldn't save that setting. { $cause }
 
-# Toast when the torrent protection choice was saved.
-notice-protection-saved = Saved torrent protection.
+# Toast when the proxy for torrent traffic was saved.
+notice-proxy-saved = Torrent traffic now goes through the proxy.
 
-# Toast when the torrent protection could not be checked. The cause says why.
+# Toast when the proxy for torrent traffic was turned off.
+notice-proxy-removed = Torrents now connect directly, without a proxy.
+
+# Toast when the proxy could not be checked. The cause says why.
 # @arg cause: cause
-notice-protection-not-checked = Couldn't check the torrent protection. { $cause }
+notice-proxy-not-checked = Couldn't check the proxy. { $cause }
 
 # Toast when the proxy's password could not be stored. The reason comes from the system.
 # @arg reason: text
@@ -147,9 +150,6 @@ notice-show-not-reset = Couldn't reset this show's settings. { $reason }
 
 # Toast when a subtitle choice names subtitles the show has not used.
 notice-show-no-such-subtitles = Couldn't save that subtitle choice. This show hasn't used those subtitles before.
-
-# Toast while torrents are held until the connection check passes.
-notice-torrents-waiting-for-check = Torrents are waiting for the connection check to pass again.
 
 # Toast when the mapping data downloads work again after a failure.
 notice-mapping-data-refreshed = Mapping data refreshed.
@@ -177,12 +177,6 @@ notice-episodes-aired = { $count ->
 # @arg tag: text
 # @allow app-name
 notice-update-available = { $tag } is out. Run kaeri --update to install it.
-
-# The reason a setting was refused until the person confirms having no protection.
-cause-confirm-no-protection = Confirm that you want no protection first.
-
-# The reason a setting was refused until the person confirms the "warn only" choice.
-cause-confirm-warn-only = Confirm that you want to be warned only first.
 
 # The reason a proxy was refused: it has no host or no port.
 cause-proxy-needs-address = A proxy needs a host and a port.

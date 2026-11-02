@@ -61,7 +61,7 @@ public sealed partial class MainWindow
             await global::Windows.System.Launcher.LaunchUriAsync(uri);
     }
 
-    /// <summary>Back from a licensed service: "Watched episode 4 on Hikari Stream?" holds Mark watched for 8 s.</summary>
+    /// <summary>Back from a licensed service: "Watched episode 4 on Hikari Library?" holds Mark watched for 8 s.</summary>
     void ShowReturn(LicensedReturn back) =>
         Say(back.Prompt.Text(), T.LicensedMarkWatched, () =>
         {

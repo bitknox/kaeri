@@ -28,7 +28,6 @@ settings-folder-default = Lưu cùng bộ nhớ đệm torrent
 settings-storage-unwatched = Chưa xem
 settings-storage-used = { $size } cho tải xuống.
 settings-storage-used-free = { $size } cho tải xuống. Còn trống { $free } trên { -device } này.
-settings-torrents-warn-note = Chỉ cảnh báo chỉ hỏi xác nhận trước, giống như Không bảo vệ.
 settings-source-count = { $count ->
    *[other] { $count } { -source }
  }

@@ -168,10 +168,10 @@ public sealed class Known
     public bool Offline { get; private set; }
 
     /// <summary>
-    /// The torrent connection check's last verdict and when it came, or null while torrents are
-    /// off or before the first check.
+    /// The torrent proxy check's last status and when it came, or null while torrents are off or
+    /// before the first word.
     /// </summary>
-    public (GuardView View, DateTimeOffset At)? Guard { get; private set; }
+    public (ProxyStatus Status, DateTimeOffset At)? ProxyCheck { get; private set; }
 
     /// <summary>What the update check last said, or null before it has said anything.</summary>
     public UpdateStatus? Update { get; private set; }
@@ -274,6 +274,11 @@ public sealed class Known
             case Event.Detail d:
                 Entries[d.V1.Id] = Fixed(d.V1);
                 break;
+            case Event.Cards c:
+                // Card data for covers the lists did not bring: a title already known keeps its row.
+                foreach (var card in c.V1)
+                    Entries.TryAdd(card.Id, Fixed(card));
+                break;
             case Event.Episodes ep:
                 Episodes[ep.Id] = ep.Rows;
                 break;
@@ -368,8 +373,8 @@ public sealed class Known
             case Event.Seeding s:
                 Seeding = s.V1;
                 break;
-            case Event.Vpn v:
-                Guard = v.V1 is { } view ? (view, DateTimeOffset.UtcNow) : null;
+            case Event.TorrentProxy p:
+                ProxyCheck = p.V1 is { } status ? (status, DateTimeOffset.UtcNow) : null;
                 break;
             case Event.Connectivity c:
                 Offline = c.Offline;

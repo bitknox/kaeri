@@ -20,7 +20,6 @@ sources-check = Проверить { -source-pl }
 sources-origin-version = { $origin } · версия { $version }
 sources-standing = Состояние
 sources-status-working = Готов
-sources-torrent-indexes = Ищет по торрент-индексам, которые вы включили в настройках.
 sources-version-ready = Версия { $version } готова к установке
 sources-use-this = Использовать этот { -source }
 sources-use-name = { $name }, включено

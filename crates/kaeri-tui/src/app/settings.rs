@@ -180,7 +180,7 @@ impl App {
             S::PresenceTitle => t::settings_note_presence_title(),
             S::PresenceRich => t::settings_note_presence_rich(),
             S::Torrents => t::settings_note_torrents(),
-            S::VpnMode => t::settings_note_vpn_mode(),
+            S::TorrentProxy => t::settings_note_torrent_proxy(),
             S::SeedRatio => t::settings_note_seed_ratio(),
             S::SeedHours => t::settings_note_seed_hours(),
             S::UploadLimit => t::settings_note_upload_limit(),
@@ -204,7 +204,6 @@ impl App {
             | S::KeepNextEpisodes
             | S::DownloadsOnCellular
             | S::TorrentsOnCellular
-            | S::VpnOnFailure
             | S::EpisodeNotifications
             | S::MpvOptions
             | S::AdultTitles
@@ -324,7 +323,7 @@ fn label_text(key: SettingKey) -> String {
         S::SeedRatio => t::settings_label_seed_ratio(),
         S::SeedHours => t::settings_label_seed_hours(),
         S::UploadLimit => t::settings_label_upload_limit(),
-        S::VpnMode => t::settings_label_vpn_mode(),
+        S::TorrentProxy => t::settings_label_torrent_proxy(),
         S::TokenStorage => t::settings_label_token_storage(),
         S::SourceOrder => t::settings_label_source_order(),
         S::UpNextCountdown => t::settings_label_up_next_countdown(),
@@ -333,7 +332,6 @@ fn label_text(key: SettingKey) -> String {
         S::KeepNextEpisodes => t::settings_label_keep_next_episodes(),
         S::DownloadsOnCellular => t::settings_label_downloads_on_cellular(),
         S::TorrentsOnCellular => t::settings_label_torrents_on_cellular(),
-        S::VpnOnFailure => t::settings_label_vpn_on_failure(),
         S::EpisodeNotifications => t::settings_label_episode_notifications(),
         S::MpvOptions => t::settings_label_mpv_options(),
         S::AdultTitles => t::settings_label_adult_titles(),
@@ -423,10 +421,8 @@ fn known_value(key: SettingKey, raw: &str) -> String {
         (S::PlayerUi, "your mpv setup") => t::settings_value_player_ui_mpv(),     // i18n-skip
         (S::DownloadDir, KEPT_WITH_CACHE) => t::settings_value_download_dir_default(),
         (S::DownloadHook, "configured") => t::settings_value_configured(), // i18n-skip
-        (S::DownloadHook | S::VpnMode, "none") => t::settings_value_none(), // i18n-skip
+        (S::DownloadHook | S::TorrentProxy, "none") => t::settings_value_none(), // i18n-skip
         (S::SyncplayRoom, "unset — needed for parties") => t::settings_value_room_unset(), // i18n-skip
-        (S::VpnMode, "socks5") => t::settings_value_vpn_socks5(), // i18n-skip
-        (S::VpnMode, "external") => t::settings_value_vpn_external(), // i18n-skip
         (S::UploadLimit, "unlimited") => t::settings_value_unlimited(), // i18n-skip
         _ => String::new(),
     };
@@ -550,8 +546,8 @@ mod tests {
 
     #[test]
     fn a_refused_settings_write_puts_the_setting_back() {
-        // The value changed before the write and nothing undid it, so a refused write — torrents
-        // on with no VPN configured — went on showing "on" and the status line the new value.
+        // The value changed before the write and nothing undid it, so a refused write — a
+        // file that did not load — went on showing "on" and the status line the new value.
         let mut a = settings_at(SettingKey::Torrents);
         let task = a.handle(Action::Right, 10);
         assert_eq!(task, Some(Command::StepSetting { key: SettingKey::Torrents, delta: 1 }));
@@ -640,12 +636,12 @@ mod tests {
         assert_eq!(a.settings.quality, 1080);
 
         // And the rows that cannot be edited here say so instead of silently ignoring the key.
-        let vpn_row =
-            SettingKey::ROWS.iter().position(|id| *id == SettingKey::VpnMode).unwrap();
-        a.set_cursor(vpn_row);
-        let before = setting_text(&a, SettingKey::VpnMode);
+        let proxy_row =
+            SettingKey::ROWS.iter().position(|id| *id == SettingKey::TorrentProxy).unwrap();
+        a.set_cursor(proxy_row);
+        let before = setting_text(&a, SettingKey::TorrentProxy);
         assert_eq!(a.handle(Action::Right, 10), None);
-        assert_eq!(setting_text(&a, SettingKey::VpnMode), before);
+        assert_eq!(setting_text(&a, SettingKey::TorrentProxy), before);
         assert!(
             a.toasts.iter().any(|t| t.notice.text.contains("config.toml")),
             "a read-only row must explain itself"

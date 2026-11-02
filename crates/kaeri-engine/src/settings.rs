@@ -4,7 +4,7 @@
 
 use kaeri_core::{media::Translation, settings::SettingValue};
 use kaeri_model::{
-    Cause, Msg,
+    Msg,
     event::Event,
     notice::Notice,
     settings::{self, SettingKey, redefines_sources},
@@ -49,16 +49,6 @@ pub fn set_setting(
     tx: &Outbox,
 ) {
     let Some((table, file_key)) = key.path() else { return };
-    // Warn only on a failed check: never as a setting, since nothing here carries the viewer's
-    // confirmation. Said, so the row that asked does not wait for an answer.
-    if settings::needs_acknowledgement(key, &value) {
-        let refused = Some(key);
-        let _ = tx
-            .send(Event::Settings(settings::SettingsView { refused, ..engine.config.view() }));
-        let cause = Cause::ConfirmWarnOnly;
-        let _ = tx.send(Event::Toast(Notice::alert(Msg::NoticeNotSavedBecause { cause })));
-        return;
-    }
     if !settings::put(engine.config.effective_mut(), key, &value) {
         tracing::debug!(?key, ?value, "not a value this setting takes; nothing written");
         return;
@@ -144,7 +134,7 @@ fn write_setting(
             }
             // A setting that redefines what sources exist takes effect now rather
             // than at the next launch. The engine side's loop owns the session and
-            // the guard, so it does the work, once what was said above is in; this
+            // its route, so it does the work, once what was said above is in; this
             // only says that it is needed. An order that only moves sources is put in
             // effect without a rebuild.
             if reordered {
@@ -153,9 +143,9 @@ fn write_setting(
                 let _ = tx.internal(Internal::SourcesChanged);
             }
         }
-        // The guard reaching the UI: enabling torrents with no VPN configured fails
-        // validation here, so no arrow key can write a config that would leak. And a
-        // file that did not load at launch is refused by name and line.
+        // The config's rules reaching the UI: a value they refuse fails validation here, so
+        // no arrow key can write a config that would not load. And a file that did not load
+        // at launch is refused by name and line.
         Err(e) => {
             let reason = match e {
                 kaeri_core::Error::Config(reason) => reason,

@@ -114,10 +114,6 @@ sources-standing = Standing
 # @only windows
 sources-status-working = Ready
 
-# In the torrent { -source }'s detail, in place of the hosts it contacts.
-# @only windows
-sources-torrent-indexes = Searches the torrent indexes you have turned on under Settings.
-
 # Heading of the card in a { -source }'s detail when a newer version can be installed.
 # @only windows
 # @arg version: text

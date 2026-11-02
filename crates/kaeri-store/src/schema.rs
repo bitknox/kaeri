@@ -210,10 +210,8 @@ const MIGRATIONS: &[(&str, &str)] = &[
     -- "Use this source for this series." Distinct from `mapping_override`, which answers
     -- *which title* a provider means; this answers *which provider* to ask at all.
     --
-    -- Per title rather than global because the right answer genuinely varies per series: a
-    -- web source may carry a show the indexer has no seeded release for, and a torrent may be
-    -- the only thing carrying an older season. `providers.order` picks a default; this
-    -- overrides it for one title.
+    -- The right source can differ per title, so a title can pin one. `providers.order` is the
+    -- default; this overrides it for one title.
     --
     -- The provider is stored by id, and a stored id that no longer exists — a plugin the user
     -- removed — is treated as "no preference" at read time rather than being cleaned up here.

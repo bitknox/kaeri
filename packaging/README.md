@@ -179,13 +179,37 @@ those two read from it and register under the person's team (`apple/scripts/adho
 release's. Betas are pre-releases and are never marked latest, so they never reach either. The engine finds a new release
 on its own (`crates/kaeri-engine/src/updates.rs`) and tells the apps, which then update:
 
-- The Mac app through Sparkle 2, when the viewer presses Update. The app is signed ad hoc, so
-  Sparkle trusts the `.dmg` by its EdDSA signature against the app's public key, and it checks it
-  before it opens the image. Its installer replaces the bundle, takes the new one out of
+- The Mac app through Sparkle 2, when the viewer presses Update. The app has no Apple developer
+  signature, so Sparkle trusts the `.dmg` by its EdDSA signature against the app's public key,
+  and it checks it before it opens the image. Its installer replaces the bundle, takes the new one out of
   quarantine and relaunches it. The private key is the `MAC_UPDATE_ED25519_KEY` secret, Ed25519's
   32-byte seed in base64, as Sparkle's `sign_update --ed-key-file` reads it. Losing it means the
   Mac app can no longer update itself: a new key needs a release whose app carries it, installed
   by hand.
+
+  Releases are signed with Kaeri's own self-signed code-signing certificate (CN "Kaeri"), the
+  `MAC_CODESIGN_P12` secret (the `.p12` in base64) and `MAC_CODESIGN_P12_PASSWORD`, through
+  `apple/scripts/signing-keychain.sh`; the terminal's macOS binary too. Gatekeeper treats that
+  the same as ad hoc, but the designated requirement (`identifier "app.kaeri.app" and
+  certificate leaf = H"<SHA-1>"`) stays the same from one release to the next, so the login
+  keychain's "Always Allow" lasts across updates. Sparkle lets the signing identity change
+  while the EdDSA key stays the same, so the first signed release updates over an ad hoc one.
+  Without the secrets the builds are signed ad hoc. Losing the certificate means one more
+  keychain prompt for everyone, on the update signed with its replacement. The maintainer keeps
+  it, with a backup, in `~/.kaeri-signing/mac`.
+
+  Local review builds, such as a merge train's, are signed with the same certificate, so the
+  maintainer's keychain access lasts from one to the next as it does across releases:
+
+  ```bash
+  apple/scripts/signing-keychain.sh sign ~/.kaeri-signing/mac <derived data>/Build/Products/Release/Kaeri.app
+  ```
+
+  It imports the certificate into a keychain made with a random password in a temporary
+  directory, signs the app with `adhoc-sign.sh` through that keychain, and deletes it when it
+  ends. It never touches the login keychain or the keychain search list, and nothing asks for a
+  password. Inside the HOME guard, `~` is the temporary HOME, so name the real one there
+  (`$real/.kaeri-signing/mac`).
 - iPhone and iPad through SideStore or AltStore, from the source. The app links to SideStore's
   `sidestore://source?url=` and AltStore's `altstore://source?url=`, and to the release page
   when neither is installed.
@@ -195,8 +219,8 @@ on its own (`crates/kaeri-engine/src/updates.rs`) and tells the apps, which then
 `rust-licences/generate.sh` lists every Rust crate compiled into a build, under the licence it is
 used under, with that licence's text as the crate ships it: for the terminal binary per target,
 and for the apps' engine. It runs cargo-about 0.9.2. `rust-licences/about.toml` says which
-licences are accepted, and adds the C some crates vendor under licences of their own (BoringSSL
-in `btls-sys`, zstd in `zstd-sys`); a crate under anything else, or a clarification that no
+licences are accepted, and adds the C some crates vendor under licences of their own (zstd in
+`zstd-sys`); a crate under anything else, or a clarification that no
 longer matches its crate, fails the build. CI runs it whenever the Rust changes; each terminal
 package carries its target's in `third-party/THIRD-PARTY-rust.txt`, a release attaches
 `kaeri-<version>-rust-licences.txt` for all four, and the apps' notices zip carries the

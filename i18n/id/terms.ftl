@@ -43,8 +43,6 @@
 -watch-together-cap = Nonton bareng
 
 # Where releases are looked up.
--torrent-index = indeks torrent
--torrent-index-cap = Indeks torrent
 
 # One downloadable file in a torrent index. Not a place episodes come from.
 -release = rilis

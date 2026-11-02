@@ -8,7 +8,10 @@ use std::{
 };
 
 use kaeri_core::ids::AnilistId;
-use kaeri_meta::{Meta, anilist::AiringEntry};
+use kaeri_meta::{
+    Meta,
+    anilist::{AiringEntry, AiringPage},
+};
 use kaeri_model::{
     catalog::{AiringStatus, ContentFor, ContentList, Entry},
     event::Event,
@@ -34,7 +37,7 @@ struct Block {
 
 /// The pages the calendar has loaded, numbered against one anchor.
 #[derive(Debug, Clone, Default)]
-struct Window {
+pub struct Window {
     anchor: i64,
     past: BTreeMap<u32, Block>,
     ahead: BTreeMap<u32, Block>,
@@ -82,11 +85,22 @@ impl Window {
     }
 }
 
-/// The last window, kept for [`REMEMBERED_FOR`], so a return to the calendar asks AniList
-/// nothing. Cheap to clone; every clone is the same memory.
+/// The one schedule of broadcasts the Calendar, the widgets, the notifications' week and the
+/// airing digest read: the last window, kept for [`REMEMBERED_FOR`], so a return to the calendar
+/// asks AniList nothing and the widgets ask only for the pages the calendar has not. Cheap to
+/// clone; every clone is the same memory.
+///
+/// A page is fetched once however many ask for it at the same time, and a page that arrived is
+/// kept when the pages after it fail, so a week cut short still has what it had.
 #[derive(Clone, Default)]
 pub struct CalendarMemory {
     inner: Arc<Mutex<Option<Remembered>>>,
+    /// Held while a page of the past, and of the days ahead, is asked for, so two readers
+    /// wanting the same page ask once. One for each side, so the two go out side by side.
+    gates: Arc<[tokio::sync::Mutex<()>; 2]>,
+    /// The lanes of the background walks under way, raised to the page on screen's when the
+    /// Calendar comes to read: see [`kaeri_meta::Lane`].
+    walking: Arc<Mutex<Vec<kaeri_meta::Lane>>>,
 }
 
 struct Remembered {
@@ -95,20 +109,106 @@ struct Remembered {
     window: Window,
 }
 
+/// What a reader of the schedule needs held, from the anchor outward.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct Need {
+    /// Pages of the past held without a gap, at least.
+    pub past_pages: u32,
+    /// And the past held back to this instant, when the schedule reaches it.
+    pub past_to: Option<i64>,
+    /// Pages of the days ahead held without a gap, at least.
+    pub ahead_pages: u32,
+    /// And the days ahead held on to this instant, when the schedule reaches it.
+    pub ahead_to: Option<i64>,
+}
+
+/// The schedule as read: the window, and why it falls short of what was needed, if it does.
+#[derive(Debug, Clone)]
+pub struct Covered {
+    pub window: Window,
+    pub failure: Option<String>,
+}
+
+impl Window {
+    /// The next page of the past this window still needs for `need`, if any.
+    fn next_past(&self, need: &Need) -> Option<u32> {
+        let (count, more) = Self::run(&self.past);
+        let reached = |t: i64| {
+            self.past.get(&count).and_then(|b| b.items.last()).is_some_and(|a| a.airing_at <= t)
+        };
+        let wanted =
+            count < need.past_pages || need.past_to.is_some_and(|t| count == 0 || !reached(t));
+        (wanted && more && count < CALENDAR_JOB_PAGES * 2).then_some(count + 1)
+    }
+
+    /// The next page of the days ahead this window still needs for `need`, if any.
+    fn next_ahead(&self, need: &Need) -> Option<u32> {
+        let (count, more) = Self::run(&self.ahead);
+        let reached = |t: i64| {
+            self.ahead
+                .get(&count)
+                .and_then(|b| b.items.last())
+                .is_some_and(|a| a.airing_at >= t)
+        };
+        let wanted = count < need.ahead_pages
+            || need.ahead_to.is_some_and(|t| count == 0 || !reached(t));
+        (wanted && more && count < CALENDAR_JOB_PAGES * 2).then_some(count + 1)
+    }
+
+    /// The pages of one side this window still needs for `need`, in order: the next one, and
+    /// those after it that are sure to be wanted too. A count of pages says how many; an instant
+    /// to reach is reckoned from how far the pages held went each, so a page that turns out not
+    /// to be needed is left unread. Empty when nothing more is needed.
+    fn wanted(&self, need: &Need, ahead: bool) -> Vec<u32> {
+        let next = if ahead { self.next_ahead(need) } else { self.next_past(need) };
+        let Some(next) = next else { return Vec::new() };
+        let pages = if ahead { &self.ahead } else { &self.past };
+        let (count, _) = Self::run(pages);
+        let counted = if ahead { need.ahead_pages } else { need.past_pages };
+        let mut more = counted.saturating_sub(count).max(1);
+        let to = if ahead { need.ahead_to } else { need.past_to };
+        let reached = pages.get(&count).and_then(|b| b.items.last()).map(|a| a.airing_at);
+        if let (Some(to), Some(reached)) = (to, reached)
+            && count > 0
+        {
+            // How far a page went, on average, and how many such pages the rest would take.
+            let (went, left) = if ahead {
+                (reached - self.anchor, to - reached)
+            } else {
+                (self.anchor - reached, reached - to)
+            };
+            let each = went / i64::from(count);
+            if each > 0 && left > 0 {
+                let pages = u32::try_from((left + each - 1) / each).unwrap_or(u32::MAX);
+                more = more.max(pages);
+            }
+        }
+        let last = (CALENDAR_JOB_PAGES * 2).min(next.saturating_add(more - 1));
+        (next..=last).collect()
+    }
+
+    /// The broadcasts held, in time order, strictly between `from` and `to`.
+    pub fn between(&self, from: i64, to: i64) -> Vec<AiringEntry> {
+        self.broadcasts()
+            .into_iter()
+            .filter(|a| a.airing_at > from && a.airing_at < to)
+            .cloned()
+            .collect()
+    }
+}
+
 impl CalendarMemory {
     fn lock(&self) -> std::sync::MutexGuard<'_, Option<Remembered>> {
         self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
     }
 
-    /// The window kept, if it was fetched less than ten minutes before `now`.
-    fn fresh(&self, now: i64) -> Option<Window> {
-        let kept = self.lock();
-        let kept = kept.as_ref()?;
-        (now - kept.at < REMEMBERED_FOR && now >= kept.at).then(|| kept.window.clone())
+    fn walks(&self) -> std::sync::MutexGuard<'_, Vec<kaeri_meta::Lane>> {
+        self.walking.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
     }
 
-    fn keep(&self, at: i64, window: Window) {
-        *self.lock() = Some(Remembered { at, window });
+    /// The window held, however old: what stands in while the schedule is asked for again.
+    pub fn held(&self) -> Option<Window> {
+        self.lock().as_ref().map(|k| k.window.clone())
     }
 
     /// Add pages a job fetched to the window they belong to, if it is still the one kept.
@@ -118,6 +218,174 @@ impl CalendarMemory {
             let into = if ahead { &mut kept.window.ahead } else { &mut kept.window.past };
             into.extend(pages.iter().cloned());
         }
+    }
+
+    /// The window to read from: the kept one while it is fresh, and otherwise a new one at
+    /// `anchor`, which replaces the kept one at its first page. `renew` asks for a new one
+    /// whatever the kept one's age.
+    fn window_for(&self, at: i64, anchor: i64, renew: bool) -> (i64, Option<Window>) {
+        let mut kept = self.lock();
+        let fresh = kept
+            .as_ref()
+            .filter(|k| !renew && at - k.at < REMEMBERED_FOR && at >= k.at)
+            .map(|k| k.window.anchor);
+        match fresh {
+            Some(anchor) => (anchor, None),
+            None => (anchor, kept.take().map(|k| k.window)),
+        }
+    }
+
+    /// Read the schedule with `need` held: the pages it lacks asked for one at a time, each
+    /// once however many readers want it, and what is held handed back with the reason it
+    /// falls short, if it does. Asked of AniList as background work when `low`: the widgets,
+    /// the notices and the digest wait behind what is on screen. A reader that is not `low`, the
+    /// Calendar on screen, raises the background walks under way to the page on screen's class,
+    /// as it may wait on their pages.
+    ///
+    /// The walk goes on if the caller stops waiting, so a reader that gave up on a slow answer
+    /// finds the pages held when it comes back.
+    pub async fn cover(
+        &self,
+        meta: &Meta,
+        at: i64,
+        anchor: i64,
+        need: Need,
+        renew: bool,
+        low: bool,
+    ) -> Covered {
+        let (anchor, stale) = self.window_for(at, anchor, renew);
+        let lane = if low {
+            let lane = kaeri_meta::Lane::new(kaeri_meta::Priority::Background);
+            self.walks().push(lane.clone());
+            Some(lane)
+        } else {
+            for walk in self.walks().iter() {
+                walk.raise(kaeri_meta::Priority::OnScreen);
+            }
+            None
+        };
+        let me = self.clone();
+        let meta = meta.clone();
+        let walk = async move {
+            // A window just begun is kept empty at once, for the other readers to join.
+            {
+                let mut kept = me.lock();
+                if kept.as_ref().is_none_or(|k| k.window.anchor != anchor) {
+                    *kept =
+                        Some(Remembered { at, window: Window { anchor, ..Window::default() } });
+                }
+            }
+            // The pages each side lacks go out together, two to a request: the first page of
+            // the past and of the days ahead in one, and the pages a side is sure to need after
+            // it in the next. A side whose gate another reader holds is not waited for while the
+            // other has pages to ask.
+            let mut errors: [Option<String>; 2] = [None, None];
+            loop {
+                let wanted = |ahead: bool| {
+                    let kept = me.lock();
+                    let window = kept.as_ref().filter(|k| k.window.anchor == anchor);
+                    window.map(|k| k.window.wanted(&need, ahead)).unwrap_or_default()
+                };
+                let sides: Vec<bool> = [false, true]
+                    .into_iter()
+                    .filter(|ahead| errors[usize::from(*ahead)].is_none())
+                    .filter(|ahead| !wanted(*ahead).is_empty())
+                    .collect();
+                let Some(first) = sides.first().copied() else { break };
+                let mut gates = Vec::new();
+                for ahead in &sides {
+                    if let Ok(gate) = me.gates[usize::from(*ahead)].try_lock() {
+                        gates.push((*ahead, gate));
+                    }
+                }
+                if gates.is_empty() {
+                    gates.push((first, me.gates[usize::from(first)].lock().await));
+                }
+                // Looked at again behind the gates: a page may have arrived.
+                let mut asked: Vec<(bool, u32)> = Vec::new();
+                let lists: Vec<(bool, Vec<u32>)> =
+                    gates.iter().map(|(ahead, _)| (*ahead, wanted(*ahead))).collect();
+                for n in 0..CALENDAR_PAGES_TOGETHER {
+                    for (ahead, pages) in &lists {
+                        if let Some(page) = pages.get(n) {
+                            asked.push((*ahead, *page));
+                        }
+                    }
+                }
+                asked.truncate(CALENDAR_PAGES_TOGETHER);
+                if asked.is_empty() {
+                    continue;
+                }
+                let found = fetch_pages(&meta, anchor, &asked).await;
+                for ahead in [false, true] {
+                    // In page order, and only as far as the need reaches, as asked one by one.
+                    for ((side, page), block) in asked.iter().zip(&found) {
+                        if *side != ahead {
+                            continue;
+                        }
+                        let next = {
+                            let kept = me.lock();
+                            let window = kept.as_ref().filter(|k| k.window.anchor == anchor);
+                            window.and_then(|k| {
+                                if ahead {
+                                    k.window.next_ahead(&need)
+                                } else {
+                                    k.window.next_past(&need)
+                                }
+                            })
+                        };
+                        if next != Some(*page) {
+                            break;
+                        }
+                        match block {
+                            Ok(block) => me.add(anchor, ahead, &[(*page, block.clone())]),
+                            Err(e) => {
+                                errors[usize::from(ahead)] = Some(e.clone());
+                                break;
+                            }
+                        }
+                    }
+                }
+                drop(gates);
+            }
+            let [past, ahead] = errors;
+            (past, ahead)
+        };
+        let walking = self.walking.clone();
+        let walk = async move {
+            let Some(lane) = lane else { return walk.await };
+            let errors = lane.run(walk).await;
+            let mut walks = walking.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            walks.retain(|other| !other.same(&lane));
+            errors
+        };
+        let (past_error, ahead_error) = match tokio::spawn(walk).await {
+            Ok(errors) => errors,
+            Err(e) => (Some(e.to_string()), None),
+        };
+        let mut failure = past_error.or(ahead_error);
+        let now_kept = self.held();
+        let held = now_kept.as_ref().filter(|w| w.anchor == anchor).cloned();
+        let window = match (held, stale) {
+            // Nothing arrived of a new window: the last good one stands in for it.
+            (Some(w), Some(stale))
+                if failure.is_some()
+                    && Window::run(&w.past).0 + Window::run(&w.ahead).0 == 0 =>
+            {
+                *self.lock() = Some(Remembered { at, window: stale.clone() });
+                stale
+            }
+            (Some(w), _) => w,
+            // Another reader began a newer window while this one was read (a Calendar
+            // refresh): that one stands in, and the reader is told it may not be whole, so it
+            // asks again rather than keeping an empty week as the answer.
+            (None, stale) => {
+                failure
+                    .get_or_insert_with(|| "the schedule was renewed while it was read".into());
+                now_kept.or(stale).unwrap_or_else(|| Window { anchor, ..Window::default() })
+            }
+        };
+        Covered { window, failure }
     }
 }
 
@@ -133,17 +401,14 @@ pub async fn load_calendar(
 ) {
     let Lent { meta, store, registry, tx, .. } = lent;
     let started = clock.now();
-    let (window, failure) = match memory.fresh(started).filter(|_| remembered) {
-        Some(window) => (window, None),
-        None => {
-            let (window, failure) = fetch_window(&meta, now_epoch()).await;
-            // A window with a half missing is shown, but not kept: the next visit asks again.
-            if failure.is_none() {
-                memory.keep(started, window.clone());
-            }
-            (window, failure)
-        }
+    let need = Need {
+        past_pages: CALENDAR_INITIAL_PAST_PAGES,
+        ahead_pages: CALENDAR_FUTURE_PAGES,
+        ..Need::default()
     };
+    // Shared with the widgets, the notices and the digest: only the pages they have not read.
+    let Covered { window, failure } =
+        memory.cover(&meta, started, now_epoch(), need, !remembered, false).await;
     let update = match timeline(&window, &store) {
         Some(mut entries) => {
             mark_dubbed(&mut entries, &dubs, &store, &registry);
@@ -251,6 +516,42 @@ pub async fn load_calendar_ahead(
     let _ = tx.send(update);
 }
 
+/// Pages of the past (`false`) and the days ahead (`true`), each as [`fetch_past`] and
+/// [`fetch_ahead`] ask for one, in one request: see [`Meta::airing_pages`].
+async fn fetch_pages(
+    meta: &Meta,
+    anchor: i64,
+    pages: &[(bool, u32)],
+) -> Vec<Result<Block, String>> {
+    let asked: Vec<AiringPage> = pages
+        .iter()
+        .map(|(ahead, page)| match ahead {
+            true => AiringPage {
+                from: anchor,
+                to: anchor + CALENDAR_CEILING,
+                page: *page,
+                per_page: CALENDAR_PER_PAGE,
+                newest_first: false,
+            },
+            false => AiringPage {
+                from: anchor - CALENDAR_MAX_PAST,
+                to: anchor,
+                page: *page,
+                per_page: CALENDAR_PER_PAGE,
+                newest_first: true,
+            },
+        })
+        .collect();
+    meta.airing_pages(&asked)
+        .await
+        .into_iter()
+        .map(|found| {
+            let found = found.map_err(|e| e.to_string())?;
+            Ok(Block { items: found.items, has_next: found.has_next })
+        })
+        .collect()
+}
+
 /// One page of past broadcasts, newest first.
 ///
 /// The window's *upper* bound is the anchor and the sort is descending, so page numbering means
@@ -316,34 +617,6 @@ where
         }
     }
     (blocks, None)
-}
-
-/// The calendar's first load: the pages of past and of the days ahead that cover the week
-/// either side, beside each other, numbered against `anchor`.
-///
-/// "Is there a tab for latest releases?" was a fair question with no good answer — the calendar
-/// only looked forward, so the episodes you could actually watch right now appeared nowhere.
-///
-/// Two directions rather than one, and not for want of trying: a single ascending query over the
-/// whole fortnight returns its page *oldest first*, and the page is exhausted long before it
-/// reaches today. So the recent half is fetched newest-first and reversed.
-///
-/// **Both halves page.** The window was never the real limit — a single page is. Measured against
-/// live data there are around 127 broadcasts in a week, and AniList caps `perPage` at 50 whatever
-/// you ask for, so one page of past is a day and a half and one page of future is barely two days.
-/// A seven-day window served by one page each was a seven-day window in name only.
-///
-/// Either half failing alone is still a usable screen. The failure is returned beside the window
-/// so the caller can tell a whole window from half of one. A half that failed outright still
-/// leaves its `more` set: there is no evidence it is empty, only that this attempt did not
-/// reach it, and the front end should ask for it again.
-async fn fetch_window(meta: &Meta, anchor: i64) -> (Window, Option<String>) {
-    let past = walk(1, CALENDAR_INITIAL_PAST_PAGES, |p| fetch_past(meta, anchor, p), |_| false);
-    let ahead = walk(1, CALENDAR_FUTURE_PAGES, |p| fetch_ahead(meta, anchor, p), |_| false);
-    let ((past, past_error), (ahead, ahead_error)) = tokio::join!(past, ahead);
-    let window =
-        Window { anchor, past: past.into_iter().collect(), ahead: ahead.into_iter().collect() };
-    (window, past_error.or(ahead_error))
 }
 
 /// The window as one timeline of rows: what recently aired, then what is coming, with the
@@ -495,6 +768,11 @@ const CALENDAR_FUTURE_PAGES: u32 = 3;
 /// The most pages one job walks to reach its `through`. About a week and a half of broadcasts
 /// is three pages, so this is several weeks; a job that stops short says there is more.
 const CALENDAR_JOB_PAGES: u32 = 12;
+/// The most pages of the schedule asked in one request: two hundred broadcasts, each with its
+/// title. AniList counts each page's titles once against its query complexity, as it does
+/// Search's start's five rails, so four pages fit where two did. Refused together, the pages are
+/// asked one by one.
+const CALENDAR_PAGES_TOGETHER: usize = 4;
 /// How long the last window is kept (seconds), so a return to the calendar asks AniList nothing.
 const REMEMBERED_FOR: i64 = 600;
 

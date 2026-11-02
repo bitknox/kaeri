@@ -174,7 +174,9 @@ class CalendarModel {
         val anchor = now.anchor ?: return null
         if (!now.morePast || now.loadingPast || now.pastFailed) return null
         _window.value = now.copy(loadingPast = true)
-        return anchor to now.pages
+        // The page after the last held: asking for [Window.pages] would fetch the oldest page
+        // held again and show its broadcasts twice.
+        return anchor to now.pages + 1u
     }
 
     /** The next later page to ask for; Try again asks for it after a failure. */
@@ -194,7 +196,8 @@ class CalendarModel {
 
     /**
      * Older broadcasts, above what is there. A page of `null` failed: nothing to add; the screen
-     * says so and Try again asks for the same page.
+     * says so and Try again asks for the same page. A page already held, as when a fresh window
+     * came in while it was on its way, adds nothing.
      */
     internal fun backfill(page: UInt?, entries: List<Entry>, morePast: Boolean, titles: TitleCache) {
         val now = _window.value
@@ -202,32 +205,54 @@ class CalendarModel {
             _window.value = now.copy(loadingPast = false, pastFailed = true)
             return
         }
-        titles.merge(entries)
+        if (page <= now.pages) {
+            _window.value = now.copy(loadingPast = false, pastFailed = false)
+            return
+        }
+        val added = unheld(entries, now.rows)
+        titles.merge(added)
         _window.value = now.copy(
-            rows = entries + now.rows,
-            pages = maxOf(now.pages, page + 1u),
+            rows = added + now.rows,
+            pages = page,
             morePast = morePast,
             loadingPast = false,
             pastFailed = false,
         )
     }
 
-    /** Later broadcasts, after what is there; a `null` page failed. */
+    /** Later broadcasts, after what is there; a `null` page failed, and one already held adds nothing. */
     internal fun ahead(page: UInt?, entries: List<Entry>, moreAhead: Boolean, titles: TitleCache) {
         val now = _window.value
         if (page == null) {
             _window.value = now.copy(loadingAhead = false, aheadFailed = true)
             return
         }
-        titles.merge(entries)
+        if (page <= now.aheadPages) {
+            _window.value = now.copy(loadingAhead = false, aheadFailed = false)
+            return
+        }
+        val added = unheld(entries, now.rows)
+        titles.merge(added)
         _window.value = now.copy(
-            rows = now.rows + entries,
-            aheadPages = maxOf(now.aheadPages, page),
+            rows = now.rows + added,
+            aheadPages = page,
             moreAhead = moreAhead,
             loadingAhead = false,
             aheadFailed = false,
         )
     }
+
+    /**
+     * The broadcasts of [entries] not already among [rows]: a broadcast is a title's episode,
+     * AniList's own or one the calendar estimates, and shows once.
+     */
+    private fun unheld(entries: List<Entry>, rows: List<Entry>): List<Entry> {
+        val held = rows.mapNotNullTo(HashSet()) { broadcast(it) }
+        return entries.filter { entry -> broadcast(entry)?.let { held.add(it) } ?: true }
+    }
+
+    private fun broadcast(entry: Entry): Triple<UInt, UInt, Boolean>? =
+        entry.airingEpisode?.let { Triple(entry.id, it, entry.airingApproximate) }
 }
 
 /**

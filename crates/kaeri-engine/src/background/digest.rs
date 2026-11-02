@@ -12,8 +12,10 @@ use kaeri_model::{Msg, event::Event, notice::Notice};
 use kaeri_store::Store;
 
 use crate::{
+    catalog::calendar::{CalendarMemory, Need},
+    clock::Clock,
     host::Host,
-    outbox::{Internal, Outbox},
+    outbox::Outbox,
 };
 
 /// The stored-state key holding when the digest last looked.
@@ -28,18 +30,21 @@ const WATCHED_ROWS: u32 = 100;
 
 /// Look for what aired since the last launch, in the background, and say it once: as a toast,
 /// and on the desktop too when `desktop` asks for it, through the host.
+#[allow(clippy::too_many_arguments)]
 pub fn spawn(
     enabled: bool,
     desktop: bool,
     store: Store,
     meta: Meta,
+    schedule: CalendarMemory,
+    clock: Clock,
     host: Arc<dyn Host>,
     tx: Outbox,
 ) {
     if !enabled {
         return;
     }
-    tokio::spawn(async move {
+    tokio::spawn(kaeri_meta::in_background(async move {
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .map_or(0, |d| d.as_secs() as i64);
@@ -67,33 +72,28 @@ pub fn spawn(
             return;
         }
 
-        // A busy week is hundreds of airings; walk a few pages rather than trusting one.
-        // The cap is a courtesy to the rate budget — four pages covers any real window.
-        let mut hits: Vec<(String, u32)> = Vec::new();
-        for page in 1..=4 {
-            let Ok(batch) = meta.airing_between(from, now, page, 50).await else {
-                return;
-            };
-            hits.extend(
-                batch
-                    .items
-                    .iter()
-                    .filter(|e| watching.contains(&e.media.id))
-                    .map(|e| (meta.titles().pick(&e.media.title).to_owned(), e.episode)),
-            );
-            if !batch.has_next {
-                break;
-            }
+        // Read from the schedule the Calendar, the widgets and the notices share: the page or
+        // two of the past it holds already, and as background work, behind what is on screen.
+        let need = Need { past_to: Some(from), ..Need::default() };
+        let covered = schedule.cover(&meta, clock.now(), now, need, false, true).await;
+        if let Some(failure) = &covered.failure {
+            tracing::info!(%failure, "the airing digest could not read all of the schedule");
         }
+        let hits: Vec<(String, u32)> = covered
+            .window
+            .between(from, now)
+            .iter()
+            .filter(|e| watching.contains(&e.media.id))
+            .map(|e| (meta.titles().pick(&e.media.title).to_owned(), e.episode))
+            .collect();
         if hits.is_empty() {
             return;
         }
         say(&hits, desktop, host.as_ref(), &tx);
-    });
+    }));
 }
 
-/// Say what aired: as a toast, and through the host too when `desktop` asks for it. Then keep
-/// next tops the shows up, since an episode out is one more it may keep.
+/// Say what aired: as a toast, and through the host too when `desktop` asks for it.
 fn say(hits: &[(String, u32)], desktop: bool, host: &dyn Host, tx: &Outbox) {
     let msg = compose(hits);
     // A copy for people who launch the app and switch away. The toast is the real channel.
@@ -102,7 +102,6 @@ fn say(hits: &[(String, u32)], desktop: bool, host: &dyn Host, tx: &Outbox) {
         host.notify("Kaeri", &msg.english());
     }
     let _ = tx.send(Event::Toast(Notice::info(msg)));
-    let _ = tx.internal(Internal::TopUp);
 }
 
 /// One line, sized to what it reports: a single episode is named, a pile is counted.
@@ -120,14 +119,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn what_aired_is_said_and_then_kept_next() {
+    fn what_aired_is_said_and_nothing_is_downloaded_for_it() {
         use crate::outbox::Envelope;
         let (tx, mut inbox) = Outbox::inbox();
         let dir = tempfile::tempdir().unwrap();
         let host = crate::host::QuietHost::in_dir(dir.path());
         say(&[("Show".into(), 4)], false, &host, &tx);
         assert!(matches!(inbox.try_recv(), Ok(Envelope::Event(Event::Toast(_)))));
-        assert!(matches!(inbox.try_recv(), Ok(Envelope::Internal(Internal::TopUp))));
+        assert!(inbox.try_recv().is_err(), "keep next is not asked to top up");
     }
 
     #[test]

@@ -165,6 +165,81 @@ struct TitleOpeningTests {
         #expect(navigator.flight == nil && navigator.lifted == nil && !navigator.pageCovers)
     }
 
+    @Test func aTileClickedWhileItsArtFliesHomeFliesAgainAsANewTrip() {
+        let navigator = Navigator(route: LaunchRoute())
+        navigator.sourceShown(shelf, true)
+        navigator.openTitle(900_001, from: shelf)
+        navigator.landingShown(cover, true)
+        navigator.takeOff()
+        if let flight = navigator.flight { navigator.land(flight) }
+        navigator.back()
+        navigator.takeOff()
+        // The art is on its way home, or just landed there, when the tile is clicked again.
+        let backTrip = TitleFlight(source: shelf, opening: false, atPage: false).trip
+        if let flight = navigator.flight { #expect(flight.trip == backTrip) }
+        navigator.openTitle(900_001, from: shelf)
+        let opening = navigator.flight
+        #expect(opening?.opening == true)
+        // The shell keys the flyer by its trip: a new trip is a new flyer, which takes off on
+        // its own. Kept as the last one, it never took off and the page's cover stayed hidden.
+        #expect(opening?.trip != backTrip)
+        #expect(navigator.awaits(900_001, .poster))
+        navigator.takeOff()
+        if let flight = navigator.flight {
+            #expect(flight.atPage)
+            navigator.land(flight)
+        }
+        #expect(navigator.flight == nil && navigator.pageSettled)
+        #expect(!navigator.awaits(900_001, .poster), "the cover is drawn once the art lands")
+    }
+
+    @Test func aSecondClickWhileThePageOpensLetsTheArtFlyOn() {
+        let navigator = Navigator(route: LaunchRoute())
+        navigator.sourceShown(shelf, true)
+        navigator.openTitle(900_001, from: shelf)
+        let opening = navigator.flight
+        // The second click of a double click, before the flyer takes off.
+        navigator.openTitle(900_001, from: shelf)
+        #expect(navigator.flight == opening, "the flight is not torn down")
+        #expect(navigator.lifted == shelf)
+        #expect(navigator.awaited == cover)
+        navigator.landingShown(cover, true)
+        navigator.takeOff()
+        // And again with the art in the air, or just landed: without a window the spring ends
+        // at once.
+        let inAir = navigator.flight
+        navigator.openTitle(900_001, from: shelf)
+        #expect(navigator.flight == inAir)
+        if let flight = navigator.flight { navigator.land(flight) }
+        #expect(navigator.flight == nil && navigator.pageSettled)
+        #expect(navigator.awaited == nil, "the cover is drawn once the art lands")
+        navigator.back()
+        navigator.takeOff()
+        if let flight = navigator.flight { navigator.land(flight) }
+        #expect(navigator.titleOnMac == nil && !navigator.canGoBack, "one Back leaves the page")
+    }
+
+    @Test func aSecondClickOnAnOpenPageLeavesItsCoverDrawn() {
+        let navigator = Navigator(route: LaunchRoute())
+        navigator.sourceShown(shelf, true)
+        navigator.openTitle(900_001, from: shelf)
+        navigator.landingShown(cover, true)
+        navigator.takeOff()
+        if let flight = navigator.flight { navigator.land(flight) }
+        navigator.openTitle(900_001, from: shelf)
+        navigator.openTitle(900_001)
+        #expect(navigator.flight == nil && navigator.awaited == nil)
+        #expect(navigator.pageSettled && navigator.lifted == shelf, "Back still flies home")
+    }
+
+    @Test func aPageFromNowhereAwaitsNoArt() {
+        let navigator = Navigator(route: LaunchRoute())
+        navigator.openTitle(900_001)
+        #expect(navigator.flight == nil && navigator.awaited == nil)
+        navigator.openTitle(900_001)
+        #expect(navigator.awaited == nil)
+    }
+
     @Test func backFadesWhenTheElementHasGone() {
         let navigator = Navigator(route: LaunchRoute())
         navigator.sourceShown(shelf, true)

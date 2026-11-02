@@ -66,7 +66,7 @@ pub struct PlaybackTracker {
     /// Whether to hand the player chapter markers when the stream brings none of its own.
     mark_chapters: bool,
     /// Set once markers have been written. mpv reports the change back as a chapters event,
-    /// and reading our own markers as though the release group had authored them would be
+    /// and reading our own markers as though the file's own author had written them would be
     /// circular — worse, an ending marker past the runtime is dropped by mpv, so the round
     /// trip could come back *missing* the ending we started from.
     marked: bool,
@@ -500,8 +500,8 @@ mod tests {
         assert!(marks(&actions).is_some(), "the settled answer still gets markers");
     }
 
-    /// Writing the list makes mpv report it straight back. Reading that as the release group's
-    /// own work would be circular — and mpv drops a marker past the runtime, so the round trip
+    /// Writing the list makes mpv report it straight back. Reading that as the file's own
+    /// chapters would be circular — and mpv drops a marker past the runtime, so the round trip
     /// can return *fewer* segments than it was given.
     #[test]
     fn the_markers_we_wrote_are_not_read_back_as_the_streams_own() {

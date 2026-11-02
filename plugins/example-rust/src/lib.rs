@@ -1,15 +1,15 @@
 //! A reference provider plugin.
 //!
 //! This exists to be read. It exercises every part of the ABI — the manifest, the lent `fetch`,
-//! the lent regex, the error vocabulary — so the shape of a real provider is visible without
-//! needing a volatile live source to be reachable.
+//! the lent regex, the error vocabulary — so the shape of a real plugin is visible without
+//! needing a live server to be reachable.
 //!
-//! It talks to `api.example`, a made-up host that stands for a source's API.
-//! A reference implementation whose tests fail because someone else's site changed its markup
+//! It talks to `api.example`, a made-up host that stands for your own media API.
+//! A reference implementation whose tests fail because a real server changed
 //! teaches nothing, so it never names a real one. Point it at a fake server to see it search.
 //!
 //! **The thing to notice:** there is no HTTP client here, no TLS, no async runtime. The whole
-//! plugin is a parser. `host::fetch` does the networking, which is why this compiles to a few
+//! plugin turns responses into results. `host::fetch` does the networking, which is why this compiles to a few
 //! kilobytes and leaves the allowlist and rate limiting to the host.
 
 #[allow(warnings)]
@@ -51,7 +51,7 @@ impl Guest for Component {
     fn search(query: String, translation: String) -> Result<Vec<SearchHit>, ProviderError> {
         host::log("debug", &format!("search {query:?} ({translation})"));
 
-        // A real provider would request the site's search endpoint. Here the query is echoed
+        // A real plugin asks your server's search endpoint. Here the query is echoed
         // back, which still exercises the whole round trip: request construction, the host's
         // allowlist check, the response body arriving as bytes.
         let body = get(&format!("https://{ALLOWED_HOST}/get?q={}", encode(&query)))?;
@@ -107,11 +107,10 @@ impl Guest for Component {
         let slug = id.strip_prefix("example:").ok_or(ProviderError::NotFound)?;
 
         // A real plugin reads this from the catalogue's response; the example keeps it fixed so
-        // it needs no network. A source that wraps its URLs in a cipher is the plugin's own
-        // business now: the ABI lends no crypto, so such a plugin brings a small library.
+        // it needs no network.
         let url = STREAM_URL.to_owned();
 
-        // The lent settings: an optional mirror override from
+        // The lent settings: an optional server address override from
         // `[providers.plugins.settings.example-rust]`. The pattern to copy is the fallback —
         // a plugin must work with every setting unset, because most users never write any.
         let cdn = host::config_get("cdn").unwrap_or_else(|| "cdn.example.test".into());
@@ -122,9 +121,8 @@ impl Guest for Component {
             url: url.replace("cdn.example.test", &cdn),
             kind: "hls".into(),
             quality: Some(1080),
-            // Referer-locked CDNs return 403 without this, which is why headers travel with the
-            // stream rather than being the player's guess.
-            headers: vec![("referer".into(), format!("https://{ALLOWED_HOST}/"))],
+            // Headers travel with the stream, such as an authorization header your server needs.
+            headers: vec![("authorization".into(), "Bearer example-token".into())],
             subtitles: vec![Subtitle {
                 language: "eng".into(),
                 url: format!("https://{ALLOWED_HOST}/anything/{slug}.vtt"),
@@ -208,7 +206,7 @@ fn get(url: &str) -> Result<String, ProviderError> {
         body: None,
     })
     .map_err(|error| match error {
-        // A denial means the manifest and the code disagree — a bug in the plugin, not a site
+        // A denial means the manifest and the code disagree — a bug in the plugin, not a server
         // being down, so it is reported as such rather than as `blocked`.
         host::HostError::Denied(m) => ProviderError::Other(format!("denied by the host: {m}")),
         host::HostError::Timeout => ProviderError::Blocked("timed out".into()),

@@ -83,28 +83,15 @@ stores-publish-not-yet = Not in the { -plugin-store } yet
 
 ## Torrents
 
-# Title of the sheet that turns torrents on.
-torrents-sheet-turn-on = Turn on torrents
-
-# Title of the sheet that changes what protects torrents.
-torrents-sheet-protect = Protect torrents
-
-# Title of the sheet that edits the saved proxy.
+# Title of the form that edits the saved proxy.
 torrents-sheet-edit-proxy = Edit proxy
 
-# Button of the turn-on sheet.
-# @max 24
-torrents-turn-on-button = Turn on
-
-# Button that opens the sheet that edits the saved proxy.
+# Button that opens the form that edits the saved proxy.
 # @max 24
 torrents-edit-proxy = Edit proxy
 
 # Hint inside the optional proxy fields.
 torrents-proxy-optional = Optional
-
-# Line under the question that asks whether torrents may keep running when a check fails.
-torrents-warn-only-detail = { -app-name } will warn you instead of pausing. If your VPN or proxy is down, other people can see your IP address.
 
 # Line naming where the saved proxy is and who it signs in as.
 # @arg address: text

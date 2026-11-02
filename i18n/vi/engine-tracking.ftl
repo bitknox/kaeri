@@ -27,13 +27,10 @@ notice-signed-out-queue = { $count ->
  }
 notice-sign-out-failed = Không đăng xuất được khỏi { $tracker }. Hãy thử lại. { $reason }
 notice-not-saved-because = Không lưu được cài đặt đó. { $cause }
-notice-protection-saved = Đã lưu cài đặt bảo vệ torrent.
-notice-protection-not-checked = Không kiểm tra được bảo vệ torrent. { $cause }
 notice-proxy-password-not-kept = Không giữ được mật khẩu proxy. Hãy nhập lại để thử lưu. { $reason }
 notice-show-setting-refused = Không lưu được cài đặt đó. { $value } không phải giá trị hợp lệ cho { $setting }.
 notice-show-not-reset = Không đặt lại được cài đặt của bộ phim này. { $reason }
 notice-show-no-such-subtitles = Không lưu được lựa chọn phụ đề đó. Bộ phim này chưa từng dùng phụ đề đó.
-notice-torrents-waiting-for-check = Torrent đang chờ kiểm tra kết nối đạt lại.
 notice-mapping-data-refreshed = Đã làm mới dữ liệu ánh xạ.
 notice-mapping-data-failed = Không làm mới được dữ liệu ánh xạ ({ $datasets }). Sẽ thử lại sau { $wait }. { $cause }
 notice-episode-aired = { $title }, tập { $episode }, đã phát sóng khi bạn vắng mặt.
@@ -41,8 +38,6 @@ notice-episodes-aired = { $count ->
    *[other] Có { $count } tập mới của các bộ phim bạn theo dõi đã phát sóng. Lịch chiếu đã có các tập đó.
  }
 notice-update-available = Đã có bản { $tag }. Chạy kaeri --update để cài đặt.
-cause-confirm-no-protection = Hãy xác nhận trước rằng bạn muốn không dùng bảo vệ nào.
-cause-confirm-warn-only = Hãy xác nhận trước rằng bạn chỉ muốn được cảnh báo.
 cause-proxy-needs-address = Proxy cần có máy chủ và cổng.
 cause-proxy-address-unusable = Không kiểm tra được địa chỉ proxy này.
 cause-server-unreachable = Không kết nối được tới máy chủ.

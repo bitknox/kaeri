@@ -970,6 +970,9 @@ private fun FiltersSheet(onDismiss: () -> Unit) {
     val facets = status.facets
     val scoreAny = stringResource(R.string.filter_score_any)
     val colors = MaterialTheme.colorScheme
+    // On a phone a chosen chip takes the neutral fill of the pinned row's set pills, leaving amber
+    // to the switches and the action; a wide window keeps primaryContainer for now.
+    val phone = !wideWindow()
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberBottomSheetState(SheetValue.Hidden, setOf(SheetValue.Hidden, SheetValue.PartiallyExpanded, SheetValue.Expanded)),
@@ -1032,13 +1035,13 @@ private fun FiltersSheet(onDismiss: () -> Unit) {
             FilterLabel(stringResource(R.string.filter_source_material))
             FlowRow(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 for (source in searchSources()) {
-                    SearchChip(searchSourceLabel(source), source in query.sources) { store.editSearch { it.togglingSource(source) } }
+                    SearchChip(searchSourceLabel(source), source in query.sources, phone = phone) { store.editSearch { it.togglingSource(source) } }
                 }
             }
             FilterLabel(stringResource(R.string.filter_country))
             FlowRow(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 for (code in searchCountries()) {
-                    SearchChip(SearchWords.country(LocalContext.current, code), code in query.countries) { store.editSearch { it.togglingCountry(code) } }
+                    SearchChip(SearchWords.country(LocalContext.current, code), code in query.countries, phone = phone) { store.editSearch { it.togglingCountry(code) } }
                 }
             }
 
@@ -1047,7 +1050,7 @@ private fun FiltersSheet(onDismiss: () -> Unit) {
             if (sites.isNotEmpty()) {
                 FlowRow(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     for (site in sites) {
-                        SearchChip(site, site in query.streamingOn) { store.editSearch { it.togglingStreaming(site) } }
+                        SearchChip(site, site in query.streamingOn, phone = phone) { store.editSearch { it.togglingStreaming(site) } }
                     }
                 }
             }
@@ -1285,9 +1288,11 @@ private fun sliderColors() = SliderDefaults.colors(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun Presets(choices: List<Bounds>, current: Bounds, words: (Bounds) -> String?, onPick: (Bounds) -> Unit) {
+    // On a phone a chosen range takes the neutral fill, like the sheet's other chips.
+    val phone = !wideWindow()
     FlowRow(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         for (bounds in choices) {
-            SearchChip(words(bounds).orEmpty(), selected = current == bounds) { onPick(if (current == bounds) Bounds(null, null) else bounds) }
+            SearchChip(words(bounds).orEmpty(), selected = current == bounds, phone = phone) { onPick(if (current == bounds) Bounds(null, null) else bounds) }
         }
     }
 }

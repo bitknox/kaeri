@@ -162,7 +162,7 @@ home-more-genre = Plus de { $genre }
 # Line over the spotlight's title when it is the built-in demo.
 home-spotlight-demo = Démo, libre de partage
 
-# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Stream.
+# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.
 licensed-return = Épisode { $episode } regardé sur { $service } ?
 
 # Notice after Mark as watched on the return notice. It holds Undo.
@@ -672,15 +672,6 @@ release-pinned = { $name } sera utilisé pour ce titre.
 # Toast when the chosen source or release for a title could not be saved. The reason comes from the database.
 notice-choice-not-saved = Impossible d’enregistrer ce choix. { $reason }
 
-# Toast while torrents are running but the connection check failed, and the settings say to warn only.
-torrent-check-failed-running = La vérification de la connexion a échoué. Les torrents continuent de tourner.
-
-# Note on the sources screen: torrents are waiting for the VPN guard. The reason comes from the guard.
-torrent-vpn-waiting = Les torrents démarrent une fois le contrôle VPN validé. { $reason }
-
-# Note on the sources screen: the VPN guard has no verdict yet.
-torrent-vpn-unverified = Les torrents démarrent une fois le contrôle VPN validé. La connexion n’a pas encore été vérifiée.
-
 # Error: the link or file given to open is not a magnet link, an info hash or a torrent file.
 torrent-link-unusable = Ce n’est ni un lien magnet ni un fichier torrent.
 
@@ -695,15 +686,6 @@ torrent-interface-closed = Kaeri s’est fermé avant le démarrage des torrents
 
 # Error: the torrent session could not start. The reason comes from the torrent engine.
 torrent-session-failed = Impossible de démarrer la session torrent. { $reason }
-
-# Toast when torrents are up but no operating-system firewall rule backs the VPN guard. Terminal only: the engine never sends it to the apps.
-torrent-no-kill-switch = Rien sur cet appareil n’arrête le trafic torrent si le VPN tombe. Lancez « kaeri --doctor » pour le configurer.
-
-# Toast when the connection check could not run. The reason comes from the VPN settings.
-torrent-not-checked = Impossible de vérifier la connexion. { $reason }
-
-# Note on the sources screen after the source chain is rebuilt with torrents on.
-sources-reloaded-torrents-pending = Sources rechargées. Les torrents démarrent une fois le contrôle VPN validé.
 
 # Note on the sources screen after the source chain is rebuilt with torrents off.
 sources-reloaded-torrents-off = Torrents désactivés. La session a été arrêtée.
@@ -818,12 +800,6 @@ notice-sign-out-failed = Impossible de vous déconnecter de { $tracker }. Réess
 # Toast when a setting could not be stored. The cause says why and what to do.
 notice-not-saved-because = Impossible d'enregistrer ce réglage. { $cause }
 
-# Toast when the torrent protection choice was saved.
-notice-protection-saved = Protection contre les torrents enregistrée.
-
-# Toast when the torrent protection could not be checked. The cause says why.
-notice-protection-not-checked = Impossible de vérifier la protection contre les torrents. { $cause }
-
 # Toast when the proxy's password could not be stored. The reason comes from the system.
 notice-proxy-password-not-kept = Impossible de conserver le mot de passe du proxy. Saisissez-le à nouveau pour essayer de l'enregistrer. { $reason }
 
@@ -835,9 +811,6 @@ notice-show-not-reset = Impossible de réinitialiser les réglages de cette sér
 
 # Toast when a subtitle choice names subtitles the show has not used.
 notice-show-no-such-subtitles = Impossible d'enregistrer ce choix de sous-titres. Cette série n'a pas utilisé ces sous-titres auparavant.
-
-# Toast while torrents are held until the connection check passes.
-notice-torrents-waiting-for-check = Les torrents attendent que la vérification de la connexion réussisse de nouveau.
 
 # Toast when the mapping data downloads work again after a failure.
 notice-mapping-data-refreshed = Données de correspondance actualisées.
@@ -858,12 +831,6 @@ notice-episodes-aired =
 
 # Toast when a new release of Kaeri is out, on the terminal app. The command is not translated. Terminal only: the engine never sends it to the apps.
 notice-update-available = La version { $tag } est disponible. Lancez kaeri --update pour l'installer.
-
-# The reason a setting was refused until the person confirms having no protection.
-cause-confirm-no-protection = Confirmez d'abord que vous ne voulez aucune protection.
-
-# The reason a setting was refused until the person confirms the "warn only" choice.
-cause-confirm-warn-only = Confirmez d'abord que vous voulez seulement être averti.
 
 # The reason a proxy was refused: it has no host or no port.
 cause-proxy-needs-address = Un proxy a besoin d'un hôte et d'un port.
@@ -936,26 +903,8 @@ crash-notice = Kaeri s’est fermé après un problème.
 # The same notice on the TV, which has no button.
 crash-notice-tv = Kaeri s’est fermé après un problème. Vous pouvez le signaler dans Paramètres, À propos.
 
-# Note under the connection-check group of the torrents dialog: what the check does.
-torrents-linux-check-note = Kaeri vérifie par où sort le trafic des torrents au démarrage d’un torrent, puis chaque minute pendant son exécution, et met les torrents en pause si ce contrôle échoue. Votre VPN ou votre proxy est ce qui vous protège.
-
-# Confirmation text when choosing "Warn only" for a failed check.
-torrents-linux-warn-confirm = Kaeri vous avertira au lieu de mettre en pause. Si votre VPN ou votre proxy est coupé, d’autres personnes peuvent voir votre adresse IP.
-
-# Status line once the protection has been checked and saved.
-torrents-linux-protection-saved = Protection des torrents enregistrée
-
-# Title of the dialog that turns torrents on.
-torrents-linux-turn-on-title = Activer les torrents
-
-# Title of the dialog that changes what protects torrents.
-torrents-linux-protect-title = Protéger les torrents
-
 # Title of the dialog that edits the proxy.
 torrents-linux-edit-proxy-title = Modifier le proxy
-
-# Button that turns torrents on in the dialog.
-torrents-linux-turn-on-button = Activer
 
 # Seeding row: time left until the goal, in a span already worded ("18h", "1d 6h").
 downloads-linux-seed-left = { $span } restant
@@ -1181,12 +1130,6 @@ settings-notify-note-on = Une notification quand un épisode d’une série de v
 
 # Preview note for new-episode notifications when they are off.
 settings-notify-note-off = Désactivé. Seules les séries activées dans leurs propres réglages envoient une notification.
-
-# Heading of the preview note beside the sources settings while torrents are on.
-settings-connection-check-title = Test de connexion
-
-# Preview note beside the sources settings while torrents are on.
-settings-connection-check-note = Kaeri vérifie par où sort le trafic des torrents au démarrage d’un torrent, puis chaque minute pendant qu’il tourne, et met les torrents en pause si ce contrôle échoue. C’est votre VPN ou votre proxy qui vous protège.
 
 # Preview note beside the accounts settings.
 settings-accounts-note = Kaeri fonctionne sans compte. Votre historique de visionnage reste sur cet ordinateur quand vous vous déconnectez.
@@ -3110,9 +3053,6 @@ sources-too-small = Agrandissez le terminal pour afficher cet écran.
 # Heading shown on the Sources screen when there is nothing to list, in the alert colour.
 sources-none-available = Pas de sources disponibles
 
-# Reason shown when no source is available and the engine gave none. The setting is the name of a key in the config file and is not translated.
-sources-torrents-off = Les torrents restent désactivés tant que { $setting } et un mode VPN ne sont pas réglés.
-
 # Column heading in the Sources table: the name of the source.
 sources-column-source = Source
 
@@ -3158,14 +3098,11 @@ sources-state-down = Hors ligne
 # State of a source: it has not been tried yet.
 sources-state-unchecked = Pas encore testée
 
-# State of a source: it works but local rules (the VPN check) are withholding it.
+# State of a source: it works but waits for the proxy check.
 sources-state-held-back = Bloquée
 
 # Heading of the line about { -plugin-store-pl }.
 sources-stores-title = Boutiques de plugins
-
-# Under the heading when no { -plugin-store } is joined or the list has not arrived.
-sources-stores-invite = Plugins partagés par vos proches. Un lien d’invitation suffit.
 
 # Part of the { -plugin-store } summary: how many { -plugin-store-pl } are joined.
 sources-stores-joined = Rejointes : { $count }
@@ -3221,27 +3158,6 @@ sources-meta-skipped-until = Ignoré jusqu’à { $time } ({ $cause })
 
 # Detail for a metadata service whose wait is over: it is asked again when something needs it. The cause is the service's own error text.
 sources-meta-next-request = Nouvel essai à la prochaine demande ({ $cause })
-
-# Header chip while the VPN check is running. The mark is a status glyph.
-sources-vpn-checking = VPN { $mark }  Vérification
-
-# Header chip when the VPN protects the connection. The name is where traffic leaves the network.
-sources-vpn-protected = VPN { $mark }  { $exit }
-
-# Header chip when the VPN check found traffic leaving outside the tunnel.
-sources-vpn-leaking = VPN { $mark }  Fuite
-
-# Header chip when the VPN check could not be completed.
-sources-vpn-unreachable = VPN { $mark }  Injoignable
-
-# Header chip when the configuration runs with no VPN on purpose.
-sources-vpn-unprotected = VPN { $mark }  Non protégé
-
-# Notice when the VPN check finds a leak and torrents are paused.
-sources-vpn-leak-paused = Le VPN fuit. Les torrents sont en pause jusqu’à ce qu’il protège à nouveau la connexion.
-
-# Notice when the VPN check cannot be completed and torrents are paused.
-sources-vpn-unreachable-paused = Impossible de joindre le VPN. Les torrents sont en pause jusqu’à ce qu’il réponde.
 
 # Notice after the person submits an empty value for a text setting.
 settings-unchanged = Inchangé. Supprimez la ligne dans config.toml pour annuler le réglage.
@@ -3311,12 +3227,6 @@ settings-value-download-dir-default = Dans le cache des torrents
 
 # Value of the Syncplay room setting when no room is set.
 settings-value-room-unset = Non défini (nécessaire pour les visionnages en groupe)
-
-# Value of the VPN mode setting: traffic goes through a proxy server (SOCKS5).
-settings-value-vpn-socks5 = Proxy
-
-# Value of the VPN mode setting: a tunnel set up outside the app.
-settings-value-vpn-external = Externe
 
 # Value of the seeding ratio setting: seed until the ratio is reached.
 settings-value-seed-ratio = Jusqu’au ratio { $ratio }
@@ -3450,9 +3360,6 @@ settings-label-seed-hours = Partage pendant au plus
 # Settings row: the cap on torrent upload speed.
 settings-label-upload-limit = Limite d’envoi
 
-# Settings row: how traffic is protected by a VPN.
-settings-label-vpn-mode = Mode VPN
-
 # Settings row: where sign-in tokens are kept.
 settings-label-token-storage = Stockage des jetons
 
@@ -3476,9 +3383,6 @@ settings-label-downloads-on-cellular = Téléchargements en données mobiles
 
 # Settings row: whether torrents run on a mobile connection.
 settings-label-torrents-on-cellular = Torrents en données mobiles
-
-# Settings row: what happens to torrents when the VPN check fails.
-settings-label-vpn-on-failure = En cas d’échec de la vérification
 
 # Settings row: whether the app notifies of new episodes.
 settings-label-episode-notifications = Notifications des nouveaux épisodes
@@ -3531,9 +3435,6 @@ settings-note-download-dir = Appuyez sur Entrée pour saisir un chemin. Appliqu�
 # Note under the merge subtitles row.
 settings-note-merge-subtitles = Appliqué au prochain téléchargement terminé.
 
-# Note under the keep seeding row. It is a privacy choice.
-settings-note-keep-seeding = Tant que c’est activé, vous restez listé comme partageur. Effet immédiat.
-
 # Note under the after each download row.
 settings-note-download-hook = Appuyez sur Entrée pour saisir une commande. Elle s’exécute après chaque téléchargement terminé.
 
@@ -3560,12 +3461,6 @@ settings-note-presence-title = Désactivé affiche « Regarde un anime » sans n
 
 # Note under the rich presence row.
 settings-note-presence-rich = Ajoute la jaquette, une barre de progression et un lien AniList. Nécessite l’affichage du titre.
-
-# Note under the torrent playback row.
-settings-note-torrents = Nécessite un VPN configuré. Effet immédiat.
-
-# Note under the VPN mode row.
-settings-note-vpn-mode = Modifiez config.toml pour changer ce réglage. Désactiver la protection demande une action explicite.
 
 # Note under the seed after watching row.
 settings-note-seed-ratio = Garde les épisodes vus en partage tant que Kaeri est ouvert.
@@ -6227,9 +6122,6 @@ onboarding-own-heading = Vous avez vos propres médias ?
 # Heading of the group that joins a store with an invite.
 onboarding-invite-heading = Vous avez un lien d’invitation ?
 
-# Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-onboarding-where-stores = Les plugins viennent de boutiques de plugins. Une boutique de plugins est tenue par une personne pour celles qu’elle invite : vous en rejoignez une avec un lien d’invitation de son propriétaire.
-
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = Essayez maintenant
 
@@ -8164,9 +8056,6 @@ settings-reset = Réinitialiser les réglages
 # Title of the confirmation for resetting the settings.
 settings-reset-title = Réinitialiser les réglages ?
 
-# Line under it. The old settings file is moved aside, not deleted.
-settings-reset-detail = Tous les réglages reviennent à leur valeur par défaut, VPN et proxy compris. Votre historique reste, et l’ancien fichier de réglages est conservé.
-
 # Notice once Kaeri has started again on the default settings. The file is the name the old settings file is kept under, beside the new one, such as config.damaged-2026-10-30.
 settings-reset-done = Les réglages sont revenus à leurs valeurs par défaut. L’ancien fichier est conservé sous le nom { $file }.
 
@@ -8337,9 +8226,6 @@ source-note-gone = Non installée
 # Under a source that found more than one show by this name and could not tell which is this one.
 source-note-ambiguous = Correspondance impossible
 
-# Under a source held back by the VPN check in Settings.
-source-note-held-back = Retenue par le contrôle VPN
-
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 source-picker-releases = Releases
 
@@ -8382,12 +8268,6 @@ sources-empty-detail = Rejoignez une boutique de plugins avec le lien d’invita
 # Row for the built-in torrent source.
 sources-torrents = Torrents
 
-# Label of a source that is not a plugin and controls this device.
-sources-remote = À distance
-
-# Origin: set in the config file.
-sources-origin-config = Défini dans le fichier de configuration
-
 # Origin: built into the app.
 sources-origin-built-in = Intégrée
 
@@ -8424,16 +8304,13 @@ sources-detail-not-answering = Ne répond pas. { $why }
 # Status line: no answer.
 sources-detail-not-answering-plain = Ne répond pas.
 
-# Status line: held back by the check.
-sources-detail-held-back = Retenue jusqu'à ce que le contrôle de connexion soit réussi.
-
 # Status line: disabled.
 sources-detail-disabled = Désactivée. Elle garde sa place et n'est pas essayée.
 
 # Status line: the source is gone.
 sources-detail-gone = Cette source n'est plus là.
 
-# Status line: the site did not answer.
+# Status line: the source did not answer.
 sources-detail-site = La source n'a pas répondu.
 
 # Row label: version.
@@ -8502,9 +8379,6 @@ sources-torrent-source = Lecture de torrents
 
 # Row: where the plugin's page stands.
 sources-source-order-row = Ordre des sources
-
-# Note under the facts on the Torrents page in Sources. Torrents are built in, not a plugin.
-sources-torrents-note = Les torrents font partie de Kaeri, pas d'un plugin. Le réglage qui protège leur trafic, le contrôle de connexion et le partage se trouvent dans les réglages, sous Sources.
 
 # Over the { -source } list while the { -source-pl } are set up again after a change.
 sources-rebuilding = Les Sources sont en cours de reconfiguration.
@@ -8700,9 +8574,6 @@ sources-your-intro = Les épisodes sont lus depuis la première source qui les a
 # Heading of the section that lists the plugins.
 sources-section-plugins = Plugins
 
-# Section heading: Internet Archive collections and PeerTube channels.
-sources-section-catalogues = Catalogues gratuits
-
 # Link in the empty state.
 sources-add-demo = Ajouter la démo
 
@@ -8714,9 +8585,6 @@ stores-joined = Rejoint
 
 # Title of the empty list.
 stores-empty-title = Aucune boutiques de plugins pour l'instant
-
-# Line under the empty title.
-stores-empty-detail = Boutiques de plugins sont gérées par des personnes que vous connaissez. Rejoignez-en une avec le lien d'invitation que son propriétaire vous envoie.
 
 # Line under the title of the screen when plugins add sources.
 stores-intro = Plugins ajoutent des sources. Chacun liste les serveurs qu'il contacte avant que vous l'installiez.
@@ -9215,9 +9083,6 @@ stores-offers-plugins =
 # Button of a notice that opens the plugin stores page.
 notice-open-stores = Ouvrir les boutiques de plugins
 
-# Explainer on the empty plugin stores page.
-stores-what-is = Une boutique de plugins est un petit serveur géré par une personne pour celles qu’elle invite. Elle propose des sources sous forme de plugins. Kaeri ne gère aucune boutique de plugins et n’en liste aucune : vous en rejoignez une avec un lien d’invitation de son propriétaire.
-
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = Qu’est-ce qu’une boutique ?
 
@@ -9475,63 +9340,6 @@ torrents-title = Torrents
 # Label and short value for the switch.
 torrents-on = Torrents activés
 
-# Line under the switch while torrents are off.
-torrents-off-detail = Désactivés par défaut. Activer cette option demande d’abord comment protéger votre connexion.
-
-# Line explaining the risk, before torrents start.
-torrents-risk = D’autres personnes peuvent voir votre adresse IP pendant que vous téléchargez et partagez un torrent. Choisissez ce qui la protège avant le démarrage des torrents.
-
-# Line in the Apple sources screen: torrents belong to the app, not to a plugin.
-torrents-not-a-plugin = Les torrents font partie de Kaeri, pas d’un plugin. La protection du trafic, la vérification de la connexion et le partage se règlent dans les réglages, sous Sources.
-
-# Label of the choice of protection.
-torrents-protect-with = Protéger avec
-
-# Option: no protection.
-torrents-protect-none = Aucune protection
-
-# Option: a proxy.
-torrents-protect-proxy = Proxy
-
-# Option: a VPN already running on the device.
-torrents-protect-vpn = VPN
-
-# Line under the proxy option.
-torrents-protect-proxy-detail = Le trafic des torrents passe par un proxy que vous exploitez ou louez.
-
-# Line under the VPN option.
-torrents-protect-vpn-detail = Utilise le VPN déjà actif sur cet appareil.
-
-# Line under the no-protection option.
-torrents-protect-none-detail = Votre adresse est visible de tous dans le torrent.
-
-# Line when no protection is set.
-torrents-protect-none-note = Sans protection, Kaeri ne vérifie pas la connexion.
-
-# Summary: a proxy protects. Host and port are already formatted.
-torrents-summary-proxy-at = Protégé par un proxy SOCKS5 à { $host }:{ $port }.
-
-# Summary: a proxy protects, address not shown.
-torrents-summary-proxy = Protégé par un proxy SOCKS5.
-
-# Summary: a VPN protects.
-torrents-summary-vpn = Protégé par le VPN sur cet appareil.
-
-# Summary: nothing protects.
-torrents-summary-none = Non protégé. Votre adresse est visible de tous dans le torrent.
-
-# Title of the question when torrents are turned on without protection.
-torrents-unprotected-title = Utiliser les torrents sans protection ?
-
-# Line under it.
-torrents-unprotected-detail = D’autres personnes peuvent voir votre adresse IP pendant que vous téléchargez et partagez un torrent, et Kaeri ne vérifie pas la connexion.
-
-# Button that confirms turning torrents on without protection.
-torrents-turn-on-unprotected = Activer sans protection
-
-# Button that confirms using no protection.
-torrents-use-unprotected = Utiliser sans protection
-
 # Label of the proxy host field.
 torrents-proxy-host = Hôte du proxy
 
@@ -9547,9 +9355,6 @@ torrents-proxy-password = Mot de passe
 # Line under the password field.
 torrents-password-keep = Laissez le mot de passe vide pour garder celui qui est enregistré.
 
-# Line under the proxy form: what happens while the new proxy is checked.
-torrents-proxy-keeps-saved = Les torrents utilisent toujours le proxy enregistré jusqu’à ce que le nouveau passe la vérification de connexion.
-
 # Line when the host or port is wrong.
 torrents-proxy-invalid = Le proxy a besoin d’un hôte et d’un port compris entre 1 et 65535.
 
@@ -9559,95 +9364,20 @@ torrents-checking-proxy = Vérification du proxy…
 # Notice after the proxy was saved.
 torrents-proxy-saved = Proxy enregistré
 
-# Why a save was refused: traffic left outside the proxy.
-torrents-left-outside-proxy = Le trafic des torrents est passé hors de ce proxy
-
-# Why a save was refused: the check could not run through the proxy.
-torrents-check-not-made-proxy = La vérification n’a pas pu être faite via ce proxy
-
 # Notice when a proxy was not saved. The reason is a sentence fragment.
 torrents-proxy-not-saved = Non enregistré. { $why }, le proxy enregistré reste en place.
-
-# Notice when protection was not saved. The reason is a sentence fragment.
-torrents-protection-not-saved = Non enregistré. { $why }, la protection enregistrée reste en place.
 
 # Notice when torrents stayed off. The reason is a sentence fragment.
 torrents-still-off = Les torrents restent désactivés. { $why }.
 
-# Label of the index address field.
-torrents-index = Index de torrents
-
-# Line under the index field.
-torrents-index-detail = L’adresse de recherche RSS que Kaeri utilise pour les torrents.
-
-# Hint inside the index field.
-torrents-index-hint = https://…/?q={ "{" }query{ "}" }
-
-# Line when no index address is set.
-torrents-index-needed = Les torrents ont besoin d’une adresse d’index.
-
-# Line when the index address has the wrong scheme.
-torrents-index-scheme = Utilisez une adresse http ou https.
-
-# Notice after the index was saved.
-torrents-index-saved = Index de torrents enregistré
-
-# Label of the choice of what to do when a check fails.
-torrents-if-check-fails = En cas d’échec de la vérification
-
-# Title of the question that asks whether torrents may keep running.
-torrents-keep-running-title = Garder les torrents actifs en cas d’échec de la vérification ?
-
-# Line under the question: what the choice is about.
-torrents-keep-running-detail = Ce qui arrive aux torrents lorsque la vérification trouve du trafic hors de votre VPN ou de votre proxy.
-
-# Option: pause torrents.
-torrents-fail-pause = Mettre les torrents en pause
-
-# Option: stop torrents.
-torrents-fail-stop = Arrêter les torrents
-
-# Option: only warn.
-torrents-fail-warn = Avertir seulement
-
-# Result of the choice: torrents run.
-torrents-fail-warn-result = Les torrents restent actifs.
-
-# Result of the choice: torrents stop.
-torrents-fail-stop-result = Les torrents sont arrêtés.
-
-# Result of the choice: torrents pause.
-torrents-fail-pause-result = Les torrents sont en pause.
-
-# Label of the last check.
-torrents-last-check = Dernière vérification
-
-# Check passed. The exit is where the traffic leaves from, already formatted.
-torrents-check-passed-exit = Sortie par { $exit }
-
 # Check passed.
 torrents-check-passed = Réussie
-
-# Check running: the line.
-torrents-check-running-line = Vérification de la sortie du trafic des torrents
 
 # Check running: the short word.
 torrents-check-running = Vérification
 
-# Check failed: traffic left outside. The consequence follows.
-torrents-check-leaked = Du trafic est sorti hors de la protection. { $then }
-
-# Check failed: the check could not be made. The consequence follows.
-torrents-check-unmade = La vérification n’a pas pu être effectuée. { $then }
-
 # Short word: the check failed.
 torrents-check-failed = Échec
-
-# Line: no protection is set, so nothing was checked.
-torrents-check-none-line = Aucune protection définie
-
-# Short word: unprotected.
-torrents-check-none = Non protégé
 
 # Line: no check yet.
 torrents-check-waiting-line = Pas encore vérifié
@@ -9687,12 +9417,6 @@ torrents-page-unreadable = Le téléviseur n’a pas pu lire ceci. Scannez de no
 
 # Line when the page needs script.
 torrents-page-needs-script = Cette page a besoin de JavaScript pour envoyer le formulaire au téléviseur en toute sécurité.
-
-# Under the proxy form when turning torrents on: what the app checks, and that the VPN or proxy is what protects.
-torrents-check-note = Kaeri vérifie d’où sort le trafic des torrents au démarrage d’un torrent puis chaque minute pendant qu’il tourne, et met les torrents en pause si cette vérification échoue. Votre VPN ou votre proxy est ce qui vous protège.
-
-# Notice after the protection was saved.
-torrents-protection-saved = Protection des torrents enregistrée
 
 # Menu item and button: open a magnet link or a torrent file the viewer has.
 opened-open = Ouvrir un lien ou un fichier

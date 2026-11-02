@@ -1,5 +1,5 @@
 // Rows the testing engine has none of, for screenshots of the screens that show them: providers
-// from plugin stores, the stores themselves, a download queue, the VPN guard's verdict. Invented,
+// from plugin stores, the stores themselves, a download queue, the torrent proxy's check. Invented,
 // as the design boards invent them, and only ever on the testing engine.
 
 import KaeriKit
@@ -45,8 +45,8 @@ public enum Showcase: String, CaseIterable, Sendable {
         for part in parts {
             switch part {
             case .sources:
-                events += [.providers(Self.providerRows), .vpn(.protected(exit: "Lantern Networks"))]
-                held.formUnion(["providers", "vpn"])
+                events += [.providers(Self.providerRows), .torrentProxy(.direct)]
+                held.formUnion(["providers", "torrentProxy"])
                 if let settings {
                     events.append(.settings(Self.torrentsOn(settings)))
                     held.insert("settings")
@@ -107,8 +107,8 @@ public enum Showcase: String, CaseIterable, Sendable {
                     tracker: "simkl", code: "7KQ4-M2XD", url: "https://simkl.example/pin",
                     expiresAt: Int64(now.timeIntervalSince1970) + left)))
             case .proxy, .checking, .unsaved:
-                events += [.providers(Self.providerRows), .vpn(.protected(exit: "Lantern Networks"))]
-                held.formUnion(["providers", "vpn"])
+                events += [.providers(Self.providerRows), .torrentProxy(self == .checking ? .checking : .passed)]
+                held.formUnion(["providers", "torrentProxy"])
                 if let settings {
                     events.append(.settings(Self.throughProxy(Self.torrentsOn(settings))))
                     held.insert("settings")
@@ -147,7 +147,7 @@ public enum Showcase: String, CaseIterable, Sendable {
                                         size: "480 MiB", dualAudio: false, dubbed: false, autoPick: false),
                      ],
                      pinnedRelease: nil),
-        SourceOption(providerId: "fumi-mirror", name: "Fumi Mirror", covered: 0, of: 13,
+        SourceOption(providerId: "fumi-archive", name: "Fumi Archive", covered: 0, of: 13,
                      pinned: false, note: .resting, releases: [], pinnedRelease: nil),
         SourceOption(providerId: "old-reel", name: "Old Reel", covered: 0, of: 13,
                      pinned: false, note: .off, releases: [], pinnedRelease: nil),
@@ -183,7 +183,7 @@ public enum Showcase: String, CaseIterable, Sendable {
                     disabled: false,
                     update: ProviderUpdate(version: "1.5.0", newHosts: ["media2.mukashi-archive.example"])),
         ProviderRow(id: "machi-library-films", kind: "plugin", state: "down", latencyMs: nil,
-                    lastError: "the site did not answer in 15 s.", usable: false, heldBack: false,
+                    lastError: "the source did not answer in 15 s.", usable: false, heldBack: false,
                     name: "Machi Library Films", version: "0.3.0", hosts: ["films.machi-library.example"],
                     origin: .byHand, disabled: false, update: nil),
     ]
@@ -347,19 +347,16 @@ public enum Showcase: String, CaseIterable, Sendable {
     /// The settings with torrents through a saved proxy.
     static func throughProxy(_ view: SettingsView) -> SettingsView {
         var view = view
-        view.torrent = ProtectionView(
-            protection: .proxy, proxy: ProxyView(host: "proxy.example", port: 1080, user: "mika"),
-            onFailure: view.torrent.onFailure)
+        view.torrent = TorrentView(proxy: ProxyView(host: "proxy.example", port: 1080, user: "mika"))
         return view
     }
 
-    /// The settings with torrents on, behind a VPN on this device, as Sources shows them so.
+    /// The settings with torrents on and no proxy, as Sources shows them so.
     static func torrentsOn(_ view: SettingsView) -> SettingsView {
         var view = view
         view.rows = view.rows.map { row in
             switch row.key {
             case .torrents: SettingRow(key: .torrents, value: "on", change: .steps(back: true, forward: false))
-            case .vpnMode: SettingRow(key: .vpnMode, value: "external", change: .fixed)
             default: row
             }
         }
@@ -375,7 +372,7 @@ extension Event {
     var showcaseKind: String? {
         switch self {
         case .providers: "providers"
-        case .vpn: "vpn"
+        case .torrentProxy: "torrentProxy"
         case .settings: "settings"
         case .stores: "stores"
         case .downloads: "downloads"

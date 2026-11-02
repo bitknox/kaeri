@@ -683,15 +683,6 @@
   <data name="NoticeChoiceNotSaved" xml:space="preserve">
     <value>Det gick inte att spara valet. {reason}</value>
   </data>
-  <data name="TorrentCheckFailedRunning" xml:space="preserve">
-    <value>Anslutningskontrollen misslyckades. Torrenterna fortsätter att köra.</value>
-  </data>
-  <data name="TorrentVpnWaiting" xml:space="preserve">
-    <value>Torrenterna startar när VPN-skyddet godkänns. {reason}</value>
-  </data>
-  <data name="TorrentVpnUnverified" xml:space="preserve">
-    <value>Torrenterna startar när VPN-skyddet godkänns. Anslutningen har inte verifierats än.</value>
-  </data>
   <data name="TorrentLinkUnusable" xml:space="preserve">
     <value>Det där är varken en magnetlänk eller en torrentfil.</value>
   </data>
@@ -706,15 +697,6 @@
   </data>
   <data name="TorrentSessionFailed" xml:space="preserve">
     <value>Det gick inte att starta torrentsessionen. {reason}</value>
-  </data>
-  <data name="TorrentNoKillSwitch" xml:space="preserve">
-    <value>Ingenting på den här enheten stoppar torrenttrafiken om VPN:en tappas. Kör "kaeri --doctor" för att ställa in det.</value>
-  </data>
-  <data name="TorrentNotChecked" xml:space="preserve">
-    <value>Det gick inte att kontrollera anslutningen. {reason}</value>
-  </data>
-  <data name="SourcesReloadedTorrentsPending" xml:space="preserve">
-    <value>Källor lästes in på nytt. Torrenterna startar när VPN-skyddet godkänns.</value>
   </data>
   <data name="SourcesReloadedTorrentsOff" xml:space="preserve">
     <value>Torrenterna är av. Sessionen stoppades.</value>
@@ -827,12 +809,6 @@
   <data name="NoticeNotSavedBecause" xml:space="preserve">
     <value>Det gick inte att spara inställningen. {cause}</value>
   </data>
-  <data name="NoticeProtectionSaved" xml:space="preserve">
-    <value>Skyddet för torrenter sparades.</value>
-  </data>
-  <data name="NoticeProtectionNotChecked" xml:space="preserve">
-    <value>Det gick inte att kontrollera skyddet för torrenter. {cause}</value>
-  </data>
   <data name="NoticeProxyPasswordNotKept" xml:space="preserve">
     <value>Det gick inte att spara proxyns lösenord. Ange det igen för att försöka spara det. {reason}</value>
   </data>
@@ -844,9 +820,6 @@
   </data>
   <data name="NoticeShowNoSuchSubtitles" xml:space="preserve">
     <value>Det gick inte att spara det undertextvalet. Den här serien har inte använt de undertexterna förut.</value>
-  </data>
-  <data name="NoticeTorrentsWaitingForCheck" xml:space="preserve">
-    <value>Torrenterna väntar på att anslutningskontrollen godkänns igen.</value>
   </data>
   <data name="NoticeMappingDataRefreshed" xml:space="preserve">
     <value>Mappningsdatan uppdaterades.</value>
@@ -865,12 +838,6 @@
   </data>
   <data name="NoticeUpdateAvailable" xml:space="preserve">
     <value>{tag} är ute. Kör kaeri --update för att installera den.</value>
-  </data>
-  <data name="CauseConfirmNoProtection" xml:space="preserve">
-    <value>Bekräfta först att du vill ha inget skydd.</value>
-  </data>
-  <data name="CauseConfirmWarnOnly" xml:space="preserve">
-    <value>Bekräfta först att du bara vill få en varning.</value>
   </data>
   <data name="CauseProxyNeedsAddress" xml:space="preserve">
     <value>En proxy behöver en värd och en port.</value>
@@ -1175,9 +1142,6 @@
   <data name="SettingsPlayerInterface" xml:space="preserve">
     <value>Gränssnitt för spelaren</value>
   </data>
-  <data name="SettingsVpnMode" xml:space="preserve">
-    <value>VPN-läge</value>
-  </data>
   <data name="SettingsTokenStorage" xml:space="preserve">
     <value>Lagring av token</value>
   </data>
@@ -1241,9 +1205,6 @@
   <data name="SettingsLibmpvLicence" xml:space="preserve">
     <value>Licensierat under GNU Lesser General Public License, version 2.1 eller senare.</value>
   </data>
-  <data name="TorrentsWarnInstead" xml:space="preserve">
-    <value>Kaeri varnar dig i stället för att pausa. Om din VPN eller proxy är nere kan andra se din IP-adress.</value>
-  </data>
   <data name="ShowSettingsLabel" xml:space="preserve">
     <value>Inställningar för {title}</value>
   </data>
@@ -1268,20 +1229,8 @@
   <data name="SettingsDownloadHigher" xml:space="preserve">
     <value>Högre</value>
   </data>
-  <data name="TorrentsDialogTurnOn" xml:space="preserve">
-    <value>Slå på torrent</value>
-  </data>
-  <data name="TorrentsDialogProtect" xml:space="preserve">
-    <value>Skydda torrent</value>
-  </data>
   <data name="TorrentsDialogEditProxy" xml:space="preserve">
     <value>Redigera proxy</value>
-  </data>
-  <data name="TorrentsDialogTurnOnAction" xml:space="preserve">
-    <value>Slå på</value>
-  </data>
-  <data name="TorrentsChoiceSpoken" xml:space="preserve">
-    <value>{label}. {detail}</value>
   </data>
   <data name="SettingsNoteTrailersWindows" xml:space="preserve">
     <value>Trailers spelas upp utan ljud från YouTube, som ser din IP-adress. De spelas inte upp på ett mätat nätverk, med animationer avstängda, i energisparläge eller när Berättaren körs.</value>
@@ -1486,9 +1435,6 @@
   </data>
   <data name="SourcesStatusWorking" xml:space="preserve">
     <value>Redo</value>
-  </data>
-  <data name="SourcesTorrentIndexes" xml:space="preserve">
-    <value>Söker i de torrentindex du har slagit på under Inställningar.</value>
   </data>
   <data name="SourcesVersionReady" xml:space="preserve">
     <value>Version {version} är redo</value>
@@ -3623,9 +3569,6 @@
   <data name="OnboardingInviteHeading" xml:space="preserve">
     <value>Har du en inbjudningslänk?</value>
   </data>
-  <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>Tillägg kommer från tilläggsbutiker. En tilläggsbutik drivs av en person åt dem hen bjuder in, så du går med i en via en inbjudningslänk från ägaren.</value>
-  </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>Prova direkt</value>
   </data>
@@ -5558,9 +5501,6 @@
   <data name="SettingsResetTitle" xml:space="preserve">
     <value>Återställa inställningar?</value>
   </data>
-  <data name="SettingsResetDetail" xml:space="preserve">
-    <value>Alla inställningar går tillbaka till standard, inklusive VPN och proxy. Din tittarhistorik finns kvar och den gamla inställningsfilen sparas.</value>
-  </data>
   <data name="SettingsResetDone" xml:space="preserve">
     <value>Inställningarna är tillbaka till standard. Den gamla filen sparades som {file}.</value>
   </data>
@@ -5729,9 +5669,6 @@
   <data name="SourceNoteAmbiguous" xml:space="preserve">
     <value>Det gick inte att matcha titeln</value>
   </data>
-  <data name="SourceNoteHeldBack" xml:space="preserve">
-    <value>Spärrad av VPN-kontrollen</value>
-  </data>
   <data name="SourcePickerReleases" xml:space="preserve">
     <value>Utgåvor</value>
   </data>
@@ -5774,12 +5711,6 @@
   <data name="SourcesTorrents" xml:space="preserve">
     <value>Torrent</value>
   </data>
-  <data name="SourcesRemote" xml:space="preserve">
-    <value>Fjärrstyrd</value>
-  </data>
-  <data name="SourcesOriginConfig" xml:space="preserve">
-    <value>Angiven i konfigurationsfilen</value>
-  </data>
   <data name="SourcesOriginBuiltIn" xml:space="preserve">
     <value>Inbyggd</value>
   </data>
@@ -5815,9 +5746,6 @@
   </data>
   <data name="SourcesDetailNotAnsweringPlain" xml:space="preserve">
     <value>Svarar inte.</value>
-  </data>
-  <data name="SourcesDetailHeldBack" xml:space="preserve">
-    <value>Spärrad tills anslutningskontrollen är godkänd.</value>
   </data>
   <data name="SourcesDetailDisabled" xml:space="preserve">
     <value>Av. Den behåller sin plats och provas inte.</value>
@@ -5890,9 +5818,6 @@
   </data>
   <data name="SourcesSourceOrderRow" xml:space="preserve">
     <value>Källaordning</value>
-  </data>
-  <data name="SourcesTorrentsNote" xml:space="preserve">
-    <value>Torrent ingår i Kaeri, inte i ett tillägg. Vad som skyddar deras trafik, anslutningskontrollen och seedningen ställs in i Inställningar, under Källor.</value>
   </data>
   <data name="SourcesRebuilding" xml:space="preserve">
     <value>Källor ställs in på nytt</value>
@@ -6086,9 +6011,6 @@
   <data name="SourcesSectionPlugins" xml:space="preserve">
     <value>Tillägg</value>
   </data>
-  <data name="SourcesSectionCatalogues" xml:space="preserve">
-    <value>Fria kataloger</value>
-  </data>
   <data name="SourcesAddDemo" xml:space="preserve">
     <value>Lägg till demon</value>
   </data>
@@ -6100,9 +6022,6 @@
   </data>
   <data name="StoresEmptyTitle" xml:space="preserve">
     <value>Inga tilläggsbutiker än</value>
-  </data>
-  <data name="StoresEmptyDetail" xml:space="preserve">
-    <value>Tilläggsbutiker drivs av personer du känner. Gå med i en av dem med inbjudningslänken som ägaren skickar till dig.</value>
   </data>
   <data name="StoresIntro" xml:space="preserve">
     <value>Tillägg lägger till källor. Varje visar vilka värdar den kontaktar innan du installerar den.</value>
@@ -6596,9 +6515,6 @@
   <data name="NoticeOpenStores" xml:space="preserve">
     <value>Öppna tilläggsbutiker</value>
   </data>
-  <data name="StoresWhatIs" xml:space="preserve">
-    <value>En tilläggsbutik är en liten server som en person driver åt dem hen bjuder in. Den erbjuder källor som tillägg. Kaeri driver inga tilläggsbutiker och listar inga, så du går med i en via en inbjudningslänk från ägaren.</value>
-  </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>Vad är en tilläggsbutik?</value>
   </data>
@@ -6854,63 +6770,6 @@
   <data name="TorrentsOn" xml:space="preserve">
     <value>Torrenter är på</value>
   </data>
-  <data name="TorrentsOffDetail" xml:space="preserve">
-    <value>Av som standard. När du slår på det frågar appen först hur din anslutning ska skyddas.</value>
-  </data>
-  <data name="TorrentsRisk" xml:space="preserve">
-    <value>Andra kan se din IP-adress medan du laddar ner och delar en torrent. Välj vad som skyddar den innan torrenter startar.</value>
-  </data>
-  <data name="TorrentsNotAPlugin" xml:space="preserve">
-    <value>Torrenter ingår i Kaeri, inte i ett tillägg. Skyddet för trafiken, anslutningskontrollen och seedningen ställs in i Inställningar under Källor.</value>
-  </data>
-  <data name="TorrentsProtectWith" xml:space="preserve">
-    <value>Skydda med</value>
-  </data>
-  <data name="TorrentsProtectNone" xml:space="preserve">
-    <value>Inget skydd</value>
-  </data>
-  <data name="TorrentsProtectProxy" xml:space="preserve">
-    <value>Proxy</value>
-  </data>
-  <data name="TorrentsProtectVpn" xml:space="preserve">
-    <value>VPN</value>
-  </data>
-  <data name="TorrentsProtectProxyDetail" xml:space="preserve">
-    <value>Torrenttrafiken går genom en proxy du själv kör eller hyr.</value>
-  </data>
-  <data name="TorrentsProtectVpnDetail" xml:space="preserve">
-    <value>Använder det VPN som redan körs på den här enheten.</value>
-  </data>
-  <data name="TorrentsProtectNoneDetail" xml:space="preserve">
-    <value>Din adress syns för alla i torrenten.</value>
-  </data>
-  <data name="TorrentsProtectNoneNote" xml:space="preserve">
-    <value>Utan skydd kontrollerar inte Kaeri anslutningen.</value>
-  </data>
-  <data name="TorrentsSummaryProxyAt" xml:space="preserve">
-    <value>Skyddad av en SOCKS5-proxy på {host}:{port}.</value>
-  </data>
-  <data name="TorrentsSummaryProxy" xml:space="preserve">
-    <value>Skyddad av en SOCKS5-proxy.</value>
-  </data>
-  <data name="TorrentsSummaryVpn" xml:space="preserve">
-    <value>Skyddad av VPN:et på den här enheten.</value>
-  </data>
-  <data name="TorrentsSummaryNone" xml:space="preserve">
-    <value>Inte skyddad. Din adress syns för alla i torrenten.</value>
-  </data>
-  <data name="TorrentsUnprotectedTitle" xml:space="preserve">
-    <value>Använda torrenter utan skydd?</value>
-  </data>
-  <data name="TorrentsUnprotectedDetail" xml:space="preserve">
-    <value>Andra kan se din IP-adress medan du laddar ner och delar en torrent, och Kaeri kontrollerar inte anslutningen.</value>
-  </data>
-  <data name="TorrentsTurnOnUnprotected" xml:space="preserve">
-    <value>Slå på utan skydd</value>
-  </data>
-  <data name="TorrentsUseUnprotected" xml:space="preserve">
-    <value>Använd utan skydd</value>
-  </data>
   <data name="TorrentsProxyHost" xml:space="preserve">
     <value>Proxyvärd</value>
   </data>
@@ -6926,9 +6785,6 @@
   <data name="TorrentsPasswordKeep" xml:space="preserve">
     <value>Lämna lösenordet tomt för att behålla det sparade.</value>
   </data>
-  <data name="TorrentsProxyKeepsSaved" xml:space="preserve">
-    <value>Torrenter fortsätter använda den sparade proxyn tills den nya klarar anslutningskontrollen.</value>
-  </data>
   <data name="TorrentsProxyInvalid" xml:space="preserve">
     <value>Proxyn behöver en värd och en port från 1 till 65535.</value>
   </data>
@@ -6938,95 +6794,20 @@
   <data name="TorrentsProxySaved" xml:space="preserve">
     <value>Proxyn sparades</value>
   </data>
-  <data name="TorrentsLeftOutsideProxy" xml:space="preserve">
-    <value>Torrenttrafik gick utanför den här proxyn</value>
-  </data>
-  <data name="TorrentsCheckNotMadeProxy" xml:space="preserve">
-    <value>Kontrollen kunde inte göras genom den här proxyn</value>
-  </data>
   <data name="TorrentsProxyNotSaved" xml:space="preserve">
     <value>Inte sparad. {why}, så den sparade proxyn finns kvar.</value>
-  </data>
-  <data name="TorrentsProtectionNotSaved" xml:space="preserve">
-    <value>Inte sparat. {why}, så det sparade skyddet finns kvar.</value>
   </data>
   <data name="TorrentsStillOff" xml:space="preserve">
     <value>Torrenter är fortfarande av. {why}.</value>
   </data>
-  <data name="TorrentsIndex" xml:space="preserve">
-    <value>Torrentindex</value>
-  </data>
-  <data name="TorrentsIndexDetail" xml:space="preserve">
-    <value>RSS-sökadressen som Kaeri frågar efter torrenter från.</value>
-  </data>
-  <data name="TorrentsIndexHint" xml:space="preserve">
-    <value>https://…/?q={{query}}</value>
-  </data>
-  <data name="TorrentsIndexNeeded" xml:space="preserve">
-    <value>Torrenter behöver en indexadress.</value>
-  </data>
-  <data name="TorrentsIndexScheme" xml:space="preserve">
-    <value>Använd en http- eller https-adress.</value>
-  </data>
-  <data name="TorrentsIndexSaved" xml:space="preserve">
-    <value>Torrentindex sparades</value>
-  </data>
-  <data name="TorrentsIfCheckFails" xml:space="preserve">
-    <value>Om en kontroll misslyckas</value>
-  </data>
-  <data name="TorrentsKeepRunningTitle" xml:space="preserve">
-    <value>Ska torrenter fortsätta att köras om en kontroll misslyckas?</value>
-  </data>
-  <data name="TorrentsKeepRunningDetail" xml:space="preserve">
-    <value>Vad som händer med torrenter när kontrollen hittar trafik som går utanför ditt VPN eller din proxy.</value>
-  </data>
-  <data name="TorrentsFailPause" xml:space="preserve">
-    <value>Pausa torrenter</value>
-  </data>
-  <data name="TorrentsFailStop" xml:space="preserve">
-    <value>Stoppa torrenter</value>
-  </data>
-  <data name="TorrentsFailWarn" xml:space="preserve">
-    <value>Varna bara</value>
-  </data>
-  <data name="TorrentsFailWarnResult" xml:space="preserve">
-    <value>Torrenter fortsätter att köras.</value>
-  </data>
-  <data name="TorrentsFailStopResult" xml:space="preserve">
-    <value>Torrenter har stoppats.</value>
-  </data>
-  <data name="TorrentsFailPauseResult" xml:space="preserve">
-    <value>Torrenter har pausats.</value>
-  </data>
-  <data name="TorrentsLastCheck" xml:space="preserve">
-    <value>Senaste kontroll</value>
-  </data>
-  <data name="TorrentsCheckPassedExit" xml:space="preserve">
-    <value>Går ut via {exit}</value>
-  </data>
   <data name="TorrentsCheckPassed" xml:space="preserve">
     <value>Godkänd</value>
-  </data>
-  <data name="TorrentsCheckRunningLine" xml:space="preserve">
-    <value>Kontrollerar var torrenttrafiken går ut</value>
   </data>
   <data name="TorrentsCheckRunning" xml:space="preserve">
     <value>Kontrollerar</value>
   </data>
-  <data name="TorrentsCheckLeaked" xml:space="preserve">
-    <value>Trafik gick utanför skyddet. {then}</value>
-  </data>
-  <data name="TorrentsCheckUnmade" xml:space="preserve">
-    <value>Kontrollen kunde inte göras. {then}</value>
-  </data>
   <data name="TorrentsCheckFailed" xml:space="preserve">
     <value>Misslyckades</value>
-  </data>
-  <data name="TorrentsCheckNoneLine" xml:space="preserve">
-    <value>Inget skydd är inställt</value>
-  </data>
-  <data name="TorrentsCheckNone" xml:space="preserve">
-    <value>Utan skydd</value>
   </data>
   <data name="TorrentsCheckWaitingLine" xml:space="preserve">
     <value>Inte kontrollerad än</value>
@@ -7066,12 +6847,6 @@
   </data>
   <data name="TorrentsPageNeedsScript" xml:space="preserve">
     <value>Den här sidan behöver JavaScript för att skicka formuläret till TV:n på ett säkert sätt.</value>
-  </data>
-  <data name="TorrentsCheckNote" xml:space="preserve">
-    <value>Kaeri kontrollerar var torrenttrafiken går ut när en torrent startar och varje minut medan den körs, och pausar torrenter om kontrollen misslyckas. Det är ditt VPN eller din proxy som skyddar dig.</value>
-  </data>
-  <data name="TorrentsProtectionSaved" xml:space="preserve">
-    <value>Torrentskyddet sparades</value>
   </data>
   <data name="OpenedOpen" xml:space="preserve">
     <value>Öppna länk eller fil</value>

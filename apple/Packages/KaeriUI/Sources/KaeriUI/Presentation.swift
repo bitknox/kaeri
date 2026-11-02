@@ -37,7 +37,7 @@ extension Entry {
         coverColor.flatMap(Color.init(hex:))
     }
 
-    /// "Also on Lantern Stream", when the title's page names where else it streams.
+    /// "Also on Lantern Library", when the title's page names where else it streams.
     public var alsoOn: String? {
         availableOn.isEmpty ? nil : L.titleAlsoOn(places: ListFormatter.localizedString(byJoining: availableOn))
     }

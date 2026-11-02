@@ -39,8 +39,8 @@ settings-upscaling-note-none = The { -source }, scaled to fit without processing
 # Shown in the Advanced pane while the player has no options of its own to set.
 settings-advanced-none = No extra options. The player runs with { -app-name }'s own.
 
-# Side note title in Sources while torrents are on.
-settings-aside-check-title = Connection check
+# Side note title in Sources while a proxy is set.
+settings-aside-check-title = Proxy check
 
 # Side note in Sources while torrents are off.
 settings-aside-sources-apple = { -source-cap-pl } are tried in order, top to bottom. A show can keep its own { -source }, chosen from its title page.
@@ -100,9 +100,6 @@ settings-storage-used = { $size } in downloads.
 # @arg size: text
 # @arg free: text
 settings-storage-used-free = { $size } in downloads. { $free } free on this { -device }.
-
-# Footnote of the Torrents group while torrents are on.
-settings-torrents-warn-note = Choosing Warn only asks you to confirm first, as No protection does.
 
 # Value of the source order row: how many sources are in the order.
 # @arg count: int

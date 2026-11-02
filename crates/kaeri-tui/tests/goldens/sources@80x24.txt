@@ -7,9 +7,9 @@ Kaeri                                                  plugins ●  ·  anilist 
 ────────────────────────────────────────────────────────────────────────────────
 ▌ Sources   Episode 4. Enter plays your pick.
 ────────────────────────────────────────────────────────────────────────────────
-  [Example Group] Hoshikuzu no Tabibito - 04 (1080p)  ·  212 peers  ·… 1080p
-▌ [Sample Team] Hoshikuzu no Tabibito 04 [Dual]  ·  14 peers  ·  2.1 … 1080p
-  [Test Team] Hoshikuzu no Tabibito - 04  ·  3 peers  ·  0.9 GiB       1080p
+  Hoshikuzu no Tabibito 04 (1080p)  ·  212 peers  ·  1.4 GiB  ·  Curr… 1080p
+▌ Hoshikuzu no Tabibito 04 (dual audio)  ·  14 peers  ·  2.1 GiB  ·  … 1080p
+  Hoshikuzu no Tabibito 04 (720p)  ·  3 peers  ·  0.9 GiB              1080p
   Hoshikuzu no Tabibito — episode 4 (dub)  ·  Dubbed                   1080p
 
    │    009   Postmarked Yesterday                    23:55   ░░░░░░░░
@@ -57,8 +57,8 @@ r10 c70-70 fg=rule bg=ground
 r10 c71-75 fg=text bg=ground
 r10 c76-79 fg=rule bg=ground
 r11 c00-01 fg=rule bg=ground
-r11 c02-63 fg=text-dim bg=ground
-r11 c64-70 fg=rule bg=ground
+r11 c02-56 fg=text-dim bg=ground
+r11 c57-70 fg=rule bg=ground
 r11 c71-75 fg=text bg=ground
 r11 c76-79 fg=rule bg=ground
 r12 c00-01 fg=rule bg=ground

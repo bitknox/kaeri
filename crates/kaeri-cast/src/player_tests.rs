@@ -18,7 +18,7 @@ use crate::{
 };
 
 /// A loopback server answering each path with its body, ranges and all, without CORS: what the
-/// mender and the torrent server look like from here.
+/// stream proxy and the torrent server look like from here.
 async fn serve(files: HashMap<String, Vec<u8>>) -> String {
     serve_slowly(files, HashMap::new()).await
 }
@@ -427,7 +427,7 @@ async fn a_file_the_remuxer_cant_read_is_passed_through() {
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
-async fn hls_behind_the_mender_is_relayed_with_cors() {
+async fn hls_behind_the_stream_proxy_is_relayed_with_cors() {
     let playlist = "#EXTM3U\n#EXT-X-TARGETDURATION:4\n#EXTINF:4.0,\nseg0.ts\n#EXTINF:4.0,\nseg1.ts\n#EXT-X-ENDLIST\n";
     let mut segment = vec![0u8; 188 * 4];
     for packet in segment.chunks_mut(188) {

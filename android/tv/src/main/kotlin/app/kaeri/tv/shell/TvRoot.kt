@@ -44,6 +44,7 @@ import app.kaeri.design.Motion
 import app.kaeri.design.ObiSilk
 import app.kaeri.engine.core.AnilistId
 import app.kaeri.engine.ffi.FfiScreen
+import app.kaeri.engine.model.SettingKey
 import app.kaeri.player.PlayerModel
 import app.kaeri.store.AppStore
 import app.kaeri.store.UpdateState
@@ -70,7 +71,6 @@ import app.kaeri.tv.signin.JoinStoreScreen
 import app.kaeri.tv.signin.LicensedScreen
 import app.kaeri.tv.signin.ServerScreen
 import app.kaeri.tv.signin.SignInScreen
-import app.kaeri.tv.signin.TorrentMode
 import app.kaeri.tv.signin.TorrentScreen
 import app.kaeri.tv.ui.EngineDown
 import app.kaeri.tv.ui.LocalNotices
@@ -216,7 +216,8 @@ private fun BoxScope.Notices(store: AppStore, player: PlayerModel, remote: TvRem
 @Composable
 private fun BoxScope.RemoteOverlays(remote: TvRemoteHost, playing: Boolean, nav: TvNavigator) {
     val request = remote.request
-    OpenedDialog(LocalAppStore.current) { nav.openTorrents(TorrentMode.TurnOn) }
+    val store = LocalAppStore.current
+    OpenedDialog(store) { store.setSwitch(SettingKey.TORRENTS, true) }
     if (request != null && !playing && !remote.pairing) {
         PairRequestDialog(request, onCancel = remote::cancelRequest)
     }
@@ -307,7 +308,7 @@ private fun Browse(nav: TvNavigator, play: (AnilistId, UInt) -> Unit, playFromSt
                                 )
                                 is Page.SignIn -> SignInScreen(target.tracker, onDone = { nav.pop() })
                                 is Page.JoinStore -> JoinStoreScreen(onDone = { nav.pop() })
-                                is Page.Torrents -> TorrentScreen(target.mode, target.start, onDone = { nav.pop() })
+                                is Page.Torrents -> TorrentScreen(onDone = { nav.pop() })
                                 is Page.AddServer -> AddServerScreen(onDone = { nav.pop() })
                                 is Page.Server -> ServerScreen(target.id, onDone = { nav.pop() })
                                 is Page.Licensed -> LicensedScreen(onDone = { nav.pop() })

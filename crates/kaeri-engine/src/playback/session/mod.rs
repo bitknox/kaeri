@@ -78,12 +78,12 @@ use companion_state::fetch_still;
 use subtitles::{SUBTITLE_WAIT, localise_subtitles, sanitise};
 use watch::remember_tracks;
 
-/// An unguessable-enough path token for one playback attempt's mender.
+/// An unguessable-enough path token for one playback attempt's stream proxy.
 ///
 /// Not a security boundary — binding to loopback is — but it keeps an unrelated local process
 /// from stumbling onto the proxy, and differs per attempt so a stale connection from a failed
 /// stream cannot address the next one's.
-fn mender_token(context: &PlaybackContext, attempt: usize) -> String {
+fn proxy_token(context: &PlaybackContext, attempt: usize) -> String {
     // Random, because the parts identifying the playback were all guessable: the AniList id is
     // the show on screen, the episode a small integer, the attempt almost always zero, and the
     // timestamp a few seconds wide. That is a few thousand candidates against a scannable
@@ -384,21 +384,21 @@ pub async fn play(
         }
         let mut stream = streams[index].clone();
 
-        // HLS goes through the mender: segments arrive dressed as other things often enough
-        // that checking is worth a loopback hop, and a healthy stream passes through
-        // byte-for-byte. Held for the whole attempt — dropping it would kill the proxy mid
+        // HLS goes through the stream proxy, which sends the stream's headers with every
+        // request and holds playback through a rate limit; segments pass through unchanged.
+        // Held for the whole attempt — dropping it would kill the proxy mid
         // playback — and replaced on the next, so a stream that failed leaves nothing behind.
-        let mut menders = crate::playback::mend::Menders::default();
+        let mut proxies = crate::playback::proxy::Proxies::default();
         if stream.kind == StreamKind::Hls {
             let original = stream.url.clone();
-            stream.url = menders
-                .route(&http, &original, &stream.headers, &mender_token(&context, attempt))
+            stream.url = proxies
+                .route(&http, &original, &stream.headers, &proxy_token(&context, attempt))
                 .await;
             // The seek bar's thumbnailer reads the same stream through its own entry, which
             // answers from what playback already fetched and never waits out a rate limit.
-            // Unset when the mender could not start, and thumbfast then opens the stream as
+            // Unset when the proxy could not start, and thumbfast then opens the stream as
             // the player does.
-            stream.thumbnail_url = menders.thumbnail_url(&original);
+            stream.thumbnail_url = proxies.thumbnail_url(&original);
         }
         attempt += 1;
         tracing::info!(
@@ -408,7 +408,7 @@ pub async fn play(
             kind = ?stream.kind,
             quality = ?stream.quality,
             from = %crate::logged::address(&streams[index].url),
-            mended = stream.kind == StreamKind::Hls,
+            proxied = stream.kind == StreamKind::Hls,
             headers = stream.headers.len(),
             "trying a stream"
         );
@@ -556,7 +556,7 @@ pub async fn play(
                 // What the attempt says of its server, written down before anything else is
                 // decided, so the next play knows which server to try first.
                 if no_frames {
-                    let refused = menders.refused(&streams[index].url);
+                    let refused = proxies.refused(&streams[index].url);
                     run.servers.unplayed(&store, &streams[index], stopped || quit, refused);
                 }
 

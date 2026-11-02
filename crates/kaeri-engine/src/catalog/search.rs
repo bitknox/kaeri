@@ -308,7 +308,7 @@ fn entries(lent: &Lent, page: &Page<Media>) -> Vec<Entry> {
 }
 
 /// Where each title the viewer's own sources have plays, by AniList id: the first such source
-/// in source order. Plugins and web sources never count.
+/// in source order. Plugins never count.
 fn own_titles(registry: &ProviderRegistry) -> HashMap<AnilistId, AvailableAt> {
     let mut out = HashMap::new();
     for provider in registry.all() {

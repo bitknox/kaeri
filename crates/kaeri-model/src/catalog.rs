@@ -9,13 +9,13 @@ use crate::{episodes::EpisodeAiring, progress::TitleProgress, search::SearchQuer
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
 pub enum AvailableAt {
-    /// "Plays here": a free catalogue or the demo has it.
+    /// "Plays here": an open catalogue or the demo has it.
     PlaysHere,
     /// "In your library": files on this device.
     InLibrary,
     /// "On Mika's Jellyfin": a media server, by the name it gave.
     OnServer { server: String },
-    /// "On Hikari Stream": one of the viewer's licensed services, which opens outside Kaeri.
+    /// "On Hikari Library": one of the viewer's licensed services, which opens outside Kaeri.
     OnService { service: String },
 }
 
@@ -425,6 +425,15 @@ pub struct TitleDetail {
     /// for then.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub following: Vec<FollowedEntry>,
+    /// Only the header: the title, its art, the facts under it, the synopsis and the seasons,
+    /// from what the engine kept of the franchise's seasons, sent before AniList answers for
+    /// the page. Everything else here is empty because it has not come yet, not because there
+    /// is none: a second [`Event::Detail`] brings the whole page moments later. A front end
+    /// shows the header at once and keeps the rest of the page loading.
+    ///
+    /// [`Event::Detail`]: crate::event::Event::Detail
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub partial: bool,
 }
 
 /// How a title's run reads, decided by the engine. The wording is the catalogue's, so every app

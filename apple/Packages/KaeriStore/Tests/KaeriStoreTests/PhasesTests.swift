@@ -46,6 +46,17 @@ struct PhasesTests {
         ])
     }
 
+    @Test func theMacsWindowsGoingOffScreenRestOnlyThePullAndEachChangeIsSaidOnce() {
+        let told = Told()
+        let phases = told.phases(backgrounds: false)
+        // On screen at launch: nothing to say.
+        phases.windowsVisible(true)
+        phases.windowsVisible(false)
+        phases.windowsVisible(false)
+        phases.windowsVisible(true)
+        #expect(told.sent == [.syncVisible(visible: false), .syncVisible(visible: true)])
+    }
+
     @Test func aDownloadsWindowInTheBackgroundIsSaidThereAndItsEndToo() {
         let told = Told()
         let phases = told.phases(backgrounds: true)

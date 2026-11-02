@@ -15,10 +15,6 @@ struct MacShell: View {
     /// Where a title's art flies from the element clicked to its page (TitleOpening).
     @Namespace private var titleSpace
 
-    /// How a page or its section comes in as they change places: fade-in, once the one going has
-    /// all but gone (quick has 5 % left at 150 ms).
-    static let comesIn = Animation.fadeIn.delay(0.15)
-
     var body: some View {
         @Bindable var navigator = navigator
         NavigationSplitView {
@@ -42,25 +38,22 @@ struct MacShell: View {
                     .background(.ground)
                     // Under a page the section's banners are not where the player grows from.
                     .environment(\.playerZoomAside, navigator.pageCovers ? "section" : nil)
-                    // The page and the section fade through the ground: the one going leaves on
-                    // quick, the one coming fades in a beat later, so their words are never drawn
-                    // over each other. Art in flight stays whole above both.
-                    .animation(navigator.titleOnMac == nil ? Self.comesIn : .quick) {
-                        $0.opacity(navigator.titleOnMac == nil ? 1 : 0)
-                    }
                 if let id = navigator.titleOnMac {
                     TitlePage(id: id)
-                        .transition(.asymmetric(
-                            insertion: .opacity.animation(Self.comesIn),
-                            removal: .opacity.animation(.quick)
-                        ))
+                        // The page crossfades over the section on standard, as it opens and on Back;
+                        // art in flight stays whole above both.
+                        .transition(.opacity)
                         .zIndex(1)
                         // Nor is the page's banner until the page has come in: the player never
                         // pairs the two, and the page's art never grows out of the section's.
                         .environment(\.playerZoomAside, navigator.pageSettled ? nil : "page")
+                        .environment(\.titleAwaited, navigator.awaited)
                 }
                 if let flight = navigator.flight {
                     TitleFlyer(flight: flight, space: titleSpace)
+                        // Each flight its own flyer, so one started while the last is still in
+                        // the air takes off too, rather than staying where it started.
+                        .id(flight.trip)
                         .transition(.identity)
                         .zIndex(2)
                 }

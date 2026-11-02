@@ -12,9 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import app.kaeri.engine.core.AnilistId
-import app.kaeri.engine.model.TorrentProtection
 import app.kaeri.i18n.R as I18nR
-import app.kaeri.tv.signin.TorrentMode
 import app.kaeri.tv.ui.FocusMemory
 import app.kaeri.tv.ui.TvIcons
 
@@ -88,8 +86,8 @@ sealed interface Page {
         override val memory: FocusMemory = FocusMemory()
     }
 
-    /** TVTorrents: torrents turning on, or their protection changing, over Settings › Sources. */
-    data class Torrents(val mode: TorrentMode, val start: TorrentProtection?, override val key: String) : Page {
+    /** TVTorrents: the torrent proxy's form, over Settings › Sources. */
+    data class Torrents(override val key: String) : Page {
         override val memory: FocusMemory = FocusMemory()
     }
 }
@@ -228,9 +226,9 @@ class TvNavigator(start: Destination = Destination.Home) {
         pages += Page.Licensed("licensed/$opened")
     }
 
-    fun openTorrents(mode: TorrentMode, start: TorrentProtection? = null) {
+    fun openTorrents() {
         opened += 1
-        pages += Page.Torrents(mode, start, "torrents/$opened")
+        pages += Page.Torrents("torrents/$opened")
     }
 
     fun openTitle(id: AnilistId) {

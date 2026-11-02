@@ -225,7 +225,7 @@ object Strings {
     fun homeSpotlightDemo(context: Context): String =
         context.getString(R.string.home_spotlight_demo)
 
-    /** Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Stream. */
+    /** Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library. */
     fun licensedReturn(context: Context, episode: Int, service: String): String =
         context.getString(R.string.licensed_return, episode, service)
 
@@ -825,17 +825,13 @@ object Strings {
     fun noticeChoiceNotSaved(context: Context, reason: String): String =
         context.getString(R.string.notice_choice_not_saved, reason)
 
-    /** Toast while torrents are running but the connection check failed, and the settings say to warn only. */
-    fun torrentCheckFailedRunning(context: Context): String =
-        context.getString(R.string.torrent_check_failed_running)
+    /** Note on the sources screen: the proxy for torrent traffic failed its check, so torrents wait. */
+    fun torrentProxyWaiting(context: Context): String =
+        context.getString(R.string.torrent_proxy_waiting)
 
-    /** Note on the sources screen: torrents are waiting for the VPN guard. The reason comes from the guard. */
-    fun torrentVpnWaiting(context: Context, reason: String): String =
-        context.getString(R.string.torrent_vpn_waiting, reason)
-
-    /** Note on the sources screen: the VPN guard has no verdict yet. */
-    fun torrentVpnUnverified(context: Context): String =
-        context.getString(R.string.torrent_vpn_unverified)
+    /** Note on the sources screen: the proxy for torrent traffic hasn't been checked yet. */
+    fun torrentProxyUnchecked(context: Context): String =
+        context.getString(R.string.torrent_proxy_unchecked)
 
     /** Error: the link or file given to open is not a magnet link, an info hash or a torrent file. */
     fun torrentLinkUnusable(context: Context): String =
@@ -857,17 +853,13 @@ object Strings {
     fun torrentSessionFailed(context: Context, reason: String): String =
         context.getString(R.string.torrent_session_failed, reason)
 
-    /** Toast when torrents are up but no operating-system firewall rule backs the VPN guard. Terminal only: the engine never sends it to the apps. */
-    fun torrentNoKillSwitch(context: Context): String =
-        context.getString(R.string.torrent_no_kill_switch)
+    /** Toast when the proxy setting can't be used. The reason comes from the proxy setting. */
+    fun torrentProxyUnusable(context: Context, reason: String): String =
+        context.getString(R.string.torrent_proxy_unusable, reason)
 
-    /** Toast when the connection check could not run. The reason comes from the VPN settings. */
-    fun torrentNotChecked(context: Context, reason: String): String =
-        context.getString(R.string.torrent_not_checked, reason)
-
-    /** Note on the sources screen after the source chain is rebuilt with torrents on. */
-    fun sourcesReloadedTorrentsPending(context: Context): String =
-        context.getString(R.string.sources_reloaded_torrents_pending)
+    /** Note on the sources screen after the source chain is rebuilt with torrents on and a proxy set. */
+    fun sourcesReloadedTorrentsChecking(context: Context): String =
+        context.getString(R.string.sources_reloaded_torrents_checking)
 
     /** Note on the sources screen after the source chain is rebuilt with torrents off. */
     fun sourcesReloadedTorrentsOff(context: Context): String =
@@ -1013,13 +1005,17 @@ object Strings {
     fun noticeNotSavedBecause(context: Context, cause: String): String =
         context.getString(R.string.notice_not_saved_because, cause)
 
-    /** Toast when the torrent protection choice was saved. */
-    fun noticeProtectionSaved(context: Context): String =
-        context.getString(R.string.notice_protection_saved)
+    /** Toast when the proxy for torrent traffic was saved. */
+    fun noticeProxySaved(context: Context): String =
+        context.getString(R.string.notice_proxy_saved)
 
-    /** Toast when the torrent protection could not be checked. The cause says why. */
-    fun noticeProtectionNotChecked(context: Context, cause: String): String =
-        context.getString(R.string.notice_protection_not_checked, cause)
+    /** Toast when the proxy for torrent traffic was turned off. */
+    fun noticeProxyRemoved(context: Context): String =
+        context.getString(R.string.notice_proxy_removed)
+
+    /** Toast when the proxy could not be checked. The cause says why. */
+    fun noticeProxyNotChecked(context: Context, cause: String): String =
+        context.getString(R.string.notice_proxy_not_checked, cause)
 
     /** Toast when the proxy's password could not be stored. The reason comes from the system. */
     fun noticeProxyPasswordNotKept(context: Context, reason: String): String =
@@ -1036,10 +1032,6 @@ object Strings {
     /** Toast when a subtitle choice names subtitles the show has not used. */
     fun noticeShowNoSuchSubtitles(context: Context): String =
         context.getString(R.string.notice_show_no_such_subtitles)
-
-    /** Toast while torrents are held until the connection check passes. */
-    fun noticeTorrentsWaitingForCheck(context: Context): String =
-        context.getString(R.string.notice_torrents_waiting_for_check)
 
     /** Toast when the mapping data downloads work again after a failure. */
     fun noticeMappingDataRefreshed(context: Context): String =
@@ -1060,14 +1052,6 @@ object Strings {
     /** Toast when a new release of Kaeri is out, on the terminal app. The command is not translated. Terminal only: the engine never sends it to the apps. */
     fun noticeUpdateAvailable(context: Context, tag: String): String =
         context.getString(R.string.notice_update_available, tag)
-
-    /** The reason a setting was refused until the person confirms having no protection. */
-    fun causeConfirmNoProtection(context: Context): String =
-        context.getString(R.string.cause_confirm_no_protection)
-
-    /** The reason a setting was refused until the person confirms the "warn only" choice. */
-    fun causeConfirmWarnOnly(context: Context): String =
-        context.getString(R.string.cause_confirm_warn_only)
 
     /** The reason a proxy was refused: it has no host or no port. */
     fun causeProxyNeedsAddress(context: Context): String =
@@ -1605,10 +1589,6 @@ object Strings {
     fun tvPageNextLink(context: Context): String =
         context.getString(R.string.tv_page_next_link)
 
-    /** What the TV does next once the phone sent the torrent details */
-    fun tvPageNextTorrent(context: Context): String =
-        context.getString(R.string.tv_page_next_torrent)
-
     /** What the TV does next once the phone sent a proxy */
     fun tvPageNextProxy(context: Context): String =
         context.getString(R.string.tv_page_next_proxy)
@@ -1640,14 +1620,6 @@ object Strings {
     /** Intro on the phone page that takes a plugin store link */
     fun tvPageLink(context: Context): String =
         context.getString(R.string.tv_page_link)
-
-    /** Intro on the phone page that takes the torrent index */
-    fun tvPageTorrent(context: Context): String =
-        context.getString(R.string.tv_page_torrent)
-
-    /** Intro on the phone page that takes the torrent index and a proxy */
-    fun tvPageTorrentProxy(context: Context): String =
-        context.getString(R.string.tv_page_torrent_proxy)
 
     /** Intro on the phone page that takes a proxy */
     fun tvPageProxy(context: Context, kept: String): String =
@@ -1693,21 +1665,9 @@ object Strings {
     fun tvQrLabelProxy(context: Context): String =
         context.getString(R.string.tv_qr_label_proxy)
 
-    /** Spoken label of the QR code for the torrent index page */
-    fun tvQrLabelIndex(context: Context): String =
-        context.getString(R.string.tv_qr_label_index)
-
-    /** Beside the QR code on the TV */
-    fun tvScanTorrentProxy(context: Context): String =
-        context.getString(R.string.tv_scan_torrent_proxy)
-
     /** Beside the QR code on the TV */
     fun tvScanProxy(context: Context): String =
         context.getString(R.string.tv_scan_proxy)
-
-    /** Beside the QR code on the TV */
-    fun tvScanTorrent(context: Context): String =
-        context.getString(R.string.tv_scan_torrent)
 
     /** Name of the proxy user field on the TV */
     fun tvFieldUserOptional(context: Context): String =
@@ -1860,26 +1820,6 @@ object Strings {
     /** Footer under the week's notifications: what a row does. */
     fun settingsComingUpOpens(context: Context): String =
         context.getString(R.string.settings_coming_up_opens)
-
-    /** The same note when a failed check only warns. */
-    fun torrentsCheckNoteWarn(context: Context): String =
-        context.getString(R.string.torrents_check_note_warn)
-
-    /** The same note when a failed check stops torrents. */
-    fun torrentsCheckNoteStop(context: Context): String =
-        context.getString(R.string.torrents_check_note_stop)
-
-    /** Name of the proxy protection. */
-    fun torrentsProtectProxyName(context: Context): String =
-        context.getString(R.string.torrents_protect_proxy_name)
-
-    /** Name of the VPN protection. */
-    fun torrentsProtectVpnName(context: Context): String =
-        context.getString(R.string.torrents_protect_vpn_name)
-
-    /** Body of the question asked before a failed check only warns. */
-    fun torrentsWarnBody(context: Context): String =
-        context.getString(R.string.torrents_warn_body)
 
     /** Part of a proxy's line: the user it lets in. */
     fun torrentsProxyAs(context: Context, user: String): String =
@@ -2261,10 +2201,6 @@ object Strings {
     fun settingsTitlesNoteRomaji(context: Context): String =
         context.getString(R.string.settings_titles_note_romaji)
 
-    /** Settings, Sources: no torrent index address is set. */
-    fun settingsIndexNone(context: Context): String =
-        context.getString(R.string.settings_index_none)
-
     /** Settings, Sources: how many plugin stores, and how many updates wait in them. */
     fun settingsStoresWithUpdates(context: Context, stores: Int, updates: String): String =
         context.getString(R.string.settings_stores_with_updates, stores, updates)
@@ -2321,10 +2257,6 @@ object Strings {
     fun settingsAsideDownloads(context: Context): String =
         context.getString(R.string.settings_aside_downloads)
 
-    /** Settings aside on a tablet, Sources: the title over the connection check note. */
-    fun settingsAsideConnectionCheck(context: Context): String =
-        context.getString(R.string.settings_aside_connection_check)
-
     /** Settings aside on a tablet, Sources: how sources are tried. */
     fun settingsAsideSources(context: Context): String =
         context.getString(R.string.settings_aside_sources)
@@ -2340,26 +2272,6 @@ object Strings {
     /** Settings aside on a tablet, upscaling: what no processing does. */
     fun settingsUpscalingNoteOffOriginal(context: Context): String =
         context.getString(R.string.settings_upscaling_note_off_original)
-
-    /** Torrent sheet: the title when torrents are being turned on. */
-    fun torrentsSheetTurnOnTitle(context: Context): String =
-        context.getString(R.string.torrents_sheet_turn_on_title)
-
-    /** Torrent sheet: the title when only the protection changes. */
-    fun torrentsSheetProtectTitle(context: Context): String =
-        context.getString(R.string.torrents_sheet_protect_title)
-
-    /** Torrent sheet: the button that turns torrents on. */
-    fun torrentsSheetTurnOnButton(context: Context): String =
-        context.getString(R.string.torrents_sheet_turn_on_button)
-
-    /** Torrent sheet: the proxy's host field. */
-    fun torrentsSheetHost(context: Context): String =
-        context.getString(R.string.torrents_sheet_host)
-
-    /** Torrent sheet: the proxy's port field. */
-    fun torrentsSheetPort(context: Context): String =
-        context.getString(R.string.torrents_sheet_port)
 
     /** Torrent sheet: the note under the proxy fields. */
     fun torrentsSheetProxyAuthNote(context: Context): String =
@@ -8113,7 +8025,7 @@ object Strings {
     fun sourceNoteAmbiguous(context: Context): String =
         context.getString(R.string.source_note_ambiguous)
 
-    /** Under a source held back by the VPN check in Settings. */
+    /** Under a source that waits for the proxy check in Settings. */
     fun sourceNoteHeldBack(context: Context): String =
         context.getString(R.string.source_note_held_back)
 
@@ -8173,14 +8085,6 @@ object Strings {
     fun sourcesTorrents(context: Context): String =
         context.getString(R.string.sources_torrents)
 
-    /** Label of a source that is not a plugin and controls this device. */
-    fun sourcesRemote(context: Context): String =
-        context.getString(R.string.sources_remote)
-
-    /** Origin: set in the config file. */
-    fun sourcesOriginConfig(context: Context): String =
-        context.getString(R.string.sources_origin_config)
-
     /** Origin: built into the app. */
     fun sourcesOriginBuiltIn(context: Context): String =
         context.getString(R.string.sources_origin_built_in)
@@ -8229,7 +8133,7 @@ object Strings {
     fun sourcesDetailNotAnsweringPlain(context: Context): String =
         context.getString(R.string.sources_detail_not_answering_plain)
 
-    /** Status line: held back by the check. */
+    /** Status line: waiting for the proxy check. */
     fun sourcesDetailHeldBack(context: Context): String =
         context.getString(R.string.sources_detail_held_back)
 
@@ -8241,7 +8145,7 @@ object Strings {
     fun sourcesDetailGone(context: Context): String =
         context.getString(R.string.sources_detail_gone)
 
-    /** Status line: the site did not answer. */
+    /** Status line: the source did not answer. */
     fun sourcesDetailSite(context: Context): String =
         context.getString(R.string.sources_detail_site)
 
@@ -9580,7 +9484,7 @@ object Strings {
     fun torrentsOffDetail(context: Context): String =
         context.getString(R.string.torrents_off_detail)
 
-    /** Line explaining the risk, before torrents start. */
+    /** Line about privacy in the torrent sheet, before torrents start. */
     fun torrentsRisk(context: Context): String =
         context.getString(R.string.torrents_risk)
 
@@ -9588,69 +9492,25 @@ object Strings {
     fun torrentsNotAPlugin(context: Context): String =
         context.getString(R.string.torrents_not_a_plugin)
 
-    /** Label of the choice of protection. */
-    fun torrentsProtectWith(context: Context): String =
-        context.getString(R.string.torrents_protect_with)
+    /** Switch: send torrent traffic through a SOCKS5 proxy. Off by default. */
+    fun torrentsProxyRoute(context: Context): String =
+        context.getString(R.string.torrents_proxy_route)
 
-    /** Option: no protection. */
-    fun torrentsProtectNone(context: Context): String =
-        context.getString(R.string.torrents_protect_none)
+    /** Line under the switch. */
+    fun torrentsProxyRouteDetail(context: Context): String =
+        context.getString(R.string.torrents_proxy_route_detail)
 
-    /** Option: a proxy. */
-    fun torrentsProtectProxy(context: Context): String =
-        context.getString(R.string.torrents_protect_proxy)
-
-    /** Option: a VPN already running on the device. */
-    fun torrentsProtectVpn(context: Context): String =
-        context.getString(R.string.torrents_protect_vpn)
-
-    /** Line under the proxy option. */
-    fun torrentsProtectProxyDetail(context: Context): String =
-        context.getString(R.string.torrents_protect_proxy_detail)
-
-    /** Line under the VPN option. */
-    fun torrentsProtectVpnDetail(context: Context): String =
-        context.getString(R.string.torrents_protect_vpn_detail)
-
-    /** Line under the no-protection option. */
-    fun torrentsProtectNoneDetail(context: Context): String =
-        context.getString(R.string.torrents_protect_none_detail)
-
-    /** Line when no protection is set. */
-    fun torrentsProtectNoneNote(context: Context): String =
-        context.getString(R.string.torrents_protect_none_note)
-
-    /** Summary: a proxy protects. Host and port are already formatted. */
+    /** Summary: torrents go through a proxy. Host and port are already formatted. */
     fun torrentsSummaryProxyAt(context: Context, host: String, port: String): String =
         context.getString(R.string.torrents_summary_proxy_at, host, port)
 
-    /** Summary: a proxy protects, address not shown. */
+    /** Summary: torrents go through a proxy, address not shown. */
     fun torrentsSummaryProxy(context: Context): String =
         context.getString(R.string.torrents_summary_proxy)
 
-    /** Summary: a VPN protects. */
-    fun torrentsSummaryVpn(context: Context): String =
-        context.getString(R.string.torrents_summary_vpn)
-
-    /** Summary: nothing protects. */
-    fun torrentsSummaryNone(context: Context): String =
-        context.getString(R.string.torrents_summary_none)
-
-    /** Title of the question when torrents are turned on without protection. */
-    fun torrentsUnprotectedTitle(context: Context): String =
-        context.getString(R.string.torrents_unprotected_title)
-
-    /** Line under it. */
-    fun torrentsUnprotectedDetail(context: Context): String =
-        context.getString(R.string.torrents_unprotected_detail)
-
-    /** Button that confirms turning torrents on without protection. */
-    fun torrentsTurnOnUnprotected(context: Context): String =
-        context.getString(R.string.torrents_turn_on_unprotected)
-
-    /** Button that confirms using no protection. */
-    fun torrentsUseUnprotected(context: Context): String =
-        context.getString(R.string.torrents_use_unprotected)
+    /** Summary: no proxy is set. */
+    fun torrentsSummaryDirect(context: Context): String =
+        context.getString(R.string.torrents_summary_direct)
 
     /** Label of the proxy host field. */
     fun torrentsProxyHost(context: Context): String =
@@ -9688,11 +9548,7 @@ object Strings {
     fun torrentsProxySaved(context: Context): String =
         context.getString(R.string.torrents_proxy_saved)
 
-    /** Why a save was refused: traffic left outside the proxy. */
-    fun torrentsLeftOutsideProxy(context: Context): String =
-        context.getString(R.string.torrents_left_outside_proxy)
-
-    /** Why a save was refused: the check could not run through the proxy. */
+    /** Why a save was refused: the proxy check failed. A sentence fragment. */
     fun torrentsCheckNotMadeProxy(context: Context): String =
         context.getString(R.string.torrents_check_not_made_proxy)
 
@@ -9700,113 +9556,33 @@ object Strings {
     fun torrentsProxyNotSaved(context: Context, why: String): String =
         context.getString(R.string.torrents_proxy_not_saved, why)
 
-    /** Notice when protection was not saved. The reason is a sentence fragment. */
-    fun torrentsProtectionNotSaved(context: Context, why: String): String =
-        context.getString(R.string.torrents_protection_not_saved, why)
-
     /** Notice when torrents stayed off. The reason is a sentence fragment. */
     fun torrentsStillOff(context: Context, why: String): String =
         context.getString(R.string.torrents_still_off, why)
 
-    /** Label of the index address field. */
-    fun torrentsIndex(context: Context): String =
-        context.getString(R.string.torrents_index)
+    /** Under the proxy form: what the app checks. */
+    fun torrentsCheckNote(context: Context): String =
+        context.getString(R.string.torrents_check_note)
 
-    /** Line under the index field. */
-    fun torrentsIndexDetail(context: Context): String =
-        context.getString(R.string.torrents_index_detail)
-
-    /** Hint inside the index field. */
-    fun torrentsIndexHint(context: Context): String =
-        context.getString(R.string.torrents_index_hint)
-
-    /** Line when no index address is set. */
-    fun torrentsIndexNeeded(context: Context): String =
-        context.getString(R.string.torrents_index_needed)
-
-    /** Line when the index address has the wrong scheme. */
-    fun torrentsIndexScheme(context: Context): String =
-        context.getString(R.string.torrents_index_scheme)
-
-    /** Notice after the index was saved. */
-    fun torrentsIndexSaved(context: Context): String =
-        context.getString(R.string.torrents_index_saved)
-
-    /** Label of the choice of what to do when a check fails. */
-    fun torrentsIfCheckFails(context: Context): String =
-        context.getString(R.string.torrents_if_check_fails)
-
-    /** Title of the question that asks whether torrents may keep running. */
-    fun torrentsKeepRunningTitle(context: Context): String =
-        context.getString(R.string.torrents_keep_running_title)
-
-    /** Line under the question: what the choice is about. */
-    fun torrentsKeepRunningDetail(context: Context): String =
-        context.getString(R.string.torrents_keep_running_detail)
-
-    /** Option: pause torrents. */
-    fun torrentsFailPause(context: Context): String =
-        context.getString(R.string.torrents_fail_pause)
-
-    /** Option: stop torrents. */
-    fun torrentsFailStop(context: Context): String =
-        context.getString(R.string.torrents_fail_stop)
-
-    /** Option: only warn. */
-    fun torrentsFailWarn(context: Context): String =
-        context.getString(R.string.torrents_fail_warn)
-
-    /** Result of the choice: torrents run. */
-    fun torrentsFailWarnResult(context: Context): String =
-        context.getString(R.string.torrents_fail_warn_result)
-
-    /** Result of the choice: torrents stop. */
-    fun torrentsFailStopResult(context: Context): String =
-        context.getString(R.string.torrents_fail_stop_result)
-
-    /** Result of the choice: torrents pause. */
-    fun torrentsFailPauseResult(context: Context): String =
-        context.getString(R.string.torrents_fail_pause_result)
-
-    /** Label of the last check. */
+    /** Label of the proxy check's result. */
     fun torrentsLastCheck(context: Context): String =
         context.getString(R.string.torrents_last_check)
-
-    /** Check passed. The exit is where the traffic leaves from, already formatted. */
-    fun torrentsCheckPassedExit(context: Context, exit: String): String =
-        context.getString(R.string.torrents_check_passed_exit, exit)
 
     /** Check passed. */
     fun torrentsCheckPassed(context: Context): String =
         context.getString(R.string.torrents_check_passed)
 
-    /** Check running: the line. */
-    fun torrentsCheckRunningLine(context: Context): String =
-        context.getString(R.string.torrents_check_running_line)
-
     /** Check running: the short word. */
     fun torrentsCheckRunning(context: Context): String =
         context.getString(R.string.torrents_check_running)
 
-    /** Check failed: traffic left outside. The consequence follows. */
-    fun torrentsCheckLeaked(context: Context, then: String): String =
-        context.getString(R.string.torrents_check_leaked, then)
-
-    /** Check failed: the check could not be made. The consequence follows. */
-    fun torrentsCheckUnmade(context: Context, then: String): String =
-        context.getString(R.string.torrents_check_unmade, then)
+    /** Check failed: the line. */
+    fun torrentsCheckFailedLine(context: Context): String =
+        context.getString(R.string.torrents_check_failed_line)
 
     /** Short word: the check failed. */
     fun torrentsCheckFailed(context: Context): String =
         context.getString(R.string.torrents_check_failed)
-
-    /** Line: no protection is set, so nothing was checked. */
-    fun torrentsCheckNoneLine(context: Context): String =
-        context.getString(R.string.torrents_check_none_line)
-
-    /** Short word: unprotected. */
-    fun torrentsCheckNone(context: Context): String =
-        context.getString(R.string.torrents_check_none)
 
     /** Line: no check yet. */
     fun torrentsCheckWaitingLine(context: Context): String =
@@ -9859,14 +9635,6 @@ object Strings {
     /** Line when the page needs script. */
     fun torrentsPageNeedsScript(context: Context): String =
         context.getString(R.string.torrents_page_needs_script)
-
-    /** Under the proxy form when turning torrents on: what the app checks, and that the VPN or proxy is what protects. */
-    fun torrentsCheckNote(context: Context): String =
-        context.getString(R.string.torrents_check_note)
-
-    /** Notice after the protection was saved. */
-    fun torrentsProtectionSaved(context: Context): String =
-        context.getString(R.string.torrents_protection_saved)
 
     /** Menu item and button: open a magnet link or a torrent file the viewer has. */
     fun openedOpen(context: Context): String =

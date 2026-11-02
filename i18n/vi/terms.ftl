@@ -43,8 +43,6 @@
 -watch-together-cap = Cùng xem
 
 # Where releases are looked up.
--torrent-index = chỉ mục torrent
--torrent-index-cap = Chỉ mục torrent
 
 # One downloadable file in a torrent index. Not a place episodes come from.
 -release = bản phát hành

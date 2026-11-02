@@ -197,6 +197,8 @@ public sealed partial class MainWindow : Window
                 RememberPlace();
         };
         Closed += (_, _) => Shutdown();
+        // Hidden or minimised, the tracker pull rests and one pull runs on return; downloads and torrents go on.
+        VisibilityChanged += (_, e) => ctx.Send(new Command.SyncVisible(e.Visible));
         Root.Loaded += (_, _) => FirstPage();
         Root.SizeChanged += (_, e) => FitTitleBar(e.NewSize.Width);
     }
