@@ -32,7 +32,7 @@ pub const MEDIA_FIELDS: &str = r"
     nextAiringEpisode { episode airingAt timeUntilAiring }
     studios(isMain: true) { nodes { name } }
     trailer { id site }
-    prequels: relations { edges { relationType node { id } } }
+    prequels: relations { edges { relationType node { id format } } }
 ";
 
 /// Extra fields only the Title screen needs. Excluded from list queries because
@@ -734,9 +734,10 @@ mod tests {
     }
 
     #[test]
-    fn the_list_fields_ask_for_prequels_by_id_alone() {
+    fn the_list_fields_ask_for_relations_by_id_and_format_alone() {
         assert!(
-            MEDIA_FIELDS.contains("prequels: relations { edges { relationType node { id } } }")
+            MEDIA_FIELDS
+                .contains("prequels: relations { edges { relationType node { id format } } }")
         );
         // One request for the list as before: the ids ride in it, no query of their own.
         assert_eq!(by_ids().matches("media(").count(), 1);

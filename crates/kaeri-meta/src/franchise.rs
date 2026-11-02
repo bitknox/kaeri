@@ -30,7 +30,7 @@ use kaeri_core::{ids::AnilistId, media::MediaFormat};
 
 use crate::anilist::{
     Media, Season,
-    model::{CoverImage, RelationConnection, RelationNode},
+    model::{CoverImage, RelationConnection, RelationEdge, RelationNode},
 };
 
 /// The farthest a season can be from the title opened, in steps along the chain either way,
@@ -180,9 +180,37 @@ impl Relations {
     }
 
     /// Title `id`'s header and when it came, while it is believed: younger than [`KEEP_FOR`].
+    ///
+    /// Its relations are the ones its header came with, by kind, id and format, each named by
+    /// its card where the walk met it: so its page knows at once whether it has a Related row
+    /// and how many it holds, and the page fills in the names the walk did not learn.
     pub fn header(&self, id: AnilistId, now: Instant) -> Option<(Media, Instant)> {
         let (media, at) = self.titles.get(&id)?.header.as_ref()?;
-        (now.saturating_duration_since(*at) < KEEP_FOR).then(|| (media.clone(), *at))
+        (now.saturating_duration_since(*at) < KEEP_FOR).then(|| (self.related(media), *at))
+    }
+
+    /// `media` with its relations from its `prequels`, named by the cards known.
+    fn related(&self, media: &Media) -> Media {
+        let edges = media
+            .prequels
+            .edges
+            .iter()
+            .map(|edge| RelationEdge {
+                relation_type: edge.relation_type.clone(),
+                node: self
+                    .titles
+                    .get(&edge.node.id)
+                    .and_then(|known| known.card.clone())
+                    .map_or_else(
+                        || edge.node.clone(),
+                        |card| RelationNode {
+                            format: card.format.or(edge.node.format),
+                            ..card
+                        },
+                    ),
+            })
+            .collect();
+        Media { relations: RelationConnection { edges }, ..media.clone() }
     }
 
     /// The seasons of `start`'s franchise when every one is known: what its page's picker shows,
