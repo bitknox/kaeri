@@ -1,6 +1,7 @@
 //! How many AniList requests each journey costs, against the fake, in the world the Fixtures
 //! apps show. Each journey has an upper bound ([`BOUNDS`]): a change that costs more fails here,
-//! and one that costs less lowers the bound. Run with `--nocapture` to read the table.
+//! and one that costs less lowers the bound. Run with `--nocapture` to read the table, and with
+//! `KAERI_LAUNCH_TIMELINE` set as well for when each cold-launch request went.
 
 use std::collections::BTreeMap;
 
@@ -391,3 +392,167 @@ async fn hover_cards_for_unlisted_covers_cost_one_batched_lookup() {
     assert!(again.iter().any(|u| matches!(u, Event::Cards(_))));
     assert_eq!(tally.rows[2].1, 0, "and the second time none");
 }
+
+/// The Mac's cold launch, as the app makes it, against an AniList that answers 30 a minute and
+/// says so in its headers: the launch pull, Home and Continue as the Home tab asks, the week's
+/// notices and the widgets' record, then once Home has drawn, the spotlight's page and the stills
+/// of the Continue cards with no banner. Every title of the world without a banner on every
+/// other id, as many real ones are, so the stills are counted. Run with `--nocapture` for the
+/// table; [`COLD_LAUNCH`] bounds it.
+/// What a cold launch on the Mac set off, against the fake: see [`cold_launch_on_the_mac`].
+struct Launch {
+    asked: Vec<kaeri_testkit::Request>,
+    first_ten: usize,
+    refused: usize,
+    /// Alerts raised, and Home sends that said a part failed.
+    alerts: usize,
+    failed: usize,
+    stills: usize,
+    /// The kinds of the last Home's sections, and whether it had a spotlight.
+    shelves: Vec<SectionKind>,
+    spotlight: bool,
+}
+
+/// Launch the Mac app cold, signed in, with AniList answering `limit`: the launch pull, Home
+/// and Continue as the Home tab asks for them, the notices and the widgets' record, then after
+/// the first paint what Home's spotlight and its visible Continue cards ask.
+async fn cold_launch_on_the_mac(limit: impl FnOnce(&kaeri_testkit::FakeAniList)) -> Launch {
+    let now = kaeri_store::now();
+    let world = HomeWorld::at(HomeClock::in_zone(now, &jiff::tz::TimeZone::UTC));
+    let mut h = launch(now, None, &world, true, 0).await;
+    limit(h.server());
+    // Eight more shows being watched, finished and without a banner, so the Continue row is as
+    // full as a viewer's and its cards ask for stills.
+    h.server().add_titles(
+        (0..8u32)
+            .map(|n| fixtures::invented(970_000 + n, "FINISHED", 12, (2029, 4, 1), &[], &[])),
+    );
+    h.server().add_entries((0..8u32).map(|n| {
+        serde_json::json!({
+            "id": 87_000 + n,
+            "mediaId": 970_000 + n,
+            "status": "CURRENT",
+            "progress": 3,
+            "score": 0,
+            "updatedAt": now - i64::from(n + 1) * 3_600,
+        })
+    }));
+    world.seed_history(h.store(), now);
+    let started = std::time::Instant::now();
+
+    let mut updates = run(
+        &mut h,
+        vec![
+            Command::SyncNow,
+            Command::LoadHome { refresh: false },
+            Command::LoadContinue,
+            Command::UpcomingNotices,
+            Command::WidgetSnapshot,
+        ],
+    )
+    .await;
+    let spotlight = updates.iter().rev().find_map(|u| match u {
+        Event::Home(home) => home.spotlight.as_ref().map(|s| s.entry.id),
+        _ => None,
+    });
+    let mut after: Vec<Command> = spotlight
+        .into_iter()
+        .flat_map(|id| [Command::ProbeTitle { id }, Command::LoadDetail(id)])
+        .collect();
+    // The Continue cards a Mac window shows at once.
+    after.extend(
+        home_items(&updates)
+            .into_iter()
+            .filter(|(_, banner, kind)| !banner && *kind == SectionKind::Continue)
+            .take(6)
+            .map(|(id, ..)| Command::LoadStills(id)),
+    );
+    let stills = after.iter().filter(|c| matches!(c, Command::LoadStills(_))).count();
+    updates.extend(run(&mut h, after).await);
+
+    let asked: Vec<_> =
+        h.server().requests().into_iter().filter(|r| r.path == "/graphql").collect();
+    let last = updates.iter().rev().find_map(|u| match u {
+        Event::Home(home) => Some(home.as_ref().clone()),
+        _ => None,
+    });
+    let launch = Launch {
+        first_ten: asked.iter().filter(|r| r.at.duration_since(started).as_secs() < 10).count(),
+        refused: asked.iter().filter(|r| r.refused).count(),
+        alerts: updates
+            .iter()
+            .filter(|u| {
+                matches!(u, Event::Toast(n) if n.kind == kaeri_model::notice::NoticeKind::Alert)
+            })
+            .count(),
+        failed: updates.iter().filter(|u| matches!(u, Event::Home(home) if home.failed)).count(),
+        stills,
+        shelves: last.as_ref().map(|l| l.sections.iter().map(|s| s.kind).collect()).unwrap_or_default(),
+        spotlight: last.is_some_and(|l| l.spotlight.is_some()),
+        asked,
+    };
+    let mut by: BTreeMap<String, usize> = BTreeMap::new();
+    for r in &launch.asked {
+        *by.entry(format!("{:?}", r.operation)).or_default() += 1;
+    }
+    let by: Vec<String> = by.iter().map(|(k, v)| format!("{k} {v}")).collect();
+    println!(
+        "\ncold launch on the Mac: {} requests, {} in the first 10 s, {} refused (429), {} alerts, \
+         {} failed Home sends, {} stills asked, over {:.1} s\n  {}",
+        launch.asked.len(),
+        launch.first_ten,
+        launch.refused,
+        launch.alerts,
+        launch.failed,
+        launch.stills,
+        started.elapsed().as_secs_f64(),
+        by.join(", ")
+    );
+    if std::env::var_os("KAERI_LAUNCH_TIMELINE").is_some() {
+        for r in &launch.asked {
+            let ms = r.at.duration_since(started).as_millis();
+            println!(
+                "  {ms:>6} ms {:?}{}",
+                r.operation,
+                if r.refused { " refused" } else { "" }
+            );
+        }
+    }
+    let _ = h.quit().await;
+    launch
+}
+
+#[tokio::test]
+async fn anilist_cold_launch_on_the_mac() {
+    let launch = cold_launch_on_the_mac(|server| server.limit_per_minute(30)).await;
+    assert_eq!(launch.refused, 0, "a cold launch stays inside AniList's 30 a minute");
+    assert_eq!((launch.alerts, launch.failed), (0, 0), "nothing at launch alerts");
+    assert_eq!(launch.stills, 6, "the Continue cards without a banner ask for their stills");
+    assert!(
+        launch.asked.len() <= COLD_LAUNCH,
+        "the cold launch took {}, the bound is {COLD_LAUNCH}",
+        launch.asked.len()
+    );
+}
+
+/// A launch over a limit far tighter than AniList's, as a second launch inside the minute of
+/// the first meets: each refusal is a wait as the server says and another go, so Home comes
+/// whole and nothing alerts.
+#[tokio::test]
+async fn anilist_cold_launch_over_a_tight_limit_waits_and_says_nothing() {
+    let roomy = cold_launch_on_the_mac(|server| server.limit_per_minute(30)).await;
+    let tight = cold_launch_on_the_mac(|server| {
+        server.limit_per(6, std::time::Duration::from_secs(2));
+    })
+    .await;
+    assert!(tight.refused > 0, "the tight limit refused some");
+    assert_eq!((tight.alerts, tight.failed), (0, 0), "a refusal is a wait, never an alert");
+    assert_eq!(tight.shelves, roomy.shelves, "Home comes whole");
+    assert!(tight.spotlight);
+}
+
+/// The most AniList requests the Mac's cold launch may make: [`anilist_cold_launch_on_the_mac`].
+/// It makes 20 when Home's, Continue's, Up next's and the widgets' title lookups meet in one
+/// batch window and up to 23 when they each miss the others' (four to seven `Many`), as the
+/// tasks happen to be scheduled.
+const COLD_LAUNCH: usize = 23;

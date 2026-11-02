@@ -175,6 +175,11 @@ pub struct Request {
     pub variables: Value,
     /// The `authorization` header, when one was sent.
     pub authorization: Option<String>,
+    /// When it came.
+    pub at: std::time::Instant,
+    /// Whether the fake refused it for going over its limit: see
+    /// [`FakeAniList::limit_per`].
+    pub refused: bool,
 }
 
 /// A failure the fake answers with instead of the fixtures, for the failure paths.
@@ -206,6 +211,11 @@ pub struct FakeAniList {
 
 struct State {
     requests: Vec<Request>,
+    /// The most GraphQL requests a rolling window answers, and the window: see
+    /// [`FakeAniList::limit_per`].
+    limit: Option<(u32, std::time::Duration)>,
+    /// When each GraphQL request the limit counted came, oldest first.
+    counted: VecDeque<std::time::Instant>,
     next: VecDeque<Failure>,
     always: Option<Failure>,
     /// Failures for one operation each, until healed: see [`FakeAniList::fail_operation`].
@@ -263,6 +273,8 @@ impl FakeAniList {
         let addr = listener.local_addr().expect("a bound listener has an address");
         let state = Arc::new(Mutex::new(State {
             requests: Vec::new(),
+            limit: None,
+            counted: VecDeque::new(),
             next: VecDeque::new(),
             always: None,
             now: FIXTURE_NOW,
@@ -443,6 +455,19 @@ impl FakeAniList {
     /// [`following_entry`].
     pub fn set_following(&self, id: AnilistId, entries: impl IntoIterator<Item = Value>) {
         lock(&self.state).following.insert(u64::from(id.get()), entries.into_iter().collect());
+    }
+
+    /// Answer at most `per_minute` GraphQL requests in any minute from now on, as AniList does,
+    /// saying so in the `x-ratelimit-limit` and `x-ratelimit-remaining` headers, and refuse the
+    /// rest with a `429` and `retry-after` until the oldest of the minute is a minute old.
+    pub fn limit_per_minute(&self, per_minute: u32) {
+        self.limit_per(per_minute, std::time::Duration::from_secs(60));
+    }
+
+    /// [`Self::limit_per_minute`] over a window of `window` in place of a minute, so a test of
+    /// what a refusal sets off waits seconds rather than a minute for the window to pass.
+    pub fn limit_per(&self, most: u32, window: std::time::Duration) {
+        lock(&self.state).limit = Some((most.max(1), window));
     }
 
     /// Hold every answer to `operation` back by `wait` from now on, as a slow AniList would: for
@@ -774,6 +799,8 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
             query: String::new(),
             variables: Value::Null,
             authorization: head.authorization.clone(),
+            at: std::time::Instant::now(),
+            refused: false,
         });
         return kitsu::answer(&head.method, rest, head.authorization.as_deref(), body);
     }
@@ -784,6 +811,8 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
             query: String::new(),
             variables: Value::Null,
             authorization: head.authorization.clone(),
+            at: std::time::Instant::now(),
+            refused: false,
         });
         return tenrai(rest);
     }
@@ -798,6 +827,8 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
     };
 
     let asks_following = query.contains("isFollowing: true");
+    // What the limit leaves of the minute, said on an answer it counted.
+    let mut limit_headers: Option<(u32, usize, Option<u64>)> = None;
     // AniList refuses a query that costs more than 500. Only the queries the fake counts for
     // are held to it: see [`complexity`].
     if operation == Operation::Recommended && complexity(&query, &variables) > COMPLEXITY_LIMIT
@@ -818,16 +849,47 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
         listed,
     ) = {
         let mut state = lock(state);
+        let at = std::time::Instant::now();
+        let mut limited = None;
+        if let Some((limit, minute)) = state.limit.filter(|_| head.path == "/graphql") {
+            while state.counted.front().is_some_and(|first| at.duration_since(*first) >= minute)
+            {
+                state.counted.pop_front();
+            }
+            // The limit as a minute's worth, which is how AniList says it.
+            let per_minute = (u64::from(limit) * 60 / minute.as_secs().max(1)) as u32;
+            // How long until the oldest of the window leaves it, in whole seconds.
+            let frees = |counted: &VecDeque<std::time::Instant>| {
+                let oldest = counted.front().copied().unwrap_or(at);
+                let wait =
+                    minute.saturating_sub(at.duration_since(oldest)).as_secs_f64().ceil();
+                (wait as u64).max(1)
+            };
+            if state.counted.len() >= limit as usize {
+                limited =
+                    Some(Failure::RateLimited { retry_after_secs: frees(&state.counted) });
+                limit_headers = Some((per_minute, 0, None));
+            } else {
+                state.counted.push_back(at);
+                let remaining = limit as usize - state.counted.len();
+                // AniList's window is a minute, which a client waits out when nothing is
+                // left. A shorter one says when it frees, or the client would wait the minute.
+                let reset = (remaining == 0 && minute != std::time::Duration::from_secs(60))
+                    .then(|| frees(&state.counted));
+                limit_headers = Some((per_minute, remaining, reset));
+            }
+        }
         state.requests.push(Request {
             operation,
             path: head.path.clone(),
             query,
             variables: variables.clone(),
             authorization: head.authorization.clone(),
+            at,
+            refused: limited.is_some(),
         });
-        let failure = state
-            .next
-            .pop_front()
+        let failure = limited
+            .or_else(|| state.next.pop_front())
             .or_else(|| state.always.clone())
             .or_else(|| state.failing.get(&operation).cloned());
         let clock = (state.now, state.ahead);
@@ -848,7 +910,7 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
             state.entries.clone(),
         )
     };
-    match failure {
+    let mut reply = match failure {
         Some(failure) => fail(failure),
         None => {
             let clock = Clock { shift: now - FIXTURE_NOW, now: now + ahead };
@@ -892,7 +954,18 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
             }
             reply
         }
+    };
+    if let (Some((limit, remaining, reset)), Reply::Answer { headers, .. }) =
+        (limit_headers, &mut reply)
+    {
+        headers.retain(|(name, _)| !name.starts_with("x-ratelimit-"));
+        headers.push(("x-ratelimit-limit", limit.to_string()));
+        headers.push(("x-ratelimit-remaining", remaining.to_string()));
+        if let Some(reset) = reset {
+            headers.push(("x-ratelimit-reset", reset.to_string()));
+        }
     }
+    reply
 }
 
 /// Give every title the test set another way its forms, wherever it is in `value`.
@@ -1134,8 +1207,11 @@ fn respond(
                 .map(|(listed, wire)| {
                     let whole = clock.media(wire.clone());
                     let mut media = clock.media(listed);
-                    media["streamingEpisodes"] = whole["streamingEpisodes"].clone();
-                    media["upcoming"] = whole["upcoming"].clone();
+                    // As AniList answers a title with none: an empty list, an empty connection.
+                    media["streamingEpisodes"] =
+                        whole.get("streamingEpisodes").cloned().unwrap_or_else(|| json!([]));
+                    media["upcoming"] =
+                        whole.get("upcoming").cloned().unwrap_or_else(|| json!({ "nodes": [] }));
                     // The connection takes no sort: oldest first, fifty at most.
                     let mut past = whole["aired"].as_array().cloned().unwrap_or_default();
                     past.sort_by_key(|row| row["episode"].as_u64());
