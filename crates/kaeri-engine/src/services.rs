@@ -127,7 +127,8 @@ impl Services {
         // Trackers are built whether or not they hold a token: the Accounts overlay needs
         // something to offer a sign-in for, and the outbox accumulates against the id meanwhile.
         let sync = tracking::Sync::with_tokens(config, &store, &http, tokens)
-            .on_budget_of(meta.anilist());
+            .on_budget_of(meta.anilist())
+            .with_titles(meta.titles().clone());
         let (power, hosted) = players(&paths);
         #[cfg(feature = "cast")]
         let casts =

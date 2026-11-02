@@ -896,7 +896,11 @@ async fn a_kept_viewer_someone_else_has_replaced_is_dropped_and_their_list_asked
     ends(&updates, job);
     let asked = h.server().requests_for(Operation::Library);
     assert_eq!(asked.len(), 2, "the list for the kept id is not used");
-    assert_eq!(asked[1].variables["userId"], 777, "the list asked for is the new viewer's");
+    // Asked with the viewer, as every pull is, under the list's own alias.
+    let user = asked[1].variables.as_object().and_then(|vars| {
+        vars.iter().find(|(name, _)| name.ends_with("userId")).map(|(_, id)| id.clone())
+    });
+    assert_eq!(user, Some(777.into()), "the list asked for is the new viewer's");
     assert_eq!(kept_viewer(&h).as_deref(), Some("777"));
 }
 

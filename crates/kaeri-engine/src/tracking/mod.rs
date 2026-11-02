@@ -82,6 +82,9 @@ pub struct Sync {
     pub pending: native::PendingSignIns,
     /// The device-code sign-ins running, one per tracker: see [`device`].
     pub device: device::DeviceFlows,
+    /// How titles are named, which under `anilist` follows what each pull's viewer says: see
+    /// [`Self::with_titles`].
+    pub titles: Option<kaeri_meta::titles::Titles>,
 }
 
 impl Sync {
@@ -224,7 +227,16 @@ impl Sync {
             pulls: Arc::default(),
             pending: native::PendingSignIns::default(),
             device: device::DeviceFlows::default(),
+            titles: None,
         }
+    }
+
+    /// Titles named as AniList's viewer reads them follow each pull's answer: every pull asks
+    /// for the viewer with the list.
+    #[must_use]
+    pub fn with_titles(mut self, titles: kaeri_meta::titles::Titles) -> Self {
+        self.titles = Some(titles);
+        self
     }
 
     /// The AniList tracker asking against `base`'s budget: one for the tracker and the metadata
@@ -780,6 +792,14 @@ pub async fn pull_once(sync: &Sync, tx: &Outbox) {
     // disagreement is reported as the conflict.
     let pulling: Vec<_> = sync.trackers.iter().filter(|t| t.is_authenticated()).collect();
     let libraries = futures::future::join_all(pulling.iter().map(|t| t.pull_library())).await;
+    // AniList's answer carries the viewer, whose title language may have changed since.
+    if let (Some(titles), Some(anilist)) = (&sync.titles, &sync.anilist)
+        && anilist.is_authenticated()
+        && let Some(language) = anilist.answered_title_language().await
+        && titles.viewer_reads(language)
+    {
+        let _ = tx.send(Event::TitlesChanged(crate::data::title_language(titles.language())));
+    }
     // What keep next keeps follows the list: the shows being watched, and their progress.
     let listed = sync.trackers.first().is_some_and(|tracker| tracker.is_authenticated());
     let since = now - crate::downloads::ahead::WATCHED_WITHIN;

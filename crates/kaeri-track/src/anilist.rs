@@ -23,9 +23,13 @@ use kaeri_meta::anilist::{AniList, AniListError, LibraryEntry, TitleLanguage, Vi
 /// list is the remote one and this screen is how its changes are seen.
 pub const LIBRARY_REUSE: Duration = Duration::from_secs(30);
 
-/// Where the signed-in viewer's AniList id is kept between launches: the id alone, so a
-/// launch's list can ride with its viewer lookup. See [`AniListTracker::with_store`].
+/// Where the signed-in viewer's AniList id is kept between launches, so a launch's list can
+/// ride with its viewer lookup. See [`AniListTracker::with_store`].
 pub const VIEWER_ID_KEY: &str = "anilist:viewer_id";
+
+/// Where the title language that viewer reads AniList in is kept beside the id, so a launch
+/// names titles their way from its first frame: `ROMAJI`, `ENGLISH` or `NATIVE`.
+pub const VIEWER_LANGUAGE_KEY: &str = "anilist:title_language";
 
 /// The library as last asked for, and for whom.
 struct LastLibrary {
@@ -104,10 +108,11 @@ impl AniListTracker {
         }
     }
 
-    /// Keep the signed-in viewer's id in `store` between launches, and nothing else of theirs.
-    /// With it, the first viewer lookup of a launch asks for the list in the same request, and
-    /// the list's pull takes that answer. A sign-in or a sign-out drops it, and so does an
-    /// answer for someone else.
+    /// Keep the signed-in viewer's id and title language in `store` between launches, and
+    /// nothing else of theirs. With the id, the first viewer lookup of a launch asks for the
+    /// list in the same request, and the list's pull takes that answer; every pull asks for the
+    /// viewer with the list, so both are kept as AniList last said. A sign-in or a sign-out
+    /// drops them, and an answer for someone else replaces them.
     #[must_use]
     pub fn with_store(mut self, store: kaeri_store::Store) -> Self {
         self.store = Some(store);
@@ -131,16 +136,42 @@ impl AniListTracker {
         store.get_meta_text(VIEWER_ID_KEY).ok().flatten()?.parse().ok()
     }
 
-    /// Keep `id` as the viewer's, or with `None` drop what was kept.
-    fn remember(&self, id: Option<u32>) {
+    /// Keep `viewer`'s id and title language, or with `None` drop what was kept.
+    fn remember(&self, viewer: Option<&Viewer>) {
         let Some(store) = &self.store else { return };
-        let kept = match id {
-            Some(id) => store.set_meta_text(VIEWER_ID_KEY, &id.to_string()),
+        let language = viewer.and_then(|v| v.title_language).map(|l| match l {
+            TitleLanguage::Romaji => "ROMAJI",
+            TitleLanguage::English => "ENGLISH",
+            TitleLanguage::Native => "NATIVE",
+        });
+        let kept = match viewer {
+            Some(viewer) => store.set_meta_text(VIEWER_ID_KEY, &viewer.id.to_string()),
             None => store.delete_meta(VIEWER_ID_KEY),
-        };
+        }
+        .and_then(|()| match language {
+            Some(language) => store.set_meta_text(VIEWER_LANGUAGE_KEY, language),
+            None => store.delete_meta(VIEWER_LANGUAGE_KEY),
+        });
         if let Err(e) = kept {
             tracing::warn!(error = %e, "could not keep the AniList viewer's id");
         }
+    }
+
+    /// The title language the signed-in viewer read AniList in when last asked, as kept from
+    /// an earlier launch, without asking. `None` signed out, or when nothing is kept.
+    pub fn kept_title_language(&self) -> Option<TitleLanguage> {
+        if !self.is_authenticated() {
+            return None;
+        }
+        self.remembered()?;
+        let store = self.store.as_ref()?;
+        TitleLanguage::from_wire(&store.get_meta_text(VIEWER_LANGUAGE_KEY).ok().flatten()?)
+    }
+
+    /// The title language in the viewer's last answer this run, without asking: `None` when
+    /// AniList has not answered for the viewer yet, `Some(None)` when it did not say one.
+    pub async fn answered_title_language(&self) -> Option<Option<TitleLanguage>> {
+        self.viewer.lock().await.as_ref().map(|viewer| viewer.title_language)
     }
 
     /// The full library, with media attached, for the Library screen.
@@ -163,12 +194,37 @@ impl AniListTracker {
         {
             return last.answer.clone().map_err(to_core);
         }
-        let answer = match viewer {
-            Ok(viewer) => self.client.library(viewer.id).await,
-            Err(e) => Err(e),
+        let (answer, fresh) = match viewer {
+            Ok(viewer) => self.list_with_viewer(viewer.id).await,
+            Err(e) => (Err(e), None),
         };
         *last = Some(LastLibrary { changes, at: Instant::now(), answer: answer.clone() });
+        drop(last);
+        if let Some(viewer) = fresh {
+            self.remember(Some(&viewer));
+            *self.viewer.lock().await = Some(viewer);
+        }
         answer.map_err(to_core)
+    }
+
+    /// The list of the viewer `id`, asked with the viewer, and the viewer as answered. An
+    /// answer for someone else has their list asked for instead. Refused together, the list is
+    /// asked alone.
+    async fn list_with_viewer(
+        &self,
+        id: u32,
+    ) -> (Result<Vec<LibraryEntry>, AniListError>, Option<Viewer>) {
+        match self.client.viewer_and_library(id).await {
+            Ok((viewer, library)) if viewer.id == id => (Ok(library), Some(viewer)),
+            Ok((viewer, _)) => {
+                tracing::info!("AniList answered for another viewer than the one asked for");
+                (self.client.library(viewer.id).await, Some(viewer))
+            }
+            Err(AniListError::Api(_) | AniListError::NotFound | AniListError::Decode(_)) => {
+                (self.client.library(id).await, None)
+            }
+            Err(e) => (Err(e), None),
+        }
     }
 
     /// The last library answer is someone else's now, or out of date.
@@ -231,8 +287,8 @@ impl AniListTracker {
                     } else {
                         // Someone else is signed in now: their list is asked for anew.
                         tracing::info!("AniList answered for another viewer than the one kept");
-                        self.remember(Some(viewer.id));
                     }
+                    self.remember(Some(&viewer));
                     *cached = Some(viewer.clone());
                     return Ok(viewer);
                 }
@@ -248,7 +304,7 @@ impl AniListTracker {
             }
         }
         let viewer = self.client.viewer().await?;
-        self.remember(Some(viewer.id));
+        self.remember(Some(&viewer));
         *cached = Some(viewer.clone());
         Ok(viewer)
     }

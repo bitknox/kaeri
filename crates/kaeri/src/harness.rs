@@ -131,6 +131,9 @@ pub struct Options {
     pub store: Option<Store>,
     /// Run the launch's airing digest, as the app does.
     pub digest: bool,
+    /// Operations the fake answers this much later from launch on: for what the app shows
+    /// before an answer the launch asks for.
+    pub slow: Vec<(kaeri_testkit::Operation, Duration)>,
 }
 
 impl Default for Options {
@@ -148,6 +151,7 @@ impl Default for Options {
             clock: None,
             store: None,
             digest: false,
+            slow: Vec::new(),
         }
     }
 }
@@ -220,6 +224,9 @@ impl Harness {
         if let Some(language) = options.viewer_title_language {
             server.set_viewer_title_language(language);
         }
+        for (operation, wait) in &options.slow {
+            server.answer_slowly(*operation, *wait);
+        }
         // `build_meta`, pointed at the fake.
         let mut meta = Meta::new(
             server.anilist(&http),
@@ -238,7 +245,8 @@ impl Harness {
         for tracker in &options.signed_in {
             tokens.set(tracker, &format!("harness-{tracker}-token")).expect("a token file");
         }
-        let mut sync = tracking::Sync::with_tokens(&config, &store, &http, tokens.clone());
+        let mut sync = tracking::Sync::with_tokens(&config, &store, &http, tokens.clone())
+            .with_titles(meta.titles().clone());
         // Built as `with_tokens` builds it, but asking the fake rather than AniList itself.
         if options.signed_in.contains(&"anilist")
             && let Some(at) = sync.trackers.iter().position(|t| t.id() == "anilist")

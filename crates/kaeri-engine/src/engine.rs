@@ -425,6 +425,10 @@ impl Engine {
         // choice, which comes with the viewer lookup the library pull makes anyway.
         services.meta.titles().choose(state.config.effective().meta.title_language);
         if services.meta.titles().choice() == kaeri_core::config::TitleChoice::Anilist {
+            // As the viewer read AniList when last asked, from the first frame, until the
+            // viewer's answer says again.
+            let kept = services.sync.anilist.as_ref().and_then(|a| a.kept_title_language());
+            services.meta.titles().viewer_reads(kept);
             crate::title_language::follow_viewer(&services, &inbox.sender());
         }
         if background.sync_loops {
