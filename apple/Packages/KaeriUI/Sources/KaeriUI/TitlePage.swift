@@ -173,8 +173,9 @@ struct TitlePage: View {
         let entry = store.titles.page(ready ? id : laidOut ?? id)
         // A season's stand-in, from its picker's card, knows no banner, and a cover or a banner
         // on its way would show as a plate first: the last art stays until the next is whole, or
-        // until it is known there is none.
-        let next = ArtKey(id: entry.id, art: store.pageArt(entry))
+        // until it is known there is none. With no banner and no still seen, the cover fills the
+        // band in its own colours, behind the header, as on every Mac screen with a hero.
+        let next = ArtKey(id: entry.id, art: store.heroArt(entry))
         let shown = shownArt.flatMap { held in
             held.key != next && !Self.artReady(next, in: store) && (artWaited != next.id || next.art == .waiting) ? held : nil
         } ?? ShownArt(key: next, entry: entry)
@@ -184,7 +185,7 @@ struct TitlePage: View {
         let kin = Self.kin(of: entry, last: familyOf, in: store)
         // What the title picked shows with, asked for while the last one's page stays.
         let picked = ready ? nil : store.titles.page(id)
-        let coming = Coming(cover: picked?.coverUrl, wide: picked.flatMap { store.pageArt($0).url })
+        let coming = Coming(cover: picked?.coverUrl, wide: picked.flatMap { store.heroArt($0).url })
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 // With no wide art the page starts higher: under the toolbar, not under a banner.

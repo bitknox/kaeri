@@ -121,6 +121,8 @@ extension EnvironmentValues {
 struct PosterGrid<Cell: View>: View {
     let entries: [Entry]
     var minimum: CGFloat = 128
+    /// The widest a column grows: `nil` shares the width among the columns that fit.
+    var maximum: CGFloat? = nil
     var spacing: CGFloat = 20
     @ViewBuilder let cell: (Entry) -> Cell
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -135,7 +137,7 @@ struct PosterGrid<Cell: View>: View {
             }
         } else {
             LazyVGrid(
-                columns: [GridItem(.adaptive(minimum: minimum), spacing: spacing, alignment: .top)],
+                columns: [GridItem(.adaptive(minimum: minimum, maximum: maximum ?? .infinity), spacing: spacing, alignment: .top)],
                 alignment: .leading,
                 spacing: 24
             ) {
@@ -154,11 +156,12 @@ struct PosterGrid<Cell: View>: View {
 struct PosterGridPlaceholder: View {
     var count = 14
     var minimum: CGFloat = 128
+    var maximum: CGFloat? = nil
     var spacing: CGFloat = 20
 
     var body: some View {
         LazyVGrid(
-            columns: [GridItem(.adaptive(minimum: minimum), spacing: spacing, alignment: .top)],
+            columns: [GridItem(.adaptive(minimum: minimum, maximum: maximum ?? .infinity), spacing: spacing, alignment: .top)],
             alignment: .leading,
             spacing: 24
         ) {
