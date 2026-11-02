@@ -33,7 +33,7 @@ func download(_ id: Int64, title: AnilistId, episode: String, _ state: DownloadS
 func settingsView(order: [String], rows: [SettingRow] = []) -> SettingsView {
     SettingsView(
         rows: rows, refused: nil, translation: .sub, quality: 1080, theme: .adaptive,
-        sources: ConfiguredSources(order: order, disabled: [], torrent: true, remote: false),
+        sources: ConfiguredSources(order: order, disabled: [], torrent: true),
         speed: nil, presenceClient: false, nativeRows: [], overridden: [],
         torrent: ProtectionView(protection: .none, proxy: nil, onFailure: .pause)
     )

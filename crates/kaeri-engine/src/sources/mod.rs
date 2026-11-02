@@ -19,7 +19,6 @@ use kaeri_core::traits::ProviderKind;
 use kaeri_net::HttpClient;
 use kaeri_providers::{
     ProviderRegistry,
-    remote::RemoteHttpProvider,
     torrent::TorrentSession,
     vpn::{GuardState, VpnGuard},
 };
@@ -96,21 +95,13 @@ pub async fn build_registry(
 
 /// The provider chain as config describes it. Torrent playback comes up beside it once the VPN
 /// guard has passed — see [`bring_up_torrent`].
-pub fn build_registry_deferred(config: &Config, http: &HttpClient) -> ProviderRegistry {
+pub fn build_registry_deferred(config: &Config, _http: &HttpClient) -> ProviderRegistry {
     let mut providers: Vec<std::sync::Arc<dyn kaeri_core::traits::Provider>> = Vec::new();
     for id in &config.providers.order {
         if config.providers.disabled.contains(id) {
             continue;
         }
         match id.as_str() {
-            "remote" => {
-                if let Some(url) = &config.providers.remote_url {
-                    providers.push(std::sync::Arc::new(RemoteHttpProvider::new(
-                        url.clone(),
-                        http.clone(),
-                    )));
-                }
-            }
             // Every `.wasm` in the plugin directory, registered at this point in the order. A
             // plugin is indistinguishable from a native source from here on: same ranking, same
             // health tracking, same failover.
@@ -577,14 +568,14 @@ mod tests {
 
     #[test]
     fn a_named_plugin_ranks_at_its_own_entry_and_the_rest_at_plugins_by_id() {
-        let config = order(&["beta", "remote-a", "plugins", "remote"]);
+        let config = order(&["beta", "extra-a", "plugins", "extra"]);
         let order = &config.providers.order;
         let ranked = |p: Arc<dyn kaeri_core::traits::Provider>| rank(p.as_ref(), order);
         assert_eq!(ranked(plugin("beta")), (0, 3, "beta".into()));
-        assert_eq!(ranked(source("remote-a", ProviderKind::Remote)), (1, 3, "remote-a".into()));
+        assert_eq!(ranked(source("extra-a", ProviderKind::Native)), (1, 3, "extra-a".into()));
         assert_eq!(ranked(plugin("gamma")), (2, 3, "gamma".into()));
         assert_eq!(ranked(plugin("alpha")), (2, 3, "alpha".into()));
-        assert_eq!(ranked(source("remote", ProviderKind::Remote)), (3, 3, "remote".into()));
+        assert_eq!(ranked(source("extra", ProviderKind::Native)), (3, 3, "extra".into()));
         // Left out of the order: last, as before.
         assert_eq!(ranked(source("other", ProviderKind::Native)), (4, 3, "other".into()));
     }
@@ -595,7 +586,7 @@ mod tests {
         // about plugins.
         let config = order(&["plugins"]);
         let order = &config.providers.order;
-        assert_eq!(rank(source("remote", ProviderKind::Remote).as_ref(), order).0, 1);
+        assert_eq!(rank(source("extra", ProviderKind::Native).as_ref(), order).0, 1);
         assert_eq!(rank(plugin("alpha").as_ref(), order).0, 0);
     }
 
@@ -607,13 +598,10 @@ mod tests {
             source("catalogue", ProviderKind::Catalogue),
             source("server", ProviderKind::Server),
             source("folder", ProviderKind::Library),
-            source("remote", ProviderKind::Remote),
+            source("extra", ProviderKind::Native),
         ]);
-        arrange(&registry, &order(&["remote", "plugins"]));
-        assert_eq!(
-            registry.ids(),
-            ["folder", "server", "catalogue", "remote", "alpha", "demo"]
-        );
+        arrange(&registry, &order(&["extra", "plugins"]));
+        assert_eq!(registry.ids(), ["folder", "server", "catalogue", "extra", "alpha", "demo"]);
     }
 
     #[test]
@@ -674,11 +662,11 @@ mod tests {
         assert_eq!(registry.ids(), ["beta", "native", "alpha", "gamma"]);
 
         // A late source still takes its place in it.
-        let config = order(&["beta", "remote", "native", "plugins"]);
+        let config = order(&["beta", "extra", "native", "plugins"]);
         arrange(&registry, &config);
         let order = &config.providers.order;
-        registry.insert_ranked(source("remote", ProviderKind::Remote), |p| rank(p, order));
-        assert_eq!(registry.ids(), ["beta", "remote", "native", "alpha", "gamma"]);
+        registry.insert_ranked(source("extra", ProviderKind::Native), |p| rank(p, order));
+        assert_eq!(registry.ids(), ["beta", "extra", "native", "alpha", "gamma"]);
     }
 
     #[test]

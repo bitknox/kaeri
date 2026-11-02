@@ -188,11 +188,11 @@ struct ReducerTests {
     @Test func aListKeepsWhatTheTitlesPageBrought() {
         let store = AppStore()
         store.apply(.detail(entry(900_001, "Stardust Wayfarer") {
-            $0.availableOn = ["Lantern Stream"]
+            $0.availableOn = ["Lantern Library"]
             $0.trailerUrl = "https://video.example/trailer"
         }))
         store.apply(.content(view: .seasonal, content: .entries([entry(900_001, "Stardust Wayfarer")])))
-        #expect(store.titles[900_001]?.availableOn == ["Lantern Stream"])
+        #expect(store.titles[900_001]?.availableOn == ["Lantern Library"])
         #expect(store.titles[900_001]?.trailerUrl == "https://video.example/trailer")
     }
 

@@ -463,7 +463,6 @@
      ],
      "disabled": [],
      "torrent": false,
-     "remote": false,
      "demo": true,
      "offerDemo": false
     },

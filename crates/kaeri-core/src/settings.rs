@@ -331,7 +331,7 @@ mod tests {
         std::fs::write(
             &paths.config_file,
             "# my notes\n[providers]\norder = [\"torrent\", \"plugins\"]  # tried first\n\
-             disabled = [\"remote\"]\n\n[playback]\nquality = 1080\n",
+             disabled = [\"extra\"]\n\n[playback]\nquality = 1080\n",
         )
         .unwrap();
 
@@ -341,7 +341,7 @@ mod tests {
 
         let config = crate::config::Config::load(&paths).unwrap();
         assert_eq!(config.providers.order, order);
-        assert_eq!(config.providers.disabled, ["remote"], "the sibling key was disturbed");
+        assert_eq!(config.providers.disabled, ["extra"], "the sibling key was disturbed");
         assert_eq!(config.playback.quality, 1080, "the other table was disturbed");
         let after = std::fs::read_to_string(&paths.config_file).unwrap();
         assert!(after.contains("# my notes"), "leading comment lost:\n{after}");

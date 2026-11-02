@@ -118,11 +118,6 @@ public sealed record ProviderInfo(ProviderRow Row, string Name, string Origin, S
         if (row.IsDemo)
             return new(row, T.SourcesDemoName, T.SourcesDemoLine, null, null);
         var listing = Stores.OriginOf(stores, row.Id);
-        switch (row.Kind)
-        {
-            case "remote":
-                return new(row, T.SourcesRemote, T.SourcesOriginConfig, null, null);
-        }
         var name = listing?.Plugin.Name ?? row.Id;
         var origin = listing is null || listing.Value.Plugin.Status is StorePluginStatus.AddedByHand
             ? T.SourcesOriginByHand

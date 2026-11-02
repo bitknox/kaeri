@@ -104,17 +104,14 @@ internal data class ProviderInfo(val row: ProviderRow, val context: Context, val
     val isDemo get() = row.isDemo
 
     val name: String
-        get() = when (row.kind) {
-            "remote" -> Strings.sourcesRemote(context)
-            else -> if (row.isDemo) Strings.sourcesDemoName(context) else row.name.ifEmpty { row.id }
-        }
+        get() = if (row.isDemo) Strings.sourcesDemoName(context) else row.name.ifEmpty { row.id }
 
     /** "Hotaru Plugins", "Added by hand", "Built in". */
     val origin: String
         get() = line ?: if (row.isDemo) Strings.sourcesDemoLine(context) else when (val origin = row.origin) {
             is ProviderOrigin.Store -> origin.name ?: Strings.sourcesOriginLeftStore(context)
             ProviderOrigin.ByHand -> Strings.sourcesOriginByHand(context)
-            ProviderOrigin.BuiltIn -> if (row.kind == "remote") Strings.sourcesOriginConfig(context) else Strings.sourcesOriginBuiltIn(context)
+            ProviderOrigin.BuiltIn -> Strings.sourcesOriginBuiltIn(context)
         }
 
     /** The quiet line under a source's name: that it plays through torrent playback, or its origin. */

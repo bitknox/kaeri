@@ -147,7 +147,7 @@ public enum Showcase: String, CaseIterable, Sendable {
                                         size: "480 MiB", dualAudio: false, dubbed: false, autoPick: false),
                      ],
                      pinnedRelease: nil),
-        SourceOption(providerId: "fumi-mirror", name: "Fumi Mirror", covered: 0, of: 13,
+        SourceOption(providerId: "fumi-archive", name: "Fumi Archive", covered: 0, of: 13,
                      pinned: false, note: .resting, releases: [], pinnedRelease: nil),
         SourceOption(providerId: "old-reel", name: "Old Reel", covered: 0, of: 13,
                      pinned: false, note: .off, releases: [], pinnedRelease: nil),
@@ -183,7 +183,7 @@ public enum Showcase: String, CaseIterable, Sendable {
                     disabled: false,
                     update: ProviderUpdate(version: "1.5.0", newHosts: ["media2.mukashi-archive.example"])),
         ProviderRow(id: "machi-library-films", kind: "plugin", state: "down", latencyMs: nil,
-                    lastError: "the site did not answer in 15 s.", usable: false, heldBack: false,
+                    lastError: "the source did not answer in 15 s.", usable: false, heldBack: false,
                     name: "Machi Library Films", version: "0.3.0", hosts: ["films.machi-library.example"],
                     origin: .byHand, disabled: false, update: nil),
     ]

@@ -14,7 +14,7 @@ and the player, the history and the trackers are stable again.
 `kaeri-core` (types and traits) · `-net` (HTTP, with a client that matches a browser's TLS
 handshake for hosts that answer differently by client, and rate limiting) · `-meta` (AniList, the
 metadata failover, ID mapping, filler) · `-store` (SQLite: the history and the sync outbox) ·
-`-providers` (torrent, remote, mock) · `-player` (mpv IPC, the companion-script protocol, the
+`-providers` (torrent, mock) · `-player` (mpv IPC, the companion-script protocol, the
 bundled player files, track selection, aniskip) · `-discord` (Discord rich presence over its
 local socket) · `-playback` (the pure half of playback: what to record, skip and pick for tracks) ·
 `-mpv-host` (libmpv behind the engine's hosted player protocol, for the desktop apps) · `-party`
@@ -99,7 +99,6 @@ cargo run -p kaeri-engine --example simkl_probe -- --write   # Simkl push, then 
 cargo run -p kaeri-engine --example kitsu_probe -- --write   # Kitsu push, then undo
 cargo run -p kaeri-engine --example mend_probe -- <url>      # HLS behind an image header → mpv
 cargo run -p kaeri-providers --example halt_probe            # the guard pausing torrents
-cargo run -p kaeri-meta --example filler_probe               # filler parsing
 cargo run -p kaeri-meta --example episode_meta_probe         # episode titles, stills, numbering
 cargo run -p kaeri-meta --example anilist_probe              # the AniList client
 cargo run -p kaeri-meta --example dataset_probe              # ID-mapping datasets

@@ -463,7 +463,6 @@
      ],
      "disabled": [],
      "torrent": false,
-     "remote": false,
      "demo": false,
      "offerDemo": true
     },
@@ -961,15 +960,15 @@
    "v1": {
     "settings": {
      "services": [
-      "Lantern Stream"
+      "Lantern Library"
      ],
      "region": null,
      "showOthers": true
     },
     "region": "DK",
     "available": [
-     "Hikari Stream",
-     "Lantern Stream"
+     "Hikari Library",
+     "Lantern Library"
     ],
     "regions": [
      "AD",
@@ -1597,7 +1596,7 @@
        "Slice of Life"
       ],
       "availableOn": [
-       "Lantern Stream"
+       "Lantern Library"
       ],
       "availableAt": null,
       "progress": {
@@ -1891,8 +1890,8 @@
      }
     ],
     "streamingSites": [
-     "Lantern Stream",
-     "Hikari Stream"
+     "Lantern Library",
+     "Hikari Library"
     ]
    }
   },
@@ -3084,7 +3083,7 @@
        "Fantasy"
       ],
       "availableOn": [
-       "Lantern Stream"
+       "Lantern Library"
       ],
       "availableAt": {
        "@type": "InLibrary"
@@ -3178,11 +3177,11 @@
        "Fantasy"
       ],
       "availableOn": [
-       "Lantern Stream"
+       "Lantern Library"
       ],
       "availableAt": {
        "@type": "OnService",
-       "service": "Lantern Stream"
+       "service": "Lantern Library"
       },
       "progress": null,
       "airingIn": null,
@@ -3490,7 +3489,7 @@
      "Fantasy"
     ],
     "availableOn": [
-     "Lantern Stream"
+     "Lantern Library"
     ],
     "availableAt": null,
     "progress": {
@@ -3773,7 +3772,7 @@
      ],
      "streamingLinks": [
       {
-       "site": "Lantern Stream",
+       "site": "Lantern Library",
        "url": "https://stream.example/series/hoshikuzu",
        "language": "Japanese"
       }
@@ -3824,14 +3823,14 @@
     "id": "900001",
     "case": "ON_SERVICE",
     "main": {
-     "service": "Lantern Stream",
+     "service": "Lantern Library",
      "url": "https://stream.example/series/hoshikuzu",
      "notes": null
     },
     "alsoOn": [],
     "yours": [
      {
-      "service": "Lantern Stream",
+      "service": "Lantern Library",
       "url": "https://stream.example/series/hoshikuzu",
       "notes": null
      }
@@ -3840,62 +3839,62 @@
     "episodes": [
      {
       "episode": "1",
-      "service": "Lantern Stream",
+      "service": "Lantern Library",
       "url": "https://stream.example/watch/hoshikuzu-1"
      },
      {
       "episode": "2",
-      "service": "Lantern Stream",
+      "service": "Lantern Library",
       "url": "https://stream.example/watch/hoshikuzu-2"
      },
      {
       "episode": "3",
-      "service": "Lantern Stream",
+      "service": "Lantern Library",
       "url": "https://stream.example/watch/hoshikuzu-3"
      },
      {
       "episode": "4",
-      "service": "Lantern Stream",
+      "service": "Lantern Library",
       "url": "https://stream.example/watch/hoshikuzu-4"
      },
      {
       "episode": "5",
-      "service": "Lantern Stream",
+      "service": "Lantern Library",
       "url": "https://stream.example/watch/hoshikuzu-5"
      },
      {
       "episode": "6",
-      "service": "Lantern Stream",
+      "service": "Lantern Library",
       "url": "https://stream.example/watch/hoshikuzu-6"
      },
      {
       "episode": "7",
-      "service": "Lantern Stream",
+      "service": "Lantern Library",
       "url": "https://stream.example/watch/hoshikuzu-7"
      },
      {
       "episode": "8",
-      "service": "Lantern Stream",
+      "service": "Lantern Library",
       "url": "https://stream.example/watch/hoshikuzu-8"
      },
      {
       "episode": "9",
-      "service": "Lantern Stream",
+      "service": "Lantern Library",
       "url": "https://stream.example/watch/hoshikuzu-9"
      },
      {
       "episode": "10",
-      "service": "Lantern Stream",
+      "service": "Lantern Library",
       "url": "https://stream.example/watch/hoshikuzu-10"
      },
      {
       "episode": "11",
-      "service": "Lantern Stream",
+      "service": "Lantern Library",
       "url": "https://stream.example/watch/hoshikuzu-11"
      },
      {
       "episode": "12",
-      "service": "Lantern Stream",
+      "service": "Lantern Library",
       "url": "https://stream.example/watch/hoshikuzu-12"
      }
     ],
@@ -3923,7 +3922,7 @@
      "Slice of Life"
     ],
     "availableOn": [
-     "Lantern Stream"
+     "Lantern Library"
     ],
     "availableAt": null,
     "progress": {
@@ -4134,7 +4133,7 @@
      ],
      "streamingLinks": [
       {
-       "site": "Lantern Stream",
+       "site": "Lantern Library",
        "url": "https://stream.example/series/kumo-toshokan",
        "language": "Japanese"
       }
@@ -4193,14 +4192,14 @@
     "id": "900002",
     "case": "ON_SERVICE",
     "main": {
-     "service": "Lantern Stream",
+     "service": "Lantern Library",
      "url": "https://stream.example/series/kumo-toshokan",
      "notes": null
     },
     "alsoOn": [],
     "yours": [
      {
-      "service": "Lantern Stream",
+      "service": "Lantern Library",
       "url": "https://stream.example/series/kumo-toshokan",
       "notes": null
      }
@@ -4209,27 +4208,27 @@
     "episodes": [
      {
       "episode": "1",
-      "service": "Lantern Stream",
+      "service": "Lantern Library",
       "url": "https://stream.example/watch/kumo-toshokan-1"
      },
      {
       "episode": "2",
-      "service": "Lantern Stream",
+      "service": "Lantern Library",
       "url": "https://stream.example/watch/kumo-toshokan-2"
      },
      {
       "episode": "3",
-      "service": "Lantern Stream",
+      "service": "Lantern Library",
       "url": "https://stream.example/watch/kumo-toshokan-3"
      },
      {
       "episode": "4",
-      "service": "Lantern Stream",
+      "service": "Lantern Library",
       "url": "https://stream.example/watch/kumo-toshokan-4"
      },
      {
       "episode": "5",
-      "service": "Lantern Stream",
+      "service": "Lantern Library",
       "url": "https://stream.example/watch/kumo-toshokan-5"
      }
     ],
@@ -4401,14 +4400,14 @@
     "id": "900004",
     "case": "ON_SERVICE",
     "main": {
-     "service": "Lantern Stream",
+     "service": "Lantern Library",
      "url": "https://stream.example/series/hoshikuzu",
      "notes": null
     },
     "alsoOn": [],
     "yours": [
      {
-      "service": "Lantern Stream",
+      "service": "Lantern Library",
       "url": "https://stream.example/series/hoshikuzu",
       "notes": null
      }
@@ -4603,7 +4602,7 @@
      "Fantasy"
     ],
     "availableOn": [
-     "Lantern Stream"
+     "Lantern Library"
     ],
     "availableAt": null,
     "progress": null,
@@ -4696,7 +4695,7 @@
      "staff": [],
      "streamingLinks": [
       {
-       "site": "Lantern Stream",
+       "site": "Lantern Library",
        "url": "https://stream.example/series/hoshikuzu",
        "language": "Japanese"
       }
@@ -6131,7 +6130,7 @@
        "Fantasy"
       ],
       "availableOn": [
-       "Lantern Stream"
+       "Lantern Library"
       ],
       "availableAt": null,
       "progress": {
@@ -6265,7 +6264,7 @@
           "Fantasy"
          ],
          "availableOn": [
-          "Lantern Stream"
+          "Lantern Library"
          ],
          "availableAt": null,
          "progress": {
@@ -6504,7 +6503,7 @@
           "Slice of Life"
          ],
          "availableOn": [
-          "Lantern Stream"
+          "Lantern Library"
          ],
          "availableAt": null,
          "progress": {
@@ -6710,7 +6709,7 @@
           "Slice of Life"
          ],
          "availableOn": [
-          "Lantern Stream"
+          "Lantern Library"
          ],
          "availableAt": null,
          "progress": {
@@ -7336,7 +7335,7 @@
         "Fantasy"
        ],
        "availableOn": [
-        "Lantern Stream"
+        "Lantern Library"
        ],
        "availableAt": null,
        "progress": {
@@ -7428,7 +7427,7 @@
         "Slice of Life"
        ],
        "availableOn": [
-        "Lantern Stream"
+        "Lantern Library"
        ],
        "availableAt": null,
        "progress": {
@@ -7506,7 +7505,7 @@
         "Fantasy"
        ],
        "availableOn": [
-        "Lantern Stream"
+        "Lantern Library"
        ],
        "availableAt": null,
        "progress": null,
@@ -7875,7 +7874,7 @@
         "Slice of Life"
        ],
        "availableOn": [
-        "Lantern Stream"
+        "Lantern Library"
        ],
        "availableAt": null,
        "progress": {
@@ -8066,7 +8065,7 @@
         "Fantasy"
        ],
        "availableOn": [
-        "Lantern Stream"
+        "Lantern Library"
        ],
        "availableAt": null,
        "progress": {
@@ -8158,7 +8157,7 @@
         "Slice of Life"
        ],
        "availableOn": [
-        "Lantern Stream"
+        "Lantern Library"
        ],
        "availableAt": null,
        "progress": {
@@ -8236,7 +8235,7 @@
         "Fantasy"
        ],
        "availableOn": [
-        "Lantern Stream"
+        "Lantern Library"
        ],
        "availableAt": null,
        "progress": null,
@@ -8685,7 +8684,7 @@
         "Fantasy"
        ],
        "availableOn": [
-        "Lantern Stream"
+        "Lantern Library"
        ],
        "availableAt": null,
        "progress": null,
@@ -8774,7 +8773,7 @@
         "Fantasy"
        ],
        "availableOn": [
-        "Lantern Stream"
+        "Lantern Library"
        ],
        "availableAt": null,
        "progress": {
@@ -8866,7 +8865,7 @@
         "Slice of Life"
        ],
        "availableOn": [
-        "Lantern Stream"
+        "Lantern Library"
        ],
        "availableAt": null,
        "progress": {
@@ -12637,7 +12636,7 @@
        "Fantasy"
       ],
       "availableOn": [
-       "Lantern Stream"
+       "Lantern Library"
       ],
       "availableAt": null,
       "progress": {
@@ -12753,7 +12752,7 @@
           "Fantasy"
          ],
          "availableOn": [
-          "Lantern Stream"
+          "Lantern Library"
          ],
          "availableAt": null,
          "progress": {
@@ -12974,7 +12973,7 @@
           "Slice of Life"
          ],
          "availableOn": [
-          "Lantern Stream"
+          "Lantern Library"
          ],
          "availableAt": null,
          "progress": {
@@ -13173,7 +13172,7 @@
           "Slice of Life"
          ],
          "availableOn": [
-          "Lantern Stream"
+          "Lantern Library"
          ],
          "availableAt": null,
          "progress": {
@@ -13675,7 +13674,7 @@
        "Fantasy"
       ],
       "availableOn": [
-       "Lantern Stream"
+       "Lantern Library"
       ],
       "availableAt": {
        "@type": "InLibrary"
@@ -13769,7 +13768,7 @@
        "Slice of Life"
       ],
       "availableOn": [
-       "Lantern Stream"
+       "Lantern Library"
       ],
       "availableAt": {
        "@type": "OnServer",
@@ -13850,11 +13849,11 @@
        "Fantasy"
       ],
       "availableOn": [
-       "Lantern Stream"
+       "Lantern Library"
       ],
       "availableAt": {
        "@type": "OnService",
-       "service": "Lantern Stream"
+       "service": "Lantern Library"
       },
       "progress": null,
       "airingIn": null,

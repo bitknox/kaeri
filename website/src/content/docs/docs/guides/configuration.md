@@ -53,8 +53,6 @@ screen with its position. Only past
 
 - `"plugins"` is every [plugin](/docs/plugins/authoring/) you have installed, by hand or
   from a [plugin store](/docs/plugins/stores/).
-- `"remote"` is a JSON API you host yourself, answering `search/<query>`, `info/<id>` and
-  `watch/<id>-episode-<n>` under `providers.remote_url`. It does nothing until that is set.
 
 Plugins compile in the background and are cached, so they never hold up the first frame. An
 installed plugin is only used while `"plugins"` is in the order; drop it if you use none.
@@ -63,7 +61,7 @@ The order can also name a plugin by its id, which puts that plugin at its own pl
 
 ```toml
 [providers]
-order = ["alpha", "remote", "plugins"]    # alpha first, then your API, then the other plugins
+order = ["alpha", "servers", "plugins"]    # alpha first, then your servers, then the other plugins
 ```
 
 The plugins the order does not name are tried at `"plugins"`, in alphabetical order of their ids.

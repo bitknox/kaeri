@@ -224,7 +224,7 @@ mod tests {
     use super::*;
 
     fn tracker() -> HealthTracker {
-        HealthTracker::new(["torrent".to_string(), "remote".to_string()])
+        HealthTracker::new(["torrent".to_string(), "extra".to_string()])
     }
 
     #[test]
@@ -310,13 +310,13 @@ mod tests {
     #[test]
     fn usable_preserves_configured_order_and_drops_what_is_down() {
         let t = tracker();
-        let order = vec!["torrent".to_string(), "remote".to_string()];
+        let order = vec!["torrent".to_string(), "extra".to_string()];
         assert_eq!(t.usable(&order), order, "order is the user's preference");
 
         for _ in 0..DOWN_AFTER {
             t.record_failure("torrent", &ProviderError::Blocked("nope".into()), 0);
         }
-        assert_eq!(t.usable(&order), vec!["remote".to_string()], "a down provider is skipped");
+        assert_eq!(t.usable(&order), vec!["extra".to_string()], "a down provider is skipped");
     }
 
     #[test]
@@ -326,7 +326,7 @@ mod tests {
         // VPN check withheld torrenting until the process restarted. The registry's walk makes
         // the live check and skips it there — see its own tests for both halves.
         let t = tracker();
-        let order = vec!["torrent".to_string(), "remote".to_string()];
+        let order = vec!["torrent".to_string(), "extra".to_string()];
         t.hold_back("torrent", "vpn down");
 
         assert_eq!(t.usable(&order), order);

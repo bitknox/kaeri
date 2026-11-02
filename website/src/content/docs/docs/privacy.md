@@ -28,7 +28,7 @@ found the episode, or from the image servers of the services AniList lists for i
 on the device for 30 days, so each one is fetched about once a month.
 
 When AniList can't answer, most of the same requests go to Tenrai (`api.tenrai.org`), a public
-mirror of MyAnimeList's data, and its images come from MyAnimeList's image server. To turn this
+MyAnimeList-compatible metadata API, and its images come from MyAnimeList's image server. To turn this
 off, set `fallback = false` under `[meta]` in `config.toml`, the file the terminal app and the Mac
 app share.
 
@@ -179,15 +179,13 @@ The video and subtitles a plugin finds are then fetched from the addresses it re
 a media server on another host. Each host a plugin reaches, and each media server, sees your IP
 address and what was asked of it.
 
-A link to a licensed service opens in that service's own app or website. A self-hosted source API,
-set as `remote_url` under `[providers]`, receives searches and episode requests the same way a
-plugin's hosts do.
+A link to a licensed service opens in that service's own app or website.
 
 To stop a plugin, remove it under Sources.
 
 ## Plugin stores
 
-A plugin store is run by someone you know, not by Kaeri. You join one with a link its owner
+A plugin store is run by its owner, not by Kaeri. You join one with a link its owner
 gives you.
 
 Joining with an invite sends the invite code and a name for this device. The name starts as the
