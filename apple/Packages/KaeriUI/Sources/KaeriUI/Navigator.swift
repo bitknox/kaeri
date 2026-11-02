@@ -213,6 +213,9 @@ public final class Navigator {
     public func openTitle(_ id: AnilistId, from source: TitleSource? = nil) {
         focusedTitle = id
         #if os(macOS)
+        // A second click on the title that is opening, or open, changes nothing: its art flies
+        // on, and Back still takes one press. Only a page going back opens again.
+        if titleOnMac == id, flight?.opening != false { return }
         openOnMac(id, from: source)
         #else
         withAnimation(.standard) { titleOnMac = id }

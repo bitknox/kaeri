@@ -117,6 +117,10 @@ extension EnvironmentValues {
     @Entry var zoomNamespace: Namespace.ID? = nil
     /// The namespace the Mac's title art flies in: the main window's.
     @Entry var titleSpace: Namespace.ID? = nil
+    /// The page's element that art in flight is to land on, or has just left, on the Mac: the
+    /// window hands it to the page with the flyer itself, so the element is drawn again in the
+    /// same update that takes the flyer away.
+    @Entry var titleAwaited: TitleLandingID? = nil
 }
 
 extension View {
@@ -224,14 +228,15 @@ private struct TitleSourceMark: ViewModifier {
 private struct TitleLanding: ViewModifier {
     @Environment(Navigator.self) private var navigator
     @Environment(\.titleSpace) private var space
+    @Environment(\.titleAwaited) private var awaited
     let id: AnilistId
     let art: TitleSource.Art
 
     func body(content: Content) -> some View {
         #if os(macOS)
         if let space {
-            let waits = navigator.awaits(id, art)
             let landing = TitleLandingID(id: id, art: art)
+            let waits = awaited == landing
             content
                 .matchedGeometryEffect(id: TitleMatch.landing(landing), in: space, properties: .frame, isSource: true)
                 .opacity(waits ? 0 : 1)
@@ -254,10 +259,14 @@ private struct TitleLanding: ViewModifier {
 // MARK: - The Mac's flight
 
 extension Navigator {
+    /// The page's element art in flight is to land on, or has just left.
+    var awaited: TitleLandingID? {
+        flight.map { TitleLandingID(id: $0.source.id, art: $0.landing) }
+    }
+
     /// Whether art in flight is to land on, or has just left, the element `art` of `id`'s page.
     func awaits(_ id: AnilistId, _ art: TitleSource.Art) -> Bool {
-        guard let flight else { return false }
-        return flight.source.id == id && flight.landing == art
+        awaited == TitleLandingID(id: id, art: art)
     }
 
     /// An element a page can open from came on screen, or left it.

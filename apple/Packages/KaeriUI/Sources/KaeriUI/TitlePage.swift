@@ -113,6 +113,7 @@ func nextAiring(_ entry: Entry, now: Date = .now) -> String? {
 struct TitlePage: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
+    @Environment(\.titleAwaited) private var awaited
     @Namespace private var rotor
     let id: AnilistId
     /// The title the page is laid out for: the last one opened, until the next one's is here.
@@ -192,7 +193,7 @@ struct TitlePage: View {
                 Color.clear.frame(height: art.isCompact ? 64 : 96)
                 // Art flying onto the banner covers the cover and the words over it: they come in
                 // once it has landed, rather than at once with the art drawn under them.
-                let underFlyer = navigator.awaits(entry.id, .banner)
+                let underFlyer = awaited == TitleLandingID(id: entry.id, art: .banner)
                 TitleHero(entry: entry)
                     .opacity(underFlyer ? 0 : 1)
                     .animation(.fadeIn, value: underFlyer)
