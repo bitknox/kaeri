@@ -25,7 +25,7 @@ use kaeri_model::{
     party::{PartyForm, PartyMember, PartyView},
     servers::{ServerEvent, ServerRow},
     settings::{SettingKey, SettingRow, SettingsView},
-    sources::{GuardView, ProviderOrigin, ProviderRow, SourceOption},
+    sources::{ProviderOrigin, ProviderRow, ProxyStatus, SourceOption},
     stores::{StorePluginRow, StorePluginStatus, StoreRow},
     sync::SyncState,
 };
@@ -80,9 +80,8 @@ pub struct Known {
     pub jobs: HashMap<JobId, String>,
     /// The trackers being signed in to, and how.
     pub signing: HashMap<String, SignIn>,
-    /// The torrent connection check's last verdict, and when it was heard; `None` while
-    /// torrents are off or before the first.
-    pub guard: Option<(GuardView, std::time::Instant)>,
+    /// The torrent proxy check's last word; `None` while torrents are off or before the first.
+    pub proxy: Option<ProxyStatus>,
     /// The update check's last word.
     pub update: Option<kaeri_model::updates::UpdateStatus>,
     /// The watch party this device is in, while it is in one.
@@ -301,9 +300,7 @@ impl Known {
                 self.discussions.insert((media.get(), *episode), *comments);
             }
             Event::Update(status) => self.update = Some(status.clone()),
-            Event::Vpn(guard) => {
-                self.guard = guard.clone().map(|g| (g, std::time::Instant::now()));
-            }
+            Event::TorrentProxy(status) => self.proxy = *status,
             Event::JobStarted { job, activity } => {
                 self.jobs.insert(*job, activity.clone());
             }
@@ -376,10 +373,10 @@ pub struct Hub {
     /// The hub itself, for a showcase's answers, which arrive a moment after they are asked.
     #[cfg(feature = "fixtures")]
     me: std::rc::Weak<Hub>,
-    /// For a shot: what a protection check answers in place of the engine, `Some(None)` for
+    /// For a shot: what a proxy check answers in place of the engine, `Some(None)` for
     /// never, so the form's checking and failed states hold still.
     #[cfg(feature = "fixtures")]
-    pub check_answer: RefCell<Option<Option<GuardView>>>,
+    pub check_answer: RefCell<Option<Option<ProxyStatus>>>,
     /// For a shot: what the sources have of a title in place of the engine's listing, and
     /// whether it never comes, so the picker's loading state holds still.
     #[cfg(feature = "fixtures")]
@@ -521,8 +518,8 @@ impl Hub {
             _ => {}
         }
         #[cfg(feature = "fixtures")]
-        if matches!(command, Command::CheckTorrentProtection { .. })
-            && let Some(answer) = self.check_answer.borrow().clone()
+        if matches!(command, Command::CheckTorrentProxy { .. })
+            && let Some(answer) = *self.check_answer.borrow()
         {
             if let Some(view) = answer {
                 let me = self.me.clone();
@@ -530,7 +527,7 @@ impl Hub {
                     std::time::Duration::from_millis(300),
                     move || {
                         if let Some(hub) = me.upgrade() {
-                            hub.take(vec![Event::ProtectionChecked(view)]);
+                            hub.take(vec![Event::ProxyChecked(view)]);
                         }
                     },
                 );

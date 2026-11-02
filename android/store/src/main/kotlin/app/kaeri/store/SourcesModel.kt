@@ -1,19 +1,18 @@
 // Where streams come from, as Providers and Settings show it: each provider, why there are none,
-// the connection check's verdict, and the order failover walks them in.
+// the torrent proxy's check, and the order failover walks them in.
 
 package app.kaeri.store
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import app.kaeri.engine.model.GuardView
 import app.kaeri.engine.model.Msg
 import app.kaeri.engine.model.ProviderRow
-import app.kaeri.engine.model.TorrentProtection
+import app.kaeri.engine.model.ProxyStatus
 import app.kaeri.engine.model.TorrentProxy
 
 /** The providers, as the engine last said them. */
-class ProvidersModel(private val clock: () -> Long = { AppClock.now().toEpochMilli() }) {
+class ProvidersModel {
     private val _rows = MutableStateFlow<List<ProviderRow>>(emptyList())
 
     /** Each provider, in the order the engine lists them. */
@@ -34,29 +33,28 @@ class ProvidersModel(private val clock: () -> Long = { AppClock.now().toEpochMil
     /** Whether the sources are being rebuilt, from `SourcesChanged` until the rebuilt list. */
     val rebuilding: StateFlow<Boolean> = _rebuilding.asStateFlow()
 
-    /** The connection check's verdict for torrents, and when it was said, on [clock]. */
-    data class Check(val view: GuardView, val at: Long)
-
-    private val _check = MutableStateFlow<Check?>(null)
-
-    /** The connection check's last verdict; `null` while torrents are off or before it said. */
-    val check: StateFlow<Check?> = _check.asStateFlow()
+    private val _check = MutableStateFlow<ProxyStatus?>(null)
 
     /**
-     * A protection checked before it is saved: under way, then the check's verdict on it. Each
-     * carries the [mode] and [proxy] it checked, the proxy's password as given, so a form saves
-     * exactly what passed and sets aside a verdict on details it no longer holds.
+     * The saved proxy's check, as the engine last said it; `null` while torrents are off, and
+     * [ProxyStatus.DIRECT] while they are on with no proxy.
+     */
+    val check: StateFlow<ProxyStatus?> = _check.asStateFlow()
+
+    /**
+     * A proxy checked before it is saved: under way, then the check's verdict on it. Each carries
+     * the [proxy] it checked, its password as given, so a form saves exactly what passed and sets
+     * aside a verdict on details it no longer holds.
      */
     sealed interface Trial {
-        val mode: TorrentProtection
-        val proxy: TorrentProxy?
+        val proxy: TorrentProxy
 
-        /** Whether this trial checked [mode] through [proxy]. */
-        fun isFor(mode: TorrentProtection, proxy: TorrentProxy?): Boolean = this.mode == mode && this.proxy == proxy
+        class Checking internal constructor(override val proxy: TorrentProxy) : Trial
 
-        class Checking internal constructor(override val mode: TorrentProtection, override val proxy: TorrentProxy?) : Trial
-
-        class Said internal constructor(override val mode: TorrentProtection, override val proxy: TorrentProxy?, val view: GuardView) : Trial
+        class Said internal constructor(override val proxy: TorrentProxy, val status: ProxyStatus) : Trial {
+            /** Whether the proxy may be saved. */
+            val passed: Boolean get() = status == ProxyStatus.PASSED
+        }
     }
 
     private val _trial = MutableStateFlow<Trial?>(null)
@@ -70,9 +68,9 @@ class ProvidersModel(private val clock: () -> Long = { AppClock.now().toEpochMil
     private var sent: Trial.Checking? = null
     private var waiting: Trial.Checking? = null
 
-    /** A check of [mode] through [proxy] is asked for: the one to send now, or null while another runs. */
-    internal fun trialAsked(mode: TorrentProtection, proxy: TorrentProxy?): Trial.Checking? = synchronized(this) {
-        val asked = Trial.Checking(mode, proxy)
+    /** A check of [proxy] is asked for: the one to send now, or null while another runs. */
+    internal fun trialAsked(proxy: TorrentProxy): Trial.Checking? = synchronized(this) {
+        val asked = Trial.Checking(proxy)
         _trial.value = asked
         if (sent == null) {
             sent = asked
@@ -84,10 +82,10 @@ class ProvidersModel(private val clock: () -> Long = { AppClock.now().toEpochMil
     }
 
     /** The verdict on the check sent; the one waiting, to send next. */
-    internal fun trialSaid(view: GuardView): Trial.Checking? = synchronized(this) {
+    internal fun trialSaid(status: ProxyStatus): Trial.Checking? = synchronized(this) {
         val said = sent ?: return null
         // A verdict no form is waiting for any more is not kept.
-        if (_trial.value === said) _trial.value = Trial.Said(said.mode, said.proxy, view)
+        if (_trial.value === said) _trial.value = Trial.Said(said.proxy, status)
         sent = waiting
         waiting = null
         sent
@@ -125,8 +123,8 @@ class ProvidersModel(private val clock: () -> Long = { AppClock.now().toEpochMil
         _rebuilding.value = true
     }
 
-    internal fun guardSaid(view: GuardView?) {
-        _check.value = view?.let { Check(it, clock()) }
+    internal fun proxySaid(status: ProxyStatus?) {
+        _check.value = status
     }
 
     fun row(id: String): ProviderRow? = _rows.value.firstOrNull { it.id == id }
@@ -142,10 +140,6 @@ val ProviderRow.standing: ProviderStanding
         state == "degraded" -> ProviderStanding.Slow
         else -> ProviderStanding.Working
     }
-
-/** Whether torrents may run: the check passed, or the config accepts no protection. */
-val GuardView.passes: Boolean
-    get() = this is GuardView.Protected || this == GuardView.Unprotected
 
 /**
  * Where streams come from, as Providers moves them: ports of `kaeri_model::sources`'s order

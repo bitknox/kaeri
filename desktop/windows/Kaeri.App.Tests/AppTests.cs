@@ -260,15 +260,14 @@ public class LinesTests
 
 public class TorrentsTests
 {
-    static SettingsView Settings(ProtectionView torrent) => new(
+    static SettingsView Settings(TorrentView torrent) => new(
         Translation: Translation.Sub, Quality: 1080, Theme: ThemeMode.Adaptive,
         Sources: new ConfiguredSources(), PresenceClient: false, Torrent: torrent);
 
     [Fact]
     public void AProxyNeedsItsHostAndAPort()
     {
-        var draft = TorrentDraft.From(null, turningOn: true);
-        Assert.Equal(TorrentProtection.Proxy, draft.Protection);
+        var draft = TorrentDraft.From(null);
         Assert.False(draft.Complete);
         draft = draft with { Host = " proxy.example ", Port = "0" };
         Assert.False(draft.Complete, "port 0 is no port");
@@ -277,114 +276,84 @@ public class TorrentsTests
         Assert.Equal(("proxy.example", (ushort)1080), (draft.Proxy!.Host, draft.Proxy.Port));
         Assert.Null(draft.Proxy.User);
         Assert.Null(draft.Proxy.Password);
-        Assert.True((draft with { Protection = TorrentProtection.Device, Host = "" }).Complete);
-        Assert.Null((draft with { Protection = TorrentProtection.Device }).Proxy);
+        Assert.False((draft with { Host = "" }).Complete);
     }
 
     [Fact]
-    public void TheDialogSendsTheProtectionAndThenTorrentsOn()
+    public void TheProxyIsSavedOrRemovedWithOneCommand()
     {
-        var settings = Settings(new ProtectionView(TorrentProtection.Device, FailedCheck.Stop));
-        var draft = TorrentDraft.From(settings, turningOn: true);
-        var sent = Torrents.Apply(draft, settings, turningOn: true).ToList();
-        Assert.Equal(2, sent.Count);
-        var protect = Assert.IsType<Command.SetTorrentProtection>(sent[0]);
-        Assert.Equal((TorrentProtection.Device, FailedCheck.Stop, false), (protect.Mode, protect.OnFailure, protect.Acknowledged));
-        Assert.Null(protect.Proxy);
-        Assert.Equal(SettingKey.Torrents, Assert.IsType<Command.SetSetting>(sent[1]).Key);
-
-        // No protection goes acknowledged.
-        var none = Torrents.Apply(draft with { Protection = TorrentProtection.None }, Settings(settings.Torrent), turningOn: false).ToList();
-        Assert.True(Assert.IsType<Command.SetTorrentProtection>(Assert.Single(none)).Acknowledged);
-    }
-
-    [Fact]
-    public void WarnOnlyGoesAcknowledgedAndAKeptProxyStays()
-    {
-        var current = new ProtectionView(TorrentProtection.Proxy, FailedCheck.Pause, new ProxyView("proxy.example", 1080, "kai"));
-        var warn = Assert.IsType<Command.SetTorrentProtection>(Torrents.FailedCheckCommand(current, FailedCheck.Warn));
-        Assert.True(warn.Acknowledged);
-        Assert.Equal(FailedCheck.Warn, warn.OnFailure);
-        Assert.Equal(("proxy.example", (ushort)1080, "kai"), (warn.Proxy!.Host, warn.Proxy.Port, warn.Proxy.User));
-        Assert.Null(warn.Proxy.Password);
-        var stop = Assert.IsType<Command.SetSetting>(Torrents.FailedCheckCommand(current, FailedCheck.Stop));
-        Assert.Equal(SettingKey.VpnOnFailure, stop.Key);
-        Assert.Null(Torrents.FailedCheckCommand(current, FailedCheck.Pause));
-        Assert.Equal("Protected by a SOCKS5 proxy at proxy.example:1080.", TorrentWords.OnNote(current));
+        var proxy = new TorrentProxy("proxy.example", 1080, "kai", null);
+        Assert.Same(proxy, Assert.IsType<Command.SetTorrentProxy>(Torrents.SetProxy(proxy)).Proxy);
+        Assert.Null(Assert.IsType<Command.SetTorrentProxy>(Torrents.SetProxy(null)).Proxy);
+        Assert.IsType<Command.CheckProxy>(Torrents.CheckNow());
     }
 
     [Fact]
     public void AProxyIsCheckedOneAtATimeAndAVerdictGoesOnlyToWhatItChecked()
     {
-        var sent = new List<Command.CheckTorrentProtection>();
-        var trials = new ProtectionTrials(c => sent.Add(Assert.IsType<Command.CheckTorrentProtection>(c)));
-        var first = new TrialAsk(TorrentProtection.Proxy, new TorrentProxy("proxy.example", 1080, "kai", null));
-        var second = new TrialAsk(TorrentProtection.Proxy, new TorrentProxy("relay.example", 1081, "kai", null));
-        var said = new List<(TrialAsk, GuardView)>();
+        var sent = new List<Command.CheckTorrentProxy>();
+        var trials = new ProxyTrials(c => sent.Add(Assert.IsType<Command.CheckTorrentProxy>(c)));
+        var first = new TrialAsk(new TorrentProxy("proxy.example", 1080, "kai", null));
+        var second = new TrialAsk(new TorrentProxy("relay.example", 1081, "kai", null));
+        var said = new List<(TrialAsk, ProxyStatus)>();
 
-        trials.Ask(first, (ask, view) => said.Add((ask, view)));
+        trials.Ask(first, (ask, status) => said.Add((ask, status)));
         Assert.True(trials.Checking);
-        Assert.Equal("proxy.example", Assert.Single(sent).Proxy!.Host);
+        Assert.Equal("proxy.example", Assert.Single(sent).Proxy.Host);
 
         // Asked again before the first answered: the second waits, and the first's answer is
         // nobody's, since it was not made on what is asked now.
-        trials.Ask(second, (ask, view) => said.Add((ask, view)));
+        trials.Ask(second, (ask, status) => said.Add((ask, status)));
         Assert.Single(sent);
-        trials.Heard(new GuardView.Protected("a test network"));
+        trials.Heard(ProxyStatus.Passed);
         Assert.Empty(said);
-        Assert.Equal("relay.example", sent[^1].Proxy!.Host);
-        trials.Heard(new GuardView.Leaking());
+        Assert.Equal("relay.example", sent[^1].Proxy.Host);
+        trials.Heard(ProxyStatus.Failed);
         var (asked, verdict) = Assert.Single(said);
         Assert.Equal(second, asked);
-        Assert.IsType<GuardView.Leaking>(verdict);
+        Assert.Equal(ProxyStatus.Failed, verdict);
         Assert.False(trials.Checking);
 
         // A dialog closed while its check runs hears nothing of it, and the next check waits for it.
-        trials.Ask(first, (ask, view) => said.Add((ask, view)));
+        trials.Ask(first, (ask, status) => said.Add((ask, status)));
         trials.Drop();
         Assert.False(trials.Checking);
-        trials.Ask(second, (ask, view) => said.Add((ask, view)));
+        trials.Ask(second, (ask, status) => said.Add((ask, status)));
         Assert.Equal(3, sent.Count);
-        trials.Heard(new GuardView.Protected("a test network"));
+        trials.Heard(ProxyStatus.Passed);
         Assert.Single(said);
         Assert.Equal(4, sent.Count);
-        trials.Heard(new GuardView.Protected("a test network"));
+        trials.Heard(ProxyStatus.Passed);
         Assert.Equal(2, said.Count);
         Assert.Equal(second, said[1].Item1);
     }
 
     [Fact]
-    public void AFailedCheckSaysNothingWasSavedAndWhatStays()
+    public void EditProxyOpensOnTheSavedProxyWithTheKeptPassword()
     {
-        Assert.Equal("Not saved. Torrent traffic left outside this proxy, so the saved proxy stays.",
-            TorrentWords.NotSaved(new GuardView.Leaking(), TorrentWords.Kept.EditedProxy));
-        Assert.Equal("Not saved. The check couldn't be made through this proxy, so the saved protection stays.",
-            TorrentWords.NotSaved(new GuardView.Unreachable(), TorrentWords.Kept.Protection));
-        Assert.Equal("Torrents are still off. Torrent traffic left outside this proxy.",
-            TorrentWords.NotSaved(new GuardView.Leaking(), TorrentWords.Kept.TurningOn));
+        Assert.Equal("Not saved. The proxy check failed, so the saved proxy stays.", TorrentWords.NotSaved());
 
         // Edit proxy opens on the saved proxy with the password empty, which keeps the saved one.
-        var settings = Settings(new ProtectionView(TorrentProtection.Proxy, FailedCheck.Pause, new ProxyView("proxy.example", 1080, "kai")));
-        var draft = TorrentDraft.From(settings, turningOn: false, TorrentProtection.Proxy);
+        var settings = Settings(new TorrentView(new ProxyView("proxy.example", 1080, "kai")));
+        var draft = TorrentDraft.From(settings);
         Assert.Equal(("proxy.example", "1080", "kai", ""), (draft.Host, draft.Port, draft.User, draft.Password));
         Assert.Null(draft.Proxy!.Password);
-        var save = Assert.IsType<Command.SetTorrentProtection>(Assert.Single(Torrents.Apply(draft with { Host = "relay.example" }, settings, turningOn: false)));
-        Assert.Equal(("relay.example", (string?)null, false), (save.Proxy!.Host, save.Proxy.Password, save.Acknowledged));
+        Assert.Equal("Through a SOCKS5 proxy at proxy.example:1080.", TorrentWords.OnNote(settings.Torrent));
+        Assert.Equal("Connecting directly, without a proxy.", TorrentWords.OnNote(new TorrentView(null)));
     }
 
     [Fact]
-    public void TheCheckSaysWhereTrafficLeftAndWhen()
+    public void TheCheckSaysWhatItFoundAndWhen()
     {
-        Assert.Equal(("Leaving through a test network · just now", "Passed", false),
-            TorrentWords.Guard(new GuardView.Protected("a test network"), 5));
-        Assert.Equal("Failed", TorrentWords.Guard(new GuardView.Leaking(), null).Word);
-        Assert.True(TorrentWords.Guard(new GuardView.Unreachable(), null).Failed);
-        Assert.Equal("Not checked yet", TorrentWords.Guard(null, null).Note);
+        Assert.Equal(("just now", "Passed", false), TorrentWords.Check(ProxyStatus.Passed, 5));
+        Assert.Equal("Failed", TorrentWords.Check(ProxyStatus.Failed, null).Word);
+        Assert.True(TorrentWords.Check(ProxyStatus.Failed, null).Failed);
+        Assert.Equal("Not checked yet", TorrentWords.Check(null, null).Note);
         var known = new Known();
-        known.Take(new Event.Vpn(new GuardView.Checking()));
-        Assert.IsType<GuardView.Checking>(known.Guard!.Value.View);
-        known.Take(new Event.Vpn(null));
-        Assert.Null(known.Guard);
+        known.Take(new Event.TorrentProxy(ProxyStatus.Checking));
+        Assert.Equal(ProxyStatus.Checking, known.ProxyCheck!.Value.Status);
+        known.Take(new Event.TorrentProxy(null));
+        Assert.Null(known.ProxyCheck);
     }
 }
 
@@ -413,7 +382,7 @@ public class SettingsCatalogTests
         Assert.Equal(SettingControl.Choice, SettingsCatalog.ControlFor(Row(SettingKey.Upscaling, "off")));
         Assert.Equal(SettingControl.Choice, SettingsCatalog.ControlFor(Row(SettingKey.Quality, "1080p")));
         Assert.Equal(SettingControl.Text, SettingsCatalog.ControlFor(Row(SettingKey.DownloadDir, "D:/Anime", new SettingChange.Typed("D:/Anime"))));
-        Assert.Equal(SettingControl.ReadOnly, SettingsCatalog.ControlFor(Row(SettingKey.VpnMode, "external", new SettingChange.Fixed())));
+        Assert.Equal(SettingControl.ReadOnly, SettingsCatalog.ControlFor(Row(SettingKey.TorrentProxy, "external", new SettingChange.Fixed())));
     }
 
     [Fact]
@@ -441,7 +410,7 @@ public class SettingsCatalogTests
         Assert.Equal(new SettingValue.Str("sub"), SettingsCatalog.Current(Row(SettingKey.Translation, "sub · dub this session"))?.Value);
         Assert.True(SettingsCatalog.IsOn(Row(SettingKey.Fullscreen, "on")));
         Assert.False(SettingsCatalog.IsOn(Row(SettingKey.Fullscreen, "off")));
-        Assert.False(SettingsCatalog.Editable(Row(SettingKey.VpnMode, "external", new SettingChange.Fixed())));
+        Assert.False(SettingsCatalog.Editable(Row(SettingKey.TorrentProxy, "external", new SettingChange.Fixed())));
         Assert.Equal("D:/Anime", SettingsCatalog.TypedText(Row(SettingKey.DownloadDir, "D:/Anime", new SettingChange.Typed("D:/Anime"))));
     }
 }
@@ -673,7 +642,7 @@ public class PlayerRulesTests
 public class SceneTests
 {
     /// <summary>
-    /// A proxy checked before it is saved: the engine answers on ProtectionChecked, through the
+    /// A proxy checked before it is saved: the engine answers on ProxyChecked, through the
     /// trials the dialog asks with, and nothing is saved. The fixture engine's exit is made up,
     /// so the check sends nothing anywhere.
     /// </summary>
@@ -686,11 +655,11 @@ public class SceneTests
         var engine = FfiEngine.StartScene(AppDirs.Under(root), new QuietHost(), new FfiScene.Fresh(), EngineSession.AppStart());
         using (var session = new EngineSession(engine, a => { lock (gate) a(); }))
         {
-            var trials = new ProtectionTrials(c => session.Send(c));
+            var trials = new ProxyTrials(c => session.Send(c));
             session.Batch += batch =>
             {
                 foreach (var e in batch)
-                    if (e is Event.ProtectionChecked checkedNow)
+                    if (e is Event.ProxyChecked checkedNow)
                         trials.Heard(checkedNow.V1);
             };
             session.Start();
@@ -703,12 +672,12 @@ public class SceneTests
             }
             Assert.NotNull(before);
 
-            GuardView? said = null;
-            var ask = new TrialAsk(TorrentProtection.Proxy, new TorrentProxy("proxy.example", 1080, null, null));
+            ProxyStatus? said = null;
+            var ask = new TrialAsk(new TorrentProxy("proxy.example", 1080, null, null));
             lock (gate) trials.Ask(ask, (_, view) => said = view);
             while (said is null && DateTime.UtcNow < deadline)
                 await Task.Delay(50, TestContext.Current.CancellationToken);
-            Assert.IsType<GuardView.Protected>(said);
+            Assert.Equal(ProxyStatus.Passed, said);
             lock (gate)
             {
                 Assert.False(trials.Checking);

@@ -29,13 +29,10 @@ notice-signed-out-queue = { $count ->
  }
 notice-sign-out-failed = No se pudo cerrar la sesión en { $tracker }. Inténtalo de nuevo. { $reason }
 notice-not-saved-because = No se pudo guardar esa configuración. { $cause }
-notice-protection-saved = Protección de torrents guardada.
-notice-protection-not-checked = No se pudo revisar la protección de torrents. { $cause }
 notice-proxy-password-not-kept = No se pudo guardar la contraseña del proxy. Escríbela otra vez para intentar guardarla. { $reason }
 notice-show-setting-refused = No se pudo guardar esa configuración. { $value } no es un valor válido para { $setting }.
 notice-show-not-reset = No se pudo restablecer la configuración de esta serie. { $reason }
 notice-show-no-such-subtitles = No se pudo guardar esa elección de subtítulos. Esta serie no ha usado esos subtítulos antes.
-notice-torrents-waiting-for-check = Los torrents esperan a que vuelva a pasar la revisión de conexión.
 notice-mapping-data-refreshed = Datos de mapeo actualizados.
 notice-mapping-data-failed = No se pudieron actualizar los datos de mapeo ({ $datasets }). Se intentará otra vez en { $wait }. { $cause }
 notice-episode-aired = { $title }, episodio { $episode }, salió al aire mientras no estabas.
@@ -45,8 +42,6 @@ notice-episodes-aired = { $count ->
    *[other] Salieron al aire { $count } episodios nuevos de series que ves. El calendario los tiene.
  }
 notice-update-available = Ya está disponible { $tag }. Ejecuta kaeri --update para instalarlo.
-cause-confirm-no-protection = Primero confirma que quieres no tener protección.
-cause-confirm-warn-only = Primero confirma que solo quieres recibir avisos.
 cause-proxy-needs-address = Un proxy necesita un host y un puerto.
 cause-proxy-address-unusable = La dirección del proxy no es una que la revisión pueda usar.
 cause-server-unreachable = No se pudo contactar con el servidor.

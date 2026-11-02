@@ -77,8 +77,6 @@ Also in the apps:
 
 - Skip the opening, and start the next episode from the credits.
 - Pick sub or dub once and each show remembers.
-- The next episodes of your shows download ahead of time, and a downloaded episode resumes and
-  syncs like a stream.
 - Watch with friends in sync, on Mac, iPhone, iPad, Windows, Linux and in the terminal.
 - New-episode alerts, off until you turn them on for a show.
 - Home screen widgets, and Live Activities and Handoff on Apple devices.

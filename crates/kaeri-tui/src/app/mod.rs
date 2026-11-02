@@ -68,7 +68,7 @@ pub use self::{
     notices::{ACTIVITY_DELAY, Job, LOG_CAPACITY, LogRow, Toast, alert, info, say, worded},
     overlays::{FrameReport, PALETTE_ROWS},
     playback::NowPlaying,
-    providers::vpn_badge,
+    providers::proxy_badge,
     settings::SettingLine,
     stores::{MemberLine, PluginChoice, StoreConfirm, StoreLine},
     text::{Field, TextField},
@@ -147,13 +147,13 @@ pub struct App {
     pub synopsis_expanded: bool,
     /// Decoded artwork, keyed by URL.
     pub images: crate::image::ImageStore,
-    /// VPN state, shown in the header whenever torrenting is configured.
+    /// The proxy check's result, shown in the header while torrents go through a proxy.
     ///
-    /// Visible rather than discoverable: finding out the guard is failing when playback
-    /// mysteriously refuses would be much worse than a badge.
-    pub vpn_badge: Option<String>,
-    /// Set when the guard is failing, so the badge can use the alert role.
-    pub vpn_leaking: bool,
+    /// Visible rather than discoverable: finding out the check is failing only when playback
+    /// does not start would be much worse than a badge.
+    pub proxy_badge: Option<String>,
+    /// Set when the proxy check failed, so the badge can use the alert role.
+    pub proxy_failed: bool,
     /// The download queue, as the Downloads screen shows it.
     pub downloads: Vec<DownloadRow>,
     /// Watched episodes still seeding, for the Downloads screen.
@@ -182,7 +182,7 @@ pub struct App {
     pub release_of: Option<String>,
     /// Why there are no sources, when there are none.
     ///
-    /// "You have not configured anything" and "your VPN guard failed" need different
+    /// "You have not configured anything" and "the proxy check failed" need different
     /// actions from the user, so the screen must not guess between them.
     pub provider_note: Option<String>,
     /// Live playback state, when something is playing.
@@ -420,8 +420,8 @@ impl App {
             marking: None,
             rolling: false,
             commands: Vec::new(),
-            vpn_badge: None,
-            vpn_leaking: false,
+            proxy_badge: None,
+            proxy_failed: false,
             providers: Vec::new(),
             demo: kaeri_model::sources::DemoState::default(),
             first_run_shown: false,
@@ -681,9 +681,9 @@ impl App {
             | Event::PlayerSkipPrompt { .. }
             | Event::PlayerSkipNotice { .. }
             | Event::Clipboard { .. } => {}
-            // A check a native app's protection form asks for before it saves; the terminal's
-            // protection is the config file's, read at launch.
-            Event::ProtectionChecked(_) => {}
+            // A check a native app's proxy form asks for before it saves; the terminal's
+            // proxy is the config file's, read at launch.
+            Event::ProxyChecked(_) => {}
             // The playback still in the window ended while its successor was being found: the
             // successor is what was asked for, so nothing comes down and nothing rolls on.
             //
@@ -710,7 +710,7 @@ impl App {
             Event::ProgressQueued => self.apply_progress_queued(),
             Event::Conflicts(rows) => self.apply_conflicts(rows),
             Event::Resumed { position } => self.apply_resumed(position),
-            Event::Vpn(guard) => self.apply_vpn(guard),
+            Event::TorrentProxy(status) => self.apply_proxy(status),
             Event::Episodes { id, rows, .. } => self.apply_episodes(id, rows),
             Event::Progress { id, progress, resume, episodes } => {
                 self.apply_progress(id, progress, resume, episodes)

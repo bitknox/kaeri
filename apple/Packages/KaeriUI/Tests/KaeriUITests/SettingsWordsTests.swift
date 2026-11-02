@@ -33,7 +33,7 @@ struct SettingsWordsTests {
             rows: [], refused: nil, translation: .sub, quality: 1080, theme: .adaptive,
             sources: ConfiguredSources(order: [], disabled: [], torrent: false, remote: false),
             speed: nil, presenceClient: true, presenceAvailable: presence, nativeRows: [], overridden: [],
-            torrent: ProtectionView(protection: .none, proxy: nil, onFailure: .pause)
+            torrent: TorrentView(proxy: nil)
         )
     }
 
@@ -58,7 +58,7 @@ struct SettingsWordsTests {
             rows: [], refused: nil, translation: .sub, quality: 1080, theme: .adaptive,
             sources: ConfiguredSources(order: [], disabled: [], torrent: false, remote: false),
             speed: nil, presenceClient: true, nativeRows: [], overridden: [],
-            torrent: ProtectionView(protection: .none, proxy: nil, onFailure: .pause)
+            torrent: TorrentView(proxy: nil)
         )
         #expect(view.presenceAvailable)
     }
@@ -97,79 +97,53 @@ struct SettingsWordsTests {
         }
     }
 
-    @Test func theProtectionIsNamedAsTheTurnOnSheetNamesIt() {
-        #expect(ProtectionWords.label(TorrentProtection.proxy) == "Proxy")
-        #expect(ProtectionWords.label(TorrentProtection.device) == "VPN")
-        #expect(ProtectionWords.label(TorrentProtection.none) == "No protection")
-        #expect(ProtectionWords.label(Optional<TorrentProtection>.none) == "–", "nothing said yet")
-        #expect(ProtectionWords.failedChecks.map { ProtectionWords.label($0) }
-                == ["Pause torrents", "Stop torrents", "Warn only"])
+    @Test func theTorrentLineSaysOffDirectOrThroughTheProxy() {
+        let proxy = ProxyView(host: "proxy.example", port: 1080, user: nil)
+        #expect(ProxyWords.summary(on: false, proxy: nil) == "Off by default. Torrents connect directly unless you route them through a proxy.")
+        #expect(ProxyWords.summary(on: true, proxy: nil) == "Connecting directly, without a proxy.")
+        #expect(ProxyWords.summary(on: true, proxy: proxy) == "Through a SOCKS5 proxy at proxy.example:1080.")
     }
 
     @Test func aProxyNeedsItsHostAndPortAndKeepsThePasswordItHasWhenLeftEmpty() {
         let store = AppStore()
-        var draft = TorrentDraft(store)
-        draft.protection = .proxy
-        #expect(!draft.complete, "no host yet")
+        var draft = ProxyDraft(store)
+        #expect(!draft.complete && !draft.invalid, "no host yet, and nothing typed to fault")
         draft.host = " proxy.example "
         draft.port = "1080"
         #expect(draft.complete)
         #expect(draft.proxy == TorrentProxy(host: "proxy.example", port: 1080, user: nil, password: nil),
                 "an empty password keeps the one kept")
         draft.port = "eighty"
-        #expect(!draft.complete)
-        draft.protection = .device
-        #expect(draft.complete && draft.proxy == nil)
+        #expect(!draft.complete && draft.invalid)
     }
 
-    @Test func aProxyIsCheckedBeforeItIsSavedAndAnythingElseIsSavedAtOnce() {
+    @Test func aProxyIsCheckedBeforeItIsSaved() {
         let store = AppStore()
-        var draft = TorrentDraft(store)
-        draft.protection = .proxy
+        var draft = ProxyDraft(store)
         draft.host = "proxy.example"
         draft.port = "1080"
-        #expect(!store.save(draft, .turnOn), "a proxy waits for its check")
-        #expect(store.sentLog == ["checkTorrentProtection"], "nothing set, torrents not turned on")
+        store.check(draft)
+        #expect(store.sentLog == ["checkTorrentProxy"], "nothing set until the check passes")
         #expect(store.providers.trial == .checking)
-
-        draft.protection = .device
-        #expect(store.save(draft, .change))
-        #expect(store.sentLog.last == "setTorrentProtection")
     }
 
-    @Test func aProxyNotSavedSaysWhyAndWhatStays() {
-        #expect(ProtectionWords.notSaved(.leaking, .editProxy)
-                == "Not saved. Torrent traffic left outside this proxy, so the saved proxy stays.")
-        #expect(ProtectionWords.notSaved(.unreachable, .editProxy)
-                == "Not saved. The check couldn't be made through this proxy, so the saved proxy stays.")
-        #expect(ProtectionWords.notSaved(.unreachable, .turnOn)
-                == "Torrents are still off. The check couldn't be made through this proxy.")
-        #expect(ProtectionWords.notSaved(.leaking, .change)
-                == "Not saved. Torrent traffic left outside this proxy, so the saved protection stays.")
-    }
-
-    @Test func aSavedSheetSaysWhatItSaved() {
-        #expect(ProtectionWords.saved(.editProxy) == "Proxy saved")
-        #expect(ProtectionWords.saved(.turnOn) == "Torrents are on")
-        #expect(ProtectionWords.saved(.change) == "Torrent protection saved")
+    @Test func aProxyNotSavedSaysWhatStays() {
+        #expect(ProxyWords.notSaved == "Not saved. The proxy check failed, so the saved proxy stays.")
     }
 
     @Test func theSavedProxyIsNamedByWhereItIsAndWhoItLetsIn() {
         let proxy = ProxyView(host: "proxy.example", port: 1080, user: "mika")
-        #expect(ProtectionWords.proxyLine(proxy) == "proxy.example:1080 · as mika")
-        #expect(ProtectionWords.proxyLine(ProxyView(host: "proxy.example", port: 1080, user: nil)) == "proxy.example:1080")
-        #expect(ProtectionView(protection: .proxy, proxy: proxy, onFailure: .pause).proxyLine == "proxy.example:1080 · as mika")
-        #expect(ProtectionView(protection: .device, proxy: proxy, onFailure: .pause).proxyLine == nil,
-                "no Edit proxy once torrents go another way")
+        #expect(ProxyWords.proxyLine(proxy) == "proxy.example:1080 · as mika")
+        #expect(ProxyWords.proxyLine(ProxyView(host: "proxy.example", port: 1080, user: nil)) == "proxy.example:1080")
+        #expect(TorrentView(proxy: proxy).proxyLine == "proxy.example:1080 · as mika")
+        #expect(TorrentView(proxy: nil).proxyLine == nil)
     }
 
-    @Test func theGuardSaysWhereTrafficLeftAndHowLongAgo() {
-        let at = Date(timeIntervalSince1970: 1_000)
-        let (note, status, _) = GuardWords.words(.protected(exit: "Lantern Networks"), at: at, now: at.addingTimeInterval(120))
-        #expect(note == "Leaving through Lantern Networks · 2 min ago")
-        #expect(status == "Passed")
-        #expect(GuardWords.words(.leaking, at: at).1 == "Failed")
-        #expect(GuardWords.words(nil, at: nil).0 == "Not checked yet")
+    @Test func theProxyCheckSaysHowItStands() {
+        #expect(ProxyWords.words(.passed).1 == "Passed")
+        #expect(ProxyWords.words(.failed).1 == "Failed")
+        #expect(ProxyWords.words(.checking).1 == "Checking")
+        #expect(ProxyWords.words(nil).1 == "Waiting")
     }
 
     @Test func anAccountSaysWhatWaitsOrWhenItLastSynced() {

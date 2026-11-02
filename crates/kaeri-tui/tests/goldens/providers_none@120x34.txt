@@ -4,7 +4,7 @@ Kaeri                                                                           
   ▤  Calendar               │
   ▦  Seasonal               │  No sources available
   /  Search                 │
-  ▥  Library                │  Torrents are off until providers.torrent.enabled and a VPN mode are set.
+  ▥  Library                │  Torrents are off until providers.torrent.enabled is turned on.
   ↓  Downloads              │
 ▌ ◇  Sources                │  Plugin stores
   ◎  Accounts               │    Plugins shared by people you know. Join with an invite link.                  ↵ Open
@@ -57,7 +57,7 @@ r05 c28-28 fg=rule
 r06 c02-02 fg=text-dim
 r06 c05-11 fg=text-dim
 r06 c28-28 fg=rule
-r06 c31-102 fg=text-dim
+r06 c31-92 fg=text-dim
 r07 c02-02 fg=text-dim
 r07 c05-13 fg=text-dim
 r07 c28-28 fg=rule

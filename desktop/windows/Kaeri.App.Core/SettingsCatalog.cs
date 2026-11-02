@@ -89,8 +89,6 @@ public static class SettingsCatalog
             [Str("standard", "standard", T.SettingsDownloadStandard), Str("higher", "higher", T.SettingsDownloadHigher)],
         SettingKey.KeepNextEpisodes =>
             [.. new long[] { 0, 1, 2, 3, 5, 10 }.Select(n => Int(n, n == 0 ? "off" : KaeriFfiMethods.Plural((ulong)n, "episode"), n == 0 ? T.ValueOff : T.EpisodesCount(n)))],
-        // Warn only is asked for with its acknowledgement, through the torrent protection command.
-        SettingKey.VpnOnFailure => [Str("pause", "pause torrents", T.TorrentsFailPause), Str("stop", "stop torrents", T.TorrentsFailStop)],
         _ when IsSwitch(key) => [new(new SettingValue.Bool(false), "off", T.ValueOff), new(new SettingValue.Bool(true), "on", T.ValueOn)],
         _ => [],
     };

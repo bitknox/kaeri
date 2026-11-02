@@ -62,9 +62,8 @@ public sealed partial class SettingsPage : Page
         new("notifications", "", [("new-episodes", [K.EpisodeNotifications])]),
         new("sources", "",
         [
-            // Laid out by ShowTorrents: the switch, what protects them, the last
-            // check and what a failed one does.
-            ("torrents", [K.Torrents, K.VpnMode, K.VpnOnFailure]),
+            // Laid out by ShowTorrents: the switch, the optional proxy and its check.
+            ("torrents", [K.Torrents]),
             ("seeding", [K.KeepSeeding, K.SeedRatio, K.SeedHours, K.UploadLimit]),
         ]),
         new("accounts", "", []),
@@ -129,7 +128,6 @@ public sealed partial class SettingsPage : Page
         K.PresenceTitle => T.SettingsPresenceTitle,
         K.PresenceRich => T.SettingsPresenceRich,
         K.Torrents => T.SettingsTorrentSource,
-        K.VpnMode => T.SettingsVpnMode,
         K.SeedRatio => T.SettingsSeedAfter,
         K.SeedHours => T.SettingsSeedFor,
         K.UploadLimit => T.SettingsUploadLimit,
@@ -146,7 +144,6 @@ public sealed partial class SettingsPage : Page
         K.KeepNextEpisodes => T.SettingsKeepNext,
         K.DownloadsOnCellular => T.SettingsDownloadsCellular,
         K.TorrentsOnCellular => T.SettingsTorrentsCellular,
-        K.VpnOnFailure => T.TorrentsIfCheckFails,
         K.AdultTitles => T.SettingsAdult,
         K.EpisodeNotifications => T.SettingsEpisodeNotifications,
         K.EpisodeDiscussions => T.SettingsEpisodeDiscussions,
@@ -187,8 +184,8 @@ public sealed partial class SettingsPage : Page
             return plates;
         };
         State.ActivityText = T.SettingsLoading;
-        // "· 2 min ago" moves on while the Last check card is on screen.
-        guardClock = Timers.Weak(this, TimeSpan.FromSeconds(30), true, static page => page.ShowGuard());
+        // "2 min ago" moves on while the Proxy check card is on screen.
+        guardClock = Timers.Weak(this, TimeSpan.FromSeconds(30), true, static page => page.ShowProxyCheck());
         savedClock = Timers.Weak(this, TimeSpan.FromSeconds(8), false, static page => page.ShowSaved());
         // Heard from the start: what arrives before the page is loaded is not missed.
         ctx.Tv.Changed += TvChanged;
@@ -212,8 +209,8 @@ public sealed partial class SettingsPage : Page
     {
         if (batch.Any(e => e is Event.Settings || e is Event.Sync && pane.Name == "accounts" || e is Event.HiddenTitles && pane.Name == "library"))
             Show();
-        else if (batch.Any(e => e is Event.Vpn))
-            ShowGuard();
+        else if (batch.Any(e => e is Event.TorrentProxy))
+            ShowProxyCheck();
     }
 
     void OnPaneChanged(object sender, SelectionChangedEventArgs e)
@@ -562,26 +559,8 @@ public sealed partial class SettingsPage : Page
     }
 
     /// <summary>
-    /// Turning torrents on asks how to protect them first, in the dialog that also takes the
-    /// index: the switch goes back off unless it is sent.
-    /// </summary>
-    async void TurnOnTorrents(ToggleSwitch toggle)
-    {
-        if (await TorrentDialog.Ask(ctx, XamlRoot, TorrentDialog.Purpose.TurnOn) is { } saved)
-        {
-            if (saved == TorrentProtection.Proxy)
-                ProxySaved();
-            return;
-        }
-        quiet = true;
-        toggle.IsOn = false;
-        quiet = false;
-    }
-
-    /// <summary>
-    /// Torrents: the switch, saying what protects them, and once they are on, Protect
-    /// with, the last connection check and what a failed one does. The Mac's Sources pane and
-    /// Linux's torrents group.
+    /// Torrents: the switch, saying where traffic goes, the optional proxy switch, and with a
+    /// proxy set its check. The Mac's Sources pane and Linux's torrents group.
     /// </summary>
     void ShowTorrents()
     {
@@ -595,41 +574,32 @@ public sealed partial class SettingsPage : Page
             toggle.Description = on ? TorrentWords.OnNote(view) : TorrentWords.OffNote;
             Cards.Children.Add(toggle);
         }
-        if (!on)
-            return;
 
-        // Protect with: the device's VPN at once, a proxy through the dialog that asks for it,
-        // no protection once confirmed. A choice not made puts the box back.
-        var protect = new ComboBox
+        // Route torrent traffic through a proxy: always there. On opens the form, and goes back
+        // off unless a proxy passes its check and is saved; off removes the proxy at once.
+        var route = new ToggleSwitch { IsOn = view.Proxy is not null, OnContent = "", OffContent = "", MinWidth = 0 };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(route, T.TorrentsProxyRoute);
+        route.Toggled += async (_, _) =>
         {
-            MinWidth = 200,
-            ItemsSource = TorrentWords.Order.Select(TorrentWords.Label).ToList(),
-            SelectedIndex = Array.IndexOf(TorrentWords.Order, view.Protection),
-        };
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(protect, T.TorrentsProtectWith);
-        protect.SelectionChanged += async (_, _) =>
-        {
-            var current = ctx.Known.Settings?.Torrent ?? view;
-            var was = Array.IndexOf(TorrentWords.Order, current.Protection);
-            if (quiet || protect.SelectedIndex < 0 || protect.SelectedIndex == was)
+            if (quiet)
                 return;
-            var choice = TorrentWords.Order[protect.SelectedIndex];
-            var sent = choice switch
+            if (!route.IsOn)
             {
-                TorrentProtection.Device => Sent(Torrents.Protect(current, choice)),
-                TorrentProtection.Proxy => await TorrentDialog.Ask(ctx, XamlRoot, TorrentDialog.Purpose.Protect, start: TorrentProtection.Proxy) is { } chosen
-                    && (chosen != TorrentProtection.Proxy || ProxySaved()),
-                _ => await Ui.Confirm(XamlRoot, TorrentWords.NoneTitle, TorrentWords.NoneMessage, TorrentWords.NoneAction(turningOn: false))
-                    && Sent(Torrents.Protect(current, choice, acknowledged: true)),
-            };
-            if (!sent)
-                PutBack(protect, was);
+                ctx.Send(Torrents.SetProxy(null));
+                return;
+            }
+            if (await TorrentDialog.Ask(ctx, XamlRoot, TorrentDialog.Purpose.Route))
+            {
+                ProxySaved();
+                return;
+            }
+            quiet = true;
+            route.IsOn = false;
+            quiet = false;
         };
-        // Edit proxy… beside the choice once a proxy is saved: its form, filled in but for the
-        // password, saved only once the new details pass the check.
         var protectRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
         savedMark = null;
-        if (view is { Protection: TorrentProtection.Proxy, Proxy: not null })
+        if (view.Proxy is not null)
         {
             // Proxy saved, in the row and faded in place: its room is kept, so nothing moves.
             savedMark = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 8, 0), Opacity = 0 };
@@ -638,52 +608,30 @@ public sealed partial class SettingsPage : Page
             Motion.QuickOpacity(savedMark);
             Microsoft.UI.Xaml.Automation.AutomationProperties.SetAccessibilityView(savedMark, Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Raw);
             protectRow.Children.Add(savedMark);
+            // Edit proxy… once a proxy is saved: its form, filled in but for the password,
+            // saved only once the new details pass the check.
             var edit = new Button { Content = T.SettingsEditProxy, VerticalAlignment = VerticalAlignment.Center };
             edit.Click += async (_, _) =>
             {
-                if (await TorrentDialog.Ask(ctx, XamlRoot, TorrentDialog.Purpose.EditProxy) is not null)
+                if (await TorrentDialog.Ask(ctx, XamlRoot, TorrentDialog.Purpose.EditProxy))
                     ProxySaved();
             };
             protectRow.Children.Add(edit);
         }
-        protectRow.Children.Add(protect);
-        protectCard = CardFrame(T.TorrentsProtectWith, null, protectRow);
+        protectRow.Children.Add(route);
+        protectCard = CardFrame(T.TorrentsProxyRoute, T.TorrentsProxyRouteDetail, protectRow);
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetLiveSetting(protectCard, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
         Cards.Children.Add(protectCard);
         ShowSaved();
 
-        // The last check: where traffic left through and when, and how it went.
-        guardCard = CardFrame(T.TorrentsLastCheck, null, null);
-        Cards.Children.Add(guardCard);
-        ShowGuard();
-        guardClock.Start();
-
-        // If a check fails: pause or stop at once, Warn only once confirmed.
-        var failed = new ComboBox
+        // The proxy check: how it went, with Check now. Only while a proxy is set and has said so.
+        if (view.Proxy is not null)
         {
-            MinWidth = 200,
-            ItemsSource = TorrentWords.FailedChecks.Select(TorrentWords.Label).ToList(),
-            SelectedIndex = Array.IndexOf(TorrentWords.FailedChecks, view.OnFailure),
-        };
-        var failedTitle = Title(K.VpnOnFailure);
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(failed, failedTitle);
-        failed.SelectionChanged += async (_, _) =>
-        {
-            var current = ctx.Known.Settings?.Torrent ?? view;
-            var was = Array.IndexOf(TorrentWords.FailedChecks, current.OnFailure);
-            if (quiet || failed.SelectedIndex < 0 || failed.SelectedIndex == was)
-                return;
-            var check = TorrentWords.FailedChecks[failed.SelectedIndex];
-            if (check == FailedCheck.Warn
-                && !await Ui.Confirm(XamlRoot, TorrentWords.WarnTitle, TorrentWords.WarnMessage, T.TorrentsFailWarn))
-            {
-                PutBack(failed, was);
-                return;
-            }
-            if (Torrents.FailedCheckCommand(current, check) is { } command)
-                ctx.Send(command);
-        };
-        Cards.Children.Add(CardFrame(failedTitle, TorrentWords.FailedNote, failed));
+            guardCard = CardFrame(T.TorrentsLastCheck, null, null);
+            Cards.Children.Add(guardCard);
+            ShowProxyCheck();
+            guardClock.Start();
+        }
 
         // Whether a cast plays torrents, which this PC then serves to the TV.
         if (ctx.Known.Setting(K.TorrentsWhileCasting) is { } casting)
@@ -691,7 +639,7 @@ public sealed partial class SettingsPage : Page
     }
 
     /// <summary>
-    /// A proxy saved once its check passed: said beside Protect with for a few seconds, and kept
+    /// A proxy saved once its check passed: said beside the proxy switch for a few seconds, and kept
     /// through the redraw the saved settings bring.
     /// </summary>
     bool ProxySaved()
@@ -713,7 +661,7 @@ public sealed partial class SettingsPage : Page
                 ?.RaiseAutomationEvent(Microsoft.UI.Xaml.Automation.Peers.AutomationEvents.LiveRegionChanged);
     }
 
-    /// <summary>Protect with's Proxy saved: shown while it stands, faded out otherwise, in the same place.</summary>
+    /// <summary>The proxy switch's Proxy saved: shown while it stands, faded out otherwise, in the same place.</summary>
     void ShowSaved()
     {
         if (protectCard is null)
@@ -723,15 +671,7 @@ public sealed partial class SettingsPage : Page
             savedUntil = null;
         if (savedMark is not null)
             savedMark.Opacity = showing ? 1 : 0;
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(protectCard, showing ? T.SettingsCardState(T.TorrentsProtectWith, TorrentWords.ProxySaved) : T.TorrentsProtectWith);
-    }
-
-    /// <summary>A drop-down back on what is set, for a choice not made.</summary>
-    void PutBack(ComboBox box, int at)
-    {
-        quiet = true;
-        box.SelectedIndex = at;
-        quiet = false;
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(protectCard, showing ? T.SettingsCardState(T.TorrentsProxyRoute, TorrentWords.ProxySaved) : T.TorrentsProxyRoute);
     }
 
     // The Chromecast switch under Play on TV, for the testing build to scroll to.
@@ -742,15 +682,12 @@ public sealed partial class SettingsPage : Page
 
     /// <summary>
     /// A torrent state to bring up on Sources for a screenshot, on the testing build:
-    /// <c>--show=torrent</c> (the turn-on dialog), <c>torrent-proxy</c> (it with a proxy typed),
-    /// <c>torrent-none</c> (confirming no protection), <c>torrents-on</c> (turned on through the
-    /// device's VPN, with the fixture's made-up exit), <c>torrents-warn</c> (then confirming
-    /// Warn only), <c>torrents-checking</c> and <c>torrents-failed</c> (Last check while it checks,
-    /// and failed with Try again), <c>torrent-protect</c> (the proxy dialog once torrents are on),
-    /// and on a saved proxy <c>torrent-edit</c> (Edit proxy filled in), <c>torrent-edit-checking</c>
-    /// and <c>torrent-edit-failed</c> (a new proxy's check under way, and failed with nothing
-    /// saved), <c>torrent-edit-saved</c> (passed, and Proxy saved beside Protect with) and
-    /// <c>torrent-edit-protect</c> (the proxy dialog with a proxy saved).
+    /// <c>--show=torrent</c> (the proxy form), <c>torrent-proxy</c> (it with a proxy typed),
+    /// <c>torrents-on</c> (torrents on and a saved proxy), <c>torrents-checking</c> and
+    /// <c>torrents-failed</c> (Proxy check while it checks, and failed with Check now),
+    /// <c>torrent-edit</c> (Edit proxy filled in), <c>torrent-edit-checking</c> and
+    /// <c>torrent-edit-failed</c> (a new proxy's check under way, and failed with nothing
+    /// saved), and <c>torrent-edit-saved</c> (passed, and Proxy saved beside the switch).
     /// </summary>
     async void Demo()
     {
@@ -766,49 +703,34 @@ public sealed partial class SettingsPage : Page
             return;
         demoed = true;
         await Task.Delay(800);
-        var draft = TorrentDraft.From(ctx.Known.Settings, turningOn: true);
+        var draft = TorrentDraft.From(ctx.Known.Settings);
         switch (show)
         {
             case "torrent":
-                await TorrentDialog.Ask(ctx, XamlRoot, TorrentDialog.Purpose.TurnOn, from: draft);
+                await TorrentDialog.Ask(ctx, XamlRoot, TorrentDialog.Purpose.Route, from: draft);
                 break;
             case "torrent-proxy":
-                await TorrentDialog.Ask(ctx, XamlRoot, TorrentDialog.Purpose.TurnOn,
-                    from: draft with { Protection = TorrentProtection.Proxy, Host = "proxy.example", Port = "1080", User = "kai" });
+                await TorrentDialog.Ask(ctx, XamlRoot, TorrentDialog.Purpose.Route,
+                    from: draft with { Host = "proxy.example", Port = "1080", User = "kai" });
                 break;
-            case "torrent-none":
-                await Ui.Confirm(XamlRoot, TorrentWords.NoneTitle, TorrentWords.NoneMessage, TorrentWords.NoneAction(turningOn: true));
-                break;
-            case "torrents-on" or "torrents-warn" or "torrents-checking" or "torrents-failed" or "torrent-protect"
-                or "torrent-edit" or "torrent-edit-checking" or "torrent-edit-failed" or "torrent-edit-saved" or "torrent-edit-protect":
+            case "torrents-on" or "torrents-checking" or "torrents-failed"
+                or "torrent-edit" or "torrent-edit-checking" or "torrent-edit-failed" or "torrent-edit-saved":
             {
-                // On a saved proxy for Edit proxy, the device's VPN otherwise.
-                var on = show.StartsWith("torrent-edit", StringComparison.Ordinal)
-                    ? draft with { Protection = TorrentProtection.Proxy, Host = "proxy.example", Port = "1080", User = "kai" }
-                    : draft with { Protection = TorrentProtection.Device };
-                foreach (var command in Torrents.Apply(on, ctx.Known.Settings, turningOn: true))
-                    ctx.Send(command);
+                // Torrents on, through a saved proxy.
+                var saved = draft with { Host = "proxy.example", Port = "1080", User = "kai" };
+                ctx.Send(new Command.SetSetting(K.Torrents, new SettingValue.Bool(true)));
+                ctx.Send(Torrents.SetProxy(saved.Proxy));
                 await Task.Delay(2500);
                 switch (show)
                 {
-                    case "torrents-warn":
-                        await Ui.Confirm(XamlRoot, TorrentWords.WarnTitle, TorrentWords.WarnMessage, T.TorrentsFailWarn);
-                        break;
-                    case "torrent-protect":
-                        await TorrentDialog.Ask(ctx, XamlRoot, TorrentDialog.Purpose.Protect, start: TorrentProtection.Proxy);
-                        break;
                     case "torrent-edit":
                         await TorrentDialog.Ask(ctx, XamlRoot, TorrentDialog.Purpose.EditProxy);
-                        break;
-                    case "torrent-edit-protect":
-                        await TorrentDialog.Ask(ctx, XamlRoot, TorrentDialog.Purpose.Protect, start: TorrentProtection.Proxy);
                         break;
                     case "torrent-edit-checking" or "torrent-edit-failed" or "torrent-edit-saved":
                     {
                         // New details typed, then Save: held, answered as failed, or the fixture's pass.
-                        var typed = TorrentDraft.From(ctx.Known.Settings, turningOn: false, TorrentProtection.Proxy)
-                            with { Host = "relay.example", Port = "1081" };
-                        if (await TorrentDialog.Ask(ctx, XamlRoot, TorrentDialog.Purpose.EditProxy, from: typed, shown: d => d.PressSave()) is not null)
+                        var typed = TorrentDraft.From(ctx.Known.Settings) with { Host = "relay.example", Port = "1081" };
+                        if (await TorrentDialog.Ask(ctx, XamlRoot, TorrentDialog.Purpose.EditProxy, from: typed, shown: d => d.PressSave()))
                             ProxySaved();
                         break;
                     }
@@ -816,7 +738,7 @@ public sealed partial class SettingsPage : Page
                     {
                         // The check's word as the engine would say it, after the fixture's own pass.
                         await Task.Delay(1500);
-                        Event said = new Event.Vpn(show == "torrents-checking" ? new GuardView.Checking() : new GuardView.Unreachable());
+                        Event said = new Event.TorrentProxy(show == "torrents-checking" ? ProxyStatus.Checking : ProxyStatus.Failed);
                         ctx.Known.Take(said);
                         ctx.Heard([said]);
                         break;
@@ -835,29 +757,28 @@ public sealed partial class SettingsPage : Page
     }
 
     /// <summary>
-    /// The Last check card as the guard last said: the line under it, a dot and its word, and
-    /// Try again after a failed check. Water for passed, vermilion for failed, haze otherwise.
+    /// The Proxy check card as the engine last said: the line under it, a dot and its word, and
+    /// Check now. Water for passed, vermilion for failed, haze otherwise. The card is hidden
+    /// until the engine has said something other than direct.
     /// </summary>
-    void ShowGuard()
+    void ShowProxyCheck()
     {
         if (guardCard is null)
             return;
-        var guard = ctx.Known.Guard;
-        var ago = guard is { } g ? (long)(DateTimeOffset.UtcNow - g.At).TotalSeconds : (long?)null;
-        var (note, word, isFailed) = TorrentWords.Guard(guard?.View, ago);
+        var check = ctx.Known.ProxyCheck;
+        guardCard.Visibility = check is null or { Status: ProxyStatus.Direct } ? Visibility.Collapsed : Visibility.Visible;
+        var ago = check is { } c ? (long)(DateTimeOffset.UtcNow - c.At).TotalSeconds : (long?)null;
+        var (note, word, isFailed) = TorrentWords.Check(check?.Status, ago);
         guardCard.Description = note;
         var verdict = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, VerticalAlignment = VerticalAlignment.Center };
-        var colour = isFailed ? Ui.Vermilion : guard?.View is GuardView.Protected ? Colours.Water : Colours.Haze;
+        var colour = isFailed ? Ui.Vermilion : check?.Status == ProxyStatus.Passed ? Colours.Water : Colours.Haze;
         verdict.Children.Add(Ui.Dot(colour));
         verdict.Children.Add(new TextBlock { Text = word, VerticalAlignment = VerticalAlignment.Center });
-        if (isFailed)
-        {
-            var again = new Button { Content = T.ActionTryAgain, Margin = new Thickness(8, 0, 0, 0) };
-            again.Click += (_, _) => ctx.Send(new Command.CheckConnection());
-            verdict.Children.Add(again);
-        }
+        var again = new Button { Content = T.TorrentsCheckNow, Margin = new Thickness(8, 0, 0, 0), IsEnabled = check?.Status != ProxyStatus.Checking };
+        again.Click += (_, _) => ctx.Send(Torrents.CheckNow());
+        verdict.Children.Add(again);
         guardCard.Content = verdict;
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(guardCard, T.SettingsCardCheck(T.TorrentsLastCheck, word, note));
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(guardCard, T.SettingsCardCheck(T.TorrentsLastCheck, word, note ?? ""));
     }
 
     FrameworkElement Card(SettingRow row)
@@ -890,10 +811,7 @@ public sealed partial class SettingsPage : Page
                 {
                     if (quiet)
                         return;
-                    if (row.Key == K.Torrents && toggle.IsOn)
-                        TurnOnTorrents(toggle);
-                    else
-                        ctx.Send(new Command.SetSetting(row.Key, new SettingValue.Bool(toggle.IsOn)));
+                    ctx.Send(new Command.SetSetting(row.Key, new SettingValue.Bool(toggle.IsOn)));
                 };
                 control = toggle;
                 break;

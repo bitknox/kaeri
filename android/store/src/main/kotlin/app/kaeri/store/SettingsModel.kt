@@ -89,9 +89,6 @@ object SettingsCatalog {
         SettingKey.DOWNLOAD_QUALITY -> listOf("standard", "higher").map { SettingOption(SettingValue.Str(it), it) }
         SettingKey.KEEP_NEXT_EPISODES -> listOf(0, 1, 2, 3, 5, 10)
             .map { SettingOption(SettingValue.Int(it.toLong()), if (it == 0) "off" else if (it == 1) "1 episode" else "$it episodes") }
-        // Warn only is asked for with its acknowledgement, through the torrent protection command.
-        SettingKey.VPN_ON_FAILURE -> listOf("pause" to "pause torrents", "stop" to "stop torrents")
-            .map { SettingOption(SettingValue.Str(it.first), it.second) }
         else -> if (isSwitch(key)) {
             listOf(SettingOption(SettingValue.Bool(false), "off"), SettingOption(SettingValue.Bool(true), "on"))
         } else {
@@ -139,7 +136,6 @@ object SettingsCatalog {
             key == SettingKey.DOWNLOAD_QUALITY && value is SettingValue.Str -> if (value.v1 == "higher") Strings.settingsQualityHigher(context) else Strings.settingsQualityStandard(context)
             key == SettingKey.KEEP_NEXT_EPISODES && value is SettingValue.Int ->
                 if (value.v1 == 0L) Strings.valueOff(context) else context.resources.getQuantityString(R.plurals.episodes_count, value.v1.toInt(), value.v1.toInt())
-            key == SettingKey.VPN_ON_FAILURE && value is SettingValue.Str -> if (value.v1 == "stop") Strings.torrentsFailStop(context) else Strings.torrentsFailPause(context)
             value is SettingValue.Bool -> if (value.v1) Strings.valueOn(context) else Strings.valueOff(context)
             else -> option.label.replaceFirstChar { it.titlecase(AirTime.locale) }
         }

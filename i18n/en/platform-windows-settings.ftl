@@ -10,7 +10,7 @@ settings-loading = Loading settings
 # @only windows
 settings-group-mpv = mpv
 
-# Screen reader name of a setting card that also says its state, such as "Protect with, Proxy saved".
+# Screen reader name of a setting card that also says its state, such as "Route torrent traffic through a proxy, Proxy saved".
 # @only windows
 # @arg title: text
 # @arg state: text
@@ -54,10 +54,6 @@ settings-start-fullscreen = Start in full screen
 # Setting: the app's own player controls, or mpv's.
 # @only windows
 settings-player-interface = Player interface
-
-# Setting: how torrent traffic is protected. VPN stays in capitals: it is an abbreviation.
-# @only windows
-settings-vpn-mode = VPN mode
 
 # Setting: where sign-in tokens are kept.
 # @only windows
@@ -151,12 +147,6 @@ settings-signed-out-code = Not signed in · you enter a code on its site
 # @only windows
 settings-libmpv-licence = Licensed under the GNU Lesser General Public License, version 2.1 or later.
 
-## Torrents
-
-# Confirmation text before choosing Warn only for a failed check.
-# @only windows
-torrents-warn-instead = { -app-name } will warn you instead of pausing. If your VPN or proxy is down, other people can see your IP address.
-
 ## A show's own settings
 
 # Screen reader name of a show's settings dialog.
@@ -198,27 +188,9 @@ settings-download-higher = Higher
 
 ## Torrent dialog
 
-# Title of the dialog that turns torrents on and asks what protects them.
-# @only windows
-torrents-dialog-turn-on = Turn on torrents
-
-# Title of the dialog that changes what protects torrents.
-# @only windows
-torrents-dialog-protect = Protect torrents
-
 # Title of the dialog that edits the saved proxy.
 # @only windows
 torrents-dialog-edit-proxy = Edit proxy
-
-# The torrent dialog's main button when it turns torrents on.
-# @only windows
-torrents-dialog-turn-on-action = Turn on
-
-# Screen reader name of a protection choice: its name, then what it does.
-# @only windows
-# @arg label: text
-# @arg detail: text
-torrents-choice-spoken = { $label }. { $detail }
 
 ## Seeding
 

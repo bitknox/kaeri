@@ -52,8 +52,8 @@ pub(super) fn render_providers(buf: &mut Buffer, app: &App, area: Rect) {
             t::sources_none_available(),
             app.palette.style(Role::Alert),
         );
-        // The actual reason, when there is one. "You configured nothing" and "your VPN
-        // guard failed verification" call for completely different responses.
+        // The actual reason, when there is one. "You configured nothing" and "the proxy
+        // check failed" call for completely different responses.
         let note = app.provider_note.clone().unwrap_or_else(|| {
             t::sources_torrents_off("providers.torrent.enabled") // i18n-skip
         });
@@ -466,21 +466,21 @@ mod tests {
         app.go_to_section(Section::Providers);
         let text = text_of(&render_to_buffer(&mut app, 110, 20));
         assert!(text.contains("No sources available"));
-        assert!(text.contains("VPN mode"), "must say what to actually do");
+        assert!(text.contains("providers.torrent.enabled"), "must say what to actually do");
     }
 
     #[test]
-    fn a_failing_guard_is_reported_instead_of_the_generic_advice() {
-        // "You configured nothing" and "your VPN guard failed verification" call for
-        // completely different responses, so the screen must not guess between them.
+    fn a_failing_proxy_check_is_reported_instead_of_the_generic_advice() {
+        // "You configured nothing" and "the proxy check failed" call for completely
+        // different responses, so the screen must not guess between them.
         let mut app = app_with(ContentList::Empty);
         app.go_to_section(Section::Providers);
         app.apply(Event::ProviderNote(kaeri_model::Msg::verbatim(
-            "vpn guard: expected one of [Mullvad], but traffic is leaving via Comcast",
+            "The proxy check failed. proxy.example refused the connection.",
         )));
 
         let text = text_of(&render_to_buffer(&mut app, 110, 20));
-        assert!(text.contains("Comcast"), "the real reason must reach the screen");
+        assert!(text.contains("proxy.example"), "the real reason must reach the screen");
         assert!(
             !text.contains("providers.torrent.enabled"),
             "generic setup advice is wrong here and would mislead"

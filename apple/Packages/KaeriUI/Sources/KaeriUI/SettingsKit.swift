@@ -236,7 +236,6 @@ extension SettingKey {
         case .keepNextEpisodes: L.settingsKeepNext
         case .downloadsOnCellular: L.settingsDownloadCellular
         case .torrentsOnCellular: L.settingsTorrentsCellular
-        case .vpnOnFailure: L.torrentsIfCheckFails
         case .syncplay: L.settingsSyncplay
         case .castTvs: L.castTvsLabel
         case .torrentsWhileCasting: L.castTorrentsLabel
@@ -267,7 +266,7 @@ extension SettingKey {
         case .keepSeeding: L.settingsKeepSeeding
         case .downloadHook: L.settingsHookCommand
         case .torrents: L.sourcesTorrentSource
-        case .vpnMode: L.torrentsProtectWith
+        case .torrentProxy: L.torrentsProxyRoute
         case .seedRatio: L.settingsSeedAfter
         case .seedHours: L.settingsSeedFor
         case .uploadLimit: L.settingsUploadLimit
@@ -322,9 +321,6 @@ extension SettingKey {
         case (.titles, "English"): return L.settingsTitleEnglish
         case (.titles, "Romaji"): return L.settingsTitleRomaji
         case (.playerUi, "your mpv setup"): return L.settingsOptionMpv
-        case (.vpnOnFailure, "pause torrents"): return L.torrentsFailPause
-        case (.vpnOnFailure, "stop torrents"): return L.torrentsFailStop
-        case (.vpnOnFailure, "warn only"): return L.torrentsFailWarn
         default: return label.firstCapitalized
         }
     }

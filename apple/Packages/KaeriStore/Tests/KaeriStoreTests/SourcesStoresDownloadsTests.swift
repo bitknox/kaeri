@@ -35,7 +35,7 @@ func settingsView(order: [String], rows: [SettingRow] = []) -> SettingsView {
         rows: rows, refused: nil, translation: .sub, quality: 1080, theme: .adaptive,
         sources: ConfiguredSources(order: order, disabled: [], torrent: true, remote: false),
         speed: nil, presenceClient: false, nativeRows: [], overridden: [],
-        torrent: ProtectionView(protection: .none, proxy: nil, onFailure: .pause)
+        torrent: TorrentView(proxy: nil)
     )
 }
 
@@ -52,64 +52,64 @@ struct ProvidersTests {
         #expect(store.providers.note == nil)
     }
 
-    @Test func aProtectionIsCheckedWithNothingSavedAndOnlyTheSheetWaitingHearsTheVerdict() {
+    @Test func aProxyIsCheckedWithNothingSavedAndOnlyTheFormWaitingHearsTheAnswer() {
         let store = AppStore()
         let proxy = TorrentProxy(host: "proxy.example", port: 1080, user: "mika", password: nil)
-        store.checkTorrentProtection(.proxy, proxy: proxy)
+        store.checkTorrentProxy(proxy)
         #expect(store.providers.trial == .checking)
-        #expect(store.sentLog == ["checkTorrentProtection"], "checked, not set")
+        #expect(store.sentLog == ["checkTorrentProxy"], "checked, not set")
 
-        store.apply(.protectionChecked(.leaking))
-        #expect(store.providers.trial == .said(.leaking))
-        #expect(store.providers.trial?.failed == .leaking)
+        store.apply(.proxyChecked(.failed))
+        #expect(store.providers.trial == .said(.failed))
+        #expect(store.providers.trial?.failed == true)
         #expect(store.providers.trial?.passed == false)
-        #expect(store.providers.guardView == nil, "the guard's own verdict is untouched")
+        #expect(store.providers.proxyStatus == nil, "the saved proxy's own check is untouched")
 
-        // A verdict for a sheet that closed is dropped.
+        // An answer for a form that closed is dropped.
         store.providers.clearTrial()
-        store.apply(.protectionChecked(.protected(exit: "Lantern Networks")))
+        store.apply(.proxyChecked(.passed))
         #expect(store.providers.trial == nil)
 
-        store.checkTorrentProtection(.proxy, proxy: proxy)
-        store.apply(.protectionChecked(.protected(exit: "Lantern Networks")))
+        store.checkTorrentProxy(proxy)
+        store.apply(.proxyChecked(.passed))
         #expect(store.providers.trial?.passed == true)
-        #expect(store.providers.trial?.failed == nil)
+        #expect(store.providers.trial?.failed == false)
     }
 
-    @Test func aVerdictOnACancelledCheckNeverSavesTheNextOne() {
+    @Test func anAnswerOnACancelledCheckNeverSavesTheNextOne() {
         let store = AppStore()
         let proxy = TorrentProxy(host: "proxy.example", port: 1080, user: "mika", password: nil)
         // Save, then Cancel while the check runs.
-        store.checkTorrentProtection(.proxy, proxy: proxy)
+        store.checkTorrentProxy(proxy)
         store.providers.clearTrial()
-        // Open the sheet again and Save: the new check waits for the old one's verdict.
-        store.checkTorrentProtection(.proxy, proxy: proxy)
-        #expect(store.sentLog == ["checkTorrentProtection"], "one check out at a time")
+        // Open the form again and Save: the new check waits for the old one's answer.
+        store.checkTorrentProxy(proxy)
+        #expect(store.sentLog == ["checkTorrentProxy"], "one check out at a time")
         #expect(store.providers.trial == .checking)
 
         // The old check passes. That says nothing of the new one, which goes now.
-        store.apply(.protectionChecked(.protected(exit: "Lantern Networks")))
-        #expect(store.providers.trial == .checking, "the old verdict is not the new check's")
-        #expect(store.sentLog == ["checkTorrentProtection", "checkTorrentProtection"])
+        store.apply(.proxyChecked(.passed))
+        #expect(store.providers.trial == .checking, "the old answer is not the new check's")
+        #expect(store.sentLog == ["checkTorrentProxy", "checkTorrentProxy"])
 
-        store.apply(.protectionChecked(.leaking))
-        #expect(store.providers.trial == .said(.leaking), "only the new check's verdict counts")
+        store.apply(.proxyChecked(.failed))
+        #expect(store.providers.trial == .said(.failed), "only the new check's answer counts")
     }
 
-    @Test func aCheckWaitingItsTurnIsDroppedWithItsSheet() {
+    @Test func aCheckWaitingItsTurnIsDroppedWithItsForm() {
         let store = AppStore()
         let proxy = TorrentProxy(host: "proxy.example", port: 1080, user: nil, password: nil)
-        store.checkTorrentProtection(.proxy, proxy: proxy)
+        store.checkTorrentProxy(proxy)
         store.providers.clearTrial()
-        store.checkTorrentProtection(.proxy, proxy: proxy)
+        store.checkTorrentProxy(proxy)
         store.providers.clearTrial()
-        store.checkTorrentProtection(.device, proxy: nil)
+        store.checkTorrentProxy(proxy)
 
         // Only the newest of the waiting checks goes once the first answers.
-        store.apply(.protectionChecked(.unreachable))
-        #expect(store.sentLog == ["checkTorrentProtection", "checkTorrentProtection"])
+        store.apply(.proxyChecked(.failed))
+        #expect(store.sentLog == ["checkTorrentProxy", "checkTorrentProxy"])
         store.providers.clearTrial()
-        store.apply(.protectionChecked(.protected(exit: "Lantern Networks")))
+        store.apply(.proxyChecked(.passed))
         #expect(store.providers.trial == nil, "nobody waits for it")
         #expect(store.sentLog.count == 2, "nothing more to send")
     }
@@ -125,10 +125,10 @@ struct ProvidersTests {
         try await waitFor({ store.settings.torrent != nil })
         let before = store.settings.torrent
 
-        store.checkTorrentProtection(.proxy, proxy: TorrentProxy(host: "proxy.example", port: 1080, user: nil, password: nil))
+        store.checkTorrentProxy(TorrentProxy(host: "proxy.example", port: 1080, user: nil, password: nil))
         // The engine checks on its own thread, which a busy machine can hold a while.
         try await waitFor({ store.providers.trial != .checking }, within: .seconds(30))
-        #expect(store.providers.trial?.passed == true, "the testing engine's exit passes: \(String(describing: store.providers.trial))")
+        #expect(store.providers.trial?.passed == true, "the testing engine's check passes: \(String(describing: store.providers.trial))")
         #expect(store.settings.torrent == before, "a check saves nothing")
     }
 
@@ -154,14 +154,12 @@ struct ProvidersTests {
         #expect(provider("a", state: "held back", usable: false, heldBack: true).standing == .heldBack)
     }
 
-    @Test func theGuardAndThePinnedSourceAreKept() {
+    @Test func theProxyCheckAndThePinnedSourceAreKept() {
         let store = AppStore()
-        store.apply(.vpn(.protected(exit: "Lantern Networks")))
-        #expect(store.providers.guardView == .protected(exit: "Lantern Networks"))
-        #expect(store.providers.guardAt != nil)
-        #expect(store.providers.guardView?.passes == true)
-        store.apply(.vpn(nil))
-        #expect(store.providers.guardAt == nil)
+        store.apply(.torrentProxy(.passed))
+        #expect(store.providers.proxyStatus == .passed)
+        store.apply(.torrentProxy(nil))
+        #expect(store.providers.proxyStatus == nil)
         store.apply(.providerPreference("alpha"))
         #expect(store.providers.preference == "alpha")
     }

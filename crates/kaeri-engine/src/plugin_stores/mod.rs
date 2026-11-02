@@ -496,7 +496,7 @@ impl Stores {
         plugin: &str,
     ) -> Result<(IndexEntry, PathBuf), Msg> {
         // The chain swaps a source by id, so a plugin named after a built-in source would replace
-        // it — torrent playback and its VPN guard included.
+        // it — torrent playback and its proxy included.
         if RESERVED_IDS.contains(&plugin) {
             return Err(Msg::Store(StoreMsg::PluginReservedName { plugin: plugin.to_owned() }));
         }

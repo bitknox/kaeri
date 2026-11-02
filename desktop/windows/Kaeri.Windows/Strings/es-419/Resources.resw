@@ -719,15 +719,6 @@
   <data name="NoticeChoiceNotSaved" xml:space="preserve">
     <value>No se pudo guardar esa elección. {reason}</value>
   </data>
-  <data name="TorrentCheckFailedRunning" xml:space="preserve">
-    <value>La revisión de la conexión falló. Los torrents siguen activos.</value>
-  </data>
-  <data name="TorrentVpnWaiting" xml:space="preserve">
-    <value>Los torrents empiezan cuando pase la protección de VPN. {reason}</value>
-  </data>
-  <data name="TorrentVpnUnverified" xml:space="preserve">
-    <value>Los torrents empiezan cuando pase la protección de VPN. Todavía no se verificó la conexión.</value>
-  </data>
   <data name="TorrentLinkUnusable" xml:space="preserve">
     <value>Eso no es un enlace magnet ni un archivo torrent.</value>
   </data>
@@ -742,15 +733,6 @@
   </data>
   <data name="TorrentSessionFailed" xml:space="preserve">
     <value>No se pudo iniciar la sesión de torrents. {reason}</value>
-  </data>
-  <data name="TorrentNoKillSwitch" xml:space="preserve">
-    <value>Nada en este dispositivo detiene el tráfico de torrents si cae la VPN. Ejecuta "kaeri --doctor" para configurarlo.</value>
-  </data>
-  <data name="TorrentNotChecked" xml:space="preserve">
-    <value>No se pudo revisar la conexión. {reason}</value>
-  </data>
-  <data name="SourcesReloadedTorrentsPending" xml:space="preserve">
-    <value>Fuentes recargadas. Los torrents empiezan cuando pase la protección de VPN.</value>
   </data>
   <data name="SourcesReloadedTorrentsOff" xml:space="preserve">
     <value>Los torrents están desactivados. La sesión se detuvo.</value>
@@ -866,12 +848,6 @@
   <data name="NoticeNotSavedBecause" xml:space="preserve">
     <value>No se pudo guardar esa configuración. {cause}</value>
   </data>
-  <data name="NoticeProtectionSaved" xml:space="preserve">
-    <value>Protección de torrents guardada.</value>
-  </data>
-  <data name="NoticeProtectionNotChecked" xml:space="preserve">
-    <value>No se pudo revisar la protección de torrents. {cause}</value>
-  </data>
   <data name="NoticeProxyPasswordNotKept" xml:space="preserve">
     <value>No se pudo guardar la contraseña del proxy. Escríbela otra vez para intentar guardarla. {reason}</value>
   </data>
@@ -883,9 +859,6 @@
   </data>
   <data name="NoticeShowNoSuchSubtitles" xml:space="preserve">
     <value>No se pudo guardar esa elección de subtítulos. Esta serie no ha usado esos subtítulos antes.</value>
-  </data>
-  <data name="NoticeTorrentsWaitingForCheck" xml:space="preserve">
-    <value>Los torrents esperan a que vuelva a pasar la revisión de conexión.</value>
   </data>
   <data name="NoticeMappingDataRefreshed" xml:space="preserve">
     <value>Datos de mapeo actualizados.</value>
@@ -907,12 +880,6 @@
   </data>
   <data name="NoticeUpdateAvailable" xml:space="preserve">
     <value>Ya está disponible {tag}. Ejecuta kaeri --update para instalarlo.</value>
-  </data>
-  <data name="CauseConfirmNoProtection" xml:space="preserve">
-    <value>Primero confirma que quieres no tener protección.</value>
-  </data>
-  <data name="CauseConfirmWarnOnly" xml:space="preserve">
-    <value>Primero confirma que solo quieres recibir avisos.</value>
   </data>
   <data name="CauseProxyNeedsAddress" xml:space="preserve">
     <value>Un proxy necesita un host y un puerto.</value>
@@ -1232,9 +1199,6 @@
   <data name="SettingsPlayerInterface" xml:space="preserve">
     <value>Interfaz del reproductor</value>
   </data>
-  <data name="SettingsVpnMode" xml:space="preserve">
-    <value>Modo VPN</value>
-  </data>
   <data name="SettingsTokenStorage" xml:space="preserve">
     <value>Almacenamiento de tokens</value>
   </data>
@@ -1301,9 +1265,6 @@
   <data name="SettingsLibmpvLicence" xml:space="preserve">
     <value>Distribuido bajo la licencia GNU Lesser General Public License, versión 2.1 o posterior.</value>
   </data>
-  <data name="TorrentsWarnInstead" xml:space="preserve">
-    <value>Kaeri te avisará en lugar de pausar. Si tu VPN o proxy está caído, otras personas pueden ver tu dirección IP.</value>
-  </data>
   <data name="ShowSettingsLabel" xml:space="preserve">
     <value>Configuración de {title}</value>
   </data>
@@ -1328,20 +1289,8 @@
   <data name="SettingsDownloadHigher" xml:space="preserve">
     <value>Alta</value>
   </data>
-  <data name="TorrentsDialogTurnOn" xml:space="preserve">
-    <value>Activar torrents</value>
-  </data>
-  <data name="TorrentsDialogProtect" xml:space="preserve">
-    <value>Proteger torrents</value>
-  </data>
   <data name="TorrentsDialogEditProxy" xml:space="preserve">
     <value>Editar proxy</value>
-  </data>
-  <data name="TorrentsDialogTurnOnAction" xml:space="preserve">
-    <value>Activar</value>
-  </data>
-  <data name="TorrentsChoiceSpoken" xml:space="preserve">
-    <value>{label}. {detail}</value>
   </data>
   <data name="SettingsNoteTrailersWindows" xml:space="preserve">
     <value>Los tráileres se reproducen silenciados desde YouTube, que ve tu dirección IP. No se reproducen con conexión medida, con los efectos de animación desactivados, en modo de ahorro de energía ni con Narrador activo.</value>
@@ -5708,9 +5657,6 @@
   <data name="SettingsResetTitle" xml:space="preserve">
     <value>¿Restablecer los ajustes?</value>
   </data>
-  <data name="SettingsResetDetail" xml:space="preserve">
-    <value>Todos los ajustes vuelven a sus valores predeterminados, incluidos VPN y proxy. Tu historial se conserva y el archivo de ajustes anterior se guarda.</value>
-  </data>
   <data name="SettingsResetDone" xml:space="preserve">
     <value>Los ajustes volvieron a sus valores predeterminados. El archivo anterior se guardó como {file}.</value>
   </data>
@@ -5882,9 +5828,6 @@
   <data name="SourceNoteAmbiguous" xml:space="preserve">
     <value>No se pudo relacionar este título</value>
   </data>
-  <data name="SourceNoteHeldBack" xml:space="preserve">
-    <value>Retenida por la verificación de VPN</value>
-  </data>
   <data name="SourcePickerReleases" xml:space="preserve">
     <value>Lanzamientos</value>
   </data>
@@ -5969,9 +5912,6 @@
   <data name="SourcesDetailNotAnsweringPlain" xml:space="preserve">
     <value>No responde.</value>
   </data>
-  <data name="SourcesDetailHeldBack" xml:space="preserve">
-    <value>Retenida hasta que pase la verificación de conexión.</value>
-  </data>
   <data name="SourcesDetailDisabled" xml:space="preserve">
     <value>Desactivada. Conserva su lugar y no se prueba.</value>
   </data>
@@ -6049,9 +5989,6 @@
   </data>
   <data name="SourcesSourceOrderRow" xml:space="preserve">
     <value>Orden de la fuente</value>
-  </data>
-  <data name="SourcesTorrentsNote" xml:space="preserve">
-    <value>Los torrents forman parte de Kaeri, no de un complemento. La protección de su tráfico, la verificación de conexión y la siembra se configuran en Ajustes, en Fuentes.</value>
   </data>
   <data name="SourcesRebuilding" xml:space="preserve">
     <value>Las fuentes se están configurando de nuevo</value>
@@ -7034,63 +6971,6 @@
   <data name="TorrentsOn" xml:space="preserve">
     <value>Torrents activados</value>
   </data>
-  <data name="TorrentsOffDetail" xml:space="preserve">
-    <value>Desactivados de forma predeterminada. Activarlos pregunta antes cómo proteger tu conexión.</value>
-  </data>
-  <data name="TorrentsRisk" xml:space="preserve">
-    <value>Otras personas pueden ver tu dirección IP mientras descargas y compartes un torrent. Elige qué lo protege antes de que los torrents empiecen.</value>
-  </data>
-  <data name="TorrentsNotAPlugin" xml:space="preserve">
-    <value>Los torrents son parte de Kaeri, no de un complemento. Lo que protege su tráfico, la comprobación de la conexión y compartir se configura en Configuración, en Fuentes.</value>
-  </data>
-  <data name="TorrentsProtectWith" xml:space="preserve">
-    <value>Proteger con</value>
-  </data>
-  <data name="TorrentsProtectNone" xml:space="preserve">
-    <value>Sin protección</value>
-  </data>
-  <data name="TorrentsProtectProxy" xml:space="preserve">
-    <value>Proxy</value>
-  </data>
-  <data name="TorrentsProtectVpn" xml:space="preserve">
-    <value>VPN</value>
-  </data>
-  <data name="TorrentsProtectProxyDetail" xml:space="preserve">
-    <value>El tráfico de torrents pasa por un proxy que tú administras o alquilas.</value>
-  </data>
-  <data name="TorrentsProtectVpnDetail" xml:space="preserve">
-    <value>Usa la VPN que ya está activa en este dispositivo.</value>
-  </data>
-  <data name="TorrentsProtectNoneDetail" xml:space="preserve">
-    <value>Tu dirección es visible para todos los participantes del torrent.</value>
-  </data>
-  <data name="TorrentsProtectNoneNote" xml:space="preserve">
-    <value>Sin protección, Kaeri no comprueba la conexión.</value>
-  </data>
-  <data name="TorrentsSummaryProxyAt" xml:space="preserve">
-    <value>Protegido por un proxy SOCKS5 en {host}:{port}.</value>
-  </data>
-  <data name="TorrentsSummaryProxy" xml:space="preserve">
-    <value>Protegido por un proxy SOCKS5.</value>
-  </data>
-  <data name="TorrentsSummaryVpn" xml:space="preserve">
-    <value>Protegido por la VPN de este dispositivo.</value>
-  </data>
-  <data name="TorrentsSummaryNone" xml:space="preserve">
-    <value>Sin protección. Tu dirección es visible para todos los participantes del torrent.</value>
-  </data>
-  <data name="TorrentsUnprotectedTitle" xml:space="preserve">
-    <value>¿Usar torrents sin protección?</value>
-  </data>
-  <data name="TorrentsUnprotectedDetail" xml:space="preserve">
-    <value>Otras personas pueden ver tu dirección IP mientras descargas y compartes un torrent, y Kaeri no comprueba la conexión.</value>
-  </data>
-  <data name="TorrentsTurnOnUnprotected" xml:space="preserve">
-    <value>Activar sin protección</value>
-  </data>
-  <data name="TorrentsUseUnprotected" xml:space="preserve">
-    <value>Usar sin protección</value>
-  </data>
   <data name="TorrentsProxyHost" xml:space="preserve">
     <value>Host del proxy</value>
   </data>
@@ -7106,9 +6986,6 @@
   <data name="TorrentsPasswordKeep" xml:space="preserve">
     <value>Deja la contraseña vacía para mantener la guardada.</value>
   </data>
-  <data name="TorrentsProxyKeepsSaved" xml:space="preserve">
-    <value>Los torrents siguen usando el proxy guardado hasta que el nuevo pase la comprobación de la conexión.</value>
-  </data>
   <data name="TorrentsProxyInvalid" xml:space="preserve">
     <value>El proxy necesita un host y un puerto del 1 al 65535.</value>
   </data>
@@ -7118,17 +6995,8 @@
   <data name="TorrentsProxySaved" xml:space="preserve">
     <value>Proxy guardado</value>
   </data>
-  <data name="TorrentsLeftOutsideProxy" xml:space="preserve">
-    <value>El tráfico de torrents salió fuera de este proxy</value>
-  </data>
-  <data name="TorrentsCheckNotMadeProxy" xml:space="preserve">
-    <value>No se pudo hacer la comprobación a través de este proxy</value>
-  </data>
   <data name="TorrentsProxyNotSaved" xml:space="preserve">
     <value>No se guardó. {why}. Se mantiene el proxy guardado.</value>
-  </data>
-  <data name="TorrentsProtectionNotSaved" xml:space="preserve">
-    <value>No se guardó. {why}. Se mantiene la protección guardada.</value>
   </data>
   <data name="TorrentsStillOff" xml:space="preserve">
     <value>Los torrents siguen desactivados. {why}.</value>
@@ -7151,62 +7019,14 @@
   <data name="TorrentsIndexSaved" xml:space="preserve">
     <value>Índice de torrents guardado</value>
   </data>
-  <data name="TorrentsIfCheckFails" xml:space="preserve">
-    <value>Si falla una comprobación</value>
-  </data>
-  <data name="TorrentsKeepRunningTitle" xml:space="preserve">
-    <value>¿Mantener los torrents activos si falla una comprobación?</value>
-  </data>
-  <data name="TorrentsKeepRunningDetail" xml:space="preserve">
-    <value>Lo que pasa con los torrents cuando la comprobación encuentra tráfico que sale fuera de tu VPN o proxy.</value>
-  </data>
-  <data name="TorrentsFailPause" xml:space="preserve">
-    <value>Pausar torrents</value>
-  </data>
-  <data name="TorrentsFailStop" xml:space="preserve">
-    <value>Detener torrents</value>
-  </data>
-  <data name="TorrentsFailWarn" xml:space="preserve">
-    <value>Solo avisar</value>
-  </data>
-  <data name="TorrentsFailWarnResult" xml:space="preserve">
-    <value>Los torrents siguen activos.</value>
-  </data>
-  <data name="TorrentsFailStopResult" xml:space="preserve">
-    <value>Los torrents se detienen.</value>
-  </data>
-  <data name="TorrentsFailPauseResult" xml:space="preserve">
-    <value>Los torrents se pausan.</value>
-  </data>
-  <data name="TorrentsLastCheck" xml:space="preserve">
-    <value>Última comprobación</value>
-  </data>
-  <data name="TorrentsCheckPassedExit" xml:space="preserve">
-    <value>Saliendo por {exit}</value>
-  </data>
   <data name="TorrentsCheckPassed" xml:space="preserve">
     <value>Correcta</value>
-  </data>
-  <data name="TorrentsCheckRunningLine" xml:space="preserve">
-    <value>Comprobando desde dónde sale el tráfico de torrents</value>
   </data>
   <data name="TorrentsCheckRunning" xml:space="preserve">
     <value>Comprobando</value>
   </data>
-  <data name="TorrentsCheckLeaked" xml:space="preserve">
-    <value>El tráfico salió fuera de la protección. {then}</value>
-  </data>
-  <data name="TorrentsCheckUnmade" xml:space="preserve">
-    <value>No se pudo hacer la comprobación. {then}</value>
-  </data>
   <data name="TorrentsCheckFailed" xml:space="preserve">
     <value>Fallida</value>
-  </data>
-  <data name="TorrentsCheckNoneLine" xml:space="preserve">
-    <value>No hay ninguna protección configurada</value>
-  </data>
-  <data name="TorrentsCheckNone" xml:space="preserve">
-    <value>Sin protección</value>
   </data>
   <data name="TorrentsCheckWaitingLine" xml:space="preserve">
     <value>Aún sin comprobar</value>
@@ -7246,12 +7066,6 @@
   </data>
   <data name="TorrentsPageNeedsScript" xml:space="preserve">
     <value>Esta página necesita JavaScript para enviar el formulario a la TV de forma segura.</value>
-  </data>
-  <data name="TorrentsCheckNote" xml:space="preserve">
-    <value>Kaeri comprueba desde dónde sale el tráfico de torrents cuando empieza un torrent y cada minuto mientras se ejecuta, y pausa los torrents si esa comprobación falla. Lo que te protege es tu VPN o tu proxy.</value>
-  </data>
-  <data name="TorrentsProtectionSaved" xml:space="preserve">
-    <value>Protección de torrents guardada</value>
   </data>
   <data name="OpenedOpen" xml:space="preserve">
     <value>Abrir enlace o archivo</value>

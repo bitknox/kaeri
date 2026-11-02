@@ -138,7 +138,7 @@ own (`start_scene`): the fake AniList at the real time, with its art, and for `w
 own. A debug build of either flavour says `KAERI_READY` in the log, tag
 `kaeri`, once its screens have what they asked for.
 
-The engine downloads torrents only, and no fixture has one, so the `downloads` extra seeds the
+No fixture source can download, so the `downloads` extra seeds the
 queue instead (`seed_fixture_downloads`): episode 6 of 900001 finished, its file the fixtures'
 clip (`app/src/fixtures/assets/fixture-download.mkv`, ffmpeg's test pattern from
 `scripts/fixture-clip.sh`) copied into the app's download folder, so it plays offline; episode 7
@@ -147,14 +147,13 @@ the Downloads screen, and `page=settings/downloads` the storage meter.
 
 ### Checking downloads on a phone
 
-The real transfer, the download job and Wi-Fi only need a torrent source, which only a phone with
-its own VPN and index has:
+The real transfer, the download job and Wi-Fi only need a source that can download, which only a
+phone set up with one has:
 
 1. Build and install the app flavour: `android/scripts/engine.sh release`, then
    `cd android && ./gradlew assembleAppDebug` and
    `adb install -r app/build/outputs/apk/app/debug/app-app-debug.apk`.
-2. With the phone's VPN on, open Settings › Sources, turn on Torrent source, pick VPN on this
-   device, enter the torrent index, and Turn on. Wait for Last check to say Passed.
+2. Open Settings › Sources and turn on Torrent playback.
 3. On a title page, long-press an episode and pick Download. Downloads lists it as Queued, then
    running, with its speed and the time left.
 4. The download notification is up: on Android 16 a Live Update at the top of the shade and the

@@ -46,8 +46,8 @@ public final class SettingsModel {
         size: 100, font: .default, colour: .white, edge: .outline, thickness: .medium,
         background: .noBackground, opacity: 75, raise: 0, styled: .keep, followSystem: true)
 
-    /// How torrent traffic is kept off the viewer's address, as the file has it.
-    public var torrent: ProtectionView? {
+    /// Where torrent traffic goes, as the file has it: the proxy, when one is set.
+    public var torrent: TorrentView? {
         view?.torrent
     }
 

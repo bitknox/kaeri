@@ -7,7 +7,7 @@ use crate::{
     episodes::EpisodeRow,
     hosted::{PlayerChoice, PlayerReport, StatsAbout},
     playback::{PlaybackId, SkipEdge, SkipKind, Successor},
-    protection::{FailedCheck, TorrentProtection, TorrentProxy},
+    proxy::TorrentProxy,
     search::SearchQuery,
     settings::SettingKey,
     show::ShowSettingKey,
@@ -265,11 +265,10 @@ pub enum Command {
     // or with `None`, and asks again once back.
     LoadDub(AnilistId),
     CheckProviders,
-    /// Check where torrent traffic leaves from now, as Sources' Check Now asks, rather than at
-    /// the next of the guard's own checks. Answered with
-    /// [`Event::Vpn`](crate::event::Event::Vpn): `Checking`, then the verdict, or `None` when
-    /// torrents are off. A failed check does what any of the guard's does.
-    CheckConnection,
+    /// Check the torrent proxy again now, as Sources' Check now asks after a check failed.
+    /// Answered with [`Event::TorrentProxy`](crate::event::Event::TorrentProxy): `Checking`,
+    /// then what it found, or `None` when torrents are off. Torrents start once it passes.
+    CheckProxy,
     /// Fetch one segment of the tracker's list.
     LoadLibrary(LibrarySegment),
     /// Drain the outbox and pull the library now, rather than waiting for the interval.
@@ -651,33 +650,24 @@ pub enum Command {
         #[cfg_attr(feature = "ffi", uniffi(default))]
         low_memory: bool,
     },
-    /// Protect torrent traffic with `mode`, through `proxy` when it is one, and have a failed
-    /// connection check do `on_failure`: written to the file as one change, the proxy's
-    /// password to the host's secret store and never to the file. No protection and warn only
-    /// need `acknowledged`, the viewer having confirmed it, unless the file holds that choice
-    /// already; asked for without it, nothing is written and a notice says why.
+    /// Route torrent traffic through `proxy`, or with `None` connect directly: the proxy's URL
+    /// written to the file, its password to the host's secret store and never to the file.
     ///
     /// Answered as [`Command::SetSetting`] is, with the torrent source brought back up on what
     /// was written.
-    SetTorrentProtection {
-        mode: TorrentProtection,
+    SetTorrentProxy {
         proxy: Option<TorrentProxy>,
-        on_failure: FailedCheck,
-        acknowledged: bool,
     },
-    /// Check where torrent traffic would leave from under `mode`, through `proxy` when it is
-    /// one, before any of it is saved: the guard's own check, made once on these settings and
-    /// on the rest of the file's, as a protection sheet asks before it saves. A proxy given
-    /// with no password is checked with the one kept, as saving it would keep it.
+    /// Check `proxy` before it is saved, as the torrent sheet asks: the check torrents make, made
+    /// once. A proxy given with no password is checked with the one kept, as saving it would
+    /// keep it.
     ///
     /// Writes nothing: not the file, not the secret store, not the torrent source, which
     /// carries on as it was. Answered, with no job, with
-    /// [`Event::ProtectionChecked`](crate::event::Event::ProtectionChecked): the verdict, or
-    /// `Unreachable` and a notice saying why when the settings cannot be checked at all, as a
-    /// proxy with no address.
-    CheckTorrentProtection {
-        mode: TorrentProtection,
-        proxy: Option<TorrentProxy>,
+    /// [`Event::ProxyChecked`](crate::event::Event::ProxyChecked): `Passed` or `Failed`, and a
+    /// notice saying why when the proxy cannot be checked at all, as one with no address.
+    CheckTorrentProxy {
+        proxy: TorrentProxy,
     },
     /// Read one show's settings sheet: answered with
     /// [`Event::ShowSettings`](crate::event::Event::ShowSettings).

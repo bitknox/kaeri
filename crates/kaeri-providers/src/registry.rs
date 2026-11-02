@@ -235,7 +235,7 @@ impl ProviderRegistry {
     /// Add a source that came up after the chain was built, at the place a ranking gives it.
     ///
     /// Before the first source that ranks after it, so a source that arrives late — the torrent
-    /// source waits for the VPN guard — still sits where `providers.order` put it rather than
+    /// source waits for the proxy check — still sits where `providers.order` put it rather than
     /// wherever its arrival time would. A source with the same id is replaced.
     pub fn insert_ranked<K: Ord>(
         &self,
@@ -407,11 +407,11 @@ impl ProviderRegistry {
         for provider in self.candidates() {
             let id = provider.manifest().id.clone();
 
-            // Local policy first: a provider held back by the VPN guard must not be
+            // Local policy first: a provider held back by the proxy check must not be
             // contacted at all, and that is not a health event.
             //
             // Asked every time rather than remembered, because a hold is a statement about the
-            // present. Recording it and then skipping the provider forever meant a tunnel that
+            // present. Recording it and then skipping the provider forever meant a proxy that
             // recovered never got to say so.
             match provider.is_available() {
                 Err(reason) => {
@@ -740,7 +740,7 @@ mod tests {
 
     #[test]
     fn a_late_source_takes_the_place_its_rank_gives_it() {
-        // The torrent source comes up once the VPN guard passes, after sources that were
+        // The torrent source comes up once the proxy check passes, after sources that were
         // ready at once; it must still be tried in the order the configuration names.
         let rank = |p: &dyn Provider| match p.manifest().id.as_str() {
             "early" => 0,
@@ -840,12 +840,12 @@ mod tests {
     #[tokio::test]
     async fn a_hold_is_lifted_once_the_provider_is_available_again() {
         // A hold is a statement about the present, so it has to be re-examined. Filtering held
-        // providers out of the chain meant the question was never asked again: one failed VPN
-        // check took torrenting out until the process restarted, however healthy the tunnel
+        // providers out of the chain meant the question was never asked again: one failed proxy
+        // check took torrenting out until the process restarted, however healthy the proxy
         // became afterwards.
         let r =
             registry(vec![MockProvider::new("a").with_streams(vec![stream("from-a")]).arc()]);
-        r.health().hold_back("a", "vpn guard failing");
+        r.health().hold_back("a", "proxy check failed");
 
         let attempt = r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
 
@@ -863,7 +863,7 @@ mod tests {
     #[tokio::test]
     async fn a_provider_that_is_still_withheld_is_not_contacted() {
         // The other half: lifting a stale hold must not weaken a live one.
-        let provider = MockProvider::new("a").unavailable("vpn guard failing");
+        let provider = MockProvider::new("a").unavailable("proxy check failed");
         let calls = provider.call_count();
         let r = registry(vec![provider.arc()]);
 
@@ -873,7 +873,7 @@ mod tests {
         assert_eq!(calls.load(std::sync::atomic::Ordering::Relaxed), 0, "it was contacted");
         assert_eq!(
             r.health().get("a").and_then(|h| h.held_back),
-            Some("vpn guard failing".to_string())
+            Some("proxy check failed".to_string())
         );
     }
 
@@ -967,10 +967,10 @@ mod tests {
 
     #[tokio::test]
     async fn a_held_back_provider_is_never_contacted() {
-        // The VPN guard has to prevent the request, not merely discard its result.
+        // A held-back source has to prevent the request, not merely discard its result.
         let torrent = MockProvider::new("torrent")
-            .with_streams(vec![stream("leaky")])
-            .unavailable("vpn guard failing");
+            .with_streams(vec![stream("held")])
+            .unavailable("proxy check failed");
         let calls = torrent.call_count();
 
         let r = registry(vec![
@@ -1048,7 +1048,7 @@ mod tests {
         let r = registry(vec![
             MockProvider::new("a").with_hits(vec![]).arc(),
             MockProvider::new("b").failing(ProviderError::Transport("down".into())).arc(),
-            MockProvider::new("c").unavailable("vpn down").arc(),
+            MockProvider::new("c").unavailable("proxy down").arc(),
         ]);
         r.check_all(0).await;
 

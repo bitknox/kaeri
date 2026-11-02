@@ -101,7 +101,7 @@ sources-none-available = No { -source-pl } available
 # Reason shown when no source is available and the engine gave none. The setting is the name
 # of a key in the config file and is not translated.
 # @arg setting: text
-sources-torrents-off = Torrents are off until { $setting } and a VPN mode are set.
+sources-torrents-off = Torrents are off until { $setting } is turned on.
 
 # Column heading in the Sources table: the name of the source.
 # @max 12
@@ -156,7 +156,7 @@ sources-state-down = Down
 # State of a source: it has not been tried yet.
 sources-state-unchecked = Not checked yet
 
-# State of a source: it works but local rules (the VPN check) are withholding it.
+# State of a source: it works but waits for the proxy check.
 sources-state-held-back = Held back
 
 ## The { -plugin-store } line on the Sources screen
@@ -231,34 +231,22 @@ sources-meta-skipped-until = Skipped until { $time } ({ $cause })
 # @arg cause: text
 sources-meta-next-request = Tried again on the next request ({ $cause })
 
-## The VPN chip in the header
+## The proxy chip in the header
 
-# Header chip while the VPN check is running. The mark is a status glyph.
+# Header chip while the proxy check is running. The mark is a status glyph.
 # @arg mark: text
-sources-vpn-checking = VPN { $mark }  Checking
+sources-proxy-checking = Proxy { $mark }  Checking
 
-# Header chip when the VPN protects the connection. The name is where traffic leaves the network.
+# Header chip when the proxy check passed.
 # @arg mark: text
-# @arg exit: text
-sources-vpn-protected = VPN { $mark }  { $exit }
+sources-proxy-passed = Proxy { $mark }  Passed
 
-# Header chip when the VPN check found traffic leaving outside the tunnel.
+# Header chip when the proxy check failed.
 # @arg mark: text
-sources-vpn-leaking = VPN { $mark }  Leaking
+sources-proxy-failed = Proxy { $mark }  Check failed
 
-# Header chip when the VPN check could not be completed.
-# @arg mark: text
-sources-vpn-unreachable = VPN { $mark }  Unreachable
-
-# Header chip when the configuration runs with no VPN on purpose.
-# @arg mark: text
-sources-vpn-unprotected = VPN { $mark }  Unprotected
-
-# Notice when the VPN check finds a leak and torrents are paused.
-sources-vpn-leak-paused = The VPN is leaking. Torrents are paused until it is protected again.
-
-# Notice when the VPN check cannot be completed and torrents are paused.
-sources-vpn-unreachable-paused = The VPN can't be reached. Torrents are paused until it can.
+# Notice when the proxy check fails and torrents wait.
+sources-proxy-failed-note = The proxy check failed. Torrents start once it passes.
 
 ## Settings
 
@@ -332,12 +320,6 @@ settings-value-download-dir-default = Kept with the torrent cache
 
 # Value of the Syncplay room setting when no room is set.
 settings-value-room-unset = Not set (needed for { -watch-party-pl })
-
-# Value of the VPN mode setting: traffic goes through a proxy server (SOCKS5).
-settings-value-vpn-socks5 = Proxy
-
-# Value of the VPN mode setting: a tunnel set up outside the app.
-settings-value-vpn-external = External
 
 # Value of the seeding ratio setting: seed until the ratio is reached.
 # @arg ratio: text
@@ -479,8 +461,8 @@ settings-label-seed-hours = Seed for at most
 # Settings row: the cap on torrent upload speed.
 settings-label-upload-limit = Upload limit
 
-# Settings row: how traffic is protected by a VPN.
-settings-label-vpn-mode = VPN mode
+# Settings row: the SOCKS5 proxy torrent traffic goes through, if any.
+settings-label-torrent-proxy = Torrent proxy
 
 # Settings row: where sign-in tokens are kept.
 settings-label-token-storage = Token storage
@@ -505,9 +487,6 @@ settings-label-downloads-on-cellular = Downloads on mobile data
 
 # Settings row: whether torrents run on a mobile connection.
 settings-label-torrents-on-cellular = Torrents on mobile data
-
-# Settings row: what happens to torrents when the VPN check fails.
-settings-label-vpn-on-failure = If a check fails
 
 # Settings row: whether the app notifies of new episodes.
 settings-label-episode-notifications = New episode notifications
@@ -564,8 +543,8 @@ settings-note-download-dir = Press Enter to type a path. Applies to the next dow
 # Note under the merge subtitles row.
 settings-note-merge-subtitles = Applies to the next download that finishes.
 
-# Note under the keep seeding row. It is a privacy choice.
-settings-note-keep-seeding = While on, you stay listed as a seeder. Applies immediately.
+# Note under the keep seeding row.
+settings-note-keep-seeding = Off by default to save upload; turn it on to give back to the swarm.
 
 # Note under the after each download row.
 settings-note-download-hook = Press Enter to type a command. It runs after each finished download.
@@ -597,10 +576,10 @@ settings-note-presence-title = Off shows “Watching anime” without naming the
 settings-note-presence-rich = Adds the cover, a progress bar and an AniList link. Needs the title shown.
 
 # Note under the torrent playback row.
-settings-note-torrents = Needs a VPN configured. Takes effect immediately.
+settings-note-torrents = Off by default. Takes effect immediately.
 
-# Note under the VPN mode row.
-settings-note-vpn-mode = Edit config.toml to change this. Turning protection off takes an explicit step.
+# Note under the torrent proxy row. config.toml is a file name and is not translated.
+settings-note-torrent-proxy = Optional. Edit config.toml to route torrent traffic through a SOCKS5 proxy.
 
 # Note under the seed after watching row.
 # @allow proceed

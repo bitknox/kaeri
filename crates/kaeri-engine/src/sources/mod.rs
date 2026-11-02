@@ -1,14 +1,13 @@
 //! Assembling the provider chain.
 //!
 //! Lifted out of the binary so it can be exercised. This is the code that decides whether
-//! torrent playback comes up at all — the VPN guard runs here, before any session is created — and
+//! torrent playback comes up at all — a proxy's check runs here, before any session is created — and
 //! while it lived in `main.rs` the only way to find out what it had registered was to start the
 //! whole interface and look. A probe can now ask it directly.
 
 pub mod commands;
 pub mod options;
 pub mod torrent;
-pub mod vpn;
 
 use kaeri_model::Msg;
 use kaeri_model::StoreMsg;
@@ -19,9 +18,9 @@ use kaeri_core::traits::ProviderKind;
 use kaeri_net::HttpClient;
 use kaeri_providers::{
     ProviderRegistry,
+    proxy::{ProxyState, TorrentRoute},
     remote::RemoteHttpProvider,
     torrent::TorrentSession,
-    vpn::{GuardState, VpnGuard},
 };
 
 /// The largest torrent file read: one far past this is not a torrent file.
@@ -48,16 +47,16 @@ pub fn torrent_to_open(input: &str) -> std::result::Result<String, Msg> {
 ///
 /// For the command-line paths, which need every source before they can do anything. The
 /// interface uses [`build_registry_deferred`] and [`bring_up_torrent`] instead, because torrent
-/// playback waits on the VPN guard, and a guard whose tunnel is down takes as long as its
-/// timeout to say so. Once up, the session is lent to every source in the chain that names
+/// playback through a proxy waits on its check, and a proxy that is down takes as long as the
+/// check's timeout to say so. Once up, the session is lent to every source in the chain that names
 /// torrents, plugins that join later included.
 ///
 /// Only sources that are actually configured are registered. A source listed in `order` but
 /// unconfigured is skipped rather than added as a permanently-failing entry, which would
 /// clutter the Providers screen with something the user never asked for.
 ///
-/// The last element is the guard's verdict when it is what held torrent playback back, for
-/// a preview to show as the interface would.
+/// The last element is the proxy's check when it is what held torrent playback back, for a
+/// preview to show as the interface would.
 pub async fn build_registry(
     config: &Config,
     http: &HttpClient,
@@ -65,9 +64,9 @@ pub async fn build_registry(
     store: &kaeri_store::Store,
 ) -> (
     ProviderRegistry,
-    Option<(VpnGuard, Arc<TorrentSession>)>,
+    Option<(TorrentRoute, Arc<TorrentSession>)>,
     Option<String>,
-    Option<GuardState>,
+    Option<ProxyState>,
 ) {
     let registry = build_registry_deferred(config, http);
     if !torrent_wanted(config) {
@@ -78,12 +77,8 @@ pub async fn build_registry(
     tracing::info!(elapsed = ?started.elapsed(), ok = outcome.is_ok(), "torrent playback");
     match outcome {
         Ok(up) => {
-            // No interface to tell: these paths print to the terminal they were run from.
-            if let Some(warning) = &up.warning {
-                eprintln!("warning: {}", warning.english());
-            }
             lend_torrents(&registry, Some(&up.session), config);
-            (registry, Some((up.guard, up.session)), None, None)
+            (registry, Some((up.route, up.session)), None, None)
         }
         // Playback that cannot start safely stays off, and the reason is surfaced, not
         // swallowed.
@@ -94,8 +89,8 @@ pub async fn build_registry(
     }
 }
 
-/// The provider chain as config describes it. Torrent playback comes up beside it once the VPN
-/// guard has passed — see [`bring_up_torrent`].
+/// The provider chain as config describes it. Torrent playback comes up beside it, once a
+/// proxy's check has passed when one is set: see [`bring_up_torrent`].
 pub fn build_registry_deferred(config: &Config, http: &HttpClient) -> ProviderRegistry {
     let mut providers: Vec<std::sync::Arc<dyn kaeri_core::traits::Provider>> = Vec::new();
     for id in &config.providers.order {
@@ -359,73 +354,58 @@ async fn load_plugins(
     ))
 }
 
-/// Torrent playback, up: the guard it runs behind, and its session.
+/// Torrent playback, up: its route, and its session.
 pub struct TorrentUp {
-    pub guard: VpnGuard,
+    pub route: TorrentRoute,
     pub session: Arc<TorrentSession>,
-    /// Said once playback is up, when there is no OS-level kill switch behind the guard.
-    pub warning: Option<Msg>,
 }
 
-/// The guard torrent playback runs behind, when the configuration can build one: a mistake a
-/// retry cannot fix otherwise.
-fn prepare_torrent(
-    config: &Config,
-    fixture: Option<&kaeri_providers::vpn::Egress>,
-) -> std::result::Result<VpnGuard, Msg> {
-    guard_for(config, fixture)
-        .map_err(|reason| Msg::Store(StoreMsg::TorrentNotChecked { reason }))
+/// The route torrent playback takes, when the configuration can build one: a mistake a retry
+/// cannot fix otherwise.
+fn prepare_torrent(config: &Config, fixture: bool) -> std::result::Result<TorrentRoute, Msg> {
+    route_for(config, fixture)
+        .map_err(|reason| Msg::Store(StoreMsg::TorrentProxyUnusable { reason }))
 }
 
-/// The guard `config` describes: one that looks the exit up, or in a fixture build one that
-/// answers with `fixture` and makes no request.
-pub fn guard_for(
-    config: &Config,
-    fixture: Option<&kaeri_providers::vpn::Egress>,
-) -> std::result::Result<VpnGuard, String> {
-    let vpn = config.providers.torrent.vpn.clone();
-    match fixture {
-        Some(egress) => VpnGuard::fixed(vpn, egress.clone()),
-        None => VpnGuard::new(vpn),
-    }
+/// The route `config` describes: directly, or through its proxy. In a fixture build, a proxy's
+/// check passes without connecting anywhere.
+pub fn route_for(config: &Config, fixture: bool) -> std::result::Result<TorrentRoute, String> {
+    let proxy = config.providers.torrent.proxy.clone();
+    if fixture { TorrentRoute::fixed(proxy) } else { TorrentRoute::new(proxy) }
 }
 
-/// Bring up the VPN guard, verify egress, then start the torrent session.
+/// The longest torrents wait between checks of a proxy that keeps failing.
+const RETRY_CEILING: Duration = Duration::from_secs(60);
+
+/// Check the route, then start the torrent session.
 ///
-/// Ordering is the whole point: the guard is verified *before* a session exists, so there is
-/// no window in which torrent traffic could leave unprotected.
+/// Through a proxy, the check comes before a session exists, so a proxy that is down is said
+/// rather than found later as torrents that find no peers.
 // The error is a whole message with its values, which is large; it is built once, on failure.
 #[allow(clippy::result_large_err)]
 async fn start_torrent_playback(
     config: &Config,
     paths: &Paths,
     store: &kaeri_store::Store,
-) -> std::result::Result<TorrentUp, (Msg, Option<GuardState>)> {
-    let guard = prepare_torrent(config, None).map_err(|reason| (reason, None))?;
+) -> std::result::Result<TorrentUp, (Msg, Option<ProxyState>)> {
+    let route = prepare_torrent(config, false).map_err(|reason| (reason, None))?;
 
-    let state = guard.verify().await;
-    if !state.is_protected() {
-        let reason = match state.reason() {
-            Some(reason) => {
-                Msg::Store(StoreMsg::TorrentVpnWaiting { reason: reason.to_owned() })
-            }
-            None => Msg::Store(StoreMsg::TorrentVpnUnverified),
-        };
-        return Err((reason, Some(state)));
+    let state = route.verify().await;
+    if !state.is_ready() {
+        return Err((Msg::Store(StoreMsg::TorrentProxyWaiting), Some(state)));
     }
-    tracing::info!(badge = %state.badge(), "vpn guard satisfied");
 
     sweep_before_session(config, paths, store).await;
-    start_torrent_session(paths, guard).await.map_err(|reason| (reason, None))
+    start_torrent_session(paths, route).await.map_err(|reason| (reason, None))
 }
 
-/// Bring torrent playback up for the interface, however long the VPN guard takes to pass.
+/// Bring torrent playback up for the interface, however long a proxy's check takes to pass.
 ///
-/// The interface draws while this runs: a tunnel that is down made the guard's check wait out
-/// its whole timeout before the first frame, with the terminal not yet set up and every key
-/// echoing into the shell. And it keeps checking rather than giving up, so a VPN connected a
-/// minute after launch brings torrents up without a restart — a failed check used to leave
-/// torrents out for the rest of the session. Each verdict reaches the badge as it arrives.
+/// The interface draws while this runs: a proxy that is down made the check wait out its whole
+/// timeout before the first frame. And while the check fails it is made again, sooner at first
+/// and then once a minute at most, or at once when Check now asks, so a proxy started after
+/// launch brings torrents up without a restart. Once it passes, nothing more is checked. Each
+/// answer reaches the interface as it arrives.
 ///
 /// Errs only for what no amount of waiting fixes: a configuration that cannot work, or a
 /// session that would not start.
@@ -435,71 +415,54 @@ pub async fn bring_up_torrent(
     store: kaeri_store::Store,
     tx: crate::outbox::Outbox,
     check: std::sync::Arc<tokio::sync::Notify>,
-    fixture: Option<kaeri_providers::vpn::Egress>,
+    fixture: bool,
 ) -> std::result::Result<TorrentUp, Msg> {
     use kaeri_model::event::Event;
-    use kaeri_providers::vpn::{GuardLog, GuardNote, GuardState};
 
-    let guard = prepare_torrent(&config, fixture.as_ref())?;
+    let route = prepare_torrent(&config, fixture)?;
     // Before the wait rather than after it: a cache left full by an earlier run should not stay
-    // full for as long as the tunnel is down.
+    // full for as long as the proxy is down.
     sweep_before_session(&config, &paths, &store).await;
 
-    let mut log = GuardLog::default();
-    // Quick at first, for a tunnel that is a moment from connecting, then no more often than
-    // the guard's own interval — and that interval at once for a real leak, where every check
-    // reaches the lookup service.
+    let mut said = false;
     let mut wait = Duration::from_secs(5);
     loop {
-        let state = guard.verify().await;
-        let leaking = !state.is_protected();
-        if tx.send(Event::Vpn(Some(guard_view(&state)))).is_err() {
+        let state = route.verify().await;
+        if tx.send(Event::TorrentProxy(Some(proxy_status(&state)))).is_err() {
             return Err(Msg::Store(StoreMsg::TorrentInterfaceClosed));
         }
-        match log.observe(&state, std::time::Instant::now()) {
-            GuardNote::Failing(reason) => {
-                tracing::warn!(%reason, "vpn guard failing; torrents wait for it");
-                let _ = tx.send(Event::ProviderNote(Msg::Store(StoreMsg::TorrentVpnWaiting {
-                    reason: reason.clone(),
-                })));
+        if state.is_ready() {
+            if said {
+                tracing::info!("the torrent proxy check passed");
             }
-            GuardNote::StillFailing { reason, minutes, checks } => {
-                tracing::warn!(%reason, minutes, checks, "vpn guard still failing");
-            }
-            GuardNote::Recovered { minutes } => {
-                tracing::info!(minutes, badge = %state.badge(), "vpn guard satisfied");
-            }
-            GuardNote::Passed => tracing::info!(badge = %state.badge(), "vpn guard satisfied"),
-            GuardNote::Quiet => {}
-        }
-        if !leaking {
             break;
         }
-        let ceiling = guard.verify_interval();
-        if matches!(state, GuardState::Leaking { .. }) {
-            wait = ceiling;
+        if !said {
+            said = true;
+            tracing::warn!(
+                reason = state.reason().unwrap_or("-"),
+                "the torrent proxy check failed"
+            );
+            let _ = tx.send(Event::ProviderNote(Msg::Store(StoreMsg::TorrentProxyWaiting)));
         }
-        // Or sooner, when Check Now asks.
         tokio::select! {
-            () = tokio::time::sleep(wait.min(ceiling)) => {}
+            () = tokio::time::sleep(wait) => {}
             () = check.notified() => {}
         }
-        wait = (wait * 2).min(ceiling);
+        wait = (wait * 2).min(RETRY_CEILING);
     }
 
-    start_torrent_session(&paths, guard).await
+    start_torrent_session(&paths, route).await
 }
 
-/// The guard's verdict as the interface is told it: what the guard found, without its reasons,
-/// which are for the log and the Providers note.
-pub fn guard_view(state: &GuardState) -> kaeri_model::sources::GuardView {
-    use kaeri_model::sources::GuardView;
+/// The check's answer as the interface is told it, without its reasons, which are the log's.
+pub fn proxy_status(state: &ProxyState) -> kaeri_model::sources::ProxyStatus {
+    use kaeri_model::sources::ProxyStatus;
     match state {
-        GuardState::Unverified => GuardView::Checking,
-        GuardState::Protected { egress } => GuardView::Protected { exit: egress.describe() },
-        GuardState::Leaking { .. } => GuardView::Leaking,
-        GuardState::Unreachable { .. } => GuardView::Unreachable,
-        GuardState::Unprotected => GuardView::Unprotected,
+        ProxyState::Unchecked => ProxyStatus::Checking,
+        ProxyState::Passed => ProxyStatus::Passed,
+        ProxyState::Failed { .. } => ProxyStatus::Failed,
+        ProxyState::Direct => ProxyStatus::Direct,
     }
 }
 
@@ -512,26 +475,14 @@ async fn sweep_before_session(config: &Config, paths: &Paths, store: &kaeri_stor
     crate::background::prune::sweep_torrent_cache(dir, limit, store, Default::default()).await;
 }
 
-/// Start the torrent session behind a guard that has just passed.
+/// Start the torrent session on a route that is ready.
 async fn start_torrent_session(
     paths: &Paths,
-    guard: VpnGuard,
+    route: TorrentRoute,
 ) -> std::result::Result<TorrentUp, Msg> {
-    // Said when there is no OS-level kill switch. The guard is application-level: it stops
-    // *Kaeri* leaking, but cannot stop a bug in Kaeri, a change in librqbit, or any
-    // other process. Only a firewall rule can.
-    let enforcement = kaeri_providers::vpn::detect_kernel_enforcement().await;
-    let warning = if enforcement.is_enforced() {
-        tracing::info!("os-level kill switch enforced");
-        None
-    } else {
-        tracing::warn!(advice = enforcement.advice(), "no os-level kill switch");
-        Some(Msg::Store(StoreMsg::TorrentNoKillSwitch))
-    };
-
     let session = Arc::new(
         kaeri_providers::torrent::TorrentSession::start(
-            guard.clone(),
+            route.clone(),
             paths.cache_dir.join("torrents"),
             paths.cache_dir.join("dht.json"),
             random_token(),
@@ -540,7 +491,7 @@ async fn start_torrent_session(
         .map_err(|e| Msg::Store(StoreMsg::TorrentSessionFailed { reason: e.to_string() }))?,
     );
 
-    Ok(TorrentUp { guard, session, warning })
+    Ok(TorrentUp { route, session })
 }
 
 /// An unguessable path segment for the loopback stream server.
@@ -707,10 +658,10 @@ mod tests {
         }
     }
 
-    /// A preview shows the badge and toast the interface would, so the guard's verdict has to
-    /// come back with the reason it held torrent playback back.
+    /// A preview shows the line and toast the interface would, so the proxy's check has to
+    /// come back with what held torrent playback back.
     #[tokio::test]
-    async fn a_guard_that_holds_torrents_back_comes_back_with_its_verdict() {
+    async fn a_proxy_that_holds_torrents_back_comes_back_with_its_check() {
         let dir = tempfile::tempdir().unwrap();
         let paths = Paths {
             config_file: dir.path().join("config.toml"),
@@ -720,18 +671,16 @@ mod tests {
         let mut config = Config::default();
         let torrent = &mut config.providers.torrent;
         torrent.enabled = true;
-        // A proxy nothing listens on: the egress check fails at once and offline.
-        torrent.vpn.socks_url = Some("socks5://127.0.0.1:1".into());
+        // A proxy nothing listens on: the check fails at once and offline.
+        torrent.proxy = Some("socks5://127.0.0.1:1".into());
         let http = HttpClient::new(&config.network).unwrap();
         let store = kaeri_store::Store::open_in_memory().unwrap();
 
-        let (registry, guard, note, held) =
+        let (registry, route, note, held) =
             build_registry(&config, &http, &paths, &store).await;
-        assert!(guard.is_none() && registry.torrents().session().is_none());
-        assert!(
-            note.is_some_and(|n| n.starts_with("Torrents start once the VPN guard passes."))
-        );
-        let held = held.expect("the verdict that held it back");
-        assert!(!held.is_protected(), "{held:?}");
+        assert!(route.is_none() && registry.torrents().session().is_none());
+        assert!(note.is_some_and(|n| n.starts_with("The proxy check failed.")));
+        let held = held.expect("the check that held it back");
+        assert!(!held.is_ready(), "{held:?}");
     }
 }

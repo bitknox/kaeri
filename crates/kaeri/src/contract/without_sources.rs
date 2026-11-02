@@ -159,8 +159,14 @@ async fn keep_next_queues_nothing_with_no_source_to_download_from() {
         ..Options::default()
     })
     .await;
-    // As on start, after a mark, and after an episode is played to its end.
-    h.send(Command::SetWatched { id: FINISHED, episodes: vec!["5".into()], watched: true });
+    // As an episode of the show starts.
+    h.player_says(Event::PlaybackStaged {
+        id: FINISHED,
+        title: "Show".into(),
+        episode: "5".into(),
+        episode_title: None,
+        speed: 1.0,
+    });
     h.settle().await;
     assert!(h.store().downloads().unwrap().is_empty(), "nothing queued");
     assert!(

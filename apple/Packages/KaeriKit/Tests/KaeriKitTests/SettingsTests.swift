@@ -26,7 +26,6 @@ struct SettingsPortTests {
         #expect(SettingKey.downloadQuality.options.map(\.label) == ["standard", "higher"])
         #expect(SettingKey.keepNextEpisodes.options.map(\.label)
                 == ["off", "1 episode", "2 episodes", "3 episodes", "5 episodes", "10 episodes"])
-        #expect(SettingKey.vpnOnFailure.options.map(\.label) == ["pause torrents", "stop torrents"])
         #expect(SettingKey.spoilerProtection.isSwitch && SettingKey.torrentsOnCellular.isSwitch)
         #expect(SettingKey.seedRatio.options.map(\.label)
             == ["off", "until ratio 0.5", "until ratio 1.0", "until ratio 1.5", "until ratio 2.0"])
@@ -35,7 +34,7 @@ struct SettingsPortTests {
             == ["unlimited", "262 kB/s", "524 kB/s", "1.0 MB/s", "2.1 MB/s", "5.2 MB/s"])
         #expect(SettingKey.autoNext.options.map(\.value) == [.bool(false), .bool(true)])
         #expect(SettingKey.subtitles.options.isEmpty, "typed")
-        #expect(SettingKey.vpnMode.options.isEmpty, "the file's to change")
+        #expect(SettingKey.torrentProxy.options.isEmpty, "the proxy form's to change")
     }
 
     @Test func aSizeReadsAsTheTerminalSaysIt() {
@@ -68,7 +67,7 @@ struct SettingsPortTests {
             .translation, .playerUi, .autoNext, .skipOpening, .nightMode, .keepSeeding,
             // The native apps' own rows.
             .upNextCountdown, .spoilerProtection, .downloadQuality, .keepNextEpisodes,
-            .downloadsOnCellular, .torrentsOnCellular, .vpnOnFailure,
+            .downloadsOnCellular, .torrentsOnCellular,
         ]
         for key in keys {
             // Last to first, so each one is a change from the default the file starts with.

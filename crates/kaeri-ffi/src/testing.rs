@@ -257,7 +257,7 @@ pub(crate) fn options(
         sync,
         stores,
         clock: testing.clock.clone(),
-        fixture_exit: Some(kaeri_providers::vpn::VpnGuard::fixture_egress()),
+        fixture_route: true,
         windows: None,
     });
     Ok(options)

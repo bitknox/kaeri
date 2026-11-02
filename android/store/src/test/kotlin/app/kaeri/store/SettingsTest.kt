@@ -87,7 +87,7 @@ class SettingsTest {
         assertEquals(SettingValue.Float(1.0), SettingsCatalog.current(setting(SettingKey.SEED_RATIO, "until ratio 1.0"))?.value)
         assertEquals("524 kB/s", SettingsCatalog.uploadLabel(512))
         assertTrue(SettingsCatalog.isOn(setting(SettingKey.AUTO_NEXT, "on")))
-        assertFalse(SettingsCatalog.editable(setting(SettingKey.VPN_MODE, "external", SettingChange.Fixed)))
+        assertFalse(SettingsCatalog.editable(setting(SettingKey.TORRENT_PROXY, "direct", SettingChange.Fixed)))
     }
 
     @Test

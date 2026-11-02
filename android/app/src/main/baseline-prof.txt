@@ -234,7 +234,6 @@ Lapp/kaeri/engine/model/Command$SetScore;
 Lapp/kaeri/engine/model/Command$SetSetting;
 Lapp/kaeri/engine/model/Command$SetShowSetting;
 Lapp/kaeri/engine/model/Command$SetStatus;
-Lapp/kaeri/engine/model/Command$SetTorrentProtection;
 Lapp/kaeri/engine/model/Command$SetTranslation;
 Lapp/kaeri/engine/model/Command$SetWatched;
 Lapp/kaeri/engine/model/Command$StepSetting;
@@ -337,10 +336,7 @@ Lapp/kaeri/engine/model/Event$TitlesChanged;
 Lapp/kaeri/engine/model/Event$Toast$Companion;
 Lapp/kaeri/engine/model/Event$Toast;
 Lapp/kaeri/engine/model/Event$ViewerTitleLanguage;
-Lapp/kaeri/engine/model/Event$Vpn;
 Lapp/kaeri/engine/model/Event;
-Lapp/kaeri/engine/model/FailedCheck$Companion;
-Lapp/kaeri/engine/model/FailedCheck;
 Lapp/kaeri/engine/model/FfiConverter;
 Lapp/kaeri/engine/model/FfiConverterBoolean;
 Lapp/kaeri/engine/model/FfiConverterByteArray;
@@ -355,7 +351,6 @@ Lapp/kaeri/engine/model/FfiConverterOptionalTypeAired;
 Lapp/kaeri/engine/model/FfiConverterOptionalTypeAiringStatus;
 Lapp/kaeri/engine/model/FfiConverterOptionalTypeDeviceCodePrompt;
 Lapp/kaeri/engine/model/FfiConverterOptionalTypeFuzzyDate;
-Lapp/kaeri/engine/model/FfiConverterOptionalTypeGuardView;
 Lapp/kaeri/engine/model/FfiConverterOptionalTypeLibrarySegment;
 Lapp/kaeri/engine/model/FfiConverterOptionalTypeNoticeHint;
 Lapp/kaeri/engine/model/FfiConverterOptionalTypeProxyView;
@@ -404,7 +399,6 @@ Lapp/kaeri/engine/model/FfiConverterTypeContentList;
 Lapp/kaeri/engine/model/FfiConverterTypeEnding;
 Lapp/kaeri/engine/model/FfiConverterTypeEntry;
 Lapp/kaeri/engine/model/FfiConverterTypeEvent;
-Lapp/kaeri/engine/model/FfiConverterTypeFailedCheck;
 Lapp/kaeri/engine/model/FfiConverterTypeFuzzyDate;
 Lapp/kaeri/engine/model/FfiConverterTypeInviteLinkView;
 Lapp/kaeri/engine/model/FfiConverterTypeInvitePreview;
@@ -417,7 +411,6 @@ Lapp/kaeri/engine/model/FfiConverterTypePlayerCommand;
 Lapp/kaeri/engine/model/FfiConverterTypePlayerReport;
 Lapp/kaeri/engine/model/FfiConverterTypePlayerTheme;
 Lapp/kaeri/engine/model/FfiConverterTypePlayerUi;
-Lapp/kaeri/engine/model/FfiConverterTypeProtectionView;
 Lapp/kaeri/engine/model/FfiConverterTypeProviderRow;
 Lapp/kaeri/engine/model/FfiConverterTypeProxyView;
 Lapp/kaeri/engine/model/FfiConverterTypePullError;
@@ -440,14 +433,12 @@ Lapp/kaeri/engine/model/FfiConverterTypeSynopsisSpan;
 Lapp/kaeri/engine/model/FfiConverterTypeTitleDetail;
 Lapp/kaeri/engine/model/FfiConverterTypeTitleLanguage;
 Lapp/kaeri/engine/model/FfiConverterTypeTitleProgress;
-Lapp/kaeri/engine/model/FfiConverterTypeTorrentProtection;
 Lapp/kaeri/engine/model/FfiConverterUInt;
 Lapp/kaeri/engine/model/FfiConverterULong;
 Lapp/kaeri/engine/model/FfiConverterUShort;
 Lapp/kaeri/engine/model/ForeignBytes$ByValue;
 Lapp/kaeri/engine/model/ForeignBytes;
 Lapp/kaeri/engine/model/FuzzyDate;
-Lapp/kaeri/engine/model/GuardView;
 Lapp/kaeri/engine/model/IntegrityCheckingUniffiLib;
 Lapp/kaeri/engine/model/InternalException;
 Lapp/kaeri/engine/model/InviteLinkView;
@@ -466,8 +457,6 @@ Lapp/kaeri/engine/model/PlayerReport;
 Lapp/kaeri/engine/model/PlayerTheme$Companion;
 Lapp/kaeri/engine/model/PlayerTheme;
 Lapp/kaeri/engine/model/PlayerUi;
-Lapp/kaeri/engine/model/ProtectionView$Companion;
-Lapp/kaeri/engine/model/ProtectionView;
 Lapp/kaeri/engine/model/ProviderRow;
 Lapp/kaeri/engine/model/ProxyView;
 Lapp/kaeri/engine/model/PullError;
@@ -505,8 +494,6 @@ Lapp/kaeri/engine/model/TitleAired;
 Lapp/kaeri/engine/model/TitleDetail;
 Lapp/kaeri/engine/model/TitleLanguage;
 Lapp/kaeri/engine/model/TitleProgress;
-Lapp/kaeri/engine/model/TorrentProtection$Companion;
-Lapp/kaeri/engine/model/TorrentProtection;
 Lapp/kaeri/engine/model/TorrentProxy;
 Lapp/kaeri/engine/model/UniffiLib;
 Lapp/kaeri/engine/model/UniffiNullRustCallStatusErrorHandler;
@@ -1115,12 +1102,6 @@ SPLapp/kaeri/engine/model/Event$Toast;->getV1()Lapp/kaeri/engine/model/Notice;
 SPLapp/kaeri/engine/model/Event;-><clinit>()V
 SPLapp/kaeri/engine/model/Event;-><init>()V
 SPLapp/kaeri/engine/model/Event;-><init>(Lkotlin/jvm/internal/DefaultConstructorMarker;)V
-SPLapp/kaeri/engine/model/FailedCheck$Companion;-><init>()V
-SPLapp/kaeri/engine/model/FailedCheck$Companion;-><init>(Lkotlin/jvm/internal/DefaultConstructorMarker;)V
-SPLapp/kaeri/engine/model/FailedCheck;->$values()[Lapp/kaeri/engine/model/FailedCheck;
-SPLapp/kaeri/engine/model/FailedCheck;-><clinit>()V
-SPLapp/kaeri/engine/model/FailedCheck;-><init>(Ljava/lang/String;I)V
-SPLapp/kaeri/engine/model/FailedCheck;->values()[Lapp/kaeri/engine/model/FailedCheck;
 SPLapp/kaeri/engine/model/FfiConverterBoolean;-><clinit>()V
 SPLapp/kaeri/engine/model/FfiConverterBoolean;-><init>()V
 SPLapp/kaeri/engine/model/FfiConverterBoolean;->lift(B)Ljava/lang/Boolean;
@@ -1246,9 +1227,6 @@ SPLapp/kaeri/engine/model/FfiConverterTypeEntry;->read(Ljava/nio/ByteBuffer;)Lap
 SPLapp/kaeri/engine/model/FfiConverterTypeEvent;-><clinit>()V
 SPLapp/kaeri/engine/model/FfiConverterTypeEvent;-><init>()V
 SPLapp/kaeri/engine/model/FfiConverterTypeEvent;->read(Ljava/nio/ByteBuffer;)Lapp/kaeri/engine/model/Event;
-SPLapp/kaeri/engine/model/FfiConverterTypeFailedCheck;-><clinit>()V
-SPLapp/kaeri/engine/model/FfiConverterTypeFailedCheck;-><init>()V
-SPLapp/kaeri/engine/model/FfiConverterTypeFailedCheck;->read(Ljava/nio/ByteBuffer;)Lapp/kaeri/engine/model/FailedCheck;
 SPLapp/kaeri/engine/model/FfiConverterTypeMetaSourceRow;-><clinit>()V
 SPLapp/kaeri/engine/model/FfiConverterTypeMetaSourceRow;-><init>()V
 SPLapp/kaeri/engine/model/FfiConverterTypeMetaSourceRow;->read(Ljava/nio/ByteBuffer;)Lapp/kaeri/engine/model/MetaSourceRow;
@@ -1262,9 +1240,6 @@ SPLapp/kaeri/engine/model/FfiConverterTypePlayerTheme;-><clinit>()V
 SPLapp/kaeri/engine/model/FfiConverterTypePlayerTheme;-><init>()V
 SPLapp/kaeri/engine/model/FfiConverterTypePlayerTheme;->allocationSize-I7RO_PI(Lapp/kaeri/engine/model/PlayerTheme;)J
 SPLapp/kaeri/engine/model/FfiConverterTypePlayerTheme;->write(Lapp/kaeri/engine/model/PlayerTheme;Ljava/nio/ByteBuffer;)V
-SPLapp/kaeri/engine/model/FfiConverterTypeProtectionView;-><clinit>()V
-SPLapp/kaeri/engine/model/FfiConverterTypeProtectionView;-><init>()V
-SPLapp/kaeri/engine/model/FfiConverterTypeProtectionView;->read(Ljava/nio/ByteBuffer;)Lapp/kaeri/engine/model/ProtectionView;
 SPLapp/kaeri/engine/model/FfiConverterTypeSettingChange;-><clinit>()V
 SPLapp/kaeri/engine/model/FfiConverterTypeSettingChange;-><init>()V
 SPLapp/kaeri/engine/model/FfiConverterTypeSettingChange;->read(Ljava/nio/ByteBuffer;)Lapp/kaeri/engine/model/SettingChange;
@@ -1283,9 +1258,6 @@ SPLapp/kaeri/engine/model/FfiConverterTypeSyncState;->read(Ljava/nio/ByteBuffer;
 SPLapp/kaeri/engine/model/FfiConverterTypeSynopsisSpan;-><clinit>()V
 SPLapp/kaeri/engine/model/FfiConverterTypeSynopsisSpan;-><init>()V
 SPLapp/kaeri/engine/model/FfiConverterTypeSynopsisSpan;->read(Ljava/nio/ByteBuffer;)Lapp/kaeri/engine/model/SynopsisSpan;
-SPLapp/kaeri/engine/model/FfiConverterTypeTorrentProtection;-><clinit>()V
-SPLapp/kaeri/engine/model/FfiConverterTypeTorrentProtection;-><init>()V
-SPLapp/kaeri/engine/model/FfiConverterTypeTorrentProtection;->read(Ljava/nio/ByteBuffer;)Lapp/kaeri/engine/model/TorrentProtection;
 SPLapp/kaeri/engine/model/FfiConverterUInt;-><clinit>()V
 SPLapp/kaeri/engine/model/FfiConverterUInt;-><init>()V
 SPLapp/kaeri/engine/model/FfiConverterUInt;->lift-OGnWXxg(I)I
@@ -1335,10 +1307,6 @@ SPLapp/kaeri/engine/model/PlayerTheme;->getGround()Ljava/lang/String;
 SPLapp/kaeri/engine/model/PlayerTheme;->getObi()Ljava/lang/String;
 SPLapp/kaeri/engine/model/PlayerTheme;->getState()Ljava/lang/String;
 SPLapp/kaeri/engine/model/PlayerTheme;->getText()Ljava/lang/String;
-SPLapp/kaeri/engine/model/ProtectionView$Companion;-><init>()V
-SPLapp/kaeri/engine/model/ProtectionView$Companion;-><init>(Lkotlin/jvm/internal/DefaultConstructorMarker;)V
-SPLapp/kaeri/engine/model/ProtectionView;-><clinit>()V
-SPLapp/kaeri/engine/model/ProtectionView;-><init>(Lapp/kaeri/engine/model/TorrentProtection;Lapp/kaeri/engine/model/ProxyView;Lapp/kaeri/engine/model/FailedCheck;)V
 SPLapp/kaeri/engine/model/RustBuffer$ByValue;-><init>()V
 SPLapp/kaeri/engine/model/RustBuffer$Companion;-><init>()V
 SPLapp/kaeri/engine/model/RustBuffer$Companion;-><init>(Lkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -1372,8 +1340,6 @@ SPLapp/kaeri/engine/model/SettingRow;-><init>(Lapp/kaeri/engine/model/SettingKey
 SPLapp/kaeri/engine/model/SettingsView$Companion;-><init>()V
 SPLapp/kaeri/engine/model/SettingsView$Companion;-><init>(Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 SPLapp/kaeri/engine/model/SettingsView;-><clinit>()V
-SPLapp/kaeri/engine/model/SettingsView;-><init>(Ljava/util/List;Lapp/kaeri/engine/model/SettingKey;Lapp/kaeri/engine/core/Translation;ILapp/kaeri/engine/core/ThemeMode;Lapp/kaeri/engine/model/ConfiguredSources;Ljava/lang/Double;ZLjava/util/List;Ljava/util/List;Lapp/kaeri/engine/model/ProtectionView;)V
-SPLapp/kaeri/engine/model/SettingsView;-><init>(Ljava/util/List;Lapp/kaeri/engine/model/SettingKey;Lapp/kaeri/engine/core/Translation;ILapp/kaeri/engine/core/ThemeMode;Lapp/kaeri/engine/model/ConfiguredSources;Ljava/lang/Double;ZLjava/util/List;Ljava/util/List;Lapp/kaeri/engine/model/ProtectionView;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 SPLapp/kaeri/engine/model/SyncState$Companion;-><init>()V
 SPLapp/kaeri/engine/model/SyncState$Companion;-><init>(Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 SPLapp/kaeri/engine/model/SyncState;-><clinit>()V
@@ -1385,12 +1351,6 @@ SPLapp/kaeri/engine/model/SynopsisSpan$Companion;-><init>()V
 SPLapp/kaeri/engine/model/SynopsisSpan$Companion;-><init>(Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 SPLapp/kaeri/engine/model/SynopsisSpan;-><clinit>()V
 SPLapp/kaeri/engine/model/SynopsisSpan;-><init>(Ljava/lang/String;Z)V
-SPLapp/kaeri/engine/model/TorrentProtection$Companion;-><init>()V
-SPLapp/kaeri/engine/model/TorrentProtection$Companion;-><init>(Lkotlin/jvm/internal/DefaultConstructorMarker;)V
-SPLapp/kaeri/engine/model/TorrentProtection;->$values()[Lapp/kaeri/engine/model/TorrentProtection;
-SPLapp/kaeri/engine/model/TorrentProtection;-><clinit>()V
-SPLapp/kaeri/engine/model/TorrentProtection;-><init>(Ljava/lang/String;I)V
-SPLapp/kaeri/engine/model/TorrentProtection;->values()[Lapp/kaeri/engine/model/TorrentProtection;
 SPLapp/kaeri/engine/model/UniffiLib;-><clinit>()V
 SPLapp/kaeri/engine/model/UniffiLib;-><init>()V
 SPLapp/kaeri/engine/model/UniffiLib;->ensureInitialized$engine()V
@@ -1406,11 +1366,9 @@ SPLapp/kaeri/engine/model/UniffiRustCallStatus;->isSuccess()Z
 [Lapp/kaeri/engine/ffi/FfiPlatform;
 [Lapp/kaeri/engine/ffi/SecretsMode;
 [Lapp/kaeri/engine/model/AiringStatus;
-[Lapp/kaeri/engine/model/FailedCheck;
 [Lapp/kaeri/engine/model/LibrarySegment;
 [Lapp/kaeri/engine/model/NoticeKind;
 [Lapp/kaeri/engine/model/SettingKey;
-[Lapp/kaeri/engine/model/TorrentProtection;
 [Lapp/kaeri/store/ListModel;
 [Lapp/kaeri/ui/Destination;
 [Lapp/kaeri/ui/Shared;

@@ -163,7 +163,7 @@ impl MockProvider {
         self
     }
 
-    /// Report as withheld by local policy, e.g. a failing VPN guard.
+    /// Report as withheld by local policy, e.g. a proxy check that failed.
     pub fn unavailable(mut self, reason: &str) -> Self {
         self.unavailable = Some(reason.to_owned());
         self
@@ -319,8 +319,8 @@ mod tests {
 
     #[test]
     fn an_unavailable_mock_reports_why() {
-        let p = MockProvider::new("m").unavailable("vpn down");
-        assert_eq!(p.is_available(), Err(ProviderError::Unavailable("vpn down".into())));
+        let p = MockProvider::new("m").unavailable("proxy down");
+        assert_eq!(p.is_available(), Err(ProviderError::Unavailable("proxy down".into())));
         assert!(MockProvider::new("m").is_available().is_ok());
     }
 }

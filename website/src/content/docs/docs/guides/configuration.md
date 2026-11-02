@@ -101,16 +101,14 @@ keep_seeding = false       # whether a finished download keeps seeding
 ```
 
 `on_complete` is for refreshing a media library or renaming to a scheme of your own; a failure is
-logged, never fatal. A finished download stops seeding unless you ask otherwise, which is a privacy
-choice. What a watched episode does is set under
-[Seeding](/docs/guides/torrents-vpn/#seeding).
+logged, never fatal. A finished download stops seeding unless you ask otherwise: off by default to
+save upload; turn it on to give back to the swarm. What a watched episode does is set under
+[Seeding](/docs/guides/torrents/#seeding).
 
 :::caution
 A key this version doesn't know is skipped and left in the file, so apps of different versions can
-share it. The one exception is `[providers.torrent.vpn]`, where an unknown key is refused, since a
-misspelt one there could leave torrents unprotected. A config that fails to load is not used
-at all: Kaeri runs entirely on the defaults, without your VPN mode and tracker
-credentials, until the file is fixed. It says so on every screen, naming the file and the line,
+share it. A config that fails to load is not used at all: Kaeri runs entirely on the defaults,
+without your torrent proxy and tracker credentials, until the file is fixed. It says so on every screen, naming the file and the line,
 and the Settings screen saves nothing until the file loads again, so a broken file is never
 written over.
 :::
@@ -120,7 +118,7 @@ written over.
 Streamed episodes are written to the cache directory: `~/.cache/kaeri/torrents` on Linux,
 `~/Library/Caches/kaeri/torrents` on macOS and `%LOCALAPPDATA%\kaeri\cache\torrents` on
 Windows. An episode's files are deleted once it is no longer playing, fetched ahead or
-[seeding](/docs/guides/torrents-vpn/#seeding), and the directory as a whole is held to a limit:
+[seeding](/docs/guides/torrents/#seeding), and the directory as a whole is held to a limit:
 
 ```toml
 [providers.torrent]
@@ -181,15 +179,15 @@ ends.
 
 ## A torrent proxy in the apps
 
-In the apps, torrent protection is set under **Settings › Sources**. A proxy is
-checked before it is saved: the guard's check runs through it first, and a failed check saves
-nothing and says why. To change the saved proxy, choose **Edit proxy…** beside **Protect with**.
-Its form opens filled in; leave the password empty to keep the saved one.
-[In the apps](/docs/guides/torrents-vpn/#in-the-apps) has the rest.
+In the apps, **Route torrent traffic through a proxy** is under **Settings › Sources**. It is
+optional and off by default. A proxy is checked before it is saved, and a failed check saves
+nothing and says "The proxy check failed". To change the saved proxy, choose **Edit proxy…**. Its
+form opens filled in; leave the password empty to keep the saved one.
+[Routing torrent traffic through a proxy](/docs/guides/torrents/#routing-torrent-traffic-through-a-proxy)
+has the rest.
 
 ## Everything else
 
-`[providers.torrent]` and `[providers.torrent.vpn]` are covered in
-[Torrents and the VPN guard](/docs/guides/torrents-vpn/); `[trackers]` in
+`[providers.torrent]` is covered in [Torrents](/docs/guides/torrents/); `[trackers]` in
 [Trackers and sync](/docs/guides/trackers-sync/); `[keys]` in
 [Keys and command line](/docs/guides/keybindings-cli/).

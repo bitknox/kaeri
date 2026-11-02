@@ -1,10 +1,4 @@
-torrents-linux-check-note = { -app-name } kiểm tra nơi lưu lượng torrent đi ra khi torrent bắt đầu và mỗi phút khi đang chạy, rồi tạm dừng torrent nếu kiểm tra thất bại. VPN hoặc proxy của bạn mới là thứ bảo vệ bạn.
-torrents-linux-warn-confirm = { -app-name } sẽ cảnh báo thay vì tạm dừng. Nếu VPN hoặc proxy ngừng hoạt động, người khác có thể thấy địa chỉ IP của bạn.
-torrents-linux-protection-saved = Đã lưu cài đặt bảo vệ torrent
-torrents-linux-turn-on-title = Bật torrent
-torrents-linux-protect-title = Bảo vệ torrent
 torrents-linux-edit-proxy-title = Sửa proxy
-torrents-linux-turn-on-button = Bật
 downloads-linux-seed-left = Còn { $span }
 downloads-linux-seed-left-soon = Còn chưa đầy một giờ
 downloads-linux-space-free = Còn trống { $free } trên { $total } · tải xuống chiếm { $taken }

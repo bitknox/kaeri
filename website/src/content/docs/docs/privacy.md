@@ -214,11 +214,11 @@ Torrents are off until you turn them on, and Kaeri finds no torrents itself. A s
 that names torrents receives your searches like any other source. The torrent's trackers and every peer in the swarm see the IP address you
 connect from and the torrent you are downloading or sharing.
 
-The [VPN guard](/docs/guides/torrents-vpn/) checks where torrent traffic leaves from before any
-torrent starts and then every 60 seconds, by asking `ifconfig.co`, or your VPN's own check if you
-turn that on. In proxy mode the check goes through your proxy. DHT is off in proxy mode, port
+To keep your IP address private, you can [route torrent traffic through a
+proxy](/docs/guides/torrents/#routing-torrent-traffic-through-a-proxy). It is optional and off by
+default. Its check connects to your proxy and nowhere else. DHT is off through a proxy, port
 forwarding is never requested, nothing listens for incoming connections, and there is no local
-peer discovery. The guard is a safety net. Your VPN or proxy is what protects you.
+peer discovery.
 
 Seeding after an episode is off by default.
 

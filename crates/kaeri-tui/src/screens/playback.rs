@@ -217,7 +217,7 @@ pub(super) fn render_eyecatch(buf: &mut Buffer, app: &App, area: Rect) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use kaeri_model::{catalog::ContentList, event::Event, sources::GuardView};
+    use kaeri_model::{catalog::ContentList, event::Event, sources::ProxyStatus};
 
     use crate::{
         screens::{
@@ -353,17 +353,17 @@ mod tests {
 
     #[test]
     fn the_eyecatch_leaves_the_header_and_status_line_alone() {
-        // Provider health and the VPN badge stay legible through the transition — those are
+        // Provider health and the proxy badge stay legible through the transition — those are
         // exactly the things you want to see when a stream is slow to resolve.
         let mut app = app_playing();
-        app.apply(Event::Vpn(Some(GuardView::Protected { exit: "Mullvad".into() })));
+        app.apply(Event::TorrentProxy(Some(ProxyStatus::Passed)));
         app.eyecatch = Some(crate::Eyecatch::new("x"));
         for _ in 0..crate::eyecatch::SWEEP_FRAMES {
             app.tick_animation();
         }
         let text = text_of(&render_to_buffer(&mut app, 100, 26));
         assert!(text.contains("Kaeri"), "the header was covered");
-        assert!(text.contains("VPN ●  Mullvad"), "the VPN badge was covered:\n{text}");
+        assert!(text.contains("Proxy ●  Passed"), "the proxy badge was covered:\n{text}");
     }
 
     #[test]

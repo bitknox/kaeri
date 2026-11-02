@@ -660,15 +660,6 @@ release-pinned = { $name } bu başlık için kullanılacak.
 # Toast when the chosen source or release for a title could not be saved. The reason comes from the database.
 notice-choice-not-saved = Bu seçim kaydedilemedi. { $reason }
 
-# Toast while torrents are running but the connection check failed, and the settings say to warn only.
-torrent-check-failed-running = Bağlantı denetimi başarısız oldu. Torrentler çalışmaya devam ediyor.
-
-# Note on the sources screen: torrents are waiting for the VPN guard. The reason comes from the guard.
-torrent-vpn-waiting = Torrentler VPN korumasından geçince başlar. { $reason }
-
-# Note on the sources screen: the VPN guard has no verdict yet.
-torrent-vpn-unverified = Torrentler VPN korumasından geçince başlar. Bağlantı henüz doğrulanmadı.
-
 # Error: the link or file given to open is not a magnet link, an info hash or a torrent file.
 torrent-link-unusable = Bu bir magnet bağlantısı ya da torrent dosyası değil.
 
@@ -683,15 +674,6 @@ torrent-interface-closed = Kaeri torrentler başlamadan kapandı.
 
 # Error: the torrent session could not start. The reason comes from the torrent engine.
 torrent-session-failed = Torrent oturumu başlatılamadı. { $reason }
-
-# Toast when torrents are up but no operating-system firewall rule backs the VPN guard. Terminal only: the engine never sends it to the apps.
-torrent-no-kill-switch = Bu cihazda VPN koparsa torrent trafiğini durduran bir şey yok. Kurulum için "kaeri --doctor" komutunu çalıştırın.
-
-# Toast when the connection check could not run. The reason comes from the VPN settings.
-torrent-not-checked = Bağlantı denetlenemedi. { $reason }
-
-# Note on the sources screen after the source chain is rebuilt with torrents on.
-sources-reloaded-torrents-pending = Kaynaklar yeniden yüklendi. Torrentler VPN korumasından geçince başlar.
 
 # Note on the sources screen after the source chain is rebuilt with torrents off.
 sources-reloaded-torrents-off = Torrentler kapalı. Oturum durduruldu.
@@ -805,12 +787,6 @@ notice-sign-out-failed = Oturum kapatılamadı: { $tracker }. Yeniden deneyin. {
 # Toast when a setting could not be stored. The cause says why and what to do.
 notice-not-saved-because = Bu ayar kaydedilemedi. { $cause }
 
-# Toast when the torrent protection choice was saved.
-notice-protection-saved = Torrent koruması kaydedildi.
-
-# Toast when the torrent protection could not be checked. The cause says why.
-notice-protection-not-checked = Torrent koruması denetlenemedi. { $cause }
-
 # Toast when the proxy's password could not be stored. The reason comes from the system.
 notice-proxy-password-not-kept = Vekil sunucu parolası saklanamadı. Kaydetmeyi denemek için yeniden girin. { $reason }
 
@@ -822,9 +798,6 @@ notice-show-not-reset = Bu dizinin ayarları sıfırlanamadı. { $reason }
 
 # Toast when a subtitle choice names subtitles the show has not used.
 notice-show-no-such-subtitles = Bu altyazı seçimi kaydedilemedi. Bu dizi bu altyazıları daha önce kullanmadı.
-
-# Toast while torrents are held until the connection check passes.
-notice-torrents-waiting-for-check = Torrentler bağlantı denetiminin yeniden geçmesini bekliyor.
 
 # Toast when the mapping data downloads work again after a failure.
 notice-mapping-data-refreshed = Eşleme verileri yenilendi.
@@ -844,12 +817,6 @@ notice-episodes-aired =
 
 # Toast when a new release of Kaeri is out, on the terminal app. The command is not translated. Terminal only: the engine never sends it to the apps.
 notice-update-available = { $tag } çıktı. Kurmak için kaeri --update komutunu çalıştırın.
-
-# The reason a setting was refused until the person confirms having no protection.
-cause-confirm-no-protection = Önce korumasız kalmak istediğinizi onaylayın.
-
-# The reason a setting was refused until the person confirms the "warn only" choice.
-cause-confirm-warn-only = Önce yalnızca uyarılmak istediğinizi onaylayın.
 
 # The reason a proxy was refused: it has no host or no port.
 cause-proxy-needs-address = Vekil sunucu için bir ana makine ve bir bağlantı noktası gerekir.
@@ -921,26 +888,8 @@ crash-notice = Kaeri bir sorun nedeniyle kapandı.
 # The same notice on the TV, which has no button.
 crash-notice-tv = Kaeri bir sorun nedeniyle kapandı. Ayarlar, Hakkında bölümünden bildirebilirsiniz.
 
-# Note under the connection-check group of the torrents dialog: what the check does.
-torrents-linux-check-note = Kaeri, torrent trafiğinin nereden çıktığını bir torrent başladığında ve çalışırken her dakika denetler. Denetim başarısız olursa torrentleri duraklatır. Sizi koruyan şey VPN'iniz ya da proxy'nizdir.
-
-# Confirmation text when choosing "Warn only" for a failed check.
-torrents-linux-warn-confirm = Kaeri duraklatmak yerine sizi uyarır. VPN'iniz ya da proxy'niz kapalıysa diğer kişiler IP adresinizi görebilir.
-
-# Status line once the protection has been checked and saved.
-torrents-linux-protection-saved = Torrent koruması kaydedildi
-
-# Title of the dialog that turns torrents on.
-torrents-linux-turn-on-title = Torrentleri aç
-
-# Title of the dialog that changes what protects torrents.
-torrents-linux-protect-title = Torrentleri koru
-
 # Title of the dialog that edits the proxy.
 torrents-linux-edit-proxy-title = Proxy'yi düzenle
-
-# Button that turns torrents on in the dialog.
-torrents-linux-turn-on-button = Aç
 
 # Seeding row: time left until the goal, in a span already worded ("18h", "1d 6h").
 downloads-linux-seed-left = { $span } kaldı
@@ -1160,12 +1109,6 @@ settings-notify-note-on = İzlediklerim listenizdeki bir dizinin yeni bölümü 
 
 # Preview note for new-episode notifications when they are off.
 settings-notify-note-off = Kapalı. Yalnızca kendi ayarında açılmış diziler bildirim gönderir.
-
-# Heading of the preview note beside the sources settings while torrents are on.
-settings-connection-check-title = Bağlantı denetimi
-
-# Preview note beside the sources settings while torrents are on.
-settings-connection-check-note = Bir torrent başladığında ve çalıştığı sürece her dakika, Kaeri torrent trafiğinin nereden çıktığını denetler. Denetim başarısız olursa torrentleri duraklatır. Sizi koruyan şey VPN'iniz ya da proxy'nizdir.
 
 # Preview note beside the accounts settings.
 settings-accounts-note = Kaeri hesap olmadan çalışır. Oturumu kapattığınızda izleme geçmişiniz bu bilgisayarda kalır.
@@ -3072,9 +3015,6 @@ sources-too-small = Daha büyük bir terminal gerekiyor.
 # Heading shown on the Sources screen when there is nothing to list, in the alert colour.
 sources-none-available = Kullanılabilir kaynaklar yok
 
-# Reason shown when no source is available and the engine gave none. The setting is the name of a key in the config file and is not translated.
-sources-torrents-off = Torrentler, { $setting } ve bir VPN modu ayarlanana kadar kapalı.
-
 # Column heading in the Sources table: the name of the source.
 sources-column-source = Kaynak
 
@@ -3120,7 +3060,7 @@ sources-state-down = Yanıt yok
 # State of a source: it has not been tried yet.
 sources-state-unchecked = Henüz denenmedi
 
-# State of a source: it works but local rules (the VPN check) are withholding it.
+# State of a source: it works but waits for the proxy check.
 sources-state-held-back = Kısıtlandı
 
 # Heading of the line about { -plugin-store-pl }.
@@ -3181,27 +3121,6 @@ sources-meta-skipped-until = Saat { $time } olana kadar atlanıyor ({ $cause })
 
 # Detail for a metadata service whose wait is over: it is asked again when something needs it. The cause is the service's own error text.
 sources-meta-next-request = Bir sonraki istekte yeniden denendi ({ $cause })
-
-# Header chip while the VPN check is running. The mark is a status glyph.
-sources-vpn-checking = VPN { $mark }  Denetleniyor
-
-# Header chip when the VPN protects the connection. The name is where traffic leaves the network.
-sources-vpn-protected = VPN { $mark }  { $exit }
-
-# Header chip when the VPN check found traffic leaving outside the tunnel.
-sources-vpn-leaking = VPN { $mark }  Sızıntı var
-
-# Header chip when the VPN check could not be completed.
-sources-vpn-unreachable = VPN { $mark }  Ulaşılamıyor
-
-# Header chip when the configuration runs with no VPN on purpose.
-sources-vpn-unprotected = VPN { $mark }  Korumasız
-
-# Notice when the VPN check finds a leak and torrents are paused.
-sources-vpn-leak-paused = VPN sızıntı yapıyor. Yeniden korunana kadar torrentler duraklatıldı.
-
-# Notice when the VPN check cannot be completed and torrents are paused.
-sources-vpn-unreachable-paused = VPN'e ulaşılamıyor. Ulaşılana kadar torrentler duraklatıldı.
 
 # Notice after the person submits an empty value for a text setting.
 settings-unchanged = Değişmedi. Ayarı kaldırmak için config.toml içindeki satırı silin.
@@ -3271,12 +3190,6 @@ settings-value-download-dir-default = Torrent önbelleğinde tutulur
 
 # Value of the Syncplay room setting when no room is set.
 settings-value-room-unset = Ayarlanmadı (birlikte izlemeler için gerekli)
-
-# Value of the VPN mode setting: traffic goes through a proxy server (SOCKS5).
-settings-value-vpn-socks5 = Vekil sunucu
-
-# Value of the VPN mode setting: a tunnel set up outside the app.
-settings-value-vpn-external = Harici
 
 # Value of the seeding ratio setting: seed until the ratio is reached.
 settings-value-seed-ratio = Oran { $ratio } olana kadar
@@ -3410,9 +3323,6 @@ settings-label-seed-hours = En fazla paylaşım süresi
 # Settings row: the cap on torrent upload speed.
 settings-label-upload-limit = Yükleme sınırı
 
-# Settings row: how traffic is protected by a VPN.
-settings-label-vpn-mode = VPN modu
-
 # Settings row: where sign-in tokens are kept.
 settings-label-token-storage = Belirteç saklama
 
@@ -3436,9 +3346,6 @@ settings-label-downloads-on-cellular = Mobil veriyle indirme
 
 # Settings row: whether torrents run on a mobile connection.
 settings-label-torrents-on-cellular = Mobil veriyle torrent
-
-# Settings row: what happens to torrents when the VPN check fails.
-settings-label-vpn-on-failure = Denetim başarısız olursa
 
 # Settings row: whether the app notifies of new episodes.
 settings-label-episode-notifications = Yeni bölüm bildirimleri
@@ -3491,9 +3398,6 @@ settings-note-download-dir = Bir yol yazmak için Enter tuşuna basın. Bir sonr
 # Note under the merge subtitles row.
 settings-note-merge-subtitles = Bir sonraki biten indirmeye uygulanır.
 
-# Note under the keep seeding row. It is a privacy choice.
-settings-note-keep-seeding = Açıkken paylaşan olarak listelenirsiniz. Hemen uygulanır.
-
 # Note under the after each download row.
 settings-note-download-hook = Bir komut yazmak için Enter tuşuna basın. Her tamamlanan indirmeden sonra çalışır.
 
@@ -3520,12 +3424,6 @@ settings-note-presence-title = Kapalıyken dizinin adı yerine “Anime izleniyo
 
 # Note under the rich presence row.
 settings-note-presence-rich = Kapak, ilerleme çubuğu ve bir AniList bağlantısı ekler. Başlığın gösterilmesi gerekir.
-
-# Note under the torrent playback row.
-settings-note-torrents = Bir VPN yapılandırılmış olmalı. Hemen uygulanır.
-
-# Note under the VPN mode row.
-settings-note-vpn-mode = Bunu değiştirmek için config.toml dosyasını düzenleyin. Korumayı kapatmak açık bir adım gerektirir.
 
 # Note under the seed after watching row.
 settings-note-seed-ratio = Kaeri açıkken izlenen bölümler paylaşmaya devam eder.
@@ -8090,9 +7988,6 @@ settings-reset = Ayarları sıfırla
 # Title of the confirmation for resetting the settings.
 settings-reset-title = Ayarlar sıfırlansın mı?
 
-# Line under it. The old settings file is moved aside, not deleted.
-settings-reset-detail = Her ayar varsayılanına döner, VPN ve proxy dahil. İzleme geçmişiniz kalır ve eski ayar dosyası saklanır.
-
 # Notice once Kaeri has started again on the default settings. The file is the name the old settings file is kept under, beside the new one, such as config.damaged-2026-10-30.
 settings-reset-done = Ayarlar varsayılanlara döndü. Eski dosya { $file } adıyla saklandı.
 
@@ -8262,9 +8157,6 @@ source-note-gone = Yüklü değil
 # Under a source that found more than one show by this name and could not tell which is this one.
 source-note-ambiguous = Bu başlık eşleştirilemedi
 
-# Under a source held back by the VPN check in Settings.
-source-note-held-back = VPN denetimi nedeniyle bekletildi
-
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 source-picker-releases = Sürümler
 
@@ -8349,9 +8241,6 @@ sources-detail-not-answering = Yanıt vermiyor. { $why }
 # Status line: no answer.
 sources-detail-not-answering-plain = Yanıt vermiyor.
 
-# Status line: held back by the check.
-sources-detail-held-back = Bağlantı denetimi geçilene kadar bekletildi.
-
 # Status line: disabled.
 sources-detail-disabled = Kapalı. Yerini korur, denenmez.
 
@@ -8425,9 +8314,6 @@ sources-torrent-source = Torrent oynatma
 
 # Row: where the plugin's page stands.
 sources-source-order-row = Kaynak sırası
-
-# Note under the facts on the Torrents page in Sources. Torrents are built in, not a plugin.
-sources-torrents-note = Torrent'ler Kaeri'ın parçasıdır, bir eklenti değil. Trafiklerini koruyan ayarlar, bağlantı denetimi ve paylaşım, Ayarlar'da, Kaynaklar altında yapılır.
 
 # Over the { -source } list while the { -source-pl } are set up again after a change.
 sources-rebuilding = Kaynaklar yeniden hazırlanıyor
@@ -9391,63 +9277,6 @@ torrents-title = Torrentler
 # Label and short value for the switch.
 torrents-on = Torrentler açık
 
-# Line under the switch while torrents are off.
-torrents-off-detail = Varsayılan olarak kapalı. Açmak, önce bağlantınızın nasıl korunacağını sorar.
-
-# Line explaining the risk, before torrents start.
-torrents-risk = Bir torrenti indirip paylaşırken başkaları IP adresinizi görebilir. Torrentler başlamadan önce bu adresi neyin koruyacağını seçin.
-
-# Line in the Apple sources screen: torrents belong to the app, not to a plugin.
-torrents-not-a-plugin = Torrentler Kaeri'in bir parçası, bir eklenti değil. Trafiklerini neyin koruduğu, bağlantı denetimi ve paylaşım Ayarlar'da, Kaynaklar altında ayarlanır.
-
-# Label of the choice of protection.
-torrents-protect-with = Koruma yöntemi
-
-# Option: no protection.
-torrents-protect-none = Koruma yok
-
-# Option: a proxy.
-torrents-protect-proxy = Proxy
-
-# Option: a VPN already running on the device.
-torrents-protect-vpn = VPN
-
-# Line under the proxy option.
-torrents-protect-proxy-detail = Torrent trafiği, sizin çalıştırdığınız ya da kiraladığınız bir proxy üzerinden geçer.
-
-# Line under the VPN option.
-torrents-protect-vpn-detail = Bu cihazdaki zaten çalışan VPN'i kullanır.
-
-# Line under the no-protection option.
-torrents-protect-none-detail = IP adresiniz torrentteki herkes tarafından görülür.
-
-# Line when no protection is set.
-torrents-protect-none-note = Koruma yoksa Kaeri bağlantıyı denetlemez.
-
-# Summary: a proxy protects. Host and port are already formatted.
-torrents-summary-proxy-at = { $host }:{ $port } adresindeki bir SOCKS5 proxy korur.
-
-# Summary: a proxy protects, address not shown.
-torrents-summary-proxy = Bir SOCKS5 proxy korur.
-
-# Summary: a VPN protects.
-torrents-summary-vpn = Bu cihazdaki VPN korur.
-
-# Summary: nothing protects.
-torrents-summary-none = Korunmuyor. IP adresiniz torrentteki herkes tarafından görülür.
-
-# Title of the question when torrents are turned on without protection.
-torrents-unprotected-title = Torrentler koruma olmadan kullanılsın mı?
-
-# Line under it.
-torrents-unprotected-detail = Bir torrenti indirip paylaşırken başkaları IP adresinizi görebilir ve Kaeri bağlantıyı denetlemez.
-
-# Button that confirms turning torrents on without protection.
-torrents-turn-on-unprotected = Koruma olmadan aç
-
-# Button that confirms using no protection.
-torrents-use-unprotected = Koruma olmadan kullan
-
 # Label of the proxy host field.
 torrents-proxy-host = Proxy sunucusu
 
@@ -9463,9 +9292,6 @@ torrents-proxy-password = Parola
 # Line under the password field.
 torrents-password-keep = Kayıtlı parolayı korumak için parolayı boş bırakın.
 
-# Line under the proxy form: what happens while the new proxy is checked.
-torrents-proxy-keeps-saved = Yeni proxy bağlantı denetiminden geçene kadar torrentler kayıtlı proxy'yi kullanmaya devam eder.
-
 # Line when the host or port is wrong.
 torrents-proxy-invalid = Proxy için bir sunucu adı ve 1 ile 65535 arasında bir bağlantı noktası gerekir.
 
@@ -9475,17 +9301,8 @@ torrents-checking-proxy = Proxy kontrol ediliyor…
 # Notice after the proxy was saved.
 torrents-proxy-saved = Proxy kaydedildi
 
-# Why a save was refused: traffic left outside the proxy.
-torrents-left-outside-proxy = Torrent trafiği bu proxy'nin dışına çıktı
-
-# Why a save was refused: the check could not run through the proxy.
-torrents-check-not-made-proxy = Denetim bu proxy üzerinden yapılamadı
-
 # Notice when a proxy was not saved. The reason is a sentence fragment.
 torrents-proxy-not-saved = Kaydedilmedi. { $why }, bu yüzden kayıtlı proxy kalır.
-
-# Notice when protection was not saved. The reason is a sentence fragment.
-torrents-protection-not-saved = Kaydedilmedi. { $why }, bu yüzden kayıtlı koruma kalır.
 
 # Notice when torrents stayed off. The reason is a sentence fragment.
 torrents-still-off = Torrentler hâlâ kapalı. { $why }.
@@ -9508,62 +9325,14 @@ torrents-index-scheme = Bir http ya da https adresi kullanın.
 # Notice after the index was saved.
 torrents-index-saved = Torrent dizini kaydedildi
 
-# Label of the choice of what to do when a check fails.
-torrents-if-check-fails = Denetim başarısız olursa
-
-# Title of the question that asks whether torrents may keep running.
-torrents-keep-running-title = Denetim başarısız olursa torrentler çalışmaya devam etsin mi?
-
-# Line under the question: what the choice is about.
-torrents-keep-running-detail = Denetim, VPN'iniz ya da proxy'niz dışında trafik bulursa torrentlere ne olacağı.
-
-# Option: pause torrents.
-torrents-fail-pause = Torrentleri duraklat
-
-# Option: stop torrents.
-torrents-fail-stop = Torrentleri durdur
-
-# Option: only warn.
-torrents-fail-warn = Yalnızca uyar
-
-# Result of the choice: torrents run.
-torrents-fail-warn-result = Torrentler çalışmaya devam eder.
-
-# Result of the choice: torrents stop.
-torrents-fail-stop-result = Torrentler durduruldu.
-
-# Result of the choice: torrents pause.
-torrents-fail-pause-result = Torrentler duraklatıldı.
-
-# Label of the last check.
-torrents-last-check = Son denetim
-
-# Check passed. The exit is where the traffic leaves from, already formatted.
-torrents-check-passed-exit = { $exit } üzerinden çıkıyor
-
 # Check passed.
 torrents-check-passed = Geçti
-
-# Check running: the line.
-torrents-check-running-line = Torrent trafiğinin nereden çıktığı denetleniyor
 
 # Check running: the short word.
 torrents-check-running = Denetleniyor
 
-# Check failed: traffic left outside. The consequence follows.
-torrents-check-leaked = Trafik koruma dışına çıktı. { $then }
-
-# Check failed: the check could not be made. The consequence follows.
-torrents-check-unmade = Denetim yapılamadı. { $then }
-
 # Short word: the check failed.
 torrents-check-failed = Başarısız
-
-# Line: no protection is set, so nothing was checked.
-torrents-check-none-line = Koruma ayarlanmamış
-
-# Short word: unprotected.
-torrents-check-none = Korunmuyor
 
 # Line: no check yet.
 torrents-check-waiting-line = Henüz denetlenmedi
@@ -9603,12 +9372,6 @@ torrents-page-unreadable = TV bunu okuyamadı. TV'deki QR kodu yeniden tarayın.
 
 # Line when the page needs script.
 torrents-page-needs-script = Bu sayfa, formu TV'ye güvenle göndermek için JavaScript gerektirir.
-
-# Under the proxy form when turning torrents on: what the app checks, and that the VPN or proxy is what protects.
-torrents-check-note = Kaeri, bir torrent başladığında ve çalıştığı sürece her dakika torrent trafiğinin nereden çıktığını denetler. Denetim başarısız olursa torrentleri duraklatır. Sizi koruyan VPN'iniz ya da proxy'nizdir.
-
-# Notice after the protection was saved.
-torrents-protection-saved = Torrent koruması kaydedildi
 
 # Menu item and button: open a magnet link or a torrent file the viewer has.
 opened-open = Bağlantı ya da dosya aç

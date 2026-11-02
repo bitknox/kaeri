@@ -30,7 +30,6 @@ settings-folder-default = Conservata insieme alla cache dei torrent
 settings-storage-unwatched = Non ancora guardati
 settings-storage-used = { $size } usati dai download.
 settings-storage-used-free = { $size } usati dai download. { $free } liberi su questo { -device }.
-settings-torrents-warn-note = Scegliendo Avvisa viene chiesta solo una conferma prima, come con Nessuna protezione.
 settings-source-count = { $count ->
     [one] Una { -source }
     [many] { $count } { -source-pl }

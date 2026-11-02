@@ -13,7 +13,6 @@ use kaeri_model::{
     event::Event,
     notice::Notice,
     settings::SettingKey,
-    show::ShowSettingKey,
 };
 use kaeri_providers::ProviderRegistry;
 use kaeri_store::Store;
@@ -42,7 +41,7 @@ use crate::{
     outbox::{Internal, Outbox},
     playback::{prefetch::prefetch, resolve::load_sources},
     plugin_stores::tasks::{StoreTaskContext, store_task},
-    protection::set_torrent_protection,
+    proxy::{check_torrent_proxy, set_torrent_proxy},
     services::Services,
     settings::{set_setting, set_translation, step_setting},
     show_settings::{
@@ -434,7 +433,11 @@ pub(crate) fn dispatch(
         Command::LoadStills(id) => episodes_job(id, true, job, engine, services, tx),
         Command::SetWatched { id, episodes, watched } => {
             set_watched(id, &episodes, watched, engine, services, tx);
-            ahead::top_up(engine, services, tx);
+            // One episode marked watched by hand is one finished: that show, topped up. A mark
+            // of many, such as a whole season, is not.
+            if watched && episodes.len() == 1 {
+                ahead::top_up(id, engine, services, tx);
+            }
         }
         // A title matched afresh may be another title on the source, so its dub is too.
         Command::ClearMatch { id } => {
@@ -558,18 +561,19 @@ pub(crate) fn dispatch(
         Command::Player(command) => control_player(command, engine),
         // The same, aimed: let go when another playback has followed the one it names.
         Command::Control { playback, command } => control_playback(playback, command, engine),
-        // Where the app is and its network: which torrents wait, and whether keep next runs.
+        // Where the app is and its network: which torrents wait, and whether keep next runs
+        // for the shows it was asked for while downloads waited.
         Command::AppPhase { phase } => {
             services.sync.pulls.set_away(phase != kaeri_model::command::AppState::Foreground);
-            crate::phases::app_phase(phase, engine, tx);
-            ahead::top_up(engine, services, tx);
+            crate::phases::app_phase(phase, engine);
+            ahead::resume(engine, services, tx);
         }
         Command::NetworkPath { cellular, constrained, offline } => {
             let network = crate::phases::Network { cellular, constrained, offline };
             let moved = engine.network.offline != offline;
             services.offline.store(offline, std::sync::atomic::Ordering::Relaxed);
             crate::phases::network_path(network, engine, tx);
-            ahead::top_up(engine, services, tx);
+            ahead::resume(engine, services, tx);
             // Home open says it is offline, and since when, or stops saying so, at once.
             if moved && engine.home.asked() {
                 let (ask, memory) = (home_ask(engine, services, false), engine.home.clone());
@@ -601,7 +605,7 @@ pub(crate) fn dispatch(
 
         // The sources.
         Command::CheckProviders => spawn(job, services, tx, check_providers),
-        Command::CheckConnection => {
+        Command::CheckProxy => {
             engine.torrent_tasks.check_now(engine.config.effective(), services, tx);
         }
 
@@ -649,9 +653,6 @@ pub(crate) fn dispatch(
         // Settings.
         Command::StepSetting { key, delta } => {
             step_setting(key, delta, engine, services, tx);
-            if ahead::follows(key) {
-                ahead::top_up(engine, services, tx);
-            }
             if key == SettingKey::UpdateBeta {
                 crate::updates::check_now(
                     &services.paths.cache_dir,
@@ -663,9 +664,6 @@ pub(crate) fn dispatch(
         }
         Command::SetSetting { key, value } => {
             set_setting(key, value, engine, services, tx);
-            if ahead::follows(key) {
-                ahead::top_up(engine, services, tx);
-            }
             // Turning beta updates on or off asks GitHub at once for the other channel's newest.
             if key == SettingKey::UpdateBeta {
                 crate::updates::check_now(
@@ -677,23 +675,17 @@ pub(crate) fn dispatch(
             }
         }
         Command::SetTranslation { translation } => set_translation(translation, engine, tx),
-        Command::SetTorrentProtection { mode, proxy, on_failure, acknowledged } => {
-            set_torrent_protection(mode, proxy, on_failure, acknowledged, engine, services, tx)
-        }
+        Command::SetTorrentProxy { proxy } => set_torrent_proxy(proxy, engine, services, tx),
         // Off the loop, with no job: the verdict is the answer.
-        Command::CheckTorrentProtection { mode, proxy } => {
-            crate::protection::check_torrent_protection(mode, proxy, engine, services, tx)
+        Command::CheckTorrentProxy { proxy } => {
+            check_torrent_proxy(proxy, engine, services, tx);
         }
         Command::LoadShowSettings { id } => load_show_settings(id, engine, services, tx),
         Command::SetShowSetting { id, key, value } => {
             set_show_setting(id, key, value, engine, services, tx);
-            if key == ShowSettingKey::KeepNext {
-                ahead::top_up(engine, services, tx);
-            }
         }
         Command::ResetShowSettings { id } => {
             reset_show_settings(id, engine, services, tx);
-            ahead::top_up(engine, services, tx);
         }
         Command::SetShowSubtitles { id, translation, subtitles } => {
             set_show_subtitles(id, translation, subtitles, engine, services, tx)
@@ -865,7 +857,7 @@ pub(crate) async fn handle_internal(
     match message {
         // What runs on cellular may have changed with it.
         Internal::SettingsSaved => crate::phases::settings_saved(engine, tx),
-        Internal::TopUp => ahead::top_up(engine, services, tx),
+        Internal::LetGo => ahead::let_go(engine, services, tx),
         // Only the order changed: the chain as it stands is put in it, with no rebuild.
         Internal::SourcesReordered => {
             sources::arrange(&services.registry, engine.config.effective());
@@ -876,14 +868,14 @@ pub(crate) async fn handle_internal(
             )));
             said.push(Event::Demo(crate::demo::state(engine, services)));
         }
-        // Awaited rather than spawned: this owns the session and the guard, and two
+        // Awaited rather than spawned: this owns the session and its route, and two
         // rebuilds racing would leave one of their sessions running with nothing holding
         // it. Quick: torrent playback comes up behind the interface, as at launch.
         Internal::SourcesChanged => {
             reload_sources(
                 services,
                 &mut engine.torrent_tasks,
-                &mut engine.vpn_guard,
+                &mut engine.torrent_route,
                 &engine.shared_config,
                 tx,
                 &engine.arrivals,

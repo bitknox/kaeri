@@ -15,7 +15,7 @@ use crate::{
     catalog::calendar::{CalendarMemory, Need},
     clock::Clock,
     host::Host,
-    outbox::{Internal, Outbox},
+    outbox::Outbox,
 };
 
 /// The stored-state key holding when the digest last looked.
@@ -93,8 +93,7 @@ pub fn spawn(
     });
 }
 
-/// Say what aired: as a toast, and through the host too when `desktop` asks for it. Then keep
-/// next tops the shows up, since an episode out is one more it may keep.
+/// Say what aired: as a toast, and through the host too when `desktop` asks for it.
 fn say(hits: &[(String, u32)], desktop: bool, host: &dyn Host, tx: &Outbox) {
     let msg = compose(hits);
     // A copy for people who launch the app and switch away. The toast is the real channel.
@@ -103,7 +102,6 @@ fn say(hits: &[(String, u32)], desktop: bool, host: &dyn Host, tx: &Outbox) {
         host.notify("Kaeri", &msg.english());
     }
     let _ = tx.send(Event::Toast(Notice::info(msg)));
-    let _ = tx.internal(Internal::TopUp);
 }
 
 /// One line, sized to what it reports: a single episode is named, a pile is counted.
@@ -121,14 +119,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn what_aired_is_said_and_then_kept_next() {
+    fn what_aired_is_said_and_nothing_is_downloaded_for_it() {
         use crate::outbox::Envelope;
         let (tx, mut inbox) = Outbox::inbox();
         let dir = tempfile::tempdir().unwrap();
         let host = crate::host::QuietHost::in_dir(dir.path());
         say(&[("Show".into(), 4)], false, &host, &tx);
         assert!(matches!(inbox.try_recv(), Ok(Envelope::Event(Event::Toast(_)))));
-        assert!(matches!(inbox.try_recv(), Ok(Envelope::Internal(Internal::TopUp))));
+        assert!(inbox.try_recv().is_err(), "keep next is not asked to top up");
     }
 
     #[test]

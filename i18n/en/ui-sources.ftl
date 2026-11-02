@@ -47,9 +47,9 @@ source-note-gone = Not installed
 # @max 36
 source-note-ambiguous = Couldn't match this title
 
-# Under a source held back by the VPN check in Settings.
+# Under a source that waits for the proxy check in Settings.
 # @max 36
-source-note-held-back = Held back by the VPN check
+source-note-held-back = Waiting for the proxy check
 
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 # @max 20
@@ -144,8 +144,8 @@ sources-detail-not-answering = Not answering. { $why }
 # Status line: no answer.
 sources-detail-not-answering-plain = Not answering.
 
-# Status line: held back by the check.
-sources-detail-held-back = Held back until the connection check passes.
+# Status line: waiting for the proxy check.
+sources-detail-held-back = Waiting until the proxy check passes.
 
 # Status line: disabled.
 sources-detail-disabled = Off. It keeps its place and isn't tried.
@@ -235,7 +235,7 @@ sources-torrent-source = Torrent playback
 sources-source-order-row = { -source-cap } order
 
 # Note under the facts on the Torrents page in Sources. Torrents are built in, not a plugin.
-sources-torrents-note = Torrents are part of { -app-name }, not a { -plugin }. What protects their traffic, the connection check and seeding are set in Settings, under { -source-cap-pl }.
+sources-torrents-note = Torrents are part of { -app-name }, not a { -plugin }. The proxy and seeding are set in Settings, under { -source-cap-pl }.
 
 # Over the { -source } list while the { -source-pl } are set up again after a change.
 sources-rebuilding = { -source-cap-pl } are being set up again

@@ -192,7 +192,7 @@ class SignInPageTest {
 
     @Test
     fun torrents_page_takes_one_answer_and_closes() {
-        val url = start(PageForm.TorrentProxy)
+        val url = start(PageForm.Proxy)
         val reply = post(url, "host=proxy.example&port=1080&user=mika&password=p%26ss")
         assertTrue(reply.contains("\"ok\":true"))
         assertEquals(
@@ -212,7 +212,7 @@ class SignInPageTest {
 
     @Test
     fun torrents_page_says_what_is_missing_and_never_what_was_sent() {
-        val url = start(PageForm.TorrentProxy)
+        val url = start(PageForm.Proxy)
         val reply = post(url, "host=proxy.example&port=nope&password=secret")
         assertTrue(reply.contains("port"))
         assertTrue(reply.contains("\"ok\":false"))

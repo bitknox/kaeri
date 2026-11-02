@@ -125,7 +125,6 @@ private struct OpenedConfirm: View {
     @State private var episode = ""
     @State private var seeded = false
     @State private var query = ""
-    @State private var turningOn = false
 
     var body: some View {
         let opened = store.opened
@@ -139,15 +138,6 @@ private struct OpenedConfirm: View {
         }
         .onAppear(perform: seed)
         .onChange(of: link.link) { seeded = false; seed() }
-        .sheet(isPresented: $turningOn) { turnOnSheet }
-    }
-
-    @ViewBuilder private var turnOnSheet: some View {
-        #if os(iOS)
-        if UIDevice.current.userInterfaceIdiom == .phone { PhoneTorrentSheet() } else { TorrentSheet() }
-        #else
-        TorrentSheet()
-        #endif
     }
 
     private func seed() {
@@ -245,7 +235,7 @@ private struct OpenedConfirm: View {
         return VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 10) {
                 if !link.playbackOn {
-                    Button(L.openedTurnOn) { turningOn = true }
+                    Button(L.openedTurnOn) { store.setSwitch(.torrents, on: true) }
                         .buttonStyle(PrimaryCapsuleStyle())
                 } else if let picked, ready {
                     Button(L.openedPlay) { store.playOpened(picked, episode: episode, title: picked.showTitle); dismiss() }

@@ -16,7 +16,7 @@ use kaeri_core::{
     ids::AnilistId,
 };
 use kaeri_model::{Msg, command::PlayerCommand, playback::PlaybackId};
-use kaeri_providers::{torrent::TorrentSession, vpn::VpnGuard};
+use kaeri_providers::{proxy::TorrentRoute, torrent::TorrentSession};
 use tokio::sync::mpsc;
 
 use crate::{
@@ -53,9 +53,9 @@ pub struct EngineState {
     /// The torrent stack's live parts, held so a settings change can tear them down and stand
     /// them back up without a restart.
     pub torrent_tasks: TorrentTasks,
-    /// The VPN guard and the session it protects, once torrent playback is up. Replaced along
-    /// with the tasks above when the settings stand the stack down and back up.
-    pub vpn_guard: Option<(VpnGuard, Arc<TorrentSession>)>,
+    /// The route torrent traffic takes and the session on it, once torrent playback is up.
+    /// Replaced along with the tasks above when the settings stand the stack down and back up.
+    pub torrent_route: Option<(TorrentRoute, Arc<TorrentSession>)>,
     /// Where torrent playback reports in once it is up. The actor holds the other end.
     pub arrivals: Arrivals,
     /// Playbacks started so far: what the next one is numbered after, so that what each says
@@ -140,7 +140,7 @@ impl EngineState {
             player_tx: None,
             finding: None,
             torrent_tasks: TorrentTasks::default(),
-            vpn_guard: None,
+            torrent_route: None,
             arrivals,
             playbacks: 0,
             cache: TitleCache::default(),

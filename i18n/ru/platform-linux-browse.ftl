@@ -1,10 +1,4 @@
-torrents-linux-check-note = { -app-name } проверяет, откуда выходит торрент-трафик, когда торрент запускается и затем каждую минуту во время работы, и ставит торренты на паузу, если проверка не проходит. Защищают вас VPN или прокси.
-torrents-linux-warn-confirm = { -app-name } будет предупреждать вместо паузы. Если VPN или прокси отключён, другие люди смогут увидеть ваш IP-адрес.
-torrents-linux-protection-saved = Защита торрентов сохранена
-torrents-linux-turn-on-title = Включить торренты
-torrents-linux-protect-title = Защита торрентов
 torrents-linux-edit-proxy-title = Изменить прокси
-torrents-linux-turn-on-button = Включить
 downloads-linux-seed-left = Осталось { $span }
 downloads-linux-seed-left-soon = Осталось меньше часа
 downloads-linux-space-free = Свободно { $free } из { $total } · загрузки занимают { $taken }

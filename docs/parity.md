@@ -282,29 +282,27 @@ in Settings > Integrations, finds TVs with Windows' own DNS-SD (a device watcher
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Add and order sources | yes | yes | yes | yes | partial (1) | yes | yes | yes |
 | Join plugin stores | yes | yes | yes | yes | yes (2) | yes | yes | yes |
-| Torrents with the VPN guard | yes (3) | yes (3) | yes (3) | yes (3) | yes (5) | yes (3) | yes (3) | partial (4) |
-| Check the guard again | dev (6) | dev (6) | dev (6) | partial (6) | partial (6) | yes (6) | yes (6) | no |
+| Torrents, with an optional proxy | yes (3) | yes (3) | yes (3) | yes (3) | yes (5) | yes (3) | yes (3) | partial (4) |
+| Check the proxy again | yes (6) | yes (6) | yes (6) | yes (6) | yes (6) | yes (6) | yes (6) | no |
 
 1. Settings > Sources lists them read-only; sources arrive only by joining a store.
 2. `signin/JoinStoreScreen.kt` takes the invite through a QR code to
    a page the TV serves, or typed on the TV, previews the store and joins; Settings > Plugin
    stores lists them with Leave. A phone cannot send a store link to a paired TV: the remote
    protocol keeps stores off the wire, and its `text` command always lands in Search.
-3. Settings > Sources: turning Torrents on asks what protects them ("Protect with") and runs
-   the connection check. A new or changed proxy goes through `Command::CheckTorrentProtection`
-   first and is saved only once it passes; a failed check saves nothing and says why. Once a
-   proxy is set, Edit proxy sits beside "Protect with" and opens its form filled in, where an
-   empty password keeps the saved one. Apple in `TorrentProtection.swift` and `TorrentSheet.swift`,
+3. Settings > Sources: the Torrents switch turns them on directly, and "Route torrent traffic
+   through a proxy" is an optional setting beside it. A new or changed proxy goes through
+   `Command::CheckTorrentProxy` first and is saved only once it passes; a failed check saves
+   nothing and says why. Once a proxy is set, Edit proxy opens its form filled in, where an
+   empty password keeps the saved one. Apple in `TorrentProxy.swift` and `TorrentSheet.swift`,
    Android in `ui/TorrentSheet.kt`, Windows in `Pages/TorrentDialog.cs` and
    `App.Core/Torrents.cs`, Linux in `pages/torrents.rs`.
-4. VPN mode is set in config.toml, not in the TUI.
-5. Settings > Sources has the phone's Torrents group (`tv/screens/SettingsScreen.kt`). The index
-   and a proxy's details come from a page the TV serves, opened on a phone from a QR code, or are
+4. The proxy is set in config.toml (`providers.torrent.proxy`), not in the TUI.
+5. Settings > Sources has the phone's Torrents group (`tv/screens/SettingsScreen.kt`). A
+   proxy's details come from a page the TV serves, opened on a phone from a QR code, or are
    typed on the TV (`signin/TorrentScreen.kt`); the proxy is checked before it is saved, as in
    note 3. Downloads stay off on the TV.
-6. Check now on Android and the TV sends `Command::CheckProviders`, which re-checks plugins and
-   leaves the guard alone (`ui/SettingsPanes.kt`, `tv/screens/SettingsScreen.kt`). Windows and
-   Linux send `Command::CheckConnection`. Apple has no Check now.
+6. While a proxy is set, Check now on the Proxy check row sends `Command::CheckProxy`.
 
 ## On the device
 
@@ -354,6 +352,6 @@ in Settings > Integrations, finds TVs with Windows' own DNS-SD (a device watcher
   sync.
 - The terminal's Settings screen leaves out the rows the engine lists as the native apps' own
   (`SettingKey::NATIVE_ROWS`): the Up next countdown, spoiler protection, download quality, keep
-  next episodes, downloads and torrents on mobile data, VPN on failure, episode notifications, mpv
+  next episodes, downloads and torrents on mobile data, episode notifications, mpv
   options, adult titles, the discussions and comment images rows, the controller rows and
   Calendar, mine only. Most work from config.toml.
