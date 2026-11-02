@@ -618,7 +618,7 @@ public final class AppStore {
     /// `prepareCards` brought, and otherwise asked at low priority so the screen's own requests go
     /// first.
     public func loadHoverEpisodes(_ id: AnilistId) {
-        guard titles.episodes[id] == nil, ask(.episodes(id)) else { return }
+        guard titles.episodes[id] == nil, asked[.episodes(id)] == nil, ask(.stills(id)) else { return }
         send(.loadStills(id))
     }
 
@@ -638,10 +638,14 @@ public final class AppStore {
         }
     }
 
-    /// A question about one title.
+    /// A question about one title. Stills are the episodes asked at low priority, kept apart so a
+    /// page opened right after a hover still asks for its own at the page's priority. Once a page
+    /// has asked, stills ask nothing: the engine answers only the newest listing of a title, and a
+    /// quiet one would put the page's behind the background work.
     private enum TitleQuestion: Hashable {
         case detail(AnilistId)
         case episodes(AnilistId)
+        case stills(AnilistId)
         case dub(AnilistId)
     }
 
@@ -659,8 +663,8 @@ public final class AppStore {
     /// forth costs one request. Whether it asked.
     @discardableResult
     public func loadStills(_ id: AnilistId) -> Bool {
-        guard titles[id]?.bannerUrl == nil, titles.episodes[id] == nil,
-              stillsAsked.insert(id).inserted, ask(.episodes(id))
+        guard titles[id]?.bannerUrl == nil, titles.episodes[id] == nil, asked[.episodes(id)] == nil,
+              stillsAsked.insert(id).inserted, ask(.stills(id))
         else { return false }
         send(.loadStills(id))
         return true
