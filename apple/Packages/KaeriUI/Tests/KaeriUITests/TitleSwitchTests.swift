@@ -1,5 +1,6 @@
 // A season or related title picked on the title page: the last one's page stays until the next
-// one's is here whole, so the page changes once, as it does for a title already visited.
+// one's words and episodes are here, then dissolves into it. Its art and main button hold on
+// their own until they land.
 
 import KaeriKit
 import KaeriStore
@@ -12,20 +13,14 @@ struct TitleSwitchTests {
                          watched: 0, completed: false, kind: nil, skippable: false, airsAt: nil,
                          delayedFrom: nil, metadataOnly: true)
 
-    @Test func thePickedTitleShowsOnceItsPageIsWhole() {
+    @Test func thePickedTitleShowsOnceItsWordsAndEpisodesAreHere() {
         let store = AppStore()
         let side: AnilistId = 900_010
         #expect(!TitlePage.pageHere(side, in: store), "nothing of it is here")
         store.apply(.detail(entry { $0.id = side; $0.format = "OVA"; $0.detail = detail() }))
         #expect(!TitlePage.pageHere(side, in: store), "its episodes are on their way")
         store.apply(.episodes(id: side, rows: [row]))
-        #expect(!TitlePage.pageHere(side, in: store), "the services have not said")
-        // Answered before the episodes said no source lists it: Add a source would show, then
-        // give way to Watch on.
-        store.apply(.availability(TitleAvailability(id: side, case: .playsHere)))
-        #expect(!TitlePage.pageHere(side, in: store), "answered for a source that lists it")
-        store.apply(.availability(TitleAvailability(id: side, case: .notInSources)))
-        #expect(TitlePage.pageHere(side, in: store))
+        #expect(TitlePage.pageHere(side, in: store), "the services and the art need not have said")
     }
 
     @Test func theRowItWasPickedFromStaysUntilItsPageSaysWhatIsInIt() {

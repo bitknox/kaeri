@@ -165,6 +165,34 @@ struct TitleOpeningTests {
         #expect(navigator.flight == nil && navigator.lifted == nil && !navigator.pageCovers)
     }
 
+    @Test func aTileClickedWhileItsArtFliesHomeFliesAgainAsANewTrip() {
+        let navigator = Navigator(route: LaunchRoute())
+        navigator.sourceShown(shelf, true)
+        navigator.openTitle(900_001, from: shelf)
+        navigator.landingShown(cover, true)
+        navigator.takeOff()
+        if let flight = navigator.flight { navigator.land(flight) }
+        navigator.back()
+        navigator.takeOff()
+        // The art is on its way home, or just landed there, when the tile is clicked again.
+        let backTrip = TitleFlight(source: shelf, opening: false, atPage: false).trip
+        if let flight = navigator.flight { #expect(flight.trip == backTrip) }
+        navigator.openTitle(900_001, from: shelf)
+        let opening = navigator.flight
+        #expect(opening?.opening == true)
+        // The shell keys the flyer by its trip: a new trip is a new flyer, which takes off on
+        // its own. Kept as the last one, it never took off and the page's cover stayed hidden.
+        #expect(opening?.trip != backTrip)
+        #expect(navigator.awaits(900_001, .poster))
+        navigator.takeOff()
+        if let flight = navigator.flight {
+            #expect(flight.atPage)
+            navigator.land(flight)
+        }
+        #expect(navigator.flight == nil && navigator.pageSettled)
+        #expect(!navigator.awaits(900_001, .poster), "the cover is drawn once the art lands")
+    }
+
     @Test func backFadesWhenTheElementHasGone() {
         let navigator = Navigator(route: LaunchRoute())
         navigator.sourceShown(shelf, true)
