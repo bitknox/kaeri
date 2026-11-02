@@ -317,6 +317,41 @@ impl Store {
         })
     }
 
+    /// A bookkeeping value the transports keep beside the log (a read cursor, a published
+    /// number). Not synced.
+    pub fn sync_meta_get(&self, key: &str) -> Result<Option<String>> {
+        self.with_conn(|c| Ok(meta(c, &format!("x.{key}"))?))
+    }
+
+    pub fn sync_meta_set(&self, key: &str, value: &str) -> Result<()> {
+        self.with_conn(|c| Ok(set_meta(c, &format!("x.{key}"), value)?))
+    }
+
+    /// One device's ops after `after`, oldest first, at most `limit`.
+    pub fn ops_of(&self, device: &str, after: u64, limit: usize) -> Result<Vec<Op>> {
+        self.with_conn(|c| {
+            let mut stmt = c.prepare(
+                "SELECT device, seq, stamp, body FROM sync_op
+                  WHERE device = ?1 AND seq > ?2 ORDER BY seq LIMIT ?3",
+            )?;
+            Ok(stmt
+                .query_map(params![device, after as i64, limit as i64], row_to_op)?
+                .collect::<rusqlite::Result<_>>()?)
+        })
+    }
+
+    /// Note when a device was last heard from, in unix seconds.
+    pub fn sync_touch_peer(&self, device: &str, at: i64) -> Result<()> {
+        self.with_conn(|c| {
+            c.execute(
+                "INSERT INTO sync_peer (device, last_seen) VALUES (?1, ?2)
+                 ON CONFLICT(device) DO UPDATE SET last_seen = MAX(COALESCE(last_seen, 0), ?2)",
+                params![device, at],
+            )?;
+            Ok(())
+        })
+    }
+
     /// Ops held, of every device.
     pub fn sync_op_count(&self) -> Result<u64> {
         self.with_conn(|c| {
