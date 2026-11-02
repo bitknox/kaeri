@@ -67,6 +67,9 @@
 	--ani-on-obi: #1e2033;
 	--ani-link-hover: #7a4309;
 	--ani-focus: #7a4309;
+	--ani-foot: #e3e1d9;
+	--ani-foot-text: #1e2033;
+	--ani-foot-dim: #4f546e;
 }
 
 *,
@@ -550,7 +553,7 @@ body.k-body {
 }
 
 .site-footer :focus-visible {
-	outline-color: #f5b467;
+	outline-color: var(--ani-focus);
 }
 
 /* ── Disclosures (the FAQ and docs): the height eases open, the pixel chevron turns in two steps ── */
