@@ -62,12 +62,25 @@ pub fn write_key(
 /// them in it, none. [`write_key`] for each, with the rest of the document left alone just the
 /// same.
 ///
-/// One write rather than several because some settings only make sense together: the torrent
-/// source's protection is a mode, a proxy and an acknowledgement, and a file holding the mode
-/// without the acknowledgement it needs is one the app would refuse to load.
+/// One write rather than several because some settings only make sense together, and a file
+/// holding half of such a change is one that should never be seen.
 pub fn write_keys(
     paths: &Paths,
     edits: Vec<(&[&str], &str, SettingValue)>,
+) -> Result<(), crate::Error> {
+    write_changes(paths, edits, Vec::new())
+}
+
+/// [`write_keys`], with the keys in `removals` taken out of the file in the same change: a
+/// setting that goes back to unset, such as the torrent proxy turned off.
+///
+/// Every write also moves a file from before the proxy setting on: an old
+/// `[providers.torrent.vpn]` table's proxy becomes `providers.torrent.proxy`, unless one is set
+/// already, and the table goes, its acknowledgements with it.
+pub fn write_changes(
+    paths: &Paths,
+    edits: Vec<(&[&str], &str, SettingValue)>,
+    removals: Vec<(&[&str], &str)>,
 ) -> Result<(), crate::Error> {
     let path = &paths.config_file;
     let existing = match std::fs::read_to_string(path) {
@@ -96,8 +109,12 @@ pub fn write_keys(
     let mut doc = existing.parse::<toml_edit::DocumentMut>().map_err(|e| {
         crate::Error::Config(format!("{} is not valid TOML: {e}", path.display()))
     })?;
+    drop_legacy_vpn(&mut doc, &existing, path)?;
     for (table, key, value) in edits {
         set_in(&mut doc, path, table, key, value)?;
+    }
+    for (table, key) in removals {
+        remove_in(&mut doc, table, key);
     }
 
     let rendered = doc.to_string();
@@ -107,6 +124,43 @@ pub fn write_keys(
     crate::config::Config::from_toml(&rendered)?;
 
     write_atomically(path, rendered.as_bytes())
+}
+
+/// Move an old `[providers.torrent.vpn]` table on: its proxy to `providers.torrent.proxy`, when
+/// that is not set, and the table out. `src` is the document as read.
+fn drop_legacy_vpn(
+    doc: &mut toml_edit::DocumentMut,
+    src: &str,
+    path: &Path,
+) -> Result<(), crate::Error> {
+    let torrent = doc
+        .get_mut("providers")
+        .and_then(|providers| providers.get_mut("torrent"))
+        .and_then(toml_edit::Item::as_table_like_mut);
+    let Some(torrent) = torrent else { return Ok(()) };
+    if torrent.remove("vpn").is_none() {
+        return Ok(());
+    }
+    let proxy =
+        src.parse::<toml::Table>().ok().and_then(|table| crate::config::legacy_proxy(&table));
+    if let Some(url) = proxy
+        && !torrent.contains_key("proxy")
+    {
+        set_in(doc, path, &["providers", "torrent"], "proxy", SettingValue::Str(url))?;
+    }
+    Ok(())
+}
+
+/// Take `table`.`key` out of `doc`, when it is there.
+fn remove_in(doc: &mut toml_edit::DocumentMut, table: &[&str], key: &str) {
+    let mut node: &mut dyn toml_edit::TableLike = doc.as_table_mut();
+    for segment in table {
+        match node.get_mut(segment).and_then(toml_edit::Item::as_table_like_mut) {
+            Some(next) => node = next,
+            None => return,
+        }
+    }
+    node.remove(key);
 }
 
 /// Set `table`.`key` to `value` in `doc`, the document at `path`, creating any tables it needs.
@@ -331,7 +385,7 @@ mod tests {
         std::fs::write(
             &paths.config_file,
             "# my notes\n[providers]\norder = [\"torrent\", \"plugins\"]  # tried first\n\
-             disabled = [\"remote\"]\n\n[playback]\nquality = 1080\n",
+             disabled = [\"extra\"]\n\n[playback]\nquality = 1080\n",
         )
         .unwrap();
 
@@ -341,7 +395,7 @@ mod tests {
 
         let config = crate::config::Config::load(&paths).unwrap();
         assert_eq!(config.providers.order, order);
-        assert_eq!(config.providers.disabled, ["remote"], "the sibling key was disturbed");
+        assert_eq!(config.providers.disabled, ["extra"], "the sibling key was disturbed");
         assert_eq!(config.playback.quality, 1080, "the other table was disturbed");
         let after = std::fs::read_to_string(&paths.config_file).unwrap();
         assert!(after.contains("# my notes"), "leading comment lost:\n{after}");
@@ -360,45 +414,92 @@ mod tests {
 
         write_key(
             &paths,
-            &["providers", "torrent", "vpn"],
-            "socks_url",
-            SettingValue::Str("socks5://10.64.0.1:1080".into()),
+            &["providers", "torrent"],
+            "proxy",
+            SettingValue::Str("socks5://192.0.2.10:1080".into()),
         )
         .unwrap();
 
         let config = crate::config::Config::load(&paths).unwrap();
         assert_eq!(
-            config.providers.torrent.vpn.socks_url.as_deref(),
-            Some("socks5://10.64.0.1:1080"),
+            config.providers.torrent.proxy.as_deref(),
+            Some("socks5://192.0.2.10:1080"),
             "value did not land in the right table"
         );
         assert!(config.trackers.enabled.is_empty(), "the other table was disturbed");
     }
 
     #[test]
-    fn enabling_torrents_without_the_required_setup_is_refused() {
-        // The validate-before-write rule earning its place: whatever `Config::validate` requires
-        // before torrenting can start now gates the settings screen too, so no UI toggle can write
-        // a config the app would refuse to load. Found by this module's own test, not by design.
-        //
-        // Deliberately not asserting *which* requirement fires. There are several — a VPN mode, a
-        // proxy URL, an indexer — and pinning this to one couples a test about the write path to
-        // the order `validate` happens to check them in.
-        let dir = temp_dir("guard");
+    fn a_setting_that_would_not_load_is_refused_and_names_itself() {
+        // The validate-before-write rule: whatever `Config::validate` requires gates the settings
+        // screens too, so no control can write a config the app would refuse to load.
+        let dir = temp_dir("refused");
         let paths = paths_in(&dir);
         std::fs::write(&paths.config_file, "[providers.torrent]\nenabled = false\n").unwrap();
 
-        let err =
-            write_key(&paths, &["providers", "torrent"], "enabled", SettingValue::Bool(true))
-                .unwrap_err();
+        let err = write_key(
+            &paths,
+            &["providers", "torrent"],
+            "proxy",
+            SettingValue::Str("http://192.0.2.10:8080".into()),
+        )
+        .unwrap_err();
         assert!(
             err.to_string().contains("providers.torrent"),
             "the refusal has to name the setting at fault: {err}"
         );
         assert!(
-            !crate::config::Config::load(&paths).unwrap().providers.torrent.enabled,
+            crate::config::Config::load(&paths).unwrap().providers.torrent.proxy.is_none(),
             "a refused write must change nothing"
         );
+    }
+
+    #[test]
+    fn the_next_write_moves_an_old_vpn_table_to_the_proxy_and_drops_it() {
+        let dir = temp_dir("legacy-vpn");
+        let paths = paths_in(&dir);
+        std::fs::write(
+            &paths.config_file,
+            "[providers.torrent]\nenabled = true\n\n[providers.torrent.vpn]\nmode = \"socks5\"\n\
+             socks_url = \"socks5://mika@192.0.2.10:1080\"\non_leak = \"warn\"\n\
+             i_understand_a_failed_check_keeps_torrents_running = true\n",
+        )
+        .unwrap();
+
+        write_key(&paths, &["playback"], "quality", SettingValue::Int(720)).unwrap();
+        let after = std::fs::read_to_string(&paths.config_file).unwrap();
+        assert!(!after.contains("vpn") && !after.contains("i_understand"), "{after}");
+        assert!(after.contains("proxy = \"socks5://mika@192.0.2.10:1080\""), "{after}");
+        let config = crate::config::Config::load(&paths).unwrap();
+        assert!(config.providers.torrent.enabled);
+
+        // A table with no proxy in it just goes.
+        std::fs::write(
+            &paths.config_file,
+            "[providers.torrent.vpn]\nmode = \"none\"\ni_understand_my_ip_is_exposed = true\n",
+        )
+        .unwrap();
+        write_key(&paths, &["playback"], "quality", SettingValue::Int(720)).unwrap();
+        let after = std::fs::read_to_string(&paths.config_file).unwrap();
+        assert!(!after.contains("vpn") && !after.contains("proxy"), "{after}");
+    }
+
+    #[test]
+    fn a_removal_takes_the_key_out_in_the_same_change() {
+        let dir = temp_dir("removal");
+        let paths = paths_in(&dir);
+        std::fs::write(
+            &paths.config_file,
+            "[providers.torrent]\nenabled = true\nproxy = \"socks5://192.0.2.10:1080\"\n",
+        )
+        .unwrap();
+        let torrent: &[&str] = &["providers", "torrent"];
+        write_changes(&paths, Vec::new(), vec![(torrent, "proxy")]).unwrap();
+        let config = crate::config::Config::load(&paths).unwrap();
+        assert!(config.providers.torrent.enabled && config.providers.torrent.proxy.is_none());
+        // Nothing to take out is no error.
+        write_changes(&paths, Vec::new(), vec![(torrent, "proxy"), (&["nowhere"], "x")])
+            .unwrap();
     }
 
     #[cfg(unix)]
@@ -446,10 +547,7 @@ on_cellular = true
 
 [providers.torrent]
 on_cellular = true
-
-[providers.torrent.vpn]
-on_leak = \"warn\"
-i_understand_a_failed_check_keeps_torrents_running = true
+proxy = \"socks5://192.0.2.10:1080\"
 ";
         std::fs::write(&paths.config_file, before).unwrap();
 
@@ -459,7 +557,7 @@ i_understand_a_failed_check_keeps_torrents_running = true
         assert_eq!(config.downloads.quality, crate::config::DownloadQuality::Higher);
         assert_eq!(config.downloads.keep_next, 3);
         assert!(config.downloads.on_cellular && config.providers.torrent.on_cellular);
-        assert_eq!(config.providers.torrent.vpn.on_leak, crate::config::LeakAction::Warn);
+        assert!(config.providers.torrent.proxy.is_some());
 
         write_key(&paths, &["playback"], "quality", SettingValue::Int(720)).unwrap();
         let after = std::fs::read_to_string(&paths.config_file).unwrap();
@@ -471,33 +569,26 @@ i_understand_a_failed_check_keeps_torrents_running = true
         let dir = temp_dir("batch");
         let paths = paths_in(&dir);
         std::fs::write(&paths.config_file, "[providers.torrent]\nenabled = false\n").unwrap();
-        let vpn: &[&str] = &["providers", "torrent", "vpn"];
+        let torrent: &[&str] = &["providers", "torrent"];
 
-        // Each alone would be a file that does not load once torrents are on; together they are
-        // one that does.
         write_keys(
             &paths,
             vec![
-                (vpn, "on_leak", SettingValue::Str("warn".into())),
-                (
-                    vpn,
-                    "i_understand_a_failed_check_keeps_torrents_running",
-                    SettingValue::Bool(true),
-                ),
+                (torrent, "enabled", SettingValue::Bool(true)),
+                (torrent, "proxy", SettingValue::Str("socks5://192.0.2.10:1080".into())),
             ],
         )
         .unwrap();
         let config = crate::config::Config::load(&paths).unwrap();
-        assert_eq!(config.providers.torrent.vpn.on_leak, crate::config::LeakAction::Warn);
+        assert!(config.providers.torrent.enabled && config.providers.torrent.proxy.is_some());
 
-        // Torrents on with no protection and no acknowledgement: refused whole, the key that
-        // would have loaded on its own included.
+        // One key that would not load: refused whole, the key that would have loaded included.
         let before = std::fs::read_to_string(&paths.config_file).unwrap();
         let refused = write_keys(
             &paths,
             vec![
-                (vpn, "mode", SettingValue::Str("none".into())),
-                (&["providers", "torrent"], "enabled", SettingValue::Bool(true)),
+                (torrent, "cache_limit_gb", SettingValue::Int(5)),
+                (torrent, "proxy", SettingValue::Str("ftp://192.0.2.10".into())),
             ],
         );
         assert!(refused.is_err());

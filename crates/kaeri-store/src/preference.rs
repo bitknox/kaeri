@@ -6,9 +6,7 @@
 //! "this show is that entry in the catalogue" the same setting, and clearing one would clear
 //! the other.
 //!
-//! The preference is per title rather than global for a reason that shows up immediately in
-//! practice: a web source often carries a series the indexer has no seeded release for, and a
-//! torrent is frequently the only thing carrying an older season. `providers.order` sets the
+//! The right source can differ per title, so a title can pin one. `providers.order` is the
 //! default; this overrides it where the default is wrong.
 
 use kaeri_core::ids::AnilistId;

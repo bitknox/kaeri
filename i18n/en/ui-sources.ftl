@@ -47,9 +47,9 @@ source-note-gone = Not installed
 # @max 36
 source-note-ambiguous = Couldn't match this title
 
-# Under a source held back by the VPN check in Settings.
+# Under a source that waits for the proxy check in Settings.
 # @max 36
-source-note-held-back = Held back by the VPN check
+source-note-held-back = Waiting for the proxy check
 
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 # @max 20
@@ -99,12 +99,6 @@ sources-empty-detail = Join a { -plugin-store } with the invite link its owner s
 # Row for the built-in torrent source.
 sources-torrents = Torrents
 
-# Label of a source that is not a plugin and controls this device.
-sources-remote = Remote
-
-# Origin: set in the config file.
-sources-origin-config = Set in the config file
-
 # Origin: built into the app.
 sources-origin-built-in = Built in
 
@@ -144,8 +138,8 @@ sources-detail-not-answering = Not answering. { $why }
 # Status line: no answer.
 sources-detail-not-answering-plain = Not answering.
 
-# Status line: held back by the check.
-sources-detail-held-back = Held back until the connection check passes.
+# Status line: waiting for the proxy check.
+sources-detail-held-back = Waiting until the proxy check passes.
 
 # Status line: disabled.
 sources-detail-disabled = Off. It keeps its place and isn't tried.
@@ -153,7 +147,7 @@ sources-detail-disabled = Off. It keeps its place and isn't tried.
 # Status line: the source is gone.
 sources-detail-gone = This { -source } is no longer here.
 
-# Status line: the site did not answer.
+# Status line: the source did not answer.
 sources-detail-site = The { -source } didn't answer.
 
 # Row label: version.
@@ -235,11 +229,10 @@ sources-torrent-source = Torrent playback
 sources-source-order-row = { -source-cap } order
 
 # Note under the facts on the Torrents page in Sources. Torrents are built in, not a plugin.
-sources-torrents-note = Torrents are part of { -app-name }, not a { -plugin }. What protects their traffic, the connection check and seeding are set in Settings, under { -source-cap-pl }.
+sources-torrents-note = Torrents are part of { -app-name }, not a { -plugin }. The proxy and seeding are set in Settings, under { -source-cap-pl }.
 
 # Over the { -source } list while the { -source-pl } are set up again after a change.
 sources-rebuilding = { -source-cap-pl } are being set up again
-
 
 # Value of a plugin's response time, in milliseconds.
 # @arg ms: int
@@ -467,7 +460,6 @@ player-starting-part = Starting part { $part }
 # Credit line under the starting line on the player's starting screen for the demo.
 player-demo-credit = こうしす！ by OPAP-JP contributors · CC BY 4.0
 
-
 # Line under the title when no source is set up, where the device cannot read folders.
 sources-empty-body-mobile = { -source-cap-pl } are where episodes come from: your media server, and { -plugin-pl } from { -plugin-store-pl } you join.
 
@@ -480,9 +472,8 @@ sources-your-intro = Episodes play from the first { -source } that has them, in 
 # Heading of the section that lists the plugins.
 sources-section-plugins = { -plugin-cap-pl }
 
-
 # Section heading: Internet Archive collections and PeerTube channels.
-sources-section-catalogues = Free catalogues
+sources-section-catalogues = Open catalogues
 
 # Link in the empty state.
 # @max 24

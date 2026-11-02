@@ -21,7 +21,7 @@ async fn harness() -> Harness {
     let h = Harness::new().await;
     let mut title = invented(TWO_SERVICES.get(), "FINISHED", 12, (2030, 4, 6), &[], &[]);
     title["externalLinks"] = json!([
-        { "site": "Hikari Stream", "url": "https://hikari.example/t/1", "type": "STREAMING",
+        { "site": "Hikari Library", "url": "https://hikari.example/t/1", "type": "STREAMING",
           "language": "Japanese", "isDisabled": false, "notes": "JP" },
         { "site": "Tsuki TV", "url": "https://tsuki.example/t/1", "type": "STREAMING",
           "language": "English", "isDisabled": false, "notes": null },
@@ -68,7 +68,7 @@ async fn the_page_lists_the_services_anilist_knows_and_starts_with_none_chosen()
     assert!(page.settings.show_others);
     assert_eq!(page.region.as_deref(), Some("DK"));
     // AniList's list, sorted, with the switched-off site left out.
-    assert_eq!(page.available, ["Hikari Stream", "Lantern Stream"]);
+    assert_eq!(page.available, ["Hikari Library", "Lantern Library"]);
     assert!(page.regions.contains(&"DK".to_owned()));
 }
 
@@ -98,7 +98,7 @@ async fn with_no_service_chosen_a_title_is_listed_and_the_page_offers_the_choice
     let found = ask(&mut h, FINISHED, false).await;
     assert_eq!(found.case, AvailabilityCase::NotInSources);
     assert!(found.choose_services);
-    assert_eq!(found.others, ["Lantern Stream"]);
+    assert_eq!(found.others, ["Lantern Library"]);
     assert!(found.main.is_none());
 }
 
@@ -106,14 +106,14 @@ async fn with_no_service_chosen_a_title_is_listed_and_the_page_offers_the_choice
 async fn a_title_that_does_not_play_here_opens_the_service_and_its_episodes() {
     let mut h = harness().await;
     h.send(Command::Licensed(LicensedCommand::SetServices {
-        services: vec!["Lantern Stream".into()],
+        services: vec!["Lantern Library".into()],
     }));
     h.settle().await;
     let found = ask(&mut h, FINISHED, false).await;
     assert_eq!(found.case, AvailabilityCase::OnService);
-    assert_eq!(found.main.as_ref().map(|m| m.service.as_str()), Some("Lantern Stream"));
+    assert_eq!(found.main.as_ref().map(|m| m.service.as_str()), Some("Lantern Library"));
     assert!(!found.episodes.is_empty(), "the service published its episodes' pages");
-    assert!(found.episodes.iter().all(|e| e.service == "Lantern Stream"));
+    assert!(found.episodes.iter().all(|e| e.service == "Lantern Library"));
 
     // Playing here as well: the same service is an "Also on" line, and the main action is Play.
     let found = ask(&mut h, FINISHED, true).await;
@@ -126,7 +126,7 @@ async fn a_title_that_does_not_play_here_opens_the_service_and_its_episodes() {
 async fn region_hides_links_whose_notes_name_another_country_and_a_disabled_link_never_shows() {
     let mut h = harness().await;
     h.send(Command::Licensed(LicensedCommand::SetServices {
-        services: vec!["Hikari Stream".into()],
+        services: vec!["Hikari Library".into()],
     }));
     h.settle().await;
     // Until a region is known nothing is hidden.
@@ -137,7 +137,7 @@ async fn region_hides_links_whose_notes_name_another_country_and_a_disabled_link
     h.send(Command::Licensed(LicensedCommand::SetRegion { region: Some("DK".into()) }));
     h.settle().await;
     let found = ask(&mut h, TWO_SERVICES, false).await;
-    assert_eq!(found.case, AvailabilityCase::NotInSources, "Hikari Stream is marked JP");
+    assert_eq!(found.case, AvailabilityCase::NotInSources, "Hikari Library is marked JP");
     assert_eq!(found.others, ["Tsuki TV"]);
 
     h.send(Command::Licensed(LicensedCommand::SetRegion { region: Some("JP".into()) }));
@@ -157,7 +157,7 @@ async fn coming_back_after_ten_minutes_asks_about_the_next_episode() {
         .unwrap();
     h.send(Command::Licensed(LicensedCommand::Open {
         id: FINISHED,
-        service: "Lantern Stream".into(),
+        service: "Lantern Library".into(),
         url: "https://stream.example/series/hoshikuzu".into(),
         episode: None,
     }));
@@ -174,8 +174,11 @@ async fn coming_back_after_ten_minutes_asks_about_the_next_episode() {
             _ => None,
         })
         .expect("a return notice");
-    assert_eq!((back.id, back.episode, back.service.as_str()), (FINISHED, 4, "Lantern Stream"));
-    assert_eq!(back.prompt.english(), "Watched episode 4 on Lantern Stream?");
+    assert_eq!(
+        (back.id, back.episode, back.service.as_str()),
+        (FINISHED, 4, "Lantern Library")
+    );
+    assert_eq!(back.prompt.english(), "Watched episode 4 on Lantern Library?");
     assert_eq!(back.done.english(), "Episode 4 marked as watched.");
 
     // Asked once.
@@ -188,7 +191,7 @@ async fn a_short_look_at_the_service_asks_nothing_and_an_episode_link_names_its_
     let mut h = harness().await;
     h.send(Command::Licensed(LicensedCommand::Open {
         id: FINISHED,
-        service: "Lantern Stream".into(),
+        service: "Lantern Library".into(),
         url: "https://stream.example/series/hoshikuzu/6".into(),
         episode: Some(6),
     }));
@@ -199,7 +202,7 @@ async fn a_short_look_at_the_service_asks_nothing_and_an_episode_link_names_its_
 
     h.send(Command::Licensed(LicensedCommand::Open {
         id: FINISHED,
-        service: "Lantern Stream".into(),
+        service: "Lantern Library".into(),
         url: "https://stream.example/series/hoshikuzu/6".into(),
         episode: Some(6),
     }));

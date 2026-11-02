@@ -7,7 +7,7 @@
 # The product name. It is never translated.
 -app-name = Kaeri
 
-# A site or feed Kaeri reads episodes from. Never "provider".
+# A place Kaeri plays episodes from: a folder, a media server, a catalogue or a plugin. Never "provider".
 -source = source
 -source-cap = Source
 -source-pl = sources
@@ -50,11 +50,7 @@
 # The name of the place that starts and joins watch parties.
 -watch-together-cap = Watch together
 
-# Where releases are looked up.
--torrent-index = torrent index
--torrent-index-cap = Torrent index
-
-# One downloadable file in a torrent index. Not a place episodes come from.
+# One downloadable file in a listing. Not a place episodes come from.
 -release = release
 -release-cap = Release
 -release-pl = releases

@@ -1,10 +1,4 @@
-torrents-linux-check-note = { -app-name } sprawdza, skąd wychodzi ruch torrentów, gdy torrent się uruchamia i co minutę podczas działania, a jeśli sprawdzenie się nie powiedzie, wstrzymuje torrenty. Ochronę zapewnia VPN lub proxy.
-torrents-linux-warn-confirm = { -app-name } ostrzeże zamiast wstrzymać. Jeśli VPN lub proxy nie działa, inni mogą zobaczyć adres IP.
-torrents-linux-protection-saved = Ochrona torrentów zapisana
-torrents-linux-turn-on-title = Włącz torrenty
-torrents-linux-protect-title = Ochrona torrentów
 torrents-linux-edit-proxy-title = Edytuj proxy
-torrents-linux-turn-on-button = Włącz
 downloads-linux-seed-left = Zostało { $span }
 downloads-linux-seed-left-soon = Zostało mniej niż godzina
 downloads-linux-space-free = Wolne { $free } z { $total } · pobrane zajmują { $taken }

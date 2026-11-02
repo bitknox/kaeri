@@ -10,7 +10,7 @@
 //! | `example-rust` | Rust | The reference implementation. |
 //! | `example-ts` | JavaScript | Proves the ABI is language-agnostic rather than Rust-shaped. |
 //! | `test-hostile` | Rust | Attacks the host: spins, allocates, tries to escape. |
-//! | `test-torrent-index` | Rust | A made-up index on `index.example` that names torrents. |
+//! | `test-torrent-source` | Rust | A made-up source on `index.example` that lists torrents. |
 //!
 //! [`assert_reference_behaviour`] is the load-bearing one: the *same* assertions run against the
 //! Rust and JavaScript components. Two guests sharing nothing but a `.wit` file, producing
@@ -24,7 +24,7 @@
 //! ```sh
 //! cargo build --release --target wasm32-wasip2 --manifest-path plugins/example-rust/Cargo.toml
 //! cargo build --release --target wasm32-wasip2 --manifest-path plugins/test-hostile/Cargo.toml
-//! cargo build --release --target wasm32-wasip2 --manifest-path plugins/test-torrent-index/Cargo.toml
+//! cargo build --release --target wasm32-wasip2 --manifest-path plugins/test-torrent-source/Cargo.toml
 //! cd plugins/example-ts && npm install && npm run build
 //! cargo test -p kaeri-plugin
 //! ```
@@ -127,7 +127,7 @@ async fn assert_reference_behaviour(plugin: &LoadedPlugin, expected_id: &str) {
     assert_eq!(streams[0].url, "https://cdn.example.test/master.m3u8");
     assert_eq!(streams[0].kind, "hls");
     assert_eq!(streams[0].quality, Some(1080));
-    assert!(streams[0].headers.iter().any(|(n, _)| n == "referer"));
+    assert!(streams[0].headers.iter().any(|(n, _)| n == "authorization"));
     assert_eq!(streams[0].subtitles.len(), 1);
     assert_eq!(streams[0].subtitles[0].language, "eng");
     assert!(!streams[0].subtitles[0].hard);
@@ -251,8 +251,8 @@ async fn a_guest_resolves_a_stream_with_headers_and_subtitles() {
     assert_eq!(streams[0].url, "https://cdn.example.test/master.m3u8");
     assert_eq!(streams[0].kind, "hls");
     assert_eq!(streams[0].quality, Some(1080));
-    // Referer travels with the stream, because a referer-locked CDN 403s without it.
-    assert!(streams[0].headers.iter().any(|(n, _)| n == "referer"));
+    // Headers a source sets travel with the stream.
+    assert!(streams[0].headers.iter().any(|(n, _)| n == "authorization"));
     assert_eq!(streams[0].subtitles.len(), 1);
     assert!(!streams[0].subtitles[0].hard);
 }
@@ -614,22 +614,22 @@ async fn a_plugin_built_for_the_old_abi_major_is_refused_with_a_clear_error() {
 
 // ── a source that names torrents ─────────────────────────────────────────────────────────────
 //
-// `plugins/test-torrent-index` is a made-up index. Kaeri finds no torrents of its own: a
+// `plugins/test-torrent-source` is a made-up source. Kaeri finds no torrents of its own: a
 // plugin names them, in its own order, and the host turns each into a magnet link for torrent
 // playback without ranking anything.
 
-fn torrent_index() -> Option<PathBuf> {
+fn torrent_source_wasm() -> Option<PathBuf> {
     built(
         plugins_dir().join(
-            "test-torrent-index/target/wasm32-wasip2/release/kaeri_torrent_index_fixture.wasm",
+            "test-torrent-source/target/wasm32-wasip2/release/kaeri_torrent_source_fixture.wasm",
         ),
         "cargo build --release --target wasm32-wasip2 \
-         --manifest-path plugins/test-torrent-index/Cargo.toml",
+         --manifest-path plugins/test-torrent-source/Cargo.toml",
     )
 }
 
 async fn torrent_source() -> Option<kaeri_plugin::WasmProvider> {
-    let path = torrent_index()?;
+    let path = torrent_source_wasm()?;
     let plugin = default_host().load(&path).await.expect("load");
     Some(kaeri_plugin::WasmProvider::new(plugin))
 }

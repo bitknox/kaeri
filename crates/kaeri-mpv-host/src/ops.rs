@@ -288,7 +288,7 @@ mod tests {
     #[test]
     fn a_load_keeps_the_last_of_each_option_and_goes_as_named_arguments() {
         let op = PlayerOp::Load {
-            url: "http://127.0.0.1:8123/mend/a".into(),
+            url: "http://127.0.0.1:8123/m/a".into(),
             options: vec![
                 option("start", "10"),
                 option("title", "Episode 2"),
@@ -299,7 +299,7 @@ mod tests {
         assert_eq!(
             call,
             MpvCall::Load {
-                url: "http://127.0.0.1:8123/mend/a".into(),
+                url: "http://127.0.0.1:8123/m/a".into(),
                 options: vec![
                     ("title".into(), "Episode 2".into()),
                     ("start".into(), "12.5".into())
@@ -308,7 +308,7 @@ mod tests {
         );
         assert_eq!(
             call.command_node().unwrap(),
-            json!({"name": "loadfile", "url": "http://127.0.0.1:8123/mend/a", "flags": "replace",
+            json!({"name": "loadfile", "url": "http://127.0.0.1:8123/m/a", "flags": "replace",
                 "options": {"title": "Episode 2", "start": "12.5"}})
         );
     }

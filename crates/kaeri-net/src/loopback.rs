@@ -1,7 +1,7 @@
 //! Loopback listeners that can be bound again on their own port.
 //!
 //! Every server this app runs listens on 127.0.0.1 for one player: the torrent stream servers
-//! and the mending proxy. A phone's system may take an app's sockets while it is in the
+//! and the stream proxy. A phone's system may take an app's sockets while it is in the
 //! background, and a listener taken that way accepts nothing when the app comes back, while the
 //! player still holds a URL with its port in it. [`restore_all`] binds each listener that no
 //! longer answers again, on the port it had, so every URL handed out still leads where it did,

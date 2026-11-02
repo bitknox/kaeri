@@ -14,7 +14,7 @@ use std::{
 };
 
 use kaeri_core::ids::AnilistId;
-use kaeri_meta::Meta;
+use kaeri_meta::{Media, Meta};
 use kaeri_model::{
     catalog::{AiringStatus, Entry, LibrarySegment},
     event::Event,
@@ -40,6 +40,8 @@ const COMPLETED_PROBED: usize = 25;
 /// Sequels and Planning titles looked up together, one request of at most fifty.
 const SEQUELS_LOOKED_UP: usize = 30;
 const PLANNING_LOOKED_UP: usize = 20;
+/// The most titles one lookup by id carries: AniList's page of media.
+const MEDIA_PER_REQUEST: usize = 50;
 /// Recommended titles looked up, enough to fill the room after the ones that are filtered out.
 const RECOMMENDED_LOOKED_UP: usize = 18;
 
@@ -94,40 +96,62 @@ pub struct Ask {
 /// lookups. Nothing is sent when they fail; a second rail is not worth a toast, and what is on
 /// screen stays.
 pub async fn load_up_next(lent: Lent, ask: Ask) {
+    // A lookup that failed is asked for again after AniList's own wait, a few times, and the
+    // shelf is sent again as each answer fills it in.
+    for attempt in 0..=crate::catalog::RETRIES {
+        let done = if attempt == 0 {
+            up_next_once(&lent, &ask).await
+        } else {
+            // Asked again behind whatever is on screen by then.
+            tokio::time::sleep(crate::catalog::retry_wait(&lent.meta).await).await;
+            kaeri_meta::in_background(up_next_once(&lent, &ask)).await
+        };
+        if done {
+            return;
+        }
+    }
+}
+
+/// One go at Up next. Whether it needs no further go: it was sent whole, or could not be found.
+async fn up_next_once(lent: &Lent, ask: &Ask) -> bool {
     let Lent { meta, store, tx, .. } = lent;
-    let queue = queue(&store);
+    let queue = queue(store);
     let room = SUGGESTIONS_SHOWN;
     // Nothing watched yet has nothing to suggest from.
     if store.stats().is_ok_and(|s| s.titles == 0) {
         let _ = tx.send(Event::UpNext(Vec::new()));
-        return;
+        return true;
     }
-    let dismissed = dismissed(&store);
-    let from = signature(&store, &queue, &dismissed, &ask, room);
-    if let Some(kept) = kept(&store)
+    let dismissed = dismissed(store);
+    let from = signature(store, &queue, &dismissed, ask, room);
+    if let Some(kept) = kept(store)
         && kept.from == from
         && ask.now - kept.at < KEPT_FOR
-        && let Some(items) = items_from_cache(&meta, &store, &kept.picks)
+        && let Some(items) = items_from_cache(meta, store, &kept.picks)
     {
         let _ = tx.send(Event::UpNext(items));
-        return;
+        return true;
     }
-    let picks = match find(&meta, &store, &queue, &dismissed, &ask, room).await {
-        Ok(found) => found.picks,
+    let (picks, complete) = match find(meta, store, &queue, &dismissed, ask, room, None).await {
+        Ok(found) => (found.picks, found.complete),
         Err(e) => {
             tracing::warn!(error = %e, "Up next could not be found");
-            return;
+            return false;
         }
     };
     let cut: Vec<Pick> = picks.iter().take(room).map(|(pick, _)| pick.clone()).collect();
     let items = picks.into_iter().take(room).map(|(pick, entry)| item(&pick, entry)).collect();
     let kept = Kept { at: ask.now, from, picks: cut };
-    if let Ok(json) = serde_json::to_string(&kept)
+    // A lookup that failed leaves the others' picks on screen but not kept: the next ask finds
+    // the rest instead of serving a thin shelf for half an hour.
+    if complete
+        && let Ok(json) = serde_json::to_string(&kept)
         && let Err(e) = store.set_meta_text(KEPT_KEY, &json)
     {
         tracing::warn!(error = %e, "could not keep Up next");
     }
     let _ = tx.send(Event::UpNext(items));
+    complete
 }
 
 /// Not interested in `id`: hidden until it starts airing, and for good if it already has.
@@ -266,10 +290,22 @@ pub(crate) fn item(pick: &Pick, entry: Entry) -> UpNextItem {
 pub(crate) struct Found {
     /// In order, and at most as many as the room after the groups that cannot fill it.
     pub picks: Vec<(Pick, Entry)>,
-    /// The titles the viewer finished, the most recent first.
-    pub finished: Vec<Entry>,
     /// Every title finished, whichever way, including those on the list not looked up.
     pub finished_ids: HashSet<AnilistId>,
+    /// Every lookup answered. When one failed, the picks are those the others found: shown, but
+    /// not kept as the answer, and asked for again.
+    pub complete: bool,
+    /// With [`Because`] asked: the most recent title finished that rated well enough, and the
+    /// titles rated highest off it, best first, or why they could not be found.
+    pub because: Option<(Entry, Result<Vec<Media>, String>)>,
+}
+
+/// Home's "Because you finished", found with the suggestions: off the most recent title finished
+/// scored at least `score`, the `each` titles rated highest.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct Because {
+    pub score: u32,
+    pub each: u32,
 }
 
 /// The suggestions, in order, and as many as the room, with the groups that cannot fill it
@@ -281,6 +317,7 @@ pub(crate) async fn find(
     dismissed: &[Dismissed],
     ask: &Ask,
     room: usize,
+    because: Option<Because>,
 ) -> Result<Found, String> {
     let queue: HashSet<AnilistId> = queue.iter().copied().collect();
     let status_of = |id: AnilistId| -> Option<String> {
@@ -300,6 +337,22 @@ pub(crate) async fn find(
     };
     let mut probe: Vec<AnilistId> = watched.iter().map(|p| p.anilist_id).collect();
     for id in completed.iter().take(COMPLETED_PROBED) {
+        if !probe.contains(id) {
+            probe.push(*id);
+        }
+    }
+    // The Planning titles ride along with the probe, as far as one request of fifty holds them:
+    // they are known already, and asking for them apart is a request for nothing new.
+    let mut planning_ids: Vec<AnilistId> = if ask.listed {
+        store.library_with_status("PLANNING").unwrap_or_default()
+    } else {
+        Vec::new()
+    };
+    planning_ids.retain(|id| !queue.contains(id) && !started(*id));
+    planning_ids.truncate(PLANNING_LOOKED_UP);
+    let probe_len = probe.len();
+    let with_probe = MEDIA_PER_REQUEST.saturating_sub(probe_len);
+    for id in planning_ids.iter().take(with_probe) {
         if !probe.contains(id) {
             probe.push(*id);
         }
@@ -345,21 +398,36 @@ pub(crate) async fn find(
         }
     }
     sequel_ids.truncate(SEQUELS_LOOKED_UP);
-    let mut planning_ids: Vec<AnilistId> = if ask.listed {
-        store.library_with_status("PLANNING").unwrap_or_default()
-    } else {
-        Vec::new()
-    };
-    planning_ids.retain(|id| !sequel_ids.contains(id) && !queue.contains(id) && !started(*id));
-    planning_ids.truncate(PLANNING_LOOKED_UP);
-    let wanted: Vec<AnilistId> = sequel_ids.iter().chain(&planning_ids).copied().collect();
-    let found = if wanted.is_empty() {
-        Vec::new()
-    } else {
-        meta.media_many(&wanted).await.map_err(|e| e.to_string())?
-    };
+    planning_ids.retain(|id| !sequel_ids.contains(id));
+    // Only the titles the probe did not already carry are asked for.
+    let wanted: Vec<AnilistId> = sequel_ids
+        .iter()
+        .chain(&planning_ids)
+        .filter(|id| !probed.iter().any(|m| m.id == **id))
+        .copied()
+        .collect();
+    // What is recommended off the titles finished most recently, and with `because` off the
+    // one Home names, go in the same request when they are wanted whatever the lookup finds:
+    // the new seasons and Planning can make no more picks than they have titles.
+    let sources: Vec<AnilistId> = finished_entries
+        .iter()
+        .take(kaeri_meta::anilist::query::RECOMMENDED_FROM)
+        .map(|e| e.id)
+        .collect();
+    let because_from: Option<Entry> = because.and_then(|because| {
+        finished_entries.iter().find(|e| e.score.is_some_and(|s| s >= because.score)).cloned()
+    });
+    let recommending = sequel_ids.len() + planning_ids.len() < room && !sources.is_empty();
+    let asked = meta
+        .suggestions(
+            &wanted,
+            if recommending { &sources } else { &[] },
+            because_from.as_ref().zip(because).map(|(e, b)| (e.id, b.each)),
+        )
+        .await;
+    let found = asked.titles.map_err(|e| e.to_string())?;
     let entries: HashMap<AnilistId, Entry> =
-        found.iter().map(|m| (m.id, data::entry_from(m, Some(store)))).collect();
+        probed.iter().chain(&found).map(|m| (m.id, data::entry_from(m, Some(store)))).collect();
 
     let mut picks: Vec<(Pick, Entry)> = Vec::new();
     let group = |ids: &[AnilistId], why: Why, picks: &mut Vec<(Pick, Entry)>| {
@@ -389,15 +457,15 @@ pub(crate) async fn find(
     group(&planning_ids, Why::Planning, &mut picks);
 
     // What people who liked what was finished rated highest.
+    let mut complete = true;
+    let mut candidates: Vec<(AnilistId, String)> = Vec::new();
     if picks.len() < room && !finished_entries.is_empty() {
-        let sources: Vec<AnilistId> = finished_entries
-            .iter()
-            .take(kaeri_meta::anilist::query::RECOMMENDED_FROM)
-            .map(|e| e.id)
-            .collect();
-        match meta.recommended_from(&sources).await {
+        let from = match asked.from {
+            Some(from) => from,
+            None => meta.recommended_from(&sources).await,
+        };
+        match from {
             Ok(from) => {
-                let mut candidates: Vec<(AnilistId, String)> = Vec::new();
                 let longest = from.iter().map(|(_, _, recs)| recs.len()).max().unwrap_or(0);
                 // One from each title in turn, so the most recent does not take them all.
                 for n in 0..longest {
@@ -415,40 +483,68 @@ pub(crate) async fn find(
                     }
                 }
                 candidates.truncate(RECOMMENDED_LOOKED_UP);
-                let ids: Vec<AnilistId> = candidates.iter().map(|(id, _)| *id).collect();
-                if !ids.is_empty() {
-                    match meta.media_many(&ids).await {
-                        Ok(media) => {
-                            for media in &media {
-                                let entry = data::entry_from(media, Some(store));
-                                if !suggestible(&entry) {
-                                    continue;
-                                }
-                                let because = candidates
-                                    .iter()
-                                    .find(|(id, _)| *id == entry.id)
-                                    .map(|(_, name)| name.clone());
-                                picks.push((
-                                    Pick {
-                                        id: entry.id.get(),
-                                        reason: Why::Recommended,
-                                        because,
-                                        unaired: false,
-                                        planned: false,
-                                    },
-                                    entry,
-                                ));
-                            }
-                        }
-                        Err(e) => tracing::warn!(error = %e, "recommended titles failed"),
-                    }
-                }
             }
-            Err(e) => tracing::warn!(error = %e, "recommendations failed"),
+            Err(e) => {
+                complete = false;
+                tracing::warn!(error = %e, "recommendations failed");
+            }
         }
     }
+    // The recommended titles and Home's "Because you finished" are looked up together.
+    let because_ids: Option<Result<Vec<AnilistId>, String>> =
+        asked.because.map(|ids| ids.map_err(|e| e.to_string()));
+    let mut ids: Vec<AnilistId> = candidates.iter().map(|(id, _)| *id).collect();
+    for id in because_ids.iter().flatten().flatten() {
+        if !ids.contains(id) {
+            ids.push(*id);
+        }
+    }
+    let looked_up = if ids.is_empty() {
+        Ok(Vec::new())
+    } else {
+        meta.media_many(&ids).await.map_err(|e| e.to_string())
+    };
+    match &looked_up {
+        Ok(media) => {
+            for media in media.iter().filter(|m| candidates.iter().any(|(id, _)| *id == m.id)) {
+                let entry = data::entry_from(media, Some(store));
+                if !suggestible(&entry) {
+                    continue;
+                }
+                let because = candidates
+                    .iter()
+                    .find(|(id, _)| *id == entry.id)
+                    .map(|(_, name)| name.clone());
+                picks.push((
+                    Pick {
+                        id: entry.id.get(),
+                        reason: Why::Recommended,
+                        because,
+                        unaired: false,
+                        planned: false,
+                    },
+                    entry,
+                ));
+            }
+        }
+        Err(e) if !candidates.is_empty() => {
+            complete = false;
+            tracing::warn!(error = %e, "recommended titles failed");
+        }
+        Err(_) => {}
+    }
+    let because = because_from.zip(because_ids).map(|(source, ids)| {
+        let titles = ids.and_then(|ids| {
+            let media = looked_up.clone()?;
+            Ok(ids
+                .iter()
+                .filter_map(|id| media.iter().find(|m| m.id == *id).cloned())
+                .collect())
+        });
+        (source, titles)
+    });
 
-    Ok(Found { picks, finished: finished_entries, finished_ids: finished })
+    Ok(Found { picks, finished_ids: finished, complete, because })
 }
 
 /// Airing first, then announced with a date, then finished, then announced without one.

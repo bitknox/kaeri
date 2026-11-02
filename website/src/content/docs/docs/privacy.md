@@ -28,7 +28,7 @@ found the episode, or from the image servers of the services AniList lists for i
 on the device for 30 days, so each one is fetched about once a month.
 
 When AniList can't answer, most of the same requests go to Tenrai (`api.tenrai.org`), a public
-mirror of MyAnimeList's data, and its images come from MyAnimeList's image server. To turn this
+MyAnimeList-compatible metadata API, and its images come from MyAnimeList's image server. To turn this
 off, set `fallback = false` under `[meta]` in `config.toml`, the file the terminal app and the Mac
 app share.
 
@@ -153,7 +153,7 @@ Tokens are kept here:
 | App | Where |
 |---|---|
 | iPhone and iPad | The system Keychain |
-| Mac | Where the terminal app keeps them, so one sign-in serves both: the Keychain, or files if `token_storage = "file"` |
+| Mac | Where the terminal app keeps them, so one sign-in serves both: the Keychain, as one item named `kaeri-secrets` that holds them all, or files if `token_storage = "file"` |
 | Android and Android TV | A private file in the app, sealed with a key that the Android Keystore holds and never lets out |
 | Windows | Windows Credential Manager, as generic credentials named `kaeri/` and the token's id, kept for your user on that computer |
 | Linux | Files only you can read, in the data directory the terminal app uses, `~/.local/share/kaeri` |
@@ -179,15 +179,13 @@ The video and subtitles a plugin finds are then fetched from the addresses it re
 a media server on another host. Each host a plugin reaches, and each media server, sees your IP
 address and what was asked of it.
 
-A link to a licensed service opens in that service's own app or website. A self-hosted source API,
-set as `remote_url` under `[providers]`, receives searches and episode requests the same way a
-plugin's hosts do.
+A link to a licensed service opens in that service's own app or website.
 
 To stop a plugin, remove it under Sources.
 
 ## Plugin stores
 
-A plugin store is run by someone you know, not by Kaeri. You join one with a link its owner
+A plugin store is run by its owner, not by Kaeri. You join one with a link its owner
 gives you.
 
 Joining with an invite sends the invite code and a name for this device. The name starts as the
@@ -214,11 +212,11 @@ Torrents are off until you turn them on, and Kaeri finds no torrents itself. A s
 that names torrents receives your searches like any other source. The torrent's trackers and every peer in the swarm see the IP address you
 connect from and the torrent you are downloading or sharing.
 
-The [VPN guard](/docs/guides/torrents-vpn/) checks where torrent traffic leaves from before any
-torrent starts and then every 60 seconds, by asking `ifconfig.co`, or your VPN's own check if you
-turn that on. In proxy mode the check goes through your proxy. DHT is off in proxy mode, port
+To keep your IP address private, you can [route torrent traffic through a
+proxy](/docs/guides/torrents/#routing-torrent-traffic-through-a-proxy). It is optional and off by
+default. Its check connects to your proxy and nowhere else. DHT is off through a proxy, port
 forwarding is never requested, nothing listens for incoming connections, and there is no local
-peer discovery. The guard is a safety net. Your VPN or proxy is what protects you.
+peer discovery.
 
 Seeding after an episode is off by default.
 

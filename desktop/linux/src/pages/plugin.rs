@@ -407,6 +407,6 @@ mod tests {
         );
         assert_eq!(new_hosts_line(&[]), None);
         assert_eq!(contacts_line(&three), "Contacts a.example and 2 more");
-        assert_eq!(capitalized("the site did not answer."), "The site did not answer.");
+        assert_eq!(capitalized("the source did not answer."), "The source did not answer.");
     }
 }

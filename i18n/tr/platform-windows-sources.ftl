@@ -20,7 +20,6 @@ sources-check = { -source-pl }ı denetle
 sources-origin-version = { $origin } · Versiyon { $version }
 sources-standing = Durum
 sources-status-working = Hazır
-sources-torrent-indexes = Ayarlarda açık olan dizinlerde arar.
 sources-version-ready = Versiyon { $version } hazır
 sources-use-this = Bu { -source } kullanılsın
 sources-use-name = { $name } açık

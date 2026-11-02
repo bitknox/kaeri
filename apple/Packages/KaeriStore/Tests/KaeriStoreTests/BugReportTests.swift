@@ -63,8 +63,8 @@ private func formIds() throws -> Set<String> {
         )
         let url = BugReports.url(device: phone, providers: [moon, provider("lantern")], context: context)
         let text = parameters(url).values.joined(separator: "\n")
-        for leak in ["moonlit", "Lantern", "moon.example", "10.0.0.2"] {
-            #expect(!text.contains(leak), "\(leak) in \(text)")
+        for secret in ["moonlit", "Lantern", "moon.example", "10.0.0.2"] {
+            #expect(!text.contains(secret), "\(secret) in \(text)")
         }
         #expect(text.contains("2 plugin sources"))
         #expect(parameters(url)["title"] == "Bug: load")

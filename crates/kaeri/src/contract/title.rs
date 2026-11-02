@@ -31,11 +31,12 @@ use kaeri_testkit::{
 use super::{WITH_ANILIST, ends, toasts};
 use crate::harness::{Harness, Options, names};
 
-/// The seasons each page said, in the order the pages came: `None` for one sent while the walk
-/// along its franchise was still under way.
+/// The seasons each whole page said, in the order the pages came: `None` for one sent while the
+/// walk along its franchise was still under way. A header sent ahead of its page is left out:
+/// see [`headers_said`].
 fn seasons_said(updates: &[Event]) -> Vec<Option<Vec<AnilistId>>> {
     let said = |update: &Event| match update {
-        Event::Detail(page) => {
+        Event::Detail(page) if !page.detail.as_ref().is_some_and(|detail| detail.partial) => {
             let seasons = page.detail.as_ref().and_then(|detail| detail.seasons.as_ref());
             Some(seasons.map(|seasons| seasons.iter().map(|season| season.id).collect()))
         }
@@ -95,7 +96,8 @@ async fn a_title_says_its_pinned_source_before_it_arrives() {
     let job = h.send(Command::LoadDetail(FINISHED));
     let updates = h.settle().await;
 
-    assert_eq!(names(&updates), ["ProviderPreference", "Detail", "JobDone"]);
+    // Its sequel's header follows the page, as a card.
+    assert_eq!(names(&updates), ["ProviderPreference", "Detail", "JobDone", "Cards"]);
     assert!(matches!(&updates[0], Event::ProviderPreference(None)));
     let Event::Detail(entry) = &updates[1] else { unreachable!() };
     assert_eq!((entry.id, entry.title.as_str()), (FINISHED, "Stardust Wayfarer"));
@@ -112,7 +114,8 @@ async fn a_franchises_seasons_are_the_same_from_every_one_of_them() {
         let mut h = with_franchise(Options::default()).await;
         let job = h.send(Command::LoadDetail(start));
         let updates = h.settle().await;
-        assert_eq!(names(&updates), ["ProviderPreference", "Detail", "JobDone"], "{start}");
+        let said = ["ProviderPreference", "Detail", "JobDone", "Cards"];
+        assert_eq!(names(&updates), said, "{start}");
         assert_eq!(seasons_said(&updates), [Some(FRANCHISE_SEASONS.to_vec())], "{start}");
         assert_eq!(h.server().requests_for(Operation::Relations).len(), walked, "{start}");
         ends(&updates, job);
@@ -164,6 +167,101 @@ async fn a_long_franchise_has_all_twelve_seasons_on_every_page() {
     assert_eq!(seasons_said(&h.settle().await), [Some(Vec::new())]);
 }
 
+/// The headers sent ahead of their pages, in the order they came.
+fn headers_said(updates: &[Event]) -> Vec<&kaeri_model::catalog::Entry> {
+    updates
+        .iter()
+        .filter_map(|update| match update {
+            Event::Detail(page)
+                if page.detail.as_ref().is_some_and(|detail| detail.partial) =>
+            {
+                Some(page.as_ref())
+            }
+            _ => None,
+        })
+        .collect()
+}
+
+#[tokio::test]
+async fn a_season_opened_after_its_franchise_is_headed_at_once_and_whole_moments_later() {
+    let mut h = Harness::with(Options::default()).await;
+    h.server().add_titles(fixtures::long_franchise());
+    let opened = LONG_FRANCHISE_SEASONS[5];
+    h.send(Command::LoadDetail(opened));
+    let updates = h.settle().await;
+    assert!(headers_said(&updates).is_empty(), "nothing kept on the first page");
+    // The other seasons' headers follow the page as cards, with their art for the screens to
+    // fetch ahead, from one request.
+    let cards: Vec<&kaeri_model::catalog::Entry> = updates
+        .iter()
+        .filter_map(|update| match update {
+            Event::Cards(cards) => Some(cards.iter()),
+            _ => None,
+        })
+        .flatten()
+        .collect();
+    let others: Vec<AnilistId> =
+        LONG_FRANCHISE_SEASONS.into_iter().filter(|id| *id != opened).collect();
+    assert_eq!(cards.iter().map(|card| card.id).collect::<Vec<_>>(), others);
+    assert!(cards.iter().all(|card| card.cover_url.is_some()));
+    assert_eq!(h.server().requests_for(Operation::Many).len(), 1);
+
+    let mut headed_related = 0;
+    for id in others {
+        h.send(Command::LoadDetail(id));
+        let updates = h.settle().await;
+        let pages: Vec<&kaeri_model::catalog::Entry> = updates
+            .iter()
+            .filter_map(|update| match update {
+                Event::Detail(page) => Some(page.as_ref()),
+                _ => None,
+            })
+            .collect();
+        let [header, page] = pages[..] else { panic!("{id}: {:?}", names(&updates)) };
+        assert!(header.detail.as_ref().unwrap().partial, "{id}: the header first");
+        assert!(!page.detail.as_ref().unwrap().partial, "{id}: then the whole page");
+        // The header is the page's top as the page has it: nothing in it moves.
+        let top = |entry: &kaeri_model::catalog::Entry| {
+            (
+                entry.title.clone(),
+                entry.banner_url.clone(),
+                entry.cover_url.clone(),
+                entry.format.clone(),
+                entry.episodes,
+                entry.year,
+                entry.score,
+                entry.studio.clone(),
+                entry.synopsis.clone(),
+                entry.genres.clone(),
+                entry.status,
+            )
+        };
+        assert_eq!(top(header), top(page), "{id}");
+        // Its relations too, by kind and id: whether the page has a Related row, and how many
+        // cards it holds, is known with the header.
+        let related = |entry: &kaeri_model::catalog::Entry| {
+            let detail = entry.detail.as_ref().unwrap();
+            detail.relations.iter().map(|r| (r.id, r.relation)).collect::<Vec<_>>()
+        };
+        assert_eq!(related(header), related(page), "{id}: the header's relations");
+        headed_related += related(header).len();
+        assert_eq!(
+            seasons_said(&updates),
+            [Some(LONG_FRANCHISE_SEASONS.to_vec())],
+            "{id}: the page's seasons"
+        );
+        let seasons = header.detail.as_ref().and_then(|detail| detail.seasons.as_ref());
+        let seasons: Vec<AnilistId> = seasons.unwrap().iter().map(|s| s.id).collect();
+        assert_eq!(seasons, LONG_FRANCHISE_SEASONS.to_vec(), "{id}: the header's seasons");
+    }
+    assert!(headed_related > 0, "the franchise's own Related, beside its seasons");
+    assert_eq!(h.server().requests_for(Operation::Many).len(), 1, "no header asked again");
+
+    // A page AniList answered moments ago comes at once, with no header ahead of it.
+    h.send(Command::LoadDetail(opened));
+    assert!(headers_said(&h.settle().await).is_empty());
+}
+
 #[tokio::test]
 async fn a_page_whose_seasons_take_long_comes_without_them_and_never_renumbers() {
     let mut h = with_franchise(Options {
@@ -176,7 +274,7 @@ async fn a_page_whose_seasons_take_long_comes_without_them_and_never_renumbers()
     let updates = h.settle().await;
     // The page first, without seasons, then with all five. Never what the third season's page
     // alone knows, the second to the fourth, which would have numbered it Season 2.
-    assert_eq!(names(&updates), ["ProviderPreference", "Detail", "Detail", "JobDone"]);
+    assert_eq!(names(&updates), ["ProviderPreference", "Detail", "Detail", "JobDone", "Cards"]);
     assert_eq!(seasons_said(&updates), [None, Some(FRANCHISE_SEASONS.to_vec())]);
     ends(&updates, job);
 }
@@ -211,7 +309,15 @@ async fn a_pin_written_inline_is_what_the_next_task_reads() {
     // The settings first, with the shows that keep a source of their own counted again.
     assert_eq!(
         names(&updates),
-        ["Settings", "Toast", "ShowSettings", "ProviderPreference", "Detail", "JobDone"]
+        [
+            "Settings",
+            "Toast",
+            "ShowSettings",
+            "ProviderPreference",
+            "Detail",
+            "JobDone",
+            "Cards"
+        ]
     );
     assert_eq!(kept_sources(&updates[0]), 1);
     assert_eq!(toasts(&updates), ["info: alt will be used for this title."]);
@@ -622,7 +728,7 @@ async fn related_cards_say_where_each_title_is_on_the_library_and_carry_its_colo
         updates
             .into_iter()
             .find_map(|update| match update {
-                Event::Detail(entry) => entry.detail,
+                Event::Detail(entry) => entry.detail.filter(|detail| !detail.partial),
                 _ => None,
             })
             .expect("the page")

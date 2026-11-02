@@ -27,13 +27,10 @@ notice-signed-out-queue = { $count ->
  }
 notice-sign-out-failed = { $tracker }からサインアウトできませんでした。もう一度試してください。{ $reason }
 notice-not-saved-because = その設定を保存できませんでした。{ $cause }
-notice-protection-saved = トレントの保護設定を保存しました。
-notice-protection-not-checked = トレントの保護を確認できませんでした。{ $cause }
 notice-proxy-password-not-kept = プロキシのパスワードを保存できませんでした。もう一度入力して、保存をお試しください。{ $reason }
 notice-show-setting-refused = その設定を保存できませんでした。{ $value }は{ $setting }に使えない値です。
 notice-show-not-reset = この作品の設定をリセットできませんでした。{ $reason }
 notice-show-no-such-subtitles = その字幕の選択を保存できませんでした。この作品では、その字幕が使われたことがありません。
-notice-torrents-waiting-for-check = トレントは、接続の確認が再び通るまで待機しています。
 notice-mapping-data-refreshed = マッピングデータを更新しました。
 notice-mapping-data-failed = マッピングデータを更新できませんでした（{ $datasets }）。{ $wait }後に再試行します。{ $cause }
 notice-episode-aired = { $title }のエピソード{ $episode }が、離れている間に放送されました。
@@ -41,8 +38,6 @@ notice-episodes-aired = { $count ->
    *[other] 視聴中の作品の新しいエピソードが{ $count }件放送されました。カレンダーで確認できます。
  }
 notice-update-available = { $tag }が公開されました。kaeri --updateを実行するとインストールできます。
-cause-confirm-no-protection = 先に、保護なしで問題ないことを確認してください。
-cause-confirm-warn-only = 先に、警告のみにすることを確認してください。
 cause-proxy-needs-address = プロキシにはホストとポートが必要です。
 cause-proxy-address-unusable = プロキシのアドレスは、確認に使えないアドレスです。
 cause-server-unreachable = サーバーに接続できませんでした。

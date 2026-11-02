@@ -1,10 +1,4 @@
-torrents-linux-check-note = { -app-name }, torrent trafiğinin nereden çıktığını bir torrent başladığında ve çalışırken her dakika denetler. Denetim başarısız olursa torrentleri duraklatır. Sizi koruyan şey VPN'iniz ya da proxy'nizdir.
-torrents-linux-warn-confirm = { -app-name } duraklatmak yerine sizi uyarır. VPN'iniz ya da proxy'niz kapalıysa diğer kişiler IP adresinizi görebilir.
-torrents-linux-protection-saved = Torrent koruması kaydedildi
-torrents-linux-turn-on-title = Torrentleri aç
-torrents-linux-protect-title = Torrentleri koru
 torrents-linux-edit-proxy-title = Proxy'yi düzenle
-torrents-linux-turn-on-button = Aç
 downloads-linux-seed-left = { $span } kaldı
 downloads-linux-seed-left-soon = Bir saatten az kaldı
 downloads-linux-space-free = { $total } içinden { $free } boş · indirmeler { $taken } kullanıyor

@@ -1,4 +1,4 @@
-// Where the engine finds the command-line tools it runs, such as a VPN client's: a Mac app
+// Where the engine finds the command-line tools it runs, such as a helper's: a Mac app
 // opened from the Finder gets launchd's PATH, /usr/bin:/bin:/usr/sbin:/sbin, where the terminal
 // has the shell's, with Homebrew's and /usr/local/bin's tools on it.
 

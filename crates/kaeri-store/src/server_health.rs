@@ -48,7 +48,7 @@ impl ServerKey {
     ///
     /// `None` where there is no server to keep a record of: an address that is not `http` or
     /// `https` — a local file, a magnet, a test pattern — or one on this machine, which is the
-    /// torrent session's, or the mender's, never a host's.
+    /// torrent session's, or the stream proxy's, never a host's.
     pub fn of(provider_id: &str, url: &str) -> Option<Self> {
         let (scheme, rest) = url.split_once("://")?;
         let scheme = scheme.to_ascii_lowercase();

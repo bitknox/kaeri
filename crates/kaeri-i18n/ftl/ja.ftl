@@ -162,7 +162,7 @@ home-more-genre = もっと見る:{ $genre }
 # Line over the spotlight's title when it is the built-in demo.
 home-spotlight-demo = デモ版(自由に共有OK)
 
-# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Stream.
+# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.
 licensed-return = { $service }で第{ $episode }話を観ましたか?
 
 # Notice after Mark as watched on the return notice. It holds Undo.
@@ -648,15 +648,6 @@ release-pinned = このタイトルには{ $name }を使います。
 # Toast when the chosen source or release for a title could not be saved. The reason comes from the database.
 notice-choice-not-saved = その選択を保存できませんでした。{ $reason }
 
-# Toast while torrents are running but the connection check failed, and the settings say to warn only.
-torrent-check-failed-running = 接続の確認に失敗しました。トレントは動き続けています。
-
-# Note on the sources screen: torrents are waiting for the VPN guard. The reason comes from the guard.
-torrent-vpn-waiting = VPNガードを通過すると、トレントが開始されます。{ $reason }
-
-# Note on the sources screen: the VPN guard has no verdict yet.
-torrent-vpn-unverified = VPNガードを通過すると、トレントが開始されます。接続はまだ確認されていません。
-
 # Error: the link or file given to open is not a magnet link, an info hash or a torrent file.
 torrent-link-unusable = マグネットリンクでもトレントファイルでもありません。
 
@@ -671,15 +662,6 @@ torrent-interface-closed = トレントが開始される前にKaeriが終了し
 
 # Error: the torrent session could not start. The reason comes from the torrent engine.
 torrent-session-failed = トレントのセッションを開始できませんでした。{ $reason }
-
-# Toast when torrents are up but no operating-system firewall rule backs the VPN guard. Terminal only: the engine never sends it to the apps.
-torrent-no-kill-switch = VPNが切断された場合にトレントの通信を止める仕組みが、このデバイスにはありません。「kaeri --doctor」を実行すると設定できます。
-
-# Toast when the connection check could not run. The reason comes from the VPN settings.
-torrent-not-checked = 接続を確認できませんでした。{ $reason }
-
-# Note on the sources screen after the source chain is rebuilt with torrents on.
-sources-reloaded-torrents-pending = ソースを再読み込みしました。VPNガードを通過すると、トレントが開始されます。
 
 # Note on the sources screen after the source chain is rebuilt with torrents off.
 sources-reloaded-torrents-off = トレントはオフです。セッションを停止しました。
@@ -792,12 +774,6 @@ notice-sign-out-failed = { $tracker }からサインアウトできませんで�
 # Toast when a setting could not be stored. The cause says why and what to do.
 notice-not-saved-because = その設定を保存できませんでした。{ $cause }
 
-# Toast when the torrent protection choice was saved.
-notice-protection-saved = トレントの保護設定を保存しました。
-
-# Toast when the torrent protection could not be checked. The cause says why.
-notice-protection-not-checked = トレントの保護を確認できませんでした。{ $cause }
-
 # Toast when the proxy's password could not be stored. The reason comes from the system.
 notice-proxy-password-not-kept = プロキシのパスワードを保存できませんでした。もう一度入力して、保存をお試しください。{ $reason }
 
@@ -809,9 +785,6 @@ notice-show-not-reset = この作品の設定をリセットできませんで�
 
 # Toast when a subtitle choice names subtitles the show has not used.
 notice-show-no-such-subtitles = その字幕の選択を保存できませんでした。この作品では、その字幕が使われたことがありません。
-
-# Toast while torrents are held until the connection check passes.
-notice-torrents-waiting-for-check = トレントは、接続の確認が再び通るまで待機しています。
 
 # Toast when the mapping data downloads work again after a failure.
 notice-mapping-data-refreshed = マッピングデータを更新しました。
@@ -830,12 +803,6 @@ notice-episodes-aired =
 
 # Toast when a new release of Kaeri is out, on the terminal app. The command is not translated. Terminal only: the engine never sends it to the apps.
 notice-update-available = { $tag }が公開されました。kaeri --updateを実行するとインストールできます。
-
-# The reason a setting was refused until the person confirms having no protection.
-cause-confirm-no-protection = 先に、保護なしで問題ないことを確認してください。
-
-# The reason a setting was refused until the person confirms the "warn only" choice.
-cause-confirm-warn-only = 先に、警告のみにすることを確認してください。
 
 # The reason a proxy was refused: it has no host or no port.
 cause-proxy-needs-address = プロキシにはホストとポートが必要です。
@@ -906,26 +873,8 @@ crash-notice = 問題が発生したため、Kaeriを終了しました。
 # The same notice on the TV, which has no button.
 crash-notice-tv = 問題が発生したため、Kaeriを終了しました。設定の「情報」から報告できます。
 
-# Note under the connection-check group of the torrents dialog: what the check does.
-torrents-linux-check-note = Kaeriは、トレントの開始時と実行中は1分ごとに、トレント通信の出口を確認します。確認に失敗するとトレントを一時停止します。身を守るのはVPNまたはプロキシです。
-
-# Confirmation text when choosing "Warn only" for a failed check.
-torrents-linux-warn-confirm = Kaeriは一時停止する代わりに警告します。VPNまたはプロキシが停止していると、他の人からあなたのIPアドレスが見えてしまう場合があります。
-
-# Status line once the protection has been checked and saved.
-torrents-linux-protection-saved = トレントの保護設定を保存しました
-
-# Title of the dialog that turns torrents on.
-torrents-linux-turn-on-title = トレントを有効にする
-
-# Title of the dialog that changes what protects torrents.
-torrents-linux-protect-title = トレントを保護
-
 # Title of the dialog that edits the proxy.
 torrents-linux-edit-proxy-title = プロキシを編集
-
-# Button that turns torrents on in the dialog.
-torrents-linux-turn-on-button = 有効にする
 
 # Seeding row: time left until the goal, in a span already worded ("18h", "1d 6h").
 downloads-linux-seed-left = 残り{ $span }
@@ -1139,12 +1088,6 @@ settings-notify-note-on = 視聴リストの作品のエピソードが公開さ
 
 # Preview note for new-episode notifications when they are off.
 settings-notify-note-off = オフです。作品ごとの設定で通知をオンにした作品だけ通知します。
-
-# Heading of the preview note beside the sources settings while torrents are on.
-settings-connection-check-title = 接続の確認
-
-# Preview note beside the sources settings while torrents are on.
-settings-connection-check-note = Kaeriは、トレントの開始時と実行中は1分ごとに、トレント通信の出口を確認します。確認に失敗するとトレントを一時停止します。身を守るのはVPNまたはプロキシです。
 
 # Preview note beside the accounts settings.
 settings-accounts-note = Kaeriはアカウントなしで使えます。サインアウトしても、視聴履歴はこのコンピューターに残ります。
@@ -3034,9 +2977,6 @@ sources-too-small = 表示するには、ターミナルをより広くしてく
 # Heading shown on the Sources screen when there is nothing to list, in the alert colour.
 sources-none-available = 利用できるソースはありません
 
-# Reason shown when no source is available and the engine gave none. The setting is the name of a key in the config file and is not translated.
-sources-torrents-off = { $setting }とVPNモードを設定するまで、トレントはオフになっています。
-
 # Column heading in the Sources table: the name of the source.
 sources-column-source = ソース
 
@@ -3082,14 +3022,11 @@ sources-state-down = 停止中
 # State of a source: it has not been tried yet.
 sources-state-unchecked = 未確認
 
-# State of a source: it works but local rules (the VPN check) are withholding it.
+# State of a source: it works but waits for the proxy check.
 sources-state-held-back = 保留中
 
 # Heading of the line about { -plugin-store-pl }.
 sources-stores-title = プラグインストア
-
-# Under the heading when no { -plugin-store } is joined or the list has not arrived.
-sources-stores-invite = 知り合いが共有するプラグイン。招待リンクで参加できます。
 
 # Part of the { -plugin-store } summary: how many { -plugin-store-pl } are joined.
 sources-stores-joined = { $count } 件参加中
@@ -3141,27 +3078,6 @@ sources-meta-skipped-until = { $time } まで見送っています（{ $cause }�
 
 # Detail for a metadata service whose wait is over: it is asked again when something needs it. The cause is the service's own error text.
 sources-meta-next-request = 次の要求で再試行します（{ $cause }）
-
-# Header chip while the VPN check is running. The mark is a status glyph.
-sources-vpn-checking = VPN { $mark }  確認中
-
-# Header chip when the VPN protects the connection. The name is where traffic leaves the network.
-sources-vpn-protected = VPN { $mark }  { $exit }
-
-# Header chip when the VPN check found traffic leaving outside the tunnel.
-sources-vpn-leaking = VPN { $mark }  漏れあり
-
-# Header chip when the VPN check could not be completed.
-sources-vpn-unreachable = VPN { $mark }  接続不可
-
-# Header chip when the configuration runs with no VPN on purpose.
-sources-vpn-unprotected = VPN { $mark }  保護なし
-
-# Notice when the VPN check finds a leak and torrents are paused.
-sources-vpn-leak-paused = VPNから通信が漏れています。保護が戻るまで、トレントを一時停止しています。
-
-# Notice when the VPN check cannot be completed and torrents are paused.
-sources-vpn-unreachable-paused = VPNに接続できません。接続できるようになるまで、トレントを一時停止しています。
 
 # Notice after the person submits an empty value for a text setting.
 settings-unchanged = 変更していません。設定を解除するには、config.tomlの該当行を削除してください。
@@ -3231,12 +3147,6 @@ settings-value-download-dir-default = トレントのキャッシュと同じ場
 
 # Value of the Syncplay room setting when no room is set.
 settings-value-room-unset = 未設定（同時視聴に必要）
-
-# Value of the VPN mode setting: traffic goes through a proxy server (SOCKS5).
-settings-value-vpn-socks5 = プロキシ
-
-# Value of the VPN mode setting: a tunnel set up outside the app.
-settings-value-vpn-external = 外部
 
 # Value of the seeding ratio setting: seed until the ratio is reached.
 settings-value-seed-ratio = 比率 { $ratio } まで
@@ -3370,9 +3280,6 @@ settings-label-seed-hours = シードの上限時間
 # Settings row: the cap on torrent upload speed.
 settings-label-upload-limit = アップロード上限
 
-# Settings row: how traffic is protected by a VPN.
-settings-label-vpn-mode = VPNモード
-
 # Settings row: where sign-in tokens are kept.
 settings-label-token-storage = トークンの保存先
 
@@ -3396,9 +3303,6 @@ settings-label-downloads-on-cellular = モバイルデータ通信でのダウ�
 
 # Settings row: whether torrents run on a mobile connection.
 settings-label-torrents-on-cellular = モバイルデータ通信でのトレント
-
-# Settings row: what happens to torrents when the VPN check fails.
-settings-label-vpn-on-failure = 確認に失敗した場合
 
 # Settings row: whether the app notifies of new episodes.
 settings-label-episode-notifications = 新しいエピソードの通知
@@ -3451,9 +3355,6 @@ settings-note-download-dir = Enterキーを押すとパスを入力できます�
 # Note under the merge subtitles row.
 settings-note-merge-subtitles = 完了する次のダウンロードから適用されます。
 
-# Note under the keep seeding row. It is a privacy choice.
-settings-note-keep-seeding = オンの間は、シードとして表示され続けます。すぐに適用されます。
-
 # Note under the after each download row.
 settings-note-download-hook = Enterキーを押すとコマンドを入力できます。ダウンロードが完了するたびに実行されます。
 
@@ -3480,12 +3381,6 @@ settings-note-presence-title = オフにすると、作品名を出さずに「�
 
 # Note under the rich presence row.
 settings-note-presence-rich = カバー画像、進行バー、AniListへのリンクを追加します。タイトルの表示が必要です。
-
-# Note under the torrent playback row.
-settings-note-torrents = VPNの設定が必要です。すぐに反映されます。
-
-# Note under the VPN mode row.
-settings-note-vpn-mode = 変更するにはconfig.tomlを編集してください。保護をオフにするには、明示的な操作が必要です。
 
 # Note under the seed after watching row.
 settings-note-seed-ratio = Kaeriを開いている間、視聴済みのエピソードをシードし続けます。
@@ -6097,9 +5992,6 @@ onboarding-own-heading = 自分のメディアがありますか?
 # Heading of the group that joins a store with an invite.
 onboarding-invite-heading = 招待リンクをお持ちですか?
 
-# Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-onboarding-where-stores = プラグインはプラグインストアから提供されます。プラグインストアは一人の運営者が、招待した人のために運営しています。参加するには、所有者からの招待リンクが必要です。
-
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = 今すぐ試す
 
@@ -8016,9 +7908,6 @@ settings-reset = 設定をリセット
 # Title of the confirmation for resetting the settings.
 settings-reset-title = 設定をリセットしますか?
 
-# Line under it. The old settings file is moved aside, not deleted.
-settings-reset-detail = VPNとプロキシを含め、すべての設定が初期値に戻ります。視聴履歴は残り、古い設定ファイルも保管されます。
-
 # Notice once Kaeri has started again on the default settings. The file is the name the old settings file is kept under, beside the new one, such as config.damaged-2026-10-30.
 settings-reset-done = 設定を初期値に戻しました。古いファイルは{ $file }として保管されています。
 
@@ -8187,9 +8076,6 @@ source-note-gone = 未インストール
 # Under a source that found more than one show by this name and could not tell which is this one.
 source-note-ambiguous = この作品と一致させられませんでした
 
-# Under a source held back by the VPN check in Settings.
-source-note-held-back = VPN の確認で保留中
-
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 source-picker-releases = リリース
 
@@ -8232,12 +8118,6 @@ sources-empty-detail = 所有者から届く招待リンクでプラグインス
 # Row for the built-in torrent source.
 sources-torrents = トレント
 
-# Label of a source that is not a plugin and controls this device.
-sources-remote = リモート
-
-# Origin: set in the config file.
-sources-origin-config = 設定ファイルで指定
-
 # Origin: built into the app.
 sources-origin-built-in = アプリに同梱
 
@@ -8274,16 +8154,13 @@ sources-detail-not-answering = 応答がありません。{ $why }
 # Status line: no answer.
 sources-detail-not-answering-plain = 応答がありません。
 
-# Status line: held back by the check.
-sources-detail-held-back = 接続の確認が通るまで保留されます。
-
 # Status line: disabled.
 sources-detail-disabled = オフです。順番は保持されますが、試されません。
 
 # Status line: the source is gone.
 sources-detail-gone = このソースはもうありません。
 
-# Status line: the site did not answer.
+# Status line: the source did not answer.
 sources-detail-site = ソースが応答しませんでした。
 
 # Row label: version.
@@ -8348,9 +8225,6 @@ sources-torrent-source = トレント再生
 
 # Row: where the plugin's page stands.
 sources-source-order-row = ソースの順番
-
-# Note under the facts on the Torrents page in Sources. Torrents are built in, not a plugin.
-sources-torrents-note = トレントはプラグインではなく、Kaeriに含まれています。通信の保護、接続確認、シーディングは、設定のソースで設定します。
 
 # Over the { -source } list while the { -source-pl } are set up again after a change.
 sources-rebuilding = ソースを設定し直しています
@@ -8544,9 +8418,6 @@ sources-your-intro = エピソードは、この順番で最初に見つかっ�
 # Heading of the section that lists the plugins.
 sources-section-plugins = プラグイン
 
-# Section heading: Internet Archive collections and PeerTube channels.
-sources-section-catalogues = 無料カタログ
-
 # Link in the empty state.
 sources-add-demo = デモを追加
 
@@ -8558,9 +8429,6 @@ stores-joined = 参加済み
 
 # Title of the empty list.
 stores-empty-title = まだプラグインストアがありません
-
-# Line under the empty title.
-stores-empty-detail = プラグインストアは、知り合いが運営しています。運営者から届いた招待リンクで参加できます。
 
 # Line under the title of the screen when plugins add sources.
 stores-intro = プラグインはソースを追加します。それぞれ、インストールする前に接続先のホストを一覧で示します。
@@ -9049,9 +8917,6 @@ stores-offers-plugins =
 # Button of a notice that opens the plugin stores page.
 notice-open-stores = プラグインストアを開く
 
-# Explainer on the empty plugin stores page.
-stores-what-is = プラグインストアは、一人の運営者が、招待した人のために運営する小さなサーバーです。ソースをプラグインとして提供します。Kaeriはプラグインストアを運営せず、一覧も載せません。所有者からの招待リンクで参加してください。
-
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = プラグインストアとは?
 
@@ -9307,63 +9172,6 @@ torrents-title = トレント
 # Label and short value for the switch.
 torrents-on = トレント：オン
 
-# Line under the switch while torrents are off.
-torrents-off-detail = 初期設定ではオフです。オンにすると、先に接続の保護方法をお尋ねします。
-
-# Line explaining the risk, before torrents start.
-torrents-risk = トレントのダウンロードと共有中は、ほかの人があなたのIPアドレスを見ることができます。トレントを開始する前に、保護方法を選んでください。
-
-# Line in the Apple sources screen: torrents belong to the app, not to a plugin.
-torrents-not-a-plugin = トレントはプラグインではなく、Kaeriの機能です。通信の保護、接続の確認、シーディングは、設定のソースで設定します。
-
-# Label of the choice of protection.
-torrents-protect-with = 保護方法
-
-# Option: no protection.
-torrents-protect-none = 保護なし
-
-# Option: a proxy.
-torrents-protect-proxy = プロキシ
-
-# Option: a VPN already running on the device.
-torrents-protect-vpn = VPN
-
-# Line under the proxy option.
-torrents-protect-proxy-detail = トレントの通信は、ご自身で運用または契約しているプロキシを経由します。
-
-# Line under the VPN option.
-torrents-protect-vpn-detail = このデバイスですでに動作しているVPNを使用します。
-
-# Line under the no-protection option.
-torrents-protect-none-detail = トレントに参加しているすべての人に、あなたのアドレスが見えます。
-
-# Line when no protection is set.
-torrents-protect-none-note = 保護がない場合、Kaeriは接続を確認しません。
-
-# Summary: a proxy protects. Host and port are already formatted.
-torrents-summary-proxy-at = SOCKS5プロキシ（{ $host }:{ $port }）で保護されています。
-
-# Summary: a proxy protects, address not shown.
-torrents-summary-proxy = SOCKS5プロキシで保護されています。
-
-# Summary: a VPN protects.
-torrents-summary-vpn = このデバイスのVPNで保護されています。
-
-# Summary: nothing protects.
-torrents-summary-none = 保護されていません。トレントに参加しているすべての人に、あなたのアドレスが見えます。
-
-# Title of the question when torrents are turned on without protection.
-torrents-unprotected-title = 保護せずにトレントを使用しますか？
-
-# Line under it.
-torrents-unprotected-detail = トレントのダウンロードと共有中は、ほかの人があなたのIPアドレスを見ることができます。また、Kaeriは接続を確認しません。
-
-# Button that confirms turning torrents on without protection.
-torrents-turn-on-unprotected = 保護なしでオンにする
-
-# Button that confirms using no protection.
-torrents-use-unprotected = 保護なしで使用
-
 # Label of the proxy host field.
 torrents-proxy-host = プロキシのホスト
 
@@ -9379,9 +9187,6 @@ torrents-proxy-password = パスワード
 # Line under the password field.
 torrents-password-keep = 保存済みのパスワードを使う場合は、空欄のままにしてください。
 
-# Line under the proxy form: what happens while the new proxy is checked.
-torrents-proxy-keeps-saved = 新しいプロキシが接続確認に合格するまで、トレントは保存済みのプロキシを使い続けます。
-
 # Line when the host or port is wrong.
 torrents-proxy-invalid = プロキシには、ホストと、1から65535までのポート番号が必要です。
 
@@ -9391,95 +9196,20 @@ torrents-checking-proxy = プロキシを確認しています…
 # Notice after the proxy was saved.
 torrents-proxy-saved = プロキシを保存しました
 
-# Why a save was refused: traffic left outside the proxy.
-torrents-left-outside-proxy = トレントの通信がこのプロキシの外に出ていた
-
-# Why a save was refused: the check could not run through the proxy.
-torrents-check-not-made-proxy = このプロキシ経由では接続を確認できなかった
-
 # Notice when a proxy was not saved. The reason is a sentence fragment.
 torrents-proxy-not-saved = 保存されませんでした。{ $why }ため、保存済みのプロキシはそのまま残ります。
-
-# Notice when protection was not saved. The reason is a sentence fragment.
-torrents-protection-not-saved = 保存されませんでした。{ $why }ため、保存済みの保護設定はそのまま残ります。
 
 # Notice when torrents stayed off. The reason is a sentence fragment.
 torrents-still-off = { $why }ため、トレントはまだオフです。
 
-# Label of the index address field.
-torrents-index = トレントインデックス
-
-# Line under the index field.
-torrents-index-detail = Kaeriがトレントを探すために使うRSS検索のアドレスです。
-
-# Hint inside the index field.
-torrents-index-hint = https://…/?q={ "{" }query{ "}" }
-
-# Line when no index address is set.
-torrents-index-needed = トレントには、トレントインデックスのアドレスが必要です。
-
-# Line when the index address has the wrong scheme.
-torrents-index-scheme = httpまたはhttpsのアドレスを使用してください。
-
-# Notice after the index was saved.
-torrents-index-saved = トレントインデックスを保存しました
-
-# Label of the choice of what to do when a check fails.
-torrents-if-check-fails = 接続確認に失敗した場合
-
-# Title of the question that asks whether torrents may keep running.
-torrents-keep-running-title = 確認に失敗した場合も、トレントを動かし続けますか？
-
-# Line under the question: what the choice is about.
-torrents-keep-running-detail = 接続確認で、VPNまたはプロキシの外に通信が出ていることがわかった場合、トレントをどうするかを選びます。
-
-# Option: pause torrents.
-torrents-fail-pause = トレントを一時停止
-
-# Option: stop torrents.
-torrents-fail-stop = トレントを停止
-
-# Option: only warn.
-torrents-fail-warn = 警告のみ
-
-# Result of the choice: torrents run.
-torrents-fail-warn-result = トレントは動き続けます。
-
-# Result of the choice: torrents stop.
-torrents-fail-stop-result = トレントを停止しました。
-
-# Result of the choice: torrents pause.
-torrents-fail-pause-result = トレントを一時停止しました。
-
-# Label of the last check.
-torrents-last-check = 前回の確認
-
-# Check passed. The exit is where the traffic leaves from, already formatted.
-torrents-check-passed-exit = { $exit }経由で通信中
-
 # Check passed.
 torrents-check-passed = 合格
-
-# Check running: the line.
-torrents-check-running-line = トレントの通信がどこから出ていくかを確認しています
 
 # Check running: the short word.
 torrents-check-running = 確認中
 
-# Check failed: traffic left outside. The consequence follows.
-torrents-check-leaked = 保護の外に通信が出ていました。{ $then }
-
-# Check failed: the check could not be made. The consequence follows.
-torrents-check-unmade = 接続を確認できませんでした。{ $then }
-
 # Short word: the check failed.
 torrents-check-failed = 失敗
-
-# Line: no protection is set, so nothing was checked.
-torrents-check-none-line = 保護が設定されていないため、確認していません
-
-# Short word: unprotected.
-torrents-check-none = 保護なし
 
 # Line: no check yet.
 torrents-check-waiting-line = まだ確認していません
@@ -9519,12 +9249,6 @@ torrents-page-unreadable = テレビでこの内容を読み取れませんで�
 
 # Line when the page needs script.
 torrents-page-needs-script = このページは、フォームの内容をテレビに安全に送るためにJavaScriptが必要です。
-
-# Under the proxy form when turning torrents on: what the app checks, and that the VPN or proxy is what protects.
-torrents-check-note = Kaeriは、トレントの開始時と、動作中は1分ごとに、通信がどこから出ていくかを確認します。確認に失敗した場合は、トレントを一時停止します。通信を守っているのは、VPNまたはプロキシです。
-
-# Notice after the protection was saved.
-torrents-protection-saved = トレントの保護設定を保存しました
 
 # Menu item and button: open a magnet link or a torrent file the viewer has.
 opened-open = リンクまたはファイルを開く

@@ -31,7 +31,6 @@ settings-folder-default = Przechowywane w pamięci podręcznej torrentów
 settings-storage-unwatched = Jeszcze nieobejrzane
 settings-storage-used = { $size } w pobraniach.
 settings-storage-used-free = { $size } w pobraniach. Wolne miejsce: { $free }.
-settings-torrents-warn-note = Wybranie opcji Tylko ostrzegaj pyta najpierw o potwierdzenie, tak samo jak Brak ochrony.
 settings-source-count = { $count ->
     [one] Jedno { -source }
     [few] { $count } { -source-pl }

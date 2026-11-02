@@ -46,7 +46,7 @@ downloads-continued-left = { $count ->
 
 ## The title page
 
-# Line on the title page and in a Continue preview: where else the show streams. The places are already joined, such as "Lantern Stream and Hikari Stream".
+# Line on the title page and in a Continue preview: where else the show streams. The places are already joined, such as "Lantern Library and Hikari Library".
 # @arg places: text
 title-also-on = Also on { $places }
 

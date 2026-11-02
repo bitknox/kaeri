@@ -12,8 +12,6 @@
 
 <p>
 Native apps for Mac, iPhone, iPad, Android, Android TV, Windows and Linux, and one for the terminal.
-<br>
-Kaeri doesn't host any shows. You add your own sources.
 </p>
 
 <p>
@@ -45,7 +43,7 @@ Kaeri doesn't host any shows. You add your own sources.
 
 Kaeri browses AniList with no account, plays episodes in mpv, keeps your history on your
 device and syncs it to AniList, MyAnimeList, Kitsu, Simkl and Trakt. It is free, open source and
-non-commercial. Kaeri doesn't host any shows. You add your own sources.
+non-commercial.
 
 <table>
   <tr>
@@ -77,8 +75,6 @@ Also in the apps:
 
 - Skip the opening, and start the next episode from the credits.
 - Pick sub or dub once and each show remembers.
-- The next episodes of your shows download ahead of time, and a downloaded episode resumes and
-  syncs like a stream.
 - Watch with friends in sync, on Mac, iPhone, iPad, Windows, Linux and in the terminal.
 - New-episode alerts, off until you turn them on for a show.
 - Home screen widgets, and Live Activities and Handoff on Apple devices.
@@ -151,7 +147,7 @@ or on Google Play, so each one needs a one-time step the first time you open it.
 
 | Platform | File | First open |
 | --- | --- | --- |
-| Mac, macOS 26 or later, Apple silicon | `kaeri-<version>-macos.dmg` | Drag Kaeri to Applications. The app is ad-hoc signed and not notarized, so macOS stops it once. Choose **Done**, then open **System Settings › Privacy & Security** and choose **Open Anyway**. |
+| Mac, macOS 26 or later, Apple silicon | `kaeri-<version>-macos.dmg` | Drag Kaeri to Applications. The app isn't signed with an Apple developer account and isn't notarized, so macOS stops it once. Choose **Done**, then open **System Settings › Privacy & Security** and choose **Open Anyway**. |
 | iPhone and iPad, iOS or iPadOS 26 or later | `kaeri-<version>-ios-unsigned.ipa` | Add the source below in [SideStore](https://sidestore.io) or [AltStore](https://altstore.io), then install Kaeri from it. They sign the app with your own Apple ID. |
 | Android 15 or later, 64-bit ARM | `kaeri-<version>-android-arm64.apk` | Open the APK on the device and allow installs from your browser or file manager once. |
 | Android TV and Google TV, Android 11 or later, 64-bit ARM or 32-bit ARM | `kaeri-<version>-android-tv-arm64.apk` or `kaeri-<version>-android-tv-armv7.apk` | Install it with a sideloading app or `adb install`. |
@@ -204,13 +200,13 @@ source. The terminal app updates with `kaeri --update`.
 
 Kaeri doesn't host any shows. Apart from a demo of Creative Commons works, it comes with no
 sources, and it doesn't list, recommend or link to any. You add the sources you're entitled to use:
-your own files, your own media server, a JSON API you host yourself, a stream you have the right to
+your own files, your own media server, a stream you have the right to
 play, a licensed service, or a sandboxed WebAssembly plugin from a plugin store you joined. A plugin can only reach
 the hosts it declares. Kaeri never gets round DRM: a licensed stream opens in its own service.
 
-A plugin store is a small server that one person runs for the people they invite. Its owner
-chooses its plugins and is responsible for them. Everyone who joins can install the store's
-plugins from inside Kaeri and hears about new versions. Each device gets its own token, and
+A plugin store is a small server for your own plugins and your own devices. Its owner
+chooses its plugins and is responsible for them. Devices that join can install the store's
+plugins from inside Kaeri and hear about new versions. Each device gets its own token, and
 every plugin list is signed with the store's key. Kaeri ships no store and lists none. You
 join one through an invite link. See [Legal and contact](https://kaeri.app/legal/).
 
@@ -225,7 +221,7 @@ See [plugin stores](https://kaeri.app/docs/plugins/stores/),
 ## Build from source
 
 The Rust toolchain version is pinned in `rust-toolchain.toml`, and `rustup` installs it. For the
-terminal app, install mpv and ffmpeg, and cmake for the TLS library, then:
+terminal app, install mpv and ffmpeg, and cmake for the torrent engine's crypto library, then:
 
 ```sh
 cargo run --release                      # the terminal app, from a checkout
@@ -280,5 +276,5 @@ through [SECURITY.md](SECURITY.md).
 <p align="center">
 <a href="https://kaeri.app"><img src="website/public/favicon.svg" width="48" alt="kaeri"></a>
 <br>
-<sub>Kaeri doesn't host any shows. You add your own sources. <a href="https://kaeri.app/legal/">Legal and contact</a></sub>
+<sub><a href="https://kaeri.app/legal/">Legal and contact</a></sub>
 </p>

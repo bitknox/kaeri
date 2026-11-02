@@ -1,12 +1,8 @@
 //! Configuration, loaded from `~/.config/kaeri/config.toml`.
 //!
-//! Two principles run through this module. First, every volatile thing is *addressable
-//! from config* — provider order, emulation profile, dataset URLs — so a dead source or
-//! a rotated fingerprint is a config edit rather than a release. Second, anything with a
-//! privacy or safety consequence **fails closed**: see [`VpnConfig`] and
-//! [`Config::validate`], where torrenting is unreachable until a VPN mode is chosen and
-//! `mode = "none"` requires an explicit acknowledgement that cannot be reached by
-//! omission.
+//! Two principles run through this module. First, source order and dataset addresses live
+//! in config, so changing them needs no release. Second, a file that does not load is
+//! refused rather than half read: see [`Config::validate`].
 
 use std::{collections::BTreeMap, path::PathBuf};
 
@@ -109,7 +105,7 @@ pub struct Config {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ConfigProblem {
     /// The line at fault, counting from 1, when the problem is in one place. A rule broken
-    /// across settings — torrents on with no VPN mode — has none.
+    /// across settings, such as a threshold out of range, has none.
     pub line: Option<usize>,
     pub message: String,
 }
@@ -147,6 +143,12 @@ impl Config {
         let mut cfg: Self =
             toml::from_str(src).map_err(|e| ConfigProblem::from_toml(src, &e))?;
         cfg.subtitles = cfg.subtitles.clamped();
+        // A file from before the proxy setting: its VPN table's proxy is the proxy.
+        if cfg.providers.torrent.proxy.is_none()
+            && let Ok(table) = src.parse::<toml::Table>()
+        {
+            cfg.providers.torrent.proxy = legacy_proxy(&table);
+        }
         cfg.validate().map_err(|e| ConfigProblem {
             line: None,
             message: match e {
@@ -161,7 +163,7 @@ impl Config {
     /// Load from disk, falling back to defaults when the file does not exist.
     ///
     /// A missing config is normal on first run and must not be an error; a *malformed*
-    /// one is, because silently ignoring it could mean silently ignoring a VPN setting.
+    /// one is, because silently ignoring it could mean silently ignoring a setting the person made.
     pub fn load(paths: &Paths) -> Result<Self, crate::Error> {
         Self::read(paths).map_err(|problem| {
             crate::Error::Config(format!("{}, {problem}", paths.config_file.display()))
@@ -207,8 +209,9 @@ impl Config {
 ///
 /// Such keys are read past rather than refused, since the apps and the terminal app share one
 /// file and each release can be ahead of or behind the others, and a setting written with
-/// [`crate::settings::write_keys`] leaves them where they are. The VPN table stays strict: a
-/// misspelt key there would leave torrents unprotected without a word.
+/// [`crate::settings::write_keys`] leaves them where they are. The old `providers.torrent.vpn`
+/// table is not among them: it is read for its proxy and dropped on the next write, see
+/// [`legacy_proxy`].
 pub fn unknown_keys(src: &str, cfg: &Config) -> Vec<String> {
     let (Ok(given), Ok(known)) = (src.parse::<toml::Table>(), toml::Table::try_from(cfg))
     else {
@@ -216,7 +219,24 @@ pub fn unknown_keys(src: &str, cfg: &Config) -> Vec<String> {
     };
     let mut unknown = Vec::new();
     unknown_in(&given, &known, "", &mut unknown);
+    unknown.retain(|key| {
+        key != LEGACY_TORRENT_TABLE && !key.starts_with("providers.torrent.vpn.")
+    });
     unknown
+}
+
+/// Where earlier versions kept torrent traffic's route: `[providers.torrent.vpn]`.
+pub const LEGACY_TORRENT_TABLE: &str = "providers.torrent.vpn";
+
+/// The proxy an earlier version's `[providers.torrent.vpn]` table names, for a file written
+/// before `providers.torrent.proxy`: its `socks_url`, when its mode was a proxy (`socks5`, the
+/// default then). Its other keys, the mode's alternatives and their acknowledgements, have no
+/// setting now and are ignored.
+pub fn legacy_proxy(table: &toml::Table) -> Option<String> {
+    let vpn = table.get("providers")?.get("torrent")?.get("vpn")?.as_table()?;
+    let mode = vpn.get("mode").and_then(toml::Value::as_str).unwrap_or("socks5");
+    let url = vpn.get("socks_url").and_then(toml::Value::as_str)?.trim();
+    (mode == "socks5" && !url.is_empty()).then(|| url.to_owned())
 }
 
 fn unknown_in(given: &toml::Table, known: &toml::Table, at: &str, unknown: &mut Vec<String>) {
@@ -267,12 +287,10 @@ pub struct DownloadsConfig {
     pub on_complete: Option<String>,
     /// Keep seeding after a download completes.
     ///
-    /// Off by default, and that is a privacy choice rather than a bandwidth one: seeding advertises
-    /// you as a source for as long as it runs, and doing that unattended is not something to opt
-    /// somebody into silently.
+    /// Off by default to save upload; turn it on to give back to the swarm.
     ///
-    /// Streaming is different, deliberately: while an episode plays, its torrent uploads
-    /// to peers over the guarded connection — watching already gives back. The session
+    /// Streaming is different: while an episode plays, its torrent uploads to peers, so
+    /// watching already gives back. The session
     /// keeps the previous, current and next episode's swarms alive and retires older ones
     /// (each live swarm holds dozens of sockets, and file descriptors are finite). This key
     /// only decides whether a *finished download* keeps seeding.
@@ -284,7 +302,8 @@ pub struct DownloadsConfig {
     /// How many of the next episodes of each show being watched are kept downloaded, `0` for
     /// none, where a show keeps no number of its own. Set from the native apps' Downloads
     /// settings, and acted on by the engine wherever it runs, the terminal's included: it queues
-    /// what is missing as the viewer moves on, and deletes nothing.
+    /// what is missing as the viewer starts or finishes an episode of the show, and deletes
+    /// nothing.
     pub keep_next: u32,
     /// Whether downloads run over a cellular connection. Off by default, so a phone does not
     /// spend a data plan on its own. Only the native apps know which network they are on; the
@@ -735,7 +754,7 @@ impl Default for ControllerConfig {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct MetaConfig {
-    /// Fall back to Tenrai — MyAnimeList's mirror — when AniList cannot answer, before
+    /// Fall back to Tenrai — a MyAnimeList-compatible metadata API — when AniList cannot answer, before
     /// resorting to cached data. Fresh first, always; the ladder only descends on failure.
     pub fallback: bool,
     /// Which form of each title is shown: AniList's own choice for the signed-in account, or
@@ -1036,8 +1055,6 @@ pub struct ProvidersConfig {
     pub disabled: Vec<String>,
     pub torrent: TorrentConfig,
     pub plugins: PluginsConfig,
-    /// Base URL of a JSON API you host, such as an index of your own media.
-    pub remote_url: Option<String>,
 }
 
 impl Default for ProvidersConfig {
@@ -1053,7 +1070,6 @@ impl Default for ProvidersConfig {
             disabled: Vec::new(),
             torrent: TorrentConfig::default(),
             plugins: PluginsConfig::default(),
-            remote_url: None,
         }
     }
 }
@@ -1092,16 +1108,21 @@ impl Default for PluginsConfig {
 /// Torrent playback settings: how the engine plays a torrent a source names or a link you open.
 ///
 /// Kaeri finds no torrents itself. A source plugin that declares the `torrents` capability
-/// names them, and the engine plays them here. Off by default. Torrent traffic shows your IP
-/// address to every peer in the swarm, so this stays off until a protection mode is chosen.
+/// names them, and the engine plays them here. Off by default.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct TorrentConfig {
     pub enabled: bool,
-    pub vpn: VpnConfig,
+    /// Route torrent traffic through a proxy: a SOCKS5 URL, `socks5://user@host:port`. Optional
+    /// and unset by default, when torrents connect directly. A password is kept out of the file
+    /// by the native apps, in the system's secret store; a URL typed here may carry one.
+    ///
+    /// Files from before this setting kept it as `[providers.torrent.vpn] socks_url`, which is
+    /// read as this one and dropped on the next write.
+    pub proxy: Option<String>,
     /// Trackers added to every torrent played, supplied by you.
     ///
-    /// Proxy mode disables DHT, so with none of these there is no way to find peers.
+    /// Through a proxy DHT is off, so with none of these there is no way to find peers.
     pub trackers: Vec<String>,
     /// Giving back after an episode has been watched.
     pub seeding: SeedingConfig,
@@ -1125,7 +1146,7 @@ impl Default for TorrentConfig {
     fn default() -> Self {
         Self {
             enabled: false,
-            vpn: VpnConfig::default(),
+            proxy: None,
             trackers: Vec::new(),
             seeding: SeedingConfig::default(),
             // Room for a dozen episodes at 1080p: enough that resuming or rewatching last
@@ -1142,9 +1163,8 @@ impl Default for TorrentConfig {
 /// An episode uploads to its swarm while it plays either way. These decide what happens after:
 /// with `ratio` at 0 a finished episode stops seeding once newer ones push it out of the session,
 /// within minutes; above 0 it keeps seeding, while Kaeri is open, until it has given back
-/// that multiple of what it took or `hours` have passed. Off by default for the same reason as
-/// `downloads.keep_seeding`: seeding advertises you as a source for as long as it runs, and that
-/// is not something to switch on for anyone silently.
+/// that multiple of what it took or `hours` have passed. Off by default to save upload; turn it
+/// on to give back to the swarm.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(default)]
 pub struct SeedingConfig {
@@ -1180,130 +1200,24 @@ impl TorrentConfig {
 
 impl TorrentConfig {
     fn validate(&self) -> Result<(), crate::Error> {
-        if !self.enabled {
-            return Ok(());
-        }
-        match self.vpn.mode {
-            VpnMode::Socks5 => {
-                if self.vpn.socks_url.as_deref().unwrap_or("").is_empty() {
-                    return Err(crate::Error::Config(
-                        "providers.torrent.vpn.mode is \"socks5\" but no socks_url is set"
-                            .into(),
-                    ));
-                }
-            }
-            VpnMode::External => {}
-            VpnMode::None => {
-                if !self.vpn.i_understand_my_ip_is_exposed {
-                    return Err(crate::Error::Config(
-                        "providers.torrent.vpn.mode is \"none\": set \
-                         i_understand_my_ip_is_exposed = true to confirm, or choose a VPN mode"
-                            .into(),
-                    ));
-                }
-            }
-        }
-        if self.vpn.on_leak == LeakAction::Warn
-            && !self.vpn.i_understand_a_failed_check_keeps_torrents_running
-        {
+        let Some(url) = self.proxy.as_deref() else { return Ok(()) };
+        let scheme_ok = url.starts_with("socks5://") || url.starts_with("socks5h://");
+        if !scheme_ok || url.split("://").nth(1).is_none_or(str::is_empty) {
             return Err(crate::Error::Config(
-                "providers.torrent.vpn.on_leak is \"warn\": set \
-                 i_understand_a_failed_check_keeps_torrents_running = true to confirm, or \
-                 choose pause or stop"
+                "providers.torrent.proxy must be a SOCKS5 address, such as \
+                 \"socks5://127.0.0.1:1080\""
                     .into(),
             ));
         }
         Ok(())
     }
-}
 
-/// How torrent traffic is kept off your own address.
-///
-/// librqbit offers a SOCKS5 proxy but **no** bind-to-interface option, so real interface
-/// binding has to happen outside the process. This config covers what we can enforce and
-/// the docs are explicit about the rest, rather than implying a guarantee we cannot make.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-// Strict, unlike the rest: a key misspelt here would quietly leave torrents unprotected.
-#[serde(default, deny_unknown_fields)]
-pub struct VpnConfig {
-    pub mode: VpnMode,
-    pub socks_url: Option<String>,
-    /// Accepted exit network operators, matched case-insensitively as substrings.
-    ///
-    /// Checked against the egress lookup so the guard asserts *whose* network you are
-    /// leaving through, not merely that some address answered. Provider-agnostic: put
-    /// whatever your VPN reports here.
-    ///
-    /// A **list** rather than one value because operators routinely exit through upstream
-    /// infrastructure under a different name — Mullvad reports both `Mullvad VPN AB` and
-    /// `31173 Services AB`, for instance. Demanding a single string would flag a perfectly
-    /// good tunnel as a leak. Any one match is enough.
-    pub require_asn_org: Vec<String>,
-    /// Optional shortcut for Mullvad, which publishes a definitive `mullvad_exit_ip`
-    /// boolean. Stronger than operator matching when available, and simply unused
-    /// otherwise — every other provider is covered by `require_asn_org`.
-    pub mullvad_exit: bool,
-    pub verify_interval_secs: u64,
-    pub on_leak: LeakAction,
-    /// Required when `mode = "none"`. Named to be impossible to set by accident.
-    pub i_understand_my_ip_is_exposed: bool,
-    /// Required when `on_leak = "warn"`, for the same reason: a failed check then leaves
-    /// torrents running on a connection that may be your own.
-    pub i_understand_a_failed_check_keeps_torrents_running: bool,
-}
-
-impl Default for VpnConfig {
-    fn default() -> Self {
-        Self {
-            mode: VpnMode::Socks5,
-            socks_url: None,
-            require_asn_org: Vec::new(),
-            mullvad_exit: false,
-            verify_interval_secs: 60,
-            on_leak: LeakAction::Pause,
-            i_understand_my_ip_is_exposed: false,
-            i_understand_a_failed_check_keeps_torrents_running: false,
-        }
-    }
-}
-
-impl VpnConfig {
-    /// Whether DHT must be disabled.
-    ///
-    /// In proxy mode: yes, always. SOCKS5 UDP-associate is frequently unsupported and
-    /// librqbit does not document whether DHT is tunnelled or bypasses the proxy. That is
-    /// unverified, so it is treated as a leak. Tracker-only operation costs little as long
-    /// as `providers.torrent.trackers` is populated.
+    /// Whether DHT is turned off: yes through a proxy. DHT runs over UDP, which a SOCKS5 proxy
+    /// often does not carry, and librqbit does not say whether its DHT uses the proxy at all, so
+    /// through one it is off and peers come from trackers.
     pub const fn must_disable_dht(&self) -> bool {
-        matches!(self.mode, VpnMode::Socks5)
+        self.proxy.is_some()
     }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum VpnMode {
-    /// Route the torrent session through a SOCKS5 proxy. Natively supported by librqbit.
-    #[default]
-    Socks5,
-    /// Trust an OS-level arrangement — a network namespace, or a provider kill switch.
-    /// The egress check still runs, so a broken tunnel is still caught.
-    External,
-    /// No protection. Requires explicit acknowledgement.
-    None,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum LeakAction {
-    /// Pause every torrent and raise a blocking alert.
-    #[default]
-    Pause,
-    /// Tear the session down entirely.
-    Stop,
-    /// Keep torrents running and say the check failed. Requires
-    /// `i_understand_a_failed_check_keeps_torrents_running`, as `mode = "none"` requires its
-    /// own acknowledgement.
-    Warn,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -1499,9 +1413,6 @@ impl TrackersConfig {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct NetworkConfig {
-    /// Browser fingerprint to emulate for Cloudflare-fronted providers. Exposed as
-    /// config because this is an arms race — rotating it should not need a rebuild.
-    pub emulation: String,
     pub timeout_secs: u64,
     /// Requests per minute against AniList. Their observed limit is 30.
     pub anilist_rate_limit: u32,
@@ -1509,7 +1420,7 @@ pub struct NetworkConfig {
 
 impl Default for NetworkConfig {
     fn default() -> Self {
-        Self { emulation: "chrome".into(), timeout_secs: 20, anilist_rate_limit: 30 }
+        Self { timeout_secs: 20, anilist_rate_limit: 30 }
     }
 }
 
@@ -1523,6 +1434,15 @@ mod tests {
             data_dir: dir.join("data"),
             cache_dir: dir.join("cache"),
         }
+    }
+
+    #[test]
+    fn a_config_that_still_has_the_removed_remote_source_keys_reads_fine() {
+        let config = Config::parse(
+            "[providers]\norder = [\"remote\", \"plugins\"]\nremote_url = \"https://api.example\"\n",
+        )
+        .expect("old keys are ignored");
+        assert_eq!(config.providers.order, ["remote", "plugins"]);
     }
 
     #[test]
@@ -1613,27 +1533,53 @@ mod tests {
         assert_eq!(cfg.downloads.quality, DownloadQuality::Standard);
         assert_eq!(cfg.downloads.keep_next, 0, "nothing kept unasked");
         assert!(!cfg.downloads.on_cellular && !cfg.providers.torrent.on_cellular);
-        assert_eq!(cfg.providers.torrent.vpn.on_leak, LeakAction::Pause);
+        assert_eq!(cfg.providers.torrent.proxy, None, "torrents connect directly unless asked");
         assert_eq!(DownloadQuality::Standard.resolution(720), 720);
         assert_eq!(DownloadQuality::Higher.resolution(720), u32::MAX);
     }
 
     #[test]
-    fn warning_on_a_failed_check_needs_its_own_acknowledgement() {
-        // As `mode = "none"` does: a failed check then leaves torrents running.
-        let on = r#"
+    fn an_earlier_vpn_table_becomes_the_proxy_and_its_acknowledgements_are_ignored() {
+        // A proxy set the old way is the proxy now.
+        let proxied = Config::from_toml(
+            r#"
             [providers.torrent]
             enabled = true
             [providers.torrent.vpn]
-            mode = "external"
+            mode = "socks5"
+            socks_url = "socks5://mika@192.0.2.10:1080"
             on_leak = "warn"
-        "#;
-        let err = Config::from_toml(on).unwrap_err().to_string();
-        assert!(err.contains("i_understand_a_failed_check_keeps_torrents_running"), "{err}");
-        let acknowledged =
-            format!("{on}i_understand_a_failed_check_keeps_torrents_running = true\n");
-        let cfg = Config::from_toml(&acknowledged).unwrap();
-        assert_eq!(cfg.providers.torrent.vpn.on_leak, LeakAction::Warn);
+            i_understand_a_failed_check_keeps_torrents_running = true
+            "#,
+        )
+        .unwrap();
+        assert_eq!(
+            proxied.providers.torrent.proxy.as_deref(),
+            Some("socks5://mika@192.0.2.10:1080")
+        );
+        // Its mode was the default then.
+        let default_mode =
+            "[providers.torrent.vpn]\nsocks_url = \"socks5://192.0.2.10:1080\"\n";
+        assert!(Config::from_toml(default_mode).unwrap().providers.torrent.proxy.is_some());
+
+        // The other modes had no proxy, and torrents now connect directly.
+        for mode in ["external", "none"] {
+            let src = format!(
+                "[providers.torrent]\nenabled = true\n[providers.torrent.vpn]\nmode = \"{mode}\"\n\
+                 socks_url = \"socks5://192.0.2.10:1080\"\ni_understand_my_ip_is_exposed = true\n"
+            );
+            let cfg = Config::parse(&src).unwrap();
+            assert!(cfg.providers.torrent.enabled && cfg.providers.torrent.proxy.is_none());
+            assert!(unknown_keys(&src, &cfg).is_empty(), "the old table is not an unknown key");
+        }
+
+        // A proxy set the new way wins over an old table left beside it.
+        let both = "[providers.torrent]\nproxy = \"socks5://new.example:1080\"\n\
+                    [providers.torrent.vpn]\nsocks_url = \"socks5://old.example:1080\"\n";
+        assert_eq!(
+            Config::from_toml(both).unwrap().providers.torrent.proxy.as_deref(),
+            Some("socks5://new.example:1080")
+        );
     }
 
     #[test]
@@ -1788,52 +1734,22 @@ mod tests {
     }
 
     #[test]
-    fn enabling_torrents_without_a_socks_url_is_rejected() {
-        let err = Config::from_toml(
-            r#"
-            [providers.torrent]
-            enabled = true
-            [providers.torrent.vpn]
-            mode = "socks5"
-            "#,
-        )
-        .expect_err("must not start with proxy mode and no proxy");
-        assert!(err.to_string().contains("socks_url"), "got: {err}");
+    fn torrents_turn_on_without_a_proxy() {
+        let cfg = Config::from_toml("[providers.torrent]\nenabled = true\n").unwrap();
+        assert!(cfg.providers.torrent.enabled);
+        assert!(!cfg.providers.torrent.must_disable_dht());
     }
 
     #[test]
-    fn vpn_mode_none_requires_explicit_acknowledgement() {
-        let base = r#"
-            [providers.torrent]
-            enabled = true
-            [providers.torrent.vpn]
-            mode = "none"
-        "#;
-        let err = Config::from_toml(base).expect_err("must not silently torrent unprotected");
-        assert!(err.to_string().contains("i_understand_my_ip_is_exposed"));
-
-        // With the acknowledgement present it is allowed — the point is that it cannot
-        // happen by omission, not that it is forbidden.
-        let ok = Config::from_toml(&format!("{base}\ni_understand_my_ip_is_exposed = true\n"))
-            .unwrap();
-        assert_eq!(ok.providers.torrent.vpn.mode, VpnMode::None);
-    }
-
-    #[test]
-    fn proxy_mode_always_forces_dht_off() {
-        // Unverified whether librqbit tunnels DHT over SOCKS5, so we assume it leaks.
-        let vpn = VpnConfig::default();
-        assert_eq!(vpn.mode, VpnMode::Socks5);
-        assert!(vpn.must_disable_dht());
-
-        let external = VpnConfig { mode: VpnMode::External, ..Default::default() };
-        assert!(!external.must_disable_dht());
-    }
-
-    #[test]
-    fn disabled_torrents_skip_vpn_validation() {
-        // No VPN configured at all is fine as long as nothing will torrent.
-        Config::from_toml("[providers.torrent]\nenabled = false\n").unwrap();
+    fn a_proxy_has_to_be_a_socks5_address_and_turns_dht_off() {
+        let err =
+            Config::from_toml("[providers.torrent]\nproxy = \"http://192.0.2.10:8080\"\n")
+                .unwrap_err();
+        assert!(err.to_string().contains("providers.torrent.proxy"), "{err}");
+        let cfg =
+            Config::from_toml("[providers.torrent]\nproxy = \"socks5h://192.0.2.10:1080\"\n")
+                .unwrap();
+        assert!(cfg.providers.torrent.must_disable_dht());
     }
 
     #[test]
@@ -1865,13 +1781,6 @@ mod tests {
     }
 
     #[test]
-    fn unknown_keys_are_rejected_rather_than_ignored() {
-        // A typo in a privacy-relevant key must not be silently discarded.
-        let err = Config::from_toml("[providers.torrent.vpn]\nmoed = \"none\"\n").unwrap_err();
-        assert!(err.to_string().contains("unknown field `moed`"), "got: {err}");
-    }
-
-    #[test]
     fn a_key_this_version_does_not_know_is_read_past_and_named() {
         // A newer app's setting, and one an older version had, beside known ones.
         let src = "[theme]\nmode = \"immersive\"\nsparkle = true\n\n[playback]\nqualty = 720\n\n\
@@ -1890,12 +1799,11 @@ mod tests {
     #[test]
     fn a_problem_names_its_line_and_what_is_wrong_on_one_line() {
         // What the interface shows when the file cannot be used: a person has to find it.
-        let typo = Config::parse(
-            "[theme]\nmode = \"adaptive\"\n\n[providers.torrent.vpn]\nmoed = 1\n",
-        )
-        .unwrap_err();
+        let typo =
+            Config::parse("[theme]\nmode = \"adaptive\"\n\n[providers.torrent]\nenabled = 1\n")
+                .unwrap_err();
         assert_eq!(typo.line, Some(5), "{typo:?}");
-        assert!(typo.message.starts_with("unknown field `moed`"), "{typo:?}");
+        assert!(typo.message.starts_with("invalid type"), "{typo:?}");
 
         let syntax = Config::parse("[playback]\nquality = 1080 ]\n").unwrap_err();
         assert_eq!(syntax.line, Some(2), "{syntax:?}");

@@ -94,7 +94,7 @@ fun Entry.seasonWords(context: Context): String? = when {
     else -> null
 }
 
-/** "Hikari Stream", or "Hikari Stream and 1 more". */
+/** "Hikari Library", or "Hikari Library and 1 more". */
 fun Entry.alsoOn(context: Context): String? = when (availableOn.size) {
     0 -> null
     1 -> availableOn.first()

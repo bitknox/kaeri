@@ -647,15 +647,6 @@
   <data name="NoticeChoiceNotSaved" xml:space="preserve">
     <value>Pilihan itu tidak bisa disimpan. {reason}</value>
   </data>
-  <data name="TorrentCheckFailedRunning" xml:space="preserve">
-    <value>Pemeriksaan koneksi gagal. Torrent tetap berjalan.</value>
-  </data>
-  <data name="TorrentVpnWaiting" xml:space="preserve">
-    <value>Torrent mulai setelah penjaga VPN lolos. {reason}</value>
-  </data>
-  <data name="TorrentVpnUnverified" xml:space="preserve">
-    <value>Torrent mulai setelah penjaga VPN lolos. Koneksi belum diverifikasi.</value>
-  </data>
   <data name="TorrentLinkUnusable" xml:space="preserve">
     <value>Itu bukan tautan magnet atau berkas torrent.</value>
   </data>
@@ -670,15 +661,6 @@
   </data>
   <data name="TorrentSessionFailed" xml:space="preserve">
     <value>Tidak bisa memulai sesi torrent. {reason}</value>
-  </data>
-  <data name="TorrentNoKillSwitch" xml:space="preserve">
-    <value>Tidak ada yang menghentikan lalu lintas torrent di perangkat ini jika VPN terputus. Jalankan "kaeri --doctor" untuk mengaturnya.</value>
-  </data>
-  <data name="TorrentNotChecked" xml:space="preserve">
-    <value>Tidak bisa memeriksa koneksi. {reason}</value>
-  </data>
-  <data name="SourcesReloadedTorrentsPending" xml:space="preserve">
-    <value>Sumber-sumber dimuat ulang. Torrent mulai setelah penjaga VPN lolos.</value>
   </data>
   <data name="SourcesReloadedTorrentsOff" xml:space="preserve">
     <value>Torrent dimatikan. Sesinya dihentikan.</value>
@@ -788,12 +770,6 @@
   <data name="NoticeNotSavedBecause" xml:space="preserve">
     <value>Tidak dapat menyimpan pengaturan itu. {cause}</value>
   </data>
-  <data name="NoticeProtectionSaved" xml:space="preserve">
-    <value>Perlindungan torrent disimpan.</value>
-  </data>
-  <data name="NoticeProtectionNotChecked" xml:space="preserve">
-    <value>Tidak dapat memeriksa perlindungan torrent. {cause}</value>
-  </data>
   <data name="NoticeProxyPasswordNotKept" xml:space="preserve">
     <value>Tidak dapat menyimpan kata sandi proxy. Masukkan lagi untuk mencoba menyimpannya. {reason}</value>
   </data>
@@ -805,9 +781,6 @@
   </data>
   <data name="NoticeShowNoSuchSubtitles" xml:space="preserve">
     <value>Tidak dapat menyimpan pilihan subtitle itu. Judul ini belum pernah memakai subtitle tersebut.</value>
-  </data>
-  <data name="NoticeTorrentsWaitingForCheck" xml:space="preserve">
-    <value>Torrent menunggu sampai pemeriksaan koneksi lolos lagi.</value>
   </data>
   <data name="NoticeMappingDataRefreshed" xml:space="preserve">
     <value>Data pemetaan diperbarui.</value>
@@ -823,12 +796,6 @@
   </data>
   <data name="NoticeUpdateAvailable" xml:space="preserve">
     <value>{tag} sudah tersedia. Jalankan kaeri --update untuk memasangnya.</value>
-  </data>
-  <data name="CauseConfirmNoProtection" xml:space="preserve">
-    <value>Konfirmasikan dulu bahwa Anda memang ingin tanpa perlindungan.</value>
-  </data>
-  <data name="CauseConfirmWarnOnly" xml:space="preserve">
-    <value>Konfirmasikan dulu bahwa Anda hanya ingin diperingatkan.</value>
   </data>
   <data name="CauseProxyNeedsAddress" xml:space="preserve">
     <value>Proxy memerlukan host dan port.</value>
@@ -1118,9 +1085,6 @@
   <data name="SettingsPlayerInterface" xml:space="preserve">
     <value>Antarmuka pemutar</value>
   </data>
-  <data name="SettingsVpnMode" xml:space="preserve">
-    <value>Mode VPN</value>
-  </data>
   <data name="SettingsTokenStorage" xml:space="preserve">
     <value>Penyimpanan token</value>
   </data>
@@ -1181,9 +1145,6 @@
   <data name="SettingsLibmpvLicence" xml:space="preserve">
     <value>Dilisensikan di bawah GNU Lesser General Public License, versi 2.1 atau lebih baru.</value>
   </data>
-  <data name="TorrentsWarnInstead" xml:space="preserve">
-    <value>Kaeri akan memberi peringatan, bukan menjeda. Jika VPN atau proksi Anda mati, orang lain bisa melihat alamat IP Anda.</value>
-  </data>
   <data name="ShowSettingsLabel" xml:space="preserve">
     <value>Pengaturan untuk {title}</value>
   </data>
@@ -1208,20 +1169,8 @@
   <data name="SettingsDownloadHigher" xml:space="preserve">
     <value>Lebih tinggi</value>
   </data>
-  <data name="TorrentsDialogTurnOn" xml:space="preserve">
-    <value>Aktifkan torrent</value>
-  </data>
-  <data name="TorrentsDialogProtect" xml:space="preserve">
-    <value>Lindungi torrent</value>
-  </data>
   <data name="TorrentsDialogEditProxy" xml:space="preserve">
     <value>Ubah proksi</value>
-  </data>
-  <data name="TorrentsDialogTurnOnAction" xml:space="preserve">
-    <value>Aktifkan</value>
-  </data>
-  <data name="TorrentsChoiceSpoken" xml:space="preserve">
-    <value>{label}. {detail}</value>
   </data>
   <data name="SettingsNoteTrailersWindows" xml:space="preserve">
     <value>Trailer diputar tanpa suara dari YouTube, yang dapat melihat alamat IP Anda. Trailer tidak diputar di koneksi berbatas, dengan efek animasi dimatikan, dalam mode hemat energi, atau saat Narrator berjalan.</value>
@@ -1417,9 +1366,6 @@
   </data>
   <data name="SourcesStatusWorking" xml:space="preserve">
     <value>Siap</value>
-  </data>
-  <data name="SourcesTorrentIndexes" xml:space="preserve">
-    <value>Mencari di indeks torrent yang Anda aktifkan di Pengaturan.</value>
   </data>
   <data name="SourcesVersionReady" xml:space="preserve">
     <value>Versi {version} siap</value>
@@ -3500,9 +3446,6 @@
   <data name="OnboardingInviteHeading" xml:space="preserve">
     <value>Punya tautan undangan?</value>
   </data>
-  <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>Plugin-plugin berasal dari toko-toko plugin. Satu toko plugin dikelola oleh satu orang untuk orang yang ia undang, jadi Anda bergabung lewat tautan undangan dari pemiliknya.</value>
-  </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>Coba sekarang</value>
   </data>
@@ -5408,9 +5351,6 @@
   <data name="SettingsResetTitle" xml:space="preserve">
     <value>Atur ulang pengaturan?</value>
   </data>
-  <data name="SettingsResetDetail" xml:space="preserve">
-    <value>Semua pengaturan kembali ke bawaan, termasuk VPN dan proksi. Riwayat tontonan Anda tetap ada, dan berkas pengaturan lama disimpan.</value>
-  </data>
   <data name="SettingsResetDone" xml:space="preserve">
     <value>Pengaturan sudah kembali ke bawaan. Berkas lama disimpan sebagai {file}.</value>
   </data>
@@ -5576,9 +5516,6 @@
   <data name="SourceNoteAmbiguous" xml:space="preserve">
     <value>Tidak bisa mencocokkan judul ini</value>
   </data>
-  <data name="SourceNoteHeldBack" xml:space="preserve">
-    <value>Ditahan oleh pemeriksaan VPN</value>
-  </data>
   <data name="SourcePickerReleases" xml:space="preserve">
     <value>Rilis</value>
   </data>
@@ -5621,12 +5558,6 @@
   <data name="SourcesTorrents" xml:space="preserve">
     <value>Torrent</value>
   </data>
-  <data name="SourcesRemote" xml:space="preserve">
-    <value>Jarak jauh</value>
-  </data>
-  <data name="SourcesOriginConfig" xml:space="preserve">
-    <value>Diatur di berkas konfigurasi</value>
-  </data>
   <data name="SourcesOriginBuiltIn" xml:space="preserve">
     <value>Bawaan aplikasi</value>
   </data>
@@ -5662,9 +5593,6 @@
   </data>
   <data name="SourcesDetailNotAnsweringPlain" xml:space="preserve">
     <value>Tidak merespons.</value>
-  </data>
-  <data name="SourcesDetailHeldBack" xml:space="preserve">
-    <value>Ditahan sampai pemeriksaan koneksi lolos.</value>
   </data>
   <data name="SourcesDetailDisabled" xml:space="preserve">
     <value>Mati. Posisinya tetap, dan tidak dicoba.</value>
@@ -5731,9 +5659,6 @@
   </data>
   <data name="SourcesSourceOrderRow" xml:space="preserve">
     <value>Urutan Sumber</value>
-  </data>
-  <data name="SourcesTorrentsNote" xml:space="preserve">
-    <value>Torrent adalah bagian dari Kaeri, bukan plugin. Pelindung lalu lintasnya, pemeriksaan koneksi, dan seeding diatur di Pengaturan, di bawah Sumber-sumber.</value>
   </data>
   <data name="SourcesRebuilding" xml:space="preserve">
     <value>Sumber-sumber sedang disiapkan ulang</value>
@@ -5924,9 +5849,6 @@
   <data name="SourcesSectionPlugins" xml:space="preserve">
     <value>Plugin-plugin</value>
   </data>
-  <data name="SourcesSectionCatalogues" xml:space="preserve">
-    <value>Katalog gratis</value>
-  </data>
   <data name="SourcesAddDemo" xml:space="preserve">
     <value>Tambah demo</value>
   </data>
@@ -5938,9 +5860,6 @@
   </data>
   <data name="StoresEmptyTitle" xml:space="preserve">
     <value>Belum ada toko-toko plugin</value>
-  </data>
-  <data name="StoresEmptyDetail" xml:space="preserve">
-    <value>Toko-toko plugin dijalankan oleh orang yang Anda kenal. Gabung ke salah satunya dengan tautan undangan yang dikirim pemiliknya.</value>
   </data>
   <data name="StoresIntro" xml:space="preserve">
     <value>Plugin-plugin menambahkan sumber-sumber. Setiap plugin mencantumkan host yang dihubunginya sebelum Anda memasangnya.</value>
@@ -6419,9 +6338,6 @@
   <data name="NoticeOpenStores" xml:space="preserve">
     <value>Buka toko-toko plugin</value>
   </data>
-  <data name="StoresWhatIs" xml:space="preserve">
-    <value>Toko plugin adalah server kecil yang dikelola satu orang untuk orang yang ia undang. Ia menawarkan sumber-sumber berupa plugin-plugin. Kaeri tidak menjalankan dan tidak mendaftar toko-toko plugin mana pun, jadi Anda bergabung lewat tautan undangan dari pemiliknya.</value>
-  </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>Apa itu toko plugin?</value>
   </data>
@@ -6674,63 +6590,6 @@
   <data name="TorrentsOn" xml:space="preserve">
     <value>Torrent aktif</value>
   </data>
-  <data name="TorrentsOffDetail" xml:space="preserve">
-    <value>Nonaktif secara default. Mengaktifkannya akan menanyakan dulu cara melindungi koneksi Anda.</value>
-  </data>
-  <data name="TorrentsRisk" xml:space="preserve">
-    <value>Orang lain dapat melihat alamat IP Anda saat Anda mengunduh dan membagikan torrent. Pilih apa yang melindunginya sebelum torrent dimulai.</value>
-  </data>
-  <data name="TorrentsNotAPlugin" xml:space="preserve">
-    <value>Torrent adalah bagian dari Kaeri, bukan plugin. Perlindungan lalu lintasnya, pemeriksaan koneksi, dan seeding diatur di Pengaturan, di bawah Sumber-sumber.</value>
-  </data>
-  <data name="TorrentsProtectWith" xml:space="preserve">
-    <value>Lindungi dengan</value>
-  </data>
-  <data name="TorrentsProtectNone" xml:space="preserve">
-    <value>Tanpa perlindungan</value>
-  </data>
-  <data name="TorrentsProtectProxy" xml:space="preserve">
-    <value>Proksi</value>
-  </data>
-  <data name="TorrentsProtectVpn" xml:space="preserve">
-    <value>VPN</value>
-  </data>
-  <data name="TorrentsProtectProxyDetail" xml:space="preserve">
-    <value>Lalu lintas torrent melewati proksi yang Anda jalankan atau sewa.</value>
-  </data>
-  <data name="TorrentsProtectVpnDetail" xml:space="preserve">
-    <value>Menggunakan VPN yang sudah berjalan di perangkat ini.</value>
-  </data>
-  <data name="TorrentsProtectNoneDetail" xml:space="preserve">
-    <value>Alamat Anda terlihat oleh semua orang dalam torrent.</value>
-  </data>
-  <data name="TorrentsProtectNoneNote" xml:space="preserve">
-    <value>Tanpa perlindungan, Kaeri tidak memeriksa koneksi.</value>
-  </data>
-  <data name="TorrentsSummaryProxyAt" xml:space="preserve">
-    <value>Dilindungi oleh proksi SOCKS5 di {host}:{port}.</value>
-  </data>
-  <data name="TorrentsSummaryProxy" xml:space="preserve">
-    <value>Dilindungi oleh proksi SOCKS5.</value>
-  </data>
-  <data name="TorrentsSummaryVpn" xml:space="preserve">
-    <value>Dilindungi oleh VPN di perangkat ini.</value>
-  </data>
-  <data name="TorrentsSummaryNone" xml:space="preserve">
-    <value>Tidak dilindungi. Alamat Anda terlihat oleh semua orang dalam torrent.</value>
-  </data>
-  <data name="TorrentsUnprotectedTitle" xml:space="preserve">
-    <value>Gunakan torrent tanpa perlindungan?</value>
-  </data>
-  <data name="TorrentsUnprotectedDetail" xml:space="preserve">
-    <value>Orang lain dapat melihat alamat IP Anda saat Anda mengunduh dan membagikan torrent, dan Kaeri tidak memeriksa koneksi.</value>
-  </data>
-  <data name="TorrentsTurnOnUnprotected" xml:space="preserve">
-    <value>Aktifkan tanpa perlindungan</value>
-  </data>
-  <data name="TorrentsUseUnprotected" xml:space="preserve">
-    <value>Gunakan tanpa perlindungan</value>
-  </data>
   <data name="TorrentsProxyHost" xml:space="preserve">
     <value>Host proksi</value>
   </data>
@@ -6746,9 +6605,6 @@
   <data name="TorrentsPasswordKeep" xml:space="preserve">
     <value>Kosongkan kata sandi untuk mempertahankan yang tersimpan.</value>
   </data>
-  <data name="TorrentsProxyKeepsSaved" xml:space="preserve">
-    <value>Torrent tetap memakai proksi yang tersimpan sampai proksi baru lolos pemeriksaan koneksi.</value>
-  </data>
   <data name="TorrentsProxyInvalid" xml:space="preserve">
     <value>Proksi memerlukan host dan port dari 1 sampai 65535.</value>
   </data>
@@ -6758,95 +6614,20 @@
   <data name="TorrentsProxySaved" xml:space="preserve">
     <value>Proksi disimpan</value>
   </data>
-  <data name="TorrentsLeftOutsideProxy" xml:space="preserve">
-    <value>Lalu lintas torrent keluar di luar proksi ini</value>
-  </data>
-  <data name="TorrentsCheckNotMadeProxy" xml:space="preserve">
-    <value>Pemeriksaan tidak dapat dilakukan melalui proksi ini</value>
-  </data>
   <data name="TorrentsProxyNotSaved" xml:space="preserve">
     <value>Tidak tersimpan. {why}, jadi proksi yang tersimpan tetap dipakai.</value>
-  </data>
-  <data name="TorrentsProtectionNotSaved" xml:space="preserve">
-    <value>Tidak tersimpan. {why}, jadi perlindungan yang tersimpan tetap dipakai.</value>
   </data>
   <data name="TorrentsStillOff" xml:space="preserve">
     <value>Torrent masih nonaktif. {why}.</value>
   </data>
-  <data name="TorrentsIndex" xml:space="preserve">
-    <value>Indeks torrent</value>
-  </data>
-  <data name="TorrentsIndexDetail" xml:space="preserve">
-    <value>Alamat pencarian RSS yang diminta Kaeri untuk torrent.</value>
-  </data>
-  <data name="TorrentsIndexHint" xml:space="preserve">
-    <value>https://…/?q={{query}}</value>
-  </data>
-  <data name="TorrentsIndexNeeded" xml:space="preserve">
-    <value>Torrent memerlukan alamat indeks.</value>
-  </data>
-  <data name="TorrentsIndexScheme" xml:space="preserve">
-    <value>Gunakan alamat http atau https.</value>
-  </data>
-  <data name="TorrentsIndexSaved" xml:space="preserve">
-    <value>Indeks torrent disimpan</value>
-  </data>
-  <data name="TorrentsIfCheckFails" xml:space="preserve">
-    <value>Jika pemeriksaan gagal</value>
-  </data>
-  <data name="TorrentsKeepRunningTitle" xml:space="preserve">
-    <value>Tetap jalankan torrent jika pemeriksaan gagal?</value>
-  </data>
-  <data name="TorrentsKeepRunningDetail" xml:space="preserve">
-    <value>Yang terjadi pada torrent saat pemeriksaan menemukan lalu lintas keluar di luar VPN atau proksi Anda.</value>
-  </data>
-  <data name="TorrentsFailPause" xml:space="preserve">
-    <value>Jeda torrent</value>
-  </data>
-  <data name="TorrentsFailStop" xml:space="preserve">
-    <value>Hentikan torrent</value>
-  </data>
-  <data name="TorrentsFailWarn" xml:space="preserve">
-    <value>Hanya peringatkan</value>
-  </data>
-  <data name="TorrentsFailWarnResult" xml:space="preserve">
-    <value>Torrent tetap berjalan.</value>
-  </data>
-  <data name="TorrentsFailStopResult" xml:space="preserve">
-    <value>Torrent dihentikan.</value>
-  </data>
-  <data name="TorrentsFailPauseResult" xml:space="preserve">
-    <value>Torrent dijeda.</value>
-  </data>
-  <data name="TorrentsLastCheck" xml:space="preserve">
-    <value>Pemeriksaan terakhir</value>
-  </data>
-  <data name="TorrentsCheckPassedExit" xml:space="preserve">
-    <value>Keluar melalui {exit}</value>
-  </data>
   <data name="TorrentsCheckPassed" xml:space="preserve">
     <value>Lolos</value>
-  </data>
-  <data name="TorrentsCheckRunningLine" xml:space="preserve">
-    <value>Memeriksa dari mana lalu lintas torrent keluar</value>
   </data>
   <data name="TorrentsCheckRunning" xml:space="preserve">
     <value>Memeriksa</value>
   </data>
-  <data name="TorrentsCheckLeaked" xml:space="preserve">
-    <value>Lalu lintas keluar di luar perlindungan. {then}</value>
-  </data>
-  <data name="TorrentsCheckUnmade" xml:space="preserve">
-    <value>Pemeriksaan tidak dapat dilakukan. {then}</value>
-  </data>
   <data name="TorrentsCheckFailed" xml:space="preserve">
     <value>Gagal</value>
-  </data>
-  <data name="TorrentsCheckNoneLine" xml:space="preserve">
-    <value>Belum ada perlindungan yang diatur</value>
-  </data>
-  <data name="TorrentsCheckNone" xml:space="preserve">
-    <value>Tanpa perlindungan</value>
   </data>
   <data name="TorrentsCheckWaitingLine" xml:space="preserve">
     <value>Belum diperiksa</value>
@@ -6886,12 +6667,6 @@
   </data>
   <data name="TorrentsPageNeedsScript" xml:space="preserve">
     <value>Halaman ini memerlukan JavaScript untuk mengirim formulir ke TV dengan aman.</value>
-  </data>
-  <data name="TorrentsCheckNote" xml:space="preserve">
-    <value>Kaeri memeriksa dari mana lalu lintas torrent keluar saat torrent dimulai dan setiap menit selama berjalan, dan menjeda torrent jika pemeriksaan itu gagal. VPN atau proksi Anda yang melindungi Anda.</value>
-  </data>
-  <data name="TorrentsProtectionSaved" xml:space="preserve">
-    <value>Perlindungan torrent disimpan</value>
   </data>
   <data name="OpenedOpen" xml:space="preserve">
     <value>Buka tautan atau berkas</value>

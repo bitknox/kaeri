@@ -225,7 +225,7 @@ public enum L {
     /// Line over the spotlight's title when it is the built-in demo.
     public static var homeSpotlightDemo: String { string("home-spotlight-demo", fallback: "Demo, free to share") }
 
-    /// Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Stream.
+    /// Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.
     public static func licensedReturn(episode: Int, service: String) -> String {
         Self.format("licensed-return", fallback: "Watched episode %1$lld on %2$@?", episode, service)
     }
@@ -877,16 +877,11 @@ public enum L {
         Self.format("notice-choice-not-saved", fallback: "Couldn't save that choice. %1$@", reason)
     }
 
-    /// Toast while torrents are running but the connection check failed, and the settings say to warn only.
-    public static var torrentCheckFailedRunning: String { string("torrent-check-failed-running", fallback: "The connection check failed. Torrents keep running.") }
+    /// Note on the sources screen: the proxy for torrent traffic failed its check, so torrents wait.
+    public static var torrentProxyWaiting: String { string("torrent-proxy-waiting", fallback: "The proxy check failed. Torrents start once it passes.") }
 
-    /// Note on the sources screen: torrents are waiting for the VPN guard. The reason comes from the guard.
-    public static func torrentVpnWaiting(reason: String) -> String {
-        Self.format("torrent-vpn-waiting", fallback: "Torrents start once the VPN guard passes. %1$@", reason)
-    }
-
-    /// Note on the sources screen: the VPN guard has no verdict yet.
-    public static var torrentVpnUnverified: String { string("torrent-vpn-unverified", fallback: "Torrents start once the VPN guard passes. The connection hasn't been verified yet.") }
+    /// Note on the sources screen: the proxy for torrent traffic hasn't been checked yet.
+    public static var torrentProxyUnchecked: String { string("torrent-proxy-unchecked", fallback: "Torrents start once the proxy check passes.") }
 
     /// Error: the link or file given to open is not a magnet link, an info hash or a torrent file.
     public static var torrentLinkUnusable: String { string("torrent-link-unusable", fallback: "That isn't a magnet link or a torrent file.") }
@@ -907,16 +902,13 @@ public enum L {
         Self.format("torrent-session-failed", fallback: "Couldn't start the torrent session. %1$@", reason)
     }
 
-    /// Toast when torrents are up but no operating-system firewall rule backs the VPN guard. Terminal only: the engine never sends it to the apps.
-    public static var torrentNoKillSwitch: String { string("torrent-no-kill-switch", fallback: "Nothing on this device stops torrent traffic if the VPN drops. Run \"kaeri --doctor\" to set that up.") }
-
-    /// Toast when the connection check could not run. The reason comes from the VPN settings.
-    public static func torrentNotChecked(reason: String) -> String {
-        Self.format("torrent-not-checked", fallback: "Couldn't check the connection. %1$@", reason)
+    /// Toast when the proxy setting can't be used. The reason comes from the proxy setting.
+    public static func torrentProxyUnusable(reason: String) -> String {
+        Self.format("torrent-proxy-unusable", fallback: "The proxy setting can't be used. %1$@", reason)
     }
 
-    /// Note on the sources screen after the source chain is rebuilt with torrents on.
-    public static var sourcesReloadedTorrentsPending: String { string("sources-reloaded-torrents-pending", fallback: "Sources reloaded. Torrents start once the VPN guard passes.") }
+    /// Note on the sources screen after the source chain is rebuilt with torrents on and a proxy set.
+    public static var sourcesReloadedTorrentsChecking: String { string("sources-reloaded-torrents-checking", fallback: "Sources reloaded. Torrents start once the proxy check passes.") }
 
     /// Note on the sources screen after the source chain is rebuilt with torrents off.
     public static var sourcesReloadedTorrentsOff: String { string("sources-reloaded-torrents-off", fallback: "Torrents are off. The session was stopped.") }
@@ -1076,12 +1068,15 @@ public enum L {
         Self.format("notice-not-saved-because", fallback: "Couldn't save that setting. %1$@", cause)
     }
 
-    /// Toast when the torrent protection choice was saved.
-    public static var noticeProtectionSaved: String { string("notice-protection-saved", fallback: "Saved torrent protection.") }
+    /// Toast when the proxy for torrent traffic was saved.
+    public static var noticeProxySaved: String { string("notice-proxy-saved", fallback: "Torrent traffic now goes through the proxy.") }
 
-    /// Toast when the torrent protection could not be checked. The cause says why.
-    public static func noticeProtectionNotChecked(cause: String) -> String {
-        Self.format("notice-protection-not-checked", fallback: "Couldn't check the torrent protection. %1$@", cause)
+    /// Toast when the proxy for torrent traffic was turned off.
+    public static var noticeProxyRemoved: String { string("notice-proxy-removed", fallback: "Torrents now connect directly, without a proxy.") }
+
+    /// Toast when the proxy could not be checked. The cause says why.
+    public static func noticeProxyNotChecked(cause: String) -> String {
+        Self.format("notice-proxy-not-checked", fallback: "Couldn't check the proxy. %1$@", cause)
     }
 
     /// Toast when the proxy's password could not be stored. The reason comes from the system.
@@ -1101,9 +1096,6 @@ public enum L {
 
     /// Toast when a subtitle choice names subtitles the show has not used.
     public static var noticeShowNoSuchSubtitles: String { string("notice-show-no-such-subtitles", fallback: "Couldn't save that subtitle choice. This show hasn't used those subtitles before.") }
-
-    /// Toast while torrents are held until the connection check passes.
-    public static var noticeTorrentsWaitingForCheck: String { string("notice-torrents-waiting-for-check", fallback: "Torrents are waiting for the connection check to pass again.") }
 
     /// Toast when the mapping data downloads work again after a failure.
     public static var noticeMappingDataRefreshed: String { string("notice-mapping-data-refreshed", fallback: "Mapping data refreshed.") }
@@ -1127,12 +1119,6 @@ public enum L {
     public static func noticeUpdateAvailable(tag: String) -> String {
         Self.format("notice-update-available", fallback: "%1$@ is out. Run kaeri --update to install it.", tag)
     }
-
-    /// The reason a setting was refused until the person confirms having no protection.
-    public static var causeConfirmNoProtection: String { string("cause-confirm-no-protection", fallback: "Confirm that you want no protection first.") }
-
-    /// The reason a setting was refused until the person confirms the "warn only" choice.
-    public static var causeConfirmWarnOnly: String { string("cause-confirm-warn-only", fallback: "Confirm that you want to be warned only first.") }
 
     /// The reason a proxy was refused: it has no host or no port.
     public static var causeProxyNeedsAddress: String { string("cause-proxy-needs-address", fallback: "A proxy needs a host and a port.") }
@@ -1356,7 +1342,7 @@ public enum L {
         Self.format("downloads-continued-left", fallback: "%1$lld episodes left", count)
     }
 
-    /// Line on the title page and in a Continue preview: where else the show streams. The places are already joined, such as "Lantern Stream and Hikari Stream".
+    /// Line on the title page and in a Continue preview: where else the show streams. The places are already joined, such as "Lantern Library and Hikari Library".
     public static func titleAlsoOn(places: String) -> String {
         Self.format("title-also-on", fallback: "Also on %1$@", places)
     }
@@ -1886,8 +1872,8 @@ public enum L {
     /// Shown in the Advanced pane while the player has no options of its own to set.
     public static var settingsAdvancedNone: String { string("settings-advanced-none", fallback: "No extra options. The player runs with Kaeri's own.") }
 
-    /// Side note title in Sources while torrents are on.
-    public static var settingsAsideCheckTitle: String { string("settings-aside-check-title", fallback: "Connection check") }
+    /// Side note title in Sources while a proxy is set.
+    public static var settingsAsideCheckTitle: String { string("settings-aside-check-title", fallback: "Proxy check") }
 
     /// Side note in Sources while torrents are off.
     public static var settingsAsideSourcesApple: String { string("settings-aside-sources-apple", fallback: "Sources are tried in order, top to bottom. A show can keep its own source, chosen from its title page.") }
@@ -1943,9 +1929,6 @@ public enum L {
     public static func settingsStorageUsedFree(size: String, free: String) -> String {
         Self.format("settings-storage-used-free", fallback: "%1$@ in downloads. %2$@ free on this device.", size, free)
     }
-
-    /// Footnote of the Torrents group while torrents are on.
-    public static var settingsTorrentsWarnNote: String { string("settings-torrents-warn-note", fallback: "Choosing Warn only asks you to confirm first, as No protection does.") }
 
     /// Value of the source order row: how many sources are in the order.
     public static func settingsSourceCount(count: Int) -> String {
@@ -2497,26 +2480,14 @@ public enum L {
     /// Line of a plugin in the publish sheet that the plugin store does not have yet.
     public static var storesPublishNotYet: String { string("stores-publish-not-yet", fallback: "Not in the plugin store yet") }
 
-    /// Title of the sheet that turns torrents on.
-    public static var torrentsSheetTurnOn: String { string("torrents-sheet-turn-on", fallback: "Turn on torrents") }
-
-    /// Title of the sheet that changes what protects torrents.
-    public static var torrentsSheetProtect: String { string("torrents-sheet-protect", fallback: "Protect torrents") }
-
-    /// Title of the sheet that edits the saved proxy.
+    /// Title of the form that edits the saved proxy.
     public static var torrentsSheetEditProxy: String { string("torrents-sheet-edit-proxy", fallback: "Edit proxy") }
 
-    /// Button of the turn-on sheet.
-    public static var torrentsTurnOnButton: String { string("torrents-turn-on-button", fallback: "Turn on") }
-
-    /// Button that opens the sheet that edits the saved proxy.
+    /// Button that opens the form that edits the saved proxy.
     public static var torrentsEditProxy: String { string("torrents-edit-proxy", fallback: "Edit proxy") }
 
     /// Hint inside the optional proxy fields.
     public static var torrentsProxyOptional: String { string("torrents-proxy-optional", fallback: "Optional") }
-
-    /// Line under the question that asks whether torrents may keep running when a check fails.
-    public static var torrentsWarnOnlyDetail: String { string("torrents-warn-only-detail", fallback: "Kaeri will warn you instead of pausing. If your VPN or proxy is down, other people can see your IP address.") }
 
     /// Line naming where the saved proxy is and who it signs in as.
     public static func torrentsProxyLineUser(address: String, user: String) -> String {
@@ -5374,7 +5345,7 @@ public enum L {
     public static var onboardingInviteHeading: String { string("onboarding-invite-heading", fallback: "Have an invite link?") }
 
     /// Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-    public static var onboardingWhereStores: String { string("onboarding-where-stores", fallback: "Plugins come from plugin stores. A plugin store is run by one person for the people they invite, so you join one with an invite link from its owner.") }
+    public static var onboardingWhereStores: String { string("onboarding-where-stores", fallback: "Plugins come from plugin stores. A plugin store is signed and gives each device its own token, so you join one with an invite link from its owner.") }
 
     /// Heading above the Play the demo button on the welcome page.
     public static var onboardingDemoHeading: String { string("onboarding-demo-heading", fallback: "Try it now") }
@@ -7514,7 +7485,7 @@ public enum L {
     public static var settingsResetTitle: String { string("settings-reset-title", fallback: "Reset settings?") }
 
     /// Line under it. The old settings file is moved aside, not deleted.
-    public static var settingsResetDetail: String { string("settings-reset-detail", fallback: "Every setting goes back to its default, VPN and proxy included. Your watch history stays, and the old settings file is kept.") }
+    public static var settingsResetDetail: String { string("settings-reset-detail", fallback: "Every setting goes back to its default, the torrent proxy included. Your watch history stays, and the old settings file is kept.") }
 
     /// Notice once Kaeri has started again on the default settings. The file is the name the old settings file is kept under, beside the new one, such as config.damaged-2026-10-30.
     public static func settingsResetDone(file: String) -> String {
@@ -7689,8 +7660,8 @@ public enum L {
     /// Under a source that found more than one show by this name and could not tell which is this one.
     public static var sourceNoteAmbiguous: String { string("source-note-ambiguous", fallback: "Couldn't match this title") }
 
-    /// Under a source held back by the VPN check in Settings.
-    public static var sourceNoteHeldBack: String { string("source-note-held-back", fallback: "Held back by the VPN check") }
+    /// Under a source that waits for the proxy check in Settings.
+    public static var sourceNoteHeldBack: String { string("source-note-held-back", fallback: "Waiting for the proxy check") }
 
     /// Heading over one source's releases, for a source that offers several (a batch, single episodes).
     public static var sourcePickerReleases: String { string("source-picker-releases", fallback: "Releases") }
@@ -7736,12 +7707,6 @@ public enum L {
     /// Row for the built-in torrent source.
     public static var sourcesTorrents: String { string("sources-torrents", fallback: "Torrents") }
 
-    /// Label of a source that is not a plugin and controls this device.
-    public static var sourcesRemote: String { string("sources-remote", fallback: "Remote") }
-
-    /// Origin: set in the config file.
-    public static var sourcesOriginConfig: String { string("sources-origin-config", fallback: "Set in the config file") }
-
     /// Origin: built into the app.
     public static var sourcesOriginBuiltIn: String { string("sources-origin-built-in", fallback: "Built in") }
 
@@ -7784,8 +7749,8 @@ public enum L {
     /// Status line: no answer.
     public static var sourcesDetailNotAnsweringPlain: String { string("sources-detail-not-answering-plain", fallback: "Not answering.") }
 
-    /// Status line: held back by the check.
-    public static var sourcesDetailHeldBack: String { string("sources-detail-held-back", fallback: "Held back until the connection check passes.") }
+    /// Status line: waiting for the proxy check.
+    public static var sourcesDetailHeldBack: String { string("sources-detail-held-back", fallback: "Waiting until the proxy check passes.") }
 
     /// Status line: disabled.
     public static var sourcesDetailDisabled: String { string("sources-detail-disabled", fallback: "Off. It keeps its place and isn't tried.") }
@@ -7793,7 +7758,7 @@ public enum L {
     /// Status line: the source is gone.
     public static var sourcesDetailGone: String { string("sources-detail-gone", fallback: "This source is no longer here.") }
 
-    /// Status line: the site did not answer.
+    /// Status line: the source did not answer.
     public static var sourcesDetailSite: String { string("sources-detail-site", fallback: "The source didn't answer.") }
 
     /// Row label: version.
@@ -7870,7 +7835,7 @@ public enum L {
     public static var sourcesSourceOrderRow: String { string("sources-source-order-row", fallback: "Source order") }
 
     /// Note under the facts on the Torrents page in Sources. Torrents are built in, not a plugin.
-    public static var sourcesTorrentsNote: String { string("sources-torrents-note", fallback: "Torrents are part of Kaeri, not a plugin. What protects their traffic, the connection check and seeding are set in Settings, under Sources.") }
+    public static var sourcesTorrentsNote: String { string("sources-torrents-note", fallback: "Torrents are part of Kaeri, not a plugin. The proxy and seeding are set in Settings, under Sources.") }
 
     /// Over the { -source } list while the { -source-pl } are set up again after a change.
     public static var sourcesRebuilding: String { string("sources-rebuilding", fallback: "Sources are being set up again") }
@@ -8096,7 +8061,7 @@ public enum L {
     public static var sourcesSectionPlugins: String { string("sources-section-plugins", fallback: "Plugins") }
 
     /// Section heading: Internet Archive collections and PeerTube channels.
-    public static var sourcesSectionCatalogues: String { string("sources-section-catalogues", fallback: "Free catalogues") }
+    public static var sourcesSectionCatalogues: String { string("sources-section-catalogues", fallback: "Open catalogues") }
 
     /// Link in the empty state.
     public static var sourcesAddDemo: String { string("sources-add-demo", fallback: "Add the demo") }
@@ -8111,7 +8076,7 @@ public enum L {
     public static var storesEmptyTitle: String { string("stores-empty-title", fallback: "No plugin stores yet") }
 
     /// Line under the empty title.
-    public static var storesEmptyDetail: String { string("stores-empty-detail", fallback: "Plugin stores are run by people you know. Join one with the invite link its owner sends you.") }
+    public static var storesEmptyDetail: String { string("stores-empty-detail", fallback: "Plugin stores hold signed plugins and give each device its own token. Join one with the invite link its owner sends you.") }
 
     /// Line under the title of the screen when plugins add sources.
     public static var storesIntro: String { string("stores-intro", fallback: "Plugins add sources. Each one lists the hosts it contacts before you install it.") }
@@ -8678,7 +8643,7 @@ public enum L {
     public static var noticeOpenStores: String { string("notice-open-stores", fallback: "Open plugin stores") }
 
     /// Explainer on the empty plugin stores page.
-    public static var storesWhatIs: String { string("stores-what-is", fallback: "A plugin store is a small server one person runs for the people they invite. It offers sources as plugins. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.") }
+    public static var storesWhatIs: String { string("stores-what-is", fallback: "A plugin store is a small server that holds signed plugins and gives each device its own token. It offers sources as plugins. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.") }
 
     /// Button on the empty plugin stores page that opens the docs page in the browser.
     public static var storesWhatIsLink: String { string("stores-what-is-link", fallback: "What is a plugin store?") }
@@ -8977,63 +8942,30 @@ public enum L {
     public static var torrentsOn: String { string("torrents-on", fallback: "Torrents are on") }
 
     /// Line under the switch while torrents are off.
-    public static var torrentsOffDetail: String { string("torrents-off-detail", fallback: "Off by default. Turning this on asks how to protect your connection first.") }
+    public static var torrentsOffDetail: String { string("torrents-off-detail", fallback: "Off by default. Torrents connect directly unless you route them through a proxy.") }
 
-    /// Line explaining the risk, before torrents start.
-    public static var torrentsRisk: String { string("torrents-risk", fallback: "Other people can see your IP address while you download and share a torrent. Choose what protects it before torrents start.") }
+    /// Line about privacy in the torrent sheet, before torrents start.
+    public static var torrentsRisk: String { string("torrents-risk", fallback: "Other people in a torrent can see your IP address. To keep it private, route torrent traffic through a proxy.") }
 
     /// Line in the Apple sources screen: torrents belong to the app, not to a plugin.
-    public static var torrentsNotAPlugin: String { string("torrents-not-a-plugin", fallback: "Torrents are part of Kaeri, not a plugin. What protects their traffic, the connection check and seeding are set in Settings, under Sources.") }
+    public static var torrentsNotAPlugin: String { string("torrents-not-a-plugin", fallback: "Torrents are part of Kaeri, not a plugin. The proxy and seeding are set in Settings, under Sources.") }
 
-    /// Label of the choice of protection.
-    public static var torrentsProtectWith: String { string("torrents-protect-with", fallback: "Protect with") }
+    /// Switch: send torrent traffic through a SOCKS5 proxy. Off by default.
+    public static var torrentsProxyRoute: String { string("torrents-proxy-route", fallback: "Route torrent traffic through a proxy") }
 
-    /// Option: no protection.
-    public static var torrentsProtectNone: String { string("torrents-protect-none", fallback: "No protection") }
+    /// Line under the switch.
+    public static var torrentsProxyRouteDetail: String { string("torrents-proxy-route-detail", fallback: "Torrent traffic goes through a SOCKS5 proxy you run or rent. While this is off, torrents connect directly.") }
 
-    /// Option: a proxy.
-    public static var torrentsProtectProxy: String { string("torrents-protect-proxy", fallback: "Proxy") }
-
-    /// Option: a VPN already running on the device.
-    public static var torrentsProtectVpn: String { string("torrents-protect-vpn", fallback: "VPN") }
-
-    /// Line under the proxy option.
-    public static var torrentsProtectProxyDetail: String { string("torrents-protect-proxy-detail", fallback: "Torrent traffic goes through a proxy you run or rent.") }
-
-    /// Line under the VPN option.
-    public static var torrentsProtectVpnDetail: String { string("torrents-protect-vpn-detail", fallback: "Uses the VPN already running on this device.") }
-
-    /// Line under the no-protection option.
-    public static var torrentsProtectNoneDetail: String { string("torrents-protect-none-detail", fallback: "Your address is visible to everyone in the torrent.") }
-
-    /// Line when no protection is set.
-    public static var torrentsProtectNoneNote: String { string("torrents-protect-none-note", fallback: "With no protection, Kaeri doesn't check the connection.") }
-
-    /// Summary: a proxy protects. Host and port are already formatted.
+    /// Summary: torrents go through a proxy. Host and port are already formatted.
     public static func torrentsSummaryProxyAt(host: String, port: String) -> String {
-        Self.format("torrents-summary-proxy-at", fallback: "Protected by a SOCKS5 proxy at %1$@:%2$@.", host, port)
+        Self.format("torrents-summary-proxy-at", fallback: "Through a SOCKS5 proxy at %1$@:%2$@.", host, port)
     }
 
-    /// Summary: a proxy protects, address not shown.
-    public static var torrentsSummaryProxy: String { string("torrents-summary-proxy", fallback: "Protected by a SOCKS5 proxy.") }
+    /// Summary: torrents go through a proxy, address not shown.
+    public static var torrentsSummaryProxy: String { string("torrents-summary-proxy", fallback: "Through a SOCKS5 proxy.") }
 
-    /// Summary: a VPN protects.
-    public static var torrentsSummaryVpn: String { string("torrents-summary-vpn", fallback: "Protected by the VPN on this device.") }
-
-    /// Summary: nothing protects.
-    public static var torrentsSummaryNone: String { string("torrents-summary-none", fallback: "Not protected. Your address is visible to everyone in the torrent.") }
-
-    /// Title of the question when torrents are turned on without protection.
-    public static var torrentsUnprotectedTitle: String { string("torrents-unprotected-title", fallback: "Use torrents without protection?") }
-
-    /// Line under it.
-    public static var torrentsUnprotectedDetail: String { string("torrents-unprotected-detail", fallback: "Other people can see your IP address while you download and share a torrent, and Kaeri doesn't check the connection.") }
-
-    /// Button that confirms turning torrents on without protection.
-    public static var torrentsTurnOnUnprotected: String { string("torrents-turn-on-unprotected", fallback: "Turn on without protection") }
-
-    /// Button that confirms using no protection.
-    public static var torrentsUseUnprotected: String { string("torrents-use-unprotected", fallback: "Use without protection") }
+    /// Summary: no proxy is set.
+    public static var torrentsSummaryDirect: String { string("torrents-summary-direct", fallback: "Connecting directly, without a proxy.") }
 
     /// Label of the proxy host field.
     public static var torrentsProxyHost: String { string("torrents-proxy-host", fallback: "Proxy host") }
@@ -9051,7 +8983,7 @@ public enum L {
     public static var torrentsPasswordKeep: String { string("torrents-password-keep", fallback: "Leave the password empty to keep the saved one.") }
 
     /// Line under the proxy form: what happens while the new proxy is checked.
-    public static var torrentsProxyKeepsSaved: String { string("torrents-proxy-keeps-saved", fallback: "Torrents keep using the saved proxy until the new one passes the connection check.") }
+    public static var torrentsProxyKeepsSaved: String { string("torrents-proxy-keeps-saved", fallback: "Torrents keep using the saved proxy until the new one passes the proxy check.") }
 
     /// Line when the host or port is wrong.
     public static var torrentsProxyInvalid: String { string("torrents-proxy-invalid", fallback: "The proxy needs a host and a port from 1 to 65535.") }
@@ -9062,20 +8994,12 @@ public enum L {
     /// Notice after the proxy was saved.
     public static var torrentsProxySaved: String { string("torrents-proxy-saved", fallback: "Proxy saved") }
 
-    /// Why a save was refused: traffic left outside the proxy.
-    public static var torrentsLeftOutsideProxy: String { string("torrents-left-outside-proxy", fallback: "Torrent traffic left outside this proxy") }
-
-    /// Why a save was refused: the check could not run through the proxy.
-    public static var torrentsCheckNotMadeProxy: String { string("torrents-check-not-made-proxy", fallback: "The check couldn't be made through this proxy") }
+    /// Why a save was refused: the proxy check failed. A sentence fragment.
+    public static var torrentsCheckNotMadeProxy: String { string("torrents-check-not-made-proxy", fallback: "The proxy check failed") }
 
     /// Notice when a proxy was not saved. The reason is a sentence fragment.
     public static func torrentsProxyNotSaved(why: String) -> String {
         Self.format("torrents-proxy-not-saved", fallback: "Not saved. %1$@, so the saved proxy stays.", why)
-    }
-
-    /// Notice when protection was not saved. The reason is a sentence fragment.
-    public static func torrentsProtectionNotSaved(why: String) -> String {
-        Self.format("torrents-protection-not-saved", fallback: "Not saved. %1$@, so the saved protection stays.", why)
     }
 
     /// Notice when torrents stayed off. The reason is a sentence fragment.
@@ -9083,86 +9007,23 @@ public enum L {
         Self.format("torrents-still-off", fallback: "Torrents are still off. %1$@.", why)
     }
 
-    /// Label of the index address field.
-    public static var torrentsIndex: String { string("torrents-index", fallback: "Torrent index") }
+    /// Under the proxy form: what the app checks.
+    public static var torrentsCheckNote: String { string("torrents-check-note", fallback: "Kaeri checks that it can reach the proxy before torrents start. Torrents wait while that check fails.") }
 
-    /// Line under the index field.
-    public static var torrentsIndexDetail: String { string("torrents-index-detail", fallback: "The RSS search address Kaeri asks for torrents.") }
-
-    /// Hint inside the index field.
-    public static var torrentsIndexHint: String { string("torrents-index-hint", fallback: "https://…/?q={query}") }
-
-    /// Line when no index address is set.
-    public static var torrentsIndexNeeded: String { string("torrents-index-needed", fallback: "Torrents need an index address.") }
-
-    /// Line when the index address has the wrong scheme.
-    public static var torrentsIndexScheme: String { string("torrents-index-scheme", fallback: "Use an http or https address.") }
-
-    /// Notice after the index was saved.
-    public static var torrentsIndexSaved: String { string("torrents-index-saved", fallback: "Torrent index saved") }
-
-    /// Label of the choice of what to do when a check fails.
-    public static var torrentsIfCheckFails: String { string("torrents-if-check-fails", fallback: "If a check fails") }
-
-    /// Title of the question that asks whether torrents may keep running.
-    public static var torrentsKeepRunningTitle: String { string("torrents-keep-running-title", fallback: "Keep torrents running if a check fails?") }
-
-    /// Line under the question: what the choice is about.
-    public static var torrentsKeepRunningDetail: String { string("torrents-keep-running-detail", fallback: "What happens to torrents when the check finds traffic leaving outside your VPN or proxy.") }
-
-    /// Option: pause torrents.
-    public static var torrentsFailPause: String { string("torrents-fail-pause", fallback: "Pause torrents") }
-
-    /// Option: stop torrents.
-    public static var torrentsFailStop: String { string("torrents-fail-stop", fallback: "Stop torrents") }
-
-    /// Option: only warn.
-    public static var torrentsFailWarn: String { string("torrents-fail-warn", fallback: "Warn only") }
-
-    /// Result of the choice: torrents run.
-    public static var torrentsFailWarnResult: String { string("torrents-fail-warn-result", fallback: "Torrents keep running.") }
-
-    /// Result of the choice: torrents stop.
-    public static var torrentsFailStopResult: String { string("torrents-fail-stop-result", fallback: "Torrents are stopped.") }
-
-    /// Result of the choice: torrents pause.
-    public static var torrentsFailPauseResult: String { string("torrents-fail-pause-result", fallback: "Torrents are paused.") }
-
-    /// Label of the last check.
-    public static var torrentsLastCheck: String { string("torrents-last-check", fallback: "Last check") }
-
-    /// Check passed. The exit is where the traffic leaves from, already formatted.
-    public static func torrentsCheckPassedExit(exit: String) -> String {
-        Self.format("torrents-check-passed-exit", fallback: "Leaving through %1$@", exit)
-    }
+    /// Label of the proxy check's result.
+    public static var torrentsLastCheck: String { string("torrents-last-check", fallback: "Proxy check") }
 
     /// Check passed.
     public static var torrentsCheckPassed: String { string("torrents-check-passed", fallback: "Passed") }
 
-    /// Check running: the line.
-    public static var torrentsCheckRunningLine: String { string("torrents-check-running-line", fallback: "Checking where torrent traffic leaves from") }
-
     /// Check running: the short word.
     public static var torrentsCheckRunning: String { string("torrents-check-running", fallback: "Checking") }
 
-    /// Check failed: traffic left outside. The consequence follows.
-    public static func torrentsCheckLeaked(then: String) -> String {
-        Self.format("torrents-check-leaked", fallback: "Traffic left outside the protection. %1$@", then)
-    }
-
-    /// Check failed: the check could not be made. The consequence follows.
-    public static func torrentsCheckUnmade(then: String) -> String {
-        Self.format("torrents-check-unmade", fallback: "The check couldn't be made. %1$@", then)
-    }
+    /// Check failed: the line.
+    public static var torrentsCheckFailedLine: String { string("torrents-check-failed-line", fallback: "The proxy check failed. Torrents start once it passes.") }
 
     /// Short word: the check failed.
     public static var torrentsCheckFailed: String { string("torrents-check-failed", fallback: "Failed") }
-
-    /// Line: no protection is set, so nothing was checked.
-    public static var torrentsCheckNoneLine: String { string("torrents-check-none-line", fallback: "No protection is set") }
-
-    /// Short word: unprotected.
-    public static var torrentsCheckNone: String { string("torrents-check-none", fallback: "Unprotected") }
 
     /// Line: no check yet.
     public static var torrentsCheckWaitingLine: String { string("torrents-check-waiting-line", fallback: "Not checked yet") }
@@ -9206,12 +9067,6 @@ public enum L {
 
     /// Line when the page needs script.
     public static var torrentsPageNeedsScript: String { string("torrents-page-needs-script", fallback: "This page needs JavaScript to send the form to the TV safely.") }
-
-    /// Under the proxy form when turning torrents on: what the app checks, and that the VPN or proxy is what protects.
-    public static var torrentsCheckNote: String { string("torrents-check-note", fallback: "Kaeri checks where torrent traffic leaves from when a torrent starts and every minute while it runs, and pauses torrents if that check fails. Your VPN or proxy is what protects you.") }
-
-    /// Notice after the protection was saved.
-    public static var torrentsProtectionSaved: String { string("torrents-protection-saved", fallback: "Torrent protection saved") }
 
     /// Menu item and button: open a magnet link or a torrent file the viewer has.
     public static var openedOpen: String { string("opened-open", fallback: "Open link or file") }

@@ -177,7 +177,7 @@ public static partial class T
     /// <summary>Line over the spotlight's title when it is the built-in demo.</summary>
     public static string HomeSpotlightDemo => Get("HomeSpotlightDemo");
 
-    /// <summary>Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Stream.</summary>
+    /// <summary>Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.</summary>
     public static string LicensedReturn(long episode, string service) => Fill(Get("LicensedReturn"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("service", service));
 
     /// <summary>Notice after Mark as watched on the return notice. It holds Undo.</summary>
@@ -627,14 +627,11 @@ public static partial class T
     /// <summary>Toast when the chosen source or release for a title could not be saved. The reason comes from the database.</summary>
     public static string NoticeChoiceNotSaved(string reason) => Fill(Get("NoticeChoiceNotSaved"), ("reason", reason));
 
-    /// <summary>Toast while torrents are running but the connection check failed, and the settings say to warn only.</summary>
-    public static string TorrentCheckFailedRunning => Get("TorrentCheckFailedRunning");
+    /// <summary>Note on the sources screen: the proxy for torrent traffic failed its check, so torrents wait.</summary>
+    public static string TorrentProxyWaiting => Get("TorrentProxyWaiting");
 
-    /// <summary>Note on the sources screen: torrents are waiting for the VPN guard. The reason comes from the guard.</summary>
-    public static string TorrentVpnWaiting(string reason) => Fill(Get("TorrentVpnWaiting"), ("reason", reason));
-
-    /// <summary>Note on the sources screen: the VPN guard has no verdict yet.</summary>
-    public static string TorrentVpnUnverified => Get("TorrentVpnUnverified");
+    /// <summary>Note on the sources screen: the proxy for torrent traffic hasn't been checked yet.</summary>
+    public static string TorrentProxyUnchecked => Get("TorrentProxyUnchecked");
 
     /// <summary>Error: the link or file given to open is not a magnet link, an info hash or a torrent file.</summary>
     public static string TorrentLinkUnusable => Get("TorrentLinkUnusable");
@@ -651,14 +648,11 @@ public static partial class T
     /// <summary>Error: the torrent session could not start. The reason comes from the torrent engine.</summary>
     public static string TorrentSessionFailed(string reason) => Fill(Get("TorrentSessionFailed"), ("reason", reason));
 
-    /// <summary>Toast when torrents are up but no operating-system firewall rule backs the VPN guard. Terminal only: the engine never sends it to the apps.</summary>
-    public static string TorrentNoKillSwitch => Get("TorrentNoKillSwitch");
+    /// <summary>Toast when the proxy setting can't be used. The reason comes from the proxy setting.</summary>
+    public static string TorrentProxyUnusable(string reason) => Fill(Get("TorrentProxyUnusable"), ("reason", reason));
 
-    /// <summary>Toast when the connection check could not run. The reason comes from the VPN settings.</summary>
-    public static string TorrentNotChecked(string reason) => Fill(Get("TorrentNotChecked"), ("reason", reason));
-
-    /// <summary>Note on the sources screen after the source chain is rebuilt with torrents on.</summary>
-    public static string SourcesReloadedTorrentsPending => Get("SourcesReloadedTorrentsPending");
+    /// <summary>Note on the sources screen after the source chain is rebuilt with torrents on and a proxy set.</summary>
+    public static string SourcesReloadedTorrentsChecking => Get("SourcesReloadedTorrentsChecking");
 
     /// <summary>Note on the sources screen after the source chain is rebuilt with torrents off.</summary>
     public static string SourcesReloadedTorrentsOff => Get("SourcesReloadedTorrentsOff");
@@ -768,11 +762,14 @@ public static partial class T
     /// <summary>Toast when a setting could not be stored. The cause says why and what to do.</summary>
     public static string NoticeNotSavedBecause(string cause) => Fill(Get("NoticeNotSavedBecause"), ("cause", cause));
 
-    /// <summary>Toast when the torrent protection choice was saved.</summary>
-    public static string NoticeProtectionSaved => Get("NoticeProtectionSaved");
+    /// <summary>Toast when the proxy for torrent traffic was saved.</summary>
+    public static string NoticeProxySaved => Get("NoticeProxySaved");
 
-    /// <summary>Toast when the torrent protection could not be checked. The cause says why.</summary>
-    public static string NoticeProtectionNotChecked(string cause) => Fill(Get("NoticeProtectionNotChecked"), ("cause", cause));
+    /// <summary>Toast when the proxy for torrent traffic was turned off.</summary>
+    public static string NoticeProxyRemoved => Get("NoticeProxyRemoved");
+
+    /// <summary>Toast when the proxy could not be checked. The cause says why.</summary>
+    public static string NoticeProxyNotChecked(string cause) => Fill(Get("NoticeProxyNotChecked"), ("cause", cause));
 
     /// <summary>Toast when the proxy's password could not be stored. The reason comes from the system.</summary>
     public static string NoticeProxyPasswordNotKept(string reason) => Fill(Get("NoticeProxyPasswordNotKept"), ("reason", reason));
@@ -785,9 +782,6 @@ public static partial class T
 
     /// <summary>Toast when a subtitle choice names subtitles the show has not used.</summary>
     public static string NoticeShowNoSuchSubtitles => Get("NoticeShowNoSuchSubtitles");
-
-    /// <summary>Toast while torrents are held until the connection check passes.</summary>
-    public static string NoticeTorrentsWaitingForCheck => Get("NoticeTorrentsWaitingForCheck");
 
     /// <summary>Toast when the mapping data downloads work again after a failure.</summary>
     public static string NoticeMappingDataRefreshed => Get("NoticeMappingDataRefreshed");
@@ -803,12 +797,6 @@ public static partial class T
 
     /// <summary>Toast when a new release of Kaeri is out, on the terminal app. The command is not translated. Terminal only: the engine never sends it to the apps.</summary>
     public static string NoticeUpdateAvailable(string tag) => Fill(Get("NoticeUpdateAvailable"), ("tag", tag));
-
-    /// <summary>The reason a setting was refused until the person confirms having no protection.</summary>
-    public static string CauseConfirmNoProtection => Get("CauseConfirmNoProtection");
-
-    /// <summary>The reason a setting was refused until the person confirms the "warn only" choice.</summary>
-    public static string CauseConfirmWarnOnly => Get("CauseConfirmWarnOnly");
 
     /// <summary>The reason a proxy was refused: it has no host or no port.</summary>
     public static string CauseProxyNeedsAddress => Get("CauseProxyNeedsAddress");
@@ -981,7 +969,7 @@ public static partial class T
     /// <summary>Search: Available choice that keeps titles one of the viewer's own sources has.</summary>
     public static string SearchAvailablePlaysHere => Get("SearchAvailablePlaysHere");
 
-    /// <summary>Search: end of a result's line when a free catalogue or the demo has the title.</summary>
+    /// <summary>Search: end of a result's line when an open catalogue or the demo has the title.</summary>
     public static string SearchResultPlaysHere => Get("SearchResultPlaysHere");
 
     /// <summary>Search: end of a result's line when files on this device have the title.</summary>
@@ -1071,7 +1059,7 @@ public static partial class T
     /// <summary>Heading of the group with mpv's own options, on the Advanced pane. mpv is the player's name and stays lower case.</summary>
     public static string SettingsGroupMpv => Get("SettingsGroupMpv");
 
-    /// <summary>Screen reader name of a setting card that also says its state, such as "Protect with, Proxy saved".</summary>
+    /// <summary>Screen reader name of a setting card that also says its state, such as "Route torrent traffic through a proxy, Proxy saved".</summary>
     public static string SettingsCardState(string title, string state) => Fill(Get("SettingsCardState"), ("title", title), ("state", state));
 
     /// <summary>Screen reader name of the Last check card: its title, the check's word and the line under it.</summary>
@@ -1097,9 +1085,6 @@ public static partial class T
 
     /// <summary>Setting: the app's own player controls, or mpv's.</summary>
     public static string SettingsPlayerInterface => Get("SettingsPlayerInterface");
-
-    /// <summary>Setting: how torrent traffic is protected. VPN stays in capitals: it is an abbreviation.</summary>
-    public static string SettingsVpnMode => Get("SettingsVpnMode");
 
     /// <summary>Setting: where sign-in tokens are kept.</summary>
     public static string SettingsTokenStorage => Get("SettingsTokenStorage");
@@ -1161,9 +1146,6 @@ public static partial class T
     /// <summary>Notice line for the video library the player uses.</summary>
     public static string SettingsLibmpvLicence => Get("SettingsLibmpvLicence");
 
-    /// <summary>Confirmation text before choosing Warn only for a failed check.</summary>
-    public static string TorrentsWarnInstead => Get("TorrentsWarnInstead");
-
     /// <summary>Screen reader name of a show's settings dialog.</summary>
     public static string ShowSettingsLabel(string title) => Fill(Get("ShowSettingsLabel"), ("title", title));
 
@@ -1188,20 +1170,8 @@ public static partial class T
     /// <summary>Value of the download quality setting: a larger, sharper version where a source has one.</summary>
     public static string SettingsDownloadHigher => Get("SettingsDownloadHigher");
 
-    /// <summary>Title of the dialog that turns torrents on and asks what protects them.</summary>
-    public static string TorrentsDialogTurnOn => Get("TorrentsDialogTurnOn");
-
-    /// <summary>Title of the dialog that changes what protects torrents.</summary>
-    public static string TorrentsDialogProtect => Get("TorrentsDialogProtect");
-
     /// <summary>Title of the dialog that edits the saved proxy.</summary>
     public static string TorrentsDialogEditProxy => Get("TorrentsDialogEditProxy");
-
-    /// <summary>The torrent dialog's main button when it turns torrents on.</summary>
-    public static string TorrentsDialogTurnOnAction => Get("TorrentsDialogTurnOnAction");
-
-    /// <summary>Screen reader name of a protection choice: its name, then what it does.</summary>
-    public static string TorrentsChoiceSpoken(string label, string detail) => Fill(Get("TorrentsChoiceSpoken"), ("label", label), ("detail", detail));
 
     /// <summary>Note under the Play trailers setting: what the trailers are and when they do not play.</summary>
     public static string SettingsNoteTrailersWindows => Get("SettingsNoteTrailersWindows");
@@ -1397,9 +1367,6 @@ public static partial class T
 
     /// <summary>How a { -source } stands when nothing is wrong with it.</summary>
     public static string SourcesStatusWorking => Get("SourcesStatusWorking");
-
-    /// <summary>In the torrent { -source }'s detail, in place of the hosts it contacts.</summary>
-    public static string SourcesTorrentIndexes => Get("SourcesTorrentIndexes");
 
     /// <summary>Heading of the card in a { -source }'s detail when a newer version can be installed.</summary>
     public static string SourcesVersionReady(string version) => Fill(Get("SourcesVersionReady"), ("version", version));
@@ -5540,7 +5507,7 @@ public static partial class T
     /// <summary>Under a source that found more than one show by this name and could not tell which is this one.</summary>
     public static string SourceNoteAmbiguous => Get("SourceNoteAmbiguous");
 
-    /// <summary>Under a source held back by the VPN check in Settings.</summary>
+    /// <summary>Under a source that waits for the proxy check in Settings.</summary>
     public static string SourceNoteHeldBack => Get("SourceNoteHeldBack");
 
     /// <summary>Heading over one source's releases, for a source that offers several (a batch, single episodes).</summary>
@@ -5585,12 +5552,6 @@ public static partial class T
     /// <summary>Row for the built-in torrent source.</summary>
     public static string SourcesTorrents => Get("SourcesTorrents");
 
-    /// <summary>Label of a source that is not a plugin and controls this device.</summary>
-    public static string SourcesRemote => Get("SourcesRemote");
-
-    /// <summary>Origin: set in the config file.</summary>
-    public static string SourcesOriginConfig => Get("SourcesOriginConfig");
-
     /// <summary>Origin: built into the app.</summary>
     public static string SourcesOriginBuiltIn => Get("SourcesOriginBuiltIn");
 
@@ -5627,7 +5588,7 @@ public static partial class T
     /// <summary>Status line: no answer.</summary>
     public static string SourcesDetailNotAnsweringPlain => Get("SourcesDetailNotAnsweringPlain");
 
-    /// <summary>Status line: held back by the check.</summary>
+    /// <summary>Status line: waiting for the proxy check.</summary>
     public static string SourcesDetailHeldBack => Get("SourcesDetailHeldBack");
 
     /// <summary>Status line: disabled.</summary>
@@ -5636,7 +5597,7 @@ public static partial class T
     /// <summary>Status line: the source is gone.</summary>
     public static string SourcesDetailGone => Get("SourcesDetailGone");
 
-    /// <summary>Status line: the site did not answer.</summary>
+    /// <summary>Status line: the source did not answer.</summary>
     public static string SourcesDetailSite => Get("SourcesDetailSite");
 
     /// <summary>Row label: version.</summary>
@@ -6636,59 +6597,26 @@ public static partial class T
     /// <summary>Line under the switch while torrents are off.</summary>
     public static string TorrentsOffDetail => Get("TorrentsOffDetail");
 
-    /// <summary>Line explaining the risk, before torrents start.</summary>
+    /// <summary>Line about privacy in the torrent sheet, before torrents start.</summary>
     public static string TorrentsRisk => Get("TorrentsRisk");
 
     /// <summary>Line in the Apple sources screen: torrents belong to the app, not to a plugin.</summary>
     public static string TorrentsNotAPlugin => Get("TorrentsNotAPlugin");
 
-    /// <summary>Label of the choice of protection.</summary>
-    public static string TorrentsProtectWith => Get("TorrentsProtectWith");
+    /// <summary>Switch: send torrent traffic through a SOCKS5 proxy. Off by default.</summary>
+    public static string TorrentsProxyRoute => Get("TorrentsProxyRoute");
 
-    /// <summary>Option: no protection.</summary>
-    public static string TorrentsProtectNone => Get("TorrentsProtectNone");
+    /// <summary>Line under the switch.</summary>
+    public static string TorrentsProxyRouteDetail => Get("TorrentsProxyRouteDetail");
 
-    /// <summary>Option: a proxy.</summary>
-    public static string TorrentsProtectProxy => Get("TorrentsProtectProxy");
-
-    /// <summary>Option: a VPN already running on the device.</summary>
-    public static string TorrentsProtectVpn => Get("TorrentsProtectVpn");
-
-    /// <summary>Line under the proxy option.</summary>
-    public static string TorrentsProtectProxyDetail => Get("TorrentsProtectProxyDetail");
-
-    /// <summary>Line under the VPN option.</summary>
-    public static string TorrentsProtectVpnDetail => Get("TorrentsProtectVpnDetail");
-
-    /// <summary>Line under the no-protection option.</summary>
-    public static string TorrentsProtectNoneDetail => Get("TorrentsProtectNoneDetail");
-
-    /// <summary>Line when no protection is set.</summary>
-    public static string TorrentsProtectNoneNote => Get("TorrentsProtectNoneNote");
-
-    /// <summary>Summary: a proxy protects. Host and port are already formatted.</summary>
+    /// <summary>Summary: torrents go through a proxy. Host and port are already formatted.</summary>
     public static string TorrentsSummaryProxyAt(string host, string port) => Fill(Get("TorrentsSummaryProxyAt"), ("host", host), ("port", port));
 
-    /// <summary>Summary: a proxy protects, address not shown.</summary>
+    /// <summary>Summary: torrents go through a proxy, address not shown.</summary>
     public static string TorrentsSummaryProxy => Get("TorrentsSummaryProxy");
 
-    /// <summary>Summary: a VPN protects.</summary>
-    public static string TorrentsSummaryVpn => Get("TorrentsSummaryVpn");
-
-    /// <summary>Summary: nothing protects.</summary>
-    public static string TorrentsSummaryNone => Get("TorrentsSummaryNone");
-
-    /// <summary>Title of the question when torrents are turned on without protection.</summary>
-    public static string TorrentsUnprotectedTitle => Get("TorrentsUnprotectedTitle");
-
-    /// <summary>Line under it.</summary>
-    public static string TorrentsUnprotectedDetail => Get("TorrentsUnprotectedDetail");
-
-    /// <summary>Button that confirms turning torrents on without protection.</summary>
-    public static string TorrentsTurnOnUnprotected => Get("TorrentsTurnOnUnprotected");
-
-    /// <summary>Button that confirms using no protection.</summary>
-    public static string TorrentsUseUnprotected => Get("TorrentsUseUnprotected");
+    /// <summary>Summary: no proxy is set.</summary>
+    public static string TorrentsSummaryDirect => Get("TorrentsSummaryDirect");
 
     /// <summary>Label of the proxy host field.</summary>
     public static string TorrentsProxyHost => Get("TorrentsProxyHost");
@@ -6717,95 +6645,32 @@ public static partial class T
     /// <summary>Notice after the proxy was saved.</summary>
     public static string TorrentsProxySaved => Get("TorrentsProxySaved");
 
-    /// <summary>Why a save was refused: traffic left outside the proxy.</summary>
-    public static string TorrentsLeftOutsideProxy => Get("TorrentsLeftOutsideProxy");
-
-    /// <summary>Why a save was refused: the check could not run through the proxy.</summary>
+    /// <summary>Why a save was refused: the proxy check failed. A sentence fragment.</summary>
     public static string TorrentsCheckNotMadeProxy => Get("TorrentsCheckNotMadeProxy");
 
     /// <summary>Notice when a proxy was not saved. The reason is a sentence fragment.</summary>
     public static string TorrentsProxyNotSaved(string why) => Fill(Get("TorrentsProxyNotSaved"), ("why", why));
 
-    /// <summary>Notice when protection was not saved. The reason is a sentence fragment.</summary>
-    public static string TorrentsProtectionNotSaved(string why) => Fill(Get("TorrentsProtectionNotSaved"), ("why", why));
-
     /// <summary>Notice when torrents stayed off. The reason is a sentence fragment.</summary>
     public static string TorrentsStillOff(string why) => Fill(Get("TorrentsStillOff"), ("why", why));
 
-    /// <summary>Label of the index address field.</summary>
-    public static string TorrentsIndex => Get("TorrentsIndex");
+    /// <summary>Under the proxy form: what the app checks.</summary>
+    public static string TorrentsCheckNote => Get("TorrentsCheckNote");
 
-    /// <summary>Line under the index field.</summary>
-    public static string TorrentsIndexDetail => Get("TorrentsIndexDetail");
-
-    /// <summary>Hint inside the index field.</summary>
-    public static string TorrentsIndexHint => Get("TorrentsIndexHint");
-
-    /// <summary>Line when no index address is set.</summary>
-    public static string TorrentsIndexNeeded => Get("TorrentsIndexNeeded");
-
-    /// <summary>Line when the index address has the wrong scheme.</summary>
-    public static string TorrentsIndexScheme => Get("TorrentsIndexScheme");
-
-    /// <summary>Notice after the index was saved.</summary>
-    public static string TorrentsIndexSaved => Get("TorrentsIndexSaved");
-
-    /// <summary>Label of the choice of what to do when a check fails.</summary>
-    public static string TorrentsIfCheckFails => Get("TorrentsIfCheckFails");
-
-    /// <summary>Title of the question that asks whether torrents may keep running.</summary>
-    public static string TorrentsKeepRunningTitle => Get("TorrentsKeepRunningTitle");
-
-    /// <summary>Line under the question: what the choice is about.</summary>
-    public static string TorrentsKeepRunningDetail => Get("TorrentsKeepRunningDetail");
-
-    /// <summary>Option: pause torrents.</summary>
-    public static string TorrentsFailPause => Get("TorrentsFailPause");
-
-    /// <summary>Option: stop torrents.</summary>
-    public static string TorrentsFailStop => Get("TorrentsFailStop");
-
-    /// <summary>Option: only warn.</summary>
-    public static string TorrentsFailWarn => Get("TorrentsFailWarn");
-
-    /// <summary>Result of the choice: torrents run.</summary>
-    public static string TorrentsFailWarnResult => Get("TorrentsFailWarnResult");
-
-    /// <summary>Result of the choice: torrents stop.</summary>
-    public static string TorrentsFailStopResult => Get("TorrentsFailStopResult");
-
-    /// <summary>Result of the choice: torrents pause.</summary>
-    public static string TorrentsFailPauseResult => Get("TorrentsFailPauseResult");
-
-    /// <summary>Label of the last check.</summary>
+    /// <summary>Label of the proxy check's result.</summary>
     public static string TorrentsLastCheck => Get("TorrentsLastCheck");
-
-    /// <summary>Check passed. The exit is where the traffic leaves from, already formatted.</summary>
-    public static string TorrentsCheckPassedExit(string exit) => Fill(Get("TorrentsCheckPassedExit"), ("exit", exit));
 
     /// <summary>Check passed.</summary>
     public static string TorrentsCheckPassed => Get("TorrentsCheckPassed");
 
-    /// <summary>Check running: the line.</summary>
-    public static string TorrentsCheckRunningLine => Get("TorrentsCheckRunningLine");
-
     /// <summary>Check running: the short word.</summary>
     public static string TorrentsCheckRunning => Get("TorrentsCheckRunning");
 
-    /// <summary>Check failed: traffic left outside. The consequence follows.</summary>
-    public static string TorrentsCheckLeaked(string then) => Fill(Get("TorrentsCheckLeaked"), ("then", then));
-
-    /// <summary>Check failed: the check could not be made. The consequence follows.</summary>
-    public static string TorrentsCheckUnmade(string then) => Fill(Get("TorrentsCheckUnmade"), ("then", then));
+    /// <summary>Check failed: the line.</summary>
+    public static string TorrentsCheckFailedLine => Get("TorrentsCheckFailedLine");
 
     /// <summary>Short word: the check failed.</summary>
     public static string TorrentsCheckFailed => Get("TorrentsCheckFailed");
-
-    /// <summary>Line: no protection is set, so nothing was checked.</summary>
-    public static string TorrentsCheckNoneLine => Get("TorrentsCheckNoneLine");
-
-    /// <summary>Short word: unprotected.</summary>
-    public static string TorrentsCheckNone => Get("TorrentsCheckNone");
 
     /// <summary>Line: no check yet.</summary>
     public static string TorrentsCheckWaitingLine => Get("TorrentsCheckWaitingLine");
@@ -6845,12 +6710,6 @@ public static partial class T
 
     /// <summary>Line when the page needs script.</summary>
     public static string TorrentsPageNeedsScript => Get("TorrentsPageNeedsScript");
-
-    /// <summary>Under the proxy form when turning torrents on: what the app checks, and that the VPN or proxy is what protects.</summary>
-    public static string TorrentsCheckNote => Get("TorrentsCheckNote");
-
-    /// <summary>Notice after the protection was saved.</summary>
-    public static string TorrentsProtectionSaved => Get("TorrentsProtectionSaved");
 
     /// <summary>Menu item and button: open a magnet link or a torrent file the viewer has.</summary>
     public static string OpenedOpen => Get("OpenedOpen");
@@ -7766,17 +7625,15 @@ public static partial class T
         ["PluginNotLoaded"] = "{id} isn't loaded. Check that it's installed under Sources.",
         ["ReleasePinned"] = "{name} will be used for this title.",
         ["NoticeChoiceNotSaved"] = "Couldn't save that choice. {reason}",
-        ["TorrentCheckFailedRunning"] = "The connection check failed. Torrents keep running.",
-        ["TorrentVpnWaiting"] = "Torrents start once the VPN guard passes. {reason}",
-        ["TorrentVpnUnverified"] = "Torrents start once the VPN guard passes. The connection hasn't been verified yet.",
+        ["TorrentProxyWaiting"] = "The proxy check failed. Torrents start once it passes.",
+        ["TorrentProxyUnchecked"] = "Torrents start once the proxy check passes.",
         ["TorrentLinkUnusable"] = "That isn't a magnet link or a torrent file.",
         ["TorrentLinkPlaybackOff"] = "Turn on torrent playback in Settings to play your own links.",
         ["OpenedSearchFailed"] = "Couldn't search for that title. {reason}",
         ["TorrentInterfaceClosed"] = "Kaeri closed before torrents started.",
         ["TorrentSessionFailed"] = "Couldn't start the torrent session. {reason}",
-        ["TorrentNoKillSwitch"] = "Nothing on this device stops torrent traffic if the VPN drops. Run \"kaeri --doctor\" to set that up.",
-        ["TorrentNotChecked"] = "Couldn't check the connection. {reason}",
-        ["SourcesReloadedTorrentsPending"] = "Sources reloaded. Torrents start once the VPN guard passes.",
+        ["TorrentProxyUnusable"] = "The proxy setting can't be used. {reason}",
+        ["SourcesReloadedTorrentsChecking"] = "Sources reloaded. Torrents start once the proxy check passes.",
         ["SourcesReloadedTorrentsOff"] = "Torrents are off. The session was stopped.",
         ["JobAnilistLimit"] = "Waiting on the AniList rate limit",
         ["NoticeAnilistLimit"] = "Waiting {wait} on the AniList rate limit.",
@@ -7814,21 +7671,19 @@ public static partial class T
         ["NoticeSignedOutQueue_other"] = "Signed out of {tracker}. {count} queued changes are kept for the next sign-in.",
         ["NoticeSignOutFailed"] = "Couldn't sign out of {tracker}. Try again. {reason}",
         ["NoticeNotSavedBecause"] = "Couldn't save that setting. {cause}",
-        ["NoticeProtectionSaved"] = "Saved torrent protection.",
-        ["NoticeProtectionNotChecked"] = "Couldn't check the torrent protection. {cause}",
+        ["NoticeProxySaved"] = "Torrent traffic now goes through the proxy.",
+        ["NoticeProxyRemoved"] = "Torrents now connect directly, without a proxy.",
+        ["NoticeProxyNotChecked"] = "Couldn't check the proxy. {cause}",
         ["NoticeProxyPasswordNotKept"] = "Couldn't keep the proxy's password. Enter it again to try saving it. {reason}",
         ["NoticeShowSettingRefused"] = "Couldn't save that setting. {value} isn't a value for {setting}.",
         ["NoticeShowNotReset"] = "Couldn't reset this show's settings. {reason}",
         ["NoticeShowNoSuchSubtitles"] = "Couldn't save that subtitle choice. This show hasn't used those subtitles before.",
-        ["NoticeTorrentsWaitingForCheck"] = "Torrents are waiting for the connection check to pass again.",
         ["NoticeMappingDataRefreshed"] = "Mapping data refreshed.",
         ["NoticeMappingDataFailed"] = "Couldn't refresh the mapping data ({datasets}). Trying again in {wait}. {cause}",
         ["NoticeEpisodeAired"] = "{title}, episode {episode}, aired while you were away.",
         ["NoticeEpisodesAired_one"] = "One new episode of a show you watch aired. The calendar has it.",
         ["NoticeEpisodesAired_other"] = "{count} new episodes of shows you watch aired. The calendar has them.",
         ["NoticeUpdateAvailable"] = "{tag} is out. Run kaeri --update to install it.",
-        ["CauseConfirmNoProtection"] = "Confirm that you want no protection first.",
-        ["CauseConfirmWarnOnly"] = "Confirm that you want to be warned only first.",
         ["CauseProxyNeedsAddress"] = "A proxy needs a host and a port.",
         ["CauseProxyAddressUnusable"] = "The proxy's address is not one a check can use.",
         ["CauseServerUnreachable"] = "The server couldn't be reached.",
@@ -7930,7 +7785,6 @@ public static partial class T
         ["SettingsMotion"] = "Motion",
         ["SettingsStartFullscreen"] = "Start in full screen",
         ["SettingsPlayerInterface"] = "Player interface",
-        ["SettingsVpnMode"] = "VPN mode",
         ["SettingsTokenStorage"] = "Token storage",
         ["SettingsWatchParties"] = "Watch parties",
         ["SettingsSourceOrder"] = "Source order",
@@ -7952,7 +7806,6 @@ public static partial class T
         ["SettingsSignedInWaiting_other"] = "Signed in · {count} changes waiting",
         ["SettingsSignedOutCode"] = "Not signed in · you enter a code on its site",
         ["SettingsLibmpvLicence"] = "Licensed under the GNU Lesser General Public License, version 2.1 or later.",
-        ["TorrentsWarnInstead"] = "Kaeri will warn you instead of pausing. If your VPN or proxy is down, other people can see your IP address.",
         ["ShowSettingsLabel"] = "Settings for {title}",
         ["ShowSettingsLoading"] = "Loading this show's settings",
         ["ShowSettingsFailed"] = "Couldn't load this show's settings.",
@@ -7961,11 +7814,7 @@ public static partial class T
         ["ShowSettingsNotifyDetail"] = "A notification when an episode comes out.",
         ["SettingsDownloadStandard"] = "Standard",
         ["SettingsDownloadHigher"] = "Higher",
-        ["TorrentsDialogTurnOn"] = "Turn on torrents",
-        ["TorrentsDialogProtect"] = "Protect torrents",
         ["TorrentsDialogEditProxy"] = "Edit proxy",
-        ["TorrentsDialogTurnOnAction"] = "Turn on",
-        ["TorrentsChoiceSpoken"] = "{label}. {detail}",
         ["SettingsNoteTrailersWindows"] = "Trailers play muted from YouTube, which sees your IP address. They don't play on a metered connection, with animation effects off, in energy saver mode or with Narrator running.",
         ["SettingsNoteCastTvsPc"] = "They appear under Chromecast in Play on TV. This PC sends them the episode.",
         ["SettingsNoteTorrentsWhileCastingPc"] = "Lets a TV with Chromecast built in play torrents. This PC sends the episode for as long as it plays.",
@@ -8034,7 +7883,6 @@ public static partial class T
         ["SourcesOriginVersion"] = "{origin} · version {version}",
         ["SourcesStanding"] = "Standing",
         ["SourcesStatusWorking"] = "Ready",
-        ["SourcesTorrentIndexes"] = "Searches the torrent indexes you have turned on under Settings.",
         ["SourcesVersionReady"] = "Version {version} is ready",
         ["SourcesUseThis"] = "Use this source",
         ["SourcesUseName"] = "{name} on",
@@ -8746,7 +8594,7 @@ public static partial class T
         ["OnboardingWhereHosts"] = "Kaeri plays what you already have: files on this device, your Jellyfin server, and plugins from stores you join.",
         ["OnboardingOwnHeading"] = "Have your own media?",
         ["OnboardingInviteHeading"] = "Have an invite link?",
-        ["OnboardingWhereStores"] = "Plugins come from plugin stores. A plugin store is run by one person for the people they invite, so you join one with an invite link from its owner.",
+        ["OnboardingWhereStores"] = "Plugins come from plugin stores. A plugin store is signed and gives each device its own token, so you join one with an invite link from its owner.",
         ["OnboardingDemoHeading"] = "Try it now",
         ["OnboardingDemoDetail"] = "The demo plays こうしす！, a series its makers share under CC BY 4.0, from Wikimedia Commons.",
         ["OnboardingPlayDemo"] = "Play the demo",
@@ -9391,7 +9239,7 @@ public static partial class T
         ["SettingsTrailersWifiOnly"] = "Wi-Fi only",
         ["SettingsReset"] = "Reset settings",
         ["SettingsResetTitle"] = "Reset settings?",
-        ["SettingsResetDetail"] = "Every setting goes back to its default, VPN and proxy included. Your watch history stays, and the old settings file is kept.",
+        ["SettingsResetDetail"] = "Every setting goes back to its default, the torrent proxy included. Your watch history stays, and the old settings file is kept.",
         ["SettingsResetDone"] = "Settings are back to their defaults. The old file is kept as {file}.",
         ["SettingsGroupSubtitles"] = "Subtitles",
         ["SettingsSubsPreview"] = "Preview",
@@ -9448,7 +9296,7 @@ public static partial class T
         ["SourceNoteResting"] = "Not responding, trying again soon",
         ["SourceNoteGone"] = "Not installed",
         ["SourceNoteAmbiguous"] = "Couldn't match this title",
-        ["SourceNoteHeldBack"] = "Held back by the VPN check",
+        ["SourceNoteHeldBack"] = "Waiting for the proxy check",
         ["SourcePickerReleases"] = "Releases",
         ["SourcePickerChosen"] = "Chosen",
         ["SourcePinUnavailable"] = "{name} isn't available right now, so this title's episodes come from your other sources.",
@@ -9463,8 +9311,6 @@ public static partial class T
         ["SourcesEmptyTitle"] = "No sources yet",
         ["SourcesEmptyDetail"] = "Join a plugin store with the invite link its owner sends you.",
         ["SourcesTorrents"] = "Torrents",
-        ["SourcesRemote"] = "Remote",
-        ["SourcesOriginConfig"] = "Set in the config file",
         ["SourcesOriginBuiltIn"] = "Built in",
         ["SourcesOriginLeftStore"] = "From a plugin store you left",
         ["SourcesOriginByHand"] = "Added by hand",
@@ -9477,7 +9323,7 @@ public static partial class T
         ["SourcesStatusUpdate"] = "Update available",
         ["SourcesDetailNotAnswering"] = "Not answering. {why}",
         ["SourcesDetailNotAnsweringPlain"] = "Not answering.",
-        ["SourcesDetailHeldBack"] = "Held back until the connection check passes.",
+        ["SourcesDetailHeldBack"] = "Waiting until the proxy check passes.",
         ["SourcesDetailDisabled"] = "Off. It keeps its place and isn't tried.",
         ["SourcesDetailGone"] = "This source is no longer here.",
         ["SourcesDetailSite"] = "The source didn't answer.",
@@ -9502,7 +9348,7 @@ public static partial class T
         ["SourcesOpenSettings"] = "Open source settings",
         ["SourcesTorrentSource"] = "Torrent playback",
         ["SourcesSourceOrderRow"] = "Source order",
-        ["SourcesTorrentsNote"] = "Torrents are part of Kaeri, not a plugin. What protects their traffic, the connection check and seeding are set in Settings, under Sources.",
+        ["SourcesTorrentsNote"] = "Torrents are part of Kaeri, not a plugin. The proxy and seeding are set in Settings, under Sources.",
         ["SourcesRebuilding"] = "Sources are being set up again",
         ["SourcesResponseMs"] = "{ms} ms",
         ["MatchFix"] = "Fix this match",
@@ -9567,12 +9413,12 @@ public static partial class T
         ["SourcesYour"] = "Your sources",
         ["SourcesYourIntro"] = "Episodes play from the first source that has them, in this order.",
         ["SourcesSectionPlugins"] = "Plugins",
-        ["SourcesSectionCatalogues"] = "Free catalogues",
+        ["SourcesSectionCatalogues"] = "Open catalogues",
         ["SourcesAddDemo"] = "Add the demo",
         ["SourcesOrderAll"] = "Every source is tried in this order, whatever its kind.",
         ["StoresJoined"] = "Joined",
         ["StoresEmptyTitle"] = "No plugin stores yet",
-        ["StoresEmptyDetail"] = "Plugin stores are run by people you know. Join one with the invite link its owner sends you.",
+        ["StoresEmptyDetail"] = "Plugin stores hold signed plugins and give each device its own token. Join one with the invite link its owner sends you.",
         ["StoresIntro"] = "Plugins add sources. Each one lists the hosts it contacts before you install it.",
         ["StoresNotFromApp"] = "Plugins come from the plugin store's owner, not from Kaeri. You can leave a plugin store at any time.",
         ["StoresJoinOwnerResponsible"] = "{owner} runs this plugin store and chose its plugins. Kaeri did not make, review or approve them.",
@@ -9737,7 +9583,7 @@ public static partial class T
         ["StoresOffersPlugins_one"] = "One plugin",
         ["StoresOffersPlugins_other"] = "{count} plugins",
         ["NoticeOpenStores"] = "Open plugin stores",
-        ["StoresWhatIs"] = "A plugin store is a small server one person runs for the people they invite. It offers sources as plugins. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.",
+        ["StoresWhatIs"] = "A plugin store is a small server that holds signed plugins and gives each device its own token. It offers sources as plugins. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.",
         ["StoresWhatIsLink"] = "What is a plugin store?",
         ["StoresInviteRules"] = "An invite link works once, for one person, and lasts seven days. Ask the plugin store's owner for a new one if yours has expired.",
         ["StoresQrLabel"] = "QR code for the invite link",
@@ -9823,64 +9669,32 @@ public static partial class T
         ["MoreFollowingLine"] = "{status} · {score}/10",
         ["TorrentsTitle"] = "Torrents",
         ["TorrentsOn"] = "Torrents are on",
-        ["TorrentsOffDetail"] = "Off by default. Turning this on asks how to protect your connection first.",
-        ["TorrentsRisk"] = "Other people can see your IP address while you download and share a torrent. Choose what protects it before torrents start.",
-        ["TorrentsNotAPlugin"] = "Torrents are part of Kaeri, not a plugin. What protects their traffic, the connection check and seeding are set in Settings, under Sources.",
-        ["TorrentsProtectWith"] = "Protect with",
-        ["TorrentsProtectNone"] = "No protection",
-        ["TorrentsProtectProxy"] = "Proxy",
-        ["TorrentsProtectVpn"] = "VPN",
-        ["TorrentsProtectProxyDetail"] = "Torrent traffic goes through a proxy you run or rent.",
-        ["TorrentsProtectVpnDetail"] = "Uses the VPN already running on this device.",
-        ["TorrentsProtectNoneDetail"] = "Your address is visible to everyone in the torrent.",
-        ["TorrentsProtectNoneNote"] = "With no protection, Kaeri doesn't check the connection.",
-        ["TorrentsSummaryProxyAt"] = "Protected by a SOCKS5 proxy at {host}:{port}.",
-        ["TorrentsSummaryProxy"] = "Protected by a SOCKS5 proxy.",
-        ["TorrentsSummaryVpn"] = "Protected by the VPN on this device.",
-        ["TorrentsSummaryNone"] = "Not protected. Your address is visible to everyone in the torrent.",
-        ["TorrentsUnprotectedTitle"] = "Use torrents without protection?",
-        ["TorrentsUnprotectedDetail"] = "Other people can see your IP address while you download and share a torrent, and Kaeri doesn't check the connection.",
-        ["TorrentsTurnOnUnprotected"] = "Turn on without protection",
-        ["TorrentsUseUnprotected"] = "Use without protection",
+        ["TorrentsOffDetail"] = "Off by default. Torrents connect directly unless you route them through a proxy.",
+        ["TorrentsRisk"] = "Other people in a torrent can see your IP address. To keep it private, route torrent traffic through a proxy.",
+        ["TorrentsNotAPlugin"] = "Torrents are part of Kaeri, not a plugin. The proxy and seeding are set in Settings, under Sources.",
+        ["TorrentsProxyRoute"] = "Route torrent traffic through a proxy",
+        ["TorrentsProxyRouteDetail"] = "Torrent traffic goes through a SOCKS5 proxy you run or rent. While this is off, torrents connect directly.",
+        ["TorrentsSummaryProxyAt"] = "Through a SOCKS5 proxy at {host}:{port}.",
+        ["TorrentsSummaryProxy"] = "Through a SOCKS5 proxy.",
+        ["TorrentsSummaryDirect"] = "Connecting directly, without a proxy.",
         ["TorrentsProxyHost"] = "Proxy host",
         ["TorrentsProxyPort"] = "Proxy port",
         ["TorrentsProxyUser"] = "User name",
         ["TorrentsProxyPassword"] = "Password",
         ["TorrentsPasswordKeep"] = "Leave the password empty to keep the saved one.",
-        ["TorrentsProxyKeepsSaved"] = "Torrents keep using the saved proxy until the new one passes the connection check.",
+        ["TorrentsProxyKeepsSaved"] = "Torrents keep using the saved proxy until the new one passes the proxy check.",
         ["TorrentsProxyInvalid"] = "The proxy needs a host and a port from 1 to 65535.",
         ["TorrentsCheckingProxy"] = "Checking the proxy…",
         ["TorrentsProxySaved"] = "Proxy saved",
-        ["TorrentsLeftOutsideProxy"] = "Torrent traffic left outside this proxy",
-        ["TorrentsCheckNotMadeProxy"] = "The check couldn't be made through this proxy",
+        ["TorrentsCheckNotMadeProxy"] = "The proxy check failed",
         ["TorrentsProxyNotSaved"] = "Not saved. {why}, so the saved proxy stays.",
-        ["TorrentsProtectionNotSaved"] = "Not saved. {why}, so the saved protection stays.",
         ["TorrentsStillOff"] = "Torrents are still off. {why}.",
-        ["TorrentsIndex"] = "Torrent index",
-        ["TorrentsIndexDetail"] = "The RSS search address Kaeri asks for torrents.",
-        ["TorrentsIndexHint"] = "https://…/?q={{query}}",
-        ["TorrentsIndexNeeded"] = "Torrents need an index address.",
-        ["TorrentsIndexScheme"] = "Use an http or https address.",
-        ["TorrentsIndexSaved"] = "Torrent index saved",
-        ["TorrentsIfCheckFails"] = "If a check fails",
-        ["TorrentsKeepRunningTitle"] = "Keep torrents running if a check fails?",
-        ["TorrentsKeepRunningDetail"] = "What happens to torrents when the check finds traffic leaving outside your VPN or proxy.",
-        ["TorrentsFailPause"] = "Pause torrents",
-        ["TorrentsFailStop"] = "Stop torrents",
-        ["TorrentsFailWarn"] = "Warn only",
-        ["TorrentsFailWarnResult"] = "Torrents keep running.",
-        ["TorrentsFailStopResult"] = "Torrents are stopped.",
-        ["TorrentsFailPauseResult"] = "Torrents are paused.",
-        ["TorrentsLastCheck"] = "Last check",
-        ["TorrentsCheckPassedExit"] = "Leaving through {exit}",
+        ["TorrentsCheckNote"] = "Kaeri checks that it can reach the proxy before torrents start. Torrents wait while that check fails.",
+        ["TorrentsLastCheck"] = "Proxy check",
         ["TorrentsCheckPassed"] = "Passed",
-        ["TorrentsCheckRunningLine"] = "Checking where torrent traffic leaves from",
         ["TorrentsCheckRunning"] = "Checking",
-        ["TorrentsCheckLeaked"] = "Traffic left outside the protection. {then}",
-        ["TorrentsCheckUnmade"] = "The check couldn't be made. {then}",
+        ["TorrentsCheckFailedLine"] = "The proxy check failed. Torrents start once it passes.",
         ["TorrentsCheckFailed"] = "Failed",
-        ["TorrentsCheckNoneLine"] = "No protection is set",
-        ["TorrentsCheckNone"] = "Unprotected",
         ["TorrentsCheckWaitingLine"] = "Not checked yet",
         ["TorrentsCheckWaiting"] = "Waiting",
         ["TorrentsNotChecked"] = "Not checked",
@@ -9894,8 +9708,6 @@ public static partial class T
         ["TorrentsPageMissingKey"] = "This address is missing its key. Scan the QR code on the TV again, and open the whole address it gives.",
         ["TorrentsPageUnreadable"] = "The TV couldn't read this. Scan the QR code on the TV again.",
         ["TorrentsPageNeedsScript"] = "This page needs JavaScript to send the form to the TV safely.",
-        ["TorrentsCheckNote"] = "Kaeri checks where torrent traffic leaves from when a torrent starts and every minute while it runs, and pauses torrents if that check fails. Your VPN or proxy is what protects you.",
-        ["TorrentsProtectionSaved"] = "Torrent protection saved",
         ["OpenedOpen"] = "Open link or file",
         ["OpenedPasteTitle"] = "Open a magnet link or torrent file",
         ["OpenedPastePlaceholder"] = "Magnet link or info hash",

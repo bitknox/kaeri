@@ -1325,7 +1325,7 @@ fn a_subtitle_that_arrives_after_the_file_opened_is_added_to_it() {
 }
 
 #[test]
-fn a_mended_stream_whose_upstream_answers_502_falls_over_at_once() {
+fn a_proxied_stream_whose_upstream_answers_502_falls_over_at_once() {
     a_stream_that_fails_to_load_falls_over_at_once(StreamKind::Hls, &bad_gateway());
 }
 
@@ -1356,7 +1356,7 @@ fn subtitle_server() -> String {
 }
 
 #[test]
-fn a_web_stream_comes_mended_and_its_subtitles_fetched_ahead() {
+fn a_web_stream_comes_proxied_and_its_subtitles_fetched_ahead() {
     let subtitles = subtitle_server();
     let hls = Stream {
         subtitles: vec![Subtitle {
@@ -1370,11 +1370,11 @@ fn a_web_stream_comes_mended_and_its_subtitles_fetched_ahead() {
     let mut app = App::start(with_streams(vec![hls]), "");
     app.play(FINISHED, "12");
 
-    // The thumbnailer's own entry to the mender, then the mender's address for the stream.
+    // The thumbnailer's own entry to the proxy, then the proxy's address for the stream.
     let (_, previews) =
         app.ui("the previews' address", |ui| matches!(ui, PlayerUi::Thumbnails { .. }));
     let PlayerUi::Thumbnails { url: Some(previews) } = previews else {
-        panic!("a mended stream has its previews read through the mender: {previews:?}")
+        panic!("a proxied stream has its previews read through the proxy: {previews:?}")
     };
     assert!(previews.starts_with("http://127.0.0.1:"), "{previews}");
     let load = app.load();

@@ -6,7 +6,7 @@
 use std::{sync::Arc, thread, time::Duration};
 
 use kaeri_ffi::{FfiDirs, FfiEngine, FfiHost, FfiScene};
-use kaeri_model::{command::Command, event::Event, sources::GuardView};
+use kaeri_model::{command::Command, event::Event, sources::ProxyStatus};
 
 /// How long a test waits for what it is waiting on before failing: everything is on loopback.
 const PATIENCE: Duration = Duration::from_secs(30);
@@ -59,20 +59,18 @@ fn read_until(
 }
 
 #[test]
-fn the_connection_check_in_device_mode_is_answered_from_the_fixtures() {
+fn the_proxy_check_is_answered_from_the_fixtures() {
     let root = tempfile::tempdir().expect("a temporary directory");
     let dir = |name: &str| root.path().join(name).display().to_string();
     let dirs = FfiDirs { config: dir("config"), data: dir("data"), cache: dir("cache") };
-    // Torrents on, protected by the VPN already running on the device: the setting whose check
-    // looked the exit up on the real network.
+    // Torrents on, through a proxy no fixture may reach: the fixtures' check passes without
+    // connecting anywhere.
     std::fs::create_dir_all(&dirs.config).unwrap();
     std::fs::write(
         std::path::Path::new(&dirs.config).join("config.toml"),
-        "[providers.torrent]\nenabled = true\n[providers.torrent.vpn]\nmode = \"external\"\n",
+        "[providers.torrent]\nenabled = true\nproxy = \"socks5://proxy.example:1080\"\n",
     )
     .unwrap();
-    // The engine's own clients resolve no name, and the fixture guard makes no request, so a
-    // lookup that went out anyway would come back unreachable rather than protected.
     let engine = FfiEngine::start_scene_on(
         dirs,
         Arc::new(Quiet),
@@ -81,17 +79,14 @@ fn the_connection_check_in_device_mode_is_answered_from_the_fixtures() {
     )
     .expect("the engine starts");
 
-    assert_eq!(engine.send(Command::CheckConnection), None, "a check is not a job");
+    assert_eq!(engine.send(Command::CheckProxy), None, "a check is not a job");
     let read = read_until(
         &engine,
-        |event| matches!(event, Event::Vpn(Some(view)) if *view != GuardView::Checking),
+        |event| matches!(event, Event::TorrentProxy(Some(status)) if *status != ProxyStatus::Checking),
     );
-    let verdict = read.into_iter().rev().find_map(|event| match event {
-        Event::Vpn(view) => view,
+    let status = read.into_iter().rev().find_map(|event| match event {
+        Event::TorrentProxy(status) => status,
         _ => None,
     });
-    let Some(GuardView::Protected { exit }) = verdict else {
-        panic!("the fixtures' exit was not what the check found: {verdict:?}");
-    };
-    assert!(exit.contains("fixture") && exit.contains("Exampleland"), "{exit}");
+    assert_eq!(status, Some(ProxyStatus::Passed));
 }

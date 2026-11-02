@@ -53,6 +53,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.kaeri.design.ShowTitle
 import app.kaeri.engine.model.SettingKey
 import app.kaeri.store.SettingsCatalog
+import app.kaeri.store.TorrentWords
 
 /** The column for [pane], about the row [focus] names when it has an effect to show. */
 @Composable
@@ -78,8 +79,8 @@ internal fun SettingsAside(pane: SettingsPane, focus: String?) {
                 stringResource(R.string.downloads_title),
                 stringResource(R.string.settings_aside_downloads),
             )
-            SettingsPane.Sources -> if (store.settings.isOn(SettingKey.TORRENTS, view)) {
-                Aside(stringResource(R.string.settings_aside_connection_check), checkNote(LocalContext.current, view?.torrent?.onFailure, view?.torrent?.protection))
+            SettingsPane.Sources -> if (store.settings.isOn(SettingKey.TORRENTS, view) && view?.torrent?.proxy != null) {
+                Aside(stringResource(R.string.torrents_last_check), stringResource(TorrentWords.CHECK_NOTE))
             } else {
                 Aside(stringResource(R.string.sources_title), stringResource(R.string.settings_aside_sources))
             }

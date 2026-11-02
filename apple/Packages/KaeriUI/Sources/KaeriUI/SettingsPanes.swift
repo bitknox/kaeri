@@ -266,12 +266,13 @@ enum FreeSpace {
 struct SourcesPane: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
-    @State private var turningOn = false
+    @State private var routing = false
     /// Whether this device has a cellular connection to choose about: an iPad with one.
     @State private var cellular = false
 
     var body: some View {
         let on = store.settings.isOn(.torrents)
+        let proxy = store.settings.torrent?.proxy
         SettingsGroup(title: L.sourcesTitle) {
             Button {
                 navigator.open(.providers)
@@ -292,32 +293,34 @@ struct SourcesPane: View {
         }
         SettingsGroup(
             title: L.torrentsTitle,
-            footnote: on ? L.settingsTorrentsWarnNote : L.torrentsOffDetail
+            footnote: ProxyWords.summary(on: on, proxy: proxy)
         ) {
             SettingsRow(title: SettingKey.torrents.title) {
                 Toggle(SettingKey.torrents.title, isOn: Binding(
                     get: { on },
-                    set: { wanted in
-                        if wanted { turningOn = true } else { store.setSwitch(.torrents, on: false) }
-                    }
+                    set: { store.setSwitch(.torrents, on: $0) }
                 ))
                 .toggleStyle(.switch)
                 .tint(.amber)
                 .labelsHidden()
             }
-            if on {
-                if cellular {
-                    SettingsRow(title: SettingKey.torrentsOnCellular.title) { SettingSwitch(key: .torrentsOnCellular) }
+            if on, cellular {
+                SettingsRow(title: SettingKey.torrentsOnCellular.title) { SettingSwitch(key: .torrentsOnCellular) }
+            }
+            SettingsRow(title: L.torrentsProxyRoute, note: L.torrentsProxyRouteDetail) {
+                HStack(spacing: 10) {
+                    EditProxyButton()
+                    Toggle(L.torrentsProxyRoute, isOn: Binding(
+                        get: { proxy != nil },
+                        set: { wanted in if wanted { routing = true } else { store.setTorrentProxy(nil) } }
+                    ))
+                    .toggleStyle(.switch)
+                    .tint(.amber)
+                    .labelsHidden()
                 }
-                // Beside the choice, once a proxy is set: where it is, and its form to edit.
-                SettingsRow(title: L.torrentsProtectWith, note: store.settings.torrent?.proxyLine) {
-                    HStack(spacing: 10) {
-                        EditProxyButton()
-                        ProtectionMenu()
-                    }
-                }
-                GuardRow()
-                SettingsRow(title: SettingKey.vpnOnFailure.title) { FailedCheckMenu() }
+            }
+            if proxy != nil, let status = store.providers.proxyStatus, status != .direct {
+                ProxyCheckRow()
             }
         }
         if on {
@@ -331,8 +334,8 @@ struct SourcesPane: View {
             }
         }
         Color.clear.frame(height: 0)
-            .sheet(isPresented: $turningOn) { TorrentSheet() }
-            .onLaunchSheet("torrent", navigator) { turningOn = true }
+            .sheet(isPresented: $routing) { ProxySheet() }
+            .onLaunchSheet("torrent", navigator) { routing = true }
             #if os(iOS)
             .task { cellular = await CellularCheck.available() }
             #endif
@@ -360,54 +363,6 @@ enum CellularCheck {
     }
 }
 #endif
-
-/// The VPN guard's last word: where traffic left through and when, and whether it passed.
-struct GuardRow: View {
-    @Environment(AppStore.self) private var store
-
-    var body: some View {
-        TimelineView(.periodic(from: .now, by: 30)) { context in
-            let (note, status, color) = words(now: context.date)
-            // The guard checks again on its own every minute; Check now does not wait for it.
-            SettingsRow(title: L.torrentsLastCheck, note: note) {
-                HStack(spacing: 10) {
-                    HStack(spacing: 6) {
-                        Circle().fill(color).frame(width: 6, height: 6)
-                        Text(status).font(.mac(13)).foregroundStyle(.silk)
-                    }
-                    Button(L.torrentsCheckNow) { store.checkConnection() }
-                        .disabled(store.providers.guardView == .checking)
-                }
-            }
-        }
-    }
-
-    private func words(now: Date) -> (String, String, Color) {
-        GuardWords.words(store.providers.guardView, at: store.providers.guardAt, now: now)
-    }
-}
-
-/// The VPN guard's verdict in words: where traffic left through and when, a word for how it
-/// stands, and the dot's colour.
-enum GuardWords {
-    static func words(_ view: GuardView?, at: Date?, now: Date = .now) -> (String, String, Color) {
-        let ago = at.map { Wording.ago(Int64(now.timeIntervalSince($0))) }
-        switch view {
-        case .protected(let exit)?:
-            return (L.torrentsCheckPassedExit(exit: exit) + (ago.map { " · \($0)" } ?? ""), L.torrentsCheckPassed, .water)
-        case .checking?:
-            return (L.torrentsCheckRunningLine, L.torrentsCheckRunning, .haze)
-        case .leaking?:
-            return (L.torrentsCheckLeaked(then: L.torrentsFailPauseResult), L.torrentsCheckFailed, .vermilion)
-        case .unreachable?:
-            return (L.torrentsCheckUnmade(then: L.torrentsFailPauseResult), L.torrentsCheckFailed, .vermilion)
-        case .unprotected?:
-            return (L.torrentsCheckNoneLine, L.torrentsCheckNone, .haze)
-        case nil:
-            return (L.torrentsCheckWaitingLine, L.torrentsCheckWaiting, .haze)
-        }
-    }
-}
 
 // MARK: - Accounts
 

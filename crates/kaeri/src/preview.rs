@@ -53,8 +53,8 @@ pub async fn preview(
         kaeri_tui::image::ImageEngine::detect(images).with_cache_dir(paths.image_cache());
     let graphics = image_engine.graphics();
 
-    // The sources a running app has a moment after launch: the torrent source once its guard
-    // has answered, and the plugins once compiled.
+    // The sources a running app has a moment after launch: the torrent source once its session
+    // is up, and the plugins once compiled.
     let (registry, guard, note, held) =
         sources::build_registry(&config, &http, paths, &store).await;
     let plugins = sources::spawn_plugin_load(
@@ -73,10 +73,10 @@ pub async fn preview(
     if let Some(note) = plugin_note {
         app.apply(Event::ProviderNote(note));
     }
-    // A failed guard included: the interface puts its verdict on the chip and toasts it, and
-    // a preview without it showed a machine whose torrents were fine.
-    if let Some(state) = guard.as_ref().map(|(guard, _)| guard.state()).or(held) {
-        app.apply(Event::Vpn(Some(sources::guard_view(&state))));
+    // A failed proxy check included: the interface puts it on the chip and toasts it, and a
+    // preview without it showed a machine whose torrents were fine.
+    if let Some(state) = guard.as_ref().map(|(route, _)| route.state()).or(held) {
+        app.apply(Event::TorrentProxy(Some(sources::proxy_status(&state))));
     }
     if let Some(problem) = &config_problem {
         show_config_problem(&mut app, paths, problem);

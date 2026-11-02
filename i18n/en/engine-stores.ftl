@@ -255,16 +255,11 @@ release-pinned = { $name } will be used for this title.
 # @arg reason: text
 notice-choice-not-saved = Couldn't save that choice. { $reason }
 
-# Toast while torrents are running but the connection check failed, and the settings say to warn only.
-# @allow proceed
-torrent-check-failed-running = The connection check failed. Torrents keep running.
+# Note on the sources screen: the proxy for torrent traffic failed its check, so torrents wait.
+torrent-proxy-waiting = The proxy check failed. Torrents start once it passes.
 
-# Note on the sources screen: torrents are waiting for the VPN guard. The reason comes from the guard.
-# @arg reason: text
-torrent-vpn-waiting = Torrents start once the VPN guard passes. { $reason }
-
-# Note on the sources screen: the VPN guard has no verdict yet.
-torrent-vpn-unverified = Torrents start once the VPN guard passes. The connection hasn't been verified yet.
+# Note on the sources screen: the proxy for torrent traffic hasn't been checked yet.
+torrent-proxy-unchecked = Torrents start once the proxy check passes.
 
 # Error: the link or file given to open is not a magnet link, an info hash or a torrent file.
 torrent-link-unusable = That isn't a magnet link or a torrent file.
@@ -283,17 +278,12 @@ torrent-interface-closed = { -app-name } closed before torrents started.
 # @arg reason: text
 torrent-session-failed = Couldn't start the torrent session. { $reason }
 
-# Toast when torrents are up but no operating-system firewall rule backs the VPN guard.
-# Terminal only: the engine never sends it to the apps.
-# @allow app-name
-torrent-no-kill-switch = Nothing on this { -device } stops torrent traffic if the VPN drops. Run "kaeri --doctor" to set that up.
-
-# Toast when the connection check could not run. The reason comes from the VPN settings.
+# Toast when the proxy setting can't be used. The reason comes from the proxy setting.
 # @arg reason: text
-torrent-not-checked = Couldn't check the connection. { $reason }
+torrent-proxy-unusable = The proxy setting can't be used. { $reason }
 
-# Note on the sources screen after the source chain is rebuilt with torrents on.
-sources-reloaded-torrents-pending = { -source-cap-pl } reloaded. Torrents start once the VPN guard passes.
+# Note on the sources screen after the source chain is rebuilt with torrents on and a proxy set.
+sources-reloaded-torrents-checking = { -source-cap-pl } reloaded. Torrents start once the proxy check passes.
 
 # Note on the sources screen after the source chain is rebuilt with torrents off.
 sources-reloaded-torrents-off = Torrents are off. The session was stopped.

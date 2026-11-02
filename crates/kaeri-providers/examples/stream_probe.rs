@@ -1,12 +1,12 @@
-//! End-to-end validation of the torrent path: guard → session → peers → loopback HTTP.
+//! End-to-end validation of the torrent path: route → session → peers → loopback HTTP.
 //!
 //! Uses **Big Buck Bunny**, the Blender Foundation's open movie, which is licensed
 //! Creative Commons Attribution 3.0 and distributed by its rights holder specifically for
 //! this kind of testing.
 //!
-//! What unit tests cannot cover and this can: whether librqbit actually finds peers through
-//! a real SOCKS5 proxy with DHT disabled, and whether bytes genuinely arrive at the loopback
-//! URL in a form a player can seek.
+//! What unit tests cannot cover and this can: whether librqbit actually finds peers, through a
+//! SOCKS5 proxy with DHT off when the config sets one, and whether bytes genuinely arrive at the
+//! loopback URL in a form a player can seek.
 //!
 //! ```text
 //! cargo run -p kaeri-providers --example stream_probe
@@ -16,7 +16,7 @@ use std::time::{Duration, Instant};
 
 use kaeri_core::config::{Config, Paths};
 use kaeri_providers::{
-    VpnGuard,
+    TorrentRoute,
     torrent::{TorrentSession, session::choose_file},
 };
 
@@ -39,14 +39,11 @@ async fn main() {
     println!("── configuration ──────────────────────────────────────");
     let torrent = &config.providers.torrent;
     println!("  enabled     {}", torrent.enabled);
-    println!("  vpn mode    {:?}", torrent.vpn.mode);
-    println!("  socks_url   {}", torrent.vpn.socks_url.as_deref().unwrap_or("(none)"));
-    println!("  operators   {:?}", torrent.vpn.require_asn_org);
-    println!("  mullvad_exit {}", torrent.vpn.mullvad_exit);
+    println!("  proxy       {}", if torrent.proxy.is_some() { "set" } else { "none" });
 
     println!();
-    println!("── vpn guard ──────────────────────────────────────────");
-    let guard = match VpnGuard::new(torrent.vpn.clone()) {
+    println!("── route ──────────────────────────────────────────────");
+    let route = match TorrentRoute::new(torrent.proxy.clone()) {
         Ok(g) => g,
         Err(e) => {
             println!("  ✕ misconfigured: {e}");
@@ -55,21 +52,19 @@ async fn main() {
     };
     println!(
         "  dht          {}",
-        if guard.must_disable_dht() { "disabled" } else { "enabled" }
+        if route.must_disable_dht() { "disabled" } else { "enabled" }
     );
 
     let started = Instant::now();
-    let state = guard.verify().await;
-    println!("  verify       {:?} in {:?}", state, started.elapsed());
-    println!("  badge        {}", state.badge());
+    let state = route.verify().await;
+    println!("  check        {:?} in {:?}", state, started.elapsed());
 
-    if !state.is_protected() {
+    if !state.is_ready() {
         println!();
-        println!("  ✕ guard refuses — the torrent source will not start.");
-        println!("    This is the fail-closed path working correctly.");
+        println!("  ✕ the proxy check failed, so the torrent source will not start.");
         return;
     }
-    println!("  ● protected");
+    println!("  ● ready");
 
     println!();
     println!("── session ────────────────────────────────────────────");
@@ -77,7 +72,7 @@ async fn main() {
     let scratch = tempfile::tempdir().expect("scratch directory");
     let dir = scratch.path().join("torrents");
     let session = match TorrentSession::start(
-        guard.clone(),
+        route.clone(),
         dir.clone(),
         scratch.path().join("dht.json"),
         "probe".into(),
@@ -319,31 +314,6 @@ async fn main() {
             }
         }
         Err(e) => println!("  (mpv unavailable: {e})"),
-    }
-
-    println!();
-    println!("── kill switch: guard state while still connected ─────");
-    println!("  {}", guard.verify().await.badge());
-
-    // The kill switch is the half that unit tests cannot reach: a tunnel dropping
-    // mid-session has to make the source unavailable, not merely be noticed later.
-    if std::env::var("KAERI_TEST_KILLSWITCH").is_ok() {
-        println!();
-        println!("── kill switch: dropping the tunnel ──────────────────");
-        let dropped =
-            tokio::process::Command::new("mullvad").arg("disconnect").output().await.is_ok();
-        if dropped {
-            tokio::time::sleep(Duration::from_secs(3)).await;
-            let state = guard.verify().await;
-            println!("  {}", state.badge());
-            if state.is_protected() {
-                println!("  ✕ guard still reports protected after the tunnel dropped");
-            } else {
-                println!("  ● guard flipped to leaking: {}", state.reason().unwrap_or("-"));
-                println!("  ● the provider now reports: {:?}", guard.permit().err());
-            }
-            let _ = tokio::process::Command::new("mullvad").arg("connect").output().await;
-        }
     }
 
     session.stop();

@@ -7,7 +7,7 @@ use crate::{
     episodes::EpisodeRow,
     hosted::{PlayerChoice, PlayerReport, StatsAbout},
     playback::{PlaybackId, SkipEdge, SkipKind, Successor},
-    protection::{FailedCheck, TorrentProtection, TorrentProxy},
+    proxy::TorrentProxy,
     search::SearchQuery,
     settings::SettingKey,
     show::ShowSettingKey,
@@ -48,7 +48,8 @@ impl Command {
             Self::LoadUpNext => "finding what is up next".into(),
             Self::LoadHome { .. } => "loading home".into(),
             Self::LoadDetail(_) => "loading the title".into(),
-            Self::LoadEpisodes(_) => "loading episodes".into(),
+            Self::LoadCards { .. } | Self::PrepareCards { .. } => "loading hover cards".into(),
+            Self::LoadEpisodes(_) | Self::LoadStills(_) => "loading episodes".into(),
             Self::ClearMatch { .. } | Self::FixMatch { .. } => "rematching sources".into(),
             Self::CheckProviders => "checking providers".into(),
             Self::LoadLibrary(segment) => format!("loading your {} list", segment.label()),
@@ -220,11 +221,36 @@ pub enum Command {
     ForgetRecentSearch(SearchQuery),
     ClearRecentSearches,
     LoadDetail(AnilistId),
+    /// What a hover card or preview shows for these covers (at most fifty): the synopsis, the
+    /// trailer and the airing and episode facts. Answered with one [`Event::Cards`], at once from
+    /// what lists already brought and the metadata cache kept, and for the titles that
+    /// leaves out by one batched lookup at low priority. Costs no request on a hover when the
+    /// list that showed the cover carried them. The page still asks [`Command::LoadDetail`] on
+    /// opening.
+    ///
+    /// [`Event::Cards`]: crate::event::Event::Cards
+    LoadCards {
+        ids: Vec<AnilistId>,
+    },
+    /// The covers a screen shows (at most fifty), for their hover cards: [`Command::LoadCards`]
+    /// with what each title's episode table needs from AniList, in one batched request at low
+    /// priority. Answered with [`Event::Cards`]; a [`Command::LoadEpisodes`] or
+    /// [`Command::LoadStills`] for one of them then asks AniList nothing. Sent when the covers
+    /// on screen change, so a hover costs no request once a screen is loaded.
+    ///
+    /// [`Event::Cards`]: crate::event::Event::Cards
+    PrepareCards {
+        ids: Vec<AnilistId>,
+    },
     /// Ask the signed-in AniList viewer's title language, answered by
     /// [`Event::ViewerTitleLanguage`](crate::event::Event::ViewerTitleLanguage). Costs no request
     /// when the viewer was already looked up for their library.
     LoadTitleLanguage,
     LoadEpisodes(AnilistId),
+    /// [`Command::LoadEpisodes`] for the stills that stand in for a missing banner on a card
+    /// nobody has opened: the same answer, asked of AniList at low priority so a screen's own
+    /// requests go first.
+    LoadStills(AnilistId),
     // How far a title's dub goes, for the title page's "Dub to episode 6": answered by one
     // [`Event::TitleDub`](crate::event::Event::TitleDub), with no job. Sent when the page
     // opens, beside [`Command::LoadEpisodes`], and again when it comes back into view.
@@ -239,15 +265,21 @@ pub enum Command {
     // or with `None`, and asks again once back.
     LoadDub(AnilistId),
     CheckProviders,
-    /// Check where torrent traffic leaves from now, as Sources' Check Now asks, rather than at
-    /// the next of the guard's own checks. Answered with
-    /// [`Event::Vpn`](crate::event::Event::Vpn): `Checking`, then the verdict, or `None` when
-    /// torrents are off. A failed check does what any of the guard's does.
-    CheckConnection,
+    /// Check the torrent proxy again now, as Sources' Check now asks after a check failed.
+    /// Answered with [`Event::TorrentProxy`](crate::event::Event::TorrentProxy): `Checking`,
+    /// then what it found, or `None` when torrents are off. Torrents start once it passes.
+    CheckProxy,
     /// Fetch one segment of the tracker's list.
     LoadLibrary(LibrarySegment),
     /// Drain the outbox and pull the library now, rather than waiting for the interval.
     SyncNow,
+    /// The window is on screen (`true`) or hidden or minimised (`false`): for a desktop app,
+    /// which has no [`Command::AppPhase`] to send because downloads and torrents go on while
+    /// the window is away. Only the tracker pull loop rests while hidden, and one pull runs on
+    /// return. Nothing else is held.
+    SyncVisible {
+        visible: bool,
+    },
     /// Set a title's list status.
     SetStatus {
         id: AnilistId,
@@ -618,33 +650,24 @@ pub enum Command {
         #[cfg_attr(feature = "ffi", uniffi(default))]
         low_memory: bool,
     },
-    /// Protect torrent traffic with `mode`, through `proxy` when it is one, and have a failed
-    /// connection check do `on_failure`: written to the file as one change, the proxy's
-    /// password to the host's secret store and never to the file. No protection and warn only
-    /// need `acknowledged`, the viewer having confirmed it, unless the file holds that choice
-    /// already; asked for without it, nothing is written and a notice says why.
+    /// Route torrent traffic through `proxy`, or with `None` connect directly: the proxy's URL
+    /// written to the file, its password to the host's secret store and never to the file.
     ///
     /// Answered as [`Command::SetSetting`] is, with the torrent source brought back up on what
     /// was written.
-    SetTorrentProtection {
-        mode: TorrentProtection,
+    SetTorrentProxy {
         proxy: Option<TorrentProxy>,
-        on_failure: FailedCheck,
-        acknowledged: bool,
     },
-    /// Check where torrent traffic would leave from under `mode`, through `proxy` when it is
-    /// one, before any of it is saved: the guard's own check, made once on these settings and
-    /// on the rest of the file's, as a protection sheet asks before it saves. A proxy given
-    /// with no password is checked with the one kept, as saving it would keep it.
+    /// Check `proxy` before it is saved, as the torrent sheet asks: the check torrents make, made
+    /// once. A proxy given with no password is checked with the one kept, as saving it would
+    /// keep it.
     ///
     /// Writes nothing: not the file, not the secret store, not the torrent source, which
     /// carries on as it was. Answered, with no job, with
-    /// [`Event::ProtectionChecked`](crate::event::Event::ProtectionChecked): the verdict, or
-    /// `Unreachable` and a notice saying why when the settings cannot be checked at all, as a
-    /// proxy with no address.
-    CheckTorrentProtection {
-        mode: TorrentProtection,
-        proxy: Option<TorrentProxy>,
+    /// [`Event::ProxyChecked`](crate::event::Event::ProxyChecked): `Passed` or `Failed`, and a
+    /// notice saying why when the proxy cannot be checked at all, as one with no address.
+    CheckTorrentProxy {
+        proxy: TorrentProxy,
     },
     /// Read one show's settings sheet: answered with
     /// [`Event::ShowSettings`](crate::event::Event::ShowSettings).

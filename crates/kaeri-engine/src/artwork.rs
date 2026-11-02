@@ -256,8 +256,7 @@ async fn write_cached(path: &PathBuf, bytes: &[u8]) {
 }
 
 async fn download(http: &HttpClient, url: &str) -> Result<Vec<u8>, Failure> {
-    // The AniList CDN has no bot protection, so the plain client is right here — paying for
-    // fingerprint emulation would only add handshake cost.
+    // Kaeri's own request, so the client that follows redirects.
     let response = http.plain().get(url).send().await.map_err(|e| {
         tracing::debug!(%url, error = %e, "artwork fetch failed");
         Failure::Offline

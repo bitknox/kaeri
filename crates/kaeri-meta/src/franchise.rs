@@ -30,7 +30,7 @@ use kaeri_core::{ids::AnilistId, media::MediaFormat};
 
 use crate::anilist::{
     Media, Season,
-    model::{CoverImage, RelationConnection, RelationNode},
+    model::{CoverImage, RelationConnection, RelationEdge, RelationNode},
 };
 
 /// The farthest a season can be from the title opened, in steps along the chain either way,
@@ -80,13 +80,16 @@ struct Known {
     links: Option<(Vec<Link>, Instant)>,
     /// When it was asked after and did not come: a link that leads nowhere.
     gone: Option<Instant>,
+    /// What its page's header shows, from its own page or the seasons' headers asked together
+    /// ([`crate::Meta::season_headers`]), and when it came.
+    header: Option<(Media, Instant)>,
     /// When anything was last learned of it, which says who is let go first.
     touched: Instant,
 }
 
 impl Known {
     fn new(now: Instant) -> Self {
-        Self { card: None, format: None, links: None, gone: None, touched: now }
+        Self { card: None, format: None, links: None, gone: None, header: None, touched: now }
     }
 
     /// Its prequels and sequels, while what was learned of them is still believed.
@@ -160,7 +163,59 @@ impl Relations {
             relations: None,
         };
         self.learn(&page, Some(&media.relations), now);
+        self.known(media.id, now).header = Some((header_of(media), now));
         self.let_go();
+    }
+
+    /// The headers of titles asked together, each as the list query brings it.
+    pub fn learn_headers(&mut self, headers: &[Media], now: Instant) {
+        for media in headers {
+            let known = self.known(media.id, now);
+            if media.format.is_some() {
+                known.format = media.format;
+            }
+            known.header = Some((header_of(media), now));
+        }
+        self.let_go();
+    }
+
+    /// Title `id`'s header and when it came, while it is believed: younger than [`KEEP_FOR`].
+    ///
+    /// Its relations are the ones its header came with, each with its card (see
+    /// [`crate::anilist::query::HEADER_RELATIONS`]), so its page's Related row stands whole with
+    /// the header. A header that came without them has them from its `prequels`, only those the
+    /// walk named: a card short that the page brings fades in, where a placeholder the page then
+    /// takes away would be a card that comes and goes.
+    pub fn header(&self, id: AnilistId, now: Instant) -> Option<(Media, Instant)> {
+        let (media, at) = self.titles.get(&id)?.header.as_ref()?;
+        (now.saturating_duration_since(*at) < KEEP_FOR).then(|| (self.related(media), *at))
+    }
+
+    /// `media` with its relations: its own when it came with them, or else from its
+    /// `prequels`, those with a card known.
+    fn related(&self, media: &Media) -> Media {
+        if !media.relations.edges.is_empty() {
+            return media.clone();
+        }
+        let edges = media
+            .prequels
+            .edges
+            .iter()
+            .filter_map(|edge| {
+                let card = self.titles.get(&edge.node.id)?.card.clone()?;
+                Some(RelationEdge {
+                    relation_type: edge.relation_type.clone(),
+                    node: RelationNode { format: card.format.or(edge.node.format), ..card },
+                })
+            })
+            .collect();
+        Media { relations: RelationConnection { edges }, ..media.clone() }
+    }
+
+    /// The seasons of `start`'s franchise when every one is known: what its page's picker shows,
+    /// with nothing left to walk. `None` while the walk has seasons to ask after.
+    pub fn seasons_known(&self, start: AnilistId, now: Instant) -> Option<Vec<RelationNode>> {
+        self.chain(start, now).unknown.is_empty().then(|| self.seasons(start, now))
     }
 
     /// What a walk's answer said of one title asked after. It was asked with its relations, so
@@ -339,7 +394,37 @@ impl Relations {
     }
 }
 
-fn lock(relations: &Mutex<Relations>) -> MutexGuard<'_, Relations> {
+/// What a header needs of `media`, and nothing the page alone brings: its relations, tags, cast,
+/// recommendations and listings, which are the bulk of a page and would make a franchise's
+/// headers weigh what its pages do.
+fn header_of(media: &Media) -> Media {
+    // Each related title's card, without the relations a page asks of it a level further out.
+    let edges = media
+        .relations
+        .edges
+        .iter()
+        .map(|edge| RelationEdge {
+            relation_type: edge.relation_type.clone(),
+            node: RelationNode { relations: None, ..edge.node.clone() },
+        })
+        .collect();
+    Media {
+        external_links: Vec::new(),
+        streaming_episodes: Vec::new(),
+        relations: RelationConnection { edges },
+        recommendations: Default::default(),
+        tags: Vec::new(),
+        upcoming: Default::default(),
+        aired: Vec::new(),
+        rankings: Vec::new(),
+        characters: Default::default(),
+        staff: Default::default(),
+        following: Vec::new(),
+        ..media.clone()
+    }
+}
+
+pub(crate) fn lock(relations: &Mutex<Relations>) -> MutexGuard<'_, Relations> {
     relations.lock().unwrap_or_else(|e| e.into_inner())
 }
 

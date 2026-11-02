@@ -331,7 +331,7 @@ pub async fn look_up(
     let media =
         match cached.and_then(|(payload, _)| serde_json::from_str::<Media>(&payload).ok()) {
             Some(media) => media,
-            None => match meta.media(id).await {
+            None => match kaeri_meta::in_background(meta.media(id)).await {
                 Ok(media) => media,
                 Err(_) => return Looked::Unsaid,
             },

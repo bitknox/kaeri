@@ -7,7 +7,7 @@
 /// Segment URIs, initialisation segments and key URIs are all rewritten: a key that still
 /// pointed upstream would be fetched by mpv without the stream's referer and refused, and a
 /// nested playlist has to come back through here or its own segments would go direct and
-/// unmended.
+/// fetched without the stream's headers.
 ///
 /// **Rewriting rather than parsing** is deliberate. A full HLS parser (`m3u8-rs` is the good
 /// one) would round-trip the playlist through its own model and re-serialise it, which drops
@@ -48,6 +48,25 @@ pub fn rewrite_playlist(body: &str, base: &str, proxy: &dyn Fn(&str) -> String) 
     out
 }
 
+/// The URIs a playlist lists as subtitles: every `#EXT-X-MEDIA` of `TYPE=SUBTITLES`, as
+/// absolute URLs. What they name is a WebVTT file, or a playlist of them.
+pub(super) fn subtitle_uris(body: &str, base: &str) -> Vec<String> {
+    body.lines()
+        .map(str::trim)
+        .filter(|line| line.starts_with("#EXT-X-MEDIA:"))
+        .filter(|line| {
+            line["#EXT-X-MEDIA:".len()..]
+                .split(',')
+                .any(|attribute| attribute.trim().eq_ignore_ascii_case("TYPE=SUBTITLES"))
+        })
+        .filter_map(|line| {
+            let start = line.find("URI=\"")? + 5;
+            let end = start + line[start..].find('"')?;
+            Some(resolve_url(base, &line[start..end]))
+        })
+        .collect()
+}
+
 /// Rewrite the `URI="…"` attribute of one tag, if it has one.
 fn rewrite_uri_attribute(
     tag: &str,
@@ -62,15 +81,22 @@ fn rewrite_uri_attribute(
 
 /// Resolve a possibly-relative URI against the URL it was found in.
 ///
-/// Hand-rolled rather than pulled from a URL crate: playlists use three forms — absolute,
-/// root-relative and path-relative — and this handles exactly those without adding a
-/// dependency for the sake of it.
+/// Hand-rolled rather than pulled from a URL crate: playlists use four forms (absolute,
+/// scheme-relative, root-relative and path-relative), and this handles exactly those without
+/// adding a dependency for the sake of it.
 pub fn resolve_url(base: &str, reference: &str) -> String {
     if reference.starts_with("http://") || reference.starts_with("https://") {
         return reference.to_owned();
     }
 
     let scheme_end = base.find("://").map(|i| i + 3).unwrap_or(0);
+
+    // Scheme-relative: the playlist's scheme, and the host the reference names.
+    if reference.starts_with("//") {
+        let scheme = base.get(..scheme_end.saturating_sub(3)).filter(|s| !s.is_empty());
+        return format!("{}:{reference}", scheme.unwrap_or("https"));
+    }
+
     let authority_end =
         base[scheme_end..].find('/').map(|i| scheme_end + i).unwrap_or(base.len());
 
@@ -111,12 +137,12 @@ pub(super) fn looks_like_playlist(content_type: &str, body: &[u8]) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::playback::mend::encode_path;
+    use crate::playback::proxy::encode_path;
 
     #[test]
     fn a_tag_this_code_never_heard_of_still_has_its_uri_rewritten() {
         // Any tag with a URI attribute, rather than a list of the ones known today — a tag
-        // added to the spec later would otherwise quietly point upstream, unmended.
+        // added to the spec later would otherwise quietly point upstream.
         let proxy = |u: &str| format!("proxied:{u}");
         let out = rewrite_playlist(
             "#EXTM3U\n#EXT-X-SOMETHING-NEW:URI=\"future.ts\",FLAG=1\n",
@@ -153,10 +179,75 @@ mod tests {
     }
 
     #[test]
+    fn the_uris_listed_as_subtitles_are_found_among_the_other_media() {
+        let master = "#EXTM3U\n\
+             #EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"a\",NAME=\"Main\",URI=\"audio.m3u8\"\n\
+             #EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID=\"s\",NAME=\"Deutsch\",URI=\"de/index.m3u8\"\n\
+             #EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID=\"s\",NAME=\"Direct\",URI=\"https://s.example/x.vtt\"\n\
+             #EXT-X-STREAM-INF:BANDWIDTH=1\nv.m3u8\n";
+        assert_eq!(
+            subtitle_uris(master, "https://cdn.example/hls/master.m3u8"),
+            ["https://cdn.example/hls/de/index.m3u8", "https://s.example/x.vtt"]
+        );
+    }
+
+    #[test]
     fn relative_and_absolute_references_both_resolve() {
         let base = "https://cdn.test/a/b/index.m3u8?token=1";
         assert_eq!(resolve_url(base, "seg.ts"), "https://cdn.test/a/b/seg.ts");
         assert_eq!(resolve_url(base, "/root/seg.ts"), "https://cdn.test/root/seg.ts");
         assert_eq!(resolve_url(base, "https://x.test/s.ts"), "https://x.test/s.ts");
+    }
+
+    #[test]
+    fn a_scheme_relative_reference_keeps_its_own_host() {
+        let base = "https://cdn.test/a/b/index.m3u8?token=1";
+        assert_eq!(resolve_url(base, "//media.test/v/seg.ts"), "https://media.test/v/seg.ts");
+        assert_eq!(
+            resolve_url("http://cdn.test/index.m3u8", "//media.test/seg.ts?x=1"),
+            "http://media.test/seg.ts?x=1"
+        );
+    }
+
+    #[test]
+    fn segments_and_keys_resolve_in_every_form() {
+        let playlist = "#EXTM3U\n\
+             #EXT-X-KEY:METHOD=AES-128,URI=\"//keys.test/k1.bin\"\n\
+             #EXTINF:4.0,\n\
+             //media.test/v/seg1.ts\n\
+             #EXT-X-KEY:METHOD=AES-128,URI=\"/keys/k2.bin\"\n\
+             #EXTINF:4.0,\n\
+             /v/seg2.ts\n\
+             #EXT-X-KEY:METHOD=AES-128,URI=\"k3.bin\"\n\
+             #EXTINF:4.0,\n\
+             seg3.ts\n\
+             #EXT-X-KEY:METHOD=AES-128,URI=\"https://keys.test/k4.bin\"\n\
+             #EXTINF:4.0,\n\
+             https://other.test/seg4.ts\n";
+        let base = "https://cdn.test/hls/index.m3u8";
+        let proxy = |u: &str| format!("proxied:{u}");
+        let out = rewrite_playlist(playlist, base, &proxy);
+
+        for expected in [
+            "https://keys.test/k1.bin",
+            "https://media.test/v/seg1.ts",
+            "https://cdn.test/keys/k2.bin",
+            "https://cdn.test/v/seg2.ts",
+            "https://cdn.test/hls/k3.bin",
+            "https://cdn.test/hls/seg3.ts",
+            "https://keys.test/k4.bin",
+            "https://other.test/seg4.ts",
+        ] {
+            assert!(out.contains(&proxy(expected)), "{expected} missing from {out}");
+        }
+        assert_eq!(
+            segment_urls(playlist, base),
+            [
+                "https://media.test/v/seg1.ts",
+                "https://cdn.test/v/seg2.ts",
+                "https://cdn.test/hls/seg3.ts",
+                "https://other.test/seg4.ts",
+            ]
+        );
     }
 }

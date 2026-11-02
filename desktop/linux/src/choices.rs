@@ -313,8 +313,8 @@ mod tests {
             (SourceNote::Gone, t::source_note_gone()),
             (SourceNote::Ambiguous, t::source_note_ambiguous()),
             (
-                SourceNote::Failed { reason: "the site did not answer in 15 s.".into() },
-                "the site did not answer in 15 s.".into(),
+                SourceNote::Failed { reason: "the source did not answer in 15 s.".into() },
+                "the source did not answer in 15 s.".into(),
             ),
         ] {
             source.note = Some(note);

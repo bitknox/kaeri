@@ -34,7 +34,7 @@ impl Upstream {
     /// Fetch for the thumbnailer, by [`Class::Thumbnail`]'s rules. `Err` is a refusal, to be
     /// answered at once.
     ///
-    /// [`Class::Thumbnail`]: crate::playback::mend::Class::Thumbnail
+    /// [`Class::Thumbnail`]: crate::playback::proxy::Class::Thumbnail
     pub(super) async fn for_thumbnail(&self, url: &str) -> Result<Arc<Fetched>, String> {
         if self.refused_successor(url) {
             return Err(self.refuse(url, "the segment after a refused one"));
@@ -149,7 +149,7 @@ mod tests {
     use tokio::net::TcpListener;
 
     use super::*;
-    use crate::playback::mend::{tests::transport_stream, *};
+    use crate::playback::proxy::{tests::transport_stream, *};
 
     // Two players: playback and the seek bar's thumbnailer.
 
@@ -270,12 +270,12 @@ mod tests {
         files
     }
 
-    async fn mender_for(origin: &Origin) -> MendServer {
+    async fn proxy_for(origin: &Origin) -> ProxyServer {
         let http = HttpClient::new(&kaeri_core::config::NetworkConfig::default()).unwrap();
         serve(http, &format!("{}/index.m3u8", origin.base), Vec::new(), "tok").await.unwrap()
     }
 
-    /// GET through the mender: status and body.
+    /// GET through the proxy: status and body.
     async fn get(url: impl AsRef<str>) -> (u16, Vec<u8>) {
         let rest = url.as_ref().trim_start_matches("http://");
         let (authority, path) = rest.split_once('/').unwrap();
@@ -296,7 +296,7 @@ mod tests {
     }
 
     /// The proxied URL of segment `n`, as a player of `class` would find it in its playlist.
-    fn segment(server: &MendServer, origin: &Origin, class: Class, n: usize) -> String {
+    fn segment(server: &ProxyServer, origin: &Origin, class: Class, n: usize) -> String {
         let entry = match class {
             Class::Playback => server.url(),
             Class::Thumbnail => server.thumbnail_url(),
@@ -316,7 +316,7 @@ mod tests {
     #[tokio::test]
     async fn the_thumbnail_entry_rewrites_its_playlist_onto_itself() {
         let origin = origin(vod(2), Duration::ZERO, |_, _| false).await;
-        let server = mender_for(&origin).await;
+        let server = proxy_for(&origin).await;
 
         let (_, playback) = get(server.url()).await;
         let (_, thumbnails) = get(server.thumbnail_url()).await;
@@ -336,7 +336,7 @@ mod tests {
     #[tokio::test]
     async fn thumbnails_are_answered_from_what_playback_already_fetched() {
         let origin = origin(vod(3), Duration::ZERO, |_, _| false).await;
-        let server = mender_for(&origin).await;
+        let server = proxy_for(&origin).await;
 
         let (status, played) = get(&segment(&server, &origin, Class::Playback, 1)).await;
         assert_eq!(status, 200);
@@ -352,7 +352,7 @@ mod tests {
         // The reported failure: a 429 parked the thumbnailer for ten seconds, and the hold it
         // set was shared, so playback's own requests waited behind it too.
         let origin = origin(vod(4), Duration::ZERO, |name, _| name == "seg1.ts").await;
-        let server = mender_for(&origin).await;
+        let server = proxy_for(&origin).await;
 
         let (status, _) = get_promptly(&segment(&server, &origin, Class::Thumbnail, 1)).await;
         assert_eq!(status, 503);
@@ -377,7 +377,7 @@ mod tests {
     #[tokio::test]
     async fn while_playback_is_held_thumbnails_are_refused_without_asking_upstream() {
         let origin = origin(vod(3), Duration::ZERO, |name, _| name == "seg0.ts").await;
-        let server = mender_for(&origin).await;
+        let server = proxy_for(&origin).await;
 
         // Playback meets the 429 and holds, as it must.
         let held = tokio::spawn(get(segment(&server, &origin, Class::Playback, 0)));
@@ -398,7 +398,7 @@ mod tests {
     async fn one_segment_asked_for_at_once_is_fetched_once() {
         // thumbfast's exact seek lands right behind its keyframe seek, on the same segment.
         let origin = origin(vod(1), Duration::from_millis(300), |_, _| false).await;
-        let server = mender_for(&origin).await;
+        let server = proxy_for(&origin).await;
         let url = segment(&server, &origin, Class::Thumbnail, 0);
 
         let asks: Vec<_> = (0..4).map(|_| tokio::spawn(get(url.clone()))).collect();
@@ -413,7 +413,7 @@ mod tests {
         // A sweep crosses positions faster than they can be fetched; the ones it crossed are
         // not worth a request each.
         let origin = origin(vod(3), Duration::from_millis(500), |_, _| false).await;
-        let server = mender_for(&origin).await;
+        let server = proxy_for(&origin).await;
 
         let first = tokio::spawn(get(segment(&server, &origin, Class::Thumbnail, 0)));
         tokio::time::sleep(Duration::from_millis(100)).await;
@@ -432,7 +432,7 @@ mod tests {
         // ffmpeg opens the next segment when one is refused, and the next, until one opens:
         // left alone it would land on the first cached one and draw that, minutes off.
         let origin = origin(vod(4), Duration::ZERO, |name, _| name == "seg1.ts").await;
-        let server = mender_for(&origin).await;
+        let server = proxy_for(&origin).await;
         get(server.thumbnail_url()).await;
         for n in [0, 2, 3] {
             get(&segment(&server, &origin, Class::Playback, n)).await;
@@ -469,7 +469,7 @@ mod tests {
             }
         })
         .await;
-        let server = mender_for(&origin).await;
+        let server = proxy_for(&origin).await;
         get(server.url()).await;
         for n in 0..3 {
             assert_eq!(get(&segment(&server, &origin, Class::Playback, n)).await.0, 200);
@@ -585,7 +585,7 @@ mod tests {
         }
         let segments = files.iter().filter(|(name, _)| name.ends_with(".ts")).count();
         let origin = origin(files, Duration::from_millis(30), |_, recent| recent > 6).await;
-        let server = mender_for(&origin).await;
+        let server = proxy_for(&origin).await;
 
         // Playback loads the first 16 seconds.
         get(server.url()).await;

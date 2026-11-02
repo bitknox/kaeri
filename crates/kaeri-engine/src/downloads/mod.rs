@@ -6,14 +6,14 @@
 //! Three decisions worth stating.
 //!
 //! **Concurrency is capped.** A swarm gives you a share of its bandwidth, so eight downloads at once
-//! is not eight times faster — it is eight things all finishing late, and on a VPN proxy it is also
-//! eight times the connection count through one tunnel. The queue drains oldest-first.
+//! is not eight times faster — it is eight things all finishing late, and through a proxy it is also
+//! eight times the connection count through one route. The queue drains oldest-first.
 //!
 //! **Progress is persisted, not just displayed.** A download interrupted by a crash comes back
 //! showing where it got to, and librqbit resumes from the partial file rather than from zero.
 //!
-//! **The VPN guard is re-checked on every start.** A download runs unattended for a long time,
-//! which makes it the most important thing to gate, not the least.
+//! **A download starts only on a ready route.** With a proxy set, a download waits for its check
+//! to pass like any other torrent.
 
 pub mod ahead;
 pub mod commands;
@@ -174,7 +174,7 @@ async fn poll_running(
         if progress.paused {
             match session.resume_one(entry.torrent_id).await {
                 Ok(()) => tracing::info!(row = row.id, "download resumed"),
-                // Refused means the VPN guard is failing. Back to paused rather than pretending:
+                // Refused means the proxy check is failing. Back to paused rather than pretending:
                 // a download that silently does not run is exactly the failure this app avoids.
                 Err(e) => {
                     tracing::warn!(row = row.id, error = %e, "could not resume; pausing again");

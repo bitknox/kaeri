@@ -225,9 +225,6 @@ fn pane_note(pane: &str, known: &Known) -> Option<(String, String)> {
                 t::settings_notify_note_off()
             },
         ),
-        "sources" if on(SettingKey::Torrents) => {
-            (t::settings_connection_check_title(), t::settings_connection_check_note())
-        }
         "sources" => (t::sources_title(), t::sources_order_detail_show()),
         "accounts" => (t::accounts_title(), t::settings_accounts_note()),
         "integrations" => (

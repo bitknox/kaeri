@@ -9,7 +9,7 @@
 //!   says it is a sign or a title. A dialogue line that is only placed (`\pos`) is kept, at the
 //!   top, middle or bottom by its height; a translator's note is kept at the top;
 //! - **songs**: karaoke (`\k`) and the styles named for openings, endings and lyrics;
-//! - **layer copies**: a second line with the same text and times as one kept, which a fansub
+//! - **layer copies**: a second line with the same text and times as one kept, which a subtitle author
 //!   uses to stack a glow or border under the dialogue.
 //!
 //! Fonts, colours, sizes and outlines are the receiver's own; the LOAD's `textTrackStyle` sets

@@ -2,8 +2,8 @@
 //! streams found for them, behind the eyecatch or ahead of time, the servers among them tried in
 //! the order their [`health`] says, and the window handed from one playback to the next; the
 //! session that runs an episode in mpv and records what was watched; and the player, the window
-//! kept between episodes, the picture and how hard it is pushed, the loopback proxy that mends
-//! what some hosts serve, and the subtitles muxed into a finished download.
+//! kept between episodes, the picture and how hard it is pushed, the loopback proxy that carries
+//! a stream's headers, and the subtitles muxed into a finished download.
 //!
 //! What front ends, the command line and the probes call to play is named from here.
 //!
@@ -12,21 +12,22 @@
 //! without it there is nothing yet to open a player with, and a play is answered with
 //! [`refuse`]. What is left plays all the same: what a playback is about, the streams found for
 //! it and ahead of it, the window kept between episodes, the picture and its shaders, the rules
-//! for what follows an ending, the mending proxy, and the subtitles muxed into a download.
+//! for what follows an ending, the stream proxy, and the subtitles muxed into a download.
 
 mod context;
 mod session;
+mod webvtt;
 
 pub mod autonext;
 pub mod handoff;
 pub mod health;
 pub mod link;
-pub mod mend;
 pub mod picture;
 #[cfg(feature = "desktop")]
 pub mod player;
 pub mod power;
 pub mod prefetch;
+pub mod proxy;
 pub mod remux;
 pub mod resolve;
 pub mod seat;

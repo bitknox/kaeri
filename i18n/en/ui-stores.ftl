@@ -8,7 +8,7 @@ stores-joined = Joined
 stores-empty-title = No { -plugin-store-pl } yet
 
 # Line under the empty title.
-stores-empty-detail = { -plugin-store-cap-pl } are run by people you know. Join one with the invite link its owner sends you.
+stores-empty-detail = { -plugin-store-cap-pl } hold signed { -plugin-pl } and give each { -device } its own token. Join one with the invite link its owner sends you.
 
 # Line under the title of the screen when plugins add sources.
 stores-intro = { -plugin-cap-pl } add { -source-pl }. Each one lists the hosts it contacts before you install it.
@@ -573,7 +573,7 @@ stores-offers-plugins = { $count ->
 notice-open-stores = Open { -plugin-store-pl }
 
 # Explainer on the empty plugin stores page.
-stores-what-is = A { -plugin-store } is a small server one person runs for the people they invite. It offers { -source-pl } as { -plugin-pl }. { -app-name } runs no { -plugin-store-pl } and lists none, so you join one with an invite link from its owner.
+stores-what-is = A { -plugin-store } is a small server that holds signed { -plugin-pl } and gives each { -device } its own token. It offers { -source-pl } as { -plugin-pl }. { -app-name } runs no { -plugin-store-pl } and lists none, so you join one with an invite link from its owner.
 
 # Button on the empty plugin stores page that opens the docs page in the browser.
 # @max 32

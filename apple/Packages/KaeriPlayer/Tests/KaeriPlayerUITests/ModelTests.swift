@@ -832,6 +832,36 @@ extension BufferingLineTests {
     }
 }
 
+/// The loading line's sweep, read off a clock: the stretch's place at a time, whatever the size.
+struct LoaderLineTests {
+    @Test func theStretchSetsOffFromTheLeftAndComesBack() {
+        let travel: CGFloat = 353.5
+        let leg = LoaderLine.leg(travel: travel)
+        // One way takes as long as the spring takes to come within a fifth of a point.
+        #expect(abs(leg - 2.2) < 0.02, "one way over the Mac's starting line, \(leg) s")
+        #expect(LoaderLine.across(after: 0, travel: travel) == 0, "in its place from the first frame")
+        #expect(LoaderLine.across(after: 0.4, travel: travel) > 0.5, "the spring's ease, past halfway in 0.4 s")
+        #expect(LoaderLine.across(after: leg - 0.001, travel: travel) > 0.999, "at the right at the turn")
+        #expect(abs(LoaderLine.across(after: leg + 0.4, travel: travel) - (1 - LoaderLine.across(after: 0.4, travel: travel))) < 1e-9,
+                "back the same way")
+        #expect(LoaderLine.across(after: 2 * leg + 0.001, travel: travel) < 0.001, "and round again")
+    }
+
+    @Test func theStretchNeverLeavesTheTrackNorJumps() {
+        let travel: CGFloat = 870
+        var last = LoaderLine.across(after: 0, travel: travel)
+        for frame in 1...1200 {
+            let now = LoaderLine.across(after: Double(frame) / 120, travel: travel)
+            #expect((0...1).contains(now))
+            // Never more than a sixtieth of the way in one frame at 120 Hz: no jump at the turns.
+            #expect(abs(now - last) < 1.0 / 60, "frame \(frame)")
+            last = now
+        }
+        #expect(LoaderLine.leg(travel: 870) > LoaderLine.leg(travel: 353.5), "a longer line rests a moment later")
+        #expect(LoaderLine.across(after: 5, travel: 0) == 0, "no track, no sweep")
+    }
+}
+
 struct LogLineTests {
     @Test func mpvsLinesAreLoggedWithoutTheTokensInTheirAddresses() {
         let line = MpvLogLine(

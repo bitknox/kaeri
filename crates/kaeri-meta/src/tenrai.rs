@@ -1,4 +1,4 @@
-//! Tenrai, an unofficial REST mirror of MyAnimeList: the fallback metadata well.
+//! Tenrai, a MyAnimeList-compatible metadata API: the fallback metadata well.
 //!
 //! Everything here answers in MAL's terms and is translated back into ours: results are
 //! keyed by `mal_id`, so the mapping table — carried for the trackers since day one —

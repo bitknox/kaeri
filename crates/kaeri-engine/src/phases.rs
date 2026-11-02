@@ -4,9 +4,8 @@
 //! A phone's app runs while it is on screen, and for the episode playing with the screen
 //! locked. In the background its torrents wait, all but the episode playing when one plays, and
 //! its downloads while the system gives it a window for them.
-//! Coming back, the connection check runs again before any of them resumes, since the network
-//! may have changed under the app while it was away, and a loopback server the system took is
-//! bound again on its own port, with what plays opened again from it.
+//! Coming back, a loopback server the system took is bound again on its own port, with what
+//! plays opened again from it.
 //!
 //! On cellular, torrents and downloads run only as the settings let them: `[providers.torrent]
 //! on_cellular` for the episode streaming, what gives back after it, and torrent playback
@@ -17,15 +16,10 @@
 use std::sync::Arc;
 
 use kaeri_core::config::Config;
-use kaeri_model::{
-    Msg,
-    command::{AppState, PlayerCommand},
-    event::Event,
-    notice::Notice,
-};
+use kaeri_model::command::{AppState, PlayerCommand};
 use kaeri_providers::{
+    proxy::TorrentRoute,
     torrent::{TorrentSession, session::Hold},
-    vpn::VpnGuard,
 };
 use tokio::sync::mpsc;
 
@@ -78,24 +72,18 @@ pub fn gate_for(phase: AppState, network: Network, config: &Config) -> Gate {
 pub const CELLULAR: &str = "torrents don't run on cellular while torrents on cellular is off";
 
 /// The app moved to `phase`.
-pub fn app_phase(phase: AppState, engine: &mut EngineState, tx: &Outbox) {
+pub fn app_phase(phase: AppState, engine: &mut EngineState) {
     let away = engine.phase != AppState::Foreground;
     let back = away && phase == AppState::Foreground;
-    // What was held while away resumes only once the connection check passes again, on screen
-    // or in a downloads window: the network may have changed under the app meanwhile.
-    let checked = back
-        || (matches!(engine.phase, AppState::Background { .. })
-            && !matches!(phase, AppState::Background { .. }));
     engine.phase = phase;
     let gate = gate_now(engine);
-    let torrents = engine.vpn_guard.clone();
+    let torrents = engine.torrent_route.clone();
     let controls = engine.player_tx.clone();
-    let tx = tx.clone();
     tokio::spawn(async move {
         if back {
             come_back(controls).await;
         }
-        apply(gate, torrents, checked, &tx).await;
+        apply(gate, torrents).await;
     });
 }
 
@@ -106,7 +94,7 @@ pub fn network_path(network: Network, engine: &mut EngineState, tx: &Outbox) {
     engine.network = network;
     crate::connectivity::moved(was.offline, network.offline, &mut engine.missed, tx);
     crate::autoplay::changed(engine, tx);
-    reapply(engine, tx);
+    reapply(engine);
 }
 
 /// A setting was saved: what runs on cellular may be another thing now.
@@ -116,15 +104,15 @@ pub fn settings_saved(engine: &mut EngineState, tx: &Outbox) {
     crate::autoplay::changed(engine, tx);
     let gate = gate_for(engine.phase, engine.network, engine.config.effective());
     if engine.gated.as_ref() != Some(&gate) {
-        reapply(engine, tx);
+        reapply(engine);
     }
 }
 
 /// Tell the torrent session what waits now, as nothing more than that has changed.
-fn reapply(engine: &mut EngineState, tx: &Outbox) {
+fn reapply(engine: &mut EngineState) {
     let gate = gate_now(engine);
-    let (torrents, tx) = (engine.vpn_guard.clone(), tx.clone());
-    tokio::spawn(async move { apply(gate, torrents, false, &tx).await });
+    let torrents = engine.torrent_route.clone();
+    tokio::spawn(async move { apply(gate, torrents).await });
 }
 
 /// What the torrent session is told now, for one that has just come up too; remembered as what
@@ -148,27 +136,14 @@ async fn come_back(controls: Option<mpsc::UnboundedSender<PlayerCommand>>) {
 }
 
 /// Hold what `gate` names on the torrent session, when there is one, and refuse what it refuses.
-/// `checked` asks for the connection check first, as after the background: nothing held resumes
-/// until it passes.
 async fn apply(
     Gate { hold, refusal }: Gate,
-    torrents: Option<(VpnGuard, Arc<TorrentSession>)>,
-    checked: bool,
-    tx: &Outbox,
+    torrents: Option<(TorrentRoute, Arc<TorrentSession>)>,
 ) {
-    let Some((guard, session)) = torrents else { return };
+    let Some((_, session)) = torrents else { return };
     session.refuse_on_this_network(refusal);
-    if checked {
-        let state = guard.verify().await;
-        let _ = tx.send(Event::Vpn(Some(crate::sources::guard_view(&state))));
-        if !state.is_protected() {
-            let _ = tx.send(Event::Toast(Notice::info(Msg::NoticeTorrentsWaitingForCheck)));
-        }
-    }
-    // Refused while the guard fails: what is held stays held, for the guard's own recovery to
-    // let go of.
     if let Err(e) = session.set_hold(hold).await {
-        tracing::info!(error = %e, ?hold, "held torrents wait for the connection check");
+        tracing::info!(error = %e, ?hold, "could not hold or resume torrents");
     }
 }
 

@@ -2,11 +2,10 @@
 //!
 //! Two things here are load-bearing.
 //!
-//! **The session is built from the VPN guard, not merely checked against it.** Proxy mode
-//! sets `socks_proxy_url` *and* `disable_dht`, because librqbit does not document whether
-//! DHT traverses the proxy and SOCKS5 UDP-associate is frequently unsupported. Unverified
-//! means treated as leaking. The session simply refuses to exist when the guard is failing,
-//! so there is no window in which traffic could escape.
+//! **The session is built from its route.** Through a proxy it sets `socks_proxy_url` *and*
+//! `disable_dht`, because librqbit does not document whether DHT traverses the proxy and
+//! SOCKS5 UDP-associate is frequently unsupported. The session refuses to exist until a
+//! proxy's check has passed, so a proxy that is down is said once rather than found later.
 //!
 //! **The right file has to be picked out of the torrent.** A batch holds a whole season, so
 //! playing "the first file" would play episode one regardless of what was asked for — and
@@ -17,13 +16,11 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use kaeri_core::{
-    config::{LeakAction, SeedingConfig},
-    error::ProviderError,
-};
+use kaeri_core::{config::SeedingConfig, error::ProviderError};
 use librqbit::{AddTorrent, AddTorrentOptions, Session, SessionOptions, api::TorrentIdOrHash};
 
 use crate::{
+    proxy::TorrentRoute,
     torrent::{
         http::{
             Range, ReadySource, SeekableRead, StreamServer, StreamSource, serve,
@@ -31,7 +28,6 @@ use crate::{
         },
         pieces::{HavePieces, PieceLayout},
     },
-    vpn::VpnGuard,
 };
 
 /// A video file inside a torrent.
@@ -268,7 +264,7 @@ fn fresh_token() -> String {
 /// Owns the librqbit session and the streams built from it.
 pub struct TorrentSession {
     session: Arc<Session>,
-    guard: VpnGuard,
+    route: TorrentRoute,
     /// The stream servers alive right now, oldest first: the episode playing and, while its
     /// ending runs, the next one being fetched ahead. Starting a third drops the oldest, which
     /// frees its port and stops work on an episode nobody is watching.
@@ -461,46 +457,39 @@ impl std::fmt::Debug for TorrentSession {
 }
 
 impl TorrentSession {
-    /// Start a session, refusing outright if the guard is not satisfied.
-    ///
-    /// Refusing to construct is deliberate: there is then no window in which a session
-    /// exists while the guard is failing.
+    /// Start a session on `route`, refusing outright while its proxy has not passed its check.
     pub async fn start(
-        guard: VpnGuard,
+        route: TorrentRoute,
         download_dir: PathBuf,
         dht_state: PathBuf,
         token: String,
     ) -> Result<Self, ProviderError> {
-        guard.permit()?;
+        route.permit()?;
 
         let mut options = SessionOptions {
-            // No window in which peers could be found off-proxy.
-            disable_dht: guard.must_disable_dht(),
-            disable_dht_persistence: guard.must_disable_dht(),
+            // Through a proxy, peers come from trackers: DHT's UDP may not go through it.
+            disable_dht: route.must_disable_dht(),
+            disable_dht_persistence: route.must_disable_dht(),
             // Without this librqbit writes its routing table to the user's own cache folder,
             // outside Kaeri's, so the state is kept beside the rest of our cache.
             dht_config: Some(librqbit::dht::PersistentDhtConfig {
                 config_filename: Some(dht_state),
                 ..Default::default()
             }),
-            // Port forwarding would advertise a routable address, defeating the proxy.
+            // No port forwarding: Kaeri does not open the router to peers.
             enable_upnp_port_forwarding: false,
             // No inbound listener. librqbit binds `0.0.0.0` when this is `Some`, and an
-            // inbound connection does *not* traverse the proxy — so a peer reaching it
-            // would see the real address. `None` is librqbit's default, but relying on a
-            // default for a privacy property is how leaks happen, so it is explicit.
+            // inbound connection does not go through a proxy. `None` is librqbit's default,
+            // stated here so it stays that way.
             listen_port_range: None,
             ..Default::default()
         };
-        if let Some(url) = guard.config().socks_url.clone() {
-            options.socks_proxy_url = Some(url);
+        if let Some(url) = route.proxy_url() {
+            options.socks_proxy_url = Some(url.to_owned());
         }
 
-        if guard.must_disable_dht() {
-            tracing::info!(
-                "DHT disabled: SOCKS5 UDP-associate support is unverified, so it is treated \
-                 as a leak. Indexer-sourced torrents generally carry working trackers."
-            );
+        if route.must_disable_dht() {
+            tracing::info!("DHT off: torrents go through a proxy, so peers come from trackers");
         }
 
         tokio::fs::create_dir_all(&download_dir).await.map_err(|e| {
@@ -513,7 +502,7 @@ impl TorrentSession {
 
         Ok(Self {
             session,
-            guard,
+            route,
             active: Mutex::new(std::collections::VecDeque::new()),
             held: Mutex::default(),
             hold: Mutex::default(),
@@ -529,7 +518,7 @@ impl TorrentSession {
 
     /// List the files in a torrent without downloading it.
     pub async fn list_files(&self, magnet: &str) -> Result<Vec<TorrentFile>, ProviderError> {
-        self.guard.permit()?;
+        self.route.permit()?;
 
         let response = add_bounded(
             &self.session,
@@ -570,9 +559,7 @@ impl TorrentSession {
         magnet: &str,
         episode: Option<u32>,
     ) -> Result<Arc<ActiveStream>, ProviderError> {
-        // Re-checked here, not only at construction: the guard may have started leaking
-        // since the session was built.
-        self.guard.permit()?;
+        self.route.permit()?;
         self.network_permit()?;
 
         let response = add_bounded(
@@ -639,7 +626,7 @@ impl TorrentSession {
         // `into_inner` on poisoning rather than skipping the write, which is what `if let Ok`
         // did here and at every other lock in this file. A panic elsewhere would have turned
         // these into silent no-ops — and on `active` that means `stop()` stops nothing, so the
-        // VPN guard's teardown becomes a no-op exactly when it is most needed. The rest of the
+        // session's own teardown becomes a no-op exactly when it is needed. The rest of the
         // workspace already recovers rather than skips.
         {
             let mut servers = self.active.lock().unwrap_or_else(|e| e.into_inner());
@@ -691,9 +678,7 @@ impl TorrentSession {
         magnet: &str,
         episode: Option<u32>,
     ) -> Result<DownloadHandle, ProviderError> {
-        // Re-checked per call, exactly as streaming is: a download runs unattended for a long time,
-        // which makes it the *most* important thing to gate rather than the least.
-        self.guard.permit()?;
+        self.route.permit()?;
 
         let response = add_bounded(
             &self.session,
@@ -765,12 +750,12 @@ impl TorrentSession {
         self.for_one(id, true).await
     }
 
-    /// Resume one torrent. Refuses if the guard is failing.
+    /// Resume one torrent. Refuses while a proxy has not passed its check.
     ///
     /// One held for the app's sake stays paused, and this says it resumed: it does, once the
     /// hold is over, and a download that read this as a refusal would mark itself paused.
     pub async fn resume_one(&self, id: usize) -> Result<(), ProviderError> {
-        self.guard.permit()?;
+        self.route.permit()?;
         if self.held.lock().unwrap_or_else(|e| e.into_inner()).contains(&id) {
             return Ok(());
         }
@@ -780,8 +765,7 @@ impl TorrentSession {
     /// Hold the torrents `hold` names, and let go of the others it held, resuming them.
     ///
     /// Only what runs is paused and remembered as held, so what the viewer had paused is left
-    /// as it was, and resumes with nothing. Letting go is refused while the guard is failing,
-    /// as any resume is: those stay held, for [`Self::resume`] to take back once it passes.
+    /// as it was, and resumes with nothing.
     pub async fn set_hold(&self, hold: Hold) -> Result<(), ProviderError> {
         *self.hold.lock().unwrap_or_else(|e| e.into_inner()) = hold;
         let streaming: std::collections::HashSet<usize> = self
@@ -798,7 +782,7 @@ impl TorrentSession {
         let wanted = |id: usize| hold.holds(streaming.contains(&id), downloads.contains(&id));
         let held: std::collections::HashSet<usize> =
             self.held.lock().unwrap_or_else(|e| e.into_inner()).clone();
-        let permitted = self.guard.permit();
+        let permitted = self.route.permit();
         for (id, handle) in torrents {
             match (wanted(id), held.contains(&id)) {
                 (true, false) if !handle.is_paused() => {
@@ -1056,74 +1040,8 @@ impl TorrentSession {
         self.session.stop().await;
     }
 
-    /// Halt all torrent traffic because the guard started leaking.
-    ///
-    /// This is the part that makes `on_leak` mean something. Dropping the stream server
-    /// alone would stop *playback* while librqbit carried on downloading and seeding over
-    /// an unprotected connection — the exact situation the guard exists to prevent.
-    ///
-    /// `Pause` stops peer traffic but keeps the torrents, so recovery is cheap when the
-    /// tunnel returns. `Stop` tears the whole session down, which cannot be undone without
-    /// a restart and is the right choice for anyone who would rather lose the session than
-    /// risk it.
-    pub async fn halt(&self) {
-        self.stop();
-
-        let handles = self.session.with_torrents(|torrents| {
-            torrents.map(|(_, handle)| handle.clone()).collect::<Vec<_>>()
-        });
-
-        for handle in handles {
-            if let Err(e) = self.session.pause(&handle).await {
-                // Report but keep going: a torrent that will not pause must not stop us
-                // pausing the rest.
-                tracing::error!(error = %e, "could not pause torrent after vpn leak");
-            }
-        }
-
-        if self.guard.on_leak() == LeakAction::Stop {
-            // Cancels every task in the session. Deliberately unrecoverable.
-            self.session.stop().await;
-            tracing::warn!("vpn leak: torrent session torn down (on_leak = stop)");
-        } else {
-            tracing::warn!("vpn leak: all torrents paused (on_leak = pause)");
-        }
-    }
-
-    /// Resume after the guard recovers.
-    ///
-    /// Re-verifies first rather than trusting the caller: resuming into an unprotected
-    /// connection would undo the whole point of having halted.
-    pub async fn resume(&self) -> Result<(), ProviderError> {
-        self.guard.permit()?;
-
-        if self.guard.on_leak() == LeakAction::Stop {
-            return Err(ProviderError::Unavailable(
-                "session was torn down (on_leak = stop); restart to torrent again".into(),
-            ));
-        }
-
-        // Not those the app holds: they wait for the hold to end, not for the guard.
-        let handles = self.session.with_torrents(|torrents| {
-            torrents.map(|(id, handle)| (id, handle.clone())).collect::<Vec<_>>()
-        });
-        let held = self.held();
-        for (_, handle) in handles.into_iter().filter(|(id, _)| !held.contains(id)) {
-            if let Err(e) = self.session.unpause(&handle).await {
-                tracing::warn!(error = %e, "could not resume torrent");
-            }
-        }
-        // A hold that ended, or eased, while the guard was failing lets go now of what it no
-        // longer holds.
-        if !held.is_empty() {
-            let _ = self.set_hold(self.hold()).await;
-        }
-        tracing::info!("vpn guard recovered: torrents resumed");
-        Ok(())
-    }
-
-    pub fn guard(&self) -> &VpnGuard {
-        &self.guard
+    pub fn route(&self) -> &TorrentRoute {
+        &self.route
     }
 
     /// Per-torrent progress, for the Downloads screen and for verifying a halt.
@@ -1313,22 +1231,13 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn a_session_refuses_to_start_while_the_guard_is_failing() {
-        // The important property: no session exists while the guard is unsatisfied, so
-        // there is no window for traffic to escape.
-        use kaeri_core::config::{VpnConfig, VpnMode};
-
-        let guard = VpnGuard::new(VpnConfig {
-            mode: VpnMode::Socks5,
-            socks_url: Some("socks5://127.0.0.1:1080".into()),
-            ..Default::default()
-        })
-        .unwrap();
-        // Never verified, so failing.
+    async fn a_session_refuses_to_start_before_its_proxy_passes() {
+        let route = TorrentRoute::new(Some("socks5://127.0.0.1:1080".into())).unwrap();
+        // Never checked, so not yet.
         let scratch = tempfile::tempdir().unwrap();
         let dir = scratch.path().to_path_buf();
         let result =
-            TorrentSession::start(guard, dir.join("dl"), dir.join("dht.json"), "tok".into())
+            TorrentSession::start(route, dir.join("dl"), dir.join("dht.json"), "tok".into())
                 .await;
 
         assert!(matches!(result, Err(ProviderError::Unavailable(_))));
@@ -1337,26 +1246,19 @@ mod tests {
     #[tokio::test]
     async fn an_acknowledged_unprotected_session_can_start() {
         // The escape hatch still works, having been explicitly acknowledged in config.
-        use kaeri_core::config::{VpnConfig, VpnMode};
-
-        let guard = VpnGuard::new(VpnConfig {
-            mode: VpnMode::None,
-            i_understand_my_ip_is_exposed: true,
-            ..Default::default()
-        })
-        .unwrap();
-        guard.verify().await;
+        let route = TorrentRoute::new(None).unwrap();
+        route.verify().await;
 
         let scratch = tempfile::tempdir().unwrap();
         let dir = scratch.path().to_path_buf();
-        match TorrentSession::start(guard, dir.join("dl"), dir.join("dht.json"), "tok".into())
+        match TorrentSession::start(route, dir.join("dl"), dir.join("dht.json"), "tok".into())
             .await
         {
             Ok(session) => {
                 // The DHT's state is kept under the given directory, not in the user's cache.
                 assert!(dir.join("dht.json").parent().unwrap().is_dir());
-                // DHT stays enabled here: without a proxy there is nothing to leak past.
-                assert!(!session.guard().must_disable_dht());
+                // DHT stays on here: without a proxy peers may come from it too.
+                assert!(!session.route().must_disable_dht());
             }
             // Binding a listener can fail in a sandbox; that is not what this test is about.
             Err(e) => eprintln!("session start unavailable in this environment: {e}"),
@@ -1373,7 +1275,6 @@ mod tests {
         name: &str,
         files: &[(&str, usize)],
     ) -> (TorrentSession, usize) {
-        use kaeri_core::config::{VpnConfig, VpnMode};
         let pack = root.join(name);
         std::fs::create_dir_all(&pack).unwrap();
         for (file, bytes) in files {
@@ -1385,15 +1286,10 @@ mod tests {
         )
         .await
         .unwrap();
-        let guard = VpnGuard::new(VpnConfig {
-            mode: VpnMode::None,
-            i_understand_my_ip_is_exposed: true,
-            ..Default::default()
-        })
-        .unwrap();
-        guard.verify().await;
+        let route = TorrentRoute::new(None).unwrap();
+        route.verify().await;
         let session = TorrentSession::start(
-            guard,
+            route,
             root.to_path_buf(),
             root.join("dht.json"),
             "tok".into(),

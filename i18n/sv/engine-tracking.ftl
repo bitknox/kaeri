@@ -28,13 +28,10 @@ notice-signed-out-queue = { $count ->
  }
 notice-sign-out-failed = Det gick inte att logga ut från { $tracker }. Försök igen. { $reason }
 notice-not-saved-because = Det gick inte att spara inställningen. { $cause }
-notice-protection-saved = Skyddet för torrenter sparades.
-notice-protection-not-checked = Det gick inte att kontrollera skyddet för torrenter. { $cause }
 notice-proxy-password-not-kept = Det gick inte att spara proxyns lösenord. Ange det igen för att försöka spara det. { $reason }
 notice-show-setting-refused = Det gick inte att spara inställningen. { $value } är inte ett värde för { $setting }.
 notice-show-not-reset = Det gick inte att återställa den här seriens inställningar. { $reason }
 notice-show-no-such-subtitles = Det gick inte att spara det undertextvalet. Den här serien har inte använt de undertexterna förut.
-notice-torrents-waiting-for-check = Torrenterna väntar på att anslutningskontrollen godkänns igen.
 notice-mapping-data-refreshed = Mappningsdatan uppdaterades.
 notice-mapping-data-failed = Det gick inte att uppdatera mappningsdatan ({ $datasets }). Försöker igen om { $wait }. { $cause }
 notice-episode-aired = { $title }, avsnitt { $episode }, sändes medan du var borta.
@@ -43,8 +40,6 @@ notice-episodes-aired = { $count ->
    *[other] { $count } nya avsnitt av serier du följer sändes. Kalendern visar dem.
  }
 notice-update-available = { $tag } är ute. Kör kaeri --update för att installera den.
-cause-confirm-no-protection = Bekräfta först att du vill ha inget skydd.
-cause-confirm-warn-only = Bekräfta först att du bara vill få en varning.
 cause-proxy-needs-address = En proxy behöver en värd och en port.
 cause-proxy-address-unusable = Proxyns adress kan inte användas för en kontroll.
 cause-server-unreachable = Det gick inte att nå servern.

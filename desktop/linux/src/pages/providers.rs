@@ -57,11 +57,7 @@ impl Standing {
 
 /// The name a source goes by.
 pub fn name(row: &ProviderRow) -> String {
-    match row.kind.as_str() {
-        "remote" => t::sources_remote(),
-        _ if row.name.is_empty() => row.id.clone(),
-        _ => row.name.clone(),
-    }
+    if row.name.is_empty() { row.id.clone() } else { row.name.clone() }
 }
 
 /// Where a source came from, in one quiet line: its store, or how it got here, and when it
@@ -72,12 +68,11 @@ pub fn origin(row: &ProviderRow) -> String {
 }
 
 fn came_from(row: &ProviderRow) -> String {
-    match (&row.origin, row.kind.as_str()) {
-        (_, "remote") => t::sources_origin_config(),
-        (ProviderOrigin::BuiltIn, _) => t::sources_origin_built_in(),
-        (ProviderOrigin::Store { name: Some(name), .. }, _) => name.clone(),
-        (ProviderOrigin::Store { name: None, .. }, _) => t::sources_origin_left_store(),
-        (ProviderOrigin::ByHand, _) => t::sources_origin_by_hand(),
+    match &row.origin {
+        ProviderOrigin::BuiltIn => t::sources_origin_built_in(),
+        ProviderOrigin::Store { name: Some(name), .. } => name.clone(),
+        ProviderOrigin::Store { name: None, .. } => t::sources_origin_left_store(),
+        ProviderOrigin::ByHand => t::sources_origin_by_hand(),
     }
 }
 

@@ -20,7 +20,6 @@ sources-check = Kontrollera { -source-pl }
 sources-origin-version = { $origin } · version { $version }
 sources-standing = Status
 sources-status-working = Redo
-sources-torrent-indexes = Söker i de { -torrent-index } du har slagit på under Inställningar.
 sources-version-ready = Version { $version } är redo
 sources-use-this = Använd den här { -source }n
 sources-use-name = { $name } på

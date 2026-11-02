@@ -64,6 +64,9 @@ pub enum Operation {
     Detail,
     /// `query::by_ids`: several titles at once, for the Continue rail.
     Many,
+    /// `query::by_ids_with_tables`: the covers a screen shows, with what their episode tables
+    /// need, for the Mac's hover cards.
+    Tables,
     /// `query::relations`: several titles' relations, two levels deep, for the season walk.
     Relations,
     /// `query::recommended_from`: what people who liked each title rated highest, by id.
@@ -142,6 +145,8 @@ impl Operation {
             Self::Recommended
         } else if has("media(id_in:") && has("relations {") && !has("prequels:") {
             Self::Relations
+        } else if has("media(id_in:") && has("streamingEpisodes") {
+            Self::Tables
         } else if has("media(id_in:") {
             Self::Many
         } else if has("GenreCollection") {
@@ -170,6 +175,11 @@ pub struct Request {
     pub variables: Value,
     /// The `authorization` header, when one was sent.
     pub authorization: Option<String>,
+    /// When it came.
+    pub at: std::time::Instant,
+    /// Whether the fake refused it for going over its limit: see
+    /// [`FakeAniList::limit_per`].
+    pub refused: bool,
 }
 
 /// A failure the fake answers with instead of the fixtures, for the failure paths.
@@ -201,6 +211,11 @@ pub struct FakeAniList {
 
 struct State {
     requests: Vec<Request>,
+    /// The most GraphQL requests a rolling window answers, and the window: see
+    /// [`FakeAniList::limit_per`].
+    limit: Option<(u32, std::time::Duration)>,
+    /// When each GraphQL request the limit counted came, oldest first.
+    counted: VecDeque<std::time::Instant>,
     next: VecDeque<Failure>,
     always: Option<Failure>,
     /// Failures for one operation each, until healed: see [`FakeAniList::fail_operation`].
@@ -213,6 +228,8 @@ struct State {
     titles: HashMap<u64, Value>,
     /// The viewer's own title language, in place of the fixture's.
     viewer_language: Option<String>,
+    /// The viewer's id, in place of the fixture's: see [`FakeAniList::answer_as_viewer`].
+    viewer_id: Option<u64>,
     /// Titles beside the fixtures, by id, which a test made up: see [`FakeAniList::add_titles`].
     extra: HashMap<u64, Value>,
     /// Titles that are also in the search and browse pool: see [`FakeAniList::add_catalogue`].
@@ -226,6 +243,9 @@ struct State {
     entries: Vec<Value>,
     /// How long each operation's answers are held back: see [`FakeAniList::answer_slowly`].
     slow: HashMap<Operation, std::time::Duration>,
+    /// What the next answers say of the limit, as `(limit, remaining)`, with no reset: see
+    /// [`FakeAniList::say_left`].
+    said: VecDeque<(u32, u32)>,
     /// Where image URLs point once the fake serves art: its own `/art/`.
     art: Option<String>,
     /// How the art is served when it is served badly: see [`FakeAniList::trouble_art`].
@@ -258,18 +278,22 @@ impl FakeAniList {
         let addr = listener.local_addr().expect("a bound listener has an address");
         let state = Arc::new(Mutex::new(State {
             requests: Vec::new(),
+            limit: None,
+            counted: VecDeque::new(),
             next: VecDeque::new(),
             always: None,
             now: FIXTURE_NOW,
             ahead: 0,
             titles: HashMap::new(),
             viewer_language: None,
+            viewer_id: None,
             extra: HashMap::new(),
             catalogue: Vec::new(),
             broadcasts: Vec::new(),
             season: Vec::new(),
             entries: Vec::new(),
             slow: HashMap::new(),
+            said: VecDeque::new(),
             failing: HashMap::new(),
             art: None,
             art_trouble: ArtTrouble::default(),
@@ -299,9 +323,17 @@ impl FakeAniList {
         format!("http://{}/tenrai/v1", self.addr)
     }
 
-    /// An AniList client that talks to this server, with [`crate::TEST_RATE_LIMIT`].
+    /// An AniList client that talks to this server, with [`crate::TEST_RATE_LIMIT`] and no
+    /// pacing of queued work, so a test's background requests go as soon as the limit allows.
     pub fn anilist(&self, http: &HttpClient) -> AniList {
-        AniList::new(http.clone(), crate::TEST_RATE_LIMIT).with_endpoint(self.endpoint())
+        self.anilist_paced(http, kaeri_meta::Pacing::UNPACED)
+    }
+
+    /// [`Self::anilist`], with queued work paced by `pacing`, as the app paces it.
+    pub fn anilist_paced(&self, http: &HttpClient, pacing: kaeri_meta::Pacing) -> AniList {
+        AniList::new(http.clone(), crate::TEST_RATE_LIMIT)
+            .with_endpoint(self.endpoint())
+            .with_pacing(pacing)
     }
 
     /// Where the fake Kitsu answers, for [`kaeri_track`]'s `kitsu::Site::at`: its token
@@ -432,12 +464,39 @@ impl FakeAniList {
         lock(&self.state).viewer_language = Some(language.to_owned());
     }
 
+    /// The token is someone else's from now on: the viewer AniList answers with has `id`, as
+    /// after a sign-in to another account elsewhere.
+    pub fn answer_as_viewer(&self, id: u64) {
+        lock(&self.state).viewer_id = Some(id);
+    }
+
     /// The people the signed-in viewer follows who have `id` on a list, as `mediaList` entries in
     /// AniList's shape (`status`, `score`, `progress`, `private`, `user { name avatar { medium } }`),
     /// newest first. Answered only to a request that asks for them, with a token: see
     /// [`following_entry`].
     pub fn set_following(&self, id: AnilistId, entries: impl IntoIterator<Item = Value>) {
         lock(&self.state).following.insert(u64::from(id.get()), entries.into_iter().collect());
+    }
+
+    /// Answer at most `per_minute` GraphQL requests in any minute from now on, as AniList does,
+    /// saying so in the `x-ratelimit-limit` and `x-ratelimit-remaining` headers, and refuse the
+    /// rest with a `429` and `retry-after` until the oldest of the minute is a minute old.
+    pub fn limit_per_minute(&self, per_minute: u32) {
+        self.limit_per(per_minute, std::time::Duration::from_secs(60));
+    }
+
+    /// [`Self::limit_per_minute`] over a window of `window` in place of a minute, so a test of
+    /// what a refusal sets off waits seconds rather than a minute for the window to pass.
+    pub fn limit_per(&self, most: u32, window: std::time::Duration) {
+        lock(&self.state).limit = Some((most.max(1), window));
+    }
+
+    /// Answer the next GraphQL requests as usual, each saying the next of `remaining` is left
+    /// of `limit` a minute, with no reset, as AniList's answers do. Its nodes count apart, so
+    /// one may say nothing is left while the window still has room: for a test of how the
+    /// client reads what it is told.
+    pub fn say_left(&self, limit: u32, remaining: impl IntoIterator<Item = u32>) {
+        lock(&self.state).said.extend(remaining.into_iter().map(|left| (limit, left)));
     }
 
     /// Hold every answer to `operation` back by `wait` from now on, as a slow AniList would: for
@@ -530,8 +589,8 @@ impl Drop for FakeAniList {
 pub const COMPLEXITY_LIMIT: u64 = 500;
 
 /// What `document` costs as AniList counts it, as far as the fake can tell: one for every field,
-/// and a field with a `perPage` argument (a literal or a variable of `variables`) multiplies what
-/// is selected under it by that many. An estimate of the rule AniList documents, not a replay of
+/// and a connection with a `perPage` argument (a literal or a variable of `variables`)
+/// multiplies what is selected under it by that many. A root `Page` does not. An estimate of the rule AniList documents, not a replay of
 /// it: the real service is the judge, and a live probe is the way to measure it.
 pub fn complexity(document: &str, variables: &Value) -> u64 {
     let mut tokens: Vec<String> = Vec::new();
@@ -571,6 +630,10 @@ fn selection(tokens: &[String], at: &mut usize, variables: &Value) -> u64 {
                 if tokens.get(*at + 1).is_some_and(|t| t == ":") {
                     *at += 2;
                 }
+                // A `Page` is not a connection: its titles are counted once, however many it
+                // holds. Fifty whole titles in one page answer, as do five pages of twenty,
+                // while sixteen whole titles under one title's recommendations were refused.
+                let page = tokens.get(*at).is_some_and(|t| t == "Page");
                 *at += 1;
                 let mut times = 1;
                 if tokens.get(*at).is_some_and(|t| t == "(") {
@@ -600,11 +663,123 @@ fn selection(tokens: &[String], at: &mut usize, variables: &Value) -> u64 {
                     *at += 1;
                     children = selection(tokens, at, variables);
                 }
-                total += 1 + children * times;
+                total += 1 + children * if page { 1 } else { times };
             }
         }
     }
     total
+}
+
+/// The roots of a document that asks several queries at once, as `query::together` writes one:
+/// each root under an alias `q0`, `q1` and on, its variables named after it (`$q0_ids`). Each
+/// comes back as its alias, a document of that root alone with its variables named as the query
+/// names them, and those variables. `None` for any other document, the aliased pages of a search
+/// included.
+fn together(document: &str, variables: &Value) -> Option<Vec<(String, String, Value)>> {
+    let open = document.find('{')?;
+    let head = &document[..open];
+    let declared: Vec<(String, String)> = match (head.find('('), head.rfind(')')) {
+        (Some(from), Some(to)) if from < to => head[from + 1..to]
+            .split(',')
+            .filter_map(|d| {
+                let (name, kind) = d.split_once(':')?;
+                Some((name.trim().trim_start_matches('$').to_owned(), kind.trim().to_owned()))
+            })
+            .collect(),
+        _ => Vec::new(),
+    };
+    let body: Vec<char> = document[open + 1..document.rfind('}')?].chars().collect();
+    let mut parts = Vec::new();
+    let mut at = 0;
+    let skip = |at: &mut usize| {
+        while body.get(*at).is_some_and(|c| c.is_whitespace() || *c == ',') {
+            *at += 1;
+        }
+    };
+    let word = |at: &mut usize| {
+        let from = *at;
+        while body.get(*at).is_some_and(|c| c.is_alphanumeric() || *c == '_') {
+            *at += 1;
+        }
+        body[from..*at].iter().collect::<String>()
+    };
+    // Past the bracket that closes the one at `at`.
+    let close = |at: &mut usize, open: char, shut: char| {
+        let mut depth = 0;
+        while let Some(c) = body.get(*at) {
+            *at += 1;
+            if *c == open {
+                depth += 1;
+            } else if *c == shut {
+                depth -= 1;
+                if depth == 0 {
+                    return;
+                }
+            }
+        }
+    };
+    loop {
+        skip(&mut at);
+        if at >= body.len() {
+            break;
+        }
+        let alias = word(&mut at);
+        if !alias
+            .strip_prefix('q')
+            .is_some_and(|n| !n.is_empty() && n.chars().all(|c| c.is_ascii_digit()))
+        {
+            return None;
+        }
+        skip(&mut at);
+        if body.get(at) != Some(&':') {
+            return None;
+        }
+        at += 1;
+        skip(&mut at);
+        let from = at;
+        word(&mut at);
+        skip(&mut at);
+        if body.get(at) == Some(&'(') {
+            close(&mut at, '(', ')');
+            skip(&mut at);
+        }
+        if body.get(at) != Some(&'{') {
+            return None;
+        }
+        close(&mut at, '{', '}');
+        let prefix = format!("{alias}_");
+        let root: String =
+            body[from..at].iter().collect::<String>().replace(&format!("${prefix}"), "$");
+        let mut vars = serde_json::Map::new();
+        let mut declarations = Vec::new();
+        for (name, kind) in &declared {
+            if let Some(own) = name.strip_prefix(&prefix) {
+                declarations.push(format!("${own}: {kind}"));
+                if let Some(value) = variables.get(name) {
+                    vars.insert(own.to_owned(), value.clone());
+                }
+            }
+        }
+        let document = format!("query ({}) {{ {root} }}", declarations.join(", "));
+        parts.push((alias, document, Value::Object(vars)));
+    }
+    (parts.len() > 1).then_some(parts)
+}
+
+/// The viewer as a test set it: its title language and its id, where one was given.
+fn as_viewer(viewer: &mut Value, language: Option<&str>, id: Option<u64>) {
+    if let Some(language) = language {
+        viewer["options"] = json!({ "titleLanguage": language });
+    }
+    if let Some(id) = id {
+        viewer["id"] = json!(id);
+    }
+}
+
+/// The root field a document of one root answers under.
+fn root_field(document: &str) -> String {
+    let body = document.split_once('{').map_or("", |(_, b)| b).trim_start();
+    body.chars().take_while(|c| c.is_alphanumeric() || *c == '_').collect()
 }
 
 /// A poisoned lock means a test already panicked; the state is still worth reading.
@@ -769,6 +944,8 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
             query: String::new(),
             variables: Value::Null,
             authorization: head.authorization.clone(),
+            at: std::time::Instant::now(),
+            refused: false,
         });
         return kitsu::answer(&head.method, rest, head.authorization.as_deref(), body);
     }
@@ -779,6 +956,8 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
             query: String::new(),
             variables: Value::Null,
             authorization: head.authorization.clone(),
+            at: std::time::Instant::now(),
+            refused: false,
         });
         return tenrai(rest);
     }
@@ -793,6 +972,8 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
     };
 
     let asks_following = query.contains("isFollowing: true");
+    // What the limit leaves of the minute, said on an answer it counted.
+    let mut limit_headers: Option<(u32, usize, Option<u64>)> = None;
     // AniList refuses a query that costs more than 500. Only the queries the fake counts for
     // are held to it: see [`complexity`].
     if operation == Operation::Recommended && complexity(&query, &variables) > COMPLEXITY_LIMIT
@@ -804,7 +985,7 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
         failure,
         (now, ahead),
         titles,
-        viewer_language,
+        (viewer_language, viewer_id),
         extra,
         pool,
         rows,
@@ -813,16 +994,52 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
         listed,
     ) = {
         let mut state = lock(state);
+        let at = std::time::Instant::now();
+        let mut limited = None;
+        if let Some((limit, minute)) = state.limit.filter(|_| head.path == "/graphql") {
+            while state.counted.front().is_some_and(|first| at.duration_since(*first) >= minute)
+            {
+                state.counted.pop_front();
+            }
+            // The limit as a minute's worth, which is how AniList says it.
+            let per_minute = (u64::from(limit) * 60 / minute.as_secs().max(1)) as u32;
+            // How long until the oldest of the window leaves it, in whole seconds.
+            let frees = |counted: &VecDeque<std::time::Instant>| {
+                let oldest = counted.front().copied().unwrap_or(at);
+                let wait =
+                    minute.saturating_sub(at.duration_since(oldest)).as_secs_f64().ceil();
+                (wait as u64).max(1)
+            };
+            if state.counted.len() >= limit as usize {
+                limited =
+                    Some(Failure::RateLimited { retry_after_secs: frees(&state.counted) });
+                limit_headers = Some((per_minute, 0, None));
+            } else {
+                state.counted.push_back(at);
+                let remaining = limit as usize - state.counted.len();
+                // AniList's window is a minute, which a client waits out when nothing is
+                // left. A shorter one says when it frees, or the client would wait the minute.
+                let reset = (remaining == 0 && minute != std::time::Duration::from_secs(60))
+                    .then(|| frees(&state.counted));
+                limit_headers = Some((per_minute, remaining, reset));
+            }
+        }
+        if head.path == "/graphql"
+            && let Some((limit, left)) = state.said.pop_front()
+        {
+            limit_headers = Some((limit, left as usize, None));
+        }
         state.requests.push(Request {
             operation,
             path: head.path.clone(),
-            query,
+            query: query.clone(),
             variables: variables.clone(),
             authorization: head.authorization.clone(),
+            at,
+            refused: limited.is_some(),
         });
-        let failure = state
-            .next
-            .pop_front()
+        let failure = limited
+            .or_else(|| state.next.pop_front())
             .or_else(|| state.always.clone())
             .or_else(|| state.failing.get(&operation).cloned());
         let clock = (state.now, state.ahead);
@@ -834,7 +1051,7 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
             failure,
             clock,
             state.titles.clone(),
-            state.viewer_language.clone(),
+            (state.viewer_language.clone(), state.viewer_id),
             extra,
             pool,
             rows,
@@ -843,7 +1060,7 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
             state.entries.clone(),
         )
     };
-    match failure {
+    let mut reply = match failure {
         Some(failure) => fail(failure),
         None => {
             let clock = Clock { shift: now - FIXTURE_NOW, now: now + ahead };
@@ -866,28 +1083,66 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
             } else {
                 threads::respond(&mut lock(state), operation, &variables, clock.now)
             };
-            let mut reply = thread.unwrap_or_else(|| {
-                respond(
+            let mut reply = thread.unwrap_or_else(|| match together(&query, &variables) {
+                // Each root of several in one request, answered as it would be alone.
+                Some(parts) => {
+                    let mut data = serde_json::Map::new();
+                    for (alias, document, vars) in parts {
+                        let operation = Operation::of(&document);
+                        let reply = respond(
+                            operation, &document, &vars, authorized, clock, catalogue, None,
+                        );
+                        match reply {
+                            Reply::Answer { status: 200, mut body, .. }
+                                if body.get("errors").is_none() =>
+                            {
+                                let root = root_field(&document);
+                                let mut answer = body["data"][&root].take();
+                                if root == "Viewer" {
+                                    as_viewer(
+                                        &mut answer,
+                                        viewer_language.as_deref(),
+                                        viewer_id,
+                                    );
+                                }
+                                data.insert(alias, answer);
+                            }
+                            failed => return failed,
+                        }
+                    }
+                    Reply::ok(Value::Object(data))
+                }
+                None => respond(
                     operation,
+                    &query,
                     &variables,
                     authorized,
                     clock,
                     catalogue,
                     asks_following.then_some(&following),
-                )
+                ),
             });
             if let Reply::Answer { body, .. } = &mut reply {
                 retitle(body, &titles);
-                if let Some(language) = viewer_language
-                    && let Some(viewer) =
-                        body.pointer_mut("/data/Viewer").filter(|v| v.is_object())
+                if let Some(viewer) = body.pointer_mut("/data/Viewer").filter(|v| v.is_object())
                 {
-                    viewer["options"] = json!({ "titleLanguage": language });
+                    as_viewer(viewer, viewer_language.as_deref(), viewer_id);
                 }
             }
             reply
         }
+    };
+    if let (Some((limit, remaining, reset)), Reply::Answer { headers, .. }) =
+        (limit_headers, &mut reply)
+    {
+        headers.retain(|(name, _)| !name.starts_with("x-ratelimit-"));
+        headers.push(("x-ratelimit-limit", limit.to_string()));
+        headers.push(("x-ratelimit-remaining", remaining.to_string()));
+        if let Some(reset) = reset {
+            headers.push(("x-ratelimit-reset", reset.to_string()));
+        }
     }
+    reply
 }
 
 /// Give every title the test set another way its forms, wherever it is in `value`.
@@ -1062,6 +1317,7 @@ impl<'a> Catalogue<'a> {
 
 fn respond(
     operation: Operation,
+    document: &str,
     vars: &Value,
     authorized: bool,
     clock: Clock,
@@ -1109,46 +1365,90 @@ fn respond(
             }
         }
         Operation::Many => {
-            let asked = ids(&vars["ids"]);
-            // In the catalogue's order, not the order asked: the client puts them back, and
-            // answering in the asked order would let a client that forgot pass anyway. The
-            // titles a test added come after the fixtures, newest id first.
-            let mut added: Vec<AnilistId> = asked
-                .iter()
-                .copied()
-                .filter(|id| !fixtures::ALL.contains(id))
-                .filter(|id| catalogue.extra.contains_key(&u64::from(id.get())))
-                .collect();
-            added.sort_by_key(|id| std::cmp::Reverse(id.get()));
-            let media: Vec<Value> = fixtures::ALL
-                .iter()
-                .filter(|id| asked.contains(id))
-                .filter_map(|id| fixtures::listed_wire(*id))
-                .chain(added.iter().filter_map(|id| catalogue.listed(*id)))
+            // The season headers ask each title's related titles too, each with its card.
+            let headers = document.contains(kaeri_meta::anilist::query::HEADER_RELATIONS);
+            let media: Vec<Value> = catalogue_order(&ids(&vars["ids"]), catalogue)
+                .into_iter()
+                .filter_map(|id| {
+                    let mut listed = if fixtures::ALL.contains(&id) {
+                        fixtures::listed_wire(id)
+                    } else {
+                        catalogue.listed(id)
+                    }?;
+                    if headers {
+                        let edges: Vec<Value> = catalogue
+                            .get(u64::from(id.get()))
+                            .and_then(|title| title["relations"]["edges"].as_array().cloned())
+                            .unwrap_or_default()
+                            .into_iter()
+                            .map(|mut edge| {
+                                if let Some(node) = edge["node"].as_object_mut() {
+                                    node.remove("relations");
+                                }
+                                edge
+                            })
+                            .collect();
+                        listed["relations"] = json!({ "edges": edges });
+                    }
+                    Some(listed)
+                })
                 .map(|m| clock.media(m))
+                .collect();
+            Reply::ok(json!({ "Page": { "media": media } }))
+        }
+        Operation::Tables => {
+            let media: Vec<Value> = catalogue_order(&ids(&vars["ids"]), catalogue)
+                .into_iter()
+                .filter_map(|id| Some((catalogue.listed(id)?, catalogue.wire(id)?)))
+                .map(|(listed, wire)| {
+                    let whole = clock.media(wire.clone());
+                    let mut media = clock.media(listed);
+                    // As AniList answers a title with none: an empty list, an empty connection.
+                    media["streamingEpisodes"] =
+                        whole.get("streamingEpisodes").cloned().unwrap_or_else(|| json!([]));
+                    media["upcoming"] =
+                        whole.get("upcoming").cloned().unwrap_or_else(|| json!({ "nodes": [] }));
+                    // The connection takes no sort: oldest first, fifty at most.
+                    let mut past = whole["aired"].as_array().cloned().unwrap_or_default();
+                    past.sort_by_key(|row| row["episode"].as_u64());
+                    past.truncate(50);
+                    media["past"] = json!({ "nodes": past });
+                    media
+                })
                 .collect();
             Reply::ok(json!({ "Page": { "media": media } }))
         }
         Operation::Recommended => {
             let per_page = vars["perPage"].as_u64().unwrap_or(MAX_PER_PAGE as u64) as usize;
+            let document = document.split_whitespace().collect::<Vec<_>>().join(" ");
+            // Asked for more than their ids, the titles come whole, as Home's "Because you
+            // finished" once asked. As many as the connection's `perPage` says.
+            let whole = !document.contains("mediaRecommendation { id }");
+            let each = document
+                .split_once("recommendations(perPage: ")
+                .map(|(_, rest)| rest.split([',', ')']).next().unwrap_or_default())
+                .and_then(|n| match n.strip_prefix('$') {
+                    Some(name) => vars[name].as_u64(),
+                    None => n.trim().parse().ok(),
+                })
+                .unwrap_or(MAX_PER_PAGE as u64) as usize;
             let media: Vec<Value> = ids(&vars["ids"])
                 .into_iter()
                 .take(per_page)
                 .filter_map(|id| catalogue.wire(id))
                 .map(|m| {
-                    // Asked with `$each`, the titles come whole, as many as asked for: Home's
-                    // "Because you finished". Otherwise each is its id, under its card.
-                    let nodes = match vars["each"].as_u64() {
-                        Some(each) => m["recommendations"]["nodes"]
-                            .as_array()
-                            .into_iter()
-                            .flatten()
-                            .filter_map(|n| n["mediaRecommendation"]["id"].as_u64())
-                            .filter_map(|id| catalogue.listed(AnilistId::new(id as u32)))
-                            .take(each as usize)
+                    let ids = m["recommendations"]["nodes"]
+                        .as_array()
+                        .into_iter()
+                        .flatten()
+                        .filter_map(|n| n["mediaRecommendation"]["id"].as_u64());
+                    let nodes: Vec<Value> = if whole {
+                        ids.filter_map(|id| catalogue.listed(AnilistId::new(id as u32)))
+                            .take(each)
                             .map(|title| json!({ "mediaRecommendation": clock.media(title) }))
-                            .collect(),
-                        None => m["recommendations"]["nodes"].clone(),
+                            .collect()
+                    } else {
+                        ids.take(each).map(|id| json!({ "mediaRecommendation": { "id": id } })).collect()
                     };
                     json!({
                         "id": m["id"],
@@ -1230,6 +1530,20 @@ impl Clock {
             row["airingAt"] = at.into();
         }
     }
+}
+
+/// The titles of `asked` the fake has, in the catalogue's order rather than the order asked: the
+/// client puts them back, and answering in the asked order would let a client that forgot pass
+/// anyway. The titles a test added come after the fixtures, newest id first.
+fn catalogue_order(asked: &[AnilistId], catalogue: Catalogue<'_>) -> Vec<AnilistId> {
+    let mut added: Vec<AnilistId> = asked
+        .iter()
+        .copied()
+        .filter(|id| !fixtures::ALL.contains(id))
+        .filter(|id| catalogue.extra.contains_key(&u64::from(id.get())))
+        .collect();
+    added.sort_by_key(|id| std::cmp::Reverse(id.get()));
+    fixtures::ALL.iter().copied().filter(|id| asked.contains(id)).chain(added).collect()
 }
 
 /// One entry of the people the viewer follows, as AniList answers it: for
@@ -1486,9 +1800,9 @@ fn facets() -> Value {
               "category": "Sexual Content", "isAdult": true, "isGeneralSpoiler": false },
         ],
         "ExternalLinkSourceCollection": [
-            { "site": "Lantern Stream", "isDisabled": false },
-            { "site": "Hikari Stream", "isDisabled": false },
-            { "site": "Lantern Stream", "isDisabled": false },
+            { "site": "Lantern Library", "isDisabled": false },
+            { "site": "Hikari Library", "isDisabled": false },
+            { "site": "Lantern Library", "isDisabled": false },
             { "site": "Old Stream", "isDisabled": true },
         ],
     })
@@ -1704,6 +2018,8 @@ mod tests {
             (query::by_id(false), Operation::Detail),
             (query::by_id(true), Operation::Detail),
             (query::by_ids(), Operation::Many),
+            (query::headers_by_ids(), Operation::Many),
+            (query::by_ids_with_tables(), Operation::Tables),
             (query::relations(), Operation::Relations),
             (query::recommended_from(), Operation::Recommended),
             (query::airing_schedule(), Operation::Schedule),

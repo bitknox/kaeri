@@ -9,8 +9,7 @@
 //!
 //! The probe asks as the receiver will, with `Origin: https://www.gstatic.com`, and passes when
 //! the playlist and its first segment both answer with `Access-Control-Allow-Origin` and the
-//! segment's bytes are media rather than media dressed as a picture, which only the mender's
-//! repair would play.
+//! segment's bytes are plain media: MPEG-TS or fragmented MP4.
 
 use std::{
     io::{Read, Seek},
@@ -34,7 +33,7 @@ pub struct CorsProbe {
     pub manifest: bool,
     /// The first segment did too.
     pub segment: bool,
-    /// The segment's bytes are plain media: MPEG-TS or fragmented MP4, not a disguise.
+    /// The segment's bytes are plain media: MPEG-TS or fragmented MP4.
     pub plain_media: bool,
 }
 
@@ -374,14 +373,14 @@ mod tests {
     }
 
     #[test]
-    fn segments_dressed_as_pictures_are_not_plain_media() {
+    fn segments_with_other_bytes_first_are_not_plain_media() {
         let mut ts = vec![0u8; 400];
         ts[0] = 0x47;
         ts[188] = 0x47;
         assert!(plain_media(&ts, false));
-        let mut disguised = b"\x89PNG\r\n\x1a\n".to_vec();
-        disguised.extend(&ts);
-        assert!(!plain_media(&disguised, false));
+        let mut prefixed = b"\x89PNG\r\n\x1a\n".to_vec();
+        prefixed.extend(&ts);
+        assert!(!plain_media(&prefixed, false));
         let mut id3 = b"ID3\x04\x00\x00\x00\x00\x00\x02xx".to_vec();
         id3.extend(&ts);
         assert!(plain_media(&id3, false));

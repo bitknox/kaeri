@@ -66,7 +66,7 @@ pub mod party;
 pub mod playback;
 pub mod present;
 pub mod progress;
-pub mod protection;
+pub mod proxy;
 pub mod qr;
 pub mod remote;
 pub mod search;

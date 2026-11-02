@@ -8,6 +8,7 @@ body:
       value: |
         Thanks for the report. Reports from inside the app arrive with the diagnostics below filled in.
         This is a public page: do not paste addresses, file paths, account details or your library here.
+        Don't post links to sources and don't name sites that carry content. Use made-up titles in examples.
   - type: textarea
     id: what_happened
     attributes:

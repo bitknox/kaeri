@@ -255,8 +255,8 @@ pub const fn timeline_mark(skip: &SkipInterval) -> kaeri_model::playback::Timeli
 
 /// How far short of the end a skip lands when its segment runs to the end of the file.
 ///
-/// An ending cut as the release's last chapter ends exactly at the runtime, and aniskip's times,
-/// taken against another rip, can end past it. Seeking there left mpv seeking at end-of-file for
+/// An ending cut as the file's last chapter ends exactly at the runtime, and aniskip's times,
+/// taken against another encode, can end past it. Seeking there left mpv seeking at end-of-file for
 /// up to most of a minute, until Up Next fired on its own; landing just short lets the last
 /// frames play and the file end the ordinary way, which is what rolls on to the next episode.
 const SKIP_SHORT_OF_END: f64 = 1.0;
@@ -398,7 +398,7 @@ mod tests {
 
     #[test]
     fn a_skip_that_reaches_the_end_lands_just_short_of_it() {
-        // An ending that closes the file, and aniskip's ending for a longer rip.
+        // An ending that closes the file, and aniskip's ending for a longer encode.
         assert_eq!(skip_target(1420.0, Some(1420.0)), 1420.0 - SKIP_SHORT_OF_END);
         assert_eq!(skip_target(1507.0, Some(1420.0)), 1420.0 - SKIP_SHORT_OF_END);
         // Anything short of the end, or a length not known yet, is the segment's own end.

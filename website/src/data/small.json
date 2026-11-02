@@ -22,14 +22,6 @@
   ]
  },
  {
-  "id": "downloads",
-  "items": [
-   "nextEpisodes",
-   "startNow",
-   "sameHistoryOffline"
-  ]
- },
- {
   "id": "alertsAndWidgets",
   "items": [
    "newEpisodeAlerts",

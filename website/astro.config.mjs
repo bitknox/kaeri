@@ -50,7 +50,7 @@ export default defineConfig({
 					entry('Configuration', 'configuration', 'docs/guides/configuration/'),
 					entry('Keys and command line', 'keys', 'docs/guides/keybindings-cli/'),
 					entry('The player', 'player', 'docs/guides/player/'),
-					entry('Torrents and the VPN guard', 'torrents', 'docs/guides/torrents-vpn/'),
+					entry('Torrents', 'torrents', 'docs/guides/torrents/'),
 					entry('Trackers and sync', 'trackers', 'docs/guides/trackers-sync/'),
 					entry('Troubleshooting', 'troubleshooting', 'docs/guides/troubleshooting/'),
 				]),

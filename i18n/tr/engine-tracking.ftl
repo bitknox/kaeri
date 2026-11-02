@@ -28,13 +28,10 @@ notice-signed-out-queue = { $count ->
  }
 notice-sign-out-failed = Oturum kapatılamadı: { $tracker }. Yeniden deneyin. { $reason }
 notice-not-saved-because = Bu ayar kaydedilemedi. { $cause }
-notice-protection-saved = Torrent koruması kaydedildi.
-notice-protection-not-checked = Torrent koruması denetlenemedi. { $cause }
 notice-proxy-password-not-kept = Vekil sunucu parolası saklanamadı. Kaydetmeyi denemek için yeniden girin. { $reason }
 notice-show-setting-refused = Bu ayar kaydedilemedi. { $value }, { $setting } için geçerli bir değer değil.
 notice-show-not-reset = Bu dizinin ayarları sıfırlanamadı. { $reason }
 notice-show-no-such-subtitles = Bu altyazı seçimi kaydedilemedi. Bu dizi bu altyazıları daha önce kullanmadı.
-notice-torrents-waiting-for-check = Torrentler bağlantı denetiminin yeniden geçmesini bekliyor.
 notice-mapping-data-refreshed = Eşleme verileri yenilendi.
 notice-mapping-data-failed = Eşleme verileri yenilenemedi ({ $datasets }). { $wait } içinde yeniden denenecek. { $cause }
 notice-episode-aired = { $title }, { $episode }. bölüm, siz yokken yayınlandı.
@@ -43,8 +40,6 @@ notice-episodes-aired = { $count ->
    *[other] İzlediğiniz dizilerden { $count } yeni bölüm yayınlandı. Takvimde görebilirsiniz.
  }
 notice-update-available = { $tag } çıktı. Kurmak için kaeri --update komutunu çalıştırın.
-cause-confirm-no-protection = Önce korumasız kalmak istediğinizi onaylayın.
-cause-confirm-warn-only = Önce yalnızca uyarılmak istediğinizi onaylayın.
 cause-proxy-needs-address = Vekil sunucu için bir ana makine ve bir bağlantı noktası gerekir.
 cause-proxy-address-unusable = Vekil sunucunun adresi denetim için kullanılamıyor.
 cause-server-unreachable = Sunucuya ulaşılamadı.

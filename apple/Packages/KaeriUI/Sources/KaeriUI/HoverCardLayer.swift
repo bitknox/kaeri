@@ -286,15 +286,22 @@ private struct HoverCardLayer: ViewModifier {
             }
             .onContinuousHover(coordinateSpace: .global) { phase in
                 switch phase {
-                case .active(let location): cards.hover(location)
+                case .active(let location):
+                    // The pointer over the grid: the covers on screen bring their cards and tables
+                    // in one request, so the card it settles on asks nothing. Not at launch, where
+                    // nobody has pointed yet; covers asked lately are left out.
+                    if store.hoverCardsOn { store.prepareCards(cards.layout.covers.map(\.id)) }
+                    cards.hover(location)
                 case .ended: cards.hover(nil)
                 }
             }
             .onAppear {
                 cards.cue = { [store, trailer, navigator] id in
                     guard let entry = store.titles[id] else { return }
-                    if !store.titles.detailed.contains(id) { store.loadDetail(id) }
-                    if store.titles.episodes[id] == nil { store.loadEpisodes(id) }
+                    // A hover costs no request when the list that showed the cover carried the
+                    // card's data: the page waits for the page to open.
+                    store.loadCards([id])
+                    store.loadHoverEpisodes(id)
                     // Interest shown on Home: whether a source has it, for the card's quiet line.
                     if navigator.section == .home { store.probe(id) }
                     if let url = entry.coverUrl, let image = store.artwork.image(url) {
@@ -458,7 +465,7 @@ extension AppStore {
     func hoverCardHeight(_ id: AnilistId, handedOff: HandedOff?, onHome: Bool = false) -> CGFloat {
         guard let entry = titles[id] else { return HoverCardSize.height(synopsis: true, action: true) }
         let reason = onHome && HomeHover(self, id)?.line != nil
-        let synopsis = !(titles.detailed.contains(id) && entry.shownSynopsis.isEmpty)
+        let synopsis = !((titles.detailed.contains(id) || titles.cardedIds.contains(id)) && entry.shownSynopsis.isEmpty)
         let action = TitleAction(entry, handedOff: handedOff, episodes: titles.episodes[id]).playable
             || (onHome && HomeHover(self, id)?.action == .addToPlanning)
         return HoverCardSize.height(synopsis: synopsis, action: action, reason: reason)

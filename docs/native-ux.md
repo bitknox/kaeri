@@ -70,7 +70,7 @@ Nothing to lose: More about this show, Messages, the show's own settings and the
 
 Holds input: the torrent sheet and the proxy form, Kitsu sign-in, joining a plugin store, a new invite, publishing a store, the watch party form, the match picker's search, a comment being written, and the invite field on first launch. Where the platform's sheet closes on a tap outside (iPhone, iPad, Android), it does so only until the person types or changes something.
 
-Asks a question: confirmations (leave, remove, delete, reset, update a plugin, no protection, allow installs), sync conflicts, the no-source question in a watch party, and first launch. A click outside does nothing.
+Asks a question: confirmations (leave, remove, delete, reset, update a plugin, allow installs), sync conflicts, the no-source question in a watch party, and first launch. A click outside does nothing.
 
 How each platform does it:
 
@@ -246,8 +246,9 @@ libmpv draws into the app's own view and SwiftUI controls sit on top, which keep
 | Click | Play or pause, after the double-click interval |
 | Double-click | Full screen |
 | Move | Show the controls; they and the cursor hide 2 s after the pointer stops (`NSCursor.setHiddenUntilMouseMoves`) |
-| Vertical scroll | Volume, 2% per notch |
+| Vertical scroll | Volume, 2% per notch, gathered from small trackpad movements |
 | Horizontal two-finger scroll | Seek, 0.25 s per point, momentum ignored |
+| Any scroll over a menu or panel | Scrolls it, never the volume or the position |
 | Secondary click | Play/Pause, Skip, Subtitles, Audio, Episodes, Mini Player, Picture in Picture |
 
 ### Scrubbing
@@ -395,7 +396,7 @@ Home has no empty state. Its empty sections are left out, and with nothing watch
 - Errors show where the action happened. A screen that failed to load shows `ContentUnavailableView` with the reason and Try again. A failed row action restores the row and a notice says why. A failed playback shows “Couldn't play episode 8” in the player with Choose source and Close.
 - Vermilion colours the error glyph (`exclamationmark.triangle.fill`) and nothing else. The full error chain goes to Messages, and the screen shows its first clause in plain words.
 - On Home a section that failed to load is left out, or keeps what it showed before, and one notice says “Couldn't load suggestions” with Try again, however many sections failed.
-- System alerts only confirm destructive actions: deleting a download and its file, leaving a store, removing a member, turning torrents on without protection.
+- System alerts only confirm destructive actions: deleting a download and its file, leaving a store, removing a member.
 
 ### Notices
 
@@ -434,17 +435,15 @@ The app then opens on Home.
 
 ### Torrents
 
-Torrents are off by default and live in Settings > Sources as “Torrent playback”, on Mac, iPad and iPhone. Turning the switch on opens a sheet before anything starts:
+Torrents are off by default and live in Settings > Sources as “Torrent playback”, on Mac, iPad and iPhone. The switch turns them on straight away, with no sheet and no question: torrents connect directly unless a proxy is set. Under the switch, off says “Off by default. Torrents connect directly unless you route them through a proxy.”, and on says where traffic goes (“Connecting directly, without a proxy.” or “Through a SOCKS5 proxy at host:port.”).
 
-- “Torrents download from other people and share what you download with them while you watch. They can see your IP address.”
-- A “Protect with” picker: SOCKS5 proxy (host, port, user name, password), VPN on this device, or No protection.
-- “Kaeri checks where torrent traffic leaves from when a torrent starts and every minute while it runs, and pauses torrents if that check fails. Your VPN or proxy is what protects you.”
-- No protection keeps Turn on disabled until a checkbox is ticked: “I understand other people can see my IP address.”
-- Once a SOCKS5 proxy is set, “Edit proxy…” sits beside the “Protect with” choice. It opens the same proxy form, filled in, and the new settings apply only after the connection check passes. The engine's `CheckTorrentProtection` runs that check against the form's settings and writes nothing, so a failed check leaves the saved proxy and its password as they were.
-- Every new or changed proxy goes through that check before it is saved: turning torrents on with a proxy, switching “Protect with” to one, and Edit proxy. The sheet says “Checking the proxy” while it runs. Only a passed check saves the settings and turns torrents on, and a notice says what was saved (“Proxy saved”). A failed one saves nothing and says why, and the sheet stays open. VoiceOver hears both lines as they come. One check runs at a time: a check asked for while an earlier one is out waits for that one's verdict, so a verdict can only ever answer the check its sheet is waiting for.
+- “Route torrent traffic through a proxy” is an optional privacy setting, off by default, and shown whether torrents are on or off, so a proxy can be set before the first torrent starts. Its line: “Torrent traffic goes through a SOCKS5 proxy you run or rent. While this is off, torrents connect directly.”
+- Turning it on opens the proxy form (host, port, user name, password) with “Other people in a torrent can see your IP address. To keep it private, route torrent traffic through a proxy.” and “Kaeri checks that it can reach the proxy before torrents start. Torrents wait while that check fails.” Cancel leaves it off. Turning it off saves at once (`SetTorrentProxy` with no proxy) and torrents connect directly.
+- Once a proxy is set, “Edit proxy…” opens the same form, filled in. The engine's `CheckTorrentProxy` checks the form's proxy and writes nothing, so a failed check leaves the saved proxy and its password as they were. Only a passed check saves it (`SetTorrentProxy`), and a notice says so. A failed one saves nothing, says “Not saved. The proxy check failed, so the saved proxy stays.”, and the form stays open. The form says “Checking the proxy” while it runs, and VoiceOver hears both lines as they come. One check runs at a time.
+- While a proxy is set, a “Proxy check” row shows Checking, Passed or Failed (`Event::TorrentProxy`). A failed check says “The proxy check failed. Torrents start once it passes.” and offers Check now (`CheckProxy`). Torrents wait while it fails, and start once it passes.
 - The seeding settings (seed after watching, seed for at most, upload limit) appear only once the source is on.
 
-The switch turns on torrent playback, not a source. Kaeri finds no torrents: a source plugin that declares the `torrents` capability names them, and they play through this switch and its check. There is no index address. Such a plugin's row on Sources says “Plays through torrent playback”, and the release picker shows each candidate's own line (`label`) as the plugin wrote it, in the plugin's order.
+The switch turns on torrent playback, not a source. Kaeri finds no torrents: a source plugin that declares the `torrents` capability names them, and they play through this switch. There is no index address. Such a plugin's row on Sources says “Plays through torrent playback”, and the release picker shows each candidate's own line (`label`) as the plugin wrote it, in the plugin's order.
 
 ### Opening your own link
 
@@ -455,11 +454,11 @@ The switch turns on torrent playback, not a source. Kaeri finds no torrents: a s
 - Change lists the guess's candidates and has a search field (`Find`, answered by `OpenedChoices`) and the episode field.
 - Play (`Play`) plays it as that episode: history, resume, trackers and sync as any episode. Download (`Download`) queues it for offline as any episode.
 - Play without tracking (`PlayUntracked`) records nothing, and says so under the button. Its playback's events carry id 0, and nothing opens a title page for it.
-- While torrent playback is off, Play and Download give way to “Turn on torrent playback”, which opens the switch's sheet.
+- While torrent playback is off, Play and Download give way to “Turn on torrent playback”, which turns the switch on.
 
 On iPhone and iPad, torrents run while the app is open:
 
-- Streaming and downloading run in the foreground. When the app goes to the background, the torrent session pauses. When it comes back, the check runs again and then the session resumes, so the check never runs in the background.
+- Streaming and downloading run in the foreground. When the app goes to the background, the torrent session pauses, and it resumes when the app comes back.
 - Seeding happens only while the app is open, so seed after watching is best effort. Its row says so and names the device: “On this iPhone, seeding happens only while Kaeri is open.”
 - A “Torrents on mobile data” row, off by default, appears on devices with mobile data. While it is off, torrents pause on mobile data and resume on Wi-Fi.
 - A torrent episode playing with the phone locked is open; see Decisions for you.
@@ -592,7 +591,7 @@ The Compose app keeps every rule above and changes only the means: Material 3 wi
 | Swipe, long press, pull to refresh | `SwipeToDismissBox`, `combinedClickable(onLongClick)` with a `DropdownMenu`, `PullToRefreshBox` |
 | Player and Picture in Picture | libmpv in a `SurfaceView` under Compose controls. Android's PiP (`setAutoEnterEnabled(true)`) takes the `SurfaceView` as it is, so Android gets PiP without the iOS frame copy |
 | Now Playing and background audio | Media3 `MediaSession` around a `SimpleBasePlayer` that wraps libmpv, in a `mediaPlayback` foreground service |
-| Torrents | The same rules as iPhone: foreground only, a re-check on resume, Torrents on mobile data off by default |
+| Torrents | The same rules as iPhone: foreground only, Torrents on mobile data off by default |
 | Text size, TalkBack, keyboard | Font scale in `sp` with the same caps; `semantics` with `contentDescription`, `stateDescription`, `customActions` and `heading()`; `onPreviewKeyEvent` with the same keys, and `onProvideKeyboardShortcuts` for Meta + / |
 | Glass chrome | No glass. Bars and capsules are solid Raised, with tonal elevation off |
 
@@ -605,8 +604,8 @@ Each has a recommendation. The spec is written as if you take it.
 3. Engine notice casing: the engine writes the terminal's lower case. Recommended: write sentence case in the engine's wording and let the TUI lower-case it if it wants. Until then the app capitalises the first letter.
 4. Picture in Picture on Mac: the public sample-buffer route, or the private PIP.framework that IINA uses. Recommended: the public route. It survives macOS updates, and it is the same frame path the iOS spike needs.
 5. Picture in Picture on iPhone and iPad: a spike of mpv's software renderer at 540p in the background. Recommended: run it once v1's player works, and ship v1 without PiP on iOS.
-6. Engine work for torrents on iPhone and iPad: pause the torrent session when the app goes to the background, and on return re-run the VPN check before resuming; plus a mobile data flag the front end passes, so torrents pause on mobile data while Torrents on mobile data is off. Recommended as engine tasks ahead of the iOS torrent screens.
-7. A torrent episode playing in the background on iPhone. Background audio keeps the app running, so iOS does not suspend it, and pausing the session would stop the episode once mpv's buffer runs out. Recommended: keep only the playing stream's session running while its audio plays, with the minute check still running, and pause everything else. The alternative is to pause playback with the session and resume on return.
+6. Engine work for torrents on iPhone and iPad: pause the torrent session when the app goes to the background, and resume it on return; plus a mobile data flag the front end passes, so torrents pause on mobile data while Torrents on mobile data is off. Recommended as engine tasks ahead of the iOS torrent screens.
+7. A torrent episode playing in the background on iPhone. Background audio keeps the app running, so iOS does not suspend it, and pausing the session would stop the episode once mpv's buffer runs out. Recommended: keep only the playing stream's session running while its audio plays, and pause everything else. The alternative is to pause playback with the session and resume on return.
 8. Double-tap seek: 10 s on touch, against 5 s for the arrow keys. Recommended: 10 s. A tap costs more than a key press, and 10 s matches the lock screen's skip buttons.
 9. Long press for 2× speed on touch. Recommended: keep it. It is the touch form of the TUI's speed keys.
 10. Lock screen buttons on iPhone: skip 10 s, or next and previous episode. Recommended: skip 10 s. The next episode is one tap away in the player and in Up next.

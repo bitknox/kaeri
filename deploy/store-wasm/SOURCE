@@ -1,4 +1,4 @@
-version 0.1
+version 0.2
 async-trait v0.1.92 (proc-macro) 
 base64 v0.23.1 alloc,default,simd-unsafe,std
 block-buffer v0.10.4 
@@ -85,7 +85,7 @@ zerotrie v0.2.4 yoke,zerofrom
 zerovec v0.11.6 derive,yoke
 zerovec-derive v0.11.3 (proc-macro) 
 zmij v1.0.23 
-.cargo/config.toml d552db6e2d190b983a9254cd9b8116695d71e178
+.cargo/config.toml 193ffe573f22bc2b3052fea0d81d56d2d819d5ce
 crates/kaeri-store-core/Cargo.toml 8c50d895e534dc0412ad0710c2d7e79f2290a889
 crates/kaeri-store-core/admin/.gitignore c2658d7d1b31848c3b71960543cb0368e56cd4c7
 crates/kaeri-store-core/admin/README.md 1ff288e9321189cf4d51b652b4767158229a781f
@@ -153,4 +153,4 @@ crates/kaeri-store-core/src/schema.rs bd2c364429f4a72c761d2bc76566c82b28eef337
 crates/kaeri-store-core/src/store.rs ed35d5e64db2964bbde667c05975662de6aa7365
 crates/kaeri-store-wasm/Cargo.toml fba16e8bf467281a3bd4ca6d4d19fce8368061bd
 crates/kaeri-store-wasm/src/lib.rs 7439e20b81db766a229596bb3f113bac0ff62174
-rust-toolchain.toml 581aaf71800dbaa5b016e5c8f471eb925d3878e8
+rust-toolchain.toml 0f5d6beb3142ba7446dd56cca07b4184055a51f2

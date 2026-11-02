@@ -65,12 +65,10 @@ import app.kaeri.engine.model.SettingKey
 import app.kaeri.engine.model.ShowSettingKey
 import app.kaeri.engine.model.DownloadState
 import app.kaeri.engine.model.DownloadRow
-import app.kaeri.engine.model.FailedCheck
 import app.kaeri.engine.model.Msg
 import app.kaeri.engine.model.ProviderRow
 import app.kaeri.engine.model.ServerEvent
 import app.kaeri.engine.model.StoreMsg
-import app.kaeri.engine.model.TorrentProtection
 import app.kaeri.engine.model.TorrentProxy
 
 /**
@@ -293,7 +291,7 @@ class AppStore(
 
     /**
      * Reset settings on the start-failed screen, once the viewer has confirmed it: `config.toml` is
-     * kept aside as `config.damaged-<date>`, and the engine starts again on the defaults, VPN and
+     * kept aside as `config.damaged-<date>`, and the engine starts again on the defaults, the
      * proxy included. The database, and the watch history in it, stay. Does nothing unless the
      * start failed on the settings file.
      */
@@ -575,18 +573,16 @@ class AppStore(
 
     fun loadDetail(id: AnilistId) {
         titles.detailAsked(id)
-        detailPending += id
         send(Command.LoadDetail(id))?.let { detailJobs[it] = id }
     }
 
     /** Each title page's fetch by the job that carries it, to tell an answer from none. */
     private val detailJobs = mutableMapOf<JobId, AnilistId>()
-    private val detailPending = mutableSetOf<AnilistId>()
 
-    /** A page's fetch ended: without the title, AniList did not answer. */
+    /** A page's fetch ended: without the whole page, AniList did not answer. */
     private fun detailDone(job: JobId) {
         val id = detailJobs.remove(job) ?: return
-        if (detailPending.remove(id)) titles.detailFailed(id)
+        titles.detailEnded(id)
     }
 
     /**
@@ -934,35 +930,26 @@ class AppStore(
     // Sources
 
     /**
-     * Protect torrent traffic with [mode], through [proxy] when it is one, and have a failed
-     * connection check do [onFailure]: written as one change, the proxy's password to the
-     * keystore-sealed secrets and never to the file. No protection and warn only need
-     * [acknowledged], the viewer having confirmed it.
+     * Route torrent traffic through [proxy], or with `null` connect directly: written as one
+     * change, the proxy's password to the keystore-sealed secrets and never to the file. A
+     * [proxy] with no password keeps the saved one.
      */
-    fun setTorrentProtection(
-        mode: TorrentProtection,
-        proxy: TorrentProxy?,
-        onFailure: FailedCheck,
-        acknowledged: Boolean,
-    ) {
-        send(Command.SetTorrentProtection(mode, proxy, onFailure, acknowledged))
+    fun setTorrentProxy(proxy: TorrentProxy?) {
+        send(Command.SetTorrentProxy(proxy))
     }
 
     /**
-     * Check [mode], through [proxy] when it is one, before anything is saved: the verdict comes to
-     * [ProvidersModel.trial], and nothing is written, the saved proxy and its password included.
-     * A [proxy] with no password is checked with the one kept.
+     * Check [proxy] before anything is saved: the verdict comes to [ProvidersModel.trial], and
+     * nothing is written, the saved proxy and its password included. A [proxy] with no password
+     * is checked with the one kept.
      */
-    fun checkTorrentProtection(
-        mode: TorrentProtection,
-        proxy: TorrentProxy?,
-    ) {
-        providers.trialAsked(mode, proxy)?.let { send(Command.CheckTorrentProtection(it.mode, it.proxy)) }
+    fun checkTorrentProxy(proxy: TorrentProxy) {
+        providers.trialAsked(proxy)?.let { send(Command.CheckTorrentProxy(it.proxy)) }
     }
 
-    /** Check the connection against the torrent guard again: the VPN check, on its own. */
-    fun checkConnection() {
-        send(Command.CheckConnection)
+    /** Check the saved proxy again: the check torrents make, on its own. */
+    fun checkProxy() {
+        send(Command.CheckProxy)
     }
 
     // Licensed services.
@@ -1299,10 +1286,9 @@ class AppStore(
             is Event.Browse -> search.rails(event.v1, titles)
             is Event.Facets -> search.facets(event.v1)
             is Event.RecentSearches -> search.recents(event.v1)
-            is Event.Detail -> {
-                detailPending -= event.v1.id
-                titles.merge(detail = event.v1)
-            }
+            // A page's head ahead of it leaves the whole page awaited: see TitleCache.merge.
+            is Event.Detail -> titles.merge(detail = event.v1)
+            is Event.Cards -> titles.merge(list = event.v1)
             is Event.TitlesChanged -> titlesChanged()
             is Event.Progress -> titles.progress(event.id, event.progress, event.resume, event.episodes)
             is Event.LastAired -> titles.lastAired(event.v1)
@@ -1348,9 +1334,9 @@ class AppStore(
             }
             is Event.ProviderNote -> providers.note(event.v1)
             Event.SourcesChanged -> providers.sourcesChanged()
-            is Event.Vpn -> providers.guardSaid(event.v1)
+            is Event.TorrentProxy -> providers.proxySaid(event.v1)
             is Event.Demo -> _demo.value = event.v1
-            is Event.ProtectionChecked -> providers.trialSaid(event.v1)?.let { send(Command.CheckTorrentProtection(it.mode, it.proxy)) }
+            is Event.ProxyChecked -> providers.trialSaid(event.v1)?.let { send(Command.CheckTorrentProxy(it.proxy)) }
             is Event.ProviderPreference -> providers.preference(event.v1)
             is Event.SourceOptions -> sourceChoices.apply(event.id, event.options)
             is Event.PinUnavailable -> sourceChoices.pinUnavailable(event.id, event.providerId, event.name)

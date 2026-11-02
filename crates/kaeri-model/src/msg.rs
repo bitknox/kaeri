@@ -119,7 +119,7 @@ pub enum Msg {
     HomeMoreGenre { genre: String },
     /// Line over the spotlight's title when it is the built-in demo.
     HomeSpotlightDemo,
-    /// Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Stream.
+    /// Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.
     LicensedReturn { episode: i64, service: String },
     /// Notice after Mark as watched on the return notice. It holds Undo.
     LicensedMarked { episode: i64 },
@@ -325,10 +325,12 @@ pub enum Msg {
     NoticeSignOutFailed { tracker: String, reason: String },
     /// Toast when a setting could not be stored. The cause says why and what to do.
     NoticeNotSavedBecause { cause: Cause },
-    /// Toast when the torrent protection choice was saved.
-    NoticeProtectionSaved,
-    /// Toast when the torrent protection could not be checked. The cause says why.
-    NoticeProtectionNotChecked { cause: Cause },
+    /// Toast when the proxy for torrent traffic was saved.
+    NoticeProxySaved,
+    /// Toast when the proxy for torrent traffic was turned off.
+    NoticeProxyRemoved,
+    /// Toast when the proxy could not be checked. The cause says why.
+    NoticeProxyNotChecked { cause: Cause },
     /// Toast when the proxy's password could not be stored. The reason comes from the system.
     NoticeProxyPasswordNotKept { reason: String },
     /// Toast when a show's setting was given a value it does not take. The value is what was given.
@@ -337,8 +339,6 @@ pub enum Msg {
     NoticeShowNotReset { reason: String },
     /// Toast when a subtitle choice names subtitles the show has not used.
     NoticeShowNoSuchSubtitles,
-    /// Toast while torrents are held until the connection check passes.
-    NoticeTorrentsWaitingForCheck,
     /// Toast when the mapping data downloads work again after a failure.
     NoticeMappingDataRefreshed,
     /// Toast when the mapping data could not be downloaded. It is said once; the retries are silent.
@@ -554,13 +554,13 @@ impl Msg {
             Self::NoticeSignedOutQueue { .. } => "notice-signed-out-queue",
             Self::NoticeSignOutFailed { .. } => "notice-sign-out-failed",
             Self::NoticeNotSavedBecause { .. } => "notice-not-saved-because",
-            Self::NoticeProtectionSaved => "notice-protection-saved",
-            Self::NoticeProtectionNotChecked { .. } => "notice-protection-not-checked",
+            Self::NoticeProxySaved => "notice-proxy-saved",
+            Self::NoticeProxyRemoved => "notice-proxy-removed",
+            Self::NoticeProxyNotChecked { .. } => "notice-proxy-not-checked",
             Self::NoticeProxyPasswordNotKept { .. } => "notice-proxy-password-not-kept",
             Self::NoticeShowSettingRefused { .. } => "notice-show-setting-refused",
             Self::NoticeShowNotReset { .. } => "notice-show-not-reset",
             Self::NoticeShowNoSuchSubtitles => "notice-show-no-such-subtitles",
-            Self::NoticeTorrentsWaitingForCheck => "notice-torrents-waiting-for-check",
             Self::NoticeMappingDataRefreshed => "notice-mapping-data-refreshed",
             Self::NoticeMappingDataFailed { .. } => "notice-mapping-data-failed",
             Self::NoticeEpisodeAired { .. } => "notice-episode-aired",
@@ -750,13 +750,13 @@ impl Msg {
             Self::NoticeSignedOutQueue { tracker, count } => vec![("tracker", Value::Text(tracker.clone())), ("count", Value::Int(*count))],
             Self::NoticeSignOutFailed { tracker, reason } => vec![("tracker", Value::Text(tracker.clone())), ("reason", Value::Text(reason.clone()))],
             Self::NoticeNotSavedBecause { cause } => vec![("cause", Value::Cause(cause.clone()))],
-            Self::NoticeProtectionSaved => Vec::new(),
-            Self::NoticeProtectionNotChecked { cause } => vec![("cause", Value::Cause(cause.clone()))],
+            Self::NoticeProxySaved => Vec::new(),
+            Self::NoticeProxyRemoved => Vec::new(),
+            Self::NoticeProxyNotChecked { cause } => vec![("cause", Value::Cause(cause.clone()))],
             Self::NoticeProxyPasswordNotKept { reason } => vec![("reason", Value::Text(reason.clone()))],
             Self::NoticeShowSettingRefused { value, setting } => vec![("value", Value::Text(value.clone())), ("setting", Value::Text(setting.clone()))],
             Self::NoticeShowNotReset { reason } => vec![("reason", Value::Text(reason.clone()))],
             Self::NoticeShowNoSuchSubtitles => Vec::new(),
-            Self::NoticeTorrentsWaitingForCheck => Vec::new(),
             Self::NoticeMappingDataRefreshed => Vec::new(),
             Self::NoticeMappingDataFailed { datasets, wait, cause } => vec![("datasets", Value::Text(datasets.clone())), ("wait", Value::Span(*wait)), ("cause", Value::Cause(cause.clone()))],
             Self::NoticeEpisodeAired { title, episode } => vec![("title", Value::Text(title.clone())), ("episode", Value::Int(*episode))],
@@ -913,12 +913,10 @@ pub enum StoreMsg {
     ReleasePinned { name: String },
     /// Toast when the chosen source or release for a title could not be saved. The reason comes from the database.
     NoticeChoiceNotSaved { reason: String },
-    /// Toast while torrents are running but the connection check failed, and the settings say to warn only.
-    TorrentCheckFailedRunning,
-    /// Note on the sources screen: torrents are waiting for the VPN guard. The reason comes from the guard.
-    TorrentVpnWaiting { reason: String },
-    /// Note on the sources screen: the VPN guard has no verdict yet.
-    TorrentVpnUnverified,
+    /// Note on the sources screen: the proxy for torrent traffic failed its check, so torrents wait.
+    TorrentProxyWaiting,
+    /// Note on the sources screen: the proxy for torrent traffic hasn't been checked yet.
+    TorrentProxyUnchecked,
     /// Error: the link or file given to open is not a magnet link, an info hash or a torrent file.
     TorrentLinkUnusable,
     /// Error: a link the viewer opened can't play or download while torrent playback is off.
@@ -929,12 +927,10 @@ pub enum StoreMsg {
     TorrentInterfaceClosed,
     /// Error: the torrent session could not start. The reason comes from the torrent engine.
     TorrentSessionFailed { reason: String },
-    /// Toast when torrents are up but no operating-system firewall rule backs the VPN guard. Terminal only: the engine never sends it to the apps.
-    TorrentNoKillSwitch,
-    /// Toast when the connection check could not run. The reason comes from the VPN settings.
-    TorrentNotChecked { reason: String },
-    /// Note on the sources screen after the source chain is rebuilt with torrents on.
-    SourcesReloadedTorrentsPending,
+    /// Toast when the proxy setting can't be used. The reason comes from the proxy setting.
+    TorrentProxyUnusable { reason: String },
+    /// Note on the sources screen after the source chain is rebuilt with torrents on and a proxy set.
+    SourcesReloadedTorrentsChecking,
     /// Note on the sources screen after the source chain is rebuilt with torrents off.
     SourcesReloadedTorrentsOff,
     /// Note on a running job: requests to AniList are being slowed to stay within its limit. A countdown follows.
@@ -1017,17 +1013,15 @@ impl StoreMsg {
             Self::PluginNotLoaded { .. } => "plugin-not-loaded",
             Self::ReleasePinned { .. } => "release-pinned",
             Self::NoticeChoiceNotSaved { .. } => "notice-choice-not-saved",
-            Self::TorrentCheckFailedRunning => "torrent-check-failed-running",
-            Self::TorrentVpnWaiting { .. } => "torrent-vpn-waiting",
-            Self::TorrentVpnUnverified => "torrent-vpn-unverified",
+            Self::TorrentProxyWaiting => "torrent-proxy-waiting",
+            Self::TorrentProxyUnchecked => "torrent-proxy-unchecked",
             Self::TorrentLinkUnusable => "torrent-link-unusable",
             Self::TorrentLinkPlaybackOff => "torrent-link-playback-off",
             Self::OpenedSearchFailed { .. } => "opened-search-failed",
             Self::TorrentInterfaceClosed => "torrent-interface-closed",
             Self::TorrentSessionFailed { .. } => "torrent-session-failed",
-            Self::TorrentNoKillSwitch => "torrent-no-kill-switch",
-            Self::TorrentNotChecked { .. } => "torrent-not-checked",
-            Self::SourcesReloadedTorrentsPending => "sources-reloaded-torrents-pending",
+            Self::TorrentProxyUnusable { .. } => "torrent-proxy-unusable",
+            Self::SourcesReloadedTorrentsChecking => "sources-reloaded-torrents-checking",
             Self::SourcesReloadedTorrentsOff => "sources-reloaded-torrents-off",
             Self::JobAnilistLimit => "job-anilist-limit",
             Self::NoticeAnilistLimit { .. } => "notice-anilist-limit",
@@ -1101,17 +1095,15 @@ impl StoreMsg {
             Self::PluginNotLoaded { id } => vec![("id", Value::Text(id.clone()))],
             Self::ReleasePinned { name } => vec![("name", Value::Text(name.clone()))],
             Self::NoticeChoiceNotSaved { reason } => vec![("reason", Value::Text(reason.clone()))],
-            Self::TorrentCheckFailedRunning => Vec::new(),
-            Self::TorrentVpnWaiting { reason } => vec![("reason", Value::Text(reason.clone()))],
-            Self::TorrentVpnUnverified => Vec::new(),
+            Self::TorrentProxyWaiting => Vec::new(),
+            Self::TorrentProxyUnchecked => Vec::new(),
             Self::TorrentLinkUnusable => Vec::new(),
             Self::TorrentLinkPlaybackOff => Vec::new(),
             Self::OpenedSearchFailed { reason } => vec![("reason", Value::Text(reason.clone()))],
             Self::TorrentInterfaceClosed => Vec::new(),
             Self::TorrentSessionFailed { reason } => vec![("reason", Value::Text(reason.clone()))],
-            Self::TorrentNoKillSwitch => Vec::new(),
-            Self::TorrentNotChecked { reason } => vec![("reason", Value::Text(reason.clone()))],
-            Self::SourcesReloadedTorrentsPending => Vec::new(),
+            Self::TorrentProxyUnusable { reason } => vec![("reason", Value::Text(reason.clone()))],
+            Self::SourcesReloadedTorrentsChecking => Vec::new(),
             Self::SourcesReloadedTorrentsOff => Vec::new(),
             Self::JobAnilistLimit => Vec::new(),
             Self::NoticeAnilistLimit { wait } => vec![("wait", Value::Span(*wait))],
@@ -1161,10 +1153,6 @@ pub enum Cause {
     SubtitlesLeftApart { reason: String },
     /// Part of a download toast: how many episodes of the range were in the queue already.
     AlreadyInDownloads { count: i64 },
-    /// The reason a setting was refused until the person confirms having no protection.
-    ConfirmNoProtection,
-    /// The reason a setting was refused until the person confirms the "warn only" choice.
-    ConfirmWarnOnly,
     /// The reason a proxy was refused: it has no host or no port.
     ProxyNeedsAddress,
     /// The reason a proxy could not be checked: its address is not one the check can use.
@@ -1195,8 +1183,6 @@ impl Cause {
             Self::SubtitlesMerged { .. } => "cause-subtitles-merged",
             Self::SubtitlesLeftApart { .. } => "cause-subtitles-left-apart",
             Self::AlreadyInDownloads { .. } => "cause-already-in-downloads",
-            Self::ConfirmNoProtection => "cause-confirm-no-protection",
-            Self::ConfirmWarnOnly => "cause-confirm-warn-only",
             Self::ProxyNeedsAddress => "cause-proxy-needs-address",
             Self::ProxyAddressUnusable => "cause-proxy-address-unusable",
             Self::ServerUnreachable => "cause-server-unreachable",
@@ -1223,8 +1209,6 @@ impl Cause {
             Self::SubtitlesMerged { tracks } => vec![("tracks", Value::Int(*tracks))],
             Self::SubtitlesLeftApart { reason } => vec![("reason", Value::Text(reason.clone()))],
             Self::AlreadyInDownloads { count } => vec![("count", Value::Int(*count))],
-            Self::ConfirmNoProtection => Vec::new(),
-            Self::ConfirmWarnOnly => Vec::new(),
             Self::ProxyNeedsAddress => Vec::new(),
             Self::ProxyAddressUnusable => Vec::new(),
             Self::ServerUnreachable => Vec::new(),

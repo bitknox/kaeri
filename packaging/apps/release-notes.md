@@ -29,8 +29,8 @@ installs beside it. It is not on Google Play. Pair it with your phone from the T
 
 `kaeri-@VERSION@-macos.dmg`, for macOS 26 or later on a Mac with Apple silicon.
 
-Open the disk image and drag Kaeri to Applications. The app is signed ad hoc rather than with
-an Apple developer account, and it is not notarized, so macOS stops it the first time it opens:
+Open the disk image and drag Kaeri to Applications. The app isn't signed with an Apple
+developer account, and it is not notarized, so macOS stops it the first time it opens:
 
 1. Open Kaeri, and choose Done when macOS says it cannot verify it.
 2. In System Settings › Privacy & Security, under Security, choose Open Anyway beside the message

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Fails if a provider plugin other than the four reference ones is tracked or packaged.
 #
-# This repository does not carry plugins. plugins/example-rust and plugins/example-ts are
-# references to read; plugins/test-hostile is a sandbox fixture and plugins/test-torrent-index a
-# made-up torrent index for the ABI tests. Anything else under plugins/ is somebody's local build
-# and must stay untracked and out of every release file.
+# This repository carries no plugins apart from the two references and two test fixtures.
+# plugins/example-rust and plugins/example-ts are references to read; plugins/test-hostile is a
+# sandbox fixture and plugins/test-torrent-source a made-up listing source for the ABI tests.
+# Nothing else under plugins/ may be tracked or named by a release file.
 #
 #   tools/check-plugins.sh
 set -euo pipefail
@@ -12,7 +12,7 @@ shopt -s inherit_errexit
 
 cd "$(dirname "$0")/.."
 
-allowed='example-rust|example-ts|test-hostile|test-torrent-index'
+allowed='example-rust|example-ts|test-hostile|test-torrent-source'
 failed=0
 
 # 1. Nothing else under plugins/ is tracked, however it got there (a forced add, say).

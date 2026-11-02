@@ -14,7 +14,7 @@ Kaeri                                                                           
                             │    B  Play the demo   Y  Remove demo
                             │
                             │  Plugin stores
-                            │    Plugins shared by people you know. Join with an invite link.                  ↵ Open
+                            │    Plugins for your own devices. Join with an invite link.                       ↵ Open
                             │
                             │  Metadata
                             │

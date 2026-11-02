@@ -1,5 +1,5 @@
 //! Where streams come from, as the Providers screen shows it: each provider, the metadata ladder,
-//! the VPN guard's verdict, and the candidates offered when a title's match was too close to call.
+//! the torrent proxy's check, and the candidates offered when a title's match was too close to call.
 
 /// One provider, as the Providers screen shows it.
 ///
@@ -17,7 +17,7 @@ pub struct ProviderRow {
     pub last_error: Option<String>,
     /// Whether resolution will actually try this source: not while it is switched off.
     pub usable: bool,
-    /// Withheld by local policy rather than broken — a failing VPN guard, say.
+    /// Withheld by local policy rather than broken: torrents waiting for their proxy, say.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub held_back: bool,
     /// The name it goes by: the plugin's own, or the built-in source's.
@@ -49,7 +49,7 @@ pub struct ProviderRow {
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
 pub enum ProviderOrigin {
-    /// Part of kaeri: a remote API you run.
+    /// Part of kaeri.
     #[default]
     BuiltIn,
     /// Installed from a plugin store, which keeps it updated. `name` is the store's, or `None`
@@ -70,11 +70,11 @@ pub enum SourceSection {
     MediaServers,
     /// Licensed services.
     LicensedServices,
-    /// Free catalogues.
+    /// Open catalogues.
     FreeCatalogues,
     /// The plugins of one store, or the plugins put in by hand.
     Plugins,
-    /// What Kaeri ships: the demo, and the remote API.
+    /// What Kaeri ships: the demo.
     BuiltIn,
 }
 
@@ -124,8 +124,8 @@ pub fn source_groups(rows: &[ProviderRow]) -> Vec<SourceGroup> {
     groups
 }
 
-/// Whether the page has nothing to list: no first-party source and no plugin. The demo and the
-/// remote API are not sources the viewer added, so they do not count.
+/// Whether the page has nothing to list: no first-party source and no plugin. The demo is not a
+/// source the viewer added, so it does not count.
 pub fn has_no_sources(rows: &[ProviderRow]) -> bool {
     rows.iter().all(|row| section_of(row) == SourceSection::BuiltIn)
 }
@@ -204,7 +204,7 @@ pub fn group_entry(kind: &str) -> Option<&'static str> {
 
 /// The order a new install starts with. Everything is in the one list the user can reorder, and
 /// by default the sources Kaeri provides come first, as the Your sources page lists them:
-/// Your media, media servers, free catalogues, then the plugins, with the demo last.
+/// Your media, media servers, open catalogues, then the plugins, with the demo last.
 pub fn default_source_order() -> Vec<String> {
     ["library", "servers", "catalogues", "plugins", "demo"].map(String::from).to_vec()
 }
@@ -213,7 +213,7 @@ pub fn default_source_order() -> Vec<String> {
 /// `None` when it is already at that end or has no row.
 ///
 /// One place is past the next row on screen. An entry with no row (a kind's group entry, a
-/// remote that is not set up, a plugin named but not installed) is stepped over rather than
+/// plugin named but not installed) is stepped over rather than
 /// counted, so every press moves the row the user is looking at. It is kept all the same: the
 /// order is the user's, and only one entry was asked to move.
 ///
@@ -310,7 +310,7 @@ fn shown_ids(order: &[String], rows: &[ProviderRow]) -> Vec<String> {
 /// in, names nothing either way.
 pub fn only_reorders(before: &[String], after: &[String]) -> bool {
     let built_in = |order: &[String]| -> std::collections::BTreeSet<String> {
-        order.iter().filter(|id| matches!(id.as_str(), "remote" | "plugins")).cloned().collect()
+        order.iter().filter(|id| id.as_str() == "plugins").cloned().collect()
     };
     built_in(before) == built_in(after)
 }
@@ -328,9 +328,6 @@ pub struct ConfiguredSources {
     /// Whether torrent playback is switched on, for the sources that name torrents.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub torrent: bool,
-    /// Whether a remote source is set up.
-    #[cfg_attr(feature = "ffi", uniffi(default))]
-    pub remote: bool,
     /// Whether the demo is one of the sources.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub demo: bool,
@@ -346,7 +343,6 @@ impl ConfiguredSources {
             order: providers.order.clone(),
             disabled: providers.disabled.clone(),
             torrent: providers.torrent.enabled,
-            remote: providers.remote_url.is_some(),
             demo: false,
             offer_demo: true,
         }
@@ -420,7 +416,7 @@ pub struct SourceChip {
 /// Each configured source, in the order failover walks them, and how it stands.
 ///
 /// The header's chips. Read from the registered providers' `rows` rather than the config alone:
-/// a configured source can be ready, failing, held back by the VPN guard, still loading, or off
+/// a configured source can be ready, failing, held back, still loading, or off
 /// on purpose — and only the last is something the config can say by itself.
 pub fn source_states(configured: &ConfiguredSources, rows: &[ProviderRow]) -> Vec<SourceChip> {
     let of_kind = |kind: &str| -> SourceState {
@@ -446,8 +442,6 @@ pub fn source_states(configured: &ConfiguredSources, rows: &[ProviderRow]) -> Ve
         .filter_map(|id| {
             let state = match id.as_str() {
                 "plugins" => of_kind("plugin"),
-                "remote" if !configured.remote => return None,
-                "remote" => of_kind("remote"),
                 _ => return None,
             };
             Some(SourceChip { id: id.clone(), state })
@@ -463,7 +457,7 @@ pub enum SourceState {
     Ready,
     /// Switched off in config. Said quietly: off is a choice, not a fault.
     Off,
-    /// Working, but withheld by local policy — the VPN guard.
+    /// Working, but withheld by local policy, as torrents wait for their proxy's check.
     HeldBack,
     /// Registered and not answering, or refused at startup.
     Failing,
@@ -471,24 +465,22 @@ pub enum SourceState {
     Pending,
 }
 
-/// The VPN guard's verdict, for the badge beside the torrent source.
+/// The torrent proxy's check, for the line beside torrent playback.
 ///
-/// What the guard found and nothing about how it is shown: the badge's words, its marks and
-/// when it alerts are the front end's, as the terminal's `vpn_badge` has them.
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// What the check found and nothing about how it is shown: the words and marks are the front
+/// end's.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
-pub enum GuardView {
-    /// Not answered yet. Nothing runs until it passes, so nothing can have leaked.
+pub enum ProxyStatus {
+    /// Not answered yet. Torrents wait for it.
     Checking,
-    /// Traffic leaves where it should, through the network `exit` names.
-    Protected { exit: String },
-    /// Traffic was seen leaving where it should not. Torrents are halted.
-    Leaking,
-    /// The check could not be made: the proxy is down, or the lookup did not answer. Failing
-    /// all the same, and told apart from a leak.
-    Unreachable,
-    /// The configuration accepts an unprotected connection.
-    Unprotected,
+    /// The proxy took a connection: torrents go through it.
+    Passed,
+    /// The proxy check failed: the proxy could not be reached, or refused the connection.
+    /// Torrents wait for the next check.
+    Failed,
+    /// No proxy is set: torrents connect directly, with nothing to check.
+    Direct,
 }
 
 /// One rung of the metadata ladder, as the Providers screen shows it.
@@ -612,22 +604,22 @@ mod tests {
     #[test]
     fn moving_a_plugin_names_the_plugins_on_screen_and_keeps_plugins_after_them() {
         let rows = [
-            source_row("remote", "remote"),
+            source_row("extra", "extra"),
             source_row("alpha", "plugin"),
             source_row("beta", "plugin"),
         ];
-        let order = strings(&["remote", "plugins"]);
+        let order = strings(&["extra", "plugins"]);
         assert_eq!(
             order_with_source_moved(&order, &rows, "beta", -1),
-            Some(strings(&["remote", "beta", "alpha", "plugins"]))
+            Some(strings(&["extra", "beta", "alpha", "plugins"]))
         );
         assert_eq!(
             order_with_source_moved(&order, &rows, "alpha", -1),
-            Some(strings(&["alpha", "remote", "beta", "plugins"]))
+            Some(strings(&["alpha", "extra", "beta", "plugins"]))
         );
         assert_eq!(
-            order_with_source_moved(&order, &rows, "remote", 1),
-            Some(strings(&["alpha", "remote", "beta", "plugins"]))
+            order_with_source_moved(&order, &rows, "extra", 1),
+            Some(strings(&["alpha", "extra", "beta", "plugins"]))
         );
     }
 
@@ -635,25 +627,25 @@ mod tests {
     fn a_move_steps_over_entries_with_no_row_and_keeps_them() {
         // `torrent` is the torrent search that is no longer built in, so it has no row; `gamma`
         // is named but not installed. Both stay, and neither costs a press.
-        let rows = [source_row("remote", "remote"), source_row("alpha", "plugin")];
-        let order = strings(&["torrent", "remote", "gamma", "plugins"]);
+        let rows = [source_row("extra", "extra"), source_row("alpha", "plugin")];
+        let order = strings(&["torrent", "extra", "gamma", "plugins"]);
         assert_eq!(
             order_with_source_moved(&order, &rows, "alpha", -1),
-            Some(strings(&["torrent", "alpha", "remote", "gamma", "plugins"]))
+            Some(strings(&["torrent", "alpha", "extra", "gamma", "plugins"]))
         );
         // Down past `"plugins"`, which has no row once its plugins are named.
-        let order = strings(&["alpha", "plugins", "remote"]);
+        let order = strings(&["alpha", "plugins", "extra"]);
         assert_eq!(
             order_with_source_moved(&order, &rows, "alpha", 1),
-            Some(strings(&["plugins", "remote", "alpha"]))
+            Some(strings(&["plugins", "extra", "alpha"]))
         );
     }
 
     #[test]
     fn a_move_past_either_end_or_of_no_row_changes_nothing() {
-        let rows = [source_row("remote", "remote"), source_row("alpha", "plugin")];
-        let order = strings(&["remote", "plugins"]);
-        assert_eq!(order_with_source_moved(&order, &rows, "remote", -1), None);
+        let rows = [source_row("extra", "extra"), source_row("alpha", "plugin")];
+        let order = strings(&["extra", "plugins"]);
+        assert_eq!(order_with_source_moved(&order, &rows, "extra", -1), None);
         assert_eq!(order_with_source_moved(&order, &rows, "alpha", 1), None);
         assert_eq!(order_with_source_moved(&order, &rows, "nothing", 1), None);
     }
@@ -661,10 +653,10 @@ mod tests {
     #[test]
     fn without_plugins_in_the_order_a_plugin_on_screen_is_named_at_the_end() {
         // A rebuild that dropped `"plugins"` keeps the plugins it had, last in the chain.
-        let rows = [source_row("remote", "remote"), source_row("alpha", "plugin")];
+        let rows = [source_row("extra", "extra"), source_row("alpha", "plugin")];
         assert_eq!(
-            order_with_source_moved(&strings(&["remote"]), &rows, "alpha", -1),
-            Some(strings(&["alpha", "remote"]))
+            order_with_source_moved(&strings(&["extra"]), &rows, "alpha", -1),
+            Some(strings(&["alpha", "extra"]))
         );
     }
 
@@ -673,16 +665,16 @@ mod tests {
         let order =
             |entries: &[&str]| entries.iter().map(|e| (*e).to_owned()).collect::<Vec<_>>();
         // Moved, or with a plugin named: the same sources, so the session can stay up.
-        assert!(only_reorders(&order(&["remote", "plugins"]), &order(&["plugins", "remote"])));
+        assert!(only_reorders(&order(&["demo", "plugins"]), &order(&["plugins", "demo"])));
         assert!(only_reorders(
-            &order(&["remote", "plugins"]),
-            &order(&["alpha", "plugins", "remote", "beta"])
+            &order(&["demo", "plugins"]),
+            &order(&["alpha", "plugins", "demo", "beta"])
         ));
         // The torrent search that is no longer built in names nothing.
         assert!(only_reorders(&order(&["torrent", "plugins"]), &order(&["plugins"])));
-        // A built-in source added or taken away is a rebuild.
-        assert!(!only_reorders(&order(&["remote", "plugins"]), &order(&["plugins"])));
-        assert!(!only_reorders(&order(&["plugins"]), &order(&["plugins", "remote"])));
+        // The plugins entry added or taken away is a rebuild.
+        assert!(!only_reorders(&order(&["demo", "plugins"]), &order(&["demo"])));
+        assert!(!only_reorders(&order(&["demo"]), &order(&["demo", "plugins"])));
     }
 }
 

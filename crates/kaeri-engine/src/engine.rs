@@ -245,8 +245,8 @@ impl Engine {
         let (registry, plugins_loading) = match given {
             Some(registry) => (registry, None),
             None => {
-                // Without torrent playback, which comes up behind the interface once the VPN
-                // guard passes: see `TorrentTasks::bring_up`.
+                // Without torrent playback, which comes up behind the interface, once a proxy's
+                // check passes when there is one: see `TorrentTasks::bring_up`.
                 let registry = sources::build_registry_deferred(&config, &http);
                 tracing::info!(providers = ?registry.ids(), "provider registry ready");
                 // Plugins join the chain when they have finished compiling. Nothing waits on
@@ -302,7 +302,7 @@ impl Engine {
                     app_clients: Default::default(),
                     host,
                     clock: parts.clock,
-                    fixture_exit: parts.fixture_exit,
+                    fixture_route: parts.fixture_route,
                     party: Default::default(),
                     windows: parts.windows,
                     #[cfg(feature = "cast")]
@@ -400,6 +400,8 @@ impl Engine {
                 state.config.effective().notifications.desktop,
                 services.store.clone(),
                 services.meta.clone(),
+                state.calendar.clone(),
+                services.clock.clone(),
                 services.host.clone(),
                 inbox.sender(),
             );
@@ -410,23 +412,33 @@ impl Engine {
         if background.store_refresh && joined {
             refresh_joined(services.stores.clone(), inbox.sender());
         }
-        // Keep next, topped up from the inbox rather than now: commands are routed first, so
-        // where the app is and its network, sent as the front end starts, are in effect for it.
+        // Keep next lets go of what was watched, from the inbox rather than now, and queues
+        // nothing: it tops a show up only as one of its episodes starts or finishes.
         if background.keep_next {
-            let _ = inbox.sender().internal(Internal::TopUp);
+            let _ = inbox.sender().internal(Internal::LetGo);
         }
 
         for tracker in services.sync.initial_states() {
             launch.push_back(Event::Sync(Box::new(tracker)));
         }
+        // Home's first screen goes first: AniList's background work waits for it.
+        services.meta.anilist().launching();
         // How titles are named: the setting, and under `anilist` the signed-in viewer's own
         // choice, which comes with the viewer lookup the library pull makes anyway.
         services.meta.titles().choose(state.config.effective().meta.title_language);
         if services.meta.titles().choice() == kaeri_core::config::TitleChoice::Anilist {
+            // As the viewer read AniList when last asked, from the first frame, until the
+            // viewer's answer says again.
+            let kept = services.sync.anilist.as_ref().and_then(|a| a.kept_title_language());
+            services.meta.titles().viewer_reads(kept);
             crate::title_language::follow_viewer(&services, &inbox.sender());
         }
         if background.sync_loops {
-            tracking::spawn_loops(services.sync.clone(), inbox.sender());
+            tracking::spawn_loops(
+                services.sync.clone(),
+                services.meta.anilist().clone(),
+                inbox.sender(),
+            );
             // What waits for AniSkip from the last run, as the tracker queues are sent.
             if state.config.effective().playback.share_skip_times == Some(true) {
                 crate::aniskip::Sharing::shared()
@@ -443,9 +455,9 @@ impl Engine {
         }
 
         // The torrent stack's live parts, held so a settings change can tear them down and
-        // stand them back up without a restart. Both are replaced together: the download
-        // manager and the guard's watcher are the two things holding a session alive, and
-        // leaving either behind would mean traffic outliving the source it belongs to. A chain
+        // stand them back up without a restart. They are replaced together: the download
+        // manager and seeding hold a session alive, and leaving one behind would mean traffic
+        // outliving the source it belongs to. A chain
         // given whole has torrent playback in it already, or none.
         if own_chain {
             let tx = inbox.sender();
@@ -1027,7 +1039,13 @@ impl Actor {
     fn forward(&mut self, mut event: Event, played: Option<Played>) {
         // Named as the titles are shown now, before the record takes the names in.
         crate::title_language::retitle(&mut event, self.services.meta.titles().language());
-        let moved_on = crate::downloads::ahead::after(&event);
+        // A show whose episode starts, or is finished: keep next tops that show up.
+        let kept = match &event {
+            Event::PlaybackStaged { id, .. } | Event::CastStaged { id, .. } => Some(*id),
+            _ => {
+                played.as_ref().filter(|_| crate::downloads::ahead::after(&event)).map(|p| p.id)
+            }
+        };
         // Where a viewer is in a show: what the Continue queue is made of.
         let queue_moves = matches!(
             event,
@@ -1072,10 +1090,10 @@ impl Actor {
             self.refresh_up_next();
             self.refresh_home();
         }
-        // An episode watched: the episodes after it, kept.
-        if moved_on {
+        // An episode started or finished: the episodes after where the viewer is, kept.
+        if let Some(id) = kept {
             let tx = self.inbox.sender();
-            crate::downloads::ahead::top_up(&self.state, &self.services, &tx);
+            crate::downloads::ahead::top_up(id, &self.state, &self.services, &tx);
         }
     }
 
@@ -1172,18 +1190,18 @@ impl Actor {
     fn arrived(&mut self, generation: u64, outcome: Result<TorrentUp, Msg>) {
         let tx = self.inbox.sender();
         let crate::phases::Gate { hold, refusal } = crate::phases::gate_now(&mut self.state);
-        let EngineState { torrent_tasks, vpn_guard, shared_config, .. } = &mut self.state;
+        let EngineState { torrent_tasks, torrent_route, shared_config, .. } = &mut self.state;
         torrent_tasks.arrived(
             generation,
             outcome,
-            vpn_guard,
+            torrent_route,
             &self.services,
             shared_config,
             &tx,
         );
         // Up while the app is away, on cellular or in Low Data Mode: what waits, waits from the
         // start, and what may not start does not.
-        if let Some((_, session)) = vpn_guard.clone() {
+        if let Some((_, session)) = torrent_route.clone() {
             session.refuse_on_this_network(refusal);
             if hold != kaeri_providers::torrent::session::Hold::NOTHING {
                 tokio::spawn(async move {
@@ -1225,13 +1243,13 @@ impl Actor {
         }
     }
 
-    /// Stand the torrent session down within [`TORRENT_CLOSE`], then let the guard go.
+    /// Stand the torrent session down within [`TORRENT_CLOSE`], then let its route go.
     async fn close_torrents(&mut self) {
         let closing = self.state.torrent_tasks.close();
         if tokio::time::timeout(TORRENT_CLOSE, closing).await.is_err() {
             tracing::debug!("the torrent session was still winding down as the app quit");
         }
-        self.state.vpn_guard = None;
+        self.state.torrent_route = None;
     }
 
     /// Stop what is playing, if it is under way, and wait briefly for it to record where it
@@ -1659,19 +1677,19 @@ mod tests {
         let (engine, mut events) = quiet_engine(dir.path()).await;
         events.launch().await;
 
-        // Torrents with no VPN configured: refused by the config's own rules.
-        engine.send(Command::StepSetting { key: SettingKey::Torrents, delta: 1 });
+        // Marked watched at 900%: refused by the config's own rules.
+        let value = kaeri_core::settings::SettingValue::Float(9.0);
+        engine.send(Command::SetSetting { key: SettingKey::CommitThreshold, value });
         let seen = until(&mut events, |e| matches!(e, Event::Toast(_))).await;
         let [Event::Settings(view), Event::Toast(refusal)] = &seen[..] else {
             panic!("the settings, then the notice: {seen:?}")
         };
-        assert_eq!(view.refused, Some(SettingKey::Torrents));
-        let row = view.rows.iter().find(|row| row.key == SettingKey::Torrents).unwrap();
-        assert_eq!(row.value, "off", "put back to what the file holds");
-        assert!(!view.sources.torrent);
+        assert_eq!(view.refused, Some(SettingKey::CommitThreshold));
+        let row = view.rows.iter().find(|row| row.key == SettingKey::CommitThreshold).unwrap();
+        assert_ne!(row.value, "900%", "put back to what the file holds");
         assert_eq!(refusal.kind, NoticeKind::Alert);
         assert!(
-            matches!(&refusal.msg, Some(Msg::NoticeNotSaved { reason }) if reason.contains("no socks_url is set")),
+            matches!(&refusal.msg, Some(Msg::NoticeNotSaved { reason }) if reason.contains("commit_threshold")),
             "{:?}",
             refusal.msg
         );
@@ -1817,9 +1835,7 @@ mod tests {
     #[tokio::test]
     async fn a_proxy_is_written_as_one_change_and_its_password_kept_apart() {
         use kaeri_model::{
-            protection::{
-                FailedCheck, PROXY_SECRET, ProxyView, TorrentProtection, TorrentProxy,
-            },
+            proxy::{PROXY_SECRET, ProxyView, TorrentProxy},
             stores::Secret,
         };
         let dir = tempfile::tempdir().unwrap();
@@ -1828,104 +1844,60 @@ mod tests {
         events.launch().await;
 
         let proxy = TorrentProxy {
-            host: "10.64.0.1".into(),
+            host: "192.0.2.10".into(),
             port: 1080,
             user: Some("mika".into()),
             password: Some(Secret("lantern".into())),
         };
-        engine.send(Command::SetTorrentProtection {
-            mode: TorrentProtection::Proxy,
-            proxy: Some(proxy.clone()),
-            on_failure: FailedCheck::Stop,
-            acknowledged: false,
-        });
+        engine.send(Command::SetTorrentProxy { proxy: Some(proxy) });
         let seen = until(&mut events, |e| matches!(e, Event::Toast(_))).await;
         let [Event::Settings(view), Event::Toast(saved)] = &seen[..] else {
             panic!("the settings, then the notice: {seen:?}")
         };
         assert_eq!(view.refused, None);
-        assert_eq!(saved.msg, Some(Msg::NoticeProtectionSaved));
-        assert_eq!(view.torrent.protection, TorrentProtection::Proxy);
-        assert_eq!(view.torrent.on_failure, FailedCheck::Stop);
+        assert_eq!(saved.msg, Some(Msg::NoticeProxySaved));
         let user = Some("mika".to_owned());
-        let shown = ProxyView { host: "10.64.0.1".into(), port: 1080, user };
+        let shown = ProxyView { host: "192.0.2.10".into(), port: 1080, user };
         assert_eq!(view.torrent.proxy, Some(shown));
         let file = std::fs::read_to_string(dir.path().join("config.toml")).unwrap();
-        assert!(file.contains("socks_url = \"socks5://mika@10.64.0.1:1080\""), "{file}");
-        assert!(file.contains("on_leak = \"stop\""), "{file}");
+        assert!(file.contains("proxy = \"socks5://mika@192.0.2.10:1080\""), "{file}");
         assert!(!file.contains("lantern"), "the password stays out of the file:\n{file}");
         assert_eq!(kept.get(PROXY_SECRET).unwrap().as_deref(), Some("lantern"));
 
-        // The VPN on this device: the proxy's password is not kept for nothing.
-        engine.send(Command::SetTorrentProtection {
-            mode: TorrentProtection::Device,
-            proxy: None,
-            on_failure: FailedCheck::Pause,
-            acknowledged: false,
-        });
-        until(&mut events, |e| matches!(e, Event::Toast(_))).await;
+        // No proxy: torrents connect directly, and the password is not kept for nothing.
+        engine.send(Command::SetTorrentProxy { proxy: None });
+        let seen = until(&mut events, |e| matches!(e, Event::Toast(_))).await;
+        let [Event::Settings(view), Event::Toast(removed)] = &seen[..] else {
+            panic!("the settings, then the notice: {seen:?}")
+        };
+        assert_eq!(removed.msg, Some(Msg::NoticeProxyRemoved));
+        assert_eq!(view.torrent.proxy, None);
+        let file = std::fs::read_to_string(dir.path().join("config.toml")).unwrap();
+        assert!(!file.contains("proxy"), "{file}");
         assert_eq!(kept.get(PROXY_SECRET).unwrap(), None);
     }
 
     #[tokio::test]
-    async fn what_needs_confirming_is_refused_unconfirmed_and_nothing_written() {
-        use kaeri_core::settings::SettingValue;
-        use kaeri_model::{
-            notice::NoticeKind,
-            protection::{FailedCheck, TorrentProtection},
-            settings::SettingKey,
-        };
+    async fn a_proxy_with_no_address_is_refused_and_nothing_written() {
+        use kaeri_model::{notice::NoticeKind, proxy::TorrentProxy, settings::SettingKey};
         let dir = tempfile::tempdir().unwrap();
         let (engine, mut events) = quiet_engine(dir.path()).await;
         events.launch().await;
 
-        engine.send(Command::SetTorrentProtection {
-            mode: TorrentProtection::None,
-            proxy: None,
-            on_failure: FailedCheck::Pause,
-            acknowledged: false,
-        });
+        let nowhere = TorrentProxy { host: " ".into(), port: 1080, user: None, password: None };
+        engine.send(Command::SetTorrentProxy { proxy: Some(nowhere) });
         let seen = until(&mut events, |e| matches!(e, Event::Toast(_))).await;
         let [Event::Settings(view), Event::Toast(refusal)] = &seen[..] else {
             panic!("the settings, then the notice: {seen:?}")
         };
-        assert_eq!(view.refused, Some(SettingKey::VpnMode));
-        assert_eq!(view.torrent.protection, TorrentProtection::Proxy, "as the file has it");
+        assert_eq!(view.refused, Some(SettingKey::TorrentProxy));
+        assert_eq!(view.torrent.proxy, None, "as the file has it");
         assert_eq!(refusal.kind, NoticeKind::Alert);
         assert_eq!(
             refusal.msg,
-            Some(Msg::NoticeNotSavedBecause { cause: Cause::ConfirmNoProtection })
-        );
-
-        // Warn only, as a setting, which cannot carry the confirmation.
-        let warn = SettingValue::Str("warn".into());
-        engine.send(Command::SetSetting { key: SettingKey::VpnOnFailure, value: warn });
-        let seen = until(&mut events, |e| matches!(e, Event::Toast(_))).await;
-        let [Event::Settings(view), Event::Toast(refusal)] = &seen[..] else {
-            panic!("the settings, then the notice: {seen:?}")
-        };
-        assert_eq!(view.refused, Some(SettingKey::VpnOnFailure));
-        assert_eq!(
-            refusal.msg,
-            Some(Msg::NoticeNotSavedBecause { cause: Cause::ConfirmWarnOnly })
+            Some(Msg::NoticeNotSavedBecause { cause: Cause::ProxyNeedsAddress })
         );
         assert!(!dir.path().join("config.toml").exists(), "nothing written");
-
-        // Confirmed, it is.
-        engine.send(Command::SetTorrentProtection {
-            mode: TorrentProtection::None,
-            proxy: None,
-            on_failure: FailedCheck::Warn,
-            acknowledged: true,
-        });
-        let seen = until(&mut events, |e| matches!(e, Event::Toast(_))).await;
-        let [Event::Settings(view), Event::Toast(_)] = &seen[..] else { panic!("{seen:?}") };
-        assert_eq!(view.torrent.protection, TorrentProtection::None);
-        let row = view.native_rows.iter().find(|r| r.key == SettingKey::VpnOnFailure).unwrap();
-        assert_eq!(row.value, "warn only");
-        let file = std::fs::read_to_string(dir.path().join("config.toml")).unwrap();
-        assert!(file.contains("i_understand_my_ip_is_exposed = true"), "{file}");
-        assert!(file.contains("i_understand_a_failed_check_keeps_torrents_running = true"));
     }
 
     #[cfg(not(feature = "desktop"))]

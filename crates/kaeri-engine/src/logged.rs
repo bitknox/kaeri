@@ -19,7 +19,7 @@ mod tests {
     #[test]
     fn an_address_keeps_its_host_and_drops_what_could_be_a_token() {
         assert_eq!(address("https://cdn.example/a/b.m3u8?token=secret"), "https://cdn.example");
-        assert_eq!(address("http://127.0.0.1:7878/mend/abc"), "http://127.0.0.1:7878");
+        assert_eq!(address("http://127.0.0.1:7878/m/abc"), "http://127.0.0.1:7878");
         assert_eq!(address("https://user:pass@cdn.example/x"), "https://cdn.example");
         assert_eq!(address("magnet:?xt=urn:btih:abc"), "an address");
         assert_eq!(address("/Users/someone/episode.mkv"), "a local file");

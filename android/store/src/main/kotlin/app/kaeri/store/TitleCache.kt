@@ -39,17 +39,33 @@ class TitleCache {
     var detailed: Set<AnilistId> = emptySet()
         private set
 
+    /**
+     * The titles whose page's head came ahead of the page (a partial page): their title, art,
+     * facts and synopsis are here, and the rest of the page is still on its way. A title is in
+     * this or in [detailed], never both.
+     */
+    var headed: Set<AnilistId> = emptySet()
+        private set
+
+    /** Whether [id]'s head is here to show: its page, whole or only its head. */
+    fun hasHead(id: AnilistId): Boolean = id in detailed || id in headed
+
     private val _failed = MutableStateFlow<Set<AnilistId>>(emptySet())
 
     /** The titles whose page was asked for and did not come: what "AniList did not answer" says. */
     val failed: StateFlow<Set<AnilistId>> = _failed.asStateFlow()
 
-    internal fun detailFailed(id: AnilistId) {
-        _failed.value = _failed.value + id
-    }
+    /** The titles whose whole page was asked for and has not come yet. */
+    private val pending = mutableSetOf<AnilistId>()
 
     internal fun detailAsked(id: AnilistId) {
+        pending += id
         if (id in _failed.value) _failed.value = _failed.value - id
+    }
+
+    /** A page's fetch ended: without the whole page, AniList did not answer, whatever head came first. */
+    internal fun detailEnded(id: AnilistId) {
+        if (pending.remove(id)) _failed.value = _failed.value + id
     }
 
     operator fun get(id: AnilistId): Entry? = _entries.value[id]
@@ -77,7 +93,7 @@ class TitleCache {
             // Only Continue's list speaks for what this device watched. A tracker's list (the
             // Library after sign-in) may say 12 of 12 or none, and must not turn E7 at 10:06 into E1.
             if (!local) merged = merged.copy(progress = kept.progress ?: entry.progress, resume = kept.resume ?: entry.resume, watchedIn = kept.watchedIn ?: entry.watchedIn)
-            if (entry.id in detailed) {
+            if (entry.id in detailed || entry.id in headed) {
                 merged = merged.copy(
                     related = kept.related,
                     recommended = kept.recommended,
@@ -92,8 +108,14 @@ class TitleCache {
         }
     }
 
-    /** A title's page, whole. */
+    /**
+     * A title's page: whole, or only its head ahead of it (`detail.partial`). A head is kept until
+     * the whole page replaces it, and is no use once the whole page is here; the whole page is
+     * still awaited after it.
+     */
     internal fun merge(detail: Entry) {
+        val partial = detail.detail?.partial == true
+        if (partial && detail.id in detailed) return
         update { entries ->
             val kept = entries[detail.id]
             entries[detail.id] = if (kept == null) detail else detail.copy(
@@ -101,7 +123,13 @@ class TitleCache {
                 lastAired = detail.lastAired ?: kept.lastAired,
             )
         }
+        if (partial) {
+            headed = headed + detail.id
+            return
+        }
+        headed = headed - detail.id
         detailed = detailed + detail.id
+        pending -= detail.id
         if (detail.id in _failed.value) _failed.value = _failed.value - detail.id
     }
 

@@ -41,7 +41,7 @@ You'll get a reply in the advisory, and the discussion and the fix are worked ou
 
 ## Out of scope
 
-- Third-party sources: the sites and services that plugins, indexers or trackers reach. Kaeri
+- Third-party sources: the hosts and services that plugins or trackers reach. Kaeri
   doesn't run them and can't fix them.
 - Plugins people install, whether from a file or from someone's store. A bug in a plugin is for
   its author. A plugin that gets out of the sandbox is in scope, as above.

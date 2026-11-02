@@ -249,6 +249,18 @@ struct SearchScreen: View {
         #endif
     }
 
+    /// How wide a cover is on the Mac: a column of the results grid with the panel shut. It stays
+    /// so with the panel open, which leaves room for fewer covers rather than larger ones, so the
+    /// panel pushes the covers aside without scaling them.
+    private var coverWidth: CGFloat? {
+        #if os(macOS)
+        guard let fullWidth else { return nil }
+        return RailCover.width(in: max(0, fullWidth - margins.leading - margins.trailing))
+        #else
+        return nil
+        #endif
+    }
+
     /// The trailing room the panel takes before the screen is measured: a screen that comes back
     /// with the panel already open (from a title's page) lays out once at the full width, which is
     /// under the panel, until its width is known.
@@ -306,6 +318,7 @@ struct SearchScreen: View {
             .animation(reduceMotion || navigator.motionReduced || pinned ? nil : .standard, value: filtersAsked)
             .frame(width: settledWidth, alignment: .leading)
             .environment(\.searchSettledWidth, settledWidth)
+            .environment(\.searchCoverWidth, coverWidth)
             // With Reduce Motion the results take their new width at once while the panel fades.
             .transaction(value: navigator.searchFiltersShown) { transaction in
                 if reduceMotion { transaction.animation = nil }
@@ -575,6 +588,8 @@ struct SearchFilterRow: View {
             // with more beyond it; the sort stays at the end, outside the scroll, so none slides
             // under it. Filters sits beside it, so the button that closes the panel is never
             // scrolled or clipped away; the menus scroll behind the edge fade, as on a phone.
+            // Where the capsules would not all fit, as beside the open filters, Filters and then
+            // the sort give up their words for their glyphs first, as a toolbar's items do.
             HStack(spacing: 8) {
                 ScrollView(.horizontal) {
                     HStack(spacing: 8) {
@@ -588,15 +603,62 @@ struct SearchFilterRow: View {
                 } action: { _, edges in
                     more = edges
                 }
+                .onScrollGeometryChange(for: CGFloat.self) { $0.contentSize.width } action: { _, width in
+                    widths.capsules = width
+                }
                 .mask { ScrollEdgeFade(edges: more) }
-                filters(query)
-                sort(query)
+                filters(query, glyph: condensed >= 1)
+                sort(query, glyph: condensed >= 2)
+            }
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { widths.row = $0 }
+            .background {
+                // The buttons' widths with their words and as glyphs alone, measured unseen.
+                HStack(spacing: 8) {
+                    measured(filtersCapsule(query, glyph: false), \.filters)
+                    measured(filtersCapsule(query, glyph: true), \.filtersGlyph)
+                    measured(sortCapsule(query, glyph: false), \.sort)
+                    measured(sortCapsule(query, glyph: true), \.sortGlyph)
+                }
+                .fixedSize()
+                .hidden()
+                .accessibilityHidden(true)
+            }
+            .onChange(of: widths.condensed, initial: true) { _, now in
+                withAnimation(reduceMotion || navigator.motionReduced ? nil : .standard) { condensed = now }
             }
         }
     }
 
     /// Whether the capsules run on past either edge of the row.
     @State private var more = ScrollEdges()
+    /// The widths the Mac's row is laid out by.
+    @State private var widths = RowWidths()
+    /// How many of Filters and the sort show their glyphs alone: none, Filters, or both.
+    @State private var condensed = 0
+
+    /// The Mac's row and what is in it, by width.
+    struct RowWidths: Equatable {
+        var row: CGFloat = 0
+        var capsules: CGFloat = 0
+        var filters: CGFloat = 0
+        var filtersGlyph: CGFloat = 0
+        var sort: CGFloat = 0
+        var sortGlyph: CGFloat = 0
+
+        /// How many of Filters and the sort give up their words so the capsules fit beside them:
+        /// none where all fits, both where even that does not, and the capsules scroll.
+        var condensed: Int {
+            guard row > 0, capsules > 0 else { return 0 }
+            let gaps: CGFloat = 16
+            if capsules + filters + sort + gaps <= row { return 0 }
+            if capsules + filtersGlyph + sort + gaps <= row { return 1 }
+            return 2
+        }
+    }
+
+    private func measured(_ view: some View, _ width: WritableKeyPath<RowWidths, CGFloat>) -> some View {
+        view.onGeometryChange(for: CGFloat.self) { $0.size.width } action: { widths[keyPath: width] = $0 }
+    }
     /// Where the pinned row's capsules are scrolled to, kept across the results' scrolling and the
     /// sheet, and put back to the start by a new search.
     @State private var position = ScrollPosition(edge: .leading)
@@ -838,23 +900,31 @@ struct SearchFilterRow: View {
         .filterMenu()
     }
 
-    private func filters(_ query: SearchQuery) -> some View {
+    /// Filters, with its word, or its glyph alone (`glyph`) where the row is short of room.
+    private func filters(_ query: SearchQuery, glyph: Bool = false) -> some View {
         let count = query.advancedCount()
         return Button {
             navigator.searchFiltersShown.toggle()
         } label: {
-            FilterCapsule(
-                title: L.filtersTitle, active: count > 0, compact: compact,
-                symbol: "line.3.horizontal.decrease", badge: count, chevron: false
-            )
+            filtersCapsule(query, glyph: glyph)
         }
         .buttonStyle(.plain)
         .pointerHover()
+        .accessibilityLabel(L.filtersTitle)
         .accessibilityValue(count == 0 ? "" : L.searchFiltersSet(count: Int(count)))
         .help(L.searchFiltersHelp)
     }
 
-    private func sort(_ query: SearchQuery) -> some View {
+    private func filtersCapsule(_ query: SearchQuery, glyph: Bool) -> some View {
+        let count = query.advancedCount()
+        return FilterCapsule(
+            title: glyph ? "" : L.filtersTitle, active: count > 0, compact: compact,
+            symbol: "line.3.horizontal.decrease", badge: count, chevron: false
+        )
+    }
+
+    /// The sort, with what it sorts by, or its glyph alone (`glyph`) where the row is short of room.
+    private func sort(_ query: SearchQuery, glyph: Bool = false) -> some View {
         let current = query.sortInEffect()
         return Menu {
             Picker(L.searchSortBy, selection: Binding(
@@ -867,13 +937,18 @@ struct SearchFilterRow: View {
             }
             .pickerStyle(.inline)
         } label: {
-            FilterCapsule(
-                title: searchSortLabel(sort: current), active: query.sort != nil, compact: compact,
-                symbol: "arrow.up.arrow.down", pinned: pinned
-            )
+            sortCapsule(query, glyph: glyph)
         }
         .filterMenu()
         .accessibilityLabel(L.sortLabel(sort: searchSortLabel(sort: current)))
+        .help(glyph ? L.sortLabel(sort: searchSortLabel(sort: current)) : "")
+    }
+
+    private func sortCapsule(_ query: SearchQuery, glyph: Bool) -> some View {
+        FilterCapsule(
+            title: glyph ? "" : searchSortLabel(sort: query.sortInEffect()), active: query.sort != nil,
+            compact: compact, symbol: "arrow.up.arrow.down", pinned: pinned
+        )
     }
 }
 
@@ -970,12 +1045,20 @@ struct ActiveFilters: View {
 /// The titles found, a page at a time: the next is asked for as the end comes near.
 struct SearchResults: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.searchCoverWidth) private var cover
+    @Environment(\.searchSettledWidth) private var settled
     var compact = false
 
     var body: some View {
         let search = store.search
         let minimum: CGFloat = compact ? 100 : 128
         let spacing: CGFloat = compact ? 12 : 20
+        // On the Mac the columns are worked out from the cover's steady width
+        // (`searchCoverWidth`) and fill the column to its edge: the panel takes columns away,
+        // and the ones left flex a little at most (`SearchGridColumns`).
+        let columns = settled.flatMap { settled in
+            cover.map { SearchGridColumns.columns(cover: $0, in: settled, spacing: spacing) }
+        }
         // The earlier results stay while the answer is under 600 ms away, then give way to
         // placeholders at once: never results that answer something else for long. The model has
         // counted those 600 ms, so the list does not wait them again (`waited`).
@@ -996,12 +1079,12 @@ struct SearchResults: View {
             ListStates(
                 state: state,
                 waited: search.overdue,
-                placeholder: AnyView(PosterGridPlaceholder(count: compact ? 12 : 14, minimum: minimum, spacing: spacing)),
+                placeholder: AnyView(PosterGridPlaceholder(count: compact ? 12 : 14, minimum: minimum, columns: columns, spacing: spacing)),
                 retry: { store.retrySearch() }
             ) { ids in
                 VStack(alignment: .leading, spacing: 24) {
-                    PosterGrid(entries: ids.compactMap { store.titles[$0] }, minimum: minimum, spacing: spacing) { entry in
-                        PosterCell(entry: entry, detail: searchLine(entry), width: minimum)
+                    PosterGrid(entries: ids.compactMap { store.titles[$0] }, minimum: minimum, columns: columns, spacing: spacing) { entry in
+                        PosterCell(entry: entry, detail: searchLine(entry), width: columns?.width ?? minimum)
                     }
                     // One answer replaces another in one crossfade, not cell by cell.
                     .id(search.answered)
@@ -1009,7 +1092,7 @@ struct SearchResults: View {
                     if search.hasNext {
                         // The next page's covers to come, in the grid's own columns: they ask
                         // for it as they come into sight.
-                        PosterGridPlaceholder(count: compact ? 6 : 8, minimum: minimum, spacing: spacing)
+                        PosterGridPlaceholder(count: compact ? 6 : 8, minimum: minimum, columns: columns, spacing: spacing)
                             // Anew for each page, so a page that still leaves them in sight
                             // asks for the next.
                             .id(search.pages)
@@ -1179,10 +1262,13 @@ private struct RecentSearchList: View {
 }
 
 /// One rail: a heading, See All, and its covers in a row that scrolls. On the Mac and iPad its
-/// covers are the results grid's columns (`RailCover`).
+/// covers are the results grid's columns (`RailCover`). On the Mac the rail takes Search's
+/// column, to the open filters panel's edge as to the window's: the panel cuts the last cover
+/// there, which says the rail goes on, and See All stands at the end beside it.
 private struct RailRow: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
+    @Environment(\.searchCoverWidth) private var cover
     let rail: BrowseRail
     var compact = false
 
@@ -1216,11 +1302,15 @@ private struct RailRow: View {
                             .railCover(compact: compact)
                     }
                 }
-                .padding(.horizontal, compact ? 16 : 12)
+                .padding(bleed)
             }
             .scrollIndicators(.never)
-            .padding(.horizontal, compact ? -16 : -12)
+            .padding(-bleed)
         }
+    }
+
+    private var bleed: EdgeInsets {
+        RailCover.bleed(compact: compact, panelOpen: cover != nil && navigator.searchFiltersShown)
     }
 
     private func line(_ entry: Entry) -> String? {
@@ -1231,6 +1321,8 @@ private struct RailRow: View {
 /// Covers to come, while the rails are on their way: nothing for 600 ms, then rails of plates at
 /// the size the rails will have.
 private struct RailPlaceholder: View {
+    @Environment(Navigator.self) private var navigator
+    @Environment(\.searchCoverWidth) private var cover
     var compact = false
     @State private var shown = false
 
@@ -1248,11 +1340,11 @@ private struct RailPlaceholder: View {
                                 PosterCellPlaceholder(width: width).railCover(compact: compact)
                             }
                         }
-                        .padding(.horizontal, compact ? 16 : 12)
+                        .padding(bleed)
                     }
                     .scrollDisabled(true)
                     .scrollIndicators(.never)
-                    .padding(.horizontal, compact ? -16 : -12)
+                    .padding(-bleed)
                 }
             }
         }
@@ -1265,6 +1357,10 @@ private struct RailPlaceholder: View {
         }
         .accessibilityHidden(true)
     }
+
+    private var bleed: EdgeInsets {
+        RailCover.bleed(compact: compact, panelOpen: cover != nil && navigator.searchFiltersShown)
+    }
 }
 
 /// A cover in one of Search's rails. On iPhone a fixed 112 points, the next cover showing at the
@@ -1276,17 +1372,16 @@ struct RailCover: ViewModifier {
     /// How far the rail's scroll view reaches past the column on each side, where the covers pass
     /// as they scroll.
     var bleed: CGFloat = 12
-    @Environment(\.searchSettledWidth) private var settled
+    @Environment(\.searchCoverWidth) private var cover
 
     func body(content: Content) -> some View {
         if compact {
             content.frame(width: 112)
-        } else if let settled {
-            // The Mac: the width the results take once the panel has moved, set at once, so the
-            // covers glide to their new size with the panel rather than stepping through every
-            // column count between, as the grid's do.
+        } else if let cover {
+            // The Mac: the grid's column with the panel shut, the same with it open. The panel
+            // cuts the rail shorter, never makes its covers larger.
             content
-                .frame(width: Self.width(in: settled))
+                .frame(width: cover)
                 .geometryGroup()
         } else {
             content
@@ -1295,6 +1390,15 @@ struct RailCover: ViewModifier {
                 }
                 .geometryGroup()
         }
+    }
+
+    /// How far a rail's scroll view reaches past Search's column, where its covers pass as they
+    /// scroll: to the sidebar's edge on the leading side and near the window's on the trailing
+    /// side. With the Mac's filters panel open it stops at the column's edge, the margin before
+    /// the panel kept clear, so a cover cut there ends where See All does.
+    static func bleed(compact: Bool, panelOpen: Bool) -> EdgeInsets {
+        let side: CGFloat = compact ? 16 : 12
+        return EdgeInsets(top: 0, leading: side, bottom: 0, trailing: panelOpen ? 0 : side)
     }
 
     /// The width of a column of `PosterGrid` across `width`: as many columns of at least
@@ -1306,10 +1410,50 @@ struct RailCover: ViewModifier {
     }
 }
 
+/// The columns of Search's results on the Mac: across the whole column, to the window's edge or
+/// the open filters panel's, as near the steady cover width as a whole number of them comes.
+enum SearchGridColumns {
+    /// How far a column may flex from the steady cover width, either way, so the grid fills the
+    /// column. Past it the columns keep to the bound and the gaps between them widen.
+    static let flex: CGFloat = 0.08
+
+    /// The column count whose width comes nearest `cover` across `width`, `spacing` apart, and
+    /// that width: at least one column. With the panel shut the width fits whole covers, so the
+    /// columns are the covers exactly.
+    static func columns(cover: CGFloat, in width: CGFloat, spacing: CGFloat = 20) -> GridColumns {
+        guard cover > 0, width > 0 else { return GridColumns(count: 1, width: max(width, 0), spacing: spacing) }
+        func across(_ count: CGFloat) -> CGFloat { (width - spacing * (count - 1)) / count }
+        let fewer = max(1, ((width + spacing) / (cover + spacing)).rounded(.down))
+        let wider = across(fewer)
+        let narrower = across(fewer + 1)
+        let count: CGFloat
+        let column: CGFloat
+        if cover - narrower < wider - cover, narrower >= cover * (1 - flex) {
+            count = fewer + 1
+            column = narrower
+        } else {
+            count = fewer
+            column = min(wider, cover * (1 + flex))
+        }
+        let gap = count > 1 ? (width - column * count) / (count - 1) : spacing
+        return GridColumns(count: Int(count), width: column, spacing: gap)
+    }
+}
+
 extension EnvironmentValues {
     /// The width Search's column takes once the Mac's filters panel has opened or closed. `nil`
     /// before the screen is measured, and on iPhone and iPad.
     @Entry var searchSettledWidth: CGFloat?
+    /// The width of a cover in Search on the Mac, the same with the filters panel open or shut.
+    /// `nil` before the screen is measured, and on iPhone and iPad.
+    @Entry var searchCoverWidth: CGFloat?
+}
+
+private extension EdgeInsets {
+    /// The same insets reaching outward.
+    static prefix func - (insets: EdgeInsets) -> EdgeInsets {
+        EdgeInsets(top: -insets.top, leading: -insets.leading, bottom: -insets.bottom, trailing: -insets.trailing)
+    }
 }
 
 extension View {
@@ -1332,9 +1476,9 @@ struct SearchFiltersPanel: View {
     @State private var find = ""
     @State private var spoilers = false
 
-    /// The iPhone's sheet, under the pinned row: an included genre takes the neutral fill like
-    /// the row's set pills, leaving amber to the switches and the action. The iPad and the Mac
-    /// keep amber for now.
+    /// The iPhone's sheet, under the pinned row: an included genre or tag and a chosen source,
+    /// country, service or range take the neutral fill like the row's set pills, leaving amber to
+    /// the switches and the action. The iPad and the Mac keep amber for now.
     private var neutralPicks: Bool {
         #if os(iOS)
         compact && sizeClass == .compact
@@ -1386,14 +1530,16 @@ struct SearchFiltersPanel: View {
                     }
                     Presets(
                         choices: [Bounds(min: 1, max: 1), Bounds(min: nil, max: 12), Bounds(min: 13, max: 26), Bounds(min: 50, max: nil)],
-                        current: query.episodes, words: { SearchQuery(episodes: $0).label(.episodes) }, compact: compact
+                        current: query.episodes, words: { SearchQuery(episodes: $0).label(.episodes) }, compact: compact,
+                        neutral: neutralPicks
                     ) { bounds in store.editSearch { $0.episodes = bounds } }
                     RangeFields(title: L.filterEpisodeLength, bounds: query.minutes, unit: L.filterMinutesUnit, compact: compact) { bounds in
                         store.editSearch { $0.minutes = bounds }
                     }
                     Presets(
                         choices: [Bounds(min: nil, max: 15), Bounds(min: 20, max: 30), Bounds(min: 60, max: nil)],
-                        current: query.minutes, words: { SearchQuery(minutes: $0).label(.minutes) }, compact: compact
+                        current: query.minutes, words: { SearchQuery(minutes: $0).label(.minutes) }, compact: compact,
+                        neutral: neutralPicks
                     ) { bounds in store.editSearch { $0.minutes = bounds } }
                 }
                 PanelSection(compact: compact, L.filterReception) {
@@ -1424,7 +1570,7 @@ struct SearchFiltersPanel: View {
                         Text(L.titleBasedOn).foregroundStyle(.haze)
                         FlowLayout(spacing: 6, lineSpacing: 6) {
                             ForEach(searchSources(), id: \.self) { source in
-                                ToggleChip(name: searchSourceLabel(source: source), on: query.sources.contains(source), compact: compact) {
+                                ToggleChip(name: searchSourceLabel(source: source), on: query.sources.contains(source), compact: compact, neutral: neutralPicks) {
                                     store.searchLive(store.search.query.togglingSource(source: source))
                                 }
                             }
@@ -1435,7 +1581,7 @@ struct SearchFiltersPanel: View {
                         Text(L.filterCountry).foregroundStyle(.haze)
                         FlowLayout(spacing: 6, lineSpacing: 6) {
                             ForEach(searchCountries(), id: \.self) { code in
-                                ToggleChip(name: searchCountryLabel(code: code), on: query.countries.contains(code), compact: compact) {
+                                ToggleChip(name: searchCountryLabel(code: code), on: query.countries.contains(code), compact: compact, neutral: neutralPicks) {
                                     store.searchLive(store.search.query.togglingCountry(code: code))
                                 }
                             }
@@ -1448,7 +1594,7 @@ struct SearchFiltersPanel: View {
                     if !sites.isEmpty {
                         FlowLayout(spacing: 6, lineSpacing: 6) {
                             ForEach(sites, id: \.self) { site in
-                                ToggleChip(name: site, on: query.streamingOn.contains(site), compact: compact) {
+                                ToggleChip(name: site, on: query.streamingOn.contains(site), compact: compact, neutral: neutralPicks) {
                                     store.searchLive(store.search.query.togglingStreaming(site: site))
                                 }
                             }
@@ -1562,7 +1708,7 @@ struct SearchFiltersPanel: View {
                     let set = group.tags.filter { query.tagPick(name: $0.name) != .off }.count
                     DisclosureGroup {
                         ForEach(group.tags.filter { spoilers || !$0.spoiler }, id: \.name) { tag in
-                            TagRow(tag: tag, pick: query.tagPick(name: tag.name), compact: compact) { pick in
+                            TagRow(tag: tag, pick: query.tagPick(name: tag.name), compact: compact, neutral: neutralPicks) { pick in
                                 store.searchLive(store.search.query.pickingTag(name: tag.name, pick: pick))
                             }
                         }
@@ -1583,7 +1729,7 @@ struct SearchFiltersPanel: View {
                     Text(L.filterTagNone).foregroundStyle(.haze)
                 }
                 ForEach(Array(found), id: \.name) { tag in
-                    TagRow(tag: tag, pick: query.tagPick(name: tag.name), compact: compact) { pick in
+                    TagRow(tag: tag, pick: query.tagPick(name: tag.name), compact: compact, neutral: neutralPicks) { pick in
                         store.searchLive(store.search.query.pickingTag(name: tag.name, pick: pick))
                     }
                 }
@@ -1724,6 +1870,8 @@ private struct TagRow: View {
     let tag: FacetTag
     let pick: Pick
     var compact = false
+    /// An included tag's mark in silk rather than amber, as on the iPhone's sheet.
+    var neutral = false
     let set: (Pick) -> Void
 
     var body: some View {
@@ -1732,7 +1880,7 @@ private struct TagRow: View {
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: symbol)
-                    .foregroundStyle(pick == .off ? .haze : pick == .include ? .amber : .vermilion)
+                    .foregroundStyle(pick == .off ? .haze : pick == .include ? (neutral ? .silk : .amber) : .vermilion)
                     .frame(width: 18)
                 Text(tag.name).foregroundStyle(.silk)
                 Spacer()
@@ -1810,21 +1958,23 @@ private struct PickChip: View {
     }
 }
 
-/// A choice that is on or off, as a chip.
+/// A choice that is on or off, as a chip. `neutral` draws it on in the raised fill with silk
+/// words rather than amber.
 private struct ToggleChip: View {
     let name: String
     let on: Bool
     var compact = false
+    var neutral = false
     let toggle: () -> Void
 
     var body: some View {
         Button(action: toggle) {
             Text(name)
                 .font(compact ? .ui(15) : .mac(12))
-                .foregroundStyle(on ? .amber : .silk)
+                .foregroundStyle(on && !neutral ? .amber : .silk)
                 .padding(.horizontal, 10)
                 .frame(height: compact ? 32 : 24)
-                .background(on ? Palette.selection : .clear, in: .capsule)
+                .background(on ? (neutral ? Palette.raisedSelected : Palette.selection) : .clear, in: .capsule)
                 .overlay(Capsule().strokeBorder(on ? .clear : Palette.faintRule))
                 .contentShape(.capsule)
         }
@@ -1877,12 +2027,13 @@ private struct Presets: View {
     let current: Bounds
     let words: (Bounds) -> String?
     var compact = false
+    var neutral = false
     let set: (Bounds) -> Void
 
     var body: some View {
         FlowLayout(spacing: 6, lineSpacing: 6) {
             ForEach(choices, id: \.self) { bounds in
-                ToggleChip(name: words(bounds) ?? "", on: current == bounds, compact: compact) {
+                ToggleChip(name: words(bounds) ?? "", on: current == bounds, compact: compact, neutral: neutral) {
                     set(current == bounds ? Bounds() : bounds)
                 }
             }

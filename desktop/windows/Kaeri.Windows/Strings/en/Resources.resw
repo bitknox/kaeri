@@ -253,7 +253,7 @@
   </data>
   <data name="LicensedReturn" xml:space="preserve">
     <value>Watched episode {episode} on {service}?</value>
-    <comment>Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Stream.</comment>
+    <comment>Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.</comment>
   </data>
   <data name="LicensedMarked" xml:space="preserve">
     <value>Episode {episode} marked as watched.</value>
@@ -899,17 +899,13 @@
     <value>Couldn't save that choice. {reason}</value>
     <comment>Toast when the chosen source or release for a title could not be saved. The reason comes from the database.</comment>
   </data>
-  <data name="TorrentCheckFailedRunning" xml:space="preserve">
-    <value>The connection check failed. Torrents keep running.</value>
-    <comment>Toast while torrents are running but the connection check failed, and the settings say to warn only.</comment>
+  <data name="TorrentProxyWaiting" xml:space="preserve">
+    <value>The proxy check failed. Torrents start once it passes.</value>
+    <comment>Note on the sources screen: the proxy for torrent traffic failed its check, so torrents wait.</comment>
   </data>
-  <data name="TorrentVpnWaiting" xml:space="preserve">
-    <value>Torrents start once the VPN guard passes. {reason}</value>
-    <comment>Note on the sources screen: torrents are waiting for the VPN guard. The reason comes from the guard.</comment>
-  </data>
-  <data name="TorrentVpnUnverified" xml:space="preserve">
-    <value>Torrents start once the VPN guard passes. The connection hasn't been verified yet.</value>
-    <comment>Note on the sources screen: the VPN guard has no verdict yet.</comment>
+  <data name="TorrentProxyUnchecked" xml:space="preserve">
+    <value>Torrents start once the proxy check passes.</value>
+    <comment>Note on the sources screen: the proxy for torrent traffic hasn't been checked yet.</comment>
   </data>
   <data name="TorrentLinkUnusable" xml:space="preserve">
     <value>That isn't a magnet link or a torrent file.</value>
@@ -931,17 +927,13 @@
     <value>Couldn't start the torrent session. {reason}</value>
     <comment>Error: the torrent session could not start. The reason comes from the torrent engine.</comment>
   </data>
-  <data name="TorrentNoKillSwitch" xml:space="preserve">
-    <value>Nothing on this device stops torrent traffic if the VPN drops. Run "kaeri --doctor" to set that up.</value>
-    <comment>Toast when torrents are up but no operating-system firewall rule backs the VPN guard. Terminal only: the engine never sends it to the apps.</comment>
+  <data name="TorrentProxyUnusable" xml:space="preserve">
+    <value>The proxy setting can't be used. {reason}</value>
+    <comment>Toast when the proxy setting can't be used. The reason comes from the proxy setting.</comment>
   </data>
-  <data name="TorrentNotChecked" xml:space="preserve">
-    <value>Couldn't check the connection. {reason}</value>
-    <comment>Toast when the connection check could not run. The reason comes from the VPN settings.</comment>
-  </data>
-  <data name="SourcesReloadedTorrentsPending" xml:space="preserve">
-    <value>Sources reloaded. Torrents start once the VPN guard passes.</value>
-    <comment>Note on the sources screen after the source chain is rebuilt with torrents on.</comment>
+  <data name="SourcesReloadedTorrentsChecking" xml:space="preserve">
+    <value>Sources reloaded. Torrents start once the proxy check passes.</value>
+    <comment>Note on the sources screen after the source chain is rebuilt with torrents on and a proxy set.</comment>
   </data>
   <data name="SourcesReloadedTorrentsOff" xml:space="preserve">
     <value>Torrents are off. The session was stopped.</value>
@@ -1091,13 +1083,17 @@
     <value>Couldn't save that setting. {cause}</value>
     <comment>Toast when a setting could not be stored. The cause says why and what to do.</comment>
   </data>
-  <data name="NoticeProtectionSaved" xml:space="preserve">
-    <value>Saved torrent protection.</value>
-    <comment>Toast when the torrent protection choice was saved.</comment>
+  <data name="NoticeProxySaved" xml:space="preserve">
+    <value>Torrent traffic now goes through the proxy.</value>
+    <comment>Toast when the proxy for torrent traffic was saved.</comment>
   </data>
-  <data name="NoticeProtectionNotChecked" xml:space="preserve">
-    <value>Couldn't check the torrent protection. {cause}</value>
-    <comment>Toast when the torrent protection could not be checked. The cause says why.</comment>
+  <data name="NoticeProxyRemoved" xml:space="preserve">
+    <value>Torrents now connect directly, without a proxy.</value>
+    <comment>Toast when the proxy for torrent traffic was turned off.</comment>
+  </data>
+  <data name="NoticeProxyNotChecked" xml:space="preserve">
+    <value>Couldn't check the proxy. {cause}</value>
+    <comment>Toast when the proxy could not be checked. The cause says why.</comment>
   </data>
   <data name="NoticeProxyPasswordNotKept" xml:space="preserve">
     <value>Couldn't keep the proxy's password. Enter it again to try saving it. {reason}</value>
@@ -1114,10 +1110,6 @@
   <data name="NoticeShowNoSuchSubtitles" xml:space="preserve">
     <value>Couldn't save that subtitle choice. This show hasn't used those subtitles before.</value>
     <comment>Toast when a subtitle choice names subtitles the show has not used.</comment>
-  </data>
-  <data name="NoticeTorrentsWaitingForCheck" xml:space="preserve">
-    <value>Torrents are waiting for the connection check to pass again.</value>
-    <comment>Toast while torrents are held until the connection check passes.</comment>
   </data>
   <data name="NoticeMappingDataRefreshed" xml:space="preserve">
     <value>Mapping data refreshed.</value>
@@ -1142,14 +1134,6 @@
   <data name="NoticeUpdateAvailable" xml:space="preserve">
     <value>{tag} is out. Run kaeri --update to install it.</value>
     <comment>Toast when a new release of Kaeri is out, on the terminal app. The command is not translated. Terminal only: the engine never sends it to the apps.</comment>
-  </data>
-  <data name="CauseConfirmNoProtection" xml:space="preserve">
-    <value>Confirm that you want no protection first.</value>
-    <comment>The reason a setting was refused until the person confirms having no protection.</comment>
-  </data>
-  <data name="CauseConfirmWarnOnly" xml:space="preserve">
-    <value>Confirm that you want to be warned only first.</value>
-    <comment>The reason a setting was refused until the person confirms the "warn only" choice.</comment>
   </data>
   <data name="CauseProxyNeedsAddress" xml:space="preserve">
     <value>A proxy needs a host and a port.</value>
@@ -1389,7 +1373,7 @@
   </data>
   <data name="SearchResultPlaysHere" xml:space="preserve">
     <value>Plays here</value>
-    <comment>Search: end of a result's line when a free catalogue or the demo has the title.</comment>
+    <comment>Search: end of a result's line when an open catalogue or the demo has the title.</comment>
   </data>
   <data name="SearchResultInLibrary" xml:space="preserve">
     <value>In your library</value>
@@ -1521,7 +1505,7 @@
   </data>
   <data name="SettingsCardState" xml:space="preserve">
     <value>{title}, {state}</value>
-    <comment>Screen reader name of a setting card that also says its state, such as "Protect with, Proxy saved".</comment>
+    <comment>Screen reader name of a setting card that also says its state, such as "Route torrent traffic through a proxy, Proxy saved".</comment>
   </data>
   <data name="SettingsCardCheck" xml:space="preserve">
     <value>{title}, {word}, {note}</value>
@@ -1554,10 +1538,6 @@
   <data name="SettingsPlayerInterface" xml:space="preserve">
     <value>Player interface</value>
     <comment>Setting: the app's own player controls, or mpv's.</comment>
-  </data>
-  <data name="SettingsVpnMode" xml:space="preserve">
-    <value>VPN mode</value>
-    <comment>Setting: how torrent traffic is protected. VPN stays in capitals: it is an abbreviation.</comment>
   </data>
   <data name="SettingsTokenStorage" xml:space="preserve">
     <value>Token storage</value>
@@ -1643,10 +1623,6 @@
     <value>Licensed under the GNU Lesser General Public License, version 2.1 or later.</value>
     <comment>Notice line for the video library the player uses.</comment>
   </data>
-  <data name="TorrentsWarnInstead" xml:space="preserve">
-    <value>Kaeri will warn you instead of pausing. If your VPN or proxy is down, other people can see your IP address.</value>
-    <comment>Confirmation text before choosing Warn only for a failed check.</comment>
-  </data>
   <data name="ShowSettingsLabel" xml:space="preserve">
     <value>Settings for {title}</value>
     <comment>Screen reader name of a show's settings dialog.</comment>
@@ -1679,25 +1655,9 @@
     <value>Higher</value>
     <comment>Value of the download quality setting: a larger, sharper version where a source has one.</comment>
   </data>
-  <data name="TorrentsDialogTurnOn" xml:space="preserve">
-    <value>Turn on torrents</value>
-    <comment>Title of the dialog that turns torrents on and asks what protects them.</comment>
-  </data>
-  <data name="TorrentsDialogProtect" xml:space="preserve">
-    <value>Protect torrents</value>
-    <comment>Title of the dialog that changes what protects torrents.</comment>
-  </data>
   <data name="TorrentsDialogEditProxy" xml:space="preserve">
     <value>Edit proxy</value>
     <comment>Title of the dialog that edits the saved proxy.</comment>
-  </data>
-  <data name="TorrentsDialogTurnOnAction" xml:space="preserve">
-    <value>Turn on</value>
-    <comment>The torrent dialog's main button when it turns torrents on.</comment>
-  </data>
-  <data name="TorrentsChoiceSpoken" xml:space="preserve">
-    <value>{label}. {detail}</value>
-    <comment>Screen reader name of a protection choice: its name, then what it does.</comment>
   </data>
   <data name="SettingsNoteTrailersWindows" xml:space="preserve">
     <value>Trailers play muted from YouTube, which sees your IP address. They don't play on a metered connection, with animation effects off, in energy saver mode or with Narrator running.</value>
@@ -1970,10 +1930,6 @@
   <data name="SourcesStatusWorking" xml:space="preserve">
     <value>Ready</value>
     <comment>How a { -source } stands when nothing is wrong with it.</comment>
-  </data>
-  <data name="SourcesTorrentIndexes" xml:space="preserve">
-    <value>Searches the torrent indexes you have turned on under Settings.</value>
-    <comment>In the torrent { -source }'s detail, in place of the hosts it contacts.</comment>
   </data>
   <data name="SourcesVersionReady" xml:space="preserve">
     <value>Version {version} is ready</value>
@@ -4820,7 +4776,7 @@
     <comment>Heading of the group that joins a store with an invite.</comment>
   </data>
   <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>Plugins come from plugin stores. A plugin store is run by one person for the people they invite, so you join one with an invite link from its owner.</value>
+    <value>Plugins come from plugin stores. A plugin store is signed and gives each device its own token, so you join one with an invite link from its owner.</value>
     <comment>Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.</comment>
   </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
@@ -7384,7 +7340,7 @@
     <comment>Title of the confirmation for resetting the settings.</comment>
   </data>
   <data name="SettingsResetDetail" xml:space="preserve">
-    <value>Every setting goes back to its default, VPN and proxy included. Your watch history stays, and the old settings file is kept.</value>
+    <value>Every setting goes back to its default, the torrent proxy included. Your watch history stays, and the old settings file is kept.</value>
     <comment>Line under it. The old settings file is moved aside, not deleted.</comment>
   </data>
   <data name="SettingsResetDone" xml:space="preserve">
@@ -7612,8 +7568,8 @@
     <comment>Under a source that found more than one show by this name and could not tell which is this one.</comment>
   </data>
   <data name="SourceNoteHeldBack" xml:space="preserve">
-    <value>Held back by the VPN check</value>
-    <comment>Under a source held back by the VPN check in Settings.</comment>
+    <value>Waiting for the proxy check</value>
+    <comment>Under a source that waits for the proxy check in Settings.</comment>
   </data>
   <data name="SourcePickerReleases" xml:space="preserve">
     <value>Releases</value>
@@ -7671,14 +7627,6 @@
     <value>Torrents</value>
     <comment>Row for the built-in torrent source.</comment>
   </data>
-  <data name="SourcesRemote" xml:space="preserve">
-    <value>Remote</value>
-    <comment>Label of a source that is not a plugin and controls this device.</comment>
-  </data>
-  <data name="SourcesOriginConfig" xml:space="preserve">
-    <value>Set in the config file</value>
-    <comment>Origin: set in the config file.</comment>
-  </data>
   <data name="SourcesOriginBuiltIn" xml:space="preserve">
     <value>Built in</value>
     <comment>Origin: built into the app.</comment>
@@ -7728,8 +7676,8 @@
     <comment>Status line: no answer.</comment>
   </data>
   <data name="SourcesDetailHeldBack" xml:space="preserve">
-    <value>Held back until the connection check passes.</value>
-    <comment>Status line: held back by the check.</comment>
+    <value>Waiting until the proxy check passes.</value>
+    <comment>Status line: waiting for the proxy check.</comment>
   </data>
   <data name="SourcesDetailDisabled" xml:space="preserve">
     <value>Off. It keeps its place and isn't tried.</value>
@@ -7741,7 +7689,7 @@
   </data>
   <data name="SourcesDetailSite" xml:space="preserve">
     <value>The source didn't answer.</value>
-    <comment>Status line: the site did not answer.</comment>
+    <comment>Status line: the source did not answer.</comment>
   </data>
   <data name="SourcesVersion" xml:space="preserve">
     <value>Version</value>
@@ -7828,7 +7776,7 @@
     <comment>Row: where the plugin's page stands.</comment>
   </data>
   <data name="SourcesTorrentsNote" xml:space="preserve">
-    <value>Torrents are part of Kaeri, not a plugin. What protects their traffic, the connection check and seeding are set in Settings, under Sources.</value>
+    <value>Torrents are part of Kaeri, not a plugin. The proxy and seeding are set in Settings, under Sources.</value>
     <comment>Note under the facts on the Torrents page in Sources. Torrents are built in, not a plugin.</comment>
   </data>
   <data name="SourcesRebuilding" xml:space="preserve">
@@ -8088,7 +8036,7 @@
     <comment>Heading of the section that lists the plugins.</comment>
   </data>
   <data name="SourcesSectionCatalogues" xml:space="preserve">
-    <value>Free catalogues</value>
+    <value>Open catalogues</value>
     <comment>Section heading: Internet Archive collections and PeerTube channels.</comment>
   </data>
   <data name="SourcesAddDemo" xml:space="preserve">
@@ -8108,7 +8056,7 @@
     <comment>Title of the empty list.</comment>
   </data>
   <data name="StoresEmptyDetail" xml:space="preserve">
-    <value>Plugin stores are run by people you know. Join one with the invite link its owner sends you.</value>
+    <value>Plugin stores hold signed plugins and give each device its own token. Join one with the invite link its owner sends you.</value>
     <comment>Line under the empty title.</comment>
   </data>
   <data name="StoresIntro" xml:space="preserve">
@@ -8763,7 +8711,7 @@
     <comment>Button of a notice that opens the plugin stores page.</comment>
   </data>
   <data name="StoresWhatIs" xml:space="preserve">
-    <value>A plugin store is a small server one person runs for the people they invite. It offers sources as plugins. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.</value>
+    <value>A plugin store is a small server that holds signed plugins and gives each device its own token. It offers sources as plugins. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.</value>
     <comment>Explainer on the empty plugin stores page.</comment>
   </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
@@ -9107,80 +9055,36 @@
     <comment>Label and short value for the switch.</comment>
   </data>
   <data name="TorrentsOffDetail" xml:space="preserve">
-    <value>Off by default. Turning this on asks how to protect your connection first.</value>
+    <value>Off by default. Torrents connect directly unless you route them through a proxy.</value>
     <comment>Line under the switch while torrents are off.</comment>
   </data>
   <data name="TorrentsRisk" xml:space="preserve">
-    <value>Other people can see your IP address while you download and share a torrent. Choose what protects it before torrents start.</value>
-    <comment>Line explaining the risk, before torrents start.</comment>
+    <value>Other people in a torrent can see your IP address. To keep it private, route torrent traffic through a proxy.</value>
+    <comment>Line about privacy in the torrent sheet, before torrents start.</comment>
   </data>
   <data name="TorrentsNotAPlugin" xml:space="preserve">
-    <value>Torrents are part of Kaeri, not a plugin. What protects their traffic, the connection check and seeding are set in Settings, under Sources.</value>
+    <value>Torrents are part of Kaeri, not a plugin. The proxy and seeding are set in Settings, under Sources.</value>
     <comment>Line in the Apple sources screen: torrents belong to the app, not to a plugin.</comment>
   </data>
-  <data name="TorrentsProtectWith" xml:space="preserve">
-    <value>Protect with</value>
-    <comment>Label of the choice of protection.</comment>
+  <data name="TorrentsProxyRoute" xml:space="preserve">
+    <value>Route torrent traffic through a proxy</value>
+    <comment>Switch: send torrent traffic through a SOCKS5 proxy. Off by default.</comment>
   </data>
-  <data name="TorrentsProtectNone" xml:space="preserve">
-    <value>No protection</value>
-    <comment>Option: no protection.</comment>
-  </data>
-  <data name="TorrentsProtectProxy" xml:space="preserve">
-    <value>Proxy</value>
-    <comment>Option: a proxy.</comment>
-  </data>
-  <data name="TorrentsProtectVpn" xml:space="preserve">
-    <value>VPN</value>
-    <comment>Option: a VPN already running on the device.</comment>
-  </data>
-  <data name="TorrentsProtectProxyDetail" xml:space="preserve">
-    <value>Torrent traffic goes through a proxy you run or rent.</value>
-    <comment>Line under the proxy option.</comment>
-  </data>
-  <data name="TorrentsProtectVpnDetail" xml:space="preserve">
-    <value>Uses the VPN already running on this device.</value>
-    <comment>Line under the VPN option.</comment>
-  </data>
-  <data name="TorrentsProtectNoneDetail" xml:space="preserve">
-    <value>Your address is visible to everyone in the torrent.</value>
-    <comment>Line under the no-protection option.</comment>
-  </data>
-  <data name="TorrentsProtectNoneNote" xml:space="preserve">
-    <value>With no protection, Kaeri doesn't check the connection.</value>
-    <comment>Line when no protection is set.</comment>
+  <data name="TorrentsProxyRouteDetail" xml:space="preserve">
+    <value>Torrent traffic goes through a SOCKS5 proxy you run or rent. While this is off, torrents connect directly.</value>
+    <comment>Line under the switch.</comment>
   </data>
   <data name="TorrentsSummaryProxyAt" xml:space="preserve">
-    <value>Protected by a SOCKS5 proxy at {host}:{port}.</value>
-    <comment>Summary: a proxy protects. Host and port are already formatted.</comment>
+    <value>Through a SOCKS5 proxy at {host}:{port}.</value>
+    <comment>Summary: torrents go through a proxy. Host and port are already formatted.</comment>
   </data>
   <data name="TorrentsSummaryProxy" xml:space="preserve">
-    <value>Protected by a SOCKS5 proxy.</value>
-    <comment>Summary: a proxy protects, address not shown.</comment>
+    <value>Through a SOCKS5 proxy.</value>
+    <comment>Summary: torrents go through a proxy, address not shown.</comment>
   </data>
-  <data name="TorrentsSummaryVpn" xml:space="preserve">
-    <value>Protected by the VPN on this device.</value>
-    <comment>Summary: a VPN protects.</comment>
-  </data>
-  <data name="TorrentsSummaryNone" xml:space="preserve">
-    <value>Not protected. Your address is visible to everyone in the torrent.</value>
-    <comment>Summary: nothing protects.</comment>
-  </data>
-  <data name="TorrentsUnprotectedTitle" xml:space="preserve">
-    <value>Use torrents without protection?</value>
-    <comment>Title of the question when torrents are turned on without protection.</comment>
-  </data>
-  <data name="TorrentsUnprotectedDetail" xml:space="preserve">
-    <value>Other people can see your IP address while you download and share a torrent, and Kaeri doesn't check the connection.</value>
-    <comment>Line under it.</comment>
-  </data>
-  <data name="TorrentsTurnOnUnprotected" xml:space="preserve">
-    <value>Turn on without protection</value>
-    <comment>Button that confirms turning torrents on without protection.</comment>
-  </data>
-  <data name="TorrentsUseUnprotected" xml:space="preserve">
-    <value>Use without protection</value>
-    <comment>Button that confirms using no protection.</comment>
+  <data name="TorrentsSummaryDirect" xml:space="preserve">
+    <value>Connecting directly, without a proxy.</value>
+    <comment>Summary: no proxy is set.</comment>
   </data>
   <data name="TorrentsProxyHost" xml:space="preserve">
     <value>Proxy host</value>
@@ -9203,7 +9107,7 @@
     <comment>Line under the password field.</comment>
   </data>
   <data name="TorrentsProxyKeepsSaved" xml:space="preserve">
-    <value>Torrents keep using the saved proxy until the new one passes the connection check.</value>
+    <value>Torrents keep using the saved proxy until the new one passes the proxy check.</value>
     <comment>Line under the proxy form: what happens while the new proxy is checked.</comment>
   </data>
   <data name="TorrentsProxyInvalid" xml:space="preserve">
@@ -9218,125 +9122,41 @@
     <value>Proxy saved</value>
     <comment>Notice after the proxy was saved.</comment>
   </data>
-  <data name="TorrentsLeftOutsideProxy" xml:space="preserve">
-    <value>Torrent traffic left outside this proxy</value>
-    <comment>Why a save was refused: traffic left outside the proxy.</comment>
-  </data>
   <data name="TorrentsCheckNotMadeProxy" xml:space="preserve">
-    <value>The check couldn't be made through this proxy</value>
-    <comment>Why a save was refused: the check could not run through the proxy.</comment>
+    <value>The proxy check failed</value>
+    <comment>Why a save was refused: the proxy check failed. A sentence fragment.</comment>
   </data>
   <data name="TorrentsProxyNotSaved" xml:space="preserve">
     <value>Not saved. {why}, so the saved proxy stays.</value>
     <comment>Notice when a proxy was not saved. The reason is a sentence fragment.</comment>
   </data>
-  <data name="TorrentsProtectionNotSaved" xml:space="preserve">
-    <value>Not saved. {why}, so the saved protection stays.</value>
-    <comment>Notice when protection was not saved. The reason is a sentence fragment.</comment>
-  </data>
   <data name="TorrentsStillOff" xml:space="preserve">
     <value>Torrents are still off. {why}.</value>
     <comment>Notice when torrents stayed off. The reason is a sentence fragment.</comment>
   </data>
-  <data name="TorrentsIndex" xml:space="preserve">
-    <value>Torrent index</value>
-    <comment>Label of the index address field.</comment>
-  </data>
-  <data name="TorrentsIndexDetail" xml:space="preserve">
-    <value>The RSS search address Kaeri asks for torrents.</value>
-    <comment>Line under the index field.</comment>
-  </data>
-  <data name="TorrentsIndexHint" xml:space="preserve">
-    <value>https://…/?q={{query}}</value>
-    <comment>Hint inside the index field.</comment>
-  </data>
-  <data name="TorrentsIndexNeeded" xml:space="preserve">
-    <value>Torrents need an index address.</value>
-    <comment>Line when no index address is set.</comment>
-  </data>
-  <data name="TorrentsIndexScheme" xml:space="preserve">
-    <value>Use an http or https address.</value>
-    <comment>Line when the index address has the wrong scheme.</comment>
-  </data>
-  <data name="TorrentsIndexSaved" xml:space="preserve">
-    <value>Torrent index saved</value>
-    <comment>Notice after the index was saved.</comment>
-  </data>
-  <data name="TorrentsIfCheckFails" xml:space="preserve">
-    <value>If a check fails</value>
-    <comment>Label of the choice of what to do when a check fails.</comment>
-  </data>
-  <data name="TorrentsKeepRunningTitle" xml:space="preserve">
-    <value>Keep torrents running if a check fails?</value>
-    <comment>Title of the question that asks whether torrents may keep running.</comment>
-  </data>
-  <data name="TorrentsKeepRunningDetail" xml:space="preserve">
-    <value>What happens to torrents when the check finds traffic leaving outside your VPN or proxy.</value>
-    <comment>Line under the question: what the choice is about.</comment>
-  </data>
-  <data name="TorrentsFailPause" xml:space="preserve">
-    <value>Pause torrents</value>
-    <comment>Option: pause torrents.</comment>
-  </data>
-  <data name="TorrentsFailStop" xml:space="preserve">
-    <value>Stop torrents</value>
-    <comment>Option: stop torrents.</comment>
-  </data>
-  <data name="TorrentsFailWarn" xml:space="preserve">
-    <value>Warn only</value>
-    <comment>Option: only warn.</comment>
-  </data>
-  <data name="TorrentsFailWarnResult" xml:space="preserve">
-    <value>Torrents keep running.</value>
-    <comment>Result of the choice: torrents run.</comment>
-  </data>
-  <data name="TorrentsFailStopResult" xml:space="preserve">
-    <value>Torrents are stopped.</value>
-    <comment>Result of the choice: torrents stop.</comment>
-  </data>
-  <data name="TorrentsFailPauseResult" xml:space="preserve">
-    <value>Torrents are paused.</value>
-    <comment>Result of the choice: torrents pause.</comment>
+  <data name="TorrentsCheckNote" xml:space="preserve">
+    <value>Kaeri checks that it can reach the proxy before torrents start. Torrents wait while that check fails.</value>
+    <comment>Under the proxy form: what the app checks.</comment>
   </data>
   <data name="TorrentsLastCheck" xml:space="preserve">
-    <value>Last check</value>
-    <comment>Label of the last check.</comment>
-  </data>
-  <data name="TorrentsCheckPassedExit" xml:space="preserve">
-    <value>Leaving through {exit}</value>
-    <comment>Check passed. The exit is where the traffic leaves from, already formatted.</comment>
+    <value>Proxy check</value>
+    <comment>Label of the proxy check's result.</comment>
   </data>
   <data name="TorrentsCheckPassed" xml:space="preserve">
     <value>Passed</value>
     <comment>Check passed.</comment>
   </data>
-  <data name="TorrentsCheckRunningLine" xml:space="preserve">
-    <value>Checking where torrent traffic leaves from</value>
-    <comment>Check running: the line.</comment>
-  </data>
   <data name="TorrentsCheckRunning" xml:space="preserve">
     <value>Checking</value>
     <comment>Check running: the short word.</comment>
   </data>
-  <data name="TorrentsCheckLeaked" xml:space="preserve">
-    <value>Traffic left outside the protection. {then}</value>
-    <comment>Check failed: traffic left outside. The consequence follows.</comment>
-  </data>
-  <data name="TorrentsCheckUnmade" xml:space="preserve">
-    <value>The check couldn't be made. {then}</value>
-    <comment>Check failed: the check could not be made. The consequence follows.</comment>
+  <data name="TorrentsCheckFailedLine" xml:space="preserve">
+    <value>The proxy check failed. Torrents start once it passes.</value>
+    <comment>Check failed: the line.</comment>
   </data>
   <data name="TorrentsCheckFailed" xml:space="preserve">
     <value>Failed</value>
     <comment>Short word: the check failed.</comment>
-  </data>
-  <data name="TorrentsCheckNoneLine" xml:space="preserve">
-    <value>No protection is set</value>
-    <comment>Line: no protection is set, so nothing was checked.</comment>
-  </data>
-  <data name="TorrentsCheckNone" xml:space="preserve">
-    <value>Unprotected</value>
-    <comment>Short word: unprotected.</comment>
   </data>
   <data name="TorrentsCheckWaitingLine" xml:space="preserve">
     <value>Not checked yet</value>
@@ -9389,14 +9209,6 @@
   <data name="TorrentsPageNeedsScript" xml:space="preserve">
     <value>This page needs JavaScript to send the form to the TV safely.</value>
     <comment>Line when the page needs script.</comment>
-  </data>
-  <data name="TorrentsCheckNote" xml:space="preserve">
-    <value>Kaeri checks where torrent traffic leaves from when a torrent starts and every minute while it runs, and pauses torrents if that check fails. Your VPN or proxy is what protects you.</value>
-    <comment>Under the proxy form when turning torrents on: what the app checks, and that the VPN or proxy is what protects.</comment>
-  </data>
-  <data name="TorrentsProtectionSaved" xml:space="preserve">
-    <value>Torrent protection saved</value>
-    <comment>Notice after the protection was saved.</comment>
   </data>
   <data name="OpenedOpen" xml:space="preserve">
     <value>Open link or file</value>

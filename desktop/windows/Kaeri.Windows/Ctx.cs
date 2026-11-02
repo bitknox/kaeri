@@ -25,14 +25,14 @@ sealed class Ctx
     /// <summary>Every batch of the engine's events, on the UI thread, after Known has them.</summary>
     public event Action<IReadOnlyList<Event>>? Batch;
 
-    /// <summary>Protections checked before they are saved: the proxy dialog's checks.</summary>
-    public ProtectionTrials Trials => trials ??= new(command => Send(command));
-    ProtectionTrials? trials;
+    /// <summary>Proxies checked before they are saved: the proxy dialog's checks.</summary>
+    public ProxyTrials Trials => trials ??= new(command => Send(command));
+    ProxyTrials? trials;
 
     public void Heard(IReadOnlyList<Event> batch)
     {
         foreach (var e in batch)
-            if (e is Event.ProtectionChecked checkedNow)
+            if (e is Event.ProxyChecked checkedNow)
                 Trials.Heard(checkedNow.V1);
         // Each listener on its own: one page that throws leaves the rest of the batch to the others.
         if (Batch is { } listeners)
@@ -109,12 +109,12 @@ sealed class Ctx
         if (command is Command.Licensed { V1: LicensedCommand.LoadAvailability ask } && show?.StartsWith("lawful-title-", StringComparison.Ordinal) == true)
         {
             var main = new ServiceLink("Lumen Plus", "https://lumen.example/watch/1", null);
-            var other = new ServiceLink("Harbor Stream", "https://harbor.example/watch/1", null);
+            var other = new ServiceLink("Harbor Library", "https://harbor.example/watch/1", null);
             var found = show switch
             {
                 "lawful-title-a" => new TitleAvailability(Id: ask.Id, Case: AvailabilityCase.PlaysAlsoOn, Main: null, AlsoOn: [main, other], Yours: [], Others: [], Episodes: [], ChooseServices: false),
                 "lawful-title-b" => new TitleAvailability(Id: ask.Id, Case: AvailabilityCase.OnService, Main: main, AlsoOn: [other], Yours: [], Others: [], Episodes: [], ChooseServices: false),
-                _ => new TitleAvailability(Id: ask.Id, Case: AvailabilityCase.NotInSources, Main: null, AlsoOn: [], Yours: [], Others: ["Lumen Plus", "Harbor Stream"], Episodes: [], ChooseServices: true),
+                _ => new TitleAvailability(Id: ask.Id, Case: AvailabilityCase.NotInSources, Main: null, AlsoOn: [], Yours: [], Others: ["Lumen Plus", "Harbor Library"], Episodes: [], ChooseServices: true),
             };
             return [new Event.Availability(found)];
         }
@@ -247,10 +247,10 @@ sealed class Ctx
         }
         // A proxy dialog's check held while it checks, or answered as failed, for a screenshot:
         // the fixture's own check always passes.
-        if (command is Command.CheckTorrentProtection && Options.Show is "torrent-edit-checking" or "torrent-edit-failed")
+        if (command is Command.CheckTorrentProxy && Options.Show is "torrent-edit-checking" or "torrent-edit-failed")
         {
             if (Options.Show == "torrent-edit-failed")
-                _ = Task.Delay(1200).ContinueWith(_ => Window.DispatcherQueue.TryEnqueue(() => Heard([new Event.ProtectionChecked(new GuardView.Leaking())])));
+                _ = Task.Delay(1200).ContinueWith(_ => Window.DispatcherQueue.TryEnqueue(() => Heard([new Event.ProxyChecked(ProxyStatus.Failed)])));
             return null;
         }
 #endif
