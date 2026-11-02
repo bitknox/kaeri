@@ -1,0 +1,59 @@
+From: der richter <der.richter@gmx.de>
+Subject: [PATCH] ao_coreaudio: remove misusage of audio unit channel map API
+
+Upstream mpv 3dae21b1ed4793912a8f9de1c5eb3cf32d227bce, rebased on v0.41.0.
+kAudioOutputUnitProperty_ChannelMap takes an array of SInt32, not an
+AudioChannelLayout. macOS 27 refuses it (-50), coreaudio fails to start, and
+mpv falls back to avfoundation, which reads 2 s ahead, so a volume change is
+heard up to 2 s late.
+
+diff --git a/audio/out/ao_coreaudio.c b/audio/out/ao_coreaudio.c
+index 4b4bf1d..f55346e 100644
+--- a/audio/out/ao_coreaudio.c
++++ b/audio/out/ao_coreaudio.c
+@@ -136,7 +136,7 @@ static int control(struct ao *ao, enum aocontrol cmd, void *arg)
+     return CONTROL_UNKNOWN;
+ }
+ 
+-static bool init_audiounit(struct ao *ao, AudioStreamBasicDescription asbd, AudioChannelLayout *layout, size_t layout_size);
++static bool init_audiounit(struct ao *ao, AudioStreamBasicDescription asbd);
+ static void init_physical_format(struct ao *ao);
+ static void reinit_latency(struct ao *ao);
+ static bool register_hotplug_cb(struct ao *ao);
+@@ -178,13 +178,8 @@ static int init(struct ao *ao)
+ 
+     AudioStreamBasicDescription asbd;
+     ca_fill_asbd(ao, &asbd);
+-    size_t layout_size;
+-    AudioChannelLayout *layout = ca_get_acl(ao, &layout_size);
+ 
+-    bool r = init_audiounit(ao, asbd, layout, layout_size);
+-    talloc_free(layout);
+-
+-    if (!r)
++    if (!init_audiounit(ao, asbd))
+         goto coreaudio_error;
+ 
+     reinit_latency(ao);
+@@ -277,7 +272,7 @@ coreaudio_error:
+     talloc_free(tmp);
+ }
+ 
+-static bool init_audiounit(struct ao *ao, AudioStreamBasicDescription asbd, AudioChannelLayout *layout, size_t layout_size)
++static bool init_audiounit(struct ao *ao, AudioStreamBasicDescription asbd)
+ {
+     OSStatus err;
+     uint32_t size;
+@@ -321,12 +316,6 @@ static bool init_audiounit(struct ao *ao, AudioStreamBasicDescription asbd, Audi
+     CHECK_CA_ERROR_L(coreaudio_error_audiounit,
+                      "can't link audio unit to selected device");
+ 
+-    err = AudioUnitSetProperty(p->audio_unit,
+-                               kAudioOutputUnitProperty_ChannelMap,
+-                               kAudioUnitScope_Global, 0, layout, layout_size);
+-
+-    CHECK_CA_ERROR_L(coreaudio_error_audiounit,
+-                     "unable to set the input channel layout on the audio unit");
+ 
+     AURenderCallbackStruct render_cb = (AURenderCallbackStruct) {
+         .inputProc       = render_cb_lpcm,

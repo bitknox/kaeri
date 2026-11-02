@@ -33,6 +33,8 @@ public struct MacPlayerView: View {
     @State private var pointed: String?
     /// The watch party's popover on the people button.
     @State private var partyOpen = false
+    /// Where the panels over the video are, which take the scroll wheel from the player.
+    @State private var wheelStops: [CGRect] = []
     @FocusState private var focused: Bool
     @Environment(AppStore.self) private var store
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -90,7 +92,9 @@ public struct MacPlayerView: View {
         .modifier(GrowFromBanner(id: model.staged?.id, zoom: reduceMotion ? nil : zoom, grown: grown))
         .ignoresSafeArea()
         .background(WindowReader { window = $0 })
-        .background(ScrollMonitor(model: model))
+        .onPreferenceChange(WheelStops.self) { wheelStops = $0 }
+        .coordinateSpace(.named(ScrollMonitor.space))
+        .background(ScrollMonitor(model: model, stops: wheelStops))
         .contentShape(.rect)
         .onContinuousHover { phase in
             if case .active = phase { model.poke() }
@@ -162,6 +166,7 @@ public struct MacPlayerView: View {
         // Stats for nerds stays up while the controls hide, below where the top bar's capsule
         // is, under the menus that hang from it.
         StatsPanel(model: model, metrics: metrics)
+            .takesScrollWheel()
             .padding(.top, 60)
             .padding(.trailing, 16)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
@@ -429,6 +434,7 @@ public struct MacPlayerView: View {
         }
         .frame(width: Self.panelWidth(which))
         .menuPanelGlass()
+        .takesScrollWheel()
         // The Style submenu, beside the panel on the side away from the window's edge, its first
         // row level with the row it opens from, as a Mac menu's submenu opens.
         .overlayPreferenceValue(SubmenuAnchor.self) { anchor in
@@ -460,6 +466,7 @@ public struct MacPlayerView: View {
         .frame(width: Self.panelWidth(.tracks))
         .fixedSize(horizontal: false, vertical: true)
         .menuPanelGlass()
+        .takesScrollWheel()
     }
 
     /// How far in from the trailing edge a panel ends: the control row's in line with the end of
@@ -690,23 +697,29 @@ struct VolumeLine: View {
             Capsule()
                 .fill(Palette.silk.opacity(0.25))
                 .overlay(alignment: .leading) {
-                    Capsule().fill(.silk).frame(width: proxy.size.width * min(1, model.volume / 100))
+                    Capsule().fill(.silk).frame(width: proxy.size.width * min(1, model.shownVolume / 100))
                 }
                 .frame(height: 4)
                 .frame(maxHeight: .infinity)
                 .contentShape(.rect)
+                // The volume follows the pointer from the press, a step each whole percent.
                 .gesture(
-                    DragGesture(minimumDistance: 0).onEnded { value in
-                        let target = min(100, max(0, value.location.x / proxy.size.width * 100))
-                        model.stepVolume(by: (target - model.volume).rounded())
+                    DragGesture(minimumDistance: 0).onChanged { value in
+                        model.setVolume(Self.level(at: value.location.x, width: proxy.size.width))
                     }
                 )
         }
         .frame(width: width, height: 28)
         .accessibilityElement()
         .accessibilityLabel(L.playerVolume)
-        .accessibilityValue((model.volume / 100).formatted(.percent.locale(AirTime.locale)))
+        .accessibilityValue((model.shownVolume / 100).formatted(.percent.locale(AirTime.locale)))
         .accessibilityAdjustableAction { model.stepVolume(by: $0 == .increment ? 5 : -5) }
+    }
+
+    /// The volume at `x` along a line `width` wide, from 0 to 100.
+    static func level(at x: CGFloat, width: CGFloat) -> Double {
+        guard width > 0 else { return 0 }
+        return Double(min(100, max(0, x / width * 100)))
     }
 }
 
@@ -783,22 +796,53 @@ struct WindowReader: NSViewRepresentable {
 }
 
 /// The scroll wheel over the player: vertical scrolls the volume 2% a notch, horizontal two-finger
-/// scrolls seek 0.25 s a point, momentum ignored.
+/// scrolls seek 0.25 s a point, momentum ignored. A scroll over something on the video that
+/// scrolls (every menu's list is a scroll view) or that takes the wheel (`takesScrollWheel`, the
+/// panels) is left to it. The monitor sees the window's every scroll before any view does, so it
+/// hit-tests each one itself rather than leave it to the views under the pointer.
 struct ScrollMonitor: NSViewRepresentable {
     let model: PlayerModel
+    /// The panels' frames in `space`.
+    var stops: [CGRect] = []
+
+    /// The player's own coordinate space, top left at the player's.
+    static let space = "player-wheel"
 
     func makeNSView(context: Context) -> NSView {
         let view = Monitor()
         view.model = model
+        view.stops = stops
         return view
     }
 
-    func updateNSView(_ view: NSView, context: Context) {}
+    func updateNSView(_ view: NSView, context: Context) {
+        (view as? Monitor)?.stops = stops
+    }
+
+    /// Whether a scroll at `point` belongs to what is under it rather than to the player: a
+    /// panel's frame among `stops`, or a scroll view between the view `hit` and `player`, the
+    /// view that holds the player (what is above that is not over the video).
+    static func claimed(at point: CGPoint, stops: [CGRect], hit: NSView?, player: NSView) -> Bool {
+        if stops.contains(where: { $0.contains(point) }) { return true }
+        var view = hit
+        while let current = view, !player.isDescendant(of: current) {
+            if current is NSScrollView { return true }
+            view = current.superview
+        }
+        return false
+    }
 
     final class Monitor: NSView {
         weak var model: PlayerModel?
+        var stops: [CGRect] = []
         private var monitor: Any?
-        private var horizontal: CGFloat = 0
+        private var steps = WheelSteps()
+
+        // Top left first, as the player's coordinate space has it.
+        override var isFlipped: Bool { true }
+
+        // Never the target of a click: it only watches.
+        override func hitTest(_ point: NSPoint) -> NSView? { nil }
 
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
@@ -814,17 +858,21 @@ struct ScrollMonitor: NSViewRepresentable {
 
         private func scrolled(_ event: NSEvent) {
             guard let model, event.momentumPhase.isEmpty else { return }
+            let point = convert(event.locationInWindow, from: nil)
+            guard bounds.contains(point) else { return }
+            let content = window?.contentView
+            let hit = content?.hitTest(content?.superview?.convert(event.locationInWindow, from: nil) ?? event.locationInWindow)
+            guard !ScrollMonitor.claimed(at: point, stops: stops, hit: hit, player: self) else { return }
+            if event.phase == .began { steps = WheelSteps() }
             model.poke()
             if abs(event.scrollingDeltaX) > abs(event.scrollingDeltaY) {
-                horizontal += event.scrollingDeltaX
-                if event.phase == .ended || event.phase == .cancelled || abs(horizontal) >= 8 {
-                    model.seek(by: Double(-horizontal) * 0.25)
-                    horizontal = 0
+                let ended = event.phase == .ended || event.phase == .cancelled
+                if let seconds = steps.seek(Double(event.scrollingDeltaX), ended: ended) {
+                    model.seek(by: seconds)
                 }
             } else if event.scrollingDeltaY != 0 {
-                let notches = event.hasPreciseScrollingDeltas ? event.scrollingDeltaY / 10 : event.scrollingDeltaY
-                let step = (Double(notches) * 2).rounded()
-                if step != 0 { model.stepVolume(by: step) }
+                let points = steps.volume(Double(event.scrollingDeltaY), precise: event.hasPreciseScrollingDeltas)
+                if points != 0 { model.stepVolume(by: points) }
             }
         }
 
@@ -840,6 +888,50 @@ private extension View {
         background(.glassFill, in: .rect(cornerRadius: 12))
             .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Palette.glassEdge, lineWidth: 1))
             .shadow(color: Color(rgb: 0x0A0C18, opacity: 0.4), radius: 12, y: 8)
+    }
+}
+
+/// The wheel's deltas as whole steps, with what is left over kept for the next delta: a slow
+/// trackpad scroll moves the volume as it goes, rather than each small delta rounding to none.
+struct WheelSteps {
+    private var volumeLeft: Double = 0
+    private var seekGathered: Double = 0
+
+    /// The volume points for a vertical delta: 2 a notch, 10 points of a trackpad's scrolling
+    /// counting as one.
+    mutating func volume(_ delta: Double, precise: Bool) -> Double {
+        volumeLeft += (precise ? delta / 10 : delta) * 2
+        let whole = volumeLeft.rounded(.towardZero)
+        volumeLeft -= whole
+        return whole
+    }
+
+    /// The seconds to seek for a horizontal delta, 0.25 s a point, gathered until 8 points or the
+    /// gesture's end.
+    mutating func seek(_ delta: Double, ended: Bool) -> Double? {
+        seekGathered += delta
+        guard ended || abs(seekGathered) >= 8 else { return nil }
+        defer { seekGathered = 0 }
+        return seekGathered == 0 ? nil : -seekGathered * 0.25
+    }
+}
+
+/// The panels' frames over the video, which take the scroll wheel from the player.
+struct WheelStops: PreferenceKey {
+    static let defaultValue: [CGRect] = []
+    static func reduce(value: inout [CGRect], nextValue: () -> [CGRect]) {
+        value += nextValue()
+    }
+}
+
+extension View {
+    /// A panel over the video: the scroll wheel over it never steps the volume or seeks.
+    func takesScrollWheel() -> some View {
+        background {
+            GeometryReader { proxy in
+                Color.clear.preference(key: WheelStops.self, value: [proxy.frame(in: .named(ScrollMonitor.space))])
+            }
+        }
     }
 }
 #endif

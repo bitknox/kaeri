@@ -246,8 +246,9 @@ libmpv draws into the app's own view and SwiftUI controls sit on top, which keep
 | Click | Play or pause, after the double-click interval |
 | Double-click | Full screen |
 | Move | Show the controls; they and the cursor hide 2 s after the pointer stops (`NSCursor.setHiddenUntilMouseMoves`) |
-| Vertical scroll | Volume, 2% per notch |
+| Vertical scroll | Volume, 2% per notch, gathered from small trackpad movements |
 | Horizontal two-finger scroll | Seek, 0.25 s per point, momentum ignored |
+| Any scroll over a menu or panel | Scrolls it, never the volume or the position |
 | Secondary click | Play/Pause, Skip, Subtitles, Audio, Episodes, Mini Player, Picture in Picture |
 
 ### Scrubbing
