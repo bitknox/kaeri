@@ -754,7 +754,7 @@ impl Default for ControllerConfig {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct MetaConfig {
-    /// Fall back to Tenrai — MyAnimeList's mirror — when AniList cannot answer, before
+    /// Fall back to Tenrai — a MyAnimeList-compatible metadata API — when AniList cannot answer, before
     /// resorting to cached data. Fresh first, always; the ladder only descends on failure.
     pub fallback: bool,
     /// Which form of each title is shown: AniList's own choice for the signed-in account, or
@@ -1055,8 +1055,6 @@ pub struct ProvidersConfig {
     pub disabled: Vec<String>,
     pub torrent: TorrentConfig,
     pub plugins: PluginsConfig,
-    /// Base URL of a JSON API you host, such as an index of your own media.
-    pub remote_url: Option<String>,
 }
 
 impl Default for ProvidersConfig {
@@ -1072,7 +1070,6 @@ impl Default for ProvidersConfig {
             disabled: Vec::new(),
             torrent: TorrentConfig::default(),
             plugins: PluginsConfig::default(),
-            remote_url: None,
         }
     }
 }
@@ -1437,6 +1434,15 @@ mod tests {
             data_dir: dir.join("data"),
             cache_dir: dir.join("cache"),
         }
+    }
+
+    #[test]
+    fn a_config_that_still_has_the_removed_remote_source_keys_reads_fine() {
+        let config = Config::parse(
+            "[providers]\norder = [\"remote\", \"plugins\"]\nremote_url = \"https://api.example\"\n",
+        )
+        .expect("old keys are ignored");
+        assert_eq!(config.providers.order, ["remote", "plugins"]);
     }
 
     #[test]

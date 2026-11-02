@@ -17,12 +17,6 @@ torrents-proxy-saved = Proksi disimpan
 torrents-check-not-made-proxy = Pemeriksaan tidak dapat dilakukan melalui proksi ini
 torrents-proxy-not-saved = Tidak tersimpan. { $why }, jadi proksi yang tersimpan tetap dipakai.
 torrents-still-off = Torrent masih nonaktif. { $why }.
-torrents-index = { -torrent-index-cap }
-torrents-index-detail = Alamat pencarian RSS yang diminta { -app-name } untuk torrent.
-torrents-index-hint = https://…/?q={ "{" }query{ "}" }
-torrents-index-needed = Torrent memerlukan alamat indeks.
-torrents-index-scheme = Gunakan alamat http atau https.
-torrents-index-saved = { -torrent-index-cap } disimpan
 torrents-last-check = Pemeriksaan terakhir
 torrents-check-passed = Lolos
 torrents-check-running = Memeriksa

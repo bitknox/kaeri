@@ -136,7 +136,6 @@ settings-titles-note-follows = Följer ditt AniList-konto. Medan du är utloggad
 settings-titles-note-english-missing = { $title } har ingen engelsk titel på AniList, så den behåller sin romaji-titel.
 settings-titles-note-english = Engelska titlar som AniList anger, och romaji där det inte finns någon.
 settings-titles-note-romaji = Japanska titlar skrivna med latinska bokstäver, som AniList anger dem.
-settings-index-none = Inte angiven
 settings-stores-with-updates = { $stores } · { $updates }
 settings-seeding-best-effort = Bästa möjliga på den här { -device }en: seeding körs bara medan { -app-name } är öppen.
 settings-downloads-count = { $count ->

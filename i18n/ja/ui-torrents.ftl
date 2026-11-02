@@ -17,12 +17,6 @@ torrents-proxy-saved = プロキシを保存しました
 torrents-check-not-made-proxy = このプロキシ経由では接続を確認できなかった
 torrents-proxy-not-saved = 保存されませんでした。{ $why }ため、保存済みのプロキシはそのまま残ります。
 torrents-still-off = { $why }ため、トレントはまだオフです。
-torrents-index = { -torrent-index-cap }
-torrents-index-detail = { -app-name }がトレントを探すために使うRSS検索のアドレスです。
-torrents-index-hint = https://…/?q={ "{" }query{ "}" }
-torrents-index-needed = トレントには、{ -torrent-index-cap }のアドレスが必要です。
-torrents-index-scheme = httpまたはhttpsのアドレスを使用してください。
-torrents-index-saved = { -torrent-index-cap }を保存しました
 torrents-last-check = 前回の確認
 torrents-check-passed = 合格
 torrents-check-running = 確認中

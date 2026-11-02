@@ -402,8 +402,8 @@ pub struct PlayableStream {
     /// Vertical resolution, when known: `1080`, `720`, …
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub quality: Option<u32>,
-    /// The headers the player must send with every request for the stream. Many CDNs are
-    /// referer-locked, so a player that drops these gets a 403.
+    /// The headers the player must send with every request for the stream, such as
+    /// authorization. Dropping them can turn a working stream into a 403.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub headers: Vec<HttpHeader>,
     /// The subtitle tracks beside the stream, in the order the source listed them.

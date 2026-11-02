@@ -225,7 +225,7 @@ object Strings {
     fun homeSpotlightDemo(context: Context): String =
         context.getString(R.string.home_spotlight_demo)
 
-    /** Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Stream. */
+    /** Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library. */
     fun licensedReturn(context: Context, episode: Int, service: String): String =
         context.getString(R.string.licensed_return, episode, service)
 
@@ -1665,17 +1665,9 @@ object Strings {
     fun tvQrLabelProxy(context: Context): String =
         context.getString(R.string.tv_qr_label_proxy)
 
-    /** Spoken label of the QR code for the torrent index page */
-    fun tvQrLabelIndex(context: Context): String =
-        context.getString(R.string.tv_qr_label_index)
-
     /** Beside the QR code on the TV */
     fun tvScanProxy(context: Context): String =
         context.getString(R.string.tv_scan_proxy)
-
-    /** Beside the QR code on the TV */
-    fun tvScanTorrent(context: Context): String =
-        context.getString(R.string.tv_scan_torrent)
 
     /** Name of the proxy user field on the TV */
     fun tvFieldUserOptional(context: Context): String =
@@ -2208,10 +2200,6 @@ object Strings {
     /** Title language note: what the Romaji choice does. */
     fun settingsTitlesNoteRomaji(context: Context): String =
         context.getString(R.string.settings_titles_note_romaji)
-
-    /** Settings, Sources: no torrent index address is set. */
-    fun settingsIndexNone(context: Context): String =
-        context.getString(R.string.settings_index_none)
 
     /** Settings, Sources: how many plugin stores, and how many updates wait in them. */
     fun settingsStoresWithUpdates(context: Context, stores: Int, updates: String): String =
@@ -8097,14 +8085,6 @@ object Strings {
     fun sourcesTorrents(context: Context): String =
         context.getString(R.string.sources_torrents)
 
-    /** Label of a source that is not a plugin and controls this device. */
-    fun sourcesRemote(context: Context): String =
-        context.getString(R.string.sources_remote)
-
-    /** Origin: set in the config file. */
-    fun sourcesOriginConfig(context: Context): String =
-        context.getString(R.string.sources_origin_config)
-
     /** Origin: built into the app. */
     fun sourcesOriginBuiltIn(context: Context): String =
         context.getString(R.string.sources_origin_built_in)
@@ -8165,7 +8145,7 @@ object Strings {
     fun sourcesDetailGone(context: Context): String =
         context.getString(R.string.sources_detail_gone)
 
-    /** Status line: the site did not answer. */
+    /** Status line: the source did not answer. */
     fun sourcesDetailSite(context: Context): String =
         context.getString(R.string.sources_detail_site)
 
@@ -9579,30 +9559,6 @@ object Strings {
     /** Notice when torrents stayed off. The reason is a sentence fragment. */
     fun torrentsStillOff(context: Context, why: String): String =
         context.getString(R.string.torrents_still_off, why)
-
-    /** Label of the index address field. */
-    fun torrentsIndex(context: Context): String =
-        context.getString(R.string.torrents_index)
-
-    /** Line under the index field. */
-    fun torrentsIndexDetail(context: Context): String =
-        context.getString(R.string.torrents_index_detail)
-
-    /** Hint inside the index field. */
-    fun torrentsIndexHint(context: Context): String =
-        context.getString(R.string.torrents_index_hint)
-
-    /** Line when no index address is set. */
-    fun torrentsIndexNeeded(context: Context): String =
-        context.getString(R.string.torrents_index_needed)
-
-    /** Line when the index address has the wrong scheme. */
-    fun torrentsIndexScheme(context: Context): String =
-        context.getString(R.string.torrents_index_scheme)
-
-    /** Notice after the index was saved. */
-    fun torrentsIndexSaved(context: Context): String =
-        context.getString(R.string.torrents_index_saved)
 
     /** Under the proxy form: what the app checks. */
     fun torrentsCheckNote(context: Context): String =

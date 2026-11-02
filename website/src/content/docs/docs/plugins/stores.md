@@ -1,9 +1,9 @@
 ---
 title: Plugin stores
-description: Share plugins with people you know, through a store one of you runs.
+description: Run a store for your own plugins and your own devices, with a signed list and a token for each device.
 ---
 
-A plugin store is a small server that one person runs for the people they invite. Everyone who
+A plugin store is a small server for your own plugins and your own devices. Every device that
 joins can install the store's plugins from inside Kaeri and hears about new versions when
 Kaeri starts. Kaeri ships no store and lists none. You join one through an invite link. The store's owner
 chooses its plugins and is responsible for them: Kaeri did not make, review or approve them.
@@ -46,12 +46,12 @@ as is a list older than one you have already seen. The key lives with the store,
 guards against tampering on the way to you and against another server answering at the store's
 address. It does not guard against someone who controls the store itself.
 
-Removing someone stops their updates at once; plugins they already installed stay on their machine.
+Removing a device stops its updates at once; plugins it already installed stay on that machine.
 
 ## Running a store
 
 Anyone can run one, on their own computer or on a hosting platform, and most platforms' free or
-smallest plans are enough for a group of friends. [Running a store](/docs/plugins/running-a-store/)
+smallest plans are enough for a store of your own. [Running a store](/docs/plugins/running-a-store/)
 covers deploying one, claiming it, and managing it from Kaeri or its admin page.
 
 The protocol is described in full in

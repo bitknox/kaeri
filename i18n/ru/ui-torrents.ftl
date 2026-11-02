@@ -17,12 +17,6 @@ torrents-proxy-saved = Прокси сохранён
 torrents-check-not-made-proxy = Проверку не удалось провести через этот прокси
 torrents-proxy-not-saved = Не сохранено. { $why }, поэтому остаётся сохранённый прокси.
 torrents-still-off = Торренты всё ещё выключены. { $why }.
-torrents-index = { -torrent-index-cap }
-torrents-index-detail = Адрес RSS-поиска, по которому { -app-name } ищет торренты.
-torrents-index-hint = https://…/?q={ "{query}" }
-torrents-index-needed = Для торрентов нужен адрес индекса.
-torrents-index-scheme = Используйте адрес http или https.
-torrents-index-saved = { -torrent-index-cap } сохранён
 torrents-last-check = Последняя проверка
 torrents-check-passed = Пройдена
 torrents-check-running = Проверка

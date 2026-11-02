@@ -136,7 +136,6 @@ settings-titles-note-follows = AniList hesabınızı izler. AniList oturumunuz k
 settings-titles-note-english-missing = { $title }, AniList'te İngilizce adı olmadığı için romaji adını korur.
 settings-titles-note-english = AniList'te listelendiği gibi İngilizce adlar. Yoksa romaji.
 settings-titles-note-romaji = AniList'te listelendiği gibi, Latin harflerle yazılmış Japonca adlar.
-settings-index-none = Ayarlanmadı
 settings-stores-with-updates = { $stores } · { $updates }
 settings-seeding-best-effort = Bu { -device }da en iyi çaba: paylaşım yalnızca { -app-name } açıkken çalışır.
 settings-downloads-count = { $count ->

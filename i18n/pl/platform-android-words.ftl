@@ -156,7 +156,6 @@ settings-titles-note-follows = Zgodnie z kontem AniList. Gdy nie jesteś zalogow
 settings-titles-note-english-missing = { $title } nie ma tytułu angielskiego w AniList, więc zostaje tytuł romaji.
 settings-titles-note-english = Tytuły angielskie tak, jak je podaje AniList, a tam, gdzie ich nie ma, romaji.
 settings-titles-note-romaji = Tytuły japońskie w alfabecie łacińskim, tak jak podaje AniList.
-settings-index-none = Nie ustawiono
 settings-stores-with-updates = { $stores } · { $updates }
 settings-seeding-best-effort = Działa w miarę możliwości: seedowanie trwa tylko wtedy, gdy aplikacja { -app-name } jest otwarta.
 settings-downloads-count = { $count ->

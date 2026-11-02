@@ -162,7 +162,7 @@ home-more-genre = Mehr { $genre }
 # Line over the spotlight's title when it is the built-in demo.
 home-spotlight-demo = Demo, frei teilbar
 
-# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Stream.
+# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.
 licensed-return = Folge { $episode } auf { $service } gesehen?
 
 # Notice after Mark as watched on the return notice. It holds Undo.
@@ -3065,9 +3065,6 @@ sources-state-held-back = Zurückgehalten
 
 # Heading of the line about { -plugin-store-pl }.
 sources-stores-title = Plugin-Stores
-
-# Under the heading when no { -plugin-store } is joined or the list has not arrived.
-sources-stores-invite = Plugins von Bekannten geteilt. Mit einem Einladungslink beitreten.
 
 # Part of the { -plugin-store } summary: how many { -plugin-store-pl } are joined.
 sources-stores-joined = { $count } beigetreten
@@ -6060,9 +6057,6 @@ onboarding-own-heading = Eigene Medien?
 # Heading of the group that joins a store with an invite.
 onboarding-invite-heading = Einladungslink vorhanden?
 
-# Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-onboarding-where-stores = Plugins kommen aus Plugin-Stores. Ein Plugin-Store wird von einer Person für die Leute betrieben, die sie einlädt. Du trittst also mit einem Einladungslink des Besitzers bei.
-
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = Jetzt ausprobieren
 
@@ -8199,12 +8193,6 @@ sources-empty-detail = Tritt einem Plugin-Store mit dem Einladungslink bei, den 
 # Row for the built-in torrent source.
 sources-torrents = Torrents
 
-# Label of a source that is not a plugin and controls this device.
-sources-remote = Remote
-
-# Origin: set in the config file.
-sources-origin-config = In der Konfigurationsdatei festgelegt
-
 # Origin: built into the app.
 sources-origin-built-in = Eingebaut
 
@@ -8247,7 +8235,7 @@ sources-detail-disabled = Aus. Sie behält ihren Platz und wird nicht ausprobier
 # Status line: the source is gone.
 sources-detail-gone = Diese Quelle ist nicht mehr da.
 
-# Status line: the site did not answer.
+# Status line: the source did not answer.
 sources-detail-site = Die Quelle hat nicht geantwortet.
 
 # Row label: version.
@@ -8508,9 +8496,6 @@ sources-your-intro = Folgen werden aus der ersten Quelle abgespielt, die sie hat
 # Heading of the section that lists the plugins.
 sources-section-plugins = Plugins
 
-# Section heading: Internet Archive collections and PeerTube channels.
-sources-section-catalogues = Freie Kataloge
-
 # Link in the empty state.
 sources-add-demo = Demo hinzufügen
 
@@ -8522,9 +8507,6 @@ stores-joined = Beigetreten
 
 # Title of the empty list.
 stores-empty-title = Noch keine Plugin-Stores
-
-# Line under the empty title.
-stores-empty-detail = Plugin-Stores werden von Leuten betrieben, die du kennst. Tritt einem bei, indem du den Einladungslink einfügst, den dir die betreibende Person schickt.
 
 # Line under the title of the screen when plugins add sources.
 stores-intro = Plugins fügen Quellen hinzu. Jedes listet die Hosts auf, die es kontaktiert, bevor du es installierst.
@@ -9018,9 +9000,6 @@ stores-offers-plugins =
 # Button of a notice that opens the plugin stores page.
 notice-open-stores = Plugin-Stores öffnen
 
-# Explainer on the empty plugin stores page.
-stores-what-is = Ein Plugin-Store ist ein kleiner Server, den eine Person für die Leute betreibt, die sie einlädt. Er bietet Quellen als Plugins an. Kaeri betreibt keine Plugin-Stores und listet keine auf, du trittst also mit einem Einladungslink des Besitzers bei.
-
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = Was ist ein Plugin-Store?
 
@@ -9306,24 +9285,6 @@ torrents-proxy-not-saved = Nicht gespeichert. { $why }, daher bleibt der gespeic
 
 # Notice when torrents stayed off. The reason is a sentence fragment.
 torrents-still-off = Torrents sind weiterhin aus. { $why }.
-
-# Label of the index address field.
-torrents-index = Torrent-Index
-
-# Line under the index field.
-torrents-index-detail = Die RSS-Suchadresse, bei der Kaeri nach Torrents fragt.
-
-# Hint inside the index field.
-torrents-index-hint = https://…/?q={ "{" }query{ "}" }
-
-# Line when no index address is set.
-torrents-index-needed = Torrents brauchen eine Index-Adresse.
-
-# Line when the index address has the wrong scheme.
-torrents-index-scheme = Verwende eine http- oder https-Adresse.
-
-# Notice after the index was saved.
-torrents-index-saved = Torrent-Index gespeichert
 
 # Check passed.
 torrents-check-passed = Bestanden

@@ -162,7 +162,7 @@ home-more-genre = もっと見る:{ $genre }
 # Line over the spotlight's title when it is the built-in demo.
 home-spotlight-demo = デモ版(自由に共有OK)
 
-# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Stream.
+# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.
 licensed-return = { $service }で第{ $episode }話を観ましたか?
 
 # Notice after Mark as watched on the return notice. It holds Undo.
@@ -3027,9 +3027,6 @@ sources-state-held-back = 保留中
 
 # Heading of the line about { -plugin-store-pl }.
 sources-stores-title = プラグインストア
-
-# Under the heading when no { -plugin-store } is joined or the list has not arrived.
-sources-stores-invite = 知り合いが共有するプラグイン。招待リンクで参加できます。
 
 # Part of the { -plugin-store } summary: how many { -plugin-store-pl } are joined.
 sources-stores-joined = { $count } 件参加中
@@ -5995,9 +5992,6 @@ onboarding-own-heading = 自分のメディアがありますか?
 # Heading of the group that joins a store with an invite.
 onboarding-invite-heading = 招待リンクをお持ちですか?
 
-# Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-onboarding-where-stores = プラグインはプラグインストアから提供されます。プラグインストアは一人の運営者が、招待した人のために運営しています。参加するには、所有者からの招待リンクが必要です。
-
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = 今すぐ試す
 
@@ -8124,12 +8118,6 @@ sources-empty-detail = 所有者から届く招待リンクでプラグインス
 # Row for the built-in torrent source.
 sources-torrents = トレント
 
-# Label of a source that is not a plugin and controls this device.
-sources-remote = リモート
-
-# Origin: set in the config file.
-sources-origin-config = 設定ファイルで指定
-
 # Origin: built into the app.
 sources-origin-built-in = アプリに同梱
 
@@ -8172,7 +8160,7 @@ sources-detail-disabled = オフです。順番は保持されますが、試さ
 # Status line: the source is gone.
 sources-detail-gone = このソースはもうありません。
 
-# Status line: the site did not answer.
+# Status line: the source did not answer.
 sources-detail-site = ソースが応答しませんでした。
 
 # Row label: version.
@@ -8430,9 +8418,6 @@ sources-your-intro = エピソードは、この順番で最初に見つかっ�
 # Heading of the section that lists the plugins.
 sources-section-plugins = プラグイン
 
-# Section heading: Internet Archive collections and PeerTube channels.
-sources-section-catalogues = 無料カタログ
-
 # Link in the empty state.
 sources-add-demo = デモを追加
 
@@ -8444,9 +8429,6 @@ stores-joined = 参加済み
 
 # Title of the empty list.
 stores-empty-title = まだプラグインストアがありません
-
-# Line under the empty title.
-stores-empty-detail = プラグインストアは、知り合いが運営しています。運営者から届いた招待リンクで参加できます。
 
 # Line under the title of the screen when plugins add sources.
 stores-intro = プラグインはソースを追加します。それぞれ、インストールする前に接続先のホストを一覧で示します。
@@ -8935,9 +8917,6 @@ stores-offers-plugins =
 # Button of a notice that opens the plugin stores page.
 notice-open-stores = プラグインストアを開く
 
-# Explainer on the empty plugin stores page.
-stores-what-is = プラグインストアは、一人の運営者が、招待した人のために運営する小さなサーバーです。ソースをプラグインとして提供します。Kaeriはプラグインストアを運営せず、一覧も載せません。所有者からの招待リンクで参加してください。
-
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = プラグインストアとは?
 
@@ -9222,24 +9201,6 @@ torrents-proxy-not-saved = 保存されませんでした。{ $why }ため、保
 
 # Notice when torrents stayed off. The reason is a sentence fragment.
 torrents-still-off = { $why }ため、トレントはまだオフです。
-
-# Label of the index address field.
-torrents-index = トレントインデックス
-
-# Line under the index field.
-torrents-index-detail = Kaeriがトレントを探すために使うRSS検索のアドレスです。
-
-# Hint inside the index field.
-torrents-index-hint = https://…/?q={ "{" }query{ "}" }
-
-# Line when no index address is set.
-torrents-index-needed = トレントには、トレントインデックスのアドレスが必要です。
-
-# Line when the index address has the wrong scheme.
-torrents-index-scheme = httpまたはhttpsのアドレスを使用してください。
-
-# Notice after the index was saved.
-torrents-index-saved = トレントインデックスを保存しました
 
 # Check passed.
 torrents-check-passed = 合格

@@ -1367,9 +1367,6 @@
   <data name="SourcesStatusWorking" xml:space="preserve">
     <value>Sẵn sàng</value>
   </data>
-  <data name="SourcesTorrentIndexes" xml:space="preserve">
-    <value>Tìm trong các chỉ mục torrent mà bạn đã bật trong Cài đặt.</value>
-  </data>
   <data name="SourcesVersionReady" xml:space="preserve">
     <value>Phiên bản {version} đã sẵn sàng</value>
   </data>
@@ -3448,9 +3445,6 @@
   </data>
   <data name="OnboardingInviteHeading" xml:space="preserve">
     <value>Có liên kết mời?</value>
-  </data>
-  <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>Các plugin đến từ các cửa hàng plugin. Một cửa hàng plugin do một người vận hành cho những người họ mời, nên bạn tham gia bằng liên kết mời từ chủ sở hữu.</value>
   </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>Dùng thử ngay</value>
@@ -5564,12 +5558,6 @@
   <data name="SourcesTorrents" xml:space="preserve">
     <value>Torrent</value>
   </data>
-  <data name="SourcesRemote" xml:space="preserve">
-    <value>Từ xa</value>
-  </data>
-  <data name="SourcesOriginConfig" xml:space="preserve">
-    <value>Đặt trong tệp cấu hình</value>
-  </data>
   <data name="SourcesOriginBuiltIn" xml:space="preserve">
     <value>Có sẵn trong ứng dụng</value>
   </data>
@@ -5861,9 +5849,6 @@
   <data name="SourcesSectionPlugins" xml:space="preserve">
     <value>Các plugin</value>
   </data>
-  <data name="SourcesSectionCatalogues" xml:space="preserve">
-    <value>Danh mục miễn phí</value>
-  </data>
   <data name="SourcesAddDemo" xml:space="preserve">
     <value>Thêm bản demo</value>
   </data>
@@ -5875,9 +5860,6 @@
   </data>
   <data name="StoresEmptyTitle" xml:space="preserve">
     <value>Chưa có các cửa hàng plugin</value>
-  </data>
-  <data name="StoresEmptyDetail" xml:space="preserve">
-    <value>Các cửa hàng plugin do những người bạn quen điều hành. Tham gia bằng liên kết mời mà chủ của nó gửi cho bạn.</value>
   </data>
   <data name="StoresIntro" xml:space="preserve">
     <value>Các plugin thêm các nguồn. Trước khi bạn cài đặt, mỗi thứ đều liệt kê các máy chủ mà nó kết nối tới.</value>
@@ -6356,9 +6338,6 @@
   <data name="NoticeOpenStores" xml:space="preserve">
     <value>Mở các cửa hàng plugin</value>
   </data>
-  <data name="StoresWhatIs" xml:space="preserve">
-    <value>Cửa hàng plugin là một máy chủ nhỏ do một người vận hành cho những người họ mời. Nó cung cấp các nguồn dưới dạng các plugin. Kaeri không vận hành và không liệt kê các cửa hàng plugin nào, nên bạn tham gia bằng liên kết mời từ chủ sở hữu.</value>
-  </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>Cửa hàng plugin là gì?</value>
   </data>
@@ -6640,24 +6619,6 @@
   </data>
   <data name="TorrentsStillOff" xml:space="preserve">
     <value>Torrent vẫn tắt. {why}.</value>
-  </data>
-  <data name="TorrentsIndex" xml:space="preserve">
-    <value>Chỉ mục torrent</value>
-  </data>
-  <data name="TorrentsIndexDetail" xml:space="preserve">
-    <value>Địa chỉ tìm kiếm RSS mà Kaeri dùng để lấy torrent.</value>
-  </data>
-  <data name="TorrentsIndexHint" xml:space="preserve">
-    <value>https://…/?q=…</value>
-  </data>
-  <data name="TorrentsIndexNeeded" xml:space="preserve">
-    <value>Torrent cần có địa chỉ chỉ mục.</value>
-  </data>
-  <data name="TorrentsIndexScheme" xml:space="preserve">
-    <value>Dùng địa chỉ http hoặc https.</value>
-  </data>
-  <data name="TorrentsIndexSaved" xml:space="preserve">
-    <value>Chỉ mục torrent đã lưu.</value>
   </data>
   <data name="TorrentsCheckPassed" xml:space="preserve">
     <value>Đạt</value>

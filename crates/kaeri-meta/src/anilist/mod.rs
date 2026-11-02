@@ -282,7 +282,7 @@ impl BrowseFilter {
             min_popularity: Some(1000),
             sources: vec!["MANGA".into()],
             countries: vec!["JP".into(), "KR".into()],
-            licensed_by: vec!["Hikari Stream".into()],
+            licensed_by: vec!["Hikari Library".into()],
             licensed: Some(true),
             on_list: Some(false),
             adult: Some(false),

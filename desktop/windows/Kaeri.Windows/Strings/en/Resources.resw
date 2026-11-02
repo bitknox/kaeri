@@ -253,7 +253,7 @@
   </data>
   <data name="LicensedReturn" xml:space="preserve">
     <value>Watched episode {episode} on {service}?</value>
-    <comment>Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Stream.</comment>
+    <comment>Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.</comment>
   </data>
   <data name="LicensedMarked" xml:space="preserve">
     <value>Episode {episode} marked as watched.</value>
@@ -1373,7 +1373,7 @@
   </data>
   <data name="SearchResultPlaysHere" xml:space="preserve">
     <value>Plays here</value>
-    <comment>Search: end of a result's line when a free catalogue or the demo has the title.</comment>
+    <comment>Search: end of a result's line when an open catalogue or the demo has the title.</comment>
   </data>
   <data name="SearchResultInLibrary" xml:space="preserve">
     <value>In your library</value>
@@ -1930,10 +1930,6 @@
   <data name="SourcesStatusWorking" xml:space="preserve">
     <value>Ready</value>
     <comment>How a { -source } stands when nothing is wrong with it.</comment>
-  </data>
-  <data name="SourcesTorrentIndexes" xml:space="preserve">
-    <value>Searches the torrent indexes you have turned on under Settings.</value>
-    <comment>In the torrent { -source }'s detail, in place of the hosts it contacts.</comment>
   </data>
   <data name="SourcesVersionReady" xml:space="preserve">
     <value>Version {version} is ready</value>
@@ -4780,7 +4776,7 @@
     <comment>Heading of the group that joins a store with an invite.</comment>
   </data>
   <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>Plugins come from plugin stores. A plugin store is run by one person for the people they invite, so you join one with an invite link from its owner.</value>
+    <value>Plugins come from plugin stores. A plugin store is signed and gives each device its own token, so you join one with an invite link from its owner.</value>
     <comment>Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.</comment>
   </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
@@ -7631,14 +7627,6 @@
     <value>Torrents</value>
     <comment>Row for the built-in torrent source.</comment>
   </data>
-  <data name="SourcesRemote" xml:space="preserve">
-    <value>Remote</value>
-    <comment>Label of a source that is not a plugin and controls this device.</comment>
-  </data>
-  <data name="SourcesOriginConfig" xml:space="preserve">
-    <value>Set in the config file</value>
-    <comment>Origin: set in the config file.</comment>
-  </data>
   <data name="SourcesOriginBuiltIn" xml:space="preserve">
     <value>Built in</value>
     <comment>Origin: built into the app.</comment>
@@ -7701,7 +7689,7 @@
   </data>
   <data name="SourcesDetailSite" xml:space="preserve">
     <value>The source didn't answer.</value>
-    <comment>Status line: the site did not answer.</comment>
+    <comment>Status line: the source did not answer.</comment>
   </data>
   <data name="SourcesVersion" xml:space="preserve">
     <value>Version</value>
@@ -8048,7 +8036,7 @@
     <comment>Heading of the section that lists the plugins.</comment>
   </data>
   <data name="SourcesSectionCatalogues" xml:space="preserve">
-    <value>Free catalogues</value>
+    <value>Open catalogues</value>
     <comment>Section heading: Internet Archive collections and PeerTube channels.</comment>
   </data>
   <data name="SourcesAddDemo" xml:space="preserve">
@@ -8068,7 +8056,7 @@
     <comment>Title of the empty list.</comment>
   </data>
   <data name="StoresEmptyDetail" xml:space="preserve">
-    <value>Plugin stores are run by people you know. Join one with the invite link its owner sends you.</value>
+    <value>Plugin stores hold signed plugins and give each device its own token. Join one with the invite link its owner sends you.</value>
     <comment>Line under the empty title.</comment>
   </data>
   <data name="StoresIntro" xml:space="preserve">
@@ -8723,7 +8711,7 @@
     <comment>Button of a notice that opens the plugin stores page.</comment>
   </data>
   <data name="StoresWhatIs" xml:space="preserve">
-    <value>A plugin store is a small server one person runs for the people they invite. It offers sources as plugins. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.</value>
+    <value>A plugin store is a small server that holds signed plugins and gives each device its own token. It offers sources as plugins. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.</value>
     <comment>Explainer on the empty plugin stores page.</comment>
   </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
@@ -9145,30 +9133,6 @@
   <data name="TorrentsStillOff" xml:space="preserve">
     <value>Torrents are still off. {why}.</value>
     <comment>Notice when torrents stayed off. The reason is a sentence fragment.</comment>
-  </data>
-  <data name="TorrentsIndex" xml:space="preserve">
-    <value>Torrent index</value>
-    <comment>Label of the index address field.</comment>
-  </data>
-  <data name="TorrentsIndexDetail" xml:space="preserve">
-    <value>The RSS search address Kaeri asks for torrents.</value>
-    <comment>Line under the index field.</comment>
-  </data>
-  <data name="TorrentsIndexHint" xml:space="preserve">
-    <value>https://…/?q={{query}}</value>
-    <comment>Hint inside the index field.</comment>
-  </data>
-  <data name="TorrentsIndexNeeded" xml:space="preserve">
-    <value>Torrents need an index address.</value>
-    <comment>Line when no index address is set.</comment>
-  </data>
-  <data name="TorrentsIndexScheme" xml:space="preserve">
-    <value>Use an http or https address.</value>
-    <comment>Line when the index address has the wrong scheme.</comment>
-  </data>
-  <data name="TorrentsIndexSaved" xml:space="preserve">
-    <value>Torrent index saved</value>
-    <comment>Notice after the index was saved.</comment>
   </data>
   <data name="TorrentsCheckNote" xml:space="preserve">
     <value>Kaeri checks that it can reach the proxy before torrents start. Torrents wait while that check fails.</value>

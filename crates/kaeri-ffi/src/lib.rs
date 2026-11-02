@@ -180,7 +180,7 @@ mod tests {
             Command::LoadBrowse,
             Command::Licensed(LicensedCommand::Load { system_region: Some("DK".into()) }),
             Command::Licensed(LicensedCommand::SetServices {
-                services: vec!["Hikari Stream".into()],
+                services: vec!["Hikari Library".into()],
             }),
             Command::Licensed(LicensedCommand::SetRegion { region: None }),
             Command::Licensed(LicensedCommand::SetShowOthers { show: false }),
@@ -190,7 +190,7 @@ mod tests {
             }),
             Command::Licensed(LicensedCommand::Open {
                 id: AnilistId::new(900_001),
-                service: "Hikari Stream".into(),
+                service: "Hikari Library".into(),
                 url: "https://hikari.example/t/1".into(),
                 episode: Some(4),
             }),
@@ -924,7 +924,7 @@ mod tests {
             min_popularity: Some(1_000),
             sources: vec![kaeri_model::catalog::SourceMaterial::Manga],
             countries: vec!["JP".into()],
-            streaming_on: vec!["Lantern Stream".into()],
+            streaming_on: vec!["Lantern Library".into()],
             licensed_only: true,
             on_list: Some(OnList::Hide),
             available: Some(kaeri_model::search::Available::OnYourServices),
@@ -982,7 +982,7 @@ mod tests {
                     spoiler: false,
                 }],
             }],
-            streaming_sites: vec!["Hikari Stream".into()],
+            streaming_sites: vec!["Hikari Library".into()],
         }));
         crosses_intact(Event::RecentSearches(vec![every_filter(), SearchQuery::text("kaze")]));
         crosses_intact(Event::Content {
@@ -1084,18 +1084,18 @@ mod tests {
             ServiceLink, TitleAvailability,
         };
         let link = ServiceLink {
-            service: "Hikari Stream".into(),
+            service: "Hikari Library".into(),
             url: "https://hikari.example/t/1".into(),
             notes: Some("JP".into()),
         };
         crosses_intact(Event::Licensed(LicensedView {
             settings: LicensedSettings {
-                services: vec!["Hikari Stream".into()],
+                services: vec!["Hikari Library".into()],
                 region: Some("DK".into()),
                 show_others: false,
             },
             region: Some("DK".into()),
-            available: vec!["Hikari Stream".into(), "Tsuki TV".into()],
+            available: vec!["Hikari Library".into(), "Tsuki TV".into()],
             regions: vec!["DK".into(), "JP".into()],
         }));
         crosses_intact(Event::Availability(TitleAvailability {
@@ -1107,7 +1107,7 @@ mod tests {
             others: vec!["Tsuki TV".into()],
             episodes: vec![EpisodeLink {
                 episode: 4,
-                service: "Hikari Stream".into(),
+                service: "Hikari Library".into(),
                 url: "https://hikari.example/t/1/4".into(),
             }],
             choose_services: true,
@@ -1259,10 +1259,10 @@ mod tests {
         crosses_intact(Event::LicensedReturn(LicensedReturn {
             id: AnilistId::new(900_001),
             episode: 4,
-            service: "Hikari Stream".into(),
+            service: "Hikari Library".into(),
             prompt: kaeri_model::Msg::LicensedReturn {
                 episode: 4,
-                service: "Hikari Stream".into(),
+                service: "Hikari Library".into(),
             },
             done: kaeri_model::Msg::LicensedMarked { episode: 4 },
         }));

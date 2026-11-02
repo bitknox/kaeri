@@ -1574,9 +1574,6 @@
   <data name="SourcesStatusWorking" xml:space="preserve">
     <value>Готов</value>
   </data>
-  <data name="SourcesTorrentIndexes" xml:space="preserve">
-    <value>Ищет по торрент-индексам, которые вы включили в настройках.</value>
-  </data>
   <data name="SourcesVersionReady" xml:space="preserve">
     <value>Версия {version} готова к установке</value>
   </data>
@@ -3818,9 +3815,6 @@
   <data name="OnboardingInviteHeading" xml:space="preserve">
     <value>Есть ссылка-приглашение?</value>
   </data>
-  <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>Плагины приходят из магазинов плагинов. Магазин плагинов ведёт один человек для тех, кого он приглашает, поэтому присоединиться можно по ссылке-приглашению от его владельца.</value>
-  </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>Попробуйте сразу</value>
   </data>
@@ -6023,12 +6017,6 @@
   <data name="SourcesTorrents" xml:space="preserve">
     <value>Торренты</value>
   </data>
-  <data name="SourcesRemote" xml:space="preserve">
-    <value>Удалённый</value>
-  </data>
-  <data name="SourcesOriginConfig" xml:space="preserve">
-    <value>Задан в файле настроек</value>
-  </data>
   <data name="SourcesOriginBuiltIn" xml:space="preserve">
     <value>Встроен в приложение</value>
   </data>
@@ -6347,9 +6335,6 @@
   <data name="SourcesSectionPlugins" xml:space="preserve">
     <value>Плагины</value>
   </data>
-  <data name="SourcesSectionCatalogues" xml:space="preserve">
-    <value>Бесплатные каталоги</value>
-  </data>
   <data name="SourcesAddDemo" xml:space="preserve">
     <value>Добавить демо</value>
   </data>
@@ -6361,9 +6346,6 @@
   </data>
   <data name="StoresEmptyTitle" xml:space="preserve">
     <value>Магазины плагинов пока не подключены</value>
-  </data>
-  <data name="StoresEmptyDetail" xml:space="preserve">
-    <value>Магазины плагинов ведут люди, которых вы знаете. Подключиться можно по пригласительной ссылке, которую присылает владелец.</value>
   </data>
   <data name="StoresIntro" xml:space="preserve">
     <value>Плагины добавляют источники. Каждый показывает серверы, с которыми связывается, до установки.</value>
@@ -6887,9 +6869,6 @@
   <data name="NoticeOpenStores" xml:space="preserve">
     <value>Открыть магазины плагинов</value>
   </data>
-  <data name="StoresWhatIs" xml:space="preserve">
-    <value>Магазин плагинов: небольшой сервер, который один человек ведёт для тех, кого приглашает. Он предлагает источники в виде плагины. Kaeri не ведёт магазинов плагинов и не публикует их список, поэтому присоединиться к магазину можно по ссылке-приглашению от его владельца.</value>
-  </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>Что такое магазин плагинов?</value>
   </data>
@@ -7180,24 +7159,6 @@
   </data>
   <data name="TorrentsStillOff" xml:space="preserve">
     <value>Торренты всё ещё выключены. {why}.</value>
-  </data>
-  <data name="TorrentsIndex" xml:space="preserve">
-    <value>Торрент-индекс</value>
-  </data>
-  <data name="TorrentsIndexDetail" xml:space="preserve">
-    <value>Адрес RSS-поиска, по которому Kaeri ищет торренты.</value>
-  </data>
-  <data name="TorrentsIndexHint" xml:space="preserve">
-    <value>https://…/?q={{query}}</value>
-  </data>
-  <data name="TorrentsIndexNeeded" xml:space="preserve">
-    <value>Для торрентов нужен адрес индекса.</value>
-  </data>
-  <data name="TorrentsIndexScheme" xml:space="preserve">
-    <value>Используйте адрес http или https.</value>
-  </data>
-  <data name="TorrentsIndexSaved" xml:space="preserve">
-    <value>Торрент-индекс сохранён</value>
   </data>
   <data name="TorrentsCheckPassed" xml:space="preserve">
     <value>Пройдена</value>

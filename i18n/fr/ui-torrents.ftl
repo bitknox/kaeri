@@ -17,12 +17,6 @@ torrents-proxy-saved = Proxy enregistré
 torrents-check-not-made-proxy = La vérification n’a pas pu être faite via ce proxy
 torrents-proxy-not-saved = Non enregistré. { $why }, le proxy enregistré reste en place.
 torrents-still-off = Les torrents restent désactivés. { $why }.
-torrents-index = { -torrent-index-cap }
-torrents-index-detail = L’adresse de recherche RSS que { -app-name } utilise pour les torrents.
-torrents-index-hint = https://…/?q={ "{" }query{ "}" }
-torrents-index-needed = Les torrents ont besoin d’une adresse d’index.
-torrents-index-scheme = Utilisez une adresse http ou https.
-torrents-index-saved = { -torrent-index-cap } enregistré
 torrents-last-check = Dernière vérification
 torrents-check-passed = Réussie
 torrents-check-running = Vérification

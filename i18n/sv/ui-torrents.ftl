@@ -17,12 +17,6 @@ torrents-proxy-saved = Proxyn sparades
 torrents-check-not-made-proxy = Kontrollen kunde inte göras genom den här proxyn
 torrents-proxy-not-saved = Inte sparad. { $why }, så den sparade proxyn finns kvar.
 torrents-still-off = Torrenter är fortfarande av. { $why }.
-torrents-index = { -torrent-index-cap }
-torrents-index-detail = RSS-sökadressen som { -app-name } frågar efter torrenter från.
-torrents-index-hint = https://…/?q={ "{" }query{ "}" }
-torrents-index-needed = Torrenter behöver en indexadress.
-torrents-index-scheme = Använd en http- eller https-adress.
-torrents-index-saved = { -torrent-index-cap } sparades
 torrents-last-check = Senaste kontroll
 torrents-check-passed = Godkänd
 torrents-check-running = Kontrollerar

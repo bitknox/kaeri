@@ -127,7 +127,7 @@ pub struct LicensedReturn {
     pub id: AnilistId,
     pub episode: u32,
     pub service: String,
-    /// "Watched episode 4 on Hikari Stream?"
+    /// "Watched episode 4 on Hikari Library?"
     pub prompt: crate::Msg,
     /// "Episode 4 marked as watched.", for the notice once it is marked.
     pub done: crate::Msg,
@@ -249,8 +249,8 @@ mod tests {
 
     #[test]
     fn a_title_that_plays_here_and_is_on_your_service_says_also_on() {
-        let links = [link("Hikari Stream", None), link("Tsuki TV", None)];
-        let a = resolve_availability(ID, &links, &[], &uses(&["Hikari Stream"]), None, true);
+        let links = [link("Hikari Library", None), link("Tsuki TV", None)];
+        let a = resolve_availability(ID, &links, &[], &uses(&["Hikari Library"]), None, true);
         assert_eq!(a.case, AvailabilityCase::PlaysAlsoOn);
         assert_eq!(a.also_on.len(), 1);
         assert!(a.main.is_none());
@@ -260,11 +260,11 @@ mod tests {
     #[test]
     fn a_title_that_does_not_play_here_opens_your_first_service() {
         let links =
-            [link("Tsuki TV", None), link("Hikari Stream", None), link("Aozora Plus", None)];
+            [link("Tsuki TV", None), link("Hikari Library", None), link("Aozora Plus", None)];
         let listings = [
             EpisodeLink {
                 episode: 1,
-                service: "Hikari Stream".into(),
+                service: "Hikari Library".into(),
                 url: "https://a.example/1".into(),
             },
             EpisodeLink {
@@ -277,7 +277,7 @@ mod tests {
             ID,
             &links,
             &listings,
-            &uses(&["hikari stream", "Tsuki TV"]),
+            &uses(&["hikari library", "Tsuki TV"]),
             None,
             false,
         );
@@ -295,21 +295,27 @@ mod tests {
 
     #[test]
     fn episode_pages_follow_the_main_service() {
-        let links = [link("Hikari Stream", None)];
+        let links = [link("Hikari Library", None)];
         let listings = [EpisodeLink {
             episode: 3,
-            service: "Hikari Stream".into(),
+            service: "Hikari Library".into(),
             url: "https://a.example/3".into(),
         }];
-        let b =
-            resolve_availability(ID, &links, &listings, &uses(&["Hikari Stream"]), None, false);
+        let b = resolve_availability(
+            ID,
+            &links,
+            &listings,
+            &uses(&["Hikari Library"]),
+            None,
+            false,
+        );
         assert_eq!(b.episodes.len(), 1);
     }
 
     #[test]
     fn a_title_on_none_of_your_services_lists_where_it_is() {
         let links = [link("Aozora Plus", None), link("Minato Video", None)];
-        let mut settings = uses(&["Hikari Stream"]);
+        let mut settings = uses(&["Hikari Library"]);
         settings.show_others = false;
         let c = resolve_availability(ID, &links, &[], &settings, None, false);
         assert_eq!(c.case, AvailabilityCase::NotInSources);
@@ -320,8 +326,8 @@ mod tests {
 
     #[test]
     fn the_switch_hides_other_services_in_the_other_cases() {
-        let links = [link("Hikari Stream", None), link("Tsuki TV", None)];
-        let mut settings = uses(&["Hikari Stream"]);
+        let links = [link("Hikari Library", None), link("Tsuki TV", None)];
+        let mut settings = uses(&["Hikari Library"]);
         settings.show_others = false;
         assert!(resolve_availability(ID, &links, &[], &settings, None, true).others.is_empty());
         assert!(
@@ -331,7 +337,7 @@ mod tests {
 
     #[test]
     fn until_a_service_is_chosen_there_are_no_watch_on_buttons() {
-        let links = [link("Hikari Stream", None)];
+        let links = [link("Hikari Library", None)];
         let none =
             resolve_availability(ID, &links, &[], &LicensedSettings::default(), None, false);
         assert_eq!(none.case, AvailabilityCase::NotInSources);
@@ -353,9 +359,15 @@ mod tests {
 
     #[test]
     fn a_hidden_link_is_not_listed_anywhere() {
-        let links = [link("Hikari Stream", Some("JP")), link("Tsuki TV", None)];
-        let a =
-            resolve_availability(ID, &links, &[], &uses(&["Hikari Stream"]), Some("DK"), false);
+        let links = [link("Hikari Library", Some("JP")), link("Tsuki TV", None)];
+        let a = resolve_availability(
+            ID,
+            &links,
+            &[],
+            &uses(&["Hikari Library"]),
+            Some("DK"),
+            false,
+        );
         assert_eq!(a.case, AvailabilityCase::NotInSources);
         assert_eq!(a.others, ["Tsuki TV"]);
     }

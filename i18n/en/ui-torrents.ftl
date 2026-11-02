@@ -76,26 +76,6 @@ torrents-proxy-not-saved = Not saved. { $why }, so the saved proxy stays.
 # @arg why: cause
 torrents-still-off = Torrents are still off. { $why }.
 
-## Torrent index
-
-# Label of the index address field.
-torrents-index = { -torrent-index-cap }
-
-# Line under the index field.
-torrents-index-detail = The RSS search address { -app-name } asks for torrents.
-
-# Hint inside the index field.
-torrents-index-hint = https://…/?q={ "{query}" }
-
-# Line when no index address is set.
-torrents-index-needed = Torrents need an index address.
-
-# Line when the index address has the wrong scheme.
-torrents-index-scheme = Use an http or https address.
-
-# Notice after the index was saved.
-torrents-index-saved = { -torrent-index-cap } saved
-
 ## The proxy check
 
 # Under the proxy form: what the app checks.

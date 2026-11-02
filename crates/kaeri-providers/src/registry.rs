@@ -975,12 +975,12 @@ mod tests {
 
         let r = registry(vec![
             torrent.arc(),
-            MockProvider::new("remote").with_streams(vec![stream("safe")]).arc(),
+            MockProvider::new("extra").with_streams(vec![stream("safe")]).arc(),
         ]);
         let attempt = r.resolve(&ProviderKey::new("k"), "1", Translation::Sub, 0).await;
 
         assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), 0, "no request may leave");
-        assert_eq!(attempt.provider.as_deref(), Some("remote"));
+        assert_eq!(attempt.provider.as_deref(), Some("extra"));
         assert_eq!(r.health().get("torrent").unwrap().state_label(), "held back");
     }
 

@@ -64,11 +64,11 @@ struct MetaTests {
             $0.season = .summer
             $0.year = 2026
             $0.startDate = FuzzyDate(year: 2026, month: 8, day: 20)
-            $0.availableOn = ["Hikari Stream", "Lantern Stream"]
+            $0.availableOn = ["Hikari Library", "Lantern Library"]
         }
         #expect(e.facts(now: now).map(\.label) == ["Studio", "Based on", "Season", "Airing", "Also on"])
         #expect(e.facts(now: now).map(\.value) == [
-            "Atelier Hotaru", "Manga", "Summer 2026", "Since 20 Aug 2026", "Hikari Stream and 1 more",
+            "Atelier Hotaru", "Manga", "Summer 2026", "Since 20 Aug 2026", "Hikari Library and 1 more",
         ])
         #expect(e.factsLine(now: now) == "Manga · Atelier Hotaru · Airing since 20 Aug 2026")
         #expect(entry { $0.source = .other }.basedOn == nil, "Other is left out")

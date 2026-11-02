@@ -162,7 +162,7 @@ home-more-genre = Mer { $genre }
 # Line over the spotlight's title when it is the built-in demo.
 home-spotlight-demo = Demo, fri att dela
 
-# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Stream.
+# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.
 licensed-return = Såg du avsnitt { $episode } på { $service }?
 
 # Notice after Mark as watched on the return notice. It holds Undo.
@@ -3065,9 +3065,6 @@ sources-state-held-back = Hålls tillbaka
 
 # Heading of the line about { -plugin-store-pl }.
 sources-stores-title = Tilläggsbutiker
-
-# Under the heading when no { -plugin-store } is joined or the list has not arrived.
-sources-stores-invite = Tillägg delade av personer du känner. Gå med via en inbjudningslänk.
 
 # Part of the { -plugin-store } summary: how many { -plugin-store-pl } are joined.
 sources-stores-joined = { $count } anslutna
@@ -6060,9 +6057,6 @@ onboarding-own-heading = Har du egna media?
 # Heading of the group that joins a store with an invite.
 onboarding-invite-heading = Har du en inbjudningslänk?
 
-# Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-onboarding-where-stores = Tillägg kommer från tilläggsbutiker. En tilläggsbutik drivs av en person åt dem hen bjuder in, så du går med i en via en inbjudningslänk från ägaren.
-
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = Prova direkt
 
@@ -8199,12 +8193,6 @@ sources-empty-detail = Gå med i en tilläggsbutik med inbjudningslänken som ä
 # Row for the built-in torrent source.
 sources-torrents = Torrent
 
-# Label of a source that is not a plugin and controls this device.
-sources-remote = Fjärrstyrd
-
-# Origin: set in the config file.
-sources-origin-config = Angiven i konfigurationsfilen
-
 # Origin: built into the app.
 sources-origin-built-in = Inbyggd
 
@@ -8247,7 +8235,7 @@ sources-detail-disabled = Av. Den behåller sin plats och provas inte.
 # Status line: the source is gone.
 sources-detail-gone = Den här källan finns inte längre.
 
-# Status line: the site did not answer.
+# Status line: the source did not answer.
 sources-detail-site = källan svarade inte.
 
 # Row label: version.
@@ -8508,9 +8496,6 @@ sources-your-intro = Avsnitt spelas från den första källa som har dem, i den 
 # Heading of the section that lists the plugins.
 sources-section-plugins = Tillägg
 
-# Section heading: Internet Archive collections and PeerTube channels.
-sources-section-catalogues = Fria kataloger
-
 # Link in the empty state.
 sources-add-demo = Lägg till demon
 
@@ -8522,9 +8507,6 @@ stores-joined = Ansluten
 
 # Title of the empty list.
 stores-empty-title = Inga tilläggsbutiker än
-
-# Line under the empty title.
-stores-empty-detail = Tilläggsbutiker drivs av personer du känner. Gå med i en av dem med inbjudningslänken som ägaren skickar till dig.
 
 # Line under the title of the screen when plugins add sources.
 stores-intro = Tillägg lägger till källor. Varje visar vilka värdar den kontaktar innan du installerar den.
@@ -9018,9 +9000,6 @@ stores-offers-plugins =
 # Button of a notice that opens the plugin stores page.
 notice-open-stores = Öppna tilläggsbutiker
 
-# Explainer on the empty plugin stores page.
-stores-what-is = En tilläggsbutik är en liten server som en person driver åt dem hen bjuder in. Den erbjuder källor som tillägg. Kaeri driver inga tilläggsbutiker och listar inga, så du går med i en via en inbjudningslänk från ägaren.
-
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = Vad är en tilläggsbutik?
 
@@ -9306,24 +9285,6 @@ torrents-proxy-not-saved = Inte sparad. { $why }, så den sparade proxyn finns k
 
 # Notice when torrents stayed off. The reason is a sentence fragment.
 torrents-still-off = Torrenter är fortfarande av. { $why }.
-
-# Label of the index address field.
-torrents-index = Torrentindex
-
-# Line under the index field.
-torrents-index-detail = RSS-sökadressen som Kaeri frågar efter torrenter från.
-
-# Hint inside the index field.
-torrents-index-hint = https://…/?q={ "{" }query{ "}" }
-
-# Line when no index address is set.
-torrents-index-needed = Torrenter behöver en indexadress.
-
-# Line when the index address has the wrong scheme.
-torrents-index-scheme = Använd en http- eller https-adress.
-
-# Notice after the index was saved.
-torrents-index-saved = Torrentindex sparades
 
 # Check passed.
 torrents-check-passed = Godkänd

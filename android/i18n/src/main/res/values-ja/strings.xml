@@ -443,9 +443,7 @@
     <string name="tv_use_phone">スマートフォンを使う</string>
     <string name="tv_type_it">入力する</string>
     <string name="tv_qr_label_proxy">プロキシを設定するページのQRコード</string>
-    <string name="tv_qr_label_index">トレントインデックスを入力するページのQRコード</string>
     <string name="tv_scan_proxy">スマートフォンでスキャンし、開いたページでプロキシを変更してください。</string>
-    <string name="tv_scan_torrent">スマートフォンでスキャンし、開いたページでトレントインデックスを入力してください。</string>
     <string name="tv_field_user_optional">ユーザー名（必要な場合）</string>
     <string name="tv_field_password_optional">パスワード（必要な場合）</string>
     <string name="tv_qr_label_link">リンクを開くページのQRコード</string>
@@ -603,7 +601,6 @@
     <string name="settings_titles_note_english_missing">%1$sにはAniListで英語のタイトルがないため、ローマ字のタイトルのままです。</string>
     <string name="settings_titles_note_english">AniListに登録されている英語のタイトルを表示します。英語がない場合はローマ字を表示します。</string>
     <string name="settings_titles_note_romaji">AniListに登録されている日本語のタイトルを、ローマ字で表示します。</string>
-    <string name="settings_index_none">未設定</string>
     <string name="settings_stores_with_updates">%1$d件 · %2$s</string>
     <string name="settings_seeding_best_effort">このデバイスではベストエフォートです。シーディングはKaeriを開いている間だけ行われます。</string>
     <plurals name="settings_downloads_count">
@@ -1412,7 +1409,6 @@
     <string name="onboarding_where_hosts">Kaeriは、お手元にあるもの(このデバイス内のファイル、Jellyfinサーバー、参加したストアのプラグイン)を再生します。</string>
     <string name="onboarding_own_heading">自分のメディアがありますか?</string>
     <string name="onboarding_invite_heading">招待リンクをお持ちですか?</string>
-    <string name="onboarding_where_stores">プラグインはプラグインストアから提供されます。プラグインストアは一人の運営者が、招待した人のために運営しています。参加するには、所有者からの招待リンクが必要です。</string>
     <string name="onboarding_demo_heading">今すぐ試す</string>
     <string name="onboarding_demo_detail">デモでは、制作者がCC BY 4.0で公開しているシリーズ「こうしす！」をWikimedia Commonsから再生します。</string>
     <string name="onboarding_play_demo">デモを再生</string>
@@ -2137,8 +2133,6 @@
     <string name="sources_empty_title">ソースはまだありません</string>
     <string name="sources_empty_detail">所有者から届く招待リンクでプラグインストアに参加してください。</string>
     <string name="sources_torrents">トレント</string>
-    <string name="sources_remote">リモート</string>
-    <string name="sources_origin_config">設定ファイルで指定</string>
     <string name="sources_origin_built_in">アプリに同梱</string>
     <string name="sources_origin_left_store">脱退したプラグインストアから</string>
     <string name="sources_origin_by_hand">手動で追加</string>
@@ -2243,12 +2237,10 @@
     <string name="sources_your">あなたのソース</string>
     <string name="sources_your_intro">エピソードは、この順番で最初に見つかったソースから再生されます。</string>
     <string name="sources_section_plugins">プラグイン</string>
-    <string name="sources_section_catalogues">無料カタログ</string>
     <string name="sources_add_demo">デモを追加</string>
     <string name="sources_order_all">種類にかかわらず、すべてのソースがこの順番で試されます。</string>
     <string name="stores_joined">参加済み</string>
     <string name="stores_empty_title">まだプラグインストアがありません</string>
-    <string name="stores_empty_detail">プラグインストアは、知り合いが運営しています。運営者から届いた招待リンクで参加できます。</string>
     <string name="stores_intro">プラグインはソースを追加します。それぞれ、インストールする前に接続先のホストを一覧で示します。</string>
     <string name="stores_not_from_app">プラグインは、プラグインストアの運営者が提供するもので、Kaeriが提供するものではありません。プラグインストアからはいつでも退出できます。</string>
     <string name="stores_join_owner_responsible">このプラグインストアは%1$sが運営し、プラグインも%1$sが選んでいます。Kaeriは作成も確認も承認もしていません。</string>
@@ -2418,7 +2410,6 @@
         <item quantity="other">提供しているプラグイン（%1$d件）</item>
     </plurals>
     <string name="notice_open_stores">プラグインストアを開く</string>
-    <string name="stores_what_is">プラグインストアは、一人の運営者が、招待した人のために運営する小さなサーバーです。ソースをプラグインとして提供します。Kaeriはプラグインストアを運営せず、一覧も載せません。所有者からの招待リンクで参加してください。</string>
     <string name="stores_what_is_link">プラグインストアとは?</string>
     <string name="stores_invite_rules">招待リンクは、1人が1回だけ使え、7日間有効です。期限が切れた場合は、プラグインストアの所有者に新しいリンクを依頼してください。</string>
     <string name="stores_qr_label">招待リンクのQRコード</string>
@@ -2515,12 +2506,6 @@
     <string name="torrents_proxy_saved">プロキシを保存しました</string>
     <string name="torrents_proxy_not_saved">保存されませんでした。%1$sため、保存済みのプロキシはそのまま残ります。</string>
     <string name="torrents_still_off">%1$sため、トレントはまだオフです。</string>
-    <string name="torrents_index">トレントインデックス</string>
-    <string name="torrents_index_detail">Kaeriがトレントを探すために使うRSS検索のアドレスです。</string>
-    <string name="torrents_index_hint">https://…/?q={query}</string>
-    <string name="torrents_index_needed">トレントには、トレントインデックスのアドレスが必要です。</string>
-    <string name="torrents_index_scheme">httpまたはhttpsのアドレスを使用してください。</string>
-    <string name="torrents_index_saved">トレントインデックスを保存しました</string>
     <string name="torrents_check_passed">合格</string>
     <string name="torrents_check_running">確認中</string>
     <string name="torrents_check_failed">失敗</string>

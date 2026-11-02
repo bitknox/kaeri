@@ -1367,9 +1367,6 @@
   <data name="SourcesStatusWorking" xml:space="preserve">
     <value>Siap</value>
   </data>
-  <data name="SourcesTorrentIndexes" xml:space="preserve">
-    <value>Mencari di indeks torrent yang Anda aktifkan di Pengaturan.</value>
-  </data>
   <data name="SourcesVersionReady" xml:space="preserve">
     <value>Versi {version} siap</value>
   </data>
@@ -3448,9 +3445,6 @@
   </data>
   <data name="OnboardingInviteHeading" xml:space="preserve">
     <value>Punya tautan undangan?</value>
-  </data>
-  <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>Plugin-plugin berasal dari toko-toko plugin. Satu toko plugin dikelola oleh satu orang untuk orang yang ia undang, jadi Anda bergabung lewat tautan undangan dari pemiliknya.</value>
   </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>Coba sekarang</value>
@@ -5564,12 +5558,6 @@
   <data name="SourcesTorrents" xml:space="preserve">
     <value>Torrent</value>
   </data>
-  <data name="SourcesRemote" xml:space="preserve">
-    <value>Jarak jauh</value>
-  </data>
-  <data name="SourcesOriginConfig" xml:space="preserve">
-    <value>Diatur di berkas konfigurasi</value>
-  </data>
   <data name="SourcesOriginBuiltIn" xml:space="preserve">
     <value>Bawaan aplikasi</value>
   </data>
@@ -5861,9 +5849,6 @@
   <data name="SourcesSectionPlugins" xml:space="preserve">
     <value>Plugin-plugin</value>
   </data>
-  <data name="SourcesSectionCatalogues" xml:space="preserve">
-    <value>Katalog gratis</value>
-  </data>
   <data name="SourcesAddDemo" xml:space="preserve">
     <value>Tambah demo</value>
   </data>
@@ -5875,9 +5860,6 @@
   </data>
   <data name="StoresEmptyTitle" xml:space="preserve">
     <value>Belum ada toko-toko plugin</value>
-  </data>
-  <data name="StoresEmptyDetail" xml:space="preserve">
-    <value>Toko-toko plugin dijalankan oleh orang yang Anda kenal. Gabung ke salah satunya dengan tautan undangan yang dikirim pemiliknya.</value>
   </data>
   <data name="StoresIntro" xml:space="preserve">
     <value>Plugin-plugin menambahkan sumber-sumber. Setiap plugin mencantumkan host yang dihubunginya sebelum Anda memasangnya.</value>
@@ -6356,9 +6338,6 @@
   <data name="NoticeOpenStores" xml:space="preserve">
     <value>Buka toko-toko plugin</value>
   </data>
-  <data name="StoresWhatIs" xml:space="preserve">
-    <value>Toko plugin adalah server kecil yang dikelola satu orang untuk orang yang ia undang. Ia menawarkan sumber-sumber berupa plugin-plugin. Kaeri tidak menjalankan dan tidak mendaftar toko-toko plugin mana pun, jadi Anda bergabung lewat tautan undangan dari pemiliknya.</value>
-  </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>Apa itu toko plugin?</value>
   </data>
@@ -6640,24 +6619,6 @@
   </data>
   <data name="TorrentsStillOff" xml:space="preserve">
     <value>Torrent masih nonaktif. {why}.</value>
-  </data>
-  <data name="TorrentsIndex" xml:space="preserve">
-    <value>Indeks torrent</value>
-  </data>
-  <data name="TorrentsIndexDetail" xml:space="preserve">
-    <value>Alamat pencarian RSS yang diminta Kaeri untuk torrent.</value>
-  </data>
-  <data name="TorrentsIndexHint" xml:space="preserve">
-    <value>https://…/?q={{query}}</value>
-  </data>
-  <data name="TorrentsIndexNeeded" xml:space="preserve">
-    <value>Torrent memerlukan alamat indeks.</value>
-  </data>
-  <data name="TorrentsIndexScheme" xml:space="preserve">
-    <value>Gunakan alamat http atau https.</value>
-  </data>
-  <data name="TorrentsIndexSaved" xml:space="preserve">
-    <value>Indeks torrent disimpan</value>
   </data>
   <data name="TorrentsCheckPassed" xml:space="preserve">
     <value>Lolos</value>

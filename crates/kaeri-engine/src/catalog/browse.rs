@@ -324,7 +324,7 @@ mod tests {
                 tag("Androids", "Cast-Traits", false),
                 tag("Aliens", "Theme-Sci-Fi", false),
             ],
-            streaming: vec!["Hikari Stream".into()],
+            streaming: vec!["Hikari Library".into()],
         };
         let shown = facets(&from, false);
         assert_eq!(shown.genres, ["Mecha"]);

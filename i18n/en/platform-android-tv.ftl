@@ -376,17 +376,9 @@ tv-type-it = Type it
 # @only android
 tv-qr-label-proxy = QR code for the page that takes the proxy
 
-# Spoken label of the QR code for the torrent index page
-# @only android
-tv-qr-label-index = QR code for the page that takes the { -torrent-index }
-
 # Beside the QR code on the TV
 # @only android
 tv-scan-proxy = Scan with your phone, then change the proxy on the page that opens.
-
-# Beside the QR code on the TV
-# @only android
-tv-scan-torrent = Scan with your phone, then fill in the { -torrent-index } on the page that opens.
 
 # Name of the proxy user field on the TV
 # @only android

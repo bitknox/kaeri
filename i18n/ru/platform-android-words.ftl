@@ -156,7 +156,6 @@ settings-titles-note-follows = Берётся из аккаунта AniList. П�
 settings-titles-note-english-missing = У { $title } нет английского названия в AniList, поэтому оно остаётся в ромадзи.
 settings-titles-note-english = Английские названия, как их указывает AniList, а там, где их нет, ромадзи.
 settings-titles-note-romaji = Японские названия латиницей, как их указывает AniList.
-settings-index-none = Не задано
 settings-stores-with-updates = { $stores } · { $updates }
 settings-seeding-best-effort = По возможности: раздача идёт, только пока открыт { -app-name }.
 settings-downloads-count = { $count ->

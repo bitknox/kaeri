@@ -17,12 +17,6 @@ torrents-proxy-saved = Đã lưu proxy
 torrents-check-not-made-proxy = Không thể kiểm tra qua proxy này
 torrents-proxy-not-saved = Chưa lưu. { $why }, nên proxy đã lưu vẫn được giữ.
 torrents-still-off = Torrent vẫn tắt. { $why }.
-torrents-index = { -torrent-index-cap }
-torrents-index-detail = Địa chỉ tìm kiếm RSS mà { -app-name } dùng để lấy torrent.
-torrents-index-hint = https://…/?q=…
-torrents-index-needed = Torrent cần có địa chỉ chỉ mục.
-torrents-index-scheme = Dùng địa chỉ http hoặc https.
-torrents-index-saved = { -torrent-index-cap } đã lưu.
 torrents-last-check = Lần kiểm tra gần nhất
 torrents-check-passed = Đạt
 torrents-check-running = Đang kiểm tra

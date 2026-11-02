@@ -99,12 +99,6 @@ sources-empty-detail = Join a { -plugin-store } with the invite link its owner s
 # Row for the built-in torrent source.
 sources-torrents = Torrents
 
-# Label of a source that is not a plugin and controls this device.
-sources-remote = Remote
-
-# Origin: set in the config file.
-sources-origin-config = Set in the config file
-
 # Origin: built into the app.
 sources-origin-built-in = Built in
 
@@ -153,7 +147,7 @@ sources-detail-disabled = Off. It keeps its place and isn't tried.
 # Status line: the source is gone.
 sources-detail-gone = This { -source } is no longer here.
 
-# Status line: the site did not answer.
+# Status line: the source did not answer.
 sources-detail-site = The { -source } didn't answer.
 
 # Row label: version.
@@ -239,7 +233,6 @@ sources-torrents-note = Torrents are part of { -app-name }, not a { -plugin }. T
 
 # Over the { -source } list while the { -source-pl } are set up again after a change.
 sources-rebuilding = { -source-cap-pl } are being set up again
-
 
 # Value of a plugin's response time, in milliseconds.
 # @arg ms: int
@@ -467,7 +460,6 @@ player-starting-part = Starting part { $part }
 # Credit line under the starting line on the player's starting screen for the demo.
 player-demo-credit = こうしす！ by OPAP-JP contributors · CC BY 4.0
 
-
 # Line under the title when no source is set up, where the device cannot read folders.
 sources-empty-body-mobile = { -source-cap-pl } are where episodes come from: your media server, and { -plugin-pl } from { -plugin-store-pl } you join.
 
@@ -480,9 +472,8 @@ sources-your-intro = Episodes play from the first { -source } that has them, in 
 # Heading of the section that lists the plugins.
 sources-section-plugins = { -plugin-cap-pl }
 
-
 # Section heading: Internet Archive collections and PeerTube channels.
-sources-section-catalogues = Free catalogues
+sources-section-catalogues = Open catalogues
 
 # Link in the empty state.
 # @max 24

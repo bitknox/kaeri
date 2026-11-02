@@ -16,8 +16,8 @@ Netlify account. It sets up two things:
 
 The database is created by the first deploy, because this folder's `package.json` lists
 `@netlify/database`, and the function finds it through `NETLIFY_DB_URL`. There is nothing to copy
-by hand. Netlify Database is part of Netlify's credit-based plans, Free included, and a store for a
-group of friends fits in the Free plan's allowance. Plugin files count toward the database's
+by hand. Netlify Database is part of Netlify's credit-based plans, Free included, and a small
+store fits in the Free plan's allowance. Plugin files count toward the database's
 storage.
 
 To use a database of your own instead, or if your plan does not include Netlify Database, put a

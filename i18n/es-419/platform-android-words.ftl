@@ -146,7 +146,6 @@ settings-titles-note-follows = Sigue tu cuenta de AniList. Mientras no hayas ini
 settings-titles-note-english-missing = { $title } no tiene título en inglés en AniList, así que conserva su título en romaji.
 settings-titles-note-english = Títulos en inglés como los lista AniList, y romaji cuando no hay.
 settings-titles-note-romaji = Títulos japoneses escritos con letras latinas, como los lista AniList.
-settings-index-none = Sin configurar
 settings-stores-with-updates = { $stores } · { $updates }
 settings-seeding-best-effort = Compartir funciona a mejor esfuerzo en este { -device }: solo mientras { -app-name } está abierta.
 settings-downloads-count = { $count ->

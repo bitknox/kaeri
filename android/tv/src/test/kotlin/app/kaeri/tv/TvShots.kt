@@ -254,7 +254,7 @@ class TvShots {
             ),
             "single-1080".takeIf { pinned },
         ),
-        SourceOption("fumi-mirror", "Fumi Mirror", 0u, 13u, false, SourceNote.Resting, emptyList(), null),
+        SourceOption("fumi-archive", "Fumi Archive", 0u, 13u, false, SourceNote.Resting, emptyList(), null),
         SourceOption("old-reel", "Old Reel", 0u, 13u, false, SourceNote.Failed("Timed out after 20 seconds"), emptyList(), null),
     )
 
@@ -346,7 +346,7 @@ class TvShots {
     private fun notInstalledShot(name: String, outcome: FfiLinkSent?) {
         val host = ActionsHost()
         val context = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
-        host.open(notInstalledPanel(context, "Hikari Stream", "https://watch.example/title/900001", outcome?.let { { _: String -> it } }))
+        host.open(notInstalledPanel(context, "Hikari Library", "https://watch.example/title/900001", outcome?.let { { _: String -> it } }))
         compose.setContent { TvTheme { Box(Modifier.fillMaxSize().background(ObiSilk.Ground)) { ActionsPanel(host) } } }
         compose.waitForIdle()
         if (outcome != null) {

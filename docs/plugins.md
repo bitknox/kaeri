@@ -15,7 +15,7 @@ like a native source, with the same ranking, health tracking and failover. Any W
 works, and reference implementations in Rust and JavaScript live in `plugins/`.
 
 **The sandbox has no sockets. The host lends `fetch`.** The host makes each request, enforces
-`allowed-hosts`, rate-limits and keeps the cookie jar, so your plugin is a parser. It cannot reach
+`allowed-hosts`, rate-limits and keeps the cookie jar, so your plugin turns responses into results. It cannot reach
 anything outside its declared `allowed-hosts`.
 
 ## The interface

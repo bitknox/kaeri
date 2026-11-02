@@ -481,9 +481,7 @@
     <string name="tv_use_phone">Usar un teléfono</string>
     <string name="tv_type_it">Escribir</string>
     <string name="tv_qr_label_proxy">Código QR de la página para el proxy</string>
-    <string name="tv_qr_label_index">Código QR de la página para el índice de torrents</string>
     <string name="tv_scan_proxy">Escanea con tu teléfono y cambia el proxy en la página que se abre.</string>
-    <string name="tv_scan_torrent">Escanea con tu teléfono y completa el índice de torrents en la página que se abre.</string>
     <string name="tv_field_user_optional">Usuario, si lo piden</string>
     <string name="tv_field_password_optional">Contraseña, si la piden</string>
     <string name="tv_qr_label_link">Código QR de la página para el enlace</string>
@@ -665,7 +663,6 @@
     <string name="settings_titles_note_english_missing">%1$s no tiene título en inglés en AniList, así que conserva su título en romaji.</string>
     <string name="settings_titles_note_english">Títulos en inglés como los lista AniList, y romaji cuando no hay.</string>
     <string name="settings_titles_note_romaji">Títulos japoneses escritos con letras latinas, como los lista AniList.</string>
-    <string name="settings_index_none">Sin configurar</string>
     <string name="settings_stores_with_updates">%1$d · %2$s</string>
     <string name="settings_seeding_best_effort">Compartir funciona a mejor esfuerzo en este dispositivo: solo mientras Kaeri está abierta.</string>
     <plurals name="settings_downloads_count">
@@ -1514,7 +1511,6 @@
     <string name="onboarding_where_hosts">Kaeri reproduce lo que ya tienes: archivos de este dispositivo, tu servidor Jellyfin y complementos de las tiendas a las que te unes.</string>
     <string name="onboarding_own_heading">¿Tienes tus propios archivos?</string>
     <string name="onboarding_invite_heading">¿Tienes un enlace de invitación?</string>
-    <string name="onboarding_where_stores">Complementos vienen de tiendas de complementos. Una tienda de complementos la administra una persona para quienes invita, así que te unes con un enlace de invitación de su dueño.</string>
     <string name="onboarding_demo_heading">Pruébalo ahora</string>
     <string name="onboarding_demo_detail">La demo reproduce こうしす！, una serie que sus creadores comparten bajo CC BY 4.0, desde Wikimedia Commons.</string>
     <string name="onboarding_play_demo">Ver la demo</string>
@@ -2259,8 +2255,6 @@
     <string name="sources_empty_title">Todavía no hay fuentes</string>
     <string name="sources_empty_detail">Únete a una tienda de complementos con el enlace de invitación que te envíe su dueño.</string>
     <string name="sources_torrents">Torrents</string>
-    <string name="sources_remote">Remota</string>
-    <string name="sources_origin_config">Definida en el archivo de configuración</string>
     <string name="sources_origin_built_in">Integrada</string>
     <string name="sources_origin_left_store">De una tienda de complementos que dejaste</string>
     <string name="sources_origin_by_hand">Añadida a mano</string>
@@ -2371,12 +2365,10 @@
     <string name="sources_your">Tus fuentes</string>
     <string name="sources_your_intro">Los episodios se reproducen desde la primera fuente que los tenga, en este orden.</string>
     <string name="sources_section_plugins">Complementos</string>
-    <string name="sources_section_catalogues">Catálogos gratuitos</string>
     <string name="sources_add_demo">Agregar la demo</string>
     <string name="sources_order_all">Se prueba cada fuente en este orden, sea del tipo que sea.</string>
     <string name="stores_joined">Unido</string>
     <string name="stores_empty_title">Todavía no hay tiendas de complementos</string>
-    <string name="stores_empty_detail">Tiendas de complementos las administran personas que conoces. Únete con el enlace de invitación que te envíe su propietario.</string>
     <string name="stores_intro">Los complementos añaden fuentes. Cada uno muestra los hosts a los que se conecta antes de que lo instales.</string>
     <string name="stores_not_from_app">Los complementos vienen del propietario de la tienda de complementos, no de Kaeri. Puedes salir de una tienda de complementos cuando quieras.</string>
     <string name="stores_join_owner_responsible">%1$s administra esta tienda de complementos y eligió sus complementos. Kaeri no los hizo, revisó ni aprobó.</string>
@@ -2556,7 +2548,6 @@
         <item quantity="other">%1$d complementos</item>
     </plurals>
     <string name="notice_open_stores">Abrir tiendas de complementos</string>
-    <string name="stores_what_is">Una tienda de complementos es un servidor pequeño que administra una persona para quienes invita. Ofrece fuentes como complementos. Kaeri no administra tiendas de complementos ni lista ninguna, así que te unes con un enlace de invitación de su dueño.</string>
     <string name="stores_what_is_link">¿Qué es esto?</string>
     <string name="stores_invite_rules">Un enlace de invitación funciona una vez, para una persona, y dura siete días. Pide uno nuevo al dueño de la tienda de complementos si el tuyo venció.</string>
     <string name="stores_qr_label">Código QR del enlace de invitación</string>
@@ -2655,12 +2646,6 @@
     <string name="torrents_proxy_saved">Proxy guardado</string>
     <string name="torrents_proxy_not_saved">No se guardó. %1$s. Se mantiene el proxy guardado.</string>
     <string name="torrents_still_off">Los torrents siguen desactivados. %1$s.</string>
-    <string name="torrents_index">Índice de torrents</string>
-    <string name="torrents_index_detail">La dirección de búsqueda RSS que Kaeri usa para los torrents.</string>
-    <string name="torrents_index_hint">https://…/?q={query}</string>
-    <string name="torrents_index_needed">Los torrents necesitan una dirección de índice.</string>
-    <string name="torrents_index_scheme">Usa una dirección http o https.</string>
-    <string name="torrents_index_saved">Índice de torrents guardado</string>
     <string name="torrents_check_passed">Correcta</string>
     <string name="torrents_check_running">Comprobando</string>
     <string name="torrents_check_failed">Fallida</string>

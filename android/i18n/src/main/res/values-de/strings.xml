@@ -462,9 +462,7 @@
     <string name="tv_use_phone">Handy verwenden</string>
     <string name="tv_type_it">Eintippen</string>
     <string name="tv_qr_label_proxy">QR-Code für die Seite mit dem Proxy</string>
-    <string name="tv_qr_label_index">QR-Code für die Seite mit dem Torrent-Index</string>
     <string name="tv_scan_proxy">Scanne mit dem Handy und ändere dann den Proxy auf der Seite, die sich öffnet.</string>
-    <string name="tv_scan_torrent">Scanne mit dem Handy und trage dann den Torrent-Index auf der Seite ein, die sich öffnet.</string>
     <string name="tv_field_user_optional">Benutzername, falls verlangt</string>
     <string name="tv_field_password_optional">Passwort, falls verlangt</string>
     <string name="tv_qr_label_link">QR-Code für die Seite mit dem Link</string>
@@ -634,7 +632,6 @@
     <string name="settings_titles_note_english_missing">%1$s hat bei AniList keinen englischen Titel, deshalb bleibt der Romaji-Titel.</string>
     <string name="settings_titles_note_english">Englische Titel, wie AniList sie führt, und Romaji, wenn es keinen gibt.</string>
     <string name="settings_titles_note_romaji">Japanische Titel in lateinischen Buchstaben, wie AniList sie führt.</string>
-    <string name="settings_index_none">Nicht festgelegt</string>
     <string name="settings_stores_with_updates">%1$d · %2$s</string>
     <string name="settings_seeding_best_effort">Nach Möglichkeit auf diesem Gerät: Seeding läuft nur, solange Kaeri geöffnet ist.</string>
     <plurals name="settings_downloads_count">
@@ -1463,7 +1460,6 @@
     <string name="onboarding_where_hosts">Kaeri spielt ab, was du schon hast: Dateien auf diesem Gerät, deinen Jellyfin-Server und Plugins aus Stores, denen du beitrittst.</string>
     <string name="onboarding_own_heading">Eigene Medien?</string>
     <string name="onboarding_invite_heading">Einladungslink vorhanden?</string>
-    <string name="onboarding_where_stores">Plugins kommen aus Plugin-Stores. Ein Plugin-Store wird von einer Person für die Leute betrieben, die sie einlädt. Du trittst also mit einem Einladungslink des Besitzers bei.</string>
     <string name="onboarding_demo_heading">Jetzt ausprobieren</string>
     <string name="onboarding_demo_detail">Die Demo spielt こうしす！, eine Serie, die ihre Macher unter CC BY 4.0 teilen, von Wikimedia Commons.</string>
     <string name="onboarding_play_demo">Demo abspielen</string>
@@ -2198,8 +2194,6 @@
     <string name="sources_empty_title">Noch keine Quellen</string>
     <string name="sources_empty_detail">Tritt einem Plugin-Store mit dem Einladungslink bei, den dir sein Besitzer schickt.</string>
     <string name="sources_torrents">Torrents</string>
-    <string name="sources_remote">Remote</string>
-    <string name="sources_origin_config">In der Konfigurationsdatei festgelegt</string>
     <string name="sources_origin_built_in">Eingebaut</string>
     <string name="sources_origin_left_store">Von einem Plugin-Store, den du verlassen hast</string>
     <string name="sources_origin_by_hand">Von Hand hinzugefügt</string>
@@ -2307,12 +2301,10 @@
     <string name="sources_your">Deine Quellen</string>
     <string name="sources_your_intro">Folgen werden aus der ersten Quelle abgespielt, die sie hat, in dieser Reihenfolge.</string>
     <string name="sources_section_plugins">Plugins</string>
-    <string name="sources_section_catalogues">Freie Kataloge</string>
     <string name="sources_add_demo">Demo hinzufügen</string>
     <string name="sources_order_all">Jede Quelle wird in dieser Reihenfolge versucht, egal welcher Art.</string>
     <string name="stores_joined">Beigetreten</string>
     <string name="stores_empty_title">Noch keine Plugin-Stores</string>
-    <string name="stores_empty_detail">Plugin-Stores werden von Leuten betrieben, die du kennst. Tritt einem bei, indem du den Einladungslink einfügst, den dir die betreibende Person schickt.</string>
     <string name="stores_intro">Plugins fügen Quellen hinzu. Jedes listet die Hosts auf, die es kontaktiert, bevor du es installierst.</string>
     <string name="stores_not_from_app">Plugins kommen von der Person, die den Plugin-Store betreibt, nicht von Kaeri. Du kannst einen Plugin-Store jederzeit verlassen.</string>
     <string name="stores_join_owner_responsible">%1$s betreibt diesen Plugin-Store und hat dessen Plugins ausgewählt. Kaeri hat sie weder erstellt noch geprüft oder genehmigt.</string>
@@ -2487,7 +2479,6 @@
         <item quantity="other">%1$d Plugins</item>
     </plurals>
     <string name="notice_open_stores">Plugin-Stores öffnen</string>
-    <string name="stores_what_is">Ein Plugin-Store ist ein kleiner Server, den eine Person für die Leute betreibt, die sie einlädt. Er bietet Quellen als Plugins an. Kaeri betreibt keine Plugin-Stores und listet keine auf, du trittst also mit einem Einladungslink des Besitzers bei.</string>
     <string name="stores_what_is_link">Was ist ein Plugin-Store?</string>
     <string name="stores_invite_rules">Ein Einladungslink gilt einmal, für eine Person, und sieben Tage. Frag den Besitzer des Plugin-Store nach einem neuen, wenn deiner abgelaufen ist.</string>
     <string name="stores_qr_label">QR-Code für den Einladungslink</string>
@@ -2585,12 +2576,6 @@
     <string name="torrents_proxy_saved">Proxy gespeichert</string>
     <string name="torrents_proxy_not_saved">Nicht gespeichert. %1$s, daher bleibt der gespeicherte Proxy.</string>
     <string name="torrents_still_off">Torrents sind weiterhin aus. %1$s.</string>
-    <string name="torrents_index">Torrent-Index</string>
-    <string name="torrents_index_detail">Die RSS-Suchadresse, bei der Kaeri nach Torrents fragt.</string>
-    <string name="torrents_index_hint">https://…/?q={query}</string>
-    <string name="torrents_index_needed">Torrents brauchen eine Index-Adresse.</string>
-    <string name="torrents_index_scheme">Verwende eine http- oder https-Adresse.</string>
-    <string name="torrents_index_saved">Torrent-Index gespeichert</string>
     <string name="torrents_check_passed">Bestanden</string>
     <string name="torrents_check_running">Läuft</string>
     <string name="torrents_check_failed">Fehlgeschlagen</string>

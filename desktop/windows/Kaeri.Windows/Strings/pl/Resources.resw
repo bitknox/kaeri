@@ -1574,9 +1574,6 @@
   <data name="SourcesStatusWorking" xml:space="preserve">
     <value>Gotowe</value>
   </data>
-  <data name="SourcesTorrentIndexes" xml:space="preserve">
-    <value>Przeszukuje włączone w ustawieniach indeksy torrentów.</value>
-  </data>
   <data name="SourcesVersionReady" xml:space="preserve">
     <value>Wersja {version} jest gotowa</value>
   </data>
@@ -3818,9 +3815,6 @@
   <data name="OnboardingInviteHeading" xml:space="preserve">
     <value>Masz link z zaproszeniem?</value>
   </data>
-  <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>Wtyczki pochodzą ze sklepów. Każdy sklep z wtyczkami prowadzi jedna osoba dla zaproszonych ludzi, więc dołącza się do niego przez link z zaproszeniem od właściciela.</value>
-  </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>Wypróbuj teraz</value>
   </data>
@@ -6023,12 +6017,6 @@
   <data name="SourcesTorrents" xml:space="preserve">
     <value>Torrenty</value>
   </data>
-  <data name="SourcesRemote" xml:space="preserve">
-    <value>Zdalne</value>
-  </data>
-  <data name="SourcesOriginConfig" xml:space="preserve">
-    <value>Ustawione w pliku konfiguracyjnym</value>
-  </data>
   <data name="SourcesOriginBuiltIn" xml:space="preserve">
     <value>Wbudowane</value>
   </data>
@@ -6347,9 +6335,6 @@
   <data name="SourcesSectionPlugins" xml:space="preserve">
     <value>Wtyczki</value>
   </data>
-  <data name="SourcesSectionCatalogues" xml:space="preserve">
-    <value>Darmowe katalogi</value>
-  </data>
   <data name="SourcesAddDemo" xml:space="preserve">
     <value>Dodaj demo</value>
   </data>
@@ -6361,9 +6346,6 @@
   </data>
   <data name="StoresEmptyTitle" xml:space="preserve">
     <value>Nie masz jeszcze sklepy z wtyczkami</value>
-  </data>
-  <data name="StoresEmptyDetail" xml:space="preserve">
-    <value>Sklepy z wtyczkami prowadzą osoby, które znasz. Dołącz do jednego z nich linkiem z zaproszeniem od właściciela.</value>
   </data>
   <data name="StoresIntro" xml:space="preserve">
     <value>Wtyczki dodają źródła. Każda z nich pokazuje hosty, z którymi się łączy, zanim ją zainstalujesz.</value>
@@ -6887,9 +6869,6 @@
   <data name="NoticeOpenStores" xml:space="preserve">
     <value>Otwórz sklepy z wtyczkami</value>
   </data>
-  <data name="StoresWhatIs" xml:space="preserve">
-    <value>Sklep z wtyczkami to mały serwer, który prowadzi jedna osoba dla zaproszonych ludzi. Oferuje źródła jako wtyczki. Kaeri nie prowadzi żadnych sklepów z wtyczkami ani ich nie wymienia, więc dołączasz do jednego przez link z zaproszeniem od właściciela.</value>
-  </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>Czym jest sklep z wtyczkami?</value>
   </data>
@@ -7180,24 +7159,6 @@
   </data>
   <data name="TorrentsStillOff" xml:space="preserve">
     <value>Torrenty nadal są wyłączone. {why}.</value>
-  </data>
-  <data name="TorrentsIndex" xml:space="preserve">
-    <value>Indeks torrentów</value>
-  </data>
-  <data name="TorrentsIndexDetail" xml:space="preserve">
-    <value>Adres wyszukiwania RSS, o który Kaeri pyta o torrenty.</value>
-  </data>
-  <data name="TorrentsIndexHint" xml:space="preserve">
-    <value>https://…/?q={{query}}</value>
-  </data>
-  <data name="TorrentsIndexNeeded" xml:space="preserve">
-    <value>Torrenty wymagają adresu indeksu.</value>
-  </data>
-  <data name="TorrentsIndexScheme" xml:space="preserve">
-    <value>Użyj adresu http lub https.</value>
-  </data>
-  <data name="TorrentsIndexSaved" xml:space="preserve">
-    <value>Indeks torrentów zapisany</value>
   </data>
   <data name="TorrentsCheckPassed" xml:space="preserve">
     <value>Zaliczone</value>

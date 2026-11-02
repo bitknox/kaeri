@@ -34,7 +34,7 @@ import app.kaeri.engine.model.TitleAvailability
 import app.kaeri.i18n.R
 import app.kaeri.store.AppStore
 
-/** The services named in one line: "Hikari Stream and Tsuki TV", in the person's language. */
+/** The services named in one line: "Hikari Library and Tsuki TV", in the person's language. */
 internal fun joinServices(names: List<String>): String =
     android.icu.text.ListFormatter.getInstance().format(names)
 

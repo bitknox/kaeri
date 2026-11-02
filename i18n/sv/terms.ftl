@@ -43,8 +43,6 @@
 -watch-together-cap = Titta tillsammans
 
 # Where releases are looked up.
--torrent-index = torrentindex
--torrent-index-cap = Torrentindex
 
 # One downloadable file in a torrent index. Not a place episodes come from.
 -release = utgåva

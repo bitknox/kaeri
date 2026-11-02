@@ -109,9 +109,9 @@ pub enum FfiScene {
     /// [`Self::Watching`] with AniList failing everything but the queue's own titles and their
     /// broadcasts: Continue shows, the discovery shelves are left out and one notice says so.
     Failed,
-    /// [`Self::Sourceless`] with the viewer's licensed services chosen: Lantern Stream, which
+    /// [`Self::Sourceless`] with the viewer's licensed services chosen: Lantern Library, which
     /// AniList lists for Hoshikuzu no Tabibito. Its page is the licensed-service case where the
-    /// title does not play here and the main action is Watch on Lantern Stream, and the Licensed
+    /// title does not play here and the main action is Watch on Lantern Library, and the Licensed
     /// services page has one service ticked and the rest to choose.
     Licensed,
     /// [`Self::Watching`] with one Jellyfin server saved, Mika's Jellyfin: two libraries, the
@@ -129,11 +129,11 @@ pub enum FfiScene {
     /// again, and a third, Attic server, says "Not answering · last seen" two hours before the
     /// scene's now. Check this server's data is [`testing_certificate_check`].
     SourcesBusy,
-    /// [`Self::Library`] and [`Self::Servers`] together, with Lantern Stream chosen as a licensed
+    /// [`Self::Library`] and [`Self::Servers`] together, with Lantern Library chosen as a licensed
     /// service, for Search's Available filter. A result's line ends "In your library" for
     /// Stardust Wayfarer (the folder comes before the server), "On Mika's Jellyfin" for The
-    /// Library Above the Clouds and "On Lantern Stream" for Stardust Wayfarer Season 2. Plays here
-    /// keeps to the first two, and On your services to the titles Lantern Stream carries.
+    /// Library Above the Clouds and "On Lantern Library" for Stardust Wayfarer Season 2. Plays here
+    /// keeps to the first two, and On your services to the titles Lantern Library carries.
     Available,
     /// [`Self::Watching`] with three watch party rooms kept, as Together shows them: Natsukaze
     /// Relay's with two friends an hour ago, Stardust Wayfarer's with one a day ago, and
@@ -719,7 +719,7 @@ fn seed_scene(store: &Store, scene: &FfiScene, now: i64) {
         kaeri_engine::servers::seed_fixture_busy(store, now);
     }
     if matches!(scene, FfiScene::Licensed | FfiScene::Available) {
-        kaeri_engine::licensed::set_services(vec!["Lantern Stream".into()], store);
+        kaeri_engine::licensed::set_services(vec!["Lantern Library".into()], store);
     }
     const HOUR: i64 = 3_600;
     const DAY: i64 = 24 * HOUR;
@@ -905,7 +905,7 @@ mod tests {
         seed_scene(&store, &FfiScene::Available, 1_800_000_000);
         assert_eq!(kaeri_engine::local::saved(&store).len(), 5);
         assert_eq!(kaeri_engine::servers::saved(&store).len(), 1);
-        assert_eq!(kaeri_engine::licensed::settings(&store).services, ["Lantern Stream"]);
+        assert_eq!(kaeri_engine::licensed::settings(&store).services, ["Lantern Library"]);
     }
 
     #[test]
@@ -931,7 +931,7 @@ mod tests {
         let store = Store::open(dir.path().join("kaeri.db")).expect("a database");
         seed_scene(&store, &FfiScene::Licensed, 1_800_000_000);
         assert_eq!(store.continue_list(15).expect("the rail").len(), 4);
-        assert_eq!(kaeri_engine::licensed::settings(&store).services, ["Lantern Stream"]);
+        assert_eq!(kaeri_engine::licensed::settings(&store).services, ["Lantern Library"]);
         let none =
             scene_sources(&FfiScene::Licensed, "http://127.0.0.1:9/art/", &world().provided());
         assert!(none.is_empty());

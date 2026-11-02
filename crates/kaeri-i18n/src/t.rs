@@ -275,7 +275,7 @@ pub fn home_spotlight_demo() -> String {
     text("home-spotlight-demo", &[])
 }
 
-/// Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Stream.
+/// Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.
 pub fn licensed_return(episode: i64, service: &str) -> String {
     text("licensed-return", &[("episode", Arg::Int(episode)), ("service", Arg::Text(service))])
 }
@@ -13272,16 +13272,6 @@ pub fn sources_torrents() -> String {
     text("sources-torrents", &[])
 }
 
-/// Label of a source that is not a plugin and controls this device.
-pub fn sources_remote() -> String {
-    text("sources-remote", &[])
-}
-
-/// Origin: set in the config file.
-pub fn sources_origin_config() -> String {
-    text("sources-origin-config", &[])
-}
-
 /// Origin: built into the app.
 pub fn sources_origin_built_in() -> String {
     text("sources-origin-built-in", &[])
@@ -13357,7 +13347,7 @@ pub fn sources_detail_gone() -> String {
     text("sources-detail-gone", &[])
 }
 
-/// Status line: the site did not answer.
+/// Status line: the source did not answer.
 pub fn sources_detail_site() -> String {
     text("sources-detail-site", &[])
 }
@@ -15120,36 +15110,6 @@ pub fn torrents_proxy_not_saved(why: &str) -> String {
 /// Notice when torrents stayed off. The reason is a sentence fragment.
 pub fn torrents_still_off(why: &str) -> String {
     text("torrents-still-off", &[("why", Arg::Text(why))])
-}
-
-/// Label of the index address field.
-pub fn torrents_index() -> String {
-    text("torrents-index", &[])
-}
-
-/// Line under the index field.
-pub fn torrents_index_detail() -> String {
-    text("torrents-index-detail", &[])
-}
-
-/// Hint inside the index field.
-pub fn torrents_index_hint() -> String {
-    text("torrents-index-hint", &[])
-}
-
-/// Line when no index address is set.
-pub fn torrents_index_needed() -> String {
-    text("torrents-index-needed", &[])
-}
-
-/// Line when the index address has the wrong scheme.
-pub fn torrents_index_scheme() -> String {
-    text("torrents-index-scheme", &[])
-}
-
-/// Notice after the index was saved.
-pub fn torrents_index_saved() -> String {
-    text("torrents-index-saved", &[])
 }
 
 /// Under the proxy form: what the app checks.

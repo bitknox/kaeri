@@ -75,13 +75,11 @@ pub enum ProviderError {
     #[error("not found")]
     NotFound,
 
-    /// Bot protection, rate limiting, geo-blocking, or an outright ban. The signature
-    /// failure of a web source, and the main reason failover exists.
+    /// The source refused the request or asked the client to slow down.
     #[error("blocked: {0}")]
     Blocked(String),
 
-    /// The response arrived but didn't look like what we expected — almost always means
-    /// the site changed its markup or API shape and the site adapter needs updating.
+    /// The response did not have the expected shape.
     #[error("could not parse response: {0}")]
     Parse(String),
 

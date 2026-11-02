@@ -380,7 +380,7 @@ mod tests {
 
     #[test]
     fn ordinary_headers_are_the_guests_to_set() {
-        // Referer and cookies are exactly what web sources need.
+        // Headers a source sets are passed through.
         let request = Request {
             headers: vec![
                 ("referer".into(), "https://example.com/".into()),

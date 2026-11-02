@@ -462,9 +462,7 @@
     <string name="tv_use_phone">Telefon kullan</string>
     <string name="tv_type_it">Yazarak gir</string>
     <string name="tv_qr_label_proxy">Vekil sunucuyu alan sayfanın QR kodu</string>
-    <string name="tv_qr_label_index">torrent dizini alan sayfanın QR kodu</string>
     <string name="tv_scan_proxy">Telefonunuzla tarayın, sonra açılan sayfada vekil sunucuyu değiştirin.</string>
-    <string name="tv_scan_torrent">Telefonunuzla tarayın, sonra açılan sayfada torrent dizinini doldurun.</string>
     <string name="tv_field_user_optional">Kullanıcı adı (istenirse)</string>
     <string name="tv_field_password_optional">Parola (istenirse)</string>
     <string name="tv_qr_label_link">Davet bağlantısını alan sayfanın QR kodu</string>
@@ -634,7 +632,6 @@
     <string name="settings_titles_note_english_missing">%1$s, AniList\'te İngilizce adı olmadığı için romaji adını korur.</string>
     <string name="settings_titles_note_english">AniList\'te listelendiği gibi İngilizce adlar. Yoksa romaji.</string>
     <string name="settings_titles_note_romaji">AniList\'te listelendiği gibi, Latin harflerle yazılmış Japonca adlar.</string>
-    <string name="settings_index_none">Ayarlanmadı</string>
     <string name="settings_stores_with_updates">%1$d · %2$s</string>
     <string name="settings_seeding_best_effort">Bu cihazda en iyi çaba: paylaşım yalnızca Kaeri açıkken çalışır.</string>
     <plurals name="settings_downloads_count">
@@ -1463,7 +1460,6 @@
     <string name="onboarding_where_hosts">Kaeri zaten sahip olduklarınızı oynatır: bu cihaz üzerindeki dosyalar, Jellyfin sunucunuz ve katıldığınız mağazalardan gelen eklentiler.</string>
     <string name="onboarding_own_heading">Kendi medyanız var mı?</string>
     <string name="onboarding_invite_heading">Davet bağlantınız var mı?</string>
-    <string name="onboarding_where_stores">Eklentiler, eklenti mağazaları üzerinden gelir. Bir eklenti mağazası, bir kişi tarafından davet ettiği kişiler için işletilir; bu yüzden sahibinden aldığınız davet bağlantısıyla katılırsınız.</string>
     <string name="onboarding_demo_heading">Şimdi deneyin</string>
     <string name="onboarding_demo_detail">Demo, yapımcılarının CC BY 4.0 altında paylaştığı こうしす！ dizisini Wikimedia Commons\'tan oynatır.</string>
     <string name="onboarding_play_demo">Demoyu oynat</string>
@@ -2198,8 +2194,6 @@
     <string name="sources_empty_title">Henüz kaynaklar yok</string>
     <string name="sources_empty_detail">Sahibinin size gönderdiği davet bağlantısıyla bir eklenti mağazasına katılın.</string>
     <string name="sources_torrents">Torrent\'ler</string>
-    <string name="sources_remote">Uzak</string>
-    <string name="sources_origin_config">Yapılandırma dosyasında ayarlandı</string>
     <string name="sources_origin_built_in">Uygulamaya dahil</string>
     <string name="sources_origin_left_store">Ayrıldığınız bir eklenti mağazasından</string>
     <string name="sources_origin_by_hand">Elle eklendi</string>
@@ -2307,12 +2301,10 @@
     <string name="sources_your">Kaynaklarınız</string>
     <string name="sources_your_intro">Bölümler, onlara sahip olan ilk kaynaktan bu sırayla oynatılır.</string>
     <string name="sources_section_plugins">Eklentiler</string>
-    <string name="sources_section_catalogues">Ücretsiz kataloglar</string>
     <string name="sources_add_demo">Demoyu ekle</string>
     <string name="sources_order_all">Her kaynak, türü ne olursa olsun bu sırayla denenir.</string>
     <string name="stores_joined">Katıldı</string>
     <string name="stores_empty_title">Henüz eklenti mağazaları yok</string>
-    <string name="stores_empty_detail">Eklenti mağazaları sizin tanıdığınız kişiler tarafından işletilir. Sahibinin gönderdiği davet bağlantısıyla birine katılabilirsiniz.</string>
     <string name="stores_intro">Eklentiler kaynaklar ekler. Her biri, kurmadan önce bağlanacağı sunucuları listeler.</string>
     <string name="stores_not_from_app">Eklentiler eklenti mağazasının sahibinden gelir, Kaeri\'den gelmez. İstediğiniz zaman eklenti mağazasından ayrılabilirsiniz.</string>
     <string name="stores_join_owner_responsible">Bu eklenti mağazası sahibi %1$s tarafından işletiliyor ve eklentiler onun tarafından seçildi. Kaeri bunları yapmadı, incelemedi ya da onaylamadı.</string>
@@ -2487,7 +2479,6 @@
         <item quantity="other">%1$d eklenti</item>
     </plurals>
     <string name="notice_open_stores">eklenti mağazalarını aç</string>
-    <string name="stores_what_is">Bir eklenti mağazası, bir kişinin davet ettiği insanlar için işlettiği küçük bir sunucudur. kaynakları eklentiler olarak sunar. Kaeri hiçbir eklenti mağazası işletmez ve listelemez; bu yüzden sahibinden aldığınız davet bağlantısıyla katılırsınız.</string>
     <string name="stores_what_is_link">eklenti mağazası nedir?</string>
     <string name="stores_invite_rules">Bir davet bağlantısı bir kişi için bir kez geçerlidir ve yedi gün sürer. Sizinkinin süresi dolduysa eklenti mağazası sahibinden yenisini isteyin.</string>
     <string name="stores_qr_label">Davet bağlantısı için QR kodu</string>
@@ -2585,12 +2576,6 @@
     <string name="torrents_proxy_saved">Proxy kaydedildi</string>
     <string name="torrents_proxy_not_saved">Kaydedilmedi. %1$s, bu yüzden kayıtlı proxy kalır.</string>
     <string name="torrents_still_off">Torrentler hâlâ kapalı. %1$s.</string>
-    <string name="torrents_index">Torrent dizini</string>
-    <string name="torrents_index_detail">Torrentler için Kaeri\'in istediği RSS arama adresi.</string>
-    <string name="torrents_index_hint">https://…/?q=…</string>
-    <string name="torrents_index_needed">Torrentler için bir torrent dizini adresi gerekir.</string>
-    <string name="torrents_index_scheme">Bir http ya da https adresi kullanın.</string>
-    <string name="torrents_index_saved">Torrent dizini kaydedildi</string>
     <string name="torrents_check_passed">Geçti</string>
     <string name="torrents_check_running">Denetleniyor</string>
     <string name="torrents_check_failed">Başarısız</string>

@@ -629,7 +629,7 @@ async fn the_facets_leave_adult_tags_out_and_are_asked_once() {
     assert!(!facets.genres.contains(&"Hentai".to_owned()));
     let categories: Vec<_> = facets.tag_groups.iter().map(|g| g.category.as_str()).collect();
     assert_eq!(categories, ["Theme", "Setting"]);
-    assert_eq!(facets.streaming_sites, ["Lantern Stream", "Hikari Stream"]);
+    assert_eq!(facets.streaming_sites, ["Lantern Library", "Hikari Library"]);
     assert_eq!(facets.tags_matching("gar", 5), ["Gardening"]);
 
     h.send(Command::LoadSearchFacets);

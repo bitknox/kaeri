@@ -162,7 +162,7 @@ home-more-genre = Daha fazla { $genre }
 # Line over the spotlight's title when it is the built-in demo.
 home-spotlight-demo = Demo, paylaşmak serbest
 
-# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Stream.
+# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.
 licensed-return = { $service } üzerinde { $episode }. bölümü izlediniz mi?
 
 # Notice after Mark as watched on the return notice. It holds Undo.
@@ -3065,9 +3065,6 @@ sources-state-held-back = Kısıtlandı
 
 # Heading of the line about { -plugin-store-pl }.
 sources-stores-title = Eklenti mağazaları
-
-# Under the heading when no { -plugin-store } is joined or the list has not arrived.
-sources-stores-invite = Tanıdıklarınızın paylaştığı Eklentiler. Davet bağlantısıyla katılın.
 
 # Part of the { -plugin-store } summary: how many { -plugin-store-pl } are joined.
 sources-stores-joined = { $count } katıldı
@@ -6060,9 +6057,6 @@ onboarding-own-heading = Kendi medyanız var mı?
 # Heading of the group that joins a store with an invite.
 onboarding-invite-heading = Davet bağlantınız var mı?
 
-# Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-onboarding-where-stores = Eklentiler, eklenti mağazaları üzerinden gelir. Bir eklenti mağazası, bir kişi tarafından davet ettiği kişiler için işletilir; bu yüzden sahibinden aldığınız davet bağlantısıyla katılırsınız.
-
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = Şimdi deneyin
 
@@ -8199,12 +8193,6 @@ sources-empty-detail = Sahibinin size gönderdiği davet bağlantısıyla bir ek
 # Row for the built-in torrent source.
 sources-torrents = Torrent'ler
 
-# Label of a source that is not a plugin and controls this device.
-sources-remote = Uzak
-
-# Origin: set in the config file.
-sources-origin-config = Yapılandırma dosyasında ayarlandı
-
 # Origin: built into the app.
 sources-origin-built-in = Uygulamaya dahil
 
@@ -8247,7 +8235,7 @@ sources-detail-disabled = Kapalı. Yerini korur, denenmez.
 # Status line: the source is gone.
 sources-detail-gone = Bu kaynak artık yok.
 
-# Status line: the site did not answer.
+# Status line: the source did not answer.
 sources-detail-site = Bu kaynak yanıt vermedi.
 
 # Row label: version.
@@ -8508,9 +8496,6 @@ sources-your-intro = Bölümler, onlara sahip olan ilk kaynaktan bu sırayla oyn
 # Heading of the section that lists the plugins.
 sources-section-plugins = Eklentiler
 
-# Section heading: Internet Archive collections and PeerTube channels.
-sources-section-catalogues = Ücretsiz kataloglar
-
 # Link in the empty state.
 sources-add-demo = Demoyu ekle
 
@@ -8522,9 +8507,6 @@ stores-joined = Katıldı
 
 # Title of the empty list.
 stores-empty-title = Henüz eklenti mağazaları yok
-
-# Line under the empty title.
-stores-empty-detail = Eklenti mağazaları sizin tanıdığınız kişiler tarafından işletilir. Sahibinin gönderdiği davet bağlantısıyla birine katılabilirsiniz.
 
 # Line under the title of the screen when plugins add sources.
 stores-intro = Eklentiler kaynaklar ekler. Her biri, kurmadan önce bağlanacağı sunucuları listeler.
@@ -9018,9 +9000,6 @@ stores-offers-plugins =
 # Button of a notice that opens the plugin stores page.
 notice-open-stores = eklenti mağazalarını aç
 
-# Explainer on the empty plugin stores page.
-stores-what-is = Bir eklenti mağazası, bir kişinin davet ettiği insanlar için işlettiği küçük bir sunucudur. kaynakları eklentiler olarak sunar. Kaeri hiçbir eklenti mağazası işletmez ve listelemez; bu yüzden sahibinden aldığınız davet bağlantısıyla katılırsınız.
-
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = eklenti mağazası nedir?
 
@@ -9306,24 +9285,6 @@ torrents-proxy-not-saved = Kaydedilmedi. { $why }, bu yüzden kayıtlı proxy ka
 
 # Notice when torrents stayed off. The reason is a sentence fragment.
 torrents-still-off = Torrentler hâlâ kapalı. { $why }.
-
-# Label of the index address field.
-torrents-index = Torrent dizini
-
-# Line under the index field.
-torrents-index-detail = Torrentler için Kaeri'in istediği RSS arama adresi.
-
-# Hint inside the index field.
-torrents-index-hint = https://…/?q=…
-
-# Line when no index address is set.
-torrents-index-needed = Torrentler için bir torrent dizini adresi gerekir.
-
-# Line when the index address has the wrong scheme.
-torrents-index-scheme = Bir http ya da https adresi kullanın.
-
-# Notice after the index was saved.
-torrents-index-saved = Torrent dizini kaydedildi
 
 # Check passed.
 torrents-check-passed = Geçti

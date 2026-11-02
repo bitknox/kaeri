@@ -481,9 +481,7 @@
     <string name="tv_use_phone">Usa un telefono</string>
     <string name="tv_type_it">Scrivi</string>
     <string name="tv_qr_label_proxy">Codice QR per la pagina che richiede il proxy</string>
-    <string name="tv_qr_label_index">Codice QR per la pagina che richiede l\'indice torrent</string>
     <string name="tv_scan_proxy">Inquadra con il telefono, poi cambia il proxy nella pagina che si apre.</string>
-    <string name="tv_scan_torrent">Inquadra con il telefono, poi compila l\'indice torrent nella pagina che si apre.</string>
     <string name="tv_field_user_optional">Nome utente, se richiesto</string>
     <string name="tv_field_password_optional">Password, se richiesta</string>
     <string name="tv_qr_label_link">Codice QR per la pagina che richiede il link</string>
@@ -665,7 +663,6 @@
     <string name="settings_titles_note_english_missing">%1$s non ha un titolo inglese su AniList, quindi mantiene quello romaji.</string>
     <string name="settings_titles_note_english">Titoli inglesi come li elenca AniList, e romaji dove manca.</string>
     <string name="settings_titles_note_romaji">Titoli giapponesi in caratteri latini, come li elenca AniList.</string>
-    <string name="settings_index_none">Nessuno impostato</string>
     <string name="settings_stores_with_updates">%1$d · %2$s</string>
     <string name="settings_seeding_best_effort">Nei limiti del possibile su questo dispositivo: la condivisione procede solo mentre Kaeri è in esecuzione.</string>
     <plurals name="settings_downloads_count">
@@ -1514,7 +1511,6 @@
     <string name="onboarding_where_hosts">Kaeri riproduce ciò che hai già: i file su questo dispositivo, il tuo server Jellyfin e i plugin dei negozi a cui ti unisci.</string>
     <string name="onboarding_own_heading">Hai i tuoi contenuti?</string>
     <string name="onboarding_invite_heading">Hai un link d\'invito?</string>
-    <string name="onboarding_where_stores">Plugin provengono da negozi di plugin. Un negozio di plugin è gestito da una persona per chi invita, quindi ci si unisce con un link d\'invito del suo proprietario.</string>
     <string name="onboarding_demo_heading">Provalo subito</string>
     <string name="onboarding_demo_detail">La demo riproduce こうしす！, una serie che i suoi autori condividono con licenza CC BY 4.0, da Wikimedia Commons.</string>
     <string name="onboarding_play_demo">Riproduci la demo</string>
@@ -2259,8 +2255,6 @@
     <string name="sources_empty_title">Ancora nessuna fonte</string>
     <string name="sources_empty_detail">Unisciti a un negozio di plugin con il link d\'invito che ti manda il suo proprietario.</string>
     <string name="sources_torrents">Torrent</string>
-    <string name="sources_remote">Remota</string>
-    <string name="sources_origin_config">Impostata nel file di configurazione</string>
     <string name="sources_origin_built_in">Integrata nell\'app</string>
     <string name="sources_origin_left_store">Da un negozio di plugin che hai lasciato</string>
     <string name="sources_origin_by_hand">Aggiunta a mano</string>
@@ -2371,12 +2365,10 @@
     <string name="sources_your">Le tue fonti</string>
     <string name="sources_your_intro">Gli episodi si riproducono dalla prima fonte che li ha, in quest\'ordine.</string>
     <string name="sources_section_plugins">Plugin</string>
-    <string name="sources_section_catalogues">Cataloghi gratuiti</string>
     <string name="sources_add_demo">Aggiungi la demo</string>
     <string name="sources_order_all">Ogni fonte viene provata in quest\'ordine, di qualunque tipo sia.</string>
     <string name="stores_joined">Unito</string>
     <string name="stores_empty_title">Ancora nessun negozio di plugin</string>
-    <string name="stores_empty_detail">I Negozi di plugin sono gestiti da persone che conosci. Unisciti con il link di invito che ti manda il proprietario.</string>
     <string name="stores_intro">I Plugin aggiungono fonti. Ognuno elenca gli host che contatta prima che tu lo installi.</string>
     <string name="stores_not_from_app">I Plugin arrivano dal proprietario del negozio di plugin, non da Kaeri. Puoi lasciare un negozio di plugin in qualsiasi momento.</string>
     <string name="stores_join_owner_responsible">%1$s gestisce questo negozio di plugin e ha scelto i suoi plugin. Kaeri non li ha creati, controllati né approvati.</string>
@@ -2556,7 +2548,6 @@
         <item quantity="other">%1$d plugin</item>
     </plurals>
     <string name="notice_open_stores">Apri i negozi di plugin</string>
-    <string name="stores_what_is">Un negozio di plugin è un piccolo server gestito da una persona per chi invita. Offre fonti sotto forma di plugin. Kaeri non gestisce negozi di plugin e non ne elenca, quindi ti unisci a uno con un link d\'invito del suo proprietario.</string>
     <string name="stores_what_is_link">Che cos\'è un negozio di plugin?</string>
     <string name="stores_invite_rules">Un link d\'invito vale una volta, per una persona, e dura sette giorni. Chiedi un nuovo link al proprietario del negozio di plugin se il tuo è scaduto.</string>
     <string name="stores_qr_label">Codice QR del link d\'invito</string>
@@ -2655,12 +2646,6 @@
     <string name="torrents_proxy_saved">Proxy salvato</string>
     <string name="torrents_proxy_not_saved">Non salvato. %1$s, quindi resta il proxy salvato.</string>
     <string name="torrents_still_off">I torrent restano disattivati. %1$s.</string>
-    <string name="torrents_index">Indice torrent</string>
-    <string name="torrents_index_detail">L\'indirizzo di ricerca RSS che Kaeri usa per i torrent.</string>
-    <string name="torrents_index_hint">https://…/?q={query}</string>
-    <string name="torrents_index_needed">I torrent richiedono un indirizzo dell\'indice.</string>
-    <string name="torrents_index_scheme">Usa un indirizzo http o https.</string>
-    <string name="torrents_index_saved">Indice torrent salvato</string>
     <string name="torrents_check_passed">Superato</string>
     <string name="torrents_check_running">Verifica in corso</string>
     <string name="torrents_check_failed">Fallito</string>

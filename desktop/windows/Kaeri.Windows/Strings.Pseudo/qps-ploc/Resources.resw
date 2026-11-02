@@ -253,7 +253,7 @@
   </data>
   <data name="LicensedReturn" xml:space="preserve">
     <value>[Ŵàţçĥéð éþîšöðé {episode} öñ {service}?~~~~~~~~~]</value>
-    <comment>Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Stream.</comment>
+    <comment>Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.</comment>
   </data>
   <data name="LicensedMarked" xml:space="preserve">
     <value>[Éþîšöðé {episode} ɱàŕķéð àš ŵàţçĥéð.~~~~~~~~~]</value>
@@ -1373,7 +1373,7 @@
   </data>
   <data name="SearchResultPlaysHere" xml:space="preserve">
     <value>[Þļàýš ĥéŕé~~~]</value>
-    <comment>Search: end of a result's line when a free catalogue or the demo has the title.</comment>
+    <comment>Search: end of a result's line when an open catalogue or the demo has the title.</comment>
   </data>
   <data name="SearchResultInLibrary" xml:space="preserve">
     <value>[Îñ ýöüŕ ļîƀŕàŕý~~~~~]</value>
@@ -1930,10 +1930,6 @@
   <data name="SourcesStatusWorking" xml:space="preserve">
     <value>[Ŕéàðý~~]</value>
     <comment>How a { -source } stands when nothing is wrong with it.</comment>
-  </data>
-  <data name="SourcesTorrentIndexes" xml:space="preserve">
-    <value>[Šéàŕçĥéš ţĥé ţöŕŕéñţ îñðéẋéš ýöü ĥàṽé ţüŕñéð öñ üñðéŕ Šéţţîñĝš.~~~~~~~~~~~~~~~~~~~]</value>
-    <comment>In the torrent { -source }'s detail, in place of the hosts it contacts.</comment>
   </data>
   <data name="SourcesVersionReady" xml:space="preserve">
     <value>[Ṽéŕšîöñ {version} îš ŕéàðý~~~~~~]</value>
@@ -4780,7 +4776,7 @@
     <comment>Heading of the group that joins a store with an invite.</comment>
   </data>
   <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>[Þļüĝîñš çöɱé ƒŕöɱ þļüĝîñ šţöŕéš. Å þļüĝîñ šţöŕé îš ŕüñ ƀý öñé þéŕšöñ ƒöŕ ţĥé þéöþļé ţĥéý îñṽîţé, šö ýöü ĵöîñ öñé ŵîţĥ àñ îñṽîţé ļîñķ ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Þļüĝîñš çöɱé ƒŕöɱ þļüĝîñ šţöŕéš. Å þļüĝîñ šţöŕé îš šîĝñéð àñð ĝîṽéš éàçĥ ðéṽîçé îţš öŵñ ţöķéñ, šö ýöü ĵöîñ öñé ŵîţĥ àñ îñṽîţé ļîñķ ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.</comment>
   </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
@@ -7631,14 +7627,6 @@
     <value>[Ţöŕŕéñţš~~~]</value>
     <comment>Row for the built-in torrent source.</comment>
   </data>
-  <data name="SourcesRemote" xml:space="preserve">
-    <value>[Ŕéɱöţé~~]</value>
-    <comment>Label of a source that is not a plugin and controls this device.</comment>
-  </data>
-  <data name="SourcesOriginConfig" xml:space="preserve">
-    <value>[Šéţ îñ ţĥé çöñƒîĝ ƒîļé~~~~~~~]</value>
-    <comment>Origin: set in the config file.</comment>
-  </data>
   <data name="SourcesOriginBuiltIn" xml:space="preserve">
     <value>[Ɓüîļţ îñ~~~]</value>
     <comment>Origin: built into the app.</comment>
@@ -7701,7 +7689,7 @@
   </data>
   <data name="SourcesDetailSite" xml:space="preserve">
     <value>[Ţĥé šöüŕçé ðîðñ'ţ àñšŵéŕ.~~~~~~~~]</value>
-    <comment>Status line: the site did not answer.</comment>
+    <comment>Status line: the source did not answer.</comment>
   </data>
   <data name="SourcesVersion" xml:space="preserve">
     <value>[Ṽéŕšîöñ~~~]</value>
@@ -8048,7 +8036,7 @@
     <comment>Heading of the section that lists the plugins.</comment>
   </data>
   <data name="SourcesSectionCatalogues" xml:space="preserve">
-    <value>[Ƒŕéé çàţàļöĝüéš~~~~~]</value>
+    <value>[Öþéñ çàţàļöĝüéš~~~~~]</value>
     <comment>Section heading: Internet Archive collections and PeerTube channels.</comment>
   </data>
   <data name="SourcesAddDemo" xml:space="preserve">
@@ -8068,7 +8056,7 @@
     <comment>Title of the empty list.</comment>
   </data>
   <data name="StoresEmptyDetail" xml:space="preserve">
-    <value>[Þļüĝîñ šţöŕéš àŕé ŕüñ ƀý þéöþļé ýöü ķñöŵ. Ĵöîñ öñé ŵîţĥ ţĥé îñṽîţé ļîñķ îţš öŵñéŕ šéñðš ýöü.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Þļüĝîñ šţöŕéš ĥöļð šîĝñéð þļüĝîñš àñð ĝîṽé éàçĥ ðéṽîçé îţš öŵñ ţöķéñ. Ĵöîñ öñé ŵîţĥ ţĥé îñṽîţé ļîñķ îţš öŵñéŕ šéñðš ýöü.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under the empty title.</comment>
   </data>
   <data name="StoresIntro" xml:space="preserve">
@@ -8723,7 +8711,7 @@
     <comment>Button of a notice that opens the plugin stores page.</comment>
   </data>
   <data name="StoresWhatIs" xml:space="preserve">
-    <value>[Å þļüĝîñ šţöŕé îš à šɱàļļ šéŕṽéŕ öñé þéŕšöñ ŕüñš ƒöŕ ţĥé þéöþļé ţĥéý îñṽîţé. Îţ öƒƒéŕš šöüŕçéš àš þļüĝîñš. Ķàéŕî ŕüñš ñö þļüĝîñ šţöŕéš àñð ļîšţš ñöñé, šö ýöü ĵöîñ öñé ŵîţĥ àñ îñṽîţé ļîñķ ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Å þļüĝîñ šţöŕé îš à šɱàļļ šéŕṽéŕ ţĥàţ ĥöļðš šîĝñéð þļüĝîñš àñð ĝîṽéš éàçĥ ðéṽîçé îţš öŵñ ţöķéñ. Îţ öƒƒéŕš šöüŕçéš àš þļüĝîñš. Ķàéŕî ŕüñš ñö þļüĝîñ šţöŕéš àñð ļîšţš ñöñé, šö ýöü ĵöîñ öñé ŵîţĥ àñ îñṽîţé ļîñķ ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Explainer on the empty plugin stores page.</comment>
   </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
@@ -9145,30 +9133,6 @@
   <data name="TorrentsStillOff" xml:space="preserve">
     <value>[Ţöŕŕéñţš àŕé šţîļļ öƒƒ. {why}.~~~~~~~~~]</value>
     <comment>Notice when torrents stayed off. The reason is a sentence fragment.</comment>
-  </data>
-  <data name="TorrentsIndex" xml:space="preserve">
-    <value>[Ţöŕŕéñţ îñðéẋ~~~~]</value>
-    <comment>Label of the index address field.</comment>
-  </data>
-  <data name="TorrentsIndexDetail" xml:space="preserve">
-    <value>[Ţĥé ŔŠŠ šéàŕçĥ àððŕéšš Ķàéŕî àšķš ƒöŕ ţöŕŕéñţš.~~~~~~~~~~~~~~~]</value>
-    <comment>Line under the index field.</comment>
-  </data>
-  <data name="TorrentsIndexHint" xml:space="preserve">
-    <value>[ĥţţþš://…/?ƣ={{ƣüéŕý}}~~~~~~]</value>
-    <comment>Hint inside the index field.</comment>
-  </data>
-  <data name="TorrentsIndexNeeded" xml:space="preserve">
-    <value>[Ţöŕŕéñţš ñééð àñ îñðéẋ àððŕéšš.~~~~~~~~~~]</value>
-    <comment>Line when no index address is set.</comment>
-  </data>
-  <data name="TorrentsIndexScheme" xml:space="preserve">
-    <value>[Ûšé àñ ĥţţþ öŕ ĥţţþš àððŕéšš.~~~~~~~~~]</value>
-    <comment>Line when the index address has the wrong scheme.</comment>
-  </data>
-  <data name="TorrentsIndexSaved" xml:space="preserve">
-    <value>[Ţöŕŕéñţ îñðéẋ šàṽéð~~~~~~]</value>
-    <comment>Notice after the index was saved.</comment>
   </data>
   <data name="TorrentsCheckNote" xml:space="preserve">
     <value>[Ķàéŕî çĥéçķš ţĥàţ îţ çàñ ŕéàçĥ ţĥé þŕöẋý ƀéƒöŕé ţöŕŕéñţš šţàŕţ. Ţöŕŕéñţš ŵàîţ ŵĥîļé ţĥàţ çĥéçķ ƒàîļš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>

@@ -1585,7 +1585,7 @@ public class LawfulLinesTests
     {
         Assert.Equal(T.SearchResultInLibrary, Wording.Where(new AvailableAt.InLibrary()));
         Assert.Equal(T.SearchResultOnServer("Mika's Jellyfin"), Wording.Where(new AvailableAt.OnServer("Mika's Jellyfin")));
-        Assert.Equal(T.SearchResultOnService("Lantern Stream"), Wording.Where(new AvailableAt.OnService("Lantern Stream")));
+        Assert.Equal(T.SearchResultOnService("Lantern Library"), Wording.Where(new AvailableAt.OnService("Lantern Library")));
         Assert.Equal(T.SearchResultPlaysHere, Wording.Where(new AvailableAt.PlaysHere()));
     }
 }

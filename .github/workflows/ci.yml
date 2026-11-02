@@ -68,7 +68,7 @@ jobs:
               - 'plugins/example-rust/**'
               - 'plugins/example-ts/**'
               - 'plugins/test-hostile/**'
-              - 'plugins/test-torrent-index/**'
+              - 'plugins/test-torrent-source/**'
               - 'assets/**'
               - 'deploy/**'
               - 'packaging/**'
@@ -296,7 +296,7 @@ jobs:
             .
             plugins/example-rust
             plugins/test-hostile
-            plugins/test-torrent-index
+            plugins/test-torrent-source
           save-if: ${{ github.ref == 'refs/heads/main' }}
       - uses: taiki-e/install-action@v2
         with:
@@ -307,7 +307,7 @@ jobs:
       # cache.
       - name: Build the plugins the sandbox tests load
         run: |
-          for plugin in example-rust test-hostile test-torrent-index; do
+          for plugin in example-rust test-hostile test-torrent-source; do
             cargo build --locked --release --target wasm32-wasip2 --manifest-path "plugins/$plugin/Cargo.toml"
           done
           npm ci --prefix plugins/example-ts
@@ -505,9 +505,8 @@ jobs:
       - uses: actions/checkout@v7
       - run: python3 tools/check-contrast.py
 
-  # The repository carries only the two reference plugins and the sandbox fixture. Anything else
-  # under plugins/ is a local build, and this fails if one is tracked or named by a packaging,
-  # workflow or deploy file. It has no path filter, so a forced add cannot slip past it.
+  # The repository carries no plugins apart from the two references and two test fixtures. This
+  # fails if any other is tracked or named by a packaging, workflow or deploy file. It has no path filter, so a forced add cannot slip past it.
   plugins-guard:
     runs-on: ubuntu-latest
     timeout-minutes: 5

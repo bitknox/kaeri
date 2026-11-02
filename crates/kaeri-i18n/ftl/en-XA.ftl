@@ -162,7 +162,7 @@ home-more-genre = [Ṁöŕé { $genre }~~~]
 # Line over the spotlight's title when it is the built-in demo.
 home-spotlight-demo = [Ðéɱö, ƒŕéé ţö šĥàŕé~~~~~~]
 
-# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Stream.
+# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.
 licensed-return = [Ŵàţçĥéð éþîšöðé { $episode } öñ { $service }?~~~~~~~~~]
 
 # Notice after Mark as watched on the return notice. It holds Undo.
@@ -3091,7 +3091,7 @@ sources-state-held-back = [Ĥéļð ƀàçķ~~~]
 sources-stores-title = [Þļüĝîñ šţöŕéš~~~~]
 
 # Under the heading when no { -plugin-store } is joined or the list has not arrived.
-sources-stores-invite = [Þļüĝîñš šĥàŕéð ƀý þéöþļé ýöü ķñöŵ. Ĵöîñ ŵîţĥ àñ îñṽîţé ļîñķ.~~~~~~~~~~~~~~~~~~]
+sources-stores-invite = [Þļüĝîñš ƒöŕ ýöüŕ öŵñ ðéṽîçéš. Ĵöîñ ŵîţĥ àñ îñṽîţé ļîñķ.~~~~~~~~~~~~~~~~~]
 
 # Part of the { -plugin-store } summary: how many { -plugin-store-pl } are joined.
 sources-stores-joined = [{ $count } ĵöîñéð~~~]
@@ -6109,7 +6109,7 @@ onboarding-own-heading = [Ĥàṽé ýöüŕ öŵñ ɱéðîà?~~~~~~]
 onboarding-invite-heading = [Ĥàṽé àñ îñṽîţé ļîñķ?~~~~~~]
 
 # Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-onboarding-where-stores = [Þļüĝîñš çöɱé ƒŕöɱ þļüĝîñ šţöŕéš. Å þļüĝîñ šţöŕé îš ŕüñ ƀý öñé þéŕšöñ ƒöŕ ţĥé þéöþļé ţĥéý îñṽîţé, šö ýöü ĵöîñ öñé ŵîţĥ àñ îñṽîţé ļîñķ ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+onboarding-where-stores = [Þļüĝîñš çöɱé ƒŕöɱ þļüĝîñ šţöŕéš. Å þļüĝîñ šţöŕé îš šîĝñéð àñð ĝîṽéš éàçĥ ðéṽîçé îţš öŵñ ţöķéñ, šö ýöü ĵöîñ öñé ŵîţĥ àñ îñṽîţé ļîñķ ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = [Ţŕý îţ ñöŵ~~~]
@@ -8253,12 +8253,6 @@ sources-empty-detail = [Ĵöîñ à þļüĝîñ šţöŕé ŵîţĥ ţĥé îñ
 # Row for the built-in torrent source.
 sources-torrents = [Ţöŕŕéñţš~~~]
 
-# Label of a source that is not a plugin and controls this device.
-sources-remote = [Ŕéɱöţé~~]
-
-# Origin: set in the config file.
-sources-origin-config = [Šéţ îñ ţĥé çöñƒîĝ ƒîļé~~~~~~~]
-
 # Origin: built into the app.
 sources-origin-built-in = [Ɓüîļţ îñ~~~]
 
@@ -8304,7 +8298,7 @@ sources-detail-disabled = [Öƒƒ. Îţ ķééþš îţš þļàçé àñð îš
 # Status line: the source is gone.
 sources-detail-gone = [Ţĥîš šöüŕçé îš ñö ļöñĝéŕ ĥéŕé.~~~~~~~~~]
 
-# Status line: the site did not answer.
+# Status line: the source did not answer.
 sources-detail-site = [Ţĥé šöüŕçé ðîðñ'ţ àñšŵéŕ.~~~~~~~~]
 
 # Row label: version.
@@ -8569,7 +8563,7 @@ sources-your-intro = [Éþîšöðéš þļàý ƒŕöɱ ţĥé ƒîŕšţ šö�
 sources-section-plugins = [Þļüĝîñš~~~]
 
 # Section heading: Internet Archive collections and PeerTube channels.
-sources-section-catalogues = [Ƒŕéé çàţàļöĝüéš~~~~~]
+sources-section-catalogues = [Öþéñ çàţàļöĝüéš~~~~~]
 
 # Link in the empty state.
 sources-add-demo = [Åðð ţĥé ðéɱö~~~~]
@@ -8584,7 +8578,7 @@ stores-joined = [Ĵöîñéð~~]
 stores-empty-title = [Ñö þļüĝîñ šţöŕéš ýéţ~~~~~~]
 
 # Line under the empty title.
-stores-empty-detail = [Þļüĝîñ šţöŕéš àŕé ŕüñ ƀý þéöþļé ýöü ķñöŵ. Ĵöîñ öñé ŵîţĥ ţĥé îñṽîţé ļîñķ îţš öŵñéŕ šéñðš ýöü.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+stores-empty-detail = [Þļüĝîñ šţöŕéš ĥöļð šîĝñéð þļüĝîñš àñð ĝîṽé éàçĥ ðéṽîçé îţš öŵñ ţöķéñ. Ĵöîñ öñé ŵîţĥ ţĥé îñṽîţé ļîñķ îţš öŵñéŕ šéñðš ýöü.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Line under the title of the screen when plugins add sources.
 stores-intro = [Þļüĝîñš àðð šöüŕçéš. Éàçĥ öñé ļîšţš ţĥé ĥöšţš îţ çöñţàçţš ƀéƒöŕé ýöü îñšţàļļ îţ.~~~~~~~~~~~~~~~~~~~~~~~~]
@@ -9079,7 +9073,7 @@ stores-offers-plugins =
 notice-open-stores = [Öþéñ þļüĝîñ šţöŕéš~~~~~~]
 
 # Explainer on the empty plugin stores page.
-stores-what-is = [Å þļüĝîñ šţöŕé îš à šɱàļļ šéŕṽéŕ öñé þéŕšöñ ŕüñš ƒöŕ ţĥé þéöþļé ţĥéý îñṽîţé. Îţ öƒƒéŕš šöüŕçéš àš þļüĝîñš. Ķàéŕî ŕüñš ñö þļüĝîñ šţöŕéš àñð ļîšţš ñöñé, šö ýöü ĵöîñ öñé ŵîţĥ àñ îñṽîţé ļîñķ ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+stores-what-is = [Å þļüĝîñ šţöŕé îš à šɱàļļ šéŕṽéŕ ţĥàţ ĥöļðš šîĝñéð þļüĝîñš àñð ĝîṽéš éàçĥ ðéṽîçé îţš öŵñ ţöķéñ. Îţ öƒƒéŕš šöüŕçéš àš þļüĝîñš. Ķàéŕî ŕüñš ñö þļüĝîñ šţöŕéš àñð ļîšţš ñöñé, šö ýöü ĵöîñ öñé ŵîţĥ àñ îñṽîţé ļîñķ ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = [Ŵĥàţ îš à þļüĝîñ šţöŕé?~~~~~~~]
@@ -9396,24 +9390,6 @@ torrents-proxy-not-saved = [Ñöţ šàṽéð. { $why }, šö ţĥé šàṽé�
 
 # Notice when torrents stayed off. The reason is a sentence fragment.
 torrents-still-off = [Ţöŕŕéñţš àŕé šţîļļ öƒƒ. { $why }.~~~~~~~~~]
-
-# Label of the index address field.
-torrents-index = [Ţöŕŕéñţ îñðéẋ~~~~]
-
-# Line under the index field.
-torrents-index-detail = [Ţĥé ŔŠŠ šéàŕçĥ àððŕéšš Ķàéŕî àšķš ƒöŕ ţöŕŕéñţš.~~~~~~~~~~~~~~~]
-
-# Hint inside the index field.
-torrents-index-hint = [ĥţţþš://…/?ƣ={ "{" }ƣüéŕý{ "}" }~~~~~~]
-
-# Line when no index address is set.
-torrents-index-needed = [Ţöŕŕéñţš ñééð àñ îñðéẋ àððŕéšš.~~~~~~~~~~]
-
-# Line when the index address has the wrong scheme.
-torrents-index-scheme = [Ûšé àñ ĥţţþ öŕ ĥţţþš àððŕéšš.~~~~~~~~~]
-
-# Notice after the index was saved.
-torrents-index-saved = [Ţöŕŕéñţ îñðéẋ šàṽéð~~~~~~]
 
 # Under the proxy form: what the app checks.
 torrents-check-note = [Ķàéŕî çĥéçķš ţĥàţ îţ çàñ ŕéàçĥ ţĥé þŕöẋý ƀéƒöŕé ţöŕŕéñţš šţàŕţ. Ţöŕŕéñţš ŵàîţ ŵĥîļé ţĥàţ çĥéçķ ƒàîļš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]

@@ -1367,9 +1367,6 @@
   <data name="SourcesStatusWorking" xml:space="preserve">
     <value>準備完了</value>
   </data>
-  <data name="SourcesTorrentIndexes" xml:space="preserve">
-    <value>設定でオンにしたトレントインデックスを検索します。</value>
-  </data>
   <data name="SourcesVersionReady" xml:space="preserve">
     <value>バージョン{version}の準備ができました</value>
   </data>
@@ -3448,9 +3445,6 @@
   </data>
   <data name="OnboardingInviteHeading" xml:space="preserve">
     <value>招待リンクをお持ちですか?</value>
-  </data>
-  <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>プラグインはプラグインストアから提供されます。プラグインストアは一人の運営者が、招待した人のために運営しています。参加するには、所有者からの招待リンクが必要です。</value>
   </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>今すぐ試す</value>
@@ -5564,12 +5558,6 @@
   <data name="SourcesTorrents" xml:space="preserve">
     <value>トレント</value>
   </data>
-  <data name="SourcesRemote" xml:space="preserve">
-    <value>リモート</value>
-  </data>
-  <data name="SourcesOriginConfig" xml:space="preserve">
-    <value>設定ファイルで指定</value>
-  </data>
   <data name="SourcesOriginBuiltIn" xml:space="preserve">
     <value>アプリに同梱</value>
   </data>
@@ -5861,9 +5849,6 @@
   <data name="SourcesSectionPlugins" xml:space="preserve">
     <value>プラグイン</value>
   </data>
-  <data name="SourcesSectionCatalogues" xml:space="preserve">
-    <value>無料カタログ</value>
-  </data>
   <data name="SourcesAddDemo" xml:space="preserve">
     <value>デモを追加</value>
   </data>
@@ -5875,9 +5860,6 @@
   </data>
   <data name="StoresEmptyTitle" xml:space="preserve">
     <value>まだプラグインストアがありません</value>
-  </data>
-  <data name="StoresEmptyDetail" xml:space="preserve">
-    <value>プラグインストアは、知り合いが運営しています。運営者から届いた招待リンクで参加できます。</value>
   </data>
   <data name="StoresIntro" xml:space="preserve">
     <value>プラグインはソースを追加します。それぞれ、インストールする前に接続先のホストを一覧で示します。</value>
@@ -6356,9 +6338,6 @@
   <data name="NoticeOpenStores" xml:space="preserve">
     <value>プラグインストアを開く</value>
   </data>
-  <data name="StoresWhatIs" xml:space="preserve">
-    <value>プラグインストアは、一人の運営者が、招待した人のために運営する小さなサーバーです。ソースをプラグインとして提供します。Kaeriはプラグインストアを運営せず、一覧も載せません。所有者からの招待リンクで参加してください。</value>
-  </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>プラグインストアとは?</value>
   </data>
@@ -6640,24 +6619,6 @@
   </data>
   <data name="TorrentsStillOff" xml:space="preserve">
     <value>{why}ため、トレントはまだオフです。</value>
-  </data>
-  <data name="TorrentsIndex" xml:space="preserve">
-    <value>トレントインデックス</value>
-  </data>
-  <data name="TorrentsIndexDetail" xml:space="preserve">
-    <value>Kaeriがトレントを探すために使うRSS検索のアドレスです。</value>
-  </data>
-  <data name="TorrentsIndexHint" xml:space="preserve">
-    <value>https://…/?q={{query}}</value>
-  </data>
-  <data name="TorrentsIndexNeeded" xml:space="preserve">
-    <value>トレントには、トレントインデックスのアドレスが必要です。</value>
-  </data>
-  <data name="TorrentsIndexScheme" xml:space="preserve">
-    <value>httpまたはhttpsのアドレスを使用してください。</value>
-  </data>
-  <data name="TorrentsIndexSaved" xml:space="preserve">
-    <value>トレントインデックスを保存しました</value>
   </data>
   <data name="TorrentsCheckPassed" xml:space="preserve">
     <value>合格</value>

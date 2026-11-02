@@ -162,7 +162,7 @@ home-more-genre = Więcej: { $genre }
 # Line over the spotlight's title when it is the built-in demo.
 home-spotlight-demo = Demo, wolne do udostępniania
 
-# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Stream.
+# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.
 licensed-return = Czy obejrzano odcinek { $episode } w { $service }?
 
 # Notice after Mark as watched on the return notice. It holds Undo.
@@ -3141,9 +3141,6 @@ sources-state-held-back = Wstrzymane
 
 # Heading of the line about { -plugin-store-pl }.
 sources-stores-title = Sklepy z wtyczkami
-
-# Under the heading when no { -plugin-store } is joined or the list has not arrived.
-sources-stores-invite = Wtyczki udostępniane przez znajome osoby. Dołącz linkiem z zaproszeniem.
 
 # Part of the { -plugin-store } summary: how many { -plugin-store-pl } are joined.
 sources-stores-joined = Dołączono: { $count }
@@ -6190,9 +6187,6 @@ onboarding-own-heading = Masz własne media?
 # Heading of the group that joins a store with an invite.
 onboarding-invite-heading = Masz link z zaproszeniem?
 
-# Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-onboarding-where-stores = Wtyczki pochodzą ze sklepów. Każdy sklep z wtyczkami prowadzi jedna osoba dla zaproszonych ludzi, więc dołącza się do niego przez link z zaproszeniem od właściciela.
-
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = Wypróbuj teraz
 
@@ -8349,12 +8343,6 @@ sources-empty-detail = Dołącz do sklepu z wtyczkami przez link z zaproszeniem 
 # Row for the built-in torrent source.
 sources-torrents = Torrenty
 
-# Label of a source that is not a plugin and controls this device.
-sources-remote = Zdalne
-
-# Origin: set in the config file.
-sources-origin-config = Ustawione w pliku konfiguracyjnym
-
 # Origin: built into the app.
 sources-origin-built-in = Wbudowane
 
@@ -8397,7 +8385,7 @@ sources-detail-disabled = Wyłączone. Zachowuje swoje miejsce i nie jest sprawd
 # Status line: the source is gone.
 sources-detail-gone = Źródło nie jest już tutaj.
 
-# Status line: the site did not answer.
+# Status line: the source did not answer.
 sources-detail-site = Źródło nie odpowiedziało.
 
 # Row label: version.
@@ -8664,9 +8652,6 @@ sources-your-intro = Odcinki odtwarza pierwsze źródło, które je ma, w tej ko
 # Heading of the section that lists the plugins.
 sources-section-plugins = Wtyczki
 
-# Section heading: Internet Archive collections and PeerTube channels.
-sources-section-catalogues = Darmowe katalogi
-
 # Link in the empty state.
 sources-add-demo = Dodaj demo
 
@@ -8678,9 +8663,6 @@ stores-joined = Dołączono
 
 # Title of the empty list.
 stores-empty-title = Nie masz jeszcze sklepy z wtyczkami
-
-# Line under the empty title.
-stores-empty-detail = Sklepy z wtyczkami prowadzą osoby, które znasz. Dołącz do jednego z nich linkiem z zaproszeniem od właściciela.
 
 # Line under the title of the screen when plugins add sources.
 stores-intro = Wtyczki dodają źródła. Każda z nich pokazuje hosty, z którymi się łączy, zanim ją zainstalujesz.
@@ -9184,9 +9166,6 @@ stores-offers-plugins =
 # Button of a notice that opens the plugin stores page.
 notice-open-stores = Otwórz sklepy z wtyczkami
 
-# Explainer on the empty plugin stores page.
-stores-what-is = Sklep z wtyczkami to mały serwer, który prowadzi jedna osoba dla zaproszonych ludzi. Oferuje źródła jako wtyczki. Kaeri nie prowadzi żadnych sklepów z wtyczkami ani ich nie wymienia, więc dołączasz do jednego przez link z zaproszeniem od właściciela.
-
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = Czym jest sklep z wtyczkami?
 
@@ -9474,24 +9453,6 @@ torrents-proxy-not-saved = Nie zapisano. { $why }, więc zapisane proxy pozostaj
 
 # Notice when torrents stayed off. The reason is a sentence fragment.
 torrents-still-off = Torrenty nadal są wyłączone. { $why }.
-
-# Label of the index address field.
-torrents-index = Indeks torrentów
-
-# Line under the index field.
-torrents-index-detail = Adres wyszukiwania RSS, o który Kaeri pyta o torrenty.
-
-# Hint inside the index field.
-torrents-index-hint = https://…/?q={ "{" }query{ "}" }
-
-# Line when no index address is set.
-torrents-index-needed = Torrenty wymagają adresu indeksu.
-
-# Line when the index address has the wrong scheme.
-torrents-index-scheme = Użyj adresu http lub https.
-
-# Notice after the index was saved.
-torrents-index-saved = Indeks torrentów zapisany
 
 # Check passed.
 torrents-check-passed = Zaliczone

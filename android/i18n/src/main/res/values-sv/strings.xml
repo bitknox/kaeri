@@ -462,9 +462,7 @@
     <string name="tv_use_phone">Använd en telefon</string>
     <string name="tv_type_it">Skriv in den</string>
     <string name="tv_qr_label_proxy">QR-kod för sidan som tar emot proxyn</string>
-    <string name="tv_qr_label_index">QR-kod för sidan som tar emot torrentindexet</string>
     <string name="tv_scan_proxy">Skanna med telefonen, ändra sedan proxyn på sidan som öppnas.</string>
-    <string name="tv_scan_torrent">Skanna med telefonen, fyll sedan i torrentindexet på sidan som öppnas.</string>
     <string name="tv_field_user_optional">Användarnamn, om det efterfrågas</string>
     <string name="tv_field_password_optional">Lösenord, om det efterfrågas</string>
     <string name="tv_qr_label_link">QR-kod för sidan som tar emot länken</string>
@@ -634,7 +632,6 @@
     <string name="settings_titles_note_english_missing">%1$s har ingen engelsk titel på AniList, så den behåller sin romaji-titel.</string>
     <string name="settings_titles_note_english">Engelska titlar som AniList anger, och romaji där det inte finns någon.</string>
     <string name="settings_titles_note_romaji">Japanska titlar skrivna med latinska bokstäver, som AniList anger dem.</string>
-    <string name="settings_index_none">Inte angiven</string>
     <string name="settings_stores_with_updates">%1$d · %2$s</string>
     <string name="settings_seeding_best_effort">Bästa möjliga på den här enheten: seeding körs bara medan Kaeri är öppen.</string>
     <plurals name="settings_downloads_count">
@@ -1463,7 +1460,6 @@
     <string name="onboarding_where_hosts">Kaeri spelar det du redan har: filer på den här enheten, din Jellyfin-server och tillägg från de tilläggsbutiker du går med i.</string>
     <string name="onboarding_own_heading">Har du egna media?</string>
     <string name="onboarding_invite_heading">Har du en inbjudningslänk?</string>
-    <string name="onboarding_where_stores">Tillägg kommer från tilläggsbutiker. En tilläggsbutik drivs av en person åt dem hen bjuder in, så du går med i en via en inbjudningslänk från ägaren.</string>
     <string name="onboarding_demo_heading">Prova direkt</string>
     <string name="onboarding_demo_detail">Demon spelar こうしす！, en serie som skaparna delar under CC BY 4.0, från Wikimedia Commons.</string>
     <string name="onboarding_play_demo">Spela demon</string>
@@ -2198,8 +2194,6 @@
     <string name="sources_empty_title">Inga källor än</string>
     <string name="sources_empty_detail">Gå med i en tilläggsbutik med inbjudningslänken som ägaren skickar till dig.</string>
     <string name="sources_torrents">Torrent</string>
-    <string name="sources_remote">Fjärrstyrd</string>
-    <string name="sources_origin_config">Angiven i konfigurationsfilen</string>
     <string name="sources_origin_built_in">Inbyggd</string>
     <string name="sources_origin_left_store">Från en tilläggsbutik du lämnade</string>
     <string name="sources_origin_by_hand">Tillagd för hand</string>
@@ -2307,12 +2301,10 @@
     <string name="sources_your">Dina källor</string>
     <string name="sources_your_intro">Avsnitt spelas från den första källa som har dem, i den här ordningen.</string>
     <string name="sources_section_plugins">Tillägg</string>
-    <string name="sources_section_catalogues">Fria kataloger</string>
     <string name="sources_add_demo">Lägg till demon</string>
     <string name="sources_order_all">Varje källa prövas i den här ordningen, oavsett typ.</string>
     <string name="stores_joined">Ansluten</string>
     <string name="stores_empty_title">Inga tilläggsbutiker än</string>
-    <string name="stores_empty_detail">Tilläggsbutiker drivs av personer du känner. Gå med i en av dem med inbjudningslänken som ägaren skickar till dig.</string>
     <string name="stores_intro">Tillägg lägger till källor. Varje visar vilka värdar den kontaktar innan du installerar den.</string>
     <string name="stores_not_from_app">Tillägg kommer från tilläggsbutikens ägare, inte från Kaeri. Du kan lämna en tilläggsbutik när som helst.</string>
     <string name="stores_join_owner_responsible">%1$s driver den här tilläggsbutik och valde dess tillägg. Kaeri har inte gjort, granskat eller godkänt dem.</string>
@@ -2487,7 +2479,6 @@
         <item quantity="other">%1$d tillägg</item>
     </plurals>
     <string name="notice_open_stores">Öppna tilläggsbutiker</string>
-    <string name="stores_what_is">En tilläggsbutik är en liten server som en person driver åt dem hen bjuder in. Den erbjuder källor som tillägg. Kaeri driver inga tilläggsbutiker och listar inga, så du går med i en via en inbjudningslänk från ägaren.</string>
     <string name="stores_what_is_link">Vad är en tilläggsbutik?</string>
     <string name="stores_invite_rules">En inbjudningslänk gäller en gång, för en person, och i sju dagar. Be tilläggsbutikens ägare om en ny om din har gått ut.</string>
     <string name="stores_qr_label">QR-kod för inbjudningslänken</string>
@@ -2585,12 +2576,6 @@
     <string name="torrents_proxy_saved">Proxyn sparades</string>
     <string name="torrents_proxy_not_saved">Inte sparad. %1$s, så den sparade proxyn finns kvar.</string>
     <string name="torrents_still_off">Torrenter är fortfarande av. %1$s.</string>
-    <string name="torrents_index">Torrentindex</string>
-    <string name="torrents_index_detail">RSS-sökadressen som Kaeri frågar efter torrenter från.</string>
-    <string name="torrents_index_hint">https://…/?q={query}</string>
-    <string name="torrents_index_needed">Torrenter behöver en indexadress.</string>
-    <string name="torrents_index_scheme">Använd en http- eller https-adress.</string>
-    <string name="torrents_index_saved">Torrentindex sparades</string>
     <string name="torrents_check_passed">Godkänd</string>
     <string name="torrents_check_running">Kontrollerar</string>
     <string name="torrents_check_failed">Misslyckades</string>

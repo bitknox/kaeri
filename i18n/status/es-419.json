@@ -16687,13 +16687,6 @@
     "by": "agent",
     "at": "2026-11-01"
   },
-  "settings-index-none": {
-    "source": "d48719159084",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Not configured"
-  },
   "settings-keep-next": {
     "source": "9b7142165739",
     "state": "draft",
@@ -20721,13 +20714,6 @@
     "at": "2026-10-31",
     "back": "Added by hand"
   },
-  "sources-origin-config": {
-    "source": "3ea0e4cb57d6",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Defined in the configuration file"
-  },
   "sources-origin-from": {
     "source": "09c4ff5bf087",
     "state": "draft",
@@ -20782,13 +20768,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "The torrents are deactivated. The session stopped."
-  },
-  "sources-remote": {
-    "source": "ea47f4110bb2",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Remote"
   },
   "sources-remove-detail": {
     "source": "7dca9d3569a3",
@@ -21042,13 +21021,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "A bigger terminal is needed."
-  },
-  "sources-torrent-indexes": {
-    "source": "930784d9b438",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "It searches the torrent indexes activated in Settings."
   },
   "sources-torrent-source": {
     "source": "b871d0a30bf7",
@@ -25552,48 +25524,6 @@
     "at": "2026-10-31",
     "back": "Torrents for Kaeri"
   },
-  "torrents-index": {
-    "source": "3e137d7a1f87",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Torrent index"
-  },
-  "torrents-index-detail": {
-    "source": "9be9bea9e53a",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "The RSS search address that Kaeri uses for torrents."
-  },
-  "torrents-index-hint": {
-    "source": "ffaafba956bf",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "https://…/?q={query}"
-  },
-  "torrents-index-needed": {
-    "source": "9672b1c5f873",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Torrents need an index address."
-  },
-  "torrents-index-saved": {
-    "source": "2ef032a8e29c",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Torrent index saved"
-  },
-  "torrents-index-scheme": {
-    "source": "6fbcf1a12aa2",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Use an http or https address."
-  },
   "torrents-last-check": {
     "source": "7308453cbee2",
     "state": "draft",
@@ -27085,13 +27015,6 @@
     "at": "2026-10-31",
     "back": "QR code"
   },
-  "tv-qr-label-index": {
-    "source": "9f51752e624b",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "QR code of the page for the torrent index"
-  },
   "tv-qr-label-link": {
     "source": "7b794027a307",
     "state": "draft",
@@ -27259,13 +27182,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Scan with your phone and change the proxy on the page that opens."
-  },
-  "tv-scan-torrent": {
-    "source": "0c85f76b36c7",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Scan with your phone and complete the torrent index on the page that opens."
   },
   "tv-search-genres-offline": {
     "source": "47ffc0251e2a",

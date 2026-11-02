@@ -31,7 +31,7 @@ struct SettingsWordsTests {
     private func settingsView(presence: Bool) -> SettingsView {
         SettingsView(
             rows: [], refused: nil, translation: .sub, quality: 1080, theme: .adaptive,
-            sources: ConfiguredSources(order: [], disabled: [], torrent: false, remote: false),
+            sources: ConfiguredSources(order: [], disabled: [], torrent: false),
             speed: nil, presenceClient: true, presenceAvailable: presence, nativeRows: [], overridden: [],
             torrent: TorrentView(proxy: nil)
         )
@@ -56,7 +56,7 @@ struct SettingsWordsTests {
         // The bindings' default, so a front end that does not say keeps the terminal's behaviour.
         let view = SettingsView(
             rows: [], refused: nil, translation: .sub, quality: 1080, theme: .adaptive,
-            sources: ConfiguredSources(order: [], disabled: [], torrent: false, remote: false),
+            sources: ConfiguredSources(order: [], disabled: [], torrent: false),
             speed: nil, presenceClient: true, nativeRows: [], overridden: [],
             torrent: TorrentView(proxy: nil)
         )

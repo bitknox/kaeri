@@ -1757,9 +1757,9 @@ fn facets() -> Value {
               "category": "Sexual Content", "isAdult": true, "isGeneralSpoiler": false },
         ],
         "ExternalLinkSourceCollection": [
-            { "site": "Lantern Stream", "isDisabled": false },
-            { "site": "Hikari Stream", "isDisabled": false },
-            { "site": "Lantern Stream", "isDisabled": false },
+            { "site": "Lantern Library", "isDisabled": false },
+            { "site": "Hikari Library", "isDisabled": false },
+            { "site": "Lantern Library", "isDisabled": false },
             { "site": "Old Stream", "isDisabled": true },
         ],
     })
