@@ -118,6 +118,48 @@ pub(crate) enum DeviceWrite {
     LetGo { anilist_id: i64, episode: String, at: Option<i64> },
 }
 
+/// A completed watch that arrived from another device: which device watched, and the trackers it
+/// was queued for there, so a tracker it lacked can be filled by that tracker's lead device.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ReceivedWatch {
+    pub device: String,
+    pub anilist_id: u32,
+    pub episode: String,
+    pub queued_for: Vec<String>,
+}
+
+/// How long a device counts as present for the lead rule, in seconds.
+pub const LEAD_WINDOW_SECS: i64 = 7 * 24 * 3600;
+
+/// A device in the group, for the lead rule: its id, the trackers it is signed in to, and when it
+/// was last seen (unix seconds).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LeadCandidate {
+    pub device: String,
+    pub trackers: Vec<String>,
+    pub last_seen: Option<i64>,
+    pub removed: bool,
+}
+
+/// The device that fills `tracker` for watches whose origin lacked it: of the devices signed in
+/// to it and seen in the last seven days (this device always counts as seen), the one with the
+/// lowest id. Every device computes the same answer from the same device list and no messages.
+pub fn lead_device<'a>(
+    tracker: &str,
+    me: &str,
+    devices: &'a [LeadCandidate],
+    now: i64,
+) -> Option<&'a str> {
+    devices
+        .iter()
+        .filter(|d| !d.removed && d.trackers.iter().any(|t| t == tracker))
+        .filter(|d| {
+            d.device == me || d.last_seen.is_some_and(|seen| now - seen <= LEAD_WINDOW_SECS)
+        })
+        .map(|d| d.device.as_str())
+        .min()
+}
+
 /// What applying a batch did.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Applied {
@@ -130,6 +172,8 @@ pub struct Applied {
     pub effects: Vec<Effect>,
     pub notes: Vec<SyncNote>,
     pub titles: Vec<u32>,
+    /// Completed watches that arrived, for the tracker lead rule.
+    pub watches: Vec<ReceivedWatch>,
     pub(crate) device: Vec<DeviceWrite>,
 }
 
@@ -156,6 +200,42 @@ pub mod kinds {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn dev(id: &str, trackers: &[&str], seen: Option<i64>) -> LeadCandidate {
+        LeadCandidate {
+            device: id.into(),
+            trackers: trackers.iter().map(|t| (*t).to_owned()).collect(),
+            last_seen: seen,
+            removed: false,
+        }
+    }
+
+    #[test]
+    fn the_lead_is_the_lowest_signed_in_device_seen_this_week() {
+        let now = 10_000_000;
+        let devices = [
+            dev("aa", &["anilist"], Some(now - LEAD_WINDOW_SECS - 1)),
+            dev("bb", &["anilist", "trakt"], Some(now - 60)),
+            dev("cc", &["anilist"], Some(now)),
+            dev("dd", &[], Some(now)),
+        ];
+        // "aa" is the lowest but was last seen too long ago.
+        assert_eq!(lead_device("anilist", "cc", &devices, now), Some("bb"));
+        assert_eq!(lead_device("trakt", "cc", &devices, now), Some("bb"));
+        assert_eq!(lead_device("simkl", "cc", &devices, now), None);
+        // Every device reaches the same answer.
+        assert_eq!(lead_device("anilist", "bb", &devices, now), Some("bb"));
+        // This device is always present, however long since it saw itself.
+        let alone = [dev("zz", &["anilist"], None)];
+        assert_eq!(lead_device("anilist", "zz", &alone, now), Some("zz"));
+        // A removed device never leads.
+        let mut gone = dev("aa", &["anilist"], Some(now));
+        gone.removed = true;
+        assert_eq!(
+            lead_device("anilist", "cc", &[gone, dev("cc", &["anilist"], None)], now),
+            Some("cc")
+        );
+    }
 
     #[test]
     fn a_stamp_is_never_behind_what_was_seen() {

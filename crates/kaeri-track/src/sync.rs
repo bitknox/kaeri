@@ -87,9 +87,13 @@ fn last_pushed(
     tracker_id: &str,
     anilist_id: kaeri_core::ids::AnilistId,
 ) -> Result<Option<u32>, kaeri_store::StoreError> {
-    Ok(store
+    let own = store
         .get_meta_i64(&pushed_key(tracker_id, anilist_id))?
-        .map(|sent| sent.clamp(0, i64::from(u32::MAX)) as u32))
+        .map(|sent| sent.clamp(0, i64::from(u32::MAX)) as u32);
+    // What another of the person's devices already sent counts as sent: with sync on, the
+    // high-water mark is the highest of every device's.
+    let shared = store.sync_tracker_mark_for(tracker_id, anilist_id.get())?;
+    Ok(own.max(shared))
 }
 
 /// Record a progress value as sent, keeping the highest.
@@ -100,7 +104,9 @@ fn remember_pushed(
     episode: u32,
 ) -> Result<(), kaeri_store::StoreError> {
     let highest = last_pushed(store, tracker_id, anilist_id)?.unwrap_or(0).max(episode);
-    store.set_meta_i64(&pushed_key(tracker_id, anilist_id), i64::from(highest))
+    store.set_meta_i64(&pushed_key(tracker_id, anilist_id), i64::from(highest))?;
+    // Tells the other devices (a no-op with sync off) so none of them sends it again.
+    store.sync_tracker_mark(tracker_id, anilist_id.get(), highest)
 }
 
 /// Lift the hold after a successful sign-in, so the queue drains at once.
@@ -384,6 +390,12 @@ pub fn queue_progress_for(
 
     let op = kaeri_core::traits::TrackOp::SetProgress { anilist_id, episode: episodes };
     for tracker in trackers {
+        // Another device already sent this far: nothing to add, and a repeat would count a
+        // play twice on trackers that keep a history.
+        if matches!(store.sync_tracker_mark_for(tracker, anilist_id.get()), Ok(Some(sent)) if sent >= episodes)
+        {
+            continue;
+        }
         // Queued even for an unauthenticated tracker: the whole point of a durable outbox is
         // that watching now and signing in later still syncs.
         if let Err(e) = store.enqueue(tracker, &op, now) {

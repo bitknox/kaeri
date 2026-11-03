@@ -5,7 +5,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use rusqlite::{OptionalExtension, Transaction, params};
 
 use super::{
-    Applied, Effect, Op, OpBody, Stamp, Store, SyncNote, VersionVector, log,
+    Applied, Effect, LeadCandidate, Op, OpBody, ReceivedWatch, Stamp, Store, SyncNote,
+    VersionVector, lead_device, log,
     op::{self, kinds},
 };
 use crate::Result;
@@ -194,6 +195,79 @@ impl Store {
                 })?
                 .collect::<rusqlite::Result<_>>()?)
         })
+    }
+
+    /// The devices as the lead rule sees them.
+    pub fn sync_lead_candidates(&self) -> Result<Vec<LeadCandidate>> {
+        self.with_personal(|c| {
+            let mut stmt =
+                c.prepare("SELECT device, trackers, last_seen, removed FROM sync_peer")?;
+            Ok(stmt
+                .query_map([], |r| {
+                    let trackers: String = r.get(1)?;
+                    Ok(LeadCandidate {
+                        device: r.get(0)?,
+                        trackers: serde_json::from_str(&trackers).unwrap_or_default(),
+                        last_seen: r.get(2)?,
+                        removed: r.get::<_, i64>(3)? != 0,
+                    })
+                })?
+                .collect::<rusqlite::Result<_>>()?)
+        })
+    }
+
+    /// Say which trackers this device is signed in to, so the others can work out the lead.
+    pub fn sync_set_my_trackers(&self, trackers: &[String]) -> Result<()> {
+        let Some(me) = self.sync_device()? else { return Ok(()) };
+        let json = serde_json::to_string(trackers)
+            .map_err(|source| crate::StoreError::Encode { what: "trackers", source })?;
+        if self.sync_reg_value(kinds::DEVICE_TRACKERS, &me)?.as_deref() == Some(json.as_str()) {
+            return Ok(());
+        }
+        self.sync_register(kinds::DEVICE_TRACKERS, &me, Some(&json), None)
+    }
+
+    /// Of the watches that arrived, the `(tracker, title)` pairs this device must fill: a tracker
+    /// the watching device was not queued for, that this device is signed in to, that no device
+    /// has reached the episode on, and whose lead (see [`lead_device`]) is this device. Anything
+    /// else is somebody else's to send, or already sent.
+    pub fn sync_tracker_gaps(
+        &self,
+        my_trackers: &[String],
+        watches: &[ReceivedWatch],
+        now: i64,
+    ) -> Result<Vec<(String, u32)>> {
+        let Some(me) = self.sync_device()? else { return Ok(Vec::new()) };
+        // This device knows its own trackers first-hand, and is always present.
+        let mut devices = self.sync_lead_candidates()?;
+        devices.retain(|d| d.device != me);
+        devices.push(LeadCandidate {
+            device: me.clone(),
+            trackers: my_trackers.to_vec(),
+            last_seen: Some(now),
+            removed: false,
+        });
+        let mut out = Vec::new();
+        for tracker in my_trackers {
+            if lead_device(tracker, &me, &devices, now) != Some(me.as_str()) {
+                continue;
+            }
+            for watch in watches {
+                if watch.queued_for.iter().any(|t| t == tracker) {
+                    continue;
+                }
+                let reached = watch.episode.parse::<u32>().ok();
+                let marked = self.sync_tracker_mark_for(tracker, watch.anilist_id)?;
+                if matches!((marked, reached), (Some(m), Some(e)) if m >= e) {
+                    continue;
+                }
+                let pair = (tracker.clone(), watch.anilist_id);
+                if !out.contains(&pair) {
+                    out.push(pair);
+                }
+            }
+        }
+        Ok(out)
     }
 
     /// A tracker's count adopted while sync is on: one op, and an event for every episode up to
@@ -474,7 +548,7 @@ fn apply_one(
             completed,
             at,
             seen_unwatch,
-            ..
+            queued_for,
         } => {
             let uid = format!("{}:{}", op.device, op.seq);
             let inserted = tx.execute(
@@ -499,6 +573,12 @@ fn apply_one(
             )?;
             titles.insert(*anilist_id);
             if inserted > 0 && *completed {
+                report.watches.push(ReceivedWatch {
+                    device: op.device.clone(),
+                    anilist_id: *anilist_id,
+                    episode: episode.clone(),
+                    queued_for: queued_for.clone(),
+                });
                 // An unwatch another device wrote, later than this watch, that did not name it.
                 let unwatch: Option<(i64, String)> = tx
                     .query_row(

@@ -171,6 +171,11 @@ impl Stores {
         Ok(out)
     }
 
+    /// A joined store's address and name, for the sync log: never its token.
+    pub fn address_of(&self, id: &str) -> Option<(String, String)> {
+        self.joined(id).ok().map(|joined| (joined.base, joined.name))
+    }
+
     fn joined(&self, id: &str) -> Result<Joined, Msg> {
         self.load()?.store(id).cloned().ok_or(Msg::Store(StoreMsg::StoreNotJoined))
     }

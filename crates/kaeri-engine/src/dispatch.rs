@@ -625,6 +625,7 @@ pub(crate) fn dispatch(
         }
         Command::Disconnect { tracker } => {
             tracking::disconnect(&services.sync, &tracker, tx);
+            tracking::commands::announce_signed_in(&services.store, &services.sync);
             if tracker == "anilist" {
                 crate::title_language::signed_out(services, tx);
             }

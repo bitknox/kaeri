@@ -545,3 +545,73 @@ fn the_database_of_the_previous_release_migrates_and_syncs() {
     other.store.apply_ops(store.ops_after(&Default::default(), 10).unwrap()).unwrap();
     assert_eq!(other.store.completed_episodes(SHOW).unwrap(), vec!["1".to_string()]);
 }
+
+#[test]
+fn a_received_watch_is_filled_by_the_lead_for_a_tracker_its_origin_lacked() {
+    // The phone watches with AniList queued; the Mac and the iPad are both signed in to
+    // AniList and to Trakt, which the phone lacks.
+    let phone = dev("cccc", 10_000);
+    let mac = dev("aaaa", 10_000);
+    let ipad = dev("bbbb", 10_000);
+    let trackers = |t: &[&str]| t.iter().map(|s| (*s).to_owned()).collect::<Vec<_>>();
+    for (d, t) in [
+        (&phone, &["anilist"][..]),
+        (&mac, &["anilist", "trakt"]),
+        (&ipad, &["anilist", "trakt"]),
+    ] {
+        d.store.sync_set_my_trackers(&trackers(t)).unwrap();
+    }
+    phone.advance(1);
+    let mut e = WatchEvent::new(SHOW, "3", 1400.0);
+    e.duration_secs = Some(1440.0);
+    e.at = phone.secs();
+    e.completed = true;
+    phone.store.record_event_queued(&e, trackers(&["anilist"])).unwrap();
+
+    for d in [&mac, &ipad] {
+        send(&phone, d);
+        send(&mac, d);
+        send(&ipad, d);
+        d.store.sync_touch_peer("aaaa", d.secs()).unwrap();
+        d.store.sync_touch_peer("bbbb", d.secs()).unwrap();
+        d.store.sync_touch_peer("cccc", d.secs()).unwrap();
+    }
+    let received = |d: &Dev| {
+        let ops = phone.store.ops_after(&VersionVector::new(), usize::MAX).unwrap();
+        // Applying again is a no-op; the report of the first application is what matters, so
+        // build the same list from the op.
+        let _ = d;
+        ops.into_iter()
+            .filter_map(|op| match op.body {
+                OpBody::Watch { anilist_id, episode, queued_for, .. } => {
+                    Some(ReceivedWatch { device: op.device, anilist_id, episode, queued_for })
+                }
+                _ => None,
+            })
+            .collect::<Vec<_>>()
+    };
+    let now = mac.secs();
+    // AniList was queued by the phone: nobody fills it. Trakt: the lowest id, the Mac, does.
+    let mac_gaps = mac
+        .store
+        .sync_tracker_gaps(&trackers(&["anilist", "trakt"]), &received(&mac), now)
+        .unwrap();
+    let ipad_gaps = ipad
+        .store
+        .sync_tracker_gaps(&trackers(&["anilist", "trakt"]), &received(&ipad), now)
+        .unwrap();
+    assert_eq!(mac_gaps, vec![("trakt".to_owned(), SHOW.get())]);
+    assert!(ipad_gaps.is_empty(), "only one device sends it");
+
+    // Once any device has pushed it, no one else does.
+    mac.store.sync_tracker_mark("trakt", SHOW.get(), 3).unwrap();
+    send(&mac, &ipad);
+    send(&mac, &phone);
+    assert!(
+        mac.store
+            .sync_tracker_gaps(&trackers(&["trakt"]), &received(&mac), now)
+            .unwrap()
+            .is_empty()
+    );
+    assert_eq!(ipad.store.sync_tracker_mark_for("trakt", SHOW.get()).unwrap(), Some(3));
+}

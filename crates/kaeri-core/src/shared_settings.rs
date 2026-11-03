@@ -45,8 +45,60 @@ pub fn parse(id: &str) -> Option<(&'static [&'static str], &'static str)> {
     SHARED.iter().copied().find(|(t, k)| self::id(t, k) == id)
 }
 
+/// A setting's value as a sync register holds it: JSON, tagged by type so that `1` and `1.0` stay
+/// what they were.
+pub fn encode(value: &crate::settings::SettingValue) -> String {
+    use crate::settings::SettingValue as V;
+    match value {
+        V::Str(s) => serde_json::json!({ "s": s }),
+        V::Int(i) => serde_json::json!({ "i": i }),
+        V::Float(f) => serde_json::json!({ "f": f }),
+        V::Bool(b) => serde_json::json!({ "b": b }),
+        V::Strings(items) => serde_json::json!({ "l": items }),
+    }
+    .to_string()
+}
+
+/// The inverse of [`encode`]; `None` for anything that is not one of its outputs.
+pub fn decode(text: &str) -> Option<crate::settings::SettingValue> {
+    use crate::settings::SettingValue as V;
+    let json: serde_json::Value = serde_json::from_str(text).ok()?;
+    let object = json.as_object()?;
+    if let Some(v) = object.get("s") {
+        return Some(V::Str(v.as_str()?.to_owned()));
+    }
+    if let Some(v) = object.get("i") {
+        return Some(V::Int(v.as_i64()?));
+    }
+    if let Some(v) = object.get("f") {
+        return Some(V::Float(v.as_f64()?));
+    }
+    if let Some(v) = object.get("b") {
+        return Some(V::Bool(v.as_bool()?));
+    }
+    let list = object.get("l")?.as_array()?;
+    Some(V::Strings(list.iter().map(|i| i.as_str().map(str::to_owned)).collect::<Option<_>>()?))
+}
+
 #[cfg(test)]
 mod tests {
+    use crate::settings::SettingValue;
+
+    #[test]
+    fn values_round_trip_through_a_register() {
+        for value in [
+            SettingValue::Str("jpn".into()),
+            SettingValue::Int(3),
+            SettingValue::Float(0.85),
+            SettingValue::Bool(false),
+            SettingValue::Strings(vec!["a.example".into(), "b".into()]),
+        ] {
+            assert_eq!(super::decode(&super::encode(&value)), Some(value));
+        }
+        assert_eq!(super::decode("nonsense"), None);
+        assert_eq!(super::decode("{\"x\": 1}"), None);
+    }
+
     use super::*;
 
     #[test]

@@ -27,6 +27,8 @@ pub struct StoreTaskContext {
     http: HttpClient,
     paths: Paths,
     host: Arc<dyn Host>,
+    /// The local database, for telling the sync log which stores were joined and left.
+    store: kaeri_store::Store,
     tx: Outbox,
 }
 
@@ -97,6 +99,14 @@ impl StoreTaskContext {
     pub async fn join_store(self, link: Secret, label: Option<String>, name: Option<String>) {
         match self.stores.join_as(&link.0, label.as_deref(), name.as_deref()).await {
             Ok(joined) => {
+                // The address and name travel to the person's other devices, which can join on
+                // their own; the token never does.
+                let _ = self.store.sync_register(
+                    kaeri_store::sync::kinds::STORE,
+                    &joined.base,
+                    Some(&joined.name),
+                    None,
+                );
                 self.rows();
                 self.send(Event::StoreJoined { store: joined.id.clone() });
                 self.toast(Notice::info(if joined.anonymous {
@@ -124,8 +134,17 @@ impl StoreTaskContext {
 
     /// Leave a store; what was installed from it stays.
     pub async fn leave_store(self, store: String) {
+        let address = self.stores.address_of(&store);
         match self.stores.leave(&store).await {
             Ok(name) => {
+                if let Some((base, _)) = address {
+                    let _ = self.store.sync_register(
+                        kaeri_store::sync::kinds::STORE,
+                        &base,
+                        None,
+                        None,
+                    );
+                }
                 self.rows();
                 self.toast(Notice::info(Msg::Store(StoreMsg::StoreLeft { store: name })));
             }
@@ -386,6 +405,7 @@ pub fn store_task<W, F>(
         http: services.http.clone(),
         paths: services.paths.clone(),
         host: services.host.clone(),
+        store: services.store.clone(),
         tx: tx.clone(),
     };
     tokio::spawn(async move {

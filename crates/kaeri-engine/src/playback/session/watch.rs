@@ -141,7 +141,10 @@ impl Run<'_> {
         // Blocking sqlite calls: off the async worker so a slow disk cannot stall the event
         // stream.
         let _ = tokio::task::spawn_blocking(move || {
-            store_handle.record_event(&watch)?;
+            store_handle.record_event_queued(
+                &watch,
+                if queue_now { trackers.clone() } else { Vec::new() },
+            )?;
             if queue_now {
                 kaeri_track::sync::queue_progress_for(
                     &store_handle,

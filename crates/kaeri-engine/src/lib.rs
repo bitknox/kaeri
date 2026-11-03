@@ -138,6 +138,7 @@ pub mod skip_marks;
 pub mod sources;
 pub(crate) mod state;
 pub mod subtitles;
+pub mod sync;
 pub mod title_language;
 mod titlematch;
 pub mod titles;

@@ -332,6 +332,8 @@ impl Engine {
         let (arrivals_tx, arrivals) = mpsc::unbounded_channel();
         // The engine side's own state, on the config the app was launched with.
         let mut state = EngineState::new(config, saved, &services.paths, arrivals_tx);
+        state.config.set_sync(services.store.clone());
+        crate::tracking::commands::announce_signed_in(&services.store, &services.sync);
         state.config.set_handheld(handheld);
         crate::crash::arm_from(&services.paths.data_dir, state.config.effective());
         #[cfg(feature = "cast")]

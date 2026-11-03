@@ -49,13 +49,20 @@ pub fn load_title_language(services: &Services, tx: &Outbox) {
 
 /// Sign in to a tracker, off the UI thread: it opens a browser and waits.
 pub fn connect(tracker: String, job: Option<JobGuard>, services: &Services, tx: &Outbox) {
-    let Services { sync, host, app_clients, meta, .. } = services;
-    let (sync, host, clients, meta, tx) =
-        (sync.clone(), host.clone(), app_clients.clone(), meta.clone(), tx.clone());
+    let Services { sync, host, app_clients, meta, store, .. } = services;
+    let (sync, host, clients, meta, tx, store) = (
+        sync.clone(),
+        host.clone(),
+        app_clients.clone(),
+        meta.clone(),
+        tx.clone(),
+        store.clone(),
+    );
     tokio::spawn(async move {
         let anilist = tracker == "anilist";
         tracking::connect(sync.clone(), host, clients, tracker, job.as_ref(), tx.clone()).await;
         drop(job);
+        announce_signed_in(&store, &sync);
         // Signed in to AniList: titles are named as this account reads them, when the setting
         // follows AniList.
         if anilist {
@@ -72,13 +79,14 @@ pub fn finish_sign_in(
     services: &Services,
     tx: &Outbox,
 ) {
-    let Services { sync, app_clients, meta, .. } = services;
-    let (sync, clients, meta, tx) =
-        (sync.clone(), app_clients.clone(), meta.clone(), tx.clone());
+    let Services { sync, app_clients, meta, store, .. } = services;
+    let (sync, clients, meta, tx, store) =
+        (sync.clone(), app_clients.clone(), meta.clone(), tx.clone(), store.clone());
     tokio::spawn(async move {
         let _job = job;
         let anilist = tracker == "anilist";
         tracking::native::finish(sync.clone(), clients, tracker, callback.0, tx.clone()).await;
+        announce_signed_in(&store, &sync);
         // As for a sign-in the engine opened itself: titles follow the account now signed in.
         if anilist {
             crate::title_language::follow(&meta, sync.anilist.as_deref(), &tx).await;
@@ -103,11 +111,12 @@ pub fn connect_kitsu(
     services: &Services,
     tx: &Outbox,
 ) {
-    let Services { sync, .. } = services;
-    let (sync, tx) = (sync.clone(), tx.clone());
+    let Services { sync, store, .. } = services;
+    let (sync, tx, store) = (sync.clone(), tx.clone(), store.clone());
     tokio::spawn(async move {
         let _job = job;
-        tracking::connect_kitsu(sync, username, password.0, tx).await;
+        tracking::connect_kitsu(sync.clone(), username, password.0, tx).await;
+        announce_signed_in(&store, &sync);
     });
 }
 
@@ -157,4 +166,11 @@ pub fn load_library(
 /// progress out of the watch log.
 pub fn signed_in_tracker_ids(sync: &tracking::Sync) -> Vec<String> {
     sync.trackers.iter().filter(|t| t.is_authenticated()).map(|t| t.id().to_owned()).collect()
+}
+
+/// Tell the sync log which trackers this device is signed in to, for the lead rule.
+pub fn announce_signed_in(store: &kaeri_store::Store, sync: &tracking::Sync) {
+    if let Err(e) = store.sync_set_my_trackers(&signed_in_tracker_ids(sync)) {
+        tracing::warn!(error = %e, "could not tell the sync log which trackers this device has");
+    }
 }
