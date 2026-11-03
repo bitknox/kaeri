@@ -50,11 +50,16 @@ static class StringResources
             if (language is { Length: > 0 })
                 context.QualifierValues["Language"] = language;
             var map = manager.MainResourceMap.GetSubtree("Resources");
-            T.Resolver = key =>
+            // Each lookup goes through MRT, which costs far more than the text it returns, and a
+            // page asks for hundreds as it builds (the calendar's lines, every card's caption).
+            // The language is fixed for the run, so each key is looked up once and kept, the
+            // ones the language lacks (null, English then) included.
+            var known = new System.Collections.Concurrent.ConcurrentDictionary<string, string?>();
+            T.Resolver = key => known.GetOrAdd(key, k =>
             {
-                try { return map.TryGetValue(key, context)?.ValueAsString; }
+                try { return map.TryGetValue(k, context)?.ValueAsString; }
                 catch { return null; }
-            };
+            });
             T.Language = language is { Length: > 0 } ? language : CultureInfo.CurrentUICulture.Name;
             if (language is { Length: > 0 })
             {
