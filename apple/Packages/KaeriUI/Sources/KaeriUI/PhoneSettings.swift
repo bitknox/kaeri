@@ -106,12 +106,17 @@ struct PhoneSectionHeader: View {
 struct PhoneRowTitle: View {
     let title: String
     var note: String?
+    /// A line in silk under the note: a status, such as why a setting is paused.
+    var status: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title).font(.ui(17)).foregroundStyle(.silk)
             if let note {
                 Text(note).font(.ui(13)).foregroundStyle(.haze)
+            }
+            if let status {
+                Text(status).font(.ui(13)).foregroundStyle(.silk).padding(.top, 4)
             }
         }
     }
@@ -122,10 +127,11 @@ struct PhoneSettingSwitch: View {
     @Environment(AppStore.self) private var store
     let key: SettingKey
     var note: String?
+    var status: String?
 
     var body: some View {
         Toggle(isOn: Binding(get: { store.settings.isOn(key) }, set: { store.setSwitch(key, on: $0) })) {
-            PhoneRowTitle(title: key.title, note: note)
+            PhoneRowTitle(title: key.title, note: note, status: status)
         }
         .tint(.amber)
         .disabled(store.settings.row(key) == nil)
@@ -353,6 +359,7 @@ struct PhonePlaybackPage: View {
                 PhoneSettingSwitch(key: .skipFiller, note: overridden(.skipFiller))
                 PhoneSettingSwitch(key: .markChapters)
                 PhoneSettingSwitch(key: .skipButton, note: L.settingsSkipButtonDetail)
+                PhoneSettingSwitch(key: .findSkipTimes, note: L.settingsFindSkipsDetail, status: store.settings.skipFindPausedWords)
                 PhoneSettingSwitch(key: .askWasOpening, note: L.settingsAskWasOpeningDetail)
                 PhoneSettingSwitch(key: .shareSkipTimes, note: L.settingsShareSkipsDetail)
                 Button(L.settingsClearSkips) { confirmClearSkips = true }

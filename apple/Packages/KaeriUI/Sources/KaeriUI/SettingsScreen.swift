@@ -204,7 +204,7 @@ struct SettingsResults: View {
         (L.settingsAudio, .playback), (L.playerSubtitles, .playback), (L.settingsQuality, .playback),
         (L.settingsAutoPlay, .playback), (L.settingsUpNextCountdown, .playback),
         (L.settingsSkipOpening, .playback), (L.settingsSkipRecap, .playback), (L.settingsAskWasOpening, .playback),
-        (L.settingsShareSkips, .playback), (L.settingsClearSkips, .playback), (L.settingsSkipFiller, .playback),
+        (L.settingsFindSkips, .playback), (L.settingsShareSkips, .playback), (L.settingsClearSkips, .playback), (L.settingsSkipFiller, .playback),
         (L.settingsMarkOpening, .playback), (L.settingsCountsWatched, .playback),
         (L.settingsSpoiler, .playback), (L.playerUpscaling, .playback), (L.playerNightMode, .playback),
         (L.settingsStartFullScreen, .playback),
@@ -409,6 +409,9 @@ struct PlaybackPane: View {
             SettingsRow(title: SettingKey.markChapters.title) { SettingSwitch(key: .markChapters) }
             SettingsRow(title: SettingKey.skipButton.title, note: L.settingsSkipButtonDetail) {
                 SettingSwitch(key: .skipButton)
+            }
+            SettingsRow(title: SettingKey.findSkipTimes.title, note: L.settingsFindSkipsDetail, status: store.settings.skipFindPausedWords) {
+                SettingSwitch(key: .findSkipTimes)
             }
             SettingsRow(title: SettingKey.askWasOpening.title, note: L.settingsAskWasOpeningDetail) {
                 SettingSwitch(key: .askWasOpening)

@@ -57,6 +57,14 @@ final class AppDelegate: NSObject {
         tvNowPlaying = TVNowPlaying(tv: store.tv, player: player)
         #endif
         super.init()
+        player.skipFindPause = { [weak store] in store?.settings.pausedOverride ?? store?.settings.view?.skipFindPaused }
+        #if FIXTURES
+        // `-KaeriSkipPause low-power|storage`: a shot of finding paused, whatever the device says.
+        let arguments = ProcessInfo.processInfo.arguments
+        if let at = arguments.firstIndex(of: "-KaeriSkipPause"), arguments.indices.contains(at + 1) {
+            store.settings.pausedOverride = arguments[at + 1] == "storage" ? .storage : .lowPower
+        }
+        #endif
         store.onPlayback = { [weak player = self.player] event in player?.apply(event) }
         store.playerTakesPlay = { [weak player = self.player] command in player?.playAsked(command) ?? false }
         // Play on TV from the player: the TV picker over it, and the player closed once the TV

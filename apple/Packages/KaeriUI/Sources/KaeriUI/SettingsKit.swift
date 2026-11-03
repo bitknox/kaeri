@@ -71,6 +71,8 @@ struct SettingsRow<Accessory: View>: View {
     let title: String
     var note: String?
     var noteColor: Color = .haze
+    /// A line in silk under the note: a status, such as why a setting is paused.
+    var status: String?
     var selected = false
     @ViewBuilder let accessory: Accessory
 
@@ -86,14 +88,21 @@ struct SettingsRow<Accessory: View>: View {
                         .foregroundStyle(noteColor)
                         .fixedSize(horizontal: false, vertical: true)
                 }
+                if let status {
+                    Text(status)
+                        .font(.mac(12))
+                        .foregroundStyle(.silk)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 4)
+                }
             }
             .macLineHeight(16)
             Spacer(minLength: 0)
             accessory
         }
-        .padding(note == nil ? EdgeInsets(top: 4, leading: 10, bottom: 4, trailing: 6)
+        .padding(note == nil && status == nil ? EdgeInsets(top: 4, leading: 10, bottom: 4, trailing: 6)
                              : EdgeInsets(top: 8, leading: 10, bottom: 8, trailing: 6))
-        .frame(minHeight: note == nil ? 36 : 50)
+        .frame(minHeight: note == nil && status == nil ? 36 : 50)
         .background(selected ? Palette.selection : .clear, in: .rect(cornerRadius: 8))
         .contentShape(.rect)
         .padding(.horizontal, 4)
@@ -253,6 +262,7 @@ extension SettingKey {
         case .autoNext: L.settingsAutoPlay
         case .skipOpening: L.settingsSkipOpening
         case .skipRecap: L.settingsSkipRecap
+        case .findSkipTimes: L.settingsFindSkips
         case .askWasOpening: L.settingsAskWasOpening
         case .shareSkipTimes: L.settingsShareSkips
         case .skipFiller: L.settingsSkipFiller

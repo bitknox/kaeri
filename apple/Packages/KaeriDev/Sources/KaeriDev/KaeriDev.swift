@@ -60,6 +60,14 @@ final class Delegate: NSObject, NSApplicationDelegate {
     let navigator = Navigator()
     lazy var player: PlayerModel = {
         let player = PlayerModel(send: { [weak store] command in store?.send(command) })
+        player.skipFindPause = { [weak store] in store?.settings.pausedOverride ?? store?.settings.view?.skipFindPaused }
+        #if FIXTURES
+        // `-KaeriSkipPause low-power|storage`: a shot of finding paused, whatever the device says.
+        let arguments = ProcessInfo.processInfo.arguments
+        if let at = arguments.firstIndex(of: "-KaeriSkipPause"), arguments.indices.contains(at + 1) {
+            store.settings.pausedOverride = arguments[at + 1] == "storage" ? .storage : .lowPower
+        }
+        #endif
         store.onPlayback = { [weak player] event in player?.apply(event) }
         player.discussionHost = DiscussionHost(
             enabled: { [weak store] in store?.discussionsOn ?? false },

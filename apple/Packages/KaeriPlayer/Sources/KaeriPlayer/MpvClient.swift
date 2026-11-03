@@ -24,6 +24,9 @@ public struct MpvConfiguration: Sendable {
     public var subtitleFallback: SubtitleFont?
     /// Any other mpv options, set before start, after these.
     public var options: [String: String] = [:]
+    /// The address of the engine's audio tap callback (`audioTapCallback()`), for finding skip
+    /// times: set on this core with `mpv_set_audio_tap` once it is up. Zero is none.
+    public var audioTap: UInt64 = 0
 
     public init() {
         #if os(iOS)
@@ -140,6 +143,12 @@ public actor MpvClient {
             _ = mpv_set_option_string(mpv, "ytdl", "no")
             mpv_request_log_messages(mpv, configuration.logLevel)
             try check(mpv_initialize(mpv), "mpv_initialize")
+            if configuration.audioTap != 0 {
+                typealias Tap = @convention(c) (UnsafeMutableRawPointer?, Int64, Double, UnsafePointer<Int16>?, Int32) -> Void
+                let callback = unsafeBitCast(UInt(configuration.audioTap), to: Tap.self)
+                // Never fatal: libmpv without the tap just finds no skip times.
+                _ = mpv_set_audio_tap(mpv, callback, nil)
+            }
         } catch {
             mpv_terminate_destroy(mpv)
             throw error

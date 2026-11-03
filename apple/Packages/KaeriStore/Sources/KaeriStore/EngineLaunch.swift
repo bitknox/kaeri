@@ -108,7 +108,8 @@ public struct EngineLaunch: Sendable {
             malClientId: malClientID,
             simklClientId: simklClientID,
             traktClientId: traktClientID,
-            secrets: secrets
+            secrets: secrets,
+            audioTap: true
         )
     }
 
