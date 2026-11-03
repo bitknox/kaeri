@@ -839,6 +839,7 @@ pub fn name(update: &Event) -> &'static str {
         Event::PinUnavailable { .. } => "PinUnavailable",
         Event::PlaybackVolume(_) => "PlaybackVolume",
         Event::ActiveProvider(_) => "ActiveProvider",
+        Event::StartingStep { .. } => "StartingStep",
         Event::PlayerPlayEpisode { .. } => "PlayerPlayEpisode",
         Event::PlaybackKept => "PlaybackKept",
         Event::EpisodeLeft { .. } => "EpisodeLeft",
@@ -1067,20 +1068,28 @@ fn copy(update: &Event) -> Event {
         Event::SkipAvailable { kind, to } => Event::SkipAvailable { kind: *kind, to: *to },
         Event::SkipCleared => Event::SkipCleared,
         Event::PlaybackSpeed(speed) => Event::PlaybackSpeed(*speed),
-        Event::PlaybackEnded { watched, ending, rolling_on } => Event::PlaybackEnded {
+        Event::PlaybackEnded { watched, ending, rolling_on, failure } => Event::PlaybackEnded {
             watched: *watched,
             ending: ending.clone(),
             rolling_on: *rolling_on,
+            failure: failure.clone(),
         },
-        Event::PlaybackStaged { id, title, episode, episode_title, speed } => {
+        Event::PlaybackStaged { id, title, episode, episode_title, speed, resume } => {
             Event::PlaybackStaged {
                 id: *id,
                 title: title.clone(),
                 episode: episode.clone(),
                 episode_title: episode_title.clone(),
                 speed: *speed,
+                resume: *resume,
             }
         }
+        Event::StartingStep { id, episode, step, line } => Event::StartingStep {
+            id: *id,
+            episode: episode.clone(),
+            step: step.clone(),
+            line: line.clone(),
+        },
         Event::CastStaged { id, title, episode, episode_title, speed } => Event::CastStaged {
             id: *id,
             title: title.clone(),

@@ -327,6 +327,7 @@ impl PlaybackTracker {
             | PlaybackEvent::Sid(_)
             | PlaybackEvent::SubDelay(_)
             | PlaybackEvent::Buffering(_)
+            | PlaybackEvent::BufferFill(_)
             | PlaybackEvent::Cached(_)
             | PlaybackEvent::FrameDrops(_)
             | PlaybackEvent::Seeking(_)

@@ -317,6 +317,34 @@ object Strings {
     fun statusLoadingSources(context: Context): String =
         context.getString(R.string.status_loading_sources)
 
+    /** Starting screen, step line while the title is looked up. */
+    fun startLookingUpTitle(context: Context): String =
+        context.getString(R.string.start_looking_up_title)
+
+    /** Starting screen, step line while sources still being set up are waited for. */
+    fun startGettingSourcesReady(context: Context): String =
+        context.getString(R.string.start_getting_sources_ready)
+
+    /** Starting screen, step line while one source is asked for the episode. The name is the source's own. */
+    fun startAskingSource(context: Context, name: String): String =
+        context.getString(R.string.start_asking_source, name)
+
+    /** Starting screen, step line once a stream is found and the player opens it. */
+    fun startOpeningStream(context: Context): String =
+        context.getString(R.string.start_opening_stream)
+
+    /** Starting screen, step line when a stream showed no video and the next stream of the same source is opened. */
+    fun startTryingAnotherStream(context: Context): String =
+        context.getString(R.string.start_trying_another_stream)
+
+    /** Starting screen, step line while a torrent looks for peers that can send it. Never says torrent. */
+    fun startFindingPeers(context: Context): String =
+        context.getString(R.string.start_finding_peers)
+
+    /** Starting screen, step line while the player waits for data to fill its buffer. */
+    fun startBuffering(context: Context): String =
+        context.getString(R.string.start_buffering)
+
     /** Job note while the sources are asked for an episode. The episode is its label, often a number. */
     fun statusSearchingSources(context: Context, episode: String): String =
         context.getString(R.string.status_searching_sources, episode)
@@ -6048,6 +6076,102 @@ object Strings {
     /** Short word while the video buffers. */
     fun playerBuffering(context: Context): String =
         context.getString(R.string.player_buffering)
+
+    /** Detail line while a source is asked and more than one is in the viewer's order. */
+    fun playerStartPlace(context: Context, place: Int, total: Int): String =
+        context.getString(R.string.player_start_place, place, total)
+
+    /** Detail line while the source asked is the one the show is pinned to. */
+    fun playerStartPinned(context: Context): String =
+        context.getString(R.string.player_start_pinned)
+
+    /** Detail line when a source has no match for the show. */
+    fun playerStartMissNoMatch(context: Context, name: String): String =
+        context.getString(R.string.player_start_miss_no_match, name)
+
+    /** Detail line when a source has the show and not the episode. The episode is its label. */
+    fun playerStartMissNoEpisode(context: Context, name: String, episode: String): String =
+        context.getString(R.string.player_start_miss_no_episode, name, episode)
+
+    /** Detail line when a source failed and the next is asked. */
+    fun playerStartMissFailed(context: Context, name: String): String =
+        context.getString(R.string.player_start_miss_failed, name)
+
+    /** Detail line when a source took too long and the next is asked. */
+    fun playerStartMissTimedOut(context: Context, name: String): String =
+        context.getString(R.string.player_start_miss_timed_out, name)
+
+    /** Detail line after the viewer skipped the source being asked. */
+    fun playerStartMissSkipped(context: Context, name: String): String =
+        context.getString(R.string.player_start_miss_skipped, name)
+
+    /** Details row for sources passed over because they failed lately. The name goes before it. */
+    fun playerStartResting(context: Context): String =
+        context.getString(R.string.player_start_resting)
+
+    /** Detail line once the streams are found and the player opens one. The name is the source's. */
+    fun playerStartFrom(context: Context, name: String): String =
+        context.getString(R.string.player_start_from, name)
+
+    /** Detail line when a stream showed no video and another opens. */
+    fun playerStartNoVideo(context: Context): String =
+        context.getString(R.string.player_start_no_video)
+
+    /** Detail line with the place of the stream being opened. */
+    fun playerStartStreamPlace(context: Context, next: Int, total: Int): String =
+        context.getString(R.string.player_start_stream_place, next, total)
+
+    /** Detail line while a torrent has peers. */
+    fun playerStartPeers(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.player_start_peers, count, count)
+
+    /** Detail line with the speed data arrives at. */
+    fun playerStartSpeed(context: Context, speed: String): String =
+        context.getString(R.string.player_start_speed, speed)
+
+    /** Step line while the player fills its buffer and gives a number. */
+    fun playerStartBufferingPercent(context: Context, percent: String): String =
+        context.getString(R.string.player_start_buffering_percent, percent)
+
+    /** Step line while the episode resumes where it was left. */
+    fun playerStartResuming(context: Context, clock: String): String =
+        context.getString(R.string.player_start_resuming, clock)
+
+    /** Button on the starting screen that plays the episode from its beginning. */
+    fun playerStartFromBeginning(context: Context): String =
+        context.getString(R.string.player_start_from_beginning)
+
+    /** Button on the starting screen that opens the list of steps. */
+    fun playerStartDetails(context: Context): String =
+        context.getString(R.string.player_start_details)
+
+    /** Button that skips the source being asked. The name is the source's. */
+    fun playerStartSkipSource(context: Context, name: String): String =
+        context.getString(R.string.player_start_skip_source, name)
+
+    /** Button that opens the next stream of the same source. */
+    fun playerStartSkipStream(context: Context): String =
+        context.getString(R.string.player_start_skip_stream)
+
+    /** Step line when a start is slow: still waiting for the source. The name is the source's. */
+    fun playerStartStillWaiting(context: Context, name: String): String =
+        context.getString(R.string.player_start_still_waiting, name)
+
+    /** Step line while the device is offline and the episode will start when it is back. */
+    fun playerStartOffline(context: Context): String =
+        context.getString(R.string.player_start_offline)
+
+    /** Detail line while offline. The episode is its label. */
+    fun playerStartOfflineDetail(context: Context, episode: String): String =
+        context.getString(R.string.player_start_offline_detail, episode)
+
+    /** Button on the failure screen that opens the fix for a title that matched the wrong show. */
+    fun playerStartFixMatch(context: Context): String =
+        context.getString(R.string.player_start_fix_match)
+
+    /** Details row label for the translation of the episode. */
+    fun playerStartTranslation(context: Context): String =
+        context.getString(R.string.player_start_translation)
 
     /** Title of the stall card. The seconds count up. */
     fun playerStallTitle(context: Context, seconds: Int): String =

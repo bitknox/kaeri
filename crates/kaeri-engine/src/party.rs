@@ -552,6 +552,7 @@ async fn check_sources(
         None,
         &env.playback,
         None,
+        None,
     )
     .await;
     match found {

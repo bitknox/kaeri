@@ -93,6 +93,28 @@ status-looking-up-title = Looking up the title…
 # Job note while a play waits for the sources to arrive.
 status-loading-sources = Loading { -source-pl }…
 
+# Starting screen, step line while the title is looked up.
+start-looking-up-title = Looking up the title
+
+# Starting screen, step line while sources still being set up are waited for.
+start-getting-sources-ready = Getting your { -source-pl } ready
+
+# Starting screen, step line while one source is asked for the episode. The name is the source's own.
+# @arg name: text
+start-asking-source = Asking { $name }
+
+# Starting screen, step line once a stream is found and the player opens it.
+start-opening-stream = Opening the stream
+
+# Starting screen, step line when a stream showed no video and the next stream of the same source is opened.
+start-trying-another-stream = Trying another stream
+
+# Starting screen, step line while a torrent looks for peers that can send it. Never says torrent.
+start-finding-peers = Finding peers
+
+# Starting screen, step line while the player waits for data to fill its buffer.
+start-buffering = Buffering
+
 # Job note while the sources are asked for an episode. The episode is its label, often a number.
 # @arg episode: text
 status-searching-sources = Searching { -source-pl } for episode { $episode }…

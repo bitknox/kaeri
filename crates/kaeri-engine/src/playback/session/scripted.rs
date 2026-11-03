@@ -156,6 +156,7 @@ pub(super) fn settings() -> PlaySettings {
         up_next_countdown: 10,
         mpv_options: Vec::new(),
         untracked: false,
+        swarm: Default::default(),
     }
 }
 

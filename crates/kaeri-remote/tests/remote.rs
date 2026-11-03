@@ -91,6 +91,7 @@ impl Tv {
             episode: "3".into(),
             episode_title: Some("Low Tide".into()),
             speed: 1.0,
+            resume: None,
         });
     }
 }

@@ -111,6 +111,7 @@ async fn main() -> anyhow::Result<()> {
             up_next_countdown: 10,
             mpv_options: Vec::new(),
             untracked: false,
+            swarm: Default::default(),
         };
         let stream = Stream {
             provider_id: "preview".into(),

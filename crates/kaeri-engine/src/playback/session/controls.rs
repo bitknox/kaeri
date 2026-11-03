@@ -251,6 +251,8 @@ pub(super) async fn apply_command(link: &dyn PlayerLink, command: PlayerCommand)
         | PlayerCommand::Choose(_)
         | PlayerCommand::StallSwitch
         | PlayerCommand::StallWait
+        // The walk through the sources hears this; once a player plays, it has nothing to skip.
+        | PlayerCommand::SkipSource
         | PlayerCommand::NightMode(_)
         | PlayerCommand::Upscaling(_) => {}
         PlayerCommand::Stop => {

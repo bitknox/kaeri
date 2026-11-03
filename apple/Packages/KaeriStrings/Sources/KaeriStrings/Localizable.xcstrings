@@ -126041,6 +126041,162 @@
         }
       }
     },
+    "player-start-buffering-percent" : {
+      "comment" : "Step line while the player fills its buffer and gives a number. Argument 1: percent (Percent).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buffering · %1$@"
+          }
+        }
+      }
+    },
+    "player-start-details" : {
+      "comment" : "Button on the starting screen that opens the list of steps.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details"
+          }
+        }
+      }
+    },
+    "player-start-fix-match" : {
+      "comment" : "Button on the failure screen that opens the fix for a title that matched the wrong show.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fix match"
+          }
+        }
+      }
+    },
+    "player-start-from" : {
+      "comment" : "Detail line once the streams are found and the player opens one. The name is the source's. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From %1$@"
+          }
+        }
+      }
+    },
+    "player-start-from-beginning" : {
+      "comment" : "Button on the starting screen that plays the episode from its beginning.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play from the beginning"
+          }
+        }
+      }
+    },
+    "player-start-miss-failed" : {
+      "comment" : "Detail line when a source failed and the next is asked. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ didn't answer"
+          }
+        }
+      }
+    },
+    "player-start-miss-no-episode" : {
+      "comment" : "Detail line when a source has the show and not the episode. The episode is its label. Argument 1: name (Text). Argument 2: episode (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ doesn't have episode %2$@"
+          }
+        }
+      }
+    },
+    "player-start-miss-no-match" : {
+      "comment" : "Detail line when a source has no match for the show. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ doesn't have this show"
+          }
+        }
+      }
+    },
+    "player-start-miss-skipped" : {
+      "comment" : "Detail line after the viewer skipped the source being asked. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You skipped %1$@"
+          }
+        }
+      }
+    },
+    "player-start-miss-timed-out" : {
+      "comment" : "Detail line when a source took too long and the next is asked. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ took too long"
+          }
+        }
+      }
+    },
+    "player-start-no-video" : {
+      "comment" : "Detail line when a stream showed no video and another opens.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The first one showed no video"
+          }
+        }
+      }
+    },
+    "player-start-offline" : {
+      "comment" : "Step line while the device is offline and the episode will start when it is back.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for a connection"
+          }
+        }
+      }
+    },
+    "player-start-offline-detail" : {
+      "comment" : "Detail line while offline. The episode is its label. Argument 1: episode (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You're offline. Episode %1$@ starts when you're back."
+          }
+        }
+      }
+    },
     "player-start-over" : {
       "comment" : "Button beside the resume note that plays from the start.",
       "extractionState" : "manual",
@@ -126121,6 +126277,160 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Phát từ đầu"
+          }
+        }
+      }
+    },
+    "player-start-peers" : {
+      "comment" : "Detail line while a torrent has peers. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "One peer"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld peers"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "player-start-pinned" : {
+      "comment" : "Detail line while the source asked is the one the show is pinned to.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your pick for this show"
+          }
+        }
+      }
+    },
+    "player-start-place" : {
+      "comment" : "Detail line while a source is asked and more than one is in the viewer's order. Argument 1: place (Int). Argument 2: total (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld sources"
+          }
+        }
+      }
+    },
+    "player-start-resting" : {
+      "comment" : "Details row for sources passed over because they failed lately. The name goes before it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skipped after recent failures"
+          }
+        }
+      }
+    },
+    "player-start-resuming" : {
+      "comment" : "Step line while the episode resumes where it was left. Argument 1: clock (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resuming at %1$@"
+          }
+        }
+      }
+    },
+    "player-start-skip-source" : {
+      "comment" : "Button that skips the source being asked. The name is the source's. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skip %1$@"
+          }
+        }
+      }
+    },
+    "player-start-skip-stream" : {
+      "comment" : "Button that opens the next stream of the same source.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skip this stream"
+          }
+        }
+      }
+    },
+    "player-start-speed" : {
+      "comment" : "Detail line with the speed data arrives at. Argument 1: speed (Bytes).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ a second"
+          }
+        }
+      }
+    },
+    "player-start-still-waiting" : {
+      "comment" : "Step line when a start is slow: still waiting for the source. The name is the source's. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Still waiting for %1$@"
+          }
+        }
+      }
+    },
+    "player-start-stream-place" : {
+      "comment" : "Detail line with the place of the stream being opened. Argument 1: next (Int). Argument 2: total (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld streams"
+          }
+        }
+      }
+    },
+    "player-start-translation" : {
+      "comment" : "Details row label for the translation of the episode.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio and subtitles"
           }
         }
       }
@@ -189621,6 +189931,30 @@
         }
       }
     },
+    "start-asking-source" : {
+      "comment" : "Starting screen, step line while one source is asked for the episode. The name is the source's own. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asking %1$@"
+          }
+        }
+      }
+    },
+    "start-buffering" : {
+      "comment" : "Starting screen, step line while the player waits for data to fill its buffer.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buffering"
+          }
+        }
+      }
+    },
     "start-failed" : {
       "comment" : "Message when Kaeri itself could not start. The reason comes from the system or the engine. Argument 1: reason (Text).",
       "extractionState" : "manual",
@@ -190205,6 +190539,66 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Không khởi động được chức năng điều khiển từ xa. %1$@"
+          }
+        }
+      }
+    },
+    "start-finding-peers" : {
+      "comment" : "Starting screen, step line while a torrent looks for peers that can send it. Never says torrent.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finding peers"
+          }
+        }
+      }
+    },
+    "start-getting-sources-ready" : {
+      "comment" : "Starting screen, step line while sources still being set up are waited for.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Getting your sources ready"
+          }
+        }
+      }
+    },
+    "start-looking-up-title" : {
+      "comment" : "Starting screen, step line while the title is looked up.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Looking up the title"
+          }
+        }
+      }
+    },
+    "start-opening-stream" : {
+      "comment" : "Starting screen, step line once a stream is found and the player opens it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opening the stream"
+          }
+        }
+      }
+    },
+    "start-trying-another-stream" : {
+      "comment" : "Starting screen, step line when a stream showed no video and the next stream of the same source is opened.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trying another stream"
           }
         }
       }

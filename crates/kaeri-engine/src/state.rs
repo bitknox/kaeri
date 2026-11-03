@@ -46,6 +46,9 @@ pub struct EngineState {
     /// on is the session's, read off `player_tx` as every other control is. `None` for a play
     /// that opens at once.
     pub finding: Option<tokio::sync::watch::Sender<bool>>,
+    /// The same playback's skip of the source being asked: each `SkipSource` moves the count,
+    /// which the walk through the sources watches. Set where `finding` is.
+    pub skipping: Option<tokio::sync::watch::Sender<u64>>,
     /// The copy of the config the background tasks read: the download manager, the seeding
     /// watch and the stream cache's. Brought up to `config` whenever a setting is written, so
     /// "saved" and "in effect" are the same moment.
@@ -139,6 +142,7 @@ impl EngineState {
             config: ConfigState::new(config, saved, paths),
             player_tx: None,
             finding: None,
+            skipping: None,
             torrent_tasks: TorrentTasks::default(),
             torrent_route: None,
             arrivals,

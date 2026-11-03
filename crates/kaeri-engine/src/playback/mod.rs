@@ -35,6 +35,7 @@ pub mod shaders;
 pub mod slot;
 pub mod start;
 pub mod stats;
+pub mod starting;
 
 // What the episode table says of the episodes around this one: the front end sends them ahead
 // of a play, so they are the model's, and named from here for whatever plays.

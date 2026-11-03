@@ -261,6 +261,15 @@ fn fresh_token() -> String {
     format!("{:016x}{:016x}", half(nanos), half(!nanos))
 }
 
+/// How a playing torrent stream is doing, as the starting screen shows it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Pace {
+    /// Peers connected now.
+    pub peers: u32,
+    /// What is arriving, in bytes a second.
+    pub bytes_per_second: u64,
+}
+
 /// Owns the librqbit session and the streams built from it.
 pub struct TorrentSession {
     session: Arc<Session>,
@@ -721,6 +730,35 @@ impl TorrentSession {
         }
 
         Ok(DownloadHandle { id: handle.id(), name: file.name.clone(), total: file.length })
+    }
+
+    /// How the stream served at `url` is doing: its live peers and its download speed. `None`
+    /// when no stream here is served at `url`, or the torrent is not live yet.
+    pub fn pace_of(&self, url: &str) -> Option<Pace> {
+        let id = self
+            .active
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .iter()
+            .find(|active| active.url() == url)?
+            .key
+            .0;
+        self.session.with_torrents(|torrents| {
+            for (tid, handle) in torrents {
+                if tid != id {
+                    continue;
+                }
+                let stats = handle.stats();
+                let live = stats.live.as_ref()?;
+                // librqbit counts the speed in mebibytes a second.
+                let bytes = live.download_speed.mbps * 1024.0 * 1024.0;
+                return Some(Pace {
+                    peers: u32::try_from(live.snapshot.peer_stats.live).unwrap_or(u32::MAX),
+                    bytes_per_second: if bytes.is_finite() && bytes > 0.0 { bytes as u64 } else { 0 },
+                });
+            }
+            None
+        })
     }
 
     /// Progress for one torrent by id, or `None` if the session has forgotten it.

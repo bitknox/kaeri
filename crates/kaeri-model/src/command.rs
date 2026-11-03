@@ -1002,6 +1002,10 @@ pub enum PlayerCommand {
     CancelNext,
     /// A pick in the player's menus.
     Choose(PlayerChoice),
+    /// Skip the source being asked while a play looks for its stream: the walk moves on to the
+    /// next source in the viewer's order. Heard only while the stream is being found; once the
+    /// player opens, it does nothing.
+    SkipSource,
     /// The stall prompt's answers: another stream, or keep waiting.
     StallSwitch,
     StallWait,

@@ -12,6 +12,7 @@ pub mod proxy;
 pub mod registry;
 pub mod resolve;
 pub mod torrent;
+pub mod walk;
 
 pub use health::{HealthTracker, ProviderHealth};
 pub use mock::MockProvider;
@@ -19,5 +20,6 @@ pub use proxy::{ProxyState, TorrentRoute};
 pub use registry::{Attempt, ProviderRegistry};
 pub use resolve::{
     Answer, Candidate, Contribution, Gathered, Resolution, Surveyed, confirm, first_answer,
+    first_answer_with,
     gather, resolve, survey,
 };

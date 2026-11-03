@@ -6,11 +6,13 @@ use kaeri_meta::Meta;
 use kaeri_model::StoreMsg;
 use kaeri_model::{Cause, Msg};
 use kaeri_model::{event::Event, notice::Notice, party::NoSourceWhy};
-use kaeri_providers::ProviderRegistry;
+use kaeri_model::starting::StartStep;
+use kaeri_providers::{ProviderRegistry, walk};
 use kaeri_store::Store;
 
 use crate::{
-    jobs::JobGuard, now_epoch, outbox::Outbox, playback, services::Services, state::EngineState,
+    jobs::JobGuard, now_epoch, outbox::Outbox, playback, playback::starting::Starting,
+    services::Services, state::EngineState,
 };
 
 /// What a lookup says when there is no source to ask.
@@ -187,6 +189,7 @@ pub async fn resolve_for_playback(
     pick: Option<Pick>,
     playback: &kaeri_core::config::PlaybackConfig,
     job: Option<&JobGuard>,
+    starting: Option<&Starting>,
 ) -> std::result::Result<(Vec<kaeri_core::stream::Stream>, playback::PlaybackContext), Unplayable>
 {
     // The step under way, on the job when there is one; with none, as the command line plays,
@@ -195,6 +198,14 @@ pub async fn resolve_for_playback(
         Some(job) => job.note(text, None),
         None => tracing::info!(step = %text.english(), "playback"),
     };
+    // The same steps for the starting screen, which Android, TV and Windows read in place of the
+    // job's notes.
+    let say = |step: kaeri_model::starting::StartStep, line: Msg| {
+        if let Some(starting) = starting {
+            starting.step(step, Some(line));
+        }
+    };
+    let watch = || starting.map(Starting::watch).unwrap_or_default();
     let began = std::time::Instant::now();
     tracing::info!(
         %id, episode, sources = ?registry.ids(), usable = ?registry.usable_ids(), picked = pick.is_some(),
@@ -202,7 +213,9 @@ pub async fn resolve_for_playback(
     );
     if let Some(Pick::Untracked { link, name }) = &pick {
         step(Msg::StatusSearchingSources { episode: episode.to_owned() });
-        let streams = opened_stream(registry, link, episode).await.map_err(link_failed)?;
+        let streams = walk::asking(&watch(), None, opened_stream(registry, link, episode))
+            .await
+            .map_err(link_failed)?;
         return Ok((streams, untracked_context(name, episode, playback)));
     }
     // An opened link needs no source: it plays through torrent playback.
@@ -215,6 +228,7 @@ pub async fn resolve_for_playback(
     // this category earns its "is it frozen?" issues. The status line names the rung
     // being climbed; the eyecatch's own timer says how long it has taken.
     step(Msg::StatusLookingUpTitle);
+    say(StartStep::LookingUpTitle, Msg::StartLookingUpTitle);
     let media = meta.media(id).await.map_err(|e| {
         tracing::warn!(error = %e, elapsed_ms = began.elapsed().as_millis() as u64, "could not look up the title");
         Cause::verbatim(e.to_string())
@@ -226,7 +240,11 @@ pub async fn resolve_for_playback(
     // Plugins still compiling are part of the chain a moment from now. Looked up without
     // them, the episode would come from whichever source was ready first, or from none.
     if !opened {
-        crate::sources::arrived(registry, || step(Msg::StatusLoadingSources)).await;
+        crate::sources::arrived(registry, || {
+            step(Msg::StatusLoadingSources);
+            say(StartStep::GettingSourcesReady, Msg::StartGettingSourcesReady);
+        })
+        .await;
     }
     if !opened && registry.is_empty() {
         tracing::warn!("no sources to resolve against");
@@ -251,10 +269,12 @@ pub async fn resolve_for_playback(
     // A preference naming a provider that is not registered, is switched off or is resting falls
     // back to the normal chain: refusing to play because a remembered choice is momentarily
     // unusable would be a worse answer than playing.
+    let mut pinned_to = None;
     let chain = pick.is_none().then(|| {
         match crate::titles::episodes::pin_of(store, registry, id) {
             crate::titles::episodes::Pin::Held(name) => {
                 tracing::info!(provider = %name, "the series is pinned to a source");
+                pinned_to = Some(name);
             }
             crate::titles::episodes::Pin::Unavailable(name) => {
                 tracing::info!(provider = %name, "pinned source is not usable, using the chain");
@@ -274,7 +294,9 @@ pub async fn resolve_for_playback(
         Ok::<_, Unplayable>(match &pick {
             // The viewer's own link plays as it is.
             Some(Pick::Link(link)) => {
-                opened_stream(registry, link, episode).await.map_err(link_failed)?
+                walk::asking(&watch(), None, opened_stream(registry, link, episode))
+                    .await
+                    .map_err(link_failed)?
             }
             Some(Pick::Untracked { .. }) => unreachable!("an untracked play returned above"),
             // A picked release goes straight to its provider, no failover: substituting a
@@ -284,6 +306,19 @@ pub async fn resolve_for_playback(
                 let source = registry
                     .pinned(provider_id)
                     .ok_or_else(|| Cause::SourceGone { source: provider_id.clone() })?;
+                let name = registry.get(provider_id).map(|s| s.manifest().display_name.clone());
+                if let Some(name) = &name {
+                    let line = Msg::StartAskingSource { name: name.clone() };
+                    let step = StartStep::AskingSource {
+                        name: name.clone(),
+                        place: 1,
+                        total: 1,
+                        pinned: false,
+                    };
+                    if let Some(starting) = starting {
+                        starting.step(step, Some(line));
+                    }
+                }
                 let resolution = kaeri_providers::resolve(
                     store,
                     &source,
@@ -297,17 +332,20 @@ pub async fn resolve_for_playback(
                     .key()
                     .cloned()
                     .ok_or_else(|| Cause::TitleNoMatch { detail: resolution.explain() })?;
-                source
-                    .resolve_source(
+                walk::asking(
+                    &watch(),
+                    name.as_deref(),
+                    source.resolve_source(
                         provider_id,
                         &key,
                         episode,
                         playback.translation,
                         source_id,
                         now,
-                    )
-                    .await
-                    .map_err(|e| Cause::ReleaseFailed { detail: e.to_string() })?
+                    ),
+                )
+                .await
+                .map_err(|e| Cause::ReleaseFailed { detail: e.to_string() })?
             }
             None => {
                 let from_release = pinned_release(
@@ -318,18 +356,22 @@ pub async fn resolve_for_playback(
                     episode,
                     playback.translation,
                     now,
+                    starting,
                 )
                 .await;
                 if let Some(streams) = from_release {
                     streams
                 } else {
-                    let answer = kaeri_providers::first_answer(
+                    let walking =
+                        starting.map(|s| s.walk(pinned_to.clone())).unwrap_or_default();
+                    let answer = kaeri_providers::first_answer_with(
                         store,
                         registry,
                         id,
                         &target,
                         playback.translation,
                         now,
+                        &walking,
                         |source, key| async move {
                             source.resolve(&key, episode, playback.translation, now).await
                         },
@@ -455,12 +497,21 @@ async fn pinned_release(
     episode: &str,
     translation: kaeri_core::media::Translation,
     now: i64,
+    starting: Option<&Starting>,
 ) -> Option<Vec<kaeri_core::stream::Stream>> {
     let pin = store.release_preference(id).ok().flatten()?;
     if !registry.usable_ids().contains(&pin.provider_id) {
         return None;
     }
     let source = registry.pinned(&pin.provider_id)?;
+    let name = registry.get(&pin.provider_id).map(|s| s.manifest().display_name.clone());
+    if let (Some(starting), Some(name)) = (starting, &name) {
+        starting.step(
+            StartStep::AskingSource { name: name.clone(), place: 1, total: 1, pinned: true },
+            Some(Msg::StartAskingSource { name: name.clone() }),
+        );
+    }
+    let watching = starting.map(Starting::watch).unwrap_or_default();
     let resolution =
         kaeri_providers::resolve(store, &source, id, target, translation, now).await;
     let key = resolution.key()?.clone();
@@ -469,10 +520,13 @@ async fn pinned_release(
         tracing::info!(provider = %pin.provider_id, episode, "the pinned release does not hold this episode");
         return None;
     }
-    match source
-        .resolve_source(&pin.provider_id, &key, episode, translation, &pin.release_id, now)
-        .await
-    {
+    let streams = walk::asking(
+        &watching,
+        name.as_deref(),
+        source.resolve_source(&pin.provider_id, &key, episode, translation, &pin.release_id, now),
+    )
+    .await;
+    match streams {
         Ok(streams) if !streams.is_empty() => Some(streams),
         Ok(_) => None,
         Err(error) => {
@@ -594,6 +648,7 @@ mod tests {
             episode,
             None,
             &playback,
+            None,
             None,
         )
         .await;

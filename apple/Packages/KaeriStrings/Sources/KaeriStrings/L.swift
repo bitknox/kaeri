@@ -326,6 +326,29 @@ public enum L {
     /// Job note while a play waits for the sources to arrive.
     public static var statusLoadingSources: String { string("status-loading-sources", fallback: "Loading sources…") }
 
+    /// Starting screen, step line while the title is looked up.
+    public static var startLookingUpTitle: String { string("start-looking-up-title", fallback: "Looking up the title") }
+
+    /// Starting screen, step line while sources still being set up are waited for.
+    public static var startGettingSourcesReady: String { string("start-getting-sources-ready", fallback: "Getting your sources ready") }
+
+    /// Starting screen, step line while one source is asked for the episode. The name is the source's own.
+    public static func startAskingSource(name: String) -> String {
+        Self.format("start-asking-source", fallback: "Asking %1$@", name)
+    }
+
+    /// Starting screen, step line once a stream is found and the player opens it.
+    public static var startOpeningStream: String { string("start-opening-stream", fallback: "Opening the stream") }
+
+    /// Starting screen, step line when a stream showed no video and the next stream of the same source is opened.
+    public static var startTryingAnotherStream: String { string("start-trying-another-stream", fallback: "Trying another stream") }
+
+    /// Starting screen, step line while a torrent looks for peers that can send it. Never says torrent.
+    public static var startFindingPeers: String { string("start-finding-peers", fallback: "Finding peers") }
+
+    /// Starting screen, step line while the player waits for data to fill its buffer.
+    public static var startBuffering: String { string("start-buffering", fallback: "Buffering") }
+
     /// Job note while the sources are asked for an episode. The episode is its label, often a number.
     public static func statusSearchingSources(episode: String) -> String {
         Self.format("status-searching-sources", fallback: "Searching sources for episode %1$@…", episode)
@@ -6045,6 +6068,108 @@ public enum L {
 
     /// Short word while the video buffers.
     public static var playerBuffering: String { string("player-buffering", fallback: "Buffering") }
+
+    /// Detail line while a source is asked and more than one is in the viewer's order.
+    public static func playerStartPlace(place: Int, total: Int) -> String {
+        Self.format("player-start-place", fallback: "%1$lld of %2$lld sources", place, total)
+    }
+
+    /// Detail line while the source asked is the one the show is pinned to.
+    public static var playerStartPinned: String { string("player-start-pinned", fallback: "Your pick for this show") }
+
+    /// Detail line when a source has no match for the show.
+    public static func playerStartMissNoMatch(name: String) -> String {
+        Self.format("player-start-miss-no-match", fallback: "%1$@ doesn't have this show", name)
+    }
+
+    /// Detail line when a source has the show and not the episode. The episode is its label.
+    public static func playerStartMissNoEpisode(name: String, episode: String) -> String {
+        Self.format("player-start-miss-no-episode", fallback: "%1$@ doesn't have episode %2$@", name, episode)
+    }
+
+    /// Detail line when a source failed and the next is asked.
+    public static func playerStartMissFailed(name: String) -> String {
+        Self.format("player-start-miss-failed", fallback: "%1$@ didn't answer", name)
+    }
+
+    /// Detail line when a source took too long and the next is asked.
+    public static func playerStartMissTimedOut(name: String) -> String {
+        Self.format("player-start-miss-timed-out", fallback: "%1$@ took too long", name)
+    }
+
+    /// Detail line after the viewer skipped the source being asked.
+    public static func playerStartMissSkipped(name: String) -> String {
+        Self.format("player-start-miss-skipped", fallback: "You skipped %1$@", name)
+    }
+
+    /// Details row for sources passed over because they failed lately. The name goes before it.
+    public static var playerStartResting: String { string("player-start-resting", fallback: "Skipped after recent failures") }
+
+    /// Detail line once the streams are found and the player opens one. The name is the source's.
+    public static func playerStartFrom(name: String) -> String {
+        Self.format("player-start-from", fallback: "From %1$@", name)
+    }
+
+    /// Detail line when a stream showed no video and another opens.
+    public static var playerStartNoVideo: String { string("player-start-no-video", fallback: "The first one showed no video") }
+
+    /// Detail line with the place of the stream being opened.
+    public static func playerStartStreamPlace(next: Int, total: Int) -> String {
+        Self.format("player-start-stream-place", fallback: "%1$lld of %2$lld streams", next, total)
+    }
+
+    /// Detail line while a torrent has peers.
+    public static func playerStartPeers(count: Int) -> String {
+        Self.format("player-start-peers", fallback: "%1$lld peers", count)
+    }
+
+    /// Detail line with the speed data arrives at.
+    public static func playerStartSpeed(speed: String) -> String {
+        Self.format("player-start-speed", fallback: "%1$@ a second", speed)
+    }
+
+    /// Step line while the player fills its buffer and gives a number.
+    public static func playerStartBufferingPercent(percent: String) -> String {
+        Self.format("player-start-buffering-percent", fallback: "Buffering · %1$@", percent)
+    }
+
+    /// Step line while the episode resumes where it was left.
+    public static func playerStartResuming(clock: String) -> String {
+        Self.format("player-start-resuming", fallback: "Resuming at %1$@", clock)
+    }
+
+    /// Button on the starting screen that plays the episode from its beginning.
+    public static var playerStartFromBeginning: String { string("player-start-from-beginning", fallback: "Play from the beginning") }
+
+    /// Button on the starting screen that opens the list of steps.
+    public static var playerStartDetails: String { string("player-start-details", fallback: "Details") }
+
+    /// Button that skips the source being asked. The name is the source's.
+    public static func playerStartSkipSource(name: String) -> String {
+        Self.format("player-start-skip-source", fallback: "Skip %1$@", name)
+    }
+
+    /// Button that opens the next stream of the same source.
+    public static var playerStartSkipStream: String { string("player-start-skip-stream", fallback: "Skip this stream") }
+
+    /// Step line when a start is slow: still waiting for the source. The name is the source's.
+    public static func playerStartStillWaiting(name: String) -> String {
+        Self.format("player-start-still-waiting", fallback: "Still waiting for %1$@", name)
+    }
+
+    /// Step line while the device is offline and the episode will start when it is back.
+    public static var playerStartOffline: String { string("player-start-offline", fallback: "Waiting for a connection") }
+
+    /// Detail line while offline. The episode is its label.
+    public static func playerStartOfflineDetail(episode: String) -> String {
+        Self.format("player-start-offline-detail", fallback: "You're offline. Episode %1$@ starts when you're back.", episode)
+    }
+
+    /// Button on the failure screen that opens the fix for a title that matched the wrong show.
+    public static var playerStartFixMatch: String { string("player-start-fix-match", fallback: "Fix match") }
+
+    /// Details row label for the translation of the episode.
+    public static var playerStartTranslation: String { string("player-start-translation", fallback: "Audio and subtitles") }
 
     /// Title of the stall card. The seconds count up.
     public static func playerStallTitle(seconds: Int) -> String {

@@ -133,6 +133,20 @@ pub enum Msg {
     StatusLookingUpTitle,
     /// Job note while a play waits for the sources to arrive.
     StatusLoadingSources,
+    /// Starting screen, step line while the title is looked up.
+    StartLookingUpTitle,
+    /// Starting screen, step line while sources still being set up are waited for.
+    StartGettingSourcesReady,
+    /// Starting screen, step line while one source is asked for the episode. The name is the source's own.
+    StartAskingSource { name: String },
+    /// Starting screen, step line once a stream is found and the player opens it.
+    StartOpeningStream,
+    /// Starting screen, step line when a stream showed no video and the next stream of the same source is opened.
+    StartTryingAnotherStream,
+    /// Starting screen, step line while a torrent looks for peers that can send it. Never says torrent.
+    StartFindingPeers,
+    /// Starting screen, step line while the player waits for data to fill its buffer.
+    StartBuffering,
     /// Job note while the sources are asked for an episode. The episode is its label, often a number.
     StatusSearchingSources { episode: String },
     /// Toast when the player cannot be started. The reason comes from the system.
@@ -458,6 +472,13 @@ impl Msg {
             Self::NoticeNotAiredYet { .. } => "notice-not-aired-yet",
             Self::StatusLookingUpTitle => "status-looking-up-title",
             Self::StatusLoadingSources => "status-loading-sources",
+            Self::StartLookingUpTitle => "start-looking-up-title",
+            Self::StartGettingSourcesReady => "start-getting-sources-ready",
+            Self::StartAskingSource { .. } => "start-asking-source",
+            Self::StartOpeningStream => "start-opening-stream",
+            Self::StartTryingAnotherStream => "start-trying-another-stream",
+            Self::StartFindingPeers => "start-finding-peers",
+            Self::StartBuffering => "start-buffering",
             Self::StatusSearchingSources { .. } => "status-searching-sources",
             Self::NoticePlayerFailedToStart { .. } => "notice-player-failed-to-start",
             Self::NoticeStreamNoVideo { .. } => "notice-stream-no-video",
@@ -654,6 +675,13 @@ impl Msg {
             Self::NoticeNotAiredYet { episode, next, when } => vec![("episode", Value::Int(*episode)), ("next", Value::Int(*next)), ("when", Value::Cause(when.clone()))],
             Self::StatusLookingUpTitle => Vec::new(),
             Self::StatusLoadingSources => Vec::new(),
+            Self::StartLookingUpTitle => Vec::new(),
+            Self::StartGettingSourcesReady => Vec::new(),
+            Self::StartAskingSource { name } => vec![("name", Value::Text(name.clone()))],
+            Self::StartOpeningStream => Vec::new(),
+            Self::StartTryingAnotherStream => Vec::new(),
+            Self::StartFindingPeers => Vec::new(),
+            Self::StartBuffering => Vec::new(),
             Self::StatusSearchingSources { episode } => vec![("episode", Value::Text(episode.clone()))],
             Self::NoticePlayerFailedToStart { reason } => vec![("reason", Value::Text(reason.clone()))],
             Self::NoticeStreamNoVideo { next, total } => vec![("next", Value::Int(*next)), ("total", Value::Int(*total))],

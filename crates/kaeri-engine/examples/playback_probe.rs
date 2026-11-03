@@ -201,6 +201,7 @@ async fn main() {
             up_next_countdown: 10,
             mpv_options: Vec::new(),
             untracked: false,
+            swarm: Default::default(),
         };
         kaeri_engine::playback::play(
             vec![stream],

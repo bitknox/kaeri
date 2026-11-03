@@ -355,6 +355,34 @@
     <value>Loading sources…</value>
     <comment>Job note while a play waits for the sources to arrive.</comment>
   </data>
+  <data name="StartLookingUpTitle" xml:space="preserve">
+    <value>Looking up the title</value>
+    <comment>Starting screen, step line while the title is looked up.</comment>
+  </data>
+  <data name="StartGettingSourcesReady" xml:space="preserve">
+    <value>Getting your sources ready</value>
+    <comment>Starting screen, step line while sources still being set up are waited for.</comment>
+  </data>
+  <data name="StartAskingSource" xml:space="preserve">
+    <value>Asking {name}</value>
+    <comment>Starting screen, step line while one source is asked for the episode. The name is the source's own.</comment>
+  </data>
+  <data name="StartOpeningStream" xml:space="preserve">
+    <value>Opening the stream</value>
+    <comment>Starting screen, step line once a stream is found and the player opens it.</comment>
+  </data>
+  <data name="StartTryingAnotherStream" xml:space="preserve">
+    <value>Trying another stream</value>
+    <comment>Starting screen, step line when a stream showed no video and the next stream of the same source is opened.</comment>
+  </data>
+  <data name="StartFindingPeers" xml:space="preserve">
+    <value>Finding peers</value>
+    <comment>Starting screen, step line while a torrent looks for peers that can send it. Never says torrent.</comment>
+  </data>
+  <data name="StartBuffering" xml:space="preserve">
+    <value>Buffering</value>
+    <comment>Starting screen, step line while the player waits for data to fill its buffer.</comment>
+  </data>
   <data name="StatusSearchingSources" xml:space="preserve">
     <value>Searching sources for episode {episode}…</value>
     <comment>Job note while the sources are asked for an episode. The episode is its label, often a number.</comment>
@@ -5562,6 +5590,106 @@
   <data name="PlayerBuffering" xml:space="preserve">
     <value>Buffering</value>
     <comment>Short word while the video buffers.</comment>
+  </data>
+  <data name="PlayerStartPlace" xml:space="preserve">
+    <value>{place} of {total} sources</value>
+    <comment>Detail line while a source is asked and more than one is in the viewer's order.</comment>
+  </data>
+  <data name="PlayerStartPinned" xml:space="preserve">
+    <value>Your pick for this show</value>
+    <comment>Detail line while the source asked is the one the show is pinned to.</comment>
+  </data>
+  <data name="PlayerStartMissNoMatch" xml:space="preserve">
+    <value>{name} doesn't have this show</value>
+    <comment>Detail line when a source has no match for the show.</comment>
+  </data>
+  <data name="PlayerStartMissNoEpisode" xml:space="preserve">
+    <value>{name} doesn't have episode {episode}</value>
+    <comment>Detail line when a source has the show and not the episode. The episode is its label.</comment>
+  </data>
+  <data name="PlayerStartMissFailed" xml:space="preserve">
+    <value>{name} didn't answer</value>
+    <comment>Detail line when a source failed and the next is asked.</comment>
+  </data>
+  <data name="PlayerStartMissTimedOut" xml:space="preserve">
+    <value>{name} took too long</value>
+    <comment>Detail line when a source took too long and the next is asked.</comment>
+  </data>
+  <data name="PlayerStartMissSkipped" xml:space="preserve">
+    <value>You skipped {name}</value>
+    <comment>Detail line after the viewer skipped the source being asked.</comment>
+  </data>
+  <data name="PlayerStartResting" xml:space="preserve">
+    <value>Skipped after recent failures</value>
+    <comment>Details row for sources passed over because they failed lately. The name goes before it.</comment>
+  </data>
+  <data name="PlayerStartFrom" xml:space="preserve">
+    <value>From {name}</value>
+    <comment>Detail line once the streams are found and the player opens one. The name is the source's.</comment>
+  </data>
+  <data name="PlayerStartNoVideo" xml:space="preserve">
+    <value>The first one showed no video</value>
+    <comment>Detail line when a stream showed no video and another opens.</comment>
+  </data>
+  <data name="PlayerStartStreamPlace" xml:space="preserve">
+    <value>{next} of {total} streams</value>
+    <comment>Detail line with the place of the stream being opened.</comment>
+  </data>
+  <data name="PlayerStartPeers_one" xml:space="preserve">
+    <value>One peer</value>
+    <comment>Detail line while a torrent has peers.</comment>
+  </data>
+  <data name="PlayerStartPeers_other" xml:space="preserve">
+    <value>{count} peers</value>
+    <comment>Detail line while a torrent has peers.</comment>
+  </data>
+  <data name="PlayerStartSpeed" xml:space="preserve">
+    <value>{speed} a second</value>
+    <comment>Detail line with the speed data arrives at.</comment>
+  </data>
+  <data name="PlayerStartBufferingPercent" xml:space="preserve">
+    <value>Buffering · {percent}</value>
+    <comment>Step line while the player fills its buffer and gives a number.</comment>
+  </data>
+  <data name="PlayerStartResuming" xml:space="preserve">
+    <value>Resuming at {clock}</value>
+    <comment>Step line while the episode resumes where it was left.</comment>
+  </data>
+  <data name="PlayerStartFromBeginning" xml:space="preserve">
+    <value>Play from the beginning</value>
+    <comment>Button on the starting screen that plays the episode from its beginning.</comment>
+  </data>
+  <data name="PlayerStartDetails" xml:space="preserve">
+    <value>Details</value>
+    <comment>Button on the starting screen that opens the list of steps.</comment>
+  </data>
+  <data name="PlayerStartSkipSource" xml:space="preserve">
+    <value>Skip {name}</value>
+    <comment>Button that skips the source being asked. The name is the source's.</comment>
+  </data>
+  <data name="PlayerStartSkipStream" xml:space="preserve">
+    <value>Skip this stream</value>
+    <comment>Button that opens the next stream of the same source.</comment>
+  </data>
+  <data name="PlayerStartStillWaiting" xml:space="preserve">
+    <value>Still waiting for {name}</value>
+    <comment>Step line when a start is slow: still waiting for the source. The name is the source's.</comment>
+  </data>
+  <data name="PlayerStartOffline" xml:space="preserve">
+    <value>Waiting for a connection</value>
+    <comment>Step line while the device is offline and the episode will start when it is back.</comment>
+  </data>
+  <data name="PlayerStartOfflineDetail" xml:space="preserve">
+    <value>You're offline. Episode {episode} starts when you're back.</value>
+    <comment>Detail line while offline. The episode is its label.</comment>
+  </data>
+  <data name="PlayerStartFixMatch" xml:space="preserve">
+    <value>Fix match</value>
+    <comment>Button on the failure screen that opens the fix for a title that matched the wrong show.</comment>
+  </data>
+  <data name="PlayerStartTranslation" xml:space="preserve">
+    <value>Audio and subtitles</value>
+    <comment>Details row label for the translation of the episode.</comment>
   </data>
   <data name="PlayerStallTitle" xml:space="preserve">
     <value>Source is buffering · {seconds} s</value>

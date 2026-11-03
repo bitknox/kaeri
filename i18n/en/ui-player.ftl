@@ -42,6 +42,106 @@ player-add-plugin-store = Add a { -plugin-store }
 # Short word while the video buffers.
 player-buffering = Buffering
 
+## The starting screen's steps and details
+
+# Detail line while a source is asked and more than one is in the viewer's order.
+# @arg place: int
+# @arg total: int
+player-start-place = { $place } of { $total } { -source-pl }
+
+# Detail line while the source asked is the one the show is pinned to.
+player-start-pinned = Your pick for this show
+
+# Detail line when a source has no match for the show.
+# @arg name: text
+player-start-miss-no-match = { $name } doesn't have this show
+
+# Detail line when a source has the show and not the episode. The episode is its label.
+# @arg name: text
+# @arg episode: text
+player-start-miss-no-episode = { $name } doesn't have episode { $episode }
+
+# Detail line when a source failed and the next is asked.
+# @arg name: text
+player-start-miss-failed = { $name } didn't answer
+
+# Detail line when a source took too long and the next is asked.
+# @arg name: text
+player-start-miss-timed-out = { $name } took too long
+
+# Detail line after the viewer skipped the source being asked.
+# @arg name: text
+player-start-miss-skipped = You skipped { $name }
+
+# Details row for sources passed over because they failed lately. The name goes before it.
+player-start-resting = Skipped after recent failures
+
+# Detail line once the streams are found and the player opens one. The name is the source's.
+# @arg name: text
+player-start-from = From { $name }
+
+# Detail line when a stream showed no video and another opens.
+player-start-no-video = The first one showed no video
+
+# Detail line with the place of the stream being opened.
+# @arg next: int
+# @arg total: int
+player-start-stream-place = { $next } of { $total } streams
+
+# Detail line while a torrent has peers.
+# @arg count: int
+player-start-peers = { $count ->
+    [one] One peer
+   *[other] { $count } peers
+ }
+
+# Detail line with the speed data arrives at.
+# @arg speed: bytes
+player-start-speed = { $speed } a second
+
+# Step line while the player fills its buffer and gives a number.
+# @arg percent: percent
+player-start-buffering-percent = Buffering · { $percent }
+
+# Step line while the episode resumes where it was left.
+# @arg clock: text
+player-start-resuming = Resuming at { $clock }
+
+# Button on the starting screen that plays the episode from its beginning.
+# @max 32
+player-start-from-beginning = Play from the beginning
+
+# Button on the starting screen that opens the list of steps.
+# @max 20
+player-start-details = Details
+
+# Button that skips the source being asked. The name is the source's.
+# @arg name: text
+# @max 28
+player-start-skip-source = Skip { $name }
+
+# Button that opens the next stream of the same source.
+# @max 28
+player-start-skip-stream = Skip this stream
+
+# Step line when a start is slow: still waiting for the source. The name is the source's.
+# @arg name: text
+player-start-still-waiting = Still waiting for { $name }
+
+# Step line while the device is offline and the episode will start when it is back.
+player-start-offline = Waiting for a connection
+
+# Detail line while offline. The episode is its label.
+# @arg episode: text
+player-start-offline-detail = You're offline. Episode { $episode } starts when you're back.
+
+# Button on the failure screen that opens the fix for a title that matched the wrong show.
+# @max 28
+player-start-fix-match = Fix match
+
+# Details row label for the translation of the episode.
+player-start-translation = Audio and subtitles
+
 ## The card in the corner of the video
 
 # Title of the stall card. The seconds count up.

@@ -31,7 +31,7 @@ const LOOKED_UP: [&str; 5] = ["JobNote", "JobNote", "Toast", "PlaybackEnded", "J
 #[track_caller]
 fn staged(updates: &[Event]) -> (AnilistId, String, String, Option<String>) {
     let mut staged = updates.iter().filter_map(|update| match update {
-        Event::PlaybackStaged { id, title, episode, episode_title, speed } => {
+        Event::PlaybackStaged { id, title, episode, episode_title, speed, .. } => {
             assert_eq!(*speed, 1.0, "no speed was remembered");
             Some((*id, title.clone(), episode.clone(), episode_title.clone()))
         }

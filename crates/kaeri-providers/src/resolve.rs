@@ -28,6 +28,7 @@ use kaeri_meta::title::{CONFIDENCE_FLOOR, MatchTarget, Rejection, rank};
 use kaeri_store::{ResolutionRung, Store};
 
 use crate::registry::{Attempt, ProviderRegistry};
+use crate::walk::{Miss, Step, Walk};
 
 /// A candidate offered to the user when the ladder cannot decide.
 #[derive(Debug, Clone, PartialEq)]
@@ -204,6 +205,7 @@ enum Outcome<T> {
     Failed {
         reason: String,
         matched: bool,
+        miss: Miss,
     },
     /// Not asked: switched off between the walk starting and this source's turn.
     Skipped,
@@ -234,6 +236,7 @@ where
             let asked = std::time::Instant::now();
             let attempt = ask(source, key.clone()).await;
             let summary = attempt.summary();
+            let miss = miss_of(&attempt);
             match attempt.value {
                 Some(value) => {
                     tracing::info!(provider = %provider_id, elapsed_ms = ms(asked), "source answered");
@@ -245,7 +248,7 @@ where
                 }
                 None => {
                     tracing::info!(provider = %provider_id, reason = %summary, elapsed_ms = ms(asked), "source had no answer");
-                    Outcome::Failed { reason: summary, matched: true }
+                    Outcome::Failed { reason: summary, matched: true, miss }
                 }
             }
         }
@@ -261,8 +264,27 @@ where
             } else {
                 format!("{provider_id}: {reason}")
             };
-            Outcome::Failed { reason, matched: false }
+            Outcome::Failed { reason, matched: false, miss: Miss::NoMatch }
         }
+    }
+}
+
+/// How an attempt that gave no value came up empty: a source that does not have the episode
+/// answers not found, one that is slow says it timed out, and anything else is an error.
+fn miss_of<T>(attempt: &Attempt<T>) -> Miss {
+    let timed_out = |error: &kaeri_core::error::ProviderError| {
+        error.to_string().to_ascii_lowercase().contains("timed out")
+    };
+    if attempt.failures.iter().any(|(_, error)| timed_out(error)) {
+        Miss::TimedOut
+    } else if attempt
+        .failures
+        .iter()
+        .all(|(_, error)| matches!(error, kaeri_core::error::ProviderError::NotFound))
+    {
+        Miss::NoEpisode
+    } else {
+        Miss::Failed
     }
 }
 
@@ -291,6 +313,37 @@ where
     F: Fn(ProviderRegistry, ProviderKey) -> Fut,
     Fut: std::future::Future<Output = Attempt<T>>,
 {
+    first_answer_with(
+        store,
+        registry,
+        anilist_id,
+        target,
+        translation,
+        now,
+        &Walk::default(),
+        ask,
+    )
+    .await
+}
+
+/// [`first_answer`], watched: each source asked, each that comes up empty and each that is
+/// skipped is reported to `walk`'s observer, and the one being asked is let go when `walk`'s
+/// skip moves, as though it had come up empty.
+#[allow(clippy::too_many_arguments)]
+pub async fn first_answer_with<T, F, Fut>(
+    store: &Store,
+    registry: &ProviderRegistry,
+    anilist_id: AnilistId,
+    target: &MatchTarget,
+    translation: Translation,
+    now: i64,
+    walk: &Walk,
+    ask: F,
+) -> Answer<T>
+where
+    F: Fn(ProviderRegistry, ProviderKey) -> Fut,
+    Fut: std::future::Future<Output = Attempt<T>>,
+{
     let mut reasons = Vec::new();
     let mut matched = false;
     let mut ambiguous: Option<(String, Vec<Candidate>)> = None;
@@ -299,20 +352,56 @@ where
         registry.ids().into_iter().filter(|id| !usable.contains(id)).collect();
     if !skipped.is_empty() {
         tracing::info!(?skipped, "sources resting after failures, not asked");
+        walk.say(Step::Resting { names: skipped.iter().map(|id| display_name(registry, id)).collect() });
     }
-    for provider_id in usable {
-        match match_and_ask(
-            store,
-            registry,
-            &provider_id,
-            anilist_id,
-            target,
-            translation,
-            now,
-            &ask,
-        )
-        .await
-        {
+    let total = usable.len();
+    for (index, provider_id) in usable.into_iter().enumerate() {
+        let name = display_name(registry, &provider_id);
+        walk.say(Step::Asking {
+            name: name.clone(),
+            place: index + 1,
+            total,
+            pinned: walk.pinned.as_deref() == Some(provider_id.as_str()),
+        });
+        let asking = crate::walk::asking(
+            walk,
+            Some(&name),
+            match_and_ask(
+                store,
+                registry,
+                &provider_id,
+                anilist_id,
+                target,
+                translation,
+                now,
+                &ask,
+            ),
+        );
+        let outcome = match walk.skip.clone() {
+            // Only a skip made while this source is asked counts: one made before it was is
+            // for the source before.
+            Some(mut skip) => {
+                skip.mark_unchanged();
+                let skipped = async {
+                    if skip.changed().await.is_err() {
+                        std::future::pending::<()>().await;
+                    }
+                };
+                tokio::select! {
+                    outcome = asking => outcome,
+                    () = skipped => {
+                        tracing::info!(provider = %provider_id, "skipped while asked");
+                        Outcome::Failed {
+                            reason: format!("{provider_id}: skipped"),
+                            matched: false,
+                            miss: Miss::Skipped,
+                        }
+                    }
+                }
+            }
+            None => asking.await,
+        };
+        match outcome {
             Outcome::Answered(Contribution { provider_id, key, value }) => {
                 if let Some((passed, candidates)) = &ambiguous {
                     tracing::info!(
@@ -329,9 +418,10 @@ where
                 reasons.push(format!("{} possible matches on {provider_id}", candidates.len()));
                 ambiguous.get_or_insert((provider_id, candidates));
             }
-            Outcome::Failed { reason, matched: found } => {
+            Outcome::Failed { reason, matched: found, miss } => {
                 matched |= found;
                 reasons.push(reason);
+                walk.say(Step::Missed { name, miss });
             }
             Outcome::Skipped => {}
         }
@@ -340,6 +430,13 @@ where
         return Answer::Ambiguous { provider_id, candidates };
     }
     Answer::Unanswered { reasons, matched }
+}
+
+/// A source by the name it goes by on screen, and by its id when it is not in the registry.
+fn display_name(registry: &ProviderRegistry, provider_id: &str) -> String {
+    registry
+        .get(provider_id)
+        .map_or_else(|| provider_id.to_owned(), |source| source.manifest().display_name.clone())
 }
 
 /// What one source contributed to a [`gather`]: its answer, and the key it was matched under.
@@ -525,7 +622,7 @@ where
                     question = Some((provider_id, candidates));
                 }
             }
-            Outcome::Failed { reason, matched: found } => {
+            Outcome::Failed { reason, matched: found, .. } => {
                 matched |= found;
                 reasons.push(reason);
             }

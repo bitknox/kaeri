@@ -34,6 +34,9 @@ pub enum PlaybackEvent {
     SubDelay(f64),
     /// Playback is held waiting for data, or has resumed.
     Buffering(bool),
+    /// How full, from 0 to 100, the cache is that playback waits on: mpv's
+    /// `cache-buffering-state`, which means something only while playback is held for the cache.
+    BufferFill(u8),
     /// The stretches of the file the player holds and can seek within without waiting, as
     /// `(start, end)` in seconds of the file: mpv's `demuxer-cache-state`, its
     /// `seekable-ranges`.

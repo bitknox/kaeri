@@ -70,6 +70,13 @@ extension Msg {
         case .noticeNotAiredYet(let episode, let next, let when): L.noticeNotAiredYet(episode: Int(episode), next: Int(next), when: when.text)
         case .statusLookingUpTitle: L.statusLookingUpTitle
         case .statusLoadingSources: L.statusLoadingSources
+        case .startLookingUpTitle: L.startLookingUpTitle
+        case .startGettingSourcesReady: L.startGettingSourcesReady
+        case .startAskingSource(let name): L.startAskingSource(name: name)
+        case .startOpeningStream: L.startOpeningStream
+        case .startTryingAnotherStream: L.startTryingAnotherStream
+        case .startFindingPeers: L.startFindingPeers
+        case .startBuffering: L.startBuffering
         case .statusSearchingSources(let episode): L.statusSearchingSources(episode: episode)
         case .noticePlayerFailedToStart(let reason): L.noticePlayerFailedToStart(reason: reason)
         case .noticeStreamNoVideo(let next, let total): L.noticeStreamNoVideo(next: Int(next), total: Int(total))

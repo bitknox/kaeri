@@ -165,6 +165,20 @@
     <string name="status_looking_up_title">Looking up the title…</string>
     <!-- Job note while a play waits for the sources to arrive. -->
     <string name="status_loading_sources">Loading sources…</string>
+    <!-- Starting screen, step line while the title is looked up. -->
+    <string name="start_looking_up_title">Looking up the title</string>
+    <!-- Starting screen, step line while sources still being set up are waited for. -->
+    <string name="start_getting_sources_ready">Getting your sources ready</string>
+    <!-- Starting screen, step line while one source is asked for the episode. The name is the source's own. -->
+    <string name="start_asking_source">Asking %1$s</string>
+    <!-- Starting screen, step line once a stream is found and the player opens it. -->
+    <string name="start_opening_stream">Opening the stream</string>
+    <!-- Starting screen, step line when a stream showed no video and the next stream of the same source is opened. -->
+    <string name="start_trying_another_stream">Trying another stream</string>
+    <!-- Starting screen, step line while a torrent looks for peers that can send it. Never says torrent. -->
+    <string name="start_finding_peers">Finding peers</string>
+    <!-- Starting screen, step line while the player waits for data to fill its buffer. -->
+    <string name="start_buffering">Buffering</string>
     <!-- Job note while the sources are asked for an episode. The episode is its label, often a number. -->
     <string name="status_searching_sources">Searching sources for episode %1$s…</string>
     <!-- Toast when the player cannot be started. The reason comes from the system. -->
@@ -3184,6 +3198,57 @@
     <string name="player_add_plugin_store">Add a plugin store</string>
     <!-- Short word while the video buffers. -->
     <string name="player_buffering">Buffering</string>
+    <!-- Detail line while a source is asked and more than one is in the viewer's order. -->
+    <string name="player_start_place">%1$d of %2$d sources</string>
+    <!-- Detail line while the source asked is the one the show is pinned to. -->
+    <string name="player_start_pinned">Your pick for this show</string>
+    <!-- Detail line when a source has no match for the show. -->
+    <string name="player_start_miss_no_match">%1$s doesn\'t have this show</string>
+    <!-- Detail line when a source has the show and not the episode. The episode is its label. -->
+    <string name="player_start_miss_no_episode">%1$s doesn\'t have episode %2$s</string>
+    <!-- Detail line when a source failed and the next is asked. -->
+    <string name="player_start_miss_failed">%1$s didn\'t answer</string>
+    <!-- Detail line when a source took too long and the next is asked. -->
+    <string name="player_start_miss_timed_out">%1$s took too long</string>
+    <!-- Detail line after the viewer skipped the source being asked. -->
+    <string name="player_start_miss_skipped">You skipped %1$s</string>
+    <!-- Details row for sources passed over because they failed lately. The name goes before it. -->
+    <string name="player_start_resting">Skipped after recent failures</string>
+    <!-- Detail line once the streams are found and the player opens one. The name is the source's. -->
+    <string name="player_start_from">From %1$s</string>
+    <!-- Detail line when a stream showed no video and another opens. -->
+    <string name="player_start_no_video">The first one showed no video</string>
+    <!-- Detail line with the place of the stream being opened. -->
+    <string name="player_start_stream_place">%1$d of %2$d streams</string>
+    <!-- Detail line while a torrent has peers. -->
+    <plurals name="player_start_peers">
+        <item quantity="one">One peer</item>
+        <item quantity="other">%1$d peers</item>
+    </plurals>
+    <!-- Detail line with the speed data arrives at. -->
+    <string name="player_start_speed">%1$s a second</string>
+    <!-- Step line while the player fills its buffer and gives a number. -->
+    <string name="player_start_buffering_percent">Buffering · %1$s</string>
+    <!-- Step line while the episode resumes where it was left. -->
+    <string name="player_start_resuming">Resuming at %1$s</string>
+    <!-- Button on the starting screen that plays the episode from its beginning. -->
+    <string name="player_start_from_beginning">Play from the beginning</string>
+    <!-- Button on the starting screen that opens the list of steps. -->
+    <string name="player_start_details">Details</string>
+    <!-- Button that skips the source being asked. The name is the source's. -->
+    <string name="player_start_skip_source">Skip %1$s</string>
+    <!-- Button that opens the next stream of the same source. -->
+    <string name="player_start_skip_stream">Skip this stream</string>
+    <!-- Step line when a start is slow: still waiting for the source. The name is the source's. -->
+    <string name="player_start_still_waiting">Still waiting for %1$s</string>
+    <!-- Step line while the device is offline and the episode will start when it is back. -->
+    <string name="player_start_offline">Waiting for a connection</string>
+    <!-- Detail line while offline. The episode is its label. -->
+    <string name="player_start_offline_detail">You\'re offline. Episode %1$s starts when you\'re back.</string>
+    <!-- Button on the failure screen that opens the fix for a title that matched the wrong show. -->
+    <string name="player_start_fix_match">Fix match</string>
+    <!-- Details row label for the translation of the episode. -->
+    <string name="player_start_translation">Audio and subtitles</string>
     <!-- Title of the stall card. The seconds count up. -->
     <string name="player_stall_title">Source is buffering · %1$d s</string>
     <!-- Line under the stall title. -->

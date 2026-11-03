@@ -243,6 +243,27 @@ status-looking-up-title = Looking up the title…
 # Job note while a play waits for the sources to arrive.
 status-loading-sources = Loading sources…
 
+# Starting screen, step line while the title is looked up.
+start-looking-up-title = Looking up the title
+
+# Starting screen, step line while sources still being set up are waited for.
+start-getting-sources-ready = Getting your sources ready
+
+# Starting screen, step line while one source is asked for the episode. The name is the source's own.
+start-asking-source = Asking { $name }
+
+# Starting screen, step line once a stream is found and the player opens it.
+start-opening-stream = Opening the stream
+
+# Starting screen, step line when a stream showed no video and the next stream of the same source is opened.
+start-trying-another-stream = Trying another stream
+
+# Starting screen, step line while a torrent looks for peers that can send it. Never says torrent.
+start-finding-peers = Finding peers
+
+# Starting screen, step line while the player waits for data to fill its buffer.
+start-buffering = Buffering
+
 # Job note while the sources are asked for an episode. The episode is its label, often a number.
 status-searching-sources = Searching sources for episode { $episode }…
 
@@ -6701,6 +6722,82 @@ player-add-plugin-store = Add a plugin store
 
 # Short word while the video buffers.
 player-buffering = Buffering
+
+# Detail line while a source is asked and more than one is in the viewer's order.
+player-start-place = { $place } of { $total } sources
+
+# Detail line while the source asked is the one the show is pinned to.
+player-start-pinned = Your pick for this show
+
+# Detail line when a source has no match for the show.
+player-start-miss-no-match = { $name } doesn't have this show
+
+# Detail line when a source has the show and not the episode. The episode is its label.
+player-start-miss-no-episode = { $name } doesn't have episode { $episode }
+
+# Detail line when a source failed and the next is asked.
+player-start-miss-failed = { $name } didn't answer
+
+# Detail line when a source took too long and the next is asked.
+player-start-miss-timed-out = { $name } took too long
+
+# Detail line after the viewer skipped the source being asked.
+player-start-miss-skipped = You skipped { $name }
+
+# Details row for sources passed over because they failed lately. The name goes before it.
+player-start-resting = Skipped after recent failures
+
+# Detail line once the streams are found and the player opens one. The name is the source's.
+player-start-from = From { $name }
+
+# Detail line when a stream showed no video and another opens.
+player-start-no-video = The first one showed no video
+
+# Detail line with the place of the stream being opened.
+player-start-stream-place = { $next } of { $total } streams
+
+# Detail line while a torrent has peers.
+player-start-peers =
+    { $count ->
+        [one] One peer
+       *[other] { $count } peers
+    }
+
+# Detail line with the speed data arrives at.
+player-start-speed = { $speed } a second
+
+# Step line while the player fills its buffer and gives a number.
+player-start-buffering-percent = Buffering · { $percent }
+
+# Step line while the episode resumes where it was left.
+player-start-resuming = Resuming at { $clock }
+
+# Button on the starting screen that plays the episode from its beginning.
+player-start-from-beginning = Play from the beginning
+
+# Button on the starting screen that opens the list of steps.
+player-start-details = Details
+
+# Button that skips the source being asked. The name is the source's.
+player-start-skip-source = Skip { $name }
+
+# Button that opens the next stream of the same source.
+player-start-skip-stream = Skip this stream
+
+# Step line when a start is slow: still waiting for the source. The name is the source's.
+player-start-still-waiting = Still waiting for { $name }
+
+# Step line while the device is offline and the episode will start when it is back.
+player-start-offline = Waiting for a connection
+
+# Detail line while offline. The episode is its label.
+player-start-offline-detail = You're offline. Episode { $episode } starts when you're back.
+
+# Button on the failure screen that opens the fix for a title that matched the wrong show.
+player-start-fix-match = Fix match
+
+# Details row label for the translation of the episode.
+player-start-translation = Audio and subtitles
 
 # Title of the stall card. The seconds count up.
 player-stall-title = Source is buffering · { $seconds } s
