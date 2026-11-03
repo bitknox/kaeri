@@ -53,7 +53,10 @@ import app.kaeri.engine.model.SkipMarkFixture
 import app.kaeri.engine.model.SkipNotice
 import app.kaeri.engine.model.SkipOrigin
 import app.kaeri.engine.model.SkipPrompt
+import app.kaeri.engine.ffi.foundSkipScene
 import app.kaeri.engine.ffi.skipMarkFixture
+import app.kaeri.engine.model.FoundSkipFixture
+import app.kaeri.engine.model.SkipFindPause
 import app.kaeri.engine.model.TimeRange
 import app.kaeri.engine.model.TimelineMark
 import app.kaeri.player.ui.PlayerScreen
@@ -300,6 +303,69 @@ class PlayerShots {
         )
     }
 
+    // Found skip times: each of the board's states, from the engine's fixture scenes.
+
+    /**
+     * A found-times fixture state: the player where the scene has it, its skip button or undo, the
+     * marks, the card and the review as the engine says them, with the controls up or hidden.
+     */
+    private fun found(name: String, state: FoundSkipFixture, paused: Boolean = false, after: () -> Unit = {}) {
+        val scene = foundSkipScene(state)
+        shoot(name, episode = scene.episode.toString(), length = scene.length, after = {
+            if (scene.panel) {
+                compose.onNodeWithContentDescription("More").performClick()
+                compose.waitForIdle()
+                compose.onNodeWithText("Skip times").performClick()
+                compose.waitForIdle()
+            }
+            after()
+        }) { model, mpv ->
+            mpv.emit(MpvEvent.property("time-pos", MpvValue.Real(scene.position)))
+            for (ui in scene.ui) model.apply(Event.PlayerUi(1u, ui))
+            model.apply(Event.PlayerTimeline(1u, scene.marks))
+            scene.prompt?.let { model.apply(Event.PlayerSkipPrompt(1u, it)) }
+            scene.mark?.let { model.apply(Event.PlayerSkipMark(1u, it)) }
+            if (paused) {
+                val view = store.settings.view.value
+                if (view != null) store.apply(listOf(Event.Settings(view.copy(skipFindPaused = scene.paused ?: SkipFindPause.LOW_POWER))))
+            }
+            if (!scene.controls && !scene.panel) {
+                time = 1_000
+                model.hideControls()
+            }
+        }
+    }
+
+    @Test
+    fun phone_found_skip() = found("phone-found-skip", FoundSkipFixture.SKIP)
+
+    @Test
+    fun phone_found_controls() = found("phone-found-controls", FoundSkipFixture.CONTROLS)
+
+    @Test
+    fun phone_found_prompt() = found("phone-found-prompt", FoundSkipFixture.PROMPT)
+
+    @Test
+    fun phone_found_saved() = found("phone-found-saved", FoundSkipFixture.SAVED)
+
+    @Test
+    fun phone_found_never() = found("phone-found-never", FoundSkipFixture.NEVER)
+
+    @Test
+    fun phone_found_review() = found("phone-found-review", FoundSkipFixture.REVIEW)
+
+    @Test
+    fun phone_found_nudged() = found("phone-found-nudged", FoundSkipFixture.NUDGED)
+
+    @Test
+    fun phone_found_undo() = found("phone-found-undo", FoundSkipFixture.UNDO)
+
+    @Test
+    fun phone_found_panel() = found("phone-found-panel", FoundSkipFixture.PANEL)
+
+    @Test
+    fun phone_found_panel_paused() = found("phone-found-panel-paused", FoundSkipFixture.PANEL_PAUSED, paused = true)
+
     /** The More menu with the two skip entries. */
     @Test
     fun phone_skip_more_menu() = shoot("phone-skip-more", after = {
@@ -313,6 +379,8 @@ class PlayerShots {
         picture: Boolean = true,
         discussionSheet: Boolean = false,
         after: () -> Unit = {},
+        episode: String = "7",
+        length: Double = 1442.0,
         at: (PlayerModel, ScriptedMpv) -> Unit,
     ) {
         store = AppStore(scope, clock = { 0L }, artworkWithoutEngine = FixtureArt::bytes)
@@ -324,9 +392,9 @@ class PlayerShots {
         // The clock held, so the controls stay up for the shot as after a tap.
         model = PlayerModel(send = { sent += it }, backend = { ScriptedMpv().also { mpv = it; playing = it } }, scope = scope, now = { time }, hwdec = "no")
         compose.runOnUiThread {
-            model.apply(Event.PlaybackStaged(900_001u, TITLE, "7", EPISODE, 1.0))
+            model.apply(Event.PlaybackStaged(900_001u, TITLE, episode, EPISODE, 1.0))
             model.apply(Event.PlayerOps(1u, listOf(PlayerOp.Open(true, null, null), PlayerOp.Load("/media/episode.mkv", emptyList()))))
-            model.apply(Event.PlayerUi(1u, PlayerUi.Episode("7", "Episode 7", EPISODE, TITLE, Translation.SUB)))
+            model.apply(Event.PlayerUi(1u, PlayerUi.Episode(episode, "Episode $episode", EPISODE, TITLE, Translation.SUB)))
         }
         compose.waitForIdle()
         val art = FixtureArt.bytes("${FixtureArt.HOST}banner/900001.jpg")!!
@@ -353,7 +421,7 @@ class PlayerShots {
             val m = mpv!!
             m.emit(MpvEvent.of(MpvNative.Event.START_FILE))
             m.emit(MpvEvent.of(MpvNative.Event.FILE_LOADED))
-            m.emit(MpvEvent.property("duration", MpvValue.Real(1442.0)))
+            m.emit(MpvEvent.property("duration", MpvValue.Real(length)))
             m.emit(MpvEvent.property("pause", MpvValue.Flag(false)))
             m.emit(MpvEvent.property("video-params", MpvValue.parse("""{"w":1920,"h":1080,"dw":1920,"dh":1080}""")!!))
             m.emit(MpvEvent.property("chapter-list", MpvValue.parse(CHAPTERS)!!))

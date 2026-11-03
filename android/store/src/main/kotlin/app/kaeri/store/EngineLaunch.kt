@@ -69,6 +69,8 @@ data class EngineLaunch(
     val malClientId: String? = null,
     val simklClientId: String? = null,
     val traktClientId: String? = null,
+    /** The player's libmpv carries the demuxer's audio tap and each of its cores has the engine's callback. */
+    val audioTap: Boolean = true,
 ) {
     /** Which engine. */
     sealed interface Engine {
@@ -93,6 +95,7 @@ data class EngineLaunch(
             simklClientId = simklClientId,
             traktClientId = traktClientId,
             secrets = secrets,
+            audioTap = audioTap,
         )
 
     /** Stand the engine up. Blocks while it opens its files, so call it off the main thread. */

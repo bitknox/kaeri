@@ -423,6 +423,7 @@ class PlayerModel(
                 val prompt = event.prompt
                 asksToShare = prompt == SkipPrompt.Share
                 skipPrompt = prompt?.takeIf { it != SkipPrompt.Share }?.let { SkipPromptOffer(it, now()) }
+                promptHeld = 0L
             }
             is Event.PlayerSkipNotice -> if (accepts(event.playback)) skipNotice = SkipNoticeOffer(event.notice, now())
             is Event.PlayerBuffered -> if (accepts(event.playback)) buffered = event.ranges
@@ -1271,8 +1272,16 @@ class PlayerModel(
         undo?.let { if (!assisted && now - it.since >= noticeMillis(PlayerTiming.UNDO_PAUSED)) undo = null }
         alert?.let { if (now - it.since >= noticeMillis(PlayerTiming.ALERT_STAYS)) alert = null }
         skipNotice?.let { if (now - it.since >= noticeMillis(PlayerTiming.ALERT_STAYS)) skipNotice = null }
-        skipPrompt?.let { if (now - it.since >= it.stays) dismissSkipPrompt() }
+        // A question holds for 12 s of playback: a pause waits, and a screen reader never times it out.
+        val since = promptTickedAt
+        promptTickedAt = now
+        if (skipPrompt != null && !paused && !assisted && since != null) promptHeld += now - since
+        skipPrompt?.let { if (!assisted && promptHeld >= it.stays) dismissSkipPrompt() }
     }
+
+    /** When the card's clock last ran, and how long it has been up while playing. */
+    private var promptTickedAt: Long? = null
+    private var promptHeld = 0L
 
     /**
      * Whether nothing on screen keeps time: a playback that failed and says so, or a pause nobody
@@ -1576,9 +1585,23 @@ class PlayerModel(
         control(PlayerCommand.DismissSkipPrompt)
     }
 
+    /** On a found card the engine answers with the card that says what happened. */
     fun neverAskWasOpening() {
-        skipPrompt = null
+        if (skipPrompt?.prompt !is SkipPrompt.FoundEdges) skipPrompt = null
         control(PlayerCommand.NeverAskWasOpening)
+    }
+
+    /** Yes on the card: the found times become yours and are shared; the engine says Saved. */
+    fun confirmFoundSkip(kind: SkipKind) {
+        input()
+        control(PlayerCommand.ConfirmFoundSkip(kind))
+    }
+
+    /** Adjust on the card or a found row: the review opens on the found stretch. */
+    fun adjustFoundSkip(kind: SkipKind) {
+        input()
+        skipPrompt = null
+        control(PlayerCommand.AdjustFoundSkip(kind))
     }
 
     fun answerShare(share: Boolean) {

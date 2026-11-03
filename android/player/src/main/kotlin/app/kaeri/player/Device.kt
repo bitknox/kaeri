@@ -8,6 +8,7 @@ import android.content.IntentFilter
 import android.os.BatteryManager
 import android.os.PowerManager
 import android.view.Display
+import app.kaeri.engine.model.Command
 
 object Device {
     /** On battery, and whether power saver is on: the upscaling chain starts a step lighter for either. */
@@ -26,5 +27,29 @@ object Device {
         val mode = display.mode
         val (w, h) = mode.physicalWidth to mode.physicalHeight
         return DisplayInfo(maxOf(w, h), minOf(w, h), density.toDouble(), mode.refreshRate.toDouble().takeIf { it > 0 })
+    }
+}
+
+/**
+ * Tells the engine what the device is doing that finding skip times waits for: battery saver, on
+ * a phone. It says so now and each time the system's power saving changes. A TV has no battery
+ * saver, so it says [lowPower] is never on and the engine pauses finding on storage alone.
+ */
+class DeviceWatch(private val context: Context, private val send: (Command) -> Unit, private val hasSaver: Boolean = true) {
+    private fun say() {
+        val saver = hasSaver && (context.getSystemService(PowerManager::class.java)?.isPowerSaveMode ?: false)
+        send(Command.DeviceState(lowPower = saver))
+    }
+
+    /** Say it now, and again at every change. Call once, from the application. */
+    fun start() {
+        say()
+        if (!hasSaver) return
+        context.registerReceiver(
+            object : android.content.BroadcastReceiver() {
+                override fun onReceive(context: Context, intent: Intent) = say()
+            },
+            IntentFilter(PowerManager.ACTION_POWER_SAVE_MODE_CHANGED),
+        )
     }
 }

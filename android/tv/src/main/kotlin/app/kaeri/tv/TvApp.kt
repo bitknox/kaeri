@@ -25,6 +25,7 @@ import app.kaeri.player.SystemCaptions
 import kotlinx.coroutines.flow.map
 import app.kaeri.player.CaptionStyleWatch
 import app.kaeri.player.Device
+import app.kaeri.player.DeviceWatch
 import app.kaeri.player.MpvBackend
 import app.kaeri.player.PlayerConnection
 import app.kaeri.player.PlayerHost
@@ -52,7 +53,10 @@ class TvApp : Application(), PlayerHost {
     // The TV updates from the release's TV APK, never the phone's: the one built for the ABI this
     // system runs the app as, 32-bit on most TV boxes and 64-bit on the rest.
     val store: AppStore by lazy {
-        AppStore(scope, decoder = TvArtDecoder, artworkBudget = TV_ART_BUDGET, updateAsset = ::tvUpdateAsset).also { it.collectCrashes(this, scope) }
+        AppStore(scope, decoder = TvArtDecoder, artworkBudget = TV_ART_BUDGET, updateAsset = ::tvUpdateAsset).also {
+            it.collectCrashes(this, scope)
+            DeviceWatch(this, it::send, hasSaver = false).start()
+        }
     }
 
     /** The TV's own update, where the flavour has one: the release build's, or a staged fixture. */

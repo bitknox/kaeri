@@ -60,7 +60,8 @@ class MpvBackend(private val context: Context, private val extra: List<Pair<Stri
         MpvNative.setAppContext(context.applicationContext)
         // fonts.conf and the CA bundle are files to write and read: off the main thread.
         val base = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { MpvSetup.playerOptions(context, hwdec) }
-        mpv.start(base + options.toList() + extra, reportedProperties, logLevel = "warn")
+        // The engine finds skip times from the audio mpv's demuxer hands it through this tap.
+        mpv.start(base + options.toList() + extra, reportedProperties, logLevel = "warn", audioTap = app.kaeri.engine.ffi.audioTapCallback().toLong())
     }
 
     override suspend fun perform(call: MpvCall): List<PlayerReport> {

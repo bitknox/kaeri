@@ -4,7 +4,9 @@
 
 package app.kaeri.player.ui
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -40,6 +42,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -51,7 +54,9 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -247,33 +252,64 @@ private fun EdgeRow(label: String, name: String, edge: SkipEdge, at: Double, mod
     }
 }
 
-/** "Was that the opening?" and "Wrong opening times?", in the corner with two buttons. */
+/**
+ * The card in the corner: "Was that the opening?", "Wrong opening times?", or "Kaeri found this
+ * opening. Were the edges right?" with Yes, Adjust and Don't ask again. The answer to a found
+ * card crossfades in its place, the card never empty between them.
+ */
 @Composable
 internal fun SkipPromptCard(model: PlayerModel) {
     val offer = model.skipPrompt ?: return
+    AnimatedContent(
+        offer.prompt,
+        transitionSpec = { fadeIn(Motion.standard()) togetherWith fadeOut(Motion.standard()) },
+        label = "skip card", // i18n-skip
+    ) { prompt ->
+        SkipPromptBody(model, prompt)
+    }
+}
+
+@Composable
+private fun SkipPromptBody(model: PlayerModel, prompt: SkipPrompt) {
     val context = LocalContext.current
     val haptics = LocalHapticFeedback.current
-    val (line, no, yes) = when (val prompt = offer.prompt) {
-        is SkipPrompt.WasOpening -> Triple(
-            Strings.playerWasOpening(context),
+    val (line, note) = SkipWords.promptLines(context, prompt)
+    val buttons: List<Pair<String, () -> Unit>> = when (prompt) {
+        is SkipPrompt.WasOpening -> listOf(
             Strings.playerDontAskAgain(context) to { model.neverAskWasOpening() },
             Strings.playerMarkIt(context) to { model.dismissSkipPrompt(); model.beginMarking(SkipKind.OPENING) },
         )
-        is SkipPrompt.WrongTimes -> Triple(
-            Strings.playerSkipWrong(context, SkipWords.inline(context, prompt.kind)),
+        is SkipPrompt.WrongTimes -> listOf(
             Strings.playerSkipReport(context) to { model.dismissSkipPrompt(); model.reportSkip(prompt.kind) },
             Strings.playerSkipMark(context) to { model.dismissSkipPrompt(); model.beginMarking(prompt.kind) },
         )
-        SkipPrompt.Share -> return
+        is SkipPrompt.FoundEdges -> listOf(
+            Strings.playerDontAskAgain(context) to { model.neverAskWasOpening() },
+            Strings.playerFoundAdjust(context) to { model.adjustFoundSkip(prompt.kind) },
+            Strings.playerFoundYes(context) to { model.confirmFoundSkip(prompt.kind) },
+        )
+        else -> emptyList()
     }
     Column(
-        Modifier.width(300.dp).clip(RoundedCornerShape(20.dp)).background(ObiSilk.Raised).padding(start = 16.dp, end = 8.dp, top = 12.dp, bottom = 4.dp),
+        Modifier
+            .width(300.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(ObiSilk.Raised)
+            .padding(start = 16.dp, end = 8.dp, top = 12.dp, bottom = if (buttons.isEmpty()) 12.dp else 4.dp),
     ) {
-        Text(line, style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Silk, modifier = Modifier.padding(bottom = 4.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            TextButton(onClick = no.second) { Text(no.first, style = MaterialTheme.typography.labelLarge, color = ObiSilk.Haze) }
-            TextButton(onClick = { haptics.performHapticFeedback(HapticFeedbackType.ContextClick); yes.second() }) {
-                Text(yes.first, style = MaterialTheme.typography.labelLarge, color = ObiSilk.Silk)
+        // Announced as it appears, and read as one: the question and what Yes would do.
+        Column(Modifier.semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite }) {
+            Text(line, style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Silk)
+            note?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = ObiSilk.Haze, modifier = Modifier.padding(top = 4.dp)) }
+        }
+        if (buttons.isNotEmpty()) {
+            Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.End) {
+                buttons.forEachIndexed { index, (label, action) ->
+                    val last = index == buttons.lastIndex
+                    TextButton(onClick = { if (last) haptics.performHapticFeedback(HapticFeedbackType.ContextClick); action() }) {
+                        Text(label, style = MaterialTheme.typography.labelLarge, color = if (index == 0) ObiSilk.Haze else ObiSilk.Silk)
+                    }
+                }
             }
         }
     }
@@ -325,11 +361,14 @@ internal fun LazyListScope.skipTimes(model: PlayerModel, onDismiss: () -> Unit) 
 @Composable
 private fun SkipTimeRow(model: PlayerModel, kind: SkipKind, found: app.kaeri.engine.model.TimelineMark?, onDismiss: () -> Unit) {
     val context = LocalContext.current
+    val settings by app.kaeri.ui.LocalAppStore.current.settings.view.collectAsStateWithLifecycle()
+    // A kind with no times says why there are none, when finding is paused. Recaps are not found.
+    val paused = if (found == null && kind != SkipKind.RECAP) app.kaeri.store.skipFindPausedLine(context, settings?.skipFindPaused) else null
     Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(start = 24.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(SkipWords.kind(context, kind), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Silk)
             Text(
-                if (found == null) Strings.playerSkipNone(context)
+                if (found == null) listOfNotNull(Strings.playerSkipNone(context), paused).joinToString(" · ") // i18n-skip
                 else "${PlayerClock.label(found.start)}–${PlayerClock.label(found.end)} · ${SkipWords.origin(context, found.origin)}", // i18n-skip
                 style = MaterialTheme.typography.bodyMedium.tabular(),
                 color = ObiSilk.Haze,
@@ -340,8 +379,13 @@ private fun SkipTimeRow(model: PlayerModel, kind: SkipKind, found: app.kaeri.eng
                 TextButton(onClick = { onDismiss(); model.reportSkip(kind) }) { Text(Strings.playerSkipReport(context), color = ObiSilk.Silk) }
             app.kaeri.engine.model.SkipOrigin.YOURS ->
                 TextButton(onClick = { onDismiss(); model.clearMySkip(kind) }) { Text(Strings.playerSkipClear(context), color = ObiSilk.Silk) }
+            // Found times have a button of their own: Adjust opens the review on them.
+            app.kaeri.engine.model.SkipOrigin.FOUND ->
+                TextButton(onClick = { onDismiss(); model.adjustFoundSkip(kind) }) { Text(Strings.playerFoundAdjust(context), color = ObiSilk.Silk) }
             else -> {}
         }
-        TextButton(onClick = { onDismiss(); model.beginMarking(kind) }) { Text(Strings.playerSkipMark(context), color = ObiSilk.Silk) }
+        if (found?.origin != app.kaeri.engine.model.SkipOrigin.FOUND) {
+            TextButton(onClick = { onDismiss(); model.beginMarking(kind) }) { Text(Strings.playerSkipMark(context), color = ObiSilk.Silk) }
+        }
     }
 }

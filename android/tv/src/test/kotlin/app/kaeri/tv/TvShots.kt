@@ -86,7 +86,10 @@ import app.kaeri.engine.model.PlayerUi
 import app.kaeri.engine.model.SkipMarkFixture
 import app.kaeri.engine.model.SkipOrigin
 import app.kaeri.engine.model.SkipPrompt
+import app.kaeri.engine.ffi.foundSkipScene
 import app.kaeri.engine.ffi.skipMarkFixture
+import app.kaeri.engine.model.FoundSkipFixture
+import app.kaeri.engine.model.SkipFindPause
 import app.kaeri.engine.model.ProxyStatus
 import app.kaeri.engine.model.ProxyView
 import app.kaeri.engine.core.SourceCandidate
@@ -427,6 +430,78 @@ class TvShots {
         repeat(8) { if (focusedText() != "Skip times") press(Key.DirectionRight) }
         assertEquals("Skip times", focusedText())
         press(Key.DirectionCenter)
+    }
+
+    // Found skip times: the engine's fixture scenes on the TV, as the board draws them.
+
+    private fun tvFound(name: String, state: FoundSkipFixture, focus: String? = null, hide: Boolean = true) = playerShot(name) { model ->
+        val scene = foundSkipScene(state)
+        if (hide) time = CHROME_HIDE + 1_000
+        compose.runOnUiThread {
+            playerMpv!!.emit(MpvEvent.property("time-pos", MpvValue.Real(scene.position)))
+            for (ui in scene.ui) model.apply(Event.PlayerUi(1u, ui))
+            model.apply(Event.PlayerTimeline(1u, scene.marks))
+            scene.prompt?.let { model.apply(Event.PlayerSkipPrompt(1u, it)) }
+            scene.mark?.let { model.apply(Event.PlayerSkipMark(1u, it)) }
+        }
+        compose.mainClock.advanceTimeBy(1_000)
+        compose.waitForIdle()
+        focus?.let { assertEquals(it, focusedText()) }
+    }
+
+    @Test
+    fun found_skip() = tvFound("tv-found-skip", FoundSkipFixture.SKIP)
+
+    /** The card, focus on Yes. */
+    @Test
+    fun found_prompt() = tvFound("tv-found-prompt", FoundSkipFixture.PROMPT, focus = "Yes")
+
+    /** Right walks the card's buttons from Yes, and the card keeps the focus. */
+    @Test
+    fun found_prompt_focus_walks() {
+        tvFound("tv-found-prompt-walk", FoundSkipFixture.PROMPT, focus = "Yes")
+        press(Key.DirectionRight)
+        assertEquals("Adjust", focusedText())
+        press(Key.DirectionRight)
+        assertEquals("Don't ask again", focusedText())
+    }
+
+    @Test
+    fun found_saved() = tvFound("tv-found-saved", FoundSkipFixture.SAVED)
+
+    @Test
+    fun found_never() = tvFound("tv-found-never", FoundSkipFixture.NEVER)
+
+    /** Adjust's review, focus on Watch the edges. */
+    @Test
+    fun found_review() = tvFound("tv-found-review", FoundSkipFixture.REVIEW, focus = "Watch the edges", hide = false)
+
+    @Test
+    fun found_undo() = tvFound("tv-found-undo", FoundSkipFixture.UNDO)
+
+    /** Settings, Playback, with finding paused by low storage. */
+    @Test
+    fun found_settings_paused() = shoot("tv-found-settings-paused", section = "Playback", then = {
+        val view = shot.settings.view.value!!
+        shot.apply(listOf(Event.Settings(view.copy(skipFindPaused = SkipFindPause.STORAGE))))
+        settle()
+        // The row is below the first screenful: the way down is how the list scrolls.
+        press(Key.DirectionRight)
+        var presses = 0
+        while (compose.onAllNodesWithText("Paused until", substring = true).fetchSemanticsNodes().isEmpty() && presses++ < 14) press(Key.DirectionDown)
+        compose.onNodeWithText("Find skip times from the audio").assertExists()
+        compose.onNodeWithText("Paused until", substring = true).assertExists()
+    })
+
+    /** Back closes the card unanswered. */
+    @Test
+    fun found_prompt_back_dismisses() = tvFound("tv-found-prompt-back", FoundSkipFixture.PROMPT).also {
+        compose.runOnUiThread {
+            listOf(KeyEvent.ACTION_DOWN, KeyEvent.ACTION_UP).forEach { compose.activity.dispatchKeyEvent(KeyEvent(it, KeyEvent.KEYCODE_BACK)) }
+        }
+        compose.mainClock.advanceTimeBy(600)
+        compose.waitForIdle()
+        assertTrue("Back dismissed the card", sentCommands.any { it.toString().contains("DismissSkipPrompt") })
     }
 
     /** Back steps the marking panel back, then closes it. */

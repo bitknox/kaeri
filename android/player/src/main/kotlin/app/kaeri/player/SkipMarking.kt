@@ -17,8 +17,11 @@ val SkipKinds = listOf(SkipKind.OPENING, SkipKind.ENDING, SkipKind.RECAP)
 
 /** A prompt on the video, since when it has been up. */
 data class SkipPromptOffer(val prompt: SkipPrompt, val since: Long) {
-    /** Wrong times stays 8 s, Was that the opening 12 s, as on the desktop. */
-    val stays: Long get() = if (prompt is SkipPrompt.WrongTimes) 8_000L else 12_000L
+    /** Every question holds 12 s of playback; the line that answers it, 4 s. */
+    val stays: Long get() = if (answer) 4_000L else 12_000L
+
+    /** The card says what was done, not asking. */
+    val answer: Boolean get() = prompt is SkipPrompt.FoundSaved || prompt is SkipPrompt.FoundNever
 }
 
 /** A notice about the skip times, since when. */
@@ -73,6 +76,19 @@ object SkipWords {
         SkipMarkNote.Shares -> Strings.playerMarkShares(context)
         is SkipMarkNote.Replaces -> Strings.playerMarkReplaces(context, PlayerClock.label(note.start), PlayerClock.label(note.end))
         SkipMarkNote.NoEntry -> Strings.playerMarkNoMal(context)
+        SkipMarkNote.Found -> Strings.playerMarkFound(context)
+    }
+
+    /** A card's question or answer, and the quieter line under it when it has one. */
+    fun promptLines(context: Context, prompt: SkipPrompt): Pair<String, String?> = when (prompt) {
+        is SkipPrompt.WasOpening -> Strings.playerWasOpening(context) to null
+        is SkipPrompt.WrongTimes -> Strings.playerSkipWrong(context, inline(context, prompt.kind)) to null
+        is SkipPrompt.FoundEdges -> (
+            if (prompt.kind == SkipKind.ENDING) Strings.playerFoundAskEnding(context) else Strings.playerFoundAskOpening(context)
+            ) to Strings.playerFoundAskShare(context, prompt.episode.toInt())
+        is SkipPrompt.FoundSaved -> Strings.playerFoundSaved(context, prompt.episode.toInt()) to null
+        is SkipPrompt.FoundNever -> Strings.playerFoundNever(context) to Strings.playerFoundNeverHow(context)
+        is SkipPrompt.Share -> "" to null // i18n-skip
     }
 
     /** The notice an action on the skip times says once. */
@@ -88,6 +104,7 @@ object SkipWords {
     fun origin(context: Context, origin: SkipOrigin?): String = when (origin) {
         SkipOrigin.YOURS -> Strings.playerSkipYours(context)
         SkipOrigin.ANI_SKIP -> Strings.playerSkipFromAniskip(context)
+        SkipOrigin.FOUND -> Strings.playerSkipFound(context)
         else -> Strings.playerSkipFromFile(context)
     }
 

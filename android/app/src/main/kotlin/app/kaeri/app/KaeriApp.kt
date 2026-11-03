@@ -34,6 +34,7 @@ import app.kaeri.player.SystemCaptions
 import kotlinx.coroutines.flow.map
 import app.kaeri.player.CaptionStyleWatch
 import app.kaeri.player.Device
+import app.kaeri.player.DeviceWatch
 import app.kaeri.player.MpvBackend
 import app.kaeri.player.PlayerConnection
 import app.kaeri.player.PlayerHost
@@ -67,6 +68,7 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
         AppStore(scope).also { store ->
             store.tv.openLink = { url -> open(url) }
             store.collectCrashes(this, scope)
+            DeviceWatch(this, store::send).start()
             if (Flavour.UPDATES) {
                 val updates = AppUpdates(this, store.updates)
                 store.updates.attach(updates, updates.files)

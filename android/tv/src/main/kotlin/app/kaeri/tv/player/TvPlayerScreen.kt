@@ -301,7 +301,8 @@ fun TvPlayerScreen(
                 }
                 true
             }
-            Key.DirectionLeft, Key.DirectionRight -> {
+            // A card up: Left and Right walk its buttons, not the playhead.
+            Key.DirectionLeft, Key.DirectionRight -> if (cardUp) false else {
                 run.press(forward = event.key == Key.DirectionRight)
                 presses = run.presses
                 runShown = true

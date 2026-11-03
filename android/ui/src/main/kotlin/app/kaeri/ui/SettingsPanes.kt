@@ -116,7 +116,7 @@ internal fun SettingMenu(
 
 /** A setting that is on or off, with how many shows set it for themselves under it. */
 @Composable
-internal fun SettingSwitch(place: Place, key: SettingKey, title: String, note: String? = null, enabled: Boolean = true) {
+internal fun SettingSwitch(place: Place, key: SettingKey, title: String, note: String? = null, enabled: Boolean = true, extra: String? = null) {
     val store = LocalAppStore.current
     val view by store.settings.view.collectAsStateWithLifecycle()
     val row = store.settings.row(key, view)
@@ -126,6 +126,7 @@ internal fun SettingSwitch(place: Place, key: SettingKey, title: String, note: S
         checked = SettingsCatalog.isOn(row),
         note = listOfNotNull(store.settings.overridden(LocalContext.current, key, view), note).joinToString("\n").ifEmpty { null }, // i18n-skip
         enabled = enabled && SettingsCatalog.editable(row),
+        extra = extra,
     ) { store.setSetting(key, SettingValue.Bool(it)) }
 }
 
@@ -302,9 +303,14 @@ internal fun PlaybackPane() {
                 { place -> SettingSwitch(place, SettingKey.SKIP_FILLER, stringResource(R.string.settings_skip_filler)) },
                 { place -> SettingSwitch(place, SettingKey.MARK_CHAPTERS, stringResource(R.string.settings_mark_opening)) },
                 { place -> SettingSwitch(place, SettingKey.SKIP_BUTTON, stringResource(R.string.settings_skip_button), note = stringResource(R.string.settings_skip_button_detail)) },
+                { place ->
+                    // Paused says nothing in the player: the reason is here and in the Skip times panel.
+                    val paused = app.kaeri.store.skipFindPausedLine(context, view?.skipFindPaused)
+                    SettingSwitch(place, SettingKey.FIND_SKIP_TIMES, stringResource(R.string.settings_find_skips), note = stringResource(R.string.settings_find_skips_detail), extra = paused)
+                },
                 { place -> SettingSwitch(place, SettingKey.ASK_WAS_OPENING, stringResource(R.string.settings_ask_was_opening), note = stringResource(R.string.settings_ask_was_opening_detail)) },
                 { place -> SettingSwitch(place, SettingKey.SHARE_SKIP_TIMES, stringResource(R.string.settings_share_skips), note = stringResource(R.string.settings_share_skips_detail)) },
-                { place -> ActionRow(place, stringResource(R.string.settings_clear_skips)) { store.send(Command.ClearSkipMarks) } },
+                { place -> ActionRow(place, stringResource(R.string.settings_clear_skips_android), note = stringResource(R.string.settings_clear_skips_android_detail)) { store.send(Command.ClearSkipMarks) } },
                 { place -> SettingMenu(place, SettingKey.COMMIT_THRESHOLD, stringResource(R.string.settings_counts_watched), note = stringResource(R.string.settings_counts_watched_detail)) },
                 { place -> SettingSwitch(place, SettingKey.SPOILER_PROTECTION, stringResource(R.string.settings_spoiler), note = stringResource(R.string.settings_spoiler_detail)) },
             ),
@@ -796,13 +802,16 @@ private fun SignInButton(label: String, busy: Boolean, onClick: () -> Unit) {
 
 /** A row that is one action in silk, such as Sync now or Sign out. */
 @Composable
-internal fun ActionRow(place: Place, title: String, enabled: Boolean = true, onClick: () -> Unit) {
+internal fun ActionRow(place: Place, title: String, enabled: Boolean = true, note: String? = null, onClick: () -> Unit) {
     RowFrame(place, onClick = if (enabled) onClick else null) {
-        Text(
-            title,
-            style = MaterialTheme.typography.titleMedium,
-            color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        Column {
+            Text(
+                title,
+                style = MaterialTheme.typography.titleMedium,
+                color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            note?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        }
     }
 }
 
