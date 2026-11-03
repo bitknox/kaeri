@@ -543,6 +543,11 @@ class AppStore(
     }
 
     /** Show the Trending rail for [period], asking for it: kept answers show at once. */
+    /** Ask for a Trending period's rail without choosing it. */
+    fun loadTrending(period: TrendPeriod) {
+        send(Command.LoadTrending(period))
+    }
+
     fun chooseTrending(period: TrendPeriod) {
         search.choose(period)
         send(Command.LoadTrending(period))

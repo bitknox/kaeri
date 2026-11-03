@@ -267,7 +267,10 @@ enum class FixtureScene {
     AVAILABLE,
 
     /** [WATCHING] with three watch party rooms kept, as Watch together lists them. */
-    TOGETHER;
+    TOGETHER,
+
+    /** [WATCHING] for Search's extras: dub counts on the cards, Surprise me's fixtures and a long franchise for ranges. */
+    BROWSING;
 
     companion object {
         /** The scene [name] says, case aside; `null` for one there is none of. */

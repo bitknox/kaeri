@@ -701,7 +701,7 @@ fun SurprisePill(pool: SurprisePool, modifier: Modifier = Modifier, another: Boo
             slow = true
         }
     }
-    TonalButton(onClick = { store.surprise(pool, inPlace = another) }, modifier = modifier, height = 40.dp) {
+    TonalButton(onClick = { store.surprise(pool, inPlace = another) }, modifier = modifier, height = if (another) 48.dp else 40.dp) {
         ButtonLabel(stringResource(if (another) R.string.surprise_another else R.string.surprise_me) + if (slow && asking != null) "…" else "") // i18n-skip
     }
 }

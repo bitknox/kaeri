@@ -865,9 +865,80 @@ class BoardShots {
     @Config(qualifiers = PHONE, fontScale = 2.0f)
     fun phone_title_synopsis_large_text() = shoot("phone-large-text", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses) { toEpisodes() }
 
+    // Browsing extras (the browsing board): count lines, Trending periods, Surprise me, Another, Go to episode.
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_search_start() = shoot("phone-browse-search-start", BROWSING, start = Destination.Search, before = { it.chooseTrending(app.kaeri.engine.model.TrendPeriod.TODAY) })
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_trending_week() = shoot("phone-browse-trending-week", BROWSING, start = Destination.Search, before = { it.chooseTrending(app.kaeri.engine.model.TrendPeriod.TODAY) }) { store ->
+        store.chooseTrending(app.kaeri.engine.model.TrendPeriod.WEEK)
+    }
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_trending_menu() = shoot("phone-browse-trending-menu", BROWSING, start = Destination.Search, screen = true, before = { it.chooseTrending(app.kaeri.engine.model.TrendPeriod.TODAY) }) {
+        compose.onNodeWithText("Trending today").performClick()
+        compose.waitForIdle()
+    }
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_results() = shoot("phone-browse-results", BROWSING, start = Destination.Search, search = SearchQuery(text = "hoshi"))
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_title_another() = shoot("phone-browse-title-another", BROWSING, start = Destination.Search) { store ->
+        store.apply(listOf(Event.Surprise(app.kaeri.engine.model.SurprisePool.Planning, app.kaeri.engine.model.SurpriseOutcome.Picked(900001u, true))))
+    }
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_go_to_episode() = shoot("phone-browse-go-to-episode", BROWSING, title = 900001u, episodes = SynopsisFixtures::long, screen = true, settle = false) {
+        toRanges()
+        compose.onNodeWithContentDescription("Episode range").performClick()
+        compose.waitForIdle()
+        // The field's cursor blinks for ever, so the clock is stepped, not waited for.
+        compose.mainClock.autoAdvance = false
+        compose.onNodeWithText("Go to episode", substring = true).performClick()
+        compose.mainClock.advanceTimeBy(600)
+    }
+
     // Recordings, as frames 33 ms apart that make a 30 fps clip.
 
     private val clip = (0L..900L step 33L).toList()
+
+    /** Loop A: a title's dub arrives while its cell is on screen; the dub part fades in on the line's end. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_dub_arrives_clip() = shoot("phone-browse-dub-clip-end", BROWSING, start = Destination.Search, search = SearchQuery(text = "hoshi")) { store ->
+        frames("phone-browse-dub-clip", clip) {
+            store.apply((900002u..900006u).map { Event.TitleDub(it, app.kaeri.engine.model.DubExtent(through = 3u, complete = false)) })
+        }
+    }
+
+    /** Loop B: the period switch; the shelf crossfades, the heading label on quick. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_period_clip() = shoot("phone-browse-period-clip-end", BROWSING, start = Destination.Search, screen = true, before = { it.chooseTrending(app.kaeri.engine.model.TrendPeriod.TODAY) }) {
+        compose.onNodeWithText("Trending today").performClick()
+        compose.waitForIdle()
+        frames("phone-browse-period-clip", clip, screen = true) { compose.onNodeWithText("This week").performClick() }
+    }
+
+    /** Loop C: Surprise me opens a title, then Another takes its place on a crossfade. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_another_clip() = shoot("phone-browse-another-clip-end", BROWSING, start = Destination.Search) { store ->
+        store.apply(listOf(Event.Surprise(app.kaeri.engine.model.SurprisePool.Planning, app.kaeri.engine.model.SurpriseOutcome.Picked(900001u, true))))
+        compose.waitForIdle()
+        frames("phone-browse-another-clip", (0L..900L step 33L).toList()) {
+            store.surprise(app.kaeri.engine.model.SurprisePool.Planning, inPlace = true)
+            store.apply(listOf(Event.Surprise(app.kaeri.engine.model.SurprisePool.Planning, app.kaeri.engine.model.SurpriseOutcome.Picked(900003u, true))))
+        }
+    }
 
     /** The line's Show: the line crossfades, each row grows, then its text fades in. */
     @Test
@@ -1030,6 +1101,7 @@ class BoardShots {
         fun seasonalList(event: Event) = event is Event.Content && event.view == ContentFor.Seasonal
 
         const val WATCHING = "watching"
+        const val BROWSING = "browsing"
 
         const val HOME_WATCHING = "home-watching"
         const val FRESH = "fresh"

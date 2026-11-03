@@ -207,6 +207,41 @@ class TvShots {
     @Test
     fun title() = shoot("tv-title", title = 900001u)
 
+    // Browsing extras (the browsing board): the Trending rail with its periods, Surprise me and Another.
+    @Test
+    fun browse_search_start() = shoot("tv-browse-search-start", start = Destination.Search, scene = BROWSING) { shot.chooseTrending(app.kaeri.engine.model.TrendPeriod.TODAY) }
+
+    @Test
+    fun browse_trending_week() = shoot("tv-browse-trending-week", start = Destination.Search, scene = BROWSING) {
+        shot.chooseTrending(app.kaeri.engine.model.TrendPeriod.TODAY)
+        shot.chooseTrending(app.kaeri.engine.model.TrendPeriod.WEEK)
+    }
+
+    /** Loop B on TV: the period chip chosen, the posters crossfade on standard, as frames 33 ms apart. */
+    @Test
+    fun browse_period_clip() = shoot("tv-browse-period-clip-end", start = Destination.Search, scene = BROWSING) {
+        shot.chooseTrending(app.kaeri.engine.model.TrendPeriod.TODAY)
+        settle()
+        compose.mainClock.autoAdvance = false
+        shot.chooseTrending(app.kaeri.engine.model.TrendPeriod.WEEK)
+        var now = 0L
+        for (ms in 0L..900L step 33L) {
+            compose.mainClock.advanceTimeBy(ms - now)
+            now = ms
+            compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-browse-period-clip-$ms.png")
+        }
+        compose.mainClock.autoAdvance = true
+        settle()
+    }
+
+    @Test
+    fun browse_results() = shoot("tv-browse-results", query = "hoshi", scene = BROWSING)
+
+    @Test
+    fun browse_title_another() = shoot("tv-browse-title-another", start = Destination.Search, scene = BROWSING) {
+        shot.apply(listOf(Event.Surprise(app.kaeri.engine.model.SurprisePool.Planning, app.kaeri.engine.model.SurpriseOutcome.Picked(900001u, true))))
+    }
+
     // Episode synopses (the synopsis board, section 4): three cards across with text under each.
 
     /** The shelf with the next episode focused, its neighbours readable. */
@@ -1343,6 +1378,7 @@ class TvShots {
         const val TV = "w960dp-h540dp-land-television-xhdpi"
 
         const val WATCHING = "watching"
+        const val BROWSING = "browsing"
         const val HOME_WATCHING = "home-watching"
         const val TOGETHER = "together"
 

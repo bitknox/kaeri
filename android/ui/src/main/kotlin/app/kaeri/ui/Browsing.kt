@@ -5,6 +5,7 @@ package app.kaeri.ui
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.height
@@ -166,7 +167,7 @@ internal fun AnotherButton(pick: SurprisePick, modifier: Modifier = Modifier) {
     val hint = stringResource(R.string.surprise_another_hint)
     TextButton(
         onClick = { store.surprise(pick.pool, inPlace = true) },
-        modifier = modifier.semantics { contentDescription = hint },
+        modifier = modifier.background(MaterialTheme.colorScheme.surfaceContainer, androidx.compose.foundation.shape.CircleShape).semantics { contentDescription = hint },
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             if (slow) CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
