@@ -7,7 +7,7 @@
 
 use kaeri_core::{settings::SettingValue, shared_settings};
 use kaeri_model::event::Event;
-use kaeri_store::sync::{Applied, Effect, kinds};
+use kaeri_store::sync::{Effect, kinds};
 
 use crate::{
     outbox::{Internal, Outbox},
@@ -100,11 +100,10 @@ pub fn apply_effects(
 /// The plugin stores another device joined that this one has not: `(address, name)`, for the
 /// Plugin stores list's "Join on this device". `joined` is the addresses this device is a member of.
 pub fn stores_to_join(
-    services: &Services,
+    store: &kaeri_store::Store,
     joined: &[String],
 ) -> Result<Vec<(String, String)>, kaeri_store::StoreError> {
-    Ok(services
-        .store
+    Ok(store
         .sync_regs(kinds::STORE)?
         .into_iter()
         .filter(|(address, _)| !joined.contains(address))
@@ -120,12 +119,16 @@ pub fn announce_trackers(services: &Services, signed_in: &[String]) {
 
 /// Queue the progress this device must send for the trackers a received watch's origin lacked.
 /// With sync off, or when this device is not the lead, nothing is queued.
-pub fn fill_tracker_gaps(applied: &Applied, my_trackers: &[String], services: &Services) {
-    if applied.watches.is_empty() || my_trackers.is_empty() {
+pub fn fill_tracker_gaps(
+    watches: &[kaeri_store::sync::ReceivedWatch],
+    my_trackers: &[String],
+    store: &kaeri_store::Store,
+) {
+    if watches.is_empty() || my_trackers.is_empty() {
         return;
     }
     let now = kaeri_store::now();
-    let gaps = match services.store.sync_tracker_gaps(my_trackers, &applied.watches, now) {
+    let gaps = match store.sync_tracker_gaps(my_trackers, watches, now) {
         Ok(gaps) => gaps,
         Err(e) => {
             tracing::warn!(error = %e, "could not work out which trackers to fill");
@@ -134,7 +137,7 @@ pub fn fill_tracker_gaps(applied: &Applied, my_trackers: &[String], services: &S
     };
     for (tracker, anilist_id) in gaps {
         kaeri_track::sync::queue_progress_for(
-            &services.store,
+            store,
             std::slice::from_ref(&tracker),
             kaeri_core::ids::AnilistId::new(anilist_id),
             now,

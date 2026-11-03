@@ -164,6 +164,10 @@ pub struct FfiStart {
     /// for English.
     #[uniffi(default = None)]
     pub language: Option<String>,
+    /// The profile to start in, when the install has profiles: the picker's choice, or what
+    /// `Event::ProfileSwitch` named. `None` for the one used last. Ignored for a single user.
+    #[uniffi(default = None)]
+    pub profile: Option<String>,
 }
 
 impl FfiStart {

@@ -70,6 +70,11 @@ pub struct Services {
     pub every_play_a_party: bool,
     /// The next episode's streams, found while the current one's ending plays.
     pub prefetch: Prefetch,
+    /// Every token store the device keeps, under the bare names: the profiles' tracker tokens
+    /// are `p-<id>/` ones beside them, moved and removed through this.
+    pub tokens: TokenStore,
+    /// The folder road of cross-device sync, once it is set up.
+    pub syncing: Arc<crate::syncing::SyncHub>,
     /// The covers downloading, a few at a time.
     pub artwork: crate::artwork::Downloads,
     /// How the player's own interface is dressed: the front end's choice, made once from its
@@ -126,7 +131,8 @@ impl Services {
             .map_err(|e| e.english())?;
         // Trackers are built whether or not they hold a token: the Accounts overlay needs
         // something to offer a sign-in for, and the outbox accumulates against the id meanwhile.
-        let sync = tracking::Sync::with_tokens(config, &store, &http, tokens)
+        let tracker_tokens = crate::profile::scope_tokens(&store, &paths, tokens.clone());
+        let sync = tracking::Sync::with_tokens(config, &store, &http, tracker_tokens)
             .on_budget_of(meta.anilist())
             .with_titles(meta.titles().clone());
         let (power, hosted) = players(&paths);
@@ -150,6 +156,8 @@ impl Services {
             hosted_player: !cfg!(feature = "desktop"),
             every_play_a_party: false,
             prefetch: Prefetch::default(),
+            tokens,
+            syncing: Default::default(),
             artwork: Default::default(),
             player_theme,
             app_clients: AppClients::default(),

@@ -185,6 +185,14 @@ pub enum FfiScene {
     /// [`Self::Fresh`] with the same store, not joined: [`FfiEngine::testing_store_invite`] is
     /// the Book club link, used once so far, for the join sheet with its name field.
     StoreInvited,
+    /// [`Self::Watching`] with sync set up: this device is Kim's iPhone, the group holds the
+    /// Living room TV as well, heard from two minutes ago, the folder is `Shared/Kaeri`, and one
+    /// note says a watch of Hoshikuzu no Tabibito episode 3 was kept although the iPhone marked
+    /// it unwatched. No folder is behind it; the engine runs no pass.
+    SyncOn,
+    /// [`Self::Watching`] with three profiles: Alex, who is in use and whose data this is,
+    /// Kim, and Sam, a kids profile. Kim's and Sam's start empty.
+    Profiles,
 }
 
 /// The magnet link [`FfiScene::LinkOpened`] opens: a made-up info hash whose name is
@@ -263,6 +271,8 @@ impl FfiScene {
                 | Self::Slow
                 | Self::Failed
                 | Self::LinkOpened
+                | Self::SyncOn
+                | Self::Profiles
         )
     }
 
@@ -285,6 +295,8 @@ impl FfiScene {
                 | Self::NotFound
                 | Self::Slow
                 | Self::Failed
+                | Self::SyncOn
+                | Self::Profiles
         )
     }
 }
@@ -352,7 +364,10 @@ impl FfiEngine {
         }
         let now = clock.now();
         scene_config(&dirs, &scene, now)?;
-        let opened = Opened::open(&dirs)?;
+        if scene == FfiScene::Profiles {
+            seed_profiles(&dirs, now)?;
+        }
+        let opened = Opened::open_as(&dirs, start.profile.as_deref())?;
         seed_crashes(&opened.paths.data_dir, &scene, now);
         let world = home_world.then(|| HomeWorld::at(HomeClock::in_zone(now, &clock.zone())));
         seed_scene(&opened.store, &scene, now);
@@ -721,6 +736,9 @@ fn seed_scene(store: &Store, scene: &FfiScene, now: i64) {
     if matches!(scene, FfiScene::Licensed | FfiScene::Available) {
         kaeri_engine::licensed::set_services(vec!["Lantern Library".into()], store);
     }
+    if *scene == FfiScene::SyncOn {
+        kaeri_engine::syncing::seed_fixture(store, now);
+    }
     const HOUR: i64 = 3_600;
     const DAY: i64 = 24 * HOUR;
     match scene {
@@ -770,6 +788,8 @@ fn seed_scene(store: &Store, scene: &FfiScene, now: i64) {
         | FfiScene::Unsure
         | FfiScene::Slow
         | FfiScene::Failed
+        | FfiScene::SyncOn
+        | FfiScene::Profiles
         | FfiScene::LinkOpened => {
             // Oldest first, since each watch moves its title to the top.
             seed::watched(store, AIRING_NO_MAL, 7, now - 3 * DAY);
@@ -784,6 +804,20 @@ fn seed_scene(store: &Store, scene: &FfiScene, now: i64) {
             }
         }
     }
+}
+
+/// The profiles [`FfiScene::Profiles`] keeps, Alex last used.
+fn seed_profiles(dirs: &FfiDirs, now: i64) -> Result<(), FfiError> {
+    let data = std::path::Path::new(&dirs.data);
+    let failed = |e: kaeri_store::StoreError| {
+        FfiError::store(Msg::StartFailedDatabase {
+            path: dirs.data.clone(),
+            reason: e.to_string(),
+        })
+    };
+    kaeri_store::profile::add(data, "Kim", false, "Alex", now - 20).map_err(failed)?;
+    kaeri_store::profile::add(data, "Sam", true, "Alex", now - 10).map_err(failed)?;
+    kaeri_store::profile::touch(data, "p1", now).map_err(failed)
 }
 
 /// The three rooms [`FfiScene::Together`] keeps.

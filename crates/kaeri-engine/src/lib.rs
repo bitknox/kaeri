@@ -127,6 +127,7 @@ mod party_identify;
 pub mod phases;
 pub mod playback;
 pub mod plugin_stores;
+pub mod profile;
 pub mod proxy;
 #[cfg(feature = "remote")]
 pub mod remote;
@@ -139,6 +140,7 @@ pub mod sources;
 pub(crate) mod state;
 pub mod subtitles;
 pub mod sync;
+pub mod syncing;
 pub mod title_language;
 mod titlematch;
 pub mod titles;

@@ -39,6 +39,8 @@ pub struct FolderReport {
     pub effects: Vec<Effect>,
     pub notes: Vec<SyncNote>,
     pub titles: Vec<u32>,
+    /// Completed watches that arrived, for the tracker rules.
+    pub watches: Vec<kaeri_store::sync::ReceivedWatch>,
 }
 
 impl FolderReport {
@@ -47,6 +49,7 @@ impl FolderReport {
         self.effects.extend(applied.effects);
         self.notes.extend(applied.notes);
         self.titles.extend(applied.titles);
+        self.watches.extend(applied.watches);
     }
 }
 

@@ -283,6 +283,7 @@ mod tests {
             trakt_client_secret: Some("a-trakt-secret".into()),
             secrets: Some(SecretsMode::FollowConfig),
             language: Some("da".into()),
+            profile: Some("p2".into()),
         };
         assert_eq!(crossed(start.clone()), start);
         assert_eq!(crossed(FfiStart::default()), FfiStart::default());

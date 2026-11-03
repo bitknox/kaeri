@@ -34,6 +34,9 @@ pub enum Internal {
     /// The engine has started: keep next lets go of what was watched, as
     /// [`crate::downloads::ahead::let_go`] does, and queues nothing.
     LetGo,
+    /// A pass through the sync folder brought settings and the like from other devices: carry
+    /// out what [`crate::syncing::SyncHub::take_effects`] holds.
+    SyncEffects,
 }
 
 /// One item of the engine side's inbox, in the order it was sent.

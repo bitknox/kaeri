@@ -18,6 +18,7 @@ use kaeri_providers::ProviderRegistry;
 use kaeri_store::Store;
 
 use crate::playback::start::{control_playback, control_player, play, play_local, play_source};
+use crate::syncing::Ctx;
 use crate::{
     artwork,
     catalog::{
@@ -623,6 +624,118 @@ pub(crate) fn dispatch(
         Command::ConnectKitsu { username, password } => {
             connect_kitsu(username, password, job, services, tx)
         }
+        Command::LoadProfiles => {
+            let _ = tx
+                .send(Event::Profiles(crate::profile::view(&services.store, &services.paths)));
+            drop(job);
+        }
+        Command::AddProfile { name, kids, first_name } => {
+            let first = first_name.unwrap_or_else(|| "Me".to_owned());
+            if let Err(e) =
+                crate::profile::add(&services.store, &services.paths, &name, kids, &first)
+            {
+                tracing::warn!(error = %e, "could not add a profile");
+            }
+            let _ = tx
+                .send(Event::Profiles(crate::profile::view(&services.store, &services.paths)));
+            drop(job);
+        }
+        Command::EditProfile { id, name, kids } => {
+            if let Err(e) = crate::profile::edit(&services.paths, &id, &name, kids) {
+                tracing::warn!(error = %e, "could not edit a profile");
+            }
+            let _ = tx
+                .send(Event::Profiles(crate::profile::view(&services.store, &services.paths)));
+            drop(job);
+        }
+        Command::SwitchProfile { id } => {
+            match crate::profile::choose(&services.paths, &id) {
+                Ok(()) => {
+                    let _ = tx.send(Event::ProfileSwitch { id });
+                }
+                Err(e) => tracing::warn!(error = %e, "could not switch profile"),
+            }
+            drop(job);
+        }
+        Command::DeleteProfile { id } => {
+            let promoted_to = services.store.active_profile();
+            let primary_goes =
+                kaeri_store::profile::ProfileList::load(&services.paths.data_dir)
+                    .ok()
+                    .flatten()
+                    .is_some_and(|list| list.primary == id);
+            match crate::profile::delete(
+                &services.store,
+                &services.paths,
+                &services.tokens,
+                &id,
+            ) {
+                // The one in use took the first profile's place: its tokens and settings are the
+                // bare ones now, which a restart on it reads.
+                Ok(()) if primary_goes => {
+                    if let Some(id) = promoted_to {
+                        let _ = tx.send(Event::ProfileSwitch { id });
+                    }
+                }
+                Ok(()) => {}
+                Err(e) => tracing::warn!(error = %e, "could not delete a profile"),
+            }
+            let _ = tx
+                .send(Event::Profiles(crate::profile::view(&services.store, &services.paths)));
+            drop(job);
+        }
+        Command::LoadSync => {
+            let _ = tx.send(Event::SyncStatus(crate::syncing::status(&Ctx::of(services))));
+            drop(job);
+        }
+        Command::StartSync { device_name, folder } => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::syncing::start(&ctx, &tx, device_name, folder).await;
+            });
+        }
+        Command::JoinSync { device_name, folder, recovery_key } => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::syncing::join(&ctx, &tx, device_name, folder, &recovery_key.0).await;
+            });
+        }
+        Command::SyncFolderNow => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::syncing::pass(&ctx, &tx).await;
+            });
+        }
+        Command::LeaveSync => {
+            crate::syncing::leave(&Ctx::of(services), tx);
+            drop(job);
+        }
+        Command::RemoveSyncDevice { device } => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::syncing::remove_device(&ctx, &tx, &device).await;
+            });
+        }
+        Command::NewRecoveryKey => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::syncing::new_recovery_key(&ctx, &tx).await;
+            });
+        }
+        Command::ShowRecoveryKey => {
+            crate::syncing::reveal_recovery_key(&Ctx::of(services), tx);
+            drop(job);
+        }
+        Command::DismissSyncNote { id } => {
+            let _ = services.store.dismiss_sync_note(id);
+            let _ = tx.send(Event::SyncStatus(crate::syncing::status(&Ctx::of(services))));
+            drop(job);
+        }
         Command::Disconnect { tracker } => {
             tracking::disconnect(&services.sync, &tracker, tx);
             tracking::commands::announce_signed_in(&services.store, &services.sync);
@@ -859,6 +972,10 @@ pub(crate) async fn handle_internal(
         // What runs on cellular may have changed with it.
         Internal::SettingsSaved => crate::phases::settings_saved(engine, tx),
         Internal::LetGo => ahead::let_go(engine, services, tx),
+        Internal::SyncEffects => {
+            let effects = services.syncing.take_effects();
+            crate::sync::apply_effects(effects, engine, services, tx);
+        }
         // Only the order changed: the chain as it stands is put in it, with no rebuild.
         Internal::SourcesReordered => {
             sources::arrange(&services.registry, engine.config.effective());

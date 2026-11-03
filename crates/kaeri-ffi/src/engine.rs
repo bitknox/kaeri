@@ -87,7 +87,7 @@ impl FfiEngine {
         background: FfiBackground,
         start: FfiStart,
     ) -> Result<Arc<Self>, FfiError> {
-        let opened = Opened::open(&dirs)?;
+        let opened = Opened::open_as(&dirs, start.profile.as_deref())?;
         let host = Adapter::new(host, start.secrets_mode(), &opened.config, &opened.paths);
         let home = RemoteHome::of(&host, &opened.paths);
         let runtime = runtime()?;
@@ -260,7 +260,14 @@ pub(crate) struct Opened {
 impl Opened {
     /// Create the directories, read the config and open the database, a damaged one moved
     /// aside for a new one.
+    #[cfg(any(test, feature = "testing"))]
     pub(crate) fn open(dirs: &FfiDirs) -> Result<Self, FfiError> {
+        Self::open_as(dirs, None)
+    }
+
+    /// [`Self::open`], entering `profile` when the install has profiles: the one named, or the
+    /// one used last.
+    pub(crate) fn open_as(dirs: &FfiDirs, profile: Option<&str>) -> Result<Self, FfiError> {
         for dir in [&dirs.config, &dirs.data, &dirs.cache] {
             std::fs::create_dir_all(dir).map_err(|e| {
                 FfiError::dirs(Msg::StartFailedFolder {
@@ -274,14 +281,18 @@ impl Opened {
             data_dir: dirs.data.clone().into(),
             cache_dir: dirs.cache.clone().into(),
         };
-        let config = Config::read(&paths).map_err(|problem| {
-            let path = paths.config_file.display().to_string();
-            FfiError::config(Msg::StartFailedConfig { path, problem: problem.to_string() })
-        })?;
         let database = paths.database();
         let (store, set_aside) = Store::open_or_set_aside(&database).map_err(|e| {
             let path = database.display().to_string();
             FfiError::store(Msg::StartFailedDatabase { path, reason: e.to_string() })
+        })?;
+        kaeri_engine::profile::enter(&store, &paths, profile).map_err(|reason| {
+            let path = paths.data_dir.display().to_string();
+            FfiError::store(Msg::StartFailedDatabase { path, reason })
+        })?;
+        let config = kaeri_engine::profile::read_config(&store, &paths).map_err(|problem| {
+            let path = paths.config_file.display().to_string();
+            FfiError::config(Msg::StartFailedConfig { path, problem: problem.to_string() })
         })?;
         Ok(Self { paths, config, store, set_aside })
     }

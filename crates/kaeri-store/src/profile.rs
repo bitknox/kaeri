@@ -203,6 +203,14 @@ pub fn add(
     Ok(profile)
 }
 
+/// Mark `id` as the profile used last, which is the one the next launch enters.
+pub fn touch(data_dir: &Path, id: &str, now: i64) -> Result<()> {
+    let mut list = ProfileList::load(data_dir)?.ok_or_else(|| missing(id))?;
+    let profile = list.profiles.iter_mut().find(|p| p.id == id).ok_or_else(|| missing(id))?;
+    profile.last_used = now;
+    list.save(data_dir)
+}
+
 /// Rename a profile or change its kids switch.
 pub fn edit(data_dir: &Path, id: &str, name: &str, kids: bool) -> Result<()> {
     let mut list = ProfileList::load(data_dir)?.ok_or_else(|| missing(id))?;

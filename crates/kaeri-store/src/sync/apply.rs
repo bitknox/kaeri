@@ -197,6 +197,30 @@ impl Store {
         })
     }
 
+    /// A kept-watch note, as a pass through the folder would leave one: for a fixture build
+    /// that shows the note without a second device writing it.
+    pub fn sync_fixture_note(
+        &self,
+        anilist_id: u32,
+        episode: &str,
+        unwatch_device: &str,
+        watch_device: &str,
+        at: i64,
+    ) -> Result<()> {
+        self.with_personal_tx(|tx| {
+            note(
+                tx,
+                &mut Applied::default(),
+                anilist_id,
+                episode,
+                unwatch_device,
+                watch_device,
+                at,
+            )?;
+            Ok(())
+        })
+    }
+
     /// The devices as the lead rule sees them.
     pub fn sync_lead_candidates(&self) -> Result<Vec<LeadCandidate>> {
         self.with_personal(|c| {

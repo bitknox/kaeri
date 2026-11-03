@@ -281,6 +281,8 @@ impl Engine {
                 );
                 let local = crate::local::Local::new(store.clone());
                 Services {
+                    tokens: kaeri_track::TokenStore::over(crate::host::file_secrets(&paths)),
+                    syncing: Default::default(),
                     servers,
                     local,
                     power,
@@ -332,6 +334,9 @@ impl Engine {
         let (arrivals_tx, arrivals) = mpsc::unbounded_channel();
         // The engine side's own state, on the config the app was launched with.
         let mut state = EngineState::new(config, saved, &services.paths, arrivals_tx);
+        if let Some(overlay) = crate::profile::overlay_of(&services.store, &services.paths) {
+            state.config.use_overlay(Some(overlay), &services.paths);
+        }
         state.config.set_sync(services.store.clone());
         crate::tracking::commands::announce_signed_in(&services.store, &services.sync);
         state.config.set_handheld(handheld);
@@ -420,6 +425,7 @@ impl Engine {
             let _ = inbox.sender().internal(Internal::LetGo);
         }
 
+        crate::syncing::keep_syncing(&services, &inbox.sender());
         for tracker in services.sync.initial_states() {
             launch.push_back(Event::Sync(Box::new(tracker)));
         }

@@ -260,6 +260,16 @@ pub fn wrap_for(recipient: &[u8; 32], device_id: &str, keyring: &Keyring) -> Vec
     out
 }
 
+/// A new device's secret seed, from which its X25519 key is derived: kept in the host's secrets.
+pub fn new_device_seed() -> [u8; 32] {
+    random()
+}
+
+/// A new device id: random, not the machine's, so it says nothing about it.
+pub fn new_device_id() -> String {
+    hex::encode(random::<8>())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

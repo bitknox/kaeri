@@ -58,6 +58,8 @@ kaeri-providers.workspace = true
 kaeri-remote = { workspace = true, optional = true }
 kaeri-cast = { workspace = true, optional = true }
 kaeri-store.workspace = true
+kaeri-sync.workspace = true
+hex = "0.4"
 kaeri-track.workspace = true
 open = { workspace = true, optional = true }
 async-trait.workspace = true

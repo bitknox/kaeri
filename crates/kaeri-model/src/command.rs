@@ -330,6 +330,61 @@ pub enum Command {
         username: String,
         password: Secret,
     },
+    /// Say what the profiles are: answered with `Event::Profiles`.
+    LoadProfiles,
+    /// Add a profile. The first one added also makes today's data the first profile, named
+    /// `first_name` when it has to be, and the new profile is switched to.
+    AddProfile {
+        name: String,
+        kids: bool,
+        first_name: Option<String>,
+    },
+    /// Rename a profile or change whether it is a kids profile.
+    EditProfile {
+        id: String,
+        name: String,
+        kids: bool,
+    },
+    /// Stop what plays, keeping its place, and use another profile. Answered with
+    /// `Event::Profiles`, after which the front end reloads its screens.
+    SwitchProfile {
+        id: String,
+    },
+    /// Delete a profile and its data. The one in use cannot be deleted; switch first.
+    DeleteProfile {
+        id: String,
+    },
+    /// Say how sync stands: answered with `Event::SyncStatus`.
+    LoadSync,
+    /// Set sync up in an empty folder, naming this device. Answered with
+    /// `Event::SyncRecoveryKey`, shown once, then `Event::SyncStatus`.
+    StartSync {
+        device_name: String,
+        folder: crate::group::SyncFolderSpec,
+    },
+    /// Join the group a folder holds, with its recovery key.
+    JoinSync {
+        device_name: String,
+        folder: crate::group::SyncFolderSpec,
+        recovery_key: Secret,
+    },
+    /// Run the folder road now.
+    SyncFolderNow,
+    /// Leave the group: this device stops syncing and keeps its data.
+    LeaveSync,
+    /// Remove another device from the group.
+    RemoveSyncDevice {
+        device: String,
+    },
+    /// Make a new recovery key and rotate the group key: answered with `Event::SyncRecoveryKey`.
+    NewRecoveryKey,
+    /// Say the recovery key again, for the sheet the device's own lock guards. Answered with
+    /// `Event::SyncRecoveryKey`. A TV never asks.
+    ShowRecoveryKey,
+    /// Close a note about a watch that was kept.
+    DismissSyncNote {
+        id: i64,
+    },
     /// Forget a tracker's token.
     Disconnect {
         tracker: String,
