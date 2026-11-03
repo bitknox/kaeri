@@ -29,15 +29,6 @@ pub fn skip_mark_fixture(
     state.view()
 }
 
-/// A made-up found-times scene in `state`: the card, the marking bar, the timeline and the
-/// controls the board shows, for an app's previews, screenshots and tests.
-#[uniffi::export]
-pub fn found_skip_scene(
-    state: kaeri_model::playback::FoundSkipFixture,
-) -> kaeri_model::playback::FoundSkipScene {
-    kaeri_model::playback::found_skip_scene(state)
-}
-
 /// A message from the engine in English. A bridge for the apps that have not moved to the
 /// catalogue yet (P2); each caller is marked `i18n P2` and goes when its app does.
 #[uniffi::export]
