@@ -239,6 +239,14 @@ pub(crate) fn status_hints_paged(
         }
         // Enter plays in the table; that is the table's whole point. A row from AniList alone
         // has nothing to play it from, and Enter there goes to add a source.
+        V::Episodes(_) if !app.go_count.is_empty() => {
+            // A number is being typed: the key that takes it, drawn beside what it will take.
+            let go = key(Action::Bottom).unwrap_or_default();
+            return with_help(
+                keymap,
+                vec![(format!("{}{go}", app.go_count), said(t::keys_hint_go_to_episode()))],
+            );
+        }
         V::Episodes(_) => vec![
             (
                 Action::Open,
@@ -434,7 +442,12 @@ fn overlay_hints(
         O::Logs if app.logs.is_empty() => vec![hint(ESC, hint_close())],
         O::Logs => vec![hint("↑↓", hint_move()), hint(ESC, hint_close())],
         O::SearchFilters => {
-            vec![hint("←→", hint_change()), hint("↵", hint_search()), hint(ESC, hint_keep())]
+            vec![
+                hint("←→", hint_change()),
+                hint("z", Action::Surprise.hint()),
+                hint("↵", hint_search()),
+                hint(ESC, hint_keep()),
+            ]
         }
         O::CommandPalette => {
             vec![hint("↑↓", hint_move()), hint("↵", hint_run()), hint(ESC, hint_close())]

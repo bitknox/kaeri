@@ -319,6 +319,18 @@ progressbar.home-progress progress { min-height: 3px; border-radius: 2px; backgr
 .home-end link { color: var(--silk); }
 .home-capsule { padding: 0 8px; }
 
+/* Go to episode: the row it went to takes the selection fill, and the typed number is a small
+   capsule at the foot of the list. */
+row.go-target, row.go-target:hover { background: var(--raised-selected); }
+.typed-capsule {
+  background: var(--raised-selected);
+  color: var(--silk);
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+  padding: 4px 14px;
+  font-weight: 600;
+}
+
 /* The player's Episodes panel: compact rows, and a footer for the one under the pointer. */
 popover.ep-panel > contents { padding: 0; }
 .ep-panel-list { background: transparent; padding: 6px 4px; }

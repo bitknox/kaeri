@@ -57,6 +57,10 @@ shortcuts-group-lists = Lists
 # @only linux
 shortcuts-go-to-section = Go to a section
 
+# Shortcut: step to the previous or next range of episodes on a title page.
+# @only linux
+shortcuts-episode-ranges = Previous or next range of episodes
+
 # Shortcut: open the keyboard shortcuts window.
 # @only linux
 shortcuts-show = Keyboard shortcuts

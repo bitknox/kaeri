@@ -78,7 +78,15 @@ sealed class EpisodesPanel
         var list = new StackPanel { Padding = new Thickness(4, 6, 4, 6) };
         Button? current = null;
         buttons.Clear();
-        foreach (var episode in episodes.Take(200))
+        // A show of over 100 episodes lists them in ranges of 100, the one playing open first.
+        var ranges = KaeriFfiMethods.EpisodeRanges(table, DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+        var rangeOf = new Dictionary<string, int>();
+        for (var r = 0; r < ranges.Length; r++)
+            for (var i = (int)ranges[r].Start; i < Math.Min((int)ranges[r].End, table.Length); i++)
+                rangeOf.TryAdd(table[i].Number, r);
+        var rowRange = new List<int>();
+        var shownRange = playing is not null && rangeOf.TryGetValue(playing.Number, out var playingRange) ? playingRange : 0;
+        foreach (var episode in episodes)
         {
             var line = new Grid { ColumnSpacing = 10 };
             line.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(24) });
@@ -122,11 +130,47 @@ sealed class EpisodesPanel
                 current = row;
             list.Children.Add(row);
             buttons.Add(row);
+            rowRange.Add(rangeOf.GetValueOrDefault(episode.Number));
         }
+        void ShowRange()
+        {
+            for (var i = 0; i < buttons.Count; i++)
+                buttons[i].Visibility = ranges.Length < 2 || rowRange[i] == shownRange ? Visibility.Visible : Visibility.Collapsed;
+        }
+        ShowRange();
         // Left again, the footer goes back to the episode playing.
         list.PointerExited += (_, _) => Show(playing);
 
         var scroll = new ScrollViewer { MaxHeight = ListMax, Content = list, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+        FrameworkElement? picker = null;
+        if (ranges.Length > 1)
+        {
+            var items = Synopsis.RangeItems(table, ranges);
+            var menu = new MenuFlyout { Placement = Microsoft.UI.Xaml.Controls.Primitives.FlyoutPlacementMode.BottomEdgeAlignedLeft };
+            var dropdown = new DropDownButton { Content = items[Math.Min(shownRange, items.Length - 1)].Label, Margin = new Thickness(8, 8, 8, 0), HorizontalAlignment = HorizontalAlignment.Left };
+            AutomationProperties.SetName(dropdown, T.EpisodeRangeLabel);
+            for (var r = 0; r < items.Length; r++)
+            {
+                var at = r;
+                var item = new RadioMenuFlyoutItem { Text = items[r].State is null ? items[r].Label : $"{items[r].Label} \u00b7 {items[r].State}", GroupName = "player-ranges", IsChecked = r == shownRange };
+                AutomationProperties.SetName(item, items[r].Spoken);
+                item.Click += (_, _) =>
+                {
+                    if (at == shownRange)
+                        return;
+                    shownRange = at;
+                    dropdown.Content = items[at].Label;
+                    // The old rows dim as the new ones come in: never empty between.
+                    list.Opacity = 0.4;
+                    ShowRange();
+                    scroll.ChangeView(null, 0, null, true);
+                    Motion.Fade(list, 1);
+                };
+                menu.Items.Add(item);
+            }
+            dropdown.Flyout = menu;
+            picker = dropdown;
+        }
         var footer = new StackPanel
         {
             Spacing = 3,
@@ -139,6 +183,8 @@ sealed class EpisodesPanel
         footer.Children.Add(heading);
         footer.Children.Add(body);
         var panel = new StackPanel { Width = Width };
+        if (picker is not null)
+            panel.Children.Add(picker);
         panel.Children.Add(scroll);
         panel.Children.Add(footer);
         Flyout.Content = panel;

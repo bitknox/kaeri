@@ -53,6 +53,26 @@ public sealed partial class EpisodeItem : INotifyPropertyChanged
     public Visibility DiscussionShown => Discussion > 0 ? Visibility.Visible : Visibility.Collapsed;
 
     public EpisodeRow Row { get; private set; }
+
+    bool target;
+
+    /// <summary>The row Go to episode landed on: it keeps the selection fill until the next jump.</summary>
+    public bool Target
+    {
+        get => target;
+        set
+        {
+            if (target == value)
+                return;
+            target = value;
+            Changed(nameof(TargetFill));
+        }
+    }
+
+    static readonly SolidColorBrush SelectionFill = new(global::Windows.UI.Color.FromArgb(0xFF, 0x34, 0x3A, 0x57));
+    static readonly SolidColorBrush NoFill = new(Microsoft.UI.Colors.Transparent);
+    public Brush TargetFill => target ? SelectionFill : NoFill;
+
     public string Heading => long.TryParse(Row.Number, out var n)
         ? Row.Title is { Length: > 0 } t ? T.EpisodeWithTitle(n, t) : T.EpisodeNumber(n)
         : Row.Title is { Length: > 0 } named ? T.EpisodeTextWithTitle(Row.Number, named) : T.EpisodeNumberText(Row.Number);
@@ -338,6 +358,7 @@ public sealed partial class TitlePage : Page, IPageKeys
         KeyboardAccelerators.Add(settings);
         // The page's own key is in the shortcuts list; a tooltip naming it over the whole page is not wanted.
         KeyboardAcceleratorPlacementMode = KeyboardAcceleratorPlacementMode.Hidden;
+        KeysForGo();
         // Heard from the start: what arrives before the page is loaded is not missed.
         ctx.Hear(this, Heard, () =>
         {
@@ -390,6 +411,12 @@ public sealed partial class TitlePage : Page, IPageKeys
         DubLine.Opacity = 0;
         Show();
         ShowEpisodes();
+#if KAERI_TESTING
+        // --show=title-another: as if Surprise me opened this title, so Another is there.
+        if (ctx.Options.Show == "title-another" && ctx.Options.Title == id)
+            ctx.Pick = new Pick(id, new SurprisePool.Planning(), true);
+#endif
+        ShowAnother();
         // The cover a grid sent flies in to this one; anything else crossfades.
         var flight = ConnectedAnimationService.GetForCurrentView().GetAnimation(CoverAnimation);
         if (flight is not null)
@@ -460,6 +487,22 @@ public sealed partial class TitlePage : Page, IPageKeys
     /// <summary>The synopsis shots' state: see --show=synopsis... where the page opens.</summary>
     void StageSynopsis(string shot)
     {
+        // The Go to episode shots: the dialog empty, with a refusal, or a number typed, or landed on.
+        if (shot.StartsWith("synopsis-go", StringComparison.Ordinal))
+        {
+            switch (shot)
+            {
+                case "synopsis-go-dialog": OpenGoTo(); break;
+                case "synopsis-go-none": OpenGoTo("300"); break;
+                case "synopsis-go-not-out": OpenGoTo("245"); break;
+                case "synopsis-go-typed": typed = "142"; SayTyped(); break;
+                case "synopsis-go-landed":
+                    if (Browsing.Go(Rows(), "142") is GoTo.Row landing)
+                        Land(landing);
+                    break;
+            }
+            return;
+        }
         if (shot == "synopsis-ranges")
         {
             RangePicker.StartBringIntoView(new BringIntoViewOptions { AnimationDesired = false, VerticalAlignmentRatio = 0.2 });
@@ -545,6 +588,7 @@ public sealed partial class TitlePage : Page, IPageKeys
 
     void Heard(IReadOnlyList<Event> batch)
     {
+        HeardAnother(batch);
         foreach (var e in batch)
         {
             switch (e)
@@ -943,7 +987,7 @@ public sealed partial class TitlePage : Page, IPageKeys
                 items.Add(protection);
             }
             var row = shown[i];
-            var item = new EpisodeItem(row, id);
+            var item = new EpisodeItem(row, id) { Target = row.Number == targetNumber };
             var known = before.GetValueOrDefault(row.Number);
             if (known is not null)
                 item.Inherit(known);
@@ -961,6 +1005,7 @@ public sealed partial class TitlePage : Page, IPageKeys
     /// <summary>The range picker beside the season picker: shown for a show of over 100 episodes.</summary>
     void ShowRanges(EpisodeRow[] rows, int selected)
     {
+        shownRange = selected;
         RangeMenu.Items.Clear();
         if (ranges.Length > 1)
         {
@@ -980,6 +1025,11 @@ public sealed partial class TitlePage : Page, IPageKeys
                 RangeMenu.Items.Add(entry);
             }
             RangePicker.Content = items[Math.Min(selected, items.Length - 1)].Label;
+            // The menu ends in Go to episode, after a rule.
+            RangeMenu.Items.Add(new MenuFlyoutSeparator());
+            var go = new MenuFlyoutItem { Text = T.EpisodeGoTo, KeyboardAcceleratorTextOverride = "Ctrl+G" };
+            go.Click += (_, _) => OpenGoTo();
+            RangeMenu.Items.Add(go);
         }
         if (ranges.Length > 1)
             Motion.Show(RangePicker);

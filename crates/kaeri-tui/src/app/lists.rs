@@ -3,6 +3,7 @@
 
 use kaeri_i18n::t;
 use kaeri_model::{
+    browsing::{SurpriseOutcome, SurprisePool, TrendPeriod},
     catalog::{ContentFor, ContentList, Entry, Season, TitleAired},
     command::Command,
     event::Event,
@@ -689,6 +690,38 @@ impl App {
         }
     }
 
+    /// Surprise me: a title picked from what the filters match, opened when the answer comes. A
+    /// second press while one is being picked waits for the first.
+    pub(super) fn surprise(&mut self) -> Option<Command> {
+        if !self.on_search_root() && self.nav.overlay() != Some(&Overlay::SearchFilters) {
+            self.push_toast(info(t::keys_where_elsewhere()));
+            return None;
+        }
+        if self.nav.overlay().is_some() {
+            self.nav.close_overlay();
+        }
+        if self.surprising {
+            return None;
+        }
+        self.surprising = true;
+        // The pool is what the filters match: the words typed have nothing to do with it.
+        Some(Command::Surprise(SurprisePool::Filters { query: self.search_filter.clone() }))
+    }
+
+    /// What Surprise me came to: the title opens; the engine has said what went wrong in a
+    /// notice of its own.
+    pub(super) fn apply_surprise(&mut self, pool: SurprisePool, outcome: SurpriseOutcome) {
+        if !matches!(pool, SurprisePool::Filters { .. }) {
+            return;
+        }
+        self.surprising = false;
+        let SurpriseOutcome::Picked { id, .. } = outcome else { return };
+        // Opened over a stub the page fills in as the load answers, as a title from any list is.
+        self.detail = Some(Entry::new(id, String::new()));
+        self.nav.push(StageView::Title(id));
+        self.commands.push(Command::LoadDetail(id));
+    }
+
     /// Whether the section on screen fills `content` with a list it is about to ask for.
     fn fetches_list(&self) -> bool {
         match self.nav.section() {
@@ -739,8 +772,28 @@ const SEARCH_STATUSES: [kaeri_model::catalog::AiringStatus; 3] = {
     [S::Releasing, S::Finished, S::NotYetReleased]
 };
 
-const SEARCH_SORTS: [SearchSort; 4] =
-    [SearchSort::Popularity, SearchSort::Score, SearchSort::Trending, SearchSort::Newest];
+/// The steps of the Sort row: Trending has its periods as steps of its own, today before this
+/// week before this month.
+const SEARCH_SORTS: [(SearchSort, Option<TrendPeriod>); 6] = [
+    (SearchSort::Popularity, None),
+    (SearchSort::Score, None),
+    (SearchSort::Trending, None),
+    (SearchSort::Trending, Some(TrendPeriod::Week)),
+    (SearchSort::Trending, Some(TrendPeriod::Month)),
+    (SearchSort::Newest, None),
+];
+
+/// Where the filter's sort stands on the ladder: a period only counts with Trending.
+fn sort_step(filter: &SearchQuery) -> Option<(SearchSort, Option<TrendPeriod>)> {
+    let sort = filter.sort?;
+    let period = match filter.period {
+        Some(p @ (TrendPeriod::Week | TrendPeriod::Month)) if sort == SearchSort::Trending => {
+            Some(p)
+        }
+        _ => None,
+    };
+    Some((sort, period))
+}
 
 fn season_word(season: Season) -> String {
     match season {
@@ -799,7 +852,11 @@ pub fn search_filter_value(filter: &SearchQuery, row: usize) -> String {
         3 => filter.formats.first().copied().map(format_word),
         4 => filter.statuses.first().copied().and_then(status_word),
         5 => {
-            return filter.sort.and_then(sort_word).unwrap_or_else(t::lists_sort_relevance);
+            return match sort_step(filter) {
+                Some((_, Some(period))) => period.label(),
+                Some((sort, None)) => sort_word(sort).unwrap_or_else(t::lists_sort_relevance),
+                None => t::lists_sort_relevance(),
+            };
         }
         _ => None,
     }
@@ -866,7 +923,11 @@ pub fn cycle_search_filter(filter: &mut SearchQuery, row: usize, forward: bool, 
             let next = step(filter.statuses.first().copied(), &SEARCH_STATUSES, forward);
             filter.statuses = next.into_iter().collect();
         }
-        _ => filter.sort = step(filter.sort, &SEARCH_SORTS, forward),
+        _ => {
+            let next = step(sort_step(filter), &SEARCH_SORTS, forward);
+            filter.sort = next.map(|(sort, _)| sort);
+            filter.period = next.and_then(|(_, period)| period);
+        }
     }
 }
 
@@ -1241,6 +1302,62 @@ mod tests {
         assert_eq!(a.handle(Action::FocusSearch, 5), None);
         assert!(a.is_typing());
         assert_eq!(a.content.len(), 40);
+    }
+
+    #[test]
+    fn the_sort_row_steps_through_trending_s_periods() {
+        use kaeri_model::browsing::TrendPeriod;
+        let clock = Clock::system();
+        let mut filter = SearchQuery::default();
+        let mut seen = Vec::new();
+        for _ in 0..6 {
+            cycle_search_filter(&mut filter, 5, true, &clock);
+            seen.push(search_filter_value(&filter, 5));
+        }
+        assert_eq!(
+            seen,
+            [
+                "Popularity",
+                "Score",
+                "Trending",
+                "Trending this week",
+                "Trending this month",
+                "Newest"
+            ]
+        );
+        assert_eq!(filter.period, None, "a period belongs to Trending alone");
+        // Back down to the month: the period comes back with it, and the way on is "any".
+        cycle_search_filter(&mut filter, 5, false, &clock);
+        assert_eq!(filter.period, Some(TrendPeriod::Month));
+        assert_eq!(filter.sort, Some(SearchSort::Trending));
+        cycle_search_filter(&mut filter, 5, false, &clock);
+        cycle_search_filter(&mut filter, 5, false, &clock);
+        cycle_search_filter(&mut filter, 5, false, &clock);
+        cycle_search_filter(&mut filter, 5, false, &clock);
+        cycle_search_filter(&mut filter, 5, false, &clock);
+        assert_eq!(filter.sort, None);
+        assert_eq!(filter.period, None);
+    }
+
+    #[test]
+    fn z_in_the_filters_asks_for_a_surprise_and_the_pick_opens() {
+        use kaeri_model::browsing::{SurpriseOutcome, SurprisePool};
+        let mut a = app();
+        a.handle(Action::FilterSearch, 10);
+        a.search_filter.genres = vec!["Comedy".into()];
+        let task = a.handle(Action::Surprise, 10);
+        let pool = SurprisePool::Filters { query: a.search_filter.clone() };
+        assert_eq!(task, Some(Command::Surprise(pool.clone())));
+        assert!(a.nav.overlay().is_none(), "the overlay makes way");
+        // Pressed again while it is being picked, nothing more is asked.
+        assert_eq!(a.handle(Action::Surprise, 10), None);
+
+        a.apply(Event::Surprise {
+            pool,
+            outcome: SurpriseOutcome::Picked { id: AnilistId::new(77), more: true },
+        });
+        assert_eq!(a.take_commands(), [Command::LoadDetail(AnilistId::new(77))]);
+        assert!(matches!(a.nav.current(), StageView::Title(id) if *id == AnilistId::new(77)));
     }
 
     #[test]

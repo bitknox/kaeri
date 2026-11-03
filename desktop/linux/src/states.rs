@@ -192,6 +192,11 @@ impl States {
         self.offline.set_description(Some(line));
     }
 
+    /// The failed state's heading, for a screen whose words depend on what it was loading.
+    pub fn failed_title(&self, title: &str) {
+        self.failed.set_title(title);
+    }
+
     /// What Try Again does: ask for the screen again.
     pub fn on_retry(&self, retry: impl Fn() + 'static) {
         self.retry.replace(Some(Rc::new(retry)));

@@ -30,6 +30,7 @@
               <Image Source="{x:Bind Cover, Mode=OneWay}" Stretch="UniformToFill" AutomationProperties.AccessibilityView="Raw" />
             </Grid>
             <TextBlock Text="{x:Bind Title}" Style="{StaticResource ShowTitleStyle}" MaxLines="2" TextWrapping="WrapWholeWords" />
+            <TextBlock Text="{x:Bind Count}" Visibility="{x:Bind CountShown}" Style="{StaticResource HazeCaptionStyle}" TextTrimming="CharacterEllipsis" />
             <TextBlock Text="{x:Bind Caption}" Style="{StaticResource HazeCaptionStyle}" />
           </StackPanel>
         </ItemContainer>

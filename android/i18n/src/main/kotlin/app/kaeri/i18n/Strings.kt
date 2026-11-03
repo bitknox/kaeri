@@ -3017,6 +3017,10 @@ object Strings {
     fun actionCancel(context: Context): String =
         context.getString(R.string.action_cancel)
 
+    /** Button that confirms a small question, such as the episode number to go to. */
+    fun actionGo(context: Context): String =
+        context.getString(R.string.action_go)
+
     /** Button that puts a question off until later. */
     fun actionNotNow(context: Context): String =
         context.getString(R.string.action_not_now)

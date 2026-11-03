@@ -2459,6 +2459,10 @@
     <value>[Çàñçéļ~~]</value>
     <comment>Button that closes a dialog without doing what it offered.</comment>
   </data>
+  <data name="ActionGo" xml:space="preserve">
+    <value>[Ĝö~]</value>
+    <comment>Button that confirms a small question, such as the episode number to go to.</comment>
+  </data>
   <data name="ActionNotNow" xml:space="preserve">
     <value>[Ñöţ ñöŵ~~~]</value>
     <comment>Button that puts a question off until later.</comment>

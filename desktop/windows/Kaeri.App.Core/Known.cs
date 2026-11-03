@@ -50,6 +50,12 @@ public sealed class Known
 
     /// <summary>What the search filters choose from, once the engine has said.</summary>
     public SearchFacets? Facets { get; private set; }
+    /// <summary>Search's Trending rail by period, as the engine last sent it; a failed period is not here.</summary>
+    public Dictionary<TrendPeriod, Entry[]> TrendingKept { get; } = [];
+    /// <summary>The period the engine says was last picked on this device, when it is not today.</summary>
+    public TrendPeriod? TrendingRemembered { get; private set; }
+    /// <summary>The periods whose last ask failed.</summary>
+    public HashSet<TrendPeriod> TrendingFailed { get; } = [];
     public Dictionary<string, SyncState> Sync { get; } = [];
     public DownloadRow[] Downloads => Queue.Rows;
     public SeedRow[] Seeding { get; private set; } = [];
@@ -315,6 +321,22 @@ public sealed class Known
             case Event.Facets f:
                 Facets = f.V1;
                 break;
+            case Event.Browse browse:
+                // Today is the first rail of the browse.
+                if (browse.V1.FirstOrDefault(r => r.Query.Sort == SearchSort.Trending) is { } rail && rail.Entries.Length > 0)
+                    KeepTrending(TrendPeriod.Today, rail.Entries);
+                break;
+            case Event.Trending trending:
+                if (trending.Failed)
+                    TrendingFailed.Add(trending.Period);
+                else
+                {
+                    TrendingFailed.Remove(trending.Period);
+                    KeepTrending(trending.Period, trending.Entries);
+                    if (trending.Period != TrendPeriod.Today)
+                        TrendingRemembered = trending.Period;
+                }
+                break;
             case Event.Sync s:
                 Sync[s.V1.Tracker] = s.V1;
                 break;
@@ -419,6 +441,13 @@ public sealed class Known
 
     /// <summary>The testing build's fixture runs give most titles a made-up trailer.</summary>
     public bool FixtureTrailers { get; set; }
+
+    void KeepTrending(TrendPeriod period, Entry[] entries)
+    {
+        foreach (var entry in entries)
+            Entries[entry.Id] = Merge(Fixed(entry), false);
+        TrendingKept[period] = entries;
+    }
 
     Entry Fixed(Entry entry) =>
 #if KAERI_TESTING

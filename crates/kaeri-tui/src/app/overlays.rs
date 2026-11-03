@@ -182,6 +182,7 @@ impl App {
             Action::Open if len > 0 => return self.confirm_overlay(visible_rows),
             // The filters overlay edits in place: the vertical axis picks a row and the
             // horizontal one walks its values, the same grammar as the Settings screen.
+            Action::Surprise if *overlay == Overlay::SearchFilters => return self.surprise(),
             Action::Left if *overlay == Overlay::SearchFilters => {
                 cycle_search_filter(
                     &mut self.search_filter,

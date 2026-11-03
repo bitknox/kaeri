@@ -2459,6 +2459,10 @@
     <value>Cancel</value>
     <comment>Button that closes a dialog without doing what it offered.</comment>
   </data>
+  <data name="ActionGo" xml:space="preserve">
+    <value>Go</value>
+    <comment>Button that confirms a small question, such as the episode number to go to.</comment>
+  </data>
   <data name="ActionNotNow" xml:space="preserve">
     <value>Not now</value>
     <comment>Button that puts a question off until later.</comment>

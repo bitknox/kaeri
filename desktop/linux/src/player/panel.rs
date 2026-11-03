@@ -4,16 +4,19 @@
 //! The footer is reserved only when the table has a synopsis as the panel is built, so no text
 //! arriving later moves the list. A row spoiler protection holds back shows its title and facts.
 
-use std::{cell::RefCell, rc::Rc};
+use std::{
+    cell::{Cell, RefCell},
+    rc::Rc,
+};
 
 use adw::prelude::*;
 use gtk::glib;
 use kaeri_model::{
-    episodes::{EpisodeRow, EpisodeText, episode_text},
+    episodes::{EpisodeRow, EpisodeText, episode_ranges, episode_text},
     hosted::MenuEpisode,
 };
 
-use crate::{synopsis, widgets};
+use crate::{motion, synopsis, widgets};
 
 /// How tall the list may grow before it scrolls.
 const LIST_MAX: i32 = 360;
@@ -87,7 +90,6 @@ pub fn fill(
     let rows: Rc<Vec<(MenuEpisode, Option<EpisodeRow>)>> = Rc::new(
         episodes
             .iter()
-            .take(200)
             .map(|episode| {
                 let row = table.iter().find(|row| row.number == episode.number).cloned();
                 (episode.clone(), row)
@@ -113,6 +115,20 @@ pub fn fill(
         let row = table.iter().find(|row| row.number == playing.number);
         show(playing, row);
     }
+
+    // A long series splits into the title page's ranges: the panel shows one at a time, opening on
+    // the range of the episode playing, and a picker in its heading row switches.
+    let now = glib::DateTime::now_utc().map_or(0, |t| t.to_unix());
+    let ranges = episode_ranges(table, now);
+    let range_of = |number: &str| {
+        let at = table.iter().position(|row| row.number == number)? as u32;
+        ranges.iter().position(|r| (r.start..r.end).contains(&at))
+    };
+    let shown = Rc::new(Cell::new(
+        playing.as_ref().and_then(|p| range_of(&p.number)).unwrap_or(0),
+    ));
+    let owners: Rc<Vec<usize>> =
+        Rc::new(rows.iter().map(|(e, _)| range_of(&e.number).unwrap_or(0)).collect());
 
     let mut current_row = None;
     for (episode, row) in rows.iter() {
@@ -182,6 +198,13 @@ pub fn fill(
     scroll.set_child(Some(&list));
     let body = gtk::Box::new(gtk::Orientation::Vertical, 0);
     body.set_size_request(WIDTH, -1);
+    if ranges.len() > 1 {
+        list.set_filter_func({
+            let (shown, owners) = (shown.clone(), owners.clone());
+            move |row| owners.get(row.index() as usize).is_some_and(|at| *at == shown.get())
+        });
+        body.append(&range_heading(&list, &scroll, table, &ranges, &shown));
+    }
     body.append(&scroll);
     body.append(&footer);
     let popover = gtk::Popover::new();
@@ -198,4 +221,72 @@ pub fn fill(
         }
     });
     button.set_popover(Some(&popover));
+}
+
+/// The heading row of a long series' panel: a flat button naming the range shown, whose menu has
+/// one item per range. The list crossfades into the range chosen, with both drawn.
+fn range_heading(
+    list: &gtk::ListBox,
+    scroll: &gtk::ScrolledWindow,
+    table: &[EpisodeRow],
+    ranges: &[kaeri_model::episodes::EpisodeRange],
+    shown: &Rc<Cell<usize>>,
+) -> gtk::Box {
+    let items = synopsis::range_items(table, ranges);
+    let button = gtk::MenuButton::new();
+    button.add_css_class("flat");
+    button.set_halign(gtk::Align::Start);
+    button.set_tooltip_text(Some(&kaeri_i18n::t::episode_range_label()));
+    button.update_property(&[gtk::accessible::Property::Label(
+        &kaeri_i18n::t::episode_range_label(),
+    )]);
+    button.set_label(&items[shown.get().min(items.len() - 1)].label);
+    let menu = gtk::ListBox::new();
+    menu.set_selection_mode(gtk::SelectionMode::Single);
+    menu.add_css_class("navigation-sidebar");
+    for item in &items {
+        let line = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+        let label = gtk::Label::new(Some(&item.label));
+        label.set_xalign(0.0);
+        label.set_hexpand(true);
+        line.append(&label);
+        if let Some(state) = &item.state {
+            line.append(&widgets::haze(state, "caption"));
+        }
+        menu.append(&line);
+    }
+    menu.select_row(menu.row_at_index(shown.get() as i32).as_ref());
+    let pop = gtk::Popover::new();
+    let menu_scroll = gtk::ScrolledWindow::new();
+    menu_scroll.set_policy(gtk::PolicyType::Never, gtk::PolicyType::Automatic);
+    menu_scroll.set_propagate_natural_height(true);
+    menu_scroll.set_max_content_height(LIST_MAX);
+    menu_scroll.set_child(Some(&menu));
+    pop.set_child(Some(&menu_scroll));
+    button.set_popover(Some(&pop));
+    menu.connect_row_activated({
+        let (list, scroll, shown, button, pop) =
+            (list.clone(), scroll.clone(), shown.clone(), button.clone(), pop.clone());
+        move |_, row| {
+            pop.popdown();
+            let to = row.index() as usize;
+            if to == shown.get() {
+                return;
+            }
+            shown.set(to);
+            button.set_label(&items[to].label);
+            list.invalidate_filter();
+            scroll.vadjustment().set_value(0.0);
+            // The new range arrives over the old one's last frame: never empty between them.
+            let fade = adw::TimedAnimation::new(&scroll, 0.4, 1.0, 200, motion::opacity(&scroll));
+            fade.set_easing(adw::Easing::EaseOutCubic);
+            fade.play();
+        }
+    });
+    let heading = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+    heading.add_css_class("ep-range-heading");
+    heading.set_margin_start(4);
+    heading.set_margin_top(4);
+    heading.append(&button);
+    heading
 }

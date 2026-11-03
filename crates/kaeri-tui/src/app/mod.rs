@@ -290,6 +290,10 @@ pub struct App {
     pub dub: Option<(AnilistId, DubExtent)>,
     /// The active episode filter, cycled with `f`.
     pub episode_filter: EpisodeFilter,
+    /// The digits typed on the episode list, for the `G` that goes to that episode.
+    pub go_count: String,
+    /// A Surprise me is being picked: another press waits for it.
+    surprising: bool,
     /// The provider that actually resolved the most recent stream. The header prefers
     /// this over the configured order: during failover the first configured source is
     /// exactly the one that is *not* serving.
@@ -437,6 +441,8 @@ impl App {
             dub: None,
             episodes_for: None,
             episode_filter: EpisodeFilter::default(),
+            go_count: String::new(),
+            surprising: false,
             active_provider: None,
             match_candidates: Vec::new(),
             match_context: None,
@@ -513,8 +519,9 @@ impl App {
             | Event::Browse(_)
             | Event::Facets(_)
             | Event::RecentSearches(_) => {}
-            // Trending periods and Surprise me are the native apps'.
-            Event::Trending { .. } | Event::Surprise { .. } => {}
+            // The periods' rail is the native apps'; the terminal has them in the Sort row.
+            Event::Trending { .. } => {}
+            Event::Surprise { pool, outcome } => self.apply_surprise(pool, outcome),
             // The terminal draws no licensed services yet: what the native apps are sent is not
             // asked for here.
             Event::Licensed(_)

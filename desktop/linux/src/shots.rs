@@ -19,7 +19,7 @@ const TITLE: u32 = 900_001;
 const PLAYING: (u32, &str) = (900_002, "4");
 
 /// Every shot by name, in the order a run takes them.
-pub const ALL: [&str; 101] = [
+pub const ALL: [&str; 109] = [
     "home",
     "welcome",
     "offline",
@@ -27,6 +27,9 @@ pub const ALL: [&str; 101] = [
     "seasonal",
     "search",
     "search-results",
+    "browse-trending",
+    "browse-period-menu",
+    "title-another",
     "search-filters",
     "search-filters-none",
     "search-failed",
@@ -46,6 +49,12 @@ pub const ALL: [&str; 101] = [
     "synopsis-none",
     "synopsis-long",
     "synopsis-ranges",
+    "go-dialog",
+    "go-dialog-none",
+    "go-dialog-not-out",
+    "go-typed",
+    "go-landed",
+    "go-error",
     "title-watch-again",
     "show-settings",
     "library",
@@ -481,6 +490,39 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
             shell.go(Dest::Search);
             2.0
         }
+        #[cfg(feature = "fixtures")]
+        "browse-trending" | "browse-period-menu" => {
+            use kaeri_model::browsing::TrendPeriod;
+            shell.go(Dest::Search);
+            let shell = Rc::clone(shell);
+            let menu = shot == "browse-period-menu";
+            glib::timeout_add_local_once(Duration::from_millis(2500), move || {
+                shell.search_page().trending().pick(TrendPeriod::Week);
+                if menu {
+                    glib::timeout_add_local_once(Duration::from_millis(1500), move || {
+                        if let Some(button) = shell.search_page().trending().menu() {
+                            button.popup();
+                        }
+                    });
+                }
+            });
+            5.5
+        }
+        #[cfg(feature = "fixtures")]
+        "title-another" => {
+            // Opened by Surprise me: the header says Another.
+            shell.go(Dest::Search);
+            shell.ctx.pick.replace(Some(crate::window::Pick {
+                id: kaeri_core::ids::AnilistId::new(TITLE),
+                pool: kaeri_model::browsing::SurprisePool::Filters {
+                    query: kaeri_model::search::SearchQuery::default(),
+                },
+                more: true,
+            }));
+            let _ =
+                WidgetExt::activate_action(window, "win.open-title", Some(&TITLE.to_variant()));
+            3.5
+        }
         "search-results" => {
             shell.go(Dest::Search);
             shell.search_page().search_for("hoshikuzu");
@@ -636,7 +678,10 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
         }
         #[cfg(feature = "fixtures")]
         "synopsis" | "synopsis-revealed" | "synopsis-shown" | "synopsis-none"
-        | "synopsis-long" | "synopsis-ranges" => stage_synopsis(shell, shot),
+        | "synopsis-long" | "synopsis-ranges" | "go-dialog" | "go-dialog-none"
+        | "go-dialog-not-out" | "go-typed" | "go-landed" | "go-error" => {
+            stage_synopsis(shell, shot)
+        }
         "title-discussion" => {
             // The episode that has a thread says so under its row.
             shell.go(Dest::Home);
@@ -1182,12 +1227,19 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
         close_dialogs(&shell.ctx.window);
     }
     match shot {
+        "title-another" => {
+            shell.ctx.pick.replace(None);
+            let _ = WidgetExt::activate_action(&shell.ctx.window, "win.back", None);
+        }
         "title-more-about" => {
             close_dialogs(&shell.ctx.window);
             let _ = WidgetExt::activate_action(&shell.ctx.window, "win.back", None);
         }
         "title" | "pad-title" | "title-discussion" | "synopsis" | "synopsis-revealed"
-        | "synopsis-shown" | "synopsis-none" | "synopsis-long" | "synopsis-ranges" => {
+        | "synopsis-shown" | "synopsis-none" | "synopsis-long" | "synopsis-ranges"
+        | "go-dialog" | "go-dialog-none" | "go-dialog-not-out" | "go-typed" | "go-landed"
+        | "go-error" => {
+            close_dialogs(&shell.ctx.window);
             let _ = WidgetExt::activate_action(&shell.ctx.window, "win.back", None);
         }
         "trailer-preview" => crate::trailer::close_preview(),
@@ -1800,6 +1852,8 @@ async fn painted(shell: &Rc<Shell>, path: &std::path::Path, shot: &str) -> Resul
                 "player-tracks" => player.shot_tracks_popover(),
                 "player-episodes" | "player-episodes-focus" => player.shot_episodes_popover(),
                 "synopsis-ranges" => range_popover(&window),
+                #[cfg(feature = "fixtures")]
+                "browse-period-menu" => period_popover(&window),
                 "first-play-style" => player.shot_style_popover(),
                 "party-title-menu" | "store-menu" | "match-fix-menu" => {
                     title_menu_popover(&window)
@@ -2883,6 +2937,52 @@ fn range_button(window: &adw::ApplicationWindow) -> Option<gtk::MenuButton> {
     find(window.upcast_ref(), &kaeri_i18n::t::episode_range_label())
 }
 
+/// The Trending rail's period menu, under its heading, over the window.
+#[cfg(feature = "fixtures")]
+fn period_popover(window: &adw::ApplicationWindow) -> Option<(gtk::Widget, f32, f32)> {
+    fn find(widget: &gtk::Widget) -> Option<gtk::MenuButton> {
+        if let Some(button) = widget.downcast_ref::<gtk::MenuButton>()
+            && button.widget_name() == "trend-period"
+            && button.is_mapped()
+        {
+            return Some(button.clone());
+        }
+        let mut child = widget.first_child();
+        while let Some(next) = child {
+            if let Some(found) = find(&next) {
+                return Some(found);
+            }
+            child = next.next_sibling();
+        }
+        None
+    }
+    let button = find(window.upcast_ref())?;
+    let popover = button.popover()?;
+    if !popover.is_visible() {
+        return None;
+    }
+    let bounds = button.compute_bounds(window)?;
+    let width = popover.width() as f32;
+    let x = (bounds.x() - 4.0).clamp(0.0, (window.width() as f32 - width).max(0.0));
+    Some((popover.upcast(), x, bounds.y() + bounds.height()))
+}
+
+/// The first text field under `widget`.
+#[cfg(feature = "fixtures")]
+fn find_entry(widget: &gtk::Widget) -> Option<gtk::Entry> {
+    if let Some(entry) = widget.downcast_ref::<gtk::Entry>() {
+        return Some(entry.clone());
+    }
+    let mut child = widget.first_child();
+    while let Some(next) = child {
+        if let Some(found) = find_entry(&next) {
+            return Some(found);
+        }
+        child = next.next_sibling();
+    }
+    None
+}
+
 /// The range picker's popover, under its button, over the window.
 fn range_popover(window: &adw::ApplicationWindow) -> Option<(gtk::Widget, f32, f32)> {
     let button = range_button(window)?;
@@ -3571,7 +3671,7 @@ fn stage_synopsis(shell: &Rc<Shell>, shot: &str) -> f64 {
         hub.forget(listening);
         let base = seen.borrow().clone();
         let next = 7;
-        let long = matches!(shot.as_str(), "synopsis-long" | "synopsis-ranges");
+        let long = !matches!(shot.as_str(), "synopsis" | "synopsis-revealed" | "synopsis-shown");
         let mut rows: Vec<EpisodeRow> = if long {
             (1..=250)
                 .map(|n| {
@@ -3593,6 +3693,10 @@ fn stage_synopsis(shell: &Rc<Shell>, shot: &str) -> f64 {
             row.spoiler_ahead = n > next;
             row.description = (n != 10 || long).then(|| LINES[i % LINES.len()].to_owned());
             row.kind = (n == 10).then_some(kaeri_model::episodes::EpisodeKind::Filler);
+            // The not-out shot: the last ten have no date, after 240 that came out.
+            if shot == "go-dialog-not-out" {
+                row.airs_at = (n <= 240).then_some(1_000_000_000 + n as i64 * 604_800);
+            }
         }
         hub.take(vec![Event::Episodes {
             id: kaeri_core::ids::AnilistId::new(TITLE),
@@ -3617,6 +3721,34 @@ fn stage_synopsis(shell: &Rc<Shell>, shot: &str) -> f64 {
                 }
             }
             "synopsis-shown" => press(kaeri_i18n::t::episode_protection_show()),
+            "go-dialog" | "go-dialog-none" | "go-dialog-not-out" => {
+                let page = ctx2.nav().and_then(|nav| nav.visible_page());
+                let window = ctx2.window.clone();
+                if let Some(page) = page {
+                    let _ = WidgetExt::activate_action(&page, "title.shot-go", Some(&"dialog".to_variant()));
+                    let text = match shot.as_str() {
+                        "go-dialog-none" => "537",
+                        "go-dialog-not-out" => "245",
+                        _ => "",
+                    };
+                    glib::timeout_add_local_once(Duration::from_millis(500), move || {
+                        if let Some(entry) = window.visible_dialog().and_then(|d| find_entry(d.upcast_ref())) {
+                            entry.set_text(text);
+                            entry.set_position(-1);
+                        }
+                    });
+                }
+            }
+            "go-typed" | "go-landed" | "go-error" => {
+                if let Some(page) = ctx2.nav().and_then(|nav| nav.visible_page()) {
+                    let arg = match shot.as_str() {
+                        "go-typed" => "type:12",
+                        "go-landed" => "go:120",
+                        _ => "err:537",
+                    };
+                    let _ = WidgetExt::activate_action(&page, "title.shot-go", Some(&arg.to_variant()));
+                }
+            }
             "synopsis-ranges" => {
                 // Focused first, so the page scrolls the picker into view, then opened.
                 if let Some(button) = range_button(&ctx2.window) {

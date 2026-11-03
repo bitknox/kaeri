@@ -21,7 +21,7 @@ Kaeri                                                  plugins ●  ·  anilist 
    │
    │
 ────────────────────────────────────────────────────────────────────────────────
-plugins · Subbed · 1080p                         ←→ change   ↵ search   esc keep
+plugins · Subbed · 1080p         ←→ change   z surprise me   ↵ search   esc keep
 === styles ===
 colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
 r00 c00-04 fg=rule mod=BOLD
@@ -79,9 +79,11 @@ r20 c00-79 fg=rule
 r21 c00-79 fg=rule
 r22 c00-79 fg=rule
 r23 c00-23 fg=text-dim
-r23 c24-48 fg=rule
-r23 c49-50 fg=text
-r23 c51-60 fg=text-dim
+r23 c24-32 fg=rule
+r23 c33-34 fg=text
+r23 c35-44 fg=text-dim
+r23 c45-45 fg=text
+r23 c46-60 fg=text-dim
 r23 c61-61 fg=text
 r23 c62-71 fg=text-dim
 r23 c72-74 fg=text

@@ -208,6 +208,44 @@ pub fn cover_caption(entry: &Entry) -> String {
     parts.join(" · ")
 }
 
+/// A cell's second line in Search and the rails: "TV · Plays here". The count has the first line,
+/// so the episode count is not said again; the year stands in when there is no count to say.
+pub fn cell_detail(entry: &Entry) -> String {
+    if entry.is_demo {
+        return t::search_demo_plays();
+    }
+    let mut parts = Vec::new();
+    if let Some(f) = &entry.format {
+        parts.push(format(f));
+    }
+    if entry.count_line.is_none()
+        && let Some(y) = entry.year
+    {
+        parts.push(y.to_string());
+    }
+    if let Some(at) = &entry.available_at {
+        parts.push(available_line(at));
+    }
+    parts.join(" · ")
+}
+
+/// Which form of a count line a cell shows: the long one when it fits `room` (as measured by
+/// `width`), else the short one, so the dub part is never cut off. A cell under 120 px takes the
+/// short form without measuring.
+pub fn count_text(line: &kaeri_model::browsing::CountLine, room: i32, width: impl Fn(&str) -> i32) -> String {
+    if room >= 120 && width(&line.long) <= room { line.long.clone() } else { line.short.clone() }
+}
+
+/// Library's one line with the dub appended: "E7 of 24 · Dub 8".
+pub fn library_line(entry: &Entry) -> String {
+    let line = progress_caption(entry);
+    match entry.count_line.as_ref().and_then(|c| c.dub.as_deref()) {
+        Some(dub) if !line.is_empty() => format!("{line} · {dub}"),
+        Some(dub) => dub.to_owned(),
+        None => line,
+    }
+}
+
 /// What a search result says about where it can be watched, when the engine knows.
 pub fn available_line(at: &kaeri_model::catalog::AvailableAt) -> String {
     use kaeri_model::catalog::AvailableAt;
@@ -530,6 +568,37 @@ mod tests {
         present::SeasonYear,
         progress::TitleProgress,
     };
+
+    fn counted(long: &str, short: &str, dub: Option<&str>) -> Entry {
+        let mut e = entry(1);
+        e.format = Some("TV".into());
+        e.year = Some(2024);
+        e.count_line = Some(kaeri_model::browsing::CountLine {
+            long: long.into(),
+            short: short.into(),
+            spoken: long.into(),
+            dub: dub.map(str::to_owned),
+        });
+        e
+    }
+
+    #[test]
+    fn a_count_takes_the_long_form_only_where_it_is_wide_and_fits() {
+        let line = counted("402 of 412 · Dub 64", "402 of 412", Some("Dub 64")).count_line.unwrap();
+        let width = |s: &str| s.chars().count() as i32 * 7;
+        assert_eq!(count_text(&line, 130, width), "402 of 412", "19 characters do not fit 130");
+        assert_eq!(count_text(&line, 148, width), "402 of 412 · Dub 64");
+        assert_eq!(count_text(&line, 110, |_| 1), "402 of 412", "narrow cells never measure");
+    }
+
+    #[test]
+    fn a_cell_says_the_year_only_when_it_has_no_count() {
+        assert_eq!(cell_detail(&counted("12 episodes", "12 ep", None)), "TV");
+        let mut bare = entry(2);
+        bare.format = Some("TV".into());
+        bare.year = Some(2024);
+        assert_eq!(cell_detail(&bare), "TV · 2024");
+    }
 
     #[test]
     fn time_left_is_said_in_words() {

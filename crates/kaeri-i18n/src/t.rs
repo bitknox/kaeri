@@ -1940,6 +1940,11 @@ pub fn shortcuts_go_to_section() -> String {
     text("shortcuts-go-to-section", &[])
 }
 
+/// Shortcut: step to the previous or next range of episodes on a title page.
+pub fn shortcuts_episode_ranges() -> String {
+    text("shortcuts-episode-ranges", &[])
+}
+
 /// Shortcut: open the keyboard shortcuts window.
 pub fn shortcuts_show() -> String {
     text("shortcuts-show", &[])
@@ -3376,6 +3381,11 @@ pub fn keys_action_filter_search() -> String {
 }
 
 /// Action label in the help overlay and the command palette.
+pub fn keys_action_surprise() -> String {
+    text("keys-action-surprise", &[])
+}
+
+/// Action label in the help overlay and the command palette.
 pub fn keys_action_play_pause() -> String {
     text("keys-action-play-pause", &[])
 }
@@ -3493,6 +3503,16 @@ pub fn keys_hint_mark_previous() -> String {
 /// Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 pub fn keys_hint_filters() -> String {
     text("keys-hint-filters", &[])
+}
+
+/// Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
+pub fn keys_hint_surprise() -> String {
+    text("keys-hint-surprise", &[])
+}
+
+/// Status line hint on the episode list while a number is typed: the key that goes to that episode, drawn beside the number and G.
+pub fn keys_hint_go_to_episode() -> String {
+    text("keys-hint-go-to-episode", &[])
 }
 
 /// Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
@@ -6931,6 +6951,11 @@ pub fn action_try_again() -> String {
 /// Button that closes a dialog without doing what it offered.
 pub fn action_cancel() -> String {
     text("action-cancel", &[])
+}
+
+/// Button that confirms a small question, such as the episode number to go to.
+pub fn action_go() -> String {
+    text("action-go", &[])
 }
 
 /// Button that puts a question off until later.

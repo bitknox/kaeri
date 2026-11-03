@@ -11681,6 +11681,18 @@
         }
       }
     },
+    "action-go" : {
+      "comment" : "Button that confirms a small question, such as the episode number to go to.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go"
+          }
+        }
+      }
+    },
     "action-install" : {
       "comment" : "Button that installs something.",
       "extractionState" : "manual",

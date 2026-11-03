@@ -14,7 +14,14 @@
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
     <StackPanel>
-      <TextBlock x:Name="Heading" Text="{x:Bind s:T.NavSearch}" Style="{StaticResource PageTitleStyle}" AutomationProperties.HeadingLevel="Level1" />
+      <Grid ColumnSpacing="12">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBlock x:Name="Heading" Text="{x:Bind s:T.NavSearch}" Style="{StaticResource PageTitleStyle}" AutomationProperties.HeadingLevel="Level1" />
+        <ContentControl x:Name="SurpriseHost" Grid.Column="1" VerticalAlignment="Center" />
+      </Grid>
       <local:OfflineLine />
       <!-- While the demo is the only source. -->
       <TextBlock x:Name="DemoLine" Text="{x:Bind s:T.SearchDemoOnly}" Style="{StaticResource HazeBodyStyle}" Visibility="Collapsed" />
@@ -63,6 +70,7 @@
     </ScrollViewer>
     <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
       <StackPanel Padding="0,4,0,24" Spacing="12">
+        <ContentControl x:Name="RailHost" />
         <TextBlock x:Name="Section" Style="{StaticResource SectionTitleStyle}" Visibility="Collapsed" />
         <local:StateHost x:Name="State">
           <app:CoverGrid x:Name="Grid" />

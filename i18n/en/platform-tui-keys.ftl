@@ -189,6 +189,9 @@ keys-action-filter = Filter
 keys-action-filter-search = Search filters
 
 # Action label in the help overlay and the command palette.
+keys-action-surprise = Surprise me
+
+# Action label in the help overlay and the command palette.
 keys-action-play-pause = Play or pause
 
 # Action label in the help overlay and the command palette.
@@ -268,6 +271,14 @@ keys-hint-mark-previous = Mark previous
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 # @max 20
 keys-hint-filters = Filters
+
+# Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
+# @max 20
+keys-hint-surprise = Surprise me
+
+# Status line hint on the episode list while a number is typed: the key that goes to that episode, drawn beside the number and G.
+# @max 20
+keys-hint-go-to-episode = Go to episode
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 # @max 20

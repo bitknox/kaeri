@@ -1758,6 +1758,9 @@ public static partial class T
     /// <summary>Button that closes a dialog without doing what it offered.</summary>
     public static string ActionCancel => Get("ActionCancel");
 
+    /// <summary>Button that confirms a small question, such as the episode number to go to.</summary>
+    public static string ActionGo => Get("ActionGo");
+
     /// <summary>Button that puts a question off until later.</summary>
     public static string ActionNotNow => Get("ActionNotNow");
 
@@ -8282,6 +8285,7 @@ public static partial class T
         ["CastVolumeFixed"] = "Set on the TV",
         ["ActionTryAgain"] = "Try again",
         ["ActionCancel"] = "Cancel",
+        ["ActionGo"] = "Go",
         ["ActionNotNow"] = "Not now",
         ["DurationDays"] = "{days} d",
         ["DurationHoursMinutes"] = "{hours} h {minutes} min",

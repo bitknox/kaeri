@@ -10,10 +10,11 @@ use std::{
 };
 
 use adw::prelude::*;
-use gtk::{gio, glib};
+use gtk::{gdk, gio, glib};
 use kaeri_core::ids::AnilistId;
 use kaeri_i18n::t;
 use kaeri_model::{
+    browsing::{self, GoTo},
     catalog::{Entry, LibrarySegment, LinkedTitle, RelationKind},
     command::{Command, LicensedCommand},
     episodes::{self, EpisodeRange, EpisodeRow, EpisodeText},
@@ -146,6 +147,12 @@ struct Page {
     /// Play on TV, at the header's end: the episode the primary action plays.
     tv_button: gtk::Button,
     content: gtk::Box,
+    /// Digits typed on the episode list, a jump once typing pauses; and the capsule that says
+    /// them. The episode Go to episode last went to keeps the selection fill.
+    typed: RefCell<String>,
+    typing: RefCell<Option<glib::SourceId>>,
+    capsule: gtk::Label,
+    target: RefCell<Option<String>>,
 }
 
 /// The tag a title's page carries in the navigation stack: one page per title.
@@ -219,6 +226,16 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
     // Over the list, a range switch lays the old list's picture and fades it out.
     let veil = gtk::Overlay::new();
     veil.set_child(Some(&episodes_state.widget));
+    // The digits typed on the list, as a small capsule at its foot.
+    let capsule = gtk::Label::new(None);
+    capsule.add_css_class("typed-capsule");
+    capsule.set_halign(gtk::Align::Center);
+    capsule.set_valign(gtk::Align::End);
+    capsule.set_margin_bottom(18);
+    capsule.set_visible(false);
+    capsule.set_can_target(false);
+    capsule.set_accessible_role(gtk::AccessibleRole::Presentation);
+    veil.add_overlay(&capsule);
     main.append(&veil);
 
     let side = gtk::Box::new(gtk::Orientation::Vertical, 18);
@@ -272,6 +289,19 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
     )]);
     tv_button.set_visible(false);
     header.pack_end(&tv_button);
+    // Opened by Surprise me: Another picks again from the same pool, in this page's place.
+    let pick = ctx.pick.borrow().clone().filter(|p| p.id == id);
+    if let Some(pick) = pick.clone()
+        && pick.more
+    {
+        header.pack_start(&widgets::surprise_button(
+            ctx,
+            &t::surprise_another(),
+            &t::surprise_another_hint(),
+            true,
+            move || Some(pick.pool.clone()),
+        ));
+    }
     let view = adw::ToolbarView::new();
     view.add_top_bar(&header);
     view.add_top_bar(&widgets::offline_banner());
@@ -322,6 +352,10 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
         header,
         tv_button,
         content: content.clone(),
+        typed: RefCell::default(),
+        typing: RefCell::default(),
+        capsule,
+        target: RefCell::default(),
     });
     scroll.vadjustment().connect_value_changed({
         let weak = Rc::downgrade(&page);
@@ -349,6 +383,7 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
     });
     page.me.replace(Rc::downgrade(&page));
     page.actions();
+    page.keys(&view);
     ctx.hub.known.borrow_mut().visit(id);
     if let Some(entry) = &entry {
         page.fill(entry);
@@ -362,6 +397,11 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
     navigation.connect_destroy(move |_| {
         if let Some(id) = page.listening.borrow_mut().take() {
             page.ctx.hub.forget(id);
+        }
+        // The pick this page was opened by ends with it.
+        let mut pick = page.ctx.pick.borrow_mut();
+        if pick.as_ref().is_some_and(|p| p.id == page.id) {
+            *pick = None;
         }
     });
     navigation
@@ -658,6 +698,37 @@ impl Page {
             }
         });
         group.add_action(&reveal);
+        // The fixtures' shots drive Go to episode through one action: `dialog`, `go:<number>` and
+        // `type:<digits>`, the capsule as it stands while typing goes on.
+        #[cfg(feature = "fixtures")]
+        {
+            let shot = gio::SimpleAction::new("shot-go", Some(glib::VariantTy::STRING));
+            shot.connect_activate({
+                let page = self.me.borrow().clone();
+                move |_, arg| {
+                    let (Some(page), Some(arg)) = (page.upgrade(), arg.and_then(String::from_variant))
+                    else {
+                        return;
+                    };
+                    match arg.split_once(':') {
+                        Some(("go", number)) => {
+                            let _ = page.jump(number);
+                        }
+                        Some(("err", number)) => {
+                            if let Err(words) = page.jump(number) {
+                                page.say_typed(Some(&words));
+                            }
+                        }
+                        Some(("type", digits)) => {
+                            page.typed.replace(digits.to_owned());
+                            page.say_typed(Some(&t::episode_number(digits.parse().unwrap_or(0))));
+                        }
+                        _ => page.go_dialog(),
+                    }
+                }
+            });
+            group.add_action(&shot);
+        }
         if let Some(navigation) = self.navigation.upgrade() {
             navigation.insert_action_group("title", Some(&group));
         }
@@ -1176,6 +1247,17 @@ impl Page {
             }
             list.append(&line);
         }
+        // The menu ends with Go to episode, after a rule.
+        let rule = gtk::Separator::new(gtk::Orientation::Horizontal);
+        list.append(&gtk::ListBoxRow::builder().child(&rule).activatable(false).selectable(false).build());
+        let go = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+        let go_label = gtk::Label::new(Some(&t::episode_go_to()));
+        go_label.set_xalign(0.0);
+        go_label.set_hexpand(true);
+        go.append(&go_label);
+        let go_row = gtk::ListBoxRow::builder().child(&go).build();
+        go_row.set_selectable(false);
+        list.append(&go_row);
         list.select_row(list.row_at_index(at as i32).as_ref());
         let scroll = gtk::ScrolledWindow::new();
         scroll.set_policy(gtk::PolicyType::Never, gtk::PolicyType::Automatic);
@@ -1186,12 +1268,16 @@ impl Page {
         popover.set_child(Some(&scroll));
         picker.set_popover(Some(&popover));
         let page = self.me.borrow().clone();
+        let count = items.len();
         list.connect_row_activated({
             let popover = popover.clone();
             move |_, row| {
                 popover.popdown();
-                if let Some(page) = page.upgrade() {
+                let Some(page) = page.upgrade() else { return };
+                if (row.index() as usize) < count {
                     page.switch_range(row.index() as usize);
+                } else {
+                    page.go_dialog();
                 }
             }
         });
@@ -1204,25 +1290,13 @@ impl Page {
         if self.range.get().is_some_and(|at| at == to) {
             return;
         }
-        let before =
-            gtk::WidgetPaintable::new(Some(&self.episodes_state.widget)).current_image();
-        let ghost = gtk::Picture::for_paintable(&before);
-        ghost.set_can_target(false);
-        ghost.set_halign(gtk::Align::Fill);
-        ghost.set_valign(gtk::Align::Start);
-        ghost.set_content_fit(gtk::ContentFit::Fill);
-        self.range.set(Some(to));
-        self.unfolded.set(false);
-        // The next layout decides the rows' room again.
-        self.outlook.set(None);
-        self.draw_episodes();
-        self.veil.add_overlay(&ghost);
-        let veil = self.veil.clone();
-        let gone = ghost.clone();
-        let fade = adw::TimedAnimation::new(&ghost, 1.0, 0.0, 300, motion::opacity(&ghost));
-        fade.set_easing(adw::Easing::EaseOutCubic);
-        fade.connect_done(move |_| veil.remove_overlay(&gone));
-        fade.play();
+        self.crossfade(|| {
+            self.range.set(Some(to));
+            self.unfolded.set(false);
+            // The next layout decides the rows' room again.
+            self.outlook.set(None);
+            self.draw_episodes();
+        });
         // The page scrolls the pickers into view first when they were above the screen.
         if let Some(parent) = self.range_slot.parent() {
             let y = parent
@@ -1236,6 +1310,320 @@ impl Page {
                 adjustment.set_value(y);
             }
         }
+    }
+
+    /// `change` is made to the list with the page as it stood laid over it as a picture, which
+    /// fades away on the standard token: both sides are drawn at once, so the list is never empty.
+    fn crossfade(&self, change: impl FnOnce()) {
+        let before =
+            gtk::WidgetPaintable::new(Some(&self.episodes_state.widget)).current_image();
+        let ghost = gtk::Picture::for_paintable(&before);
+        ghost.set_can_target(false);
+        ghost.set_halign(gtk::Align::Fill);
+        ghost.set_valign(gtk::Align::Start);
+        ghost.set_content_fit(gtk::ContentFit::Fill);
+        change();
+        self.veil.add_overlay(&ghost);
+        let veil = self.veil.clone();
+        let gone = ghost.clone();
+        let fade = adw::TimedAnimation::new(&ghost, 1.0, 0.0, 300, motion::opacity(&ghost));
+        fade.set_easing(adw::Easing::EaseOutCubic);
+        fade.connect_done(move |_| veil.remove_overlay(&gone));
+        fade.play();
+    }
+
+    // Go to episode, typed digits and the range keys.
+
+    /// The keys of the page: Ctrl+G asks for an episode, Ctrl+Shift+[ and ] step the range, and
+    /// digits typed on the episode list jump there once typing pauses or on Return.
+    fn keys(&self, view: &adw::ToolbarView) {
+        let page = self.me.borrow().clone();
+        let shortcuts = gtk::ShortcutController::new();
+        let add = |trigger: &str, f: Box<dyn Fn(&Page)>| {
+            let page = page.clone();
+            shortcuts.add_shortcut(gtk::Shortcut::new(
+                gtk::ShortcutTrigger::parse_string(trigger),
+                Some(gtk::CallbackAction::new(move |_, _| match page.upgrade() {
+                    Some(page) => {
+                        f(&page);
+                        glib::Propagation::Stop
+                    }
+                    None => glib::Propagation::Proceed,
+                })),
+            ));
+        };
+        add("<Control>g", Box::new(|p| p.go_dialog()));
+        add("<Control><Shift>bracketleft|<Control>braceleft", Box::new(|p| p.step_range(-1)));
+        add("<Control><Shift>bracketright|<Control>braceright", Box::new(|p| p.step_range(1)));
+        view.add_controller(shortcuts);
+
+        let keys = gtk::EventControllerKey::new();
+        keys.set_propagation_phase(gtk::PropagationPhase::Bubble);
+        keys.connect_key_pressed(move |_, key, _, state| {
+            let Some(page) = page.upgrade() else { return glib::Propagation::Proceed };
+            if state.intersects(gdk::ModifierType::CONTROL_MASK | gdk::ModifierType::ALT_MASK) {
+                return glib::Propagation::Proceed;
+            }
+            if page.type_key(key) {
+                glib::Propagation::Stop
+            } else {
+                glib::Propagation::Proceed
+            }
+        });
+        self.episodes.add_controller(keys);
+    }
+
+    /// A key on the episode list: whether the typed number took it.
+    fn type_key(&self, key: gdk::Key) -> bool {
+        let digit = key.to_unicode().filter(char::is_ascii_digit);
+        let typing = !self.typed.borrow().is_empty();
+        match (digit, key) {
+            (Some(digit), _) => {
+                let mut typed = self.typed.borrow_mut();
+                if typed.len() < 5 {
+                    typed.push(digit);
+                }
+            }
+            (None, gdk::Key::Return | gdk::Key::KP_Enter) if typing => {
+                self.finish_typing();
+                return true;
+            }
+            (None, gdk::Key::Escape) if typing => {
+                self.typed.borrow_mut().clear();
+                self.cancel_typing();
+                self.say_typed(None);
+                return true;
+            }
+            (None, gdk::Key::BackSpace) if typing => {
+                self.typed.borrow_mut().pop();
+            }
+            _ => return false,
+        }
+        let typed = self.typed.borrow().clone();
+        if typed.is_empty() {
+            self.cancel_typing();
+            self.say_typed(None);
+            return true;
+        }
+        self.say_typed(Some(&t::episode_number(typed.parse().unwrap_or(0))));
+        self.cancel_typing();
+        let page = self.me.borrow().clone();
+        let at = glib::timeout_add_local_once(std::time::Duration::from_millis(600), move || {
+            if let Some(page) = page.upgrade() {
+                page.typing.replace(None);
+                page.finish_typing();
+            }
+        });
+        self.typing.replace(Some(at));
+        true
+    }
+
+    fn cancel_typing(&self) {
+        if let Some(at) = self.typing.take() {
+            at.remove();
+        }
+    }
+
+    /// Typing paused or Return: go to what was typed. The capsule fades out a second later.
+    fn finish_typing(&self) {
+        self.cancel_typing();
+        let typed = self.typed.take();
+        let result = self.jump(&typed);
+        let page = self.me.borrow().clone();
+        match result {
+            Ok(()) => {}
+            // The words stay a little longer than a number does.
+            Err(words) => self.say_typed(Some(&words)),
+        }
+        glib::timeout_add_local_once(std::time::Duration::from_millis(1000), move || {
+            if let Some(page) = page.upgrade()
+                && page.typed.borrow().is_empty()
+            {
+                page.say_typed(None);
+            }
+        });
+    }
+
+    /// The capsule over the list: fades in with the first digit, updates in place, fades out.
+    fn say_typed(&self, words: Option<&str>) {
+        match words {
+            Some(words) => {
+                self.capsule.set_label(words);
+                if !self.capsule.is_visible() {
+                    self.capsule.set_visible(true);
+                    motion::fade_in(&self.capsule);
+                }
+            }
+            None => {
+                if self.capsule.is_visible() {
+                    motion::fade_out(&self.capsule);
+                }
+            }
+        }
+    }
+
+    /// Go to the episode `typed` names: the list switches range if it must and puts the row at
+    /// the top in the selection fill. What is wrong with the number comes back in words.
+    fn jump(&self, typed: &str) -> Result<(), String> {
+        let rows = self.rows.borrow().clone();
+        let now = glib::DateTime::now_utc().map_or(0, |t| t.to_unix());
+        match browsing::go_to_episode(&rows, typed, now) {
+            GoTo::Empty => Ok(()),
+            GoTo::Row { index, range } => {
+                self.go_row(&rows, index as usize, range.map(|r| r as usize));
+                Ok(())
+            }
+            other => Err(browsing::go_to_message(&other).unwrap_or_default()),
+        }
+    }
+
+    fn go_row(&self, rows: &[EpisodeRow], index: usize, range: Option<usize>) {
+        let number = rows[index].number.clone();
+        self.target.replace(Some(number));
+        let now = glib::DateTime::now_utc().map_or(0, |t| t.to_unix());
+        let ranges = episodes::episode_ranges(rows, now);
+        let (_, plan) = self.plan(rows);
+        let shown = ranges.iter().position(|r| r.start as usize == plan.start);
+        let to = range.or(shown);
+        let other_range = to != shown && range.is_some();
+        // The folded watched rows open when the row is among them.
+        let folded = match to.and_then(|at| ranges.get(at)) {
+            Some(range) => {
+                let fold = episodes::episode_fold(rows, range) as usize;
+                index < range.start as usize + fold
+            }
+            None => index < plan.start + plan.fold,
+        };
+        if other_range || (folded && !self.unfolded.get()) {
+            self.crossfade(|| {
+                if other_range {
+                    self.range.set(to);
+                }
+                self.unfolded.set(folded);
+                self.outlook.set(None);
+                self.draw_episodes();
+            });
+            self.place_target(false);
+        } else {
+            self.mark_target();
+            self.place_target(true);
+        }
+    }
+
+    /// The row Go to episode went to takes the selection fill; the others lose it.
+    fn mark_target(&self) {
+        let target = self.target.borrow().clone();
+        for line in self.lines.borrow().iter() {
+            if Some(&line.number) == target.as_ref() {
+                line.list_row.add_css_class("go-target");
+            } else {
+                line.list_row.remove_css_class("go-target");
+            }
+        }
+    }
+
+    /// Scroll the target row to the top of the page. Within a screen the list scrolls on the
+    /// standard token; further, the page crossfades, so a long jump never streaks.
+    fn place_target(&self, nearby: bool) {
+        let page = self.me.borrow().clone();
+        glib::idle_add_local_once(move || {
+            let Some(page) = page.upgrade() else { return };
+            page.mark_target();
+            let target = page.target.borrow().clone();
+            let row = page
+                .lines
+                .borrow()
+                .iter()
+                .find(|l| Some(&l.number) == target.as_ref())
+                .map(|l| l.list_row.clone());
+            let Some(top) = row.and_then(|row| page.row_top(&row)) else { return };
+            // Under the header bar, with a little air.
+            let to = (top - 64.0).max(0.0);
+            let adjustment = page.scroll.vadjustment();
+            let near = (to - adjustment.value()).abs() < adjustment.page_size();
+            if nearby && near {
+                let fade = adw::TimedAnimation::new(
+                    &page.scroll,
+                    adjustment.value(),
+                    to,
+                    300,
+                    adw::PropertyAnimationTarget::new(&adjustment, "value"),
+                );
+                fade.set_easing(adw::Easing::EaseOutCubic);
+                fade.play();
+            } else if nearby && !near {
+                page.crossfade(|| adjustment.set_value(to));
+            } else {
+                adjustment.set_value(to);
+            }
+        });
+    }
+
+    /// The range after stepping by `by`, held to the first and the last.
+    fn step_range(&self, by: i32) {
+        let rows = self.rows.borrow().clone();
+        let now = glib::DateTime::now_utc().map_or(0, |t| t.to_unix());
+        let ranges = episodes::episode_ranges(&rows, now);
+        if ranges.len() < 2 {
+            return;
+        }
+        let (_, plan) = self.plan(&rows);
+        let current = ranges.iter().position(|r| r.start as usize == plan.start).unwrap_or(0);
+        let to =
+            browsing::episode_range_step(ranges.len() as u32, current as u32, by) as usize;
+        self.switch_range(to);
+    }
+
+    /// Go to episode: a number field that says what is wrong with the number as it is typed.
+    fn go_dialog(&self) {
+        let rows = self.rows.borrow().clone();
+        if rows.is_empty() {
+            return;
+        }
+        let hint = browsing::go_to_hint(&rows);
+        let dialog = adw::AlertDialog::new(Some(&t::episode_go_to_title()), Some(&hint));
+        let entry = gtk::Entry::builder()
+            .input_purpose(gtk::InputPurpose::Digits)
+            .placeholder_text(&hint)
+            .activates_default(true)
+            .build();
+        entry.update_property(&[gtk::accessible::Property::Label(&browsing::go_to_label(&rows))]);
+        dialog.set_extra_child(Some(&entry));
+        dialog.add_response("cancel", &t::action_cancel());
+        dialog.add_response("go", &t::action_go());
+        dialog.set_response_appearance("go", adw::ResponseAppearance::Suggested);
+        dialog.set_default_response(Some("go"));
+        dialog.set_close_response("cancel");
+        dialog.set_response_enabled("go", false);
+        entry.connect_changed({
+            let (dialog, rows) = (dialog.clone(), rows.clone());
+            move |entry| {
+                // Digits only.
+                let text = entry.text();
+                let digits: String = text.chars().filter(char::is_ascii_digit).collect();
+                if digits != text.as_str() {
+                    entry.set_text(&digits);
+                    return;
+                }
+                let now = glib::DateTime::now_utc().map_or(0, |t| t.to_unix());
+                let result = browsing::go_to_episode(&rows, &digits, now);
+                dialog.set_response_enabled("go", matches!(result, GoTo::Row { .. }));
+                dialog.set_body(&browsing::go_to_message(&result).unwrap_or_else(|| {
+                    browsing::go_to_hint(&rows)
+                }));
+            }
+        });
+        let page = self.me.borrow().clone();
+        dialog.connect_response(Some("go"), {
+            let entry = entry.clone();
+            move |_, _| {
+                if let Some(page) = page.upgrade() {
+                    let _ = page.jump(&entry.text());
+                }
+            }
+        });
+        dialog.present(Some(&self.ctx.window));
+        entry.grab_focus();
     }
 
     /// The episode table, drawn whole: when it arrives, when the window changes size and when the
@@ -1526,6 +1914,7 @@ impl Page {
         }
         drop(rows);
         self.lines.replace(lines);
+        self.mark_target();
         self.episodes_state.content();
     }
 

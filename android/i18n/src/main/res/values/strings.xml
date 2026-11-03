@@ -1611,6 +1611,8 @@
     <string name="action_try_again">Try again</string>
     <!-- Button that closes a dialog without doing what it offered. -->
     <string name="action_cancel">Cancel</string>
+    <!-- Button that confirms a small question, such as the episode number to go to. -->
+    <string name="action_go">Go</string>
     <!-- Button that puts a question off until later. -->
     <string name="action_not_now">Not now</string>
     <!-- A span of time in whole days. The unit letter belongs to the language. -->

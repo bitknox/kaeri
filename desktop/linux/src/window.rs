@@ -76,6 +76,16 @@ pub struct Ctx {
     pub content_focus: RefCell<Option<glib::WeakRef<gtk::Widget>>>,
     /// The sidebar's main menu button, which a controller's Menu button opens.
     main_menu: RefCell<Option<gtk::MenuButton>>,
+    /// The pick the title page on screen was opened by (Surprise me or Another), for its Another.
+    pub pick: RefCell<Option<Pick>>,
+}
+
+/// A title opened by Surprise me: where it was picked from, and whether that pool has another.
+#[derive(Debug, Clone)]
+pub struct Pick {
+    pub id: AnilistId,
+    pub pool: kaeri_model::browsing::SurprisePool,
+    pub more: bool,
 }
 
 /// A dialog's hold on the engine's alerts: given the words, it says whether it showed them.
@@ -368,6 +378,7 @@ impl Shell {
             controller_device: RefCell::default(),
             content_focus: RefCell::default(),
             main_menu: RefCell::default(),
+            pick: RefCell::default(),
         });
 
         // The offline scene is offline before Home first asks, as a device without a network
@@ -593,6 +604,18 @@ impl Shell {
         }
     }
 
+    /// Another: the title page on screen gives way to `id`'s in place, so Back returns to where
+    /// the first pick was made.
+    pub fn swap_title(&self, id: AnilistId) {
+        let Some(nav) = self.ctx.nav() else { return };
+        let stack = nav.navigation_stack();
+        let mut kept: Vec<adw::NavigationPage> = (0..stack.n_items().saturating_sub(1))
+            .filter_map(|at| stack.item(at).and_downcast::<adw::NavigationPage>())
+            .collect();
+        kept.push(pages::title::page(&self.ctx, id));
+        nav.replace(&kept);
+    }
+
     pub fn show_player(&self, on: bool) {
         self.top.set_visible_child_name(if on { "player" } else { "main" });
         self.search.capture_keys(!on);
@@ -665,6 +688,15 @@ impl Shell {
             Box::new(move |s, a| {
                 if let Some(id) = id_of(a) {
                     s.open_title(id);
+                }
+            }),
+        );
+        add(
+            "swap-title",
+            Some(glib::VariantTy::UINT32),
+            Box::new(move |s, a| {
+                if let Some(id) = id_of(a) {
+                    s.swap_title(id);
                 }
             }),
         );

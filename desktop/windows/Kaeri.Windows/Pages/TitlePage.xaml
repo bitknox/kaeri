@@ -48,8 +48,13 @@
               <TextBlock x:Name="Secondary" Style="{StaticResource HazeBodyStyle}" />
               <TextBlock x:Name="Meta" Style="{StaticResource HazeCaptionStyle}" />
               <local:OfflineLine />
-              <Grid ColumnSpacing="8" Margin="0,10,0,0">
+              <Grid ColumnSpacing="8" RowSpacing="8" Margin="0,10,0,0">
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto" />
+                  <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="Auto" />
                   <ColumnDefinition Width="Auto" />
                   <ColumnDefinition Width="Auto" />
                   <ColumnDefinition Width="Auto" />
@@ -60,6 +65,14 @@
                 <Button x:Name="TvAction" Grid.Column="1" HorizontalAlignment="Left" Height="40" Width="40" Padding="0" Visibility="Collapsed" Click="OnPlayOnTv"
                         ToolTipService.ToolTip="{x:Bind s:T.TitlePlayOnTvTooltip}" AutomationProperties.Name="{x:Bind s:T.TvPlayOn}">
                   <FontIcon Glyph="&#xE7F4;" FontSize="16" />
+                </Button>
+                <!-- Another: a title Surprise me opened swaps for the next pick; on its own line, so a long Resume label never clips it. -->
+                <Button x:Name="AnotherAction" Grid.Row="1" Grid.ColumnSpan="5" HorizontalAlignment="Left" Height="40" Visibility="Collapsed" Click="OnAnother"
+                        ToolTipService.ToolTip="{x:Bind s:T.SurpriseAnotherHint}" AutomationProperties.Name="{x:Bind s:T.SurpriseAnother}">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon Glyph="&#xE8B1;" FontSize="14" />
+                    <TextBlock Text="{x:Bind s:T.SurpriseAnother}" />
+                  </StackPanel>
                 </Button>
                 <DropDownButton x:Name="StatusButton" Grid.Column="2" Height="40" AutomationProperties.Name="{x:Bind s:T.TitleListStatus}">
                   <DropDownButton.Flyout>
@@ -165,6 +178,7 @@
                 </DataTemplate>
                 <DataTemplate x:Key="EpisodeTemplate" x:DataType="local:EpisodeItem">
                   <Grid Height="{x:Bind RowHeight, Mode=OneWay}" Padding="{x:Bind RowPad, Mode=OneWay}" Margin="0,2" ColumnSpacing="14"
+                        Background="{x:Bind TargetFill, Mode=OneWay}" CornerRadius="6"
                         AutomationProperties.Name="{x:Bind Name}" AutomationProperties.HelpText="{x:Bind HelpText, Mode=OneWay}"
                         Opacity="{x:Bind Dim}" ToolTipService.ToolTip="{x:Bind Tip, Mode=OneWay}">
                     <Grid.ColumnDefinitions>
@@ -276,6 +290,12 @@
     </Grid>
     </local:StateHost>
   </ScrollViewer>
+  <!-- Digits typed on the episodes: a capsule at the bottom that says what Go to episode will take. -->
+  <Border x:Name="TypedCapsule" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,32"
+          Padding="16,6" CornerRadius="999" Background="{ThemeResource RaisedBrush}" BorderBrush="{ThemeResource EdgeBrush}" BorderThickness="1"
+          IsHitTestVisible="False" AutomationProperties.LiveSetting="Polite">
+    <TextBlock x:Name="TypedText" Style="{StaticResource BodyTextBlockStyle}" />
+  </Border>
   <!-- A range switch: the page as it stood, fading away over the new rows. -->
   <Image x:Name="RangeGhost" Visibility="Collapsed" IsHitTestVisible="False" Stretch="Fill" HorizontalAlignment="Left" VerticalAlignment="Top"
          AutomationProperties.AccessibilityView="Raw" />

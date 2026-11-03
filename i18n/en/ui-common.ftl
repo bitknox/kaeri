@@ -4,6 +4,10 @@ action-try-again = Try again
 # Button that closes a dialog without doing what it offered.
 action-cancel = Cancel
 
+# Button that confirms a small question, such as the episode number to go to.
+# @max 12
+action-go = Go
+
 # Button that puts a question off until later.
 action-not-now = Not now
 

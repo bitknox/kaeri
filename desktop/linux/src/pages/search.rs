@@ -14,12 +14,13 @@ use kaeri_model::{
     catalog::{ContentFor, ContentList, Entry},
     command::Command,
     event::Event,
+    browsing::SurprisePool,
     search::SearchQuery,
 };
 
 use kaeri_i18n::t;
 
-use super::search_filters::Filters;
+use super::{search_filters::Filters, trending::Rail};
 
 use crate::{
     catalog,
@@ -53,6 +54,11 @@ struct Inner {
     /// Under the results while the next page is on its way.
     more_spinner: adw::Spinner,
     caption: gtk::Label,
+    /// Surprise me, there while no words are typed.
+    surprise: gtk::Button,
+    /// The Trending rail, for a shot to drive.
+    #[cfg(feature = "fixtures")]
+    trending: Rail,
     /// Under the field while the demo is the only source: other titles wait for a store.
     demo_line: gtk::Label,
     /// Whether searching as you type waits for Return, to stay within AniList's limits.
@@ -93,6 +99,21 @@ pub fn build(ctx: &Rc<Ctx>) -> SearchPage {
     header.pack_end(&toggle);
 
     let filters = Filters::new();
+    // Surprise me: a random title from the filters in effect, while no words are typed.
+    let surprise = widgets::surprise_button(
+        ctx,
+        &t::surprise_me(),
+        &t::surprise_hint_filters(),
+        false,
+        {
+            let filters = Rc::downgrade(&filters);
+            move || {
+                let filters = filters.upgrade()?;
+                Some(SurprisePool::Filters { query: filters.query("") })
+            }
+        },
+    );
+    header.pack_end(&surprise);
 
     // Before typing.
     let recent = gtk::FlowBox::builder()
@@ -138,6 +159,10 @@ pub fn build(ctx: &Rc<Ctx>) -> SearchPage {
     before.set_margin_top(12);
     before.set_margin_bottom(24);
     before.append(&recent_group);
+    let trending = Rail::new(ctx);
+    trending.widget.set_margin_start(18);
+    trending.widget.set_margin_end(18);
+    before.append(&trending.widget);
     before.append(&section(&t::continue_this_season(), &season.widget));
     before.append(&section(&t::search_genres(), &genres));
     let before = gtk::ScrolledWindow::builder()
@@ -217,6 +242,8 @@ pub fn build(ctx: &Rc<Ctx>) -> SearchPage {
     column.append(&body);
 
     let inner = Rc::new(Inner {
+        #[cfg(feature = "fixtures")]
+        trending: trending.clone(),
         ctx: Rc::clone(ctx),
         bar: bar.clone(),
         entry: entry.clone(),
@@ -228,6 +255,7 @@ pub fn build(ctx: &Rc<Ctx>) -> SearchPage {
         asking_more: Cell::new(false),
         more_spinner,
         caption,
+        surprise,
         demo_line,
         paused: Cell::new(false),
         season,
@@ -243,6 +271,15 @@ pub fn build(ctx: &Rc<Ctx>) -> SearchPage {
     });
 
     inner.show_recent();
+    // See all browses the period shown, sorted by Trending.
+    trending.on_see_all({
+        let filters = Rc::downgrade(&filters);
+        move |period| {
+            if let Some(filters) = filters.upgrade() {
+                filters.set(&SearchQuery::trending(period));
+            }
+        }
+    });
     clear.connect_clicked({
         let inner = Rc::downgrade(&inner);
         move |_| {
@@ -370,6 +407,12 @@ impl SearchPage {
         self.inner.filters.set(query);
     }
 
+    /// The Trending rail, as a screenshot drives its period.
+    #[cfg(feature = "fixtures")]
+    pub fn trending(&self) -> &Rail {
+        &self.inner.trending
+    }
+
     /// The query on screen, and the next page asked for, as a screenshot of paging asks.
     #[cfg(feature = "fixtures")]
     pub fn asked(&self) -> Option<SearchQuery> {
@@ -411,6 +454,7 @@ impl Inner {
     fn search(&self, live: bool) {
         let query = self.query();
         self.filters.typed(!query.trimmed_text().is_empty());
+        self.surprise.set_visible(query.trimmed_text().is_empty());
         if query.is_blank() {
             self.asked.replace(None);
             self.body.set_visible_child_name("before");

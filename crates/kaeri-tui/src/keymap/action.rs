@@ -105,6 +105,8 @@ pub enum Action {
     /// Open the search filter overlay, from anywhere. A modified key on purpose: the
     /// search box eats plain letters, and filters are wanted mid-query.
     FilterSearch,
+    /// Pick a title at random from what the search filters match.
+    Surprise,
 
     // Playback
     PlayPause,
@@ -197,6 +199,7 @@ impl Action {
         Self::MarkAllPrevious,
         Self::Filter,
         Self::FilterSearch,
+        Self::Surprise,
         Self::PlayPause,
         Self::SeekBack,
         Self::SeekForward,
@@ -284,6 +287,7 @@ impl Action {
             Self::MarkAllPrevious => t::keys_action_mark_all_previous(),
             Self::Filter => t::keys_action_filter(),
             Self::FilterSearch => t::keys_action_filter_search(),
+            Self::Surprise => t::keys_action_surprise(),
             Self::PlayPause => t::keys_action_play_pause(),
             Self::SeekBack => t::keys_action_seek_back(),
             Self::SeekForward => t::keys_action_seek_forward(),
@@ -319,6 +323,7 @@ impl Action {
             Self::OpenInBrowser => said(t::keys_hint_on_anilist()),
             Self::MarkAllPrevious => said(t::keys_hint_mark_previous()),
             Self::FilterSearch => said(t::keys_hint_filters()),
+            Self::Surprise => said(t::keys_hint_surprise()),
             Self::ForceResync => said(t::keys_hint_resync()),
             Self::Help => said(t::keys_hint_keys()),
             Self::Refresh => said(t::keys_hint_refresh()),
@@ -370,6 +375,7 @@ impl Action {
             | Self::RateTitle
             | Self::ToggleSynopsis
             | Self::FilterSearch
+            | Self::Surprise
             | Self::HideFromContinue => Scope::Lists,
 
             Self::ShowEpisodes

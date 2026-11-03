@@ -1253,6 +1253,9 @@ shortcuts-group-lists = [Ļîšţš~~]
 # Shortcut: jump to a section of the app by number.
 shortcuts-go-to-section = [Ĝö ţö à šéçţîöñ~~~~~]
 
+# Shortcut: step to the previous or next range of episodes on a title page.
+shortcuts-episode-ranges = [Þŕéṽîöüš öŕ ñéẋţ ŕàñĝé öƒ éþîšöðéš~~~~~~~~~~~]
+
 # Shortcut: open the keyboard shortcuts window.
 shortcuts-show = [Ķéýƀöàŕð šĥöŕţçüţš~~~~~~]
 
@@ -2159,6 +2162,9 @@ keys-action-filter = [Ƒîļţéŕ~~]
 keys-action-filter-search = [Šéàŕçĥ ƒîļţéŕš~~~~~]
 
 # Action label in the help overlay and the command palette.
+keys-action-surprise = [Šüŕþŕîšé ɱé~~~~]
+
+# Action label in the help overlay and the command palette.
 keys-action-play-pause = [Þļàý öŕ þàüšé~~~~]
 
 # Action label in the help overlay and the command palette.
@@ -2229,6 +2235,12 @@ keys-hint-mark-previous = [Ṁàŕķ þŕéṽîöüš~~~~]
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-filters = [Ƒîļţéŕš~~~]
+
+# Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
+keys-hint-surprise = [Šüŕþŕîšé ɱé~~~~]
+
+# Status line hint on the episode list while a number is typed: the key that goes to that episode, drawn beside the number and G.
+keys-hint-go-to-episode = [Ĝö ţö éþîšöðé~~~~]
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-resync = [Ŕéšýñç~~]
@@ -4351,6 +4363,9 @@ action-try-again = [Ţŕý àĝàîñ~~~]
 
 # Button that closes a dialog without doing what it offered.
 action-cancel = [Çàñçéļ~~]
+
+# Button that confirms a small question, such as the episode number to go to.
+action-go = [Ĝö~]
 
 # Button that puts a question off until later.
 action-not-now = [Ñöţ ñöŵ~~~]

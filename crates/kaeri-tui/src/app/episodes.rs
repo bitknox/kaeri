@@ -5,6 +5,7 @@ use kaeri_core::{ids::AnilistId, traits::SourceCandidate};
 use kaeri_i18n::t;
 use kaeri_model::{
     Msg,
+    browsing::{self, GoTo},
     catalog::{ContentList, ResumePoint},
     command::Command,
     episodes::{DubExtent, EpisodeRow},
@@ -14,7 +15,7 @@ use kaeri_model::{
     sources::{MatchCandidate, MatchQuestion},
 };
 
-use super::{App, Field, info};
+use super::{App, Cursor, Field, info};
 use crate::nav::{Overlay, StageView};
 
 /// `"4"` → one episode, `"1-12"` → inclusive range, `"7-"` → everything from 7 on.
@@ -123,6 +124,41 @@ impl App {
         self.cursors.episodes.selected = kept
             .unwrap_or(self.cursors.episodes.selected)
             .min(self.episodes.len().saturating_sub(1));
+    }
+
+    /// A digit of the number being typed for `G`: five at most, and no leading zeros.
+    pub(super) fn type_go_digit(&mut self, digit: char) {
+        if self.go_count.len() < 5 && !(self.go_count.is_empty() && digit == '0') {
+            self.go_count.push(digit);
+        }
+    }
+
+    /// `G` after digits: the cursor goes to that episode with the row at the top. A number the
+    /// show does not have, or one that is not out, is said in the catalogue's words, and the
+    /// cursor stays.
+    pub(super) fn go_to_typed(&mut self) -> Option<Command> {
+        let typed = std::mem::take(&mut self.go_count);
+        let result =
+            browsing::go_to_episode(&self.episodes_all, &typed, self.clock.now_epoch());
+        match result {
+            GoTo::Row { index, .. } => {
+                let number = self.episodes_all[index as usize].number.clone();
+                // A filter that hides the episode gives way: the number asked for is the point.
+                if !self.episodes.iter().any(|r| r.number == number) {
+                    self.episode_filter = EpisodeFilter::All;
+                    self.apply_episode_filter();
+                }
+                if let Some(at) = self.episodes.iter().position(|r| r.number == number) {
+                    self.cursors.episodes = Cursor { selected: at, offset: at };
+                }
+            }
+            other => {
+                if let Some(message) = browsing::go_to_message(&other) {
+                    self.push_toast(info(message));
+                }
+            }
+        }
+        None
     }
 
     /// Whether the filter is hiding everything — distinct from a title with no episodes.
@@ -774,6 +810,62 @@ mod tests {
         );
         assert_eq!(at(&a, 0), (three, three), "the page and the list row move");
         assert_eq!(at(&a, 1).1, two, "another show is not touched");
+    }
+
+    #[test]
+    fn digits_then_g_go_to_that_episode_and_other_keys_let_go() {
+        let mut a = app_at_episodes();
+        a.handle(Action::JumpSection(7), 5);
+        assert_eq!(a.go_count, "7", "a digit on the list is a number, not a section");
+        assert!(a.in_episodes(), "the section jump did not happen");
+        assert_eq!(a.handle(Action::Bottom, 5), None);
+        assert_eq!(a.cursors.episodes.selected, 6);
+        assert_eq!(a.cursors.episodes.offset, 6, "the row is put at the top");
+        assert!(a.go_count.is_empty());
+
+        // Two digits make one number, and zero is the digit after the one.
+        a.handle(Action::JumpSection(1), 5);
+        a.handle(Action::JumpSection(10), 5);
+        assert_eq!(a.go_count, "10");
+        a.handle(Action::Back, 5);
+        assert!(a.go_count.is_empty(), "Esc lets go of the number first");
+        assert!(a.in_episodes(), "and does not leave the list");
+
+        // Any other key lets go of it, and G alone is still the bottom.
+        a.handle(Action::JumpSection(3), 5);
+        a.handle(Action::Down, 5);
+        assert!(a.go_count.is_empty());
+        a.handle(Action::Bottom, 5);
+        assert_eq!(a.cursors.episodes.selected, 11);
+    }
+
+    #[test]
+    fn go_to_an_episode_the_show_does_not_have_says_so_and_stays() {
+        let mut a = app_at_episodes();
+        a.set_episode_cursor(3);
+        for digit in [9, 9] {
+            a.handle(Action::JumpSection(digit), 5);
+        }
+        a.handle(Action::Bottom, 5);
+        assert_eq!(a.cursors.episodes.selected, 3, "the cursor stays");
+        let says = kaeri_model::browsing::go_to_message(&kaeri_model::browsing::GoTo::NoSuch {
+            number: 99,
+            last: 12,
+        });
+        assert!(a.toasts.iter().any(|t| Some(&t.notice.text) == says.as_ref()));
+    }
+
+    #[test]
+    fn go_to_an_episode_the_filter_hides_shows_all_again() {
+        let mut a = app_at_episodes();
+        a.episodes_all[4].completed = true;
+        a.episode_filter = EpisodeFilter::Unwatched;
+        a.apply_episode_filter();
+        assert!(a.episodes.iter().all(|r| r.number != "5"));
+        a.handle(Action::JumpSection(5), 5);
+        a.handle(Action::Bottom, 5);
+        assert_eq!(a.episode_filter, EpisodeFilter::All);
+        assert_eq!(a.episodes[a.cursors.episodes.selected].number, "5");
     }
 
     #[test]

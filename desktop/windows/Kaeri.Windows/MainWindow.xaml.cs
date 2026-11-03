@@ -151,8 +151,8 @@ public sealed partial class MainWindow : Window
                 DispatcherQueue.TryEnqueue(() =>
                 {
                     var next = playerShot ? ctx.Known.Entry(synopsisTable.Id)?.Progress?.Next ?? 4 : 7;
-                    var ranged = synopsisShot == "synopsis-ranges";
-                    var shown = new Event[] { Showcase.Synopses(synopsisTable, ranged ? 230 : next, ranged) };
+                    var ranged = synopsisShot is "synopsis-ranges" || synopsisShot.StartsWith("synopsis-go", StringComparison.Ordinal);
+                    var shown = new Event[] { Showcase.Synopses(synopsisTable, ranged ? 230 : next, ranged, synopsisShot == "synopsis-go-not-out") };
                     ctx.Known.Take(shown[0]);
                     Heard(shown);
                     ctx.Heard(shown);
@@ -803,6 +803,21 @@ public sealed partial class MainWindow : Window
             ContentFrame.Navigate(typeof(TitlePage), id, new SuppressNavigationTransitionInfo());
             Motion.FadeIn(ContentFrame, Motion.Standard);
         }
+    }
+
+    /// <summary>
+    /// Another: this title's page is swapped for the next pick's, so Back goes to where Surprise me
+    /// was pressed. The page as it stood fades away over the new one on the standard token.
+    /// </summary>
+    internal void SwapTitle(uint id)
+    {
+        Crossfade.Swap(ContentFrame, () =>
+        {
+            ContentFrame.Navigate(typeof(TitlePage), id, new SuppressNavigationTransitionInfo());
+            // The page it replaces is not a place to come back to.
+            if (ContentFrame.BackStack.Count > 0)
+                ContentFrame.BackStack.RemoveAt(ContentFrame.BackStack.Count - 1);
+        });
     }
 
     /// <summary>A browse from Home: the query's genres and sort set, nothing typed.</summary>

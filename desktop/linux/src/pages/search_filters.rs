@@ -9,6 +9,7 @@ use adw::prelude::*;
 use gtk::{gio, glib};
 use kaeri_i18n::t;
 use kaeri_model::{
+    browsing::TrendPeriod,
     catalog::Season,
     search::{
         ActiveFilter, Available, FilterKey, MediaFormat, Pick, SEARCH_STATUSES, SearchQuery,
@@ -245,9 +246,15 @@ impl Filters {
             },
             ..q.clone()
         });
-        choice("sort", |q, value| SearchQuery {
-            sort: SearchSort::ALL.into_iter().find(|s| s.label() == value),
-            ..q.clone()
+        choice("sort", |q, value| {
+            // "Trending:week": a sort, and for Trending the period it covers.
+            let (name, period) = value.split_once(':').unwrap_or((value, ""));
+            let sort = SearchSort::ALL.into_iter().find(|s| s.label() == name);
+            let period = TrendPeriod::ALL
+                .into_iter()
+                .find(|p| period_key(*p) == period)
+                .filter(|p| sort == Some(SearchSort::Trending) && *p != TrendPeriod::Today);
+            SearchQuery { sort, period, ..q.clone() }
         });
 
         // Each chip takes its filter off: its index among what is set.
@@ -495,6 +502,16 @@ impl Filters {
             if sort == SearchSort::Relevance && !with_text {
                 continue;
             }
+            // Trending is its three periods, which a rail's See all can show.
+            if sort == SearchSort::Trending {
+                for period in TrendPeriod::ALL {
+                    sorts.append(
+                        Some(&period.label()),
+                        Some(&format!("filter.sort::{}:{}", sort.label(), period_key(period))),
+                    );
+                }
+                continue;
+            }
             sorts.append(
                 Some(&sort_name(sort)),
                 Some(&format!("filter.sort::{}", sort.label())),
@@ -502,9 +519,16 @@ impl Filters {
         }
         menu.append_section(Some(&t::filter_linux_sort_by()), &sorts);
         self.sort.set_menu_model(Some(&menu));
-        self.set_state("sort", effect.label());
-        self.sort_label.set_label(&sort_name(effect));
-        self.sort.set_tooltip_text(Some(&t::sort_label(&sort_name(effect))));
+        let named = if effect == SearchSort::Trending {
+            let period = query.period.unwrap_or(TrendPeriod::Today);
+            self.set_state("sort", &format!("{}:{}", effect.label(), period_key(period)));
+            period.label()
+        } else {
+            self.set_state("sort", effect.label());
+            sort_name(effect)
+        };
+        self.sort_label.set_label(&named);
+        self.sort.set_tooltip_text(Some(&t::sort_label(&named)));
         if query.sort.is_some() {
             self.sort.remove_css_class("flat");
         } else {
@@ -590,6 +614,15 @@ fn format_name(format: MediaFormat) -> String {
 
 fn formats_line(formats: &[MediaFormat]) -> String {
     formats.iter().map(|f| format_name(*f)).collect::<Vec<_>>().join(", ")
+}
+
+/// The name a period has in a sort's action target.
+fn period_key(period: TrendPeriod) -> &'static str {
+    match period {
+        TrendPeriod::Today => "today",
+        TrendPeriod::Week => "week",
+        TrendPeriod::Month => "month",
+    }
 }
 
 /// A sort as the catalogue says it.
