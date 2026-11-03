@@ -85,10 +85,12 @@ struct SkipMarkingTests {
         let rig = Rig()
         try await rig.opened()
         rig.model.apply(.playerSkipPrompt(playback: 1, prompt: .foundEdges(kind: .opening, episode: 3)))
-        rig.model.togglePause()
+        rig.mpv.emit(.property(name: "pause", value: .flag(true)))
+        try await until("paused") { rig.model.paused }
         rig.step(.seconds(30))
         #expect(rig.model.skipPrompt != nil, "a pause waits")
-        rig.model.togglePause()
+        rig.mpv.emit(.property(name: "pause", value: .flag(false)))
+        try await until("playing") { !rig.model.paused }
         rig.step(.seconds(11))
         #expect(rig.model.skipPrompt != nil)
         rig.step(.seconds(2))
