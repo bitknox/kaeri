@@ -465,6 +465,7 @@ fn row(number: &str) -> kaeri_model::episodes::EpisodeRow {
         source: None,
         unsourced: false,
         past_progress: false,
+        spoiler_ahead: false,
         synopsis_pending: false,
     }
 }
