@@ -197,6 +197,10 @@ public sealed partial class TitlePage : Page, IPageKeys
     {
         var band = Math.Min(360, Math.Max(220, Scroll.ActualWidth * 9 / 32));
         Banner.Height = band;
+        // The art fills the band by overflowing it (UniformToFill), and the scrim ends at the
+        // band's edge, so the band is clipped to its height: any overflow would show as a light
+        // line under the scrim. Only the height matters; the width is generous.
+        Banner.Clip = new RectangleGeometry { Rect = new global::Windows.Foundation.Rect(0, 0, 100_000, band) };
         Columns.Padding = new Thickness(36, band - 120, 36, 24);
     }
 

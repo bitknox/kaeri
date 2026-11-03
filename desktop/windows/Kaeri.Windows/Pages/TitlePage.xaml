@@ -23,7 +23,8 @@
               <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
                 <GradientStop Color="#00161A2E" Offset="0.25" />
                 <GradientStop Color="#D9161A2E" Offset="0.75" />
-                <GradientStop Color="#FF161A2E" Offset="1" />
+                <!-- The ground in full just before the edge, so no row of the art shows under it. -->
+                <GradientStop Color="#FF161A2E" Offset="0.97" />
               </LinearGradientBrush>
             </Rectangle.Fill>
           </Rectangle>
