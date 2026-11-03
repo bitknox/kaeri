@@ -5,7 +5,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:player="using:Kaeri.Windows.Player"
     xmlns:app="using:Kaeri.App">
-  <Grid x:Name="Root">
+  <!-- Window-wide shortcuts: tooltips that name a key say so themselves, so WinUI does not add one
+       to everything under the pointer. -->
+  <Grid x:Name="Root" KeyboardAcceleratorPlacementMode="Hidden">
     <Grid.KeyboardAccelerators>
       <KeyboardAccelerator Key="O" Modifiers="Control" Invoked="OnKeyOpenLink" />
     </Grid.KeyboardAccelerators>
@@ -49,6 +51,9 @@
         </NavigationViewItem>
         <NavigationViewItem Content="{x:Bind app:T.NavSeasonal}" Tag="seasonal" AccessKey="S">
           <NavigationViewItem.Icon><FontIcon Glyph="&#xE734;" /></NavigationViewItem.Icon>
+        </NavigationViewItem>
+        <NavigationViewItem Content="{x:Bind app:T.NavSearch}" Tag="search" AccessKey="R">
+          <NavigationViewItem.Icon><FontIcon Glyph="&#xE721;" /></NavigationViewItem.Icon>
         </NavigationViewItem>
         <NavigationViewItem Content="{x:Bind app:T.NavLibrary}" Tag="library" AccessKey="L">
           <NavigationViewItem.Icon><FontIcon Glyph="&#xE8F1;" /></NavigationViewItem.Icon>

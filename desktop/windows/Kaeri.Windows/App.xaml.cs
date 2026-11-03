@@ -65,5 +65,8 @@ public partial class App : Application
             return;
         }
         window.Activate();
+#if KAERI_TESTING
+        Probe.Start(window.DispatcherQueue);
+#endif
     }
 }

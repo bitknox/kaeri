@@ -178,7 +178,14 @@ public class CalendarTests
         };
         var broadcasts = Calendar.Broadcasts(rows, anchor, new Known(), mine: false);
         Assert.Equal([2u, 1u], broadcasts.Select(b => b.Entry.Id));
-        Assert.Equal("E10 · 16:30 · Moved from 23:00", broadcasts[1].Line(Utc));
+        // The time comes first, the move beside it, then what is out or coming.
+        Assert.Equal("16:30", broadcasts[1].Clock(Utc));
+        Assert.Equal("Moved from 23:00", broadcasts[1].DelayNote(Utc));
+        Assert.Null(broadcasts[0].DelayNote(Utc));
+        Assert.Equal("E10 in 4 h 30 min", broadcasts[1].Status(anchor));
+        Assert.Equal("E8 out 1 d ago", broadcasts[0].Status(anchor));
+        Assert.Equal("Atelier Hotaru, E10, 16:30, Moved from 23:00, in 4 h 30 min", broadcasts[1].Spoken(anchor, Utc));
+        Assert.Equal("Natsukaze Relay, E8, 12:00, Out 1 d ago", broadcasts[0].Spoken(anchor, Utc));
         var week = Calendar.Week(new DateOnly(2026, 10, 19), broadcasts, Utc);
         Assert.Equal(2u, week[0].Broadcasts.Single().Entry.Id);
         Assert.Equal(1u, week[1].Broadcasts.Single().Entry.Id);
@@ -199,15 +206,18 @@ public class CalendarTests
         };
         var broadcasts = Calendar.Broadcasts(rows, anchor, new Known(), mine: false);
         Func<uint, Broadcast> broadcast = id => broadcasts.Single(b => b.Entry.Id == id);
-        // The dub's mark is in the line after its episode; a sub row, or one not known, has none.
-        Assert.Equal("E10 dubbed · ~16:30", broadcast(1).Line(Utc));
-        Assert.Equal("E10 dubbed · about 16:30", broadcast(1).Spoken(Utc));
+        // The dub's mark ends the line, held to the words before it; a sub row, or one not known, has none.
+        Assert.Equal("~16:30", broadcast(1).Clock(Utc));
+        Assert.Equal("E10 in 4 h 30 min\u00A0·\u00A0Dubbed", broadcast(1).Status(anchor));
+        Assert.Equal("E10 out 2 h ago\u00A0·\u00A0Dubbed", broadcast(1).Status(anchor + 6 * 3600 + 1800));
+        Assert.Equal("Atelier Hotaru, E10 dubbed, about 16:30, in 4 h 30 min", broadcast(1).Spoken(anchor, Utc));
         Assert.Equal("E10 dubbed", broadcast(1).EpisodeText);
         Assert.True(broadcast(1).Dubbed);
         Assert.False(broadcast(2).Dubbed);
         Assert.False(broadcast(3).Dubbed);
         Assert.Equal("E8", broadcast(2).EpisodeText);
-        Assert.Equal("E3 · 14:00", broadcast(3).Line(Utc));
+        Assert.Equal("14:00", broadcast(3).Clock(Utc));
+        Assert.Equal("E3 in 2 h", broadcast(3).Status(anchor));
     }
 }
 
@@ -524,6 +534,24 @@ public class StoresTests
         known.Take(new Event.StoreJoined("one"));
         Assert.Equal("one", known.Joined);
         Assert.Null(known.Preview);
+    }
+
+    [Fact]
+    public void AListThatCameBackEmptyCountsAsLoaded()
+    {
+        var known = new Known();
+        Assert.False(known.ServersLoaded);
+        Assert.False(known.HiddenLoaded);
+        Assert.False(known.PartyRecentLoaded);
+        Assert.False(known.Queue.Loaded);
+        known.Take(new Event.Server(new ServerEvent.Servers([])));
+        known.Take(new Event.HiddenTitles([]));
+        known.Take(new Event.PartyRecent([]));
+        known.Take(new Event.Downloads([]));
+        Assert.True(known.ServersLoaded);
+        Assert.True(known.HiddenLoaded);
+        Assert.True(known.PartyRecentLoaded);
+        Assert.True(known.Queue.Loaded);
     }
 }
 

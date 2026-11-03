@@ -175,8 +175,14 @@ sealed class TrailerStage
             settings.IsGeneralAutofillEnabled = false;
             core.NewWindowRequested += (_, e) => e.Handled = true;
             // In a preview YouTube's own controls are hidden in its frame; Play trailer keeps them.
+            // WebView2 runs this as each document is created, before it has a head or even a root
+            // to put the style in, where Apple's user script runs at the document's end; so it
+            // waits for the document to be parsed, as there.
             if (style == EmbedStyle.Banner)
-                await core.AddScriptToExecuteOnDocumentCreatedAsync(KaeriFfiMethods.TrailerChromeScript());
+                await core.AddScriptToExecuteOnDocumentCreatedAsync(
+                    "(function () { var run = function () { " + KaeriFfiMethods.TrailerChromeScript() + " };"
+                    + " if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', run, { once: true }); }"
+                    + " else { run(); } })();");
             core.WebMessageReceived += (_, e) => Heard(token, e.TryGetWebMessageAsString());
             // The page is served from the app's own origin, so YouTube sees it as the Referer.
             folder = Path.Combine(Path.GetTempPath(), "kaeri-windows", "trailers", Guid.NewGuid().ToString("N"));

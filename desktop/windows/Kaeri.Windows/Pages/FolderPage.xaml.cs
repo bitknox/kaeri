@@ -32,22 +32,49 @@ public sealed partial class FolderPage : Page
 
     Microsoft.UI.Dispatching.DispatcherQueueTimer? countdown;
 
-    public FolderPage() => InitializeComponent();
+    public FolderPage()
+    {
+        InitializeComponent();
+        State.Placeholders = Placeholders;
+        // The folders and what was found in them are on this device.
+        State.NeedsConnection = false;
+    }
+
+    /// <summary>The folder's state line, its three actions and a list of groups, as plates.</summary>
+    static UIElement Placeholders()
+    {
+        var plates = new StackPanel { Spacing = 12 };
+        plates.Children.Add(States.Plate(240, 14, 3));
+        var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 4, 0, 0) };
+        for (var i = 0; i < 3; i++)
+            actions.Children.Add(States.Plate(110, 32, 4));
+        plates.Children.Add(actions);
+        plates.Children.Add(States.Plate(320, 10, 3));
+        plates.Children.Add(States.Heading());
+        plates.Children.Add(States.Rows(3, 0, 0, rowHeight: 52));
+        return plates;
+    }
 
     void Draw()
     {
+        Head.Children.Clear();
         Stack.Children.Clear();
         var view = ctx.Known.Local;
         var folder = view?.Folders.FirstOrDefault(f => f.Path == path);
         var title = Ui.Text(Path.GetFileName(path.TrimEnd('\\', '/')) is { Length: > 0 } name ? name : path, "PageTitleStyle");
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetHeadingLevel(title, Microsoft.UI.Xaml.Automation.Peers.AutomationHeadingLevel.Level1);
-        Stack.Children.Add(title);
-        Stack.Children.Add(Ui.Haze(path, wrap: true));
-        if (folder is null || view is null)
+        Head.Children.Add(title);
+        Head.Children.Add(Ui.Haze(path, wrap: true));
+        if (view is null)
+        {
+            State.Wait();
+            return;
+        }
+        State.Done();
+        if (folder is null)
         {
             // Removed while the page was up.
-            if (view is not null)
-                Stack.Children.Add(Ui.Text(T.LibraryRowMissing, "BodyTextBlockStyle"));
+            Stack.Children.Add(Ui.Text(T.LibraryRowMissing, "BodyTextBlockStyle"));
             return;
         }
         var state = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };

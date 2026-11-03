@@ -94,6 +94,10 @@ sealed partial class HomeWeek : Grid
             IsTabStop = false,
             Content = strip,
         };
+        // A horizontal ScrollViewer measures its content with no width limit, which turns the
+        // equal columns into ones as wide as their longest title. The strip takes the width the
+        // page gives it (at least its minimum), so the days share it and a long title wraps.
+        scroll.SizeChanged += (_, e) => strip.Width = Math.Max(strip.MinWidth, e.NewSize.Width);
         HomeShelf.ForwardWheel(scroll, page);
         Grid.SetRow(scroll, 1);
         Children.Add(scroll);
@@ -113,7 +117,7 @@ sealed partial class HomeWeek : Grid
         var time = item.AirsAt is { } at ? HomeWording.When(at, now, TimeZoneInfo.Local) : "";
         when.Children.Add(new TextBlock { Text = time, FontSize = 12, LineHeight = 16, FontWeight = FontWeights.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis });
         text.Children.Add(when);
-        text.Children.Add(new TextBlock { Text = item.Entry.Title, Style = Ui.Res<Style>("ShowTitleStyle"), FontSize = 13, LineHeight = 17, MaxLines = 2, TextWrapping = TextWrapping.Wrap });
+        text.Children.Add(new TextBlock { Text = item.Entry.Title, Style = Ui.Res<Style>("ShowTitleStyle"), FontSize = 13, LineHeight = 17, MaxLines = 2, TextWrapping = TextWrapping.Wrap, TextTrimming = TextTrimming.CharacterEllipsis });
         var episode = item.Episode is { } ep ? T.EpisodeNumber(ep) : "";
         text.Children.Add(new TextBlock { Text = episode, Style = Ui.Res<Style>("HazeCaptionStyle") });
         Grid.SetColumn(text, 1);

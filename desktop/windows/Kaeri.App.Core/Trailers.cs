@@ -163,8 +163,7 @@ public static class Trailers
     {
         if (known.Autoplay is not { Trailers: true } || !Embeddable(entry))
             return false;
-        var spoilers = SettingsCatalog.IsOn(known.Setting(SettingKey.SpoilerProtection));
-        return KaeriFfiMethods.TrailerMayAutoplay(entry, spoilers);
+        return KaeriFfiMethods.TrailerMayAutoplay(entry, Spoilers.On(known, entry.Id));
     }
 
     /// <summary>The synopsis without the parts a spoiler tag marks, for the preview's two lines.</summary>

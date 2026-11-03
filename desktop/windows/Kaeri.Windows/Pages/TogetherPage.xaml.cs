@@ -23,9 +23,18 @@ public sealed partial class TogetherPage : Page
     readonly TextBlock joinProblem = Ui.Text("", "HazeCaptionStyle");
     bool inLobby;
 
+    // The last rooms and a party's members, each kept across redraws so its 600 ms is not started
+    // again. The rooms are kept on this device, and the party says itself when the connection drops.
+    readonly StateHost recentState = new() { Placeholders = () => States.Rows(2, 0, 0, rowHeight: 56, spacing: 14), NeedsConnection = false };
+    readonly StackPanel recentRows = new() { Spacing = 14 };
+    readonly StateHost membersState = new() { Placeholders = () => States.Rows(2, 32, 32, rowHeight: 44, spacing: 14), NeedsConnection = false };
+    readonly StackPanel memberRows = new() { Spacing = 14 };
+
     public TogetherPage()
     {
         InitializeComponent();
+        recentState.Children.Add(recentRows);
+        membersState.Children.Add(memberRows);
         AutomationProperties.SetName(join, T.TogetherJoinField);
         join.KeyDown += (_, e) =>
         {
@@ -35,6 +44,8 @@ public sealed partial class TogetherPage : Page
         ctx.Hear(this, Heard);
         // Ctrl+V outside a field pastes into Join.
         Loaded += (_, _) => KeyboardAccelerators.Add(Paste());
+        // Not named in a tooltip over the whole page; the paste hint under the field says it.
+        KeyboardAcceleratorPlacementMode = KeyboardAcceleratorPlacementMode.Hidden;
     }
 
     KeyboardAccelerator Paste()
@@ -96,12 +107,14 @@ public sealed partial class TogetherPage : Page
             ctx.Window.ShowParty(new PartyDialog.For.Episode(pick.Id, pick.Episode));
     }
 
+    /// <summary>The row the join field is in. WinUI leaves Parent null for a child added in code, so it is kept here.</summary>
+    Panel? joinRow;
+
     void Show()
     {
         // The join field and its line outlive a rebuild; let go of their old parents first.
-        foreach (var kept in new FrameworkElement[] { join, joinProblem })
-            if (kept.Parent is Panel old)
-                old.Children.Remove(kept);
+        joinRow?.Children.Remove(join);
+        joinRow = null;
         Stack.Children.Clear();
         var heading = Ui.Text(T.TogetherTitle, "PageTitleStyle");
         AutomationProperties.SetHeadingLevel(heading, Microsoft.UI.Xaml.Automation.Peers.AutomationHeadingLevel.Level1);
@@ -132,6 +145,7 @@ public sealed partial class TogetherPage : Page
         Stack.Children.Add(Ui.Haze(T.TogetherJoinLine));
         var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
         row.Children.Add(join);
+        joinRow = row;
         row.Children.Add(Ui.Label(T.TogetherPaste, async (_, _) => await PasteIntoJoin()));
         row.Children.Add(Ui.Label(T.TogetherJoinAction, (_, _) => Join(join.Text)));
         Stack.Children.Add(row);
@@ -140,11 +154,19 @@ public sealed partial class TogetherPage : Page
         Stack.Children.Add(Ui.Haze(T.TogetherPasteShortcutHint));
 
         Stack.Children.Add(Section(T.TogetherRecent));
-        var recent = ctx.Known.PartyRecent;
-        if (recent.Length == 0)
-            Stack.Children.Add(Ui.Haze(T.TogetherRecentEmpty));
-        foreach (var room in recent)
-            Stack.Children.Add(Recent(room));
+        recentRows.Children.Clear();
+        Stack.Children.Add(recentState);
+        if (!ctx.Known.PartyRecentLoaded)
+            recentState.Wait();
+        else
+        {
+            recentState.Done();
+            var recent = ctx.Known.PartyRecent;
+            if (recent.Length == 0)
+                recentRows.Children.Add(Ui.Haze(T.TogetherRecentEmpty));
+            foreach (var room in recent)
+                recentRows.Children.Add(Recent(room));
+        }
         if (ctx.Known.PartyLookFailure is { } failure)
             Stack.Children.Add(new InfoBar { Severity = InfoBarSeverity.Warning, IsOpen = true, IsClosable = false, Message = failure });
     }
@@ -230,10 +252,18 @@ public sealed partial class TogetherPage : Page
 
         // Members: you first, then in the order they joined. A state in words, never a source.
         Stack.Children.Add(Section(T.PartyWaitingMembers));
+        memberRows.Children.Clear();
+        Stack.Children.Add(membersState);
+        if (ctx.Known.PartyMembers is null)
+            membersState.Wait();
+        else
+            membersState.Done();
         foreach (var member in members.OrderBy(m => m.You ? 0 : 1))
-            Stack.Children.Add(MemberRow(member));
+            memberRows.Children.Add(MemberRow(member));
         var ready = members.Count(m => m.Ready == true);
-        Stack.Children.Add(Ui.Haze(T.PartyLobbyCount(ready, members.Length)));
+        // No count before the room has listed anyone.
+        if (ctx.Known.PartyMembers is not null)
+            Stack.Children.Add(Ui.Haze(T.PartyLobbyCount(ready, members.Length)));
         Stack.Children.Add(Ui.Haze(party.StartingIn is { } secs ? T.PartyStarting(secs) : party.Playing || members.Length > 0 && ready == members.Length ? T.PartyAllReady : T.PartyStartsLine));
 
         // Ready is the one amber; once ready it is tonal with a check and the word.

@@ -19,7 +19,7 @@ namespace Kaeri.Windows.Pages;
 /// </summary>
 sealed class SourcePickerDialog
 {
-    static readonly TimeSpan Silence = TimeSpan.FromMilliseconds(600);
+    static readonly TimeSpan Silence = TimeSpan.FromMilliseconds(600), Slow = TimeSpan.FromSeconds(4), Least = TimeSpan.FromMilliseconds(300);
 
     readonly Ctx ctx;
     readonly uint id;
@@ -33,7 +33,9 @@ sealed class SourcePickerDialog
     };
     readonly StackPanel plates = new() { Spacing = 12, Margin = new Thickness(12, 12, 12, 0), Visibility = Visibility.Collapsed };
     readonly TextBlock empty = Ui.Text(T.SourcesEmpty, "HazeBodyStyle");
-    readonly DispatcherQueueTimer silence;
+    readonly TextBlock activityLine = Ui.Text(T.StateLoading, "HazeCaptionStyle");
+    readonly DispatcherQueueTimer silence, slow;
+    DateTimeOffset platesSince;
     bool picked;
     bool fixMatch;
 
@@ -57,6 +59,10 @@ sealed class SourcePickerDialog
 
         AutomationProperties.SetAccessibilityView(plates, AccessibilityView.Raw);
         plates.Children.Add(States.Rows(2, 0, 0));
+        // Past 4 s the job's activity line under the plates.
+        activityLine.Visibility = Visibility.Collapsed;
+        AutomationProperties.SetLiveSetting(activityLine, AutomationLiveSetting.Polite);
+        plates.Children.Add(activityLine);
         empty.Margin = new Thickness(12, 12, 12, 0);
         empty.Visibility = Visibility.Collapsed;
 
@@ -85,8 +91,19 @@ sealed class SourcePickerDialog
         silence.IsRepeating = false;
         silence.Tick += (_, _) =>
         {
+            if (!ctx.Known.SourceChoices.Loading(id))
+                return;
+            platesSince = DateTimeOffset.UtcNow;
+            Motion.Show(plates);
+            slow.Start();
+        };
+        slow = queue.CreateTimer();
+        slow.Interval = Slow;
+        slow.IsRepeating = false;
+        slow.Tick += (_, _) =>
+        {
             if (ctx.Known.SourceChoices.Loading(id))
-                Motion.Show(plates);
+                Motion.Show(activityLine);
         };
 
         dialog = new ContentDialog
@@ -118,6 +135,7 @@ sealed class SourcePickerDialog
         {
             ctx.Batch -= picker.Heard;
             picker.silence.Stop();
+            picker.slow.Stop();
             ctx.Known.SourceChoices.GiveUp(id);
         }
         if (picker.fixMatch)
@@ -145,13 +163,25 @@ sealed class SourcePickerDialog
         if (listed is not null)
         {
             silence.Stop();
-            plates.Visibility = Visibility.Collapsed;
+            slow.Stop();
+            HidePlates();
         }
         empty.Visibility = listed is { Length: 0 } ? Visibility.Visible : Visibility.Collapsed;
 
         // Once the sources arrive the check may have moved; focus goes to where the person was, or to the chosen row.
         if (dialog.IsLoaded)
             FocusRow(keep);
+    }
+
+    /// <summary>The listing came: plates that showed stay at least 0.3 s, then fade as the rows stand in their place.</summary>
+    async void HidePlates()
+    {
+        if (plates.Visibility != Visibility.Visible)
+            return;
+        var left = Least - (DateTimeOffset.UtcNow - platesSince);
+        if (left > TimeSpan.Zero)
+            await Task.Delay(left);
+        Motion.HideStandard(plates);
     }
 
     /// <summary>Focuses the row with <paramref name="key"/>, or the chosen one.</summary>
