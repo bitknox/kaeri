@@ -76,6 +76,12 @@ mpv_patches=()
 for patch in "$root/android/mpv/patches/mpv/"*.patch; do
   [[ -f "$patch" ]] && mpv_patches+=("$patch")
 done
+# FFmpeg fixes from its release/9.0 branch, after the tag: the images' libraries are the ones that
+# branch builds with.
+ffmpeg_patches=()
+for patch in "$here/ffmpeg/"*.patch; do
+  [[ -f "$patch" ]] && ffmpeg_patches+=("$patch")
+done
 
 sum() { sha256sum "$1" 2>/dev/null | cut -d' ' -f1 || shasum -a 256 "$1" | cut -d' ' -f1; }
 hash_of() { { sha256sum 2>/dev/null || shasum -a 256; } | cut -d' ' -f1; }
@@ -86,7 +92,7 @@ name() {
   hash="$( {
     cat "$self" "$here/build-mingw64-full.patch" "$here/mujs.wrap"
     echo "$ffmpeg_url $ffmpeg_sum $mpv_url $mpv_sum"
-    for patch in "${mpv_patches[@]}"; do basename "$patch"; cat "$patch"; done
+    for patch in "${mpv_patches[@]}" "${ffmpeg_patches[@]}"; do basename "$patch"; cat "$patch"; done
   } | hash_of)"
   echo "$mpv_version-kaeri-${hash:0:12}"
 }
@@ -165,6 +171,7 @@ fetch "https://raw.githubusercontent.com/mpv-player/mpv/$mpv_script_commit/ci/bu
 unpack "mpv-$mpv_version.tar.gz" "$src"
 for patch in "${mpv_patches[@]}"; do apply "$src" "$patch"; done
 unpack "ffmpeg-${ffmpeg_version#n}.tar.xz" "$src/ffmpeg"
+for patch in "${ffmpeg_patches[@]}"; do apply "$src/ffmpeg" "$patch"; done
 unpack "LuaJIT-$luajit_commit.tar.gz" "$src/LuaJIT"
 unpack "libsixel-$libsixel_commit.tar.gz" "$src/libsixel"
 mkdir -p "$src/subprojects"
@@ -295,6 +302,8 @@ unpack "FFmpeg-Builds-$ffmpeg_builds_commit.tar.gz" "$builds"
 cp "$self" "$here/build-mingw64-full.patch" "$here/mujs.wrap" "$here/tapcheck.c" "$stage/build/"
 cp "$downloads/build-mingw64-full.sh" "$stage/build/build-mingw64-full.sh.orig"
 cp "${mpv_patches[@]}" "$stage/build/patches/"
+mkdir -p "$stage/build/patches/ffmpeg"
+cp "${ffmpeg_patches[@]}" "$stage/build/patches/ffmpeg/"
 {
   title="Source of libmpv $build for Windows"
   echo "$title"
@@ -310,6 +319,7 @@ library of its own and which can be replaced with one built from modified source
                                    $mpv_script_commit
   build/build-mingw64-full.patch   Kaeri's changes to that script
   build/patches/                   Kaeri's changes to mpv
+  build/patches/ffmpeg/            fixes from FFmpeg's release/9.0 branch, applied to the tag
   build/mujs.wrap                  the mujs release and meson build used
   sources/                         each archive, by its SHA-256 below
   DEPENDENCIES.txt                 every library in the build images, by repository and commit
