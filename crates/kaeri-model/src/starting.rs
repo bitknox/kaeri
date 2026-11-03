@@ -66,6 +66,10 @@ pub enum StartStep {
     /// does for torrents (the player pauses to fill its cache before the first frame) and not
     /// for direct streams.
     Buffering { percent: u32 },
+    /// The device is offline: the start waits for a connection, up to two minutes, and carries
+    /// on by itself when it is back. Said once when the wait begins. The line is the app's:
+    /// `player-start-offline`.
+    WaitingForConnection,
 }
 
 /// Why a start failed, for the failure screen to say and to pick its actions by. `text` is the
@@ -75,6 +79,10 @@ pub enum StartStep {
 pub struct StartFailure {
     pub why: crate::party::NoSourceWhy,
     pub text: crate::Msg,
+    /// The names of the sources that were asked, in the order they were asked: what a failure
+    /// says as "Alpha and Brook were asked." Empty when none was asked.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub asked: Vec<String>,
 }
 
 /// A made-up start, for an app's previews, screenshots and tests: the events the engine says
@@ -113,8 +121,11 @@ pub enum StartingFixture {
     BufferingTorrent,
     /// A direct stream's player waits for data and knows no percentage.
     BufferingDirect,
-    /// The device is offline.
+    /// The device is offline: the start waits for a connection, which is back at 8 s, and the
+    /// first source is asked.
     Offline,
+    /// The device stays offline: after two minutes the start fails with no source asked.
+    OfflineTimedOut,
     /// Every source has the show and none has the episode.
     FailedNoEpisode,
     /// No source matched the show.

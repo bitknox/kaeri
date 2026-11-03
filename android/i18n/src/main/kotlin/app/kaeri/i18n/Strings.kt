@@ -241,6 +241,10 @@ object Strings {
     fun causeNoSources(context: Context): String =
         context.getString(R.string.cause_no_sources)
 
+    /** Reason: the play waited two minutes for a connection and the device stayed offline. Shown in a toast and on the failure screen. */
+    fun causeNoConnection(context: Context): String =
+        context.getString(R.string.cause_no_connection)
+
     /** A play's explanation: the episode's broadcast is still ahead. The "when" says today, tomorrow or a date. */
     fun noticeNotAired(context: Context, episode: Int, `when`: String): String =
         context.getString(R.string.notice_not_aired, episode, `when`)
@@ -6125,7 +6129,7 @@ object Strings {
     fun playerStartPeers(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.player_start_peers, count, count)
 
-    /** Detail line with the speed data arrives at. */
+    /** Detail line with the speed data arrives at, already sized with one decimal, such as "3.4 MB". */
     fun playerStartSpeed(context: Context, speed: String): String =
         context.getString(R.string.player_start_speed, speed)
 
@@ -6172,6 +6176,66 @@ object Strings {
     /** Details row label for the translation of the episode. */
     fun playerStartTranslation(context: Context): String =
         context.getString(R.string.player_start_translation)
+
+    /** Details row once the title has been looked up. */
+    fun playerStartLookedUp(context: Context): String =
+        context.getString(R.string.player_start_looked_up)
+
+    /** Seconds on the starting screen's detail line and Details rows. */
+    fun playerStartSeconds(context: Context, seconds: Int): String =
+        context.getString(R.string.player_start_seconds, seconds)
+
+    /** Spoken once, when a start has taken more than a few seconds. */
+    fun playerStartStillStarting(context: Context): String =
+        context.getString(R.string.player_start_still_starting)
+
+    /** Spoken when a start begins. The episode is its label. */
+    fun playerStartAnnounce(context: Context, episode: String, title: String): String =
+        context.getString(R.string.player_start_announce, episode, title)
+
+    /** Spoken when a start fails: the title, then the reason. */
+    fun playerStartFailedAnnounce(context: Context, title: String, reason: String): String =
+        context.getString(R.string.player_start_failed_announce, title, reason)
+
+    /** Accessibility value of the starting screen: the step line, then the detail line. */
+    fun playerStartStatus(context: Context, step: String, detail: String): String =
+        context.getString(R.string.player_start_status, step, detail)
+
+    /** Detail line on the starting screen after the viewer chose to play from the beginning. */
+    fun playerStartBeginning(context: Context): String =
+        context.getString(R.string.player_start_beginning)
+
+    /** Details row while a source is being asked. */
+    fun playerStartRowAsking(context: Context): String =
+        context.getString(R.string.player_start_row_asking)
+
+    /** Details row outcome when a source has no match for the show. */
+    fun playerStartRowNoMatch(context: Context): String =
+        context.getString(R.string.player_start_row_no_match)
+
+    /** Details row outcome when a source has the show and not the episode. The episode is its label. */
+    fun playerStartRowNoEpisode(context: Context, episode: String): String =
+        context.getString(R.string.player_start_row_no_episode, episode)
+
+    /** Details row outcome when a source failed. */
+    fun playerStartRowFailed(context: Context): String =
+        context.getString(R.string.player_start_row_failed)
+
+    /** Details row outcome when a source took too long. */
+    fun playerStartRowTimedOut(context: Context): String =
+        context.getString(R.string.player_start_row_timed_out)
+
+    /** Details row outcome when the viewer skipped a source. */
+    fun playerStartRowSkipped(context: Context): String =
+        context.getString(R.string.player_start_row_skipped)
+
+    /** Second clause of a failure: the sources that were asked, joined as a list by the app. */
+    fun playerStartAsked(context: Context, names: String): String =
+        context.getString(R.string.player_start_asked, names)
+
+    /** Label of the switch in the Details list that plays the episode with its subtitles. */
+    fun playerStartSubtitled(context: Context): String =
+        context.getString(R.string.player_start_subtitled)
 
     /** Title of the stall card. The seconds count up. */
     fun playerStallTitle(context: Context, seconds: Int): String =

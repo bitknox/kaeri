@@ -1,5 +1,6 @@
 notice-reason = { $reason }
 cause-no-sources = Inga { -source-pl } är inställda. Lägg till en på skärmen { -source-cap-pl }.
+cause-no-connection = Ingen anslutning. Försök igen när du är online.
 notice-not-aired = Avsnitt { $episode } sänds { $when }.
 notice-not-aired-yet = Avsnitt { $episode } har inte sänts än. Avsnitt { $next } sänds { $when }.
 cause-airs-today = idag kl. { $time }
@@ -28,6 +29,13 @@ cause-already-in-downloads = { $count ->
  }
 status-looking-up-title = Slår upp titeln…
 status-loading-sources = Läser in { -source-pl }…
+start-looking-up-title = Söker upp titeln
+start-getting-sources-ready = Förbereder dina { -source-pl }
+start-asking-source = Frågar { $name }
+start-opening-stream = Öppnar strömmen
+start-trying-another-stream = Provar en annan ström
+start-finding-peers = Letar efter peers
+start-buffering = Buffrar
 status-searching-sources = Söker i { -source-pl } efter avsnitt { $episode }…
 notice-player-failed-to-start = Det gick inte att starta mpv. Kontrollera att den startar på egen hand. ({ $reason })
 notice-stream-no-video = Ingen bild från strömmen. Provar { $next } av { $total }.
