@@ -7935,6 +7935,9 @@ settings-counts-watched-detail = Или когда начинается энди
 # Row: spoiler protection.
 settings-spoiler = Защита от спойлеров
 
+# Line under it.
+settings-spoiler-detail = Размывает кадры и описания непросмотренных серий после следующей
+
 # Line under the audio row.
 settings-audio-detail = Каждый сериал помнит свою аудиодорожку и субтитры.
 
@@ -8081,6 +8084,9 @@ show-settings-blur-ahead = Размывать кадры следующих се
 
 # Option: show everything.
 show-settings-show-everything = Показывать всё
+
+# Line under spoiler protection.
+show-settings-spoiler-detail = Размывает кадры и описания после следующей серии.
 
 # Option: always.
 show-settings-always = Всегда
@@ -9423,6 +9429,72 @@ episode-row-airs = Выйдет { $when }
 
 # Accessibility label of an episode's still while spoiler protection hides it.
 episode-spoiler-hidden = Скрыто защитой от спойлеров
+
+# Hint of a protected episode's row, and its still's label in a preview: the synopsis is hidden.
+episode-synopsis-hidden = Описание скрыто защитой от спойлеров
+
+# Menu item, button and screen reader action that reveals one protected episode's still and synopsis.
+episode-synopsis-show = Показать описание
+
+# Screen reader hint of that action.
+episode-synopsis-show-hint = Показывает кадр и описание этой серии
+
+# Facts line of an episode with a length and an air date. The date is already formatted.
+episode-facts = { $minutes } мин · Вышла { $date }
+
+# Facts line of an episode with a length only.
+episode-facts-length = { $minutes } min
+
+# Facts line of an episode that is part-watched.
+episode-facts-left = Осталось { $minutes } мин
+
+# One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.
+episode-protection-line = Защита от спойлеров скрывает всё после серии { $episode }.
+
+# The same line on phones.
+episode-protection-line-short = Скрыто после серии { $episode }
+
+# Label of an episode range of a long series, in the range menu.
+episode-range = Серии с { $from } по { $to }
+
+# Label of the control that picks an episode range.
+episode-range-label = Диапазон серий
+
+# One line that stands for the watched episodes at the top of a range. Opening it shows them.
+episode-fold =
+    { $count ->
+        [one] Одна просмотренная серия
+        [few] { $count } просмотренные серии
+        [many] { $count } просмотренных серий
+       *[other] { $count } просмотренной серии
+    }
+
+# An episode's number in a facts line on phones.
+episode-short = С{ $episode }
+
+# Part of an episode's facts line: when it aired. The date is already formatted.
+episode-aired = Вышла { $date }
+
+# Two parts of an episode's facts line, set one after the other.
+episode-facts-join = { $first } · { $second }
+
+# Button in the line where spoiler protection starts: shows what comes after.
+episode-protection-show = Показать
+
+# Button in that line once the rows after it are shown: hides them again.
+episode-protection-hide = Скрыть
+
+# The line where spoiler protection starts, once the rows after it are shown.
+episode-protection-shown = Показано всё после серии { $episode }.
+
+# The same line on phones.
+episode-protection-shown-short = Видно после серии { $episode }
+
+# An episode range in the range menu: the first and the last episode.
+episode-range-short = { $from }–{ $to }
+
+# An item of the range menu: the range, then Watched or Not out yet.
+episode-range-item = { $range } · { $state }
 
 # Accessibility label of the button that opens an episode's menu.
 episode-options = Параметры серии

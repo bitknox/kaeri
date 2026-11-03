@@ -7791,6 +7791,9 @@ settings-counts-watched-detail = Ya da bitiş işaretliyse, bitiş başladığı
 # Row: spoiler protection.
 settings-spoiler = Spoiler koruması
 
+# Line under it.
+settings-spoiler-detail = Sıradakinden sonraki izlenmemiş bölümlerin karelerini ve özetlerini bulanıklaştırır
+
 # Line under the audio row.
 settings-audio-detail = Her dizi kendi ses ve altyazı tercihini hatırlar.
 
@@ -7935,6 +7938,9 @@ show-settings-blur-ahead = İleriki bölümlerin karelerini bulanıklaştır
 
 # Option: show everything.
 show-settings-show-everything = Her şeyi göster
+
+# Line under spoiler protection.
+show-settings-spoiler-detail = sıradaki bölümden sonrasının kare ve özetlerini bulanıklaştırır.
 
 # Option: always.
 show-settings-always = Her zaman
@@ -9257,6 +9263,70 @@ episode-row-airs = { $when } yayımlanır
 
 # Accessibility label of an episode's still while spoiler protection hides it.
 episode-spoiler-hidden = Spoiler koruması nedeniyle gizli
+
+# Hint of a protected episode's row, and its still's label in a preview: the synopsis is hidden.
+episode-synopsis-hidden = Özet, spoiler korumasıyla gizlendi
+
+# Menu item, button and screen reader action that reveals one protected episode's still and synopsis.
+episode-synopsis-show = Özeti göster
+
+# Screen reader hint of that action.
+episode-synopsis-show-hint = Bu bölümün karesini ve özetini gösterir
+
+# Facts line of an episode with a length and an air date. The date is already formatted.
+episode-facts = { $minutes } dk · Yayın tarihi { $date }
+
+# Facts line of an episode with a length only.
+episode-facts-length = { $minutes } min
+
+# Facts line of an episode that is part-watched.
+episode-facts-left = { $minutes } dk kaldı
+
+# One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.
+episode-protection-line = Spoiler koruması, { $episode }. bölümden sonrasını gizler.
+
+# The same line on phones.
+episode-protection-line-short = { $episode }. bölümden sonra gizli
+
+# Label of an episode range of a long series, in the range menu.
+episode-range = { $from }. ile { $to }. bölümler arası
+
+# Label of the control that picks an episode range.
+episode-range-label = Bölüm aralığı
+
+# One line that stands for the watched episodes at the top of a range. Opening it shows them.
+episode-fold =
+    { $count ->
+        [one] İzlenen bir bölüm
+       *[other] { $count } izlenen bölüm
+    }
+
+# An episode's number in a facts line on phones.
+episode-short = B{ $episode }
+
+# Part of an episode's facts line: when it aired. The date is already formatted.
+episode-aired = Yayın tarihi { $date }
+
+# Two parts of an episode's facts line, set one after the other.
+episode-facts-join = { $first } · { $second }
+
+# Button in the line where spoiler protection starts: shows what comes after.
+episode-protection-show = Göster
+
+# Button in that line once the rows after it are shown: hides them again.
+episode-protection-hide = Gizle
+
+# The line where spoiler protection starts, once the rows after it are shown.
+episode-protection-shown = { $episode }. bölümden sonrası gösteriliyor.
+
+# The same line on phones.
+episode-protection-shown-short = { $episode }. bölümden sonra görünür
+
+# An episode range in the range menu: the first and the last episode.
+episode-range-short = { $from }–{ $to }
+
+# An item of the range menu: the range, then Watched or Not out yet.
+episode-range-item = { $range } · { $state }
 
 # Accessibility label of the button that opens an episode's menu.
 episode-options = Bölüm seçenekleri

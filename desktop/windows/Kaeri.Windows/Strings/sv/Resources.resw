@@ -5261,6 +5261,9 @@
   <data name="SettingsSpoiler" xml:space="preserve">
     <value>Spoilerskydd</value>
   </data>
+  <data name="SettingsSpoilerDetail" xml:space="preserve">
+    <value>Suddar bilder och sammanfattningar för osedda avsnitt efter nästa</value>
+  </data>
   <data name="SettingsAudioDetail" xml:space="preserve">
     <value>Varje serie minns sitt eget ljud och sina undertexter.</value>
   </data>
@@ -5404,6 +5407,9 @@
   </data>
   <data name="ShowSettingsShowEverything" xml:space="preserve">
     <value>Visa allt</value>
+  </data>
+  <data name="ShowSettingsSpoilerDetail" xml:space="preserve">
+    <value>Suddar bilder och sammanfattningar efter nästa avsnitt.</value>
   </data>
   <data name="ShowSettingsAlways" xml:space="preserve">
     <value>Alltid</value>
@@ -6721,6 +6727,69 @@
   </data>
   <data name="EpisodeSpoilerHidden" xml:space="preserve">
     <value>Dold av spoilerskydd</value>
+  </data>
+  <data name="EpisodeSynopsisHidden" xml:space="preserve">
+    <value>Sammanfattning dold av spoilerskydd</value>
+  </data>
+  <data name="EpisodeSynopsisShow" xml:space="preserve">
+    <value>Visa sammanfattning</value>
+  </data>
+  <data name="EpisodeSynopsisShowHint" xml:space="preserve">
+    <value>Visar avsnittets bild och sammanfattning</value>
+  </data>
+  <data name="EpisodeFacts" xml:space="preserve">
+    <value>{minutes} min · Sändes {date}</value>
+  </data>
+  <data name="EpisodeFactsLength" xml:space="preserve">
+    <value>{minutes} min</value>
+  </data>
+  <data name="EpisodeFactsLeft" xml:space="preserve">
+    <value>{minutes} min kvar</value>
+  </data>
+  <data name="EpisodeProtectionLine" xml:space="preserve">
+    <value>Spoilerskyddet döljer allt efter avsnitt {episode}.</value>
+  </data>
+  <data name="EpisodeProtectionLineShort" xml:space="preserve">
+    <value>Dolt efter avsnitt {episode}</value>
+  </data>
+  <data name="EpisodeRange" xml:space="preserve">
+    <value>Avsnitt {from} till {to}</value>
+  </data>
+  <data name="EpisodeRangeLabel" xml:space="preserve">
+    <value>Avsnittsintervall</value>
+  </data>
+  <data name="EpisodeFold_one" xml:space="preserve">
+    <value>Ett sett avsnitt</value>
+  </data>
+  <data name="EpisodeFold_other" xml:space="preserve">
+    <value>{count} sedda avsnitt</value>
+  </data>
+  <data name="EpisodeShort" xml:space="preserve">
+    <value>A{episode}</value>
+  </data>
+  <data name="EpisodeAired" xml:space="preserve">
+    <value>Sändes {date}</value>
+  </data>
+  <data name="EpisodeFactsJoin" xml:space="preserve">
+    <value>{first} · {second}</value>
+  </data>
+  <data name="EpisodeProtectionShow" xml:space="preserve">
+    <value>Visa</value>
+  </data>
+  <data name="EpisodeProtectionHide" xml:space="preserve">
+    <value>Dölj</value>
+  </data>
+  <data name="EpisodeProtectionShown" xml:space="preserve">
+    <value>Visar allt efter avsnitt {episode}.</value>
+  </data>
+  <data name="EpisodeProtectionShownShort" xml:space="preserve">
+    <value>Visas efter avsnitt {episode}</value>
+  </data>
+  <data name="EpisodeRangeShort" xml:space="preserve">
+    <value>{from}–{to}</value>
+  </data>
+  <data name="EpisodeRangeItem" xml:space="preserve">
+    <value>{range} · {state}</value>
   </data>
   <data name="EpisodeOptions" xml:space="preserve">
     <value>Avsnittsalternativ</value>

@@ -35,6 +35,30 @@ episode-filler = Filler
 episode-row-not-out = Pas encore diffusé
 episode-row-airs = Diffusion { $when }
 episode-spoiler-hidden = Masqué par la protection anti-spoilers
+episode-synopsis-hidden = Résumé masqué par la protection anti-spoilers
+episode-synopsis-show = Afficher le résumé
+episode-synopsis-show-hint = Affiche l’image et le résumé de cet épisode
+episode-facts = { $minutes } min · Diffusé le { $date }
+episode-facts-length = { $minutes } min
+episode-facts-left = { $minutes } min restantes
+episode-protection-line = La protection anti-spoilers masque ce qui suit l’épisode { $episode }.
+episode-protection-line-short = Masqué après l’épisode { $episode }
+episode-range = Épisodes { $from } à { $to }
+episode-range-label = Plage d’épisodes
+episode-fold = { $count ->
+    [one] Un épisode vu
+    [many] { $count } épisodes vus
+   *[other] { $count } épisodes vus
+ }
+episode-short = Ép. { $episode }
+episode-aired = Diffusé le { $date }
+episode-facts-join = { $first } · { $second }
+episode-protection-show = Afficher
+episode-protection-hide = Masquer
+episode-protection-shown = Affichage de ce qui suit l’épisode { $episode }.
+episode-protection-shown-short = Visible après l’épisode { $episode }
+episode-range-short = { $from }–{ $to }
+episode-range-item = { $range } · { $state }
 episode-options = Options de l'épisode
 episode-mark-watched = Marquer comme vu
 episode-mark-unwatched = Marquer comme non vu

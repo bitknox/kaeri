@@ -9460,6 +9460,42 @@ object Strings {
     fun episodeFold(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.episode_fold, count, count)
 
+    /** An episode's number in a facts line on phones. */
+    fun episodeShort(context: Context, episode: Int): String =
+        context.getString(R.string.episode_short, episode)
+
+    /** Part of an episode's facts line: when it aired. The date is already formatted. */
+    fun episodeAired(context: Context, date: String): String =
+        context.getString(R.string.episode_aired, date)
+
+    /** Two parts of an episode's facts line, set one after the other. */
+    fun episodeFactsJoin(context: Context, first: String, second: String): String =
+        context.getString(R.string.episode_facts_join, first, second)
+
+    /** Button in the line where spoiler protection starts: shows what comes after. */
+    fun episodeProtectionShow(context: Context): String =
+        context.getString(R.string.episode_protection_show)
+
+    /** Button in that line once the rows after it are shown: hides them again. */
+    fun episodeProtectionHide(context: Context): String =
+        context.getString(R.string.episode_protection_hide)
+
+    /** The line where spoiler protection starts, once the rows after it are shown. */
+    fun episodeProtectionShown(context: Context, episode: Int): String =
+        context.getString(R.string.episode_protection_shown, episode)
+
+    /** The same line on phones. */
+    fun episodeProtectionShownShort(context: Context, episode: Int): String =
+        context.getString(R.string.episode_protection_shown_short, episode)
+
+    /** An episode range in the range menu: the first and the last episode. */
+    fun episodeRangeShort(context: Context, from: String, to: String): String =
+        context.getString(R.string.episode_range_short, from, to)
+
+    /** An item of the range menu: the range, then Watched or Not out yet. */
+    fun episodeRangeItem(context: Context, range: String, state: String): String =
+        context.getString(R.string.episode_range_item, range, state)
+
     /** Accessibility label of the button that opens an episode's menu. */
     fun episodeOptions(context: Context): String =
         context.getString(R.string.episode_options)

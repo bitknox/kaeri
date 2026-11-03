@@ -35,6 +35,29 @@ episode-filler = Dolgu
 episode-row-not-out = Henüz yayımlanmadı
 episode-row-airs = { $when } yayımlanır
 episode-spoiler-hidden = Spoiler koruması nedeniyle gizli
+episode-synopsis-hidden = Özet, spoiler korumasıyla gizlendi
+episode-synopsis-show = Özeti göster
+episode-synopsis-show-hint = Bu bölümün karesini ve özetini gösterir
+episode-facts = { $minutes } dk · Yayın tarihi { $date }
+episode-facts-length = { $minutes } min
+episode-facts-left = { $minutes } dk kaldı
+episode-protection-line = Spoiler koruması, { $episode }. bölümden sonrasını gizler.
+episode-protection-line-short = { $episode }. bölümden sonra gizli
+episode-range = { $from }. ile { $to }. bölümler arası
+episode-range-label = Bölüm aralığı
+episode-fold = { $count ->
+    [one] İzlenen bir bölüm
+   *[other] { $count } izlenen bölüm
+ }
+episode-short = B{ $episode }
+episode-aired = Yayın tarihi { $date }
+episode-facts-join = { $first } · { $second }
+episode-protection-show = Göster
+episode-protection-hide = Gizle
+episode-protection-shown = { $episode }. bölümden sonrası gösteriliyor.
+episode-protection-shown-short = { $episode }. bölümden sonra görünür
+episode-range-short = { $from }–{ $to }
+episode-range-item = { $range } · { $state }
 episode-options = Bölüm seçenekleri
 episode-mark-watched = İzlendi olarak işaretle
 episode-mark-unwatched = İzlenmedi olarak işaretle

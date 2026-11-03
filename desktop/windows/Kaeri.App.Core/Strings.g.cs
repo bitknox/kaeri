@@ -6546,6 +6546,33 @@ public static partial class T
     /// <summary>One line that stands for the watched episodes at the top of a range. Opening it shows them.</summary>
     public static string EpisodeFold(long count) => Fill(GetPlural("EpisodeFold", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>An episode's number in a facts line on phones.</summary>
+    public static string EpisodeShort(long episode) => Fill(Get("EpisodeShort"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Part of an episode's facts line: when it aired. The date is already formatted.</summary>
+    public static string EpisodeAired(string date) => Fill(Get("EpisodeAired"), ("date", date));
+
+    /// <summary>Two parts of an episode's facts line, set one after the other.</summary>
+    public static string EpisodeFactsJoin(string first, string second) => Fill(Get("EpisodeFactsJoin"), ("first", first), ("second", second));
+
+    /// <summary>Button in the line where spoiler protection starts: shows what comes after.</summary>
+    public static string EpisodeProtectionShow => Get("EpisodeProtectionShow");
+
+    /// <summary>Button in that line once the rows after it are shown: hides them again.</summary>
+    public static string EpisodeProtectionHide => Get("EpisodeProtectionHide");
+
+    /// <summary>The line where spoiler protection starts, once the rows after it are shown.</summary>
+    public static string EpisodeProtectionShown(long episode) => Fill(Get("EpisodeProtectionShown"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The same line on phones.</summary>
+    public static string EpisodeProtectionShownShort(long episode) => Fill(Get("EpisodeProtectionShownShort"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>An episode range in the range menu: the first and the last episode.</summary>
+    public static string EpisodeRangeShort(string from, string to) => Fill(Get("EpisodeRangeShort"), ("from", from), ("to", to));
+
+    /// <summary>An item of the range menu: the range, then Watched or Not out yet.</summary>
+    public static string EpisodeRangeItem(string range, string state) => Fill(Get("EpisodeRangeItem"), ("range", range), ("state", state));
+
     /// <summary>Accessibility label of the button that opens an episode's menu.</summary>
     public static string EpisodeOptions => Get("EpisodeOptions");
 
@@ -9830,6 +9857,15 @@ public static partial class T
         ["EpisodeRangeLabel"] = "Episode range",
         ["EpisodeFold_one"] = "One watched episode",
         ["EpisodeFold_other"] = "{count} watched episodes",
+        ["EpisodeShort"] = "E{episode}",
+        ["EpisodeAired"] = "Aired {date}",
+        ["EpisodeFactsJoin"] = "{first} · {second}",
+        ["EpisodeProtectionShow"] = "Show",
+        ["EpisodeProtectionHide"] = "Hide",
+        ["EpisodeProtectionShown"] = "Showing what comes after episode {episode}.",
+        ["EpisodeProtectionShownShort"] = "Showing after episode {episode}",
+        ["EpisodeRangeShort"] = "{from}–{to}",
+        ["EpisodeRangeItem"] = "{range} · {state}",
         ["EpisodeOptions"] = "Episode options",
         ["EpisodeMarkWatched"] = "Mark watched",
         ["EpisodeMarkUnwatched"] = "Mark unwatched",

@@ -3761,6 +3761,13 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "episode-aired": {
+    "source": "43f8e2b01315",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03",
+    "back": "Aired { $date }"
+  },
   "episode-aired-help": {
     "source": "1ed48bc101a8",
     "state": "draft",
@@ -3839,11 +3846,49 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "episode-facts": {
+    "source": "0af98d4f3685",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03",
+    "back": "{ $minutes } min · Aired { $date }"
+  },
+  "episode-facts-join": {
+    "source": "142080cd7a31",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03",
+    "back": "{ $first } · { $second }"
+  },
+  "episode-facts-left": {
+    "source": "d520dfbe1051",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03",
+    "back": "{ $minutes } min left"
+  },
+  "episode-facts-length": {
+    "source": "e2c4da4d9e86",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03",
+    "back": "{ $minutes } min"
+  },
   "episode-filler": {
     "source": "4ac64f66ac45",
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "episode-fold": {
+    "source": "337b0b7a033d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03",
+    "flags": [
+      "Plural wording; the \"many\" form only counts millions"
+    ],
+    "back": "One watched episode / {count} watched episodes"
   },
   "episode-label": {
     "source": "b866ac6e9ff4",
@@ -3989,6 +4034,76 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "episode-protection-hide": {
+    "source": "9df212d89cab",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03",
+    "back": "Hide"
+  },
+  "episode-protection-line": {
+    "source": "0252a3c932a9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03",
+    "back": "Spoiler protection hides what comes after episode { $episode }."
+  },
+  "episode-protection-line-short": {
+    "source": "70597858004f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03",
+    "back": "Hidden after episode { $episode }"
+  },
+  "episode-protection-show": {
+    "source": "716a6024e3fe",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03",
+    "back": "Show"
+  },
+  "episode-protection-shown": {
+    "source": "cf8b55aa2648",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03",
+    "back": "Showing what comes after episode { $episode }."
+  },
+  "episode-protection-shown-short": {
+    "source": "5ee98a7d6e11",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03",
+    "back": "Showing after episode { $episode }"
+  },
+  "episode-range": {
+    "source": "a706d4e19964",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03",
+    "back": "Episodes { $from } to { $to }"
+  },
+  "episode-range-item": {
+    "source": "0e39bcbec086",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03",
+    "back": "{ $range } · { $state }"
+  },
+  "episode-range-label": {
+    "source": "a4eff8019cf6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03",
+    "back": "Episode range"
+  },
+  "episode-range-short": {
+    "source": "ee2a5cfb619d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03",
+    "back": "{ $from }–{ $to }"
+  },
   "episode-row-airs": {
     "source": "8ad9d45ed7c2",
     "state": "draft",
@@ -4007,6 +4122,16 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "episode-short": {
+    "source": "6f4f5d294345",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03",
+    "flags": [
+      "Abbreviation for episode; check it reads as a compact label"
+    ],
+    "back": "E{ $episode }"
+  },
   "episode-short-dubbed": {
     "source": "4674a2aa161a",
     "state": "draft",
@@ -4018,6 +4143,30 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "episode-synopsis-hidden": {
+    "source": "dc215349ece8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03",
+    "flags": [
+      "Spoiler protection and synopsis wording to be checked against the app glossary"
+    ],
+    "back": "Synopsis hidden by spoiler protection"
+  },
+  "episode-synopsis-show": {
+    "source": "8b77ec4bcd48",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03",
+    "back": "Show synopsis"
+  },
+  "episode-synopsis-show-hint": {
+    "source": "51e193a5f3bc",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03",
+    "back": "Shows this episode's still and synopsis"
   },
   "episode-text-with-title": {
     "source": "943e6f0f0ea1",
@@ -16091,10 +16240,14 @@
     "at": "2026-10-31"
   },
   "settings-spoiler-detail": {
-    "source": "0afda37e7641",
+    "source": "d7099ea8b0cb",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-03",
+    "flags": [
+      "Uses the up next term; sentence shape adjusted around it"
+    ],
+    "back": "Hides stills and synopses of unwatched episodes after the next one"
   },
   "settings-start-full-screen": {
     "source": "e85ff585419d",
@@ -17663,10 +17816,14 @@
     "at": "2026-10-31"
   },
   "show-settings-spoiler-detail": {
-    "source": "8c3f49313f30",
+    "source": "3048ec35aab1",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-03",
+    "flags": [
+      "Uses the up next term; sentence shape adjusted around it"
+    ],
+    "back": "Hides stills and synopses after the next episode."
   },
   "show-settings-subs-follow": {
     "source": "59bcda084151",
