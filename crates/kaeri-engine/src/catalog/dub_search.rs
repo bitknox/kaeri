@@ -74,8 +74,13 @@ pub async fn ask(
             keep(&lent.store, media, &hits, now);
         }
     }
-    let coverage =
-        DubCoverage::of(true, covered.len() as u32, covered.len() as u32 + u32::from(more), asked, answered);
+    let coverage = DubCoverage::of(
+        true,
+        covered.len() as u32,
+        covered.len() as u32 + u32::from(more),
+        asked,
+        answered,
+    );
     (known(&lent.store, covered), coverage)
 }
 

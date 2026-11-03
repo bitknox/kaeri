@@ -210,7 +210,7 @@ async fn first_page(
             // The ask is about the first 50 results: the first page and the start of the
             // second, which the next scroll finds kept.
             let (covered, more) = if wants_dubs {
-                covered_by_ask(&lent, &searches, &query, adult, &found).await
+                covered_by_ask(&lent, searches, &query, adult, &found).await
             } else {
                 (found.page.items.clone(), found.page.has_next)
             };
@@ -269,7 +269,8 @@ async fn covered_by_ask(
     adult: bool,
     first: &Found,
 ) -> (Vec<Media>, bool) {
-    let room = (kaeri_model::browsing::DUB_COVERS as usize).saturating_sub(first.page.items.len());
+    let room =
+        (kaeri_model::browsing::DUB_COVERS as usize).saturating_sub(first.page.items.len());
     if !first.page.has_next || room == 0 {
         return (first.page.items.clone(), first.page.has_next);
     }
