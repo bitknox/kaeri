@@ -211,7 +211,8 @@ needs="$("${FFBUILD_CROSS_PREFIX}objdump" -p "$dll" | sed -n 's/^\s*DLL Name: //
 [[ -n "$needs" ]] || fail "found no imports in libmpv-2.dll"
 for need in $needs; do
   case "${need,,}" in
-    lib*.dll | *mingw*.dll | *pthread*.dll | *c++*.dll | *unwind*.dll | *gcc*.dll | *ffmpeg*.dll | av*.dll | sw*.dll | *mpv*.dll)
+    lib*.dll | *mingw*.dll | *pthread*.dll | *c++*.dll | *unwind*.dll | *gcc*.dll | *ffmpeg*.dll | *mpv*.dll | \
+      avcodec*.dll | avformat*.dll | avutil*.dll | avfilter*.dll | avdevice*.dll | swscale*.dll | swresample*.dll)
       fail "libmpv-2.dll needs $need, which Windows does not have" ;;
   esac
 done
