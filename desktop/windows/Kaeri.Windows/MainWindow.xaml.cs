@@ -112,6 +112,15 @@ public sealed partial class MainWindow : Window
         };
         ctx = new Ctx { Session = session, Art = art, Window = this, Options = options, Updater = updater, Tv = tv };
         Ctx.Current = ctx;
+#if KAERI_TESTING
+        // The found skip times' shots: finding paused as a fixture says, whatever this machine does.
+        session.Known.ForcedPause = options.Show switch
+        {
+            "found-set-low-power" or "found-panel-paused" => SkipFindPause.LowPower,
+            "found-set-storage" => SkipFindPause.Storage,
+            _ => null,
+        };
+#endif
         // A fixture run has no trailers of its own; the testing build gives most titles a made-up one.
         session.Known.FixtureTrailers = options.Fixture;
         session.Batch += batch =>
@@ -589,12 +598,11 @@ public sealed partial class MainWindow : Window
                     foreach (var notice in Notices.Aired(n.V1))
                         toasts?.Post(notice);
                     break;
-                case Event.Content { View: ContentFor.Continue, ContentValue: ContentList.Entries } when options.Play && !played:
+                // --play: the first Home the engine sends starts the fixture show's episode 7, the
+                // one the Playing and SkipMarked scenes seed.
+                case Event.Home when options.Play && !played:
                     played = true;
-                    var entries = ctx.Known.ListEntries(new ContentFor.Continue());
-                    var queue = Wording.Said(KaeriFfiMethods.ContinueQueue(entries, [.. ctx.Known.HiddenFromContinue], Casing.Sentence));
-                    if (queue.InProgress.Concat(queue.NewThisWeek).FirstOrDefault(q => q.Playable) is { } first)
-                        ctx.Play(first.Entry.Id, first.Episode.ToString());
+                    ctx.Play(900001, "7");
                     break;
             }
         }

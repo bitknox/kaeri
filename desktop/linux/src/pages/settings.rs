@@ -115,6 +115,7 @@ const PANES: [Pane; 10] = [
                     K::SkipFiller,
                     K::MarkChapters,
                     K::SkipButton,
+                    K::FindSkipTimes,
                     K::AskWasOpening,
                     K::ShareSkipTimes,
                     K::Fullscreen,
@@ -208,8 +209,17 @@ fn follows(switch: SettingKey) -> Option<&'static [SettingKey]> {
 /// for power saving, or what it does.
 fn find_skips_line(paused: Option<SkipFindPause>) -> String {
     match paused {
-        Some(SkipFindPause::LowPower) => t::player_skip_paused_power_saver(),
-        Some(SkipFindPause::Storage) => t::player_skip_paused_storage(),
+        // The reason joins what the row says it does; an app that can't find at all says only that.
+        Some(SkipFindPause::LowPower) => {
+            format!(
+                "{} {}",
+                t::settings_find_skips_detail(),
+                t::player_skip_paused_power_saver()
+            )
+        }
+        Some(SkipFindPause::Storage) => {
+            format!("{} {}", t::settings_find_skips_detail(), t::player_skip_paused_storage())
+        }
         Some(SkipFindPause::Unavailable) => t::player_skip_unavailable(),
         None => t::settings_find_skips_detail(),
     }
