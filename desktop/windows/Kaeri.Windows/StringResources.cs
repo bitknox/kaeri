@@ -32,8 +32,12 @@ static class StringResources
         var language = only ?? Chosen;
         try
         {
-            if (only is null && !fixture)
-                Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = Chosen ?? "";
+            // WinUI's own words (Back, Settings, the navigation button) follow the override. Left
+            // empty, they follow Windows, and on a system in a language the app has no text for
+            // they come out in that language beside the app's English. Every launch sets it, so
+            // a fixture run setting it leaves nothing behind that the next launch keeps.
+            if (only is null)
+                Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = Chosen ?? Shown(null);
         }
         catch
         {
