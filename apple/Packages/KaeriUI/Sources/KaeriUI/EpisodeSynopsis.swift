@@ -91,7 +91,20 @@ enum EpisodeProtection {
 
     /// The first row that protection hides, which the line about it sits above.
     static func startsAt(_ rows: [EpisodeRow], spoilers: Bool) -> String? {
-        rows.first { hides($0, spoilers: spoilers) }?.number
+        start(rows, spoilers: spoilers)?.row
+    }
+
+    /// Where protection starts in `rows`: the first row it hides, and the episode the line names,
+    /// the last one before it (the row above, else the number before the first hidden one).
+    static func start(_ rows: [EpisodeRow], spoilers: Bool) -> (row: String, after: Int)? {
+        guard let at = rows.firstIndex(where: { hides($0, spoilers: spoilers) }) else { return nil }
+        let before = at > 0 ? whole(rows[at - 1].number) : whole(rows[at].number).map { $0 - 1 }
+        return (rows[at].number, max(before ?? 0, 0))
+    }
+
+    /// An episode number as a whole number, a half episode taking the one before it.
+    private static func whole(_ number: String) -> Int? {
+        Int(number) ?? Double(number).map { Int($0.rounded(.down)) }
     }
 }
 
@@ -212,11 +225,47 @@ extension Navigator {
         if !shown { synopsisShown[title] = nil }
     }
 
-    /// The visit to `title`'s page is over: what it showed past protection hides again, and the
-    /// next visit opens on the range of the next episode.
-    func endEpisodeVisit(_ title: AnilistId) {
-        synopsisShown[title] = nil
-        synopsisAllShown.remove(title)
-        episodeRange[title] = nil
+    /// The titles whose pages are open: the Mac's page and the pages under it that Back returns
+    /// to, and on iPhone and iPad every tab's pushed pages. A page covered by another page or by
+    /// the player is still open.
+    var openTitles: Set<AnilistId> {
+        #if os(macOS)
+        guard let titleOnMac else { return [] }
+        return Set((paths[section] ?? []).map(\.id)).union([titleOnMac])
+        #else
+        return Set(paths.values.flatMap { $0.map(\.id) })
+        #endif
     }
+
+    /// Ends the visit to each page no longer open: what it showed past protection hides again,
+    /// and the next visit opens on the range of the next episode.
+    func endClosedEpisodeVisits() {
+        let open = openTitles
+        let visited = Set(synopsisShown.keys).union(synopsisAllShown).union(episodeRange.keys)
+        for title in visited.subtracting(open) {
+            synopsisShown[title] = nil
+            synopsisAllShown.remove(title)
+            episodeRange[title] = nil
+        }
+    }
+
+    /// Steps the episode list on screen to its previous or next range, as View › Previous
+    /// Episodes and Next Episodes do.
+    func stepEpisodeRange(by step: Int) {
+        guard let shown = episodeRangesShown else { return }
+        let index = shown.index + step
+        guard (0..<shown.count).contains(index) else { return }
+        episodeRange[shown.title] = index
+    }
+}
+
+/// The ranges of the episode list on screen, for the View menu's Previous Episodes and Next
+/// Episodes.
+struct EpisodeRangesShown: Equatable {
+    let title: AnilistId
+    let index: Int
+    let count: Int
+
+    var hasPrevious: Bool { index > 0 }
+    var hasNext: Bool { index < count - 1 }
 }

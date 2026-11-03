@@ -1183,10 +1183,24 @@ struct EpisodeList: View {
     var picked: (() -> Void)? = nil
     /// The episode the pointer is over, for the panel's footer.
     var pointed: Binding<String?>? = nil
+    /// The episode whose row has the keyboard's focus, for the panel's footer.
+    var focused: Binding<String?>? = nil
+    @FocusState private var focus: String?
+    /// The pointer's last row, let go 150 ms after the pointer leaves it: crossing a gap or a
+    /// source between rows keeps the footer where it was.
+    @State private var leaving: Task<Void, Never>?
 
     var body: some View {
         let episodes = model.menus?.episodes ?? []
         MenuHeading(title: L.playerEpisodes)
+            .onChange(of: focus) { focused?.wrappedValue = focus }
+            .task {
+                // A screenshot's keyboard focus on a row, by its number.
+                guard focused != nil, let number = PlayerShot.focusedEpisode(in: ProcessInfo.processInfo.arguments)
+                else { return }
+                try? await Task.sleep(for: .milliseconds(300))
+                focus = number
+            }
         ForEach(episodes, id: \.number) { row in
             if row.current {
                 // One block, which the list scrolls into view whole as it opens.
@@ -1215,12 +1229,20 @@ struct EpisodeList: View {
             model.choose(.episode(row.number))
             if !row.current { picked?() }
         }
+        .focused($focus, equals: row.number)
         .onHover { inside in
             guard let pointed else { return }
             if inside {
+                leaving?.cancel()
+                leaving = nil
                 pointed.wrappedValue = row.number
             } else if pointed.wrappedValue == row.number {
-                pointed.wrappedValue = nil
+                leaving?.cancel()
+                leaving = Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(150))
+                    guard !Task.isCancelled, pointed.wrappedValue == row.number else { return }
+                    pointed.wrappedValue = nil
+                }
             }
         }
     }
@@ -1407,28 +1429,32 @@ struct MarkedStretch: View {
     }
 }
 
-/// The foot of the Episodes panel: the title of the episode the pointer is over, else the one
-/// playing, and its synopsis in three lines. A protected episode gets its title and length and no
-/// synopsis, and no bar to say so. The room is kept only if the table had synopses when the panel
-/// opened; text that comes later fades in.
+/// The foot of the Episodes panel: the title of the episode under the pointer, else the one with
+/// the keyboard's focus, else the one playing, and its synopsis in three lines. A protected
+/// episode gets its title and length and no synopsis, and no bar to say so. The room is kept only
+/// if the table had synopses when the panel opened, decided as the panel is made so it opens at
+/// its final layout; text that comes later fades in.
 struct EpisodeFooter: View {
     @Environment(AppStore.self) private var store
     let model: PlayerModel
+    let metrics: PlayerMetrics
     let pointed: String?
-    /// Whether the table had synopses when the panel opened.
-    @State private var reserved: Bool?
+    let focused: String?
+    /// Whether the table had synopses when the panel opened: the first value made is kept.
+    @State private var reserved: Bool
+
+    init(model: PlayerModel, metrics: PlayerMetrics, table: [EpisodeRow], pointed: String?, focused: String?) {
+        self.model = model
+        self.metrics = metrics
+        self.pointed = pointed
+        self.focused = focused
+        _reserved = State(initialValue: episodeText(rows: table) == .present)
+    }
 
     var body: some View {
-        let id = model.staged?.id
-        let table = id.flatMap { store.titles.episodes[$0] } ?? []
-        // A stack, not a Group: a Group with nothing in it never runs onAppear.
-        VStack(spacing: 0) {
-            if reserved == true, let id {
-                footer(id: id, table: table)
-            }
+        if reserved, let id = model.staged?.id {
+            footer(id: id, table: store.titles.episodes[id] ?? [])
         }
-        .animation(.fadeIn, value: reserved)
-        .onAppear { reserved = episodeText(rows: table) == .present }
     }
 
     private func footer(id: AnilistId, table: [EpisodeRow]) -> some View {
@@ -1439,15 +1465,15 @@ struct EpisodeFooter: View {
                 (item.title.map { "\(item.label) · \($0)" } ?? item.label) == words
             }?.number
         }
-        let number = pointed ?? named ?? episodes.first(where: \.current)?.number
+        let number = pointed ?? focused ?? named ?? episodes.first(where: \.current)?.number
         let row = table.first { $0.number == number }
         let hidden = row.map { store.spoilerProtection(for: id) && $0.spoilerAhead } ?? false
         let text = hidden ? nil : row?.description
-        return VStack(alignment: .leading, spacing: 2) {
+        return VStack(alignment: .leading, spacing: 3) {
             if let row {
                 Text(row.title.map { L.episodeTitledText(number: row.number, title: $0) } ?? L.episodeNumberString(number: row.number))
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.silk)
+                    .font(metrics.touch ? .footnote : .system(size: 11.5))
+                    .foregroundStyle(.haze)
                     .lineLimit(1)
                 ZStack(alignment: .topLeading) {
                     if hidden {
@@ -1457,16 +1483,19 @@ struct EpisodeFooter: View {
                         Text(text).lineLimit(3).id(text)
                     }
                 }
-                .font(.system(size: 12))
+                .font(metrics.touch ? .subheadline : .system(size: 12))
+                // 12 on 17 on the Mac.
+                .lineSpacing(metrics.touch ? 0 : 2.7)
                 .foregroundStyle(.haze)
                 .frame(maxWidth: .infinity, alignment: .topLeading)
                 .transition(.opacity)
                 .animation(.fadeIn, value: text)
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .frame(maxWidth: .infinity, minHeight: 80, alignment: .topLeading)
+        .padding(.horizontal, metrics.touch ? 16 : 12)
+        .padding(.top, 8)
+        .padding(.bottom, 10)
+        .frame(maxWidth: .infinity, minHeight: metrics.touch ? 104 : 92, maxHeight: metrics.touch ? nil : 92, alignment: .topLeading)
         .overlay(alignment: .top) { Rectangle().fill(Palette.faintRule).frame(height: 1) }
         .accessibilityElement(children: .combine)
     }

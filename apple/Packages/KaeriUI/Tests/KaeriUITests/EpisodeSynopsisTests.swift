@@ -94,6 +94,45 @@ struct EpisodeSynopsisTests {
         #expect(EpisodeProtection.startsAt(rows(5, watched: 5), spoilers: true) == nil)
     }
 
+    @Test func theLineNamesTheLastEpisodeBeforeTheRowsItHides() throws {
+        let start = try #require(EpisodeProtection.start(rows(10, watched: 6), spoilers: true))
+        #expect(start.row == "8")
+        #expect(start.after == 7)
+        // A range that opens on hidden rows names the episode before its first.
+        let range = Array(rows(230, watched: 6)[150..<200])
+        let ranged = try #require(EpisodeProtection.start(range, spoilers: true))
+        #expect(ranged.row == "151")
+        #expect(ranged.after == 150)
+    }
+
+    @Test func aRevealLastsWhileThePageIsOpenUnderAnotherAndEndsWhenItIsClosed() {
+        let navigator = Navigator(route: LaunchRoute())
+        navigator.openTitle(920_021)
+        navigator.showSynopsis(920_021, "8")
+        navigator.episodeRange[920_021] = 1
+        // Another page over it: the visit goes on.
+        navigator.openTitle(920_020)
+        #expect(navigator.synopsisIsShown(920_021, "8"))
+        #expect(navigator.episodeRange[920_021] == 1)
+        navigator.paths[navigator.section] = []
+        #if os(macOS)
+        navigator.back()
+        #endif
+        #expect(!navigator.synopsisIsShown(920_021, "8"))
+        #expect(navigator.episodeRange[920_021] == nil)
+    }
+
+    @Test func theViewMenuStepsThroughTheRangesOnScreenAndStopsAtTheEnds() {
+        let navigator = Navigator(route: LaunchRoute())
+        navigator.episodeRangesShown = EpisodeRangesShown(title: 920_020, index: 0, count: 3)
+        navigator.stepEpisodeRange(by: -1)
+        #expect(navigator.episodeRange[920_020] == nil)
+        navigator.stepEpisodeRange(by: 1)
+        #expect(navigator.episodeRange[920_020] == 1)
+        #expect(EpisodeRangesShown(title: 920_020, index: 2, count: 3).hasNext == false)
+        #expect(EpisodeRangesShown(title: 920_020, index: 0, count: 3).hasPrevious == false)
+    }
+
     @Test func aWatchedRowKeepsItsTextWhateverItsNumber() {
         var row = rows(3)[2]
         #expect(EpisodeProtection.hides(row, spoilers: true))

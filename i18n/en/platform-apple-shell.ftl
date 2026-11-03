@@ -30,6 +30,15 @@ menu-previous-week = Previous Week
 # @allow up-next
 menu-next-week = Next Week
 
+# Mac and iPad View menu item: a long series' title page shows its episodes a hundred at a time,
+# and this shows the hundred before the ones on screen.
+menu-previous-episodes = Previous Episodes
+
+# Mac and iPad View menu item: a long series' title page shows its episodes a hundred at a time,
+# and this shows the hundred after the ones on screen.
+# @allow up-next
+menu-next-episodes = Next Episodes
+
 # Mac menu bar item that syncs with the tracker accounts now.
 menu-sync-now = Sync Now
 

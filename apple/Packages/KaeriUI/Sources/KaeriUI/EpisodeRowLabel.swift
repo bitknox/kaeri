@@ -55,7 +55,9 @@ struct EpisodeRowLabel: View {
             VStack(alignment: .leading, spacing: 4) {
                 title(lines: 1)
                 factsLine(facts, lines: 1)
+                // About 58 characters a line, however wide the window.
                 synopsis(text, lines: 3)
+                    .frame(maxWidth: Self.measure, alignment: .leading)
             }
             .frame(maxWidth: .infinity, maxHeight: metrics.still.height, alignment: .topLeading)
             trailing
@@ -161,6 +163,15 @@ struct EpisodeRowLabel: View {
 
     // MARK: Type
 
+    /// The widest a synopsis beside its still sets its lines: about 58 characters of it.
+    static var measure: CGFloat {
+        #if os(macOS)
+        376
+        #else
+        436
+        #endif
+    }
+
     static func numberFont(_ metrics: EpisodeMetrics) -> Font {
         #if os(macOS)
         .mac(13, weight: .regular)
@@ -171,9 +182,9 @@ struct EpisodeRowLabel: View {
 
     static func titleFont(_ metrics: EpisodeMetrics) -> Font {
         #if os(macOS)
-        .mac(14, weight: .medium)
+        .mac(14, weight: .semibold)
         #else
-        .ui(16, weight: .semibold)
+        .headline
         #endif
     }
 
@@ -237,9 +248,9 @@ struct SynopsisText: View {
 }
 
 /// An episode's still: its art; blurred, with an eye, while spoiler protection hides it, and
-/// crossfading to sharp when it is shown; a plain plate before the episode airs. A row with no
-/// still shows the show's own wide art in its place, never blurred, since a show's banner gives
-/// nothing away, and a still that comes later fades in over it.
+/// crossfading to sharp when it is shown; before the episode airs, the show's banner crop. A row
+/// with no still shows the show's own wide art in its place, never blurred, since a show's banner
+/// gives nothing away, and a still that comes later fades in over it.
 struct EpisodeStill: View {
     @Environment(\.displayScale) private var scale
     let entry: Entry
@@ -250,6 +261,9 @@ struct EpisodeStill: View {
     var size: CGSize? = CGSize(width: 64, height: 36)
     /// How far through the episode the viewer is, as a track along the still's foot.
     var fraction: Double?
+    /// Whether this still has been hidden on screen: its blurred copy then stays under the sharp
+    /// one, which a reveal fades in over it and a hide fades out from over it.
+    @State private var wasHidden = false
 
     var body: some View {
         Group {
@@ -269,6 +283,7 @@ struct EpisodeStill: View {
                     .padding(6)
             }
         }
+        .onChange(of: hidden, initial: true) { if hidden { wasHidden = true } }
         .accessibilityHidden(true)
     }
 
@@ -276,29 +291,30 @@ struct EpisodeStill: View {
     private func art(_ size: CGSize) -> some View {
         let pixels = Int(max(size.width, 160) * scale)
         ZStack {
-            if unaired {
-                Rectangle().fill(CoverPlate.muted(entry.plateColor))
+            if unaired || row.thumbnail == nil {
+                // The show's banner, which cannot spoil an episode.
+                WideFallback(entry: entry)
             } else {
-                if row.thumbnail == nil {
-                    WideFallback(entry: entry)
-                } else {
-                    Rectangle().fill(CoverPlate.muted(entry.plateColor))
-                }
-                if let still = row.thumbnail {
-                    ArtworkView(url: still, maxPixelSize: pixels, flat: .clear)
-                    // The blurred still lies over the sharp one and fades out when it is shown:
-                    // a crossfade, which Reduce Motion keeps.
+                Rectangle().fill(CoverPlate.muted(entry.plateColor))
+            }
+            if !unaired, let still = row.thumbnail {
+                // While hidden only the blurred still is drawn: nothing sharp exists to show
+                // before the blur has loaded. Shown, the sharp still fades in over the blurred
+                // one on the reveal token, never through the plate.
+                if hidden || wasHidden {
                     ArtworkView(url: still, maxPixelSize: 128, flat: .clear)
                         .blur(radius: max(8, size.width / 16))
                         .scaleEffect(1.15)
-                        .opacity(hidden ? 1 : 0)
-                        .animation(.reveal, value: hidden)
-                    Image(systemName: "eye.slash")
-                        .font(.ui(15, weight: .medium))
-                        .foregroundStyle(.silk)
-                        .opacity(hidden ? 1 : 0)
-                        .animation(.quick, value: hidden)
                 }
+                if !hidden {
+                    ArtworkView(url: still, maxPixelSize: pixels, flat: .clear)
+                        .transition(.opacity.animation(.reveal))
+                }
+                Image(systemName: "eye.slash")
+                    .font(.ui(15, weight: .medium))
+                    .foregroundStyle(.silk)
+                    .opacity(hidden ? 1 : 0)
+                    .animation(.quick, value: hidden)
             }
         }
     }
@@ -317,8 +333,9 @@ struct WideFallback: View {
     }
 }
 
-/// The line where spoiler protection starts, over the first row it hides: why the rows below have
-/// no text, and a Show that shows them for the visit. Once shown it says so, with Hide.
+/// The line where spoiler protection starts, over the first row it hides: the eye glyph, why the
+/// rows below have no text, and a Show that shows them for the visit. Once shown it says so, with
+/// Hide. On a phone Show stands at the line's end; on the Mac and the iPad it follows the words.
 struct ProtectionLine: View {
     let episode: Int
     let shown: Bool
@@ -327,21 +344,29 @@ struct ProtectionLine: View {
 
     var body: some View {
         HStack(spacing: 8) {
+            Image(systemName: "eye.slash")
+                .font(phone ? .ui(13, weight: .medium) : .mac(12, weight: .medium))
+                .foregroundStyle(.haze)
+                .frame(width: 16)
+                .accessibilityHidden(true)
             Text(words)
+                .font(phone ? .ui(13) : .mac(12))
                 .foregroundStyle(.haze)
                 .lineLimit(2)
+            if phone { Spacer(minLength: 8) }
             Button(shown ? L.episodeProtectionHide : L.episodeProtectionShow, action: toggle)
                 .buttonStyle(.plain)
-                .fontWeight(.medium)
+                .font(phone ? .ui(15, weight: .medium) : .mac(12, weight: .medium))
                 .foregroundStyle(.silk)
+                .frame(minHeight: phone ? 44 : nil)
+                .contentShape(.rect)
                 .pointerHover()
-            Spacer(minLength: 0)
+            if !phone { Spacer(minLength: 0) }
         }
-        .font(phone ? .ui(15) : .mac(12))
         .contentTransition(.opacity)
         .animation(.standard, value: shown)
         .padding(.leading, phone ? 0 : 44)
-        .frame(minHeight: phone ? 44 : 36)
+        .frame(minHeight: phone ? 44 : 30)
     }
 
     private var words: String {
@@ -374,7 +399,7 @@ struct EpisodePreview: View {
         VStack(alignment: .leading, spacing: 8) {
             EpisodeStill(entry: entry, row: row, hidden: hidden, unaired: false, size: nil)
             Text(row.title ?? L.episodeNumberString(number: row.number))
-                .font(.ui(17, weight: .semibold))
+                .font(.headline)
                 .foregroundStyle(.silk)
                 .lineLimit(3)
             Text(EpisodeFacts.line(
@@ -383,9 +408,9 @@ struct EpisodePreview: View {
             ))
             .font(.ui(13))
             .foregroundStyle(.haze)
-            if hidden {
-                Text(L.episodeSynopsisHidden).font(.ui(15)).foregroundStyle(.haze)
-            } else if let text = row.description, !text.isEmpty {
+            // A protected episode shows its facts and its blurred still, and no words about what
+            // is hidden.
+            if !hidden, let text = row.description, !text.isEmpty {
                 SynopsisText(text: text, lines: 12, font: .ui(15))
             }
         }
@@ -396,9 +421,10 @@ struct EpisodePreview: View {
 }
 #endif
 
-/// The menu that picks one of a long series' ranges of 100, beside the dub line: the range shown
+/// The control that picks one of a long series' ranges of 100, beside the dub line: the range shown
 /// by its first and last episode, and one item per range, each saying Watched or Not out yet where
-/// that is all of it. ⇧⌘[ and ⇧⌘] step to the previous and next range.
+/// that is all of it. A native pop-up button on the Mac and the iPad, whose View menu also steps
+/// through the ranges (Previous Episodes and Next Episodes); a menu in a capsule on a phone.
 struct EpisodeRangeMenu: View {
     let plan: EpisodePlan
     let rows: [EpisodeRow]
@@ -406,8 +432,25 @@ struct EpisodeRangeMenu: View {
     let pick: (Int) -> Void
 
     var body: some View {
+        if phone { capsule } else { popUp }
+    }
+
+    private var popUp: some View {
+        Picker(L.episodeRangeLabel, selection: Binding(get: { plan.index }, set: { pick($0) })) {
+            ForEach(plan.ranges.indices, id: \.self) { index in
+                Text(EpisodePlan.item(plan.ranges[index], in: rows)).monospacedDigit().tag(index)
+            }
+        }
+        .pickerStyle(.menu)
+        .labelsHidden()
+        .fixedSize()
+        .font(.mac(12))
+        .accessibilityValue(EpisodePlan.title(plan.ranges[plan.index], in: rows))
+    }
+
+    private var capsule: some View {
         let current = plan.ranges[plan.index]
-        Menu {
+        return Menu {
             ForEach(plan.ranges.indices, id: \.self) { index in
                 Toggle(
                     EpisodePlan.item(plan.ranges[index], in: rows),
@@ -418,13 +461,13 @@ struct EpisodeRangeMenu: View {
             HStack(spacing: 6) {
                 Text(EpisodePlan.title(current, in: rows)).monospacedDigit()
                 Image(systemName: "chevron.up.chevron.down")
-                    .font(phone ? .ui(12, weight: .semibold) : .mac(9, weight: .semibold))
+                    .font(.ui(12, weight: .semibold))
             }
-            .font(phone ? .ui(15) : .mac(12))
+            .font(.ui(15))
             .foregroundStyle(.silk)
             .padding(.horizontal, 12)
             .padding(.vertical, 4)
-            .frame(minHeight: phone ? 32 : 24)
+            .frame(minHeight: 32)
             .overlay(Capsule().strokeBorder(.faintRule))
             .contentShape(.capsule)
         }
@@ -434,19 +477,5 @@ struct EpisodeRangeMenu: View {
         .pointerHover()
         .accessibilityLabel(L.episodeRangeLabel)
         .accessibilityValue(EpisodePlan.title(current, in: rows))
-        .background {
-            // Previous and next range from the keyboard.
-            Group {
-                Button("") { pick(plan.index - 1) }
-                    .keyboardShortcut("[", modifiers: [.command, .shift])
-                    .disabled(plan.index == 0)
-                Button("") { pick(plan.index + 1) }
-                    .keyboardShortcut("]", modifiers: [.command, .shift])
-                    .disabled(plan.index >= plan.ranges.count - 1)
-            }
-            .opacity(0)
-            .frame(width: 0, height: 0)
-            .accessibilityHidden(true)
-        }
     }
 }

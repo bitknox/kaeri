@@ -55,6 +55,16 @@ public enum MotionDemo: String, CaseIterable, Sendable {
     /// Home: Not interested on the first poster that is not Continue's or the week's (Home
     /// board, prototype 6).
     case homeHide
+    /// The title `-KaeriOpen` names opened from nowhere, as the palette does: its page coming in,
+    /// its episode rows laid out.
+    case titleOpen
+    /// The title page's episodes scrolled to the last row of their range, then the next range
+    /// picked, as View › Next Episodes does: the rows crossfading, the pickers coming back.
+    case episodeRange
+    /// Show on the line where spoiler protection starts, then Hide 1.6 s later.
+    case protectionLine
+    /// Show synopsis on the first row spoiler protection hides, as its menu does.
+    case reveal
 
     /// The one the launch arguments name.
     public static func from(arguments: [String] = ProcessInfo.processInfo.arguments) -> MotionDemo? {
@@ -71,6 +81,17 @@ public enum MotionDemo: String, CaseIterable, Sendable {
         case .backSpotlight:
             MotionDemo.t1Spotlight.run(navigator: navigator, store: store)
             try? await Task.sleep(for: .seconds(2))
+        case .episodeRange, .protectionLine, .reveal:
+            for _ in 0..<200 {
+                if let id = navigator.titleOnMac ?? navigator.paths[navigator.section]?.last?.id,
+                   store.titles.episodes[id] != nil { break }
+                try? await Task.sleep(for: .milliseconds(50))
+            }
+            if self == .episodeRange {
+                try? await Task.sleep(for: .milliseconds(600))
+                navigator.episodeListToEnd += 1
+                try? await Task.sleep(for: .milliseconds(1200))
+            }
         case .season:
             for _ in 0..<200 {
                 if let id = navigator.titleOnMac ?? navigator.paths[navigator.section]?.last?.id,
@@ -172,6 +193,27 @@ public enum MotionDemo: String, CaseIterable, Sendable {
             let shelves = store.discovery.view?.sections.filter { $0.kind != .continue && $0.kind != .thisWeek } ?? []
             guard let item = shelves.first?.items.first else { return }
             store.notInterested(item.entry, title: item.entry.showTitle, unaired: item.starts != nil)
+        case .titleOpen:
+            let arguments = ProcessInfo.processInfo.arguments
+            guard let at = arguments.firstIndex(of: "-KaeriOpen"), arguments.indices.contains(at + 1),
+                  let id = AnilistId(arguments[at + 1])
+            else { return }
+            navigator.openTitle(id)
+        case .episodeRange:
+            navigator.stepEpisodeRange(by: 1)
+        case .protectionLine:
+            guard let id = navigator.titleOnMac ?? navigator.paths[navigator.section]?.last?.id else { return }
+            withAnimation(.standard) { navigator.showAllSynopses(id, true) }
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(1600))
+                withAnimation(.standard) { navigator.showAllSynopses(id, false) }
+            }
+        case .reveal:
+            guard let id = navigator.titleOnMac ?? navigator.paths[navigator.section]?.last?.id,
+                  let rows = store.titles.episodes[id],
+                  let first = EpisodeProtection.startsAt(rows, spoilers: store.spoilerProtection(for: id))
+            else { return }
+            withAnimation(.standard) { navigator.showSynopsis(id, first) }
         }
     }
 }

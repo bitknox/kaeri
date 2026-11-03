@@ -196,65 +196,69 @@ struct TitlePage: View {
         let picked = ready ? nil : store.titles.page(id)
         let coming = Coming(cover: picked?.coverUrl, wide: picked.flatMap { store.pageArt($0).url })
         ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                // With no wide art the page starts higher: under the toolbar, not under a banner.
-                Color.clear.frame(height: art.isCompact ? 64 : 96)
-                // Art flying onto the banner covers the cover and the words over it: they come in
-                // once it has landed, rather than at once with the art drawn under them.
-                let underFlyer = navigator.awaits(entry.id, .banner)
-                TitleHero(entry: entry, faded: between)
-                    .opacity(underFlyer ? 0 : 1)
-                    .animation(.fadeIn, value: underFlyer)
-                let family = TitleFamily(kin, this: id)
-                if !family.seasons.isEmpty || !family.related.isEmpty {
-                    TitleFamilyRow(entry: kin, family: family, faded: between)
-                        .padding(.top, 20)
-                }
-                HStack(alignment: .top, spacing: 32) {
-                    EpisodeList(entry: entry, rotor: rotor)
-                    // The synopsis and the facts once the title itself is here: a title picked
-                    // keeps their room empty meanwhile, as its card knows none of them.
-                    let known = store.titles[entry.id] != nil
-                    ZStack(alignment: .top) {
-                        if known { TitleDetails(entry: entry).transition(.opacity) }
+            // Inside the scroll view, which the reader's proxy finds as the one holding the
+            // views it scrolls to; the scroll view's own modifiers stay on it.
+            ScrollViewReader { scroller in
+                VStack(alignment: .leading, spacing: 0) {
+                    // With no wide art the page starts higher: under the toolbar, not under a banner.
+                    Color.clear.frame(height: art.isCompact ? 64 : 96)
+                    // Art flying onto the banner covers the cover and the words over it: they come in
+                    // once it has landed, rather than at once with the art drawn under them.
+                    let underFlyer = navigator.awaits(entry.id, .banner)
+                    TitleHero(entry: entry, faded: between)
+                        .opacity(underFlyer ? 0 : 1)
+                        .animation(.fadeIn, value: underFlyer)
+                    let family = TitleFamily(kin, this: id)
+                    if !family.seasons.isEmpty || !family.related.isEmpty {
+                        TitleFamilyRow(entry: kin, family: family, faded: between)
+                            .padding(.top, 20)
                     }
-                    .animation(.fadeIn, value: known)
-                    .frame(width: 260, alignment: .top)
-                    // Another title's facts are other views: they never fade out over these.
-                    .id(entry.id)
-                    .transition(.identity)
-                }
-                .opacity(between ? 0 : 1)
-                .padding(.top, 24)
-            }
-            .padding(EdgeInsets(top: 0, leading: 24, bottom: 20, trailing: 28))
-            // On the Mac a season picked on the page changes the page that is open, in the
-            // spring that opens a title. Carried into the page, it would spring every view from
-            // where it stood on the last season's: the titles' words sliding over each other, the
-            // rows sliding past the Episodes header. The page stands still instead, and only what
-            // differs changes, by its own animation: the season picked (quick), then the words,
-            // episodes and facts fading through (`between`), and the art as it lands (fade-in).
-            .transaction(value: id) { $0.animation = nil }
-            // A title known to have no wide art, or that has some after all, moves the page to
-            // its place on standard.
-            .animation(.standard, value: art.isCompact)
-            .background(alignment: .top) {
-                // The wide art, under the clear toolbar, with the ground over its lower part,
-                // where the cover and the title sit, and fading up into the art above that, where
-                // a title of two lines starts. None at all where there is none. Across a season
-                // switch the last season's art stays until the next one's is here, and fades to it.
-                if !art.isCompact {
-                    HeldHeroArt(shown: shown, layer: artLayer)
-                        .frame(height: 280)
-                        .clipped()
-                        .overlay(alignment: .bottom) {
-                            VStack(spacing: 0) {
-                                BannerScrim()
-                                Palette.ground.frame(height: 96)
-                            }
+                    HStack(alignment: .top, spacing: 32) {
+                        EpisodeList(entry: entry, rotor: rotor, scroller: scroller)
+                        // The synopsis and the facts once the title itself is here: a title picked
+                        // keeps their room empty meanwhile, as its card knows none of them.
+                        let known = store.titles[entry.id] != nil
+                        ZStack(alignment: .top) {
+                            if known { TitleDetails(entry: entry).transition(.opacity) }
                         }
-                        .titleLanding(entry.id, .banner)
-                        .playerZoomSource(entry.id)
+                        .animation(.fadeIn, value: known)
+                        .frame(width: 260, alignment: .top)
+                        // Another title's facts are other views: they never fade out over these.
+                        .id(entry.id)
+                        .transition(.identity)
+                    }
+                    .opacity(between ? 0 : 1)
+                    .padding(.top, 24)
+                }
+                .padding(EdgeInsets(top: 0, leading: 24, bottom: 20, trailing: 28))
+                // On the Mac a season picked on the page changes the page that is open, in the
+                // spring that opens a title. Carried into the page, it would spring every view from
+                // where it stood on the last season's: the titles' words sliding over each other, the
+                // rows sliding past the Episodes header. The page stands still instead, and only what
+                // differs changes, by its own animation: the season picked (quick), then the words,
+                // episodes and facts fading through (`between`), and the art as it lands (fade-in).
+                .transaction(value: id) { $0.animation = nil }
+                // A title known to have no wide art, or that has some after all, moves the page to
+                // its place on standard.
+                .animation(.standard, value: art.isCompact)
+                .background(alignment: .top) {
+                    // The wide art, under the clear toolbar, with the ground over its lower part,
+                    // where the cover and the title sit, and fading up into the art above that, where
+                    // a title of two lines starts. None at all where there is none. Across a season
+                    // switch the last season's art stays until the next one's is here, and fades to it.
+                    if !art.isCompact {
+                        HeldHeroArt(shown: shown, layer: artLayer)
+                            .frame(height: 280)
+                            .clipped()
+                            .overlay(alignment: .bottom) {
+                                VStack(spacing: 0) {
+                                    BannerScrim()
+                                    Palette.ground.frame(height: 96)
+                                }
+                            }
+                            .titleLanding(entry.id, .banner)
+                            .playerZoomSource(entry.id)
+                    }
                 }
             }
         }
@@ -853,9 +857,19 @@ struct EpisodeList: View {
     @State private var room = EpisodeRoom()
     /// How wide the list stands, which sets whether text sits beside the stills or under them.
     @State private var listWidth: CGFloat?
+    /// Where the pickers stand from the top of the page's visible area.
+    @State private var pickersTop: CGFloat = 0
     let entry: Entry
     /// Where the page's Unwatched episodes rotor finds the rows.
     let rotor: Namespace.ID
+    /// The page's scroll view, which a range switch brings the pickers back into.
+    var scroller: ScrollViewProxy?
+
+    /// The id of the line that holds the pickers, which a range switch scrolls to.
+    static let pickers = "episode-pickers"
+    /// Above this, from the top of the visible area, the pickers are under the toolbar or
+    /// scrolled away.
+    private static let pickersHidden: CGFloat = 64
 
     /// The rows' sizes: the Mac's by the list's width, the iPad's own.
     private var metrics: EpisodeMetrics {
@@ -890,15 +904,18 @@ struct EpisodeList: View {
                 .animation(.fadeIn, value: dub)
                 .id(entry.id)
                 .transition(.identity)
-                // A long series' ranges of 100, beside the dub line; ⇧⌘[ and ⇧⌘] step through them.
+                // A long series' ranges of 100, beside the dub line; View › Previous Episodes and
+                // Next Episodes step through them.
                 if !plan.ranges.isEmpty {
-                    EpisodeRangeMenu(plan: plan, rows: rows, phone: false) { pickRange($0, rows: rows) }
+                    EpisodeRangeMenu(plan: plan, rows: rows, phone: false) { navigator.episodeRange[entry.id] = $0 }
                 }
                 Spacer()
                 SegmentedCapsule(selection: $unwatchedOnly, options: [(false, L.titleEpisodesAll), (true, L.titleEpisodesUnwatched)])
             }
             .frame(height: 28)
             .padding(.bottom, 6)
+            .id(Self.pickers)
+            .onGeometryChange(for: CGFloat.self) { $0.frame(in: .scrollView).minY } action: { pickersTop = $0 }
             let loaded = store.titles.episodes[entry.id] != nil
             // The placeholders and the rows in one place, one crossfading into the other (T8):
             // none slides or comes in alone.
@@ -912,9 +929,8 @@ struct EpisodeList: View {
                         // has none. A long series shows one range of a hundred, its watched run
                         // folded the same way.
                         let fold = unwatchedOnly && plan.ranges.isEmpty ? nil : plan.fold
-                        let next = entry.progress?.next ?? 1
                         let spoilers = store.spoilerProtection(for: entry.id)
-                        let protectedFrom = EpisodeProtection.startsAt(plan.shown, spoilers: spoilers)
+                        let protectedFrom = EpisodeProtection.start(plan.shown, spoilers: spoilers)
                         if let fold {
                             WatchedFoldSection(
                                 fold: fold, shown: navigator.watchedShown(entry.id), phone: false,
@@ -931,6 +947,9 @@ struct EpisodeList: View {
                     .animation(.standard, value: plan.index)
                     .onChange(of: plan.index) { room.settle(plan.shown, again: true) }
                     .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { lastRows = (entry.id, $0) }
+                    // Until the list's width is known the rows would lay out at a guess, wide or
+                    // narrow, and change a frame later.
+                    .opacity(listWidth == nil ? 0 : 1)
                 } else {
                     EpisodePlaceholders(count: entry.episodes, metrics: metrics)
                         .frame(minHeight: lastRows.flatMap { $0.id == entry.id ? nil : $0.height }, alignment: .top)
@@ -948,22 +967,37 @@ struct EpisodeList: View {
         // page comes back: text that turned up meanwhile waits for that.
         .onChange(of: loadedTable, initial: true) { if loadedTable { room.settle(plan.shown) } }
         .onAppear { if loadedTable { room.settle(plan.shown, again: true) } }
-        .onDisappear { navigator.endEpisodeVisit(entry.id) }
+        // A range switch, from the pop-up or the View menu, brings the pickers back into view
+        // when they were scrolled away above.
+        .onChange(of: plan.index) {
+            guard pickersTop < Self.pickersHidden, let scroller else { return }
+            withAnimation(.standard) { scroller.scrollTo(Self.pickers, anchor: UnitPoint(x: 0, y: 0.1)) }
+        }
+        // The View menu's Previous Episodes and Next Episodes act on this list while it is on
+        // screen. A page covered by another keeps its visit, not the menu.
+        .task(id: plan.ranges.isEmpty ? nil : EpisodeRangesShown(title: entry.id, index: plan.index, count: plan.ranges.count)) {
+            navigator.episodeRangesShown = plan.ranges.isEmpty
+                ? nil : EpisodeRangesShown(title: entry.id, index: plan.index, count: plan.ranges.count)
+        }
+        .onDisappear {
+            if navigator.episodeRangesShown?.title == entry.id { navigator.episodeRangesShown = nil }
+        }
+        // The motion audit's range switch: the list scrolled to its last row first.
+        .onChange(of: navigator.episodeListToEnd) {
+            guard let last = plan.shown.last?.number else { return }
+            scroller?.scrollTo(last, anchor: .bottom)
+        }
     }
 
     private var loadedTable: Bool { store.titles.episodes[entry.id] != nil }
 
-    private func pickRange(_ index: Int, rows: [EpisodeRow]) {
-        navigator.episodeRange[entry.id] = index
-    }
-
-    private func row(_ row: EpisodeRow, protectedFrom: String?) -> some View {
+    private func row(_ row: EpisodeRow, protectedFrom: (row: String, after: Int)?) -> some View {
         VStack(spacing: 0) {
-            if row.number == protectedFrom {
-                ProtectionLine(
-                    episode: Int(entry.progress?.next ?? 1),
-                    shown: navigator.synopsisAllShown.contains(entry.id), phone: false
-                ) { withAnimation(.standard) { navigator.showAllSynopses(entry.id, !navigator.synopsisAllShown.contains(entry.id)) } }
+            if row.number == protectedFrom?.row {
+                let shown = navigator.synopsisAllShown.contains(entry.id)
+                ProtectionLine(episode: protectedFrom?.after ?? 0, shown: shown, phone: false) {
+                    withAnimation(.standard) { navigator.showAllSynopses(entry.id, !shown) }
+                }
             }
             EpisodeRowView(
                 entry: entry, row: row, spoilers: store.spoilerProtection(for: entry.id),
@@ -1004,7 +1038,7 @@ struct EpisodeRowView: View {
 
     var body: some View {
         if row.isUnaired(), let date = row.airsDate {
-            UnairedEpisodeRow(row: row, airs: date, metrics: metrics, textInset: textInset)
+            UnairedEpisodeRow(entry: entry, row: row, airs: date, metrics: metrics, textInset: textInset)
         } else {
             VStack(spacing: 0) {
                 airedRow
@@ -1104,9 +1138,10 @@ struct EpisodeRowView: View {
     }
 }
 
-/// The next episode still to air: no button, since nothing can play it; the flat placeholder for
-/// its still, its title in haze, and when it airs in water ("Airs Thursday 16:30").
+/// The next episode still to air: no button, since nothing can play it; the show's banner crop in
+/// its still's place, its title in haze, and when it airs in water ("Airs Thursday 16:30").
 struct UnairedEpisodeRow: View {
+    let entry: Entry
     let row: EpisodeRow
     let airs: Date
     var metrics = EpisodeMetrics.macWide
@@ -1121,8 +1156,8 @@ struct UnairedEpisodeRow: View {
                 .monospacedDigit()
                 .foregroundStyle(.haze)
                 .frame(width: 22, alignment: .trailing)
-            RoundedRectangle(cornerRadius: 6).fill(Palette.artPlaceholder)
-                .frame(width: metrics.still.width, height: metrics.still.height)
+            // The show's banner crop: the episode has no still before it airs.
+            EpisodeStill(entry: entry, row: row, hidden: false, unaired: true, size: metrics.still)
             VStack(alignment: .leading, spacing: 4) {
                 Text(title).font(EpisodeRowLabel.titleFont(metrics)).foregroundStyle(.haze).lineLimit(2)
                 HStack(spacing: 6) {

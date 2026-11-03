@@ -17,6 +17,8 @@ struct PhoneTitle: View {
     @State private var mainButtonGone = false
     /// Whether the episode rows keep room for text, settled when they are first laid out.
     @State private var room = EpisodeRoom()
+    /// Where the episodes' pickers stand from the top of the list's visible area.
+    @State private var pickersTop: CGFloat = 0
     let id: AnilistId
 
     /// Case B: the service the main action opens.
@@ -242,6 +244,7 @@ struct PhoneTitle: View {
             }
             .bareRow()
             Color.clear.frame(height: 0).bareRow().id("episodes")
+                .onGeometryChange(for: CGFloat.self) { $0.frame(in: .scrollView).minY } action: { pickersTop = $0 }
             PhoneEpisodes(
                 entry: entry, spoilers: store.spoilerProtection(for: id), rotor: rotor,
                 room: room.room, rows: episodes, plan: plan
@@ -258,7 +261,17 @@ struct PhoneTitle: View {
         .onChange(of: loaded, initial: true) { if loaded { room.settle(plan.shown) } }
         .onChange(of: plan.index) { room.settle(plan.shown, again: true) }
         .onAppear { if loaded { room.settle(plan.shown, again: true) } }
-        .onDisappear { navigator.endEpisodeVisit(id) }
+        // A range switch brings the pickers back into view when they were scrolled away above,
+        // under the navigation bar or past it.
+        .onChange(of: plan.index) {
+            guard pickersTop < 100 else { return }
+            withAnimation(.standard) { reader.scrollTo("episodes", anchor: UnitPoint(x: 0, y: 0.12)) }
+        }
+        // The motion audit's range switch: the list scrolled to its last row first.
+        .onChange(of: navigator.episodeListToEnd) {
+            guard let last = plan.shown.last?.number else { return }
+            reader.scrollTo(last, anchor: .bottom)
+        }
         .nudgeableScroll()
         .ignoresSafeArea(edges: art.isCompact ? [] : .top)
         .scrollIndicators(.never)
@@ -359,7 +372,7 @@ struct PhoneEpisodes: View {
         let inset = EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
         let dub = store.titles.dubLines[entry.id]
         let ranged = !plan.ranges.isEmpty
-        let protectedFrom = EpisodeProtection.startsAt(plan.shown, spoilers: spoilers)
+        let protectedFrom = EpisodeProtection.start(plan.shown, spoilers: spoilers)
         Group {
             if loaded {
                 // A long series: the dub line and the range menu share a row.
@@ -425,8 +438,8 @@ struct PhoneEpisodeRow: View {
     let rotor: Namespace.ID
     /// Whether the table keeps room for text.
     let room: Bool
-    /// The episode that spoiler protection's line sits above.
-    let protectedFrom: String?
+    /// The episode that spoiler protection's line sits above, and the one it names.
+    let protectedFrom: (row: String, after: Int)?
 
     private var next: UInt32 { entry.progress?.next ?? 1 }
 
@@ -439,9 +452,9 @@ struct PhoneEpisodeRow: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if row.number == protectedFrom {
+            if let protectedFrom, row.number == protectedFrom.row {
                 let shown = navigator.synopsisAllShown.contains(entry.id)
-                ProtectionLine(episode: Int(next), shown: shown, phone: true) {
+                ProtectionLine(episode: protectedFrom.after, shown: shown, phone: true) {
                     withAnimation(.standard) { navigator.showAllSynopses(entry.id, !shown) }
                 }
             }
@@ -456,7 +469,7 @@ struct PhoneEpisodeRow: View {
         let number = UInt32(row.number) ?? 0
         let current = number == next
         if row.isUnaired(), let airs = row.airsDate {
-            PhoneUnairedRow(row: row, airs: airs)
+            PhoneUnairedRow(entry: entry, row: row, airs: airs)
                 .accessibilityRotorEntry(id: row.number, in: rotor)
         } else if row.metadataOnly || row.unsourced {
             // One no source has: nothing to play, so a tap offers what can be done, adding a
@@ -512,20 +525,21 @@ struct PhoneEpisodeRow: View {
     }
 }
 
-/// The next episode still to air on an iPhone's page: no button; the flat placeholder, its title
+/// The next episode still to air on an iPhone's page: no button; the show's banner crop, its title
 /// in haze and "Airs Thursday 16:30" in water.
 struct PhoneUnairedRow: View {
+    let entry: Entry
     let row: EpisodeRow
     let airs: Date
 
     var body: some View {
         let when = AirsWords.airs(airs)
         HStack(alignment: .top, spacing: 12) {
-            RoundedRectangle(cornerRadius: 6).fill(Palette.artPlaceholder)
-                .frame(width: EpisodeMetrics.phone.still.width, height: EpisodeMetrics.phone.still.height)
+            // The show's banner crop: the episode has no still before it airs.
+            EpisodeStill(entry: entry, row: row, hidden: false, unaired: true, size: EpisodeMetrics.phone.still)
             VStack(alignment: .leading, spacing: 4) {
                 Text(row.title ?? L.episodeNumberString(number: row.number))
-                    .font(.ui(16, weight: .semibold)).foregroundStyle(.haze).lineLimit(2)
+                    .font(.headline).foregroundStyle(.haze).lineLimit(2)
                 HStack(spacing: 6) {
                     Circle().fill(.water).frame(width: 6, height: 6)
                     Text(when).monospacedDigit()

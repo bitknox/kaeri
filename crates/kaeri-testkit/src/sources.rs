@@ -283,10 +283,11 @@ pub fn with_synopsis_episodes(provider: MockProvider) -> MockProvider {
                 thumbnail: Some(still(fixtures::LONG_RUNNER, n)),
                 duration: Some(runtime),
                 description: described.then(|| {
+                    let article = if thing.starts_with(['A', 'E', 'I', 'O', 'U']) { "an" } else { "a" };
                     format!(
-                        "Inspector Mido is called to {place} when a {} goes missing. The only \
-                         witness is a clock that runs four minutes slow, and nobody agrees on \
-                         who set it that way. By the next tide Mido has to choose whom to \
+                        "Inspector Mido is called to {place} when {article} {} goes missing. The \
+                         only witness is a clock that runs four minutes slow, and nobody agrees \
+                         on who set it that way. By the next tide Mido has to choose whom to \
                          believe.",
                         thing.to_lowercase()
                     )

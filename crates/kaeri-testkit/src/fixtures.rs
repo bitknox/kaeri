@@ -568,17 +568,24 @@ pub fn synopsis_shows() -> Vec<Value> {
             "relations": { "edges": [] },
         })
     };
+    // The twelve broadcasts, weekly from Saturday 5 April 2014, so each row says when it aired.
+    let mut letters = one(
+        SYNOPSIS_SHOW,
+        "Tegami no Hikousen",
+        "Letters Above the Clouds",
+        "#5f7fa0",
+        SYNOPSIS_SHOW_EPISODES,
+        2014,
+        "The crew of a patched-up airship carry letters and strangers between islands that \
+         float above an endless sea of cloud.",
+    );
+    letters["aired"] = (1..=SYNOPSIS_SHOW_EPISODES)
+        .map(|episode| {
+            json!({ "episode": episode, "airingAt": 1_396_710_000 + i64::from(episode - 1) * 604_800 })
+        })
+        .collect();
     vec![
-        one(
-            SYNOPSIS_SHOW,
-            "Tegami no Hikousen",
-            "Letters Above the Clouds",
-            "#5f7fa0",
-            SYNOPSIS_SHOW_EPISODES,
-            2014,
-            "The crew of a patched-up airship carry letters and strangers between islands that \
-             float above an endless sea of cloud.",
-        ),
+        letters,
         one(
             LONG_RUNNER,
             "Tokei no Arubai",

@@ -20,7 +20,9 @@ public final class Navigator {
     }
     /// The title page open over the section on the Mac. On iPhone and iPad a page is pushed on
     /// the tab's own stack, `paths`.
-    public internal(set) var titleOnMac: AnilistId?
+    public internal(set) var titleOnMac: AnilistId? {
+        didSet { if titleOnMac != oldValue { endClosedEpisodeVisits() } }
+    }
     /// The element the Mac's title page was opened from, which its art flies back to on Back.
     public internal(set) var openedFrom: TitleSource?
     /// The art on its way between that element and the page, on the Mac (M3).
@@ -41,7 +43,9 @@ public final class Navigator {
     /// where it has wide art.
     @ObservationIgnored var shownLandings: [TitleLandingID: Int] = [:]
     /// Each tab's pushed title pages, on iPhone and iPad, each with the element it zooms from.
-    public var paths: [AppSection: [TitleRoute]] = [:]
+    public var paths: [AppSection: [TitleRoute]] = [:] {
+        didSet { if paths != oldValue { endClosedEpisodeVisits() } }
+    }
     /// The title the menus' Episode items and the palette's commands act on: the one selected
     /// in a list, or the page that is open.
     public var focusedTitle: AnilistId?
@@ -125,6 +129,11 @@ public final class Navigator {
     var synopsisAllShown: Set<AnilistId> = []
     /// The range of a long series' episodes the viewer picked, per title, for the visit.
     var episodeRange: [AnilistId: Int] = [:]
+    /// The ranges of the episode list on screen, which the View menu steps through.
+    var episodeRangesShown: EpisodeRangesShown?
+    /// Counts the asks to scroll the episode list on screen to its last row, for the motion
+    /// audit's range switch with the pickers off screen.
+    var episodeListToEnd = 0
     /// An episode handed over from another device, which its title's page offers to resume.
     public var handedOff: HandedOff?
 

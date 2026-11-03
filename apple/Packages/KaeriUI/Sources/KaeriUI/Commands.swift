@@ -140,6 +140,16 @@ public struct KaeriCommands<Playback: View, PlayerWindowItems: View>: Commands {
                 .disabled(navigator.section != .calendar)
             Button(L.calendarFilterMineTitle) { store.setSwitch(.calendarMine, on: true) }
                 .disabled(navigator.section != .calendar)
+            Divider()
+            // A long series' ranges of 100 on the title page, beside Previous Week and Next Week:
+            // ⌥⌘[ and ⌥⌘], since ⌘[ is Back and ⇧⌘[ and ⇧⌘] are the system's tab keys.
+            let ranges = navigator.episodeRangesShown
+            Button(L.menuPreviousEpisodes) { navigator.stepEpisodeRange(by: -1) }
+                .keyboardShortcut("[", modifiers: [.command, .option])
+                .disabled(ranges?.hasPrevious != true)
+            Button(L.menuNextEpisodes) { navigator.stepEpisodeRange(by: 1) }
+                .keyboardShortcut("]", modifiers: [.command, .option])
+                .disabled(ranges?.hasNext != true)
         }
 
         CommandGroup(after: .windowArrangement) {

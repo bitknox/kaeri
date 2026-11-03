@@ -103,6 +103,16 @@ public enum PlayerShot: String, CaseIterable, Sendable {
         return arguments[index + 1]
     }
 
+    /// The launch argument that gives an Episodes row the keyboard's focus, by its episode
+    /// number: `-KaeriPlayerFocus 3`. Rows take focus only with keyboard navigation on, which
+    /// `-AppleKeyboardUIMode 2` turns on for the one process.
+    public static let focusArgument = "-KaeriPlayerFocus"
+
+    static func focusedEpisode(in arguments: [String]) -> String? {
+        guard let index = arguments.firstIndex(of: focusArgument), arguments.indices.contains(index + 1) else { return nil }
+        return arguments[index + 1]
+    }
+
     /// The menu a shot opens.
     var menu: PlayerMenu? {
         switch self {
