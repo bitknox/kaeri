@@ -1006,6 +1006,10 @@ pub enum PlayerCommand {
     /// next source in the viewer's order. Heard only while the stream is being found; once the
     /// player opens, it does nothing.
     SkipSource,
+    /// Begin the episode being started at 0, in place of its resume point, without asking the
+    /// sources again. Heard while the walk runs (the file opens at 0), and once the file has
+    /// loaded (it seeks to 0 at once). The stored position is kept until the episode has played.
+    PlayFromBeginning,
     /// The stall prompt's answers: another stream, or keep waiting.
     StallSwitch,
     StallWait,

@@ -327,6 +327,7 @@ fn settings() -> PlaySettings {
         mpv_options: Vec::new(),
         untracked: false,
         swarm: Default::default(),
+        begin: Default::default(),
     }
 }
 

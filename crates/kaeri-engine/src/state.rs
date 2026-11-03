@@ -49,6 +49,9 @@ pub struct EngineState {
     /// The same playback's skip of the source being asked: each `SkipSource` moves the count,
     /// which the walk through the sources watches. Set where `finding` is.
     pub skipping: Option<tokio::sync::watch::Sender<u64>>,
+    /// Whether the viewer asked this playback to begin at 0 (`PlayFromBeginning`). Set where
+    /// `finding` is.
+    pub beginning: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
     /// The copy of the config the background tasks read: the download manager, the seeding
     /// watch and the stream cache's. Brought up to `config` whenever a setting is written, so
     /// "saved" and "in effect" are the same moment.
@@ -143,6 +146,7 @@ impl EngineState {
             player_tx: None,
             finding: None,
             skipping: None,
+            beginning: None,
             torrent_tasks: TorrentTasks::default(),
             torrent_route: None,
             arrivals,

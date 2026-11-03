@@ -361,13 +361,14 @@ fn play_staged(
     let for_show = show_settings::for_show(engine.config.effective(), store, id);
     let hints =
         hints_for(id, &episode, PlayKind::Staged, for_show.playback.skip_filler, engine);
-    let EngineState { player_tx, finding, skipping, .. } = engine;
+    let EngineState { player_tx, finding, skipping, beginning, .. } = engine;
     let config = &for_show;
     // A fresh channel per playback. The one playing gives up its window only once
     // this one has something to play — see `Handoff`.
     let (prx, handoff) = take_controls(player_tx, successor(id, &episode, &hints, config));
     let stopped = watch_for_stop(finding);
     let skip = watch_for_skip(skipping);
+    let begin = watch_for_begin(beginning);
     // Never from the streams found ahead for a release picked by hand: the pick names its
     // own. Otherwise the same fresh channel, the same session-replacement semantics.
     let prefetched = match pick {
@@ -390,6 +391,7 @@ fn play_staged(
         prx,
         stopped,
         skip,
+        begin,
         handoff,
         config,
         services,
@@ -449,10 +451,11 @@ pub fn play_local(
     let resume = resume_of(store, id, &episode);
     let staged = stage(&played, title.clone(), episode_title, resume, opener.as_ref(), engine);
     let _ = tx.send(staged);
-    let EngineState { player_tx, finding, skipping, .. } = engine;
+    let EngineState { player_tx, finding, skipping, beginning, .. } = engine;
     // Nothing to find: it opens at once, and a Stop is its session's from the start.
     *finding = None;
     *skipping = None;
+    *beginning = None;
     let config = &for_show;
     // No provider walk and no torrent session — the file is on disk — but the full
     // playback session all the same: a downloaded episode records history, resumes,
@@ -549,7 +552,13 @@ fn machine(opener: Arc<dyn PlayerOpener>, services: &Services) -> playback::Mach
 /// A Stop is that playback's whether or not it has opened yet: one still finding its stream
 /// reads its controls only once it plays, so it is told at once as well, and opens nothing.
 pub fn control_player(command: PlayerCommand, engine: &EngineState) {
-    let EngineState { player_tx, finding, skipping, .. } = engine;
+    let EngineState { player_tx, finding, skipping, beginning, .. } = engine;
+    if command == PlayerCommand::PlayFromBeginning
+        && let Some(beginning) = beginning
+    {
+        // Read when the file is opened; a file already open hears the command as well.
+        beginning.store(true, std::sync::atomic::Ordering::SeqCst);
+    }
     if command == PlayerCommand::Stop
         && let Some(finding) = finding
     {
@@ -613,6 +622,16 @@ fn watch_for_skip(skipping: &mut Option<watch::Sender<u64>>) -> watch::Receiver<
     skipped
 }
 
+/// A fresh flag for the begin-at-0 that reaches the playback starting now, kept as the engine's
+/// `beginning` in place of the one before it.
+fn watch_for_begin(
+    beginning: &mut Option<Arc<std::sync::atomic::AtomicBool>>,
+) -> Arc<std::sync::atomic::AtomicBool> {
+    let begin = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    *beginning = Some(begin.clone());
+    begin
+}
+
 /// What ended a playback's wait for its stream before the stream was found.
 enum Overtaken {
     /// The viewer stopped it.
@@ -664,6 +683,8 @@ fn spawn_playback(
     mut stopped: watch::Receiver<bool>,
     // The count the walk through the sources watches for a skip of the source it is asking.
     skip: watch::Receiver<u64>,
+    // Whether the viewer asked to begin at 0: see `PlayerCommand::PlayFromBeginning`.
+    begin: Arc<std::sync::atomic::AtomicBool>,
     handoff: Handoff,
     config: &Config,
     services: &Services,
@@ -855,6 +876,7 @@ fn spawn_playback(
             shader_dir,
             reports,
             swarm: crate::playback::starting::Swarm::of(torrents),
+            begin,
             ..play_settings(&config, tracker_ids, hub)
         };
         let settings = if untracked { settings.untracked() } else { settings };
@@ -908,6 +930,7 @@ pub fn play_settings(
         mpv_options: kaeri_playback::protocol::option_pairs(&playback.mpv_args),
         untracked: false,
         swarm: Default::default(),
+        begin: Default::default(),
     }
 }
 

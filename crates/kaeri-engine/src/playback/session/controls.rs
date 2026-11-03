@@ -174,6 +174,8 @@ pub(super) fn aimed(
 ) -> Option<PlayerCommand> {
     match command {
         PlayerCommand::Seek(_) | PlayerCommand::SeekTo(_) if !loaded => None,
+        // Before the file has loaded the open itself starts at 0; after, it seeks there.
+        PlayerCommand::PlayFromBeginning => loaded.then_some(PlayerCommand::SeekTo(0.0)),
         PlayerCommand::Seek(delta) if delta > 0.0 => match duration {
             Some(duration) if position + delta > duration - SEEK_END_MARGIN => {
                 let end = duration - SEEK_END_MARGIN;
@@ -253,6 +255,7 @@ pub(super) async fn apply_command(link: &dyn PlayerLink, command: PlayerCommand)
         | PlayerCommand::StallWait
         // The walk through the sources hears this; once a player plays, it has nothing to skip.
         | PlayerCommand::SkipSource
+        | PlayerCommand::PlayFromBeginning
         | PlayerCommand::NightMode(_)
         | PlayerCommand::Upscaling(_) => {}
         PlayerCommand::Stop => {
@@ -277,6 +280,9 @@ mod tests {
     fn a_seek_is_aimed_at_the_file_playing_and_stays_inside_it() {
         use super::aimed;
         let seek = |by| PlayerCommand::Seek(by);
+        let begin = PlayerCommand::PlayFromBeginning;
+        assert_eq!(aimed(begin.clone(), false, 0.0, None), None, "the open itself starts at 0");
+        assert_eq!(aimed(begin, true, 300.0, None), Some(PlayerCommand::SeekTo(0.0)));
         assert_eq!(aimed(seek(5.0), false, 0.0, None), None);
         assert_eq!(aimed(PlayerCommand::SeekTo(30.0), false, 0.0, Some(120.0)), None);
         assert_eq!(

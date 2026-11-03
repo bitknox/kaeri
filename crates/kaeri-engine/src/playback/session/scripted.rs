@@ -157,6 +157,7 @@ pub(super) fn settings() -> PlaySettings {
         mpv_options: Vec::new(),
         untracked: false,
         swarm: Default::default(),
+        begin: Default::default(),
     }
 }
 
@@ -309,6 +310,33 @@ async fn a_playback_opens_a_window_loads_the_file_and_plays_it_to_its_end() {
     // And what was watched is written down.
     let completed = rig.store.completed_episodes(AnilistId::new(900_001)).unwrap();
     assert_eq!(completed, ["1"], "episode 1 is recorded as watched");
+}
+
+#[tokio::test]
+async fn a_resume_point_opens_the_file_there_unless_the_viewer_asked_to_begin_at_nought() {
+    let start_of = |rig: &Rig| {
+        rig.opener.calls().into_iter().find_map(|c| match c {
+            Call::Load { options, .. } => {
+                Some(options.iter().find(|(k, _)| k == "start").map(|(_, v)| v.clone()))
+            }
+            _ => None,
+        })
+    };
+    let resuming = || PlaybackContext { resume_at: Some(606.0), ..context("1", None) };
+
+    let rig = Rig::new(vec![file(&[("Opening", 0.0)], (1920, 1080))]);
+    let events = rig.play(stream(StreamKind::Mp4), resuming(), settings()).await;
+    assert!(start_of(&rig).flatten().is_some(), "it resumes");
+    assert!(events.iter().any(|e| matches!(e, Event::Resumed { .. })));
+
+    let rig = Rig::new(vec![file(&[("Opening", 0.0)], (1920, 1080))]);
+    let asked = settings();
+    asked.begin.store(true, std::sync::atomic::Ordering::SeqCst);
+    let events = rig.play(stream(StreamKind::Mp4), resuming(), asked).await;
+    assert_eq!(start_of(&rig), Some(None), "it opens at nought");
+    assert!(!events.iter().any(|e| matches!(e, Event::Resumed { .. })), "nothing resumed");
+    let id = AnilistId::new(900_001);
+    assert_eq!(rig.store.resume_position(id, "1").unwrap(), None, "no position was kept");
 }
 
 #[tokio::test]

@@ -202,6 +202,7 @@ async fn main() {
             mpv_options: Vec::new(),
             untracked: false,
             swarm: Default::default(),
+            begin: Default::default(),
         };
         kaeri_engine::playback::play(
             vec![stream],

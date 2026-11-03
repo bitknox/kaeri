@@ -158,6 +158,9 @@ pub struct PlaySettings {
     pub untracked: bool,
     /// How a torrent stream is doing, for the starting screen until its first frame.
     pub swarm: crate::playback::starting::Swarm,
+    /// Set when the viewer asked to begin at 0: the file then opens there, whatever the resume
+    /// point.
+    pub begin: std::sync::Arc<std::sync::atomic::AtomicBool>,
 }
 
 impl PlaySettings {
@@ -438,6 +441,12 @@ pub async fn play(
             "trying a stream"
         );
 
+        // Asked to begin at 0 while the sources were walked or this file was found: it opens
+        // there. The stored position stays as it was until the episode has played.
+        let begin = || settings.begin.load(std::sync::atomic::Ordering::SeqCst);
+        if begin() {
+            resume_at = None;
+        }
         let request = PlaybackRequest {
             title: context.window_title(),
             start_at: resume_at,
@@ -524,6 +533,11 @@ pub async fn play(
         }
         // mpv is already at the resume point by now — `start` handled it. Saying so is what
         // keeps it from looking like the episode began in the wrong place.
+        // Asked while the file was handed over, before it could hear the command: seek there.
+        if resume_at.is_some() && begin() {
+            resume_at = None;
+            let _ = current.link.seek(0.0, true).await;
+        }
         if let Some(position) = resume_at {
             let _ = tx.send(Event::Resumed { position });
             let _ = current.link.overlay(Overlay::Resumed { position }).await;
