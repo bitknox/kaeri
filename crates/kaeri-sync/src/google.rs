@@ -162,6 +162,7 @@ impl fmt::Debug for Tokens {
 #[derive(Debug, Clone, Deserialize)]
 pub struct DeviceCode {
     pub user_code: String,
+    #[serde(alias = "verification_uri")]
     pub verification_url: String,
     pub device_code: String,
     pub expires_in: u64,
@@ -264,8 +265,18 @@ pub async fn device_start(
     endpoints: &Endpoints,
     config: &ClientConfig,
 ) -> Result<DeviceCode, FolderError> {
+    device_start_for(http, endpoints, config, SCOPE).await
+}
+
+/// [`device_start`] asking for `scope`: the other services' device flows are this one.
+pub async fn device_start_for(
+    http: &reqwest::Client,
+    endpoints: &Endpoints,
+    config: &ClientConfig,
+    scope: &str,
+) -> Result<DeviceCode, FolderError> {
     let mut form = form_base(config);
-    form.push(("scope", SCOPE.to_owned()));
+    form.push(("scope", scope.to_owned()));
     match token_call(http, &endpoints.device_url, &form).await? {
         Reply::Ok(json) => serde_json::from_value(json)
             .map_err(|e| FolderError::Server(format!("unreadable device code: {e}"))),

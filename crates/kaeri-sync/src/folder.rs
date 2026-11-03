@@ -316,10 +316,11 @@ impl AsRef<Path> for DirTarget {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod contract {
     use super::*;
 
-    async fn exercise(t: &dyn FolderTarget) {
+    /// What every target must do, in one place.
+    pub(crate) async fn exercise(t: &dyn FolderTarget) {
         assert!(t.list("").await.unwrap().is_empty());
         t.write_new("a/b/one.seg", b"1").await.unwrap();
         t.write_new("a/two.seg", b"22").await.unwrap();
@@ -339,6 +340,11 @@ mod tests {
         t.remove("a/three.seg").await.unwrap();
         assert!(matches!(t.read("../x").await, Err(FolderError::BadPath(_))));
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{contract::exercise, *};
 
     #[tokio::test]
     async fn memory_target_keeps_the_contract() {
