@@ -119,6 +119,7 @@ struct MacShell: View {
         .sourcePickerSheet(navigator)
         .matchPickerSheet(navigator)
         .openLinkSheet(navigator)
+        .surprisePicks()
     }
 
     /// What the toolbar says under the section's name.
@@ -155,9 +156,12 @@ struct SectionToolbar: ToolbarContent {
             ToolbarItem(placement: .primaryAction) {
                 HStack(spacing: 8) {
                     LibrarySegments()
+                    SurpriseButton()
                     LibraryMenus()
                 }
             }
+        case .search:
+            ToolbarItem(placement: .primaryAction) { SurpriseButton() }
         case .seasonal:
             ToolbarItem(placement: .primaryAction) { SeasonalToolbar() }
         case .providers:

@@ -175,7 +175,10 @@ struct PhoneLibrary: View {
         }
         .pullToRefresh(store, .library(navigator.librarySegment))
         .screenSubtitle(sizeClass == .compact ? store.syncSubtitle() : "")
-        .toolbar { if sizeClass == .compact { AccountButton() } }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) { SurpriseButton() }
+            if sizeClass == .compact { AccountButton() }
+        }
         .task {
             for segment in LibraryModel.order where store.library.segment(segment).state == .idle {
                 store.loadLibrary(segment)
@@ -256,6 +259,7 @@ struct DownloadsRow: View {
 struct PhoneSearch: View {
     var body: some View {
         SearchScreen(compact: true)
+            .toolbar { ToolbarItem(placement: .topBarTrailing) { SurpriseButton() } }
     }
 }
 #endif

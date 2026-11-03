@@ -31,6 +31,12 @@ public struct MacPlayerView: View {
     /// The top bar's control under the pointer, as the title bar strip says it: where the
     /// controls' own hover cannot see it.
     @State private var pointed: String?
+    /// The episode under the pointer in the Episodes panel.
+    @State private var pointedEpisode: String?
+    /// The episode Go to episode asks the Episodes panel to scroll to.
+    @State private var landedEpisode: String?
+    /// The episode whose row has the keyboard's focus in the Episodes panel.
+    @State private var focusedEpisode: String?
     /// The watch party's popover on the people button.
     @State private var partyOpen = false
     /// Where the panels over the video are, which take the scroll wheel from the player.
@@ -113,6 +119,11 @@ public struct MacPlayerView: View {
         .onChange(of: window) { _, window in if let window { opened(window) } }
         .onChange(of: model.backRequests) { back() }
         .onChange(of: model.menuRequests) { panel = model.requestedMenu }
+        // A panel opens with its footer on the playing episode, whatever was pointed at last time.
+        .onChange(of: panel) {
+            pointedEpisode = nil
+            focusedEpisode = nil
+        }
         .onChange(of: store.party.panelRequests) {
             panel = nil
             partyOpen = store.party.inParty
@@ -411,25 +422,44 @@ public struct MacPlayerView: View {
         Color.clear
             .contentShape(.rect)
             .onTapGesture { panel = nil }
-        MenuPanelFrame {
-            ScrollViewReader { list in
-                MenuScroll {
-                    VStack(alignment: .leading, spacing: 0) {
-                        switch which {
-                        case .tracks: TrackLists(model: model, metrics: metrics, style: $styleOpen)
-                        case .episodes: EpisodeList(model: model, metrics: metrics)
-                        case .speed: SpeedList(model: model, metrics: metrics)
-                        case .picture: PictureLists(model: model, metrics: metrics)
+        VStack(spacing: 0) {
+            MenuPanelFrame {
+                ScrollViewReader { list in
+                    MenuScroll {
+                        VStack(alignment: .leading, spacing: 0) {
+                            switch which {
+                            case .tracks: TrackLists(model: model, metrics: metrics, style: $styleOpen)
+                            case .episodes: EpisodeList(model: model, metrics: metrics, pointed: $pointedEpisode, focused: $focusedEpisode, landed: $landedEpisode)
+                            case .speed: SpeedList(model: model, metrics: metrics)
+                            case .picture: PictureLists(model: model, metrics: metrics)
+                            }
+                        }
+                        .padding(5)
+                        .environment(\.pointedMenuRow, model.pointedRow)
+                        // The pointer moving on to another row closes the submenu, as in a menu.
+                        .environment(\.menuRowEntered) { styleOpen = false }
+                    }
+                    .onAppear {
+                        if let row = selectedRow(which) { list.scrollTo(row, anchor: .center) }
+                    }
+                    // Go to episode put a row at the top, once its range has crossfaded in.
+                    .onChange(of: landedEpisode) { _, number in
+                        guard let number else { return }
+                        Task {
+                            try? await Task.sleep(for: .milliseconds(150))
+                            list.scrollTo(EpisodeList.row(number), anchor: .top)
+                            landedEpisode = nil
                         }
                     }
-                    .padding(5)
-                    .environment(\.pointedMenuRow, model.pointedRow)
-                    // The pointer moving on to another row closes the submenu, as in a menu.
-                    .environment(\.menuRowEntered) { styleOpen = false }
                 }
-                .onAppear {
-                    if let row = selectedRow(which) { list.scrollTo(row, anchor: .center) }
-                }
+            }
+            // The pointed or focused episode's title and synopsis in three lines, kept only if
+            // the table had synopses when the panel opened.
+            if which == .episodes {
+                EpisodeFooter(
+                    model: model, metrics: metrics, table: model.staged.flatMap { store.titles.episodes[$0.id] } ?? [],
+                    pointed: pointedEpisode, focused: focusedEpisode
+                )
             }
         }
         .frame(width: Self.panelWidth(which))

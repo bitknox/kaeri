@@ -2262,6 +2262,12 @@ public enum L {
     /// Mac and iPad View menu item that shows the calendar's week after.
     public static var menuNextWeek: String { string("menu-next-week", fallback: "Next Week") }
 
+    /// Mac and iPad View menu item: a long series' title page shows its episodes a hundred at a time, and this shows the hundred before the ones on screen.
+    public static var menuPreviousEpisodes: String { string("menu-previous-episodes", fallback: "Previous Episodes") }
+
+    /// Mac and iPad View menu item: a long series' title page shows its episodes a hundred at a time, and this shows the hundred after the ones on screen.
+    public static var menuNextEpisodes: String { string("menu-next-episodes", fallback: "Next Episodes") }
+
     /// Mac menu bar item that syncs with the tracker accounts now.
     public static var menuSyncNow: String { string("menu-sync-now", fallback: "Sync Now") }
 
@@ -9251,6 +9257,9 @@ public enum L {
 
     /// Title of the Go to episode field.
     public static var episodeGoToTitle: String { string("episode-go-to-title", fallback: "Go to episode") }
+
+    /// Default button of the Go to episode field, which goes to the number typed.
+    public static var episodeGoToGo: String { string("episode-go-to-go", fallback: "Go") }
 
     /// Placeholder of the Go to episode field: the first and last episode of the show.
     public static func episodeGoToHint(first: Int, last: Int) -> String {

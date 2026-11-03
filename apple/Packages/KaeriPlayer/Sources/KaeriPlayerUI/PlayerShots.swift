@@ -103,6 +103,16 @@ public enum PlayerShot: String, CaseIterable, Sendable {
         return arguments[index + 1]
     }
 
+    /// The launch argument that gives an Episodes row the keyboard's focus, by its episode
+    /// number: `-KaeriPlayerFocus 3`. Rows take focus only with keyboard navigation on, which
+    /// `-AppleKeyboardUIMode 2` turns on for the one process.
+    public static let focusArgument = "-KaeriPlayerFocus"
+
+    static func focusedEpisode(in arguments: [String]) -> String? {
+        guard let index = arguments.firstIndex(of: focusArgument), arguments.indices.contains(index + 1) else { return nil }
+        return arguments[index + 1]
+    }
+
     /// The menu a shot opens.
     var menu: PlayerMenu? {
         switch self {
@@ -149,6 +159,11 @@ extension PlayerModel {
             if shot == .tracks, let last = subtitleTracks.last { selectSubtitle(last.id) }
             pinnedControls = true
             pointedRow = PlayerShot.pointed(in: ProcessInfo.processInfo.arguments)
+            // The episode table is cached by the title's page in use; the shot has had none.
+            if shot == .episodes {
+                store.loadEpisodes(item.id)
+                _ = await waited(10) { episodeText(rows: store.titles.episodes[item.id] ?? []) == .present }
+            }
             try? await Task.sleep(for: .seconds(0.5))
             if let menu = shot.menu { requestMenu(menu) }
         case .fading:

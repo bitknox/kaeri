@@ -17,6 +17,10 @@ struct PosterCell: View {
     let entry: Entry
     /// The line under the title: "Ep 7 of 24", a genre, a status.
     var detail: String?
+    /// The count line, which comes first and today's `detail` second: "12 episodes · Dub 8". It
+    /// takes the short form under about 120 pt, and wherever the long one does not fit, so the dub
+    /// part is never cut off. In the Library it stands alone, the dub appended.
+    var count: CountLine?
     /// A new episode's line, with the water dot: "Ep 9 out 2h ago".
     var fresh: String?
     /// How far through, for the meter, when it is under way.
@@ -73,7 +77,7 @@ struct PosterCell: View {
         }
         .buttonStyle(.plain)
         .pointerHover()
-        .titleElement(entry, value: [detail, fresh].compactMap { $0 }.joined(separator: ", ")) {
+        .titleElement(entry, value: [count?.spoken, detail, fresh].compactMap { $0 }.joined(separator: ", ")) {
             TitleActions(entry: entry)
         }
         .contextMenu { TitleMenu(entry: entry) }
@@ -85,6 +89,10 @@ struct PosterCell: View {
     /// The lines under the title: the detail, the meter, a new episode.
     @ViewBuilder
     private var lines: some View {
+        if let count {
+            CountLineText(line: count, narrow: width < 120)
+                .padding(.top, 4)
+        }
         if let detail {
             Text(detail)
                 .font(.mac(12))
@@ -92,7 +100,7 @@ struct PosterCell: View {
                 .monospacedDigit()
                 .foregroundStyle(.haze)
                 .lineLimit(1)
-                .padding(.top, 4)
+                .padding(.top, count == nil ? 4 : 0)
         }
         if let fraction {
             Meter(fraction: fraction, height: 3)
@@ -109,6 +117,36 @@ struct PosterCell: View {
             .lineLimit(1)
             .padding(.top, 8)
         }
+    }
+}
+
+/// A card's count line: haze text on the facts line, the long form where it fits and the short
+/// one where it does not. The dub part arrives later than the count, as a source answers on a
+/// title page, and fades in at the line's end: the text only grows to the right, so nothing
+/// moves.
+struct CountLineText: View {
+    let line: CountLine
+    var narrow = false
+    var font: Font = .mac(12)
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            text(narrow ? line.short : line.long)
+            // Past the short form, the line is cut at its end rather than wrapped.
+            text(line.short).truncationMode(.tail)
+        }
+        .animation(.fadeIn, value: line.dub)
+        .accessibilityLabel(line.spoken)
+    }
+
+    private func text(_ string: String) -> some View {
+        Text(string)
+            .font(font)
+            .macLineHeight(16)
+            .monospacedDigit()
+            .foregroundStyle(.haze)
+            .lineLimit(1)
+            .contentTransition(.opacity)
     }
 }
 

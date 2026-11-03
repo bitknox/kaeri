@@ -389,7 +389,9 @@ struct SearchScreen: View {
             } else if store.search.asked == nil, !navigator.query.isEmpty {
                 store.search(text: navigator.query)
             }
-            if let points = navigator.launchScroll {
+            // Only when Search is what the launch opened: the iPhone's tab can be drawn early,
+            // under a title page whose scroll this is.
+            if navigator.section == .search, let points = navigator.launchScroll {
                 navigator.launchScroll = nil
                 try? await Task.sleep(for: .milliseconds(1_500))
                 scrollPosition.scrollTo(y: CGFloat(points))
@@ -1084,7 +1086,7 @@ struct SearchResults: View {
             ) { ids in
                 VStack(alignment: .leading, spacing: 24) {
                     PosterGrid(entries: ids.compactMap { store.titles[$0] }, minimum: minimum, columns: columns, spacing: spacing) { entry in
-                        PosterCell(entry: entry, detail: searchLine(entry), width: columns?.width ?? minimum)
+                        PosterCell(entry: entry, detail: searchLine(entry), count: entry.countLine, width: columns?.width ?? minimum)
                     }
                     // One answer replaces another in one crossfade, not cell by cell.
                     .id(search.answered)
@@ -1184,7 +1186,12 @@ struct SearchStart: View {
                 if let rails = store.search.rails {
                     VStack(alignment: .leading, spacing: 28) {
                         ForEach(rails.filter { !$0.entries.isEmpty }, id: \.title) { rail in
-                            RailRow(rail: rail, compact: compact)
+                            if rail.query.sort == .trending, rail.query.period == nil {
+                                // Trending's rail has a period menu in its heading.
+                                RailRow(rail: rail, compact: compact, trending: true)
+                            } else {
+                                RailRow(rail: rail, compact: compact)
+                            }
                         }
                     }
                     .transition(.opacity)
@@ -1271,20 +1278,38 @@ private struct RailRow: View {
     @Environment(\.searchCoverWidth) private var cover
     let rail: BrowseRail
     var compact = false
+    /// Trending's rail: its heading is a menu of periods, and its covers follow the period.
+    var trending = false
+    /// The covers on screen and the period they are of, kept while another period's are on
+    /// their way, and plates once that has waited past 600 ms.
+    @State private var held: (period: TrendPeriod, entries: [Entry])?
+    @State private var plates = false
+
+    private var period: TrendPeriod { trending ? store.search.trendingPeriod : .today }
+    private var shown: SearchModel.TrendingRail? {
+        trending ? store.search.trendingShown(browse: rail) : nil
+    }
 
     var body: some View {
         let width: CGFloat = compact ? 112 : 128
+        let kept = trending ? store.search.trendingShown(browse: rail) : nil
+        let entries = trending ? (kept?.failed == true ? [] : (kept?.entries ?? held?.entries ?? rail.entries)) : rail.entries
+        let waiting = trending && store.search.trendingPending == period && kept == nil
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 // The engine says it in sentence case, as the iPhone has it; the Mac's headings
                 // are in title case.
-                SectionHeading(compact ? rail.title : rail.title.capitalizedSentence, compact: compact)
+                if trending {
+                    TrendingHeading(period: period, compact: compact) { store.loadTrending($0) }
+                } else {
+                    SectionHeading(compact ? rail.title : rail.title.capitalizedSentence, compact: compact)
+                }
                 if let detail = rail.detail {
                     Text(detail).font(compact ? .ui(15) : .mac(13)).foregroundStyle(.haze)
                 }
                 Spacer()
                 Button {
-                    navigator.search(rail.query, in: store)
+                    navigator.search(trending ? SearchQuery(sort: .trending, period: period == .today ? nil : period) : rail.query, in: store)
                 } label: {
                     Text(L.searchSeeAll)
                         .frame(minHeight: compact ? 44 : 28)
@@ -1295,17 +1320,45 @@ private struct RailRow: View {
                 .foregroundStyle(.silk)
                 .pointerHover()
             }
-            ScrollView(.horizontal) {
-                LazyHStack(alignment: .top, spacing: compact ? 12 : 20) {
-                    ForEach(rail.entries, id: \.id) { entry in
-                        PosterCell(entry: store.titles[entry.id] ?? entry, detail: line(entry), width: width, place: .rail(rail.title))
-                            .railCover(compact: compact)
-                    }
-                }
-                .padding(bleed)
+            if trending, let kept {
+                TrendingNote(rail: kept, period: period) { store.loadTrending(period) }
             }
-            .scrollIndicators(.never)
-            .padding(-bleed)
+            // One swap at a time, a crossfade with both sides drawn: the old covers stay until the
+            // new ones are in, plates after 600 ms, and then the covers in one crossfade.
+            ZStack(alignment: .topLeading) {
+                if kept?.failed == true {
+                    TrendingFailed(period: period, compact: compact) { store.loadTrending(period) }
+                        .transition(.opacity)
+                } else if waiting && plates {
+                    RailPlates(width: width, compact: compact).transition(.opacity)
+                } else {
+                    ScrollView(.horizontal) {
+                        LazyHStack(alignment: .top, spacing: compact ? 12 : 20) {
+                            ForEach(entries, id: \.id) { entry in
+                                let current = store.titles[entry.id] ?? entry
+                                PosterCell(entry: current, detail: line(entry), count: current.countLine, width: width, place: .rail(rail.title))
+                                    .railCover(compact: compact)
+                            }
+                        }
+                        .padding(bleed)
+                    }
+                    .scrollIndicators(.never)
+                    .padding(-bleed)
+                    .id(trending ? period : .today)
+                    .transition(.opacity)
+                }
+            }
+            .animation(.standard, value: period)
+            .animation(.standard, value: plates)
+            .animation(.standard, value: kept?.failed)
+        }
+        .onChange(of: kept?.entries.map(\.id), initial: true) {
+            if let kept, !kept.failed { held = (period, kept.entries) }
+        }
+        .task(id: waiting) {
+            guard waiting else { plates = false; return }
+            try? await Task.sleep(for: SearchModel.quiet)
+            if !Task.isCancelled { plates = true }
         }
     }
 
@@ -1315,6 +1368,97 @@ private struct RailRow: View {
 
     private func line(_ entry: Entry) -> String? {
         entry.genres.first
+    }
+}
+
+/// Trending's heading, a menu of its periods: "Trending today ⌄", in the system's own menu motion.
+private struct TrendingHeading: View {
+    let period: TrendPeriod
+    var compact = false
+    let choose: (TrendPeriod) -> Void
+
+    var body: some View {
+        Menu {
+            ForEach(trendPeriods(), id: \.self) { choice in
+                Toggle(trendPeriodChoice(period: choice), isOn: Binding(get: { choice == period }, set: { _ in choose(choice) }))
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Text(trendPeriodLabel(period: period))
+                    .contentTransition(.opacity)
+                Image(systemName: "chevron.down")
+                    .font(.ui(compact ? 12 : 10, weight: .semibold))
+                    .foregroundStyle(.haze)
+            }
+            .font(compact ? .ui(20, weight: .semibold) : .mac(15, weight: .semibold))
+            .foregroundStyle(.silk)
+            .frame(minHeight: compact ? 44 : 28)
+            .contentShape(.rect)
+        }
+        .menuStyle(.button)
+        .menuIndicator(.hidden)
+        .buttonStyle(.plain)
+        .animation(.quick, value: period)
+        .pointerHover()
+        .accessibilityAddTraits(.isHeader)
+    }
+}
+
+/// Under Trending's heading: when a kept answer was made, or the wait AniList asked for.
+private struct TrendingNote: View {
+    let rail: SearchModel.TrendingRail
+    let period: TrendPeriod
+    let retry: () -> Void
+
+    var body: some View {
+        if let seconds = rail.waiting, rail.failed {
+            HStack(spacing: 6) {
+                ProgressView().controlSize(.small)
+                Text(L.libraryRowWaiting(seconds: Int(seconds)))
+            }
+            .font(.mac(12)).foregroundStyle(.haze)
+        } else if let at = rail.updatedAt, !rail.failed {
+            Text(L.trendingUpdated(age: Date(timeIntervalSince1970: TimeInterval(at)).formatted(.relative(presentation: .named))))
+                .font(.mac(12)).foregroundStyle(.haze)
+        }
+    }
+}
+
+/// A period that could not load: in the rail's own space, the rails below it staying.
+private struct TrendingFailed: View {
+    let period: TrendPeriod
+    var compact = false
+    let retry: () -> Void
+
+    var body: some View {
+        VStack(spacing: 10) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.system(size: 18)).foregroundStyle(.vermilion)
+            Text(L.trendingFailed(period: trendPeriodChoice(period: period).lowercased()))
+                .font(compact ? .ui(15) : .mac(13)).foregroundStyle(.haze)
+            Button(L.actionTryAgain, action: retry)
+                .buttonStyle(SecondaryCapsuleStyle(height: compact ? 44 : 28, fontSize: compact ? 17 : 13))
+        }
+        .frame(maxWidth: .infinity, minHeight: 200)
+    }
+}
+
+/// A rail's plates, while a period's covers are on their way.
+private struct RailPlates: View {
+    let width: CGFloat
+    var compact = false
+
+    var body: some View {
+        ScrollView(.horizontal) {
+            HStack(alignment: .top, spacing: compact ? 12 : 20) {
+                ForEach(0..<8, id: \.self) { _ in PosterCellPlaceholder(width: width).railCover(compact: compact) }
+            }
+        }
+        .scrollDisabled(true)
+        .scrollIndicators(.never)
+        .redacted(reason: .placeholder)
+        .foregroundStyle(.haze)
+        .accessibilityHidden(true)
     }
 }
 

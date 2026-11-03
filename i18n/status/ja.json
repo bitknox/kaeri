@@ -9346,6 +9346,12 @@
     ],
     "back": "Play { -up-next-cap }"
   },
+  "menu-next-episodes": {
+    "source": "bba58abc8e36",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
   "menu-next-week": {
     "source": "29ddb337e889",
     "state": "draft",
@@ -9414,6 +9420,12 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Play previous episode"
+  },
+  "menu-previous-episodes": {
+    "source": "6cfae6498a3c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
   },
   "menu-previous-week": {
     "source": "88ddc26ffb60",

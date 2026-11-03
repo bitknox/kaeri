@@ -112,6 +112,7 @@ struct TabShell: View {
         .sourcePickerSheet(navigator)
         .matchPickerSheet(navigator)
         .openLinkSheet(navigator)
+        .surprisePicks()
         .modifier(AppSheets())
     }
 
@@ -147,6 +148,9 @@ struct PadTitleToolbar: ToolbarContent {
     var body: some ToolbarContent {
         // The list's menu is in the page's header, beside Resume (PadTitleMeta): a narrow
         // window's bar, with the tabs in it, folded it away.
+        ToolbarItem(placement: .topBarTrailing) {
+            AnotherButton(id: id)
+        }
         ToolbarItem(placement: .topBarTrailing) {
             Menu {
                 if let entry = store.titles[id] { TitleMoreItems(entry: entry) }
@@ -214,7 +218,14 @@ struct TabStack<Screen: View>: View {
     var body: some View {
         NavigationStack(path: Binding(
             get: { navigator.paths[section] ?? [] },
-            set: { navigator.paths[section] = $0 }
+            set: {
+                // Back, however it came, ends a pick's visit and what Another put in its place.
+                if $0.count < (navigator.paths[section] ?? []).count {
+                    navigator.pickVisit = nil
+                    navigator.shownInPlace = [:]
+                }
+                navigator.paths[section] = $0
+            }
         )) {
             screen()
                 .toolbar {
@@ -236,17 +247,23 @@ struct TabStack<Screen: View>: View {
                 // it: never the window's black at its sides.
                 .containerBackground(.ground, for: .navigation)
                 .navigationDestination(for: TitleRoute.self) { route in
-                    let id = route.id
+                    let id = navigator.shownInPlace[route.id] ?? route.id
                     // A wide iPad has the Mac's page (PadTitleMeta); an iPhone, a narrow window
                     // and the accessibility text sizes, the iPhone's, whose one column wraps
                     // what the Mac's side-by-side header would cut.
-                    Group {
-                        if sizeClass == .regular, !typeSize.isAccessibilitySize {
-                            TitlePage(id: id).toolbar { PadTitleToolbar(id: id) }
-                        } else {
-                            PhoneTitle(id: id)
+                    // Another swaps the title in place: a crossfade with both sides drawn.
+                    ZStack {
+                        Group {
+                            if sizeClass == .regular, !typeSize.isAccessibilitySize {
+                                TitlePage(id: id).toolbar { PadTitleToolbar(id: id) }
+                            } else {
+                                PhoneTitle(id: id)
+                            }
                         }
+                        .id(id)
+                        .transition(.opacity)
                     }
+                    .animation(.standard, value: id)
                     // Out of the element clicked, and back into it.
                     .navigationTransition(.zoom(sourceID: route.zoomID, in: zoom))
                 }
