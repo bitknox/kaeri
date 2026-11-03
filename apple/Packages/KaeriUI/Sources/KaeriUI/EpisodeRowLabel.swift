@@ -367,7 +367,7 @@ struct EpisodePreview: View {
     var body: some View {
         let next = entry.progress?.next ?? 1
         let hidden = EpisodeProtection.hidden(
-            row, next: next, spoilers: store.spoilerProtection(for: entry.id),
+            row, spoilers: store.spoilerProtection(for: entry.id),
             revealed: navigator.synopsisShown[entry.id] ?? [], all: navigator.synopsisAllShown.contains(entry.id)
         )
         let current = UInt32(row.number) == next
@@ -398,7 +398,7 @@ struct EpisodePreview: View {
 
 /// The menu that picks one of a long series' ranges of 100, beside the dub line: the range shown
 /// by its first and last episode, and one item per range, each saying Watched or Not out yet where
-/// that is all of it. ⌘[ and ⌘] step to the previous and next range.
+/// that is all of it. ⇧⌘[ and ⇧⌘] step to the previous and next range.
 struct EpisodeRangeMenu: View {
     let plan: EpisodePlan
     let rows: [EpisodeRow]
@@ -438,10 +438,10 @@ struct EpisodeRangeMenu: View {
             // Previous and next range from the keyboard.
             Group {
                 Button("") { pick(plan.index - 1) }
-                    .keyboardShortcut("[", modifiers: .command)
+                    .keyboardShortcut("[", modifiers: [.command, .shift])
                     .disabled(plan.index == 0)
                 Button("") { pick(plan.index + 1) }
-                    .keyboardShortcut("]", modifiers: .command)
+                    .keyboardShortcut("]", modifiers: [.command, .shift])
                     .disabled(plan.index >= plan.ranges.count - 1)
             }
             .opacity(0)

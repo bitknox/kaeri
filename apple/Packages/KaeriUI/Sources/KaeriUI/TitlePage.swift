@@ -890,7 +890,7 @@ struct EpisodeList: View {
                 .animation(.fadeIn, value: dub)
                 .id(entry.id)
                 .transition(.identity)
-                // A long series' ranges of 100, beside the dub line; ⌘[ and ⌘] step through them.
+                // A long series' ranges of 100, beside the dub line; ⇧⌘[ and ⇧⌘] step through them.
                 if !plan.ranges.isEmpty {
                     EpisodeRangeMenu(plan: plan, rows: rows, phone: false) { pickRange($0, rows: rows) }
                 }
@@ -914,7 +914,7 @@ struct EpisodeList: View {
                         let fold = unwatchedOnly && plan.ranges.isEmpty ? nil : plan.fold
                         let next = entry.progress?.next ?? 1
                         let spoilers = store.spoilerProtection(for: entry.id)
-                        let protectedFrom = EpisodeProtection.startsAt(plan.shown, next: next, spoilers: spoilers)
+                        let protectedFrom = EpisodeProtection.startsAt(plan.shown, spoilers: spoilers)
                         if let fold {
                             WatchedFoldSection(
                                 fold: fold, shown: navigator.watchedShown(entry.id), phone: false,
@@ -997,7 +997,7 @@ struct EpisodeRowView: View {
     /// Whether protection hides this row's still and synopsis now.
     private var hidden: Bool {
         EpisodeProtection.hidden(
-            row, next: next, spoilers: spoilers,
+            row, spoilers: spoilers,
             revealed: navigator.synopsisShown[entry.id] ?? [], all: navigator.synopsisAllShown.contains(entry.id)
         )
     }

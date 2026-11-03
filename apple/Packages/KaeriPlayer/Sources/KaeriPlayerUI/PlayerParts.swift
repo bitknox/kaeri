@@ -1408,7 +1408,7 @@ struct MarkedStretch: View {
 }
 
 /// The foot of the Episodes panel: the title of the episode the pointer is over, else the one
-/// playing, and its synopsis in two lines. A protected episode gets its title and length and no
+/// playing, and its synopsis in three lines. A protected episode gets its title and length and no
 /// synopsis, and no bar to say so. The room is kept only if the table had synopses when the panel
 /// opened; text that comes later fades in.
 struct EpisodeFooter: View {
@@ -1441,11 +1441,7 @@ struct EpisodeFooter: View {
         }
         let number = pointed ?? named ?? episodes.first(where: \.current)?.number
         let row = table.first { $0.number == number }
-        let entry = store.titles[id]
-        let hidden = row.map { row in
-            store.spoilerProtection(for: id) && !row.completed
-                && (UInt32(row.number) ?? 0) > (entry?.progress?.next ?? 1)
-        } ?? false
+        let hidden = row.map { store.spoilerProtection(for: id) && $0.spoilerAhead } ?? false
         let text = hidden ? nil : row?.description
         return VStack(alignment: .leading, spacing: 2) {
             if let row {
@@ -1458,7 +1454,7 @@ struct EpisodeFooter: View {
                         Text(row.durationSecs.map { L.episodeFactsLength(minutes: max(1, Int((Double($0) / 60).rounded()))) } ?? "")
                             .id("facts")
                     } else if let text, !text.isEmpty {
-                        Text(text).lineLimit(2).id(text)
+                        Text(text).lineLimit(3).id(text)
                     }
                 }
                 .font(.system(size: 12))
@@ -1470,7 +1466,7 @@ struct EpisodeFooter: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .frame(maxWidth: .infinity, minHeight: 64, alignment: .topLeading)
+        .frame(maxWidth: .infinity, minHeight: 80, alignment: .topLeading)
         .overlay(alignment: .top) { Rectangle().fill(Palette.faintRule).frame(height: 1) }
         .accessibilityElement(children: .combine)
     }

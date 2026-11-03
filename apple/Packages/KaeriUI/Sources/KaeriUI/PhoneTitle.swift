@@ -359,9 +359,7 @@ struct PhoneEpisodes: View {
         let inset = EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
         let dub = store.titles.dubLines[entry.id]
         let ranged = !plan.ranges.isEmpty
-        let protectedFrom = EpisodeProtection.startsAt(
-            plan.shown, next: entry.progress?.next ?? 1, spoilers: spoilers
-        )
+        let protectedFrom = EpisodeProtection.startsAt(plan.shown, spoilers: spoilers)
         Group {
             if loaded {
                 // A long series: the dub line and the range menu share a row.
@@ -434,7 +432,7 @@ struct PhoneEpisodeRow: View {
 
     private var hidden: Bool {
         EpisodeProtection.hidden(
-            row, next: next, spoilers: spoilers,
+            row, spoilers: spoilers,
             revealed: navigator.synopsisShown[entry.id] ?? [], all: navigator.synopsisAllShown.contains(entry.id)
         )
     }

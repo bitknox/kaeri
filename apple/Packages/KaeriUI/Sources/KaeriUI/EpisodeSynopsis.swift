@@ -76,23 +76,22 @@ struct EpisodeRoom: Equatable {
 
 /// Spoiler protection for one row.
 enum EpisodeProtection {
-    /// Whether protection hides `row`'s still and synopsis: it is past the next episode and not
-    /// watched, and the setting is on.
-    static func hides(_ row: EpisodeRow, next: UInt32, spoilers: Bool) -> Bool {
-        guard spoilers, !row.completed else { return false }
-        return (UInt32(row.number) ?? 0) > next
+    /// Whether protection hides `row`'s still and synopsis: the setting is on and the engine says
+    /// the row is ahead (`spoilerAhead`).
+    static func hides(_ row: EpisodeRow, spoilers: Bool) -> Bool {
+        spoilers && row.spoilerAhead
     }
 
     /// Whether `row` is hidden and nobody has asked to see it this visit.
     static func hidden(
-        _ row: EpisodeRow, next: UInt32, spoilers: Bool, revealed: Set<String>, all: Bool
+        _ row: EpisodeRow, spoilers: Bool, revealed: Set<String>, all: Bool
     ) -> Bool {
-        hides(row, next: next, spoilers: spoilers) && !all && !revealed.contains(row.number)
+        hides(row, spoilers: spoilers) && !all && !revealed.contains(row.number)
     }
 
     /// The first row that protection hides, which the line about it sits above.
-    static func startsAt(_ rows: [EpisodeRow], next: UInt32, spoilers: Bool) -> String? {
-        rows.first { hides($0, next: next, spoilers: spoilers) }?.number
+    static func startsAt(_ rows: [EpisodeRow], spoilers: Bool) -> String? {
+        rows.first { hides($0, spoilers: spoilers) }?.number
     }
 }
 

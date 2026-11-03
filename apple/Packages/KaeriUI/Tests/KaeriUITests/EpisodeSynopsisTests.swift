@@ -19,6 +19,8 @@ struct EpisodeSynopsisTests {
                 kind: nil, skippable: false, airsAt: nil
             )
             row.synopsisPending = pending
+            // What the engine says: after the next episode, which comes after those watched.
+            row.spoilerAhead = index > watched
             return row
         }
     }
@@ -84,24 +86,25 @@ struct EpisodeSynopsisTests {
 
     @Test func protectionHidesWhatComesAfterTheNextEpisodeAndWhatIsNotWatched() {
         let table = rows(10, watched: 6)
-        let hidden = table.filter { EpisodeProtection.hides($0, next: 7, spoilers: true) }.map(\.number)
+        let hidden = table.filter { EpisodeProtection.hides($0, spoilers: true) }.map(\.number)
         #expect(hidden == ["8", "9", "10"])
-        #expect(table.allSatisfy { !EpisodeProtection.hides($0, next: 7, spoilers: false) })
-        #expect(EpisodeProtection.startsAt(table, next: 7, spoilers: true) == "8")
-        #expect(EpisodeProtection.startsAt(table, next: 7, spoilers: false) == nil)
-        #expect(EpisodeProtection.startsAt(rows(5, watched: 5), next: 6, spoilers: true) == nil)
+        #expect(table.allSatisfy { !EpisodeProtection.hides($0, spoilers: false) })
+        #expect(EpisodeProtection.startsAt(table, spoilers: true) == "8")
+        #expect(EpisodeProtection.startsAt(table, spoilers: false) == nil)
+        #expect(EpisodeProtection.startsAt(rows(5, watched: 5), spoilers: true) == nil)
     }
 
     @Test func aWatchedRowKeepsItsTextWhateverItsNumber() {
         var row = rows(3)[2]
-        row.completed = true
-        #expect(!EpisodeProtection.hides(row, next: 1, spoilers: true))
+        #expect(EpisodeProtection.hides(row, spoilers: true))
+        row.spoilerAhead = false
+        #expect(!EpisodeProtection.hides(row, spoilers: true))
     }
 
     @Test func aRevealCoversOneEpisodeOrEveryRowAfterTheLine() {
         let row = rows(10, watched: 6)[8]
         func hidden(_ shown: Set<String>, all: Bool) -> Bool {
-            EpisodeProtection.hidden(row, next: 7, spoilers: true, revealed: shown, all: all)
+            EpisodeProtection.hidden(row, spoilers: true, revealed: shown, all: all)
         }
         #expect(hidden([], all: false))
         #expect(!hidden(["9"], all: false))

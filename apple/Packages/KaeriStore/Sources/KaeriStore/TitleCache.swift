@@ -81,6 +81,7 @@ public final class TitleCache {
             guard let index = table.firstIndex(where: { $0.number == row.number }) else { continue }
             table[index].watched = row.watched
             table[index].completed = row.completed
+            table[index].spoilerAhead = row.spoilerAhead
         }
         episodes[id] = table
     }
