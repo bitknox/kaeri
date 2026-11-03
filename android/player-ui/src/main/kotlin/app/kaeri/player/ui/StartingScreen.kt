@@ -6,7 +6,6 @@
 package app.kaeri.player.ui
 
 import android.content.Context
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.foundation.Canvas
@@ -62,6 +61,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -74,7 +74,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.kaeri.design.FrameCrossfade
 import app.kaeri.design.KaeriLoaderLine
+import app.kaeri.design.ReservedHeight
 import app.kaeri.design.Motion
 import app.kaeri.design.ObiSilk
 import app.kaeri.design.ShowTitle
@@ -95,6 +97,7 @@ import app.kaeri.player.RowKind
 import app.kaeri.player.StartAction
 import app.kaeri.player.startingAnnouncement
 import app.kaeri.player.startingWords
+import app.kaeri.player.startWaiting
 import app.kaeri.player.label
 import app.kaeri.player.primaryAction
 import app.kaeri.player.startActions
@@ -181,7 +184,7 @@ private fun StartingColumn(model: PlayerModel, reduced: Boolean, onChooseSource:
     val progress = failure?.trail ?: model.progress
     val now = model.clock
     var open by remember { mutableStateOf(StartDetailsMemory.open(context)) }
-    val hasDetails = if (failure != null) progress != null && !failure.notAired && !failure.noSources else progress != null && progress.waited(now) >= StartTiming.TOOLS && !model.offline
+    val hasDetails = if (failure != null) progress != null && !failure.notAired && !failure.noSources else progress != null && progress.waited(now) >= StartTiming.TOOLS && !model.startWaiting(progress)
     val fraction by animateFloatAsState(if (open && hasDetails) 1f else 0f, if (reduced) Motion.fadeIn() else Motion.standard(), label = "details") // i18n-skip
 
     StartColumn(
@@ -213,20 +216,28 @@ private fun StartingColumn(model: PlayerModel, reduced: Boolean, onChooseSource:
                 KaeriLoaderLine(progress?.determinate(now).takeIf { failure == null }, reduced)
             }
             val said = startingWords(context, model, progress, failure, now)
+            // One line for the step and room for two under it, always, so no line arriving or
+            // wrapping moves what is below it. The two lines are read as one.
+            val density = LocalDensity.current
+            val stepRoom = with(density) { 24.sp.toDp() }
+            val detailRoom = with(density) { 40.sp.toDp() }
             Column(Modifier.padding(top = 12.dp).semantics(mergeDescendants = true) { }) {
-                Crossfade(said.step to said.failed, animationSpec = if (reduced) Motion.fadeIn() else Motion.standard(), label = "step") { (text, failed) -> // i18n-skip
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        if (failed) Box(Modifier.size(8.dp).clip(CircleShape).background(ObiSilk.Vermilion))
-                        Text(text, style = StepStyle, color = ObiSilk.Silk, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Box(Modifier.heightIn(min = stepRoom)) {
+                    FrameCrossfade(said.step to said.failed) { (text, failed) ->
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            if (failed) Box(Modifier.size(8.dp).clip(CircleShape).background(ObiSilk.Vermilion))
+                            Text(text, style = StepStyle, color = ObiSilk.Silk, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
                     }
                 }
-                Box(Modifier.padding(top = 3.dp).heightIn(min = 20.dp)) {
-                    Crossfade(said.facts, animationSpec = if (reduced) Motion.fadeIn() else Motion.standard(), label = "detail") { facts -> // i18n-skip
+                Box(Modifier.padding(top = 3.dp).heightIn(min = detailRoom)) {
+                    // The seconds only count; the facts crossfade when they change.
+                    FrameCrossfade(said.facts) { facts ->
                         Text(
                             if (said.seconds != null && !said.failed) listOfNotNull(facts, said.seconds).filter { it.isNotEmpty() }.joinToString(" · ") else facts,
                             style = DetailStyle,
                             color = ObiSilk.Haze,
-                            maxLines = 3,
+                            maxLines = if (said.failed) 2 else 1,
                             overflow = TextOverflow.Ellipsis,
                         )
                     }
@@ -259,7 +270,6 @@ private fun Announcer(model: PlayerModel, progress: StartProgress?, failure: Pla
 }
 
 /** The row under the lines: the buttons that apply, in the order they arrived, each laid out once it has. */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun StartingButtons(
     model: PlayerModel,
@@ -278,47 +288,90 @@ private fun StartingButtons(
     val providers by store.providers.rows.collectAsStateWithLifecycle()
     val now = model.clock
     val canFix = store.match.canFix(providers)
-    val wanted = startActions(progress, failure, model.offline, now, canFix, hasDetails)
+    val wanted = startActions(progress, failure, model.startWaiting(progress), now, canFix, hasDetails)
     // A button that has arrived keeps its room, so the ones before it never move; one that no
     // longer applies fades out and leaves it empty until the start ends.
     val arrived = remember(failure != null) { mutableStateListOf<StartAction>() }
     for (wish in wanted) if (wish !in arrived) arrived += wish
+    // Downloads belongs to the wait for a connection alone; nothing has come after it by then.
+    arrived.removeAll { it == StartAction.Downloads && it !in wanted }
     val primary = if (failure != null) primaryAction(wanted) else null
+    // The row's height is the tallest it comes to, from the start: the buttons that can arrive are
+    // laid out unseen, so the column never moves when one does.
+    ReservedHeight(reserve = {
+        Box {
+            ButtonsFlow {
+                for (wish in listOf(StartAction.Cancel, StartAction.FromBeginning, StartAction.Choose, StartAction.Details, StartAction.Skip)) {
+                    ActionButton(wish, wish.label(context, progress, null), false, null, open, reduced, {}, {})
+                }
+            }
+            for (set in listOf(
+                listOf(StartAction.Choose, StartAction.TryAgain, StartAction.Details, StartAction.Close),
+                listOf(StartAction.FixMatch, StartAction.Choose, StartAction.Details, StartAction.Close),
+            )) {
+                ButtonsFlow {
+                    for (wish in set) ActionButton(wish, wish.label(context, progress, failure ?: FAILURE_SAMPLE), false, null, open, reduced, {}, {})
+                }
+            }
+        }
+    }) {
+        ButtonsFlow {
+            for (wish in arrived) {
+                val applies = wish in wanted
+                val alpha by animateFloatAsState(if (applies) 1f else 0f, if (reduced) snap() else if (applies) Motion.fadeIn() else Motion.fadeOut(), label = "button") // i18n-skip
+                Box(Modifier.alpha(alpha).then(if (applies) Modifier else Modifier.clearAndSetSemantics { })) {
+                    ActionButton(
+                        wish, wish.label(context, progress, failure), applies, primary, open, reduced, onToggleDetails,
+                    ) { act(wish, model, failure, store, navigator, onChooseSource) }
+                }
+            }
+        }
+    }
+}
+
+private val FAILURE_SAMPLE = PlaybackFailure(null, "")
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ButtonsFlow(content: @Composable () -> Unit) {
     FlowRow(
         Modifier.fillMaxWidth().heightIn(min = 48.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.Center,
         itemVerticalAlignment = Alignment.CenterVertically,
-    ) {
-        for (wish in arrived) {
-            val applies = wish in wanted
-            val alpha by animateFloatAsState(if (applies) 1f else 0f, if (reduced) snap() else if (applies) Motion.fadeIn() else Motion.fadeOut(), label = "button") // i18n-skip
-            Box(Modifier.alpha(alpha).then(if (applies) Modifier else Modifier.clearAndSetSemantics { })) {
-                val enabled = applies
-                val label = wish.label(context, progress, failure)
-                when (wish) {
-                    StartAction.Cancel -> TextButton({ model.viewerClosed() }, enabled = enabled) { Text(label, color = ObiSilk.Silk) }
-                    StartAction.Close -> TextButton({ model.viewerClosed() }, enabled = enabled) { Text(label, color = ObiSilk.Silk) }
-                    StartAction.Details -> TextButton(onToggleDetails, enabled = enabled) {
-                        Text(label, color = ObiSilk.Silk)
-                        Spacer(Modifier.width(6.dp))
-                        StartChevron(open, reduced, ObiSilk.Silk)
-                    }
-                    else -> if (wish == primary) {
-                        Button(
-                            onClick = { act(wish, model, failure, store, navigator, onChooseSource) },
-                            enabled = enabled,
-                            colors = ButtonDefaults.buttonColors(containerColor = ObiSilk.Amber, contentColor = ObiSilk.Ground),
-                        ) { Text(label) }
-                    } else {
-                        FilledTonalButton(
-                            onClick = { act(wish, model, failure, store, navigator, onChooseSource) },
-                            enabled = enabled,
-                            colors = ButtonDefaults.filledTonalButtonColors(containerColor = ObiSilk.RaisedSelected, contentColor = ObiSilk.Silk),
-                        ) { Text(label) }
-                    }
-                }
-            }
+    ) { content() }
+}
+
+@Composable
+private fun ActionButton(
+    wish: StartAction,
+    label: String,
+    enabled: Boolean,
+    primary: StartAction?,
+    open: Boolean,
+    reduced: Boolean,
+    onToggleDetails: () -> Unit,
+    onClick: () -> Unit,
+) {
+    when (wish) {
+        StartAction.Cancel, StartAction.Close -> TextButton(onClick, enabled = enabled) { Text(label, color = ObiSilk.Silk) }
+        StartAction.Details -> TextButton(onToggleDetails, enabled = enabled) {
+            Text(label, color = ObiSilk.Silk)
+            Spacer(Modifier.width(6.dp))
+            StartChevron(open, reduced, ObiSilk.Silk)
+        }
+        else -> if (wish == primary) {
+            Button(
+                onClick = onClick,
+                enabled = enabled,
+                colors = ButtonDefaults.buttonColors(containerColor = ObiSilk.Amber, contentColor = ObiSilk.Ground),
+            ) { Text(label) }
+        } else {
+            FilledTonalButton(
+                onClick = onClick,
+                enabled = enabled,
+                colors = ButtonDefaults.filledTonalButtonColors(containerColor = ObiSilk.RaisedSelected, contentColor = ObiSilk.Silk),
+            ) { Text(label) }
         }
     }
 }
@@ -332,6 +385,7 @@ private fun act(
     onChooseSource: () -> Unit,
 ) {
     when (wish) {
+        StartAction.Cancel, StartAction.Close -> model.viewerClosed()
         StartAction.FromBeginning -> model.playFromBeginning()
         StartAction.Choose -> onChooseSource()
         StartAction.Skip -> model.skipSource()
@@ -413,7 +467,7 @@ private fun DetailsRow(row: DetailRow, model: PlayerModel) {
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
-        row.seconds?.let { Text(Strings.durationSeconds(LocalContext.current, it), style = DetailStyle, color = ObiSilk.Haze, modifier = Modifier.padding(start = 8.dp)) }
+        row.seconds?.let { Text(Strings.playerStartSeconds(LocalContext.current, it), style = DetailStyle, color = ObiSilk.Haze, modifier = Modifier.padding(start = 8.dp)) }
         row.skip?.let { TextButton({ model.skipSource() }) { Text(it, color = ObiSilk.Silk) } }
     }
 }

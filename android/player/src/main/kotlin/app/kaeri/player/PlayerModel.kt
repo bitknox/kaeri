@@ -468,7 +468,7 @@ class PlayerModel(
                     val told = event.failure
                     failure = PlaybackFailure(
                         staged?.id, startingEpisode!!, failedWith?.let(PlaybackFailure::reason), told?.text ?: failedMsg,
-                        why = told?.why, trail = progress, endedAt = now(),
+                        why = told?.why, trail = progress, endedAt = now(), asked = told?.asked.orEmpty(),
                     )
                     progress = null
                     failedWith = null
@@ -1439,6 +1439,8 @@ class PlayerModel(
         choosingSource = false
         sourceChoices = null
         failure = null
+        // A new start: its trail and clock begin again, as on the other platforms.
+        progress = null
         send(Command.PlaySource(id, episode, candidate.providerId, candidate.id))
     }
 

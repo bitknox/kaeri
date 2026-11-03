@@ -80,6 +80,8 @@ class PlayerScreenTest {
 
     private val orientation: Int get() = compose.activity.requestedOrientation
 
+    // A phone on its side, as the player holds it: the column keeps room for the lines and buttons to come.
+    @Config(qualifiers = "w915dp-h412dp-land-420dpi")
     @Test
     fun aPlayThatNeverPlayedSaysSoWithCloseWhichClosesIt() {
         compose.runOnUiThread {

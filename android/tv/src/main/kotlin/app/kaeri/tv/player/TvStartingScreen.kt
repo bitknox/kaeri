@@ -6,7 +6,6 @@
 package app.kaeri.tv.player
 
 import android.content.Context
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
@@ -15,6 +14,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,6 +34,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,6 +54,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -67,7 +72,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
+import app.kaeri.design.FrameCrossfade
 import app.kaeri.design.KaeriLoaderLine
+import app.kaeri.design.ReservedHeight
 import app.kaeri.design.Motion
 import app.kaeri.design.ObiSilk
 import app.kaeri.design.StartChevron
@@ -90,6 +97,7 @@ import app.kaeri.player.primaryAction
 import app.kaeri.player.startActions
 import app.kaeri.player.startingAnnouncement
 import app.kaeri.player.startingWords
+import app.kaeri.player.startWaiting
 import app.kaeri.store.HeroArt
 import app.kaeri.tv.ui.AmberButton
 import app.kaeri.tv.ui.ButtonLabel
@@ -164,13 +172,13 @@ private fun StartingColumn(model: PlayerModel, reduced: Boolean, focus: StartFoc
     val progress = failure?.trail ?: model.progress
     val now = model.clock
     var open by remember { mutableStateOf(StartDetailsMemory.open(context)) }
-    val hasDetails = if (failure != null) progress != null && !failure.notAired && !failure.noSources else progress != null && progress.waited(now) >= StartTiming.TOOLS
+    val hasDetails = if (failure != null) progress != null && !failure.notAired && !failure.noSources else progress != null && progress.waited(now) >= StartTiming.TOOLS && !model.startWaiting(progress)
     val fraction by animateFloatAsState(if (open && hasDetails) 1f else 0f, if (reduced) Motion.fadeIn() else Motion.standard(), label = "details") // i18n-skip
     val said = startingWords(context, model, progress, failure, now)
     val addStore = LocalAddStore.current
     val store = LocalAppStore.current
     val providers by store.providers.rows.collectAsStateWithLifecycle()
-    val actions = startActions(progress, failure, model.offline, now, store.match.canFix(providers), hasDetails)
+    val actions = startActions(progress, failure, model.startWaiting(progress), now, store.match.canFix(providers), hasDetails)
         .filter { it != StartAction.Downloads && (it != StartAction.AddStore || addStore != null) }
 
     StartColumn(
@@ -194,26 +202,33 @@ private fun StartingColumn(model: PlayerModel, reduced: Boolean, focus: StartFoc
             Box(Modifier.padding(top = 14.dp).alpha(if (failure == null) 1f else 0f)) {
                 KaeriLoaderLine(progress?.determinate(now).takeIf { failure == null }, reduced, thickness = 3.dp)
             }
+            // One line for the step and room for two under it, always, so nothing arriving or
+            // wrapping moves what is below. The two lines are read as one.
+            val density = LocalDensity.current
+            val stepRoom = with(density) { 24.sp.toDp() }
+            val detailRoom = with(density) { 48.sp.toDp() }
             Column(Modifier.padding(top = 12.dp).semantics(mergeDescendants = true) { }) {
-                Crossfade(said.step to said.failed, animationSpec = if (reduced) Motion.fadeIn() else Motion.standard(), label = "step") { (text, failed) -> // i18n-skip
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        if (failed) Box(Modifier.size(10.dp).clip(CircleShape).background(ObiSilk.Vermilion))
-                        Text(
-                            text,
-                            style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp, lineHeight = 24.sp, fontWeight = FontWeight.Medium, shadow = SHADOW),
-                            color = ObiSilk.Silk,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                        )
+                Box(Modifier.heightIn(min = stepRoom)) {
+                    FrameCrossfade(said.step to said.failed) { (text, failed) ->
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            if (failed) Box(Modifier.size(10.dp).clip(CircleShape).background(ObiSilk.Vermilion))
+                            Text(
+                                text,
+                                style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp, lineHeight = 24.sp, fontWeight = FontWeight.Medium, shadow = SHADOW),
+                                color = ObiSilk.Silk,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
                     }
                 }
-                Box(Modifier.padding(top = 3.dp).heightIn(min = 24.dp)) {
-                    Crossfade(said.facts, animationSpec = if (reduced) Motion.fadeIn() else Motion.standard(), label = "detail") { facts -> // i18n-skip
+                Box(Modifier.padding(top = 3.dp).heightIn(min = detailRoom)) {
+                    FrameCrossfade(said.facts) { facts ->
                         Text(
                             if (said.seconds != null && !said.failed) listOfNotNull(facts, said.seconds).filter { it.isNotEmpty() }.joinToString(" · ") else facts,
                             style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, lineHeight = 24.sp, shadow = SHADOW).tabular(),
                             color = ObiSilk.Haze,
-                            maxLines = 3,
+                            maxLines = if (said.failed) 2 else 1,
                             overflow = TextOverflow.Ellipsis,
                         )
                     }
@@ -261,50 +276,71 @@ private fun Buttons(
     val land = if (failure != null) null else (wanted.firstOrNull { it == StartAction.Choose } ?: wanted.firstOrNull { it != StartAction.Cancel })
     focus.ready = failure == null && wanted.size > 1
     val first = primary ?: wanted.firstOrNull()
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .heightIn(min = 56.dp)
-            .onFocusChanged { focus.held = it.hasFocus },
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        for (action in arrived) {
-            val applies = action in wanted
-            val alpha by animateFloatAsState(if (applies) 1f else 0f, if (reduced) snap() else if (applies) Motion.fadeIn() else Motion.fadeOut(), label = "button") // i18n-skip
-            val tall = primary != null
-            val mine = when {
-                failure != null && action == first -> Modifier.focusRequester(focus.target)
-                action == land -> Modifier.focusRequester(focus.target)
-                else -> Modifier
-            }
-            Box(Modifier.alpha(alpha).then(if (applies) Modifier else Modifier.clearAndSetSemantics { })) {
-                val label = action.label(context, progress, failure)
-                val go = {
-                    when (action) {
-                        StartAction.Cancel, StartAction.Close -> onClose()
-                        StartAction.FromBeginning -> model.playFromBeginning()
-                        StartAction.Choose -> model.chooseSource()
-                        StartAction.Details -> onToggle()
-                        StartAction.Skip -> model.skipSource()
-                        StartAction.TryAgain -> model.tryAgain()
-                        StartAction.AddStore -> addStore?.invoke()
-                        StartAction.FixMatch -> failure?.id?.let { id ->
-                            model.viewerClosed()
-                            store.match.open(id, fromMenu = false)
-                        }
-                        StartAction.Downloads -> {}
-                    }
-                    Unit
+    val cancel = remember { FocusRequester() }
+    val scope = rememberCoroutineScope()
+    val wantedNow by rememberUpdatedState(wanted)
+    // The row's height is the tallest it comes to, from the start, and it wraps like the phone's:
+    // the buttons that can arrive are laid out unseen, so nothing below or above moves.
+    ReservedHeight(reserve = {
+        Box {
+            for (set in listOf(
+                listOf(StartAction.Cancel, StartAction.FromBeginning, StartAction.Choose, StartAction.Details, StartAction.Skip),
+                listOf(StartAction.Choose, StartAction.TryAgain, StartAction.Details, StartAction.Close),
+                listOf(StartAction.FixMatch, StartAction.Choose, StartAction.Details, StartAction.Close),
+            )) {
+                ButtonsFlow(Modifier) {
+                    for (action in set) TonalButton(onClick = {}, enabled = false, height = 56.dp) { ButtonLabel(action.label(context, progress, failure ?: FAILURE_SAMPLE)) }
                 }
-                if (action == primary) {
-                    AmberButton(onClick = go, icon = null, enabled = applies, modifier = mine) { ButtonLabel(label) }
-                } else {
-                    TonalButton(onClick = go, enabled = applies, height = if (tall) 56.dp else 48.dp, modifier = mine) {
-                        ButtonLabel(label)
-                        if (action == StartAction.Details) {
-                            Spacer(Modifier.width(8.dp))
-                            StartChevron(open, reduced, LocalContentColor.current)
+            }
+        }
+    }) {
+        ButtonsFlow(Modifier.onFocusChanged { focus.held = it.hasFocus }) {
+            for (action in arrived) {
+                val applies = action in wanted
+                val alpha by animateFloatAsState(if (applies) 1f else 0f, if (reduced) snap() else if (applies) Motion.fadeIn() else Motion.fadeOut(), label = "button") // i18n-skip
+                val tall = primary != null
+                val mine = when {
+                    failure != null && action == first -> Modifier.focusRequester(focus.target)
+                    action == land -> Modifier.focusRequester(focus.target)
+                    action == StartAction.Cancel -> Modifier.focusRequester(cancel)
+                    else -> Modifier
+                }
+                // A button that holds focus and stops applying hands it on, to Choose source or Cancel,
+                // rather than let it fall to nowhere; a press that moved it elsewhere is left alone.
+                val handOn = Modifier.onFocusChanged { state ->
+                    if (!state.hasFocus && action !in wantedNow && failure == null) {
+                        val choose = StartAction.Choose
+                        scope.launch { if (choose in wantedNow && choose != action) focus.target.focusSoon() else cancel.focusSoon() }
+                    }
+                }
+                Box(Modifier.alpha(alpha).then(if (applies) handOn else Modifier.then(handOn).clearAndSetSemantics { })) {
+                    val label = action.label(context, progress, failure)
+                    val go = {
+                        when (action) {
+                            StartAction.Cancel, StartAction.Close -> onClose()
+                            StartAction.FromBeginning -> model.playFromBeginning()
+                            StartAction.Choose -> model.chooseSource()
+                            StartAction.Details -> onToggle()
+                            StartAction.Skip -> model.skipSource()
+                            StartAction.TryAgain -> model.tryAgain()
+                            StartAction.AddStore -> addStore?.invoke()
+                            StartAction.FixMatch -> failure?.id?.let { id ->
+                                model.viewerClosed()
+                                store.match.open(id, fromMenu = false)
+                            }
+                            StartAction.Downloads -> {}
+                        }
+                        Unit
+                    }
+                    if (action == primary) {
+                        AmberButton(onClick = go, icon = null, enabled = applies, modifier = mine) { ButtonLabel(label) }
+                    } else {
+                        TonalButton(onClick = go, enabled = applies, height = if (tall) 56.dp else 48.dp, modifier = mine) {
+                            ButtonLabel(label)
+                            if (action == StartAction.Details) {
+                                Spacer(Modifier.width(8.dp))
+                                StartChevron(open, reduced, LocalContentColor.current)
+                            }
                         }
                     }
                 }
@@ -313,6 +349,19 @@ private fun Buttons(
     }
     // After a failure the primary takes focus at once; during a start nothing does.
     LaunchedEffect(failure) { if (failure != null) focus.target.focusSoon() }
+}
+
+private val FAILURE_SAMPLE = PlaybackFailure(null, "")
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ButtonsFlow(modifier: Modifier, content: @Composable () -> Unit) {
+    FlowRow(
+        modifier.fillMaxWidth().heightIn(min = 56.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.Center,
+        itemVerticalAlignment = Alignment.CenterVertically,
+    ) { content() }
 }
 
 /** The steps of this start, a row each, scrolling under the buttons when they do not fit. */
@@ -370,7 +419,7 @@ private fun DetailsRow(row: DetailRow, model: PlayerModel) {
             overflow = TextOverflow.Ellipsis,
         )
         row.seconds?.let {
-            Text(Strings.durationSeconds(LocalContext.current, it), style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, lineHeight = 24.sp).tabular(), color = ObiSilk.Haze, modifier = Modifier.padding(start = 8.dp))
+            Text(Strings.playerStartSeconds(LocalContext.current, it), style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, lineHeight = 24.sp).tabular(), color = ObiSilk.Haze, modifier = Modifier.padding(start = 8.dp))
         }
         row.skip?.let {
             Spacer(Modifier.width(12.dp))

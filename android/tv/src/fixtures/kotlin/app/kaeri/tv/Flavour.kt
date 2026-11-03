@@ -11,6 +11,8 @@
 //   expires   seconds the `signin` code has left, 0 for one already expired
 //   day       days after today the calendar opens on, 0 to 6, for a day with broadcasts: the
 //             fixtures' own day has none
+//   start     a made-up start (StartingFixture, as `slow` or `failed-no-episode`) said to the real
+//             player screen on its own clock; `details` 1 opens Details, `startdelay` ms waits first
 //   firstLaunch  true to show first launch's pages, which fixtures leave out otherwise
 //   update    a made-up release staged for the update's page, which opens over the section:
 //             available, allowing, downloading, failed or storage; nothing is fetched or installed
@@ -91,7 +93,8 @@ internal object Flavour {
      * has no tracker to answer with one. `expires=<seconds>` sets how long its code has left, 0 for
      * one already expired, 899 unless it says.
      */
-    fun started(store: AppStore, intent: Intent) {
+    fun started(context: Context, store: AppStore, intent: Intent, player: app.kaeri.player.PlayerModel) {
+        StartReplay.from(context, store, player, intent)
         intent.getStringExtra("day")?.toIntOrNull()?.let { store.calendar.opensOn = it }
         // Episodes of the first fixture marked watched, 1,2,3: playback would also have the engine
         // look their threads up, so the one with a fixture thread is said found as it would be.

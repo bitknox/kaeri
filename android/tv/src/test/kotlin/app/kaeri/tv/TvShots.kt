@@ -863,6 +863,7 @@ class TvShots {
     @Test fun player_start_found() = startingShot("tv-start-found", StartingFixture.FOUND, 1_500)
     @Test fun player_start_buffering_torrent() = startingShot("tv-start-buffering-torrent", StartingFixture.BUFFERING_TORRENT, 1_500)
     @Test fun player_start_offline() = startingShot("tv-start-offline", StartingFixture.OFFLINE, 1_500)
+    @Test fun player_start_offline_timed_out() = startingShot("tv-start-offline-timed-out", StartingFixture.OFFLINE_TIMED_OUT, 1_500)
     @Test fun player_start_failed_no_episode() = startingShot("tv-start-failed-no-episode", StartingFixture.FAILED_NO_EPISODE, 1_500)
     @Test fun player_start_failed_no_match() = startingShot("tv-start-failed-no-match", StartingFixture.FAILED_NO_MATCH, 1_500)
     @Test fun player_start_failed_no_sources() = startingShot("tv-start-failed-no-sources", StartingFixture.FAILED_NO_SOURCES, 1_500)

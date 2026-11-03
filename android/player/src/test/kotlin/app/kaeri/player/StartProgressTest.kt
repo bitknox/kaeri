@@ -38,8 +38,22 @@ class StartProgressTest {
         val p = start(resume = 606.0).heard(asking(), null, 0)
         assertEquals(listOf(StartButton.Cancel), p.buttons(500, false))
         assertEquals(listOf(StartButton.Cancel, StartButton.FromBeginning), p.buttons(1_000, false))
-        assertEquals(listOf(StartButton.Cancel, StartButton.ChooseSource, StartButton.Details), p.buttons(3_000, false))
+        assertEquals(listOf(StartButton.Cancel, StartButton.FromBeginning, StartButton.ChooseSource, StartButton.Details), p.buttons(3_000, false))
         assertEquals(StartButton.Skip, p.buttons(8_000, false).last())
+    }
+
+    @Test
+    fun playFromBeginningStaysUntilTheFirstFrame() {
+        val p = start(resume = 606.0).heard(asking(), null, 0)
+        assertTrue(p.resuming(30_000))
+        assertTrue(StartButton.FromBeginning in p.buttons(30_000, false))
+    }
+
+    @Test
+    fun waitingForAConnectionIsTheLastStepTold() {
+        val p = start().heard(StartStep.WaitingForConnection, null, 0)
+        assertTrue(p.waiting)
+        assertFalse(p.heard(asking(), null, 8_000).waiting)
     }
 
     @Test

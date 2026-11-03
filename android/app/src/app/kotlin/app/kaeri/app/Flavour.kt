@@ -27,7 +27,7 @@ internal object Flavour {
     fun background(context: Context): EngineLaunch =
         EngineLaunch.app(EngineHome.sandbox(files = context.filesDir, cache = context.cacheDir))
 
-    fun started(context: Context, store: AppStore, intent: Intent, notifier: EpisodeNotifier) {}
+    fun started(context: Context, store: AppStore, intent: Intent, notifier: EpisodeNotifier, player: app.kaeri.player.PlayerModel) {}
 
     /** The TVs Android's DNS-SD finds on the network. */
     fun tvBrowser(context: Context, store: AppStore): FfiTvBrowser = NsdTvBrowser(context)

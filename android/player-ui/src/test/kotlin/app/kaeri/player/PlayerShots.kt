@@ -138,6 +138,7 @@ class PlayerShots {
     @Test fun phone_start_buffering_torrent() = starting("phone-start-buffering-torrent", StartingFixture.BUFFERING_TORRENT, extra = 1_500)
     @Test fun phone_start_buffering_direct() = starting("phone-start-buffering-direct", StartingFixture.BUFFERING_DIRECT, extra = 1_500)
     @Test fun phone_start_offline() = starting("phone-start-offline", StartingFixture.OFFLINE, extra = 1_500)
+    @Test fun phone_start_offline_timed_out() = starting("phone-start-offline-timed-out", StartingFixture.OFFLINE_TIMED_OUT, extra = 1_500)
     @Test fun phone_start_failed_no_episode() = starting("phone-start-failed-no-episode", StartingFixture.FAILED_NO_EPISODE, extra = 1_500)
     @Test fun phone_start_failed_no_match() = starting("phone-start-failed-no-match", StartingFixture.FAILED_NO_MATCH, extra = 1_500)
     @Test fun phone_start_failed_no_sources() = starting("phone-start-failed-no-sources", StartingFixture.FAILED_NO_SOURCES, extra = 1_500)

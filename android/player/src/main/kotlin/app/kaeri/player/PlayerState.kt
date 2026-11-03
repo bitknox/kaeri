@@ -111,6 +111,8 @@ data class PlaybackFailure(
     val trail: StartProgress? = null,
     /** When it ended, in the clock the model keeps. */
     val endedAt: Long = 0L,
+    /** The names of the sources that were asked, in order. */
+    val asked: List<String> = emptyList(),
 ) {
     /** The cause behind [msg], when the engine gave one. */
     val cause: app.kaeri.engine.model.Cause?
@@ -121,6 +123,9 @@ data class PlaybackFailure(
 
     /** Whether the episode has not aired, which no source can change. */
     val notAired: Boolean get() = why == app.kaeri.engine.model.NoSourceWhy.NOT_AIRED
+
+    /** Whether the device had no connection for the whole wait. */
+    val noConnection: Boolean get() = why == app.kaeri.engine.model.NoSourceWhy.NO_CONNECTION
 
     /** Whether no source is set up, so the way on is to add a store. */
     val noSources: Boolean get() = why == app.kaeri.engine.model.NoSourceWhy.NO_SOURCES

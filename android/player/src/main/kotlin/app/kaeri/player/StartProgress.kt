@@ -6,7 +6,10 @@
 package app.kaeri.player
 
 import android.content.Context
-import android.text.format.Formatter
+import android.icu.text.MeasureFormat
+import android.icu.text.NumberFormat
+import android.icu.util.Measure
+import android.icu.util.MeasureUnit
 import app.kaeri.engine.core.AnilistId
 import app.kaeri.engine.core.Translation
 import app.kaeri.engine.model.Msg
@@ -32,9 +35,6 @@ object StartTiming {
 
     /** The step line says it is still waiting; a screen reader says so once. */
     const val SLOW = 20_000L
-
-    /** The resume line gives way to the facts. */
-    const val RESUME_UNTIL = 3_000L
 }
 
 /** One step the engine told, and when. */
@@ -81,7 +81,7 @@ data class StartProgress(
         return copy(lines = lines, trail = trail + Told(now, step), percent = percent)
     }
 
-    /** The viewer asked to begin at 0: the resume line and its button go. */
+    /** The viewer asked to begin at 0: the line says so, and the button goes. */
     fun fromTheBeginning(): StartProgress = copy(beginning = true)
 
     /** How long this start has waited at [now]. */
@@ -126,6 +126,9 @@ data class StartProgress(
     /** The translation the streams were found in, once they are. */
     fun translation(): Translation? = (found?.step as? StartStep.Found)?.translation
 
+    /** Whether the engine is holding the start until the device has a connection. */
+    val waiting: Boolean get() = trail.lastOrNull()?.step is StartStep.WaitingForConnection
+
     /** Whether the streams have been found and the player is opening one. */
     val opened: Boolean get() = found != null
 
@@ -149,14 +152,16 @@ data class StartProgress(
     fun detailLine(context: Context, now: Long): DetailText {
         val waited = waited(now)
         if (waited < StartTiming.DETAIL) return DetailText("", null)
-        if (resuming(now)) return DetailText(Strings.playerStartResuming(context, clock(resume ?: 0.0)), null)
-        val seconds = if (waited >= StartTiming.TOOLS) Strings.durationSeconds(context, (waited / 1000).toInt()) else null
+        val seconds = if (waited >= StartTiming.TOOLS) Strings.playerStartSeconds(context, (waited / 1000).toInt()) else null
         return DetailText(facts(context).joinToString(" \u00b7 "), seconds)
     }
 
     /** The detail line's facts, without the seconds. */
     private fun facts(context: Context): List<String> {
         val parts = mutableListOf<String>()
+        // Where it begins leads, for the whole start: the position it resumes at, or the beginning.
+        if (beginning) parts += Strings.playerStartBeginning(context)
+        else if (resume != null) parts += Strings.playerStartResuming(context, clock(resume))
         val found = found?.step as? StartStep.Found
         if (found != null) {
             val swarm = swarm
@@ -193,9 +198,8 @@ data class StartProgress(
         SourceMiss.SKIPPED -> Strings.playerStartMissSkipped(context, missed.name)
     }
 
-    /** Whether the detail line is still the resume time, which Play from the beginning answers. */
-    fun resuming(now: Long): Boolean =
-        resume != null && !beginning && waited(now) in StartTiming.DETAIL until StartTiming.RESUME_UNTIL
+    /** Whether the start is resuming, which Play from the beginning answers: until its first frame. */
+    fun resuming(now: Long): Boolean = resume != null && !beginning && waited(now) >= StartTiming.DETAIL
 
     /** The percent buffering shows, only when mpv gave one. */
     fun determinate(now: Long): Int? = percent?.takeIf { heldLine(now) == Msg.StartBuffering }
@@ -245,10 +249,10 @@ data class StartProgress(
     fun details(context: Context, now: Long): List<DetailRow> {
         val rows = mutableListOf<DetailRow>()
         val total = trail
-        fun seconds(from: Long, to: Long): Int? = ((to - from) / 1000).toInt().takeIf { it >= 1 }
+        fun seconds(from: Long, to: Long): Int = ((to - from) / 1000).toInt().coerceAtLeast(0)
         val first = total.firstOrNull { it.step !is StartStep.LookingUpTitle }
         total.firstOrNull { it.step is StartStep.LookingUpTitle }?.let { start ->
-            rows += if (first != null) DetailRow(RowKind.Done, Strings.androidStartTitleLookedUp(context), seconds(start.at, first.at))
+            rows += if (first != null) DetailRow(RowKind.Done, Strings.playerStartLookedUp(context), seconds(start.at, first.at))
             else DetailRow(RowKind.Now, Strings.startLookingUpTitle(context), seconds(start.at, now))
         }
         total.forEachIndexed { index, told ->
@@ -282,7 +286,19 @@ data class StartProgress(
     private companion object {
         fun percentText(percent: Int): String = java.text.NumberFormat.getPercentInstance().format(percent / 100.0)
 
-        fun speedText(context: Context, bytes: ULong): String = Formatter.formatFileSize(context, bytes.toLong())
+        /** A rate as "3.4 MB": one decimal, the unit the number reads best in. */
+        fun speedText(context: Context, bytes: ULong): String {
+            val locale = context.resources.configuration.locales[0]
+            val (value, unit) = when {
+                bytes >= 1_000_000_000uL -> bytes.toDouble() / 1e9 to MeasureUnit.GIGABYTE
+                bytes >= 1_000_000uL -> bytes.toDouble() / 1e6 to MeasureUnit.MEGABYTE
+                bytes >= 1_000uL -> bytes.toDouble() / 1e3 to MeasureUnit.KILOBYTE
+                else -> bytes.toDouble() to MeasureUnit.BYTE
+            }
+            val digits = if (unit == MeasureUnit.BYTE) 0 else 1
+            val number = NumberFormat.getInstance(locale).apply { minimumFractionDigits = digits; maximumFractionDigits = digits }
+            return MeasureFormat.getInstance(locale, MeasureFormat.FormatWidth.SHORT, number).format(Measure(value, unit))
+        }
 
         /** 606 seconds as "10:06"; over an hour as "1:02:03". */
         fun clock(seconds: Double): String {
@@ -308,6 +324,7 @@ fun startActions(progress: StartProgress?, failure: PlaybackFailure?, offline: B
         return when {
             failure.notAired -> listOf(StartAction.Close)
             failure.noSources -> listOf(StartAction.AddStore, StartAction.Close)
+            failure.noConnection -> listOf(StartAction.TryAgain, StartAction.Close)
             failure.noMatch && failure.id != null && canFix ->
                 listOf(StartAction.FixMatch, StartAction.Choose, StartAction.Details, StartAction.Close)
             failure.cause is app.kaeri.engine.model.Cause.SourcesTimedOut ->
@@ -348,16 +365,25 @@ fun StartAction.label(context: Context, progress: StartProgress?, failure: Playb
 /** What the step and detail lines say now. */
 data class Said(val step: String, val facts: String, val seconds: String?, val failed: Boolean)
 
+/** Whether the start waits for a connection: the engine said so, or the device is offline before any step. */
+fun PlayerModel.startWaiting(progress: StartProgress? = this.progress): Boolean =
+    progress?.waiting == true || (offline && progress?.trail.isNullOrEmpty())
+
+/** The failure's reason and who was asked, as one sentence or two. */
+private fun failureDetail(context: Context, failure: PlaybackFailure): String {
+    val reason = when {
+        failure.noSources -> Strings.playerFailedNoSources(context)
+        else -> failure.reasonText(context)?.let { "$it." } ?: Strings.playerFailedDetail(context)
+    }
+    if (failure.asked.isEmpty()) return reason
+    val names = android.icu.text.ListFormatter.getInstance().format(failure.asked)
+    return reason + " " + Strings.playerStartAsked(context, names)
+}
+
 /** The lines the starting screen shows at [now]: the failure, the wait for a connection, or the start's own. */
 fun startingWords(context: Context, model: PlayerModel, progress: StartProgress?, failure: PlaybackFailure?, now: Long): Said {
-    if (failure != null) {
-        val reason = when {
-            failure.noSources -> Strings.playerFailedNoSources(context)
-            else -> failure.reasonText(context)?.let { "$it." } ?: Strings.playerFailedDetail(context)
-        }
-        return Said(Strings.playerFailedTitleText(context, failure.episode), reason, null, true)
-    }
-    if (model.offline) {
+    if (failure != null) return Said(Strings.playerFailedTitleText(context, failure.episode), failureDetail(context, failure), null, true)
+    if (model.startWaiting(progress)) {
         return Said(Strings.playerStartOffline(context), Strings.playerStartOfflineDetail(context, model.startingEpisode ?: ""), null, false)
     }
     val p = progress ?: return Said(Strings.playerStartingText(context, model.startingEpisode ?: ""), "", null, false)
@@ -367,9 +393,8 @@ fun startingWords(context: Context, model: PlayerModel, progress: StartProgress?
 
 /** What a screen reader hears of the start: it opening, a slow start once, the wait for a connection, the outcome. */
 fun startingAnnouncement(context: Context, model: PlayerModel, progress: StartProgress?, failure: PlaybackFailure?, now: Long): String = when {
-    failure != null -> Strings.playerFailedTitleText(context, failure.episode) + ". " +
-        (if (failure.noSources) Strings.playerFailedNoSources(context) else failure.reasonText(context)?.let { "$it." } ?: Strings.playerFailedDetail(context))
-    model.offline -> Strings.playerStartOfflineDetail(context, model.startingEpisode ?: "")
-    progress != null && progress.waited(now) >= StartTiming.SKIP -> Strings.androidStartStillStarting(context)
-    else -> Strings.playerStartingText(context, model.startingEpisode ?: "") + ", " + model.showTitle
+    failure != null -> Strings.playerStartFailedAnnounce(context, Strings.playerFailedTitleText(context, failure.episode), failureDetail(context, failure))
+    model.startWaiting(progress) -> Strings.playerStartOfflineDetail(context, model.startingEpisode ?: "")
+    progress != null && progress.waited(now) >= StartTiming.SKIP -> Strings.playerStartStillStarting(context)
+    else -> Strings.playerStartAnnounce(context, model.startingEpisode ?: "", model.showTitle)
 }
