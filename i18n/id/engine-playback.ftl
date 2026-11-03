@@ -1,5 +1,6 @@
 notice-reason = { $reason }
 cause-no-sources = Belum ada { -source-pl } yang diatur. Tambahkan satu di layar { -source-cap-pl }.
+cause-no-connection = Tidak ada koneksi. Coba lagi saat kamu kembali online.
 notice-not-aired = Episode { $episode } tayang { $when }.
 notice-not-aired-yet = Episode { $episode } belum tayang. Episode { $next } tayang { $when }.
 cause-airs-today = hari ini pukul { $time }
@@ -25,6 +26,13 @@ cause-already-in-downloads = { $count ->
  }
 status-looking-up-title = Mencari judul…
 status-loading-sources = Memuat { -source-pl }…
+start-looking-up-title = Mencari judul
+start-getting-sources-ready = Menyiapkan { -source-pl } kamu
+start-asking-source = Menanyakan ke { $name }
+start-opening-stream = Membuka stream
+start-trying-another-stream = Mencoba stream lain
+start-finding-peers = Mencari peer
+start-buffering = Buffering
 status-searching-sources = Mencari { -source-pl } untuk episode { $episode }…
 notice-player-failed-to-start = Tidak bisa memulai mpv. Pastikan mpv bisa berjalan sendiri. ({ $reason })
 notice-stream-no-video = Tidak ada video dari aliran itu. Mencoba { $next } dari { $total }.

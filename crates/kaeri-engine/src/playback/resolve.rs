@@ -76,6 +76,11 @@ pub struct Unplayable {
 }
 
 impl Unplayable {
+    /// The device stayed offline while the start waited for a connection.
+    pub(crate) fn no_connection() -> Self {
+        Self { why: NoSourceWhy::NoConnection, text: explained(Cause::NoConnection) }
+    }
+
     /// No source is set up to ask: [`no_sources`].
     pub(crate) fn no_sources() -> Self {
         Self { why: NoSourceWhy::NoSources, text: explained(no_sources()) }

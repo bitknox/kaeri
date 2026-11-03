@@ -62,6 +62,9 @@ pub struct Services {
     /// Whether the device has no network path, as its front end last said: what a playback's
     /// Stats for nerds says of the network.
     pub offline: Arc<std::sync::atomic::AtomicBool>,
+    /// The same state as a watch, true while offline, for what waits for a connection: a start
+    /// that begins offline. Set where `offline` is.
+    pub connection: Arc<tokio::sync::watch::Sender<bool>>,
     /// Whether a play opens the front end's hosted player rather than mpv's process: always
     /// without the desktop feature, and on the desktop when the front end asks for it.
     pub hosted_player: bool,
@@ -145,6 +148,7 @@ impl Services {
             local,
             slot: Default::default(),
             offline: Default::default(),
+            connection: Arc::new(tokio::sync::watch::channel(false).0),
             power,
             hosted,
             hosted_player: !cfg!(feature = "desktop"),

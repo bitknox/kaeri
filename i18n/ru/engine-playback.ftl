@@ -1,5 +1,6 @@
 notice-reason = { $reason }
 cause-no-sources = { -source-cap-pl } не настроены. Добавьте { -source } на экране «{ -source-cap-pl }».
+cause-no-connection = Нет подключения. Повторите попытку, когда появится сеть.
 notice-not-aired = Эпизод { $episode } выходит { $when }.
 notice-not-aired-yet = Эпизод { $episode } ещё не вышел. Эпизод { $next } выходит { $when }.
 cause-airs-today = сегодня в { $time }
@@ -34,6 +35,13 @@ cause-already-in-downloads = { $count ->
  }
 status-looking-up-title = Ищем название…
 status-loading-sources = Загружаем { -source-pl }…
+start-looking-up-title = Поиск названия
+start-getting-sources-ready = Подготавливаем ваши { -source-pl }
+start-asking-source = Запрос к { $name }
+start-opening-stream = Открываем поток
+start-trying-another-stream = Пробуем другой поток
+start-finding-peers = Поиск пиров
+start-buffering = Буферизация
 status-searching-sources = Запрашиваем { -source-pl } об эпизоде { $episode }…
 notice-player-failed-to-start = Не удалось запустить mpv. Проверьте, что mpv запускается сам по себе. ({ $reason })
 notice-stream-no-video = Из этого потока не пришёл ни один кадр. Пробуем поток { $next } из { $total }.

@@ -1151,6 +1151,8 @@ impl StoreMsg {
 pub enum Cause {
     /// Reason: no source is set up, so nothing can be played or downloaded. Shown in a toast.
     NoSources,
+    /// Reason: the play waited two minutes for a connection and the device stayed offline. Shown in a toast and on the failure screen.
+    NoConnection,
     /// Part of an air time: the broadcast is later today. The time is the viewer's local time.
     AirsToday { time: String },
     /// Part of an air time: the broadcast is tomorrow. The time is the viewer's local time.
@@ -1196,6 +1198,7 @@ impl Cause {
     pub fn id(&self) -> &'static str {
         match self {
             Self::NoSources => "cause-no-sources",
+            Self::NoConnection => "cause-no-connection",
             Self::AirsToday { .. } => "cause-airs-today",
             Self::AirsTomorrow { .. } => "cause-airs-tomorrow",
             Self::AirsInDays { .. } => "cause-airs-in-days",
@@ -1222,6 +1225,7 @@ impl Cause {
     pub fn values(&self) -> Vec<(&'static str, Value)> {
         match self {
             Self::NoSources => Vec::new(),
+            Self::NoConnection => Vec::new(),
             Self::AirsToday { time } => vec![("time", Value::Text(time.clone()))],
             Self::AirsTomorrow { time } => vec![("time", Value::Text(time.clone()))],
             Self::AirsInDays { days, time } => vec![("days", Value::Int(*days)), ("time", Value::Text(time.clone()))],
