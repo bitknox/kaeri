@@ -253,8 +253,11 @@ fn the_fake_anilist_says_what_it_was_asked() {
         .send(Command::LoadDetail(AnilistId::new(900_001)))
         .expect("loading a title is a job");
     read_until(&engine, ends(job));
-    // One title is one request, by its operation's name.
-    assert_eq!(engine.testing_anilist_requests()[before..], ["Detail"]);
+    // One title is one request, by its operation's name. The headers of its other seasons are
+    // asked for apart from the page's job, which may have ended before or after they were.
+    let asked = engine.testing_anilist_requests();
+    let page: Vec<&String> = asked[before..].iter().filter(|op| *op != "Many").collect();
+    assert_eq!(page, ["Detail"]);
     engine.shutdown();
 }
 
