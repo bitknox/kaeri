@@ -44,6 +44,8 @@ public sealed partial class TogetherPage : Page
         ctx.Hear(this, Heard);
         // Ctrl+V outside a field pastes into Join.
         Loaded += (_, _) => KeyboardAccelerators.Add(Paste());
+        // Not named in a tooltip over the whole page; the paste hint under the field says it.
+        KeyboardAcceleratorPlacementMode = KeyboardAcceleratorPlacementMode.Hidden;
     }
 
     KeyboardAccelerator Paste()
