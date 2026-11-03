@@ -38,6 +38,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -142,7 +144,7 @@ enum class PlayerPanel { Episodes, Tracks, Sources, Info, SkipTimes }
 val LocalAddStore = compositionLocalOf<(() -> Unit)?> { null }
 
 /** What the chrome puts focus on as it comes up. */
-private enum class ChromeFocus { Play, SeekBar, Episodes }
+private enum class ChromeFocus { Play, SeekBar, Episodes, React }
 
 /** Previous goes to the episode before within its first 3 s; after, to this one's start. */
 private const val PREVIOUS_WITHIN = 3.0
@@ -167,6 +169,11 @@ fun TvPlayerScreen(
     val playFocus = remember { FocusRequester() }
     val barFocus = remember { FocusRequester() }
     val episodesFocus = remember { FocusRequester() }
+    val reactFocus = remember { FocusRequester() }
+    val store = LocalAppStore.current
+    val inParty = store.party.view.collectAsStateWithLifecycle().value != null
+    val chatOn = inParty && rememberTvChatOn()
+    var tray by remember { mutableStateOf(false) }
     var panel by remember { mutableStateOf<PlayerPanel?>(null) }
     var wanted by remember { mutableStateOf<ChromeFocus?>(null) }
     val run = remember { SeekRun() }
@@ -196,6 +203,12 @@ fun TvPlayerScreen(
         model.hold("panel", true)
     }
 
+    fun closeTray() {
+        tray = false
+        model.hold("tray", false) // i18n-skip
+        wanted = ChromeFocus.React
+    }
+
     fun closePanel() {
         panel = null
         model.hold("panel", false)
@@ -222,6 +235,7 @@ fun TvPlayerScreen(
             model.choosingSource -> model.cancelChoosingSource()
             model.asksToShare -> model.answerShare(false)
             model.marking != null -> model.cancelMark()
+            tray -> closeTray()
             panel != null -> closePanel()
             model.corner == PlayerModel.Corner.Prompt -> model.dismissSkipPrompt()
             model.corner == PlayerModel.Corner.Stall -> model.keepWaiting()
@@ -277,6 +291,7 @@ fun TvPlayerScreen(
             ChromeFocus.Play -> playFocus
             ChromeFocus.SeekBar -> barFocus
             ChromeFocus.Episodes -> episodesFocus
+            ChromeFocus.React -> reactFocus
         }
         repeat(5) {
             androidx.compose.runtime.withFrameNanos { }
@@ -390,6 +405,11 @@ fun TvPlayerScreen(
                 playFocus = playFocus,
                 barFocus = barFocus,
                 episodesFocus = episodesFocus,
+                reactFocus = reactFocus,
+                onReact = if (chatOn) ({
+                    tray = true
+                    model.hold("tray", true) // i18n-skip
+                }) else null,
                 onPanel = ::openPanel,
                 onNext = ::nextEpisode,
                 hasNext = model.menus?.episodes?.let { list -> list.indexOfFirst { it.current }.let { it >= 0 && it < list.lastIndex } } == true,
@@ -420,6 +440,20 @@ fun TvPlayerScreen(
                         else -> false
                     }
                 },
+            )
+        }
+        // Party notices and chat lines at the trailing edge under the clock; a reaction's moment above the controls.
+        if (inParty && !starting) {
+            TvPartyColumn(model, Modifier.align(Alignment.TopEnd).padding(end = 48.dp, top = 104.dp))
+            if (chatOn) TvReactionMoments(Modifier.align(Alignment.BottomEnd).padding(end = 48.dp, bottom = 150.dp))
+        }
+        if (tray && chrome && chatOn) {
+            TvReactTray(
+                onReact = { reaction ->
+                    store.partyReact(reaction)
+                    closeTray()
+                },
+                modifier = Modifier.align(Alignment.BottomStart).padding(start = 92.dp, bottom = 148.dp),
             )
         }
         if (!chrome && runShown) SeekCount(model, run.label(context))
@@ -596,6 +630,8 @@ private fun Chrome(
     playFocus: FocusRequester,
     barFocus: FocusRequester,
     episodesFocus: FocusRequester,
+    reactFocus: FocusRequester,
+    onReact: (() -> Unit)?,
     onPanel: (PlayerPanel) -> Unit,
     onNext: () -> Unit,
     hasNext: Boolean,
@@ -633,12 +669,24 @@ private fun Chrome(
                 onSeekTo = model::seekTo, onSeekBy = model::seekBy, provisional = model.provisional,
             )
             Spacer(Modifier.height(20.dp))
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                TonalButton(
-                    onClick = { model.togglePause() },
-                    icon = if (model.paused) TvIcons.Play else TvIcons.Pause,
-                    modifier = Modifier.focusRequester(playFocus),
-                ) { ButtonLabel(stringResource(if (model.paused) R.string.action_play else R.string.action_pause)) }
+            Row(
+                Modifier.horizontalScroll(rememberScrollState()),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                val playLabel = stringResource(if (model.paused) R.string.action_play else R.string.action_pause)
+                val playIcon = if (model.paused) TvIcons.Play else TvIcons.Pause
+                // In a party the row also holds React, so Play is the glyph alone, as the board draws it.
+                if (onReact != null) {
+                    TonalButton(onClick = { model.togglePause() }, modifier = Modifier.focusRequester(playFocus)) {
+                        androidx.tv.material3.Icon(playIcon, contentDescription = playLabel, modifier = Modifier.size(24.dp))
+                    }
+                } else {
+                    TonalButton(onClick = { model.togglePause() }, icon = playIcon, modifier = Modifier.focusRequester(playFocus)) { ButtonLabel(playLabel) }
+                }
+                if (onReact != null) TonalButton(onClick = onReact, icon = app.kaeri.design.ChatGlyphs.Laugh, modifier = Modifier.focusRequester(reactFocus)) {
+                    ButtonLabel(Strings.partyReact(LocalContext.current))
+                }
                 TonalButton(onClick = { onPanel(PlayerPanel.Episodes) }, icon = TvIcons.Episodes, modifier = Modifier.focusRequester(episodesFocus)) {
                     ButtonLabel(stringResource(R.string.player_episodes))
                 }
@@ -646,7 +694,7 @@ private fun Chrome(
                 TonalButton(onClick = { onPanel(PlayerPanel.Sources) }, icon = TvIcons.Source) { ButtonLabel(stringResource(R.string.show_settings_source)) }
                 TonalButton(onClick = { onPanel(PlayerPanel.Info) }, icon = TvIcons.Info) { ButtonLabel(stringResource(R.string.player_info)) }
                 TonalButton(onClick = { onPanel(PlayerPanel.SkipTimes) }, icon = TvIcons.SkipNext) { ButtonLabel(stringResource(R.string.player_skip_times)) }
-                Spacer(Modifier.weight(1f))
+                Spacer(Modifier.width(12.dp))
                 if (hasNext) TonalButton(onClick = onNext, icon = TvIcons.SkipNext) { ButtonLabel(stringResource(R.string.player_next_episode)) }
             }
         }

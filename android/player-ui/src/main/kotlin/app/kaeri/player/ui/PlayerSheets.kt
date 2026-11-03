@@ -124,7 +124,7 @@ fun PlayerSheets(model: PlayerModel, sheet: PlayerSheet?, onMoreSubtitleSettings
             if (sheet == PlayerSheet.Sources) model.cancelChoosingSource()
             onDismiss()
         },
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false),
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = sheet == PlayerSheet.People),
         containerColor = ObiSilk.Raised,
         scrimColor = androidx.compose.material3.MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f),
         dragHandle = { BottomSheetDefaults.DragHandle(color = ObiSilk.Haze.copy(alpha = 0.4f)) },

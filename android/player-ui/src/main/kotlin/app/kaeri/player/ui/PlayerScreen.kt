@@ -33,6 +33,7 @@ import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -153,6 +154,7 @@ fun PlayerScreen(
     val context = LocalContext.current
     var surfaceView by remember { mutableStateOf<SurfaceView?>(null) }
     var sheet by remember { mutableStateOf<PlayerSheet?>(null) }
+    var typing by remember { mutableStateOf(false) }
     val discussion = discussionEntry(model)
 
     // TalkBack and Switch Access keep the controls up, and Up Next waits for them (T4, T5).
@@ -416,6 +418,9 @@ fun PlayerScreen(
         }
 
         val inParty = LocalAppStore.current.party.view.collectAsStateWithLifecycle().value != null
+        val chatOn = inParty && rememberChatOn()
+        val partyMarks = LocalAppStore.current.party.conversation.collectAsStateWithLifecycle().value.marks
+        val ticks = if (chatOn) remember(partyMarks) { tickSeconds(partyMarks) } else emptyList()
         // "Still watching?" is the only thing a screen reader reaches while it shows.
         AnimatedVisibility(
             chromeVisible,
@@ -433,16 +438,35 @@ fun PlayerScreen(
                 onPlayOnTv = playOnTv,
                 discussion = discussion,
                 onPeople = if (inParty) ({ sheet = PlayerSheet.People }) else null,
+                onChat = if (chatOn) ({ typing = true }) else null,
+                ticks = ticks,
             )
         }
 
         if (still.frame == null && !pip) {
-            CornerCard(model, chromeVisible, { ground.value }, Modifier.align(Alignment.BottomEnd).padding(end = 48.dp, bottom = 88.dp))
+            // A reaction's moment stands above the corner card, bottom trailing.
+            Column(Modifier.align(Alignment.BottomEnd).padding(end = 48.dp, bottom = 88.dp), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                if (inParty) ReactionMoments()
+                CornerCard(model, chromeVisible, { ground.value })
+            }
             ResumeNote(model, Modifier.align(Alignment.BottomStart).padding(start = 48.dp, bottom = 84.dp))
-            AlertNote(model, Modifier.align(Alignment.TopCenter).padding(top = 80.dp))
+            // In a party the notice leads the chat column at the top leading corner; else it stands top centre.
+            if (inParty) {
+                PartyColumn(model, onMore = { sheet = PlayerSheet.People }, Modifier.align(Alignment.TopStart).padding(start = 48.dp, top = 80.dp))
+            } else {
+                AlertNote(model, Modifier.align(Alignment.TopCenter).padding(top = 80.dp))
+            }
             StillWatching(model)
             MarkingPanel(model)
             ShareSkipTimes(model)
+        }
+        // The field above the keyboard keeps the controls up while it is open.
+        DisposableEffect(typing) {
+            model.hold("chat", typing) // i18n-skip
+            onDispose { model.hold("chat", false) } // i18n-skip
+        }
+        AnimatedVisibility(typing && chatOn, modifier = Modifier.align(Alignment.BottomCenter), enter = fadeIn(Motion.fadeIn()), exit = fadeOut(Motion.fadeOut())) {
+            TypingBar(onClose = { typing = false })
         }
         PlayerSheets(model, sheet, onMoreSubtitleSettings = { sheet = null; openSubtitleSettings() }) { sheet = null }
 

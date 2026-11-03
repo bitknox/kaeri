@@ -65,6 +65,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -504,8 +506,101 @@ private fun TvPartySection(tv: TvRemoteModel, tvName: String, party: app.kaeri.e
             }) { Text(Strings.partyShareInvite(context)) }
         }
     }
+    TvChatBlock(tv, tvName, party, live)
     QuietButton(Strings.partyLeaveOnDevice(context, tvName), onClick = { tv.send(FfiTvCommand.PartyLeave) })
     TvDivider(Modifier.padding(top = 8.dp))
+}
+
+/**
+ * Chat for a TV in a party: the conversation the TV sends, a field that sends as the TV, and a
+ * Mute for each member beside it. The TV shows nothing while this phone types.
+ */
+@Composable
+private fun TvChatBlock(tv: TvRemoteModel, tvName: String, party: app.kaeri.engine.ffi.FfiTvParty, live: Boolean) {
+    val context = LocalContext.current
+    val hidden by LocalAppStore.current.party.hideChat.collectAsStateWithLifecycle()
+    val store = LocalAppStore.current
+    LaunchedEffect(Unit) { store.party.loadHideChat(context) }
+    if (hidden) return
+    TvHeading(Strings.partyChatTitle(context))
+    if (party.chatOff) {
+        SheetText(Strings.partyChatOff(context))
+        return
+    }
+    val names = party.members
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
+        for (line in party.messages) {
+            val said = line.text
+            val name = if (line.you) tvName else line.from
+            if (said != null) {
+                Text(saidText(name, said, if (line.you) ObiSilk.Haze else androidx.compose.ui.graphics.Color.Unspecified), style = MaterialTheme.typography.bodyLarge)
+            } else {
+                val reaction = REACTIONS.firstOrNull { reactionWord(it) == line.reaction }
+                if (reaction != null) {
+                    val who = chatNames(context, name, line.with)
+                    val at = chatClock(line.at ?: 0.0)
+                    val sentence = when (reaction) {
+                        app.kaeri.engine.model.Reaction.LAUGH -> Strings.partyReactedLaugh(context, who)
+                        app.kaeri.engine.model.Reaction.GASP -> Strings.partyReactedGasp(context, who)
+                        app.kaeri.engine.model.Reaction.CLAP -> Strings.partyReactedClap(context, who)
+                        app.kaeri.engine.model.Reaction.CRY -> Strings.partyReactedCry(context, who)
+                    }
+                    Text(Strings.partyReactedAt(context, sentence, at), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Haze)
+                }
+            }
+        }
+    }
+    var text by remember { mutableStateOf("") }
+    val max = if (party.chatMax > 0u) party.chatMax.toInt() else 150
+    val send = {
+        val said = text.trim()
+        if (said.isNotEmpty()) {
+            tv.send(FfiTvCommand.PartyChat(said))
+            text = ""
+        }
+    }
+    Row(Modifier.padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            Modifier.weight(1f).height(56.dp).clip(CircleShape).background(ObiSilk.RaisedHigh).padding(horizontal = 20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(Modifier.weight(1f)) {
+                if (text.isEmpty()) Text(Strings.partyChatField(context), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Haze, maxLines = 1)
+                androidx.compose.foundation.text.BasicTextField(
+                    value = text,
+                    onValueChange = { if (it.length <= max && '\n' !in it) text = it },
+                    enabled = live,
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = ObiSilk.Silk),
+                    cursorBrush = androidx.compose.ui.graphics.SolidColor(ObiSilk.Silk),
+                    keyboardOptions = KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Sentences, imeAction = ImeAction.Send),
+                    keyboardActions = KeyboardActions(onSend = { send() }),
+                )
+            }
+            if (max - text.length <= 20) Text((max - text.length).toString(), style = MaterialTheme.typography.labelMedium, color = ObiSilk.Haze, modifier = Modifier.padding(start = 8.dp))
+        }
+        SendButton(enabled = live && text.isNotBlank(), onClick = send)
+    }
+    Text(Strings.partySendsAs(context, tvName), style = MaterialTheme.typography.bodySmall, color = ObiSilk.Haze, modifier = Modifier.padding(start = 20.dp, top = 8.dp))
+    if (names.isNotEmpty()) {
+        Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            for (name in names) {
+                val muted = name in party.muted
+                QuietButton(if (muted) Strings.partyUnmute(context, name) else Strings.partyMute(context, name)) {
+                    tv.send(FfiTvCommand.PartyMute(name, !muted))
+                }
+            }
+        }
+    }
+}
+
+/** The word the TV's state gives a reaction: "laughs", "gasps", "claps", "cries". */
+private fun reactionWord(reaction: app.kaeri.engine.model.Reaction): String = when (reaction) {
+    app.kaeri.engine.model.Reaction.LAUGH -> "laughs"
+    app.kaeri.engine.model.Reaction.GASP -> "gasps"
+    app.kaeri.engine.model.Reaction.CLAP -> "claps"
+    app.kaeri.engine.model.Reaction.CRY -> "cries"
 }
 
 /** What the TV plays: the cover, the title and episode, the seek line, and the transport. */

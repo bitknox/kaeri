@@ -13,7 +13,14 @@ import app.kaeri.engine.model.Msg
 import app.kaeri.engine.model.NoSourceWhy
 import app.kaeri.engine.model.PartyForm
 import app.kaeri.engine.model.PartyGlimpse
+import app.kaeri.engine.model.PartyChatBody
+import app.kaeri.engine.model.PartyChatLine
+import app.kaeri.engine.model.PartyChatRefusal
+import app.kaeri.engine.model.PartyChatState
+import app.kaeri.engine.model.PartyConversation
 import app.kaeri.engine.model.PartyMember
+import app.kaeri.engine.model.PartyReaction
+import app.kaeri.engine.model.Reaction
 import app.kaeri.engine.model.PartyMessage
 import app.kaeri.engine.model.PartyRecentRoom
 import app.kaeri.engine.model.PartyTarget
@@ -77,6 +84,62 @@ class PartyModel {
 
     /** The room a link or code opened, while its lobby is up. */
     val target: StateFlow<LobbyTarget?> = _target.asStateFlow()
+
+    private val _conversation = MutableStateFlow(PartyConversation(emptyList(), emptyList(), null))
+
+    /** The party's conversation as the engine last sent it: lines, seek bar marks, a line that failed. */
+    val conversation: StateFlow<PartyConversation> = _conversation.asStateFlow()
+
+    private val _chat = MutableStateFlow<PartyChatState?>(null)
+
+    /** What the room's server allows: chat on or off, the length, who is muted, the waits. */
+    val chat: StateFlow<PartyChatState?> = _chat.asStateFlow()
+
+    private val _refusal = MutableStateFlow<Refusal?>(null)
+
+    /** The engine's last "not now" for a message or a reaction. */
+    val refusal: StateFlow<Refusal?> = _refusal.asStateFlow()
+
+    private val _moment = MutableStateFlow<Moment?>(null)
+
+    /** The last reaction to show on the video: by anyone but a muted member, this device's on its echo. */
+    val moment: StateFlow<Moment?> = _moment.asStateFlow()
+
+    private val _hideChat = MutableStateFlow(false)
+
+    /** Hide chat, on this device: lines, reactions, ticks and the field stay away, in every party. */
+    val hideChat: StateFlow<Boolean> = _hideChat.asStateFlow()
+
+    private var hideRead = false
+
+    /** The newest line the video's column has shown or the lists have held up: only newer ones show there. */
+    var seenId: ULong = 0uL
+        private set
+
+    fun seenThrough(id: ULong) {
+        if (id > seenId) seenId = id
+    }
+
+    /** Read Hide chat from the device's preferences, once. */
+    fun loadHideChat(context: android.content.Context) {
+        if (hideRead) return
+        hideRead = true
+        _hideChat.value = DevicePreferences.of(context).getBoolean(HIDE_CHAT, false)
+    }
+
+    fun setHideChat(context: android.content.Context, on: Boolean) {
+        hideRead = true
+        _hideChat.value = on
+        DevicePreferences.of(context).edit().putBoolean(HIDE_CHAT, on).apply()
+    }
+
+    /** A refusal, counted so the same one twice is two events. */
+    data class Refusal(val what: PartyChatRefusal, val n: Long)
+
+    /** A reaction on the video; [n] counts them. */
+    data class Moment(val reaction: PartyReaction, val n: Long)
+
+    private var counted = 0L
 
     private val _noSource = MutableStateFlow<PartyNoSource?>(null)
     val noSource: StateFlow<PartyNoSource?> = _noSource.asStateFlow()
@@ -148,10 +211,17 @@ class PartyModel {
             }
             is Event.PartyMembers -> _members.value = event.v1
             is Event.PartyMessage -> onMessage?.invoke(event.v1)
+            is Event.PartyChat -> _conversation.value = event.v1
+            is Event.PartyChatState -> _chat.value = event.v1
+            is Event.PartyChatRefused -> _refusal.value = Refusal(event.v1, ++counted)
+            is Event.PartyReaction -> _moment.value = Moment(event.v1, ++counted)
             is Event.PartyLeft -> {
                 _joining.value = false
                 _view.value = null
                 _members.value = emptyList()
+                _conversation.value = PartyConversation(emptyList(), emptyList(), null)
+                _chat.value = null
+                _moment.value = null
                 _noSource.value = null
                 _failure.value = event.reason
             }
@@ -172,6 +242,18 @@ class PartyModel {
     }
 
     companion object {
+        private const val HIDE_CHAT = "party_hide_chat"
+
+        /** How long a chat line holds on the video: 4 s, and 1 s for every 10 words past 12. */
+        fun holdMillis(text: String): Long {
+            val words = text.trim().split(Regex("\\s+")).size
+            return 4000L + maxOf(0, (words - 12 + 9) / 10) * 1000L
+        }
+
+        /** The typed lines of [lines], without muted members', newest last. */
+        fun said(lines: List<PartyChatLine>): List<PartyChatLine> =
+            lines.filter { !it.muted && it.body is PartyChatBody.Said }
+
         /** When a room was last in: the time today, the weekday this week, else the day and month. */
         fun lastIn(seconds: Long): String {
             val at = java.time.Instant.ofEpochSecond(seconds).atZone(AppClock.zone)
