@@ -50,6 +50,11 @@ impl PairingCode {
         &self.0
     }
 
+    /// A code from its text, for a listener that keeps the text it showed.
+    pub fn from_text(code: &str) -> Self {
+        Self(code.to_owned())
+    }
+
     #[cfg(test)]
     pub(crate) fn fixed(code: &str) -> Self {
         Self(code.to_owned())

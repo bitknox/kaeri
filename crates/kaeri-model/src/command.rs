@@ -378,6 +378,26 @@ pub enum Command {
     },
     /// Make a new recovery key and rotate the group key: answered with `Event::SyncRecoveryKey`.
     NewRecoveryKey,
+    /// Show a pairing code and wait for another device on the network to enter it. Sets sync up
+    /// on this device first if it is not, naming it. Answered with `Event::SyncInvite`; the
+    /// code is good for two minutes and three tries, and `Event::SyncStatus` follows a pairing.
+    PairInvite {
+        device_name: String,
+    },
+    /// Stop waiting for a device to pair.
+    PairStop,
+    /// Pair with the device showing `code` at `address` (`host:port`, from its QR code or the
+    /// network), then swap histories. Sets sync up on this device first if it is not.
+    PairJoin {
+        device_name: String,
+        address: String,
+        code: String,
+    },
+    /// Swap histories with a device already paired, at `address`.
+    SyncWithDevice {
+        device: String,
+        address: String,
+    },
     /// Say the recovery key again, for the sheet the device's own lock guards. Answered with
     /// `Event::SyncRecoveryKey`. A TV never asks.
     ShowRecoveryKey,

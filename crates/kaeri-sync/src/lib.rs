@@ -9,6 +9,7 @@ pub mod error;
 pub mod folder;
 pub mod google;
 pub mod keys;
+pub mod lan;
 pub mod nextcloud;
 pub mod peer;
 pub mod road;

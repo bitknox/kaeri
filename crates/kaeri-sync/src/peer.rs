@@ -105,6 +105,7 @@ where
                     applied.effects.extend(a.effects);
                     applied.notes.extend(a.notes);
                     applied.titles.extend(a.titles);
+                    applied.watches.extend(a.watches);
                 }
                 Frame::Done => break,
                 Frame::Hello { .. } => return Err(SyncError::Damaged("second hello")),

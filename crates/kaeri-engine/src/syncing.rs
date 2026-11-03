@@ -26,7 +26,9 @@ use kaeri_sync::{
     SyncError,
     folder::{DirTarget, FolderTarget},
     keys::{self, DeviceKey, Keyring, RecoveryKey},
+    lan::{self, Identity, Listener, Me},
     nextcloud,
+    peer::PeerReport,
     road::{FolderReport, FolderRoad},
     webdav::{Password, WebDavTarget},
 };
@@ -83,6 +85,7 @@ pub struct SyncHub {
     road: Mutex<Option<Arc<FolderRoad>>>,
     running: AtomicBool,
     effects: Mutex<Vec<Effect>>,
+    listener: Mutex<Option<Arc<tokio::sync::Mutex<Listener>>>>,
 }
 
 impl std::fmt::Debug for SyncHub {
@@ -574,4 +577,158 @@ pub fn seed_fixture(store: &kaeri_store::Store, now: i64) {
         let _ = store.sync_meta_set(FOLDER, &json);
     }
     let _ = store.sync_fixture_note(1_000_001, "3", "fixture-me", "fixture-tv", now - 3_600);
+}
+
+const LAN_KEY: &str = "sync-lan-key";
+
+fn lan_me(services: &Ctx) -> Option<Me> {
+    let device = services.store.sync_device().ok().flatten()?;
+    let identity = match services
+        .sync
+        .tokens
+        .get(LAN_KEY)
+        .ok()
+        .and_then(|h| hex::decode(h).ok())
+        .and_then(|b| Identity::from_pkcs8(&b).ok())
+    {
+        Some(identity) => identity,
+        None => {
+            let identity = Identity::generate().ok()?;
+            let _ = services.sync.tokens.set(LAN_KEY, &hex::encode(identity.to_pkcs8()));
+            identity
+        }
+    };
+    Some(Me {
+        identity,
+        device,
+        name: device_name(services),
+        pubkey: device_key(services).public_hex(),
+    })
+}
+
+/// Turn sync on for a device that pairs before it has any folder: a group of its own, which the
+/// other device's history then joins.
+fn enable_for_pairing(services: &Ctx, device_name: &str) -> Result<(), SyncProblem> {
+    if services.store.sync_device().ok().flatten().is_some() {
+        return Ok(());
+    }
+    let id = keys::new_device_id();
+    services.store.sync_enable(&id).map_err(|e| SyncProblem::Other(e.to_string()))?;
+    announce_self(services, &id, device_name, &device_key(services));
+    let _ = services.store.sync_meta_set(NAME, device_name);
+    tracking::commands::announce_signed_in(&services.store, &services.sync);
+    Ok(())
+}
+
+/// What a session with another device brought, carried out as a pass through the folder's is.
+fn carry_out_peer(services: &Ctx, tx: &Outbox, report: &PeerReport) {
+    carry_out(
+        services,
+        tx,
+        FolderReport {
+            ops_applied: report.applied.ops,
+            effects: report.applied.effects.clone(),
+            watches: report.applied.watches.clone(),
+            ..FolderReport::default()
+        },
+    );
+}
+
+/// Listen for other devices and show a code for one to pair with.
+pub async fn invite(services: &Ctx, tx: &Outbox, device_name: String) {
+    if let Err(p) = enable_for_pairing(services, &device_name) {
+        return fail(services, tx, p);
+    }
+    let Some(me) = lan_me(services) else {
+        return fail(services, tx, SyncProblem::Other("no key for this device".into()));
+    };
+    let held = services
+        .syncing
+        .listener
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .clone();
+    let listener = match held {
+        Some(listener) => listener,
+        None => {
+            let bound =
+                Listener::bind(me, services.store.clone(), ([0, 0, 0, 0], 0).into()).await;
+            let listener = match bound {
+                Ok(listener) => Arc::new(tokio::sync::Mutex::new(listener)),
+                Err(e) => return fail(services, tx, problem(&e)),
+            };
+            *services
+                .syncing
+                .listener
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(listener.clone());
+            // Sessions end here, whoever opened them: carried out, and the status said again.
+            let (watcher, tx, ctx) = (listener.clone(), tx.clone(), services.clone());
+            tokio::spawn(async move {
+                loop {
+                    let session = {
+                        let mut guard = watcher.lock().await;
+                        guard.next_session().await
+                    };
+                    match session {
+                        Some(Ok(report)) => carry_out_peer(&ctx, &tx, &report),
+                        Some(Err(_)) => {}
+                        None => return,
+                    }
+                    say_status(&ctx, &tx);
+                }
+            });
+            listener
+        }
+    };
+    let (code, port) = {
+        let guard = listener.lock().await;
+        (guard.show_code(), guard.port())
+    };
+    let _ = tx.send(Event::SyncInvite { code, port, seconds: lan::CODE_LIFETIME });
+    say_status(services, tx);
+}
+
+/// Stop listening: the code is gone and nobody can pair.
+pub fn stop_inviting(services: &Ctx) {
+    *services.syncing.listener.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = None;
+}
+
+fn address_of(text: &str) -> Result<std::net::SocketAddr, SyncProblem> {
+    text.trim().parse().map_err(|_| SyncProblem::Other(format!("not an address: {text}")))
+}
+
+/// Pair with the device showing `code` at `address`, then swap histories.
+pub async fn pair(services: &Ctx, tx: &Outbox, device_name: String, address: &str, code: &str) {
+    if let Err(p) = enable_for_pairing(services, &device_name) {
+        return fail(services, tx, p);
+    }
+    let (Some(me), Ok(addr)) = (lan_me(services), address_of(address)) else {
+        return fail(services, tx, SyncProblem::Other("could not reach that device".into()));
+    };
+    match lan::dial(&me, &services.store, addr, Some(code), None).await {
+        Ok(report) => {
+            carry_out_peer(services, tx, &report);
+            say_status(services, tx);
+        }
+        Err(e) => fail(services, tx, problem(&e)),
+    }
+}
+
+/// Swap histories with a device already paired.
+pub async fn sync_with(services: &Ctx, tx: &Outbox, device: &str, address: &str) {
+    let (Some(me), Ok(addr)) = (lan_me(services), address_of(address)) else {
+        return fail(services, tx, SyncProblem::Other("could not reach that device".into()));
+    };
+    let pinned = lan::fingerprint_of(&services.store, device);
+    if pinned.is_none() {
+        return fail(services, tx, SyncProblem::Other("that device is not paired".into()));
+    }
+    match lan::dial(&me, &services.store, addr, None, pinned).await {
+        Ok(report) => {
+            carry_out_peer(services, tx, &report);
+            say_status(services, tx);
+        }
+        Err(e) => fail(services, tx, problem(&e)),
+    }
 }

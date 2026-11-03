@@ -248,3 +248,37 @@ fn the_profiles_scene_starts_in_the_first_profile_and_can_start_in_another() {
     let view = kim.profiles_where("three profiles", |v| v.profiles.len() == 3);
     assert!(view.profiles[1].active && !view.profiles[0].active);
 }
+
+#[test]
+fn two_devices_pair_with_a_code_and_a_wrong_code_does_not() {
+    let mut living_room = App::start();
+    living_room.engine.send(Command::PairInvite { device_name: "Living room".into() });
+    let (code, port) = living_room.until("the code", |event| match event {
+        Event::SyncInvite { code, port, seconds } => {
+            assert_eq!(*seconds, 120);
+            Some((code.clone(), *port))
+        }
+        _ => None,
+    });
+    assert_eq!(code.len(), 6);
+
+    let mut phone = App::start();
+    let address = format!("127.0.0.1:{port}");
+    let wrong = if code == "000000" { "111111" } else { "000000" };
+    phone.engine.send(Command::PairJoin {
+        device_name: "Phone".into(),
+        address: address.clone(),
+        code: wrong.into(),
+    });
+    let problem = phone.until("a problem", |event| match event {
+        Event::SyncProblem(problem) => Some(problem.clone()),
+        _ => None,
+    });
+    assert!(matches!(problem, SyncProblem::Other(_)), "{problem:?}");
+
+    phone.engine.send(Command::PairJoin { device_name: "Phone".into(), address, code });
+    let status = phone.status_where("both devices", |s| s.devices.len() == 2);
+    assert!(status.devices.iter().any(|d| d.name == "Living room"));
+    let status = living_room.status_where("both devices", |s| s.devices.len() == 2);
+    assert!(status.devices.iter().any(|d| d.name == "Phone"));
+}

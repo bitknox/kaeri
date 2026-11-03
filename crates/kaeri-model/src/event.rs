@@ -586,6 +586,14 @@ pub enum Event {
     },
     /// How sync stands, replacing whatever was there.
     SyncStatus(crate::group::SyncStatus),
+    /// A pairing code is showing: this device listens at `port` for it, and it stops working
+    /// after `seconds` or three wrong tries. The QR code carries the device's address, `port`
+    /// and the code.
+    SyncInvite {
+        code: String,
+        port: u16,
+        seconds: u32,
+    },
     /// The recovery key, to show once. Never sent again; only a new one can be made.
     SyncRecoveryKey(String),
     /// A sync set-up or join did not work.

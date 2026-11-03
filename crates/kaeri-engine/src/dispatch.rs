@@ -727,6 +727,31 @@ pub(crate) fn dispatch(
                 crate::syncing::new_recovery_key(&ctx, &tx).await;
             });
         }
+        Command::PairInvite { device_name } => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::syncing::invite(&ctx, &tx, device_name).await;
+            });
+        }
+        Command::PairStop => {
+            crate::syncing::stop_inviting(&Ctx::of(services));
+            drop(job);
+        }
+        Command::PairJoin { device_name, address, code } => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::syncing::pair(&ctx, &tx, device_name, &address, &code).await;
+            });
+        }
+        Command::SyncWithDevice { device, address } => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::syncing::sync_with(&ctx, &tx, &device, &address).await;
+            });
+        }
         Command::ShowRecoveryKey => {
             crate::syncing::reveal_recovery_key(&Ctx::of(services), tx);
             drop(job);

@@ -889,6 +889,7 @@ pub fn name(update: &Event) -> &'static str {
         Event::Profiles(_) => "Profiles",
         Event::ProfileSwitch { .. } => "ProfileSwitch",
         Event::SyncStatus(_) => "SyncStatus",
+        Event::SyncInvite { .. } => "SyncInvite",
         Event::SyncRecoveryKey(_) => "SyncRecoveryKey",
         Event::SyncProblem(_) => "SyncProblem",
         Event::StorePreview(_) => "StorePreview",
@@ -1154,6 +1155,9 @@ fn copy(update: &Event) -> Event {
         Event::Profiles(view) => Event::Profiles(view.clone()),
         Event::ProfileSwitch { id } => Event::ProfileSwitch { id: id.clone() },
         Event::SyncStatus(status) => Event::SyncStatus(status.clone()),
+        Event::SyncInvite { code, port, seconds } => {
+            Event::SyncInvite { code: code.clone(), port: *port, seconds: *seconds }
+        }
         Event::SyncRecoveryKey(key) => Event::SyncRecoveryKey(key.clone()),
         Event::SyncProblem(problem) => Event::SyncProblem(problem.clone()),
         Event::StorePreview(preview) => Event::StorePreview(preview.clone()),
