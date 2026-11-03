@@ -108,6 +108,16 @@ pub struct SyncNote {
     pub at: i64,
 }
 
+/// A write a received op asks of the device's own tables, which the personal transaction cannot
+/// make: done by [`Store::apply_ops`] right after it commits.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum DeviceWrite {
+    /// A cached resolution that a received match change made stale.
+    ClearResolution { anilist_id: i64, provider_id: String },
+    /// Keep next's let-go list: `at` is `None` to bring the episode back.
+    LetGo { anilist_id: i64, episode: String, at: Option<i64> },
+}
+
 /// What applying a batch did.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Applied {
@@ -120,6 +130,7 @@ pub struct Applied {
     pub effects: Vec<Effect>,
     pub notes: Vec<SyncNote>,
     pub titles: Vec<u32>,
+    pub(crate) device: Vec<DeviceWrite>,
 }
 
 /// Register kinds the store applies itself.

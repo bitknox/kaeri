@@ -11,6 +11,7 @@ pub mod error;
 pub mod hash;
 pub mod ids;
 pub mod media;
+pub mod profile;
 pub mod settings;
 pub mod shared_settings;
 pub mod stream;

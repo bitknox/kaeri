@@ -84,7 +84,7 @@ toml_edit = "0.25"
 reqwest = { version = "0.13", default-features = false, features = ["json", "query", "form", "rustls", "webpki-roots", "http2", "gzip", "brotli", "deflate", "zstd", "stream", "socks", "system-proxy"] }
 
 # --- storage ---
-rusqlite = { version = "0.40", features = ["bundled", "chrono", "serde_json"] }
+rusqlite = { version = "0.40", features = ["bundled", "chrono", "serde_json", "hooks"] }
 
 # --- tui ---
 ratatui = "0.30"

@@ -23,6 +23,7 @@ pub mod mapping;
 pub mod outbox;
 pub mod party_room;
 pub mod preference;
+pub mod profile;
 pub mod schema;
 pub mod server_health;
 pub mod show_setting;
@@ -34,7 +35,7 @@ pub mod track_memory;
 
 use std::{
     path::{Path, PathBuf},
-    sync::{Arc, Mutex},
+    sync::{Arc, Mutex, RwLock},
 };
 
 use rusqlite::Connection;
@@ -85,6 +86,10 @@ pub enum StoreError {
     /// at it risks writing wrong progress into someone's history.
     #[error("unsupported format: {0}")]
     UnsupportedFormat(String),
+
+    /// A profile change that cannot be made as asked.
+    #[error("{0}")]
+    Profile(String),
 }
 
 pub type Result<T> = std::result::Result<T, StoreError>;
@@ -92,7 +97,13 @@ pub type Result<T> = std::result::Result<T, StoreError>;
 /// Handle to the local database.
 #[derive(Clone)]
 pub struct Store {
+    /// The device's connection: sources, downloads, caches, datasets.
     conn: Arc<Mutex<Connection>>,
+    /// The personal connection: history, choices, trackers' state and the sync log. The same
+    /// connection as `conn` until a second profile exists, so a one-person install holds one.
+    personal: Arc<RwLock<Arc<Mutex<Connection>>>>,
+    /// The profile in use, once profiles are on.
+    active: Arc<Mutex<Option<String>>>,
     /// The sync log's clock; the log itself is in the database.
     sync: Arc<sync::SyncCtx>,
 }
@@ -171,7 +182,7 @@ impl Store {
         }
         let conn = Connection::open(path)?;
         schema::migrate(&conn)?;
-        Ok(Self { conn: Arc::new(Mutex::new(conn)), sync: Arc::new(sync::SyncCtx::new()) })
+        Ok(Self::from_conn(conn))
     }
 
     /// [`Self::open`], with a database too damaged to open moved aside and a new one started in
@@ -194,12 +205,86 @@ impl Store {
 
     /// An ephemeral in-memory database. For tests.
     pub fn open_in_memory() -> Result<Self> {
-        let conn = Connection::open_in_memory()?;
-        schema::migrate(&conn)?;
-        Ok(Self { conn: Arc::new(Mutex::new(conn)), sync: Arc::new(sync::SyncCtx::new()) })
+        #[cfg(test)]
+        {
+            Self::open_in_memory_guarded()
+        }
+        #[cfg(not(test))]
+        {
+            let conn = Connection::open_in_memory()?;
+            schema::migrate(&conn)?;
+            Ok(Self::from_conn(conn))
+        }
     }
 
-    /// Run `f` with the connection held.
+    /// This crate's own tests run on two connections to one shared in-memory database, each
+    /// refused the other side's tables, so any method on the wrong connection fails its test.
+    #[cfg(test)]
+    fn open_in_memory_guarded() -> Result<Self> {
+        use std::sync::atomic::{AtomicU64, Ordering};
+        static N: AtomicU64 = AtomicU64::new(0);
+        let uri = format!(
+            "file:kaeri-test-{}?mode=memory&cache=shared",
+            N.fetch_add(1, Ordering::Relaxed)
+        );
+        let open = || {
+            Connection::open_with_flags(
+                &uri,
+                rusqlite::OpenFlags::SQLITE_OPEN_READ_WRITE
+                    | rusqlite::OpenFlags::SQLITE_OPEN_CREATE
+                    | rusqlite::OpenFlags::SQLITE_OPEN_URI
+                    | rusqlite::OpenFlags::SQLITE_OPEN_SHARED_CACHE,
+            )
+        };
+        let device = open()?;
+        schema::migrate(&device)?;
+        let personal = open()?;
+        profile::guard_for_test(&device, &personal)?;
+        let store = Self::from_conn(device);
+        *store.personal.write().unwrap() = Arc::new(Mutex::new(personal));
+        Ok(store)
+    }
+
+    fn from_conn(conn: Connection) -> Self {
+        let conn = Arc::new(Mutex::new(conn));
+        Self {
+            personal: Arc::new(RwLock::new(conn.clone())),
+            active: Arc::default(),
+            conn,
+            sync: Arc::new(sync::SyncCtx::new()),
+        }
+    }
+
+    /// The personal connection as it is now.
+    fn personal_conn(&self) -> Arc<Mutex<Connection>> {
+        self.personal.read().unwrap_or_else(std::sync::PoisonError::into_inner).clone()
+    }
+
+    /// Run `f` with the personal connection held: for the tables of
+    /// [`profile::PERSONAL_TABLES`].
+    pub(crate) fn with_personal<T>(
+        &self,
+        f: impl FnOnce(&Connection) -> Result<T>,
+    ) -> Result<T> {
+        let conn = self.personal_conn();
+        let guard = conn.lock().map_err(|_| StoreError::Poisoned)?;
+        f(&guard)
+    }
+
+    /// [`Self::with_tx`] on the personal connection.
+    pub(crate) fn with_personal_tx<T>(
+        &self,
+        f: impl FnOnce(&rusqlite::Transaction<'_>) -> Result<T>,
+    ) -> Result<T> {
+        let conn = self.personal_conn();
+        let mut guard = conn.lock().map_err(|_| StoreError::Poisoned)?;
+        let tx = guard.transaction()?;
+        let out = f(&tx)?;
+        tx.commit()?;
+        Ok(out)
+    }
+
+    /// Run `f` with the device connection held.
     pub(crate) fn with_conn<T>(&self, f: impl FnOnce(&Connection) -> Result<T>) -> Result<T> {
         let guard = self.conn.lock().map_err(|_| StoreError::Poisoned)?;
         f(&guard)

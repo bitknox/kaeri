@@ -174,7 +174,7 @@ impl Store {
 
     fn local_device_op(&self, body: OpBody) -> Result<()> {
         let now = self.sync.wall_ms() / 1000;
-        self.with_tx(|tx| {
+        self.with_personal_tx(|tx| {
             if let Some(op) = self.emit(tx, body)? {
                 apply_one(tx, &op, now, &mut Applied::default(), &mut BTreeSet::new())?;
             }
@@ -184,7 +184,7 @@ impl Store {
 
     /// The group's devices as the log has them: `(device, name, public key, removed)`.
     pub fn sync_peers(&self) -> Result<Vec<PeerRow>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut stmt = c.prepare(
                 "SELECT device, name, pubkey, removed FROM sync_peer ORDER BY device",
             )?;
@@ -276,7 +276,7 @@ impl Store {
     pub fn apply_ops(&self, mut ops: Vec<Op>) -> Result<Applied> {
         ops.sort_by(|a, b| (&a.device, a.seq).cmp(&(&b.device, b.seq)));
         let now_secs = self.sync.wall_ms() / 1000;
-        self.with_tx(|tx| {
+        let mut report = self.with_personal_tx(|tx| {
             if !is_on(tx)? {
                 return Err(crate::StoreError::Missing("sync is turned on".into()));
             }
@@ -322,14 +322,46 @@ impl Store {
             }
             report.titles = titles.into_iter().collect();
             Ok(report)
-        })
+        })?;
+        let device = std::mem::take(&mut report.device);
+        if !device.is_empty() {
+            self.with_conn(|c| {
+                for write in &device {
+                    match write {
+                        super::op::DeviceWrite::ClearResolution { anilist_id, provider_id } => {
+                            c.execute(
+                                "DELETE FROM mapping_resolution
+                                  WHERE anilist_id = ?1 AND provider_id = ?2",
+                                params![anilist_id, provider_id],
+                            )?;
+                        }
+                        super::op::DeviceWrite::LetGo { anilist_id, episode, at: Some(at) } => {
+                            c.execute(
+                                "INSERT OR REPLACE INTO download_dismissed (anilist_id, episode, at)
+                                 VALUES (?1, ?2, ?3)",
+                                params![anilist_id, episode, at],
+                            )?;
+                        }
+                        super::op::DeviceWrite::LetGo { anilist_id, episode, at: None } => {
+                            c.execute(
+                                "DELETE FROM download_dismissed
+                                  WHERE anilist_id = ?1 AND episode = ?2",
+                                params![anilist_id, episode],
+                            )?;
+                        }
+                    }
+                }
+                Ok(())
+            })?;
+        }
+        Ok(report)
     }
 
     /// Replace superseded register ops that every device has acknowledged (`acked`, the smallest
     /// vector among them) with no-ops that keep their numbers, so what is kept stays small.
     /// Watch events are never touched. Returns how many ops were rewritten.
     pub fn compact(&self, acked: &VersionVector) -> Result<usize> {
-        self.with_tx(|tx| {
+        self.with_personal_tx(|tx| {
             let mut changed = 0;
             let candidates: Vec<Op> = {
                 let mut stmt = tx.prepare(
@@ -364,7 +396,7 @@ impl Store {
 
     /// Watches kept against an unwatch they had not seen, newer than `since` (unix seconds).
     pub fn sync_notes(&self, since: i64) -> Result<Vec<SyncNote>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut stmt = c.prepare(
                 "SELECT id, anilist_id, episode, unwatch_device, watch_device, at
                    FROM sync_note WHERE at >= ?1 ORDER BY id",
@@ -385,14 +417,14 @@ impl Store {
     }
 
     pub fn dismiss_sync_note(&self, id: i64) -> Result<()> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             Ok(c.execute("DELETE FROM sync_note WHERE id = ?1", [id]).map(|_| ())?)
         })
     }
 
     /// What other devices hold downloaded: `(device, anilist id, episode)`.
     pub fn remote_downloads(&self) -> Result<Vec<(String, u32, String)>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut stmt = c.prepare(
                 "SELECT device, anilist_id, episode FROM sync_remote_download
                   WHERE done = 1 ORDER BY device, anilist_id, episode",
@@ -405,7 +437,7 @@ impl Store {
 
     /// The highest episode any device saw a tracker hold for a title.
     pub fn sync_tracker_mark_for(&self, tracker: &str, anilist_id: u32) -> Result<Option<u32>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             Ok(c.query_row(
                 "SELECT episode FROM sync_mark WHERE tracker = ?1 AND anilist_id = ?2",
                 params![tracker, anilist_id],
@@ -744,27 +776,21 @@ fn apply_reg(
                             "DELETE FROM mapping_override WHERE anilist_id = ?1 AND provider_id = ?2",
                             params![id, provider],
                         )?;
-                        tx.execute(
-                            "DELETE FROM mapping_resolution WHERE anilist_id = ?1 AND provider_id = ?2",
-                            params![id, provider],
-                        )?;
+                        report.device.push(super::op::DeviceWrite::ClearResolution {
+                            anilist_id: i64::from(id),
+                            provider_id: provider.to_owned(),
+                        });
                     }
                 }
             }
         }
         kinds::LET_GO => {
             if let Some((id, episode)) = parse_key(key) {
-                match value {
-                    Some(_) => tx.execute(
-                        "INSERT OR REPLACE INTO download_dismissed (anilist_id, episode, at)
-                         VALUES (?1, ?2, ?3)",
-                        params![id, episode, at],
-                    )?,
-                    None => tx.execute(
-                        "DELETE FROM download_dismissed WHERE anilist_id = ?1 AND episode = ?2",
-                        params![id, episode],
-                    )?,
-                };
+                report.device.push(super::op::DeviceWrite::LetGo {
+                    anilist_id: i64::from(id),
+                    episode: episode.to_owned(),
+                    at: value.map(|_| at),
+                });
             }
         }
         kinds::DEVICE_NAME => {

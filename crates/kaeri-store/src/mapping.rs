@@ -83,7 +83,7 @@ impl Store {
         title: Option<&str>,
         at: i64,
     ) -> Result<()> {
-        self.with_tx(|c| {
+        self.with_personal_tx(|c| {
             self.emit_reg(
                 c,
                 crate::sync::kinds::MATCH,
@@ -117,7 +117,7 @@ impl Store {
         // One transaction, because the doc above describes exactly what two autocommitted
         // statements produce when the second fails: the override gone and the cached
         // resolution left behind, still answering with the key the user just asked to forget.
-        self.with_tx(|tx| {
+        self.with_personal_tx(|tx| {
             if crate::sync::device_of(tx)?.is_some() {
                 let providers: Vec<String> = {
                     let mut stmt = tx.prepare(
@@ -135,7 +135,13 @@ impl Store {
                 "DELETE FROM mapping_override WHERE anilist_id = ?1",
                 [anilist_id.get()],
             )?;
-            tx.execute(
+            Ok(())
+        })?;
+        // The cached resolution is the device's, so it goes in a second step on its own
+        // connection. The override went first: a failure here leaves a cache the next dataset
+        // refresh clears, never an override that came back.
+        self.with_conn(|c| {
+            c.execute(
                 "DELETE FROM mapping_resolution WHERE anilist_id = ?1",
                 [anilist_id.get()],
             )?;
@@ -144,7 +150,7 @@ impl Store {
     }
 
     pub fn clear_override(&self, anilist_id: AnilistId, provider_id: &str) -> Result<()> {
-        self.with_tx(|c| {
+        self.with_personal_tx(|c| {
             let key = format!("{}/{provider_id}", anilist_id.get());
             self.emit_reg(c, crate::sync::kinds::MATCH, &key, None)?;
             c.execute(
@@ -221,24 +227,24 @@ impl Store {
         anilist_id: AnilistId,
         provider_id: &str,
     ) -> Result<Option<ResolvedMapping>> {
+        let over: Option<(String, Option<String>)> = self.with_personal(|c| {
+            Ok(c.query_row(
+                "SELECT provider_key, title FROM mapping_override
+                  WHERE anilist_id = ?1 AND provider_id = ?2",
+                rusqlite::params![anilist_id.get(), provider_id],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .ok())
+        })?;
+        if let Some((key, title)) = over {
+            return Ok(Some(ResolvedMapping {
+                provider_key: ProviderKey::new(key),
+                confidence: 1.0,
+                rung: ResolutionRung::Override,
+                title,
+            }));
+        }
         self.with_conn(|c| {
-            let over: Option<(String, Option<String>)> = c
-                .query_row(
-                    "SELECT provider_key, title FROM mapping_override
-                      WHERE anilist_id = ?1 AND provider_id = ?2",
-                    rusqlite::params![anilist_id.get(), provider_id],
-                    |r| Ok((r.get(0)?, r.get(1)?)),
-                )
-                .ok();
-            if let Some((key, title)) = over {
-                return Ok(Some(ResolvedMapping {
-                    provider_key: ProviderKey::new(key),
-                    confidence: 1.0,
-                    rung: ResolutionRung::Override,
-                    title,
-                }));
-            }
-
             let cached: Option<(String, f64, u8, Option<String>)> = c
                 .query_row(
                     "SELECT provider_key, confidence, rung, title FROM mapping_resolution

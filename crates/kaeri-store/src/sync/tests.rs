@@ -63,7 +63,7 @@ fn exchange(a: &Dev, b: &Dev) {
 
 /// The merged state, for comparing two devices.
 fn dump(s: &Store) -> String {
-    s.with_conn(|c| {
+    s.with_personal(|c| {
         let mut out = String::new();
         let mut table = |name: &str, sql: &str| -> rusqlite::Result<()> {
             out.push_str(&format!("[{name}]\n"));
@@ -485,7 +485,7 @@ fn devices_join_and_a_removal_wins_over_any_add() {
     for d in [&a, &b] {
         let removed: i64 = d
             .store
-            .with_conn(|c| {
+            .with_personal(|c| {
                 Ok(c.query_row("SELECT removed FROM sync_peer WHERE device='cccc'", [], |r| {
                     r.get(0)
                 })?)

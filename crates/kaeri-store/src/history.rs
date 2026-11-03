@@ -126,7 +126,7 @@ impl Store {
         event: &WatchEvent,
         queued_for: Vec<String>,
     ) -> Result<()> {
-        self.with_tx(|tx| {
+        self.with_personal_tx(|tx| {
             tx.execute(
                 "INSERT INTO watch_event
                    (anilist_id, episode, position_secs, duration_secs, watched_secs,
@@ -208,7 +208,7 @@ impl Store {
     /// Episodes already recorded as completed are skipped, so this is idempotent and cannot
     /// inflate the count. Returns how many episodes were newly marked.
     pub fn adopt_progress(&self, anilist_id: AnilistId, upto: u32, at: i64) -> Result<u32> {
-        self.with_tx(|tx| {
+        self.with_personal_tx(|tx| {
             if let Some(device) = crate::sync::device_of(tx)? {
                 return self.adopt_synced(tx, &device, anilist_id, upto, at);
             }
@@ -265,7 +265,7 @@ impl Store {
     /// The unmark half of a manual toggle is [`Self::unmark_episode`], which keeps what was
     /// watched of an episode only marked.
     pub fn forget_episode(&self, anilist_id: AnilistId, episode: &str) -> Result<()> {
-        self.with_tx(|tx| {
+        self.with_personal_tx(|tx| {
             let removed = Self::sync_event_uids(tx, anilist_id.get(), episode, false)?;
             tx.execute(
                 "DELETE FROM watch_event WHERE anilist_id = ?1 AND episode = ?2",
@@ -292,7 +292,7 @@ impl Store {
         anilist_id: AnilistId,
         episode: &str,
     ) -> Result<Option<WatchEvent>> {
-        self.with_tx(|tx| {
+        self.with_personal_tx(|tx| {
             let params = rusqlite::params![anilist_id.get(), episode];
             let played_through: bool = tx.query_row(
                 &format!(
@@ -335,7 +335,7 @@ impl Store {
 
     /// Current progress for one title.
     pub fn progress(&self, anilist_id: AnilistId) -> Result<Option<Progress>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut stmt = c.prepare(
                 "SELECT anilist_id, last_episode, last_position, last_duration,
                         episodes_done, updated_at
@@ -358,7 +358,7 @@ impl Store {
     /// this be reported as watched", two questions with different right answers. See
     /// [`RESUME_CEILING`].
     pub fn resume_position(&self, anilist_id: AnilistId, episode: &str) -> Result<Option<f64>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let row: Option<(f64, Option<f64>, i64)> = c
                 .query_row(
                     "SELECT position_secs, duration_secs, completed FROM watch_event
@@ -385,7 +385,7 @@ impl Store {
     /// title and closing it three seconds later puts it at the top of the rail forever — measured
     /// on a real database, where a three-second row outranked an episode left at 61%.
     pub fn continue_list(&self, limit: u32) -> Result<Vec<Progress>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut stmt = c.prepare(
                 "SELECT anilist_id, last_episode, last_position, last_duration,
                         episodes_done, updated_at
@@ -403,7 +403,7 @@ impl Store {
     /// Every title with an episode watched, hidden from Continue or not, most recent first:
     /// what has been finished or started here, which "Up next for you" suggests from.
     pub fn watched_titles(&self, limit: u32) -> Result<Vec<Progress>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut stmt = c.prepare(
                 "SELECT anilist_id, last_episode, last_position, last_duration,
                         episodes_done, updated_at
@@ -423,7 +423,7 @@ impl Store {
     /// so the meter and resume point are intact wherever else they show. The next recorded
     /// watch clears the flag — a dismissed title earns its way back by being watched.
     pub fn hide_from_continue(&self, anilist_id: AnilistId) -> Result<()> {
-        self.with_tx(|tx| {
+        self.with_personal_tx(|tx| {
             tx.execute(
                 "UPDATE watch_progress SET hidden = 1 WHERE anilist_id = ?1",
                 [anilist_id.get()],
@@ -446,7 +446,7 @@ impl Store {
     /// a recap numbered "12.5", anything with letters in it — sits outside the numbering a
     /// tracker counts in, so it neither raises progress nor stands in for an episode.
     pub fn tracker_progress(&self, anilist_id: AnilistId) -> Result<u32> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let highest: i64 = c.query_row(
                 "SELECT COALESCE(MAX(CAST(episode AS INTEGER)), 0) FROM watch_event
                   WHERE anilist_id = ?1 AND completed = 1
@@ -465,7 +465,7 @@ impl Store {
         anilist_id: AnilistId,
         episode: &str,
     ) -> Result<Option<(bool, i64)>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             Ok(c.query_row(
                 "SELECT completed, at FROM watch_event
                   WHERE anilist_id = ?1 AND episode = ?2
@@ -480,7 +480,7 @@ impl Store {
     /// The translation `anilist_id` was last watched in: the newest record of a play that says
     /// which. `None` when no play here said, as for progress taken from a tracker's list.
     pub fn last_translation(&self, anilist_id: AnilistId) -> Result<Option<Translation>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let text: Option<String> = c
                 .query_row(
                     "SELECT translation FROM watch_event
@@ -496,7 +496,7 @@ impl Store {
 
     /// Distinct completed episodes, however they are numbered.
     pub fn completed_episode_count(&self, anilist_id: AnilistId) -> Result<u32> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             Ok(c.query_row(
                 "SELECT COUNT(DISTINCT episode) FROM watch_event
                   WHERE anilist_id = ?1 AND completed = 1",
@@ -511,7 +511,7 @@ impl Store {
     /// Read whole rather than off [`Self::events_for`], whose limit is a few episodes' worth of
     /// rows — every ten seconds of playback is one — so an early episode drops out of it.
     pub fn completed_episodes(&self, anilist_id: AnilistId) -> Result<Vec<String>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut stmt = c.prepare(
                 "SELECT DISTINCT episode FROM watch_event
                   WHERE anilist_id = ?1 AND completed = 1",
@@ -523,7 +523,7 @@ impl Store {
 
     /// Full event log for a title, newest first. Used by the stats view.
     pub fn events_for(&self, anilist_id: AnilistId, limit: u32) -> Result<Vec<WatchEvent>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut stmt = c.prepare(&format!(
                 "SELECT {EVENT_COLUMNS}
                    FROM watch_event

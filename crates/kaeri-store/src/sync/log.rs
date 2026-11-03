@@ -73,7 +73,7 @@ pub(crate) fn row_to_op(r: &rusqlite::Row<'_>) -> rusqlite::Result<Op> {
 impl Store {
     /// The id this device writes ops under, when sync is on.
     pub fn sync_device(&self) -> Result<Option<String>> {
-        self.with_conn(|c| Ok(device(c)?))
+        self.with_personal(|c| Ok(device(c)?))
     }
 
     /// Turn sync on for this device as `device_id`, and turn today's history and choices into the
@@ -81,7 +81,15 @@ impl Store {
     /// [`Self::sync_disable`], keeps the log and its numbering.
     pub fn sync_enable(&self, device_id: &str) -> Result<()> {
         let wall = self.sync.wall_ms();
-        self.with_tx(|tx| {
+        // The let-go list is the device's table; it joins the first ops from here.
+        let dismissed: Vec<(i64, String, i64)> = self.with_conn(|c| {
+            let mut stmt =
+                c.prepare("SELECT anilist_id, episode, at FROM download_dismissed")?;
+            Ok(stmt
+                .query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))?
+                .collect::<rusqlite::Result<_>>()?)
+        })?;
+        self.with_personal_tx(|tx| {
             if let Some(existing) = meta(tx, "device")?
                 && existing != device_id
             {
@@ -93,7 +101,7 @@ impl Store {
             set_meta(tx, "device", device_id)?;
             set_meta(tx, "enabled", "1")?;
             if first {
-                backfill(tx, device_id, wall)?;
+                backfill(tx, device_id, wall, &dismissed)?;
                 set_meta(tx, "backfilled", "1")?;
             }
             Ok(())
@@ -102,7 +110,7 @@ impl Store {
 
     /// Stop writing ops. Everything held stays, so turning sync on again carries on.
     pub fn sync_disable(&self) -> Result<()> {
-        self.with_conn(|c| Ok(set_meta(c, "enabled", "0")?))
+        self.with_personal(|c| Ok(set_meta(c, "enabled", "0")?))
     }
 
     /// Write an op for a change made in `tx`. `None` when sync is off.
@@ -140,7 +148,7 @@ impl Store {
         value: Option<&str>,
         at_ms: Option<i64>,
     ) -> Result<()> {
-        self.with_tx(|tx| {
+        self.with_personal_tx(|tx| {
             let Some(device) = device(tx)? else { return Ok(()) };
             let stamp = match at_ms {
                 // A dated value never goes ahead of the clock's own stamps, and never replaces
@@ -166,7 +174,7 @@ impl Store {
         episode: &str,
         done: bool,
     ) -> Result<()> {
-        self.with_tx(|tx| {
+        self.with_personal_tx(|tx| {
             self.emit(
                 tx,
                 OpBody::DownloadState { anilist_id, episode: episode.to_owned(), done },
@@ -182,7 +190,7 @@ impl Store {
         anilist_id: u32,
         episode: u32,
     ) -> Result<()> {
-        self.with_tx(|tx| {
+        self.with_personal_tx(|tx| {
             let Some(_) = self.emit(
                 tx,
                 OpBody::TrackerMark { tracker: tracker.to_owned(), anilist_id, episode },
@@ -201,7 +209,7 @@ impl Store {
 
     /// The highest op number held from each device, this one included.
     pub fn version_vector(&self) -> Result<VersionVector> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut stmt = c.prepare("SELECT device, MAX(seq) FROM sync_op GROUP BY device")?;
             let rows =
                 stmt.query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, i64>(1)?)))?;
@@ -217,7 +225,7 @@ impl Store {
     /// Every op the other side lacks, going by its `vector`, oldest first per device, at most
     /// `limit`. Includes ops held from other devices: a device relays what it holds.
     pub fn ops_after(&self, vector: &VersionVector, limit: usize) -> Result<Vec<Op>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut devices =
                 c.prepare("SELECT DISTINCT device FROM sync_op ORDER BY device")?;
             let devices: Vec<String> =
@@ -244,7 +252,7 @@ impl Store {
 
     /// A register's value, when it is set.
     pub fn sync_reg_value(&self, kind: &str, key: &str) -> Result<Option<String>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             Ok(c.query_row(
                 "SELECT value FROM sync_reg WHERE kind = ?1 AND key = ?2",
                 [kind, key],
@@ -257,7 +265,7 @@ impl Store {
 
     /// Every set register of a kind, as `(key, value)`.
     pub fn sync_regs(&self, kind: &str) -> Result<Vec<(String, String)>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut stmt = c.prepare(
                 "SELECT key, value FROM sync_reg WHERE kind = ?1 AND value IS NOT NULL ORDER BY key",
             )?;
@@ -269,14 +277,14 @@ impl Store {
 
     /// Set a title's status or score as the person set it, keeping the register's rule.
     pub fn set_synced_status(&self, anilist_id: u32, status: Option<&str>) -> Result<()> {
-        self.with_tx(|tx| {
+        self.with_personal_tx(|tx| {
             self.emit_reg(tx, op::kinds::STATUS, &anilist_id.to_string(), status)?;
             Ok(())
         })
     }
 
     pub fn set_synced_score(&self, anilist_id: u32, score: Option<f32>) -> Result<()> {
-        self.with_tx(|tx| {
+        self.with_personal_tx(|tx| {
             self.emit_reg(
                 tx,
                 op::kinds::SCORE,
@@ -301,7 +309,7 @@ impl Store {
     /// Which device a title's newest event came from, and when: for "stopped at 12:04 on Study
     /// Mac". `None` for a title with no events, or whose newest came from a tracker.
     pub fn last_event_origin(&self, anilist_id: u32) -> Result<Option<(String, i64)>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let row: Option<(Option<String>, i64)> = c
                 .query_row(
                     "SELECT uid, at FROM watch_event
@@ -320,16 +328,16 @@ impl Store {
     /// A bookkeeping value the transports keep beside the log (a read cursor, a published
     /// number). Not synced.
     pub fn sync_meta_get(&self, key: &str) -> Result<Option<String>> {
-        self.with_conn(|c| Ok(meta(c, &format!("x.{key}"))?))
+        self.with_personal(|c| Ok(meta(c, &format!("x.{key}"))?))
     }
 
     pub fn sync_meta_set(&self, key: &str, value: &str) -> Result<()> {
-        self.with_conn(|c| Ok(set_meta(c, &format!("x.{key}"), value)?))
+        self.with_personal(|c| Ok(set_meta(c, &format!("x.{key}"), value)?))
     }
 
     /// One device's ops after `after`, oldest first, at most `limit`.
     pub fn ops_of(&self, device: &str, after: u64, limit: usize) -> Result<Vec<Op>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut stmt = c.prepare(
                 "SELECT device, seq, stamp, body FROM sync_op
                   WHERE device = ?1 AND seq > ?2 ORDER BY seq LIMIT ?3",
@@ -342,7 +350,7 @@ impl Store {
 
     /// Note when a device was last heard from, in unix seconds.
     pub fn sync_touch_peer(&self, device: &str, at: i64) -> Result<()> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             c.execute(
                 "INSERT INTO sync_peer (device, last_seen) VALUES (?1, ?2)
                  ON CONFLICT(device) DO UPDATE SET last_seen = MAX(COALESCE(last_seen, 0), ?2)",
@@ -354,14 +362,19 @@ impl Store {
 
     /// Ops held, of every device.
     pub fn sync_op_count(&self) -> Result<u64> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             Ok(c.query_row("SELECT COUNT(*) FROM sync_op", [], |r| r.get::<_, i64>(0))? as u64)
         })
     }
 }
 
 /// Turn what the database holds into this device's first ops.
-fn backfill(tx: &Transaction<'_>, device: &str, wall_ms: i64) -> Result<()> {
+fn backfill(
+    tx: &Transaction<'_>,
+    device: &str,
+    wall_ms: i64,
+    dismissed: &[(i64, String, i64)],
+) -> Result<()> {
     // Events, oldest first, each given the id its op will have.
     let events: Vec<(i64, OpBody, i64)> = {
         let mut stmt = tx.prepare(
@@ -451,14 +464,14 @@ fn backfill(tx: &Transaction<'_>, device: &str, wall_ms: i64) -> Result<()> {
             ))
         },
     )?;
-    collect("SELECT anilist_id, episode, NULL, at FROM download_dismissed", &|r| {
-        Ok((
+    for (anilist_id, episode, at) in dismissed {
+        regs.push((
             op::kinds::LET_GO.into(),
-            format!("{}/{}", r.get::<_, i64>(0)?, r.get::<_, String>(1)?),
+            format!("{anilist_id}/{episode}"),
             Some("1".into()),
-            r.get(3)?,
-        ))
-    })?;
+            *at,
+        ));
+    }
     for (kind, key, value, at) in regs {
         // Dated by when the choice was made, so a device that joins later with a newer choice
         // wins, and a long-forgotten one does not beat it.

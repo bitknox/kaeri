@@ -87,7 +87,7 @@ const MAX_IMPORTED_EPISODES: u32 = 10_000;
 impl Store {
     /// Aggregate statistics over the whole log.
     pub fn stats(&self) -> Result<Stats> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut stats = Stats::default();
 
             (stats.titles, stats.first_at, stats.last_at) = c.query_row(
@@ -140,7 +140,7 @@ impl Store {
 
     /// Every title with recorded history, newest first.
     pub fn export(&self, now: i64) -> Result<Export> {
-        let titles = self.with_conn(|c| {
+        let titles = self.with_personal(|c| {
             let mut stmt = c.prepare(
                 "SELECT p.anilist_id, t.title, p.episodes_done, p.last_episode,
                         p.last_position, p.updated_at,
@@ -247,7 +247,7 @@ impl Store {
     /// `SQLite`'s `RANDOM()` rather than shuffling in Rust: the selection happens where the rows
     /// are, and it stays one query as history grows.
     pub fn random_watched(&self) -> Result<Option<AnilistId>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             Ok(c.query_row(
                 "SELECT anilist_id FROM watch_progress ORDER BY RANDOM() LIMIT 1",
                 [],

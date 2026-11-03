@@ -13,7 +13,7 @@ use crate::{Result, Store, now};
 impl Store {
     /// Read an integer cursor.
     pub fn get_meta_i64(&self, key: &str) -> Result<Option<i64>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let raw: Option<String> = c
                 .query_row("SELECT value FROM app_state WHERE key = ?1", [key], |r| r.get(0))
                 .optional()?;
@@ -23,7 +23,7 @@ impl Store {
 
     /// Write an integer cursor.
     pub fn set_meta_i64(&self, key: &str, value: i64) -> Result<()> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             c.execute(
                 "INSERT INTO app_state (key, value) VALUES (?1, ?2)
                  ON CONFLICT(key) DO UPDATE SET value = excluded.value",
@@ -35,7 +35,7 @@ impl Store {
 
     /// Read a text value, such as a small JSON document a screen keeps between launches.
     pub fn get_meta_text(&self, key: &str) -> Result<Option<String>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             Ok(c.query_row("SELECT value FROM app_state WHERE key = ?1", [key], |r| r.get(0))
                 .optional()?)
         })
@@ -43,7 +43,7 @@ impl Store {
 
     /// Write a text value.
     pub fn set_meta_text(&self, key: &str, value: &str) -> Result<()> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             c.execute(
                 "INSERT INTO app_state (key, value) VALUES (?1, ?2)
                  ON CONFLICT(key) DO UPDATE SET value = excluded.value",
@@ -55,7 +55,7 @@ impl Store {
 
     /// Every text value whose key starts with `prefix`, with its key.
     pub fn meta_texts_with_prefix(&self, prefix: &str) -> Result<Vec<(String, String)>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut stmt = c.prepare(
                 "SELECT key, value FROM app_state WHERE substr(key, 1, length(?1)) = ?1",
             )?;
@@ -66,7 +66,7 @@ impl Store {
 
     /// Drop one value.
     pub fn delete_meta(&self, key: &str) -> Result<()> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             c.execute("DELETE FROM app_state WHERE key = ?1", [key])?;
             Ok(())
         })
@@ -74,7 +74,7 @@ impl Store {
 
     /// Drop every cursor whose key starts with `prefix`, returning how many there were.
     pub fn clear_meta_prefix(&self, prefix: &str) -> Result<usize> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             // `substr` rather than LIKE, so a `_` or `%` in the prefix means itself.
             Ok(c.execute(
                 "DELETE FROM app_state WHERE substr(key, 1, length(?1)) = ?1",
@@ -91,7 +91,7 @@ impl Store {
         if title.trim().is_empty() {
             return Ok(());
         }
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             c.execute(
                 "INSERT INTO title_index (anilist_id, title, seen_at) VALUES (?1, ?2, ?3)
                  ON CONFLICT(anilist_id) DO UPDATE SET title = excluded.title,
@@ -104,7 +104,7 @@ impl Store {
 
     /// A remembered title, if we have ever seen one.
     pub fn cached_title(&self, anilist_id: AnilistId) -> Result<Option<String>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             Ok(c.query_row(
                 "SELECT title FROM title_index WHERE anilist_id = ?1",
                 [anilist_id.get()],

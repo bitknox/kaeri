@@ -22,7 +22,7 @@ impl Store {
         anilist_id: AnilistId,
         translation: Translation,
     ) -> Result<Option<TrackMemory>> {
-        let raw: Option<String> = self.with_conn(|c| {
+        let raw: Option<String> = self.with_personal(|c| {
             Ok(c.query_row(
                 "SELECT memory FROM track_memory WHERE anilist_id = ?1 AND translation = ?2",
                 rusqlite::params![anilist_id.get(), translation.as_str()],
@@ -51,7 +51,7 @@ impl Store {
     ) -> Result<()> {
         let json = serde_json::to_string(memory)
             .map_err(|source| StoreError::Encode { what: "track memory", source })?;
-        self.with_tx(|c| {
+        self.with_personal_tx(|c| {
             self.emit_reg(
                 c,
                 crate::sync::kinds::TRACK_MEMORY,
@@ -157,7 +157,7 @@ mod tests {
         // playing; the heuristic stands in, and the next choice overwrites the row.
         let store = store();
         store
-            .with_conn(|c| {
+            .with_personal(|c| {
                 c.execute(
                     "INSERT INTO track_memory (anilist_id, translation, memory, updated_at)
                      VALUES (21, 'sub', '{\"audio\": 7}', 0)",

@@ -16,7 +16,7 @@ impl Store {
         statuses: &[(AnilistId, &str)],
         at: i64,
     ) -> Result<()> {
-        self.with_tx(|tx| {
+        self.with_personal_tx(|tx| {
             // Every row, whichever tracker wrote it: there is one list, the Library's.
             tx.execute("DELETE FROM library_status", [])?;
             let mut insert = tx.prepare(
@@ -36,7 +36,7 @@ impl Store {
     /// dropped or paused, or they were taken off Continue. The most recently watched here
     /// first, then by id. The new-episode check follows the same shows.
     pub fn watching(&self, since: i64, listed: bool) -> Result<Vec<AnilistId>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut statement = c.prepare(
                 "SELECT id FROM (
                      SELECT s.anilist_id AS id, COALESCE(p.updated_at, 0) AS at
@@ -65,7 +65,7 @@ impl Store {
     /// The titles the list has with `status` (as the tracker words it: `PLANNING`), newest ids
     /// first: the newest titles are the likeliest to be airing.
     pub fn library_with_status(&self, status: &str) -> Result<Vec<AnilistId>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut statement = c.prepare(
                 "SELECT anilist_id FROM library_status WHERE status = ?1 ORDER BY anilist_id DESC",
             )?;
@@ -79,7 +79,7 @@ impl Store {
 
     /// Where `id` is on the list, as the tracker words it, when it is on it.
     pub fn library_status(&self, id: AnilistId) -> Result<Option<String>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             Ok(c.query_row(
                 "SELECT status FROM library_status WHERE anilist_id = ?1",
                 [id.get()],

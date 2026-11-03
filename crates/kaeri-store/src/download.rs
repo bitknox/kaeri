@@ -86,40 +86,51 @@ impl Download {
 }
 
 impl Store {
-    /// Tell the sync log what this device holds, for the rows matching `filter`: whether each is
-    /// held now, and whether letting it go is also a let-go for keep next.
-    fn sync_download_rows(
-        &self,
-        tx: &rusqlite::Transaction<'_>,
+    /// The `(title, episode)` of the rows matching `filter`, for [`Self::sync_download_emit`].
+    fn download_rows(
+        c: &rusqlite::Connection,
         filter: &str,
         params: impl rusqlite::Params,
+    ) -> Result<Vec<(u32, String)>> {
+        let mut stmt =
+            c.prepare(&format!("SELECT anilist_id, episode FROM download WHERE {filter}"))?;
+        Ok(stmt
+            .query_map(params, |r| Ok((r.get(0)?, r.get(1)?)))?
+            .collect::<rusqlite::Result<_>>()?)
+    }
+
+    /// Tell the sync log what this device holds, for `rows`: whether each is held now, and
+    /// whether letting it go is also a let-go for keep next. The log is the personal
+    /// connection's, so this is a step of its own after the download rows changed.
+    fn sync_download_emit(
+        &self,
+        rows: &[(u32, String)],
         done: bool,
         let_go: bool,
     ) -> Result<()> {
-        if crate::sync::device_of(tx)?.is_none() {
+        if rows.is_empty() {
             return Ok(());
         }
-        let rows: Vec<(u32, String)> = {
-            let mut stmt = tx
-                .prepare(&format!("SELECT anilist_id, episode FROM download WHERE {filter}"))?;
-            stmt.query_map(params, |r| Ok((r.get(0)?, r.get(1)?)))?
-                .collect::<rusqlite::Result<_>>()?
-        };
-        for (anilist_id, episode) in rows {
-            self.emit(
-                tx,
-                crate::sync::OpBody::DownloadState {
-                    anilist_id,
-                    episode: episode.clone(),
-                    done,
-                },
-            )?;
-            if let_go {
-                let key = format!("{anilist_id}/{episode}");
-                self.emit_reg(tx, crate::sync::kinds::LET_GO, &key, Some("1"))?;
+        self.with_personal_tx(|tx| {
+            if crate::sync::device_of(tx)?.is_none() {
+                return Ok(());
             }
-        }
-        Ok(())
+            for (anilist_id, episode) in rows {
+                self.emit(
+                    tx,
+                    crate::sync::OpBody::DownloadState {
+                        anilist_id: *anilist_id,
+                        episode: episode.clone(),
+                        done,
+                    },
+                )?;
+                if let_go {
+                    let key = format!("{anilist_id}/{episode}");
+                    self.emit_reg(tx, crate::sync::kinds::LET_GO, &key, Some("1"))?;
+                }
+            }
+            Ok(())
+        })
     }
 
     /// Add an episode to the queue, or return the existing row.
@@ -158,17 +169,14 @@ impl Store {
         ahead: bool,
     ) -> Result<Download> {
         let at = now();
+        let mut freed = 0;
         self.with_tx(|c| {
             // Asked for by the viewer: theirs to keep, whatever they let go of before.
             if !ahead {
-                let freed = c.execute(
+                freed = c.execute(
                     "DELETE FROM download_dismissed WHERE anilist_id = ?1 AND episode = ?2",
                     rusqlite::params![anilist_id.get(), episode],
                 )?;
-                if freed > 0 {
-                    let key = format!("{}/{episode}", anilist_id.get());
-                    self.emit_reg(c, crate::sync::kinds::LET_GO, &key, None)?;
-                }
             }
             c.execute(
                 "INSERT INTO download
@@ -197,6 +205,14 @@ impl Store {
             )?;
             Ok(())
         })?;
+        if freed > 0 {
+            self.sync_register(
+                crate::sync::kinds::LET_GO,
+                &format!("{}/{episode}", anilist_id.get()),
+                None,
+                None,
+            )?;
+        }
         self.download_for(anilist_id, episode)?
             .ok_or_else(|| crate::StoreError::Missing("download row after insert".into()))
     }
@@ -328,7 +344,7 @@ impl Store {
 
     /// Mark a download finished, recording where the file ended up.
     pub fn finish_download(&self, id: i64, path: Option<&str>) -> Result<()> {
-        self.with_tx(|c| {
+        let rows = self.with_tx(|c| {
             c.execute(
                 // `downloaded = total` reads as "it is all here", and is right whenever the
                 // total was learned. It was unconditional, so a download that finished before
@@ -344,9 +360,9 @@ impl Store {
                   WHERE id = ?1",
                 rusqlite::params![id, path, now()],
             )?;
-            self.sync_download_rows(c, "id = ?1", rusqlite::params![id], true, false)?;
-            Ok(())
-        })
+            Self::download_rows(c, "id = ?1", rusqlite::params![id])
+        })?;
+        self.sync_download_emit(&rows, true, false)
     }
 
     pub fn fail_download(&self, id: i64, reason: &str) -> Result<()> {
@@ -362,30 +378,34 @@ impl Store {
     /// Take a download off the queue, as the viewer lets it go: keep next does not queue its
     /// episode again unless they ask for it themselves.
     pub fn remove_download(&self, id: i64) -> Result<()> {
-        self.with_tx(|tx| {
-            self.sync_download_rows(tx, "id = ?1", rusqlite::params![id], false, true)?;
+        let rows = self.with_tx(|tx| {
+            let rows = Self::download_rows(tx, "id = ?1", rusqlite::params![id])?;
             tx.execute(
                 "INSERT OR REPLACE INTO download_dismissed (anilist_id, episode, at)
                  SELECT anilist_id, episode, ?2 FROM download WHERE id = ?1",
                 rusqlite::params![id, now()],
             )?;
             tx.execute("DELETE FROM download WHERE id = ?1", [id])?;
-            Ok(())
-        })
+            Ok(rows)
+        })?;
+        self.sync_download_emit(&rows, false, true)
     }
 
     /// Drop every finished row, returning how many went. Their files stay where they are, so
     /// keep next does not fetch their episodes again either.
     pub fn clear_completed_downloads(&self) -> Result<usize> {
-        self.with_tx(|tx| {
-            self.sync_download_rows(tx, "state = 'done'", rusqlite::params![], false, true)?;
+        let rows = self.with_tx(|tx| {
+            let rows = Self::download_rows(tx, "state = 'done'", rusqlite::params![])?;
             tx.execute(
                 "INSERT OR REPLACE INTO download_dismissed (anilist_id, episode, at)
                  SELECT anilist_id, episode, ?1 FROM download WHERE state = 'done'",
                 [now()],
             )?;
-            Ok(tx.execute("DELETE FROM download WHERE state = 'done'", [])?)
-        })
+            tx.execute("DELETE FROM download WHERE state = 'done'", [])?;
+            Ok(rows)
+        })?;
+        self.sync_download_emit(&rows, false, true)?;
+        Ok(rows.len())
     }
 
     /// Take download `id` off the queue as keep next's, a day after its episode was watched:

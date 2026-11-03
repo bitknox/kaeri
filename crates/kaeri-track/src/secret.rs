@@ -698,6 +698,43 @@ impl TokenStore {
         Self { secrets, cache: Arc::new(Mutex::new(HashMap::new())) }
     }
 
+    /// The store a profile other than the first signs in through: the same secrets under names
+    /// `p-<profile>/<tracker>`, with a cache of its own. The first profile keeps the bare names,
+    /// so no keychain entry of a one-person install moves.
+    pub fn scoped(&self, profile: &str) -> Self {
+        Self::over(Arc::new(Scoped {
+            inner: self.secrets.clone(),
+            prefix: format!("p-{profile}/"),
+        }))
+    }
+
+    /// Give the tokens of `ids` that `profile` signed in with to the first profile's bare names,
+    /// replacing what was there and removing the profile's own: when the first profile is deleted
+    /// and `profile` takes its place.
+    pub fn promote(&self, profile: &str, ids: &[&str]) -> Result<(), SecretError> {
+        let scoped = format!("p-{profile}/");
+        for id in ids {
+            let moved = self.secrets.get(&format!("{scoped}{id}"))?;
+            self.forget(id);
+            match moved {
+                Some(value) => {
+                    self.secrets.set(id, &value)?;
+                    self.secrets.delete(&format!("{scoped}{id}"))?;
+                }
+                None => self.secrets.delete(id)?,
+            }
+        }
+        Ok(())
+    }
+
+    /// Forget every token `profile` holds, for the ids given: a profile deleted.
+    pub fn clear_profile(&self, profile: &str, ids: &[&str]) -> Result<(), SecretError> {
+        for id in ids {
+            self.secrets.delete(&format!("p-{profile}/{id}"))?;
+        }
+        Ok(())
+    }
+
     /// Store a token, returning where it went.
     pub fn set(&self, tracker_id: &str, token: &str) -> Result<Storage, SecretError> {
         // Cached immediately: a sign-in is followed by a read, and going back to the keychain
@@ -826,6 +863,27 @@ impl TokenStore {
     }
 }
 
+/// A profile's view of the secrets: every name under its own prefix.
+struct Scoped {
+    inner: Arc<dyn SecretStore>,
+    prefix: String,
+}
+
+impl SecretStore for Scoped {
+    fn get(&self, id: &str) -> Result<Option<String>, SecretError> {
+        self.inner.get(&format!("{}{id}", self.prefix))
+    }
+    fn set(&self, id: &str, value: &str) -> Result<Storage, SecretError> {
+        self.inner.set(&format!("{}{id}", self.prefix), value)
+    }
+    fn delete(&self, id: &str) -> Result<(), SecretError> {
+        self.inner.delete(&format!("{}{id}", self.prefix))
+    }
+    fn storage_for(&self, id: &str) -> Storage {
+        self.inner.storage_for(&format!("{}{id}", self.prefix))
+    }
+}
+
 /// Make a file readable only by its owner.
 #[cfg(unix)]
 fn restrict(path: &Path) -> std::io::Result<()> {
@@ -847,6 +905,23 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let store = TokenStore::with_backend(dir.path(), Backend::File);
         (dir, store)
+    }
+
+    #[test]
+    fn a_profile_signs_in_under_its_own_names_and_promotion_moves_them_to_the_bare_ones() {
+        let (_dir, first) = store();
+        first.set("anilist", "mika-token").unwrap();
+        let aki = first.scoped("p2");
+        assert!(aki.get("anilist").is_err(), "Aki is not signed in as Mika");
+        aki.set("anilist", "aki-token").unwrap();
+        aki.set("kitsu", "aki-kitsu").unwrap();
+        assert_eq!(first.get("anilist").unwrap(), "mika-token");
+
+        first.promote("p2", &["anilist", "kitsu", "mal"]).unwrap();
+        assert_eq!(first.get("anilist").unwrap(), "aki-token");
+        assert_eq!(first.get("kitsu").unwrap(), "aki-kitsu");
+        assert!(first.get("mal").is_err());
+        assert!(first.scoped("p2").get("anilist").is_err(), "the scoped copy is gone");
     }
 
     #[test]

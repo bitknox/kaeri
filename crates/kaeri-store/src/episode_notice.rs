@@ -27,7 +27,7 @@ pub struct EpisodeNotice {
 impl Store {
     /// Every show the check has followed, with what it has said of each.
     pub fn episode_notices(&self) -> Result<Vec<EpisodeNotice>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut statement = c.prepare(
                 "SELECT anilist_id, episode, since, dubbed FROM episode_notice
                   ORDER BY anilist_id",
@@ -47,7 +47,7 @@ impl Store {
     /// How far the check has looked: the moment its last look reached, or `None` before the
     /// first.
     pub fn episode_check_through(&self) -> Result<Option<i64>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let raw: Option<String> = c
                 .query_row(
                     "SELECT value FROM app_state WHERE key = ?1",
@@ -68,7 +68,7 @@ impl Store {
         through: i64,
         at: i64,
     ) -> Result<()> {
-        self.with_tx(|tx| {
+        self.with_personal_tx(|tx| {
             let mut upsert = tx.prepare(
                 "INSERT INTO episode_notice (anilist_id, episode, since, dubbed, updated_at)
                  VALUES (?1, ?2, ?3, ?4, ?5)
@@ -98,7 +98,7 @@ impl Store {
     /// Forget what the check has said of `shows`, which it follows no longer: one followed
     /// again starts over, from when it is.
     pub fn forget_episode_notices(&self, shows: &[AnilistId]) -> Result<()> {
-        self.with_tx(|tx| {
+        self.with_personal_tx(|tx| {
             let mut delete = tx.prepare("DELETE FROM episode_notice WHERE anilist_id = ?1")?;
             for show in shows {
                 delete.execute([show.get()])?;
@@ -110,7 +110,7 @@ impl Store {
     /// Forget everything the check has said and how far it looked, as notifications are turned
     /// off: the next check after they are turned on again is a first one.
     pub fn forget_episode_check(&self) -> Result<()> {
-        self.with_tx(|tx| {
+        self.with_personal_tx(|tx| {
             tx.execute("DELETE FROM episode_notice", [])?;
             tx.execute("DELETE FROM app_state WHERE key = ?1", [CHECKED_THROUGH])?;
             Ok(())
@@ -119,7 +119,7 @@ impl Store {
 
     /// The titles watched here since `since`, newest first, but those taken off Continue.
     pub fn watched_since(&self, since: i64) -> Result<Vec<AnilistId>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut statement = c.prepare(
                 "SELECT anilist_id FROM watch_progress
                   WHERE hidden = 0 AND updated_at >= ?1
@@ -132,7 +132,7 @@ impl Store {
 
     /// Every title on the list, with where it is on it, as the tracker words it.
     pub fn library_statuses(&self) -> Result<Vec<(AnilistId, String)>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut statement =
                 c.prepare("SELECT anilist_id, status FROM library_status ORDER BY anilist_id")?;
             let rows =
@@ -143,7 +143,7 @@ impl Store {
 
     /// The shows that set `setting` to `value` for themselves.
     pub fn shows_setting(&self, setting: &str, value: &str) -> Result<Vec<AnilistId>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut statement = c.prepare(
                 "SELECT anilist_id FROM show_setting WHERE setting = ?1 AND value = ?2
                   ORDER BY anilist_id",

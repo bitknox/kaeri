@@ -48,7 +48,7 @@ impl Store {
     /// What show `anilist_id` sets for itself: each setting's name and its value as text, by
     /// name.
     pub fn show_settings(&self, anilist_id: AnilistId) -> Result<Vec<(String, String)>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut statement = c.prepare(
                 "SELECT setting, value FROM show_setting WHERE anilist_id = ?1 ORDER BY setting",
             )?;
@@ -68,7 +68,7 @@ impl Store {
         value: Option<&str>,
         at: i64,
     ) -> Result<()> {
-        self.with_tx(|c| {
+        self.with_personal_tx(|c| {
             let key = format!("{}/{setting}", anilist_id.get());
             self.emit_reg(c, crate::sync::kinds::SHOW_SETTING, &key, value)?;
             match value {
@@ -92,7 +92,7 @@ impl Store {
     /// How many shows set each setting for themselves, by name: what "Overridden for 3 shows"
     /// counts. The source a show keeps is counted with them, under `source`.
     pub fn show_setting_counts(&self) -> Result<Vec<(String, u32)>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut statement = c.prepare(
                 "SELECT setting, COUNT(*) FROM show_setting GROUP BY setting
                  UNION ALL
@@ -109,7 +109,7 @@ impl Store {
     /// Put show `anilist_id` back on Settings: what it sets for itself, the source it keeps and
     /// the tracks remembered for it, all forgotten together or none of them.
     pub fn reset_show(&self, anilist_id: AnilistId) -> Result<()> {
-        self.with_tx(|tx| {
+        self.with_personal_tx(|tx| {
             if crate::sync::device_of(tx)?.is_some() {
                 self.sync_reset_show(tx, anilist_id.get())?;
             }
