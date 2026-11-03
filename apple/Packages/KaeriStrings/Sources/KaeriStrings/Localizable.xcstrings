@@ -13949,66 +13949,6 @@
         }
       }
     },
-    "apple-start-beginning" : {
-      "comment" : "Detail line on the starting screen after the viewer chose to play from the beginning.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Starting from the beginning"
-          }
-        }
-      }
-    },
-    "apple-start-looked-up" : {
-      "comment" : "Row in the starting screen's Details list once the title has been looked up.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Looked up the title"
-          }
-        }
-      }
-    },
-    "apple-start-seconds" : {
-      "comment" : "Seconds on the starting screen's detail line when no other fact leads it. Argument 1: seconds (Int).",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld s"
-          }
-        }
-      }
-    },
-    "apple-start-still-starting" : {
-      "comment" : "VoiceOver announcement once, when a start has taken more than a few seconds.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Still starting. Choose source is available."
-          }
-        }
-      }
-    },
-    "apple-start-subtitled" : {
-      "comment" : "Label of the switch in the starting screen's Details list that plays the episode with its subtitles.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Subtitled"
-          }
-        }
-      }
-    },
     "audio-dubbed" : {
       "comment" : "Value of the audio setting: translated audio.",
       "extractionState" : "manual",

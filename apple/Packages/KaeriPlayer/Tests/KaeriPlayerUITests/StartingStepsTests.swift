@@ -124,7 +124,8 @@ struct StartingStepsTests {
         rig.model.playFromBeginning()
         #expect(rig.sent.last == .player(.playFromBeginning))
         #expect(lines(rig).detail.hasPrefix("Starting from the beginning"))
-        #expect(rig.model.walk?.actions(at: rig.model.clock).contains(.playFromBeginning) == false)
+        // Its place stays, so Choose source and Details do not slide left.
+        #expect(rig.model.walk?.actions(at: rig.model.clock).contains(.playFromBeginning) == true)
     }
 
     @Test func skippingSendsTheCommand() {
@@ -169,6 +170,64 @@ struct StartingStepsTests {
         }
     }
 
+    @Test func aFailureNamesTheSourcesAsked() {
+        let rig = run(.failedNoEpisode, to: 3)
+        #expect(rig.model.failure?.view.reason == "No source has episode 7.")
+        #expect(rig.model.failure?.view.asked == "Alpha and Brook were asked.")
+        #expect(rig.model.failure?.view.detail == "No source has episode 7. Alpha and Brook were asked.")
+        let none = run(.failedNoSources, to: 3)
+        #expect(none.model.failure?.view.asked == nil)
+    }
+
+    @Test func offlineWaitsOnTheEnginesStepAndStartsOnReconnect() {
+        let waiting = run(.offline, to: 3)
+        #expect(waiting.model.walk?.waiting == true)
+        #expect(lines(waiting).step == "Waiting for a connection")
+        #expect(lines(waiting).detail.contains("starts when you're back"))
+        #expect(waiting.model.walk?.actions(at: waiting.model.clock) == [.cancel, .showDownloads])
+        let back = run(.offline, to: 10)
+        #expect(back.model.walk?.waiting == false)
+        #expect(lines(back).step == "Asking Alpha")
+    }
+
+    @Test func offlineThatLastsFailsWithNothingAsked() {
+        let rig = run(.offlineTimedOut, to: 121)
+        #expect(rig.model.failure?.view.lead == .offline)
+        #expect(rig.model.failure?.view.asked == nil)
+        #expect(rig.model.failure?.view.reason == "No connection.")
+    }
+
+    @Test func theSlowWordingAppliesInAnyStepHeldPastTwentySeconds() {
+        let now = ContinuousClock.now
+        var walk = StartingWalk(id: 1, episode: "7", resume: nil, at: now)
+        walk.take(.askingSource(name: "Alpha", place: 1, total: 2, pinned: false), line: nil, at: now)
+        walk.take(.found(count: 1, source: "Alpha", quality: 1080, translation: .sub), line: .startOpeningStream, at: now + .seconds(1))
+        walk.take(.buffering(percent: 40), line: nil, at: now + .seconds(2))
+        #expect(walk.stepLine(at: now + .seconds(21)) == "Still waiting for Alpha")
+        walk.take(.findingPeers(name: "Harbor"), line: .startFindingPeers, at: now + .seconds(3))
+        #expect(walk.stepLine(at: now + .seconds(21)) == "Still waiting for Harbor")
+    }
+
+    @Test func aSpeedShowsOneDecimal() {
+        // The decimal mark is the person's: compare as a point.
+        func point(_ text: String) -> String { text.replacingOccurrences(of: ",", with: ".") }
+        #expect(point(StartingWalk.rate(3_400_000)) == "3.4 MB", "\(StartingWalk.rate(3_400_000))")
+        #expect(point(StartingWalk.rate(3_000_000)) == "3.0 MB", "\(StartingWalk.rate(3_000_000))")
+        #expect(point(StartingWalk.rate(812_000)) == "812 kB", "\(StartingWalk.rate(812_000))")
+    }
+
+    @Test func theBreathingIsFourSecondsFromFullToFortyPercent() {
+        #expect(abs(LoaderLine.breath(after: 0) - 1) < 0.0001)
+        #expect(abs(LoaderLine.breath(after: 2) - 0.4) < 0.0001)
+        #expect(abs(LoaderLine.breath(after: 4) - 1) < 0.0001)
+    }
+
+    @Test func aDetailsRowKeepsATenthAndASpace() {
+        func point(_ text: String) -> String { text.replacingOccurrences(of: ",", with: ".") }
+        #expect(point(StartDetails.seconds(.milliseconds(700))) == "0.7 s", "\(StartDetails.seconds(.milliseconds(700)))")
+        #expect(point(StartDetails.seconds(.milliseconds(8_340))) == "8.3 s")
+    }
+
     @Test func aFailureKeepsTheStepsForDetails() {
         let rig = run(.failedNoEpisode, to: 3)
         #expect(rig.model.walk?.detailRows.contains { $0.kind == .missed } == true)
@@ -178,11 +237,10 @@ struct StartingStepsTests {
         let all: [StartingFixture] = [
             .titleLookup, .sourcesLoading, .askingFirst, .askingPinned, .sourceMissed, .sourceFailed, .sourcesResting,
             .slow, .findingPeers, .peersKnown, .found, .fetchingSubtitles, .anotherStream, .bufferingTorrent,
-            .bufferingDirect, .offline, .failedNoEpisode, .failedNoMatch, .failedNoSources, .failedNotAired,
+            .bufferingDirect, .offline, .offlineTimedOut, .failedNoEpisode, .failedNoMatch, .failedNoSources, .failedNotAired,
         ]
         for state in all {
             let rig = run(state, to: 30)
-            if state == .offline { continue }
             let words = lines(rig)
             #expect(!words.step.isEmpty || rig.model.failure != nil, "\(state) has a step")
         }

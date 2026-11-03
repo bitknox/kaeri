@@ -138,7 +138,8 @@ extension PlayerModel {
             "sources-resting": .sourcesResting, "slow": .slow, "finding-peers": .findingPeers,
             "peers-known": .peersKnown, "found": .found, "fetching-subtitles": .fetchingSubtitles,
             "another-stream": .anotherStream, "buffering-torrent": .bufferingTorrent,
-            "buffering-direct": .bufferingDirect, "offline": .offline, "failed-no-episode": .failedNoEpisode,
+            "buffering-direct": .bufferingDirect, "offline": .offline, "offline-timed-out": .offlineTimedOut,
+            "failed-no-episode": .failedNoEpisode,
             "failed-no-match": .failedNoMatch, "failed-no-sources": .failedNoSources, "failed-not-aired": .failedNotAired,
         ]
         guard let state = Self.startParameter("state").flatMap({ states[$0] }) else { return false }

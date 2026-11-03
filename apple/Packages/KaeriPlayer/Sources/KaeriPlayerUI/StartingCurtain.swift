@@ -22,6 +22,10 @@ struct StartingCurtain: View {
     /// The heights of the column and of what opens under it, for sliding the column up by any
     /// overflow.
     @State private var columnHeight: CGFloat = 0
+    /// The column's height while it is a start, with the room of every button that can arrive
+    /// kept: what it is centred on, so nothing in it moves as lines and buttons come, or when it
+    /// turns into a failure.
+    @State private var reservedHeight: CGFloat = 0
     @State private var belowHeight: CGFloat = 0
     @State private var listHeight: CGFloat = 0
 
@@ -51,7 +55,7 @@ struct StartingCurtain: View {
             // As sharp as the screen, which the player may come to fill.
             if let url { await store.artwork.show(url, maxPixelSize: ScreenPixels.longSide) }
         }
-        .onChange(of: image != nil, initial: true) {
+        .onChange(of: (url ?? "") + (image == nil ? "" : "+"), initial: true) {
             if let url, let image, depths[url] == nil {
                 depths[url] = GroundDepth.depth(forLuminance: GroundDepth.centreLuminance(of: image) ?? 0)
             }
@@ -62,7 +66,7 @@ struct StartingCurtain: View {
                 store.loadEpisodes(entry.id)
             }
         }
-        .modifier(StartingAnnouncements(model: model, offline: store.offline))
+        .modifier(StartingAnnouncements(model: model))
     }
 
     // MARK: The column
@@ -71,20 +75,25 @@ struct StartingCurtain: View {
         let width = min(520, max(0, size.width - 2 * (metrics.touch ? 56 : 48)))
         let bottom: CGFloat = metrics.touch ? 40 : 32
         let top: CGFloat = metrics.touch ? 24 : 32
-        // Centred on the closed column; slid up only by what the list would run past the bottom.
-        let room = (size.height - columnHeight) / 2
-        let overflow = max(0, room + columnHeight + 16 + belowHeight - (size.height - bottom))
+        // Centred on the column as a start keeps it, its top fixed there so a longer failure
+        // grows downward only; slid up only by what the list would run past the bottom.
+        let height = reservedHeight > 0 ? reservedHeight : columnHeight
+        let room = (size.height - height) / 2
+        let overflow = max(0, room + height + 16 + belowHeight - (size.height - bottom))
         let lift = min(overflow, max(0, room - top))
         return closed
-            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { columnHeight = $0 }
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
+                columnHeight = $0
+                if !failed { reservedHeight = $0 }
+            }
             .overlay(alignment: .bottomLeading) {
                 below(cap: size.height - bottom - top - columnHeight - 16)
                     .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { belowHeight = $0 }
                     .alignmentGuide(.bottom) { $0[.top] }
             }
             .frame(width: width, alignment: .leading)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .offset(y: -lift)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .padding(.top, max(0, room - lift))
             .animation(.standard, value: lift)
             .foregroundStyle(.silk)
             .shadow(color: Color(rgb: 0x0A0C18, opacity: 0.5), radius: 1, y: 1)
@@ -107,7 +116,7 @@ struct StartingCurtain: View {
     private var closed: some View {
         let walk = model.walk
         let now = model.clock
-        let offline = store.offline && failed == false && (walk?.streams ?? 0) == 0
+        let waiting = failed == false && walk?.waiting == true
         let demo = (model.starting?.id ?? model.staged?.id).flatMap { store.titles[$0] }?.isDemo == true
         let episode = model.startingEpisode ?? ""
         return VStack(alignment: .leading, spacing: 0) {
@@ -125,29 +134,29 @@ struct StartingCurtain: View {
                     .foregroundStyle(.haze)
                     .padding(.top, 4)
             }
-            LoaderLine(reduceMotion: motionReduced, progress: offline ? nil : walk?.progress)
+            LoaderLine(reduceMotion: motionReduced, progress: waiting ? nil : walk?.progress)
                 .frame(height: 2)
                 .padding(.top, 14)
                 .opacity(failed ? 0 : 1)
                 .animation(.standard, value: failed)
                 .accessibilityHidden(true)
-            lines(walk: walk, now: now, offline: offline, episode: episode)
-            StartActions(model: model, metrics: metrics, offline: offline)
+            lines(walk: walk, now: now, episode: episode)
+            StartActions(model: model, metrics: metrics)
                 .padding(.top, 16)
         }
     }
 
     /// The step and detail lines as one element that can be read at any time.
-    private func lines(walk: StartingWalk?, now: ContinuousClock.Instant, offline: Bool, episode: String) -> some View {
-        let words = Self.words(walk: walk, now: now, offline: offline, failure: model.failure, episode: episode)
+    private func lines(walk: StartingWalk?, now: ContinuousClock.Instant, episode: String) -> some View {
+        let words = Self.words(walk: walk, now: now, failure: model.failure, episode: episode)
         return VStack(alignment: .leading, spacing: 0) {
             StepLine(words: words, touch: metrics.touch)
                 .padding(.top, 12)
-            DetailLine(text: words.detail, touch: metrics.touch)
+            DetailLine(text: words.detail, touch: metrics.touch, lines: words.failure ? 2 : 1)
                 .padding(.top, 3)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel([words.step, words.detail].filter { !$0.isEmpty }.joined(separator: ", "))
+        .accessibilityLabel(words.detail.isEmpty ? words.step : L.playerStartStatus(step: words.step, detail: words.detail))
         .accessibilityAddTraits(.updatesFrequently)
     }
 
@@ -159,13 +168,10 @@ struct StartingCurtain: View {
     }
 
     static func words(
-        walk: StartingWalk?, now: ContinuousClock.Instant, offline: Bool, failure: PlaybackFailure?, episode: String
+        walk: StartingWalk?, now: ContinuousClock.Instant, failure: PlaybackFailure?, episode: String
     ) -> Words {
         if let failure {
-            return Words(step: L.playerFailedTitleText(episode: failure.episode), detail: failure.view.reason, failure: true)
-        }
-        if offline {
-            return Words(step: L.playerStartOffline, detail: L.playerStartOfflineDetail(episode: episode))
+            return Words(step: L.playerFailedTitleText(episode: failure.episode), detail: failure.view.detail, failure: true)
         }
         guard let walk else { return Words(step: L.playerStartingText(episode: episode), detail: "") }
         return Words(step: walk.stepLine(at: now), detail: walk.detail(at: now))
@@ -178,7 +184,7 @@ struct StartingCurtain: View {
         Group {
             if model.choosingSource {
                 scrolling(SourceList(model: model, metrics: metrics), cap: cap)
-            } else if model.startDetailsOpen, !(store.offline && !failed && (model.walk?.streams ?? 0) == 0), model.walk != nil {
+            } else if model.startDetailsOpen, !(model.walk?.waiting ?? false), model.walk != nil {
                 scrolling(StartDetails(model: model, metrics: metrics), cap: cap)
             }
         }
@@ -245,6 +251,8 @@ private struct StepLine: View {
 private struct DetailLine: View {
     let text: String
     let touch: Bool
+    /// One line during a start, with the end cut off; a failure's reason and who was asked may take two.
+    let lines: Int
 
     var body: some View {
         let font = Font.system(size: touch ? 15 : 13)
@@ -254,6 +262,9 @@ private struct DetailLine: View {
                 .font(font)
                 .monospacedDigit()
                 .foregroundStyle(.haze)
+                .lineLimit(lines)
+                .truncationMode(.tail)
+                .fixedSize(horizontal: false, vertical: true)
                 .contentTransition(.numericText())
                 .id(text.filter { !$0.isNumber })
                 .transition(.opacity)
@@ -271,7 +282,6 @@ private struct StartActions: View {
     @Environment(AppStore.self) private var store
     let model: PlayerModel
     let metrics: PlayerMetrics
-    let offline: Bool
 
     private struct Item: Identifiable {
         var id: String
@@ -279,11 +289,34 @@ private struct StartActions: View {
         var kind: PillButtonStyle.Kind
         var chevron: Bool? = nil
         var shortcut: KeyboardShortcut? = nil
-        var action: () -> Void
+        /// A button that no longer applies keeps its place, unseen and unreachable.
+        var spent = false
+        /// Skip's label is cut to this width, so the room kept for it is known.
+        var width: CGFloat? = nil
+        /// The most a label may take, cut past it.
+        var cap: CGFloat? = nil
+        var action: () -> Void = {}
     }
+
+    /// The widest a Skip button gets, and the room kept for it.
+    private static let skipWidth: CGFloat = 160
 
     var body: some View {
         let items = self.items
+        // The row's room is the tallest of the rows it can be: every button a start can bring,
+        // and a failure's, laid out unseen under the real one at the same width.
+        ZStack(alignment: .topLeading) {
+            row(reserve(forStart: true)).hidden().accessibilityHidden(true).allowsHitTesting(false)
+            row(reserve(forStart: false)).hidden().accessibilityHidden(true).allowsHitTesting(false)
+            row(items)
+        }
+        .frame(maxWidth: .infinity, minHeight: metrics.button, alignment: .topLeading)
+        .animation(.fadeIn, value: items.map(\.id))
+        .animation(.standard, value: items.map(\.spent))
+        .animation(.standard, value: model.startDetailsOpen)
+    }
+
+    private func row(_ items: [Item]) -> some View {
         WrapRow(spacing: 8, lineSpacing: 8) {
             ForEach(items) { item in
                 Button {
@@ -291,6 +324,10 @@ private struct StartActions: View {
                 } label: {
                     HStack(spacing: 5) {
                         Text(item.label)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .frame(width: item.width, alignment: .leading)
+                            .frame(maxWidth: item.cap, alignment: .leading)
                         if let up = item.chevron {
                             Image(systemName: "chevron.down")
                                 .font(.system(size: metrics.touch ? 11 : 9, weight: .semibold))
@@ -299,13 +336,35 @@ private struct StartActions: View {
                     }
                 }
                 .buttonStyle(PillButtonStyle(kind: item.kind, metrics: metrics))
-                .modifier(Shortcut(shortcut: item.shortcut))
+                .modifier(Shortcut(shortcut: item.spent ? nil : item.shortcut))
+                .opacity(item.spent ? 0 : 1)
+                .disabled(item.spent)
+                .accessibilityHidden(item.spent)
                 .transition(.opacity)
             }
         }
-        .frame(maxWidth: .infinity, minHeight: metrics.button, alignment: .leading)
-        .animation(.fadeIn, value: items.map(\.id))
-        .animation(.standard, value: model.startDetailsOpen)
+    }
+
+    /// Every button the start (or the failure) can show, for its room alone.
+    private func reserve(forStart start: Bool) -> [Item] {
+        guard start else {
+            return [
+                Item(id: "choose", label: L.playerChooseAnotherSource, kind: .primary),
+                Item(id: "again", label: L.actionTryAgain, kind: .secondary),
+                Item(id: "details", label: L.playerStartDetails, kind: .quiet, chevron: false),
+                Item(id: "close", label: L.actionClose, kind: .quiet),
+            ]
+        }
+        var items = [Item(id: "cancel", label: L.actionCancel, kind: .quiet)]
+        if model.walk?.resume != nil {
+            items.append(Item(id: "begin", label: L.playerStartFromBeginning, kind: .secondary))
+        }
+        items += [
+            Item(id: "choose", label: L.playerChooseSource, kind: .secondary),
+            Item(id: "details", label: L.playerStartDetails, kind: .quiet, chevron: false),
+            Item(id: "skip", label: "", kind: .secondary, width: Self.skipWidth),
+        ]
+        return items
     }
 
     private struct Shortcut: ViewModifier {
@@ -317,10 +376,7 @@ private struct StartActions: View {
 
     private var items: [Item] {
         if let failure = model.failure { return failureItems(failure) }
-        let actions = offline
-            ? [StartAction.cancel, .showDownloads]
-            : (model.walk?.actions(at: model.clock) ?? [.cancel])
-        return actions.map(item)
+        return (model.walk?.actions(at: model.clock) ?? [.cancel]).map(item)
     }
 
     private func item(_ action: StartAction) -> Item {
@@ -329,7 +385,9 @@ private struct StartActions: View {
         case .cancel:
             return Item(id: "cancel", label: L.actionCancel, kind: .quiet, shortcut: cancel) { model.viewerClosed() }
         case .playFromBeginning:
-            return Item(id: "begin", label: L.playerStartFromBeginning, kind: .secondary) { model.playFromBeginning() }
+            return Item(id: "begin", label: L.playerStartFromBeginning, kind: .secondary, spent: model.walk?.fromBeginning == true) {
+                model.playFromBeginning()
+            }
         case .chooseSource:
             return Item(id: "choose", label: L.playerChooseSource, kind: .secondary) {
                 model.startDetailsOpen = false
@@ -341,7 +399,7 @@ private struct StartActions: View {
                 model.startDetailsOpen.toggle()
             }
         case .skip(let label):
-            return Item(id: "skip", label: label, kind: .secondary) { model.skipSource() }
+            return Item(id: "skip", label: label, kind: .secondary, cap: Self.skipWidth) { model.skipSource() }
         case .showDownloads:
             return Item(id: "downloads", label: L.stateOfflineShowDownloads, kind: .secondary) { model.openDownloads?() }
         }
@@ -365,6 +423,9 @@ private struct StartActions: View {
                 if let id = failure.id { model.openFixMatch?(id) }
             }
             return [fix, choose, details, close]
+        case .offline:
+            let downloads = Item(id: "downloads", label: L.stateOfflineShowDownloads, kind: .secondary) { model.openDownloads?() }
+            return [primary(again), downloads, close]
         case .addStore:
             let add = Item(id: "store", label: L.playerAddPluginStore, kind: .primary, shortcut: .defaultAction) {
                 model.openPluginStores?()
@@ -486,8 +547,13 @@ struct StartDetails: View {
         }
     }
 
+    /// "0.7 s": the shared seconds wording with a tenth, as the Details rows keep it.
     static func seconds(_ duration: Duration) -> String {
-        duration.formatted(.units(allowed: [.seconds], width: .narrow, fractionalPart: .show(length: 1)))
+        let tenths = (duration.seconds * 10).rounded() / 10
+        let number = tenths.formatted(.number.precision(.fractionLength(1)))
+        let template = L.playerStartSeconds(seconds: 0)
+        guard template.contains("0") else { return L.playerStartSeconds(seconds: Int(tenths)) }
+        return template.replacingOccurrences(of: "0", with: number)
     }
 }
 
@@ -500,7 +566,7 @@ private struct TranslationSwitch: View {
     var body: some View {
         let current = model.walk?.translation ?? .sub
         HStack(spacing: 0) {
-            segment(L.appleStartSubtitled, translation: .sub, current: current)
+            segment(L.playerStartSubtitled, translation: .sub, current: current)
             segment(L.audioDubbed, translation: .dub, current: current)
         }
         .padding(2)
@@ -533,23 +599,22 @@ private struct TranslationSwitch: View {
 /// outcome. Never every step.
 private struct StartingAnnouncements: ViewModifier {
     let model: PlayerModel
-    let offline: Bool
 
     func body(content: Content) -> some View {
         content
             .onChange(of: model.staged?.episode, initial: true) {
                 guard model.failure == nil, let staged = model.staged else { return }
-                announce(L.playerAnnounceTitled(line: L.playerStartingText(episode: staged.episode), title: staged.title))
+                announce(L.playerStartAnnounce(episode: staged.episode, title: staged.title))
             }
             .onChange(of: slow) { _, slow in
-                if slow { announce(L.appleStartStillStarting) }
+                if slow { announce(L.playerStartStillStarting) }
             }
             .onChange(of: waiting) { _, waiting in
                 if waiting, let episode = model.startingEpisode { announce(L.playerStartOfflineDetail(episode: episode)) }
             }
             .onChange(of: model.failure) { _, failure in
                 guard let failure else { return }
-                announce("\(L.playerFailedTitleText(episode: failure.episode)) \(failure.view.reason)", urgent: true)
+                announce(L.playerStartFailedAnnounce(title: L.playerFailedTitleText(episode: failure.episode), reason: failure.view.detail), urgent: true)
             }
     }
 
@@ -558,7 +623,7 @@ private struct StartingAnnouncements: ViewModifier {
     }
 
     private var waiting: Bool {
-        offline && model.failure == nil && (model.walk?.streams ?? 0) == 0
+        model.failure == nil && (model.walk?.waiting ?? false)
     }
 
     private func announce(_ words: String, urgent: Bool = false) {
@@ -566,4 +631,8 @@ private struct StartingAnnouncements: ViewModifier {
         if urgent { text.accessibilitySpeechAnnouncementPriority = .high }
         AccessibilityNotification.Announcement(text).post()
     }
+}
+
+private extension Duration {
+    var seconds: Double { Double(components.seconds) + Double(components.attoseconds) / 1e18 }
 }

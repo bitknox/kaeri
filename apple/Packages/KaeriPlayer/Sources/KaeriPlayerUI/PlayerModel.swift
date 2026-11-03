@@ -400,7 +400,7 @@ public final class PlayerModel {
                 // It never played: no stream was found, or none showed a frame. Say so where the
                 // viewer is looking, with another source to choose, rather than vanish.
                 verdictPending = false
-                failure = PlaybackFailure(id: staged?.id, episode: episode, view: said.map { StartFailureView(why: $0.why, text: $0.text) } ?? StartFailureView())
+                failure = PlaybackFailure(id: staged?.id, episode: episode, view: said.map { StartFailureView(why: $0.why, text: $0.text, asked: $0.asked) } ?? StartFailureView())
                 Self.note(.warn, "couldn't play episode \(episode)")
             } else if backend == nil {
                 // Nothing was opened for it, or it played elsewhere, or it is simply over.

@@ -1781,23 +1781,6 @@ public enum L {
     /// Spoken by VoiceOver on the loading indicator before the video shows.
     public static var playerLoadingAnnounce: String { string("player-loading-announce", fallback: "Starting") }
 
-    /// Row in the starting screen's Details list once the title has been looked up.
-    public static var appleStartLookedUp: String { string("apple-start-looked-up", fallback: "Looked up the title") }
-
-    /// Detail line on the starting screen after the viewer chose to play from the beginning.
-    public static var appleStartBeginning: String { string("apple-start-beginning", fallback: "Starting from the beginning") }
-
-    /// Seconds on the starting screen's detail line when no other fact leads it.
-    public static func appleStartSeconds(seconds: Int) -> String {
-        Self.format("apple-start-seconds", fallback: "%1$lld s", seconds)
-    }
-
-    /// Label of the switch in the starting screen's Details list that plays the episode with its subtitles.
-    public static var appleStartSubtitled: String { string("apple-start-subtitled", fallback: "Subtitled") }
-
-    /// VoiceOver announcement once, when a start has taken more than a few seconds.
-    public static var appleStartStillStarting: String { string("apple-start-still-starting", fallback: "Still starting. Choose source is available.") }
-
     /// Line while results wait for the rate limit to recover, on a phone where a Search key runs the search.
     public static var searchRateLimitSearch: String { string("search-rate-limit-search", fallback: "Searching as you type is paused for a moment, to stay within AniList's limits. Press Search to search now.") }
 

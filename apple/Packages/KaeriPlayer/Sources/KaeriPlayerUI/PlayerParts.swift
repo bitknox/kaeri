@@ -68,8 +68,6 @@ struct LoaderLine: View {
     var label = L.playerLoadingAnnounce
     /// When the stretch set off from the left.
     @State private var began = Date.now
-    /// Under Reduce Motion the stretch rests and breathes.
-    @State private var breathing = false
 
     var body: some View {
         GeometryReader { proxy in
@@ -77,12 +75,14 @@ struct LoaderLine: View {
             ZStack(alignment: .leading) {
                 Capsule().fill(Palette.silk.opacity(0.14))
                 if reduceMotion {
-                    Capsule()
-                        .fill(Palette.amber)
-                        .frame(width: stretch)
-                        .opacity(progress != nil ? 0 : breathing ? 0.4 : 1)
-                        .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: breathing)
-                        .onAppear { breathing = true }
+                    // 100% to 40% over 2 s and back, a 4 s cycle, from the clock: no repeating
+                    // animation, so a change of layout is never caught up in it.
+                    TimelineView(.animation) { context in
+                        Capsule()
+                            .fill(Palette.amber)
+                            .frame(width: stretch)
+                            .opacity(progress != nil ? 0 : Self.breath(after: context.date.timeIntervalSince(began)))
+                    }
                 } else {
                     TimelineView(.animation) { context in
                         let travel = proxy.size.width - stretch
@@ -106,6 +106,12 @@ struct LoaderLine: View {
         .accessibilityElement()
         .accessibilityLabel(label)
         .accessibilityAddTraits(.updatesFrequently)
+    }
+
+    /// The stretch's opacity under Reduce Motion `elapsed` seconds in: 1 falling to 0.4 over 2 s
+    /// and back over the next 2 s.
+    nonisolated static func breath(after elapsed: TimeInterval) -> Double {
+        0.7 + 0.3 * cos(2 * .pi * max(0, elapsed) / 4)
     }
 
     /// The standard spring's shape, slowed to a calm sweep; never a bounce.
