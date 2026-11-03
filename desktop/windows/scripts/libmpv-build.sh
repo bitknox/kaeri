@@ -41,8 +41,10 @@
 #                 mpv's script takes the newest
 #
 # Nothing here deletes Docker data: build runs the image with --rm and leaves the image pulled.
-set -euo pipefail
+set -Eeuo pipefail
 shopt -s inherit_errexit 2>/dev/null || true
+# A command that stops the script says so, rather than the build ending without a word.
+trap 'echo "libmpv-build.sh: line $LINENO: $BASH_COMMAND failed" >&2' ERR
 
 # --- Pins ------------------------------------------------------------------------------------------
 
@@ -74,17 +76,17 @@ IFS='|' read -r _ mpv_version mpv_url mpv_sum <<<"$(pin_of mpv)"
 [[ -n "$ffmpeg_sum" && -n "$mpv_sum" ]] || fail "found no FFmpeg or mpv in $android's sources"
 mpv_patches=()
 for patch in "$root/android/mpv/patches/mpv/"*.patch; do
-  [[ -f "$patch" ]] && mpv_patches+=("$patch")
+  if [[ -f "$patch" ]]; then mpv_patches+=("$patch"); fi
 done
 # Then fixes from mpv's master that this toolchain needs, for Windows only.
 for patch in "$here/mpv/"*.patch; do
-  [[ -f "$patch" ]] && mpv_patches+=("$patch")
+  if [[ -f "$patch" ]]; then mpv_patches+=("$patch"); fi
 done
 # FFmpeg fixes from its release/9.0 branch, after the tag: the images' libraries are the ones that
 # branch builds with.
 ffmpeg_patches=()
 for patch in "$here/ffmpeg/"*.patch; do
-  [[ -f "$patch" ]] && ffmpeg_patches+=("$patch")
+  if [[ -f "$patch" ]]; then ffmpeg_patches+=("$patch"); fi
 done
 
 sum() { sha256sum "$1" 2>/dev/null | cut -d' ' -f1 || shasum -a 256 "$1" | cut -d' ' -f1; }
@@ -189,7 +191,7 @@ log="$work/build.log"
 (cd "$src" && ./ci/build-mingw64-full.sh) >"$log" 2>&1 || {
   grep -E 'error|Error|ERROR' "$log" | grep -v -- '-Werror' | tail -40
   tail -40 "$log"
-  [[ -f "$src/build/meson-logs/meson-log.txt" ]] && tail -40 "$src/build/meson-logs/meson-log.txt"
+  if [[ -f "$src/build/meson-logs/meson-log.txt" ]]; then tail -40 "$src/build/meson-logs/meson-log.txt"; fi
   cp "$log" "$out/libmpv-$build-$arch-build.log"
   fail "the build failed: the log is in $out/libmpv-$build-$arch-build.log"
 }
@@ -301,8 +303,9 @@ unpack "FFmpeg-Builds-$ffmpeg_builds_commit.tar.gz" "$builds"
   echo "for which targets and variants. Only the lgpl variant's are in the images used."
   echo
   find "$builds/scripts.d" -name '*.sh' | sort | while read -r script; do
-    pins="$(grep -E '^SCRIPT_(REPO|COMMIT|REV|BRANCH)[0-9]*=' "$script" | tr '\n' ' ')"
-    [[ -n "$pins" ]] && printf '%s\t%s\n' "${script#"$builds/"}" "$pins"
+    # Some scripts fetch nothing (zz-final.sh, 15-base.sh): no pins, no line.
+    pins="$(grep -E '^SCRIPT_(REPO|COMMIT|REV|BRANCH)[0-9]*=' "$script" | tr '\n' ' ' || true)"
+    if [[ -n "$pins" ]]; then printf '%s\t%s\n' "${script#"$builds/"}" "$pins"; fi
   done
 } >"$stage/DEPENDENCIES.txt"
 
