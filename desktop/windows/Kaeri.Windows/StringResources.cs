@@ -63,6 +63,57 @@ static class StringResources
         {
             // No resources.pri beside the executable (a bare `dotnet run`): English from T.
         }
+        FormatIn(Shown(language));
+    }
+
+    /// <summary>
+    /// The language the strings come out in: the one asked for, else the system's display
+    /// language or its parent when the app has text for it, else English, as the resources fall back.
+    /// </summary>
+    static string Shown(string? language)
+    {
+        if (language is { Length: > 0 })
+            return language;
+        for (var c = CultureInfo.CurrentUICulture; c.Name.Length > 0; c = c.Parent)
+        {
+            var name = c.Name;
+            if (T.Languages.FirstOrDefault(l => string.Equals(l.Tag, name, StringComparison.OrdinalIgnoreCase)) is { Tag: { } tag })
+                return tag;
+        }
+        return "en";
+    }
+
+    /// <summary>
+    /// Dates and numbers in the language the strings are shown in, with the person's region, as
+    /// Apple's Locale.current does. English text on a Danish system reads "Wednesday 4" with the
+    /// Danish order and separators (en-DK), not "onsdag 4". When the regional format already
+    /// speaks the shown language, it stays as it is, with any changes the person made to it.
+    /// </summary>
+    static void FormatIn(string shown)
+    {
+        try
+        {
+            var current = CultureInfo.CurrentCulture;
+            var language = CultureInfo.GetCultureInfo(shown);
+            if (current.TwoLetterISOLanguageName == language.TwoLetterISOLanguageName)
+                return;
+            var culture = language;
+            try
+            {
+                var region = new RegionInfo(current.Name).TwoLetterISORegionName;
+                culture = CultureInfo.GetCultureInfo($"{language.TwoLetterISOLanguageName}-{region}", predefinedOnly: true);
+            }
+            catch (ArgumentException)
+            {
+                // No such pairing (or no region): the shown language's own formats.
+            }
+            CultureInfo.DefaultThreadCurrentCulture = culture;
+            CultureInfo.CurrentCulture = culture;
+        }
+        catch (ArgumentException)
+        {
+            // An unknown tag: the system's formats.
+        }
     }
 
     /// <summary>Saves the choice for the next launch; null follows the system.</summary>
