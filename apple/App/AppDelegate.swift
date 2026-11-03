@@ -216,6 +216,10 @@ final class AppDelegate: NSObject {
         if let scene = TVScene.named() {
             ready = await store.tv.reached(scene) && ready
         }
+        // A screenshot of sync: the state the arguments name, on screen.
+        if let scene = SyncScene.named() {
+            ready = await store.sync.stage(scene, store: store) && ready
+        }
         // A screenshot of casting: the scene the arguments name, on screen.
         if let scene = CastScene.named() {
             ready = await store.tv.cast.reached(scene, tv: store.tv) && ready

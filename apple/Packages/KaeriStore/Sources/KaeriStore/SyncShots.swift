@@ -1,0 +1,166 @@
+// States of sync for screenshots, staged without an account or a network: the Fixtures app and the
+// dev harness say `-KaeriSync <state>`, and the model takes the status, problem and sheet named.
+
+import Foundation
+import KaeriKit
+
+/// The states `-KaeriSync` stages. Settings opens at Devices with `-KaeriPane devices`.
+///
+///     off            sync off (the pane's own start)
+///     on             a group with three devices and Google Drive, synced
+///     syncing        the same, past 600 ms of a pass
+///     settingup      the folder being made after sign-in
+///     signedout      Google Drive signed out by the person
+///     signedout-err  Google Drive signed the app out
+///     offline        the folder cannot be reached
+///     folder-gone    a local folder that is gone
+///     road           the road sheet; picker, picker-denied, nextcloud, nextcloud-wait, nextcloud-err,
+///                    webdav, webdav-err, key, key-qr, restore, restore-wrong, pair-show, pair-enter,
+///                    pair-err, pair-nf, paired, profile-add, profile-edit are the sheets, over `on`
+///     profiles       two profiles
+public enum SyncScene: String, Sendable {
+    case off, on, syncing, settingup, signedout, signedoutErr = "signedout-err", offline
+    case folderGone = "folder-gone", road, picker, pickerDenied = "picker-denied", nextcloud
+    case nextcloudWait = "nextcloud-wait", nextcloudErr = "nextcloud-err", webdav, webdavErr = "webdav-err"
+    case key, keyQr = "key-qr", restore, restoreWrong = "restore-wrong"
+    case pairShow = "pair-show", pairEnter = "pair-enter", pairErr = "pair-err", pairNf = "pair-nf", paired
+    case profiles, profileAdd = "profile-add", profileEdit = "profile-edit"
+
+    public static let argument = "-KaeriSync"
+
+    public static func named(in arguments: [String] = ProcessInfo.processInfo.arguments) -> SyncScene? {
+        guard let index = arguments.firstIndex(of: argument), arguments.indices.contains(index + 1)
+        else { return nil }
+        return SyncScene(rawValue: arguments[index + 1])
+    }
+}
+
+extension SyncModel {
+    private static func clouds(offered: Bool = true) -> [SyncCloudView] {
+        [
+            SyncCloudView(service: .dropbox, way: .sheet, signedIn: false),
+            SyncCloudView(service: .googleDrive, way: .sheet, signedIn: false),
+            SyncCloudView(service: .oneDrive, way: .sheet, signedIn: false),
+            SyncCloudView(service: .nextcloud, way: .browser, signedIn: false),
+        ]
+    }
+
+    private static func devices(now: Int64) -> [SyncDeviceView] {
+        [
+            SyncDeviceView(id: "me", name: DeviceName.this, thisDevice: true, lastSeen: now),
+            SyncDeviceView(id: "kim-phone", name: "Kim’s iPhone", thisDevice: false, lastSeen: now - 20), // i18n-skip
+            SyncDeviceView(id: "living-room", name: "Living room TV", thisDevice: false, lastSeen: now - 120), // i18n-skip
+            SyncDeviceView(id: "kitchen", name: "Kitchen iPad", thisDevice: false, lastSeen: now - 31 * 86_400), // i18n-skip
+        ]
+    }
+
+    private static func group(
+        now: Int64, syncing: Bool = false, problem: SyncProblem? = nil, folder: SyncFolderKind = .googleDrive,
+        account: String? = "kim@mail.example"
+    ) -> SyncStatus {
+        SyncStatus(
+            enabled: true, deviceName: DeviceName.this,
+            folder: SyncFolderView(kind: folder, label: folder == .directory ? "Kaeri sync" : "", account: account), // i18n-skip
+            devices: devices(now: now), lastSynced: now - 240, syncing: syncing,
+            clouds: clouds(), problem: problem, groupFolder: folder, recoveryKey: true,
+            recoveryKeyMade: now - 86_400
+        )
+    }
+
+    /// Put `scene` on screen: the status it names, and the sheet.
+    public func stage(_ scene: SyncScene, store: AppStore) async -> Bool {
+        staged = true
+        let now = Int64(Date.now.timeIntervalSince1970)
+        deviceName = DeviceName.this
+        var status = SyncStatus(enabled: false, syncing: false, clouds: Self.clouds())
+        var sheet: SyncSheet?
+        switch scene {
+        case .off: break
+        case .on, .key, .keyQr, .pairShow, .pairEnter, .pairErr, .pairNf, .paired, .profiles,
+             .profileAdd, .profileEdit, .picker, .pickerDenied, .nextcloud, .nextcloudWait, .nextcloudErr,
+             .webdav, .webdavErr, .restore, .restoreWrong, .road:
+            status = Self.group(now: now)
+        case .syncing:
+            status = Self.group(now: now, syncing: true)
+            syncingShown = true
+        case .settingup:
+            status = Self.group(now: now, syncing: true)
+            stage(settingUp: .googleDrive)
+            settingUpShown = true
+        case .signedout:
+            status = Self.group(now: now, problem: .signInNeeded(service: .googleDrive))
+            stage(problem: .signInNeeded(service: .googleDrive), byHand: true)
+        case .signedoutErr:
+            status = Self.group(now: now, problem: .signInNeeded(service: .googleDrive))
+            stage(problem: .signInNeeded(service: .googleDrive))
+        case .offline:
+            status = Self.group(now: now, problem: .unreachable)
+        case .folderGone:
+            status = Self.group(now: now, problem: .unreachable, folder: .directory, account: nil)
+        }
+        let people = [
+            ProfileView(id: "kim", name: "Kim", initials: "K", kids: false, active: true), // i18n-skip
+            ProfileView(id: "sam", name: "Sam", initials: "S", kids: true, active: false), // i18n-skip
+        ]
+        let isProfile = [.profiles, .profileAdd, .profileEdit].contains(scene)
+        stage(status: status, profiles: isProfile ? people : [])
+        switch scene {
+        case .road: sheet = .road
+        case .picker: sheet = .picker
+        case .pickerDenied:
+            denied = .googleDrive
+            sheet = .picker
+        case .nextcloud: sheet = .nextcloud
+        case .nextcloudWait:
+            stage(signIn: SyncSignInRequest(service: .nextcloud, step: .browser(url: "https://cloud.example/login/flow")))
+            sheet = .nextcloud
+        case .nextcloudErr:
+            stage(problem: .unreachable)
+            sheet = .nextcloud
+        case .webdav: sheet = .webDav
+        case .webdavErr:
+            stage(problem: .unreachable)
+            sheet = .webDav
+        case .key:
+            stage(key: "K7QM4XR9TB2HWN6CP3ZD8FLA")
+            sheet = .recoveryKey
+        case .keyQr:
+            stage(key: "K7QM4XR9TB2HWN6CP3ZD8FLA")
+            sheet = .recoveryKey
+        case .restore:
+            sheet = .restore(.googleDrive)
+        case .restoreWrong:
+            stage(problem: .wrongRecoveryKey)
+            sheet = .restore(.googleDrive)
+        case .pairShow:
+            stage(invite: SyncInviteView(code: "042917", port: 4510, until: .now.addingTimeInterval(108)))
+            sheet = .pairShow
+        case .pairEnter: sheet = .pairEnter
+        case .pairErr:
+            stage(pair: .failed(.code))
+            sheet = .pairEnter
+        case .pairNf:
+            stage(pair: .failed(.notFound))
+            sheet = .pairEnter
+        case .paired:
+            stage(pair: .paired("Living room TV")) // i18n-skip
+            sheet = .pairEnter
+        case .profileAdd: sheet = .profileAdd
+        case .profileEdit: sheet = .profileEdit("sam")
+        default: break
+        }
+        self.sheet = sheet
+        return true
+    }
+}
+
+/// What this device is called in the staged group.
+enum DeviceName {
+    static var this: String {
+        #if os(macOS)
+        "Kim’s Mac" // i18n-skip
+        #else
+        "Kim’s iPad" // i18n-skip
+        #endif
+    }
+}

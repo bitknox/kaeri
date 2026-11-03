@@ -63,6 +63,8 @@ extension PhoneSettingsPage {
         case .about: PhoneAboutPage()
         case .acknowledgements: PhoneAcknowledgementsPage()
         case .tvs: PhoneTVsPage()
+        case .devices: PhoneDevicesPage()
+        case .profiles: PhoneProfilesPage()
         case .hiddenTitles: PhoneHiddenTitlesPage()
         case .store(let id): PhoneStorePage(id: id)
         case .plugin(let id): PhonePluginPage(id: id)
@@ -224,9 +226,8 @@ struct PhoneSettingsRoot: View {
                 link(.notifications, L.settingsGroupNotifications, "bell", value: store.settings.isOn(.episodeNotifications) ? L.valueOn : L.valueOff)
                 link(.sources, L.sourcesTitle, "powerplug", value: store.settings.isOn(.torrents) ? L.settingsTorrentsValueOn : L.settingsTorrentsValueOff)
                 link(.accounts, L.navAccounts, "person", value: anilist?.connected == true ? AccountsModel.name("anilist") : L.valueNone)
-                if store.tv.available {
-                    link(.tvs, L.tvTitleList, "tv", value: store.tv.paired.isEmpty ? L.valueNone : store.tv.paired.count.formatted(.number.locale(AirTime.locale)))
-                }
+                link(.devices, L.devicesTitle, "laptopcomputer.and.iphone", value: SyncWords.rowValue(store.sync, tvs: store.tv.paired.count))
+                link(.profiles, L.profilesTitle, "person.2", value: store.sync.profiles.isEmpty ? L.profilesOnlyYou : store.sync.profiles.count.formatted(.number.locale(AirTime.locale)))
             }
             Section {
                 link(.about, L.aboutTitle, "info.circle", value: AppVersion.short)

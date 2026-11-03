@@ -1291,6 +1291,7 @@ struct PhoneTVRemote: View {
 /// VisionKit's scanner, on a device with a camera that has it; the system's Camera app reads the
 /// same code and opens the app with the link where it does not.
 struct TVCodeScanner: UIViewControllerRepresentable {
+    var scheme = "kaeri-remote://"
     let found: (String) -> Void
 
     static var isSupported: Bool {
@@ -1310,20 +1311,22 @@ struct TVCodeScanner: UIViewControllerRepresentable {
 
     func updateUIViewController(_ scanner: DataScannerViewController, context: Context) {}
 
-    func makeCoordinator() -> Coordinator { Coordinator(found: found) }
+    func makeCoordinator() -> Coordinator { Coordinator(found: found, scheme: scheme) }
 
     final class Coordinator: NSObject, DataScannerViewControllerDelegate {
         let found: (String) -> Void
+        let scheme: String
         private var done = false
 
-        init(found: @escaping (String) -> Void) {
+        init(found: @escaping (String) -> Void, scheme: String) {
             self.found = found
+            self.scheme = scheme
         }
 
         func dataScanner(_ scanner: DataScannerViewController, didAdd items: [RecognizedItem], allItems: [RecognizedItem]) {
             for item in items {
                 guard !done, case .barcode(let code) = item,
-                      let link = code.payloadStringValue, link.hasPrefix("kaeri-remote://") else { continue }
+                      let link = code.payloadStringValue, link.hasPrefix(scheme) else { continue }
                 done = true
                 scanner.stopScanning()
                 found(link)

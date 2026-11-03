@@ -75,6 +75,8 @@ public final class AppStore {
     public let updates = UpdatesModel()
     /// Play on TV: the TVs, pairing, and the card of the one driven.
     public let tv = TVRemoteModel()
+    /// Sync between this person's devices, and the profiles on this one.
+    public let sync = SyncModel()
     /// The watch party this device is in, and the sheets that start one.
     public let party = PartyModel()
     /// The subtitle style before the last reset, for its Undo.
@@ -147,6 +149,7 @@ public final class AppStore {
         continued.send = { [weak self] command in self?.send(command) }
         updates.send = { [weak self] command in self?.send(command) }
         party.send = { [weak self] command in self?.send(command) }
+        sync.send = { [weak self] command in self?.send(command) }
         party.say = { [weak self] notice, player, kind in
             guard let self else { return }
             if party.playerUp() {
@@ -298,6 +301,7 @@ public final class AppStore {
         }
         early = []
         artwork.sendUnsent()
+        sync.load()
     }
 
     /// The engine's sender for Play on TV, browsing the network with Bonjour; in the Fixtures
@@ -854,6 +858,7 @@ public final class AppStore {
     public func apply(_ event: Event) {
         if !held.isEmpty, let kind = event.showcaseKind, held.contains(kind) { return }
         notifications.observe(event)
+        sync.apply(event)
         answers.deliver([event])
         if case .downloads(let rows) = event { continued.update(rows) }
         if wantsWeek, NotificationsModel.reschedules(after: event) { refreshNotices() }

@@ -2611,6 +2611,77 @@ public enum L {
         Self.format("servers-row-summary-apple", fallback: "%1$lld series", series)
     }
 
+    /// Button on the recovery key sheet that opens the Files save panel on iPhone and iPad.
+    public static var rkeySaveFiles: String { string("rkey-save-files", fallback: "Save to Files") }
+
+    /// Button on the recovery key sheet on the Mac. The app adds the ellipsis, since it opens the save panel.
+    public static var rkeySaveMac: String { string("rkey-save-mac", fallback: "Save") }
+
+    /// Button while a pairing code is being tried.
+    public static var pairPairing: String { string("pair-pairing", fallback: "Pairing") }
+
+    /// Capsule on a remote-only row on iPhone.
+    public static var devicesAlsoSyncShort: String { string("devices-also-sync-short", fallback: "Also sync") }
+
+    /// Row on the Devices page that opens the road sheet's cloud choice.
+    public static var cloudAddRow: String { string("cloud-add-row", fallback: "Add a cloud folder") }
+
+    /// Title of the iPad and Mac launch picker's explanation.
+    public static var profilesPickerLine: String { string("profiles-picker-line", fallback: "Choose a profile to continue. You can turn this question off in Settings, Profiles.") }
+
+    /// Menu item on the Mac menu bar, the Profile menu's title.
+    public static var profilesMenu: String { string("profiles-menu", fallback: "Profile") }
+
+    /// Accessibility value of a device's sync switch.
+    public static var devicesA11ySynced: String { string("devices-a11y-synced", fallback: "Syncing") }
+
+    /// Line under the pairing code field on Mac and iPad.
+    public static var pairCodeHint: String { string("pair-code-hint", fallback: "Six digits") }
+
+    /// Sheet title while a cloud service is being signed in to on Apple.
+    public static var cloudSheetWait: String { string("cloud-sheet-wait", fallback: "Finish signing in") }
+
+    /// Mac menu item that opens the pairing sheet from first launch.
+    public static var firstSetupOtherMac: String { string("first-setup-other-mac", fallback: "Set up from another device") }
+
+    /// Line on a profile row that says it syncs with a device's profile.
+    public static var profilesSyncsNothing: String { string("profiles-syncs-nothing", fallback: "Not synced") }
+
+    /// Heading over the profile strip on iPhone.
+    public static var profilesStrip: String { string("profiles-strip", fallback: "Profiles") }
+
+    /// Title of the "Syncs with" picker for a profile.
+    public static var profilesSyncsWithTitle: String { string("profiles-syncs-with-title", fallback: "Syncs with") }
+
+    /// Line shown in the Mac toolbar capsule's popover when sync is running with a device.
+    public static var syncPopoverTitle: String { string("sync-popover-title", fallback: "Sync") }
+
+    /// Row in the sync popover that opens Devices.
+    public static var syncPopoverOpen: String { string("sync-popover-open", fallback: "Open Devices") }
+
+    /// Button that shows something kept out of sight, such as the recovery key.
+    public static var actionShow: String { string("action-show", fallback: "Show") }
+
+    /// Button that adds something, such as a cloud folder.
+    public static var actionAdd: String { string("action-add", fallback: "Add") }
+
+    /// Button on the Devices page that opens the sheet for a code from another device.
+    public static var pairEnterCode: String { string("pair-enter-code", fallback: "Enter a code") }
+
+    /// Line under the recovery key row on the Devices page.
+    public static var rkeyRestores: String { string("rkey-restores", fallback: "Restores everything if you lose every device.") }
+
+    /// Button on the Devices page that asks before turning sync off on this device.
+    public static var syncTurnOffButton: String { string("sync-turn-off-button", fallback: "Turn off") }
+
+    /// Restore sheet line when the folder's device count is not known.
+    public static func rkeyEnterLineGeneric(service: String) -> String {
+        Self.format("rkey-enter-line-generic", fallback: "%1$@ holds history from your other devices. The key you saved when sync was turned on opens it.", service)
+    }
+
+    /// Name for the device whose pairing code did not match, when no name is known yet.
+    public static var pairOtherDevice: String { string("pair-other-device", fallback: "your other device") }
+
     /// Name of the fact on the title page that lists where else a show can be watched.
     public static var titleFactAlsoOn: String { string("title-fact-also-on", fallback: "Also on") }
 
@@ -8665,6 +8736,619 @@ public enum L {
 
     /// Button that opens the system share sheet for the invite link.
     public static var storesShare: String { string("stores-share", fallback: "Share…") }
+
+    /// Settings row and page title, every platform.
+    public static var devicesTitle: String { string("devices-title", fallback: "Devices") }
+
+    /// Devices row value while sync is off.
+    public static var devicesRowOff: String { string("devices-row-off", fallback: "Sync off") }
+
+    /// Devices row value; “Synced 2 min ago”, “Synced just now”.
+    public static func devicesRowSynced(ago: String) -> String {
+        Self.format("devices-row-synced", fallback: "Synced %1$@", ago)
+    }
+
+    /// Devices row value with the error glyph.
+    public static var devicesRowError: String { string("devices-row-error", fallback: "Couldn’t sync") }
+
+    /// Group heading over the name.
+    public static var devicesThisDevice: String { string("devices-this-device", fallback: "This device") }
+
+    /// Row for this device’s name.
+    public static var devicesName: String { string("devices-name", fallback: "Name") }
+
+    /// Group heading while off.
+    public static var syncGroup: String { string("sync-group", fallback: "Sync") }
+
+    /// Off state.
+    public static var syncOffTitle: String { string("sync-off-title", fallback: "Sync is off") }
+
+    /// Off state.
+    public static var syncOffLine: String { string("sync-off-line", fallback: "Turn it on to keep where you stopped, your history and your settings the same on your devices.") }
+
+    /// Button; the Mac adds an ellipsis.
+    public static var syncTurnOn: String { string("sync-turn-on", fallback: "Turn on sync") }
+
+    /// Road sheet title.
+    public static var syncRoadTitle: String { string("sync-road-title", fallback: "How should your devices share?") }
+
+    /// Road sheet row.
+    public static var syncRoadNearby: String { string("sync-road-nearby", fallback: "With a device nearby") }
+
+    /// Road sheet row line.
+    public static var syncRoadNearbyLine: String { string("sync-road-nearby-line", fallback: "Pair with another device on the same Wi-Fi. Nothing is stored anywhere else.") }
+
+    /// Road sheet row.
+    public static var syncRoadCloud: String { string("sync-road-cloud", fallback: "Through a cloud folder") }
+
+    /// Road sheet row line. Names no service, since a build may hide some (decision 14).
+    public static var syncRoadCloudLine: String { string("sync-road-cloud-line", fallback: "A cloud drive you already use, or your own server. Works while your devices are apart, and keeps a backup.") }
+
+    /// Road sheet footer.
+    public static var syncRoadLater: String { string("sync-road-later", fallback: "You can add the other way later. Most people use both.") }
+
+    /// Group heading.
+    public static var devicesYours: String { string("devices-yours", fallback: "Your devices") }
+
+    /// Empty Your devices.
+    public static var devicesOnlyThis: String { string("devices-only-this", fallback: "Only this device") }
+
+    /// Empty Your devices.
+    public static var devicesOnlyThisLine: String { string("devices-only-this-line", fallback: "Pair another device to share where you stopped, your history and your settings.") }
+
+    /// Row and sheet title.
+    public static var devicesAdd: String { string("devices-add", fallback: "Add a device") }
+
+    /// Device row line past 30 days.
+    public static func devicesNotSeen(days: Int) -> String {
+        Self.format("devices-not-seen", fallback: "Not seen for %1$lld days", days)
+    }
+
+    /// A device paired only for Play on TV.
+    public static var devicesRemoteOnly: String { string("devices-remote-only", fallback: "Remote only") }
+
+    /// Button on a remote-only TV row.
+    public static func devicesAlsoSync(device: String) -> String {
+        Self.format("devices-also-sync", fallback: "Also sync with %1$@", device)
+    }
+
+    /// Footer while sync is off.
+    public static var devicesPairedTvsFoot: String { string("devices-paired-tvs-foot", fallback: "Paired for Play on TV. A TV paired as a remote never gets your history.") }
+
+    /// Switch on a device.
+    public static var devicesSyncSwitch: String { string("devices-sync-switch", fallback: "Sync") }
+
+    /// Switch on a TV.
+    public static var devicesRemoteSwitch: String { string("devices-remote-switch", fallback: "Remote") }
+
+    /// Device page footer.
+    public static func devicesSwitchesFoot(device: String) -> String {
+        Self.format("devices-switches-foot", fallback: "Sync shares where you stopped, your history and your settings. Remote lets this phone drive %1$@.", device)
+    }
+
+    /// Device page, destructive.
+    public static var devicesRemove: String { string("devices-remove", fallback: "Remove this device") }
+
+    /// Alert title.
+    public static func devicesRemoveAlert(device: String) -> String {
+        Self.format("devices-remove-alert", fallback: "Remove %1$@?", device)
+    }
+
+    /// Alert message.
+    public static func devicesRemoveAlertLine(device: String) -> String {
+        Self.format("devices-remove-alert-line", fallback: "%1$@ keeps what it has, but gets nothing new from your other devices.", device)
+    }
+
+    /// Last row; “this phone”, “this Mac”.
+    public static func syncTurnOff(kind: String) -> String {
+        Self.format("sync-turn-off", fallback: "Turn off sync on this %1$@", kind)
+    }
+
+    /// Alert title.
+    public static func syncTurnOffAlert(device: String) -> String {
+        Self.format("sync-turn-off-alert", fallback: "Turn off sync on %1$@?", device)
+    }
+
+    /// Alert message.
+    public static func syncTurnOffAlertLine(kind: String) -> String {
+        Self.format("sync-turn-off-alert-line", fallback: "This %1$@ stops sharing with your other devices. Everything it has stays here.", kind)
+    }
+
+    /// Group heading.
+    public static var cloudGroup: String { string("cloud-group", fallback: "Cloud folder") }
+
+    /// Group footer.
+    public static var cloudFoot: String { string("cloud-foot", fallback: "Fills in while your devices are apart, and keeps a sealed backup. Only your devices can read it.") }
+
+    /// Row when only the nearby road is set.
+    public static var cloudAdd: String { string("cloud-add", fallback: "Add a cloud folder") }
+
+    /// Picker title.
+    public static var cloudPickTitle: String { string("cloud-pick-title", fallback: "Choose a cloud folder") }
+
+    /// Picker row line.
+    public static var cloudGoogleLine: String { string("cloud-google-line", fallback: "A hidden Kaeri folder in your Drive") }
+
+    /// Picker row line.
+    public static var cloudNextcloudLine: String { string("cloud-nextcloud-line", fallback: "Your own or a hosted Nextcloud server") }
+
+    /// Picker row line, Apple and Windows.
+    public static var cloudIcloudLine: String { string("cloud-icloud-line", fallback: "A folder you choose in iCloud Drive") }
+
+    /// Picker group heading.
+    public static var cloudOther: String { string("cloud-other", fallback: "Other") }
+
+    /// Picker row.
+    public static var cloudWebdav: String { string("cloud-webdav", fallback: "WebDAV server") }
+
+    /// Picker row line.
+    public static var cloudWebdavLine: String { string("cloud-webdav-line", fallback: "Any server that speaks WebDAV") }
+
+    /// Picker row line.
+    public static var cloudFolderLine: String { string("cloud-folder-line", fallback: "For a folder another app keeps in step") }
+
+    /// Picker footer.
+    public static var cloudPickFoot: String { string("cloud-pick-foot", fallback: "Your devices keep a sealed copy of their changes in this folder. Only your devices can read it, and Kaeri runs no server of its own.") }
+
+    /// Row line while the first write runs.
+    public static var cloudSettingUp: String { string("cloud-setting-up", fallback: "Setting up the folder") }
+
+    /// Field label.
+    public static var cloudNextcloudAddress: String { string("cloud-nextcloud-address", fallback: "Server address") }
+
+    /// Field note.
+    public static var cloudNextcloudAddressNote: String { string("cloud-nextcloud-address-note", fallback: "The address you open Nextcloud at in a browser.") }
+
+    /// Login flow wait.
+    public static func cloudNextcloudWaitTitle(host: String) -> String {
+        Self.format("cloud-nextcloud-wait-title", fallback: "Finish signing in on %1$@", host)
+    }
+
+    /// Login flow wait.
+    public static var cloudNextcloudWaitLine: String { string("cloud-nextcloud-wait-line", fallback: "Your Nextcloud page is open in the browser. Allow access there, and this sheet carries on by itself.") }
+
+    /// Wait row.
+    public static func cloudWaiting(service: String) -> String {
+        Self.format("cloud-waiting", fallback: "Waiting for %1$@", service)
+    }
+
+    /// Button.
+    public static var cloudOpenAgain: String { string("cloud-open-again", fallback: "Open the page again") }
+
+    /// Text button.
+    public static var cloudAppPassword: String { string("cloud-app-password", fallback: "Use an app password instead") }
+
+    /// Button.
+    public static var cloudConnect: String { string("cloud-connect", fallback: "Connect") }
+
+    /// Error.
+    public static func cloudErrOffline(service: String) -> String {
+        Self.format("cloud-err-offline", fallback: "Couldn’t reach %1$@. Check your connection.", service)
+    }
+
+    /// Inline error.
+    public static func cloudErrNoServer(host: String) -> String {
+        Self.format("cloud-err-no-server", fallback: "Couldn’t find a Nextcloud server at %1$@. Check the address.", host)
+    }
+
+    /// Inline error.
+    public static var cloudErrAppPassword: String { string("cloud-err-app-password", fallback: "Nextcloud didn’t accept that app password. Make a new one in Nextcloud under Settings, Security.") }
+
+    /// Inline error.
+    public static var cloudErrWebdav: String { string("cloud-err-webdav", fallback: "The server refused that user name or password.") }
+
+    /// Error, with Open the page again.
+    public static var cloudErrTimeout: String { string("cloud-err-timeout", fallback: "The sign-in page closed before access was allowed.") }
+
+    /// Error.
+    public static var cloudErrOtherGroup: String { string("cloud-err-other-group", fallback: "This folder belongs to another set of devices. Enter its recovery key to join them, or choose another folder.") }
+
+    /// Status error, with Sign in again.
+    public static func cloudErrSignedOut(service: String, kind: String) -> String {
+        Self.format("cloud-err-signed-out", fallback: "%1$@ signed Kaeri out. Your changes wait on this %2$@ until you sign in again.", service, kind)
+    }
+
+    /// Status error.
+    public static func cloudErrFull(service: String) -> String {
+        Self.format("cloud-err-full", fallback: "%1$@ is full. Free some space there, then try again.", service)
+    }
+
+    /// Status error, with Choose folder.
+    public static var cloudErrFolderGone: String { string("cloud-err-folder-gone", fallback: "Kaeri can’t open the folder any more. Choose it again.") }
+
+    /// Status error title.
+    public static func cloudErrTitle(service: String) -> String {
+        Self.format("cloud-err-title", fallback: "Couldn’t sync with %1$@", service)
+    }
+
+    /// Picker row line.
+    public static var cloudDropboxLine: String { string("cloud-dropbox-line", fallback: "Kaeri’s own folder in your Dropbox, Apps/Kaeri") }
+
+    /// Picker row line.
+    public static var cloudOnedriveLine: String { string("cloud-onedrive-line", fallback: "Kaeri’s own folder in your OneDrive, Apps/Kaeri") }
+
+    /// Cloud group button.
+    public static var cloudSyncNow: String { string("cloud-sync-now", fallback: "Sync now") }
+
+    /// Cloud group button; at once, no question, except on the TV.
+    public static var cloudSignOut: String { string("cloud-sign-out", fallback: "Sign out") }
+
+    /// Cloud group button after signing out.
+    public static var cloudSignIn: String { string("cloud-sign-in", fallback: "Sign in") }
+
+    /// Cloud row after Sign out; hollow haze dot.
+    public static func cloudSignedOutLine(kind: String) -> String {
+        Self.format("cloud-signed-out-line", fallback: "Signed out. Changes wait on this %1$@ until you sign in again.", kind)
+    }
+
+    /// Picker row line after `SignInDenied`.
+    public static func cloudErrDenied(service: String) -> String {
+        Self.format("cloud-err-denied", fallback: "%1$@ didn’t give Kaeri access. Choose it again to retry.", service)
+    }
+
+    /// TV picker footer (decision 17).
+    public static var tvCloudPickFoot: String { string("tv-cloud-pick-foot", fallback: "Choose the one your other devices use. A new cloud folder is added on a phone or computer, where its recovery key can be saved.") }
+
+    /// TV picker row line for Dropbox.
+    public static var tvCloudDropboxLine: String { string("tv-cloud-dropbox-line", fallback: "Signs in on your phone") }
+
+    /// TV, Dropbox.
+    public static var tvCloudNeedsPhoneTitle: String { string("tv-cloud-needs-phone-title", fallback: "Dropbox signs in on your phone") }
+
+    /// TV, Dropbox, a paired phone has it.
+    public static func tvCloudNeedsPhoneHas(device: String) -> String {
+        Self.format("tv-cloud-needs-phone-has", fallback: "%1$@ is signed in to Dropbox. This TV can use that sign-in over your paired link.", device)
+    }
+
+    /// TV amber button; also for Nextcloud and WebDAV.
+    public static func tvUsePhoneSignin(device: String) -> String {
+        Self.format("tv-use-phone-signin", fallback: "Use %1$@’s sign-in", device)
+    }
+
+    /// TV, Dropbox, no phone has it.
+    public static var tvCloudNeedsPhoneNone: String { string("tv-cloud-needs-phone-none", fallback: "Dropbox has no sign-in a TV can do. On your phone, open Kaeri, then Settings, Devices, Cloud folder, and sign in to Dropbox there. Then choose Dropbox here again.") }
+
+    /// TV code screen after the poll succeeds.
+    public static var tvCloudFinishing: String { string("tv-cloud-finishing", fallback: "Signed in. Setting up the folder") }
+
+    /// TV cloud row.
+    public static func tvCloudRevokedLine(service: String) -> String {
+        Self.format("tv-cloud-revoked-line", fallback: "%1$@ signed Kaeri out. Select to sign in again.", service)
+    }
+
+    /// TV cloud row.
+    public static var tvCloudSignedOutLine: String { string("tv-cloud-signed-out-line", fallback: "Signed out. Select to sign in.") }
+
+    /// TV ConfirmDialog.
+    public static func tvCloudSignOutTitle(service: String) -> String {
+        Self.format("tv-cloud-sign-out-title", fallback: "Sign out of %1$@?", service)
+    }
+
+    /// TV ConfirmDialog, with Cancel focused and Sign out.
+    public static func tvCloudSignOutLine(service: String) -> String {
+        Self.format("tv-cloud-sign-out-line", fallback: "This TV stops syncing through %1$@. Changes wait here until you sign in again.", service)
+    }
+
+    /// Status line while offline.
+    public static func cloudOffline(kind: String) -> String {
+        Self.format("cloud-offline", fallback: "Waiting for a connection. Changes are kept on this %1$@.", kind)
+    }
+
+    /// TV device flow.
+    public static var tvGoogleTitle: String { string("tv-google-title", fallback: "Sign in to Google Drive") }
+
+    /// TV device flow.
+    public static var tvQrOpenPage: String { string("tv-qr-open-page", fallback: "Or scan to open the page") }
+
+    /// TV Nextcloud.
+    public static var tvNextcloudLine: String { string("tv-nextcloud-line", fallback: "Scan this with your phone and allow access on your Nextcloud page. The TV carries on by itself.") }
+
+    /// Sheet title.
+    public static var rkeyTitle: String { string("rkey-title", fallback: "Your recovery key") }
+
+    /// Sheet line.
+    public static var rkeyLine: String { string("rkey-line", fallback: "Keep this somewhere safe. It restores your history if you lose every device, and lets a new device join from your cloud folder.") }
+
+    /// Button.
+    public static var rkeyCopy: String { string("rkey-copy", fallback: "Copy") }
+
+    /// Text button.
+    public static var rkeyQr: String { string("rkey-qr", fallback: "Show as QR code") }
+
+    /// Sheet footnote.
+    public static func rkeyAgain(kind: String) -> String {
+        Self.format("rkey-again", fallback: "You can see it again in Settings, Devices, after unlocking this %1$@.", kind)
+    }
+
+    /// Devices row.
+    public static var rkeyRow: String { string("rkey-row", fallback: "Recovery key") }
+
+    /// Devices row value.
+    public static func rkeyMade(date: String) -> String {
+        Self.format("rkey-made", fallback: "Made %1$@", date)
+    }
+
+    /// Row.
+    public static var rkeyNew: String { string("rkey-new", fallback: "Make a new key") }
+
+    /// Footer.
+    public static var rkeyNewFoot: String { string("rkey-new-foot", fallback: "The old key stops working, and your devices switch to the new one the next time they sync.") }
+
+    /// Restore.
+    public static var rkeyEnterTitle: String { string("rkey-enter-title", fallback: "Enter your recovery key") }
+
+    /// Restore.
+    public static func rkeyEnterLine(service: String, count: Int) -> String {
+        Self.format("rkey-enter-line", fallback: "%1$@ holds history from %2$lld devices. The key you saved when sync was turned on opens it.", service, count)
+    }
+
+    /// Field note.
+    public static var rkeyEnterNote: String { string("rkey-enter-note", fallback: "24 letters and digits, in groups of four. Spaces and case don’t matter.") }
+
+    /// Inline error.
+    public static var rkeyWrong: String { string("rkey-wrong", fallback: "That key doesn’t open this folder. Check each group of four and try again.") }
+
+    /// Button.
+    public static var rkeyRestore: String { string("rkey-restore", fallback: "Restore") }
+
+    /// Add a device.
+    public static var pairEnterLine: String { string("pair-enter-line", fallback: "On the other device, open Kaeri and choose Set up from another device, or Settings, Devices, Show a code. Then enter the code here.") }
+
+    /// Button, phones.
+    public static var pairScan: String { string("pair-scan", fallback: "Scan the code") }
+
+    /// Note.
+    public static var pairSameWifi: String { string("pair-same-wifi", fallback: "Both devices need to be on the same Wi-Fi.") }
+
+    /// Button.
+    public static var pairButton: String { string("pair-button", fallback: "Pair") }
+
+    /// Text button.
+    public static var pairShowInstead: String { string("pair-show-instead", fallback: "Show a code here instead") }
+
+    /// Code screen.
+    public static var pairShowTitle: String { string("pair-show-title", fallback: "Enter this code on your other device") }
+
+    /// Code screen.
+    public static var pairShowScan: String { string("pair-show-scan", fallback: "Or scan it from Kaeri on your phone.") }
+
+    /// Code screen.
+    public static func pairGoodFor(left: String) -> String {
+        Self.format("pair-good-for", fallback: "Good for 2 minutes · %1$@", left)
+    }
+
+    /// TV code screen.
+    public static var pairTvLine: String { string("pair-tv-line", fallback: "On your phone, open Kaeri, then Settings, Devices, Add a device, and scan this code or enter it.") }
+
+    /// Success.
+    public static func pairOk(device: String) -> String {
+        Self.format("pair-ok", fallback: "Paired with %1$@", device)
+    }
+
+    /// Success.
+    public static var pairOkLine: String { string("pair-ok-line", fallback: "Bringing over your history. You can keep using Kaeri meanwhile.") }
+
+    /// Success switch.
+    public static func pairCopySignins(device: String) -> String {
+        Self.format("pair-copy-signins", fallback: "Copy sign-ins from %1$@", device)
+    }
+
+    /// Success switch line.
+    public static func pairCopySigninsLine(trackers: String) -> String {
+        Self.format("pair-copy-signins-line", fallback: "%1$@. Each device gets its own copy over this link.", trackers)
+    }
+
+    /// Error.
+    public static func pairErrCode(device: String) -> String {
+        Self.format("pair-err-code", fallback: "That code didn’t match. Check the code on %1$@ and try again.", device)
+    }
+
+    /// Error.
+    public static var pairErrNotFound: String { string("pair-err-not-found", fallback: "Couldn’t find the device showing this code. Both devices need to be on the same Wi-Fi.") }
+
+    /// Error on the showing side.
+    public static var pairErrExpired: String { string("pair-err-expired", fallback: "This code ran out. Show a new one.") }
+
+    /// Profile question.
+    public static func pairWhichProfile(device: String) -> String {
+        Self.format("pair-which-profile", fallback: "Which profile on %1$@ is yours?", device)
+    }
+
+    /// Profile question.
+    public static func pairWhichProfileLine(kind: String, device: String) -> String {
+        Self.format("pair-which-profile-line", fallback: "This %1$@ syncs with that profile only. The others stay on %2$@.", kind, device)
+    }
+
+    /// Footer.
+    public static func pairAlsoSyncFoot(device: String) -> String {
+        Self.format("pair-also-sync-foot", fallback: "%1$@ already knows this phone from Play on TV, so syncing with it needs no new code.", device)
+    }
+
+    /// Continue, for a day.
+    public static func continueFromDevice(n: Int, time: String, device: String) -> String {
+        Self.format("continue-from-device", fallback: "Episode %1$lld · stopped at %2$@ on %3$@", n, time, device)
+    }
+
+    /// Player, 6 s, with Start over.
+    public static func playerResumedFrom(time: String, device: String) -> String {
+        Self.format("player-resumed-from", fallback: "Resumed at %1$@ from %2$@", time, device)
+    }
+
+    /// Row line, Mac toolbar status.
+    public static var syncSyncing: String { string("sync-syncing", fallback: "Syncing") }
+
+    /// Mac jobs popover.
+    public static func syncSyncingWith(device: String) -> String {
+        Self.format("sync-syncing-with", fallback: "Syncing with %1$@", device)
+    }
+
+    /// Device page group.
+    public static var syncNotes: String { string("sync-notes", fallback: "Sync notes") }
+
+    /// Sync note.
+    public static func syncNoteKeptWatched(n: Int, title: String, other: String, device: String) -> String {
+        Self.format("sync-note-kept-watched", fallback: "Episode %1$lld of %2$@ stays watched. %3$@ marked it unwatched without knowing %4$@ had finished it.", n, title, other, device)
+    }
+
+    /// Sync note action.
+    public static var syncNoteUndo: String { string("sync-note-undo", fallback: "Mark unwatched") }
+
+    /// Footer.
+    public static var syncNotesFoot: String { string("sync-notes-foot", fallback: "Notes stay for 7 days.") }
+
+    /// Settings row and page.
+    public static var profilesTitle: String { string("profiles-title", fallback: "Profiles") }
+
+    /// Profiles row value with one profile.
+    public static var profilesOnlyYou: String { string("profiles-only-you", fallback: "Only you") }
+
+    /// Profiles page with one.
+    public static var profilesOneFoot: String { string("profiles-one-foot", fallback: "Profiles keep separate history, Continue and accounts for people who share this device. With one profile, Kaeri has no picker and no names.") }
+
+    /// Row, sheet title, picker tile.
+    public static var profilesAdd: String { string("profiles-add", fallback: "Add a profile") }
+
+    /// Sheet line.
+    public static var profilesAddLine: String { string("profiles-add-line", fallback: "Each profile keeps its own history, Continue and accounts. Sources and downloads stay shared on this device.") }
+
+    /// Field label.
+    public static var profilesNew: String { string("profiles-new", fallback: "New profile") }
+
+    /// Field label.
+    public static var profilesYours: String { string("profiles-yours", fallback: "Your profile") }
+
+    /// Field note when signed in.
+    public static var profilesYoursNote: String { string("profiles-yours-note", fallback: "Filled in from AniList. Until now this device had one profile with no name.") }
+
+    /// Switch.
+    public static var profilesKids: String { string("profiles-kids", fallback: "Kids profile") }
+
+    /// Switch footer.
+    public static var profilesKidsLine: String { string("profiles-kids-line", fallback: "Adult titles stay off, and sources, devices and torrent settings are hidden in it.") }
+
+    /// Settings foot in a kids profile.
+    public static var profilesKidsHidden: String { string("profiles-kids-hidden", fallback: "Sources and Devices are hidden in a kids profile, and adult titles stay off.") }
+
+    /// Line under a kids profile.
+    public static var profilesKidsTag: String { string("profiles-kids-tag", fallback: "Kids") }
+
+    /// Button.
+    public static var profilesAddButton: String { string("profiles-add-button", fallback: "Add profile") }
+
+    /// Profiles page footer.
+    public static var profilesSharedFoot: String { string("profiles-shared-foot", fallback: "Sources, downloads and this device’s settings are shared by every profile.") }
+
+    /// Profile page row.
+    public static var profilesSyncsWith: String { string("profiles-syncs-with", fallback: "Syncs with") }
+
+    /// Profile page, destructive.
+    public static var profilesDelete: String { string("profiles-delete", fallback: "Delete profile") }
+
+    /// Alert title.
+    public static func profilesDeleteAlert(name: String) -> String {
+        Self.format("profiles-delete-alert", fallback: "Delete %1$@’s profile?", name)
+    }
+
+    /// Alert message.
+    public static func profilesDeleteAlertLine(name: String) -> String {
+        Self.format("profiles-delete-alert-line", fallback: "%1$@’s history and sign-ins on this device are removed. Devices that sync with %1$@ keep theirs.", name)
+    }
+
+    /// TV, and iPad when asked.
+    public static var profilesPicker: String { string("profiles-picker", fallback: "Who’s watching?") }
+
+    /// iPad switch.
+    public static var profilesAskAtLaunch: String { string("profiles-ask-at-launch", fallback: "Ask who’s watching at launch") }
+
+    /// iPad footer.
+    public static var profilesAskFoot: String { string("profiles-ask-foot", fallback: "Off by default. For an iPad the household shares. The account row switches profiles at any time.") }
+
+    /// TV Settings.
+    public static var profilesSwitch: String { string("profiles-switch", fallback: "Switch profile") }
+
+    /// Account sheet and menus.
+    public static var profilesManage: String { string("profiles-manage", fallback: "Manage profiles") }
+
+    /// Welcome, text button; TV says “Set up from your phone”.
+    public static var firstSetupOther: String { string("first-setup-other", fallback: "Set up from another device") }
+
+    /// Code screen from first launch.
+    public static var firstSetupLine: String { string("first-setup-line", fallback: "On a device that already has Kaeri, open Settings, Devices, Add a device, and enter this code or scan it.") }
+
+    /// Text button.
+    public static var firstRestore: String { string("first-restore", fallback: "Restore from a cloud folder instead") }
+
+    /// Success from first launch.
+    public static var firstOkLine: String { string("first-ok-line", fallback: "Bringing over your history, settings and plugin stores. You can start using Kaeri now.") }
+
+    /// Success switch.
+    public static func firstJoinStore(store: String) -> String {
+        Self.format("first-join-store", fallback: "Join the plugin store %1$@", store)
+    }
+
+    /// Success switch line.
+    public static func firstJoinStoreLine(device: String, kind: String) -> String {
+        Self.format("first-join-store-line", fallback: "%1$@ makes this %2$@ its own invite", device, kind)
+    }
+
+    /// Picker row on a phone or computer.
+    public static func cloudFolder(kind: String) -> String {
+        Self.format("cloud-folder", fallback: "A folder on this %1$@", kind)
+    }
+
+    /// Field note under the app password, on Android.
+    public static func cloudAppPasswordNote(kind: String) -> String {
+        Self.format("cloud-app-password-note", fallback: "Make one in Nextcloud under Settings, Security. It is kept on this %1$@.", kind)
+    }
+
+    /// Devices row value while sync is off and TVs are paired for Play on TV. The row says "Sync off", then this.
+    public static func devicesTvsForPlay(count: Int) -> String {
+        Self.format("devices-tvs-for-play", fallback: "%1$lld TVs for Play on TV", count)
+    }
+
+    /// Line under a TV paired for Play on TV today.
+    public static var devicesPairedToday: String { string("devices-paired-today", fallback: "Paired today") }
+
+    /// Line under Add a device on the TV's Devices page.
+    public static var tvDevicesAddLine: String { string("tv-devices-add-line", fallback: "Shows a code to enter on your phone") }
+
+    /// TV Profiles page with one profile.
+    public static var tvProfilesOnlyYou: String { string("tv-profiles-only-you", fallback: "Only you. Add a profile to keep separate history, Continue and accounts on this TV.") }
+
+    /// TV Settings, Profiles: the row that opens the picker.
+    public static var tvProfilesOpensPicker: String { string("tv-profiles-opens-picker", fallback: "Opens Who’s watching?") }
+
+    /// TV Profiles page heading over the profiles.
+    public static var tvProfilesOnThisTv: String { string("tv-profiles-on-this-tv", fallback: "Profiles on this TV") }
+
+    /// Android recovery key sheet, third button.
+    public static var rkeySaveFile: String { string("rkey-save-file", fallback: "Save as a file") }
+
+    /// Android recovery key sheet, button that shows the key as a code.
+    public static var rkeyQrShort: String { string("rkey-qr-short", fallback: "QR code") }
+
+    /// Button on the Devices page and the add a device sheet that shows a pairing code instead of entering one.
+    public static var pairShowCode: String { string("pair-show-code", fallback: "Show a code") }
+
+    /// Cloud row button when the service signed Kaeri out.
+    public static var cloudSignInAgain: String { string("cloud-sign-in-again", fallback: "Sign in again") }
+
+    /// Cloud row button when the folder can't be opened.
+    public static var cloudChooseFolder: String { string("cloud-choose-folder", fallback: "Choose folder") }
+
+    /// Spoken label of a profile's avatar on Home.
+    public static func profilesAvatarDesc(name: String) -> String {
+        Self.format("profiles-avatar-desc", fallback: "%1$@, switch profile", name)
+    }
+
+    /// Heading over the pairing code the other device shows, over the field.
+    public static var pairCodeField: String { string("pair-code-field", fallback: "Pairing code") }
+
+    public static var deviceKindPhone: String { string("device-kind-phone", fallback: "phone") }
+
+    public static var deviceKindTablet: String { string("device-kind-tablet", fallback: "tablet") }
+
+    public static var deviceKindTv: String { string("device-kind-tv", fallback: "TV") }
 
     /// Title of the state when a title page could not load.
     public static var titleLoadFailed: String { string("title-load-failed", fallback: "Couldn't load this title") }

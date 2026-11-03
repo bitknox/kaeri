@@ -547,7 +547,6 @@ struct IntegrationsPane: View {
     var body: some View {
         let presence = store.settings.isOn(.presence)
         let titled = store.settings.isOn(.presenceTitle)
-        TVsGroup()
         // Only where the engine has a presence to show: a phone's has none.
         if store.settings.hasPresence {
             SettingsGroup(

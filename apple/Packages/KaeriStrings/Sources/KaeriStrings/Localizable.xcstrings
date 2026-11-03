@@ -10337,6 +10337,18 @@
         }
       }
     },
+    "action-add" : {
+      "comment" : "Button that adds something, such as a cloud folder.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add"
+          }
+        }
+      }
+    },
     "action-back" : {
       "comment" : "Button and header control that goes to the screen before.",
       "extractionState" : "manual",
@@ -13357,6 +13369,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chia sẻ"
+          }
+        }
+      }
+    },
+    "action-show" : {
+      "comment" : "Button that shows something kept out of sight, such as the recovery key.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show"
           }
         }
       }
@@ -22625,6 +22649,294 @@
         }
       }
     },
+    "cloud-add" : {
+      "comment" : "Row when only the nearby road is set.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a cloud folder"
+          }
+        }
+      }
+    },
+    "cloud-add-row" : {
+      "comment" : "Row on the Devices page that opens the road sheet's cloud choice.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a cloud folder"
+          }
+        }
+      }
+    },
+    "cloud-app-password" : {
+      "comment" : "Text button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use an app password instead"
+          }
+        }
+      }
+    },
+    "cloud-app-password-note" : {
+      "comment" : "Field note under the app password, on Android. Argument 1: kind (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make one in Nextcloud under Settings, Security. It is kept on this %1$@."
+          }
+        }
+      }
+    },
+    "cloud-choose-folder" : {
+      "comment" : "Cloud row button when the folder can't be opened.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose folder"
+          }
+        }
+      }
+    },
+    "cloud-connect" : {
+      "comment" : "Button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connect"
+          }
+        }
+      }
+    },
+    "cloud-dropbox-line" : {
+      "comment" : "Picker row line.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri’s own folder in your Dropbox, Apps/Kaeri"
+          }
+        }
+      }
+    },
+    "cloud-err-app-password" : {
+      "comment" : "Inline error.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nextcloud didn’t accept that app password. Make a new one in Nextcloud under Settings, Security."
+          }
+        }
+      }
+    },
+    "cloud-err-denied" : {
+      "comment" : "Picker row line after `SignInDenied`. Argument 1: service (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ didn’t give Kaeri access. Choose it again to retry."
+          }
+        }
+      }
+    },
+    "cloud-err-folder-gone" : {
+      "comment" : "Status error, with Choose folder.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri can’t open the folder any more. Choose it again."
+          }
+        }
+      }
+    },
+    "cloud-err-full" : {
+      "comment" : "Status error. Argument 1: service (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ is full. Free some space there, then try again."
+          }
+        }
+      }
+    },
+    "cloud-err-no-server" : {
+      "comment" : "Inline error. Argument 1: host (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn’t find a Nextcloud server at %1$@. Check the address."
+          }
+        }
+      }
+    },
+    "cloud-err-offline" : {
+      "comment" : "Error. Argument 1: service (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn’t reach %1$@. Check your connection."
+          }
+        }
+      }
+    },
+    "cloud-err-other-group" : {
+      "comment" : "Error.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This folder belongs to another set of devices. Enter its recovery key to join them, or choose another folder."
+          }
+        }
+      }
+    },
+    "cloud-err-signed-out" : {
+      "comment" : "Status error, with Sign in again. Argument 1: service (Text). Argument 2: kind (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ signed Kaeri out. Your changes wait on this %2$@ until you sign in again."
+          }
+        }
+      }
+    },
+    "cloud-err-timeout" : {
+      "comment" : "Error, with Open the page again.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The sign-in page closed before access was allowed."
+          }
+        }
+      }
+    },
+    "cloud-err-title" : {
+      "comment" : "Status error title. Argument 1: service (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn’t sync with %1$@"
+          }
+        }
+      }
+    },
+    "cloud-err-webdav" : {
+      "comment" : "Inline error.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server refused that user name or password."
+          }
+        }
+      }
+    },
+    "cloud-folder" : {
+      "comment" : "Picker row on a phone or computer. Argument 1: kind (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A folder on this %1$@"
+          }
+        }
+      }
+    },
+    "cloud-folder-line" : {
+      "comment" : "Picker row line.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For a folder another app keeps in step"
+          }
+        }
+      }
+    },
+    "cloud-foot" : {
+      "comment" : "Group footer.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fills in while your devices are apart, and keeps a sealed backup. Only your devices can read it."
+          }
+        }
+      }
+    },
+    "cloud-google-line" : {
+      "comment" : "Picker row line.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A hidden Kaeri folder in your Drive"
+          }
+        }
+      }
+    },
+    "cloud-group" : {
+      "comment" : "Group heading.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloud folder"
+          }
+        }
+      }
+    },
+    "cloud-icloud-line" : {
+      "comment" : "Picker row line, Apple and Windows.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A folder you choose in iCloud Drive"
+          }
+        }
+      }
+    },
     "cloud-loopback-done" : {
       "comment" : "The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.",
       "extractionState" : "manual",
@@ -22705,6 +23017,258 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bạn có thể đóng thẻ này và quay lại Kaeri."
+          }
+        }
+      }
+    },
+    "cloud-nextcloud-address" : {
+      "comment" : "Field label.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server address"
+          }
+        }
+      }
+    },
+    "cloud-nextcloud-address-note" : {
+      "comment" : "Field note.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The address you open Nextcloud at in a browser."
+          }
+        }
+      }
+    },
+    "cloud-nextcloud-line" : {
+      "comment" : "Picker row line.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your own or a hosted Nextcloud server"
+          }
+        }
+      }
+    },
+    "cloud-nextcloud-wait-line" : {
+      "comment" : "Login flow wait.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your Nextcloud page is open in the browser. Allow access there, and this sheet carries on by itself."
+          }
+        }
+      }
+    },
+    "cloud-nextcloud-wait-title" : {
+      "comment" : "Login flow wait. Argument 1: host (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finish signing in on %1$@"
+          }
+        }
+      }
+    },
+    "cloud-offline" : {
+      "comment" : "Status line while offline. Argument 1: kind (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for a connection. Changes are kept on this %1$@."
+          }
+        }
+      }
+    },
+    "cloud-onedrive-line" : {
+      "comment" : "Picker row line.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri’s own folder in your OneDrive, Apps/Kaeri"
+          }
+        }
+      }
+    },
+    "cloud-open-again" : {
+      "comment" : "Button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open the page again"
+          }
+        }
+      }
+    },
+    "cloud-other" : {
+      "comment" : "Picker group heading.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other"
+          }
+        }
+      }
+    },
+    "cloud-pick-foot" : {
+      "comment" : "Picker footer.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your devices keep a sealed copy of their changes in this folder. Only your devices can read it, and Kaeri runs no server of its own."
+          }
+        }
+      }
+    },
+    "cloud-pick-title" : {
+      "comment" : "Picker title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a cloud folder"
+          }
+        }
+      }
+    },
+    "cloud-setting-up" : {
+      "comment" : "Row line while the first write runs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setting up the folder"
+          }
+        }
+      }
+    },
+    "cloud-sheet-wait" : {
+      "comment" : "Sheet title while a cloud service is being signed in to on Apple.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finish signing in"
+          }
+        }
+      }
+    },
+    "cloud-sign-in" : {
+      "comment" : "Cloud group button after signing out.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in"
+          }
+        }
+      }
+    },
+    "cloud-sign-in-again" : {
+      "comment" : "Cloud row button when the service signed Kaeri out.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in again"
+          }
+        }
+      }
+    },
+    "cloud-sign-out" : {
+      "comment" : "Cloud group button; at once, no question, except on the TV.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign out"
+          }
+        }
+      }
+    },
+    "cloud-signed-out-line" : {
+      "comment" : "Cloud row after Sign out; hollow haze dot. Argument 1: kind (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signed out. Changes wait on this %1$@ until you sign in again."
+          }
+        }
+      }
+    },
+    "cloud-sync-now" : {
+      "comment" : "Cloud group button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync now"
+          }
+        }
+      }
+    },
+    "cloud-waiting" : {
+      "comment" : "Wait row. Argument 1: service (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for %1$@"
+          }
+        }
+      }
+    },
+    "cloud-webdav" : {
+      "comment" : "Picker row.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WebDAV server"
+          }
+        }
+      }
+    },
+    "cloud-webdav-line" : {
+      "comment" : "Picker row line.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Any server that speaks WebDAV"
           }
         }
       }
@@ -23125,6 +23689,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chưa xem gì"
+          }
+        }
+      }
+    },
+    "continue-from-device" : {
+      "comment" : "Continue, for a day. Argument 1: n (Int). Argument 2: time (Text). Argument 3: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episode %1$lld · stopped at %2$@ on %3$@"
           }
         }
       }
@@ -25981,6 +26557,352 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hôm qua"
+          }
+        }
+      }
+    },
+    "device-kind-phone" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "phone"
+          }
+        }
+      }
+    },
+    "device-kind-tablet" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tablet"
+          }
+        }
+      }
+    },
+    "device-kind-tv" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV"
+          }
+        }
+      }
+    },
+    "devices-a11y-synced" : {
+      "comment" : "Accessibility value of a device's sync switch.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Syncing"
+          }
+        }
+      }
+    },
+    "devices-add" : {
+      "comment" : "Row and sheet title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a device"
+          }
+        }
+      }
+    },
+    "devices-also-sync" : {
+      "comment" : "Button on a remote-only TV row. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Also sync with %1$@"
+          }
+        }
+      }
+    },
+    "devices-also-sync-short" : {
+      "comment" : "Capsule on a remote-only row on iPhone.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Also sync"
+          }
+        }
+      }
+    },
+    "devices-name" : {
+      "comment" : "Row for this device’s name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name"
+          }
+        }
+      }
+    },
+    "devices-not-seen" : {
+      "comment" : "Device row line past 30 days. Argument 1: days (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not seen for %1$lld days"
+          }
+        }
+      }
+    },
+    "devices-only-this" : {
+      "comment" : "Empty Your devices.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only this device"
+          }
+        }
+      }
+    },
+    "devices-only-this-line" : {
+      "comment" : "Empty Your devices.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pair another device to share where you stopped, your history and your settings."
+          }
+        }
+      }
+    },
+    "devices-paired-today" : {
+      "comment" : "Line under a TV paired for Play on TV today.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paired today"
+          }
+        }
+      }
+    },
+    "devices-paired-tvs-foot" : {
+      "comment" : "Footer while sync is off.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paired for Play on TV. A TV paired as a remote never gets your history."
+          }
+        }
+      }
+    },
+    "devices-remote-only" : {
+      "comment" : "A device paired only for Play on TV.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remote only"
+          }
+        }
+      }
+    },
+    "devices-remote-switch" : {
+      "comment" : "Switch on a TV.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remote"
+          }
+        }
+      }
+    },
+    "devices-remove" : {
+      "comment" : "Device page, destructive.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove this device"
+          }
+        }
+      }
+    },
+    "devices-remove-alert" : {
+      "comment" : "Alert title. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove %1$@?"
+          }
+        }
+      }
+    },
+    "devices-remove-alert-line" : {
+      "comment" : "Alert message. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ keeps what it has, but gets nothing new from your other devices."
+          }
+        }
+      }
+    },
+    "devices-row-error" : {
+      "comment" : "Devices row value with the error glyph.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn’t sync"
+          }
+        }
+      }
+    },
+    "devices-row-off" : {
+      "comment" : "Devices row value while sync is off.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync off"
+          }
+        }
+      }
+    },
+    "devices-row-synced" : {
+      "comment" : "Devices row value; “Synced 2 min ago”, “Synced just now”. Argument 1: ago (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synced %1$@"
+          }
+        }
+      }
+    },
+    "devices-switches-foot" : {
+      "comment" : "Device page footer. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync shares where you stopped, your history and your settings. Remote lets this phone drive %1$@."
+          }
+        }
+      }
+    },
+    "devices-sync-switch" : {
+      "comment" : "Switch on a device.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync"
+          }
+        }
+      }
+    },
+    "devices-this-device" : {
+      "comment" : "Group heading over the name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This device"
+          }
+        }
+      }
+    },
+    "devices-title" : {
+      "comment" : "Settings row and page title, every platform.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Devices"
+          }
+        }
+      }
+    },
+    "devices-tvs-for-play" : {
+      "comment" : "Devices row value while sync is off and TVs are paired for Play on TV. The row says \"Sync off\", then this. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "One TV for Play on TV"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld TVs for Play on TV"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "devices-yours" : {
+      "comment" : "Group heading.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your devices"
           }
         }
       }
@@ -47177,6 +48099,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bộ lọc"
+          }
+        }
+      }
+    },
+    "first-join-store" : {
+      "comment" : "Success switch. Argument 1: store (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Join the plugin store %1$@"
+          }
+        }
+      }
+    },
+    "first-join-store-line" : {
+      "comment" : "Success switch line. Argument 1: device (Text). Argument 2: kind (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ makes this %2$@ its own invite"
+          }
+        }
+      }
+    },
+    "first-ok-line" : {
+      "comment" : "Success from first launch.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bringing over your history, settings and plugin stores. You can start using Kaeri now."
+          }
+        }
+      }
+    },
+    "first-restore" : {
+      "comment" : "Text button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore from a cloud folder instead"
+          }
+        }
+      }
+    },
+    "first-setup-line" : {
+      "comment" : "Code screen from first launch.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On a device that already has Kaeri, open Settings, Devices, Add a device, and enter this code or scan it."
+          }
+        }
+      }
+    },
+    "first-setup-other" : {
+      "comment" : "Welcome, text button; TV says “Set up from your phone”.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set up from another device"
+          }
+        }
+      }
+    },
+    "first-setup-other-mac" : {
+      "comment" : "Mac menu item that opens the pairing sheet from first launch.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set up from another device"
           }
         }
       }
@@ -100105,6 +101111,306 @@
         }
       }
     },
+    "pair-also-sync-foot" : {
+      "comment" : "Footer. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ already knows this phone from Play on TV, so syncing with it needs no new code."
+          }
+        }
+      }
+    },
+    "pair-button" : {
+      "comment" : "Button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pair"
+          }
+        }
+      }
+    },
+    "pair-code-field" : {
+      "comment" : "Heading over the pairing code the other device shows, over the field.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pairing code"
+          }
+        }
+      }
+    },
+    "pair-code-hint" : {
+      "comment" : "Line under the pairing code field on Mac and iPad.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Six digits"
+          }
+        }
+      }
+    },
+    "pair-copy-signins" : {
+      "comment" : "Success switch. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy sign-ins from %1$@"
+          }
+        }
+      }
+    },
+    "pair-copy-signins-line" : {
+      "comment" : "Success switch line. Argument 1: trackers (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@. Each device gets its own copy over this link."
+          }
+        }
+      }
+    },
+    "pair-enter-code" : {
+      "comment" : "Button on the Devices page that opens the sheet for a code from another device.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a code"
+          }
+        }
+      }
+    },
+    "pair-enter-line" : {
+      "comment" : "Add a device.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On the other device, open Kaeri and choose Set up from another device, or Settings, Devices, Show a code. Then enter the code here."
+          }
+        }
+      }
+    },
+    "pair-err-code" : {
+      "comment" : "Error. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That code didn’t match. Check the code on %1$@ and try again."
+          }
+        }
+      }
+    },
+    "pair-err-expired" : {
+      "comment" : "Error on the showing side.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This code ran out. Show a new one."
+          }
+        }
+      }
+    },
+    "pair-err-not-found" : {
+      "comment" : "Error.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn’t find the device showing this code. Both devices need to be on the same Wi-Fi."
+          }
+        }
+      }
+    },
+    "pair-good-for" : {
+      "comment" : "Code screen. Argument 1: left (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Good for 2 minutes · %1$@"
+          }
+        }
+      }
+    },
+    "pair-ok" : {
+      "comment" : "Success. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paired with %1$@"
+          }
+        }
+      }
+    },
+    "pair-ok-line" : {
+      "comment" : "Success.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bringing over your history. You can keep using Kaeri meanwhile."
+          }
+        }
+      }
+    },
+    "pair-other-device" : {
+      "comment" : "Name for the device whose pairing code did not match, when no name is known yet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "your other device"
+          }
+        }
+      }
+    },
+    "pair-pairing" : {
+      "comment" : "Button while a pairing code is being tried.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pairing"
+          }
+        }
+      }
+    },
+    "pair-same-wifi" : {
+      "comment" : "Note.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Both devices need to be on the same Wi-Fi."
+          }
+        }
+      }
+    },
+    "pair-scan" : {
+      "comment" : "Button, phones.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan the code"
+          }
+        }
+      }
+    },
+    "pair-show-code" : {
+      "comment" : "Button on the Devices page and the add a device sheet that shows a pairing code instead of entering one.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show a code"
+          }
+        }
+      }
+    },
+    "pair-show-instead" : {
+      "comment" : "Text button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show a code here instead"
+          }
+        }
+      }
+    },
+    "pair-show-scan" : {
+      "comment" : "Code screen.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Or scan it from Kaeri on your phone."
+          }
+        }
+      }
+    },
+    "pair-show-title" : {
+      "comment" : "Code screen.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter this code on your other device"
+          }
+        }
+      }
+    },
+    "pair-tv-line" : {
+      "comment" : "TV code screen.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On your phone, open Kaeri, then Settings, Devices, Add a device, and scan this code or enter it."
+          }
+        }
+      }
+    },
+    "pair-which-profile" : {
+      "comment" : "Profile question. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Which profile on %1$@ is yours?"
+          }
+        }
+      }
+    },
+    "pair-which-profile-line" : {
+      "comment" : "Profile question. Argument 1: kind (Text). Argument 2: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This %1$@ syncs with that profile only. The others stay on %2$@."
+          }
+        }
+      }
+    },
     "palette-commands" : {
       "comment" : "Heading of the commands in the command palette.",
       "extractionState" : "manual",
@@ -123437,6 +124743,18 @@
         }
       }
     },
+    "player-resumed-from" : {
+      "comment" : "Player, 6 s, with Start over. Argument 1: time (Text). Argument 2: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resumed at %1$@ from %2$@"
+          }
+        }
+      }
+    },
     "player-scrub-half" : {
       "comment" : "Label while scrubbing the seek line at half the pace.",
       "extractionState" : "manual",
@@ -132113,6 +133431,354 @@
         }
       }
     },
+    "profiles-add" : {
+      "comment" : "Row, sheet title, picker tile.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a profile"
+          }
+        }
+      }
+    },
+    "profiles-add-button" : {
+      "comment" : "Button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add profile"
+          }
+        }
+      }
+    },
+    "profiles-add-line" : {
+      "comment" : "Sheet line.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Each profile keeps its own history, Continue and accounts. Sources and downloads stay shared on this device."
+          }
+        }
+      }
+    },
+    "profiles-ask-at-launch" : {
+      "comment" : "iPad switch.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask who’s watching at launch"
+          }
+        }
+      }
+    },
+    "profiles-ask-foot" : {
+      "comment" : "iPad footer.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off by default. For an iPad the household shares. The account row switches profiles at any time."
+          }
+        }
+      }
+    },
+    "profiles-avatar-desc" : {
+      "comment" : "Spoken label of a profile's avatar on Home. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, switch profile"
+          }
+        }
+      }
+    },
+    "profiles-delete" : {
+      "comment" : "Profile page, destructive.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete profile"
+          }
+        }
+      }
+    },
+    "profiles-delete-alert" : {
+      "comment" : "Alert title. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete %1$@’s profile?"
+          }
+        }
+      }
+    },
+    "profiles-delete-alert-line" : {
+      "comment" : "Alert message. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@’s history and sign-ins on this device are removed. Devices that sync with %1$@ keep theirs."
+          }
+        }
+      }
+    },
+    "profiles-kids" : {
+      "comment" : "Switch.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kids profile"
+          }
+        }
+      }
+    },
+    "profiles-kids-hidden" : {
+      "comment" : "Settings foot in a kids profile.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sources and Devices are hidden in a kids profile, and adult titles stay off."
+          }
+        }
+      }
+    },
+    "profiles-kids-line" : {
+      "comment" : "Switch footer.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adult titles stay off, and sources, devices and torrent settings are hidden in it."
+          }
+        }
+      }
+    },
+    "profiles-kids-tag" : {
+      "comment" : "Line under a kids profile.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kids"
+          }
+        }
+      }
+    },
+    "profiles-manage" : {
+      "comment" : "Account sheet and menus.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manage profiles"
+          }
+        }
+      }
+    },
+    "profiles-menu" : {
+      "comment" : "Menu item on the Mac menu bar, the Profile menu's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profile"
+          }
+        }
+      }
+    },
+    "profiles-new" : {
+      "comment" : "Field label.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New profile"
+          }
+        }
+      }
+    },
+    "profiles-one-foot" : {
+      "comment" : "Profiles page with one.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profiles keep separate history, Continue and accounts for people who share this device. With one profile, Kaeri has no picker and no names."
+          }
+        }
+      }
+    },
+    "profiles-only-you" : {
+      "comment" : "Profiles row value with one profile.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only you"
+          }
+        }
+      }
+    },
+    "profiles-picker" : {
+      "comment" : "TV, and iPad when asked.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Who’s watching?"
+          }
+        }
+      }
+    },
+    "profiles-picker-line" : {
+      "comment" : "Title of the iPad and Mac launch picker's explanation.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a profile to continue. You can turn this question off in Settings, Profiles."
+          }
+        }
+      }
+    },
+    "profiles-shared-foot" : {
+      "comment" : "Profiles page footer.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sources, downloads and this device’s settings are shared by every profile."
+          }
+        }
+      }
+    },
+    "profiles-strip" : {
+      "comment" : "Heading over the profile strip on iPhone.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profiles"
+          }
+        }
+      }
+    },
+    "profiles-switch" : {
+      "comment" : "TV Settings.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch profile"
+          }
+        }
+      }
+    },
+    "profiles-syncs-nothing" : {
+      "comment" : "Line on a profile row that says it syncs with a device's profile.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not synced"
+          }
+        }
+      }
+    },
+    "profiles-syncs-with" : {
+      "comment" : "Profile page row.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Syncs with"
+          }
+        }
+      }
+    },
+    "profiles-syncs-with-title" : {
+      "comment" : "Title of the \"Syncs with\" picker for a profile.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Syncs with"
+          }
+        }
+      }
+    },
+    "profiles-title" : {
+      "comment" : "Settings row and page.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profiles"
+          }
+        }
+      }
+    },
+    "profiles-yours" : {
+      "comment" : "Field label.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your profile"
+          }
+        }
+      }
+    },
+    "profiles-yours-note" : {
+      "comment" : "Field note when signed in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filled in from AniList. Until now this device had one profile with no name."
+          }
+        }
+      }
+    },
     "progress-episode-short" : {
       "comment" : "Short progress under a show when the total is not known. Argument 1: done (Int).",
       "extractionState" : "manual",
@@ -136017,6 +137683,246 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Phiên bản ứng dụng và thiết bị"
+          }
+        }
+      }
+    },
+    "rkey-again" : {
+      "comment" : "Sheet footnote. Argument 1: kind (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can see it again in Settings, Devices, after unlocking this %1$@."
+          }
+        }
+      }
+    },
+    "rkey-copy" : {
+      "comment" : "Button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy"
+          }
+        }
+      }
+    },
+    "rkey-enter-line" : {
+      "comment" : "Restore. Argument 1: service (Text). Argument 2: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ holds history from %2$lld devices. The key you saved when sync was turned on opens it."
+          }
+        }
+      }
+    },
+    "rkey-enter-line-generic" : {
+      "comment" : "Restore sheet line when the folder's device count is not known. Argument 1: service (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ holds history from your other devices. The key you saved when sync was turned on opens it."
+          }
+        }
+      }
+    },
+    "rkey-enter-note" : {
+      "comment" : "Field note.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "24 letters and digits, in groups of four. Spaces and case don’t matter."
+          }
+        }
+      }
+    },
+    "rkey-enter-title" : {
+      "comment" : "Restore.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter your recovery key"
+          }
+        }
+      }
+    },
+    "rkey-line" : {
+      "comment" : "Sheet line.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep this somewhere safe. It restores your history if you lose every device, and lets a new device join from your cloud folder."
+          }
+        }
+      }
+    },
+    "rkey-made" : {
+      "comment" : "Devices row value. Argument 1: date (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Made %1$@"
+          }
+        }
+      }
+    },
+    "rkey-new" : {
+      "comment" : "Row.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make a new key"
+          }
+        }
+      }
+    },
+    "rkey-new-foot" : {
+      "comment" : "Footer.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The old key stops working, and your devices switch to the new one the next time they sync."
+          }
+        }
+      }
+    },
+    "rkey-qr" : {
+      "comment" : "Text button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show as QR code"
+          }
+        }
+      }
+    },
+    "rkey-qr-short" : {
+      "comment" : "Android recovery key sheet, button that shows the key as a code.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR code"
+          }
+        }
+      }
+    },
+    "rkey-restore" : {
+      "comment" : "Button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore"
+          }
+        }
+      }
+    },
+    "rkey-restores" : {
+      "comment" : "Line under the recovery key row on the Devices page.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restores everything if you lose every device."
+          }
+        }
+      }
+    },
+    "rkey-row" : {
+      "comment" : "Devices row.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recovery key"
+          }
+        }
+      }
+    },
+    "rkey-save-file" : {
+      "comment" : "Android recovery key sheet, third button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save as a file"
+          }
+        }
+      }
+    },
+    "rkey-save-files" : {
+      "comment" : "Button on the recovery key sheet that opens the Files save panel on iPhone and iPad.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save to Files"
+          }
+        }
+      }
+    },
+    "rkey-save-mac" : {
+      "comment" : "Button on the recovery key sheet on the Mac. The app adds the ellipsis, since it opens the save panel.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save"
+          }
+        }
+      }
+    },
+    "rkey-title" : {
+      "comment" : "Sheet title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your recovery key"
+          }
+        }
+      }
+    },
+    "rkey-wrong" : {
+      "comment" : "Inline error.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That key doesn’t open this folder. Check each group of four and try again."
           }
         }
       }
@@ -213049,6 +214955,270 @@
         }
       }
     },
+    "sync-group" : {
+      "comment" : "Group heading while off.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync"
+          }
+        }
+      }
+    },
+    "sync-note-kept-watched" : {
+      "comment" : "Sync note. Argument 1: n (Int). Argument 2: title (Text). Argument 3: other (Text). Argument 4: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episode %1$lld of %2$@ stays watched. %3$@ marked it unwatched without knowing %4$@ had finished it."
+          }
+        }
+      }
+    },
+    "sync-note-undo" : {
+      "comment" : "Sync note action.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark unwatched"
+          }
+        }
+      }
+    },
+    "sync-notes" : {
+      "comment" : "Device page group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync notes"
+          }
+        }
+      }
+    },
+    "sync-notes-foot" : {
+      "comment" : "Footer.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notes stay for 7 days."
+          }
+        }
+      }
+    },
+    "sync-off-line" : {
+      "comment" : "Off state.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn it on to keep where you stopped, your history and your settings the same on your devices."
+          }
+        }
+      }
+    },
+    "sync-off-title" : {
+      "comment" : "Off state.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync is off"
+          }
+        }
+      }
+    },
+    "sync-popover-open" : {
+      "comment" : "Row in the sync popover that opens Devices.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Devices"
+          }
+        }
+      }
+    },
+    "sync-popover-title" : {
+      "comment" : "Line shown in the Mac toolbar capsule's popover when sync is running with a device.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync"
+          }
+        }
+      }
+    },
+    "sync-road-cloud" : {
+      "comment" : "Road sheet row.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Through a cloud folder"
+          }
+        }
+      }
+    },
+    "sync-road-cloud-line" : {
+      "comment" : "Road sheet row line. Names no service, since a build may hide some (decision 14).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A cloud drive you already use, or your own server. Works while your devices are apart, and keeps a backup."
+          }
+        }
+      }
+    },
+    "sync-road-later" : {
+      "comment" : "Road sheet footer.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can add the other way later. Most people use both."
+          }
+        }
+      }
+    },
+    "sync-road-nearby" : {
+      "comment" : "Road sheet row.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With a device nearby"
+          }
+        }
+      }
+    },
+    "sync-road-nearby-line" : {
+      "comment" : "Road sheet row line.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pair with another device on the same Wi-Fi. Nothing is stored anywhere else."
+          }
+        }
+      }
+    },
+    "sync-road-title" : {
+      "comment" : "Road sheet title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How should your devices share?"
+          }
+        }
+      }
+    },
+    "sync-syncing" : {
+      "comment" : "Row line, Mac toolbar status.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Syncing"
+          }
+        }
+      }
+    },
+    "sync-syncing-with" : {
+      "comment" : "Mac jobs popover. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Syncing with %1$@"
+          }
+        }
+      }
+    },
+    "sync-turn-off" : {
+      "comment" : "Last row; “this phone”, “this Mac”. Argument 1: kind (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn off sync on this %1$@"
+          }
+        }
+      }
+    },
+    "sync-turn-off-alert" : {
+      "comment" : "Alert title. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn off sync on %1$@?"
+          }
+        }
+      }
+    },
+    "sync-turn-off-alert-line" : {
+      "comment" : "Alert message. Argument 1: kind (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This %1$@ stops sharing with your other devices. Everything it has stays here."
+          }
+        }
+      }
+    },
+    "sync-turn-off-button" : {
+      "comment" : "Button on the Devices page that asks before turning sync off on this device.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn off"
+          }
+        }
+      }
+    },
+    "sync-turn-on" : {
+      "comment" : "Button; the Mac adds an ellipsis.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn on sync"
+          }
+        }
+      }
+    },
     "time-ago" : {
       "comment" : "How long ago something happened. Argument 1: span (Text).",
       "extractionState" : "manual",
@@ -227209,6 +229379,126 @@
         }
       }
     },
+    "tv-cloud-dropbox-line" : {
+      "comment" : "TV picker row line for Dropbox.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signs in on your phone"
+          }
+        }
+      }
+    },
+    "tv-cloud-finishing" : {
+      "comment" : "TV code screen after the poll succeeds.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signed in. Setting up the folder"
+          }
+        }
+      }
+    },
+    "tv-cloud-needs-phone-has" : {
+      "comment" : "TV, Dropbox, a paired phone has it. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ is signed in to Dropbox. This TV can use that sign-in over your paired link."
+          }
+        }
+      }
+    },
+    "tv-cloud-needs-phone-none" : {
+      "comment" : "TV, Dropbox, no phone has it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dropbox has no sign-in a TV can do. On your phone, open Kaeri, then Settings, Devices, Cloud folder, and sign in to Dropbox there. Then choose Dropbox here again."
+          }
+        }
+      }
+    },
+    "tv-cloud-needs-phone-title" : {
+      "comment" : "TV, Dropbox.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dropbox signs in on your phone"
+          }
+        }
+      }
+    },
+    "tv-cloud-pick-foot" : {
+      "comment" : "TV picker footer (decision 17).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose the one your other devices use. A new cloud folder is added on a phone or computer, where its recovery key can be saved."
+          }
+        }
+      }
+    },
+    "tv-cloud-revoked-line" : {
+      "comment" : "TV cloud row. Argument 1: service (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ signed Kaeri out. Select to sign in again."
+          }
+        }
+      }
+    },
+    "tv-cloud-sign-out-line" : {
+      "comment" : "TV ConfirmDialog, with Cancel focused and Sign out. Argument 1: service (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This TV stops syncing through %1$@. Changes wait here until you sign in again."
+          }
+        }
+      }
+    },
+    "tv-cloud-sign-out-title" : {
+      "comment" : "TV ConfirmDialog. Argument 1: service (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign out of %1$@?"
+          }
+        }
+      }
+    },
+    "tv-cloud-signed-out-line" : {
+      "comment" : "TV cloud row.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signed out. Select to sign in."
+          }
+        }
+      }
+    },
     "tv-code-changes" : {
       "comment" : "Line: how often the code changes.",
       "extractionState" : "manual",
@@ -227629,6 +229919,18 @@
         }
       }
     },
+    "tv-devices-add-line" : {
+      "comment" : "Line under Add a device on the TV's Devices page.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows a code to enter on your phone"
+          }
+        }
+      }
+    },
     "tv-forget-detail" : {
       "comment" : "Line under it.",
       "extractionState" : "manual",
@@ -227965,6 +230267,18 @@
         }
       }
     },
+    "tv-google-title" : {
+      "comment" : "TV device flow.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in to Google Drive"
+          }
+        }
+      }
+    },
     "tv-looking" : {
       "comment" : "Line while the app looks for TVs.",
       "extractionState" : "manual",
@@ -228045,6 +230359,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đang tìm TV trên mạng này"
+          }
+        }
+      }
+    },
+    "tv-nextcloud-line" : {
+      "comment" : "TV Nextcloud.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan this with your phone and allow access on your Nextcloud page. The TV carries on by itself."
           }
         }
       }
@@ -231493,6 +233819,54 @@
         }
       }
     },
+    "tv-profiles-on-this-tv" : {
+      "comment" : "TV Profiles page heading over the profiles.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profiles on this TV"
+          }
+        }
+      }
+    },
+    "tv-profiles-only-you" : {
+      "comment" : "TV Profiles page with one profile.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only you. Add a profile to keep separate history, Continue and accounts on this TV."
+          }
+        }
+      }
+    },
+    "tv-profiles-opens-picker" : {
+      "comment" : "TV Settings, Profiles: the row that opens the picker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens Who’s watching?"
+          }
+        }
+      }
+    },
+    "tv-qr-open-page" : {
+      "comment" : "TV device flow.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Or scan to open the page"
+          }
+        }
+      }
+    },
     "tv-remote-action" : {
       "comment" : "Accessibility action that opens the remote.",
       "extractionState" : "manual",
@@ -234177,6 +236551,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nhập từ khóa tìm kiếm"
+          }
+        }
+      }
+    },
+    "tv-use-phone-signin" : {
+      "comment" : "TV amber button; also for Nextcloud and WebDAV. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use %1$@’s sign-in"
           }
         }
       }

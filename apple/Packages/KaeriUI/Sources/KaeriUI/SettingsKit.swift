@@ -72,6 +72,8 @@ struct SettingsRow<Accessory: View>: View {
     var note: String?
     var noteColor: Color = .haze
     var selected = false
+    /// A state's dot before the note, as an account row has it.
+    var dot: SyncSummary.State?
     @ViewBuilder let accessory: Accessory
 
     var body: some View {
@@ -81,10 +83,13 @@ struct SettingsRow<Accessory: View>: View {
                     .font(.mac(13, weight: selected ? .medium : .regular))
                     .foregroundStyle(selected ? .amber : .silk)
                 if let note {
-                    Text(note)
-                        .font(.mac(12))
-                        .foregroundStyle(noteColor)
-                        .fixedSize(horizontal: false, vertical: true)
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        if let dot { StateDot(state: dot).alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 3 } }
+                        Text(note)
+                            .font(.mac(12))
+                            .foregroundStyle(noteColor)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
             }
             .macLineHeight(16)

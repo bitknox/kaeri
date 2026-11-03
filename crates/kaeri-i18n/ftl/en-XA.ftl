@@ -9096,6 +9096,529 @@ stores-qr-warning-device = [Šçàñ ţĥîš ŵîţĥ ţĥé ðéṽîçé ýö
 # Button that opens the system share sheet for the invite link.
 stores-share = [Šĥàŕé…~~]
 
+# Settings row and page title, every platform.
+devices-title = [Ðéṽîçéš~~~]
+
+# Devices row value while sync is off.
+devices-row-off = [Šýñç öƒƒ~~~]
+
+# Devices row value; “Synced 2 min ago”, “Synced just now”.
+devices-row-synced = [Šýñçéð { $ago }~~~]
+
+# Devices row value with the error glyph.
+devices-row-error = [Çöüļðñ’ţ šýñç~~~~]
+
+# Group heading over the name.
+devices-this-device = [Ţĥîš ðéṽîçé~~~~]
+
+# Row for this device’s name.
+devices-name = [Ñàɱé~~]
+
+# Group heading while off.
+sync-group = [Šýñç~~]
+
+# Off state.
+sync-off-title = [Šýñç îš öƒƒ~~~~]
+
+# Off state.
+sync-off-line = [Ţüŕñ îţ öñ ţö ķééþ ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš ţĥé šàɱé öñ ýöüŕ ðéṽîçéš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Button; the Mac adds an ellipsis.
+sync-turn-on = [Ţüŕñ öñ šýñç~~~~]
+
+# Road sheet title.
+sync-road-title = [Ĥöŵ šĥöüļð ýöüŕ ðéṽîçéš šĥàŕé?~~~~~~~~~]
+
+# Road sheet row.
+sync-road-nearby = [Ŵîţĥ à ðéṽîçé ñéàŕƀý~~~~~~]
+
+# Road sheet row line.
+sync-road-nearby-line = [Þàîŕ ŵîţĥ àñöţĥéŕ ðéṽîçé öñ ţĥé šàɱé Ŵî-Ƒî. Ñöţĥîñĝ îš šţöŕéð àñýŵĥéŕé éļšé.~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Road sheet row.
+sync-road-cloud = [Ţĥŕöüĝĥ à çļöüð ƒöļðéŕ~~~~~~~]
+
+# Road sheet row line. Names no service, since a build may hide some (decision 14).
+sync-road-cloud-line = [Å çļöüð ðŕîṽé ýöü àļŕéàðý üšé, öŕ ýöüŕ öŵñ šéŕṽéŕ. Ŵöŕķš ŵĥîļé ýöüŕ ðéṽîçéš àŕé àþàŕţ, àñð ķééþš à ƀàçķüþ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Road sheet footer.
+sync-road-later = [Ýöü çàñ àðð ţĥé öţĥéŕ ŵàý ļàţéŕ. Ṁöšţ þéöþļé üšé ƀöţĥ.~~~~~~~~~~~~~~~~~]
+
+# Group heading.
+devices-yours = [Ýöüŕ ðéṽîçéš~~~~]
+
+# Empty Your devices.
+devices-only-this = [Öñļý ţĥîš ðéṽîçé~~~~~]
+
+# Empty Your devices.
+devices-only-this-line = [Þàîŕ àñöţĥéŕ ðéṽîçé ţö šĥàŕé ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš.~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Row and sheet title.
+devices-add = [Åðð à ðéṽîçé~~~~]
+
+# Device row line past 30 days.
+devices-not-seen = [Ñöţ šééñ ƒöŕ { $days } ðàýš~~~~~~~]
+
+# A device paired only for Play on TV.
+devices-remote-only = [Ŕéɱöţé öñļý~~~~]
+
+# Button on a remote-only TV row.
+devices-also-sync = [Åļšö šýñç ŵîţĥ { $device }~~~~~~]
+
+# Footer while sync is off.
+devices-paired-tvs-foot = [Þàîŕéð ƒöŕ Þļàý öñ ŢṼ. Å ŢṼ þàîŕéð àš à ŕéɱöţé ñéṽéŕ ĝéţš ýöüŕ ĥîšţöŕý.~~~~~~~~~~~~~~~~~~~~~~]
+
+# Switch on a device.
+devices-sync-switch = [Šýñç~~]
+
+# Switch on a TV.
+devices-remote-switch = [Ŕéɱöţé~~]
+
+# Device page footer.
+devices-switches-foot = [Šýñç šĥàŕéš ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš. Ŕéɱöţé ļéţš ţĥîš þĥöñé ðŕîṽé { $device }.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Device page, destructive.
+devices-remove = [Ŕéɱöṽé ţĥîš ðéṽîçé~~~~~~]
+
+# Alert title.
+devices-remove-alert = [Ŕéɱöṽé { $device }?~~~~]
+
+# Alert message.
+devices-remove-alert-line = [{ $device } ķééþš ŵĥàţ îţ ĥàš, ƀüţ ĝéţš ñöţĥîñĝ ñéŵ ƒŕöɱ ýöüŕ öţĥéŕ ðéṽîçéš.~~~~~~~~~~~~~~~~~~~~~]
+
+# Last row; “this phone”, “this Mac”.
+sync-turn-off = [Ţüŕñ öƒƒ šýñç öñ ţĥîš { $kind }~~~~~~~~]
+
+# Alert title.
+sync-turn-off-alert = [Ţüŕñ öƒƒ šýñç öñ { $device }?~~~~~~~]
+
+# Alert message.
+sync-turn-off-alert-line = [Ţĥîš { $kind } šţöþš šĥàŕîñĝ ŵîţĥ ýöüŕ öţĥéŕ ðéṽîçéš. Éṽéŕýţĥîñĝ îţ ĥàš šţàýš ĥéŕé.~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Group heading.
+cloud-group = [Çļöüð ƒöļðéŕ~~~~]
+
+# Group footer.
+cloud-foot = [Ƒîļļš îñ ŵĥîļé ýöüŕ ðéṽîçéš àŕé àþàŕţ, àñð ķééþš à šéàļéð ƀàçķüþ. Öñļý ýöüŕ ðéṽîçéš çàñ ŕéàð îţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Row when only the nearby road is set.
+cloud-add = [Åðð à çļöüð ƒöļðéŕ~~~~~~]
+
+# Picker title.
+cloud-pick-title = [Çĥööšé à çļöüð ƒöļðéŕ~~~~~~~]
+
+# Picker row line.
+cloud-google-line = [Å ĥîððéñ Ķàéŕî ƒöļðéŕ îñ ýöüŕ Ðŕîṽé~~~~~~~~~~~]
+
+# Picker row line.
+cloud-nextcloud-line = [Ýöüŕ öŵñ öŕ à ĥöšţéð Ñéẋţçļöüð šéŕṽéŕ~~~~~~~~~~~~]
+
+# Picker row line, Apple and Windows.
+cloud-icloud-line = [Å ƒöļðéŕ ýöü çĥööšé îñ îÇļöüð Ðŕîṽé~~~~~~~~~~~]
+
+# Picker group heading.
+cloud-other = [Öţĥéŕ~~]
+
+# Picker row.
+cloud-webdav = [ŴéƀÐÅṼ šéŕṽéŕ~~~~]
+
+# Picker row line.
+cloud-webdav-line = [Åñý šéŕṽéŕ ţĥàţ šþéàķš ŴéƀÐÅṼ~~~~~~~~~]
+
+# Picker row line.
+cloud-folder-line = [Ƒöŕ à ƒöļðéŕ àñöţĥéŕ àþþ ķééþš îñ šţéþ~~~~~~~~~~~~]
+
+# Picker footer.
+cloud-pick-foot = [Ýöüŕ ðéṽîçéš ķééþ à šéàļéð çöþý öƒ ţĥéîŕ çĥàñĝéš îñ ţĥîš ƒöļðéŕ. Öñļý ýöüŕ ðéṽîçéš çàñ ŕéàð îţ, àñð Ķàéŕî ŕüñš ñö šéŕṽéŕ öƒ îţš öŵñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Row line while the first write runs.
+cloud-setting-up = [Šéţţîñĝ üþ ţĥé ƒöļðéŕ~~~~~~~]
+
+# Field label.
+cloud-nextcloud-address = [Šéŕṽéŕ àððŕéšš~~~~~]
+
+# Field note.
+cloud-nextcloud-address-note = [Ţĥé àððŕéšš ýöü öþéñ Ñéẋţçļöüð àţ îñ à ƀŕöŵšéŕ.~~~~~~~~~~~~~~~]
+
+# Login flow wait.
+cloud-nextcloud-wait-title = [Ƒîñîšĥ šîĝñîñĝ îñ öñ { $host }~~~~~~~~]
+
+# Login flow wait.
+cloud-nextcloud-wait-line = [Ýöüŕ Ñéẋţçļöüð þàĝé îš öþéñ îñ ţĥé ƀŕöŵšéŕ. Åļļöŵ àççéšš ţĥéŕé, àñð ţĥîš šĥééţ çàŕŕîéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Wait row.
+cloud-waiting = [Ŵàîţîñĝ ƒöŕ { $service }~~~~~]
+
+# Button.
+cloud-open-again = [Öþéñ ţĥé þàĝé àĝàîñ~~~~~~]
+
+# Text button.
+cloud-app-password = [Ûšé àñ àþþ þàššŵöŕð îñšţéàð~~~~~~~~~]
+
+# Button.
+cloud-connect = [Çöññéçţ~~~]
+
+# Error.
+cloud-err-offline = [Çöüļðñ’ţ ŕéàçĥ { $service }. Çĥéçķ ýöüŕ çöññéçţîöñ.~~~~~~~~~~~~~]
+
+# Inline error.
+cloud-err-no-server = [Çöüļðñ’ţ ƒîñð à Ñéẋţçļöüð šéŕṽéŕ àţ { $host }. Çĥéçķ ţĥé àððŕéšš.~~~~~~~~~~~~~~~~~~]
+
+# Inline error.
+cloud-err-app-password = [Ñéẋţçļöüð ðîðñ’ţ àççéþţ ţĥàţ àþþ þàššŵöŕð. Ṁàķé à ñéŵ öñé îñ Ñéẋţçļöüð üñðéŕ Šéţţîñĝš, Šéçüŕîţý.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Inline error.
+cloud-err-webdav = [Ţĥé šéŕṽéŕ ŕéƒüšéð ţĥàţ üšéŕ ñàɱé öŕ þàššŵöŕð.~~~~~~~~~~~~~~]
+
+# Error, with Open the page again.
+cloud-err-timeout = [Ţĥé šîĝñ-îñ þàĝé çļöšéð ƀéƒöŕé àççéšš ŵàš àļļöŵéð.~~~~~~~~~~~~~~~]
+
+# Error.
+cloud-err-other-group = [Ţĥîš ƒöļðéŕ ƀéļöñĝš ţö àñöţĥéŕ šéţ öƒ ðéṽîçéš. Éñţéŕ îţš ŕéçöṽéŕý ķéý ţö ĵöîñ ţĥéɱ, öŕ çĥööšé àñöţĥéŕ ƒöļðéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Status error, with Sign in again.
+cloud-err-signed-out = [{ $service } šîĝñéð Ķàéŕî öüţ. Ýöüŕ çĥàñĝéš ŵàîţ öñ ţĥîš { $kind } üñţîļ ýöü šîĝñ îñ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Status error.
+cloud-err-full = [{ $service } îš ƒüļļ. Ƒŕéé šöɱé šþàçé ţĥéŕé, ţĥéñ ţŕý àĝàîñ.~~~~~~~~~~~~~~~~]
+
+# Status error, with Choose folder.
+cloud-err-folder-gone = [Ķàéŕî çàñ’ţ öþéñ ţĥé ƒöļðéŕ àñý ɱöŕé. Çĥööšé îţ àĝàîñ.~~~~~~~~~~~~~~~~~]
+
+# Status error title.
+cloud-err-title = [Çöüļðñ’ţ šýñç ŵîţĥ { $service }~~~~~~~]
+
+# Picker row line.
+cloud-dropbox-line = [Ķàéŕî’š öŵñ ƒöļðéŕ îñ ýöüŕ Ðŕöþƀöẋ, Åþþš/Ķàéŕî~~~~~~~~~~~~~~]
+
+# Picker row line.
+cloud-onedrive-line = [Ķàéŕî’š öŵñ ƒöļðéŕ îñ ýöüŕ ÖñéÐŕîṽé, Åþþš/Ķàéŕî~~~~~~~~~~~~~~~]
+
+# Cloud group button.
+cloud-sync-now = [Šýñç ñöŵ~~~]
+
+# Cloud group button; at once, no question, except on the TV.
+cloud-sign-out = [Šîĝñ öüţ~~~]
+
+# Cloud group button after signing out.
+cloud-sign-in = [Šîĝñ îñ~~~]
+
+# Cloud row after Sign out; hollow haze dot.
+cloud-signed-out-line = [Šîĝñéð öüţ. Çĥàñĝéš ŵàîţ öñ ţĥîš { $kind } üñţîļ ýöü šîĝñ îñ àĝàîñ.~~~~~~~~~~~~~~~~~~~]
+
+# Picker row line after `SignInDenied`.
+cloud-err-denied = [{ $service } ðîðñ’ţ ĝîṽé Ķàéŕî àççéšš. Çĥööšé îţ àĝàîñ ţö ŕéţŕý.~~~~~~~~~~~~~~~~~]
+
+# TV picker footer (decision 17).
+tv-cloud-pick-foot = [Çĥööšé ţĥé öñé ýöüŕ öţĥéŕ ðéṽîçéš üšé. Å ñéŵ çļöüð ƒöļðéŕ îš àððéð öñ à þĥöñé öŕ çöɱþüţéŕ, ŵĥéŕé îţš ŕéçöṽéŕý ķéý çàñ ƀé šàṽéð.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# TV picker row line for Dropbox.
+tv-cloud-dropbox-line = [Šîĝñš îñ öñ ýöüŕ þĥöñé~~~~~~~]
+
+# TV, Dropbox.
+tv-cloud-needs-phone-title = [Ðŕöþƀöẋ šîĝñš îñ öñ ýöüŕ þĥöñé~~~~~~~~~]
+
+# TV, Dropbox, a paired phone has it.
+tv-cloud-needs-phone-has = [{ $device } îš šîĝñéð îñ ţö Ðŕöþƀöẋ. Ţĥîš ŢṼ çàñ üšé ţĥàţ šîĝñ-îñ öṽéŕ ýöüŕ þàîŕéð ļîñķ.~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# TV amber button; also for Nextcloud and WebDAV.
+tv-use-phone-signin = [Ûšé { $device }’š šîĝñ-îñ~~~~~~]
+
+# TV, Dropbox, no phone has it.
+tv-cloud-needs-phone-none = [Ðŕöþƀöẋ ĥàš ñö šîĝñ-îñ à ŢṼ çàñ ðö. Öñ ýöüŕ þĥöñé, öþéñ Ķàéŕî, ţĥéñ Šéţţîñĝš, Ðéṽîçéš, Çļöüð ƒöļðéŕ, àñð šîĝñ îñ ţö Ðŕöþƀöẋ ţĥéŕé. Ţĥéñ çĥööšé Ðŕöþƀöẋ ĥéŕé àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# TV code screen after the poll succeeds.
+tv-cloud-finishing = [Šîĝñéð îñ. Šéţţîñĝ üþ ţĥé ƒöļðéŕ~~~~~~~~~~]
+
+# TV cloud row.
+tv-cloud-revoked-line = [{ $service } šîĝñéð Ķàéŕî öüţ. Šéļéçţ ţö šîĝñ îñ àĝàîñ.~~~~~~~~~~~~~~]
+
+# TV cloud row.
+tv-cloud-signed-out-line = [Šîĝñéð öüţ. Šéļéçţ ţö šîĝñ îñ.~~~~~~~~~]
+
+# TV ConfirmDialog.
+tv-cloud-sign-out-title = [Šîĝñ öüţ öƒ { $service }?~~~~~]
+
+# TV ConfirmDialog, with Cancel focused and Sign out.
+tv-cloud-sign-out-line = [Ţĥîš ŢṼ šţöþš šýñçîñĝ ţĥŕöüĝĥ { $service }. Çĥàñĝéš ŵàîţ ĥéŕé üñţîļ ýöü šîĝñ îñ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Status line while offline.
+cloud-offline = [Ŵàîţîñĝ ƒöŕ à çöññéçţîöñ. Çĥàñĝéš àŕé ķéþţ öñ ţĥîš { $kind }.~~~~~~~~~~~~~~~~~]
+
+# TV device flow.
+tv-google-title = [Šîĝñ îñ ţö Ĝööĝļé Ðŕîṽé~~~~~~~]
+
+# TV device flow.
+tv-qr-open-page = [Öŕ šçàñ ţö öþéñ ţĥé þàĝé~~~~~~~~]
+
+# TV Nextcloud.
+tv-nextcloud-line = [Šçàñ ţĥîš ŵîţĥ ýöüŕ þĥöñé àñð àļļöŵ àççéšš öñ ýöüŕ Ñéẋţçļöüð þàĝé. Ţĥé ŢṼ çàŕŕîéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Sheet title.
+rkey-title = [Ýöüŕ ŕéçöṽéŕý ķéý~~~~~~]
+
+# Sheet line.
+rkey-line = [Ķééþ ţĥîš šöɱéŵĥéŕé šàƒé. Îţ ŕéšţöŕéš ýöüŕ ĥîšţöŕý îƒ ýöü ļöšé éṽéŕý ðéṽîçé, àñð ļéţš à ñéŵ ðéṽîçé ĵöîñ ƒŕöɱ ýöüŕ çļöüð ƒöļðéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Button.
+rkey-copy = [Çöþý~~]
+
+# Text button.
+rkey-qr = [Šĥöŵ àš ǪŔ çöðé~~~~~]
+
+# Sheet footnote.
+rkey-again = [Ýöü çàñ šéé îţ àĝàîñ îñ Šéţţîñĝš, Ðéṽîçéš, àƒţéŕ üñļöçķîñĝ ţĥîš { $kind }.~~~~~~~~~~~~~~~~~~~~~]
+
+# Devices row.
+rkey-row = [Ŕéçöṽéŕý ķéý~~~~]
+
+# Devices row value.
+rkey-made = [Ṁàðé { $date }~~~]
+
+# Row.
+rkey-new = [Ṁàķé à ñéŵ ķéý~~~~~]
+
+# Footer.
+rkey-new-foot = [Ţĥé öļð ķéý šţöþš ŵöŕķîñĝ, àñð ýöüŕ ðéṽîçéš šŵîţçĥ ţö ţĥé ñéŵ öñé ţĥé ñéẋţ ţîɱé ţĥéý šýñç.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Restore.
+rkey-enter-title = [Éñţéŕ ýöüŕ ŕéçöṽéŕý ķéý~~~~~~~]
+
+# Restore.
+rkey-enter-line = [{ $service } ĥöļðš ĥîšţöŕý ƒŕöɱ { $count } ðéṽîçéš. Ţĥé ķéý ýöü šàṽéð ŵĥéñ šýñç ŵàš ţüŕñéð öñ öþéñš îţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Field note.
+rkey-enter-note = [24 ļéţţéŕš àñð ðîĝîţš, îñ ĝŕöüþš öƒ ƒöüŕ. Šþàçéš àñð çàšé ðöñ’ţ ɱàţţéŕ.~~~~~~~~~~~~~~~~~~~~~~]
+
+# Inline error.
+rkey-wrong = [Ţĥàţ ķéý ðöéšñ’ţ öþéñ ţĥîš ƒöļðéŕ. Çĥéçķ éàçĥ ĝŕöüþ öƒ ƒöüŕ àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Button.
+rkey-restore = [Ŕéšţöŕé~~~]
+
+# Add a device.
+pair-enter-line = [Öñ ţĥé öţĥéŕ ðéṽîçé, öþéñ Ķàéŕî àñð çĥööšé Šéţ üþ ƒŕöɱ àñöţĥéŕ ðéṽîçé, öŕ Šéţţîñĝš, Ðéṽîçéš, Šĥöŵ à çöðé. Ţĥéñ éñţéŕ ţĥé çöðé ĥéŕé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Button, phones.
+pair-scan = [Šçàñ ţĥé çöðé~~~~]
+
+# Note.
+pair-same-wifi = [Ɓöţĥ ðéṽîçéš ñééð ţö ƀé öñ ţĥé šàɱé Ŵî-Ƒî.~~~~~~~~~~~~~]
+
+# Button.
+pair-button = [Þàîŕ~~]
+
+# Text button.
+pair-show-instead = [Šĥöŵ à çöðé ĥéŕé îñšţéàð~~~~~~~~]
+
+# Code screen.
+pair-show-title = [Éñţéŕ ţĥîš çöðé öñ ýöüŕ öţĥéŕ ðéṽîçé~~~~~~~~~~~]
+
+# Code screen.
+pair-show-scan = [Öŕ šçàñ îţ ƒŕöɱ Ķàéŕî öñ ýöüŕ þĥöñé.~~~~~~~~~~~]
+
+# Code screen.
+pair-good-for = [Ĝööð ƒöŕ 2 ɱîñüţéš · { $left }~~~~~~~~]
+
+# TV code screen.
+pair-tv-line = [Öñ ýöüŕ þĥöñé, öþéñ Ķàéŕî, ţĥéñ Šéţţîñĝš, Ðéṽîçéš, Åðð à ðéṽîçé, àñð šçàñ ţĥîš çöðé öŕ éñţéŕ îţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Success.
+pair-ok = [Þàîŕéð ŵîţĥ { $device }~~~~~]
+
+# Success.
+pair-ok-line = [Ɓŕîñĝîñĝ öṽéŕ ýöüŕ ĥîšţöŕý. Ýöü çàñ ķééþ üšîñĝ Ķàéŕî ɱéàñŵĥîļé.~~~~~~~~~~~~~~~~~~~]
+
+# Success switch.
+pair-copy-signins = [Çöþý šîĝñ-îñš ƒŕöɱ { $device }~~~~~~~]
+
+# Success switch line.
+pair-copy-signins-line = [{ $trackers }. Éàçĥ ðéṽîçé ĝéţš îţš öŵñ çöþý öṽéŕ ţĥîš ļîñķ.~~~~~~~~~~~~~~~]
+
+# Error.
+pair-err-code = [Ţĥàţ çöðé ðîðñ’ţ ɱàţçĥ. Çĥéçķ ţĥé çöðé öñ { $device } àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~]
+
+# Error.
+pair-err-not-found = [Çöüļðñ’ţ ƒîñð ţĥé ðéṽîçé šĥöŵîñĝ ţĥîš çöðé. Ɓöţĥ ðéṽîçéš ñééð ţö ƀé öñ ţĥé šàɱé Ŵî-Ƒî.~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Error on the showing side.
+pair-err-expired = [Ţĥîš çöðé ŕàñ öüţ. Šĥöŵ à ñéŵ öñé.~~~~~~~~~~~]
+
+# Profile question.
+pair-which-profile = [Ŵĥîçĥ þŕöƒîļé öñ { $device } îš ýöüŕš?~~~~~~~~~]
+
+# Profile question.
+pair-which-profile-line = [Ţĥîš { $kind } šýñçš ŵîţĥ ţĥàţ þŕöƒîļé öñļý. Ţĥé öţĥéŕš šţàý öñ { $device }.~~~~~~~~~~~~~~~~~~~]
+
+# Footer.
+pair-also-sync-foot = [{ $device } àļŕéàðý ķñöŵš ţĥîš þĥöñé ƒŕöɱ Þļàý öñ ŢṼ, šö šýñçîñĝ ŵîţĥ îţ ñééðš ñö ñéŵ çöðé.~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Continue, for a day.
+continue-from-device = [Éþîšöðé { $n } · šţöþþéð àţ { $time } öñ { $device }~~~~~~~~~~~]
+
+# Player, 6 s, with Start over.
+player-resumed-from = [Ŕéšüɱéð àţ { $time } ƒŕöɱ { $device }~~~~~~~]
+
+# Row line, Mac toolbar status.
+sync-syncing = [Šýñçîñĝ~~~]
+
+# Mac jobs popover.
+sync-syncing-with = [Šýñçîñĝ ŵîţĥ { $device }~~~~~]
+
+# Device page group.
+sync-notes = [Šýñç ñöţéš~~~]
+
+# Sync note.
+sync-note-kept-watched = [Éþîšöðé { $n } öƒ { $title } šţàýš ŵàţçĥéð. { $other } ɱàŕķéð îţ üñŵàţçĥéð ŵîţĥöüţ ķñöŵîñĝ { $device } ĥàð ƒîñîšĥéð îţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Sync note action.
+sync-note-undo = [Ṁàŕķ üñŵàţçĥéð~~~~~]
+
+# Footer.
+sync-notes-foot = [Ñöţéš šţàý ƒöŕ 7 ðàýš.~~~~~~~]
+
+# Settings row and page.
+profiles-title = [Þŕöƒîļéš~~~]
+
+# Profiles row value with one profile.
+profiles-only-you = [Öñļý ýöü~~~]
+
+# Profiles page with one.
+profiles-one-foot = [Þŕöƒîļéš ķééþ šéþàŕàţé ĥîšţöŕý, Çöñţîñüé àñð àççöüñţš ƒöŕ þéöþļé ŵĥö šĥàŕé ţĥîš ðéṽîçé. Ŵîţĥ öñé þŕöƒîļé, Ķàéŕî ĥàš ñö þîçķéŕ àñð ñö ñàɱéš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Row, sheet title, picker tile.
+profiles-add = [Åðð à þŕöƒîļé~~~~]
+
+# Sheet line.
+profiles-add-line = [Éàçĥ þŕöƒîļé ķééþš îţš öŵñ ĥîšţöŕý, Çöñţîñüé àñð àççöüñţš. Šöüŕçéš àñð ðöŵñļöàðš šţàý šĥàŕéð öñ ţĥîš ðéṽîçé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Field label.
+profiles-new = [Ñéŵ þŕöƒîļé~~~~]
+
+# Field label.
+profiles-yours = [Ýöüŕ þŕöƒîļé~~~~]
+
+# Field note when signed in.
+profiles-yours-note = [Ƒîļļéð îñ ƒŕöɱ ÅñîĻîšţ. Ûñţîļ ñöŵ ţĥîš ðéṽîçé ĥàð öñé þŕöƒîļé ŵîţĥ ñö ñàɱé.~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Switch.
+profiles-kids = [Ķîðš þŕöƒîļé~~~~]
+
+# Switch footer.
+profiles-kids-line = [Åðüļţ ţîţļéš šţàý öƒƒ, àñð šöüŕçéš, ðéṽîçéš àñð ţöŕŕéñţ šéţţîñĝš àŕé ĥîððéñ îñ îţ.~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Settings foot in a kids profile.
+profiles-kids-hidden = [Šöüŕçéš àñð Ðéṽîçéš àŕé ĥîððéñ îñ à ķîðš þŕöƒîļé, àñð àðüļţ ţîţļéš šţàý öƒƒ.~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Line under a kids profile.
+profiles-kids-tag = [Ķîðš~~]
+
+# Button.
+profiles-add-button = [Åðð þŕöƒîļé~~~~]
+
+# Profiles page footer.
+profiles-shared-foot = [Šöüŕçéš, ðöŵñļöàðš àñð ţĥîš ðéṽîçé’š šéţţîñĝš àŕé šĥàŕéð ƀý éṽéŕý þŕöƒîļé.~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Profile page row.
+profiles-syncs-with = [Šýñçš ŵîţĥ~~~]
+
+# Profile page, destructive.
+profiles-delete = [Ðéļéţé þŕöƒîļé~~~~~]
+
+# Alert title.
+profiles-delete-alert = [Ðéļéţé { $name }’š þŕöƒîļé?~~~~~~~]
+
+# Alert message.
+profiles-delete-alert-line = [{ $name }’š ĥîšţöŕý àñð šîĝñ-îñš öñ ţĥîš ðéṽîçé àŕé ŕéɱöṽéð. Ðéṽîçéš ţĥàţ šýñç ŵîţĥ { $name } ķééþ ţĥéîŕš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# TV, and iPad when asked.
+profiles-picker = [Ŵĥö’š ŵàţçĥîñĝ?~~~~~]
+
+# iPad switch.
+profiles-ask-at-launch = [Åšķ ŵĥö’š ŵàţçĥîñĝ àţ ļàüñçĥ~~~~~~~~~]
+
+# iPad footer.
+profiles-ask-foot = [Öƒƒ ƀý ðéƒàüļţ. Ƒöŕ àñ îÞàð ţĥé ĥöüšéĥöļð šĥàŕéš. Ţĥé àççöüñţ ŕöŵ šŵîţçĥéš þŕöƒîļéš àţ àñý ţîɱé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# TV Settings.
+profiles-switch = [Šŵîţçĥ þŕöƒîļé~~~~~]
+
+# Account sheet and menus.
+profiles-manage = [Ṁàñàĝé þŕöƒîļéš~~~~~]
+
+# Welcome, text button; TV says “Set up from your phone”.
+first-setup-other = [Šéţ üþ ƒŕöɱ àñöţĥéŕ ðéṽîçé~~~~~~~~]
+
+# Code screen from first launch.
+first-setup-line = [Öñ à ðéṽîçé ţĥàţ àļŕéàðý ĥàš Ķàéŕî, öþéñ Šéţţîñĝš, Ðéṽîçéš, Åðð à ðéṽîçé, àñð éñţéŕ ţĥîš çöðé öŕ šçàñ îţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Text button.
+first-restore = [Ŕéšţöŕé ƒŕöɱ à çļöüð ƒöļðéŕ îñšţéàð~~~~~~~~~~~]
+
+# Success from first launch.
+first-ok-line = [Ɓŕîñĝîñĝ öṽéŕ ýöüŕ ĥîšţöŕý, šéţţîñĝš àñð þļüĝîñ šţöŕéš. Ýöü çàñ šţàŕţ üšîñĝ Ķàéŕî ñöŵ.~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Success switch.
+first-join-store = [Ĵöîñ ţĥé þļüĝîñ šţöŕé { $store }~~~~~~~~]
+
+# Success switch line.
+first-join-store-line = [{ $device } ɱàķéš ţĥîš { $kind } îţš öŵñ îñṽîţé~~~~~~~~~~]
+
+# Picker row on a phone or computer.
+cloud-folder = [Å ƒöļðéŕ öñ ţĥîš { $kind }~~~~~~]
+
+# Field note under the app password, on Android.
+cloud-app-password-note = [Ṁàķé öñé îñ Ñéẋţçļöüð üñðéŕ Šéţţîñĝš, Šéçüŕîţý. Îţ îš ķéþţ öñ ţĥîš { $kind }.~~~~~~~~~~~~~~~~~~~~~~]
+
+# Devices row value while sync is off and TVs are paired for Play on TV. The row says "Sync off", then this.
+devices-tvs-for-play =
+    { $count ->
+        [one] [Öñé ŢṼ ƒöŕ Þļàý öñ ŢṼ~~~~~~~]
+       *[other] [{ $count } ŢṼš ƒöŕ Þļàý öñ ŢṼ~~~~~~~]
+    }
+
+# Line under a TV paired for Play on TV today.
+devices-paired-today = [Þàîŕéð ţöðàý~~~~]
+
+# Line under Add a device on the TV's Devices page.
+tv-devices-add-line = [Šĥöŵš à çöðé ţö éñţéŕ öñ ýöüŕ þĥöñé~~~~~~~~~~~]
+
+# TV Profiles page with one profile.
+tv-profiles-only-you = [Öñļý ýöü. Åðð à þŕöƒîļé ţö ķééþ šéþàŕàţé ĥîšţöŕý, Çöñţîñüé àñð àççöüñţš öñ ţĥîš ŢṼ.~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# TV Settings, Profiles: the row that opens the picker.
+tv-profiles-opens-picker = [Öþéñš Ŵĥö’š ŵàţçĥîñĝ?~~~~~~~]
+
+# TV Profiles page heading over the profiles.
+tv-profiles-on-this-tv = [Þŕöƒîļéš öñ ţĥîš ŢṼ~~~~~~]
+
+# Android recovery key sheet, third button.
+rkey-save-file = [Šàṽé àš à ƒîļé~~~~~]
+
+# Android recovery key sheet, button that shows the key as a code.
+rkey-qr-short = [ǪŔ çöðé~~~]
+
+# Button on the Devices page and the add a device sheet that shows a pairing code instead of entering one.
+pair-show-code = [Šĥöŵ à çöðé~~~~]
+
+# Cloud row button when the service signed Kaeri out.
+cloud-sign-in-again = [Šîĝñ îñ àĝàîñ~~~~]
+
+# Cloud row button when the folder can't be opened.
+cloud-choose-folder = [Çĥööšé ƒöļðéŕ~~~~]
+
+# Spoken label of a profile's avatar on Home.
+profiles-avatar-desc = [{ $name }, šŵîţçĥ þŕöƒîļé~~~~~~]
+
+# Heading over the pairing code the other device shows, over the field.
+pair-code-field = [Þàîŕîñĝ çöðé~~~~]
+
+device-kind-phone = [þĥöñé~~]
+
+device-kind-tablet = [ţàƀļéţ~~]
+
+device-kind-tv = [ŢṼ~]
+
 # Title of the state when a title page could not load.
 title-load-failed = [Çöüļðñ'ţ ļöàð ţĥîš ţîţļé~~~~~~~~]
 
