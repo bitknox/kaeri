@@ -525,6 +525,24 @@ public class StoresTests
         Assert.Equal("one", known.Joined);
         Assert.Null(known.Preview);
     }
+
+    [Fact]
+    public void AListThatCameBackEmptyCountsAsLoaded()
+    {
+        var known = new Known();
+        Assert.False(known.ServersLoaded);
+        Assert.False(known.HiddenLoaded);
+        Assert.False(known.PartyRecentLoaded);
+        Assert.False(known.Queue.Loaded);
+        known.Take(new Event.Server(new ServerEvent.Servers([])));
+        known.Take(new Event.HiddenTitles([]));
+        known.Take(new Event.PartyRecent([]));
+        known.Take(new Event.Downloads([]));
+        Assert.True(known.ServersLoaded);
+        Assert.True(known.HiddenLoaded);
+        Assert.True(known.PartyRecentLoaded);
+        Assert.True(known.Queue.Loaded);
+    }
 }
 
 public class DownloadsTests
