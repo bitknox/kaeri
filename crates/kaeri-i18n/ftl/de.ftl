@@ -174,6 +174,9 @@ notice-reason = { $reason }
 # Reason: no source is set up, so nothing can be played or downloaded. Shown in a toast.
 cause-no-sources = Keine Quellen eingerichtet. Füge eine im Bereich Quellen hinzu.
 
+# Reason: the play waited two minutes for a connection and the device stayed offline. Shown in a toast and on the failure screen.
+cause-no-connection = Keine Verbindung. Versuche es erneut, wenn du wieder online bist.
+
 # A play's explanation: the episode's broadcast is still ahead. The "when" says today, tomorrow or a date.
 notice-not-aired = Folge { $episode } wird { $when } ausgestrahlt.
 
@@ -242,6 +245,27 @@ status-looking-up-title = Titel wird gesucht…
 
 # Job note while a play waits for the sources to arrive.
 status-loading-sources = Quellen werden geladen…
+
+# Starting screen, step line while the title is looked up.
+start-looking-up-title = Titel wird gesucht
+
+# Starting screen, step line while sources still being set up are waited for.
+start-getting-sources-ready = Deine Quellen werden vorbereitet
+
+# Starting screen, step line while one source is asked for the episode. The name is the source's own.
+start-asking-source = { $name } wird gefragt
+
+# Starting screen, step line once a stream is found and the player opens it.
+start-opening-stream = Stream wird geöffnet
+
+# Starting screen, step line when a stream showed no video and the next stream of the same source is opened.
+start-trying-another-stream = Anderer Stream wird versucht
+
+# Starting screen, step line while a torrent looks for peers that can send it. Never says torrent.
+start-finding-peers = Peers werden gesucht
+
+# Starting screen, step line while the player waits for data to fill its buffer.
+start-buffering = Puffern
 
 # Job note while the sources are asked for an episode. The episode is its label, often a number.
 status-searching-sources = Quellen werden nach Folge { $episode } durchsucht…
@@ -6647,6 +6671,127 @@ player-add-plugin-store = Plugin-Store hinzufügen
 
 # Short word while the video buffers.
 player-buffering = Puffert
+
+# Detail line while a source is asked and more than one is in the viewer's order.
+player-start-place = { $place } von { $total } Quellen
+
+# Detail line while the source asked is the one the show is pinned to.
+player-start-pinned = Deine Wahl für diese Serie
+
+# Detail line when a source has no match for the show.
+player-start-miss-no-match = { $name } hat diese Serie nicht
+
+# Detail line when a source has the show and not the episode. The episode is its label.
+player-start-miss-no-episode = { $name } hat Folge { $episode } nicht
+
+# Detail line when a source failed and the next is asked.
+player-start-miss-failed = { $name } hat nicht geantwortet
+
+# Detail line when a source took too long and the next is asked.
+player-start-miss-timed-out = { $name } hat zu lange gebraucht
+
+# Detail line after the viewer skipped the source being asked.
+player-start-miss-skipped = Du hast { $name } übersprungen
+
+# Details row for sources passed over because they failed lately. The name goes before it.
+player-start-resting = Nach jüngsten Fehlern übersprungen
+
+# Detail line once the streams are found and the player opens one. The name is the source's.
+player-start-from = Von { $name }
+
+# Detail line when a stream showed no video and another opens.
+player-start-no-video = Der erste zeigte kein Video
+
+# Detail line with the place of the stream being opened.
+player-start-stream-place = Stream { $next } von { $total }
+
+# Detail line while a torrent has peers.
+player-start-peers =
+    { $count ->
+        [one] Ein Peer
+       *[other] { $count } Peers
+    }
+
+# Detail line with the speed data arrives at, already sized with one decimal, such as "3.4 MB".
+player-start-speed = { $speed }/s
+
+# Step line while the player fills its buffer and gives a number.
+player-start-buffering-percent = Puffern · { $percent }
+
+# Step line while the episode resumes where it was left.
+player-start-resuming = Fortsetzen bei { $clock }
+
+# Button on the starting screen that plays the episode from its beginning.
+player-start-from-beginning = Von vorn abspielen
+
+# Button on the starting screen that opens the list of steps.
+player-start-details = Details
+
+# Button that skips the source being asked. The name is the source's.
+player-start-skip-source = { $name } überspringen
+
+# Button that opens the next stream of the same source.
+player-start-skip-stream = Stream überspringen
+
+# Step line when a start is slow: still waiting for the source. The name is the source's.
+player-start-still-waiting = Warte noch auf { $name }
+
+# Step line while the device is offline and the episode will start when it is back.
+player-start-offline = Warten auf Verbindung
+
+# Detail line while offline. The episode is its label.
+player-start-offline-detail = Du bist offline. Folge { $episode } startet, sobald du wieder online bist.
+
+# Button on the failure screen that opens the fix for a title that matched the wrong show.
+player-start-fix-match = Zuordnung ändern
+
+# Details row label for the translation of the episode.
+player-start-translation = Ton und Untertitel
+
+# Details row once the title has been looked up.
+player-start-looked-up = Titel gefunden
+
+# Seconds on the starting screen's detail line and Details rows.
+player-start-seconds = { $seconds } s
+
+# Spoken once, when a start has taken more than a few seconds.
+player-start-still-starting = Startet noch. Du kannst eine Quelle wählen.
+
+# Spoken when a start begins. The episode is its label.
+player-start-announce = Folge { $episode } wird gestartet, { $title }
+
+# Spoken when a start fails: the title, then the reason.
+player-start-failed-announce = { $title }. { $reason }
+
+# Accessibility value of the starting screen: the step line, then the detail line.
+player-start-status = { $step }, { $detail }
+
+# Detail line on the starting screen after the viewer chose to play from the beginning.
+player-start-beginning = Start von vorn
+
+# Details row while a source is being asked.
+player-start-row-asking = Wird gefragt
+
+# Details row outcome when a source has no match for the show.
+player-start-row-no-match = Hat diese Serie nicht
+
+# Details row outcome when a source has the show and not the episode. The episode is its label.
+player-start-row-no-episode = Hat Folge { $episode } nicht
+
+# Details row outcome when a source failed.
+player-start-row-failed = Keine Antwort
+
+# Details row outcome when a source took too long.
+player-start-row-timed-out = Zu lange gebraucht
+
+# Details row outcome when the viewer skipped a source.
+player-start-row-skipped = Übersprungen
+
+# Second clause of a failure: the sources that were asked, joined as a list by the app.
+player-start-asked = { $names } wurden gefragt.
+
+# Label of the switch in the Details list that plays the episode with its subtitles.
+player-start-subtitled = Mit Untertiteln
 
 # Title of the stall card. The seconds count up.
 player-stall-title = Quelle puffert · { $seconds } s

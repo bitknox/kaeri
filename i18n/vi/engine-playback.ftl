@@ -1,5 +1,6 @@
 notice-reason = { $reason }
 cause-no-sources = Chưa thiết lập { -source-pl }. Hãy thêm một { -source } trong mục { -source-cap-pl }.
+cause-no-connection = Không có kết nối. Hãy thử lại khi bạn trực tuyến.
 notice-not-aired = Tập { $episode } sẽ phát sóng { $when }.
 notice-not-aired-yet = Tập { $episode } chưa phát sóng. Tập { $next } sẽ phát sóng { $when }.
 cause-airs-today = hôm nay lúc { $time }
@@ -25,6 +26,13 @@ cause-already-in-downloads = { $count ->
  }
 status-looking-up-title = Đang tìm tựa…
 status-loading-sources = Đang tải { -source-pl }…
+start-looking-up-title = Đang tìm tiêu đề
+start-getting-sources-ready = Đang chuẩn bị { -source-pl } của bạn
+start-asking-source = Đang hỏi { $name }
+start-opening-stream = Đang mở luồng
+start-trying-another-stream = Đang thử luồng khác
+start-finding-peers = Đang tìm peer
+start-buffering = Đang đệm
 status-searching-sources = Đang tìm trong { -source-pl } tập { $episode }…
 notice-player-failed-to-start = Không khởi chạy được mpv. Hãy kiểm tra mpv chạy được khi mở riêng. ({ $reason })
 notice-stream-no-video = Luồng này không có hình. Đang thử { $next } trên { $total }.

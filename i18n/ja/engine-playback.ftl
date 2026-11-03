@@ -1,5 +1,6 @@
 notice-reason = { $reason }
 cause-no-sources = { -source-pl }が設定されていません。{ -source-cap-pl }の画面で追加してください。
+cause-no-connection = 接続がありません。オンラインに戻ったらもう一度お試しください。
 notice-not-aired = 第{ $episode }話は{ $when }に放送予定です。
 notice-not-aired-yet = 第{ $episode }話はまだ放送されていません。第{ $next }話は{ $when }に放送予定です。
 cause-airs-today = 今日{ $time }
@@ -25,6 +26,13 @@ cause-already-in-downloads = { $count ->
  }
 status-looking-up-title = タイトルを検索しています…
 status-loading-sources = { -source-pl }を読み込んでいます…
+start-looking-up-title = タイトルを検索中
+start-getting-sources-ready = { -source-pl }を準備中
+start-asking-source = { $name }に問い合わせ中
+start-opening-stream = ストリームを開いています
+start-trying-another-stream = 別のストリームを試しています
+start-finding-peers = ピアを探しています
+start-buffering = バッファリング中
 status-searching-sources = { -source-pl }でエピソード{ $episode }を検索しています…
 notice-player-failed-to-start = mpvを起動できませんでした。mpvが単独で起動するか確認してください。（{ $reason }）
 notice-stream-no-video = そのストリームから映像が届きませんでした。{ $total }件中{ $next }件目を試しています。

@@ -1,5 +1,6 @@
 notice-reason = { $reason }
 cause-no-sources = No hay { -source-pl } configuradas. Añade una en la pantalla { -source-cap-pl }.
+cause-no-connection = Sin conexión. Inténtalo de nuevo cuando vuelvas a estar en línea.
 notice-not-aired = El episodio { $episode } se emite { $when }.
 notice-not-aired-yet = El episodio { $episode } aún no se ha emitido. El episodio { $next } se emite { $when }.
 cause-airs-today = hoy a las { $time }
@@ -31,6 +32,13 @@ cause-already-in-downloads = { $count ->
  }
 status-looking-up-title = Buscando el título…
 status-loading-sources = Cargando { -source-pl }…
+start-looking-up-title = Buscando el título
+start-getting-sources-ready = Preparando tus { -source-pl }
+start-asking-source = Consultando a { $name }
+start-opening-stream = Abriendo la transmisión
+start-trying-another-stream = Probando otra transmisión
+start-finding-peers = Buscando pares
+start-buffering = Almacenando en búfer
 status-searching-sources = Buscando { -source-pl } del episodio { $episode }…
 notice-player-failed-to-start = No se pudo iniciar mpv. Comprueba que mpv se abra por sí solo. ({ $reason })
 notice-stream-no-video = Esa transmisión no muestra video. Probando la transmisión { $next } de { $total }.

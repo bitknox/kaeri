@@ -243,6 +243,9 @@ public enum L {
     /// Reason: no source is set up, so nothing can be played or downloaded. Shown in a toast.
     public static var causeNoSources: String { string("cause-no-sources", fallback: "No sources are set up. Add one on the Sources screen.") }
 
+    /// Reason: the play waited two minutes for a connection and the device stayed offline. Shown in a toast and on the failure screen.
+    public static var causeNoConnection: String { string("cause-no-connection", fallback: "No connection. Try again when you're back online.") }
+
     /// A play's explanation: the episode's broadcast is still ahead. The "when" says today, tomorrow or a date.
     public static func noticeNotAired(episode: Int, when: String) -> String {
         Self.format("notice-not-aired", fallback: "Episode %1$lld airs %2$@.", episode, when)
@@ -6140,9 +6143,9 @@ public enum L {
         Self.format("player-start-peers", fallback: "%1$lld peers", count)
     }
 
-    /// Detail line with the speed data arrives at.
+    /// Detail line with the speed data arrives at, already sized with one decimal, such as "3.4 MB".
     public static func playerStartSpeed(speed: String) -> String {
-        Self.format("player-start-speed", fallback: "%1$@ a second", speed)
+        Self.format("player-start-speed", fallback: "%1$@/s", speed)
     }
 
     /// Step line while the player fills its buffer and gives a number.
@@ -6187,6 +6190,63 @@ public enum L {
 
     /// Details row label for the translation of the episode.
     public static var playerStartTranslation: String { string("player-start-translation", fallback: "Audio and subtitles") }
+
+    /// Details row once the title has been looked up.
+    public static var playerStartLookedUp: String { string("player-start-looked-up", fallback: "Looked up the title") }
+
+    /// Seconds on the starting screen's detail line and Details rows.
+    public static func playerStartSeconds(seconds: Int) -> String {
+        Self.format("player-start-seconds", fallback: "%1$lld s", seconds)
+    }
+
+    /// Spoken once, when a start has taken more than a few seconds.
+    public static var playerStartStillStarting: String { string("player-start-still-starting", fallback: "Still starting. You can choose a source now.") }
+
+    /// Spoken when a start begins. The episode is its label.
+    public static func playerStartAnnounce(episode: String, title: String) -> String {
+        Self.format("player-start-announce", fallback: "Starting episode %1$@, %2$@", episode, title)
+    }
+
+    /// Spoken when a start fails: the title, then the reason.
+    public static func playerStartFailedAnnounce(title: String, reason: String) -> String {
+        Self.format("player-start-failed-announce", fallback: "%1$@. %2$@", title, reason)
+    }
+
+    /// Accessibility value of the starting screen: the step line, then the detail line.
+    public static func playerStartStatus(step: String, detail: String) -> String {
+        Self.format("player-start-status", fallback: "%1$@, %2$@", step, detail)
+    }
+
+    /// Detail line on the starting screen after the viewer chose to play from the beginning.
+    public static var playerStartBeginning: String { string("player-start-beginning", fallback: "Starting from the beginning") }
+
+    /// Details row while a source is being asked.
+    public static var playerStartRowAsking: String { string("player-start-row-asking", fallback: "Asking") }
+
+    /// Details row outcome when a source has no match for the show.
+    public static var playerStartRowNoMatch: String { string("player-start-row-no-match", fallback: "Doesn't have this show") }
+
+    /// Details row outcome when a source has the show and not the episode. The episode is its label.
+    public static func playerStartRowNoEpisode(episode: String) -> String {
+        Self.format("player-start-row-no-episode", fallback: "Doesn't have episode %1$@", episode)
+    }
+
+    /// Details row outcome when a source failed.
+    public static var playerStartRowFailed: String { string("player-start-row-failed", fallback: "Didn't answer") }
+
+    /// Details row outcome when a source took too long.
+    public static var playerStartRowTimedOut: String { string("player-start-row-timed-out", fallback: "Took too long") }
+
+    /// Details row outcome when the viewer skipped a source.
+    public static var playerStartRowSkipped: String { string("player-start-row-skipped", fallback: "Skipped") }
+
+    /// Second clause of a failure: the sources that were asked, joined as a list by the app.
+    public static func playerStartAsked(names: String) -> String {
+        Self.format("player-start-asked", fallback: "%1$@ were asked.", names)
+    }
+
+    /// Label of the switch in the Details list that plays the episode with its subtitles.
+    public static var playerStartSubtitled: String { string("player-start-subtitled", fallback: "Subtitled") }
 
     /// Title of the stall card. The seconds count up.
     public static func playerStallTitle(seconds: Int) -> String {

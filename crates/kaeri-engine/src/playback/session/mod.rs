@@ -483,6 +483,7 @@ pub async fn play(
                     let _ = tx.send(Event::playback_failed(StartFailure {
                         why: NoSourceWhy::NotFound,
                         text: notice,
+                        asked: Vec::new(),
                     }));
                     return;
                 }
@@ -682,7 +683,11 @@ pub async fn play(
                         "playback produced no frames"
                     );
                     let _ = tx.send(Event::Toast(Notice::alert(message.clone())));
-                    failure = Some(StartFailure { why: NoSourceWhy::NotFound, text: message });
+                    failure = Some(StartFailure {
+                        why: NoSourceWhy::NotFound,
+                        text: message,
+                        asked: Vec::new(),
+                    });
                 }
 
                 // Exactly one ending per playback, sent only now that this attempt is known to

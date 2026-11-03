@@ -174,6 +174,9 @@ notice-reason = { $reason }
 # Reason: no source is set up, so nothing can be played or downloaded. Shown in a toast.
 cause-no-sources = Hiçbir kaynak ayarlanmadı. Kaynaklar ekranını açıp bir kaynak ekleyin.
 
+# Reason: the play waited two minutes for a connection and the device stayed offline. Shown in a toast and on the failure screen.
+cause-no-connection = Bağlantı yok. Çevrimiçi olunca tekrar dene.
+
 # A play's explanation: the episode's broadcast is still ahead. The "when" says today, tomorrow or a date.
 notice-not-aired = Bölüm { $episode }, { $when } yayınlanacak.
 
@@ -242,6 +245,27 @@ status-looking-up-title = Başlık aranıyor…
 
 # Job note while a play waits for the sources to arrive.
 status-loading-sources = Yükleniyor: kaynaklar…
+
+# Starting screen, step line while the title is looked up.
+start-looking-up-title = Başlık aranıyor
+
+# Starting screen, step line while sources still being set up are waited for.
+start-getting-sources-ready = kaynaklar hazırlanıyor
+
+# Starting screen, step line while one source is asked for the episode. The name is the source's own.
+start-asking-source = { $name } soruluyor
+
+# Starting screen, step line once a stream is found and the player opens it.
+start-opening-stream = Akış açılıyor
+
+# Starting screen, step line when a stream showed no video and the next stream of the same source is opened.
+start-trying-another-stream = Başka bir akış deneniyor
+
+# Starting screen, step line while a torrent looks for peers that can send it. Never says torrent.
+start-finding-peers = Eşler aranıyor
+
+# Starting screen, step line while the player waits for data to fill its buffer.
+start-buffering = Arabelleğe alınıyor
 
 # Job note while the sources are asked for an episode. The episode is its label, often a number.
 status-searching-sources = Bölüm { $episode } için kaynaklar aranıyor…
@@ -6647,6 +6671,124 @@ player-add-plugin-store = Bir eklenti mağazası ekle
 
 # Short word while the video buffers.
 player-buffering = Yükleniyor
+
+# Detail line while a source is asked and more than one is in the viewer's order.
+player-start-place = { $total } kaynak içinden { $place }
+
+# Detail line while the source asked is the one the show is pinned to.
+player-start-pinned = Bu dizi için seçimin
+
+# Detail line when a source has no match for the show.
+player-start-miss-no-match = { $name } bu diziye sahip değil
+
+# Detail line when a source has the show and not the episode. The episode is its label.
+player-start-miss-no-episode = { $name } bölüm { $episode } için yok
+
+# Detail line when a source failed and the next is asked.
+player-start-miss-failed = { $name } yanıt vermedi
+
+# Detail line when a source took too long and the next is asked.
+player-start-miss-timed-out = { $name } çok uzun sürdü
+
+# Detail line after the viewer skipped the source being asked.
+player-start-miss-skipped = { $name } atlandı
+
+# Details row for sources passed over because they failed lately. The name goes before it.
+player-start-resting = Son hatalar nedeniyle atlandı
+
+# Detail line when a stream showed no video and another opens.
+player-start-no-video = İlki görüntü göstermedi
+
+# Detail line with the place of the stream being opened.
+player-start-stream-place = { $total } akıştan { $next }.
+
+# Detail line while a torrent has peers.
+player-start-peers =
+    { $count ->
+        [one] Bir eş
+       *[other] { $count } eş
+    }
+
+# Detail line with the speed data arrives at, already sized with one decimal, such as "3.4 MB".
+player-start-speed = { $speed }/sn
+
+# Step line while the player fills its buffer and gives a number.
+player-start-buffering-percent = Arabelleğe alınıyor · { $percent }
+
+# Step line while the episode resumes where it was left.
+player-start-resuming = { $clock } konumundan yeniden başlıyor
+
+# Button on the starting screen that plays the episode from its beginning.
+player-start-from-beginning = Baştan oynat
+
+# Button on the starting screen that opens the list of steps.
+player-start-details = Ayrıntılar
+
+# Button that skips the source being asked. The name is the source's.
+player-start-skip-source = { $name } atla
+
+# Button that opens the next stream of the same source.
+player-start-skip-stream = Bu akışı atla
+
+# Step line when a start is slow: still waiting for the source. The name is the source's.
+player-start-still-waiting = { $name } için hâlâ bekleniyor
+
+# Step line while the device is offline and the episode will start when it is back.
+player-start-offline = Bağlantı bekleniyor
+
+# Detail line while offline. The episode is its label.
+player-start-offline-detail = Çevrimdışısın. Bölüm { $episode } tekrar çevrimiçi olunca başlayacak.
+
+# Button on the failure screen that opens the fix for a title that matched the wrong show.
+player-start-fix-match = Eşleşmeyi düzelt
+
+# Details row label for the translation of the episode.
+player-start-translation = Ses ve altyazı
+
+# Details row once the title has been looked up.
+player-start-looked-up = Başlık arandı
+
+# Seconds on the starting screen's detail line and Details rows.
+player-start-seconds = { $seconds } sn
+
+# Spoken once, when a start has taken more than a few seconds.
+player-start-still-starting = Hâlâ başlıyor. kaynak seçebilirsin.
+
+# Spoken when a start begins. The episode is its label.
+player-start-announce = Bölüm { $episode } başlıyor, { $title }
+
+# Spoken when a start fails: the title, then the reason.
+player-start-failed-announce = { $title }. { $reason }
+
+# Accessibility value of the starting screen: the step line, then the detail line.
+player-start-status = { $step }, { $detail }
+
+# Detail line on the starting screen after the viewer chose to play from the beginning.
+player-start-beginning = Baştan başlıyor
+
+# Details row while a source is being asked.
+player-start-row-asking = Soruluyor
+
+# Details row outcome when a source has no match for the show.
+player-start-row-no-match = Bu dizi yok
+
+# Details row outcome when a source has the show and not the episode. The episode is its label.
+player-start-row-no-episode = Bölüm { $episode } yok
+
+# Details row outcome when a source failed.
+player-start-row-failed = Yanıt vermedi
+
+# Details row outcome when a source took too long.
+player-start-row-timed-out = Çok uzun sürdü
+
+# Details row outcome when the viewer skipped a source.
+player-start-row-skipped = Atlandı
+
+# Second clause of a failure: the sources that were asked, joined as a list by the app.
+player-start-asked = Sorulanlar: { $names }.
+
+# Label of the switch in the Details list that plays the episode with its subtitles.
+player-start-subtitled = Altyazılı
 
 # Title of the stall card. The seconds count up.
 player-stall-title = Kaynak yükleniyor · { $seconds } sn
