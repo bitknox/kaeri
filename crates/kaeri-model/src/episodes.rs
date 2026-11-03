@@ -72,6 +72,13 @@ pub struct EpisodeRow {
     /// episode with no number to compare.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub past_progress: bool,
+    /// Spoiler protection, when it is on, hides this episode: it is not finished and comes after
+    /// the title's next episode (the one Continue offers), which is shown, as is everything
+    /// watched. This is the one rule every front end reads; none works it out for itself. A row
+    /// not out yet can be ahead too: it has nothing to hide, and a front end draws it as the
+    /// unaired row it is. Never set for an episode with no number to compare.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub spoiler_ahead: bool,
     /// This row has no synopsis yet, and another source's lookup is still running that may
     /// bring one: [`episode_text`] reads it as [`EpisodeText::Expected`], so a front end keeps
     /// room for the text where it will land. Never stored: a table read back from the cache
@@ -236,6 +243,7 @@ mod tests {
                 source: None,
                 unsourced: false,
                 past_progress: false,
+                spoiler_ahead: false,
                 synopsis_pending: false,
             })
             .collect()
@@ -280,4 +288,11 @@ mod tests {
         assert!(!airing.is_upcoming(1_000), "airing now is out");
         assert!(!airing.is_upcoming(5_000));
     }
+}
+
+/// Whether spoiler protection hides `row` when it is on ([`EpisodeRow::spoiler_ahead`]): the
+/// episode is not finished and is numbered after `next`, the title's next episode. With 1 to 6
+/// watched and 7 next, 8 and later are ahead, and 7 is not.
+pub fn spoiler_ahead(row: &EpisodeRow, next: u32) -> bool {
+    !row.completed && row.number.trim().parse::<u32>().is_ok_and(|n| n > next)
 }
