@@ -17,7 +17,8 @@
       <!-- The banner across the content, up to 360 high, the ground over its lower part. -->
       <Grid x:Name="Banner" VerticalAlignment="Top" Height="300">
         <Grid x:Name="Art">
-          <Image x:Name="BannerImage" Stretch="UniformToFill" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" />
+          <!-- Faded in once the page is laid out (ShowBanner), never drawn bare in its first frame. -->
+          <Image x:Name="BannerImage" Stretch="UniformToFill" VerticalAlignment="Center" Opacity="0" AutomationProperties.AccessibilityView="Raw" />
           <Rectangle x:Name="Scrim">
             <Rectangle.Fill>
               <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">

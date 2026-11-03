@@ -209,10 +209,20 @@ public sealed partial class TitlePage : Page, IPageKeys
         });
     }
 
-    /// <summary>The banner's height and where the cover and title start under it.</summary>
+    /// <summary>
+    /// The banner's height and where the cover and title start under it. Before the page has a
+    /// size of its own, as it is navigated to, the frame's width stands in, so the first frame
+    /// drawn already has the band it keeps: otherwise its foot drew at the XAML's 300 and then
+    /// jumped, with the title under it.
+    /// </summary>
     void Layout()
     {
-        var band = Math.Min(360, Math.Max(220, Scroll.ActualWidth * 9 / 32));
+        var width = Scroll.ActualWidth > 0 ? Scroll.ActualWidth : Frame?.ActualWidth ?? 0;
+        if (width <= 0)
+            return;
+        var band = Math.Min(360, Math.Max(220, width * 9 / 32));
+        if (Math.Abs(Banner.Height - band) < 0.5 && Banner.Clip is not null)
+            return;
         Banner.Height = band;
         // The art fills the band by overflowing it (UniformToFill), and the scrim ends at the
         // band's edge, so the band is clipped to its height: any overflow would show as a light
@@ -273,6 +283,7 @@ public sealed partial class TitlePage : Page, IPageKeys
         // What the show sets for itself, its spoiler protection among it.
         ctx.Send(new Command.LoadShowSettings(id));
         DubLine.Opacity = 0;
+        Layout();
         Show();
         ShowEpisodes();
         // The cover a grid sent flies in to this one; anything else crossfades.
@@ -497,6 +508,36 @@ public sealed partial class TitlePage : Page, IPageKeys
     }
 #endif
 
+    /// <summary>
+    /// The banner's art, faded in once the page has been laid out. Drawn at once, it showed bare in
+    /// the page's first frame, before its scrim, and its foot read as a light line. The same art
+    /// arriving again leaves it as it is.
+    /// </summary>
+    void ShowBanner(ImageSource art)
+    {
+        var again = BannerImage.Source == art && BannerImage.Opacity > 0;
+        BannerImage.Source = art;
+        if (again)
+            return;
+        if (IsLoaded)
+        {
+            Motion.FadeIn(BannerImage);
+            return;
+        }
+        // From the cache the art is there before the page's first frame, and the scrim over it
+        // draws about 0.1 s after the page is loaded: the fade starts once it is surely there.
+        void Laid(object sender, RoutedEventArgs e)
+        {
+            Loaded -= Laid;
+            _ = Task.Delay(150).ContinueWith(_ => DispatcherQueue.TryEnqueue(() =>
+            {
+                if (BannerImage.Source == art)
+                    Motion.FadeIn(BannerImage);
+            }));
+        }
+        Loaded += Laid;
+    }
+
     void Show()
     {
         if (Current() is not { } entry)
@@ -504,9 +545,10 @@ public sealed partial class TitlePage : Page, IPageKeys
         State.Done();
         var cover = new CoverItem(entry);
         CoverFrame.Background = cover.Placeholder;
-        Art.Background = cover.Placeholder;
+        // No cover colour behind the banner: until its art fades in, the band is the ground, as
+        // under the scrim, so nothing lighter ends at its foot.
         ctx.Art.Bind(entry.CoverUrl, s => CoverImage.Source = s);
-        ctx.Art.Bind(entry.BannerUrl ?? entry.CoverUrl, s => BannerImage.Source = s);
+        ctx.Art.Bind(entry.BannerUrl ?? entry.CoverUrl, ShowBanner);
         ShowTitle.Text = entry.Title;
         Secondary.Text = entry.Secondary ?? "";
         Secondary.Visibility = entry.Secondary is { Length: > 0 } ? Visibility.Visible : Visibility.Collapsed;
