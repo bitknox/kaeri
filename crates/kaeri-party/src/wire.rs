@@ -67,6 +67,12 @@ pub fn hello(name: &str, room: &str) -> Value {
     })
 }
 
+/// Say something to the room. The server sends it back to everyone in the room, this member
+/// included.
+pub fn chat(text: &str) -> Value {
+    json!({ "Chat": text })
+}
+
 /// Say which file is open, or that none is. A file with no length yet is sent with nought, as
 /// servers expect a number.
 pub fn set_file(file: Option<&FileInfo>) -> Value {
@@ -184,6 +190,27 @@ pub struct Hello {
     pub version: Option<String>,
     /// The server's message of the day, when it has one.
     pub motd: Option<String>,
+    /// What the server says it takes.
+    pub features: ServerFeatures,
+}
+
+/// The longest chat message a server takes when it does not say.
+pub const DEFAULT_CHAT_LENGTH: usize = 150;
+
+/// What a server's welcome says about itself, as far as chat goes. A server that says nothing is
+/// taken to have chat, up to [`DEFAULT_CHAT_LENGTH`] characters.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ServerFeatures {
+    /// The server relays chat. A server can turn it off.
+    pub chat: bool,
+    /// The most characters in one message.
+    pub max_chat_length: usize,
+}
+
+impl Default for ServerFeatures {
+    fn default() -> Self {
+        Self { chat: true, max_chat_length: DEFAULT_CHAT_LENGTH }
+    }
 }
 
 /// One part of a `Set`.
@@ -307,6 +334,7 @@ fn message(key: &str, body: &Value) -> ServerMessage {
             room: body.get("room").and_then(|r| string(r.get("name"))),
             version: string(body.get("realversion")).or_else(|| string(body.get("version"))),
             motd: string(body.get("motd")).filter(|m| !m.trim().is_empty()),
+            features: server_features(body.get("features")),
         }),
         "Set" => ServerMessage::Set(set_items(body)),
         "State" => ServerMessage::State(state(body)),
@@ -324,6 +352,24 @@ fn message(key: &str, body: &Value) -> ServerMessage {
         other => ServerMessage::Other(other.to_owned()),
     }
 }
+
+fn server_features(features: Option<&Value>) -> ServerFeatures {
+    let mut read = ServerFeatures::default();
+    let Some(features) = features else { return read };
+    if let Some(chat) = features.get("chat").and_then(Value::as_bool) {
+        read.chat = chat;
+    }
+    if let Some(max) = features.get("maxChatMessageLength").and_then(Value::as_u64)
+        && max > 0
+    {
+        read.max_chat_length = usize::try_from(max).unwrap_or(usize::MAX).min(MAX_CHAT_LENGTH);
+    }
+    read
+}
+
+/// The longest message length believed of a server: past it the line limit, [`MAX_LINE`], and a
+/// reader's patience, are the limits.
+const MAX_CHAT_LENGTH: usize = 2000;
 
 fn set_items(body: &Value) -> Vec<SetItem> {
     let Some(map) = body.as_object() else { return Vec::new() };
@@ -613,5 +659,33 @@ mod tests {
             parse(r#"{"NewThing": {}}"#).unwrap(),
             vec![ServerMessage::Other("NewThing".into())]
         );
+    }
+
+    #[test]
+    fn chat_is_written_as_a_bare_string() {
+        assert_eq!(chat("hi there"), json!({ "Chat": "hi there" }));
+    }
+
+    #[test]
+    fn a_welcome_says_whether_chat_is_on_and_how_long_a_message_may_be() {
+        let hello = |features: &str| {
+            let line =
+                format!(r#"{{"Hello": {{"username": "Mika", "features": {features}}}}}"#);
+            let read = parse(&line).unwrap();
+            let ServerMessage::Hello(hello) = &read[0] else { panic!("{read:?}") };
+            hello.features
+        };
+        assert_eq!(hello("{}"), ServerFeatures { chat: true, max_chat_length: 150 });
+        assert_eq!(
+            hello(r#"{"chat": true, "maxChatMessageLength": 500}"#),
+            ServerFeatures { chat: true, max_chat_length: 500 }
+        );
+        assert!(!hello(r#"{"chat": false}"#).chat);
+        // Nonsense lengths fall back or are held to a limit.
+        assert_eq!(hello(r#"{"maxChatMessageLength": 0}"#).max_chat_length, 150);
+        assert_eq!(hello(r#"{"maxChatMessageLength": 99999999}"#).max_chat_length, 2000);
+        let none = parse(r#"{"Hello": {"username": "Mika"}}"#).unwrap();
+        let ServerMessage::Hello(none) = &none[0] else { panic!() };
+        assert_eq!(none.features, ServerFeatures::default());
     }
 }

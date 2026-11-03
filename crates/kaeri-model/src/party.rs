@@ -266,6 +266,125 @@ pub struct PartyMember {
     pub you: bool,
 }
 
+/// A reaction to what is playing: one of four, drawn as a glyph by every app. On the wire it is a
+/// readable chat line, `*laughs* 12:04`, see `kaeri-party`'s reaction codec.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum Reaction {
+    Laugh,
+    Gasp,
+    Clap,
+    Cry,
+}
+
+/// What a conversation line holds.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum PartyChatBody {
+    /// Something typed, as written, on one line. Shown as text, links included, never tappable.
+    Said { text: String },
+    /// A reaction at `at` seconds into the episode. `with` names the others who made the same
+    /// reaction at the same second, right after `from`: "Ren and Mika laughed at 12:04".
+    Reacted { reaction: Reaction, at: f64, with: Vec<String> },
+}
+
+/// One line of the party's conversation.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct PartyChatLine {
+    /// Counts up from 1 through the party; a line is the same line in every snapshot.
+    pub id: u64,
+    pub from: String,
+    /// This device's own line, which arrived back from the server: your own lines show on the
+    /// echo.
+    pub you: bool,
+    pub body: PartyChatBody,
+    /// `from` is muted on this device: the line stays in the list so Unmute brings it back, and
+    /// the app shows "Ren is muted" in its place.
+    pub muted: bool,
+}
+
+/// Where somebody reacted, for a tick on the seek bar. Kept for the episode, per device.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct PartyReactionMark {
+    pub at: f64,
+    pub from: String,
+    pub reaction: Reaction,
+}
+
+/// The party's conversation as it stands: sent as a whole whenever it changes, so an app keeps
+/// nothing between events. In memory for the party only; never written to disk, and a member
+/// who comes later sees nothing said before.
+#[derive(Debug, Clone, PartialEq, Default)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct PartyConversation {
+    /// The newest last: at most [`CONVERSATION_LINES`], the oldest dropped first.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub lines: Vec<PartyChatLine>,
+    /// Reactions of this episode by others and this device, in the order they came, without
+    /// the muted members'.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub marks: Vec<PartyReactionMark>,
+    /// The text of a line the server never echoed: "Couldn't send" with Try again, and the text
+    /// goes back into the field. Cleared by the next send.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub failed: Option<String>,
+}
+
+/// The most lines a conversation holds.
+pub const CONVERSATION_LINES: usize = 200;
+
+/// The most reaction marks an episode holds.
+pub const REACTION_MARKS: usize = 500;
+
+/// What a send waits for on the line from the server, in seconds, before it counts as lost.
+pub const ECHO_WAIT_SECONDS: u32 = 5;
+
+/// What this device may do in the conversation now. Sent when it changes, and each second while
+/// a wait runs down.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct PartyChatState {
+    /// The room's server relays chat. When not: hide the field and say "This room's server has
+    /// chat turned off".
+    pub allowed: bool,
+    /// The most characters in one message, the server's or 150. The count shows at 20 left.
+    pub max_length: u32,
+    /// The members muted on this device for this party.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub muted: Vec<String>,
+    /// Whole seconds Send waits: three messages in five seconds is the most. 0 when it may send.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub wait_seconds: u32,
+    /// Whole seconds before the next reaction: one per two seconds. 0 when it may go.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub react_wait_seconds: u32,
+}
+
+/// A reaction coming in, for the moment on the video: the glyph and the name, bottom trailing.
+/// Sent on the server's echo, this device's own included, and never for a muted member.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct PartyReaction {
+    pub from: String,
+    pub you: bool,
+    pub reaction: Reaction,
+    pub at: f64,
+}
+
+/// Why a send did not go.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum PartyChatRefusal {
+    /// The room's server has chat turned off.
+    Off,
+    /// Too many lately: wait this many whole seconds.
+    Wait { seconds: u32 },
+    /// A reaction needs the episode playing on this device, to say where in it.
+    NotPlaying,
+}
+
 /// Something the room said, as words for the player: shown there as a notice, and sent as
 /// [`Event::PartyMessage`](crate::event::Event::PartyMessage) for a party panel.
 #[derive(Debug, Clone, PartialEq)]
@@ -279,7 +398,8 @@ pub struct PartyMessage {
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
 pub enum PartyMessageKind {
-    /// A chat message. Coming in only: sending is not built.
+    /// A chat message that was typed, from this device or another member. A reaction is not
+    /// one: it comes as [`Event::PartyReaction`](crate::event::Event::PartyReaction).
     Chat {
         from: String,
     },
@@ -559,6 +679,14 @@ pub enum PartyCommand {
         #[cfg_attr(feature = "ffi", uniffi(default))]
         name: Option<String>,
     },
+    /// Say something to the room. The line shows when the server sends it back; with no echo
+    /// in five seconds `Event::PartyChat` carries it in `failed`. Cut to the server's length;
+    /// answered with `Event::PartyChatRefused` when chat is off or too much was sent lately.
+    Say { text: String },
+    /// React at the playhead of the episode this device plays for the party.
+    React { reaction: Reaction },
+    /// Hide a member's lines and reactions for this party, on this device, or show them again.
+    Mute { name: String, muted: bool },
     /// Ask for the last ten rooms: answered with `Event::PartyRecent`.
     LoadRecent,
     /// Remove a room from the last ten.

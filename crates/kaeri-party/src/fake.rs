@@ -37,6 +37,10 @@ pub struct FakeOptions {
     /// Refuse every member, with this reason.
     pub refuse: Option<String>,
     pub tls: FakeTls,
+    /// The server relays chat. Off, it says so in its welcome and drops chat it is sent.
+    pub chat: bool,
+    /// The longest message it announces, when it announces one.
+    pub max_chat_length: Option<u32>,
 }
 
 impl Default for FakeOptions {
@@ -46,6 +50,8 @@ impl Default for FakeOptions {
             motd: None,
             refuse: None,
             tls: FakeTls::Decline,
+            chat: true,
+            max_chat_length: None,
         }
     }
 }
@@ -102,6 +108,13 @@ struct Inner {
     next_conn: u64,
     /// Connections are taken and closed at once, as by a server that is down.
     down: bool,
+    /// What the welcome says of chat, and whether chat is sent back: see [`FakeOptions`].
+    chat: bool,
+    max_chat_length: Option<u32>,
+    /// Chat is taken but not sent on to anyone, as by a server that loses it.
+    swallow_chat: bool,
+    /// Every chat line taken, in order: who said it and what.
+    said: Vec<(String, String)>,
 }
 
 struct Room {
@@ -172,11 +185,13 @@ impl FakeServer {
         let listener = TcpListener::bind(("127.0.0.1", 0)).await?;
         let address = listener.local_addr()?;
         let tick = options.tick;
-        let shared = Arc::new(Shared {
-            options,
-            started: Instant::now(),
-            inner: Mutex::new(Inner::default()),
-        });
+        let inner = Inner {
+            chat: options.chat,
+            max_chat_length: options.max_chat_length,
+            ..Inner::default()
+        };
+        let shared =
+            Arc::new(Shared { options, started: Instant::now(), inner: Mutex::new(inner) });
         let accepting = {
             let shared = shared.clone();
             tokio::spawn(async move {
@@ -205,6 +220,23 @@ impl FakeServer {
             })
         };
         Ok(Self { shared, address, tasks: vec![accepting, ticking] })
+    }
+
+    /// Turn chat on or off, and the length announced, for members who join after this.
+    pub fn set_chat(&self, on: bool, max_length: Option<u32>) {
+        let mut inner = self.shared.lock();
+        inner.chat = on;
+        inner.max_chat_length = max_length;
+    }
+
+    /// Take chat and send it on to no one, so a sender sees no echo.
+    pub fn swallow_chat(&self, swallow: bool) {
+        self.shared.lock().swallow_chat = swallow;
+    }
+
+    /// The chat lines taken so far, as (who, what).
+    pub fn said(&self) -> Vec<(String, String)> {
+        self.shared.lock().said.clone()
     }
 
     /// Where to connect, as `host:port`.
@@ -586,6 +618,10 @@ fn hello(
         name.push('_');
     }
     occupants.insert(name.clone(), Occupant::default());
+    let mut features = json!({ "readiness": true, "chat": inner.chat });
+    if let Some(max) = inner.max_chat_length {
+        features["maxChatMessageLength"] = json!(max);
+    }
     let welcome = json!({
         "Hello": {
             "username": name,
@@ -593,7 +629,7 @@ fn hello(
             "version": wire::PROTOCOL_VERSION,
             "realversion": wire::REAL_VERSION,
             "motd": shared.options.motd.clone().unwrap_or_default(),
-            "features": { "readiness": true, "chat": true },
+            "features": features,
         }
     });
     let _ = lines.send(wire::line(&welcome));
@@ -682,9 +718,12 @@ fn message(shared: &Shared, id: u64, key: &str, body: &Value) {
         }
         "Chat" => {
             let text = body.as_str().or_else(|| body.get("message").and_then(Value::as_str));
-            if let Some(text) = text {
-                let message = json!({ "Chat": { "username": name, "message": text } });
-                inner.broadcast(&room, None, &message);
+            if let Some(text) = text.filter(|_| inner.chat) {
+                inner.said.push((name.clone(), text.to_owned()));
+                if !inner.swallow_chat {
+                    let message = json!({ "Chat": { "username": name, "message": text } });
+                    inner.broadcast(&room, None, &message);
+                }
             }
         }
         "State" => {

@@ -1755,6 +1755,9 @@ public enum L {
     /// Spoken by VoiceOver on the loading indicator before the video shows.
     public static var playerLoadingAnnounce: String { string("player-loading-announce", fallback: "Starting") }
 
+    /// Playback menu item that opens the chat field in a watch party. Key C.
+    public static var menuSaySomething: String { string("menu-say-something", fallback: "Say Something…") }
+
     /// Line while results wait for the rate limit to recover, on a phone where a Search key runs the search.
     public static var searchRateLimitSearch: String { string("search-rate-limit-search", fallback: "Searching as you type is paused for a moment, to stay within AniList's limits. Press Search to search now.") }
 
@@ -6003,6 +6006,156 @@ public enum L {
 
     /// The start sheet's button after a title is picked.
     public static var partyPickContinue: String { string("party-pick-continue", fallback: "Continue") }
+
+    /// Placeholder of every chat field, and the label of the button that opens it.
+    public static var partyChatField: String { string("party-chat-field", fallback: "Say something") }
+
+    /// Button that sends a chat line.
+    public static var partyChatSend: String { string("party-chat-send", fallback: "Send") }
+
+    /// Heading of the conversation in the lobby, on a phone's remote screen and the Android action that opens chat.
+    public static var partyChatTitle: String { string("party-chat-title", fallback: "Chat") }
+
+    /// End of the chat field while sending waits, after three messages in five seconds.
+    public static func partyChatWait(seconds: Int) -> String {
+        Self.format("party-chat-wait", fallback: "Wait %1$lld s", seconds)
+    }
+
+    /// Spoken once when sending waits, for screen readers.
+    public static func partyChatWaitSpoken(seconds: Int) -> String {
+        Self.format("party-chat-wait-spoken", fallback: "Wait %1$lld seconds", seconds)
+    }
+
+    /// Line after the three newest chat lines on the video, which opens the conversation.
+    public static func partyChatMore(count: Int) -> String {
+        Self.format("party-chat-more", fallback: "%1$lld more in chat", count)
+    }
+
+    /// Notice when the room's server has chat turned off, and the line that replaces the field.
+    public static var partyChatOff: String { string("party-chat-off", fallback: "This room's server has chat turned off") }
+
+    /// Line under the chat field in the lobby, shown once.
+    public static var partyChatPrivacy: String { string("party-chat-privacy", fallback: "Messages go through the room's server. Kaeri keeps none.") }
+
+    /// Heading in the conversation when Hide chat is on.
+    public static var partyChatHidden: String { string("party-chat-hidden", fallback: "Chat is hidden") }
+
+    /// Line under it.
+    public static var partyChatHiddenLine: String { string("party-chat-hidden-line", fallback: "Hide chat is on in Settings, under Playback.") }
+
+    /// Button that turns Hide chat off.
+    public static var partyChatShow: String { string("party-chat-show", fallback: "Show chat") }
+
+    /// Settings switch that hides chat in every watch party on this device.
+    public static var settingsHideChat: String { string("settings-hide-chat", fallback: "Hide chat in watch parties") }
+
+    /// Line under that switch.
+    public static var settingsHideChatLine: String { string("settings-hide-chat-line", fallback: "Lines, reactions and their ticks on the seek bar stay off the video, and the field is gone. The people list still shows who is in the room.") }
+
+    /// Member menu item and accessibility action that hides a member's lines and reactions for this party.
+    public static func partyMute(name: String) -> String {
+        Self.format("party-mute", fallback: "Mute %1$@", name)
+    }
+
+    /// Member menu item and accessibility action that shows a muted member's lines again.
+    public static func partyUnmute(name: String) -> String {
+        Self.format("party-unmute", fallback: "Unmute %1$@", name)
+    }
+
+    /// Button in the conversation on the line that says a member is muted.
+    public static var partyUnmuteShort: String { string("party-unmute-short", fallback: "Unmute") }
+
+    /// State on a muted member's row.
+    public static var partyMemberMuted: String { string("party-member-muted", fallback: "Muted") }
+
+    /// Line in the conversation where a muted member's lines were.
+    public static func partyMutedLine(name: String) -> String {
+        Self.format("party-muted-line", fallback: "%1$@ is muted", name)
+    }
+
+    /// Line in the conversation when a message never came back from the server, five seconds after it was sent.
+    public static var partyChatNotSent: String { string("party-chat-not-sent", fallback: "Couldn't send") }
+
+    /// Button after it, which sends the same text again.
+    public static var partyChatRetry: String { string("party-chat-retry", fallback: "Try again") }
+
+    /// Button on the TV's controls that opens the four reactions.
+    public static var partyReact: String { string("party-react", fallback: "React") }
+
+    /// Label of the laugh reaction button.
+    public static var partyReactLaugh: String { string("party-react-laugh", fallback: "Laugh") }
+
+    /// Label of the gasp reaction button.
+    public static var partyReactGasp: String { string("party-react-gasp", fallback: "Gasp") }
+
+    /// Label of the clap reaction button.
+    public static var partyReactClap: String { string("party-react-clap", fallback: "Clap") }
+
+    /// Label of the cry reaction button.
+    public static var partyReactCry: String { string("party-react-cry", fallback: "Cry") }
+
+    /// Line in the conversation and in the terminal: a member laughed.
+    public static func partyReactedLaugh(name: String) -> String {
+        Self.format("party-reacted-laugh", fallback: "%1$@ laughed", name)
+    }
+
+    /// Line in the conversation and in the terminal: a member gasped.
+    public static func partyReactedGasp(name: String) -> String {
+        Self.format("party-reacted-gasp", fallback: "%1$@ gasped", name)
+    }
+
+    /// Line in the conversation and in the terminal: a member clapped.
+    public static func partyReactedClap(name: String) -> String {
+        Self.format("party-reacted-clap", fallback: "%1$@ clapped", name)
+    }
+
+    /// Line in the conversation and in the terminal: a member cried.
+    public static func partyReactedCry(name: String) -> String {
+        Self.format("party-reacted-cry", fallback: "%1$@ cried", name)
+    }
+
+    /// A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The line is one of the party-reacted messages, the time is minutes and seconds.
+    public static func partyReactedAt(line: String, time: String) -> String {
+        Self.format("party-reacted-at", fallback: "%1$@ at %2$@", line, time)
+    }
+
+    /// Two members named together, for a reaction made by both: "Ren and Mika".
+    public static func partyNamesTwo(first: String, second: String) -> String {
+        Self.format("party-names-two", fallback: "%1$@ and %2$@", first, second)
+    }
+
+    /// Three members named together.
+    public static func partyNamesThree(first: String, second: String, third: String) -> String {
+        Self.format("party-names-three", fallback: "%1$@, %2$@ and %3$@", first, second, third)
+    }
+
+    /// More than three members named together: two names and how many others.
+    public static func partyNamesOthers(first: String, second: String, count: Int) -> String {
+        Self.format("party-names-others", fallback: "%1$@, %2$@ and %3$lld others", first, second, count)
+    }
+
+    /// Name of this device's own member in the conversation and on its reactions.
+    public static var partyChatYou: String { string("party-chat-you", fallback: "You") }
+
+    /// Line on a phone's remote screen under the chat field: which device the line is said as.
+    public static func partySendsAs(device: String) -> String {
+        Self.format("party-sends-as", fallback: "Sends as %1$@", device)
+    }
+
+    /// Label on the seek bar when pointing near a reaction tick: the moment and who reacted.
+    public static func partyTickLabel(time: String, names: String) -> String {
+        Self.format("party-tick-label", fallback: "%1$@ · %2$@", time, names)
+    }
+
+    /// Spoken by a screen reader when a chat line arrives.
+    public static func partyChatAnnounce(name: String, message: String) -> String {
+        Self.format("party-chat-announce", fallback: "%1$@ says %2$@", name, message)
+    }
+
+    /// Spoken by a screen reader once, when 20 characters are left in the chat field.
+    public static func partyChatLeft(count: Int) -> String {
+        Self.format("party-chat-left", fallback: "%1$lld characters left", count)
+    }
 
     /// Label on the card for the episode that plays after this one.
     public static var playerUpNext: String { string("player-up-next", fallback: "Up next") }

@@ -74825,6 +74825,18 @@
         }
       }
     },
+    "menu-say-something" : {
+      "comment" : "Playback menu item that opens the chat field in a watch party. Key C.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Say Something…"
+          }
+        }
+      }
+    },
     "menu-search-filters" : {
       "comment" : "Mac menu bar item that opens the filters of a search.",
       "extractionState" : "manual",
@@ -101449,6 +101461,242 @@
         }
       }
     },
+    "party-chat-announce" : {
+      "comment" : "Spoken by a screen reader when a chat line arrives. Argument 1: name (Text). Argument 2: message (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ says %2$@"
+          }
+        }
+      }
+    },
+    "party-chat-field" : {
+      "comment" : "Placeholder of every chat field, and the label of the button that opens it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Say something"
+          }
+        }
+      }
+    },
+    "party-chat-hidden" : {
+      "comment" : "Heading in the conversation when Hide chat is on.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chat is hidden"
+          }
+        }
+      }
+    },
+    "party-chat-hidden-line" : {
+      "comment" : "Line under it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide chat is on in Settings, under Playback."
+          }
+        }
+      }
+    },
+    "party-chat-left" : {
+      "comment" : "Spoken by a screen reader once, when 20 characters are left in the chat field. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld character left"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld characters left"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "party-chat-more" : {
+      "comment" : "Line after the three newest chat lines on the video, which opens the conversation. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld more in chat"
+          }
+        }
+      }
+    },
+    "party-chat-not-sent" : {
+      "comment" : "Line in the conversation when a message never came back from the server, five seconds after it was sent.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't send"
+          }
+        }
+      }
+    },
+    "party-chat-off" : {
+      "comment" : "Notice when the room's server has chat turned off, and the line that replaces the field.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This room's server has chat turned off"
+          }
+        }
+      }
+    },
+    "party-chat-privacy" : {
+      "comment" : "Line under the chat field in the lobby, shown once.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Messages go through the room's server. Kaeri keeps none."
+          }
+        }
+      }
+    },
+    "party-chat-retry" : {
+      "comment" : "Button after it, which sends the same text again.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try again"
+          }
+        }
+      }
+    },
+    "party-chat-send" : {
+      "comment" : "Button that sends a chat line.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send"
+          }
+        }
+      }
+    },
+    "party-chat-show" : {
+      "comment" : "Button that turns Hide chat off.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show chat"
+          }
+        }
+      }
+    },
+    "party-chat-title" : {
+      "comment" : "Heading of the conversation in the lobby, on a phone's remote screen and the Android action that opens chat.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chat"
+          }
+        }
+      }
+    },
+    "party-chat-wait" : {
+      "comment" : "End of the chat field while sending waits, after three messages in five seconds. Argument 1: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wait %1$lld s"
+          }
+        }
+      }
+    },
+    "party-chat-wait-spoken" : {
+      "comment" : "Spoken once when sending waits, for screen readers. Argument 1: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@seconds@"
+          },
+          "substitutions" : {
+            "seconds" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Wait one second"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Wait %1$lld seconds"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "party-chat-you" : {
+      "comment" : "Name of this device's own member in the conversation and on its reactions.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You"
+          }
+        }
+      }
+    },
     "party-choose-server" : {
       "comment" : "Message when an app asked for a watch party with no server chosen. The names are a suggested server and who runs it. Argument 1: server (Text). Argument 2: operator (Text).",
       "extractionState" : "manual",
@@ -106573,6 +106821,18 @@
         }
       }
     },
+    "party-member-muted" : {
+      "comment" : "State on a muted member's row.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muted"
+          }
+        }
+      }
+    },
     "party-member-no-file" : {
       "comment" : "Note on a member who has nothing open.",
       "extractionState" : "manual",
@@ -107157,6 +107417,66 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ (bạn)"
+          }
+        }
+      }
+    },
+    "party-mute" : {
+      "comment" : "Member menu item and accessibility action that hides a member's lines and reactions for this party. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mute %1$@"
+          }
+        }
+      }
+    },
+    "party-muted-line" : {
+      "comment" : "Line in the conversation where a muted member's lines were. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ is muted"
+          }
+        }
+      }
+    },
+    "party-names-others" : {
+      "comment" : "More than three members named together: two names and how many others. Argument 1: first (Text). Argument 2: second (Text). Argument 3: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@ and %3$lld others"
+          }
+        }
+      }
+    },
+    "party-names-three" : {
+      "comment" : "Three members named together. Argument 1: first (Text). Argument 2: second (Text). Argument 3: third (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@ and %3$@"
+          }
+        }
+      }
+    },
+    "party-names-two" : {
+      "comment" : "Two members named together, for a reaction made by both: \"Ren and Mika\". Argument 1: first (Text). Argument 2: second (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ and %2$@"
           }
         }
       }
@@ -109429,6 +109749,126 @@
         }
       }
     },
+    "party-react" : {
+      "comment" : "Button on the TV's controls that opens the four reactions.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "React"
+          }
+        }
+      }
+    },
+    "party-react-clap" : {
+      "comment" : "Label of the clap reaction button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clap"
+          }
+        }
+      }
+    },
+    "party-react-cry" : {
+      "comment" : "Label of the cry reaction button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cry"
+          }
+        }
+      }
+    },
+    "party-react-gasp" : {
+      "comment" : "Label of the gasp reaction button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gasp"
+          }
+        }
+      }
+    },
+    "party-react-laugh" : {
+      "comment" : "Label of the laugh reaction button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laugh"
+          }
+        }
+      }
+    },
+    "party-reacted-at" : {
+      "comment" : "A reaction line with the moment in the episode it was made at, such as \"Ren and Mika laughed at 12:04\". The line is one of the party-reacted messages, the time is minutes and seconds. Argument 1: line (Text). Argument 2: time (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ at %2$@"
+          }
+        }
+      }
+    },
+    "party-reacted-clap" : {
+      "comment" : "Line in the conversation and in the terminal: a member clapped. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ clapped"
+          }
+        }
+      }
+    },
+    "party-reacted-cry" : {
+      "comment" : "Line in the conversation and in the terminal: a member cried. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ cried"
+          }
+        }
+      }
+    },
+    "party-reacted-gasp" : {
+      "comment" : "Line in the conversation and in the terminal: a member gasped. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ gasped"
+          }
+        }
+      }
+    },
+    "party-reacted-laugh" : {
+      "comment" : "Line in the conversation and in the terminal: a member laughed. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ laughed"
+          }
+        }
+      }
+    },
     "party-ready-action" : {
       "comment" : "Label of the button that marks you as ready.",
       "extractionState" : "manual",
@@ -111189,6 +111629,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ đã tua tới %2$@"
+          }
+        }
+      }
+    },
+    "party-sends-as" : {
+      "comment" : "Line on a phone's remote screen under the chat field: which device the line is said as. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sends as %1$@"
           }
         }
       }
@@ -113357,6 +113809,18 @@
         }
       }
     },
+    "party-tick-label" : {
+      "comment" : "Label on the seek bar when pointing near a reaction tick: the moment and who reacted. Argument 1: time (Text). Argument 2: names (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
     "party-title" : {
       "comment" : "Title of the form and the panel.",
       "extractionState" : "manual",
@@ -113773,6 +114237,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Quét để gửi lời mời từ điện thoại của bạn"
+          }
+        }
+      }
+    },
+    "party-unmute" : {
+      "comment" : "Member menu item and accessibility action that shows a muted member's lines again. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unmute %1$@"
+          }
+        }
+      }
+    },
+    "party-unmute-short" : {
+      "comment" : "Button in the conversation on the line that says a member is muted.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unmute"
           }
         }
       }
@@ -155749,6 +156237,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sẽ hiện lại khi phát sóng"
+          }
+        }
+      }
+    },
+    "settings-hide-chat" : {
+      "comment" : "Settings switch that hides chat in every watch party on this device.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide chat in watch parties"
+          }
+        }
+      }
+    },
+    "settings-hide-chat-line" : {
+      "comment" : "Line under that switch.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lines, reactions and their ticks on the seek bar stay off the video, and the field is gone. The people list still shows who is in the room."
           }
         }
       }

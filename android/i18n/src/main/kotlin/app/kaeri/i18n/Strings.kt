@@ -6001,6 +6001,158 @@ object Strings {
     fun partyPickContinue(context: Context): String =
         context.getString(R.string.party_pick_continue)
 
+    /** Placeholder of every chat field, and the label of the button that opens it. */
+    fun partyChatField(context: Context): String =
+        context.getString(R.string.party_chat_field)
+
+    /** Button that sends a chat line. */
+    fun partyChatSend(context: Context): String =
+        context.getString(R.string.party_chat_send)
+
+    /** Heading of the conversation in the lobby, on a phone's remote screen and the Android action that opens chat. */
+    fun partyChatTitle(context: Context): String =
+        context.getString(R.string.party_chat_title)
+
+    /** End of the chat field while sending waits, after three messages in five seconds. */
+    fun partyChatWait(context: Context, seconds: Int): String =
+        context.getString(R.string.party_chat_wait, seconds)
+
+    /** Spoken once when sending waits, for screen readers. */
+    fun partyChatWaitSpoken(context: Context, seconds: Int): String =
+        context.resources.getQuantityString(R.plurals.party_chat_wait_spoken, seconds, seconds)
+
+    /** Line after the three newest chat lines on the video, which opens the conversation. */
+    fun partyChatMore(context: Context, count: Int): String =
+        context.getString(R.string.party_chat_more, count)
+
+    /** Notice when the room's server has chat turned off, and the line that replaces the field. */
+    fun partyChatOff(context: Context): String =
+        context.getString(R.string.party_chat_off)
+
+    /** Line under the chat field in the lobby, shown once. */
+    fun partyChatPrivacy(context: Context): String =
+        context.getString(R.string.party_chat_privacy)
+
+    /** Heading in the conversation when Hide chat is on. */
+    fun partyChatHidden(context: Context): String =
+        context.getString(R.string.party_chat_hidden)
+
+    /** Line under it. */
+    fun partyChatHiddenLine(context: Context): String =
+        context.getString(R.string.party_chat_hidden_line)
+
+    /** Button that turns Hide chat off. */
+    fun partyChatShow(context: Context): String =
+        context.getString(R.string.party_chat_show)
+
+    /** Settings switch that hides chat in every watch party on this device. */
+    fun settingsHideChat(context: Context): String =
+        context.getString(R.string.settings_hide_chat)
+
+    /** Line under that switch. */
+    fun settingsHideChatLine(context: Context): String =
+        context.getString(R.string.settings_hide_chat_line)
+
+    /** Member menu item and accessibility action that hides a member's lines and reactions for this party. */
+    fun partyMute(context: Context, name: String): String =
+        context.getString(R.string.party_mute, name)
+
+    /** Member menu item and accessibility action that shows a muted member's lines again. */
+    fun partyUnmute(context: Context, name: String): String =
+        context.getString(R.string.party_unmute, name)
+
+    /** Button in the conversation on the line that says a member is muted. */
+    fun partyUnmuteShort(context: Context): String =
+        context.getString(R.string.party_unmute_short)
+
+    /** State on a muted member's row. */
+    fun partyMemberMuted(context: Context): String =
+        context.getString(R.string.party_member_muted)
+
+    /** Line in the conversation where a muted member's lines were. */
+    fun partyMutedLine(context: Context, name: String): String =
+        context.getString(R.string.party_muted_line, name)
+
+    /** Line in the conversation when a message never came back from the server, five seconds after it was sent. */
+    fun partyChatNotSent(context: Context): String =
+        context.getString(R.string.party_chat_not_sent)
+
+    /** Button after it, which sends the same text again. */
+    fun partyChatRetry(context: Context): String =
+        context.getString(R.string.party_chat_retry)
+
+    /** Button on the TV's controls that opens the four reactions. */
+    fun partyReact(context: Context): String =
+        context.getString(R.string.party_react)
+
+    /** Label of the laugh reaction button. */
+    fun partyReactLaugh(context: Context): String =
+        context.getString(R.string.party_react_laugh)
+
+    /** Label of the gasp reaction button. */
+    fun partyReactGasp(context: Context): String =
+        context.getString(R.string.party_react_gasp)
+
+    /** Label of the clap reaction button. */
+    fun partyReactClap(context: Context): String =
+        context.getString(R.string.party_react_clap)
+
+    /** Label of the cry reaction button. */
+    fun partyReactCry(context: Context): String =
+        context.getString(R.string.party_react_cry)
+
+    /** Line in the conversation and in the terminal: a member laughed. */
+    fun partyReactedLaugh(context: Context, name: String): String =
+        context.getString(R.string.party_reacted_laugh, name)
+
+    /** Line in the conversation and in the terminal: a member gasped. */
+    fun partyReactedGasp(context: Context, name: String): String =
+        context.getString(R.string.party_reacted_gasp, name)
+
+    /** Line in the conversation and in the terminal: a member clapped. */
+    fun partyReactedClap(context: Context, name: String): String =
+        context.getString(R.string.party_reacted_clap, name)
+
+    /** Line in the conversation and in the terminal: a member cried. */
+    fun partyReactedCry(context: Context, name: String): String =
+        context.getString(R.string.party_reacted_cry, name)
+
+    /** A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The line is one of the party-reacted messages, the time is minutes and seconds. */
+    fun partyReactedAt(context: Context, line: String, time: String): String =
+        context.getString(R.string.party_reacted_at, line, time)
+
+    /** Two members named together, for a reaction made by both: "Ren and Mika". */
+    fun partyNamesTwo(context: Context, first: String, second: String): String =
+        context.getString(R.string.party_names_two, first, second)
+
+    /** Three members named together. */
+    fun partyNamesThree(context: Context, first: String, second: String, third: String): String =
+        context.getString(R.string.party_names_three, first, second, third)
+
+    /** More than three members named together: two names and how many others. */
+    fun partyNamesOthers(context: Context, first: String, second: String, count: Int): String =
+        context.getString(R.string.party_names_others, first, second, count)
+
+    /** Name of this device's own member in the conversation and on its reactions. */
+    fun partyChatYou(context: Context): String =
+        context.getString(R.string.party_chat_you)
+
+    /** Line on a phone's remote screen under the chat field: which device the line is said as. */
+    fun partySendsAs(context: Context, device: String): String =
+        context.getString(R.string.party_sends_as, device)
+
+    /** Label on the seek bar when pointing near a reaction tick: the moment and who reacted. */
+    fun partyTickLabel(context: Context, time: String, names: String): String =
+        context.getString(R.string.party_tick_label, time, names)
+
+    /** Spoken by a screen reader when a chat line arrives. */
+    fun partyChatAnnounce(context: Context, name: String, message: String): String =
+        context.getString(R.string.party_chat_announce, name, message)
+
+    /** Spoken by a screen reader once, when 20 characters are left in the chat field. */
+    fun partyChatLeft(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.party_chat_left, count, count)
+
     /** Label on the card for the episode that plays after this one. */
     fun playerUpNext(context: Context): String =
         context.getString(R.string.player_up_next)

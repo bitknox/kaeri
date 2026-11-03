@@ -45,7 +45,7 @@ pub fn clean_party_code(text: String) -> Option<String> {
 }
 
 #[cfg(all(feature = "party", feature = "testing"))]
-pub use fake::FfiFakeParty;
+pub use fake::{FfiChatFixture, FfiFakeParty};
 
 #[cfg(all(feature = "party", feature = "testing"))]
 mod fake {
@@ -54,8 +54,11 @@ mod fake {
         sync::{Arc, Mutex, PoisonError},
     };
 
-    use kaeri_model::Msg;
-    use kaeri_party::fake::{FakeMember, FakeOptions, FakeServer};
+    use kaeri_model::{Msg, party::Reaction};
+    use kaeri_party::{
+        fake::{FakeMember, FakeOptions, FakeServer},
+        reaction,
+    };
     use tokio::runtime::Handle;
 
     use crate::{engine::FfiEngine, start::FfiError};
@@ -71,6 +74,32 @@ mod fake {
     struct Inner {
         server: FakeServer,
         members: HashMap<String, FakeMember>,
+    }
+
+    /// The chat states the Fixtures apps take screenshots of, from the watch together chat board.
+    /// The members are Mika, Ren and Sol, added to the room when they are not there; Noa is the
+    /// device. Testing builds only.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+    pub enum FfiChatFixture {
+        /// Chat on and working, as a server is: undoes the states below for the next join.
+        Quiet,
+        /// Playing: Mika "ok starting", Ren "the handoff in the rain, I knew it", Sol "wait, who
+        /// is the new runner" and Mika "this part again", and reactions: Sol claps at 3:24, Ren
+        /// gasps at 7:48, Ren and Mika laugh at 12:04.
+        Conversation,
+        /// Six lines at once, for the fold line: "3 more in chat".
+        Burst,
+        /// The lobby's conversation: "snacks ready?", "two minutes, making tea", and a line
+        /// with a link written as plain text.
+        Lobby,
+        /// A server with chat turned off. Set before joining: the welcome says it.
+        ChatOff,
+        /// A server that takes chat and sends it to no one, so a send is never echoed and, five
+        /// seconds on, is "Couldn't send".
+        NotSent,
+        /// A server that takes messages of 40 characters, for the count at 20 left. Set before
+        /// joining.
+        ShortMessages,
     }
 
     #[uniffi::export]
@@ -152,6 +181,92 @@ mod fake {
 
         pub fn member_says(&self, name: String, message: String) {
             self.member(&name, |member| member.chat(&message));
+        }
+
+        /// The member reacts at `at` seconds, as a Syncplay line.
+        pub fn member_reacts(&self, name: String, reaction: Reaction, at: f64) {
+            let kind = match reaction {
+                Reaction::Laugh => kaeri_party::Reaction::Laugh,
+                Reaction::Gasp => kaeri_party::Reaction::Gasp,
+                Reaction::Clap => kaeri_party::Reaction::Clap,
+                Reaction::Cry => kaeri_party::Reaction::Cry,
+            };
+            self.member(&name, |member| member.chat(&reaction::encode(kind, at)));
+        }
+
+        /// The server turns chat on or off, and announces `max_length` characters per message,
+        /// for members who join after this.
+        pub fn set_chat(&self, on: bool, max_length: Option<u32>) {
+            self.with(|inner| inner.server.set_chat(on, max_length));
+        }
+
+        /// The server takes chat and sends it to no one: a sender never sees its line come back.
+        pub fn swallow_chat(&self, swallow: bool) {
+            self.with(|inner| inner.server.swallow_chat(swallow));
+        }
+
+        /// The chat lines the server took from the device, as `name: text`.
+        pub fn chat_taken(&self) -> Vec<String> {
+            self.with(|inner| {
+                inner
+                    .server
+                    .said()
+                    .into_iter()
+                    .map(|(who, text)| format!("{who}: {text}"))
+                    .collect()
+            })
+            .unwrap_or_default()
+        }
+
+        /// Put the chat in one of the board's states: see [`FfiChatFixture`]. Mika, Ren and Sol
+        /// come into `room` when they are not there.
+        pub fn chat_fixture(&self, room: String, state: FfiChatFixture) {
+            self.with(|inner| {
+                inner.server.set_chat(true, None);
+                inner.server.swallow_chat(false);
+            });
+            for name in ["Mika", "Ren", "Sol"] {
+                if self.with(|inner| inner.members.contains_key(name)) != Some(true) {
+                    self.add_member(room.clone(), name.into());
+                }
+            }
+            let say = |who: &str, text: &str| self.member_says(who.into(), text.into());
+            let react = |who: &str, kind: Reaction, at: f64| {
+                self.member_reacts(who.into(), kind, at);
+            };
+            match state {
+                FfiChatFixture::Quiet => {}
+                FfiChatFixture::Conversation => {
+                    say("Mika", "ok starting");
+                    react("Sol", Reaction::Clap, 204.0);
+                    say("Ren", "the handoff in the rain, I knew it");
+                    react("Ren", Reaction::Gasp, 468.0);
+                    say("Sol", "wait, who is the new runner");
+                    react("Ren", Reaction::Laugh, 724.0);
+                    react("Mika", Reaction::Laugh, 724.0);
+                    say("Mika", "this part again");
+                }
+                FfiChatFixture::Burst => {
+                    for (who, text) in [
+                        ("Mika", "ok starting"),
+                        ("Ren", "ready"),
+                        ("Sol", "one sec"),
+                        ("Mika", "this part again"),
+                        ("Ren", "the handoff in the rain, I knew it"),
+                        ("Sol", "wait, who is the new runner"),
+                    ] {
+                        say(who, text);
+                    }
+                }
+                FfiChatFixture::Lobby => {
+                    say("Mika", "snacks ready?");
+                    say("Ren", "two minutes, making tea");
+                    say("Sol", "the soundtrack is at music.example/ost");
+                }
+                FfiChatFixture::ChatOff => self.set_chat(false, None),
+                FfiChatFixture::NotSent => self.swallow_chat(true),
+                FfiChatFixture::ShortMessages => self.set_chat(true, Some(40)),
+            }
         }
 
         pub fn member_leaves(&self, name: String) {

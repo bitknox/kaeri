@@ -5515,6 +5515,166 @@
     <value>Continue</value>
     <comment>The start sheet's button after a title is picked.</comment>
   </data>
+  <data name="PartyChatField" xml:space="preserve">
+    <value>Say something</value>
+    <comment>Placeholder of every chat field, and the label of the button that opens it.</comment>
+  </data>
+  <data name="PartyChatSend" xml:space="preserve">
+    <value>Send</value>
+    <comment>Button that sends a chat line.</comment>
+  </data>
+  <data name="PartyChatTitle" xml:space="preserve">
+    <value>Chat</value>
+    <comment>Heading of the conversation in the lobby, on a phone's remote screen and the Android action that opens chat.</comment>
+  </data>
+  <data name="PartyChatWait" xml:space="preserve">
+    <value>Wait {seconds} s</value>
+    <comment>End of the chat field while sending waits, after three messages in five seconds.</comment>
+  </data>
+  <data name="PartyChatWaitSpoken_one" xml:space="preserve">
+    <value>Wait one second</value>
+    <comment>Spoken once when sending waits, for screen readers.</comment>
+  </data>
+  <data name="PartyChatWaitSpoken_other" xml:space="preserve">
+    <value>Wait {seconds} seconds</value>
+    <comment>Spoken once when sending waits, for screen readers.</comment>
+  </data>
+  <data name="PartyChatMore" xml:space="preserve">
+    <value>{count} more in chat</value>
+    <comment>Line after the three newest chat lines on the video, which opens the conversation.</comment>
+  </data>
+  <data name="PartyChatOff" xml:space="preserve">
+    <value>This room's server has chat turned off</value>
+    <comment>Notice when the room's server has chat turned off, and the line that replaces the field.</comment>
+  </data>
+  <data name="PartyChatPrivacy" xml:space="preserve">
+    <value>Messages go through the room's server. Kaeri keeps none.</value>
+    <comment>Line under the chat field in the lobby, shown once.</comment>
+  </data>
+  <data name="PartyChatHidden" xml:space="preserve">
+    <value>Chat is hidden</value>
+    <comment>Heading in the conversation when Hide chat is on.</comment>
+  </data>
+  <data name="PartyChatHiddenLine" xml:space="preserve">
+    <value>Hide chat is on in Settings, under Playback.</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="PartyChatShow" xml:space="preserve">
+    <value>Show chat</value>
+    <comment>Button that turns Hide chat off.</comment>
+  </data>
+  <data name="SettingsHideChat" xml:space="preserve">
+    <value>Hide chat in watch parties</value>
+    <comment>Settings switch that hides chat in every watch party on this device.</comment>
+  </data>
+  <data name="SettingsHideChatLine" xml:space="preserve">
+    <value>Lines, reactions and their ticks on the seek bar stay off the video, and the field is gone. The people list still shows who is in the room.</value>
+    <comment>Line under that switch.</comment>
+  </data>
+  <data name="PartyMute" xml:space="preserve">
+    <value>Mute {name}</value>
+    <comment>Member menu item and accessibility action that hides a member's lines and reactions for this party.</comment>
+  </data>
+  <data name="PartyUnmute" xml:space="preserve">
+    <value>Unmute {name}</value>
+    <comment>Member menu item and accessibility action that shows a muted member's lines again.</comment>
+  </data>
+  <data name="PartyUnmuteShort" xml:space="preserve">
+    <value>Unmute</value>
+    <comment>Button in the conversation on the line that says a member is muted.</comment>
+  </data>
+  <data name="PartyMemberMuted" xml:space="preserve">
+    <value>Muted</value>
+    <comment>State on a muted member's row.</comment>
+  </data>
+  <data name="PartyMutedLine" xml:space="preserve">
+    <value>{name} is muted</value>
+    <comment>Line in the conversation where a muted member's lines were.</comment>
+  </data>
+  <data name="PartyChatNotSent" xml:space="preserve">
+    <value>Couldn't send</value>
+    <comment>Line in the conversation when a message never came back from the server, five seconds after it was sent.</comment>
+  </data>
+  <data name="PartyChatRetry" xml:space="preserve">
+    <value>Try again</value>
+    <comment>Button after it, which sends the same text again.</comment>
+  </data>
+  <data name="PartyReact" xml:space="preserve">
+    <value>React</value>
+    <comment>Button on the TV's controls that opens the four reactions.</comment>
+  </data>
+  <data name="PartyReactLaugh" xml:space="preserve">
+    <value>Laugh</value>
+    <comment>Label of the laugh reaction button.</comment>
+  </data>
+  <data name="PartyReactGasp" xml:space="preserve">
+    <value>Gasp</value>
+    <comment>Label of the gasp reaction button.</comment>
+  </data>
+  <data name="PartyReactClap" xml:space="preserve">
+    <value>Clap</value>
+    <comment>Label of the clap reaction button.</comment>
+  </data>
+  <data name="PartyReactCry" xml:space="preserve">
+    <value>Cry</value>
+    <comment>Label of the cry reaction button.</comment>
+  </data>
+  <data name="PartyReactedLaugh" xml:space="preserve">
+    <value>{name} laughed</value>
+    <comment>Line in the conversation and in the terminal: a member laughed.</comment>
+  </data>
+  <data name="PartyReactedGasp" xml:space="preserve">
+    <value>{name} gasped</value>
+    <comment>Line in the conversation and in the terminal: a member gasped.</comment>
+  </data>
+  <data name="PartyReactedClap" xml:space="preserve">
+    <value>{name} clapped</value>
+    <comment>Line in the conversation and in the terminal: a member clapped.</comment>
+  </data>
+  <data name="PartyReactedCry" xml:space="preserve">
+    <value>{name} cried</value>
+    <comment>Line in the conversation and in the terminal: a member cried.</comment>
+  </data>
+  <data name="PartyReactedAt" xml:space="preserve">
+    <value>{line} at {time}</value>
+    <comment>A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The line is one of the party-reacted messages, the time is minutes and seconds.</comment>
+  </data>
+  <data name="PartyNamesTwo" xml:space="preserve">
+    <value>{first} and {second}</value>
+    <comment>Two members named together, for a reaction made by both: "Ren and Mika".</comment>
+  </data>
+  <data name="PartyNamesThree" xml:space="preserve">
+    <value>{first}, {second} and {third}</value>
+    <comment>Three members named together.</comment>
+  </data>
+  <data name="PartyNamesOthers" xml:space="preserve">
+    <value>{first}, {second} and {count} others</value>
+    <comment>More than three members named together: two names and how many others.</comment>
+  </data>
+  <data name="PartyChatYou" xml:space="preserve">
+    <value>You</value>
+    <comment>Name of this device's own member in the conversation and on its reactions.</comment>
+  </data>
+  <data name="PartySendsAs" xml:space="preserve">
+    <value>Sends as {device}</value>
+    <comment>Line on a phone's remote screen under the chat field: which device the line is said as.</comment>
+  </data>
+  <data name="PartyTickLabel" xml:space="preserve">
+    <value>{time} · {names}</value>
+    <comment>Label on the seek bar when pointing near a reaction tick: the moment and who reacted.</comment>
+  </data>
+  <data name="PartyChatAnnounce" xml:space="preserve">
+    <value>{name} says {message}</value>
+    <comment>Spoken by a screen reader when a chat line arrives.</comment>
+  </data>
+  <data name="PartyChatLeft_one" xml:space="preserve">
+    <value>{count} character left</value>
+    <comment>Spoken by a screen reader once, when 20 characters are left in the chat field.</comment>
+  </data>
+  <data name="PartyChatLeft_other" xml:space="preserve">
+    <value>{count} characters left</value>
+    <comment>Spoken by a screen reader once, when 20 characters are left in the chat field.</comment>
+  </data>
   <data name="PlayerUpNext" xml:space="preserve">
     <value>Up next</value>
     <comment>Label on the card for the episode that plays after this one.</comment>

@@ -23,7 +23,7 @@ Syncplay's, which is GPL; this one is MIT like the rest of the project.
 | Server | None by default; the first party suggests the public one and says who runs it |
 | Room | New parties get a name nobody can guess, shared by invite link; a name typed in joins that room |
 | Sync | The server's room state, applied with Syncplay's thresholds and its acknowledgement counters |
-| Chat | Received and shown as notices on the player; nothing is sent |
+| Chat | Sent and received; a line shows when the server sends it back. Reactions are chat lines in a fixed form. The conversation is kept in memory for the party only |
 | History | A party play marks the episode watched at its end; no position is kept along the way |
 | Crate | `kaeri-party`: the protocol and its TLS, no engine, no player, no HTTP stack |
 | Feature | The engine's `party`, on in `desktop` and in the Mac, Windows and Linux apps' builds |
@@ -56,11 +56,11 @@ Every message is an object with one or more of these keys, each a message of its
 | Key | Sent | Received |
 |---|---|---|
 | `TLS` | The STARTTLS request | Whether the server will do it |
-| `Hello` | Name, room, version and features | The name the server gave, the room, its version, its message of the day |
+| `Hello` | Name, room, version and features | The name the server gave, the room, its version, its message of the day, and its chat features |
 | `Set` | The file open, the ready state | Members joining, leaving and opening files; ready states; the room joined |
 | `List` | A request for the room's members | Every room's members, their files and ready states |
 | `State` | Position and pause, the ping, the acknowledgement counters | The room's position and pause, who set it, the ping, the counters |
-| `Chat` | Never | A member's message |
+| `Chat` | `{"Chat": "text"}` | A member's message, this member's own included |
 | `Error` | Never | Why the server ends the connection |
 
 The client says it is protocol version `1.2.255`, real version `1.7.3`, with the features
@@ -181,9 +181,86 @@ A server's own text is cut to one line and a reasonable length before it is show
 
 ## Chat
 
-Incoming chat is shown on the player as a notice, "Mika: starting in a minute", and reaches the
-front end as `PartyMessage` with `PartyMessageKind::Chat`. Sending chat is not part of the
-protocol client.
+Chat travels on the room's own Syncplay server. Kaeri runs nothing of its own and adds no
+service. A message is sent as `{"Chat": "text"}`, and the server sends it to everyone in the
+room, the sender included, as `{"Chat": {"username": "Mika", "message": "text"}}`.
+
+### What the server says it takes
+
+The server's `Hello` has a `features` object. The client reads two keys from it: `chat`, false
+when the server has chat turned off, and `maxChatMessageLength`, the most characters in one
+message. A server that says nothing is taken to have chat on, at 150 characters. A length of 0
+is ignored, and one above 2000 is held to 2000. The client tells the engine through
+`PartyEvent::Features`, after joining and after every reconnection.
+
+With chat off the client sends nothing, the engine answers a send with
+`PartyChatRefusal::Off`, and `PartyChatState.allowed` is false: an app hides the field and says
+"This room's server has chat turned off". An incoming line is cleaned (control characters become
+spaces, runs of space are folded, and it is cut at the server's length, at least 150) and is
+dropped when nothing is left.
+
+### Sending, and when a line shows
+
+A person's own line shows when the server's copy of it arrives, like everyone else's. The engine
+keeps each send until its copy comes back. After five seconds with none, the send is lost: the
+conversation's `failed` holds the text, the app says "Couldn't send" with Try again, and the
+text goes back into the field. The next send clears it. A lost reaction is dropped without a
+word.
+
+A line is cut to the server's length and cleaned before it goes out. Kaeri limits itself, as
+Syncplay servers have no flood control that Kaeri knows of: at most three messages in five
+seconds, then Send waits (`PartyChatRefusal::Wait { seconds }` and
+`PartyChatState.wait_seconds`), and one reaction per two seconds (`react_wait_seconds`). A
+reaction counts as a message too. The waits are whole seconds, rounded up, and run down on the
+party's one-second tick.
+
+### Reactions
+
+Syncplay has no message for a reaction, so one is a chat line in a fixed, readable form: the
+English word between asterisks and the room's position at the press, `*laughs* 12:04`. The
+words are `laughs`, `gasps`, `claps` and `cries`; the time is `m:ss`, or `h:mm:ss` from the
+first hour. Another Syncplay client shows the line as text. Kaeri reads any whole line of that
+form as a reaction, so typing it by hand makes one, which is harmless. A line with anything
+more than the word and the time is text.
+
+The position is the one the party's player last reported, so a reaction needs an episode
+playing on this device (`PartyChatRefusal::NotPlaying` otherwise). A reaction comes to the front
+end as `Event::PartyReaction` for the moment on the video, and as a mark in the conversation
+for the seek bar, kept for the episode on this device. Reactions at the same second by
+different members merge into one conversation line ("Ren and Mika laughed at 12:04").
+
+### The conversation
+
+`Event::PartyChat(PartyConversation)` carries the whole conversation after every change, so an
+app keeps nothing between events:
+
+| Field | Meaning |
+|---|---|
+| `lines` | The newest last, at most 200; the oldest is dropped first. A line is `Said { text }` or `Reacted { reaction, at, with }`, with its member, whether it is this device's own, and whether its member is muted |
+| `marks` | Every reaction of the episode (at most 500) without the muted members', for ticks on the seek bar |
+| `failed` | The text of a send that was never echoed |
+
+`Event::PartyChatState` carries what this device may do: `allowed`, `max_length`, `muted`,
+`wait_seconds` and `react_wait_seconds`. A typed line from another member also comes as
+`PartyMessage` with `PartyMessageKind::Chat`, and is cued to the player as a notice, "Mika:
+starting in a minute". A reaction is never a notice.
+
+### Mute
+
+`PartyCommand::Mute { name, muted }` hides a member for this party on this device. Their new
+lines and reactions are not cued, not sent as moments and left out of the marks, and their
+lines in the conversation have `muted` set, so an app shows "Ren is muted" with Unmute in their
+place. The lines stay in memory, so Unmute brings them back. Nothing about it reaches the room,
+and Kaeri has no host or kick: anyone can play, pause and seek. Links in chat are plain text and
+never tappable.
+
+### Privacy
+
+Lines go to the server's operator, encrypted to the server when it offers TLS and never end to
+end. Kaeri keeps them in memory for the party and nowhere else: not on disk, not in the recent
+rooms, not in bug reports or logs. Leaving the party drops them, and a member who joins later
+sees nothing said before. The lobby says it once: "Messages go through the room's server. Kaeri
+keeps none."
 
 ## The engine side
 
@@ -244,6 +321,9 @@ uniffi metadata for `Command` within its size limit.
 | `OpenPlayer` | Opens the player again in the room's episode |
 | `LookIn { server, room, name }` | Joins a room for a moment and says who is there and what it watches; only when a room is opened |
 | `LoadRecent`, `ForgetRoom { server, room }` | The last ten rooms on this device, newest first |
+| `Say { text }` | Says something in chat; see [Chat](#chat) |
+| `React { reaction }` | Reacts at the playhead of the episode this device plays |
+| `Mute { name, muted }` | Hides a member's lines and reactions for this party, on this device |
 
 ### Events
 
@@ -254,6 +334,10 @@ uniffi metadata for `Command` within its size limit.
 | `PartyState(PartyView)` | The party changed: connection, ready, the episode playing and its invite link, the round trip |
 | `PartyMembers(Vec<PartyMember>)` | The room's members changed |
 | `PartyMessage(PartyMessage)` | Something to say: chat, a join or leave, a pause, resume or seek, a correction, everyone ready |
+| `PartyChat(PartyConversation)` | The conversation changed: a line, a reaction, a mute, a lost send |
+| `PartyChatState(PartyChatState)` | What this device may do in chat: allowed, the length, who is muted, the waits |
+| `PartyReaction(PartyReaction)` | A reaction to show for a moment on the video, never from a muted member |
+| `PartyChatRefused(PartyChatRefusal)` | A send that was not made: chat off, a wait, or no episode playing |
 | `PartyLeft { reason }` | The party ended; `reason` when it was not the viewer's own leaving |
 | `PartyNoSource { id, episode }` | A party play found no source for the episode: still in the room, with nothing playing. A front end offers Choose source |
 | `PartyStarted { id, episode, kind }` | The room starts (`Start`), moves on (`MoveOn`) or this device opens the player again (`Rejoin`). The engine opens the episode from this device's own sources; the front end gives the lobby way |
@@ -364,7 +448,9 @@ The commands and events cross as the model's own types. Beside them the FFI has:
 - `FfiEngine::start_fake_party()`, in builds with `party` and `testing`: a Syncplay server on
   127.0.0.1 whose members the caller plays (`add_member`, `member_opens`, `member_ready`,
   `member_sets_playlist`, `member_sets_index`, `member_pauses`, `member_plays`,
-  `member_seeks`, `member_says`, `member_leaves`, `go_down`),
+  `member_seeks`, `member_says`, `member_reacts`, `member_leaves`, `go_down`, and for chat
+  `set_chat`, `swallow_chat`, `chat_taken` and `chat_fixture`, which puts the chat in one of the
+  board's states for screenshots),
   joined with `PartyJoin` and its `server()`. The Fixtures apps hold a party on it offline.
 
 The FFI's `party` feature turns on the engine's. `desktop` includes it; the Mac and iOS engine
@@ -375,7 +461,8 @@ Linux app (`desktop/linux/Cargo.toml`) turn it on beside `--no-default-features`
 
 `kaeri_party::fake::FakeServer` (feature `testing`) speaks the server's side on loopback:
 rooms, members it plays, forced states with acknowledgement counts, refusals, TLS declined or
-unknown, dropped connections, a server that goes down, and kicks. The crate's tests cover
+unknown, dropped connections, a server that goes down, kicks, and chat that is turned off, has a
+length, or is taken and never sent on. The crate's tests cover
 joining, refusals, TLS fallback, remote and local changes, drift, readiness, chat and comings
 and goings, reconnecting and leaving against it. The engine's tests join, steer and leave a
 party through `Command`s, and drive a scripted player through a seat. Nothing touches the

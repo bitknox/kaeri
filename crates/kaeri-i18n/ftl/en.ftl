@@ -6666,6 +6666,128 @@ together-recent-note = The last ten, kept on this device
 # The start sheet's button after a title is picked.
 party-pick-continue = Continue
 
+# Placeholder of every chat field, and the label of the button that opens it.
+party-chat-field = Say something
+
+# Button that sends a chat line.
+party-chat-send = Send
+
+# Heading of the conversation in the lobby, on a phone's remote screen and the Android action that opens chat.
+party-chat-title = Chat
+
+# End of the chat field while sending waits, after three messages in five seconds.
+party-chat-wait = Wait { $seconds } s
+
+# Spoken once when sending waits, for screen readers.
+party-chat-wait-spoken =
+    { $seconds ->
+        [one] Wait one second
+       *[other] Wait { $seconds } seconds
+    }
+
+# Line after the three newest chat lines on the video, which opens the conversation.
+party-chat-more = { $count } more in chat
+
+# Notice when the room's server has chat turned off, and the line that replaces the field.
+party-chat-off = This room's server has chat turned off
+
+# Line under the chat field in the lobby, shown once.
+party-chat-privacy = Messages go through the room's server. Kaeri keeps none.
+
+# Heading in the conversation when Hide chat is on.
+party-chat-hidden = Chat is hidden
+
+# Line under it.
+party-chat-hidden-line = Hide chat is on in Settings, under Playback.
+
+# Button that turns Hide chat off.
+party-chat-show = Show chat
+
+# Settings switch that hides chat in every watch party on this device.
+settings-hide-chat = Hide chat in watch parties
+
+# Line under that switch.
+settings-hide-chat-line = Lines, reactions and their ticks on the seek bar stay off the video, and the field is gone. The people list still shows who is in the room.
+
+# Member menu item and accessibility action that hides a member's lines and reactions for this party.
+party-mute = Mute { $name }
+
+# Member menu item and accessibility action that shows a muted member's lines again.
+party-unmute = Unmute { $name }
+
+# Button in the conversation on the line that says a member is muted.
+party-unmute-short = Unmute
+
+# State on a muted member's row.
+party-member-muted = Muted
+
+# Line in the conversation where a muted member's lines were.
+party-muted-line = { $name } is muted
+
+# Line in the conversation when a message never came back from the server, five seconds after it was sent.
+party-chat-not-sent = Couldn't send
+
+# Button after it, which sends the same text again.
+party-chat-retry = Try again
+
+# Button on the TV's controls that opens the four reactions.
+party-react = React
+
+# Label of the laugh reaction button.
+party-react-laugh = Laugh
+
+# Label of the gasp reaction button.
+party-react-gasp = Gasp
+
+# Label of the clap reaction button.
+party-react-clap = Clap
+
+# Label of the cry reaction button.
+party-react-cry = Cry
+
+# Line in the conversation and in the terminal: a member laughed.
+party-reacted-laugh = { $name } laughed
+
+# Line in the conversation and in the terminal: a member gasped.
+party-reacted-gasp = { $name } gasped
+
+# Line in the conversation and in the terminal: a member clapped.
+party-reacted-clap = { $name } clapped
+
+# Line in the conversation and in the terminal: a member cried.
+party-reacted-cry = { $name } cried
+
+# A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The line is one of the party-reacted messages, the time is minutes and seconds.
+party-reacted-at = { $line } at { $time }
+
+# Two members named together, for a reaction made by both: "Ren and Mika".
+party-names-two = { $first } and { $second }
+
+# Three members named together.
+party-names-three = { $first }, { $second } and { $third }
+
+# More than three members named together: two names and how many others.
+party-names-others = { $first }, { $second } and { $count } others
+
+# Name of this device's own member in the conversation and on its reactions.
+party-chat-you = You
+
+# Line on a phone's remote screen under the chat field: which device the line is said as.
+party-sends-as = Sends as { $device }
+
+# Label on the seek bar when pointing near a reaction tick: the moment and who reacted.
+party-tick-label = { $time } · { $names }
+
+# Spoken by a screen reader when a chat line arrives.
+party-chat-announce = { $name } says { $message }
+
+# Spoken by a screen reader once, when 20 characters are left in the chat field.
+party-chat-left =
+    { $count ->
+        [one] { $count } character left
+       *[other] { $count } characters left
+    }
+
 # Label on the card for the episode that plays after this one.
 player-up-next = Up next
 

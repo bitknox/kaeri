@@ -17,13 +17,13 @@ use kaeri_model::{
     party::{
         NoSourceWhy, PartyCommand, PartyConnection, PartyEpisode, PartyForm, PartyGlimpse,
         PartyGuess, PartyMember, PartyMessage, PartyMessageKind, PartyRecentRoom,
-        PartyRoomEpisode, PartyShare, PartySources, PartyStartKind, PartyView,
+        PartyRoomEpisode, PartyShare, PartySources, PartyStartKind, PartyView, Reaction,
         SUGGESTED_SERVER, SUGGESTED_SERVER_RUN_BY, clean_party_code, room_name,
     },
 };
 use kaeri_party::{
-    FileInfo, Member, NoticeKind, Party, PartyEvent, PartyOptions, PlayerAction, Playlist,
-    Sample, Server, file,
+    FileInfo, Member, Notice, NoticeKind, Party, PartyEvent, PartyOptions, PlayerAction,
+    Playlist, Sample, Server, file,
 };
 use kaeri_providers::ProviderRegistry;
 use kaeri_store::{PartyRoom, Store};
@@ -33,6 +33,7 @@ use crate::{
     jobs::JobGuard,
     now_epoch,
     outbox::Outbox,
+    party_chat::{Chat, Heard},
     party_identify::{Identified, identify},
     playback::{
         prefetch::Prefetch,
@@ -66,6 +67,12 @@ enum Control {
     StartAnyway,
     /// Open the player in the room's episode again.
     OpenPlayer,
+    /// Say something in chat.
+    Say(String),
+    /// React at the player's position.
+    React(Reaction),
+    /// Hide a member's lines and reactions on this device, or show them again.
+    Mute(String, bool),
     Leave,
     /// Leave for another party, which says itself: this one ends without a word.
     Switch,
@@ -314,6 +321,9 @@ pub fn command(
         PartyCommand::ChooseTitle { id } => choose_title(id, engine, tx),
         PartyCommand::StartAnyway => start_anyway(engine, tx),
         PartyCommand::OpenPlayer => open_player(engine, tx),
+        PartyCommand::Say { text } => steer(Control::Say(text), engine, tx),
+        PartyCommand::React { reaction } => steer(Control::React(reaction), engine, tx),
+        PartyCommand::Mute { name, muted } => steer(Control::Mute(name, muted), engine, tx),
         PartyCommand::LookIn { server, room, name } => {
             look_in((server, room, name), engine, services, tx);
         }
@@ -590,6 +600,11 @@ struct Task {
     moving_on: bool,
     countdown: Option<u32>,
     tick: tokio::time::Interval,
+    /// The conversation, in memory for this party.
+    chat: Chat,
+    /// Where this device's player is, for a reaction's moment; `None` with no player seated.
+    position: Option<f64>,
+    epoch: tokio::time::Instant,
     /// Left for another party, or by an engine shutting down: the end goes unsaid.
     quiet: bool,
 }
@@ -615,8 +630,78 @@ impl Task {
             moving_on: false,
             countdown: None,
             tick,
+            chat: Chat::new(""),
+            position: None,
+            epoch: tokio::time::Instant::now(),
             quiet: false,
         }
+    }
+
+    /// Seconds on the party's own clock, for the conversation's limits and waits.
+    fn clock(&self) -> f64 {
+        self.epoch.elapsed().as_secs_f64()
+    }
+
+    fn say_chat(&self) {
+        self.say(Event::PartyChat(self.chat.conversation()));
+    }
+
+    /// Tell the front end what this device may do in chat, and remember the waits it was told.
+    fn say_chat_state(&mut self) {
+        let state = self.chat.state(self.clock());
+        self.chat.told(&state);
+        self.say(Event::PartyChatState(state));
+    }
+
+    /// Time moved on: a send with no echo is lost, and the waits run down.
+    fn chat_tick(&mut self) {
+        let now = self.clock();
+        if self.chat.tick(now) {
+            self.say_chat();
+        }
+        let state = self.chat.state(now);
+        if (state.wait_seconds, state.react_wait_seconds) != self.chat.told_waits() {
+            self.chat.told(&state);
+            self.say(Event::PartyChatState(state));
+        }
+    }
+
+    fn on_say(&mut self, text: &str) {
+        let now = self.clock();
+        match self.chat.say(text, now) {
+            Ok(Some(line)) => {
+                self.party.say(line);
+                self.say_chat();
+                self.say_chat_state();
+            }
+            Ok(None) => {}
+            Err(refusal) => self.say(Event::PartyChatRefused(refusal)),
+        }
+    }
+
+    fn on_react(&mut self, reaction: Reaction) {
+        let now = self.clock();
+        match self.chat.react(crate::party_chat::party(reaction), self.position, now) {
+            Ok(line) => {
+                self.party.say(line);
+                self.say_chat_state();
+            }
+            Err(refusal) => self.say(Event::PartyChatRefused(refusal)),
+        }
+    }
+
+    fn on_heard(&mut self, from: &str, text: &str) {
+        match self.chat.hear(from, text) {
+            Heard::Quiet => {}
+            Heard::Typed { from, text } => {
+                let notice = Notice::chat(&from, &text);
+                self.cue(SeatCue::Notice(notice.text.clone()));
+                let kind = message_kind(notice.kind);
+                self.say(Event::PartyMessage(PartyMessage { kind, text: notice.text }));
+            }
+            Heard::Reacted(moment) => self.say(Event::PartyReaction(moment)),
+        }
+        self.say_chat();
     }
 
     fn cue(&self, cue: SeatCue) {
@@ -698,6 +783,11 @@ impl Task {
         self.countdown = None;
         self.view.playing = true;
         self.playing = Some((id, room.episode.clone()));
+        if kind != PartyStartKind::Rejoin {
+            // The reactions of the episode before are not this one's.
+            self.chat.new_episode();
+            self.say_chat();
+        }
         match kind {
             PartyStartKind::Start => self.party.play(),
             PartyStartKind::MoveOn => self.moving_on = true,
@@ -792,6 +882,7 @@ impl Task {
     fn on_party(&mut self, event: PartyEvent) -> bool {
         match event {
             PartyEvent::Joined { name, room, encrypted, motd } => {
+                self.chat.set_me(&name);
                 (self.view.name, self.view.room, self.view.encrypted, self.view.motd) =
                     (name, room, encrypted, motd);
                 self.refresh();
@@ -832,6 +923,11 @@ impl Task {
                 PlayerAction::Seek(to) => SeatCue::Seek(to),
                 PlayerAction::Speed(speed) => SeatCue::Speed(speed),
             }),
+            PartyEvent::Features(features) => {
+                self.chat.set_features(features.chat, features.max_chat_length);
+                self.say_chat_state();
+            }
+            PartyEvent::Chat { from, text } => self.on_heard(&from, &text),
             PartyEvent::Notice(notice) => {
                 self.cue(SeatCue::Notice(notice.text.clone()));
                 let kind = message_kind(notice.kind);
@@ -852,6 +948,7 @@ impl Task {
             }
             PartyEvent::Rejoined { name, encrypted } => {
                 self.cue(SeatCue::Notice(Msg::PartyRejoined.english()));
+                self.chat.set_me(&name);
                 (self.view.name, self.view.encrypted) = (name, encrypted);
                 self.view.connection = PartyConnection::Connected;
                 self.say(Event::PartyState(self.view.clone()));
@@ -904,9 +1001,11 @@ impl Task {
                 }
             }
             SeatReport::Sample { position, paused, speed } => {
+                self.position = Some(position);
                 self.party.sample(Sample { position, paused, speed });
             }
             SeatReport::Ended { leave, finished } => {
+                self.position = None;
                 self.party.detach();
                 self.party.file(None);
                 self.cues = None;
@@ -1071,6 +1170,13 @@ impl Task {
                 }
             }
             Control::OpenPlayer => self.start(PartyStartKind::Rejoin),
+            Control::Say(text) => self.on_say(&text),
+            Control::React(reaction) => self.on_react(reaction),
+            Control::Mute(name, muted) => {
+                self.chat.mute(&name, muted);
+                self.say_chat();
+                self.say_chat_state();
+            }
             Control::Leave => self.party.leave(),
             Control::Switch => {
                 self.quiet = true;
@@ -1118,7 +1224,8 @@ impl Task {
                     }
                 },
                 Some(message) = internals.recv() => self.on_internal(message),
-                _ = self.tick.tick(), if self.countdown.is_some() => {
+                _ = self.tick.tick(), if self.countdown.is_some() || self.chat.busy() => {
+                    self.chat_tick();
                     match self.countdown {
                         Some(left) if left > 1 => {
                             self.countdown = Some(left - 1);
