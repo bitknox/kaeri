@@ -76,6 +76,10 @@ mpv_patches=()
 for patch in "$root/android/mpv/patches/mpv/"*.patch; do
   [[ -f "$patch" ]] && mpv_patches+=("$patch")
 done
+# Then fixes from mpv's master that this toolchain needs, for Windows only.
+for patch in "$here/mpv/"*.patch; do
+  [[ -f "$patch" ]] && mpv_patches+=("$patch")
+done
 # FFmpeg fixes from its release/9.0 branch, after the tag: the images' libraries are the ones that
 # branch builds with.
 ffmpeg_patches=()
@@ -318,7 +322,8 @@ library of its own and which can be replaced with one built from modified source
   build/build-mingw64-full.sh.orig mpv's own script for its Windows builds, at mpv commit
                                    $mpv_script_commit
   build/build-mingw64-full.patch   Kaeri's changes to that script
-  build/patches/                   Kaeri's changes to mpv
+  build/patches/                   Kaeri's changes to mpv, and fixes from mpv's master branch
+                                   for this toolchain
   build/patches/ffmpeg/            fixes from FFmpeg's release/9.0 branch, applied to the tag
   build/mujs.wrap                  the mujs release and meson build used
   sources/                         each archive, by its SHA-256 below
