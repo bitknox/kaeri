@@ -74,6 +74,9 @@ struct Options {
     /// The milliseconds after the launch's motion demo (`-KaeriMotion`) to snapshot at, each
     /// to the snapshot's name with `-<ms>` before its extension.
     var frames: [Int] = []
+    /// Where to click before the snapshot, in points from the window's top left, to open a menu
+    /// the snapshot then shows over the window.
+    var openMenu: CGPoint?
     /// How badly the fake serves the art: every second image fails this many times before it is
     /// served, and each waits the delay.
     var artTrouble: (failFirst: Int, delay: Duration)?
@@ -100,7 +103,8 @@ struct Options {
                             [--player-shot <state>] [--snapshot <file.png>] [--size <width>x<height>]
                             [--media <file>] [--full-screen <times>] [--art-trouble <fails>[,<ms>]]
                             [--art-cache <MB>] [--episodes-delay <ms>] [--search-delay <ms>]
-                            [--detail-delay <ms>] [--list-delay <ms>] [--visit <id>,…] [--reduce-motion]
+                            [--detail-delay <ms>] [--list-delay <ms>] [--visit <id>,…] [--open-menu <x>,<y>]
+                            [--reduce-motion]
         the player's states: \(PlayerShot.allCases.map(\.rawValue).joined(separator: ", "))
         """
 
@@ -141,6 +145,11 @@ struct Options {
                 home = URL(filePath: try value(flag), directoryHint: .isDirectory)
             case "--snapshot":
                 snapshot = URL(filePath: try value(flag))
+            case "--open-menu":
+                let at = try value(flag)
+                let parts = at.split(separator: ",").compactMap { Double($0) }
+                guard parts.count == 2 else { throw Problem.bad(flag, at) }
+                openMenu = CGPoint(x: parts[0], y: parts[1])
             case "--frames":
                 let list = try value(flag)
                 frames = list.split(separator: ",").compactMap { Int($0) }

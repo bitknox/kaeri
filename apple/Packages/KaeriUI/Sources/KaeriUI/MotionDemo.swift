@@ -200,7 +200,15 @@ public enum MotionDemo: String, CaseIterable, Sendable {
             else { return }
             navigator.openTitle(id)
         case .episodeRange:
-            navigator.stepEpisodeRange(by: 1)
+            if navigator.episodeRangesShown != nil {
+                navigator.stepEpisodeRange(by: 1)
+            } else if let id = navigator.paths[navigator.section]?.last?.id,
+                      let rows = store.titles.episodes[id] {
+                // A phone has no View menu: the next range is picked as its picker picks it.
+                let plan = EpisodePlan(rows: rows, picked: navigator.episodeRange[id])
+                guard plan.index + 1 < plan.ranges.count else { return }
+                navigator.episodeRange[id] = plan.index + 1
+            }
         case .protectionLine:
             guard let id = navigator.titleOnMac ?? navigator.paths[navigator.section]?.last?.id else { return }
             withAnimation(.standard) { navigator.showAllSynopses(id, true) }

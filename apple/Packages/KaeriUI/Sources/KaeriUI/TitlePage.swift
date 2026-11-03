@@ -857,8 +857,9 @@ struct EpisodeList: View {
     @State private var room = EpisodeRoom()
     /// How wide the list stands, which sets whether text sits beside the stills or under them.
     @State private var listWidth: CGFloat?
-    /// Where the pickers stand from the top of the page's visible area.
-    @State private var pickersTop: CGFloat = 0
+    /// Where the pickers stand from the top of the page's visible area. Kept out of the view's
+    /// state, so scrolling redraws nothing.
+    @State private var pickers = PickersPlace()
     let entry: Entry
     /// Where the page's Unwatched episodes rotor finds the rows.
     let rotor: Namespace.ID
@@ -915,7 +916,7 @@ struct EpisodeList: View {
             .frame(height: 28)
             .padding(.bottom, 6)
             .id(Self.pickers)
-            .onGeometryChange(for: CGFloat.self) { $0.frame(in: .scrollView).minY } action: { pickersTop = $0 }
+            .onGeometryChange(for: CGFloat.self) { $0.frame(in: .scrollView).minY } action: { [pickers] top in pickers.top = top }
             let loaded = store.titles.episodes[entry.id] != nil
             // The placeholders and the rows in one place, one crossfading into the other (T8):
             // none slides or comes in alone.
@@ -970,7 +971,7 @@ struct EpisodeList: View {
         // A range switch, from the pop-up or the View menu, brings the pickers back into view
         // when they were scrolled away above.
         .onChange(of: plan.index) {
-            guard pickersTop < Self.pickersHidden, let scroller else { return }
+            guard pickers.top < Self.pickersHidden, let scroller else { return }
             withAnimation(.standard) { scroller.scrollTo(Self.pickers, anchor: UnitPoint(x: 0, y: 0.1)) }
         }
         // The View menu's Previous Episodes and Next Episodes act on this list while it is on
@@ -986,6 +987,13 @@ struct EpisodeList: View {
         .onChange(of: navigator.episodeListToEnd) {
             guard let last = plan.shown.last?.number else { return }
             scroller?.scrollTo(last, anchor: .bottom)
+        }
+        // A screenshot's `-KaeriScroll <episode>`: that row scrolled near the top once drawn.
+        .task(id: loadedTable) {
+            guard loadedTable, let episode = navigator.launchScroll, let scroller else { return }
+            navigator.launchScroll = nil
+            try? await Task.sleep(for: .milliseconds(600))
+            scroller.scrollTo(String(episode), anchor: UnitPoint(x: 0, y: 0.08))
         }
     }
 
@@ -1109,7 +1117,9 @@ struct EpisodeRowView: View {
             .contextMenu {
                 EpisodeMenu(entry: entry, number: number, row: row)
             } preview: {
-                EpisodePreview(entry: entry, row: row)
+                EpisodePreview(entry: entry, row: row, hidden: hidden)
+                    .environment(store)
+                    .environment(navigator)
             }
             #else
             .contextMenu { EpisodeMenu(entry: entry, number: number, row: row) }
@@ -1155,6 +1165,8 @@ struct UnairedEpisodeRow: View {
                 .font(EpisodeRowLabel.numberFont(metrics))
                 .monospacedDigit()
                 .foregroundStyle(.haze)
+                .lineLimit(1)
+                .fixedSize()
                 .frame(width: 22, alignment: .trailing)
             // The show's banner crop: the episode has no still before it airs.
             EpisodeStill(entry: entry, row: row, hidden: false, unaired: true, size: metrics.still)

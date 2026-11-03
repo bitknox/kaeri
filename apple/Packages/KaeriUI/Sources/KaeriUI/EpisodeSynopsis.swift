@@ -177,6 +177,8 @@ struct EpisodePlan {
     static func title(_ range: EpisodeRange, in rows: [EpisodeRow]) -> String {
         let first = rows[Int(range.start)].number
         let last = rows[Int(range.end) - 1].number
+        // A range of one, such as the next episode alone after a hundred, is that episode.
+        if first == last { return Int(episode: first).formatted() }
         return L.episodeRangeShort(
             from: Int(episode: first).formatted(), to: Int(episode: last).formatted()
         )
@@ -189,6 +191,25 @@ struct EpisodePlan {
         if range.notOut { return L.episodeRangeItem(range: name, state: L.episodeRowNotOut) }
         return name
     }
+}
+
+/// Where a title page's range pickers stand from the top of its visible area, as they last stood
+/// on screen: a row scrolled away above keeps where it left.
+@MainActor final class PickersPlace {
+    var top: CGFloat = 0
+    /// How far a list has scrolled, and how far it had when the pickers last stood on screen: a
+    /// list that jumps far past a row drops it without telling it where it went.
+    var offset: CGFloat = 0
+    private var offsetSeen: CGFloat = 0
+
+    /// The pickers seen this far from the top.
+    func saw(_ top: CGFloat) {
+        self.top = top
+        offsetSeen = offset
+    }
+
+    /// Where they stand now, on screen or scrolled away.
+    var now: CGFloat { top - (offset - offsetSeen) }
 }
 
 /// The language a synopsis is written in, so a screen reader and the line breaking follow the

@@ -376,7 +376,9 @@ struct SearchScreen: View {
             } else if store.search.asked == nil, !navigator.query.isEmpty {
                 store.search(text: navigator.query)
             }
-            if let points = navigator.launchScroll {
+            // Only when Search is what the launch opened: the iPhone's tab can be drawn early,
+            // under a title page whose scroll this is.
+            if navigator.section == .search, let points = navigator.launchScroll {
                 navigator.launchScroll = nil
                 try? await Task.sleep(for: .milliseconds(1_500))
                 scrollPosition.scrollTo(y: CGFloat(points))

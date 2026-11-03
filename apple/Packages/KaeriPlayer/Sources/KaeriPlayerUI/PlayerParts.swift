@@ -1200,6 +1200,9 @@ struct EpisodeList: View {
                 else { return }
                 try? await Task.sleep(for: .milliseconds(300))
                 focus = number
+                // A window that is not key takes no focus, as a snapshot's never is: the footer
+                // is told the row all the same.
+                focused?.wrappedValue = number
             }
         ForEach(episodes, id: \.number) { row in
             if row.current {

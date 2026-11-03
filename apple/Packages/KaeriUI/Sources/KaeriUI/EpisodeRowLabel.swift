@@ -124,6 +124,9 @@ struct EpisodeRowLabel: View {
             .monospacedDigit()
             .foregroundStyle(current ? .amber : .haze)
             .animation(.quick, value: current)
+            // A number past 99 keeps one line, standing into the row's margin.
+            .lineLimit(1)
+            .fixedSize()
             .frame(width: 22, alignment: .trailing)
             .frame(height: metrics.still.height * (metrics.text == .beside ? 1 : 0.2), alignment: .center)
     }
@@ -382,19 +385,16 @@ struct ProtectionLine: View {
 #if os(iOS)
 /// The preview a long press on an episode lifts above its menu: the still at 16:9, the title, the
 /// facts and the synopsis in up to twelve lines, which is where a cut text is read whole. A
-/// protected episode's still stays blurred and its text out until Show synopsis is chosen.
+/// protected episode's still stays blurred and its text out until Show synopsis is chosen. The
+/// preview is drawn apart from the page, without its environment: the row hands it the store and
+/// the navigator, and says what is hidden.
 struct EpisodePreview: View {
-    @Environment(AppStore.self) private var store
-    @Environment(Navigator.self) private var navigator
     let entry: Entry
     let row: EpisodeRow
+    let hidden: Bool
 
     var body: some View {
         let next = entry.progress?.next ?? 1
-        let hidden = EpisodeProtection.hidden(
-            row, spoilers: store.spoilerProtection(for: entry.id),
-            revealed: navigator.synopsisShown[entry.id] ?? [], all: navigator.synopsisAllShown.contains(entry.id)
-        )
         let current = UInt32(row.number) == next
         VStack(alignment: .leading, spacing: 8) {
             EpisodeStill(entry: entry, row: row, hidden: hidden, unaired: false, size: nil)

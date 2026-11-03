@@ -517,7 +517,12 @@ fn fixture_sources(scene: &FfiScene, art: &str, provided: &[(Media, u32)]) -> Pr
     let franchise = || {
         let mut titles = provided.to_vec();
         titles.extend(fixtures::synopsis_shows_media().into_iter().map(|media| {
-            let episodes = media.episodes.unwrap_or(1);
+            // The long runner is still airing: the source lists what is out.
+            let episodes = if media.id == fixtures::LONG_RUNNER {
+                fixtures::LONG_RUNNER_AIRED
+            } else {
+                media.episodes.unwrap_or(1)
+            };
             (media, episodes)
         }));
         sources::with_synopsis_episodes(sources::with_long_franchise_and(

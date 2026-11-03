@@ -219,7 +219,7 @@ pub fn with_long_franchise_and(
 
 /// The episodes of [`fixtures::SYNOPSIS_SHOW`] and [`fixtures::LONG_RUNNER`] as the source lists
 /// them: a title and a still each, and a synopsis on all but the tenth of the first and every
-/// ninth of the second, as most sources have gaps.
+/// ninth of the second, as most sources have gaps. The second lists only what is out.
 pub fn with_synopsis_episodes(provider: MockProvider) -> MockProvider {
     const LETTERS: [&str; 12] = [
         "Paper Lanterns",
@@ -273,7 +273,7 @@ pub fn with_synopsis_episodes(provider: MockProvider) -> MockProvider {
         "Chart House",
     ];
     const THINGS: [&str; 5] = ["Umbrella", "Ticket", "Alibi", "Pendulum", "Ledger"];
-    let runner = (1..=fixtures::LONG_RUNNER_EPISODES)
+    let runner = (1..=fixtures::LONG_RUNNER_AIRED)
         .map(|n| {
             let place = PLACES[n as usize % PLACES.len()];
             let thing = THINGS[(n as usize / 3) % THINGS.len()];

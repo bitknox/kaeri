@@ -219,6 +219,25 @@ struct EpisodeSynopsisTests {
         #expect(EpisodePlan.item(plan.ranges[2], in: table) == "201–230 · Not out yet")
     }
 
+    @Test func aRangeOfOneEpisodeIsNamedByThatEpisode() {
+        // A show on the air lists what is out and the next to air: 201 after 200 is a range alone.
+        var table = rows(201, watched: 100)
+        table[200].airsAt = Int64(Date.now.timeIntervalSince1970) + 86_400
+        let plan = EpisodePlan(rows: table, picked: nil)
+        #expect(plan.ranges.count == 3)
+        #expect(EpisodePlan.item(plan.ranges[2], in: table) == "201 · Not out yet")
+    }
+
+    @Test func pickersAListJumpsFarPastStandWhereTheJumpLeftThem() {
+        let place = PickersPlace()
+        place.offset = 200
+        place.saw(395)
+        place.offset = 9_000
+        #expect(place.now < 0, "scrolled away above, though the row last said 395")
+        place.offset = 200
+        #expect(place.now == 395)
+    }
+
     // MARK: Language
 
     @Test func aSynopsisIsTaggedWithTheLanguageItIsWrittenIn() {

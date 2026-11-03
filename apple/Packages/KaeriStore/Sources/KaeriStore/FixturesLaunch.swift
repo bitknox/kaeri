@@ -133,10 +133,11 @@ extension AppStore {
         }
         send(.setWatched(id: id, episodes: episodes, watched: true))
         // Asked again after the mark, which the engine takes in order: what the screens asked for
-        // while it started went ahead of it, and says the title as it was.
+        // while it started went ahead of it, and says the title and its episodes as they were.
         continuing.list.asked()
         send(.loadContinue)
         send(.loadDetail(id))
+        send(.loadEpisodes(id))
     }
 
     /// The launch argument that takes the fake AniList away once the first Home has loaded,

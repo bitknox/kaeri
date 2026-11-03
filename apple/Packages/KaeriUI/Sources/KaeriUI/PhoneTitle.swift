@@ -17,8 +17,10 @@ struct PhoneTitle: View {
     @State private var mainButtonGone = false
     /// Whether the episode rows keep room for text, settled when they are first laid out.
     @State private var room = EpisodeRoom()
-    /// Where the episodes' pickers stand from the top of the list's visible area.
-    @State private var pickersTop: CGFloat = 0
+    /// Where the range menu's row stands from the top of the list's visible area, as it last
+    /// stood on screen. Kept out of the view's state, so scrolling redraws nothing: a page redrawn
+    /// on every scroll step takes no scroll to its episodes.
+    @State private var pickers = PickersPlace()
     let id: AnilistId
 
     /// Case B: the service the main action opens.
@@ -244,10 +246,9 @@ struct PhoneTitle: View {
             }
             .bareRow()
             Color.clear.frame(height: 0).bareRow().id("episodes")
-                .onGeometryChange(for: CGFloat.self) { $0.frame(in: .scrollView).minY } action: { pickersTop = $0 }
             PhoneEpisodes(
                 entry: entry, spoilers: store.spoilerProtection(for: id), rotor: rotor,
-                room: room.room, rows: episodes, plan: plan
+                room: room.room, rows: episodes, plan: plan, pickers: pickers
             )
             Color.clear.frame(height: 32).bareRow()
         }
@@ -264,13 +265,16 @@ struct PhoneTitle: View {
         // A range switch brings the pickers back into view when they were scrolled away above,
         // under the navigation bar or past it.
         .onChange(of: plan.index) {
-            guard pickersTop < 100 else { return }
+            guard pickers.now < 100 else { return }
             withAnimation(.standard) { reader.scrollTo("episodes", anchor: UnitPoint(x: 0, y: 0.12)) }
         }
         // The motion audit's range switch: the list scrolled to its last row first.
         .onChange(of: navigator.episodeListToEnd) {
             guard let last = plan.shown.last?.number else { return }
             reader.scrollTo(last, anchor: .bottom)
+        }
+        .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { [pickers] _, offset in
+            pickers.offset = offset
         }
         .nudgeableScroll()
         .ignoresSafeArea(edges: art.isCompact ? [] : .top)
@@ -364,6 +368,8 @@ struct PhoneEpisodes: View {
     let room: Bool
     let rows: [EpisodeRow]
     let plan: EpisodePlan
+    /// Where the range menu's row last stood, for the page.
+    var pickers: PickersPlace? = nil
 
     var body: some View {
         let loaded = store.titles.episodes[entry.id] != nil
@@ -391,6 +397,9 @@ struct PhoneEpisodes: View {
                         }
                     }
                     .frame(minHeight: 44)
+                    .onGeometryChange(for: CGFloat.self) { $0.frame(in: .scrollView).minY } action: { [pickers] top in
+                        pickers?.saw(top)
+                    }
                     .bareRow(inset)
                 }
                 // The watched run folds away above the last episode watched.
@@ -500,7 +509,9 @@ struct PhoneEpisodeRow: View {
             .contextMenu {
                 EpisodeMenu(entry: entry, number: number, row: row)
             } preview: {
-                EpisodePreview(entry: entry, row: row)
+                EpisodePreview(entry: entry, row: row, hidden: hidden)
+                    .environment(store)
+                    .environment(navigator)
             }
         }
     }
