@@ -332,6 +332,9 @@ extension PlayerModel {
         apply(.playerTimeline(playback: playback, marks: scene.marks.map {
             TimelineMark(kind: $0.kind, start: fit($0.start), end: fit($0.end), origin: $0.origin)
         }))
+        // The playing episode's own skip offer is not the scene's.
+        if scene.ui.isEmpty { apply(.playerUi(playback: playback, ui: .skipCleared)) }
+        if scene.paused != nil { skipFindPause = { scene.paused } }
         for ui in scene.ui {
             switch ui {
             case .skip(let kind, let to): apply(.playerUi(playback: playback, ui: .skip(kind: kind, to: fit(to))))

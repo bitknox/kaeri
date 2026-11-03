@@ -21,6 +21,7 @@ public struct PhonePlayerView: View {
     @State private var heldSpeed: Double?
     @State private var flash: SeekFlash?
     @State private var height: CGFloat = 0
+    @State private var width: CGFloat = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(AppStore.self) private var store
     private let metrics = PlayerMetrics.phone
@@ -160,6 +161,7 @@ public struct PhonePlayerView: View {
         .onChange(of: store.party.inParty, initial: true) { _, inParty in model.marksBlocked = inParty }
         .onChange(of: held) { _, on in speedHeld(on) }
         .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { height = $0 }
+        .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { width = $0 }
         .onChange(of: SubtitleLift(visible: visible, height: height), initial: true) { _, lift in
             // The subtitles rise above the bar while the controls are up, as PhonePlayer has them.
             model.liftSubtitles(lift.visible ? metrics.subtitleLift / max(lift.height, 1) : 0, animated: !reduceMotion)
@@ -250,7 +252,11 @@ public struct PhonePlayerView: View {
                 .frame(width: 52, alignment: .trailing)
         }
         .frame(height: 44)
-        .padding(.horizontal, 56)
+        .padding(.leading, 56)
+        // The iPhone's marking panel takes the trailing edge: the seek row stops short of it, so
+        // the marked stretch stays in view.
+        .padding(.trailing, model.skipMark != nil && !(width >= 700 && height >= 600) ? 56 + 320 + 16 : 56)
+        .animation(.standard, value: model.skipMark != nil)
         .padding(.bottom, 26)
     }
 

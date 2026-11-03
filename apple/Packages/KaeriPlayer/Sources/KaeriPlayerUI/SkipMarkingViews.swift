@@ -70,14 +70,21 @@ struct SkipMarkBar: View {
                     edgeRow(view, edge: .start)
                     edgeRow(view, edge: .end)
                 }
-                lines(view)
-                HStack {
-                    Button(L.playerMarkWatchEdges) { model.previewSkipEdges() }
-                        .buttonStyle(PillButtonStyle(kind: .secondary, metrics: metrics))
-                        .opacity(view.previewing ? 0.6 : 1)
-                        .animation(.quick, value: view.previewing)
-                    Spacer(minLength: 0)
-                    saveButton(view)
+                // A found review sets its lines beside the buttons; the others keep them above.
+                if view.found {
+                    HStack(alignment: .bottom, spacing: 8) {
+                        lines(view)
+                        Spacer(minLength: 0)
+                        watchEdges(view)
+                        saveButton(view)
+                    }
+                } else {
+                    lines(view)
+                    HStack {
+                        watchEdges(view)
+                        Spacer(minLength: 0)
+                        saveButton(view)
+                    }
                 }
             }
         }
@@ -154,6 +161,13 @@ struct SkipMarkBar: View {
             .buttonStyle(PillButtonStyle(kind: .primary, metrics: metrics))
             .keyboardShortcut(.defaultAction)
             .sensoryFeedback(.impact(weight: .light), trigger: view.start) { old, new in old != new }
+    }
+
+    private func watchEdges(_ view: SkipMarkView) -> some View {
+        Button(L.playerMarkWatchEdges) { model.previewSkipEdges() }
+            .buttonStyle(PillButtonStyle(kind: .secondary, metrics: metrics))
+            .opacity(view.previewing ? 0.6 : 1)
+            .animation(.quick, value: view.previewing)
     }
 
     private func saveButton(_ view: SkipMarkView) -> some View {
