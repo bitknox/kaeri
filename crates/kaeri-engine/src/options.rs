@@ -148,19 +148,22 @@ pub struct AppClients {
     /// token goes without it when it is `None`.
     pub trakt_secret: Option<String>,
     /// The Google client of this platform ([`kaeri_sync::google::ClientKind`]): iOS and Android
-    /// have no secret, the desktop's and the TV's do.
+    /// have no secret, the desktop's and the TV's do. `None` for Kaeri's own.
     pub google: Option<String>,
     /// The secret of the Google desktop client (Google asks for it in the token exchange), or of
     /// the TV client.
     pub google_secret: Option<String>,
-    /// The Dropbox app key. The app has no secret: PKCE.
+    /// The Dropbox app key, `None` for Kaeri's own. The app has no secret: PKCE.
     pub dropbox: Option<String>,
-    /// The Microsoft application (client) id, a public client.
+    /// The Microsoft application (client) id, a public client. `None` for Kaeri's own.
     pub onedrive: Option<String>,
     /// Which of the cloud clients above this device uses, which decides the redirect and the
     /// way of signing in. `None` for the desktop feature's default, the desktop client, and for
     /// no cloud sign-in without it.
     pub cloud_kind: Option<CloudClient>,
+    /// Leave Kaeri's own cloud clients out where the app names none, as a build without them
+    /// would be: for a test of a service with no client.
+    pub no_built_in_clients: bool,
 }
 
 /// The work the engine does on its own beside the commands, each piece on its own switch.

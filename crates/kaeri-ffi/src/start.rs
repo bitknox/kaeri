@@ -156,17 +156,17 @@ pub struct FfiStart {
     #[uniffi(default = None)]
     pub trakt_client_secret: Option<String>,
     /// The Google Drive client for this platform: iOS, Android, desktop or TV, whichever the app
-    /// registered. Used for sync only.
+    /// registered. Used for sync only. `None` for Kaeri's own client of the platform.
     #[uniffi(default = None)]
     pub google_client_id: Option<String>,
     /// The secret of the desktop or TV Google client, which Google asks for in the token
     /// exchange. `None` for iOS and Android.
     #[uniffi(default = None)]
     pub google_client_secret: Option<String>,
-    /// The Dropbox app key.
+    /// The Dropbox app key, `None` for Kaeri's own.
     #[uniffi(default = None)]
     pub dropbox_app_key: Option<String>,
-    /// The Microsoft application (client) id for OneDrive.
+    /// The Microsoft application (client) id for OneDrive, `None` for Kaeri's own.
     #[uniffi(default = None)]
     pub onedrive_client_id: Option<String>,
     /// Where the trackers' and the plugin stores' tokens are kept. `None` for
@@ -205,6 +205,7 @@ impl FfiStart {
             dropbox: self.dropbox_app_key.clone(),
             onedrive: self.onedrive_client_id.clone(),
             cloud_kind: self.platform.and_then(FfiPlatform::cloud_kind),
+            no_built_in_clients: false,
         }
     }
 }

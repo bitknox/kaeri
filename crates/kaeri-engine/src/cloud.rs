@@ -203,6 +203,60 @@ fn kind_of_device(ctx: &Ctx) -> Option<ClientKind> {
     })
 }
 
+/// Kaeri's own registered cloud clients, used when the app names none of its own.
+///
+/// Google's desktop and TV clients come with a client secret. Google documents that an installed
+/// app can't keep one, so it isn't treated as a secret there:
+/// <https://developers.google.com/identity/protocols/oauth2#installed>. Until those secrets are
+/// built in, Kaeri has no Google client of its own on desktops and TVs, and Google stays hidden
+/// there unless the app names its own. Dropbox (PKCE) and OneDrive (a public client) have none.
+mod built_in {
+    /// iPhone, iPad and Mac.
+    pub const GOOGLE_IOS: &str =
+        "206293095288-jg72ijavhr0ja9pi09esua4gbqu11jtd.apps.googleusercontent.com";
+    /// Android phones and tablets.
+    pub const GOOGLE_ANDROID: &str =
+        "206293095288-gitmhcp8qpohddgr0o8qli0e0o8kob4t.apps.googleusercontent.com";
+    /// Windows, Linux and the terminal.
+    pub const GOOGLE_DESKTOP: &str =
+        "206293095288-1rem63756776feni5pd62f283n3a222t.apps.googleusercontent.com";
+    pub const GOOGLE_DESKTOP_SECRET: Option<&str> = None;
+    /// Android TV, through Google's device flow.
+    pub const GOOGLE_TV: &str =
+        "206293095288-thhdr2a11mbeq1e125k45ictid2tm1dh.apps.googleusercontent.com";
+    pub const GOOGLE_TV_SECRET: Option<&str> = None;
+    pub const DROPBOX: &str = "miisqg43cochyzu";
+    pub const ONEDRIVE: &str = "1ddf77ce-b123-4483-9c8b-9596e8459a9c";
+}
+
+/// Kaeri's own client for `service` on a device of `kind`, if it has one.
+fn built_in(service: Service, kind: ClientKind) -> Option<ClientConfig> {
+    let (client_id, client_secret) = match service {
+        Service::Google => match kind {
+            ClientKind::Ios => (built_in::GOOGLE_IOS, None),
+            ClientKind::Android => (built_in::GOOGLE_ANDROID, None),
+            ClientKind::Desktop => {
+                (built_in::GOOGLE_DESKTOP, Some(built_in::GOOGLE_DESKTOP_SECRET?))
+            }
+            ClientKind::Tv => (built_in::GOOGLE_TV, Some(built_in::GOOGLE_TV_SECRET?)),
+        },
+        Service::Dropbox => (built_in::DROPBOX, None),
+        Service::OneDrive => (built_in::ONEDRIVE, None),
+    };
+    Some(ClientConfig {
+        client_id: client_id.into(),
+        client_secret: client_secret.map(Secret::new),
+    })
+}
+
+/// Whether Kaeri has a Google client of its own for a device of `kind`.
+#[cfg(all(test, feature = "testing"))]
+pub(crate) fn has_own_google(kind: ClientKind) -> bool {
+    built_in(Service::Google, kind).is_some()
+}
+
+/// The client `service` signs in with on this device: the app's own when it names one, else
+/// Kaeri's. An app's client id never goes with Kaeri's secret.
 fn config_of(ctx: &Ctx, service: Service, kind: ClientKind) -> Option<ClientConfig> {
     let present = |v: &Option<String>| v.clone().filter(|v| !v.trim().is_empty());
     if ctx.fixture {
@@ -211,26 +265,21 @@ fn config_of(ctx: &Ctx, service: Service, kind: ClientKind) -> Option<ClientConf
             client_secret: None,
         });
     }
-    match service {
-        Service::Google => {
-            let client_id = present(&ctx.clients.google)?;
-            // Google's iOS and Android clients have no secret; the desktop's has one it needs.
-            let client_secret = match kind {
-                ClientKind::Ios | ClientKind::Android => None,
-                ClientKind::Desktop => Some(present(&ctx.clients.google_secret)?),
-                ClientKind::Tv => present(&ctx.clients.google_secret),
-            };
-            Some(ClientConfig { client_id, client_secret: client_secret.map(Secret::new) })
-        }
-        Service::Dropbox => Some(ClientConfig {
-            client_id: present(&ctx.clients.dropbox)?,
-            client_secret: None,
-        }),
-        Service::OneDrive => Some(ClientConfig {
-            client_id: present(&ctx.clients.onedrive)?,
-            client_secret: None,
-        }),
-    }
+    let own = match service {
+        Service::Google => &ctx.clients.google,
+        Service::Dropbox => &ctx.clients.dropbox,
+        Service::OneDrive => &ctx.clients.onedrive,
+    };
+    let Some(client_id) = present(own) else {
+        return (!ctx.clients.no_built_in_clients).then(|| built_in(service, kind)).flatten();
+    };
+    let client_secret = match (service, kind) {
+        // Google's iOS and Android clients have no secret; the desktop's has one it needs.
+        (Service::Google, ClientKind::Desktop) => Some(present(&ctx.clients.google_secret)?),
+        (Service::Google, ClientKind::Tv) => present(&ctx.clients.google_secret),
+        _ => None,
+    };
+    Some(ClientConfig { client_id, client_secret: client_secret.map(Secret::new) })
 }
 
 /// How `service` is signed in to on this device, or why it cannot be.
@@ -728,6 +777,38 @@ pub async fn target(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn kaeris_own_clients_are_picked_by_the_kind_of_device() {
+        let pick = |service, kind| {
+            let config = built_in(service, kind).expect("a built-in client");
+            (config.client_id, config.client_secret.is_some())
+        };
+        let google = |kind| pick(Service::Google, kind);
+        assert!(google(ClientKind::Ios).0.starts_with("206293095288-jg72"));
+        assert!(google(ClientKind::Android).0.starts_with("206293095288-gitm"));
+        // The desktop's and the TV's Google clients need their secrets, so until those are
+        // built in Kaeri has no Google client of its own there.
+        for kind in [ClientKind::Desktop, ClientKind::Tv] {
+            let secret = match kind {
+                ClientKind::Desktop => built_in::GOOGLE_DESKTOP_SECRET,
+                _ => built_in::GOOGLE_TV_SECRET,
+            };
+            let config = built_in(Service::Google, kind);
+            assert_eq!(config.is_some(), secret.is_some());
+            if let Some(config) = config {
+                assert!(config.client_secret.is_some());
+            }
+        }
+        assert!(!google(ClientKind::Ios).1 && !google(ClientKind::Android).1);
+        for kind in [ClientKind::Ios, ClientKind::Desktop] {
+            assert_eq!(pick(Service::Dropbox, kind), ("miisqg43cochyzu".into(), false));
+            assert_eq!(
+                pick(Service::OneDrive, kind),
+                ("1ddf77ce-b123-4483-9c8b-9596e8459a9c".into(), false)
+            );
+        }
+    }
 
     #[test]
     fn each_kind_of_device_comes_back_where_its_client_registered() {

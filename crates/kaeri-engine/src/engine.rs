@@ -2503,7 +2503,11 @@ mod tests {
                     ..Default::default()
                 }
             } else {
-                crate::options::AppClients { cloud_kind: Some(kind), ..Default::default() }
+                crate::options::AppClients {
+                    cloud_kind: Some(kind),
+                    no_built_in_clients: true,
+                    ..Default::default()
+                }
             };
             let (engine, mut events) = engine_with(dir.path(), host, |options| {
                 options.app_clients = clients;
@@ -2862,6 +2866,41 @@ mod tests {
             };
             assert!(problems(&seen).contains(&want), "{seen:?}");
             assert!(rig.opened.lock().unwrap().is_empty());
+        }
+
+        #[tokio::test]
+        async fn an_app_with_no_clients_of_its_own_signs_in_with_kaeris() {
+            for (kind, way) in [
+                (CloudClient::Ios, SyncCloudWay::Sheet),
+                (CloudClient::Android, SyncCloudWay::Sheet),
+                (CloudClient::Desktop, SyncCloudWay::Browser),
+                (CloudClient::Tv, SyncCloudWay::DeviceCode),
+            ] {
+                let dir = tempfile::tempdir().unwrap();
+                let clients =
+                    crate::options::AppClients { cloud_kind: Some(kind), ..Default::default() };
+                let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+                let (engine, mut events) =
+                    engine_with(dir.path(), host, |o| o.app_clients = clients).await;
+                events.launch().await;
+                let mut watch = Watch { events, held: Vec::new() };
+                engine.send(Command::LoadSync);
+                let seen = watch.until(|e| matches!(e, Event::SyncStatus(_))).await;
+                for cloud in status_of(&seen).clouds {
+                    let want = if kind == CloudClient::Tv
+                        && cloud.service == SyncFolderKind::Dropbox
+                    {
+                        SyncCloudWay::Unavailable { reason: CloudUnavailable::NeedsPhone }
+                    } else if cloud.service == SyncFolderKind::GoogleDrive
+                        && !crate::cloud::has_own_google(kind)
+                    {
+                        SyncCloudWay::Unavailable { reason: CloudUnavailable::NoClientId }
+                    } else {
+                        way.clone()
+                    };
+                    assert_eq!(cloud.way, want, "{kind:?} {:?}", cloud.service);
+                }
+            }
         }
 
         #[tokio::test]
