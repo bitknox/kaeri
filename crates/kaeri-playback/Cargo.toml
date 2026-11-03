@@ -16,6 +16,7 @@ doctest = false
 kaeri-core.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+rusty-chromaprint.workspace = true
 
 [lints]
 workspace = true

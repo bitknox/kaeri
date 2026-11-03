@@ -7,6 +7,7 @@
 
 pub mod aniskip;
 pub mod companion;
+pub mod detect;
 mod event;
 pub mod marking;
 pub mod protocol;

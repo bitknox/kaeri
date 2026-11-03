@@ -11,7 +11,7 @@
 
 use crate::{
     event::PlaybackEvent,
-    skip::{MarkedSkip, SkipInterval, SkipKind, active, fitting},
+    skip::{MarkedSkip, SkipInterval, SkipKind, SkipOrigin, active, fitting},
 };
 
 /// How far the playhead must move before a new history row is worth writing.
@@ -59,6 +59,12 @@ pub struct PlaybackTracker {
     given: Vec<SkipInterval>,
     /// The viewer's own marks for the episode, used once the file's length says they fit it.
     marks: Vec<MarkedSkip>,
+    /// Stretches found from the audio, used for a kind nothing else names.
+    found: Vec<SkipInterval>,
+    /// Kinds whose found stretch is skipped by itself like any other: the person said Yes to
+    /// one for this show, or skipped one twice without going back. Until then a found stretch
+    /// only offers its button.
+    trusted: Vec<SkipKind>,
     auto_skip: bool,
     /// Whether a recap is skipped by itself: a setting of its own, off by default, where
     /// `auto_skip` covers the opening and the ending.
@@ -115,6 +121,8 @@ impl PlaybackTracker {
             given: skips.clone(),
             skips,
             marks: Vec::new(),
+            found: Vec::new(),
+            trusted: Vec::new(),
             auto_skip,
             auto_skip_recap: false,
             mark_chapters: false,
@@ -164,6 +172,20 @@ impl PlaybackTracker {
         self.settle();
     }
 
+    /// Stretches found from the audio changed, as when the matcher found one while playing.
+    pub fn set_found(&mut self, found: Vec<SkipInterval>) {
+        self.found = found;
+        self.settle();
+    }
+
+    /// Whether a found stretch of `kind` is skipped by itself, when the setting skips its kind.
+    pub fn trust_found(&mut self, kind: SkipKind, trusted: bool) {
+        self.trusted.retain(|k| *k != kind);
+        if trusted {
+            self.trusted.push(kind);
+        }
+    }
+
     /// Skip recaps by themselves too. Off unless asked for: a recap is story some people want.
     #[must_use]
     pub const fn skipping_recaps(mut self, on: bool) -> Self {
@@ -192,7 +214,7 @@ impl PlaybackTracker {
             .map(|chapters| crate::skip::from_chapters(chapters, self.duration))
             .unwrap_or_default();
         let yours = fitting(&self.marks, self.duration);
-        self.skips = crate::skip::merge(&from_file, &yours, &self.given);
+        self.skips = crate::skip::merge(&from_file, &yours, &self.given, &self.found);
         !from_file.is_empty()
     }
 
@@ -429,6 +451,10 @@ impl PlaybackTracker {
     /// Whether a segment of `kind` is skipped by itself rather than offered: the opening and
     /// ending under `auto_skip`, a recap under its own setting.
     pub fn auto_skips_kind(&self, kind: SkipKind) -> bool {
+        let found = self.skips.iter().any(|s| s.kind == kind && s.origin == SkipOrigin::Found);
+        if found && !self.trusted.contains(&kind) {
+            return false;
+        }
         match kind {
             SkipKind::Opening | SkipKind::Ending => self.auto_skip,
             SkipKind::Recap => self.auto_skip_recap,
@@ -439,7 +465,6 @@ impl PlaybackTracker {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::skip::SkipOrigin;
 
     fn skips() -> Vec<SkipInterval> {
         vec![
@@ -819,6 +844,25 @@ mod tests {
         let recap_only = PlaybackTracker::new(0.85, Vec::new(), false).skipping_recaps(true);
         assert!(recap_only.auto_skips_kind(SkipKind::Recap));
         assert!(!recap_only.auto_skips_kind(SkipKind::Opening));
+    }
+
+    #[test]
+    fn a_found_stretch_offers_its_button_until_it_is_trusted() {
+        let mut t = PlaybackTracker::new(0.85, Vec::new(), true);
+        let found = SkipInterval { kind: SkipKind::Opening, start: 41.0, end: 129.0, origin: SkipOrigin::Found };
+        t.set_found(vec![found]);
+        assert_eq!(t.skips(), [found]);
+        assert!(!t.auto_skips_kind(SkipKind::Opening), "offered, not skipped");
+        assert!(t.auto_skips_kind(SkipKind::Ending), "other kinds as before");
+        let actions = t.observe(&PlaybackEvent::Progress { position: 50.0, duration: Some(1420.0) });
+        assert!(actions.contains(&Action::OfferSkip { kind: SkipKind::Opening, to: 129.0 }));
+        t.trust_found(SkipKind::Opening, true);
+        assert!(t.auto_skips_kind(SkipKind::Opening));
+        t.trust_found(SkipKind::Opening, false);
+        assert!(!t.auto_skips_kind(SkipKind::Opening));
+        // AniSkip's time outranks it and skips as before.
+        t.set_given(vec![SkipInterval { origin: SkipOrigin::AniSkip, ..found }]);
+        assert!(t.auto_skips_kind(SkipKind::Opening));
     }
 
     #[test]

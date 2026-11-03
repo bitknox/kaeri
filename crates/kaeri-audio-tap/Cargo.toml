@@ -1,0 +1,23 @@
+[package]
+name = "kaeri-audio-tap"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "The callback libmpv's demuxer audio tap calls, and the listeners it hands audio to"
+publish = false
+
+[lib]
+doctest = false
+
+[dependencies]
+
+# Not the workspace's: it forbids unsafe code, and the callback libmpv calls reads a C array.
+# Unsafe is denied everywhere else in the crate and allowed only in `callback`.
+[lints.rust]
+unsafe_code = "deny"
+unsafe_op_in_unsafe_fn = "deny"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+undocumented_unsafe_blocks = "warn"

@@ -62,6 +62,9 @@ pub enum SkipOrigin {
     Yours,
     /// AniSkip's shared list.
     AniSkip,
+    /// Found on this device, from the audio this episode shares with an earlier one: see
+    /// [`crate::detect`]. Used only for a kind every other origin lacks.
+    Found,
 }
 
 /// Skip intervals from the file's own chapter markers.
@@ -326,17 +329,20 @@ impl SkipInterval {
 }
 
 /// The skips that win, per kind, from each origin's: the file's chapters, then the person's own
-/// marks, then aniskip's. A kind one origin names is taken from it whole, so an opening from
-/// the file never sits beside aniskip's opening for another cut.
+/// marks, then aniskip's, then the ones found on this device. A kind one origin names is taken
+/// from it whole, so an opening from the file never sits beside aniskip's opening for another
+/// cut.
 pub fn merge(
     file: &[SkipInterval],
     yours: &[SkipInterval],
     aniskip: &[SkipInterval],
+    found: &[SkipInterval],
 ) -> Vec<SkipInterval> {
     let mut merged: Vec<SkipInterval> = Vec::new();
     for kind in SkipKind::ALL {
         let named = |from: &[SkipInterval]| from.iter().any(|s| s.kind == kind);
-        let from = [file, yours, aniskip].into_iter().find(|from| named(from)).unwrap_or(&[]);
+        let from =
+            [file, yours, aniskip, found].into_iter().find(|from| named(from)).unwrap_or(&[]);
         merged.extend(from.iter().filter(|s| s.kind == kind).copied());
     }
     merged.sort_by(|a, b| a.start.total_cmp(&b.start));
@@ -597,7 +603,7 @@ mod tests {
     #[test]
     fn per_kind_the_file_wins_then_your_marks_then_aniskip() {
         use SkipKind::{Ending, Opening, Recap};
-        use SkipOrigin::{AniSkip, File, Yours};
+        use SkipOrigin::{AniSkip, File, Found, Yours};
         let file = [at(Ending, 1300.0, 1390.0, File)];
         let yours = [at(Opening, 40.0, 130.0, Yours), at(Ending, 1310.0, 1400.0, Yours)];
         let aniskip = [
@@ -606,7 +612,7 @@ mod tests {
             at(Ending, 1312.0, 1402.0, AniSkip),
         ];
         assert_eq!(
-            merge(&file, &yours, &aniskip),
+            merge(&file, &yours, &aniskip, &[]),
             [
                 at(Recap, 0.0, 40.0, AniSkip),
                 at(Opening, 40.0, 130.0, Yours),
@@ -614,8 +620,14 @@ mod tests {
             ]
         );
         // With nothing of its own, each origin stands alone.
-        assert_eq!(merge(&[], &[], &aniskip), aniskip);
-        assert!(merge(&[], &[], &[]).is_empty());
+        assert_eq!(merge(&[], &[], &aniskip, &[]), aniskip);
+        assert!(merge(&[], &[], &[], &[]).is_empty());
+        // Found times come last: only for a kind nothing else has.
+        let found = [at(Opening, 41.0, 129.0, Found), at(Ending, 1311.0, 1399.0, Found)];
+        assert_eq!(
+            merge(&[], &[], &[at(Ending, 1312.0, 1402.0, AniSkip)], &found),
+            [at(Opening, 41.0, 129.0, Found), at(Ending, 1312.0, 1402.0, AniSkip)]
+        );
     }
 
     #[test]
