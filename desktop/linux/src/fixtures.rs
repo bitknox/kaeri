@@ -348,14 +348,8 @@ pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<St
     let (kept, providers) = (chain.clone(), chain.all());
     let rebuilt: Box<dyn Fn() + Send> = Box::new(move || kept.replace(providers.clone()));
     options.sources = Some(chain);
-    options.parts = Some(Parts {
-        meta,
-        sync,
-        stores,
-        clock,
-        fixture_exit: Some(kaeri_providers::vpn::VpnGuard::fixture_egress()),
-        windows: None,
-    });
+    options.parts =
+        Some(Parts { meta, sync, stores, clock, fixture_route: true, windows: None });
     let (engine, events): (Engine, _) =
         Engine::start(options, host).await.map_err(|e| e.to_string())?;
     Ok(Started { engine, events, keep: Some(Box::new(server)), rebuilt: Some(rebuilt) })

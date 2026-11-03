@@ -20,7 +20,6 @@ sources-check = Periksa { -source-pl }
 sources-origin-version = { $origin } · versi { $version }
 sources-standing = Kondisi
 sources-status-working = Siap
-sources-torrent-indexes = Mencari di { -torrent-index } yang Anda aktifkan di Pengaturan.
 sources-version-ready = Versi { $version } siap
 sources-use-this = Gunakan { -source } ini
 sources-use-name = { $name } aktif

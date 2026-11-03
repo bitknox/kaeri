@@ -49,9 +49,9 @@ sealed interface PageAnswer {
 
 /**
  * Which form the page shows: a code, a user name and password, a plugin store's link, or a
- * SOCKS5 proxy's address: [TorrentProxy] when torrents turn on, [Proxy] when it is edited.
+ * SOCKS5 proxy's address ([Proxy]).
  */
-enum class PageForm { Code, Password, Link, TorrentProxy, Proxy }
+enum class PageForm { Code, Password, Link, Proxy }
 
 /**
  * The page for [tracker] ("AniList"), its form [form], with a link to [authorizeUrl] to open
@@ -167,7 +167,7 @@ class SignInPage(
         }
     }
 
-    private val torrents = form == PageForm.TorrentProxy || form == PageForm.Proxy
+    private val torrents = form == PageForm.Proxy
 
     @Volatile
     private var answered = false
@@ -194,7 +194,6 @@ class SignInPage(
                         onAnswer(answer)
                         val next = when (form) {
                             PageForm.Link -> Strings.tvPageNextLink(context)
-                            PageForm.TorrentProxy -> Strings.tvPageNextTorrent(context)
                             PageForm.Proxy -> Strings.tvPageNextProxy(context)
                             else -> Strings.tvPageNextSignin(context, tracker)
                         }
@@ -233,7 +232,7 @@ class SignInPage(
             if (user.isNotEmpty() && password.isNotEmpty()) PageAnswer.Password(user, password) else null
         }
         PageForm.Link -> fields["link"]?.trim()?.takeIf { it.isNotEmpty() }?.let(PageAnswer::Link)
-        PageForm.TorrentProxy, PageForm.Proxy -> torrentAnswer(fields)
+        PageForm.Proxy -> torrentAnswer(fields)
     }
 
     /** The reply to a sent form, for the page's script: whether the TV took it, and what to say. Never a field sent. */
@@ -263,7 +262,6 @@ class SignInPage(
             }
             PageForm.Password -> "<p>${escape(Strings.tvPagePassword(context, tracker))}</p>"
             PageForm.Link -> "<p>${escape(context.getString(R.string.tv_page_link))}</p>"
-            PageForm.TorrentProxy -> "<p>${escape(introOf(R.string.tv_page_torrent_proxy))}</p>"
             PageForm.Proxy -> "<p>${escape(Strings.tvPageProxy(context, context.getString(TorrentWords.PASSWORD_KEPT)) + " " + context.getString(R.string.tv_page_closes_once_sent))}</p>"
         }
         // No field has a name, and the form no action: only the script sends it, sealed.
@@ -274,7 +272,7 @@ class SignInPage(
                 input(escape(context.getString(R.string.accounts_user_or_email)), "username", "autocomplete=\"username\" autocapitalize=\"off\"") +
                     input(escape(context.getString(R.string.torrents_proxy_password)), "password", "type=\"password\" autocomplete=\"current-password\"")
             PageForm.Link -> input(escape(context.getString(R.string.stores_invite_link)), "link", "type=\"url\" autocomplete=\"off\" autocapitalize=\"off\" spellcheck=\"false\"")
-            PageForm.TorrentProxy, PageForm.Proxy ->
+            PageForm.Proxy ->
                 input(escape(context.getString(R.string.torrents_proxy_host)), "host", "autocomplete=\"off\" autocapitalize=\"off\" spellcheck=\"false\"") +
                 input(escape(context.getString(R.string.torrents_proxy_port)), "port", "inputmode=\"numeric\" autocomplete=\"off\"") +
                 "<p>${escape(context.getString(R.string.torrents_sheet_proxy_auth_note))}</p>" +
@@ -287,7 +285,7 @@ class SignInPage(
         return page(
             when (form) {
                 PageForm.Link -> context.getString(R.string.stores_add_title)
-                PageForm.TorrentProxy, PageForm.Proxy -> context.getString(R.string.tv_page_title_torrents)
+                PageForm.Proxy -> context.getString(R.string.tv_page_title_torrents)
                 else -> context.getString(R.string.torrents_page_sign_in, tracker)
             },
             "$steps<noscript><p class=\"error\">${escape(context.getString(R.string.torrents_page_needs_script))}</p></noscript>" +
@@ -295,10 +293,6 @@ class SignInPage(
                 "<script>${PAGE_CRYPTO}</script><script>${pageScript(context)}</script>",
         )
     }
-
-    /** A torrent intro and its closing sentence after it. */
-    private fun introOf(res: Int): String =
-        listOf(context.getString(res), context.getString(R.string.tv_page_closes_once_sent)).joinToString(" ") // i18n-skip
 
     companion object {
         const val TAG = "kaeri-sign-in"

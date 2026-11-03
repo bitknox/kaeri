@@ -129,8 +129,8 @@ impl ConfigState {
     }
 
     /// Write `value` at `table`.`key`, then read the file back, whatever the write did: what
-    /// the file holds is what the Settings screen shows. A refused write — torrents on with no
-    /// VPN, a file that did not load, a disk that said no — puts that one setting in effect
+    /// the file holds is what the Settings screen shows. A refused write — a value the config's
+    /// rules refuse, a file that did not load, a disk that said no — puts that one setting in effect
     /// back to what the file holds, and leaves every other alone, a change made a moment later
     /// whose own write worked included.
     ///
@@ -156,20 +156,21 @@ impl ConfigState {
         written
     }
 
-    /// Write `edits` as one change, then read the file back, as [`Self::write`] does, and put
-    /// in effect what the file then holds of the VPN's table: the keys such a change writes,
-    /// the torrent source's protection, whether it was refused or not.
-    pub fn write_protection(
+    /// Write `edits` and `removals` as one change, then read the file back, as [`Self::write`]
+    /// does, and put in effect what the file then holds of the torrent proxy, whether the
+    /// change was refused or not.
+    pub fn write_proxy(
         &mut self,
         paths: &Paths,
-        edits: Vec<kaeri_model::protection::Edit>,
+        edits: Vec<kaeri_model::proxy::Edit>,
+        removals: Vec<kaeri_model::proxy::Removal>,
     ) -> Result<(), kaeri_core::Error> {
         let existed = paths.config_file.exists();
-        let written = kaeri_core::settings::write_keys(paths, edits);
+        let written = kaeri_core::settings::write_changes(paths, edits, removals);
         self.remember_demo(paths, existed);
         self.saved = Config::load(paths).unwrap_or_default();
         self.fill();
-        self.effective.providers.torrent.vpn.clone_from(&self.saved.providers.torrent.vpn);
+        self.effective.providers.torrent.proxy.clone_from(&self.saved.providers.torrent.proxy);
         written
     }
 }
@@ -196,16 +197,15 @@ mod tests {
         config.write(&paths, &["playback"], "quality", SettingValue::Int(2160)).unwrap();
         assert_eq!(config.saved().playback.quality, 2160, "read back from the file");
 
-        // Torrents with no VPN configured: refused by the config's own rules.
-        config.effective_mut().providers.torrent.enabled = true;
-        let refused = config.write(
-            &paths,
-            &["providers", "torrent"],
-            "enabled",
-            SettingValue::Bool(true),
-        );
+        // Marked watched at 200%: refused by the config's own rules.
+        config.effective_mut().playback.commit_threshold = 2.0;
+        let refused =
+            config.write(&paths, &["playback"], "commit_threshold", SettingValue::Float(2.0));
         assert!(refused.is_err());
-        assert!(!config.effective().providers.torrent.enabled, "back to what the file holds");
+        assert!(
+            config.effective().playback.commit_threshold <= 1.0,
+            "back to what the file holds"
+        );
         assert_eq!(config.effective().playback.quality, 2160, "and nothing else");
     }
 

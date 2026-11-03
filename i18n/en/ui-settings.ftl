@@ -497,7 +497,7 @@ settings-reset = Reset settings
 settings-reset-title = Reset settings?
 
 # Line under it. The old settings file is moved aside, not deleted.
-settings-reset-detail = Every setting goes back to its default, VPN and proxy included. Your watch history stays, and the old settings file is kept.
+settings-reset-detail = Every setting goes back to its default, the torrent proxy included. Your watch history stays, and the old settings file is kept.
 
 # Notice once Kaeri has started again on the default settings. The file is the name the old
 # settings file is kept under, beside the new one, such as config.damaged-2026-10-30.

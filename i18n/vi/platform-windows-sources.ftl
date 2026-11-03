@@ -20,7 +20,6 @@ sources-check = Kiểm tra { -source-pl }
 sources-origin-version = { $origin } · phiên bản { $version }
 sources-standing = Tình trạng
 sources-status-working = Sẵn sàng
-sources-torrent-indexes = Tìm trong các { -torrent-index } mà bạn đã bật trong Cài đặt.
 sources-version-ready = Phiên bản { $version } đã sẵn sàng
 sources-use-this = Dùng { -source } này
 sources-use-name = { $name }: bật

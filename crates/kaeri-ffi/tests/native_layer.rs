@@ -580,7 +580,9 @@ fn the_widgets_record_for_the_watching_scene() {
     assert_eq!(data.version, WIDGET_DATA_VERSION);
     assert!((data.generated_at - now()).abs() < MINUTE, "{}", data.generated_at);
     assert_eq!((data.signed_in, data.tracker.as_deref()), (true, Some("anilist")));
-    // The one title the cache lacked, and the week's broadcasts, a page of them.
+    // The one title the cache lacked, and the week's broadcasts: the page before now and the
+    // page after it, asked in one request, the same two the Calendar, the notices and the
+    // digest read.
     assert_eq!(asked, ["Many", "Schedule"]);
 
     // Continue's four, most recent first, each where Continue has it.
@@ -716,7 +718,11 @@ fn the_notifications_week_for_the_watching_scene() {
     // Off by default: the week is still said, for the pane to show what turning it on would do.
     let (week, asked) = upcoming(&engine);
     assert!(!week.enabled);
-    assert_eq!(asked, ["Schedule"], "the week's broadcasts, a page of them");
+    assert_eq!(
+        asked,
+        ["Schedule"],
+        "the week's broadcasts, the shared two pages in one request"
+    );
     let rows: Vec<_> = week
         .airings
         .iter()

@@ -211,8 +211,8 @@ struct SettingsResults: View {
         (L.downloadsFolder, .downloads), (L.downloadsQuality, .downloads), (L.settingsMergeSubtitles, .downloads),
         (L.settingsKeepSeeding, .downloads), (L.settingsAfterDownload, .downloads), (L.settingsWatchedDownloads, .downloads),
         (L.settingsNewEpisodes, .notifications), (L.settingsSystemNotifications, .notifications),
-        (L.sourcesSourceOrderRow, .sources), (L.sourcesTorrentSource, .sources), (L.torrentsIndex, .sources),
-        (L.torrentsProtectWith, .sources), (L.torrentsLastCheck, .sources), (L.torrentsIfCheckFails, .sources),
+        (L.sourcesSourceOrderRow, .sources), (L.sourcesTorrentSource, .sources),
+        (L.torrentsProxyRoute, .sources), (L.torrentsLastCheck, .sources),
         (L.settingsSeedAfter, .sources), (L.settingsSeedFor, .sources), (L.settingsUploadLimit, .sources),
         (AccountsModel.name("anilist"), .accounts), (AccountsModel.name("mal"), .accounts),
         (AccountsModel.name("kitsu"), .accounts), (AccountsModel.name("simkl"), .accounts),
@@ -315,7 +315,7 @@ struct SettingsAside: View {
             case .notifications:
                 NotificationsAside()
             case .sources:
-                if store.settings.isOn(.torrents) {
+                if store.settings.torrent?.proxy != nil {
                     aside(L.settingsAsideCheckTitle, L.torrentsCheckNote)
                 } else {
                     aside(L.sourcesTitle, L.settingsAsideSourcesApple)

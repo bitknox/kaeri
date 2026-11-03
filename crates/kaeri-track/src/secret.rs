@@ -15,7 +15,7 @@
 //! each one once per process.
 
 use std::{
-    collections::HashMap,
+    collections::{BTreeMap, HashMap, HashSet},
     path::{Path, PathBuf},
     sync::{Arc, Mutex},
 };
@@ -197,15 +197,24 @@ pub struct LocalSecrets {
 
 /// The keychain a [`LocalSecrets`] asks, best effort: one that does not answer is one that is not
 /// there, and the file takes the token instead.
+#[derive(Clone, Debug)]
+struct Keychain {
+    reach: Reach,
+    /// The one item every secret is kept in, where the keychain asks the user per item: see
+    /// [`BUNDLE`]. `None` keeps an item per secret, as on Linux and Windows.
+    bundle: Option<Arc<Bundle>>,
+}
+
+/// How a [`Keychain`] reaches the system's.
 #[derive(Clone)]
-enum Keychain {
+enum Reach {
     /// The OS credential store, as `keyring` reaches it.
     System,
     /// A store a front end reaches the keychain through: a native app's own, through its host.
     Offered(Arc<dyn SecretStore>),
 }
 
-impl std::fmt::Debug for Keychain {
+impl std::fmt::Debug for Reach {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(match self {
             Self::System => "System",
@@ -214,11 +223,11 @@ impl std::fmt::Debug for Keychain {
     }
 }
 
-impl Keychain {
+impl Reach {
+    /// The item under `id`. A keychain that cannot be read holds nothing, as with `keyring`.
     fn get(&self, id: &str) -> Option<String> {
         match self {
             Self::System => keychain::get(id),
-            // A keychain that cannot be read holds nothing, as with `keyring`.
             Self::Offered(store) => store.get(id).ok().flatten(),
         }
     }
@@ -241,19 +250,218 @@ impl Keychain {
     }
 }
 
+impl Keychain {
+    fn new(reach: Reach, bundled: bool) -> Self {
+        Self { reach, bundle: bundled.then(Default::default) }
+    }
+
+    fn get(&self, id: &str) -> Option<String> {
+        match &self.bundle {
+            Some(bundle) => bundle.get(&self.reach, id),
+            None => self.reach.get(id),
+        }
+    }
+
+    /// Whether the keychain took it.
+    fn set(&self, id: &str, value: &str) -> bool {
+        match &self.bundle {
+            Some(bundle) => bundle.set(&self.reach, id, value),
+            None => self.reach.set(id, value),
+        }
+    }
+
+    fn delete(&self, id: &str) {
+        match &self.bundle {
+            Some(bundle) => bundle.delete(&self.reach, id),
+            None => self.reach.delete(id),
+        }
+    }
+}
+
+/// The account of the one keychain item every secret is kept in on macOS, under the service
+/// `kaeri`: a JSON object, `{"v": 1, "secrets": {"<id>": "<value>"}}`.
+///
+/// One item, because the Mac's login keychain asks the user before an app reads an item it did
+/// not make, and asks again for each item. The apps are signed ad hoc, so an update is a new app
+/// to the keychain, and an item per secret meant a password prompt per secret after each one.
+/// With one item it is one prompt, and the item is read once per process: the [`Bundle`] keeps
+/// it in memory and writes it back whole when a secret changes.
+pub const BUNDLE: &str = "kaeri-secrets";
+
+/// The [`BUNDLE`] item, as this process holds it. Locked through each keychain call, so that
+/// tasks asking at once wait for the one read, and the one prompt, rather than each making
+/// their own.
+#[derive(Default)]
+struct Bundle(Mutex<Option<Held>>);
+
+impl std::fmt::Debug for Bundle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // Never what it holds: the tokens.
+        f.write_str("Bundle")
+    }
+}
+
+/// What the [`BUNDLE`] item holds, once read.
+#[derive(Default)]
+struct Held {
+    secrets: BTreeMap<String, String>,
+    /// Whether what the item holds is known: it was read or written. Until then a write looks
+    /// for it once more, so that a read the user refused does not lead to writing over secrets
+    /// it could not see.
+    known: bool,
+    /// The item is a newer build's, in a shape this one does not read. It is left as it is, and
+    /// tokens go to the file meanwhile.
+    newer: bool,
+    /// Ids with no item of their own left in the keychain, from before the bundle: looked for
+    /// and found missing, moved into the bundle, or deleted. Each is looked for once at most.
+    settled: HashSet<String>,
+}
+
+impl Held {
+    /// The item as `reach` holds it now: the one keychain read the bundle makes.
+    fn read(reach: &Reach) -> Self {
+        let Some(raw) = reach.get(BUNDLE) else { return Self::default() };
+        let mut held = Self { known: true, ..Self::default() };
+        let value: serde_json::Value = match serde_json::from_str(&raw) {
+            Ok(value) => value,
+            Err(_) => {
+                tracing::warn!("the keychain's secrets item is not JSON; starting it afresh");
+                return held;
+            }
+        };
+        match value.get("v").and_then(serde_json::Value::as_u64) {
+            Some(1) => {}
+            Some(_) => {
+                tracing::warn!("the keychain's secrets item is a newer build's; leaving it be");
+                held.newer = true;
+                return held;
+            }
+            None => {
+                tracing::warn!("the keychain's secrets item has no version; reading it as 1")
+            }
+        }
+        if let Some(secrets) = value.get("secrets").and_then(serde_json::Value::as_object) {
+            held.secrets = secrets
+                .iter()
+                .filter_map(|(id, value)| Some((id.clone(), value.as_str()?.to_owned())))
+                .collect();
+        }
+        held
+    }
+
+    /// Write the whole bundle back. Whether the keychain took it.
+    fn write(&mut self, reach: &Reach) -> bool {
+        let payload = serde_json::json!({ "v": 1, "secrets": self.secrets });
+        let kept = reach.set(BUNDLE, &payload.to_string());
+        self.known |= kept;
+        kept
+    }
+}
+
+impl Bundle {
+    /// The bundle as held, read on first use.
+    fn held(&self) -> std::sync::MutexGuard<'_, Option<Held>> {
+        self.0.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+    }
+
+    fn get(&self, reach: &Reach, id: &str) -> Option<String> {
+        let mut guard = self.held();
+        let held = guard.get_or_insert_with(|| Held::read(reach));
+        if held.newer {
+            return None;
+        }
+        if let Some(value) = held.secrets.get(id) {
+            return Some(value.clone());
+        }
+        if !held.settled.insert(id.to_owned()) {
+            return None;
+        }
+        // An item from before the bundle, moved into it: kept there first, and only then let go.
+        // Looking for one that is not there asks the user nothing.
+        let old = reach.get(id)?;
+        held.secrets.insert(id.to_owned(), old.clone());
+        if held.write(reach) {
+            reach.delete(id);
+        } else {
+            // Still its own item, which a sign-out has to delete.
+            held.settled.remove(id);
+        }
+        Some(old)
+    }
+
+    fn set(&self, reach: &Reach, id: &str, value: &str) -> bool {
+        let mut guard = self.held();
+        let held = guard.get_or_insert_with(|| Held::read(reach));
+        if !held.known {
+            // Nothing was found: look once more before writing, in case the item is there and
+            // its read was refused. When it is not there, this asks nothing either.
+            let again = Held::read(reach);
+            if again.known {
+                let mine = std::mem::take(&mut held.secrets);
+                held.secrets = again.secrets;
+                held.secrets.extend(mine);
+                held.newer = again.newer;
+            }
+            held.known = true;
+        }
+        if held.newer {
+            return false;
+        }
+        let before = held.secrets.insert(id.to_owned(), value.to_owned());
+        if !held.write(reach) {
+            match before {
+                Some(before) => held.secrets.insert(id.to_owned(), before),
+                None => held.secrets.remove(id),
+            };
+            return false;
+        }
+        // An item of its own from before the bundle would come back after a sign-out.
+        if held.settled.insert(id.to_owned()) {
+            reach.delete(id);
+        }
+        true
+    }
+
+    fn delete(&self, reach: &Reach, id: &str) {
+        let mut guard = self.held();
+        let held = guard.get_or_insert_with(|| Held::read(reach));
+        if held.newer {
+            return;
+        }
+        if held.secrets.remove(id).is_some() && !held.write(reach) {
+            tracing::warn!(id, "could not write the keychain's secrets item after a sign-out");
+        }
+        if held.settled.insert(id.to_owned()) {
+            reach.delete(id);
+        }
+    }
+}
+
+/// Whether the system's keychain, as `keyring` reaches it, keeps every secret in one item: on
+/// macOS, whose keychain asks per item. Not in this crate's tests, whose keychain is a fake of
+/// their own and per item, as the other systems' are.
+const fn system_bundled() -> bool {
+    cfg!(all(target_os = "macos", not(test)))
+}
+
 impl LocalSecrets {
     /// Secrets in `dir`, or in the keychain first as `backend` says.
     pub fn new(dir: impl Into<PathBuf>, backend: Backend) -> Self {
-        Self { dir: dir.into(), backend, keychain: Keychain::System }
+        Self {
+            dir: dir.into(),
+            backend,
+            keychain: Keychain::new(Reach::System, system_bundled()),
+        }
     }
 
     /// The same store with `keychain` as the keychain [`Backend::Keychain`] asks first, in place
     /// of the OS's as `keyring` reaches it: what a native app hands in when it keeps tokens where
-    /// the terminal app does, reaching the system's keychain itself. Everything else is as
+    /// the terminal app does, reaching the system's keychain itself. Every secret goes in the
+    /// one [`BUNDLE`] item there, as the terminal keeps them on macOS. Everything else is as
     /// before, the file in `dir` included: the fallback where `keychain` refuses a token, and
     /// read where it holds none. [`Backend::File`] never asks it.
     pub fn with_keychain(self, keychain: Arc<dyn SecretStore>) -> Self {
-        Self { keychain: Keychain::Offered(keychain), ..self }
+        Self { keychain: Keychain::new(Reach::Offered(keychain), true), ..self }
     }
 
     pub fn backend(&self) -> Backend {
@@ -539,8 +747,10 @@ impl TokenStore {
     /// The pair stored now, read past this process's cache: what another process signed in
     /// through the same store (the app beside the terminal) renewed, or signed out of, since.
     ///
-    /// A keychain read, which can prompt, so for a token about to be renewed or just rejected, not
-    /// for every request.
+    /// A `0600` file is read again. The keychain on macOS is not: its one [`BUNDLE`] item is read
+    /// once per process, because each read can prompt, so there this is what the process holds.
+    /// Elsewhere a keychain read, for a token about to be renewed or just rejected, not for every
+    /// request.
     pub fn reread_pair(&self, tracker_id: &str) -> Result<TokenPair, SecretError> {
         match self.secrets.get(tracker_id)? {
             Some(raw) => {
@@ -856,20 +1066,60 @@ mod tests {
     }
 
     /// A store kept in memory, counting what it is asked: what a host's own store looks like
-    /// from here.
+    /// from here. `refused_reads` reads answer nothing, as a read the user denied does, and
+    /// writes are refused while `refuses` is set.
     #[derive(Default)]
     struct Counted {
         kept: Mutex<HashMap<String, String>>,
         reads: std::sync::atomic::AtomicUsize,
+        /// Each id read, in order.
+        asked: Mutex<Vec<String>>,
+        refused_reads: std::sync::atomic::AtomicUsize,
+        refuses: std::sync::atomic::AtomicBool,
+    }
+
+    impl Counted {
+        fn holding(items: &[(&str, &str)]) -> Arc<Self> {
+            let counted = Self::default();
+            counted
+                .kept
+                .lock()
+                .unwrap()
+                .extend(items.iter().map(|(id, value)| (id.to_string(), value.to_string())));
+            Arc::new(counted)
+        }
+
+        fn item(&self, id: &str) -> Option<String> {
+            self.kept.lock().unwrap().get(id).cloned()
+        }
+
+        /// The secrets the bundle item holds.
+        fn bundled(&self) -> BTreeMap<String, String> {
+            let raw = self.item(BUNDLE).expect("no bundle item");
+            let value: serde_json::Value = serde_json::from_str(&raw).unwrap();
+            assert_eq!(value["v"], 1, "{raw}");
+            serde_json::from_value(value["secrets"].clone()).unwrap()
+        }
+
+        fn asked(&self) -> Vec<String> {
+            self.asked.lock().unwrap().clone()
+        }
     }
 
     impl SecretStore for Counted {
         fn get(&self, id: &str) -> Result<Option<String>, SecretError> {
-            self.reads.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-            Ok(self.kept.lock().unwrap().get(id).cloned())
+            use std::sync::atomic::Ordering::Relaxed;
+            self.reads.fetch_add(1, Relaxed);
+            self.asked.lock().unwrap().push(id.to_owned());
+            let refused =
+                self.refused_reads.try_update(Relaxed, Relaxed, |n| n.checked_sub(1)).is_ok();
+            Ok(if refused { None } else { self.item(id) })
         }
 
         fn set(&self, id: &str, value: &str) -> Result<Storage, SecretError> {
+            if self.refuses.load(std::sync::atomic::Ordering::Relaxed) {
+                return Err(SecretError::Keychain("refused".into()));
+            }
             self.kept.lock().unwrap().insert(id.to_owned(), value.to_owned());
             Ok(Storage::Keychain)
         }
@@ -942,16 +1192,150 @@ mod tests {
 
         assert_eq!(secrets.set("anilist", "fresh").unwrap(), Storage::Keychain);
         assert!(!dir.path().join("anilist.token").exists(), "the stale copy outlived it");
-        assert_eq!(
-            offered.kept.lock().unwrap().get("anilist").map(String::as_str),
-            Some("fresh")
-        );
+        assert_eq!(offered.bundled().get("anilist").map(String::as_str), Some("fresh"));
         assert_eq!(keychain::get("anilist"), None, "the system's keychain was written");
+        assert_eq!(keychain::get(BUNDLE), None, "the system's keychain was written");
         assert_eq!(secrets.storage_for("anilist"), Storage::Keychain);
         assert_eq!(secrets.get("anilist").unwrap().as_deref(), Some("fresh"));
 
         secrets.delete("anilist").unwrap();
-        assert!(offered.kept.lock().unwrap().is_empty());
+        assert!(offered.bundled().is_empty());
+        assert_eq!(offered.kept.lock().unwrap().len(), 1, "an item besides the bundle");
+    }
+
+    /// A store over `offered` as the Mac app has it: the keychain first, every secret in the
+    /// bundle, files under `dir` behind it.
+    fn bundled(dir: &Path, offered: &Arc<Counted>) -> LocalSecrets {
+        LocalSecrets::new(dir, Backend::Keychain).with_keychain(offered.clone())
+    }
+
+    #[test]
+    fn the_keychain_is_read_once_however_many_secrets_are_asked_for() {
+        // Each read of an item the app did not make can be a password prompt on the Mac, so
+        // the bundle is read once and everything after is answered from memory: tokens, a
+        // sign-in, a renewal, a sign-out, and the reads past the token store's cache.
+        let dir = tempfile::tempdir().unwrap();
+        let offered = Counted::holding(&[(
+            BUNDLE,
+            r#"{"v":1,"secrets":{"anilist":"a","plugin-store-home":"p","torrent-proxy":"x"}}"#,
+        )]);
+        let secrets: Arc<dyn SecretStore> = Arc::new(bundled(dir.path(), &offered));
+        let tokens = TokenStore::over(secrets.clone());
+
+        assert_eq!(tokens.get("anilist").unwrap(), "a");
+        assert_eq!(offered.asked(), [BUNDLE], "the first read is the bundle's alone");
+        assert_eq!(secrets.get("torrent-proxy").unwrap().as_deref(), Some("x"));
+        assert_eq!(tokens.get("plugin-store-home").unwrap(), "p");
+        assert_eq!(tokens.reread_pair("anilist").unwrap().access, "a");
+        tokens.set_pair("mal", "m", Some("r"), Some(10)).unwrap();
+        assert_eq!(tokens.reread_pair("mal").unwrap().refresh.as_deref(), Some("r"));
+        tokens.clear("anilist").unwrap();
+        assert!(tokens.reread_pair("anilist").is_err(), "signed out");
+        assert!(!tokens.has("kitsu"));
+        assert!(!tokens.has("kitsu"));
+
+        // Then an item of its own for each id never seen, looked for once and missing, which
+        // asks the user nothing; the bundle itself is never read again.
+        let asked = offered.asked();
+        assert_eq!(asked.iter().filter(|id| *id == BUNDLE).count(), 1, "{asked:?}");
+        assert_eq!(asked.iter().filter(|id| *id == "kitsu").count(), 1, "{asked:?}");
+        let kept = offered.bundled();
+        assert_eq!(
+            kept.keys().collect::<Vec<_>>(),
+            ["mal", "plugin-store-home", "torrent-proxy"]
+        );
+    }
+
+    #[test]
+    fn items_from_before_the_bundle_move_into_it_when_asked_for() {
+        // An update from a build that kept an item per secret: each one is read once more,
+        // kept in the bundle, and only then deleted. One never asked for is not read.
+        let dir = tempfile::tempdir().unwrap();
+        let offered = Counted::holding(&[
+            ("anilist", "an-anilist-token"),
+            ("plugin-store-home", "a-store-token"),
+            ("simkl", "a-simkl-token"),
+        ]);
+        let secrets = bundled(dir.path(), &offered);
+
+        assert_eq!(secrets.get("anilist").unwrap().as_deref(), Some("an-anilist-token"));
+        assert_eq!(secrets.get("plugin-store-home").unwrap().as_deref(), Some("a-store-token"));
+        assert_eq!(secrets.get("kitsu").unwrap(), None);
+        let kept = offered.bundled();
+        assert_eq!(kept.get("anilist").map(String::as_str), Some("an-anilist-token"));
+        assert_eq!(kept.get("plugin-store-home").map(String::as_str), Some("a-store-token"));
+        assert_eq!(offered.item("anilist"), None, "the old item was kept");
+        assert_eq!(offered.item("plugin-store-home"), None, "the old item was kept");
+        assert_eq!(offered.item("simkl").as_deref(), Some("a-simkl-token"), "read unasked");
+        assert!(!offered.asked().contains(&"simkl".to_owned()));
+
+        // The next launch reads the bundle alone for what moved.
+        let offered_again = Counted::holding(&[
+            (BUNDLE, offered.item(BUNDLE).unwrap().as_str()),
+            ("simkl", "a-simkl-token"),
+        ]);
+        let again = bundled(dir.path(), &offered_again);
+        assert_eq!(again.get("anilist").unwrap().as_deref(), Some("an-anilist-token"));
+        assert_eq!(again.get("plugin-store-home").unwrap().as_deref(), Some("a-store-token"));
+        assert_eq!(again.get("simkl").unwrap().as_deref(), Some("a-simkl-token"));
+        assert_eq!(offered_again.asked(), [BUNDLE, "simkl"]);
+        assert_eq!(offered_again.item("simkl"), None);
+    }
+
+    #[test]
+    fn an_old_item_stays_until_the_bundle_has_taken_it() {
+        let dir = tempfile::tempdir().unwrap();
+        let offered = Counted::holding(&[("anilist", "an-anilist-token")]);
+        offered.refuses.store(true, std::sync::atomic::Ordering::Relaxed);
+        let secrets = bundled(dir.path(), &offered);
+
+        assert_eq!(secrets.get("anilist").unwrap().as_deref(), Some("an-anilist-token"));
+        assert_eq!(offered.item("anilist").as_deref(), Some("an-anilist-token"), "deleted");
+        assert_eq!(offered.item(BUNDLE), None);
+
+        // And a sign-out still deletes it, so it cannot come back on the next launch.
+        offered.refuses.store(false, std::sync::atomic::Ordering::Relaxed);
+        secrets.delete("anilist").unwrap();
+        assert_eq!(offered.item("anilist"), None, "the old item outlived the sign-out");
+    }
+
+    #[test]
+    fn signing_out_of_an_item_never_read_deletes_it_too() {
+        let dir = tempfile::tempdir().unwrap();
+        let offered = Counted::holding(&[("mal", "a-mal-token")]);
+        let secrets = bundled(dir.path(), &offered);
+        secrets.delete("mal").unwrap();
+        assert_eq!(offered.item("mal"), None);
+        assert_eq!(secrets.get("mal").unwrap(), None);
+    }
+
+    #[test]
+    fn a_bundle_whose_read_was_refused_is_not_written_over() {
+        // The user denied the prompt, so nothing was seen; signing in to one tracker must not
+        // replace the secrets the bundle holds with that one token.
+        let dir = tempfile::tempdir().unwrap();
+        let offered = Counted::holding(&[(BUNDLE, r#"{"v":1,"secrets":{"anilist":"kept"}}"#)]);
+        offered.refused_reads.store(1, std::sync::atomic::Ordering::Relaxed);
+        let secrets = bundled(dir.path(), &offered);
+        assert_eq!(secrets.get("anilist").unwrap(), None);
+
+        assert_eq!(secrets.set("kitsu", "a-kitsu-token").unwrap(), Storage::Keychain);
+        let kept = offered.bundled();
+        assert_eq!(kept.get("anilist").map(String::as_str), Some("kept"), "written over");
+        assert_eq!(kept.get("kitsu").map(String::as_str), Some("a-kitsu-token"));
+    }
+
+    #[test]
+    fn a_newer_builds_bundle_is_left_as_it_is() {
+        // A downgrade: the newer shape is not read, nor written over, and tokens go to the file.
+        let dir = tempfile::tempdir().unwrap();
+        let newer = r#"{"v":2,"vault":"something else"}"#;
+        let offered = Counted::holding(&[(BUNDLE, newer)]);
+        let secrets = bundled(dir.path(), &offered);
+        assert_eq!(secrets.get("anilist").unwrap(), None);
+        assert_eq!(secrets.set("anilist", "tok").unwrap(), Storage::File);
+        secrets.delete("anilist").unwrap();
+        assert_eq!(offered.item(BUNDLE).as_deref(), Some(newer));
     }
 
     #[test]

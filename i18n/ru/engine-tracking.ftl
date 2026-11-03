@@ -30,13 +30,10 @@ notice-signed-out-queue = { $count ->
  }
 notice-sign-out-failed = Не удалось выйти из { $tracker }. Попробуйте ещё раз. { $reason }
 notice-not-saved-because = Не удалось сохранить настройку. { $cause }
-notice-protection-saved = Защита торрентов сохранена.
-notice-protection-not-checked = Не удалось проверить защиту торрентов. { $cause }
 notice-proxy-password-not-kept = Не удалось сохранить пароль прокси. Введите его ещё раз, чтобы попробовать сохранить. { $reason }
 notice-show-setting-refused = Не удалось сохранить настройку. { $value } не подходит для { $setting }.
 notice-show-not-reset = Не удалось сбросить настройки этого тайтла. { $reason }
 notice-show-no-such-subtitles = Не удалось сохранить выбор субтитров. Для этого тайтла такие субтитры раньше не использовались.
-notice-torrents-waiting-for-check = Торренты ждут, пока проверка подключения снова пройдёт.
 notice-mapping-data-refreshed = Данные сопоставления обновлены.
 notice-mapping-data-failed = Не удалось обновить данные сопоставления ({ $datasets }). Повтор через { $wait }. { $cause }
 notice-episode-aired = { $title }, серия { $episode }, вышла, пока вас не было.
@@ -47,8 +44,6 @@ notice-episodes-aired = { $count ->
    *[other] Вышли { $count } новые серии тайтлов, которые вы смотрите. Они есть в календаре.
  }
 notice-update-available = Вышла версия { $tag }. Чтобы установить её, выполните kaeri --update.
-cause-confirm-no-protection = Сначала подтвердите, что хотите обойтись без защиты.
-cause-confirm-warn-only = Сначала подтвердите режим «только предупреждать».
 cause-proxy-needs-address = Для прокси нужны хост и порт.
 cause-proxy-address-unusable = Адрес прокси не подходит для проверки.
 cause-server-unreachable = Не удалось связаться с сервером.

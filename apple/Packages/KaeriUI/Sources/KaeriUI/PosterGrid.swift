@@ -117,10 +117,24 @@ extension EnvironmentValues {
     @Entry var posterAsRow = false
 }
 
-/// A grid of covers, as many columns of at least `minimum` points as fit.
+/// A grid's columns worked out ahead: `count` columns `width` points wide, `spacing` apart.
+struct GridColumns: Equatable {
+    var count: Int
+    var width: CGFloat
+    var spacing: CGFloat
+
+    var items: [GridItem] {
+        Array(repeating: GridItem(.fixed(width), spacing: spacing, alignment: .top), count: max(1, count))
+    }
+}
+
+/// A grid of covers, as many columns of at least `minimum` points as fit, or the `columns` given.
 struct PosterGrid<Cell: View>: View {
     let entries: [Entry]
     var minimum: CGFloat = 128
+    /// The columns, when the caller has worked them out: `nil` shares the width among as many
+    /// columns of at least `minimum` as fit.
+    var columns: GridColumns? = nil
     var spacing: CGFloat = 20
     @ViewBuilder let cell: (Entry) -> Cell
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -135,7 +149,7 @@ struct PosterGrid<Cell: View>: View {
             }
         } else {
             LazyVGrid(
-                columns: [GridItem(.adaptive(minimum: minimum), spacing: spacing, alignment: .top)],
+                columns: columns?.items ?? [GridItem(.adaptive(minimum: minimum), spacing: spacing, alignment: .top)],
                 alignment: .leading,
                 spacing: 24
             ) {
@@ -154,16 +168,17 @@ struct PosterGrid<Cell: View>: View {
 struct PosterGridPlaceholder: View {
     var count = 14
     var minimum: CGFloat = 128
+    var columns: GridColumns? = nil
     var spacing: CGFloat = 20
 
     var body: some View {
         LazyVGrid(
-            columns: [GridItem(.adaptive(minimum: minimum), spacing: spacing, alignment: .top)],
+            columns: columns?.items ?? [GridItem(.adaptive(minimum: minimum), spacing: spacing, alignment: .top)],
             alignment: .leading,
             spacing: 24
         ) {
             ForEach(0..<count, id: \.self) { _ in
-                PosterCellPlaceholder(width: minimum).geometryGroup()
+                PosterCellPlaceholder(width: columns?.width ?? minimum).geometryGroup()
             }
         }
         .accessibilityHidden(true)

@@ -181,7 +181,7 @@ mod tests {
             Command::LoadBrowse,
             Command::Licensed(LicensedCommand::Load { system_region: Some("DK".into()) }),
             Command::Licensed(LicensedCommand::SetServices {
-                services: vec!["Hikari Stream".into()],
+                services: vec!["Hikari Library".into()],
             }),
             Command::Licensed(LicensedCommand::SetRegion { region: None }),
             Command::Licensed(LicensedCommand::SetShowOthers { show: false }),
@@ -191,7 +191,7 @@ mod tests {
             }),
             Command::Licensed(LicensedCommand::Open {
                 id: AnilistId::new(900_001),
-                service: "Hikari Stream".into(),
+                service: "Hikari Library".into(),
                 url: "https://hikari.example/t/1".into(),
                 episode: Some(4),
             }),
@@ -250,6 +250,10 @@ mod tests {
             Command::RestoreUpNext { id: AnilistId::new(900_004) },
             Command::LoadSearchFacets,
             Command::LoadHome { refresh: true },
+            Command::LoadCards { ids: vec![AnilistId::new(900_004)] },
+            Command::PrepareCards { ids: vec![AnilistId::new(900_004)] },
+            Command::SyncVisible { visible: false },
+            Command::LoadStills(AnilistId::new(900_004)),
             Command::ProbeTitle { id: AnilistId::new(900_004) },
             Command::LoadHiddenTitles,
         ];
@@ -354,33 +358,30 @@ mod tests {
     #[test]
     fn the_native_apps_settings_cross_intact() {
         use kaeri_model::{
-            protection::{FailedCheck, TorrentProtection, TorrentProxy},
+            proxy::TorrentProxy,
             settings::SettingsView,
             show::{RememberedSubtitles, RememberedTrack, RememberedTracks, ShowSettingKey},
         };
         let id = AnilistId::new(900_001);
         let commands = [
-            Command::SetTorrentProtection {
-                mode: TorrentProtection::Proxy,
+            Command::SetTorrentProxy {
                 proxy: Some(TorrentProxy {
-                    host: "10.64.0.1".into(),
+                    host: "192.0.2.10".into(),
                     port: 1080,
                     user: Some("nagare".into()),
                     password: Some(Secret("lantern".into())),
                 }),
-                on_failure: FailedCheck::Warn,
-                acknowledged: true,
             },
-            Command::CheckTorrentProtection {
-                mode: TorrentProtection::Proxy,
-                proxy: Some(TorrentProxy {
-                    host: "10.64.0.2".into(),
+            Command::SetTorrentProxy { proxy: None },
+            Command::CheckTorrentProxy {
+                proxy: TorrentProxy {
+                    host: "192.0.2.11".into(),
                     port: 1080,
                     user: None,
                     password: None,
-                }),
+                },
             },
-            Command::CheckTorrentProtection { mode: TorrentProtection::Device, proxy: None },
+            Command::CheckProxy,
             Command::LoadShowSettings { id },
             Command::SetShowSetting {
                 id,
@@ -432,11 +433,10 @@ mod tests {
         let sheet = kaeri_model::show::view(id, &config, &own, remembered, None);
         assert_eq!(crossed(sheet.clone()), sheet);
         crosses_intact(Event::ShowSettings(sheet));
-        let exit = "192.0.2.7 · Tunnel Co.".to_owned();
-        crosses_intact(Event::ProtectionChecked(kaeri_model::sources::GuardView::Protected {
-            exit,
-        }));
-        crosses_intact(Event::ProtectionChecked(kaeri_model::sources::GuardView::Leaking));
+        crosses_intact(Event::ProxyChecked(kaeri_model::sources::ProxyStatus::Passed));
+        crosses_intact(Event::ProxyChecked(kaeri_model::sources::ProxyStatus::Failed));
+        crosses_intact(Event::TorrentProxy(Some(kaeri_model::sources::ProxyStatus::Direct)));
+        crosses_intact(Event::TorrentProxy(None));
         let view = SettingsView::default();
         assert_eq!(crossed(view.clone()), view);
         // With the shows that switch new-episode notifications on for themselves counted.
@@ -703,7 +703,7 @@ mod tests {
             ops: vec![
                 PlayerOp::Open { fullscreen: true, speed: Some(1.25), volume: None },
                 PlayerOp::Load {
-                    url: "http://127.0.0.1:45001/mend/abc/master.m3u8".into(),
+                    url: "http://127.0.0.1:45001/m/abc/master.m3u8".into(),
                     options: vec![MpvOption { name: "start".into(), value: "600".into() }],
                 },
                 PlayerOp::Set { property: "aid".into(), value: MpvValue::Int(2) },
@@ -925,7 +925,7 @@ mod tests {
             min_popularity: Some(1_000),
             sources: vec![kaeri_model::catalog::SourceMaterial::Manga],
             countries: vec!["JP".into()],
-            streaming_on: vec!["Lantern Stream".into()],
+            streaming_on: vec!["Lantern Library".into()],
             licensed_only: true,
             on_list: Some(OnList::Hide),
             available: Some(kaeri_model::search::Available::OnYourServices),
@@ -983,7 +983,7 @@ mod tests {
                     spoiler: false,
                 }],
             }],
-            streaming_sites: vec!["Hikari Stream".into()],
+            streaming_sites: vec!["Hikari Library".into()],
         }));
         crosses_intact(Event::RecentSearches(vec![every_filter(), SearchQuery::text("kaze")]));
         crosses_intact(Event::Content {
@@ -1085,18 +1085,18 @@ mod tests {
             ServiceLink, TitleAvailability,
         };
         let link = ServiceLink {
-            service: "Hikari Stream".into(),
+            service: "Hikari Library".into(),
             url: "https://hikari.example/t/1".into(),
             notes: Some("JP".into()),
         };
         crosses_intact(Event::Licensed(LicensedView {
             settings: LicensedSettings {
-                services: vec!["Hikari Stream".into()],
+                services: vec!["Hikari Library".into()],
                 region: Some("DK".into()),
                 show_others: false,
             },
             region: Some("DK".into()),
-            available: vec!["Hikari Stream".into(), "Tsuki TV".into()],
+            available: vec!["Hikari Library".into(), "Tsuki TV".into()],
             regions: vec!["DK".into(), "JP".into()],
         }));
         crosses_intact(Event::Availability(TitleAvailability {
@@ -1108,7 +1108,7 @@ mod tests {
             others: vec!["Tsuki TV".into()],
             episodes: vec![EpisodeLink {
                 episode: 4,
-                service: "Hikari Stream".into(),
+                service: "Hikari Library".into(),
                 url: "https://hikari.example/t/1/4".into(),
             }],
             choose_services: true,
@@ -1260,10 +1260,10 @@ mod tests {
         crosses_intact(Event::LicensedReturn(LicensedReturn {
             id: AnilistId::new(900_001),
             episode: 4,
-            service: "Hikari Stream".into(),
+            service: "Hikari Library".into(),
             prompt: kaeri_model::Msg::LicensedReturn {
                 episode: 4,
-                service: "Hikari Stream".into(),
+                service: "Hikari Library".into(),
             },
             done: kaeri_model::Msg::LicensedMarked { episode: 4 },
         }));

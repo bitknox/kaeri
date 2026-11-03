@@ -647,15 +647,6 @@
   <data name="NoticeChoiceNotSaved" xml:space="preserve">
     <value>Không lưu được lựa chọn đó. {reason}</value>
   </data>
-  <data name="TorrentCheckFailedRunning" xml:space="preserve">
-    <value>Kiểm tra kết nối không thành công. Torrent vẫn đang chạy.</value>
-  </data>
-  <data name="TorrentVpnWaiting" xml:space="preserve">
-    <value>Torrent sẽ bắt đầu sau khi chốt bảo vệ VPN đạt yêu cầu. {reason}</value>
-  </data>
-  <data name="TorrentVpnUnverified" xml:space="preserve">
-    <value>Torrent sẽ bắt đầu sau khi chốt bảo vệ VPN đạt yêu cầu. Kết nối chưa được xác minh.</value>
-  </data>
   <data name="TorrentLinkUnusable" xml:space="preserve">
     <value>Đây không phải liên kết magnet hay tệp torrent.</value>
   </data>
@@ -670,15 +661,6 @@
   </data>
   <data name="TorrentSessionFailed" xml:space="preserve">
     <value>Không khởi động được phiên torrent. {reason}</value>
-  </data>
-  <data name="TorrentNoKillSwitch" xml:space="preserve">
-    <value>Trên thiết bị này, không có gì ngăn lưu lượng torrent nếu VPN bị ngắt. Hãy chạy "kaeri --doctor" để thiết lập.</value>
-  </data>
-  <data name="TorrentNotChecked" xml:space="preserve">
-    <value>Không kiểm tra được kết nối. {reason}</value>
-  </data>
-  <data name="SourcesReloadedTorrentsPending" xml:space="preserve">
-    <value>Các nguồn đã tải lại. Torrent sẽ bắt đầu sau khi chốt bảo vệ VPN đạt yêu cầu.</value>
   </data>
   <data name="SourcesReloadedTorrentsOff" xml:space="preserve">
     <value>Torrent đang tắt. Phiên đã dừng.</value>
@@ -788,12 +770,6 @@
   <data name="NoticeNotSavedBecause" xml:space="preserve">
     <value>Không lưu được cài đặt đó. {cause}</value>
   </data>
-  <data name="NoticeProtectionSaved" xml:space="preserve">
-    <value>Đã lưu cài đặt bảo vệ torrent.</value>
-  </data>
-  <data name="NoticeProtectionNotChecked" xml:space="preserve">
-    <value>Không kiểm tra được bảo vệ torrent. {cause}</value>
-  </data>
   <data name="NoticeProxyPasswordNotKept" xml:space="preserve">
     <value>Không giữ được mật khẩu proxy. Hãy nhập lại để thử lưu. {reason}</value>
   </data>
@@ -805,9 +781,6 @@
   </data>
   <data name="NoticeShowNoSuchSubtitles" xml:space="preserve">
     <value>Không lưu được lựa chọn phụ đề đó. Bộ phim này chưa từng dùng phụ đề đó.</value>
-  </data>
-  <data name="NoticeTorrentsWaitingForCheck" xml:space="preserve">
-    <value>Torrent đang chờ kiểm tra kết nối đạt lại.</value>
   </data>
   <data name="NoticeMappingDataRefreshed" xml:space="preserve">
     <value>Đã làm mới dữ liệu ánh xạ.</value>
@@ -823,12 +796,6 @@
   </data>
   <data name="NoticeUpdateAvailable" xml:space="preserve">
     <value>Đã có bản {tag}. Chạy kaeri --update để cài đặt.</value>
-  </data>
-  <data name="CauseConfirmNoProtection" xml:space="preserve">
-    <value>Hãy xác nhận trước rằng bạn muốn không dùng bảo vệ nào.</value>
-  </data>
-  <data name="CauseConfirmWarnOnly" xml:space="preserve">
-    <value>Hãy xác nhận trước rằng bạn chỉ muốn được cảnh báo.</value>
   </data>
   <data name="CauseProxyNeedsAddress" xml:space="preserve">
     <value>Proxy cần có máy chủ và cổng.</value>
@@ -1118,9 +1085,6 @@
   <data name="SettingsPlayerInterface" xml:space="preserve">
     <value>Giao diện trình phát</value>
   </data>
-  <data name="SettingsVpnMode" xml:space="preserve">
-    <value>Chế độ VPN</value>
-  </data>
   <data name="SettingsTokenStorage" xml:space="preserve">
     <value>Nơi lưu mã đăng nhập</value>
   </data>
@@ -1181,9 +1145,6 @@
   <data name="SettingsLibmpvLicence" xml:space="preserve">
     <value>Được cấp phép theo GNU Lesser General Public License, phiên bản 2.1 trở lên.</value>
   </data>
-  <data name="TorrentsWarnInstead" xml:space="preserve">
-    <value>Kaeri sẽ cảnh báo bạn thay vì tạm dừng. Nếu VPN hoặc proxy của bạn ngừng hoạt động, người khác có thể thấy địa chỉ IP của bạn.</value>
-  </data>
   <data name="ShowSettingsLabel" xml:space="preserve">
     <value>Cài đặt của {title}</value>
   </data>
@@ -1208,20 +1169,8 @@
   <data name="SettingsDownloadHigher" xml:space="preserve">
     <value>Cao hơn</value>
   </data>
-  <data name="TorrentsDialogTurnOn" xml:space="preserve">
-    <value>Bật torrent</value>
-  </data>
-  <data name="TorrentsDialogProtect" xml:space="preserve">
-    <value>Bảo vệ torrent</value>
-  </data>
   <data name="TorrentsDialogEditProxy" xml:space="preserve">
     <value>Sửa proxy</value>
-  </data>
-  <data name="TorrentsDialogTurnOnAction" xml:space="preserve">
-    <value>Bật</value>
-  </data>
-  <data name="TorrentsChoiceSpoken" xml:space="preserve">
-    <value>{label}. {detail}</value>
   </data>
   <data name="SettingsNoteTrailersWindows" xml:space="preserve">
     <value>Trailer phát tắt tiếng từ YouTube, nơi thấy được địa chỉ IP của bạn. Không phát khi dùng kết nối tính phí, khi tắt hiệu ứng chuyển động, khi bật tiết kiệm năng lượng hoặc khi Narrator đang chạy.</value>
@@ -1417,9 +1366,6 @@
   </data>
   <data name="SourcesStatusWorking" xml:space="preserve">
     <value>Sẵn sàng</value>
-  </data>
-  <data name="SourcesTorrentIndexes" xml:space="preserve">
-    <value>Tìm trong các chỉ mục torrent mà bạn đã bật trong Cài đặt.</value>
   </data>
   <data name="SourcesVersionReady" xml:space="preserve">
     <value>Phiên bản {version} đã sẵn sàng</value>
@@ -3500,9 +3446,6 @@
   <data name="OnboardingInviteHeading" xml:space="preserve">
     <value>Có liên kết mời?</value>
   </data>
-  <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>Các plugin đến từ các cửa hàng plugin. Một cửa hàng plugin do một người vận hành cho những người họ mời, nên bạn tham gia bằng liên kết mời từ chủ sở hữu.</value>
-  </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>Dùng thử ngay</value>
   </data>
@@ -5408,9 +5351,6 @@
   <data name="SettingsResetTitle" xml:space="preserve">
     <value>Đặt lại cài đặt?</value>
   </data>
-  <data name="SettingsResetDetail" xml:space="preserve">
-    <value>Mọi cài đặt quay về mặc định, kể cả VPN và proxy. Lịch sử xem vẫn còn, và tệp cài đặt cũ được giữ lại.</value>
-  </data>
   <data name="SettingsResetDone" xml:space="preserve">
     <value>Cài đặt đã về mặc định. Tệp cũ được giữ với tên {file}.</value>
   </data>
@@ -5576,9 +5516,6 @@
   <data name="SourceNoteAmbiguous" xml:space="preserve">
     <value>Không khớp được tựa này</value>
   </data>
-  <data name="SourceNoteHeldBack" xml:space="preserve">
-    <value>Bị giữ lại bởi kiểm tra VPN</value>
-  </data>
   <data name="SourcePickerReleases" xml:space="preserve">
     <value>Các bản phát hành</value>
   </data>
@@ -5621,12 +5558,6 @@
   <data name="SourcesTorrents" xml:space="preserve">
     <value>Torrent</value>
   </data>
-  <data name="SourcesRemote" xml:space="preserve">
-    <value>Từ xa</value>
-  </data>
-  <data name="SourcesOriginConfig" xml:space="preserve">
-    <value>Đặt trong tệp cấu hình</value>
-  </data>
   <data name="SourcesOriginBuiltIn" xml:space="preserve">
     <value>Có sẵn trong ứng dụng</value>
   </data>
@@ -5662,9 +5593,6 @@
   </data>
   <data name="SourcesDetailNotAnsweringPlain" xml:space="preserve">
     <value>Không phản hồi.</value>
-  </data>
-  <data name="SourcesDetailHeldBack" xml:space="preserve">
-    <value>Bị giữ lại cho đến khi kiểm tra kết nối đạt.</value>
   </data>
   <data name="SourcesDetailDisabled" xml:space="preserve">
     <value>Đã tắt. Vẫn giữ vị trí nhưng không được thử.</value>
@@ -5731,9 +5659,6 @@
   </data>
   <data name="SourcesSourceOrderRow" xml:space="preserve">
     <value>Thứ tự ưu tiên</value>
-  </data>
-  <data name="SourcesTorrentsNote" xml:space="preserve">
-    <value>Torrent là một phần của Kaeri, không phải plugin. Mục bảo vệ lưu lượng của chúng, kiểm tra kết nối và chia sẻ được đặt trong Cài đặt, ở mục Các nguồn.</value>
   </data>
   <data name="SourcesRebuilding" xml:space="preserve">
     <value>Các nguồn đang được thiết lập lại</value>
@@ -5924,9 +5849,6 @@
   <data name="SourcesSectionPlugins" xml:space="preserve">
     <value>Các plugin</value>
   </data>
-  <data name="SourcesSectionCatalogues" xml:space="preserve">
-    <value>Danh mục miễn phí</value>
-  </data>
   <data name="SourcesAddDemo" xml:space="preserve">
     <value>Thêm bản demo</value>
   </data>
@@ -5938,9 +5860,6 @@
   </data>
   <data name="StoresEmptyTitle" xml:space="preserve">
     <value>Chưa có các cửa hàng plugin</value>
-  </data>
-  <data name="StoresEmptyDetail" xml:space="preserve">
-    <value>Các cửa hàng plugin do những người bạn quen điều hành. Tham gia bằng liên kết mời mà chủ của nó gửi cho bạn.</value>
   </data>
   <data name="StoresIntro" xml:space="preserve">
     <value>Các plugin thêm các nguồn. Trước khi bạn cài đặt, mỗi thứ đều liệt kê các máy chủ mà nó kết nối tới.</value>
@@ -6419,9 +6338,6 @@
   <data name="NoticeOpenStores" xml:space="preserve">
     <value>Mở các cửa hàng plugin</value>
   </data>
-  <data name="StoresWhatIs" xml:space="preserve">
-    <value>Cửa hàng plugin là một máy chủ nhỏ do một người vận hành cho những người họ mời. Nó cung cấp các nguồn dưới dạng các plugin. Kaeri không vận hành và không liệt kê các cửa hàng plugin nào, nên bạn tham gia bằng liên kết mời từ chủ sở hữu.</value>
-  </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>Cửa hàng plugin là gì?</value>
   </data>
@@ -6734,63 +6650,6 @@
   <data name="TorrentsOn" xml:space="preserve">
     <value>Đang bật</value>
   </data>
-  <data name="TorrentsOffDetail" xml:space="preserve">
-    <value>Mặc định là tắt. Khi bật, trước tiên ứng dụng sẽ hỏi cách bảo vệ kết nối của bạn.</value>
-  </data>
-  <data name="TorrentsRisk" xml:space="preserve">
-    <value>Người khác có thể thấy địa chỉ IP của bạn khi bạn tải và chia sẻ một torrent. Hãy chọn cách bảo vệ trước khi torrent bắt đầu.</value>
-  </data>
-  <data name="TorrentsNotAPlugin" xml:space="preserve">
-    <value>Torrent là một phần của Kaeri, không phải một plugin. Cách bảo vệ lưu lượng, kiểm tra kết nối và seeding được đặt trong Cài đặt, mục Các nguồn.</value>
-  </data>
-  <data name="TorrentsProtectWith" xml:space="preserve">
-    <value>Bảo vệ bằng</value>
-  </data>
-  <data name="TorrentsProtectNone" xml:space="preserve">
-    <value>Không bảo vệ</value>
-  </data>
-  <data name="TorrentsProtectProxy" xml:space="preserve">
-    <value>Proxy</value>
-  </data>
-  <data name="TorrentsProtectVpn" xml:space="preserve">
-    <value>VPN</value>
-  </data>
-  <data name="TorrentsProtectProxyDetail" xml:space="preserve">
-    <value>Lưu lượng torrent đi qua một proxy mà bạn tự chạy hoặc thuê.</value>
-  </data>
-  <data name="TorrentsProtectVpnDetail" xml:space="preserve">
-    <value>Dùng VPN đang chạy trên thiết bị này.</value>
-  </data>
-  <data name="TorrentsProtectNoneDetail" xml:space="preserve">
-    <value>Địa chỉ của bạn hiển thị với mọi người trong torrent.</value>
-  </data>
-  <data name="TorrentsProtectNoneNote" xml:space="preserve">
-    <value>Khi không có bảo vệ, Kaeri không kiểm tra kết nối.</value>
-  </data>
-  <data name="TorrentsSummaryProxyAt" xml:space="preserve">
-    <value>Được bảo vệ bởi proxy SOCKS5 tại {host}:{port}.</value>
-  </data>
-  <data name="TorrentsSummaryProxy" xml:space="preserve">
-    <value>Được bảo vệ bởi proxy SOCKS5.</value>
-  </data>
-  <data name="TorrentsSummaryVpn" xml:space="preserve">
-    <value>Được bảo vệ bởi VPN trên thiết bị này.</value>
-  </data>
-  <data name="TorrentsSummaryNone" xml:space="preserve">
-    <value>Chưa được bảo vệ. Địa chỉ của bạn hiển thị với mọi người trong torrent.</value>
-  </data>
-  <data name="TorrentsUnprotectedTitle" xml:space="preserve">
-    <value>Dùng torrent không có bảo vệ?</value>
-  </data>
-  <data name="TorrentsUnprotectedDetail" xml:space="preserve">
-    <value>Người khác có thể thấy địa chỉ IP của bạn khi bạn tải và chia sẻ torrent, và Kaeri không kiểm tra kết nối.</value>
-  </data>
-  <data name="TorrentsTurnOnUnprotected" xml:space="preserve">
-    <value>Bật mà không bảo vệ</value>
-  </data>
-  <data name="TorrentsUseUnprotected" xml:space="preserve">
-    <value>Dùng mà không bảo vệ</value>
-  </data>
   <data name="TorrentsProxyHost" xml:space="preserve">
     <value>Máy chủ proxy</value>
   </data>
@@ -6806,9 +6665,6 @@
   <data name="TorrentsPasswordKeep" xml:space="preserve">
     <value>Để trống mật khẩu để giữ mật khẩu đã lưu.</value>
   </data>
-  <data name="TorrentsProxyKeepsSaved" xml:space="preserve">
-    <value>Torrent tiếp tục dùng proxy đã lưu cho đến khi proxy mới vượt qua kiểm tra kết nối.</value>
-  </data>
   <data name="TorrentsProxyInvalid" xml:space="preserve">
     <value>Proxy cần có máy chủ và cổng từ 1 đến 65535.</value>
   </data>
@@ -6818,95 +6674,20 @@
   <data name="TorrentsProxySaved" xml:space="preserve">
     <value>Đã lưu proxy</value>
   </data>
-  <data name="TorrentsLeftOutsideProxy" xml:space="preserve">
-    <value>Lưu lượng torrent đi ra ngoài proxy này</value>
-  </data>
-  <data name="TorrentsCheckNotMadeProxy" xml:space="preserve">
-    <value>Không thể kiểm tra qua proxy này</value>
-  </data>
   <data name="TorrentsProxyNotSaved" xml:space="preserve">
     <value>Chưa lưu. {why}, nên proxy đã lưu vẫn được giữ.</value>
-  </data>
-  <data name="TorrentsProtectionNotSaved" xml:space="preserve">
-    <value>Chưa lưu. {why}, nên cách bảo vệ đã lưu vẫn được giữ.</value>
   </data>
   <data name="TorrentsStillOff" xml:space="preserve">
     <value>Torrent vẫn tắt. {why}.</value>
   </data>
-  <data name="TorrentsIndex" xml:space="preserve">
-    <value>Chỉ mục torrent</value>
-  </data>
-  <data name="TorrentsIndexDetail" xml:space="preserve">
-    <value>Địa chỉ tìm kiếm RSS mà Kaeri dùng để lấy torrent.</value>
-  </data>
-  <data name="TorrentsIndexHint" xml:space="preserve">
-    <value>https://…/?q=…</value>
-  </data>
-  <data name="TorrentsIndexNeeded" xml:space="preserve">
-    <value>Torrent cần có địa chỉ chỉ mục.</value>
-  </data>
-  <data name="TorrentsIndexScheme" xml:space="preserve">
-    <value>Dùng địa chỉ http hoặc https.</value>
-  </data>
-  <data name="TorrentsIndexSaved" xml:space="preserve">
-    <value>Chỉ mục torrent đã lưu.</value>
-  </data>
-  <data name="TorrentsIfCheckFails" xml:space="preserve">
-    <value>Khi kiểm tra thất bại</value>
-  </data>
-  <data name="TorrentsKeepRunningTitle" xml:space="preserve">
-    <value>Giữ torrent chạy nếu kiểm tra thất bại?</value>
-  </data>
-  <data name="TorrentsKeepRunningDetail" xml:space="preserve">
-    <value>Điều gì xảy ra với torrent khi kiểm tra phát hiện lưu lượng đi ra ngoài VPN hoặc proxy của bạn.</value>
-  </data>
-  <data name="TorrentsFailPause" xml:space="preserve">
-    <value>Tạm dừng torrent</value>
-  </data>
-  <data name="TorrentsFailStop" xml:space="preserve">
-    <value>Dừng torrent</value>
-  </data>
-  <data name="TorrentsFailWarn" xml:space="preserve">
-    <value>Chỉ cảnh báo</value>
-  </data>
-  <data name="TorrentsFailWarnResult" xml:space="preserve">
-    <value>Torrent tiếp tục chạy.</value>
-  </data>
-  <data name="TorrentsFailStopResult" xml:space="preserve">
-    <value>Torrent đã dừng.</value>
-  </data>
-  <data name="TorrentsFailPauseResult" xml:space="preserve">
-    <value>Torrent đã tạm dừng.</value>
-  </data>
-  <data name="TorrentsLastCheck" xml:space="preserve">
-    <value>Lần kiểm tra gần nhất</value>
-  </data>
-  <data name="TorrentsCheckPassedExit" xml:space="preserve">
-    <value>Đi ra qua {exit}</value>
-  </data>
   <data name="TorrentsCheckPassed" xml:space="preserve">
     <value>Đạt</value>
-  </data>
-  <data name="TorrentsCheckRunningLine" xml:space="preserve">
-    <value>Đang kiểm tra lưu lượng torrent đi ra từ đâu</value>
   </data>
   <data name="TorrentsCheckRunning" xml:space="preserve">
     <value>Đang kiểm tra</value>
   </data>
-  <data name="TorrentsCheckLeaked" xml:space="preserve">
-    <value>Lưu lượng đi ra ngoài phần bảo vệ. {then}</value>
-  </data>
-  <data name="TorrentsCheckUnmade" xml:space="preserve">
-    <value>Không thể thực hiện kiểm tra. {then}</value>
-  </data>
   <data name="TorrentsCheckFailed" xml:space="preserve">
     <value>Thất bại</value>
-  </data>
-  <data name="TorrentsCheckNoneLine" xml:space="preserve">
-    <value>Chưa đặt cách bảo vệ nào, nên không có gì để kiểm tra.</value>
-  </data>
-  <data name="TorrentsCheckNone" xml:space="preserve">
-    <value>Không bảo vệ</value>
   </data>
   <data name="TorrentsCheckWaitingLine" xml:space="preserve">
     <value>Chưa kiểm tra</value>
@@ -6946,12 +6727,6 @@
   </data>
   <data name="TorrentsPageNeedsScript" xml:space="preserve">
     <value>Trang này cần JavaScript để gửi biểu mẫu tới TV một cách an toàn.</value>
-  </data>
-  <data name="TorrentsCheckNote" xml:space="preserve">
-    <value>Kaeri kiểm tra lưu lượng torrent đi ra từ đâu khi torrent bắt đầu và mỗi phút trong lúc chạy, và tạm dừng torrent nếu kiểm tra thất bại. VPN hoặc proxy của bạn mới là thứ bảo vệ bạn.</value>
-  </data>
-  <data name="TorrentsProtectionSaved" xml:space="preserve">
-    <value>Đã lưu cách bảo vệ torrent</value>
   </data>
   <data name="OpenedOpen" xml:space="preserve">
     <value>Mở liên kết hoặc tệp</value>

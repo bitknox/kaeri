@@ -20,10 +20,12 @@ pub mod title;
 pub mod titles;
 
 pub use anilist::{
-    AniList, AniListError, BrowseFilter, FacetTag, Facets, Media, Season, in_background,
+    AniList, AniListError, BrowseFilter, FacetTag, Facets, Lane, Media, Season, in_background,
+    on_screen,
 };
 pub use dataset::{MAPPING_DATASETS, RefreshOutcome, refresh_all};
 pub use episode_text::EpisodeText;
-pub use source::{Found, Meta};
+pub use kaeri_net::ratelimit::{Pacing, Priority};
+pub use source::{Found, Meta, Suggested};
 pub use tenrai::Tenrai;
 pub use title::{CONFIDENCE_FLOOR, MatchTarget, Scored, normalise, rank, similarity};

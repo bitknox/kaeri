@@ -27,13 +27,10 @@ notice-signed-out-queue = { $count ->
  }
 notice-sign-out-failed = Tidak dapat keluar dari { $tracker }. Coba lagi. { $reason }
 notice-not-saved-because = Tidak dapat menyimpan pengaturan itu. { $cause }
-notice-protection-saved = Perlindungan torrent disimpan.
-notice-protection-not-checked = Tidak dapat memeriksa perlindungan torrent. { $cause }
 notice-proxy-password-not-kept = Tidak dapat menyimpan kata sandi proxy. Masukkan lagi untuk mencoba menyimpannya. { $reason }
 notice-show-setting-refused = Tidak dapat menyimpan pengaturan itu. { $value } bukan nilai untuk { $setting }.
 notice-show-not-reset = Tidak dapat mengatur ulang pengaturan judul ini. { $reason }
 notice-show-no-such-subtitles = Tidak dapat menyimpan pilihan subtitle itu. Judul ini belum pernah memakai subtitle tersebut.
-notice-torrents-waiting-for-check = Torrent menunggu sampai pemeriksaan koneksi lolos lagi.
 notice-mapping-data-refreshed = Data pemetaan diperbarui.
 notice-mapping-data-failed = Tidak dapat memperbarui data pemetaan ({ $datasets }). Mencoba lagi dalam { $wait }. { $cause }
 notice-episode-aired = { $title }, episode { $episode }, sudah tayang selagi Anda pergi.
@@ -41,8 +38,6 @@ notice-episodes-aired = { $count ->
    *[other] { $count } episode baru dari judul yang Anda tonton sudah tayang. Kalender memuatnya.
  }
 notice-update-available = { $tag } sudah tersedia. Jalankan kaeri --update untuk memasangnya.
-cause-confirm-no-protection = Konfirmasikan dulu bahwa Anda memang ingin tanpa perlindungan.
-cause-confirm-warn-only = Konfirmasikan dulu bahwa Anda hanya ingin diperingatkan.
 cause-proxy-needs-address = Proxy memerlukan host dan port.
 cause-proxy-address-unusable = Alamat proxy tidak dapat diperiksa.
 cause-server-unreachable = Server tidak dapat dihubungi.

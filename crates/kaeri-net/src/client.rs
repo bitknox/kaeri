@@ -1,4 +1,4 @@
-//! The two-client HTTP surface.
+//! The HTTP client.
 
 use std::time::Duration;
 
@@ -14,62 +14,16 @@ pub enum NetError {
 
     #[error("{url} returned HTTP {status}")]
     Status { url: String, status: u16 },
-
-    #[error("unknown emulation profile {0:?}")]
-    UnknownProfile(String),
-}
-
-/// Which browser handshake to reproduce.
-///
-/// Exposed in config rather than hardcoded so it can be changed without a rebuild.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum Profile {
-    #[default]
-    Chrome,
-    Firefox,
-    Safari,
-    Edge,
-}
-
-impl Profile {
-    pub fn parse(name: &str) -> Result<Self, NetError> {
-        match name.trim().to_ascii_lowercase().as_str() {
-            "chrome" | "chromium" => Ok(Self::Chrome),
-            "firefox" => Ok(Self::Firefox),
-            "safari" => Ok(Self::Safari),
-            "edge" => Ok(Self::Edge),
-            other => Err(NetError::UnknownProfile(other.to_owned())),
-        }
-    }
-
-    /// The `wreq-util` profile reproduced for this browser.
-    ///
-    /// These trail current releases: they were the newest wreq-util shipped when they were
-    /// chosen, and moving wreq-util on (0.1 to 0.2) kept them, so the TLS handshake and HTTP/2
-    /// settings providers see did not change with the library. 0.2 did correct their default
-    /// headers (order, `upgrade-insecure-requests`, `sec-fetch-user`) and the weight of the
-    /// request's HTTP/2 stream. Newer ones exist (0.2 ships Chrome 149); moving to one is a
-    /// change of its own, checked against the providers. The browser is a config value for the
-    /// same reason.
-    fn emulation(self) -> wreq_util::Profile {
-        match self {
-            Self::Chrome => wreq_util::Profile::Chrome137,
-            Self::Firefox => wreq_util::Profile::Firefox139,
-            Self::Safari => wreq_util::Profile::Safari18,
-            Self::Edge => wreq_util::Profile::Edge134,
-        }
-    }
 }
 
 /// Shared HTTP access.
 ///
-/// Cheap to clone — both inner clients are reference-counted and pool connections, so a
-/// single instance should be created at startup and handed around.
+/// Cheap to clone: the inner clients are reference-counted and pool connections, so a single
+/// instance should be created at startup and handed around.
 #[derive(Clone)]
 pub struct HttpClient {
-    emulated: wreq::Client,
     plain: reqwest::Client,
-    profile: Profile,
+    sources: reqwest::Client,
     /// The host names an offline client was asked to resolve and refused, in order; `None` on a
     /// client that resolves.
     refused: Option<Refused>,
@@ -79,38 +33,30 @@ type Refused = std::sync::Arc<std::sync::Mutex<Vec<String>>>;
 
 impl std::fmt::Debug for HttpClient {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("HttpClient").field("profile", &self.profile).finish_non_exhaustive()
+        f.debug_struct("HttpClient").finish_non_exhaustive()
     }
 }
 
 impl HttpClient {
     pub fn new(config: &NetworkConfig) -> Result<Self, NetError> {
-        let profile = Profile::parse(&config.emulation)?;
-        let timeout = Duration::from_secs(config.timeout_secs.max(1));
-
-        let emulated = wreq::Client::builder()
-            .emulation(profile.emulation())
-            .timeout(timeout)
+        let plain = builder(config)
             .build()
-            .map_err(|e| NetError::Build(format!("emulated client: {e}")))?;
-
-        let plain = trusted_roots(reqwest::Client::builder())
-            .timeout(timeout)
-            .user_agent(concat!("kaeri/", env!("CARGO_PKG_VERSION")))
+            .map_err(|e| NetError::Build(format!("http client: {e}")))?;
+        let sources = builder(config)
+            .redirect(reqwest::redirect::Policy::none())
             .build()
-            .map_err(|e| NetError::Build(format!("plain client: {e}")))?;
-
-        Ok(Self { emulated, plain, profile, refused: None })
+            .map_err(|e| NetError::Build(format!("sources client: {e}")))?;
+        Ok(Self { plain, sources, refused: None })
     }
 
     /// A client that can reach no host by name, for tests that stand the app up whole.
     ///
-    /// The app's own two clients, built from `config` as [`Self::new`] builds them, with two
-    /// changes. Every name resolves to an error naming this client, at once, so a request for
-    /// a real host fails before a packet — a DNS query included — leaves the machine. And no
-    /// proxy is used, because a proxy is reached by its own address and resolves the name at
-    /// its end, which would let a request past the resolver. An address written as an IP
-    /// literal is never resolved, so a server on `127.0.0.1` answers as usual.
+    /// The app's own client, built from `config` as [`Self::new`] builds it, with two changes.
+    /// Every name resolves to an error naming this client, at once, so a request for a real
+    /// host fails before a packet (a DNS query included) leaves the machine. And no proxy is
+    /// used, because a proxy is reached by its own address and resolves the name at its end,
+    /// which would let a request past the resolver. An address written as an IP literal is
+    /// never resolved, so a server on `127.0.0.1` answers as usual.
     ///
     /// The point is the requests a test did not think of: a tracker built with the real
     /// endpoint, a cover, a skip-time lookup. Each fails loudly in its test instead of
@@ -118,37 +64,31 @@ impl HttpClient {
     /// a use for a client that cannot connect.
     #[doc(hidden)]
     pub fn offline(config: &NetworkConfig) -> Result<Self, NetError> {
-        let profile = Profile::parse(&config.emulation)?;
-        let timeout = Duration::from_secs(config.timeout_secs.max(1));
-
         let refused = Refused::default();
-        let emulated = wreq::Client::builder()
-            .emulation(profile.emulation())
-            .timeout(timeout)
-            .no_proxy()
-            .dns_resolver(std::sync::Arc::new(Unresolved(refused.clone())))
+        let offline = |builder: reqwest::ClientBuilder| {
+            builder.no_proxy().dns_resolver(std::sync::Arc::new(Unresolved(refused.clone())))
+        };
+        let plain = offline(builder(config))
             .build()
-            .map_err(|e| NetError::Build(format!("emulated client: {e}")))?;
-
-        let plain = trusted_roots(reqwest::Client::builder())
-            .timeout(timeout)
-            .user_agent(concat!("kaeri/", env!("CARGO_PKG_VERSION")))
-            .no_proxy()
-            .dns_resolver(std::sync::Arc::new(Unresolved(refused.clone())))
+            .map_err(|e| NetError::Build(format!("http client: {e}")))?;
+        let sources = offline(builder(config).redirect(reqwest::redirect::Policy::none()))
             .build()
-            .map_err(|e| NetError::Build(format!("plain client: {e}")))?;
-
-        Ok(Self { emulated, plain, profile, refused: Some(refused) })
+            .map_err(|e| NetError::Build(format!("sources client: {e}")))?;
+        Ok(Self { plain, sources, refused: Some(refused) })
     }
 
-    /// Client with a browser-style TLS/HTTP2 handshake. Used for plugin requests.
-    pub fn emulated(&self) -> &wreq::Client {
-        &self.emulated
-    }
-
-    /// Plain client. Faster, and its behaviour is easier to reason about.
+    /// The client for Kaeri's own requests: AniList, artwork, trackers, stores, datasets.
+    /// Follows redirects.
     pub fn plain(&self) -> &reqwest::Client {
         &self.plain
+    }
+
+    /// The client for what a source names: plugin fetches, the stream proxy, subtitle tracks
+    /// and the cast relay. The same settings as [`Self::plain`], but it follows no redirects:
+    /// a plugin's fetch is answered with the redirect itself, so the next hop is checked
+    /// against the plugin's hosts again before anything reaches it.
+    pub fn sources(&self) -> &reqwest::Client {
+        &self.sources
     }
 
     /// The host names this offline client was asked for and refused, oldest first: empty on a
@@ -160,10 +100,15 @@ impl HttpClient {
             .and_then(|refused| refused.lock().ok().map(|names| names.clone()))
             .unwrap_or_default()
     }
+}
 
-    pub fn profile(&self) -> Profile {
-        self.profile
-    }
+/// The builder both constructors start from: the platform's trust, the configured timeout and
+/// Kaeri's own user agent. A plugin that wants another sets its own `user-agent` header.
+fn builder(config: &NetworkConfig) -> reqwest::ClientBuilder {
+    let timeout = Duration::from_secs(config.timeout_secs.max(1));
+    trusted_roots(reqwest::Client::builder())
+        .timeout(timeout)
+        .user_agent(concat!("kaeri/", env!("CARGO_PKG_VERSION")))
 }
 
 /// `builder`, trusting what a plain client trusts on this platform. Every plain client is built
@@ -178,8 +123,7 @@ impl HttpClient {
 /// client trusts the Mozilla roots built into the binary instead, [`bundled_roots`], which need
 /// nothing from the app. **The cost: a CA the user installed on the device is not trusted.** A
 /// request through a proxy that inspects TLS, or to a server behind a private CA, fails on
-/// Android where it works elsewhere. The emulated client has always trusted those same bundled
-/// roots, through BoringSSL, on every platform.
+/// Android where it works elsewhere.
 pub fn trusted_roots(builder: reqwest::ClientBuilder) -> reqwest::ClientBuilder {
     if cfg!(target_os = "android") { builder.tls_certs_only(bundled_roots()) } else { builder }
 }
@@ -222,23 +166,9 @@ impl reqwest::dns::Resolve for Unresolved {
     }
 }
 
-impl wreq::dns::Resolve for Unresolved {
-    fn resolve(&self, name: wreq::dns::Name) -> wreq::dns::Resolving {
-        Box::pin(std::future::ready(Err(self.refuse(name.as_str()))))
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn profiles_parse_case_insensitively_and_reject_nonsense() {
-        assert_eq!(Profile::parse("Chrome").unwrap(), Profile::Chrome);
-        assert_eq!(Profile::parse("  firefox ").unwrap(), Profile::Firefox);
-        assert_eq!(Profile::parse("chromium").unwrap(), Profile::Chrome);
-        assert!(Profile::parse("netscape").is_err());
-    }
 
     #[test]
     fn every_bundled_root_is_one_a_client_will_trust() {
@@ -254,18 +184,7 @@ mod tests {
     #[test]
     fn client_builds_from_default_config() {
         let client = HttpClient::new(&NetworkConfig::default()).unwrap();
-        assert_eq!(client.profile(), Profile::Chrome);
-    }
-
-    #[test]
-    fn an_unknown_profile_fails_loudly_rather_than_silently_defaulting() {
-        // Silently falling back would mean a typo in the emulation profile turns into
-        // mysterious 403s from every provider.
-        let cfg = NetworkConfig {
-            emulation: "definitely-not-a-browser".into(),
-            ..Default::default()
-        };
-        assert!(matches!(HttpClient::new(&cfg), Err(NetError::UnknownProfile(_))));
+        assert!(client.refused_names().is_empty());
     }
 
     /// Every message in an error's chain, outermost first: the resolver's refusal is several
@@ -290,19 +209,18 @@ mod tests {
                 .unwrap();
         let refused = "guard.example was not resolved";
 
-        // A name, through either client, is refused by the resolver: the request never gets as
-        // far as a connection, and the error says why rather than looking like an outage.
+        // A name is refused by the resolver: the request never gets as far as a connection, and
+        // the error says why rather than looking like an outage.
         let plain = client.plain().get("http://guard.example/").send().await.unwrap_err();
         assert!(plain.is_connect(), "{plain:?}");
         assert!(chain(&plain).contains(refused), "{}", chain(&plain));
-        let emulated =
-            client.emulated().get("https://guard.example/").send().await.unwrap_err();
-        assert!(chain(&emulated).contains(refused), "{}", chain(&emulated));
+        let sources = client.sources().get("https://guard.example/").send().await.unwrap_err();
+        assert!(chain(&sources).contains(refused), "{}", chain(&sources));
         // And kept, both times, for a test to see what was aimed at.
         assert_eq!(client.refused_names(), ["guard.example", "guard.example"]);
         assert!(HttpClient::new(&NetworkConfig::default()).unwrap().refused_names().is_empty());
 
-        // An address is not a name, so a server on loopback answers both clients.
+        // An address is not a name, so a server on loopback answers.
         let listener =
             tokio::net::TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, 0)).await.unwrap();
         let addr = listener.local_addr().unwrap();
@@ -325,21 +243,14 @@ mod tests {
         });
         let url = format!("http://{addr}/");
         assert_eq!(client.plain().get(&url).send().await.unwrap().status().as_u16(), 204);
-        assert_eq!(client.emulated().get(&url).send().await.unwrap().status().as_u16(), 204);
+        assert_eq!(client.sources().get(&url).send().await.unwrap().status().as_u16(), 204);
         server.await.unwrap();
     }
 
-    #[tokio::test]
-    async fn the_emulated_client_asks_for_encodings_as_the_browser_does() {
-        // wreq-util 0.2 puts a browser's own accept-encoding into its profile only with its
-        // `emulation-compression` feature. Without it the profile has none, and wreq's decoder
-        // appends its own, `zstd,gzip,deflate,br`, after every other header: a value and a place
-        // no browser uses.
+    /// One request's head as a loopback server received it, with `answer` sent back.
+    async fn head_of(client: &reqwest::Client, answer: &'static [u8]) -> (String, u16) {
         use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
-        let client =
-            HttpClient::offline(&NetworkConfig { timeout_secs: 5, ..Default::default() })
-                .unwrap();
         let listener =
             tokio::net::TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, 0)).await.unwrap();
         let addr = listener.local_addr().unwrap();
@@ -350,25 +261,44 @@ mod tests {
             while !head.ends_with(b"\r\n\r\n") && socket.read(&mut byte).await.unwrap() == 1 {
                 head.push(byte[0]);
             }
-            socket
-                .write_all(b"HTTP/1.1 204 No Content\r\ncontent-length: 0\r\nconnection: close\r\n\r\n")
-                .await
-                .unwrap();
+            socket.write_all(answer).await.unwrap();
             String::from_utf8(head).unwrap()
         });
-        client.emulated().get(format!("http://{addr}/")).send().await.unwrap();
-        let head = server.await.unwrap();
+        let status = client.get(format!("http://{addr}/")).send().await.unwrap().status();
+        (server.await.unwrap(), status.as_u16())
+    }
 
-        let names: Vec<&str> = head
+    #[tokio::test]
+    async fn requests_offer_every_encoding_the_client_decodes() {
+        let client =
+            HttpClient::offline(&NetworkConfig { timeout_secs: 5, ..Default::default() })
+                .unwrap();
+        let (head, _) = head_of(
+            client.sources(),
+            b"HTTP/1.1 204 No Content\r\ncontent-length: 0\r\nconnection: close\r\n\r\n",
+        )
+        .await;
+        let offered = head
             .lines()
-            .skip(1)
-            .filter_map(|line| line.split_once(": "))
-            .map(|(n, _)| n)
-            .collect();
-        assert!(head.contains("\r\naccept-encoding: gzip, deflate, br, zstd\r\n"), "{head}");
-        // Chrome's place for it: after the fetch metadata, before the language.
-        let at = |name: &str| names.iter().position(|n| *n == name).unwrap_or(usize::MAX);
-        assert!(at("sec-fetch-dest") < at("accept-encoding"), "{head}");
-        assert!(at("accept-encoding") < at("accept-language"), "{head}");
+            .find_map(|line| line.strip_prefix("accept-encoding: "))
+            .unwrap_or_default()
+            .to_owned();
+        for encoding in ["gzip", "br", "deflate", "zstd"] {
+            assert!(offered.contains(encoding), "{head}");
+        }
+    }
+
+    #[tokio::test]
+    async fn the_sources_client_hands_a_redirect_back() {
+        // A plugin's fetch must see the redirect, so its next hop is checked against the
+        // plugin's hosts again before anything reaches it.
+        let client =
+            HttpClient::offline(&NetworkConfig { timeout_secs: 5, ..Default::default() })
+                .unwrap();
+        let redirect: &[u8] =
+            b"HTTP/1.1 302 Found\r\nlocation: http://127.0.0.1:9/\r\ncontent-length: 0\r\n\
+              connection: close\r\n\r\n";
+        let (_, status) = head_of(client.sources(), redirect).await;
+        assert_eq!(status, 302);
     }
 }

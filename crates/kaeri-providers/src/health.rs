@@ -4,7 +4,7 @@
 //! *which* one and why rather than an unexplained empty list.
 //!
 //! One distinction runs through this module: being **held back** is not being **unhealthy**.
-//! The torrent provider with a failing VPN guard is working perfectly; local policy is
+//! The torrent provider with a proxy check that failed is working perfectly; local policy is
 //! keeping it out. Marking it down would produce a Providers screen that lies.
 
 use std::{
@@ -37,7 +37,7 @@ pub struct ProviderHealth {
     /// Round-trip of the last successful call.
     pub last_latency: Option<Duration>,
     pub last_checked: Option<i64>,
-    /// Set when local policy is withholding the provider — a failing VPN guard, say.
+    /// Set when local policy is withholding the provider — a proxy check that failed, say.
     pub held_back: Option<String>,
     /// When the provider last failed while down or went down, so it is asked again after
     /// [`RETRY_DOWN_AFTER`].
@@ -175,8 +175,8 @@ impl HealthTracker {
     /// **Health only — a hold is deliberately not consulted here.** A hold says local policy is
     /// withholding a provider *right now*, and the only thing that can lift it is asking the
     /// provider again. Filtering it out of the chain meant it was never asked, so the hold
-    /// outlived its reason: one failed VPN check took torrenting out until the process
-    /// restarted, however healthy the tunnel became afterwards. The live check lives in
+    /// outlived its reason: one failed proxy check took torrenting out until the process
+    /// restarted, however healthy the proxy became afterwards. The live check lives in
     /// [`crate::registry::ProviderRegistry`]'s walk, which lifts the hold when it passes.
     pub fn usable(&self, order: &[String]) -> Vec<String> {
         self.with(|list| {
@@ -224,7 +224,7 @@ mod tests {
     use super::*;
 
     fn tracker() -> HealthTracker {
-        HealthTracker::new(["torrent".to_string(), "remote".to_string()])
+        HealthTracker::new(["torrent".to_string(), "extra".to_string()])
     }
 
     #[test]
@@ -285,23 +285,27 @@ mod tests {
 
     #[test]
     fn being_held_back_is_not_being_unhealthy() {
-        // A torrent provider behind a failing VPN guard is fine; local policy is what is
+        // A torrent provider behind a proxy check that failed is fine; local policy is what is
         // withholding it. Reporting it as "down" would be a lie.
         let t = tracker();
-        t.record_failure("torrent", &ProviderError::Unavailable("vpn guard failing".into()), 0);
+        t.record_failure(
+            "torrent",
+            &ProviderError::Unavailable("proxy check failed".into()),
+            0,
+        );
 
         let h = t.get("torrent").unwrap();
         assert_eq!(h.health, Health::Unknown, "not a health problem");
         assert_eq!(h.consecutive_failures, 0);
         assert!(!h.is_usable(), "but it must still be skipped");
         assert_eq!(h.state_label(), "held back");
-        assert_eq!(h.held_back.as_deref(), Some("vpn guard failing"));
+        assert_eq!(h.held_back.as_deref(), Some("proxy check failed"));
     }
 
     #[test]
     fn a_held_back_provider_can_be_released() {
         let t = tracker();
-        t.hold_back("torrent", "vpn down");
+        t.hold_back("torrent", "proxy down");
         assert!(!t.get("torrent").unwrap().is_usable());
         t.release("torrent");
         assert!(t.get("torrent").unwrap().is_usable());
@@ -310,29 +314,29 @@ mod tests {
     #[test]
     fn usable_preserves_configured_order_and_drops_what_is_down() {
         let t = tracker();
-        let order = vec!["torrent".to_string(), "remote".to_string()];
+        let order = vec!["torrent".to_string(), "extra".to_string()];
         assert_eq!(t.usable(&order), order, "order is the user's preference");
 
         for _ in 0..DOWN_AFTER {
             t.record_failure("torrent", &ProviderError::Blocked("nope".into()), 0);
         }
-        assert_eq!(t.usable(&order), vec!["remote".to_string()], "a down provider is skipped");
+        assert_eq!(t.usable(&order), vec!["extra".to_string()], "a down provider is skipped");
     }
 
     #[test]
     fn a_hold_does_not_remove_a_provider_from_the_chain() {
         // Deliberately: a hold is local policy about *now*, and only asking the provider again
         // can lift it. Dropping it from the chain here meant it was never asked, so one failed
-        // VPN check withheld torrenting until the process restarted. The registry's walk makes
+        // proxy check withheld torrenting until the process restarted. The registry's walk makes
         // the live check and skips it there — see its own tests for both halves.
         let t = tracker();
-        let order = vec!["torrent".to_string(), "remote".to_string()];
-        t.hold_back("torrent", "vpn down");
+        let order = vec!["torrent".to_string(), "extra".to_string()];
+        t.hold_back("torrent", "proxy down");
 
         assert_eq!(t.usable(&order), order);
         assert_eq!(
             t.get("torrent").and_then(|h| h.held_back),
-            Some("vpn down".to_string()),
+            Some("proxy down".to_string()),
             "the reason is still reported to the Providers screen"
         );
     }
@@ -360,9 +364,9 @@ mod tests {
 
     #[test]
     fn a_reset_does_not_release_a_policy_hold() {
-        // Otherwise re-checking a provider would quietly bypass the VPN guard.
+        // Otherwise re-checking a provider would quietly bypass the proxy check.
         let t = tracker();
-        t.hold_back("torrent", "vpn down");
+        t.hold_back("torrent", "proxy down");
         t.reset("torrent");
         assert!(!t.get("torrent").unwrap().is_usable(), "the hold must survive a reset");
     }

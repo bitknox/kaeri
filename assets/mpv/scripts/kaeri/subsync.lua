@@ -88,15 +88,17 @@ local function mark()
     end
 
     local result, why = M.solve(marks[1], marks[2], marks[3], marks[4])
-    finish()
     if not result then
+        finish()
         local reason = why == "too close" and "pick two lines further apart"
             or "the two marks disagree; try again"
         M.notify("Could not sync: " .. reason, true)
         return
     end
+    -- The timing first, then the end of the sync: whatever sees the sync end sees its timing.
     mp.set_property_native("sub-speed", result.speed)
     mp.set_property_native("sub-delay", result.delay)
+    finish()
     M.notify(string.format("Subtitles synced  ·  delay %+.2f s  ·  speed %.4f", result.delay, result.speed))
 end
 

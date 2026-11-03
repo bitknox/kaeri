@@ -2299,20 +2299,6 @@
     "at": "2026-10-31",
     "back": "One episode is already in downloads. / { $count } episodes are already in downloads. / { $count } episodes are already in downloads."
   },
-  "cause-confirm-no-protection": {
-    "source": "19bc9667e139",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "First confirm that you want to have no protection."
-  },
-  "cause-confirm-warn-only": {
-    "source": "22e469de5daf",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "First confirm that you only want to receive warnings."
-  },
   "cause-no-playable-stream": {
     "source": "30bed517cf34",
     "state": "draft",
@@ -10761,20 +10747,6 @@
     "at": "2026-10-31",
     "back": "mpv did not start playing after { $seconds } s. The source may have no data. Check that mpv plays a file on its own."
   },
-  "notice-protection-not-checked": {
-    "source": "4a6cddfdbfa7",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Torrent protection could not be checked. { $cause }"
-  },
-  "notice-protection-saved": {
-    "source": "9df51779fb14",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Torrent protection saved."
-  },
   "notice-proxy-password-not-kept": {
     "source": "3aff7625be51",
     "state": "draft",
@@ -11002,13 +10974,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "The sign-in token could not be saved. Sign in again. { $reason }"
-  },
-  "notice-torrents-waiting-for-check": {
-    "source": "48156d152f47",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Torrents wait for the connection check to pass again."
   },
   "notice-trailer-failed": {
     "source": "63b72b0ba384",
@@ -16243,13 +16208,6 @@
     "at": "2026-10-31",
     "back": "Connection check"
   },
-  "settings-aside-connection-check": {
-    "source": "1c134a674c72",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Connection check"
-  },
   "settings-aside-downloads": {
     "source": "ad618eb572c2",
     "state": "draft",
@@ -16472,20 +16430,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "One title does not match { $tracker } / { $count } titles do not match { $tracker } / { $count } titles do not match { $tracker }"
-  },
-  "settings-connection-check-note": {
-    "source": "fa8d2457b103",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Kaeri checks where torrent traffic comes out from when starting one and every minute while it runs, and pauses the torrents if that check fails. Your VPN or proxy is what protects you."
-  },
-  "settings-connection-check-title": {
-    "source": "1c134a674c72",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Connection check"
   },
   "settings-controller-device": {
     "source": "96785479b0f4",
@@ -16891,13 +16835,6 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-01"
-  },
-  "settings-index-none": {
-    "source": "d48719159084",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Not configured"
   },
   "settings-keep-next": {
     "source": "9b7142165739",
@@ -17305,20 +17242,6 @@
     "at": "2026-10-31",
     "back": "Scaling"
   },
-  "settings-label-vpn-mode": {
-    "source": "aacc083b9bd7",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "VPN mode"
-  },
-  "settings-label-vpn-on-failure": {
-    "source": "813a68f7d374",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "If a verification fails"
-  },
   "settings-language": {
     "source": "efcf950b3cc4",
     "state": "draft",
@@ -17694,13 +17617,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "It adapts to the video and to your graphics card. It applies from the next episode."
-  },
-  "settings-note-vpn-mode": {
-    "source": "f9181df124b2",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Edit config.toml to change this. Deactivating the protection requires an explicit step."
   },
   "settings-notices": {
     "source": "73112da1b80e",
@@ -19070,13 +18986,6 @@
     "at": "2026-10-31",
     "back": "Torrents on"
   },
-  "settings-torrents-warn-note": {
-    "source": "676572d0c8b1",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Choosing Warn only asks to confirm first, just like Unprotected."
-  },
   "settings-trackers": {
     "source": "b4c06d298f83",
     "state": "draft",
@@ -19398,27 +19307,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Sharp · Anime4K"
-  },
-  "settings-value-vpn-external": {
-    "source": "84fcddede27b",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "External"
-  },
-  "settings-value-vpn-socks5": {
-    "source": "b8dd788adf7b",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Proxy"
-  },
-  "settings-vpn-mode": {
-    "source": "aacc083b9bd7",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "VPN mode"
   },
   "settings-watch-parties": {
     "source": "148487619c42",
@@ -20981,13 +20869,6 @@
     "at": "2026-10-31",
     "back": "Added by hand"
   },
-  "sources-origin-config": {
-    "source": "3ea0e4cb57d6",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Defined in the configuration file"
-  },
   "sources-origin-from": {
     "source": "09c4ff5bf087",
     "state": "draft",
@@ -21042,20 +20923,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "The torrents are deactivated. The session stopped."
-  },
-  "sources-reloaded-torrents-pending": {
-    "source": "60be55ad4860",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Sources reloaded. The torrents start when the VPN protection passes."
-  },
-  "sources-remote": {
-    "source": "ea47f4110bb2",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Remote"
   },
   "sources-remove-detail": {
     "source": "7dca9d3569a3",
@@ -21310,13 +21177,6 @@
     "at": "2026-10-31",
     "back": "A bigger terminal is needed."
   },
-  "sources-torrent-indexes": {
-    "source": "930784d9b438",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "It searches the torrent indexes activated in Settings."
-  },
   "sources-torrent-source": {
     "source": "b871d0a30bf7",
     "state": "draft",
@@ -21434,55 +21294,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Version { $version } is ready"
-  },
-  "sources-vpn-checking": {
-    "source": "166637cc0499",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "VPN { $mark }  Verifying"
-  },
-  "sources-vpn-leak-paused": {
-    "source": "035945c41b0e",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "The VPN has a leak. Torrents are paused until it is protected again."
-  },
-  "sources-vpn-leaking": {
-    "source": "6f36f2be66c9",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "VPN { $mark }  With leak"
-  },
-  "sources-vpn-protected": {
-    "source": "05a787c687c5",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "VPN { $mark }  Exit at { $exit }"
-  },
-  "sources-vpn-unprotected": {
-    "source": "2486c71af20d",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "VPN { $mark }  Without protection"
-  },
-  "sources-vpn-unreachable": {
-    "source": "2f8f1b6a7f23",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "VPN { $mark }  Not available"
-  },
-  "sources-vpn-unreachable-paused": {
-    "source": "221f0b7a1067",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "The VPN cannot be accessed. Torrents are paused until it can be."
   },
   "sources-your": {
     "source": "63448b06f2af",
@@ -25758,13 +25569,6 @@
     "at": "2026-10-31",
     "back": "{ $name } ({ $key })"
   },
-  "torrent-check-failed-running": {
-    "source": "cf62f08f0229",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "The connection check failed. The torrents remain active."
-  },
   "torrent-interface-closed": {
     "source": "5adb14e508de",
     "state": "draft",
@@ -25784,20 +25588,6 @@
     "by": "agent",
     "at": "2026-11-01"
   },
-  "torrent-no-kill-switch": {
-    "source": "66803b722e67",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Nothing on this device stops the torrent traffic if the VPN drops. Run \"kaeri --doctor\" to set it up."
-  },
-  "torrent-not-checked": {
-    "source": "6e3522b86224",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "The connection could not be checked. { $reason }"
-  },
   "torrent-session-failed": {
     "source": "2b921fbc3f4e",
     "state": "draft",
@@ -25805,47 +25595,12 @@
     "at": "2026-10-31",
     "back": "The torrent session could not be started. { $reason }"
   },
-  "torrent-vpn-unverified": {
-    "source": "a6c9d085a8d1",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "The torrents start when the VPN protection passes. The connection has not been verified yet."
-  },
-  "torrent-vpn-waiting": {
-    "source": "f88090fb0a46",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "The torrents start when the VPN protection passes. { $reason }"
-  },
   "torrents-check-failed": {
     "source": "bf9c5c5a8e5e",
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Failed"
-  },
-  "torrents-check-leaked": {
-    "source": "fe9cc0cd1e87",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Traffic went out outside the protection. { $then }"
-  },
-  "torrents-check-none": {
-    "source": "b5f88237cb7e",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Without protection"
-  },
-  "torrents-check-none-line": {
-    "source": "4378d04bd1ab",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "There is no protection configured"
   },
   "torrents-check-not-made-proxy": {
     "source": "14daa6c11278",
@@ -25861,20 +25616,6 @@
     "at": "2026-10-31",
     "back": "Kaeri checks from where the torrent traffic goes out when a torrent starts and every minute while it runs, and pauses the torrents if that check fails. What protects you is your VPN or your proxy."
   },
-  "torrents-check-note-stop": {
-    "source": "a341759e366d",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Kaeri checks where torrent traffic goes out when a torrent starts and every minute while it runs, and stops the torrents if that check fails. Your VPN or proxy is what protects you."
-  },
-  "torrents-check-note-warn": {
-    "source": "e208e9c4d534",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Kaeri checks where torrent traffic goes out when a torrent starts and every minute while it runs, and warns you if that check fails. Your VPN or proxy is what protects you."
-  },
   "torrents-check-now": {
     "source": "6f110f7fed7a",
     "state": "draft",
@@ -25889,33 +25630,12 @@
     "at": "2026-10-31",
     "back": "Correct"
   },
-  "torrents-check-passed-exit": {
-    "source": "6263f9155878",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Exiting through { $exit }"
-  },
   "torrents-check-running": {
     "source": "29d3b9fb142c",
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Checking"
-  },
-  "torrents-check-running-line": {
-    "source": "314e29eac637",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Checking from where the torrent traffic goes out"
-  },
-  "torrents-check-unmade": {
-    "source": "1e3e5149e5ef",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "The check could not be made. { $then }"
   },
   "torrents-check-waiting": {
     "source": "123b7254b44d",
@@ -25938,40 +25658,12 @@
     "at": "2026-10-31",
     "back": "Checking the proxy…"
   },
-  "torrents-choice-spoken": {
-    "source": "59bdc704a7e5",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "{ $label }. { $detail }"
-  },
   "torrents-dialog-edit-proxy": {
     "source": "be2c2a621767",
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Edit proxy"
-  },
-  "torrents-dialog-protect": {
-    "source": "2f114caf7a71",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Protect torrents"
-  },
-  "torrents-dialog-turn-on": {
-    "source": "9ac07ba4323b",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Turn on torrents"
-  },
-  "torrents-dialog-turn-on-action": {
-    "source": "6bb329b249dd",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Turn on"
   },
   "torrents-edit-proxy": {
     "source": "be2c2a621767",
@@ -25980,117 +25672,12 @@
     "at": "2026-10-31",
     "back": "Edit proxy"
   },
-  "torrents-fail-pause": {
-    "source": "0e34f8bb0a58",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Pause torrents"
-  },
-  "torrents-fail-pause-result": {
-    "source": "087769498e29",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Torrents are paused."
-  },
-  "torrents-fail-stop": {
-    "source": "97d82e6ffec2",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Stop torrents"
-  },
-  "torrents-fail-stop-result": {
-    "source": "e4577a670708",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Torrents are stopped."
-  },
-  "torrents-fail-warn": {
-    "source": "b3c5fb12cc70",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Only warn"
-  },
-  "torrents-fail-warn-result": {
-    "source": "cce5c33af0eb",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Torrents remain active."
-  },
   "torrents-for-app": {
     "source": "1a366995dced",
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Torrents for Kaeri"
-  },
-  "torrents-if-check-fails": {
-    "source": "813a68f7d374",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "If a check fails"
-  },
-  "torrents-index": {
-    "source": "3e137d7a1f87",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Torrent index"
-  },
-  "torrents-index-detail": {
-    "source": "9be9bea9e53a",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "The RSS search address that Kaeri uses for torrents."
-  },
-  "torrents-index-hint": {
-    "source": "ffaafba956bf",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "https://…/?q={query}"
-  },
-  "torrents-index-needed": {
-    "source": "9672b1c5f873",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Torrents need an index address."
-  },
-  "torrents-index-saved": {
-    "source": "2ef032a8e29c",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Torrent index saved"
-  },
-  "torrents-index-scheme": {
-    "source": "6fbcf1a12aa2",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Use an http or https address."
-  },
-  "torrents-keep-running-detail": {
-    "source": "c88d23ab9922",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "What happens to torrents when the check finds traffic that goes out outside your VPN or proxy."
-  },
-  "torrents-keep-running-title": {
-    "source": "22ef48478c86",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Keep torrents active if a check fails?"
   },
   "torrents-last-check": {
     "source": "7308453cbee2",
@@ -26099,61 +25686,12 @@
     "at": "2026-10-31",
     "back": "Last check"
   },
-  "torrents-left-outside-proxy": {
-    "source": "14c0efd99368",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Torrent traffic went out outside this proxy"
-  },
-  "torrents-linux-check-note": {
-    "source": "fa8d2457b103",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Kaeri checks where the torrent traffic goes out from when a torrent starts and every minute while it is running, and pauses the torrents if that check fails. Your VPN or proxy is what protects you."
-  },
   "torrents-linux-edit-proxy-title": {
     "source": "be2c2a621767",
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Edit proxy"
-  },
-  "torrents-linux-protect-title": {
-    "source": "2f114caf7a71",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Protect torrents"
-  },
-  "torrents-linux-protection-saved": {
-    "source": "2bf2b83cfcb8",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Torrent protection saved"
-  },
-  "torrents-linux-turn-on-button": {
-    "source": "6bb329b249dd",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Turn on"
-  },
-  "torrents-linux-turn-on-title": {
-    "source": "9ac07ba4323b",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Turn on torrents"
-  },
-  "torrents-linux-warn-confirm": {
-    "source": "a261dd3b267f",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Kaeri will warn you instead of pausing. If your VPN or proxy is down, other people can see your IP address."
   },
   "torrents-not-a-plugin": {
     "source": "59d31ff1af7a",
@@ -26245,90 +25783,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Leave the password empty to keep the saved one."
-  },
-  "torrents-protect-none": {
-    "source": "9a591ad0c35b",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Without protection"
-  },
-  "torrents-protect-none-detail": {
-    "source": "b1ef2985f6ba",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Your address is visible to all participants of the torrent."
-  },
-  "torrents-protect-none-note": {
-    "source": "3c59685444e4",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Without protection, Kaeri does not check the connection."
-  },
-  "torrents-protect-proxy": {
-    "source": "b8dd788adf7b",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Proxy"
-  },
-  "torrents-protect-proxy-detail": {
-    "source": "8bbd2dc227c0",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Torrent traffic goes through a proxy that you administer or rent."
-  },
-  "torrents-protect-proxy-name": {
-    "source": "4eea8904a00a",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "SOCKS5 Proxy"
-  },
-  "torrents-protect-vpn": {
-    "source": "7c4d2619ea33",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "VPN"
-  },
-  "torrents-protect-vpn-detail": {
-    "source": "47d55db3598b",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Uses the VPN that is already active on this device."
-  },
-  "torrents-protect-vpn-name": {
-    "source": "ccd691ea33e7",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "VPN on this device"
-  },
-  "torrents-protect-with": {
-    "source": "53fac03125f8",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Protect with"
-  },
-  "torrents-protection-not-saved": {
-    "source": "084cb892ec5f",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "It was not saved. { $why }. The saved protection is kept."
-  },
-  "torrents-protection-saved": {
-    "source": "2bf2b83cfcb8",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Torrent protection saved"
   },
   "torrents-proxy-as": {
     "source": "0e7f527f396e",
@@ -26435,34 +25889,6 @@
     "at": "2026-10-31",
     "back": "Edit proxy"
   },
-  "torrents-sheet-host": {
-    "source": "6b05f9d8801f",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Host"
-  },
-  "torrents-sheet-port": {
-    "source": "b354dc19a720",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Port"
-  },
-  "torrents-sheet-protect": {
-    "source": "2f114caf7a71",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Protect torrents"
-  },
-  "torrents-sheet-protect-title": {
-    "source": "4a5622bbc764",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Protect torrent traffic"
-  },
   "torrents-sheet-proxy-auth-note": {
     "source": "209a04258ca5",
     "state": "draft",
@@ -26470,40 +25896,12 @@
     "at": "2026-10-31",
     "back": "Username and password only if the proxy asks for them."
   },
-  "torrents-sheet-turn-on": {
-    "source": "9ac07ba4323b",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Activate torrents"
-  },
-  "torrents-sheet-turn-on-button": {
-    "source": "6bb329b249dd",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Activate"
-  },
-  "torrents-sheet-turn-on-title": {
-    "source": "9ac07ba4323b",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Activate torrents"
-  },
   "torrents-still-off": {
     "source": "27d531bb6ab7",
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Torrents remain deactivated. { $why }."
-  },
-  "torrents-summary-none": {
-    "source": "2855f746d012",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Without protection. Your address is visible to all participants of the torrent."
   },
   "torrents-summary-proxy": {
     "source": "59c98e78b5d3",
@@ -26519,75 +25917,12 @@
     "at": "2026-10-31",
     "back": "Protected by a SOCKS5 proxy at { $host }:{ $port }."
   },
-  "torrents-summary-vpn": {
-    "source": "8ce0c736503e",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Protected by the VPN of this device."
-  },
   "torrents-title": {
     "source": "5e719fad3ef5",
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Torrents"
-  },
-  "torrents-turn-on-button": {
-    "source": "6bb329b249dd",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Activate"
-  },
-  "torrents-turn-on-unprotected": {
-    "source": "1b05674b4c97",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Activate without protection"
-  },
-  "torrents-unprotected-detail": {
-    "source": "48924f58e8f7",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Other people can see your IP address while you download and share a torrent, and Kaeri does not check the connection."
-  },
-  "torrents-unprotected-title": {
-    "source": "0fb1105f8cd5",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Use torrents without protection?"
-  },
-  "torrents-use-unprotected": {
-    "source": "0a83eb85cf92",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Use without protection"
-  },
-  "torrents-warn-body": {
-    "source": "a261dd3b267f",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Kaeri will warn you instead of pausing. If your VPN or proxy doesn't work, other people can see your IP address."
-  },
-  "torrents-warn-instead": {
-    "source": "a261dd3b267f",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Kaeri will warn you instead of pausing. If your VPN or proxy is down, other people can see your IP address."
-  },
-  "torrents-warn-only-detail": {
-    "source": "a261dd3b267f",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Kaeri will warn you instead of pausing. If your VPN or your proxy go down, other people can see your IP address."
   },
   "trailer-failed": {
     "source": "d2f8fd136b16",
@@ -27359,13 +26694,6 @@
     "at": "2026-10-31",
     "back": "sign in to { $tracker } now"
   },
-  "tv-page-next-torrent": {
-    "source": "8ac8fb140d16",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "review the details there and then choose Activate"
-  },
   "tv-page-no-answer": {
     "source": "2e54d9161ee1",
     "state": "draft",
@@ -27456,20 +26784,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Torrents for Kaeri"
-  },
-  "tv-page-torrent": {
-    "source": "a88ffdbb31f2",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Kaeri asks for torrents from the torrent index."
-  },
-  "tv-page-torrent-proxy": {
-    "source": "047ccd41a467",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Kaeri asks for torrents from the torrent index, and the torrent traffic goes through the SOCKS5 proxy."
   },
   "tv-pair": {
     "source": "2df72619ecf9",
@@ -27856,13 +27170,6 @@
     "at": "2026-10-31",
     "back": "QR code"
   },
-  "tv-qr-label-index": {
-    "source": "9f51752e624b",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "QR code of the page for the torrent index"
-  },
   "tv-qr-label-link": {
     "source": "7b794027a307",
     "state": "draft",
@@ -28030,20 +27337,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Scan with your phone and change the proxy on the page that opens."
-  },
-  "tv-scan-torrent": {
-    "source": "0c85f76b36c7",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Scan with your phone and complete the torrent index on the page that opens."
-  },
-  "tv-scan-torrent-proxy": {
-    "source": "d1e8f0ad0356",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Scan with your phone and complete the torrent index and the proxy on the page that opens."
   },
   "tv-search-genres-offline": {
     "source": "47ffc0251e2a",

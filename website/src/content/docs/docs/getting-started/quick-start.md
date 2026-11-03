@@ -29,8 +29,8 @@ default and needs one sign-in on the Accounts screen, and the others need an app
 native apps sign in to all five from Accounts with nothing to register. See
 [Trackers and sync](/docs/guides/trackers-sync/).
 
-Plugins add sources. If someone you know runs a [plugin store](/docs/plugins/stores/), open
-Sources (`7`), press Enter, choose **Join a store** and paste their invite link. To make your own, see
+Plugins add sources. If you have a [plugin store](/docs/plugins/stores/), open
+Sources (`7`), press Enter, choose **Join a store** and paste its invite link. To make your own, see
 [Writing a plugin](/docs/plugins/authoring/).
 
 ## First keys to know

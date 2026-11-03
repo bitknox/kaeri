@@ -168,6 +168,11 @@ struct RelatedCard: View {
     let cover: CGSize
     var phone = false
 
+    /// A season's header knows a related title's kind and format but not its name.
+    private var named: Bool {
+        linked.titleRomaji != nil || linked.titleEnglish != nil || linked.titleNative != nil
+    }
+
     var body: some View {
         Button {
             navigator.openTitle(linked.id)
@@ -177,15 +182,19 @@ struct RelatedCard: View {
                     .frame(width: cover.width, height: cover.height)
                     .clipShape(.rect(cornerRadius: 6))
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(linked.shownTitle)
+                    // A season's header names the titles it relates to by kind and format, and
+                    // its page brings the names: until then the name is a placeholder of its size.
+                    Text(named ? linked.shownTitle : "The Lantern Road") // i18n-skip
                         .font(phone ? .showTitle(size: 17) : .macShowTitle(size: 13))
                         .foregroundStyle(.silk)
                         .lineLimit(1)
+                        .redacted(reason: named ? [] : .placeholder)
                     Text(linked.relationLine)
                         .font(phone ? .ui(15) : .mac(12))
                         .foregroundStyle(.haze)
                         .lineLimit(1)
                 }
+                .animation(.fadeIn, value: named)
             }
             .padding(EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 14))
             .contentShape(.rect(cornerRadius: 10))

@@ -227,13 +227,17 @@ pub(crate) fn options(
     // The trackers as the app's own sign-in clients turn them on, as the engine builds them.
     let tracked = tracking::native::with_app_clients(&config, &start.app_clients());
     let mut sync = tracking::Sync::with_tokens(&tracked, &store, &http, tokens.clone())
+        .with_titles(meta.titles().clone())
         // Kitsu on the fake as well: a password typed into a fixture build goes nowhere else.
         .with_kitsu_at(kaeri_track::kitsu::Site::at(&server.kitsu_base()));
     // AniList's on the fake rather than AniList itself, signed in or not: a scene can leave it
     // signed in, so the Library is the fake's, and a sign-in from the app reaches the fake.
     if let Some(at) = sync.trackers.iter().position(|t| t.id() == "anilist") {
-        let client = server.anilist(&http).with_token(tokens.get("anilist").ok());
-        let tracker = Arc::new(AniListTracker::new(client));
+        let client = server
+            .anilist(&http)
+            .with_token(tokens.get("anilist").ok())
+            .on_budget_of(meta.anilist());
+        let tracker = Arc::new(AniListTracker::new(client).with_store(store.clone()));
         sync.trackers[at] = tracker.clone();
         sync.anilist = Some(tracker);
     }
@@ -253,7 +257,7 @@ pub(crate) fn options(
         sync,
         stores,
         clock: testing.clock.clone(),
-        fixture_exit: Some(kaeri_providers::vpn::VpnGuard::fixture_egress()),
+        fixture_route: true,
         windows: None,
     });
     Ok(options)

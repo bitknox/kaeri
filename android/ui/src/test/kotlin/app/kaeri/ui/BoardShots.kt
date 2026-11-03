@@ -323,7 +323,7 @@ class BoardShots {
             ),
             "batch-1080".takeIf { pinned },
         ),
-        SourceOption("fumi-mirror", "Fumi Mirror", 0u, 13u, false, SourceNote.Resting, emptyList(), null),
+        SourceOption("fumi-archive", "Fumi Archive", 0u, 13u, false, SourceNote.Resting, emptyList(), null),
         SourceOption("old-reel", "Old Reel", 0u, 13u, false, SourceNote.Failed("Timed out after 20 seconds"), emptyList(), null),
     )
 

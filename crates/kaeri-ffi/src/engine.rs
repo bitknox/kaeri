@@ -308,7 +308,7 @@ impl Opened {
 
 /// Settings back to their defaults, for an app whose start failed on a `config.toml` nobody on
 /// the device can edit: the file is moved aside to `config.damaged-<date>` beside it and kept,
-/// and the next start reads the defaults, VPN and proxy included. Nothing else changes: the
+/// and the next start reads the defaults, the torrent proxy included. Nothing else changes: the
 /// database, and the watch history in it, stay. Answers where the old file is kept, or nothing
 /// when there was no file. The app calls it only when the viewer asks, and starts again after.
 #[uniffi::export]

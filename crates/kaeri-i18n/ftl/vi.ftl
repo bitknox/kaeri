@@ -162,7 +162,7 @@ home-more-genre = Thêm { $genre }
 # Line over the spotlight's title when it is the built-in demo.
 home-spotlight-demo = Bản demo, chia sẻ thoải mái
 
-# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Stream.
+# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.
 licensed-return = Bạn đã xem tập { $episode } trên { $service } chưa?
 
 # Notice after Mark as watched on the return notice. It holds Undo.
@@ -648,15 +648,6 @@ release-pinned = { $name } sẽ được dùng cho tựa này.
 # Toast when the chosen source or release for a title could not be saved. The reason comes from the database.
 notice-choice-not-saved = Không lưu được lựa chọn đó. { $reason }
 
-# Toast while torrents are running but the connection check failed, and the settings say to warn only.
-torrent-check-failed-running = Kiểm tra kết nối không thành công. Torrent vẫn đang chạy.
-
-# Note on the sources screen: torrents are waiting for the VPN guard. The reason comes from the guard.
-torrent-vpn-waiting = Torrent sẽ bắt đầu sau khi chốt bảo vệ VPN đạt yêu cầu. { $reason }
-
-# Note on the sources screen: the VPN guard has no verdict yet.
-torrent-vpn-unverified = Torrent sẽ bắt đầu sau khi chốt bảo vệ VPN đạt yêu cầu. Kết nối chưa được xác minh.
-
 # Error: the link or file given to open is not a magnet link, an info hash or a torrent file.
 torrent-link-unusable = Đây không phải liên kết magnet hay tệp torrent.
 
@@ -671,15 +662,6 @@ torrent-interface-closed = Kaeri đã đóng trước khi torrent bắt đầu.
 
 # Error: the torrent session could not start. The reason comes from the torrent engine.
 torrent-session-failed = Không khởi động được phiên torrent. { $reason }
-
-# Toast when torrents are up but no operating-system firewall rule backs the VPN guard. Terminal only: the engine never sends it to the apps.
-torrent-no-kill-switch = Trên thiết bị này, không có gì ngăn lưu lượng torrent nếu VPN bị ngắt. Hãy chạy "kaeri --doctor" để thiết lập.
-
-# Toast when the connection check could not run. The reason comes from the VPN settings.
-torrent-not-checked = Không kiểm tra được kết nối. { $reason }
-
-# Note on the sources screen after the source chain is rebuilt with torrents on.
-sources-reloaded-torrents-pending = Các nguồn đã tải lại. Torrent sẽ bắt đầu sau khi chốt bảo vệ VPN đạt yêu cầu.
 
 # Note on the sources screen after the source chain is rebuilt with torrents off.
 sources-reloaded-torrents-off = Torrent đang tắt. Phiên đã dừng.
@@ -792,12 +774,6 @@ notice-sign-out-failed = Không đăng xuất được khỏi { $tracker }. Hãy
 # Toast when a setting could not be stored. The cause says why and what to do.
 notice-not-saved-because = Không lưu được cài đặt đó. { $cause }
 
-# Toast when the torrent protection choice was saved.
-notice-protection-saved = Đã lưu cài đặt bảo vệ torrent.
-
-# Toast when the torrent protection could not be checked. The cause says why.
-notice-protection-not-checked = Không kiểm tra được bảo vệ torrent. { $cause }
-
 # Toast when the proxy's password could not be stored. The reason comes from the system.
 notice-proxy-password-not-kept = Không giữ được mật khẩu proxy. Hãy nhập lại để thử lưu. { $reason }
 
@@ -809,9 +785,6 @@ notice-show-not-reset = Không đặt lại được cài đặt của bộ phim
 
 # Toast when a subtitle choice names subtitles the show has not used.
 notice-show-no-such-subtitles = Không lưu được lựa chọn phụ đề đó. Bộ phim này chưa từng dùng phụ đề đó.
-
-# Toast while torrents are held until the connection check passes.
-notice-torrents-waiting-for-check = Torrent đang chờ kiểm tra kết nối đạt lại.
 
 # Toast when the mapping data downloads work again after a failure.
 notice-mapping-data-refreshed = Đã làm mới dữ liệu ánh xạ.
@@ -830,12 +803,6 @@ notice-episodes-aired =
 
 # Toast when a new release of Kaeri is out, on the terminal app. The command is not translated. Terminal only: the engine never sends it to the apps.
 notice-update-available = Đã có bản { $tag }. Chạy kaeri --update để cài đặt.
-
-# The reason a setting was refused until the person confirms having no protection.
-cause-confirm-no-protection = Hãy xác nhận trước rằng bạn muốn không dùng bảo vệ nào.
-
-# The reason a setting was refused until the person confirms the "warn only" choice.
-cause-confirm-warn-only = Hãy xác nhận trước rằng bạn chỉ muốn được cảnh báo.
 
 # The reason a proxy was refused: it has no host or no port.
 cause-proxy-needs-address = Proxy cần có máy chủ và cổng.
@@ -906,26 +873,8 @@ crash-notice = Kaeri đã đóng sau một sự cố.
 # The same notice on the TV, which has no button.
 crash-notice-tv = Kaeri đã đóng sau một sự cố. Bạn có thể báo cáo trong Cài đặt, Giới thiệu.
 
-# Note under the connection-check group of the torrents dialog: what the check does.
-torrents-linux-check-note = Kaeri kiểm tra nơi lưu lượng torrent đi ra khi torrent bắt đầu và mỗi phút khi đang chạy, rồi tạm dừng torrent nếu kiểm tra thất bại. VPN hoặc proxy của bạn mới là thứ bảo vệ bạn.
-
-# Confirmation text when choosing "Warn only" for a failed check.
-torrents-linux-warn-confirm = Kaeri sẽ cảnh báo thay vì tạm dừng. Nếu VPN hoặc proxy ngừng hoạt động, người khác có thể thấy địa chỉ IP của bạn.
-
-# Status line once the protection has been checked and saved.
-torrents-linux-protection-saved = Đã lưu cài đặt bảo vệ torrent
-
-# Title of the dialog that turns torrents on.
-torrents-linux-turn-on-title = Bật torrent
-
-# Title of the dialog that changes what protects torrents.
-torrents-linux-protect-title = Bảo vệ torrent
-
 # Title of the dialog that edits the proxy.
 torrents-linux-edit-proxy-title = Sửa proxy
-
-# Button that turns torrents on in the dialog.
-torrents-linux-turn-on-button = Bật
 
 # Seeding row: time left until the goal, in a span already worded ("18h", "1d 6h").
 downloads-linux-seed-left = Còn { $span }
@@ -1139,12 +1088,6 @@ settings-notify-note-on = Một thông báo khi tập mới của phim trong dan
 
 # Preview note for new-episode notifications when they are off.
 settings-notify-note-off = Tắt. Chỉ những phim được bật trong cài đặt riêng mới gửi thông báo.
-
-# Heading of the preview note beside the sources settings while torrents are on.
-settings-connection-check-title = Kiểm tra kết nối
-
-# Preview note beside the sources settings while torrents are on.
-settings-connection-check-note = Kaeri kiểm tra nơi lưu lượng torrent đi ra khi một torrent bắt đầu và mỗi phút trong khi nó chạy, rồi tạm dừng torrent nếu kiểm tra thất bại. VPN hoặc proxy của bạn mới là thứ bảo vệ bạn.
 
 # Preview note beside the accounts settings.
 settings-accounts-note = Kaeri hoạt động không cần tài khoản. Lịch sử xem của bạn vẫn ở trên máy tính này khi bạn đăng xuất.
@@ -3034,9 +2977,6 @@ sources-too-small = Cần cửa sổ lớn hơn.
 # Heading shown on the Sources screen when there is nothing to list, in the alert colour.
 sources-none-available = Không có các nguồn khả dụng
 
-# Reason shown when no source is available and the engine gave none. The setting is the name of a key in the config file and is not translated.
-sources-torrents-off = Torrent đang tắt cho đến khi đặt { $setting } và một chế độ VPN.
-
 # Column heading in the Sources table: the name of the source.
 sources-column-source = Nguồn
 
@@ -3082,14 +3022,11 @@ sources-state-down = Không phản hồi
 # State of a source: it has not been tried yet.
 sources-state-unchecked = Chưa kiểm tra
 
-# State of a source: it works but local rules (the VPN check) are withholding it.
+# State of a source: it works but waits for the proxy check.
 sources-state-held-back = Bị giữ lại
 
 # Heading of the line about { -plugin-store-pl }.
 sources-stores-title = Các cửa hàng plugin
-
-# Under the heading when no { -plugin-store } is joined or the list has not arrived.
-sources-stores-invite = Các plugin do người bạn chia sẻ. Tham gia bằng liên kết mời.
 
 # Part of the { -plugin-store } summary: how many { -plugin-store-pl } are joined.
 sources-stores-joined = { $count } đã tham gia
@@ -3141,27 +3078,6 @@ sources-meta-skipped-until = Bỏ qua đến { $time } ({ $cause })
 
 # Detail for a metadata service whose wait is over: it is asked again when something needs it. The cause is the service's own error text.
 sources-meta-next-request = Sẽ thử lại ở yêu cầu kế tiếp ({ $cause })
-
-# Header chip while the VPN check is running. The mark is a status glyph.
-sources-vpn-checking = VPN { $mark }  Đang kiểm tra
-
-# Header chip when the VPN protects the connection. The name is where traffic leaves the network.
-sources-vpn-protected = VPN { $mark }  { $exit }
-
-# Header chip when the VPN check found traffic leaving outside the tunnel.
-sources-vpn-leaking = VPN { $mark }  Rò rỉ
-
-# Header chip when the VPN check could not be completed.
-sources-vpn-unreachable = VPN { $mark }  Không kết nối được
-
-# Header chip when the configuration runs with no VPN on purpose.
-sources-vpn-unprotected = VPN { $mark }  Không được bảo vệ
-
-# Notice when the VPN check finds a leak and torrents are paused.
-sources-vpn-leak-paused = VPN đang rò rỉ. Torrent tạm dừng cho đến khi VPN được bảo vệ lại.
-
-# Notice when the VPN check cannot be completed and torrents are paused.
-sources-vpn-unreachable-paused = Không kết nối được VPN. Torrent tạm dừng cho đến khi kết nối được.
 
 # Notice after the person submits an empty value for a text setting.
 settings-unchanged = Giữ nguyên. Xóa dòng trong config.toml để bỏ thiết lập.
@@ -3231,12 +3147,6 @@ settings-value-download-dir-default = Giữ cùng bộ nhớ đệm torrent
 
 # Value of the Syncplay room setting when no room is set.
 settings-value-room-unset = Chưa đặt (cần cho các buổi xem chung)
-
-# Value of the VPN mode setting: traffic goes through a proxy server (SOCKS5).
-settings-value-vpn-socks5 = Proxy
-
-# Value of the VPN mode setting: a tunnel set up outside the app.
-settings-value-vpn-external = Bên ngoài
 
 # Value of the seeding ratio setting: seed until the ratio is reached.
 settings-value-seed-ratio = Đến tỉ lệ { $ratio }
@@ -3370,9 +3280,6 @@ settings-label-seed-hours = Chia sẻ tối đa
 # Settings row: the cap on torrent upload speed.
 settings-label-upload-limit = Giới hạn tải lên
 
-# Settings row: how traffic is protected by a VPN.
-settings-label-vpn-mode = Chế độ VPN
-
 # Settings row: where sign-in tokens are kept.
 settings-label-token-storage = Lưu trữ token
 
@@ -3396,9 +3303,6 @@ settings-label-downloads-on-cellular = Tải xuống khi dùng dữ liệu di đ
 
 # Settings row: whether torrents run on a mobile connection.
 settings-label-torrents-on-cellular = Torrent khi dùng dữ liệu di động
-
-# Settings row: what happens to torrents when the VPN check fails.
-settings-label-vpn-on-failure = Khi kiểm tra thất bại
 
 # Settings row: whether the app notifies of new episodes.
 settings-label-episode-notifications = Thông báo tập mới
@@ -3451,9 +3355,6 @@ settings-note-download-dir = Nhấn Enter để nhập đường dẫn. Áp dụ
 # Note under the merge subtitles row.
 settings-note-merge-subtitles = Áp dụng cho lần tải kế tiếp khi hoàn tất.
 
-# Note under the keep seeding row. It is a privacy choice.
-settings-note-keep-seeding = Khi bật, bạn vẫn nằm trong danh sách người chia sẻ. Áp dụng ngay.
-
 # Note under the after each download row.
 settings-note-download-hook = Nhấn Enter để nhập lệnh. Lệnh chạy sau mỗi lần tải xong.
 
@@ -3480,12 +3381,6 @@ settings-note-presence-title = Tắt sẽ hiện “Đang xem anime” mà khôn
 
 # Note under the rich presence row.
 settings-note-presence-rich = Thêm ảnh bìa, thanh tiến độ và liên kết AniList. Cần bật hiện tên phim.
-
-# Note under the torrent playback row.
-settings-note-torrents = Cần cấu hình VPN. Có hiệu lực ngay.
-
-# Note under the VPN mode row.
-settings-note-vpn-mode = Sửa config.toml để đổi thiết lập này. Tắt bảo vệ cần một bước xác nhận riêng.
 
 # Note under the seed after watching row.
 settings-note-seed-ratio = Giữ các tập đã xem vẫn được chia sẻ khi Kaeri đang mở.
@@ -6097,9 +5992,6 @@ onboarding-own-heading = Có phim của riêng bạn?
 # Heading of the group that joins a store with an invite.
 onboarding-invite-heading = Có liên kết mời?
 
-# Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-onboarding-where-stores = Các plugin đến từ các cửa hàng plugin. Một cửa hàng plugin do một người vận hành cho những người họ mời, nên bạn tham gia bằng liên kết mời từ chủ sở hữu.
-
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = Dùng thử ngay
 
@@ -8016,9 +7908,6 @@ settings-reset = Đặt lại cài đặt
 # Title of the confirmation for resetting the settings.
 settings-reset-title = Đặt lại cài đặt?
 
-# Line under it. The old settings file is moved aside, not deleted.
-settings-reset-detail = Mọi cài đặt quay về mặc định, kể cả VPN và proxy. Lịch sử xem vẫn còn, và tệp cài đặt cũ được giữ lại.
-
 # Notice once Kaeri has started again on the default settings. The file is the name the old settings file is kept under, beside the new one, such as config.damaged-2026-10-30.
 settings-reset-done = Cài đặt đã về mặc định. Tệp cũ được giữ với tên { $file }.
 
@@ -8187,9 +8076,6 @@ source-note-gone = Chưa cài đặt
 # Under a source that found more than one show by this name and could not tell which is this one.
 source-note-ambiguous = Không khớp được tựa này
 
-# Under a source held back by the VPN check in Settings.
-source-note-held-back = Bị giữ lại bởi kiểm tra VPN
-
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 source-picker-releases = Các bản phát hành
 
@@ -8232,12 +8118,6 @@ sources-empty-detail = Tham gia một cửa hàng plugin bằng liên kết mờ
 # Row for the built-in torrent source.
 sources-torrents = Torrent
 
-# Label of a source that is not a plugin and controls this device.
-sources-remote = Từ xa
-
-# Origin: set in the config file.
-sources-origin-config = Đặt trong tệp cấu hình
-
 # Origin: built into the app.
 sources-origin-built-in = Có sẵn trong ứng dụng
 
@@ -8274,16 +8154,13 @@ sources-detail-not-answering = Không phản hồi. { $why }
 # Status line: no answer.
 sources-detail-not-answering-plain = Không phản hồi.
 
-# Status line: held back by the check.
-sources-detail-held-back = Bị giữ lại cho đến khi kiểm tra kết nối đạt.
-
 # Status line: disabled.
 sources-detail-disabled = Đã tắt. Vẫn giữ vị trí nhưng không được thử.
 
 # Status line: the source is gone.
 sources-detail-gone = Nguồn này không còn ở đây.
 
-# Status line: the site did not answer.
+# Status line: the source did not answer.
 sources-detail-site = Nguồn không phản hồi.
 
 # Row label: version.
@@ -8348,9 +8225,6 @@ sources-torrent-source = Phát torrent
 
 # Row: where the plugin's page stands.
 sources-source-order-row = Thứ tự ưu tiên
-
-# Note under the facts on the Torrents page in Sources. Torrents are built in, not a plugin.
-sources-torrents-note = Torrent là một phần của Kaeri, không phải plugin. Mục bảo vệ lưu lượng của chúng, kiểm tra kết nối và chia sẻ được đặt trong Cài đặt, ở mục Các nguồn.
 
 # Over the { -source } list while the { -source-pl } are set up again after a change.
 sources-rebuilding = Các nguồn đang được thiết lập lại
@@ -8544,9 +8418,6 @@ sources-your-intro = Tập phim được phát từ nguồn đầu tiên có ch�
 # Heading of the section that lists the plugins.
 sources-section-plugins = Các plugin
 
-# Section heading: Internet Archive collections and PeerTube channels.
-sources-section-catalogues = Danh mục miễn phí
-
 # Link in the empty state.
 sources-add-demo = Thêm bản demo
 
@@ -8558,9 +8429,6 @@ stores-joined = Đã tham gia
 
 # Title of the empty list.
 stores-empty-title = Chưa có các cửa hàng plugin
-
-# Line under the empty title.
-stores-empty-detail = Các cửa hàng plugin do những người bạn quen điều hành. Tham gia bằng liên kết mời mà chủ của nó gửi cho bạn.
 
 # Line under the title of the screen when plugins add sources.
 stores-intro = Các plugin thêm các nguồn. Trước khi bạn cài đặt, mỗi thứ đều liệt kê các máy chủ mà nó kết nối tới.
@@ -9049,9 +8917,6 @@ stores-offers-plugins =
 # Button of a notice that opens the plugin stores page.
 notice-open-stores = Mở các cửa hàng plugin
 
-# Explainer on the empty plugin stores page.
-stores-what-is = Cửa hàng plugin là một máy chủ nhỏ do một người vận hành cho những người họ mời. Nó cung cấp các nguồn dưới dạng các plugin. Kaeri không vận hành và không liệt kê các cửa hàng plugin nào, nên bạn tham gia bằng liên kết mời từ chủ sở hữu.
-
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = Cửa hàng plugin là gì?
 
@@ -9370,63 +9235,6 @@ torrents-title = Torrent
 # Label and short value for the switch.
 torrents-on = Đang bật
 
-# Line under the switch while torrents are off.
-torrents-off-detail = Mặc định là tắt. Khi bật, trước tiên ứng dụng sẽ hỏi cách bảo vệ kết nối của bạn.
-
-# Line explaining the risk, before torrents start.
-torrents-risk = Người khác có thể thấy địa chỉ IP của bạn khi bạn tải và chia sẻ một torrent. Hãy chọn cách bảo vệ trước khi torrent bắt đầu.
-
-# Line in the Apple sources screen: torrents belong to the app, not to a plugin.
-torrents-not-a-plugin = Torrent là một phần của Kaeri, không phải một plugin. Cách bảo vệ lưu lượng, kiểm tra kết nối và seeding được đặt trong Cài đặt, mục Các nguồn.
-
-# Label of the choice of protection.
-torrents-protect-with = Bảo vệ bằng
-
-# Option: no protection.
-torrents-protect-none = Không bảo vệ
-
-# Option: a proxy.
-torrents-protect-proxy = Proxy
-
-# Option: a VPN already running on the device.
-torrents-protect-vpn = VPN
-
-# Line under the proxy option.
-torrents-protect-proxy-detail = Lưu lượng torrent đi qua một proxy mà bạn tự chạy hoặc thuê.
-
-# Line under the VPN option.
-torrents-protect-vpn-detail = Dùng VPN đang chạy trên thiết bị này.
-
-# Line under the no-protection option.
-torrents-protect-none-detail = Địa chỉ của bạn hiển thị với mọi người trong torrent.
-
-# Line when no protection is set.
-torrents-protect-none-note = Khi không có bảo vệ, Kaeri không kiểm tra kết nối.
-
-# Summary: a proxy protects. Host and port are already formatted.
-torrents-summary-proxy-at = Được bảo vệ bởi proxy SOCKS5 tại { $host }:{ $port }.
-
-# Summary: a proxy protects, address not shown.
-torrents-summary-proxy = Được bảo vệ bởi proxy SOCKS5.
-
-# Summary: a VPN protects.
-torrents-summary-vpn = Được bảo vệ bởi VPN trên thiết bị này.
-
-# Summary: nothing protects.
-torrents-summary-none = Chưa được bảo vệ. Địa chỉ của bạn hiển thị với mọi người trong torrent.
-
-# Title of the question when torrents are turned on without protection.
-torrents-unprotected-title = Dùng torrent không có bảo vệ?
-
-# Line under it.
-torrents-unprotected-detail = Người khác có thể thấy địa chỉ IP của bạn khi bạn tải và chia sẻ torrent, và Kaeri không kiểm tra kết nối.
-
-# Button that confirms turning torrents on without protection.
-torrents-turn-on-unprotected = Bật mà không bảo vệ
-
-# Button that confirms using no protection.
-torrents-use-unprotected = Dùng mà không bảo vệ
-
 # Label of the proxy host field.
 torrents-proxy-host = Máy chủ proxy
 
@@ -9442,9 +9250,6 @@ torrents-proxy-password = Mật khẩu
 # Line under the password field.
 torrents-password-keep = Để trống mật khẩu để giữ mật khẩu đã lưu.
 
-# Line under the proxy form: what happens while the new proxy is checked.
-torrents-proxy-keeps-saved = Torrent tiếp tục dùng proxy đã lưu cho đến khi proxy mới vượt qua kiểm tra kết nối.
-
 # Line when the host or port is wrong.
 torrents-proxy-invalid = Proxy cần có máy chủ và cổng từ 1 đến 65535.
 
@@ -9454,95 +9259,20 @@ torrents-checking-proxy = Đang kiểm tra proxy…
 # Notice after the proxy was saved.
 torrents-proxy-saved = Đã lưu proxy
 
-# Why a save was refused: traffic left outside the proxy.
-torrents-left-outside-proxy = Lưu lượng torrent đi ra ngoài proxy này
-
-# Why a save was refused: the check could not run through the proxy.
-torrents-check-not-made-proxy = Không thể kiểm tra qua proxy này
-
 # Notice when a proxy was not saved. The reason is a sentence fragment.
 torrents-proxy-not-saved = Chưa lưu. { $why }, nên proxy đã lưu vẫn được giữ.
-
-# Notice when protection was not saved. The reason is a sentence fragment.
-torrents-protection-not-saved = Chưa lưu. { $why }, nên cách bảo vệ đã lưu vẫn được giữ.
 
 # Notice when torrents stayed off. The reason is a sentence fragment.
 torrents-still-off = Torrent vẫn tắt. { $why }.
 
-# Label of the index address field.
-torrents-index = Chỉ mục torrent
-
-# Line under the index field.
-torrents-index-detail = Địa chỉ tìm kiếm RSS mà Kaeri dùng để lấy torrent.
-
-# Hint inside the index field.
-torrents-index-hint = https://…/?q=…
-
-# Line when no index address is set.
-torrents-index-needed = Torrent cần có địa chỉ chỉ mục.
-
-# Line when the index address has the wrong scheme.
-torrents-index-scheme = Dùng địa chỉ http hoặc https.
-
-# Notice after the index was saved.
-torrents-index-saved = Chỉ mục torrent đã lưu.
-
-# Label of the choice of what to do when a check fails.
-torrents-if-check-fails = Khi kiểm tra thất bại
-
-# Title of the question that asks whether torrents may keep running.
-torrents-keep-running-title = Giữ torrent chạy nếu kiểm tra thất bại?
-
-# Line under the question: what the choice is about.
-torrents-keep-running-detail = Điều gì xảy ra với torrent khi kiểm tra phát hiện lưu lượng đi ra ngoài VPN hoặc proxy của bạn.
-
-# Option: pause torrents.
-torrents-fail-pause = Tạm dừng torrent
-
-# Option: stop torrents.
-torrents-fail-stop = Dừng torrent
-
-# Option: only warn.
-torrents-fail-warn = Chỉ cảnh báo
-
-# Result of the choice: torrents run.
-torrents-fail-warn-result = Torrent tiếp tục chạy.
-
-# Result of the choice: torrents stop.
-torrents-fail-stop-result = Torrent đã dừng.
-
-# Result of the choice: torrents pause.
-torrents-fail-pause-result = Torrent đã tạm dừng.
-
-# Label of the last check.
-torrents-last-check = Lần kiểm tra gần nhất
-
-# Check passed. The exit is where the traffic leaves from, already formatted.
-torrents-check-passed-exit = Đi ra qua { $exit }
-
 # Check passed.
 torrents-check-passed = Đạt
-
-# Check running: the line.
-torrents-check-running-line = Đang kiểm tra lưu lượng torrent đi ra từ đâu
 
 # Check running: the short word.
 torrents-check-running = Đang kiểm tra
 
-# Check failed: traffic left outside. The consequence follows.
-torrents-check-leaked = Lưu lượng đi ra ngoài phần bảo vệ. { $then }
-
-# Check failed: the check could not be made. The consequence follows.
-torrents-check-unmade = Không thể thực hiện kiểm tra. { $then }
-
 # Short word: the check failed.
 torrents-check-failed = Thất bại
-
-# Line: no protection is set, so nothing was checked.
-torrents-check-none-line = Chưa đặt cách bảo vệ nào, nên không có gì để kiểm tra.
-
-# Short word: unprotected.
-torrents-check-none = Không bảo vệ
 
 # Line: no check yet.
 torrents-check-waiting-line = Chưa kiểm tra
@@ -9582,12 +9312,6 @@ torrents-page-unreadable = TV không đọc được nội dung này. Quét lạ
 
 # Line when the page needs script.
 torrents-page-needs-script = Trang này cần JavaScript để gửi biểu mẫu tới TV một cách an toàn.
-
-# Under the proxy form when turning torrents on: what the app checks, and that the VPN or proxy is what protects.
-torrents-check-note = Kaeri kiểm tra lưu lượng torrent đi ra từ đâu khi torrent bắt đầu và mỗi phút trong lúc chạy, và tạm dừng torrent nếu kiểm tra thất bại. VPN hoặc proxy của bạn mới là thứ bảo vệ bạn.
-
-# Notice after the protection was saved.
-torrents-protection-saved = Đã lưu cách bảo vệ torrent
 
 # Menu item and button: open a magnet link or a torrent file the viewer has.
 opened-open = Mở liên kết hoặc tệp

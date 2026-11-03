@@ -43,8 +43,6 @@
 -watch-together-cap = Birlikte izle
 
 # Where releases are looked up.
--torrent-index = torrent dizini
--torrent-index-cap = Torrent dizini
 
 # One downloadable file in a torrent index. Not a place episodes come from.
 -release = sürüm

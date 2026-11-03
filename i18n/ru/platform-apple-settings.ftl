@@ -31,7 +31,6 @@ settings-folder-default = Хранится в кеше торрентов
 settings-storage-unwatched = Ещё не просмотрено
 settings-storage-used = Загрузки занимают { $size }.
 settings-storage-used-free = Загрузки занимают { $size }. Свободно на диске: { $free }.
-settings-torrents-warn-note = Режим «Предупреждать» только просит подтвердить действие, как и режим «Без защиты».
 settings-source-count = { $count ->
     [one] { $count } { -source }
     [few] { $count } { -source }а

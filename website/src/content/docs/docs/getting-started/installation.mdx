@@ -114,9 +114,9 @@ on the same network. On Windows and Linux, paired TVs are listed under
 **Settings › Integrations**.
 
 Torrents on the TV are off until you turn them on under **Settings › Sources**. The TV shows a QR
-code that opens a page on your phone, where you type the torrent index and, if you use one, the
-proxy; you can also type them with the TV's keyboard. The proxy is checked before it is saved, as
-in [Torrents and the VPN guard](/docs/guides/torrents-vpn/#in-the-apps).
+code that opens a page on your phone, where you type the proxy, if you use one; you can also
+type it with the TV's keyboard. The proxy is checked before it is saved, as in
+[Torrents](/docs/guides/torrents/#routing-torrent-traffic-through-a-proxy).
 
 ### Windows
 
@@ -331,7 +331,7 @@ cd kaeri
 cargo run --release
 ```
 
-The first build is slow, since BoringSSL, librqbit and a WASM runtime are in the tree, and
+The first build is slow, since librqbit, aws-lc and a WASM runtime are in the tree, and
 incremental after that. The binary ends up at `target/release/kaeri` if you want it on your
 `PATH`.
 

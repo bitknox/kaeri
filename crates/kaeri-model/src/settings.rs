@@ -67,7 +67,11 @@ pub enum SettingKey {
     /// state. Needs the title shown, since every part of it names the show.
     PresenceRich,
     Torrents,
-    VpnMode,
+    /// The proxy torrent traffic goes through, or none. Shown, not written from here: the
+    /// native apps set it with [`Command::SetTorrentProxy`], the terminal in the file.
+    ///
+    /// [`Command::SetTorrentProxy`]: crate::command::Command::SetTorrentProxy
+    TorrentProxy,
     SeedRatio,
     SeedHours,
     UploadLimit,
@@ -94,11 +98,6 @@ pub enum SettingKey {
     DownloadsOnCellular,
     /// Whether torrents run over a cellular connection.
     TorrentsOnCellular,
-    /// What a failed connection check does to torrents: pause them, stop them, or only warn.
-    /// Warn needs an acknowledgement, which only [`Command::SetTorrentProtection`] carries.
-    ///
-    /// [`Command::SetTorrentProtection`]: crate::command::Command::SetTorrentProtection
-    VpnOnFailure,
     /// Whether the app notifies of new episodes of the shows being watched, from
     /// [`Command::CheckNewEpisodes`]. Off by default. A show can turn it off for itself, or on
     /// when it is only planned, with [`ShowSettingKey::NotifyNewEpisodes`]; with this off, no
@@ -202,7 +201,7 @@ impl SettingKey {
         Self::KeepSeeding,
         Self::DownloadHook,
         Self::Torrents,
-        Self::VpnMode,
+        Self::TorrentProxy,
         Self::SeedRatio,
         Self::SeedHours,
         Self::UploadLimit,
@@ -222,14 +221,13 @@ impl SettingKey {
     /// The native apps' own rows, which the terminal's Settings screen does not show: a front
     /// end finds the rows both show among [`Self::ROWS`]. In no order of their own, since each
     /// app lays them out on its own panes; grouped by [`Self::category`] all the same.
-    pub const NATIVE_ROWS: [Self; 18] = [
+    pub const NATIVE_ROWS: [Self; 17] = [
         Self::UpNextCountdown,
         Self::SpoilerProtection,
         Self::DownloadQuality,
         Self::KeepNextEpisodes,
         Self::DownloadsOnCellular,
         Self::TorrentsOnCellular,
-        Self::VpnOnFailure,
         Self::EpisodeNotifications,
         Self::MpvOptions,
         Self::AdultTitles,
@@ -245,7 +243,7 @@ impl SettingKey {
 
     /// Where the file keeps it: the containing table, as the dotted path
     /// `kaeri_core::settings::write_key` takes, and the key. `None` for the two shown and
-    /// never written from here, the VPN mode and where tokens are kept: the file's to change.
+    /// never written from here, the torrent proxy and where tokens are kept: set elsewhere.
     pub const fn path(self) -> Option<(&'static [&'static str], &'static str)> {
         Some(match self {
             Self::Theme => (&["theme"], "mode"),
@@ -312,10 +310,9 @@ impl SettingKey {
             Self::KeepNextEpisodes => (&["downloads"], "keep_next"),
             Self::DownloadsOnCellular => (&["downloads"], "on_cellular"),
             Self::TorrentsOnCellular => (&["providers", "torrent"], "on_cellular"),
-            Self::VpnOnFailure => (&["providers", "torrent", "vpn"], "on_leak"),
             Self::EpisodeNotifications => (&["notifications"], "episodes"),
             Self::MpvOptions => (&["playback"], "mpv_args"),
-            Self::VpnMode | Self::TokenStorage => return None,
+            Self::TorrentProxy | Self::TokenStorage => return None,
         })
     }
 
@@ -435,14 +432,11 @@ impl SettingKey {
             Self::TorrentsOnCellular => {
                 to.providers.torrent.on_cellular = from.providers.torrent.on_cellular;
             }
-            Self::VpnOnFailure => {
-                to.providers.torrent.vpn.on_leak = from.providers.torrent.vpn.on_leak;
-            }
             Self::EpisodeNotifications => {
                 to.notifications.episodes = from.notifications.episodes;
             }
             // Not editable here, so never written and never rolled back.
-            Self::VpnMode | Self::TokenStorage => {}
+            Self::TorrentProxy | Self::TokenStorage => {}
         }
     }
 
@@ -495,14 +489,13 @@ impl SettingKey {
             | Self::KeepNextEpisodes
             | Self::DownloadsOnCellular => "downloads",
             Self::Torrents
-            | Self::VpnMode
+            | Self::TorrentProxy
             | Self::SeedRatio
             | Self::SeedHours
             | Self::UploadLimit
             | Self::SourceOrder
             | Self::TorrentsOnCellular
-            | Self::TorrentsWhileCasting
-            | Self::VpnOnFailure => "sources",
+            | Self::TorrentsWhileCasting => "sources",
             Self::Presence
             | Self::PresenceTitle
             | Self::PresenceRich
@@ -561,7 +554,7 @@ impl SettingKey {
             Self::SeedRatio => "seed after watching",
             Self::SeedHours => "seed for at most",
             Self::UploadLimit => "upload limit",
-            Self::VpnMode => "vpn mode",
+            Self::TorrentProxy => "torrent proxy",
             Self::TokenStorage => "token storage",
             Self::SourceOrder => "source order",
             Self::UpNextCountdown => "up next countdown",
@@ -572,7 +565,6 @@ impl SettingKey {
             Self::KeepNextEpisodes => "keep next episodes",
             Self::DownloadsOnCellular => "downloads on cellular",
             Self::TorrentsOnCellular => "torrents on cellular",
-            Self::VpnOnFailure => "if a check fails",
             Self::AdultTitles => "adult titles",
             Self::EpisodeDiscussions => "episode discussions",
             Self::CommentImages => "load images in comments",
@@ -609,19 +601,11 @@ pub fn while_casting(config: &Config) -> bool {
 /// Whether writing this setting changes which sources exist, and so needs the chain rebuilt.
 ///
 /// Listed rather than inferred: a rebuild tears down a live torrent session, which is far
-/// too blunt to trigger on a guess about a setting. The VPN mode is listed though nothing here
-/// writes it, since it decides whether torrents run at all; the sources switched off by name
-/// and the remote's address, which the file alone sets, have no key to list. What a failed
-/// check does is listed too: the guard reads it as torrent playback comes up, and a choice to stop
-/// rather than pause that waited for the next launch would not be the one in force.
+/// too blunt to trigger on a guess about a setting. The torrent proxy is listed though nothing
+/// here writes it, since the torrent session is built on it; the sources switched off by name
+/// and the remote's address, which the file alone sets, have no key to list.
 pub fn redefines_sources(setting: SettingKey) -> bool {
-    matches!(
-        setting,
-        SettingKey::Torrents
-            | SettingKey::VpnMode
-            | SettingKey::SourceOrder
-            | SettingKey::VpnOnFailure
-    )
+    matches!(setting, SettingKey::Torrents | SettingKey::TorrentProxy | SettingKey::SourceOrder)
 }
 
 // The Settings screen's rules, over the config in effect and the file's: what each row shows and
@@ -688,10 +672,9 @@ pub struct SettingsView {
     /// `mpv_subtitle_options`.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub subtitle_style: Option<crate::subtitle_style::SubtitleStyle>,
-    /// How torrent traffic is kept off the viewer's own address, as the torrent sheet and
-    /// Sources show it. Boxed, as the largest part of a view every settings event carries:
-    /// the bindings see the view itself.
-    pub torrent: Box<crate::protection::ProtectionView>,
+    /// Where torrent traffic goes, directly or through a proxy, as the torrent sheet and
+    /// Sources show it. Boxed, as the bindings see the view itself.
+    pub torrent: Box<crate::proxy::TorrentView>,
 }
 
 /// How many shows set a setting for themselves.
@@ -730,7 +713,7 @@ pub fn view(effective: &Config, saved: &Config) -> SettingsView {
         overridden: Vec::new(),
         notify_switched_on: 0,
         subtitle_style: Some(effective.subtitles.clone().into()),
-        torrent: Box::new(crate::protection::view(&effective.providers.torrent.vpn)),
+        torrent: Box::new(crate::proxy::view(&effective.providers.torrent)),
     }
 }
 
@@ -823,7 +806,7 @@ pub fn step(
     delta: i64,
 ) -> Option<SettingValue> {
     use SettingValue as V;
-    use kaeri_core::config::{DownloadQuality, LeakAction, PlayerUi, ThemeMode, Upscaling};
+    use kaeri_core::config::{DownloadQuality, PlayerUi, ThemeMode, Upscaling};
     use kaeri_core::media::Translation;
 
     let playback = &effective.playback;
@@ -975,22 +958,13 @@ pub fn step(
         SettingKey::FollowSystemCaptions => V::Bool(!effective.subtitles.follow_system),
         SettingKey::SaveCrashReports => V::Bool(!effective.crash_reports.save),
         SettingKey::AskAfterCrash => V::Bool(!effective.crash_reports.ask),
-        // Between the two that need no confirming. Warn is never a step away: it is asked for
-        // with its acknowledgement, and a step from it goes back to the default.
-        SettingKey::VpnOnFailure => V::Str(
-            match effective.providers.torrent.vpn.on_leak {
-                LeakAction::Pause => "stop",
-                LeakAction::Stop | LeakAction::Warn => "pause",
-            }
-            .into(),
-        ),
         // Typed, read-only, or moved on Providers: nothing to step through.
         SettingKey::Subtitles
         | SettingKey::DownloadDir
         | SettingKey::DownloadHook
         | SettingKey::SyncplayServer
         | SettingKey::SyncplayRoom
-        | SettingKey::VpnMode
+        | SettingKey::TorrentProxy
         | SettingKey::TokenStorage
         | SettingKey::SourceOrder
         | SettingKey::MpvOptions => return None,
@@ -1003,7 +977,7 @@ pub fn step(
 /// name it does not know, or a setting that is not written from here.
 pub fn put(config: &mut Config, key: SettingKey, value: &SettingValue) -> bool {
     use SettingValue as V;
-    use kaeri_core::config::{DownloadQuality, LeakAction, PlayerUi, ThemeMode, Upscaling};
+    use kaeri_core::config::{DownloadQuality, PlayerUi, ThemeMode, Upscaling};
     use kaeri_core::media::Translation;
 
     let playback = &mut config.playback;
@@ -1190,31 +1164,14 @@ pub fn put(config: &mut Config, key: SettingKey, value: &SettingValue) -> bool {
         (SettingKey::TorrentsOnCellular, V::Bool(on)) => {
             config.providers.torrent.on_cellular = *on;
         }
-        (SettingKey::VpnOnFailure, V::Str(name)) => {
-            config.providers.torrent.vpn.on_leak = match name.as_str() {
-                "pause" => LeakAction::Pause,
-                "stop" => LeakAction::Stop,
-                "warn" => LeakAction::Warn,
-                _ => return false,
-            };
-        }
         _ => return false,
     }
     true
 }
 
-/// Whether `value` for `key` asks for something that needs confirming first, which a setting
-/// alone cannot carry: warn only, on a failed connection check, which leaves torrents running
-/// on what may be the viewer's own address. Asked for with
-/// [`Command::SetTorrentProtection`](crate::command::Command::SetTorrentProtection) instead,
-/// and refused as a setting.
-pub fn needs_acknowledgement(key: SettingKey, value: &SettingValue) -> bool {
-    matches!((key, value), (SettingKey::VpnOnFailure, SettingValue::Str(name)) if name == "warn")
-}
-
 /// A row's value, as it shows it.
 pub(crate) fn value(effective: &Config, saved: &Config, key: SettingKey) -> String {
-    use kaeri_core::config::{DownloadQuality, LeakAction, PlayerUi};
+    use kaeri_core::config::{DownloadQuality, PlayerUi};
 
     let playback = &effective.playback;
     let torrent = &effective.providers.torrent;
@@ -1286,7 +1243,10 @@ pub(crate) fn value(effective: &Config, saved: &Config, key: SettingKey) -> Stri
         SettingKey::PresenceTitle => on_off(effective.presence.show_title),
         SettingKey::PresenceRich => on_off(effective.presence.rich),
         SettingKey::Torrents => on_off(torrent.enabled),
-        SettingKey::VpnMode => format!("{:?}", torrent.vpn.mode).to_lowercase(),
+        SettingKey::TorrentProxy => match crate::proxy::view(torrent).proxy {
+            Some(proxy) => format!("{}:{}", proxy.host, proxy.port),
+            None => "none".into(),
+        },
         SettingKey::SeedRatio => {
             if torrent.seeding.ratio > 0.0 {
                 format!("until ratio {:.1}", torrent.seeding.ratio)
@@ -1362,12 +1322,6 @@ pub(crate) fn value(effective: &Config, saved: &Config, key: SettingKey) -> Stri
         SettingKey::FollowSystemCaptions => on_off(effective.subtitles.follow_system),
         SettingKey::SaveCrashReports => on_off(effective.crash_reports.save),
         SettingKey::AskAfterCrash => on_off(effective.crash_reports.ask),
-        SettingKey::VpnOnFailure => match torrent.vpn.on_leak {
-            LeakAction::Pause => "pause torrents",
-            LeakAction::Stop => "stop torrents",
-            LeakAction::Warn => "warn only",
-        }
-        .into(),
     }
 }
 
@@ -1377,9 +1331,7 @@ fn change(effective: &Config, saved: &Config, key: SettingKey) -> SettingChange 
     if key.typed() {
         return SettingChange::Typed { text: text(effective, key) };
     }
-    // Deliberately not editable: the VPN mode's `none` requires an explicit
-    // acknowledgement key in the file, and a screen that let you cycle past it with an
-    // arrow key would be a way around friction that exists on purpose.
+    // Not editable here: the proxy takes a form, and token storage is the file's.
     if key.path().is_none() {
         return SettingChange::Fixed;
     }
@@ -1444,10 +1396,6 @@ fn two_state(effective: &Config, saved: &Config, key: SettingKey) -> Option<bool
         S::FollowSystemCaptions => c.subtitles.follow_system,
         S::SaveCrashReports => c.crash_reports.save,
         S::AskAfterCrash => c.crash_reports.ask,
-        // Pause, then stop; warn stands beside stop, a step back from the default.
-        S::VpnOnFailure => {
-            c.providers.torrent.vpn.on_leak != kaeri_core::config::LeakAction::Pause
-        }
         _ => return None,
     })
 }
@@ -1695,7 +1643,7 @@ mod tests {
             }
         }
         // Shown and never written from here: the file's to change.
-        assert_eq!(SettingKey::VpnMode.path(), None);
+        assert_eq!(SettingKey::TorrentProxy.path(), None);
         assert_eq!(SettingKey::TokenStorage.path(), None);
         // What the player remembers in passing is no setting of the screen's.
         for key in ["persisted_speed", "persisted_volume", "tone_mapping"] {
@@ -1730,7 +1678,6 @@ mod tests {
                 (SettingKey::KeepNextEpisodes, "off"),
                 (SettingKey::DownloadsOnCellular, "off"),
                 (SettingKey::TorrentsOnCellular, "off"),
-                (SettingKey::VpnOnFailure, "pause torrents"),
                 (SettingKey::EpisodeNotifications, "off"),
                 (SettingKey::MpvOptions, "none"),
                 (SettingKey::AdultTitles, "off"),
@@ -1784,26 +1731,11 @@ mod tests {
     }
 
     #[test]
-    fn warn_only_is_never_a_step_and_needs_confirming_as_a_setting() {
-        use kaeri_core::config::LeakAction;
+    fn the_proxy_row_shows_where_torrent_traffic_goes() {
         let mut config = Config::default();
-        let warn = SettingValue::Str("warn".into());
-        assert!(needs_acknowledgement(SettingKey::VpnOnFailure, &warn));
-        assert!(!needs_acknowledgement(
-            SettingKey::VpnOnFailure,
-            &SettingValue::Str("stop".into())
-        ));
-        // Pause and stop step between each other; from warn a step goes back to the default.
-        assert_eq!(
-            step(&config, &config, SettingKey::VpnOnFailure, 1),
-            Some(SettingValue::Str("stop".into()))
-        );
-        config.providers.torrent.vpn.on_leak = LeakAction::Warn;
-        assert_eq!(
-            step(&config, &config, SettingKey::VpnOnFailure, -1),
-            Some(SettingValue::Str("pause".into()))
-        );
-        assert_eq!(value(&config, &config, SettingKey::VpnOnFailure), "warn only");
+        assert_eq!(value(&config, &config, SettingKey::TorrentProxy), "none");
+        config.providers.torrent.proxy = Some("socks5://mika:pw@192.0.2.10:1080".into());
+        assert_eq!(value(&config, &config, SettingKey::TorrentProxy), "192.0.2.10:1080");
     }
 
     #[test]
@@ -1837,7 +1769,7 @@ mod tests {
             row(&config, SettingKey::Subtitles),
             SettingChange::Typed { text: "eng".into() }
         );
-        assert_eq!(row(&config, SettingKey::VpnMode), SettingChange::Fixed);
+        assert_eq!(row(&config, SettingKey::TorrentProxy), SettingChange::Fixed);
     }
 
     #[test]
@@ -1847,7 +1779,7 @@ mod tests {
         assert!(!put(&mut config, SettingKey::Quality, &SettingValue::Str("hd".into())));
         assert!(!put(&mut config, SettingKey::Upscaling, &SettingValue::Str("max".into())));
         assert!(!put(&mut config, SettingKey::Quality, &SettingValue::Int(-1)));
-        assert!(!put(&mut config, SettingKey::VpnMode, &SettingValue::Str("none".into())));
+        assert!(!put(&mut config, SettingKey::TorrentProxy, &SettingValue::Str("none".into())));
         assert_eq!(config, before);
 
         assert!(put(&mut config, SettingKey::Upscaling, &SettingValue::Str("sharp".into())));
@@ -1878,9 +1810,8 @@ mod tests {
         // A rebuild tears down a live torrent session, so it must not fire on a setting
         // that has nothing to do with which sources exist.
         assert!(redefines_sources(SettingKey::Torrents));
-        assert!(redefines_sources(SettingKey::VpnMode));
+        assert!(redefines_sources(SettingKey::TorrentProxy));
         assert!(redefines_sources(SettingKey::SourceOrder));
-        assert!(redefines_sources(SettingKey::VpnOnFailure));
 
         assert!(!redefines_sources(SettingKey::Upscaling));
         assert!(!redefines_sources(SettingKey::Quality));

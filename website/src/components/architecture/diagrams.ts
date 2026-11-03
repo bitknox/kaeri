@@ -213,7 +213,7 @@ class Svg {
 const FLOW_TITLE = 'How a title becomes an episode playing, and how it reaches your trackers';
 const FLOW_DESC =
 	'Metadata comes from AniList, then Tenrai, then the cache (kaeri-meta). The ID mapping gives the title an id for each source and each tracker (kaeri-meta). ' +
-	'The sources find a stream through the torrent transport, a self-hosted API or a plugin, in the order you set (kaeri-providers); they are the one volatile layer. ' +
+	'The sources find a stream through the torrent transport or a plugin, in the order you set (kaeri-providers); they are the one volatile layer. ' +
 	'mpv plays it, over JSON IPC (kaeri-player). Progress goes into the history, a SQLite database on your disk and the source of truth (kaeri-store). ' +
 	'Changes to push wait in the outbox, a queue per tracker that is kept while you are offline (kaeri-store), and go to AniList, MyAnimeList, Kitsu, Simkl and Trakt (kaeri-track), under the ids the ID mapping gives each tracker.';
 
@@ -221,7 +221,7 @@ type FlowNode = { tag: string; tagEm?: boolean; label: string; detail: [string, 
 const FLOW: Record<string, FlowNode> = {
 	meta: { tag: 'Stable', label: 'Metadata', detail: ['AniList, then Tenrai,', 'then the cache'], crate: 'kaeri-meta' },
 	map: { tag: 'Stable', label: 'ID mapping', detail: ['the title’s id for', 'sources and trackers'], crate: 'kaeri-meta' },
-	prov: { tag: 'Volatile', tagEm: true, label: 'Sources', detail: ['torrent, remote and', 'plugins, in order'], crate: 'kaeri-providers' },
+	prov: { tag: 'Volatile', tagEm: true, label: 'Sources', detail: ['torrent and', 'plugins, in order'], crate: 'kaeri-providers' },
 	player: { tag: 'Stable', label: 'Player', detail: ['mpv, over JSON IPC', ''], crate: 'kaeri-player' },
 	history: { tag: 'Source of truth', label: 'History', detail: ['SQLite on your disk,', 'no account needed'], crate: 'kaeri-store' },
 	outbox: { tag: 'Durable', label: 'Outbox', detail: ['a queue per tracker,', 'kept while offline'], crate: 'kaeri-store' },

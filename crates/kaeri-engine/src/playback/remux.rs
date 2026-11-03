@@ -1,6 +1,6 @@
 //! Muxing sidecar subtitles into a finished download.
 //!
-//! Fansub releases routinely ship `Episode.mkv` beside `Episode.ass`, or a `Subs/` folder holding
+//! Releases often ship subtitles beside the video: `Episode.mkv` beside `Episode.ass`, or a `Subs/` folder holding
 //! one file per language. That works while the folder structure survives, and stops working the
 //! moment the video is copied anywhere on its own — onto a phone, into a different player, across a
 //! network share. Muxing them in makes the file self-contained.
@@ -17,7 +17,7 @@ use std::path::{Path, PathBuf};
 /// Subtitle extensions worth muxing.
 ///
 /// Text formats only. Muxing an image-based `.sup` into Matroska works but doubles as a trap: it is
-/// large, cannot be restyled, and is nearly always a rip artefact rather than what a fansub shipped.
+/// large, cannot be restyled, and is nearly always an artefact of a different encode rather than what the author shipped.
 const SUBTITLE_EXTENSIONS: &[&str] = &["ass", "ssa", "srt", "vtt"];
 
 /// Folders a release puts its subtitles in.
@@ -99,7 +99,7 @@ pub async fn merge_sidecar_subtitles(video: &Path) -> Result<Merge, RemuxError> 
     if subtitles.is_empty() {
         return Ok(Merge::NothingToDo);
     }
-    // Matroska is the only container here that reliably carries ASS, which is what fansubs use.
+    // Matroska is the only container here that reliably carries ASS, which is the styled subtitle format.
     // Muxing into MP4 would silently convert styling away, so it is refused as nothing-to-do
     // rather than done badly.
     let container =

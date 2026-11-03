@@ -28,7 +28,6 @@ settings-folder-default = トレントのキャッシュに保存
 settings-storage-unwatched = 未視聴
 settings-storage-used = ダウンロードで{ $size }を使用しています。
 settings-storage-used-free = ダウンロードで{ $size }を使用しています。この{ -device }の空きは{ $free }です。
-settings-torrents-warn-note = 「警告のみ」を選ぶと、「保護なし」と同様に、まず確認を求めます。
 settings-source-count = { $count ->
    *[other] { $count }件の{ -source-pl }
  }

@@ -625,7 +625,7 @@ fn hoshikuzu() -> Entry {
         cover_url: Some("https://img.example/cover/hoshikuzu.jpg".into()),
         banner_url: Some("https://img.example/banner/hoshikuzu.jpg".into()),
         genres: vec!["Adventure".into(), "Fantasy".into(), "Slice of Life".into()],
-        available_on: vec!["Hikari Stream".into(), "Nami TV".into()],
+        available_on: vec!["Hikari Library".into(), "Nami TV".into()],
         progress: Some(TitleProgress { done: 3, next: 4 }),
         resume: Some(ResumePoint { position: 812.0, fraction: Some(0.57) }),
         last_aired: Some(Aired { episode: 4, ago: 2 * DAY + 3 * HOUR + 7 * MINUTE + 41 }),
@@ -1405,7 +1405,7 @@ fn kaze_detail() -> Entry {
                    serial in Kumo Monthly, with the town's old station rebuilt shot for shot."
             .into(),
         banner_url: Some("https://img.example/banner/kaze.jpg".into()),
-        available_on: vec!["Hikari Stream".into()],
+        available_on: vec!["Hikari Library".into()],
         season: Some(Season::Summer),
         airing: Some(AiringFact::Airing {
             since: Some(FuzzyDate { year: 2026, month: Some(7), day: Some(3) }),
@@ -1814,7 +1814,7 @@ fn sources(s: &mut Screen) {
         SourceCandidate {
             auto_pick: true,
             ..release(
-                "[Example Group] Hoshikuzu no Tabibito - 04 (1080p)",
+                "Hoshikuzu no Tabibito 04 (1080p)",
                 "index",
                 Some("212 peers"),
                 Some("1.4 GiB"),
@@ -1823,18 +1823,13 @@ fn sources(s: &mut Screen) {
         SourceCandidate {
             dual_audio: true,
             ..release(
-                "[Sample Team] Hoshikuzu no Tabibito 04 [Dual]",
+                "Hoshikuzu no Tabibito 04 (dual audio)",
                 "index",
                 Some("14 peers"),
                 Some("2.1 GiB"),
             )
         },
-        release(
-            "[Test Team] Hoshikuzu no Tabibito - 04",
-            "index",
-            Some("3 peers"),
-            Some("0.9 GiB"),
-        ),
+        release("Hoshikuzu no Tabibito 04 (720p)", "index", Some("3 peers"), Some("0.9 GiB")),
         SourceCandidate {
             dubbed: true,
             ..release("Hoshikuzu no Tabibito — episode 4 (dub)", "yamabiko", None, None)

@@ -28,7 +28,6 @@ settings-folder-default = Disimpan bersama cache torrent
 settings-storage-unwatched = Belum ditonton
 settings-storage-used = { $size } untuk unduhan.
 settings-storage-used-free = { $size } untuk unduhan. { $free } tersedia di { -device } ini.
-settings-torrents-warn-note = Memilih Peringatan saja hanya meminta konfirmasi terlebih dahulu, sama seperti Tanpa perlindungan.
 settings-source-count = { $count ->
    *[other] { $count } { -source }
  }

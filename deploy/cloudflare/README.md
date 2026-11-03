@@ -14,7 +14,7 @@ it to your Cloudflare account. It sets up three things:
 - a D1 database, which keeps members, invites and the plugin list
 - an R2 bucket, which keeps the plugin files
 
-A store for a group of friends stays inside the free tier of all three. Cloudflare may ask for a
+A small store stays inside the free tier of all three. Cloudflare may ask for a
 payment method before it turns on R2 for your account, even though the store's usage is free.
 
 ## Choose a setup code

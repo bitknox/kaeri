@@ -38,6 +38,15 @@ object FixtureTvs {
     fun openLink(browser: FfiTvBrowser, index: Int): String? =
         (browser as? FixtureTvBrowser)?.tvs?.getOrNull(index)?.let { it.pairLink(it.openCode()) }
 
+    /** Has the [index]th fake TV in [browser] send [url] to the phones paired with it; how many it reached. */
+    fun sendLink(browser: FfiTvBrowser, index: Int, url: String): UInt =
+        (browser as FixtureTvBrowser).tvs[index].sendLink(url)
+
+    /** Stops the [index]th fake TV in [browser], as a TV going off the network. */
+    fun stopTv(browser: FfiTvBrowser, index: Int) {
+        (browser as FixtureTvBrowser).tvs[index].stop()
+    }
+
     /**
      * Set up [scene] on [model], whose browse is [fakes]: Bedroom paired first in every scene, then
      * the picker, Living room's code, or Living room playing [play] with its card open, and in the lost

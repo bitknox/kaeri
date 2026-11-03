@@ -755,15 +755,6 @@
   <data name="NoticeChoiceNotSaved" xml:space="preserve">
     <value>Не удалось сохранить выбор. {reason}</value>
   </data>
-  <data name="TorrentCheckFailedRunning" xml:space="preserve">
-    <value>Проверка подключения не прошла. Торренты продолжают работать.</value>
-  </data>
-  <data name="TorrentVpnWaiting" xml:space="preserve">
-    <value>Торренты запустятся, когда пройдёт проверка VPN. {reason}</value>
-  </data>
-  <data name="TorrentVpnUnverified" xml:space="preserve">
-    <value>Торренты запустятся, когда пройдёт проверка VPN. Подключение ещё не проверено.</value>
-  </data>
   <data name="TorrentLinkUnusable" xml:space="preserve">
     <value>Это не магнитная ссылка и не торрент-файл.</value>
   </data>
@@ -778,15 +769,6 @@
   </data>
   <data name="TorrentSessionFailed" xml:space="preserve">
     <value>Не удалось запустить сессию торрентов. {reason}</value>
-  </data>
-  <data name="TorrentNoKillSwitch" xml:space="preserve">
-    <value>Ничто не останавливает торрент-трафик, если VPN отключится. Запустите «kaeri --doctor», чтобы настроить защиту.</value>
-  </data>
-  <data name="TorrentNotChecked" xml:space="preserve">
-    <value>Не удалось проверить подключение. {reason}</value>
-  </data>
-  <data name="SourcesReloadedTorrentsPending" xml:space="preserve">
-    <value>Источники перезагружены. Торренты запустятся, когда пройдёт проверка VPN.</value>
   </data>
   <data name="SourcesReloadedTorrentsOff" xml:space="preserve">
     <value>Торренты выключены. Сессия остановлена.</value>
@@ -905,12 +887,6 @@
   <data name="NoticeNotSavedBecause" xml:space="preserve">
     <value>Не удалось сохранить настройку. {cause}</value>
   </data>
-  <data name="NoticeProtectionSaved" xml:space="preserve">
-    <value>Защита торрентов сохранена.</value>
-  </data>
-  <data name="NoticeProtectionNotChecked" xml:space="preserve">
-    <value>Не удалось проверить защиту торрентов. {cause}</value>
-  </data>
   <data name="NoticeProxyPasswordNotKept" xml:space="preserve">
     <value>Не удалось сохранить пароль прокси. Введите его ещё раз, чтобы попробовать сохранить. {reason}</value>
   </data>
@@ -922,9 +898,6 @@
   </data>
   <data name="NoticeShowNoSuchSubtitles" xml:space="preserve">
     <value>Не удалось сохранить выбор субтитров. Для этого тайтла такие субтитры раньше не использовались.</value>
-  </data>
-  <data name="NoticeTorrentsWaitingForCheck" xml:space="preserve">
-    <value>Торренты ждут, пока проверка подключения снова пройдёт.</value>
   </data>
   <data name="NoticeMappingDataRefreshed" xml:space="preserve">
     <value>Данные сопоставления обновлены.</value>
@@ -949,12 +922,6 @@
   </data>
   <data name="NoticeUpdateAvailable" xml:space="preserve">
     <value>Вышла версия {tag}. Чтобы установить её, выполните kaeri --update.</value>
-  </data>
-  <data name="CauseConfirmNoProtection" xml:space="preserve">
-    <value>Сначала подтвердите, что хотите обойтись без защиты.</value>
-  </data>
-  <data name="CauseConfirmWarnOnly" xml:space="preserve">
-    <value>Сначала подтвердите режим «только предупреждать».</value>
   </data>
   <data name="CauseProxyNeedsAddress" xml:space="preserve">
     <value>Для прокси нужны хост и порт.</value>
@@ -1289,9 +1256,6 @@
   <data name="SettingsPlayerInterface" xml:space="preserve">
     <value>Интерфейс плеера</value>
   </data>
-  <data name="SettingsVpnMode" xml:space="preserve">
-    <value>Режим VPN</value>
-  </data>
   <data name="SettingsTokenStorage" xml:space="preserve">
     <value>Хранение токенов</value>
   </data>
@@ -1361,9 +1325,6 @@
   <data name="SettingsLibmpvLicence" xml:space="preserve">
     <value>Распространяется по лицензии GNU Lesser General Public License, версия 2.1 или новее.</value>
   </data>
-  <data name="TorrentsWarnInstead" xml:space="preserve">
-    <value>Kaeri предупредит вас вместо паузы. Если ваш VPN или прокси не работает, другие люди смогут увидеть ваш IP-адрес.</value>
-  </data>
   <data name="ShowSettingsLabel" xml:space="preserve">
     <value>Настройки: {title}</value>
   </data>
@@ -1388,20 +1349,8 @@
   <data name="SettingsDownloadHigher" xml:space="preserve">
     <value>Высокое</value>
   </data>
-  <data name="TorrentsDialogTurnOn" xml:space="preserve">
-    <value>Включить торренты</value>
-  </data>
-  <data name="TorrentsDialogProtect" xml:space="preserve">
-    <value>Защита торрентов</value>
-  </data>
   <data name="TorrentsDialogEditProxy" xml:space="preserve">
     <value>Изменить прокси</value>
-  </data>
-  <data name="TorrentsDialogTurnOnAction" xml:space="preserve">
-    <value>Включить</value>
-  </data>
-  <data name="TorrentsChoiceSpoken" xml:space="preserve">
-    <value>{label}. {detail}</value>
   </data>
   <data name="SettingsNoteTrailersWindows" xml:space="preserve">
     <value>Трейлеры идут без звука с YouTube, который видит ваш IP-адрес. Не воспроизводятся при лимитном подключении, с выключенными анимациями, в режиме экономии энергии или с Экранным диктором.</value>
@@ -1624,9 +1573,6 @@
   </data>
   <data name="SourcesStatusWorking" xml:space="preserve">
     <value>Готов</value>
-  </data>
-  <data name="SourcesTorrentIndexes" xml:space="preserve">
-    <value>Ищет по торрент-индексам, которые вы включили в настройках.</value>
   </data>
   <data name="SourcesVersionReady" xml:space="preserve">
     <value>Версия {version} готова к установке</value>
@@ -3869,9 +3815,6 @@
   <data name="OnboardingInviteHeading" xml:space="preserve">
     <value>Есть ссылка-приглашение?</value>
   </data>
-  <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>Плагины приходят из магазинов плагинов. Магазин плагинов ведёт один человек для тех, кого он приглашает, поэтому присоединиться можно по ссылке-приглашению от его владельца.</value>
-  </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>Попробуйте сразу</value>
   </data>
@@ -5858,9 +5801,6 @@
   <data name="SettingsResetTitle" xml:space="preserve">
     <value>Сбросить настройки?</value>
   </data>
-  <data name="SettingsResetDetail" xml:space="preserve">
-    <value>Все настройки вернутся к значениям по умолчанию, включая VPN и прокси. История просмотра сохранится, старый файл настроек останется.</value>
-  </data>
   <data name="SettingsResetDone" xml:space="preserve">
     <value>Настройки возвращены к значениям по умолчанию. Старый файл сохранён как {file}.</value>
   </data>
@@ -6035,9 +5975,6 @@
   <data name="SourceNoteAmbiguous" xml:space="preserve">
     <value>Не удалось сопоставить название</value>
   </data>
-  <data name="SourceNoteHeldBack" xml:space="preserve">
-    <value>Задержан проверкой VPN</value>
-  </data>
   <data name="SourcePickerReleases" xml:space="preserve">
     <value>Релизы</value>
   </data>
@@ -6080,12 +6017,6 @@
   <data name="SourcesTorrents" xml:space="preserve">
     <value>Торренты</value>
   </data>
-  <data name="SourcesRemote" xml:space="preserve">
-    <value>Удалённый</value>
-  </data>
-  <data name="SourcesOriginConfig" xml:space="preserve">
-    <value>Задан в файле настроек</value>
-  </data>
   <data name="SourcesOriginBuiltIn" xml:space="preserve">
     <value>Встроен в приложение</value>
   </data>
@@ -6121,9 +6052,6 @@
   </data>
   <data name="SourcesDetailNotAnsweringPlain" xml:space="preserve">
     <value>Не отвечает.</value>
-  </data>
-  <data name="SourcesDetailHeldBack" xml:space="preserve">
-    <value>Задержан, пока не пройдёт проверка соединения.</value>
   </data>
   <data name="SourcesDetailDisabled" xml:space="preserve">
     <value>Выключен. Он сохраняет своё место и не проверяется.</value>
@@ -6208,9 +6136,6 @@
   </data>
   <data name="SourcesSourceOrderRow" xml:space="preserve">
     <value>Порядок проверки</value>
-  </data>
-  <data name="SourcesTorrentsNote" xml:space="preserve">
-    <value>Торренты входят в Kaeri, а не плагин. Защита трафика, проверка соединения и раздача настраиваются в разделе «Источники» в настройках.</value>
   </data>
   <data name="SourcesRebuilding" xml:space="preserve">
     <value>Источники настраиваются заново</value>
@@ -6410,9 +6335,6 @@
   <data name="SourcesSectionPlugins" xml:space="preserve">
     <value>Плагины</value>
   </data>
-  <data name="SourcesSectionCatalogues" xml:space="preserve">
-    <value>Бесплатные каталоги</value>
-  </data>
   <data name="SourcesAddDemo" xml:space="preserve">
     <value>Добавить демо</value>
   </data>
@@ -6424,9 +6346,6 @@
   </data>
   <data name="StoresEmptyTitle" xml:space="preserve">
     <value>Магазины плагинов пока не подключены</value>
-  </data>
-  <data name="StoresEmptyDetail" xml:space="preserve">
-    <value>Магазины плагинов ведут люди, которых вы знаете. Подключиться можно по пригласительной ссылке, которую присылает владелец.</value>
   </data>
   <data name="StoresIntro" xml:space="preserve">
     <value>Плагины добавляют источники. Каждый показывает серверы, с которыми связывается, до установки.</value>
@@ -6950,9 +6869,6 @@
   <data name="NoticeOpenStores" xml:space="preserve">
     <value>Открыть магазины плагинов</value>
   </data>
-  <data name="StoresWhatIs" xml:space="preserve">
-    <value>Магазин плагинов: небольшой сервер, который один человек ведёт для тех, кого приглашает. Он предлагает источники в виде плагины. Kaeri не ведёт магазинов плагинов и не публикует их список, поэтому присоединиться к магазину можно по ссылке-приглашению от его владельца.</value>
-  </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>Что такое магазин плагинов?</value>
   </data>
@@ -7283,63 +7199,6 @@
   <data name="TorrentsOn" xml:space="preserve">
     <value>Торренты включены</value>
   </data>
-  <data name="TorrentsOffDetail" xml:space="preserve">
-    <value>По умолчанию выключены. При включении сначала нужно выбрать защиту соединения.</value>
-  </data>
-  <data name="TorrentsRisk" xml:space="preserve">
-    <value>Другие люди могут видеть ваш IP-адрес, пока вы скачиваете и раздаёте торрент. Выберите защиту до начала работы торрентов.</value>
-  </data>
-  <data name="TorrentsNotAPlugin" xml:space="preserve">
-    <value>Торренты входят в Kaeri, а не в плагин. Защита их трафика, проверка соединения и раздача настраиваются в разделе «Источники».</value>
-  </data>
-  <data name="TorrentsProtectWith" xml:space="preserve">
-    <value>Защита</value>
-  </data>
-  <data name="TorrentsProtectNone" xml:space="preserve">
-    <value>Без защиты</value>
-  </data>
-  <data name="TorrentsProtectProxy" xml:space="preserve">
-    <value>Прокси</value>
-  </data>
-  <data name="TorrentsProtectVpn" xml:space="preserve">
-    <value>VPN</value>
-  </data>
-  <data name="TorrentsProtectProxyDetail" xml:space="preserve">
-    <value>Трафик торрентов идёт через прокси, который вы запускаете или арендуете.</value>
-  </data>
-  <data name="TorrentsProtectVpnDetail" xml:space="preserve">
-    <value>Использует VPN, уже запущенный для этого устройствоа.</value>
-  </data>
-  <data name="TorrentsProtectNoneDetail" xml:space="preserve">
-    <value>Ваш адрес виден всем в торренте.</value>
-  </data>
-  <data name="TorrentsProtectNoneNote" xml:space="preserve">
-    <value>Без защиты Kaeri не проверяет соединение.</value>
-  </data>
-  <data name="TorrentsSummaryProxyAt" xml:space="preserve">
-    <value>Защищено SOCKS5-прокси по адресу {host}:{port}.</value>
-  </data>
-  <data name="TorrentsSummaryProxy" xml:space="preserve">
-    <value>Защищено SOCKS5-прокси.</value>
-  </data>
-  <data name="TorrentsSummaryVpn" xml:space="preserve">
-    <value>Защищено VPN этого устройствоа.</value>
-  </data>
-  <data name="TorrentsSummaryNone" xml:space="preserve">
-    <value>Без защиты. Ваш адрес виден всем в торренте.</value>
-  </data>
-  <data name="TorrentsUnprotectedTitle" xml:space="preserve">
-    <value>Использовать торренты без защиты?</value>
-  </data>
-  <data name="TorrentsUnprotectedDetail" xml:space="preserve">
-    <value>Другие люди могут видеть ваш IP-адрес, пока вы скачиваете и раздаёте торрент, а Kaeri не проверяет соединение.</value>
-  </data>
-  <data name="TorrentsTurnOnUnprotected" xml:space="preserve">
-    <value>Включить без защиты</value>
-  </data>
-  <data name="TorrentsUseUnprotected" xml:space="preserve">
-    <value>Использовать без защиты</value>
-  </data>
   <data name="TorrentsProxyHost" xml:space="preserve">
     <value>Адрес прокси</value>
   </data>
@@ -7355,9 +7214,6 @@
   <data name="TorrentsPasswordKeep" xml:space="preserve">
     <value>Оставьте пароль пустым, чтобы сохранить текущий.</value>
   </data>
-  <data name="TorrentsProxyKeepsSaved" xml:space="preserve">
-    <value>Торренты продолжают использовать сохранённый прокси, пока новый не пройдёт проверку соединения.</value>
-  </data>
   <data name="TorrentsProxyInvalid" xml:space="preserve">
     <value>Прокси нужны адрес и порт от 1 до 65535.</value>
   </data>
@@ -7367,95 +7223,20 @@
   <data name="TorrentsProxySaved" xml:space="preserve">
     <value>Прокси сохранён</value>
   </data>
-  <data name="TorrentsLeftOutsideProxy" xml:space="preserve">
-    <value>Трафик торрентов шёл мимо этого прокси</value>
-  </data>
-  <data name="TorrentsCheckNotMadeProxy" xml:space="preserve">
-    <value>Проверку не удалось провести через этот прокси</value>
-  </data>
   <data name="TorrentsProxyNotSaved" xml:space="preserve">
     <value>Не сохранено. {why}, поэтому остаётся сохранённый прокси.</value>
-  </data>
-  <data name="TorrentsProtectionNotSaved" xml:space="preserve">
-    <value>Не сохранено. {why}, поэтому остаётся прежняя защита.</value>
   </data>
   <data name="TorrentsStillOff" xml:space="preserve">
     <value>Торренты всё ещё выключены. {why}.</value>
   </data>
-  <data name="TorrentsIndex" xml:space="preserve">
-    <value>Торрент-индекс</value>
-  </data>
-  <data name="TorrentsIndexDetail" xml:space="preserve">
-    <value>Адрес RSS-поиска, по которому Kaeri ищет торренты.</value>
-  </data>
-  <data name="TorrentsIndexHint" xml:space="preserve">
-    <value>https://…/?q={{query}}</value>
-  </data>
-  <data name="TorrentsIndexNeeded" xml:space="preserve">
-    <value>Для торрентов нужен адрес индекса.</value>
-  </data>
-  <data name="TorrentsIndexScheme" xml:space="preserve">
-    <value>Используйте адрес http или https.</value>
-  </data>
-  <data name="TorrentsIndexSaved" xml:space="preserve">
-    <value>Торрент-индекс сохранён</value>
-  </data>
-  <data name="TorrentsIfCheckFails" xml:space="preserve">
-    <value>Если проверка не прошла</value>
-  </data>
-  <data name="TorrentsKeepRunningTitle" xml:space="preserve">
-    <value>Продолжать работу торрентов, если проверка не прошла?</value>
-  </data>
-  <data name="TorrentsKeepRunningDetail" xml:space="preserve">
-    <value>Что будет с торрентами, если проверка найдёт трафик вне VPN или прокси.</value>
-  </data>
-  <data name="TorrentsFailPause" xml:space="preserve">
-    <value>Приостанавливать торренты</value>
-  </data>
-  <data name="TorrentsFailStop" xml:space="preserve">
-    <value>Останавливать торренты</value>
-  </data>
-  <data name="TorrentsFailWarn" xml:space="preserve">
-    <value>Только предупреждать</value>
-  </data>
-  <data name="TorrentsFailWarnResult" xml:space="preserve">
-    <value>Торренты продолжат работу.</value>
-  </data>
-  <data name="TorrentsFailStopResult" xml:space="preserve">
-    <value>Торренты остановлены.</value>
-  </data>
-  <data name="TorrentsFailPauseResult" xml:space="preserve">
-    <value>Торренты приостановлены.</value>
-  </data>
-  <data name="TorrentsLastCheck" xml:space="preserve">
-    <value>Последняя проверка</value>
-  </data>
-  <data name="TorrentsCheckPassedExit" xml:space="preserve">
-    <value>Выход через {exit}</value>
-  </data>
   <data name="TorrentsCheckPassed" xml:space="preserve">
     <value>Пройдена</value>
-  </data>
-  <data name="TorrentsCheckRunningLine" xml:space="preserve">
-    <value>Проверяем, откуда выходит трафик торрентов</value>
   </data>
   <data name="TorrentsCheckRunning" xml:space="preserve">
     <value>Проверка</value>
   </data>
-  <data name="TorrentsCheckLeaked" xml:space="preserve">
-    <value>Трафик шёл мимо защиты. {then}</value>
-  </data>
-  <data name="TorrentsCheckUnmade" xml:space="preserve">
-    <value>Проверку не удалось провести. {then}</value>
-  </data>
   <data name="TorrentsCheckFailed" xml:space="preserve">
     <value>Не пройдена</value>
-  </data>
-  <data name="TorrentsCheckNoneLine" xml:space="preserve">
-    <value>Защита не настроена</value>
-  </data>
-  <data name="TorrentsCheckNone" xml:space="preserve">
-    <value>Без защиты</value>
   </data>
   <data name="TorrentsCheckWaitingLine" xml:space="preserve">
     <value>Ещё не проверялось</value>
@@ -7495,12 +7276,6 @@
   </data>
   <data name="TorrentsPageNeedsScript" xml:space="preserve">
     <value>Для безопасной отправки формы на телевизор этой странице нужен JavaScript.</value>
-  </data>
-  <data name="TorrentsCheckNote" xml:space="preserve">
-    <value>Kaeri проверяет, откуда выходит трафик торрентов, когда торрент запускается и каждую минуту во время работы, и приостанавливает торренты, если проверка не проходит. Защищает вас VPN или прокси.</value>
-  </data>
-  <data name="TorrentsProtectionSaved" xml:space="preserve">
-    <value>Защита торрентов сохранена</value>
   </data>
   <data name="OpenedOpen" xml:space="preserve">
     <value>Открыть ссылку или файл</value>

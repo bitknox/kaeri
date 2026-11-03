@@ -183,7 +183,7 @@ struct FixturesPlaybackTests {
     }
 
     /// A start from a config with the player full screen and natural upscaling, on a web
-    /// stream behind a referer lock that the engine's mender fetches: the first frame lifts the
+    /// stream behind a referer lock that the engine's stream proxy fetches: the first frame lifts the
     /// starting screen, and the controls come up.
     @Test func aWebStreamInFullScreenGetsPastTheStartingScreen() async throws {
         let server = try StreamServer(directory: try Self.webEpisode(), referer: "https://lantern-archive.example/")
@@ -222,8 +222,8 @@ struct FixturesPlaybackTests {
         // mpv's cache of the stream, reported to the engine and said back for the seek line.
         try await until("the buffered ranges", timeout: .seconds(10)) { !model.buffered.isEmpty }
         #expect(model.buffered.allSatisfy { $0.end > $0.start })
-        // Hovering the seek line: the hidden mpv reads the mended stream, from the engine's
-        // thumbnails address through the mender, and shows a frame.
+        // Hovering the seek line: the hidden mpv reads the proxied stream, from the engine's
+        // thumbnails address through the proxy, and shows a frame.
         model.hover(at: 9)
         try await until("the preview's frame", timeout: .seconds(15)) { model.preview.ready }
         #expect(model.thumbnails?.hasPrefix("http://127.0.0.1:") == true)

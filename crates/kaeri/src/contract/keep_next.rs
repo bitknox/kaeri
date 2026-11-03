@@ -1,7 +1,8 @@
-//! Keep next: the next episodes of the shows being watched, queued ahead of the viewer as they
-//! move on — on start, as the number to keep changes, as an episode is watched or played to its
-//! end, and as a list sync moves a show — and not while downloads wait; and let go of a day after
-//! they are watched.
+//! Keep next: the next episodes of a show being watched, queued ahead of the viewer only as an
+//! episode of that show starts or finishes (counted watched, played to its end, or marked
+//! watched on its own), and not while downloads wait; and let go of a day after they are
+//! watched. Nothing else queues them: not a launch, a change of setting, a mark of many episodes,
+//! a list sync or the new-episode check.
 //!
 //! Off in every other test, as the rest of the engine's own work is; on here, with the device
 //! taken to have a terabyte free. Nothing starts a torrent: the harness has no session, so what
@@ -57,6 +58,17 @@ fn keep(n: u32) -> Option<String> {
 
 const HOUR: i64 = 3_600;
 
+/// Episode `episode` of `id` starting, as the engine says of a play it has started.
+fn starts(h: &mut Harness, id: AnilistId, episode: &str) {
+    h.player_says(Event::PlaybackStaged {
+        id,
+        title: "Show".into(),
+        episode: episode.into(),
+        episode_title: None,
+        speed: 1.0,
+    });
+}
+
 /// Now, by the wall clock.
 fn now() -> i64 {
     kaeri_store::now()
@@ -110,61 +122,99 @@ fn said(updates: &[Event]) -> Vec<String> {
 }
 
 #[tokio::test]
-async fn on_start_the_episodes_after_where_the_viewer_is_are_queued() {
+async fn nothing_is_queued_on_start() {
     let mut h =
         keeping(Options { config: keep(2), before_start: Some(four_in), ..Options::default() })
             .await;
     h.send(Command::LoadDownloads);
     let updates = h.settle().await;
-    assert_eq!(queue(h.store(), FINISHED), ["5 ahead", "6 ahead"]);
-    assert_eq!(said(&updates), ["5 ahead", "6 ahead"], "the Downloads screen says so");
+    assert!(queue(h.store(), FINISHED).is_empty(), "{:?}", queue(h.store(), FINISHED));
     assert!(toasts(&updates).is_empty(), "quietly: {:?}", toasts(&updates));
 }
 
 #[tokio::test]
-async fn the_number_kept_changing_tops_the_show_up_settings_or_its_own() {
+async fn an_episode_starting_tops_that_show_up_and_no_other() {
+    let mut h = keeping(Options {
+        config: keep(2),
+        before_start: Some(|store| {
+            four_in(store);
+            seed::watched(store, AIRING, 2, now() - 600);
+        }),
+        ..Options::default()
+    })
+    .await;
+    starts(&mut h, FINISHED, "5");
+    let updates = h.settle().await;
+    assert_eq!(queue(h.store(), FINISHED), ["5 ahead", "6 ahead"]);
+    assert_eq!(said(&updates), ["5 ahead", "6 ahead"], "the Downloads screen says so");
+    assert!(queue(h.store(), AIRING).is_empty(), "only the show that started");
+
+    // Started again with nothing new to keep: the one row each.
+    starts(&mut h, FINISHED, "5");
+    h.settle().await;
+    assert_eq!(queue(h.store(), FINISHED), ["5 ahead", "6 ahead"]);
+}
+
+#[tokio::test]
+async fn changing_the_number_kept_or_marking_many_episodes_queues_nothing() {
     let mut h = keeping(Options::default()).await;
     four_in(h.store());
     h.send(Command::SetSetting {
         key: SettingKey::KeepNextEpisodes,
         value: SettingValue::Int(2),
     });
-    h.settle().await;
-    assert_eq!(queue(h.store(), FINISHED), ["5 ahead", "6 ahead"]);
-
     h.send(Command::SetShowSetting {
         id: FINISHED,
         key: ShowSettingKey::KeepNext,
         value: Some(SettingValue::Int(3)),
     });
+    // A season marked at once is not an episode finished.
+    h.send(Command::SetWatched {
+        id: FINISHED,
+        episodes: vec!["5".into(), "6".into()],
+        watched: true,
+    });
     h.settle().await;
-    assert_eq!(queue(h.store(), FINISHED), ["5 ahead", "6 ahead", "7 ahead"]);
+    assert!(queue(h.store(), FINISHED).is_empty(), "{:?}", queue(h.store(), FINISHED));
+
+    // The show's own number, once one of its episodes starts.
+    starts(&mut h, FINISHED, "7");
+    h.settle().await;
+    assert_eq!(queue(h.store(), FINISHED), ["7 ahead", "8 ahead", "9 ahead"]);
 
     // Fewer kept: nothing deleted.
     h.send(Command::StepSetting { key: SettingKey::KeepNextEpisodes, delta: -1 });
     h.send(Command::ResetShowSettings { id: FINISHED });
+    starts(&mut h, FINISHED, "7");
     h.settle().await;
-    assert_eq!(queue(h.store(), FINISHED), ["5 ahead", "6 ahead", "7 ahead"]);
+    assert_eq!(queue(h.store(), FINISHED), ["7 ahead", "8 ahead", "9 ahead"]);
 }
 
 #[tokio::test]
-async fn marking_an_episode_watched_tops_the_show_up_once() {
-    let mut h =
-        keeping(Options { config: keep(2), before_start: Some(four_in), ..Options::default() })
-            .await;
-    h.send(Command::LoadDownloads);
-    h.settle().await;
-    assert_eq!(queue(h.store(), FINISHED), ["5 ahead", "6 ahead"]);
-
+async fn one_episode_marked_watched_tops_that_show_up_once() {
+    let mut h = keeping(Options {
+        config: keep(2),
+        before_start: Some(|store| {
+            four_in(store);
+            seed::watched(store, AIRING, 2, now() - 600);
+        }),
+        ..Options::default()
+    })
+    .await;
     h.send(Command::SetWatched { id: FINISHED, episodes: vec!["5".into()], watched: true });
     h.settle().await;
-    assert_eq!(queue(h.store(), FINISHED), ["5 ahead", "6 ahead", "7 ahead"]);
+    assert_eq!(queue(h.store(), FINISHED), ["6 ahead", "7 ahead"]);
+    assert!(queue(h.store(), AIRING).is_empty(), "only the show marked");
 
-    // Asked again with nothing new to keep: the one row each.
+    // Marked again with nothing new to keep: the one row each.
     h.send(Command::SetWatched { id: FINISHED, episodes: vec!["5".into()], watched: true });
-    h.send(Command::LoadDownloads);
     h.settle().await;
-    assert_eq!(queue(h.store(), FINISHED), ["5 ahead", "6 ahead", "7 ahead"]);
+    assert_eq!(queue(h.store(), FINISHED), ["6 ahead", "7 ahead"]);
+
+    // Marked unwatched: nothing more queued, nothing deleted.
+    h.send(Command::SetWatched { id: FINISHED, episodes: vec!["5".into()], watched: false });
+    h.settle().await;
+    assert_eq!(queue(h.store(), FINISHED), ["6 ahead", "7 ahead"]);
 }
 
 #[tokio::test]
@@ -180,17 +230,17 @@ async fn an_episode_played_to_its_end_or_counted_watched_tops_the_show_up() {
     let ended = Event::playback_ended(true, Ending::Complete { next: None });
     h.playback_says(1_000_001, FINISHED, "5", ended);
     h.settle().await;
-    assert_eq!(queue(h.store(), FINISHED), ["5 ahead", "6 ahead", "7 ahead"]);
+    assert_eq!(queue(h.store(), FINISHED), ["6 ahead", "7 ahead"]);
 
     // Counted watched partway through the credits of 6.
     seed::watched(h.store(), FINISHED, 6, now() + 60);
-    h.player_says(Event::ProgressQueued);
+    h.playback_says(1_000_002, FINISHED, "6", Event::ProgressQueued);
     h.settle().await;
-    assert_eq!(queue(h.store(), FINISHED), ["5 ahead", "6 ahead", "7 ahead", "8 ahead"]);
+    assert_eq!(queue(h.store(), FINISHED), ["6 ahead", "7 ahead", "8 ahead"]);
 }
 
 #[tokio::test]
-async fn a_list_sync_that_moves_a_show_tops_it_up_with_only_what_is_out() {
+async fn a_list_sync_or_the_new_episode_check_queues_nothing() {
     let mut h = keeping(Options {
         config: signed_in_keeping(4),
         signed_in: vec!["anilist"],
@@ -201,8 +251,15 @@ async fn a_list_sync_that_moves_a_show_tops_it_up_with_only_what_is_out() {
     // sixth airs in two days; the finished one completed.
     h.send(Command::SyncNow);
     h.settle().await;
+    h.send(Command::CheckNewEpisodes);
+    h.settle().await;
+    assert!(queue(h.store(), AIRING).is_empty(), "{:?}", queue(h.store(), AIRING));
+    assert!(queue(h.store(), FINISHED).is_empty());
+
+    // Once the viewer starts the airing show's next episode: only what is out.
+    starts(&mut h, AIRING, "4");
+    h.settle().await;
     assert_eq!(queue(h.store(), AIRING), ["4 ahead", "5 ahead"]);
-    assert!(queue(h.store(), FINISHED).is_empty(), "completed, so not being watched");
 }
 
 #[tokio::test]
@@ -211,7 +268,7 @@ async fn nothing_is_kept_while_downloads_wait_on_cellular_or_off_screen() {
     h.send(Command::NetworkPath { cellular: true, constrained: false, offline: false });
     h.settle().await;
     four_in(h.store());
-    h.send(Command::SetWatched { id: FINISHED, episodes: vec!["4".into()], watched: true });
+    starts(&mut h, FINISHED, "5");
     h.settle().await;
     assert!(queue(h.store(), FINISHED).is_empty(), "Wi-Fi only");
 
@@ -221,6 +278,7 @@ async fn nothing_is_kept_while_downloads_wait_on_cellular_or_off_screen() {
     h.settle().await;
     assert!(queue(h.store(), FINISHED).is_empty(), "off screen");
 
+    // In front again: the show asked for while downloads waited, topped up.
     h.send(Command::AppPhase { phase: AppState::Foreground });
     h.settle().await;
     assert_eq!(queue(h.store(), FINISHED), ["5 ahead", "6 ahead"]);
@@ -235,13 +293,14 @@ async fn a_show_set_aside_on_the_list_keeps_its_downloads_and_is_topped_up_no_mo
         ..Options::default()
     })
     .await;
-    h.send(Command::LoadDownloads);
+    starts(&mut h, FINISHED, "5");
     h.settle().await;
     assert_eq!(queue(h.store(), FINISHED), ["5 ahead", "6 ahead"]);
 
     // Paused on the list, however lately it was watched here.
     h.store().replace_library_statuses("anilist", &[(FINISHED, "PAUSED")], now()).unwrap();
-    h.send(Command::SetWatched { id: FINISHED, episodes: vec!["5".into()], watched: true });
+    seed::watched(h.store(), FINISHED, 5, now());
+    starts(&mut h, FINISHED, "6");
     h.settle().await;
     assert_eq!(queue(h.store(), FINISHED), ["5 ahead", "6 ahead"]);
 }
@@ -251,6 +310,7 @@ async fn an_episode_asked_for_is_the_viewers_and_one_kept_ahead_becomes_theirs()
     let mut h =
         keeping(Options { config: keep(2), before_start: Some(four_in), ..Options::default() })
             .await;
+    starts(&mut h, FINISHED, "5");
     h.send(Command::DownloadEpisode { id: FINISHED, episode: "9".into() });
     h.settle().await;
     assert_eq!(queue(h.store(), FINISHED), ["5 ahead", "6 ahead", "9"]);
@@ -265,11 +325,11 @@ async fn an_episode_the_viewer_lets_go_of_is_not_queued_again_until_asked_for() 
     let mut h =
         keeping(Options { config: keep(2), before_start: Some(four_in), ..Options::default() })
             .await;
-    h.send(Command::LoadDownloads);
+    starts(&mut h, FINISHED, "5");
     h.settle().await;
     let six = h.store().download_for(FINISHED, "6").unwrap().unwrap();
     h.send(Command::DownloadCancel { id: six.id });
-    h.send(Command::SetWatched { id: FINISHED, episodes: vec!["4".into()], watched: true });
+    starts(&mut h, FINISHED, "5");
     h.settle().await;
     assert_eq!(queue(h.store(), FINISHED), ["5 ahead"]);
 
@@ -302,9 +362,9 @@ async fn an_episode_kept_ahead_goes_a_day_after_it_is_watched_and_one_asked_for_
     .await;
     h.send(Command::LoadDownloads);
     let updates = h.settle().await;
-    // One a day gone, two the viewer's, three an hour short of a day.
-    assert_eq!(queue(h.store(), FINISHED), ["2", "3 ahead", "5 ahead", "6 ahead"]);
-    assert_eq!(said(&updates), ["2", "3 ahead", "5 ahead", "6 ahead"]);
+    // One a day gone, two the viewer's, three an hour short of a day; nothing queued on start.
+    assert_eq!(queue(h.store(), FINISHED), ["2", "3 ahead"]);
+    assert_eq!(said(&updates), ["2", "3 ahead"]);
     assert!(
         !h.store().download_dismissed(FINISHED, "1").unwrap(),
         "not let go of by the viewer"

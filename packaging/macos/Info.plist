@@ -28,6 +28,6 @@
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>MIT licensed. Kaeri doesn't host any shows. You add your own sources.</string>
+	<string>MIT licensed.</string>
 </dict>
 </plist>

@@ -156,7 +156,15 @@ final class Delegate: NSObject, NSApplicationDelegate {
         }
         print(settled ? "KAERI_READY" : "KaeriDev: did not settle; going on")
         if let shot = options.playerShot {
-            let there = await player.stage(shot, store: store)
+            let there: Bool
+            if !options.frames.isEmpty, MotionDemo.from() == nil, let url = options.snapshot, let window = Snapshot.window {
+                // The player's way in, shot from the moment play is pressed.
+                let staging = Task { await player.stage(shot, store: store) }
+                await frames(of: nil, in: window, to: url)
+                there = await staging.value
+            } else {
+                there = await player.stage(shot, store: store)
+            }
             print(there ? "KaeriDev: the player is at \(shot.rawValue)" : "KaeriDev: the player did not reach \(shot.rawValue)")
         }
         if let scene = PartyScene.named() {

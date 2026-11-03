@@ -683,15 +683,6 @@
   <data name="NoticeChoiceNotSaved" xml:space="preserve">
     <value>Diese Auswahl konnte nicht gespeichert werden. {reason}</value>
   </data>
-  <data name="TorrentCheckFailedRunning" xml:space="preserve">
-    <value>Die Verbindungsprüfung ist fehlgeschlagen. Torrents laufen weiter.</value>
-  </data>
-  <data name="TorrentVpnWaiting" xml:space="preserve">
-    <value>Torrents starten, sobald der VPN-Wächter freigibt. {reason}</value>
-  </data>
-  <data name="TorrentVpnUnverified" xml:space="preserve">
-    <value>Torrents starten, sobald der VPN-Wächter freigibt. Die Verbindung wurde noch nicht geprüft.</value>
-  </data>
   <data name="TorrentLinkUnusable" xml:space="preserve">
     <value>Das ist kein Magnet-Link und keine Torrent-Datei.</value>
   </data>
@@ -706,15 +697,6 @@
   </data>
   <data name="TorrentSessionFailed" xml:space="preserve">
     <value>Die Torrent-Sitzung konnte nicht gestartet werden. {reason}</value>
-  </data>
-  <data name="TorrentNoKillSwitch" xml:space="preserve">
-    <value>Auf diesem Gerät stoppt nichts den Torrent-Verkehr, wenn das VPN ausfällt. Führe „kaeri --doctor“ aus, um das einzurichten.</value>
-  </data>
-  <data name="TorrentNotChecked" xml:space="preserve">
-    <value>Die Verbindung konnte nicht geprüft werden. {reason}</value>
-  </data>
-  <data name="SourcesReloadedTorrentsPending" xml:space="preserve">
-    <value>Quellen neu geladen. Torrents starten, sobald der VPN-Wächter freigibt.</value>
   </data>
   <data name="SourcesReloadedTorrentsOff" xml:space="preserve">
     <value>Torrents sind aus. Die Sitzung wurde beendet.</value>
@@ -827,12 +809,6 @@
   <data name="NoticeNotSavedBecause" xml:space="preserve">
     <value>Diese Einstellung konnte nicht gespeichert werden. {cause}</value>
   </data>
-  <data name="NoticeProtectionSaved" xml:space="preserve">
-    <value>Torrent-Schutz gespeichert.</value>
-  </data>
-  <data name="NoticeProtectionNotChecked" xml:space="preserve">
-    <value>Der Torrent-Schutz konnte nicht geprüft werden. {cause}</value>
-  </data>
   <data name="NoticeProxyPasswordNotKept" xml:space="preserve">
     <value>Das Passwort des Proxys konnte nicht gespeichert werden. Gib es erneut ein, um das Speichern zu versuchen. {reason}</value>
   </data>
@@ -844,9 +820,6 @@
   </data>
   <data name="NoticeShowNoSuchSubtitles" xml:space="preserve">
     <value>Diese Untertitelauswahl konnte nicht gespeichert werden. Die Serie hat diese Untertitel bisher nicht verwendet.</value>
-  </data>
-  <data name="NoticeTorrentsWaitingForCheck" xml:space="preserve">
-    <value>Torrents warten, bis die Verbindungsprüfung wieder besteht.</value>
   </data>
   <data name="NoticeMappingDataRefreshed" xml:space="preserve">
     <value>Zuordnungsdaten aktualisiert.</value>
@@ -865,12 +838,6 @@
   </data>
   <data name="NoticeUpdateAvailable" xml:space="preserve">
     <value>{tag} ist da. Führe kaeri --update aus, um es zu installieren.</value>
-  </data>
-  <data name="CauseConfirmNoProtection" xml:space="preserve">
-    <value>Bestätige zuerst, dass du keinen Schutz willst.</value>
-  </data>
-  <data name="CauseConfirmWarnOnly" xml:space="preserve">
-    <value>Bestätige zuerst, dass du nur gewarnt werden willst.</value>
   </data>
   <data name="CauseProxyNeedsAddress" xml:space="preserve">
     <value>Ein Proxy braucht einen Host und einen Port.</value>
@@ -1175,9 +1142,6 @@
   <data name="SettingsPlayerInterface" xml:space="preserve">
     <value>Oberfläche des Players</value>
   </data>
-  <data name="SettingsVpnMode" xml:space="preserve">
-    <value>VPN-Modus</value>
-  </data>
   <data name="SettingsTokenStorage" xml:space="preserve">
     <value>Speicherort der Anmeldetoken</value>
   </data>
@@ -1241,9 +1205,6 @@
   <data name="SettingsLibmpvLicence" xml:space="preserve">
     <value>Lizenziert unter der GNU Lesser General Public License, Version 2.1 oder später.</value>
   </data>
-  <data name="TorrentsWarnInstead" xml:space="preserve">
-    <value>Kaeri warnt dich, statt anzuhalten. Wenn dein VPN oder Proxy ausgefallen ist, können andere deine IP-Adresse sehen.</value>
-  </data>
   <data name="ShowSettingsLabel" xml:space="preserve">
     <value>Einstellungen für {title}</value>
   </data>
@@ -1268,20 +1229,8 @@
   <data name="SettingsDownloadHigher" xml:space="preserve">
     <value>Höher</value>
   </data>
-  <data name="TorrentsDialogTurnOn" xml:space="preserve">
-    <value>Torrents einschalten</value>
-  </data>
-  <data name="TorrentsDialogProtect" xml:space="preserve">
-    <value>Torrents schützen</value>
-  </data>
   <data name="TorrentsDialogEditProxy" xml:space="preserve">
     <value>Proxy bearbeiten</value>
-  </data>
-  <data name="TorrentsDialogTurnOnAction" xml:space="preserve">
-    <value>Einschalten</value>
-  </data>
-  <data name="TorrentsChoiceSpoken" xml:space="preserve">
-    <value>{label}. {detail}</value>
   </data>
   <data name="SettingsNoteTrailersWindows" xml:space="preserve">
     <value>Trailer werden stumm von YouTube abgespielt, das deine IP-Adresse sieht. Sie werden nicht abgespielt bei getakteter Verbindung, bei ausgeschalteten Animationen, im Energiesparmodus oder wenn Narrator läuft.</value>
@@ -1486,9 +1435,6 @@
   </data>
   <data name="SourcesStatusWorking" xml:space="preserve">
     <value>Bereit</value>
-  </data>
-  <data name="SourcesTorrentIndexes" xml:space="preserve">
-    <value>Sucht in den Torrent-Indexen, die du unter Einstellungen aktiviert hast.</value>
   </data>
   <data name="SourcesVersionReady" xml:space="preserve">
     <value>Version {version} ist bereit</value>
@@ -3623,9 +3569,6 @@
   <data name="OnboardingInviteHeading" xml:space="preserve">
     <value>Einladungslink vorhanden?</value>
   </data>
-  <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>Plugins kommen aus Plugin-Stores. Ein Plugin-Store wird von einer Person für die Leute betrieben, die sie einlädt. Du trittst also mit einem Einladungslink des Besitzers bei.</value>
-  </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>Jetzt ausprobieren</value>
   </data>
@@ -5558,9 +5501,6 @@
   <data name="SettingsResetTitle" xml:space="preserve">
     <value>Einstellungen zurücksetzen?</value>
   </data>
-  <data name="SettingsResetDetail" xml:space="preserve">
-    <value>Jede Einstellung geht auf ihren Standard zurück, auch VPN und Proxy. Dein Verlauf bleibt, und die alte Einstellungsdatei wird aufbewahrt.</value>
-  </data>
   <data name="SettingsResetDone" xml:space="preserve">
     <value>Die Einstellungen sind wieder auf Standard. Die alte Datei wird als {file} aufbewahrt.</value>
   </data>
@@ -5729,9 +5669,6 @@
   <data name="SourceNoteAmbiguous" xml:space="preserve">
     <value>Titel konnte nicht zugeordnet werden</value>
   </data>
-  <data name="SourceNoteHeldBack" xml:space="preserve">
-    <value>Durch die VPN-Prüfung zurückgehalten</value>
-  </data>
   <data name="SourcePickerReleases" xml:space="preserve">
     <value>Releases</value>
   </data>
@@ -5774,12 +5711,6 @@
   <data name="SourcesTorrents" xml:space="preserve">
     <value>Torrents</value>
   </data>
-  <data name="SourcesRemote" xml:space="preserve">
-    <value>Remote</value>
-  </data>
-  <data name="SourcesOriginConfig" xml:space="preserve">
-    <value>In der Konfigurationsdatei festgelegt</value>
-  </data>
   <data name="SourcesOriginBuiltIn" xml:space="preserve">
     <value>Eingebaut</value>
   </data>
@@ -5815,9 +5746,6 @@
   </data>
   <data name="SourcesDetailNotAnsweringPlain" xml:space="preserve">
     <value>Antwortet nicht.</value>
-  </data>
-  <data name="SourcesDetailHeldBack" xml:space="preserve">
-    <value>Wird zurückgehalten, bis die Verbindungsprüfung besteht.</value>
   </data>
   <data name="SourcesDetailDisabled" xml:space="preserve">
     <value>Aus. Sie behält ihren Platz und wird nicht ausprobiert.</value>
@@ -5890,9 +5818,6 @@
   </data>
   <data name="SourcesSourceOrderRow" xml:space="preserve">
     <value>Reihenfolge der Quelle</value>
-  </data>
-  <data name="SourcesTorrentsNote" xml:space="preserve">
-    <value>Torrents gehören zu Kaeri und sind kein Plugin. Den Schutz des Datenverkehrs, die Verbindungsprüfung und das Seeding stellst du in den Einstellungen unter Quellen ein.</value>
   </data>
   <data name="SourcesRebuilding" xml:space="preserve">
     <value>Quellen werden neu eingerichtet</value>
@@ -6086,9 +6011,6 @@
   <data name="SourcesSectionPlugins" xml:space="preserve">
     <value>Plugins</value>
   </data>
-  <data name="SourcesSectionCatalogues" xml:space="preserve">
-    <value>Freie Kataloge</value>
-  </data>
   <data name="SourcesAddDemo" xml:space="preserve">
     <value>Demo hinzufügen</value>
   </data>
@@ -6100,9 +6022,6 @@
   </data>
   <data name="StoresEmptyTitle" xml:space="preserve">
     <value>Noch keine Plugin-Stores</value>
-  </data>
-  <data name="StoresEmptyDetail" xml:space="preserve">
-    <value>Plugin-Stores werden von Leuten betrieben, die du kennst. Tritt einem bei, indem du den Einladungslink einfügst, den dir die betreibende Person schickt.</value>
   </data>
   <data name="StoresIntro" xml:space="preserve">
     <value>Plugins fügen Quellen hinzu. Jedes listet die Hosts auf, die es kontaktiert, bevor du es installierst.</value>
@@ -6596,9 +6515,6 @@
   <data name="NoticeOpenStores" xml:space="preserve">
     <value>Plugin-Stores öffnen</value>
   </data>
-  <data name="StoresWhatIs" xml:space="preserve">
-    <value>Ein Plugin-Store ist ein kleiner Server, den eine Person für die Leute betreibt, die sie einlädt. Er bietet Quellen als Plugins an. Kaeri betreibt keine Plugin-Stores und listet keine auf, du trittst also mit einem Einladungslink des Besitzers bei.</value>
-  </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>Was ist ein Plugin-Store?</value>
   </data>
@@ -6917,63 +6833,6 @@
   <data name="TorrentsOn" xml:space="preserve">
     <value>Torrents sind an</value>
   </data>
-  <data name="TorrentsOffDetail" xml:space="preserve">
-    <value>Standardmäßig aus. Beim Einschalten wirst du zuerst gefragt, wie deine Verbindung geschützt wird.</value>
-  </data>
-  <data name="TorrentsRisk" xml:space="preserve">
-    <value>Andere können deine IP-Adresse sehen, während du einen Torrent herunterlädst und teilst. Wähle vor dem Start der Torrents, was sie schützt.</value>
-  </data>
-  <data name="TorrentsNotAPlugin" xml:space="preserve">
-    <value>Torrents gehören zu Kaeri, nicht zu einem Plugin. Was ihren Datenverkehr schützt, die Verbindungsprüfung und das Seeding werden unter Quellen in den Einstellungen festgelegt.</value>
-  </data>
-  <data name="TorrentsProtectWith" xml:space="preserve">
-    <value>Schutz</value>
-  </data>
-  <data name="TorrentsProtectNone" xml:space="preserve">
-    <value>Kein Schutz</value>
-  </data>
-  <data name="TorrentsProtectProxy" xml:space="preserve">
-    <value>Proxy</value>
-  </data>
-  <data name="TorrentsProtectVpn" xml:space="preserve">
-    <value>VPN</value>
-  </data>
-  <data name="TorrentsProtectProxyDetail" xml:space="preserve">
-    <value>Torrent-Datenverkehr läuft über einen Proxy, den du betreibst oder mietest.</value>
-  </data>
-  <data name="TorrentsProtectVpnDetail" xml:space="preserve">
-    <value>Nutzt das VPN, das bereits auf diesem Gerät läuft.</value>
-  </data>
-  <data name="TorrentsProtectNoneDetail" xml:space="preserve">
-    <value>Deine Adresse ist für alle im Torrent sichtbar.</value>
-  </data>
-  <data name="TorrentsProtectNoneNote" xml:space="preserve">
-    <value>Ohne Schutz prüft Kaeri die Verbindung nicht.</value>
-  </data>
-  <data name="TorrentsSummaryProxyAt" xml:space="preserve">
-    <value>Geschützt durch einen SOCKS5-Proxy unter {host}:{port}.</value>
-  </data>
-  <data name="TorrentsSummaryProxy" xml:space="preserve">
-    <value>Geschützt durch einen SOCKS5-Proxy.</value>
-  </data>
-  <data name="TorrentsSummaryVpn" xml:space="preserve">
-    <value>Geschützt durch das VPN auf diesem Gerät.</value>
-  </data>
-  <data name="TorrentsSummaryNone" xml:space="preserve">
-    <value>Nicht geschützt. Deine Adresse ist für alle im Torrent sichtbar.</value>
-  </data>
-  <data name="TorrentsUnprotectedTitle" xml:space="preserve">
-    <value>Torrents ohne Schutz verwenden?</value>
-  </data>
-  <data name="TorrentsUnprotectedDetail" xml:space="preserve">
-    <value>Andere können deine IP-Adresse sehen, während du einen Torrent herunterlädst und teilst, und Kaeri prüft die Verbindung nicht.</value>
-  </data>
-  <data name="TorrentsTurnOnUnprotected" xml:space="preserve">
-    <value>Ohne Schutz einschalten</value>
-  </data>
-  <data name="TorrentsUseUnprotected" xml:space="preserve">
-    <value>Ohne Schutz verwenden</value>
-  </data>
   <data name="TorrentsProxyHost" xml:space="preserve">
     <value>Proxy-Host</value>
   </data>
@@ -6989,9 +6848,6 @@
   <data name="TorrentsPasswordKeep" xml:space="preserve">
     <value>Lass das Passwort leer, um das gespeicherte zu behalten.</value>
   </data>
-  <data name="TorrentsProxyKeepsSaved" xml:space="preserve">
-    <value>Torrents nutzen weiter den gespeicherten Proxy, bis der neue die Verbindungsprüfung besteht.</value>
-  </data>
   <data name="TorrentsProxyInvalid" xml:space="preserve">
     <value>Der Proxy braucht einen Host und einen Port von 1 bis 65535.</value>
   </data>
@@ -7001,95 +6857,20 @@
   <data name="TorrentsProxySaved" xml:space="preserve">
     <value>Proxy gespeichert</value>
   </data>
-  <data name="TorrentsLeftOutsideProxy" xml:space="preserve">
-    <value>Torrent-Datenverkehr lief außerhalb dieses Proxys</value>
-  </data>
-  <data name="TorrentsCheckNotMadeProxy" xml:space="preserve">
-    <value>Die Prüfung konnte über diesen Proxy nicht durchgeführt werden</value>
-  </data>
   <data name="TorrentsProxyNotSaved" xml:space="preserve">
     <value>Nicht gespeichert. {why}, daher bleibt der gespeicherte Proxy.</value>
-  </data>
-  <data name="TorrentsProtectionNotSaved" xml:space="preserve">
-    <value>Nicht gespeichert. {why}, daher bleibt der gespeicherte Schutz.</value>
   </data>
   <data name="TorrentsStillOff" xml:space="preserve">
     <value>Torrents sind weiterhin aus. {why}.</value>
   </data>
-  <data name="TorrentsIndex" xml:space="preserve">
-    <value>Torrent-Index</value>
-  </data>
-  <data name="TorrentsIndexDetail" xml:space="preserve">
-    <value>Die RSS-Suchadresse, bei der Kaeri nach Torrents fragt.</value>
-  </data>
-  <data name="TorrentsIndexHint" xml:space="preserve">
-    <value>https://…/?q={{query}}</value>
-  </data>
-  <data name="TorrentsIndexNeeded" xml:space="preserve">
-    <value>Torrents brauchen eine Index-Adresse.</value>
-  </data>
-  <data name="TorrentsIndexScheme" xml:space="preserve">
-    <value>Verwende eine http- oder https-Adresse.</value>
-  </data>
-  <data name="TorrentsIndexSaved" xml:space="preserve">
-    <value>Torrent-Index gespeichert</value>
-  </data>
-  <data name="TorrentsIfCheckFails" xml:space="preserve">
-    <value>Wenn eine Prüfung fehlschlägt</value>
-  </data>
-  <data name="TorrentsKeepRunningTitle" xml:space="preserve">
-    <value>Torrents weiterlaufen lassen, wenn eine Prüfung fehlschlägt?</value>
-  </data>
-  <data name="TorrentsKeepRunningDetail" xml:space="preserve">
-    <value>Was mit Torrents passiert, wenn die Prüfung Datenverkehr außerhalb deines VPNs oder Proxys findet.</value>
-  </data>
-  <data name="TorrentsFailPause" xml:space="preserve">
-    <value>Torrents pausieren</value>
-  </data>
-  <data name="TorrentsFailStop" xml:space="preserve">
-    <value>Torrents stoppen</value>
-  </data>
-  <data name="TorrentsFailWarn" xml:space="preserve">
-    <value>Nur warnen</value>
-  </data>
-  <data name="TorrentsFailWarnResult" xml:space="preserve">
-    <value>Torrents laufen weiter.</value>
-  </data>
-  <data name="TorrentsFailStopResult" xml:space="preserve">
-    <value>Torrents sind gestoppt.</value>
-  </data>
-  <data name="TorrentsFailPauseResult" xml:space="preserve">
-    <value>Torrents sind pausiert.</value>
-  </data>
-  <data name="TorrentsLastCheck" xml:space="preserve">
-    <value>Letzte Prüfung</value>
-  </data>
-  <data name="TorrentsCheckPassedExit" xml:space="preserve">
-    <value>Austritt über {exit}</value>
-  </data>
   <data name="TorrentsCheckPassed" xml:space="preserve">
     <value>Bestanden</value>
-  </data>
-  <data name="TorrentsCheckRunningLine" xml:space="preserve">
-    <value>Es wird geprüft, wo der Torrent-Datenverkehr austritt</value>
   </data>
   <data name="TorrentsCheckRunning" xml:space="preserve">
     <value>Läuft</value>
   </data>
-  <data name="TorrentsCheckLeaked" xml:space="preserve">
-    <value>Datenverkehr lief außerhalb des Schutzes. {then}</value>
-  </data>
-  <data name="TorrentsCheckUnmade" xml:space="preserve">
-    <value>Die Prüfung konnte nicht durchgeführt werden. {then}</value>
-  </data>
   <data name="TorrentsCheckFailed" xml:space="preserve">
     <value>Fehlgeschlagen</value>
-  </data>
-  <data name="TorrentsCheckNoneLine" xml:space="preserve">
-    <value>Kein Schutz eingestellt</value>
-  </data>
-  <data name="TorrentsCheckNone" xml:space="preserve">
-    <value>Ungeschützt</value>
   </data>
   <data name="TorrentsCheckWaitingLine" xml:space="preserve">
     <value>Noch nicht geprüft</value>
@@ -7129,12 +6910,6 @@
   </data>
   <data name="TorrentsPageNeedsScript" xml:space="preserve">
     <value>Diese Seite braucht JavaScript, um das Formular sicher an den Fernseher zu senden.</value>
-  </data>
-  <data name="TorrentsCheckNote" xml:space="preserve">
-    <value>Kaeri prüft beim Start eines Torrents und danach jede Minute, von wo der Torrent-Datenverkehr ausgeht, und pausiert Torrents, wenn die Prüfung fehlschlägt. Dein VPN oder Proxy schützt dich.</value>
-  </data>
-  <data name="TorrentsProtectionSaved" xml:space="preserve">
-    <value>Torrent-Schutz gespeichert</value>
   </data>
   <data name="OpenedOpen" xml:space="preserve">
     <value>Link oder Datei öffnen</value>

@@ -1,8 +1,7 @@
 //! The three pluggable seams: sources, players and trackers.
 //!
-//! Every volatile part of Kaeri sits behind one of these. That is the whole strategy:
-//! streaming sites die, gain challenges, or change their markup, and when they do the fix
-//! should be a config edit or a dropped-in `.wasm` file rather than a new release.
+//! Sources differ in how they are reached, so each sits behind one of these seams and can be
+//! added as a plugin without a new release.
 //!
 //! [`Provider`] is deliberately the same shape as the `provider` interface in
 //! `wit/kaeri-provider.wit`, so a WASM plugin written in Go or TypeScript is
@@ -25,23 +24,21 @@ pub enum ProviderKind {
     Native,
     /// WASM component plugin.
     Plugin,
-    /// A JSON API you host.
-    Remote,
-    /// A licensed service we can browse and track but not decrypt — resolves to an
-    /// external deep link.
+    /// A licensed service: its episodes open in the service's own app, through an external
+    /// deep link.
     Licensed,
     /// Folders on this device, scanned into a library.
     Library,
     /// A media server the user runs, such as Jellyfin.
     Server,
-    /// A free catalogue the user added: an Internet Archive collection or a PeerTube channel.
+    /// An open catalogue the user added: an Internet Archive collection or a PeerTube channel.
     Catalogue,
     /// The bundled demo, made of works under open licences.
     Demo,
 }
 
 impl ProviderKind {
-    /// Whether Kaeri itself provides this source, rather than a plugin or a web source: what
+    /// Whether Kaeri itself provides this source, rather than a plugin: what
     /// the user already has, a server they run, or a catalogue they chose.
     pub const fn is_first_party(self) -> bool {
         matches!(
@@ -68,7 +65,6 @@ impl ProviderKind {
         match self {
             Self::Native => "native",
             Self::Plugin => "plugin",
-            Self::Remote => "remote",
             Self::Licensed => "licensed",
             Self::Library => "library",
             Self::Server => "server",
@@ -139,8 +135,8 @@ pub struct SourceCandidate {
 pub trait Provider: Send + Sync {
     fn manifest(&self) -> &ProviderManifest;
 
-    /// Find candidate titles. For site-backed sources this is the *primary* identification
-    /// path, not a fallback: site catalogues key on their own opaque ids, which
+    /// Find candidate titles. For plugin sources this is the *primary* identification
+    /// path, not a fallback: a source's catalogue keys on its own opaque ids, which
     /// appear in no mapping dataset, so there is nothing to look up.
     async fn search(
         &self,

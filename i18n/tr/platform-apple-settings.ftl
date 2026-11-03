@@ -29,7 +29,6 @@ settings-folder-default = Torrent önbelleğiyle birlikte tutulur
 settings-storage-unwatched = Henüz izlenmedi
 settings-storage-used = İndirmeler { $size } yer kaplıyor.
 settings-storage-used-free = İndirmeler { $size } yer kaplıyor. Bu { -device } üzerinde { $free } boş.
-settings-torrents-warn-note = Yalnızca uyar seçeneği, Koruma yok gibi, önce onay ister.
 settings-source-count = { $count ->
     [one] Bir { -source }
    *[other] { $count } { -source-pl }

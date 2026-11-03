@@ -11,7 +11,7 @@ Folder guides: `crates/CLAUDE.md`, `apple/CLAUDE.md`, `android/CLAUDE.md`, `webs
   `cargo test -p <crate> --test <file_stem>`. CI runs `cargo nextest run --workspace`.
 - Lint and format: `cargo clippy -p <crate> --all-targets -- -D warnings`,
   `cargo fmt --all -- --check`. Platform builds and the HOME guard: the `local-checks` skill.
-- Live probes under `examples/` can use real credentials, playback, VPN traffic or tracker
+- Live probes under `examples/` can use real credentials, playback or tracker
   writes; run them only when the task calls for that integration. `KAERI_TEST_STORE` opts
   the store journey test into a real endpoint. Report skipped coverage and checks you could not run.
 
@@ -19,8 +19,8 @@ Folder guides: `crates/CLAUDE.md`, `apple/CLAUDE.md`, `android/CLAUDE.md`, `webs
 
 - `kaeri-store` is local watch history. The plugin store's server logic is
   `kaeri-store-core`, with native and WASM adapters.
-- Provider plugins under `plugins/` are separate builds outside the workspace. Most are local and
-  ignored; only the two examples and the hostile and torrent-index test fixtures are tracked.
+- Provider plugins under `plugins/` are separate builds outside the workspace. This repository
+  carries no plugins apart from the two references and two test fixtures.
 - `website/` uses Bun; the JS reference plugin uses npm and its `package-lock.json`.
 
 ## Rules that always apply
@@ -34,7 +34,8 @@ Folder guides: `crates/CLAUDE.md`, `apple/CLAUDE.md`, `android/CLAUDE.md`, `webs
 - Copy and docs: plain sentences and headings, no em dashes, no "honestly", "deliberately" or
   "concretely", no bold-label-then-dash list items, no asides about past bugs.
 - Never print secrets: the release keystore and its passwords (`~/.kaeri-signing`,
-  `~/.gradle/gradle.properties`), the Mac update key, tracker client secrets in config.
+  `~/.gradle/gradle.properties`), the Mac signing certificate's `.p12` and its password
+  (`~/.kaeri-signing/mac`), the Mac update key, tracker client secrets in config.
 - Tests never run against the real HOME or `~/Library/Application Support/kaeri`. Use the
   HOME guard from the `local-checks` skill. Never launch the real app id `app.kaeri.app`, and
   never post real notifications on the Mac; use the Fixtures app and fakes.

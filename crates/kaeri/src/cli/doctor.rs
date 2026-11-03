@@ -5,7 +5,6 @@ use anyhow::Result;
 use kaeri_core::config::{Config, Paths};
 use kaeri_meta::dataset;
 use kaeri_net::HttpClient;
-use kaeri_providers::vpn::VpnGuard;
 use kaeri_store::Store;
 use kaeri_tui::theme;
 
@@ -146,65 +145,50 @@ pub async fn doctor(config: &Config, paths: &Paths, store: &Store, images: bool)
     println!();
     println!("sources");
     if !config.providers.torrent.enabled {
-        println!("  torrent     disabled (set providers.torrent.enabled and a vpn mode)");
+        println!("  torrent     off (set providers.torrent.enabled to turn it on)");
         return Ok(());
     }
 
-    println!(
-        "  torrent     enabled, vpn mode {}",
-        match config.providers.torrent.vpn.mode {
-            kaeri_core::config::VpnMode::Socks5 => "socks5",
-            kaeri_core::config::VpnMode::External => "external",
-            kaeri_core::config::VpnMode::None => "none",
-        }
-    );
+    let route =
+        match kaeri_providers::proxy::TorrentRoute::new(config.providers.torrent.proxy.clone())
+        {
+            Ok(route) => route,
+            Err(reason) => {
+                println!("  ✕ the proxy setting can't be used: {reason}");
+                return Ok(());
+            }
+        };
+    if route.proxied() {
+        println!("  torrent     on, through a SOCKS5 proxy");
+    } else {
+        println!("  torrent     on, connecting directly");
+    }
 
-    if config.providers.torrent.trackers.is_empty() {
+    if config.providers.torrent.trackers.is_empty() && route.must_disable_dht() {
         println!(
-            "  trackers    none configured — DHT is off in proxy mode, so no peers will be found"
+            "  trackers    none configured; DHT is off through a proxy, so no peers will be found"
         );
     } else {
         println!("  trackers    {} configured", config.providers.torrent.trackers.len());
     }
 
-    // Actually run the guard. Reporting the configured mode without checking it would be
-    // useless in the one situation where you reach for this command.
-    match VpnGuard::new(config.providers.torrent.vpn.clone()) {
-        Ok(guard) => {
-            print!("  verifying egress through the proxy… ");
-            use std::io::Write;
-            let _ = std::io::stdout().flush();
-
-            let state = guard.verify().await;
-            println!("{}", state.badge());
-            match state.reason() {
-                Some(reason) => println!("  ✕ torrent source will NOT start: {reason}"),
-                None => println!("  ● torrent source will start"),
+    // Run the proxy check: reporting the setting without checking it would be useless in the
+    // one situation where you reach for this command.
+    if route.proxied() {
+        print!("  checking the proxy… ");
+        use std::io::Write;
+        let _ = std::io::stdout().flush();
+        let state = route.verify().await;
+        match state.reason() {
+            Some(reason) => {
+                println!("failed");
+                println!("  ✕ The proxy check failed: {reason}");
             }
-            if guard.must_disable_dht() {
-                println!("  note        DHT disabled in proxy mode (UDP-associate unverified)");
-            }
-
-            // The distinction that actually matters. Everything above is application-level
-            // and can be defeated by a bug here; only a firewall rule makes leaking
-            // impossible the way an interface bind does.
-            let enforcement = kaeri_providers::vpn::detect_kernel_enforcement().await;
-            println!();
-            println!("  os-level kill switch");
-            match enforcement {
-                kaeri_providers::vpn::KernelEnforcement::Enforced => {
-                    println!("    ● ENFORCED — {}", enforcement.advice());
-                }
-                _ => {
-                    println!("    ▲ {}", enforcement.advice());
-                    println!();
-                    println!("    Without it, Kaeri's guard is defence in depth, not a");
-                    println!("    guarantee: it stops Kaeri leaking, but cannot stop a bug");
-                    println!("    in Kaeri or any other process on this machine.");
-                }
-            }
+            None => println!("passed"),
         }
-        Err(reason) => println!("  ✕ vpn guard misconfigured: {reason}"),
+        if route.must_disable_dht() {
+            println!("  note        DHT is off through a proxy");
+        }
     }
     Ok(())
 }

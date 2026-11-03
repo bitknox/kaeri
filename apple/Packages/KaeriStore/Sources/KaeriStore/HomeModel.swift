@@ -147,6 +147,15 @@ extension AppStore {
         send(.loadHome(refresh: force))
     }
 
+    /// The player has gone: Continue and Up next are made again from the history, and nothing
+    /// else is asked for. Home keeps every other part it holds until its half hour is up or what
+    /// it was made from has changed, so this is not a forced refresh.
+    public func playerClosed() {
+        discovery.asked()
+        send(.loadHome(refresh: false))
+        loadContinue(force: true)
+    }
+
     /// Ask whether a source has `id`, once for each title, when someone shows interest in it.
     public func probe(_ id: AnilistId) {
         guard discovery.probing(id) else { return }

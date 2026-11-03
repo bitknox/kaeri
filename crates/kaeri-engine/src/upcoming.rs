@@ -30,16 +30,39 @@ pub(crate) fn answer(engine: &EngineState, services: &Services, tx: &Outbox) {
     let signed_in = new_episodes::list_signed_in(services);
     let (store, meta, clock) =
         (services.store.clone(), services.meta.clone(), services.clock.clone());
-    let schedule = engine.widget_schedule.clone();
+    let schedule = engine.calendar.clone();
     let tx = tx.clone();
-    tokio::spawn(async move {
-        let now = clock.now();
-        let (broadcasts, end) =
-            crate::widgets::week(store.clone(), meta.clone(), clock, schedule, now).await;
-        let week =
-            Week { store: &store, titles: meta.titles(), config: &config, signed_in, now, end };
-        let _ = tx.send(Event::UpcomingNotices(week.notices(enabled, &broadcasts)));
-    });
+    // Background work, as the notices are scheduled from it rather than read.
+    tokio::spawn(kaeri_meta::in_background(async move {
+        // Said at once with the week as far as it is held, and again as the rest fills in.
+        let mut tries = 0;
+        loop {
+            let now = clock.now();
+            let (broadcasts, end, whole) = crate::widgets::week(
+                store.clone(),
+                meta.clone(),
+                clock.clone(),
+                schedule.clone(),
+                now,
+            )
+            .await;
+            let week = Week {
+                store: &store,
+                titles: meta.titles(),
+                config: &config,
+                signed_in,
+                now,
+                end,
+            };
+            let _ = tx.send(Event::UpcomingNotices(week.notices(enabled, &broadcasts)));
+            tries += 1;
+            if whole || tries > crate::widgets::FILL_IN_TRIES {
+                break;
+            }
+            let wait = meta.rate_limit_wait().await.unwrap_or_default();
+            tokio::time::sleep(wait.max(crate::widgets::FILL_IN_AFTER)).await;
+        }
+    }));
 }
 
 /// What the week is made from.

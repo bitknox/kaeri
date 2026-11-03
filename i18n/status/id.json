@@ -2015,18 +2015,6 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "cause-confirm-no-protection": {
-    "source": "19bc9667e139",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "cause-confirm-warn-only": {
-    "source": "22e469de5daf",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "cause-no-playable-stream": {
     "source": "30bed517cf34",
     "state": "draft",
@@ -9465,18 +9453,6 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "notice-protection-not-checked": {
-    "source": "4a6cddfdbfa7",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "notice-protection-saved": {
-    "source": "9df51779fb14",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "notice-proxy-password-not-kept": {
     "source": "3aff7625be51",
     "state": "draft",
@@ -9671,12 +9647,6 @@
   },
   "notice-token-not-saved": {
     "source": "d046cbbbea08",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "notice-torrents-waiting-for-check": {
-    "source": "48156d152f47",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
@@ -14403,12 +14373,6 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "settings-aside-connection-check": {
-    "source": "1c134a674c72",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "settings-aside-downloads": {
     "source": "ad618eb572c2",
     "state": "draft",
@@ -14597,18 +14561,6 @@
   },
   "settings-conflicts": {
     "source": "387b5cf6fc7f",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "settings-connection-check-note": {
-    "source": "fa8d2457b103",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "settings-connection-check-title": {
-    "source": "1c134a674c72",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
@@ -14979,12 +14931,6 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "settings-index-none": {
-    "source": "d48719159084",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "settings-keep-next": {
     "source": "9b7142165739",
     "state": "draft",
@@ -15339,18 +15285,6 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "settings-label-vpn-mode": {
-    "source": "aacc083b9bd7",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "settings-label-vpn-on-failure": {
-    "source": "813a68f7d374",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "settings-language": {
     "source": "efcf950b3cc4",
     "state": "draft",
@@ -15671,12 +15605,6 @@
   },
   "settings-note-upscaling": {
     "source": "dbae89d51382",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "settings-note-vpn-mode": {
-    "source": "f9181df124b2",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
@@ -16891,12 +16819,6 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "settings-torrents-warn-note": {
-    "source": "676572d0c8b1",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "settings-trackers": {
     "source": "b4c06d298f83",
     "state": "draft",
@@ -17169,24 +17091,6 @@
   },
   "settings-value-upscaling-sharp": {
     "source": "a8906fd18dc2",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "settings-value-vpn-external": {
-    "source": "84fcddede27b",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "settings-value-vpn-socks5": {
-    "source": "b8dd788adf7b",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "settings-vpn-mode": {
-    "source": "aacc083b9bd7",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
@@ -18539,12 +18443,6 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "sources-origin-config": {
-    "source": "3ea0e4cb57d6",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "sources-origin-from": {
     "source": "09c4ff5bf087",
     "state": "draft",
@@ -18589,18 +18487,6 @@
   },
   "sources-reloaded-torrents-off": {
     "source": "8011035b5ff8",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "sources-reloaded-torrents-pending": {
-    "source": "60be55ad4860",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "sources-remote": {
-    "source": "ea47f4110bb2",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
@@ -18827,12 +18713,6 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "sources-torrent-indexes": {
-    "source": "930784d9b438",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "sources-torrent-source": {
     "source": "b871d0a30bf7",
     "state": "draft",
@@ -18931,48 +18811,6 @@
   },
   "sources-version-ready": {
     "source": "a4123741bc22",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "sources-vpn-checking": {
-    "source": "166637cc0499",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "sources-vpn-leak-paused": {
-    "source": "035945c41b0e",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "sources-vpn-leaking": {
-    "source": "6f36f2be66c9",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "sources-vpn-protected": {
-    "source": "05a787c687c5",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "sources-vpn-unprotected": {
-    "source": "2486c71af20d",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "sources-vpn-unreachable": {
-    "source": "2f8f1b6a7f23",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "sources-vpn-unreachable-paused": {
-    "source": "221f0b7a1067",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
@@ -22703,12 +22541,6 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "torrent-check-failed-running": {
-    "source": "cf62f08f0229",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "torrent-interface-closed": {
     "source": "5adb14e508de",
     "state": "draft",
@@ -22727,56 +22559,14 @@
     "by": "agent",
     "at": "2026-11-01"
   },
-  "torrent-no-kill-switch": {
-    "source": "66803b722e67",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrent-not-checked": {
-    "source": "6e3522b86224",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "torrent-session-failed": {
     "source": "2b921fbc3f4e",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
   },
-  "torrent-vpn-unverified": {
-    "source": "a6c9d085a8d1",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrent-vpn-waiting": {
-    "source": "f88090fb0a46",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "torrents-check-failed": {
     "source": "bf9c5c5a8e5e",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-check-leaked": {
-    "source": "fe9cc0cd1e87",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-check-none": {
-    "source": "b5f88237cb7e",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-check-none-line": {
-    "source": "4378d04bd1ab",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
@@ -22793,18 +22583,6 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "torrents-check-note-stop": {
-    "source": "a341759e366d",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-check-note-warn": {
-    "source": "e208e9c4d534",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "torrents-check-now": {
     "source": "6f110f7fed7a",
     "state": "draft",
@@ -22817,26 +22595,8 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "torrents-check-passed-exit": {
-    "source": "6263f9155878",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "torrents-check-running": {
     "source": "29d3b9fb142c",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-check-running-line": {
-    "source": "314e29eac637",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-check-unmade": {
-    "source": "1e3e5149e5ef",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
@@ -22859,32 +22619,8 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "torrents-choice-spoken": {
-    "source": "59bdc704a7e5",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "torrents-dialog-edit-proxy": {
     "source": "be2c2a621767",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-dialog-protect": {
-    "source": "2f114caf7a71",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-dialog-turn-on": {
-    "source": "9ac07ba4323b",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-dialog-turn-on-action": {
-    "source": "6bb329b249dd",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
@@ -22895,98 +22631,8 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "torrents-fail-pause": {
-    "source": "0e34f8bb0a58",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-fail-pause-result": {
-    "source": "087769498e29",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-fail-stop": {
-    "source": "97d82e6ffec2",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-fail-stop-result": {
-    "source": "e4577a670708",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-fail-warn": {
-    "source": "b3c5fb12cc70",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-fail-warn-result": {
-    "source": "cce5c33af0eb",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "torrents-for-app": {
     "source": "1a366995dced",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-if-check-fails": {
-    "source": "813a68f7d374",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-index": {
-    "source": "3e137d7a1f87",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-index-detail": {
-    "source": "9be9bea9e53a",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-index-hint": {
-    "source": "ffaafba956bf",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-index-needed": {
-    "source": "9672b1c5f873",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-index-saved": {
-    "source": "2ef032a8e29c",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-index-scheme": {
-    "source": "6fbcf1a12aa2",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-keep-running-detail": {
-    "source": "c88d23ab9922",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-keep-running-title": {
-    "source": "22ef48478c86",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
@@ -22997,50 +22643,8 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "torrents-left-outside-proxy": {
-    "source": "14c0efd99368",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-linux-check-note": {
-    "source": "fa8d2457b103",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "torrents-linux-edit-proxy-title": {
     "source": "be2c2a621767",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-linux-protect-title": {
-    "source": "2f114caf7a71",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-linux-protection-saved": {
-    "source": "2bf2b83cfcb8",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-linux-turn-on-button": {
-    "source": "6bb329b249dd",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-linux-turn-on-title": {
-    "source": "9ac07ba4323b",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-linux-warn-confirm": {
-    "source": "a261dd3b267f",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
@@ -23119,78 +22723,6 @@
   },
   "torrents-password-keep": {
     "source": "67f0d7e4ccde",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-protect-none": {
-    "source": "9a591ad0c35b",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-protect-none-detail": {
-    "source": "b1ef2985f6ba",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-protect-none-note": {
-    "source": "3c59685444e4",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-protect-proxy": {
-    "source": "b8dd788adf7b",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-protect-proxy-detail": {
-    "source": "8bbd2dc227c0",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-protect-proxy-name": {
-    "source": "4eea8904a00a",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-protect-vpn": {
-    "source": "7c4d2619ea33",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-protect-vpn-detail": {
-    "source": "47d55db3598b",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-protect-vpn-name": {
-    "source": "ccd691ea33e7",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-protect-with": {
-    "source": "53fac03125f8",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-protection-not-saved": {
-    "source": "084cb892ec5f",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-protection-saved": {
-    "source": "2bf2b83cfcb8",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
@@ -23285,62 +22817,14 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "torrents-sheet-host": {
-    "source": "6b05f9d8801f",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-sheet-port": {
-    "source": "b354dc19a720",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-sheet-protect": {
-    "source": "2f114caf7a71",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-sheet-protect-title": {
-    "source": "4a5622bbc764",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "torrents-sheet-proxy-auth-note": {
     "source": "209a04258ca5",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
   },
-  "torrents-sheet-turn-on": {
-    "source": "9ac07ba4323b",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-sheet-turn-on-button": {
-    "source": "6bb329b249dd",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-sheet-turn-on-title": {
-    "source": "9ac07ba4323b",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "torrents-still-off": {
     "source": "27d531bb6ab7",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-summary-none": {
-    "source": "2855f746d012",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
@@ -23357,62 +22841,8 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "torrents-summary-vpn": {
-    "source": "8ce0c736503e",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "torrents-title": {
     "source": "5e719fad3ef5",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-turn-on-button": {
-    "source": "6bb329b249dd",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-turn-on-unprotected": {
-    "source": "1b05674b4c97",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-unprotected-detail": {
-    "source": "48924f58e8f7",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-unprotected-title": {
-    "source": "0fb1105f8cd5",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-use-unprotected": {
-    "source": "0a83eb85cf92",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-warn-body": {
-    "source": "a261dd3b267f",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-warn-instead": {
-    "source": "a261dd3b267f",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "torrents-warn-only-detail": {
-    "source": "a261dd3b267f",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
@@ -24095,12 +23525,6 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "tv-page-next-torrent": {
-    "source": "8ac8fb140d16",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "tv-page-no-answer": {
     "source": "2e54d9161ee1",
     "state": "draft",
@@ -24175,18 +23599,6 @@
   },
   "tv-page-title-torrents": {
     "source": "1a366995dced",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "tv-page-torrent": {
-    "source": "a88ffdbb31f2",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "tv-page-torrent-proxy": {
-    "source": "047ccd41a467",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
@@ -24521,12 +23933,6 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "tv-qr-label-index": {
-    "source": "9f51752e624b",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "tv-qr-label-link": {
     "source": "7b794027a307",
     "state": "draft",
@@ -24667,18 +24073,6 @@
   },
   "tv-scan-proxy": {
     "source": "8d05d1318a72",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "tv-scan-torrent": {
-    "source": "0c85f76b36c7",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "tv-scan-torrent-proxy": {
-    "source": "d1e8f0ad0356",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"

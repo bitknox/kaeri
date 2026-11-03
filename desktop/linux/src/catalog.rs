@@ -69,7 +69,7 @@ pub fn label(key: SettingKey) -> String {
         K::SeedRatio => t::settings_label_seed_ratio(),
         K::SeedHours => t::settings_label_seed_hours(),
         K::UploadLimit => t::settings_label_upload_limit(),
-        K::VpnMode => t::settings_label_vpn_mode(),
+        K::TorrentProxy => t::settings_label_torrent_proxy(),
         K::TokenStorage => t::settings_label_token_storage(),
         K::SourceOrder => t::settings_label_source_order(),
         K::UpNextCountdown => t::settings_label_up_next_countdown(),
@@ -78,7 +78,6 @@ pub fn label(key: SettingKey) -> String {
         K::KeepNextEpisodes => t::settings_label_keep_next_episodes(),
         K::DownloadsOnCellular => t::settings_label_downloads_on_cellular(),
         K::TorrentsOnCellular => t::settings_label_torrents_on_cellular(),
-        K::VpnOnFailure => t::settings_label_vpn_on_failure(),
         K::AdultTitles => t::settings_label_adult_titles(),
         K::EpisodeNotifications => t::settings_label_episode_notifications(),
         K::MpvOptions => t::settings_label_mpv_options(),
@@ -114,8 +113,6 @@ pub fn display(row: &SettingRow) -> String {
     match (row.key, row.value.as_str()) {
         (SettingKey::PlayerUi, "kaeri") => t::settings_value_player_ui_kaeri(),
         (SettingKey::PlayerUi, "your mpv setup") => t::settings_value_player_ui_mpv(), // i18n-skip
-        (SettingKey::VpnMode, "socks5") => t::settings_value_vpn_socks5(),
-        (SettingKey::VpnMode, "external") => t::settings_value_vpn_external(),
         (_, "on") => t::value_on(),
         (_, "off") => t::value_off(),
         (_, "") => t::value_none(),
@@ -274,11 +271,6 @@ pub fn choices(key: SettingKey) -> Vec<Choice> {
                 (kaeri_model::wording::plural(n as usize, "episode"), t::episodes_count(n))
             }
         }),
-        // Warn only is asked for with its acknowledgement, through the torrent protection.
-        K::VpnOnFailure => strs(&[
-            ("pause", "pause torrents", t::torrents_fail_pause()), // i18n-skip
-            ("stop", "stop torrents", t::torrents_fail_stop()),    // i18n-skip
-        ]),
         K::SubtitleSize => ints(&[50, 70, 80, 90, 100, 110, 120, 140, 160, 180, 200], &|p| {
             (format!("{p}%"), t::settings_subs_size_value(p))
         }),

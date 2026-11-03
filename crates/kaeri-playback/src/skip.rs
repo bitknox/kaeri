@@ -66,9 +66,9 @@ pub enum SkipOrigin {
 
 /// Skip intervals from the file's own chapter markers.
 ///
-/// Release groups routinely author `OP`/`ED`/`Intro`/`Outro` chapters into the mkv, and
+/// A file's own chapters often name `OP`/`ED`/`Intro`/`Outro`, and
 /// those were cut against *this exact encode* — where aniskip's community times were taken
-/// against whichever rip the submitter had. When a file declares chapters, they outrank
+/// against whichever encode the submitter had. When a file declares chapters, they outrank
 /// the API. An interval runs to the next chapter, or for the last one to the end of the file,
 /// which is how a release that ends on its ED is cut. While the length is not known yet, a
 /// final chapter is left alone rather than guessed at.
@@ -257,7 +257,7 @@ mod chapter_tests {
     }
 
     /// The names are the ones [`from_chapters`] reads, so what we write is what we would have
-    /// understood had the release group written it.
+    /// understood had the file's own author written it.
     #[test]
     fn the_markers_round_trip_back_to_the_same_skips() {
         let skips = vec![

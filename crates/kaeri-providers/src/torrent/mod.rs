@@ -1,12 +1,12 @@
 //! Torrent playback.
 //!
-//! Kaeri provides the transport: a librqbit session behind the protection check, streaming
+//! Kaeri provides the transport: a librqbit session, directly or through a proxy, streaming
 //! over loopback HTTP. It finds no torrents. A source plugin that declares the `torrents`
 //! capability names them, and [`bridge::TorrentBridge`] plays what it names; a link the person
 //! opens plays the same way. Nothing here searches an index, ranks releases or picks one.
 //!
-//! Gated by [`crate::vpn::VpnGuard`]. No session exists, and no torrent starts, until the guard
-//! passes.
+//! Routed by [`crate::proxy::TorrentRoute`]. Through a proxy, no session exists, and no torrent
+//! starts, until the proxy's check passes.
 
 pub mod bridge;
 pub mod cache;

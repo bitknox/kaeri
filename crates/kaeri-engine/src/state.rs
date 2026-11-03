@@ -16,7 +16,7 @@ use kaeri_core::{
     ids::AnilistId,
 };
 use kaeri_model::{Msg, command::PlayerCommand, playback::PlaybackId};
-use kaeri_providers::{torrent::TorrentSession, vpn::VpnGuard};
+use kaeri_providers::{proxy::TorrentRoute, torrent::TorrentSession};
 use tokio::sync::mpsc;
 
 use crate::{
@@ -26,7 +26,6 @@ use crate::{
     outbox::Played,
     playback::autonext::Staging,
     sources::{TorrentUp, torrent::TorrentTasks},
-    widgets::Schedule,
 };
 
 /// Where a bring-up of torrent playback reports in, tagged with the bring-up it answers.
@@ -54,9 +53,9 @@ pub struct EngineState {
     /// The torrent stack's live parts, held so a settings change can tear them down and stand
     /// them back up without a restart.
     pub torrent_tasks: TorrentTasks,
-    /// The VPN guard and the session it protects, once torrent playback is up. Replaced along
-    /// with the tasks above when the settings stand the stack down and back up.
-    pub vpn_guard: Option<(VpnGuard, Arc<TorrentSession>)>,
+    /// The route torrent traffic takes and the session on it, once torrent playback is up.
+    /// Replaced along with the tasks above when the settings stand the stack down and back up.
+    pub torrent_route: Option<(TorrentRoute, Arc<TorrentSession>)>,
     /// Where torrent playback reports in once it is up. The actor holds the other end.
     pub arrivals: Arrivals,
     /// Playbacks started so far: what the next one is numbered after, so that what each says
@@ -100,8 +99,6 @@ pub struct EngineState {
     /// Held by each new-episode check while it runs, so two asked for together take turns
     /// rather than both saying the same episode.
     pub episode_check: Arc<tokio::sync::Mutex<()>>,
-    /// The week's broadcasts as the widgets' record last fetched them: see [`Schedule`].
-    pub widget_schedule: Schedule,
     /// Keep next: whether it runs, and the top-up asked for while one runs. See
     /// [`crate::downloads::ahead`].
     pub ahead: crate::downloads::ahead::Ahead,
@@ -143,7 +140,7 @@ impl EngineState {
             player_tx: None,
             finding: None,
             torrent_tasks: TorrentTasks::default(),
-            vpn_guard: None,
+            torrent_route: None,
             arrivals,
             playbacks: 0,
             cache: TitleCache::default(),
@@ -161,7 +158,6 @@ impl EngineState {
             casting: None,
             gated: None,
             episode_check: Arc::default(),
-            widget_schedule: Schedule::default(),
             ahead: Default::default(),
             search: Default::default(),
             dubs: Default::default(),

@@ -43,7 +43,7 @@ Building also needs Rust, cmake and a C toolchain, and NASM on Windows:
 <TabItem label="macOS">
 
 ```sh
-brew install mpv ffmpeg cmake      # cmake is for wreq's BoringSSL
+brew install mpv ffmpeg cmake      # cmake builds the torrent engine's aws-lc
 rustup toolchain install 1.99.1    # pinned by rust-toolchain.toml
 ```
 
@@ -75,8 +75,7 @@ assembles its own crypto primitives. See
 </TabItem>
 </Tabs>
 
-cmake builds BoringSSL, which Kaeri's HTTP client uses to match a browser's TLS handshake,
-since some hosts answer differently depending on the client that connects. Rust 1.99.1 is pinned
+cmake builds aws-lc, the crypto library under the torrent engine. Rust 1.99.1 is pinned
 by `rust-toolchain.toml`, so `rustup` picks it up inside the repo. To build
 [plugins](/docs/plugins/authoring/), also run `rustup target add wasm32-wasip2`.
 
@@ -87,4 +86,4 @@ WezTerm. It renders as images over the Kitty, Sixel or iTerm2 protocols, and fal
 halfblocks elsewhere. On Windows, WezTerm is one of them.
 
 `kaeri --doctor` reports what your terminal supports, which mpv you have and which config it
-reads, and, once torrent playback is on, the state of the VPN guard and your VPN's kill switch.
+reads, and, once torrent playback is on, where torrent traffic goes and whether the proxy check passes.

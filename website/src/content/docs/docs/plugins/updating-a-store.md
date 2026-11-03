@@ -39,9 +39,9 @@ docker compose pull
 docker compose up -d
 ```
 
-The compose file names the image `ghcr.io/bitknox/kaeri-store:0.1`, which follows every 0.1.x
+The compose file names the image `ghcr.io/bitknox/kaeri-store:0.2`, which follows every 0.2.x
 release. A new minor version needs the tag changed by hand, after reading its release notes. To
-stay on one release, name it in full, such as `:0.1.4`.
+stay on one release, name it in full, such as `:0.2.0`.
 
 ## Fly.io
 

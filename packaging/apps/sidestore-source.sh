@@ -80,7 +80,7 @@ with open(ipa, "rb") as f:
 
 icon = f"https://raw.githubusercontent.com/{repo}/main/assets/icon/512x512.png"
 about = ("Kaeri for iPhone and iPad: browse anime on AniList, play the sources you add, and sync "
-         "your progress to five trackers. Kaeri doesn't host any shows. You add your own sources.")
+         "your progress to five trackers.")
 source = {
     "version": 2,
     "name": "kaeri",

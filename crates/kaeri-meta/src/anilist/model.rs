@@ -207,7 +207,7 @@ pub struct Viewer {
 
 /// A title in the three forms AniList publishes.
 ///
-/// All three matter: `romaji` is what torrent release groups use, `english` is what people
+/// All three matter: `romaji` is how many file names are written, `english` is what people
 /// type, and `native` occasionally matches nothing else. The resolution ladder feeds all of
 /// them to a provider search, which is why none is discarded.
 #[derive(Debug, Clone, Default, Deserialize, Serialize, PartialEq, Eq)]
@@ -1167,7 +1167,7 @@ mod tests {
             },
             "format": "TV",
             "status": "FINISHED",
-            "description": "<p>The lamplighter walks on...</p><br><i>(Source: Hikari Stream)</i>",
+            "description": "<p>The lamplighter walks on...</p><br><i>(Source: Hikari Library)</i>",
             "episodes": 28,
             "seasonYear": 2023,
             "averageScore": 91,
@@ -1180,13 +1180,13 @@ mod tests {
             "bannerImage": "https://s4.anilist.co/banner/154587.jpg",
             "nextAiringEpisode": null,
             "externalLinks": [
-                {"site": "Hikari Stream", "url": "https://hikari.example/series/GG5H5XQX4", "type": "STREAMING"},
-                {"site": "Lantern Stream", "url": "https://stream.example/title/81726714", "type": "STREAMING"},
+                {"site": "Hikari Library", "url": "https://hikari.example/series/GG5H5XQX4", "type": "STREAMING"},
+                {"site": "Lantern Library", "url": "https://stream.example/title/81726714", "type": "STREAMING"},
                 {"site": "Official Site", "url": "https://hoshikuzu.example/", "type": "INFO"}
             ],
             "streamingEpisodes": [
-                {"title": "Episode 1 - The Lantern Road", "url": "https://hikari.example/watch/G2XU04E88", "site": "Hikari Stream"},
-                {"title": "Episode 2 - A Town Without Night", "url": "https://hikari.example/watch/G8WUNGZ48", "site": "Hikari Stream"}
+                {"title": "Episode 1 - The Lantern Road", "url": "https://hikari.example/watch/G2XU04E88", "site": "Hikari Library"},
+                {"title": "Episode 2 - A Town Without Night", "url": "https://hikari.example/watch/G8WUNGZ48", "site": "Hikari Library"}
             ]
         }))
         .unwrap()
@@ -1433,7 +1433,7 @@ mod tests {
         assert!(!text.contains('<'), "got: {text}");
         assert!(!text.contains("&amp;"));
         assert!(text.starts_with("The lamplighter"));
-        assert!(text.contains("(Source: Hikari Stream)"));
+        assert!(text.contains("(Source: Hikari Library)"));
     }
 
     #[test]
@@ -1547,7 +1547,7 @@ mod tests {
         assert!(titles.contains(&"Hoshikuzu no Tabibito".to_string()));
         assert!(titles.contains(&"Stardust Wayfarer".to_string()));
         assert!(titles.contains(&"Hoshitabi".to_string()));
-        assert_eq!(titles[0], "Hoshikuzu no Tabibito", "romaji first — release groups use it");
+        assert_eq!(titles[0], "Hoshikuzu no Tabibito", "romaji first — file names use it");
     }
 
     #[test]
@@ -1578,7 +1578,7 @@ mod tests {
             m.episode_link(1).and_then(|e| e.url.as_deref()),
             Some("https://hikari.example/watch/G2XU04E88")
         );
-        assert_eq!(m.episode_link(2).unwrap().site.as_deref(), Some("Hikari Stream"));
+        assert_eq!(m.episode_link(2).unwrap().site.as_deref(), Some("Hikari Library"));
         assert!(m.episode_link(99).is_none());
     }
 

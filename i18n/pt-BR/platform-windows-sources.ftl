@@ -20,7 +20,6 @@ sources-check = Verificar { -source-pl }
 sources-origin-version = { $origin } · { -release } { $version }
 sources-standing = Situação
 sources-status-working = Pronta
-sources-torrent-indexes = Pesquisa em cada { -torrent-index } que você ativou em Configurações.
 sources-version-ready = { -release-cap } { $version } está pronta
 sources-use-this = Usar esta { -source }
 sources-use-name = { $name } ativado

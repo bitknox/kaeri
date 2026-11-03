@@ -184,8 +184,8 @@ impl Capabilities {
 
         // The same client the native sources use, so one place owns the connection settings.
         let mut builder = match request.method.to_ascii_uppercase().as_str() {
-            "POST" => http.emulated().post(&request.url),
-            _ => http.emulated().get(&request.url),
+            "POST" => http.sources().post(&request.url),
+            _ => http.sources().get(&request.url),
         };
         for (name, value) in &request.headers {
             builder = builder.header(name.as_str(), value.as_str());
@@ -218,7 +218,10 @@ impl Capabilities {
 /// Content-Length when it says one, else as it arrives. Read whole first, a body could fill the
 /// host's memory with as much as the client's timeout let through, none of it counted against
 /// the plugin's own memory ceiling.
-async fn read_capped(response: wreq::Response, ceiling: usize) -> Result<Vec<u8>, HostError> {
+async fn read_capped(
+    response: reqwest::Response,
+    ceiling: usize,
+) -> Result<Vec<u8>, HostError> {
     use futures::StreamExt;
 
     let too_large = |size: u64| {
@@ -298,15 +301,16 @@ mod tests {
     #[tokio::test]
     async fn a_body_past_the_ceiling_is_refused_as_it_arrives() {
         let endless = futures::stream::repeat_with(|| Ok::<_, std::io::Error>(vec![0u8; 1024]));
-        let response: wreq::Response =
-            http::Response::new(wreq::Body::wrap_stream(endless)).into();
+        let response: reqwest::Response =
+            http::Response::new(reqwest::Body::wrap_stream(endless)).into();
         let error = read_capped(response, 4 * 1024).await.unwrap_err();
         assert!(
             matches!(error, HostError::Denied(ref m) if m.contains("4096 byte")),
             "{error}"
         );
 
-        let small: wreq::Response = http::Response::new(wreq::Body::from(vec![1u8; 10])).into();
+        let small: reqwest::Response =
+            http::Response::new(reqwest::Body::from(vec![1u8; 10])).into();
         assert_eq!(read_capped(small, 4 * 1024).await.unwrap(), vec![1u8; 10]);
     }
 
@@ -376,7 +380,7 @@ mod tests {
 
     #[test]
     fn ordinary_headers_are_the_guests_to_set() {
-        // Referer and cookies are exactly what web sources need.
+        // Headers a source sets are passed through.
         let request = Request {
             headers: vec![
                 ("referer".into(), "https://example.com/".into()),

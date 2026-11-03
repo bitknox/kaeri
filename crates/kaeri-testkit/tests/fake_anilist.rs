@@ -112,7 +112,7 @@ async fn every_filter_is_applied_as_anilist_applies_it() {
     let manga = BrowseFilter { sources: vec!["MANGA".into()], ..Default::default() };
     assert_eq!(find(manga).await, [FINISHED.get(), SEQUEL.get()]);
     let streaming =
-        BrowseFilter { licensed_by: vec!["Lantern Stream".into()], ..Default::default() };
+        BrowseFilter { licensed_by: vec!["Lantern Library".into()], ..Default::default() };
     assert_eq!(find(streaming).await, [FINISHED.get(), AIRING.get(), SEQUEL.get()]);
     let korean = BrowseFilter { countries: vec!["KR".into()], ..Default::default() };
     assert!(find(korean).await.is_empty(), "the fixtures are all made in Japan");
@@ -149,7 +149,7 @@ async fn the_rails_come_in_one_request_and_the_facets_in_another() {
     assert!(facets.tags.iter().any(|t| t.name == "Nudity" && t.adult));
     assert_eq!(
         facets.streaming,
-        ["Lantern Stream", "Hikari Stream"],
+        ["Lantern Library", "Hikari Library"],
         "once each, none disabled"
     );
     assert_eq!(kit.server.requests().len(), 2);
@@ -291,6 +291,61 @@ async fn a_title_from_a_list_is_still_asked_for_its_page() {
 }
 
 #[tokio::test]
+async fn a_screens_covers_bring_their_tables_and_a_hover_asks_nothing_more() {
+    let kit = MetaKit::start().await;
+    let cards = kit.meta.media_tables(&[AIRING, FINISHED, MISSING]).await;
+    assert_eq!(ids(&cards), [AIRING.get(), FINISHED.get()]);
+    assert_eq!(kit.server.requests_for(Operation::Tables).len(), 1);
+
+    // Asked again, the screen costs nothing: they are kept.
+    assert_eq!(kit.meta.media_tables(&[AIRING, FINISHED]).await.len(), 2);
+    assert_eq!(kit.server.requests_for(Operation::Tables).len(), 1);
+
+    // The tables read what the page's lookup would give them, and ask nothing of their own.
+    let airing = kit.meta.table_media(AIRING).await.unwrap();
+    let finished = kit.meta.table_media(FINISHED).await.unwrap();
+    assert!(kit.server.requests_for(Operation::Detail).is_empty());
+    for (tabled, id) in [(airing, AIRING), (finished, FINISHED)] {
+        let page = kit.meta.media(id).await.unwrap();
+        assert_eq!(tabled.air_times(), page.air_times());
+        assert_eq!(tabled.aired, page.aired, "newest first, as the page has them");
+        assert_eq!(tabled.streaming_episodes, page.streaming_episodes);
+        assert_eq!(tabled.upcoming, page.upcoming);
+    }
+    // The page still asks for itself.
+    assert_eq!(kit.server.requests_for(Operation::Detail).len(), 2);
+
+    // A title the screen did not bring is looked up whole.
+    kit.meta.table_media(MOVIE).await.unwrap();
+    assert_eq!(kit.server.requests_for(Operation::Detail).len(), 3);
+}
+
+#[tokio::test]
+async fn quiet_table_lookups_made_together_share_one_request() {
+    let kit = MetaKit::start().await;
+    // A row of cards asking for their stills at once, as the Mac's Continue row does.
+    let (airing, finished) = tokio::join!(
+        kaeri_meta::in_background(kit.meta.table_media(AIRING)),
+        kaeri_meta::in_background(kit.meta.table_media(FINISHED)),
+    );
+    assert_eq!((airing.unwrap().id, finished.unwrap().id), (AIRING, FINISHED));
+    assert_eq!(kit.server.requests_for(Operation::Tables).len(), 1);
+    assert!(kit.server.requests_for(Operation::Detail).is_empty());
+
+    // A title the batch could not bring is still looked up whole.
+    let (movie, missing) = tokio::join!(
+        kaeri_meta::in_background(kit.meta.table_media(MOVIE)),
+        kaeri_meta::in_background(kit.meta.table_media(MISSING)),
+    );
+    assert_eq!(movie.unwrap().id, MOVIE);
+    assert!(missing.is_err());
+    assert_eq!(kit.server.requests_for(Operation::Tables).len(), 2);
+    // A screen's lookup is not held for a batch.
+    kit.meta.table_media(AIRING).await.unwrap();
+    assert_eq!(kit.server.requests_for(Operation::Tables).len(), 2);
+}
+
+#[tokio::test]
 async fn an_unknown_title_is_refused_as_anilist_refuses_one() {
     let kit = MetaKit::start().await;
     let error = kit.meta.media(MISSING).await.unwrap_err();
@@ -416,18 +471,29 @@ async fn an_error_answers_one_request_and_then_the_fixtures_return() {
 }
 
 #[tokio::test]
-async fn a_rate_limit_is_reported_and_held_to() {
+async fn a_rate_limit_is_waited_out_and_asked_again() {
     let server = FakeAniList::start().await;
     let anilist = server.anilist(&kaeri_testkit::http());
-    server.fail_next(Failure::RateLimited { retry_after_secs: 30 });
+    server.fail_next(Failure::RateLimited { retry_after_secs: 1 });
+    let started = std::time::Instant::now();
+    let media = anilist.media(FINISHED).await.expect("the refused request goes again");
+    assert_eq!(media.id, FINISHED);
+    assert!(started.elapsed() >= std::time::Duration::from_secs(1), "{:?}", started.elapsed());
+    assert_eq!(server.requests_for(Operation::Detail).len(), 2, "refused once, then answered");
+}
+
+#[tokio::test]
+async fn a_rate_limit_that_lasts_is_reported_and_held_to() {
+    let server = FakeAniList::start().await;
+    let anilist = server.anilist(&kaeri_testkit::http());
+    for _ in 0..4 {
+        server.fail_next(Failure::RateLimited { retry_after_secs: 1 });
+    }
     match anilist.media(FINISHED).await {
-        Err(AniListError::Api(message)) => {
-            assert!(message.contains("rate limited"), "{message}")
-        }
+        Err(AniListError::RateLimited { retry_in_secs }) => assert_eq!(retry_in_secs, 1),
         other => panic!("expected a rate-limit error, got {other:?}"),
     }
-    let wait = anilist.rate_limit_wait().await.expect("the client holds off after a 429");
-    assert!(wait.as_secs() > 20, "{wait:?}");
+    assert!(anilist.rate_limit_wait().await.is_some(), "the client holds off after a 429");
 }
 
 #[tokio::test]
@@ -531,4 +597,175 @@ async fn art_served_badly_fails_every_second_image_a_few_times_first() {
     assert!(fetch(&second).await.is_some(), "the second does not");
     assert!(fetch(&first).await.is_none(), "twice");
     assert!(fetch(&first).await.is_some(), "and then it is served");
+}
+
+#[tokio::test]
+async fn pages_of_the_calendar_asked_together_are_each_answered_as_alone() {
+    use kaeri_meta::anilist::AiringPage;
+    let kit = MetaKit::start().await;
+    let page = |page, newest_first| AiringPage {
+        from: FIXTURE_NOW - 14 * DAY,
+        to: FIXTURE_NOW + 14 * DAY,
+        page,
+        per_page: 2,
+        newest_first,
+    };
+    let asked = [page(1, true), page(1, false), page(2, false)];
+    let together = kit.meta.airing_pages(&asked).await;
+    assert_eq!(kit.server.requests_for(Operation::Schedule).len(), 1, "one request");
+    let rows = |found: &kaeri_meta::anilist::Page<kaeri_meta::anilist::AiringEntry>| {
+        found
+            .items
+            .iter()
+            .map(|a| (a.media.id.get(), a.episode, a.airing_at))
+            .collect::<Vec<_>>()
+    };
+    for (one, found) in asked.iter().zip(&together) {
+        let alone = kit
+            .meta
+            .airing_between_sorted(one.from, one.to, one.page, one.per_page, one.newest_first)
+            .await
+            .unwrap();
+        let found = found.as_ref().unwrap();
+        assert!(!alone.items.is_empty());
+        assert_eq!(rows(found), rows(&alone), "{one:?}");
+        assert_eq!(found.has_next, alone.has_next);
+    }
+
+    // Refused as a whole, they are asked one by one and still come.
+    kit.server.clear_requests();
+    kit.server.fail_next(Failure::GraphQl("Max query complexity of 500 exceeded".into()));
+    let apart = kit.meta.airing_pages(&asked).await;
+    assert!(apart.iter().all(Result::is_ok));
+    assert_eq!(kit.server.requests_for(Operation::Schedule).len(), 4, "refused, then three");
+}
+
+#[tokio::test]
+async fn up_next_lookups_asked_together_are_each_answered_as_alone() {
+    let kit = MetaKit::start().await;
+    let found = kit.meta.suggestions(&[AIRING, MOVIE], &[FINISHED], Some((FINISHED, 9))).await;
+    assert_eq!(kit.server.requests().len(), 1, "one request for the three");
+    assert_eq!(kit.server.requests_for(Operation::Recommended).len(), 1);
+
+    let titles = found.titles.unwrap();
+    assert_eq!(ids(&titles), [AIRING.get(), MOVIE.get()]);
+    let from = found.from.unwrap().unwrap();
+    let alone = kit.meta.recommended_from(&[FINISHED]).await.unwrap();
+    assert_eq!(from, alone);
+    assert!(!from[0].2.is_empty(), "the fixture has recommendations");
+    let because = found.because.unwrap().unwrap();
+    assert_eq!(because, from[0].2, "the same titles, best first");
+
+    // Refused as a whole, each part is asked on its own.
+    kit.server.clear_requests();
+    kit.server.fail_next(Failure::GraphQl("Max query complexity of 500 exceeded".into()));
+    let apart = kit.meta.suggestions(&[AIRING, MOVIE], &[FINISHED], Some((FINISHED, 9))).await;
+    assert_eq!(ids(&apart.titles.unwrap()), [AIRING.get(), MOVIE.get()]);
+    assert_eq!(apart.from.unwrap().unwrap(), alone);
+    assert_eq!(apart.because.unwrap().unwrap(), because);
+    assert_eq!(kit.server.requests().len(), 4, "refused, then one for each");
+
+    // Over the network, a failure is each part's, and the titles fall to what is kept.
+    kit.server.fail_next(Failure::Disconnect);
+    let failed = kit.meta.suggestions(&[AIRING], &[FINISHED], None).await;
+    assert!(failed.from.unwrap().is_err());
+    assert_eq!(ids(&failed.titles.unwrap()), [AIRING.get()], "from the cache");
+}
+
+/// Made-up titles from `first`, `n` of them, for lookups larger than a page.
+fn invented_run(kit: &MetaKit, first: u32, n: u32) -> Vec<kaeri_core::ids::AnilistId> {
+    kit.server.add_titles(
+        (first..first + n)
+            .map(|id| fixtures::invented(id, "FINISHED", 12, (2020, 1, 1), &[], &[])),
+    );
+    (first..first + n).map(kaeri_core::ids::AnilistId::new).collect()
+}
+
+#[tokio::test]
+async fn titles_past_a_page_go_as_pages_in_one_request_within_the_complexity_limit() {
+    let kit = MetaKit::start().await;
+    let ids = invented_run(&kit, 970_000, 200);
+    let found = kit.meta.anilist().media_many(&ids).await.unwrap();
+    assert_eq!(found.iter().map(|m| m.id).collect::<Vec<_>>(), ids, "every one, in order");
+    let asked = kit.server.requests_for(Operation::Many);
+    assert_eq!(asked.len(), 1, "four pages of fifty in one request");
+    let cost = kaeri_testkit::complexity(&asked[0].query, &asked[0].variables);
+    assert!(cost < kaeri_testkit::COMPLEXITY_LIMIT, "{cost}");
+}
+
+#[tokio::test]
+async fn season_headers_with_their_named_relations_stay_within_the_complexity_limit() {
+    let kit = MetaKit::start().await;
+    let ids = invented_run(&kit, 972_000, 200);
+    let found = kit.meta.anilist().media_headers(&ids).await.unwrap();
+    assert_eq!(found.len(), ids.len());
+    let asked = kit.server.requests_for(Operation::Many);
+    assert_eq!(asked.len(), 1, "four pages of fifty in one request");
+    assert!(asked[0].query.contains(kaeri_meta::anilist::query::HEADER_RELATIONS));
+    let cost = kaeri_testkit::complexity(&asked[0].query, &asked[0].variables);
+    assert!(cost < kaeri_testkit::COMPLEXITY_LIMIT, "{cost}");
+}
+
+#[tokio::test]
+async fn the_largest_season_list_the_walk_allows_is_asked_within_the_complexity_limit() {
+    let kit = MetaKit::start().await;
+    // The most titles a walk can learn of: every one of its requests full.
+    let most = kaeri_meta::franchise::MAX_REQUESTS * 50;
+    let ids = invented_run(&kit, 971_000, most as u32);
+    let found = kit.meta.anilist().media_many(&ids).await.unwrap();
+    assert_eq!(found.len(), most);
+    let asked = kit.server.requests_for(Operation::Many);
+    assert_eq!(asked.len(), most.div_ceil(kaeri_meta::anilist::MANY_PER_REQUEST));
+    for request in asked {
+        let cost = kaeri_testkit::complexity(&request.query, &request.variables);
+        assert!(cost < kaeri_testkit::COMPLEXITY_LIMIT, "{cost}");
+    }
+}
+
+#[tokio::test]
+async fn a_franchise_s_season_headers_come_in_one_request_and_head_each_season_s_page() {
+    use fixtures::LONG_FRANCHISE_SEASONS as SEASONS;
+    let kit = MetaKit::start().await;
+    kit.server.add_titles(fixtures::long_franchise());
+    let opened = SEASONS[5];
+    // Nothing is kept before the page has walked its franchise.
+    assert!(kit.meta.season_headers(opened).await.is_empty());
+    assert!(kit.server.requests_for(Operation::Many).is_empty());
+
+    let (media, fresh) = kit.meta.media_answered(opened).await.unwrap();
+    kit.meta.seasons(&media, fresh, |_| {}).await;
+    let headers = kit.meta.season_headers(opened).await;
+    let others: Vec<_> = SEASONS.iter().copied().filter(|id| *id != opened).collect();
+    assert_eq!(headers.iter().map(|m| m.id).collect::<Vec<_>>(), others, "in watch order");
+    assert_eq!(kit.server.requests_for(Operation::Many).len(), 1, "every season in one");
+    assert!(headers.iter().all(|m| m.cover_image.extra_large.is_some()));
+
+    // Each season's page is headed from what came, and nothing more is asked for headers.
+    for id in &others {
+        let (header, seasons) = kit.meta.season_header(*id).expect("a kept header");
+        assert_eq!(header.id, *id);
+        assert_eq!(
+            header.banner_image,
+            fixtures::long_franchise_media()
+                .into_iter()
+                .find(|m| m.id == *id)
+                .unwrap()
+                .banner_image
+        );
+        assert_eq!(seasons.len(), SEASONS.len());
+        // Its related titles came with it, each named, as its page will show them.
+        let page = fixtures::long_franchise_media().into_iter().find(|m| m.id == *id).unwrap();
+        let ids = |m: &kaeri_meta::anilist::Media| {
+            m.relations.edges.iter().map(|e| e.node.id).collect::<Vec<_>>()
+        };
+        assert_eq!(ids(&header), ids(&page));
+        assert!(header.relations.edges.iter().all(|e| !e.node.title.all().is_empty()));
+        assert_eq!(kit.meta.season_headers(*id).await.len(), SEASONS.len() - 1);
+    }
+    assert_eq!(kit.server.requests_for(Operation::Many).len(), 1);
+
+    // Once AniList has answered for a page, the page heads itself.
+    kit.meta.media(others[0]).await.unwrap();
+    assert!(kit.meta.season_header(others[0]).is_none());
+    assert!(kit.meta.season_header(opened).is_none());
 }

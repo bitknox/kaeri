@@ -139,7 +139,9 @@ async fn load_listed(
     id: kaeri_core::ids::AnilistId,
     progress: &mut (dyn FnMut(Vec<EpisodeRow>) + Send),
 ) -> std::result::Result<Listed, String> {
-    let media = meta.media(id).await.map_err(|e| e.to_string())?;
+    // What the screen's covers brought for their tables when it serves, so a hover card's Play
+    // line asks nothing of its own: see `Meta::table_media`.
+    let media = meta.table_media(id).await.map_err(|e| e.to_string())?;
     // Numbered by the source a play would use, which may be one still compiling.
     crate::sources::arrived(registry, || ()).await;
     let now = now_epoch();
@@ -792,7 +794,7 @@ mod tests {
 
     #[tokio::test]
     async fn a_season_out_all_at_once_is_listed_from_the_page_the_user_chose() {
-        // The site has the whole season while AniList's schedule has three out: from the
+        // The source has the whole season while AniList's schedule has three out: from the
         // listing alone that is the season before matched by its name, so it is not taken...
         let store = store();
         let meta = sequel::meta(&store, sequel::airing());

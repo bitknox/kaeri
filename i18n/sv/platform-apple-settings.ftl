@@ -29,7 +29,6 @@ settings-folder-default = Sparas med torrentcachen
 settings-storage-unwatched = Ännu inte sett
 settings-storage-used = { $size } i hämtningar.
 settings-storage-used-free = { $size } i hämtningar. { $free } lediga på den här { -device }en.
-settings-torrents-warn-note = Att välja Bara varna frågar först om bekräftelse, precis som Inget skydd.
 settings-source-count = { $count ->
     [one] En { -source }
    *[other] { $count } { -source-pl }

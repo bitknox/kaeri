@@ -9,9 +9,9 @@ friends, and an open store whose link travels further can outgrow a free plan.
 
 | Where | How | Keeps its data in | Cost |
 | --- | --- | --- | --- |
-| Cloudflare | Button in [`cloudflare/`](cloudflare/) | D1 and R2 | A group of friends fits in the free tier |
-| Vercel | Button in [`vercel/`](vercel/) | Neon Postgres | A group of friends fits in the Hobby plan and Neon's free plan |
-| Netlify | Button in [`netlify/`](netlify/) | Netlify Database (Postgres) | A group of friends fits in the Free plan |
+| Cloudflare | Button in [`cloudflare/`](cloudflare/) | D1 and R2 | A small store fits in the free tier |
+| Vercel | Button in [`vercel/`](vercel/) | Neon Postgres | A small store fits in the Hobby plan and Neon's free plan |
+| Netlify | Button in [`netlify/`](netlify/) | Netlify Database (Postgres) | A small store fits in the Free plan |
 | Fly.io | [`fly launch`](#flyio) | A 1 GB volume | Billed by usage; the machine stops when idle |
 | Render | [Button](#render) | A 1 GB disk | Disks need a paid instance |
 | Railway | A template, made once from [`railway/`](railway/) | A volume | Billed by usage |
@@ -105,8 +105,8 @@ Running it copies the newest release's template over yours, keeps your `wrangler
 
 `ghcr.io/bitknox/kaeri-store`, for linux/amd64 and linux/arm64, built from
 [`container/Dockerfile`](container/Dockerfile) by `.github/workflows/store-image.yml`. Its tags
-are the release's version (`0.1.4`), its minor version (`0.1`) and `latest`. While the major version is 0 the
-templates use the minor tag, `0.1`, which follows every 0.1.x release. A new minor version means
+are the release's version (`0.2.0`), its minor version (`0.2`) and `latest`. While the major version is 0 the
+templates use the minor tag, `0.2`, which follows every 0.2.x release. A new minor version means
 changing the tag by hand, and `deploy/sync.sh --check` fails until every template names the
 workspace's minor version.
 

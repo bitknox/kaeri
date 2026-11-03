@@ -279,7 +279,7 @@ async fn main() -> Result<()> {
     init_logging(&paths);
 
     // A malformed config must not stop the app from starting, but it must be loud — silently
-    // ignoring it could mean silently ignoring a VPN setting. Logged, printed for the commands
+    // ignoring it could mean silently ignoring a proxy setting. Logged, printed for the commands
     // that print, and kept for the interface, which says so for as long as it runs.
     let mut config_problem = None;
     let mut config = Config::read(&paths).unwrap_or_else(|problem| {
@@ -587,29 +587,26 @@ mod tests {
     // here rather than beside the work they check.
 
     #[test]
-    fn a_verdict_reads_on_the_badge_as_the_guard_words_it() {
-        use kaeri_providers::vpn::GuardState;
+    fn a_proxy_check_reads_on_the_badge_as_the_check_words_it() {
+        use kaeri_providers::proxy::ProxyState;
 
-        // Every verdict a check can reach. Not yet checked is said before any check runs, and
+        // Every result a check can reach. Not yet checked is said before any check runs, and
         // does not alert: nothing runs until it passes.
-        let egress = kaeri_providers::vpn::Egress {
-            asn_org: Some("Tunnel Example AB".into()),
-            country: Some("Sweden".into()),
-            ..Default::default()
-        };
-        for state in [
-            GuardState::Protected { egress: Box::new(egress) },
-            GuardState::Leaking { reason: "egress is the home network".into() },
-            GuardState::Unreachable { reason: "the proxy did not answer".into() },
-            GuardState::Unprotected,
-        ] {
-            let badge = kaeri_tui::app::vpn_badge(&sources::guard_view(&state));
+        for state in [ProxyState::Passed, ProxyState::Failed { reason: "refused".into() }] {
+            let (badge, alerts) = kaeri_tui::app::proxy_badge(sources::proxy_status(&state))
+                .expect("a proxy has a chip");
             // The words are the terminal's own; what must agree is whether it alerts.
-            assert!(badge.0.to_lowercase().starts_with("vpn"), "{state:?}: {}", badge.0);
-            assert_eq!(badge.1, !state.is_protected(), "{state:?}");
+            assert!(badge.to_lowercase().starts_with("proxy"), "{state:?}: {badge}");
+            assert_eq!(alerts, !state.is_ready(), "{state:?}");
         }
-        let checking = kaeri_tui::app::vpn_badge(&sources::guard_view(&GuardState::Unverified));
-        assert!(!checking.1);
+        let checking =
+            kaeri_tui::app::proxy_badge(sources::proxy_status(&ProxyState::Unchecked));
+        assert!(!checking.expect("a proxy has a chip").1);
+        // Connecting directly has no chip at all.
+        assert_eq!(
+            kaeri_tui::app::proxy_badge(sources::proxy_status(&ProxyState::Direct)),
+            None
+        );
     }
 
     #[test]

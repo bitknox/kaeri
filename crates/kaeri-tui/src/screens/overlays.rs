@@ -118,7 +118,7 @@ pub(super) fn render_overlay(
     };
 
     // Full width, but only ever as tall as the stage. The header and status line carry state
-    // the user still needs while a modal is open — provider health, the VPN badge, the sync
+    // the user still needs while a modal is open — provider health, the proxy badge, the sync
     // depth — so a long help table must clip rather than swallow them.
     let host = Rect {
         x: area.x,

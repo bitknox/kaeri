@@ -20,9 +20,9 @@ The maintainer inspects every train before it merges, so keep trains few and com
    - Android scenes re-recorded (`android/scripts/scenes.sh`) if engine records changed;
    - Cargo.lock: take one side, then `cargo check --locked`.
 3. **Check** with the `local-checks` skill, everything the train touches, including both R8
-   builds and the Mac Release plus `adhoc-sign.sh` when Apple or packaging changed. Fix what
-   breaks with small signed train commits that say what they fix. Code that only breaks in
-   combination is the usual find.
+   builds and the Mac Release signed with `signing-keychain.sh sign` when Apple or packaging
+   changed. Fix what breaks with small signed train commits that say what they fix. Code that
+   only breaks in combination is the usual find.
 4. **Version.** After the merges, choose the bump. While the major is 0:
    - minor if the train breaks something: a plugin API change that needs plugins rebuilt, config
      or data the previous version can't read, a store protocol break, or a dropped OS version;
@@ -42,7 +42,7 @@ The maintainer inspects every train before it merges, so keep trains few and com
    with `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.
 6. **Review builds.** Don't turn on auto-merge yet. Into `train-<n>/` in the review-builds folder
    the maintainer's own instructions name (outside the repository), put:
-   - the Mac Release app from step 3, after `adhoc-sign.sh`;
+   - the Mac Release app from step 3, signed with Kaeri's certificate by `signing-keychain.sh sign`;
    - the Android app-flavour release APK from the R8 build, with a version code above the latest
      release, so it installs over the store build;
    - `README.md`: a few lines on what changed, before and after shots of every changed screen (from

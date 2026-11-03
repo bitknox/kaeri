@@ -1,12 +1,13 @@
 //! The Providers table: the sources failover walks and their order, and the header's chips
-//! for the sources, the metadata ladder and the VPN guard.
+//! for the sources, the metadata ladder and the torrent proxy.
 
 use kaeri_i18n::t;
 use kaeri_model::{
     command::Command,
     settings::SettingKey,
     sources::{
-        GuardView, ProviderRow, SourceChip, SourceState, order_with_source_moved, source_states,
+        ProviderRow, ProxyStatus, SourceChip, SourceState, order_with_source_moved,
+        source_states,
     },
 };
 
@@ -16,25 +17,22 @@ use crate::{
     theme::glyph,
 };
 
-/// The header's `vpn` chip for a guard's verdict, and whether it alerts.
+/// The header's `proxy` chip for the proxy check's result, and whether it alerts; `None` when
+/// torrents connect directly, which needs no chip.
 ///
-/// A guard still checking does not: it is not yet failing anyone. Nor does one the
-/// configuration runs unprotected, which is a choice rather than a fault.
-pub fn vpn_badge(guard: &GuardView) -> (String, bool) {
-    match guard {
-        GuardView::Checking => {
-            (t::sources_vpn_checking(&glyph::STATE_UNKNOWN.to_string()), false)
+/// A check still running does not alert: it is not yet failing anyone.
+pub fn proxy_badge(status: ProxyStatus) -> Option<(String, bool)> {
+    match status {
+        ProxyStatus::Checking => {
+            Some((t::sources_proxy_checking(&glyph::STATE_UNKNOWN.to_string()), false))
         }
-        GuardView::Protected { exit } => {
-            (t::sources_vpn_protected(&glyph::STATE_READY.to_string(), exit), false)
+        ProxyStatus::Passed => {
+            Some((t::sources_proxy_passed(&glyph::STATE_READY.to_string()), false))
         }
-        GuardView::Leaking => (t::sources_vpn_leaking(&glyph::STATE_DOWN.to_string()), true),
-        GuardView::Unreachable => {
-            (t::sources_vpn_unreachable(&glyph::STATE_DOWN.to_string()), true)
+        ProxyStatus::Failed => {
+            Some((t::sources_proxy_failed(&glyph::STATE_DOWN.to_string()), true))
         }
-        GuardView::Unprotected => {
-            (t::sources_vpn_unprotected(&glyph::STATE_DOWN.to_string()), false)
-        }
+        ProxyStatus::Direct => None,
     }
 }
 
@@ -76,20 +74,17 @@ impl App {
         self.cursors.providers.selected = self.cursors.providers.selected.min(last);
     }
 
-    /// The VPN guard's verdict, for the header's chip: `None` when there is no guard.
-    pub(super) fn apply_vpn(&mut self, guard: Option<GuardView>) {
-        // No guard empties the badge rather than removing it.
-        let (badge, leaking) = guard.as_ref().map_or_else(|| (String::new(), false), vpn_badge);
-        // A newly-failing guard is worth interrupting for: torrents have just been
-        // paused and the user needs to know why playback stopped.
-        if leaking && !self.vpn_leaking {
-            self.push_toast(alert(match guard {
-                Some(GuardView::Unreachable) => t::sources_vpn_unreachable_paused(),
-                _ => t::sources_vpn_leak_paused(),
-            }));
+    /// The proxy check's result, for the header's chip: `None` when torrents are off.
+    pub(super) fn apply_proxy(&mut self, status: Option<ProxyStatus>) {
+        let (badge, failed) = status.and_then(proxy_badge).unzip();
+        let failed = failed.unwrap_or(false);
+        // A check that has just failed is worth interrupting for: torrents wait for it, and
+        // the viewer needs to know why playback does not start.
+        if failed && !self.proxy_failed {
+            self.push_toast(alert(t::sources_proxy_failed_note()));
         }
-        self.vpn_badge = Some(badge);
-        self.vpn_leaking = leaking;
+        self.proxy_badge = badge;
+        self.proxy_failed = failed;
     }
 
     /// Whether metadata is currently served by anything other than AniList.

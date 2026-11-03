@@ -253,7 +253,7 @@
   </data>
   <data name="LicensedReturn" xml:space="preserve">
     <value>[Ŵàţçĥéð éþîšöðé {episode} öñ {service}?~~~~~~~~~]</value>
-    <comment>Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Stream.</comment>
+    <comment>Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.</comment>
   </data>
   <data name="LicensedMarked" xml:space="preserve">
     <value>[Éþîšöðé {episode} ɱàŕķéð àš ŵàţçĥéð.~~~~~~~~~]</value>
@@ -899,17 +899,13 @@
     <value>[Çöüļðñ'ţ šàṽé ţĥàţ çĥöîçé. {reason}~~~~~~~~~]</value>
     <comment>Toast when the chosen source or release for a title could not be saved. The reason comes from the database.</comment>
   </data>
-  <data name="TorrentCheckFailedRunning" xml:space="preserve">
-    <value>[Ţĥé çöññéçţîöñ çĥéçķ ƒàîļéð. Ţöŕŕéñţš ķééþ ŕüññîñĝ.~~~~~~~~~~~~~~~~]</value>
-    <comment>Toast while torrents are running but the connection check failed, and the settings say to warn only.</comment>
+  <data name="TorrentProxyWaiting" xml:space="preserve">
+    <value>[Ţĥé þŕöẋý çĥéçķ ƒàîļéð. Ţöŕŕéñţš šţàŕţ öñçé îţ þàššéš.~~~~~~~~~~~~~~~~~]</value>
+    <comment>Note on the sources screen: the proxy for torrent traffic failed its check, so torrents wait.</comment>
   </data>
-  <data name="TorrentVpnWaiting" xml:space="preserve">
-    <value>[Ţöŕŕéñţš šţàŕţ öñçé ţĥé ṼÞÑ ĝüàŕð þàššéš. {reason}~~~~~~~~~~~~~~]</value>
-    <comment>Note on the sources screen: torrents are waiting for the VPN guard. The reason comes from the guard.</comment>
-  </data>
-  <data name="TorrentVpnUnverified" xml:space="preserve">
-    <value>[Ţöŕŕéñţš šţàŕţ öñçé ţĥé ṼÞÑ ĝüàŕð þàššéš. Ţĥé çöññéçţîöñ ĥàšñ'ţ ƀééñ ṽéŕîƒîéð ýéţ.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
-    <comment>Note on the sources screen: the VPN guard has no verdict yet.</comment>
+  <data name="TorrentProxyUnchecked" xml:space="preserve">
+    <value>[Ţöŕŕéñţš šţàŕţ öñçé ţĥé þŕöẋý çĥéçķ þàššéš.~~~~~~~~~~~~~]</value>
+    <comment>Note on the sources screen: the proxy for torrent traffic hasn't been checked yet.</comment>
   </data>
   <data name="TorrentLinkUnusable" xml:space="preserve">
     <value>[Ţĥàţ îšñ'ţ à ɱàĝñéţ ļîñķ öŕ à ţöŕŕéñţ ƒîļé.~~~~~~~~~~~~~]</value>
@@ -931,17 +927,13 @@
     <value>[Çöüļðñ'ţ šţàŕţ ţĥé ţöŕŕéñţ šéššîöñ. {reason}~~~~~~~~~~~~]</value>
     <comment>Error: the torrent session could not start. The reason comes from the torrent engine.</comment>
   </data>
-  <data name="TorrentNoKillSwitch" xml:space="preserve">
-    <value>[Ñöţĥîñĝ öñ ţĥîš ðéṽîçé šţöþš ţöŕŕéñţ ţŕàƒƒîç îƒ ţĥé ṼÞÑ ðŕöþš. Ŕüñ "ķàéŕî --ðöçţöŕ" ţö šéţ ţĥàţ üþ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
-    <comment>Toast when torrents are up but no operating-system firewall rule backs the VPN guard. Terminal only: the engine never sends it to the apps.</comment>
+  <data name="TorrentProxyUnusable" xml:space="preserve">
+    <value>[Ţĥé þŕöẋý šéţţîñĝ çàñ'ţ ƀé üšéð. {reason}~~~~~~~~~~~]</value>
+    <comment>Toast when the proxy setting can't be used. The reason comes from the proxy setting.</comment>
   </data>
-  <data name="TorrentNotChecked" xml:space="preserve">
-    <value>[Çöüļðñ'ţ çĥéçķ ţĥé çöññéçţîöñ. {reason}~~~~~~~~~~~]</value>
-    <comment>Toast when the connection check could not run. The reason comes from the VPN settings.</comment>
-  </data>
-  <data name="SourcesReloadedTorrentsPending" xml:space="preserve">
-    <value>[Šöüŕçéš ŕéļöàðéð. Ţöŕŕéñţš šţàŕţ öñçé ţĥé ṼÞÑ ĝüàŕð þàššéš.~~~~~~~~~~~~~~~~~~]</value>
-    <comment>Note on the sources screen after the source chain is rebuilt with torrents on.</comment>
+  <data name="SourcesReloadedTorrentsChecking" xml:space="preserve">
+    <value>[Šöüŕçéš ŕéļöàðéð. Ţöŕŕéñţš šţàŕţ öñçé ţĥé þŕöẋý çĥéçķ þàššéš.~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Note on the sources screen after the source chain is rebuilt with torrents on and a proxy set.</comment>
   </data>
   <data name="SourcesReloadedTorrentsOff" xml:space="preserve">
     <value>[Ţöŕŕéñţš àŕé öƒƒ. Ţĥé šéššîöñ ŵàš šţöþþéð.~~~~~~~~~~~~~]</value>
@@ -1091,13 +1083,17 @@
     <value>[Çöüļðñ'ţ šàṽé ţĥàţ šéţţîñĝ. {cause}~~~~~~~~~~]</value>
     <comment>Toast when a setting could not be stored. The cause says why and what to do.</comment>
   </data>
-  <data name="NoticeProtectionSaved" xml:space="preserve">
-    <value>[Šàṽéð ţöŕŕéñţ þŕöţéçţîöñ.~~~~~~~~]</value>
-    <comment>Toast when the torrent protection choice was saved.</comment>
+  <data name="NoticeProxySaved" xml:space="preserve">
+    <value>[Ţöŕŕéñţ ţŕàƒƒîç ñöŵ ĝöéš ţĥŕöüĝĥ ţĥé þŕöẋý.~~~~~~~~~~~~~]</value>
+    <comment>Toast when the proxy for torrent traffic was saved.</comment>
   </data>
-  <data name="NoticeProtectionNotChecked" xml:space="preserve">
-    <value>[Çöüļðñ'ţ çĥéçķ ţĥé ţöŕŕéñţ þŕöţéçţîöñ. {cause}~~~~~~~~~~~~~]</value>
-    <comment>Toast when the torrent protection could not be checked. The cause says why.</comment>
+  <data name="NoticeProxyRemoved" xml:space="preserve">
+    <value>[Ţöŕŕéñţš ñöŵ çöññéçţ ðîŕéçţļý, ŵîţĥöüţ à þŕöẋý.~~~~~~~~~~~~~~~]</value>
+    <comment>Toast when the proxy for torrent traffic was turned off.</comment>
+  </data>
+  <data name="NoticeProxyNotChecked" xml:space="preserve">
+    <value>[Çöüļðñ'ţ çĥéçķ ţĥé þŕöẋý. {cause}~~~~~~~~~]</value>
+    <comment>Toast when the proxy could not be checked. The cause says why.</comment>
   </data>
   <data name="NoticeProxyPasswordNotKept" xml:space="preserve">
     <value>[Çöüļðñ'ţ ķééþ ţĥé þŕöẋý'š þàššŵöŕð. Éñţéŕ îţ àĝàîñ ţö ţŕý šàṽîñĝ îţ. {reason}~~~~~~~~~~~~~~~~~~~~~~]</value>
@@ -1114,10 +1110,6 @@
   <data name="NoticeShowNoSuchSubtitles" xml:space="preserve">
     <value>[Çöüļðñ'ţ šàṽé ţĥàţ šüƀţîţļé çĥöîçé. Ţĥîš šĥöŵ ĥàšñ'ţ üšéð ţĥöšé šüƀţîţļéš ƀéƒöŕé.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Toast when a subtitle choice names subtitles the show has not used.</comment>
-  </data>
-  <data name="NoticeTorrentsWaitingForCheck" xml:space="preserve">
-    <value>[Ţöŕŕéñţš àŕé ŵàîţîñĝ ƒöŕ ţĥé çöññéçţîöñ çĥéçķ ţö þàšš àĝàîñ.~~~~~~~~~~~~~~~~~~]</value>
-    <comment>Toast while torrents are held until the connection check passes.</comment>
   </data>
   <data name="NoticeMappingDataRefreshed" xml:space="preserve">
     <value>[Ṁàþþîñĝ ðàţà ŕéƒŕéšĥéð.~~~~~~~]</value>
@@ -1142,14 +1134,6 @@
   <data name="NoticeUpdateAvailable" xml:space="preserve">
     <value>[{tag} îš öüţ. Ŕüñ ķàéŕî --üþðàţé ţö îñšţàļļ îţ.~~~~~~~~~~~~~~]</value>
     <comment>Toast when a new release of Kaeri is out, on the terminal app. The command is not translated. Terminal only: the engine never sends it to the apps.</comment>
-  </data>
-  <data name="CauseConfirmNoProtection" xml:space="preserve">
-    <value>[Çöñƒîŕɱ ţĥàţ ýöü ŵàñţ ñö þŕöţéçţîöñ ƒîŕšţ.~~~~~~~~~~~~~]</value>
-    <comment>The reason a setting was refused until the person confirms having no protection.</comment>
-  </data>
-  <data name="CauseConfirmWarnOnly" xml:space="preserve">
-    <value>[Çöñƒîŕɱ ţĥàţ ýöü ŵàñţ ţö ƀé ŵàŕñéð öñļý ƒîŕšţ.~~~~~~~~~~~~~~]</value>
-    <comment>The reason a setting was refused until the person confirms the "warn only" choice.</comment>
   </data>
   <data name="CauseProxyNeedsAddress" xml:space="preserve">
     <value>[Å þŕöẋý ñééðš à ĥöšţ àñð à þöŕţ.~~~~~~~~~~]</value>
@@ -1389,7 +1373,7 @@
   </data>
   <data name="SearchResultPlaysHere" xml:space="preserve">
     <value>[Þļàýš ĥéŕé~~~]</value>
-    <comment>Search: end of a result's line when a free catalogue or the demo has the title.</comment>
+    <comment>Search: end of a result's line when an open catalogue or the demo has the title.</comment>
   </data>
   <data name="SearchResultInLibrary" xml:space="preserve">
     <value>[Îñ ýöüŕ ļîƀŕàŕý~~~~~]</value>
@@ -1521,7 +1505,7 @@
   </data>
   <data name="SettingsCardState" xml:space="preserve">
     <value>[{title}, {state}~~~]</value>
-    <comment>Screen reader name of a setting card that also says its state, such as "Protect with, Proxy saved".</comment>
+    <comment>Screen reader name of a setting card that also says its state, such as "Route torrent traffic through a proxy, Proxy saved".</comment>
   </data>
   <data name="SettingsCardCheck" xml:space="preserve">
     <value>[{title}, {word}, {note}~~~~]</value>
@@ -1554,10 +1538,6 @@
   <data name="SettingsPlayerInterface" xml:space="preserve">
     <value>[Þļàýéŕ îñţéŕƒàçé~~~~~]</value>
     <comment>Setting: the app's own player controls, or mpv's.</comment>
-  </data>
-  <data name="SettingsVpnMode" xml:space="preserve">
-    <value>[ṼÞÑ ɱöðé~~~]</value>
-    <comment>Setting: how torrent traffic is protected. VPN stays in capitals: it is an abbreviation.</comment>
   </data>
   <data name="SettingsTokenStorage" xml:space="preserve">
     <value>[Ţöķéñ šţöŕàĝé~~~~]</value>
@@ -1643,10 +1623,6 @@
     <value>[Ļîçéñšéð üñðéŕ ţĥé ĜÑÛ Ļéššéŕ Ĝéñéŕàļ Þüƀļîç Ļîçéñšé, ṽéŕšîöñ 2.1 öŕ ļàţéŕ.~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Notice line for the video library the player uses.</comment>
   </data>
-  <data name="TorrentsWarnInstead" xml:space="preserve">
-    <value>[Ķàéŕî ŵîļļ ŵàŕñ ýöü îñšţéàð öƒ þàüšîñĝ. Îƒ ýöüŕ ṼÞÑ öŕ þŕöẋý îš ðöŵñ, öţĥéŕ þéöþļé çàñ šéé ýöüŕ ÎÞ àððŕéšš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
-    <comment>Confirmation text before choosing Warn only for a failed check.</comment>
-  </data>
   <data name="ShowSettingsLabel" xml:space="preserve">
     <value>[Šéţţîñĝš ƒöŕ {title}~~~~~]</value>
     <comment>Screen reader name of a show's settings dialog.</comment>
@@ -1679,25 +1655,9 @@
     <value>[Ĥîĝĥéŕ~~]</value>
     <comment>Value of the download quality setting: a larger, sharper version where a source has one.</comment>
   </data>
-  <data name="TorrentsDialogTurnOn" xml:space="preserve">
-    <value>[Ţüŕñ öñ ţöŕŕéñţš~~~~~]</value>
-    <comment>Title of the dialog that turns torrents on and asks what protects them.</comment>
-  </data>
-  <data name="TorrentsDialogProtect" xml:space="preserve">
-    <value>[Þŕöţéçţ ţöŕŕéñţš~~~~~]</value>
-    <comment>Title of the dialog that changes what protects torrents.</comment>
-  </data>
   <data name="TorrentsDialogEditProxy" xml:space="preserve">
     <value>[Éðîţ þŕöẋý~~~]</value>
     <comment>Title of the dialog that edits the saved proxy.</comment>
-  </data>
-  <data name="TorrentsDialogTurnOnAction" xml:space="preserve">
-    <value>[Ţüŕñ öñ~~~]</value>
-    <comment>The torrent dialog's main button when it turns torrents on.</comment>
-  </data>
-  <data name="TorrentsChoiceSpoken" xml:space="preserve">
-    <value>[{label}. {detail}~~~]</value>
-    <comment>Screen reader name of a protection choice: its name, then what it does.</comment>
   </data>
   <data name="SettingsNoteTrailersWindows" xml:space="preserve">
     <value>[Ţŕàîļéŕš þļàý ɱüţéð ƒŕöɱ ÝöüŢüƀé, ŵĥîçĥ šééš ýöüŕ ÎÞ àððŕéšš. Ţĥéý ðöñ'ţ þļàý öñ à ɱéţéŕéð çöññéçţîöñ, ŵîţĥ àñîɱàţîöñ éƒƒéçţš öƒƒ, îñ éñéŕĝý šàṽéŕ ɱöðé öŕ ŵîţĥ Ñàŕŕàţöŕ ŕüññîñĝ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
@@ -1970,10 +1930,6 @@
   <data name="SourcesStatusWorking" xml:space="preserve">
     <value>[Ŕéàðý~~]</value>
     <comment>How a { -source } stands when nothing is wrong with it.</comment>
-  </data>
-  <data name="SourcesTorrentIndexes" xml:space="preserve">
-    <value>[Šéàŕçĥéš ţĥé ţöŕŕéñţ îñðéẋéš ýöü ĥàṽé ţüŕñéð öñ üñðéŕ Šéţţîñĝš.~~~~~~~~~~~~~~~~~~~]</value>
-    <comment>In the torrent { -source }'s detail, in place of the hosts it contacts.</comment>
   </data>
   <data name="SourcesVersionReady" xml:space="preserve">
     <value>[Ṽéŕšîöñ {version} îš ŕéàðý~~~~~~]</value>
@@ -4820,7 +4776,7 @@
     <comment>Heading of the group that joins a store with an invite.</comment>
   </data>
   <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>[Þļüĝîñš çöɱé ƒŕöɱ þļüĝîñ šţöŕéš. Å þļüĝîñ šţöŕé îš ŕüñ ƀý öñé þéŕšöñ ƒöŕ ţĥé þéöþļé ţĥéý îñṽîţé, šö ýöü ĵöîñ öñé ŵîţĥ àñ îñṽîţé ļîñķ ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Þļüĝîñš çöɱé ƒŕöɱ þļüĝîñ šţöŕéš. Å þļüĝîñ šţöŕé îš šîĝñéð àñð ĝîṽéš éàçĥ ðéṽîçé îţš öŵñ ţöķéñ, šö ýöü ĵöîñ öñé ŵîţĥ àñ îñṽîţé ļîñķ ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.</comment>
   </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
@@ -7384,7 +7340,7 @@
     <comment>Title of the confirmation for resetting the settings.</comment>
   </data>
   <data name="SettingsResetDetail" xml:space="preserve">
-    <value>[Éṽéŕý šéţţîñĝ ĝöéš ƀàçķ ţö îţš ðéƒàüļţ, ṼÞÑ àñð þŕöẋý îñçļüðéð. Ýöüŕ ŵàţçĥ ĥîšţöŕý šţàýš, àñð ţĥé öļð šéţţîñĝš ƒîļé îš ķéþţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Éṽéŕý šéţţîñĝ ĝöéš ƀàçķ ţö îţš ðéƒàüļţ, ţĥé ţöŕŕéñţ þŕöẋý îñçļüðéð. Ýöüŕ ŵàţçĥ ĥîšţöŕý šţàýš, àñð ţĥé öļð šéţţîñĝš ƒîļé îš ķéþţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under it. The old settings file is moved aside, not deleted.</comment>
   </data>
   <data name="SettingsResetDone" xml:space="preserve">
@@ -7612,8 +7568,8 @@
     <comment>Under a source that found more than one show by this name and could not tell which is this one.</comment>
   </data>
   <data name="SourceNoteHeldBack" xml:space="preserve">
-    <value>[Ĥéļð ƀàçķ ƀý ţĥé ṼÞÑ çĥéçķ~~~~~~~~]</value>
-    <comment>Under a source held back by the VPN check in Settings.</comment>
+    <value>[Ŵàîţîñĝ ƒöŕ ţĥé þŕöẋý çĥéçķ~~~~~~~~~]</value>
+    <comment>Under a source that waits for the proxy check in Settings.</comment>
   </data>
   <data name="SourcePickerReleases" xml:space="preserve">
     <value>[Ŕéļéàšéš~~~]</value>
@@ -7671,14 +7627,6 @@
     <value>[Ţöŕŕéñţš~~~]</value>
     <comment>Row for the built-in torrent source.</comment>
   </data>
-  <data name="SourcesRemote" xml:space="preserve">
-    <value>[Ŕéɱöţé~~]</value>
-    <comment>Label of a source that is not a plugin and controls this device.</comment>
-  </data>
-  <data name="SourcesOriginConfig" xml:space="preserve">
-    <value>[Šéţ îñ ţĥé çöñƒîĝ ƒîļé~~~~~~~]</value>
-    <comment>Origin: set in the config file.</comment>
-  </data>
   <data name="SourcesOriginBuiltIn" xml:space="preserve">
     <value>[Ɓüîļţ îñ~~~]</value>
     <comment>Origin: built into the app.</comment>
@@ -7728,8 +7676,8 @@
     <comment>Status line: no answer.</comment>
   </data>
   <data name="SourcesDetailHeldBack" xml:space="preserve">
-    <value>[Ĥéļð ƀàçķ üñţîļ ţĥé çöññéçţîöñ çĥéçķ þàššéš.~~~~~~~~~~~~~~]</value>
-    <comment>Status line: held back by the check.</comment>
+    <value>[Ŵàîţîñĝ üñţîļ ţĥé þŕöẋý çĥéçķ þàššéš.~~~~~~~~~~~~]</value>
+    <comment>Status line: waiting for the proxy check.</comment>
   </data>
   <data name="SourcesDetailDisabled" xml:space="preserve">
     <value>[Öƒƒ. Îţ ķééþš îţš þļàçé àñð îšñ'ţ ţŕîéð.~~~~~~~~~~~~]</value>
@@ -7741,7 +7689,7 @@
   </data>
   <data name="SourcesDetailSite" xml:space="preserve">
     <value>[Ţĥé šöüŕçé ðîðñ'ţ àñšŵéŕ.~~~~~~~~]</value>
-    <comment>Status line: the site did not answer.</comment>
+    <comment>Status line: the source did not answer.</comment>
   </data>
   <data name="SourcesVersion" xml:space="preserve">
     <value>[Ṽéŕšîöñ~~~]</value>
@@ -7828,7 +7776,7 @@
     <comment>Row: where the plugin's page stands.</comment>
   </data>
   <data name="SourcesTorrentsNote" xml:space="preserve">
-    <value>[Ţöŕŕéñţš àŕé þàŕţ öƒ Ķàéŕî, ñöţ à þļüĝîñ. Ŵĥàţ þŕöţéçţš ţĥéîŕ ţŕàƒƒîç, ţĥé çöññéçţîöñ çĥéçķ àñð šééðîñĝ àŕé šéţ îñ Šéţţîñĝš, üñðéŕ Šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ţöŕŕéñţš àŕé þàŕţ öƒ Ķàéŕî, ñöţ à þļüĝîñ. Ţĥé þŕöẋý àñð šééðîñĝ àŕé šéţ îñ Šéţţîñĝš, üñðéŕ Šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Note under the facts on the Torrents page in Sources. Torrents are built in, not a plugin.</comment>
   </data>
   <data name="SourcesRebuilding" xml:space="preserve">
@@ -8088,7 +8036,7 @@
     <comment>Heading of the section that lists the plugins.</comment>
   </data>
   <data name="SourcesSectionCatalogues" xml:space="preserve">
-    <value>[Ƒŕéé çàţàļöĝüéš~~~~~]</value>
+    <value>[Öþéñ çàţàļöĝüéš~~~~~]</value>
     <comment>Section heading: Internet Archive collections and PeerTube channels.</comment>
   </data>
   <data name="SourcesAddDemo" xml:space="preserve">
@@ -8108,7 +8056,7 @@
     <comment>Title of the empty list.</comment>
   </data>
   <data name="StoresEmptyDetail" xml:space="preserve">
-    <value>[Þļüĝîñ šţöŕéš àŕé ŕüñ ƀý þéöþļé ýöü ķñöŵ. Ĵöîñ öñé ŵîţĥ ţĥé îñṽîţé ļîñķ îţš öŵñéŕ šéñðš ýöü.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Þļüĝîñ šţöŕéš ĥöļð šîĝñéð þļüĝîñš àñð ĝîṽé éàçĥ ðéṽîçé îţš öŵñ ţöķéñ. Ĵöîñ öñé ŵîţĥ ţĥé îñṽîţé ļîñķ îţš öŵñéŕ šéñðš ýöü.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under the empty title.</comment>
   </data>
   <data name="StoresIntro" xml:space="preserve">
@@ -8763,7 +8711,7 @@
     <comment>Button of a notice that opens the plugin stores page.</comment>
   </data>
   <data name="StoresWhatIs" xml:space="preserve">
-    <value>[Å þļüĝîñ šţöŕé îš à šɱàļļ šéŕṽéŕ öñé þéŕšöñ ŕüñš ƒöŕ ţĥé þéöþļé ţĥéý îñṽîţé. Îţ öƒƒéŕš šöüŕçéš àš þļüĝîñš. Ķàéŕî ŕüñš ñö þļüĝîñ šţöŕéš àñð ļîšţš ñöñé, šö ýöü ĵöîñ öñé ŵîţĥ àñ îñṽîţé ļîñķ ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Å þļüĝîñ šţöŕé îš à šɱàļļ šéŕṽéŕ ţĥàţ ĥöļðš šîĝñéð þļüĝîñš àñð ĝîṽéš éàçĥ ðéṽîçé îţš öŵñ ţöķéñ. Îţ öƒƒéŕš šöüŕçéš àš þļüĝîñš. Ķàéŕî ŕüñš ñö þļüĝîñ šţöŕéš àñð ļîšţš ñöñé, šö ýöü ĵöîñ öñé ŵîţĥ àñ îñṽîţé ļîñķ ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Explainer on the empty plugin stores page.</comment>
   </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
@@ -9191,80 +9139,36 @@
     <comment>Label and short value for the switch.</comment>
   </data>
   <data name="TorrentsOffDetail" xml:space="preserve">
-    <value>[Öƒƒ ƀý ðéƒàüļţ. Ţüŕñîñĝ ţĥîš öñ àšķš ĥöŵ ţö þŕöţéçţ ýöüŕ çöññéçţîöñ ƒîŕšţ.~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Öƒƒ ƀý ðéƒàüļţ. Ţöŕŕéñţš çöññéçţ ðîŕéçţļý üñļéšš ýöü ŕöüţé ţĥéɱ ţĥŕöüĝĥ à þŕöẋý.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under the switch while torrents are off.</comment>
   </data>
   <data name="TorrentsRisk" xml:space="preserve">
-    <value>[Öţĥéŕ þéöþļé çàñ šéé ýöüŕ ÎÞ àððŕéšš ŵĥîļé ýöü ðöŵñļöàð àñð šĥàŕé à ţöŕŕéñţ. Çĥööšé ŵĥàţ þŕöţéçţš îţ ƀéƒöŕé ţöŕŕéñţš šţàŕţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
-    <comment>Line explaining the risk, before torrents start.</comment>
+    <value>[Öţĥéŕ þéöþļé îñ à ţöŕŕéñţ çàñ šéé ýöüŕ ÎÞ àððŕéšš. Ţö ķééþ îţ þŕîṽàţé, ŕöüţé ţöŕŕéñţ ţŕàƒƒîç ţĥŕöüĝĥ à þŕöẋý.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line about privacy in the torrent sheet, before torrents start.</comment>
   </data>
   <data name="TorrentsNotAPlugin" xml:space="preserve">
-    <value>[Ţöŕŕéñţš àŕé þàŕţ öƒ Ķàéŕî, ñöţ à þļüĝîñ. Ŵĥàţ þŕöţéçţš ţĥéîŕ ţŕàƒƒîç, ţĥé çöññéçţîöñ çĥéçķ àñð šééðîñĝ àŕé šéţ îñ Šéţţîñĝš, üñðéŕ Šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ţöŕŕéñţš àŕé þàŕţ öƒ Ķàéŕî, ñöţ à þļüĝîñ. Ţĥé þŕöẋý àñð šééðîñĝ àŕé šéţ îñ Šéţţîñĝš, üñðéŕ Šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line in the Apple sources screen: torrents belong to the app, not to a plugin.</comment>
   </data>
-  <data name="TorrentsProtectWith" xml:space="preserve">
-    <value>[Þŕöţéçţ ŵîţĥ~~~~]</value>
-    <comment>Label of the choice of protection.</comment>
+  <data name="TorrentsProxyRoute" xml:space="preserve">
+    <value>[Ŕöüţé ţöŕŕéñţ ţŕàƒƒîç ţĥŕöüĝĥ à þŕöẋý~~~~~~~~~~~~]</value>
+    <comment>Switch: send torrent traffic through a SOCKS5 proxy. Off by default.</comment>
   </data>
-  <data name="TorrentsProtectNone" xml:space="preserve">
-    <value>[Ñö þŕöţéçţîöñ~~~~]</value>
-    <comment>Option: no protection.</comment>
-  </data>
-  <data name="TorrentsProtectProxy" xml:space="preserve">
-    <value>[Þŕöẋý~~]</value>
-    <comment>Option: a proxy.</comment>
-  </data>
-  <data name="TorrentsProtectVpn" xml:space="preserve">
-    <value>[ṼÞÑ~]</value>
-    <comment>Option: a VPN already running on the device.</comment>
-  </data>
-  <data name="TorrentsProtectProxyDetail" xml:space="preserve">
-    <value>[Ţöŕŕéñţ ţŕàƒƒîç ĝöéš ţĥŕöüĝĥ à þŕöẋý ýöü ŕüñ öŕ ŕéñţ.~~~~~~~~~~~~~~~~]</value>
-    <comment>Line under the proxy option.</comment>
-  </data>
-  <data name="TorrentsProtectVpnDetail" xml:space="preserve">
-    <value>[Ûšéš ţĥé ṼÞÑ àļŕéàðý ŕüññîñĝ öñ ţĥîš ðéṽîçé.~~~~~~~~~~~~~~]</value>
-    <comment>Line under the VPN option.</comment>
-  </data>
-  <data name="TorrentsProtectNoneDetail" xml:space="preserve">
-    <value>[Ýöüŕ àððŕéšš îš ṽîšîƀļé ţö éṽéŕýöñé îñ ţĥé ţöŕŕéñţ.~~~~~~~~~~~~~~~~]</value>
-    <comment>Line under the no-protection option.</comment>
-  </data>
-  <data name="TorrentsProtectNoneNote" xml:space="preserve">
-    <value>[Ŵîţĥ ñö þŕöţéçţîöñ, Ķàéŕî ðöéšñ'ţ çĥéçķ ţĥé çöññéçţîöñ.~~~~~~~~~~~~~~~~~]</value>
-    <comment>Line when no protection is set.</comment>
+  <data name="TorrentsProxyRouteDetail" xml:space="preserve">
+    <value>[Ţöŕŕéñţ ţŕàƒƒîç ĝöéš ţĥŕöüĝĥ à ŠÖÇĶŠ5 þŕöẋý ýöü ŕüñ öŕ ŕéñţ. Ŵĥîļé ţĥîš îš öƒƒ, ţöŕŕéñţš çöññéçţ ðîŕéçţļý.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under the switch.</comment>
   </data>
   <data name="TorrentsSummaryProxyAt" xml:space="preserve">
-    <value>[Þŕöţéçţéð ƀý à ŠÖÇĶŠ5 þŕöẋý àţ {host}:{port}.~~~~~~~~~~~~]</value>
-    <comment>Summary: a proxy protects. Host and port are already formatted.</comment>
+    <value>[Ţĥŕöüĝĥ à ŠÖÇĶŠ5 þŕöẋý àţ {host}:{port}.~~~~~~~~~~~]</value>
+    <comment>Summary: torrents go through a proxy. Host and port are already formatted.</comment>
   </data>
   <data name="TorrentsSummaryProxy" xml:space="preserve">
-    <value>[Þŕöţéçţéð ƀý à ŠÖÇĶŠ5 þŕöẋý.~~~~~~~~~]</value>
-    <comment>Summary: a proxy protects, address not shown.</comment>
+    <value>[Ţĥŕöüĝĥ à ŠÖÇĶŠ5 þŕöẋý.~~~~~~~]</value>
+    <comment>Summary: torrents go through a proxy, address not shown.</comment>
   </data>
-  <data name="TorrentsSummaryVpn" xml:space="preserve">
-    <value>[Þŕöţéçţéð ƀý ţĥé ṼÞÑ öñ ţĥîš ðéṽîçé.~~~~~~~~~~~]</value>
-    <comment>Summary: a VPN protects.</comment>
-  </data>
-  <data name="TorrentsSummaryNone" xml:space="preserve">
-    <value>[Ñöţ þŕöţéçţéð. Ýöüŕ àððŕéšš îš ṽîšîƀļé ţö éṽéŕýöñé îñ ţĥé ţöŕŕéñţ.~~~~~~~~~~~~~~~~~~~~]</value>
-    <comment>Summary: nothing protects.</comment>
-  </data>
-  <data name="TorrentsUnprotectedTitle" xml:space="preserve">
-    <value>[Ûšé ţöŕŕéñţš ŵîţĥöüţ þŕöţéçţîöñ?~~~~~~~~~~]</value>
-    <comment>Title of the question when torrents are turned on without protection.</comment>
-  </data>
-  <data name="TorrentsUnprotectedDetail" xml:space="preserve">
-    <value>[Öţĥéŕ þéöþļé çàñ šéé ýöüŕ ÎÞ àððŕéšš ŵĥîļé ýöü ðöŵñļöàð àñð šĥàŕé à ţöŕŕéñţ, àñð Ķàéŕî ðöéšñ'ţ çĥéçķ ţĥé çöññéçţîöñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
-    <comment>Line under it.</comment>
-  </data>
-  <data name="TorrentsTurnOnUnprotected" xml:space="preserve">
-    <value>[Ţüŕñ öñ ŵîţĥöüţ þŕöţéçţîöñ~~~~~~~~]</value>
-    <comment>Button that confirms turning torrents on without protection.</comment>
-  </data>
-  <data name="TorrentsUseUnprotected" xml:space="preserve">
-    <value>[Ûšé ŵîţĥöüţ þŕöţéçţîöñ~~~~~~~]</value>
-    <comment>Button that confirms using no protection.</comment>
+  <data name="TorrentsSummaryDirect" xml:space="preserve">
+    <value>[Çöññéçţîñĝ ðîŕéçţļý, ŵîţĥöüţ à þŕöẋý.~~~~~~~~~~~~]</value>
+    <comment>Summary: no proxy is set.</comment>
   </data>
   <data name="TorrentsProxyHost" xml:space="preserve">
     <value>[Þŕöẋý ĥöšţ~~~]</value>
@@ -9287,7 +9191,7 @@
     <comment>Line under the password field.</comment>
   </data>
   <data name="TorrentsProxyKeepsSaved" xml:space="preserve">
-    <value>[Ţöŕŕéñţš ķééþ üšîñĝ ţĥé šàṽéð þŕöẋý üñţîļ ţĥé ñéŵ öñé þàššéš ţĥé çöññéçţîöñ çĥéçķ.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ţöŕŕéñţš ķééþ üšîñĝ ţĥé šàṽéð þŕöẋý üñţîļ ţĥé ñéŵ öñé þàššéš ţĥé þŕöẋý çĥéçķ.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under the proxy form: what happens while the new proxy is checked.</comment>
   </data>
   <data name="TorrentsProxyInvalid" xml:space="preserve">
@@ -9302,125 +9206,41 @@
     <value>[Þŕöẋý šàṽéð~~~~]</value>
     <comment>Notice after the proxy was saved.</comment>
   </data>
-  <data name="TorrentsLeftOutsideProxy" xml:space="preserve">
-    <value>[Ţöŕŕéñţ ţŕàƒƒîç ļéƒţ öüţšîðé ţĥîš þŕöẋý~~~~~~~~~~~~]</value>
-    <comment>Why a save was refused: traffic left outside the proxy.</comment>
-  </data>
   <data name="TorrentsCheckNotMadeProxy" xml:space="preserve">
-    <value>[Ţĥé çĥéçķ çöüļðñ'ţ ƀé ɱàðé ţĥŕöüĝĥ ţĥîš þŕöẋý~~~~~~~~~~~~~~]</value>
-    <comment>Why a save was refused: the check could not run through the proxy.</comment>
+    <value>[Ţĥé þŕöẋý çĥéçķ ƒàîļéð~~~~~~~]</value>
+    <comment>Why a save was refused: the proxy check failed. A sentence fragment.</comment>
   </data>
   <data name="TorrentsProxyNotSaved" xml:space="preserve">
     <value>[Ñöţ šàṽéð. {why}, šö ţĥé šàṽéð þŕöẋý šţàýš.~~~~~~~~~~~~~]</value>
     <comment>Notice when a proxy was not saved. The reason is a sentence fragment.</comment>
   </data>
-  <data name="TorrentsProtectionNotSaved" xml:space="preserve">
-    <value>[Ñöţ šàṽéð. {why}, šö ţĥé šàṽéð þŕöţéçţîöñ šţàýš.~~~~~~~~~~~~~~]</value>
-    <comment>Notice when protection was not saved. The reason is a sentence fragment.</comment>
-  </data>
   <data name="TorrentsStillOff" xml:space="preserve">
     <value>[Ţöŕŕéñţš àŕé šţîļļ öƒƒ. {why}.~~~~~~~~~]</value>
     <comment>Notice when torrents stayed off. The reason is a sentence fragment.</comment>
   </data>
-  <data name="TorrentsIndex" xml:space="preserve">
-    <value>[Ţöŕŕéñţ îñðéẋ~~~~]</value>
-    <comment>Label of the index address field.</comment>
-  </data>
-  <data name="TorrentsIndexDetail" xml:space="preserve">
-    <value>[Ţĥé ŔŠŠ šéàŕçĥ àððŕéšš Ķàéŕî àšķš ƒöŕ ţöŕŕéñţš.~~~~~~~~~~~~~~~]</value>
-    <comment>Line under the index field.</comment>
-  </data>
-  <data name="TorrentsIndexHint" xml:space="preserve">
-    <value>[ĥţţþš://…/?ƣ={{ƣüéŕý}}~~~~~~]</value>
-    <comment>Hint inside the index field.</comment>
-  </data>
-  <data name="TorrentsIndexNeeded" xml:space="preserve">
-    <value>[Ţöŕŕéñţš ñééð àñ îñðéẋ àððŕéšš.~~~~~~~~~~]</value>
-    <comment>Line when no index address is set.</comment>
-  </data>
-  <data name="TorrentsIndexScheme" xml:space="preserve">
-    <value>[Ûšé àñ ĥţţþ öŕ ĥţţþš àððŕéšš.~~~~~~~~~]</value>
-    <comment>Line when the index address has the wrong scheme.</comment>
-  </data>
-  <data name="TorrentsIndexSaved" xml:space="preserve">
-    <value>[Ţöŕŕéñţ îñðéẋ šàṽéð~~~~~~]</value>
-    <comment>Notice after the index was saved.</comment>
-  </data>
-  <data name="TorrentsIfCheckFails" xml:space="preserve">
-    <value>[Îƒ à çĥéçķ ƒàîļš~~~~~]</value>
-    <comment>Label of the choice of what to do when a check fails.</comment>
-  </data>
-  <data name="TorrentsKeepRunningTitle" xml:space="preserve">
-    <value>[Ķééþ ţöŕŕéñţš ŕüññîñĝ îƒ à çĥéçķ ƒàîļš?~~~~~~~~~~~~]</value>
-    <comment>Title of the question that asks whether torrents may keep running.</comment>
-  </data>
-  <data name="TorrentsKeepRunningDetail" xml:space="preserve">
-    <value>[Ŵĥàţ ĥàþþéñš ţö ţöŕŕéñţš ŵĥéñ ţĥé çĥéçķ ƒîñðš ţŕàƒƒîç ļéàṽîñĝ öüţšîðé ýöüŕ ṼÞÑ öŕ þŕöẋý.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
-    <comment>Line under the question: what the choice is about.</comment>
-  </data>
-  <data name="TorrentsFailPause" xml:space="preserve">
-    <value>[Þàüšé ţöŕŕéñţš~~~~~]</value>
-    <comment>Option: pause torrents.</comment>
-  </data>
-  <data name="TorrentsFailStop" xml:space="preserve">
-    <value>[Šţöþ ţöŕŕéñţš~~~~]</value>
-    <comment>Option: stop torrents.</comment>
-  </data>
-  <data name="TorrentsFailWarn" xml:space="preserve">
-    <value>[Ŵàŕñ öñļý~~~]</value>
-    <comment>Option: only warn.</comment>
-  </data>
-  <data name="TorrentsFailWarnResult" xml:space="preserve">
-    <value>[Ţöŕŕéñţš ķééþ ŕüññîñĝ.~~~~~~~]</value>
-    <comment>Result of the choice: torrents run.</comment>
-  </data>
-  <data name="TorrentsFailStopResult" xml:space="preserve">
-    <value>[Ţöŕŕéñţš àŕé šţöþþéð.~~~~~~~]</value>
-    <comment>Result of the choice: torrents stop.</comment>
-  </data>
-  <data name="TorrentsFailPauseResult" xml:space="preserve">
-    <value>[Ţöŕŕéñţš àŕé þàüšéð.~~~~~~]</value>
-    <comment>Result of the choice: torrents pause.</comment>
+  <data name="TorrentsCheckNote" xml:space="preserve">
+    <value>[Ķàéŕî çĥéçķš ţĥàţ îţ çàñ ŕéàçĥ ţĥé þŕöẋý ƀéƒöŕé ţöŕŕéñţš šţàŕţ. Ţöŕŕéñţš ŵàîţ ŵĥîļé ţĥàţ çĥéçķ ƒàîļš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Under the proxy form: what the app checks.</comment>
   </data>
   <data name="TorrentsLastCheck" xml:space="preserve">
-    <value>[Ļàšţ çĥéçķ~~~]</value>
-    <comment>Label of the last check.</comment>
-  </data>
-  <data name="TorrentsCheckPassedExit" xml:space="preserve">
-    <value>[Ļéàṽîñĝ ţĥŕöüĝĥ {exit}~~~~~~]</value>
-    <comment>Check passed. The exit is where the traffic leaves from, already formatted.</comment>
+    <value>[Þŕöẋý çĥéçķ~~~~]</value>
+    <comment>Label of the proxy check's result.</comment>
   </data>
   <data name="TorrentsCheckPassed" xml:space="preserve">
     <value>[Þàššéð~~]</value>
     <comment>Check passed.</comment>
   </data>
-  <data name="TorrentsCheckRunningLine" xml:space="preserve">
-    <value>[Çĥéçķîñĝ ŵĥéŕé ţöŕŕéñţ ţŕàƒƒîç ļéàṽéš ƒŕöɱ~~~~~~~~~~~~~]</value>
-    <comment>Check running: the line.</comment>
-  </data>
   <data name="TorrentsCheckRunning" xml:space="preserve">
     <value>[Çĥéçķîñĝ~~~]</value>
     <comment>Check running: the short word.</comment>
   </data>
-  <data name="TorrentsCheckLeaked" xml:space="preserve">
-    <value>[Ţŕàƒƒîç ļéƒţ öüţšîðé ţĥé þŕöţéçţîöñ. {then}~~~~~~~~~~~~]</value>
-    <comment>Check failed: traffic left outside. The consequence follows.</comment>
-  </data>
-  <data name="TorrentsCheckUnmade" xml:space="preserve">
-    <value>[Ţĥé çĥéçķ çöüļðñ'ţ ƀé ɱàðé. {then}~~~~~~~~~~]</value>
-    <comment>Check failed: the check could not be made. The consequence follows.</comment>
+  <data name="TorrentsCheckFailedLine" xml:space="preserve">
+    <value>[Ţĥé þŕöẋý çĥéçķ ƒàîļéð. Ţöŕŕéñţš šţàŕţ öñçé îţ þàššéš.~~~~~~~~~~~~~~~~~]</value>
+    <comment>Check failed: the line.</comment>
   </data>
   <data name="TorrentsCheckFailed" xml:space="preserve">
     <value>[Ƒàîļéð~~]</value>
     <comment>Short word: the check failed.</comment>
-  </data>
-  <data name="TorrentsCheckNoneLine" xml:space="preserve">
-    <value>[Ñö þŕöţéçţîöñ îš šéţ~~~~~~]</value>
-    <comment>Line: no protection is set, so nothing was checked.</comment>
-  </data>
-  <data name="TorrentsCheckNone" xml:space="preserve">
-    <value>[Ûñþŕöţéçţéð~~~~]</value>
-    <comment>Short word: unprotected.</comment>
   </data>
   <data name="TorrentsCheckWaitingLine" xml:space="preserve">
     <value>[Ñöţ çĥéçķéð ýéţ~~~~~]</value>
@@ -9473,14 +9293,6 @@
   <data name="TorrentsPageNeedsScript" xml:space="preserve">
     <value>[Ţĥîš þàĝé ñééðš ĴàṽàŠçŕîþţ ţö šéñð ţĥé ƒöŕɱ ţö ţĥé ŢṼ šàƒéļý.~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line when the page needs script.</comment>
-  </data>
-  <data name="TorrentsCheckNote" xml:space="preserve">
-    <value>[Ķàéŕî çĥéçķš ŵĥéŕé ţöŕŕéñţ ţŕàƒƒîç ļéàṽéš ƒŕöɱ ŵĥéñ à ţöŕŕéñţ šţàŕţš àñð éṽéŕý ɱîñüţé ŵĥîļé îţ ŕüñš, àñð þàüšéš ţöŕŕéñţš îƒ ţĥàţ çĥéçķ ƒàîļš. Ýöüŕ ṼÞÑ öŕ þŕöẋý îš ŵĥàţ þŕöţéçţš ýöü.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
-    <comment>Under the proxy form when turning torrents on: what the app checks, and that the VPN or proxy is what protects.</comment>
-  </data>
-  <data name="TorrentsProtectionSaved" xml:space="preserve">
-    <value>[Ţöŕŕéñţ þŕöţéçţîöñ šàṽéð~~~~~~~~]</value>
-    <comment>Notice after the protection was saved.</comment>
   </data>
   <data name="OpenedOpen" xml:space="preserve">
     <value>[Öþéñ ļîñķ öŕ ƒîļé~~~~~~]</value>

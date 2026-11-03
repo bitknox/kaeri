@@ -12,12 +12,14 @@
 #   libass 0.17.5    with apple/patches/libass: Core Text's fallback for Han, PingFang, is in a
 #                    format FreeType cannot open since macOS 15, so libass drew boxes for it.
 #   mpv v0.41.0      with apple/patches/mpv: MPVKit's own three patches (the moltenvk context
-#                    among them), then ours, which makes that context follow the layer's size.
+#                    among them), then ours, which makes that context follow the layer's size,
+#                    and upstream's coreaudio fix for macOS 27, which refused the channel map
+#                    and left mpv on avfoundation, two seconds behind on every volume change.
 #
 # Every other library is MPVKit's own prebuilt static build, from the releases MPVKit pins, each
 # checked against its SHA-256: FFmpeg, libplacebo, MoltenVK, shaderc, OpenSSL, GnuTLS and the rest.
 # The link exports only `_mpv_*`, so the OpenSSL inside is bound within the framework and never
-# meets the engine's BoringSSL; the framework stays dynamic, as the LGPL asks of mpv and FFmpeg.
+# meets the engine's own C; the framework stays dynamic, as the LGPL asks of mpv and FFmpeg.
 #
 # The output, all of it generated and gitignored:
 #

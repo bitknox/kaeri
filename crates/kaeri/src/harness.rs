@@ -27,7 +27,7 @@
 //!   the tokens above are its store's.
 //!
 //! The engine is started from those parts, with none of the work it does on its own at launch.
-//! What it does not stand up: a torrent session, a VPN guard, mpv or a browser. A config that
+//! What it does not stand up: a torrent session, mpv or a browser. A config that
 //! asks for torrents is refused, and so are the tasks that would start a player or open a page.
 
 use std::{
@@ -127,6 +127,16 @@ pub struct Options {
     /// The engine's clock, kept by the test to move it on or to read days in a zone of its own,
     /// or `None` for the system's.
     pub clock: Option<kaeri_engine::clock::Clock>,
+    /// The database to start on, shared with an earlier harness: a relaunch.
+    pub store: Option<Store>,
+    /// Run the launch's airing digest, as the app does.
+    pub digest: bool,
+    /// Operations the fake answers this much later from launch on: for what the app shows
+    /// before an answer the launch asks for.
+    pub slow: Vec<(kaeri_testkit::Operation, Duration)>,
+    /// How AniList's queued work is paced, or `None` for not at all: see
+    /// [`kaeri_meta::Pacing`].
+    pub pacing: Option<kaeri_meta::Pacing>,
 }
 
 impl Default for Options {
@@ -142,6 +152,10 @@ impl Default for Options {
             before_start: None,
             season_hold: None,
             clock: None,
+            store: None,
+            digest: false,
+            slow: Vec::new(),
+            pacing: None,
         }
     }
 }
@@ -202,21 +216,24 @@ impl Harness {
         };
         assert!(
             !sources::torrent_wanted(&config),
-            "the harness has no torrent session or VPN guard to bring up"
+            "the harness has no torrent session to bring up"
         );
 
         let http =
             HttpClient::offline(&NetworkConfig { timeout_secs: 5, ..config.network.clone() })
                 .expect("the offline client builds");
-        let store = kaeri_testkit::store();
+        let store = options.store.clone().unwrap_or_else(kaeri_testkit::store);
         let server = FakeAniList::start().await;
         server.set_now(options.now);
         if let Some(language) = options.viewer_title_language {
             server.set_viewer_title_language(language);
         }
+        for (operation, wait) in &options.slow {
+            server.answer_slowly(*operation, *wait);
+        }
         // `build_meta`, pointed at the fake.
         let mut meta = Meta::new(
-            server.anilist(&http),
+            server.anilist_paced(&http, options.pacing.unwrap_or(kaeri_meta::Pacing::UNPACED)),
             config.meta.fallback.then(|| server.tenrai(&http, &store)),
             store.clone(),
         );
@@ -232,13 +249,17 @@ impl Harness {
         for tracker in &options.signed_in {
             tokens.set(tracker, &format!("harness-{tracker}-token")).expect("a token file");
         }
-        let mut sync = tracking::Sync::with_tokens(&config, &store, &http, tokens.clone());
+        let mut sync = tracking::Sync::with_tokens(&config, &store, &http, tokens.clone())
+            .with_titles(meta.titles().clone());
         // Built as `with_tokens` builds it, but asking the fake rather than AniList itself.
         if options.signed_in.contains(&"anilist")
             && let Some(at) = sync.trackers.iter().position(|t| t.id() == "anilist")
         {
-            let client = server.anilist(&http).with_token(tokens.get("anilist").ok());
-            let tracker = Arc::new(AniListTracker::new(client));
+            let client = server
+                .anilist(&http)
+                .with_token(tokens.get("anilist").ok())
+                .on_budget_of(meta.anilist());
+            let tracker = Arc::new(AniListTracker::new(client).with_store(store.clone()));
             sync.trackers[at] = tracker.clone();
             sync.anilist = Some(tracker);
         }
@@ -274,7 +295,11 @@ impl Harness {
         );
         start.saved = Some(saved);
         start.sources = Some(registry.clone());
-        start.background = Background { keep_next: options.keep_next, ..Background::none() };
+        start.background = Background {
+            keep_next: options.keep_next,
+            digest: options.digest,
+            ..Background::none()
+        };
         let engine_clock = options.clock.unwrap_or_default();
         let windows = Arc::new(std::sync::atomic::AtomicUsize::new(0));
         start.parts = Some(Parts {
@@ -282,7 +307,7 @@ impl Harness {
             sync,
             stores,
             clock: engine_clock.clone(),
-            fixture_exit: Some(kaeri_providers::vpn::VpnGuard::fixture_egress()),
+            fixture_route: true,
             windows: Some(windows.clone()),
         });
         start.free_space = Some(1_000_000_000_000);
@@ -645,13 +670,13 @@ impl Harness {
         let torrent_wanted = configured.torrent;
         assert!(
             message != Internal::SourcesChanged || !torrent_wanted,
-            "the harness has no torrent session or VPN guard to bring up"
+            "the harness has no torrent session to bring up"
         );
         match message {
             Internal::SettingsSaved => self.trace.push("SettingsSaved"),
             Internal::SourcesReordered => self.trace.push("SourcesReordered"),
             // What it leads to, it says: keep next's rows on the queue.
-            Internal::SourcesChanged | Internal::TopUp => {}
+            Internal::SourcesChanged | Internal::LetGo => {}
         }
     }
 
@@ -792,6 +817,7 @@ pub fn name(update: &Event) -> &'static str {
         Event::CalendarBackfill { .. } => "CalendarBackfill",
         Event::CalendarAhead { .. } => "CalendarAhead",
         Event::Detail(_) => "Detail",
+        Event::Cards(_) => "Cards",
         Event::ViewerTitleLanguage(_) => "ViewerTitleLanguage",
         Event::TitlesChanged(_) => "TitlesChanged",
         Event::Toast(_) => "Toast",
@@ -849,8 +875,8 @@ pub fn name(update: &Event) -> &'static str {
         Event::Episodes { .. } => "Episodes",
         Event::TitleDub { .. } => "TitleDub",
         Event::Progress { .. } => "Progress",
-        Event::Vpn(_) => "Vpn",
-        Event::ProtectionChecked(_) => "ProtectionChecked",
+        Event::TorrentProxy(_) => "TorrentProxy",
+        Event::ProxyChecked(_) => "ProxyChecked",
         Event::ArtworkReady { .. } => "ArtworkReady",
         Event::ImageFailed { .. } => "ImageFailed",
         Event::Downloads(_) => "Downloads",
@@ -964,6 +990,7 @@ fn copy(update: &Event) -> Event {
             more_past: *more_past,
         },
         Event::Detail(entry) => Event::Detail(entry.clone()),
+        Event::Cards(entries) => Event::Cards(entries.clone()),
         Event::ViewerTitleLanguage(language) => Event::ViewerTitleLanguage(*language),
         Event::TitlesChanged(language) => Event::TitlesChanged(*language),
         Event::Toast(toast) => Event::Toast(toast.clone()),
@@ -1102,8 +1129,8 @@ fn copy(update: &Event) -> Event {
             resume: *resume,
             episodes: episodes.clone(),
         },
-        Event::Vpn(guard) => Event::Vpn(guard.clone()),
-        Event::ProtectionChecked(verdict) => Event::ProtectionChecked(verdict.clone()),
+        Event::TorrentProxy(status) => Event::TorrentProxy(*status),
+        Event::ProxyChecked(status) => Event::ProxyChecked(*status),
         Event::ArtworkReady { url, bytes } => {
             Event::ArtworkReady { url: url.clone(), bytes: bytes.clone() }
         }

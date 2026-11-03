@@ -96,7 +96,7 @@ public class SourceChoicesTests
     [Fact]
     public void A_failure_is_the_sources_own_words()
     {
-        Assert.Equal("the site did not answer in 15 s.", SourcePicker.Detail(Option("a", 0, new SourceNote.Failed("the site did not answer in 15 s."))));
+        Assert.Equal("the source did not answer in 15 s.", SourcePicker.Detail(Option("a", 0, new SourceNote.Failed("the source did not answer in 15 s."))));
     }
 
     [Fact]

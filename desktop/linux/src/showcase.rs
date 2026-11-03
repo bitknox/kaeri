@@ -396,7 +396,7 @@ fn providers() -> Vec<ProviderRow> {
             id: "machi-library-films".into(),
             kind: "plugin".into(),
             state: "down".into(),
-            last_error: Some("the site did not answer in 15 s.".into()),
+            last_error: Some("the source did not answer in 15 s.".into()),
             name: "Machi Library Films".into(),
             version: Some("0.3.0".into()),
             hosts: hosts(&["films.machi-library.example"]),
@@ -812,7 +812,7 @@ fn local_view() -> kaeri_model::local::LocalView {
         folders: vec![
             first,
             folder("/run/media/mika/travel-drive/anime", 36, false, 1, 36, 0),
-            folder("/home/mika/Videos/old-rips", 0, false, 0, 0, 0),
+            folder("/home/mika/Videos/old-videos", 0, false, 0, 0, 0),
         ],
         groups: vec![
             lantern,

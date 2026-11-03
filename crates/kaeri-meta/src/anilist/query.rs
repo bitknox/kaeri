@@ -32,7 +32,7 @@ pub const MEDIA_FIELDS: &str = r"
     nextAiringEpisode { episode airingAt timeUntilAiring }
     studios(isMain: true) { nodes { name } }
     trailer { id site }
-    prequels: relations { edges { relationType node { id } } }
+    prequels: relations { edges { relationType node { id format } } }
 ";
 
 /// Extra fields only the Title screen needs. Excluded from list queries because
@@ -58,7 +58,7 @@ pub const MEDIA_DETAIL_FIELDS: &str = r"
     staff(sort: RELEVANCE, perPage: 8) { edges { role node { name { full } } } }
 ";
 
-/// A list result's services, for Search's Available filter and a result's "On Hikari Stream":
+/// A list result's services, for Search's Available filter and a result's "On Hikari Library":
 /// the links alone, without the episode listings the Title screen asks for.
 const LIST_LINKS: &str = "externalLinks { site url type isDisabled }";
 
@@ -141,13 +141,61 @@ pub fn by_ids() -> String {
     )
 }
 
+/// What a season's header asks beyond [`MEDIA_FIELDS`]: its related titles, each with its card,
+/// so its page's Related row stands whole with the header, the names and covers the page will
+/// show, rather than placeholders whose widths change when the page comes.
+pub const HEADER_RELATIONS: &str = r"relations { edges { relationType node {
+    id title { romaji english native } format coverImage { large color } season seasonYear
+} } }";
+
+/// [`by_ids`] with each title's related titles ([`HEADER_RELATIONS`]): the season headers a
+/// title page asks ahead, in one request.
+pub fn headers_by_ids() -> String {
+    format!(
+        r"query ($ids: [Int], $perPage: Int) {{
+            Page(perPage: $perPage) {{
+                media(id_in: $ids, type: ANIME) {{ {MEDIA_FIELDS} {HEADER_RELATIONS} }}
+            }}
+        }}"
+    )
+}
+
+/// What a title's episode table asks of AniList beyond [`MEDIA_FIELDS`]: the listings' names
+/// and stills, and the broadcasts. [`by_ids_with_tables`] asks it of the covers a screen shows,
+/// so a hover card's Play line and stills cost no request of their own.
+///
+/// The broadcasts already out come oldest first and fifty at most, as this connection takes no
+/// sort: a title with fifty or more is left to [`by_id`], which asks for the newest.
+pub const TABLE_FIELDS: &str = r"
+    streamingEpisodes { title url site thumbnail }
+    upcoming: airingSchedule(notYetAired: true, perPage: 50) { nodes { episode airingAt } }
+    past: airingSchedule(notYetAired: false, perPage: 50) { nodes { episode airingAt } }
+";
+
+/// The most broadcasts [`TABLE_FIELDS`] brings of a title's past: one that brings this many may
+/// have more.
+pub const TABLE_PAST_AT_MOST: usize = 50;
+
+/// [`by_ids`] with [`TABLE_FIELDS`]: the cards of the covers a screen shows and what their
+/// episode tables need, fifty titles in one request.
+pub fn by_ids_with_tables() -> String {
+    format!(
+        r"query ($ids: [Int], $perPage: Int) {{
+            Page(perPage: $perPage) {{
+                media(id_in: $ids, type: ANIME) {{ {MEDIA_FIELDS} {TABLE_FIELDS} }}
+            }}
+        }}"
+    )
+}
+
 /// What people who liked each of these titles rated highest, by id alone: "Up next for you"
 /// asks it of the titles the viewer finished, then looks the answers up with [`by_ids`].
 ///
-/// Cost, counted as AniList documents it (one for a field, a list's fields times its page
-/// size), which the fake AniList in the testkit counts and refuses past 500: 133 for the most
-/// this asks, [`RECOMMENDED_FROM`] titles with [`RECOMMENDED_EACH`] recommendations each, and 23
-/// for one title. That is a quarter of AniList's limit of 500. The count is an estimate of the
+/// Cost, counted as AniList documents it (one for a field, a connection's fields times its page
+/// size, a root page's titles once), which the fake AniList in the testkit counts and refuses
+/// past 500: 23, with [`RECOMMENDED_EACH`] recommendations under each title. Counted with a root
+/// page's titles each, as the testkit once did, the most this asks ([`RECOMMENDED_FROM`]
+/// titles) is 133. Either is well inside AniList's limit of 500. The count is an estimate of the
 /// rule, not a measurement of the live service.
 pub fn recommended_from() -> String {
     format!(
@@ -164,23 +212,83 @@ pub fn recommended_from() -> String {
     )
 }
 
-/// What people who liked one title rated highest, each recommended title with the whole
-/// [`MEDIA_FIELDS`] fragment, so they need no second lookup: Home's "Because you finished".
-/// `$each` is how many. Still a `media(id_in:)` page, like [`recommended_from`], so the two
-/// read alike.
-pub fn recommended_titles() -> String {
-    format!(
-        r"query ($ids: [Int], $perPage: Int, $each: Int) {{
-            Page(perPage: $perPage) {{
-                media(id_in: $ids, type: ANIME) {{
-                    id
-                    recommendations(perPage: $each, sort: RATING_DESC) {{
-                        nodes {{ mediaRecommendation {{ {MEDIA_FIELDS} }} }}
-                    }}
-                }}
-            }}
-        }}"
-    )
+/// What people who liked one title rated highest, by id alone, `$each` of them: Home's
+/// "Because you finished". It rides in [`together`] with the other lookups Up next makes at that
+/// step, and the titles are looked up with [`by_ids`] beside the recommended ones. Asking for
+/// them whole here would cost fifty for each title, and nine of them would leave no room in the
+/// request for anything else (AniList refused sixteen whole titles, 804 by the testkit's count).
+pub fn recommended_ids() -> String {
+    r"query ($ids: [Int], $perPage: Int, $each: Int) {
+        Page(perPage: $perPage) {
+            media(id_in: $ids, type: ANIME) {
+                id
+                recommendations(perPage: $each, sort: RATING_DESC) {
+                    nodes { mediaRecommendation { id } }
+                }
+            }
+        }
+    }"
+    .to_owned()
+}
+
+/// Several queries of one root field each, as one request: each root under the alias `q0`,
+/// `q1` and on, with its variables renamed after its alias (`$q0_ids`), so no two share one.
+/// AniList answers each alias as it would the query alone, and charges one request for them
+/// all, as [`media_pages`] does for its pages. [`root_of`] names the field each one answers
+/// under.
+pub fn together(parts: &[(String, serde_json::Value)]) -> (String, serde_json::Value) {
+    let mut declared = Vec::new();
+    let mut roots = Vec::new();
+    let mut variables = serde_json::Map::new();
+    for (i, (document, vars)) in parts.iter().enumerate() {
+        let alias = format!("q{i}");
+        let (head, body) = split_document(document);
+        if !head.trim().is_empty() {
+            declared.push(renamed(head.trim(), &alias));
+        }
+        roots.push(format!("{alias}: {}", renamed(body.trim(), &alias)));
+        for (name, value) in vars.as_object().into_iter().flatten() {
+            variables.insert(format!("{alias}_{name}"), value.clone());
+        }
+    }
+    let head =
+        if declared.is_empty() { String::new() } else { format!("({})", declared.join(", ")) };
+    (format!("query {head} {{\n{}\n}}", roots.join("\n")), serde_json::Value::Object(variables))
+}
+
+/// The root field a query of one root answers under: `Page` for most.
+pub fn root_of(document: &str) -> &str {
+    let (_, body) = split_document(document);
+    let body = body.trim_start();
+    let end = body.find(|c: char| !(c.is_alphanumeric() || c == '_')).unwrap_or(body.len());
+    &body[..end]
+}
+
+/// A query document's variable declarations (inside the parentheses after `query`, empty when
+/// it has none) and its selection (inside the outer braces).
+fn split_document(document: &str) -> (&str, &str) {
+    let open = document.find('{').unwrap_or(document.len());
+    let head = match (document[..open].find('('), document[..open].rfind(')')) {
+        (Some(from), Some(to)) if from < to => &document[from + 1..to],
+        _ => "",
+    };
+    let close = document.rfind('}').unwrap_or(document.len());
+    let body = document.get(open + 1..close).unwrap_or_default();
+    (head, body)
+}
+
+/// `text` with every variable `$name` renamed `${alias}_name`.
+fn renamed(text: &str, alias: &str) -> String {
+    let mut out = String::with_capacity(text.len() + 16);
+    let mut chars = text.chars().peekable();
+    while let Some(c) = chars.next() {
+        out.push(c);
+        if c == '$' && chars.peek().is_some_and(|n| n.is_alphanumeric() || *n == '_') {
+            out.push_str(alias);
+            out.push('_');
+        }
+    }
+    out
 }
 
 /// The most titles one [`recommended_from`] request asks about.
@@ -540,6 +648,7 @@ mod tests {
             ("search_filtered", search_filtered()),
             ("facets", FACETS.to_string()),
             ("by_ids", by_ids()),
+            ("headers_by_ids", headers_by_ids()),
             ("by_id", by_id(false)),
             ("by_id_following", by_id(true)),
             ("relations", relations()),
@@ -645,9 +754,10 @@ mod tests {
     }
 
     #[test]
-    fn the_list_fields_ask_for_prequels_by_id_alone() {
+    fn the_list_fields_ask_for_relations_by_id_and_format_alone() {
         assert!(
-            MEDIA_FIELDS.contains("prequels: relations { edges { relationType node { id } } }")
+            MEDIA_FIELDS
+                .contains("prequels: relations { edges { relationType node { id format } } }")
         );
         // One request for the list as before: the ids ride in it, no query of their own.
         assert_eq!(by_ids().matches("media(").count(), 1);
@@ -724,6 +834,24 @@ mod tests {
         );
         // The title's own external links carry a notes field, so check the people's part alone.
         assert!(!FOLLOWING.contains("notes"), "no free text from other people");
+    }
+
+    #[test]
+    fn queries_asked_together_keep_their_own_variables_under_their_own_alias() {
+        let parts = [
+            (by_ids(), serde_json::json!({ "ids": [1, 2], "perPage": 2 })),
+            (recommended_ids(), serde_json::json!({ "ids": [3], "perPage": 1, "each": 9 })),
+        ];
+        let (document, variables) = together(&parts);
+        assert_eq!(document.matches("query ").count(), 1);
+        assert!(document.contains("q0: Page(perPage: $q0_perPage)"), "{document}");
+        assert!(document.contains("media(id_in: $q1_ids, type: ANIME)"), "{document}");
+        assert!(document.contains("$q0_ids: [Int]") && document.contains("$q1_each: Int"));
+        assert!(!document.contains("$ids") && !document.contains("$perPage"));
+        assert_eq!(variables["q0_ids"], serde_json::json!([1, 2]));
+        assert_eq!(variables["q1_each"], 9);
+        assert_eq!(root_of(&by_ids()), "Page");
+        assert_eq!(root_of(VIEWER), "Viewer");
     }
 
     #[test]

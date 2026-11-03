@@ -122,13 +122,16 @@ pub(crate) fn listed_wire(id: AnilistId) -> Option<Value> {
 /// `media` as a list query answers it: the detail-only fields left out.
 pub(crate) fn listed_form(media: &Value) -> Value {
     let mut media = media.clone();
-    // The relations by kind and id alone, as the list fields ask for them.
+    // The relations by kind, id and format alone, as the list fields ask for them.
     let prequels: Vec<Value> = media["relations"]["edges"]
         .as_array()
         .map(|edges| {
             edges
                 .iter()
-                .map(|e| serde_json::json!({ "relationType": e["relationType"], "node": { "id": e["node"]["id"] } }))
+                .map(|e| {
+                    serde_json::json!({ "relationType": e["relationType"],
+                    "node": { "id": e["node"]["id"], "format": e["node"]["format"] } })
+                })
                 .collect()
         })
         .unwrap_or_default();
@@ -150,6 +153,11 @@ pub(crate) fn schedule_wire() -> &'static [Value] {
 /// `updatedAt`.
 pub(crate) fn library_wire() -> &'static Value {
     &LIBRARY
+}
+
+/// The signed-in viewer's AniList id, as the fake answers it.
+pub fn library_viewer_id() -> u64 {
+    library_wire()["viewer"]["id"].as_u64().expect("the fixture viewer has an id")
 }
 
 /// The fixture library's titles and their statuses, as AniList words them (`COMPLETED`): what a

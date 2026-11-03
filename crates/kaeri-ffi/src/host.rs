@@ -3,6 +3,8 @@
 use std::sync::Arc;
 
 use kaeri_core::config::{Config, Paths};
+#[cfg(test)]
+use kaeri_engine::host::BUNDLE;
 use kaeri_engine::host::{Backend, Host, SecretError, SecretStore, Storage, shared_secrets};
 
 use crate::start::SecretsMode;
@@ -312,13 +314,19 @@ mod tests {
         assert_eq!(secrets.get("kitsu").unwrap().as_deref(), Some("the-terminals-token"));
         assert_eq!(secrets.storage_for("anilist"), Storage::Keychain);
         assert_eq!(secrets.set("anilist", "an-anilist-token").unwrap(), Storage::Keychain);
-        assert_eq!(
-            app.kept.lock().unwrap().get("anilist").map(String::as_str),
-            Some("an-anilist-token")
-        );
+        // Both in the one item the terminal keeps every secret in on macOS, the terminal's
+        // own item for kitsu moved into it.
+        let bundled = |id: &str| {
+            let raw = app.kept.lock().unwrap().get(BUNDLE).cloned().expect("no bundle item");
+            let value: serde_json::Value = serde_json::from_str(&raw).unwrap();
+            value["secrets"][id].as_str().map(str::to_owned)
+        };
+        assert_eq!(bundled("anilist").as_deref(), Some("an-anilist-token"));
+        assert_eq!(bundled("kitsu").as_deref(), Some("the-terminals-token"));
+        assert_eq!(app.kept.lock().unwrap().len(), 1, "an item besides the bundle");
         assert!(!token_file(root.path(), "anilist").exists(), "a token file was written");
         secrets.delete("anilist").unwrap();
-        assert!(!app.kept.lock().unwrap().contains_key("anilist"));
+        assert_eq!(bundled("anilist"), None);
     }
 
     #[test]
@@ -360,6 +368,7 @@ mod tests {
             Some("keychain"),
         );
         assert_eq!(to_keychain.set("mal", "into-the-keychain").unwrap(), Storage::Keychain);
-        assert!(app.kept.lock().unwrap().contains_key("mal"));
+        let bundle = app.kept.lock().unwrap().get(BUNDLE).cloned().expect("no bundle item");
+        assert!(bundle.contains("\"mal\":\"into-the-keychain\""), "{bundle}");
     }
 }

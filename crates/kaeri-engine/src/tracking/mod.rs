@@ -34,11 +34,7 @@ use kaeri_store::Store;
 use kaeri_track::auth;
 use kaeri_track::{AniListTracker, TokenStore, sync};
 
-use crate::{
-    host::Host,
-    jobs::JobGuard,
-    outbox::{Internal, Outbox},
-};
+use crate::{host::Host, jobs::JobGuard, outbox::Outbox};
 
 /// Everything the sync loops need.
 #[derive(Clone)]
@@ -75,10 +71,16 @@ pub struct Sync {
     /// the previous one whole: the next drain tick would otherwise wipe the error off the
     /// Accounts screen a minute after it appeared.
     pub pull_errors: Arc<std::sync::Mutex<std::collections::HashMap<String, PullError>>>,
+    /// When the library was last pulled and whether the app is away: the 15-minute loop rests
+    /// while it is, and Sync now does not pull again within [`PULL_COALESCE`] of a pull.
+    pub pulls: Arc<PullGate>,
     /// The sign-ins a native app's sheet is showing, each waiting for its redirect.
     pub pending: native::PendingSignIns,
     /// The device-code sign-ins running, one per tracker: see [`device`].
     pub device: device::DeviceFlows,
+    /// How titles are named, which under `anilist` follows what each pull's viewer says: see
+    /// [`Self::with_titles`].
+    pub titles: Option<kaeri_meta::titles::Titles>,
 }
 
 impl Sync {
@@ -126,7 +128,7 @@ impl Sync {
             }
             let client =
                 AniList::new(http.clone(), config.network.anilist_rate_limit).with_token(token);
-            let tracker = Arc::new(AniListTracker::new(client));
+            let tracker = Arc::new(AniListTracker::new(client).with_store(store.clone()));
             trackers.push(tracker.clone());
             anilist = Some(tracker);
         }
@@ -218,9 +220,34 @@ impl Sync {
             config: config.clone(),
             http: http.clone(),
             pull_errors: Arc::default(),
+            pulls: Arc::default(),
             pending: native::PendingSignIns::default(),
             device: device::DeviceFlows::default(),
+            titles: None,
         }
+    }
+
+    /// Titles named as AniList's viewer reads them follow each pull's answer: every pull asks
+    /// for the viewer with the list.
+    #[must_use]
+    pub fn with_titles(mut self, titles: kaeri_meta::titles::Titles) -> Self {
+        self.titles = Some(titles);
+        self
+    }
+
+    /// The AniList tracker asking against `base`'s budget: one for the tracker and the metadata
+    /// source, as AniList counts requests per address and not per caller. Its token is kept, so a
+    /// sign-in made through the earlier client still reaches it.
+    #[must_use]
+    pub fn on_budget_of(mut self, base: &kaeri_meta::anilist::AniList) -> Self {
+        if let Some(at) = self.trackers.iter().position(|t| t.id() == "anilist")
+            && let Some(old) = self.anilist.as_ref()
+        {
+            let tracker = Arc::new(old.on_budget_of(base));
+            self.trackers[at] = tracker.clone();
+            self.anilist = Some(tracker);
+        }
+        self
     }
 
     /// Kitsu at `site` in place of Kitsu itself, its sign-in and its tracker alike, signed in or
@@ -532,7 +559,50 @@ fn keep_statuses(
     }
 }
 
-pub fn spawn_loops(sync: Sync, tx: Outbox) {
+/// A pull this recent answers Sync now without another.
+pub const PULL_COALESCE: std::time::Duration = std::time::Duration::from_secs(30);
+
+/// Whether the app is on screen, when the library was last pulled, and the wake-up for a return.
+#[derive(Debug, Default)]
+pub struct PullGate {
+    away: std::sync::atomic::AtomicBool,
+    last: std::sync::Mutex<Option<std::time::Instant>>,
+    back: tokio::sync::Notify,
+}
+
+impl PullGate {
+    /// The app went off screen or came back; a return wakes the loop for one pull.
+    pub fn set_away(&self, away: bool) {
+        use std::sync::atomic::Ordering;
+        let was = self.away.swap(away, Ordering::SeqCst);
+        if was && !away {
+            self.back.notify_one();
+        }
+    }
+
+    fn is_away(&self) -> bool {
+        self.away.load(std::sync::atomic::Ordering::SeqCst)
+    }
+
+    fn mark(&self) {
+        if let Ok(mut last) = self.last.lock() {
+            *last = Some(std::time::Instant::now());
+        }
+    }
+
+    /// Whether a pull ran within [`PULL_COALESCE`].
+    pub fn recent(&self) -> bool {
+        self.last
+            .lock()
+            .ok()
+            .and_then(|last| *last)
+            .is_some_and(|at| at.elapsed() < PULL_COALESCE)
+    }
+}
+
+/// The drain and the pull, each on its tick. The launch's pull waits for the launch's screens,
+/// `launch` being the AniList client whose launch they are, and goes in the background queue.
+pub fn spawn_loops(sync: Sync, launch: kaeri_meta::AniList, tx: Outbox) {
     if sync.trackers.is_empty() {
         return;
     }
@@ -556,11 +626,20 @@ pub fn spawn_loops(sync: Sync, tx: Outbox) {
     }
 
     tokio::spawn(async move {
-        let mut ticker = tokio::time::interval(pull_every);
-        // The first tick is immediate: a pull at startup is what makes "watched two on my
-        // phone" show up when you open the app.
+        // A pull at startup is what makes "watched two on my phone" show up when you open the
+        // app, so launch always pulls: once Home's first screen is in.
+        launch.launch_over().await;
+        kaeri_meta::in_background(pull_once(&sync, &tx)).await;
         loop {
-            ticker.tick().await;
+            let gate = sync.pulls.clone();
+            let returned = tokio::select! {
+                () = tokio::time::sleep(pull_every) => false,
+                () = gate.back.notified() => true,
+            };
+            // Hidden or in the background the loop rests: the return pulls once instead.
+            if gate.is_away() || (returned && gate.recent()) {
+                continue;
+            }
             kaeri_meta::in_background(pull_once(&sync, &tx)).await;
         }
     });
@@ -705,24 +784,21 @@ pub async fn drain_once(sync: &Sync, tx: &Outbox) {
 /// One library pull across every tracker.
 pub async fn pull_once(sync: &Sync, tx: &Outbox) {
     let now = kaeri_store::now();
+    sync.pulls.mark();
     // The libraries are fetched at once — separate hosts, and a pull can be several pages —
     // but merged one at a time in tracker order. Every merge reads and writes the same local
     // history, so merging in arrival order would let network timing decide which tracker's
     // disagreement is reported as the conflict.
     let pulling: Vec<_> = sync.trackers.iter().filter(|t| t.is_authenticated()).collect();
     let libraries = futures::future::join_all(pulling.iter().map(|t| t.pull_library())).await;
-    // What keep next keeps follows the list: the shows being watched, and their progress.
-    let listed = sync.trackers.first().is_some_and(|tracker| tracker.is_authenticated());
-    let since = now - crate::downloads::ahead::WATCHED_WITHIN;
-    let watching = || {
-        sync.store.watching(since, listed).ok().map(|ids| {
-            let mut ids: Vec<u32> = ids.iter().map(|id| id.get()).collect();
-            ids.sort_unstable();
-            ids
-        })
-    };
-    let before = watching();
-    let mut adopted = 0;
+    // AniList's answer carries the viewer, whose title language may have changed since.
+    if let (Some(titles), Some(anilist)) = (&sync.titles, &sync.anilist)
+        && anilist.is_authenticated()
+        && let Some(language) = anilist.answered_title_language().await
+        && titles.viewer_reads(language)
+    {
+        let _ = tx.send(Event::TitlesChanged(crate::data::title_language(titles.language())));
+    }
 
     for (tracker, library) in pulling.into_iter().zip(libraries) {
         let last_pull =
@@ -737,9 +813,11 @@ pub async fn pull_once(sync: &Sync, tx: &Outbox) {
 
         match reconciled {
             Ok(report) => {
-                adopted += report.adopted;
                 sync.note_pull(tracker.id(), None);
                 let _ = sync.store.set_meta_i64(&pull_key(tracker.id()), now);
+                // Said after every pull that went through, changed or not: the Accounts row's
+                // "Synced" time and Sync now's answer come from it, and a pull can move the
+                // list's statuses or the outbox without adopting a title.
                 let _ = tx.send(Event::Sync(Box::new(sync.state_for(
                     tracker.as_ref(),
                     false,
@@ -792,9 +870,6 @@ pub async fn pull_once(sync: &Sync, tx: &Outbox) {
                 ))));
             }
         }
-    }
-    if adopted > 0 || watching() != before {
-        let _ = tx.internal(Internal::TopUp);
     }
 }
 
@@ -1355,6 +1430,34 @@ pub fn token_store(config: &Config, paths: &Paths) -> TokenStore {
 /// directory of its own, and a test with a temporary one, keep their tokens there.
 pub fn token_dir(paths: &Paths) -> std::path::PathBuf {
     paths.data_dir.join("tokens")
+}
+
+#[cfg(test)]
+mod pull_gate_tests {
+    use super::PullGate;
+
+    #[test]
+    fn a_pull_just_made_answers_sync_now() {
+        let gate = PullGate::default();
+        assert!(!gate.recent(), "nothing pulled yet");
+        gate.mark();
+        assert!(gate.recent());
+    }
+
+    #[tokio::test]
+    async fn only_a_return_wakes_the_loop() {
+        let gate = PullGate::default();
+        gate.set_away(false);
+        let quiet =
+            tokio::time::timeout(std::time::Duration::from_millis(50), gate.back.notified());
+        assert!(quiet.await.is_err(), "staying on screen wakes nothing");
+        gate.set_away(true);
+        assert!(gate.is_away());
+        gate.set_away(false);
+        let woken =
+            tokio::time::timeout(std::time::Duration::from_millis(500), gate.back.notified());
+        assert!(woken.await.is_ok(), "coming back wakes the loop once");
+    }
 }
 
 #[cfg(test)]

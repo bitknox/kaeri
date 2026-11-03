@@ -176,7 +176,7 @@ search-available-name = Available
 # @max 24
 search-available-plays-here = Plays here
 
-# Search: end of a result's line when a free catalogue or the demo has the title.
+# Search: end of a result's line when an open catalogue or the demo has the title.
 # @only windows
 # @max 24
 search-result-plays-here = Plays here

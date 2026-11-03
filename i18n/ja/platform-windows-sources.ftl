@@ -20,7 +20,6 @@ sources-check = { -source-pl }を確認
 sources-origin-version = { $origin } · バージョン{ $version }
 sources-standing = 状態
 sources-status-working = 準備完了
-sources-torrent-indexes = 設定でオンにした{ -torrent-index }を検索します。
 sources-version-ready = バージョン{ $version }の準備ができました
 sources-use-this = この{ -source }を使う
 sources-use-name = { $name }をオン

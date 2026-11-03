@@ -24,7 +24,7 @@
 #                    static archives linked into libmpv.so, with libc++ (static too), behind
 #                    android/mpv/libmpv.map. So nothing of theirs is visible outside libmpv.so,
 #                    and mbedTLS stays inside libavformat.so: neither meets the engine's
-#                    BoringSSL, and no libc++_shared.so is needed.
+#                    TLS, and no libc++_shared.so is needed.
 #   fontconfig       reads a fonts.conf the app writes over /system/fonts, so ASS falls back to
 #                    the system's Noto CJK.
 #   android/mpv/patches/<project>/*.patch are applied to that project's source before it builds:

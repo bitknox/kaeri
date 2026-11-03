@@ -175,11 +175,15 @@ struct StartingCurtain: View {
 
 /// Indeterminate progress as a thin amber line: a stretch of amber easing across a faint track,
 /// back and forth, calm. Still, with Reduce Motion.
+///
+/// The stretch's place is worked out from a clock on every frame rather than animated, so the
+/// line takes its size and place at once wherever it is laid out, and only the stretch moves.
 struct LoaderLine: View {
     let reduceMotion: Bool
     /// What VoiceOver says it is.
     var label = L.playerLoadingAnnounce
-    @State private var across = false
+    /// When the stretch set off from the left.
+    @State private var began = Date.now
 
     var body: some View {
         GeometryReader { proxy in
@@ -189,21 +193,46 @@ struct LoaderLine: View {
                 if reduceMotion {
                     Capsule().fill(Palette.amber.opacity(0.8))
                 } else {
-                    Capsule()
-                        .fill(Palette.amber)
-                        .frame(width: stretch)
-                        .offset(x: across ? proxy.size.width - stretch : 0)
+                    TimelineView(.animation) { context in
+                        let travel = proxy.size.width - stretch
+                        Capsule()
+                            .fill(Palette.amber)
+                            .frame(width: stretch)
+                            .offset(x: travel * Self.across(after: context.date.timeIntervalSince(began), travel: travel))
+                    }
                 }
             }
-        }
-        .onAppear {
-            guard !reduceMotion else { return }
-            // The standard spring's shape, slowed to a calm sweep; never a bounce.
-            withAnimation(.spring(duration: 1.4, bounce: 0).repeatForever(autoreverses: true)) { across = true }
         }
         .accessibilityElement()
         .accessibilityLabel(label)
         .accessibilityAddTraits(.updatesFrequently)
+    }
+
+    /// The standard spring's shape, slowed to a calm sweep; never a bounce.
+    nonisolated static let sweep = Spring(duration: 1.4, bounce: 0)
+
+    /// How far across the stretch is, from 0 at the left to 1 at the right, `elapsed` seconds
+    /// after it set off, when it has `travel` points to go: each way the spring, held until the
+    /// stretch is within a fifth of a point of the end, then back.
+    nonisolated static func across(after elapsed: TimeInterval, travel: CGFloat) -> Double {
+        let leg = self.leg(travel: travel)
+        guard leg > 0 else { return 0 }
+        let into = max(0, elapsed).truncatingRemainder(dividingBy: 2 * leg)
+        let there = min(1, max(0, sweep.value(target: 1.0, time: into < leg ? into : into - leg)))
+        return into < leg ? there : 1 - there
+    }
+
+    /// How long one way takes over `travel` points: until the spring is within a fifth of a point
+    /// of the end, where it looks still.
+    nonisolated static func leg(travel: CGFloat) -> TimeInterval {
+        let near = 0.2 / Double(travel)
+        guard near < 1 else { return 0 }
+        var (low, high) = (0.0, 10.0)
+        for _ in 0..<40 {
+            let mid = (low + high) / 2
+            if 1 - sweep.value(target: 1.0, time: mid) > near { low = mid } else { high = mid }
+        }
+        return high
     }
 }
 
@@ -1009,6 +1038,66 @@ struct MenuScroll<Rows: View>: View {
 extension EnvironmentValues {
     /// The menu row drawn as if the pointer were over it, by its title: a screenshot's.
     @Entry var pointedMenuRow: String?
+    /// What a panel does when the pointer comes onto one of its rows: the Mac's closes a submenu
+    /// open beside it, as a menu does when the pointer moves on to another item.
+    @Entry var menuRowEntered: (@MainActor () -> Void)?
+}
+
+/// Where a panel's submenu row is, for the submenu to open beside it.
+struct SubmenuAnchor: PreferenceKey {
+    static let defaultValue: Anchor<CGRect>? = nil
+    static func reduce(value: inout Anchor<CGRect>?, nextValue: () -> Anchor<CGRect>?) {
+        value = value ?? nextValue()
+    }
+}
+
+/// A row that opens a submenu beside the panel, as a Mac menu's item with a chevron does: on a
+/// click, or once the pointer has rested on it a moment. It stays lit while its submenu is open,
+/// and the panel closes the submenu when the pointer moves on to another row.
+struct SubmenuRow: View {
+    let title: String
+    @Binding var open: Bool
+    let metrics: PlayerMetrics
+    @Environment(\.pointedMenuRow) private var pointed
+    @State private var resting: Task<Void, Never>?
+
+    /// How long the pointer rests on the row before its submenu opens, as a Mac menu waits.
+    static let rest: Duration = .milliseconds(150)
+
+    var body: some View {
+        Button {
+            open.toggle()
+        } label: {
+            HStack(spacing: 4) {
+                Color.clear.frame(width: 16, height: 1)
+                Text(title).lineLimit(1)
+                Spacer(minLength: 8)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 11, weight: .semibold))
+            }
+            .font(.system(size: metrics.body))
+            .foregroundStyle(.silk)
+            .padding(.leading, 6)
+            .padding(.trailing, 10)
+            .frame(height: metrics.touch ? 44 : 24)
+            .contentShape(.rect)
+        }
+        .buttonStyle(MenuRowStyle(lit: open || pointed == title))
+        .environment(\.menuRowEntered, nil)
+        #if os(macOS)
+        .onHover { over in
+            resting?.cancel()
+            guard over, !open else { return }
+            resting = Task { @MainActor in
+                try? await Task.sleep(for: Self.rest)
+                if !Task.isCancelled { open = true }
+            }
+        }
+        #endif
+        .onDisappear { resting?.cancel() }
+        .anchorPreference(key: SubmenuAnchor.self, value: .bounds) { $0 }
+        .accessibilityAddTraits(open ? .isSelected : [])
+    }
 }
 
 /// What a viewer's pick sends: the engine's menus as rows. `indent` sets a row in a group
@@ -1062,13 +1151,17 @@ struct MenuRowStyle: ButtonStyle {
         let configuration: Configuration
         let lit: Bool
         @State private var hovering = false
+        @Environment(\.menuRowEntered) private var entered
 
         var body: some View {
             configuration.label
                 .background(RoundedRectangle(cornerRadius: 6).fill(Palette.silk.opacity(fill)))
                 .animation(.quick, value: hovering || lit)
                 #if os(macOS)
-                .onHover { hovering = $0 }
+                .onHover { over in
+                    hovering = over
+                    if over { entered?() }
+                }
                 #else
                 .contentShape(.hoverEffect, .rect(cornerRadius: 6))
                 .hoverEffect(.highlight)
@@ -1128,6 +1221,10 @@ struct MenuDivider: View {
 struct TrackLists: View {
     let model: PlayerModel
     let metrics: PlayerMetrics
+    /// Whether the subtitle style's submenu is open, where the panel shows it as one: the Mac's,
+    /// whose panel would otherwise grow past the window's height with the style's rows and push
+    /// Audio and the files out of sight. `nil` lists the rows in place, as the phone's sheet does.
+    var style: Binding<Bool>? = nil
 
     var body: some View {
         MenuHeading(title: L.playerSubtitles)
@@ -1141,9 +1238,14 @@ struct TrackLists: View {
             }
             .id(Self.subtitleRow(track.id))
         }
-        MenuDivider()
-        SubtitleStyleRows(model: model, metrics: metrics)
-        MenuDivider()
+        if let style {
+            SubmenuRow(title: L.playerSubsStyle, open: style, metrics: metrics)
+            MenuDivider()
+        } else {
+            MenuDivider()
+            SubtitleStyleRows(model: model, metrics: metrics)
+            MenuDivider()
+        }
         MenuHeading(title: L.playerAudio)
         ForEach(model.audioTracks) { track in
             MenuRow(title: track.name, checked: model.audioTrack == track.id, metrics: metrics) {
@@ -1318,22 +1420,27 @@ func speedLabel(_ speed: Double, whole: Bool = true) -> String {
 struct SubtitleStyleRows: View {
     let model: PlayerModel
     let metrics: PlayerMetrics
+    /// In a submenu of its own: no heading, since the row it opens from names it, and a divider
+    /// between the size, the position, the edge, what styled subtitles keep and Settings.
+    var submenu = false
 
     var body: some View {
         let style = model.subtitleStyle
-        MenuHeading(title: L.playerSubsStyle)
+        if !submenu { MenuHeading(title: L.playerSubsStyle) }
         MenuRow(title: L.playerSubsLarger, detail: L.settingsSubsSizeValue(percent: Int(style.size)), checked: false, metrics: metrics) {
             set(.subtitleSize, .int(Int64(min(200, Int(style.size) + 10))))
         }
         MenuRow(title: L.playerSubsSmaller, checked: false, metrics: metrics) {
             set(.subtitleSize, .int(Int64(max(50, Int(style.size) - 10))))
         }
+        if submenu { MenuDivider() }
         MenuRow(title: L.playerSubsRaise, detail: L.settingsSubsRaiseValue(percent: Int(style.raise)), checked: false, metrics: metrics) {
             set(.subtitleRaise, .int(Int64(min(20, Int(style.raise) + 1))))
         }
         MenuRow(title: L.playerSubsLower, checked: false, metrics: metrics) {
             set(.subtitleRaise, .int(Int64(max(0, Int(style.raise) - 1))))
         }
+        if submenu { MenuDivider() }
         MenuRow(title: L.playerSubsBgOutline, checked: style.background == .noBackground && style.edge == .outline, metrics: metrics) {
             set(.subtitleBackground, .str(SubtitleBackground.noBackground.fileName))
             set(.subtitleEdge, .str(SubtitleEdge.outline.fileName))
@@ -1345,6 +1452,7 @@ struct SubtitleStyleRows: View {
         MenuRow(title: L.playerSubsBgBox, checked: style.background != .noBackground, metrics: metrics) {
             set(.subtitleBackground, .str(SubtitleBackground.eachLine.fileName))
         }
+        if submenu { MenuDivider() }
         MenuRow(title: L.settingsSubsStyledKeep, checked: style.styled == .keep, metrics: metrics) {
             set(.styledSubtitles, .str(StyledSubtitles.keep.fileName))
         }
@@ -1354,6 +1462,7 @@ struct SubtitleStyleRows: View {
         MenuRow(title: L.settingsSubsStyledStrip, checked: style.styled == .strip, metrics: metrics) {
             set(.styledSubtitles, .str(StyledSubtitles.strip.fileName))
         }
+        if submenu { MenuDivider() }
         MenuRow(title: L.playerSubsMore, checked: false, metrics: metrics) {
             model.openSubtitleSettings?()
         }

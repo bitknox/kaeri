@@ -10,5 +10,9 @@ object FixtureTvs {
 
     fun openLink(@Suppress("UNUSED_PARAMETER") browser: FfiTvBrowser, @Suppress("UNUSED_PARAMETER") index: Int): String? = null
 
+    fun sendLink(@Suppress("UNUSED_PARAMETER") browser: FfiTvBrowser, @Suppress("UNUSED_PARAMETER") index: Int, @Suppress("UNUSED_PARAMETER") url: String): UInt = 0u
+
+    fun stopTv(@Suppress("UNUSED_PARAMETER") browser: FfiTvBrowser, @Suppress("UNUSED_PARAMETER") index: Int) {}
+
     suspend fun stage(model: TvRemoteModel, scene: TvScene, fakes: FfiTvBrowser, play: TvPlayRequest) {}
 }

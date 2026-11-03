@@ -38,8 +38,6 @@ extension AppStore {
             return ProviderInfo(row: row, name: L.sourcesDemoName, origin: L.sourcesDemoLine, listing: nil)
         }
         switch row.kind {
-        case "remote":
-            (name, origin) = (L.sourcesRemote, L.sourcesOriginConfig)
         case "demo":
             (name, origin) = (row.name, L.sourcesOriginBuiltIn)
         default:
@@ -77,7 +75,7 @@ extension AppStore {
             switch row.kind {
             case "library", "server", "licensed", "catalogue":
                 break
-            case "remote", "demo":
+            case "demo":
                 builtIn.append(row)
             default:
                 let listing = info(row).listing

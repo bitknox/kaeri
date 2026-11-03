@@ -161,7 +161,7 @@ async fn browse(h: &mut Harness, available: Option<Available>) -> Vec<Entry> {
 
 #[tokio::test]
 async fn available_keeps_to_your_own_sources_or_your_services_and_says_where() {
-    const SERVICE: &str = "Lantern Stream";
+    const SERVICE: &str = "Lantern Library";
     let carried = kaeri_testkit::fixtures::FINISHED;
     let dir = media();
     let mut h = harness().await;

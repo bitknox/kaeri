@@ -8,7 +8,7 @@
 //!   20,625 titles carry a `mal_id` (which is what AniList, MAL and Simkl key on) and only **7,225
 //!   carry a TVDB id**. Two thirds of the corpus cannot reach Trakt at all.
 //! - **Episode numbering is per-season, and usually unknowable.** Trakt wants `S2E03`; Kaeri
-//!   counts absolutely, because that is how fansubs number and how AniList splits cours. The
+//!   counts absolutely, because AniList splits cours that way. The
 //!   datasets' `episode_offset` bridges it — but of the 4,196 TVDB-mapped entries that *share* a
 //!   series with another entry, only 590 have one. So for **3,606 titles** there is no way to say
 //!   which season an episode belongs to.
@@ -293,7 +293,7 @@ mod tests {
 
     #[test]
     fn an_absolute_episode_becomes_season_relative() {
-        // The problem this whole trait exists for: Kaeri counts absolutely because fansubs do,
+        // The problem this whole trait exists for: Kaeri counts absolutely because AniList does,
         // and Trakt wants S2E03. Sending 15 as season 1 episode 15 marks the wrong episode.
         let mapping = Fixed { tvdb: Some(1234), offset: 12 };
         assert_eq!(mapping.season_episode(AnilistId::new(1), 15), Some((2, 3)));

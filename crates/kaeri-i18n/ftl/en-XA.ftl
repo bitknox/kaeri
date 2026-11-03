@@ -162,7 +162,7 @@ home-more-genre = [Ṁöŕé { $genre }~~~]
 # Line over the spotlight's title when it is the built-in demo.
 home-spotlight-demo = [Ðéɱö, ƒŕéé ţö šĥàŕé~~~~~~]
 
-# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Stream.
+# Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.
 licensed-return = [Ŵàţçĥéð éþîšöðé { $episode } öñ { $service }?~~~~~~~~~]
 
 # Notice after Mark as watched on the return notice. It holds Undo.
@@ -660,14 +660,11 @@ release-pinned = [{ $name } ŵîļļ ƀé üšéð ƒöŕ ţĥîš ţîţļé.~~
 # Toast when the chosen source or release for a title could not be saved. The reason comes from the database.
 notice-choice-not-saved = [Çöüļðñ'ţ šàṽé ţĥàţ çĥöîçé. { $reason }~~~~~~~~~]
 
-# Toast while torrents are running but the connection check failed, and the settings say to warn only.
-torrent-check-failed-running = [Ţĥé çöññéçţîöñ çĥéçķ ƒàîļéð. Ţöŕŕéñţš ķééþ ŕüññîñĝ.~~~~~~~~~~~~~~~~]
+# Note on the sources screen: the proxy for torrent traffic failed its check, so torrents wait.
+torrent-proxy-waiting = [Ţĥé þŕöẋý çĥéçķ ƒàîļéð. Ţöŕŕéñţš šţàŕţ öñçé îţ þàššéš.~~~~~~~~~~~~~~~~~]
 
-# Note on the sources screen: torrents are waiting for the VPN guard. The reason comes from the guard.
-torrent-vpn-waiting = [Ţöŕŕéñţš šţàŕţ öñçé ţĥé ṼÞÑ ĝüàŕð þàššéš. { $reason }~~~~~~~~~~~~~~]
-
-# Note on the sources screen: the VPN guard has no verdict yet.
-torrent-vpn-unverified = [Ţöŕŕéñţš šţàŕţ öñçé ţĥé ṼÞÑ ĝüàŕð þàššéš. Ţĥé çöññéçţîöñ ĥàšñ'ţ ƀééñ ṽéŕîƒîéð ýéţ.~~~~~~~~~~~~~~~~~~~~~~~~~]
+# Note on the sources screen: the proxy for torrent traffic hasn't been checked yet.
+torrent-proxy-unchecked = [Ţöŕŕéñţš šţàŕţ öñçé ţĥé þŕöẋý çĥéçķ þàššéš.~~~~~~~~~~~~~]
 
 # Error: the link or file given to open is not a magnet link, an info hash or a torrent file.
 torrent-link-unusable = [Ţĥàţ îšñ'ţ à ɱàĝñéţ ļîñķ öŕ à ţöŕŕéñţ ƒîļé.~~~~~~~~~~~~~]
@@ -684,14 +681,11 @@ torrent-interface-closed = [Ķàéŕî çļöšéð ƀéƒöŕé ţöŕŕéñţ�
 # Error: the torrent session could not start. The reason comes from the torrent engine.
 torrent-session-failed = [Çöüļðñ'ţ šţàŕţ ţĥé ţöŕŕéñţ šéššîöñ. { $reason }~~~~~~~~~~~~]
 
-# Toast when torrents are up but no operating-system firewall rule backs the VPN guard. Terminal only: the engine never sends it to the apps.
-torrent-no-kill-switch = [Ñöţĥîñĝ öñ ţĥîš ðéṽîçé šţöþš ţöŕŕéñţ ţŕàƒƒîç îƒ ţĥé ṼÞÑ ðŕöþš. Ŕüñ "ķàéŕî --ðöçţöŕ" ţö šéţ ţĥàţ üþ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+# Toast when the proxy setting can't be used. The reason comes from the proxy setting.
+torrent-proxy-unusable = [Ţĥé þŕöẋý šéţţîñĝ çàñ'ţ ƀé üšéð. { $reason }~~~~~~~~~~~]
 
-# Toast when the connection check could not run. The reason comes from the VPN settings.
-torrent-not-checked = [Çöüļðñ'ţ çĥéçķ ţĥé çöññéçţîöñ. { $reason }~~~~~~~~~~~]
-
-# Note on the sources screen after the source chain is rebuilt with torrents on.
-sources-reloaded-torrents-pending = [Šöüŕçéš ŕéļöàðéð. Ţöŕŕéñţš šţàŕţ öñçé ţĥé ṼÞÑ ĝüàŕð þàššéš.~~~~~~~~~~~~~~~~~~]
+# Note on the sources screen after the source chain is rebuilt with torrents on and a proxy set.
+sources-reloaded-torrents-checking = [Šöüŕçéš ŕéļöàðéð. Ţöŕŕéñţš šţàŕţ öñçé ţĥé þŕöẋý çĥéçķ þàššéš.~~~~~~~~~~~~~~~~~~~]
 
 # Note on the sources screen after the source chain is rebuilt with torrents off.
 sources-reloaded-torrents-off = [Ţöŕŕéñţš àŕé öƒƒ. Ţĥé šéššîöñ ŵàš šţöþþéð.~~~~~~~~~~~~~]
@@ -805,11 +799,14 @@ notice-sign-out-failed = [Çöüļðñ'ţ šîĝñ öüţ öƒ { $tracker }. Ţ�
 # Toast when a setting could not be stored. The cause says why and what to do.
 notice-not-saved-because = [Çöüļðñ'ţ šàṽé ţĥàţ šéţţîñĝ. { $cause }~~~~~~~~~~]
 
-# Toast when the torrent protection choice was saved.
-notice-protection-saved = [Šàṽéð ţöŕŕéñţ þŕöţéçţîöñ.~~~~~~~~]
+# Toast when the proxy for torrent traffic was saved.
+notice-proxy-saved = [Ţöŕŕéñţ ţŕàƒƒîç ñöŵ ĝöéš ţĥŕöüĝĥ ţĥé þŕöẋý.~~~~~~~~~~~~~]
 
-# Toast when the torrent protection could not be checked. The cause says why.
-notice-protection-not-checked = [Çöüļðñ'ţ çĥéçķ ţĥé ţöŕŕéñţ þŕöţéçţîöñ. { $cause }~~~~~~~~~~~~~]
+# Toast when the proxy for torrent traffic was turned off.
+notice-proxy-removed = [Ţöŕŕéñţš ñöŵ çöññéçţ ðîŕéçţļý, ŵîţĥöüţ à þŕöẋý.~~~~~~~~~~~~~~~]
+
+# Toast when the proxy could not be checked. The cause says why.
+notice-proxy-not-checked = [Çöüļðñ'ţ çĥéçķ ţĥé þŕöẋý. { $cause }~~~~~~~~~]
 
 # Toast when the proxy's password could not be stored. The reason comes from the system.
 notice-proxy-password-not-kept = [Çöüļðñ'ţ ķééþ ţĥé þŕöẋý'š þàššŵöŕð. Éñţéŕ îţ àĝàîñ ţö ţŕý šàṽîñĝ îţ. { $reason }~~~~~~~~~~~~~~~~~~~~~~]
@@ -822,9 +819,6 @@ notice-show-not-reset = [Çöüļðñ'ţ ŕéšéţ ţĥîš šĥöŵ'š šéţ�
 
 # Toast when a subtitle choice names subtitles the show has not used.
 notice-show-no-such-subtitles = [Çöüļðñ'ţ šàṽé ţĥàţ šüƀţîţļé çĥöîçé. Ţĥîš šĥöŵ ĥàšñ'ţ üšéð ţĥöšé šüƀţîţļéš ƀéƒöŕé.~~~~~~~~~~~~~~~~~~~~~~~~~]
-
-# Toast while torrents are held until the connection check passes.
-notice-torrents-waiting-for-check = [Ţöŕŕéñţš àŕé ŵàîţîñĝ ƒöŕ ţĥé çöññéçţîöñ çĥéçķ ţö þàšš àĝàîñ.~~~~~~~~~~~~~~~~~~]
 
 # Toast when the mapping data downloads work again after a failure.
 notice-mapping-data-refreshed = [Ṁàþþîñĝ ðàţà ŕéƒŕéšĥéð.~~~~~~~]
@@ -844,12 +838,6 @@ notice-episodes-aired =
 
 # Toast when a new release of Kaeri is out, on the terminal app. The command is not translated. Terminal only: the engine never sends it to the apps.
 notice-update-available = [{ $tag } îš öüţ. Ŕüñ ķàéŕî --üþðàţé ţö îñšţàļļ îţ.~~~~~~~~~~~~~~]
-
-# The reason a setting was refused until the person confirms having no protection.
-cause-confirm-no-protection = [Çöñƒîŕɱ ţĥàţ ýöü ŵàñţ ñö þŕöţéçţîöñ ƒîŕšţ.~~~~~~~~~~~~~]
-
-# The reason a setting was refused until the person confirms the "warn only" choice.
-cause-confirm-warn-only = [Çöñƒîŕɱ ţĥàţ ýöü ŵàñţ ţö ƀé ŵàŕñéð öñļý ƒîŕšţ.~~~~~~~~~~~~~~]
 
 # The reason a proxy was refused: it has no host or no port.
 cause-proxy-needs-address = [Å þŕöẋý ñééðš à ĥöšţ àñð à þöŕţ.~~~~~~~~~~]
@@ -921,26 +909,8 @@ crash-notice = [Ķàéŕî çļöšéð àƒţéŕ à þŕöƀļéɱ.~~~~~~~~~]
 # The same notice on the TV, which has no button.
 crash-notice-tv = [Ķàéŕî çļöšéð àƒţéŕ à þŕöƀļéɱ. Ýöü çàñ ŕéþöŕţ îţ ƒŕöɱ Šéţţîñĝš, Åƀöüţ.~~~~~~~~~~~~~~~~~~~~~]
 
-# Note under the connection-check group of the torrents dialog: what the check does.
-torrents-linux-check-note = [Ķàéŕî çĥéçķš ŵĥéŕé ţöŕŕéñţ ţŕàƒƒîç ļéàṽéš ƒŕöɱ ŵĥéñ à ţöŕŕéñţ šţàŕţš àñð éṽéŕý ɱîñüţé ŵĥîļé îţ ŕüñš, àñð þàüšéš ţöŕŕéñţš îƒ ţĥàţ çĥéçķ ƒàîļš. Ýöüŕ ṼÞÑ öŕ þŕöẋý îš ŵĥàţ þŕöţéçţš ýöü.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
-
-# Confirmation text when choosing "Warn only" for a failed check.
-torrents-linux-warn-confirm = [Ķàéŕî ŵîļļ ŵàŕñ ýöü îñšţéàð öƒ þàüšîñĝ. Îƒ ýöüŕ ṼÞÑ öŕ þŕöẋý îš ðöŵñ, öţĥéŕ þéöþļé çàñ šéé ýöüŕ ÎÞ àððŕéšš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
-
-# Status line once the protection has been checked and saved.
-torrents-linux-protection-saved = [Ţöŕŕéñţ þŕöţéçţîöñ šàṽéð~~~~~~~~]
-
-# Title of the dialog that turns torrents on.
-torrents-linux-turn-on-title = [Ţüŕñ öñ ţöŕŕéñţš~~~~~]
-
-# Title of the dialog that changes what protects torrents.
-torrents-linux-protect-title = [Þŕöţéçţ ţöŕŕéñţš~~~~~]
-
 # Title of the dialog that edits the proxy.
 torrents-linux-edit-proxy-title = [Éðîţ þŕöẋý~~~]
-
-# Button that turns torrents on in the dialog.
-torrents-linux-turn-on-button = [Ţüŕñ öñ~~~]
 
 # Seeding row: time left until the goal, in a span already worded ("18h", "1d 6h").
 downloads-linux-seed-left = [{ $span } ļéƒţ~~~]
@@ -1160,12 +1130,6 @@ settings-notify-note-on = [Öñé ñöţîƒîçàţîöñ ŵĥéñ àñ éþî�
 
 # Preview note for new-episode notifications when they are off.
 settings-notify-note-off = [Öƒƒ. Öñļý šĥöŵš ţüŕñéð öñ îñ ţĥéîŕ öŵñ šéţţîñĝš ñöţîƒý.~~~~~~~~~~~~~~~~~]
-
-# Heading of the preview note beside the sources settings while torrents are on.
-settings-connection-check-title = [Çöññéçţîöñ çĥéçķ~~~~~]
-
-# Preview note beside the sources settings while torrents are on.
-settings-connection-check-note = [Ķàéŕî çĥéçķš ŵĥéŕé ţöŕŕéñţ ţŕàƒƒîç ļéàṽéš ƒŕöɱ ŵĥéñ à ţöŕŕéñţ šţàŕţš àñð éṽéŕý ɱîñüţé ŵĥîļé îţ ŕüñš, àñð þàüšéš ţöŕŕéñţš îƒ ţĥàţ çĥéçķ ƒàîļš. Ýöüŕ ṼÞÑ öŕ þŕöẋý îš ŵĥàţ þŕöţéçţš ýöü.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Preview note beside the accounts settings.
 settings-accounts-note = [Ķàéŕî ŵöŕķš ŵîţĥöüţ àñ àççöüñţ. Ýöüŕ ŵàţçĥ ĥîšţöŕý šţàýš öñ ţĥîš çöɱþüţéŕ ŵĥéñ ýöü šîĝñ öüţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
@@ -3073,7 +3037,7 @@ sources-too-small = [Ñééðš à ļàŕĝéŕ ţéŕɱîñàļ.~~~~~~~~]
 sources-none-available = [Ñö šöüŕçéš àṽàîļàƀļé~~~~~~]
 
 # Reason shown when no source is available and the engine gave none. The setting is the name of a key in the config file and is not translated.
-sources-torrents-off = [Ţöŕŕéñţš àŕé öƒƒ üñţîļ { $setting } àñð à ṼÞÑ ɱöðé àŕé šéţ.~~~~~~~~~~~~~~~]
+sources-torrents-off = [Ţöŕŕéñţš àŕé öƒƒ üñţîļ { $setting } îš ţüŕñéð öñ.~~~~~~~~~~~~]
 
 # Column heading in the Sources table: the name of the source.
 sources-column-source = [Šöüŕçé~~]
@@ -3120,14 +3084,14 @@ sources-state-down = [Ðöŵñ~~]
 # State of a source: it has not been tried yet.
 sources-state-unchecked = [Ñöţ çĥéçķéð ýéţ~~~~~]
 
-# State of a source: it works but local rules (the VPN check) are withholding it.
+# State of a source: it works but waits for the proxy check.
 sources-state-held-back = [Ĥéļð ƀàçķ~~~]
 
 # Heading of the line about { -plugin-store-pl }.
 sources-stores-title = [Þļüĝîñ šţöŕéš~~~~]
 
 # Under the heading when no { -plugin-store } is joined or the list has not arrived.
-sources-stores-invite = [Þļüĝîñš šĥàŕéð ƀý þéöþļé ýöü ķñöŵ. Ĵöîñ ŵîţĥ àñ îñṽîţé ļîñķ.~~~~~~~~~~~~~~~~~~]
+sources-stores-invite = [Þļüĝîñš ƒöŕ ýöüŕ öŵñ ðéṽîçéš. Ĵöîñ ŵîţĥ àñ îñṽîţé ļîñķ.~~~~~~~~~~~~~~~~~]
 
 # Part of the { -plugin-store } summary: how many { -plugin-store-pl } are joined.
 sources-stores-joined = [{ $count } ĵöîñéð~~~]
@@ -3182,26 +3146,17 @@ sources-meta-skipped-until = [Šķîþþéð üñţîļ { $time } ({ $cause })~~
 # Detail for a metadata service whose wait is over: it is asked again when something needs it. The cause is the service's own error text.
 sources-meta-next-request = [Ţŕîéð àĝàîñ öñ ţĥé ñéẋţ ŕéƣüéšţ ({ $cause })~~~~~~~~~~~~]
 
-# Header chip while the VPN check is running. The mark is a status glyph.
-sources-vpn-checking = [ṼÞÑ { $mark }  Çĥéçķîñĝ~~~~~~]
+# Header chip while the proxy check is running. The mark is a status glyph.
+sources-proxy-checking = [Þŕöẋý { $mark }  Çĥéçķîñĝ~~~~~~]
 
-# Header chip when the VPN protects the connection. The name is where traffic leaves the network.
-sources-vpn-protected = [ṼÞÑ { $mark }  { $exit }~~~~]
+# Header chip when the proxy check passed.
+sources-proxy-passed = [Þŕöẋý { $mark }  Þàššéð~~~~~~]
 
-# Header chip when the VPN check found traffic leaving outside the tunnel.
-sources-vpn-leaking = [ṼÞÑ { $mark }  Ļéàķîñĝ~~~~~]
+# Header chip when the proxy check failed.
+sources-proxy-failed = [Þŕöẋý { $mark }  Çĥéçķ ƒàîļéð~~~~~~~]
 
-# Header chip when the VPN check could not be completed.
-sources-vpn-unreachable = [ṼÞÑ { $mark }  Ûñŕéàçĥàƀļé~~~~~~]
-
-# Header chip when the configuration runs with no VPN on purpose.
-sources-vpn-unprotected = [ṼÞÑ { $mark }  Ûñþŕöţéçţéð~~~~~~]
-
-# Notice when the VPN check finds a leak and torrents are paused.
-sources-vpn-leak-paused = [Ţĥé ṼÞÑ îš ļéàķîñĝ. Ţöŕŕéñţš àŕé þàüšéð üñţîļ îţ îš þŕöţéçţéð àĝàîñ.~~~~~~~~~~~~~~~~~~~~~]
-
-# Notice when the VPN check cannot be completed and torrents are paused.
-sources-vpn-unreachable-paused = [Ţĥé ṼÞÑ çàñ'ţ ƀé ŕéàçĥéð. Ţöŕŕéñţš àŕé þàüšéð üñţîļ îţ çàñ.~~~~~~~~~~~~~~~~~~]
+# Notice when the proxy check fails and torrents wait.
+sources-proxy-failed-note = [Ţĥé þŕöẋý çĥéçķ ƒàîļéð. Ţöŕŕéñţš šţàŕţ öñçé îţ þàššéš.~~~~~~~~~~~~~~~~~]
 
 # Notice after the person submits an empty value for a text setting.
 settings-unchanged = [Ļéƒţ üñçĥàñĝéð. Ðéļéţé ţĥé ļîñé îñ çöñƒîĝ.ţöɱļ ţö üñšéţ îţ.~~~~~~~~~~~~~~~~~~]
@@ -3271,12 +3226,6 @@ settings-value-download-dir-default = [Ķéþţ ŵîţĥ ţĥé ţöŕŕéñţ �
 
 # Value of the Syncplay room setting when no room is set.
 settings-value-room-unset = [Ñöţ šéţ (ñééðéð ƒöŕ ŵàţçĥ þàŕţîéš)~~~~~~~~~~~]
-
-# Value of the VPN mode setting: traffic goes through a proxy server (SOCKS5).
-settings-value-vpn-socks5 = [Þŕöẋý~~]
-
-# Value of the VPN mode setting: a tunnel set up outside the app.
-settings-value-vpn-external = [Éẋţéŕñàļ~~~]
 
 # Value of the seeding ratio setting: seed until the ratio is reached.
 settings-value-seed-ratio = [Ûñţîļ ŕàţîö { $ratio }~~~~~]
@@ -3410,8 +3359,8 @@ settings-label-seed-hours = [Šééð ƒöŕ àţ ɱöšţ~~~~~]
 # Settings row: the cap on torrent upload speed.
 settings-label-upload-limit = [Ûþļöàð ļîɱîţ~~~~]
 
-# Settings row: how traffic is protected by a VPN.
-settings-label-vpn-mode = [ṼÞÑ ɱöðé~~~]
+# Settings row: the SOCKS5 proxy torrent traffic goes through, if any.
+settings-label-torrent-proxy = [Ţöŕŕéñţ þŕöẋý~~~~]
 
 # Settings row: where sign-in tokens are kept.
 settings-label-token-storage = [Ţöķéñ šţöŕàĝé~~~~]
@@ -3436,9 +3385,6 @@ settings-label-downloads-on-cellular = [Ðöŵñļöàðš öñ ɱöƀîļé ð�
 
 # Settings row: whether torrents run on a mobile connection.
 settings-label-torrents-on-cellular = [Ţöŕŕéñţš öñ ɱöƀîļé ðàţà~~~~~~~]
-
-# Settings row: what happens to torrents when the VPN check fails.
-settings-label-vpn-on-failure = [Îƒ à çĥéçķ ƒàîļš~~~~~]
 
 # Settings row: whether the app notifies of new episodes.
 settings-label-episode-notifications = [Ñéŵ éþîšöðé ñöţîƒîçàţîöñš~~~~~~~~]
@@ -3491,8 +3437,8 @@ settings-note-download-dir = [Þŕéšš Éñţéŕ ţö ţýþé à þàţĥ. �
 # Note under the merge subtitles row.
 settings-note-merge-subtitles = [Åþþļîéš ţö ţĥé ñéẋţ ðöŵñļöàð ţĥàţ ƒîñîšĥéš.~~~~~~~~~~~~~]
 
-# Note under the keep seeding row. It is a privacy choice.
-settings-note-keep-seeding = [Ŵĥîļé öñ, ýöü šţàý ļîšţéð àš à šééðéŕ. Åþþļîéš îɱɱéðîàţéļý.~~~~~~~~~~~~~~~~~~]
+# Note under the keep seeding row.
+settings-note-keep-seeding = [Öƒƒ ƀý ðéƒàüļţ ţö šàṽé üþļöàð; ţüŕñ îţ öñ ţö ĝîṽé ƀàçķ ţö ţĥé šŵàŕɱ.~~~~~~~~~~~~~~~~~~~~~]
 
 # Note under the after each download row.
 settings-note-download-hook = [Þŕéšš Éñţéŕ ţö ţýþé à çöɱɱàñð. Îţ ŕüñš àƒţéŕ éàçĥ ƒîñîšĥéð ðöŵñļöàð.~~~~~~~~~~~~~~~~~~~~~]
@@ -3522,10 +3468,10 @@ settings-note-presence-title = [Öƒƒ šĥöŵš “Ŵàţçĥîñĝ àñîɱé
 settings-note-presence-rich = [Åððš ţĥé çöṽéŕ, à þŕöĝŕéšš ƀàŕ àñð àñ ÅñîĻîšţ ļîñķ. Ñééðš ţĥé ţîţļé šĥöŵñ.~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Note under the torrent playback row.
-settings-note-torrents = [Ñééðš à ṼÞÑ çöñƒîĝüŕéð. Ţàķéš éƒƒéçţ îɱɱéðîàţéļý.~~~~~~~~~~~~~~~]
+settings-note-torrents = [Öƒƒ ƀý ðéƒàüļţ. Ţàķéš éƒƒéçţ îɱɱéðîàţéļý.~~~~~~~~~~~~~]
 
-# Note under the VPN mode row.
-settings-note-vpn-mode = [Éðîţ çöñƒîĝ.ţöɱļ ţö çĥàñĝé ţĥîš. Ţüŕñîñĝ þŕöţéçţîöñ öƒƒ ţàķéš àñ éẋþļîçîţ šţéþ.~~~~~~~~~~~~~~~~~~~~~~~~]
+# Note under the torrent proxy row. config.toml is a file name and is not translated.
+settings-note-torrent-proxy = [Öþţîöñàļ. Éðîţ çöñƒîĝ.ţöɱļ ţö ŕöüţé ţöŕŕéñţ ţŕàƒƒîç ţĥŕöüĝĥ à ŠÖÇĶŠ5 þŕöẋý.~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Note under the seed after watching row.
 settings-note-seed-ratio = [Ķééþš ŵàţçĥéð éþîšöðéš šééðîñĝ ŵĥîļé Ķàéŕî îš öþéñ.~~~~~~~~~~~~~~~~]
@@ -6163,7 +6109,7 @@ onboarding-own-heading = [Ĥàṽé ýöüŕ öŵñ ɱéðîà?~~~~~~]
 onboarding-invite-heading = [Ĥàṽé àñ îñṽîţé ļîñķ?~~~~~~]
 
 # Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-onboarding-where-stores = [Þļüĝîñš çöɱé ƒŕöɱ þļüĝîñ šţöŕéš. Å þļüĝîñ šţöŕé îš ŕüñ ƀý öñé þéŕšöñ ƒöŕ ţĥé þéöþļé ţĥéý îñṽîţé, šö ýöü ĵöîñ öñé ŵîţĥ àñ îñṽîţé ļîñķ ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+onboarding-where-stores = [Þļüĝîñš çöɱé ƒŕöɱ þļüĝîñ šţöŕéš. Å þļüĝîñ šţöŕé îš šîĝñéð àñð ĝîṽéš éàçĥ ðéṽîçé îţš öŵñ ţöķéñ, šö ýöü ĵöîñ öñé ŵîţĥ àñ îñṽîţé ļîñķ ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = [Ţŕý îţ ñöŵ~~~]
@@ -8091,7 +8037,7 @@ settings-reset = [Ŕéšéţ šéţţîñĝš~~~~~]
 settings-reset-title = [Ŕéšéţ šéţţîñĝš?~~~~~]
 
 # Line under it. The old settings file is moved aside, not deleted.
-settings-reset-detail = [Éṽéŕý šéţţîñĝ ĝöéš ƀàçķ ţö îţš ðéƒàüļţ, ṼÞÑ àñð þŕöẋý îñçļüðéð. Ýöüŕ ŵàţçĥ ĥîšţöŕý šţàýš, àñð ţĥé öļð šéţţîñĝš ƒîļé îš ķéþţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+settings-reset-detail = [Éṽéŕý šéţţîñĝ ĝöéš ƀàçķ ţö îţš ðéƒàüļţ, ţĥé ţöŕŕéñţ þŕöẋý îñçļüðéð. Ýöüŕ ŵàţçĥ ĥîšţöŕý šţàýš, àñð ţĥé öļð šéţţîñĝš ƒîļé îš ķéþţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Notice once Kaeri has started again on the default settings. The file is the name the old settings file is kept under, beside the new one, such as config.damaged-2026-10-30.
 settings-reset-done = [Šéţţîñĝš àŕé ƀàçķ ţö ţĥéîŕ ðéƒàüļţš. Ţĥé öļð ƒîļé îš ķéþţ àš { $file }.~~~~~~~~~~~~~~~~~~~~]
@@ -8262,8 +8208,8 @@ source-note-gone = [Ñöţ îñšţàļļéð~~~~]
 # Under a source that found more than one show by this name and could not tell which is this one.
 source-note-ambiguous = [Çöüļðñ'ţ ɱàţçĥ ţĥîš ţîţļé~~~~~~~~]
 
-# Under a source held back by the VPN check in Settings.
-source-note-held-back = [Ĥéļð ƀàçķ ƀý ţĥé ṼÞÑ çĥéçķ~~~~~~~~]
+# Under a source that waits for the proxy check in Settings.
+source-note-held-back = [Ŵàîţîñĝ ƒöŕ ţĥé þŕöẋý çĥéçķ~~~~~~~~~]
 
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 source-picker-releases = [Ŕéļéàšéš~~~]
@@ -8307,12 +8253,6 @@ sources-empty-detail = [Ĵöîñ à þļüĝîñ šţöŕé ŵîţĥ ţĥé îñ
 # Row for the built-in torrent source.
 sources-torrents = [Ţöŕŕéñţš~~~]
 
-# Label of a source that is not a plugin and controls this device.
-sources-remote = [Ŕéɱöţé~~]
-
-# Origin: set in the config file.
-sources-origin-config = [Šéţ îñ ţĥé çöñƒîĝ ƒîļé~~~~~~~]
-
 # Origin: built into the app.
 sources-origin-built-in = [Ɓüîļţ îñ~~~]
 
@@ -8349,8 +8289,8 @@ sources-detail-not-answering = [Ñöţ àñšŵéŕîñĝ. { $why }~~~~~~]
 # Status line: no answer.
 sources-detail-not-answering-plain = [Ñöţ àñšŵéŕîñĝ.~~~~~]
 
-# Status line: held back by the check.
-sources-detail-held-back = [Ĥéļð ƀàçķ üñţîļ ţĥé çöññéçţîöñ çĥéçķ þàššéš.~~~~~~~~~~~~~~]
+# Status line: waiting for the proxy check.
+sources-detail-held-back = [Ŵàîţîñĝ üñţîļ ţĥé þŕöẋý çĥéçķ þàššéš.~~~~~~~~~~~~]
 
 # Status line: disabled.
 sources-detail-disabled = [Öƒƒ. Îţ ķééþš îţš þļàçé àñð îšñ'ţ ţŕîéð.~~~~~~~~~~~~]
@@ -8358,7 +8298,7 @@ sources-detail-disabled = [Öƒƒ. Îţ ķééþš îţš þļàçé àñð îš
 # Status line: the source is gone.
 sources-detail-gone = [Ţĥîš šöüŕçé îš ñö ļöñĝéŕ ĥéŕé.~~~~~~~~~]
 
-# Status line: the site did not answer.
+# Status line: the source did not answer.
 sources-detail-site = [Ţĥé šöüŕçé ðîðñ'ţ àñšŵéŕ.~~~~~~~~]
 
 # Row label: version.
@@ -8427,7 +8367,7 @@ sources-torrent-source = [Ţöŕŕéñţ þļàýƀàçķ~~~~~]
 sources-source-order-row = [Šöüŕçé öŕðéŕ~~~~]
 
 # Note under the facts on the Torrents page in Sources. Torrents are built in, not a plugin.
-sources-torrents-note = [Ţöŕŕéñţš àŕé þàŕţ öƒ Ķàéŕî, ñöţ à þļüĝîñ. Ŵĥàţ þŕöţéçţš ţĥéîŕ ţŕàƒƒîç, ţĥé çöññéçţîöñ çĥéçķ àñð šééðîñĝ àŕé šéţ îñ Šéţţîñĝš, üñðéŕ Šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+sources-torrents-note = [Ţöŕŕéñţš àŕé þàŕţ öƒ Ķàéŕî, ñöţ à þļüĝîñ. Ţĥé þŕöẋý àñð šééðîñĝ àŕé šéţ îñ Šéţţîñĝš, üñðéŕ Šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Over the { -source } list while the { -source-pl } are set up again after a change.
 sources-rebuilding = [Šöüŕçéš àŕé ƀéîñĝ šéţ üþ àĝàîñ~~~~~~~~~]
@@ -8623,7 +8563,7 @@ sources-your-intro = [Éþîšöðéš þļàý ƒŕöɱ ţĥé ƒîŕšţ šö�
 sources-section-plugins = [Þļüĝîñš~~~]
 
 # Section heading: Internet Archive collections and PeerTube channels.
-sources-section-catalogues = [Ƒŕéé çàţàļöĝüéš~~~~~]
+sources-section-catalogues = [Öþéñ çàţàļöĝüéš~~~~~]
 
 # Link in the empty state.
 sources-add-demo = [Åðð ţĥé ðéɱö~~~~]
@@ -8638,7 +8578,7 @@ stores-joined = [Ĵöîñéð~~]
 stores-empty-title = [Ñö þļüĝîñ šţöŕéš ýéţ~~~~~~]
 
 # Line under the empty title.
-stores-empty-detail = [Þļüĝîñ šţöŕéš àŕé ŕüñ ƀý þéöþļé ýöü ķñöŵ. Ĵöîñ öñé ŵîţĥ ţĥé îñṽîţé ļîñķ îţš öŵñéŕ šéñðš ýöü.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+stores-empty-detail = [Þļüĝîñ šţöŕéš ĥöļð šîĝñéð þļüĝîñš àñð ĝîṽé éàçĥ ðéṽîçé îţš öŵñ ţöķéñ. Ĵöîñ öñé ŵîţĥ ţĥé îñṽîţé ļîñķ îţš öŵñéŕ šéñðš ýöü.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Line under the title of the screen when plugins add sources.
 stores-intro = [Þļüĝîñš àðð šöüŕçéš. Éàçĥ öñé ļîšţš ţĥé ĥöšţš îţ çöñţàçţš ƀéƒöŕé ýöü îñšţàļļ îţ.~~~~~~~~~~~~~~~~~~~~~~~~]
@@ -9133,7 +9073,7 @@ stores-offers-plugins =
 notice-open-stores = [Öþéñ þļüĝîñ šţöŕéš~~~~~~]
 
 # Explainer on the empty plugin stores page.
-stores-what-is = [Å þļüĝîñ šţöŕé îš à šɱàļļ šéŕṽéŕ öñé þéŕšöñ ŕüñš ƒöŕ ţĥé þéöþļé ţĥéý îñṽîţé. Îţ öƒƒéŕš šöüŕçéš àš þļüĝîñš. Ķàéŕî ŕüñš ñö þļüĝîñ šţöŕéš àñð ļîšţš ñöñé, šö ýöü ĵöîñ öñé ŵîţĥ àñ îñṽîţé ļîñķ ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+stores-what-is = [Å þļüĝîñ šţöŕé îš à šɱàļļ šéŕṽéŕ ţĥàţ ĥöļðš šîĝñéð þļüĝîñš àñð ĝîṽéš éàçĥ ðéṽîçé îţš öŵñ ţöķéñ. Îţ öƒƒéŕš šöüŕçéš àš þļüĝîñš. Ķàéŕî ŕüñš ñö þļüĝîñ šţöŕéš àñð ļîšţš ñöñé, šö ýöü ĵöîñ öñé ŵîţĥ àñ îñṽîţé ļîñķ ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = [Ŵĥàţ îš à þļüĝîñ šţöŕé?~~~~~~~]
@@ -9456,61 +9396,28 @@ torrents-title = [Ţöŕŕéñţš~~~]
 torrents-on = [Ţöŕŕéñţš àŕé öñ~~~~~]
 
 # Line under the switch while torrents are off.
-torrents-off-detail = [Öƒƒ ƀý ðéƒàüļţ. Ţüŕñîñĝ ţĥîš öñ àšķš ĥöŵ ţö þŕöţéçţ ýöüŕ çöññéçţîöñ ƒîŕšţ.~~~~~~~~~~~~~~~~~~~~~~~]
+torrents-off-detail = [Öƒƒ ƀý ðéƒàüļţ. Ţöŕŕéñţš çöññéçţ ðîŕéçţļý üñļéšš ýöü ŕöüţé ţĥéɱ ţĥŕöüĝĥ à þŕöẋý.~~~~~~~~~~~~~~~~~~~~~~~~]
 
-# Line explaining the risk, before torrents start.
-torrents-risk = [Öţĥéŕ þéöþļé çàñ šéé ýöüŕ ÎÞ àððŕéšš ŵĥîļé ýöü ðöŵñļöàð àñð šĥàŕé à ţöŕŕéñţ. Çĥööšé ŵĥàţ þŕöţéçţš îţ ƀéƒöŕé ţöŕŕéñţš šţàŕţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+# Line about privacy in the torrent sheet, before torrents start.
+torrents-risk = [Öţĥéŕ þéöþļé îñ à ţöŕŕéñţ çàñ šéé ýöüŕ ÎÞ àððŕéšš. Ţö ķééþ îţ þŕîṽàţé, ŕöüţé ţöŕŕéñţ ţŕàƒƒîç ţĥŕöüĝĥ à þŕöẋý.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Line in the Apple sources screen: torrents belong to the app, not to a plugin.
-torrents-not-a-plugin = [Ţöŕŕéñţš àŕé þàŕţ öƒ Ķàéŕî, ñöţ à þļüĝîñ. Ŵĥàţ þŕöţéçţš ţĥéîŕ ţŕàƒƒîç, ţĥé çöññéçţîöñ çĥéçķ àñð šééðîñĝ àŕé šéţ îñ Šéţţîñĝš, üñðéŕ Šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+torrents-not-a-plugin = [Ţöŕŕéñţš àŕé þàŕţ öƒ Ķàéŕî, ñöţ à þļüĝîñ. Ţĥé þŕöẋý àñð šééðîñĝ àŕé šéţ îñ Šéţţîñĝš, üñðéŕ Šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
-# Label of the choice of protection.
-torrents-protect-with = [Þŕöţéçţ ŵîţĥ~~~~]
+# Switch: send torrent traffic through a SOCKS5 proxy. Off by default.
+torrents-proxy-route = [Ŕöüţé ţöŕŕéñţ ţŕàƒƒîç ţĥŕöüĝĥ à þŕöẋý~~~~~~~~~~~~]
 
-# Option: no protection.
-torrents-protect-none = [Ñö þŕöţéçţîöñ~~~~]
+# Line under the switch.
+torrents-proxy-route-detail = [Ţöŕŕéñţ ţŕàƒƒîç ĝöéš ţĥŕöüĝĥ à ŠÖÇĶŠ5 þŕöẋý ýöü ŕüñ öŕ ŕéñţ. Ŵĥîļé ţĥîš îš öƒƒ, ţöŕŕéñţš çöññéçţ ðîŕéçţļý.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
-# Option: a proxy.
-torrents-protect-proxy = [Þŕöẋý~~]
+# Summary: torrents go through a proxy. Host and port are already formatted.
+torrents-summary-proxy-at = [Ţĥŕöüĝĥ à ŠÖÇĶŠ5 þŕöẋý àţ { $host }:{ $port }.~~~~~~~~~~~]
 
-# Option: a VPN already running on the device.
-torrents-protect-vpn = [ṼÞÑ~]
+# Summary: torrents go through a proxy, address not shown.
+torrents-summary-proxy = [Ţĥŕöüĝĥ à ŠÖÇĶŠ5 þŕöẋý.~~~~~~~]
 
-# Line under the proxy option.
-torrents-protect-proxy-detail = [Ţöŕŕéñţ ţŕàƒƒîç ĝöéš ţĥŕöüĝĥ à þŕöẋý ýöü ŕüñ öŕ ŕéñţ.~~~~~~~~~~~~~~~~]
-
-# Line under the VPN option.
-torrents-protect-vpn-detail = [Ûšéš ţĥé ṼÞÑ àļŕéàðý ŕüññîñĝ öñ ţĥîš ðéṽîçé.~~~~~~~~~~~~~~]
-
-# Line under the no-protection option.
-torrents-protect-none-detail = [Ýöüŕ àððŕéšš îš ṽîšîƀļé ţö éṽéŕýöñé îñ ţĥé ţöŕŕéñţ.~~~~~~~~~~~~~~~~]
-
-# Line when no protection is set.
-torrents-protect-none-note = [Ŵîţĥ ñö þŕöţéçţîöñ, Ķàéŕî ðöéšñ'ţ çĥéçķ ţĥé çöññéçţîöñ.~~~~~~~~~~~~~~~~~]
-
-# Summary: a proxy protects. Host and port are already formatted.
-torrents-summary-proxy-at = [Þŕöţéçţéð ƀý à ŠÖÇĶŠ5 þŕöẋý àţ { $host }:{ $port }.~~~~~~~~~~~~]
-
-# Summary: a proxy protects, address not shown.
-torrents-summary-proxy = [Þŕöţéçţéð ƀý à ŠÖÇĶŠ5 þŕöẋý.~~~~~~~~~]
-
-# Summary: a VPN protects.
-torrents-summary-vpn = [Þŕöţéçţéð ƀý ţĥé ṼÞÑ öñ ţĥîš ðéṽîçé.~~~~~~~~~~~]
-
-# Summary: nothing protects.
-torrents-summary-none = [Ñöţ þŕöţéçţéð. Ýöüŕ àððŕéšš îš ṽîšîƀļé ţö éṽéŕýöñé îñ ţĥé ţöŕŕéñţ.~~~~~~~~~~~~~~~~~~~~]
-
-# Title of the question when torrents are turned on without protection.
-torrents-unprotected-title = [Ûšé ţöŕŕéñţš ŵîţĥöüţ þŕöţéçţîöñ?~~~~~~~~~~]
-
-# Line under it.
-torrents-unprotected-detail = [Öţĥéŕ þéöþļé çàñ šéé ýöüŕ ÎÞ àððŕéšš ŵĥîļé ýöü ðöŵñļöàð àñð šĥàŕé à ţöŕŕéñţ, àñð Ķàéŕî ðöéšñ'ţ çĥéçķ ţĥé çöññéçţîöñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
-
-# Button that confirms turning torrents on without protection.
-torrents-turn-on-unprotected = [Ţüŕñ öñ ŵîţĥöüţ þŕöţéçţîöñ~~~~~~~~]
-
-# Button that confirms using no protection.
-torrents-use-unprotected = [Ûšé ŵîţĥöüţ þŕöţéçţîöñ~~~~~~~]
+# Summary: no proxy is set.
+torrents-summary-direct = [Çöññéçţîñĝ ðîŕéçţļý, ŵîţĥöüţ à þŕöẋý.~~~~~~~~~~~~]
 
 # Label of the proxy host field.
 torrents-proxy-host = [Þŕöẋý ĥöšţ~~~]
@@ -9528,7 +9435,7 @@ torrents-proxy-password = [Þàššŵöŕð~~~]
 torrents-password-keep = [Ļéàṽé ţĥé þàššŵöŕð éɱþţý ţö ķééþ ţĥé šàṽéð öñé.~~~~~~~~~~~~~~~]
 
 # Line under the proxy form: what happens while the new proxy is checked.
-torrents-proxy-keeps-saved = [Ţöŕŕéñţš ķééþ üšîñĝ ţĥé šàṽéð þŕöẋý üñţîļ ţĥé ñéŵ öñé þàššéš ţĥé çöññéçţîöñ çĥéçķ.~~~~~~~~~~~~~~~~~~~~~~~~~]
+torrents-proxy-keeps-saved = [Ţöŕŕéñţš ķééþ üšîñĝ ţĥé šàṽéð þŕöẋý üñţîļ ţĥé ñéŵ öñé þàššéš ţĥé þŕöẋý çĥéçķ.~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Line when the host or port is wrong.
 torrents-proxy-invalid = [Ţĥé þŕöẋý ñééðš à ĥöšţ àñð à þöŕţ ƒŕöɱ 1 ţö 65535.~~~~~~~~~~~~~~~]
@@ -9539,95 +9446,32 @@ torrents-checking-proxy = [Çĥéçķîñĝ ţĥé þŕöẋý…~~~~~~]
 # Notice after the proxy was saved.
 torrents-proxy-saved = [Þŕöẋý šàṽéð~~~~]
 
-# Why a save was refused: traffic left outside the proxy.
-torrents-left-outside-proxy = [Ţöŕŕéñţ ţŕàƒƒîç ļéƒţ öüţšîðé ţĥîš þŕöẋý~~~~~~~~~~~~]
-
-# Why a save was refused: the check could not run through the proxy.
-torrents-check-not-made-proxy = [Ţĥé çĥéçķ çöüļðñ'ţ ƀé ɱàðé ţĥŕöüĝĥ ţĥîš þŕöẋý~~~~~~~~~~~~~~]
+# Why a save was refused: the proxy check failed. A sentence fragment.
+torrents-check-not-made-proxy = [Ţĥé þŕöẋý çĥéçķ ƒàîļéð~~~~~~~]
 
 # Notice when a proxy was not saved. The reason is a sentence fragment.
 torrents-proxy-not-saved = [Ñöţ šàṽéð. { $why }, šö ţĥé šàṽéð þŕöẋý šţàýš.~~~~~~~~~~~~~]
 
-# Notice when protection was not saved. The reason is a sentence fragment.
-torrents-protection-not-saved = [Ñöţ šàṽéð. { $why }, šö ţĥé šàṽéð þŕöţéçţîöñ šţàýš.~~~~~~~~~~~~~~]
-
 # Notice when torrents stayed off. The reason is a sentence fragment.
 torrents-still-off = [Ţöŕŕéñţš àŕé šţîļļ öƒƒ. { $why }.~~~~~~~~~]
 
-# Label of the index address field.
-torrents-index = [Ţöŕŕéñţ îñðéẋ~~~~]
+# Under the proxy form: what the app checks.
+torrents-check-note = [Ķàéŕî çĥéçķš ţĥàţ îţ çàñ ŕéàçĥ ţĥé þŕöẋý ƀéƒöŕé ţöŕŕéñţš šţàŕţ. Ţöŕŕéñţš ŵàîţ ŵĥîļé ţĥàţ çĥéçķ ƒàîļš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
-# Line under the index field.
-torrents-index-detail = [Ţĥé ŔŠŠ šéàŕçĥ àððŕéšš Ķàéŕî àšķš ƒöŕ ţöŕŕéñţš.~~~~~~~~~~~~~~~]
-
-# Hint inside the index field.
-torrents-index-hint = [ĥţţþš://…/?ƣ={ "{" }ƣüéŕý{ "}" }~~~~~~]
-
-# Line when no index address is set.
-torrents-index-needed = [Ţöŕŕéñţš ñééð àñ îñðéẋ àððŕéšš.~~~~~~~~~~]
-
-# Line when the index address has the wrong scheme.
-torrents-index-scheme = [Ûšé àñ ĥţţþ öŕ ĥţţþš àððŕéšš.~~~~~~~~~]
-
-# Notice after the index was saved.
-torrents-index-saved = [Ţöŕŕéñţ îñðéẋ šàṽéð~~~~~~]
-
-# Label of the choice of what to do when a check fails.
-torrents-if-check-fails = [Îƒ à çĥéçķ ƒàîļš~~~~~]
-
-# Title of the question that asks whether torrents may keep running.
-torrents-keep-running-title = [Ķééþ ţöŕŕéñţš ŕüññîñĝ îƒ à çĥéçķ ƒàîļš?~~~~~~~~~~~~]
-
-# Line under the question: what the choice is about.
-torrents-keep-running-detail = [Ŵĥàţ ĥàþþéñš ţö ţöŕŕéñţš ŵĥéñ ţĥé çĥéçķ ƒîñðš ţŕàƒƒîç ļéàṽîñĝ öüţšîðé ýöüŕ ṼÞÑ öŕ þŕöẋý.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
-
-# Option: pause torrents.
-torrents-fail-pause = [Þàüšé ţöŕŕéñţš~~~~~]
-
-# Option: stop torrents.
-torrents-fail-stop = [Šţöþ ţöŕŕéñţš~~~~]
-
-# Option: only warn.
-torrents-fail-warn = [Ŵàŕñ öñļý~~~]
-
-# Result of the choice: torrents run.
-torrents-fail-warn-result = [Ţöŕŕéñţš ķééþ ŕüññîñĝ.~~~~~~~]
-
-# Result of the choice: torrents stop.
-torrents-fail-stop-result = [Ţöŕŕéñţš àŕé šţöþþéð.~~~~~~~]
-
-# Result of the choice: torrents pause.
-torrents-fail-pause-result = [Ţöŕŕéñţš àŕé þàüšéð.~~~~~~]
-
-# Label of the last check.
-torrents-last-check = [Ļàšţ çĥéçķ~~~]
-
-# Check passed. The exit is where the traffic leaves from, already formatted.
-torrents-check-passed-exit = [Ļéàṽîñĝ ţĥŕöüĝĥ { $exit }~~~~~~]
+# Label of the proxy check's result.
+torrents-last-check = [Þŕöẋý çĥéçķ~~~~]
 
 # Check passed.
 torrents-check-passed = [Þàššéð~~]
 
-# Check running: the line.
-torrents-check-running-line = [Çĥéçķîñĝ ŵĥéŕé ţöŕŕéñţ ţŕàƒƒîç ļéàṽéš ƒŕöɱ~~~~~~~~~~~~~]
-
 # Check running: the short word.
 torrents-check-running = [Çĥéçķîñĝ~~~]
 
-# Check failed: traffic left outside. The consequence follows.
-torrents-check-leaked = [Ţŕàƒƒîç ļéƒţ öüţšîðé ţĥé þŕöţéçţîöñ. { $then }~~~~~~~~~~~~]
-
-# Check failed: the check could not be made. The consequence follows.
-torrents-check-unmade = [Ţĥé çĥéçķ çöüļðñ'ţ ƀé ɱàðé. { $then }~~~~~~~~~~]
+# Check failed: the line.
+torrents-check-failed-line = [Ţĥé þŕöẋý çĥéçķ ƒàîļéð. Ţöŕŕéñţš šţàŕţ öñçé îţ þàššéš.~~~~~~~~~~~~~~~~~]
 
 # Short word: the check failed.
 torrents-check-failed = [Ƒàîļéð~~]
-
-# Line: no protection is set, so nothing was checked.
-torrents-check-none-line = [Ñö þŕöţéçţîöñ îš šéţ~~~~~~]
-
-# Short word: unprotected.
-torrents-check-none = [Ûñþŕöţéçţéð~~~~]
 
 # Line: no check yet.
 torrents-check-waiting-line = [Ñöţ çĥéçķéð ýéţ~~~~~]
@@ -9667,12 +9511,6 @@ torrents-page-unreadable = [Ţĥé ŢṼ çöüļðñ'ţ ŕéàð ţĥîš. Šç
 
 # Line when the page needs script.
 torrents-page-needs-script = [Ţĥîš þàĝé ñééðš ĴàṽàŠçŕîþţ ţö šéñð ţĥé ƒöŕɱ ţö ţĥé ŢṼ šàƒéļý.~~~~~~~~~~~~~~~~~~~]
-
-# Under the proxy form when turning torrents on: what the app checks, and that the VPN or proxy is what protects.
-torrents-check-note = [Ķàéŕî çĥéçķš ŵĥéŕé ţöŕŕéñţ ţŕàƒƒîç ļéàṽéš ƒŕöɱ ŵĥéñ à ţöŕŕéñţ šţàŕţš àñð éṽéŕý ɱîñüţé ŵĥîļé îţ ŕüñš, àñð þàüšéš ţöŕŕéñţš îƒ ţĥàţ çĥéçķ ƒàîļš. Ýöüŕ ṼÞÑ öŕ þŕöẋý îš ŵĥàţ þŕöţéçţš ýöü.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
-
-# Notice after the protection was saved.
-torrents-protection-saved = [Ţöŕŕéñţ þŕöţéçţîöñ šàṽéð~~~~~~~~]
 
 # Menu item and button: open a magnet link or a torrent file the viewer has.
 opened-open = [Öþéñ ļîñķ öŕ ƒîļé~~~~~~]
