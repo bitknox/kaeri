@@ -66,6 +66,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
@@ -531,9 +535,10 @@ private fun TvChatBlock(tv: TvRemoteModel, tvName: String, party: app.kaeri.engi
     Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
         for (line in party.messages) {
             val said = line.text
-            val name = if (line.you) tvName else line.from
+            // The TV's own lines are this phone's: "You", as the board has it.
+            val name = if (line.you) Strings.partyChatYou(context) else line.from
             if (said != null) {
-                Text(saidText(name, said, if (line.you) ObiSilk.Haze else androidx.compose.ui.graphics.Color.Unspecified), style = MaterialTheme.typography.bodyLarge)
+                Text(saidText(name, said, if (line.you) ObiSilk.Haze else androidx.compose.ui.graphics.Color.Unspecified), style = conversationStyle())
             } else {
                 val reaction = REACTIONS.firstOrNull { reactionWord(it) == line.reaction }
                 if (reaction != null) {
@@ -545,7 +550,7 @@ private fun TvChatBlock(tv: TvRemoteModel, tvName: String, party: app.kaeri.engi
                         app.kaeri.engine.model.Reaction.CLAP -> Strings.partyReactedClap(context, who)
                         app.kaeri.engine.model.Reaction.CRY -> Strings.partyReactedCry(context, who)
                     }
-                    Text(Strings.partyReactedAt(context, sentence, at), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Haze)
+                    Text(Strings.partyReactedAt(context, sentence, at), style = conversationStyle(), color = ObiSilk.Haze)
                 }
             }
         }
@@ -559,30 +564,40 @@ private fun TvChatBlock(tv: TvRemoteModel, tvName: String, party: app.kaeri.engi
             text = ""
         }
     }
-    Row(Modifier.padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Row(
-            Modifier.weight(1f).height(56.dp).clip(CircleShape).background(ObiSilk.RaisedHigh).padding(horizontal = 20.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(Modifier.weight(1f)) {
-                if (text.isEmpty()) Text(Strings.partyChatField(context), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Haze, maxLines = 1)
-                androidx.compose.foundation.text.BasicTextField(
-                    value = text,
-                    onValueChange = { if (it.length <= max && '\n' !in it) text = it },
-                    enabled = live,
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = ObiSilk.Silk),
-                    cursorBrush = androidx.compose.ui.graphics.SolidColor(ObiSilk.Silk),
-                    keyboardOptions = KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Sentences, imeAction = ImeAction.Send),
-                    keyboardActions = KeyboardActions(onSend = { send() }),
-                )
+    // Focused, the field gets a 2 dp silk ring inside its edge, and it scrolls up with "Sends as"
+    // under it to stand whole above the keyboard.
+    var focused by remember { mutableStateOf(false) }
+    val bring = remember { BringIntoViewRequester() }
+    val keyboard = WindowInsets.ime.getBottom(LocalDensity.current)
+    LaunchedEffect(focused, keyboard, party.messages.size) { if (focused) bring.bringIntoView() }
+    Column(Modifier.bringIntoViewRequester(bring)) {
+        Row(Modifier.padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                Modifier.weight(1f).height(56.dp).clip(CircleShape).background(ObiSilk.RaisedHigh)
+                    .then(if (focused) Modifier.border(2.dp, ObiSilk.Silk, CircleShape) else Modifier)
+                    .padding(horizontal = 20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(Modifier.weight(1f)) {
+                    if (text.isEmpty()) Text(Strings.partyChatField(context), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Haze, maxLines = 1)
+                    androidx.compose.foundation.text.BasicTextField(
+                        value = text,
+                        onValueChange = { if (it.length <= max && '\n' !in it) text = it },
+                        enabled = live,
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth().onFocusChanged { focused = it.isFocused },
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = ObiSilk.Silk),
+                        cursorBrush = androidx.compose.ui.graphics.SolidColor(ObiSilk.Silk),
+                        keyboardOptions = KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Sentences, imeAction = ImeAction.Send),
+                        keyboardActions = KeyboardActions(onSend = { send() }),
+                    )
+                }
+                if (max - text.length <= 20) Text((max - text.length).toString(), style = MaterialTheme.typography.labelMedium, color = ObiSilk.Haze, modifier = Modifier.padding(start = 8.dp))
             }
-            if (max - text.length <= 20) Text((max - text.length).toString(), style = MaterialTheme.typography.labelMedium, color = ObiSilk.Haze, modifier = Modifier.padding(start = 8.dp))
+            SendButton(enabled = live && text.isNotBlank(), onClick = send)
         }
-        SendButton(enabled = live && text.isNotBlank(), onClick = send)
+        Text(Strings.partySendsAs(context, tvName), style = MaterialTheme.typography.bodySmall, color = ObiSilk.Haze, modifier = Modifier.padding(start = 20.dp, top = 8.dp))
     }
-    Text(Strings.partySendsAs(context, tvName), style = MaterialTheme.typography.bodySmall, color = ObiSilk.Haze, modifier = Modifier.padding(start = 20.dp, top = 8.dp))
     if (names.isNotEmpty()) {
         Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             for (name in names) {
@@ -594,6 +609,10 @@ private fun TvChatBlock(tv: TvRemoteModel, tvName: String, party: app.kaeri.engi
         }
     }
 }
+
+/** The remote's conversation, 15 on 21 as the board sets it. */
+@Composable
+private fun conversationStyle() = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, lineHeight = 21.sp)
 
 /** The word the TV's state gives a reaction: "laughs", "gasps", "claps", "cries". */
 private fun reactionWord(reaction: app.kaeri.engine.model.Reaction): String = when (reaction) {

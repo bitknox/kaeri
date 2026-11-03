@@ -38,8 +38,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -60,6 +58,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
@@ -173,6 +172,7 @@ fun TvPlayerScreen(
     val store = LocalAppStore.current
     val inParty = store.party.view.collectAsStateWithLifecycle().value != null
     val chatOn = inParty && rememberTvChatOn()
+    val partyMarks = store.party.conversation.collectAsStateWithLifecycle().value.marks
     var tray by remember { mutableStateOf(false) }
     var panel by remember { mutableStateOf<PlayerPanel?>(null) }
     var wanted by remember { mutableStateOf<ChromeFocus?>(null) }
@@ -406,6 +406,7 @@ fun TvPlayerScreen(
                 barFocus = barFocus,
                 episodesFocus = episodesFocus,
                 reactFocus = reactFocus,
+                ticks = if (chatOn) remember(partyMarks) { partyMarks.map { it.at }.distinct().sorted() } else emptyList(),
                 onReact = if (chatOn) ({
                     tray = true
                     model.hold("tray", true) // i18n-skip
@@ -631,6 +632,7 @@ private fun Chrome(
     barFocus: FocusRequester,
     episodesFocus: FocusRequester,
     reactFocus: FocusRequester,
+    ticks: List<Double>,
     onReact: (() -> Unit)?,
     onPanel: (PlayerPanel) -> Unit,
     onNext: () -> Unit,
@@ -666,36 +668,37 @@ private fun Chrome(
             Spacer(Modifier.height(6.dp))
             SeekBar(
                 position, duration, headAt, model.segments, model.buffered, Modifier.focusRequester(barFocus), onBarKey,
-                onSeekTo = model::seekTo, onSeekBy = model::seekBy, provisional = model.provisional,
+                onSeekTo = model::seekTo, onSeekBy = model::seekBy, provisional = model.provisional, ticks = ticks,
             )
             Spacer(Modifier.height(20.dp))
-            Row(
-                Modifier.horizontalScroll(rememberScrollState()),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
+            // In a party the row also holds React, so it goes as the board draws it: Play is the
+            // glyph alone in a 48 dp circle (the button's own minimum width set aside), React keeps its glyph and the rest are words, closer
+            // together, so the row still fits the safe area.
+            val party = onReact != null
+            val pad = if (party) 16.dp else 20.dp
+            fun icon(glyph: ImageVector) = glyph.takeUnless { party }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(if (party) 8.dp else 12.dp)) {
                 val playLabel = stringResource(if (model.paused) R.string.action_play else R.string.action_pause)
                 val playIcon = if (model.paused) TvIcons.Play else TvIcons.Pause
-                // In a party the row also holds React, so Play is the glyph alone, as the board draws it.
-                if (onReact != null) {
-                    TonalButton(onClick = { model.togglePause() }, modifier = Modifier.focusRequester(playFocus)) {
+                if (party) {
+                    TonalButton(onClick = { model.togglePause() }, padding = 12.dp, modifier = Modifier.size(48.dp).focusRequester(playFocus)) {
                         androidx.tv.material3.Icon(playIcon, contentDescription = playLabel, modifier = Modifier.size(24.dp))
                     }
                 } else {
                     TonalButton(onClick = { model.togglePause() }, icon = playIcon, modifier = Modifier.focusRequester(playFocus)) { ButtonLabel(playLabel) }
                 }
-                if (onReact != null) TonalButton(onClick = onReact, icon = app.kaeri.design.ChatGlyphs.Laugh, modifier = Modifier.focusRequester(reactFocus)) {
+                if (onReact != null) TonalButton(onClick = onReact, icon = app.kaeri.design.ChatGlyphs.Laugh, padding = pad, modifier = Modifier.focusRequester(reactFocus)) {
                     ButtonLabel(Strings.partyReact(LocalContext.current))
                 }
-                TonalButton(onClick = { onPanel(PlayerPanel.Episodes) }, icon = TvIcons.Episodes, modifier = Modifier.focusRequester(episodesFocus)) {
+                TonalButton(onClick = { onPanel(PlayerPanel.Episodes) }, icon = icon(TvIcons.Episodes), padding = pad, modifier = Modifier.focusRequester(episodesFocus)) {
                     ButtonLabel(stringResource(R.string.player_episodes))
                 }
-                TonalButton(onClick = { onPanel(PlayerPanel.Tracks) }, icon = TvIcons.Subtitles) { ButtonLabel(stringResource(R.string.player_subtitles_and_audio)) }
-                TonalButton(onClick = { onPanel(PlayerPanel.Sources) }, icon = TvIcons.Source) { ButtonLabel(stringResource(R.string.show_settings_source)) }
-                TonalButton(onClick = { onPanel(PlayerPanel.Info) }, icon = TvIcons.Info) { ButtonLabel(stringResource(R.string.player_info)) }
-                TonalButton(onClick = { onPanel(PlayerPanel.SkipTimes) }, icon = TvIcons.SkipNext) { ButtonLabel(stringResource(R.string.player_skip_times)) }
-                Spacer(Modifier.width(12.dp))
-                if (hasNext) TonalButton(onClick = onNext, icon = TvIcons.SkipNext) { ButtonLabel(stringResource(R.string.player_next_episode)) }
+                TonalButton(onClick = { onPanel(PlayerPanel.Tracks) }, icon = icon(TvIcons.Subtitles), padding = pad) { ButtonLabel(stringResource(R.string.player_subtitles_and_audio)) }
+                TonalButton(onClick = { onPanel(PlayerPanel.Sources) }, icon = icon(TvIcons.Source), padding = pad) { ButtonLabel(stringResource(R.string.show_settings_source)) }
+                TonalButton(onClick = { onPanel(PlayerPanel.Info) }, icon = icon(TvIcons.Info), padding = pad) { ButtonLabel(stringResource(R.string.player_info)) }
+                TonalButton(onClick = { onPanel(PlayerPanel.SkipTimes) }, icon = icon(TvIcons.SkipNext), padding = pad) { ButtonLabel(stringResource(R.string.player_skip_times)) }
+                Spacer(Modifier.weight(1f))
+                if (hasNext) TonalButton(onClick = onNext, icon = icon(TvIcons.SkipNext), padding = pad) { ButtonLabel(stringResource(R.string.player_next_episode)) }
             }
         }
     }
@@ -756,6 +759,7 @@ private fun SeekBar(
     onSeekTo: (Double) -> Unit,
     onSeekBy: (Double) -> Unit,
     provisional: Pair<Double, Double>? = null,
+    ticks: List<Double> = emptyList(),
 ) {
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
@@ -781,6 +785,19 @@ private fun SeekBar(
                 val from = (provisional.first / duration).toFloat().coerceIn(0f, 1f) * size.width
                 val to = (provisional.second / duration).toFloat().coerceIn(0f, 1f) * size.width
                 if (to > from) drawRect(ObiSilk.Water.copy(alpha = 0.5f), Offset(from, top), Size(to - from, bar))
+            }
+            // Where somebody in the party reacted: 2 dp ticks in haze, 4 dp above the line; those
+            // within 4 dp share one, and none stands at the playhead.
+            if (duration > 0 && ticks.isNotEmpty()) {
+                val head = ((headAt ?: position) / duration).toFloat().coerceIn(0f, 1f) * size.width
+                var last = -100f
+                for (at in ticks) {
+                    val x = (at / duration).toFloat().coerceIn(0f, 1f) * size.width
+                    if (x - last < 4.dp.toPx() || kotlin.math.abs(x - head) < 8.dp.toPx()) continue
+                    last = x
+                    val tall = 6.dp.toPx()
+                    drawRoundRect(ObiSilk.Haze, Offset(x - 1.dp.toPx(), top - 4.dp.toPx() - tall), Size(2.dp.toPx(), tall), CornerRadius(1.dp.toPx()))
+                }
             }
         }
         if (duration > 0 && (focused || headAt != null)) {

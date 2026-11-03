@@ -21,6 +21,7 @@ import androidx.activity.compose.PredictiveBackHandler
 import androidx.activity.BackEventCompat
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.fadeIn
@@ -422,8 +423,10 @@ fun PlayerScreen(
         val partyMarks = LocalAppStore.current.party.conversation.collectAsStateWithLifecycle().value.marks
         val ticks = if (chatOn) remember(partyMarks) { tickSeconds(partyMarks) } else emptyList()
         // "Still watching?" is the only thing a screen reader reaches while it shows.
+        // While the chat field is open the controls make way for it, as the board has it: the
+        // picture above the keyboard stays in view, with the column over it.
         AnimatedVisibility(
-            chromeVisible,
+            chromeVisible && !typing,
             modifier = if (model.stillWatching) Modifier.clearAndSetSemantics { } else Modifier,
             enter = fadeIn(Motion.fadeIn()),
             exit = fadeOut(Motion.fadeOut()),
@@ -452,7 +455,9 @@ fun PlayerScreen(
             ResumeNote(model, Modifier.align(Alignment.BottomStart).padding(start = 48.dp, bottom = 84.dp))
             // In a party the notice leads the chat column at the top leading corner; else it stands top centre.
             if (inParty) {
-                PartyColumn(model, onMore = { sheet = PlayerSheet.People }, Modifier.align(Alignment.TopStart).padding(start = 48.dp, top = 80.dp))
+                // Above the keyboard there is little room left, so the column moves up while typing.
+                val columnTop by animateDpAsState(if (typing) 16.dp else 80.dp, Motion.standard(), label = "column")
+                PartyColumn(model, onMore = { sheet = PlayerSheet.People }, Modifier.align(Alignment.TopStart).padding(start = 48.dp, top = columnTop))
             } else {
                 AlertNote(model, Modifier.align(Alignment.TopCenter).padding(top = 80.dp))
             }
@@ -460,7 +465,8 @@ fun PlayerScreen(
             MarkingPanel(model)
             ShareSkipTimes(model)
         }
-        // The field above the keyboard keeps the controls up while it is open.
+        // The controls make way for the field; the hold keeps their clock from running out under
+        // it, so they come back as it closes.
         DisposableEffect(typing) {
             model.hold("chat", typing) // i18n-skip
             onDispose { model.hold("chat", false) } // i18n-skip

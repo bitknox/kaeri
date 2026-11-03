@@ -46,6 +46,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -148,7 +150,12 @@ private fun SheetList(model: PlayerModel, sheet: PlayerSheet, onMoreSubtitleSett
         PlayerSheet.Tracks -> tracksOpeningRow(model.subtitleTracks.map { it.id }, model.subtitleTrack)
         PlayerSheet.Sources, PlayerSheet.SkipTimes, PlayerSheet.People -> 0
     }
-    LazyColumn(state = rememberLazyListState(initialFirstVisibleItemIndex = current), contentPadding = padding) {
+    // The people sheet stops 44 dp under the top, as the board has it, so the picture stays in
+    // sight above it held sideways: its list, under the 48 dp handle, scrolls inside.
+    val configuration = LocalConfiguration.current
+    val bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val most = if (sheet == PlayerSheet.People) Modifier.heightIn(max = configuration.screenHeightDp.dp - 44.dp - 48.dp - bottom) else Modifier
+    LazyColumn(most, state = rememberLazyListState(initialFirstVisibleItemIndex = current), contentPadding = padding) {
         when (sheet) {
             PlayerSheet.Tracks -> tracks(model, onMoreSubtitleSettings)
             PlayerSheet.Episodes -> episodes(model)

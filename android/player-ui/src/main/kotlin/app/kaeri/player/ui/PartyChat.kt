@@ -8,6 +8,7 @@ package app.kaeri.player.ui
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -46,6 +47,8 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.kaeri.design.ColumnLine
+import app.kaeri.design.FoldingColumn
 import app.kaeri.design.Motion
 import app.kaeri.design.ObiSilk
 import app.kaeri.engine.model.PartyChatBody
@@ -83,10 +86,6 @@ fun rememberChatOn(): Boolean {
     return chat?.allowed != false && !hidden
 }
 
-private class Standing(val line: PartyChatLine) {
-    var shown by mutableStateOf(false)
-}
-
 /**
  * The column at the top leading corner, 48 from the edge and 80 from the top: the engine's notice
  * first, then chat lines in the order they came. A line holds 4 s, and 1 s for every 10 words past
@@ -97,11 +96,11 @@ fun PartyColumn(model: PlayerModel, onMore: () -> Unit, modifier: Modifier = Mod
     val store = LocalAppStore.current
     val on = rememberChatOn()
     val conversation by store.party.conversation.collectAsStateWithLifecycle()
-    val standing = remember { mutableStateListOf<Standing>() }
+    val standing = remember { mutableStateListOf<ColumnLine<PartyChatLine>>() }
     LaunchedEffect(conversation.lines, on) {
         val fresh = conversation.lines.filter { it.id > store.party.seenId && !it.muted && it.body is PartyChatBody.Said }
         conversation.lines.lastOrNull()?.let { store.party.seenThrough(it.id) }
-        if (on) standing.addAll(fresh.map { Standing(it) })
+        if (on) standing.addAll(fresh.map { ColumnLine(it, PartyModel.holdMillis((it.body as PartyChatBody.Said).text)) })
     }
     LaunchedEffect(on) { if (!on) standing.clear() }
     val context = LocalContext.current
@@ -109,29 +108,22 @@ fun PartyColumn(model: PlayerModel, onMore: () -> Unit, modifier: Modifier = Mod
     Column(modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         // The room's own notices lead; a typed line that the engine also posted as a notice is the line below.
         AlertNote(model, suppress = { text -> chatTexts.any { text == it || text.endsWith(it) } })
-        val visible = standing.take(COLUMN_LINES)
-        for (entry in visible) {
-            key(entry.line.id) {
-                val said = (entry.line.body as? PartyChatBody.Said)?.text.orEmpty()
-                LaunchedEffect(Unit) {
-                    entry.shown = true
-                    delay(PartyModel.holdMillis(said))
-                    entry.shown = false
-                    delay(FADE_OUT_MS)
-                    standing.remove(entry)
-                }
-                AnimatedVisibility(entry.shown, enter = fadeIn(Motion.fadeIn()), exit = fadeOut(Motion.fadeOut())) {
-                    ChatCapsule(Modifier.semantics { liveRegion = LiveRegionMode.Polite; contentDescription = Strings.partyChatAnnounce(context, chatName(context, entry.line), said) }) {
-                        Text(saidText(chatName(context, entry.line), said, if (entry.line.you) ObiSilk.Haze else Color.Unspecified), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Silk)
+        Column {
+            FoldingColumn(
+                standing,
+                keep = COLUMN_LINES,
+                line = { line ->
+                    val said = (line.body as? PartyChatBody.Said)?.text.orEmpty()
+                    ChatCapsule(Modifier.semantics { liveRegion = LiveRegionMode.Polite; contentDescription = Strings.partyChatAnnounce(context, chatName(context, line), said) }) {
+                        Text(saidText(chatName(context, line), said, if (line.you) ObiSilk.Haze else Color.Unspecified), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Silk)
                     }
-                }
-            }
-        }
-        val more = standing.size - COLUMN_LINES
-        if (more > 0) {
-            ChatCapsule(Modifier.clickable(onClick = onMore)) {
-                Text(Strings.partyChatMore(context, more), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze)
-            }
+                },
+                fold = { more ->
+                    ChatCapsule(Modifier.clickable(onClick = onMore)) {
+                        Text(Strings.partyChatMore(context, more), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze)
+                    }
+                },
+            )
         }
         val failed = conversation.failed
         AnimatedVisibility(failed != null && on, enter = fadeIn(Motion.fadeIn()), exit = fadeOut(Motion.fadeOut())) {
@@ -191,6 +183,7 @@ fun ReactionMoments(modifier: Modifier = Modifier) {
     val on = rememberChatOn()
     val moment by store.party.moment.collectAsStateWithLifecycle()
     val stack = remember { mutableStateListOf<OnVideo>() }
+    val rise = with(androidx.compose.ui.platform.LocalDensity.current) { 6.dp.roundToPx() }
     var lastN by remember { mutableStateOf(moment?.n ?: 0L) }
     LaunchedEffect(moment?.n) {
         val now = moment ?: return@LaunchedEffect
@@ -210,7 +203,7 @@ fun ReactionMoments(modifier: Modifier = Modifier) {
                     delay(FADE_OUT_MS)
                     stack.remove(item)
                 }
-                AnimatedVisibility(item.shown, enter = fadeIn(Motion.fadeIn()), exit = fadeOut(Motion.fadeOut())) {
+                AnimatedVisibility(item.shown, enter = fadeIn(Motion.fadeIn()) + slideInVertically(Motion.standard()) { rise }, exit = fadeOut(Motion.fadeOut())) {
                     Row(
                         Modifier.height(40.dp).clip(RoundedCornerShape(20.dp)).background(ObiSilk.RaisedHigh).padding(start = 11.dp, end = 16.dp),
                         verticalAlignment = Alignment.CenterVertically,

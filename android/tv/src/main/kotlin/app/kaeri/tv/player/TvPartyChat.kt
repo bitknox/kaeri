@@ -7,6 +7,7 @@ package app.kaeri.tv.player
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,6 +54,8 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import app.kaeri.design.ChatGlyphs
+import app.kaeri.design.ColumnLine
+import app.kaeri.design.FoldingColumn
 import app.kaeri.design.Motion
 import app.kaeri.design.ObiSilk
 import app.kaeri.engine.model.PartyChatBody
@@ -94,10 +97,6 @@ internal fun rememberTvChatOn(): Boolean {
     return chat?.allowed != false && !hidden
 }
 
-private class Standing(val line: PartyChatLine) {
-    var shown by mutableStateOf(false)
-}
-
 @Composable
 private fun TvLine(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Row(
@@ -121,11 +120,11 @@ fun TvPartyColumn(model: PlayerModel, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val on = rememberTvChatOn()
     val conversation by store.party.conversation.collectAsStateWithLifecycle()
-    val standing = remember { mutableStateListOf<Standing>() }
+    val standing = remember { mutableStateListOf<ColumnLine<PartyChatLine>>() }
     LaunchedEffect(conversation.lines, on) {
         val fresh = conversation.lines.filter { it.id > store.party.seenId && !it.muted && it.body is PartyChatBody.Said }
         conversation.lines.lastOrNull()?.let { store.party.seenThrough(it.id) }
-        if (on) standing.addAll(fresh.map { Standing(it) })
+        if (on) standing.addAll(fresh.map { ColumnLine(it, PartyModel.holdMillis((it.body as PartyChatBody.Said).text)) })
     }
     LaunchedEffect(on) { if (!on) standing.clear() }
     val chatTexts = conversation.lines.mapNotNull { (it.body as? PartyChatBody.Said)?.let { s -> it.from + ": " + s.text } } // i18n-skip
@@ -137,22 +136,17 @@ fun TvPartyColumn(model: PlayerModel, modifier: Modifier = Modifier) {
                 Text(alert?.text.orEmpty(), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Silk)
             }
         }
-        for (entry in standing.take(COLUMN_LINES)) {
-            key(entry.line.id) {
-                val said = (entry.line.body as? PartyChatBody.Said)?.text.orEmpty()
-                LaunchedEffect(Unit) {
-                    entry.shown = true
-                    delay(PartyModel.holdMillis(said))
-                    entry.shown = false
-                    delay(FADE_OUT_MS)
-                    standing.remove(entry)
-                }
-                AnimatedVisibility(entry.shown, enter = fadeIn(Motion.fadeIn()), exit = fadeOut(Motion.fadeOut())) {
-                    val name = if (entry.line.you) Strings.partyChatYou(context) else entry.line.from
+        Column(horizontalAlignment = Alignment.End) {
+            FoldingColumn(
+                standing,
+                keep = COLUMN_LINES,
+                line = { line ->
+                    val said = (line.body as? PartyChatBody.Said)?.text.orEmpty()
+                    val name = if (line.you) Strings.partyChatYou(context) else line.from
                     TvLine {
                         Text(
                             buildAnnotatedString {
-                                withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = if (entry.line.you) ObiSilk.Haze else ObiSilk.Silk)) { append(name) }
+                                withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = if (line.you) ObiSilk.Haze else ObiSilk.Silk)) { append(name) }
                                 append("  ")
                                 append(said)
                             },
@@ -161,11 +155,10 @@ fun TvPartyColumn(model: PlayerModel, modifier: Modifier = Modifier) {
                             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite; contentDescription = Strings.partyChatAnnounce(context, name, said) },
                         )
                     }
-                }
-            }
+                },
+                fold = { more -> TvLine { Text(Strings.partyChatMore(context, more), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Haze) } },
+            )
         }
-        val more = standing.size - COLUMN_LINES
-        if (more > 0) TvLine { Text(Strings.partyChatMore(context, more), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Haze) }
     }
 }
 
@@ -181,6 +174,8 @@ fun TvReactionMoments(modifier: Modifier = Modifier) {
     val on = rememberTvChatOn()
     val moment by store.party.moment.collectAsStateWithLifecycle()
     val stack = remember { mutableStateListOf<OnVideo>() }
+    val reduced = LocalReducedMotion.current
+    val rise = with(androidx.compose.ui.platform.LocalDensity.current) { 6.dp.roundToPx() }
     var lastN by remember { mutableStateOf(moment?.n ?: 0L) }
     LaunchedEffect(moment?.n) {
         val now = moment ?: return@LaunchedEffect
@@ -199,7 +194,7 @@ fun TvReactionMoments(modifier: Modifier = Modifier) {
                     delay(FADE_OUT_MS)
                     stack.remove(item)
                 }
-                AnimatedVisibility(item.shown, enter = fadeIn(Motion.fadeIn()), exit = fadeOut(Motion.fadeOut())) {
+                AnimatedVisibility(item.shown, enter = if (reduced) fadeIn(Motion.fadeIn()) else fadeIn(Motion.fadeIn()) + slideInVertically(Motion.standard()) { rise }, exit = fadeOut(Motion.fadeOut())) {
                     Row(
                         Modifier.height(48.dp).clip(CircleShape).background(Color(0xF02A2F45)).padding(start = 14.dp, end = 20.dp),
                         verticalAlignment = Alignment.CenterVertically,

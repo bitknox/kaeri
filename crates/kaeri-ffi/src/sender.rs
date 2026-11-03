@@ -880,6 +880,13 @@ mod fake {
             self.with(FakeTv::open_code).unwrap_or_default()
         }
 
+        /// Put the TV in a watch party in `room` set to `title`'s `episode`, with Mika, Ren and
+        /// Sol and the chat board's conversation so far: the phone's remote screen for a TV in a
+        /// party. A line sent as the TV comes back as its own.
+        pub fn join_party(&self, room: String, title: String, episode: String) {
+            self.with(|tv| tv.join_party(&room, &title, &episode));
+        }
+
         /// The code it shows for a device that asked.
         pub fn shown_code(&self) -> Option<String> {
             self.with(FakeTv::shown_code).flatten()

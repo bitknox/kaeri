@@ -30,6 +30,11 @@
 //   expires   seconds the `code` sheet's code has left, 0 for one already expired
 //   day       days after today the calendar opens on, for a day with broadcasts: the fixtures'
 //             own day has none
+//   party     a watch party on the testing engine's fake server, for the chat board (PartyShot):
+//             chatline, chatbusy, chatreact, chatfield, chatoff, chatfail, chatmute, chathidden,
+//             chatshort, chatloop, lobby or bar; with media=<path> the player plays that file.
+//             chatloop and bar wait for `am broadcast -a app.kaeri.fixtures.PARTY_GO` before
+//             their timeline, so a recording can roll first
 
 package app.kaeri.app
 
@@ -66,6 +71,9 @@ import app.kaeri.store.CastScene
 import app.kaeri.store.FixtureCasts
 import app.kaeri.store.FixtureTvBrowser
 import app.kaeri.store.FixtureScene
+import app.kaeri.store.FixtureParty
+import app.kaeri.store.PartyShot
+import app.kaeri.store.PartyStage
 import app.kaeri.store.FixtureTvs
 import app.kaeri.store.TvPlayRequest
 import app.kaeri.store.TvScene
@@ -204,6 +212,11 @@ internal object Flavour {
      * screen: what announceReady waits on besides the store. True with no scene asked for.
      */
     suspend fun reachedTv(intent: Intent, store: AppStore): Boolean {
+        PartyShot.named(intent.getStringExtra("party"))?.let { shot ->
+            val app = appContext as? KaeriApp ?: return false
+            FixtureParty.listen(app)
+            return FixtureParty.stage(shot, store, PlayerStage(app))
+        }
         intent.getStringExtra("sheet")?.takeIf { it.startsWith("match") }?.let { stageMatch(store, it) }
         intent.getStringExtra("discussion")?.let { value ->
             // "row" waits for the thread to be found without opening it, for the episode row's quiet line.
@@ -325,4 +338,21 @@ internal object Flavour {
 
     /** How long a `code` extra's prompt has left: `expires=<seconds>`, 0 for an expired code, or 899. */
     private fun codeSecondsLeft(intent: Intent): Long = intent.getStringExtra("expires")?.toLongOrNull()?.coerceAtLeast(0) ?: 899
+}
+
+/** The phone's player, as the party scenes steer it. */
+private class PlayerStage(private val app: KaeriApp) : PartyStage {
+    private val player get() = app.player
+
+    override val playing: Boolean get() = player.isPresented && player.hasPicture && player.duration != null
+
+    override fun holdControls(on: Boolean) = player.hold("shot", on) // i18n-skip
+
+    override fun hideControls() = player.hideControls()
+
+    override fun seekTo(seconds: Double) = player.seekTo(seconds)
+
+    override fun setPlaying(playing: Boolean) = player.setPlaying(playing)
+
+    override fun hideChat(on: Boolean) = app.store.party.setHideChat(app, on)
 }
