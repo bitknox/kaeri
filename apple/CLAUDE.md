@@ -8,6 +8,12 @@
   `scripts/signing-keychain.sh`). The certificate keeps the app's designated requirement the
   same across builds (`identifier "app.kaeri.app" and certificate leaf`), so the login keychain's "Always Allow" lasts across updates. A cdhash, which is what
   an ad hoc signature gives, changes every build. The terminal binary is signed with it too.
+- Spotlight refuses an app (CSIndexErrorDomain -1003) while Launch Services knows more than one
+  copy of it signed with a certificate outside a temporary folder: the installed Kaeri beside
+  a mounted release disk image or a review build signed with `signing-keychain.sh sign`.
+  Ad hoc copies, and copies in a temporary folder, don't count. Indexing comes back by itself
+  once the other copies are ejected or deleted (`SpotlightIndexer` logs which ones they are).
+  Test this with the Fixtures app only, re-signed with a throwaway certificate.
 - `Packages/`: KaeriKit (engine bindings), KaeriStore (the app's state on the engine),
   KaeriDesign (tokens, fonts, pointer), KaeriUI (screens), KaeriPlayer and
   KaeriPlayerUI (embedded libmpv), KaeriWidgets, KaeriDev (the dev harness).
