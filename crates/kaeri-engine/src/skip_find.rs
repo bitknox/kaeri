@@ -58,17 +58,21 @@ impl SkipFind {
         self.free.or_else(|| crate::downloads::ahead::free_space(&self.data_dir))
     }
 
-    /// Why finding is paused while the setting is on, or `None` while it runs or is off.
+    /// Why finding is paused while the setting is on, or `None` while it runs or is off. A
+    /// player without the tap comes first: nothing else would let it run.
     pub fn paused(&self, config: &Config) -> Option<SkipFindPause> {
         if !config.playback.find_skip_times {
             return None;
+        }
+        if !self.audio_tap {
+            return Some(SkipFindPause::Unavailable);
         }
         paused(self.low_power.load(Ordering::Relaxed), self.free())
     }
 
     /// Whether a playback starting now finds skip times.
     pub fn runs(&self, config: &Config) -> bool {
-        self.audio_tap && config.playback.find_skip_times && self.paused(config).is_none()
+        config.playback.find_skip_times && self.paused(config).is_none()
     }
 }
 
@@ -115,5 +119,27 @@ mod tests {
         assert_eq!(find.paused(&off), None, "nothing to say while it is off");
         find.set_low_power(false);
         assert!(!SkipFind::new(false, PathBuf::new(), None).runs(&config), "no tap");
+    }
+
+    /// A libmpv without the demuxer tap: finding never runs, Settings says why, and the reason
+    /// stays put through the device's states. With the setting off there is nothing to say.
+    #[test]
+    fn without_the_tap_it_says_so_and_never_runs() {
+        let config = Config::default();
+        let find = SkipFind::new(false, PathBuf::new(), Some(STORAGE_FLOOR * 2));
+        assert_eq!(find.paused(&config), Some(SkipFindPause::Unavailable));
+        assert!(!find.runs(&config));
+        find.set_low_power(true);
+        assert_eq!(
+            find.paused(&config),
+            Some(SkipFindPause::Unavailable),
+            "before power saving"
+        );
+        let low = SkipFind::new(false, PathBuf::new(), Some(1));
+        assert_eq!(low.paused(&config), Some(SkipFindPause::Unavailable), "before storage");
+        let mut off = config.clone();
+        off.playback.find_skip_times = false;
+        assert_eq!(find.paused(&off), None);
+        assert!(!find.runs(&off));
     }
 }

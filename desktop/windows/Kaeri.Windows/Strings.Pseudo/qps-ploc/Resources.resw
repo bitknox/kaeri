@@ -5849,6 +5849,10 @@
   <data name="PlayerSkipPausedStorage" xml:space="preserve">
     <value>[Þàüšéð üñţîļ 2 ĜƁ öƒ šţöŕàĝé îš ƒŕéé.~~~~~~~~~~~~]</value>
   </data>
+  <data name="PlayerSkipUnavailable" xml:space="preserve">
+    <value>[Ñöţ àṽàîļàƀļé îñ ţĥîš ƀüîļð öƒ Ķàéŕî.~~~~~~~~~~~~]</value>
+    <comment>Skip times panel and Settings: finding skip times from the audio can't run, because this copy of the app has a video player that can't hand its audio over, such as a Linux build using the system's own player library.</comment>
+  </data>
   <data name="PlayerSkipNone" xml:space="preserve">
     <value>[Ñöñé ýéţ~~~]</value>
   </data>

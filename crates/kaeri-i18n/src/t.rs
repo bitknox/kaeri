@@ -11086,6 +11086,11 @@ pub fn player_skip_paused_storage() -> String {
     text("player-skip-paused-storage", &[])
 }
 
+/// Skip times panel and Settings: finding skip times from the audio can't run, because this copy of the app has a video player that can't hand its audio over, such as a Linux build using the system's own player library.
+pub fn player_skip_unavailable() -> String {
+    text("player-skip-unavailable", &[])
+}
+
 pub fn player_skip_none() -> String {
     text("player-skip-none", &[])
 }

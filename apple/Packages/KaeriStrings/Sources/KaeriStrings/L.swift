@@ -6281,6 +6281,9 @@ public enum L {
 
     public static var playerSkipPausedStorage: String { string("player-skip-paused-storage", fallback: "Paused until 2 GB of storage is free.") }
 
+    /// Skip times panel and Settings: finding skip times from the audio can't run, because this copy of the app has a video player that can't hand its audio over, such as a Linux build using the system's own player library.
+    public static var playerSkipUnavailable: String { string("player-skip-unavailable", fallback: "Not available in this build of Kaeri.") }
+
     public static var playerSkipNone: String { string("player-skip-none", fallback: "None yet") }
 
     /// Skip times panel: removes your own mark.

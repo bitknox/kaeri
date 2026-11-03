@@ -6911,6 +6911,9 @@ player-skip-paused-power-saver = [Þàüšéð ŵĥîļé þöŵéŕ šàṽéŕ
 
 player-skip-paused-storage = [Þàüšéð üñţîļ 2 ĜƁ öƒ šţöŕàĝé îš ƒŕéé.~~~~~~~~~~~~]
 
+# Skip times panel and Settings: finding skip times from the audio can't run, because this copy of the app has a video player that can't hand its audio over, such as a Linux build using the system's own player library.
+player-skip-unavailable = [Ñöţ àṽàîļàƀļé îñ ţĥîš ƀüîļð öƒ Ķàéŕî.~~~~~~~~~~~~]
+
 player-skip-none = [Ñöñé ýéţ~~~]
 
 # Skip times panel: removes your own mark.

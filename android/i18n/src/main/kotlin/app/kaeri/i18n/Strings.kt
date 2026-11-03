@@ -6335,6 +6335,10 @@ object Strings {
     fun playerSkipPausedStorage(context: Context): String =
         context.getString(R.string.player_skip_paused_storage)
 
+    /** Skip times panel and Settings: finding skip times from the audio can't run, because this copy of the app has a video player that can't hand its audio over, such as a Linux build using the system's own player library. */
+    fun playerSkipUnavailable(context: Context): String =
+        context.getString(R.string.player_skip_unavailable)
+
     fun playerSkipNone(context: Context): String =
         context.getString(R.string.player_skip_none)
 

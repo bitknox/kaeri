@@ -357,8 +357,32 @@ fn audio_tap_setter() -> Option<SetAudioTap> {
         .then(|| unsafe { std::mem::transmute::<*mut c_void, SetAudioTap>(found) })
 }
 
-/// Windows keeps its prebuilt libmpv, which has no tap.
-#[cfg(not(unix))]
+/// `mpv_set_audio_tap` in the libmpv DLL the app loaded, by the names build.rs links: Kaeri's
+/// own build has it (desktop/windows/scripts/libmpv-build.sh), mpv's development builds do not.
+#[cfg(windows)]
+fn audio_tap_setter() -> Option<SetAudioTap> {
+    #[link(name = "kernel32")]
+    unsafe extern "system" {
+        fn GetModuleHandleW(name: *const u16) -> *mut c_void;
+        fn GetProcAddress(module: *mut c_void, name: *const std::ffi::c_char) -> *mut c_void;
+    }
+    ["libmpv-2.dll", "mpv-2.dll", "libmpv.dll"].into_iter().find_map(|dll| {
+        let wide: Vec<u16> = dll.encode_utf16().chain([0]).collect();
+        // SAFETY: a valid NUL-terminated wide string. The handle is only used for the lookup
+        // below, and the DLL stays loaded for as long as the app, which links it, runs.
+        let module = unsafe { GetModuleHandleW(wide.as_ptr()) };
+        if module.is_null() {
+            return None;
+        }
+        // SAFETY: a live module handle and a valid C string.
+        let found = unsafe { GetProcAddress(module, c"mpv_set_audio_tap".as_ptr()) };
+        // SAFETY: the symbol the patch exports has this signature.
+        (!found.is_null())
+            .then(|| unsafe { std::mem::transmute::<*mut c_void, SetAudioTap>(found) })
+    })
+}
+
+#[cfg(not(any(unix, windows)))]
 fn audio_tap_setter() -> Option<SetAudioTap> {
     None
 }
