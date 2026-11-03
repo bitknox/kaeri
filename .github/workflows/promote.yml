@@ -275,3 +275,17 @@ jobs:
           [[ "$beta" == "$latest" ]] ||
             { echo "::error::$IMAGE:latest is $latest, not $TAG's $beta."; exit 1; }
           echo "$TAG is the stable release, over ${PREVIOUS:-no stable release}." >> "$GITHUB_STEP_SUMMARY"
+
+      # The website names the stable release when it is built, and no push to main follows a
+      # promotion, so its Cloudflare Pages deploy hook builds it again.
+      - name: Build the website again
+        env:
+          HOOK: ${{ secrets.WEBSITE_DEPLOY_HOOK }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$HOOK" ]]; then
+            echo "::warning::No WEBSITE_DEPLOY_HOOK secret, so the website names the old version until its next build."
+            exit 0
+          fi
+          curl -fsS -X POST "$HOOK" -o /dev/null
+          echo "The website is building again with $TAG." >> "$GITHUB_STEP_SUMMARY"
