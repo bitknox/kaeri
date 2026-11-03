@@ -1456,8 +1456,10 @@ public sealed partial class MainWindow : Window
         device.Dispose();
         StopTv();
         taskbar?.Clear();
-        player?.Shutdown();
+        // The engine first: on its way out it stops what plays and waits for the player to say
+        // where it ended, so the player must still be there to hear the stop.
         session.Dispose();
+        player?.Shutdown();
         player?.Dispose();
     }
 
