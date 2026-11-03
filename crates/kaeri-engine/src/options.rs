@@ -70,6 +70,10 @@ pub struct EngineOptions {
     pub set_aside: Option<std::path::PathBuf>,
     #[cfg(feature = "testing")]
     pub parts: Option<Parts>,
+    /// Where the cloud drives' sign-in and folders are, and how fast the device code is polled,
+    /// in place of the real services: a test's fakes on loopback.
+    #[cfg(feature = "testing")]
+    pub cloud_test: Option<crate::cloud::CloudTest>,
     /// What keep next takes to be free on the device, in bytes, in place of asking the disk:
     /// for a test, whose answer should not depend on the machine it runs on.
     #[cfg(feature = "testing")]
@@ -105,10 +109,15 @@ impl EngineOptions {
             #[cfg(feature = "testing")]
             parts: None,
             #[cfg(feature = "testing")]
+            cloud_test: None,
+            #[cfg(feature = "testing")]
             free_space: None,
         }
     }
 }
+
+/// The cloud sign-in clients: the iOS, Android, desktop and TV ones.
+pub use kaeri_sync::google::ClientKind as CloudClient;
 
 /// The OAuth clients a native app registered for itself and ships with: AniList's for its
 /// implicit grant, which needs no secret, and MAL's for PKCE, each redirecting to where its client
@@ -148,6 +157,10 @@ pub struct AppClients {
     pub dropbox: Option<String>,
     /// The Microsoft application (client) id, a public client.
     pub onedrive: Option<String>,
+    /// Which of the cloud clients above this device uses, which decides the redirect and the
+    /// way of signing in. `None` for the desktop feature's default, the desktop client, and for
+    /// no cloud sign-in without it.
+    pub cloud_kind: Option<CloudClient>,
 }
 
 /// The work the engine does on its own beside the commands, each piece on its own switch.

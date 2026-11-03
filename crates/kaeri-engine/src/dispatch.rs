@@ -702,6 +702,27 @@ pub(crate) fn dispatch(
                 crate::syncing::join(&ctx, &tx, device_name, folder, &recovery_key.0).await;
             });
         }
+        Command::SyncSignIn { service } => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::syncing::sign_in_again(&ctx, &tx, service).await;
+            });
+        }
+        Command::FinishSyncSignIn { service, callback } => {
+            if let Some(service) = crate::cloud::Service::of(&service) {
+                services.syncing.cloud.deliver(service, callback.0);
+            }
+            drop(job);
+        }
+        Command::CancelSyncSignIn => {
+            services.syncing.cloud.cancel();
+            drop(job);
+        }
+        Command::SyncSignOut { service } => {
+            crate::syncing::sign_out(&Ctx::of(services), tx, &service);
+            drop(job);
+        }
         Command::SyncFolderNow => {
             let (ctx, tx) = (Ctx::of(services), tx.clone());
             tokio::spawn(async move {

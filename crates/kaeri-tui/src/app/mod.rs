@@ -604,6 +604,7 @@ impl App {
             | Event::ProfileSwitch { .. }
             | Event::SyncStatus(_)
             | Event::SyncInvite { .. }
+            | Event::SyncSignIn { .. }
             | Event::SyncRecoveryKey(_)
             | Event::SyncProblem(_) => {}
             Event::StorePreview(outcome) => self.apply_store_preview(outcome),

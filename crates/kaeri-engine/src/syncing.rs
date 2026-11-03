@@ -24,7 +24,7 @@ use kaeri_model::{
 use kaeri_store::sync::Effect;
 use kaeri_sync::{
     SyncError,
-    folder::{DirTarget, FolderTarget},
+    folder::{DirTarget, FolderError, FolderTarget},
     keys::{self, DeviceKey, Keyring, RecoveryKey},
     lan::{self, Identity, Listener, Me},
     nextcloud,
@@ -34,6 +34,7 @@ use kaeri_sync::{
 };
 
 use crate::{
+    cloud::{self, Ended, Service},
     host::Host,
     outbox::{Internal, Outbox},
     plugin_stores::Stores,
@@ -56,6 +57,9 @@ const FOLDER: &str = "engine.folder";
 const NAME: &str = "engine.name";
 const LAST: &str = "engine.last";
 const ERROR: &str = "engine.error";
+/// A problem a person can fix, kept until a pass works: `signin:<kind>`.
+const PROBLEM: &str = "engine.problem";
+const SIGN_IN: &str = "signin:";
 
 /// The parts of the services a pass needs, owned, so a pass can run on a task of its own.
 #[derive(Clone)]
@@ -65,6 +69,10 @@ pub struct Ctx {
     pub host: Arc<dyn Host>,
     pub stores: Stores,
     pub syncing: Arc<SyncHub>,
+    /// The sign-in clients this build ships with, for the cloud drives.
+    pub clients: crate::options::AppClients,
+    /// A fixture build: cloud sign-in goes to a fake service and the folder is kept in memory.
+    pub fixture: bool,
 }
 
 impl Ctx {
@@ -75,6 +83,8 @@ impl Ctx {
             host: services.host.clone(),
             stores: services.stores.clone(),
             syncing: services.syncing.clone(),
+            clients: services.app_clients.clone(),
+            fixture: services.fixture_route,
         }
     }
 }
@@ -86,6 +96,8 @@ pub struct SyncHub {
     running: AtomicBool,
     effects: Mutex<Vec<Effect>>,
     listener: Mutex<Option<Arc<tokio::sync::Mutex<Listener>>>>,
+    /// The cloud sign-in under way, and what a test or a fixture build points it at.
+    pub cloud: crate::cloud::State,
 }
 
 impl std::fmt::Debug for SyncHub {
@@ -112,6 +124,22 @@ impl SyncHub {
 }
 
 fn problem(e: &SyncError) -> SyncProblem {
+    problem_in(None, e)
+}
+
+/// `e` as a problem in the folder this device syncs with.
+fn problem_at(services: &Ctx, e: &SyncError) -> SyncProblem {
+    problem_in(saved_folder(services).map(|f| f.kind).as_ref(), e)
+}
+
+/// `e` as a problem, in the cloud drive `kind` names when it is one: a refused sign-in is fixed
+/// by signing in again.
+fn problem_in(kind: Option<&SyncFolderKind>, e: &SyncError) -> SyncProblem {
+    if let (SyncError::Folder(FolderError::Unauthorized), Some(kind)) = (e, kind)
+        && Service::of(kind).is_some()
+    {
+        return SyncProblem::SignInNeeded { service: kind.clone() };
+    }
     match e {
         SyncError::WrongRecoveryKey | SyncError::BadRecoveryKey => {
             SyncProblem::WrongRecoveryKey
@@ -120,6 +148,19 @@ fn problem(e: &SyncError) -> SyncProblem {
         SyncError::GroupExists => SyncProblem::GroupExists,
         SyncError::Folder(_) | SyncError::Network(_) => SyncProblem::Unreachable,
         other => SyncProblem::Other(other.to_string()),
+    }
+}
+
+/// A problem in words, for the status's error line.
+fn describe(p: &SyncProblem) -> String {
+    match p {
+        SyncProblem::SignInNeeded { .. } => "the sign-in is no longer accepted".into(),
+        SyncProblem::Unreachable => "the folder could not be reached".into(),
+        SyncProblem::NoGroup => "the folder holds no sync group".into(),
+        SyncProblem::WrongRecoveryKey => "that recovery key does not open this folder".into(),
+        SyncProblem::GroupExists => "the folder already holds a sync group".into(),
+        SyncProblem::Other(text) => text.clone(),
+        _ => "sync could not carry on".into(),
     }
 }
 
@@ -191,15 +232,19 @@ fn label_of(spec: &SyncFolderSpec) -> String {
 
 /// The target a folder spec names. A Nextcloud sign-in opens the server's login page and waits
 /// for the person to approve; what it hands back is kept as a WebDAV login.
+///
+/// A cloud drive signs in first when this device holds no sign-in for it and `tx` is given, which
+/// is how the person is asked; with no `tx` it is a [`SyncProblem::SignInNeeded`].
 async fn target_for(
     services: &Ctx,
+    tx: Option<&Outbox>,
     spec: &mut SyncFolderSpec,
-) -> Result<Arc<dyn FolderTarget>, SyncProblem> {
+) -> Result<Arc<dyn FolderTarget>, Ended> {
     let address = spec.address.clone().unwrap_or_default();
     match spec.kind {
         SyncFolderKind::Directory => {
             if address.is_empty() {
-                return Err(SyncProblem::Other("no folder was given".into()));
+                return Err(SyncProblem::Other("no folder was given".into()).into());
             }
             Ok(Arc::new(DirTarget::new(address)))
         }
@@ -239,7 +284,7 @@ async fn target_for(
                         nextcloud::Poll::Done { login_name, app_password, .. } => {
                             (address.clone(), login_name, app_password.expose().to_owned())
                         }
-                        nextcloud::Poll::Pending => return Err(SyncProblem::Unreachable),
+                        nextcloud::Poll::Pending => return Err(SyncProblem::Unreachable.into()),
                     }
                 }
             };
@@ -251,7 +296,8 @@ async fn target_for(
             Ok(Arc::new(target))
         }
         SyncFolderKind::GoogleDrive | SyncFolderKind::Dropbox | SyncFolderKind::OneDrive => {
-            Err(SyncProblem::Other("this build has no sign-in for that service".into()))
+            let service = Service::of(&spec.kind).expect("a cloud drive");
+            cloud::target(services, service, tx).await
         }
     }
 }
@@ -286,7 +332,10 @@ fn announce_self(services: &Ctx, id: &str, name: &str, key: &DeviceKey) {
 /// How sync stands, from the log and what is kept beside it.
 pub fn status(services: &Ctx) -> SyncStatus {
     let store = &services.store;
-    let Ok(Some(me)) = store.sync_device() else { return SyncStatus::default() };
+    let clouds = cloud::views(services);
+    let Ok(Some(me)) = store.sync_device() else {
+        return SyncStatus { clouds, ..SyncStatus::default() };
+    };
     let seen: std::collections::HashMap<String, i64> = store
         .sync_lead_candidates()
         .unwrap_or_default()
@@ -336,7 +385,15 @@ pub fn status(services: &Ctx) -> SyncStatus {
         error: store.sync_meta_get(ERROR).ok().flatten().filter(|e| !e.is_empty()),
         notes,
         stores_to_join: offers,
+        clouds,
+        problem: saved_problem(services),
     }
+}
+
+fn saved_problem(services: &Ctx) -> Option<SyncProblem> {
+    let kept = services.store.sync_meta_get(PROBLEM).ok().flatten()?;
+    let kind = kind_of(kept.strip_prefix(SIGN_IN)?)?;
+    Some(SyncProblem::SignInNeeded { service: kind })
 }
 
 fn say_status(services: &Ctx, tx: &Outbox) {
@@ -344,15 +401,22 @@ fn say_status(services: &Ctx, tx: &Outbox) {
 }
 
 /// Set a group up in an empty folder.
-pub async fn start(
+pub async fn start(services: &Ctx, tx: &Outbox, device_name: String, folder: SyncFolderSpec) {
+    let kind = folder.kind.clone();
+    start_in(services, tx, device_name, folder).await;
+    cloud::ended(tx, &kind);
+}
+
+async fn start_in(
     services: &Ctx,
     tx: &Outbox,
     device_name: String,
     mut folder: SyncFolderSpec,
 ) {
-    let target = match target_for(services, &mut folder).await {
+    let target = match target_for(services, Some(tx), &mut folder).await {
         Ok(target) => target,
-        Err(p) => return fail(services, tx, p),
+        Err(Ended::Cancelled) => return say_status(services, tx),
+        Err(Ended::Problem(p)) => return fail(services, tx, p),
     };
     let id = keys::new_device_id();
     let key = device_key(services);
@@ -371,12 +435,24 @@ pub async fn start(
             let _ = tx.send(Event::SyncRecoveryKey(recovery.to_text()));
             pass(services, tx).await;
         }
-        Err(e) => fail(services, tx, problem(&e)),
+        Err(e) => fail(services, tx, problem_in(Some(&folder.kind), &e)),
     }
 }
 
 /// Join the group a folder holds, with its recovery key.
 pub async fn join(
+    services: &Ctx,
+    tx: &Outbox,
+    device_name: String,
+    folder: SyncFolderSpec,
+    recovery: &str,
+) {
+    let kind = folder.kind.clone();
+    join_in(services, tx, device_name, folder, recovery).await;
+    cloud::ended(tx, &kind);
+}
+
+async fn join_in(
     services: &Ctx,
     tx: &Outbox,
     device_name: String,
@@ -387,9 +463,10 @@ pub async fn join(
         Ok(key) => key,
         Err(e) => return fail(services, tx, problem(&e)),
     };
-    let target = match target_for(services, &mut folder).await {
+    let target = match target_for(services, Some(tx), &mut folder).await {
         Ok(target) => target,
-        Err(p) => return fail(services, tx, p),
+        Err(Ended::Cancelled) => return say_status(services, tx),
+        Err(Ended::Problem(p)) => return fail(services, tx, p),
     };
     let id = keys::new_device_id();
     let key = device_key(services);
@@ -409,7 +486,7 @@ pub async fn join(
             services.syncing.set_road(Some(Arc::new(road)));
             pass(services, tx).await;
         }
-        Err(e) => fail(services, tx, problem(&e)),
+        Err(e) => fail(services, tx, problem_in(Some(&folder.kind), &e)),
     }
 }
 
@@ -419,20 +496,27 @@ fn fail(services: &Ctx, tx: &Outbox, p: SyncProblem) {
 }
 
 /// The road to the folder, opened from what was kept when it is not up.
-async fn road_of(services: &Ctx) -> Option<Arc<FolderRoad>> {
+async fn road_of(services: &Ctx) -> Result<Arc<FolderRoad>, SyncProblem> {
     if let Some(road) = services.syncing.road() {
-        return Some(road);
+        return Ok(road);
     }
-    let id = services.store.sync_device().ok().flatten()?;
-    let mut folder = saved_folder(services)?;
+    let no_group = || SyncProblem::NoGroup;
+    let id = services.store.sync_device().ok().flatten().ok_or_else(no_group)?;
+    let mut folder = saved_folder(services).ok_or_else(no_group)?;
     let ring = services
         .sync
         .tokens
         .get(KEYRING)
         .ok()
         .and_then(|h| hex::decode(h).ok())
-        .and_then(|b| Keyring::from_bytes(&b).ok())?;
-    let target = target_for(services, &mut folder).await.ok()?;
+        .and_then(|b| Keyring::from_bytes(&b).ok())
+        .ok_or_else(no_group)?;
+    // No `tx`: a pass in the background never asks anyone to sign in.
+    let target = match target_for(services, None, &mut folder).await {
+        Ok(target) => target,
+        Err(Ended::Problem(p)) => return Err(p),
+        Err(Ended::Cancelled) => return Err(no_group()),
+    };
     let road = Arc::new(FolderRoad::open(
         target,
         "",
@@ -442,7 +526,7 @@ async fn road_of(services: &Ctx) -> Option<Arc<FolderRoad>> {
         ring,
     ));
     services.syncing.set_road(Some(road.clone()));
-    Some(road)
+    Ok(road)
 }
 
 /// One pass through the folder: what others wrote is read and applied, this device's own is
@@ -453,8 +537,11 @@ pub async fn pass(services: &Ctx, tx: &Outbox) {
     }
     say_status(services, tx);
     let outcome = match road_of(services).await {
-        Some(road) => road.sync().await.map(|report| (road, report)),
-        None => Err(SyncError::NoGroup),
+        Ok(road) => road.sync().await.map(|report| (road, report)).map_err(|e| {
+            let kind = saved_folder(services).map(|f| f.kind);
+            (problem_in(kind.as_ref(), &e), e.to_string())
+        }),
+        Err(p) => Err((p.clone(), describe(&p))),
     };
     services.syncing.running.store(false, Ordering::Release);
     match outcome {
@@ -462,10 +549,20 @@ pub async fn pass(services: &Ctx, tx: &Outbox) {
             keep_ring(services, &road.keyring());
             let _ = services.store.sync_meta_set(LAST, &kaeri_store::now().to_string());
             let _ = services.store.sync_meta_set(ERROR, "");
+            let _ = services.store.sync_meta_set(PROBLEM, "");
             carry_out(services, tx, report);
         }
-        Err(e) => {
-            let _ = services.store.sync_meta_set(ERROR, &e.to_string());
+        Err((p, text)) => {
+            let _ = services.store.sync_meta_set(ERROR, &text);
+            // A problem a person can fix is kept, and said once as it starts.
+            if let SyncProblem::SignInNeeded { service } = &p {
+                let was = services.store.sync_meta_get(PROBLEM).ok().flatten();
+                let now = format!("{SIGN_IN}{}", kind_name(service));
+                if was.as_deref() != Some(now.as_str()) {
+                    let _ = services.store.sync_meta_set(PROBLEM, &now);
+                    let _ = tx.send(Event::SyncProblem(p));
+                }
+            }
         }
     }
     say_status(services, tx);
@@ -497,8 +594,58 @@ pub fn leave(services: &Ctx, tx: &Outbox) {
     for id in [KEYRING, RECOVERY, PASSWORD] {
         let _ = services.sync.tokens.clear(id);
     }
-    for key in [FOLDER, NAME, LAST, ERROR] {
+    // The cloud drives' sign-ins go with the group.
+    cloud::forget_all(services);
+    for key in [FOLDER, NAME, LAST, ERROR, PROBLEM] {
         let _ = services.store.sync_meta_set(key, "");
+    }
+    say_status(services, tx);
+}
+
+/// Sign in to a cloud drive and keep the sign-in: "Sign in again" after a refused one, or another
+/// account. When sync uses that drive, the road is opened afresh and a pass runs.
+pub async fn sign_in_again(services: &Ctx, tx: &Outbox, kind: SyncFolderKind) {
+    let Some(service) = Service::of(&kind) else {
+        return fail(services, tx, SyncProblem::Other("that is not a cloud drive".into()));
+    };
+    let outcome = cloud::sign_in(services, tx, service).await;
+    sign_in_done(services, tx, &kind, outcome).await;
+    cloud::ended(tx, &kind);
+}
+
+/// What follows a sign-in on its own: a pass when sync uses the drive, the problem if it failed.
+async fn sign_in_done(
+    services: &Ctx,
+    tx: &Outbox,
+    kind: &SyncFolderKind,
+    outcome: Result<(), Ended>,
+) {
+    match outcome {
+        Ok(()) => {
+            let using = saved_folder(services).is_some_and(|f| &f.kind == kind);
+            if using {
+                services.syncing.set_road(None);
+                let _ = services.store.sync_meta_set(PROBLEM, "");
+                pass(services, tx).await;
+            } else {
+                say_status(services, tx);
+            }
+        }
+        Err(Ended::Cancelled) => say_status(services, tx),
+        Err(Ended::Problem(p)) => fail(services, tx, p),
+    }
+}
+
+/// Forget the sign-in to a cloud drive. When sync uses it, the road stops until the person signs
+/// in again.
+pub fn sign_out(services: &Ctx, tx: &Outbox, kind: &SyncFolderKind) {
+    let Some(service) = Service::of(kind) else { return };
+    cloud::forget(services, service);
+    if saved_folder(services).is_some_and(|f| &f.kind == kind) {
+        services.syncing.set_road(None);
+        let _ = services.store.sync_meta_set(PROBLEM, &format!("{SIGN_IN}{}", kind_name(kind)));
+        let _ =
+            tx.send(Event::SyncProblem(SyncProblem::SignInNeeded { service: kind.clone() }));
     }
     say_status(services, tx);
 }
@@ -508,10 +655,10 @@ pub async fn remove_device(services: &Ctx, tx: &Outbox, device: &str) {
     if let Err(e) = services.store.sync_device_remove(device) {
         return fail(services, tx, SyncProblem::Other(e.to_string()));
     }
-    if let (Some(road), Some(recovery)) = (road_of(services).await, recovery_key(services)) {
+    if let (Ok(road), Some(recovery)) = (road_of(services).await, recovery_key(services)) {
         match road.rotate_group_key(&recovery).await {
             Ok(ring) => keep_ring(services, &ring),
-            Err(e) => return fail(services, tx, problem(&e)),
+            Err(e) => return fail(services, tx, problem_at(services, &e)),
         }
     }
     pass(services, tx).await;
@@ -523,15 +670,16 @@ fn recovery_key(services: &Ctx) -> Option<RecoveryKey> {
 
 /// Make a new recovery key; the old one stops working at once.
 pub async fn new_recovery_key(services: &Ctx, tx: &Outbox) {
-    let Some(road) = road_of(services).await else {
-        return fail(services, tx, SyncProblem::NoGroup);
+    let road = match road_of(services).await {
+        Ok(road) => road,
+        Err(p) => return fail(services, tx, p),
     };
     match road.new_recovery_key().await {
         Ok(recovery) => {
             let _ = services.sync.tokens.set(RECOVERY, &recovery.to_text());
             let _ = tx.send(Event::SyncRecoveryKey(recovery.to_text()));
         }
-        Err(e) => fail(services, tx, problem(&e)),
+        Err(e) => fail(services, tx, problem_at(services, &e)),
     }
 }
 

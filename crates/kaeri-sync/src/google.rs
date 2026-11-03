@@ -331,7 +331,7 @@ pub async fn device_poll(
         Reply::Failed(error) => match error.as_str() {
             "authorization_pending" => DevicePoll::Pending,
             "slow_down" => DevicePoll::SlowDown,
-            "access_denied" => DevicePoll::Denied,
+            "access_denied" | "authorization_declined" => DevicePoll::Denied,
             "expired_token" => DevicePoll::Expired,
             other => return Err(failed(other)),
         },
@@ -1146,6 +1146,7 @@ mod fake {
         match (req.method.as_str(), req.path.as_str()) {
             ("POST", "/token") => token(st, req),
             ("POST", "/device/code") => device_code(st, req),
+            ("GET", "/auth") => authorize(req),
             _ if req.path.starts_with("/drive/v3/files")
                 || req.path.starts_with("/upload/drive/v3/files") =>
             {
@@ -1160,6 +1161,26 @@ mod fake {
         reqwest::Url::parse(&format!("http://fake/?{text}"))
             .map(|u| u.query_pairs().map(|(k, v)| (k.into_owned(), v.into_owned())).collect())
             .unwrap_or_default()
+    }
+
+    /// The sign-in page of a person who says yes at once: a redirect to where the request asked
+    /// to come back to, carrying the code and the request's state.
+    fn authorize(req: &Req) -> Resp {
+        let Some(redirect) = req.param("redirect_uri") else {
+            return oauth_error(400, "invalid_request");
+        };
+        let mut url = match reqwest::Url::parse(redirect) {
+            Ok(url) => url,
+            Err(_) => return oauth_error(400, "invalid_request"),
+        };
+        {
+            let mut query = url.query_pairs_mut();
+            query.append_pair("code", FakeGoogle::CODE);
+            if let Some(state) = req.param("state") {
+                query.append_pair("state", state);
+            }
+        }
+        Resp { status: 302, headers: vec![("Location", url.to_string())], body: Vec::new() }
     }
 
     fn device_code(st: &mut State, req: &Req) -> Resp {

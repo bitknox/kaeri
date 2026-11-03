@@ -8,11 +8,14 @@ use std::{
     time::{Duration, Instant},
 };
 
-use kaeri_ffi::{FfiDirs, FfiEngine, FfiHost, FfiScene, FfiStart};
+use kaeri_ffi::{FfiDirs, FfiEngine, FfiHost, FfiPlatform, FfiScene, FfiStart};
 use kaeri_model::{
     command::Command,
     event::Event,
-    group::{SyncFolderKind, SyncFolderSpec, SyncProblem, SyncStatus},
+    group::{
+        CloudUnavailable, SyncCloudWay, SyncFolderKind, SyncFolderSpec, SyncProblem,
+        SyncSignInStep, SyncStatus,
+    },
     profiles::ProfilesView,
     stores::Secret,
 };
@@ -281,4 +284,99 @@ fn two_devices_pair_with_a_code_and_a_wrong_code_does_not() {
     assert!(status.devices.iter().any(|d| d.name == "Living room"));
     let status = living_room.status_where("both devices", |s| s.devices.len() == 2);
     assert!(status.devices.iter().any(|d| d.name == "Phone"));
+}
+
+/// Where the fixtures' fake sign-in page sends the browser: its `Location`, read without following
+/// it, as the app reads it from the sheet.
+fn fake_sign_in_redirect(url: &str) -> String {
+    use std::io::{Read, Write};
+    let rest = url.strip_prefix("http://").expect("the fake service is on loopback");
+    let (host, path) = rest.split_once('/').expect("a path");
+    let mut socket = std::net::TcpStream::connect(host).expect("the fake service");
+    write!(socket, "GET /{path} HTTP/1.1\r\nhost: {host}\r\nconnection: close\r\n\r\n")
+        .expect("a request");
+    let mut reply = String::new();
+    socket.read_to_string(&mut reply).expect("a reply");
+    reply
+        .lines()
+        .find_map(|l| l.strip_prefix("Location: ").or_else(|| l.strip_prefix("location: ")))
+        .expect("a redirect")
+        .to_owned()
+}
+
+#[test]
+fn a_fixtures_phone_walks_through_the_cloud_sign_in_without_an_account() {
+    let start = FfiStart { platform: Some(FfiPlatform::Ios), ..FfiStart::default() };
+    let mut app = App::start_in(None, start);
+    app.engine.send(Command::LoadSync);
+    let status = app.status_where("the drives", |s| !s.clouds.is_empty());
+    assert!(status.clouds.iter().all(|c| c.way == SyncCloudWay::Sheet), "{:?}", status.clouds);
+
+    app.engine.send(Command::StartSync {
+        device_name: "Phone".into(),
+        folder: SyncFolderSpec {
+            kind: SyncFolderKind::GoogleDrive,
+            address: None,
+            user: None,
+            password: None,
+        },
+    });
+    let (url, scheme) = app.until("the sheet", |event| match event {
+        Event::SyncSignIn {
+            step: Some(SyncSignInStep::Sheet { url, callback_scheme }),
+            ..
+        } => Some((url.clone(), callback_scheme.clone())),
+        _ => None,
+    });
+    assert_eq!(scheme, "client.fixture.app");
+    let callback = fake_sign_in_redirect(&url);
+    assert!(callback.starts_with("client.fixture.app:/oauth2redirect?"), "{callback}");
+    app.engine.send(Command::FinishSyncSignIn {
+        service: SyncFolderKind::GoogleDrive,
+        callback: Secret(callback),
+    });
+    app.until("the folder", |event| match event {
+        Event::SyncSignIn { step: Some(SyncSignInStep::Finishing), .. } => Some(()),
+        _ => None,
+    });
+    app.until("the recovery key", |event| match event {
+        Event::SyncRecoveryKey(_) => Some(()),
+        _ => None,
+    });
+    let status = app.status_where("the drive in use", |s| s.enabled && s.last_synced.is_some());
+    assert_eq!(status.folder.map(|f| f.kind), Some(SyncFolderKind::GoogleDrive));
+    assert!(
+        status.clouds.iter().any(|c| c.service == SyncFolderKind::GoogleDrive && c.signed_in)
+    );
+}
+
+#[test]
+fn a_fixtures_tv_shows_a_code_and_cancel_ends_it_and_dropbox_needs_a_phone() {
+    let start = FfiStart { platform: Some(FfiPlatform::AndroidTv), ..FfiStart::default() };
+    let mut app = App::start_in(None, start);
+    app.engine.send(Command::LoadSync);
+    let status = app.status_where("the drives", |s| !s.clouds.is_empty());
+    let way = |kind: SyncFolderKind| {
+        status.clouds.iter().find(|c| c.service == kind).expect("a row").way.clone()
+    };
+    assert_eq!(way(SyncFolderKind::GoogleDrive), SyncCloudWay::DeviceCode);
+    assert_eq!(way(SyncFolderKind::OneDrive), SyncCloudWay::DeviceCode);
+    assert_eq!(
+        way(SyncFolderKind::Dropbox),
+        SyncCloudWay::Unavailable { reason: CloudUnavailable::NeedsPhone }
+    );
+
+    app.engine.send(Command::SyncSignIn { service: SyncFolderKind::OneDrive });
+    let code = app.until("the code", |event| match event {
+        Event::SyncSignIn { step: Some(SyncSignInStep::Code { user_code, .. }), .. } => {
+            Some(user_code.clone())
+        }
+        _ => None,
+    });
+    assert_eq!(code, "ABCD-EFGH");
+    app.engine.send(Command::CancelSyncSignIn);
+    app.until("the end", |event| match event {
+        Event::SyncSignIn { step: None, .. } => Some(()),
+        _ => None,
+    });
 }

@@ -13,6 +13,7 @@ pub mod folder;
 pub mod google;
 pub mod keys;
 pub mod lan;
+pub mod loopback;
 pub mod nextcloud;
 pub mod onedrive;
 pub mod peer;

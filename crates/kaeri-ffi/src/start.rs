@@ -204,6 +204,7 @@ impl FfiStart {
             google_secret: self.google_client_secret.clone(),
             dropbox: self.dropbox_app_key.clone(),
             onedrive: self.onedrive_client_id.clone(),
+            cloud_kind: self.platform.and_then(FfiPlatform::cloud_kind),
         }
     }
 }
@@ -224,6 +225,18 @@ pub enum FfiPlatform {
 }
 
 impl FfiPlatform {
+    /// Which of the cloud sign-in clients this system uses: the iOS client for Apple's, the
+    /// Android client for a phone or tablet, the TV's device flow, the desktop's loopback.
+    pub fn cloud_kind(self) -> Option<kaeri_engine::options::CloudClient> {
+        use kaeri_engine::options::CloudClient as ClientKind;
+        Some(match self {
+            Self::MacOs | Self::Ios | Self::IpadOs => ClientKind::Ios,
+            Self::Android | Self::AndroidTablet => ClientKind::Android,
+            Self::AndroidTv => ClientKind::Tv,
+            Self::Windows => ClientKind::Desktop,
+        })
+    }
+
     /// A phone or a tablet, which a cast's torrent would keep busy for a whole episode.
     pub fn handheld(self) -> bool {
         matches!(self, Self::Ios | Self::IpadOs | Self::Android | Self::AndroidTablet)

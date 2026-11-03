@@ -133,8 +133,10 @@ impl Store {
     /// Every title on the list, with where it is on it, as the tracker words it.
     pub fn library_statuses(&self) -> Result<Vec<(AnilistId, String)>> {
         self.with_personal(|c| {
-            let mut statement =
-                c.prepare("SELECT anilist_id, status FROM library_status ORDER BY anilist_id")?;
+            let mut statement = c.prepare(&format!(
+                "SELECT anilist_id, status FROM {} ORDER BY anilist_id",
+                crate::library_status::MERGED
+            ))?;
             let rows =
                 statement.query_map([], |r| Ok((AnilistId::new(r.get(0)?), r.get(1)?)))?;
             Ok(rows.collect::<rusqlite::Result<Vec<_>>>()?)

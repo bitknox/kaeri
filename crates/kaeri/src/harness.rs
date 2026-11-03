@@ -890,6 +890,7 @@ pub fn name(update: &Event) -> &'static str {
         Event::ProfileSwitch { .. } => "ProfileSwitch",
         Event::SyncStatus(_) => "SyncStatus",
         Event::SyncInvite { .. } => "SyncInvite",
+        Event::SyncSignIn { .. } => "SyncSignIn",
         Event::SyncRecoveryKey(_) => "SyncRecoveryKey",
         Event::SyncProblem(_) => "SyncProblem",
         Event::StorePreview(_) => "StorePreview",
@@ -1157,6 +1158,9 @@ fn copy(update: &Event) -> Event {
         Event::SyncStatus(status) => Event::SyncStatus(status.clone()),
         Event::SyncInvite { code, port, seconds } => {
             Event::SyncInvite { code: code.clone(), port: *port, seconds: *seconds }
+        }
+        Event::SyncSignIn { service, step } => {
+            Event::SyncSignIn { service: service.clone(), step: step.clone() }
         }
         Event::SyncRecoveryKey(key) => Event::SyncRecoveryKey(key.clone()),
         Event::SyncProblem(problem) => Event::SyncProblem(problem.clone()),

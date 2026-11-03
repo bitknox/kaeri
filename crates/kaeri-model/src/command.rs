@@ -58,6 +58,9 @@ impl Command {
                 format!("signing in to {tracker}")
             }
             Self::ConnectKitsu { .. } => "signing in to kitsu".into(),
+            Self::SyncSignIn { .. } | Self::FinishSyncSignIn { .. } => {
+                "signing in to a cloud drive".into()
+            }
             Self::Play { episode, .. } | Self::PlaySource { episode, .. } => {
                 format!("starting ep {episode}")
             }
@@ -367,6 +370,27 @@ pub enum Command {
         device_name: String,
         folder: crate::group::SyncFolderSpec,
         recovery_key: Secret,
+    },
+    /// Sign in to a cloud drive (`GoogleDrive`, `Dropbox` or `OneDrive`) and keep the sign-in,
+    /// without choosing a folder: "Sign in again" after `SyncProblem::SignInNeeded`, or another
+    /// account. Steps come as `Event::SyncSignIn`; when sync already uses the service it runs a
+    /// pass after.
+    SyncSignIn {
+        service: crate::group::SyncFolderKind,
+    },
+    /// The redirect the web sheet ended on, after `SyncSignInStep::Sheet`: the whole URL. A
+    /// secret, since it carries the authorisation code.
+    FinishSyncSignIn {
+        service: crate::group::SyncFolderKind,
+        callback: Secret,
+    },
+    /// Stop the cloud sign-in under way, at any step: the sheet was closed or the code screen
+    /// was left. Nothing is said as a problem.
+    CancelSyncSignIn,
+    /// Forget this device's sign-in to a cloud drive. When sync uses it, the folder road stops
+    /// with `SyncProblem::SignInNeeded` until `SyncSignIn`.
+    SyncSignOut {
+        service: crate::group::SyncFolderKind,
     },
     /// Run the folder road now.
     SyncFolderNow,

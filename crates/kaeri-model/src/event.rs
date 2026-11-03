@@ -596,6 +596,12 @@ pub enum Event {
     },
     /// The recovery key, to show once. Never sent again; only a new one can be made.
     SyncRecoveryKey(String),
+    /// A cloud sign-in for sync moved on: `step` says what to show, `None` that it is over (signed
+    /// in, cancelled or failed; a failure comes as `SyncProblem` too).
+    SyncSignIn {
+        service: crate::group::SyncFolderKind,
+        step: Option<crate::group::SyncSignInStep>,
+    },
     /// A sync set-up or join did not work.
     SyncProblem(crate::group::SyncProblem),
     /// What a pasted invite link leads to, or why it leads nowhere.

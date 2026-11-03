@@ -101,6 +101,7 @@ pub mod cache;
 pub mod cast;
 pub mod catalog;
 pub mod clock;
+pub mod cloud;
 pub mod config;
 pub mod connectivity;
 pub mod crash;

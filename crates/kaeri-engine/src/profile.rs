@@ -14,8 +14,17 @@ use kaeri_store::{
 };
 use kaeri_track::secret::TokenStore;
 
-/// The trackers whose tokens belong to a profile.
-pub const TRACKER_TOKENS: [&str; 5] = ["anilist", "mal", "kitsu", "simkl", "trakt"];
+/// The trackers and cloud drives whose tokens belong to a profile.
+pub const TRACKER_TOKENS: [&str; 8] = [
+    "anilist",
+    "mal",
+    "kitsu",
+    "simkl",
+    "trakt",
+    crate::cloud::TOKEN_IDS[0],
+    crate::cloud::TOKEN_IDS[1],
+    crate::cloud::TOKEN_IDS[2],
+];
 
 /// Enter a profile at launch: `requested` when it exists, else the one used last. Does nothing
 /// for a single user. Answers the profile entered.

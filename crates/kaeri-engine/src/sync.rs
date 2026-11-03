@@ -144,3 +144,10 @@ pub fn fill_tracker_gaps(
         );
     }
 }
+
+/// Whether this device has a list of titles with statuses: the Library's tracker is signed in
+/// (its list wins), or statuses a person set on a device came through sync and fill in.
+pub fn has_list(services: &crate::services::Services) -> bool {
+    services.sync.trackers.first().is_some_and(|tracker| tracker.is_authenticated())
+        || services.store.has_synced_statuses().unwrap_or(false)
+}
