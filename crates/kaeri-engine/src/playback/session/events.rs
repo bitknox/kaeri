@@ -52,6 +52,14 @@ const BATTERY_POLL: Duration = Duration::from_secs(60);
 /// is said at once.
 const SEAT_REPORTS: Duration = Duration::from_millis(200);
 
+/// What goes on beside one file as it plays.
+pub(super) struct Beside {
+    /// Subtitle tracks still being fetched as the file opened, added as each arrives.
+    pub late: Option<LateSubtitles>,
+    /// The capture finding the file's skip times from its audio, when they are found.
+    pub finder: Option<super::found::Finder>,
+}
+
 impl Run<'_> {
     /// Play one file to its end, feeding the tracker and answering the viewer.
     pub(super) async fn file(
@@ -61,9 +69,9 @@ impl Run<'_> {
         streams: &[Stream],
         index: usize,
         commands: &mut mpsc::UnboundedReceiver<PlayerCommand>,
-        // Subtitle tracks still being fetched as the file opened, added as each arrives.
-        mut late: Option<LateSubtitles>,
+        beside: Beside,
     ) -> FileOutcome {
+        let Beside { mut late, mut finder } = beside;
         let context = self.context;
         let settings = self.settings;
         let tx = self.tx;
@@ -77,6 +85,9 @@ impl Run<'_> {
                 .skipping_recaps(settings.auto_skip_recap)
                 .marking_chapters(settings.mark_chapters);
         self.marking.file_opened();
+        // Found times kept for this episode, used once the file's length says they fit it, and
+        // whether this show's found times are skipped by themselves.
+        let mut found_kept = self.found_opened(&mut tracker).await;
 
         // Presence is connected here rather than at startup: it should exist for exactly as
         // long as something is playing, and holding a socket open while idle would claim a
@@ -279,6 +290,16 @@ impl Run<'_> {
                         Some(subtitle) if loaded => add_subtitle(link, &subtitle).await,
                         Some(subtitle) => waiting.push(subtitle),
                         None => late = None,
+                    }
+                    continue;
+                }
+                found = async { finder.as_mut().expect("guarded").next().await },
+                    if finder.as_ref().is_some_and(super::found::Finder::is_open) =>
+                {
+                    if let Some(found) = found {
+                        self.found.retain(|s| s.kind != found.interval.kind);
+                        self.found.push(found.interval);
+                        tracker.set_found(self.found.clone());
                     }
                     continue;
                 }
@@ -631,6 +652,16 @@ impl Run<'_> {
                 PlaybackEvent::Replaced => continue,
                 PlaybackEvent::Progress { position, duration } => {
                     self.maybe_prefetch(*position, *duration);
+                    if let Some(length) = *duration {
+                        // The tail is tapped once the length places it.
+                        if let Some(windows) = finder.as_mut().and_then(|f| f.length(length)) {
+                            let windows = serde_json::Value::String(windows);
+                            let _ = link.set("demuxer-audio-tap-windows", windows).await;
+                        }
+                        if let Some(kept) = found_kept.take() {
+                            self.use_kept_found(kept, length, &mut tracker);
+                        }
+                    }
                     if !ever_played {
                         ever_played = true;
                         let _ = link.overlay(Overlay::Playing).await;
@@ -678,6 +709,7 @@ impl Run<'_> {
                             let _ = link.seek(to, true).await;
                             let _ = link.overlay(Overlay::Skipped { kind, from, to }).await;
                             last_skip = Some(kind);
+                            self.skipped(kind, to, &tracker).await;
                         } else if settings.skip_button {
                             // On the video, not the terminal: the viewer is looking at it.
                             let _ = link.overlay(Overlay::SkipOffer { kind, to }).await;

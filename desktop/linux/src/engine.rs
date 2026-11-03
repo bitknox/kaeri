@@ -70,6 +70,9 @@ pub async fn start(paths: Paths, host: Arc<dyn Host>) -> Result<Started, String>
     options.saved = Some(config);
     options.set_aside = set_aside;
     options.hosted_player = true;
+    // Skip times found from the audio, where the libmpv this runs on has the demuxer tap: the
+    // Flatpak's and the AppImage's do, a distribution's may not.
+    options.audio_tap = kaeri_mpv_host::audio_tap_available();
     options.app_clients = app_clients();
     options.device_label = kaeri_i18n::t::shell_device_label();
     options.language = Some(kaeri_i18n::language().to_owned());

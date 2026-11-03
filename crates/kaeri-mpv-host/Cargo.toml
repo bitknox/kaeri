@@ -16,12 +16,18 @@ doctest = false
 # macOS it is the system's, found through pkg-config, and the build needs libmpv's development
 # files. With MSVC on Windows it is the DLL in KAERI_LIBMPV_DIR (build.rs says how).
 [features]
-libmpv = ["dep:pkg-config", "dep:find-msvc-tools"]
+libmpv = ["dep:pkg-config", "dep:find-msvc-tools", "dep:kaeri-audio-tap", "dep:libc"]
 
 [dependencies]
+# The engine's audio tap callback, set on every core whose libmpv has the demuxer tap.
+kaeri-audio-tap = { workspace = true, optional = true }
 kaeri-model.workspace = true
 serde_json.workspace = true
 tracing.workspace = true
+
+# dlsym, to find the demuxer tap in a libmpv that has it: a system libmpv may not.
+[target.'cfg(unix)'.dependencies]
+libc = { version = "0.2", optional = true }
 
 [build-dependencies]
 pkg-config = { version = "0.3", optional = true }

@@ -68,6 +68,7 @@ cli = ["uniffi/cli", "uniffi/cargo-metadata"]
 
 # No terminal crate, not even transitively: tools/check-boundaries.sh holds it to that in CI.
 [dependencies]
+kaeri-audio-tap.workspace = true
 kaeri-core.workspace = true
 kaeri-engine.workspace = true
 # The commands and events themselves cross, with every row they carry: the model's `ffi` feature

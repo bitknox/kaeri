@@ -450,6 +450,7 @@ pub fn play_local(
     }
     let shaders = write_shaders(config, paths);
     let party = services.party.clone();
+    let find = services.skip_find.runs(config);
     let (config, store, http, machine, tx) = (
         config.clone(),
         store.clone(),
@@ -487,6 +488,7 @@ pub fn play_local(
         };
         let settings = playback::PlaySettings {
             shader_dir: shaders.await.ok().flatten(),
+            find_skip_times: find,
             ..play_settings(&config, tracker_ids, party)
         };
         playback::play(vec![stream], context, store, http, machine, settings, tx, prx).await;
@@ -667,6 +669,8 @@ fn spawn_playback(
         prefetched
     };
     let reports = services.servers.reports();
+    // An untracked play is of no show whose episodes could be compared.
+    let find = !untracked && services.skip_find.runs(config);
     let (config, meta, store, registry, http, machine, slot, tx) = (
         config.clone(),
         services.meta.clone(),
@@ -796,6 +800,7 @@ fn spawn_playback(
         let settings = playback::PlaySettings {
             shader_dir,
             reports,
+            find_skip_times: find,
             ..play_settings(&config, tracker_ids, hub)
         };
         let settings = if untracked { settings.untracked() } else { settings };
@@ -829,6 +834,9 @@ pub fn play_settings(
         auto_skip: playback.skip_opening,
         auto_skip_recap: playback.skip_recap_auto,
         ask_was_opening: playback.ask_was_opening,
+        // Whether the player can hand the audio over, and the device can spare the work, is
+        // the engine's to say: see `SkipFind::runs`.
+        find_skip_times: false,
         share_skip_times: playback.share_skip_times,
         mark_chapters: playback.mark_chapters,
         skip_button: playback.skip_button,

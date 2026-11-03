@@ -214,7 +214,8 @@ impl App {
             | S::CalendarMine
             | S::CastTvs
             | S::TorrentsWhileCasting
-            | S::HoverCards => return None,
+            | S::HoverCards
+            | S::FindSkipTimes => return None,
             // The subtitle rows take the engine's steps like any closed set.
             S::SubtitleSize
             | S::SubtitleFont
@@ -343,6 +344,7 @@ fn label_text(key: SettingKey) -> String {
         S::CastTvs => t::settings_label_cast_tvs(),
         S::TorrentsWhileCasting => t::settings_label_torrents_while_casting(),
         S::HoverCards => t::settings_label_hover_cards(),
+        S::FindSkipTimes => t::settings_find_skips(),
         S::SubtitleSize => t::settings_subs_size(),
         S::SubtitleFont => t::settings_subs_font(),
         S::SubtitleColour => t::settings_subs_colour(),

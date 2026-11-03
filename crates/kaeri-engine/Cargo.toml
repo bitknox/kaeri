@@ -51,6 +51,7 @@ kaeri-player = { workspace = true, optional = true }
 # The pure half of playback, which the session drives any player with: the policy, the tracks,
 # skips, and what a player reports and is shown. Allowed in a phone's build.
 kaeri-playback.workspace = true
+kaeri-audio-tap.workspace = true
 kaeri-plugin = { workspace = true, features = ["fetch"] }
 kaeri-plugin-store.workspace = true
 kaeri-store-server.workspace = true

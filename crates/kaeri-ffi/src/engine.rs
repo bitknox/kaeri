@@ -302,6 +302,7 @@ impl Opened {
         // file's is the one in effect.
         options.saved = Some(config);
         options.app_clients = start.app_clients();
+        options.audio_tap = start.audio_tap;
         options
     }
 }

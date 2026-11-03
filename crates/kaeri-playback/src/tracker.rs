@@ -849,12 +849,18 @@ mod tests {
     #[test]
     fn a_found_stretch_offers_its_button_until_it_is_trusted() {
         let mut t = PlaybackTracker::new(0.85, Vec::new(), true);
-        let found = SkipInterval { kind: SkipKind::Opening, start: 41.0, end: 129.0, origin: SkipOrigin::Found };
+        let found = SkipInterval {
+            kind: SkipKind::Opening,
+            start: 41.0,
+            end: 129.0,
+            origin: SkipOrigin::Found,
+        };
         t.set_found(vec![found]);
         assert_eq!(t.skips(), [found]);
         assert!(!t.auto_skips_kind(SkipKind::Opening), "offered, not skipped");
         assert!(t.auto_skips_kind(SkipKind::Ending), "other kinds as before");
-        let actions = t.observe(&PlaybackEvent::Progress { position: 50.0, duration: Some(1420.0) });
+        let actions =
+            t.observe(&PlaybackEvent::Progress { position: 50.0, duration: Some(1420.0) });
         assert!(actions.contains(&Action::OfferSkip { kind: SkipKind::Opening, to: 129.0 }));
         t.trust_found(SkipKind::Opening, true);
         assert!(t.auto_skips_kind(SkipKind::Opening));

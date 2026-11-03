@@ -1067,9 +1067,24 @@ pub enum PlayerCommand {
     },
     /// The skip prompt was answered without acting on it, or went by: it comes down.
     DismissSkipPrompt,
-    /// "Was that the opening?"'s Don't ask again: the prompt comes down and is turned off in
-    /// Settings, `playback.ask_was_opening`.
+    /// Don't ask again, on "Was that the opening?" or on the found times' card: turned off in
+    /// Settings, `playback.ask_was_opening`, which covers both. "Was that the opening?" comes
+    /// down; the found times' card says `SkipPrompt::FoundNever`.
     NeverAskWasOpening,
+    /// Yes on the found times' card: the found stretch of `kind` becomes the person's own mark
+    /// for this episode, is shared with AniSkip for this one episode, and found stretches of
+    /// `kind` are skipped by themselves for this show from now on. The card says
+    /// `SkipPrompt::FoundSaved`.
+    ConfirmFoundSkip {
+        kind: SkipKind,
+    },
+    /// Adjust, on the found times' card or on a found row of the Skip times panel: the marking
+    /// bar opens on the review of the found stretch of `kind`, with no kind picker, and plays
+    /// the edges once. Its Save confirms and shares as Yes does; Cancel leaves the found times
+    /// as they were.
+    AdjustFoundSkip {
+        kind: SkipKind,
+    },
     /// The answer to "Share your skip times with AniSkip?": Share or Keep on my devices. Kept
     /// as Settings' `playback.share_skip_times`; with Share, the mark just saved is sent.
     AnswerShareSkipTimes {

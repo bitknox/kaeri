@@ -241,6 +241,9 @@ impl Player {
         for (id, property) in REPORTED_PROPERTIES.iter().enumerate() {
             mpv.observe(property, id as u64 + 1)?;
         }
+        // Audio for finding skip times, where this libmpv can tap it; the engine turns the tap
+        // on per file through the load's options.
+        mpv.set_audio_tap();
         let shared = Arc::new(Shared {
             mpv,
             sink,

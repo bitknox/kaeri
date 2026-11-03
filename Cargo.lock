@@ -2989,6 +2989,7 @@ dependencies = [
  "futures",
  "image",
  "jiff",
+ "kaeri-audio-tap",
  "kaeri-cast",
  "kaeri-core",
  "kaeri-discord",
@@ -3026,6 +3027,7 @@ dependencies = [
  "async-trait",
  "futures",
  "jiff",
+ "kaeri-audio-tap",
  "kaeri-cast",
  "kaeri-core",
  "kaeri-engine",
@@ -3112,7 +3114,9 @@ name = "kaeri-mpv-host"
 version = "0.2.0"
 dependencies = [
  "find-msvc-tools",
+ "kaeri-audio-tap",
  "kaeri-model",
+ "libc",
  "pkg-config",
  "serde_json",
  "tempfile",

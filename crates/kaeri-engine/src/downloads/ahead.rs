@@ -591,7 +591,7 @@ fn destination(config: &Config, cache_dir: &Path) -> PathBuf {
 
 /// What is free on the disk `path` is on, or would be once made.
 #[cfg(unix)]
-fn free_space(path: &Path) -> Option<u64> {
+pub(crate) fn free_space(path: &Path) -> Option<u64> {
     let existing = path.ancestors().find(|ancestor| ancestor.exists())?;
     let stat = rustix::fs::statvfs(existing).ok()?;
     Some(stat.f_bavail.saturating_mul(stat.f_frsize))
@@ -600,7 +600,7 @@ fn free_space(path: &Path) -> Option<u64> {
 /// Not asked off Unix: unknown room is taken as room. Windows has no safe way to ask in this
 /// build's dependencies, and the workspace forbids unsafe code.
 #[cfg(not(unix))]
-fn free_space(_: &Path) -> Option<u64> {
+pub(crate) fn free_space(_: &Path) -> Option<u64> {
     None
 }
 

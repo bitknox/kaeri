@@ -325,7 +325,12 @@ pub struct Found {
 
 impl Found {
     pub const fn interval(&self) -> SkipInterval {
-        SkipInterval { kind: self.kind, start: self.start, end: self.end, origin: SkipOrigin::Found }
+        SkipInterval {
+            kind: self.kind,
+            start: self.start,
+            end: self.end,
+            origin: SkipOrigin::Found,
+        }
     }
 }
 
@@ -339,9 +344,12 @@ pub fn find(part: Part, this: &Print, other: &Print, settled: bool) -> Option<Fo
     let bridge = (BRIDGE / step).round() as usize;
     // Audio not heard next to an edge: the stretch may go on into it, so its edge is not known.
     // Within a bridge of an edge, as trimming may have moved the edge off the gap itself.
-    let gap_before = |items: &[u32], at: usize| items[at.saturating_sub(bridge)..at].contains(&0);
+    let gap_before =
+        |items: &[u32], at: usize| items[at.saturating_sub(bridge)..at].contains(&0);
     let gap_after = |items: &[u32], at: usize| {
-        items.get(at + 1..(at + 1 + bridge).min(items.len())).is_some_and(|near| near.contains(&0))
+        items
+            .get(at + 1..(at + 1 + bridge).min(items.len()))
+            .is_some_and(|near| near.contains(&0))
     };
     let (b0, b1) = ((run.a0 as i64 + run.shift) as usize, (run.a1 as i64 + run.shift) as usize);
     if gap_before(&this.items, run.a0)
@@ -375,7 +383,8 @@ struct Shared {
 
 fn longest_run(a: &[u32], b: &[u32], min: f64, max: f64) -> Option<Shared> {
     let step = step();
-    let mut index: std::collections::HashMap<u32, Vec<usize>> = std::collections::HashMap::new();
+    let mut index: std::collections::HashMap<u32, Vec<usize>> =
+        std::collections::HashMap::new();
     for (j, item) in b.iter().enumerate() {
         if *item != 0 {
             index.entry(*item).or_default().push(j);
@@ -474,10 +483,11 @@ fn longest_run(a: &[u32], b: &[u32], min: f64, max: f64) -> Option<Shared> {
     best.map(|(_, shared)| shared)
 }
 
-#[cfg(test)]
+/// Generated audio for tests here and in the engine, not for anything that plays: episodes of
+/// tones whose notes change four times a second, from a seed, so two stretches with the same
+/// seed sound the same and any two others do not.
+#[doc(hidden)]
 pub mod fixtures {
-    //! Generated episodes: tones whose notes change four times a second, from a seed, so two
-    //! stretches with the same seed sound the same and any two others do not.
 
     use super::RATE;
 
@@ -492,9 +502,12 @@ pub mod fixtures {
         for k in first..first + n {
             if k / note_len != note {
                 note = k / note_len;
-                let mut x = seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(note as u64);
+                let mut x =
+                    seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(note as u64);
                 for f in &mut freqs {
-                    x = x.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407);
+                    x = x
+                        .wrapping_mul(6_364_136_223_846_793_005)
+                        .wrapping_add(1_442_695_040_888_963_407);
                     *f = 110.0 * 2f64.powf(((x >> 33) % 48) as f64 / 12.0);
                 }
             }
@@ -546,9 +559,13 @@ mod tests {
         let one = episode(&[(101, 20.0), (OPENING, 90.0), (102, 250.0)]);
         let two = episode(&[(201, 65.0), (OPENING, 90.0), (202, 205.0)]);
         let (one, two) = (head(&one, 0.0, 360.0), head(&two, 0.0, 360.0));
-        let found =
-            find(Part::Head, two.print(Part::Head).unwrap(), one.print(Part::Head).unwrap(), true)
-                .expect("found");
+        let found = find(
+            Part::Head,
+            two.print(Part::Head).unwrap(),
+            one.print(Part::Head).unwrap(),
+            true,
+        )
+        .expect("found");
         assert_eq!(found.kind, SkipKind::Opening);
         near(found.start, 65.0, true);
         near(found.end, 155.0, false);
@@ -606,7 +623,8 @@ mod tests {
     #[test]
     fn finds_the_ending_two_tails_share() {
         // The last four minutes of two episodes of different lengths, the ending 30 s in.
-        let tail = |pre: u64, after: f64| episode(&[(pre, 30.0), (ENDING, 90.0), (pre + 1, after)]);
+        let tail =
+            |pre: u64, after: f64| episode(&[(pre, 30.0), (ENDING, 90.0), (pre + 1, after)]);
         let capture = |samples: &[i16], length: f64| {
             let mut capture = Capture::new();
             capture.set_length(length);
@@ -619,9 +637,13 @@ mod tests {
         };
         let one = capture(&tail(51, 120.0), 1440.0);
         let two = capture(&tail(61, 120.0), 1425.0);
-        let found =
-            find(Part::Tail, two.print(Part::Tail).unwrap(), one.print(Part::Tail).unwrap(), true)
-                .expect("found");
+        let found = find(
+            Part::Tail,
+            two.print(Part::Tail).unwrap(),
+            one.print(Part::Tail).unwrap(),
+            true,
+        )
+        .expect("found");
         assert_eq!(found.kind, SkipKind::Ending);
         near(found.start, 1215.0, true);
         near(found.end, 1305.0, false);

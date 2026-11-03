@@ -208,6 +208,7 @@ impl Engine {
             store,
             player_theme,
             hosted_player,
+            audio_tap,
             every_play_a_party,
             app_clients,
             device_label,
@@ -304,6 +305,7 @@ impl Engine {
                     clock: parts.clock,
                     fixture_route: parts.fixture_route,
                     party: Default::default(),
+                    skip_find: Default::default(),
                     windows: parts.windows,
                     #[cfg(feature = "cast")]
                     casts,
@@ -320,8 +322,23 @@ impl Engine {
         // own sign-in clients, where signing in will read them (E6).
         // And what a store joined with an invite calls this device unless told otherwise.
         let stores = services.stores.labelled(&device_label);
-        let services =
-            Services { hosted_player, every_play_a_party, app_clients, stores, ..services };
+        #[cfg(feature = "testing")]
+        let room_for_prints = free_space;
+        #[cfg(not(feature = "testing"))]
+        let room_for_prints = None;
+        let skip_find = Arc::new(crate::skip_find::SkipFind::new(
+            audio_tap && hosted_player,
+            services.paths.data_dir.clone(),
+            room_for_prints,
+        ));
+        let services = Services {
+            hosted_player,
+            every_play_a_party,
+            app_clients,
+            stores,
+            skip_find,
+            ..services
+        };
         services.servers.join_chain(&services.registry, &config);
         services.local.put_source(&services.registry, &config.providers.order);
         let hosted = Arc::clone(&services.hosted);
@@ -350,6 +367,7 @@ impl Engine {
         state.ahead = crate::downloads::ahead::Ahead::new(background.keep_next, room);
         let mut launch = VecDeque::new();
         // The settings first: everything after is drawn under the config they say.
+        state.config.set_skip_find_paused(services.skip_find.paused(state.config.effective()));
         launch.push_back(Event::Settings(state.config.view()));
         // Whether trailers may start, on that config, before the front end says anything.
         launch.push_back(crate::autoplay::at_launch(&mut state));

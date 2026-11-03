@@ -178,19 +178,20 @@ impl Store {
                         found_at
                    FROM skip_found WHERE anilist_id = ?1 AND episode = ?2 ORDER BY kind",
             )?;
-            let rows = statement.query_map(rusqlite::params![anilist_id.get(), episode], |r| {
-                Ok(FoundSkip {
-                    anilist_id: AnilistId::new(r.get(0)?),
-                    episode: r.get(1)?,
-                    kind: r.get(2)?,
-                    start_ms: r.get(3)?,
-                    end_ms: r.get(4)?,
-                    length_ms: r.get(5)?,
-                    agreed: r.get(6)?,
-                    state: r.get(7)?,
-                    found_at: r.get(8)?,
-                })
-            })?;
+            let rows =
+                statement.query_map(rusqlite::params![anilist_id.get(), episode], |r| {
+                    Ok(FoundSkip {
+                        anilist_id: AnilistId::new(r.get(0)?),
+                        episode: r.get(1)?,
+                        kind: r.get(2)?,
+                        start_ms: r.get(3)?,
+                        end_ms: r.get(4)?,
+                        length_ms: r.get(5)?,
+                        agreed: r.get(6)?,
+                        state: r.get(7)?,
+                        found_at: r.get(8)?,
+                    })
+                })?;
             Ok(rows.collect::<rusqlite::Result<Vec<_>>>()?)
         })
     }
@@ -240,7 +241,9 @@ impl Store {
                 rusqlite::params![anilist_id.get(), kind],
             )?;
             c.execute(
-                &format!("UPDATE skip_found_show SET {set} WHERE anilist_id = ?1 AND kind = ?2"),
+                &format!(
+                    "UPDATE skip_found_show SET {set} WHERE anilist_id = ?1 AND kind = ?2"
+                ),
                 rusqlite::params![anilist_id.get(), kind],
             )?;
             Ok(())

@@ -31,6 +31,10 @@ pub struct EngineOptions {
     /// rather than mpv's process: always so without the desktop feature, where there is no other
     /// player, and on the desktop only when the front end asks.
     pub hosted_player: bool,
+    /// Whether the hosted player hands the audio over through libmpv's demuxer tap, which
+    /// finding skip times needs: the app's libmpv carries the tap, and it handed
+    /// `kaeri_audio_tap` to `mpv_set_audio_tap`. Off unless the front end says so.
+    pub audio_tap: bool,
     /// Whether `syncplay.enabled` sends every play to the watch party the settings name: the
     /// terminal's way in, on for it alone. An app starts parties when asked, with `PartyJoin`
     /// or `PlayParty`, and the setting does nothing there. Off unless the front end turns it on.
@@ -94,6 +98,7 @@ impl EngineOptions {
             store,
             player_theme,
             hosted_player: !cfg!(feature = "desktop"),
+            audio_tap: false,
             every_play_a_party: false,
             app_clients: AppClients::default(),
             device_label: kaeri_model::stores::COMPUTER.to_owned(),

@@ -116,6 +116,10 @@ fn write_setting(
     }));
     match written {
         Ok(()) => {
+            // Turning finding skip times on says whether it is paused, and off says nothing.
+            if (table, key) == (&["playback"][..], "find_skip_times") {
+                crate::skip_find::refresh(&services.skip_find, engine, tx);
+            }
             // A toast, named as the Settings screen names it. As a status it stayed
             // in the status line for the rest of the session, over the state it shows,
             // and it said the file's key — "saved commit_threshold". What has no row

@@ -599,6 +599,9 @@ pub(crate) fn dispatch(
                 low_memory,
             };
             crate::autoplay::device_state(device, engine, tx);
+            // Finding skip times pauses in a power saving mode, which Settings says.
+            services.skip_find.set_low_power(low_power);
+            crate::skip_find::refresh(&services.skip_find, engine, tx);
         }
         // Taken in as it is sent by `Engine::send`; one routed here all the same lands.
         Command::PlayerReport { playback, report } => services.hosted.report(playback, report),
