@@ -102,6 +102,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import app.kaeri.design.ArtShape
 import app.kaeri.design.Motion
+import app.kaeri.design.Reveals
+import app.kaeri.engine.ffi.episodeText
+import androidx.compose.runtime.Stable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import app.kaeri.design.ObiSilk
 import app.kaeri.design.ShowTitle
 import app.kaeri.design.tabular
@@ -762,6 +766,7 @@ private fun SeasonPage(
     val context = LocalContext.current
     val failedIds by store.titles.failed.collectAsStateWithLifecycle()
     val failed = !loaded && entry.id in failedIds
+    val synopses = rememberSynopsisPage(entry, episodes)
     androidx.compose.runtime.CompositionLocalProvider(LocalUserMarks provides marks) {
         // Every item moves as one when another comes or goes, as the title's details arrive: the
         // synopsis, the facts and Related fade in above the episodes as they make room, and the
@@ -826,7 +831,7 @@ private fun SeasonPage(
             }
             val related = entry.relatedCards()
             if (related.isNotEmpty()) item(key = "related", contentType = "related") { Box(itemMotion()) { RelatedRail(related) } }
-            episodeRows(entry, episodes, actions, unfolded = entry.id in unfolded, onFold = fold, wait = !ahead, dub = dubs[entry.id]?.line(context))
+            episodeRows(entry, episodes, actions, unfolded = entry.id in unfolded, onFold = fold, wait = !ahead, dub = dubs[entry.id]?.line(context), page = synopses)
         }
     }
 }
@@ -1687,6 +1692,8 @@ private fun LazyListScope.episodeRows(
     wait: Boolean = true,
     /** How far the dub goes: on the fold row's own line, or a row of its own without a fold. */
     dub: String? = null,
+    /** The page's synopsis state: the text outlook, the ranges and the reveals. */
+    page: SynopsisPage,
 ) {
     if (episodes == null) {
         // Crossfading with the rows as they arrive (T8), as every item comes and goes.
@@ -1696,30 +1703,126 @@ private fun LazyListScope.episodeRows(
         return
     }
     val next = entry.progress?.next ?: 1u
-    val listed = entry.listedEpisodes(episodes)
+    val listed = page.listed
     if (listed.isEmpty()) {
         item(key = "no-episodes", contentType = "no-episodes") { NoEpisodes(entry.id, itemMotion().padding(horizontal = 16.dp)) }
         return
     }
-    val folded = entry.foldedEpisodes(listed)
-    if (folded.isNotEmpty()) {
-        val anchor = episodeKey(entry.id, listed[folded.size])
-        item(key = watchedFold(entry.id), contentType = "fold") { WatchedFoldRow(folded, unfolded, itemMotion().padding(horizontal = 16.dp), dub = dub) { onFold(anchor) } }
+    // Of a long series, one range of 100 at a time, opening on the one holding the next episode.
+    val ranged = page.ranges.isNotEmpty()
+    val inRange = page.rows
+    val folded = page.folded(entry)
+    val rangeDub = if (ranged) null else dub
+    if (ranged) {
+        item(key = "range-row", contentType = "range-row") {
+            Box(itemMotion()) { RangeRow(listed, page.ranges, page.selected, page.pick, dub) }
+        }
     }
-    if (folded.isEmpty() && dub != null) {
+    if (folded.isNotEmpty()) {
+        val anchor = page.key(entry.id, inRange[folded.size])
+        item(key = watchedFold(entry.id), contentType = "fold") { WatchedFoldRow(folded, unfolded, itemMotion().padding(horizontal = 16.dp), dub = rangeDub) { onFold(anchor) } }
+    }
+    if (folded.isEmpty() && rangeDub != null) {
         item(key = "dub-line", contentType = "dub-line") {
             Text(
-                dub,
+                rangeDub,
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = itemMotion().fillMaxWidth().heightIn(min = 56.dp).wrapContentHeight(Alignment.CenterVertically).padding(horizontal = 16.dp),
             )
         }
     }
-    val shown = if (folded.isNotEmpty() && !unfolded) listed.drop(folded.size) else listed
-    items(shown, key = { episodeKey(entry.id, it) }, contentType = { "episode" }) { row ->
-        Box(itemMotion()) { EpisodeRowView(entry, row, next, actions) }
+    val shown = if (folded.isNotEmpty() && !unfolded) inRange.drop(folded.size) else inRange
+    // The line where protection starts goes over the first row it hides; after Show it stays,
+    // saying what it shows, with Hide.
+    val line = shown.indexOfFirst { page.hides(it) }
+    val rowItem: @Composable androidx.compose.foundation.lazy.LazyItemScope.(EpisodeRow) -> Unit = { row ->
+        Box(itemMotion()) { page.InPlace(row) { EpisodeRowView(entry, it, next, actions, page.reveals, page) } }
     }
+    val protection: androidx.compose.foundation.lazy.LazyListScope.() -> Unit = {
+        val episode = protectionStart(listed, shown[line]) ?: next.toInt()
+        item(key = "protection-${entry.id}", contentType = "protection") {
+            Box(itemMotion()) { ProtectionLine(episode, page.reveals.everything, page.reveals::showAll, page.reveals::hideAll) }
+        }
+    }
+    if (line >= 0) {
+        items(shown.subList(0, line), key = { page.key(entry.id, it) }, contentType = { "episode" }) { row -> rowItem(row) }
+        protection()
+        items(shown.subList(line, shown.size), key = { page.key(entry.id, it) }, contentType = { "episode" }) { row -> rowItem(row) }
+    } else {
+        items(shown, key = { page.key(entry.id, it) }, contentType = { "episode" }) { row -> rowItem(row) }
+    }
+}
+
+/**
+ * What the title page's episodes need besides the rows: the listed rows, the ranges of a long
+ * series and the one shown, the text outlook the page was laid out with, and the episodes a visit
+ * has revealed.
+ */
+@Stable
+internal class SynopsisPage(
+    val listed: List<EpisodeRow>,
+    val ranges: List<app.kaeri.engine.model.EpisodeRange>,
+    val selected: Int,
+    val pick: (Int) -> Unit,
+    val outlook: app.kaeri.engine.model.EpisodeText,
+    val protect: Boolean,
+    val reveals: Reveals,
+    /** How many leading rows of the selected range fold into one line, from the engine. */
+    private val foldCount: Int,
+) {
+    /** The rows shown: the selected range's, or all of a short series. */
+    val rows: List<EpisodeRow> = if (ranges.isEmpty()) listed else rangeRows(listed, ranges[selected])
+
+    /** The leading watched rows folded into one line; for a long series the engine's count for the range. */
+    fun folded(entry: Entry): List<EpisodeRow> {
+        if (ranges.isEmpty()) return entry.foldedEpisodes(rows)
+        return if (foldCount < 2) emptyList() else rows.take(foldCount)
+    }
+
+    /** Whether spoiler protection hides [row], a visit's reveals aside. */
+    fun hides(row: EpisodeRow): Boolean {
+        val airs = row.airsAt
+        return hiddenBySpoilers(row, protect, airs != null && airs > nowSeconds())
+    }
+
+    /** Where each row of the range sits in it, for [key]. */
+    private val slots: Map<String, Int> = if (ranges.isEmpty()) emptyMap() else rows.withIndex().associate { (index, row) -> row.number to index }
+
+    /**
+     * A row's key in the list. A long series keys rows by their place in the range, so another
+     * range's rows take the same places and [InPlace] crossfades them, rather than one range
+     * leaving and the next arriving.
+     */
+    fun key(id: AnilistId, row: EpisodeRow): String =
+        slots[row.number]?.let { "episode-$id-slot-$it" } ?: episodeKey(id, row)
+
+    /** A row, crossfading in place on standard when a range switch puts another episode in its place. */
+    @Composable
+    fun InPlace(row: EpisodeRow, content: @Composable (EpisodeRow) -> Unit) {
+        if (ranges.isEmpty()) {
+            content(row)
+        } else {
+            // Keyed by the episode, so a row's own changes (text arriving, a mark) are not a crossfade.
+            val latest = remember { mutableMapOf<String, EpisodeRow>() }
+            latest[row.number] = row
+            androidx.compose.animation.Crossfade(row.number, animationSpec = Motion.standard(), label = "range-row") { content(latest[it] ?: row) } // i18n-skip
+        }
+    }
+}
+
+@Composable
+private fun rememberSynopsisPage(entry: Entry, episodes: List<EpisodeRow>?): SynopsisPage {
+    val protect = spoilerProtected(entry.id)
+    val reveals = remember(entry.id) { Reveals() }
+    val listed = remember(entry, episodes) { episodes?.let { entry.listedEpisodes(it) }.orEmpty() }
+    val ranges = remember(listed) { if (listed.size > 100) rangesOf(listed, nowSeconds()) else emptyList() }
+    val opens = remember(ranges, listed) { if (ranges.isEmpty()) 0 else app.kaeri.engine.ffi.episodeRangeToOpen(listed).toInt() }
+    var picked by remember(entry.id) { mutableStateOf<Int?>(null) }
+    val selected = (picked ?: opens).coerceIn(0, maxOf(0, ranges.size - 1))
+    val outlook = rememberTextOutlook(Triple(entry.id, selected, ranges.size), episodes, ::episodeText)
+    val foldCount = remember(listed, ranges, selected) { if (ranges.isEmpty()) 0 else app.kaeri.engine.ffi.episodeFold(listed, ranges[selected]).toInt() }
+    return SynopsisPage(listed, ranges, selected, { picked = it }, outlook, protect, reveals, foldCount)
 }
 
 /**
@@ -1773,7 +1876,7 @@ private fun rememberEpisodeFold(id: AnilistId, list: androidx.compose.foundation
     }
 }
 
-/** [rememberEpisodeFold] for the tablet's two columns of episodes. */
+/** [rememberEpisodeFold] for the tablet's episodes. */
 @Composable
 private fun rememberEpisodeFold(id: AnilistId, grid: androidx.compose.foundation.lazy.grid.LazyGridState): (String) -> Unit {
     val store = LocalAppStore.current
@@ -1846,15 +1949,18 @@ private fun EpisodePlaceholder() {
 /** Seconds from now, as the rows compare a broadcast against it. */
 private fun nowSeconds() = AppClock.now().epochSecond
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun EpisodeRowView(entry: Entry, row: EpisodeRow, next: UInt, actions: AppActions) {
-    val colors = MaterialTheme.colorScheme
+private fun EpisodeRowView(entry: Entry, row: EpisodeRow, next: UInt, actions: AppActions, reveals: Reveals, page: SynopsisPage? = null, beside: Boolean = false) {
     val number = row.number.toUIntOrNull() ?: 0u
     val current = number == next
     val airsAt = row.airsAt
     val unaired = airsAt != null && airsAt > nowSeconds()
-    val hidden = spoilerProtected(entry.id) && number > next && !row.completed && !unaired
-    var menu by remember { mutableStateOf(false) }
+    // Ahead of the next episode under protection, unless this visit revealed it.
+    val protect = page?.protect ?: spoilerProtected(entry.id)
+    val ahead = hiddenBySpoilers(row, protect, unaired)
+    val hidden = ahead && !reveals.isShown(row.number)
+    var sheet by remember { mutableStateOf(false) }
     val comments = discussionCountOf(entry, row)
     // Case B: the title is on a service of the viewer's, and the episode opens its own link there.
     val store = LocalAppStore.current
@@ -1862,24 +1968,41 @@ private fun EpisodeRowView(entry: Entry, row: EpisodeRow, next: UInt, actions: A
     val link = availability?.takeIf { it.case == AvailabilityCase.ON_SERVICE }?.let { found ->
         found.episodes.firstOrNull { it.episode.toString() == row.number.toString() }?.let { found.main to it }
     }
+    // One no source has plays nothing: a tap offers what can be done, adding a source among it.
+    val play = {
+        val main = link?.first
+        if (main != null && !unaired) store.openService(entry.id, main, link.second.episode.toInt(), link.second.url)
+        else if (row.metadataOnly || row.unsourced) sheet = true else if (!unaired) actions.play(entry.id, row.number)
+    }
     Column {
-        Box {
+        if (page != null) {
+            EpisodeCard(
+                entry = entry,
+                row = row,
+                current = current,
+                unaired = unaired,
+                hidden = hidden,
+                form = rowForm(page.outlook, hidden, unaired),
+                onPlay = play,
+                onMenu = { sheet = true },
+                onShow = { reveals.show(row.number) },
+                opensService = link != null && !unaired,
+                beside = beside,
+            )
+        } else {
             EpisodeLine(
                 entry = entry,
                 row = row,
                 current = current,
                 unaired = unaired,
                 hidden = hidden,
-                // One no source has plays nothing: a tap offers what can be done, adding a source among it.
-                onPlay = {
-                    val main = link?.first
-                    if (main != null && !unaired) store.openService(entry.id, main, link.second.episode.toInt(), link.second.url)
-                    else if (row.metadataOnly || row.unsourced) menu = true else if (!unaired) actions.play(entry.id, row.number)
-                },
-                onMenu = { menu = true },
+                onPlay = play,
+                onMenu = { sheet = true },
                 opensService = link != null && !unaired,
             )
-            EpisodeMenu(entry, row, expanded = menu, onDismiss = { menu = false }, actions = actions)
+        }
+        if (sheet) {
+            EpisodeSheet(entry, row, hidden = hidden, onShow = { reveals.show(row.number) }, onDismiss = { sheet = false }, actions = actions, current = current)
         }
         // The quiet line under a watched episode that has a thread.
         if (comments != null) DiscussionRow(entry, row, comments)
@@ -1889,7 +2012,7 @@ private fun EpisodeRowView(entry: Entry, row: EpisodeRow, next: UInt, actions: A
 /**
  * A title's page on a tablet, as AndroidTabletTitle draws it: the banner across the content, the
  * poster beside the title and its actions, the details to the right, the seasons and what is
- * related in one row, and the episodes in two columns.
+ * related in one row, and the episodes in one column of beside rows.
  */
 @Composable
 private fun TabletTitle(
@@ -1906,6 +2029,7 @@ private fun TabletTitle(
     val inset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val episodes = allEpisodes[entry.id]
     val next = entry.progress?.next ?: 1u
+    val page = rememberSynopsisPage(entry, episodes)
     val colors = MaterialTheme.colorScheme
     var aboutOpen by rememberSaveable(entry.id) { mutableStateOf(false) }
     val store = LocalAppStore.current
@@ -1919,7 +2043,7 @@ private fun TabletTitle(
         Box(Modifier.weight(1f).fillMaxHeight()) {
             androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
                 state = grid,
-                columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(2),
+                columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(1),
                 contentPadding = PaddingValues(start = 8.dp, end = 24.dp, bottom = 24.dp),
                 horizontalArrangement = Arrangement.spacedBy(24.dp),
             ) {
@@ -1986,22 +2110,43 @@ private fun TabletTitle(
                 }
                 fullWidth("gap") { Spacer(Modifier.height(16.dp)) }
                 if (episodes == null) {
-                    items(4) { AfterWait { EpisodePlaceholder() } }
+                    items(4) { Box { Box(Modifier.widthIn(max = BesideDims.MaxWidth)) { AfterWait { EpisodePlaceholder() } } } }
                 } else {
-                    val listed = entry.listedEpisodes(episodes)
+                    val listed = page.listed
                     if (listed.isEmpty()) fullWidth("no-episodes") { NoEpisodes(entry.id, itemMotion().padding(start = 16.dp)) }
-                    // Folded in pairs, so the last watched keeps its column.
-                    val folded = entry.foldedEpisodes(listed, columns = 2)
+                    // A long series shows one range of 100 at a time, as on a phone.
+                    if (page.ranges.isNotEmpty()) {
+                        fullWidth("range-row") { Box(itemMotion()) { RangeRow(listed, page.ranges, page.selected, page.pick, null, Modifier.widthIn(max = BesideDims.MaxWidth)) } }
+                    }
+                    // One column of beside rows, as on an iPad at regular width.
+                    val folded = if (page.ranges.isEmpty()) entry.foldedEpisodes(page.rows) else page.folded(entry)
                     if (folded.isNotEmpty()) {
-                        val anchor = episodeKey(entry.id, listed[folded.size])
+                        val anchor = page.key(entry.id, page.rows[folded.size])
                         fullWidth(watchedFold(entry.id)) {
-                            WatchedFoldRow(folded, entry.id in unfolded, itemMotion().padding(start = 16.dp)) { fold(anchor) }
+                            // In a Box, which lets the row be narrower than the grid's cell.
+                            Box(itemMotion()) { WatchedFoldRow(folded, entry.id in unfolded, Modifier.widthIn(max = BesideDims.MaxWidth).padding(start = 16.dp)) { fold(anchor) } }
                         }
                     }
-                    val shown = if (folded.isNotEmpty() && entry.id !in unfolded) listed.drop(folded.size) else listed
-                    items(shown.size, key = { episodeKey(entry.id, shown[it]) }) { index ->
-                        val row = shown[index]
-                        Box(itemMotion().clip(MaterialTheme.shapes.large)) { EpisodeRowView(entry, row, next, actions) }
+                    val shown = if (folded.isNotEmpty() && entry.id !in unfolded) page.rows.drop(folded.size) else page.rows
+                    // The line where protection starts runs the list's width, over the first row it hides.
+                    val line = shown.indexOfFirst { page.hides(it) }
+                    val rowItem: @Composable androidx.compose.foundation.lazy.grid.LazyGridItemScope.(EpisodeRow) -> Unit = { row ->
+                        Box(itemMotion().clip(MaterialTheme.shapes.large)) { page.InPlace(row) { EpisodeRowView(entry, it, next, actions, page.reveals, page, beside = true) } }
+                    }
+                    fun rows(from: Int, to: Int) {
+                        for (index in from until to) fullWidth(page.key(entry.id, shown[index])) { rowItem(shown[index]) }
+                    }
+                    if (line >= 0) {
+                        rows(0, line)
+                        val episode = protectionStart(listed, shown[line]) ?: next.toInt()
+                        fullWidth("protection-${entry.id}") {
+                            Box(itemMotion()) {
+                                ProtectionLine(episode, page.reveals.everything, page.reveals::showAll, page.reveals::hideAll, Modifier.widthIn(max = BesideDims.MaxWidth))
+                            }
+                        }
+                        rows(line, shown.size)
+                    } else {
+                        rows(0, shown.size)
                     }
                 }
             }
