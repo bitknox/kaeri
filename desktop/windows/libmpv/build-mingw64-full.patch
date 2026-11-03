@@ -6,6 +6,9 @@ at mpv commit 703e59b0e by its SHA-256 and applies this to it.
 - LuaJIT and libsixel are archives at pinned commits, and mujs is a pinned wrap, all put in
   place before the script runs, instead of the newest each time.
 - No subrandr, AMF or libcurl: features added after v0.41.0, which has no options for them.
+- No VapourSynth. v0.41.0 links its VSScript library at build time, which the images do not
+  carry; the development builds' newer mpv loads it as it runs. The filter only works with a
+  VapourSynth installation of one's own, which the app does not use.
 
 Everything else is mpv's: the image's toolchain and static libraries, FFmpeg's configure line,
 LuaJIT, libsixel, C++/WinRT for win32-smtc, mpv's meson options, the strip and the packaging.
@@ -60,15 +63,17 @@ LuaJIT, libsixel, C++/WinRT for win32-smtc, mpv's meson options, the strip and t
  meson subprojects download
  
  mpv_args=(
-@@ -111,8 +108,9 @@
+@@ -111,8 +108,11 @@
      -Dmujs:werror=false
      -Dmujs:default_library=static
      -Dlua=luajit
 -    -D{amf,d3d11,javascript,lcms2,libbluray,libcurl,shaderc,sixel}=enabled
 -    -D{spirv-cross,subrandr,vapoursynth,vulkan,win32-smtc,zimg}=enabled
-+    # Kaeri: without amf, libcurl and subrandr, which mpv v0.41.0 has no options for.
++    # Kaeri: without amf, libcurl and subrandr, which mpv v0.41.0 has no options for, and
++    # without VapourSynth, which v0.41.0 links at build time and the images do not carry.
 +    -D{d3d11,javascript,lcms2,libbluray,shaderc,sixel}=enabled
-+    -D{spirv-cross,vapoursynth,vulkan,win32-smtc,zimg}=enabled
++    -D{spirv-cross,vulkan,win32-smtc,zimg}=enabled
++    -Dvapoursynth=disabled
  )
  if $gpl; then
      # Only the GPL image carries the dependencies of the GPL features.
