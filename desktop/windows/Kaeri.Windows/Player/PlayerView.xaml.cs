@@ -48,6 +48,9 @@ public sealed partial class PlayerView : UserControl
     bool pictureSeen, pointerHidden, mini, miniTipShown;
     SeekPreview? preview;
     PreviewSource? stream, thumbs, previewSource;
+
+    /// <summary>Where the player keeps its compiled shaders, for the seek preview to share.</summary>
+    internal string? ShaderCache { get; set; }
     string? thumbnails;
     readonly object loads = new();
     PreviewSource? lastLoad;
@@ -1880,7 +1883,7 @@ public sealed partial class PlayerView : UserControl
         if (duration <= 0 || ctx is null || Source() is not { } from)
             return;
         var seconds = PreviewSource.TimeAt(fraction * (Timeline.ActualWidth - 20), Timeline.ActualWidth - 20, duration);
-        preview ??= new SeekPreview(ctx.Session.Engine, PreviewPanel, DispatcherQueue);
+        preview ??= new SeekPreview(ctx.Session.Engine, PreviewPanel, DispatcherQueue, ShaderCache);
         preview.Show(seconds, from, XamlRoot?.RasterizationScale ?? 1.0);
         PreviewTime.Text = KaeriFfiMethods.PlayClock(seconds);
         var left = Timeline.TransformToVisual(Chrome).TransformPoint(new global::Windows.Foundation.Point(10 + fraction * (Timeline.ActualWidth - 20), 0)).X;

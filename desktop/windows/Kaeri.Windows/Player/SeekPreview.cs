@@ -35,9 +35,12 @@ sealed class SeekPreview : IDisposable
     bool opened;
     DateTime lastSeek;
 
-    public SeekPreview(FfiEngine engine, SwapChainPanel panel, DispatcherQueue queue)
+    readonly string? cacheDir;
+
+    public SeekPreview(FfiEngine engine, SwapChainPanel panel, DispatcherQueue queue, string? cacheDir)
     {
         this.engine = engine;
+        this.cacheDir = cacheDir;
         this.panel = panel;
         ask = new SwapchainAsk(queue);
         pump = queue.CreateTimer();
@@ -63,14 +66,23 @@ sealed class SeekPreview : IDisposable
         Close();
         try
         {
+            // As Android's preview: software decoding the fast way, and almost no buffer, since it
+            // only ever wants the keyframe under the pointer. With mpv's defaults a stream's
+            // preview held about 900 MB beside the player's own. The shaders come from the
+            // player's cache, so they are not compiled again for each file.
             player = new FfiPlayer(new FfiPlayerOptions(
                 Video: new FfiVideo.Composition((uint)(160 * scale), (uint)(90 * scale)),
+                Hwdec: "no",
+                CacheDir: cacheDir,
                 AudioOutput: "null",
                 LogLevel: "error",
                 Extra:
                 [
                     new MpvOption("aid", "no"), new MpvOption("sid", "no"), new MpvOption("hr-seek", "no"),
                     new MpvOption("osd-level", "0"), new MpvOption("keep-open", "yes"), new MpvOption("pause", "yes"),
+                    new MpvOption("vd-lavc-threads", "2"), new MpvOption("vd-lavc-fast", "yes"),
+                    new MpvOption("vd-lavc-skiploopfilter", "all"), new MpvOption("demuxer-readahead-secs", "0"),
+                    new MpvOption("demuxer-max-bytes", "4MiB"), new MpvOption("demuxer-max-back-bytes", "0"),
                 ]), engine, new Quiet());
             player.CompositionSize((uint)(160 * scale), (uint)(90 * scale));
             player.Display((uint)(160 * scale), (uint)(90 * scale), scale, null);
