@@ -396,7 +396,15 @@ public sealed partial class SettingsPage : Page
     /// </summary>
     void ShowHidden()
     {
-        ctx.Send(new Command.LoadHiddenTitles());
+        // Asked once as the pane opens; the engine's answer redraws it.
+        if (shownPane != "library")
+            ctx.Send(new Command.LoadHiddenTitles());
+        if (!ctx.Known.HiddenLoaded)
+        {
+            // Never "nothing hidden" before the engine has said: nothing for 600 ms, then plates.
+            State.Wait();
+            return;
+        }
         Cards.Children.Add(Heading(T.SettingsHiddenTitles));
         Cards.Children.Add(Note(T.SettingsHiddenTitlesBody));
         var hidden = ctx.Known.Hidden.Where(h => !ctx.Known.RestoredHere.Contains(h.Entry.Id)).ToArray();
