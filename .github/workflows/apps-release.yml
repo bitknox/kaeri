@@ -82,6 +82,8 @@ on:
       - android/mpv/**
       - desktop/windows/scripts/package.sh
       - desktop/windows/scripts/libmpv.ps1
+      - desktop/windows/scripts/libmpv-build.sh
+      - desktop/windows/libmpv/**
       - desktop/windows/scripts/bindings.sh
       - desktop/windows/Kaeri.Windows/Kaeri.Windows.csproj
       - packaging/windows/kaeri-app.iss

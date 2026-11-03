@@ -783,8 +783,9 @@ jobs:
         with:
           path: ~/.cache/kaeri-bindgen-cs
           key: ci-bindgen-cs-${{ hashFiles('desktop/windows/bindgen-cs/**') }}
-      # libmpv, from mpv's development builds, whose file names carry the commit. The cache is
-      # keyed by the script, whose pin and checksum are the file's; a miss fetches and verifies.
+      # libmpv, Kaeri's own build (libmpv-windows.yml), whose file names carry what it was made
+      # from. The cache is keyed by the script, whose pin and checksum are the file's; a miss
+      # fetches and verifies.
       - name: Restore libmpv
         id: libmpv
         uses: actions/cache/restore@v6
