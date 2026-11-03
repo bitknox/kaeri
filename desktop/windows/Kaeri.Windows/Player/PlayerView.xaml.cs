@@ -245,6 +245,15 @@ public sealed partial class PlayerView : UserControl
                 case Event.PlayerUi ui:
                     Heard(ui.Ui);
                     break;
+                case Event.PlaybackStaged s when !Showing:
+                    Staged(s);
+                    break;
+                case Event.PlaybackEnded when staged is not null:
+                    // Over before the player opened: no stream was found, or none would start.
+                    // The engine's notice says why; the starting screen goes.
+                    staged = null;
+                    Hide();
+                    break;
                 case Event.PlayerSkipMark or Event.PlayerSkipPrompt or Event.PlayerSkipNotice:
                     HeardSkip(e);
                     break;
@@ -289,11 +298,47 @@ public sealed partial class PlayerView : UserControl
         }
     }
 
+    /// <summary>The title staged and waiting on a source, before the player itself has said anything.</summary>
+    uint? staged;
+
+    /// <summary>
+    /// Play was pressed: the starting screen at once, the show's banner behind the ring, while the
+    /// engine finds a source, which can take seconds (native-ux: from PlaybackStaged to the first
+    /// frame). The player's own Starting carries on from it.
+    /// </summary>
+    void Staged(Event.PlaybackStaged s)
+    {
+        closedWhileFinding = false;
+        Open();
+        staged = s.Id;
+        pictureSeen = false;
+        playingId = s.Id;
+        ShowTitle.Text = s.Title;
+        EpisodeTitle.Text = Lines.EpisodeNamed(s.Episode, s.EpisodeTitle);
+        StartingShow.Text = s.Title;
+        startingEpisode = playingEpisode = s.Episode;
+        startingDemo = ctx is { } k && (k.Known.DemoPlay || k.Known.Entries.TryGetValue(s.Id, out var shown) && shown.IsDemo);
+        StartingArt.Source = null;
+        if (ctx?.Known.Entry(s.Id) is { } entry)
+            ctx.Art.Bind(entry.BannerUrl ?? entry.CoverUrl, image => StartingArt.Source = image);
+        ShowStarting();
+    }
+
     void Heard(PlayerUi ui)
     {
         switch (ui)
         {
             case PlayerUi.Starting s:
+                if (closedWhileFinding)
+                {
+                    // Found after the viewer closed the starting screen: told so, not shown.
+                    player?.ViewerClosed();
+                    break;
+                }
+                // Up since Play was pressed (Staged): the same screen goes on, its clock too.
+                var fromStaged = staged == s.Id;
+                var since = startingFrom;
+                staged = null;
                 Open();
                 still.Started();
                 pictureSeen = false;
@@ -313,9 +358,14 @@ public sealed partial class PlayerView : UserControl
                 if (ctx is not null)
                     ctx.Known.DemoPlay = false;
                 ShowTvButton();
-                StartingArt.Source = null;
-                ctx?.Art.Bind(s.BannerUrl ?? s.CoverUrl, image => StartingArt.Source = image);
+                if (!fromStaged || StartingArt.Source is null)
+                {
+                    StartingArt.Source = null;
+                    ctx?.Art.Bind(s.BannerUrl ?? s.CoverUrl, image => StartingArt.Source = image);
+                }
                 ShowStarting();
+                if (fromStaged)
+                    startingFrom = since;
                 undo = null;
                 UpdateCorner();
                 break;
@@ -987,9 +1037,22 @@ public sealed partial class PlayerView : UserControl
 
     internal void Close()
     {
+        if (staged is not null)
+        {
+            // Nothing opened yet: what is being found stops, and nothing the engine says brings
+            // the player back until Play is pressed again (as Apple's viewerClosed).
+            staged = null;
+            closedWhileFinding = true;
+            Send(new PlayerCommand.Stop());
+            Hide();
+            return;
+        }
         player?.ViewerClosed();
         Hide();
     }
+
+    /// <summary>The viewer closed the starting screen before a source was found.</summary>
+    bool closedWhileFinding;
 
     void OnPlayPause(object sender, RoutedEventArgs e) => Send(new PlayerCommand.TogglePause());
     void OnBack10(object sender, RoutedEventArgs e) => Send(new PlayerCommand.Seek(-10));
