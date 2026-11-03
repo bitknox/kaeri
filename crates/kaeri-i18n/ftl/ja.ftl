@@ -7719,6 +7719,9 @@ settings-counts-watched-detail = エンディングに印が付いていれば�
 # Row: spoiler protection.
 settings-spoiler = ネタバレ防止
 
+# Line under it.
+settings-spoiler-detail = 次のエピソードより後の未視聴エピソードの静止画とあらすじをぼかします
+
 # Line under the audio row.
 settings-audio-detail = 作品ごとに、音声と字幕の設定を記憶します。
 
@@ -7862,6 +7865,9 @@ show-settings-blur-ahead = 先の静止画をぼかす
 
 # Option: show everything.
 show-settings-show-everything = すべて表示
+
+# Line under spoiler protection.
+show-settings-spoiler-detail = 次のエピソードより後の静止画とあらすじをぼかします。
 
 # Option: always.
 show-settings-always = 常に
@@ -9174,6 +9180,69 @@ episode-row-airs = { $when }放送予定
 
 # Accessibility label of an episode's still while spoiler protection hides it.
 episode-spoiler-hidden = ネタバレ防止により非表示
+
+# Hint of a protected episode's row, and its still's label in a preview: the synopsis is hidden.
+episode-synopsis-hidden = ネタバレ防止のためあらすじを非表示
+
+# Menu item, button and screen reader action that reveals one protected episode's still and synopsis.
+episode-synopsis-show = あらすじを表示
+
+# Screen reader hint of that action.
+episode-synopsis-show-hint = このエピソードの静止画とあらすじを表示します
+
+# Facts line of an episode with a length and an air date. The date is already formatted.
+episode-facts = { $minutes }分 · 放送日 { $date }
+
+# Facts line of an episode with a length only.
+episode-facts-length = { $minutes }分
+
+# Facts line of an episode that is part-watched.
+episode-facts-left = 残り{ $minutes }分
+
+# One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.
+episode-protection-line = ネタバレ防止により、第{ $episode }話より後は非表示です。
+
+# The same line on phones.
+episode-protection-line-short = 第{ $episode }話より後は非表示
+
+# Label of an episode range of a long series, in the range menu.
+episode-range = 第{ $from }話〜第{ $to }話
+
+# Label of the control that picks an episode range.
+episode-range-label = エピソード範囲
+
+# One line that stands for the watched episodes at the top of a range. Opening it shows them.
+episode-fold =
+    { $count ->
+       *[other] 視聴済み{ $count }エピソード
+    }
+
+# An episode's number in a facts line on phones.
+episode-short = 第{ $episode }話
+
+# Part of an episode's facts line: when it aired. The date is already formatted.
+episode-aired = 放送日 { $date }
+
+# Two parts of an episode's facts line, set one after the other.
+episode-facts-join = { $first } · { $second }
+
+# Button in the line where spoiler protection starts: shows what comes after.
+episode-protection-show = 表示
+
+# Button in that line once the rows after it are shown: hides them again.
+episode-protection-hide = 非表示
+
+# The line where spoiler protection starts, once the rows after it are shown.
+episode-protection-shown = 第{ $episode }話より後を表示中です。
+
+# The same line on phones.
+episode-protection-shown-short = 第{ $episode }話より後を表示中
+
+# An episode range in the range menu: the first and the last episode.
+episode-range-short = { $from }–{ $to }
+
+# An item of the range menu: the range, then Watched or Not out yet.
+episode-range-item = { $range } · { $state }
 
 # Accessibility label of the button that opens an episode's menu.
 episode-options = エピソードのオプション

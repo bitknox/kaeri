@@ -242,6 +242,8 @@ pub struct Meta {
     titles: crate::titles::Titles,
     anilist: AniList,
     tenrai: Option<std::sync::Arc<Tenrai>>,
+    /// The per-title synopsis fill, when switched on: see [`crate::episode_text`].
+    episode_text: Option<Arc<crate::episode_text::EpisodeText>>,
     store: Store,
     rung: std::sync::Arc<AtomicU8>,
     notice: std::sync::Arc<Mutex<Option<String>>>,
@@ -263,6 +265,7 @@ impl Meta {
             titles: crate::titles::Titles::default(),
             anilist,
             tenrai: tenrai.map(std::sync::Arc::new),
+            episode_text: None,
             store,
             rung: std::sync::Arc::new(AtomicU8::new(FRESH)),
             notice: std::sync::Arc::new(Mutex::new(None)),
@@ -273,6 +276,17 @@ impl Meta {
             relations: Arc::default(),
             season_hold: franchise::HOLD,
         }
+    }
+
+    /// With the per-title synopsis fill, or without it when `None`.
+    pub fn with_episode_text(mut self, text: Option<crate::episode_text::EpisodeText>) -> Self {
+        self.episode_text = text.map(Arc::new);
+        self
+    }
+
+    /// The per-title synopsis fill, when it is on.
+    pub fn episode_text(&self) -> Option<Arc<crate::episode_text::EpisodeText>> {
+        self.episode_text.clone()
     }
 
     /// Which form of each title is shown: the setting, and the signed-in viewer's own choice

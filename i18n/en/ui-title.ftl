@@ -188,9 +188,11 @@ episode-aired = Aired { $date }
 episode-facts-join = { $first } · { $second }
 
 # Button in the line where spoiler protection starts: shows what comes after.
+# @max 12
 episode-protection-show = Show
 
 # Button in that line once the rows after it are shown: hides them again.
+# @max 16
 episode-protection-hide = Hide
 
 # The line where spoiler protection starts, once the rows after it are shown.

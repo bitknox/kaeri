@@ -2107,6 +2107,7 @@
     <string name="settings_counts_watched">Conta come visto a</string>
     <string name="settings_counts_watched_detail">Oppure all\'inizio dei titoli di coda, se sono segnati</string>
     <string name="settings_spoiler">Protezione dagli spoiler</string>
+    <string name="settings_spoiler_detail">Sfoca anteprime e trame degli episodi non visti dopo il successivo</string>
     <string name="settings_audio_detail">Ogni serie ricorda il proprio audio e i propri sottotitoli.</string>
     <string name="settings_system_captions">Usa lo stile dei sottotitoli di sistema</string>
     <string name="settings_system_captions_detail">I sottotitoli semplici usano le tue preferenze per i sottotitoli in Accessibilità. I sottotitoli con stile mantengono il proprio aspetto.</string>
@@ -2158,6 +2159,7 @@
     <string name="show_settings_skip_filler">Salta i filler</string>
     <string name="show_settings_blur_ahead">Sfoca le anteprime successive</string>
     <string name="show_settings_show_everything">Mostra tutto</string>
+    <string name="show_settings_spoiler_detail">Sfoca anteprime e trame dopo l\'episodio successivo.</string>
     <string name="show_settings_always">Sempre</string>
     <string name="show_settings_never">Mai</string>
     <string name="show_settings_subs_remembered">Ricordati dal tuo ultimo episodio.</string>
@@ -2628,6 +2630,30 @@
     <string name="episode_row_not_out">Non ancora uscito</string>
     <string name="episode_row_airs">Esce %1$s</string>
     <string name="episode_spoiler_hidden">Nascosto dalla protezione anti-spoiler</string>
+    <string name="episode_synopsis_hidden">Trama nascosta dalla protezione dagli spoiler</string>
+    <string name="episode_synopsis_show">Mostra trama</string>
+    <string name="episode_synopsis_show_hint">Mostra l\'anteprima e la trama di questo episodio</string>
+    <string name="episode_facts">%1$d min · Uscito il %2$s</string>
+    <string name="episode_facts_length">%1$d min</string>
+    <string name="episode_facts_left">Mancano %1$d min</string>
+    <string name="episode_protection_line">La protezione dagli spoiler nasconde ciò che viene dopo l\'episodio %1$d.</string>
+    <string name="episode_protection_line_short">Nascosto dopo l\'episodio %1$d</string>
+    <string name="episode_range">Episodi da %1$d a %2$d</string>
+    <string name="episode_range_label">Intervallo di episodi</string>
+    <plurals name="episode_fold">
+        <item quantity="one">Un episodio visto</item>
+        <item quantity="many">%1$d episodi visti</item>
+        <item quantity="other">%1$d episodi visti</item>
+    </plurals>
+    <string name="episode_short">E%1$d</string>
+    <string name="episode_aired">Uscito il %1$s</string>
+    <string name="episode_facts_join">%1$s · %2$s</string>
+    <string name="episode_protection_show">Mostra</string>
+    <string name="episode_protection_hide">Nascondi</string>
+    <string name="episode_protection_shown">Si vede ciò che viene dopo l\'episodio %1$d.</string>
+    <string name="episode_protection_shown_short">Visibile dopo l\'episodio %1$d</string>
+    <string name="episode_range_short">%1$s–%2$s</string>
+    <string name="episode_range_item">%1$s · %2$s</string>
     <string name="episode_options">Opzioni episodio</string>
     <string name="episode_mark_watched">Segna come visto</string>
     <string name="episode_mark_unwatched">Segna come non visto</string>

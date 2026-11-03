@@ -35,6 +35,30 @@ episode-filler = Filler
 episode-row-not-out = Ainda não saiu
 episode-row-airs = Estreia { $when }
 episode-spoiler-hidden = Oculto pela proteção contra spoilers
+episode-synopsis-hidden = Sinopse oculta pela proteção contra spoilers
+episode-synopsis-show = Mostrar sinopse
+episode-synopsis-show-hint = Mostra a imagem e a sinopse deste episódio
+episode-facts = { $minutes } min · Exibido em { $date }
+episode-facts-length = { $minutes } min
+episode-facts-left = Faltam { $minutes } min
+episode-protection-line = A proteção contra spoilers oculta o que vem depois do episódio { $episode }.
+episode-protection-line-short = Oculto após o episódio { $episode }
+episode-range = Episódios { $from } a { $to }
+episode-range-label = Intervalo de episódios
+episode-fold = { $count ->
+    [one] Um episódio assistido
+    [many] { $count } episódios assistidos
+   *[other] { $count } episódios assistidos
+ }
+episode-short = E{ $episode }
+episode-aired = Exibido em { $date }
+episode-facts-join = { $first } · { $second }
+episode-protection-show = Mostrar
+episode-protection-hide = Ocultar
+episode-protection-shown = Mostrando o que vem depois do episódio { $episode }.
+episode-protection-shown-short = Visível após o episódio { $episode }
+episode-range-short = { $from }–{ $to }
+episode-range-item = { $range } · { $state }
 episode-options = Opções do episódio
 episode-mark-watched = Marcar como assistido
 episode-mark-unwatched = Marcar como não assistido

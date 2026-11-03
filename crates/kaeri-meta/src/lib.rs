@@ -11,6 +11,7 @@
 pub mod anilist;
 pub mod dataset;
 pub mod demo;
+pub mod episode_text;
 pub mod filler;
 pub mod franchise;
 pub mod source;
@@ -22,6 +23,7 @@ pub use anilist::{
     AniList, AniListError, BrowseFilter, FacetTag, Facets, Media, Season, in_background,
 };
 pub use dataset::{MAPPING_DATASETS, RefreshOutcome, refresh_all};
+pub use episode_text::EpisodeText;
 pub use source::{Found, Meta};
 pub use tenrai::Tenrai;
 pub use title::{CONFIDENCE_FLOOR, MatchTarget, Scored, normalise, rank, similarity};
