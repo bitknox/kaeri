@@ -294,9 +294,15 @@ internal fun episodeDetail(context: Context, row: EpisodeRow, resume: app.kaeri.
 
 /** The check, drawn along its path to [progress], as the brief's trimPathEnd draw-on does it. */
 @Composable
-internal fun DrawnCheck(progress: Float, color: androidx.compose.ui.graphics.Color, size: androidx.compose.ui.unit.Dp = 24.dp) {
+internal fun DrawnCheck(
+    progress: Float,
+    color: androidx.compose.ui.graphics.Color,
+    size: androidx.compose.ui.unit.Dp = 24.dp,
+    /** Whether it says Watched itself; not where the words beside it already do. */
+    described: Boolean = true,
+) {
     val watchedWord = stringResource(R.string.episode_watched)
-    Canvas(Modifier.size(size).semantics { contentDescription = watchedWord }) {
+    Canvas(Modifier.size(size).then(if (described) Modifier.semantics { contentDescription = watchedWord } else Modifier)) {
         val unit = this.size.width / 24f
         val path = Path().apply {
             moveTo(5f * unit, 12.5f * unit)
@@ -328,7 +334,7 @@ fun spoilerProtected(id: AnilistId): Boolean {
 
 /**
  * An episode's still: its art, blurred with the hidden glyph when spoiler protection hides it, and
- * a plain plate before it airs. Hidden and clear crossfade on standard when the next episode moves.
+ * a plain plate before it airs. Hidden and clear crossfade on the reveal token.
  * An episode with no still stands on the show's banner, never blurred, since a banner cannot spoil
  * an episode; a still that arrives later fades in over it.
  */
@@ -347,7 +353,8 @@ internal fun EpisodeStill(entry: Entry, row: EpisodeRow, hidden: Boolean, unaire
             ArtworkImage(entry.bannerUrl, plate = null, maxPixelSize = pixels, modifier = Modifier.fillMaxSize())
         }
         if (still != null) {
-            Crossfade(hidden, animationSpec = Motion.standard(), label = "still") { blurred -> // i18n-skip
+            // The reveal token: a blurred still comes out sharp over 0.3 s, eased out.
+            Crossfade(hidden, animationSpec = Motion.reveal(), label = "still") { blurred -> // i18n-skip
                 if (blurred) {
                     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceContainer)) {
                         ArtworkImage(

@@ -34,6 +34,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -119,6 +121,21 @@ internal object RowDims {
 
     /** From this font scale the row stacks: the still across the row, four lines of text room. */
     const val StackScale = 1.5f
+    const val StackedLines = 4
+}
+
+/** The beside row a tablet uses at regular width: the text beside the still, 128 dp tall at scale 1. */
+internal object BesideDims {
+    val StillWidth = 192.dp
+    val StillHeight = 108.dp
+    val Pad = 10.dp
+    val Gap = 16.dp
+    val TitleLine = 22.sp
+    val FactsLine = 18.sp
+    val BandGap = 6.dp
+
+    /** How wide a beside row grows on a wide tablet, so its text keeps a readable measure. */
+    val MaxWidth = 760.dp
 }
 
 /** How tall a row is: room for the text where text can land, none elsewhere. */
@@ -169,6 +186,26 @@ internal fun SynopsisText(
 internal fun airedDate(context: Context, airsAt: Long): String =
     Strings.titleFactsAired(context, DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).format(Instant.ofEpochSecond(airsAt).atZone(ZoneId.systemDefault())))
 
+/**
+ * The facts under an episode's title, as its row and its sheet both say them: "E7 · 14 min left",
+ * "E6 · Watched" or "E8 · 24 min", then "Aired 21 May 2014" once it has.
+ */
+internal fun rowFacts(context: Context, entry: Entry, row: EpisodeRow, current: Boolean, unaired: Boolean): Pair<String, String?> {
+    val number = row.number.toDoubleOrNull()?.toInt() ?: 0
+    val resume = entry.resume?.takeIf { current && !row.completed }
+    val first = when {
+        unaired -> {
+            val airs = row.airsAt?.let { airsWords(context, Instant.ofEpochSecond(it)) }
+            Strings.episodeLineDetail(context, number, airs?.let { Strings.episodeRowAirs(context, it) } ?: Strings.episodeRowNotOut(context))
+        }
+        row.unsourced -> Strings.episodeLineDetail(context, number, Strings.episodeUnsourced(context))
+        row.completed -> Strings.episodeLineDetail(context, number, Strings.episodeWatched(context))
+        else -> episodeDetail(context, row, resume = resume)
+    }
+    val second = row.airsAt?.takeIf { !unaired && it <= AppClock.now().epochSecond }?.let { airedDate(context, it) }
+    return first to second
+}
+
 // The row
 
 /**
@@ -189,6 +226,8 @@ internal fun EpisodeCard(
     onMenu: () -> Unit,
     onShow: () -> Unit,
     opensService: Boolean = false,
+    /** The tablet's beside row: 192 × 108 still, title, facts and three lines of text beside it. */
+    beside: Boolean = false,
 ) {
     val colors = MaterialTheme.colorScheme
     val context = LocalContext.current
@@ -197,12 +236,7 @@ internal fun EpisodeCard(
     val fraction = resume?.fraction?.toFloat()
     val marks = rememberRowMarks(row, fraction)
     val airs = row.airsAt?.takeIf { unaired }?.let { airsWords(context, Instant.ofEpochSecond(it)) }
-    val first = when {
-        unaired -> Strings.episodeLineDetail(context, row.number.toInt(), airs?.let { Strings.episodeRowAirs(context, it) } ?: Strings.episodeRowNotOut(context))
-        row.unsourced -> Strings.episodeLineDetail(context, row.number.toInt(), Strings.episodeUnsourced(context))
-        else -> episodeDetail(context, row, resume = resume.takeIf { !row.completed })
-    }
-    val second = row.airsAt?.takeIf { !unaired }?.let { airedDate(context, it) }
+    val (first, second) = rowFacts(context, entry, row, current, unaired)
     val unairedLabel = if (unaired) {
         val number = row.number
         when {
@@ -223,6 +257,19 @@ internal fun EpisodeCard(
     val band = with(density) { (RowDims.BodyLine * RowDims.SynopsisLines).toDp() }
     val title = row.title ?: stringResource(R.string.episode_number, row.number.toInt())
     val titleColor = if (unaired) colors.onSurfaceVariant else androidx.compose.ui.graphics.lerp(colors.onSurface, colors.onSurfaceVariant, marks.dim.value)
+    // A row that grows on screen (a reveal) takes its height first; its text fades in after.
+    val tall = form == RowForm.TALL
+    var settled by remember { mutableStateOf(tall) }
+    androidx.compose.runtime.LaunchedEffect(tall) {
+        if (!tall) {
+            settled = false
+        } else if (!settled) {
+            // In case the size never animates (it was already this tall), the text still comes.
+            delay(600)
+            settled = true
+        }
+    }
+    val text = row.description?.takeIf { it.isNotBlank() && !hidden && settled }
 
     val clickable = if (unaired) {
         Modifier.semantics(mergeDescendants = true) { contentDescription = unairedLabel.orEmpty() }
@@ -247,11 +294,44 @@ internal fun EpisodeCard(
                 }
             }
     }
+    val grows = Modifier.animateContentSize(Motion.standard()) { _, _ -> if (tall) settled = true }
+    if (beside) {
+        // The text beside the still; the row keeps its height whether text can land or not.
+        val besideText = with(density) { BesideDims.TitleLine.toDp() + 2.dp + BesideDims.FactsLine.toDp() + BesideDims.BandGap + band }
+        val height = BesideDims.Pad * 2 + maxOf(BesideDims.StillHeight, besideText)
+        Row(
+            Modifier
+                .widthIn(max = BesideDims.MaxWidth)
+                .fillMaxWidth()
+                .height(height)
+                .alpha(if (row.unsourced) 0.55f else 1f)
+                .then(clickable)
+                .padding(horizontal = 16.dp, vertical = BesideDims.Pad),
+            horizontalArrangement = Arrangement.spacedBy(BesideDims.Gap),
+        ) {
+            Box(Modifier.size(BesideDims.StillWidth, BesideDims.StillHeight).alpha(1f - 0.3f * marks.dim.value)) {
+                StillWithMark(entry, row, hidden, unaired, BesideDims.StillWidth, marks, fraction)
+            }
+            Column(Modifier.weight(1f)) {
+                val facts = second?.let { Strings.episodeFactsJoin(context, first, it) } ?: first
+                RowHeader(
+                    title, titleColor, facts, null, marks, titleLines = 1, modifier = Modifier.fillMaxWidth(), opensService = opensService,
+                    titleLine = BesideDims.TitleLine, factsLine = BesideDims.FactsLine,
+                )
+                if (tall) {
+                    // Text that turns up later fades in; a revealed row's fades in once it shows.
+                    val shown = row.description?.takeIf { it.isNotBlank() && !hidden }
+                    SynopsisBand(shown, Modifier.padding(top = BesideDims.BandGap).fillMaxWidth().height(band), maxLines = RowDims.SynopsisLines)
+                }
+            }
+        }
+        return
+    }
     val fixed = if (stacked) Modifier else Modifier.height(rowHeight(form, header, band))
     Column(
         Modifier
             .fillMaxWidth()
-            .animateContentSize(Motion.standard())
+            .then(grows)
             .then(fixed)
             .alpha(if (row.unsourced) 0.55f else 1f)
             .then(clickable)
@@ -263,8 +343,10 @@ internal fun EpisodeCard(
             }
             Spacer(Modifier.height(8.dp))
             RowHeader(title, titleColor, first, second, marks, titleLines = 2, modifier = Modifier.fillMaxWidth(), opensService = opensService)
-            if (form == RowForm.TALL) {
-                SynopsisBand(row, hidden, Modifier.padding(top = RowDims.BandGap).fillMaxWidth(), minLines = 4, maxLines = 4)
+            if (tall) {
+                // Four lines of room whether the text is here yet or not, so late text grows nothing.
+                val room = with(density) { (RowDims.BodyLine * RowDims.StackedLines).toDp() }
+                SynopsisBand(text, Modifier.padding(top = RowDims.BandGap).fillMaxWidth().height(room), maxLines = RowDims.StackedLines)
             }
             Spacer(Modifier.height(8.dp))
         } else {
@@ -274,8 +356,8 @@ internal fun EpisodeCard(
                 }
                 RowHeader(title, titleColor, first, second, marks, titleLines = 2, modifier = Modifier.weight(1f).padding(top = 2.dp), opensService = opensService)
             }
-            if (form == RowForm.TALL) {
-                SynopsisBand(row, hidden, Modifier.padding(top = RowDims.BandGap).fillMaxWidth().height(band), minLines = 1, maxLines = RowDims.SynopsisLines)
+            if (tall) {
+                SynopsisBand(text, Modifier.padding(top = RowDims.BandGap).fillMaxWidth().height(band), maxLines = RowDims.SynopsisLines)
             }
         }
     }
@@ -313,38 +395,50 @@ private fun RowHeader(
     titleLines: Int,
     modifier: Modifier,
     opensService: Boolean,
+    titleLine: androidx.compose.ui.unit.TextUnit = RowDims.TitleLine,
+    factsLine: androidx.compose.ui.unit.TextUnit = RowDims.FactsLine,
 ) {
     val colors = MaterialTheme.colorScheme
     Column(modifier) {
         Row(verticalAlignment = Alignment.Top) {
             Text(
                 title,
-                style = MaterialTheme.typography.titleMedium.copy(lineHeight = RowDims.TitleLine),
+                style = MaterialTheme.typography.titleMedium.copy(lineHeight = titleLine),
                 color = titleColor,
                 maxLines = titleLines,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
             )
-            Box(Modifier.size(20.dp), contentAlignment = Alignment.Center) {
-                if (marks.check.value > 0f) DrawnCheck(marks.check.value, colors.onSurfaceVariant, 20.dp)
-                else if (opensService) Icon(Icons.External, contentDescription = stringResource(R.string.licensed_opens_service), tint = colors.onSurfaceVariant, modifier = Modifier.size(16.dp))
+            if (opensService) {
+                Box(Modifier.size(20.dp), contentAlignment = Alignment.Center) {
+                    Icon(Icons.External, contentDescription = stringResource(R.string.licensed_opens_service), tint = colors.onSurfaceVariant, modifier = Modifier.size(16.dp))
+                }
             }
         }
-        Text(first, style = MaterialTheme.typography.bodySmall.tabular().copy(lineHeight = RowDims.FactsLine), color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        // A watched row's check draws itself on at the head of its facts: "✓ E6 · Watched".
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (marks.check.value > 0f) {
+                DrawnCheck(marks.check.value, colors.onSurfaceVariant, 14.dp, described = false)
+                Spacer(Modifier.width(4.dp))
+            }
+            Text(first, style = MaterialTheme.typography.bodySmall.tabular().copy(lineHeight = factsLine), color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
         if (second != null) {
-            Text(second, style = MaterialTheme.typography.bodySmall.copy(lineHeight = RowDims.FactsLine), color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(second, style = MaterialTheme.typography.bodySmall.copy(lineHeight = factsLine), color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
 
-/** The room for text: the synopsis fades in on the fade-in token, and replaced text crossfades, never through empty. */
+/**
+ * The room for text, kept whether [text] is here or not: the synopsis fades in on the fade-in
+ * token, and replaced text crossfades, never through empty.
+ */
 @Composable
-private fun SynopsisBand(row: EpisodeRow, hidden: Boolean, modifier: Modifier, minLines: Int, maxLines: Int) {
-    val text = row.description?.takeIf { it.isNotBlank() && !hidden }
+private fun SynopsisBand(text: String?, modifier: Modifier, maxLines: Int) {
     Box(modifier) {
         Crossfade(text, animationSpec = Motion.fadeIn(), label = "synopsis") { shown -> // i18n-skip
             if (shown != null) {
-                SynopsisText(shown, MaterialTheme.colorScheme.onSurfaceVariant, maxLines = maxLines, minLines = minLines)
+                SynopsisText(shown, MaterialTheme.colorScheme.onSurfaceVariant, maxLines = maxLines)
             }
         }
     }
@@ -352,33 +446,51 @@ private fun SynopsisBand(row: EpisodeRow, hidden: Boolean, modifier: Modifier, m
 
 // The line where protection starts
 
-/** "Hidden after episode 7" with Show, over the first protected row. */
+/**
+ * "Hidden after episode 7" with Show, over the first protected row. Once Show has revealed the
+ * rows after it, the line stays and says "Showing after episode 7" with Hide; words and button
+ * crossfade on the reveal token, so nothing under the line moves.
+ */
 @Composable
-internal fun ProtectionLine(episode: Int, onShow: () -> Unit, modifier: Modifier = Modifier) {
+internal fun ProtectionLine(episode: Int, showing: Boolean, onShow: () -> Unit, onHide: () -> Unit, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     val context = LocalContext.current
-    Row(
-        modifier.fillMaxWidth().height(44.dp).padding(start = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(Icons.Hidden, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(16.dp))
-        Text(
-            Strings.episodeProtectionLineShort(context, episode),
-            style = MaterialTheme.typography.bodySmall,
-            color = colors.onSurfaceVariant,
-            modifier = Modifier.weight(1f),
-        )
-        Box(
-            Modifier
-                .height(44.dp)
-                .clickable(role = Role.Button, onClickLabel = stringResource(R.string.episode_synopsis_show), onClick = onShow)
-                .padding(horizontal = 16.dp),
-            contentAlignment = Alignment.Center,
+    val showLabel = stringResource(R.string.episode_synopsis_show)
+    val hideLabel = stringResource(R.string.episode_protection_hide)
+    Crossfade(showing, modifier, animationSpec = Motion.reveal(), label = "protection-line") { shown -> // i18n-skip
+        Row(
+            Modifier.fillMaxWidth().height(44.dp).padding(start = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(stringResource(R.string.episode_protection_show), style = MaterialTheme.typography.labelLarge, color = colors.onSurface)
+            Icon(if (shown) Icons.Shown else Icons.Hidden, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(16.dp))
+            Text(
+                if (shown) Strings.episodeProtectionShownShort(context, episode) else Strings.episodeProtectionLineShort(context, episode),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.onSurfaceVariant,
+                modifier = Modifier.weight(1f),
+            )
+            Box(
+                Modifier
+                    .height(44.dp)
+                    .clickable(role = Role.Button, onClickLabel = if (shown) hideLabel else showLabel, onClick = if (shown) onHide else onShow)
+                    .padding(horizontal = 16.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    stringResource(if (shown) R.string.episode_protection_hide else R.string.episode_protection_show),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = colors.onSurface,
+                )
+            }
         }
     }
+}
+
+/** The episode the protection line names: the row before the first one it hides, as the engine marks them. */
+internal fun protectionStart(listed: List<EpisodeRow>, firstHidden: EpisodeRow): Int? {
+    val at = listed.indexOfFirst { it.number == firstHidden.number }
+    return listed.getOrNull(at - 1)?.number?.toDoubleOrNull()?.toInt()
 }
 
 // Ranges
@@ -410,7 +522,9 @@ internal fun RangeRow(
     val colors = MaterialTheme.colorScheme
     val context = LocalContext.current
     var open by remember { mutableStateOf(false) }
-    val label = rangeBounds(rows, ranges[selected]).let { Strings.episodeRange(context, it.first, it.second) }
+    // The picker says the short range, "101–200"; the menu's items say it in words.
+    val label = rangeBounds(rows, ranges[selected]).let { Strings.episodeRangeShort(context, it.first.toString(), it.second.toString()) }
+    val longLabel = rangeBounds(rows, ranges[selected]).let { Strings.episodeRange(context, it.first, it.second) }
     val rangeWord = stringResource(R.string.episode_range_label)
     val shape = RoundedCornerShape(8.dp)
     Row(modifier.fillMaxWidth().height(56.dp).padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -423,7 +537,7 @@ internal fun RangeRow(
                     .clickable(role = Role.Button, onClickLabel = rangeWord) { open = true }
                     .semantics(mergeDescendants = true) {
                         contentDescription = rangeWord
-                        stateDescription = label
+                        stateDescription = longLabel
                     }
                     .padding(start = 12.dp, end = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -490,6 +604,8 @@ internal fun EpisodeSheet(
     onShow: () -> Unit,
     onDismiss: () -> Unit,
     actions: AppActions,
+    /** Whether it is the next episode, whose facts say how much is left. */
+    current: Boolean = false,
 ) {
     val colors = MaterialTheme.colorScheme
     val context = LocalContext.current
@@ -500,8 +616,8 @@ internal fun EpisodeSheet(
     }
     val items = episodeActions(entry, row, actions, ::close)
     val title = row.title ?: stringResource(R.string.episode_number, row.number.toInt())
-    val kicker = listOfNotNull(stringResource(R.string.episode_number, row.number.toInt()), minutes(context, row)).joinToString(" · ") // i18n-skip
-    val aired = row.airsAt?.takeIf { it <= AppClock.now().epochSecond }?.let { airedDate(context, it) }
+    // The row's own facts: "E7 · 14 min left", then when it aired.
+    val (kicker, aired) = rowFacts(context, entry, row, current, unaired = false)
     val synopsis = row.description?.takeIf { it.isNotBlank() && !hidden }
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -527,7 +643,7 @@ internal fun EpisodeSheet(
             HorizontalDivider(Modifier.padding(top = 12.dp, bottom = 4.dp), color = colors.outlineVariant)
             if (hidden) {
                 SheetItem(
-                    SheetAction(stringResource(R.string.episode_synopsis_show), Icons.Hidden) {
+                    SheetAction(stringResource(R.string.episode_synopsis_show), Icons.Shown) {
                         onShow()
                         scope.launch {
                             delay(450)

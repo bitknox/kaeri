@@ -62,7 +62,10 @@ fun rememberTagged(text: String): AnnotatedString {
     return remember(text, tag) { tagged(text, tag) }
 }
 
-/** The episodes a visit has revealed, one at a time or all after the protection line's Show. */
+/**
+ * The episodes a visit has revealed, one at a time or all after the protection line's Show, until
+ * its Hide covers them again.
+ */
 @Stable
 class Reveals {
     private val shown = mutableStateListOf<String>()
@@ -78,5 +81,11 @@ class Reveals {
 
     fun showAll() {
         all = true
+    }
+
+    /** The protection line's Hide: every row after it is covered again, one revealed alone too. */
+    fun hideAll() {
+        all = false
+        shown.clear()
     }
 }

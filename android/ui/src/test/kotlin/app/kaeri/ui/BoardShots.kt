@@ -725,28 +725,78 @@ class BoardShots {
     )
 
     /** Capture [name]-<ms> at each of [at] after [change], the clock held between frames. */
-    private fun frames(name: String, at: List<Long>, change: () -> Unit) {
+    private fun frames(name: String, at: List<Long>, screen: Boolean = false, change: () -> Unit) {
         compose.mainClock.autoAdvance = false
         change()
         var now = 0L
         for (ms in at) {
             compose.mainClock.advanceTimeBy(ms - now)
             now = ms
-            compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/$name-$ms.png")
+            val file = "${roborazziSystemPropertyOutputDirectory()}/$name-$ms.png"
+            if (screen) captureScreenRoboImage(file) else compose.onRoot().captureRoboImage(file)
         }
         compose.mainClock.autoAdvance = true
     }
 
     // Episode synopses (the synopsis board, section 3): text and stills laid on the scene's table.
 
-    @Test
-    @Config(qualifiers = PHONE)
-    fun phone_title_synopsis() = shoot("phone-title", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses) { toEpisodes() }
+    /** Spoiler protection off for 900001, as its own setting says, laid over the scene's own sheet: every row takes its text. */
+    private val protectionOff: List<Event> =
+            listOf(
+                Event.ShowSettings(
+                    app.kaeri.engine.model.ShowSettingsView(
+                        id = 900001u,
+                        rows = listOf(
+                            app.kaeri.engine.model.ShowSettingRow(
+                                key = app.kaeri.engine.model.ShowSettingKey.SPOILER_PROTECTION,
+                                own = app.kaeri.engine.core.SettingValue.Bool(false),
+                                value = "off",
+                                default = "Use Default · On",
+                            ),
+                        ),
+                        remembered = emptyList(),
+                        source = null,
+                    ),
+                ),
+            )
 
-    /** Protection on: facts and a blurred still after the next episode, with the line where it starts. */
+    /** The title page scrolled so the line where protection starts shows. */
+    private fun toProtection() {
+        compose.onNode(hasScrollToKeyAction() and hasAnyDescendant(hasText("More about this show")))
+            .performScrollToKey("protection-900001")
+        compose.waitForIdle()
+    }
+
+    /** Protection off: every row from the next episode on keeps its text. */
     @Test
     @Config(qualifiers = PHONE)
-    fun phone_title_synopsis_protected() = shoot("phone-protected", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses) { toEpisodes() }
+    fun phone_title_synopsis() = shoot("phone-title", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses, party = protectionOff) { toEpisodes() }
+
+    /** Protection on: facts and a blurred still after the next episode, under the line where it starts. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_synopsis_protected() = shoot("phone-protected", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses) { toProtection() }
+
+    /** One protected row revealed from its sheet: the still sharp, the row grown, its text in. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_synopsis_revealed() = shoot("phone-revealed", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses) {
+        toProtection()
+        compose.onNodeWithText("E8", substring = true).performTouchInput { longClick() }
+        compose.waitForIdle()
+        compose.onNodeWithText("Show synopsis").performClick()
+        compose.waitForIdle()
+    }
+
+    /** The line's Show: every row after it revealed, the line saying what it shows, with Hide. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_synopsis_showing() = shoot("phone-showing", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses) {
+        toProtection()
+        compose.onNodeWithText("Show").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("Hide").assertExists()
+    }
 
     /** No synopses and none coming: every row is the short form. */
     @Test
@@ -755,7 +805,7 @@ class BoardShots {
 
     @Test
     @Config(qualifiers = PHONE)
-    fun phone_title_synopsis_ranges() = shoot("phone-ranges", WATCHING, title = 900001u, episodes = SynopsisFixtures::long) {
+    fun phone_title_synopsis_ranges() = shoot("phone-ranges", WATCHING, title = 900001u, episodes = SynopsisFixtures::long, screen = true) {
         toRanges()
         compose.onNodeWithContentDescription("Episode range").performClick()
         compose.waitForIdle()
@@ -768,6 +818,26 @@ class BoardShots {
     @Test
     @Config(qualifiers = TABLET)
     fun tablet_title_synopsis_ranged() = shoot("tablet-title-synopsis-ranged", WATCHING, title = 900001u, episodes = SynopsisFixtures::long) { toRanges() }
+
+    /** The tablet's range menu open over the beside rows. */
+    @Test
+    @Config(qualifiers = TABLET)
+    fun tablet_title_synopsis_ranges() = shoot("tablet-ranges", WATCHING, title = 900001u, episodes = SynopsisFixtures::long, screen = true) {
+        toRanges()
+        compose.onNodeWithContentDescription("Episode range").performClick()
+        compose.waitForIdle()
+    }
+
+    /** A protected row revealed on the tablet: still and text together, the row's height unchanged. */
+    @Test
+    @Config(qualifiers = TABLET)
+    fun tablet_title_synopsis_revealed() = shoot("tablet-revealed", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses) {
+        toProtection()
+        compose.onNodeWithText("E8", substring = true).performTouchInput { longClick() }
+        compose.waitForIdle()
+        compose.onNodeWithText("Show synopsis").performClick()
+        compose.waitForIdle()
+    }
 
     @Test
     @Config(qualifiers = PHONE)
@@ -782,11 +852,11 @@ class BoardShots {
         compose.waitForIdle()
     }
 
-    /** A protected episode's sheet: Show synopsis first, the still blurred. */
+    /** A protected episode's sheet: Show synopsis first with the open eye, the still blurred. */
     @Test
     @Config(qualifiers = PHONE)
     fun phone_title_synopsis_sheet_protected() = shoot("phone-sheet-protected", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses, screen = true) {
-        toEpisodes()
+        toProtection()
         compose.onNodeWithText("E9", substring = true).performTouchInput { longClick() }
         compose.waitForIdle()
     }
@@ -795,6 +865,27 @@ class BoardShots {
     @Config(qualifiers = PHONE, fontScale = 2.0f)
     fun phone_title_synopsis_large_text() = shoot("phone-large-text", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses) { toEpisodes() }
 
+    // Recordings, as frames 33 ms apart that make a 30 fps clip.
+
+    private val clip = (0L..900L step 33L).toList()
+
+    /** The line's Show: the line crossfades, each row grows, then its text fades in. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_synopsis_reveal_clip() = shoot("phone-reveal-clip-end", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses) {
+        toProtection()
+        frames("phone-reveal-clip", clip) { compose.onNodeWithText("Show").performClick() }
+    }
+
+    /** A range switch: the rows crossfade in place. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_synopsis_range_clip() = shoot("phone-range-clip-end", WATCHING, title = 900001u, episodes = SynopsisFixtures::long) {
+        toRanges()
+        compose.onNodeWithContentDescription("Episode range").performClick()
+        compose.waitForIdle()
+        frames("phone-range-clip", clip, screen = true) { compose.onNodeWithText("Episodes 201 to 230").performClick() }
+    }
 
     private fun shoot(
         name: String,

@@ -148,6 +148,12 @@ internal object Icons {
         "M15.4 17.3 C14.3 17.75 13.2 18 12 18 C7.5 18 4 14.5 2.5 12 C3.3 10.6 4.6 9 6.3 7.8",
         "M9.9 9.9 A3 3 0 0 0 14.1 14.1",
     )
+    /** The open eye: what Show synopsis brings back. */
+    val Shown = stroked(
+        "Shown",
+        "M2.5 12 C4 9.5 7.5 6 12 6 C16.5 6 20 9.5 21.5 12 C20 14.5 16.5 18 12 18 C7.5 18 4 14.5 2.5 12 Z",
+        "M12 9 A3 3 0 1 1 11.99 9 Z",
+    )
     val Settings = stroked(
         "Settings",
         "M12 9 A3 3 0 1 1 11.99 9 Z",

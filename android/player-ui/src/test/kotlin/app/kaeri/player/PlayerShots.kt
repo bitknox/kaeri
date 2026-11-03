@@ -196,6 +196,36 @@ class PlayerShots {
         compose.waitForIdle()
     }
 
+    /**
+     * The Episodes sheet over a show whose table is cached: compact rows, and under them a footer
+     * with the playing episode's name and three lines of its synopsis.
+     */
+    @Test
+    @Config(sdk = [36], qualifiers = PHONE_PORTRAIT)
+    fun phone_player_episodes() = shoot("phone-player-episodes", after = {
+        compose.onNodeWithContentDescription("Episodes").performClick()
+        compose.waitForIdle()
+        compose.mainClock.advanceTimeBy(600)
+        compose.waitForIdle()
+    }) { model, mpv ->
+        mpv.emit(MpvEvent.property("time-pos", MpvValue.Real(151.0)))
+        val rows = app.kaeri.testkit.SynopsisFixtures.table(900_001u)
+        store.apply(listOf(Event.Episodes(900_001u, rows)))
+        model.apply(
+            Event.PlayerUi(
+                1u,
+                PlayerUi.Menus(
+                    episodes = app.kaeri.testkit.SynopsisFixtures.menu(rows),
+                    sources = emptyList(),
+                    translation = Translation.SUB,
+                    upscaling = app.kaeri.engine.model.MenuChoices("off"),
+                    toneMapping = null,
+                    nightMode = false,
+                ),
+            ),
+        )
+    }
+
     /** The discussion sheet opened from the player: the video pauses where it is. */
     @Test
     fun phone_player_discussion_sheet() = shoot("phone-player-discussion", discussionSheet = true, after = {

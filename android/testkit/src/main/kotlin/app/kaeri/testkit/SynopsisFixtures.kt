@@ -45,6 +45,15 @@ object SynopsisFixtures {
         )
     }
 
+    /** [count] plain rows, the first [watched] of them watched, with the board's text laid on: for a screen with no scene, the player's. */
+    fun table(id: AnilistId, count: Int = 12, watched: Int = 6): List<EpisodeRow> =
+        withSynopses(id, (1..count).map { EpisodeRow(number = it.toString(), completed = it <= watched, watched = if (it <= watched) 1.0 else 0.0) })
+
+    /** The player's Episodes menu over [table]: the next episode, 7, playing. */
+    fun menu(rows: List<EpisodeRow>, playing: String = "7"): List<app.kaeri.engine.model.MenuEpisode> = rows.map {
+        app.kaeri.engine.model.MenuEpisode(number = it.number, label = "Episode ${it.number}", title = it.title, watched = it.completed, current = it.number == playing) // i18n-skip
+    }
+
     /** The same without any text coming, nor a still. */
     fun withoutText(id: AnilistId, rows: List<EpisodeRow>): List<EpisodeRow> =
         withSynopses(id, rows).map { it.copy(description = null) }

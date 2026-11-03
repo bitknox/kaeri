@@ -29,6 +29,12 @@ object Motion {
      */
     fun <T> fadeIn(): TweenSpec<T> = tween(durationMillis = 200, easing = LinearOutSlowInEasing)
 
+    /**
+     * A blurred still coming out sharp when spoiler protection lets it go, and the protection
+     * line's words changing with it. Apple's 0.3 s ease-out.
+     */
+    fun <T> reveal(): TweenSpec<T> = tween(durationMillis = 300, easing = LinearOutSlowInEasing)
+
     /** Player controls hiding, a page's content leaving. */
     fun <T> fadeOut(): TweenSpec<T> = tween(durationMillis = 300, easing = FastOutLinearInEasing)
 

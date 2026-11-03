@@ -34,6 +34,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.input.pointer.pointerInput
@@ -128,7 +132,9 @@ fun PlayerSheets(model: PlayerModel, sheet: PlayerSheet?, onMoreSubtitleSettings
             if (sheet == PlayerSheet.Sources) model.cancelChoosingSource()
             onDismiss()
         },
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false),
+        // The Episodes sheet opens at its own height, its list capped below, so the footer under the
+        // list is never left past the bottom of a half-open sheet.
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = sheet == PlayerSheet.Episodes),
         containerColor = ObiSilk.Raised,
         scrimColor = androidx.compose.material3.MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f),
         dragHandle = { BottomSheetDefaults.DragHandle(color = ObiSilk.Haze.copy(alpha = 0.4f)) },
@@ -152,13 +158,29 @@ private fun SheetList(model: PlayerModel, sheet: PlayerSheet, onMoreSubtitleSett
         PlayerSheet.Tracks -> tracksOpeningRow(model.subtitleTracks.map { it.id }, model.subtitleTrack)
         PlayerSheet.Sources, PlayerSheet.SkipTimes, PlayerSheet.People -> 0
     }
-    LazyColumn(state = rememberLazyListState(initialFirstVisibleItemIndex = current), contentPadding = padding) {
-        when (sheet) {
-            PlayerSheet.Tracks -> tracks(model, onMoreSubtitleSettings)
-            PlayerSheet.Episodes -> episodes(model)
-            PlayerSheet.Sources -> sources(model, onDismiss)
-            PlayerSheet.SkipTimes -> skipTimes(model, onDismiss)
-            PlayerSheet.People -> item(key = "people") { app.kaeri.ui.PartyPeopleContent(onDone = onDismiss) } // i18n-skip
+    // The episode under focus or the pointer, for the footer under the Episodes list.
+    var pointed by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
+    androidx.compose.foundation.layout.Column {
+        LazyColumn(
+            state = rememberLazyListState(initialFirstVisibleItemIndex = current),
+            contentPadding = if (sheet == PlayerSheet.Episodes) PaddingValues(top = padding.calculateTopPadding()) else padding,
+            modifier = Modifier.weight(1f, fill = false)
+                .then(if (sheet == PlayerSheet.Episodes) Modifier.heightIn(max = (LocalConfiguration.current.screenHeightDp * 0.45f).dp) else Modifier),
+        ) {
+            when (sheet) {
+                PlayerSheet.Tracks -> tracks(model, onMoreSubtitleSettings)
+                PlayerSheet.Episodes -> episodes(model) { number, on -> if (on) pointed = number else if (pointed == number) pointed = null }
+                PlayerSheet.Sources -> sources(model, onDismiss)
+                PlayerSheet.SkipTimes -> skipTimes(model, onDismiss)
+                PlayerSheet.People -> item(key = "people") { app.kaeri.ui.PartyPeopleContent(onDone = onDismiss) } // i18n-skip
+            }
+        }
+        if (sheet == PlayerSheet.Episodes) {
+            // Under the list, for the episode under focus or the pointer, else the one playing.
+            val episodes = model.menus?.episodes.orEmpty()
+            val shown = episodes.firstOrNull { it.number == pointed } ?: episodes.firstOrNull { it.current }
+            if (shown != null) EpisodeFooter(model.titleOnScreen, shown.number, shown.label, shown.title)
+            androidx.compose.foundation.layout.Spacer(Modifier.height(padding.calculateBottomPadding()))
         }
     }
 }
@@ -291,21 +313,23 @@ private fun LazyListScope.tracks(model: PlayerModel, onMore: () -> Unit) {
     }
 }
 
-private fun LazyListScope.episodes(model: PlayerModel) {
+private fun LazyListScope.episodes(model: PlayerModel, onPoint: (number: String, on: Boolean) -> Unit) {
     val menus = model.menus
     heading(R.string.player_episodes)
-    // The playing episode's synopsis in a footer under the heading, from the title's table when it is cached.
-    menus?.episodes?.firstOrNull { it.current }?.let { playing ->
-        item(key = "episode-footer") { EpisodeFooter(model.titleOnScreen, playing.number, playing.label, playing.title) }
-    }
     if (menus == null || menus.episodes.isEmpty()) {
         item(key = "no-episodes") { Note(stringResource(R.string.player_sheet_episodes_loading)) }
     } else {
         items(menus.episodes, key = { "ep-${it.number}" }) { row ->
+            val hover = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+            val hovered by hover.collectIsHoveredAsState()
+            androidx.compose.runtime.LaunchedEffect(hovered) { onPoint(row.number, hovered) }
             Choice(
                 row.title?.let { "${row.label} · $it" } ?: row.label,
                 detail = if (row.filler) stringResource(R.string.episode_filler) else if (row.watched) stringResource(R.string.episode_watched) else null,
                 checked = row.current,
+                modifier = Modifier
+                    .hoverable(hover)
+                    .onFocusChanged { onPoint(row.number, it.hasFocus) },
             ) { model.choose(PlayerChoice.Episode(row.number)) }
         }
     }
@@ -363,9 +387,9 @@ private fun Note(text: String) {
 
 /** A row with the 24 dp check slot every row keeps, so the labels line up; the current one checked in silk. */
 @Composable
-private fun Choice(title: String, detail: String? = null, checked: Boolean, radio: Boolean = true, onClick: () -> Unit) {
+private fun Choice(title: String, detail: String? = null, checked: Boolean, radio: Boolean = true, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Row(
-        Modifier
+        modifier
             .fillMaxWidth()
             .heightIn(min = 56.dp)
             .semantics {
@@ -401,9 +425,10 @@ private val Check: ImageVector = ImageVector.Builder("Check", 24.dp, 24.dp, 24f,
 }.build()
 
 /**
- * Three lines of the playing episode's synopsis under the Episodes heading, when the title's table
- * is cached (it never fetches). No text for an episode spoiler protection hides; the room is kept
- * only where text can land, and text that arrives later fades in.
+ * A footer under the Episodes list: the focused or playing episode's name and three lines of its
+ * synopsis, when the title's table is cached (it never fetches). An episode spoiler protection
+ * hides shows its name and no text; the room is kept only where text can land, and text that
+ * arrives later fades in.
  */
 @Composable
 private fun EpisodeFooter(id: app.kaeri.engine.core.AnilistId?, number: String, label: String, title: String?) {
@@ -416,7 +441,8 @@ private fun EpisodeFooter(id: app.kaeri.engine.core.AnilistId?, number: String, 
     val row = rows.firstOrNull { it.number == number }
     val hidden = protect && row?.spoilerAhead == true
     val text = row?.description?.takeIf { it.isNotBlank() && !hidden }
-    Column(Modifier.fillMaxWidth().padding(start = 56.dp, end = 24.dp, bottom = 8.dp)) {
+    HorizontalDivider(color = ObiSilk.FaintRule)
+    Column(Modifier.fillMaxWidth().padding(start = 56.dp, end = 24.dp, top = 12.dp, bottom = 8.dp)) {
         Text(
             title?.let { "$label · $it" } ?: label, // i18n-skip
             style = MaterialTheme.typography.bodyLarge,

@@ -70,6 +70,22 @@ class EpisodeSynopsisTest {
         reveals.showAll()
         assertTrue(reveals.isShown("9"))
         assertTrue(reveals.everything)
+        // The line's Hide covers them again, the one revealed alone too.
+        reveals.hideAll()
+        assertFalse(reveals.everything)
+        assertFalse(reveals.isShown("8"))
+    }
+
+    @Test
+    fun the_protection_line_names_the_row_before_the_first_one_hidden() {
+        // A long runner whose progress points elsewhere: the rows decide, not the progress.
+        val rows = (1..230).map { row(it, completed = it <= 150, ahead = it > 151) }
+        val first = rows.first { it.spoilerAhead }
+        assertEquals(151, protectionStart(rows, first))
+        // A range that starts hidden names the last row of the range before it.
+        val later = (1..230).map { row(it, completed = it <= 99, ahead = it > 200) }
+        assertEquals(200, protectionStart(later, later.first { it.spoilerAhead }))
+        assertNull(protectionStart(rows, rows.first()))
     }
 
     @Test

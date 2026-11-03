@@ -71,6 +71,17 @@ object TvIcons {
     val Down = icon("Down", listOf("M7 10 L12 15 L17 10"))
     val Update = icon("Update", listOf("M12 4 V15 M7.5 10.5 L12 15 L16.5 10.5 M5 19.5 H19"))
     val Check = icon("Check", listOf("M5 12.5 L10 17.5 L19 7"))
+
+    /** The eye struck through: a still spoiler protection covers. */
+    val Hidden = icon(
+        "Hidden",
+        listOf(
+            "M3 3 L21 21",
+            "M10.6 6.1 C11.06 6.04 11.53 6 12 6 C16.5 6 20 9.5 21.5 12 C20.9 13 20 14.2 18.8 15.2",
+            "M15.4 17.3 C14.3 17.75 13.2 18 12 18 C7.5 18 4 14.5 2.5 12 C3.3 10.6 4.6 9 6.3 7.8",
+            "M9.9 9.9 A3 3 0 0 0 14.1 14.1",
+        ),
+    )
     val Sort = icon("Sort", listOf("M4 7 H20 M7 12 H17 M10 17 H14"))
     val Keyboard = icon(
         "Keyboard",

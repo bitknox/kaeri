@@ -167,7 +167,8 @@ fun TitleScreen(
     val switching = shownId != id
     val entry = entries[shownId]
     val rows = tables[shownId]
-    val spoilers = settings?.let { store.settings.isOn(SettingKey.SPOILER_PROTECTION, it) } ?: true
+    // The show's own spoiler protection, as the phone's title page reads it.
+    val spoilers = app.kaeri.tv.ui.spoilerProtected(shownId)
 
     val list = rememberLazyListState()
     val scope = rememberCoroutineScope()
@@ -509,13 +510,22 @@ private fun Episodes(
             }
             return@BrowseRow
         }
-        items(rows, key = { it.number }, contentType = { "episode" }) { row ->
+        // A long series keys cards by their place from the card the range opens on, so choosing
+        // another range keeps the row where it is and crossfades each card in place, rather than
+        // one range leaving and the next arriving.
+        val ranged = ranges.isNotEmpty()
+        items(rows, key = { if (ranged) "slot/${rows.indexOf(it) - next}" else it.number }, contentType = { "episode" }) { slot ->
+            // Keyed by the episode, so a card's own changes (text arriving, a mark) are not a crossfade.
+            val latest = remember { mutableMapOf<String, EpisodeRow>() }
+            latest[slot.number] = slot
+            androidx.compose.animation.Crossfade(slot.number, swapFade(), animationSpec = app.kaeri.design.Motion.standard(), label = "range-card") { number -> // i18n-skip
+            val row = latest[number] ?: slot
             val index = rows.indexOf(row)
             val playsNext = index == next
-            // Ahead of the next episode under protection, unless this visit revealed it.
-            val ahead = spoilers && index > next && !row.completed
+            // The engine's rule: ahead of the next episode under protection, unless this visit revealed it.
+            val unaired = row.airsAt?.let { it > System.currentTimeMillis() / 1000 } == true
+            val ahead = spoilers && row.spoilerAhead && !unaired
             val covered = ahead && !reveals.isShown(row.number)
-            Box(swapFade()) {
             EpisodeCard(
                 row = row,
                 entry = entry,
@@ -600,6 +610,10 @@ private fun EpisodeCard(
                 Modifier.fillMaxSize().alpha(if (row.unsourced) 0.45f else 1f),
                 spoiler = spoiler,
             )
+            // The eye struck through, as phones draw it, on a still spoiler protection covers.
+            if (spoiler) {
+                Icon(TvIcons.Hidden, contentDescription = null, tint = ObiSilk.Silk, modifier = Modifier.align(Alignment.Center).size(28.dp))
+            }
             if (progress != null) ProgressEdge(progress, Modifier.align(Alignment.BottomStart))
             if (row.completed) {
                 Box(

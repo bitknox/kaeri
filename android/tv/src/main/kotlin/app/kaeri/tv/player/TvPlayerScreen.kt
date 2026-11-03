@@ -829,8 +829,15 @@ private fun Panel(model: PlayerModel, panel: PlayerPanel, onDone: () -> Unit, mo
         Text(title, style = MaterialTheme.typography.headlineSmall, color = ObiSilk.Silk, modifier = Modifier.padding(start = 16.dp, bottom = 12.dp).semantics { heading() })
         // The episode under focus, for the footer under the list.
         var pointed by remember { mutableStateOf<String?>(null) }
+        // The episode list opens with the playing episode laid out, one row below the top, so
+        // focus can start on it with the footer taking room under the list.
+        val state = remember(panel) {
+            val at = if (panel == PlayerPanel.Episodes) model.menus?.episodes?.indexOfFirst { it.current } ?: -1 else -1
+            androidx.compose.foundation.lazy.LazyListState((at - 1).coerceAtLeast(0))
+        }
         LazyColumn(
-            Modifier.focusRequester(list).focusGroup().then(if (panel == PlayerPanel.Episodes) Modifier.weight(1f) else Modifier),
+            state = state,
+            modifier = Modifier.focusRequester(list).focusGroup().then(if (panel == PlayerPanel.Episodes) Modifier.weight(1f) else Modifier),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             when (panel) {
@@ -891,8 +898,12 @@ private fun Panel(model: PlayerModel, panel: PlayerPanel, onDone: () -> Unit, mo
             }
         }
         if (panel == PlayerPanel.Episodes) {
-            val playing = model.menus?.episodes?.firstOrNull { it.current }
-            EpisodesFooter(model.titleOnScreen, pointed ?: playing?.number)
+            val episodes = model.menus?.episodes.orEmpty()
+            val shown = episodes.firstOrNull { it.number == pointed } ?: episodes.firstOrNull { it.current }
+            if (shown != null) {
+                val heading = shown.title?.let { stringResource(R.string.tv_player_episode_row, shown.number, it) } ?: shown.label
+                EpisodesFooter(model.titleOnScreen, shown.number, heading)
+            }
         }
     }
     LaunchedEffect(panel) {
@@ -1064,28 +1075,32 @@ private fun wallMinute(): java.time.Instant {
 }
 
 /**
- * Three lines of the focused episode's synopsis under the Episodes list, when the title's table is
- * cached (it never fetches). No text for an episode spoiler protection hides; the room is kept
- * only where text can land, and text that arrives later fades in.
+ * A footer under the Episodes list: the focused episode's name, then three lines of its synopsis,
+ * when the title's table is cached (it never fetches). Spoiler protection follows the show's own
+ * setting, as the title page does: a protected episode shows its name and no text. The room is
+ * kept only where text can land, text that arrives later fades in, and TalkBack reads the footer
+ * as one: the name, then the synopsis.
  */
 @Composable
-private fun EpisodesFooter(id: app.kaeri.engine.core.AnilistId?, number: String?) {
+private fun EpisodesFooter(id: app.kaeri.engine.core.AnilistId?, number: String, heading: String) {
     val store = LocalAppStore.current
     val tables by store.titles.episodes.collectAsStateWithLifecycle()
-    val settings by store.settings.view.collectAsStateWithLifecycle()
-    val rows = id?.let { tables[it] } ?: return
-    if (number == null) return
-    val outlook = remember(id, rows.isEmpty()) { app.kaeri.engine.ffi.episodeText(rows) }
+    val title = id ?: return
+    val rows = tables[title] ?: return
+    val outlook = remember(title, rows.isEmpty()) { app.kaeri.engine.ffi.episodeText(rows) }
     if (outlook == app.kaeri.engine.model.EpisodeText.NONE) return
     val row = rows.firstOrNull { it.number == number }
-    val protect = settings?.let { store.settings.isOn(app.kaeri.engine.model.SettingKey.SPOILER_PROTECTION, it) } ?: true
+    val protect = app.kaeri.tv.ui.spoilerProtected(title)
     val hidden = protect && row?.spoilerAhead == true
     val text = row?.description?.takeIf { it.isNotBlank() && !hidden }
     val room = with(androidx.compose.ui.platform.LocalDensity.current) { (20.sp * 3).toDp() }
-    Box(Modifier.padding(start = 16.dp, top = 12.dp).fillMaxWidth().height(room).clearAndSetSemantics {}) {
-        androidx.compose.animation.Crossfade(text, animationSpec = app.kaeri.design.Motion.fadeIn(), label = "episodes-footer") { shown -> // i18n-skip
-            if (shown != null) {
-                Text(app.kaeri.design.rememberTagged(shown), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, maxLines = 3, overflow = TextOverflow.Ellipsis)
+    Column(Modifier.padding(start = 16.dp, top = 12.dp).fillMaxWidth().semantics(mergeDescendants = true) {}) {
+        Text(heading, style = MaterialTheme.typography.titleSmall, color = ObiSilk.Silk, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Box(Modifier.padding(top = 4.dp).fillMaxWidth().height(room)) {
+            androidx.compose.animation.Crossfade(text, animationSpec = app.kaeri.design.Motion.fadeIn(), label = "episodes-footer") { shown -> // i18n-skip
+                if (shown != null) {
+                    Text(app.kaeri.design.rememberTagged(shown), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                }
             }
         }
     }
