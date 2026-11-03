@@ -30,9 +30,9 @@ pub mod source_picker;
 pub mod store_owner;
 pub mod stores;
 pub mod title;
-pub mod trending;
 pub mod together;
 pub mod torrents;
+pub mod trending;
 
 use std::rc::Rc;
 
@@ -151,7 +151,10 @@ pub fn shortcuts(ctx: &Ctx) {
                 (t::episode_mark_watched(), "<Control><Shift>m"), // i18n-skip
                 (t::continue_hide(), "Delete"),           // i18n-skip
                 (t::episode_go_to(), "<Control>g"),       // i18n-skip
-                (t::shortcuts_episode_ranges(), "<Control><Shift>bracketleft <Control><Shift>bracketright"), // i18n-skip
+                (
+                    t::shortcuts_episode_ranges(),
+                    "<Control><Shift>bracketleft <Control><Shift>bracketright", // i18n-skip
+                ),
                 (t::shortcuts_context_menu(), "<Shift>F10"), // i18n-skip
             ],
         ),

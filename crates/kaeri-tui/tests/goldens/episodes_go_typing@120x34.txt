@@ -1,0 +1,222 @@
+Kaeri                                                                                          plugins ●  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+▌▸ │  ←  Lantern Street Casebook
+ ▤ │
+ ▦ │    #     Title                                                                           Run     Watched
+ / │  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ ▥ │    282   A Room Above the Tram                                                           23:55   ██████████  Done
+ ↓ │    283   The Glovemaker's Guest                                                          23:55   ██████████  Done
+ ◇ │    284   Lanterns Out at Nine                                                            23:55   ██████████  Done
+ ◎ │    285   A Coat Left on the Tram                                                         23:55   ██████████  Done
+ ≡ │    286   The Pawnbroker's Ledger                                                         23:55   ██████████  Done
+ ⇄ │    287   Steam on the Window                                                             23:55   ██████████  Done
+   │    288   The Lighthouse Clerk                                                            23:55   ██████████  Done
+   │    289   A Map Folded Twice                                                              23:55   ██████████  Done
+   │    290   The Fifth Witness                                                               23:55   ██████████  Done
+   │    291   Rain at the Ticket Office                                                       23:55   ██████████  Done
+   │    292   The Silent Auction                                                              23:55   ██████████  Done
+   │    293   An Hour Taken Back                                                              23:55   ██████████  Done
+   │    294   The Harbourmaster's Cat                                                         23:55   ██████████  Done
+   │    295   A Lamp Lit Twice                                                                23:55   ██████████  Done
+   │    296   The Weathervane Points North                                                    23:55   ██████████  Done
+   │    297   A Receipt in the Hymn Book                                                      23:55   ██████████  Done
+   │    298   Two Clocks, One Hour                                                            23:55   ██████████  Done
+   │    299   The Ferryman's Day Off                                                          23:55   ██████████  Done
+   │    300   Every Lamp on Lantern Street                                                    23:55   ██████████  Done
+   │    Episodes 301 to 400
+   │    301   The Quiet Bell                                                                  23:55   ██████████  Done
+   │    302   Ink on the Station Clock                                                        23:55   ██████████  Done
+   │    303   A Parcel for No One                                                             23:55   ██████████  Done
+   │    304   The Night Porter's Key                                                          23:55   ██████████  Done
+   │    305   Salt in the Sugar Bowl                                                          23:55   ██████████  Done
+   │  ▌ 306   The Cartographer Returns                                                        23:55   ░░░░░░░░░░
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+plugins · Subbed · 1080p                                                                         382 G go to   esc clear
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c95-103 fg=state
+r00 c104-105 fg=text-dim
+r00 c106-106 fg=rule
+r00 c107-108 fg=text-dim
+r00 c109-119 fg=state
+r01 c00-119 fg=rule
+r02 c00-00 fg=text-dim
+r02 c01-01 fg=text mod=BOLD
+r02 c03-03 fg=rule
+r02 c06-31 fg=text mod=BOLD
+r03 c01-01 fg=text-dim
+r03 c03-03 fg=rule
+r04 c01-01 fg=text-dim
+r04 c03-03 fg=rule
+r04 c08-08 fg=text-dim
+r04 c14-18 fg=text-dim
+r04 c94-96 fg=text-dim
+r04 c102-108 fg=text-dim
+r05 c01-01 fg=text-dim
+r05 c03-03 fg=rule
+r05 c06-117 fg=rule
+r06 c01-01 fg=text-dim
+r06 c03-03 fg=rule
+r06 c08-10 fg=text-dim
+r06 c14-34 fg=text-dim
+r06 c94-98 fg=text-dim
+r06 c102-111 fg=state
+r06 c114-117 fg=text-dim
+r07 c01-01 fg=text-dim
+r07 c03-03 fg=rule
+r07 c08-10 fg=text-dim
+r07 c14-35 fg=text-dim
+r07 c94-98 fg=text-dim
+r07 c102-111 fg=state
+r07 c114-117 fg=text-dim
+r08 c01-01 fg=text-dim
+r08 c03-03 fg=rule
+r08 c08-10 fg=text-dim
+r08 c14-33 fg=text-dim
+r08 c94-98 fg=text-dim
+r08 c102-111 fg=state
+r08 c114-117 fg=text-dim
+r09 c01-01 fg=text-dim
+r09 c03-03 fg=rule
+r09 c08-10 fg=text-dim
+r09 c14-36 fg=text-dim
+r09 c94-98 fg=text-dim
+r09 c102-111 fg=state
+r09 c114-117 fg=text-dim
+r10 c01-01 fg=text-dim
+r10 c03-03 fg=rule
+r10 c08-10 fg=text-dim
+r10 c14-36 fg=text-dim
+r10 c94-98 fg=text-dim
+r10 c102-111 fg=state
+r10 c114-117 fg=text-dim
+r11 c01-01 fg=text-dim
+r11 c03-03 fg=rule
+r11 c08-10 fg=text-dim
+r11 c14-32 fg=text-dim
+r11 c94-98 fg=text-dim
+r11 c102-111 fg=state
+r11 c114-117 fg=text-dim
+r12 c03-03 fg=rule
+r12 c08-10 fg=text-dim
+r12 c14-33 fg=text-dim
+r12 c94-98 fg=text-dim
+r12 c102-111 fg=state
+r12 c114-117 fg=text-dim
+r13 c03-03 fg=rule
+r13 c08-10 fg=text-dim
+r13 c14-31 fg=text-dim
+r13 c94-98 fg=text-dim
+r13 c102-111 fg=state
+r13 c114-117 fg=text-dim
+r14 c03-03 fg=rule
+r14 c08-10 fg=text-dim
+r14 c14-30 fg=text-dim
+r14 c94-98 fg=text-dim
+r14 c102-111 fg=state
+r14 c114-117 fg=text-dim
+r15 c03-03 fg=rule
+r15 c08-10 fg=text-dim
+r15 c14-38 fg=text-dim
+r15 c94-98 fg=text-dim
+r15 c102-111 fg=state
+r15 c114-117 fg=text-dim
+r16 c03-03 fg=rule
+r16 c08-10 fg=text-dim
+r16 c14-31 fg=text-dim
+r16 c94-98 fg=text-dim
+r16 c102-111 fg=state
+r16 c114-117 fg=text-dim
+r17 c03-03 fg=rule
+r17 c08-10 fg=text-dim
+r17 c14-31 fg=text-dim
+r17 c94-98 fg=text-dim
+r17 c102-111 fg=state
+r17 c114-117 fg=text-dim
+r18 c03-03 fg=rule
+r18 c08-10 fg=text-dim
+r18 c14-36 fg=text-dim
+r18 c94-98 fg=text-dim
+r18 c102-111 fg=state
+r18 c114-117 fg=text-dim
+r19 c03-03 fg=rule
+r19 c08-10 fg=text-dim
+r19 c14-29 fg=text-dim
+r19 c94-98 fg=text-dim
+r19 c102-111 fg=state
+r19 c114-117 fg=text-dim
+r20 c03-03 fg=rule
+r20 c08-10 fg=text-dim
+r20 c14-41 fg=text-dim
+r20 c94-98 fg=text-dim
+r20 c102-111 fg=state
+r20 c114-117 fg=text-dim
+r21 c03-03 fg=rule
+r21 c08-10 fg=text-dim
+r21 c14-39 fg=text-dim
+r21 c94-98 fg=text-dim
+r21 c102-111 fg=state
+r21 c114-117 fg=text-dim
+r22 c03-03 fg=rule
+r22 c08-10 fg=text-dim
+r22 c14-33 fg=text-dim
+r22 c94-98 fg=text-dim
+r22 c102-111 fg=state
+r22 c114-117 fg=text-dim
+r23 c03-03 fg=rule
+r23 c08-10 fg=text-dim
+r23 c14-35 fg=text-dim
+r23 c94-98 fg=text-dim
+r23 c102-111 fg=state
+r23 c114-117 fg=text-dim
+r24 c03-03 fg=rule
+r24 c08-10 fg=text-dim
+r24 c14-41 fg=text-dim
+r24 c94-98 fg=text-dim
+r24 c102-111 fg=state
+r24 c114-117 fg=text-dim
+r25 c03-03 fg=rule
+r25 c08-26 fg=text-dim
+r26 c03-03 fg=rule
+r26 c08-10 fg=text-dim
+r26 c14-27 fg=text-dim
+r26 c94-98 fg=text-dim
+r26 c102-111 fg=state
+r26 c114-117 fg=text-dim
+r27 c03-03 fg=rule
+r27 c08-10 fg=text-dim
+r27 c14-37 fg=text-dim
+r27 c94-98 fg=text-dim
+r27 c102-111 fg=state
+r27 c114-117 fg=text-dim
+r28 c03-03 fg=rule
+r28 c08-10 fg=text-dim
+r28 c14-32 fg=text-dim
+r28 c94-98 fg=text-dim
+r28 c102-111 fg=state
+r28 c114-117 fg=text-dim
+r29 c03-03 fg=rule
+r29 c08-10 fg=text-dim
+r29 c14-35 fg=text-dim
+r29 c94-98 fg=text-dim
+r29 c102-111 fg=state
+r29 c114-117 fg=text-dim
+r30 c03-03 fg=rule
+r30 c08-10 fg=text-dim
+r30 c14-35 fg=text-dim
+r30 c94-98 fg=text-dim
+r30 c102-111 fg=state
+r30 c114-117 fg=text-dim
+r31 c03-03 fg=rule
+r31 c06-06 fg=obi
+r31 c08-10 fg=text mod=BOLD
+r31 c14-37 fg=text mod=BOLD
+r31 c94-98 fg=text-dim
+r31 c102-111 fg=rule
+r32 c00-119 fg=rule
+r33 c00-23 fg=text-dim
+r33 c97-101 fg=text
+r33 c102-110 fg=text-dim
+r33 c111-113 fg=text
+r33 c114-119 fg=text-dim

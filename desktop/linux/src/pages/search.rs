@@ -11,10 +11,10 @@ use std::{
 
 use adw::prelude::*;
 use kaeri_model::{
+    browsing::SurprisePool,
     catalog::{ContentFor, ContentList, Entry},
     command::Command,
     event::Event,
-    browsing::SurprisePool,
     search::SearchQuery,
 };
 
@@ -100,19 +100,14 @@ pub fn build(ctx: &Rc<Ctx>) -> SearchPage {
 
     let filters = Filters::new();
     // Surprise me: a random title from the filters in effect, while no words are typed.
-    let surprise = widgets::surprise_button(
-        ctx,
-        &t::surprise_me(),
-        &t::surprise_hint_filters(),
-        false,
-        {
+    let surprise =
+        widgets::surprise_button(ctx, &t::surprise_me(), &t::surprise_hint_filters(), false, {
             let filters = Rc::downgrade(&filters);
             move || {
                 let filters = filters.upgrade()?;
                 Some(SurprisePool::Filters { query: filters.query("") })
             }
-        },
-    );
+        });
     header.pack_end(&surprise);
 
     // Before typing.

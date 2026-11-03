@@ -1369,7 +1369,7 @@ fn respond(
             Reply::ok(Value::Object(data))
         }
         Operation::TrendWeek => {
-            // The first titles of the catalogue, most trending first, each on two days.
+            // The trend titles, most trending first, each on two days.
             let rows: Vec<Value> = trend_titles(catalogue)
                 .into_iter()
                 .enumerate()
@@ -1681,8 +1681,14 @@ fn pages(vars: &Value) -> Vec<(String, Value)> {
 const TREND_TITLES: usize = 6;
 
 /// The titles the fake's trending rows are about: the first of the catalogue.
+/// The titles a week or a month of trends ranks: the catalogue's first, starting halfway along,
+/// so a week leads with other titles than today's live trending and the apps' shots of a period
+/// switch show a change.
 fn trend_titles(catalogue: Catalogue<'_>) -> Vec<AnilistId> {
-    catalogue.pool().into_iter().take(TREND_TITLES).collect()
+    let mut titles: Vec<AnilistId> = catalogue.pool().into_iter().take(TREND_TITLES).collect();
+    let half = titles.len() / 2;
+    titles.rotate_left(half);
+    titles
 }
 
 fn search(vars: &Value, catalogue: Catalogue<'_>) -> Vec<AnilistId> {

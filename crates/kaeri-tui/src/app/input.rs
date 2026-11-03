@@ -56,6 +56,11 @@ impl App {
 
     /// Handle an action. Returns work for the caller to perform asynchronously.
     pub fn handle(&mut self, action: Action, visible_rows: usize) -> Option<Command> {
+        // Why a typed `G` went nowhere stays in the status line until the next key, and Esc
+        // then only lets go of it.
+        if self.go_error.take().is_some() && action == Action::Back {
+            return None;
+        }
         // While typing, most single-key bindings must not fire, or "d" would trigger a
         // download instead of entering a letter.
         if self.is_typing() {
@@ -346,7 +351,7 @@ impl App {
     }
 
     /// An action that means nothing here, saying where it does.
-    fn works_elsewhere(&mut self, action: Action) {
+    pub(super) fn works_elsewhere(&mut self, action: Action) {
         // An action that means nothing here — a playback key with nothing playing, a
         // Downloads key elsewhere, usually run from the palette — says where it does
         // something rather than doing nothing, which would read as the key being broken.

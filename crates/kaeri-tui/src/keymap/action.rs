@@ -105,7 +105,8 @@ pub enum Action {
     /// Open the search filter overlay, from anywhere. A modified key on purpose: the
     /// search box eats plain letters, and filters are wanted mid-query.
     FilterSearch,
-    /// Pick a title at random from what the search filters match.
+    /// Pick a title at random from the screen's pool: Search's browse, or Planning. On the page
+    /// a pick opened, another in its place.
     Surprise,
 
     // Playback
@@ -443,6 +444,9 @@ impl Action {
     /// would not.
     pub fn where_it_works(self) -> &'static str {
         use kaeri_i18n::t;
+        if matches!(self, Self::Surprise) {
+            return said(t::keys_where_surprise());
+        }
         said(match self.scope() {
             Scope::Playback => t::keys_where_playback(),
             Scope::Downloads => t::keys_where_downloads(),

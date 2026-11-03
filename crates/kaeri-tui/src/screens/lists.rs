@@ -44,8 +44,10 @@ pub(super) fn render_list(buf: &mut Buffer, app: &App, area: Rect, section: Sect
             app.palette.style(Role::Text),
         );
         // Active filters are shown where they act, or a filtered search would read as
-        // AniList having quietly lost titles the user knows exist.
-        let summary = crate::app::search_filter_summary(&app.search_filter);
+        // AniList having quietly lost titles the user knows exist. A browse by Trending says
+        // its period at the far end instead, so the sort is not said twice.
+        let period = app.trending_browse();
+        let summary = app.search_summary();
         let mut used = prompt.cells() as u16;
         if !summary.is_empty() {
             let at = used + 3;
@@ -56,8 +58,8 @@ pub(super) fn render_list(buf: &mut Buffer, app: &App, area: Rect, section: Sect
             }
         }
         // That the answer stopped at one page, at the far end of the prompt. Without it a
-        // capped list read as everything AniList had.
-        if let Some(caption) = app.list_caption() {
+        // capped list read as everything AniList had. A Trending browse names its period there.
+        if let Some(caption) = period.as_deref().or(app.list_caption()) {
             let width = caption.cells() as u16;
             if used + width + 3 <= area.width {
                 line(buf, area.right() - width, y, caption, app.palette.style(Role::TextDim));
@@ -102,10 +104,17 @@ pub(super) fn render_list(buf: &mut Buffer, app: &App, area: Rect, section: Sect
         ContentList::Entries(entries) => {
             // Split the stage: list on the left, a preview of the focused title on the
             // right. The key visual is the hero, so it gets the larger share.
+            // Search's counts: one trailing column at 80, their own headed columns from 100.
+            let counted = section == Section::Search;
+            let columned = counted && buf.area().width >= COUNT_COLUMNS_FROM;
             let (list_col, preview_col) = if area.width >= 76 {
-                // Home's lines carry a reason or a time each, so its list gets the larger share.
-                let share =
-                    if section == Section::Home && app.home.is_some() { 0.56 } else { 0.42 };
+                // Home's lines carry a reason or a time each, and Search's columns a count and a
+                // dub, so those lists get the larger share.
+                let share = if (section == Section::Home && app.home.is_some()) || columned {
+                    0.56
+                } else {
+                    0.42
+                };
                 let (l, p) = layout::split_stage(list_area, share);
                 (l, Some(p))
             } else {
@@ -168,6 +177,14 @@ pub(super) fn render_list(buf: &mut Buffer, app: &App, area: Rect, section: Sect
             rows.extend((0..slack).map(|_| ObiRow::new(String::new())));
             // The caption's row comes out of the window, not off the end of the list.
             let fits = visible.saturating_sub(rows.len());
+            // Search's count columns, sized to the rows in view so they line up down the list.
+            let counts = counted.then(|| {
+                let shown: Vec<&Entry> = entries.iter().skip(start).take(fits).collect();
+                CountColumns::new(&shown, columned)
+            });
+            if let Some(counts) = counts.as_ref().filter(|c| c.columned) {
+                counts.render_headings(buf, app, list_col);
+            }
             for (i, entry) in entries.iter().enumerate().skip(start).take(fits) {
                 if section == Section::Calendar
                     && let Some(secs) = entry.airing_in
@@ -191,6 +208,11 @@ pub(super) fn render_list(buf: &mut Buffer, app: &App, area: Rect, section: Sect
                 // how far along you are, when it airs, or how good it is. The bool says
                 // whether it is an actionable fact, which draws in the state role.
                 let trailing = match (entry.progress, section, entry.airing_in) {
+                    // Search answers what a title is: how many episodes, how far its dub goes,
+                    // and how good it is, in columns.
+                    _ if counts.is_some() => {
+                        counts.as_ref().map(|counts| (counts.trailing(entry), false))
+                    }
                     // A part-watched episode is the most actionable thing a row can say, so it
                     // outranks everything else. The percentage is what makes it obvious this is
                     // something to *finish* rather than something to start.
@@ -267,6 +289,160 @@ pub(super) fn render_list(buf: &mut Buffer, app: &App, area: Rect, section: Sect
             }
         }
     }
+}
+
+/// The terminal width from which Search's counts are columns of their own, headed once.
+const COUNT_COLUMNS_FROM: u16 = 100;
+
+/// The cells between a search row's count and its dub, and before its score.
+const COUNT_GAP: usize = 3;
+const SCORE_GAP: usize = 2;
+
+/// Search's counts for the rows in view: the episodes ("12", "5/24", "5/?", "movie", "9 Jan",
+/// "soon"), the dub a source said the title has, and the score. At 80 columns they are one
+/// trailing text, "12 · d12   86%"; from [`COUNT_COLUMNS_FROM`] they are columns, so the
+/// widths are the widest in view.
+struct CountColumns {
+    columned: bool,
+    episodes: usize,
+    dub: usize,
+    score: usize,
+}
+
+impl CountColumns {
+    fn new(shown: &[&Entry], columned: bool) -> Self {
+        let widest = |cells: &mut dyn Iterator<Item = usize>| cells.max().unwrap_or(0);
+        let episodes = widest(&mut shown.iter().map(|e| episodes_count(e).cells()));
+        let dub =
+            widest(&mut shown.iter().filter_map(|e| dub_count(e, columned)).map(|d| d.cells()));
+        let score = widest(&mut shown.iter().filter_map(|e| score_text(e)).map(|s| s.cells()));
+        let (episodes, dub) = if columned {
+            (
+                episodes.max(t::lists_column_episodes().cells()),
+                dub.max(t::lists_column_dub().cells()),
+            )
+        } else {
+            (episodes, dub)
+        };
+        // A score column held open even when none in view has one, so the counts keep their
+        // place as the list scrolls.
+        Self { columned, episodes, dub, score: score.max(3) }
+    }
+
+    /// What the row of `entry` says at its end.
+    fn trailing(&self, entry: &Entry) -> String {
+        let score = score_text(entry).unwrap_or_default();
+        let episodes = episodes_count(entry);
+        let dub = dub_count(entry, self.columned).unwrap_or_default();
+        let (sw, ew, dw) = (self.score, self.episodes, self.dub);
+        if self.columned {
+            let gap = " ".repeat(COUNT_GAP);
+            let before = " ".repeat(SCORE_GAP);
+            return format!("{episodes:>ew$}{gap}{dub:>dw$}{before}{score:>sw$}"); // i18n-skip
+        }
+        let count = match (episodes.is_empty(), dub.is_empty()) {
+            (_, true) => episodes,
+            (true, false) => dub,
+            (false, false) => format!("{episodes}{JOIN}{dub}"), // i18n-skip
+        };
+        if count.is_empty() {
+            return format!("{score:>sw$}"); // i18n-skip
+        }
+        format!("{count}{}{score:>sw$}", " ".repeat(COUNT_GAP)) // i18n-skip
+    }
+
+    /// "Eps" and "Dub" over their columns, on the row above the list. The trailing text ends a
+    /// cell short of the list's right edge; the headings end where their columns do.
+    fn render_headings(&self, buf: &mut Buffer, app: &App, list: Rect) {
+        let Some(y) = list.top().checked_sub(1) else { return };
+        let end = list.right().saturating_sub(1) as usize;
+        let dub_end = end.saturating_sub(self.score + SCORE_GAP);
+        let episodes_end = dub_end.saturating_sub(self.dub + COUNT_GAP);
+        let style = app.palette.style(Role::TextDim);
+        for (text, end) in
+            [(t::lists_column_episodes(), episodes_end), (t::lists_column_dub(), dub_end)]
+        {
+            let x = end.saturating_sub(text.cells());
+            if x >= list.left() as usize + 2 {
+                line(buf, x as u16, y, text, style);
+            }
+        }
+    }
+}
+
+/// AniList's format for a movie.
+const MOVIE: &str = "MOVIE"; // i18n-skip
+
+/// The parts a count joins with, as the engine's count line joins them.
+const JOIN: &str = " \u{b7} "; // i18n-skip
+
+/// A search row's score, "86%".
+fn score_text(entry: &Entry) -> Option<String> {
+    entry.score.map(|s| t::lists_score(i64::from(s)))
+}
+
+/// The episode part of a search row's count, from what the engine's count line is made of:
+/// a date or "soon" before it starts, "movie", "5/24" or "5/?" while it airs, else the total.
+/// Empty when AniList gives no count.
+fn episodes_count(entry: &Entry) -> String {
+    use kaeri_model::catalog::{AiringStatus, FuzzyDate};
+    let not_out = |start: Option<FuzzyDate>| match start {
+        Some(FuzzyDate { month: Some(month), day: Some(day), .. }) => month_short(month)
+            .map_or_else(t::lists_count_soon, |month| {
+                t::lists_count_starts(i64::from(day), &month)
+            }),
+        _ => t::lists_count_soon(),
+    };
+    if entry.status == Some(AiringStatus::NotYetReleased) {
+        return not_out(entry.start_date);
+    }
+    if entry.format.as_deref() == Some(MOVIE) {
+        return t::lists_count_movie();
+    }
+    let total = entry.episodes.filter(|n| *n > 0);
+    if let Some(next) = entry.next_episode {
+        let out = next.saturating_sub(1);
+        if out == 0 {
+            return not_out(entry.start_date);
+        }
+        return match total.filter(|total| *total >= out) {
+            Some(total) => t::lists_count_out_of(out.into(), total.into()),
+            None => t::lists_count_out(out.into()),
+        };
+    }
+    total.map(|total| total.to_string()).unwrap_or_default()
+}
+
+/// The dub part of a search row's count, from the dub a source said the title has: "d12" in
+/// the one trailing text, "12" in its own column, and "dub" where the source did not say how
+/// far. `None` is not a no: nothing is known.
+fn dub_count(entry: &Entry, columned: bool) -> Option<String> {
+    let movie = entry.format.as_deref() == Some(MOVIE);
+    let dub = entry.dub?;
+    Some(match dub.through {
+        Some(through) if through > 0 && !movie && columned => through.to_string(),
+        Some(through) if through > 0 && !movie => t::lists_count_dub_through(through.into()),
+        _ => t::lists_count_dub(),
+    })
+}
+
+/// A month's short name, "Jan".
+fn month_short(month: u8) -> Option<String> {
+    Some(match month {
+        1 => t::date_month_jan_short(),
+        2 => t::date_month_feb_short(),
+        3 => t::date_month_mar_short(),
+        4 => t::date_month_apr_short(),
+        5 => t::date_month_may_short(),
+        6 => t::date_month_jun_short(),
+        7 => t::date_month_jul_short(),
+        8 => t::date_month_aug_short(),
+        9 => t::date_month_sep_short(),
+        10 => t::date_month_oct_short(),
+        11 => t::date_month_nov_short(),
+        12 => t::date_month_dec_short(),
+        _ => return None,
+    })
 }
 
 /// The cells a suggestion's reason may take beside its title in a row `room` wide: the title
@@ -783,6 +959,10 @@ pub(super) fn metadata_line(entry: &Entry) -> String {
     }
     if let Some(episodes) = entry.episodes {
         parts.push(t::episodes_count(i64::from(episodes)));
+    }
+    // The dub a source said the title has, after the episodes as the count line has it.
+    if let Some(dub) = kaeri_model::browsing::count_line(entry).and_then(|line| line.dub) {
+        parts.push(dub);
     }
     if let Some(year) = entry.year {
         // "Summer 2026" when AniList knows the season it premiered in.

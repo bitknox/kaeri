@@ -320,8 +320,21 @@ progressbar.home-progress progress { min-height: 3px; border-radius: 2px; backgr
 .home-capsule { padding: 0 8px; }
 
 /* Go to episode: the row it went to takes the selection fill, and the typed number is a small
-   capsule at the foot of the list. */
+   capsule at the top right. The dialog's Go is the selected fill too, not amber: the view keeps
+   one amber. */
 row.go-target, row.go-target:hover { background: var(--raised-selected); }
+dialog.go-to button.suggested, dialog.go-to button.suggested-action {
+  background: var(--raised-selected);
+  color: var(--silk);
+  box-shadow: inset 0 0 0 1px var(--edge);
+  font-weight: 600;
+}
+dialog.go-to button.suggested:hover, dialog.go-to button.suggested-action:hover {
+  background: color-mix(in srgb, var(--raised-selected) 88%, var(--silk));
+}
+dialog.go-to button.suggested:disabled, dialog.go-to button.suggested-action:disabled {
+  opacity: 0.5;
+}
 .typed-capsule {
   background: var(--raised-selected);
   color: var(--silk);

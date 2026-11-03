@@ -18,6 +18,9 @@ use kaeri_model::{
 
 use crate::{motion, synopsis, widgets};
 
+/// A switch of the panel to a range, by its index.
+type Switch = Rc<dyn Fn(usize)>;
+
 /// How tall the list may grow before it scrolls.
 const LIST_MAX: i32 = 360;
 /// The panel's width, which long titles and text never widen: they cut or wrap inside it.
@@ -124,9 +127,8 @@ pub fn fill(
         let at = table.iter().position(|row| row.number == number)? as u32;
         ranges.iter().position(|r| (r.start..r.end).contains(&at))
     };
-    let shown = Rc::new(Cell::new(
-        playing.as_ref().and_then(|p| range_of(&p.number)).unwrap_or(0),
-    ));
+    let shown =
+        Rc::new(Cell::new(playing.as_ref().and_then(|p| range_of(&p.number)).unwrap_or(0)));
     let owners: Rc<Vec<usize>> =
         Rc::new(rows.iter().map(|(e, _)| range_of(&e.number).unwrap_or(0)).collect());
 
@@ -198,12 +200,51 @@ pub fn fill(
     scroll.set_child(Some(&list));
     let body = gtk::Box::new(gtk::Orientation::Vertical, 0);
     body.set_size_request(WIDTH, -1);
+    // The row to focus as the panel opens: the one playing, or the one Go to episode went to.
+    let target: Rc<RefCell<Option<glib::WeakRef<gtk::ListBoxRow>>>> = Rc::default();
+    let switch: Rc<RefCell<Option<Switch>>> = Rc::default();
     if ranges.len() > 1 {
         list.set_filter_func({
             let (shown, owners) = (shown.clone(), owners.clone());
             move |row| owners.get(row.index() as usize).is_some_and(|at| *at == shown.get())
         });
-        body.append(&range_heading(&list, &scroll, table, &ranges, &shown));
+        // Go to episode, the range menu's last item: the dialog, then the panel again on the
+        // range that holds the row, the keyboard on it.
+        let go: Rc<dyn Fn()> = Rc::new({
+            let (button, list, table, owners, episodes) = (
+                button.clone(),
+                list.clone(),
+                table.to_vec(),
+                owners.clone(),
+                episodes.to_vec(),
+            );
+            let (target, switch) = (target.clone(), switch.clone());
+            move || {
+                button.popdown();
+                let (button, list, owners, episodes) =
+                    (button.clone(), list.clone(), owners.clone(), episodes.clone());
+                let (target, switch) = (target.clone(), switch.clone());
+                let parent = button
+                    .root()
+                    .map_or_else(|| button.clone().upcast(), |r| r.upcast::<gtk::Widget>());
+                crate::pages::title::go_to_dialog(&parent, &table, move |typed| {
+                    let number = typed.trim_start_matches('0');
+                    let Some(at) = episodes.iter().position(|e| e.number == number) else {
+                        return;
+                    };
+                    if let Some(to) = owners.get(at)
+                        && let Some(switch) = switch.borrow().as_ref()
+                    {
+                        switch(*to);
+                    }
+                    target.replace(list.row_at_index(at as i32).map(|row| row.downgrade()));
+                    button.popup();
+                });
+            }
+        });
+        let (heading, to_range) = range_heading(&list, &scroll, table, &ranges, &shown, go);
+        switch.replace(Some(to_range));
+        body.append(&heading);
     }
     body.append(&scroll);
     body.append(&footer);
@@ -216,7 +257,8 @@ pub fn fill(
     });
     // Opened, the keyboard starts on the episode playing, so the footer says that one first.
     popover.connect_map(move |_| {
-        if let Some(row) = current_row.as_ref().and_then(|row| row.upgrade()) {
+        let went = target.take().and_then(|row| row.upgrade());
+        if let Some(row) = went.or_else(|| current_row.as_ref().and_then(|row| row.upgrade())) {
             row.grab_focus();
         }
     });
@@ -224,14 +266,16 @@ pub fn fill(
 }
 
 /// The heading row of a long series' panel: a flat button naming the range shown, whose menu has
-/// one item per range. The list crossfades into the range chosen, with both drawn.
+/// one item per range and ends with Go to episode. The list crossfades into the range chosen,
+/// with both drawn. Also returns the switch to a range, for Go to episode.
 fn range_heading(
     list: &gtk::ListBox,
     scroll: &gtk::ScrolledWindow,
     table: &[EpisodeRow],
     ranges: &[kaeri_model::episodes::EpisodeRange],
     shown: &Rc<Cell<usize>>,
-) -> gtk::Box {
+    go: Rc<dyn Fn()>,
+) -> (gtk::Box, Switch) {
     let items = synopsis::range_items(table, ranges);
     let button = gtk::MenuButton::new();
     button.add_css_class("flat");
@@ -255,6 +299,19 @@ fn range_heading(
         }
         menu.append(&line);
     }
+    let rule = gtk::ListBoxRow::builder()
+        .child(&gtk::Separator::new(gtk::Orientation::Horizontal))
+        .activatable(false)
+        .selectable(false)
+        .build();
+    menu.append(&rule);
+    let go_line = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+    let go_label = gtk::Label::new(Some(&kaeri_i18n::t::episode_go_to()));
+    go_label.set_xalign(0.0);
+    go_label.set_hexpand(true);
+    go_line.append(&go_label);
+    go_line.append(&widgets::haze("Ctrl+G", "caption")); // i18n-skip
+    menu.append(&go_line);
     menu.select_row(menu.row_at_index(shown.get() as i32).as_ref());
     let pop = gtk::Popover::new();
     let menu_scroll = gtk::ScrolledWindow::new();
@@ -264,23 +321,36 @@ fn range_heading(
     menu_scroll.set_child(Some(&menu));
     pop.set_child(Some(&menu_scroll));
     button.set_popover(Some(&pop));
-    menu.connect_row_activated({
-        let (list, scroll, shown, button, pop) =
-            (list.clone(), scroll.clone(), shown.clone(), button.clone(), pop.clone());
-        move |_, row| {
-            pop.popdown();
-            let to = row.index() as usize;
-            if to == shown.get() {
+    let count = items.len();
+    let switch: Switch = Rc::new({
+        let (list, scroll, shown, button, menu) =
+            (list.clone(), scroll.clone(), shown.clone(), button.clone(), menu.clone());
+        move |to: usize| {
+            if to == shown.get() || to >= items.len() {
                 return;
             }
             shown.set(to);
             button.set_label(&items[to].label);
+            menu.select_row(menu.row_at_index(to as i32).as_ref());
             list.invalidate_filter();
             scroll.vadjustment().set_value(0.0);
             // The new range arrives over the old one's last frame: never empty between them.
-            let fade = adw::TimedAnimation::new(&scroll, 0.4, 1.0, 200, motion::opacity(&scroll));
+            let fade =
+                adw::TimedAnimation::new(&scroll, 0.4, 1.0, 200, motion::opacity(&scroll));
             fade.set_easing(adw::Easing::EaseOutCubic);
             fade.play();
+        }
+    });
+    menu.connect_row_activated({
+        let (pop, switch) = (pop.clone(), switch.clone());
+        move |_, row| {
+            pop.popdown();
+            let to = row.index() as usize;
+            if to > count {
+                go();
+            } else {
+                switch(to);
+            }
         }
     });
     let heading = gtk::Box::new(gtk::Orientation::Horizontal, 0);
@@ -288,5 +358,5 @@ fn range_heading(
     heading.set_margin_start(4);
     heading.set_margin_top(4);
     heading.append(&button);
-    heading
+    (heading, switch)
 }

@@ -602,7 +602,7 @@ pub fn surprise_button(
 ) -> gtk::Button {
     use kaeri_model::{browsing::SurpriseOutcome, command::Command, event::Event};
     let icon = gtk::Stack::new();
-    icon.add_named(&gtk::Image::from_icon_name("media-playlist-shuffle-symbolic"), Some("dice"));
+    icon.add_named(&gtk::Image::from_icon_name("kaeri-dice-symbolic"), Some("dice"));
     let spinner = adw::Spinner::new();
     icon.add_named(&spinner, Some("wait"));
     let face = gtk::Box::new(gtk::Orientation::Horizontal, 6);
@@ -617,7 +617,8 @@ pub fn surprise_button(
     let asked: Rc<RefCell<Option<kaeri_model::browsing::SurprisePool>>> = Rc::default();
     let slow: Rc<RefCell<Option<glib::SourceId>>> = Rc::default();
     button.connect_clicked({
-        let (ctx, asked, slow, icon) = (Rc::clone(ctx), asked.clone(), slow.clone(), icon.clone());
+        let (ctx, asked, slow, icon) =
+            (Rc::clone(ctx), asked.clone(), slow.clone(), icon.clone());
         move |_| {
             if asked.borrow().is_some() {
                 return;
@@ -625,9 +626,12 @@ pub fn surprise_button(
             let Some(pool) = pool() else { return };
             asked.replace(Some(pool.clone()));
             let icon = icon.clone();
-            let id = glib::timeout_add_local_once(std::time::Duration::from_millis(600), move || {
-                icon.set_visible_child_name("wait");
-            });
+            let id = glib::timeout_add_local_once(
+                std::time::Duration::from_millis(600),
+                move || {
+                    icon.set_visible_child_name("wait");
+                },
+            );
             slow.replace(Some(id));
             ctx.hub.send(Command::Surprise(pool));
         }
@@ -646,7 +650,11 @@ pub fn surprise_button(
         }
         icon.set_visible_child_name("dice");
         if let SurpriseOutcome::Picked { id, more } = outcome {
-            ctx.pick.replace(Some(crate::window::Pick { id: *id, pool: pool.clone(), more: *more }));
+            ctx.pick.replace(Some(crate::window::Pick {
+                id: *id,
+                pool: pool.clone(),
+                more: *more,
+            }));
             let _ = button.activate_action(
                 if swap { "win.swap-title" } else { "win.open-title" },
                 Some(&id.get().to_variant()),

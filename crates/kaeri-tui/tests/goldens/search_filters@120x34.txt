@@ -31,7 +31,7 @@ Kaeri                                                                           
                             │
                             │
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-plugins · Subbed · 1080p                                                 ←→ change   z surprise me   ↵ search   esc keep
+plugins · Subbed · 1080p                                                                 ←→ change   ↵ search   esc keep
 === styles ===
 colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
 r00 c00-04 fg=rule mod=BOLD
@@ -114,11 +114,9 @@ r30 c00-119 fg=rule
 r31 c00-119 fg=rule
 r32 c00-119 fg=rule
 r33 c00-23 fg=text-dim
-r33 c24-72 fg=rule
-r33 c73-74 fg=text
-r33 c75-84 fg=text-dim
-r33 c85-85 fg=text
-r33 c86-100 fg=text-dim
+r33 c24-88 fg=rule
+r33 c89-90 fg=text
+r33 c91-100 fg=text-dim
 r33 c101-101 fg=text
 r33 c102-111 fg=text-dim
 r33 c112-114 fg=text

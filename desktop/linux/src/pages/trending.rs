@@ -4,7 +4,8 @@
 //! Today is the browse's own Trending now rail. A week or a month comes from the engine's
 //! `LoadTrending`, which remembers the choice on this device. Nothing here asks at launch: the
 //! rail asks when Search is on screen. A change of period keeps the old covers for 600 ms, then
-//! shows placeholders, then crossfades to the new covers.
+//! shows placeholders for at least 300 ms, then the new covers; each change crossfades over a
+//! picture of what was there, so the rail is never empty between.
 
 use std::{
     cell::{Cell, RefCell},
@@ -16,16 +17,12 @@ use adw::prelude::*;
 use gtk::{gio, glib};
 use kaeri_i18n::t;
 use kaeri_model::{
-    browsing::TrendPeriod,
-    catalog::Entry,
-    command::Command,
-    event::Event,
-    search::SearchSort,
+    browsing::TrendPeriod, catalog::Entry, command::Command, event::Event, search::SearchSort,
 };
 
 use crate::{
     states::{Shape, States},
-    widgets::{self, PosterGrid},
+    widgets::PosterGrid,
     window::Ctx,
 };
 
@@ -42,6 +39,7 @@ pub struct Rail {
 }
 
 struct Inner {
+    me: std::rc::Weak<Inner>,
     ctx: Rc<Ctx>,
     period: Cell<TrendPeriod>,
     /// The viewer picked a period this visit: a remembered one arriving later does not take over.
@@ -53,6 +51,12 @@ struct Inner {
     actions: gio::SimpleActionGroup,
     see_all: RefCell<Option<SeeAll>>,
     asked: Cell<Option<std::time::Instant>>,
+    /// The rail under its ghost: a picture of before, fading away over the change.
+    veil: gtk::Overlay,
+    /// A period asked for and not yet in: the old covers stay until this fires.
+    switching: RefCell<Option<glib::SourceId>>,
+    /// The answer waiting out the placeholders' least time.
+    landing: RefCell<Option<glib::SourceId>>,
 }
 
 fn key(period: TrendPeriod) -> &'static str {
@@ -92,7 +96,9 @@ impl Rail {
             label.add_css_class("title-4");
             heading.add_named(&label, Some(name));
         }
-        let arrow = widgets::chevron();
+        // The heading opens a menu under it: the arrow points down.
+        let arrow = gtk::Image::from_icon_name("pan-down-symbolic");
+        arrow.add_css_class("dim-label");
         let face = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         face.append(&heading);
         face.append(&arrow);
@@ -104,7 +110,10 @@ impl Rail {
 
         let menu = gio::Menu::new();
         for period in TrendPeriod::ALL {
-            menu.append(Some(&period.choice()), Some(&format!("trend.period::{}", key(period))));
+            menu.append(
+                Some(&period.choice()),
+                Some(&format!("trend.period::{}", key(period))),
+            );
         }
         menu_button.set_menu_model(Some(&menu));
         let actions = gio::SimpleActionGroup::new();
@@ -126,11 +135,14 @@ impl Rail {
         top.append(&spacer);
         top.append(&see_all);
 
+        let veil = gtk::Overlay::new();
+        veil.set_child(Some(&states.widget));
         let widget = gtk::Box::new(gtk::Orientation::Vertical, 8);
         widget.append(&top);
-        widget.append(&states.widget);
+        widget.append(&veil);
 
-        let inner = Rc::new(Inner {
+        let inner = Rc::new_cyclic(|me: &std::rc::Weak<Inner>| Inner {
+            me: me.clone(),
             ctx: Rc::clone(ctx),
             period: Cell::new(TrendPeriod::Today),
             chosen: Cell::new(false),
@@ -141,6 +153,9 @@ impl Rail {
             actions,
             see_all: RefCell::new(None),
             asked: Cell::new(None),
+            veil,
+            switching: RefCell::default(),
+            landing: RefCell::default(),
         });
         inner.say_period(TrendPeriod::Today, false);
 
@@ -243,8 +258,11 @@ impl Inner {
         self.say_period(period, changed);
         self.period.set(period);
         let kept = self.kept.borrow().get(key(period)).cloned();
+        self.settle();
         match kept {
+            Some(entries) if changed => self.crossfade(|| self.show_now(&entries)),
             Some(entries) => self.show(&entries),
+            None if self.states.has_answer() => self.switch(),
             None => self.states.loading(None),
         }
         // Today is the browse's own rail; a week and a month are the period's.
@@ -262,7 +280,8 @@ impl Inner {
 
     fn say_period(&self, period: TrendPeriod, animate: bool) {
         self.period.set(period);
-        let name = if self.heading.visible_child_name().as_deref() == Some("a") { "b" } else { "a" };
+        let name =
+            if self.heading.visible_child_name().as_deref() == Some("a") { "b" } else { "a" };
         let label = self.heading.child_by_name(name).and_downcast::<gtk::Label>();
         if let Some(label) = label {
             label.set_label(&period.label());
@@ -272,9 +291,75 @@ impl Inner {
         }
         self.heading.set_visible_child_name(name);
         self.heading.set_transition_duration(160);
-        if let Some(action) = self.actions.lookup_action("period").and_downcast::<gio::SimpleAction>() {
+        if let Some(action) =
+            self.actions.lookup_action("period").and_downcast::<gio::SimpleAction>()
+        {
             action.set_state(&key(period).to_variant());
         }
+    }
+
+    /// A period not kept, with covers on screen: they stay for 600 ms, then the placeholders.
+    fn switch(&self) {
+        let me = self.me.clone();
+        let timer = glib::timeout_add_local_once(crate::states::SILENT, move || {
+            if let Some(inner) = me.upgrade() {
+                inner.switching.borrow_mut().take();
+                inner.crossfade(|| inner.states.placeholders_now());
+            }
+        });
+        self.switching.replace(Some(timer));
+    }
+
+    /// The covers of the period chosen are in: they crossfade over what is there once the
+    /// placeholders have stood their least time.
+    fn land(&self, entries: &[Entry]) {
+        if let Some(timer) = self.switching.borrow_mut().take() {
+            // In before the 600 ms were up: straight from the old covers.
+            timer.remove();
+            self.crossfade(|| self.show_now(entries));
+            return;
+        }
+        let Some(since) = self.states.placeholders_since() else {
+            self.show(entries);
+            return;
+        };
+        let left = crate::states::AT_LEAST.saturating_sub(since.elapsed());
+        if left.is_zero() {
+            self.crossfade(|| self.show_now(entries));
+            return;
+        }
+        let me = self.me.clone();
+        let entries = entries.to_vec();
+        let timer = glib::timeout_add_local_once(left, move || {
+            if let Some(inner) = me.upgrade() {
+                inner.landing.borrow_mut().take();
+                inner.crossfade(|| inner.show_now(&entries));
+            }
+        });
+        if let Some(old) = self.landing.replace(Some(timer)) {
+            old.remove();
+        }
+    }
+
+    /// Any switch or landing under way is called off: a newer choice takes over.
+    fn settle(&self) {
+        if let Some(timer) = self.switching.borrow_mut().take() {
+            timer.remove();
+        }
+        if let Some(timer) = self.landing.borrow_mut().take() {
+            timer.remove();
+        }
+    }
+
+    /// The change crossfades over a picture of the rail as it stood, under Reduce Animation too.
+    fn crossfade(&self, change: impl FnOnce()) {
+        crate::motion::ghost(&self.veil, &self.states.widget, true, change);
+    }
+
+    /// The covers at once, for a crossfade to draw over.
+    fn show_now(&self, entries: &[Entry]) {
+        self.grid.set(&entries[..entries.len().min(SHOWN)]);
+        self.states.answer_now(entries.is_empty());
     }
 
     fn show(&self, entries: &[Entry]) {
@@ -290,13 +375,14 @@ impl Inner {
         match event {
             // Today is the first rail of the browse.
             Event::Browse(rails) => {
-                let Some(rail) = rails.iter().find(|r| r.query.sort == Some(SearchSort::Trending))
+                let Some(rail) =
+                    rails.iter().find(|r| r.query.sort == Some(SearchSort::Trending))
                 else {
                     return;
                 };
                 self.kept.borrow_mut().insert(key(TrendPeriod::Today), rail.entries.clone());
                 if self.period.get() == TrendPeriod::Today && !rail.entries.is_empty() {
-                    self.show(&rail.entries);
+                    self.land(&rail.entries);
                 }
             }
             Event::Trending { period, entries, failed, .. } => {
@@ -314,11 +400,12 @@ impl Inner {
                     if self.kept.borrow().contains_key(key(*period)) {
                         return;
                     }
+                    self.settle();
                     self.states
                         .failed_title(&t::trending_failed(&period.choice().to_lowercase()));
                     self.states.failed("");
                 } else {
-                    self.show(entries);
+                    self.land(entries);
                 }
             }
             _ => {}

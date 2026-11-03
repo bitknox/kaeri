@@ -260,6 +260,28 @@ impl States {
         self.timers.borrow_mut().push(show);
     }
 
+    /// The placeholders at once, with no fade of their own: for a caller that crossfades over
+    /// them with a picture of what was there.
+    pub fn placeholders_now(&self) {
+        self.cancel();
+        self.phase.set(Phase::Placeholders);
+        self.since.set(Some(Instant::now()));
+        self.widget.set_visible_child_name("placeholders");
+    }
+
+    /// When the placeholders came on screen, while they show.
+    pub fn placeholders_since(&self) -> Option<Instant> {
+        if self.phase.get() == Phase::Placeholders { self.since.get() } else { None }
+    }
+
+    /// The content, or the empty state, at once with no fade of its own: the caller crossfades.
+    pub fn answer_now(&self, empty: bool) {
+        self.cancel();
+        let phase = if empty { Phase::Empty } else { Phase::Content };
+        self.phase.set(phase);
+        show(&self.widget, phase, false);
+    }
+
     /// The calendar's placeholders as an agenda, for a window too narrow for the week.
     pub fn agenda(&self, agenda: bool) {
         if let Some(shapes) = &self.shapes {

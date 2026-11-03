@@ -4,13 +4,13 @@
 use kaeri_i18n::t;
 use kaeri_model::{
     browsing::{SurpriseOutcome, SurprisePool, TrendPeriod},
-    catalog::{ContentFor, ContentList, Entry, Season, TitleAired},
+    catalog::{ContentFor, ContentList, Entry, LibrarySegment, Season, TitleAired},
     command::Command,
     event::Event,
     search::{MediaFormat, SearchQuery, SearchSort},
 };
 
-use super::{App, Cursor, Field, info};
+use super::{App, Cursor, Field, Surprised, info};
 use crate::{
     clock::Clock,
     keymap::Action,
@@ -541,6 +541,30 @@ impl App {
         })
     }
 
+    /// The period of the list on screen when it is a browse sorted by Trending: "Trending this
+    /// week", said at the far end of Search's prompt.
+    pub fn trending_browse(&self) -> Option<String> {
+        let query = &self.searched_query;
+        let shown =
+            matches!(&self.content, ContentList::Entries(entries) if !entries.is_empty());
+        (shown && query.is_browse() && query.sort_in_effect() == SearchSort::Trending)
+            .then(|| query.period_in_effect().unwrap_or(TrendPeriod::Today).label())
+    }
+
+    /// The filters set, as Search's prompt line lists them. The sort is left to the far end
+    /// while a Trending browse names its period there, and the filters are the ones it ran with.
+    pub fn search_summary(&self) -> String {
+        let browsed = self.trending_browse().is_some()
+            && sort_step(&self.search_filter) == sort_step(&self.searched_query);
+        if browsed {
+            let mut unsorted = self.search_filter.clone();
+            unsorted.sort = None;
+            unsorted.period = None;
+            return search_filter_summary(&unsorted);
+        }
+        search_filter_summary(&self.search_filter)
+    }
+
     /// The caption of the list on screen, when the binary sent one for it.
     pub fn list_caption(&self) -> Option<&str> {
         let (view, text) = self.caption.as_ref()?;
@@ -690,36 +714,71 @@ impl App {
         }
     }
 
-    /// Surprise me: a title picked from what the filters match, opened when the answer comes. A
-    /// second press while one is being picked waits for the first.
+    /// Surprise me: a title picked from the pool of the screen it is on, opened when the
+    /// answer comes. On Search's browse the pool is what its filters match, on Planning the
+    /// list; on the page a pick opened it is Another, from the same pool. A second press while
+    /// one is being picked waits for the first.
     pub(super) fn surprise(&mut self) -> Option<Command> {
-        if !self.on_search_root() && self.nav.overlay() != Some(&Overlay::SearchFilters) {
-            self.push_toast(info(t::keys_where_elsewhere()));
+        let Some(pool) = self.surprise_pool() else {
+            self.works_elsewhere(Action::Surprise);
+            return None;
+        };
+        if self.surprising.is_some() {
             return None;
         }
-        if self.nav.overlay().is_some() {
-            self.nav.close_overlay();
-        }
-        if self.surprising {
+        // A pool of one has no other title for Another to pick.
+        if self.surprised_here().is_some_and(|picked| !picked.more) {
             return None;
         }
-        self.surprising = true;
-        // The pool is what the filters match: the words typed have nothing to do with it.
-        Some(Command::Surprise(SurprisePool::Filters { query: self.search_filter.clone() }))
+        self.surprising = Some(pool.clone());
+        Some(Command::Surprise(pool))
     }
 
-    /// What Surprise me came to: the title opens; the engine has said what went wrong in a
-    /// notice of its own.
+    /// The pool Surprise me picks from on the screen on top, if it has one.
+    fn surprise_pool(&self) -> Option<SurprisePool> {
+        if let Some(picked) = self.surprised_here() {
+            return Some(picked.pool.clone());
+        }
+        match self.nav.current() {
+            // The words typed have nothing to do with it: the pool is what the browse's
+            // filters match, and a search with words is not a browse.
+            StageView::Section(Section::Search) if self.searched_query.is_browse() => {
+                let mut query = self.searched_query.clone();
+                query.text.clear();
+                Some(SurprisePool::Filters { query })
+            }
+            StageView::Section(Section::Library)
+                if self.library_segment == LibrarySegment::Planning =>
+            {
+                Some(SurprisePool::Planning)
+            }
+            _ => None,
+        }
+    }
+
+    /// The pick whose title page is on top: where `z` is Another.
+    pub(crate) fn surprised_here(&self) -> Option<&Surprised> {
+        let picked = self.surprised.as_ref()?;
+        matches!(self.nav.current(), StageView::Title(id) if *id == picked.id).then_some(picked)
+    }
+
+    /// What Surprise me came to: the title opens, over the list it was asked from, or in place
+    /// of the page Another was asked from, so Back returns to the list. The engine has said
+    /// what went wrong in a notice of its own.
     pub(super) fn apply_surprise(&mut self, pool: SurprisePool, outcome: SurpriseOutcome) {
-        if !matches!(pool, SurprisePool::Filters { .. }) {
+        if self.surprising.as_ref() != Some(&pool) {
             return;
         }
-        self.surprising = false;
-        let SurpriseOutcome::Picked { id, .. } = outcome else { return };
+        self.surprising = None;
+        let SurpriseOutcome::Picked { id, more } = outcome else { return };
+        if self.surprised_here().is_some() {
+            self.nav.pop();
+        }
         // Opened over a stub the page fills in as the load answers, as a title from any list is.
         self.detail = Some(Entry::new(id, String::new()));
         self.nav.push(StageView::Title(id));
         self.commands.push(Command::LoadDetail(id));
+        self.surprised = Some(Surprised { id, pool, more });
     }
 
     /// Whether the section on screen fills `content` with a list it is about to ask for.
@@ -854,6 +913,8 @@ pub fn search_filter_value(filter: &SearchQuery, row: usize) -> String {
         5 => {
             return match sort_step(filter) {
                 Some((_, Some(period))) => period.label(),
+                // Trending with no period is today's, and says so beside the week and the month.
+                Some((SearchSort::Trending, None)) => TrendPeriod::Today.label(),
                 Some((sort, None)) => sort_word(sort).unwrap_or_else(t::lists_sort_relevance),
                 None => t::lists_sort_relevance(),
             };
@@ -1319,7 +1380,7 @@ mod tests {
             [
                 "Popularity",
                 "Score",
-                "Trending",
+                "Trending today",
                 "Trending this week",
                 "Trending this month",
                 "Newest"
@@ -1340,24 +1401,67 @@ mod tests {
     }
 
     #[test]
-    fn z_in_the_filters_asks_for_a_surprise_and_the_pick_opens() {
+    fn z_on_a_browse_picks_from_its_filters_and_again_on_the_page_it_opened() {
         use kaeri_model::browsing::{SurpriseOutcome, SurprisePool};
+        let picked =
+            |id: u32, more: bool| SurpriseOutcome::Picked { id: AnilistId::new(id), more };
         let mut a = app();
         a.handle(Action::FilterSearch, 10);
-        a.search_filter.genres = vec!["Comedy".into()];
-        let task = a.handle(Action::Surprise, 10);
-        let pool = SurprisePool::Filters { query: a.search_filter.clone() };
-        assert_eq!(task, Some(Command::Surprise(pool.clone())));
-        assert!(a.nav.overlay().is_none(), "the overlay makes way");
+        a.handle(Action::Right, 10);
+        assert_eq!(a.handle(Action::Surprise, 10), None, "the filters keep their own keys");
+        let Some(Command::Search { query }) = a.handle(Action::Open, 10) else {
+            panic!("the filters browse");
+        };
+        a.apply(a.content_here(entries(3)));
+        if a.is_typing() {
+            a.handle(Action::Down, 10);
+        }
+
+        let pool = SurprisePool::Filters { query };
+        assert_eq!(a.handle(Action::Surprise, 10), Some(Command::Surprise(pool.clone())));
         // Pressed again while it is being picked, nothing more is asked.
         assert_eq!(a.handle(Action::Surprise, 10), None);
-
-        a.apply(Event::Surprise {
-            pool,
-            outcome: SurpriseOutcome::Picked { id: AnilistId::new(77), more: true },
-        });
+        a.apply(Event::Surprise { pool: pool.clone(), outcome: picked(77, true) });
         assert_eq!(a.take_commands(), [Command::LoadDetail(AnilistId::new(77))]);
         assert!(matches!(a.nav.current(), StageView::Title(id) if *id == AnilistId::new(77)));
+
+        // Another: the same pool, and the pick takes the page's place.
+        assert_eq!(a.handle(Action::Surprise, 10), Some(Command::Surprise(pool.clone())));
+        a.apply(Event::Surprise { pool, outcome: picked(88, false) });
+        assert!(matches!(a.nav.current(), StageView::Title(id) if *id == AnilistId::new(88)));
+        assert_eq!(a.handle(Action::Surprise, 10), None, "a pool of one has no other");
+        a.handle(Action::Back, 10);
+        assert!(
+            matches!(a.nav.current(), StageView::Section(Section::Search)),
+            "Back returns to the browse"
+        );
+    }
+
+    #[test]
+    fn z_on_planning_picks_from_planning_and_a_search_with_words_says_where_it_works() {
+        use kaeri_model::browsing::SurprisePool;
+        let mut a = app();
+        a.go_to_section(Section::Library);
+        a.nav.focus_stage();
+        a.handle(Action::Right, 20);
+        assert_eq!(a.library_segment, LibrarySegment::Planning);
+        a.apply(a.content_here(entries(3)));
+        assert_eq!(
+            a.handle(Action::Surprise, 20),
+            Some(Command::Surprise(SurprisePool::Planning))
+        );
+
+        let mut a = app();
+        a.handle(Action::FocusSearch, 10);
+        for ch in "lantern".chars() {
+            a.type_char(ch);
+        }
+        a.handle(Action::Open, 10);
+        a.apply(a.content_here(entries(3)));
+        a.handle(Action::Down, 10);
+        assert!(!a.is_typing());
+        assert_eq!(a.handle(Action::Surprise, 10), None);
+        assert!(a.toasts.iter().any(|t| t.notice.text.contains(&t::keys_where_surprise())));
     }
 
     #[test]

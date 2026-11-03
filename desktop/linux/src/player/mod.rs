@@ -2197,6 +2197,45 @@ impl PlayerView {
         self.wake();
     }
 
+    /// For a shot: the panel's rows one per row of the table, the 230th playing, so a long
+    /// series shows its ranges.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_ranged_rows(&self) {
+        let table = self.table.borrow().clone();
+        if let Some(menus) = self.menus.borrow_mut().as_mut() {
+            menus.0 = table
+                .iter()
+                .map(|row| MenuEpisode {
+                    number: row.number.clone(),
+                    label: kaeri_i18n::t::episode_number(row.number.parse().unwrap_or(0)),
+                    title: row.title.clone(),
+                    watched: row.completed,
+                    filler: false,
+                    current: row.number == "230",
+                })
+                .collect();
+        }
+        self.rebuild_menus();
+    }
+
+    /// For a shot: the Episodes panel's range menu open.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_episodes_ranges(&self) {
+        let Some(popover) = self.ui.episodes.popover() else { return };
+        let mut stack = vec![popover.upcast::<gtk::Widget>()];
+        while let Some(widget) = stack.pop() {
+            if let Some(button) = widget.downcast_ref::<gtk::MenuButton>() {
+                button.popup();
+                return;
+            }
+            let mut child = widget.first_child();
+            while let Some(next) = child {
+                stack.push(next.clone());
+                child = next.next_sibling();
+            }
+        }
+    }
+
     /// For a shot: the keyboard on the Episodes panel's row `at`, with its focus showing.
     #[cfg(feature = "fixtures")]
     pub fn shot_episodes_focus(&self, at: i32) {

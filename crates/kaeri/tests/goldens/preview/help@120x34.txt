@@ -3,31 +3,31 @@ Kaeri                                                                           
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ▌ Keys
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  Global                                Page down                 ctrl+d  Downloads
-    Show keys                      ?  Lists                                 Clear finished downloads       c
-    Run a command         : / ctrl+k    Open                           ↵    Delete download and its file   X
-    Quit                  Q / ctrl+c    Play next unwatched        space  Sources
-    Back                     q / esc    Set list status                a    Move source up                 K
-    Toggle rail width            tab    Rate this title                *    Move source down               J
-    Refresh this view              r    Expand synopsis                i    Play the demo                  B
-    Force a full resync            R    Remove, or not interested      x    Remove or add the demo         Y
-    Subbed or dubbed               t    Search filters            ctrl+f  Now playing
-    Go to section                1–0  Title                                 Play or pause              space
-    Search                         /    Episodes                       e    Back 5 seconds                 ←
-    Recent messages                !    Sources                        s    Forward 5 seconds              →
-    Copy the bug report            C    Source for this title          P    Back 30 seconds                H
-    Delete the crash report        E    Fix this match                 m    Forward 30 seconds             L
-  Movement                              Download                       d    Next episode                   n
-    Move up                    k / ↑    Watch order                    w    Previous episode               N
-    Move down                  j / ↓    Recommendations                b    Skip opening                   S
-    Move left                  h / ←    Play the trailer               v    Slower                         [
-    Move right                 l / →    Open on AniList                o    Faster                         ]
-    Jump to top                    g    Play in a watch party          y    Volume down                    9
-    Jump to bottom                 G  Episodes                              Volume up                      0
-    Jump to today                  T    Download a range of episodes   D    Full screen                    F
-    Jump to previous day           {    Toggle watched                 u    Leave player running           q
-    Jump to next day               }    Mark all previous watched      M    Stop playback                  x
-    Page up                   ctrl+u    Filter                         f
+  Global                                Page down                 ctrl+d    Filter                         f
+    Show keys                      ?  Lists                               Downloads
+    Run a command         : / ctrl+k    Open                           ↵    Clear finished downloads       c
+    Quit                  Q / ctrl+c    Play next unwatched        space    Delete download and its file   X
+    Back                     q / esc    Set list status                a  Sources
+    Toggle rail width            tab    Rate this title                *    Move source up                 K
+    Refresh this view              r    Expand synopsis                i    Move source down               J
+    Force a full resync            R    Remove, or not interested      x    Play the demo                  B
+    Subbed or dubbed               t    Search filters            ctrl+f    Remove or add the demo         Y
+    Go to section                1–0    Surprise me                    z  Now playing
+    Search                         /  Title                                 Play or pause              space
+    Recent messages                !    Episodes                       e    Back 5 seconds                 ←
+    Copy the bug report            C    Sources                        s    Forward 5 seconds              →
+    Delete the crash report        E    Source for this title          P    Back 30 seconds                H
+  Movement                              Fix this match                 m    Forward 30 seconds             L
+    Move up                    k / ↑    Download                       d    Next episode                   n
+    Move down                  j / ↓    Watch order                    w    Previous episode               N
+    Move left                  h / ←    Recommendations                b    Skip opening                   S
+    Move right                 l / →    Play the trailer               v    Slower                         [
+    Jump to top                    g    Open on AniList                o    Faster                         ]
+    Jump to bottom                 G    Play in a watch party          y    Volume down                    9
+    Jump to today                  T  Episodes                              Volume up                      0
+    Jump to previous day           {    Download a range of episodes   D    Full screen                    F
+    Jump to next day               }    Toggle watched                 u    Leave player running           q
+    Page up                   ctrl+u    Mark all previous watched      M    Stop playback                  x
 
                             │                                                     ████░░░░░░░░░░░░  3 of 12 episodes
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────

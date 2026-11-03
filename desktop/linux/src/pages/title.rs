@@ -108,6 +108,8 @@ struct Page {
     scroll: gtk::ScrolledWindow,
     /// Over the episode list: the snapshot a range switch crossfades from.
     veil: gtk::Overlay,
+    /// The scrolled page under its overlays, for a crossfade of what is on screen.
+    screen: gtk::Overlay,
     /// The range picker, beside the heading of the list.
     range_slot: gtk::Box,
     /// Whether the table had text, expected text or none when it was first laid out: kept until
@@ -226,16 +228,16 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
     // Over the list, a range switch lays the old list's picture and fades it out.
     let veil = gtk::Overlay::new();
     veil.set_child(Some(&episodes_state.widget));
-    // The digits typed on the list, as a small capsule at its foot.
+    // The digits typed on the list, as a small capsule at the top right of the screen.
     let capsule = gtk::Label::new(None);
     capsule.add_css_class("typed-capsule");
-    capsule.set_halign(gtk::Align::Center);
-    capsule.set_valign(gtk::Align::End);
-    capsule.set_margin_bottom(18);
+    capsule.set_halign(gtk::Align::End);
+    capsule.set_valign(gtk::Align::Start);
+    capsule.set_margin_top(60);
+    capsule.set_margin_end(36);
     capsule.set_visible(false);
     capsule.set_can_target(false);
     capsule.set_accessible_role(gtk::AccessibleRole::Presentation);
-    veil.add_overlay(&capsule);
     main.append(&veil);
 
     let side = gtk::Box::new(gtk::Orientation::Vertical, 18);
@@ -294,7 +296,8 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
     if let Some(pick) = pick.clone()
         && pick.more
     {
-        header.pack_start(&widgets::surprise_button(
+        // Surprise me's place: a flat header bar button with its label, at the end.
+        header.pack_end(&widgets::surprise_button(
             ctx,
             &t::surprise_another(),
             &t::surprise_another_hint(),
@@ -306,7 +309,11 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
     view.add_top_bar(&header);
     view.add_top_bar(&widgets::offline_banner());
     view.set_extend_content_to_top_edge(true);
-    view.set_content(Some(&scroll));
+    // Over the screen: the typed capsule, and a Go to episode crossfade's picture of before.
+    let screen = gtk::Overlay::new();
+    screen.set_child(Some(&scroll));
+    screen.add_overlay(&capsule);
+    view.set_content(Some(&screen));
     let navigation =
         adw::NavigationPage::builder().title(&title).tag(tag(id)).child(&view).build();
 
@@ -326,6 +333,7 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
         me: RefCell::default(),
         scroll: scroll.clone(),
         veil,
+        screen,
         range_slot,
         outlook: Cell::new(None),
         revealed: RefCell::default(),
@@ -706,7 +714,8 @@ impl Page {
             shot.connect_activate({
                 let page = self.me.borrow().clone();
                 move |_, arg| {
-                    let (Some(page), Some(arg)) = (page.upgrade(), arg.and_then(String::from_variant))
+                    let (Some(page), Some(arg)) =
+                        (page.upgrade(), arg.and_then(String::from_variant))
                     else {
                         return;
                     };
@@ -719,9 +728,17 @@ impl Page {
                                 page.say_typed(Some(&words));
                             }
                         }
+                        // A key on the list, as typed: `key:<digit>`.
+                        Some(("key", key)) => {
+                            if let Some(key) = gdk::Key::from_name(key) {
+                                page.type_key(key);
+                            }
+                        }
                         Some(("type", digits)) => {
                             page.typed.replace(digits.to_owned());
-                            page.say_typed(Some(&t::episode_number(digits.parse().unwrap_or(0))));
+                            page.say_typed(Some(&t::episode_number(
+                                digits.parse().unwrap_or(0),
+                            )));
                         }
                         _ => page.go_dialog(),
                     }
@@ -1249,7 +1266,13 @@ impl Page {
         }
         // The menu ends with Go to episode, after a rule.
         let rule = gtk::Separator::new(gtk::Orientation::Horizontal);
-        list.append(&gtk::ListBoxRow::builder().child(&rule).activatable(false).selectable(false).build());
+        list.append(
+            &gtk::ListBoxRow::builder()
+                .child(&rule)
+                .activatable(false)
+                .selectable(false)
+                .build(),
+        );
         let go = gtk::Box::new(gtk::Orientation::Horizontal, 12);
         let go_label = gtk::Label::new(Some(&t::episode_go_to()));
         go_label.set_xalign(0.0);
@@ -1315,21 +1338,13 @@ impl Page {
     /// `change` is made to the list with the page as it stood laid over it as a picture, which
     /// fades away on the standard token: both sides are drawn at once, so the list is never empty.
     fn crossfade(&self, change: impl FnOnce()) {
-        let before =
-            gtk::WidgetPaintable::new(Some(&self.episodes_state.widget)).current_image();
-        let ghost = gtk::Picture::for_paintable(&before);
-        ghost.set_can_target(false);
-        ghost.set_halign(gtk::Align::Fill);
-        ghost.set_valign(gtk::Align::Start);
-        ghost.set_content_fit(gtk::ContentFit::Fill);
-        change();
-        self.veil.add_overlay(&ghost);
-        let veil = self.veil.clone();
-        let gone = ghost.clone();
-        let fade = adw::TimedAnimation::new(&ghost, 1.0, 0.0, 300, motion::opacity(&ghost));
-        fade.set_easing(adw::Easing::EaseOutCubic);
-        fade.connect_done(move |_| veil.remove_overlay(&gone));
-        fade.play();
+        motion::ghost(&self.veil, &self.episodes_state.widget, false, change);
+    }
+
+    /// Go to episode's crossfade: a picture of the screen as it stood, so a jump never streaks.
+    /// It plays under Reduce Animation too, where it stands in for the scroll.
+    fn crossfade_always(&self, change: impl FnOnce()) {
+        motion::ghost(&self.screen, &self.scroll, true, change);
     }
 
     // Go to episode, typed digits and the range keys.
@@ -1408,12 +1423,13 @@ impl Page {
         self.say_typed(Some(&t::episode_number(typed.parse().unwrap_or(0))));
         self.cancel_typing();
         let page = self.me.borrow().clone();
-        let at = glib::timeout_add_local_once(std::time::Duration::from_millis(600), move || {
-            if let Some(page) = page.upgrade() {
-                page.typing.replace(None);
-                page.finish_typing();
-            }
-        });
+        let at =
+            glib::timeout_add_local_once(std::time::Duration::from_millis(600), move || {
+                if let Some(page) = page.upgrade() {
+                    page.typing.replace(None);
+                    page.finish_typing();
+                }
+            });
         self.typing.replace(Some(at));
         true
     }
@@ -1495,7 +1511,7 @@ impl Page {
             None => index < plan.start + plan.fold,
         };
         if other_range || (folded && !self.unfolded.get()) {
-            self.crossfade(|| {
+            self.crossfade_always(|| {
                 if other_range {
                     self.range.set(to);
                 }
@@ -1541,7 +1557,7 @@ impl Page {
             let to = (top - 64.0).max(0.0);
             let adjustment = page.scroll.vadjustment();
             let near = (to - adjustment.value()).abs() < adjustment.page_size();
-            if nearby && near {
+            if nearby && near && !motion::reduced() {
                 let fade = adw::TimedAnimation::new(
                     &page.scroll,
                     adjustment.value(),
@@ -1551,8 +1567,9 @@ impl Page {
                 );
                 fade.set_easing(adw::Easing::EaseOutCubic);
                 fade.play();
-            } else if nearby && !near {
-                page.crossfade(|| adjustment.set_value(to));
+            } else if nearby {
+                // Further than a screen, or under Reduce Animation: a crossfade, never a streak.
+                page.crossfade_always(|| adjustment.set_value(to));
             } else {
                 adjustment.set_value(to);
             }
@@ -1569,8 +1586,7 @@ impl Page {
         }
         let (_, plan) = self.plan(&rows);
         let current = ranges.iter().position(|r| r.start as usize == plan.start).unwrap_or(0);
-        let to =
-            browsing::episode_range_step(ranges.len() as u32, current as u32, by) as usize;
+        let to = browsing::episode_range_step(ranges.len() as u32, current as u32, by) as usize;
         self.switch_range(to);
     }
 
@@ -1580,50 +1596,12 @@ impl Page {
         if rows.is_empty() {
             return;
         }
-        let hint = browsing::go_to_hint(&rows);
-        let dialog = adw::AlertDialog::new(Some(&t::episode_go_to_title()), Some(&hint));
-        let entry = gtk::Entry::builder()
-            .input_purpose(gtk::InputPurpose::Digits)
-            .placeholder_text(&hint)
-            .activates_default(true)
-            .build();
-        entry.update_property(&[gtk::accessible::Property::Label(&browsing::go_to_label(&rows))]);
-        dialog.set_extra_child(Some(&entry));
-        dialog.add_response("cancel", &t::action_cancel());
-        dialog.add_response("go", &t::action_go());
-        dialog.set_response_appearance("go", adw::ResponseAppearance::Suggested);
-        dialog.set_default_response(Some("go"));
-        dialog.set_close_response("cancel");
-        dialog.set_response_enabled("go", false);
-        entry.connect_changed({
-            let (dialog, rows) = (dialog.clone(), rows.clone());
-            move |entry| {
-                // Digits only.
-                let text = entry.text();
-                let digits: String = text.chars().filter(char::is_ascii_digit).collect();
-                if digits != text.as_str() {
-                    entry.set_text(&digits);
-                    return;
-                }
-                let now = glib::DateTime::now_utc().map_or(0, |t| t.to_unix());
-                let result = browsing::go_to_episode(&rows, &digits, now);
-                dialog.set_response_enabled("go", matches!(result, GoTo::Row { .. }));
-                dialog.set_body(&browsing::go_to_message(&result).unwrap_or_else(|| {
-                    browsing::go_to_hint(&rows)
-                }));
-            }
-        });
         let page = self.me.borrow().clone();
-        dialog.connect_response(Some("go"), {
-            let entry = entry.clone();
-            move |_, _| {
-                if let Some(page) = page.upgrade() {
-                    let _ = page.jump(&entry.text());
-                }
+        go_to_dialog(&self.ctx.window, &rows, move |typed| {
+            if let Some(page) = page.upgrade() {
+                let _ = page.jump(typed);
             }
         });
-        dialog.present(Some(&self.ctx.window));
-        entry.grab_focus();
     }
 
     /// The episode table, drawn whole: when it arrives, when the window changes size and when the
@@ -2017,7 +1995,11 @@ impl Page {
 
     /// Where a row's top is, in the scrolled page's content.
     fn row_top(&self, row: &gtk::ListBoxRow) -> Option<f64> {
-        let content = self.scroll.child()?;
+        // Measured on the page itself, not the viewport around it, whose points already take
+        // away how far the page has scrolled.
+        let child = self.scroll.child()?;
+        let content =
+            child.downcast_ref::<gtk::Viewport>().and_then(|v| v.child()).unwrap_or(child);
         row.compute_point(&content, &gtk::graphene::Point::zero()).map(|p| f64::from(p.y()))
     }
 
@@ -2375,6 +2357,70 @@ fn clear(container: &gtk::Box) {
 
 fn clear_list(list: &gtk::ListBox) {
     list.remove_all();
+}
+
+/// Go to episode: an entry under the show's span, which says what is wrong with the number as it
+/// is typed; Go is in the selected fill and gives `go` the digits.
+/// The title page and the player's Episodes panel share it.
+pub fn go_to_dialog(
+    parent: &impl IsA<gtk::Widget>,
+    rows: &[EpisodeRow],
+    go: impl Fn(&str) + 'static,
+) {
+    let rows = rows.to_vec();
+    let hint = browsing::go_to_hint(&rows);
+    // Headed Go to episode, the show's span as the body ("1 to 412"), which gives way to what is
+    // wrong with the number as it is typed, and the entry under it.
+    let dialog = adw::AlertDialog::new(Some(&t::episode_go_to_title()), Some(&hint));
+    dialog.add_css_class("go-to");
+    let entry = gtk::Entry::builder()
+        .input_purpose(gtk::InputPurpose::Digits)
+        .activates_default(true)
+        .build();
+    entry.update_property(&[gtk::accessible::Property::Label(&browsing::go_to_label(&rows))]);
+    dialog.set_extra_child(Some(&entry));
+    dialog.add_response("cancel", &t::action_cancel());
+    dialog.add_response("go", &t::action_go());
+    dialog.set_response_appearance("go", adw::ResponseAppearance::Suggested);
+    dialog.set_default_response(Some("go"));
+    dialog.set_close_response("cancel");
+    dialog.set_response_enabled("go", false);
+    entry.connect_changed({
+        let (dialog, rows) = (dialog.clone(), rows.clone());
+        move |entry| {
+            // Digits only.
+            let text = entry.text();
+            let digits: String = text.chars().filter(char::is_ascii_digit).collect();
+            if digits != text.as_str() {
+                entry.set_text(&digits);
+                return;
+            }
+            let now = glib::DateTime::now_utc().map_or(0, |t| t.to_unix());
+            let result = browsing::go_to_episode(&rows, &digits, now);
+            dialog.set_response_enabled("go", matches!(result, GoTo::Row { .. }));
+            dialog.set_body(
+                &browsing::go_to_message(&result)
+                    .unwrap_or_else(|| browsing::go_to_hint(&rows)),
+            );
+        }
+    });
+    let go = Rc::new(go);
+    // Return in the entry takes the number when Go would.
+    entry.connect_activate({
+        let (dialog, go) = (dialog.clone(), go.clone());
+        move |entry| {
+            if dialog.is_response_enabled("go") {
+                go(&entry.text());
+                dialog.close();
+            }
+        }
+    });
+    dialog.connect_response(Some("go"), {
+        let entry = entry.clone();
+        move |_, _| go(&entry.text())
+    });
+    dialog.present(Some(parent));
+    entry.grab_focus();
 }
 
 #[cfg(test)]

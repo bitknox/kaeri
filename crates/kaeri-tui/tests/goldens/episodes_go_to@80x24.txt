@@ -1,0 +1,145 @@
+Kaeri                                                  plugins ●  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────
+▌▸ │  ←  Lantern Street Casebook
+ ▤ │
+ ▦ │    #     Title                                   Run     Watched
+ / │  ────────────────────────────────────────────────────────────────────────
+ ▥ │    379   The Glovemaker's Guest                  23:55   ░░░░░░░░░░
+ ↓ │    380   Lanterns Out at Nine                    23:55   ░░░░░░░░░░
+ ◇ │    381   A Coat Left on the Tram                 23:55   ░░░░░░░░░░
+ ◎ │  ▌ 382   The Pawnbroker's Ledger                 23:55   ░░░░░░░░░░
+ ≡ │    383   Steam on the Window                     23:55   ░░░░░░░░░░
+ ⇄ │    384   The Lighthouse Clerk                    23:55   ░░░░░░░░░░
+   │    385   A Map Folded Twice                      23:55   ░░░░░░░░░░
+   │    386   The Fifth Witness                       23:55   ░░░░░░░░░░
+   │    387   Rain at the Ticket Office               23:55   ░░░░░░░░░░
+   │    388   The Silent Auction                      23:55   ░░░░░░░░░░
+   │    389   An Hour Taken Back                      23:55   ░░░░░░░░░░
+   │    390   The Harbourmaster's Cat                 23:55   ░░░░░░░░░░
+   │    391   A Lamp Lit Twice                        23:55   ░░░░░░░░░░
+   │    392   The Last Tram Home                      23:55   ░░░░░░░░░░
+   │    393   A Coat Left on the Tram                 23:55   ░░░░░░░░░░
+   │    394   The Pawnbroker's Ledger                 23:55   ░░░░░░░░░░
+────────────────────────────────────────────────────────────────────────────────
+plugins · Subbed · 1080p                    ↵ play   u watched   q back   ? keys
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c55-63 fg=state
+r00 c64-65 fg=text-dim
+r00 c66-66 fg=rule
+r00 c67-68 fg=text-dim
+r00 c69-79 fg=state
+r01 c00-79 fg=rule
+r02 c00-00 fg=text-dim
+r02 c01-01 fg=text mod=BOLD
+r02 c03-03 fg=rule
+r02 c06-31 fg=text mod=BOLD
+r03 c01-01 fg=text-dim
+r03 c03-03 fg=rule
+r04 c01-01 fg=text-dim
+r04 c03-03 fg=rule
+r04 c08-08 fg=text-dim
+r04 c14-18 fg=text-dim
+r04 c54-56 fg=text-dim
+r04 c62-68 fg=text-dim
+r05 c01-01 fg=text-dim
+r05 c03-03 fg=rule
+r05 c06-77 fg=rule
+r06 c01-01 fg=text-dim
+r06 c03-03 fg=rule
+r06 c08-10 fg=text-dim
+r06 c14-35 fg=text-dim
+r06 c54-58 fg=text-dim
+r06 c62-71 fg=rule
+r07 c01-01 fg=text-dim
+r07 c03-03 fg=rule
+r07 c08-10 fg=text-dim
+r07 c14-33 fg=text-dim
+r07 c54-58 fg=text-dim
+r07 c62-71 fg=rule
+r08 c01-01 fg=text-dim
+r08 c03-03 fg=rule
+r08 c08-10 fg=text-dim
+r08 c14-36 fg=text-dim
+r08 c54-58 fg=text-dim
+r08 c62-71 fg=rule
+r09 c01-01 fg=text-dim
+r09 c03-03 fg=rule
+r09 c06-06 fg=obi
+r09 c08-10 fg=text mod=BOLD
+r09 c14-36 fg=text mod=BOLD
+r09 c54-58 fg=text-dim
+r09 c62-71 fg=rule
+r10 c01-01 fg=text-dim
+r10 c03-03 fg=rule
+r10 c08-10 fg=text-dim
+r10 c14-32 fg=text-dim
+r10 c54-58 fg=text-dim
+r10 c62-71 fg=rule
+r11 c01-01 fg=text-dim
+r11 c03-03 fg=rule
+r11 c08-10 fg=text-dim
+r11 c14-33 fg=text-dim
+r11 c54-58 fg=text-dim
+r11 c62-71 fg=rule
+r12 c03-03 fg=rule
+r12 c08-10 fg=text-dim
+r12 c14-31 fg=text-dim
+r12 c54-58 fg=text-dim
+r12 c62-71 fg=rule
+r13 c03-03 fg=rule
+r13 c08-10 fg=text-dim
+r13 c14-30 fg=text-dim
+r13 c54-58 fg=text-dim
+r13 c62-71 fg=rule
+r14 c03-03 fg=rule
+r14 c08-10 fg=text-dim
+r14 c14-38 fg=text-dim
+r14 c54-58 fg=text-dim
+r14 c62-71 fg=rule
+r15 c03-03 fg=rule
+r15 c08-10 fg=text-dim
+r15 c14-31 fg=text-dim
+r15 c54-58 fg=text-dim
+r15 c62-71 fg=rule
+r16 c03-03 fg=rule
+r16 c08-10 fg=text-dim
+r16 c14-31 fg=text-dim
+r16 c54-58 fg=text-dim
+r16 c62-71 fg=rule
+r17 c03-03 fg=rule
+r17 c08-10 fg=text-dim
+r17 c14-36 fg=text-dim
+r17 c54-58 fg=text-dim
+r17 c62-71 fg=rule
+r18 c03-03 fg=rule
+r18 c08-10 fg=text-dim
+r18 c14-29 fg=text-dim
+r18 c54-58 fg=text-dim
+r18 c62-71 fg=rule
+r19 c03-03 fg=rule
+r19 c08-10 fg=text-dim
+r19 c14-31 fg=text-dim
+r19 c54-58 fg=text-dim
+r19 c62-71 fg=rule
+r20 c03-03 fg=rule
+r20 c08-10 fg=text-dim
+r20 c14-36 fg=text-dim
+r20 c54-58 fg=text-dim
+r20 c62-71 fg=rule
+r21 c03-03 fg=rule
+r21 c08-10 fg=text-dim
+r21 c14-36 fg=text-dim
+r21 c54-58 fg=text-dim
+r21 c62-71 fg=rule
+r22 c00-79 fg=rule
+r23 c00-23 fg=text-dim
+r23 c44-44 fg=text
+r23 c45-52 fg=text-dim
+r23 c53-53 fg=text
+r23 c54-64 fg=text-dim
+r23 c65-65 fg=text
+r23 c66-73 fg=text-dim
+r23 c74-74 fg=text
+r23 c75-79 fg=text-dim

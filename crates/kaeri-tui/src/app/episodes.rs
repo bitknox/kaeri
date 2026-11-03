@@ -133,9 +133,10 @@ impl App {
         }
     }
 
-    /// `G` after digits: the cursor goes to that episode with the row at the top. A number the
-    /// show does not have, or one that is not out, is said in the catalogue's words, and the
-    /// cursor stays.
+    /// `G` after digits: the cursor goes to that episode, the row a third of the way down the
+    /// table (the frame places it: see [`Self::episodes_jumped`]). A number the show does not
+    /// have, or one that is not out, is said in the status line in the catalogue's words until
+    /// the next key, and the cursor stays.
     pub(super) fn go_to_typed(&mut self) -> Option<Command> {
         let typed = std::mem::take(&mut self.go_count);
         let result =
@@ -150,13 +151,10 @@ impl App {
                 }
                 if let Some(at) = self.episodes.iter().position(|r| r.number == number) {
                     self.cursors.episodes = Cursor { selected: at, offset: at };
+                    self.episodes_jumped = true;
                 }
             }
-            other => {
-                if let Some(message) = browsing::go_to_message(&other) {
-                    self.push_toast(info(message));
-                }
-            }
+            other => self.go_error = browsing::go_to_message(&other),
         }
         None
     }
@@ -367,7 +365,7 @@ impl App {
             // reached the table it was listed in, and auto-next declined to roll on.
             // Opening the title sets this; entering its episodes has to as well.
             self.detail = Some(entry);
-            self.cursors.episodes.selected = 0;
+            self.cursors.episodes = Cursor::default();
             // Discard the previous title's rows *before* the screen appears. They were
             // being left in place until the new load answered, so opening episodes for one
             // show displayed another show's episode list — complete with its watch
@@ -820,7 +818,7 @@ mod tests {
         assert!(a.in_episodes(), "the section jump did not happen");
         assert_eq!(a.handle(Action::Bottom, 5), None);
         assert_eq!(a.cursors.episodes.selected, 6);
-        assert_eq!(a.cursors.episodes.offset, 6, "the row is put at the top");
+        assert!(a.episodes_jumped, "the next frame places the row");
         assert!(a.go_count.is_empty());
 
         // Two digits make one number, and zero is the digit after the one.
@@ -852,7 +850,20 @@ mod tests {
             number: 99,
             last: 12,
         });
-        assert!(a.toasts.iter().any(|t| Some(&t.notice.text) == says.as_ref()));
+        assert_eq!(a.go_error, says, "said in the status line");
+        assert!(a.toasts.is_empty(), "not as a toast");
+
+        // Esc lets go of it and stays on the list; any other key lets go of it and acts.
+        a.handle(Action::Back, 5);
+        assert_eq!(a.go_error, None);
+        assert!(a.in_episodes());
+        a.handle(Action::JumpSection(9), 5);
+        a.handle(Action::JumpSection(9), 5);
+        a.handle(Action::Bottom, 5);
+        assert!(a.go_error.is_some());
+        a.handle(Action::Down, 5);
+        assert_eq!(a.go_error, None);
+        assert_eq!(a.cursors.episodes.selected, 4, "the key did what it does");
     }
 
     #[test]

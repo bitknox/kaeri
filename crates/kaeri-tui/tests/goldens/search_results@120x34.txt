@@ -1,26 +1,26 @@
 Kaeri                                                                                          plugins ●  ·  anilist ⇅ 2
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
   ▸  Home                   │  Find no   Action · 2026                       first 50 — narrow the search for the rest
-  ▤  Calendar               │
-  ▦  Seasonal               │    Hoshikuzu no Tabibito          92%   ░░░░░░░░░░░░░░░
-▌ /  Search                 │  ▌ Kaze no Tegami                 91%   ░░░░░░░░░░░░░░░
-  ▥  Library                │    Yoru no Toshokan               90%   ░░░░░░░░░░░░░░░
-  ↓  Downloads              │    Tsuki to Kujira no Uta         89%   ░░░░░░░░░░░░░░░
-  ◇  Sources                │    Umibe no Kissaten              86%   ░░░░░░░░░░░░░░░
-  ◎  Accounts               │    Mori no Kajiya                 85%   ░░░░░░░░░░░░░░░
-  ≡  Settings               │    Tetsu no Hanazono              82%   ░░░░░░░░░░░░░░░
-  ⇄  Together               │    Ame Furu Machi no Robotto      81%   ░░░░░░░░░░░░░░░
-                            │    Kumo no Ue no Gakkou           80%   ░░░░░░░░░░░░░░░
-                            │    Fuyu no Shika to Tabi          78%   ░░░░░░░░░░░░░░░
-                            │    Sakanaya no Musume             74%   ░░░░░░░░░░░░░░░
-                            │    Tanuki Densha Monogatari       73%
-                            │    Uta no Tou no Majo             70%   Kaze no Tegami
+  ▤  Calendar               │                                    Eps   Dub
+  ▦  Seasonal               │    Hoshikuzu no Tabibito            12        92%   ░░░░░░░░░░░░░░░
+▌ /  Search                 │  ▌ Kaze no Tegami                   24        91%   ░░░░░░░░░░░░░░░
+  ▥  Library                │    Yoru no Toshokan                 36        90%   ░░░░░░░░░░░░░░░
+  ↓  Downloads              │    Tsuki to Kujira no Uta           12        89%   ░░░░░░░░░░░░░░░
+  ◇  Sources                │    Umibe no Kissaten                12        86%   ░░░░░░░░░░░░░░░
+  ◎  Accounts               │    Mori no Kajiya                   24        85%   ░░░░░░░░░░░░░░░
+  ≡  Settings               │    Tetsu no Hanazono                24        82%   ░░░░░░░░░░░░░░░
+  ⇄  Together               │    Ame Furu Machi no Robotto        36        81%   ░░░░░░░░░░░░░░░
+                            │    Kumo no Ue no Gakkou             12        80%   ░░░░░░░░░░░░░░░
+                            │    Fuyu no Shika to Tabi         movie        78%   ░░░░░░░░░░░░░░░
+                            │    Sakanaya no Musume               12        74%   ░░░░░░░░░░░░░░░
+                            │    Tanuki Densha Monogatari      movie        73%
+                            │    Uta no Tou no Majo               24        70%   Kaze no Tegami
                             │
-                            │                                         TV  ·  24 episodes  ·  2026  ·  91%  ·  Ateli…
-                            │                                         Comedy
+                            │                                                     TV  ·  24 episodes  ·  2026  ·  9…
+                            │                                                     Comedy
                             │
-                            │                                         Kaze no Tegami: a story told in twelve
-                            │                                         evenings.
+                            │                                                     Kaze no Tegami: a story told in
+                            │                                                     twelve evenings.
                             │
                             │
                             │
@@ -50,85 +50,87 @@ r02 c77-117 fg=text-dim
 r03 c02-02 fg=text-dim
 r03 c05-12 fg=text-dim
 r03 c28-28 fg=rule
+r03 c65-67 fg=text-dim
+r03 c71-73 fg=text-dim
 r04 c02-02 fg=text-dim
 r04 c05-12 fg=text-dim
 r04 c28-28 fg=rule
 r04 c33-53 fg=text-dim
-r04 c64-66 fg=text-dim
-r04 c70-84 fg=rule
+r04 c63-78 fg=text-dim
+r04 c82-96 fg=rule
 r05 c00-00 fg=text-dim
 r05 c02-02 fg=text
 r05 c05-10 fg=text mod=BOLD
 r05 c28-28 fg=rule
 r05 c31-31 fg=obi
 r05 c33-46 fg=text mod=BOLD
-r05 c64-66 fg=text-dim
-r05 c70-84 fg=rule
+r05 c63-78 fg=text-dim
+r05 c82-96 fg=rule
 r06 c02-02 fg=text-dim
 r06 c05-11 fg=text-dim
 r06 c28-28 fg=rule
 r06 c33-48 fg=text-dim
-r06 c64-66 fg=text-dim
-r06 c70-84 fg=rule
+r06 c63-78 fg=text-dim
+r06 c82-96 fg=rule
 r07 c02-02 fg=text-dim
 r07 c05-13 fg=text-dim
 r07 c28-28 fg=rule
 r07 c33-54 fg=text-dim
-r07 c64-66 fg=text-dim
-r07 c70-84 fg=rule
+r07 c63-78 fg=text-dim
+r07 c82-96 fg=rule
 r08 c02-02 fg=text-dim
 r08 c05-11 fg=text-dim
 r08 c28-28 fg=rule
 r08 c33-49 fg=text-dim
-r08 c64-66 fg=text-dim
-r08 c70-84 fg=rule
+r08 c63-78 fg=text-dim
+r08 c82-96 fg=rule
 r09 c02-02 fg=text-dim
 r09 c05-12 fg=text-dim
 r09 c28-28 fg=rule
 r09 c33-46 fg=text-dim
-r09 c64-66 fg=text-dim
-r09 c70-84 fg=rule
+r09 c63-78 fg=text-dim
+r09 c82-96 fg=rule
 r10 c02-02 fg=text-dim
 r10 c05-12 fg=text-dim
 r10 c28-28 fg=rule
 r10 c33-49 fg=text-dim
-r10 c64-66 fg=text-dim
-r10 c70-84 fg=rule
+r10 c63-78 fg=text-dim
+r10 c82-96 fg=rule
 r11 c02-02 fg=text-dim
 r11 c05-12 fg=text-dim
 r11 c28-28 fg=rule
 r11 c33-57 fg=text-dim
-r11 c64-66 fg=text-dim
-r11 c70-84 fg=rule
+r11 c63-78 fg=text-dim
+r11 c82-96 fg=rule
 r12 c28-28 fg=rule
 r12 c33-52 fg=text-dim
-r12 c64-66 fg=text-dim
-r12 c70-84 fg=rule
+r12 c63-78 fg=text-dim
+r12 c82-96 fg=rule
 r13 c28-28 fg=rule
 r13 c33-53 fg=text-dim
-r13 c64-66 fg=text-dim
-r13 c70-84 fg=rule
+r13 c63-78 fg=text-dim
+r13 c82-96 fg=rule
 r14 c28-28 fg=rule
 r14 c33-50 fg=text-dim
-r14 c64-66 fg=text-dim
-r14 c70-84 fg=rule
+r14 c63-78 fg=text-dim
+r14 c82-96 fg=rule
 r15 c28-28 fg=rule
 r15 c33-56 fg=text-dim
-r15 c64-66 fg=text-dim
+r15 c63-78 fg=text-dim
 r16 c28-28 fg=rule
 r16 c33-50 fg=text-dim
-r16 c64-66 fg=text-dim
-r16 c70-83 fg=text mod=BOLD
+r16 c63-78 fg=text-dim
+r16 c82-95 fg=text mod=BOLD
 r17 c28-28 fg=rule
 r18 c28-28 fg=rule
-r18 c70-115 fg=text-dim
+r18 c82-115 fg=text-dim
 r19 c28-28 fg=rule
-r19 c70-75 fg=text-dim
+r19 c82-87 fg=text-dim
 r20 c28-28 fg=rule
 r21 c28-28 fg=rule
-r21 c70-107 fg=text-dim
+r21 c82-112 fg=text-dim
 r22 c28-28 fg=rule
-r22 c70-78 fg=text-dim
+r22 c82-97 fg=text-dim
 r23 c28-28 fg=rule
 r24 c28-28 fg=rule
 r25 c28-28 fg=rule

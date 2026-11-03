@@ -7,10 +7,18 @@
 #   OUT=/some/dir desktop/linux/scripts/docker.sh desktop/linux/scripts/motion.sh
 #
 # MOTIONS picks the recordings as scene:shot pairs. The slow scene also gets one sheet of the
-# whole run at 500 ms steps. FRAMES sets how many frames a step's sheet holds.
+# whole run at 500 ms steps. FRAMES sets how many frames a step's sheet holds. REDUCED=1 turns
+# animations off, as GNOME's Reduce Animation does, and names the files with -reduced. CLIPS=1
+# keeps each recording as an mp4 beside its sheets.
 set -euo pipefail
 mkdir -p "$HOME/.config/gtk-4.0" /out/motion
-printf '[Settings]\ngtk-font-name=Inter 11\n' >"$HOME/.config/gtk-4.0/settings.ini"
+reduced=
+if [ "${REDUCED:-}" = 1 ]; then
+  reduced=-reduced
+  printf '[Settings]\ngtk-font-name=Inter 11\ngtk-enable-animations=false\n' >"$HOME/.config/gtk-4.0/settings.ini"
+else
+  printf '[Settings]\ngtk-font-name=Inter 11\n' >"$HOME/.config/gtk-4.0/settings.ini"
+fi
 
 cargo build --manifest-path desktop/linux/Cargo.toml --features fixtures 2>&1 \
   | grep -E '^(error|warning)|-->' || true
@@ -55,7 +63,7 @@ sheet() {
 
 for pair in ${MOTIONS:-watching:motion-arrows watching:motion-dismiss slow:home-settled}; do
   scene=${pair%%:*} shot=${pair#*:}
-  name="$scene-$shot"
+  name="$scene-$shot$reduced"
   video="/tmp/motion-$name.mkv"
   data="/tmp/kaeri-motion-$name"
   rm -rf "$data" "$video"
@@ -96,6 +104,11 @@ for pair in ${MOTIONS:-watching:motion-arrows watching:motion-dismiss slow:home-
   if [ "$scene" = slow ]; then
     COLUMNS_PER_SHEET=6 sheet "$video" 0 40 30 "/out/motion/$name-overview.png"
     echo "  overview at 500 ms steps: $name-overview.png"
+  fi
+  if [ "${CLIPS:-}" = 1 ]; then
+    ffmpeg -hide_banner -loglevel error -y -i "$video" -c:v libx264 -crf 20 -preset medium \
+      -pix_fmt yuv420p -movflags +faststart "/out/motion/$name.mp4"
+    echo "  clip: $name.mp4"
   fi
   rm -f "$video"
 done

@@ -120,11 +120,11 @@ pub fn render(frame: &mut TFrame<'_>, app: &App) -> FrameReport {
         Divider::new(&app.palette).render(geometry.divider, buf);
     }
 
-    render_stage(buf, app, geometry.stage);
+    let episodes_offset = render_stage(buf, app, geometry.stage);
 
     Hairline::new(&app.palette).render(geometry.status_rule, buf);
     let caption_end = render_activity(buf, app, &activity, geometry.status_rule, now);
-    let report = render_overlay(buf, app, area, &geometry);
+    let report = FrameReport { episodes_offset, ..render_overlay(buf, app, area, &geometry) };
     // After the overlay, so it is not dimmed with the rest: while one is open the status line
     // carries that overlay's own keys, which are no use faded into the scrim — and the overlay
     // has to be laid out before its hints can say whether it pages, which is this frame's word
@@ -139,15 +139,16 @@ pub fn render(frame: &mut TFrame<'_>, app: &App) -> FrameReport {
     report
 }
 
-fn render_stage(buf: &mut Buffer, app: &App, area: Rect) {
+/// The stage's view. Returns the first row the episode table drew, when it is the view.
+fn render_stage(buf: &mut Buffer, app: &App, area: Rect) -> Option<usize> {
     if area.width == 0 || area.height == 0 {
-        return;
+        return None;
     }
     let inner = layout::inset(area, 2, 0);
 
     match app.nav.current() {
         StageView::Title(_) => render_title(buf, app, inner),
-        StageView::Episodes(_) => render_episodes(buf, app, inner),
+        StageView::Episodes(_) => return render_episodes(buf, app, inner),
         StageView::NowPlaying => render_now_playing(buf, app, inner),
         StageView::Stores => render_stores(buf, app, inner),
         StageView::Store(id) => render_store(buf, app, inner, id),
@@ -164,6 +165,7 @@ fn render_stage(buf: &mut Buffer, app: &App, area: Rect) {
             Section::Together => render_together(buf, app, inner),
         },
     }
+    None
 }
 
 /// Rows a table-shaped screen needs before it can draw anything.

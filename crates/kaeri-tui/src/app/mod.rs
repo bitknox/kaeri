@@ -78,6 +78,15 @@ pub(crate) use self::{
     title::{push_detail, status_text, watch_order, watched_all},
 };
 
+/// A title Surprise me opened: on its page `z` is Another, from the same pool.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Surprised {
+    pub id: AnilistId,
+    pub pool: kaeri_model::browsing::SurprisePool,
+    /// The pool has another title to pick: with a pool of one there is no Another.
+    pub more: bool,
+}
+
 /// The whole application state.
 pub struct App {
     pub nav: Nav,
@@ -280,7 +289,7 @@ pub struct App {
     /// needing index remapping at every call site.
     pub episodes: Vec<EpisodeRow>,
     /// Every row, unfiltered — the source [`Self::episodes`] is re-derived from.
-    episodes_all: Vec<EpisodeRow>,
+    pub(crate) episodes_all: Vec<EpisodeRow>,
     /// Which title the rows are, set with them. `detail` is not enough to say: it moves to a
     /// title the moment one is opened, while the rows stay the last title's until its own load
     /// answers, and asked by `detail` they spoke for a show they were never part of.
@@ -292,8 +301,15 @@ pub struct App {
     pub episode_filter: EpisodeFilter,
     /// The digits typed on the episode list, for the `G` that goes to that episode.
     pub go_count: String,
-    /// A Surprise me is being picked: another press waits for it.
-    surprising: bool,
+    /// Why the last typed `G` went nowhere, said in the status line until the next key.
+    pub go_error: Option<String>,
+    /// A typed `G` just moved the episode cursor: the next frame puts its row in the table's
+    /// top third, and says where the window went.
+    pub episodes_jumped: bool,
+    /// The pool a Surprise me is being picked from: another press waits for it.
+    surprising: Option<kaeri_model::browsing::SurprisePool>,
+    /// The last title Surprise me opened, and its pool, for Another on its page.
+    surprised: Option<Surprised>,
     /// The provider that actually resolved the most recent stream. The header prefers
     /// this over the configured order: during failover the first configured source is
     /// exactly the one that is *not* serving.
@@ -442,7 +458,10 @@ impl App {
             episodes_for: None,
             episode_filter: EpisodeFilter::default(),
             go_count: String::new(),
-            surprising: false,
+            go_error: None,
+            episodes_jumped: false,
+            surprising: None,
+            surprised: None,
             active_provider: None,
             match_candidates: Vec::new(),
             match_context: None,

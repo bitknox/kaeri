@@ -1,0 +1,143 @@
+Kaeri                                                                                          plugins ●  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ▸  Home                   │  Find                                                                 Trending this week
+  ▤  Calendar               │                                    Eps   Dub
+  ▦  Seasonal               │  ▌ Ginga Mail Line                  24   dub  83%   ░░░░░░░░░░░░░░░
+▌ /  Search                 │    Natsukaze Relay                5/24     3  90%   ░░░░░░░░░░░░░░░
+  ▥  Library                │    Lantern Street Casebook     402/412        88%   ░░░░░░░░░░░░░░░
+  ↓  Downloads              │    Snowline Orchestra            11/12     9  87%   ░░░░░░░░░░░░░░░
+  ◇  Sources                │    Kitsune Radio Hour               12        80%   ░░░░░░░░░░░░░░░
+  ◎  Accounts               │    Saltwind Academy               3/12        78%   ░░░░░░░░░░░░░░░
+  ≡  Settings               │    Iron Tea Garden                8/13        76%   ░░░░░░░░░░░░░░░
+  ⇄  Together               │    Paper Crane Courier            6/24     2  75%   ░░░░░░░░░░░░░░░
+                            │    Moss and Mortar                5/12        74%   ░░░░░░░░░░░░░░░
+                            │    Hoshimi Kissa                  4/10        71%   ░░░░░░░░░░░░░░░
+                            │                                                     ░░░░░░░░░░░░░░░
+                            │
+                            │                                                     Ginga Mail Line
+                            │
+                            │                                                     TV  ·  24 episodes  ·  Dub  ·  20…
+                            │                                                     Drama
+                            │
+                            │                                                     Ginga Mail Line: a story told in
+                            │                                                     twelve evenings.
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+plugins · Subbed · 1080p                                                                 ↵ open   z surprise me   ? keys
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c95-103 fg=state
+r00 c104-105 fg=text-dim
+r00 c106-106 fg=rule
+r00 c107-108 fg=text-dim
+r00 c109-119 fg=state
+r01 c00-119 fg=rule
+r02 c02-02 fg=text-dim
+r02 c05-08 fg=text-dim
+r02 c28-28 fg=rule
+r02 c31-35 fg=text
+r02 c100-117 fg=text-dim
+r03 c02-02 fg=text-dim
+r03 c05-12 fg=text-dim
+r03 c28-28 fg=rule
+r03 c65-67 fg=text-dim
+r03 c71-73 fg=text-dim
+r04 c02-02 fg=text-dim
+r04 c05-12 fg=text-dim
+r04 c28-28 fg=rule
+r04 c31-31 fg=obi
+r04 c33-47 fg=text mod=BOLD
+r04 c61-78 fg=text-dim
+r04 c82-96 fg=rule
+r05 c00-00 fg=text-dim
+r05 c02-02 fg=text
+r05 c05-10 fg=text mod=BOLD
+r05 c28-28 fg=rule
+r05 c33-47 fg=text-dim
+r05 c61-78 fg=text-dim
+r05 c82-96 fg=rule
+r06 c02-02 fg=text-dim
+r06 c05-11 fg=text-dim
+r06 c28-28 fg=rule
+r06 c33-55 fg=text-dim
+r06 c61-78 fg=text-dim
+r06 c82-96 fg=rule
+r07 c02-02 fg=text-dim
+r07 c05-13 fg=text-dim
+r07 c28-28 fg=rule
+r07 c33-50 fg=text-dim
+r07 c61-78 fg=text-dim
+r07 c82-96 fg=rule
+r08 c02-02 fg=text-dim
+r08 c05-11 fg=text-dim
+r08 c28-28 fg=rule
+r08 c33-50 fg=text-dim
+r08 c61-78 fg=text-dim
+r08 c82-96 fg=rule
+r09 c02-02 fg=text-dim
+r09 c05-12 fg=text-dim
+r09 c28-28 fg=rule
+r09 c33-48 fg=text-dim
+r09 c61-78 fg=text-dim
+r09 c82-96 fg=rule
+r10 c02-02 fg=text-dim
+r10 c05-12 fg=text-dim
+r10 c28-28 fg=rule
+r10 c33-47 fg=text-dim
+r10 c61-78 fg=text-dim
+r10 c82-96 fg=rule
+r11 c02-02 fg=text-dim
+r11 c05-12 fg=text-dim
+r11 c28-28 fg=rule
+r11 c33-51 fg=text-dim
+r11 c61-78 fg=text-dim
+r11 c82-96 fg=rule
+r12 c28-28 fg=rule
+r12 c33-47 fg=text-dim
+r12 c61-78 fg=text-dim
+r12 c82-96 fg=rule
+r13 c28-28 fg=rule
+r13 c33-45 fg=text-dim
+r13 c61-78 fg=text-dim
+r13 c82-96 fg=rule
+r14 c28-28 fg=rule
+r14 c82-96 fg=rule
+r15 c28-28 fg=rule
+r16 c28-28 fg=rule
+r16 c82-96 fg=text mod=BOLD
+r17 c28-28 fg=rule
+r18 c28-28 fg=rule
+r18 c82-115 fg=text-dim
+r19 c28-28 fg=rule
+r19 c82-86 fg=text-dim
+r20 c28-28 fg=rule
+r21 c28-28 fg=rule
+r21 c82-113 fg=text-dim
+r22 c28-28 fg=rule
+r22 c82-97 fg=text-dim
+r23 c28-28 fg=rule
+r24 c28-28 fg=rule
+r25 c28-28 fg=rule
+r26 c28-28 fg=rule
+r27 c28-28 fg=rule
+r28 c28-28 fg=rule
+r29 c28-28 fg=rule
+r30 c28-28 fg=rule
+r31 c28-28 fg=rule
+r32 c00-119 fg=rule
+r33 c00-23 fg=text-dim
+r33 c89-89 fg=text
+r33 c90-97 fg=text-dim
+r33 c98-98 fg=text
+r33 c99-113 fg=text-dim
+r33 c114-114 fg=text
+r33 c115-119 fg=text-dim
