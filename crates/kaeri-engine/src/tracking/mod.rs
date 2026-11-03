@@ -505,6 +505,7 @@ pub async fn load_library(
                 });
                 // The one place the tracker's status for a title is known, so `a` opens on it.
                 row.list_status = Some(segment);
+                row.recount();
                 rows.push(row);
             }
             answer(ContentList::Entries(rows))

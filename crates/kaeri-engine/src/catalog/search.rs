@@ -207,9 +207,16 @@ async fn first_page(
             // filter on, the results wait for it and are held to what it found; without, they
             // go first and what it found follows.
             let wants_dubs = !query.is_browse() && dub_search::capable(&lent);
+            // The ask is about the first 50 results: the first page and the start of the
+            // second, which the next scroll finds kept.
+            let (covered, more) = if wants_dubs {
+                covered_by_ask(&lent, &searches, &query, adult, &found).await
+            } else {
+                (found.page.items.clone(), found.page.has_next)
+            };
             let mut entries = if query.dubbed && wants_dubs {
                 let (known, coverage) =
-                    dub_search::ask(&lent, query_text, &found.page.items, offline, now).await;
+                    dub_search::ask(&lent, query_text, &covered, more, offline, now).await;
                 let _ = lent.tx.send(Event::SearchDubs {
                     query: query.clone(),
                     found: known,
@@ -242,13 +249,38 @@ async fn first_page(
             publish_list(&lent.meta, &lent.tx, view, entries, now).await;
             if wants_dubs && !query.dubbed {
                 let (known, coverage) =
-                    dub_search::ask(&lent, query_text, &found.page.items, offline, now).await;
+                    dub_search::ask(&lent, query_text, &covered, more, offline, now).await;
                 let _ = lent.tx.send(Event::SearchDubs { query, found: known, coverage });
             }
         }
         Err(e) => {
             let _ = lent.tx.send(Event::Content { view, content: ContentList::Failed(e) });
         }
+    }
+}
+
+/// The results a dub ask is about: the first page, and the start of the second when the first
+/// leaves room under the 50 the ask covers. The second page is one more AniList request, kept
+/// for the scroll that wants it. Also whether the search has results beyond those.
+async fn covered_by_ask(
+    lent: &Lent,
+    searches: &Searches,
+    query: &SearchQuery,
+    adult: bool,
+    first: &Found,
+) -> (Vec<Media>, bool) {
+    let room = (kaeri_model::browsing::DUB_COVERS as usize).saturating_sub(first.page.items.len());
+    if !first.page.has_next || room == 0 {
+        return (first.page.items.clone(), first.page.has_next);
+    }
+    match find(lent, searches, query, adult, 2).await {
+        Ok(next) => {
+            let mut items = first.page.items.clone();
+            let more = next.page.has_next || next.page.items.len() > room;
+            items.extend(next.page.items.into_iter().take(room));
+            (items, more)
+        }
+        Err(_) => (first.page.items.clone(), true),
     }
 }
 

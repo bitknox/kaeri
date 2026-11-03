@@ -43,6 +43,7 @@ pub async fn ask(
     lent: &Lent,
     text: &str,
     results: &[Media],
+    more: bool,
     offline: bool,
     now: i64,
 ) -> (Vec<DubFound>, DubCoverage) {
@@ -74,7 +75,7 @@ pub async fn ask(
         }
     }
     let coverage =
-        DubCoverage::of(true, covered.len() as u32, covered.len() as u32, asked, answered);
+        DubCoverage::of(true, covered.len() as u32, covered.len() as u32 + u32::from(more), asked, answered);
     (known(&lent.store, covered), coverage)
 }
 
