@@ -21,10 +21,10 @@ import org.junit.Test
  * engine's, called as the app calls them.
  */
 class EpisodeSynopsisTest {
-    private fun row(number: Int, description: String? = null, completed: Boolean = false, pending: Boolean = false, airsAt: Long? = null) = EpisodeRow(
+    private fun row(number: Int, description: String? = null, completed: Boolean = false, pending: Boolean = false, airsAt: Long? = null, ahead: Boolean = false) = EpisodeRow(
         number = number.toString(), title = "Episode title $number", thumbnail = null, description = description,
         durationSecs = 1440u, watched = 0.0, completed = completed, kind = null, skippable = false,
-        airsAt = airsAt, synopsisPending = pending,
+        airsAt = airsAt, synopsisPending = pending, spoilerAhead = ahead,
     )
 
     @Test
@@ -52,13 +52,11 @@ class EpisodeSynopsisTest {
     }
 
     @Test
-    fun protection_hides_unwatched_aired_rows_after_the_next_episode() {
-        val next = 7u
-        assertFalse(hiddenBySpoilers(row(7), next, protect = true, unaired = false))
-        assertTrue(hiddenBySpoilers(row(8), next, protect = true, unaired = false))
-        assertFalse(hiddenBySpoilers(row(8), next, protect = false, unaired = false))
-        assertFalse(hiddenBySpoilers(row(8, completed = true), next, protect = true, unaired = false))
-        assertFalse(hiddenBySpoilers(row(8), next, protect = true, unaired = true))
+    fun protection_hides_the_rows_the_engine_says_are_ahead_once_aired() {
+        assertFalse(hiddenBySpoilers(row(7), protect = true, unaired = false))
+        assertTrue(hiddenBySpoilers(row(8, ahead = true), protect = true, unaired = false))
+        assertFalse(hiddenBySpoilers(row(8, ahead = true), protect = false, unaired = false))
+        assertFalse(hiddenBySpoilers(row(8, ahead = true), protect = true, unaired = true))
     }
 
     @Test

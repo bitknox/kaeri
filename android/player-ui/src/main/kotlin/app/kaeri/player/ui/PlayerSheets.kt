@@ -414,7 +414,7 @@ private fun EpisodeFooter(id: app.kaeri.engine.core.AnilistId?, number: String, 
     val outlook = remember(id, rows.isEmpty()) { app.kaeri.engine.ffi.episodeText(rows) }
     if (outlook == app.kaeri.engine.model.EpisodeText.NONE) return
     val row = rows.firstOrNull { it.number == number }
-    val hidden = protect && row?.pastProgress == true && row.completed.not()
+    val hidden = protect && row?.spoilerAhead == true
     val text = row?.description?.takeIf { it.isNotBlank() && !hidden }
     Column(Modifier.fillMaxWidth().padding(start = 56.dp, end = 24.dp, bottom = 8.dp)) {
         Text(

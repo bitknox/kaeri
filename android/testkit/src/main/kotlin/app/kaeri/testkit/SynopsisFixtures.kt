@@ -28,8 +28,14 @@ object SynopsisFixtures {
         "The pass opens again, and the way down is longer than the way up.",
     )
 
+    /** What the engine marks on a table: unfinished rows after the first unfinished one, the next episode, are ahead. */
+    private fun marked(rows: List<EpisodeRow>): List<EpisodeRow> {
+        val next = rows.indexOfFirst { !it.completed }
+        return rows.mapIndexed { index, row -> row.copy(spoilerAhead = next >= 0 && index > next && !row.completed) }
+    }
+
     /** The scene's episodes with the board's titles, text and stills (the fixtures serve one wide drawing for every still). */
-    fun withSynopses(id: AnilistId, rows: List<EpisodeRow>): List<EpisodeRow> = rows.mapIndexed { index, row ->
+    fun withSynopses(id: AnilistId, rows: List<EpisodeRow>): List<EpisodeRow> = marked(rows).mapIndexed { index, row ->
         row.copy(
             title = TITLES.getOrNull(index) ?: row.title,
             description = TEXT.getOrNull(index)?.takeIf { it.isNotEmpty() },
@@ -44,12 +50,12 @@ object SynopsisFixtures {
         withSynopses(id, rows).map { it.copy(description = null) }
 
     /** 230 episodes with the first 150 watched, as the ranges board's long runner. */
-    fun long(id: AnilistId, rows: List<EpisodeRow>): List<EpisodeRow> = (1..230).map { n ->
+    fun long(id: AnilistId, rows: List<EpisodeRow>): List<EpisodeRow> = marked((1..230).map { n ->
         val base = rows[(n - 1) % rows.size]
         base.copy(
             number = n.toString(), title = TITLES[(n - 1) % TITLES.size], description = TEXT[(n - 1) % TEXT.size].takeIf { it.isNotEmpty() },
             thumbnail = "https://img.example/ep/$id/$n.jpg", durationSecs = 1440u, completed = n <= 150, watched = if (n <= 150) 1.0 else 0.0,
             airsAt = 1_300_000_000L + n * 604_800L, kind = null, skippable = false,
         )
-    }
+    })
 }

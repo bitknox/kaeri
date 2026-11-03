@@ -762,6 +762,14 @@ class BoardShots {
     }
 
     @Test
+    @Config(qualifiers = TABLET)
+    fun tablet_title_synopsis() = shoot("tablet-title-synopsis", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses) { toEpisodes() }
+
+    @Test
+    @Config(qualifiers = TABLET)
+    fun tablet_title_synopsis_ranged() = shoot("tablet-title-synopsis-ranged", WATCHING, title = 900001u, episodes = SynopsisFixtures::long) { toRanges() }
+
+    @Test
     @Config(qualifiers = PHONE)
     fun phone_title_synopsis_ranged() = shoot("phone-ranged", WATCHING, title = 900001u, episodes = SynopsisFixtures::long) { toRanges() }
 

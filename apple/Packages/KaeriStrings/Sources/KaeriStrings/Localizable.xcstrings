@@ -41163,6 +41163,18 @@
         }
       }
     },
+    "episode-protection-show" : {
+      "comment" : "Button on the line where spoiler protection starts. It shows every episode after the line.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show"
+          }
+        }
+      }
+    },
     "episode-range" : {
       "comment" : "Label of an episode range of a long series, in the range menu. Argument 1: from (Int). Argument 2: to (Int).",
       "extractionState" : "manual",

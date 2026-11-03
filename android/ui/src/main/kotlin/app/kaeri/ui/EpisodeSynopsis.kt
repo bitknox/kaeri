@@ -137,11 +137,9 @@ internal fun rowHeight(form: RowForm, header: Dp, band: Dp): Dp = when (form) {
     RowForm.SHORT -> RowDims.Top + header + RowDims.BottomShort
 }
 
-/** Whether spoiler protection hides [row]: ahead of the next episode, unwatched and aired. */
-internal fun hiddenBySpoilers(row: EpisodeRow, next: UInt, protect: Boolean, unaired: Boolean): Boolean {
-    val number = row.number.toUIntOrNull() ?: 0u
-    return protect && !unaired && !row.completed && number > next
-}
+/** Whether spoiler protection hides [row]: it is on, the engine says the row is ahead, and the row has aired. */
+internal fun hiddenBySpoilers(row: EpisodeRow, protect: Boolean, unaired: Boolean): Boolean =
+    protect && !unaired && row.spoilerAhead
 
 /**
  * The text outlook the page was laid out with. It is read once for a table (and again for another
@@ -359,7 +357,6 @@ private fun SynopsisBand(row: EpisodeRow, hidden: Boolean, modifier: Modifier, m
 internal fun ProtectionLine(episode: Int, onShow: () -> Unit, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     val context = LocalContext.current
-    val showLabel = stringResource(R.string.episode_synopsis_show)
     Row(
         modifier.fillMaxWidth().height(44.dp).padding(start = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -379,7 +376,7 @@ internal fun ProtectionLine(episode: Int, onShow: () -> Unit, modifier: Modifier
                 .padding(horizontal = 16.dp),
             contentAlignment = Alignment.Center,
         ) {
-            Text(showLabel, style = MaterialTheme.typography.labelLarge, color = colors.onSurface)
+            Text(stringResource(R.string.episode_protection_show), style = MaterialTheme.typography.labelLarge, color = colors.onSurface)
         }
     }
 }

@@ -1079,7 +1079,7 @@ private fun EpisodesFooter(id: app.kaeri.engine.core.AnilistId?, number: String?
     if (outlook == app.kaeri.engine.model.EpisodeText.NONE) return
     val row = rows.firstOrNull { it.number == number }
     val protect = settings?.let { store.settings.isOn(app.kaeri.engine.model.SettingKey.SPOILER_PROTECTION, it) } ?: true
-    val hidden = protect && row?.pastProgress == true && !row.completed
+    val hidden = protect && row?.spoilerAhead == true
     val text = row?.description?.takeIf { it.isNotBlank() && !hidden }
     val room = with(androidx.compose.ui.platform.LocalDensity.current) { (20.sp * 3).toDp() }
     Box(Modifier.padding(start = 16.dp, top = 12.dp).fillMaxWidth().height(room).clearAndSetSemantics {}) {

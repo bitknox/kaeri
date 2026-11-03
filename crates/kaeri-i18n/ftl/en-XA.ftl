@@ -9288,6 +9288,9 @@ episode-protection-line = [Šþöîļéŕ þŕöţéçţîöñ ĥîðéš ŵĥà
 # The same line on phones.
 episode-protection-line-short = [Ĥîððéñ àƒţéŕ éþîšöðé { $episode }~~~~~~~~]
 
+# Button on the line where spoiler protection starts. It shows every episode after the line.
+episode-protection-show = [Šĥöŵ~~]
+
 # Label of an episode range of a long series, in the range menu.
 episode-range = [Éþîšöðéš { $from } ţö { $to }~~~~~~]
 

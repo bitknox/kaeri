@@ -6534,6 +6534,9 @@ public static partial class T
     /// <summary>The same line on phones.</summary>
     public static string EpisodeProtectionLineShort(long episode) => Fill(Get("EpisodeProtectionLineShort"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>Button on the line where spoiler protection starts. It shows every episode after the line.</summary>
+    public static string EpisodeProtectionShow => Get("EpisodeProtectionShow");
+
     /// <summary>Label of an episode range of a long series, in the range menu.</summary>
     public static string EpisodeRange(long from, long to) => Fill(Get("EpisodeRange"), ("from", from.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("to", to.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -9822,6 +9825,7 @@ public static partial class T
         ["EpisodeFactsLeft"] = "{minutes} min left",
         ["EpisodeProtectionLine"] = "Spoiler protection hides what comes after episode {episode}.",
         ["EpisodeProtectionLineShort"] = "Hidden after episode {episode}",
+        ["EpisodeProtectionShow"] = "Show",
         ["EpisodeRange"] = "Episodes {from} to {to}",
         ["EpisodeRangeLabel"] = "Episode range",
         ["EpisodeFold_one"] = "One watched episode",
