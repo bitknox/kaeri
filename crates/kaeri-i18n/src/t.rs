@@ -1740,76 +1740,6 @@ pub fn discussion_like_named(count: i64) -> String {
     text("discussion-like-named", &[("count", Arg::Int(count))])
 }
 
-/// The seconds a start has waited, last on the detail line after the facts: "10 s".
-pub fn linux_start_seconds(seconds: i64) -> String {
-    text("linux-start-seconds", &[("seconds", Arg::Int(seconds))])
-}
-
-/// Details row for the title lookup once it is done.
-pub fn linux_start_row_looked_up() -> String {
-    text("linux-start-row-looked-up", &[])
-}
-
-/// Details row note for the source being asked now.
-pub fn linux_start_row_asking() -> String {
-    text("linux-start-row-asking", &[])
-}
-
-/// Details row note for a source that will be asked next.
-pub fn linux_start_row_next() -> String {
-    text("linux-start-row-next", &[])
-}
-
-/// Button in the Details row of the source being asked: skips it.
-pub fn linux_start_row_skip() -> String {
-    text("linux-start-row-skip", &[])
-}
-
-/// Said to a screen reader once, when a start has waited 8 seconds.
-pub fn linux_start_still_starting() -> String {
-    text("linux-start-still-starting", &[])
-}
-
-/// Said to a screen reader when the starting screen opens. The title is the show's.
-pub fn linux_start_announce(episode: i64, title: &str) -> String {
-    text("linux-start-announce", &[("episode", Arg::Int(episode)), ("title", Arg::Text(title))])
-}
-
-/// Said to a screen reader when a start has failed: the failure's title, then its reason.
-pub fn linux_start_failed_announce(title: &str, reason: &str) -> String {
-    text("linux-start-failed-announce", &[("title", Arg::Text(title)), ("reason", Arg::Text(reason))])
-}
-
-/// Accessible label of the starting screen's step and detail lines, read as one element.
-pub fn linux_start_status(step: &str, detail: &str) -> String {
-    text("linux-start-status", &[("step", Arg::Text(step)), ("detail", Arg::Text(detail))])
-}
-
-/// Details row note for a source that has no match for the show.
-pub fn linux_start_row_no_match() -> String {
-    text("linux-start-row-no-match", &[])
-}
-
-/// Details row note for a source that has the show and not the episode.
-pub fn linux_start_row_no_episode(episode: &str) -> String {
-    text("linux-start-row-no-episode", &[("episode", Arg::Text(episode))])
-}
-
-/// Details row note for a source that gave an error.
-pub fn linux_start_row_failed() -> String {
-    text("linux-start-row-failed", &[])
-}
-
-/// Details row note for a source that took too long.
-pub fn linux_start_row_timed_out() -> String {
-    text("linux-start-row-timed-out", &[])
-}
-
-/// Details row note for a source the viewer skipped.
-pub fn linux_start_row_skipped() -> String {
-    text("linux-start-row-skipped", &[])
-}
-
 /// Tooltip on the button that opens a setting's preview on a page of its own, and accessible name of the preview.
 pub fn settings_preview() -> String {
     text("settings-preview", &[])
@@ -7796,6 +7726,16 @@ pub fn tv_problem_unpaired() -> String {
 /// What a screen reader says for the player's seek bar: where the playhead is and how long the episode is. Both times are already spoken in full, such as "12 minutes 4 seconds".
 pub fn player_position_spoken(position: &str, duration: &str) -> String {
     text("player-position-spoken", &[("position", Arg::Text(position)), ("duration", Arg::Text(duration))])
+}
+
+/// Two names, or the last two of a longer list, joined as a sentence lists them: "Alpha and Brook".
+pub fn names_pair(first: &str, last: &str) -> String {
+    text("names-pair", &[("first", Arg::Text(first)), ("last", Arg::Text(last))])
+}
+
+/// A list of names up to the last two, joined one by one: "Alpha, Brook".
+pub fn names_list(list: &str, next: &str) -> String {
+    text("names-list", &[("list", Arg::Text(list)), ("next", Arg::Text(next))])
 }
 
 /// Menu item that opens an episode's discussion.

@@ -1077,45 +1077,6 @@ public static partial class T
     /// <summary>Name of the account entry in the navigation pane, followed by its state.</summary>
     public static string AccountsPaneName(string state) => Fill(Get("AccountsPaneName"), ("state", state));
 
-    /// <summary>The seconds a start has waited, last on the detail line after the facts: "10 s".</summary>
-    public static string WindowsStartSeconds(long seconds) => Fill(Get("WindowsStartSeconds"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
-
-    /// <summary>Details row for the title lookup once it is done.</summary>
-    public static string WindowsStartRowLookedUp => Get("WindowsStartRowLookedUp");
-
-    /// <summary>Details row note for the source being asked now.</summary>
-    public static string WindowsStartRowAsking => Get("WindowsStartRowAsking");
-
-    /// <summary>Button in the Details row of the source being asked: skips it.</summary>
-    public static string WindowsStartRowSkip => Get("WindowsStartRowSkip");
-
-    /// <summary>Said to a screen reader once, when a start has waited 8 seconds.</summary>
-    public static string WindowsStartStillStarting => Get("WindowsStartStillStarting");
-
-    /// <summary>Said to a screen reader when the starting screen opens. The title is the show's.</summary>
-    public static string WindowsStartAnnounce(long episode, string title) => Fill(Get("WindowsStartAnnounce"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("title", title));
-
-    /// <summary>Said to a screen reader when a start has failed: the failure's title, then its reason.</summary>
-    public static string WindowsStartFailedAnnounce(string title, string reason) => Fill(Get("WindowsStartFailedAnnounce"), ("title", title), ("reason", reason));
-
-    /// <summary>Accessible label of the starting screen's step and detail lines, read as one element.</summary>
-    public static string WindowsStartStatus(string step, string detail) => Fill(Get("WindowsStartStatus"), ("step", step), ("detail", detail));
-
-    /// <summary>Details row note for a source that has no match for the show.</summary>
-    public static string WindowsStartRowNoMatch => Get("WindowsStartRowNoMatch");
-
-    /// <summary>Details row note for a source that has the show and not the episode.</summary>
-    public static string WindowsStartRowNoEpisode(string episode) => Fill(Get("WindowsStartRowNoEpisode"), ("episode", episode));
-
-    /// <summary>Details row note for a source that gave an error.</summary>
-    public static string WindowsStartRowFailed => Get("WindowsStartRowFailed");
-
-    /// <summary>Details row note for a source that took too long.</summary>
-    public static string WindowsStartRowTimedOut => Get("WindowsStartRowTimedOut");
-
-    /// <summary>Details row note for a source the viewer skipped.</summary>
-    public static string WindowsStartRowSkipped => Get("WindowsStartRowSkipped");
-
     /// <summary>Busy line while Settings waits for the engine's values.</summary>
     public static string SettingsLoading => Get("SettingsLoading");
 
@@ -2273,6 +2234,12 @@ public static partial class T
 
     /// <summary>What a screen reader says for the player's seek bar: where the playhead is and how long the episode is. Both times are already spoken in full, such as "12 minutes 4 seconds".</summary>
     public static string PlayerPositionSpoken(string position, string duration) => Fill(Get("PlayerPositionSpoken"), ("position", position), ("duration", duration));
+
+    /// <summary>Two names, or the last two of a longer list, joined as a sentence lists them: "Alpha and Brook".</summary>
+    public static string NamesPair(string first, string last) => Fill(Get("NamesPair"), ("first", first), ("last", last));
+
+    /// <summary>A list of names up to the last two, joined one by one: "Alpha, Brook".</summary>
+    public static string NamesList(string list, string next) => Fill(Get("NamesList"), ("list", list), ("next", next));
 
     /// <summary>Menu item that opens an episode's discussion.</summary>
     public static string DiscussionOpen => Get("DiscussionOpen");
@@ -7962,19 +7929,6 @@ public static partial class T
         ["PlayerVolumeMuted"] = "Volume, muted",
         ["PlayerExitFullscreen"] = "Exit full screen",
         ["AccountsPaneName"] = "Account, {state}",
-        ["WindowsStartSeconds"] = "{seconds} s",
-        ["WindowsStartRowLookedUp"] = "Looked up the title",
-        ["WindowsStartRowAsking"] = "Asking",
-        ["WindowsStartRowSkip"] = "Skip",
-        ["WindowsStartStillStarting"] = "Still starting. Choose source is available.",
-        ["WindowsStartAnnounce"] = "Starting episode {episode}, {title}",
-        ["WindowsStartFailedAnnounce"] = "{title}. {reason}",
-        ["WindowsStartStatus"] = "{step}, {detail}",
-        ["WindowsStartRowNoMatch"] = "Doesn't have this show",
-        ["WindowsStartRowNoEpisode"] = "Doesn't have episode {episode}",
-        ["WindowsStartRowFailed"] = "Didn't answer",
-        ["WindowsStartRowTimedOut"] = "Took too long",
-        ["WindowsStartRowSkipped"] = "Skipped",
         ["SettingsLoading"] = "Loading settings",
         ["SettingsGroupMpv"] = "mpv",
         ["SettingsCardState"] = "{title}, {state}",
@@ -8369,6 +8323,8 @@ public static partial class T
         ["TvProblemFull"] = "This TV has as many devices paired as it can keep. Remove one in the TV's settings, under Remotes.",
         ["TvProblemUnpaired"] = "The TV doesn't know this device any more. Pair again.",
         ["PlayerPositionSpoken"] = "{position} of {duration}",
+        ["NamesPair"] = "{first} and {last}",
+        ["NamesList"] = "{list}, {next}",
         ["DiscussionOpen"] = "Discussion",
         ["DiscussionTitleEpisode"] = "Episode {episode} discussion",
         ["DiscussionRow_one"] = "Discussion · one comment",

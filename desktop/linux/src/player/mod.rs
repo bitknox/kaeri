@@ -721,16 +721,6 @@ impl PlayerView {
             Event::PlaybackEnded { failure: Some(failure), rolling_on: false, .. } => {
                 self.start_failed(failure);
             }
-            Event::Connectivity { offline } => {
-                let at = self.start_elapsed();
-                if let Some(start) = self.start.borrow_mut().as_mut() {
-                    start.connectivity(*offline, at);
-                }
-                if *offline && self.start.borrow().is_some() {
-                    self.announce(&t::player_start_offline_detail(&self.start_episode()));
-                }
-                self.show_start();
-            }
             _ => {}
         }
     }
@@ -811,12 +801,13 @@ impl PlayerView {
         ));
         let line = self.show_episode_line();
         let demo = id == kaeri_core::demo::DEMO_ANILIST_ID;
-        self.ui.start.begin(title, &line, demo);
+        let resumes = self.start.borrow().as_ref().is_some_and(start_model::Start::resumes);
+        self.ui.start.begin(title, &line, demo, resumes);
         self.ui.starting.set_visible(true);
         self.ui.starting.set_opacity(1.0);
         self.clear_cards();
         self.resumed_done();
-        self.announce(&t::linux_start_announce(crate::party::number(episode), title));
+        self.announce(&t::player_start_announce(episode, title));
         self.show_start();
         let me = self.me.clone();
         let tick = glib::timeout_add_local(Duration::from_millis(100), move || {
@@ -864,6 +855,9 @@ impl PlayerView {
             };
             start.step(step, line, at);
         }
+        if matches!(step, kaeri_model::starting::StartStep::WaitingForConnection) {
+            self.announce(&t::player_start_offline_detail(&self.start_episode()));
+        }
         self.show_start();
     }
 
@@ -878,7 +872,7 @@ impl PlayerView {
         self.show_start();
         let frame = self.start.borrow().as_ref().map(|s| s.frame(self.start_elapsed()));
         if let Some(Some((title, reason))) = frame.map(|f| f.failure) {
-            self.announce_high(&t::linux_start_failed_announce(&title, &reason));
+            self.announce_high(&t::player_start_failed_announce(&title, &reason));
         }
         self.ui.start.focus_primary();
         self.open();
@@ -2328,6 +2322,11 @@ impl PlayerView {
     pub fn shot_resumed(&self, at: f64) {
         self.resumed(at);
         self.resumed_from.set(self.state.borrow().position);
+    }
+
+    /// For a shot: Details on the starting screen, opened as the viewer opens it.
+    pub fn shot_start_details(&self) {
+        self.start_action(start_model::Action::Details);
     }
 
     /// For a shot: the subtitle style panel, or with a subtitle, that on screen first.

@@ -250,7 +250,7 @@ public sealed partial class PlayerView : UserControl
                 case Event.PlayerUi ui:
                     Heard(ui.Ui);
                     break;
-                case Event.PlaybackStaged or Event.StartingStep or Event.PlaybackEnded or Event.Connectivity:
+                case Event.PlaybackStaged or Event.StartingStep or Event.PlaybackEnded:
                     HeardStart(e);
                     break;
                 case Event.PlayerSkipMark or Event.PlayerSkipPrompt or Event.PlayerSkipNotice:

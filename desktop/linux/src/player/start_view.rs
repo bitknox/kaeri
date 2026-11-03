@@ -1,10 +1,17 @@
 //! The starting screen's widgets: the art under its ground, the show, the loader line, the step
 //! and detail lines, the buttons by time, the Details list and the failure. It draws the
 //! [`Frame`] the model (`start_model.rs`) gives and says what the viewer pressed.
+//!
+//! Nothing in the column moves once a start is on screen: the column's top is set when the start
+//! begins (centred on the column as it is then, with the room of every button a start can show
+//! kept from 0 s), lines are one line each, buttons keep their room when they come and go, and
+//! Details and a longer failure grow downward only. Every fade runs on the frame clock, so the
+//! crossfades stay crossfades with animations off.
 
 use std::{
     cell::{Cell, RefCell},
     rc::Rc,
+    time::Instant,
 };
 
 use adw::prelude::*;
@@ -12,26 +19,107 @@ use gtk::{gdk, glib};
 use kaeri_core::media::Translation;
 use kaeri_i18n::t;
 
-use super::start_model::{Action, Button, Frame, Look, Mark, Row};
+use super::start_model::{Action, Button, Frame, HOLD, Look, Mark, Row};
 use crate::motion;
 
 /// Art brighter than this, by the mean relative luminance of its centre band, sits under the
 /// deeper ground.
 pub const BRIGHT: f64 = 0.15;
 
-/// Text that changes in place: the new text fades in over the old on the standard token, where
-/// the old one is, and the room is the larger of the two.
+/// The column's widest, and the room kept around it.
+const COLUMN: i32 = 520;
+const SIDE: i32 = 24;
+const TOP: i32 = 48;
+const BOTTOM: i32 = 24;
+
+/// The standard motion token, and a fade in.
+const STANDARD: f64 = 300.0;
+const FADE_IN: f64 = 200.0;
+
+/// Opacity moved on the frame clock, ease-out towards 1 and ease-in towards 0. It runs whether
+/// or not animations are on: the design keeps its fades under reduced motion.
+#[derive(Clone)]
+struct Fader {
+    widget: gtk::Widget,
+    run: Rc<RefCell<Option<gtk::TickCallbackId>>>,
+}
+
+impl Fader {
+    fn new(widget: &impl IsA<gtk::Widget>) -> Self {
+        Self { widget: widget.clone().upcast(), run: Rc::default() }
+    }
+
+    fn stop(&self) {
+        if let Some(id) = self.run.borrow_mut().take() {
+            id.remove();
+        }
+    }
+
+    /// Set at once.
+    fn set(&self, value: f64) {
+        self.stop();
+        self.widget.set_opacity(value);
+    }
+
+    /// Fade to `target` over `ms`, then call `done`.
+    fn to_then(&self, target: f64, ms: f64, done: Option<Box<dyn Fn()>>) {
+        self.stop();
+        let from = self.widget.opacity();
+        if (from - target).abs() < 0.001 || !self.widget.is_mapped() {
+            self.widget.set_opacity(target);
+            if let Some(done) = done {
+                done();
+            }
+            return;
+        }
+        let began = Cell::new(None::<i64>);
+        let run = Rc::clone(&self.run);
+        let id = self.widget.add_tick_callback(move |widget, clock| {
+            let now = clock.frame_time();
+            let start = *began.get().get_or_insert(now);
+            began.set(Some(start));
+            let p = ((now - start) as f64 / (ms * 1000.0)).clamp(0.0, 1.0);
+            let eased = if target > from { 1.0 - (1.0 - p).powi(3) } else { p.powi(3) };
+            widget.set_opacity(from + (target - from) * eased);
+            if p >= 1.0 {
+                run.borrow_mut().take();
+                if let Some(done) = &done {
+                    done();
+                }
+                return glib::ControlFlow::Break;
+            }
+            glib::ControlFlow::Continue
+        });
+        self.run.replace(Some(id));
+    }
+
+    fn to(&self, target: f64, ms: f64) {
+        self.to_then(target, ms, None);
+    }
+}
+
+/// What decides whether a line crossfades: its text without the numbers, so a count that ticks
+/// changes in place and anything else crossfades.
+fn fade_key(text: &str) -> String {
+    text.chars().filter(|c| !c.is_numeric()).collect()
+}
+
+/// Text that changes in place: the new text fades in over the old, where the old one is, on the
+/// standard token. A change waits out 0.6 s after the one before, and the newest wins.
 struct Crossfade {
-    stack: gtk::Stack,
+    root: gtk::Overlay,
     pages: [Page; 2],
     on: Cell<usize>,
-    key: Cell<&'static str>,
+    text: RefCell<String>,
+    key: RefCell<String>,
+    swapped: Cell<Option<Instant>>,
 }
 
 struct Page {
     row: gtk::Box,
     dot: gtk::Box,
     label: gtk::Label,
+    fade: Fader,
 }
 
 impl Page {
@@ -42,55 +130,97 @@ impl Page {
         dot.set_valign(gtk::Align::Center);
         let label = gtk::Label::new(None);
         label.set_xalign(0.0);
-        label.set_wrap(true);
-        label.set_wrap_mode(gtk::pango::WrapMode::WordChar);
         label.set_hexpand(true);
+        label.set_ellipsize(gtk::pango::EllipsizeMode::End);
+        label.set_single_line_mode(true);
         for class in css {
             label.add_css_class(class);
         }
         let row = gtk::Box::new(gtk::Orientation::Horizontal, 8);
+        row.set_valign(gtk::Align::Start);
         row.append(&dot);
         row.append(&label);
-        Self { row, dot, label }
+        let fade = Fader::new(&row);
+        Self { row, dot, label, fade }
+    }
+
+    /// One line, cut at the end; a failure's second line may take two.
+    fn lines(&self, two: bool) {
+        self.label.set_single_line_mode(!two);
+        self.label.set_wrap(two);
+        self.label.set_wrap_mode(gtk::pango::WrapMode::WordChar);
+        self.label.set_lines(if two { 2 } else { -1 });
     }
 }
 
 impl Crossfade {
     fn new(css: &[&str]) -> Self {
-        let stack = gtk::Stack::new();
-        stack.set_transition_type(gtk::StackTransitionType::Crossfade);
-        stack.set_transition_duration(300);
-        stack.set_hhomogeneous(false);
-        stack.set_vhomogeneous(false);
-        stack.set_halign(gtk::Align::Fill);
         let pages = [Page::new(css), Page::new(css)];
-        stack.add_named(&pages[0].row, Some("a"));
-        stack.add_named(&pages[1].row, Some("b"));
-        Self { stack, pages, on: Cell::new(0), key: Cell::new("") }
+        let root = gtk::Overlay::new();
+        root.set_child(Some(&pages[0].row));
+        root.add_overlay(&pages[1].row);
+        root.set_measure_overlay(&pages[1].row, true);
+        pages[1].fade.set(0.0);
+        Self {
+            root,
+            pages,
+            on: Cell::new(0),
+            text: RefCell::default(),
+            key: RefCell::default(),
+            swapped: Cell::new(None),
+        }
     }
 
-    /// Show `text`: crossfaded when it is another step, in place when it is the same one.
-    fn set(&self, text: &str, key: &'static str, dot: bool) {
-        let now = &self.pages[self.on.get()];
-        if now.label.label() == text && now.dot.is_visible() == dot {
+    /// The line from the start, with no fade.
+    fn reset(&self, text: &str) {
+        let on = self.on.get();
+        for (i, page) in self.pages.iter().enumerate() {
+            page.dot.set_visible(false);
+            page.lines(false);
+            page.label.set_label(if i == on { text } else { "" });
+            page.fade.set(if i == on { 1.0 } else { 0.0 });
+        }
+        self.text.replace(text.to_owned());
+        self.key.replace(fade_key(text));
+        self.swapped.set(None);
+    }
+
+    /// Show `text`, crossfaded when it is another line, in place when only its numbers moved.
+    /// `dot` marks a failure's title, and `two` lets a failure's reason take two lines.
+    fn set(&self, text: &str, dot: bool, two: bool) {
+        if *self.text.borrow() == text {
             return;
         }
-        if self.key.get() == key && now.dot.is_visible() == dot {
+        let key = format!("{dot}{two}{}", fade_key(text));
+        let now = &self.pages[self.on.get()];
+        if *self.key.borrow() == key || self.text.borrow().is_empty() {
             now.label.set_label(text);
+            now.dot.set_visible(dot);
+            now.lines(two);
+            self.text.replace(text.to_owned());
+            self.key.replace(key);
+            return;
+        }
+        // The one before has its time first; the caller asks again on the next tick.
+        if self.swapped.get().is_some_and(|at| at.elapsed() < HOLD) {
             return;
         }
         let next = 1 - self.on.get();
         let page = &self.pages[next];
         page.label.set_label(text);
         page.dot.set_visible(dot);
-        self.stack.set_visible_child_name(if next == 0 { "a" } else { "b" });
+        page.lines(two);
+        page.fade.to(1.0, STANDARD);
+        now.fade.to(0.0, STANDARD);
         self.on.set(next);
-        self.key.set(key);
+        self.text.replace(text.to_owned());
+        self.key.replace(key);
+        self.swapped.set(Some(Instant::now()));
     }
 }
 
 /// The 2 pt loader line: silk at 14%, and an amber stretch 32% wide that moves across and back,
-/// or, with animations off, rests at the start and breathes between 100% and 40%.
+/// or, with animations off, rests at the start and breathes: 2 s from 100% to 40%, 2 s back.
 struct Loader {
     root: gtk::Overlay,
     /// Never drawn: its colour is the amber, which the drawing reads from it.
@@ -103,6 +233,11 @@ struct Loader {
     /// Whether the line is on show: it goes, faded, when the start fails.
     shown: Cell<bool>,
     fade: Cell<f64>,
+}
+
+/// The breathing's opacity `seconds` into it: 100% at 0, 40% at 2 s, 100% again at 4 s.
+pub fn breath(seconds: f64) -> f64 {
+    0.7 + 0.3 * (seconds * std::f64::consts::TAU / 4.0).cos()
 }
 
 impl Loader {
@@ -119,6 +254,7 @@ impl Loader {
         probe.set_can_target(false);
         probe.set_size_request(0, 0);
         let root = gtk::Overlay::new();
+        root.add_css_class("start-line");
         root.set_child(Some(&area));
         root.add_overlay(&probe);
         let loader = Rc::new(Self {
@@ -138,7 +274,8 @@ impl Loader {
             let (w, h) = (f64::from(w), f64::from(h));
             let silk = area.color();
             let amber = loader.probe.color();
-            let amber = (f64::from(amber.red()), f64::from(amber.green()), f64::from(amber.blue()));
+            let amber =
+                (f64::from(amber.red()), f64::from(amber.green()), f64::from(amber.blue()));
             let fade = loader.fade.get();
             cr.set_source_rgba(
                 f64::from(silk.red()),
@@ -149,10 +286,9 @@ impl Loader {
             cr.rectangle(0.0, 0.0, w, h);
             let _ = cr.fill();
             let mix = loader.mix.get();
-            let reduced = reduced_motion();
             // The stretch: moving, or resting and breathing under reduced motion.
-            let (x, alpha) = if reduced {
-                (0.0, 0.7 + 0.3 * (drawn.get() * std::f64::consts::TAU / 2.0).cos())
+            let (x, alpha) = if reduced_motion() {
+                (0.0, breath(drawn.get()))
             } else {
                 let t = (drawn.get() / 1.4) % 2.0;
                 let t = if t > 1.0 { 2.0 - t } else { t };
@@ -170,9 +306,11 @@ impl Loader {
         });
         let weak = Rc::downgrade(&loader);
         let last = Cell::new(None::<i64>);
-        area.add_tick_callback(move |area, clock| {
+        area.add_tick_callback(move |area, _| {
             let Some(loader) = weak.upgrade() else { return glib::ControlFlow::Break };
-            let now = clock.frame_time();
+            // The wall clock, not the frame clock's smoothed time, which runs slow when frames
+            // come late: the loop and the breathing keep their seconds however the frames land.
+            let now = glib::monotonic_time();
             let dt = last.replace(Some(now)).map_or(0.0, |was| (now - was) as f64 / 1e6);
             phase.set(phase.get() + dt);
             // The fill follows each percentage and the determinate look fades in over 0.2 s.
@@ -180,17 +318,30 @@ impl Loader {
             if reduced_motion() {
                 loader.fill.set(target);
             } else {
-                loader.fill.set(loader.fill.get() + (target - loader.fill.get()) * (dt * 8.0).min(1.0));
+                loader.fill.set(
+                    loader.fill.get() + (target - loader.fill.get()) * (dt * 8.0).min(1.0),
+                );
             }
             let want = if loader.percent.get().is_some() { 1.0 } else { 0.0 };
             let step = dt / 0.2;
             let mix = loader.mix.get();
-            loader.mix.set(if want > mix { (mix + step).min(want) } else { (mix - step).max(want) });
+            loader.mix.set(if want > mix {
+                (mix + step).min(want)
+            } else {
+                (mix - step).max(want)
+            });
             let fade_to = if loader.shown.get() { 1.0 } else { 0.0 };
             let fade = loader.fade.get();
             let rate = dt / 0.3;
-            loader.fade.set(if fade_to > fade { (fade + rate).min(fade_to) } else { (fade - rate).max(fade_to) });
-            area.queue_draw();
+            loader.fade.set(if fade_to > fade {
+                (fade + rate).min(fade_to)
+            } else {
+                (fade - rate).max(fade_to)
+            });
+            // Once its fade away is done, the line has nothing to draw until it shows again.
+            if fade > 0.0 || loader.fade.get() > 0.0 {
+                area.queue_draw();
+            }
             glib::ControlFlow::Continue
         });
         loader
@@ -202,37 +353,61 @@ fn reduced_motion() -> bool {
     !gtk::Settings::default().is_some_and(|s| s.is_gtk_enable_animations())
 }
 
-/// One button of the waiting row: it fades in at the trailing end, and out when it stops
+/// The longest a Skip label runs before it is cut, in characters, and the name the kept room
+/// is measured with.
+const SKIP_CHARS: i32 = 18;
+fn skip_room() -> String {
+    t::player_start_skip_source(&"m".repeat(12))
+}
+
+/// A button of the starting screen, drawn as its look says.
+fn start_button(
+    action: Action,
+    label: &str,
+    look: Look,
+) -> (gtk::Button, gtk::Label, Option<gtk::Image>) {
+    let text = gtk::Label::new(Some(label));
+    if action == Action::Skip {
+        text.set_max_width_chars(SKIP_CHARS);
+        text.set_ellipsize(gtk::pango::EllipsizeMode::End);
+    }
+    let inner = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+    inner.append(&text);
+    let chevron = (action == Action::Details).then(|| {
+        let image = gtk::Image::from_icon_name("pan-down-symbolic");
+        inner.append(&image);
+        image
+    });
+    let button = gtk::Button::new();
+    button.set_child(Some(&inner));
+    button.set_valign(gtk::Align::Start);
+    button.add_css_class("start-button");
+    match look {
+        Look::Primary => button.add_css_class("suggested-action"),
+        Look::Quiet => button.add_css_class("flat"),
+        Look::Tonal => {}
+    }
+    (button, text, chevron)
+}
+
+/// One button of the waiting row: it fades in where its room is, and out when it stops
 /// applying, and keeps its room either way.
 struct Slot {
     button: gtk::Button,
     label: gtk::Label,
     chevron: Option<gtk::Image>,
     present: Cell<bool>,
-    fade: RefCell<Option<adw::TimedAnimation>>,
+    fade: Fader,
 }
 
 impl Slot {
-    fn new(action: Action) -> Self {
-        let label = gtk::Label::new(None);
-        let inner = gtk::Box::new(gtk::Orientation::Horizontal, 6);
-        inner.append(&label);
-        let chevron = (action == Action::Details).then(|| {
-            let image = gtk::Image::from_icon_name("pan-down-symbolic");
-            inner.append(&image);
-            image
-        });
-        let button = gtk::Button::new();
-        button.set_child(Some(&inner));
-        button.set_valign(gtk::Align::Center);
-        button.add_css_class("start-button");
-        if matches!(action, Action::Cancel | Action::Details) {
-            button.add_css_class("flat");
-        }
-        button.set_opacity(0.0);
+    fn new(action: Action, label: &str, look: Look) -> Self {
+        let (button, label, chevron) = start_button(action, label, look);
+        let fade = Fader::new(&button);
+        fade.set(0.0);
         button.set_can_target(false);
         button.set_focusable(false);
-        Self { button, label, chevron, present: Cell::new(false), fade: RefCell::default() }
+        Self { button, label, chevron, present: Cell::new(false), fade }
     }
 
     fn show(&self, on: bool, immediately: bool) {
@@ -241,20 +416,12 @@ impl Slot {
         }
         self.button.set_can_target(on);
         self.button.set_focusable(on);
-        if let Some(fade) = self.fade.take() {
-            fade.skip();
-        }
-        let from = self.button.opacity();
-        let (to, ms) = if on { (1.0, 200) } else { (0.0, 300) };
+        let to = if on { 1.0 } else { 0.0 };
         if immediately {
-            self.button.set_opacity(to);
-            return;
+            self.fade.set(to);
+        } else {
+            self.fade.to(to, if on { FADE_IN } else { STANDARD });
         }
-        let animation =
-            adw::TimedAnimation::new(&self.button, from, to, ms, motion::opacity(&self.button));
-        animation.set_easing(if on { adw::Easing::EaseOutCubic } else { adw::Easing::EaseInCubic });
-        animation.play();
-        self.fade.replace(Some(animation));
     }
 }
 
@@ -264,8 +431,16 @@ fn wrap() -> adw::WrapBox {
     row.set_child_spacing(8);
     row.set_line_spacing(8);
     row.set_align(0.0);
-    row.add_css_class("start-actions");
+    row.set_valign(gtk::Align::Start);
     row
+}
+
+/// Which row of buttons is on show.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Rows {
+    Waiting,
+    Offline,
+    Failing,
 }
 
 /// What the view tells the player.
@@ -273,24 +448,44 @@ pub type OnAction = Rc<dyn Fn(Action)>;
 
 type OnTranslation = Rc<dyn Fn(Translation)>;
 
+const WAITING: [Action; 5] = [
+    Action::Cancel,
+    Action::FromBeginning,
+    Action::ChooseSource,
+    Action::Details,
+    Action::Skip,
+];
+
 pub struct StartView {
     pub root: gtk::Box,
     pub art: gtk::Picture,
     ground: gtk::Box,
+    column: gtk::Box,
+    /// Where the column's top is, for the size it was placed at.
+    anchor: Cell<Option<(i32, i32, i32)>>,
     title: gtk::Label,
     episode: gtk::Label,
     credit: gtk::Label,
     loader: Rc<Loader>,
     step: Crossfade,
     detail: Crossfade,
+    detail_fade: Fader,
     detail_on: Cell<bool>,
-    switcher: gtk::Stack,
-    slots: Vec<(Action, Slot)>,
+    /// The row's kept room: every button a start can show, never drawn.
+    room: adw::WrapBox,
+    waiting: adw::WrapBox,
+    offline: adw::WrapBox,
     failing: adw::WrapBox,
+    row_fades: [Fader; 3],
+    rows_on: Cell<Rows>,
+    slots: Vec<(Action, Slot)>,
     failing_row: RefCell<Vec<Action>>,
-    reveal: gtk::Revealer,
+    details: gtk::ScrolledWindow,
+    details_fade: Fader,
+    details_open: Cell<bool>,
     rows_box: gtk::Box,
     shown_rows: RefCell<Vec<Row>>,
+    row_times: RefCell<Vec<gtk::Label>>,
     language: gtk::Box,
     sub: gtk::ToggleButton,
     dub: gtk::ToggleButton,
@@ -302,7 +497,8 @@ pub struct StartView {
 
 impl StartView {
     pub fn new() -> Rc<Self> {
-        let art = gtk::Picture::builder().accessible_role(gtk::AccessibleRole::Presentation).build();
+        let art =
+            gtk::Picture::builder().accessible_role(gtk::AccessibleRole::Presentation).build();
         art.set_content_fit(gtk::ContentFit::Cover);
         art.set_can_shrink(true);
         art.set_opacity(0.0);
@@ -314,12 +510,14 @@ impl StartView {
         title.add_css_class("start-title");
         title.set_xalign(0.0);
         title.set_wrap(true);
+        title.set_lines(2);
+        title.set_ellipsize(gtk::pango::EllipsizeMode::End);
         title.set_accessible_role(gtk::AccessibleRole::Heading);
         let episode = gtk::Label::new(None);
         episode.add_css_class("haze");
         episode.add_css_class("start-episode");
         episode.set_xalign(0.0);
-        episode.set_wrap(true);
+        episode.set_ellipsize(gtk::pango::EllipsizeMode::End);
         let credit = gtk::Label::new(Some(&t::player_demo_credit()));
         credit.add_css_class("haze");
         credit.add_css_class("caption");
@@ -330,36 +528,46 @@ impl StartView {
         let loader = Loader::new();
         let step = Crossfade::new(&["start-step"]);
         let detail = Crossfade::new(&["haze", "start-detail"]);
-        step.stack.set_margin_top(12);
-        detail.stack.set_margin_top(3);
-        detail.stack.set_opacity(0.0);
-        detail.stack.set_height_request(20);
+        step.root.set_margin_top(12);
+        detail.root.set_margin_top(3);
+        let detail_fade = Fader::new(&detail.root);
 
-        // The waiting row keeps room for every button it will have; the failure row is built
-        // for the failure; the two crossfade.
+        // The row: its kept room under the three rows that crossfade on it.
+        let room = wrap();
+        room.set_can_target(false);
+        room.set_can_focus(false);
+        room.set_opacity(0.0);
+        room.upcast_ref::<gtk::Widget>().update_state(&[gtk::accessible::State::Hidden(true)]);
         let waiting = wrap();
-        let slots: Vec<(Action, Slot)> = [
-            Action::Cancel,
-            Action::FromBeginning,
-            Action::ChooseSource,
-            Action::Details,
-            Action::Skip,
-            Action::ShowDownloads,
-        ]
-        .into_iter()
-        .map(|a| (a, Slot::new(a)))
-        .collect();
+        let slots: Vec<(Action, Slot)> = WAITING
+            .into_iter()
+            .map(|action| {
+                let (label, look) = match action {
+                    Action::Cancel => (t::action_cancel(), Look::Quiet),
+                    Action::FromBeginning => (t::player_start_from_beginning(), Look::Tonal),
+                    Action::ChooseSource => (t::player_choose_source(), Look::Tonal),
+                    Action::Details => (t::player_start_details(), Look::Quiet),
+                    _ => (skip_room(), Look::Tonal),
+                };
+                (action, Slot::new(action, &label, look))
+            })
+            .collect();
         for (_, slot) in &slots {
             waiting.append(&slot.button);
         }
+        let offline = wrap();
         let failing = wrap();
-        let switcher = gtk::Stack::new();
-        switcher.set_transition_type(gtk::StackTransitionType::Crossfade);
-        switcher.set_transition_duration(300);
-        switcher.set_hhomogeneous(false);
-        switcher.add_named(&waiting, Some("waiting"));
-        switcher.add_named(&failing, Some("failing"));
-        switcher.set_halign(gtk::Align::Start);
+        let row_box = gtk::Overlay::new();
+        row_box.add_css_class("start-actions");
+        row_box.set_child(Some(&room));
+        for row in [&waiting, &offline, &failing] {
+            row_box.add_overlay(row);
+            row_box.set_measure_overlay(row, true);
+        }
+        let row_fades = [Fader::new(&waiting), Fader::new(&offline), Fader::new(&failing)];
+        for fade in &row_fades[1..] {
+            fade.set(0.0);
+        }
 
         let rows_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
         rows_box.add_css_class("start-rows");
@@ -382,36 +590,30 @@ impl StartView {
         let list = gtk::Box::new(gtk::Orientation::Vertical, 6);
         list.append(&rows_box);
         list.append(&language);
-        let reveal = gtk::Revealer::new();
-        reveal.set_transition_type(gtk::RevealerTransitionType::SlideDown);
-        reveal.set_transition_duration(300);
-        reveal.set_child(Some(&list));
+        let details = gtk::ScrolledWindow::new();
+        details.set_hscrollbar_policy(gtk::PolicyType::Never);
+        details.set_propagate_natural_height(true);
+        details.set_child(Some(&list));
+        details.set_visible(false);
+        details.set_vexpand(false);
+        let details_fade = Fader::new(&details);
 
         let column = gtk::Box::new(gtk::Orientation::Vertical, 0);
         column.add_css_class("start-column");
+        column.set_valign(gtk::Align::Start);
         column.append(&title);
         column.append(&episode);
         column.append(&credit);
         column.append(&loader.root);
-        column.append(&step.stack);
-        column.append(&detail.stack);
-        column.append(&switcher);
-        column.append(&reveal);
-        let clamp = adw::Clamp::new();
-        clamp.set_maximum_size(520);
-        clamp.set_tightening_threshold(520);
-        clamp.set_child(Some(&column));
-        clamp.set_halign(gtk::Align::Center);
-        clamp.set_valign(gtk::Align::Center);
-        clamp.set_margin_start(24);
-        clamp.set_margin_end(24);
-        clamp.set_margin_top(48);
-        clamp.set_margin_bottom(24);
+        column.append(&step.root);
+        column.append(&detail.root);
+        column.append(&row_box);
+        column.append(&details);
 
         let stack = gtk::Overlay::new();
         stack.set_child(Some(&art));
         stack.add_overlay(&ground);
-        stack.add_overlay(&clamp);
+        stack.add_overlay(&column);
         stack.set_vexpand(true);
         let root = gtk::Box::new(gtk::Orientation::Vertical, 0);
         root.add_css_class("player-starting");
@@ -421,20 +623,30 @@ impl StartView {
             root,
             art,
             ground,
+            column,
+            anchor: Cell::new(None),
             title,
             episode,
             credit,
             loader,
             step,
             detail,
+            detail_fade,
             detail_on: Cell::new(false),
-            switcher,
-            slots,
+            room,
+            waiting,
+            offline,
             failing,
+            row_fades,
+            rows_on: Cell::new(Rows::Waiting),
+            slots,
             failing_row: RefCell::default(),
-            reveal,
+            details,
+            details_fade,
+            details_open: Cell::new(false),
             rows_box,
             shown_rows: RefCell::default(),
+            row_times: RefCell::default(),
             language,
             sub,
             dub,
@@ -442,6 +654,11 @@ impl StartView {
             on_action: RefCell::default(),
             on_translation: RefCell::default(),
             first: Cell::new(true),
+        });
+        let weak = Rc::downgrade(&view);
+        stack.connect_get_child_position(move |overlay, widget| {
+            let view = weak.upgrade()?;
+            (widget == view.column.upcast_ref::<gtk::Widget>()).then(|| view.place(overlay))
         });
         for (action, slot) in &view.slots {
             let weak = Rc::downgrade(&view);
@@ -452,7 +669,9 @@ impl StartView {
                 }
             });
         }
-        for (toggle, translation) in [(&view.sub, Translation::Sub), (&view.dub, Translation::Dub)] {
+        for (toggle, translation) in
+            [(&view.sub, Translation::Sub), (&view.dub, Translation::Dub)]
+        {
             let weak = Rc::downgrade(&view);
             toggle.connect_toggled(move |button| {
                 let Some(view) = weak.upgrade() else { return };
@@ -476,6 +695,31 @@ impl StartView {
             motion::fade_in(&view.art);
         });
         view
+    }
+
+    /// Where the column goes: `COLUMN` wide or the window less its sides, centred, and its top
+    /// where the start first placed it for this size. It grows downward from there.
+    fn place(&self, overlay: &gtk::Overlay) -> gdk::Rectangle {
+        let (w, h) = (overlay.width(), overlay.height());
+        let width = COLUMN.min(w - 2 * SIDE).max(1);
+        let top = match self.anchor.get() {
+            Some((aw, ah, top)) if (aw, ah) == (w, h) => top,
+            _ => {
+                let (_, natural, _, _) = self.column.measure(gtk::Orientation::Vertical, width);
+                let open = if self.details.is_visible() {
+                    self.details.measure(gtk::Orientation::Vertical, width).1
+                } else {
+                    0
+                };
+                let top = ((h - (natural - open)) / 2).max(TOP);
+                if w > 0 && h > 0 {
+                    self.anchor.set(Some((w, h, top)));
+                }
+                top
+            }
+        };
+        let (least, _, _, _) = self.column.measure(gtk::Orientation::Vertical, width);
+        gdk::Rectangle::new((w - width) / 2, top, width, (h - top - BOTTOM).max(least))
     }
 
     pub fn connect_action(&self, on: OnAction) {
@@ -502,23 +746,52 @@ impl StartView {
         }
     }
 
-    /// A new start: the show and episode, and the room made ready for the first lines.
-    pub fn begin(&self, show: &str, episode_line: &str, demo: bool) {
+    /// A new start: the show and episode, and the room made ready for every line and button it
+    /// can show. `resumes` keeps the room of Play from the beginning.
+    pub fn begin(&self, show: &str, episode_line: &str, demo: bool, resumes: bool) {
         self.title.set_label(show);
         self.episode.set_label(episode_line);
         self.credit.set_visible(demo);
         self.first.set(true);
-        self.detail.stack.set_opacity(0.0);
+        self.detail_fade.set(0.0);
         self.detail_on.set(false);
+        self.step.reset("");
+        self.detail.reset("");
         self.loader.shown.set(true);
         self.loader.fade.set(1.0);
         self.loader.percent.set(None);
         self.loader.mix.set(0.0);
-        self.reveal.set_reveal_child(false);
-        self.switcher.set_visible_child_name("waiting");
-        for (_, slot) in &self.slots {
+        self.details_open.set(false);
+        self.details_fade.set(0.0);
+        self.details.set_visible(false);
+        self.show_rows(Rows::Waiting, true);
+        for (action, slot) in &self.slots {
             slot.show(false, true);
+            if *action == Action::FromBeginning {
+                slot.button.set_visible(resumes);
+            }
         }
+        // The kept room: the waiting row as wide as it can get.
+        while let Some(child) = self.room.first_child() {
+            self.room.remove(&child);
+        }
+        for (action, slot) in &self.slots {
+            if slot.button.is_visible() {
+                let label = if *action == Action::Skip {
+                    skip_room()
+                } else {
+                    slot.label.label().into()
+                };
+                let look = match action {
+                    Action::Cancel | Action::Details => Look::Quiet,
+                    _ => Look::Tonal,
+                };
+                self.room.append(&start_button(*action, &label, look).0);
+            }
+        }
+        self.failing_row.borrow_mut().clear();
+        self.anchor.set(None);
+        self.column.queue_resize();
         self.set_art_pending();
     }
 
@@ -537,48 +810,71 @@ impl StartView {
         self.set_ground(false);
     }
 
-    /// Draw `frame`. `immediately` skips the fades, for a screenshot of a held state or the
-    /// first frame of a screen that is itself fading in.
+    /// The row on show: the others fade away and stop taking clicks and focus.
+    fn show_rows(&self, which: Rows, immediately: bool) {
+        if self.rows_on.replace(which) == which && !immediately {
+            return;
+        }
+        let rows = [
+            (Rows::Waiting, &self.waiting),
+            (Rows::Offline, &self.offline),
+            (Rows::Failing, &self.failing),
+        ];
+        for ((kind, row), fade) in rows.into_iter().zip(&self.row_fades) {
+            let on = kind == which;
+            row.set_can_target(on);
+            row.set_can_focus(on);
+            let to = if on { 1.0 } else { 0.0 };
+            if immediately {
+                fade.set(to);
+            } else {
+                fade.to(to, STANDARD);
+            }
+        }
+    }
+
+    /// Draw `frame`.
     pub fn show(self: &Rc<Self>, frame: &Frame, details_open: bool) {
         let failed = frame.failure.is_some();
-        let (step, key) = match &frame.failure {
-            Some((title, _)) => (title.as_str(), "failure"),
-            None => (frame.step.as_str(), frame.key),
+        let step = match &frame.failure {
+            Some((title, _)) => title.as_str(),
+            None => frame.step.as_str(),
         };
-        self.step.set(step, key, failed);
+        if self.first.get() {
+            self.step.reset(step);
+        } else {
+            self.step.set(step, failed, false);
+        }
         let detail = match &frame.failure {
             Some((_, reason)) => reason.clone(),
             None => frame.detail(),
         };
-        // The seconds change the line in place; the facts crossfade.
-        let detail_key: &'static str = if failed { "failure" } else { leak_key(&frame.lead) };
-        self.detail.set(&detail, detail_key, false);
-        let wanted = !detail.is_empty();
-        if wanted && !self.detail_on.replace(true) {
-            motion::fade_in(&self.detail.stack);
+        self.detail.set(&detail, false, failed);
+        if !detail.is_empty() && !self.detail_on.replace(true) {
+            self.detail_fade.to(1.0, FADE_IN);
         }
         self.loader.shown.set(!failed);
         self.loader.percent.set(frame.percent);
-        self.live_update(&frame.step, &detail);
+        self.live_update(step, &detail);
 
+        let immediately = self.first.get();
         if failed {
             self.build_failing(&frame.buttons);
-            self.switcher.set_visible_child_name("failing");
+            self.show_rows(Rows::Failing, immediately);
+        } else if frame.buttons.iter().any(|b| b.action == Action::ShowDownloads) {
+            self.build_offline(&frame.buttons);
+            self.show_rows(Rows::Offline, immediately);
         } else {
-            self.switcher.set_visible_child_name("waiting");
-            // Offline has its own two buttons, and the others have no room kept there.
-            let offline = frame.buttons.iter().any(|b| b.action == Action::ShowDownloads);
+            self.show_rows(Rows::Waiting, immediately);
             for (action, slot) in &self.slots {
-                slot.button.set_visible(
-                    (*action == Action::ShowDownloads) == offline
-                        || matches!(action, Action::Cancel),
-                );
                 let button = frame.buttons.iter().find(|b| b.action == *action);
-                if let Some(button) = button {
+                if let Some(button) = button
+                    && slot.label.label() != button.label
+                {
                     slot.label.set_label(&button.label);
                 }
-                slot.show(button.is_some(), self.first.get());
-                if let (Some(chevron), true) = (&slot.chevron, true) {
+                slot.show(button.is_some(), immediately);
+                if let Some(chevron) = &slot.chevron {
                     chevron.set_icon_name(Some(if details_open {
                         "pan-up-symbolic"
                     } else {
@@ -591,11 +887,8 @@ impl StartView {
 
         // Details: rows when there are any, and the translation switch once it is known.
         let can_open = frame.buttons.iter().any(|b| b.action == Action::Details);
-        self.reveal.set_reveal_child(details_open && can_open);
-        if *self.shown_rows.borrow() != frame.rows {
-            self.fill_rows(&frame.rows);
-            self.shown_rows.replace(frame.rows.clone());
-        }
+        self.open_details(details_open && can_open);
+        self.fill_rows(&frame.rows);
         match frame.translation {
             Some(translation) => {
                 self.quiet.set(true);
@@ -608,6 +901,33 @@ impl StartView {
         }
     }
 
+    /// Details opens under the row and closes again, fading; the column above stays put.
+    fn open_details(&self, open: bool) {
+        if self.details_open.replace(open) == open {
+            return;
+        }
+        if open {
+            self.details.set_visible(true);
+            self.details_fade.to(1.0, STANDARD);
+        } else {
+            let details = self.details.clone();
+            self.details_fade.to_then(
+                0.0,
+                STANDARD,
+                Some(Box::new(move || details.set_visible(false))),
+            );
+        }
+    }
+
+    fn build_offline(self: &Rc<Self>, buttons: &[Button]) {
+        if self.offline.first_child().is_some() {
+            return;
+        }
+        for button in buttons {
+            self.offline.append(&self.action_button(button));
+        }
+    }
+
     fn build_failing(self: &Rc<Self>, buttons: &[Button]) {
         let actions: Vec<Action> = buttons.iter().map(|b| b.action).collect();
         if *self.failing_row.borrow() == actions {
@@ -617,29 +937,53 @@ impl StartView {
             self.failing.remove(&child);
         }
         for button in buttons {
-            let b = gtk::Button::with_label(&button.label);
-            b.add_css_class("start-button");
-            match button.look {
-                Look::Primary => b.add_css_class("suggested-action"),
-                Look::Quiet => b.add_css_class("flat"),
-                Look::Tonal => {}
-            }
-            let action = button.action;
-            let weak = Rc::downgrade(self);
-            b.connect_clicked(move |_| {
-                if let Some(view) = weak.upgrade() {
-                    view.pressed(action);
-                }
-            });
-            self.failing.append(&b);
+            self.failing.append(&self.action_button(button));
         }
         self.failing_row.replace(actions);
     }
 
+    fn action_button(self: &Rc<Self>, button: &Button) -> gtk::Button {
+        let (b, _, _) = start_button(button.action, &button.label, button.look);
+        let action = button.action;
+        let weak = Rc::downgrade(self);
+        b.connect_clicked(move |_| {
+            if let Some(view) = weak.upgrade() {
+                view.pressed(action);
+            }
+        });
+        b
+    }
+
+    /// The Details rows: built again when what they say changes, their times updated in place.
     fn fill_rows(self: &Rc<Self>, rows: &[Row]) {
+        let same = {
+            let shown = self.shown_rows.borrow();
+            shown.len() == rows.len()
+                && shown.iter().zip(rows).all(|(a, b)| {
+                    (a.mark, &a.name, &a.note, &a.skip) == (b.mark, &b.name, &b.note, &b.skip)
+                })
+        };
+        if same {
+            for (label, row) in self.row_times.borrow().iter().zip(rows) {
+                if label.label() != row.time {
+                    label.set_label(&row.time);
+                }
+            }
+            self.shown_rows.replace(rows.to_vec());
+            return;
+        }
         while let Some(child) = self.rows_box.first_child() {
             self.rows_box.remove(&child);
         }
+        // What was there before: a row or a row's Skip that is new fades in, the rest stays.
+        let before: Vec<(String, bool)> = self
+            .shown_rows
+            .borrow()
+            .iter()
+            .map(|r| (r.name.clone(), r.skip.is_some()))
+            .collect();
+        let mut arriving = Vec::new();
+        let mut times = Vec::new();
         for row in rows {
             let line = gtk::Box::new(gtk::Orientation::Horizontal, 8);
             line.add_css_class("start-row");
@@ -659,7 +1003,7 @@ impl StartView {
             note.add_css_class("haze");
             note.set_xalign(0.0);
             note.set_hexpand(true);
-            note.set_wrap(true);
+            note.set_ellipsize(gtk::pango::EllipsizeMode::End);
             if !row.note.is_empty() {
                 note.set_label(&format!("· {}", row.note)); // i18n-skip
             }
@@ -670,8 +1014,8 @@ impl StartView {
             line.append(&name);
             line.append(&note);
             line.append(&time);
-            if row.skip {
-                let skip = gtk::Button::with_label(&t::linux_start_row_skip());
+            if let Some(label) = &row.skip {
+                let skip = gtk::Button::with_label(label);
                 skip.add_css_class("flat");
                 skip.add_css_class("start-row-skip");
                 let weak = Rc::downgrade(self);
@@ -681,19 +1025,34 @@ impl StartView {
                     }
                 });
                 line.append(&skip);
+                if before.iter().any(|(name, skip)| *name == row.name && !skip) {
+                    arriving.push(skip.upcast::<gtk::Widget>());
+                }
+            }
+            if !before.iter().any(|(name, _)| *name == row.name) {
+                arriving.push(line.clone().upcast());
             }
             self.rows_box.append(&line);
+            times.push(time);
         }
+        for widget in arriving {
+            let fade = Fader::new(&widget);
+            fade.set(0.0);
+            fade.to(1.0, FADE_IN);
+        }
+        self.row_times.replace(times);
+        self.shown_rows.replace(rows.to_vec());
     }
 
-    /// Tell a screen reader the moments the design names, and keep the lines readable as one.
+    /// Keep the lines readable as one element; the moments the design names are announced by
+    /// the player.
     fn live_update(&self, step: &str, detail: &str) {
         let text = if detail.is_empty() {
             step.to_owned()
         } else {
-            t::linux_start_status(step, detail)
+            t::player_start_status(step, detail)
         };
-        self.step.stack.update_property(&[gtk::accessible::Property::Label(&text)]);
+        self.step.root.update_property(&[gtk::accessible::Property::Label(&text)]);
     }
 
     pub fn focus_primary(&self) {
@@ -709,23 +1068,6 @@ impl StartView {
             first.grab_focus();
         }
     }
-}
-
-/// A key for the detail line's lead: the text itself, kept for the life of the program, so a
-/// changed lead crossfades and an unchanged one (only the seconds moving) changes in place.
-fn leak_key(lead: &str) -> &'static str {
-    thread_local! {
-        static KEYS: RefCell<std::collections::HashMap<String, &'static str>> = RefCell::default();
-    }
-    KEYS.with(|keys| {
-        let mut keys = keys.borrow_mut();
-        if let Some(key) = keys.get(lead) {
-            return *key;
-        }
-        let key: &'static str = Box::leak(lead.to_owned().into_boxed_str());
-        keys.insert(lead.to_owned(), key);
-        key
-    })
 }
 
 /// The mean relative luminance of the art's centre band: the middle 60% of the width and half
@@ -782,5 +1124,20 @@ mod tests {
         };
         assert!(luminance(&texture(240)) > BRIGHT);
         assert!(luminance(&texture(20)) < BRIGHT);
+    }
+
+    #[test]
+    fn the_breathing_runs_four_seconds_from_full_to_forty_percent_and_back() {
+        assert!((breath(0.0) - 1.0).abs() < 1e-9);
+        assert!((breath(2.0) - 0.4).abs() < 1e-9);
+        assert!((breath(4.0) - 1.0).abs() < 1e-9);
+        assert!(breath(1.0) > 0.4 && breath(1.0) < 1.0);
+    }
+
+    #[test]
+    fn numbers_change_in_place_and_words_crossfade() {
+        assert_eq!(fade_key("Buffering · 25%"), fade_key("Buffering · 40%"));
+        assert_eq!(fade_key("1 of 3 sources · 4 s"), fade_key("1 of 3 sources · 5 s"));
+        assert_ne!(fade_key("Asking Alpha"), fade_key("Asking Brook"));
     }
 }

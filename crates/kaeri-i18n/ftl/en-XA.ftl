@@ -1125,48 +1125,6 @@ discussion-like-named =
        *[other] [Ļîķé, { $count } ļîķéš~~~~~]
     }
 
-# The seconds a start has waited, last on the detail line after the facts: "10 s".
-linux-start-seconds = [{ $seconds } š~~]
-
-# Details row for the title lookup once it is done.
-linux-start-row-looked-up = [Ļööķéð üþ ţĥé ţîţļé~~~~~~]
-
-# Details row note for the source being asked now.
-linux-start-row-asking = [Åšķîñĝ~~]
-
-# Details row note for a source that will be asked next.
-linux-start-row-next = [Ñéẋţ~~]
-
-# Button in the Details row of the source being asked: skips it.
-linux-start-row-skip = [Šķîþ~~]
-
-# Said to a screen reader once, when a start has waited 8 seconds.
-linux-start-still-starting = [Šţîļļ šţàŕţîñĝ. Çĥööšé šöüŕçé îš àṽàîļàƀļé.~~~~~~~~~~~~~]
-
-# Said to a screen reader when the starting screen opens. The title is the show's.
-linux-start-announce = [Šţàŕţîñĝ éþîšöðé { $episode }, { $title }~~~~~~~~]
-
-# Said to a screen reader when a start has failed: the failure's title, then its reason.
-linux-start-failed-announce = [{ $title }. { $reason }~~~]
-
-# Accessible label of the starting screen's step and detail lines, read as one element.
-linux-start-status = [{ $step }, { $detail }~~~]
-
-# Details row note for a source that has no match for the show.
-linux-start-row-no-match = [Ðöéšñ'ţ ĥàṽé ţĥîš šĥöŵ~~~~~~~]
-
-# Details row note for a source that has the show and not the episode.
-linux-start-row-no-episode = [Ðöéšñ'ţ ĥàṽé éþîšöðé { $episode }~~~~~~~~]
-
-# Details row note for a source that gave an error.
-linux-start-row-failed = [Ðîðñ'ţ àñšŵéŕ~~~~]
-
-# Details row note for a source that took too long.
-linux-start-row-timed-out = [Ţööķ ţöö ļöñĝ~~~~]
-
-# Details row note for a source the viewer skipped.
-linux-start-row-skipped = [Šķîþþéð~~~]
-
 # Tooltip on the button that opens a setting's preview on a page of its own, and accessible name of the preview.
 settings-preview = [Þŕéṽîéŵ~~~]
 
@@ -4878,6 +4836,12 @@ tv-problem-unpaired = [Ţĥé ŢṼ ðöéšñ'ţ ķñöŵ ţĥîš ðéṽîç�
 
 # What a screen reader says for the player's seek bar: where the playhead is and how long the episode is. Both times are already spoken in full, such as "12 minutes 4 seconds".
 player-position-spoken = [{ $position } öƒ { $duration }~~~]
+
+# Two names, or the last two of a longer list, joined as a sentence lists them: "Alpha and Brook".
+names-pair = [{ $first } àñð { $last }~~~~]
+
+# A list of names up to the last two, joined one by one: "Alpha, Brook".
+names-list = [{ $list }, { $next }~~~]
 
 # Menu item that opens an episode's discussion.
 discussion-open = [Ðîšçüššîöñ~~~]

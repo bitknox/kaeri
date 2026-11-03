@@ -3914,6 +3914,16 @@ public enum L {
         Self.format("player-position-spoken", fallback: "%1$@ of %2$@", position, duration)
     }
 
+    /// Two names, or the last two of a longer list, joined as a sentence lists them: "Alpha and Brook".
+    public static func namesPair(first: String, last: String) -> String {
+        Self.format("names-pair", fallback: "%1$@ and %2$@", first, last)
+    }
+
+    /// A list of names up to the last two, joined one by one: "Alpha, Brook".
+    public static func namesList(list: String, next: String) -> String {
+        Self.format("names-list", fallback: "%1$@, %2$@", list, next)
+    }
+
     /// Menu item that opens an episode's discussion.
     public static var discussionOpen: String { string("discussion-open", fallback: "Discussion") }
 

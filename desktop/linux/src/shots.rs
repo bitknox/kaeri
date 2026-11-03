@@ -743,9 +743,19 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
         }
         // The starting screen, driven by the engine's made-up starts: `start-<state>-<seconds>`
         // plays the state's events on their own clock and is taken that long after the start.
+        // With `-details` after the state, Details opens 5 s in.
         start if start.starts_with("start-") => {
-            let Some((state, seconds)) = start_state(start) else { return 0.1 };
+            let details = start.contains("-details-");
+            let Some((state, seconds)) = start_state(&start.replace("-details-", "-")) else {
+                return 0.1;
+            };
             shell.go(Dest::Home);
+            if details {
+                let player = Rc::clone(&shell.player);
+                glib::timeout_add_local_once(Duration::from_secs(5), move || {
+                    player.shot_start_details();
+                });
+            }
             let hub = Rc::clone(&shell.ctx.hub);
             for fixture in kaeri_engine::playback::starting::fixture(state) {
                 let hub = Rc::clone(&hub);
@@ -1185,6 +1195,7 @@ fn start_state(shot: &str) -> Option<(kaeri_model::starting::StartingFixture, f6
         "buffering-torrent" => S::BufferingTorrent,
         "buffering-direct" => S::BufferingDirect,
         "offline" => S::Offline,
+        "offline-timed-out" => S::OfflineTimedOut,
         "failed-no-episode" => S::FailedNoEpisode,
         "failed-no-match" => S::FailedNoMatch,
         "failed-no-sources" => S::FailedNoSources,

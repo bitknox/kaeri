@@ -1,4 +1,5 @@
 using Kaeri.App;
+using Kaeri.Engine.Core;
 using Kaeri.Engine.Model;
 using Xunit;
 
@@ -6,163 +7,258 @@ namespace Kaeri.App.Tests;
 
 public class StartScreenTests
 {
+    public StartScreenTests() => T.Resolver = null;
+
     static TimeSpan Ms(int n) => TimeSpan.FromMilliseconds(n);
 
     static StartScreen Start(double? resume = 606) => new(900_001, "7", resume);
 
-    static StartStep Ask(string name, uint place, uint total, bool pinned = false) => new StartStep.AskingSource(name, place, total, pinned);
-
     static void Asking(StartScreen start, string name, uint place, uint total, TimeSpan at, bool pinned = false) =>
-        start.Step(Ask(name, place, total, pinned), new Msg.StartAskingSource(name), at);
+        start.Step(new StartStep.AskingSource(name, place, total, pinned), new Msg.StartAskingSource(name), at);
 
-    static StartFailure Failure(NoSourceWhy why) => new(why, new Msg.StartFailed("nothing"));
+    static void Found(StartScreen start, string? source, TimeSpan at) =>
+        start.Step(new StartStep.Found(3, source, null, Translation.Sub), new Msg.StartOpeningStream(), at);
+
+    static IEnumerable<StartAction> Actions(StartFrame frame) => frame.Buttons.Select(b => b.Action);
 
     [Fact]
-    public void TheStepLineIsThereFromZeroAndASecondTextWaitsForTheHold()
+    public void ANewerStepWaitsOutTheHoldAndOnlyTheLatestShows()
     {
         var start = Start();
         Assert.Equal(T.StartLookingUpTitle, start.Frame(TimeSpan.Zero).Step);
-        Asking(start, "Alpha", 1, 3, Ms(200));
-        Assert.Equal(T.StartLookingUpTitle, start.Frame(Ms(300)).Step);
+        Asking(start, "Alpha", 1, 3, Ms(100));
+        Assert.Equal(StartPhase.Lookup, start.Frame(Ms(100)).Phase);
+        Found(start, null, Ms(300));
+        Assert.Equal(StartPhase.Lookup, start.Frame(Ms(300)).Phase);
         Assert.False(start.Tick(Ms(500)));
         Assert.True(start.Tick(Ms(600)));
-        Assert.Equal(T.StartAskingSource("Alpha"), start.Frame(Ms(600)).Step);
+        Assert.Equal(StartPhase.Opening, start.Frame(Ms(600)).Phase);
     }
 
     [Fact]
-    public void ANewerTextReplacesTheOneWaiting()
+    public void AStepAfterTheHoldShowsAtOnce()
     {
         var start = Start();
-        Asking(start, "Alpha", 1, 3, Ms(100));
-        Asking(start, "Brook", 2, 3, Ms(300));
-        start.Tick(Ms(700));
-        Assert.Equal(T.StartAskingSource("Brook"), start.Frame(Ms(700)).Step);
+        Asking(start, "Alpha", 1, 3, Ms(700));
+        var frame = start.Frame(Ms(700));
+        Assert.Equal(StartPhase.Asking, frame.Phase);
+        Assert.Equal("Asking Alpha", frame.Step);
     }
 
     [Fact]
-    public void ThePercentageChangesInPlaceWithNoHold()
+    public void TheToolsComeByTimeInArrivalOrder()
     {
         var start = Start();
-        start.Step(new StartStep.Buffering(10), null, Ms(700));
-        var first = start.Frame(Ms(700));
-        start.Step(new StartStep.Buffering(11), null, Ms(800));
-        var second = start.Frame(Ms(800));
-        Assert.Equal("buffering", second.Key);
-        Assert.NotEqual(first.Step, second.Step);
-        Assert.Equal(11u, second.Percent);
-    }
-
-    [Fact]
-    public void TheDetailLineComesFromOneSecondAndTheSecondsFromThree()
-    {
-        var start = Start();
-        Assert.Equal("", start.Frame(Ms(900)).Detail);
-        Assert.Equal(T.PlayerStartResuming("10:06"), start.Frame(Ms(1000)).Detail);
-        Assert.EndsWith(T.WindowsStartSeconds(3), start.Frame(TimeSpan.FromSeconds(3)).Detail);
-    }
-
-    [Fact]
-    public void ButtonsArriveByTime()
-    {
-        var start = Start();
-        Assert.Equal([StartAction.Cancel], start.Frame(Ms(500)).Buttons.Select(b => b.Action));
-        Assert.Equal([StartAction.Cancel, StartAction.FromBeginning], start.Frame(Ms(1000)).Buttons.Select(b => b.Action));
+        Asking(start, "Alpha", 1, 3, Ms(700));
+        Assert.Equal([StartAction.Cancel], Actions(start.Frame(Ms(900))));
+        Assert.Equal([StartAction.Cancel, StartAction.FromBeginning], Actions(start.Frame(Ms(1000))));
         Assert.Equal(
             [StartAction.Cancel, StartAction.FromBeginning, StartAction.ChooseSource, StartAction.Details],
-            start.Frame(TimeSpan.FromSeconds(3)).Buttons.Select(b => b.Action));
+            Actions(start.Frame(Ms(3000))));
+        Assert.Equal(StartAction.Skip, Actions(start.Frame(Ms(8800))).Last());
     }
 
     [Fact]
-    public void SkipComesAfterEightSecondsOnASourceWithAnotherToGoTo()
+    public void SkipNeedsEightSecondsOnOneSourceAndAnotherToGoTo()
     {
         var start = Start();
-        Asking(start, "Alpha", 1, 3, TimeSpan.Zero);
-        start.Tick(Ms(600));
-        Assert.DoesNotContain(start.Frame(TimeSpan.FromSeconds(7)).Buttons, b => b.Action == StartAction.Skip);
-        var skip = Assert.Single(start.Frame(TimeSpan.FromSeconds(8)).Buttons, b => b.Action == StartAction.Skip);
-        Assert.Equal(T.PlayerStartSkipSource("Alpha"), skip.Label);
-
-        var last = Start();
-        Asking(last, "Alpha", 1, 1, TimeSpan.Zero);
-        last.Tick(Ms(600));
-        Assert.DoesNotContain(last.Frame(TimeSpan.FromSeconds(9)).Buttons, b => b.Action == StartAction.Skip);
+        Asking(start, "Alpha", 1, 3, Ms(700));
+        Assert.DoesNotContain(StartAction.Skip, Actions(start.Frame(Ms(8600))));
+        var skip = Assert.Single(start.Frame(Ms(8700)).Buttons, b => b.Action == StartAction.Skip);
+        Assert.Equal("Skip Alpha", skip.Label);
+        Assert.Equal("Skip Alpha", start.Frame(Ms(8700)).Rows.Last().Skip);
+        // The last source has nothing to skip to.
+        Asking(start, "Harbor", 3, 3, Ms(9000));
+        Assert.DoesNotContain(StartAction.Skip, Actions(start.Frame(Ms(20_000))));
     }
 
     [Fact]
-    public void ThePlayFromTheBeginningGoesWhenItIsChosen()
+    public void TheDetailComesAtOneSecondAndTheSecondsAtThree()
     {
         var start = Start();
+        Asking(start, "Alpha", 1, 3, Ms(700));
+        Assert.Equal("", start.Frame(Ms(900)).Detail);
+        Assert.Equal("Resuming at 10:06 · 1 of 3 sources", start.Frame(Ms(1000)).Detail);
+        Assert.EndsWith("10 s", start.Frame(Ms(10_000)).Detail);
+    }
+
+    [Fact]
+    public void TheResumeFactStaysAndFlipsWhenPlayingFromTheBeginning()
+    {
+        var start = Start();
+        Asking(start, "Alpha", 1, 3, Ms(700));
+        start.Step(new StartStep.SourceMissed("Alpha", SourceMiss.NoEpisode), null, Ms(1500));
+        Asking(start, "Brook", 2, 3, Ms(1500));
+        start.Tick(Ms(1500));
+        Assert.Equal("Resuming at 10:06 · Alpha doesn't have episode 7 · 2 of 3 sources", start.Frame(Ms(2000)).Detail);
         start.BeginFromStart();
-        Assert.DoesNotContain(start.Frame(TimeSpan.FromSeconds(4)).Buttons, b => b.Action == StartAction.FromBeginning);
-        Assert.DoesNotContain(T.PlayerStartResuming("10:06"), start.Frame(TimeSpan.FromSeconds(4)).Detail);
+        var frame = start.Frame(Ms(2000));
+        Assert.StartsWith("Starting from the beginning · ", frame.Detail);
+        Assert.DoesNotContain(StartAction.FromBeginning, Actions(frame));
     }
 
     [Fact]
-    public void ASlowStartSaysItIsWaitingFromTwentySeconds()
-    {
-        var start = Start();
-        Asking(start, "Alpha", 2, 3, Ms(100));
-        start.Tick(Ms(800));
-        Assert.Equal(T.StartAskingSource("Alpha"), start.Frame(TimeSpan.FromSeconds(19)).Step);
-        var slow = start.Frame(TimeSpan.FromSeconds(20));
-        Assert.Equal(T.PlayerStartStillWaiting("Alpha"), slow.Step);
-        Assert.Equal("slow", slow.Key);
-    }
-
-    [Fact]
-    public void AMissLeadsTheDetailLineAndTheListKeepsEverySource()
+    public void NoResumeNoPlayFromTheBeginning()
     {
         var start = Start(null);
-        Asking(start, "Alpha", 1, 3, Ms(100));
-        start.Step(new StartStep.SourceMissed("Alpha", SourceMiss.NoEpisode), null, Ms(2400));
-        Asking(start, "Brook", 2, 3, Ms(2500));
-        start.Tick(Ms(3200));
-        var frame = start.Frame(Ms(4000));
-        Assert.StartsWith(T.PlayerStartMissNoEpisode("Alpha", "7"), frame.Detail);
-        Assert.Contains(frame.Rows, r => r.Name == "Alpha" && r.Mark == StartMark.Empty);
-        Assert.Contains(frame.Rows, r => r.Name == "Brook" && r.Mark == StartMark.Now);
+        Asking(start, "Alpha", 1, 1, Ms(700));
+        Assert.False(start.Resumes);
+        Assert.Equal([StartAction.Cancel], Actions(start.Frame(Ms(1500))));
+        Assert.Equal("", start.Frame(Ms(1500)).Detail);
     }
 
     [Fact]
-    public void OfflineWaitsWithShowDownloadsAndComesBackToTheStep()
+    public void SlowWordingInEveryPhaseFromTwentySecondsAndNoFalseFailure()
+    {
+        var asking = Start();
+        Asking(asking, "Brook", 2, 3, Ms(1500));
+        var frame = asking.Frame(Ms(24_000));
+        Assert.Equal("Still waiting for Brook", frame.Step);
+        Assert.Null(frame.Failure);
+
+        var peers = Start();
+        Asking(peers, "Harbor", 1, 2, Ms(700));
+        peers.Step(new StartStep.FindingPeers("Harbor"), new Msg.StartFindingPeers(), Ms(900));
+        peers.Tick(Ms(1300));
+        Assert.Equal(StartPhase.Peers, peers.Frame(Ms(19_000)).Phase);
+        Assert.Equal("Still waiting for Harbor", peers.Frame(Ms(21_000)).Step);
+
+        var opening = Start();
+        Asking(opening, "Brook", 1, 3, Ms(700));
+        Found(opening, "Brook", Ms(2300));
+        Assert.Equal("Still waiting for Brook", opening.Frame(Ms(21_000)).Step);
+    }
+
+    [Fact]
+    public void AFailureSaysWhyInPlainWordsAndWhoWasAsked()
     {
         var start = Start();
-        Asking(start, "Alpha", 1, 3, Ms(100));
-        start.Tick(Ms(800));
-        start.Connectivity(true, Ms(1000));
-        var offline = start.Frame(Ms(1500));
-        Assert.Equal(T.PlayerStartOffline, offline.Step);
-        Assert.Equal(T.PlayerStartOfflineDetail("7"), offline.Detail);
-        Assert.Equal([StartAction.Cancel, StartAction.ShowDownloads], offline.Buttons.Select(b => b.Action));
-        start.Connectivity(false, Ms(2000));
-        Assert.Equal(T.StartAskingSource("Alpha"), start.Frame(Ms(2100)).Step);
+        start.Fail(new StartFailure(
+            NoSourceWhy.NotFound,
+            new Msg.NoticeReason(new Cause.NoSourceHasEpisode("7", "alpha: not found, brook: not found")),
+            ["Alpha", "Brook"]));
+        var frame = start.Frame(Ms(3000));
+        Assert.Equal("Couldn't play episode 7", frame.Failure?.Title);
+        Assert.Equal("No source has episode 7. Alpha and Brook were asked.", frame.Failure?.Reason);
+        Assert.Equal([StartAction.ChooseAnother, StartAction.TryAgain, StartAction.Details, StartAction.Close], Actions(frame));
     }
 
     [Fact]
-    public void FailuresOfferWhatFitsTheReason()
+    public void AFailureOnAHalfEpisodeNamesItAndNoSourcesOffersNoTryAgain()
     {
-        var aired = Start();
-        aired.Fail(Failure(NoSourceWhy.NotAired));
-        Assert.Equal([StartAction.Close], aired.Frame(Ms(100)).Buttons.Select(b => b.Action));
+        var start = new StartScreen(1, "7.5", null);
+        start.Fail(new StartFailure(NoSourceWhy.NoSources, new Msg.NoticeReason(new Cause.NoSources()), []));
+        var frame = start.Frame(Ms(500));
+        Assert.Equal("Couldn't play episode 7.5", frame.Failure?.Title);
+        Assert.DoesNotContain("Add one", frame.Failure?.Reason);
+        Assert.Equal([StartAction.AddStore, StartAction.Close], Actions(frame));
+    }
 
-        var none = Start();
-        none.Fail(Failure(NoSourceWhy.NoSources));
-        Assert.Equal(StartAction.AddStore, none.Frame(Ms(100)).Buttons[0].Action);
-
-        var nomatch = Start();
-        Asking(nomatch, "Alpha", 1, 2, Ms(100));
-        nomatch.Step(new StartStep.SourceMissed("Alpha", SourceMiss.NoMatch), null, Ms(900));
-        nomatch.Fail(Failure(NoSourceWhy.NotFound));
-        var frame = nomatch.Frame(Ms(1000));
+    [Fact]
+    public void ATitleWithNoMatchLeadsWithFixMatch()
+    {
+        var start = Start();
+        start.Fail(new StartFailure(
+            NoSourceWhy.NotFound,
+            new Msg.NoticeReason(new Cause.TitleNoMatch("alpha: no match")),
+            ["Alpha"]));
+        var frame = start.Frame(Ms(2000));
         Assert.Equal(StartAction.FixMatch, frame.Buttons[0].Action);
         Assert.Equal(StartLook.Primary, frame.Buttons[0].Look);
-        Assert.Equal(T.PlayerFailedTitle(7), frame.Failure?.Title);
+        Assert.DoesNotContain("alpha: no match", frame.Failure?.Reason);
+        Assert.EndsWith("Alpha were asked.", frame.Failure?.Reason);
+    }
 
-        var noEpisode = Start();
-        Asking(noEpisode, "Alpha", 1, 2, Ms(100));
-        noEpisode.Step(new StartStep.SourceMissed("Alpha", SourceMiss.NoEpisode), null, Ms(900));
-        noEpisode.Fail(Failure(NoSourceWhy.NotFound));
-        Assert.Equal(StartAction.ChooseAnother, noEpisode.Frame(Ms(1000)).Buttons[0].Action);
+    [Fact]
+    public void OnlyAFailureEventMakesAFailure()
+    {
+        var start = Start();
+        Assert.Null(start.Frame(Ms(60_000)).Failure);
+        start.Fail(new StartFailure(
+            NoSourceWhy.NotAired,
+            new Msg.NoticeNotAired(7, new Cause.AirsTomorrow("18:30")),
+            []));
+        var frame = start.Frame(Ms(700));
+        Assert.Equal("Episode 7 airs tomorrow at 18:30.", frame.Failure?.Reason);
+        Assert.Equal([StartAction.Close], Actions(frame));
+    }
+
+    [Fact]
+    public void OfflineWaitsWithShowDownloadsAndStartsOnTheNextStep()
+    {
+        var start = Start();
+        start.Step(new StartStep.WaitingForConnection(), null, Ms(0));
+        var offline = start.Frame(Ms(1000));
+        Assert.Equal("Waiting for a connection", offline.Step);
+        Assert.Contains("You're offline", offline.Detail);
+        Assert.Equal([StartAction.Cancel, StartAction.ShowDownloads], Actions(offline));
+        // Long offline waits are not slow starts.
+        Assert.Null(start.SlowAnnouncement(Ms(9000)));
+        Asking(start, "Alpha", 1, 2, Ms(8700));
+        var back = start.Frame(Ms(8700));
+        Assert.Equal("Asking Alpha", back.Step);
+        Assert.Equal([StartAction.Cancel, StartAction.FromBeginning], Actions(back).Take(2));
+        // The slow wording counts from the end of the wait.
+        Assert.Equal("Asking Alpha", start.Frame(Ms(26_000)).Step);
+        Assert.Equal("Still waiting for Alpha", start.Frame(Ms(29_000)).Step);
+    }
+
+    [Fact]
+    public void OfflineTooLongFailsWithTryAgainFirst()
+    {
+        var start = Start();
+        start.Step(new StartStep.WaitingForConnection(), null, Ms(0));
+        start.Fail(new StartFailure(NoSourceWhy.NoConnection, new Msg.NoticeReason(new Cause.NoConnection()), []));
+        var frame = start.Frame(Ms(120_000));
+        Assert.Equal("No connection.", frame.Failure?.Reason);
+        Assert.Equal([StartAction.TryAgain, StartAction.ShowDownloads, StartAction.Close], Actions(frame));
+    }
+
+    [Fact]
+    public void BufferingPercentIsANumberInTheStepAndChangesInPlace()
+    {
+        var start = Start();
+        start.Step(new StartStep.Buffering(10), new Msg.StartBuffering(), Ms(5000));
+        Assert.Equal(10u, start.Frame(Ms(5000)).Percent);
+        start.Step(new StartStep.Buffering(25), new Msg.StartBuffering(), Ms(5100));
+        var frame = start.Frame(Ms(5100));
+        Assert.Equal(25u, frame.Percent);
+        Assert.Contains("25", frame.Step);
+    }
+
+    [Fact]
+    public void ADirectStreamBuffersWithNoPercent()
+    {
+        var start = Start();
+        Asking(start, "Brook", 1, 3, Ms(700));
+        Found(start, "Brook", Ms(2300));
+        start.Step(new StartStep.OpeningStream(1, 3), null, Ms(2350));
+        start.Step(new StartStep.Speed(1_800_000), null, Ms(3400));
+        var frame = start.Frame(Ms(3400));
+        Assert.Equal(StartPhase.Buffering, frame.Phase);
+        Assert.Equal("Buffering", frame.Step);
+        Assert.Null(frame.Percent);
+        Assert.Equal("Resuming at 10:06 · From Brook · 3 s", frame.Detail);
+    }
+
+    [Fact]
+    public void SpeedHasOneDecimal()
+    {
+        var start = Start();
+        start.Step(new StartStep.Swarm(12, 3_400_000), null, Ms(6000));
+        start.Step(new StartStep.Buffering(40), new Msg.StartBuffering(), Ms(8000));
+        Assert.Equal("Resuming at 10:06 · 12 peers · 3.4 MB/s · 15 s", start.Frame(Ms(15_000)).Detail);
+        Assert.Equal("14.0 MB", StartScreen.Speed(14_000_000));
+        Assert.Equal("800 kB", StartScreen.Speed(800_000));
+    }
+
+    [Fact]
+    public void NamesAreListedAsASentence()
+    {
+        Assert.Null(StartScreen.Names([]));
+        Assert.Equal("Alpha", StartScreen.Names(["Alpha"]));
+        Assert.Equal("Alpha and Brook", StartScreen.Names(["Alpha", "Brook"]));
+        Assert.Equal("Alpha, Brook and Harbor", StartScreen.Names(["Alpha", "Brook", "Harbor"]));
     }
 
     [Fact]
@@ -170,7 +266,7 @@ public class StartScreenTests
     {
         var start = Start();
         Assert.Null(start.SlowAnnouncement(TimeSpan.FromSeconds(7)));
-        Assert.Equal(T.WindowsStartStillStarting, start.SlowAnnouncement(TimeSpan.FromSeconds(8)));
+        Assert.Equal(T.PlayerStartStillStarting, start.SlowAnnouncement(TimeSpan.FromSeconds(8)));
         Assert.Null(start.SlowAnnouncement(TimeSpan.FromSeconds(9)));
     }
 
