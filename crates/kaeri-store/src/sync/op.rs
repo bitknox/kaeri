@@ -195,6 +195,9 @@ pub mod kinds {
     /// Applied to the device list: key is the device id.
     pub const DEVICE_NAME: &str = "device_name";
     pub const DEVICE_TRACKERS: &str = "device_trackers";
+    /// What a device keeps for the cloud: its folder's kind and the cloud sign-ins it holds, as
+    /// the engine's JSON. Kept as a register only; the engine reads it back.
+    pub const DEVICE_CLOUD: &str = "device_cloud";
 }
 
 #[cfg(test)]

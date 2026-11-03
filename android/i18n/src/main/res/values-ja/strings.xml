@@ -244,6 +244,7 @@
     <string name="notice_party_not_built">このアプリには同時視聴が含まれていません。</string>
     <string name="sources_demo_removed">デモを削除しました</string>
     <string name="stores_ready_demo_stays">%1$sの準備ができました。デモは「あなたのソース」の最後に残ります。</string>
+    <string name="cloud_loopback_done">このタブを閉じて Kaeri に戻ってください。</string>
     <string name="notice_signed_in">%1$sにサインインしました。</string>
     <string name="notice_signed_in_keychain">%1$sにサインインしました。トークンはOSのキーチェーンに保存されています。</string>
     <string name="notice_signed_in_file">%1$sにサインインしました。キーチェーンが利用できないため、トークンはこのデバイス内の非公開ファイルに保存されています。</string>

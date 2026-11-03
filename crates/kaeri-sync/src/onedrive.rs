@@ -123,6 +123,42 @@ impl OneDriveTarget {
         format!("{}/me/drive/special/approot", self.base)
     }
 
+    /// The account the folder belongs to, by the name Graph gives the person who made the app's
+    /// folder; the app folder scope reads nothing else about the account. `None` when it says no
+    /// name.
+    pub async fn account(&self) -> Result<Option<String>, FolderError> {
+        #[derive(Deserialize)]
+        struct Identity {
+            #[serde(rename = "displayName")]
+            display_name: Option<String>,
+        }
+        #[derive(Deserialize)]
+        struct Set {
+            user: Option<Identity>,
+        }
+        #[derive(Deserialize)]
+        struct Item {
+            #[serde(rename = "createdBy")]
+            created_by: Option<Set>,
+        }
+        let url = self.root();
+        let answer =
+            rest::call(&self.http, self.tokens.as_ref(), |http| http.get(&url)).await?;
+        if answer.status == 401 || answer.status == 403 {
+            return Err(FolderError::Unauthorized);
+        }
+        if !answer.ok() {
+            return Err(FolderError::Server(answer.text()));
+        }
+        let item: Item = serde_json::from_slice(&answer.body)
+            .map_err(|e| FolderError::Server(e.to_string()))?;
+        Ok(item
+            .created_by
+            .and_then(|c| c.user)
+            .and_then(|u| u.display_name)
+            .filter(|n| !n.trim().is_empty()))
+    }
+
     fn item(&self, path: &str, tail: &str) -> String {
         if path.is_empty() {
             format!("{}{tail}", self.root())
@@ -293,6 +329,13 @@ mod tests {
                 Some(bytes) => Resp::bytes(bytes),
                 None => Resp::status(404),
             },
+            ("GET", "") if path.is_empty() => Resp::json(
+                200,
+                &serde_json::json!({
+                    "name": "Kaeri",
+                    "createdBy": { "user": { "displayName": "Kim" } }
+                }),
+            ),
             ("DELETE", "") => {
                 let prefix = format!("{path}/");
                 let before = files.len();
@@ -370,6 +413,12 @@ mod tests {
     async fn the_target_keeps_the_folder_contract() {
         let server = fake().await;
         exercise(&target(&server, "good").0).await;
+    }
+
+    #[tokio::test]
+    async fn the_account_is_the_name_of_who_made_the_apps_folder() {
+        let server = fake().await;
+        assert_eq!(target(&server, "good").0.account().await.unwrap().as_deref(), Some("Kim"));
     }
 
     #[tokio::test]

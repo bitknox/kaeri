@@ -893,6 +893,7 @@ pub fn name(update: &Event) -> &'static str {
         Event::SyncSignIn { .. } => "SyncSignIn",
         Event::SyncRecoveryKey(_) => "SyncRecoveryKey",
         Event::SyncProblem(_) => "SyncProblem",
+        Event::SyncSignInsCopied { .. } => "SyncSignInsCopied",
         Event::StorePreview(_) => "StorePreview",
         Event::StoreJoined { .. } => "StoreJoined",
         Event::InviteLink(_) => "InviteLink",
@@ -1164,6 +1165,14 @@ fn copy(update: &Event) -> Event {
         }
         Event::SyncRecoveryKey(key) => Event::SyncRecoveryKey(key.clone()),
         Event::SyncProblem(problem) => Event::SyncProblem(problem.clone()),
+        Event::SyncSignInsCopied { device, trackers, clouds, lacking } => {
+            Event::SyncSignInsCopied {
+                device: device.clone(),
+                trackers: trackers.clone(),
+                clouds: clouds.clone(),
+                lacking: lacking.clone(),
+            }
+        }
         Event::StorePreview(preview) => Event::StorePreview(preview.clone()),
         Event::StoreJoined { store } => Event::StoreJoined { store: store.clone() },
         Event::InviteLink(view) => Event::InviteLink(view.clone()),

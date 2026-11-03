@@ -689,6 +689,9 @@
   <data name="StoresReadyDemoStays" xml:space="preserve">
     <value>{store} siap. Demo tetap di urutan terakhir di Sumber-sumber Anda.</value>
   </data>
+  <data name="CloudLoopbackDone" xml:space="preserve">
+    <value>Anda bisa menutup tab ini dan kembali ke Kaeri.</value>
+  </data>
   <data name="NoticeSignedIn" xml:space="preserve">
     <value>Berhasil masuk ke {tracker}.</value>
   </data>

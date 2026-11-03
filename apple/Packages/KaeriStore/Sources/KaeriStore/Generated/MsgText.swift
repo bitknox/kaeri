@@ -139,6 +139,7 @@ extension Msg {
         case .partyRejoined: L.partyRejoined
         case .partyLeft: L.partyLeft
         case .partyServerUnreachable(let server): L.partyServerUnreachable(server: server)
+        case .cloudLoopbackDone: L.cloudLoopbackDone
         case .noticeSignedIn(let tracker): L.noticeSignedIn(tracker: tracker)
         case .noticeSignedInKeychain(let tracker): L.noticeSignedInKeychain(tracker: tracker)
         case .noticeSignedInFile(let tracker): L.noticeSignedInFile(tracker: tracker)

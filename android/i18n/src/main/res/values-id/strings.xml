@@ -244,6 +244,7 @@
     <string name="notice_party_not_built">Nonton bareng tidak disertakan di aplikasi ini.</string>
     <string name="sources_demo_removed">Demo dihapus</string>
     <string name="stores_ready_demo_stays">%1$s siap. Demo tetap di urutan terakhir di Sumber-sumber Anda.</string>
+    <string name="cloud_loopback_done">Anda bisa menutup tab ini dan kembali ke Kaeri.</string>
     <string name="notice_signed_in">Berhasil masuk ke %1$s.</string>
     <string name="notice_signed_in_keychain">Berhasil masuk ke %1$s. Token disimpan di rantai kunci sistem.</string>
     <string name="notice_signed_in_file">Berhasil masuk ke %1$s. Rantai kunci tidak tersedia, jadi token disimpan dalam berkas pribadi di perangkat ini.</string>

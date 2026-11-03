@@ -615,3 +615,28 @@ fn a_received_watch_is_filled_by_the_lead_for_a_tracker_its_origin_lacked() {
     );
     assert_eq!(ipad.store.sync_tracker_mark_for("trakt", SHOW.get()).unwrap(), Some(3));
 }
+
+#[test]
+fn a_devices_cloud_travels_as_a_register_and_its_id_is_kept_while_sync_is_off() {
+    let (a, b) = (dev("00000000000000a1", 1_000), dev("00000000000000b2", 1_000));
+    a.store.sync_set_my_cloud(r#"{"folder":"google_drive"}"#).unwrap();
+    let applied = send(&a, &b);
+    assert!(applied.effects.is_empty(), "{:?}", applied.effects);
+    assert_eq!(
+        b.store.sync_reg_value(kinds::DEVICE_CLOUD, &a.id).unwrap().as_deref(),
+        Some(r#"{"folder":"google_drive"}"#)
+    );
+    a.store.sync_disable().unwrap();
+    assert_eq!(a.store.sync_device().unwrap(), None);
+    assert_eq!(a.store.sync_device_kept().unwrap().as_deref(), Some(a.id.as_str()));
+    a.store.sync_enable(&a.id).unwrap();
+
+    // Bookkeeping clears by prefix, and only that prefix: `_` and `%` are literal.
+    for k in ["folder..segno", "folder..cur.b2", "folder_x", "handoff.b2"] {
+        a.store.sync_meta_set(k, "1").unwrap();
+    }
+    assert_eq!(a.store.sync_meta_clear("folder.").unwrap(), 2);
+    assert_eq!(a.store.sync_meta_get("folder_x").unwrap().as_deref(), Some("1"));
+    a.store.sync_meta_remove("handoff.b2").unwrap();
+    assert_eq!(a.store.sync_meta_get("handoff.b2").unwrap(), None);
+}

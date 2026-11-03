@@ -126,18 +126,67 @@ impl FolderRoad {
         device: &str,
         key: DeviceKey,
     ) -> Result<(Self, RecoveryKey)> {
+        let recovery = RecoveryKey::generate();
+        let road = Self::create_with(
+            target,
+            prefix,
+            store,
+            device,
+            key,
+            Keyring::generate(),
+            &recovery,
+        )
+        .await?;
+        Ok((road, recovery))
+    }
+
+    /// Put a group that already exists into an empty folder: a group that synced only nearby
+    /// gaining its first folder, or one moving to another folder. Its keyring and recovery key
+    /// are the ones given, and the keyring is wrapped for every device in the group's list, so
+    /// each can open the folder once it signs in to it.
+    pub async fn create_with(
+        target: Arc<dyn FolderTarget>,
+        prefix: &str,
+        store: Store,
+        device: &str,
+        key: DeviceKey,
+        ring: Keyring,
+        recovery: &RecoveryKey,
+    ) -> Result<Self> {
         if Self::group_exists(&*target, prefix).await? {
             return Err(SyncError::GroupExists);
         }
-        let ring = Keyring::generate();
-        let recovery = RecoveryKey::generate();
         let group: [u8; 16] = random();
         target
-            .write_new(&join(prefix, "group.bin"), &group_file(&group, &recovery, &ring))
+            .write_new(&join(prefix, "group.bin"), &group_file(&group, recovery, &ring))
             .await?;
         let road = Self::open(target, prefix, store, device, key, ring);
         road.write_own_keys().await?;
-        Ok((road, recovery))
+        road.write_missing_keys(&[]).await?;
+        Ok(road)
+    }
+
+    /// Open the group a folder holds as one of its devices, with the keyring another device
+    /// wrapped for this one: no recovery key needed. [`SyncError::NoGroup`] when the folder holds
+    /// none, and [`SyncError::GroupExists`] when it holds one this device has no key for.
+    pub async fn open_as_member(
+        target: Arc<dyn FolderTarget>,
+        prefix: &str,
+        store: Store,
+        device: &str,
+        key: DeviceKey,
+    ) -> Result<Self> {
+        if !Self::group_exists(&*target, prefix).await? {
+            return Err(SyncError::NoGroup);
+        }
+        let path = join(prefix, &format!("devices/{device}/keys.bin"));
+        let wrapped = match target.read(&path).await {
+            Ok(bytes) => bytes,
+            Err(FolderError::NotFound(_)) => return Err(SyncError::GroupExists),
+            Err(e) => return Err(e.into()),
+        };
+        let ring = key.unwrap(device, &wrapped).map_err(|_| SyncError::GroupExists)?;
+        Ok(Self::open(target, prefix, store, device, key, ring))
     }
 
     /// Join the group a folder holds, with its recovery key.
@@ -222,6 +271,9 @@ impl FolderRoad {
         self.refresh_keys().await?;
 
         let devices = self.target.list(&self.path("devices")).await?;
+        let present: Vec<String> =
+            devices.iter().filter(|e| e.is_dir).map(|e| e.name.clone()).collect();
+        self.write_missing_keys(&present).await?;
         for entry in devices.iter().filter(|e| e.is_dir && e.name != self.device) {
             if removed.contains(&entry.name) {
                 continue;
@@ -235,6 +287,22 @@ impl FolderRoad {
             .compact(&devices.iter().map(|e| e.name.clone()).collect::<Vec<_>>(), &removed)
             .await?;
         Ok(report)
+    }
+
+    /// Wrap the keyring for each device in the group's list that has no place in the folder yet:
+    /// one paired nearby, which can then open the folder once it signs in to it.
+    async fn write_missing_keys(&self, present: &[String]) -> Result<()> {
+        for (device, _, pubkey, removed) in self.store.sync_peers()? {
+            if removed || device == self.device || present.contains(&device) {
+                continue;
+            }
+            let Some(pubkey) = pubkey.as_deref().and_then(crate::keys::public_of) else {
+                continue;
+            };
+            let wrapped = wrap_for(&pubkey, &device, &self.keyring());
+            self.replace(&self.path(&format!("devices/{device}/keys.bin")), &wrapped).await?;
+        }
+        Ok(())
     }
 
     async fn refresh_keys(&self) -> Result<()> {
@@ -353,15 +421,23 @@ impl FolderRoad {
     /// said what it has seen.
     async fn compact(&self, devices: &[String], removed: &[String]) -> Result<usize> {
         let mut floor: Option<VersionVector> = None;
+        let mut counted = 0;
         for device in devices.iter().filter(|d| !removed.contains(d)) {
             let vector: VersionVector = if *device == self.device {
                 self.store.version_vector()?
             } else {
                 let path = self.path(&format!("devices/{device}/acks.bin"));
-                let Ok(bytes) = self.target.read(&path).await else { return Ok(0) };
+                let bytes = match self.target.read(&path).await {
+                    Ok(bytes) => bytes,
+                    // A device with only the keys another wrapped for it has never read the
+                    // folder: it counts as not here yet, as one with no place at all does.
+                    Err(FolderError::NotFound(_)) if self.only_keys(device).await => continue,
+                    Err(_) => return Ok(0),
+                };
                 let Ok(opened) = seal::open(&self.keyring(), &bytes) else { return Ok(0) };
                 serde_json::from_slice(&opened.plain).unwrap_or_default()
             };
+            counted += 1;
             floor = Some(match floor {
                 None => vector,
                 Some(mut min) => {
@@ -377,9 +453,16 @@ impl FolderRoad {
             });
         }
         match floor {
-            Some(floor) if devices.len() > 1 => Ok(self.store.compact(&floor)?),
+            Some(floor) if counted > 1 => Ok(self.store.compact(&floor)?),
             _ => Ok(0),
         }
+    }
+
+    async fn only_keys(&self, device: &str) -> bool {
+        self.target
+            .list(&self.path(&format!("devices/{device}")))
+            .await
+            .is_ok_and(|entries| entries.iter().all(|e| e.name == "keys.bin"))
     }
 
     /// Rotate the group key, as after removing a device: a new current key, wrapped for every
@@ -549,6 +632,145 @@ mod tests {
         // Nothing new: nothing written, nothing applied.
         let r = ra.sync().await.unwrap();
         assert_eq!((r.ops_written, r.ops_applied), (0, 0));
+    }
+
+    /// Two devices that know each other from pairing nearby: each in the other's list, with its
+    /// key, and no folder yet.
+    fn nearby() -> (Dev, Dev) {
+        let (a, b) = (dev("00000000000000a1", 1_000), dev("00000000000000b2", 1_000));
+        for d in [&a, &b] {
+            for other in [&a, &b] {
+                d.store
+                    .sync_device_add(&other.id, "x", &other.identity().public_hex())
+                    .unwrap();
+            }
+        }
+        (a, b)
+    }
+
+    #[tokio::test]
+    async fn a_nearby_group_gains_a_folder_and_its_other_device_opens_it_without_the_key() {
+        let target: Arc<dyn FolderTarget> = Arc::new(MemoryTarget::default());
+        let (a, b) = nearby();
+        let (ra, _recovery) =
+            FolderRoad::create(target.clone(), "kaeri", a.store.clone(), &a.id, a.identity())
+                .await
+                .unwrap();
+        a.watch("1", 300.0);
+        ra.sync().await.unwrap();
+        // The other device was wrapped for: it opens the folder with its own key.
+        let rb = FolderRoad::open_as_member(
+            target.clone(),
+            "kaeri",
+            b.store.clone(),
+            &b.id,
+            b.identity(),
+        )
+        .await
+        .unwrap();
+        assert_eq!(rb.keyring(), ra.keyring());
+        rb.sync().await.unwrap();
+        assert_eq!(b.resume("1"), Some(300.0));
+        // A device outside the group finds a group it has no key for; an empty folder has none.
+        let c = dev("00000000000000c3", 1_000);
+        let stranger = FolderRoad::open_as_member(
+            target.clone(),
+            "kaeri",
+            c.store.clone(),
+            &c.id,
+            c.identity(),
+        )
+        .await;
+        assert!(matches!(stranger, Err(SyncError::GroupExists)), "{stranger:?}");
+        let empty: Arc<dyn FolderTarget> = Arc::new(MemoryTarget::default());
+        let none =
+            FolderRoad::open_as_member(empty, "kaeri", c.store.clone(), &c.id, c.identity())
+                .await;
+        assert!(matches!(none, Err(SyncError::NoGroup)), "{none:?}");
+    }
+
+    #[tokio::test]
+    async fn a_device_paired_later_gets_its_keys_on_the_next_pass_and_compaction_waits_for_none()
+     {
+        let target: Arc<dyn FolderTarget> = Arc::new(MemoryTarget::default());
+        let a = dev("00000000000000a1", 1_000);
+        let (ra, _) =
+            FolderRoad::create(target.clone(), "kaeri", a.store.clone(), &a.id, a.identity())
+                .await
+                .unwrap();
+        let b = dev("00000000000000b2", 1_000);
+        a.store.sync_device_add(&b.id, "Phone", &b.identity().public_hex()).unwrap();
+        ra.sync().await.unwrap();
+        let rb = FolderRoad::open_as_member(
+            target.clone(),
+            "kaeri",
+            b.store.clone(),
+            &b.id,
+            b.identity(),
+        )
+        .await
+        .unwrap();
+        assert_eq!(rb.keyring(), ra.keyring());
+        // A device with only its keys in the folder does not hold compaction back.
+        let c = dev("00000000000000c3", 1_000);
+        a.store.sync_device_add(&c.id, "TV", &c.identity().public_hex()).unwrap();
+        ra.sync().await.unwrap();
+        rb.sync().await.unwrap();
+        ra.sync().await.unwrap();
+        assert!(ra.only_keys(&c.id).await);
+        a.store.sync_register("setting", "theme", Some("\"dark\""), None).unwrap();
+        a.store.sync_register("setting", "theme", Some("\"light\""), None).unwrap();
+        ra.sync().await.unwrap();
+        rb.sync().await.unwrap();
+        let r = ra.sync().await.unwrap();
+        assert!(r.compacted > 0, "{r:?}");
+    }
+
+    #[tokio::test]
+    async fn a_group_moves_to_another_folder_with_the_same_keys_and_recovery_key() {
+        let first: Arc<dyn FolderTarget> = Arc::new(MemoryTarget::default());
+        let (a, _, b, _, _) = pair(&first).await;
+        let target: Arc<dyn FolderTarget> = Arc::new(MemoryTarget::default());
+        let ring = Keyring::generate();
+        let recovery = RecoveryKey::generate();
+        let ra = FolderRoad::create_with(
+            target.clone(),
+            "kaeri",
+            a.store.clone(),
+            &a.id,
+            a.identity(),
+            ring.clone(),
+            &recovery,
+        )
+        .await
+        .unwrap();
+        a.watch("4", 50.0);
+        ra.sync().await.unwrap();
+        // The recovery key opens the new folder, and creating over it is refused.
+        let joined = FolderRoad::join(
+            target.clone(),
+            "kaeri",
+            b.store.clone(),
+            &b.id,
+            b.identity(),
+            &recovery,
+        )
+        .await
+        .unwrap();
+        assert_eq!(joined.keyring(), ring);
+        joined.sync().await.unwrap();
+        assert_eq!(b.resume("4"), Some(50.0));
+        let again = FolderRoad::create_with(
+            target,
+            "kaeri",
+            a.store.clone(),
+            &a.id,
+            a.identity(),
+            ring,
+            &recovery,
+        )
+        .await;
+        assert!(matches!(again, Err(SyncError::GroupExists)));
     }
 
     #[tokio::test]

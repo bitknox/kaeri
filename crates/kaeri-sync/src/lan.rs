@@ -5,6 +5,10 @@
 //! A device that has paired is known by its key and may dial again without a code. A device that
 //! has not may only pair, with the code that is showing: three tries, two minutes, then the code
 //! is gone.
+//!
+//! Before the log, each side says what it asks the other for (sign-ins, through
+//! [`crate::handoff::Handoff`]) and answers what the other asked, sealed for the asking device's
+//! own key.
 
 use std::{
     net::SocketAddr,
@@ -29,6 +33,8 @@ use tokio_rustls::{TlsAcceptor, TlsConnector};
 
 use crate::{
     error::{Result, SyncError},
+    handoff::{self, Handoff, Received},
+    keys::DeviceKey,
     peer::{self, PeerReport},
 };
 
@@ -42,8 +48,21 @@ pub struct Me {
     pub identity: Identity,
     pub device: String,
     pub name: String,
-    /// The public half of the device's group key, hex, which the others wrap the group key for.
-    pub pubkey: String,
+    /// The device's group key: its public half is what the others wrap the group key and seal
+    /// sign-ins for.
+    pub key: DeviceKey,
+    /// What this device asks of the others and answers them, when it takes part in handoffs.
+    pub handoff: Option<Arc<dyn Handoff>>,
+}
+
+impl Me {
+    fn paired(&self) -> Paired {
+        Paired {
+            device: self.device.clone(),
+            name: self.name.clone(),
+            pubkey: self.key.public_hex(),
+        }
+    }
 }
 
 /// A paired device.
@@ -69,6 +88,10 @@ enum Msg {
     Paired { who: Paired },
     /// No: the code is not showing, ran out, or was wrong too often.
     Refused,
+    /// What this side asks the other for, before the log.
+    Asks { asks: Vec<String> },
+    /// The answer to the other side's asks, sealed for it, hex.
+    Gives { sealed: Option<String> },
 }
 
 async fn write<W: AsyncWrite + Unpin>(w: &mut W, msg: &Msg) -> Result<()> {
@@ -247,8 +270,9 @@ async fn serve(
     let Msg::Hello { pair } = read(&mut stream).await? else {
         return Err(SyncError::Damaged("expected hello"));
     };
-    if find(store, &peer_fp).is_some() {
+    let (peer, just_paired) = if let Some(known) = find(store, &peer_fp) {
         write(&mut stream, &Msg::Ready).await?;
+        (known, false)
     } else {
         let Some(start) = pair else {
             write(&mut stream, &Msg::Refused).await?;
@@ -282,20 +306,50 @@ async fn serve(
         }
         // Right: the code is spent.
         *showing.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = None;
-        trust(store, peer_fp, who)?;
-        write(
-            &mut stream,
-            &Msg::Paired {
-                who: Paired {
-                    device: me.device.clone(),
-                    name: me.name.clone(),
-                    pubkey: me.pubkey.clone(),
-                },
-            },
-        )
-        .await?;
-    }
-    peer::exchange(store, &me.device, stream).await
+        trust(store, peer_fp, who.clone())?;
+        write(&mut stream, &Msg::Paired { who: me.paired() }).await?;
+        (who, true)
+    };
+    let received = swap_sign_ins(&mut stream, me, Some(&peer), just_paired).await?;
+    let mut report = peer::exchange(store, &me.device, stream).await?;
+    report.handoff = received;
+    Ok(report)
+}
+
+/// Say what this side asks for, answer what the other asks, and open the answer to this side's.
+async fn swap_sign_ins<S: AsyncRead + AsyncWrite + Unpin>(
+    stream: &mut S,
+    me: &Me,
+    peer: Option<&Paired>,
+    just_paired: bool,
+) -> Result<Option<Received>> {
+    let asks = match (&me.handoff, peer) {
+        (Some(handoff), Some(peer)) => handoff.asks(peer, just_paired),
+        _ => Vec::new(),
+    };
+    write(stream, &Msg::Asks { asks: asks.clone() }).await?;
+    let Msg::Asks { asks: theirs } = read(stream).await? else {
+        return Err(SyncError::Damaged("expected asks"));
+    };
+    let sealed = match (&me.handoff, peer) {
+        (Some(handoff), Some(peer)) if !theirs.is_empty() => handoff
+            .answer(peer, &theirs)
+            .map(|plain| handoff::seal(peer, &me.device, &plain))
+            .transpose()?
+            .map(hex::encode),
+        _ => None,
+    };
+    write(stream, &Msg::Gives { sealed }).await?;
+    let Msg::Gives { sealed } = read(stream).await? else {
+        return Err(SyncError::Damaged("expected an answer"));
+    };
+    // Only an answer to something asked is opened.
+    let (Some(sealed), Some(peer), false) = (sealed, peer, asks.is_empty()) else {
+        return Ok(None);
+    };
+    let bytes = hex::decode(sealed).map_err(|_| SyncError::Damaged("a handoff"))?;
+    let plain = handoff::open(&me.key, &me.device, &peer.device, &bytes)?;
+    Ok(Some(Received { from: peer.clone(), asked: asks, plain }))
 }
 
 /// Dial the device at `addr` and sync with it. With `code` it pairs first (the device must be
@@ -334,28 +388,27 @@ pub async fn dial(
     let binding = Binding { phone: me.identity.fingerprint(), tv: their_fp, exporter };
     let started = code.map(|c| PhonePairing::start(c, binding));
     write(&mut stream, &Msg::Hello { pair: started.as_ref().map(|(_, m)| m.clone()) }).await?;
-    match read(&mut stream).await? {
-        Msg::Ready => {}
+    let (peer, just_paired) = match read(&mut stream).await? {
+        Msg::Ready => (find(store, &their_fp), false),
         Msg::PairReply { message, mac } => {
             let (side, _) = started.ok_or_else(|| pairing("a code was not asked for"))?;
             let proof = side.finish(&message, &mac).map_err(pairing)?;
-            let who = Paired {
-                device: me.device.clone(),
-                name: me.name.clone(),
-                pubkey: me.pubkey.clone(),
-            };
-            write(&mut stream, &Msg::Proof { mac: proof, who }).await?;
+            write(&mut stream, &Msg::Proof { mac: proof, who: me.paired() }).await?;
             let Msg::Paired { who } = read(&mut stream).await? else {
                 return Err(SyncError::Pairing("the code was wrong".into()));
             };
-            trust(store, their_fp, who)?;
+            trust(store, their_fp, who.clone())?;
+            (Some(who), true)
         }
         Msg::Refused => {
             return Err(SyncError::Pairing("that device is not showing a code".into()));
         }
         _ => return Err(SyncError::Damaged("unexpected reply")),
-    }
-    peer::exchange(store, &me.device, stream).await
+    };
+    let received = swap_sign_ins(&mut stream, me, peer.as_ref(), just_paired).await?;
+    let mut report = peer::exchange(store, &me.device, stream).await?;
+    report.handoff = received;
+    Ok(report)
 }
 
 /// A paired device's key fingerprint, for dialing it again.
@@ -373,7 +426,6 @@ mod tests {
     use kaeri_store::WatchEvent;
 
     use super::*;
-    use crate::keys::DeviceKey;
 
     fn device(id: &str, name: &str) -> (Me, Store) {
         let store = Store::open_in_memory().unwrap();
@@ -381,7 +433,7 @@ mod tests {
         let identity = Identity::generate().unwrap();
         let key = DeviceKey::from_identity(&identity.to_pkcs8());
         store.sync_device_add(id, name, &key.public_hex()).unwrap();
-        (Me { identity, device: id.into(), name: name.into(), pubkey: key.public_hex() }, store)
+        (Me { identity, device: id.into(), name: name.into(), key, handoff: None }, store)
     }
 
     fn watch(store: &Store, episode: &str) {
@@ -445,6 +497,75 @@ mod tests {
             host_store.resume_position(AnilistId::new(9_001), "3").unwrap(),
             Some(100.0)
         );
+    }
+
+    /// A device that asks for what it lacks and answers with what it has.
+    struct Signs {
+        asks: Vec<String>,
+        has: Vec<(String, String)>,
+        asked_of_me: Mutex<Vec<String>>,
+    }
+
+    impl Handoff for Signs {
+        fn asks(&self, _: &Paired, _: bool) -> Vec<String> {
+            self.asks.clone()
+        }
+
+        fn answer(&self, _: &Paired, asks: &[String]) -> Option<Vec<u8>> {
+            self.asked_of_me.lock().unwrap().extend(asks.iter().cloned());
+            let given: Vec<_> = self.has.iter().filter(|(k, _)| asks.contains(k)).collect();
+            Some(serde_json::to_vec(&given).unwrap())
+        }
+    }
+
+    fn signs(asks: &[&str], has: &[(&str, &str)]) -> Arc<Signs> {
+        Arc::new(Signs {
+            asks: asks.iter().map(|a| (*a).to_owned()).collect(),
+            has: has.iter().map(|(k, v)| ((*k).to_owned(), (*v).to_owned())).collect(),
+            asked_of_me: Mutex::new(Vec::new()),
+        })
+    }
+
+    #[tokio::test]
+    async fn a_device_gets_only_what_it_asked_for_sealed_for_it_in_either_direction() {
+        let (mut tv, tv_store) = device("00000000000000a1", "Living room");
+        let (mut phone, phone_store) = device("00000000000000b2", "Phone");
+        let tv_side = signs(&["cloud:dropbox"], &[]);
+        let phone_side =
+            signs(&[], &[("cloud:dropbox", "a-dropbox-sign-in"), ("tracker:x", "t")]);
+        tv.handoff = Some(tv_side.clone());
+        phone.handoff = Some(phone_side.clone());
+        let mut listener = Listener::bind(tv, tv_store, loopback(0)).await.unwrap();
+        let code = listener.show_code();
+        // The phone dials and pairs: the TV, which listens, asked, and gets the answer.
+        let report = dial(&phone, &phone_store, loopback(listener.port()), Some(&code), None)
+            .await
+            .unwrap();
+        assert!(report.handoff.is_none(), "the phone asked for nothing");
+        let tv_report = listener.next_session().await.unwrap().unwrap();
+        let got = tv_report.handoff.expect("the TV's answer");
+        assert_eq!(got.from.device, "00000000000000b2");
+        assert_eq!(got.asked, ["cloud:dropbox"]);
+        let given: Vec<(String, String)> = serde_json::from_slice(&got.plain).unwrap();
+        assert_eq!(given, [("cloud:dropbox".to_owned(), "a-dropbox-sign-in".to_owned())]);
+        assert_eq!(*phone_side.asked_of_me.lock().unwrap(), ["cloud:dropbox"]);
+
+        // Paired: the dialing side's asks are answered too, without a code.
+        phone.handoff = Some(signs(&["tracker:x"], &[]));
+        let tv_has = signs(&[], &[("tracker:x", "from-the-tv")]);
+        let (mut tv2, tv2_store) = device("00000000000000c3", "Study");
+        tv2.handoff = Some(tv_has);
+        let mut second = Listener::bind(tv2, tv2_store, loopback(0)).await.unwrap();
+        let code = second.show_code();
+        dial(&phone, &phone_store, loopback(second.port()), Some(&code), None).await.unwrap();
+        second.next_session().await.unwrap().unwrap();
+        let pinned = fingerprint_of(&phone_store, "00000000000000c3");
+        let report =
+            dial(&phone, &phone_store, loopback(second.port()), None, pinned).await.unwrap();
+        let got = report.handoff.expect("the phone's answer");
+        let given: Vec<(String, String)> = serde_json::from_slice(&got.plain).unwrap();
+        assert_eq!(given, [("tracker:x".to_owned(), "from-the-tv".to_owned())]);
+        second.next_session().await.unwrap().unwrap();
     }
 
     #[tokio::test]

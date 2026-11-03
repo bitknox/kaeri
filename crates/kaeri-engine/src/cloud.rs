@@ -97,7 +97,7 @@ pub struct CloudTest {
 /// A sign-in under way: where its redirect is delivered and how it is stopped.
 struct Active {
     id: u64,
-    service: Service,
+    service: SyncFolderKind,
     callback: Option<mpsc::UnboundedSender<String>>,
     cancel: Arc<Notify>,
 }
@@ -121,7 +121,9 @@ impl State {
         *self.test.lock().unwrap_or_else(PoisonError::into_inner) = Some(test);
     }
 
-    fn begin(&self, service: Service, with_sheet: bool) -> Running {
+    /// Begin a sign-in to `service` (a cloud drive, or Nextcloud's login page), ending any
+    /// other under way.
+    pub(crate) fn begin(&self, service: SyncFolderKind, with_sheet: bool) -> Running {
         let (tx, rx) = mpsc::unbounded_channel();
         let cancel = Arc::new(Notify::new());
         let id = self.next.fetch_add(1, Ordering::Relaxed);
@@ -135,7 +137,7 @@ impl State {
         Running { id, rx, cancel }
     }
 
-    fn finish(&self, id: u64) {
+    pub(crate) fn finish(&self, id: u64) {
         let mut active = self.active.lock().unwrap_or_else(PoisonError::into_inner);
         if active.as_ref().is_some_and(|a| a.id == id) {
             *active = None;
@@ -153,7 +155,10 @@ impl State {
     /// The web sheet's redirect, for the sign-in waiting on it.
     pub fn deliver(&self, service: Service, callback: String) {
         let active = self.active.lock().unwrap_or_else(PoisonError::into_inner);
-        match active.as_ref().filter(|a| a.service == service).and_then(|a| a.callback.as_ref())
+        match active
+            .as_ref()
+            .filter(|a| a.service == service.kind())
+            .and_then(|a| a.callback.as_ref())
         {
             Some(tx) => {
                 let _ = tx.send(callback);
@@ -163,10 +168,10 @@ impl State {
     }
 }
 
-struct Running {
-    id: u64,
+pub(crate) struct Running {
+    pub(crate) id: u64,
     rx: mpsc::UnboundedReceiver<String>,
-    cancel: Arc<Notify>,
+    pub(crate) cancel: Arc<Notify>,
 }
 
 /// Why a sign-in did not give a token.
@@ -181,6 +186,11 @@ impl From<SyncProblem> for Ended {
     fn from(p: SyncProblem) -> Self {
         Self::Problem(p)
     }
+}
+
+/// This device is a TV: it shows pages as QR codes, and never adds a group's first folder.
+pub(crate) fn on_tv(ctx: &Ctx) -> bool {
+    kind_of_device(ctx) == Some(ClientKind::Tv)
 }
 
 fn kind_of_device(ctx: &Ctx) -> Option<ClientKind> {
@@ -250,24 +260,66 @@ pub fn signed_in(ctx: &Ctx, service: Service) -> bool {
 pub fn views(ctx: &Ctx) -> Vec<SyncCloudView> {
     Service::ALL
         .into_iter()
-        .map(|service| SyncCloudView {
-            service: service.kind(),
-            way: way(ctx, service),
-            signed_in: signed_in(ctx, service),
+        .map(|service| {
+            let signed_in = signed_in(ctx, service);
+            SyncCloudView {
+                service: service.kind(),
+                way: way(ctx, service),
+                signed_in,
+                account: if signed_in { account(&ctx.store, service) } else { None },
+            }
         })
         .collect()
+}
+
+fn account_key(service: Service) -> String {
+    format!("cloud.account.{}", service.token_id())
+}
+
+/// The account a sign-in belongs to, as the service named it when it was signed in to.
+pub fn account(store: &kaeri_store::Store, service: Service) -> Option<String> {
+    store.sync_meta_get(&account_key(service)).ok().flatten().filter(|a| !a.is_empty())
+}
+
+/// Keep the account a sign-in belongs to, or forget it with `None`.
+pub fn keep_account(store: &kaeri_store::Store, service: Service, account: Option<&str>) {
+    let _ = match account {
+        Some(account) => store.sync_meta_set(&account_key(service), account),
+        None => store.sync_meta_remove(&account_key(service)),
+    };
+}
+
+/// Ask the service which account the sign-in kept for it belongs to, and keep the answer.
+/// Dropbox would need a scope Kaeri does not ask for, so it has none; a failure keeps none.
+async fn learn_account(ctx: &Ctx, service: Service) {
+    let asked = async {
+        let tokens = tokens_for(ctx, service).await.ok()?;
+        let http = ctx.sync.http.plain();
+        let endpoints = endpoints(ctx, service).await;
+        match service {
+            Service::Google => google::account(http, &endpoints, tokens.as_ref()).await.ok()?,
+            Service::OneDrive => OneDriveTarget::new(http.clone(), &endpoints.api_base, tokens)
+                .account()
+                .await
+                .ok()?,
+            Service::Dropbox => None,
+        }
+    };
+    let found = tokio::time::timeout(Duration::from_secs(10), asked).await.ok().flatten();
+    keep_account(&ctx.store, service, found.as_deref());
 }
 
 /// Forget the sign-ins of every service, and stop one under way.
 pub fn forget_all(ctx: &Ctx) {
     ctx.syncing.cloud.cancel();
-    for id in TOKEN_IDS {
-        let _ = ctx.sync.tokens.clear(id);
+    for service in Service::ALL {
+        forget(ctx, service);
     }
 }
 
 pub fn forget(ctx: &Ctx, service: Service) {
     let _ = ctx.sync.tokens.clear(service.token_id());
+    keep_account(&ctx.store, service, None);
 }
 
 async fn endpoints(ctx: &Ctx, service: Service) -> Endpoints {
@@ -329,13 +381,18 @@ fn problem(service: Service, e: &FolderError) -> SyncProblem {
 }
 
 fn say(tx: &Outbox, service: Service, step: Option<SyncSignInStep>) {
-    let _ = tx.send(Event::SyncSignIn { service: service.kind(), step });
+    say_for(tx, &service.kind(), step);
+}
+
+/// Say where a sign-in to `kind` stands: a cloud drive's, or Nextcloud's login page.
+pub(crate) fn say_for(tx: &Outbox, kind: &SyncFolderKind, step: Option<SyncSignInStep>) {
+    let _ = tx.send(Event::SyncSignIn { service: kind.clone(), step });
 }
 
 /// Say the sign-in is over, whether it signed in, was cancelled or failed.
 pub fn ended(tx: &Outbox, kind: &SyncFolderKind) {
-    if let Some(service) = Service::of(kind) {
-        say(tx, service, None);
+    if Service::of(kind).is_some() || *kind == SyncFolderKind::Nextcloud {
+        say_for(tx, kind, None);
     }
 }
 
@@ -394,7 +451,7 @@ pub async fn sign_in(ctx: &Ctx, tx: &Outbox, service: Service) -> Result<(), End
         .into());
     };
     let endpoints = endpoints(ctx, service).await;
-    let mut run = ctx.syncing.cloud.begin(service, way == SyncCloudWay::Sheet);
+    let mut run = ctx.syncing.cloud.begin(service.kind(), way == SyncCloudWay::Sheet);
     let outcome = match way {
         SyncCloudWay::DeviceCode => device(ctx, tx, service, &endpoints, &config, &run).await,
         _ => code(ctx, tx, service, kind, &endpoints, &config, &mut run).await,
@@ -410,6 +467,7 @@ pub async fn sign_in(ctx: &Ctx, tx: &Outbox, service: Service) -> Result<(), End
         .tokens
         .set(service.token_id(), &refresh)
         .map_err(|e| SyncProblem::Other(format!("the sign-in could not be kept: {e}")))?;
+    learn_account(ctx, service).await;
     Ok(())
 }
 
@@ -431,7 +489,8 @@ async fn code(
     let state = google::random_state();
     let (mut catcher, port) = if kind == ClientKind::Desktop {
         let (ports, path) = loopback_spec(service);
-        let listener = loopback::bind(ports, path)
+        let line = kaeri_model::Msg::CloudLoopbackDone.text_in(&ctx.syncing.language());
+        let listener = loopback::bind(ports, path, &line)
             .await
             .map_err(|e| Ended::Problem(problem(service, &e)))?;
         let port = listener.port();
@@ -449,7 +508,7 @@ async fn code(
         }
         Catcher::Loopback(_) => {
             ctx.host.open_url(&url).map_err(|e| Ended::Problem(SyncProblem::Other(e)))?;
-            say(tx, service, Some(SyncSignInStep::Browser));
+            say(tx, service, Some(SyncSignInStep::Browser { url }));
         }
     }
     let params = loop {

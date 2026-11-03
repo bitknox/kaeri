@@ -256,6 +256,7 @@
     <string name="notice_party_not_built">Watch partyn ingår inte i den här appen.</string>
     <string name="sources_demo_removed">Demon togs bort</string>
     <string name="stores_ready_demo_stays">%1$s är klar. Demon ligger kvar sist bland Dina källor.</string>
+    <string name="cloud_loopback_done">Du kan stänga den här fliken och gå tillbaka till Kaeri.</string>
     <string name="notice_signed_in">Inloggad på %1$s.</string>
     <string name="notice_signed_in_keychain">Inloggad på %1$s. Token sparades i systemets nyckelring.</string>
     <string name="notice_signed_in_file">Inloggad på %1$s. Ingen nyckelring finns, så token ligger i en privat fil på den här enheten.</string>

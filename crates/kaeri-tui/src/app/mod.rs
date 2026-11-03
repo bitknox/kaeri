@@ -606,7 +606,8 @@ impl App {
             | Event::SyncInvite { .. }
             | Event::SyncSignIn { .. }
             | Event::SyncRecoveryKey(_)
-            | Event::SyncProblem(_) => {}
+            | Event::SyncProblem(_)
+            | Event::SyncSignInsCopied { .. } => {}
             Event::StorePreview(outcome) => self.apply_store_preview(outcome),
             Event::StoreJoined { store } => self.apply_store_joined(store),
             Event::InviteLink(view) => self.apply_invite_link(view),

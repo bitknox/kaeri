@@ -234,30 +234,68 @@ impl DeviceKey {
 
     /// Open a keyring wrapped for this device.
     pub fn unwrap(&self, device_id: &str, wrapped: &[u8]) -> Result<Keyring> {
-        if wrapped.len() < 32 {
-            return Err(SyncError::Damaged("wrapped keys"));
-        }
-        let (eph, sealed) = wrapped.split_at(32);
-        let eph: [u8; 32] = eph.try_into().expect("split at 32");
-        let key = wrap_key(&self.shared(&eph), &eph, &self.public());
-        let plain =
-            open_with(&key, device_id.as_bytes(), sealed).ok_or(SyncError::KeyMismatch)?;
+        let plain = self.open_sealed(WRAP, device_id.as_bytes(), wrapped)?;
         Keyring::from_bytes(&plain)
+    }
+
+    /// Open what [`seal_for`] sealed for this device under `label` and `context`.
+    fn open_sealed(&self, label: &[u8], context: &[u8], sealed: &[u8]) -> Result<Vec<u8>> {
+        if sealed.len() < 32 {
+            return Err(SyncError::Damaged("sealed for a device"));
+        }
+        let (eph, sealed) = sealed.split_at(32);
+        let eph: [u8; 32] = eph.try_into().expect("split at 32");
+        let key = wrap_key(label, &self.shared(&eph), &eph, &self.public());
+        open_with(&key, context, sealed).ok_or(SyncError::KeyMismatch)
     }
 }
 
-fn wrap_key(shared: &[u8; 32], eph_public: &[u8; 32], recipient_public: &[u8; 32]) -> [u8; 32] {
-    derive(b"kaeri-sync/1 wrap", shared, &[eph_public, recipient_public])
+/// Open what [`seal_for`] sealed for `key`'s device under `label` and `context`.
+pub(crate) fn open_sealed_with(
+    key: &DeviceKey,
+    label: &[u8],
+    context: &[u8],
+    sealed: &[u8],
+) -> Result<Vec<u8>> {
+    key.open_sealed(label, context, sealed)
+}
+
+/// The label a keyring is wrapped under.
+const WRAP: &[u8] = b"kaeri-sync/1 wrap";
+
+fn wrap_key(
+    label: &[u8],
+    shared: &[u8; 32],
+    eph_public: &[u8; 32],
+    recipient_public: &[u8; 32],
+) -> [u8; 32] {
+    derive(label, shared, &[eph_public, recipient_public])
+}
+
+/// Seal `plain` so that only the device whose public key is `recipient` can open it: a key agreed
+/// with a one-time key pair, under `label` (what kind of thing it is) and bound to `context`.
+pub(crate) fn seal_for(
+    recipient: &[u8; 32],
+    label: &[u8],
+    context: &[u8],
+    plain: &[u8],
+) -> Vec<u8> {
+    let eph = DeviceKey { secret: random() };
+    let eph_public = eph.public();
+    let key = wrap_key(label, &eph.shared(recipient), &eph_public, recipient);
+    let mut out = eph_public.to_vec();
+    out.extend(seal_with(&key, context, plain));
+    out
 }
 
 /// Wrap a keyring for the device whose public key is `recipient`.
 pub fn wrap_for(recipient: &[u8; 32], device_id: &str, keyring: &Keyring) -> Vec<u8> {
-    let eph = DeviceKey { secret: random() };
-    let eph_public = eph.public();
-    let key = wrap_key(&eph.shared(recipient), &eph_public, recipient);
-    let mut out = eph_public.to_vec();
-    out.extend(seal_with(&key, device_id.as_bytes(), &keyring.to_bytes()));
-    out
+    seal_for(recipient, WRAP, device_id.as_bytes(), &keyring.to_bytes())
+}
+
+/// A public key as the device list keeps it, hex, read back.
+pub fn public_of(hex_key: &str) -> Option<[u8; 32]> {
+    hex::decode(hex_key).ok()?.try_into().ok()
 }
 
 /// A new device's secret seed, from which its X25519 key is derived: kept in the host's secrets.

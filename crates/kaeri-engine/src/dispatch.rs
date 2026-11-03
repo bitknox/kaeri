@@ -773,6 +773,24 @@ pub(crate) fn dispatch(
                 crate::syncing::sync_with(&ctx, &tx, &device, &address).await;
             });
         }
+        Command::SyncGroup(kaeri_model::group::SyncCommand::CopySignIns {
+            device,
+            copy,
+            address,
+        }) => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::handoff::copy_sign_ins(&ctx, &tx, device, &copy, address).await;
+            });
+        }
+        Command::SyncGroup(kaeri_model::group::SyncCommand::ChangeSyncFolder { folder }) => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::syncing::change_folder(&ctx, &tx, folder).await;
+            });
+        }
         Command::ShowRecoveryKey => {
             crate::syncing::reveal_recovery_key(&Ctx::of(services), tx);
             drop(job);

@@ -251,6 +251,16 @@ impl Store {
         self.sync_register(kinds::DEVICE_TRACKERS, &me, Some(&json), None)
     }
 
+    /// Say what this device keeps for the cloud (the engine's JSON), so the others can show it and
+    /// know what they can ask it for. Written only when it changed.
+    pub fn sync_set_my_cloud(&self, json: &str) -> Result<()> {
+        let Some(me) = self.sync_device()? else { return Ok(()) };
+        if self.sync_reg_value(kinds::DEVICE_CLOUD, &me)?.as_deref() == Some(json) {
+            return Ok(());
+        }
+        self.sync_register(kinds::DEVICE_CLOUD, &me, Some(json), None)
+    }
+
     /// Of the watches that arrived, the `(tracker, title)` pairs this device must fill: a tracker
     /// the watching device was not queued for, that this device is signed in to, that no device
     /// has reached the episode on, and whose lead (see [`lead_device`]) is this device. Anything
@@ -911,6 +921,8 @@ fn apply_reg(
                 params![key, value.unwrap_or("[]")],
             )?;
         }
+        // The engine reads it from the register when it needs it.
+        kinds::DEVICE_CLOUD => {}
         other => report.effects.push(Effect {
             kind: other.to_owned(),
             key: key.to_owned(),

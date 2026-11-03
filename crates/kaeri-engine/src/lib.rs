@@ -112,6 +112,7 @@ pub(crate) mod dispatch;
 pub mod downloads;
 pub mod engine;
 pub mod error;
+pub mod handoff;
 pub mod host;
 pub mod jobs;
 pub mod licensed;

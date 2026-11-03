@@ -244,6 +244,7 @@
     <string name="notice_party_not_built">Các buổi xem chung chưa có trong ứng dụng này.</string>
     <string name="sources_demo_removed">Đã gỡ bản demo</string>
     <string name="stores_ready_demo_stays">%1$s đã sẵn sàng. Bản demo vẫn nằm cuối mục Các nguồn của bạn.</string>
+    <string name="cloud_loopback_done">Bạn có thể đóng thẻ này và quay lại Kaeri.</string>
     <string name="notice_signed_in">Đã đăng nhập vào %1$s.</string>
     <string name="notice_signed_in_keychain">Đã đăng nhập vào %1$s. Mã đăng nhập được lưu trong chuỗi khóa của hệ điều hành.</string>
     <string name="notice_signed_in_file">Đã đăng nhập vào %1$s. Không có chuỗi khóa nào, nên mã đăng nhập được lưu trong một tệp riêng chỉ người dùng này đọc được, trên thiết bị này.</string>

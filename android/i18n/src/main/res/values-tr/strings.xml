@@ -256,6 +256,7 @@
     <string name="notice_party_not_built">Birlikte izlemeler bu uygulamaya dahil edilmemiş.</string>
     <string name="sources_demo_removed">Demo kaldırıldı</string>
     <string name="stores_ready_demo_stays">%1$s hazır. Demo, Kaynaklarınızın sonunda kalır.</string>
+    <string name="cloud_loopback_done">Bu sekmeyi kapatıp Kaeri\'ye dönebilirsiniz.</string>
     <string name="notice_signed_in">Oturum açıldı: %1$s.</string>
     <string name="notice_signed_in_keychain">Oturum açıldı: %1$s. Erişim jetonu işletim sistemi anahtarlığında saklanıyor.</string>
     <string name="notice_signed_in_file">Oturum açıldı: %1$s. Anahtarlık yok. Erişim jetonu bu cihaz üzerinde, yalnızca bu kullanıcının okuyabildiği özel bir dosyada.</string>

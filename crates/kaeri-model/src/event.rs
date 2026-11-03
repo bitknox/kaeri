@@ -604,6 +604,14 @@ pub enum Event {
     },
     /// A sync set-up or join did not work.
     SyncProblem(crate::group::SyncProblem),
+    /// Sign-ins asked of `device` came: the `trackers` signed in here now, the `clouds` held
+    /// now, and the cloud sign-ins asked for that it did not have (`lacking`).
+    SyncSignInsCopied {
+        device: String,
+        trackers: Vec<String>,
+        clouds: Vec<crate::group::SyncFolderKind>,
+        lacking: Vec<crate::group::SyncFolderKind>,
+    },
     /// What a pasted invite link leads to, or why it leads nowhere.
     StorePreview(InvitePreview),
     /// A store was joined. The view moves into it if the user is still on the store list.

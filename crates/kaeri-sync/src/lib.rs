@@ -11,6 +11,7 @@ pub mod error;
 mod fakehttp;
 pub mod folder;
 pub mod google;
+pub mod handoff;
 pub mod keys;
 pub mod lan;
 pub mod loopback;

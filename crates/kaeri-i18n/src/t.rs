@@ -1115,6 +1115,11 @@ pub fn stores_ready_demo_stays(store: &str) -> String {
     text("stores-ready-demo-stays", &[("store", Arg::Text(store))])
 }
 
+/// The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.
+pub fn cloud_loopback_done() -> String {
+    text("cloud-loopback-done", &[])
+}
+
 /// Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
 pub fn notice_signed_in(tracker: &str) -> String {
     text("notice-signed-in", &[("tracker", Arg::Text(tracker))])

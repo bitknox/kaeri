@@ -31,6 +31,8 @@ pub struct PeerReport {
     pub sent: usize,
     pub received: usize,
     pub applied: Applied,
+    /// What the other device sent for what this one asked, before the log.
+    pub handoff: Option<crate::handoff::Received>,
 }
 
 async fn put<W: AsyncWrite + Unpin>(w: &mut W, frame: &Frame) -> Result<()> {

@@ -6,7 +6,7 @@
 //! `localhost` may resolve to the IPv6 address, so the same port is bound there too when the
 //! machine allows.
 
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
@@ -20,13 +20,24 @@ use crate::folder::FolderError;
 /// How long a connection may take to send its request line.
 const READ_WAIT: Duration = Duration::from_secs(5);
 
-const PAGE: &str = concat!(
+const PAGE_HEAD: &str = concat!(
     "<!doctype html><meta charset=utf-8><title>Kaeri</title>",
     "<style>:root{color-scheme:light dark}",
     "body{font:15px/1.6 ui-monospace,monospace;margin:12vh auto;max-width:30rem;",
     "padding:0 1.5rem}p{color:#8B90AD}</style>",
-    "<h1>Kaeri</h1><p>You can close this tab and go back to Kaeri.</p>"
+    "<h1>Kaeri</h1><p>"
 );
+
+/// The page the browser shows once the redirect is caught, saying `line` (the engine's
+/// translated text).
+fn page(line: &str) -> String {
+    let escaped = line
+        .replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;");
+    format!("{PAGE_HEAD}{escaped}</p>")
+}
 
 /// What the redirect carried: its query, decoded.
 pub type Params = Vec<(String, String)>;
@@ -45,8 +56,9 @@ impl Drop for Loopback {
     }
 }
 
-/// Listen on the first of `ports` that is free (`0` is any port), for requests to `path`.
-pub async fn bind(ports: &[u16], path: &str) -> Result<Loopback, FolderError> {
+/// Listen on the first of `ports` that is free (`0` is any port), for requests to `path`. The
+/// page the browser is left on says `line`.
+pub async fn bind(ports: &[u16], path: &str, line: &str) -> Result<Loopback, FolderError> {
     let mut bound = None;
     for port in ports {
         if let Ok(listener) = TcpListener::bind(("127.0.0.1", *port)).await {
@@ -63,15 +75,16 @@ pub async fn bind(ports: &[u16], path: &str) -> Result<Loopback, FolderError> {
         listeners.push(v6);
     }
     let (tx, callbacks) = mpsc::unbounded_channel();
+    let body: Arc<str> = page(line).into();
     let tasks = listeners
         .into_iter()
         .map(|listener| {
-            let (tx, path) = (tx.clone(), path.to_owned());
+            let (tx, path, body) = (tx.clone(), path.to_owned(), body.clone());
             tokio::spawn(async move {
                 while let Ok((socket, _)) = listener.accept().await {
-                    let (tx, path) = (tx.clone(), path.clone());
+                    let (tx, path, body) = (tx.clone(), path.clone(), body.clone());
                     tokio::spawn(async move {
-                        let _ = serve(socket, &path, &tx).await;
+                        let _ = serve(socket, &path, &body, &tx).await;
                     });
                 }
             })
@@ -95,6 +108,7 @@ impl Loopback {
 async fn serve(
     mut socket: TcpStream,
     path: &str,
+    page: &str,
     tx: &mpsc::UnboundedSender<Params>,
 ) -> std::io::Result<()> {
     let mut head = Vec::new();
@@ -123,7 +137,7 @@ async fn serve(
             let _ = tx.send(params);
         }
     }
-    let (status, body) = if hit { ("200 OK", PAGE) } else { ("404 Not Found", "") };
+    let (status, body) = if hit { ("200 OK", page) } else { ("404 Not Found", "") };
     let reply = format!(
         "HTTP/1.1 {status}\r\ncontent-type: text/html; charset=utf-8\r\ncontent-length: {}\r\n\
          connection: close\r\n\r\n{body}",
@@ -149,11 +163,17 @@ mod tests {
 
     #[tokio::test]
     async fn the_request_with_a_code_comes_through_and_others_are_skipped() {
-        let mut listener = bind(&[0], "/auth/x").await.unwrap();
+        let mut listener = bind(&[0], "/auth/x", "Fermez <cet> onglet.").await.unwrap();
         let port = listener.port();
         assert_eq!(get(port, "/favicon.ico").await, 404);
         assert_eq!(get(port, "/auth/x").await, 404);
         assert_eq!(get(port, "/auth/x?code=a%20b&state=s").await, 200);
+        // The page says the line it was given, as text.
+        let mut s = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
+        s.write_all(b"GET /auth/x?code=c&state=s HTTP/1.1\r\nhost: x\r\n\r\n").await.unwrap();
+        let mut page = String::new();
+        s.read_to_string(&mut page).await.unwrap();
+        assert!(page.contains("<p>Fermez &lt;cet&gt; onglet.</p>"), "{page}");
         let params = listener.next().await.unwrap();
         assert_eq!(params, vec![("code".into(), "a b".into()), ("state".into(), "s".into())]);
     }
@@ -162,8 +182,8 @@ mod tests {
     async fn a_taken_port_falls_through_to_the_next() {
         let held = TcpListener::bind(("127.0.0.1", 0)).await.unwrap();
         let taken = held.local_addr().unwrap().port();
-        let listener = bind(&[taken, 0], "/").await.unwrap();
+        let listener = bind(&[taken, 0], "/", "").await.unwrap();
         assert_ne!(listener.port(), taken);
-        assert!(bind(&[taken], "/").await.is_err());
+        assert!(bind(&[taken], "/", "").await.is_err());
     }
 }

@@ -190,6 +190,18 @@ pub enum FfiScene {
     /// note says a watch of Hoshikuzu no Tabibito episode 3 was kept although the iPhone marked
     /// it unwatched. No folder is behind it; the engine runs no pass.
     SyncOn,
+    /// [`Self::Watching`] with sync on nearby only: this device is Kim's iPhone, paired with the
+    /// Living room TV (signed in to AniList), heard from five minutes ago. No cloud folder, so no
+    /// recovery key.
+    SyncNearby,
+    /// [`Self::Watching`] syncing through Google Drive, signed in as kim@mail.example: this
+    /// device is Kim's iPhone, the group holds Kim's MacBook Air, and the recovery key was made
+    /// three days ago and can be shown again.
+    SyncCloud,
+    /// [`Self::Watching`] on a TV (start it with `FfiPlatform::AndroidTv`): this device is the
+    /// Living room TV, paired with Kim's iPhone, which syncs through Dropbox and holds the
+    /// sign-in the TV can use. The TV has no folder yet.
+    SyncTvPhoneSignIn,
     /// [`Self::Watching`] with three profiles: Alex, who is in use and whose data this is,
     /// Kim, and Sam, a kids profile. Kim's and Sam's start empty.
     Profiles,
@@ -272,6 +284,9 @@ impl FfiScene {
                 | Self::Failed
                 | Self::LinkOpened
                 | Self::SyncOn
+                | Self::SyncNearby
+                | Self::SyncCloud
+                | Self::SyncTvPhoneSignIn
                 | Self::Profiles
         )
     }
@@ -296,8 +311,23 @@ impl FfiScene {
                 | Self::Slow
                 | Self::Failed
                 | Self::SyncOn
+                | Self::SyncNearby
+                | Self::SyncCloud
+                | Self::SyncTvPhoneSignIn
                 | Self::Profiles
         )
+    }
+
+    /// How sync stands in the scene, for those that have it on.
+    fn sync(&self) -> Option<kaeri_engine::syncing::FixtureSync> {
+        use kaeri_engine::syncing::FixtureSync;
+        Some(match self {
+            Self::SyncOn => FixtureSync::Folder,
+            Self::SyncNearby => FixtureSync::Nearby,
+            Self::SyncCloud => FixtureSync::Cloud,
+            Self::SyncTvPhoneSignIn => FixtureSync::TvPhoneSignIn,
+            _ => return None,
+        })
     }
 }
 
@@ -371,6 +401,16 @@ impl FfiEngine {
         seed_crashes(&opened.paths.data_dir, &scene, now);
         let world = home_world.then(|| HomeWorld::at(HomeClock::in_zone(now, &clock.zone())));
         seed_scene(&opened.store, &scene, now);
+        if let Some(sync) = scene.sync() {
+            let tokens =
+                TokenStore::with_backend(opened.paths.data_dir.join("tokens"), Backend::File);
+            for (id, value) in kaeri_engine::syncing::seed_fixture_as(&opened.store, now, sync)
+            {
+                tokens.set(id, &value).map_err(|e| {
+                    FfiError::engine(Msg::StartFailed { reason: e.to_string() })
+                })?;
+            }
+        }
         if let Some(world) = world.as_ref().filter(|_| scene.has_world_history()) {
             world.seed_history(&opened.store, now);
             library_statuses(&opened.store, world, now);
@@ -736,9 +776,6 @@ fn seed_scene(store: &Store, scene: &FfiScene, now: i64) {
     if matches!(scene, FfiScene::Licensed | FfiScene::Available) {
         kaeri_engine::licensed::set_services(vec!["Lantern Library".into()], store);
     }
-    if *scene == FfiScene::SyncOn {
-        kaeri_engine::syncing::seed_fixture(store, now);
-    }
     const HOUR: i64 = 3_600;
     const DAY: i64 = 24 * HOUR;
     match scene {
@@ -789,6 +826,9 @@ fn seed_scene(store: &Store, scene: &FfiScene, now: i64) {
         | FfiScene::Slow
         | FfiScene::Failed
         | FfiScene::SyncOn
+        | FfiScene::SyncNearby
+        | FfiScene::SyncCloud
+        | FfiScene::SyncTvPhoneSignIn
         | FfiScene::Profiles
         | FfiScene::LinkOpened => {
             // Oldest first, since each watch moves its title to the top.

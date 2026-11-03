@@ -670,6 +670,8 @@ pub enum Command {
     LoadDownloads,
     /// A link the viewer opened: see [`crate::opened`].
     Opened(crate::opened::OpenedCommand),
+    // More sync commands; see `SyncCommand`.
+    SyncGroup(crate::group::SyncCommand),
     /// Play a file already on disk — with the identity that lets it record history,
     /// resume, and sync exactly as a streamed episode would.
     PlayLocal {

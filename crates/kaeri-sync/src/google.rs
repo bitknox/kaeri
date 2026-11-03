@@ -460,6 +460,42 @@ impl TokenSource for OAuthTokens {
     }
 }
 
+/// The account a sign-in belongs to, an email or else a name, from Drive's `about`, which the
+/// app data scope may read. `None` when Drive says neither.
+pub async fn account(
+    http: &reqwest::Client,
+    endpoints: &Endpoints,
+    tokens: &dyn TokenSource,
+) -> Result<Option<String>, FolderError> {
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct User {
+        display_name: Option<String>,
+        email_address: Option<String>,
+    }
+    #[derive(Deserialize)]
+    struct About {
+        user: Option<User>,
+    }
+    let access = tokens.access_token().await?;
+    let answer = http
+        .get(format!("{}/drive/v3/about", endpoints.api_base))
+        .query(&[("fields", "user(displayName,emailAddress)")])
+        .bearer_auth(access)
+        .send()
+        .await
+        .map_err(|e| FolderError::Unreachable(e.to_string()))?;
+    match answer.status().as_u16() {
+        200 => {}
+        401 | 403 => return Err(FolderError::Unauthorized),
+        status => return Err(FolderError::Server(format!("about answered {status}"))),
+    }
+    let about: About = answer.json().await.map_err(|e| FolderError::Server(e.to_string()))?;
+    let user = about.user;
+    let present = |v: Option<String>| v.filter(|v| !v.trim().is_empty());
+    Ok(user.and_then(|u| present(u.email_address).or(present(u.display_name))))
+}
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct DriveFile {
@@ -1147,6 +1183,12 @@ mod fake {
             ("POST", "/token") => token(st, req),
             ("POST", "/device/code") => device_code(st, req),
             ("GET", "/auth") => authorize(req),
+            ("GET", "/drive/v3/about") => json(
+                200,
+                &serde_json::json!({
+                    "user": { "displayName": "Kim", "emailAddress": "kim@mail.example" }
+                }),
+            ),
             _ if req.path.starts_with("/drive/v3/files")
                 || req.path.starts_with("/upload/drive/v3/files") =>
             {
@@ -1597,6 +1639,18 @@ mod tests {
             .await
             .unwrap();
         assert!(!fake.token_requests()[0].contains_key("client_secret"));
+    }
+
+    #[tokio::test]
+    async fn the_account_is_the_email_drive_says() {
+        let fake = FakeGoogle::start().await;
+        let ep = fake.endpoints();
+        let t = exchange_code(&http(), &ep, &config(), FakeGoogle::CODE, REDIRECT, "v")
+            .await
+            .unwrap();
+        let tokens = OAuthTokens::from_signin(http(), ep.clone(), config(), &t).unwrap();
+        let account = account(&http(), &ep, &tokens).await.unwrap();
+        assert_eq!(account.as_deref(), Some("kim@mail.example"));
     }
 
     #[tokio::test]

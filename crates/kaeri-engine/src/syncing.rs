@@ -18,7 +18,7 @@ use kaeri_model::{
     event::Event,
     group::{
         SyncDeviceView, SyncFolderKind, SyncFolderSpec, SyncFolderView, SyncNoteView,
-        SyncProblem, SyncStatus, SyncStoreOffer,
+        SyncProblem, SyncSignInStep, SyncStatus, SyncStoreOffer,
     },
 };
 use kaeri_store::sync::Effect;
@@ -49,10 +49,10 @@ const LOGIN_WAIT: Duration = Duration::from_secs(300);
 /// Between passes while the engine runs.
 pub const EVERY: Duration = Duration::from_secs(300);
 
-const KEYRING: &str = "sync-keyring";
+pub(crate) const KEYRING: &str = "sync-keyring";
 const SEED: &str = "sync-seed";
 const RECOVERY: &str = "sync-recovery";
-const PASSWORD: &str = "sync-password";
+pub(crate) const PASSWORD: &str = "sync-password";
 const FOLDER: &str = "engine.folder";
 const NAME: &str = "engine.name";
 const LAST: &str = "engine.last";
@@ -60,6 +60,11 @@ const ERROR: &str = "engine.error";
 /// A problem a person can fix, kept until a pass works: `signin:<kind>`.
 const PROBLEM: &str = "engine.problem";
 const SIGN_IN: &str = "signin:";
+/// When the recovery key this device holds was made, in Unix seconds.
+const RECOVERY_MADE: &str = "engine.recovery_made";
+/// What the folder road keeps of the folder it reads (cursors, numbers published), which means
+/// nothing in another folder.
+const ROAD_META: &str = "folder.";
 
 /// The parts of the services a pass needs, owned, so a pass can run on a task of its own.
 #[derive(Clone)]
@@ -98,6 +103,8 @@ pub struct SyncHub {
     listener: Mutex<Option<Arc<tokio::sync::Mutex<Listener>>>>,
     /// The cloud sign-in under way, and what a test or a fixture build points it at.
     pub cloud: crate::cloud::State,
+    /// The language the front end speaks, as a tag, for the page a desktop sign-in ends on.
+    language: Mutex<Option<String>>,
 }
 
 impl std::fmt::Debug for SyncHub {
@@ -112,6 +119,19 @@ impl SyncHub {
         std::mem::take(
             &mut *self.effects.lock().unwrap_or_else(std::sync::PoisonError::into_inner),
         )
+    }
+
+    pub fn set_language(&self, language: Option<String>) {
+        *self.language.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = language;
+    }
+
+    /// The front end's language, English when it said none.
+    pub fn language(&self) -> String {
+        self.language
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .clone()
+            .unwrap_or_else(|| "en".into())
     }
 
     fn road(&self) -> Option<Arc<FolderRoad>> {
@@ -164,7 +184,7 @@ fn describe(p: &SyncProblem) -> String {
     }
 }
 
-fn kind_name(kind: &SyncFolderKind) -> &'static str {
+pub(crate) fn kind_name(kind: &SyncFolderKind) -> &'static str {
     match kind {
         SyncFolderKind::Directory => "dir",
         SyncFolderKind::WebDav => "webdav",
@@ -175,7 +195,7 @@ fn kind_name(kind: &SyncFolderKind) -> &'static str {
     }
 }
 
-fn kind_of(name: &str) -> Option<SyncFolderKind> {
+pub(crate) fn kind_of(name: &str) -> Option<SyncFolderKind> {
     Some(match name {
         "dir" => SyncFolderKind::Directory,
         "webdav" => SyncFolderKind::WebDav,
@@ -195,7 +215,7 @@ struct Saved {
     user: Option<String>,
 }
 
-fn save_folder(services: &Ctx, spec: &SyncFolderSpec) {
+pub(crate) fn save_folder(services: &Ctx, spec: &SyncFolderSpec) {
     let saved = Saved {
         kind: kind_name(&spec.kind).to_owned(),
         address: spec.address.clone(),
@@ -207,7 +227,12 @@ fn save_folder(services: &Ctx, spec: &SyncFolderSpec) {
 }
 
 fn saved_folder(services: &Ctx) -> Option<SyncFolderSpec> {
-    let json = services.store.sync_meta_get(FOLDER).ok().flatten()?;
+    saved_folder_in(&services.store)
+}
+
+/// The folder this device syncs through, as kept: no secret in it.
+pub(crate) fn saved_folder_in(store: &kaeri_store::Store) -> Option<SyncFolderSpec> {
+    let json = store.sync_meta_get(FOLDER).ok().flatten()?;
     let saved: Saved = serde_json::from_str(&json).ok()?;
     Some(SyncFolderSpec {
         kind: kind_of(&saved.kind)?,
@@ -235,7 +260,7 @@ fn label_of(spec: &SyncFolderSpec) -> String {
 ///
 /// A cloud drive signs in first when this device holds no sign-in for it and `tx` is given, which
 /// is how the person is asked; with no `tx` it is a [`SyncProblem::SignInNeeded`].
-async fn target_for(
+pub(crate) async fn target_for(
     services: &Ctx,
     tx: Option<&Outbox>,
     spec: &mut SyncFolderSpec,
@@ -273,19 +298,9 @@ async fn target_for(
                     services.sync.tokens.get(PASSWORD).unwrap_or_default(),
                 ),
                 _ => {
-                    let start = nextcloud::start(&address)
-                        .await
-                        .map_err(|e| SyncProblem::Other(e.to_string()))?;
-                    services.host.open_url(&start.login_url).map_err(SyncProblem::Other)?;
-                    match nextcloud::wait(&start, Duration::from_secs(2), LOGIN_WAIT)
-                        .await
-                        .map_err(|e| SyncProblem::Other(e.to_string()))?
-                    {
-                        nextcloud::Poll::Done { login_name, app_password, .. } => {
-                            (address.clone(), login_name, app_password.expose().to_owned())
-                        }
-                        nextcloud::Poll::Pending => return Err(SyncProblem::Unreachable.into()),
-                    }
+                    let (login_name, app_password) =
+                        nextcloud_login(services, tx, &address).await?;
+                    (address.clone(), login_name, app_password)
                 }
             };
             let target =
@@ -302,7 +317,44 @@ async fn target_for(
     }
 }
 
-fn device_key(services: &Ctx) -> DeviceKey {
+/// Sign in to a Nextcloud server through its login page: opened in the browser (said as
+/// [`SyncSignInStep::Browser`]), or on a TV shown for a phone to open
+/// ([`SyncSignInStep::Page`]). Cancelled as a cloud sign-in is.
+async fn nextcloud_login(
+    services: &Ctx,
+    tx: Option<&Outbox>,
+    address: &str,
+) -> Result<(String, String), Ended> {
+    let kind = SyncFolderKind::Nextcloud;
+    // A pass in the background never asks anyone to sign in.
+    let Some(tx) = tx else {
+        return Err(SyncProblem::Unreachable.into());
+    };
+    let start =
+        nextcloud::start(address).await.map_err(|e| SyncProblem::Other(e.to_string()))?;
+    let url = start.login_url.clone();
+    if cloud::on_tv(services) {
+        cloud::say_for(tx, &kind, Some(SyncSignInStep::Page { url }));
+    } else {
+        services.host.open_url(&url).map_err(SyncProblem::Other)?;
+        cloud::say_for(tx, &kind, Some(SyncSignInStep::Browser { url }));
+    }
+    let run = services.syncing.cloud.begin(kind.clone(), false);
+    let waited = tokio::select! {
+        () = run.cancel.notified() => Err(Ended::Cancelled),
+        polled = nextcloud::wait(&start, Duration::from_secs(2), LOGIN_WAIT) => Ok(polled),
+    };
+    services.syncing.cloud.finish(run.id);
+    match waited?.map_err(|e| SyncProblem::Other(e.to_string()))? {
+        nextcloud::Poll::Done { login_name, app_password, .. } => {
+            cloud::say_for(tx, &kind, Some(SyncSignInStep::Finishing));
+            Ok((login_name, app_password.expose().to_owned()))
+        }
+        nextcloud::Poll::Pending => Err(SyncProblem::SignInExpired { service: kind }.into()),
+    }
+}
+
+pub(crate) fn device_key(services: &Ctx) -> DeviceKey {
     let seed = match services.sync.tokens.get(SEED).ok().and_then(|h| hex::decode(h).ok()) {
         Some(seed) if seed.len() == 32 => seed,
         _ => {
@@ -314,7 +366,7 @@ fn device_key(services: &Ctx) -> DeviceKey {
     DeviceKey::from_identity(&seed)
 }
 
-fn keep_ring(services: &Ctx, ring: &Keyring) {
+pub(crate) fn keep_ring(services: &Ctx, ring: &Keyring) {
     let _ = services.sync.tokens.set(KEYRING, &hex::encode(ring.to_bytes()));
 }
 
@@ -342,16 +394,29 @@ pub fn status(services: &Ctx) -> SyncStatus {
         .into_iter()
         .filter_map(|c| c.last_seen.map(|at| (c.device, at)))
         .collect();
-    let devices = store
+    let trackers: std::collections::HashMap<String, Vec<String>> = store
+        .sync_lead_candidates()
+        .unwrap_or_default()
+        .into_iter()
+        .map(|c| (c.device, c.trackers))
+        .collect();
+    let devices: Vec<SyncDeviceView> = store
         .sync_peers()
         .unwrap_or_default()
         .into_iter()
         .filter(|(_, _, _, removed)| !removed)
-        .map(|(id, name, _, _)| SyncDeviceView {
-            this_device: id == me,
-            last_seen: seen.get(&id).copied().filter(|at| *at > 0),
-            id,
-            name: name.unwrap_or_default(),
+        .map(|(id, name, _, _)| {
+            let cloud = device_cloud(store, &id);
+            SyncDeviceView {
+                this_device: id == me,
+                last_seen: seen.get(&id).copied().filter(|at| *at > 0),
+                trackers: trackers.get(&id).cloned().unwrap_or_default(),
+                sign_ins: cloud.signins.iter().filter_map(|k| kind_of(k)).collect(),
+                folder: cloud.folder.as_deref().and_then(kind_of),
+                asked: crate::handoff::asked_of(store, &id),
+                id,
+                name: name.unwrap_or_default(),
+            }
         })
         .collect();
     let notes = store
@@ -374,11 +439,33 @@ pub fn status(services: &Ctx) -> SyncStatus {
         .into_iter()
         .map(|(address, name)| SyncStoreOffer { address, name })
         .collect();
+    let folder = saved_folder(services);
+    // This device's folder, else the one most of the others say they use.
+    let group_folder = folder.as_ref().map(|f| f.kind.clone()).or_else(|| {
+        let mut counts: Vec<(SyncFolderKind, usize)> = Vec::new();
+        for kind in devices.iter().filter(|d| !d.this_device).filter_map(|d| d.folder.clone()) {
+            match counts.iter_mut().find(|(k, _)| *k == kind) {
+                Some((_, n)) => *n += 1,
+                None => counts.push((kind, 1)),
+            }
+        }
+        counts.into_iter().max_by_key(|(_, n)| *n).map(|(kind, _)| kind)
+    });
+    let recovery_key = folder.is_some() && recovery_key(services).is_some();
     SyncStatus {
         enabled: true,
         device_name: Some(device_name(services)).filter(|n| !n.is_empty()),
-        folder: saved_folder(services)
-            .map(|spec| SyncFolderView { label: label_of(&spec), kind: spec.kind }),
+        folder: folder.map(|spec| SyncFolderView {
+            label: label_of(&spec),
+            account: account_of(store, &spec),
+            kind: spec.kind,
+        }),
+        group_folder,
+        recovery_key,
+        recovery_key_made: recovery_key
+            .then(|| store.sync_meta_get(RECOVERY_MADE).ok().flatten())
+            .flatten()
+            .and_then(|v| v.parse().ok()),
         devices,
         last_synced: store.sync_meta_get(LAST).ok().flatten().and_then(|v| v.parse().ok()),
         syncing: services.syncing.running.load(Ordering::Relaxed),
@@ -396,11 +483,13 @@ fn saved_problem(services: &Ctx) -> Option<SyncProblem> {
     Some(SyncProblem::SignInNeeded { service: kind })
 }
 
-fn say_status(services: &Ctx, tx: &Outbox) {
+pub(crate) fn say_status(services: &Ctx, tx: &Outbox) {
     let _ = tx.send(Event::SyncStatus(status(services)));
 }
 
-/// Set a group up in an empty folder.
+/// Set sync up with a folder: a new group in an empty folder, or, on a device already in a group
+/// (paired nearby), the group's first folder. A folder that already holds this device's group,
+/// with keys for this device, is taken as it is.
 pub async fn start(services: &Ctx, tx: &Outbox, device_name: String, folder: SyncFolderSpec) {
     let kind = folder.kind.clone();
     start_in(services, tx, device_name, folder).await;
@@ -418,28 +507,93 @@ async fn start_in(
         Err(Ended::Cancelled) => return say_status(services, tx),
         Err(Ended::Problem(p)) => return fail(services, tx, p),
     };
-    let id = keys::new_device_id();
-    let key = device_key(services);
-    match FolderRoad::create(target, "", services.store.clone(), &id, key.clone()).await {
-        Ok((road, recovery)) => {
-            if let Err(e) = services.store.sync_enable(&id) {
-                return fail(services, tx, SyncProblem::Other(e.to_string()));
+    let enabled = services.store.sync_device().ok().flatten().is_some();
+    let id = device_id(services);
+    match settle(services, tx, target, &folder, &id).await {
+        Ok(road) => {
+            if !enabled {
+                if let Err(e) = services.store.sync_enable(&id) {
+                    return fail(services, tx, SyncProblem::Other(e.to_string()));
+                }
+                announce_self(services, &id, &device_name, &device_key(services));
+                let _ = services.store.sync_meta_set(NAME, &device_name);
             }
-            announce_self(services, &id, &device_name, &key);
-            let _ = services.store.sync_meta_set(NAME, &device_name);
-            save_folder(services, &folder);
-            keep_ring(services, &road.keyring());
-            let _ = services.sync.tokens.set(RECOVERY, &recovery.to_text());
+            take_folder(services, &folder, road);
             tracking::commands::announce_signed_in(&services.store, &services.sync);
-            services.syncing.set_road(Some(Arc::new(road)));
-            let _ = tx.send(Event::SyncRecoveryKey(recovery.to_text()));
             pass(services, tx).await;
         }
-        Err(e) => fail(services, tx, problem_in(Some(&folder.kind), &e)),
+        Err(p) => fail(services, tx, p),
     }
 }
 
-/// Join the group a folder holds, with its recovery key.
+/// The id this device writes under: the one it had, even with sync turned off since, so the log
+/// carries on; else a new one.
+fn device_id(services: &Ctx) -> String {
+    services.store.sync_device_kept().ok().flatten().unwrap_or_else(keys::new_device_id)
+}
+
+/// The road to a folder this device is about to sync through. A folder holding the group with
+/// keys for this device is opened with them. An empty one gets the group: its keyring and
+/// recovery key when this device holds them, else new ones, and a new recovery key is said once.
+/// A TV never sets a group's folder up: it only joins one. A folder of another group is
+/// [`SyncProblem::GroupExists`].
+async fn settle(
+    services: &Ctx,
+    tx: &Outbox,
+    target: Arc<dyn FolderTarget>,
+    folder: &SyncFolderSpec,
+    id: &str,
+) -> Result<FolderRoad, SyncProblem> {
+    let key = device_key(services);
+    let store = services.store.clone();
+    match FolderRoad::open_as_member(target.clone(), "", store.clone(), id, key.clone()).await {
+        Ok(road) => return Ok(road),
+        Err(SyncError::NoGroup) => {}
+        Err(e) => return Err(problem_in(Some(&folder.kind), &e)),
+    }
+    if cloud::on_tv(services) {
+        return Err(SyncProblem::NoGroup);
+    }
+    let ring = kept_ring(services).unwrap_or_else(Keyring::generate);
+    let (recovery, fresh) = match recovery_key(services) {
+        Some(key) => (key, false),
+        None => (RecoveryKey::generate(), true),
+    };
+    let road = FolderRoad::create_with(target, "", store, id, key, ring, &recovery)
+        .await
+        .map_err(|e| problem_in(Some(&folder.kind), &e))?;
+    let _ = services.sync.tokens.set(RECOVERY, &recovery.to_text());
+    if fresh {
+        let _ = services.store.sync_meta_set(RECOVERY_MADE, &kaeri_store::now().to_string());
+        let _ = tx.send(Event::SyncRecoveryKey(recovery.to_text()));
+    }
+    Ok(road)
+}
+
+/// Sync through `folder` from now on, on `road`: what was read of another folder is forgotten.
+pub(crate) fn take_folder(services: &Ctx, folder: &SyncFolderSpec, road: FolderRoad) {
+    let _ = services.store.sync_meta_clear(ROAD_META);
+    save_folder(services, folder);
+    keep_ring(services, &road.keyring());
+    for key in [LAST, ERROR, PROBLEM] {
+        let _ = services.store.sync_meta_set(key, "");
+    }
+    services.syncing.set_road(Some(Arc::new(road)));
+    announce_cloud(services);
+}
+
+fn kept_ring(services: &Ctx) -> Option<Keyring> {
+    services
+        .sync
+        .tokens
+        .get(KEYRING)
+        .ok()
+        .and_then(|h| hex::decode(h).ok())
+        .and_then(|b| Keyring::from_bytes(&b).ok())
+}
+
+/// Join the group a folder holds, with its recovery key. A device paired nearby keeps its id and
+/// its log, which the folder's group then gets.
 pub async fn join(
     services: &Ctx,
     tx: &Outbox,
@@ -468,29 +622,130 @@ async fn join_in(
         Err(Ended::Cancelled) => return say_status(services, tx),
         Err(Ended::Problem(p)) => return fail(services, tx, p),
     };
-    let id = keys::new_device_id();
+    let enabled = services.store.sync_device().ok().flatten().is_some();
+    let id = device_id(services);
     let key = device_key(services);
     match FolderRoad::join(target, "", services.store.clone(), &id, key.clone(), &recovery_key)
         .await
     {
         Ok(road) => {
-            if let Err(e) = services.store.sync_enable(&id) {
-                return fail(services, tx, SyncProblem::Other(e.to_string()));
+            if !enabled {
+                if let Err(e) = services.store.sync_enable(&id) {
+                    return fail(services, tx, SyncProblem::Other(e.to_string()));
+                }
+                announce_self(services, &id, &device_name, &key);
+                let _ = services.store.sync_meta_set(NAME, &device_name);
             }
-            announce_self(services, &id, &device_name, &key);
-            let _ = services.store.sync_meta_set(NAME, &device_name);
-            save_folder(services, &folder);
-            keep_ring(services, &road.keyring());
             let _ = services.sync.tokens.set(RECOVERY, &recovery_key.to_text());
+            // Made before this device knew it: the date is not known.
+            let _ = services.store.sync_meta_remove(RECOVERY_MADE);
+            take_folder(services, &folder, road);
             tracking::commands::announce_signed_in(&services.store, &services.sync);
-            services.syncing.set_road(Some(Arc::new(road)));
             pass(services, tx).await;
         }
         Err(e) => fail(services, tx, problem_in(Some(&folder.kind), &e)),
     }
 }
 
-fn fail(services: &Ctx, tx: &Outbox, p: SyncProblem) {
+/// Move this device to another folder, keeping the group, or stop using one with `None` and go
+/// on syncing nearby. The old folder is left as it is; the other devices move when they choose
+/// the new one, which already holds keys for them.
+pub async fn change_folder(services: &Ctx, tx: &Outbox, folder: Option<SyncFolderSpec>) {
+    let Some(id) = services.store.sync_device().ok().flatten() else {
+        return fail(services, tx, SyncProblem::NoGroup);
+    };
+    let Some(mut folder) = folder else {
+        services.syncing.set_road(None);
+        let _ = services.store.sync_meta_clear(ROAD_META);
+        for key in [FOLDER, LAST, ERROR, PROBLEM] {
+            let _ = services.store.sync_meta_set(key, "");
+        }
+        let _ = services.sync.tokens.clear(PASSWORD);
+        announce_cloud(services);
+        return say_status(services, tx);
+    };
+    let kind = folder.kind.clone();
+    let target = match target_for(services, Some(tx), &mut folder).await {
+        Ok(target) => target,
+        Err(Ended::Cancelled) => {
+            cloud::ended(tx, &kind);
+            return say_status(services, tx);
+        }
+        Err(Ended::Problem(p)) => {
+            cloud::ended(tx, &kind);
+            return fail(services, tx, p);
+        }
+    };
+    match settle(services, tx, target, &folder, &id).await {
+        Ok(road) => {
+            take_folder(services, &folder, road);
+            cloud::ended(tx, &kind);
+            pass(services, tx).await;
+        }
+        Err(p) => {
+            cloud::ended(tx, &kind);
+            fail(services, tx, p);
+        }
+    }
+}
+
+/// What a device keeps for the cloud, as its `device_cloud` register says.
+#[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
+pub(crate) struct DeviceCloud {
+    /// Its folder's kind, by [`kind_name`].
+    #[serde(default)]
+    pub folder: Option<String>,
+    /// The sign-ins it can give another device: Dropbox's, and its Nextcloud or WebDAV login.
+    #[serde(default)]
+    pub signins: Vec<String>,
+}
+
+pub(crate) fn device_cloud(store: &kaeri_store::Store, device: &str) -> DeviceCloud {
+    store
+        .sync_reg_value(kaeri_store::sync::kinds::DEVICE_CLOUD, device)
+        .ok()
+        .flatten()
+        .and_then(|json| serde_json::from_str(&json).ok())
+        .unwrap_or_default()
+}
+
+/// The sign-ins this device can give another, by [`kind_name`].
+pub(crate) fn giveable(services: &Ctx) -> Vec<String> {
+    let mut out = Vec::new();
+    if cloud::signed_in(services, Service::Dropbox) {
+        out.push(kind_name(&SyncFolderKind::Dropbox).to_owned());
+    }
+    if let Some(folder) = saved_folder(services)
+        && matches!(folder.kind, SyncFolderKind::Nextcloud | SyncFolderKind::WebDav)
+        && services.sync.tokens.get(PASSWORD).is_ok_and(|p| !p.is_empty())
+    {
+        out.push(kind_name(&folder.kind).to_owned());
+    }
+    out
+}
+
+/// Tell the group which folder this device syncs through and what it can give, when it changed.
+pub(crate) fn announce_cloud(services: &Ctx) {
+    let mine = DeviceCloud {
+        folder: saved_folder(services).map(|f| kind_name(&f.kind).to_owned()),
+        signins: giveable(services),
+    };
+    if let Ok(json) = serde_json::to_string(&mine)
+        && let Err(e) = services.store.sync_set_my_cloud(&json)
+    {
+        tracing::warn!(error = %e, "could not tell the group about this device's folder");
+    }
+}
+
+/// The account a folder is signed in to: the cloud drive's, or the Nextcloud or WebDAV login.
+fn account_of(store: &kaeri_store::Store, spec: &SyncFolderSpec) -> Option<String> {
+    match Service::of(&spec.kind) {
+        Some(service) => cloud::account(store, service),
+        None => spec.user.clone().filter(|u| !u.is_empty()),
+    }
+}
+
+pub(crate) fn fail(services: &Ctx, tx: &Outbox, p: SyncProblem) {
     let _ = tx.send(Event::SyncProblem(p));
     say_status(services, tx);
 }
@@ -503,14 +758,7 @@ async fn road_of(services: &Ctx) -> Result<Arc<FolderRoad>, SyncProblem> {
     let no_group = || SyncProblem::NoGroup;
     let id = services.store.sync_device().ok().flatten().ok_or_else(no_group)?;
     let mut folder = saved_folder(services).ok_or_else(no_group)?;
-    let ring = services
-        .sync
-        .tokens
-        .get(KEYRING)
-        .ok()
-        .and_then(|h| hex::decode(h).ok())
-        .and_then(|b| Keyring::from_bytes(&b).ok())
-        .ok_or_else(no_group)?;
+    let ring = kept_ring(services).ok_or_else(no_group)?;
     // No `tx`: a pass in the background never asks anyone to sign in.
     let target = match target_for(services, None, &mut folder).await {
         Ok(target) => target,
@@ -550,6 +798,7 @@ pub async fn pass(services: &Ctx, tx: &Outbox) {
             let _ = services.store.sync_meta_set(LAST, &kaeri_store::now().to_string());
             let _ = services.store.sync_meta_set(ERROR, "");
             let _ = services.store.sync_meta_set(PROBLEM, "");
+            announce_cloud(services);
             carry_out(services, tx, report);
         }
         Err((p, text)) => {
@@ -599,6 +848,9 @@ pub fn leave(services: &Ctx, tx: &Outbox) {
     for key in [FOLDER, NAME, LAST, ERROR, PROBLEM] {
         let _ = services.store.sync_meta_set(key, "");
     }
+    let _ = services.store.sync_meta_remove(RECOVERY_MADE);
+    let _ = services.store.sync_meta_clear(ROAD_META);
+    crate::handoff::forget_all(&services.store);
     say_status(services, tx);
 }
 
@@ -622,6 +874,7 @@ async fn sign_in_done(
 ) {
     match outcome {
         Ok(()) => {
+            announce_cloud(services);
             let using = saved_folder(services).is_some_and(|f| &f.kind == kind);
             if using {
                 services.syncing.set_road(None);
@@ -641,6 +894,7 @@ async fn sign_in_done(
 pub fn sign_out(services: &Ctx, tx: &Outbox, kind: &SyncFolderKind) {
     let Some(service) = Service::of(kind) else { return };
     cloud::forget(services, service);
+    announce_cloud(services);
     if saved_folder(services).is_some_and(|f| &f.kind == kind) {
         services.syncing.set_road(None);
         let _ = services.store.sync_meta_set(PROBLEM, &format!("{SIGN_IN}{}", kind_name(kind)));
@@ -677,6 +931,8 @@ pub async fn new_recovery_key(services: &Ctx, tx: &Outbox) {
     match road.new_recovery_key().await {
         Ok(recovery) => {
             let _ = services.sync.tokens.set(RECOVERY, &recovery.to_text());
+            let _ =
+                services.store.sync_meta_set(RECOVERY_MADE, &kaeri_store::now().to_string());
             let _ = tx.send(Event::SyncRecoveryKey(recovery.to_text()));
         }
         Err(e) => fail(services, tx, problem_at(services, &e)),
@@ -707,24 +963,106 @@ pub fn keep_syncing(services: &Services, tx: &Outbox) {
     });
 }
 
-/// Sync as a fixture build shows it: set up on a folder, with a second device that was heard
-/// from a moment ago and one note about a watch that was kept. No folder is behind it, so a
-/// build with fixtures never runs a pass.
+/// How sync stands in a fixture build's scene. No folder is behind any of them, so a build with
+/// fixtures never runs a pass by itself.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FixtureSync {
+    /// Set up on a folder, with a second device that was heard from a moment ago and one note
+    /// about a watch that was kept.
+    Folder,
+    /// Paired nearby with the Living room TV, with no cloud folder yet.
+    Nearby,
+    /// Syncing through Google Drive, signed in as kim@mail.example, with Kim's MacBook Air and
+    /// a recovery key made three days ago.
+    Cloud,
+    /// This device is the Living room TV, paired with Kim's iPhone, which syncs through Dropbox
+    /// and holds the sign-in the TV can use. The TV has no folder yet.
+    TvPhoneSignIn,
+}
+
+/// Sync as a fixture build shows it on a folder: see [`FixtureSync::Folder`].
 pub fn seed_fixture(store: &kaeri_store::Store, now: i64) {
-    let _ = store.sync_enable("fixture-me");
-    let _ = store.sync_device_add("fixture-me", "Kim's iPhone", "00");
-    let _ = store.sync_device_add("fixture-tv", "Living room TV", "00");
-    let _ = store.sync_touch_peer("fixture-tv", now - 120);
-    let _ = store.sync_meta_set(NAME, "Kim's iPhone");
-    let _ = store.sync_meta_set(LAST, &(now - 120).to_string());
-    if let Ok(json) = serde_json::to_string(&Saved {
-        kind: "dir".into(),
-        address: Some("Shared/Kaeri".into()),
-        user: None,
-    }) {
-        let _ = store.sync_meta_set(FOLDER, &json);
+    let _ = seed_fixture_as(store, now, FixtureSync::Folder);
+}
+
+/// Seed `kind` into `store`. What comes back is the tokens the scene holds, `(id, value)`, for
+/// the token store the fixture engine reads.
+pub fn seed_fixture_as(
+    store: &kaeri_store::Store,
+    now: i64,
+    kind: FixtureSync,
+) -> Vec<(&'static str, String)> {
+    let saved = |kind: &str, address: Option<&str>| {
+        if let Ok(json) = serde_json::to_string(&Saved {
+            kind: kind.into(),
+            address: address.map(str::to_owned),
+            user: None,
+        }) {
+            let _ = store.sync_meta_set(FOLDER, &json);
+        }
+    };
+    // Another device's register, as its own ops would have brought it.
+    let cloud_of = |device: &str, folder: Option<&str>, signins: &[&str]| {
+        let json = serde_json::to_string(&DeviceCloud {
+            folder: folder.map(str::to_owned),
+            signins: signins.iter().map(|s| (*s).to_owned()).collect(),
+        })
+        .unwrap_or_default();
+        let _ = store.sync_register(
+            kaeri_store::sync::kinds::DEVICE_CLOUD,
+            device,
+            Some(&json),
+            None,
+        );
+    };
+    let trackers_of = |device: &str, trackers: &[&str]| {
+        let _ = store.sync_fixture_trackers(device, trackers);
+    };
+    let me = "fixture-me";
+    let _ = store.sync_enable(me);
+    let mut tokens = Vec::new();
+    match kind {
+        FixtureSync::Folder => {
+            let _ = store.sync_device_add(me, "Kim's iPhone", "00");
+            let _ = store.sync_device_add("fixture-tv", "Living room TV", "00");
+            let _ = store.sync_touch_peer("fixture-tv", now - 120);
+            let _ = store.sync_meta_set(NAME, "Kim's iPhone");
+            let _ = store.sync_meta_set(LAST, &(now - 120).to_string());
+            saved("dir", Some("Shared/Kaeri"));
+            let _ = store.sync_fixture_note(1_000_001, "3", me, "fixture-tv", now - 3_600);
+        }
+        FixtureSync::Nearby => {
+            let _ = store.sync_device_add(me, "Kim's iPhone", "00");
+            let _ = store.sync_device_add("fixture-tv", "Living room TV", "00");
+            let _ = store.sync_touch_peer("fixture-tv", now - 300);
+            trackers_of("fixture-tv", &["anilist"]);
+            let _ = store.sync_meta_set(NAME, "Kim's iPhone");
+        }
+        FixtureSync::Cloud => {
+            let _ = store.sync_device_add(me, "Kim's iPhone", "00");
+            let _ = store.sync_device_add("fixture-mac", "Kim's MacBook Air", "00");
+            let _ = store.sync_touch_peer("fixture-mac", now - 600);
+            cloud_of("fixture-mac", Some("google"), &[]);
+            let _ = store.sync_meta_set(NAME, "Kim's iPhone");
+            let _ = store.sync_meta_set(LAST, &(now - 60).to_string());
+            saved("google", None);
+            cloud_of(me, Some("google"), &[]);
+            cloud::keep_account(store, Service::Google, Some("kim@mail.example"));
+            let _ = store.sync_meta_set(RECOVERY_MADE, &(now - 3 * 86_400).to_string());
+            tokens.push((Service::Google.token_id(), "fixture-google-refresh".to_owned()));
+            tokens.push((RECOVERY, RecoveryKey::generate().to_text()));
+            tokens.push((KEYRING, hex::encode(Keyring::generate().to_bytes())));
+        }
+        FixtureSync::TvPhoneSignIn => {
+            let _ = store.sync_device_add(me, "Living room TV", "00");
+            let _ = store.sync_device_add("fixture-phone", "Kim's iPhone", "00");
+            let _ = store.sync_touch_peer("fixture-phone", now - 120);
+            cloud_of("fixture-phone", Some("dropbox"), &["dropbox"]);
+            trackers_of("fixture-phone", &["anilist"]);
+            let _ = store.sync_meta_set(NAME, "Living room TV");
+        }
     }
-    let _ = store.sync_fixture_note(1_000_001, "3", "fixture-me", "fixture-tv", now - 3_600);
+    tokens
 }
 
 const LAN_KEY: &str = "sync-lan-key";
@@ -750,7 +1088,8 @@ fn lan_me(services: &Ctx) -> Option<Me> {
         identity,
         device,
         name: device_name(services),
-        pubkey: device_key(services).public_hex(),
+        key: device_key(services),
+        handoff: Some(Arc::new(crate::handoff::EngineHandoff::of(services))),
     })
 }
 
@@ -760,16 +1099,20 @@ fn enable_for_pairing(services: &Ctx, device_name: &str) -> Result<(), SyncProbl
     if services.store.sync_device().ok().flatten().is_some() {
         return Ok(());
     }
-    let id = keys::new_device_id();
+    let id = device_id(services);
     services.store.sync_enable(&id).map_err(|e| SyncProblem::Other(e.to_string()))?;
     announce_self(services, &id, device_name, &device_key(services));
     let _ = services.store.sync_meta_set(NAME, device_name);
     tracking::commands::announce_signed_in(&services.store, &services.sync);
+    announce_cloud(services);
     Ok(())
 }
 
 /// What a session with another device brought, carried out as a pass through the folder's is.
-fn carry_out_peer(services: &Ctx, tx: &Outbox, report: &PeerReport) {
+async fn carry_out_peer(services: &Ctx, tx: &Outbox, report: &PeerReport) {
+    if let Some(received) = &report.handoff {
+        crate::handoff::take(services, tx, received).await;
+    }
     carry_out(
         services,
         tx,
@@ -819,7 +1162,7 @@ pub async fn invite(services: &Ctx, tx: &Outbox, device_name: String) {
                         guard.next_session().await
                     };
                     match session {
-                        Some(Ok(report)) => carry_out_peer(&ctx, &tx, &report),
+                        Some(Ok(report)) => carry_out_peer(&ctx, &tx, &report).await,
                         Some(Err(_)) => {}
                         None => return,
                     }
@@ -856,7 +1199,7 @@ pub async fn pair(services: &Ctx, tx: &Outbox, device_name: String, address: &st
     };
     match lan::dial(&me, &services.store, addr, Some(code), None).await {
         Ok(report) => {
-            carry_out_peer(services, tx, &report);
+            carry_out_peer(services, tx, &report).await;
             say_status(services, tx);
         }
         Err(e) => fail(services, tx, problem(&e)),
@@ -874,7 +1217,7 @@ pub async fn sync_with(services: &Ctx, tx: &Outbox, device: &str, address: &str)
     }
     match lan::dial(&me, &services.store, addr, None, pinned).await {
         Ok(report) => {
-            carry_out_peer(services, tx, &report);
+            carry_out_peer(services, tx, &report).await;
             say_status(services, tx);
         }
         Err(e) => fail(services, tx, problem(&e)),

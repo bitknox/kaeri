@@ -725,6 +725,9 @@
   <data name="StoresReadyDemoStays" xml:space="preserve">
     <value>{store} hazır. Demo, Kaynaklarınızın sonunda kalır.</value>
   </data>
+  <data name="CloudLoopbackDone" xml:space="preserve">
+    <value>Bu sekmeyi kapatıp Kaeri'ye dönebilirsiniz.</value>
+  </data>
   <data name="NoticeSignedIn" xml:space="preserve">
     <value>Oturum açıldı: {tracker}.</value>
   </data>

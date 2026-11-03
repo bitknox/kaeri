@@ -76,6 +76,12 @@ impl Store {
         self.with_personal(|c| Ok(device(c)?))
     }
 
+    /// The id this device wrote ops under, whether sync is on or not: the one
+    /// [`Self::sync_enable`] takes again after sync was turned off.
+    pub fn sync_device_kept(&self) -> Result<Option<String>> {
+        self.with_personal(|c| Ok(meta(c, "device")?))
+    }
+
     /// Turn sync on for this device as `device_id`, and turn today's history and choices into the
     /// device's first ops, in one transaction. Idempotent: calling it again, even after
     /// [`Self::sync_disable`], keeps the log and its numbering.
@@ -335,6 +341,26 @@ impl Store {
         self.with_personal(|c| Ok(set_meta(c, &format!("x.{key}"), value)?))
     }
 
+    /// Forget a bookkeeping value.
+    pub fn sync_meta_remove(&self, key: &str) -> Result<()> {
+        self.with_personal(|c| {
+            c.execute("DELETE FROM sync_meta WHERE key = ?1", [format!("x.{key}")])?;
+            Ok(())
+        })
+    }
+
+    /// Forget every bookkeeping value whose key starts with `prefix`, as when a transport's place
+    /// changes and its cursors no longer mean anything.
+    pub fn sync_meta_clear(&self, prefix: &str) -> Result<usize> {
+        self.with_personal(|c| {
+            let like = format!(
+                "x.{}%",
+                prefix.replace('\\', "\\\\").replace('%', "\\%").replace('_', "\\_")
+            );
+            Ok(c.execute("DELETE FROM sync_meta WHERE key LIKE ?1 ESCAPE '\\'", [like])?)
+        })
+    }
+
     /// One device's ops after `after`, oldest first, at most `limit`.
     pub fn ops_of(&self, device: &str, after: u64, limit: usize) -> Result<Vec<Op>> {
         self.with_personal(|c| {
@@ -355,6 +381,21 @@ impl Store {
                 "INSERT INTO sync_peer (device, last_seen) VALUES (?1, ?2)
                  ON CONFLICT(device) DO UPDATE SET last_seen = MAX(COALESCE(last_seen, 0), ?2)",
                 params![device, at],
+            )?;
+            Ok(())
+        })
+    }
+
+    /// Say another device holds `trackers`, as its register would: for a fixture build that
+    /// shows a device's trackers without the device writing them.
+    pub fn sync_fixture_trackers(&self, device: &str, trackers: &[&str]) -> Result<()> {
+        let json = serde_json::to_string(trackers)
+            .map_err(|source| StoreError::Encode { what: "trackers", source })?;
+        self.with_personal(|c| {
+            c.execute(
+                "INSERT INTO sync_peer (device, trackers) VALUES (?1, ?2)
+                 ON CONFLICT(device) DO UPDATE SET trackers = excluded.trackers",
+                params![device, json],
             )?;
             Ok(())
         })

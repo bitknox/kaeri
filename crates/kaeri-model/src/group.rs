@@ -25,6 +25,9 @@ pub struct SyncFolderView {
     pub kind: SyncFolderKind,
     /// What to show for it: a path, a host or an account.
     pub label: String,
+    /// The account signed in to it, a name or an email, where the service says one.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub account: Option<String>,
 }
 
 /// A device in the group.
@@ -38,6 +41,47 @@ pub struct SyncDeviceView {
     /// When it was last heard from, in Unix seconds.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub last_seen: Option<i64>,
+    /// The trackers it is signed in to, by id (`anilist`, `mal`, ...).
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub trackers: Vec<String>,
+    /// The cloud drives, Nextcloud and WebDAV logins it holds a sign-in for, which this device
+    /// can ask it for with `SyncCommand::CopySignIns`.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub sign_ins: Vec<SyncFolderKind>,
+    /// The kind of folder it syncs through, if any.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub folder: Option<SyncFolderKind>,
+    /// What this device has asked it for and not yet received: it comes on the next session
+    /// with it.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub asked: Vec<SyncCopy>,
+}
+
+/// A sign-in one device can ask another for, over the paired link.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum SyncCopy {
+    /// Every tracker the other device is signed in to and this one is not.
+    Trackers,
+    /// The other device's sign-in to a cloud drive (`Dropbox`), or its Nextcloud or WebDAV login
+    /// (only for the folder it syncs through).
+    Cloud { service: SyncFolderKind },
+}
+
+/// Sync commands that came after `Command` was full.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum SyncCommand {
+    /// Ask `device` for sign-ins. They are sealed for this device and carried by the next
+    /// session between the two, whichever side opens it; with `address` (`host:port`) this
+    /// device opens one now. `device` `None` asks the next device this one pairs with, in the
+    /// pairing itself. An empty `copy` withdraws what was asked. Answered with
+    /// `Event::SyncSignInsCopied` when the answer comes, then `Event::SyncStatus`.
+    CopySignIns { device: Option<String>, copy: Vec<SyncCopy>, address: Option<String> },
+    /// Move the group to another folder, keeping the group, its keys and its recovery key, or
+    /// with `None` stop using a folder and keep syncing nearby. The new folder must be empty or
+    /// hold this group already; one holding another group is `SyncProblem::GroupExists`.
+    ChangeSyncFolder { folder: Option<SyncFolderSpec> },
 }
 
 /// A watch that was kept although another device had marked the episode unwatched.
@@ -92,6 +136,16 @@ pub struct SyncStatus {
     /// The problem the folder road is in now, that a person can fix, until a pass works again.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub problem: Option<SyncProblem>,
+    /// The kind of folder the group syncs through: this device's, else the one the other
+    /// devices say they use. A TV marks it in its picker.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub group_folder: Option<SyncFolderKind>,
+    /// This device holds the recovery key and can say it again (`Command::ShowRecoveryKey`).
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub recovery_key: bool,
+    /// When this device's recovery key was made, in Unix seconds.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub recovery_key_made: Option<i64>,
 }
 
 /// How a cloud drive is signed in to on this device.
@@ -130,6 +184,9 @@ pub struct SyncCloudView {
     pub way: SyncCloudWay,
     /// This device holds a sign-in for it.
     pub signed_in: bool,
+    /// The account signed in to, a name or an email, where the service says one.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub account: Option<String>,
 }
 
 /// Where a cloud sign-in stands, for the sheet that shows it.
@@ -140,9 +197,12 @@ pub enum SyncSignInStep {
     /// `callback_scheme`; hand the whole URL back with `Command::FinishSyncSignIn`, or send
     /// `Command::CancelSyncSignIn` when the sheet was closed.
     Sheet { url: String, callback_scheme: String },
-    /// The browser was opened; the engine waits for it to come back. Cancel with
-    /// `Command::CancelSyncSignIn`.
-    Browser,
+    /// The browser was opened at `url`; the engine waits for it to come back. Offer to open
+    /// `url` again; cancel with `Command::CancelSyncSignIn`.
+    Browser { url: String },
+    /// Show `url` for a phone to open, as a QR code (a TV's Nextcloud sign-in). The engine waits
+    /// by itself; cancel with `Command::CancelSyncSignIn`.
+    Page { url: String },
     /// Show `user_code` and send the person to `verification_url`. The engine polls by itself
     /// until `expires_at` (Unix seconds) and replaces the step when it is done.
     Code { user_code: String, verification_url: String, expires_at: i64, interval: u32 },

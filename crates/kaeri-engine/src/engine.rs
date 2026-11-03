@@ -347,6 +347,7 @@ impl Engine {
         crate::tracking::commands::announce_signed_in(&services.store, &services.sync);
         state.config.set_handheld(handheld);
         crate::crash::arm_from(&services.paths.data_dir, state.config.effective());
+        services.syncing.set_language(language.clone());
         #[cfg(feature = "cast")]
         {
             casts.set_language(language);
@@ -2585,12 +2586,16 @@ mod tests {
                     _ => None,
                 })
                 .collect();
-            assert_eq!(steps, [SyncSignInStep::Browser, SyncSignInStep::Finishing]);
+            // The browser step carries the page, for "Open the page again".
+            let url = rig.opened.lock().unwrap()[0].clone();
+            assert_eq!(
+                steps,
+                [SyncSignInStep::Browser { url: url.clone() }, SyncSignInStep::Finishing]
+            );
             assert!(seen.iter().any(|e| matches!(e, Event::SyncRecoveryKey(_))), "{seen:?}");
             assert!(!seen.iter().any(|e| matches!(e, Event::SyncProblem(_))), "{seen:?}");
             // The browser was sent to Google's page for the app's client, with PKCE and a
             // loopback redirect, and the desktop client's secret went in the exchange only.
-            let url = rig.opened.lock().unwrap()[0].clone();
             assert!(url.contains("client_id=123.apps.example"), "{url}");
             assert!(url.contains("code_challenge_method=S256"), "{url}");
             assert!(url.contains("redirect_uri=http%3A%2F%2F127.0.0.1%3A"), "{url}");
@@ -2607,10 +2612,41 @@ mod tests {
             rig.engine.send(Command::LoadSync);
             let seen = rig.watch.until(|e| matches!(e, Event::SyncStatus(_))).await;
             let status = status_of(&seen);
-            assert_eq!(status.folder.map(|f| f.kind), Some(google()));
+            assert_eq!(status.folder.as_ref().map(|f| f.kind.clone()), Some(google()));
             let row = status.clouds.iter().find(|c| c.service == google()).unwrap();
             assert!(row.signed_in);
             assert_eq!(row.way, SyncCloudWay::Browser);
+            // The account Drive names, on the picker's row and the folder's.
+            assert_eq!(row.account.as_deref(), Some("kim@mail.example"));
+            let folder = status.folder.clone().unwrap();
+            assert_eq!(folder.account.as_deref(), Some("kim@mail.example"));
+            assert_eq!(status.group_folder, Some(google()));
+            assert!(status.recovery_key);
+            assert!(status.recovery_key_made.is_some_and(|at| at > 0));
+
+            // Signing out forgets the account with the sign-in.
+            rig.engine.send(Command::SyncSignOut { service: google() });
+            let seen = rig.watch.until(|e| matches!(e, Event::SyncStatus(_))).await;
+            let row = status_of(&seen).clouds.into_iter().find(|c| c.service == google());
+            assert_eq!(row.unwrap().account, None);
+        }
+
+        #[tokio::test]
+        async fn a_tv_never_sets_a_groups_first_folder_up() {
+            let mut rig = rig(CloudClient::Tv, false, true).await;
+            rig.fake.script_device(&[Step::Done]);
+            rig.engine.send(Command::StartSync {
+                device_name: "Living room TV".into(),
+                folder: folder(google()),
+            });
+            let seen = rig.watch.until(ended(google())).await;
+            assert!(problems(&seen).contains(&SyncProblem::NoGroup), "{seen:?}");
+            assert!(!seen.iter().any(|e| matches!(e, Event::SyncRecoveryKey(_))), "{seen:?}");
+            // Signed in all the same: the folder can be joined once a phone has set it up.
+            assert!(has_token(&rig, "cloud-google"));
+            rig.engine.send(Command::LoadSync);
+            let seen = rig.watch.until(|e| matches!(e, Event::SyncStatus(_))).await;
+            assert!(!status_of(&seen).enabled);
         }
 
         #[tokio::test]

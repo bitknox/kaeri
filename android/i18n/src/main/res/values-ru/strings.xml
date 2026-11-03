@@ -280,6 +280,7 @@
     <string name="notice_party_not_built">Совместные просмотры не входят в эту сборку приложения.</string>
     <string name="sources_demo_removed">Демо удалено</string>
     <string name="stores_ready_demo_stays">%1$s готов. Демо остаётся последним в списке «Ваши источники».</string>
+    <string name="cloud_loopback_done">Можно закрыть эту вкладку и вернуться в Kaeri.</string>
     <string name="notice_signed_in">Вы вошли в %1$s.</string>
     <string name="notice_signed_in_keychain">Вы вошли в %1$s. Токен сохранён в системной связке ключей.</string>
     <string name="notice_signed_in_file">Вы вошли в %1$s. Связки ключей нет, поэтому токен хранится в файле, доступном только вам, на этом устройстве.</string>

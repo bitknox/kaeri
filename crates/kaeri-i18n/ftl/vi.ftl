@@ -690,6 +690,9 @@ sources-demo-removed = Đã gỡ bản demo
 # Notice after the first plugin from a store installs while the demo is on. It offers Remove demo for 8 seconds.
 stores-ready-demo-stays = { $store } đã sẵn sàng. Bản demo vẫn nằm cuối mục Các nguồn của bạn.
 
+# The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.
+cloud-loopback-done = Bạn có thể đóng thẻ này và quay lại Kaeri.
+
 # Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
 notice-signed-in = Đã đăng nhập vào { $tracker }.
 
