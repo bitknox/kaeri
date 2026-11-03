@@ -396,11 +396,6 @@ pub fn spoken_duration(seconds: f64) -> String {
     }
 }
 
-/// An episode's runtime in whole minutes: "24 min".
-pub fn minutes(seconds: u64) -> String {
-    t::time_minutes(((seconds + 30) / 60) as i64)
-}
-
 /// How long a notice stays, in seconds: 4 for information, 8 for an alert, and a second more for
 /// every ten words past twelve, twice that while a screen reader runs. One with a button stays
 /// until it is dismissed or acted on, which libadwaita spells as 0.
@@ -631,6 +626,8 @@ mod tests {
                 delayed_from: None,
                 metadata_only: false,
                 past_progress: false,
+                spoiler_ahead: false,
+                synopsis_pending: false,
                 unsourced: n >= 4,
                 source: None,
             })
@@ -686,7 +683,6 @@ mod tests {
     fn clocks_sizes_and_minutes_read_as_people_read_them() {
         assert_eq!(clock(245.4), "4:05");
         assert_eq!(clock(3723.0), "1:02:03");
-        assert_eq!(minutes(1440), "24 min");
         assert_eq!(format("TV_SHORT"), "TV short");
         assert_eq!(bytes(14_200_000_000), "14 GB");
         assert_eq!(rate(1_500_000), "1.5 MB/s");

@@ -9204,7 +9204,7 @@
   </data>
   <data name="EpisodeShort" xml:space="preserve">
     <value>[É{episode}~~]</value>
-    <comment>An episode's number in a facts line on phones.</comment>
+    <comment>An episode's number in a facts line on phones and in narrow desktop windows.</comment>
   </data>
   <data name="EpisodeAired" xml:space="preserve">
     <value>[Åîŕéð {date}~~~]</value>

@@ -6693,7 +6693,7 @@ public static partial class T
     /// <summary>One line that stands for the watched episodes at the top of a range. Opening it shows them.</summary>
     public static string EpisodeFold(long count) => Fill(GetPlural("EpisodeFold", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
-    /// <summary>An episode's number in a facts line on phones.</summary>
+    /// <summary>An episode's number in a facts line on phones and in narrow desktop windows.</summary>
     public static string EpisodeShort(long episode) => Fill(Get("EpisodeShort"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Part of an episode's facts line: when it aired. The date is already formatted.</summary>

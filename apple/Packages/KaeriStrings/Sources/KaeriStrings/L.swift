@@ -9060,7 +9060,7 @@ public enum L {
         Self.format("episode-fold", fallback: "%1$lld watched episodes", count)
     }
 
-    /// An episode's number in a facts line on phones.
+    /// An episode's number in a facts line on phones and in narrow desktop windows.
     public static func episodeShort(episode: Int) -> String {
         Self.format("episode-short", fallback: "E%1$lld", episode)
     }

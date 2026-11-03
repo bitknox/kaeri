@@ -174,7 +174,7 @@ episode-fold = { $count ->
    *[other] { $count } watched episodes
  }
 
-# An episode's number in a facts line on phones.
+# An episode's number in a facts line on phones and in narrow desktop windows.
 # @arg episode: int
 episode-short = E{ $episode }
 

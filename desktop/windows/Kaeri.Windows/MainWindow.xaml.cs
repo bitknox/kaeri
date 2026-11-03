@@ -142,6 +142,23 @@ public sealed partial class MainWindow : Window
 #if KAERI_TESTING
             if (options.Showcase && Showcase.Holds(e))
                 return true;
+            // --show=synopsis...: the title's table with synopses and rows ahead (synopsis-ranges: 250 of
+            // them); --show=player-episodes...: the playing title's, for the Episodes panel.
+            if (options.Show is { } synopsisShot && (synopsisShot.StartsWith("synopsis", StringComparison.Ordinal) || synopsisShot.StartsWith("player-episodes", StringComparison.Ordinal))
+                && e is Event.Episodes synopsisTable && synopsisTable.Rows.Length > 0)
+            {
+                var playerShot = synopsisShot.StartsWith("player-", StringComparison.Ordinal);
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    var next = playerShot ? ctx.Known.Entry(synopsisTable.Id)?.Progress?.Next ?? 4 : 7;
+                    var ranged = synopsisShot == "synopsis-ranges";
+                    var shown = new Event[] { Showcase.Synopses(synopsisTable, ranged ? 230 : next, ranged) };
+                    ctx.Known.Take(shown[0]);
+                    Heard(shown);
+                    ctx.Heard(shown);
+                });
+                return true;
+            }
             // --show=source-unsourced: the title's table, with episodes no source lists.
             if (options.Show is "source-unsourced" or "source-unsourced-end" && e is Event.Episodes table)
             {
@@ -595,6 +612,11 @@ public sealed partial class MainWindow : Window
                     var queue = Wording.Said(KaeriFfiMethods.ContinueQueue(entries, [.. ctx.Known.HiddenFromContinue], Casing.Sentence));
                     if (queue.InProgress.Concat(queue.NewThisWeek).FirstOrDefault(q => q.Playable) is { } first)
                         ctx.Play(first.Entry.Id, first.Episode.ToString());
+                    break;
+                // Home now arrives whole, with the title to continue in its spotlight.
+                case Event.Home { V1.Spotlight: { Case: SpotlightCase.Continuing } spot } when options.Play && !played:
+                    played = true;
+                    ctx.Play(spot.Entry.Id, spot.Episode.ToString());
                     break;
             }
         }

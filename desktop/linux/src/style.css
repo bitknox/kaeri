@@ -70,6 +70,11 @@ progressbar progress { background: var(--amber); }
 .banner.flush { border-radius: 0; }
 .still { border-radius: 6px; }
 .still.spoiler { filter: blur(10px); }
+/* The eye over a blurred still, and the resume track along a still's bottom edge. */
+.still-eye { color: var(--silk); }
+progressbar.still-progress { min-height: 3px; }
+progressbar.still-progress trough { min-height: 3px; min-width: 0; border-radius: 2px; background: rgba(16, 19, 31, 0.7); }
+progressbar.still-progress progress { min-height: 3px; border-radius: 2px; background: var(--silk); }
 .art-fade { background: linear-gradient(to bottom, alpha(var(--ground), 0) 30%, var(--ground)); }
 
 /* The sidebar's foot. */
@@ -123,7 +128,11 @@ levelbar block.empty { background: var(--edge); }
 .filter-chip image { -gtk-icon-size: 12px; opacity: 0.7; }
 
 /* Episode rows. */
+list.episode-list { background: none; }
+list.episode-list > row { border-radius: 8px; }
 .episode-row { min-height: 72px; padding: 6px 0; }
+/* Rows with a synopsis have a height of their own, set from the size and never from the text. */
+.episode-row.synopsis-row { min-height: 0; padding: 0 0 0 12px; }
 .watched .episode-name { color: var(--haze); }
 
 /* The player: controls on a 35% dim of the ground, no blur, and behind each bar a gradient that
@@ -309,3 +318,13 @@ progressbar.home-progress progress { min-height: 3px; border-radius: 2px; backgr
 .home-end { font-size: 14px; }
 .home-end link { color: var(--silk); }
 .home-capsule { padding: 0 8px; }
+
+/* The player's Episodes panel: compact rows, and a footer for the one under the pointer. */
+popover.ep-panel > contents { padding: 0; }
+.ep-panel-list { background: transparent; padding: 6px 4px; }
+.ep-panel-list row { border-radius: 6px; padding: 6px 8px; min-height: 0; }
+.ep-panel-list row:hover, .ep-panel-list row:focus-visible { background: alpha(white, 0.07); }
+.ep-row .ep-current { color: var(--amber); }
+.ep-foot { border-top: 1px solid var(--faint-rule); padding: 8px 12px 10px; }
+.ep-foot .ep-foot-title { font-size: 0.92em; }
+.ep-foot .ep-foot-text { color: #C9CAD6; font-size: 0.95em; margin-top: 2px; }

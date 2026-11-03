@@ -37,6 +37,7 @@ use crate::{
 
 mod coming;
 mod marking;
+mod panel;
 mod stats;
 mod style_panel;
 mod timeline;
@@ -184,6 +185,10 @@ pub struct PlayerView {
     translation_action: gio::SimpleAction,
     /// The title playing, and whether it has a dub, once the engine has said.
     title_id: Cell<Option<AnilistId>>,
+    /// The playing title's episode table, for the Episodes panel's synopses, and the show's own
+    /// spoiler protection when it sets one.
+    table: RefCell<Vec<kaeri_model::episodes::EpisodeRow>>,
+    own_spoilers: Cell<Option<bool>>,
     /// Whether the episode is far enough on (85%) for the More menu to offer its discussion.
     late: Cell<bool>,
     has_dub: Cell<Option<bool>>,
@@ -419,6 +424,8 @@ impl PlayerView {
             ),
             translation_action: radio("translation", "sub"),
             title_id: Cell::new(None),
+            table: RefCell::default(),
+            own_spoilers: Cell::new(None),
             late: Cell::new(false),
             has_dub: Cell::new(None),
             episode_line: RefCell::default(),
@@ -703,6 +710,22 @@ impl PlayerView {
                     self.fill_tracks();
                 }
             }
+            Event::Episodes { id, rows, failed: None } if Some(*id) == self.title_id.get() => {
+                self.table.replace(rows.clone());
+                if !self.ui.episodes.is_active() {
+                    self.rebuild_menus();
+                }
+            }
+            Event::ShowSettings(view) if Some(view.id) == self.title_id.get() => {
+                let own = view
+                    .rows
+                    .iter()
+                    .find(|row| row.key == kaeri_model::show::ShowSettingKey::SpoilerProtection)
+                    .map(|row| row.value == "on");
+                if own != self.own_spoilers.replace(own) && !self.ui.episodes.is_active() {
+                    self.rebuild_menus();
+                }
+            }
             Event::PlayerStats { stats, .. } => self.stats.took(stats),
             Event::Clipboard { text } => {
                 self.ctx.window.clipboard().set_text(text);
@@ -802,8 +825,13 @@ impl PlayerView {
                 // An opened link played without tracking has no title behind it to ask about.
                 if self.title_id.replace(Some(*id)) != Some(*id) {
                     self.has_dub.set(None);
+                    self.table.take();
+                    self.own_spoilers.set(None);
                     if *id != kaeri_model::opened::UNTRACKED {
                         self.ctx.hub.send(Command::LoadDub(*id));
+                        // The synopses for the Episodes panel, and the show's own protection.
+                        self.ctx.hub.send(Command::LoadEpisodes(*id));
+                        self.ctx.hub.send(Command::LoadShowSettings { id: *id });
                     }
                 }
                 self.ui.show.set_label(title);
@@ -1667,18 +1695,16 @@ impl PlayerView {
         let Some((episodes, sources, upscaling, night)) = self.menus.borrow().clone() else {
             return;
         };
-        // Radio items for the episode, the source and the look, a check for Night Mode: the
-        // menus mark what is chosen themselves, so no label says "playing" or "on".
-        let list = gio::Menu::new();
-        for episode in episodes.iter().take(200) {
-            let label = match &episode.title {
-                Some(title) => [episode.label.as_str(), title.as_str()].join(" · "),
-                None => episode.label.clone(),
-            };
-            list.append_item(&widgets::menu_item(&label, "player.episode", &episode.number));
-        }
-        self.ui.episodes.set_menu_model(Some(&list));
-        widgets::mark_items(&self.ui.episodes, "player.episode", "amber-check");
+        // The episodes are compact rows with a footer, not a menu: the pick is the action's state.
+        let protect = self.own_spoilers.get().unwrap_or_else(|| {
+            self.ctx
+                .hub
+                .known
+                .borrow()
+                .setting(kaeri_model::settings::SettingKey::SpoilerProtection)
+                .is_none_or(|r| crate::catalog::is_on(&r))
+        });
+        panel::fill(&self.ui.episodes, &episodes, &self.table.borrow(), protect);
         let current = episodes.iter().find(|e| e.current).map(|e| e.number.clone());
         self.episode_action.set_state(&current.unwrap_or_default().to_variant());
 
@@ -2162,6 +2188,55 @@ impl PlayerView {
         }
         self.ui.tracks.popup();
         self.wake();
+    }
+
+    /// For a shot: the Episodes panel open.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_episodes(&self) {
+        self.ui.episodes.popup();
+        self.wake();
+    }
+
+    /// For a shot: the keyboard on the Episodes panel's row `at`, with its focus showing.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_episodes_focus(&self, at: i32) {
+        fn list(widget: &gtk::Widget) -> Option<gtk::ListBox> {
+            if let Some(list) = widget.downcast_ref::<gtk::ListBox>() {
+                return Some(list.clone());
+            }
+            let mut child = widget.first_child();
+            while let Some(next) = child {
+                if let Some(found) = list(&next) {
+                    return Some(found);
+                }
+                child = next.next_sibling();
+            }
+            None
+        }
+        let Some(popover) = self.ui.episodes.popover() else { return };
+        if let Some(row) = list(popover.upcast_ref()).and_then(|list| list.row_at_index(at)) {
+            row.grab_focus();
+            // The headless display has no active window, so the focus ring is drawn by hand.
+            row.set_state_flags(
+                gtk::StateFlags::FOCUSED | gtk::StateFlags::FOCUS_VISIBLE,
+                false,
+            );
+        }
+        self.wake();
+    }
+
+    /// For a shot: the Episodes panel's popover, under its button, over the window.
+    pub fn shot_episodes_popover(&self) -> Option<(gtk::Widget, f32, f32)> {
+        let popover = self.ui.episodes.popover()?;
+        if !popover.is_visible() {
+            return None;
+        }
+        let window = &self.ctx.window;
+        let button = self.ui.episodes.compute_bounds(window)?;
+        let width = popover.width() as f32;
+        let x = (button.x() + button.width() - width)
+            .clamp(0.0, (window.width() as f32 - width).max(0.0));
+        Some((popover.upcast(), x, button.y() + button.height()))
     }
 
     /// For a shot: the notice an automatic skip of the opening shows, with its Undo.

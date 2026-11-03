@@ -9082,7 +9082,7 @@ episode-fold =
        *[other] 視聴済み{ $count }エピソード
     }
 
-# An episode's number in a facts line on phones.
+# An episode's number in a facts line on phones and in narrow desktop windows.
 episode-short = 第{ $episode }話
 
 # Part of an episode's facts line: when it aired. The date is already formatted.

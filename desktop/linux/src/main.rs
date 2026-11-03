@@ -34,6 +34,7 @@ mod showcase;
 mod squeeze;
 mod states;
 mod style;
+mod synopsis;
 mod trailer;
 mod tv;
 mod updater;

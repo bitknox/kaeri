@@ -9250,7 +9250,7 @@ episode-fold =
        *[other] { $count } episodios vistos
     }
 
-# An episode's number in a facts line on phones.
+# An episode's number in a facts line on phones and in narrow desktop windows.
 episode-short = E{ $episode }
 
 # Part of an episode's facts line: when it aired. The date is already formatted.

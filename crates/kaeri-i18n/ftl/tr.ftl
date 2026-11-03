@@ -9166,7 +9166,7 @@ episode-fold =
        *[other] { $count } izlenen bölüm
     }
 
-# An episode's number in a facts line on phones.
+# An episode's number in a facts line on phones and in narrow desktop windows.
 episode-short = B{ $episode }
 
 # Part of an episode's facts line: when it aired. The date is already formatted.
