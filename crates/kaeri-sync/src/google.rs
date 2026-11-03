@@ -116,6 +116,37 @@ pub fn random_state() -> String {
     URL_SAFE_NO_PAD.encode(raw)
 }
 
+/// The four OAuth clients registered for Kaeri, each with its own redirect and secret rules.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ClientKind {
+    /// iPhone, iPad and the Mac (bundle `app.kaeri.app`). No secret.
+    Ios,
+    /// The Android phone (package `app.kaeri.app`, custom URI scheme enabled). No secret.
+    Android,
+    /// Windows, Linux and the terminal: a loopback redirect, and a secret Google requires in the
+    /// token exchange.
+    Desktop,
+    /// TVs and Limited Input devices: the device flow, no redirect.
+    Tv,
+}
+
+impl ClientKind {
+    /// Where the sign-in comes back to. `port` is the loopback listener's, for the desktop.
+    /// `None` for the device flow, which has no redirect.
+    pub fn redirect(self, client_id: &str, port: u16) -> Option<String> {
+        match self {
+            // The reversed client id is the scheme Google registers for an iOS client.
+            Self::Ios => {
+                let reversed: Vec<&str> = client_id.split('.').rev().collect();
+                Some(format!("{}:/oauth2redirect", reversed.join(".")))
+            }
+            Self::Android => Some("app.kaeri.app:/oauth2redirect".into()),
+            Self::Desktop => Some(format!("http://127.0.0.1:{port}")),
+            Self::Tv => None,
+        }
+    }
+}
+
 /// The address to open in a browser for the code flow (loopback redirect on desktop, the web
 /// authentication sheet on Apple platforms).
 pub fn auth_url(
@@ -1410,6 +1441,29 @@ mod tests {
     use super::*;
 
     const REDIRECT: &str = "http://127.0.0.1:8123/cb";
+
+    #[test]
+    fn each_client_kind_redirects_where_it_was_registered() {
+        let id = "123-abc.apps.googleusercontent.com";
+        assert_eq!(
+            ClientKind::Ios.redirect(id, 0).unwrap(),
+            "com.googleusercontent.apps.123-abc:/oauth2redirect"
+        );
+        assert_eq!(
+            ClientKind::Android.redirect(id, 0).unwrap(),
+            "app.kaeri.app:/oauth2redirect"
+        );
+        assert_eq!(ClientKind::Desktop.redirect(id, 5555).unwrap(), "http://127.0.0.1:5555");
+        assert_eq!(ClientKind::Tv.redirect(id, 0), None);
+    }
+
+    #[test]
+    fn the_sign_in_asks_for_the_app_data_scope_alone() {
+        let url = auth_url(&Endpoints::default(), &config(), REDIRECT, "c", "s").unwrap();
+        let url = reqwest::Url::parse(&url).unwrap();
+        let q: std::collections::HashMap<_, _> = url.query_pairs().into_owned().collect();
+        assert_eq!(q["scope"], "https://www.googleapis.com/auth/drive.appdata");
+    }
 
     fn config() -> ClientConfig {
         ClientConfig {

@@ -155,6 +155,20 @@ pub struct FfiStart {
     /// The Trakt client's secret, for a client that has one; `None` signs in without.
     #[uniffi(default = None)]
     pub trakt_client_secret: Option<String>,
+    /// The Google Drive client for this platform: iOS, Android, desktop or TV, whichever the app
+    /// registered. Used for sync only.
+    #[uniffi(default = None)]
+    pub google_client_id: Option<String>,
+    /// The secret of the desktop or TV Google client, which Google asks for in the token
+    /// exchange. `None` for iOS and Android.
+    #[uniffi(default = None)]
+    pub google_client_secret: Option<String>,
+    /// The Dropbox app key.
+    #[uniffi(default = None)]
+    pub dropbox_app_key: Option<String>,
+    /// The Microsoft application (client) id for OneDrive.
+    #[uniffi(default = None)]
+    pub onedrive_client_id: Option<String>,
     /// Where the trackers' and the plugin stores' tokens are kept. `None` for
     /// [`SecretsMode::Host`].
     #[uniffi(default = None)]
@@ -186,6 +200,10 @@ impl FfiStart {
             simkl: self.simkl_client_id.clone(),
             trakt: self.trakt_client_id.clone(),
             trakt_secret: self.trakt_client_secret.clone(),
+            google: self.google_client_id.clone(),
+            google_secret: self.google_client_secret.clone(),
+            dropbox: self.dropbox_app_key.clone(),
+            onedrive: self.onedrive_client_id.clone(),
         }
     }
 }
@@ -322,12 +340,21 @@ mod tests {
         let mac = FfiStart {
             secrets: Some(SecretsMode::FollowConfig),
             anilist_client_id: Some("4242".into()),
+            google_client_id: Some("g.example".into()),
+            dropbox_app_key: Some("d-key".into()),
+            onedrive_client_id: Some("o-id".into()),
             ..FfiStart::default()
         };
         assert_eq!(mac.secrets_mode(), SecretsMode::FollowConfig);
         assert_eq!(
             mac.app_clients(),
-            AppClients { anilist: Some("4242".into()), ..AppClients::default() }
+            AppClients {
+                anilist: Some("4242".into()),
+                google: Some("g.example".into()),
+                dropbox: Some("d-key".into()),
+                onedrive: Some("o-id".into()),
+                ..AppClients::default()
+            }
         );
     }
 

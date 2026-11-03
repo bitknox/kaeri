@@ -33,6 +33,14 @@ pub fn endpoints() -> Endpoints {
     }
 }
 
+/// Where the Apple and Android apps' sign-in comes back to.
+pub const APP_REDIRECT: &str = "kaeri://auth/onedrive";
+
+/// The desktop redirect. Microsoft ignores the port of `http://localhost`, so any listener works.
+pub fn loopback_redirect(port: u16) -> String {
+    format!("http://localhost:{port}")
+}
+
 /// The address to open in a browser for the code flow.
 pub fn auth_url(
     endpoints: &Endpoints,
@@ -413,5 +421,11 @@ mod tests {
         let q: std::collections::HashMap<_, _> = url.query_pairs().into_owned().collect();
         assert_eq!(q["scope"], "Files.ReadWrite.AppFolder offline_access");
         assert_eq!(q["code_challenge_method"], "S256");
+    }
+
+    #[test]
+    fn the_redirects_are_the_registered_ones() {
+        assert_eq!(APP_REDIRECT, "kaeri://auth/onedrive");
+        assert_eq!(loopback_redirect(5123), "http://localhost:5123");
     }
 }

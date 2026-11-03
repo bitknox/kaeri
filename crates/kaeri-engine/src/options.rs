@@ -138,6 +138,16 @@ pub struct AppClients {
     /// The app's Trakt client secret, for a client that has one. Polling for the device flow's
     /// token goes without it when it is `None`.
     pub trakt_secret: Option<String>,
+    /// The Google client of this platform ([`kaeri_sync::google::ClientKind`]): iOS and Android
+    /// have no secret, the desktop's and the TV's do.
+    pub google: Option<String>,
+    /// The secret of the Google desktop client (Google asks for it in the token exchange), or of
+    /// the TV client.
+    pub google_secret: Option<String>,
+    /// The Dropbox app key. The app has no secret: PKCE.
+    pub dropbox: Option<String>,
+    /// The Microsoft application (client) id, a public client.
+    pub onedrive: Option<String>,
 }
 
 /// The work the engine does on its own beside the commands, each piece on its own switch.

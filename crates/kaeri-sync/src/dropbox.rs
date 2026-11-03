@@ -30,6 +30,20 @@ pub fn endpoints() -> Endpoints {
 /// The content host, which carries the bytes of uploads and downloads.
 pub const CONTENT_BASE: &str = "https://content.dropboxapi.com";
 
+/// The permissions the app registered, and nothing else.
+pub const SCOPE: &str = "files.metadata.read files.content.read files.content.write";
+
+/// Where the Apple and Android apps' sign-in comes back to.
+pub const APP_REDIRECT: &str = "kaeri://auth/dropbox";
+
+/// The ports a desktop app tries in turn; Dropbox wants each redirect registered with its port.
+pub const LOOPBACK_PORTS: [u16; 3] = [47811, 47812, 47813];
+
+/// The desktop redirect for one of [`LOOPBACK_PORTS`].
+pub fn loopback_redirect(port: u16) -> String {
+    format!("http://127.0.0.1:{port}/auth/dropbox")
+}
+
 /// The address to open in a browser for the code flow. Offline access is what gives a refresh
 /// token, so the device stays signed in.
 pub fn auth_url(
@@ -45,6 +59,7 @@ pub fn auth_url(
         .append_pair("client_id", &config.client_id)
         .append_pair("redirect_uri", redirect_uri)
         .append_pair("response_type", "code")
+        .append_pair("scope", SCOPE)
         .append_pair("code_challenge", challenge)
         .append_pair("code_challenge_method", "S256")
         .append_pair("token_access_type", "offline")
@@ -467,5 +482,20 @@ mod tests {
         assert_eq!(q["code_challenge_method"], "S256");
         assert_eq!(q["code_challenge"], "chal");
         assert_eq!(q["response_type"], "code");
+        assert_eq!(q["scope"], SCOPE);
+    }
+
+    #[test]
+    fn the_redirects_are_the_registered_ones() {
+        assert_eq!(APP_REDIRECT, "kaeri://auth/dropbox");
+        let all: Vec<_> = LOOPBACK_PORTS.iter().map(|p| loopback_redirect(*p)).collect();
+        assert_eq!(
+            all,
+            [
+                "http://127.0.0.1:47811/auth/dropbox",
+                "http://127.0.0.1:47812/auth/dropbox",
+                "http://127.0.0.1:47813/auth/dropbox",
+            ]
+        );
     }
 }
