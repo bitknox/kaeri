@@ -313,3 +313,13 @@ progressbar.home-progress progress { min-height: 3px; border-radius: 2px; backgr
 .home-end { font-size: 14px; }
 .home-end link { color: var(--silk); }
 .home-capsule { padding: 0 8px; }
+
+/* The player's Episodes panel: compact rows, and a footer for the one under the pointer. */
+popover.ep-panel > contents { padding: 0; }
+.ep-panel-list { background: transparent; padding: 6px 4px; }
+.ep-panel-list row { border-radius: 6px; padding: 6px 8px; min-height: 0; }
+.ep-panel-list row:hover, .ep-panel-list row:focus-visible { background: alpha(white, 0.07); }
+.ep-row .ep-current { color: var(--amber); }
+.ep-foot { border-top: 1px solid var(--faint-rule); padding: 8px 12px 10px; }
+.ep-foot .ep-foot-title { font-size: 0.92em; }
+.ep-foot .ep-foot-text { color: #C9CAD6; font-size: 0.95em; margin-top: 2px; }

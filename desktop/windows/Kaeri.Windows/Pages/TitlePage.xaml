@@ -128,8 +128,12 @@
               <ComboBox x:Name="SeasonPicker" Grid.Column="1" MinWidth="220" VerticalAlignment="Center" Visibility="Collapsed"
                         AutomationProperties.Name="{x:Bind s:T.FilterSeason}" SelectionChanged="OnSeasonPicked" />
               <!-- A show of over 100 episodes lists them in ranges of 100, beside the season picker. -->
-              <ComboBox x:Name="RangePicker" Grid.Column="2" MinWidth="200" VerticalAlignment="Center" Visibility="Collapsed"
-                        AutomationProperties.Name="{x:Bind s:T.EpisodeRangeLabel}" SelectionChanged="OnRangePicked" />
+              <DropDownButton x:Name="RangePicker" Grid.Column="2" VerticalAlignment="Center" Visibility="Collapsed"
+                              AutomationProperties.Name="{x:Bind s:T.EpisodeRangeLabel}">
+                <DropDownButton.Flyout>
+                  <MenuFlyout x:Name="RangeMenu" Placement="BottomEdgeAlignedLeft" />
+                </DropDownButton.Flyout>
+              </DropDownButton>
               <!-- How far the dub goes. Faded in when the engine says. -->
               <TextBlock x:Name="DubLine" Style="{StaticResource HazeCaptionStyle}" Grid.Column="3" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
                          Margin="0,4,0,0" Opacity="0">

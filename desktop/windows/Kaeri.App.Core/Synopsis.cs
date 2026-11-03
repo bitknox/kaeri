@@ -54,24 +54,23 @@ public static class Synopsis
     public static string? TextOf(EpisodeRow row) =>
         row.Description?.Trim() is { Length: > 0 } text ? text : null;
 
-    /// <summary>Whether protection could hold this row back: it is ahead and unwatched, whether or not the viewer asked to see it.</summary>
-    public static bool Protectable(EpisodeRow row, bool on, long next) =>
-        on && row.PastProgress && !row.Completed && Number(row.Number) is { } n && n > next;
+    /// <summary>Whether protection could hold this row back: it is on and the engine says the row is ahead, whether or not the viewer asked to see it.</summary>
+    public static bool Protectable(EpisodeRow row, bool on) => on && row.SpoilerAhead;
 
     /// <summary>Whether protection holds the row back now: protectable, and the viewer has not asked to see it.</summary>
-    public static bool Held(EpisodeRow row, bool on, long next, bool shown) => Protectable(row, on, next) && !shown;
+    public static bool Held(EpisodeRow row, bool on, bool shown) => Protectable(row, on) && !shown;
 
     /// <summary>
     /// Where protection starts in <paramref name="rows"/>: the index of the first row ahead and
     /// the number of the last episode before it, which the line names.
     /// </summary>
-    public static (int At, long Before)? ProtectionStart(IReadOnlyList<EpisodeRow> rows, bool on, long next)
+    public static (int At, long Before)? ProtectionStart(IReadOnlyList<EpisodeRow> rows, bool on)
     {
         if (!on)
             return null;
         for (var at = 0; at < rows.Count; at++)
         {
-            if (!Protectable(rows[at], on, next))
+            if (!Protectable(rows[at], on))
                 continue;
             var before = at > 0 ? Number(rows[at - 1].Number) : Number(rows[at].Number) is { } n ? n - 1 : null;
             return (at, Math.Max(0, before ?? 0));

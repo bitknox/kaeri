@@ -43,23 +43,22 @@ pub fn text_of(row: &EpisodeRow) -> Option<&str> {
     row.description.as_deref().map(str::trim).filter(|text| !text.is_empty())
 }
 
-/// Whether spoiler protection holds this row back: it is on, the row is ahead of the viewer (the
-/// engine says it is past their progress, and it comes after the next episode, which is shown),
-/// it is not watched, and the viewer has not asked to see it.
-pub fn protected(row: &EpisodeRow, on: bool, next: i64, shown: bool) -> bool {
-    protectable(row, on, next) && !shown
+/// Whether spoiler protection holds this row back: it is on, the engine says the row is ahead
+/// (`spoiler_ahead`), and the viewer has not asked to see it.
+pub fn protected(row: &EpisodeRow, on: bool, shown: bool) -> bool {
+    protectable(row, on) && !shown
 }
 
-/// Whether protection could hold this row back: it is ahead and unwatched, whether or not the
-/// viewer has asked to see it. Such a row keeps a blurred copy of its still to fade away.
-pub fn protectable(row: &EpisodeRow, on: bool, next: i64) -> bool {
-    on && row.past_progress && !row.completed && number(&row.number).is_some_and(|n| n > next)
+/// Whether protection could hold this row back: it is ahead, whether or not the viewer has asked
+/// to see it. Such a row keeps a blurred copy of its still to fade away.
+pub fn protectable(row: &EpisodeRow, on: bool) -> bool {
+    on && row.spoiler_ahead
 }
 
 /// Where spoiler protection starts in `rows`: the index of the first row ahead, and the number of
 /// the last episode before it, which the line names.
-pub fn protection_start(rows: &[EpisodeRow], on: bool, next: i64) -> Option<(usize, i64)> {
-    let at = rows.iter().position(|row| protectable(row, on, next))?;
+pub fn protection_start(rows: &[EpisodeRow], on: bool) -> Option<(usize, i64)> {
+    let at = rows.iter().position(|row| protectable(row, on))?;
     let before = at
         .checked_sub(1)
         .and_then(|i| number(&rows[i].number))
@@ -178,6 +177,7 @@ mod tests {
             source: None,
             unsourced: false,
             past_progress: false,
+            spoiler_ahead: false,
             synopsis_pending: false,
         }
     }
@@ -188,6 +188,7 @@ mod tests {
                 let mut r = row(n);
                 r.completed = n < next;
                 r.past_progress = n > next;
+                r.spoiler_ahead = n > next;
                 r
             })
             .collect()
@@ -212,21 +213,21 @@ mod tests {
     #[test]
     fn a_row_is_held_back_only_while_protection_is_on_and_unrevealed() {
         let rows = table(4, 2);
-        assert!(!protected(&rows[1], true, 2, false));
-        assert!(protected(&rows[2], true, 2, false));
-        assert!(!protected(&rows[2], false, 2, false));
-        assert!(!protected(&rows[2], true, 2, true));
+        assert!(!protected(&rows[1], true, false));
+        assert!(protected(&rows[2], true, false));
+        assert!(!protected(&rows[2], false, false));
+        assert!(!protected(&rows[2], true, true));
     }
 
     #[test]
     fn the_line_goes_before_the_first_row_ahead_and_names_the_episode_before_it() {
         let rows = table(5, 2);
-        assert_eq!(protection_start(&rows, true, 2), Some((2, 2)));
-        assert_eq!(protection_start(&rows, false, 2), None);
-        assert_eq!(protection_start(&table(3, 9), true, 9), None);
+        assert_eq!(protection_start(&rows, true), Some((2, 2)));
+        assert_eq!(protection_start(&rows, false), None);
+        assert_eq!(protection_start(&table(3, 9), true), None);
         let mut first = table(3, 0);
-        first.iter_mut().for_each(|r| r.past_progress = true);
-        assert_eq!(protection_start(&first, true, 0), Some((0, 0)));
+        first.iter_mut().for_each(|r| r.spoiler_ahead = true);
+        assert_eq!(protection_start(&first, true), Some((0, 0)));
     }
 
     #[test]

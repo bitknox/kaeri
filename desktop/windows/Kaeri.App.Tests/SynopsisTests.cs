@@ -12,7 +12,7 @@ public class SynopsisTests
     static readonly CultureInfo Gb = CultureInfo.GetCultureInfo("en-GB");
 
     static EpisodeRow Row(int n, bool completed = false, bool ahead = false, ulong? secs = 1440) =>
-        new(n.ToString(), DurationSecs: secs, Completed: completed, PastProgress: ahead);
+        new(n.ToString(), DurationSecs: secs, Completed: completed, PastProgress: ahead, SpoilerAhead: ahead);
 
     /// <summary>A table whose next episode is <paramref name="next"/>: the ones before it watched, the ones after it ahead.</summary>
     static EpisodeRow[] Table(int count, int next) =>
@@ -42,20 +42,20 @@ public class SynopsisTests
     public void ARowIsHeldBackOnlyWhileProtectionIsOnAndNotRevealed()
     {
         var rows = Table(4, 2);
-        Assert.False(Synopsis.Held(rows[1], true, 2, false));
-        Assert.True(Synopsis.Held(rows[2], true, 2, false));
-        Assert.False(Synopsis.Held(rows[2], false, 2, false));
-        Assert.False(Synopsis.Held(rows[2], true, 2, true));
-        Assert.True(Synopsis.Protectable(rows[2], true, 2));
+        Assert.False(Synopsis.Held(rows[1], true, false));
+        Assert.True(Synopsis.Held(rows[2], true, false));
+        Assert.False(Synopsis.Held(rows[2], false, false));
+        Assert.False(Synopsis.Held(rows[2], true, true));
+        Assert.True(Synopsis.Protectable(rows[2], true));
     }
 
     [Fact]
     public void TheLineGoesBeforeTheFirstRowAheadAndNamesTheEpisodeBeforeIt()
     {
-        Assert.Equal((2, 2L), Synopsis.ProtectionStart(Table(5, 2), true, 2));
-        Assert.Null(Synopsis.ProtectionStart(Table(5, 2), false, 2));
-        Assert.Null(Synopsis.ProtectionStart(Table(3, 9), true, 9));
-        Assert.Equal((0, 0L), Synopsis.ProtectionStart([Row(1, ahead: true), Row(2, ahead: true)], true, 0));
+        Assert.Equal((2, 2L), Synopsis.ProtectionStart(Table(5, 2), true));
+        Assert.Null(Synopsis.ProtectionStart(Table(5, 2), false));
+        Assert.Null(Synopsis.ProtectionStart(Table(3, 9), true));
+        Assert.Equal((0, 0L), Synopsis.ProtectionStart([Row(1, ahead: true), Row(2, ahead: true)], true));
     }
 
     [Fact]

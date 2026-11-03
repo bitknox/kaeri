@@ -5,6 +5,7 @@ using Kaeri.Engine.Ffi;
 using Kaeri.Engine.Model;
 using Kaeri.Windows;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
@@ -867,24 +868,20 @@ public sealed partial class TitlePage : Page, IPageKeys
     /// <summary>Whether spoiler protection is on for this show: what it sets for itself, else Settings.</summary>
     bool ProtectionOn() => ownSpoilers ?? SettingsCatalog.IsOn(ctx.Known.Setting(SettingKey.SpoilerProtection));
 
-    /// <summary>The next episode: the last one protection shows.</summary>
-    long Next() => ctx.Known.Entry(id)?.Progress?.Next ?? 1;
-
     bool Held(EpisodeRow row) =>
-        Synopsis.Held(row, ProtectionOn(), Next(), revealAll || revealed.Contains(row.Number));
+        global::Kaeri.App.Synopsis.Held(row, ProtectionOn(), revealAll || revealed.Contains(row.Number));
 
     void ShowEpisodes()
     {
         if (!ctx.Known.Episodes.TryGetValue(id, out var rows))
             return;
-        narrowList = Scroll.ActualWidth is > 0 and < Synopsis.NarrowBelow;
-        var (rs, at, plan) = Synopsis.Layout(rows, chosenRange, opened, DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+        narrowList = Scroll.ActualWidth is > 0 and < global::Kaeri.App.Synopsis.NarrowBelow;
+        var (rs, at, plan) = global::Kaeri.App.Synopsis.Layout(rows, chosenRange, opened, DateTimeOffset.UtcNow.ToUnixTimeSeconds());
         ranges = rs;
         outlook = rows.Length == 0 ? EpisodeText.None : KaeriFfiMethods.EpisodeText(rows);
         ShowRanges(rows, at);
 
         var on = ProtectionOn();
-        var next = Next();
         var entry = ctx.Known.Entry(id);
         // A row without a still of its own stands on the show's wide art, never blurred.
         var wide = entry?.BannerUrl ?? entry?.CoverUrl;
@@ -893,13 +890,13 @@ public sealed partial class TitlePage : Page, IPageKeys
             before.TryAdd(old.Row.Number, old);
 
         var shown = rows[(plan.Start + plan.Fold)..plan.End];
-        var start = Synopsis.ProtectionStart(shown, on, next);
+        var start = global::Kaeri.App.Synopsis.ProtectionStart(shown, on);
         var items = new List<object>();
         protection = null;
         if (plan.Fold > 0)
         {
-            var first = Synopsis.Number(rows[plan.Start].Number) ?? 1;
-            var last = Synopsis.Number(rows[plan.Start + plan.Fold - 1].Number) ?? first;
+            var first = global::Kaeri.App.Synopsis.Number(rows[plan.Start].Number) ?? 1;
+            var last = global::Kaeri.App.Synopsis.Number(rows[plan.Start + plan.Fold - 1].Number) ?? first;
             items.Add(new NoteItem(true, 0, "", T.TitleWatchedRange(first, last)));
         }
         for (var i = 0; i < shown.Length; i++)
@@ -915,7 +912,7 @@ public sealed partial class TitlePage : Page, IPageKeys
             var known = before.GetValueOrDefault(row.Number);
             if (known is not null)
                 item.Inherit(known);
-            item.Lay(narrowList, outlook, Synopsis.Protectable(row, on, next), Held(row), known is not null);
+            item.Lay(narrowList, outlook, global::Kaeri.App.Synopsis.Protectable(row, on), Held(row), known is not null);
             ctx.Art.Bind(row.Thumbnail ?? wide, s => item.Still = s);
             items.Add(item);
         }
@@ -929,17 +926,26 @@ public sealed partial class TitlePage : Page, IPageKeys
     /// <summary>The range picker beside the season picker: shown for a show of over 100 episodes.</summary>
     void ShowRanges(EpisodeRow[] rows, int selected)
     {
-        RangePicker.SelectionChanged -= OnRangePicked;
-        RangePicker.Items.Clear();
+        RangeMenu.Items.Clear();
         if (ranges.Length > 1)
-            foreach (var item in Synopsis.RangeItems(rows, ranges))
+        {
+            var items = global::Kaeri.App.Synopsis.RangeItems(rows, ranges);
+            for (var i = 0; i < items.Length; i++)
             {
-                var entry = new ComboBoxItem { Content = item.State is null ? item.Label : $"{item.Label} · {item.State}" };
+                var item = items[i];
+                var at = i;
+                var entry = new RadioMenuFlyoutItem
+                {
+                    Text = item.State is null ? item.Label : $"{item.Label} · {item.State}",
+                    GroupName = "ranges",
+                    IsChecked = i == selected,
+                };
                 AutomationProperties.SetName(entry, item.Spoken);
-                RangePicker.Items.Add(entry);
+                entry.Click += (_, _) => OnRangePicked(at);
+                RangeMenu.Items.Add(entry);
             }
-        RangePicker.SelectedIndex = ranges.Length > 1 ? selected : -1;
-        RangePicker.SelectionChanged += OnRangePicked;
+            RangePicker.Content = items[Math.Min(selected, items.Length - 1)].Label;
+        }
         if (ranges.Length > 1)
             Motion.Show(RangePicker);
         else
@@ -947,9 +953,9 @@ public sealed partial class TitlePage : Page, IPageKeys
     }
 
     /// <summary>A range was picked: the list crossfades in place to its rows.</summary>
-    void OnRangePicked(object sender, SelectionChangedEventArgs e)
+    void OnRangePicked(int at)
     {
-        if (RangePicker.SelectedIndex is not (var at and >= 0) || at >= ranges.Length)
+        if (at < 0 || at >= ranges.Length)
             return;
         chosenRange = at;
         opened = false;
@@ -971,9 +977,8 @@ public sealed partial class TitlePage : Page, IPageKeys
     void Relay(bool animate, EpisodeItem? only = null)
     {
         var on = ProtectionOn();
-        var next = Next();
         foreach (var item in Episodes().Where(i => only is null || i == only))
-            item.Lay(narrowList, outlook, Synopsis.Protectable(item.Row, on, next), Held(item.Row), animate);
+            item.Lay(narrowList, outlook, global::Kaeri.App.Synopsis.Protectable(item.Row, on), Held(item.Row), animate);
     }
 
     void OnNote(object sender, RoutedEventArgs e)
@@ -1079,7 +1084,7 @@ public sealed partial class TitlePage : Page, IPageKeys
     {
         Layout();
         // A narrow window stacks each row's text under its still.
-        var narrow = Scroll.ActualWidth is > 0 and < Synopsis.NarrowBelow;
+        var narrow = Scroll.ActualWidth is > 0 and < global::Kaeri.App.Synopsis.NarrowBelow;
         if (narrow != narrowList && EpisodeList.ItemsSource is not null)
         {
             narrowList = narrow;

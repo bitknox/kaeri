@@ -248,6 +248,7 @@ mod tests {
                 delayed_from: None,
                 metadata_only: false,
                 past_progress: false,
+                spoiler_ahead: false,
                 synopsis_pending: false,
                 unsourced: unsourced.contains(&n),
                 source: None,

@@ -19,7 +19,7 @@ const TITLE: u32 = 900_001;
 const PLAYING: (u32, &str) = (900_002, "4");
 
 /// Every shot by name, in the order a run takes them.
-pub const ALL: [&str; 98] = [
+pub const ALL: [&str; 99] = [
     "home",
     "welcome",
     "offline",
@@ -109,6 +109,7 @@ pub const ALL: [&str; 98] = [
     "player",
     "player-marks",
     "player-tracks",
+    "player-episodes",
     "first-play-style",
     "player-undo",
     "mini",
@@ -1091,6 +1092,12 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
             }
             10.0
         }
+        "player-episodes" => {
+            play(shell);
+            #[cfg(feature = "fixtures")]
+            stage_player_episodes(shell);
+            9.5
+        }
         "player-tracks" => {
             play(shell);
             #[cfg(feature = "fixtures")]
@@ -1282,7 +1289,7 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
                 nav.pop();
             }
         }
-        "player-tracks" => {
+        "player-tracks" | "player-episodes" => {
             shell.player.close_menus();
             shell.player.close();
         }
@@ -1807,6 +1814,7 @@ async fn painted(shell: &Rc<Shell>, path: &std::path::Path, shot: &str) -> Resul
             let over = match shot.as_str() {
                 "player-marks" => player.shot_popover(),
                 "player-tracks" => player.shot_tracks_popover(),
+                "player-episodes" => player.shot_episodes_popover(),
                 "first-play-style" => player.shot_style_popover(),
                 "party-title-menu" | "store-menu" | "match-fix-menu" => {
                     title_menu_popover(&window)
@@ -3464,6 +3472,47 @@ const LINES: [&str; 11] = [
     "A clock that runs four minutes slow is the only witness to a theft on Lantern Street.",
 ];
 
+/// The player's Episodes panel with synopses: the playing title's table is sent again with text
+/// and the rows ahead, and the panel opened.
+#[cfg(feature = "fixtures")]
+fn stage_player_episodes(shell: &Rc<Shell>) {
+    use kaeri_model::episodes::EpisodeRow;
+    let hub = Rc::clone(&shell.ctx.hub);
+    let seen: Rc<std::cell::RefCell<Vec<EpisodeRow>>> = Rc::default();
+    let listening = hub.listen({
+        let seen = Rc::clone(&seen);
+        move |event| {
+            if let Event::Episodes { id, rows, .. } = event
+                && id.get() == PLAYING.0
+            {
+                seen.replace(rows.clone());
+            }
+        }
+    });
+    let player = Rc::clone(&shell.player);
+    glib::timeout_add_local_once(Duration::from_secs(4), move || {
+        hub.forget(listening);
+        let mut rows = seen.borrow().clone();
+        let next = 4;
+        for (i, row) in rows.iter_mut().enumerate() {
+            let n = i + 1;
+            row.completed = n < next;
+            row.watched = if n == next { 0.42 } else { 0.0 };
+            row.past_progress = n > next;
+            row.spoiler_ahead = n > next;
+            row.description = Some(LINES[i % LINES.len()].to_owned());
+        }
+        hub.take(vec![Event::Episodes {
+            id: kaeri_core::ids::AnilistId::new(PLAYING.0),
+            rows,
+            failed: None,
+        }]);
+        glib::timeout_add_local_once(Duration::from_millis(1200), move || {
+            player.shot_episodes()
+        });
+    });
+}
+
 /// The title page with synopses on its episodes, as the fixture scene has none of its own: the
 /// table the page got is sent again with text, and which rows are ahead. `synopsis-long` sends a
 /// table of 250; `synopsis-none` opens a title whose table has no text at all.
@@ -3513,6 +3562,7 @@ fn stage_synopsis(shell: &Rc<Shell>, shot: &str) -> f64 {
             row.completed = n < next;
             row.watched = if n == next { 0.42 } else { 0.0 };
             row.past_progress = n > next;
+            row.spoiler_ahead = n > next;
             row.description =
                 (n != 10 || shot == "synopsis-long").then(|| LINES[i % LINES.len()].to_owned());
             row.kind = (n == 10).then_some(kaeri_model::episodes::EpisodeKind::Filler);

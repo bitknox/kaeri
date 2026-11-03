@@ -472,6 +472,7 @@ impl Page {
                         if let Some(p) = episodes.iter().find(|p| p.number == row.number) {
                             row.watched = p.watched;
                             row.completed = p.completed;
+                            row.spoiler_ahead = p.spoiler_ahead;
                         }
                     }
                 }
@@ -1122,11 +1123,6 @@ impl Page {
         })
     }
 
-    /// The next episode: the last one protection shows.
-    fn next(&self) -> i64 {
-        self.ctx.hub.entry(self.id).and_then(|e| e.progress).map_or(1, |p| i64::from(p.next))
-    }
-
     /// Whether the viewer asked to see this episode through spoiler protection.
     fn shown(&self, number: &str) -> bool {
         self.reveal_all.get() || self.revealed.borrow().contains(number)
@@ -1160,55 +1156,43 @@ impl Page {
             return;
         }
         let items = synopsis::range_items(rows, ranges);
-        let model = gtk::StringList::new(&[]);
-        for item in &items {
-            model.append(&item.label);
-        }
-        let factory = gtk::SignalListItemFactory::new();
-        factory.connect_setup(|_, object| {
-            let Some(item) = object.downcast_ref::<gtk::ListItem>() else { return };
-            let line = gtk::Box::new(gtk::Orientation::Horizontal, 12);
-            let label = gtk::Label::new(None);
-            label.set_xalign(0.0);
-            label.set_hexpand(true);
-            let state = widgets::haze("", "caption");
-            state.set_wrap(false);
-            line.append(&label);
-            line.append(&state);
-            item.set_child(Some(&line));
-        });
-        factory.connect_bind({
-            let labels: Vec<(String, Option<String>)> =
-                items.iter().map(|i| (i.label.clone(), i.state.clone())).collect();
-            move |_, object| {
-                let Some(item) = object.downcast_ref::<gtk::ListItem>() else { return };
-                let Some(line) = item.child().and_downcast::<gtk::Box>() else { return };
-                let Some((label, state)) = labels.get(item.position() as usize) else { return };
-                if let Some(first) = line.first_child().and_downcast::<gtk::Label>() {
-                    first.set_label(label);
-                }
-                if let Some(last) = line.last_child().and_downcast::<gtk::Label>() {
-                    last.set_label(state.as_deref().unwrap_or(""));
-                    // The button shows the label alone; the open list says what each holds.
-                    last.set_visible(
-                        state.is_some()
-                            && item.child().is_some_and(|c| {
-                                c.ancestor(gtk::Popover::static_type()).is_some()
-                            }),
-                    );
-                }
-            }
-        });
-        let picker = gtk::DropDown::new(Some(model), gtk::Expression::NONE);
-        picker.set_factory(Some(&factory));
-        picker.set_list_factory(Some(&factory));
+        // A menu button with a popover, not a drop-down: the button names the range open now, the
+        // popover lists each with what it holds.
+        let picker = gtk::MenuButton::new();
+        picker.set_label(&items[at.min(items.len() - 1)].label);
         picker.set_tooltip_text(Some(&t::episode_range_label()));
         picker.update_property(&[gtk::accessible::Property::Label(&t::episode_range_label())]);
-        picker.set_selected(at as u32);
+        let list = gtk::ListBox::new();
+        list.set_selection_mode(gtk::SelectionMode::Single);
+        list.add_css_class("navigation-sidebar");
+        for item in &items {
+            let line = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+            let label = gtk::Label::new(Some(&item.label));
+            label.set_xalign(0.0);
+            label.set_hexpand(true);
+            line.append(&label);
+            if let Some(state) = &item.state {
+                line.append(&widgets::haze(state, "caption"));
+            }
+            list.append(&line);
+        }
+        list.select_row(list.row_at_index(at as i32).as_ref());
+        let scroll = gtk::ScrolledWindow::new();
+        scroll.set_policy(gtk::PolicyType::Never, gtk::PolicyType::Automatic);
+        scroll.set_propagate_natural_height(true);
+        scroll.set_max_content_height(360);
+        scroll.set_child(Some(&list));
+        let popover = gtk::Popover::new();
+        popover.set_child(Some(&scroll));
+        picker.set_popover(Some(&popover));
         let page = self.me.borrow().clone();
-        picker.connect_selected_notify(move |picker| {
-            if let Some(page) = page.upgrade() {
-                page.switch_range(picker.selected() as usize);
+        list.connect_row_activated({
+            let popover = popover.clone();
+            move |_, row| {
+                popover.popdown();
+                if let Some(page) = page.upgrade() {
+                    page.switch_range(row.index() as usize);
+                }
             }
         });
         self.range_slot.append(&picker);
@@ -1278,7 +1262,6 @@ impl Page {
         self.fill_ranges(&rows, &ranges, selected);
 
         let on = self.protection_on();
-        let next = self.next();
         let entry = self.ctx.hub.entry(self.id);
         let color = entry.as_ref().and_then(|e| e.cover_color.clone());
         // A row without a still of its own stands on the show's wide art, never blurred.
@@ -1286,7 +1269,7 @@ impl Page {
             entry.as_ref().and_then(|e| e.banner_url.clone().or(e.cover_url.clone()));
         let id = self.id.get();
         let shown = &rows[plan.start + plan.fold..plan.end];
-        let protection_at = synopsis::protection_start(shown, on, next).map(|(at, _)| at);
+        let protection_at = synopsis::protection_start(shown, on).map(|(at, _)| at);
         self.drawn.replace(Some(Drawn {
             numbers: rows.iter().map(|r| r.number.clone()).collect(),
             narrow,
@@ -1324,11 +1307,10 @@ impl Page {
 
         for (at, row) in shown.iter().enumerate() {
             if protection_at == Some(at) {
-                let (_, before) =
-                    synopsis::protection_start(shown, on, next).unwrap_or((at, 0));
+                let (_, before) = synopsis::protection_start(shown, on).unwrap_or((at, 0));
                 self.episodes.append(&self.protection_row(before, narrow));
             }
-            let held = synopsis::protected(row, on, next, self.shown(&row.number));
+            let held = synopsis::protected(row, on, self.shown(&row.number));
             let room = synopsis::has_room(outlook, held);
             let height = synopsis::row_height(narrow, room);
             let tall = narrow && room;
@@ -1349,7 +1331,7 @@ impl Page {
             );
             // Sharp under blurred: a reveal fades the blurred one away.
             let (still_widget, blur): (gtk::Widget, Option<gtk::Widget>) =
-                if own.is_some() && synopsis::protectable(row, on, next) {
+                if own.is_some() && synopsis::protectable(row, on) {
                     let (veil, veil_frame) =
                         widgets::still(&self.ctx.hub, own.as_deref(), color.as_deref(), w);
                     veil_frame.add_css_class("spoiler");
@@ -1664,8 +1646,7 @@ impl Page {
         let outlook = self.outlook.get().unwrap_or(EpisodeText::None);
         let narrow = *self.sized.borrow() == Size::Narrow;
         let on = self.protection_on();
-        let next = self.next();
-        let held = synopsis::protected(row, on, next, self.shown(&row.number));
+        let held = synopsis::protected(row, on, self.shown(&row.number));
         let was_held = line.protected.replace(held);
         line.protected.set(held);
         if let Some(blur) = &line.blur {
@@ -1762,13 +1743,12 @@ impl Page {
         // table) draws the list again; the same table changes its rows where they stand.
         let rows = self.rows.borrow();
         let on = self.protection_on();
-        let next = self.next();
         if let Some(drawn) = self.drawn.borrow().as_ref() {
             let (_, plan) = self.plan(&rows);
             let shown = &rows[plan.start + plan.fold..plan.end];
             let numbers_same = drawn.numbers.len() == rows.len()
                 && drawn.numbers.iter().zip(rows.iter()).all(|(a, b)| *a == b.number);
-            let at = synopsis::protection_start(shown, on, next).map(|(at, _)| at);
+            let at = synopsis::protection_start(shown, on).map(|(at, _)| at);
             if !numbers_same || drawn.fold != plan.fold || drawn.protection_at != at {
                 drop(rows);
                 self.draw_episodes();
@@ -1858,7 +1838,7 @@ impl Page {
         let target = format!("(uint32 {id}, '{n}')"); // i18n-skip
         line.menu.remove_all();
         let first = gio::Menu::new();
-        if synopsis::protected(row, spoilers, i64::from(next), self.shown(&row.number)) {
+        if synopsis::protected(row, spoilers, self.shown(&row.number)) {
             // Show synopsis comes first for a protected episode.
             first.append(
                 Some(&t::episode_synopsis_show()),
@@ -1989,6 +1969,7 @@ mod tests {
             delayed_from: None,
             metadata_only,
             past_progress: false,
+            spoiler_ahead: false,
             synopsis_pending: false,
             unsourced,
             source: None,
