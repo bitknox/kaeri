@@ -299,6 +299,7 @@ fun StoreMsg.text(context: Context): String =
 fun Cause.text(context: Context): String =
     when (this) {
         is Cause.NoSources -> Strings.causeNoSources(context)
+        is Cause.NoConnection -> Strings.causeNoConnection(context)
         is Cause.AirsToday -> Strings.causeAirsToday(context, this.time)
         is Cause.AirsTomorrow -> Strings.causeAirsTomorrow(context, this.time)
         is Cause.AirsInDays -> Strings.causeAirsInDays(context, this.days.toInt(), this.time)

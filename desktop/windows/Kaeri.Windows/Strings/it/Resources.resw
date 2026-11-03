@@ -209,6 +209,9 @@
   <data name="CauseNoSources" xml:space="preserve">
     <value>Non sono configurate fonti. Aggiungine una nella schermata Fonti.</value>
   </data>
+  <data name="CauseNoConnection" xml:space="preserve">
+    <value>Nessuna connessione. Riprova quando sei di nuovo online.</value>
+  </data>
   <data name="NoticeNotAired" xml:space="preserve">
     <value>L'episodio {episode} va in onda {when}.</value>
   </data>
@@ -283,6 +286,27 @@
   </data>
   <data name="StatusLoadingSources" xml:space="preserve">
     <value>Carico le fonti…</value>
+  </data>
+  <data name="StartLookingUpTitle" xml:space="preserve">
+    <value>Ricerca del titolo</value>
+  </data>
+  <data name="StartGettingSourcesReady" xml:space="preserve">
+    <value>Preparazione delle tue fonti</value>
+  </data>
+  <data name="StartAskingSource" xml:space="preserve">
+    <value>Richiesta a {name}</value>
+  </data>
+  <data name="StartOpeningStream" xml:space="preserve">
+    <value>Apertura dello stream</value>
+  </data>
+  <data name="StartTryingAnotherStream" xml:space="preserve">
+    <value>Prova con un altro stream</value>
+  </data>
+  <data name="StartFindingPeers" xml:space="preserve">
+    <value>Ricerca di peer</value>
+  </data>
+  <data name="StartBuffering" xml:space="preserve">
+    <value>Buffering</value>
   </data>
   <data name="StatusSearchingSources" xml:space="preserve">
     <value>Cerco nelle fonti l'episodio {episode}…</value>
@@ -4288,6 +4312,129 @@
   </data>
   <data name="PlayerBuffering" xml:space="preserve">
     <value>Caricamento</value>
+  </data>
+  <data name="PlayerStartPlace" xml:space="preserve">
+    <value>{place} di {total} fonti</value>
+  </data>
+  <data name="PlayerStartPinned" xml:space="preserve">
+    <value>La tua scelta per questa serie</value>
+  </data>
+  <data name="PlayerStartMissNoMatch" xml:space="preserve">
+    <value>{name} non ha questa serie</value>
+  </data>
+  <data name="PlayerStartMissNoEpisode" xml:space="preserve">
+    <value>{name} non ha l'episodio {episode}</value>
+  </data>
+  <data name="PlayerStartMissFailed" xml:space="preserve">
+    <value>{name} non ha risposto</value>
+  </data>
+  <data name="PlayerStartMissTimedOut" xml:space="preserve">
+    <value>{name} ha impiegato troppo tempo</value>
+  </data>
+  <data name="PlayerStartMissSkipped" xml:space="preserve">
+    <value>Hai saltato {name}</value>
+  </data>
+  <data name="PlayerStartResting" xml:space="preserve">
+    <value>Saltata dopo errori recenti</value>
+  </data>
+  <data name="PlayerStartFrom" xml:space="preserve">
+    <value>Da {name}</value>
+  </data>
+  <data name="PlayerStartNoVideo" xml:space="preserve">
+    <value>Il primo non mostrava alcun video</value>
+  </data>
+  <data name="PlayerStartStreamPlace" xml:space="preserve">
+    <value>Stream {next} di {total}</value>
+  </data>
+  <data name="PlayerStartPeers_one" xml:space="preserve">
+    <value>Un peer</value>
+  </data>
+  <data name="PlayerStartPeers_many" xml:space="preserve">
+    <value>{count} peer</value>
+  </data>
+  <data name="PlayerStartPeers_other" xml:space="preserve">
+    <value>{count} peer</value>
+  </data>
+  <data name="PlayerStartSpeed" xml:space="preserve">
+    <value>{speed}/s</value>
+  </data>
+  <data name="PlayerStartBufferingPercent" xml:space="preserve">
+    <value>Buffering · {percent}</value>
+  </data>
+  <data name="PlayerStartResuming" xml:space="preserve">
+    <value>Ripresa da {clock}</value>
+  </data>
+  <data name="PlayerStartFromBeginning" xml:space="preserve">
+    <value>Riproduci dall'inizio</value>
+  </data>
+  <data name="PlayerStartDetails" xml:space="preserve">
+    <value>Dettagli</value>
+  </data>
+  <data name="PlayerStartSkipSource" xml:space="preserve">
+    <value>Salta {name}</value>
+  </data>
+  <data name="PlayerStartSkipStream" xml:space="preserve">
+    <value>Salta questo stream</value>
+  </data>
+  <data name="PlayerStartStillWaiting" xml:space="preserve">
+    <value>Ancora in attesa di {name}</value>
+  </data>
+  <data name="PlayerStartOffline" xml:space="preserve">
+    <value>In attesa di connessione</value>
+  </data>
+  <data name="PlayerStartOfflineDetail" xml:space="preserve">
+    <value>Sei offline. L'episodio {episode} parte quando torni online.</value>
+  </data>
+  <data name="PlayerStartFixMatch" xml:space="preserve">
+    <value>Correggi abbinamento</value>
+  </data>
+  <data name="PlayerStartTranslation" xml:space="preserve">
+    <value>Audio e sottotitoli</value>
+  </data>
+  <data name="PlayerStartLookedUp" xml:space="preserve">
+    <value>Titolo trovato</value>
+  </data>
+  <data name="PlayerStartSeconds" xml:space="preserve">
+    <value>{seconds} s</value>
+  </data>
+  <data name="PlayerStartStillStarting" xml:space="preserve">
+    <value>Avvio in corso. Puoi scegliere un'altra fonte.</value>
+  </data>
+  <data name="PlayerStartAnnounce" xml:space="preserve">
+    <value>Avvio dell'episodio {episode}, {title}</value>
+  </data>
+  <data name="PlayerStartFailedAnnounce" xml:space="preserve">
+    <value>{title}. {reason}</value>
+  </data>
+  <data name="PlayerStartStatus" xml:space="preserve">
+    <value>{step}, {detail}</value>
+  </data>
+  <data name="PlayerStartBeginning" xml:space="preserve">
+    <value>Partenza dall'inizio</value>
+  </data>
+  <data name="PlayerStartRowAsking" xml:space="preserve">
+    <value>Richiesta in corso</value>
+  </data>
+  <data name="PlayerStartRowNoMatch" xml:space="preserve">
+    <value>Non ha questa serie</value>
+  </data>
+  <data name="PlayerStartRowNoEpisode" xml:space="preserve">
+    <value>Non ha l'episodio {episode}</value>
+  </data>
+  <data name="PlayerStartRowFailed" xml:space="preserve">
+    <value>Nessuna risposta</value>
+  </data>
+  <data name="PlayerStartRowTimedOut" xml:space="preserve">
+    <value>Ha impiegato troppo tempo</value>
+  </data>
+  <data name="PlayerStartRowSkipped" xml:space="preserve">
+    <value>Saltata</value>
+  </data>
+  <data name="PlayerStartAsked" xml:space="preserve">
+    <value>Sono state interpellate: {names}.</value>
+  </data>
+  <data name="PlayerStartSubtitled" xml:space="preserve">
+    <value>Sottotitolato</value>
   </data>
   <data name="PlayerStallTitle" xml:space="preserve">
     <value>Fonte è in caricamento · {seconds} s</value>

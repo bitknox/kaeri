@@ -8,6 +8,9 @@ notice-reason = { $reason }
 # Reason: no source is set up, so nothing can be played or downloaded. Shown in a toast.
 cause-no-sources = No { -source-pl } are set up. Add one on the { -source-cap-pl } screen.
 
+# Reason: the play waited two minutes for a connection and the device stayed offline. Shown in a toast and on the failure screen.
+cause-no-connection = No connection. Try again when you're back online.
+
 # A play's explanation: the episode's broadcast is still ahead. The "when" says today, tomorrow or a date.
 # @arg episode: int
 # @arg when: cause

@@ -267,6 +267,10 @@
     <value>No sources are set up. Add one on the Sources screen.</value>
     <comment>Reason: no source is set up, so nothing can be played or downloaded. Shown in a toast.</comment>
   </data>
+  <data name="CauseNoConnection" xml:space="preserve">
+    <value>No connection. Try again when you're back online.</value>
+    <comment>Reason: the play waited two minutes for a connection and the device stayed offline. Shown in a toast and on the failure screen.</comment>
+  </data>
   <data name="NoticeNotAired" xml:space="preserve">
     <value>Episode {episode} airs {when}.</value>
     <comment>A play's explanation: the episode's broadcast is still ahead. The "when" says today, tomorrow or a date.</comment>
@@ -5644,8 +5648,8 @@
     <comment>Detail line while a torrent has peers.</comment>
   </data>
   <data name="PlayerStartSpeed" xml:space="preserve">
-    <value>{speed} a second</value>
-    <comment>Detail line with the speed data arrives at.</comment>
+    <value>{speed}/s</value>
+    <comment>Detail line with the speed data arrives at, already sized with one decimal, such as "3.4 MB".</comment>
   </data>
   <data name="PlayerStartBufferingPercent" xml:space="preserve">
     <value>Buffering · {percent}</value>
@@ -5690,6 +5694,66 @@
   <data name="PlayerStartTranslation" xml:space="preserve">
     <value>Audio and subtitles</value>
     <comment>Details row label for the translation of the episode.</comment>
+  </data>
+  <data name="PlayerStartLookedUp" xml:space="preserve">
+    <value>Looked up the title</value>
+    <comment>Details row once the title has been looked up.</comment>
+  </data>
+  <data name="PlayerStartSeconds" xml:space="preserve">
+    <value>{seconds} s</value>
+    <comment>Seconds on the starting screen's detail line and Details rows.</comment>
+  </data>
+  <data name="PlayerStartStillStarting" xml:space="preserve">
+    <value>Still starting. Choose source is available.</value>
+    <comment>Spoken once, when a start has taken more than a few seconds.</comment>
+  </data>
+  <data name="PlayerStartAnnounce" xml:space="preserve">
+    <value>Starting episode {episode}, {title}</value>
+    <comment>Spoken when a start begins. The episode is its label.</comment>
+  </data>
+  <data name="PlayerStartFailedAnnounce" xml:space="preserve">
+    <value>{title}. {reason}</value>
+    <comment>Spoken when a start fails: the title, then the reason.</comment>
+  </data>
+  <data name="PlayerStartStatus" xml:space="preserve">
+    <value>{step}, {detail}</value>
+    <comment>Accessibility value of the starting screen: the step line, then the detail line.</comment>
+  </data>
+  <data name="PlayerStartBeginning" xml:space="preserve">
+    <value>Starting from the beginning</value>
+    <comment>Detail line on the starting screen after the viewer chose to play from the beginning.</comment>
+  </data>
+  <data name="PlayerStartRowAsking" xml:space="preserve">
+    <value>Asking</value>
+    <comment>Details row while a source is being asked.</comment>
+  </data>
+  <data name="PlayerStartRowNoMatch" xml:space="preserve">
+    <value>Doesn't have this show</value>
+    <comment>Details row outcome when a source has no match for the show.</comment>
+  </data>
+  <data name="PlayerStartRowNoEpisode" xml:space="preserve">
+    <value>Doesn't have episode {episode}</value>
+    <comment>Details row outcome when a source has the show and not the episode. The episode is its label.</comment>
+  </data>
+  <data name="PlayerStartRowFailed" xml:space="preserve">
+    <value>Didn't answer</value>
+    <comment>Details row outcome when a source failed.</comment>
+  </data>
+  <data name="PlayerStartRowTimedOut" xml:space="preserve">
+    <value>Took too long</value>
+    <comment>Details row outcome when a source took too long.</comment>
+  </data>
+  <data name="PlayerStartRowSkipped" xml:space="preserve">
+    <value>Skipped</value>
+    <comment>Details row outcome when the viewer skipped a source.</comment>
+  </data>
+  <data name="PlayerStartAsked" xml:space="preserve">
+    <value>{names} were asked.</value>
+    <comment>Second clause of a failure: the sources that were asked, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartSubtitled" xml:space="preserve">
+    <value>Subtitled</value>
+    <comment>Label of the switch in the Details list that plays the episode with its subtitles.</comment>
   </data>
   <data name="PlayerStallTitle" xml:space="preserve">
     <value>Source is buffering · {seconds} s</value>

@@ -24,7 +24,7 @@ use crate::{
         autonext::{Follow, Staged},
         handoff::{Handoff, successor, take_controls},
         link::{PlayerOpener, PlayerTarget, opener},
-        resolve::{Pick, Resolved, resolve_for_playback},
+        resolve::{Pick, Resolved, Unplayable, resolve_for_playback},
         shaders::shader_dir,
         slot::PlayerSlot,
         starting::Starting,
@@ -725,6 +725,7 @@ fn spawn_playback(
         prefetched
     };
     let reports = services.servers.reports();
+    let mut link = services.connection.subscribe();
     let torrents = services.registry.torrents().clone();
     let (config, meta, store, registry, http, machine, slot, tx) = (
         config.clone(),
@@ -747,18 +748,35 @@ fn spawn_playback(
                     Ok(found)
                 }
                 None => {
-                    resolve_for_playback(
-                        &meta,
-                        &store,
-                        &registry,
-                        id,
-                        &episode,
-                        pick,
-                        &playback,
-                        job.as_ref(),
-                        Some(&starting),
-                    )
-                    .await
+                    // Offline, or offline again before any source is asked, the start waits
+                    // for a connection for up to two minutes and carries on by itself when it
+                    // is back. Stopped meanwhile, the select below ends it at once.
+                    let waited = starting
+                        .when_connected(
+                            &mut link,
+                            crate::playback::starting::OFFLINE_WAIT,
+                            || {
+                                resolve_for_playback(
+                                    &meta,
+                                    &store,
+                                    &registry,
+                                    id,
+                                    &episode,
+                                    pick.clone(),
+                                    &playback,
+                                    job.as_ref(),
+                                    Some(&starting),
+                                )
+                            },
+                        )
+                        .await;
+                    match waited {
+                        Some(resolved) => resolved,
+                        None => {
+                            tracing::info!(episode = %episode, "no connection came back in time");
+                            Err(Unplayable::no_connection())
+                        }
+                    }
                 }
             }
         };
@@ -817,6 +835,7 @@ fn spawn_playback(
                 let failure = kaeri_model::starting::StartFailure {
                     why: reason.why,
                     text: reason.text.clone(),
+                    asked: starting.asked(),
                 };
                 if party {
                     let _ = tx.send(Event::PartyNoSource {

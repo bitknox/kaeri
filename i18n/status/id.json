@@ -2015,6 +2015,12 @@
     "by": "agent",
     "at": "2026-10-31"
   },
+  "cause-no-connection": {
+    "source": "efb4aeea0418",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
   "cause-no-playable-stream": {
     "source": "30bed517cf34",
     "state": "draft",
@@ -12400,11 +12406,245 @@
     "by": "agent",
     "at": "2026-10-31"
   },
+  "player-start-announce": {
+    "source": "16021427349f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-asked": {
+    "source": "431c4094b834",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-beginning": {
+    "source": "49bc790921a0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-buffering-percent": {
+    "source": "8493bce6db9d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-details": {
+    "source": "355b21b89ce5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-failed-announce": {
+    "source": "ccc41229504a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-fix-match": {
+    "source": "494205b3a374",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-from": {
+    "source": "09c4ff5bf087",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-from-beginning": {
+    "source": "9b988194470e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-looked-up": {
+    "source": "91e70ae9cd25",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-miss-failed": {
+    "source": "f2541b6a6003",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-miss-no-episode": {
+    "source": "900707d34849",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-miss-no-match": {
+    "source": "bd0c77ee9285",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-miss-skipped": {
+    "source": "917bf34a9906",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-miss-timed-out": {
+    "source": "2528251faa05",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-no-video": {
+    "source": "f432d057b94e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-offline": {
+    "source": "a5e9a8fedc8f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-offline-detail": {
+    "source": "02fd898944d1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
   "player-start-over": {
     "source": "338cca2d2f31",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
+  },
+  "player-start-peers": {
+    "source": "2d46665a0477",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-pinned": {
+    "source": "c2fc18d45f4a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-place": {
+    "source": "da7501bc1a9e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-resting": {
+    "source": "49846ec866da",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-resuming": {
+    "source": "38ae4b3ce5ec",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-row-asking": {
+    "source": "fd184289c6b4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-row-failed": {
+    "source": "4bdea8ba1576",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-row-no-episode": {
+    "source": "ede688d98f09",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-row-no-match": {
+    "source": "86d00c03ba45",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-row-skipped": {
+    "source": "c15ad44c7902",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-row-timed-out": {
+    "source": "2cb333d3ca72",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-seconds": {
+    "source": "bfb5397998f2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-skip-source": {
+    "source": "d73167afbcc2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-skip-stream": {
+    "source": "ed1311e6c4ac",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-speed": {
+    "source": "2c0deeac7404",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-status": {
+    "source": "88680eb4e07c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-still-starting": {
+    "source": "b592531b5b3f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-still-waiting": {
+    "source": "882c7c55781b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-stream-place": {
+    "source": "32972f02c659",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-subtitled": {
+    "source": "8d4f0d71fde8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "player-start-translation": {
+    "source": "9b1cdd921509",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
   },
   "player-starting": {
     "source": "2c899ee32736",
@@ -18688,6 +18928,18 @@
     "by": "agent",
     "at": "2026-10-31"
   },
+  "start-asking-source": {
+    "source": "e7eb04b4ec92",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "start-buffering": {
+    "source": "15d1d284bcff",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
   "start-failed": {
     "source": "bcab8d534d8c",
     "state": "draft",
@@ -18747,6 +18999,36 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
+  },
+  "start-finding-peers": {
+    "source": "b2451f657d57",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "start-getting-sources-ready": {
+    "source": "11dfe0cd16a0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "start-looking-up-title": {
+    "source": "1a3ddee078db",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "start-opening-stream": {
+    "source": "2ae16b4c9a40",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
+  "start-trying-another-stream": {
+    "source": "afb108654a9f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
   },
   "state-check-connection": {
     "source": "81e24834e0a8",

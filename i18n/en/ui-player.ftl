@@ -95,9 +95,9 @@ player-start-peers = { $count ->
    *[other] { $count } peers
  }
 
-# Detail line with the speed data arrives at.
+# Detail line with the speed data arrives at, already sized with one decimal, such as "3.4 MB".
 # @arg speed: bytes
-player-start-speed = { $speed } a second
+player-start-speed = { $speed }/s
 
 # Step line while the player fills its buffer and gives a number.
 # @arg percent: percent
@@ -141,6 +141,61 @@ player-start-fix-match = Fix match
 
 # Details row label for the translation of the episode.
 player-start-translation = Audio and subtitles
+
+# Details row once the title has been looked up.
+player-start-looked-up = Looked up the title
+
+# Seconds on the starting screen's detail line and Details rows.
+# @arg seconds: int
+player-start-seconds = { $seconds } s
+
+# Spoken once, when a start has taken more than a few seconds.
+player-start-still-starting = Still starting. Choose { -source } is available.
+
+# Spoken when a start begins. The episode is its label.
+# @arg episode: text
+# @arg title: text
+player-start-announce = Starting episode { $episode }, { $title }
+
+# Spoken when a start fails: the title, then the reason.
+# @arg title: text
+# @arg reason: text
+player-start-failed-announce = { $title }. { $reason }
+
+# Accessibility value of the starting screen: the step line, then the detail line.
+# @arg step: text
+# @arg detail: text
+player-start-status = { $step }, { $detail }
+
+# Detail line on the starting screen after the viewer chose to play from the beginning.
+player-start-beginning = Starting from the beginning
+
+# Details row while a source is being asked.
+player-start-row-asking = Asking
+
+# Details row outcome when a source has no match for the show.
+player-start-row-no-match = Doesn't have this show
+
+# Details row outcome when a source has the show and not the episode. The episode is its label.
+# @arg episode: text
+player-start-row-no-episode = Doesn't have episode { $episode }
+
+# Details row outcome when a source failed.
+player-start-row-failed = Didn't answer
+
+# Details row outcome when a source took too long.
+player-start-row-timed-out = Took too long
+
+# Details row outcome when the viewer skipped a source.
+player-start-row-skipped = Skipped
+
+# Second clause of a failure: the sources that were asked, joined as a list by the app.
+# @arg names: text
+player-start-asked = { $names } were asked.
+
+# Label of the switch in the Details list that plays the episode with its subtitles.
+# @max 16
+player-start-subtitled = Subtitled
 
 ## The card in the corner of the video
 

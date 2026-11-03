@@ -298,6 +298,7 @@ extension Cause {
     public var text: String {
         switch self {
         case .noSources: L.causeNoSources
+        case .noConnection: L.causeNoConnection
         case .airsToday(let time): L.causeAirsToday(time: time)
         case .airsTomorrow(let time): L.causeAirsTomorrow(time: time)
         case .airsInDays(let days, let time): L.causeAirsInDays(days: Int(days), time: time)

@@ -209,6 +209,9 @@
   <data name="CauseNoSources" xml:space="preserve">
     <value>Keine Quellen eingerichtet. Füge eine im Bereich Quellen hinzu.</value>
   </data>
+  <data name="CauseNoConnection" xml:space="preserve">
+    <value>Keine Verbindung. Versuche es erneut, wenn du wieder online bist.</value>
+  </data>
   <data name="NoticeNotAired" xml:space="preserve">
     <value>Folge {episode} wird {when} ausgestrahlt.</value>
   </data>
@@ -274,6 +277,27 @@
   </data>
   <data name="StatusLoadingSources" xml:space="preserve">
     <value>Quellen werden geladen…</value>
+  </data>
+  <data name="StartLookingUpTitle" xml:space="preserve">
+    <value>Titel wird gesucht</value>
+  </data>
+  <data name="StartGettingSourcesReady" xml:space="preserve">
+    <value>Deine Quellen werden vorbereitet</value>
+  </data>
+  <data name="StartAskingSource" xml:space="preserve">
+    <value>{name} wird gefragt</value>
+  </data>
+  <data name="StartOpeningStream" xml:space="preserve">
+    <value>Stream wird geöffnet</value>
+  </data>
+  <data name="StartTryingAnotherStream" xml:space="preserve">
+    <value>Anderer Stream wird versucht</value>
+  </data>
+  <data name="StartFindingPeers" xml:space="preserve">
+    <value>Peers werden gesucht</value>
+  </data>
+  <data name="StartBuffering" xml:space="preserve">
+    <value>Puffern</value>
   </data>
   <data name="StatusSearchingSources" xml:space="preserve">
     <value>Quellen werden nach Folge {episode} durchsucht…</value>
@@ -4156,6 +4180,126 @@
   </data>
   <data name="PlayerBuffering" xml:space="preserve">
     <value>Puffert</value>
+  </data>
+  <data name="PlayerStartPlace" xml:space="preserve">
+    <value>{place} von {total} Quellen</value>
+  </data>
+  <data name="PlayerStartPinned" xml:space="preserve">
+    <value>Deine Wahl für diese Serie</value>
+  </data>
+  <data name="PlayerStartMissNoMatch" xml:space="preserve">
+    <value>{name} hat diese Serie nicht</value>
+  </data>
+  <data name="PlayerStartMissNoEpisode" xml:space="preserve">
+    <value>{name} hat Folge {episode} nicht</value>
+  </data>
+  <data name="PlayerStartMissFailed" xml:space="preserve">
+    <value>{name} hat nicht geantwortet</value>
+  </data>
+  <data name="PlayerStartMissTimedOut" xml:space="preserve">
+    <value>{name} hat zu lange gebraucht</value>
+  </data>
+  <data name="PlayerStartMissSkipped" xml:space="preserve">
+    <value>Du hast {name} übersprungen</value>
+  </data>
+  <data name="PlayerStartResting" xml:space="preserve">
+    <value>Nach jüngsten Fehlern übersprungen</value>
+  </data>
+  <data name="PlayerStartFrom" xml:space="preserve">
+    <value>Von {name}</value>
+  </data>
+  <data name="PlayerStartNoVideo" xml:space="preserve">
+    <value>Der erste zeigte kein Video</value>
+  </data>
+  <data name="PlayerStartStreamPlace" xml:space="preserve">
+    <value>Stream {next} von {total}</value>
+  </data>
+  <data name="PlayerStartPeers_one" xml:space="preserve">
+    <value>Ein Peer</value>
+  </data>
+  <data name="PlayerStartPeers_other" xml:space="preserve">
+    <value>{count} Peers</value>
+  </data>
+  <data name="PlayerStartSpeed" xml:space="preserve">
+    <value>{speed}/s</value>
+  </data>
+  <data name="PlayerStartBufferingPercent" xml:space="preserve">
+    <value>Puffern · {percent}</value>
+  </data>
+  <data name="PlayerStartResuming" xml:space="preserve">
+    <value>Fortsetzen bei {clock}</value>
+  </data>
+  <data name="PlayerStartFromBeginning" xml:space="preserve">
+    <value>Von vorn abspielen</value>
+  </data>
+  <data name="PlayerStartDetails" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="PlayerStartSkipSource" xml:space="preserve">
+    <value>{name} überspringen</value>
+  </data>
+  <data name="PlayerStartSkipStream" xml:space="preserve">
+    <value>Stream überspringen</value>
+  </data>
+  <data name="PlayerStartStillWaiting" xml:space="preserve">
+    <value>Warte noch auf {name}</value>
+  </data>
+  <data name="PlayerStartOffline" xml:space="preserve">
+    <value>Warten auf Verbindung</value>
+  </data>
+  <data name="PlayerStartOfflineDetail" xml:space="preserve">
+    <value>Du bist offline. Folge {episode} startet, sobald du wieder online bist.</value>
+  </data>
+  <data name="PlayerStartFixMatch" xml:space="preserve">
+    <value>Zuordnung ändern</value>
+  </data>
+  <data name="PlayerStartTranslation" xml:space="preserve">
+    <value>Ton und Untertitel</value>
+  </data>
+  <data name="PlayerStartLookedUp" xml:space="preserve">
+    <value>Titel gefunden</value>
+  </data>
+  <data name="PlayerStartSeconds" xml:space="preserve">
+    <value>{seconds} s</value>
+  </data>
+  <data name="PlayerStartStillStarting" xml:space="preserve">
+    <value>Startet noch. Du kannst eine Quelle wählen.</value>
+  </data>
+  <data name="PlayerStartAnnounce" xml:space="preserve">
+    <value>Folge {episode} wird gestartet, {title}</value>
+  </data>
+  <data name="PlayerStartFailedAnnounce" xml:space="preserve">
+    <value>{title}. {reason}</value>
+  </data>
+  <data name="PlayerStartStatus" xml:space="preserve">
+    <value>{step}, {detail}</value>
+  </data>
+  <data name="PlayerStartBeginning" xml:space="preserve">
+    <value>Start von vorn</value>
+  </data>
+  <data name="PlayerStartRowAsking" xml:space="preserve">
+    <value>Wird gefragt</value>
+  </data>
+  <data name="PlayerStartRowNoMatch" xml:space="preserve">
+    <value>Hat diese Serie nicht</value>
+  </data>
+  <data name="PlayerStartRowNoEpisode" xml:space="preserve">
+    <value>Hat Folge {episode} nicht</value>
+  </data>
+  <data name="PlayerStartRowFailed" xml:space="preserve">
+    <value>Keine Antwort</value>
+  </data>
+  <data name="PlayerStartRowTimedOut" xml:space="preserve">
+    <value>Zu lange gebraucht</value>
+  </data>
+  <data name="PlayerStartRowSkipped" xml:space="preserve">
+    <value>Übersprungen</value>
+  </data>
+  <data name="PlayerStartAsked" xml:space="preserve">
+    <value>{names} wurden gefragt.</value>
+  </data>
+  <data name="PlayerStartSubtitled" xml:space="preserve">
+    <value>Mit Untertiteln</value>
   </data>
   <data name="PlayerStallTitle" xml:space="preserve">
     <value>Quelle puffert · {seconds} s</value>

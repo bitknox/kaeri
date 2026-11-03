@@ -174,6 +174,9 @@ notice-reason = [{ $reason }~]
 # Reason: no source is set up, so nothing can be played or downloaded. Shown in a toast.
 cause-no-sources = [Ñö šöüŕçéš àŕé šéţ üþ. Åðð öñé öñ ţĥé Šöüŕçéš šçŕééñ.~~~~~~~~~~~~~~~~]
 
+# Reason: the play waited two minutes for a connection and the device stayed offline. Shown in a toast and on the failure screen.
+cause-no-connection = [Ñö çöññéçţîöñ. Ţŕý àĝàîñ ŵĥéñ ýöü'ŕé ƀàçķ öñļîñé.~~~~~~~~~~~~~~~]
+
 # A play's explanation: the episode's broadcast is still ahead. The "when" says today, tomorrow or a date.
 notice-not-aired = [Éþîšöðé { $episode } àîŕš { $when }.~~~~~~~]
 
@@ -6763,8 +6766,8 @@ player-start-peers =
        *[other] [{ $count } þééŕš~~~]
     }
 
-# Detail line with the speed data arrives at.
-player-start-speed = [{ $speed } à šéçöñð~~~~]
+# Detail line with the speed data arrives at, already sized with one decimal, such as "3.4 MB".
+player-start-speed = [{ $speed }/š~~]
 
 # Step line while the player fills its buffer and gives a number.
 player-start-buffering-percent = [Ɓüƒƒéŕîñĝ · { $percent }~~~~~]
@@ -6798,6 +6801,51 @@ player-start-fix-match = [Ƒîẋ ɱàţçĥ~~~]
 
 # Details row label for the translation of the episode.
 player-start-translation = [Åüðîö àñð šüƀţîţļéš~~~~~~]
+
+# Details row once the title has been looked up.
+player-start-looked-up = [Ļööķéð üþ ţĥé ţîţļé~~~~~~]
+
+# Seconds on the starting screen's detail line and Details rows.
+player-start-seconds = [{ $seconds } š~~]
+
+# Spoken once, when a start has taken more than a few seconds.
+player-start-still-starting = [Šţîļļ šţàŕţîñĝ. Çĥööšé šöüŕçé îš àṽàîļàƀļé.~~~~~~~~~~~~~]
+
+# Spoken when a start begins. The episode is its label.
+player-start-announce = [Šţàŕţîñĝ éþîšöðé { $episode }, { $title }~~~~~~~~]
+
+# Spoken when a start fails: the title, then the reason.
+player-start-failed-announce = [{ $title }. { $reason }~~~]
+
+# Accessibility value of the starting screen: the step line, then the detail line.
+player-start-status = [{ $step }, { $detail }~~~]
+
+# Detail line on the starting screen after the viewer chose to play from the beginning.
+player-start-beginning = [Šţàŕţîñĝ ƒŕöɱ ţĥé ƀéĝîññîñĝ~~~~~~~~~]
+
+# Details row while a source is being asked.
+player-start-row-asking = [Åšķîñĝ~~]
+
+# Details row outcome when a source has no match for the show.
+player-start-row-no-match = [Ðöéšñ'ţ ĥàṽé ţĥîš šĥöŵ~~~~~~~]
+
+# Details row outcome when a source has the show and not the episode. The episode is its label.
+player-start-row-no-episode = [Ðöéšñ'ţ ĥàṽé éþîšöðé { $episode }~~~~~~~~]
+
+# Details row outcome when a source failed.
+player-start-row-failed = [Ðîðñ'ţ àñšŵéŕ~~~~]
+
+# Details row outcome when a source took too long.
+player-start-row-timed-out = [Ţööķ ţöö ļöñĝ~~~~]
+
+# Details row outcome when the viewer skipped a source.
+player-start-row-skipped = [Šķîþþéð~~~]
+
+# Second clause of a failure: the sources that were asked, joined as a list by the app.
+player-start-asked = [{ $names } ŵéŕé àšķéð.~~~~~]
+
+# Label of the switch in the Details list that plays the episode with its subtitles.
+player-start-subtitled = [Šüƀţîţļéð~~~]
 
 # Title of the stall card. The seconds count up.
 player-stall-title = [Šöüŕçé îš ƀüƒƒéŕîñĝ · { $seconds } š~~~~~~~~~]

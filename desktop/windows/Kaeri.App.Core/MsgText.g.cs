@@ -297,6 +297,7 @@ public static class MsgText
     public static string Text(this Cause message) => message switch
     {
         Cause.NoSources => T.CauseNoSources,
+        Cause.NoConnection => T.CauseNoConnection,
         Cause.AirsToday x => T.CauseAirsToday(x.Time),
         Cause.AirsTomorrow x => T.CauseAirsTomorrow(x.Time),
         Cause.AirsInDays x => T.CauseAirsInDays(x.Days, x.Time),

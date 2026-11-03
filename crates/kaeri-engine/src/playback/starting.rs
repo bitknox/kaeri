@@ -8,7 +8,9 @@ use kaeri_model::{
     starting::{SourceMiss, StartStep},
 };
 use kaeri_providers::walk::{self, Miss, Walk};
-use tokio::sync::watch;
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
+use tokio::{sync::watch, time::Instant};
 
 use crate::outbox::Outbox;
 
@@ -20,7 +22,12 @@ pub struct Starting {
     id: AnilistId,
     episode: String,
     skip: Option<watch::Receiver<u64>>,
+    /// The sources asked so far, in order, shared by every clone: what a failure names.
+    asked: Arc<Mutex<Vec<String>>>,
 }
+
+/// How long a start that finds the device offline waits for a connection before it fails.
+pub const OFFLINE_WAIT: Duration = Duration::from_secs(120);
 
 impl Starting {
     pub fn new(
@@ -29,7 +36,83 @@ impl Starting {
         episode: &str,
         skip: Option<watch::Receiver<u64>>,
     ) -> Self {
-        Self { tx: tx.clone(), id, episode: episode.to_owned(), skip }
+        Self {
+            tx: tx.clone(),
+            id,
+            episode: episode.to_owned(),
+            skip,
+            asked: Default::default(),
+        }
+    }
+
+    /// The names of the sources asked so far, in the order they were asked.
+    pub fn asked(&self) -> Vec<String> {
+        self.asked.lock().map(|asked| asked.clone()).unwrap_or_default()
+    }
+
+    /// Whether any source has been asked yet.
+    pub fn has_asked(&self) -> bool {
+        self.asked.lock().is_ok_and(|asked| !asked.is_empty())
+    }
+
+    /// Wait until `link` (true while offline) says the device is online, until `until`. Says
+    /// [`StartStep::WaitingForConnection`] when it has to wait, and is true when it is online,
+    /// false at `until`. A dropped link counts as online: nothing is left to wait on.
+    pub async fn online(&self, link: &mut watch::Receiver<bool>, until: Instant) -> bool {
+        if !*link.borrow_and_update() {
+            return true;
+        }
+        self.step(StartStep::WaitingForConnection, None);
+        while *link.borrow_and_update() {
+            match tokio::time::timeout_at(until, link.changed()).await {
+                Err(_) => return false,
+                Ok(Err(_)) => return true,
+                Ok(Ok(())) => {}
+            }
+        }
+        true
+    }
+
+    /// Run `resolve` once the device is online, waiting up to `wait` for that, and again from
+    /// the top when it goes offline before any source has been asked. `None` when the wait ran
+    /// out. Dropped, it ends at once, which is how a cancel stops a start that is waiting.
+    pub async fn when_connected<T, Fut>(
+        &self,
+        link: &mut watch::Receiver<bool>,
+        wait: Duration,
+        mut resolve: impl FnMut() -> Fut,
+    ) -> Option<T>
+    where
+        Fut: std::future::Future<Output = T>,
+    {
+        let until = Instant::now() + wait;
+        loop {
+            if !self.online(link, until).await {
+                return None;
+            }
+            tokio::select! {
+                biased;
+                () = self.offline_before_asking(link) => {}
+                resolved = resolve() => return Some(resolved),
+            }
+        }
+    }
+
+    /// Resolves when the device goes offline before any source has been asked: what takes a
+    /// start back to waiting for a connection. Pends for good once a source is asked, or when the
+    /// link is dropped.
+    pub async fn offline_before_asking(&self, link: &mut watch::Receiver<bool>) {
+        loop {
+            if self.has_asked() {
+                return std::future::pending().await;
+            }
+            if *link.borrow_and_update() {
+                return;
+            }
+            if link.changed().await.is_err() {
+                return std::future::pending().await;
+            }
+        }
     }
 
     /// Say a step, with the step line it brings when it changes it.
@@ -42,6 +125,12 @@ impl Starting {
     pub fn walk(&self, pinned: Option<String>) -> Walk {
         let this = self.clone();
         let walk = Walk::observed(move |step| {
+            if let walk::Step::Asking { name, .. } = &step
+                && let Ok(mut asked) = this.asked.lock()
+                && !asked.contains(name)
+            {
+                asked.push(name.clone());
+            }
             let (step, line) = told(step);
             this.step(step, line);
         })
@@ -187,11 +276,12 @@ pub fn fixture(
         )
     };
     let opening = |attempt, total| step(StartStep::OpeningStream { attempt, total }, None);
-    let failed = |why: NoSourceWhy, cause: Cause| {
+    let failed = |why: NoSourceWhy, cause: Cause, asked: &[&str]| {
         let text = crate::playback::resolve::explained(cause);
+        let asked = asked.iter().map(|name| (*name).to_owned()).collect();
         [
             Event::Toast(Notice::alert(text.clone())),
-            Event::playback_failed(StartFailure { why, text }),
+            Event::playback_failed(StartFailure { why, text, asked }),
         ]
     };
     let resume = Some(606.0);
@@ -284,7 +374,22 @@ pub fn fixture(
             at(2_350, opening(1, 3));
             at(3_400, step(StartStep::Speed { bytes_per_second: 1_800_000 }, None));
         }
-        State::Offline => at(0, Event::Connectivity { offline: true }),
+        // Offline, the start waits and says so; the connection is back at 8 s and the walk
+        // begins by itself.
+        State::Offline => {
+            at(0, Event::Connectivity { offline: true });
+            at(0, step(StartStep::WaitingForConnection, None));
+            at(8_000, Event::Connectivity { offline: false });
+            at(8_700, asking(ALPHA, 1, 2, false));
+        }
+        // Still offline after the two minutes: nothing was asked and the start fails.
+        State::OfflineTimedOut => {
+            at(0, Event::Connectivity { offline: true });
+            at(0, step(StartStep::WaitingForConnection, None));
+            for event in failed(NoSourceWhy::NoConnection, Cause::NoConnection, &[]) {
+                at(120_000, event);
+            }
+        }
         State::FailedNoEpisode => {
             at(700, asking(ALPHA, 1, 2, false));
             at(1_500, missed(ALPHA, walk::Miss::NoEpisode));
@@ -296,6 +401,7 @@ pub fn fixture(
                     episode: EPISODE.into(),
                     detail: "alpha: not found, brook: not found".into(),
                 },
+                &[ALPHA, BROOK],
             ) {
                 at(2_400, event);
             }
@@ -306,12 +412,13 @@ pub fn fixture(
             for event in failed(
                 NoSourceWhy::NotFound,
                 Cause::TitleNoMatch { detail: "alpha: no match".into() },
+                &[ALPHA],
             ) {
                 at(1_600, event);
             }
         }
         State::FailedNoSources => {
-            for event in failed(NoSourceWhy::NoSources, Cause::NoSources) {
+            for event in failed(NoSourceWhy::NoSources, Cause::NoSources, &[]) {
                 at(100, event);
             }
         }
@@ -322,7 +429,14 @@ pub fn fixture(
                 when: Cause::AirsTomorrow { time: "18:30".into() },
             };
             at(600, Event::Toast(Notice::alert(text.clone())));
-            at(600, Event::playback_failed(StartFailure { why: NoSourceWhy::NotAired, text }));
+            at(
+                600,
+                Event::playback_failed(StartFailure {
+                    why: NoSourceWhy::NotAired,
+                    text,
+                    asked: Vec::new(),
+                }),
+            );
         }
     }
     // A slow start carries on to 24 seconds with nothing new said.
@@ -391,6 +505,7 @@ mod tests {
             F::BufferingTorrent,
             F::BufferingDirect,
             F::Offline,
+            F::OfflineTimedOut,
             F::FailedNoEpisode,
             F::FailedNoMatch,
             F::FailedNoSources,
@@ -406,5 +521,121 @@ mod tests {
                 .iter()
                 .any(|e| matches!(&e.event, Event::PlaybackEnded { failure: Some(_), .. }))
         );
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn an_online_start_asks_at_once_and_says_nothing_of_waiting() {
+        let (starting, mut rx) = heard();
+        let (_tx, mut link) = watch::channel(false);
+        let got = starting.when_connected(&mut link, OFFLINE_WAIT, || async { 7 }).await;
+        assert_eq!(got, Some(7));
+        assert!(rx.try_recv().is_err());
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn an_offline_start_waits_says_so_once_and_goes_on_when_back() {
+        let (starting, mut rx) = heard();
+        let (tx, mut link) = watch::channel(true);
+        let started = Instant::now();
+        let back = tokio::spawn(async move {
+            tokio::time::sleep(Duration::from_secs(30)).await;
+            tx.send_replace(false);
+            tx
+        });
+        let got = starting.when_connected(&mut link, OFFLINE_WAIT, || async { "walked" }).await;
+        assert_eq!(got, Some("walked"));
+        assert_eq!(started.elapsed(), Duration::from_secs(30));
+        let Some(Event::StartingStep { step, .. }) = rx.recv().await else { panic!("a step") };
+        assert_eq!(step, StartStep::WaitingForConnection);
+        assert!(rx.try_recv().is_err(), "said once");
+        back.await.unwrap();
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_start_offline_for_two_minutes_gives_up() {
+        let (starting, _rx) = heard();
+        let (_tx, mut link) = watch::channel(true);
+        let started = Instant::now();
+        let got = starting.when_connected(&mut link, OFFLINE_WAIT, || async { 1 }).await;
+        assert_eq!(got, None);
+        assert_eq!(started.elapsed(), OFFLINE_WAIT);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_start_that_goes_offline_before_asking_waits_and_begins_again() {
+        let (starting, mut rx) = heard();
+        let (tx, mut link) = watch::channel(false);
+        let runs = std::sync::atomic::AtomicU32::new(0);
+        let dropped = tokio::spawn(async move {
+            tokio::time::sleep(Duration::from_secs(1)).await;
+            tx.send_replace(true);
+            tokio::time::sleep(Duration::from_secs(10)).await;
+            tx.send_replace(false);
+            tx
+        });
+        let got = starting
+            .when_connected(&mut link, OFFLINE_WAIT, || {
+                let run = runs.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                async move { if run == 0 { std::future::pending::<u32>().await } else { run } }
+            })
+            .await;
+        assert_eq!(got, Some(1), "the walk began again on reconnect");
+        let Some(Event::StartingStep { step, .. }) = rx.recv().await else { panic!("a step") };
+        assert_eq!(step, StartStep::WaitingForConnection);
+        dropped.await.unwrap();
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_start_that_has_asked_a_source_carries_on_offline() {
+        let (starting, _rx) = heard();
+        let (tx, mut link) = watch::channel(false);
+        let (step, line) = told(walk::Step::Asking {
+            name: "alpha".into(),
+            place: 1,
+            total: 1,
+            pinned: false,
+        });
+        starting.step(step, line);
+        starting.asked.lock().unwrap().push("alpha".into());
+        tokio::spawn(async move {
+            tokio::time::sleep(Duration::from_secs(1)).await;
+            tx.send_replace(true);
+            std::future::pending::<()>().await
+        });
+        let got = starting
+            .when_connected(&mut link, OFFLINE_WAIT, || async {
+                tokio::time::sleep(Duration::from_secs(5)).await;
+                "done"
+            })
+            .await;
+        assert_eq!(got, Some("done"));
+        assert_eq!(starting.asked(), ["alpha"]);
+    }
+
+    #[test]
+    fn the_offline_fixtures_wait_then_start_or_fail_after_two_minutes() {
+        use kaeri_model::starting::StartingFixture as F;
+        let waits = fixture(F::Offline);
+        assert!(waits.iter().any(|e| matches!(
+            &e.event,
+            Event::StartingStep { step: StartStep::WaitingForConnection, .. }
+        )));
+        assert!(waits.iter().any(|e| matches!(
+            &e.event,
+            Event::StartingStep { step: StartStep::AskingSource { .. }, .. }
+        )));
+        let failed = fixture(F::OfflineTimedOut);
+        let last = failed.last().unwrap();
+        assert_eq!(last.at_ms, 120_000);
+        assert!(matches!(
+            &last.event,
+            Event::PlaybackEnded { failure: Some(f), .. }
+                if f.why == kaeri_model::party::NoSourceWhy::NoConnection
+        ));
+        let asked = fixture(F::FailedNoEpisode);
+        assert!(asked.iter().any(|e| matches!(
+            &e.event,
+            Event::PlaybackEnded { failure: Some(f), .. } if f.asked == ["Alpha", "Brook"]
+        )));
     }
 }
