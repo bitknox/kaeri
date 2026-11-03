@@ -53,10 +53,6 @@ pub struct FfiBackground {
     /// viewer moves on. Off for a background task's engine, which has seconds to do its work.
     #[uniffi(default = true)]
     pub keep_next: bool,
-    /// Look up each title of the library for a dub, one at a time and slowly, behind what is
-    /// on screen, so a card can say "Dub 8". Off for a background task's engine.
-    #[uniffi(default = true)]
-    pub dub_fill: bool,
 }
 
 impl Default for FfiBackground {
@@ -77,7 +73,6 @@ impl From<Background> for FfiBackground {
             store_refresh,
             player_check,
             keep_next,
-            dub_fill,
         } = background;
         Self {
             prune,
@@ -88,7 +83,6 @@ impl From<Background> for FfiBackground {
             store_refresh,
             player_check,
             keep_next,
-            dub_fill,
         }
     }
 }
@@ -104,7 +98,6 @@ impl From<FfiBackground> for Background {
             store_refresh,
             player_check,
             keep_next,
-            dub_fill,
         } = background;
         Self {
             prune,
@@ -115,7 +108,6 @@ impl From<FfiBackground> for Background {
             store_refresh,
             player_check,
             keep_next,
-            dub_fill,
         }
     }
 }
@@ -391,7 +383,6 @@ mod tests {
                 store_refresh: false,
                 player_check: false,
                 keep_next: false,
-                dub_fill: false,
             }
         );
     }

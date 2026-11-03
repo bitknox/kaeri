@@ -531,9 +531,6 @@ fn fixture_sources(scene: &FfiScene, art: &str, provided: &[(Media, u32)]) -> Pr
         for id in fixtures::ALL {
             provider = provider.with_streams_for(sources::key(id), vec![clip.clone()]);
         }
-        if *scene == FfiScene::Browsing {
-            return ProviderRegistry::new(vec![dub_catalogue().arc(), provider.arc()]);
-        }
         let others = fixtures::long_franchise_media()
             .into_iter()
             .chain(provided.iter().map(|p| p.0.clone()));
@@ -560,26 +557,6 @@ fn fixture_sources(scene: &FfiScene, art: &str, provided: &[(Media, u32)]) -> Pr
         provider = provider.with_streams_for(sources::key(id), vec![stream.clone()]);
     }
     ProviderRegistry::new(vec![provider.arc()])
-}
-
-/// The source [`FfiScene::Browsing`] puts first: an open catalogue that can search for dubs and
-/// lists Hoshikuzu no Tabibito in the dub with eight of its episodes.
-fn dub_catalogue() -> MockProvider {
-    let show = fixtures::media(FINISHED);
-    let hit = SearchHit {
-        episode_count: Some(8),
-        year: show.season_year.and_then(|y| u16::try_from(y).ok()),
-        format: Some(MediaFormat::Tv),
-        ..SearchHit::new(
-            "tsuki-dub-catalogue:hoshikuzu",
-            show.title.romaji.clone().unwrap_or_default(),
-        )
-    };
-    MockProvider::new("tsuki-dub-catalogue")
-        .named("Tsuki Dub Catalogue")
-        .kind(kaeri_core::traits::ProviderKind::Catalogue)
-        .with_dub_listings()
-        .with_hits(vec![hit])
 }
 
 /// The source [`FfiScene::Unsure`] puts first: an invented archive that lists four titles for
@@ -821,7 +798,7 @@ fn seed_scene(store: &Store, scene: &FfiScene, now: i64) {
     }
 }
 
-/// The dubs [`FfiScene::Browsing`]'s cards say, as a dub search once found them.
+/// The dubs [`FfiScene::Browsing`]'s cards say, as title pages once found them.
 fn seed_dubs(store: &Store, now: i64) {
     let row = |through: Option<u32>| kaeri_store::DubRow {
         has_dub: true,
@@ -831,8 +808,8 @@ fn seed_dubs(store: &Store, now: i64) {
         said_at: now,
         until: now + 24 * 3_600,
     };
-    store.put_dub(FINISHED, "search", &row(Some(8))).expect("seeding a dub");
-    store.put_dub(AIRING_NO_MAL, "search", &row(None)).expect("seeding a dub");
+    store.put_dub(FINISHED, "franchise", &row(Some(8))).expect("seeding a dub");
+    store.put_dub(AIRING_NO_MAL, "franchise", &row(None)).expect("seeding a dub");
 }
 
 /// The three rooms [`FfiScene::Together`] keeps.
@@ -1039,9 +1016,6 @@ mod tests {
         assert!(line(FINISHED).ends_with("Dub 8"), "{}", line(FINISHED));
         assert!(line(AIRING_NO_MAL).ends_with("Dub"), "{}", line(AIRING_NO_MAL));
         assert!(!line(ONA).contains("Dub"));
-        let registry =
-            scene_sources(&FfiScene::Browsing, "http://127.0.0.1:9/art/", &world().provided());
-        assert_eq!(registry.dub_searchable().len(), 1, "one source can be searched for dubs");
     }
 
     #[test]

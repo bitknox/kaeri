@@ -7528,36 +7528,6 @@ date-month-dec-short = [Ðéç~]
 # A month's full name, for a screen reader's "Starts 9 January".
 date-month-dec-long = [Ðéçéɱƀéŕ~~~]
 
-# Label of Search's filter that keeps to the titles one of the viewer's sources lists in a dub.
-search-dubbed = [Ðüƀƀéð~~]
-
-# Help text of that filter, for a screen reader.
-search-dubbed-hint = [Šĥöŵš ŕéšüļţš ýöüŕ šöüŕçéš ļîšţ îñ à ðüƀ.~~~~~~~~~~~~~]
-
-# Under Search's filters when the dub filter covered only part of the results. The count is how many results the { -source-pl } were asked about.
-dub-coverage-first = [Ƒŕöɱ ţĥé ƒîŕšţ { $count } ŕéšüļţš.~~~~~~~~~]
-
-# Under Search's filters when some { -source-pl } did not answer about dubs.
-dub-coverage-sources = [{ $answered } öƒ { $asked } šöüŕçéš àñšŵéŕéð.~~~~~~~~~]
-
-# Under Search's filters when the dub filter used only what this device already knows: offline, or a browse with no words typed.
-dub-coverage-stored = [Ðüƀƀéð üšéš ŵĥàţ ţĥîš ðéṽîçé àļŕéàðý ķñöŵš.~~~~~~~~~~~~~]
-
-# Title of the state when the dub filter is on and none of the results has a dub.
-dub-none-title = [Ñö ðüƀƀéð ŕéšüļţš~~~~~~]
-
-# Line under that title. The count is how many results the { -source-pl } were asked about.
-dub-none-detail = [Ýöüŕ šöüŕçéš ðîðñ'ţ ļîšţ à ðüƀ ƒöŕ ţĥé ƒîŕšţ { $count } ŕéšüļţš.~~~~~~~~~~~~~~~~~~]
-
-# Button of that state: turns the dub filter off.
-dub-none-show-all = [Šĥöŵ àļļ ŕéšüļţš~~~~~]
-
-# Title of the state when no source answered about dubs in time.
-dub-failed-title = [Çöüļðñ'ţ àšķ àƀöüţ ðüƀš~~~~~~~]
-
-# Line under that title.
-dub-failed-detail = [Ñöñé öƒ ýöüŕ šöüŕçéš àñšŵéŕéð îñ ţîɱé.~~~~~~~~~~~~]
-
 # Search's Trending heading and sort, for AniList's live trending.
 trending-today = [Ţŕéñðîñĝ ţöðàý~~~~~]
 

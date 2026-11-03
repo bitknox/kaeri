@@ -473,41 +473,6 @@ date-month-dec-short = Dec
 # A month's full name, for a screen reader's "Starts 9 January".
 date-month-dec-long = December
 
-# Label of Search's filter that keeps to the titles one of the viewer's sources lists in a dub.
-# @max 16
-search-dubbed = { -dubbed-cap }
-
-# Help text of that filter, for a screen reader.
-search-dubbed-hint = Shows results your { -source-pl } list in a dub.
-
-# Under Search's filters when the dub filter covered only part of the results. The count is how many results the { -source-pl } were asked about.
-# @arg count: int
-dub-coverage-first = From the first { $count } results.
-
-# Under Search's filters when some { -source-pl } did not answer about dubs.
-# @arg answered: int
-# @arg asked: int
-dub-coverage-sources = { $answered } of { $asked } { -source-pl } answered.
-
-# Under Search's filters when the dub filter used only what this device already knows: offline, or a browse with no words typed.
-dub-coverage-stored = { -dubbed-cap } uses what this { -device } already knows.
-
-# Title of the state when the dub filter is on and none of the results has a dub.
-dub-none-title = No { -dubbed } results
-
-# Line under that title. The count is how many results the { -source-pl } were asked about.
-# @arg count: int
-dub-none-detail = Your { -source-pl } didn't list a dub for the first { $count } results.
-
-# Button of that state: turns the dub filter off.
-dub-none-show-all = Show all results
-
-# Title of the state when no source answered about dubs in time.
-dub-failed-title = Couldn't ask about dubs
-
-# Line under that title.
-dub-failed-detail = None of your { -source-pl } answered in time.
-
 # Search's Trending heading and sort, for AniList's live trending.
 # @max 24
 trending-today = Trending today

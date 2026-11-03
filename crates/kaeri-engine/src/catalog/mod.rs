@@ -5,7 +5,6 @@ pub mod browse;
 pub mod calendar;
 pub mod cards;
 pub mod detail;
-pub mod dub_search;
 pub mod filter;
 pub mod home;
 pub mod lists;

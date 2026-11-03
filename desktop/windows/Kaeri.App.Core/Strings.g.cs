@@ -4835,36 +4835,6 @@ public static partial class T
     /// <summary>A month's full name, for a screen reader's "Starts 9 January".</summary>
     public static string DateMonthDecLong => Get("DateMonthDecLong");
 
-    /// <summary>Label of Search's filter that keeps to the titles one of the viewer's sources lists in a dub.</summary>
-    public static string SearchDubbed => Get("SearchDubbed");
-
-    /// <summary>Help text of that filter, for a screen reader.</summary>
-    public static string SearchDubbedHint => Get("SearchDubbedHint");
-
-    /// <summary>Under Search's filters when the dub filter covered only part of the results. The count is how many results the { -source-pl } were asked about.</summary>
-    public static string DubCoverageFirst(long count) => Fill(Get("DubCoverageFirst"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
-
-    /// <summary>Under Search's filters when some { -source-pl } did not answer about dubs.</summary>
-    public static string DubCoverageSources(long answered, long asked) => Fill(Get("DubCoverageSources"), ("answered", answered.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("asked", asked.ToString(System.Globalization.CultureInfo.CurrentCulture)));
-
-    /// <summary>Under Search's filters when the dub filter used only what this device already knows: offline, or a browse with no words typed.</summary>
-    public static string DubCoverageStored => Get("DubCoverageStored");
-
-    /// <summary>Title of the state when the dub filter is on and none of the results has a dub.</summary>
-    public static string DubNoneTitle => Get("DubNoneTitle");
-
-    /// <summary>Line under that title. The count is how many results the { -source-pl } were asked about.</summary>
-    public static string DubNoneDetail(long count) => Fill(Get("DubNoneDetail"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
-
-    /// <summary>Button of that state: turns the dub filter off.</summary>
-    public static string DubNoneShowAll => Get("DubNoneShowAll");
-
-    /// <summary>Title of the state when no source answered about dubs in time.</summary>
-    public static string DubFailedTitle => Get("DubFailedTitle");
-
-    /// <summary>Line under that title.</summary>
-    public static string DubFailedDetail => Get("DubFailedDetail");
-
     /// <summary>Search's Trending heading and sort, for AniList's live trending.</summary>
     public static string TrendingToday => Get("TrendingToday");
 
@@ -9367,16 +9337,6 @@ public static partial class T
         ["DateMonthNovLong"] = "November",
         ["DateMonthDecShort"] = "Dec",
         ["DateMonthDecLong"] = "December",
-        ["SearchDubbed"] = "Dubbed",
-        ["SearchDubbedHint"] = "Shows results your sources list in a dub.",
-        ["DubCoverageFirst"] = "From the first {count} results.",
-        ["DubCoverageSources"] = "{answered} of {asked} sources answered.",
-        ["DubCoverageStored"] = "Dubbed uses what this device already knows.",
-        ["DubNoneTitle"] = "No dubbed results",
-        ["DubNoneDetail"] = "Your sources didn't list a dub for the first {count} results.",
-        ["DubNoneShowAll"] = "Show all results",
-        ["DubFailedTitle"] = "Couldn't ask about dubs",
-        ["DubFailedDetail"] = "None of your sources answered in time.",
         ["TrendingToday"] = "Trending today",
         ["TrendingWeek"] = "Trending this week",
         ["TrendingMonth"] = "Trending this month",

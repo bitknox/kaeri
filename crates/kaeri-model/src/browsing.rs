@@ -1,8 +1,8 @@
 //! What browsing adds to cards and lists: the count line under a title, the dub a source said a
-//! title has, the Dubbed filter's coverage, Trending's periods, Surprise me, and Go to episode.
+//! title has, Trending's periods, Surprise me, and Go to episode.
 //!
 //! Every rule here is the engine's, so each app says and does the same: the long and short count
-//! forms and what a screen reader says, which results a dub ask matched, which picks are
+//! forms and what a screen reader says, which picks are
 //! offered, and what a number typed into an episode list means.
 
 use kaeri_core::ids::AnilistId;
@@ -197,90 +197,6 @@ pub fn count_line(entry: &Entry) -> Option<CountLine> {
             spoken: format!("{}{SPOKEN_JOIN}{spoken}", base.spoken),
             dub: Some(dub),
         }),
-    }
-}
-
-/// A dub one search's ask found for a title among its results, with the title's count line
-/// again, now that it says the dub.
-#[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
-pub struct DubFound {
-    pub id: AnilistId,
-    pub dub: DubKnown,
-    #[cfg_attr(feature = "ffi", uniffi(default))]
-    pub count_line: Option<CountLine>,
-}
-
-/// What a search's dub ask covered, for the line under the filter row and the Dubbed control.
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
-pub struct DubCoverage {
-    /// At least one of the viewer's sources can search for dubs. When none can, the Dubbed
-    /// control never shows, nothing is asked, and nothing suggests adding a source.
-    pub capable: bool,
-    /// How many results the ask was about: the first [`DUB_COVERS`].
-    #[cfg_attr(feature = "ffi", uniffi(default))]
-    pub results: u32,
-    /// How many results the search has in all, so a line can say "the first 50".
-    #[cfg_attr(feature = "ffi", uniffi(default))]
-    pub results_in_all: u32,
-    /// How many sources were asked, and how many answered within the time allowed.
-    #[cfg_attr(feature = "ffi", uniffi(default))]
-    pub sources_asked: u32,
-    #[cfg_attr(feature = "ffi", uniffi(default))]
-    pub sources_answered: u32,
-    /// Nothing was asked: the device was offline, or the search had no words, and the filter
-    /// uses only what was stored.
-    #[cfg_attr(feature = "ffi", uniffi(default))]
-    pub stored_only: bool,
-    /// None of the sources asked answered in time: "Couldn't ask about dubs".
-    #[cfg_attr(feature = "ffi", uniffi(default))]
-    pub failed: bool,
-    /// What the line under the filter row says; `None` when every source answered for every
-    /// result, and then nothing is shown.
-    #[cfg_attr(feature = "ffi", uniffi(default))]
-    pub line: Option<String>,
-}
-
-/// How many of a search's results its dub ask covers.
-pub const DUB_COVERS: u32 = 50;
-
-impl DubCoverage {
-    /// The coverage of an ask: `asked` sources of which `answered` came back, over `results` of a
-    /// search's `in_all` titles.
-    pub fn of(capable: bool, results: u32, in_all: u32, asked: u32, answered: u32) -> Self {
-        let results = results.min(DUB_COVERS);
-        let mut parts = Vec::new();
-        if in_all > DUB_COVERS {
-            parts.push(t::dub_coverage_first(DUB_COVERS.into()));
-        }
-        if answered < asked {
-            parts.push(t::dub_coverage_sources(answered.into(), asked.into()));
-        }
-        Self {
-            capable,
-            results,
-            results_in_all: in_all,
-            sources_asked: asked,
-            sources_answered: answered,
-            stored_only: false,
-            failed: asked > 0 && answered == 0,
-            line: (!parts.is_empty()).then(|| parts.join(" ")),
-        }
-    }
-
-    /// What a filter that used only what the device stored says.
-    pub fn stored(capable: bool) -> Self {
-        Self {
-            capable,
-            results: 0,
-            results_in_all: 0,
-            sources_asked: 0,
-            sources_answered: 0,
-            stored_only: true,
-            failed: false,
-            line: Some(t::dub_coverage_stored()),
-        }
     }
 }
 
@@ -633,17 +549,6 @@ mod tests {
         let only_dub =
             Entry { dub: Some(DubKnown { through: None, complete: false }), ..entry() };
         assert_eq!(count_line(&only_dub).unwrap().long, "Dub");
-    }
-
-    #[test]
-    fn coverage_is_a_line_only_when_something_was_left_out() {
-        assert_eq!(DubCoverage::of(true, 30, 30, 3, 3).line, None);
-        assert_eq!(
-            DubCoverage::of(true, 50, 120, 3, 2).line.as_deref(),
-            Some("From the first 50 results. 2 of 3 sources answered.")
-        );
-        assert!(DubCoverage::of(true, 30, 30, 2, 0).failed);
-        assert!(DubCoverage::stored(true).stored_only);
     }
 
     #[test]

@@ -3731,26 +3731,6 @@
     <string name="date_month_dec_short">Dec</string>
     <!-- A month's full name, for a screen reader's "Starts 9 January". -->
     <string name="date_month_dec_long">December</string>
-    <!-- Label of Search's filter that keeps to the titles one of the viewer's sources lists in a dub. -->
-    <string name="search_dubbed">Dubbed</string>
-    <!-- Help text of that filter, for a screen reader. -->
-    <string name="search_dubbed_hint">Shows results your sources list in a dub.</string>
-    <!-- Under Search's filters when the dub filter covered only part of the results. The count is how many results the { -source-pl } were asked about. -->
-    <string name="dub_coverage_first">From the first %1$d results.</string>
-    <!-- Under Search's filters when some { -source-pl } did not answer about dubs. -->
-    <string name="dub_coverage_sources">%1$d of %2$d sources answered.</string>
-    <!-- Under Search's filters when the dub filter used only what this device already knows: offline, or a browse with no words typed. -->
-    <string name="dub_coverage_stored">Dubbed uses what this device already knows.</string>
-    <!-- Title of the state when the dub filter is on and none of the results has a dub. -->
-    <string name="dub_none_title">No dubbed results</string>
-    <!-- Line under that title. The count is how many results the { -source-pl } were asked about. -->
-    <string name="dub_none_detail">Your sources didn\'t list a dub for the first %1$d results.</string>
-    <!-- Button of that state: turns the dub filter off. -->
-    <string name="dub_none_show_all">Show all results</string>
-    <!-- Title of the state when no source answered about dubs in time. -->
-    <string name="dub_failed_title">Couldn\'t ask about dubs</string>
-    <!-- Line under that title. -->
-    <string name="dub_failed_detail">None of your sources answered in time.</string>
     <!-- Search's Trending heading and sort, for AniList's live trending. -->
     <string name="trending_today">Trending today</string>
     <!-- Search's Trending heading and sort, for the last seven days. -->

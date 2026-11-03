@@ -323,12 +323,6 @@ pub struct SearchQuery {
     /// Available: `None` is All.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub available: Option<Available>,
-    /// Only the titles one of the viewer's sources lists in a dub. With text, the engine asks
-    /// each source that can search for dubs once, after AniList answers, and keeps to the
-    /// results they matched, plus what this device already stored; a browse keeps to what was
-    /// stored. Covers the first results only: see [`crate::browsing::DubCoverage`].
-    #[cfg_attr(feature = "ffi", uniffi(default))]
-    pub dubbed: bool,
     /// The period a Trending browse covers; `None` is today, AniList's live trending. Counts only
     /// for a browse sorted by Trending: see [`SearchQuery::period_in_effect`].
     #[cfg_attr(feature = "ffi", uniffi(default))]
@@ -364,7 +358,6 @@ pub enum FilterKey {
     Licensed,
     MyList,
     Available,
-    Dubbed,
 }
 
 /// One filter that is set, in the words a chip shows: "Mecha", "Not Romance", "2010 to 2015",
@@ -592,9 +585,6 @@ impl SearchQuery {
             }
             None => {}
         }
-        if self.dubbed {
-            push(FilterKey::Dubbed, kaeri_i18n::t::search_dubbed());
-        }
         out
     }
 
@@ -636,7 +626,6 @@ impl SearchQuery {
             FilterKey::Licensed => next.licensed_only = false,
             FilterKey::MyList => next.on_list = None,
             FilterKey::Available => next.available = None,
-            FilterKey::Dubbed => next.dubbed = false,
         }
         next
     }

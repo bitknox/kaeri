@@ -169,9 +169,6 @@ pub struct Background {
     /// or finishes, as many as the show or Settings keeps. See
     /// [`crate::downloads::ahead`].
     pub keep_next: bool,
-    /// The Library fill: look up each title of the library for a dub in the paced background
-    /// queue, so cards can say how far it goes. See [`crate::titles::dub::Dubs::fill_library`].
-    pub dub_fill: bool,
 }
 
 impl Background {
@@ -186,7 +183,6 @@ impl Background {
             store_refresh: false,
             player_check: false,
             keep_next: false,
-            dub_fill: false,
         }
     }
 }
@@ -203,7 +199,6 @@ impl Default for Background {
             store_refresh: true,
             player_check: true,
             keep_next: true,
-            dub_fill: true,
         }
     }
 }
@@ -252,7 +247,6 @@ mod tests {
             on.store_refresh,
             on.player_check,
             on.keep_next,
-            on.dub_fill,
         ];
         assert!(all.iter().all(|on| *on), "{on:?}");
         assert_eq!(
@@ -266,7 +260,6 @@ mod tests {
                 store_refresh: false,
                 player_check: false,
                 keep_next: false,
-                dub_fill: false,
             }
         );
     }

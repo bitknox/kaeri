@@ -120,18 +120,6 @@ impl Store {
         Ok(out)
     }
 
-    /// Whether any sources' answer for title `id` is still fresh at `now`.
-    pub fn dub_fresh(&self, id: AnilistId, now: i64) -> Result<bool> {
-        self.with_conn(|c| {
-            Ok(c.query_row(
-                "SELECT EXISTS(SELECT 1 FROM dub_extent
-                                WHERE anilist_id = ?1 AND route <> 'search' AND until > ?2)",
-                rusqlite::params![id.get(), now],
-                |r| r.get(0),
-            )?)
-        })
-    }
-
     /// Forget everything said of title `id`: its match to a source changed.
     pub fn forget_dub(&self, id: AnilistId) -> Result<()> {
         self.with_conn(|c| {
@@ -209,13 +197,10 @@ mod tests {
     }
 
     #[test]
-    fn freshness_ignores_a_searchs_answers_and_old_ones_are_let_go() {
+    fn old_answers_are_let_go() {
         let store = Store::open_in_memory().unwrap();
         store.put_dub(A, "search", &row(true, None, 10)).unwrap();
-        assert!(!store.dub_fresh(A, 50).unwrap(), "a search says a dub exists, not how far");
         store.put_dub(A, "one", &row(true, Some(2), 10)).unwrap();
-        assert!(store.dub_fresh(A, 50).unwrap());
-        assert!(!store.dub_fresh(A, 500).unwrap());
         assert_eq!(store.prune_dubs(10 + KEEP_FOR).unwrap(), 0);
         assert_eq!(store.prune_dubs(11 + KEEP_FOR).unwrap(), 2);
         store.put_dub(B, "one", &row(true, Some(2), 10)).unwrap();

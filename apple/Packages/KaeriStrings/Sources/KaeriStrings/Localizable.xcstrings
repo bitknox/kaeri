@@ -38721,102 +38721,6 @@
         }
       }
     },
-    "dub-coverage-first" : {
-      "comment" : "Under Search's filters when the dub filter covered only part of the results. The count is how many results the { -source-pl } were asked about. Argument 1: count (Int).",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "From the first %1$lld results."
-          }
-        }
-      }
-    },
-    "dub-coverage-sources" : {
-      "comment" : "Under Search's filters when some { -source-pl } did not answer about dubs. Argument 1: answered (Int). Argument 2: asked (Int).",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld of %2$lld sources answered."
-          }
-        }
-      }
-    },
-    "dub-coverage-stored" : {
-      "comment" : "Under Search's filters when the dub filter used only what this device already knows: offline, or a browse with no words typed.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dubbed uses what this device already knows."
-          }
-        }
-      }
-    },
-    "dub-failed-detail" : {
-      "comment" : "Line under that title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "None of your sources answered in time."
-          }
-        }
-      }
-    },
-    "dub-failed-title" : {
-      "comment" : "Title of the state when no source answered about dubs in time.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn't ask about dubs"
-          }
-        }
-      }
-    },
-    "dub-none-detail" : {
-      "comment" : "Line under that title. The count is how many results the { -source-pl } were asked about. Argument 1: count (Int).",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your sources didn't list a dub for the first %1$lld results."
-          }
-        }
-      }
-    },
-    "dub-none-show-all" : {
-      "comment" : "Button of that state: turns the dub filter off.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show all results"
-          }
-        }
-      }
-    },
-    "dub-none-title" : {
-      "comment" : "Title of the state when the dub filter is on and none of the results has a dub.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No dubbed results"
-          }
-        }
-      }
-    },
     "duration-days" : {
       "comment" : "A span of time in whole days. The unit letter belongs to the language. Argument 1: days (Int).",
       "extractionState" : "manual",
@@ -139589,30 +139493,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Demo · Phát ngay"
-          }
-        }
-      }
-    },
-    "search-dubbed" : {
-      "comment" : "Label of Search's filter that keeps to the titles one of the viewer's sources lists in a dub.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dubbed"
-          }
-        }
-      }
-    },
-    "search-dubbed-hint" : {
-      "comment" : "Help text of that filter, for a screen reader.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Shows results your sources list in a dub."
           }
         }
       }

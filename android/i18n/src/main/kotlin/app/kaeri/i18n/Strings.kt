@@ -7129,46 +7129,6 @@ object Strings {
     fun dateMonthDecLong(context: Context): String =
         context.getString(R.string.date_month_dec_long)
 
-    /** Label of Search's filter that keeps to the titles one of the viewer's sources lists in a dub. */
-    fun searchDubbed(context: Context): String =
-        context.getString(R.string.search_dubbed)
-
-    /** Help text of that filter, for a screen reader. */
-    fun searchDubbedHint(context: Context): String =
-        context.getString(R.string.search_dubbed_hint)
-
-    /** Under Search's filters when the dub filter covered only part of the results. The count is how many results the { -source-pl } were asked about. */
-    fun dubCoverageFirst(context: Context, count: Int): String =
-        context.getString(R.string.dub_coverage_first, count)
-
-    /** Under Search's filters when some { -source-pl } did not answer about dubs. */
-    fun dubCoverageSources(context: Context, answered: Int, asked: Int): String =
-        context.getString(R.string.dub_coverage_sources, answered, asked)
-
-    /** Under Search's filters when the dub filter used only what this device already knows: offline, or a browse with no words typed. */
-    fun dubCoverageStored(context: Context): String =
-        context.getString(R.string.dub_coverage_stored)
-
-    /** Title of the state when the dub filter is on and none of the results has a dub. */
-    fun dubNoneTitle(context: Context): String =
-        context.getString(R.string.dub_none_title)
-
-    /** Line under that title. The count is how many results the { -source-pl } were asked about. */
-    fun dubNoneDetail(context: Context, count: Int): String =
-        context.getString(R.string.dub_none_detail, count)
-
-    /** Button of that state: turns the dub filter off. */
-    fun dubNoneShowAll(context: Context): String =
-        context.getString(R.string.dub_none_show_all)
-
-    /** Title of the state when no source answered about dubs in time. */
-    fun dubFailedTitle(context: Context): String =
-        context.getString(R.string.dub_failed_title)
-
-    /** Line under that title. */
-    fun dubFailedDetail(context: Context): String =
-        context.getString(R.string.dub_failed_detail)
-
     /** Search's Trending heading and sort, for AniList's live trending. */
     fun trendingToday(context: Context): String =
         context.getString(R.string.trending_today)

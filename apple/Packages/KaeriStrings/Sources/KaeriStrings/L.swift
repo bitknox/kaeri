@@ -6954,42 +6954,6 @@ public enum L {
     /// A month's full name, for a screen reader's "Starts 9 January".
     public static var dateMonthDecLong: String { string("date-month-dec-long", fallback: "December") }
 
-    /// Label of Search's filter that keeps to the titles one of the viewer's sources lists in a dub.
-    public static var searchDubbed: String { string("search-dubbed", fallback: "Dubbed") }
-
-    /// Help text of that filter, for a screen reader.
-    public static var searchDubbedHint: String { string("search-dubbed-hint", fallback: "Shows results your sources list in a dub.") }
-
-    /// Under Search's filters when the dub filter covered only part of the results. The count is how many results the { -source-pl } were asked about.
-    public static func dubCoverageFirst(count: Int) -> String {
-        Self.format("dub-coverage-first", fallback: "From the first %1$lld results.", count)
-    }
-
-    /// Under Search's filters when some { -source-pl } did not answer about dubs.
-    public static func dubCoverageSources(answered: Int, asked: Int) -> String {
-        Self.format("dub-coverage-sources", fallback: "%1$lld of %2$lld sources answered.", answered, asked)
-    }
-
-    /// Under Search's filters when the dub filter used only what this device already knows: offline, or a browse with no words typed.
-    public static var dubCoverageStored: String { string("dub-coverage-stored", fallback: "Dubbed uses what this device already knows.") }
-
-    /// Title of the state when the dub filter is on and none of the results has a dub.
-    public static var dubNoneTitle: String { string("dub-none-title", fallback: "No dubbed results") }
-
-    /// Line under that title. The count is how many results the { -source-pl } were asked about.
-    public static func dubNoneDetail(count: Int) -> String {
-        Self.format("dub-none-detail", fallback: "Your sources didn't list a dub for the first %1$lld results.", count)
-    }
-
-    /// Button of that state: turns the dub filter off.
-    public static var dubNoneShowAll: String { string("dub-none-show-all", fallback: "Show all results") }
-
-    /// Title of the state when no source answered about dubs in time.
-    public static var dubFailedTitle: String { string("dub-failed-title", fallback: "Couldn't ask about dubs") }
-
-    /// Line under that title.
-    public static var dubFailedDetail: String { string("dub-failed-detail", fallback: "None of your sources answered in time.") }
-
     /// Search's Trending heading and sort, for AniList's live trending.
     public static var trendingToday: String { string("trending-today", fallback: "Trending today") }
 

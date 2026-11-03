@@ -524,8 +524,8 @@ const MIGRATIONS: &[(&str, &str)] = &[
         "0021_dub_extent",
         r#"
     -- What this device's sources said of a title's dub, kept so a card can say "Dub 8" after a
-    -- restart without asking. One row per title and the sources asked (`route`; a search's
-    -- answers go under `search`). `has_dub` is 0 for a source that listed the title and found
+    -- restart without asking. One row per title and the sources asked (`route`).
+    -- `has_dub` is 0 for a source that listed the title and found
     -- no dub. `through` is null for a dub with no count. `until` is when the answer is due to
     -- be asked again; the row stays and is still shown past it, as a dub does not take an
     -- episode back.

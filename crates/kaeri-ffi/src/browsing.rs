@@ -1,9 +1,8 @@
 //! What Search's extras and the episode list's Go to episode ask of the model: counts on cards,
 //! the trending periods, and typing an episode number. See `kaeri_model::browsing`.
 //!
-//! Surprise me, Another, a period's rail and the dub ask are commands and events, not calls: see
-//! `Command::Surprise`, `Command::LoadTrending`, `Event::Surprise`, `Event::Trending`,
-//! `Event::DubsKnown` and `Event::SearchDubs`.
+//! Surprise me, Another and a period's rail are commands and events, not calls: see
+//! `Command::Surprise`, `Command::LoadTrending`, `Event::Surprise` and `Event::Trending`.
 
 use kaeri_model::{
     browsing::{self, CountLine, DubKnown, GoTo, TrendPeriod},
@@ -12,11 +11,11 @@ use kaeri_model::{
 };
 
 /// The count line of a card, from its entry and the dub it is known to have: "12 episodes ·
-/// Dub 8". For a card that learned of a dub after it was made: [`Event::DubsKnown`] brings the
-/// line itself, and this says it again for an entry the app changed, such as one whose list
-/// status moved. `None` when there is nothing to say.
+/// Dub 8". Entries carry their line, from the dubs title pages learned. This says it again for an
+/// entry the app changed, such as one whose list status moved, or for a card on screen when a
+/// title page's [`Event::TitleDub`] arrives. `None` when there is nothing to say.
 ///
-/// [`Event::DubsKnown`]: kaeri_model::event::Event::DubsKnown
+/// [`Event::TitleDub`]: kaeri_model::event::Event::TitleDub
 #[uniffi::export]
 pub fn entry_count_line(entry: Entry, dub: Option<DubKnown>) -> Option<CountLine> {
     let mut entry = entry;

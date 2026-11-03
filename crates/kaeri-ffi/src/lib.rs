@@ -930,7 +930,6 @@ mod tests {
             licensed_only: true,
             on_list: Some(OnList::Hide),
             available: Some(kaeri_model::search::Available::OnYourServices),
-            dubbed: true,
             period: Some(kaeri_model::browsing::TrendPeriod::Week),
         }
     }
@@ -1392,10 +1391,7 @@ mod tests {
 
     #[test]
     fn the_browsing_extras_cross_intact() {
-        use kaeri_model::browsing::{
-            CountLine, DubCoverage, DubFound, DubKnown, SurpriseOutcome, SurprisePool,
-            TrendPeriod,
-        };
+        use kaeri_model::browsing::{CountLine, SurpriseOutcome, SurprisePool, TrendPeriod};
         let id = AnilistId::new(900_001);
         let line = CountLine {
             long: "12 episodes · Dub 8".into(),
@@ -1403,22 +1399,6 @@ mod tests {
             spoken: "12 episodes, dub through episode 8".into(),
             dub: Some("Dub 8".into()),
         };
-        let found = DubFound {
-            id,
-            dub: DubKnown { through: Some(8), complete: false },
-            count_line: Some(line.clone()),
-        };
-        crosses_intact(Event::DubsKnown { found: vec![found.clone()] });
-        crosses_intact(Event::SearchDubs {
-            query: every_filter(),
-            found: vec![found],
-            coverage: DubCoverage::of(true, 30, 30, 2, 1),
-        });
-        crosses_intact(Event::SearchDubs {
-            query: every_filter(),
-            found: Vec::new(),
-            coverage: DubCoverage::stored(true),
-        });
         let entry = Entry::new(id, "Kaze no Tegami");
         crosses_intact(Event::Trending {
             period: TrendPeriod::Week,

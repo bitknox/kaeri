@@ -119,8 +119,6 @@ pub struct Options {
     /// Keep next on, as the app launches with it, where it is otherwise off with the rest of
     /// the engine's own work. It takes the device to have a terabyte free.
     pub keep_next: bool,
-    /// The Library fill's dub lookups, off with the rest of the engine's own work.
-    pub dub_fill: bool,
     /// What the database holds when the engine starts, written before it does.
     pub before_start: Option<fn(&Store)>,
     /// How long a title page waits for the season walk before it is sent without its seasons,
@@ -151,7 +149,6 @@ impl Default for Options {
             now: FIXTURE_NOW,
             viewer_title_language: None,
             keep_next: false,
-            dub_fill: false,
             before_start: None,
             season_hold: None,
             clock: None,
@@ -300,7 +297,6 @@ impl Harness {
         start.sources = Some(registry.clone());
         start.background = Background {
             keep_next: options.keep_next,
-            dub_fill: options.dub_fill,
             digest: options.digest,
             ..Background::none()
         };
@@ -878,8 +874,6 @@ pub fn name(update: &Event) -> &'static str {
         Event::Conflicts(_) => "Conflicts",
         Event::Episodes { .. } => "Episodes",
         Event::TitleDub { .. } => "TitleDub",
-        Event::DubsKnown { .. } => "DubsKnown",
-        Event::SearchDubs { .. } => "SearchDubs",
         Event::Trending { .. } => "Trending",
         Event::Surprise { .. } => "Surprise",
         Event::Progress { .. } => "Progress",
@@ -1131,12 +1125,6 @@ fn copy(update: &Event) -> Event {
             Event::Episodes { id: *id, rows: rows.clone(), failed: failed.clone() }
         }
         Event::TitleDub { id, dub } => Event::TitleDub { id: *id, dub: *dub },
-        Event::DubsKnown { found } => Event::DubsKnown { found: found.clone() },
-        Event::SearchDubs { query, found, coverage } => Event::SearchDubs {
-            query: query.clone(),
-            found: found.clone(),
-            coverage: coverage.clone(),
-        },
         Event::Trending { period, entries, updated_at, failed, waiting } => Event::Trending {
             period: *period,
             entries: entries.clone(),

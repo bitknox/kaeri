@@ -12077,56 +12077,6 @@ pub fn date_month_dec_long() -> String {
     text("date-month-dec-long", &[])
 }
 
-/// Label of Search's filter that keeps to the titles one of the viewer's sources lists in a dub.
-pub fn search_dubbed() -> String {
-    text("search-dubbed", &[])
-}
-
-/// Help text of that filter, for a screen reader.
-pub fn search_dubbed_hint() -> String {
-    text("search-dubbed-hint", &[])
-}
-
-/// Under Search's filters when the dub filter covered only part of the results. The count is how many results the { -source-pl } were asked about.
-pub fn dub_coverage_first(count: i64) -> String {
-    text("dub-coverage-first", &[("count", Arg::Int(count))])
-}
-
-/// Under Search's filters when some { -source-pl } did not answer about dubs.
-pub fn dub_coverage_sources(answered: i64, asked: i64) -> String {
-    text("dub-coverage-sources", &[("answered", Arg::Int(answered)), ("asked", Arg::Int(asked))])
-}
-
-/// Under Search's filters when the dub filter used only what this device already knows: offline, or a browse with no words typed.
-pub fn dub_coverage_stored() -> String {
-    text("dub-coverage-stored", &[])
-}
-
-/// Title of the state when the dub filter is on and none of the results has a dub.
-pub fn dub_none_title() -> String {
-    text("dub-none-title", &[])
-}
-
-/// Line under that title. The count is how many results the { -source-pl } were asked about.
-pub fn dub_none_detail(count: i64) -> String {
-    text("dub-none-detail", &[("count", Arg::Int(count))])
-}
-
-/// Button of that state: turns the dub filter off.
-pub fn dub_none_show_all() -> String {
-    text("dub-none-show-all", &[])
-}
-
-/// Title of the state when no source answered about dubs in time.
-pub fn dub_failed_title() -> String {
-    text("dub-failed-title", &[])
-}
-
-/// Line under that title.
-pub fn dub_failed_detail() -> String {
-    text("dub-failed-detail", &[])
-}
-
 /// Search's Trending heading and sort, for AniList's live trending.
 pub fn trending_today() -> String {
     text("trending-today", &[])

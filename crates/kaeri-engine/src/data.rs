@@ -24,7 +24,7 @@ use kaeri_store::Store;
 /// Convert a title into the UI's flattened projection.
 pub fn entry_from(media: &Media, store: Option<&Store>) -> Entry {
     let mut entry = entry_without_count(media, store);
-    // What a source said of the dub, kept by the paced fill or a page, and so on every card.
+    // What a source said of the dub, kept by a title page, and so on every card.
     entry.dub = store
         .and_then(|s| s.dubs_of(&[media.id]).ok())
         .and_then(|mut found| found.remove(&media.id))

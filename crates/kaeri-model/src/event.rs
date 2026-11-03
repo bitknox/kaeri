@@ -6,7 +6,7 @@ use kaeri_core::{ids::AnilistId, traits::SourceCandidate};
 
 use crate::{
     Msg,
-    browsing::{DubCoverage, DubFound, SurpriseOutcome, SurprisePool, TrendPeriod},
+    browsing::{SurpriseOutcome, SurprisePool, TrendPeriod},
     catalog::{ContentFor, ContentList, Entry, ResumePoint, TitleAired, TitleLanguage},
     discussion::DiscussionView,
     downloads::{DownloadRow, SeedRow},
@@ -491,21 +491,6 @@ pub enum Event {
     TitleDub {
         id: AnilistId,
         dub: Option<DubExtent>,
-    },
-    /// Dubs a source said, for cards already on screen: the paced Library fill found them, or a
-    /// title page did. Each says the title's dub and its count line again. Nothing is asked of
-    /// the viewer, and a card that is not on screen ignores it.
-    DubsKnown {
-        found: Vec<DubFound>,
-    },
-    /// What a search's dub ask found among its results, once the sources answered or the time
-    /// allowed ran out: sent after the first page's [`Event::Content`] for a search with text.
-    /// Taken only while `query` is the search on screen. With the query's `dubbed` filter on, the
-    /// results wait for it, and `coverage` says what the filter covered.
-    SearchDubs {
-        query: SearchQuery,
-        found: Vec<DubFound>,
-        coverage: DubCoverage,
     },
     /// Trending over `period`, in answer to
     /// [`Command::LoadTrending`](crate::command::Command::LoadTrending). `entries` is empty with

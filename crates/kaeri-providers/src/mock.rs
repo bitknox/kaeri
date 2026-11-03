@@ -175,14 +175,6 @@ impl MockProvider {
         self
     }
 
-    /// Say the source lists titles in the dub too, so a search can ask it for them.
-    pub fn with_dub_listings(mut self) -> Self {
-        if !self.manifest.translations.contains(&Translation::Dub) {
-            self.manifest.translations.push(Translation::Dub);
-        }
-        self
-    }
-
     pub fn kind(mut self, kind: ProviderKind) -> Self {
         self.manifest.kind = kind;
         self
