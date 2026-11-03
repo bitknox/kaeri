@@ -19,6 +19,9 @@ public sealed partial class DownloadsPage : Page
     public DownloadsPage()
     {
         InitializeComponent();
+        // Each title's card: its cover and its lines, with the card's own padding between them.
+        Loading.Placeholders = () => States.Rows(3, 64, 96, spacing: 32);
+        Loading.NeedsConnection = false;
         ctx.Hear(this, Heard);
     }
 
@@ -53,6 +56,16 @@ public sealed partial class DownloadsPage : Page
     void Show()
     {
         var queue = ctx.Known.Queue;
+        if (!queue.Loaded)
+        {
+            // Never "No downloads" before the engine has said: nothing for 600 ms, then plates.
+            Subtitle.Text = "";
+            Meter.Visibility = Visibility.Collapsed;
+            PauseAll.IsEnabled = ClearDone.IsEnabled = false;
+            Loading.Wait();
+            return;
+        }
+        Loading.Done();
         var rows = queue.Rows;
         var used = queue.BytesOnDisk;
         var free = Free();

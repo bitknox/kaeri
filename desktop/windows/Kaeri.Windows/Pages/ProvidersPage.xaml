@@ -56,7 +56,9 @@
       <ScrollViewer x:Name="ListScroll" VerticalScrollBarVisibility="Auto">
         <StackPanel Spacing="8" Padding="0,0,8,24">
           <TextBlock x:Name="Rebuilding" Style="{StaticResource HazeCaptionStyle}" Text="{x:Bind app:T.SourcesRebuilding}" Visibility="Collapsed" />
-          <StackPanel x:Name="Sections" Spacing="4" AutomationProperties.Name="{x:Bind app:T.SourcesOrder}" />
+          <local:StateHost x:Name="State">
+            <StackPanel x:Name="Sections" Spacing="4" AutomationProperties.Name="{x:Bind app:T.SourcesOrder}" />
+          </local:StateHost>
           <TextBlock x:Name="Note" Style="{StaticResource HazeBodyStyle}" Visibility="Collapsed" />
         </StackPanel>
       </ScrollViewer>
