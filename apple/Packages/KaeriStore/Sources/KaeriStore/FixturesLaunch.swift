@@ -115,7 +115,7 @@ extension EngineLaunch {
 }
 extension AppStore {
     /// The launch argument that marks episodes watched once the engine is up, as if they had just
-    /// been watched: `-KaeriWatched 900006:8`, the episodes joined by commas. For a shot of a
+    /// been watched: `-KaeriWatched 900006:8`, the episodes joined by commas, a run as `1-147`. For a shot of a
     /// title caught up with its broadcasts.
     public static let watchedArgument = "-KaeriWatched"
 
@@ -125,7 +125,13 @@ extension AppStore {
         else { return }
         let parts = arguments[index + 1].split(separator: ":", maxSplits: 1)
         guard parts.count == 2, let id = AnilistId(parts[0]) else { return }
-        send(.setWatched(id: id, episodes: parts[1].split(separator: ",").map(String.init), watched: true))
+        // A run is `1-147`; the rest are numbers, joined by commas.
+        let episodes = parts[1].split(separator: ",").flatMap { part -> [String] in
+            let ends = part.split(separator: "-").compactMap { Int($0) }
+            guard ends.count == 2, ends[0] <= ends[1] else { return [String(part)] }
+            return (ends[0]...ends[1]).map(String.init)
+        }
+        send(.setWatched(id: id, episodes: episodes, watched: true))
         // Asked again after the mark, which the engine takes in order: what the screens asked for
         // while it started went ahead of it, and says the title as it was.
         continuing.list.asked()

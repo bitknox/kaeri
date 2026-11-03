@@ -118,6 +118,13 @@ public final class Navigator {
     var trailerRequest: TrailerRequest?
     /// The titles whose watched episodes are open in their episode lists, for the session.
     var watchedOpen: Set<AnilistId> = []
+    /// The episodes whose still and synopsis the viewer asked to see past spoiler protection, per
+    /// title, for the visit to its page.
+    var synopsisShown: [AnilistId: Set<String>] = [:]
+    /// The titles whose rows after spoiler protection's line are all shown, for the visit.
+    var synopsisAllShown: Set<AnilistId> = []
+    /// The range of a long series' episodes the viewer picked, per title, for the visit.
+    var episodeRange: [AnilistId: Int] = [:]
     /// An episode handed over from another device, which its title's page offers to resume.
     public var handedOff: HandedOff?
 

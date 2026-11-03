@@ -14962,6 +14962,51 @@ pub fn episode_fold(count: i64) -> String {
     text("episode-fold", &[("count", Arg::Int(count))])
 }
 
+/// An episode's number in a facts line on phones.
+pub fn episode_short(episode: i64) -> String {
+    text("episode-short", &[("episode", Arg::Int(episode))])
+}
+
+/// Part of an episode's facts line: when it aired. The date is already formatted.
+pub fn episode_aired(date: &str) -> String {
+    text("episode-aired", &[("date", Arg::Text(date))])
+}
+
+/// Two parts of an episode's facts line, set one after the other.
+pub fn episode_facts_join(first: &str, second: &str) -> String {
+    text("episode-facts-join", &[("first", Arg::Text(first)), ("second", Arg::Text(second))])
+}
+
+/// Button in the line where spoiler protection starts: shows what comes after.
+pub fn episode_protection_show() -> String {
+    text("episode-protection-show", &[])
+}
+
+/// Button in that line once the rows after it are shown: hides them again.
+pub fn episode_protection_hide() -> String {
+    text("episode-protection-hide", &[])
+}
+
+/// The line where spoiler protection starts, once the rows after it are shown.
+pub fn episode_protection_shown(episode: i64) -> String {
+    text("episode-protection-shown", &[("episode", Arg::Int(episode))])
+}
+
+/// The same line on phones.
+pub fn episode_protection_shown_short(episode: i64) -> String {
+    text("episode-protection-shown-short", &[("episode", Arg::Int(episode))])
+}
+
+/// An episode range in the range menu: the first and the last episode.
+pub fn episode_range_short(from: &str, to: &str) -> String {
+    text("episode-range-short", &[("from", Arg::Text(from)), ("to", Arg::Text(to))])
+}
+
+/// An item of the range menu: the range, then Watched or Not out yet.
+pub fn episode_range_item(range: &str, state: &str) -> String {
+    text("episode-range-item", &[("range", Arg::Text(range)), ("state", Arg::Text(state))])
+}
+
 /// Accessibility label of the button that opens an episode's menu.
 pub fn episode_options() -> String {
     text("episode-options", &[])

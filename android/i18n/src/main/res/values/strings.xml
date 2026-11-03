@@ -4925,6 +4925,24 @@
         <item quantity="one">One watched episode</item>
         <item quantity="other">%1$d watched episodes</item>
     </plurals>
+    <!-- An episode's number in a facts line on phones. -->
+    <string name="episode_short">E%1$d</string>
+    <!-- Part of an episode's facts line: when it aired. The date is already formatted. -->
+    <string name="episode_aired">Aired %1$s</string>
+    <!-- Two parts of an episode's facts line, set one after the other. -->
+    <string name="episode_facts_join">%1$s · %2$s</string>
+    <!-- Button in the line where spoiler protection starts: shows what comes after. -->
+    <string name="episode_protection_show">Show</string>
+    <!-- Button in that line once the rows after it are shown: hides them again. -->
+    <string name="episode_protection_hide">Hide</string>
+    <!-- The line where spoiler protection starts, once the rows after it are shown. -->
+    <string name="episode_protection_shown">Showing what comes after episode %1$d.</string>
+    <!-- The same line on phones. -->
+    <string name="episode_protection_shown_short">Showing after episode %1$d</string>
+    <!-- An episode range in the range menu: the first and the last episode. -->
+    <string name="episode_range_short">%1$s–%2$s</string>
+    <!-- An item of the range menu: the range, then Watched or Not out yet. -->
+    <string name="episode_range_item">%1$s · %2$s</string>
     <!-- Accessibility label of the button that opens an episode's menu. -->
     <string name="episode_options">Episode options</string>
     <!-- Menu item that marks an episode as watched. -->

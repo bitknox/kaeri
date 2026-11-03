@@ -149,6 +149,11 @@ extension PlayerModel {
             if shot == .tracks, let last = subtitleTracks.last { selectSubtitle(last.id) }
             pinnedControls = true
             pointedRow = PlayerShot.pointed(in: ProcessInfo.processInfo.arguments)
+            // The episode table is cached by the title's page in use; the shot has had none.
+            if shot == .episodes {
+                store.loadEpisodes(item.id)
+                _ = await waited(10) { episodeText(rows: store.titles.episodes[item.id] ?? []) == .present }
+            }
             try? await Task.sleep(for: .seconds(0.5))
             if let menu = shot.menu { requestMenu(menu) }
         case .fading:

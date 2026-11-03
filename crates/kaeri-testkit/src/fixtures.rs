@@ -521,6 +521,82 @@ pub fn long_franchise_media() -> Vec<Media> {
     long_franchise().into_iter().map(decode).collect()
 }
 
+/// Two titles for the episode list's synopses, in no list, search or franchise: a twelve episode
+/// show with a synopsis and a still on every episode but the tenth, and a long runner whose 230
+/// episodes make three ranges.
+///
+/// | [`SYNOPSIS_SHOW`] 920021 | Tegami no Hikousen / Letters Above the Clouds | TV, finished, 12 episodes; a synopsis on every episode but the tenth |
+/// | [`LONG_RUNNER`] 920020 | Tokei no Arubai / The Clockmaker's Alibi | TV, finished, 230 episodes; a synopsis on most, none on every ninth |
+pub const SYNOPSIS_SHOW: AnilistId = AnilistId::new(920_021);
+/// How many episodes [`SYNOPSIS_SHOW`] has.
+pub const SYNOPSIS_SHOW_EPISODES: u32 = 12;
+/// See [`SYNOPSIS_SHOW`].
+pub const LONG_RUNNER: AnilistId = AnilistId::new(920_020);
+/// How many episodes [`LONG_RUNNER`] has.
+pub const LONG_RUNNER_EPISODES: u32 = 230;
+
+/// [`SYNOPSIS_SHOW`] and [`LONG_RUNNER`], as the single-title query answers them.
+pub fn synopsis_shows() -> Vec<Value> {
+    use serde_json::json;
+    let one = |id: AnilistId,
+               romaji: &str,
+               english: &str,
+               colour: &str,
+               episodes: u32,
+               year: u16,
+               about: &str| {
+        let id = id.get();
+        json!({
+            "id": id,
+            "idMal": null,
+            "title": { "romaji": romaji, "english": english, "native": null },
+            "format": "TV",
+            "status": "FINISHED",
+            "coverImage": {
+                "large": format!("{ART_HOST}cover/{id}.jpg"),
+                "extraLarge": format!("{ART_HOST}cover/{id}.jpg"),
+                "color": colour,
+            },
+            "season": "SPRING",
+            "seasonYear": year,
+            "description": about,
+            "genres": ["Adventure", "Slice of Life"],
+            "episodes": episodes,
+            "duration": 24,
+            "startDate": { "year": year, "month": 4, "day": 5 },
+            "endDate": { "year": year, "month": 6, "day": 21 },
+            "relations": { "edges": [] },
+        })
+    };
+    vec![
+        one(
+            SYNOPSIS_SHOW,
+            "Tegami no Hikousen",
+            "Letters Above the Clouds",
+            "#5f7fa0",
+            SYNOPSIS_SHOW_EPISODES,
+            2014,
+            "The crew of a patched-up airship carry letters and strangers between islands that \
+             float above an endless sea of cloud.",
+        ),
+        one(
+            LONG_RUNNER,
+            "Tokei no Arubai",
+            "The Clockmaker's Alibi",
+            "#8a7f5f",
+            LONG_RUNNER_EPISODES,
+            2012,
+            "Inspector Mido has until the next tide to prove who set the clock. A case a week, \
+             in a harbour town that keeps its own time.",
+        ),
+    ]
+}
+
+/// [`synopsis_shows`]' titles, decoded.
+pub fn synopsis_shows_media() -> Vec<Media> {
+    synopsis_shows().into_iter().map(decode).collect()
+}
+
 /// One title with everything the Title screen shows. Panics for an id not in the set.
 pub fn media(id: AnilistId) -> Media {
     decode(wire(id).unwrap_or_else(|| panic!("{id} is not a fixture title")).clone())

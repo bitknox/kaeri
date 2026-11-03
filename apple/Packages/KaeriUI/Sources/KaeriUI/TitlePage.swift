@@ -849,12 +849,26 @@ struct EpisodeList: View {
     /// The last title whose rows were on screen, and how tall they stood: another title's
     /// placeholders keep that room, so nothing below or beside them moves until its rows come.
     @State private var lastRows: (id: AnilistId, height: CGFloat)?
+    /// Whether the rows keep room for text, settled when the table is laid out.
+    @State private var room = EpisodeRoom()
+    /// How wide the list stands, which sets whether text sits beside the stills or under them.
+    @State private var listWidth: CGFloat?
     let entry: Entry
     /// Where the page's Unwatched episodes rotor finds the rows.
     let rotor: Namespace.ID
 
+    /// The rows' sizes: the Mac's by the list's width, the iPad's own.
+    private var metrics: EpisodeMetrics {
+        #if os(macOS)
+        .mac(listWidth: listWidth ?? EpisodeMetrics.wideFrom)
+        #else
+        .pad
+        #endif
+    }
+
     var body: some View {
         let rows = episodeRows
+        let plan = EpisodePlan(rows: rows, picked: navigator.episodeRange[entry.id])
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 12) {
                 Text(L.titleEpisodes)
@@ -876,6 +890,10 @@ struct EpisodeList: View {
                 .animation(.fadeIn, value: dub)
                 .id(entry.id)
                 .transition(.identity)
+                // A long series' ranges of 100, beside the dub line; ⌘[ and ⌘] step through them.
+                if !plan.ranges.isEmpty {
+                    EpisodeRangeMenu(plan: plan, rows: rows, phone: false) { pickRange($0, rows: rows) }
+                }
                 Spacer()
                 SegmentedCapsule(selection: $unwatchedOnly, options: [(false, L.titleEpisodesAll), (true, L.titleEpisodesUnwatched)])
             }
@@ -891,22 +909,30 @@ struct EpisodeList: View {
                             QuietLine(unwatchedOnly ? L.titleAllWatched : L.titleNoEpisodes)
                         }
                         // The watched run folds away above the last episode watched; Unwatched
-                        // has none.
-                        let fold = unwatchedOnly ? nil : WatchedFold(rows)
+                        // has none. A long series shows one range of a hundred, its watched run
+                        // folded the same way.
+                        let fold = unwatchedOnly && plan.ranges.isEmpty ? nil : plan.fold
+                        let next = entry.progress?.next ?? 1
+                        let spoilers = store.spoilerProtection(for: entry.id)
+                        let protectedFrom = EpisodeProtection.startsAt(plan.shown, next: next, spoilers: spoilers)
                         if let fold {
                             WatchedFoldSection(
                                 fold: fold, shown: navigator.watchedShown(entry.id), phone: false,
                                 toggle: { navigator.toggleWatched(entry.id) }
                             ) {
-                                ForEach(rows.prefix(fold.count), id: \.number) { row($0) }
+                                ForEach(plan.shown.prefix(fold.count), id: \.number) { row($0, protectedFrom: protectedFrom) }
                             }
                         }
-                        ForEach(rows.dropFirst(fold?.count ?? 0), id: \.number) { row($0) }
+                        ForEach(plan.shown.dropFirst(fold?.count ?? 0), id: \.number) { row($0, protectedFrom: protectedFrom) }
                     }
+                    // A range switch crossfades in place.
+                    .id(plan.index)
                     .transition(.opacity)
+                    .animation(.standard, value: plan.index)
+                    .onChange(of: plan.index) { room.settle(plan.shown, again: true) }
                     .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { lastRows = (entry.id, $0) }
                 } else {
-                    EpisodePlaceholders(count: entry.episodes)
+                    EpisodePlaceholders(count: entry.episodes, metrics: metrics)
                         .frame(minHeight: lastRows.flatMap { $0.id == entry.id ? nil : $0.height }, alignment: .top)
                         .transition(.opacity)
                 }
@@ -917,11 +943,34 @@ struct EpisodeList: View {
             .transition(.identity)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { listWidth = $0 }
+        // The room for text is settled when the rows are first laid out, and again each time the
+        // page comes back: text that turned up meanwhile waits for that.
+        .onChange(of: loadedTable, initial: true) { if loadedTable { room.settle(plan.shown) } }
+        .onAppear { if loadedTable { room.settle(plan.shown, again: true) } }
+        .onDisappear { navigator.endEpisodeVisit(entry.id) }
     }
 
-    private func row(_ row: EpisodeRow) -> some View {
-        EpisodeRowView(entry: entry, row: row, spoilers: store.spoilerProtection(for: entry.id))
-            .accessibilityRotorEntry(id: row.number, in: rotor)
+    private var loadedTable: Bool { store.titles.episodes[entry.id] != nil }
+
+    private func pickRange(_ index: Int, rows: [EpisodeRow]) {
+        navigator.episodeRange[entry.id] = index
+    }
+
+    private func row(_ row: EpisodeRow, protectedFrom: String?) -> some View {
+        VStack(spacing: 0) {
+            if row.number == protectedFrom {
+                ProtectionLine(
+                    episode: Int(entry.progress?.next ?? 1),
+                    shown: navigator.synopsisAllShown.contains(entry.id), phone: false
+                ) { withAnimation(.standard) { navigator.showAllSynopses(entry.id, !navigator.synopsisAllShown.contains(entry.id)) } }
+            }
+            EpisodeRowView(
+                entry: entry, row: row, spoilers: store.spoilerProtection(for: entry.id),
+                metrics: metrics, room: room.room
+            )
+        }
+        .accessibilityRotorEntry(id: row.number, in: rotor)
     }
 
     /// The table, dated by the schedule, with the next episode still to air at its end.
@@ -935,28 +984,55 @@ struct EpisodeList: View {
 /// One episode in the list.
 struct EpisodeRowView: View {
     @Environment(AppStore.self) private var store
+    @Environment(Navigator.self) private var navigator
     let entry: Entry
     let row: EpisodeRow
     let spoilers: Bool
+    let metrics: EpisodeMetrics
+    /// Whether the table keeps room for text.
+    let room: Bool
+
+    private var next: UInt32 { entry.progress?.next ?? 1 }
+
+    /// Whether protection hides this row's still and synopsis now.
+    private var hidden: Bool {
+        EpisodeProtection.hidden(
+            row, next: next, spoilers: spoilers,
+            revealed: navigator.synopsisShown[entry.id] ?? [], all: navigator.synopsisAllShown.contains(entry.id)
+        )
+    }
 
     var body: some View {
         if row.isUnaired(), let date = row.airsDate {
-            UnairedEpisodeRow(row: row, airs: date)
+            UnairedEpisodeRow(row: row, airs: date, metrics: metrics, textInset: textInset)
         } else {
             VStack(spacing: 0) {
                 airedRow
                     #if os(macOS)
-                    .help(row.airsDate.map(AirsWords.aired) ?? "")
+                    // A synopsis cut at three lines is whole here, as a cut title is.
+                    .help(helpText)
                     #endif
-                DiscussionLine(entry: entry, row: row, inset: 140)
+                DiscussionLine(entry: entry, row: row, inset: textInset)
             }
         }
     }
 
+    /// Where the row's words start, from its leading edge.
+    private var textInset: CGFloat {
+        8 + 22 + 14 + metrics.still.width + (metrics.text == .beside ? 14 : 12)
+    }
+
+    #if os(macOS)
+    private var helpText: String {
+        if room, !hidden, let text = row.description, !text.isEmpty { return text }
+        return row.airsDate.map(AirsWords.aired) ?? ""
+    }
+    #endif
+
     @ViewBuilder
     private var airedRow: some View {
         let number = UInt32(row.number) ?? 0
-        let current = number == (entry.progress?.next ?? 1)
+        let current = number == next
         // One no source has: nothing to play, so a click offers what can be done, adding a
         // source among it, rather than playing.
         if let link = store.licensed.episodeLink(entry.id, number) {
@@ -964,94 +1040,67 @@ struct EpisodeRowView: View {
             Button {
                 store.openService(entry.id, link: ServiceLink(service: link.service, url: link.url, notes: nil), episode: number)
             } label: {
-                rowLabel(number: number, current: current)
+                rowLabel(current: current, external: true)
             }
             .buttonStyle(.plain)
             .pointerHover()
-            .accessibilityHint(L.licensedOpensOutside)
+            .episodeElement(row, value: spoken(current: current), hint: [L.licensedOpensOutside, hint].compactMap { $0 }.joined(separator: ". ")) {
+                EpisodeMenu(entry: entry, number: number, row: row)
+            }
         } else if row.metadataOnly || row.unsourced {
             Menu {
                 EpisodeMenu(entry: entry, number: number, row: row)
             } label: {
-                rowLabel(number: number, current: current)
+                rowLabel(current: current)
             }
             .menuStyle(.button)
             .menuIndicator(.hidden)
             .buttonStyle(.plain)
             .pointerHover()
-            .episodeElement(row, value: row.spokenValue(entry, current: current, upcoming: false)) {
+            .episodeElement(row, value: spoken(current: current), hint: hint) {
                 EpisodeMenu(entry: entry, number: number, row: row)
             }
         } else {
             Button {
                 store.send(.play(id: entry.id, episode: row.number))
             } label: {
-                rowLabel(number: number, current: current)
+                rowLabel(current: current)
             }
             .buttonStyle(.plain)
             .pointerHover()
-            .episodeElement(row, value: row.spokenValue(entry, current: current, upcoming: false)) {
+            .episodeElement(row, value: spoken(current: current), hint: hint) {
                 EpisodeMenu(entry: entry, number: number, row: row)
             }
+            #if os(iOS)
+            .contextMenu {
+                EpisodeMenu(entry: entry, number: number, row: row)
+            } preview: {
+                EpisodePreview(entry: entry, row: row)
+            }
+            #else
             .contextMenu { EpisodeMenu(entry: entry, number: number, row: row) }
+            #endif
         }
     }
 
-    private func rowLabel(number: UInt32, current: Bool) -> some View {
-        let next = entry.progress?.next ?? 1
-        return HStack(spacing: 14) {
-            Text(row.number)
-                .font(.mac(13, weight: current ? .semibold : .regular))
-                .monospacedDigit()
-                .foregroundStyle(current ? .amber : .haze)
-                .animation(.quick, value: current)
-                .frame(width: 22, alignment: .trailing)
-            EpisodeStill(
-                entry: entry, row: row,
-                hidden: spoilers && number > next && !row.completed,
-                unaired: false
-            )
-            .opacity(row.completed ? 0.7 : 1)
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    Text(row.title ?? L.episodeNumberString(number: row.number))
-                        .foregroundStyle(row.completed ? .haze : .silk)
-                        .lineLimit(1)
-                        .animation(.quick, value: row.completed)
-                    if row.kind == .filler {
-                        Text(L.episodeFiller).groupHeaderStyle()
-                    }
-                }
-                if row.unsourced {
-                    Text(L.episodeUnsourced).font(.mac(12)).foregroundStyle(.haze).lineLimit(1)
-                }
-                if current, let fraction = entry.resume?.fraction {
-                    Held(value: fraction) { Meter(fraction: $0, height: 3).frame(width: 200) }
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            trailing(current: current)
-            WatchedCheck(watched: row.completed, size: 11)
-                .frame(width: 14)
-        }
-        .font(.mac(13))
-        .opacity(row.unsourced && store.licensed.episodeLink(entry.id, number) == nil ? 0.55 : 1)
-        .padding(.horizontal, 8)
-        .frame(height: 44)
+    private func spoken(current: Bool) -> [String] {
+        row.spokenValue(entry, current: current, upcoming: false)
+    }
+
+    /// The synopsis said last, or why it is not there.
+    private var hint: String? {
+        if hidden { return L.episodeSynopsisHidden }
+        return room ? row.description : nil
+    }
+
+    private func rowLabel(current: Bool, external: Bool = false) -> some View {
+        EpisodeRowLabel(
+            entry: entry, row: row, metrics: metrics, room: room, hidden: hidden, current: current,
+            numberColumn: true, asked: navigator.synopsisIsShown(entry.id, row.number), external: external
+        )
+        .opacity(row.unsourced && store.licensed.episodeLink(entry.id, UInt32(row.number) ?? 0) == nil ? 0.55 : 1)
         .background(current ? Palette.selection : .clear, in: .rect(cornerRadius: 8))
         .contentShape(.rect(cornerRadius: 8))
-    }
-
-    @ViewBuilder
-    private func trailing(current: Bool) -> some View {
-        if store.licensed.episodeLink(entry.id, UInt32(row.number) ?? 0) != nil {
-            Image(systemName: "arrow.up.right").font(.mac(11, weight: .semibold)).foregroundStyle(.haze)
-        } else if current, let resume = entry.resume, let fraction = resume.fraction, fraction > 0 {
-            let left = max(1, Int(((resume.position / fraction - resume.position) / 60).rounded()))
-            Held(value: left) { MinutesLeft(minutes: $0) }
-        } else if let seconds = row.durationSecs {
-            Text(L.timeMinutes(minutes: max(1, Int((Double(seconds) / 60).rounded())))).foregroundStyle(.haze)
-        }
     }
 }
 
@@ -1060,62 +1109,36 @@ struct EpisodeRowView: View {
 struct UnairedEpisodeRow: View {
     let row: EpisodeRow
     let airs: Date
+    var metrics = EpisodeMetrics.macWide
+    var textInset: CGFloat = 0
 
     var body: some View {
         let title = row.title ?? L.episodeNumberString(number: row.number)
         let when = AirsWords.airs(airs)
         HStack(spacing: 14) {
             Text(row.number)
+                .font(EpisodeRowLabel.numberFont(metrics))
                 .monospacedDigit()
                 .foregroundStyle(.haze)
                 .frame(width: 22, alignment: .trailing)
-            RoundedRectangle(cornerRadius: 6).fill(Palette.artPlaceholder).frame(width: 64, height: 36)
-            Text(title).foregroundStyle(.haze).lineLimit(1)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            HStack(spacing: 6) {
-                Circle().fill(.water).frame(width: 6, height: 6)
-                Text(when).monospacedDigit()
+            RoundedRectangle(cornerRadius: 6).fill(Palette.artPlaceholder)
+                .frame(width: metrics.still.width, height: metrics.still.height)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title).font(EpisodeRowLabel.titleFont(metrics)).foregroundStyle(.haze).lineLimit(2)
+                HStack(spacing: 6) {
+                    Circle().fill(.water).frame(width: 6, height: 6)
+                    Text(when).monospacedDigit()
+                }
+                .font(EpisodeRowLabel.factsFont(metrics))
+                .foregroundStyle(.water)
             }
-            .foregroundStyle(.water)
+            .frame(maxWidth: .infinity, alignment: .leading)
             Color.clear.frame(width: 14)
         }
-        .font(.mac(13))
         .padding(.horizontal, 8)
-        .frame(height: 44)
+        .frame(minHeight: metrics.short)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(L.titleEpisodeRowUnaired(title: row.title.map { L.episodeTitledText(number: row.number, title: $0) } ?? L.episodeNumberString(number: row.number), when: when))
-    }
-}
-
-/// An episode's still: its art, blurred with an eye when spoiler protection hides it, and a plain
-/// plate before it airs.
-struct EpisodeStill: View {
-    let entry: Entry
-    let row: EpisodeRow
-    let hidden: Bool
-    let unaired: Bool
-    var size = CGSize(width: 64, height: 36)
-
-    var body: some View {
-        Group {
-            if unaired {
-                Rectangle().fill(CoverPlate.muted(entry.plateColor))
-            } else if hidden {
-                ZStack {
-                    ArtworkView(url: row.thumbnail ?? entry.bannerUrl, color: entry.plateColor, maxPixelSize: 128)
-                        .blur(radius: 4)
-                        .scaleEffect(1.15)
-                    Image(systemName: "eye.slash")
-                        .font(.mac(12, weight: .medium))
-                        .foregroundStyle(.silk)
-                }
-                .accessibilityLabel(L.episodeSpoilerHidden)
-            } else {
-                ArtworkView(url: row.thumbnail ?? entry.bannerUrl, color: entry.plateColor, maxPixelSize: 128)
-            }
-        }
-        .frame(width: size.width, height: size.height)
-        .clipShape(.rect(cornerRadius: 6))
     }
 }
 
@@ -1123,29 +1146,37 @@ struct EpisodeStill: View {
 /// a screenful, so the rows that replace them take the room they kept.
 struct EpisodePlaceholders: View {
     let count: UInt32?
+    var metrics = EpisodeMetrics.macWide
 
     var body: some View {
         VStack(spacing: 0) {
-            ForEach(0..<Int(min(max(count ?? 4, 1), 12)), id: \.self) { _ in EpisodePlaceholderRow() }
+            ForEach(0..<Int(min(max(count ?? 4, 1), 12)), id: \.self) { _ in EpisodePlaceholderRow(metrics: metrics) }
         }
     }
 }
 
 /// An episode row while the table loads.
 struct EpisodePlaceholderRow: View {
+    var metrics = EpisodeMetrics.macWide
+
     var body: some View {
         HStack(spacing: 14) {
             Text("7").frame(width: 22, alignment: .trailing)
-            RoundedRectangle(cornerRadius: 6).fill(.raised).frame(width: 64, height: 36)
-            Text("The Lantern Road") // i18n-skip
-            Spacer()
-            Text("24 min") // i18n-skip
+            RoundedRectangle(cornerRadius: 6).fill(.raised).frame(width: metrics.still.width, height: metrics.still.height)
+            // A redacted title and facts line, and no synopsis lines: a show without synopses
+            // never promises them.
+            VStack(alignment: .leading, spacing: 4) {
+                Text("The Lantern Road") // i18n-skip
+                Text("24 min · Aired 21 May 2014") // i18n-skip
+                    .font(EpisodeRowLabel.factsFont(metrics))
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .font(.mac(13))
+        .font(EpisodeRowLabel.titleFont(metrics))
         .foregroundStyle(.haze)
         .redacted(reason: .placeholder)
         .padding(.horizontal, 8)
-        .frame(height: 44)
+        .frame(height: metrics.short)
         .accessibilityHidden(true)
     }
 }

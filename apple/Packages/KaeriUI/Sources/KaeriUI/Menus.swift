@@ -109,6 +109,17 @@ struct EpisodeMenu: View {
 
     var body: some View {
         let resuming = entry.progress?.next == number && entry.resume != nil
+        // Protected, the still and synopsis are first among the items, for this visit.
+        if EpisodeProtection.hidden(
+            row, next: entry.progress?.next ?? 1, spoilers: store.spoilerProtection(for: entry.id),
+            revealed: navigator.synopsisShown[entry.id] ?? [], all: navigator.synopsisAllShown.contains(entry.id)
+        ) {
+            Button(L.episodeSynopsisShow, systemImage: "eye") {
+                withAnimation(.standard) { navigator.showSynopsis(entry.id, row.number) }
+            }
+            .accessibilityHint(L.episodeSynopsisShowHint)
+            Divider()
+        }
         // One no source has: the way to a source in Play's and Download's place.
         if row.metadataOnly, store.match.asks(entry.id) {
             // The source could not choose: the way to choose, in Play's place.

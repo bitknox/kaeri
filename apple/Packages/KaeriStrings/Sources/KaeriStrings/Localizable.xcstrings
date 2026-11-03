@@ -38885,6 +38885,18 @@
         }
       }
     },
+    "episode-aired" : {
+      "comment" : "Part of an episode's facts line: when it aired. The date is already formatted. Argument 1: date (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aired %1$@"
+          }
+        }
+      }
+    },
     "episode-aired-help" : {
       "comment" : "Help tag on an episode row that has aired. The day is already written in full. Argument 1: day (Text).",
       "extractionState" : "manual",
@@ -39817,6 +39829,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld min · Aired %2$@"
+          }
+        }
+      }
+    },
+    "episode-facts-join" : {
+      "comment" : "Two parts of an episode's facts line, set one after the other. Argument 1: first (Text). Argument 2: second (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
           }
         }
       }
@@ -41139,6 +41163,18 @@
         }
       }
     },
+    "episode-protection-hide" : {
+      "comment" : "Button in that line once the rows after it are shown: hides them again.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide"
+          }
+        }
+      }
+    },
     "episode-protection-line" : {
       "comment" : "One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden. Argument 1: episode (Int).",
       "extractionState" : "manual",
@@ -41163,6 +41199,42 @@
         }
       }
     },
+    "episode-protection-show" : {
+      "comment" : "Button in the line where spoiler protection starts: shows what comes after.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show"
+          }
+        }
+      }
+    },
+    "episode-protection-shown" : {
+      "comment" : "The line where spoiler protection starts, once the rows after it are shown. Argument 1: episode (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Showing what comes after episode %1$lld."
+          }
+        }
+      }
+    },
+    "episode-protection-shown-short" : {
+      "comment" : "The same line on phones. Argument 1: episode (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Showing after episode %1$lld"
+          }
+        }
+      }
+    },
     "episode-range" : {
       "comment" : "Label of an episode range of a long series, in the range menu. Argument 1: from (Int). Argument 2: to (Int).",
       "extractionState" : "manual",
@@ -41175,6 +41247,18 @@
         }
       }
     },
+    "episode-range-item" : {
+      "comment" : "An item of the range menu: the range, then Watched or Not out yet. Argument 1: range (Text). Argument 2: state (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
     "episode-range-label" : {
       "comment" : "Label of the control that picks an episode range.",
       "extractionState" : "manual",
@@ -41183,6 +41267,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Episode range"
+          }
+        }
+      }
+    },
+    "episode-range-short" : {
+      "comment" : "An episode range in the range menu: the first and the last episode. Argument 1: from (Text). Argument 2: to (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@–%2$@"
           }
         }
       }
@@ -41351,6 +41447,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chưa phát sóng"
+          }
+        }
+      }
+    },
+    "episode-short" : {
+      "comment" : "An episode's number in a facts line on phones. Argument 1: episode (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E%1$lld"
           }
         }
       }

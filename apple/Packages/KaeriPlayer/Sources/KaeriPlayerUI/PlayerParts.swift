@@ -1181,6 +1181,8 @@ struct EpisodeList: View {
     /// After an episode is picked: the iPhone's and iPad's sheet closes, since the sources move
     /// to the picked row and every row between would shift under the next tap.
     var picked: (() -> Void)? = nil
+    /// The episode the pointer is over, for the panel's footer.
+    var pointed: Binding<String?>? = nil
 
     var body: some View {
         let episodes = model.menus?.episodes ?? []
@@ -1212,6 +1214,14 @@ struct EpisodeList: View {
         ) {
             model.choose(.episode(row.number))
             if !row.current { picked?() }
+        }
+        .onHover { inside in
+            guard let pointed else { return }
+            if inside {
+                pointed.wrappedValue = row.number
+            } else if pointed.wrappedValue == row.number {
+                pointed.wrappedValue = nil
+            }
         }
     }
 
@@ -1394,5 +1404,74 @@ struct MarkedStretch: View {
             .animation(.quick, value: start)
             .animation(.quick, value: view.end)
         }
+    }
+}
+
+/// The foot of the Episodes panel: the title of the episode the pointer is over, else the one
+/// playing, and its synopsis in two lines. A protected episode gets its title and length and no
+/// synopsis, and no bar to say so. The room is kept only if the table had synopses when the panel
+/// opened; text that comes later fades in.
+struct EpisodeFooter: View {
+    @Environment(AppStore.self) private var store
+    let model: PlayerModel
+    let pointed: String?
+    /// Whether the table had synopses when the panel opened.
+    @State private var reserved: Bool?
+
+    var body: some View {
+        let id = model.staged?.id
+        let table = id.flatMap { store.titles.episodes[$0] } ?? []
+        // A stack, not a Group: a Group with nothing in it never runs onAppear.
+        VStack(spacing: 0) {
+            if reserved == true, let id {
+                footer(id: id, table: table)
+            }
+        }
+        .animation(.fadeIn, value: reserved)
+        .onAppear { reserved = episodeText(rows: table) == .present }
+    }
+
+    private func footer(id: AnilistId, table: [EpisodeRow]) -> some View {
+        let episodes = model.menus?.episodes ?? []
+        // A screenshot points at a row by its words, as the list's rows light them.
+        let named = model.pointedRow.flatMap { words in
+            episodes.first { item in
+                (item.title.map { "\(item.label) · \($0)" } ?? item.label) == words
+            }?.number
+        }
+        let number = pointed ?? named ?? episodes.first(where: \.current)?.number
+        let row = table.first { $0.number == number }
+        let entry = store.titles[id]
+        let hidden = row.map { row in
+            store.spoilerProtection(for: id) && !row.completed
+                && (UInt32(row.number) ?? 0) > (entry?.progress?.next ?? 1)
+        } ?? false
+        let text = hidden ? nil : row?.description
+        return VStack(alignment: .leading, spacing: 2) {
+            if let row {
+                Text(row.title.map { L.episodeTitledText(number: row.number, title: $0) } ?? L.episodeNumberString(number: row.number))
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.silk)
+                    .lineLimit(1)
+                ZStack(alignment: .topLeading) {
+                    if hidden {
+                        Text(row.durationSecs.map { L.episodeFactsLength(minutes: max(1, Int((Double($0) / 60).rounded()))) } ?? "")
+                            .id("facts")
+                    } else if let text, !text.isEmpty {
+                        Text(text).lineLimit(2).id(text)
+                    }
+                }
+                .font(.system(size: 12))
+                .foregroundStyle(.haze)
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+                .transition(.opacity)
+                .animation(.fadeIn, value: text)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, minHeight: 64, alignment: .topLeading)
+        .overlay(alignment: .top) { Rectangle().fill(Palette.faintRule).frame(height: 1) }
+        .accessibilityElement(children: .combine)
     }
 }

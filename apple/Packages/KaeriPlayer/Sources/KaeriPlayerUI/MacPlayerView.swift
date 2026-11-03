@@ -29,6 +29,8 @@ public struct MacPlayerView: View {
     /// The top bar's control under the pointer, as the title bar strip says it: where the
     /// controls' own hover cannot see it.
     @State private var pointed: String?
+    /// The episode under the pointer in the Episodes panel.
+    @State private var pointedEpisode: String?
     /// The watch party's popover on the people button.
     @State private var partyOpen = false
     @FocusState private var focused: Bool
@@ -403,13 +405,14 @@ public struct MacPlayerView: View {
         Color.clear
             .contentShape(.rect)
             .onTapGesture { panel = nil }
+        VStack(spacing: 0) {
         MenuPanelFrame {
             ScrollViewReader { list in
                 MenuScroll {
                     VStack(alignment: .leading, spacing: 0) {
                         switch which {
                         case .tracks: TrackLists(model: model, metrics: metrics)
-                        case .episodes: EpisodeList(model: model, metrics: metrics)
+                        case .episodes: EpisodeList(model: model, metrics: metrics, pointed: $pointedEpisode)
                         case .speed: SpeedList(model: model, metrics: metrics)
                         case .picture: PictureLists(model: model, metrics: metrics)
                         }
@@ -421,6 +424,12 @@ public struct MacPlayerView: View {
                     if let row = selectedRow(which) { list.scrollTo(row, anchor: .center) }
                 }
             }
+        }
+        // The pointed episode's title and synopsis in three lines, kept only if the table had
+        // synopses when the panel opened.
+        if which == .episodes {
+            EpisodeFooter(model: model, pointed: pointedEpisode)
+        }
         }
         .frame(width: Self.panelWidth(which))
         .background(.glassFill, in: .rect(cornerRadius: 12))

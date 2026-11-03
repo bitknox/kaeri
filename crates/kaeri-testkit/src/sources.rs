@@ -217,6 +217,89 @@ pub fn with_long_franchise_and(
     provider
 }
 
+/// The episodes of [`fixtures::SYNOPSIS_SHOW`] and [`fixtures::LONG_RUNNER`] as the source lists
+/// them: a title and a still each, and a synopsis on all but the tenth of the first and every
+/// ninth of the second, as most sources have gaps.
+pub fn with_synopsis_episodes(provider: MockProvider) -> MockProvider {
+    const LETTERS: [&str; 12] = [
+        "Paper Lanterns",
+        "First Mail",
+        "The Cloud Line",
+        "A Quiet Island",
+        "Paper Lanterns Again",
+        "The Quiet Harbour",
+        "Rain over Kiriya Pass",
+        "A Letter Never Sent",
+        "The Last Lamplighter",
+        "Where the Roads Cross",
+        "The Long Way Home",
+        "The Edge of the Chart",
+    ];
+    const TEXT: [&str; 12] = [
+        "The crew take on a cargo of lanterns for a festival nobody has told them the date of.",
+        "Toma flies her first route alone, and learns what the mail is really worth.",
+        "A bank of cloud hides the next island for three days. The crew argue about what is in it.",
+        "A town with no visitors asks the crew to stay one night. One night becomes a week.",
+        "The festival comes at last, and the lanterns are lit over an empty sea.",
+        "The crew wait out a calm at a floating harbour where nobody has docked in years. Ryo keeps the engine warm through the night, and a stranger asks for passage to an island that is on no chart.",
+        "A storm closes Kiriya Pass with the mail still aboard. Toma has to choose between turning back and flying the old route under the cloud line, the one her mentor never came back from.",
+        "Ryo finds the letter Toma has carried since the first night, and reads it before she can stop him. Neither of them speaks again until the lamps of Hoshimi come up out of the cloud.",
+        "On an island with one lamp left, the crew meet the keeper who lights it every night for a ship that stopped coming. Ryo stays behind to help, and nearly misses the morning departure. The keeper gives Toma a map that was never meant to leave the island, and asks only that she carry it past the edge of the cloud sea.",
+        "",
+        "Toma turns the airship for home, and finds the route has changed while she was away.",
+        "At the edge of every chart there is one more island, and a lamp already lit.",
+    ];
+    let runtime = Duration::from_secs(24 * 60);
+    let letters = (1..=fixtures::SYNOPSIS_SHOW_EPISODES)
+        .map(|n| {
+            let at = n as usize - 1;
+            Episode {
+                title: Some(LETTERS[at].to_owned()),
+                thumbnail: Some(still(fixtures::SYNOPSIS_SHOW, n)),
+                duration: Some(runtime),
+                air_date: Some(air_date(n)),
+                description: (!TEXT[at].is_empty()).then(|| TEXT[at].to_owned()),
+                filler: (n == 10).then_some(true),
+                ..Episode::new(n)
+            }
+        })
+        .collect();
+    const PLACES: [&str; 6] = [
+        "Harbour",
+        "Lantern Street",
+        "Tide Market",
+        "Ferry Landing",
+        "Clock Tower",
+        "Chart House",
+    ];
+    const THINGS: [&str; 5] = ["Umbrella", "Ticket", "Alibi", "Pendulum", "Ledger"];
+    let runner = (1..=fixtures::LONG_RUNNER_EPISODES)
+        .map(|n| {
+            let place = PLACES[n as usize % PLACES.len()];
+            let thing = THINGS[(n as usize / 3) % THINGS.len()];
+            let described = n % 9 != 0;
+            Episode {
+                title: Some(format!("The {thing} at {place}")),
+                thumbnail: Some(still(fixtures::LONG_RUNNER, n)),
+                duration: Some(runtime),
+                description: described.then(|| {
+                    format!(
+                        "Inspector Mido is called to {place} when a {} goes missing. The only \
+                         witness is a clock that runs four minutes slow, and nobody agrees on \
+                         who set it that way. By the next tide Mido has to choose whom to \
+                         believe.",
+                        thing.to_lowercase()
+                    )
+                }),
+                ..Episode::new(n)
+            }
+        })
+        .collect();
+    provider
+        .with_episodes_for(key(fixtures::SYNOPSIS_SHOW), letters)
+        .with_episodes_for(key(fixtures::LONG_RUNNER), runner)
+}
+
 /// A registry holding only the fixture provider.
 pub fn registry() -> ProviderRegistry {
     ProviderRegistry::new(vec![provider().arc()])
