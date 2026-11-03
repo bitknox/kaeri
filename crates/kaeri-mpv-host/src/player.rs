@@ -383,7 +383,7 @@ impl Player {
     /// output, such as a change of a `d3d11-output-*` option, makes a new one, and mpv says
     /// nothing when it does, so the app asks again from time to time and binds what is new.
     pub fn swapchain(&self) -> Option<u64> {
-        self.shared.mpv.get("display-swapchain")?.as_i64().filter(|&a| a != 0).map(|a| a as u64)
+        swapchain_of(&self.shared.mpv)
     }
 
     /// The display's HDR, for composition mode, where mpv cannot see the display: with
@@ -429,6 +429,13 @@ impl Drop for Player {
             let _ = thread.join();
         }
     }
+}
+
+/// [`Player::swapchain`], asked of a core the caller holds. mpv answers from its video thread,
+/// which can be busy for seconds with a shader compile or a rebuild after a resize, so this
+/// blocks for as long: never call it on the app's main thread.
+pub fn swapchain_of(mpv: &Mpv) -> Option<u64> {
+    mpv.get("display-swapchain")?.as_i64().filter(|&a| a != 0).map(|a| a as u64)
 }
 
 /// What [`Player::hdr_output`] sets: the colour-space hint, and the peak it tone-maps to.

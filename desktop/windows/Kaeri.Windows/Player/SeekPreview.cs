@@ -27,6 +27,7 @@ sealed class SeekPreview : IDisposable
     readonly FfiEngine engine;
     readonly SwapChainPanel panel;
     readonly DispatcherQueueTimer pump;
+    readonly SwapchainAsk ask;
     FfiPlayer? player;
     PreviewSource? source;
     nint bound;
@@ -38,6 +39,7 @@ sealed class SeekPreview : IDisposable
     {
         this.engine = engine;
         this.panel = panel;
+        ask = new SwapchainAsk(queue);
         pump = queue.CreateTimer();
         pump.Interval = TimeSpan.FromMilliseconds(80);
         pump.Tick += (_, _) => Pump();
@@ -108,21 +110,25 @@ sealed class SeekPreview : IDisposable
         }
     }
 
-    /// <summary>Hand mpv's swapchain to the panel once it has made one.</summary>
+    /// <summary>Hand mpv's swapchain to the panel once it has made one, asked off the UI thread.</summary>
     void Bind()
     {
-        var swapchain = (nint)(player?.Swapchain() ?? 0);
-        if (swapchain == 0 || swapchain == bound)
+        if (player is not { } asked)
             return;
-        try
+        ask.Ask(asked, swapchain =>
         {
-            Dxgi.SetSwapChain(panel, swapchain);
-            bound = swapchain;
-        }
-        catch (Exception e)
-        {
-            KaeriFfiMethods.LogLine(FfiLogLevel.Warn, "windows", $"binding the preview's swapchain failed: {e.Message}");
-        }
+            if (player != asked || swapchain == bound)
+                return;
+            try
+            {
+                Dxgi.SetSwapChain(panel, swapchain);
+                bound = swapchain;
+            }
+            catch (Exception e)
+            {
+                KaeriFfiMethods.LogLine(FfiLogLevel.Warn, "windows", $"binding the preview's swapchain failed: {e.Message}");
+            }
+        });
     }
 
     /// <summary>Done with this file, or with previews: that mpv shuts down.</summary>

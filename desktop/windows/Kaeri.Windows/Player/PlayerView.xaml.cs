@@ -696,11 +696,14 @@ public sealed partial class PlayerView : UserControl
         // The panel's timed states: the dashes, the waiting line, "Copied" going.
         if (stats.Shown)
             ShowStats();
-        if (player is null)
+        if (player is not { } asked)
             return;
-        var swapchain = (nint)player.Swapchain();
-        if (swapchain != 0 && swapchain != bound)
+        swapchainAsk ??= new SwapchainAsk(DispatcherQueue);
+        swapchainAsk.Ask(asked, swapchain =>
         {
+            // The answer for a player since closed or replaced is not this one's.
+            if (player != asked || swapchain == bound)
+                return;
             try
             {
                 Dxgi.SetSwapChain(VideoPanel, swapchain);
@@ -713,8 +716,10 @@ public sealed partial class PlayerView : UserControl
             {
                 KaeriFfiMethods.LogLine(FfiLogLevel.Warn, "windows", $"binding mpv's swapchain failed: {e.Message}");
             }
-        }
+        });
     }
+
+    SwapchainAsk? swapchainAsk;
 
     (uint W, uint H, double Scale)? panelAsked, panelSent;
     Microsoft.UI.Dispatching.DispatcherQueueTimer? panelPace;
