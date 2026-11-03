@@ -90,11 +90,11 @@ struct YourDevicesGroup: View {
                 let tv = store.tv.paired.first { $0.name == device.name }
                 SettingsRow(title: device.name, note: line.text, dot: line.state) {
                     HStack(spacing: 12) {
-                        Text(L.devicesSyncSwitch).font(.mac(12)).foregroundStyle(.haze)
+                        Text(L.devicesSyncSwitch).font(.mac(12)).foregroundStyle(.haze).fixedSize()
                         Toggle(L.devicesSyncSwitch, isOn: Binding(get: { true }, set: { if !$0 { removing = device } }))
                             .toggleStyle(.switch).tint(.amber).labelsHidden()
                         if device.folder == nil, tv != nil || device.name.hasSuffix("TV") {
-                            Text(L.devicesRemoteSwitch).font(.mac(12)).foregroundStyle(.haze)
+                            Text(L.devicesRemoteSwitch).font(.mac(12)).foregroundStyle(.haze).fixedSize()
                             Toggle(L.devicesRemoteSwitch, isOn: Binding(
                                 get: { tv != nil },
                                 set: { on in
@@ -177,6 +177,7 @@ struct CloudRow: View {
                     buttons(sync, state: line.state)
                 }
                 .buttonStyle(SecondaryCapsuleStyle(raisedSurface: true))
+                .fixedSize()
                 .disabled(dimmed)
             }
             .padding(EdgeInsets(top: 8, leading: 10, bottom: 8, trailing: 6))

@@ -309,7 +309,7 @@ struct RecoveryKeySheet: View {
                 SyncChoice(title: L.rkeyQr) { withAnimation(reduceMotion ? nil : .standard) { qr.toggle() } }
             }
             if qr {
-                InviteQR(link: groups.joined(), device: false)
+                InviteQR(link: groups.joined(), device: false, caption: false, label: L.rkeyQr)
                     .frame(maxWidth: .infinity)
                     .transition(.opacity)
             }
@@ -341,7 +341,7 @@ struct RecoveryKeySheet: View {
         .foregroundStyle(.silk)
         .frame(maxWidth: .infinity)
         .padding(.vertical, 18)
-        .background(Palette.raised, in: .rect(cornerRadius: 12))
+        .background(touch ? Palette.raised : Palette.ground, in: .rect(cornerRadius: 12))
         #if os(iOS)
         .listRowBackground(Color.clear)
         .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
@@ -431,7 +431,7 @@ struct PairShowSheet: View {
         .animation(reduceMotion ? nil : .standard, value: sync.pair)
         .task {
             sync.resetPair()
-            sync.invite(deviceName: sync.deviceName.isEmpty ? DeviceNaming.system : sync.deviceName)
+            if !sync.staged { sync.invite(deviceName: sync.deviceName.isEmpty ? DeviceNaming.system : sync.deviceName) }
         }
         .onChange(of: sync.devices.count) { old, new in
             if new > old, sync.invite != nil, let other = sync.others.last { sync.stage(pair: .paired(other.name)) }
@@ -443,12 +443,14 @@ struct PairShowSheet: View {
         SyncSheetFrame(title: L.pairShowTitle, cancel: { sync.close() }) {
             if let invite = sync.invite {
                 let address = LocalAddress.current
-                HStack(alignment: .center, spacing: 28) {
-                    InviteQR(link: "kaeri://pair/\(invite.code)@\(address):\(invite.port)", device: false)
-                    Text(spaced(invite.code))
-                        .font(.system(size: touch ? 40 : 34, weight: .semibold, design: .monospaced))
-                        .foregroundStyle(.silk)
-                        .accessibilityLabel(invite.code.map(String.init).joined(separator: " "))
+                let code = Text(spaced(invite.code))
+                    .font(.system(size: touch ? 40 : 34, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(.silk)
+                    .accessibilityLabel(invite.code.map(String.init).joined(separator: " "))
+                let qr = InviteQR(link: "kaeri://pair/\(invite.code)@\(address):\(invite.port)", device: false, caption: false, label: L.pairShowTitle)
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .center, spacing: 28) { qr; code }
+                    VStack(alignment: .center, spacing: 20) { qr; code }
                 }
                 .frame(maxWidth: .infinity)
                 #if os(iOS)
@@ -463,6 +465,9 @@ struct PairShowSheet: View {
                             .monospacedDigit()
                     }
                 }
+                #if os(iOS)
+                .listRowBackground(Color.clear)
+                #endif
                 SyncNote(text: address + ":" + String(invite.port)).monospacedDigit()
             } else {
                 ProgressView().frame(maxWidth: .infinity)
@@ -604,7 +609,7 @@ struct PairedContent: View {
                 }
             }
         } bottom: {
-            SyncButton(title: L.actionDone, primary: true, wide: true) {
+            SyncButton(title: L.actionDone, primary: true, wide: Device.name != "Mac") { // i18n-skip
                 if copySignIns { sync.copySignIns(from: device, [.trackers]) }
                 sync.resetPair()
                 sync.close()

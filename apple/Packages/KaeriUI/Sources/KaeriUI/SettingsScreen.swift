@@ -283,6 +283,22 @@ struct SettingsTabs: View {
     @Binding var selection: SettingsPane
 
     var body: some View {
+        #if os(iOS)
+        // Eleven panes outgrow an iPad's width: the row scrolls, and its ends fade where more is.
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) { tabs.padding(.horizontal, 16) }
+                .mask(LinearGradient(stops: [
+                    .init(color: .clear, location: 0), .init(color: .black, location: 0.03),
+                    .init(color: .black, location: 0.94), .init(color: .clear, location: 1),
+                ], startPoint: .leading, endPoint: .trailing))
+                .onChange(of: selection) { _, new in withAnimation(.standard) { proxy.scrollTo(new, anchor: .center) } }
+        }
+        #else
+        tabs
+        #endif
+    }
+
+    private var tabs: some View {
         HStack(spacing: 4) {
             ForEach(SettingsPane.shown) { pane in
                 let selected = pane == selection
@@ -292,12 +308,14 @@ struct SettingsTabs: View {
                     Text(pane.title)
                         .font(.mac(13, weight: selected ? .medium : .regular))
                         .foregroundStyle(selected ? .amber : .silk)
+                        .fixedSize()
                         .padding(.horizontal, 12)
                         .frame(height: 28)
                         .background(selected ? Palette.selection : .clear, in: .capsule)
                         .contentShape(.capsule)
                 }
                 .buttonStyle(.plain)
+                .id(pane)
                 .accessibilityAddTraits(selected ? .isSelected : [])
             }
         }

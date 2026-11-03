@@ -39,8 +39,16 @@ struct SyncSheetFrame<Content: View, Bottom: View>: View {
         .background(.raised)
         #else
         NavigationStack {
-            PhoneList { content }
-                .navigationTitle(title)
+            PhoneList {
+                Text(title)
+                    .font(.ui(30, weight: .bold))
+                    .foregroundStyle(.silk)
+                    .accessibilityAddTraits(.isHeader)
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                content
+            }
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     if let cancel {

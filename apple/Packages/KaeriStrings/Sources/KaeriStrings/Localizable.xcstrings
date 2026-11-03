@@ -48175,18 +48175,6 @@
         }
       }
     },
-    "first-setup-other-mac" : {
-      "comment" : "Mac menu item that opens the pairing sheet from first launch.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Set up from another device"
-          }
-        }
-      }
-    },
     "format-movie" : {
       "comment" : "Format of a show: a film.",
       "extractionState" : "manual",

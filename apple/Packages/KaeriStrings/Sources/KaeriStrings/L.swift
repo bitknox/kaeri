@@ -2641,9 +2641,6 @@ public enum L {
     /// Sheet title while a cloud service is being signed in to on Apple.
     public static var cloudSheetWait: String { string("cloud-sheet-wait", fallback: "Finish signing in") }
 
-    /// Mac menu item that opens the pairing sheet from first launch.
-    public static var firstSetupOtherMac: String { string("first-setup-other-mac", fallback: "Set up from another device") }
-
     /// Line on a profile row that says it syncs with a device's profile.
     public static var profilesSyncsNothing: String { string("profiles-syncs-nothing", fallback: "Not synced") }
 

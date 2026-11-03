@@ -22,7 +22,7 @@ cloud-add-row = Add a cloud folder
 
 # Title of the iPad and Mac launch picker's explanation.
 # @only apple
-profiles-picker-line = Choose a profile to continue. You can turn this question off in Settings, Profiles.
+profiles-picker-line = Choose a profile to { -proceed }. You can turn this question off in Settings, Profiles.
 
 # Menu item on the Mac menu bar, the Profile menu's title.
 # @only apple
@@ -39,10 +39,6 @@ pair-code-hint = Six digits
 # Sheet title while a cloud service is being signed in to on Apple.
 # @only apple
 cloud-sheet-wait = Finish signing in
-
-# Mac menu item that opens the pairing sheet from first launch.
-# @only apple
-first-setup-other-mac = Set up from another device
 
 # Line on a profile row that says it syncs with a device's profile.
 # @only apple
@@ -62,7 +58,7 @@ sync-popover-title = Sync
 
 # Row in the sync popover that opens Devices.
 # @only apple
-sync-popover-open = Open Devices
+sync-popover-open = Open { -device-cap-pl }
 
 # Button that shows something kept out of sight, such as the recovery key.
 # @only apple
@@ -78,7 +74,7 @@ pair-enter-code = Enter a code
 
 # Line under the recovery key row on the Devices page.
 # @only apple
-rkey-restores = Restores everything if you lose every device.
+rkey-restores = Restores everything if you lose every { -device }.
 
 # Button on the Devices page that asks before turning sync off on this device.
 # @only apple
