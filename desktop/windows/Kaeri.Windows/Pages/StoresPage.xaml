@@ -35,8 +35,10 @@
       </Grid.RowDefinitions>
       <ScrollViewer x:Name="ListScroll" VerticalScrollBarVisibility="Auto">
         <StackPanel Spacing="8" Padding="0,0,8,24">
-          <ListView x:Name="StoreList" SelectionMode="Single" SelectionChanged="OnSelected" Margin="-12,0,0,0"
-                    AutomationProperties.Name="{x:Bind app:T.NavPluginStores}" />
+          <local:StateHost x:Name="State">
+            <ListView x:Name="StoreList" SelectionMode="Single" SelectionChanged="OnSelected" Margin="-12,0,0,0"
+                      AutomationProperties.Name="{x:Bind app:T.NavPluginStores}" />
+          </local:StateHost>
           <StackPanel x:Name="Empty" Spacing="4" Margin="0,16,0,0" Visibility="Collapsed">
             <TextBlock Text="{x:Bind app:T.StoresEmptyTitle}" Style="{StaticResource BodyStrongTextBlockStyle}" />
             <TextBlock Text="{x:Bind app:T.StoresWhatIs}" Style="{StaticResource HazeBodyStyle}" TextWrapping="WrapWholeWords" />

@@ -80,7 +80,7 @@ public sealed partial class CalendarPage : Page
         rows = ctx.Known.ListRows(new ContentFor.Calendar());
         loaded = ctx.Known.Lists.TryGetValue(new ContentFor.Calendar(), out var list) && list is ContentList.Entries or ContentList.Empty || rows.Length > 0;
         if (!loaded)
-            silence.Start();
+            FirstWait();
         minute.Start();
         ctx.Send(new Command.LoadCalendar());
         Show();
@@ -90,11 +90,20 @@ public sealed partial class CalendarPage : Page
     void Refresh()
     {
         failed = null;
-        placeholders = false;
         if (!loaded)
-            silence.Start();
+            FirstWait();
         ctx.Send(new Command.RefreshCalendar());
         Show();
+    }
+
+    /// <summary>The first week on its way: nothing for 600 ms, then plates, and the activity line past 4 s.</summary>
+    void FirstWait()
+    {
+        placeholders = slow = false;
+        silence.Stop();
+        silence.Start();
+        activity.Stop();
+        activity.Start();
     }
 
     void Heard(IReadOnlyList<Event> batch)
@@ -108,8 +117,17 @@ public sealed partial class CalendarPage : Page
                 case Event.Content { View: ContentFor.Calendar } c when c.ContentValue is not ContentList.Loading:
                     rows = ctx.Known.ListRows(new ContentFor.Calendar());
                     failed = c.ContentValue is ContentList.Failed f && rows.Length == 0 ? f.V1 : null;
+                    var first = !loaded;
                     loaded = failed is null;
                     silence.Stop();
+                    if (first)
+                    {
+                        // No page asks are out before the first week: the activity line was its own.
+                        activity.Stop();
+                        slow = false;
+                        // Plates that showed stay 0.3 s and crossfade to the week.
+                        arrived |= loaded && placeholders;
+                    }
                     again = true;
                     break;
                 case Event.CalendarWindow w:
@@ -334,6 +352,9 @@ public sealed partial class CalendarPage : Page
         Run(plan, i => plan.Failed(i) && !plan.PastSide[i], () => Failure(T.CalendarLoadLaterFailed));
         if (plan.MineEmpty)
             Run(plan, i => !plan.Plain(i), MineEmptyLine);
+        // The first week past 4 s: one line under all seven days' plates.
+        if (!loaded && placeholders && slow)
+            Run(plan, _ => true, () => Activity(T.StateLoading), row: 1);
         if (slow)
         {
             Run(plan, i => plan.Pending[i] && !plan.Failed(i) && plan.PastSide[i], () => Activity(T.CalendarLoadingEarlier), row: 1);
@@ -562,6 +583,8 @@ public sealed partial class CalendarPage : Page
             list.Children.Add(Line(T.CalendarEnd));
         if (plan.Past.Any(b => b))
             list.Children.Add(Line(T.CalendarFloor));
+        if (!loaded && placeholders && slow)
+            list.Children.Add(Activity(T.StateLoading));
         Days.Children.Add(list);
     }
 

@@ -19,9 +19,18 @@ public sealed partial class StoresPage : Page
     bool quiet;
     string? inviteName;
 
+    /// <summary>The owner's member rows, kept across redraws so their 600 ms is not started again.</summary>
+    readonly StateHost membersState = new() { Placeholders = () => States.Rows(2, 0, 0, rowHeight: 36, spacing: 0) };
+    readonly StackPanel memberRows = new();
+
     public StoresPage()
     {
         InitializeComponent();
+        membersState.Children.Add(memberRows);
+        // The store rows: a name and a host, at the rows' own height.
+        State.Placeholders = () => States.Rows(3, 0, 0, rowHeight: 56, spacing: 0);
+        // The joined stores are kept on this device; offline, the list still comes.
+        State.NeedsConnection = false;
         ctx.Hear(this, Heard);
     }
 
@@ -60,6 +69,10 @@ public sealed partial class StoresPage : Page
         var current = stores.FirstOrDefault(s => s.Id == selected) ?? stores.FirstOrDefault();
         selected = current?.Id;
         Empty.Visibility = stores.Length == 0 && ctx.Known.StoresLoaded ? Visibility.Visible : Visibility.Collapsed;
+        if (ctx.Known.StoresLoaded)
+            State.Done();
+        else
+            State.Wait();
         StoreList.Items.Clear();
         foreach (var store in stores)
         {
@@ -193,6 +206,13 @@ public sealed partial class StoresPage : Page
 
         MakeInvite(store, members.InviteChoices || !ctx.Known.Members.ContainsKey(store.Id));
 
+        // The members come from the store: plates in their place while it answers.
+        memberRows.Children.Clear();
+        Detail.Children.Add(membersState);
+        if (ctx.Known.Members.ContainsKey(store.Id))
+            membersState.Done();
+        else
+            membersState.Wait();
         foreach (var member in members.Members ?? [])
         {
             var line = new Grid { ColumnSpacing = 8, Height = 36 };
@@ -214,7 +234,7 @@ public sealed partial class StoresPage : Page
                 Grid.SetColumn(remove, 1);
                 line.Children.Add(remove);
             }
-            Detail.Children.Add(line);
+            memberRows.Children.Add(line);
         }
         InviteLists(store, members.Invites ?? [], members.Ended ?? []);
 
