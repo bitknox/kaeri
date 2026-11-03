@@ -532,6 +532,26 @@ public sealed partial class MainWindow : Window
         PartyHeard(batch);
         foreach (var e in batch)
         {
+            // --play: Home's spotlight, the title Continue leads with, once the engine has it. Before
+            // the switch, whose first Continue case, the crash question, would take the event.
+            if (options.Play && !played)
+            {
+                if (e is Event.Home && ctx.Known.Home.Spotlight is { } spot)
+                {
+                    played = true;
+                    ctx.Play(spot.Entry.Id, spot.Episode.ToString(CultureInfo.InvariantCulture));
+                }
+                else if (e is Event.Content { View: ContentFor.Continue, ContentValue: ContentList.Entries })
+                {
+                    var entries = ctx.Known.ListEntries(new ContentFor.Continue());
+                    var queue = Wording.Said(KaeriFfiMethods.ContinueQueue(entries, [.. ctx.Known.HiddenFromContinue], Casing.Sentence));
+                    if (queue.InProgress.Concat(queue.NewThisWeek).FirstOrDefault(q => q.Playable) is { } first)
+                    {
+                        played = true;
+                        ctx.Play(first.Entry.Id, first.Episode.ToString(CultureInfo.InvariantCulture));
+                    }
+                }
+            }
             switch (e)
             {
                 case Event.Sync:
@@ -588,13 +608,6 @@ public sealed partial class MainWindow : Window
                 case Event.NewEpisodes n:
                     foreach (var notice in Notices.Aired(n.V1))
                         toasts?.Post(notice);
-                    break;
-                case Event.Content { View: ContentFor.Continue, ContentValue: ContentList.Entries } when options.Play && !played:
-                    played = true;
-                    var entries = ctx.Known.ListEntries(new ContentFor.Continue());
-                    var queue = Wording.Said(KaeriFfiMethods.ContinueQueue(entries, [.. ctx.Known.HiddenFromContinue], Casing.Sentence));
-                    if (queue.InProgress.Concat(queue.NewThisWeek).FirstOrDefault(q => q.Playable) is { } first)
-                        ctx.Play(first.Entry.Id, first.Episode.ToString());
                     break;
             }
         }
