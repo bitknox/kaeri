@@ -33,6 +33,9 @@ public sealed class Known
 
     public SettingsView? Settings { get; private set; }
 
+    /// <summary>Each show's own settings sheet, as the engine last sent it, by AniList id.</summary>
+    public Dictionary<uint, ShowSettingsView> ShowSheets { get; } = [];
+
     /// <summary>Play the demo was pressed and the player has not opened yet: the starting screen is the demo's.</summary>
     public bool DemoPlay { get; set; }
 
@@ -308,6 +311,9 @@ public sealed class Known
                 break;
             case Event.Settings s:
                 Settings = s.V1;
+                break;
+            case Event.ShowSettings sheet:
+                ShowSheets[sheet.V1.Id] = sheet.V1;
                 break;
             case Event.Autoplay a:
                 Autoplay = a.V1;

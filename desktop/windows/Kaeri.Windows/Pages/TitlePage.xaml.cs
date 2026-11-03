@@ -22,7 +22,7 @@ public sealed partial class EpisodeItem : INotifyPropertyChanged
     internal EpisodeItem(EpisodeRow row, bool spoiler, uint title = 0)
     {
         Row = row;
-        Spoiler = spoiler;
+        this.spoiler = spoiler;
         Title = title;
         Discussion = Ctx.Current is { } ctx && uint.TryParse(row.Number, out var n) ? ctx.Known.Discussions.GetValueOrDefault((title, n)) : 0;
     }
@@ -48,7 +48,22 @@ public sealed partial class EpisodeItem : INotifyPropertyChanged
     public Visibility DiscussionShown => Discussion > 0 ? Visibility.Visible : Visibility.Collapsed;
 
     public EpisodeRow Row { get; }
-    public bool Spoiler { get; }
+
+    bool spoiler;
+
+    /// <summary>Spoiler protection blurs the still: it follows the setting while the page is open.</summary>
+    public bool Spoiler
+    {
+        get => spoiler;
+        set
+        {
+            if (spoiler == value)
+                return;
+            spoiler = value;
+            Changed(nameof(SpoilerShown));
+        }
+    }
+
     public string Heading => long.TryParse(Row.Number, out var n)
         ? Row.Title is { Length: > 0 } t ? T.EpisodeWithTitle(n, t) : T.EpisodeNumber(n)
         : Row.Title is { Length: > 0 } named ? T.EpisodeTextWithTitle(Row.Number, named) : T.EpisodeNumberText(Row.Number);
@@ -236,6 +251,8 @@ public sealed partial class TitlePage : Page, IPageKeys
         // The queue, for each row's download cell.
         ctx.Send(new Command.LoadDownloads());
         ctx.Send(new Command.LoadDub(id));
+        // What the show sets for itself, its spoiler protection among it.
+        ctx.Send(new Command.LoadShowSettings(id));
         DubLine.Opacity = 0;
         Show();
         ShowEpisodes();
@@ -410,6 +427,10 @@ public sealed partial class TitlePage : Page, IPageKeys
                     break;
                 case Event.Downloads d:
                     ShowDownloads(d.V1);
+                    break;
+                case Event.Settings:
+                case Event.ShowSettings sheet when sheet.V1.Id == id:
+                    ShowSpoilers();
                     break;
                 case Event.TitlesChanged:
                     // Named another way now, with its relations and recommendations.
@@ -711,11 +732,11 @@ public sealed partial class TitlePage : Page, IPageKeys
         if (!ctx.Known.Episodes.TryGetValue(id, out var rows))
             return;
         var next = ctx.Known.Entry(id)?.Progress?.Next ?? 1;
+        var on = Spoilers.On(ctx.Known, id);
         var items = rows.Select(r =>
         {
-            var spoiler = uint.TryParse(r.Number, out var n) && n > next && !r.Completed;
-            var item = new EpisodeItem(r, spoiler, id);
-            // A spoiler's still loads too, and shows blurred.
+            var item = new EpisodeItem(r, Spoilers.StillHidden(r, next, on), id);
+            // A spoiler's still loads too, and shows blurred, so turning protection off shows it at once.
             ctx.Art.Bind(r.Thumbnail, s => item.Still = s);
             return item;
         }).ToList();
@@ -727,6 +748,20 @@ public sealed partial class TitlePage : Page, IPageKeys
     }
 
     static T Res<T>(string key) => (T)Application.Current.Resources[key];
+
+    /// <summary>
+    /// The rows' blur, after spoiler protection changed in Settings or for this show: the rows
+    /// stay as they are, with their focus and the scroll place, and only the blur follows.
+    /// </summary>
+    void ShowSpoilers()
+    {
+        if (EpisodeList.ItemsSource is not IEnumerable<EpisodeItem> items)
+            return;
+        var next = ctx.Known.Entry(id)?.Progress?.Next ?? 1;
+        var on = Spoilers.On(ctx.Known, id);
+        foreach (var item in items)
+            item.Spoiler = Spoilers.StillHidden(item.Row, next, on);
+    }
 
     /// <summary>Each episode row's download cell, from the queue.</summary>
     void ShowDownloads(DownloadRow[] rows)
