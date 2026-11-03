@@ -199,15 +199,17 @@ log="$work/build.log"
 package="$src/artifact-libmpv"
 dll="$package/libmpv-2.dll"
 [[ -f "$dll" ]] || fail "no libmpv-2.dll"
-licence="$(sed -n 's/^License: //p' "$log" | head -1)"
+licence="$(sed -n '/^License: /{s///p;q;}' "$log")"
 [[ "$licence" == "LGPL version 3 or later" || "$licence" == "LGPL version 2.1 or later" ]] ||
   fail "FFmpeg's configure says its licence is '$licence'"
 grep -q '^#define HAVE_GPL 0' "$src/build/config.h" || fail "mpv was configured with GPL code"
 [[ -f "$package/LICENSE.LGPL" ]] || fail "the package has no LICENSE.LGPL"
-"${FFBUILD_CROSS_PREFIX}objdump" -p "$dll" | grep -qw mpv_set_audio_tap ||
-  fail "libmpv-2.dll does not export mpv_set_audio_tap"
+# Read once into a variable: grep -q in a pipe would end objdump early, which pipefail counts
+# as a failure.
+pe="$("${FFBUILD_CROSS_PREFIX}objdump" -p "$dll")"
+grep -qw mpv_set_audio_tap <<<"$pe" || fail "libmpv-2.dll does not export mpv_set_audio_tap"
 # Everything but Windows is inside: no MinGW runtime or other library beside it.
-needs="$("${FFBUILD_CROSS_PREFIX}objdump" -p "$dll" | sed -n 's/^\s*DLL Name: //p' | sort -u | tr '\n' ' ')"
+needs="$(sed -n 's/^\s*DLL Name: //p' <<<"$pe" | sort -u | tr '\n' ' ')"
 [[ -n "$needs" ]] || fail "found no imports in libmpv-2.dll"
 for need in $needs; do
   case "${need,,}" in
