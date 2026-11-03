@@ -39,9 +39,11 @@ var all = new (string Name, Func<Run, Task> Body, string Scene, bool Player)[]
     // The person's own profile, sources and network, with no scene: only when asked for by name,
     // and only with their say-so, since it plays from their real sources and writes their history.
     ("real", Scenarios.Real, "", false),
+    // The same profile, only moving around: the sidebar's pages, and titles opened from Home.
+    ("real-nav", Scenarios.RealNav, "", false),
 };
 if (options.Only is null)
-    all = [.. all.Where(s => s.Name is not ("dump" or "real"))];
+    all = [.. all.Where(s => s.Name is not ("dump" or "real" or "real-nav"))];
 Directory.CreateDirectory(options.Out);
 var results = new List<Result>();
 Console.WriteLine($"Kaeri.Drive: display refresh {Native.RefreshHz()} Hz; the pointer and keyboard are in use until this says done.");
@@ -89,7 +91,8 @@ sealed record Args(string App, string Media, string Out, HashSet<string>? Only, 
 }
 
 /// <summary>One step's span on the probe's clock.</summary>
-sealed record Step(string Label, long Start, long End);
+/// <summary>One step's span on the probe's clock, and the moment of its click when it clicked.</summary>
+sealed record Step(string Label, long Start, long End, long? Click = null);
 
 sealed record Result(string Name, List<Step> Steps, List<string> Notes, string Dir, string? LogDir, DateTime Started);
 
@@ -153,16 +156,33 @@ sealed class Run(string name, Args options, string scene, string? media)
     public void Front()
     {
         Native.SetForegroundWindow(Hwnd);
-        Window.Focus();
+        // Not Window.Focus(): UI Automation would move the keyboard focus to the window itself,
+        // off the control that has it, and the player's keys would not reach the player.
+    }
+
+    long? clicked;
+
+    /// <summary>
+    /// The pointer glides to <paramref name="target"/>, then clicks, and the click's moment is the
+    /// step's: what the report times from, so the glide is not counted against the app.
+    /// </summary>
+    public void Click(AutomationElement target)
+    {
+        var r = target.BoundingRectangle;
+        Mouse.MoveTo(new Point(r.Left + r.Width / 2, r.Top + r.Height / 2));
+        Thread.Sleep(80);
+        clicked = Stopwatch.GetTimestamp();
+        Mouse.Click();
     }
 
     /// <summary>Runs <paramref name="act"/> as a named step, then checks the app is still there and answering.</summary>
     public async Task Step(string label, Func<Task> act)
     {
         Alive();
+        clicked = null;
         var start = Stopwatch.GetTimestamp();
         await act();
-        steps.Add(new(label, start, Stopwatch.GetTimestamp()));
+        steps.Add(new(label, start, Stopwatch.GetTimestamp(), clicked));
         Alive();
     }
 
@@ -225,7 +245,7 @@ sealed class Run(string name, Args options, string scene, string? media)
         if (back is null)
             Note("no back button in the title bar");
         else
-            back.Click(moveMouse: true);
+            Click(back);
     }
 
     public AutomationElement? NameStarts(string start) =>
@@ -285,7 +305,7 @@ sealed class Run(string name, Args options, string scene, string? media)
 
 static class Scenarios
 {
-    static readonly string[] Pages = ["Home", "Calendar", "Seasonal", "Library", "Downloads", "Watch together", "Sources", "Plugin stores"];
+    static readonly string[] Pages = ["Home", "Calendar", "Seasonal", "Search", "Library", "Downloads", "Watch together", "Sources", "Plugin stores"];
 
     public static async Task Nav(Run run)
     {
@@ -293,7 +313,7 @@ static class Scenarios
             foreach (var page in Pages)
                 await run.Step($"open {page}", async () =>
                 {
-                    (run.Named(page) ?? throw new InvalidOperationException($"no {page} item")).Click(moveMouse: true);
+                    run.Click(run.Named(page) ?? throw new InvalidOperationException($"no {page} item"));
                     await Task.Delay(1200);
                 });
     }
@@ -377,7 +397,7 @@ static class Scenarios
             var cover = covers[round % covers.Length];
             await run.Step("open a title from Seasonal", async () =>
             {
-                cover.Click(moveMouse: true);
+                run.Click(cover);
                 await Task.Delay(2500);
             });
             await run.Step("scroll the title page down and up", async () =>
@@ -471,7 +491,7 @@ static class Scenarios
             run.Note("no Resume or Play button on Home");
             return;
         }
-        button.Click(moveMouse: true);
+        run.Click(button);
         await Task.Delay(ms);
     }
 
@@ -508,6 +528,51 @@ static class Scenarios
         });
         await Stats(run, "stats after the run");
         run.Note("at the end");
+    }
+
+    /// <summary>
+    /// The person's own profile, moving around: the sidebar's pages, titles opened from Home, and
+    /// Play pressed on Continue twice, for how soon the starting screen shows.
+    /// </summary>
+    public static async Task RealNav(Run run)
+    {
+        await Task.Delay(5000);
+        await Nav(run);
+        for (var i = 0; i < 2; i++)
+        {
+            run.Named("Home")?.Click(moveMouse: true);
+            await Task.Delay(3000);
+            await run.Step("press Play on Continue: the starting screen", async () => await PlayFromHome(run, 12000));
+            await run.Step("close the player", async () =>
+            {
+                run.Front();
+                Keyboard.Type(VirtualKeyShort.ESCAPE);
+                await Task.Delay(2500);
+            });
+        }
+        run.Named("Home")?.Click(moveMouse: true);
+        await Task.Delay(3000);
+        for (var i = 0; i < 4; i++)
+        {
+            // Posters only: a Continue card ("…, Episode N next") would play.
+            var covers = run.Covers().Where(c => Run.Safe(() => c.Name)?.EndsWith(" next", StringComparison.Ordinal) != true).ToArray();
+            if (covers.Length == 0)
+            {
+                run.Note("no posters on Home");
+                return;
+            }
+            var cover = covers[i * 3 % covers.Length];
+            await run.Step("open a title from Home", async () =>
+            {
+                run.Click(cover);
+                await Task.Delay(3000);
+            });
+            await run.Step("back to Home", async () =>
+            {
+                run.TitleBack();
+                await Task.Delay(2500);
+            });
+        }
     }
 
     public static async Task Dump(Run run)
@@ -724,10 +789,11 @@ static class Report
             var frames = ReadFrames(Path.Combine(r.Dir, "frames.csv"));
             var stalls = ReadPairs(Path.Combine(r.Dir, "stalls.csv"));
             var memory = ReadMemory(Path.Combine(r.Dir, "memory.csv"));
+            var marks = ReadMarks(Path.Combine(r.Dir, "marks.csv"));
             md.AppendLine($"## {r.Name}");
             md.AppendLine();
-            md.AppendLine("| Step | Frames | p50 ms | p95 ms | p99 ms | Worst ms | Missed | Longest stall ms |");
-            md.AppendLine("|---|---:|---:|---:|---:|---:|---:|---:|");
+            md.AppendLine("| Step | Page shown ms | Frames | p50 ms | p95 ms | p99 ms | Worst ms | Missed | Longest stall ms |");
+            md.AppendLine("|---|---:|---:|---:|---:|---:|---:|---:|---:|");
             foreach (var s in r.Steps)
             {
                 var times = new List<double>();
@@ -745,7 +811,8 @@ static class Report
                 times.Sort();
                 var stall = stalls.Where(p => p.At >= s.Start && p.At <= s.End).Select(p => p.Ms).DefaultIfEmpty(0).Max();
                 var missed = times.Count(t => t > period * 1.5);
-                md.AppendLine($"| {s.Label} | {times.Count} | {Pct(times, 50)} | {Pct(times, 95)} | {Pct(times, 99)} | {(times.Count > 0 ? times[^1].ToString("F0", CultureInfo.InvariantCulture) : "-")} | {(times.Count > 0 ? $"{missed} ({100.0 * missed / times.Count:F0}%)" : "-")} | {(stall > 0 ? stall.ToString("F0", CultureInfo.InvariantCulture) : "-")} |");
+                var shown = marks.Where(m => m.At >= s.Start && m.At <= s.End && m.What.StartsWith("loaded ", StringComparison.Ordinal)).Select(m => (m.At - (s.Click ?? s.Start)) * 1000.0 / frequency).DefaultIfEmpty(-1).First();
+                md.AppendLine($"| {s.Label} | {(shown >= 0 ? shown.ToString("F0", CultureInfo.InvariantCulture) : "-")} | {times.Count} | {Pct(times, 50)} | {Pct(times, 95)} | {Pct(times, 99)} | {(times.Count > 0 ? times[^1].ToString("F0", CultureInfo.InvariantCulture) : "-")} | {(times.Count > 0 ? $"{missed} ({100.0 * missed / times.Count:F0}%)" : "-")} | {(stall > 0 ? stall.ToString("F0", CultureInfo.InvariantCulture) : "-")} |");
             }
             md.AppendLine();
             var big = stalls.Where(p => p.Ms >= 250).ToArray();
@@ -774,6 +841,7 @@ static class Report
             ? [.. File.ReadLines(path).Skip(1).Where(l => l.Contains(',')).Select(l => l.Split(',')).Select(p => (long.Parse(p[0], CultureInfo.InvariantCulture), double.Parse(p[1], CultureInfo.InvariantCulture)))]
             : [];
 
+static List<(long At, string What)> ReadMarks(string path) =>        File.Exists(path)            ? [.. File.ReadLines(path).Skip(1).Where(l => l.Contains(',')).Select(l => l.Split(',', 2)).Select(p => (long.Parse(p[0], CultureInfo.InvariantCulture), p[1]))]            : [];
     static List<(long At, long Private, long Handles)> ReadMemory(string path) =>
         File.Exists(path)
             ? [.. File.ReadLines(path).Skip(1).Where(l => l.Contains(',')).Select(l => l.Split(',')).Select(p => (long.Parse(p[0], CultureInfo.InvariantCulture), long.Parse(p[1], CultureInfo.InvariantCulture), long.Parse(p[3], CultureInfo.InvariantCulture)))]

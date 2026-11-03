@@ -175,6 +175,9 @@ public sealed partial class PlayerView : UserControl
                     Focus(FocusState.Programmatic);
             });
         ShowingChanged?.Invoke(true);
+#if KAERI_TESTING
+        Probe.Mark("loaded player");
+#endif
     }
 
     Control? returnFocus;

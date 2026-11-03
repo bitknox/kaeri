@@ -20,8 +20,17 @@ namespace Kaeri.Windows;
 static class Probe
 {
     static readonly object Gate = new();
-    static readonly StringBuilder Frames = new(), Stalls = new(), Memory = new();
+    static readonly StringBuilder Frames = new(), Stalls = new(), Memory = new(), Marks = new();
     static string? dir;
+
+    /// <summary>A moment the driver lines up with its steps, such as a navigation finishing: marks.csv.</summary>
+    public static void Mark(string what)
+    {
+        if (dir is null)
+            return;
+        lock (Gate)
+            Marks.Append(Stopwatch.GetTimestamp()).Append(',').Append(what.Replace(',', ' ')).Append('\n');
+    }
 
     public static void Start(DispatcherQueue ui)
     {
@@ -32,6 +41,7 @@ static class Probe
         File.WriteAllText(Path.Combine(dir, "frames.csv"), $"# frequency {Stopwatch.Frequency}\n");
         File.WriteAllText(Path.Combine(dir, "stalls.csv"), "start,ms\n");
         File.WriteAllText(Path.Combine(dir, "memory.csv"), "at,private_mb,working_mb,handles,threads\n");
+        File.WriteAllText(Path.Combine(dir, "marks.csv"), "at,what\n");
 
         CompositionTarget.Rendering += (_, _) =>
         {
@@ -83,6 +93,7 @@ static class Probe
             Flush("frames.csv", Frames);
             Flush("stalls.csv", Stalls);
             Flush("memory.csv", Memory);
+            Flush("marks.csv", Marks);
         }
     }
 

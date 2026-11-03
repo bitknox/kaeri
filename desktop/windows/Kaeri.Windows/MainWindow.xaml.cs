@@ -902,6 +902,19 @@ public sealed partial class MainWindow : Window
 
     void OnFrameNavigated(object sender, NavigationEventArgs e)
     {
+#if KAERI_TESTING
+        // For Kaeri.Drive: when a navigation is done, and when the new page has been laid out.
+        Probe.Mark($"navigated {e.SourcePageType.Name}");
+        if (e.Content is FrameworkElement shown)
+        {
+            void Laid(object s, RoutedEventArgs a)
+            {
+                shown.Loaded -= Laid;
+                Probe.Mark($"loaded {e.SourcePageType.Name}");
+            }
+            shown.Loaded += Laid;
+        }
+#endif
         RememberWhere();
         if (framePage != e.Content)
             ctx.Left(framePage);
