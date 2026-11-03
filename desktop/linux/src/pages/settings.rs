@@ -16,6 +16,7 @@ use kaeri_i18n::t;
 use kaeri_model::{
     command::Command,
     event::Event,
+    playback::SkipFindPause,
     proxy::ProxyView,
     settings::{SettingChange, SettingKey, SettingRow},
     updates::UpdateStatus,
@@ -200,6 +201,17 @@ fn follows(switch: SettingKey) -> Option<&'static [SettingKey]> {
         K::Presence => Some(&[K::PresenceTitle]),
         K::EpisodeDiscussions => Some(&[K::CommentImages]),
         _ => None,
+    }
+}
+
+/// The line under Find skip times from the audio: why it is paused or can't run, by Linux's name
+/// for power saving, or what it does.
+fn find_skips_line(paused: Option<SkipFindPause>) -> String {
+    match paused {
+        Some(SkipFindPause::LowPower) => t::player_skip_paused_power_saver(),
+        Some(SkipFindPause::Storage) => t::player_skip_paused_storage(),
+        Some(SkipFindPause::Unavailable) => t::player_skip_unavailable(),
+        None => t::settings_find_skips_detail(),
     }
 }
 
@@ -721,6 +733,7 @@ impl Inner {
             // The footnote: what trailers are, and when they do not play.
             match key {
                 K::Trailers => Some(t::settings_note_trailers_linux()),
+                K::FindSkipTimes => Some(find_skips_line(self.find_paused())),
                 K::AskWasOpening => Some(t::settings_ask_was_opening_detail()),
                 K::ShareSkipTimes => Some(t::settings_share_skips_detail()),
                 K::CastTvs => Some(t::settings_note_cast_tvs_computer()),
@@ -758,7 +771,22 @@ impl Inner {
             });
             self.keep(key, {
                 let line = line.clone();
-                move |row| line.set_active(catalog::is_on(row))
+                let hub = Rc::downgrade(&self.ctx.hub);
+                move |row| {
+                    line.set_active(catalog::is_on(row));
+                    // Why finding skip times is paused changes with the device, not the row.
+                    if key == K::FindSkipTimes
+                        && let Some(hub) = hub.upgrade()
+                    {
+                        let paused = hub
+                            .known
+                            .borrow()
+                            .settings
+                            .as_ref()
+                            .and_then(|v| v.skip_find_paused);
+                        line.set_subtitle(&find_skips_line(paused));
+                    }
+                }
             });
             return line.upcast();
         }
@@ -1145,6 +1173,11 @@ impl Inner {
             }
         });
         nav.push(&page);
+    }
+
+    /// Why finding skip times from the audio is paused, as the engine last said.
+    fn find_paused(&self) -> Option<SkipFindPause> {
+        self.ctx.hub.known.borrow().settings.as_ref().and_then(|v| v.skip_find_paused)
     }
 
     fn keep(&self, key: SettingKey, update: impl Fn(&SettingRow) + 'static) {

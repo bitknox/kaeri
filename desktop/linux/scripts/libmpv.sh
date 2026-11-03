@@ -2,8 +2,14 @@
 # Builds libmpv for the Linux app's AppImage as an LGPL build: FFmpeg without --enable-gpl and mpv
 # with -Dgpl=false, as shared libraries the AppImage carries beside the app. Debian's own libmpv
 # and FFmpeg are GPL builds (FFmpeg with --enable-gpl and x264), so the AppImage cannot carry those.
+# A distribution's libmpv also lacks Kaeri's mpv patches, so it can't hand its audio over for
+# finding skip times.
 #
 #   desktop/linux/scripts/libmpv.sh [--check]
+#
+# The same build is for development: once it is in .libmpv/current, a cargo build of the app
+# from this repository runs on it rather than the system's libmpv (desktop/linux/build.rs). In
+# the dev box: desktop/linux/scripts/docker.sh desktop/linux/scripts/libmpv.sh
 #
 # The sources are the Android app's: FFmpeg's and mpv's archives as android/scripts/mpv.sh pins
 # them, by address and SHA-256. So the source a release attaches for the apps' libraries
@@ -184,4 +190,6 @@ mv "$prefix" "$out"
 # The .pc files name the prefix they were built in.
 sed -i "s|$prefix|$out|g" "$out"/lib/pkgconfig/*.pc
 ln -sfn "$pin-$arch" "$cache/current"
+# The app's build script runs again on the next cargo build, and links the app to this build.
+touch "$root/desktop/linux/build.rs"
 step "wrote $out"
