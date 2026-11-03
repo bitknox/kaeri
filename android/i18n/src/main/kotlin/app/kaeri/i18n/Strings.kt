@@ -1141,6 +1141,22 @@ object Strings {
     fun crashNoticeTv(context: Context): String =
         context.getString(R.string.crash_notice_tv)
 
+    /** Toast: Surprise me on a search found no title matching the filters. */
+    fun noticeSurpriseEmptyFilters(context: Context): String =
+        context.getString(R.string.notice_surprise_empty_filters)
+
+    /** Toast: Surprise me on the Planning list, which has nothing on it to pick. */
+    fun noticeSurpriseEmptyPlanning(context: Context): String =
+        context.getString(R.string.notice_surprise_empty_planning)
+
+    /** Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked. */
+    fun noticeSurpriseOffline(context: Context): String =
+        context.getString(R.string.notice_surprise_offline)
+
+    /** Toast: Surprise me on the filters, and AniList could not be asked. */
+    fun noticeSurpriseFailed(context: Context): String =
+        context.getString(R.string.notice_surprise_failed)
+
     /** Accessibility label of the account button in the top bar when someone is signed in. */
     fun accountButtonNamed(context: Context, name: String): String =
         context.getString(R.string.account_button_named, name)
@@ -6945,6 +6961,282 @@ object Strings {
     fun searchLineService(context: Context, service: String): String =
         context.getString(R.string.search_line_service, service)
 
+    /** The count line under a title in a list or on a card: how many episodes a finished show has. */
+    fun countEpisodes(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.count_episodes, count, count)
+
+    /** The same, short, for a cell too narrow for the long form. */
+    fun countEpisodesShort(context: Context, count: Int): String =
+        context.getString(R.string.count_episodes_short, count)
+
+    /** The count line of a show that is airing and has a known total: episodes out so far, then the total. */
+    fun countOutOf(context: Context, out: Int, total: Int): String =
+        context.getString(R.string.count_out_of, out, total)
+
+    /** The same, short. */
+    fun countOutOfShort(context: Context, out: Int, total: Int): String =
+        context.getString(R.string.count_out_of_short, out, total)
+
+    /** The count line of a show that is airing and has no known total: episodes out so far. */
+    fun countOut(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.count_out, count, count)
+
+    /** The same, short. */
+    fun countOutShort(context: Context, count: Int): String =
+        context.getString(R.string.count_out_short, count)
+
+    /** The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below. */
+    fun countStarts(context: Context, date: String): String =
+        context.getString(R.string.count_starts, date)
+
+    /** The count line of a show that has not started and has no date. */
+    fun countNotOut(context: Context): String =
+        context.getString(R.string.count_not_out)
+
+    /** The count line of a show the viewer is part way through, in the library: the next episode and the total. */
+    fun countNextOf(context: Context, episode: Int, total: Int): String =
+        context.getString(R.string.count_next_of, episode, total)
+
+    /** The dub part of a count line when a source has a dub and does not say how far it goes. */
+    fun countDub(context: Context): String =
+        context.getString(R.string.count_dub)
+
+    /** The dub part of a count line: the last episode the dub has. */
+    fun countDubThrough(context: Context, through: Int): String =
+        context.getString(R.string.count_dub_through, through)
+
+    /** What a screen reader says for a count line: the long form of a finished show. */
+    fun countSpokenEpisodes(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.count_spoken_episodes, count, count)
+
+    /** What a screen reader says for a show that is airing, with a known total. */
+    fun countSpokenOutOf(context: Context, out: Int, total: Int): String =
+        context.getString(R.string.count_spoken_out_of, out, total)
+
+    /** What a screen reader says for a show that is airing with no known total. */
+    fun countSpokenOut(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.count_spoken_out, count, count)
+
+    /** What a screen reader says for a show not out yet, with a date. The date is the day and the full month name. */
+    fun countSpokenStarts(context: Context, date: String): String =
+        context.getString(R.string.count_spoken_starts, date)
+
+    /** What a screen reader says for a show the viewer is part way through. */
+    fun countSpokenNextOf(context: Context, episode: Int, total: Int): String =
+        context.getString(R.string.count_spoken_next_of, episode, total)
+
+    /** What a screen reader says after the count when the dub goes to an episode. */
+    fun countSpokenDubThrough(context: Context, through: Int): String =
+        context.getString(R.string.count_spoken_dub_through, through)
+
+    /** What a screen reader says after the count when a source has a dub and does not say how far it goes. */
+    fun countSpokenDub(context: Context): String =
+        context.getString(R.string.count_spoken_dub)
+
+    /** A month's short name, for "Starts 9 Jan". */
+    fun dateMonthJanShort(context: Context): String =
+        context.getString(R.string.date_month_jan_short)
+
+    /** A month's full name, for a screen reader's "Starts 9 January". */
+    fun dateMonthJanLong(context: Context): String =
+        context.getString(R.string.date_month_jan_long)
+
+    /** A month's short name, for "Starts 9 Jan". */
+    fun dateMonthFebShort(context: Context): String =
+        context.getString(R.string.date_month_feb_short)
+
+    /** A month's full name, for a screen reader's "Starts 9 January". */
+    fun dateMonthFebLong(context: Context): String =
+        context.getString(R.string.date_month_feb_long)
+
+    /** A month's short name, for "Starts 9 Jan". */
+    fun dateMonthMarShort(context: Context): String =
+        context.getString(R.string.date_month_mar_short)
+
+    /** A month's full name, for a screen reader's "Starts 9 January". */
+    fun dateMonthMarLong(context: Context): String =
+        context.getString(R.string.date_month_mar_long)
+
+    /** A month's short name, for "Starts 9 Jan". */
+    fun dateMonthAprShort(context: Context): String =
+        context.getString(R.string.date_month_apr_short)
+
+    /** A month's full name, for a screen reader's "Starts 9 January". */
+    fun dateMonthAprLong(context: Context): String =
+        context.getString(R.string.date_month_apr_long)
+
+    /** A month's short name, for "Starts 9 Jan". */
+    fun dateMonthMayShort(context: Context): String =
+        context.getString(R.string.date_month_may_short)
+
+    /** A month's full name, for a screen reader's "Starts 9 January". */
+    fun dateMonthMayLong(context: Context): String =
+        context.getString(R.string.date_month_may_long)
+
+    /** A month's short name, for "Starts 9 Jan". */
+    fun dateMonthJunShort(context: Context): String =
+        context.getString(R.string.date_month_jun_short)
+
+    /** A month's full name, for a screen reader's "Starts 9 January". */
+    fun dateMonthJunLong(context: Context): String =
+        context.getString(R.string.date_month_jun_long)
+
+    /** A month's short name, for "Starts 9 Jan". */
+    fun dateMonthJulShort(context: Context): String =
+        context.getString(R.string.date_month_jul_short)
+
+    /** A month's full name, for a screen reader's "Starts 9 January". */
+    fun dateMonthJulLong(context: Context): String =
+        context.getString(R.string.date_month_jul_long)
+
+    /** A month's short name, for "Starts 9 Jan". */
+    fun dateMonthAugShort(context: Context): String =
+        context.getString(R.string.date_month_aug_short)
+
+    /** A month's full name, for a screen reader's "Starts 9 January". */
+    fun dateMonthAugLong(context: Context): String =
+        context.getString(R.string.date_month_aug_long)
+
+    /** A month's short name, for "Starts 9 Jan". */
+    fun dateMonthSepShort(context: Context): String =
+        context.getString(R.string.date_month_sep_short)
+
+    /** A month's full name, for a screen reader's "Starts 9 January". */
+    fun dateMonthSepLong(context: Context): String =
+        context.getString(R.string.date_month_sep_long)
+
+    /** A month's short name, for "Starts 9 Jan". */
+    fun dateMonthOctShort(context: Context): String =
+        context.getString(R.string.date_month_oct_short)
+
+    /** A month's full name, for a screen reader's "Starts 9 January". */
+    fun dateMonthOctLong(context: Context): String =
+        context.getString(R.string.date_month_oct_long)
+
+    /** A month's short name, for "Starts 9 Jan". */
+    fun dateMonthNovShort(context: Context): String =
+        context.getString(R.string.date_month_nov_short)
+
+    /** A month's full name, for a screen reader's "Starts 9 January". */
+    fun dateMonthNovLong(context: Context): String =
+        context.getString(R.string.date_month_nov_long)
+
+    /** A month's short name, for "Starts 9 Jan". */
+    fun dateMonthDecShort(context: Context): String =
+        context.getString(R.string.date_month_dec_short)
+
+    /** A month's full name, for a screen reader's "Starts 9 January". */
+    fun dateMonthDecLong(context: Context): String =
+        context.getString(R.string.date_month_dec_long)
+
+    /** Label of Search's filter that keeps to the titles one of the viewer's sources lists in a dub. */
+    fun searchDubbed(context: Context): String =
+        context.getString(R.string.search_dubbed)
+
+    /** Help text of that filter, for a screen reader. */
+    fun searchDubbedHint(context: Context): String =
+        context.getString(R.string.search_dubbed_hint)
+
+    /** Under Search's filters when the dub filter covered only part of the results. The count is how many results the { -source-pl } were asked about. */
+    fun dubCoverageFirst(context: Context, count: Int): String =
+        context.getString(R.string.dub_coverage_first, count)
+
+    /** Under Search's filters when some { -source-pl } did not answer about dubs. */
+    fun dubCoverageSources(context: Context, answered: Int, asked: Int): String =
+        context.getString(R.string.dub_coverage_sources, answered, asked)
+
+    /** Under Search's filters when the dub filter used only what this device already knows: offline, or a browse with no words typed. */
+    fun dubCoverageStored(context: Context): String =
+        context.getString(R.string.dub_coverage_stored)
+
+    /** Title of the state when the dub filter is on and none of the results has a dub. */
+    fun dubNoneTitle(context: Context): String =
+        context.getString(R.string.dub_none_title)
+
+    /** Line under that title. The count is how many results the { -source-pl } were asked about. */
+    fun dubNoneDetail(context: Context, count: Int): String =
+        context.getString(R.string.dub_none_detail, count)
+
+    /** Button of that state: turns the dub filter off. */
+    fun dubNoneShowAll(context: Context): String =
+        context.getString(R.string.dub_none_show_all)
+
+    /** Title of the state when no source answered about dubs in time. */
+    fun dubFailedTitle(context: Context): String =
+        context.getString(R.string.dub_failed_title)
+
+    /** Line under that title. */
+    fun dubFailedDetail(context: Context): String =
+        context.getString(R.string.dub_failed_detail)
+
+    /** Search's Trending heading and sort, for AniList's live trending. */
+    fun trendingToday(context: Context): String =
+        context.getString(R.string.trending_today)
+
+    /** Search's Trending heading and sort, for the last seven days. */
+    fun trendingWeek(context: Context): String =
+        context.getString(R.string.trending_week)
+
+    /** Search's Trending heading and sort, for the last thirty days. */
+    fun trendingMonth(context: Context): String =
+        context.getString(R.string.trending_month)
+
+    /** One choice of the Trending period menu, where the heading already says Trending. */
+    fun trendingChoiceToday(context: Context): String =
+        context.getString(R.string.trending_choice_today)
+
+    /** One choice of the Trending period menu: the last seven days. */
+    fun trendingChoiceWeek(context: Context): String =
+        context.getString(R.string.trending_choice_week)
+
+    /** One choice of the Trending period menu: the last thirty days. */
+    fun trendingChoiceMonth(context: Context): String =
+        context.getString(R.string.trending_choice_month)
+
+    /** Shown in the Trending rail when a period could not load. The period is already worded, such as "this week". */
+    fun trendingFailed(context: Context, period: String): String =
+        context.getString(R.string.trending_failed, period)
+
+    /** Line under a period that was kept from earlier, with how long ago. The age is already worded, such as "yesterday". */
+    fun trendingUpdated(context: Context, age: String): String =
+        context.getString(R.string.trending_updated, age)
+
+    /** Button that picks a random title from the screen it is on: the filters in Search, the Planning list in the library. */
+    fun surpriseMe(context: Context): String =
+        context.getString(R.string.surprise_me)
+
+    /** The same as a menu bar item, in title case. */
+    fun surpriseMeMenu(context: Context): String =
+        context.getString(R.string.surprise_me_menu)
+
+    /** Button on a picked title's page that swaps it for another pick. It takes the place of Surprise me for that visit. */
+    fun surpriseAnother(context: Context): String =
+        context.getString(R.string.surprise_another)
+
+    /** Hint of the Surprise me button on the library's Planning list. */
+    fun surpriseHintPlanning(context: Context): String =
+        context.getString(R.string.surprise_hint_planning)
+
+    /** Hint of the Surprise me button in Search. */
+    fun surpriseHintFilters(context: Context): String =
+        context.getString(R.string.surprise_hint_filters)
+
+    /** Hint of the Another button. */
+    fun surpriseAnotherHint(context: Context): String =
+        context.getString(R.string.surprise_another_hint)
+
+    /** Notice when Search's filters match no title to pick from. */
+    fun surpriseEmptyFilters(context: Context): String =
+        context.getString(R.string.surprise_empty_filters)
+
+    /** Notice when the Planning list is empty. */
+    fun surpriseEmptyPlanning(context: Context): String =
+        context.getString(R.string.surprise_empty_planning)
+
+    /** Notice when a pick from Search needs AniList and the device is offline. */
+    fun surpriseOffline(context: Context): String =
+        context.getString(R.string.surprise_offline)
+
     /** Title of the dialog that adds a media server. */
     fun serversAddTitle(context: Context): String =
         context.getString(R.string.servers_add_title)
@@ -9551,6 +9843,30 @@ object Strings {
     /** A followed person's status and score, such as "Completed · 9/10". The status is already worded. */
     fun moreFollowingLine(context: Context, status: String, score: Int): String =
         context.getString(R.string.more_following_line, status, score)
+
+    /** Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number. */
+    fun episodeGoTo(context: Context): String =
+        context.getString(R.string.episode_go_to)
+
+    /** Title of the Go to episode field. */
+    fun episodeGoToTitle(context: Context): String =
+        context.getString(R.string.episode_go_to_title)
+
+    /** Placeholder of the Go to episode field: the first and last episode of the show. */
+    fun episodeGoToHint(context: Context, first: Int, last: Int): String =
+        context.getString(R.string.episode_go_to_hint, first, last)
+
+    /** Accessibility label of the Go to episode field. */
+    fun episodeGoToLabel(context: Context, first: Int, last: Int): String =
+        context.getString(R.string.episode_go_to_label, first, last)
+
+    /** Shown when the number typed is not an episode of the show. */
+    fun episodeGoToNone(context: Context, number: Int, last: Int): String =
+        context.getString(R.string.episode_go_to_none, number, last)
+
+    /** Shown when the number typed is an episode with no date that has not come out. */
+    fun episodeGoToNotOut(context: Context, number: Int, latest: Int): String =
+        context.getString(R.string.episode_go_to_not_out, number, latest)
 
     /** Title of the settings group and the screen. */
     fun torrentsTitle(context: Context): String =

@@ -1404,6 +1404,34 @@ impl Meta {
         Ok(pages)
     }
 
+    /// What was trending over the last `days` days (7 or 30; anything else is the week), most
+    /// first, summed from AniList's daily figures. See [`AniList::trending_week`].
+    pub async fn trending_over(
+        &self,
+        days: i64,
+        now: i64,
+    ) -> std::result::Result<Vec<Media>, AniListError> {
+        let from = now - days * 86_400;
+        let media = if days > 7 {
+            self.ask_anilist(self.anilist.trending_month(from)).await?
+        } else {
+            self.ask_anilist(self.anilist.trending_week(from)).await?
+        };
+        for media in &media {
+            self.remember(media);
+        }
+        Ok(media)
+    }
+
+    /// How many titles `filter` matches, `None` when AniList did not say: see
+    /// [`AniList::browse_total`].
+    pub async fn browse_total(
+        &self,
+        filter: &BrowseFilter,
+    ) -> std::result::Result<Option<u32>, AniListError> {
+        self.ask_anilist(self.anilist.browse_total(filter)).await
+    }
+
     /// What the cache holds of `ids`, in that order, asking nobody: titles a screen showed
     /// before, to show again at once while a fresh answer is on its way.
     pub fn cached(&self, ids: &[AnilistId]) -> Vec<Media> {

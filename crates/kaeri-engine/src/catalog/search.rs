@@ -16,6 +16,7 @@ use kaeri_providers::ProviderRegistry;
 
 use kaeri_meta::{BrowseFilter, Found, Media, anilist::Page};
 use kaeri_model::{
+    browsing::DubCoverage,
     catalog::{
         AiringStatus, AvailableAt, ContentFor, ContentList, Entry, Season, SourceMaterial,
     },
@@ -25,7 +26,10 @@ use kaeri_model::{
 use tokio::task::AbortHandle;
 
 use crate::{
-    catalog::lists::{follow_aired, publish_list},
+    catalog::{
+        dub_search,
+        lists::{follow_aired, publish_list},
+    },
     data,
     dispatch::{Lent, lend, spawn_abortable},
     jobs::JobGuard,
@@ -130,6 +134,7 @@ pub fn submit(
     tx: &Outbox,
 ) {
     let adult = engine.config.effective().meta.adult;
+    let offline = engine.network.offline;
     let searches = engine.search.clone();
     let query = normal(&query);
     if !query.is_blank() {
@@ -138,7 +143,7 @@ pub fn submit(
     searches.lock().last_live = Some(query.clone());
     let running = searches.clone();
     let handle = spawn_abortable(job, services, tx, move |lent| async move {
-        first_page(lent, &running, query, adult).await;
+        first_page(lent, &running, query, adult, offline).await;
     });
     searches.replace(Some(handle));
 }
@@ -146,6 +151,7 @@ pub fn submit(
 /// Search as the query changes, once the changes stop.
 pub fn live(query: SearchQuery, engine: &mut EngineState, services: &Services, tx: &Outbox) {
     let adult = engine.config.effective().meta.adult;
+    let offline = engine.network.offline;
     let searches = engine.search.clone();
     let query = normal(&query);
     let text_changed = {
@@ -171,23 +177,61 @@ pub fn live(query: SearchQuery, engine: &mut EngineState, services: &Services, t
             }
         }
         running.pause(false, &lent.tx);
-        first_page(lent, &running, query, adult).await;
+        first_page(lent, &running, query, adult, offline).await;
     });
     searches.replace(Some(task.abort_handle()));
 }
 
 /// The first page of `query`: whether there is more, any caption, then the titles.
-async fn first_page(lent: Lent, searches: &Searches, query: SearchQuery, adult: bool) {
+async fn first_page(
+    lent: Lent,
+    searches: &Searches,
+    query: SearchQuery,
+    adult: bool,
+    offline: bool,
+) {
     let view = ContentFor::Search { query: query.clone() };
     let query_text = query.text.clone();
     let query_text = query_text.as_str();
     match find(&lent, searches, &query, adult, 1).await {
         Ok(found) => {
-            let _ = lent.tx.send(Event::SearchPaging { query, has_next: found.page.has_next });
+            let _ = lent.tx.send(Event::SearchPaging {
+                query: query.clone(),
+                has_next: found.page.has_next,
+            });
             // Sent every time, empty when nothing was left out, so a caption from an earlier
             // answer to the same search cannot outlive it.
             let _ = lent.tx.send(Event::Caption { view: view.clone(), text: caption(&found) });
-            let mut entries = entries(&lent, &found.page);
+            let now = now_epoch();
+            // The dub ask: a search with words asks the sources that can say. With the Dubbed
+            // filter on, the results wait for it and are held to what it found; without, they
+            // go first and what it found follows.
+            let wants_dubs = !query.is_browse() && dub_search::capable(&lent);
+            let mut entries = if query.dubbed && wants_dubs {
+                let (known, coverage) =
+                    dub_search::ask(&lent, query_text, &found.page.items, offline, now).await;
+                let _ = lent.tx.send(Event::SearchDubs {
+                    query: query.clone(),
+                    found: known,
+                    coverage,
+                });
+                dubbed_only(entries(&lent, &found.page))
+            } else if query.dubbed {
+                // A browse, or no source to ask: what was stored.
+                let capable = dub_search::capable(&lent);
+                let _ = lent.tx.send(Event::SearchDubs {
+                    query: query.clone(),
+                    found: dub_search::known(&lent.store, &found.page.items),
+                    coverage: DubCoverage::stored(capable),
+                });
+                if capable {
+                    dubbed_only(entries(&lent, &found.page))
+                } else {
+                    entries(&lent, &found.page)
+                }
+            } else {
+                entries(&lent, &found.page)
+            };
             // The demo's title leads the results when the query is one it answers to.
             if lent.registry.get(kaeri_core::demo::DEMO_SOURCE_ID).is_some()
                 && kaeri_providers::demo::answers_to(query_text)
@@ -195,12 +239,22 @@ async fn first_page(lent: Lent, searches: &Searches, query: SearchQuery, adult: 
                 let demo = data::entry_from(&kaeri_meta::demo::media(), Some(&lent.store));
                 entries.insert(0, demo);
             }
-            publish_list(&lent.meta, &lent.tx, view, entries, now_epoch()).await;
+            publish_list(&lent.meta, &lent.tx, view, entries, now).await;
+            if wants_dubs && !query.dubbed {
+                let (known, coverage) =
+                    dub_search::ask(&lent, query_text, &found.page.items, offline, now).await;
+                let _ = lent.tx.send(Event::SearchDubs { query, found: known, coverage });
+            }
         }
         Err(e) => {
             let _ = lent.tx.send(Event::Content { view, content: ContentList::Failed(e) });
         }
     }
+}
+
+/// `entries` held to the titles with a dub.
+fn dubbed_only(entries: Vec<Entry>) -> Vec<Entry> {
+    entries.into_iter().filter(|entry| entry.dub.is_some()).collect()
 }
 
 /// A further page of the results on screen.
@@ -209,7 +263,11 @@ pub async fn more(lent: Lent, searches: Searches, query: SearchQuery, page: u32,
     let page = page.max(2);
     match find(&lent, &searches, &query, adult, page).await {
         Ok(found) => {
-            let entries = entries(&lent, &found.page);
+            let mut entries = entries(&lent, &found.page);
+            if query.dubbed && dub_search::capable(&lent) {
+                // Held to what is known of the dub: only the first page was asked.
+                entries = dubbed_only(entries);
+            }
             let has_next = found.page.has_next;
             let _ = lent.tx.send(Event::SearchMore {
                 query,
@@ -244,6 +302,11 @@ async fn find(
     let keeps = query.available.is_none();
     if keeps && let Some(found) = searches.recall(&key, now_epoch()) {
         return Ok(found);
+    }
+    if query.available.is_none()
+        && let Some(period) = query.period_in_effect()
+    {
+        return find_in_period(lent, searches, query, adult, page, period).await;
     }
     let mut filter = browse_filter(query, adult);
     let own = match query.available {
@@ -289,6 +352,58 @@ async fn find(
         searches.keep(key, &found, now_epoch());
     }
     Ok(found)
+}
+
+/// A page of a Trending browse over a week or a month: the period's titles in its order, held
+/// to the filters set. The period is summed from daily figures AniList does not sort by, so the
+/// fifty it names are asked for whole, filtered there by id, and paged here.
+async fn find_in_period(
+    lent: &Lent,
+    searches: &Searches,
+    query: &SearchQuery,
+    adult: bool,
+    page: u32,
+    period: kaeri_model::browsing::TrendPeriod,
+) -> Result<Found, String> {
+    // The whole ranked answer is kept as page 0, and each page is cut from it.
+    let key = Key { query: normal(query), adult, page: 0 };
+    let now = now_epoch();
+    let whole = match searches.recall(&key, now) {
+        Some(found) => found,
+        None => {
+            let ranked =
+                crate::catalog::trending::ranked(&lent.meta, &lent.store, period, adult, now)
+                    .await
+                    .map_err(|wait| match wait {
+                        Some(secs) => format!("AniList asks to wait {secs} seconds."),
+                        None => "Trending could not load.".to_owned(),
+                    })?;
+            let narrowed = query.without(&kaeri_model::search::FilterKey::Dubbed).has_filters();
+            let items = if narrowed && !ranked.is_empty() {
+                let mut filter = browse_filter(query, adult);
+                filter.ids = ranked.iter().map(|m| m.id.get()).collect();
+                let found = lent
+                    .meta
+                    .find("", &filter, 1, kaeri_meta::anilist::trends::TREND_TITLES as u32)
+                    .await
+                    .map_err(|e| e.to_string())?;
+                let mut items = found.page.items;
+                let place = |m: &Media| ranked.iter().position(|r| r.id == m.id);
+                items.sort_by_key(|m| place(m).unwrap_or(usize::MAX));
+                items
+            } else {
+                ranked
+            };
+            let found = Found { page: Page { items, has_next: false }, unapplied: Vec::new() };
+            searches.keep(key, &found, now);
+            found
+        }
+    };
+    let from = (page.max(1) as usize - 1) * PAGE as usize;
+    let items: Vec<Media> =
+        whole.page.items.iter().skip(from).take(PAGE as usize).cloned().collect();
+    let has_next = whole.page.items.len() > from + PAGE as usize;
+    Ok(Found { page: Page { items, has_next }, unapplied: Vec::new() })
 }
 
 fn entries(lent: &Lent, page: &Page<Media>) -> Vec<Entry> {

@@ -269,6 +269,7 @@ pub(crate) fn item(pick: &Pick, entry: Entry) -> UpNextItem {
     let planned = pick.planned;
     if planned {
         entry.list_status = Some(LibrarySegment::Planning);
+        entry.recount();
     }
     let unaired = entry.status == Some(AiringStatus::NotYetReleased) || pick.unaired;
     let action = match (unaired, planned) {

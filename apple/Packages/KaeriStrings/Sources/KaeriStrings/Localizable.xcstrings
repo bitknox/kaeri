@@ -24557,6 +24557,310 @@
         }
       }
     },
+    "count-dub" : {
+      "comment" : "The dub part of a count line when a source has a dub and does not say how far it goes.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dub"
+          }
+        }
+      }
+    },
+    "count-dub-through" : {
+      "comment" : "The dub part of a count line: the last episode the dub has. Argument 1: through (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dub %1$lld"
+          }
+        }
+      }
+    },
+    "count-episodes" : {
+      "comment" : "The count line under a title in a list or on a card: how many episodes a finished show has. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "One episode"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld episodes"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "count-episodes-short" : {
+      "comment" : "The same, short, for a cell too narrow for the long form. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld ep"
+          }
+        }
+      }
+    },
+    "count-next-of" : {
+      "comment" : "The count line of a show the viewer is part way through, in the library: the next episode and the total. Argument 1: episode (Int). Argument 2: total (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ep %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "count-not-out" : {
+      "comment" : "The count line of a show that has not started and has no date.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not out yet"
+          }
+        }
+      }
+    },
+    "count-out" : {
+      "comment" : "The count line of a show that is airing and has no known total: episodes out so far. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "One episode out"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld episodes out"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "count-out-of" : {
+      "comment" : "The count line of a show that is airing and has a known total: episodes out so far, then the total. Argument 1: out (Int). Argument 2: total (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld out"
+          }
+        }
+      }
+    },
+    "count-out-of-short" : {
+      "comment" : "The same, short. Argument 1: out (Int). Argument 2: total (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "count-out-short" : {
+      "comment" : "The same, short. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld out"
+          }
+        }
+      }
+    },
+    "count-spoken-dub" : {
+      "comment" : "What a screen reader says after the count when a source has a dub and does not say how far it goes.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "has a dub"
+          }
+        }
+      }
+    },
+    "count-spoken-dub-through" : {
+      "comment" : "What a screen reader says after the count when the dub goes to an episode. Argument 1: through (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dubbed to episode %1$lld"
+          }
+        }
+      }
+    },
+    "count-spoken-episodes" : {
+      "comment" : "What a screen reader says for a count line: the long form of a finished show. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "One episode"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld episodes"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "count-spoken-next-of" : {
+      "comment" : "What a screen reader says for a show the viewer is part way through. Argument 1: episode (Int). Argument 2: total (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episode %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "count-spoken-out" : {
+      "comment" : "What a screen reader says for a show that is airing with no known total. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "One episode out"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld episodes out"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "count-spoken-out-of" : {
+      "comment" : "What a screen reader says for a show that is airing, with a known total. Argument 1: out (Int). Argument 2: total (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld episodes out"
+          }
+        }
+      }
+    },
+    "count-spoken-starts" : {
+      "comment" : "What a screen reader says for a show not out yet, with a date. The date is the day and the full month name. Argument 1: date (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starts %1$@"
+          }
+        }
+      }
+    },
+    "count-starts" : {
+      "comment" : "The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below. Argument 1: date (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starts %1$@"
+          }
+        }
+      }
+    },
     "country-china" : {
       "comment" : "Country name: the origin filter and, after \"Made in\", the title facts.",
       "extractionState" : "manual",
@@ -25645,6 +25949,294 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ở trang một tựa phim"
+          }
+        }
+      }
+    },
+    "date-month-apr-long" : {
+      "comment" : "A month's full name, for a screen reader's \"Starts 9 January\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "April"
+          }
+        }
+      }
+    },
+    "date-month-apr-short" : {
+      "comment" : "A month's short name, for \"Starts 9 Jan\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apr"
+          }
+        }
+      }
+    },
+    "date-month-aug-long" : {
+      "comment" : "A month's full name, for a screen reader's \"Starts 9 January\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "August"
+          }
+        }
+      }
+    },
+    "date-month-aug-short" : {
+      "comment" : "A month's short name, for \"Starts 9 Jan\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aug"
+          }
+        }
+      }
+    },
+    "date-month-dec-long" : {
+      "comment" : "A month's full name, for a screen reader's \"Starts 9 January\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "December"
+          }
+        }
+      }
+    },
+    "date-month-dec-short" : {
+      "comment" : "A month's short name, for \"Starts 9 Jan\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dec"
+          }
+        }
+      }
+    },
+    "date-month-feb-long" : {
+      "comment" : "A month's full name, for a screen reader's \"Starts 9 January\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "February"
+          }
+        }
+      }
+    },
+    "date-month-feb-short" : {
+      "comment" : "A month's short name, for \"Starts 9 Jan\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feb"
+          }
+        }
+      }
+    },
+    "date-month-jan-long" : {
+      "comment" : "A month's full name, for a screen reader's \"Starts 9 January\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "January"
+          }
+        }
+      }
+    },
+    "date-month-jan-short" : {
+      "comment" : "A month's short name, for \"Starts 9 Jan\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jan"
+          }
+        }
+      }
+    },
+    "date-month-jul-long" : {
+      "comment" : "A month's full name, for a screen reader's \"Starts 9 January\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "July"
+          }
+        }
+      }
+    },
+    "date-month-jul-short" : {
+      "comment" : "A month's short name, for \"Starts 9 Jan\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jul"
+          }
+        }
+      }
+    },
+    "date-month-jun-long" : {
+      "comment" : "A month's full name, for a screen reader's \"Starts 9 January\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "June"
+          }
+        }
+      }
+    },
+    "date-month-jun-short" : {
+      "comment" : "A month's short name, for \"Starts 9 Jan\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jun"
+          }
+        }
+      }
+    },
+    "date-month-mar-long" : {
+      "comment" : "A month's full name, for a screen reader's \"Starts 9 January\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "March"
+          }
+        }
+      }
+    },
+    "date-month-mar-short" : {
+      "comment" : "A month's short name, for \"Starts 9 Jan\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mar"
+          }
+        }
+      }
+    },
+    "date-month-may-long" : {
+      "comment" : "A month's full name, for a screen reader's \"Starts 9 January\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "May"
+          }
+        }
+      }
+    },
+    "date-month-may-short" : {
+      "comment" : "A month's short name, for \"Starts 9 Jan\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "May"
+          }
+        }
+      }
+    },
+    "date-month-nov-long" : {
+      "comment" : "A month's full name, for a screen reader's \"Starts 9 January\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "November"
+          }
+        }
+      }
+    },
+    "date-month-nov-short" : {
+      "comment" : "A month's short name, for \"Starts 9 Jan\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nov"
+          }
+        }
+      }
+    },
+    "date-month-oct-long" : {
+      "comment" : "A month's full name, for a screen reader's \"Starts 9 January\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "October"
+          }
+        }
+      }
+    },
+    "date-month-oct-short" : {
+      "comment" : "A month's short name, for \"Starts 9 Jan\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oct"
+          }
+        }
+      }
+    },
+    "date-month-sep-long" : {
+      "comment" : "A month's full name, for a screen reader's \"Starts 9 January\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "September"
+          }
+        }
+      }
+    },
+    "date-month-sep-short" : {
+      "comment" : "A month's short name, for \"Starts 9 Jan\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sep"
           }
         }
       }
@@ -38129,6 +38721,102 @@
         }
       }
     },
+    "dub-coverage-first" : {
+      "comment" : "Under Search's filters when the dub filter covered only part of the results. The count is how many results the { -source-pl } were asked about. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From the first %1$lld results."
+          }
+        }
+      }
+    },
+    "dub-coverage-sources" : {
+      "comment" : "Under Search's filters when some { -source-pl } did not answer about dubs. Argument 1: answered (Int). Argument 2: asked (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld sources answered."
+          }
+        }
+      }
+    },
+    "dub-coverage-stored" : {
+      "comment" : "Under Search's filters when the dub filter used only what this device already knows: offline, or a browse with no words typed.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dubbed uses what this device already knows."
+          }
+        }
+      }
+    },
+    "dub-failed-detail" : {
+      "comment" : "Line under that title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "None of your sources answered in time."
+          }
+        }
+      }
+    },
+    "dub-failed-title" : {
+      "comment" : "Title of the state when no source answered about dubs in time.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't ask about dubs"
+          }
+        }
+      }
+    },
+    "dub-none-detail" : {
+      "comment" : "Line under that title. The count is how many results the { -source-pl } were asked about. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your sources didn't list a dub for the first %1$lld results."
+          }
+        }
+      }
+    },
+    "dub-none-show-all" : {
+      "comment" : "Button of that state: turns the dub filter off.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show all results"
+          }
+        }
+      }
+    },
+    "dub-none-title" : {
+      "comment" : "Title of the state when the dub filter is on and none of the results has a dub.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No dubbed results"
+          }
+        }
+      }
+    },
     "duration-days" : {
       "comment" : "A span of time in whole days. The unit letter belongs to the language. Argument 1: days (Int).",
       "extractionState" : "manual",
@@ -40541,6 +41229,78 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "episode-go-to" : {
+      "comment" : "Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to episode…"
+          }
+        }
+      }
+    },
+    "episode-go-to-hint" : {
+      "comment" : "Placeholder of the Go to episode field: the first and last episode of the show. Argument 1: first (Int). Argument 2: last (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld to %2$lld"
+          }
+        }
+      }
+    },
+    "episode-go-to-label" : {
+      "comment" : "Accessibility label of the Go to episode field. Argument 1: first (Int). Argument 2: last (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episode, %1$lld to %2$lld"
+          }
+        }
+      }
+    },
+    "episode-go-to-none" : {
+      "comment" : "Shown when the number typed is not an episode of the show. Argument 1: number (Int). Argument 2: last (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No episode %1$lld. This show has %2$lld."
+          }
+        }
+      }
+    },
+    "episode-go-to-not-out" : {
+      "comment" : "Shown when the number typed is an episode with no date that has not come out. Argument 1: number (Int). Argument 2: latest (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episode %1$lld isn't out yet. The latest is %2$lld."
+          }
+        }
+      }
+    },
+    "episode-go-to-title" : {
+      "comment" : "Title of the Go to episode field.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to episode"
           }
         }
       }
@@ -94317,6 +95077,54 @@
         }
       }
     },
+    "notice-surprise-empty-filters" : {
+      "comment" : "Toast: Surprise me on a search found no title matching the filters.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No titles match these filters."
+          }
+        }
+      }
+    },
+    "notice-surprise-empty-planning" : {
+      "comment" : "Toast: Surprise me on the Planning list, which has nothing on it to pick.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planning is empty."
+          }
+        }
+      }
+    },
+    "notice-surprise-failed" : {
+      "comment" : "Toast: Surprise me on the filters, and AniList could not be asked.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't pick a title right now. Try again in a moment."
+          }
+        }
+      }
+    },
+    "notice-surprise-offline" : {
+      "comment" : "Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline. Search picks need AniList."
+          }
+        }
+      }
+    },
     "notice-title-load-failed" : {
       "comment" : "Toast when a title's details did not load.",
       "extractionState" : "manual",
@@ -138781,6 +139589,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Demo · Phát ngay"
+          }
+        }
+      }
+    },
+    "search-dubbed" : {
+      "comment" : "Label of Search's filter that keeps to the titles one of the viewer's sources lists in a dub.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dubbed"
+          }
+        }
+      }
+    },
+    "search-dubbed-hint" : {
+      "comment" : "Help text of that filter, for a screen reader.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows results your sources list in a dub."
           }
         }
       }
@@ -214961,6 +215793,114 @@
         }
       }
     },
+    "surprise-another" : {
+      "comment" : "Button on a picked title's page that swaps it for another pick. It takes the place of Surprise me for that visit.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Another"
+          }
+        }
+      }
+    },
+    "surprise-another-hint" : {
+      "comment" : "Hint of the Another button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens another random title in place of this one"
+          }
+        }
+      }
+    },
+    "surprise-empty-filters" : {
+      "comment" : "Notice when Search's filters match no title to pick from.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No titles match these filters."
+          }
+        }
+      }
+    },
+    "surprise-empty-planning" : {
+      "comment" : "Notice when the Planning list is empty.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planning is empty."
+          }
+        }
+      }
+    },
+    "surprise-hint-filters" : {
+      "comment" : "Hint of the Surprise me button in Search.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens a random title from these filters"
+          }
+        }
+      }
+    },
+    "surprise-hint-planning" : {
+      "comment" : "Hint of the Surprise me button on the library's Planning list.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens a random title from Planning"
+          }
+        }
+      }
+    },
+    "surprise-me" : {
+      "comment" : "Button that picks a random title from the screen it is on: the filters in Search, the Planning list in the library.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Surprise me"
+          }
+        }
+      }
+    },
+    "surprise-me-menu" : {
+      "comment" : "The same as a menu bar item, in title case.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Surprise Me"
+          }
+        }
+      }
+    },
+    "surprise-offline" : {
+      "comment" : "Notice when a pick from Search needs AniList and the device is offline.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline. Search picks need AniList."
+          }
+        }
+      }
+    },
     "time-ago" : {
       "comment" : "How long ago something happened. Argument 1: span (Text).",
       "extractionState" : "manual",
@@ -227605,6 +228545,102 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ · Trailer"
+          }
+        }
+      }
+    },
+    "trending-choice-month" : {
+      "comment" : "One choice of the Trending period menu: the last thirty days.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This month"
+          }
+        }
+      }
+    },
+    "trending-choice-today" : {
+      "comment" : "One choice of the Trending period menu, where the heading already says Trending.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today"
+          }
+        }
+      }
+    },
+    "trending-choice-week" : {
+      "comment" : "One choice of the Trending period menu: the last seven days.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This week"
+          }
+        }
+      }
+    },
+    "trending-failed" : {
+      "comment" : "Shown in the Trending rail when a period could not load. The period is already worded, such as \"this week\". Argument 1: period (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load %1$@'s trending."
+          }
+        }
+      }
+    },
+    "trending-month" : {
+      "comment" : "Search's Trending heading and sort, for the last thirty days.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trending this month"
+          }
+        }
+      }
+    },
+    "trending-today" : {
+      "comment" : "Search's Trending heading and sort, for AniList's live trending.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trending today"
+          }
+        }
+      }
+    },
+    "trending-updated" : {
+      "comment" : "Line under a period that was kept from earlier, with how long ago. The age is already worded, such as \"yesterday\". Argument 1: age (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updated %1$@"
+          }
+        }
+      }
+    },
+    "trending-week" : {
+      "comment" : "Search's Trending heading and sort, for the last seven days.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trending this week"
           }
         }
       }

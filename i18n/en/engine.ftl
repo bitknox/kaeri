@@ -80,3 +80,15 @@ crash-notice = { -app-name } closed after a problem.
 
 # The same notice on the TV, which has no button.
 crash-notice-tv = { -app-name } closed after a problem. You can report it from Settings, About.
+
+# Toast: Surprise me on a search found no title matching the filters.
+notice-surprise-empty-filters = No titles match these filters.
+
+# Toast: Surprise me on the Planning list, which has nothing on it to pick.
+notice-surprise-empty-planning = Planning is empty.
+
+# Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
+notice-surprise-offline = Offline. Search picks need AniList.
+
+# Toast: Surprise me on the filters, and AniList could not be asked.
+notice-surprise-failed = Couldn't pick a title right now. Try again in a moment.

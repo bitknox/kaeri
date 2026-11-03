@@ -418,6 +418,20 @@ impl Engine {
             let _ = inbox.sender().internal(Internal::LetGo);
         }
 
+        // The Library fill: dubs for the cards, in the paced queue behind Home's first screen.
+        if background.dub_fill {
+            state.dubs.fill_library(
+                crate::titles::dub::Asking {
+                    meta: services.meta.clone(),
+                    store: services.store.clone(),
+                    registry: services.registry.clone(),
+                    clock: services.clock.clone(),
+                },
+                services.offline.clone(),
+                inbox.sender(),
+            );
+        }
+
         for tracker in services.sync.initial_states() {
             launch.push_back(Event::Sync(Box::new(tracker)));
         }

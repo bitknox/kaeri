@@ -1227,6 +1227,22 @@
     <value>[Ķàéŕî çļöšéð àƒţéŕ à þŕöƀļéɱ. Ýöü çàñ ŕéþöŕţ îţ ƒŕöɱ Šéţţîñĝš, Åƀöüţ.~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>The same notice on the TV, which has no button.</comment>
   </data>
+  <data name="NoticeSurpriseEmptyFilters" xml:space="preserve">
+    <value>[Ñö ţîţļéš ɱàţçĥ ţĥéšé ƒîļţéŕš.~~~~~~~~~]</value>
+    <comment>Toast: Surprise me on a search found no title matching the filters.</comment>
+  </data>
+  <data name="NoticeSurpriseEmptyPlanning" xml:space="preserve">
+    <value>[Þļàññîñĝ îš éɱþţý.~~~~~~]</value>
+    <comment>Toast: Surprise me on the Planning list, which has nothing on it to pick.</comment>
+  </data>
+  <data name="NoticeSurpriseOffline" xml:space="preserve">
+    <value>[Öƒƒļîñé. Šéàŕçĥ þîçķš ñééð ÅñîĻîšţ.~~~~~~~~~~~]</value>
+    <comment>Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.</comment>
+  </data>
+  <data name="NoticeSurpriseFailed" xml:space="preserve">
+    <value>[Çöüļðñ'ţ þîçķ à ţîţļé ŕîĝĥţ ñöŵ. Ţŕý àĝàîñ îñ à ɱöɱéñţ.~~~~~~~~~~~~~~~~~]</value>
+    <comment>Toast: Surprise me on the filters, and AniList could not be asked.</comment>
+  </data>
   <data name="ContinueMenuResume" xml:space="preserve">
     <value>[Çöñţîñüé~~~]</value>
     <comment>Context menu item on a Continue row: plays the episode from where it stopped.</comment>
@@ -6463,6 +6479,298 @@
     <value>[Öñ {service}~~]</value>
     <comment>End of a search result's line: one of the person's licensed services has it.</comment>
   </data>
+  <data name="CountEpisodes_one" xml:space="preserve">
+    <value>[Öñé éþîšöðé~~~~]</value>
+    <comment>The count line under a title in a list or on a card: how many episodes a finished show has.</comment>
+  </data>
+  <data name="CountEpisodes_other" xml:space="preserve">
+    <value>[{count} éþîšöðéš~~~~]</value>
+    <comment>The count line under a title in a list or on a card: how many episodes a finished show has.</comment>
+  </data>
+  <data name="CountEpisodesShort" xml:space="preserve">
+    <value>[{count} éþ~~]</value>
+    <comment>The same, short, for a cell too narrow for the long form.</comment>
+  </data>
+  <data name="CountOutOf" xml:space="preserve">
+    <value>[{out} öƒ {total} öüţ~~~~~]</value>
+    <comment>The count line of a show that is airing and has a known total: episodes out so far, then the total.</comment>
+  </data>
+  <data name="CountOutOfShort" xml:space="preserve">
+    <value>[{out} öƒ {total}~~~]</value>
+    <comment>The same, short.</comment>
+  </data>
+  <data name="CountOut_one" xml:space="preserve">
+    <value>[Öñé éþîšöðé öüţ~~~~~]</value>
+    <comment>The count line of a show that is airing and has no known total: episodes out so far.</comment>
+  </data>
+  <data name="CountOut_other" xml:space="preserve">
+    <value>[{count} éþîšöðéš öüţ~~~~~]</value>
+    <comment>The count line of a show that is airing and has no known total: episodes out so far.</comment>
+  </data>
+  <data name="CountOutShort" xml:space="preserve">
+    <value>[{count} öüţ~~~]</value>
+    <comment>The same, short.</comment>
+  </data>
+  <data name="CountStarts" xml:space="preserve">
+    <value>[Šţàŕţš {date}~~~]</value>
+    <comment>The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.</comment>
+  </data>
+  <data name="CountNotOut" xml:space="preserve">
+    <value>[Ñöţ öüţ ýéţ~~~~]</value>
+    <comment>The count line of a show that has not started and has no date.</comment>
+  </data>
+  <data name="CountNextOf" xml:space="preserve">
+    <value>[Éþ {episode} öƒ {total}~~~~]</value>
+    <comment>The count line of a show the viewer is part way through, in the library: the next episode and the total.</comment>
+  </data>
+  <data name="CountDub" xml:space="preserve">
+    <value>[Ðüƀ~]</value>
+    <comment>The dub part of a count line when a source has a dub and does not say how far it goes.</comment>
+  </data>
+  <data name="CountDubThrough" xml:space="preserve">
+    <value>[Ðüƀ {through}~~~]</value>
+    <comment>The dub part of a count line: the last episode the dub has.</comment>
+  </data>
+  <data name="CountSpokenEpisodes_one" xml:space="preserve">
+    <value>[Öñé éþîšöðé~~~~]</value>
+    <comment>What a screen reader says for a count line: the long form of a finished show.</comment>
+  </data>
+  <data name="CountSpokenEpisodes_other" xml:space="preserve">
+    <value>[{count} éþîšöðéš~~~~]</value>
+    <comment>What a screen reader says for a count line: the long form of a finished show.</comment>
+  </data>
+  <data name="CountSpokenOutOf" xml:space="preserve">
+    <value>[{out} öƒ {total} éþîšöðéš öüţ~~~~~~~]</value>
+    <comment>What a screen reader says for a show that is airing, with a known total.</comment>
+  </data>
+  <data name="CountSpokenOut_one" xml:space="preserve">
+    <value>[Öñé éþîšöðé öüţ~~~~~]</value>
+    <comment>What a screen reader says for a show that is airing with no known total.</comment>
+  </data>
+  <data name="CountSpokenOut_other" xml:space="preserve">
+    <value>[{count} éþîšöðéš öüţ~~~~~]</value>
+    <comment>What a screen reader says for a show that is airing with no known total.</comment>
+  </data>
+  <data name="CountSpokenStarts" xml:space="preserve">
+    <value>[Šţàŕţš {date}~~~]</value>
+    <comment>What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.</comment>
+  </data>
+  <data name="CountSpokenNextOf" xml:space="preserve">
+    <value>[Éþîšöðé {episode} öƒ {total}~~~~~~]</value>
+    <comment>What a screen reader says for a show the viewer is part way through.</comment>
+  </data>
+  <data name="CountSpokenDubThrough" xml:space="preserve">
+    <value>[ðüƀƀéð ţö éþîšöðé {through}~~~~~~~]</value>
+    <comment>What a screen reader says after the count when the dub goes to an episode.</comment>
+  </data>
+  <data name="CountSpokenDub" xml:space="preserve">
+    <value>[ĥàš à ðüƀ~~~]</value>
+    <comment>What a screen reader says after the count when a source has a dub and does not say how far it goes.</comment>
+  </data>
+  <data name="DateMonthJanShort" xml:space="preserve">
+    <value>[Ĵàñ~]</value>
+    <comment>A month's short name, for "Starts 9 Jan".</comment>
+  </data>
+  <data name="DateMonthJanLong" xml:space="preserve">
+    <value>[Ĵàñüàŕý~~~]</value>
+    <comment>A month's full name, for a screen reader's "Starts 9 January".</comment>
+  </data>
+  <data name="DateMonthFebShort" xml:space="preserve">
+    <value>[Ƒéƀ~]</value>
+    <comment>A month's short name, for "Starts 9 Jan".</comment>
+  </data>
+  <data name="DateMonthFebLong" xml:space="preserve">
+    <value>[Ƒéƀŕüàŕý~~~]</value>
+    <comment>A month's full name, for a screen reader's "Starts 9 January".</comment>
+  </data>
+  <data name="DateMonthMarShort" xml:space="preserve">
+    <value>[Ṁàŕ~]</value>
+    <comment>A month's short name, for "Starts 9 Jan".</comment>
+  </data>
+  <data name="DateMonthMarLong" xml:space="preserve">
+    <value>[Ṁàŕçĥ~~]</value>
+    <comment>A month's full name, for a screen reader's "Starts 9 January".</comment>
+  </data>
+  <data name="DateMonthAprShort" xml:space="preserve">
+    <value>[Åþŕ~]</value>
+    <comment>A month's short name, for "Starts 9 Jan".</comment>
+  </data>
+  <data name="DateMonthAprLong" xml:space="preserve">
+    <value>[Åþŕîļ~~]</value>
+    <comment>A month's full name, for a screen reader's "Starts 9 January".</comment>
+  </data>
+  <data name="DateMonthMayShort" xml:space="preserve">
+    <value>[Ṁàý~]</value>
+    <comment>A month's short name, for "Starts 9 Jan".</comment>
+  </data>
+  <data name="DateMonthMayLong" xml:space="preserve">
+    <value>[Ṁàý~]</value>
+    <comment>A month's full name, for a screen reader's "Starts 9 January".</comment>
+  </data>
+  <data name="DateMonthJunShort" xml:space="preserve">
+    <value>[Ĵüñ~]</value>
+    <comment>A month's short name, for "Starts 9 Jan".</comment>
+  </data>
+  <data name="DateMonthJunLong" xml:space="preserve">
+    <value>[Ĵüñé~~]</value>
+    <comment>A month's full name, for a screen reader's "Starts 9 January".</comment>
+  </data>
+  <data name="DateMonthJulShort" xml:space="preserve">
+    <value>[Ĵüļ~]</value>
+    <comment>A month's short name, for "Starts 9 Jan".</comment>
+  </data>
+  <data name="DateMonthJulLong" xml:space="preserve">
+    <value>[Ĵüļý~~]</value>
+    <comment>A month's full name, for a screen reader's "Starts 9 January".</comment>
+  </data>
+  <data name="DateMonthAugShort" xml:space="preserve">
+    <value>[Åüĝ~]</value>
+    <comment>A month's short name, for "Starts 9 Jan".</comment>
+  </data>
+  <data name="DateMonthAugLong" xml:space="preserve">
+    <value>[Åüĝüšţ~~]</value>
+    <comment>A month's full name, for a screen reader's "Starts 9 January".</comment>
+  </data>
+  <data name="DateMonthSepShort" xml:space="preserve">
+    <value>[Šéþ~]</value>
+    <comment>A month's short name, for "Starts 9 Jan".</comment>
+  </data>
+  <data name="DateMonthSepLong" xml:space="preserve">
+    <value>[Šéþţéɱƀéŕ~~~]</value>
+    <comment>A month's full name, for a screen reader's "Starts 9 January".</comment>
+  </data>
+  <data name="DateMonthOctShort" xml:space="preserve">
+    <value>[Öçţ~]</value>
+    <comment>A month's short name, for "Starts 9 Jan".</comment>
+  </data>
+  <data name="DateMonthOctLong" xml:space="preserve">
+    <value>[Öçţöƀéŕ~~~]</value>
+    <comment>A month's full name, for a screen reader's "Starts 9 January".</comment>
+  </data>
+  <data name="DateMonthNovShort" xml:space="preserve">
+    <value>[Ñöṽ~]</value>
+    <comment>A month's short name, for "Starts 9 Jan".</comment>
+  </data>
+  <data name="DateMonthNovLong" xml:space="preserve">
+    <value>[Ñöṽéɱƀéŕ~~~]</value>
+    <comment>A month's full name, for a screen reader's "Starts 9 January".</comment>
+  </data>
+  <data name="DateMonthDecShort" xml:space="preserve">
+    <value>[Ðéç~]</value>
+    <comment>A month's short name, for "Starts 9 Jan".</comment>
+  </data>
+  <data name="DateMonthDecLong" xml:space="preserve">
+    <value>[Ðéçéɱƀéŕ~~~]</value>
+    <comment>A month's full name, for a screen reader's "Starts 9 January".</comment>
+  </data>
+  <data name="SearchDubbed" xml:space="preserve">
+    <value>[Ðüƀƀéð~~]</value>
+    <comment>Label of Search's filter that keeps to the titles one of the viewer's sources lists in a dub.</comment>
+  </data>
+  <data name="SearchDubbedHint" xml:space="preserve">
+    <value>[Šĥöŵš ŕéšüļţš ýöüŕ šöüŕçéš ļîšţ îñ à ðüƀ.~~~~~~~~~~~~~]</value>
+    <comment>Help text of that filter, for a screen reader.</comment>
+  </data>
+  <data name="DubCoverageFirst" xml:space="preserve">
+    <value>[Ƒŕöɱ ţĥé ƒîŕšţ {count} ŕéšüļţš.~~~~~~~~~]</value>
+    <comment>Under Search's filters when the dub filter covered only part of the results. The count is how many results the { -source-pl } were asked about.</comment>
+  </data>
+  <data name="DubCoverageSources" xml:space="preserve">
+    <value>[{answered} öƒ {asked} šöüŕçéš àñšŵéŕéð.~~~~~~~~~]</value>
+    <comment>Under Search's filters when some { -source-pl } did not answer about dubs.</comment>
+  </data>
+  <data name="DubCoverageStored" xml:space="preserve">
+    <value>[Ðüƀƀéð üšéš ŵĥàţ ţĥîš ðéṽîçé àļŕéàðý ķñöŵš.~~~~~~~~~~~~~]</value>
+    <comment>Under Search's filters when the dub filter used only what this device already knows: offline, or a browse with no words typed.</comment>
+  </data>
+  <data name="DubNoneTitle" xml:space="preserve">
+    <value>[Ñö ðüƀƀéð ŕéšüļţš~~~~~~]</value>
+    <comment>Title of the state when the dub filter is on and none of the results has a dub.</comment>
+  </data>
+  <data name="DubNoneDetail" xml:space="preserve">
+    <value>[Ýöüŕ šöüŕçéš ðîðñ'ţ ļîšţ à ðüƀ ƒöŕ ţĥé ƒîŕšţ {count} ŕéšüļţš.~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under that title. The count is how many results the { -source-pl } were asked about.</comment>
+  </data>
+  <data name="DubNoneShowAll" xml:space="preserve">
+    <value>[Šĥöŵ àļļ ŕéšüļţš~~~~~]</value>
+    <comment>Button of that state: turns the dub filter off.</comment>
+  </data>
+  <data name="DubFailedTitle" xml:space="preserve">
+    <value>[Çöüļðñ'ţ àšķ àƀöüţ ðüƀš~~~~~~~]</value>
+    <comment>Title of the state when no source answered about dubs in time.</comment>
+  </data>
+  <data name="DubFailedDetail" xml:space="preserve">
+    <value>[Ñöñé öƒ ýöüŕ šöüŕçéš àñšŵéŕéð îñ ţîɱé.~~~~~~~~~~~~]</value>
+    <comment>Line under that title.</comment>
+  </data>
+  <data name="TrendingToday" xml:space="preserve">
+    <value>[Ţŕéñðîñĝ ţöðàý~~~~~]</value>
+    <comment>Search's Trending heading and sort, for AniList's live trending.</comment>
+  </data>
+  <data name="TrendingWeek" xml:space="preserve">
+    <value>[Ţŕéñðîñĝ ţĥîš ŵééķ~~~~~~]</value>
+    <comment>Search's Trending heading and sort, for the last seven days.</comment>
+  </data>
+  <data name="TrendingMonth" xml:space="preserve">
+    <value>[Ţŕéñðîñĝ ţĥîš ɱöñţĥ~~~~~~]</value>
+    <comment>Search's Trending heading and sort, for the last thirty days.</comment>
+  </data>
+  <data name="TrendingChoiceToday" xml:space="preserve">
+    <value>[Ţöðàý~~]</value>
+    <comment>One choice of the Trending period menu, where the heading already says Trending.</comment>
+  </data>
+  <data name="TrendingChoiceWeek" xml:space="preserve">
+    <value>[Ţĥîš ŵééķ~~~]</value>
+    <comment>One choice of the Trending period menu: the last seven days.</comment>
+  </data>
+  <data name="TrendingChoiceMonth" xml:space="preserve">
+    <value>[Ţĥîš ɱöñţĥ~~~]</value>
+    <comment>One choice of the Trending period menu: the last thirty days.</comment>
+  </data>
+  <data name="TrendingFailed" xml:space="preserve">
+    <value>[Çöüļðñ'ţ ļöàð {period}'š ţŕéñðîñĝ.~~~~~~~~~]</value>
+    <comment>Shown in the Trending rail when a period could not load. The period is already worded, such as "this week".</comment>
+  </data>
+  <data name="TrendingUpdated" xml:space="preserve">
+    <value>[Ûþðàţéð {age}~~~~]</value>
+    <comment>Line under a period that was kept from earlier, with how long ago. The age is already worded, such as "yesterday".</comment>
+  </data>
+  <data name="SurpriseMe" xml:space="preserve">
+    <value>[Šüŕþŕîšé ɱé~~~~]</value>
+    <comment>Button that picks a random title from the screen it is on: the filters in Search, the Planning list in the library.</comment>
+  </data>
+  <data name="SurpriseMeMenu" xml:space="preserve">
+    <value>[Šüŕþŕîšé Ṁé~~~~]</value>
+    <comment>The same as a menu bar item, in title case.</comment>
+  </data>
+  <data name="SurpriseAnother" xml:space="preserve">
+    <value>[Åñöţĥéŕ~~~]</value>
+    <comment>Button on a picked title's page that swaps it for another pick. It takes the place of Surprise me for that visit.</comment>
+  </data>
+  <data name="SurpriseHintPlanning" xml:space="preserve">
+    <value>[Öþéñš à ŕàñðöɱ ţîţļé ƒŕöɱ Þļàññîñĝ~~~~~~~~~~~]</value>
+    <comment>Hint of the Surprise me button on the library's Planning list.</comment>
+  </data>
+  <data name="SurpriseHintFilters" xml:space="preserve">
+    <value>[Öþéñš à ŕàñðöɱ ţîţļé ƒŕöɱ ţĥéšé ƒîļţéŕš~~~~~~~~~~~~]</value>
+    <comment>Hint of the Surprise me button in Search.</comment>
+  </data>
+  <data name="SurpriseAnotherHint" xml:space="preserve">
+    <value>[Öþéñš àñöţĥéŕ ŕàñðöɱ ţîţļé îñ þļàçé öƒ ţĥîš öñé~~~~~~~~~~~~~~~]</value>
+    <comment>Hint of the Another button.</comment>
+  </data>
+  <data name="SurpriseEmptyFilters" xml:space="preserve">
+    <value>[Ñö ţîţļéš ɱàţçĥ ţĥéšé ƒîļţéŕš.~~~~~~~~~]</value>
+    <comment>Notice when Search's filters match no title to pick from.</comment>
+  </data>
+  <data name="SurpriseEmptyPlanning" xml:space="preserve">
+    <value>[Þļàññîñĝ îš éɱþţý.~~~~~~]</value>
+    <comment>Notice when the Planning list is empty.</comment>
+  </data>
+  <data name="SurpriseOffline" xml:space="preserve">
+    <value>[Öƒƒļîñé. Šéàŕçĥ þîçķš ñééð ÅñîĻîšţ.~~~~~~~~~~~]</value>
+    <comment>Notice when a pick from Search needs AniList and the device is offline.</comment>
+  </data>
   <data name="ServersAddTitle" xml:space="preserve">
     <value>[Åðð à ɱéðîà šéŕṽéŕ~~~~~~]</value>
     <comment>Title of the dialog that adds a media server.</comment>
@@ -9129,6 +9437,30 @@
   <data name="MoreFollowingLine" xml:space="preserve">
     <value>[{status} · {score}/10~~~~]</value>
     <comment>A followed person's status and score, such as "Completed · 9/10". The status is already worded.</comment>
+  </data>
+  <data name="EpisodeGoTo" xml:space="preserve">
+    <value>[Ĝö ţö éþîšöðé…~~~~~]</value>
+    <comment>Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.</comment>
+  </data>
+  <data name="EpisodeGoToTitle" xml:space="preserve">
+    <value>[Ĝö ţö éþîšöðé~~~~]</value>
+    <comment>Title of the Go to episode field.</comment>
+  </data>
+  <data name="EpisodeGoToHint" xml:space="preserve">
+    <value>[{first} ţö {last}~~~]</value>
+    <comment>Placeholder of the Go to episode field: the first and last episode of the show.</comment>
+  </data>
+  <data name="EpisodeGoToLabel" xml:space="preserve">
+    <value>[Éþîšöðé, {first} ţö {last}~~~~~~]</value>
+    <comment>Accessibility label of the Go to episode field.</comment>
+  </data>
+  <data name="EpisodeGoToNone" xml:space="preserve">
+    <value>[Ñö éþîšöðé {number}. Ţĥîš šĥöŵ ĥàš {last}.~~~~~~~~~~~]</value>
+    <comment>Shown when the number typed is not an episode of the show.</comment>
+  </data>
+  <data name="EpisodeGoToNotOut" xml:space="preserve">
+    <value>[Éþîšöðé {number} îšñ'ţ öüţ ýéţ. Ţĥé ļàţéšţ îš {latest}.~~~~~~~~~~~~~~]</value>
+    <comment>Shown when the number typed is an episode with no date that has not come out.</comment>
   </data>
   <data name="TorrentsTitle" xml:space="preserve">
     <value>[Ţöŕŕéñţš~~~]</value>

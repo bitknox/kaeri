@@ -235,6 +235,16 @@ pub struct Entry {
     /// [`Self::prequels`] has the prequels: what "Up next for you" finds new seasons by.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub sequels: Vec<AnilistId>,
+    /// The dub one of the viewer's sources said the title has, as far as this device knows: from
+    /// a title page visit, the paced Library fill, or a search's dub ask, kept on disk. `None`
+    /// is not a no: a source that did not say, or was never asked, leaves it empty.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub dub: Option<crate::browsing::DubKnown>,
+    /// The count line under the title ("12 episodes · Dub 8"), worded in the long and short
+    /// forms and for a screen reader: see [`crate::browsing::count_line`]. `None` when nothing
+    /// is known to say.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub count_line: Option<crate::browsing::CountLine>,
 }
 
 /// A prequel of a title, by id, and where it was on the viewer's list when the row was built.
@@ -731,6 +741,12 @@ impl ResumePoint {
 }
 
 impl Entry {
+    /// Say the count line again, after something it is made of changed: the dub, the list
+    /// status, the progress.
+    pub fn recount(&mut self) {
+        self.count_line = crate::browsing::count_line(self);
+    }
+
     pub fn new(id: AnilistId, title: impl Into<String>) -> Self {
         Self {
             id,
@@ -784,6 +800,8 @@ impl Entry {
             trailer: None,
             prequels: Vec::new(),
             sequels: Vec::new(),
+            dub: None,
+            count_line: None,
         }
     }
 

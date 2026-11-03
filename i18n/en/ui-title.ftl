@@ -361,3 +361,33 @@ title-fact-tba = To be announced
 # @arg status: text
 # @arg score: int
 more-following-line = { $status } · { $score }/10
+
+## Go to episode
+
+# Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.
+# @max 24
+episode-go-to = Go to episode…
+
+# Title of the Go to episode field.
+# @max 24
+episode-go-to-title = Go to episode
+
+# Placeholder of the Go to episode field: the first and last episode of the show.
+# @arg first: int
+# @arg last: int
+episode-go-to-hint = { $first } to { $last }
+
+# Accessibility label of the Go to episode field.
+# @arg first: int
+# @arg last: int
+episode-go-to-label = Episode, { $first } to { $last }
+
+# Shown when the number typed is not an episode of the show.
+# @arg number: int
+# @arg last: int
+episode-go-to-none = No episode { $number }. This show has { $last }.
+
+# Shown when the number typed is an episode with no date that has not come out.
+# @arg number: int
+# @arg latest: int
+episode-go-to-not-out = Episode { $number } isn't out yet. The latest is { $latest }.

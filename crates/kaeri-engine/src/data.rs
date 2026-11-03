@@ -23,6 +23,21 @@ use kaeri_store::Store;
 
 /// Convert a title into the UI's flattened projection.
 pub fn entry_from(media: &Media, store: Option<&Store>) -> Entry {
+    let mut entry = entry_without_count(media, store);
+    // What a source said of the dub, kept by the paced fill or a page, and so on every card.
+    entry.dub = store
+        .and_then(|s| s.dubs_of(&[media.id]).ok())
+        .and_then(|mut found| found.remove(&media.id))
+        .filter(|row| row.has_dub)
+        .map(|row| kaeri_model::browsing::DubKnown {
+            through: row.through,
+            complete: row.complete,
+        });
+    entry.recount();
+    entry
+}
+
+fn entry_without_count(media: &Media, store: Option<&Store>) -> Entry {
     // Local history is the source of truth for progress, so it is read here rather than
     // taken from any remote list — this is what makes the app work with no account.
     let (progress, resume) =

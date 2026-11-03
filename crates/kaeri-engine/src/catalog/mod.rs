@@ -5,12 +5,15 @@ pub mod browse;
 pub mod calendar;
 pub mod cards;
 pub mod detail;
+pub mod dub_search;
 pub mod filter;
 pub mod home;
 pub mod lists;
 pub mod probe;
 pub mod recents;
 pub mod search;
+pub mod surprise;
+pub mod trending;
 pub mod up_next;
 
 use std::time::Duration;

@@ -27,7 +27,7 @@ use kaeri_core::{
     media::{Episode, MediaStatus},
 };
 use kaeri_meta::{Meta, anilist::Media};
-use kaeri_model::{episodes::DubExtent, event::Event};
+use kaeri_model::{browsing::DubFound, episodes::DubExtent, event::Event};
 use kaeri_providers::{Answer, ProviderRegistry};
 use kaeri_store::Store;
 use tokio::sync::Notify;
@@ -50,6 +50,48 @@ pub const SETTLED_FOR: i64 = 24 * 3_600;
 pub const UNSAID_FOR: i64 = 15 * 60;
 /// How many answers are kept before the stale ones are let go.
 const KEPT: usize = 512;
+
+/// How long the Library fill leaves the sources alone after a play stopped the dub listings.
+const FILL_HOLD_AFTER_PLAY: Duration = Duration::from_secs(120);
+
+/// The pause between one title's lookup and the next in the Library fill.
+const FILL_GAP: Duration = Duration::from_secs(5);
+/// How often the Library fill looks again while it waits for the sources to be free.
+const FILL_WAIT: Duration = Duration::from_secs(10);
+/// How many titles one run of the Library fill looks up at most.
+const FILL_AT_MOST: usize = 250;
+
+/// Write what a lookup came to into the store, under the sources it asked.
+fn persist(store: &Store, id: AnilistId, route: &str, looked: Looked, said_at: i64) {
+    if looked == Looked::Unsaid
+        && let Ok(Some(mut row)) = store.dub_row(id, route)
+    {
+        // A source that could not say does not take back what it said: asked again later.
+        row.until = said_at + kept_for(looked);
+        if let Err(e) = store.put_dub(id, route, &row) {
+            tracing::warn!(error = %e, %id, "could not keep what a dub listing found");
+        }
+        return;
+    }
+    let (has_dub, through, complete, aired) = match looked {
+        Looked::Said { dub: Some(dub), aired, .. } => {
+            (true, Some(dub.through), dub.complete, aired)
+        }
+        Looked::Said { dub: None, aired, .. } => (false, None, false, aired),
+        Looked::Unsaid => (false, None, false, None),
+    };
+    let row = kaeri_store::DubRow {
+        has_dub,
+        through,
+        complete,
+        aired,
+        said_at,
+        until: said_at + kept_for(looked),
+    };
+    if let Err(e) = store.put_dub(id, route, &row) {
+        tracing::warn!(error = %e, %id, "could not keep what a dub listing found");
+    }
+}
 
 /// What a lookup came to.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -90,6 +132,10 @@ struct Inner {
     tables: HashMap<AnilistId, usize>,
     /// Counts lookups started, so one that ends knows whether it is still the one running.
     serial: u64,
+    /// The Library fill's task, while it runs: see [`Dubs::fill_library`].
+    fill: Option<tokio::task::AbortHandle>,
+    /// Until when the Library fill leaves the sources alone: a play asked for their time.
+    held_until: Option<tokio::time::Instant>,
     /// A test's time in place of [`DUB_WITHIN`].
     #[cfg(test)]
     within: Option<Duration>,
@@ -109,7 +155,7 @@ struct Running {
 }
 
 /// What a lookup asks with: the engine's services it needs, cloned.
-pub(crate) struct Asking {
+pub struct Asking {
     pub meta: Meta,
     pub store: Store,
     pub registry: ProviderRegistry,
@@ -195,6 +241,24 @@ impl Dubs {
         Some((kept.dub, kept.until > now))
     }
 
+    /// What the store kept of title `id` asked of `route`, as [`Self::kept`] gives it: the dub, and
+    /// whether it is still fresh at `now`. A row that found a dub with no count is not one a
+    /// title page's lookup makes, and reads as no answer.
+    fn stored(
+        store: &Store,
+        id: AnilistId,
+        route: &str,
+        now: i64,
+    ) -> Option<(Option<DubExtent>, bool)> {
+        let row = store.dub_row(id, route).ok().flatten()?;
+        let dub = match (row.has_dub, row.through) {
+            (true, Some(through)) => Some(DubExtent { through, complete: row.complete }),
+            (true, None) => return None,
+            (false, _) => None,
+        };
+        Some((dub, row.until > now))
+    }
+
     fn keep(
         &self,
         id: AnilistId,
@@ -234,7 +298,9 @@ impl Dubs {
     pub(crate) fn ask_with(&self, id: AnilistId, offline: bool, asking: Asking, tx: &Outbox) {
         let now = asking.clock.now();
         let route = route(&asking.store, &asking.registry, id);
-        match self.kept(id, &route, now) {
+        let kept =
+            self.kept(id, &route, now).or_else(|| Self::stored(&asking.store, id, &route, now));
+        match kept {
             Some((dub, true)) => {
                 let _ = tx.send(Event::TitleDub { id, dub });
                 return;
@@ -280,7 +346,9 @@ impl Dubs {
                     });
             // Kept under the sources as they stand now that any on their way have arrived.
             let route = self::route(&store, &registry, id);
-            let dub = dubs.keep(id, route, looked, clock.now());
+            let said_at = clock.now();
+            persist(&store, id, &route, looked, said_at);
+            let dub = dubs.keep(id, route, looked, said_at);
             {
                 let mut inner = dubs.lock();
                 if inner.running.as_ref().is_some_and(|running| running.serial == serial) {
@@ -293,9 +361,96 @@ impl Dubs {
         inner.running = Some(Running { id, serial, handle });
     }
 
+    /// Whether a lookup is running or an episode table loading: the Library fill waits.
+    fn busy(&self) -> bool {
+        let inner = self.lock();
+        inner.running.is_some() || !inner.tables.is_empty()
+    }
+
+    /// Look up each title of the library for a dub, one at a time and well apart, in AniList's
+    /// background lane behind Home's first screen, and keep what the sources say so a card can
+    /// say "Dub 8" without opening the title. It gives way to everything else: a title page's
+    /// lookup, an episode table loading, a play (which holds it for a while), and being
+    /// offline. A title with a fresh answer is skipped. Quietly: what it finds reaches the cards
+    /// on screen as [`Event::DubsKnown`], not as a title page's [`Event::TitleDub`].
+    pub fn fill_library(
+        &self,
+        asking: Asking,
+        offline: Arc<std::sync::atomic::AtomicBool>,
+        tx: Outbox,
+    ) {
+        let dubs = self.clone();
+        let task = async move {
+            asking.meta.anilist().launch_over().await;
+            // What no card has needed for a quarter of a year goes.
+            if let Err(e) = asking.store.prune_dubs(asking.clock.now()) {
+                tracing::warn!(error = %e, "could not prune the kept dubs");
+            }
+            let mut looked_up = 0;
+            for id in fill_order(&asking.store) {
+                if looked_up >= FILL_AT_MOST {
+                    break;
+                }
+                // Wait until nothing else wants the sources.
+                loop {
+                    let held = dubs
+                        .lock()
+                        .held_until
+                        .and_then(|until| {
+                            until.checked_duration_since(tokio::time::Instant::now())
+                        })
+                        .filter(|held| !held.is_zero());
+                    if offline.load(std::sync::atomic::Ordering::Relaxed) || dubs.busy() {
+                        tokio::time::sleep(FILL_WAIT).await;
+                    } else if let Some(held) = held {
+                        tokio::time::sleep(held).await;
+                    } else if asking.registry.is_arriving() {
+                        tokio::time::sleep(FILL_WAIT).await;
+                    } else {
+                        break;
+                    }
+                }
+                if asking.registry.is_empty() {
+                    return;
+                }
+                let now = asking.clock.now();
+                if asking.store.dub_fresh(id, now).unwrap_or(false) {
+                    continue;
+                }
+                // A title no card has shown is not asked about: that would cost AniList a request
+                // for nothing anyone looks at yet.
+                if asking.store.cached_media(id).ok().flatten().is_none() {
+                    continue;
+                }
+                looked_up += 1;
+                let looked = tokio::time::timeout(
+                    DUB_WITHIN,
+                    look_up(&asking.meta, &asking.store, &asking.registry, id, &asking.clock),
+                )
+                .await
+                .unwrap_or(Looked::Unsaid);
+                let route = self::route(&asking.store, &asking.registry, id);
+                let said_at = asking.clock.now();
+                persist(&asking.store, id, &route, looked, said_at);
+                let dub = dubs.keep(id, route, looked, said_at);
+                if let Some(found) = found_of(&asking.store, id, dub) {
+                    let _ = tx.send(Event::DubsKnown { found: vec![found] });
+                }
+                tokio::time::sleep(FILL_GAP).await;
+            }
+            dubs.lock().fill = None;
+        };
+        let mut inner = self.lock();
+        if let Some(running) = inner.fill.take() {
+            running.abort();
+        }
+        inner.fill = Some(tokio::spawn(kaeri_meta::in_background(task)).abort_handle());
+    }
+
     /// Stop the lookup running, if one is: a play wants the source's time. It says nothing, and
     /// keeps nothing, so the page asks again when it is next shown.
     pub fn stop(&self) {
+        self.lock().held_until = Some(tokio::time::Instant::now() + FILL_HOLD_AFTER_PLAY);
         if let Some(running) = self.lock().running.take() {
             tracing::debug!(id = %running.id, "the dub listing stopped for a play");
             running.handle.abort();
@@ -304,7 +459,10 @@ impl Dubs {
 
     /// Forget what is kept of title `id`, and stop its lookup: its match to a source changed,
     /// so what was listed may have been another title's.
-    pub fn forget(&self, id: AnilistId) {
+    pub fn forget(&self, id: AnilistId, store: &Store) {
+        if let Err(e) = store.forget_dub(id) {
+            tracing::warn!(error = %e, %id, "could not forget what was kept of a dub");
+        }
         let mut inner = self.lock();
         inner.kept.retain(|(kept, _), _| *kept != id);
         if inner.running.as_ref().is_some_and(|running| running.id == id)
@@ -313,6 +471,43 @@ impl Dubs {
             running.handle.abort();
         }
     }
+}
+
+/// The titles the Library fill goes through, the likeliest to be seen first: what is being
+/// watched, then what is planned, paused, and the rest of the list.
+fn fill_order(store: &Store) -> Vec<AnilistId> {
+    let mut order: Vec<AnilistId> = store
+        .continue_list(100)
+        .unwrap_or_default()
+        .into_iter()
+        .map(|progress| progress.anilist_id)
+        .collect();
+    let mut listed = store.library_statuses().unwrap_or_default();
+    let rank = |status: &str| match status {
+        "CURRENT" | "REPEATING" => 0,
+        "PLANNING" => 1,
+        "PAUSED" => 2,
+        "COMPLETED" => 3,
+        _ => 4,
+    };
+    listed.sort_by_key(|(id, status)| (rank(status), std::cmp::Reverse(id.get())));
+    order.extend(listed.into_iter().map(|(id, _)| id));
+    let mut seen = std::collections::HashSet::new();
+    order.retain(|id| seen.insert(*id));
+    order
+}
+
+/// What the cards of title `id` need to hear of its dub, when it has one: the dub, and the
+/// count line again as the title's cached metadata and the store make it.
+fn found_of(store: &Store, id: AnilistId, dub: Option<DubExtent>) -> Option<DubFound> {
+    let dub = dub?;
+    let count_line = store
+        .cached_media(id)
+        .ok()
+        .flatten()
+        .and_then(|(payload, _)| serde_json::from_str::<Media>(&payload).ok())
+        .and_then(|media| data::entry_from(&media, Some(store)).count_line);
+    Some(DubFound { id, dub: dub.into(), count_line })
 }
 
 /// Title `id` listed in the dub from the source a dubbed play would use, and how far that goes.
@@ -640,6 +835,93 @@ mod tests {
             kept_for(Looked::Said { dub: six, airing: false, aired: Some(6) }),
             SETTLED_FOR
         );
+    }
+
+    #[tokio::test]
+    async fn what_was_found_is_kept_across_a_restart_and_forgotten_with_the_match() {
+        let dubbed = source("first", Some(6));
+        let counter = dubbed.call_count();
+        let mut page = Page::new(registry(vec![dubbed]), false);
+        let six = Some(DubExtent { through: 6, complete: false });
+        assert_eq!(page.open().await, six);
+        let asked = calls(&counter);
+
+        // A new run of the app: nothing in memory, the store has it, and the source is not asked.
+        page.dubs = Dubs::default();
+        assert_eq!(page.open().await, six);
+        assert_eq!(calls(&counter), asked);
+        let row = page.store.dubs_of(&[SHOW]).unwrap().remove(&SHOW).unwrap();
+        assert!(row.has_dub);
+        assert_eq!((row.through, row.aired), (Some(6), Some(6)));
+
+        page.dubs.forget(SHOW, &page.store);
+        assert!(page.store.dubs_of(&[SHOW]).unwrap().is_empty());
+    }
+
+    #[tokio::test]
+    async fn a_source_that_cannot_say_does_not_take_back_a_dub_it_said() {
+        let mut page = Page::new(registry(vec![source("first", Some(6))]), false);
+        page.open().await;
+        let path = route(&page.store, &page.registry, SHOW);
+        persist(&page.store, SHOW, &path, Looked::Unsaid, page.clock.now());
+        let row = page.store.dub_row(SHOW, &path).unwrap().unwrap();
+        assert!(row.has_dub && row.through == Some(6));
+    }
+
+    /// The Library fill, with the show on the list as being watched.
+    fn fill(page: &Page, offline: &Arc<std::sync::atomic::AtomicBool>) {
+        page.store
+            .replace_library_statuses("anilist", &[(SHOW, "CURRENT")], page.clock.now())
+            .unwrap();
+        page.dubs.fill_library(
+            asking(&page.store, &page.registry, &page.clock),
+            offline.clone(),
+            page.tx.clone(),
+        );
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn the_library_fill_says_a_dub_quietly_and_keeps_it() {
+        let dubbed = source("first", Some(6));
+        let counter = dubbed.call_count();
+        let mut page = Page::new(registry(vec![dubbed]), false);
+        fill(&page, &Arc::default());
+        let event = page.rx.recv().await.expect("the channel open");
+        let Event::DubsKnown { found } = event else { panic!("quietly: {event:?}") };
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].id, SHOW);
+        assert_eq!(found[0].dub.through, Some(6));
+        assert!(found[0].count_line.as_ref().is_some_and(|line| line.long.contains("Dub 6")));
+        assert!(page.store.dub_fresh(SHOW, page.clock.now()).unwrap());
+
+        // Another run finds it fresh and asks nothing.
+        let asked = calls(&counter);
+        fill(&page, &Arc::default());
+        tokio::time::sleep(Duration::from_secs(60)).await;
+        assert_eq!(calls(&counter), asked);
+        assert!(page.quiet());
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn the_library_fill_waits_while_offline_and_while_a_page_looks() {
+        let dubbed = source("first", Some(6));
+        let counter = dubbed.call_count();
+        let mut page = Page::new(registry(vec![dubbed]), false);
+        let offline = Arc::new(std::sync::atomic::AtomicBool::new(true));
+        fill(&page, &offline);
+        tokio::time::sleep(Duration::from_secs(120)).await;
+        assert_eq!(calls(&counter), 0, "offline: nothing is asked");
+
+        // A play holds it off for a while after the device is back.
+        offline.store(false, Ordering::SeqCst);
+        page.dubs.stop();
+        tokio::time::sleep(FILL_HOLD_AFTER_PLAY - Duration::from_secs(30)).await;
+        assert_eq!(calls(&counter), 0, "held after a play");
+        assert!(
+            matches!(page.rx.recv().await, Some(Event::DubsKnown { .. })),
+            "then it goes on"
+        );
+        assert!(calls(&counter) > 0);
     }
 
     #[tokio::test]

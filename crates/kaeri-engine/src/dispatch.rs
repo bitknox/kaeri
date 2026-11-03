@@ -68,6 +68,7 @@ use crate::{
 
 /// What a task run by [`spawn`] is lent: its own clones of the handles it reads, and of the
 /// outbox it answers on.
+#[derive(Clone)]
 pub struct Lent {
     pub meta: Meta,
     pub store: Store,
@@ -370,7 +371,40 @@ pub(crate) fn dispatch(
         }
         Command::LoadBrowse => {
             let (adult, now) = (engine.config.effective().meta.adult, services.clock.now());
-            spawn(job, services, tx, move |lent| browse::load_browse(lent, adult, now))
+            // The period chosen for the Trending rail, shown from what is kept: never asked
+            // for at launch, and asked again behind the screen once old.
+            let offline = engine.network.offline;
+            spawn(job, services, tx, move |lent| async move {
+                let more = lent.clone();
+                tokio::join!(
+                    browse::load_browse(lent, adult, now),
+                    crate::catalog::trending::load_remembered(more, adult, now, offline),
+                );
+            })
+        }
+        Command::Surprise(pool) => {
+            let adult = engine.config.effective().meta.adult;
+            let (offline, now) = (engine.network.offline, services.clock.now());
+            let picks = engine.picks.clone();
+            spawn(job, services, tx, move |lent| async move {
+                crate::catalog::surprise::pick(
+                    lent,
+                    picks,
+                    pool,
+                    adult,
+                    offline,
+                    now,
+                    &crate::catalog::surprise::random,
+                )
+                .await;
+            })
+        }
+        Command::LoadTrending(period) => {
+            let (adult, now) = (engine.config.effective().meta.adult, services.clock.now());
+            let offline = engine.network.offline;
+            spawn(job, services, tx, move |lent| {
+                crate::catalog::trending::load(lent, period, adult, now, offline)
+            })
         }
         Command::LoadSearchFacets => {
             let (adult, now) = (engine.config.effective().meta.adult, services.clock.now());
@@ -441,12 +475,12 @@ pub(crate) fn dispatch(
         }
         // A title matched afresh may be another title on the source, so its dub is too.
         Command::ClearMatch { id } => {
-            engine.dubs.forget(id);
+            engine.dubs.forget(id, &services.store);
             engine.names.forget(id);
             spawn(job, services, tx, move |lent| clear_match(lent, id))
         }
         Command::FixMatch { id, provider_id, key, title } => {
-            engine.dubs.forget(id);
+            engine.dubs.forget(id, &services.store);
             engine.names.forget(id);
             spawn(job, services, tx, move |lent| fix_match(lent, id, provider_id, key, title))
         }
@@ -454,7 +488,7 @@ pub(crate) fn dispatch(
             manual_search(id, query, provider_id, job, engine, services, tx)
         }
         Command::SetProviderPreference { id, provider } => {
-            engine.dubs.forget(id);
+            engine.dubs.forget(id, &services.store);
             engine.names.forget(id);
             set_provider_preference(id, provider, engine, services, tx);
             // The pin applies to what is on screen now, not the next time it opens.

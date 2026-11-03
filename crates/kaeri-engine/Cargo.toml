@@ -82,6 +82,8 @@ rustix = { version = "1.1", features = ["fs"] }
 
 [dev-dependencies]
 tempfile = "3"
+# A stopped clock, for the paced fills that wait seconds between titles.
+tokio = { workspace = true, features = ["test-util"] }
 # The fixture titles' schedules, for keep next's tests of what is out.
 kaeri-testkit.workspace = true
 # A Syncplay server on the loopback interface, for the watch party's tests.

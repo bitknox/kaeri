@@ -221,6 +221,13 @@ impl EpisodeRow {
     }
 }
 
+/// Whether spoiler protection hides `row` when it is on ([`EpisodeRow::spoiler_ahead`]): the
+/// episode is not finished and is numbered after `next`, the title's next episode. With 1 to 6
+/// watched and 7 next, 8 and later are ahead, and 7 is not.
+pub fn spoiler_ahead(row: &EpisodeRow, next: u32) -> bool {
+    !row.completed && row.number.trim().parse::<u32>().is_ok_and(|n| n > next)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -293,11 +300,4 @@ mod tests {
         assert!(!airing.is_upcoming(1_000), "airing now is out");
         assert!(!airing.is_upcoming(5_000));
     }
-}
-
-/// Whether spoiler protection hides `row` when it is on ([`EpisodeRow::spoiler_ahead`]): the
-/// episode is not finished and is numbered after `next`, the title's next episode. With 1 to 6
-/// watched and 7 next, 8 and later are ahead, and 7 is not.
-pub fn spoiler_ahead(row: &EpisodeRow, next: u32) -> bool {
-    !row.completed && row.number.trim().parse::<u32>().is_ok_and(|n| n > next)
 }

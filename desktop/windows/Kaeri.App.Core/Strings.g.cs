@@ -864,6 +864,18 @@ public static partial class T
     /// <summary>The same notice on the TV, which has no button.</summary>
     public static string CrashNoticeTv => Get("CrashNoticeTv");
 
+    /// <summary>Toast: Surprise me on a search found no title matching the filters.</summary>
+    public static string NoticeSurpriseEmptyFilters => Get("NoticeSurpriseEmptyFilters");
+
+    /// <summary>Toast: Surprise me on the Planning list, which has nothing on it to pick.</summary>
+    public static string NoticeSurpriseEmptyPlanning => Get("NoticeSurpriseEmptyPlanning");
+
+    /// <summary>Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.</summary>
+    public static string NoticeSurpriseOffline => Get("NoticeSurpriseOffline");
+
+    /// <summary>Toast: Surprise me on the filters, and AniList could not be asked.</summary>
+    public static string NoticeSurpriseFailed => Get("NoticeSurpriseFailed");
+
     /// <summary>Context menu item on a Continue row: plays the episode from where it stopped.</summary>
     public static string ContinueMenuResume => Get("ContinueMenuResume");
 
@@ -4697,6 +4709,213 @@ public static partial class T
     /// <summary>End of a search result's line: one of the person's licensed services has it.</summary>
     public static string SearchLineService(string service) => Fill(Get("SearchLineService"), ("service", service));
 
+    /// <summary>The count line under a title in a list or on a card: how many episodes a finished show has.</summary>
+    public static string CountEpisodes(long count) => Fill(GetPlural("CountEpisodes", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The same, short, for a cell too narrow for the long form.</summary>
+    public static string CountEpisodesShort(long count) => Fill(Get("CountEpisodesShort"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The count line of a show that is airing and has a known total: episodes out so far, then the total.</summary>
+    public static string CountOutOf(long @out, long total) => Fill(Get("CountOutOf"), ("out", @out.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The same, short.</summary>
+    public static string CountOutOfShort(long @out, long total) => Fill(Get("CountOutOfShort"), ("out", @out.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The count line of a show that is airing and has no known total: episodes out so far.</summary>
+    public static string CountOut(long count) => Fill(GetPlural("CountOut", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The same, short.</summary>
+    public static string CountOutShort(long count) => Fill(Get("CountOutShort"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.</summary>
+    public static string CountStarts(string date) => Fill(Get("CountStarts"), ("date", date));
+
+    /// <summary>The count line of a show that has not started and has no date.</summary>
+    public static string CountNotOut => Get("CountNotOut");
+
+    /// <summary>The count line of a show the viewer is part way through, in the library: the next episode and the total.</summary>
+    public static string CountNextOf(long episode, long total) => Fill(Get("CountNextOf"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The dub part of a count line when a source has a dub and does not say how far it goes.</summary>
+    public static string CountDub => Get("CountDub");
+
+    /// <summary>The dub part of a count line: the last episode the dub has.</summary>
+    public static string CountDubThrough(long through) => Fill(Get("CountDubThrough"), ("through", through.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>What a screen reader says for a count line: the long form of a finished show.</summary>
+    public static string CountSpokenEpisodes(long count) => Fill(GetPlural("CountSpokenEpisodes", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>What a screen reader says for a show that is airing, with a known total.</summary>
+    public static string CountSpokenOutOf(long @out, long total) => Fill(Get("CountSpokenOutOf"), ("out", @out.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>What a screen reader says for a show that is airing with no known total.</summary>
+    public static string CountSpokenOut(long count) => Fill(GetPlural("CountSpokenOut", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.</summary>
+    public static string CountSpokenStarts(string date) => Fill(Get("CountSpokenStarts"), ("date", date));
+
+    /// <summary>What a screen reader says for a show the viewer is part way through.</summary>
+    public static string CountSpokenNextOf(long episode, long total) => Fill(Get("CountSpokenNextOf"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>What a screen reader says after the count when the dub goes to an episode.</summary>
+    public static string CountSpokenDubThrough(long through) => Fill(Get("CountSpokenDubThrough"), ("through", through.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>What a screen reader says after the count when a source has a dub and does not say how far it goes.</summary>
+    public static string CountSpokenDub => Get("CountSpokenDub");
+
+    /// <summary>A month's short name, for "Starts 9 Jan".</summary>
+    public static string DateMonthJanShort => Get("DateMonthJanShort");
+
+    /// <summary>A month's full name, for a screen reader's "Starts 9 January".</summary>
+    public static string DateMonthJanLong => Get("DateMonthJanLong");
+
+    /// <summary>A month's short name, for "Starts 9 Jan".</summary>
+    public static string DateMonthFebShort => Get("DateMonthFebShort");
+
+    /// <summary>A month's full name, for a screen reader's "Starts 9 January".</summary>
+    public static string DateMonthFebLong => Get("DateMonthFebLong");
+
+    /// <summary>A month's short name, for "Starts 9 Jan".</summary>
+    public static string DateMonthMarShort => Get("DateMonthMarShort");
+
+    /// <summary>A month's full name, for a screen reader's "Starts 9 January".</summary>
+    public static string DateMonthMarLong => Get("DateMonthMarLong");
+
+    /// <summary>A month's short name, for "Starts 9 Jan".</summary>
+    public static string DateMonthAprShort => Get("DateMonthAprShort");
+
+    /// <summary>A month's full name, for a screen reader's "Starts 9 January".</summary>
+    public static string DateMonthAprLong => Get("DateMonthAprLong");
+
+    /// <summary>A month's short name, for "Starts 9 Jan".</summary>
+    public static string DateMonthMayShort => Get("DateMonthMayShort");
+
+    /// <summary>A month's full name, for a screen reader's "Starts 9 January".</summary>
+    public static string DateMonthMayLong => Get("DateMonthMayLong");
+
+    /// <summary>A month's short name, for "Starts 9 Jan".</summary>
+    public static string DateMonthJunShort => Get("DateMonthJunShort");
+
+    /// <summary>A month's full name, for a screen reader's "Starts 9 January".</summary>
+    public static string DateMonthJunLong => Get("DateMonthJunLong");
+
+    /// <summary>A month's short name, for "Starts 9 Jan".</summary>
+    public static string DateMonthJulShort => Get("DateMonthJulShort");
+
+    /// <summary>A month's full name, for a screen reader's "Starts 9 January".</summary>
+    public static string DateMonthJulLong => Get("DateMonthJulLong");
+
+    /// <summary>A month's short name, for "Starts 9 Jan".</summary>
+    public static string DateMonthAugShort => Get("DateMonthAugShort");
+
+    /// <summary>A month's full name, for a screen reader's "Starts 9 January".</summary>
+    public static string DateMonthAugLong => Get("DateMonthAugLong");
+
+    /// <summary>A month's short name, for "Starts 9 Jan".</summary>
+    public static string DateMonthSepShort => Get("DateMonthSepShort");
+
+    /// <summary>A month's full name, for a screen reader's "Starts 9 January".</summary>
+    public static string DateMonthSepLong => Get("DateMonthSepLong");
+
+    /// <summary>A month's short name, for "Starts 9 Jan".</summary>
+    public static string DateMonthOctShort => Get("DateMonthOctShort");
+
+    /// <summary>A month's full name, for a screen reader's "Starts 9 January".</summary>
+    public static string DateMonthOctLong => Get("DateMonthOctLong");
+
+    /// <summary>A month's short name, for "Starts 9 Jan".</summary>
+    public static string DateMonthNovShort => Get("DateMonthNovShort");
+
+    /// <summary>A month's full name, for a screen reader's "Starts 9 January".</summary>
+    public static string DateMonthNovLong => Get("DateMonthNovLong");
+
+    /// <summary>A month's short name, for "Starts 9 Jan".</summary>
+    public static string DateMonthDecShort => Get("DateMonthDecShort");
+
+    /// <summary>A month's full name, for a screen reader's "Starts 9 January".</summary>
+    public static string DateMonthDecLong => Get("DateMonthDecLong");
+
+    /// <summary>Label of Search's filter that keeps to the titles one of the viewer's sources lists in a dub.</summary>
+    public static string SearchDubbed => Get("SearchDubbed");
+
+    /// <summary>Help text of that filter, for a screen reader.</summary>
+    public static string SearchDubbedHint => Get("SearchDubbedHint");
+
+    /// <summary>Under Search's filters when the dub filter covered only part of the results. The count is how many results the { -source-pl } were asked about.</summary>
+    public static string DubCoverageFirst(long count) => Fill(Get("DubCoverageFirst"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under Search's filters when some { -source-pl } did not answer about dubs.</summary>
+    public static string DubCoverageSources(long answered, long asked) => Fill(Get("DubCoverageSources"), ("answered", answered.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("asked", asked.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under Search's filters when the dub filter used only what this device already knows: offline, or a browse with no words typed.</summary>
+    public static string DubCoverageStored => Get("DubCoverageStored");
+
+    /// <summary>Title of the state when the dub filter is on and none of the results has a dub.</summary>
+    public static string DubNoneTitle => Get("DubNoneTitle");
+
+    /// <summary>Line under that title. The count is how many results the { -source-pl } were asked about.</summary>
+    public static string DubNoneDetail(long count) => Fill(Get("DubNoneDetail"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Button of that state: turns the dub filter off.</summary>
+    public static string DubNoneShowAll => Get("DubNoneShowAll");
+
+    /// <summary>Title of the state when no source answered about dubs in time.</summary>
+    public static string DubFailedTitle => Get("DubFailedTitle");
+
+    /// <summary>Line under that title.</summary>
+    public static string DubFailedDetail => Get("DubFailedDetail");
+
+    /// <summary>Search's Trending heading and sort, for AniList's live trending.</summary>
+    public static string TrendingToday => Get("TrendingToday");
+
+    /// <summary>Search's Trending heading and sort, for the last seven days.</summary>
+    public static string TrendingWeek => Get("TrendingWeek");
+
+    /// <summary>Search's Trending heading and sort, for the last thirty days.</summary>
+    public static string TrendingMonth => Get("TrendingMonth");
+
+    /// <summary>One choice of the Trending period menu, where the heading already says Trending.</summary>
+    public static string TrendingChoiceToday => Get("TrendingChoiceToday");
+
+    /// <summary>One choice of the Trending period menu: the last seven days.</summary>
+    public static string TrendingChoiceWeek => Get("TrendingChoiceWeek");
+
+    /// <summary>One choice of the Trending period menu: the last thirty days.</summary>
+    public static string TrendingChoiceMonth => Get("TrendingChoiceMonth");
+
+    /// <summary>Shown in the Trending rail when a period could not load. The period is already worded, such as "this week".</summary>
+    public static string TrendingFailed(string period) => Fill(Get("TrendingFailed"), ("period", period));
+
+    /// <summary>Line under a period that was kept from earlier, with how long ago. The age is already worded, such as "yesterday".</summary>
+    public static string TrendingUpdated(string age) => Fill(Get("TrendingUpdated"), ("age", age));
+
+    /// <summary>Button that picks a random title from the screen it is on: the filters in Search, the Planning list in the library.</summary>
+    public static string SurpriseMe => Get("SurpriseMe");
+
+    /// <summary>The same as a menu bar item, in title case.</summary>
+    public static string SurpriseMeMenu => Get("SurpriseMeMenu");
+
+    /// <summary>Button on a picked title's page that swaps it for another pick. It takes the place of Surprise me for that visit.</summary>
+    public static string SurpriseAnother => Get("SurpriseAnother");
+
+    /// <summary>Hint of the Surprise me button on the library's Planning list.</summary>
+    public static string SurpriseHintPlanning => Get("SurpriseHintPlanning");
+
+    /// <summary>Hint of the Surprise me button in Search.</summary>
+    public static string SurpriseHintFilters => Get("SurpriseHintFilters");
+
+    /// <summary>Hint of the Another button.</summary>
+    public static string SurpriseAnotherHint => Get("SurpriseAnotherHint");
+
+    /// <summary>Notice when Search's filters match no title to pick from.</summary>
+    public static string SurpriseEmptyFilters => Get("SurpriseEmptyFilters");
+
+    /// <summary>Notice when the Planning list is empty.</summary>
+    public static string SurpriseEmptyPlanning => Get("SurpriseEmptyPlanning");
+
+    /// <summary>Notice when a pick from Search needs AniList and the device is offline.</summary>
+    public static string SurpriseOffline => Get("SurpriseOffline");
+
     /// <summary>Title of the dialog that adds a media server.</summary>
     public static string ServersAddTitle => Get("ServersAddTitle");
 
@@ -6648,6 +6867,24 @@ public static partial class T
     /// <summary>A followed person's status and score, such as "Completed · 9/10". The status is already worded.</summary>
     public static string MoreFollowingLine(string status, long score) => Fill(Get("MoreFollowingLine"), ("status", status), ("score", score.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.</summary>
+    public static string EpisodeGoTo => Get("EpisodeGoTo");
+
+    /// <summary>Title of the Go to episode field.</summary>
+    public static string EpisodeGoToTitle => Get("EpisodeGoToTitle");
+
+    /// <summary>Placeholder of the Go to episode field: the first and last episode of the show.</summary>
+    public static string EpisodeGoToHint(long first, long last) => Fill(Get("EpisodeGoToHint"), ("first", first.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("last", last.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Accessibility label of the Go to episode field.</summary>
+    public static string EpisodeGoToLabel(long first, long last) => Fill(Get("EpisodeGoToLabel"), ("first", first.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("last", last.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Shown when the number typed is not an episode of the show.</summary>
+    public static string EpisodeGoToNone(long number, long last) => Fill(Get("EpisodeGoToNone"), ("number", number.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("last", last.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Shown when the number typed is an episode with no date that has not come out.</summary>
+    public static string EpisodeGoToNotOut(long number, long latest) => Fill(Get("EpisodeGoToNotOut"), ("number", number.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("latest", latest.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
     /// <summary>Title of the settings group and the screen.</summary>
     public static string TorrentsTitle => Get("TorrentsTitle");
 
@@ -7767,6 +8004,10 @@ public static partial class T
         ["SettingsSubsResetDone"] = "Subtitle style reset",
         ["CrashNotice"] = "Kaeri closed after a problem.",
         ["CrashNoticeTv"] = "Kaeri closed after a problem. You can report it from Settings, About.",
+        ["NoticeSurpriseEmptyFilters"] = "No titles match these filters.",
+        ["NoticeSurpriseEmptyPlanning"] = "Planning is empty.",
+        ["NoticeSurpriseOffline"] = "Offline. Search picks need AniList.",
+        ["NoticeSurpriseFailed"] = "Couldn't pick a title right now. Try again in a moment.",
         ["ContinueMenuResume"] = "Continue",
         ["ContinueSyncWaiting_one"] = "One change waiting to sync",
         ["ContinueSyncWaiting_other"] = "{count} changes waiting to sync",
@@ -9080,6 +9321,79 @@ public static partial class T
         ["SearchAvailableHere"] = "Plays here",
         ["SearchAvailableServices"] = "On your services",
         ["SearchLineService"] = "On {service}",
+        ["CountEpisodes_one"] = "One episode",
+        ["CountEpisodes_other"] = "{count} episodes",
+        ["CountEpisodesShort"] = "{count} ep",
+        ["CountOutOf"] = "{out} of {total} out",
+        ["CountOutOfShort"] = "{out} of {total}",
+        ["CountOut_one"] = "One episode out",
+        ["CountOut_other"] = "{count} episodes out",
+        ["CountOutShort"] = "{count} out",
+        ["CountStarts"] = "Starts {date}",
+        ["CountNotOut"] = "Not out yet",
+        ["CountNextOf"] = "Ep {episode} of {total}",
+        ["CountDub"] = "Dub",
+        ["CountDubThrough"] = "Dub {through}",
+        ["CountSpokenEpisodes_one"] = "One episode",
+        ["CountSpokenEpisodes_other"] = "{count} episodes",
+        ["CountSpokenOutOf"] = "{out} of {total} episodes out",
+        ["CountSpokenOut_one"] = "One episode out",
+        ["CountSpokenOut_other"] = "{count} episodes out",
+        ["CountSpokenStarts"] = "Starts {date}",
+        ["CountSpokenNextOf"] = "Episode {episode} of {total}",
+        ["CountSpokenDubThrough"] = "dubbed to episode {through}",
+        ["CountSpokenDub"] = "has a dub",
+        ["DateMonthJanShort"] = "Jan",
+        ["DateMonthJanLong"] = "January",
+        ["DateMonthFebShort"] = "Feb",
+        ["DateMonthFebLong"] = "February",
+        ["DateMonthMarShort"] = "Mar",
+        ["DateMonthMarLong"] = "March",
+        ["DateMonthAprShort"] = "Apr",
+        ["DateMonthAprLong"] = "April",
+        ["DateMonthMayShort"] = "May",
+        ["DateMonthMayLong"] = "May",
+        ["DateMonthJunShort"] = "Jun",
+        ["DateMonthJunLong"] = "June",
+        ["DateMonthJulShort"] = "Jul",
+        ["DateMonthJulLong"] = "July",
+        ["DateMonthAugShort"] = "Aug",
+        ["DateMonthAugLong"] = "August",
+        ["DateMonthSepShort"] = "Sep",
+        ["DateMonthSepLong"] = "September",
+        ["DateMonthOctShort"] = "Oct",
+        ["DateMonthOctLong"] = "October",
+        ["DateMonthNovShort"] = "Nov",
+        ["DateMonthNovLong"] = "November",
+        ["DateMonthDecShort"] = "Dec",
+        ["DateMonthDecLong"] = "December",
+        ["SearchDubbed"] = "Dubbed",
+        ["SearchDubbedHint"] = "Shows results your sources list in a dub.",
+        ["DubCoverageFirst"] = "From the first {count} results.",
+        ["DubCoverageSources"] = "{answered} of {asked} sources answered.",
+        ["DubCoverageStored"] = "Dubbed uses what this device already knows.",
+        ["DubNoneTitle"] = "No dubbed results",
+        ["DubNoneDetail"] = "Your sources didn't list a dub for the first {count} results.",
+        ["DubNoneShowAll"] = "Show all results",
+        ["DubFailedTitle"] = "Couldn't ask about dubs",
+        ["DubFailedDetail"] = "None of your sources answered in time.",
+        ["TrendingToday"] = "Trending today",
+        ["TrendingWeek"] = "Trending this week",
+        ["TrendingMonth"] = "Trending this month",
+        ["TrendingChoiceToday"] = "Today",
+        ["TrendingChoiceWeek"] = "This week",
+        ["TrendingChoiceMonth"] = "This month",
+        ["TrendingFailed"] = "Couldn't load {period}'s trending.",
+        ["TrendingUpdated"] = "Updated {age}",
+        ["SurpriseMe"] = "Surprise me",
+        ["SurpriseMeMenu"] = "Surprise Me",
+        ["SurpriseAnother"] = "Another",
+        ["SurpriseHintPlanning"] = "Opens a random title from Planning",
+        ["SurpriseHintFilters"] = "Opens a random title from these filters",
+        ["SurpriseAnotherHint"] = "Opens another random title in place of this one",
+        ["SurpriseEmptyFilters"] = "No titles match these filters.",
+        ["SurpriseEmptyPlanning"] = "Planning is empty.",
+        ["SurpriseOffline"] = "Offline. Search picks need AniList.",
         ["ServersAddTitle"] = "Add a media server",
         ["ServersOnNetwork"] = "On your network",
         ["ServersLooking"] = "Looking for servers…",
@@ -9748,6 +10062,12 @@ public static partial class T
         ["TitleFactNow"] = "Now",
         ["TitleFactTba"] = "To be announced",
         ["MoreFollowingLine"] = "{status} · {score}/10",
+        ["EpisodeGoTo"] = "Go to episode…",
+        ["EpisodeGoToTitle"] = "Go to episode",
+        ["EpisodeGoToHint"] = "{first} to {last}",
+        ["EpisodeGoToLabel"] = "Episode, {first} to {last}",
+        ["EpisodeGoToNone"] = "No episode {number}. This show has {last}.",
+        ["EpisodeGoToNotOut"] = "Episode {number} isn't out yet. The latest is {latest}.",
         ["TorrentsTitle"] = "Torrents",
         ["TorrentsOn"] = "Torrents are on",
         ["TorrentsOffDetail"] = "Off by default. Torrents connect directly unless you route them through a proxy.",

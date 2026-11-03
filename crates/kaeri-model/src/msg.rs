@@ -387,6 +387,14 @@ pub enum Msg {
     CrashNotice,
     /// The same notice on the TV, which has no button.
     CrashNoticeTv,
+    /// Toast: Surprise me on a search found no title matching the filters.
+    NoticeSurpriseEmptyFilters,
+    /// Toast: Surprise me on the Planning list, which has nothing on it to pick.
+    NoticeSurpriseEmptyPlanning,
+    /// Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
+    NoticeSurpriseOffline,
+    /// Toast: Surprise me on the filters, and AniList could not be asked.
+    NoticeSurpriseFailed,
     /// A plugin store's, a source's or a torrent's message: see [`StoreMsg`].
     Store(StoreMsg),
     /// Text Kaeri does not own, shown as it is: a plugin's note, a tracker's error.
@@ -585,6 +593,10 @@ impl Msg {
             Self::SettingsSubsResetDone => "settings-subs-reset-done",
             Self::CrashNotice => "crash-notice",
             Self::CrashNoticeTv => "crash-notice-tv",
+            Self::NoticeSurpriseEmptyFilters => "notice-surprise-empty-filters",
+            Self::NoticeSurpriseEmptyPlanning => "notice-surprise-empty-planning",
+            Self::NoticeSurpriseOffline => "notice-surprise-offline",
+            Self::NoticeSurpriseFailed => "notice-surprise-failed",
             Self::Store(msg) => msg.id(),
             Self::Verbatim { .. } => "verbatim",
         }
@@ -781,6 +793,10 @@ impl Msg {
             Self::SettingsSubsResetDone => Vec::new(),
             Self::CrashNotice => Vec::new(),
             Self::CrashNoticeTv => Vec::new(),
+            Self::NoticeSurpriseEmptyFilters => Vec::new(),
+            Self::NoticeSurpriseEmptyPlanning => Vec::new(),
+            Self::NoticeSurpriseOffline => Vec::new(),
+            Self::NoticeSurpriseFailed => Vec::new(),
             Self::Store(msg) => msg.values(),
             Self::Verbatim { text } => vec![("text", Value::Text(text.clone()))],
         }

@@ -197,6 +197,10 @@ extension Msg {
         case .settingsSubsResetDone: L.settingsSubsResetDone
         case .crashNotice: L.crashNotice
         case .crashNoticeTv: L.crashNoticeTv
+        case .noticeSurpriseEmptyFilters: L.noticeSurpriseEmptyFilters
+        case .noticeSurpriseEmptyPlanning: L.noticeSurpriseEmptyPlanning
+        case .noticeSurpriseOffline: L.noticeSurpriseOffline
+        case .noticeSurpriseFailed: L.noticeSurpriseFailed
         case let .store(msg): msg.text
         case let .verbatim(text): text
         }

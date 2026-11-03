@@ -613,6 +613,14 @@
     <string name="crash_notice">Kaeri closed after a problem.</string>
     <!-- The same notice on the TV, which has no button. -->
     <string name="crash_notice_tv">Kaeri closed after a problem. You can report it from Settings, About.</string>
+    <!-- Toast: Surprise me on a search found no title matching the filters. -->
+    <string name="notice_surprise_empty_filters">No titles match these filters.</string>
+    <!-- Toast: Surprise me on the Planning list, which has nothing on it to pick. -->
+    <string name="notice_surprise_empty_planning">Planning is empty.</string>
+    <!-- Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked. -->
+    <string name="notice_surprise_offline">Offline. Search picks need AniList.</string>
+    <!-- Toast: Surprise me on the filters, and AniList could not be asked. -->
+    <string name="notice_surprise_failed">Couldn\'t pick a title right now. Try again in a moment.</string>
     <!-- Accessibility label of the account button in the top bar when someone is signed in. -->
     <string name="account_button_named">%1$s, accounts and settings</string>
     <!-- Line under Today in the calendar when My list is chosen and nothing on it airs in the next four weeks. -->
@@ -3627,6 +3635,156 @@
     <string name="search_available_services">On your services</string>
     <!-- End of a search result's line: one of the person's licensed services has it. -->
     <string name="search_line_service">On %1$s</string>
+    <!-- The count line under a title in a list or on a card: how many episodes a finished show has. -->
+    <plurals name="count_episodes">
+        <item quantity="one">One episode</item>
+        <item quantity="other">%1$d episodes</item>
+    </plurals>
+    <!-- The same, short, for a cell too narrow for the long form. -->
+    <string name="count_episodes_short">%1$d ep</string>
+    <!-- The count line of a show that is airing and has a known total: episodes out so far, then the total. -->
+    <string name="count_out_of">%1$d of %2$d out</string>
+    <!-- The same, short. -->
+    <string name="count_out_of_short">%1$d of %2$d</string>
+    <!-- The count line of a show that is airing and has no known total: episodes out so far. -->
+    <plurals name="count_out">
+        <item quantity="one">One episode out</item>
+        <item quantity="other">%1$d episodes out</item>
+    </plurals>
+    <!-- The same, short. -->
+    <string name="count_out_short">%1$d out</string>
+    <!-- The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below. -->
+    <string name="count_starts">Starts %1$s</string>
+    <!-- The count line of a show that has not started and has no date. -->
+    <string name="count_not_out">Not out yet</string>
+    <!-- The count line of a show the viewer is part way through, in the library: the next episode and the total. -->
+    <string name="count_next_of">Ep %1$d of %2$d</string>
+    <!-- The dub part of a count line when a source has a dub and does not say how far it goes. -->
+    <string name="count_dub">Dub</string>
+    <!-- The dub part of a count line: the last episode the dub has. -->
+    <string name="count_dub_through">Dub %1$d</string>
+    <!-- What a screen reader says for a count line: the long form of a finished show. -->
+    <plurals name="count_spoken_episodes">
+        <item quantity="one">One episode</item>
+        <item quantity="other">%1$d episodes</item>
+    </plurals>
+    <!-- What a screen reader says for a show that is airing, with a known total. -->
+    <string name="count_spoken_out_of">%1$d of %2$d episodes out</string>
+    <!-- What a screen reader says for a show that is airing with no known total. -->
+    <plurals name="count_spoken_out">
+        <item quantity="one">One episode out</item>
+        <item quantity="other">%1$d episodes out</item>
+    </plurals>
+    <!-- What a screen reader says for a show not out yet, with a date. The date is the day and the full month name. -->
+    <string name="count_spoken_starts">Starts %1$s</string>
+    <!-- What a screen reader says for a show the viewer is part way through. -->
+    <string name="count_spoken_next_of">Episode %1$d of %2$d</string>
+    <!-- What a screen reader says after the count when the dub goes to an episode. -->
+    <string name="count_spoken_dub_through">dubbed to episode %1$d</string>
+    <!-- What a screen reader says after the count when a source has a dub and does not say how far it goes. -->
+    <string name="count_spoken_dub">has a dub</string>
+    <!-- A month's short name, for "Starts 9 Jan". -->
+    <string name="date_month_jan_short">Jan</string>
+    <!-- A month's full name, for a screen reader's "Starts 9 January". -->
+    <string name="date_month_jan_long">January</string>
+    <!-- A month's short name, for "Starts 9 Jan". -->
+    <string name="date_month_feb_short">Feb</string>
+    <!-- A month's full name, for a screen reader's "Starts 9 January". -->
+    <string name="date_month_feb_long">February</string>
+    <!-- A month's short name, for "Starts 9 Jan". -->
+    <string name="date_month_mar_short">Mar</string>
+    <!-- A month's full name, for a screen reader's "Starts 9 January". -->
+    <string name="date_month_mar_long">March</string>
+    <!-- A month's short name, for "Starts 9 Jan". -->
+    <string name="date_month_apr_short">Apr</string>
+    <!-- A month's full name, for a screen reader's "Starts 9 January". -->
+    <string name="date_month_apr_long">April</string>
+    <!-- A month's short name, for "Starts 9 Jan". -->
+    <string name="date_month_may_short">May</string>
+    <!-- A month's full name, for a screen reader's "Starts 9 January". -->
+    <string name="date_month_may_long">May</string>
+    <!-- A month's short name, for "Starts 9 Jan". -->
+    <string name="date_month_jun_short">Jun</string>
+    <!-- A month's full name, for a screen reader's "Starts 9 January". -->
+    <string name="date_month_jun_long">June</string>
+    <!-- A month's short name, for "Starts 9 Jan". -->
+    <string name="date_month_jul_short">Jul</string>
+    <!-- A month's full name, for a screen reader's "Starts 9 January". -->
+    <string name="date_month_jul_long">July</string>
+    <!-- A month's short name, for "Starts 9 Jan". -->
+    <string name="date_month_aug_short">Aug</string>
+    <!-- A month's full name, for a screen reader's "Starts 9 January". -->
+    <string name="date_month_aug_long">August</string>
+    <!-- A month's short name, for "Starts 9 Jan". -->
+    <string name="date_month_sep_short">Sep</string>
+    <!-- A month's full name, for a screen reader's "Starts 9 January". -->
+    <string name="date_month_sep_long">September</string>
+    <!-- A month's short name, for "Starts 9 Jan". -->
+    <string name="date_month_oct_short">Oct</string>
+    <!-- A month's full name, for a screen reader's "Starts 9 January". -->
+    <string name="date_month_oct_long">October</string>
+    <!-- A month's short name, for "Starts 9 Jan". -->
+    <string name="date_month_nov_short">Nov</string>
+    <!-- A month's full name, for a screen reader's "Starts 9 January". -->
+    <string name="date_month_nov_long">November</string>
+    <!-- A month's short name, for "Starts 9 Jan". -->
+    <string name="date_month_dec_short">Dec</string>
+    <!-- A month's full name, for a screen reader's "Starts 9 January". -->
+    <string name="date_month_dec_long">December</string>
+    <!-- Label of Search's filter that keeps to the titles one of the viewer's sources lists in a dub. -->
+    <string name="search_dubbed">Dubbed</string>
+    <!-- Help text of that filter, for a screen reader. -->
+    <string name="search_dubbed_hint">Shows results your sources list in a dub.</string>
+    <!-- Under Search's filters when the dub filter covered only part of the results. The count is how many results the { -source-pl } were asked about. -->
+    <string name="dub_coverage_first">From the first %1$d results.</string>
+    <!-- Under Search's filters when some { -source-pl } did not answer about dubs. -->
+    <string name="dub_coverage_sources">%1$d of %2$d sources answered.</string>
+    <!-- Under Search's filters when the dub filter used only what this device already knows: offline, or a browse with no words typed. -->
+    <string name="dub_coverage_stored">Dubbed uses what this device already knows.</string>
+    <!-- Title of the state when the dub filter is on and none of the results has a dub. -->
+    <string name="dub_none_title">No dubbed results</string>
+    <!-- Line under that title. The count is how many results the { -source-pl } were asked about. -->
+    <string name="dub_none_detail">Your sources didn\'t list a dub for the first %1$d results.</string>
+    <!-- Button of that state: turns the dub filter off. -->
+    <string name="dub_none_show_all">Show all results</string>
+    <!-- Title of the state when no source answered about dubs in time. -->
+    <string name="dub_failed_title">Couldn\'t ask about dubs</string>
+    <!-- Line under that title. -->
+    <string name="dub_failed_detail">None of your sources answered in time.</string>
+    <!-- Search's Trending heading and sort, for AniList's live trending. -->
+    <string name="trending_today">Trending today</string>
+    <!-- Search's Trending heading and sort, for the last seven days. -->
+    <string name="trending_week">Trending this week</string>
+    <!-- Search's Trending heading and sort, for the last thirty days. -->
+    <string name="trending_month">Trending this month</string>
+    <!-- One choice of the Trending period menu, where the heading already says Trending. -->
+    <string name="trending_choice_today">Today</string>
+    <!-- One choice of the Trending period menu: the last seven days. -->
+    <string name="trending_choice_week">This week</string>
+    <!-- One choice of the Trending period menu: the last thirty days. -->
+    <string name="trending_choice_month">This month</string>
+    <!-- Shown in the Trending rail when a period could not load. The period is already worded, such as "this week". -->
+    <string name="trending_failed">Couldn\'t load %1$s\'s trending.</string>
+    <!-- Line under a period that was kept from earlier, with how long ago. The age is already worded, such as "yesterday". -->
+    <string name="trending_updated">Updated %1$s</string>
+    <!-- Button that picks a random title from the screen it is on: the filters in Search, the Planning list in the library. -->
+    <string name="surprise_me">Surprise me</string>
+    <!-- The same as a menu bar item, in title case. -->
+    <string name="surprise_me_menu">Surprise Me</string>
+    <!-- Button on a picked title's page that swaps it for another pick. It takes the place of Surprise me for that visit. -->
+    <string name="surprise_another">Another</string>
+    <!-- Hint of the Surprise me button on the library's Planning list. -->
+    <string name="surprise_hint_planning">Opens a random title from Planning</string>
+    <!-- Hint of the Surprise me button in Search. -->
+    <string name="surprise_hint_filters">Opens a random title from these filters</string>
+    <!-- Hint of the Another button. -->
+    <string name="surprise_another_hint">Opens another random title in place of this one</string>
+    <!-- Notice when Search's filters match no title to pick from. -->
+    <string name="surprise_empty_filters">No titles match these filters.</string>
+    <!-- Notice when the Planning list is empty. -->
+    <string name="surprise_empty_planning">Planning is empty.</string>
+    <!-- Notice when a pick from Search needs AniList and the device is offline. -->
+    <string name="surprise_offline">Offline. Search picks need AniList.</string>
     <!-- Title of the dialog that adds a media server. -->
     <string name="servers_add_title">Add a media server</string>
     <!-- Heading of the servers found on the network. -->
@@ -4976,6 +5134,18 @@
     <string name="title_fact_tba">To be announced</string>
     <!-- A followed person's status and score, such as "Completed · 9/10". The status is already worded. -->
     <string name="more_following_line">%1$s · %2$d/10</string>
+    <!-- Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number. -->
+    <string name="episode_go_to">Go to episode…</string>
+    <!-- Title of the Go to episode field. -->
+    <string name="episode_go_to_title">Go to episode</string>
+    <!-- Placeholder of the Go to episode field: the first and last episode of the show. -->
+    <string name="episode_go_to_hint">%1$d to %2$d</string>
+    <!-- Accessibility label of the Go to episode field. -->
+    <string name="episode_go_to_label">Episode, %1$d to %2$d</string>
+    <!-- Shown when the number typed is not an episode of the show. -->
+    <string name="episode_go_to_none">No episode %1$d. This show has %2$d.</string>
+    <!-- Shown when the number typed is an episode with no date that has not come out. -->
+    <string name="episode_go_to_not_out">Episode %1$d isn\'t out yet. The latest is %2$d.</string>
     <!-- Title of the settings group and the screen. -->
     <string name="torrents_title">Torrents</string>
     <!-- Label and short value for the switch. -->

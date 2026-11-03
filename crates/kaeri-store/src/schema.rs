@@ -520,6 +520,29 @@ const MIGRATIONS: &[(&str, &str)] = &[
     );
     "#,
     ),
+    (
+        "0021_dub_extent",
+        r#"
+    -- What this device's sources said of a title's dub, kept so a card can say "Dub 8" after a
+    -- restart without asking. One row per title and the sources asked (`route`; a search's
+    -- answers go under `search`). `has_dub` is 0 for a source that listed the title and found
+    -- no dub. `through` is null for a dub with no count. `until` is when the answer is due to
+    -- be asked again; the row stays and is still shown past it, as a dub does not take an
+    -- episode back.
+    CREATE TABLE dub_extent (
+        anilist_id INTEGER NOT NULL,
+        route      TEXT    NOT NULL,
+        has_dub    INTEGER NOT NULL,
+        through    INTEGER,
+        complete   INTEGER NOT NULL DEFAULT 0,
+        aired      INTEGER,
+        said_at    INTEGER NOT NULL,
+        until      INTEGER NOT NULL,
+        PRIMARY KEY (anilist_id, route)
+    );
+    CREATE INDEX dub_extent_said ON dub_extent (said_at);
+    "#,
+    ),
 ];
 
 /// Apply any migrations the database has not yet seen.

@@ -203,6 +203,10 @@ fun Msg.text(context: Context): String =
         is Msg.SettingsSubsResetDone -> Strings.settingsSubsResetDone(context)
         is Msg.CrashNotice -> Strings.crashNotice(context)
         is Msg.CrashNoticeTv -> Strings.crashNoticeTv(context)
+        is Msg.NoticeSurpriseEmptyFilters -> Strings.noticeSurpriseEmptyFilters(context)
+        is Msg.NoticeSurpriseEmptyPlanning -> Strings.noticeSurpriseEmptyPlanning(context)
+        is Msg.NoticeSurpriseOffline -> Strings.noticeSurpriseOffline(context)
+        is Msg.NoticeSurpriseFailed -> Strings.noticeSurpriseFailed(context)
         is Msg.Store -> this.v1.text(context)
         is Msg.Verbatim -> this.text
     }

@@ -1210,6 +1210,18 @@ public enum L {
     /// The same notice on the TV, which has no button.
     public static var crashNoticeTv: String { string("crash-notice-tv", fallback: "Kaeri closed after a problem. You can report it from Settings, About.") }
 
+    /// Toast: Surprise me on a search found no title matching the filters.
+    public static var noticeSurpriseEmptyFilters: String { string("notice-surprise-empty-filters", fallback: "No titles match these filters.") }
+
+    /// Toast: Surprise me on the Planning list, which has nothing on it to pick.
+    public static var noticeSurpriseEmptyPlanning: String { string("notice-surprise-empty-planning", fallback: "Planning is empty.") }
+
+    /// Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
+    public static var noticeSurpriseOffline: String { string("notice-surprise-offline", fallback: "Offline. Search picks need AniList.") }
+
+    /// Toast: Surprise me on the filters, and AniList could not be asked.
+    public static var noticeSurpriseFailed: String { string("notice-surprise-failed", fallback: "Couldn't pick a title right now. Try again in a moment.") }
+
     /// VoiceOver: a title that is up to date and whose next episode airs later. The time is already worded.
     public static func accessCaughtUpAirs(episode: Int, when: String) -> String {
         Self.format("access-caught-up-airs", fallback: "Caught up, episode %1$lld airs %2$@", episode, when)
@@ -6786,6 +6798,253 @@ public enum L {
         Self.format("search-line-service", fallback: "On %1$@", service)
     }
 
+    /// The count line under a title in a list or on a card: how many episodes a finished show has.
+    public static func countEpisodes(count: Int) -> String {
+        Self.format("count-episodes", fallback: "%1$lld episodes", count)
+    }
+
+    /// The same, short, for a cell too narrow for the long form.
+    public static func countEpisodesShort(count: Int) -> String {
+        Self.format("count-episodes-short", fallback: "%1$lld ep", count)
+    }
+
+    /// The count line of a show that is airing and has a known total: episodes out so far, then the total.
+    public static func countOutOf(out: Int, total: Int) -> String {
+        Self.format("count-out-of", fallback: "%1$lld of %2$lld out", out, total)
+    }
+
+    /// The same, short.
+    public static func countOutOfShort(out: Int, total: Int) -> String {
+        Self.format("count-out-of-short", fallback: "%1$lld of %2$lld", out, total)
+    }
+
+    /// The count line of a show that is airing and has no known total: episodes out so far.
+    public static func countOut(count: Int) -> String {
+        Self.format("count-out", fallback: "%1$lld episodes out", count)
+    }
+
+    /// The same, short.
+    public static func countOutShort(count: Int) -> String {
+        Self.format("count-out-short", fallback: "%1$lld out", count)
+    }
+
+    /// The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.
+    public static func countStarts(date: String) -> String {
+        Self.format("count-starts", fallback: "Starts %1$@", date)
+    }
+
+    /// The count line of a show that has not started and has no date.
+    public static var countNotOut: String { string("count-not-out", fallback: "Not out yet") }
+
+    /// The count line of a show the viewer is part way through, in the library: the next episode and the total.
+    public static func countNextOf(episode: Int, total: Int) -> String {
+        Self.format("count-next-of", fallback: "Ep %1$lld of %2$lld", episode, total)
+    }
+
+    /// The dub part of a count line when a source has a dub and does not say how far it goes.
+    public static var countDub: String { string("count-dub", fallback: "Dub") }
+
+    /// The dub part of a count line: the last episode the dub has.
+    public static func countDubThrough(through: Int) -> String {
+        Self.format("count-dub-through", fallback: "Dub %1$lld", through)
+    }
+
+    /// What a screen reader says for a count line: the long form of a finished show.
+    public static func countSpokenEpisodes(count: Int) -> String {
+        Self.format("count-spoken-episodes", fallback: "%1$lld episodes", count)
+    }
+
+    /// What a screen reader says for a show that is airing, with a known total.
+    public static func countSpokenOutOf(out: Int, total: Int) -> String {
+        Self.format("count-spoken-out-of", fallback: "%1$lld of %2$lld episodes out", out, total)
+    }
+
+    /// What a screen reader says for a show that is airing with no known total.
+    public static func countSpokenOut(count: Int) -> String {
+        Self.format("count-spoken-out", fallback: "%1$lld episodes out", count)
+    }
+
+    /// What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.
+    public static func countSpokenStarts(date: String) -> String {
+        Self.format("count-spoken-starts", fallback: "Starts %1$@", date)
+    }
+
+    /// What a screen reader says for a show the viewer is part way through.
+    public static func countSpokenNextOf(episode: Int, total: Int) -> String {
+        Self.format("count-spoken-next-of", fallback: "Episode %1$lld of %2$lld", episode, total)
+    }
+
+    /// What a screen reader says after the count when the dub goes to an episode.
+    public static func countSpokenDubThrough(through: Int) -> String {
+        Self.format("count-spoken-dub-through", fallback: "dubbed to episode %1$lld", through)
+    }
+
+    /// What a screen reader says after the count when a source has a dub and does not say how far it goes.
+    public static var countSpokenDub: String { string("count-spoken-dub", fallback: "has a dub") }
+
+    /// A month's short name, for "Starts 9 Jan".
+    public static var dateMonthJanShort: String { string("date-month-jan-short", fallback: "Jan") }
+
+    /// A month's full name, for a screen reader's "Starts 9 January".
+    public static var dateMonthJanLong: String { string("date-month-jan-long", fallback: "January") }
+
+    /// A month's short name, for "Starts 9 Jan".
+    public static var dateMonthFebShort: String { string("date-month-feb-short", fallback: "Feb") }
+
+    /// A month's full name, for a screen reader's "Starts 9 January".
+    public static var dateMonthFebLong: String { string("date-month-feb-long", fallback: "February") }
+
+    /// A month's short name, for "Starts 9 Jan".
+    public static var dateMonthMarShort: String { string("date-month-mar-short", fallback: "Mar") }
+
+    /// A month's full name, for a screen reader's "Starts 9 January".
+    public static var dateMonthMarLong: String { string("date-month-mar-long", fallback: "March") }
+
+    /// A month's short name, for "Starts 9 Jan".
+    public static var dateMonthAprShort: String { string("date-month-apr-short", fallback: "Apr") }
+
+    /// A month's full name, for a screen reader's "Starts 9 January".
+    public static var dateMonthAprLong: String { string("date-month-apr-long", fallback: "April") }
+
+    /// A month's short name, for "Starts 9 Jan".
+    public static var dateMonthMayShort: String { string("date-month-may-short", fallback: "May") }
+
+    /// A month's full name, for a screen reader's "Starts 9 January".
+    public static var dateMonthMayLong: String { string("date-month-may-long", fallback: "May") }
+
+    /// A month's short name, for "Starts 9 Jan".
+    public static var dateMonthJunShort: String { string("date-month-jun-short", fallback: "Jun") }
+
+    /// A month's full name, for a screen reader's "Starts 9 January".
+    public static var dateMonthJunLong: String { string("date-month-jun-long", fallback: "June") }
+
+    /// A month's short name, for "Starts 9 Jan".
+    public static var dateMonthJulShort: String { string("date-month-jul-short", fallback: "Jul") }
+
+    /// A month's full name, for a screen reader's "Starts 9 January".
+    public static var dateMonthJulLong: String { string("date-month-jul-long", fallback: "July") }
+
+    /// A month's short name, for "Starts 9 Jan".
+    public static var dateMonthAugShort: String { string("date-month-aug-short", fallback: "Aug") }
+
+    /// A month's full name, for a screen reader's "Starts 9 January".
+    public static var dateMonthAugLong: String { string("date-month-aug-long", fallback: "August") }
+
+    /// A month's short name, for "Starts 9 Jan".
+    public static var dateMonthSepShort: String { string("date-month-sep-short", fallback: "Sep") }
+
+    /// A month's full name, for a screen reader's "Starts 9 January".
+    public static var dateMonthSepLong: String { string("date-month-sep-long", fallback: "September") }
+
+    /// A month's short name, for "Starts 9 Jan".
+    public static var dateMonthOctShort: String { string("date-month-oct-short", fallback: "Oct") }
+
+    /// A month's full name, for a screen reader's "Starts 9 January".
+    public static var dateMonthOctLong: String { string("date-month-oct-long", fallback: "October") }
+
+    /// A month's short name, for "Starts 9 Jan".
+    public static var dateMonthNovShort: String { string("date-month-nov-short", fallback: "Nov") }
+
+    /// A month's full name, for a screen reader's "Starts 9 January".
+    public static var dateMonthNovLong: String { string("date-month-nov-long", fallback: "November") }
+
+    /// A month's short name, for "Starts 9 Jan".
+    public static var dateMonthDecShort: String { string("date-month-dec-short", fallback: "Dec") }
+
+    /// A month's full name, for a screen reader's "Starts 9 January".
+    public static var dateMonthDecLong: String { string("date-month-dec-long", fallback: "December") }
+
+    /// Label of Search's filter that keeps to the titles one of the viewer's sources lists in a dub.
+    public static var searchDubbed: String { string("search-dubbed", fallback: "Dubbed") }
+
+    /// Help text of that filter, for a screen reader.
+    public static var searchDubbedHint: String { string("search-dubbed-hint", fallback: "Shows results your sources list in a dub.") }
+
+    /// Under Search's filters when the dub filter covered only part of the results. The count is how many results the { -source-pl } were asked about.
+    public static func dubCoverageFirst(count: Int) -> String {
+        Self.format("dub-coverage-first", fallback: "From the first %1$lld results.", count)
+    }
+
+    /// Under Search's filters when some { -source-pl } did not answer about dubs.
+    public static func dubCoverageSources(answered: Int, asked: Int) -> String {
+        Self.format("dub-coverage-sources", fallback: "%1$lld of %2$lld sources answered.", answered, asked)
+    }
+
+    /// Under Search's filters when the dub filter used only what this device already knows: offline, or a browse with no words typed.
+    public static var dubCoverageStored: String { string("dub-coverage-stored", fallback: "Dubbed uses what this device already knows.") }
+
+    /// Title of the state when the dub filter is on and none of the results has a dub.
+    public static var dubNoneTitle: String { string("dub-none-title", fallback: "No dubbed results") }
+
+    /// Line under that title. The count is how many results the { -source-pl } were asked about.
+    public static func dubNoneDetail(count: Int) -> String {
+        Self.format("dub-none-detail", fallback: "Your sources didn't list a dub for the first %1$lld results.", count)
+    }
+
+    /// Button of that state: turns the dub filter off.
+    public static var dubNoneShowAll: String { string("dub-none-show-all", fallback: "Show all results") }
+
+    /// Title of the state when no source answered about dubs in time.
+    public static var dubFailedTitle: String { string("dub-failed-title", fallback: "Couldn't ask about dubs") }
+
+    /// Line under that title.
+    public static var dubFailedDetail: String { string("dub-failed-detail", fallback: "None of your sources answered in time.") }
+
+    /// Search's Trending heading and sort, for AniList's live trending.
+    public static var trendingToday: String { string("trending-today", fallback: "Trending today") }
+
+    /// Search's Trending heading and sort, for the last seven days.
+    public static var trendingWeek: String { string("trending-week", fallback: "Trending this week") }
+
+    /// Search's Trending heading and sort, for the last thirty days.
+    public static var trendingMonth: String { string("trending-month", fallback: "Trending this month") }
+
+    /// One choice of the Trending period menu, where the heading already says Trending.
+    public static var trendingChoiceToday: String { string("trending-choice-today", fallback: "Today") }
+
+    /// One choice of the Trending period menu: the last seven days.
+    public static var trendingChoiceWeek: String { string("trending-choice-week", fallback: "This week") }
+
+    /// One choice of the Trending period menu: the last thirty days.
+    public static var trendingChoiceMonth: String { string("trending-choice-month", fallback: "This month") }
+
+    /// Shown in the Trending rail when a period could not load. The period is already worded, such as "this week".
+    public static func trendingFailed(period: String) -> String {
+        Self.format("trending-failed", fallback: "Couldn't load %1$@'s trending.", period)
+    }
+
+    /// Line under a period that was kept from earlier, with how long ago. The age is already worded, such as "yesterday".
+    public static func trendingUpdated(age: String) -> String {
+        Self.format("trending-updated", fallback: "Updated %1$@", age)
+    }
+
+    /// Button that picks a random title from the screen it is on: the filters in Search, the Planning list in the library.
+    public static var surpriseMe: String { string("surprise-me", fallback: "Surprise me") }
+
+    /// The same as a menu bar item, in title case.
+    public static var surpriseMeMenu: String { string("surprise-me-menu", fallback: "Surprise Me") }
+
+    /// Button on a picked title's page that swaps it for another pick. It takes the place of Surprise me for that visit.
+    public static var surpriseAnother: String { string("surprise-another", fallback: "Another") }
+
+    /// Hint of the Surprise me button on the library's Planning list.
+    public static var surpriseHintPlanning: String { string("surprise-hint-planning", fallback: "Opens a random title from Planning") }
+
+    /// Hint of the Surprise me button in Search.
+    public static var surpriseHintFilters: String { string("surprise-hint-filters", fallback: "Opens a random title from these filters") }
+
+    /// Hint of the Another button.
+    public static var surpriseAnotherHint: String { string("surprise-another-hint", fallback: "Opens another random title in place of this one") }
+
+    /// Notice when Search's filters match no title to pick from.
+    public static var surpriseEmptyFilters: String { string("surprise-empty-filters", fallback: "No titles match these filters.") }
+
+    /// Notice when the Planning list is empty.
+    public static var surpriseEmptyPlanning: String { string("surprise-empty-planning", fallback: "Planning is empty.") }
+
+    /// Notice when a pick from Search needs AniList and the device is offline.
+    public static var surpriseOffline: String { string("surprise-offline", fallback: "Offline. Search picks need AniList.") }
+
     /// Title of the dialog that adds a media server.
     public static var serversAddTitle: String { string("servers-add-title", fallback: "Add a media server") }
 
@@ -9021,6 +9280,32 @@ public enum L {
     /// A followed person's status and score, such as "Completed · 9/10". The status is already worded.
     public static func moreFollowingLine(status: String, score: Int) -> String {
         Self.format("more-following-line", fallback: "%1$@ · %2$lld/10", status, score)
+    }
+
+    /// Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.
+    public static var episodeGoTo: String { string("episode-go-to", fallback: "Go to episode…") }
+
+    /// Title of the Go to episode field.
+    public static var episodeGoToTitle: String { string("episode-go-to-title", fallback: "Go to episode") }
+
+    /// Placeholder of the Go to episode field: the first and last episode of the show.
+    public static func episodeGoToHint(first: Int, last: Int) -> String {
+        Self.format("episode-go-to-hint", fallback: "%1$lld to %2$lld", first, last)
+    }
+
+    /// Accessibility label of the Go to episode field.
+    public static func episodeGoToLabel(first: Int, last: Int) -> String {
+        Self.format("episode-go-to-label", fallback: "Episode, %1$lld to %2$lld", first, last)
+    }
+
+    /// Shown when the number typed is not an episode of the show.
+    public static func episodeGoToNone(number: Int, last: Int) -> String {
+        Self.format("episode-go-to-none", fallback: "No episode %1$lld. This show has %2$lld.", number, last)
+    }
+
+    /// Shown when the number typed is an episode with no date that has not come out.
+    public static func episodeGoToNotOut(number: Int, latest: Int) -> String {
+        Self.format("episode-go-to-not-out", fallback: "Episode %1$lld isn't out yet. The latest is %2$lld.", number, latest)
     }
 
     /// Title of the settings group and the screen.

@@ -385,6 +385,21 @@ impl ProviderRegistry {
         self.candidates().iter().map(|p| p.manifest().id.clone()).collect()
     }
 
+    /// The sources a search for a dub can ask: those usable now, none switched off, that list
+    /// titles in the dub, and that are plugins or open catalogues. Library folders, servers,
+    /// licensed services and the demo have no dub to search for.
+    pub fn dub_searchable(&self) -> Vec<Arc<dyn Provider>> {
+        use kaeri_core::{media::Translation, traits::ProviderKind};
+        self.candidates()
+            .into_iter()
+            .filter(|p| {
+                let manifest = p.manifest();
+                matches!(manifest.kind, ProviderKind::Plugin | ProviderKind::Catalogue)
+                    && manifest.translations.contains(&Translation::Dub)
+            })
+            .collect()
+    }
+
     /// Providers that are worth trying right now, in preference order: none switched off.
     fn candidates(&self) -> Vec<Arc<dyn Provider>> {
         let usable = self.health.usable(&self.ids());
