@@ -165,7 +165,15 @@ public sealed partial class PlayerView : UserControl
         LiftSubtitles(animated: false);
         tick.Start();
         ShowStats();
-        Focus(FocusState.Programmatic);
+        // Just made visible, the view has no layout yet and WinUI refuses it the focus, which
+        // then stays on what opened it under the player: the player's keys would go there (Space
+        // pressing a Home card again). Asked again once it is laid out.
+        if (!Focus(FocusState.Programmatic))
+            DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
+            {
+                if (Showing)
+                    Focus(FocusState.Programmatic);
+            });
         ShowingChanged?.Invoke(true);
     }
 
