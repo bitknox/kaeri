@@ -275,6 +275,42 @@ the server and room, the show and the last episode the room reached, the names o
 were there, and the show's cover address. It keeps no source or stream, and it sends this list
 nowhere.
 
+## Sync between your devices
+
+Sync is off until you turn it on. It keeps your history, resume points, lists, per-show choices
+and a short list of shared settings the same on your devices. Settings that belong to one device,
+such as paths, the VPN and key bindings, stay on it. So do tracker sign-ins, plugin store
+invites and downloaded files.
+
+Two devices on the same network can sync directly. You pair them once with a six-digit code, and
+after that they talk only to each other, over an encrypted connection.
+
+To sync across networks, the devices share a folder in a service you choose:
+
+| Service | Where the files go | What Kaeri can reach |
+|---|---|---|
+| Google Drive | A hidden app folder in your Drive | Only that folder |
+| Dropbox | `Apps/Kaeri` | Only that folder |
+| OneDrive | `Apps/Kaeri` | Only that folder |
+| Nextcloud | `kaeri-sync` in your files | Your files, through an app password named Kaeri |
+| WebDAV | The folder you give | What that account can reach |
+| A folder on the device | The folder you pick, such as one in iCloud Drive or Syncthing | Only that folder |
+
+Every file Kaeri writes there is encrypted on your device first, with a key the service never
+sees. The service sees how many devices sync, how big the files are and when they were written.
+It doesn't see titles, episodes, settings or anything else inside them. While an app is open, it
+reads the folder when it starts, when you come back to it, and every 5 minutes.
+
+The key lives in your device's secret store. When you set up the first folder, Kaeri shows a
+recovery key, which lets a new device join from the folder alone. Keep it somewhere safe: anyone
+with the recovery key and access to the folder can read your sync files. You can see it again or
+replace it in Settings, Devices.
+
+Signing in uses the service's own page, as trackers do. To remove Kaeri's access, turn sync off on
+each device, delete the folder, and remove Kaeri in the service's own settings: Google's "Third-party
+apps and services", Dropbox's "Connected apps", Microsoft's "Apps and services you've given access",
+or Nextcloud's "Devices and sessions".
+
 ## On your device
 
 The apps keep these on the device, and send them nowhere unless a section above says so:
