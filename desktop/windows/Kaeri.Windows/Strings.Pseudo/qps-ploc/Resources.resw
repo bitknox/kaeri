@@ -5704,7 +5704,7 @@
     <comment>Seconds on the starting screen's detail line and Details rows.</comment>
   </data>
   <data name="PlayerStartStillStarting" xml:space="preserve">
-    <value>[Šţîļļ šţàŕţîñĝ. Çĥööšé šöüŕçé îš àṽàîļàƀļé.~~~~~~~~~~~~~]</value>
+    <value>[Šţîļļ šţàŕţîñĝ. Ýöü çàñ çĥööšé à šöüŕçé ñöŵ.~~~~~~~~~~~~~~]</value>
     <comment>Spoken once, when a start has taken more than a few seconds.</comment>
   </data>
   <data name="PlayerStartAnnounce" xml:space="preserve">

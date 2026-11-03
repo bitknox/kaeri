@@ -5704,7 +5704,7 @@
     <comment>Seconds on the starting screen's detail line and Details rows.</comment>
   </data>
   <data name="PlayerStartStillStarting" xml:space="preserve">
-    <value>Still starting. Choose source is available.</value>
+    <value>Still starting. You can choose a source now.</value>
     <comment>Spoken once, when a start has taken more than a few seconds.</comment>
   </data>
   <data name="PlayerStartAnnounce" xml:space="preserve">

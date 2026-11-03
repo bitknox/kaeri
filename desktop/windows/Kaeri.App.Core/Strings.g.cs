@@ -8967,7 +8967,7 @@ public static partial class T
         ["PlayerStartTranslation"] = "Audio and subtitles",
         ["PlayerStartLookedUp"] = "Looked up the title",
         ["PlayerStartSeconds"] = "{seconds} s",
-        ["PlayerStartStillStarting"] = "Still starting. Choose source is available.",
+        ["PlayerStartStillStarting"] = "Still starting. You can choose a source now.",
         ["PlayerStartAnnounce"] = "Starting episode {episode}, {title}",
         ["PlayerStartFailedAnnounce"] = "{title}. {reason}",
         ["PlayerStartStatus"] = "{step}, {detail}",

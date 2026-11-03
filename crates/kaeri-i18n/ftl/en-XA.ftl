@@ -6809,7 +6809,7 @@ player-start-looked-up = [Ļööķéð üþ ţĥé ţîţļé~~~~~~]
 player-start-seconds = [{ $seconds } š~~]
 
 # Spoken once, when a start has taken more than a few seconds.
-player-start-still-starting = [Šţîļļ šţàŕţîñĝ. Çĥööšé šöüŕçé îš àṽàîļàƀļé.~~~~~~~~~~~~~]
+player-start-still-starting = [Šţîļļ šţàŕţîñĝ. Ýöü çàñ çĥööšé à šöüŕçé ñöŵ.~~~~~~~~~~~~~~]
 
 # Spoken when a start begins. The episode is its label.
 player-start-announce = [Šţàŕţîñĝ éþîšöðé { $episode }, { $title }~~~~~~~~]

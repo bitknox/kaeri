@@ -3256,7 +3256,7 @@
     <!-- Seconds on the starting screen's detail line and Details rows. -->
     <string name="player_start_seconds">%1$d s</string>
     <!-- Spoken once, when a start has taken more than a few seconds. -->
-    <string name="player_start_still_starting">Still starting. Choose source is available.</string>
+    <string name="player_start_still_starting">Still starting. You can choose a source now.</string>
     <!-- Spoken when a start begins. The episode is its label. -->
     <string name="player_start_announce">Starting episode %1$s, %2$s</string>
     <!-- Spoken when a start fails: the title, then the reason. -->

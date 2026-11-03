@@ -6809,7 +6809,7 @@ player-start-looked-up = Looked up the title
 player-start-seconds = { $seconds } s
 
 # Spoken once, when a start has taken more than a few seconds.
-player-start-still-starting = Still starting. Choose source is available.
+player-start-still-starting = Still starting. You can choose a source now.
 
 # Spoken when a start begins. The episode is its label.
 player-start-announce = Starting episode { $episode }, { $title }

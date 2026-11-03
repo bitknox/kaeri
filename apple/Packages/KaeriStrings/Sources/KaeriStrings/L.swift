@@ -6183,7 +6183,7 @@ public enum L {
     }
 
     /// Spoken once, when a start has taken more than a few seconds.
-    public static var playerStartStillStarting: String { string("player-start-still-starting", fallback: "Still starting. Choose source is available.") }
+    public static var playerStartStillStarting: String { string("player-start-still-starting", fallback: "Still starting. You can choose a source now.") }
 
     /// Spoken when a start begins. The episode is its label.
     public static func playerStartAnnounce(episode: String, title: String) -> String {
