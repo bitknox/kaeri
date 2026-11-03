@@ -1663,7 +1663,6 @@
     <string name="player_mark_it">マークする</string>
     <string name="player_dont_ask_again">今後は確認しない</string>
     <string name="player_share_title">スキップ位置をAniSkipと共有しますか?</string>
-    <string name="player_share_body">AniSkipは、ボランティアが運営する、オープニングとエンディングの無料の共有リストです。あなたがマークした位置は、他の人のプレーヤーでもスキップされます。</string>
     <string name="player_share_sent">送信されるのは、スキップ位置、作品のMyAnimeList番号、エピソード、このインストール用に作られたランダムなIDです。あなたの名前、アカウント、視聴中のソースは送信されません。AniSkipはスパム対策のためIPアドレスを確認し、利用規約は13歳以上であることを求めています。</string>
     <string name="player_share_yes">共有する</string>
     <string name="player_share_no">共有しない</string>
@@ -1948,12 +1947,7 @@
     <string name="settings_up_next_countdown">次のエピソードのカウントダウン</string>
     <string name="settings_skip_opening">オープニングを自動でスキップ</string>
     <string name="settings_skip_recap">前回のあらすじを自動でスキップ</string>
-    <string name="settings_ask_was_opening">手動でオープニングをスキップした後に確認する</string>
-    <string name="settings_ask_was_opening_detail">マークを提案し、次回からスキップされるようにします</string>
     <string name="settings_share_skips">スキップ位置をAniSkipと共有</string>
-    <string name="settings_share_skips_detail">AniSkipは、多くのプレーヤーが使っている、オープニングとエンディングの無料の共有リストです。スキップ位置、作品のMyAnimeList番号、エピソード、このインストール用のランダムなIDが送信されます。</string>
-    <string name="settings_clear_skips">マークしたスキップ位置を消去…</string>
-    <string name="settings_clear_skips_confirm">マークしたスキップ位置を消去しますか?共有済みの位置はAniSkipに残ります。</string>
     <string name="settings_skip_filler">フィラーを自動でスキップ</string>
     <string name="settings_mark_opening">オープニングとエンディングに印を付ける</string>
     <string name="settings_skip_button">スキップボタンを表示</string>

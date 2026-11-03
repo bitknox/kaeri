@@ -6937,9 +6937,6 @@ player-dont-ask-again = Nie pytaj więcej
 # Title of the sheet shown on the first Save.
 player-share-title = Udostępniać twoje czasy pominięcia w AniSkip?
 
-# Body of the sheet.
-player-share-body = AniSkip to darmowa, wspólna lista czołówek i zakończeń, prowadzona przez własnych wolontariuszy. Odtwarzacze innych osób pomijają to, co zaznaczysz.
-
 # What is sent, as a line under the body.
 player-share-sent = Dostaje czasy, numer serialu z MyAnimeList, odcinek i losowy identyfikator utworzony dla tej instalacji. Nie dostaje twojego imienia, kont ani tego, skąd oglądasz. AniSkip widzi twój adres IP, aby ograniczać spam, a jego regulamin wymaga ukończenia 13 lat.
 
@@ -7788,23 +7785,8 @@ settings-skip-opening = Automatycznie pomijaj czołówkę
 # Settings, Playback: whether recaps are skipped without asking.
 settings-skip-recap = Pomijaj streszczenia automatycznie
 
-# Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand.
-settings-ask-was-opening = Pytaj po ręcznym pominięciu czołówki
-
-# Line under it.
-settings-ask-was-opening-detail = Proponuje jej zaznaczenie, aby następnym razem została pominięta
-
 # Settings, Playback: whether marked skip times go to AniSkip.
 settings-share-skips = Udostępniaj czasy pominięcia w AniSkip
-
-# Line under it.
-settings-share-skips-detail = AniSkip to darmowa, wspólna lista czołówek i zakończeń, z której korzysta wiele odtwarzaczy. Dostaje czasy, numer serialu z MyAnimeList, odcinek i losowy identyfikator tej instalacji.
-
-# Settings, Playback: removes every skip time you marked.
-settings-clear-skips = Wyczyść zaznaczone czasy pominięcia…
-
-# Question that asks before clearing every skip time you marked.
-settings-clear-skips-confirm = Wyczyścić zaznaczone przez ciebie czasy pominięcia? AniSkip zachowuje te, które udostępniono.
 
 # Row: skip filler.
 settings-skip-filler = Automatycznie pomijaj wypełniacze

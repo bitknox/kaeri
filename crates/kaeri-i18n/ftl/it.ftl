@@ -6869,9 +6869,6 @@ player-dont-ask-again = Non chiedere più
 # Title of the sheet shown on the first Save.
 player-share-title = Condividere i tuoi tempi di salto con AniSkip?
 
-# Body of the sheet.
-player-share-body = AniSkip è un elenco gratuito e condiviso di aperture e chiusure, gestito da volontari. I player degli altri saltano ciò che segni.
-
 # What is sent, as a line under the body.
 player-share-sent = Riceve i tempi, il numero MyAnimeList della serie, l'episodio e un id casuale creato per questa installazione. Non il tuo nome, i tuoi account né la fonte da cui guardi. AniSkip vede il tuo indirizzo IP per limitare lo spam e le sue condizioni richiedono che tu abbia almeno 13 anni.
 
@@ -7716,23 +7713,8 @@ settings-skip-opening = Salta automaticamente la sigla di apertura
 # Settings, Playback: whether recaps are skipped without asking.
 settings-skip-recap = Salta automaticamente i riepiloghi
 
-# Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand.
-settings-ask-was-opening = Chiedi dopo aver saltato un'apertura a mano
-
-# Line under it.
-settings-ask-was-opening-detail = Propone di segnarla, così la volta dopo viene saltata
-
 # Settings, Playback: whether marked skip times go to AniSkip.
 settings-share-skips = Condividi i tempi di salto con AniSkip
-
-# Line under it.
-settings-share-skips-detail = AniSkip è un elenco gratuito e condiviso di aperture e chiusure usato da molti player. Riceve i tempi, il numero MyAnimeList della serie, l'episodio e un id casuale per questa installazione.
-
-# Settings, Playback: removes every skip time you marked.
-settings-clear-skips = Cancella i tempi di salto segnati…
-
-# Question that asks before clearing every skip time you marked.
-settings-clear-skips-confirm = Cancellare i tempi di salto che hai segnato? AniSkip conserva quelli che hai condiviso.
 
 # Row: skip filler.
 settings-skip-filler = Salta automaticamente i filler

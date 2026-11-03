@@ -1717,7 +1717,6 @@
     <string name="player_mark_it">Markieren</string>
     <string name="player_dont_ask_again">Nicht mehr fragen</string>
     <string name="player_share_title">Deine Überspringzeiten mit AniSkip teilen?</string>
-    <string name="player_share_body">AniSkip ist eine freie, gemeinsame Liste von Vor- und Abspännen, betrieben von eigenen Freiwilligen. Die Player anderer Leute überspringen, was du markierst.</string>
     <string name="player_share_sent">Es erhält die Zeiten, die MyAnimeList-Nummer der Serie, die Folge und eine zufällige ID, die für diese Installation erzeugt wurde. Nicht deinen Namen, deine Konten oder die Quelle, aus der du schaust. AniSkip sieht deine IP-Adresse, um Spam zu begrenzen, und seine Nutzungsbedingungen verlangen ein Alter von mindestens 13 Jahren.</string>
     <string name="player_share_yes">Teilen</string>
     <string name="player_share_no">Nicht teilen</string>
@@ -2006,12 +2005,7 @@
     <string name="settings_up_next_countdown">Countdown „Als Nächstes“</string>
     <string name="settings_skip_opening">Vorspann automatisch überspringen</string>
     <string name="settings_skip_recap">Recaps automatisch überspringen</string>
-    <string name="settings_ask_was_opening">Nach manuellem Überspringen eines Vorspanns fragen</string>
-    <string name="settings_ask_was_opening_detail">Bietet an, ihn zu markieren, damit er beim nächsten Mal übersprungen wird</string>
     <string name="settings_share_skips">Überspringzeiten mit AniSkip teilen</string>
-    <string name="settings_share_skips_detail">AniSkip ist eine freie, gemeinsame Liste von Vor- und Abspännen, die viele Player nutzen. Es erhält die Zeiten, die MyAnimeList-Nummer der Serie, die Folge und eine zufällige ID für diese Installation.</string>
-    <string name="settings_clear_skips">Markierte Überspringzeiten löschen…</string>
-    <string name="settings_clear_skips_confirm">Die von dir markierten Überspringzeiten löschen? AniSkip behält die, die du geteilt hast.</string>
     <string name="settings_skip_filler">Füllfolgen automatisch überspringen</string>
     <string name="settings_mark_opening">Vorspann und Abspann markieren</string>
     <string name="settings_skip_button">Überspringen-Schaltfläche anzeigen</string>

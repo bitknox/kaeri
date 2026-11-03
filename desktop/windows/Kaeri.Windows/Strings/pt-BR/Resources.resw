@@ -4454,9 +4454,6 @@
   <data name="PlayerShareTitle" xml:space="preserve">
     <value>Compartilhar seus tempos de pulo com o AniSkip?</value>
   </data>
-  <data name="PlayerShareBody" xml:space="preserve">
-    <value>O AniSkip é uma lista gratuita e compartilhada de aberturas e encerramentos, mantida por voluntários. Os players de outras pessoas pulam o que você marcar.</value>
-  </data>
   <data name="PlayerShareSent" xml:space="preserve">
     <value>Ele recebe os tempos, o número do título no MyAnimeList, o episódio e um id aleatório criado para esta instalação. Não recebe seu nome, suas contas nem a fonte de onde você assiste. O AniSkip vê seu endereço IP para limitar spam, e os termos dele pedem que você tenha 13 anos ou mais.</value>
   </data>
@@ -5309,23 +5306,8 @@
   <data name="SettingsSkipRecap" xml:space="preserve">
     <value>Pular resumos automaticamente</value>
   </data>
-  <data name="SettingsAskWasOpening" xml:space="preserve">
-    <value>Perguntar após pular uma abertura manualmente</value>
-  </data>
-  <data name="SettingsAskWasOpeningDetail" xml:space="preserve">
-    <value>Oferece marcá-la para que seja pulada da próxima vez</value>
-  </data>
   <data name="SettingsShareSkips" xml:space="preserve">
     <value>Compartilhar tempos de pulo com o AniSkip</value>
-  </data>
-  <data name="SettingsShareSkipsDetail" xml:space="preserve">
-    <value>O AniSkip é uma lista gratuita e compartilhada de aberturas e encerramentos que muitos players usam. Ele recebe os tempos, o número do título no MyAnimeList, o episódio e um id aleatório desta instalação.</value>
-  </data>
-  <data name="SettingsClearSkips" xml:space="preserve">
-    <value>Apagar os tempos de pulo que você marcou…</value>
-  </data>
-  <data name="SettingsClearSkipsConfirm" xml:space="preserve">
-    <value>Apagar os tempos de pulo que você marcou? O AniSkip mantém os que você compartilhou.</value>
   </data>
   <data name="SettingsSkipFiller" xml:space="preserve">
     <value>Pular episódios de enchimento automaticamente</value>

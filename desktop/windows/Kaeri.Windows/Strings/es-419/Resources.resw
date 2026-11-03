@@ -4454,9 +4454,6 @@
   <data name="PlayerShareTitle" xml:space="preserve">
     <value>¿Compartir tus tiempos de salto con AniSkip?</value>
   </data>
-  <data name="PlayerShareBody" xml:space="preserve">
-    <value>AniSkip es una lista gratuita y compartida de aperturas y finales, mantenida por sus propios voluntarios. Los reproductores de otras personas omiten lo que tú marcas.</value>
-  </data>
   <data name="PlayerShareSent" xml:space="preserve">
     <value>Recibe los tiempos, el número de MyAnimeList de la serie, el episodio y un id aleatorio creado para esta instalación. No recibe tu nombre, tus cuentas ni la fuente desde la que ves. AniSkip ve tu dirección IP para limitar el spam y sus términos piden que tengas 13 años o más.</value>
   </data>
@@ -5309,23 +5306,8 @@
   <data name="SettingsSkipRecap" xml:space="preserve">
     <value>Omitir resúmenes automáticamente</value>
   </data>
-  <data name="SettingsAskWasOpening" xml:space="preserve">
-    <value>Preguntar tras saltar una apertura a mano</value>
-  </data>
-  <data name="SettingsAskWasOpeningDetail" xml:space="preserve">
-    <value>Ofrece marcarla para que se omita la próxima vez</value>
-  </data>
   <data name="SettingsShareSkips" xml:space="preserve">
     <value>Compartir tiempos de salto con AniSkip</value>
-  </data>
-  <data name="SettingsShareSkipsDetail" xml:space="preserve">
-    <value>AniSkip es una lista gratuita y compartida de aperturas y finales que usan muchos reproductores. Recibe los tiempos, el número de MyAnimeList de la serie, el episodio y un id aleatorio de esta instalación.</value>
-  </data>
-  <data name="SettingsClearSkips" xml:space="preserve">
-    <value>Borrar los tiempos de salto que marcaste…</value>
-  </data>
-  <data name="SettingsClearSkipsConfirm" xml:space="preserve">
-    <value>¿Borrar los tiempos de salto que marcaste? AniSkip conserva los que compartiste.</value>
   </data>
   <data name="SettingsSkipFiller" xml:space="preserve">
     <value>Saltar episodios de relleno automáticamente</value>

@@ -4586,9 +4586,6 @@
   <data name="PlayerShareTitle" xml:space="preserve">
     <value>Udostępniać twoje czasy pominięcia w AniSkip?</value>
   </data>
-  <data name="PlayerShareBody" xml:space="preserve">
-    <value>AniSkip to darmowa, wspólna lista czołówek i zakończeń, prowadzona przez własnych wolontariuszy. Odtwarzacze innych osób pomijają to, co zaznaczysz.</value>
-  </data>
   <data name="PlayerShareSent" xml:space="preserve">
     <value>Dostaje czasy, numer serialu z MyAnimeList, odcinek i losowy identyfikator utworzony dla tej instalacji. Nie dostaje twojego imienia, kont ani tego, skąd oglądasz. AniSkip widzi twój adres IP, aby ograniczać spam, a jego regulamin wymaga ukończenia 13 lat.</value>
   </data>
@@ -5453,23 +5450,8 @@
   <data name="SettingsSkipRecap" xml:space="preserve">
     <value>Pomijaj streszczenia automatycznie</value>
   </data>
-  <data name="SettingsAskWasOpening" xml:space="preserve">
-    <value>Pytaj po ręcznym pominięciu czołówki</value>
-  </data>
-  <data name="SettingsAskWasOpeningDetail" xml:space="preserve">
-    <value>Proponuje jej zaznaczenie, aby następnym razem została pominięta</value>
-  </data>
   <data name="SettingsShareSkips" xml:space="preserve">
     <value>Udostępniaj czasy pominięcia w AniSkip</value>
-  </data>
-  <data name="SettingsShareSkipsDetail" xml:space="preserve">
-    <value>AniSkip to darmowa, wspólna lista czołówek i zakończeń, z której korzysta wiele odtwarzaczy. Dostaje czasy, numer serialu z MyAnimeList, odcinek i losowy identyfikator tej instalacji.</value>
-  </data>
-  <data name="SettingsClearSkips" xml:space="preserve">
-    <value>Wyczyść zaznaczone czasy pominięcia…</value>
-  </data>
-  <data name="SettingsClearSkipsConfirm" xml:space="preserve">
-    <value>Wyczyścić zaznaczone przez ciebie czasy pominięcia? AniSkip zachowuje te, które udostępniono.</value>
   </data>
   <data name="SettingsSkipFiller" xml:space="preserve">
     <value>Automatycznie pomijaj wypełniacze</value>

@@ -6803,6 +6803,9 @@ player-mark-watch-edges = [Ŵàţçĥ ţĥé éðĝéš~~~~~]
 # Line in the review with sharing on.
 player-mark-shares = [Šàṽîñĝ šĥàŕéš ţĥéšé ţîɱéš ŵîţĥ ÅñîŠķîþ.~~~~~~~~~~~~]
 
+# Review line when the stretch under review was found from the audio, not marked by hand.
+player-mark-found = [Ķàéŕî ƒöüñð ţĥéšé ţîɱéš ƒŕöɱ ţĥé àüðîö.~~~~~~~~~~~~]
+
 # Line in the review when the mark replaces AniSkip's times.
 player-mark-replaces = [Ŕéþļàçéš ÅñîŠķîþ'š { $start } ţö { $end }, ŵĥîçĥ îš ŕéþöŕţéð àš ŵŕöñĝ.~~~~~~~~~~~~~~~~~~]
 
@@ -6852,11 +6855,33 @@ player-mark-it = [Ṁàŕķ îţ~~~]
 # Button of that prompt that turns it off. Settings can turn it on again.
 player-dont-ask-again = [Ðöñ'ţ àšķ àĝàîñ~~~~~]
 
+# Prompt a few seconds after a skip over an opening found from the audio, with Yes, Adjust and Don't ask again.
+player-found-ask-opening = [Ķàéŕî ƒöüñð ţĥîš öþéñîñĝ. Ŵéŕé ţĥé éðĝéš ŕîĝĥţ?~~~~~~~~~~~~~~~]
+
+# The same prompt after a skip over an ending found from the audio.
+player-found-ask-ending = [Ķàéŕî ƒöüñð ţĥîš éñðîñĝ. Ŵéŕé ţĥé éðĝéš ŕîĝĥţ?~~~~~~~~~~~~~~]
+
+# Line under that prompt, in a quieter colour. $episode is the episode's number.
+player-found-ask-share = [Ýéš šĥàŕéš ţĥéšé ţîɱéš ŵîţĥ ÅñîŠķîþ ƒöŕ éþîšöðé { $episode }.~~~~~~~~~~~~~~~~]
+
+# Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust opens the review with the edges to nudge.
+player-found-yes = [Ýéš~]
+
+player-found-adjust = [Åðĵüšţ~~]
+
+# What the prompt says after Yes. $episode is the episode's number.
+player-found-saved = [Šàṽéð. ÅñîŠķîþ ĝéţš ţĥéšé ţîɱéš ƒöŕ éþîšöðé { $episode }.~~~~~~~~~~~~~~~]
+
+# What the prompt says after Don't ask again, with the line below it.
+player-found-never = [Ķàéŕî ŵöñ'ţ àšķ àƀöüţ šķîþ ţîɱéš àĝàîñ.~~~~~~~~~~~~]
+
+player-found-never-how = [Ýöü çàñ ţüŕñ îţ ƀàçķ öñ îñ Šéţţîñĝš.~~~~~~~~~~~]
+
 # Title of the sheet shown on the first Save.
 player-share-title = [Šĥàŕé ýöüŕ šķîþ ţîɱéš ŵîţĥ ÅñîŠķîþ?~~~~~~~~~~~]
 
 # Body of the sheet.
-player-share-body = [ÅñîŠķîþ îš à ƒŕéé, šĥàŕéð ļîšţ öƒ öþéñîñĝš àñð éñðîñĝš, ŕüñ ƀý îţš öŵñ ṽöļüñţééŕš. Öţĥéŕ þéöþļé'š þļàýéŕš šķîþ ŵĥàţ ýöü ɱàŕķ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+player-share-body = [ÅñîŠķîþ îš à šĥàŕéð ļîšţ öƒ öþéñîñĝš àñð éñðîñĝš, ŕüñ ƀý îţš öŵñ ṽöļüñţééŕš. Öţĥéŕ þéöþļé'š þļàýéŕš šķîþ ţĥé ţîɱéš ýöü ɱàŕķ àñð ţĥé ƒöüñð ţîɱéš ýöü çöñƒîŕɱ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # What is sent, as a line under the body.
 player-share-sent = [Îţ ĝéţš ţĥé ţîɱéš, ţĥé šĥöŵ'š ṀýÅñîɱéĻîšţ ñüɱƀéŕ, ţĥé éþîšöðé àñð à ŕàñðöɱ îð ɱàðé ƒöŕ ţĥîš îñšţàļļ. Ñöţ ýöüŕ ñàɱé, ýöüŕ àççöüñţš öŕ ţĥé šöüŕçé ýöü ŵàţçĥ ƒŕöɱ. ÅñîŠķîþ šééš ýöüŕ ÎÞ àððŕéšš ţö ļîɱîţ šþàɱ, àñð îţš ţéŕɱš àšķ ţĥàţ ýöü àŕé 13 öŕ öļðéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
@@ -6872,6 +6897,19 @@ player-skip-from-file = [Ƒŕöɱ ţĥé ƒîļé~~~~]
 player-skip-yours = [Ýöüŕš~~]
 
 player-skip-from-aniskip = [Ƒŕöɱ ÅñîŠķîþ~~~~]
+
+player-skip-found = [Ƒöüñð ƀý Ķàéŕî~~~~~]
+
+# Skip times panel and Settings: why finding skip times from the audio is paused, one line per platform's name for its power saving mode, and one for low storage.
+player-skip-paused-low-power = [Þàüšéð ŵĥîļé Ļöŵ Þöŵéŕ Ṁöðé îš öñ.~~~~~~~~~~~]
+
+player-skip-paused-battery-saver = [Þàüšéð ŵĥîļé ƀàţţéŕý šàṽéŕ îš öñ.~~~~~~~~~~]
+
+player-skip-paused-energy-saver = [Þàüšéð ŵĥîļé éñéŕĝý šàṽéŕ îš öñ.~~~~~~~~~~]
+
+player-skip-paused-power-saver = [Þàüšéð ŵĥîļé þöŵéŕ šàṽéŕ îš öñ.~~~~~~~~~~]
+
+player-skip-paused-storage = [Þàüšéð üñţîļ 2 ĜƁ öƒ šţöŕàĝé îš ƒŕéé.~~~~~~~~~~~~]
 
 player-skip-none = [Ñöñé ýéţ~~~]
 
@@ -7698,23 +7736,35 @@ settings-skip-opening = [Šķîþ öþéñîñĝ àüţöɱàţîçàļļý~~~~~
 # Settings, Playback: whether recaps are skipped without asking.
 settings-skip-recap = [Šķîþ ŕéçàþš àüţöɱàţîçàļļý~~~~~~~~]
 
-# Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand.
-settings-ask-was-opening = [Åšķ àƒţéŕ šķîþþîñĝ àñ öþéñîñĝ ƀý ĥàñð~~~~~~~~~~~~]
+# Settings, Playback: finds openings and endings by comparing the audio of a show's episodes, when AniSkip has none. On by default.
+settings-find-skips = [Ƒîñð šķîþ ţîɱéš ƒŕöɱ ţĥé àüðîö~~~~~~~~~]
 
 # Line under it.
-settings-ask-was-opening-detail = [Öƒƒéŕš ţö ɱàŕķ îţ, šö îţ îš šķîþþéð ñéẋţ ţîɱé~~~~~~~~~~~~~~]
+settings-find-skips-detail = [Ŵĥéñ ÅñîŠķîþ ĥàš ñö ţîɱéš, Ķàéŕî çöɱþàŕéš ţĥé àüðîö àçŕöšš à šĥöŵ'š éþîšöðéš, öñ ţĥîš ðéṽîçé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand, and whether it asks about the edges of a skip it found.
+settings-ask-was-opening = [Åšķ àƀöüţ šķîþ ţîɱéš~~~~~~]
+
+# Line under it.
+settings-ask-was-opening-detail = [Åƒţéŕ ýöü šķîþ àñ öþéñîñĝ ƀý ĥàñð, àñð àƒţéŕ à šķîþ Ķàéŕî ƒöüñð~~~~~~~~~~~~~~~~~~~]
 
 # Settings, Playback: whether marked skip times go to AniSkip.
 settings-share-skips = [Šĥàŕé šķîþ ţîɱéš ŵîţĥ ÅñîŠķîþ~~~~~~~~~]
 
 # Line under it.
-settings-share-skips-detail = [ÅñîŠķîþ îš à ƒŕéé, šĥàŕéð ļîšţ öƒ öþéñîñĝš àñð éñðîñĝš ţĥàţ ɱàñý þļàýéŕš üšé. Îţ ĝéţš ţĥé ţîɱéš, ţĥé šĥöŵ'š ṀýÅñîɱéĻîšţ ñüɱƀéŕ, ţĥé éþîšöðé àñð à ŕàñðöɱ îð ƒöŕ ţĥîš îñšţàļļ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+settings-share-skips-detail = [ÅñîŠķîþ îš à šĥàŕéð ļîšţ öƒ öþéñîñĝš àñð éñðîñĝš ţĥàţ ɱàñý þļàýéŕš üšé. Îţ ĝéţš ţĥé ţîɱéš ýöü ɱàŕķ àñð ţĥé ƒöüñð ţîɱéš ýöü çöñƒîŕɱ, ţĥé šĥöŵ'š ṀýÅñîɱéĻîšţ ñüɱƀéŕ, ţĥé éþîšöðé àñð à ŕàñðöɱ îð ƒöŕ ţĥîš îñšţàļļ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
-# Settings, Playback: removes every skip time you marked.
-settings-clear-skips = [Çļéàŕ šķîþ ţîɱéš ýöü ɱàŕķéð…~~~~~~~~~]
+# Settings, Playback: the row that removes every skip time you marked and every one found from the audio. Its button reads Clear.
+settings-clear-skips = [Šķîþ ţîɱéš ýöü ɱàŕķéð öŕ Ķàéŕî ƒöüñð~~~~~~~~~~~]
 
-# Question that asks before clearing every skip time you marked.
-settings-clear-skips-confirm = [Çļéàŕ ţĥé šķîþ ţîɱéš ýöü ɱàŕķéð? ÅñîŠķîþ ķééþš ţĥé öñéš ýöü šĥàŕéð.~~~~~~~~~~~~~~~~~~~~~]
+# Question that asks before clearing them.
+settings-clear-skips-confirm = [Çļéàŕ ţĥé šķîþ ţîɱéš ýöü ɱàŕķéð àñð ţĥé öñéš Ķàéŕî ƒöüñð? ÅñîŠķîþ ķééþš ţĥé öñéš ýöü šĥàŕéð.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Android's Settings: the title of that row, with the line below.
+settings-clear-skips-android = [Çļéàŕ šķîþ ţîɱéš~~~~~]
+
+# Line under it.
+settings-clear-skips-android-detail = [Ţĥé öñéš ýöü ɱàŕķéð àñð ţĥé öñéš Ķàéŕî ƒöüñð~~~~~~~~~~~~~~]
 
 # Row: skip filler.
 settings-skip-filler = [Šķîþ ƒîļļéŕ àüţöɱàţîçàļļý~~~~~~~~]

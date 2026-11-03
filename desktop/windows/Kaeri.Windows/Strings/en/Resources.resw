@@ -5701,6 +5701,10 @@
     <value>Saving shares these times with AniSkip.</value>
     <comment>Line in the review with sharing on.</comment>
   </data>
+  <data name="PlayerMarkFound" xml:space="preserve">
+    <value>Kaeri found these times from the audio.</value>
+    <comment>Review line when the stretch under review was found from the audio, not marked by hand.</comment>
+  </data>
   <data name="PlayerMarkReplaces" xml:space="preserve">
     <value>Replaces AniSkip's {start} to {end}, which is reported as wrong.</value>
     <comment>Line in the review when the mark replaces AniSkip's times.</comment>
@@ -5767,12 +5771,42 @@
     <value>Don't ask again</value>
     <comment>Button of that prompt that turns it off. Settings can turn it on again.</comment>
   </data>
+  <data name="PlayerFoundAskOpening" xml:space="preserve">
+    <value>Kaeri found this opening. Were the edges right?</value>
+    <comment>Prompt a few seconds after a skip over an opening found from the audio, with Yes, Adjust and Don't ask again.</comment>
+  </data>
+  <data name="PlayerFoundAskEnding" xml:space="preserve">
+    <value>Kaeri found this ending. Were the edges right?</value>
+    <comment>The same prompt after a skip over an ending found from the audio.</comment>
+  </data>
+  <data name="PlayerFoundAskShare" xml:space="preserve">
+    <value>Yes shares these times with AniSkip for episode {episode}.</value>
+    <comment>Line under that prompt, in a quieter colour. $episode is the episode's number.</comment>
+  </data>
+  <data name="PlayerFoundYes" xml:space="preserve">
+    <value>Yes</value>
+    <comment>Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust opens the review with the edges to nudge.</comment>
+  </data>
+  <data name="PlayerFoundAdjust" xml:space="preserve">
+    <value>Adjust</value>
+  </data>
+  <data name="PlayerFoundSaved" xml:space="preserve">
+    <value>Saved. AniSkip gets these times for episode {episode}.</value>
+    <comment>What the prompt says after Yes. $episode is the episode's number.</comment>
+  </data>
+  <data name="PlayerFoundNever" xml:space="preserve">
+    <value>Kaeri won't ask about skip times again.</value>
+    <comment>What the prompt says after Don't ask again, with the line below it.</comment>
+  </data>
+  <data name="PlayerFoundNeverHow" xml:space="preserve">
+    <value>You can turn it back on in Settings.</value>
+  </data>
   <data name="PlayerShareTitle" xml:space="preserve">
     <value>Share your skip times with AniSkip?</value>
     <comment>Title of the sheet shown on the first Save.</comment>
   </data>
   <data name="PlayerShareBody" xml:space="preserve">
-    <value>AniSkip is a free, shared list of openings and endings, run by its own volunteers. Other people's players skip what you mark.</value>
+    <value>AniSkip is a shared list of openings and endings, run by its own volunteers. Other people's players skip the times you mark and the found times you confirm.</value>
     <comment>Body of the sheet.</comment>
   </data>
   <data name="PlayerShareSent" xml:space="preserve">
@@ -5795,6 +5829,25 @@
   </data>
   <data name="PlayerSkipFromAniskip" xml:space="preserve">
     <value>From AniSkip</value>
+  </data>
+  <data name="PlayerSkipFound" xml:space="preserve">
+    <value>Found by Kaeri</value>
+  </data>
+  <data name="PlayerSkipPausedLowPower" xml:space="preserve">
+    <value>Paused while Low Power Mode is on.</value>
+    <comment>Skip times panel and Settings: why finding skip times from the audio is paused, one line per platform's name for its power saving mode, and one for low storage.</comment>
+  </data>
+  <data name="PlayerSkipPausedBatterySaver" xml:space="preserve">
+    <value>Paused while battery saver is on.</value>
+  </data>
+  <data name="PlayerSkipPausedEnergySaver" xml:space="preserve">
+    <value>Paused while energy saver is on.</value>
+  </data>
+  <data name="PlayerSkipPausedPowerSaver" xml:space="preserve">
+    <value>Paused while power saver is on.</value>
+  </data>
+  <data name="PlayerSkipPausedStorage" xml:space="preserve">
+    <value>Paused until 2 GB of storage is free.</value>
   </data>
   <data name="PlayerSkipNone" xml:space="preserve">
     <value>None yet</value>
@@ -6891,12 +6944,20 @@
     <value>Skip recaps automatically</value>
     <comment>Settings, Playback: whether recaps are skipped without asking.</comment>
   </data>
+  <data name="SettingsFindSkips" xml:space="preserve">
+    <value>Find skip times from the audio</value>
+    <comment>Settings, Playback: finds openings and endings by comparing the audio of a show's episodes, when AniSkip has none. On by default.</comment>
+  </data>
+  <data name="SettingsFindSkipsDetail" xml:space="preserve">
+    <value>When AniSkip has no times, Kaeri compares the audio across a show's episodes, on this device.</value>
+    <comment>Line under it.</comment>
+  </data>
   <data name="SettingsAskWasOpening" xml:space="preserve">
-    <value>Ask after skipping an opening by hand</value>
-    <comment>Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand.</comment>
+    <value>Ask about skip times</value>
+    <comment>Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand, and whether it asks about the edges of a skip it found.</comment>
   </data>
   <data name="SettingsAskWasOpeningDetail" xml:space="preserve">
-    <value>Offers to mark it, so it is skipped next time</value>
+    <value>After you skip an opening by hand, and after a skip Kaeri found</value>
     <comment>Line under it.</comment>
   </data>
   <data name="SettingsShareSkips" xml:space="preserve">
@@ -6904,16 +6965,24 @@
     <comment>Settings, Playback: whether marked skip times go to AniSkip.</comment>
   </data>
   <data name="SettingsShareSkipsDetail" xml:space="preserve">
-    <value>AniSkip is a free, shared list of openings and endings that many players use. It gets the times, the show's MyAnimeList number, the episode and a random id for this install.</value>
+    <value>AniSkip is a shared list of openings and endings that many players use. It gets the times you mark and the found times you confirm, the show's MyAnimeList number, the episode and a random id for this install.</value>
     <comment>Line under it.</comment>
   </data>
   <data name="SettingsClearSkips" xml:space="preserve">
-    <value>Clear skip times you marked…</value>
-    <comment>Settings, Playback: removes every skip time you marked.</comment>
+    <value>Skip times you marked or Kaeri found</value>
+    <comment>Settings, Playback: the row that removes every skip time you marked and every one found from the audio. Its button reads Clear.</comment>
   </data>
   <data name="SettingsClearSkipsConfirm" xml:space="preserve">
-    <value>Clear the skip times you marked? AniSkip keeps the ones you shared.</value>
-    <comment>Question that asks before clearing every skip time you marked.</comment>
+    <value>Clear the skip times you marked and the ones Kaeri found? AniSkip keeps the ones you shared.</value>
+    <comment>Question that asks before clearing them.</comment>
+  </data>
+  <data name="SettingsClearSkipsAndroid" xml:space="preserve">
+    <value>Clear skip times</value>
+    <comment>Android's Settings: the title of that row, with the line below.</comment>
+  </data>
+  <data name="SettingsClearSkipsAndroidDetail" xml:space="preserve">
+    <value>The ones you marked and the ones Kaeri found</value>
+    <comment>Line under it.</comment>
   </data>
   <data name="SettingsSkipFiller" xml:space="preserve">
     <value>Skip filler automatically</value>

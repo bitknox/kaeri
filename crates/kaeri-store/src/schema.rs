@@ -520,6 +520,50 @@ const MIGRATIONS: &[(&str, &str)] = &[
     );
     "#,
     ),
+    (
+        "0023_skip_detect",
+        r#"
+    -- Skip times found from the audio. Fingerprints of an episode's head (its first six
+    -- minutes) or tail (its last four), as little-endian chromaprint items from `start_ms` on,
+    -- for the last three episodes of a show, never shared. Kept on this device only.
+    CREATE TABLE skip_prints (
+        anilist_id INTEGER NOT NULL,
+        episode    TEXT    NOT NULL,
+        part       TEXT    NOT NULL,
+        length_ms  INTEGER NOT NULL,
+        start_ms   INTEGER NOT NULL,
+        items      BLOB    NOT NULL,
+        taken_at   INTEGER NOT NULL,
+        PRIMARY KEY (anilist_id, episode, part)
+    );
+
+    -- A stretch found in an episode, by AniSkip's kind (op or ed), with the episodes whose
+    -- prints agreed and what became of it: found, skipped, confirmed, rejected or shared.
+    CREATE TABLE skip_found (
+        anilist_id INTEGER NOT NULL,
+        episode    TEXT    NOT NULL,
+        kind       TEXT    NOT NULL,
+        start_ms   INTEGER NOT NULL,
+        end_ms     INTEGER NOT NULL,
+        length_ms  INTEGER NOT NULL,
+        agreed     TEXT    NOT NULL DEFAULT '',
+        state      TEXT    NOT NULL,
+        found_at   INTEGER NOT NULL,
+        PRIMARY KEY (anilist_id, episode, kind)
+    );
+
+    -- Per show and kind: found stretches skipped without an undo since the last undo, whether
+    -- the person confirmed one, and whether they were asked.
+    CREATE TABLE skip_found_show (
+        anilist_id INTEGER NOT NULL,
+        kind       TEXT    NOT NULL,
+        skips      INTEGER NOT NULL DEFAULT 0,
+        confirmed  INTEGER NOT NULL DEFAULT 0,
+        asked      INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (anilist_id, kind)
+    );
+    "#,
+    ),
 ];
 
 /// Apply any migrations the database has not yet seen.

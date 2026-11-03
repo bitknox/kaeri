@@ -6187,6 +6187,10 @@ object Strings {
     fun playerMarkShares(context: Context): String =
         context.getString(R.string.player_mark_shares)
 
+    /** Review line when the stretch under review was found from the audio, not marked by hand. */
+    fun playerMarkFound(context: Context): String =
+        context.getString(R.string.player_mark_found)
+
     /** Line in the review when the mark replaces AniSkip's times. */
     fun playerMarkReplaces(context: Context, start: String, end: String): String =
         context.getString(R.string.player_mark_replaces, start, end)
@@ -6253,6 +6257,36 @@ object Strings {
     fun playerDontAskAgain(context: Context): String =
         context.getString(R.string.player_dont_ask_again)
 
+    /** Prompt a few seconds after a skip over an opening found from the audio, with Yes, Adjust and Don't ask again. */
+    fun playerFoundAskOpening(context: Context): String =
+        context.getString(R.string.player_found_ask_opening)
+
+    /** The same prompt after a skip over an ending found from the audio. */
+    fun playerFoundAskEnding(context: Context): String =
+        context.getString(R.string.player_found_ask_ending)
+
+    /** Line under that prompt, in a quieter colour. $episode is the episode's number. */
+    fun playerFoundAskShare(context: Context, episode: Int): String =
+        context.getString(R.string.player_found_ask_share, episode)
+
+    /** Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust opens the review with the edges to nudge. */
+    fun playerFoundYes(context: Context): String =
+        context.getString(R.string.player_found_yes)
+
+    fun playerFoundAdjust(context: Context): String =
+        context.getString(R.string.player_found_adjust)
+
+    /** What the prompt says after Yes. $episode is the episode's number. */
+    fun playerFoundSaved(context: Context, episode: Int): String =
+        context.getString(R.string.player_found_saved, episode)
+
+    /** What the prompt says after Don't ask again, with the line below it. */
+    fun playerFoundNever(context: Context): String =
+        context.getString(R.string.player_found_never)
+
+    fun playerFoundNeverHow(context: Context): String =
+        context.getString(R.string.player_found_never_how)
+
     /** Title of the sheet shown on the first Save. */
     fun playerShareTitle(context: Context): String =
         context.getString(R.string.player_share_title)
@@ -6281,6 +6315,25 @@ object Strings {
 
     fun playerSkipFromAniskip(context: Context): String =
         context.getString(R.string.player_skip_from_aniskip)
+
+    fun playerSkipFound(context: Context): String =
+        context.getString(R.string.player_skip_found)
+
+    /** Skip times panel and Settings: why finding skip times from the audio is paused, one line per platform's name for its power saving mode, and one for low storage. */
+    fun playerSkipPausedLowPower(context: Context): String =
+        context.getString(R.string.player_skip_paused_low_power)
+
+    fun playerSkipPausedBatterySaver(context: Context): String =
+        context.getString(R.string.player_skip_paused_battery_saver)
+
+    fun playerSkipPausedEnergySaver(context: Context): String =
+        context.getString(R.string.player_skip_paused_energy_saver)
+
+    fun playerSkipPausedPowerSaver(context: Context): String =
+        context.getString(R.string.player_skip_paused_power_saver)
+
+    fun playerSkipPausedStorage(context: Context): String =
+        context.getString(R.string.player_skip_paused_storage)
 
     fun playerSkipNone(context: Context): String =
         context.getString(R.string.player_skip_none)
@@ -7361,7 +7414,15 @@ object Strings {
     fun settingsSkipRecap(context: Context): String =
         context.getString(R.string.settings_skip_recap)
 
-    /** Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand. */
+    /** Settings, Playback: finds openings and endings by comparing the audio of a show's episodes, when AniSkip has none. On by default. */
+    fun settingsFindSkips(context: Context): String =
+        context.getString(R.string.settings_find_skips)
+
+    /** Line under it. */
+    fun settingsFindSkipsDetail(context: Context): String =
+        context.getString(R.string.settings_find_skips_detail)
+
+    /** Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand, and whether it asks about the edges of a skip it found. */
     fun settingsAskWasOpening(context: Context): String =
         context.getString(R.string.settings_ask_was_opening)
 
@@ -7377,13 +7438,21 @@ object Strings {
     fun settingsShareSkipsDetail(context: Context): String =
         context.getString(R.string.settings_share_skips_detail)
 
-    /** Settings, Playback: removes every skip time you marked. */
+    /** Settings, Playback: the row that removes every skip time you marked and every one found from the audio. Its button reads Clear. */
     fun settingsClearSkips(context: Context): String =
         context.getString(R.string.settings_clear_skips)
 
-    /** Question that asks before clearing every skip time you marked. */
+    /** Question that asks before clearing them. */
     fun settingsClearSkipsConfirm(context: Context): String =
         context.getString(R.string.settings_clear_skips_confirm)
+
+    /** Android's Settings: the title of that row, with the line below. */
+    fun settingsClearSkipsAndroid(context: Context): String =
+        context.getString(R.string.settings_clear_skips_android)
+
+    /** Line under it. */
+    fun settingsClearSkipsAndroidDetail(context: Context): String =
+        context.getString(R.string.settings_clear_skips_android_detail)
 
     /** Row: skip filler. */
     fun settingsSkipFiller(context: Context): String =

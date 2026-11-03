@@ -4322,9 +4322,6 @@
   <data name="PlayerShareTitle" xml:space="preserve">
     <value>Atlama zamanlarınızı AniSkip ile paylaşalım mı?</value>
   </data>
-  <data name="PlayerShareBody" xml:space="preserve">
-    <value>AniSkip, kendi gönüllüleri tarafından işletilen, ücretsiz ve ortak bir açılış ve kapanış listesidir. Başkalarının oynatıcıları sizin işaretlediğinizi atlar.</value>
-  </data>
   <data name="PlayerShareSent" xml:space="preserve">
     <value>Zamanlar, dizinin MyAnimeList numarası, bölüm ve bu kurulum için üretilmiş rastgele bir kimlik gider. Adınız, hesaplarınız ya da izlediğiniz kaynak gitmez. AniSkip, istenmeyen içeriği sınırlamak için IP adresinizi görür ve şartları 13 yaş ve üzerini ister.</value>
   </data>
@@ -5165,23 +5162,8 @@
   <data name="SettingsSkipRecap" xml:space="preserve">
     <value>Özetleri otomatik atla</value>
   </data>
-  <data name="SettingsAskWasOpening" xml:space="preserve">
-    <value>Elle açılış atladıktan sonra sor</value>
-  </data>
-  <data name="SettingsAskWasOpeningDetail" xml:space="preserve">
-    <value>Bir sonraki sefer atlanması için işaretlemeyi önerir</value>
-  </data>
   <data name="SettingsShareSkips" xml:space="preserve">
     <value>Atlama zamanlarını AniSkip ile paylaş</value>
-  </data>
-  <data name="SettingsShareSkipsDetail" xml:space="preserve">
-    <value>AniSkip, birçok oynatıcının kullandığı, ücretsiz ve ortak bir açılış ve kapanış listesidir. Zamanları, dizinin MyAnimeList numarasını, bölümü ve bu kurulum için rastgele bir kimliği alır.</value>
-  </data>
-  <data name="SettingsClearSkips" xml:space="preserve">
-    <value>İşaretlediğiniz atlama zamanlarını temizle…</value>
-  </data>
-  <data name="SettingsClearSkipsConfirm" xml:space="preserve">
-    <value>İşaretlediğiniz atlama zamanları temizlensin mi? AniSkip, paylaştıklarınızı tutar.</value>
   </data>
   <data name="SettingsSkipFiller" xml:space="preserve">
     <value>Dolgu bölümlerini otomatik atla</value>

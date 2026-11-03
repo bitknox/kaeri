@@ -122,23 +122,38 @@ settings-skip-opening = Skip opening automatically
 # Settings, Playback: whether recaps are skipped without asking.
 settings-skip-recap = Skip recaps automatically
 
-# Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand.
-settings-ask-was-opening = Ask after skipping an opening by hand
+# Settings, Playback: finds openings and endings by comparing the audio of a show's episodes,
+# when AniSkip has none. On by default.
+settings-find-skips = Find skip times from the audio
 
 # Line under it.
-settings-ask-was-opening-detail = Offers to mark it, so it is skipped next time
+settings-find-skips-detail = When AniSkip has no times, { -app-name } compares the audio across a show's episodes, on this { -device }.
+
+# Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand, and
+# whether it asks about the edges of a skip it found.
+settings-ask-was-opening = Ask about skip times
+
+# Line under it.
+settings-ask-was-opening-detail = After you skip an opening by hand, and after a skip { -app-name } found
 
 # Settings, Playback: whether marked skip times go to AniSkip.
 settings-share-skips = Share skip times with AniSkip
 
 # Line under it.
-settings-share-skips-detail = AniSkip is a free, shared list of openings and endings that many players use. It gets the times, the show's MyAnimeList number, the episode and a random id for this install.
+settings-share-skips-detail = AniSkip is a shared list of openings and endings that many players use. It gets the times you mark and the found times you confirm, the show's MyAnimeList number, the episode and a random id for this install.
 
-# Settings, Playback: removes every skip time you marked.
-settings-clear-skips = Clear skip times you marked…
+# Settings, Playback: the row that removes every skip time you marked and every one found from
+# the audio. Its button reads Clear.
+settings-clear-skips = Skip times you marked or { -app-name } found
 
-# Question that asks before clearing every skip time you marked.
-settings-clear-skips-confirm = Clear the skip times you marked? AniSkip keeps the ones you shared.
+# Question that asks before clearing them.
+settings-clear-skips-confirm = Clear the skip times you marked and the ones { -app-name } found? AniSkip keeps the ones you shared.
+
+# Android's Settings: the title of that row, with the line below.
+settings-clear-skips-android = Clear skip times
+
+# Line under it.
+settings-clear-skips-android-detail = The ones you marked and the ones { -app-name } found
 
 # Row: skip filler.
 settings-skip-filler = Skip filler automatically

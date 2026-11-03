@@ -6869,9 +6869,6 @@ player-dont-ask-again = Ne plus demander
 # Title of the sheet shown on the first Save.
 player-share-title = Partager vos repères avec AniSkip ?
 
-# Body of the sheet.
-player-share-body = AniSkip est une liste gratuite et partagée d’intros et de génériques, tenue par ses propres bénévoles. Les lecteurs des autres passent ce que vous marquez.
-
 # What is sent, as a line under the body.
 player-share-sent = Il reçoit les repères, le numéro MyAnimeList de la série, l’épisode et un identifiant aléatoire créé pour cette installation. Pas votre nom, vos comptes ni la source d’où vous regardez. AniSkip voit votre adresse IP pour limiter le spam, et ses conditions exigent d’avoir 13 ans ou plus.
 
@@ -7716,23 +7713,8 @@ settings-skip-opening = Passer le générique d’ouverture automatiquement
 # Settings, Playback: whether recaps are skipped without asking.
 settings-skip-recap = Passer les résumés automatiquement
 
-# Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand.
-settings-ask-was-opening = Demander après un saut manuel d’intro
-
-# Line under it.
-settings-ask-was-opening-detail = Propose de la marquer, pour qu’elle soit passée la prochaine fois
-
 # Settings, Playback: whether marked skip times go to AniSkip.
 settings-share-skips = Partager les repères avec AniSkip
-
-# Line under it.
-settings-share-skips-detail = AniSkip est une liste gratuite et partagée d’intros et de génériques que de nombreux lecteurs utilisent. Il reçoit les repères, le numéro MyAnimeList de la série, l’épisode et un identifiant aléatoire pour cette installation.
-
-# Settings, Playback: removes every skip time you marked.
-settings-clear-skips = Effacer les repères que vous avez marqués…
-
-# Question that asks before clearing every skip time you marked.
-settings-clear-skips-confirm = Effacer les repères que vous avez marqués ? AniSkip garde ceux que vous avez partagés.
 
 # Row: skip filler.
 settings-skip-filler = Passer les épisodes de remplissage automatiquement

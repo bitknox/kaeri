@@ -117557,6 +117557,102 @@
         }
       }
     },
+    "player-found-adjust" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adjust"
+          }
+        }
+      }
+    },
+    "player-found-ask-ending" : {
+      "comment" : "The same prompt after a skip over an ending found from the audio.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri found this ending. Were the edges right?"
+          }
+        }
+      }
+    },
+    "player-found-ask-opening" : {
+      "comment" : "Prompt a few seconds after a skip over an opening found from the audio, with Yes, Adjust and Don't ask again.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri found this opening. Were the edges right?"
+          }
+        }
+      }
+    },
+    "player-found-ask-share" : {
+      "comment" : "Line under that prompt, in a quieter colour. $episode is the episode's number. Argument 1: episode (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yes shares these times with AniSkip for episode %1$lld."
+          }
+        }
+      }
+    },
+    "player-found-never" : {
+      "comment" : "What the prompt says after Don't ask again, with the line below it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri won't ask about skip times again."
+          }
+        }
+      }
+    },
+    "player-found-never-how" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can turn it back on in Settings."
+          }
+        }
+      }
+    },
+    "player-found-saved" : {
+      "comment" : "What the prompt says after Yes. $episode is the episode's number. Argument 1: episode (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved. AniSkip gets these times for episode %1$lld."
+          }
+        }
+      }
+    },
+    "player-found-yes" : {
+      "comment" : "Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust opens the review with the edges to nudge.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yes"
+          }
+        }
+      }
+    },
     "player-fullscreen" : {
       "comment" : "Button that fills the screen with the video.",
       "extractionState" : "manual",
@@ -118897,6 +118993,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tiến %1$@ một giây"
+          }
+        }
+      }
+    },
+    "player-mark-found" : {
+      "comment" : "Review line when the stretch under review was found from the audio, not marked by hand.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri found these times from the audio."
           }
         }
       }
@@ -123525,82 +123633,10 @@
       "comment" : "Body of the sheet.",
       "extractionState" : "manual",
       "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AniSkip ist eine freie, gemeinsame Liste von Vor- und Abspännen, betrieben von eigenen Freiwilligen. Die Player anderer Leute überspringen, was du markierst."
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "AniSkip is a free, shared list of openings and endings, run by its own volunteers. Other people's players skip what you mark."
-          }
-        },
-        "es-419" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AniSkip es una lista gratuita y compartida de aperturas y finales, mantenida por sus propios voluntarios. Los reproductores de otras personas omiten lo que tú marcas."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AniSkip est une liste gratuite et partagée d’intros et de génériques, tenue par ses propres bénévoles. Les lecteurs des autres passent ce que vous marquez."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AniSkip adalah daftar gratis bersama berisi pembukaan dan penutup, dikelola relawannya sendiri. Pemutar orang lain melewati apa yang Anda tandai."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AniSkip è un elenco gratuito e condiviso di aperture e chiusure, gestito da volontari. I player degli altri saltano ciò che segni."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AniSkipは、ボランティアが運営する、オープニングとエンディングの無料の共有リストです。あなたがマークした位置は、他の人のプレーヤーでもスキップされます。"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AniSkip to darmowa, wspólna lista czołówek i zakończeń, prowadzona przez własnych wolontariuszy. Odtwarzacze innych osób pomijają to, co zaznaczysz."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "O AniSkip é uma lista gratuita e compartilhada de aberturas e encerramentos, mantida por voluntários. Os players de outras pessoas pulam o que você marcar."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AniSkip: бесплатный общий список опенингов и эндингов, который ведут его волонтёры. Плееры других людей пропускают то, что вы отметите."
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AniSkip är en gratis, delad lista över intron och outron, driven av sina egna volontärer. Andras spelare hoppar över det du markerar."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AniSkip, kendi gönüllüleri tarafından işletilen, ücretsiz ve ortak bir açılış ve kapanış listesidir. Başkalarının oynatıcıları sizin işaretlediğinizi atlar."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AniSkip là danh sách phần mở đầu và kết thúc miễn phí, dùng chung, do các tình nguyện viên của riêng nó vận hành. Trình phát của người khác sẽ bỏ qua những gì bạn đánh dấu."
+            "value" : "AniSkip is a shared list of openings and endings, run by its own volunteers. Other people's players skip the times you mark and the found times you confirm."
           }
         }
       }
@@ -124109,6 +124145,18 @@
         }
       }
     },
+    "player-skip-found" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Found by Kaeri"
+          }
+        }
+      }
+    },
     "player-skip-from-aniskip" : {
       "comment" : "",
       "extractionState" : "manual",
@@ -124609,6 +124657,66 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bỏ qua phần mở đầu"
+          }
+        }
+      }
+    },
+    "player-skip-paused-battery-saver" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paused while battery saver is on."
+          }
+        }
+      }
+    },
+    "player-skip-paused-energy-saver" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paused while energy saver is on."
+          }
+        }
+      }
+    },
+    "player-skip-paused-low-power" : {
+      "comment" : "Skip times panel and Settings: why finding skip times from the audio is paused, one line per platform's name for its power saving mode, and one for low storage.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paused while Low Power Mode is on."
+          }
+        }
+      }
+    },
+    "player-skip-paused-power-saver" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paused while power saver is on."
+          }
+        }
+      }
+    },
+    "player-skip-paused-storage" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paused until 2 GB of storage is free."
           }
         }
       }
@@ -150102,85 +150210,13 @@
       }
     },
     "settings-ask-was-opening" : {
-      "comment" : "Settings, Playback: whether the player asks \"Was that the opening?\" after a skip by hand.",
+      "comment" : "Settings, Playback: whether the player asks \"Was that the opening?\" after a skip by hand, and whether it asks about the edges of a skip it found.",
       "extractionState" : "manual",
       "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nach manuellem Überspringen eines Vorspanns fragen"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ask after skipping an opening by hand"
-          }
-        },
-        "es-419" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Preguntar tras saltar una apertura a mano"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Demander après un saut manuel d’intro"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tanya setelah melewati pembukaan secara manual"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chiedi dopo aver saltato un'apertura a mano"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "手動でオープニングをスキップした後に確認する"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pytaj po ręcznym pominięciu czołówki"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Perguntar após pular uma abertura manualmente"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Спрашивать после ручного пропуска опенинга"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fråga efter manuellt hopp över ett intro"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Elle açılış atladıktan sonra sor"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hỏi sau khi tự bỏ qua phần mở đầu"
+            "value" : "Ask about skip times"
           }
         }
       }
@@ -150189,82 +150225,10 @@
       "comment" : "Line under it.",
       "extractionState" : "manual",
       "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bietet an, ihn zu markieren, damit er beim nächsten Mal übersprungen wird"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Offers to mark it, so it is skipped next time"
-          }
-        },
-        "es-419" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ofrece marcarla para que se omita la próxima vez"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Propose de la marquer, pour qu’elle soit passée la prochaine fois"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Menawarkan untuk menandainya, jadi dilewati lain kali"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Propone di segnarla, così la volta dopo viene saltata"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "マークを提案し、次回からスキップされるようにします"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Proponuje jej zaznaczenie, aby następnym razem została pominięta"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Oferece marcá-la para que seja pulada da próxima vez"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Предлагает отметить его, чтобы в следующий раз он пропускался"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Erbjuder att markera det, så att det hoppas över framöver"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bir sonraki sefer atlanması için işaretlemeyi önerir"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Đề nghị đánh dấu để lần sau được bỏ qua"
+            "value" : "After you skip an opening by hand, and after a skip Kaeri found"
           }
         }
       }
@@ -151090,169 +151054,49 @@
       }
     },
     "settings-clear-skips" : {
-      "comment" : "Settings, Playback: removes every skip time you marked.",
+      "comment" : "Settings, Playback: the row that removes every skip time you marked and every one found from the audio. Its button reads Clear.",
       "extractionState" : "manual",
       "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Markierte Überspringzeiten löschen…"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Clear skip times you marked…"
+            "value" : "Skip times you marked or Kaeri found"
           }
-        },
-        "es-419" : {
+        }
+      }
+    },
+    "settings-clear-skips-android" : {
+      "comment" : "Android's Settings: the title of that row, with the line below.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Borrar los tiempos de salto que marcaste…"
+            "value" : "Clear skip times"
           }
-        },
-        "fr" : {
+        }
+      }
+    },
+    "settings-clear-skips-android-detail" : {
+      "comment" : "Line under it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Effacer les repères que vous avez marqués…"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hapus waktu lewati yang Anda tandai…"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cancella i tempi di salto segnati…"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "マークしたスキップ位置を消去…"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wyczyść zaznaczone czasy pominięcia…"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apagar os tempos de pulo que você marcou…"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Удалить ваши отметки пропуска…"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rensa hopptider du markerat…"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "İşaretlediğiniz atlama zamanlarını temizle…"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Xóa mốc bỏ qua bạn đã đánh dấu…"
+            "value" : "The ones you marked and the ones Kaeri found"
           }
         }
       }
     },
     "settings-clear-skips-confirm" : {
-      "comment" : "Question that asks before clearing every skip time you marked.",
+      "comment" : "Question that asks before clearing them.",
       "extractionState" : "manual",
       "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die von dir markierten Überspringzeiten löschen? AniSkip behält die, die du geteilt hast."
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Clear the skip times you marked? AniSkip keeps the ones you shared."
-          }
-        },
-        "es-419" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "¿Borrar los tiempos de salto que marcaste? AniSkip conserva los que compartiste."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Effacer les repères que vous avez marqués ? AniSkip garde ceux que vous avez partagés."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hapus waktu lewati yang Anda tandai? AniSkip tetap menyimpan yang sudah Anda bagikan."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cancellare i tempi di salto che hai segnato? AniSkip conserva quelli che hai condiviso."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "マークしたスキップ位置を消去しますか?共有済みの位置はAniSkipに残ります。"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wyczyścić zaznaczone przez ciebie czasy pominięcia? AniSkip zachowuje te, które udostępniono."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apagar os tempos de pulo que você marcou? O AniSkip mantém os que você compartilhou."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Удалить отметки пропуска, которые вы сделали? Те, которыми вы поделились, останутся в AniSkip."
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rensa de hopptider du markerat? AniSkip behåller de du delade."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "İşaretlediğiniz atlama zamanları temizlensin mi? AniSkip, paylaştıklarınızı tutar."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Xóa các mốc bỏ qua bạn đã đánh dấu? AniSkip vẫn giữ những mốc bạn đã chia sẻ."
+            "value" : "Clear the skip times you marked and the ones Kaeri found? AniSkip keeps the ones you shared."
           }
         }
       }
@@ -153901,6 +153745,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sửa proxy…"
+          }
+        }
+      }
+    },
+    "settings-find-skips" : {
+      "comment" : "Settings, Playback: finds openings and endings by comparing the audio of a show's episodes, when AniSkip has none. On by default.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Find skip times from the audio"
+          }
+        }
+      }
+    },
+    "settings-find-skips-detail" : {
+      "comment" : "Line under it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When AniSkip has no times, Kaeri compares the audio across a show's episodes, on this device."
           }
         }
       }
@@ -163037,82 +162905,10 @@
       "comment" : "Line under it.",
       "extractionState" : "manual",
       "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AniSkip ist eine freie, gemeinsame Liste von Vor- und Abspännen, die viele Player nutzen. Es erhält die Zeiten, die MyAnimeList-Nummer der Serie, die Folge und eine zufällige ID für diese Installation."
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "AniSkip is a free, shared list of openings and endings that many players use. It gets the times, the show's MyAnimeList number, the episode and a random id for this install."
-          }
-        },
-        "es-419" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AniSkip es una lista gratuita y compartida de aperturas y finales que usan muchos reproductores. Recibe los tiempos, el número de MyAnimeList de la serie, el episodio y un id aleatorio de esta instalación."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AniSkip est une liste gratuite et partagée d’intros et de génériques que de nombreux lecteurs utilisent. Il reçoit les repères, le numéro MyAnimeList de la série, l’épisode et un identifiant aléatoire pour cette installation."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AniSkip adalah daftar gratis bersama berisi pembukaan dan penutup yang dipakai banyak pemutar. Yang dikirim: waktunya, nomor MyAnimeList acaranya, episodenya, dan id acak untuk instalasi ini."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AniSkip è un elenco gratuito e condiviso di aperture e chiusure usato da molti player. Riceve i tempi, il numero MyAnimeList della serie, l'episodio e un id casuale per questa installazione."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AniSkipは、多くのプレーヤーが使っている、オープニングとエンディングの無料の共有リストです。スキップ位置、作品のMyAnimeList番号、エピソード、このインストール用のランダムなIDが送信されます。"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AniSkip to darmowa, wspólna lista czołówek i zakończeń, z której korzysta wiele odtwarzaczy. Dostaje czasy, numer serialu z MyAnimeList, odcinek i losowy identyfikator tej instalacji."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "O AniSkip é uma lista gratuita e compartilhada de aberturas e encerramentos que muitos players usam. Ele recebe os tempos, o número do título no MyAnimeList, o episódio e um id aleatório desta instalação."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AniSkip: бесплатный общий список опенингов и эндингов, которым пользуются многие плееры. Он получает время, номер тайтла в MyAnimeList, эпизод и случайный идентификатор этой установки."
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AniSkip är en gratis, delad lista över intron och outron som många spelare använder. Den får tiderna, seriens MyAnimeList-nummer, avsnittet och ett slumpmässigt id för den här installationen."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AniSkip, birçok oynatıcının kullandığı, ücretsiz ve ortak bir açılış ve kapanış listesidir. Zamanları, dizinin MyAnimeList numarasını, bölümü ve bu kurulum için rastgele bir kimliği alır."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AniSkip là danh sách phần mở đầu và kết thúc miễn phí, dùng chung, nhiều trình phát đang dùng. Nó nhận các mốc thời gian, mã MyAnimeList của phim, tập phim và một mã ngẫu nhiên cho bản cài này."
+            "value" : "AniSkip is a shared list of openings and endings that many players use. It gets the times you mark and the found times you confirm, the show's MyAnimeList number, the episode and a random id for this install."
           }
         }
       }

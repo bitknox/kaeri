@@ -6801,9 +6801,6 @@ player-dont-ask-again = Fråga inte igen
 # Title of the sheet shown on the first Save.
 player-share-title = Dela dina hopptider med AniSkip?
 
-# Body of the sheet.
-player-share-body = AniSkip är en gratis, delad lista över intron och outron, driven av sina egna volontärer. Andras spelare hoppar över det du markerar.
-
 # What is sent, as a line under the body.
 player-share-sent = Den får tiderna, seriens MyAnimeList-nummer, avsnittet och ett slumpmässigt id som skapats för den här installationen. Inte ditt namn, dina konton eller den källa du tittar från. AniSkip ser din IP-adress för att begränsa skräppost, och dess villkor kräver att du är 13 år eller äldre.
 
@@ -7644,23 +7641,8 @@ settings-skip-opening = Hoppa över öppningen automatiskt
 # Settings, Playback: whether recaps are skipped without asking.
 settings-skip-recap = Hoppa över återblickar automatiskt
 
-# Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand.
-settings-ask-was-opening = Fråga efter manuellt hopp över ett intro
-
-# Line under it.
-settings-ask-was-opening-detail = Erbjuder att markera det, så att det hoppas över framöver
-
 # Settings, Playback: whether marked skip times go to AniSkip.
 settings-share-skips = Dela hopptider med AniSkip
-
-# Line under it.
-settings-share-skips-detail = AniSkip är en gratis, delad lista över intron och outron som många spelare använder. Den får tiderna, seriens MyAnimeList-nummer, avsnittet och ett slumpmässigt id för den här installationen.
-
-# Settings, Playback: removes every skip time you marked.
-settings-clear-skips = Rensa hopptider du markerat…
-
-# Question that asks before clearing every skip time you marked.
-settings-clear-skips-confirm = Rensa de hopptider du markerat? AniSkip behåller de du delade.
 
 # Row: skip filler.
 settings-skip-filler = Hoppa över fyllnadsavsnitt automatiskt

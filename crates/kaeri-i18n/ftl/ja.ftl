@@ -6733,9 +6733,6 @@ player-dont-ask-again = 今後は確認しない
 # Title of the sheet shown on the first Save.
 player-share-title = スキップ位置をAniSkipと共有しますか?
 
-# Body of the sheet.
-player-share-body = AniSkipは、ボランティアが運営する、オープニングとエンディングの無料の共有リストです。あなたがマークした位置は、他の人のプレーヤーでもスキップされます。
-
 # What is sent, as a line under the body.
 player-share-sent = 送信されるのは、スキップ位置、作品のMyAnimeList番号、エピソード、このインストール用に作られたランダムなIDです。あなたの名前、アカウント、視聴中のソースは送信されません。AniSkipはスパム対策のためIPアドレスを確認し、利用規約は13歳以上であることを求めています。
 
@@ -7572,23 +7569,8 @@ settings-skip-opening = オープニングを自動でスキップ
 # Settings, Playback: whether recaps are skipped without asking.
 settings-skip-recap = 前回のあらすじを自動でスキップ
 
-# Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand.
-settings-ask-was-opening = 手動でオープニングをスキップした後に確認する
-
-# Line under it.
-settings-ask-was-opening-detail = マークを提案し、次回からスキップされるようにします
-
 # Settings, Playback: whether marked skip times go to AniSkip.
 settings-share-skips = スキップ位置をAniSkipと共有
-
-# Line under it.
-settings-share-skips-detail = AniSkipは、多くのプレーヤーが使っている、オープニングとエンディングの無料の共有リストです。スキップ位置、作品のMyAnimeList番号、エピソード、このインストール用のランダムなIDが送信されます。
-
-# Settings, Playback: removes every skip time you marked.
-settings-clear-skips = マークしたスキップ位置を消去…
-
-# Question that asks before clearing every skip time you marked.
-settings-clear-skips-confirm = マークしたスキップ位置を消去しますか?共有済みの位置はAniSkipに残ります。
 
 # Row: skip filler.
 settings-skip-filler = フィラーを自動でスキップ

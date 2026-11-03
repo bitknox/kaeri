@@ -4190,9 +4190,6 @@
   <data name="PlayerShareTitle" xml:space="preserve">
     <value>Chia sẻ mốc bỏ qua của bạn với AniSkip?</value>
   </data>
-  <data name="PlayerShareBody" xml:space="preserve">
-    <value>AniSkip là danh sách phần mở đầu và kết thúc miễn phí, dùng chung, do các tình nguyện viên của riêng nó vận hành. Trình phát của người khác sẽ bỏ qua những gì bạn đánh dấu.</value>
-  </data>
   <data name="PlayerShareSent" xml:space="preserve">
     <value>Nó nhận các mốc thời gian, mã MyAnimeList của phim, tập phim và một mã ngẫu nhiên tạo riêng cho bản cài này. Không có tên, tài khoản hay nguồn bạn xem. AniSkip thấy địa chỉ IP của bạn để hạn chế spam, và điều khoản của họ yêu cầu bạn từ 13 tuổi trở lên.</value>
   </data>
@@ -5021,23 +5018,8 @@
   <data name="SettingsSkipRecap" xml:space="preserve">
     <value>Tự động bỏ qua phần tóm tắt</value>
   </data>
-  <data name="SettingsAskWasOpening" xml:space="preserve">
-    <value>Hỏi sau khi tự bỏ qua phần mở đầu</value>
-  </data>
-  <data name="SettingsAskWasOpeningDetail" xml:space="preserve">
-    <value>Đề nghị đánh dấu để lần sau được bỏ qua</value>
-  </data>
   <data name="SettingsShareSkips" xml:space="preserve">
     <value>Chia sẻ mốc bỏ qua với AniSkip</value>
-  </data>
-  <data name="SettingsShareSkipsDetail" xml:space="preserve">
-    <value>AniSkip là danh sách phần mở đầu và kết thúc miễn phí, dùng chung, nhiều trình phát đang dùng. Nó nhận các mốc thời gian, mã MyAnimeList của phim, tập phim và một mã ngẫu nhiên cho bản cài này.</value>
-  </data>
-  <data name="SettingsClearSkips" xml:space="preserve">
-    <value>Xóa mốc bỏ qua bạn đã đánh dấu…</value>
-  </data>
-  <data name="SettingsClearSkipsConfirm" xml:space="preserve">
-    <value>Xóa các mốc bỏ qua bạn đã đánh dấu? AniSkip vẫn giữ những mốc bạn đã chia sẻ.</value>
   </data>
   <data name="SettingsSkipFiller" xml:space="preserve">
     <value>Tự động bỏ qua tập độn</value>

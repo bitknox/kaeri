@@ -5701,6 +5701,10 @@
     <value>[Šàṽîñĝ šĥàŕéš ţĥéšé ţîɱéš ŵîţĥ ÅñîŠķîþ.~~~~~~~~~~~~]</value>
     <comment>Line in the review with sharing on.</comment>
   </data>
+  <data name="PlayerMarkFound" xml:space="preserve">
+    <value>[Ķàéŕî ƒöüñð ţĥéšé ţîɱéš ƒŕöɱ ţĥé àüðîö.~~~~~~~~~~~~]</value>
+    <comment>Review line when the stretch under review was found from the audio, not marked by hand.</comment>
+  </data>
   <data name="PlayerMarkReplaces" xml:space="preserve">
     <value>[Ŕéþļàçéš ÅñîŠķîþ'š {start} ţö {end}, ŵĥîçĥ îš ŕéþöŕţéð àš ŵŕöñĝ.~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line in the review when the mark replaces AniSkip's times.</comment>
@@ -5767,12 +5771,42 @@
     <value>[Ðöñ'ţ àšķ àĝàîñ~~~~~]</value>
     <comment>Button of that prompt that turns it off. Settings can turn it on again.</comment>
   </data>
+  <data name="PlayerFoundAskOpening" xml:space="preserve">
+    <value>[Ķàéŕî ƒöüñð ţĥîš öþéñîñĝ. Ŵéŕé ţĥé éðĝéš ŕîĝĥţ?~~~~~~~~~~~~~~~]</value>
+    <comment>Prompt a few seconds after a skip over an opening found from the audio, with Yes, Adjust and Don't ask again.</comment>
+  </data>
+  <data name="PlayerFoundAskEnding" xml:space="preserve">
+    <value>[Ķàéŕî ƒöüñð ţĥîš éñðîñĝ. Ŵéŕé ţĥé éðĝéš ŕîĝĥţ?~~~~~~~~~~~~~~]</value>
+    <comment>The same prompt after a skip over an ending found from the audio.</comment>
+  </data>
+  <data name="PlayerFoundAskShare" xml:space="preserve">
+    <value>[Ýéš šĥàŕéš ţĥéšé ţîɱéš ŵîţĥ ÅñîŠķîþ ƒöŕ éþîšöðé {episode}.~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under that prompt, in a quieter colour. $episode is the episode's number.</comment>
+  </data>
+  <data name="PlayerFoundYes" xml:space="preserve">
+    <value>[Ýéš~]</value>
+    <comment>Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust opens the review with the edges to nudge.</comment>
+  </data>
+  <data name="PlayerFoundAdjust" xml:space="preserve">
+    <value>[Åðĵüšţ~~]</value>
+  </data>
+  <data name="PlayerFoundSaved" xml:space="preserve">
+    <value>[Šàṽéð. ÅñîŠķîþ ĝéţš ţĥéšé ţîɱéš ƒöŕ éþîšöðé {episode}.~~~~~~~~~~~~~~~]</value>
+    <comment>What the prompt says after Yes. $episode is the episode's number.</comment>
+  </data>
+  <data name="PlayerFoundNever" xml:space="preserve">
+    <value>[Ķàéŕî ŵöñ'ţ àšķ àƀöüţ šķîþ ţîɱéš àĝàîñ.~~~~~~~~~~~~]</value>
+    <comment>What the prompt says after Don't ask again, with the line below it.</comment>
+  </data>
+  <data name="PlayerFoundNeverHow" xml:space="preserve">
+    <value>[Ýöü çàñ ţüŕñ îţ ƀàçķ öñ îñ Šéţţîñĝš.~~~~~~~~~~~]</value>
+  </data>
   <data name="PlayerShareTitle" xml:space="preserve">
     <value>[Šĥàŕé ýöüŕ šķîþ ţîɱéš ŵîţĥ ÅñîŠķîþ?~~~~~~~~~~~]</value>
     <comment>Title of the sheet shown on the first Save.</comment>
   </data>
   <data name="PlayerShareBody" xml:space="preserve">
-    <value>[ÅñîŠķîþ îš à ƒŕéé, šĥàŕéð ļîšţ öƒ öþéñîñĝš àñð éñðîñĝš, ŕüñ ƀý îţš öŵñ ṽöļüñţééŕš. Öţĥéŕ þéöþļé'š þļàýéŕš šķîþ ŵĥàţ ýöü ɱàŕķ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[ÅñîŠķîþ îš à šĥàŕéð ļîšţ öƒ öþéñîñĝš àñð éñðîñĝš, ŕüñ ƀý îţš öŵñ ṽöļüñţééŕš. Öţĥéŕ þéöþļé'š þļàýéŕš šķîþ ţĥé ţîɱéš ýöü ɱàŕķ àñð ţĥé ƒöüñð ţîɱéš ýöü çöñƒîŕɱ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Body of the sheet.</comment>
   </data>
   <data name="PlayerShareSent" xml:space="preserve">
@@ -5795,6 +5829,25 @@
   </data>
   <data name="PlayerSkipFromAniskip" xml:space="preserve">
     <value>[Ƒŕöɱ ÅñîŠķîþ~~~~]</value>
+  </data>
+  <data name="PlayerSkipFound" xml:space="preserve">
+    <value>[Ƒöüñð ƀý Ķàéŕî~~~~~]</value>
+  </data>
+  <data name="PlayerSkipPausedLowPower" xml:space="preserve">
+    <value>[Þàüšéð ŵĥîļé Ļöŵ Þöŵéŕ Ṁöðé îš öñ.~~~~~~~~~~~]</value>
+    <comment>Skip times panel and Settings: why finding skip times from the audio is paused, one line per platform's name for its power saving mode, and one for low storage.</comment>
+  </data>
+  <data name="PlayerSkipPausedBatterySaver" xml:space="preserve">
+    <value>[Þàüšéð ŵĥîļé ƀàţţéŕý šàṽéŕ îš öñ.~~~~~~~~~~]</value>
+  </data>
+  <data name="PlayerSkipPausedEnergySaver" xml:space="preserve">
+    <value>[Þàüšéð ŵĥîļé éñéŕĝý šàṽéŕ îš öñ.~~~~~~~~~~]</value>
+  </data>
+  <data name="PlayerSkipPausedPowerSaver" xml:space="preserve">
+    <value>[Þàüšéð ŵĥîļé þöŵéŕ šàṽéŕ îš öñ.~~~~~~~~~~]</value>
+  </data>
+  <data name="PlayerSkipPausedStorage" xml:space="preserve">
+    <value>[Þàüšéð üñţîļ 2 ĜƁ öƒ šţöŕàĝé îš ƒŕéé.~~~~~~~~~~~~]</value>
   </data>
   <data name="PlayerSkipNone" xml:space="preserve">
     <value>[Ñöñé ýéţ~~~]</value>
@@ -6891,12 +6944,20 @@
     <value>[Šķîþ ŕéçàþš àüţöɱàţîçàļļý~~~~~~~~]</value>
     <comment>Settings, Playback: whether recaps are skipped without asking.</comment>
   </data>
+  <data name="SettingsFindSkips" xml:space="preserve">
+    <value>[Ƒîñð šķîþ ţîɱéš ƒŕöɱ ţĥé àüðîö~~~~~~~~~]</value>
+    <comment>Settings, Playback: finds openings and endings by comparing the audio of a show's episodes, when AniSkip has none. On by default.</comment>
+  </data>
+  <data name="SettingsFindSkipsDetail" xml:space="preserve">
+    <value>[Ŵĥéñ ÅñîŠķîþ ĥàš ñö ţîɱéš, Ķàéŕî çöɱþàŕéš ţĥé àüðîö àçŕöšš à šĥöŵ'š éþîšöðéš, öñ ţĥîš ðéṽîçé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under it.</comment>
+  </data>
   <data name="SettingsAskWasOpening" xml:space="preserve">
-    <value>[Åšķ àƒţéŕ šķîþþîñĝ àñ öþéñîñĝ ƀý ĥàñð~~~~~~~~~~~~]</value>
-    <comment>Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand.</comment>
+    <value>[Åšķ àƀöüţ šķîþ ţîɱéš~~~~~~]</value>
+    <comment>Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand, and whether it asks about the edges of a skip it found.</comment>
   </data>
   <data name="SettingsAskWasOpeningDetail" xml:space="preserve">
-    <value>[Öƒƒéŕš ţö ɱàŕķ îţ, šö îţ îš šķîþþéð ñéẋţ ţîɱé~~~~~~~~~~~~~~]</value>
+    <value>[Åƒţéŕ ýöü šķîþ àñ öþéñîñĝ ƀý ĥàñð, àñð àƒţéŕ à šķîþ Ķàéŕî ƒöüñð~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under it.</comment>
   </data>
   <data name="SettingsShareSkips" xml:space="preserve">
@@ -6904,16 +6965,24 @@
     <comment>Settings, Playback: whether marked skip times go to AniSkip.</comment>
   </data>
   <data name="SettingsShareSkipsDetail" xml:space="preserve">
-    <value>[ÅñîŠķîþ îš à ƒŕéé, šĥàŕéð ļîšţ öƒ öþéñîñĝš àñð éñðîñĝš ţĥàţ ɱàñý þļàýéŕš üšé. Îţ ĝéţš ţĥé ţîɱéš, ţĥé šĥöŵ'š ṀýÅñîɱéĻîšţ ñüɱƀéŕ, ţĥé éþîšöðé àñð à ŕàñðöɱ îð ƒöŕ ţĥîš îñšţàļļ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[ÅñîŠķîþ îš à šĥàŕéð ļîšţ öƒ öþéñîñĝš àñð éñðîñĝš ţĥàţ ɱàñý þļàýéŕš üšé. Îţ ĝéţš ţĥé ţîɱéš ýöü ɱàŕķ àñð ţĥé ƒöüñð ţîɱéš ýöü çöñƒîŕɱ, ţĥé šĥöŵ'š ṀýÅñîɱéĻîšţ ñüɱƀéŕ, ţĥé éþîšöðé àñð à ŕàñðöɱ îð ƒöŕ ţĥîš îñšţàļļ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under it.</comment>
   </data>
   <data name="SettingsClearSkips" xml:space="preserve">
-    <value>[Çļéàŕ šķîþ ţîɱéš ýöü ɱàŕķéð…~~~~~~~~~]</value>
-    <comment>Settings, Playback: removes every skip time you marked.</comment>
+    <value>[Šķîþ ţîɱéš ýöü ɱàŕķéð öŕ Ķàéŕî ƒöüñð~~~~~~~~~~~]</value>
+    <comment>Settings, Playback: the row that removes every skip time you marked and every one found from the audio. Its button reads Clear.</comment>
   </data>
   <data name="SettingsClearSkipsConfirm" xml:space="preserve">
-    <value>[Çļéàŕ ţĥé šķîþ ţîɱéš ýöü ɱàŕķéð? ÅñîŠķîþ ķééþš ţĥé öñéš ýöü šĥàŕéð.~~~~~~~~~~~~~~~~~~~~~]</value>
-    <comment>Question that asks before clearing every skip time you marked.</comment>
+    <value>[Çļéàŕ ţĥé šķîþ ţîɱéš ýöü ɱàŕķéð àñð ţĥé öñéš Ķàéŕî ƒöüñð? ÅñîŠķîþ ķééþš ţĥé öñéš ýöü šĥàŕéð.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Question that asks before clearing them.</comment>
+  </data>
+  <data name="SettingsClearSkipsAndroid" xml:space="preserve">
+    <value>[Çļéàŕ šķîþ ţîɱéš~~~~~]</value>
+    <comment>Android's Settings: the title of that row, with the line below.</comment>
+  </data>
+  <data name="SettingsClearSkipsAndroidDetail" xml:space="preserve">
+    <value>[Ţĥé öñéš ýöü ɱàŕķéð àñð ţĥé öñéš Ķàéŕî ƒöüñð~~~~~~~~~~~~~~]</value>
+    <comment>Line under it.</comment>
   </data>
   <data name="SettingsSkipFiller" xml:space="preserve">
     <value>[Šķîþ ƒîļļéŕ àüţöɱàţîçàļļý~~~~~~~~]</value>

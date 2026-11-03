@@ -1825,7 +1825,6 @@
     <string name="player_mark_it">Отметить</string>
     <string name="player_dont_ask_again">Больше не спрашивать</string>
     <string name="player_share_title">Делиться отметками пропуска с AniSkip?</string>
-    <string name="player_share_body">AniSkip: бесплатный общий список опенингов и эндингов, который ведут его волонтёры. Плееры других людей пропускают то, что вы отметите.</string>
     <string name="player_share_sent">Он получает время, номер тайтла в MyAnimeList, эпизод и случайный идентификатор, созданный для этой установки. Ваше имя, аккаунты и источник, из которого вы смотрите, не передаются. AniSkip видит ваш IP-адрес, чтобы ограничивать спам, а по его условиям вам должно быть 13 лет или больше.</string>
     <string name="player_share_yes">Делиться</string>
     <string name="player_share_no">Не делиться</string>
@@ -2122,12 +2121,7 @@
     <string name="settings_up_next_countdown">Отсчёт блока «Далее»</string>
     <string name="settings_skip_opening">Пропускать опенинг автоматически</string>
     <string name="settings_skip_recap">Пропускать рекапы автоматически</string>
-    <string name="settings_ask_was_opening">Спрашивать после ручного пропуска опенинга</string>
-    <string name="settings_ask_was_opening_detail">Предлагает отметить его, чтобы в следующий раз он пропускался</string>
     <string name="settings_share_skips">Делиться моментами пропуска с AniSkip</string>
-    <string name="settings_share_skips_detail">AniSkip: бесплатный общий список опенингов и эндингов, которым пользуются многие плееры. Он получает время, номер тайтла в MyAnimeList, эпизод и случайный идентификатор этой установки.</string>
-    <string name="settings_clear_skips">Удалить ваши отметки пропуска…</string>
-    <string name="settings_clear_skips_confirm">Удалить отметки пропуска, которые вы сделали? Те, которыми вы поделились, останутся в AniSkip.</string>
     <string name="settings_skip_filler">Пропускать филлеры автоматически</string>
     <string name="settings_mark_opening">Отмечать опенинг и эндинг</string>
     <string name="settings_skip_button">Показывать кнопку пропуска</string>

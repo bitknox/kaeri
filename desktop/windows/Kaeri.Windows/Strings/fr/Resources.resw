@@ -4454,9 +4454,6 @@
   <data name="PlayerShareTitle" xml:space="preserve">
     <value>Partager vos repères avec AniSkip ?</value>
   </data>
-  <data name="PlayerShareBody" xml:space="preserve">
-    <value>AniSkip est une liste gratuite et partagée d’intros et de génériques, tenue par ses propres bénévoles. Les lecteurs des autres passent ce que vous marquez.</value>
-  </data>
   <data name="PlayerShareSent" xml:space="preserve">
     <value>Il reçoit les repères, le numéro MyAnimeList de la série, l’épisode et un identifiant aléatoire créé pour cette installation. Pas votre nom, vos comptes ni la source d’où vous regardez. AniSkip voit votre adresse IP pour limiter le spam, et ses conditions exigent d’avoir 13 ans ou plus.</value>
   </data>
@@ -5309,23 +5306,8 @@
   <data name="SettingsSkipRecap" xml:space="preserve">
     <value>Passer les résumés automatiquement</value>
   </data>
-  <data name="SettingsAskWasOpening" xml:space="preserve">
-    <value>Demander après un saut manuel d’intro</value>
-  </data>
-  <data name="SettingsAskWasOpeningDetail" xml:space="preserve">
-    <value>Propose de la marquer, pour qu’elle soit passée la prochaine fois</value>
-  </data>
   <data name="SettingsShareSkips" xml:space="preserve">
     <value>Partager les repères avec AniSkip</value>
-  </data>
-  <data name="SettingsShareSkipsDetail" xml:space="preserve">
-    <value>AniSkip est une liste gratuite et partagée d’intros et de génériques que de nombreux lecteurs utilisent. Il reçoit les repères, le numéro MyAnimeList de la série, l’épisode et un identifiant aléatoire pour cette installation.</value>
-  </data>
-  <data name="SettingsClearSkips" xml:space="preserve">
-    <value>Effacer les repères que vous avez marqués…</value>
-  </data>
-  <data name="SettingsClearSkipsConfirm" xml:space="preserve">
-    <value>Effacer les repères que vous avez marqués ? AniSkip garde ceux que vous avez partagés.</value>
   </data>
   <data name="SettingsSkipFiller" xml:space="preserve">
     <value>Passer les épisodes de remplissage automatiquement</value>

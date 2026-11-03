@@ -10898,6 +10898,11 @@ pub fn player_mark_shares() -> String {
     text("player-mark-shares", &[])
 }
 
+/// Review line when the stretch under review was found from the audio, not marked by hand.
+pub fn player_mark_found() -> String {
+    text("player-mark-found", &[])
+}
+
 /// Line in the review when the mark replaces AniSkip's times.
 pub fn player_mark_replaces(start: &str, end: &str) -> String {
     text("player-mark-replaces", &[("start", Arg::Text(start)), ("end", Arg::Text(end))])
@@ -10981,6 +10986,44 @@ pub fn player_dont_ask_again() -> String {
     text("player-dont-ask-again", &[])
 }
 
+/// Prompt a few seconds after a skip over an opening found from the audio, with Yes, Adjust and Don't ask again.
+pub fn player_found_ask_opening() -> String {
+    text("player-found-ask-opening", &[])
+}
+
+/// The same prompt after a skip over an ending found from the audio.
+pub fn player_found_ask_ending() -> String {
+    text("player-found-ask-ending", &[])
+}
+
+/// Line under that prompt, in a quieter colour. $episode is the episode's number.
+pub fn player_found_ask_share(episode: i64) -> String {
+    text("player-found-ask-share", &[("episode", Arg::Int(episode))])
+}
+
+/// Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust opens the review with the edges to nudge.
+pub fn player_found_yes() -> String {
+    text("player-found-yes", &[])
+}
+
+pub fn player_found_adjust() -> String {
+    text("player-found-adjust", &[])
+}
+
+/// What the prompt says after Yes. $episode is the episode's number.
+pub fn player_found_saved(episode: i64) -> String {
+    text("player-found-saved", &[("episode", Arg::Int(episode))])
+}
+
+/// What the prompt says after Don't ask again, with the line below it.
+pub fn player_found_never() -> String {
+    text("player-found-never", &[])
+}
+
+pub fn player_found_never_how() -> String {
+    text("player-found-never-how", &[])
+}
+
 /// Title of the sheet shown on the first Save.
 pub fn player_share_title() -> String {
     text("player-share-title", &[])
@@ -11016,6 +11059,31 @@ pub fn player_skip_yours() -> String {
 
 pub fn player_skip_from_aniskip() -> String {
     text("player-skip-from-aniskip", &[])
+}
+
+pub fn player_skip_found() -> String {
+    text("player-skip-found", &[])
+}
+
+/// Skip times panel and Settings: why finding skip times from the audio is paused, one line per platform's name for its power saving mode, and one for low storage.
+pub fn player_skip_paused_low_power() -> String {
+    text("player-skip-paused-low-power", &[])
+}
+
+pub fn player_skip_paused_battery_saver() -> String {
+    text("player-skip-paused-battery-saver", &[])
+}
+
+pub fn player_skip_paused_energy_saver() -> String {
+    text("player-skip-paused-energy-saver", &[])
+}
+
+pub fn player_skip_paused_power_saver() -> String {
+    text("player-skip-paused-power-saver", &[])
+}
+
+pub fn player_skip_paused_storage() -> String {
+    text("player-skip-paused-storage", &[])
 }
 
 pub fn player_skip_none() -> String {
@@ -12367,7 +12435,17 @@ pub fn settings_skip_recap() -> String {
     text("settings-skip-recap", &[])
 }
 
-/// Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand.
+/// Settings, Playback: finds openings and endings by comparing the audio of a show's episodes, when AniSkip has none. On by default.
+pub fn settings_find_skips() -> String {
+    text("settings-find-skips", &[])
+}
+
+/// Line under it.
+pub fn settings_find_skips_detail() -> String {
+    text("settings-find-skips-detail", &[])
+}
+
+/// Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand, and whether it asks about the edges of a skip it found.
 pub fn settings_ask_was_opening() -> String {
     text("settings-ask-was-opening", &[])
 }
@@ -12387,14 +12465,24 @@ pub fn settings_share_skips_detail() -> String {
     text("settings-share-skips-detail", &[])
 }
 
-/// Settings, Playback: removes every skip time you marked.
+/// Settings, Playback: the row that removes every skip time you marked and every one found from the audio. Its button reads Clear.
 pub fn settings_clear_skips() -> String {
     text("settings-clear-skips", &[])
 }
 
-/// Question that asks before clearing every skip time you marked.
+/// Question that asks before clearing them.
 pub fn settings_clear_skips_confirm() -> String {
     text("settings-clear-skips-confirm", &[])
+}
+
+/// Android's Settings: the title of that row, with the line below.
+pub fn settings_clear_skips_android() -> String {
+    text("settings-clear-skips-android", &[])
+}
+
+/// Line under it.
+pub fn settings_clear_skips_android_detail() -> String {
+    text("settings-clear-skips-android-detail", &[])
 }
 
 /// Row: skip filler.
