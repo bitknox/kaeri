@@ -2165,6 +2165,7 @@
     <string name="settings_counts_watched">Liczy się jako obejrzany po</string>
     <string name="settings_counts_watched_detail">Albo gdy zaczyna się zakończenie, jeśli jest oznaczone</string>
     <string name="settings_spoiler">Ochrona przed spoilerami</string>
+    <string name="settings_spoiler_detail">Rozmywa kadry i opisy nieobejrzanych odcinków po następnym</string>
     <string name="settings_audio_detail">Każdy tytuł pamięta własny dźwięk i napisy.</string>
     <string name="settings_system_captions">Używaj stylu napisów z systemu</string>
     <string name="settings_system_captions_detail">Zwykłe napisy korzystają z ustawień napisów z Ułatwień dostępu. Napisy ze stylem zachowują własny wygląd.</string>
@@ -2217,6 +2218,7 @@
     <string name="show_settings_skip_filler">Pomijaj wypełniacze</string>
     <string name="show_settings_blur_ahead">Rozmywaj kadry z wyprzedzeniem</string>
     <string name="show_settings_show_everything">Pokazuj wszystko</string>
+    <string name="show_settings_spoiler_detail">Rozmywa kadry i opisy po następnym odcinku.</string>
     <string name="show_settings_always">Zawsze</string>
     <string name="show_settings_never">Nigdy</string>
     <string name="show_settings_subs_remembered">Zapamiętane z ostatniego odcinka.</string>
@@ -2697,6 +2699,31 @@
     <string name="episode_row_not_out">Jeszcze nie wyemitowany</string>
     <string name="episode_row_airs">Emisja %1$s</string>
     <string name="episode_spoiler_hidden">Ukryte przez ochronę przed spoilerami</string>
+    <string name="episode_synopsis_hidden">Opis ukryty przez ochronę przed spoilerami</string>
+    <string name="episode_synopsis_show">Pokaż opis</string>
+    <string name="episode_synopsis_show_hint">Pokazuje kadr i opis tego odcinka</string>
+    <string name="episode_facts">%1$d min · Emisja: %2$s</string>
+    <string name="episode_facts_length">%1$d min</string>
+    <string name="episode_facts_left">Zostało %1$d min</string>
+    <string name="episode_protection_line">Ochrona przed spoilerami ukrywa to, co następuje po odcinku %1$d.</string>
+    <string name="episode_protection_line_short">Ukryte po odcinku %1$d</string>
+    <string name="episode_range">Odcinki od %1$d do %2$d</string>
+    <string name="episode_range_label">Zakres odcinków</string>
+    <plurals name="episode_fold">
+        <item quantity="one">Jeden obejrzany odcinek</item>
+        <item quantity="few">%1$d obejrzane odcinki</item>
+        <item quantity="many">%1$d obejrzanych odcinków</item>
+        <item quantity="other">%1$d obejrzanego odcinka</item>
+    </plurals>
+    <string name="episode_short">Odc. %1$d</string>
+    <string name="episode_aired">Emisja: %1$s</string>
+    <string name="episode_facts_join">%1$s · %2$s</string>
+    <string name="episode_protection_show">Pokaż</string>
+    <string name="episode_protection_hide">Ukryj</string>
+    <string name="episode_protection_shown">Widoczne jest to, co następuje po odcinku %1$d.</string>
+    <string name="episode_protection_shown_short">Widoczne po odcinku %1$d</string>
+    <string name="episode_range_short">%1$s–%2$s</string>
+    <string name="episode_range_item">%1$s · %2$s</string>
     <string name="episode_options">Opcje odcinka</string>
     <string name="episode_mark_watched">Oznacz jako obejrzany</string>
     <string name="episode_mark_unwatched">Oznacz jako nieobejrzany</string>

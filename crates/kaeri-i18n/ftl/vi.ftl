@@ -7719,6 +7719,9 @@ settings-counts-watched-detail = Hoặc khi phần kết thúc bắt đầu, n�
 # Row: spoiler protection.
 settings-spoiler = Bảo vệ tiết lộ nội dung
 
+# Line under it.
+settings-spoiler-detail = Làm mờ ảnh và tóm tắt của các tập chưa xem sau tập kế tiếp
+
 # Line under the audio row.
 settings-audio-detail = Mỗi tựa tự nhớ âm thanh và phụ đề riêng.
 
@@ -7862,6 +7865,9 @@ show-settings-blur-ahead = Làm mờ ảnh trước
 
 # Option: show everything.
 show-settings-show-everything = Hiện tất cả
+
+# Line under spoiler protection.
+show-settings-spoiler-detail = Làm mờ ảnh và tóm tắt sau tập kế tiếp.
 
 # Option: always.
 show-settings-always = Luôn
@@ -9174,6 +9180,69 @@ episode-row-airs = Phát sóng { $when }
 
 # Accessibility label of an episode's still while spoiler protection hides it.
 episode-spoiler-hidden = Đã ẩn bởi chế độ chống tiết lộ
+
+# Hint of a protected episode's row, and its still's label in a preview: the synopsis is hidden.
+episode-synopsis-hidden = Tóm tắt bị ẩn bởi chế độ chống spoiler
+
+# Menu item, button and screen reader action that reveals one protected episode's still and synopsis.
+episode-synopsis-show = Hiện tóm tắt
+
+# Screen reader hint of that action.
+episode-synopsis-show-hint = Hiện ảnh và tóm tắt của tập này
+
+# Facts line of an episode with a length and an air date. The date is already formatted.
+episode-facts = { $minutes } phút · Phát sóng { $date }
+
+# Facts line of an episode with a length only.
+episode-facts-length = { $minutes } phút
+
+# Facts line of an episode that is part-watched.
+episode-facts-left = Còn { $minutes } phút
+
+# One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.
+episode-protection-line = Chế độ chống spoiler ẩn mọi thứ sau tập { $episode }.
+
+# The same line on phones.
+episode-protection-line-short = Ẩn sau tập { $episode }
+
+# Label of an episode range of a long series, in the range menu.
+episode-range = Tập { $from } đến { $to }
+
+# Label of the control that picks an episode range.
+episode-range-label = Phạm vi tập
+
+# One line that stands for the watched episodes at the top of a range. Opening it shows them.
+episode-fold =
+    { $count ->
+       *[other] { $count } tập đã xem
+    }
+
+# An episode's number in a facts line on phones.
+episode-short = T{ $episode }
+
+# Part of an episode's facts line: when it aired. The date is already formatted.
+episode-aired = Phát sóng { $date }
+
+# Two parts of an episode's facts line, set one after the other.
+episode-facts-join = { $first } · { $second }
+
+# Button in the line where spoiler protection starts: shows what comes after.
+episode-protection-show = Hiện
+
+# Button in that line once the rows after it are shown: hides them again.
+episode-protection-hide = Ẩn
+
+# The line where spoiler protection starts, once the rows after it are shown.
+episode-protection-shown = Đang hiện mọi thứ sau tập { $episode }.
+
+# The same line on phones.
+episode-protection-shown-short = Hiện sau tập { $episode }
+
+# An episode range in the range menu: the first and the last episode.
+episode-range-short = { $from }–{ $to }
+
+# An item of the range menu: the range, then Watched or Not out yet.
+episode-range-item = { $range } · { $state }
 
 # Accessibility label of the button that opens an episode's menu.
 episode-options = Tùy chọn tập

@@ -5117,6 +5117,9 @@
   <data name="SettingsSpoiler" xml:space="preserve">
     <value>Bảo vệ tiết lộ nội dung</value>
   </data>
+  <data name="SettingsSpoilerDetail" xml:space="preserve">
+    <value>Làm mờ ảnh và tóm tắt của các tập chưa xem sau tập kế tiếp</value>
+  </data>
   <data name="SettingsAudioDetail" xml:space="preserve">
     <value>Mỗi tựa tự nhớ âm thanh và phụ đề riêng.</value>
   </data>
@@ -5257,6 +5260,9 @@
   </data>
   <data name="ShowSettingsShowEverything" xml:space="preserve">
     <value>Hiện tất cả</value>
+  </data>
+  <data name="ShowSettingsSpoilerDetail" xml:space="preserve">
+    <value>Làm mờ ảnh và tóm tắt sau tập kế tiếp.</value>
   </data>
   <data name="ShowSettingsAlways" xml:space="preserve">
     <value>Luôn</value>
@@ -6544,6 +6550,66 @@
   </data>
   <data name="EpisodeSpoilerHidden" xml:space="preserve">
     <value>Đã ẩn bởi chế độ chống tiết lộ</value>
+  </data>
+  <data name="EpisodeSynopsisHidden" xml:space="preserve">
+    <value>Tóm tắt bị ẩn bởi chế độ chống spoiler</value>
+  </data>
+  <data name="EpisodeSynopsisShow" xml:space="preserve">
+    <value>Hiện tóm tắt</value>
+  </data>
+  <data name="EpisodeSynopsisShowHint" xml:space="preserve">
+    <value>Hiện ảnh và tóm tắt của tập này</value>
+  </data>
+  <data name="EpisodeFacts" xml:space="preserve">
+    <value>{minutes} phút · Phát sóng {date}</value>
+  </data>
+  <data name="EpisodeFactsLength" xml:space="preserve">
+    <value>{minutes} phút</value>
+  </data>
+  <data name="EpisodeFactsLeft" xml:space="preserve">
+    <value>Còn {minutes} phút</value>
+  </data>
+  <data name="EpisodeProtectionLine" xml:space="preserve">
+    <value>Chế độ chống spoiler ẩn mọi thứ sau tập {episode}.</value>
+  </data>
+  <data name="EpisodeProtectionLineShort" xml:space="preserve">
+    <value>Ẩn sau tập {episode}</value>
+  </data>
+  <data name="EpisodeRange" xml:space="preserve">
+    <value>Tập {from} đến {to}</value>
+  </data>
+  <data name="EpisodeRangeLabel" xml:space="preserve">
+    <value>Phạm vi tập</value>
+  </data>
+  <data name="EpisodeFold_other" xml:space="preserve">
+    <value>{count} tập đã xem</value>
+  </data>
+  <data name="EpisodeShort" xml:space="preserve">
+    <value>T{episode}</value>
+  </data>
+  <data name="EpisodeAired" xml:space="preserve">
+    <value>Phát sóng {date}</value>
+  </data>
+  <data name="EpisodeFactsJoin" xml:space="preserve">
+    <value>{first} · {second}</value>
+  </data>
+  <data name="EpisodeProtectionShow" xml:space="preserve">
+    <value>Hiện</value>
+  </data>
+  <data name="EpisodeProtectionHide" xml:space="preserve">
+    <value>Ẩn</value>
+  </data>
+  <data name="EpisodeProtectionShown" xml:space="preserve">
+    <value>Đang hiện mọi thứ sau tập {episode}.</value>
+  </data>
+  <data name="EpisodeProtectionShownShort" xml:space="preserve">
+    <value>Hiện sau tập {episode}</value>
+  </data>
+  <data name="EpisodeRangeShort" xml:space="preserve">
+    <value>{from}–{to}</value>
+  </data>
+  <data name="EpisodeRangeItem" xml:space="preserve">
+    <value>{range} · {state}</value>
   </data>
   <data name="EpisodeOptions" xml:space="preserve">
     <value>Tùy chọn tập</value>

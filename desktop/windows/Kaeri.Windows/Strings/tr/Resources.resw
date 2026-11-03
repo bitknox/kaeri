@@ -5261,6 +5261,9 @@
   <data name="SettingsSpoiler" xml:space="preserve">
     <value>Spoiler koruması</value>
   </data>
+  <data name="SettingsSpoilerDetail" xml:space="preserve">
+    <value>Sıradakinden sonraki izlenmemiş bölümlerin karelerini ve özetlerini bulanıklaştırır</value>
+  </data>
   <data name="SettingsAudioDetail" xml:space="preserve">
     <value>Her dizi kendi ses ve altyazı tercihini hatırlar.</value>
   </data>
@@ -5404,6 +5407,9 @@
   </data>
   <data name="ShowSettingsShowEverything" xml:space="preserve">
     <value>Her şeyi göster</value>
+  </data>
+  <data name="ShowSettingsSpoilerDetail" xml:space="preserve">
+    <value>sıradaki bölümden sonrasının kare ve özetlerini bulanıklaştırır.</value>
   </data>
   <data name="ShowSettingsAlways" xml:space="preserve">
     <value>Her zaman</value>
@@ -6721,6 +6727,69 @@
   </data>
   <data name="EpisodeSpoilerHidden" xml:space="preserve">
     <value>Spoiler koruması nedeniyle gizli</value>
+  </data>
+  <data name="EpisodeSynopsisHidden" xml:space="preserve">
+    <value>Özet, spoiler korumasıyla gizlendi</value>
+  </data>
+  <data name="EpisodeSynopsisShow" xml:space="preserve">
+    <value>Özeti göster</value>
+  </data>
+  <data name="EpisodeSynopsisShowHint" xml:space="preserve">
+    <value>Bu bölümün karesini ve özetini gösterir</value>
+  </data>
+  <data name="EpisodeFacts" xml:space="preserve">
+    <value>{minutes} dk · Yayın tarihi {date}</value>
+  </data>
+  <data name="EpisodeFactsLength" xml:space="preserve">
+    <value>{minutes} min</value>
+  </data>
+  <data name="EpisodeFactsLeft" xml:space="preserve">
+    <value>{minutes} dk kaldı</value>
+  </data>
+  <data name="EpisodeProtectionLine" xml:space="preserve">
+    <value>Spoiler koruması, {episode}. bölümden sonrasını gizler.</value>
+  </data>
+  <data name="EpisodeProtectionLineShort" xml:space="preserve">
+    <value>{episode}. bölümden sonra gizli</value>
+  </data>
+  <data name="EpisodeRange" xml:space="preserve">
+    <value>{from}. ile {to}. bölümler arası</value>
+  </data>
+  <data name="EpisodeRangeLabel" xml:space="preserve">
+    <value>Bölüm aralığı</value>
+  </data>
+  <data name="EpisodeFold_one" xml:space="preserve">
+    <value>İzlenen bir bölüm</value>
+  </data>
+  <data name="EpisodeFold_other" xml:space="preserve">
+    <value>{count} izlenen bölüm</value>
+  </data>
+  <data name="EpisodeShort" xml:space="preserve">
+    <value>B{episode}</value>
+  </data>
+  <data name="EpisodeAired" xml:space="preserve">
+    <value>Yayın tarihi {date}</value>
+  </data>
+  <data name="EpisodeFactsJoin" xml:space="preserve">
+    <value>{first} · {second}</value>
+  </data>
+  <data name="EpisodeProtectionShow" xml:space="preserve">
+    <value>Göster</value>
+  </data>
+  <data name="EpisodeProtectionHide" xml:space="preserve">
+    <value>Gizle</value>
+  </data>
+  <data name="EpisodeProtectionShown" xml:space="preserve">
+    <value>{episode}. bölümden sonrası gösteriliyor.</value>
+  </data>
+  <data name="EpisodeProtectionShownShort" xml:space="preserve">
+    <value>{episode}. bölümden sonra görünür</value>
+  </data>
+  <data name="EpisodeRangeShort" xml:space="preserve">
+    <value>{from}–{to}</value>
+  </data>
+  <data name="EpisodeRangeItem" xml:space="preserve">
+    <value>{range} · {state}</value>
   </data>
   <data name="EpisodeOptions" xml:space="preserve">
     <value>Bölüm seçenekleri</value>

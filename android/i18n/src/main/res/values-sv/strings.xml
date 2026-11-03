@@ -2049,6 +2049,7 @@
     <string name="settings_counts_watched">Räknas som sedd vid</string>
     <string name="settings_counts_watched_detail">Eller när avslutningen börjar, om den är markerad</string>
     <string name="settings_spoiler">Spoilerskydd</string>
+    <string name="settings_spoiler_detail">Suddar bilder och sammanfattningar för osedda avsnitt efter nästa</string>
     <string name="settings_audio_detail">Varje serie minns sitt eget ljud och sina undertexter.</string>
     <string name="settings_system_captions">Följ systemets textstil</string>
     <string name="settings_system_captions_detail">Vanliga undertexter använder dina textinställningar från Tillgänglighet. Stilade undertexter behåller sin egen look.</string>
@@ -2099,6 +2100,7 @@
     <string name="show_settings_skip_filler">Hoppa över fyllnad</string>
     <string name="show_settings_blur_ahead">Sudda bilder i förväg</string>
     <string name="show_settings_show_everything">Visa allt</string>
+    <string name="show_settings_spoiler_detail">Suddar bilder och sammanfattningar efter nästa avsnitt.</string>
     <string name="show_settings_always">Alltid</string>
     <string name="show_settings_never">Aldrig</string>
     <string name="show_settings_subs_remembered">Sparat från ditt senaste avsnitt.</string>
@@ -2559,6 +2561,29 @@
     <string name="episode_row_not_out">Inte sänt än</string>
     <string name="episode_row_airs">Sänds %1$s</string>
     <string name="episode_spoiler_hidden">Dold av spoilerskydd</string>
+    <string name="episode_synopsis_hidden">Sammanfattning dold av spoilerskydd</string>
+    <string name="episode_synopsis_show">Visa sammanfattning</string>
+    <string name="episode_synopsis_show_hint">Visar avsnittets bild och sammanfattning</string>
+    <string name="episode_facts">%1$d min · Sändes %2$s</string>
+    <string name="episode_facts_length">%1$d min</string>
+    <string name="episode_facts_left">%1$d min kvar</string>
+    <string name="episode_protection_line">Spoilerskyddet döljer allt efter avsnitt %1$d.</string>
+    <string name="episode_protection_line_short">Dolt efter avsnitt %1$d</string>
+    <string name="episode_range">Avsnitt %1$d till %2$d</string>
+    <string name="episode_range_label">Avsnittsintervall</string>
+    <plurals name="episode_fold">
+        <item quantity="one">Ett sett avsnitt</item>
+        <item quantity="other">%1$d sedda avsnitt</item>
+    </plurals>
+    <string name="episode_short">A%1$d</string>
+    <string name="episode_aired">Sändes %1$s</string>
+    <string name="episode_facts_join">%1$s · %2$s</string>
+    <string name="episode_protection_show">Visa</string>
+    <string name="episode_protection_hide">Dölj</string>
+    <string name="episode_protection_shown">Visar allt efter avsnitt %1$d.</string>
+    <string name="episode_protection_shown_short">Visas efter avsnitt %1$d</string>
+    <string name="episode_range_short">%1$s–%2$s</string>
+    <string name="episode_range_item">%1$s · %2$s</string>
     <string name="episode_options">Avsnittsalternativ</string>
     <string name="episode_mark_watched">Markera som sett</string>
     <string name="episode_mark_unwatched">Markera som osett</string>
