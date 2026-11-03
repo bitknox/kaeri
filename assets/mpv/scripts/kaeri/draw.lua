@@ -187,17 +187,50 @@ function M.width(text, opts)
     if text == nil or text == "" then
         return 0
     end
-    local key = string.format("%s|%d|%s|%s", text, round(opts.size), tostring(opts.bold), tostring(opts.spacing))
+    -- Laid out at the window's own size: at any other, libass scales the glyphs by the height
+    -- ratio and the bounds come back in the probe's units, wider than the text as drawn.
+    local osd = mp.get_property_native("osd-dimensions")
+    if type(osd) == "table" and (osd.w or 0) > 0 and (osd.h or 0) > 0 then
+        probe.res_x, probe.res_y = osd.w, osd.h
+    end
+    local key = string.format(
+        "%s|%d|%s|%s|%dx%d", text, round(opts.size), tostring(opts.bold), tostring(opts.spacing),
+        probe.res_x, probe.res_y
+    )
     local hit = widths[key]
     if hit then
         return hit
     end
-    probe.data = string.format("{\\an7\\pos(0,0)%s}%s", style(opts.size, opts.bold, opts.spacing, opts.font), M.escape(text))
-    local bounds = probe:update()
-    local width
-    if type(bounds) == "table" and bounds.x1 and bounds.x0 then
-        width = bounds.x1 - bounds.x0
-    else
+    -- The bounds come from the rendered bitmaps, which reach a few pixels past the last glyph.
+    -- Laying the text out once and twice and taking the difference leaves its advance alone,
+    -- so a panel's padding comes out even on both sides. Text too long to lay out twice on
+    -- screen takes off the overshoot a short sample shows in the same style.
+    local tags = style(opts.size, opts.bold, opts.spacing, opts.font)
+    local function advance(s)
+        probe.data = string.format("{\\an7\\pos(0,0)%s}%s", tags, s)
+        local once = probe:update()
+        probe.data = string.format("{\\an7\\pos(0,0)%s}%s%s", tags, s, s)
+        local twice = probe:update()
+        if type(once) ~= "table" or not once.x1 or type(twice) ~= "table" or not twice.x1 then
+            return nil
+        end
+        if twice.x1 < probe.res_x - 1 then
+            return math.max(0, twice.x1 - once.x1), once
+        end
+        return nil, once
+    end
+    local width, once = advance(M.escape(text))
+    if not width and once then
+        local key_over = string.format("%s|over|%d|%s|%s|%dx%d", opts.font or "", round(opts.size),
+            tostring(opts.bold), tostring(opts.spacing), probe.res_x, probe.res_y)
+        local over = widths[key_over]
+        if not over then
+            local sample_w, sample = advance("Kaeri")
+            over = sample_w and math.max(0, sample.x1 - sample.x0 - sample_w) or 0
+            widths[key_over] = over
+        end
+        width = math.max(0, once.x1 - once.x0 - over)
+    elseif not width then
         -- No OSD to lay out on (a headless run): an estimate keeps layout sane.
         width = #util.chars(text) * opts.size * 0.56
     end

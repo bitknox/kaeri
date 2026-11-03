@@ -112,6 +112,7 @@ fn rise(line: &impl IsA<gtk::Widget>) {
 /// A line waiting for its turn on the video.
 struct Pending {
     who: String,
+    you: bool,
     text: String,
 }
 
@@ -333,6 +334,10 @@ impl Chat {
     pub fn popover(&self, open: bool) {
         self.popover_open.set(open);
         self.column.set_visible(!open);
+        // The popover has its own field; what is typed here stays for the next C.
+        if open {
+            self.close_field();
+        }
         if !open {
             crate::motion::fade_in(&self.column);
         }
@@ -461,7 +466,7 @@ impl Chat {
         let PartyChatBody::Said { text } = &line.body else { return };
         let who = words::who(line);
         let room = self.shown.borrow().len() < COLUMN && self.waiting.borrow().is_empty();
-        let pending = Pending { who, text: text.clone() };
+        let pending = Pending { who, you: line.you, text: text.clone() };
         if room {
             self.show(pending);
         } else {
@@ -481,13 +486,9 @@ impl Chat {
         }
     }
 
-    fn line_widget(who: &str, text: &str) -> gtk::Box {
+    fn line_widget(who: &str, you: bool, text: &str) -> gtk::Box {
         let label = gtk::Label::new(None);
-        label.set_markup(&format!(
-            "<b>{}</b>  {}",
-            glib::markup_escape_text(who),
-            glib::markup_escape_text(text)
-        ));
+        label.set_markup(&words::said_markup(who, you, text));
         label.set_wrap(true);
         label.set_wrap_mode(gtk::pango::WrapMode::WordChar);
         label.set_lines(3);
@@ -503,7 +504,7 @@ impl Chat {
     }
 
     fn show(&self, pending: Pending) {
-        let line = Self::line_widget(&pending.who, &pending.text);
+        let line = Self::line_widget(&pending.who, pending.you, &pending.text);
         let revealer = gtk::Revealer::new();
         revealer.set_transition_type(gtk::RevealerTransitionType::None);
         revealer.set_reveal_child(true);

@@ -360,6 +360,11 @@ pub struct PartyChatState {
     /// Whole seconds before the next reaction: one per two seconds. 0 when it may go.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub react_wait_seconds: u32,
+    /// The terminal's Hide chat (`syncplay.hide_chat`) is on: see [`PartyCommand::HideChat`].
+    /// The apps keep their own setting and need not read this; the conversation and the
+    /// reaction events are the same either way, only the mpv companion's column goes quiet.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub hidden: bool,
 }
 
 /// A reaction coming in, for the moment on the video: the glyph and the name, bottom trailing.
@@ -687,6 +692,10 @@ pub enum PartyCommand {
     React { reaction: Reaction },
     /// Hide a member's lines and reactions for this party, on this device, or show them again.
     Mute { name: String, muted: bool },
+    /// The terminal's Hide chat, kept in the config for every party on this device: lines and
+    /// reactions stay off the player while it is on. `PartyChatState::hidden` says it back.
+    /// The apps keep a setting of their own and draw nothing they hide.
+    HideChat { hidden: bool },
     /// Ask for the last ten rooms: answered with `Event::PartyRecent`.
     LoadRecent,
     /// Remove a room from the last ten.

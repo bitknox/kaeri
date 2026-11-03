@@ -25,7 +25,7 @@ pub(crate) enum Heard {
     /// Nothing to show on the video: from a muted member, or empty.
     Quiet,
     /// Something typed, to show as a notice.
-    Typed { from: String, text: String },
+    Typed { from: String, you: bool, text: String },
     /// A reaction, for the moment on the video.
     Reacted(PartyReaction),
 }
@@ -52,6 +52,8 @@ pub(crate) struct Chat {
     next_id: u64,
     /// The waits last told to the front end, so a change is told once.
     told: (u32, u32),
+    /// The terminal's Hide chat: nothing reaches the player while it is on.
+    hidden: bool,
 }
 
 impl Chat {
@@ -68,6 +70,7 @@ impl Chat {
             failed: None,
             next_id: 1,
             told: (0, 0),
+            hidden: false,
         }
     }
 
@@ -159,7 +162,7 @@ impl Chat {
             }
             None => (
                 PartyChatBody::Said { text: text.to_owned() },
-                Heard::Typed { from: from.to_owned(), text: text.to_owned() },
+                Heard::Typed { from: from.to_owned(), you, text: text.to_owned() },
             ),
         };
         self.lines.push_back(PartyChatLine {
@@ -211,7 +214,22 @@ impl Chat {
             muted: self.muted.iter().cloned().collect(),
             wait_seconds: whole(self.limits.message_wait(now)),
             react_wait_seconds: whole(self.limits.reaction_wait(now)),
+            hidden: self.hidden,
         }
+    }
+
+    /// The terminal's Hide chat, from the config and as it is turned over.
+    pub fn set_hidden(&mut self, hidden: bool) {
+        self.hidden = hidden;
+    }
+
+    pub fn hidden(&self) -> bool {
+        self.hidden
+    }
+
+    /// The most characters in one message: the server's, or 150.
+    pub fn max_length(&self) -> usize {
+        self.max_length
     }
 
     /// The waits last told to the front end.
@@ -330,7 +348,7 @@ mod tests {
         assert!(chat.conversation().lines.is_empty());
         assert_eq!(
             chat.hear("Noa", "back in 2"),
-            Heard::Typed { from: "Noa".into(), text: "back in 2".into() }
+            Heard::Typed { from: "Noa".into(), you: true, text: "back in 2".into() }
         );
         let conversation = chat.conversation();
         assert_eq!(conversation.lines.len(), 1);
@@ -452,6 +470,19 @@ mod tests {
         let conversation = chat.conversation();
         assert!(conversation.lines.iter().all(|l| !l.muted));
         assert_eq!(conversation.marks.len(), 2);
+    }
+
+    #[test]
+    fn hide_chat_keeps_the_conversation_and_the_state_says_it_is_on() {
+        let mut chat = Chat::new("Noa");
+        chat.hear("Ren", "so good");
+        chat.set_hidden(true);
+        assert!(chat.hidden() && chat.state(0.0).hidden);
+        // Hearing still keeps the list, for the people popover and the TUI's pane.
+        chat.hear("Ren", "still here");
+        assert_eq!(said(&chat), vec!["Ren: so good", "Ren: still here"]);
+        chat.set_hidden(false);
+        assert!(!chat.state(0.0).hidden);
     }
 
     #[test]

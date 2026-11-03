@@ -2988,6 +2988,7 @@ dependencies = [
  "kaeri-cast",
  "kaeri-core",
  "kaeri-discord",
+ "kaeri-i18n",
  "kaeri-jellyfin",
  "kaeri-meta",
  "kaeri-model",

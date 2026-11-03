@@ -198,6 +198,9 @@ pub struct Pane {
 /// Characters left at which the count shows.
 pub const COUNT_FROM: usize = 20;
 
+/// Conversations shorter than this, in pixels, show without a scrollbar.
+const SHORT: i32 = 96;
+
 impl Pane {
     pub fn new(ctx: &Rc<Ctx>, place: Place) -> Rc<Self> {
         let root = gtk::Box::new(gtk::Orientation::Vertical, 8);
@@ -233,6 +236,7 @@ impl Pane {
         send.set_sensitive(false);
         let field = gtk::Box::new(gtk::Orientation::Horizontal, 0);
         field.add_css_class("linked");
+        field.add_css_class("chat-field");
         field.append(&over);
         field.append(&send);
 
@@ -452,7 +456,7 @@ impl Pane {
         let muted: Vec<String> = state.map(|s| s.muted.clone()).unwrap_or_default();
         for entry in entries(&conversation.lines) {
             self.list.append(&match entry {
-                Entry::Said { who, you, text } => said_row(&who, you, &text),
+                Entry::Said { who, you, text } => said_row(&who, you, &text).upcast(),
                 Entry::Reacted(line) => quiet_row(&line),
                 Entry::Muted(name) => {
                     let ctx = Rc::clone(&self.ctx);
@@ -472,6 +476,18 @@ impl Pane {
             let text = text.clone();
             self.list.append(&failed_row(move || say(&ctx, &text)));
         }
+        // A short conversation takes no scrollbar: a vertical one asks for its own minimum
+        // height, which would leave a gap under a single row such as "Couldn't send".
+        let width = match self.scroll.width() {
+            0 => 240,
+            width => width,
+        };
+        let (_, tall, _, _) = self.list.measure(gtk::Orientation::Vertical, width);
+        self.scroll.set_vscrollbar_policy(if tall < SHORT {
+            gtk::PolicyType::Never
+        } else {
+            gtk::PolicyType::Automatic
+        });
         let adjustment = self.scroll.vadjustment();
         let scroll = self.scroll.clone();
         gtk::glib::idle_add_local_once(move || {
@@ -482,69 +498,73 @@ impl Pane {
     }
 }
 
-/// A typed line: the name in bold, "You" in haze, then the words, wrapped.
-fn said_row(who: &str, you: bool, text: &str) -> gtk::Widget {
-    let row = gtk::Box::new(gtk::Orientation::Horizontal, 8);
-    let name = gtk::Label::new(Some(who));
-    name.add_css_class("heading");
-    if you {
-        name.add_css_class("haze");
-    }
-    name.set_valign(gtk::Align::Start);
-    let words = gtk::Label::new(Some(text));
-    words.set_wrap(true);
-    words.set_wrap_mode(gtk::pango::WrapMode::WordChar);
-    words.set_xalign(0.0);
-    words.set_hexpand(true);
-    words.set_max_width_chars(34);
-    row.append(&name);
-    row.append(&words);
-    row.set_accessible_role(gtk::AccessibleRole::Group);
-    row.update_property(&[gtk::accessible::Property::Label(&t::party_chat_announce(
+/// A typed line: the name in semibold, "You" in haze, then the words flowing after it and
+/// wrapping under it, as one sentence.
+fn said_row(who: &str, you: bool, text: &str) -> gtk::Label {
+    let label = gtk::Label::new(None);
+    label.set_markup(&said_markup(who, you, text));
+    label.set_wrap(true);
+    label.set_wrap_mode(gtk::pango::WrapMode::WordChar);
+    label.set_xalign(0.0);
+    label.set_hexpand(true);
+    label.set_max_width_chars(34);
+    label.update_property(&[gtk::accessible::Property::Label(&t::party_chat_announce(
         who, text,
     ))]);
-    row.upcast()
+    label
 }
 
-/// A line in haze: a reaction, "Ren and Mika laughed at 12:04".
+/// The name and the words as Pango markup: the name at weight 600 and an en space after it,
+/// the 6 px gap the board draws; "You" in haze, the `--haze` token.
+pub fn said_markup(who: &str, you: bool, text: &str) -> String {
+    let colour = if you { " foreground=\"#A3A9C4\"" } else { "" }; // i18n-skip
+    format!(
+        "<span weight=\"600\"{colour}>{}</span>\u{2002}{}", // i18n-skip
+        gtk::glib::markup_escape_text(who),
+        gtk::glib::markup_escape_text(text)
+    )
+}
+
+/// A line in haze at the conversation's size: a reaction, "Ren and Mika laughed at 12:04".
 fn quiet_row(text: &str) -> gtk::Widget {
-    let label = crate::widgets::haze(text, "caption");
+    let label = crate::widgets::haze(text, "");
     label.set_xalign(0.0);
     label.set_wrap(true);
+    label.set_wrap_mode(gtk::pango::WrapMode::WordChar);
     label.upcast()
+}
+
+/// One haze line ending in a silk, underlined action: "Couldn't send · Try again". One label,
+/// so it reads and wraps as a sentence; the action is a link, reachable with Tab.
+fn action_row(line: &str, action: &str, act: impl Fn() + 'static) -> gtk::Label {
+    let label = crate::widgets::haze("", "chat-link");
+    label.set_markup(&format!(
+        "{} \u{b7} <a href=\"act\">{}</a>", // i18n-skip
+        gtk::glib::markup_escape_text(line),
+        gtk::glib::markup_escape_text(action)
+    ));
+    label.set_xalign(0.0);
+    label.set_wrap(true);
+    label.set_wrap_mode(gtk::pango::WrapMode::WordChar);
+    label.connect_activate_link(move |_, _| {
+        act();
+        gtk::glib::Propagation::Stop
+    });
+    label
 }
 
 /// "Ren is muted · Unmute".
 fn muted_row(name: &str, unmute: impl Fn() + 'static) -> gtk::Widget {
-    let row = gtk::Box::new(gtk::Orientation::Horizontal, 4);
-    let line = crate::widgets::haze(&t::party_muted_line(name), "caption");
-    line.set_xalign(0.0);
-    let button = gtk::Button::with_label(&t::party_unmute_short());
-    button.add_css_class("flat");
-    button.add_css_class("chat-link");
-    button.set_tooltip_text(Some(&t::party_unmute(name)));
-    button.update_property(&[gtk::accessible::Property::Label(&t::party_unmute(name))]);
-    button.connect_clicked(move |_| unmute());
-    row.append(&line);
-    row.append(&crate::widgets::haze("\u{b7}", "caption")); // i18n-skip
-    row.append(&button);
+    let row = action_row(&t::party_muted_line(name), &t::party_unmute_short(), unmute);
+    row.set_tooltip_text(Some(&t::party_unmute(name)));
+    row.update_property(&[gtk::accessible::Property::Description(&t::party_unmute(name))]);
     row.upcast()
 }
 
 /// "Couldn't send · Try again".
 fn failed_row(retry: impl Fn() + 'static) -> gtk::Widget {
-    let row = gtk::Box::new(gtk::Orientation::Horizontal, 4);
-    let line = crate::widgets::haze(&t::party_chat_not_sent(), "caption");
-    line.set_xalign(0.0);
-    let button = gtk::Button::with_label(&t::party_chat_retry());
-    button.add_css_class("flat");
-    button.add_css_class("chat-link");
-    button.connect_clicked(move |_| retry());
-    row.append(&line);
-    row.append(&crate::widgets::haze("\u{b7}", "caption")); // i18n-skip
-    row.append(&button);
-    row.set_accessible_role(gtk::AccessibleRole::Group);
-    row.update_property(&[gtk::accessible::Property::Label(&t::party_chat_not_sent())]);
+    let row = action_row(&t::party_chat_not_sent(), &t::party_chat_retry(), retry);
+    row.update_property(&[gtk::accessible::Property::Description(&t::party_chat_not_sent())]);
     row.upcast()
 }
 

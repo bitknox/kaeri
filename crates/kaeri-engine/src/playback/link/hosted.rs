@@ -423,6 +423,12 @@ fn ui(overlay: Overlay) -> Option<PlayerUi> {
                 Level::Alert => NoticeKind::Alert,
             },
         },
+        // The apps draw chat from the party's own events; a line still comes as the notice it
+        // always was, which an app that draws the column passes over.
+        Overlay::ChatLine { notice, .. } => {
+            PlayerUi::Alert { text: notice, kind: NoticeKind::Info }
+        }
+        Overlay::Reaction { .. } | Overlay::ChatCleared => return None,
         Overlay::Stall { seconds } => PlayerUi::Stall { seconds },
         Overlay::StallCleared => PlayerUi::StallCleared,
         // Said as events of their own, in `overlay`.

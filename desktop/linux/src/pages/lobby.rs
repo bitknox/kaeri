@@ -237,11 +237,16 @@ impl Lobby {
         columns.append(&self.right(&view, &members));
         self.body.append(&columns);
         let heading = gtk::Label::new(Some(&t::party_chat_title()));
-        heading.add_css_class("heading");
+        heading.add_css_class("title-3");
         heading.set_xalign(0.0);
         heading.set_accessible_role(gtk::AccessibleRole::Heading);
-        self.body.append(&heading);
-        self.body.append(&self.chat.root);
+        // In from the edge as far as the columns' children are, so the headings line up.
+        let chat = gtk::Box::new(gtk::Orientation::Vertical, 8);
+        chat.set_margin_start(3);
+        chat.set_margin_end(3);
+        chat.append(&heading);
+        chat.append(&self.chat.root);
+        self.body.append(&chat);
         self.chat.refresh();
     }
 

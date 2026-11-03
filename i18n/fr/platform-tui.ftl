@@ -7,6 +7,5 @@ status-reloading-sources = Rechargement des { -source-pl }…
 pin-unavailable = La { -source } { $name } est épinglée pour ce titre, mais elle n'est pas disponible. Les autres { -source-pl } sont utilisées.
 tui-together-section = Ensemble
 tui-together-join-prompt = lien ou code
-tui-together-keys = r prêt · c copier le lien · s démarrer · x quitter
 tui-together-not-a-link = Ce n’est ni un lien ni un code de groupe.
 tui-together-recent-alone = Épisode { $episode } · { $when }

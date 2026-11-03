@@ -2055,6 +2055,13 @@ fn party_stage(shell: &Rc<Shell>, shot: &str) -> f64 {
                         }
                     });
                 });
+                if chatty {
+                    // The conversation sits under the room: scrolled down to it.
+                    let window = ctx.window.clone();
+                    glib::timeout_add_local_once(Duration::from_millis(5500), move || {
+                        scroll_to_end(window.upcast_ref());
+                    });
+                }
                 if shot == "party-lobby-waiting" {
                     // Everyone but Ren is ready: the room waits for him, then offers Start anyway.
                     let hub = Rc::clone(&ctx.hub);

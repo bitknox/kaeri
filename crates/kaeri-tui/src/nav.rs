@@ -222,7 +222,7 @@ impl Overlay {
             Self::Logs => t::nav_overlay_logs(),
             Self::JoinStore => t::nav_overlay_join_store(),
             Self::JoinParty => t::together_join(),
-            Self::Say => t::party_chat_title(),
+            Self::Say => t::keys_hint_say(),
             Self::StoreConfirm => t::nav_overlay_store_confirm(),
             Self::PluginAction => t::nav_overlay_plugin_action(),
             Self::InviteName => t::nav_overlay_invite_name(),

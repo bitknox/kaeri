@@ -649,6 +649,47 @@ async fn a_toast_shows_and_expires() {
     player.finish().await;
 }
 
+fn chat_count(ui: &Value, key: &str) -> usize {
+    ui["chat"][key].as_array().map_or(0, Vec::len)
+}
+
+#[tokio::test]
+async fn chat_lines_fill_three_then_fold_and_hide_chat_clears_them() {
+    require_mpv!();
+    let mut player = Player::start(None, &[]).await;
+    let more = ["1 more in chat", "2 more in chat"];
+    for (who, text) in
+        [("Ren", "here"), ("Mika", "ok starting"), ("You", "same"), ("Sol", "late")]
+    {
+        player
+            .message(
+                "chat-line",
+                json!({"who": who, "you": who == "You", "text": text, "more": more}),
+            )
+            .await;
+    }
+    let ui = player
+        .wait_ui("three lines and the fold", |ui| ui["chat"]["more"] == "1 more in chat")
+        .await;
+    assert_eq!(chat_count(&ui, "lines"), 3, "{ui}");
+    assert_eq!(ui["chat"]["lines"][0]["who"], "Ren", "{ui}");
+    assert_eq!(ui["chat"]["lines"][2]["you"], true, "{ui}");
+
+    player.message("chat-react", json!({"who": "Ren", "glyph": "laugh"})).await;
+    player.wait_ui("the moment", |ui| ui["chat"]["moments"][0]["who"] == "Ren").await;
+
+    player.command(json!(["script-message-to", "kaeri", "chat-clear"])).await;
+    let ui = player
+        .wait_ui("everything gone", |ui| {
+            chat_count(ui, "lines") == 0
+                && chat_count(ui, "moments") == 0
+                && ui["chat"]["more"].is_null()
+        })
+        .await;
+    assert!(ui["chat"].is_object(), "{ui}");
+    player.finish().await;
+}
+
 #[tokio::test]
 async fn shift_n_and_shift_p_step_episodes() {
     require_mpv!();
@@ -1167,6 +1208,9 @@ async fn missing_null_and_malformed_state_is_tolerated() {
         ("skipped", "{}"),
         ("toast", "{\"text\": null}"),
         ("stall", "[]"),
+        ("chat-line", "{}"),
+        ("chat-line", "{\"who\": 3, \"text\": [], \"more\": 7}"),
+        ("chat-react", "[]"),
     ] {
         player.command(json!(["script-message-to", "kaeri", name, payload])).await;
     }

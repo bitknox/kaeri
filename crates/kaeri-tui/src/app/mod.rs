@@ -565,7 +565,7 @@ impl App {
                 self.set_party(view);
             }
             Event::PartyState(view) => self.set_party(view),
-            Event::PartyMembers(members) => self.party_members = members,
+            Event::PartyMembers(members) => self.set_party_members(members),
             Event::PartyRecent(rooms) => self.set_recent_rooms(rooms),
             Event::PartyLeft { reason: Some(reason) } => {
                 self.end_party();

@@ -830,6 +830,13 @@ async fn apply_cue(link: &dyn PlayerLink, cue: SeatCue) {
             let level = kaeri_playback::companion::Level::Info;
             link.overlay(Overlay::Toast { text, level }).await
         }
+        SeatCue::Chat { who, you, text, notice } => {
+            link.overlay(Overlay::ChatLine { who, you, text, notice }).await
+        }
+        SeatCue::Reaction { who, reaction } => {
+            link.overlay(Overlay::Reaction { who, reaction }).await
+        }
+        SeatCue::ChatCleared => link.overlay(Overlay::ChatCleared).await,
     };
     if let Err(e) = done {
         tracing::debug!(error = %e, "the player did not take what the party asked");

@@ -601,6 +601,7 @@ mod tests {
             muted: vec!["Ren".into()],
             wait_seconds: 0,
             react_wait_seconds: 0,
+            hidden: false,
         };
         assert!(folder.event(&Event::PartyChatState(state)));
         folder.event(&Event::PartyState(party_view()));

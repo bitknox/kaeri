@@ -371,7 +371,8 @@ fn mute_menu(ctx: &Rc<Ctx>, row: &gtk::Box, name: &str, muted: bool) {
     row.add_controller(click);
     row.set_focusable(true);
     let shortcuts = gtk::ShortcutController::new();
-    for trigger in ["Menu", "<Shift>F10"] {
+    let triggers = ["Menu", "<Shift>F10"]; // i18n-skip
+    for trigger in triggers {
         if let Some(trigger) = gtk::ShortcutTrigger::parse_string(trigger) {
             let menu = menu.clone();
             shortcuts.add_shortcut(gtk::Shortcut::new(

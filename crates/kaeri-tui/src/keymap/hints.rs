@@ -352,19 +352,35 @@ pub(crate) fn status_hints_paged(
             hints.extend(key(Action::Open).map(|k| (k, hint_stores())));
             return with_help(keymap, hints);
         }
-        // Together: Enter joins the highlighted room or asks for a link; the party's own keys are
-        // named only while there is a party to use them on.
+        // Together: Enter joins the highlighted room or asks for a link, and on a member's row
+        // `M` mutes them instead. The party's own keys are named only while there is a party
+        // to use them on. A narrow line drops from the front, so Hide chat goes first and the
+        // row's own key and Say last.
         V::Section(Section::Together) => {
-            let mut hints = vec![(Action::Open, hint_open())];
+            let mut hints = Vec::new();
             if let Some(party) = &app.party {
-                hints.push((Action::FixMapping, said(t::keys_hint_say())));
+                hints.push(if app.chat_hidden() {
+                    (Action::ToggleSynopsis, said(t::keys_hint_show_chat()))
+                } else {
+                    (Action::ToggleSynopsis, said(t::keys_hint_hide_chat()))
+                });
                 hints.push((Action::Refresh, hint_ready()));
                 hints.push((Action::ClearCompleted, hint_copy_link()));
                 if party.can_start_anyway {
                     hints.push((Action::ShowSources, hint_start_now()));
                 }
                 hints.push((Action::HideFromContinue, hint_leave_party()));
+                if !app.chat_hidden() {
+                    hints.push((Action::FixMapping, said(t::keys_hint_say())));
+                }
             }
+            hints.push(match app.selected_member() {
+                Some(member) if app.is_muted(&member.name) => {
+                    (Action::MarkAllPrevious, said(t::keys_hint_unmute()))
+                }
+                Some(_) => (Action::MarkAllPrevious, said(t::keys_hint_mute())),
+                None => (Action::Open, hint_open()),
+            });
             hints
         }
         // Enter signs the highlighted tracker in or out, so it is named for which.

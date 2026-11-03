@@ -476,6 +476,9 @@ pub struct SyncplayConfig {
     pub name: String,
     /// Servers used for a party before, the last first: what the form offers.
     pub recent_servers: Vec<String>,
+    /// Hide chat in every party on this device: lines, reactions and the moments they make stay
+    /// off the video. The terminal's `i` in Together turns it over; the apps keep their own.
+    pub hide_chat: bool,
     /// Reserved. Accepted so existing configs keep parsing, but has no effect since the engine
     /// speaks Syncplay itself and no longer starts the Syncplay program.
     pub binary: String,
@@ -489,6 +492,7 @@ impl Default for SyncplayConfig {
             room: None,
             name: "kaeri".into(),
             recent_servers: Vec::new(),
+            hide_chat: false,
             binary: "syncplay".into(),
         }
     }
