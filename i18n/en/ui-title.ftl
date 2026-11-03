@@ -159,10 +159,6 @@ episode-protection-line = Spoiler protection hides what comes after episode { $e
 # @max 40
 episode-protection-line-short = Hidden after episode { $episode }
 
-# Button on the line where spoiler protection starts. It shows every episode after the line.
-# @max 12
-episode-protection-show = Show
-
 # Label of an episode range of a long series, in the range menu.
 # @arg from: int
 # @arg to: int

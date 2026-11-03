@@ -8859,9 +8859,6 @@ public enum L {
         Self.format("episode-protection-line-short", fallback: "Hidden after episode %1$lld", episode)
     }
 
-    /// Button on the line where spoiler protection starts. It shows every episode after the line.
-    public static var episodeProtectionShow: String { string("episode-protection-show", fallback: "Show") }
-
     /// Label of an episode range of a long series, in the range menu.
     public static func episodeRange(from: Int, to: Int) -> String {
         Self.format("episode-range", fallback: "Episodes %1$lld to %2$lld", from, to)

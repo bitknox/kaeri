@@ -14947,11 +14947,6 @@ pub fn episode_protection_line_short(episode: i64) -> String {
     text("episode-protection-line-short", &[("episode", Arg::Int(episode))])
 }
 
-/// Button on the line where spoiler protection starts. It shows every episode after the line.
-pub fn episode_protection_show() -> String {
-    text("episode-protection-show", &[])
-}
-
 /// Label of an episode range of a long series, in the range menu.
 pub fn episode_range(from: i64, to: i64) -> String {
     text("episode-range", &[("from", Arg::Int(from)), ("to", Arg::Int(to))])

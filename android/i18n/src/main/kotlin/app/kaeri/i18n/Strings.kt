@@ -9444,10 +9444,6 @@ object Strings {
     fun episodeProtectionLineShort(context: Context, episode: Int): String =
         context.getString(R.string.episode_protection_line_short, episode)
 
-    /** Button on the line where spoiler protection starts. It shows every episode after the line. */
-    fun episodeProtectionShow(context: Context): String =
-        context.getString(R.string.episode_protection_show)
-
     /** Label of an episode range of a long series, in the range menu. */
     fun episodeRange(context: Context, from: Int, to: Int): String =
         context.getString(R.string.episode_range, from, to)

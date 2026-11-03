@@ -8970,10 +8970,6 @@
     <value>[Ĥîððéñ àƒţéŕ éþîšöðé {episode}~~~~~~~~]</value>
     <comment>The same line on phones.</comment>
   </data>
-  <data name="EpisodeProtectionShow" xml:space="preserve">
-    <value>[Šĥöŵ~~]</value>
-    <comment>Button on the line where spoiler protection starts. It shows every episode after the line.</comment>
-  </data>
   <data name="EpisodeRange" xml:space="preserve">
     <value>[Éþîšöðéš {from} ţö {to}~~~~~~]</value>
     <comment>Label of an episode range of a long series, in the range menu.</comment>

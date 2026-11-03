@@ -9288,9 +9288,6 @@ episode-protection-line = Spoiler protection hides what comes after episode { $e
 # The same line on phones.
 episode-protection-line-short = Hidden after episode { $episode }
 
-# Button on the line where spoiler protection starts. It shows every episode after the line.
-episode-protection-show = Show
-
 # Label of an episode range of a long series, in the range menu.
 episode-range = Episodes { $from } to { $to }
 

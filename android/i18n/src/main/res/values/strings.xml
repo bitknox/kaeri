@@ -4916,8 +4916,6 @@
     <string name="episode_protection_line">Spoiler protection hides what comes after episode %1$d.</string>
     <!-- The same line on phones. -->
     <string name="episode_protection_line_short">Hidden after episode %1$d</string>
-    <!-- Button on the line where spoiler protection starts. It shows every episode after the line. -->
-    <string name="episode_protection_show">Show</string>
     <!-- Label of an episode range of a long series, in the range menu. -->
     <string name="episode_range">Episodes %1$d to %2$d</string>
     <!-- Label of the control that picks an episode range. -->
