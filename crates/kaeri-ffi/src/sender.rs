@@ -257,6 +257,34 @@ pub struct FfiTvParty {
     pub episode: Option<String>,
     pub ready: bool,
     pub playing: bool,
+    /// The last lines of the room's conversation, the newest last, without the muted members'.
+    #[uniffi(default)]
+    pub messages: Vec<FfiTvLine>,
+    /// The members in the room beside the TV, for Mute.
+    #[uniffi(default)]
+    pub members: Vec<String>,
+    /// The members muted on the TV.
+    #[uniffi(default)]
+    pub muted: Vec<String>,
+    /// The room's server has chat turned off: the phone hides its field.
+    #[uniffi(default)]
+    pub chat_off: bool,
+    /// The most characters in one message; 0 when the TV has not said.
+    #[uniffi(default)]
+    pub chat_max: u32,
+}
+
+/// One line of a TV's party conversation: something said, or a reaction at a second.
+#[derive(Debug, Clone, PartialEq, uniffi::Record)]
+pub struct FfiTvLine {
+    pub from: String,
+    /// The TV's own line.
+    pub you: bool,
+    pub text: Option<String>,
+    /// "laughs", "gasps", "claps" or "cries".
+    pub reaction: Option<String>,
+    pub at: Option<f64>,
+    pub with: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, uniffi::Record)]
@@ -359,6 +387,22 @@ impl From<&RemoteCard> for FfiRemoteCard {
                 episode: p.episode.clone(),
                 ready: p.ready,
                 playing: p.playing,
+                messages: p
+                    .messages
+                    .iter()
+                    .map(|l| FfiTvLine {
+                        from: l.from.clone(),
+                        you: l.you,
+                        text: l.text.clone(),
+                        reaction: l.reaction.clone(),
+                        at: l.at,
+                        with: l.with.clone(),
+                    })
+                    .collect(),
+                members: p.members.clone(),
+                muted: p.muted.clone(),
+                chat_off: p.chat_off,
+                chat_max: p.chat_max,
             }),
             rev: card.rev,
             over: card.over,
@@ -442,6 +486,15 @@ pub enum FfiTvCommand {
     /// Start the TV's room without those who are not ready.
     PartyStart,
     PartyLeave,
+    /// Say something in the TV's room, as the TV.
+    PartyChat {
+        text: String,
+    },
+    /// Hide a member's lines on the TV, or show them again.
+    PartyMute {
+        member: String,
+        muted: bool,
+    },
 }
 
 impl From<FfiTvCommand> for RemoteCommand {
@@ -471,6 +524,8 @@ impl From<FfiTvCommand> for RemoteCommand {
             FfiTvCommand::PartyReady { ready } => Self::PartyReady { ready },
             FfiTvCommand::PartyStart => Self::PartyStart,
             FfiTvCommand::PartyLeave => Self::PartyLeave,
+            FfiTvCommand::PartyChat { text } => Self::PartyChat { text },
+            FfiTvCommand::PartyMute { member, muted } => Self::PartyMute { member, muted },
         }
     }
 }
