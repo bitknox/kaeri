@@ -219,6 +219,8 @@ struct PhoneTogetherLobby: View {
 struct PartyBar: View {
     @Environment(AppStore.self) private var store
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
+    /// The newest line of chat takes the count's place for 4 s.
+    @State private var said: ChatColumnLine?
 
     var body: some View {
         let party = store.party
@@ -234,9 +236,19 @@ struct PartyBar: View {
                     } ?? L.navWatchTogether)
                         .font(.board(15, weight: .medium)).foregroundStyle(.silk).lineLimit(1)
                     if placement != .inline {
-                        Text(view.playing && !party.playerUp() ? L.partyBarIdle
-                             : L.partyBarLine(count: members.count, ready: members.filter { $0.ready == true }.count))
-                            .font(.ui(13)).foregroundStyle(.haze).lineLimit(1).monospacedDigit()
+                        Group {
+                            if let said {
+                                (Text(said.you ? L.partyChatYou : said.from).fontWeight(.semibold) + Text(" ") + Text(said.text))
+                                    .foregroundStyle(.silk)
+                            } else {
+                                Text(view.playing && !party.playerUp() ? L.partyBarIdle
+                                     : L.partyBarLine(count: members.count, ready: members.filter { $0.ready == true }.count))
+                                    .foregroundStyle(.haze)
+                            }
+                        }
+                        .font(.ui(13)).lineLimit(1).monospacedDigit()
+                        .contentTransition(.opacity)
+                        .animation(.fadeIn, value: said?.id)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -251,6 +263,12 @@ struct PartyBar: View {
             .padding(.leading, 16)
             .padding(.trailing, 4)
             .contentShape(.rect)
+            .task(id: party.chat.latest?.id) {
+                guard party.chat.shown, let latest = party.chat.latest else { return }
+                said = latest
+                try? await Task.sleep(for: .seconds(4))
+                if !Task.isCancelled { said = nil }
+            }
             .onTapGesture(perform: open)
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isButton)

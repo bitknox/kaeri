@@ -26,6 +26,28 @@ public enum PartyScene: String, CaseIterable, Sendable {
     case sync
     /// Mika saying something: the chat's notice over the video.
     case chat
+    /// Mika's line arriving over the playing video: the column at the top leading corner.
+    case chatline
+    /// Six lines at once: three rows and "n more in chat", the controls hidden.
+    case chatbusy
+    /// Controls up, a reaction's moment and the ticks of the reactions so far.
+    case chatreact
+    /// C pressed and a line typed, over the control row.
+    case chatfield
+    /// Four sends inside the window: the fourth waits ("Wait 3 s").
+    case chatwait
+    /// A server with chat turned off: C says so.
+    case chatoff
+    /// A send the server never echoes: Couldn't send and Try again.
+    case chatfail
+    /// The people popover or sheet with the conversation and its field.
+    case chatpanel
+    /// A member muted: the row says Muted and the last line offers Unmute.
+    case chatmute
+    /// Hide chat on: the popover says Chat is hidden.
+    case chathidden
+    /// A server that takes 40 characters a message: the count in the field.
+    case chatshort
     /// The server gone mid-episode: the panel trying again.
     case lost
     /// Leave party pressed in the panel: the episode goes on, just for this device.
@@ -129,7 +151,8 @@ extension PlayerModel {
             party.askingToLeave = scene == .quit ? .quit : .close
             try? await Task.sleep(for: .milliseconds(900))
             return true
-        case .panel, .ready, .sync, .chat, .lost, .left:
+        case .panel, .ready, .sync, .chat, .lost, .left, .chatline, .chatbusy, .chatreact, .chatfield, .chatwait,
+             .chatoff, .chatfail, .chatpanel, .chatmute, .chathidden, .chatshort:
             return await stagePlaying(scene, store: store)
         }
     }
@@ -142,6 +165,10 @@ extension PlayerModel {
         guard let fake = PartyScene.server(store),
               let item = store.continuing.queue(store.titles).all.first
         else { return false }
+        // What the server says of chat is in its welcome, so it is set before joining.
+        party.chat.hidden = scene == .chathidden
+        if scene == .chatoff { fake.setChat(on: false, maxLength: nil) }
+        if scene == .chatshort { fake.setChat(on: true, maxLength: 40) }
         store.send(.partyJoin(server: fake.server(), room: room, name: "Ada"))
         guard await partyWaited(10, { party.inParty }) else { return false }
         store.send(.play(id: item.id, episode: String(item.episode)))
@@ -163,6 +190,11 @@ extension PlayerModel {
         guard await partyWaited(10, { party.members?.count == 3 }) else { return false }
         try? await Task.sleep(for: .milliseconds(800))
         var there = true
+        if scene.rawValue.hasPrefix("chat") {
+            // The joins' notices have gone, so the column shows chat alone.
+            try? await Task.sleep(for: .milliseconds(1200))
+            _ = await partyWaited(8) { self.alert == nil }
+        }
         switch scene {
         case .panel:
             party.showPanel()
@@ -179,6 +211,77 @@ extension PlayerModel {
         case .chat:
             fake.memberSays(name: "Mika", message: "Starting in a minute, grabbing tea")
             there = await partyWaited(10) { self.alert != nil }
+        case .chatline, .chatbusy:
+            // Playing, the controls gone: what arrives shows alone.
+            pinnedControls = false
+            if paused { togglePause() }
+            hideControls()
+            if scene == .chatline {
+                fake.memberSays(name: "Mika", message: "this part again")
+            } else {
+                fake.chatFixture(room: room, state: .burst)
+            }
+            there = await partyWaited(10) { !party.chat.column.isEmpty }
+            if scene == .chatbusy {
+                let all = await partyWaited(10) { party.chat.column.count >= 6 }
+                there = there && all
+            }
+        case .chatreact:
+            // Reactions inside the short fixture's length, in the board's proportions.
+            fake.memberSays(name: "Mika", message: "ok starting")
+            fake.memberReacts(name: "Sol", reaction: .clap, at: length * 0.14)
+            fake.memberSays(name: "Ren", message: "the handoff in the rain, I knew it")
+            fake.memberReacts(name: "Ren", reaction: .gasp, at: length * 0.33)
+            fake.memberSays(name: "Sol", message: "wait, who is the new runner")
+            fake.memberReacts(name: "Mika", reaction: .laugh, at: length * 0.51)
+            there = await partyWaited(10) { party.chat.conversation.marks.count >= 2 }
+            // The server takes one reaction in two seconds from each member.
+            try? await Task.sleep(for: .milliseconds(2500))
+            PartyChat.momentStays = .seconds(30)
+            fake.memberReacts(name: "Ren", reaction: .laugh, at: length * 0.51)
+            let more = await partyWaited(10) { party.chat.moment != nil }
+            there = there && more
+        case .chatfield:
+            chatFixtureLines(fake)
+            there = await partyWaited(10) { party.chat.conversation.lines.count >= 4 }
+            requestChat()
+            try? await Task.sleep(for: .milliseconds(400))
+            party.chat.draft = "back in 2, pause if it gets good"
+        case .chatwait:
+            requestChat()
+            try? await Task.sleep(for: .milliseconds(400))
+            for text in ["now", "now now", "it's happening"] {
+                party.chat.draft = text
+                party.chat.submit()
+                try? await Task.sleep(for: .milliseconds(300))
+            }
+            party.chat.draft = "it's really happening"
+            there = await partyWaited(10) { party.chat.wait > 0 }
+        case .chatoff:
+            there = await partyWaited(10) { !party.chat.allowed }
+            requestChat()
+        case .chatfail:
+            fake.swallowChat(swallow: true)
+            requestChat()
+            try? await Task.sleep(for: .milliseconds(400))
+            party.chat.draft = "the music in this part"
+            party.chat.submit()
+            there = await partyWaited(12) { party.chat.failed != nil }
+            party.showPanel()
+        case .chatpanel, .chatmute, .chathidden:
+            chatFixtureLines(fake)
+            there = await partyWaited(10) { party.chat.conversation.lines.count >= 4 }
+            if scene == .chatmute {
+                party.chat.mute("Ren", true)
+                let more = await partyWaited(10) { party.chat.isMuted("Ren") }
+            there = there && more
+            }
+            party.showPanel()
+        case .chatshort:
+            requestChat()
+            try? await Task.sleep(for: .milliseconds(400))
+            party.chat.draft = "ng the whole lap and I still can't believe the coach let him run it"
+            there = await partyWaited(10) { party.chat.state?.maxLength == 40 }
         case .lost:
             fake.goDown(down: true)
             there = await partyWaited(10) {
@@ -197,6 +300,11 @@ extension PlayerModel {
         // The popover's or the sheet's own animation in, and the notices' fades.
         try? await Task.sleep(for: .milliseconds(900))
         return there
+    }
+
+    /// The conversation of the board's popover frames, with its own line from this device.
+    private func chatFixtureLines(_ fake: FfiFakeParty) {
+        fake.chatFixture(room: PartyScene.room, state: .conversation)
     }
 
     /// The join's "You're in the party" toast gone: the shot is of the sheet, and the Mac

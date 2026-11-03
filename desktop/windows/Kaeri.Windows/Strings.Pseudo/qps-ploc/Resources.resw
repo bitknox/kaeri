@@ -6943,6 +6943,10 @@
     <value>[Þļàýƀàçķ~~~]</value>
     <comment>Group heading.</comment>
   </data>
+  <data name="SettingsGroupWatchParties" xml:space="preserve">
+    <value>[Ŵàţçĥ þàŕţîéš~~~~]</value>
+    <comment>Group heading in Playback settings, above the switch that hides chat.</comment>
+  </data>
   <data name="SettingsGroupWatching" xml:space="preserve">
     <value>[Ŵàţçĥîñĝ~~~]</value>
     <comment>Group heading.</comment>

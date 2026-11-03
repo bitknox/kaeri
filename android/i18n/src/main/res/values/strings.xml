@@ -3872,6 +3872,8 @@
     <string name="settings_group_titles">Titles</string>
     <!-- Group heading. -->
     <string name="settings_group_playback">Playback</string>
+    <!-- Group heading in Playback settings, above the switch that hides chat. -->
+    <string name="settings_group_watch_parties">Watch parties</string>
     <!-- Group heading. -->
     <string name="settings_group_watching">Watching</string>
     <!-- Group heading. -->

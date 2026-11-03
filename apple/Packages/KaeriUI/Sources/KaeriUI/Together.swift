@@ -956,6 +956,7 @@ struct TogetherLobby: View {
                             Rectangle().fill(.faintRule).frame(height: 1).padding(.top, 20)
                             TogetherStartLine(view: view).padding(.top, 12)
                         }
+                        TogetherChat().padding(.top, 24)
                     }
                 }
                 .frame(maxWidth: 420, alignment: .leading)
@@ -1154,5 +1155,87 @@ struct TogetherStartSheet: View {
                 .onSubmit { party.startOnServer() }
         }
         .padding(22)
+    }
+}
+
+
+// MARK: - Chat in the lobby
+
+/// Talk before play: the conversation, the field, and the privacy line once.
+struct TogetherChat: View {
+    @Environment(AppStore.self) private var store
+    @FocusState private var focus: Bool
+
+    var body: some View {
+        let chat = store.party.chat
+        VStack(alignment: .leading, spacing: 10) {
+            Rectangle().fill(.faintRule).frame(height: 1)
+            Text(L.partyChatTitle).font(.board(13, weight: .semibold)).foregroundStyle(.haze)
+            if chat.hidden {
+                Text(L.partyChatHidden).font(.board(13)).foregroundStyle(.silk)
+                Text(L.partyChatHiddenLine).font(.board(12)).foregroundStyle(.haze)
+                Button(L.partyChatShow) { chat.show() }.buttonStyle(SecondaryCapsuleStyle())
+            } else if !chat.allowed {
+                Text(L.partyChatOff).font(.board(13)).foregroundStyle(.haze)
+            } else {
+                let lines = chat.rows.map(ChatLineData.init)
+                if !lines.isEmpty {
+                    ChatConversation(lines, size: 14, spacing: 9, maxHeight: 260)
+                }
+                if chat.failed != nil {
+                    HStack(spacing: 4) {
+                        Text(L.partyChatNotSent)
+                        Text("·")
+                        Button(L.partyChatRetry) { chat.retry() }.buttonStyle(.plain).underline().foregroundStyle(.silk)
+                    }
+                    .font(.board(13)).foregroundStyle(.haze)
+                }
+                ForEach(chat.state?.muted ?? [], id: \.self) { name in
+                    HStack(spacing: 4) {
+                        Text(L.partyMutedLine(name: name))
+                        Text("·")
+                        Button(L.partyUnmuteShort) { chat.mute(name, false) }.buttonStyle(.plain).underline().foregroundStyle(.silk)
+                    }
+                    .font(.board(13)).foregroundStyle(.haze)
+                }
+                HStack(spacing: 8) {
+                    ChatTextField(
+                        text: Binding(get: { chat.draft }, set: { chat.draft = $0 }),
+                        placeholder: L.partyChatField, style: .roomy, limit: chat.maxLength,
+                        remaining: chat.remaining,
+                        waitLabel: chat.wait > 0 ? L.partyChatWait(seconds: chat.wait) : nil,
+                        waitSpoken: chat.wait > 0 ? L.partyChatWaitSpoken(seconds: chat.wait) : nil,
+                        focus: $focus
+                    ) { chat.submit() }
+                    #if os(iOS)
+                    Button { chat.submit() } label: {
+                        Image(systemName: "arrow.up")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(chat.canSend ? Palette.silk : Palette.haze)
+                            .frame(width: 40, height: 40)
+                            .background(chat.canSend ? Palette.raisedSelected : Palette.raised, in: .circle)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!chat.canSend)
+                    .accessibilityLabel(L.partyChatSend)
+                    #endif
+                }
+                if !chat.privacySeen {
+                    Text(L.partyChatPrivacy).font(.board(12)).foregroundStyle(.haze)
+                }
+            }
+        }
+        .animation(.standard, value: chat.hidden)
+    }
+}
+
+extension ChatLineData {
+    init(_ row: ChatRow) {
+        switch row.kind {
+        case .said(let from, let text, let you):
+            self.init(id: row.id, name: you ? L.partyChatYou : from, text: text, you: you)
+        case .reacted(let text):
+            self.init(id: row.id, name: nil, text: text)
+        }
     }
 }

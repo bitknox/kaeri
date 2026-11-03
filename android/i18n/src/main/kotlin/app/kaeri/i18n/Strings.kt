@@ -7405,6 +7405,10 @@ object Strings {
     fun settingsGroupPlayback(context: Context): String =
         context.getString(R.string.settings_group_playback)
 
+    /** Group heading in Playback settings, above the switch that hides chat. */
+    fun settingsGroupWatchParties(context: Context): String =
+        context.getString(R.string.settings_group_watch_parties)
+
     /** Group heading. */
     fun settingsGroupWatching(context: Context): String =
         context.getString(R.string.settings_group_watching)

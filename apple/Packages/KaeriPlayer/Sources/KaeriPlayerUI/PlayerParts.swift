@@ -372,6 +372,7 @@ struct SeekLine: View {
     var showsPreview = true
     @State private var touched = false
     @State private var pace = ScrubPace()
+    @Environment(AppStore.self) private var store: AppStore?
 
     private var lineHeight: CGFloat { metrics.touch ? 6 : (touched ? 6 : 4) }
 
@@ -410,6 +411,12 @@ struct SeekLine: View {
             }
             .frame(width: proxy.size.width, height: proxy.size.height, alignment: .leading)
             .overlay(alignment: .leading) { MarkedStretch(model: model, width: proxy.size.width, height: lineHeight) }
+            .overlay {
+                // Where the room reacted: ticks above the line, for this episode.
+                let ticks = reactionTicks(duration: duration, width: proxy.size.width)
+                if !ticks.isEmpty { ReactionTicks(ticks: ticks, lineHeight: lineHeight) }
+            }
+            .animation(.fadeIn, value: reactionTicks(duration: duration, width: proxy.size.width).count)
             .contentShape(.rect)
             .gesture(
                 DragGesture(minimumDistance: 0)
@@ -448,7 +455,10 @@ struct SeekLine: View {
                 if showsPreview, let time = model.scrubbing ?? model.hovering, duration > 0 {
                     let width = ScrubBubble.width
                     let x = proxy.size.width * time / duration - width / 2
-                    ScrubBubble(model: model, time: time)
+                    ScrubBubble(
+                        model: model, time: time,
+                        tick: reactionTicks(duration: duration, width: proxy.size.width)
+                            .first { abs($0.x - proxy.size.width * time / duration) <= 4 }?.label)
                         .frame(width: width, alignment: .bottom)
                         .offset(
                             x: min(max(x, -16), proxy.size.width - width + 16),
@@ -475,6 +485,12 @@ struct SeekLine: View {
         .accessibilityAdjustableAction { direction in
             model.seek(by: direction == .increment ? 10 : -10)
         }
+    }
+
+    /// The ticks of the party's reactions on a line `width` wide.
+    private func reactionTicks(duration: Double, width: Double) -> [ReactionTick] {
+        guard let chat = store?.party.chat, store?.party.inParty == true, chat.shown else { return [] }
+        return chat.ticks(duration: duration, width: width)
     }
 
     /// While scrubbing, the opening or ending under the thumb, or none: a change is a mark crossed.
@@ -510,6 +526,8 @@ struct SeekLine: View {
 struct ScrubBubble: View {
     let model: PlayerModel
     let time: Double
+    /// "12:04 · Ren and Mika", when the pointer is over a reaction's tick.
+    var tick: String?
 
     static let width: CGFloat = 220
 
@@ -545,7 +563,7 @@ struct ScrubBubble: View {
                 .clipShape(.rect(cornerRadius: 6))
                 .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.glassOverArtEdge, lineWidth: 1))
             }
-            Text(model.chapter(at: time).map { "\(PlayerClock.label(time)) · \($0)" } ?? PlayerClock.label(time))
+            Text(tick ?? model.chapter(at: time).map { "\(PlayerClock.label(time)) · \($0)" } ?? PlayerClock.label(time))
                 .font(.system(size: 13, weight: .semibold))
                 .monospacedDigit()
                 .foregroundStyle(.silk)
@@ -949,24 +967,6 @@ struct StillWatchingDialog: View {
         .overVideo(radius: 24)
         .accessibilityElement(children: .contain)
         .accessibilityAddTraits(.isModal)
-    }
-}
-
-/// A message on the video, at the top.
-struct PlayerAlertView: View {
-    let model: PlayerModel
-    let metrics: PlayerMetrics
-
-    var body: some View {
-        if let alert = model.alert {
-            Label(alert.text, systemImage: alert.kind == .alert ? "exclamationmark.triangle.fill" : "info.circle")
-                .font(.system(size: metrics.body))
-                .foregroundStyle(alert.kind == .alert ? Palette.vermilion : Palette.silk)
-                .padding(.horizontal, 14)
-                .frame(height: metrics.touch ? 44 : 32)
-                .overVideo(radius: metrics.touch ? 22 : 16)
-                .transition(.opacity)
-        }
     }
 }
 

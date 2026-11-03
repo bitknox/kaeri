@@ -21,6 +21,10 @@ public struct PhonePlayerView: View {
     @State private var heldSpeed: Double?
     @State private var flash: SeekFlash?
     @State private var height: CGFloat = 0
+    /// The chat field's bar, opened by the chat button (or C on a hardware keyboard).
+    @State private var fielding = false
+    @FocusState private var fieldFocus: Bool
+    @State private var keyboard: CGFloat = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(AppStore.self) private var store
     private let metrics = PlayerMetrics.phone
@@ -103,10 +107,19 @@ public struct PhonePlayerView: View {
                     .padding(.leading, 56)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                     .animation(.standard, value: model.resume)
-                PlayerAlertView(model: model, metrics: metrics)
+                PartyColumn(model: model, metrics: metrics, covered: sheet == .party) { sheet = .party }
                     .padding(.top, 72)
-                    .frame(maxHeight: .infinity, alignment: .top)
-                    .animation(.standard, value: model.alert)
+                    .padding(.leading, 56)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                if chatShown {
+                    ReactionMomentView(metrics: metrics)
+                        .padding(.trailing, 56)
+                        .padding(.bottom, model.corner == nil ? 84 : metrics.cornerInset.bottom + 88)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                        .animation(.standard, value: model.corner == nil)
+                        .allowsHitTesting(false)
+                }
+                chatBar
                 // The iPhone gets the side panel; the iPad, wide and tall enough, the Mac's bar.
                 let wide = proxy.size.width >= 700 && proxy.size.height >= 600
                 SkipMarkLayer(model: model, metrics: metrics, layout: wide ? .bar : .panel)
@@ -156,8 +169,26 @@ public struct PhonePlayerView: View {
         .onChange(of: model.menuRequests) { sheet = Sheet(model.requestedMenu) }
         .onChange(of: store.party.panelRequests) { sheet = store.party.inParty ? .party : nil }
         // The party is over: its sheet goes with it.
-        .onChange(of: store.party.inParty) { _, inParty in if !inParty, sheet == .party { sheet = nil } }
-        .onChange(of: store.party.inParty, initial: true) { _, inParty in model.marksBlocked = inParty }
+        .onChange(of: store.party.inParty) { _, inParty in
+            if !inParty {
+                if sheet == .party { sheet = nil }
+                if fielding { closeField() }
+            }
+        }
+        .animation(.fadeIn, value: fielding)
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { note in
+            guard let end = (note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect) else { return }
+            let screen = UIScreen.main.bounds.height
+            keyboard = max(0, screen - end.minY)
+        }
+        .onChange(of: fieldFocus) { _, focused in
+            if !focused, fielding, store.party.chat.draft.isEmpty { closeField() }
+        }
+        .onChange(of: store.party.inParty, initial: true) { _, inParty in
+            model.marksBlocked = inParty
+            model.inParty = inParty
+        }
+        .onChange(of: model.chatRequests) { if chatShown, store.party.chat.allowed { startTyping() } }
         .onChange(of: held) { _, on in speedHeld(on) }
         .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { height = $0 }
         .onChange(of: SubtitleLift(visible: visible, height: height), initial: true) { _, lift in
@@ -172,10 +203,13 @@ public struct PhonePlayerView: View {
     // MARK: Chrome
 
     private var chrome: some View {
-        VStack(spacing: 0) {
-            header
-            Spacer(minLength: 0)
-            bottomBar
+        ZStack {
+            VStack(spacing: 0) {
+                header
+                Spacer(minLength: 0)
+                bottomBar
+            }
+            reactionColumn
         }
         .overVideoText()
     }
@@ -210,6 +244,9 @@ public struct PhonePlayerView: View {
                     // The party while in one, the form that starts one otherwise.
                     if store.party.inParty { sheet = .party } else { store.party.open(.playing) }
                 }
+                if chatShown, store.party.chat.allowed {
+                    headerButton("bubble.left", L.partyChatTitle) { startTyping() }
+                }
                 headerButton("captions.bubble", L.playerSubtitlesAndAudio) { sheet = .tracks }
                 headerButton("slider.horizontal.3", L.playerPictureAndSound) { sheet = .picture }
                 if model.pictureInPictureToggle != nil {
@@ -232,6 +269,63 @@ public struct PhonePlayerView: View {
         .frame(height: 44)
         .padding(.horizontal, 56)
         .padding(.top, 16)
+    }
+
+    private var chatShown: Bool { store.party.inParty && store.party.chat.shown }
+
+    /// The four reactions in a column at the trailing edge, where the thumb rests.
+    @ViewBuilder
+    private var reactionColumn: some View {
+        if chatShown {
+            ReactionButtons(metrics: metrics, size: 44, glyph: 20, vertical: true)
+                .padding(.vertical, 2)
+                .background(.overVideo(0.62), in: .capsule)
+                .overlay(Capsule().strokeBorder(Palette.glassOverArtEdge, lineWidth: 1))
+                .padding(.top, 72)
+                .padding(.trailing, 56)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+        }
+    }
+
+    private func startTyping() {
+        fielding = true
+        fieldFocus = true
+        model.hold("chat", true)
+    }
+
+    private func closeField() {
+        fielding = false
+        fieldFocus = false
+        model.hold("chat", false)
+    }
+
+    /// The field above the keyboard: 36 pt and Send; the video keeps playing above it.
+    @ViewBuilder
+    private var chatBar: some View {
+        let chat = store.party.chat
+        if fielding, chatShown {
+            HStack(spacing: 8) {
+                ChatTextField(
+                    text: Binding(get: { chat.draft }, set: { chat.draft = $0 }),
+                    placeholder: L.partyChatField, style: .roomy, limit: chat.maxLength,
+                    remaining: chat.remaining,
+                    waitLabel: chat.wait > 0 ? L.partyChatWait(seconds: chat.wait) : nil,
+                    waitSpoken: chat.wait > 0 ? L.partyChatWaitSpoken(seconds: chat.wait) : nil,
+                    focus: $fieldFocus
+                ) {
+                    chat.submit()
+                }
+                ChatSendButton(enabled: chat.canSend) { chat.submit() }
+            }
+            .padding(.horizontal, 56)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity)
+            .background(Palette.ground.opacity(0.88))
+            .padding(.bottom, max(keyboard, 76))
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+            .transition(.opacity)
+            .onKeyPress(.escape) { closeField(); return .handled }
+        }
     }
 
     private var bottomBar: some View {

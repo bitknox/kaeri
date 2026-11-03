@@ -373,6 +373,17 @@ struct PhonePlaybackPage: View {
             } header: {
                 PhoneSectionHeader(L.playerPictureAndSound)
             }
+            Section {
+                Toggle(isOn: Binding(
+                    get: { store.party.chat.hidden }, set: { store.party.chat.hidden = $0 })
+                ) {
+                    PhoneRowTitle(title: L.settingsHideChat, note: L.settingsHideChatLine)
+                }
+                .tint(.amber)
+                .listRowBackground(Palette.raised)
+            } header: {
+                PhoneSectionHeader(L.settingsGroupWatchParties)
+            }
         }
         .navigationTitle(L.settingsGroupPlayback)
         .navigationBarTitleDisplayMode(.inline)

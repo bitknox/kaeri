@@ -57,8 +57,14 @@ public enum TogetherScene: String, CaseIterable, Sendable {
     case joinShape = "join-shape"
     /// A code to a room with nobody in it.
     case codeEmpty = "code-empty"
+    /// The lobby with a conversation under the start line.
+    case lobbyChat = "lobby-chat"
+    /// The same, a line being typed and the privacy line still up.
+    case lobbyChatTyping = "lobby-chat-typing"
     /// In a party, elsewhere in the app: the bar over the tabs (iPhone).
     case bar
+    /// The same bar while a line arrives: the line takes the count's place for a few seconds.
+    case barChat = "bar-chat"
 
     public static let argument = "-KaeriTogether"
 
@@ -123,14 +129,22 @@ extension PartyModel {
             looks[lookedAt!] = .found(PartyGlimpse(server: first.server, room: first.room,
                                                   members: [member("Mika", ready: false)],
                                                   roomEpisode: episode(), nextEpisode: nil))
-        case .placeParty, .bar:
+        case .placeParty, .bar, .barChat:
             // Joined from its lobby, as the place's own Start would: no "you're in" note.
             lobby = TogetherRoom(server: server, room: room)
             store.apply(.partyJoined(view()))
             store.apply(.partyMembers([member("Ada", ready: true, you: true), member("Mika", ready: true), member("Ren", ready: false)]))
             lobbyShown = false
             // The bar shows elsewhere: Home, with the place popped.
-            if scene == .bar { placeShown = false }
+            if scene == .bar || scene == .barChat { placeShown = false }
+            if scene == .barChat {
+                // Late, so the bar is on screen when the line arrives and holds it for 4 s.
+                try? await Task.sleep(for: .milliseconds(1200))
+                store.party.chat.hidden = false
+                store.apply(.partyChat(PartyConversation(lines: [
+                    PartyChatLine(id: 1, from: "Mika", you: false, body: .said(text: "snacks ready?"), muted: false),
+                ], marks: [], failed: nil)))
+            }
         case .pick:
             picking = .title
         case .pickServer:
@@ -184,6 +198,21 @@ extension PartyModel {
             let guesses = recent.prefix(3).map { PartyGuess(id: $0.id, title: $0.title, coverUrl: $0.coverUrl) }
             inRoom(view(roomEpisode: episode(.unmatched, id: nil, plainBy: "Ren"), canStartAnyway: false,
                         sources: nil, guesses: Array(guesses)), [ada, member("Ren", ready: true)])
+        case .lobbyChat, .lobbyChatTyping:
+            store.party.chat.hidden = false
+            store.party.chat.forgetPrivacySeen()
+            inRoom(view(ready: true), [member("Ada", ready: true, you: true), member("Mika", ready: true), member("Ren", ready: false)])
+            func line(_ id: UInt64, _ from: String, _ text: String, you: Bool = false) -> PartyChatLine {
+                PartyChatLine(id: id, from: from, you: you, body: .said(text: text), muted: false)
+            }
+            store.apply(.partyChatState(PartyChatState(allowed: true, maxLength: 150, muted: [], waitSeconds: 0, reactWaitSeconds: 0)))
+            store.apply(.partyChat(PartyConversation(lines: [
+                line(1, "Mika", "snacks ready?"),
+                line(2, "Ren", "two minutes, making tea"),
+                line(3, "Ada", "starting when Ren is back", you: true),
+                line(4, "Sol", "the soundtrack is at music.example/ost"),
+            ], marks: [], failed: nil)))
+            if scene == .lobbyChatTyping { store.party.chat.draft = "who has the good cushion" }
         case .joinShape:
             joinProblem = L.partyCodeShape(example: "kite-7qm4-xr9d") // i18n-skip
         case .codeEmpty:

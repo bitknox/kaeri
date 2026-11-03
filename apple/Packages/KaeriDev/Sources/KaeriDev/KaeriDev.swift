@@ -69,6 +69,10 @@ final class Delegate: NSObject, NSApplicationDelegate {
         store.tv.handedOff = { [weak player] in player?.viewerClosed() }
         store.party.playerUp = { [weak player] in player?.isPresented ?? false }
         store.playerSays = { [weak player] text, kind in player?.say(text, kind: kind) }
+        player.alertFilter = { [weak store] text in
+            guard let store, store.party.inParty else { return false }
+            return store.party.chat.isChatNotice(text, members: (store.party.members ?? []).map(\.name))
+        }
         return player
     }()
     private var temporary: URL?

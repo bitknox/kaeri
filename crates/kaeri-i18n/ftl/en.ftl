@@ -7739,6 +7739,9 @@ settings-group-titles = Titles
 # Group heading.
 settings-group-playback = Playback
 
+# Group heading in Playback settings, above the switch that hides chat.
+settings-group-watch-parties = Watch parties
+
 # Group heading.
 settings-group-watching = Watching
 

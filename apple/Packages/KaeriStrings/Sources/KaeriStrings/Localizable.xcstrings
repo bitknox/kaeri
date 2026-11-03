@@ -155737,6 +155737,18 @@
         }
       }
     },
+    "settings-group-watch-parties" : {
+      "comment" : "Group heading in Playback settings, above the switch that hides chat.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch parties"
+          }
+        }
+      }
+    },
     "settings-group-watching" : {
       "comment" : "Group heading.",
       "extractionState" : "manual",
