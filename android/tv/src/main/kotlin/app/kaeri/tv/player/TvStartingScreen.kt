@@ -359,7 +359,7 @@ private fun ButtonsFlow(modifier: Modifier, content: @Composable () -> Unit) {
     FlowRow(
         modifier.fillMaxWidth().heightIn(min = 56.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
         itemVerticalAlignment = Alignment.CenterVertically,
     ) { content() }
 }
