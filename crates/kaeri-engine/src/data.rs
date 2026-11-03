@@ -963,6 +963,9 @@ pub fn episode_rows(
 /// Mark the episodes the viewer has not reached ([`EpisodeRow::past_progress`]): numbered past
 /// both the tracker's progress and the furthest episode finished here, and not finished
 /// themselves.
+///
+/// Also marks the episodes spoiler protection hides ([`EpisodeRow::spoiler_ahead`]): those past
+/// the one after the furthest reached, which is the next episode and is shown.
 pub fn mark_past_progress(
     rows: &mut [EpisodeRow],
     store: &Store,
@@ -979,6 +982,8 @@ pub fn mark_past_progress(
     for row in rows {
         row.past_progress =
             !row.completed && row.number.parse::<u32>().is_ok_and(|n| n > reached);
+        row.spoiler_ahead =
+            kaeri_model::episodes::spoiler_ahead(row, reached.saturating_add(1));
     }
 }
 
@@ -1110,6 +1115,7 @@ pub fn episode_rows_with_filler(
                 source: None,
                 unsourced: false,
                 past_progress: false,
+                spoiler_ahead: false,
                 synopsis_pending: false,
             }
         })
@@ -1622,6 +1628,7 @@ mod tests {
             source: None,
             unsourced: false,
             past_progress: false,
+            spoiler_ahead: false,
             synopsis_pending: false,
         };
         let mut rows =
@@ -1642,6 +1649,57 @@ mod tests {
             [false, false, true, false],
             "progress adopted from the tracker counts too"
         );
+    }
+
+    #[test]
+    fn protection_hides_what_comes_after_the_next_episode() {
+        let store = Store::open_in_memory().unwrap();
+        let id = AnilistId::new(7);
+        // The board's example: 1 to 6 watched, 7 next and half seen, 8 to 10 ahead.
+        let mut rows: Vec<EpisodeRow> = (1..=10)
+            .map(|n| EpisodeRow {
+                number: n.to_string(),
+                title: None,
+                thumbnail: None,
+                description: Some("A summary.".into()),
+                duration_secs: None,
+                watched: if n == 7 { 0.5 } else { 0.0 },
+                completed: n <= 6,
+                kind: None,
+                skippable: false,
+                airs_at: None,
+                delayed_from: None,
+                metadata_only: false,
+                source: None,
+                unsourced: false,
+                past_progress: false,
+                spoiler_ahead: false,
+                synopsis_pending: false,
+            })
+            .collect();
+        mark_past_progress(&mut rows, &store, id);
+        let ahead: Vec<u32> = rows
+            .iter()
+            .filter(|r| r.spoiler_ahead)
+            .map(|r| r.number.parse().unwrap())
+            .collect();
+        assert_eq!(ahead, [8, 9, 10], "the next episode and everything watched show");
+        assert!(rows[6].past_progress, "past progress still counts the next episode");
+
+        // Watching 8 as well moves the next to 9: only 10 is hidden.
+        rows[7].completed = true;
+        mark_past_progress(&mut rows, &store, id);
+        let ahead: Vec<_> =
+            rows.iter().filter(|r| r.spoiler_ahead).map(|r| &*r.number).collect();
+        assert_eq!(ahead, ["10"]);
+
+        // Progress adopted from a tracker counts as watched.
+        let fresh = AnilistId::new(8);
+        store.adopt_progress(fresh, 3, 1).unwrap();
+        rows.iter_mut().for_each(|r| r.completed = false);
+        mark_past_progress(&mut rows, &store, fresh);
+        let first = rows.iter().find(|r| r.spoiler_ahead).map(|r| &*r.number);
+        assert_eq!(first, Some("5"), "3 reached, 4 next, protection starts at 5");
     }
 
     #[test]
@@ -1832,6 +1890,7 @@ mod tests {
                 source: None,
                 unsourced: false,
                 past_progress: false,
+                spoiler_ahead: false,
                 synopsis_pending: false,
             })
             .collect();
