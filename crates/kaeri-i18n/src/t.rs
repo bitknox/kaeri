@@ -14962,7 +14962,7 @@ pub fn episode_fold(count: i64) -> String {
     text("episode-fold", &[("count", Arg::Int(count))])
 }
 
-/// An episode's number in a facts line on phones.
+/// An episode's number in a facts line on phones and in narrow desktop windows.
 pub fn episode_short(episode: i64) -> String {
     text("episode-short", &[("episode", Arg::Int(episode))])
 }

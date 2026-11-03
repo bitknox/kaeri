@@ -85,20 +85,42 @@ public static class Synopsis
 
     /// <summary>
     /// A row's facts line: its length, or what is left of it, and when it aired; a filler episode
-    /// says so, an unreleased one says when it airs. <paramref name="now"/> is Unix seconds.
+    /// says so, an unreleased one says when it airs. <paramref name="now"/> is Unix seconds. With
+    /// <paramref name="number"/>, the narrow form: the episode's number first ("E8"), and the air
+    /// date on a line of its own.
     /// </summary>
-    public static string Facts(EpisodeRow row, long now, Func<long, string> date)
+    public static string Facts(EpisodeRow row, long now, Func<long, string> date, long? number = null)
     {
         static long Minutes(double secs) => (long)Math.Max(1, Math.Round(secs / 60));
+        static string Join(string first, string second) =>
+            first.Length == 0 ? second : second.Length == 0 ? first : T.EpisodeFactsJoin(first, second);
         long? aired = row.AirsAt is { } at && at <= now ? at : null;
-        var line = row.Unsourced ? T.EpisodeUnsourced
-            : row.DurationSecs is { } secs
-                ? row.Watched > 0 && !row.Completed ? T.EpisodeFactsLeft(Minutes(secs * (1 - row.Watched)))
-                    : aired is { } on ? T.EpisodeFacts(Minutes(secs), date(on)) : T.EpisodeFactsLength(Minutes(secs))
-            : row.AirsAt is { } later && later > now ? T.EpisodeRowAirs(date(later))
-            : row.MetadataOnly ? T.EpisodeRowNotOut
-            : aired is { } was ? date(was) : "";
-        return row.Kind == EpisodeKind.Filler && line.Length > 0 ? $"{line} · {T.EpisodeFiller}" : line;
+        string? when = null;
+        string head;
+        if (row.Unsourced)
+            head = T.EpisodeUnsourced;
+        else if (row.DurationSecs is { } secs)
+        {
+            // The episode playing next keeps its air date beside the time left.
+            head = row.Watched > 0 && !row.Completed ? T.EpisodeFactsLeft(Minutes(secs * (1 - row.Watched))) : T.EpisodeFactsLength(Minutes(secs));
+            when = aired is { } on ? T.EpisodeAired(date(on)) : null;
+        }
+        else if (row.AirsAt is { } later && later > now)
+            head = T.EpisodeRowAirs(date(later));
+        else if (row.MetadataOnly)
+            head = T.EpisodeRowNotOut;
+        else
+            head = aired is { } was ? date(was) : "";
+        var filler = row.Kind == EpisodeKind.Filler ? T.EpisodeFiller : null;
+        if (number is not { } n)
+        {
+            var line = Join(head, when ?? "");
+            return filler is not null && line.Length > 0 ? Join(line, filler) : line;
+        }
+        var first = Join(T.EpisodeShort(n), head);
+        if (filler is not null)
+            first = Join(first, filler);
+        return when is null ? first : $"{first}\n{when}";
     }
 
     /// <summary>The date of a Unix time as the row's facts word it: "21 May 2014".</summary>

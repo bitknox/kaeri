@@ -17,8 +17,8 @@ use crate::{synopsis, widgets};
 
 /// How tall the list may grow before it scrolls.
 const LIST_MAX: i32 = 360;
-/// The panel's width.
-const WIDTH: i32 = 300;
+/// The panel's width, which long titles and text never widen: they cut or wrap inside it.
+const WIDTH: i32 = 236;
 /// A footer's height: its heading and three lines of text.
 const FOOTER: i32 = 92;
 
@@ -31,12 +31,13 @@ fn words(episode: &MenuEpisode, row: Option<&EpisodeRow>, protect: bool) -> (Str
     };
     let Some(row) = row else { return (heading, String::new()) };
     let now = glib::DateTime::now_utc().map_or(0, |t| t.to_unix());
-    let facts = synopsis::facts(row, now, |at| {
+    let date = |at| {
         glib::DateTime::from_unix_local(at)
             .ok()
             .and_then(|d| d.format("%-d %b %Y").ok())
             .map_or_else(String::new, |d| d.to_string())
-    });
+    };
+    let facts = synopsis::facts(row, now, date, None);
     let held = synopsis::protected(row, protect, false);
     match synopsis::text_of(row) {
         Some(text) if !held => (heading, text.to_owned()),
@@ -63,6 +64,9 @@ pub fn fill(
     foot_title.set_wrap(false);
     foot_title.set_ellipsize(gtk::pango::EllipsizeMode::End);
     foot_title.add_css_class("ep-foot-title");
+    // A label's natural width is its whole text: kept at one character, the panel's width rules.
+    foot_title.set_max_width_chars(1);
+    foot_title.set_hexpand(true);
     let foot_text = gtk::Label::new(None);
     foot_text.set_xalign(0.0);
     foot_text.set_yalign(0.0);
@@ -71,6 +75,8 @@ pub fn fill(
     foot_text.set_lines(3);
     foot_text.set_ellipsize(gtk::pango::EllipsizeMode::End);
     foot_text.add_css_class("ep-foot-text");
+    foot_text.set_max_width_chars(1);
+    foot_text.set_hexpand(true);
     let footer = gtk::Box::new(gtk::Orientation::Vertical, 3);
     footer.add_css_class("ep-foot");
     footer.set_size_request(-1, FOOTER);
@@ -120,6 +126,7 @@ pub fn fill(
         title.set_xalign(0.0);
         title.set_hexpand(true);
         title.set_ellipsize(gtk::pango::EllipsizeMode::End);
+        title.set_max_width_chars(1);
         line.append(&number);
         line.append(&title);
         if episode.current {

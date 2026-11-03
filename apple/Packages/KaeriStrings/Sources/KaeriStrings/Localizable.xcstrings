@@ -42898,7 +42898,7 @@
       }
     },
     "episode-short" : {
-      "comment" : "An episode's number in a facts line on phones. Argument 1: episode (Int).",
+      "comment" : "An episode's number in a facts line on phones and in narrow desktop windows. Argument 1: episode (Int).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {

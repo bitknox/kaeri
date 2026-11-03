@@ -11,6 +11,7 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
+using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Xaml.Navigation;
 
 namespace Kaeri.Windows.Pages;
@@ -70,6 +71,17 @@ public sealed partial class EpisodeItem : INotifyPropertyChanged
     /// <summary>The facts line: length or what is left, when it aired, a filler episode saying so.</summary>
     public string Line => Synopsis.Facts(Row, DateTimeOffset.UtcNow.ToUnixTimeSeconds(), at => Synopsis.Date(at));
 
+    /// <summary>A narrow row whose title stands alone: the number moves to the facts.</summary>
+    bool TitleAlone => narrow && Row.Title is { Length: > 0 } && Synopsis.Number(Row.Number) is not null;
+    /// <summary>The row's name as shown: the title alone on a narrow row, else the heading.</summary>
+    public string RowHeading => TitleAlone ? Row.Title! : Heading;
+    public TextWrapping HeadingWrap => narrow ? TextWrapping.WrapWholeWords : TextWrapping.NoWrap;
+    public int HeadingLines => narrow ? 2 : 1;
+    /// <summary>The facts as shown: on a narrow row with its title alone, "E8" first and the date on its own line.</summary>
+    public string RowFacts => TitleAlone
+        ? Synopsis.Facts(Row, DateTimeOffset.UtcNow.ToUnixTimeSeconds(), at => Synopsis.Date(at), Synopsis.Number(Row.Number))
+        : Line;
+
     // What the row's layout is, from the window's width and what the engine says of text and
     // protection. The page sets it with Lay; every figure here is a size, never read from the text.
     public double RowHeight => rowHeight;
@@ -111,7 +123,7 @@ public sealed partial class EpisodeItem : INotifyPropertyChanged
         var to = Synopsis.RowHeight(narrow, room);
         Changed(nameof(StillWidth), nameof(StillHeight), nameof(StillRowSpan), nameof(SynopsisColumn), nameof(SynopsisColumnSpan),
             nameof(HeadMargin), nameof(HeadAlign), nameof(RowPad), nameof(TextVisible), nameof(BlurOpacity), nameof(Held), nameof(HeldShown),
-            nameof(Tip), nameof(HelpText));
+            nameof(Tip), nameof(HelpText), nameof(RowHeading), nameof(HeadingWrap), nameof(HeadingLines), nameof(RowFacts));
         var text = Synopsis.TextOf(Row);
         if (!animate || !narrow || !Motion.Enabled || Math.Abs(from - to) < 1)
         {
@@ -434,6 +446,10 @@ public sealed partial class TitlePage : Page, IPageKeys
                     entry = entry with { Trailer = new Trailer(TrailerHost.YouTube, Trailers.FixtureStuckId) };
                 TrailerWindow.Play(ctx, entry);
             }));
+        // --show=synopsis...: the rows from the one playing next in view; synopsis-revealed shows
+        // episode 9 through protection, synopsis-ranges opens the range menu.
+        if (ctx.Options.Show is { } synopsisShot && synopsisShot.StartsWith("synopsis", StringComparison.Ordinal) && ctx.Options.Title == id)
+            _ = Task.Delay(3500).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => StageSynopsis(synopsisShot)));
         // --show=source-menu: the More menu open, for a screenshot.
         if (ctx.Options.Show == "source-menu" && ctx.Options.Title == id)
             _ = Task.Delay(1500).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => MoreButton.Flyout.ShowAt(MoreButton)));
@@ -441,6 +457,25 @@ public sealed partial class TitlePage : Page, IPageKeys
     }
 
 #if KAERI_TESTING
+    /// <summary>The synopsis shots' state: see --show=synopsis... where the page opens.</summary>
+    void StageSynopsis(string shot)
+    {
+        if (shot == "synopsis-ranges")
+        {
+            RangePicker.StartBringIntoView(new BringIntoViewOptions { AnimationDesired = false, VerticalAlignmentRatio = 0.2 });
+            _ = Task.Delay(600).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => RangePicker.Flyout?.ShowAt(RangePicker)));
+            return;
+        }
+        if (shot == "synopsis-revealed")
+        {
+            revealed.Add("9");
+            Relay(true);
+        }
+        var next = Episodes().FirstOrDefault(i => i.Row.Number == "7");
+        if (next is not null && EpisodeList.ContainerFromItem(next) is UIElement row)
+            row.StartBringIntoView(new BringIntoViewOptions { AnimationDesired = false, VerticalAlignmentRatio = 0.1 });
+    }
+
     /// <summary>
     /// --show=match, match-menu, match-failed, match-empty, match-results, match-picking,
     /// match-picked, match-cleared and match-source-picker, on --scene=unsure: the picker in each
@@ -952,15 +987,51 @@ public sealed partial class TitlePage : Page, IPageKeys
             Motion.Set(RangePicker, false);
     }
 
-    /// <summary>A range was picked: the list crossfades in place to its rows.</summary>
-    void OnRangePicked(int at)
+    /// <summary>
+    /// A range was picked: the page as it stood is kept as a picture over the new rows and fades
+    /// away on the standard token, so the old list and the new crossfade in place. The pickers
+    /// come into view first when they were above the screen.
+    /// </summary>
+    async void OnRangePicked(int at)
     {
         if (at < 0 || at >= ranges.Length)
             return;
+        RenderTargetBitmap? before = null;
+        if (Motion.Enabled && Scroll.ActualWidth > 0 && Scroll.ActualHeight > 0)
+        {
+            try
+            {
+                before = new RenderTargetBitmap();
+                await before.RenderAsync(Scroll);
+            }
+            catch (Exception)
+            {
+                // Nothing to fade from: the new rows simply show.
+                before = null;
+            }
+        }
         chosenRange = at;
         opened = false;
         ShowEpisodes();
-        Motion.FadeIn(EpisodeList);
+        BringPickersIntoView();
+        if (before is null)
+            return;
+        RangeGhost.Source = before;
+        RangeGhost.Width = Scroll.ActualWidth;
+        RangeGhost.Height = Scroll.ActualHeight;
+        RangeGhost.Opacity = 1;
+        RangeGhost.Visibility = Visibility.Visible;
+        Motion.HideStandard(RangeGhost);
+    }
+
+    /// <summary>Scrolls the episode pickers to the top of the view when they are above it.</summary>
+    void BringPickersIntoView()
+    {
+        if (RangePicker.Parent is not FrameworkElement row || Scroll.Content is not UIElement content)
+            return;
+        var top = row.TransformToVisual(content).TransformPoint(new global::Windows.Foundation.Point(0, 0)).Y;
+        if (Scroll.VerticalOffset > top)
+            Scroll.ChangeView(null, Math.Max(0, top), null, true);
     }
 
     /// <summary>The protection line's words, for whether the rows are showing.</summary>

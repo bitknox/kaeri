@@ -65,10 +65,20 @@ public class SynopsisTests
         Assert.Equal("24 min", Synopsis.Facts(row, 100, OnThe21st));
         row = row with { AirsAt = 50 };
         Assert.Equal("24 min · Aired 21 May 2014", Synopsis.Facts(row, 100, OnThe21st));
-        Assert.Equal("12 min left", Synopsis.Facts(row with { Watched = 0.5 }, 100, OnThe21st));
+        Assert.Equal("12 min left · Aired 21 May 2014", Synopsis.Facts(row with { Watched = 0.5 }, 100, OnThe21st));
         Assert.Equal("24 min · Aired 21 May 2014 · Filler", Synopsis.Facts(row with { Kind = EpisodeKind.Filler }, 100, OnThe21st));
         Assert.Equal("Airs 21 May 2014", Synopsis.Facts(Row(2, secs: null) with { AirsAt = 500 }, 100, OnThe21st));
         Assert.Equal("", Synopsis.Facts(Row(3, secs: null), 100, OnThe21st));
+    }
+
+    [Fact]
+    public void NarrowFactsLeadWithTheNumberAndPutTheDateOnItsOwnLine()
+    {
+        var row = Row(8) with { AirsAt = 50 };
+        Assert.Equal("E8 · 24 min\nAired 21 May 2014", Synopsis.Facts(row, 100, OnThe21st, 8));
+        Assert.Equal("E8 · 12 min left\nAired 21 May 2014", Synopsis.Facts(row with { Watched = 0.5 }, 100, OnThe21st, 8));
+        Assert.Equal("E8 · 24 min · Filler\nAired 21 May 2014", Synopsis.Facts(row with { Kind = EpisodeKind.Filler }, 100, OnThe21st, 8));
+        Assert.Equal("E8 · 24 min", Synopsis.Facts(row with { AirsAt = null }, 100, OnThe21st, 8));
     }
 
     [Fact]

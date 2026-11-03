@@ -1627,6 +1627,17 @@ public sealed partial class PlayerView : UserControl
             case "mini":
                 ToggleMini();
                 break;
+            case "player-episodes":
+            case "player-episodes-focus":
+                // The Episodes panel open; with -focus, the keyboard then on its second row.
+                ShowControls();
+                OpenMenu(EpisodesButton);
+                if (what == "player-episodes-focus")
+                {
+                    await Task.Delay(800);
+                    episodesPanel?.FocusRow(1);
+                }
+                break;
             case "discussion-player":
                 if (ctx is { } talk && uint.TryParse(playingEpisode, out var talked))
                 {

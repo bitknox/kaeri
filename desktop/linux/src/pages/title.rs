@@ -1335,25 +1335,48 @@ impl Page {
                     let (veil, veil_frame) =
                         widgets::still(&self.ctx.hub, own.as_deref(), color.as_deref(), w);
                     veil_frame.add_css_class("spoiler");
-                    veil.set_can_target(false);
+                    // The eye on the blurred still, which fades with it.
+                    let eye = gtk::Image::from_icon_name("view-conceal-symbolic");
+                    eye.set_pixel_size(22);
+                    eye.add_css_class("still-eye");
+                    eye.set_halign(gtk::Align::Center);
+                    eye.set_valign(gtk::Align::Center);
+                    eye.set_accessible_role(gtk::AccessibleRole::Presentation);
+                    let cover = gtk::Overlay::new();
+                    cover.set_child(Some(&veil));
+                    cover.add_overlay(&eye);
+                    cover.set_can_target(false);
                     let both = gtk::Overlay::new();
                     both.set_child(Some(&still));
-                    both.add_overlay(&veil);
+                    both.add_overlay(&cover);
                     both.set_valign(gtk::Align::Center);
-                    veil.set_opacity(if held { 1.0 } else { 0.0 });
-                    (both.upcast(), Some(veil.upcast()))
+                    cover.set_opacity(if held { 1.0 } else { 0.0 });
+                    (both.upcast(), Some(cover.upcast()))
                 } else {
                     (still.upcast(), None)
                 };
-            line.append(&still_widget);
+            // The resume track runs along the bottom of the still, as on Continue cards.
+            let bar = gtk::ProgressBar::new();
+            bar.add_css_class("still-progress");
+            bar.set_valign(gtk::Align::End);
+            bar.set_halign(gtk::Align::Fill);
+            bar.set_margin_start(6);
+            bar.set_margin_end(6);
+            bar.set_margin_bottom(6);
+            bar.set_can_target(false);
+            crate::widgets::name_progress(&bar);
+            let art = gtk::Overlay::new();
+            art.set_child(Some(&still_widget));
+            art.add_overlay(&bar);
+            art.set_valign(gtk::Align::Center);
+            line.append(&art);
 
             let text = gtk::Box::new(gtk::Orientation::Vertical, 2);
             text.set_hexpand(true);
-            let name = match &row.title {
-                Some(title) if !title.is_empty() => {
-                    t::episode_with_title(say::episode_n(&row.number), title)
-                }
-                _ => t::episode_number(say::episode_n(&row.number)),
+            // Narrow, the number moves to the facts ("E8") and the title has the two lines.
+            let name = match (&row.title, narrow) {
+                (Some(title), true) if !title.is_empty() => title.clone(),
+                _ => full_name(row),
             };
             let label = gtk::Label::new(Some(&name));
             label.add_css_class("heading");
@@ -1377,13 +1400,6 @@ impl Page {
             discuss.set_action_name(Some("win.open-discussion"));
             discuss.set_action_target_value(Some(&(id, row.number.clone()).to_variant()));
             text.append(&discuss);
-            let bar = gtk::ProgressBar::new();
-            bar.set_margin_top(4);
-            // Narrow, the track is as wide as the room the title leaves.
-            bar.set_size_request(if narrow { 48 } else { 120 }, -1);
-            bar.set_halign(if narrow { gtk::Align::Fill } else { gtk::Align::Start });
-            crate::widgets::name_progress(&bar);
-            text.append(&bar);
 
             // Three lines of synopsis in a box of fixed height. Beside the still the box is
             // always there, so a reveal moves nothing; under it, only where the row is tall.
@@ -1526,6 +1542,10 @@ impl Page {
     /// The one line where spoiler protection starts, with its button: Show, or Hide once the
     /// rows are shown.
     fn protection_row(&self, before: i64, narrow: bool) -> gtk::ListBoxRow {
+        let eye = gtk::Image::from_icon_name("view-conceal-symbolic");
+        eye.add_css_class("haze");
+        eye.set_valign(gtk::Align::Center);
+        eye.set_accessible_role(gtk::AccessibleRole::Presentation);
         let label = gtk::Label::new(None);
         label.add_css_class("haze");
         label.set_xalign(0.0);
@@ -1539,6 +1559,7 @@ impl Page {
         line.set_margin_bottom(8);
         line.set_margin_start(6);
         line.set_margin_end(6);
+        line.append(&eye);
         line.append(&label);
         line.append(&button);
         let page = self.me.borrow().clone();
@@ -1822,14 +1843,22 @@ impl Page {
         }
         let part_way = row.watched > 0.0 && !row.completed;
         let now = glib::DateTime::now_utc().map_or(0, |t| t.to_unix());
-        let sub = synopsis::facts(row, now, |at| {
+        let date = |at| {
             glib::DateTime::from_unix_local(at)
                 .ok()
                 .and_then(|d| d.format("%-d %b %Y").ok())
                 .map_or_else(String::new, |d| d.to_string())
-        });
-        line.sub.set_label(&sub);
-        line.sub.set_visible(!sub.is_empty());
+        };
+        let sub = synopsis::facts(row, now, date, None);
+        // A narrow row whose title stands alone says its number in the facts.
+        let titled = row.title.as_deref().is_some_and(|title| !title.is_empty());
+        let shown = if *self.sized.borrow() == Size::Narrow && titled {
+            synopsis::facts(row, now, date, Some(say::episode_n(&row.number)))
+        } else {
+            sub.clone()
+        };
+        line.sub.set_label(&shown);
+        line.sub.set_visible(!shown.is_empty());
         line.bar.set_fraction(row.watched);
         line.bar.set_visible(part_way);
 
@@ -1918,12 +1947,22 @@ impl Page {
         // The row is one element: number, title and facts in its label, the synopsis last in its
         // description (set with the text, and not announced when it arrives late).
         let spoken = if sub.is_empty() {
-            line.name.label().to_string()
+            full_name(row)
         } else {
-            format!("{}, {sub}", line.name.label()) // i18n-skip
+            format!("{}, {sub}", full_name(row)) // i18n-skip
         };
         line.list_row.update_property(&[gtk::accessible::Property::Label(&spoken)]);
         self.settle(line, row, animate);
+    }
+}
+
+/// An episode's full name: its number and title, or its number alone.
+fn full_name(row: &EpisodeRow) -> String {
+    match &row.title {
+        Some(title) if !title.is_empty() => {
+            t::episode_with_title(say::episode_n(&row.number), title)
+        }
+        _ => t::episode_number(say::episode_n(&row.number)),
     }
 }
 

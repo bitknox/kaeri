@@ -74,34 +74,60 @@ pub fn number(text: &str) -> Option<i64> {
 
 /// A row's facts line: its length (or what is left of it) and when it aired, a filler episode
 /// saying so, an unreleased one saying when it airs. `date` words a Unix time; `now` is Unix
-/// seconds.
-pub fn facts(row: &EpisodeRow, now: i64, date: impl Fn(i64) -> String) -> String {
+/// seconds. With `short`, the narrow form: the episode's number first ("E8"), and the air date on
+/// a line of its own.
+pub fn facts(
+    row: &EpisodeRow,
+    now: i64,
+    date: impl Fn(i64) -> String,
+    short: Option<i64>,
+) -> String {
     let aired = row.airs_at.filter(|at| *at <= now);
-    let mut line = if row.unsourced {
-        t::episode_unsourced()
+    let minutes = |secs: f64| (secs / 60.0).round().max(1.0) as i64;
+    let (head, when) = if row.unsourced {
+        (t::episode_unsourced(), None)
     } else if let Some(secs) = row.duration_secs {
-        let minutes = |secs: f64| (secs / 60.0).round().max(1.0) as i64;
-        if row.watched > 0.0 && !row.completed {
+        // The episode playing next keeps its air date beside the time left.
+        let head = if row.watched > 0.0 && !row.completed {
             t::episode_facts_left(minutes(secs as f64 * (1.0 - row.watched)))
         } else {
-            match aired {
-                Some(at) => t::episode_facts(minutes(secs as f64), &date(at)),
-                None => t::episode_facts_length(minutes(secs as f64)),
+            t::episode_facts_length(minutes(secs as f64))
+        };
+        (head, aired.map(|at| t::episode_aired(&date(at))))
+    } else if let Some(at) = row.airs_at.filter(|at| *at > now) {
+        (t::episode_row_airs(&date(at)), None)
+    } else if row.metadata_only {
+        (t::episode_row_not_out(), None)
+    } else if let Some(at) = aired {
+        (date(at), None)
+    } else {
+        (String::new(), None)
+    };
+    let filler = (row.kind == Some(EpisodeKind::Filler)).then(t::episode_filler);
+    let join = |first: String, second: String| match (first.is_empty(), second.is_empty()) {
+        (true, _) => second,
+        (_, true) => first,
+        _ => t::episode_facts_join(&first, &second),
+    };
+    match short {
+        None => {
+            let line = join(head, when.unwrap_or_default());
+            match filler {
+                Some(filler) if !line.is_empty() => join(line, filler),
+                _ => line,
             }
         }
-    } else if let Some(at) = row.airs_at.filter(|at| *at > now) {
-        t::episode_row_airs(&date(at))
-    } else if row.metadata_only {
-        t::episode_row_not_out()
-    } else if let Some(at) = aired {
-        date(at)
-    } else {
-        String::new()
-    };
-    if row.kind == Some(EpisodeKind::Filler) && !line.is_empty() {
-        line = format!("{line} · {}", t::episode_filler()); // i18n-skip
+        Some(number) => {
+            let mut first = join(t::episode_short(number), head);
+            if let Some(filler) = filler {
+                first = join(first, filler);
+            }
+            match when {
+                Some(when) => format!("{first}\n{when}"), // i18n-skip
+                None => first,
+            }
+        }
     }
-    line
 }
 
 /// The range menu's items for `ranges`: the label and the state each says.
@@ -234,18 +260,33 @@ mod tests {
     fn facts_say_the_length_the_date_and_what_is_left() {
         let date = |_| "21 May 2014".to_owned();
         let mut r = row(1);
-        assert_eq!(facts(&r, 100, date), "24 min");
+        assert_eq!(facts(&r, 100, date, None), "24 min");
         r.airs_at = Some(50);
-        assert_eq!(facts(&r, 100, date), "24 min · Aired 21 May 2014");
+        assert_eq!(facts(&r, 100, date, None), "24 min · Aired 21 May 2014");
         r.watched = 0.5;
-        assert_eq!(facts(&r, 100, date), "12 min left");
+        assert_eq!(facts(&r, 100, date, None), "12 min left · Aired 21 May 2014");
         r.watched = 0.0;
         r.kind = Some(EpisodeKind::Filler);
-        assert_eq!(facts(&r, 100, date), "24 min · Aired 21 May 2014 · Filler");
+        assert_eq!(facts(&r, 100, date, None), "24 min · Aired 21 May 2014 · Filler");
         let mut later = row(2);
         later.duration_secs = None;
         later.airs_at = Some(500);
-        assert_eq!(facts(&later, 100, date), "Airs 21 May 2014");
+        assert_eq!(facts(&later, 100, date, None), "Airs 21 May 2014");
+    }
+
+    #[test]
+    fn narrow_facts_lead_with_the_number_and_put_the_date_on_its_own_line() {
+        let date = |_| "21 May 2014".to_owned();
+        let mut r = row(8);
+        r.airs_at = Some(50);
+        assert_eq!(facts(&r, 100, date, Some(8)), "E8 · 24 min\nAired 21 May 2014");
+        r.watched = 0.5;
+        assert_eq!(facts(&r, 100, date, Some(8)), "E8 · 12 min left\nAired 21 May 2014");
+        r.watched = 0.0;
+        r.kind = Some(EpisodeKind::Filler);
+        assert_eq!(facts(&r, 100, date, Some(8)), "E8 · 24 min · Filler\nAired 21 May 2014");
+        r.airs_at = None;
+        assert_eq!(facts(&r, 100, date, Some(8)), "E8 · 24 min · Filler");
     }
 
     #[test]

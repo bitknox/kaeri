@@ -18,7 +18,7 @@ namespace Kaeri.Windows.Player;
 /// </summary>
 sealed class EpisodesPanel
 {
-    const double Width = 300, ListMax = 360, FooterHeight = 92;
+    const double Width = 236, ListMax = 360, FooterHeight = 92;
 
     public Flyout Flyout { get; } = new() { Placement = Microsoft.UI.Xaml.Controls.Primitives.FlyoutPlacementMode.BottomEdgeAlignedRight };
 
@@ -77,6 +77,7 @@ sealed class EpisodesPanel
 
         var list = new StackPanel { Padding = new Thickness(4, 6, 4, 6) };
         Button? current = null;
+        buttons.Clear();
         foreach (var episode in episodes.Take(200))
         {
             var line = new Grid { ColumnSpacing = 10 };
@@ -120,6 +121,7 @@ sealed class EpisodesPanel
             if (episode.Current)
                 current = row;
             list.Children.Add(row);
+            buttons.Add(row);
         }
         // Left again, the footer goes back to the episode playing.
         list.PointerExited += (_, _) => Show(playing);
@@ -147,6 +149,16 @@ sealed class EpisodesPanel
     }
 
     Button? focusAt;
+    readonly List<Button> buttons = [];
+
+#if KAERI_TESTING
+    /// <summary>For a shot: the keyboard on row <paramref name="at"/>, which the footer follows.</summary>
+    public void FocusRow(int at)
+    {
+        if (at >= 0 && at < buttons.Count)
+            buttons[at].Focus(FocusState.Keyboard);
+    }
+#endif
 
     void OpenedAt(object? sender, object e) => focusAt?.Focus(FocusState.Programmatic);
 }

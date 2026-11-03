@@ -2197,6 +2197,34 @@ impl PlayerView {
         self.wake();
     }
 
+    /// For a shot: the keyboard on the Episodes panel's row `at`, with its focus showing.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_episodes_focus(&self, at: i32) {
+        fn list(widget: &gtk::Widget) -> Option<gtk::ListBox> {
+            if let Some(list) = widget.downcast_ref::<gtk::ListBox>() {
+                return Some(list.clone());
+            }
+            let mut child = widget.first_child();
+            while let Some(next) = child {
+                if let Some(found) = list(&next) {
+                    return Some(found);
+                }
+                child = next.next_sibling();
+            }
+            None
+        }
+        let Some(popover) = self.ui.episodes.popover() else { return };
+        if let Some(row) = list(popover.upcast_ref()).and_then(|list| list.row_at_index(at)) {
+            row.grab_focus();
+            // The headless display has no active window, so the focus ring is drawn by hand.
+            row.set_state_flags(
+                gtk::StateFlags::FOCUSED | gtk::StateFlags::FOCUS_VISIBLE,
+                false,
+            );
+        }
+        self.wake();
+    }
+
     /// For a shot: the Episodes panel's popover, under its button, over the window.
     pub fn shot_episodes_popover(&self) -> Option<(gtk::Widget, f32, f32)> {
         let popover = self.ui.episodes.popover()?;

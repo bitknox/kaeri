@@ -70,6 +70,11 @@ progressbar progress { background: var(--amber); }
 .banner.flush { border-radius: 0; }
 .still { border-radius: 6px; }
 .still.spoiler { filter: blur(10px); }
+/* The eye over a blurred still, and the resume track along a still's bottom edge. */
+.still-eye { color: var(--silk); }
+progressbar.still-progress { min-height: 3px; }
+progressbar.still-progress trough { min-height: 3px; min-width: 0; border-radius: 2px; background: rgba(16, 19, 31, 0.7); }
+progressbar.still-progress progress { min-height: 3px; border-radius: 2px; background: var(--silk); }
 .art-fade { background: linear-gradient(to bottom, alpha(var(--ground), 0) 30%, var(--ground)); }
 
 /* The sidebar's foot. */

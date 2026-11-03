@@ -9469,7 +9469,7 @@ episode-fold =
        *[other] { $count } obejrzanego odcinka
     }
 
-# An episode's number in a facts line on phones.
+# An episode's number in a facts line on phones and in narrow desktop windows.
 episode-short = Odc. { $episode }
 
 # Part of an episode's facts line: when it aired. The date is already formatted.
