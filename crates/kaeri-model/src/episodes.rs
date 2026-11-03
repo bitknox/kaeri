@@ -276,6 +276,11 @@ mod tests {
         assert_eq!(spans, [(0, 100), (100, 200), (200, 230)]);
         assert_eq!(ranges.iter().map(|r| r.watched).collect::<Vec<_>>(), [true, false, false]);
         assert_eq!(ranges.iter().map(|r| r.not_out).collect::<Vec<_>>(), [false, false, true]);
+        // A range only partly out carries no word: Not out yet means all of it.
+        table[205].airs_at = Some(1);
+        let partly = episode_ranges(&table, 5);
+        assert!(!partly[2].not_out && !partly[2].watched);
+        table[205].airs_at = Some(10);
         assert_eq!(episode_range_to_open(&table), 1);
         assert_eq!(episode_fold(&table, &ranges[1]), 20);
         assert_eq!(episode_fold(&table, &ranges[0]), 0, "a whole watched range folds nothing");

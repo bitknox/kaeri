@@ -8698,17 +8698,6 @@ public enum L {
     /// Button that opens the system share sheet for the invite link.
     public static var storesShare: String { string("stores-share", fallback: "Share…") }
 
-    /// The line in the episode list where spoiler protection starts, after the person chose to see what it hides.
-    public static func episodeProtectionShown(episode: Int) -> String {
-        Self.format("episode-protection-shown", fallback: "Showing what comes after episode %1$lld.", episode)
-    }
-
-    /// Button on the spoiler protection line: shows the synopses and stills it hides, until the page closes.
-    public static var episodeProtectionShow: String { string("episode-protection-show", fallback: "Show") }
-
-    /// Button on the spoiler protection line once it is showing what it hides: hides it again.
-    public static var episodeProtectionHide: String { string("episode-protection-hide", fallback: "Hide") }
-
     /// Title of the state when a title page could not load.
     public static var titleLoadFailed: String { string("title-load-failed", fallback: "Couldn't load this title") }
 
@@ -8881,6 +8870,47 @@ public enum L {
     /// One line that stands for the watched episodes at the top of a range. Opening it shows them.
     public static func episodeFold(count: Int) -> String {
         Self.format("episode-fold", fallback: "%1$lld watched episodes", count)
+    }
+
+    /// An episode's number in a facts line on phones.
+    public static func episodeShort(episode: Int) -> String {
+        Self.format("episode-short", fallback: "E%1$lld", episode)
+    }
+
+    /// Part of an episode's facts line: when it aired. The date is already formatted.
+    public static func episodeAired(date: String) -> String {
+        Self.format("episode-aired", fallback: "Aired %1$@", date)
+    }
+
+    /// Two parts of an episode's facts line, set one after the other.
+    public static func episodeFactsJoin(first: String, second: String) -> String {
+        Self.format("episode-facts-join", fallback: "%1$@ · %2$@", first, second)
+    }
+
+    /// Button in the line where spoiler protection starts: shows what comes after.
+    public static var episodeProtectionShow: String { string("episode-protection-show", fallback: "Show") }
+
+    /// Button in that line once the rows after it are shown: hides them again.
+    public static var episodeProtectionHide: String { string("episode-protection-hide", fallback: "Hide") }
+
+    /// The line where spoiler protection starts, once the rows after it are shown.
+    public static func episodeProtectionShown(episode: Int) -> String {
+        Self.format("episode-protection-shown", fallback: "Showing what comes after episode %1$lld.", episode)
+    }
+
+    /// The same line on phones.
+    public static func episodeProtectionShownShort(episode: Int) -> String {
+        Self.format("episode-protection-shown-short", fallback: "Showing after episode %1$lld", episode)
+    }
+
+    /// An episode range in the range menu: the first and the last episode.
+    public static func episodeRangeShort(from: String, to: String) -> String {
+        Self.format("episode-range-short", fallback: "%1$@–%2$@", from, to)
+    }
+
+    /// An item of the range menu: the range, then Watched or Not out yet.
+    public static func episodeRangeItem(range: String, state: String) -> String {
+        Self.format("episode-range-item", fallback: "%1$@ · %2$@", range, state)
     }
 
     /// Accessibility label of the button that opens an episode's menu.

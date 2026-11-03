@@ -5549,6 +5549,9 @@
   <data name="SettingsSpoiler" xml:space="preserve">
     <value>Защита от спойлеров</value>
   </data>
+  <data name="SettingsSpoilerDetail" xml:space="preserve">
+    <value>Размывает кадры и описания непросмотренных серий после следующей</value>
+  </data>
   <data name="SettingsAudioDetail" xml:space="preserve">
     <value>Каждый сериал помнит свою аудиодорожку и субтитры.</value>
   </data>
@@ -5698,6 +5701,9 @@
   </data>
   <data name="ShowSettingsShowEverything" xml:space="preserve">
     <value>Показывать всё</value>
+  </data>
+  <data name="ShowSettingsSpoilerDetail" xml:space="preserve">
+    <value>Размывает кадры и описания после следующей серии.</value>
   </data>
   <data name="ShowSettingsAlways" xml:space="preserve">
     <value>Всегда</value>
@@ -7075,6 +7081,75 @@
   </data>
   <data name="EpisodeSpoilerHidden" xml:space="preserve">
     <value>Скрыто защитой от спойлеров</value>
+  </data>
+  <data name="EpisodeSynopsisHidden" xml:space="preserve">
+    <value>Описание скрыто защитой от спойлеров</value>
+  </data>
+  <data name="EpisodeSynopsisShow" xml:space="preserve">
+    <value>Показать описание</value>
+  </data>
+  <data name="EpisodeSynopsisShowHint" xml:space="preserve">
+    <value>Показывает кадр и описание этой серии</value>
+  </data>
+  <data name="EpisodeFacts" xml:space="preserve">
+    <value>{minutes} мин · Вышла {date}</value>
+  </data>
+  <data name="EpisodeFactsLength" xml:space="preserve">
+    <value>{minutes} min</value>
+  </data>
+  <data name="EpisodeFactsLeft" xml:space="preserve">
+    <value>Осталось {minutes} мин</value>
+  </data>
+  <data name="EpisodeProtectionLine" xml:space="preserve">
+    <value>Защита от спойлеров скрывает всё после серии {episode}.</value>
+  </data>
+  <data name="EpisodeProtectionLineShort" xml:space="preserve">
+    <value>Скрыто после серии {episode}</value>
+  </data>
+  <data name="EpisodeRange" xml:space="preserve">
+    <value>Серии с {from} по {to}</value>
+  </data>
+  <data name="EpisodeRangeLabel" xml:space="preserve">
+    <value>Диапазон серий</value>
+  </data>
+  <data name="EpisodeFold_one" xml:space="preserve">
+    <value>Одна просмотренная серия</value>
+  </data>
+  <data name="EpisodeFold_few" xml:space="preserve">
+    <value>{count} просмотренные серии</value>
+  </data>
+  <data name="EpisodeFold_many" xml:space="preserve">
+    <value>{count} просмотренных серий</value>
+  </data>
+  <data name="EpisodeFold_other" xml:space="preserve">
+    <value>{count} просмотренной серии</value>
+  </data>
+  <data name="EpisodeShort" xml:space="preserve">
+    <value>С{episode}</value>
+  </data>
+  <data name="EpisodeAired" xml:space="preserve">
+    <value>Вышла {date}</value>
+  </data>
+  <data name="EpisodeFactsJoin" xml:space="preserve">
+    <value>{first} · {second}</value>
+  </data>
+  <data name="EpisodeProtectionShow" xml:space="preserve">
+    <value>Показать</value>
+  </data>
+  <data name="EpisodeProtectionHide" xml:space="preserve">
+    <value>Скрыть</value>
+  </data>
+  <data name="EpisodeProtectionShown" xml:space="preserve">
+    <value>Показано всё после серии {episode}.</value>
+  </data>
+  <data name="EpisodeProtectionShownShort" xml:space="preserve">
+    <value>Видно после серии {episode}</value>
+  </data>
+  <data name="EpisodeRangeShort" xml:space="preserve">
+    <value>{from}–{to}</value>
+  </data>
+  <data name="EpisodeRangeItem" xml:space="preserve">
+    <value>{range} · {state}</value>
   </data>
   <data name="EpisodeOptions" xml:space="preserve">
     <value>Параметры серии</value>

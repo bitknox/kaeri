@@ -797,7 +797,7 @@ impl Numbering {
 
 /// An episode's number, when it is a whole one: what AniList numbers by. An "OVA" has none, and
 /// a "12.5" is a recap, not episode 12.
-fn whole(number: &kaeri_core::media::EpisodeNumber) -> Option<u32> {
+pub(crate) fn whole(number: &kaeri_core::media::EpisodeNumber) -> Option<u32> {
     let number = number.as_number()?;
     let whole = number as u32;
     (number >= 1.0 && f64::from(whole) == number).then_some(whole)

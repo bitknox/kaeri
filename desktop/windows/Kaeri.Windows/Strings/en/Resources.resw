@@ -8790,18 +8790,6 @@
     <value>Share…</value>
     <comment>Button that opens the system share sheet for the invite link.</comment>
   </data>
-  <data name="EpisodeProtectionShown" xml:space="preserve">
-    <value>Showing what comes after episode {episode}.</value>
-    <comment>The line in the episode list where spoiler protection starts, after the person chose to see what it hides.</comment>
-  </data>
-  <data name="EpisodeProtectionShow" xml:space="preserve">
-    <value>Show</value>
-    <comment>Button on the spoiler protection line: shows the synopses and stills it hides, until the page closes.</comment>
-  </data>
-  <data name="EpisodeProtectionHide" xml:space="preserve">
-    <value>Hide</value>
-    <comment>Button on the spoiler protection line once it is showing what it hides: hides it again.</comment>
-  </data>
   <data name="TitleLoadFailed" xml:space="preserve">
     <value>Couldn't load this title</value>
     <comment>Title of the state when a title page could not load.</comment>
@@ -8997,6 +8985,42 @@
   <data name="EpisodeFold_other" xml:space="preserve">
     <value>{count} watched episodes</value>
     <comment>One line that stands for the watched episodes at the top of a range. Opening it shows them.</comment>
+  </data>
+  <data name="EpisodeShort" xml:space="preserve">
+    <value>E{episode}</value>
+    <comment>An episode's number in a facts line on phones.</comment>
+  </data>
+  <data name="EpisodeAired" xml:space="preserve">
+    <value>Aired {date}</value>
+    <comment>Part of an episode's facts line: when it aired. The date is already formatted.</comment>
+  </data>
+  <data name="EpisodeFactsJoin" xml:space="preserve">
+    <value>{first} · {second}</value>
+    <comment>Two parts of an episode's facts line, set one after the other.</comment>
+  </data>
+  <data name="EpisodeProtectionShow" xml:space="preserve">
+    <value>Show</value>
+    <comment>Button in the line where spoiler protection starts: shows what comes after.</comment>
+  </data>
+  <data name="EpisodeProtectionHide" xml:space="preserve">
+    <value>Hide</value>
+    <comment>Button in that line once the rows after it are shown: hides them again.</comment>
+  </data>
+  <data name="EpisodeProtectionShown" xml:space="preserve">
+    <value>Showing what comes after episode {episode}.</value>
+    <comment>The line where spoiler protection starts, once the rows after it are shown.</comment>
+  </data>
+  <data name="EpisodeProtectionShownShort" xml:space="preserve">
+    <value>Showing after episode {episode}</value>
+    <comment>The same line on phones.</comment>
+  </data>
+  <data name="EpisodeRangeShort" xml:space="preserve">
+    <value>{from}–{to}</value>
+    <comment>An episode range in the range menu: the first and the last episode.</comment>
+  </data>
+  <data name="EpisodeRangeItem" xml:space="preserve">
+    <value>{range} · {state}</value>
+    <comment>An item of the range menu: the range, then Watched or Not out yet.</comment>
   </data>
   <data name="EpisodeOptions" xml:space="preserve">
     <value>Episode options</value>

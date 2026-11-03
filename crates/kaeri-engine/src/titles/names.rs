@@ -25,6 +25,14 @@
 //!   within that is named at once and asks nothing; later, it is named from what was kept and
 //!   asked again.
 //! - While offline it asks nothing, and names from what was kept, however old.
+//!
+//! Synopses have a second well: [`kaeri_meta::EpisodeText`], when it is switched on, answers for
+//! the whole title in one request, asked beside the other source (or alone when there is none)
+//! and kept on the device by the client. It fills only the rows no source gave a synopsis, after
+//! the other source's text, and is put on by AniList's numbers through [`Numbering`] like the
+//! rest: where the table's numbering cannot be lined up with AniList's, or a title is numbered
+//! otherwise by the service, nothing is put on rather than a neighbour's text. It never delays the
+//! table, and a refusal or a timeout leaves the rows as they were.
 
 use std::{
     collections::{BTreeMap, HashMap},
@@ -36,7 +44,7 @@ use kaeri_core::{
     ids::AnilistId,
     media::{Episode, MediaStatus, Translation},
 };
-use kaeri_meta::anilist::Media;
+use kaeri_meta::{EpisodeText, anilist::Media};
 use kaeri_model::{episodes::EpisodeRow, event::Event};
 use kaeri_providers::{Answer, ProviderRegistry};
 use kaeri_store::{ResolutionRung, Store};
@@ -119,12 +127,25 @@ pub(crate) struct Unnamed {
     marks: super::coverage::Marks,
     /// When the table was loaded.
     now: i64,
+    /// The per-title synopsis fill, when it is on.
+    text: Option<Arc<EpisodeText>>,
+}
+
+/// `raw`, the fill's synopses by AniList's number, cleaned as a source's own are for `media`.
+fn tidy_texts(raw: BTreeMap<u32, String>, media: &Media) -> BTreeMap<u32, String> {
+    let mut listed: Vec<Episode> = raw
+        .into_iter()
+        .map(|(number, text)| Episode { description: Some(text), ..Episode::new(number) })
+        .collect();
+    data::tidy_synopses(&mut listed, &media.plain_description());
+    listed.into_iter().filter_map(|e| Some((data::whole(&e.number)?, e.description?))).collect()
 }
 
 impl Unnamed {
     /// What naming `episodes` takes, the table's from `provider_id` for `media` numbered as
-    /// `numbering` has them: `None` when every whole episode has a title and a still, and when
-    /// their numbers cannot be lined up with AniList's, so nothing could be put on them.
+    /// `numbering` has them: `None` when every whole episode has a title, a still and, with the
+    /// synopsis fill on, a synopsis, and when their numbers cannot be lined up with AniList's, so
+    /// nothing could be put on them.
     pub fn of(
         media: &Media,
         episodes: &[Episode],
@@ -132,13 +153,16 @@ impl Unnamed {
         provider_id: &str,
         marks: super::coverage::Marks,
         now: i64,
+        text: Option<Arc<EpisodeText>>,
     ) -> Option<Self> {
         if numbering == Numbering::Unknown {
             return None;
         }
         let missing = episodes.iter().any(|episode| {
             numbering.anilist(episode.number.as_str()).is_some()
-                && (episode.title.is_none() || episode.thumbnail.is_none())
+                && (episode.title.is_none()
+                    || episode.thumbnail.is_none()
+                    || (text.is_some() && episode.description.is_none()))
         });
         missing.then(|| Self {
             media: media.clone(),
@@ -147,11 +171,13 @@ impl Unnamed {
             provider_id: provider_id.to_owned(),
             marks,
             now,
+            text,
         })
     }
 
-    /// The table's episodes, with what `borrowed` has put on those that lacked it.
-    fn named(&self, borrowed: &Borrowed) -> Vec<Episode> {
+    /// The table's episodes, with what `borrowed` and the fill's `texts` have put on those that
+    /// lacked it: the other source's synopsis before the fill's.
+    fn named(&self, borrowed: &Borrowed, texts: &BTreeMap<u32, String>) -> Vec<Episode> {
         let mut episodes = self.episodes.clone();
         data::name_episodes(
             &mut episodes,
@@ -159,6 +185,7 @@ impl Unnamed {
             &self.numbering.rekey(&borrowed.stills),
         );
         data::name_synopses(&mut episodes, &self.numbering.rekey(&borrowed.synopses));
+        data::name_synopses(&mut episodes, &self.numbering.rekey(texts));
         episodes
     }
 
@@ -372,18 +399,26 @@ impl Naming {
         let Self { names, offline, clock } = self;
         let others = others(store, registry, id, &unnamed.provider_id);
         let route = route(&unnamed.provider_id, &others);
-        let kept = names.kept(id, &route, clock.now());
-        let sent = match &kept {
-            Some((borrowed, _)) => unnamed.named(borrowed),
-            None => unnamed.episodes.clone(),
-        };
-        let fresh = kept.is_some_and(|(_, fresh)| fresh);
-        let pending = !(offline || fresh || others.is_empty());
+        let now = clock.now();
+        let kept = names.kept(id, &route, now);
+        let kept_text = unnamed.text.as_ref().and_then(|text| text.kept(id));
+        let have_text = kept_text
+            .as_ref()
+            .map(|kept| tidy_texts(kept.texts.clone(), &unnamed.media))
+            .unwrap_or_default();
+        let base = kept.as_ref().map(|(borrowed, _)| borrowed.clone()).unwrap_or_default();
+        let sent = unnamed.named(&base, &have_text);
+        let names_fresh = others.is_empty() || kept.is_some_and(|(_, fresh)| fresh);
+        let text_fresh =
+            unnamed.text.is_none() || kept_text.is_some_and(|kept| kept.fresh(now));
+        let ask_names = !offline && !names_fresh;
+        let ask_text = !offline && !text_fresh;
+        let pending = ask_names || ask_text;
         ticket.send(
             tx,
             Event::Episodes { id, rows: unnamed.rows(&sent, store, id, pending), failed: None },
         );
-        if offline || fresh || others.is_empty() {
+        if !pending {
             return;
         }
 
@@ -403,23 +438,51 @@ impl Naming {
         let (store, registry, tx, names) =
             (store.clone(), registry.clone(), tx.clone(), names.clone());
         let lookup = async move {
-            let looked = tokio::time::timeout(
-                within,
-                look_up(&store, &registry, id, &others, &unnamed),
-            )
-            .await
-            .unwrap_or_else(|_| {
-                tracing::info!(%id, ?within, "the episode names lookup gave up waiting");
-                Looked::Unsaid
-            });
-            let borrowed = names.keep(id, route, looked, clock.now());
+            // The other source and the fill run side by side, each on its own clock.
+            let from_sources = async {
+                if !ask_names {
+                    return base;
+                }
+                let looked = tokio::time::timeout(
+                    within,
+                    look_up(&store, &registry, id, &others, &unnamed),
+                )
+                .await
+                .unwrap_or_else(|_| {
+                    tracing::info!(%id, ?within, "the episode names lookup gave up waiting");
+                    Looked::Unsaid
+                });
+                names.keep(id, route, looked, clock.now())
+            };
+            let from_fill = async {
+                let Some(text) = unnamed.text.as_ref().filter(|_| ask_text) else {
+                    return have_text;
+                };
+                match tokio::time::timeout(
+                    within,
+                    text.texts(id, unnamed.airing(), clock.now()),
+                )
+                .await
+                {
+                    Ok(Ok(texts)) => tidy_texts(texts, &unnamed.media),
+                    Ok(Err(error)) => {
+                        tracing::info!(%id, %error, "no episode text from the fill");
+                        have_text
+                    }
+                    Err(_) => {
+                        tracing::info!(%id, "the episode text fill gave up waiting");
+                        have_text
+                    }
+                }
+            };
+            let (borrowed, texts) = tokio::join!(from_sources, from_fill);
             {
                 let mut inner = names.lock();
                 if inner.running.as_ref().is_some_and(|running| running.serial == serial) {
                     inner.running = None;
                 }
             }
-            let named = unnamed.named(&borrowed);
+            let named = unnamed.named(&borrowed, &texts);
             type Shown = (Option<String>, Option<String>, Option<String>);
             let shown = |episodes: &[Episode]| -> Vec<Shown> {
                 episodes
@@ -578,6 +641,8 @@ mod tests {
         /// The last table's titles and stills, to tell a table that only ends the wait for
         /// synopses from one that names more.
         last: Vec<(Option<String>, Option<String>)>,
+        /// The synopsis fill, aimed at a stand-in on loopback.
+        text: Option<Arc<kaeri_meta::EpisodeText>>,
     }
 
     impl Page {
@@ -592,7 +657,15 @@ mod tests {
                 tx: Outbox::from(tx),
                 rx,
                 last: Vec::new(),
+                text: None,
             }
+        }
+
+        /// With the synopsis fill on, asking the stand-in at `base`.
+        fn with_fill(mut self, base: String) -> Self {
+            let text = kaeri_meta::EpisodeText::new(kaeri_testkit::http(), self.store.clone());
+            self.text = Some(Arc::new(text.with_endpoint(base)));
+            self
         }
 
         /// The torrent's table of `episodes`, filled in as a load fills it, said.
@@ -607,6 +680,7 @@ mod tests {
                 "torrent",
                 Default::default(),
                 0,
+                self.text.clone(),
             ) {
                 Some(unnamed) => naming.say(
                     SHOW,
@@ -665,6 +739,99 @@ mod tests {
 
     fn bare(numbers: std::ops::RangeInclusive<u32>) -> Vec<Episode> {
         numbers.map(Episode::new).collect()
+    }
+
+    /// A stand-in for the episode service on loopback: answers every request with `status` and
+    /// `body`, and counts the requests.
+    async fn stand_in(status: u16, body: &'static str) -> (String, Arc<AtomicUsize>) {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let base = format!("http://{}", listener.local_addr().unwrap());
+        let count = Arc::new(AtomicUsize::new(0));
+        let seen = count.clone();
+        tokio::spawn(async move {
+            loop {
+                let Ok((mut socket, _)) = listener.accept().await else { return };
+                seen.fetch_add(1, Ordering::SeqCst);
+                tokio::spawn(async move {
+                    let mut buffer = [0u8; 2048];
+                    let _ = socket.read(&mut buffer).await;
+                    let reply = format!(
+                        "HTTP/1.1 {status} X\r\ncontent-type: application/json\r\ncontent-length: {}\r\nconnection: close\r\n\r\n{body}",
+                        body.len()
+                    );
+                    let _ = socket.write_all(reply.as_bytes()).await;
+                });
+            }
+        });
+        (base, count)
+    }
+
+    const FILL: &str = r#"{"episodes":{"1":{"overview":"A lamplighter finds a lantern."},"2":{"summary":"Only a summary."},"3":{"overview":"From the fill."}}}"#;
+
+    #[tokio::test]
+    async fn the_fill_adds_synopses_to_a_table_after_it_is_said_and_asks_once_per_title() {
+        let (base, count) = stand_in(200, FILL).await;
+        let mut page = Page::new(registry(vec![torrent()]), false).with_fill(base);
+        page.load(bare(1..=12), false);
+
+        let first = page.table().await;
+        assert!(first.iter().all(|row| row.description.is_none() && row.synopsis_pending));
+        let filled = page.table().await;
+        assert_eq!(filled[0].description.as_deref(), Some("A lamplighter finds a lantern."));
+        assert_eq!(filled[1].description.as_deref(), Some("Only a summary."));
+        assert!(filled[3].description.is_none());
+        assert!(filled.iter().all(|row| !row.synopsis_pending));
+
+        // Opened again: said with the text at once, and nothing is asked.
+        page.load(bare(1..=12), false);
+        let again = page.table().await;
+        assert_eq!(again[0].description.as_deref(), Some("A lamplighter finds a lantern."));
+        assert!(again.iter().all(|row| !row.synopsis_pending));
+        assert_eq!(calls(&count), 1);
+    }
+
+    #[tokio::test]
+    async fn the_fill_never_replaces_a_synopsis_a_source_gave() {
+        let (base, _) = stand_in(200, FILL).await;
+        let mut listed = catalogued(1..=12, "img.shelf.example");
+        listed[2].description = Some("The shelf's own words.".into());
+        let mut page = Page::new(registry(vec![torrent(), catalogue("shelf", listed)]), false)
+            .with_fill(base);
+        page.load(bare(1..=12), false);
+        let _ = page.table().await;
+        let named = page.table().await;
+        assert_eq!(named[2].description.as_deref(), Some("The shelf's own words."));
+        assert_eq!(named[0].description.as_deref(), Some("A lamplighter finds a lantern."));
+    }
+
+    #[tokio::test]
+    async fn a_refusal_leaves_the_rows_bare_ends_the_wait_and_rests_the_service() {
+        let (base, count) = stand_in(429, "{}").await;
+        let mut page = Page::new(registry(vec![torrent()]), false).with_fill(base);
+        page.load(bare(1..=12), false);
+        let first = page.table().await;
+        assert!(first.iter().all(|row| row.synopsis_pending));
+        let ended = page.table().await;
+        assert!(ended.iter().all(|row| row.description.is_none() && !row.synopsis_pending));
+        assert_eq!(calls(&count), 1);
+
+        // Another title's listing within the rest asks nothing.
+        page.load(bare(1..=12), false);
+        let _ = page.table().await;
+        let _ = page.table().await;
+        assert_eq!(calls(&count), 1);
+    }
+
+    #[tokio::test]
+    async fn offline_the_fill_asks_nothing() {
+        let (base, count) = stand_in(200, FILL).await;
+        let mut page = Page::new(registry(vec![torrent()]), false).with_fill(base);
+        page.load(bare(1..=12), true);
+        let rows = page.table().await;
+        assert!(rows.iter().all(|row| row.description.is_none() && !row.synopsis_pending));
+        assert!(page.quiet().await);
+        assert_eq!(calls(&count), 0);
     }
 
     #[tokio::test]
@@ -756,7 +923,7 @@ mod tests {
         let numbering = data::enrich_episodes(&mut episodes, &airing, 0);
         assert_eq!(numbering, Numbering::Unknown);
         assert!(
-            Unnamed::of(&airing, &episodes, numbering, "torrent", Default::default(), 0)
+            Unnamed::of(&airing, &episodes, numbering, "torrent", Default::default(), 0, None)
                 .is_none()
         );
     }
@@ -979,7 +1146,7 @@ mod tests {
             missing: ["3".to_owned()].into(),
         };
         let unnamed =
-            Unnamed::of(&media(false), &episodes, Numbering::Same, "torrent", marks, 0)
+            Unnamed::of(&media(false), &episodes, Numbering::Same, "torrent", marks, 0, None)
                 .expect("nothing is named");
         let store = Store::open_in_memory().unwrap();
         let rows = unnamed.rows(&episodes, &store, SHOW, false);

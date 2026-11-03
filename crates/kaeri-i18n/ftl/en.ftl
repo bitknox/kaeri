@@ -9153,15 +9153,6 @@ stores-qr-warning-device = Scan this with the device you want to link. It works 
 # Button that opens the system share sheet for the invite link.
 stores-share = Share…
 
-# The line in the episode list where spoiler protection starts, after the person chose to see what it hides.
-episode-protection-shown = Showing what comes after episode { $episode }.
-
-# Button on the spoiler protection line: shows the synopses and stills it hides, until the page closes.
-episode-protection-show = Show
-
-# Button on the spoiler protection line once it is showing what it hides: hides it again.
-episode-protection-hide = Hide
-
 # Title of the state when a title page could not load.
 title-load-failed = Couldn't load this title
 
@@ -9309,6 +9300,33 @@ episode-fold =
         [one] One watched episode
        *[other] { $count } watched episodes
     }
+
+# An episode's number in a facts line on phones.
+episode-short = E{ $episode }
+
+# Part of an episode's facts line: when it aired. The date is already formatted.
+episode-aired = Aired { $date }
+
+# Two parts of an episode's facts line, set one after the other.
+episode-facts-join = { $first } · { $second }
+
+# Button in the line where spoiler protection starts: shows what comes after.
+episode-protection-show = Show
+
+# Button in that line once the rows after it are shown: hides them again.
+episode-protection-hide = Hide
+
+# The line where spoiler protection starts, once the rows after it are shown.
+episode-protection-shown = Showing what comes after episode { $episode }.
+
+# The same line on phones.
+episode-protection-shown-short = Showing after episode { $episode }
+
+# An episode range in the range menu: the first and the last episode.
+episode-range-short = { $from }–{ $to }
+
+# An item of the range menu: the range, then Watched or Not out yet.
+episode-range-item = { $range } · { $state }
 
 # Accessibility label of the button that opens an episode's menu.
 episode-options = Episode options
