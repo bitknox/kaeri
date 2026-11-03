@@ -30,7 +30,10 @@
 #   android/mpv/patches/<project>/*.patch are applied to that project's source before it builds:
 #                    dav1d and FFmpeg use SVE2 code only where the CPU has SVE as well, since the
 #                    emulator on an Apple M4 reports SVE2 (streaming mode only) without SVE, and
-#                    10-bit AV1 died there with SIGILL.
+#                    10-bit AV1 died there with SIGILL. mpv gets the demuxer audio tap for skip
+#                    detection (mpv_set_audio_tap, exported by libmpv.map's mpv_*). The mpv
+#                    patches are every platform's: apple/scripts/mpv.sh and
+#                    desktop/linux/scripts/libmpv.sh apply them too.
 #
 # --vulkan builds a second variant for the plan's spike question AS4, in android/.mpv/<pin>-vk
 # (linked as android/.mpv/vulkan): libplacebo and mpv with Vulkan (mpv's androidvk context),

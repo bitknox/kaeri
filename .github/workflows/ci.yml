@@ -164,7 +164,7 @@ jobs:
             apple=$(tools/engine-touched.sh crates/kaeri-ffi/ apple/ assets/ "${ci[@]}" < "$RUNNER_TEMP/changed.txt")
           else
             native=$(grep -Ec "$cache_re" "$RUNNER_TEMP/changed.txt" || true)
-            apple=$(tools/engine-touched.sh apple/scripts/engine.sh apple/scripts/mpv.sh apple/patches/ "${ci[@]}" < "$RUNNER_TEMP/changed.txt")
+            apple=$(tools/engine-touched.sh apple/scripts/engine.sh apple/scripts/mpv.sh apple/patches/ android/mpv/patches/mpv/ "${ci[@]}" < "$RUNNER_TEMP/changed.txt")
           fi
           [[ "$native" != 0 ]] && native=true || native=false
           if [[ "$everything" == true ]]; then native=true; engine=true; apple=true; fi
@@ -630,7 +630,7 @@ jobs:
         uses: actions/cache/restore@v6
         with:
           path: apple/.mpv/${{ env.MPV_PIN }}
-          key: ci-apple-mpv-macos-ios-xcode${{ env.XCODE }}-${{ hashFiles('apple/scripts/mpv.sh', 'apple/patches/**') }}
+          key: ci-apple-mpv-macos-ios-xcode${{ env.XCODE }}-${{ hashFiles('apple/scripts/mpv.sh', 'apple/patches/**', 'android/mpv/patches/mpv/**') }}
           lookup-only: ${{ github.event_name == 'push' }}
       - name: libmpv
         if: env.PART != 'caches' || steps.mpv.outputs.cache-hit != 'true'
