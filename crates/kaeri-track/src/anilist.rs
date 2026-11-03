@@ -14,7 +14,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use kaeri_meta::anilist::{AniList, AniListError, LibraryEntry, TitleLanguage, Viewer};
+use kaeri_meta::anilist::{AniList, AniListError, Lane, LibraryEntry, TitleLanguage, Viewer};
 
 /// How long one library answer serves every ask for the library.
 ///
@@ -22,6 +22,10 @@ use kaeri_meta::anilist::{AniList, AniListError, LibraryEntry, TitleLanguage, Vi
 /// the same list: five requests for one answer, the first time it opened. Short, because the
 /// list is the remote one and this screen is how its changes are seen.
 pub const LIBRARY_REUSE: Duration = Duration::from_secs(30);
+
+/// How often an ask waiting for the viewer or the list raises the request it waits on again:
+/// see [`AniListTracker::wait_for`].
+const RAISE_EVERY: Duration = Duration::from_millis(250);
 
 /// Where the signed-in viewer's AniList id is kept between launches, so a launch's list can
 /// ride with its viewer lookup. See [`AniListTracker::with_store`].
@@ -88,6 +92,11 @@ pub struct AniListTracker {
     /// The last library answer. Held across the request, so asks made while one is out wait
     /// for it and take its answer: see [`LIBRARY_REUSE`].
     library: tokio::sync::Mutex<Option<LastLibrary>>,
+    /// The lane of the request made under `viewer` or `library` while it is out. A background
+    /// pull's request waits its turn in the background queue with the lock held, so an ask
+    /// that comes to wait for the lock raises the request to its own class: the Library screen
+    /// never waits behind the pull's place in that queue.
+    asking: std::sync::Mutex<Option<Lane>>,
     /// Counted up on every sign-in, sign-out and change written to the list, each of which
     /// makes the last library answer someone else's or out of date.
     changes: AtomicU64,
@@ -103,6 +112,7 @@ impl AniListTracker {
             viewer: tokio::sync::Mutex::new(None),
             signed_out: std::sync::atomic::AtomicBool::new(false),
             library: tokio::sync::Mutex::new(None),
+            asking: std::sync::Mutex::new(None),
             changes: AtomicU64::new(0),
             store: None,
         }
@@ -171,7 +181,7 @@ impl AniListTracker {
     /// The title language in the viewer's last answer this run, without asking: `None` when
     /// AniList has not answered for the viewer yet, `Some(None)` when it did not say one.
     pub async fn answered_title_language(&self) -> Option<Option<TitleLanguage>> {
-        self.viewer.lock().await.as_ref().map(|viewer| viewer.title_language)
+        self.wait_for(&self.viewer).await.as_ref().map(|viewer| viewer.title_language)
     }
 
     /// The full library, with media attached, for the Library screen.
@@ -186,7 +196,7 @@ impl AniListTracker {
         // The viewer first, outside the list's lock: with the id kept from before, the
         // viewer's request brings the list as well, and leaves it as the last answer.
         let viewer = self.viewer().await;
-        let mut last = self.library.lock().await;
+        let mut last = self.wait_for(&self.library).await;
         let changes = self.changes.load(Ordering::SeqCst);
         if let Some(last) = last.as_ref()
             && last.changes == changes
@@ -195,16 +205,44 @@ impl AniListTracker {
             return last.answer.clone().map_err(to_core);
         }
         let (answer, fresh) = match viewer {
-            Ok(viewer) => self.list_with_viewer(viewer.id).await,
+            Ok(viewer) => self.asking(self.list_with_viewer(viewer.id)).await,
             Err(e) => (Err(e), None),
         };
         *last = Some(LastLibrary { changes, at: Instant::now(), answer: answer.clone() });
         drop(last);
         if let Some(viewer) = fresh {
             self.remember(Some(&viewer));
-            *self.viewer.lock().await = Some(viewer);
+            *self.wait_for(&self.viewer).await = Some(viewer);
         }
         answer.map_err(to_core)
+    }
+
+    /// Take `lock`, raising the request made under it, if one is out, to the caller's class
+    /// while waiting.
+    async fn wait_for<'a, T>(
+        &self,
+        lock: &'a tokio::sync::Mutex<T>,
+    ) -> tokio::sync::MutexGuard<'a, T> {
+        let mut taken = std::pin::pin!(lock.lock());
+        loop {
+            if let Some(lane) = self.asking.lock().unwrap_or_else(|e| e.into_inner()).as_ref() {
+                lane.raise(kaeri_meta::anilist::priority());
+            }
+            if let Ok(guard) = tokio::time::timeout(RAISE_EVERY, taken.as_mut()).await {
+                return guard;
+            }
+        }
+    }
+
+    /// Make `ask`, a request under one of the list's locks, in a lane of its own in the
+    /// caller's class, which [`Self::wait_for`] raises for whoever comes to wait. Its own lane,
+    /// so raising it hurries this request and not the rest of the caller's work.
+    async fn asking<F: std::future::Future>(&self, ask: F) -> F::Output {
+        let lane = Lane::new(kaeri_meta::anilist::priority());
+        *self.asking.lock().unwrap_or_else(|e| e.into_inner()) = Some(lane.clone());
+        let answer = lane.run(ask).await;
+        *self.asking.lock().unwrap_or_else(|e| e.into_inner()) = None;
+        answer
     }
 
     /// The list of the viewer `id`, asked with the viewer, and the viewer as answered. An
@@ -268,15 +306,15 @@ impl AniListTracker {
     }
 
     async fn viewer(&self) -> Result<Viewer, AniListError> {
-        let mut cached = self.viewer.lock().await;
+        let mut cached = self.wait_for(&self.viewer).await;
         if let Some(viewer) = cached.as_ref() {
             return Ok(viewer.clone());
         }
         if let Some(id) = self.remembered() {
             // Held across the request, so a pull made meanwhile waits for this list.
-            let mut last = self.library.lock().await;
+            let mut last = self.wait_for(&self.library).await;
             let changes = self.changes.load(Ordering::SeqCst);
-            match self.client.viewer_and_library(id).await {
+            match self.asking(self.client.viewer_and_library(id)).await {
                 Ok((viewer, library)) => {
                     if viewer.id == id {
                         *last = Some(LastLibrary {
@@ -303,7 +341,7 @@ impl AniListTracker {
                 Err(e) => return Err(e),
             }
         }
-        let viewer = self.client.viewer().await?;
+        let viewer = self.asking(self.client.viewer()).await?;
         self.remember(Some(&viewer));
         *cached = Some(viewer.clone());
         Ok(viewer)
@@ -331,7 +369,7 @@ impl Tracker for AniListTracker {
         self.signed_out.store(false, std::sync::atomic::Ordering::Relaxed);
         // The cached viewer id belonged to whoever was signed in before, and a library pull keyed on
         // it would fetch the wrong account's list. So did the last library answer.
-        *self.viewer.lock().await = None;
+        *self.wait_for(&self.viewer).await = None;
         self.remember(None);
         self.changed();
     }
@@ -340,7 +378,7 @@ impl Tracker for AniListTracker {
         self.signed_out.store(true, std::sync::atomic::Ordering::Relaxed);
         // Drop the cached viewer id too, so signing into a *different* account cannot inherit the
         // previous one's list.
-        *self.viewer.lock().await = None;
+        *self.wait_for(&self.viewer).await = None;
         self.remember(None);
         self.changed();
     }

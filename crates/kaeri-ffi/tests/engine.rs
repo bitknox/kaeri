@@ -252,9 +252,16 @@ fn the_fake_anilist_says_what_it_was_asked() {
     let job = engine
         .send(Command::LoadDetail(AnilistId::new(900_001)))
         .expect("loading a title is a job");
-    read_until(&engine, ends(job));
-    // One title is one request, by its operation's name.
-    assert_eq!(engine.testing_anilist_requests()[before..], ["Detail"]);
+    // The page's job asks for the title. Once it is done, the headers of the franchise's other
+    // seasons go in one request apart from it and are said as cards, so the count is read once
+    // they are, not at the job's end.
+    let cards = |event: &Event| matches!(event, Event::Cards(_));
+    let read = read_until(&engine, ends(job));
+    if !read.iter().any(cards) {
+        read_until(&engine, cards);
+    }
+    // One title is one request, by its operation's name, and its other seasons one more.
+    assert_eq!(engine.testing_anilist_requests()[before..], ["Detail", "Many"]);
     engine.shutdown();
 }
 
