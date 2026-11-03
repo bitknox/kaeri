@@ -19,7 +19,11 @@ use crate::{say, widgets};
 
 /// Wrong times is up for 8 s, Was that the opening for as long as the corner's other notes.
 const WRONG_FOR: Duration = Duration::from_secs(8);
-const WAS_OPENING_FOR: Duration = Duration::from_secs(12);
+const WAS_OPENING_FOR: Duration =
+    Duration::from_secs(kaeri_model::playback::SKIP_PROMPT_HOLD_SECS as u64);
+/// How long the found times' card holds its answer.
+const FOUND_ANSWER_FOR: Duration =
+    Duration::from_secs(kaeri_model::playback::FOUND_ANSWER_SECS as u64);
 
 /// A prompt's button: its words, whether it is the one to press, and what it does.
 type PromptButton = (String, bool, Box<dyn Fn(&PlayerView)>);
@@ -328,6 +332,7 @@ impl PlayerView {
                     note(t::player_mark_replaces(&say::clock(*start), &say::clock(*end)));
                 }
                 SkipMarkNote::NoEntry => note(t::player_mark_no_mal()),
+                SkipMarkNote::Found => note(t::player_mark_found()),
             }
         }
         let actions = gtk::Box::new(gtk::Orientation::Horizontal, 8);
@@ -389,10 +394,10 @@ impl PlayerView {
         if self.prompt_held.get() {
             return;
         }
-        let after = if matches!(prompt, SkipPrompt::WrongTimes { .. }) {
-            WRONG_FOR
-        } else {
-            WAS_OPENING_FOR
+        let after = match prompt {
+            SkipPrompt::WrongTimes { .. } => WRONG_FOR,
+            SkipPrompt::FoundSaved { .. } | SkipPrompt::FoundNever => FOUND_ANSWER_FOR,
+            _ => WAS_OPENING_FOR,
         };
         let weak = self.self_weak();
         let source = glib::timeout_add_local_once(after, move || {
@@ -442,8 +447,44 @@ impl PlayerView {
                     ),
                 ],
             ),
+            SkipPrompt::FoundEdges { kind, episode } => (
+                format!(
+                    "{}\n{}",
+                    match kind {
+                        SkipKind::Ending => t::player_found_ask_ending(),
+                        _ => t::player_found_ask_opening(),
+                    },
+                    t::player_found_ask_share(episode.into())
+                ),
+                vec![
+                    (
+                        t::player_dont_ask_again(),
+                        false,
+                        Box::new(|v| v.send(PlayerCommand::NeverAskWasOpening)),
+                    ),
+                    (
+                        t::player_found_adjust(),
+                        false,
+                        Box::new(move |v| v.send(PlayerCommand::AdjustFoundSkip { kind })),
+                    ),
+                    (
+                        t::player_found_yes(),
+                        true,
+                        Box::new(move |v| v.send(PlayerCommand::ConfirmFoundSkip { kind })),
+                    ),
+                ],
+            ),
+            SkipPrompt::FoundSaved { episode, .. } => {
+                (t::player_found_saved(episode.into()), Vec::new())
+            }
+            SkipPrompt::FoundNever => (
+                format!("{}\n{}", t::player_found_never(), t::player_found_never_how()),
+                Vec::new(),
+            ),
             SkipPrompt::Share => return,
         };
+        // The found times' card is answered as it stands: the engine reads which card it was.
+        let answered = matches!(prompt, SkipPrompt::FoundEdges { .. });
         let label = gtk::Label::new(Some(&line));
         label.set_valign(gtk::Align::Center);
         label.set_wrap(true);
@@ -460,7 +501,9 @@ impl PlayerView {
                 if let Some(source) = view.prompt_timer.take() {
                     source.remove();
                 }
-                view.send(PlayerCommand::DismissSkipPrompt);
+                if !answered {
+                    view.send(PlayerCommand::DismissSkipPrompt);
+                }
                 act(&view);
             });
             card.append(&button);
@@ -510,6 +553,7 @@ impl PlayerView {
                 Some(m) => match m.origin {
                     Some(SkipOrigin::Yours) => t::player_skip_yours(),
                     Some(SkipOrigin::AniSkip) => t::player_skip_from_aniskip(),
+                    Some(SkipOrigin::Found) => t::player_skip_found(),
                     _ => t::player_skip_from_file(),
                 },
             };
@@ -543,6 +587,10 @@ impl PlayerView {
                     Some(SkipOrigin::Yours) => suffix(
                         t::player_skip_clear(),
                         Box::new(move |v| v.send(PlayerCommand::ClearMySkip { kind })),
+                    ),
+                    Some(SkipOrigin::Found) => suffix(
+                        t::player_found_adjust(),
+                        Box::new(move |v| v.send(PlayerCommand::AdjustFoundSkip { kind })),
                     ),
                     _ => {}
                 }
