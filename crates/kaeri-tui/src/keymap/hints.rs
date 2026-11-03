@@ -357,6 +357,7 @@ pub(crate) fn status_hints_paged(
         V::Section(Section::Together) => {
             let mut hints = vec![(Action::Open, hint_open())];
             if let Some(party) = &app.party {
+                hints.push((Action::FixMapping, said(t::keys_hint_say())));
                 hints.push((Action::Refresh, hint_ready()));
                 hints.push((Action::ClearCompleted, hint_copy_link()));
                 if party.can_start_anyway {
@@ -460,10 +461,12 @@ fn overlay_hints(
                 O::KitsuPassword => hint_sign_in(),
                 O::JoinStore => hint_check(),
                 O::JoinParty => hint_open(),
+                O::Say => said(t::party_chat_send()),
                 O::InviteName => hint_make_link(),
                 _ => hint_choose(),
             };
-            vec![hint("↵", verb), hint(ESC, hint_cancel())]
+            let leave = if matches!(other, O::Say) { hint_close() } else { hint_cancel() };
+            vec![hint("↵", verb), hint(ESC, leave)]
         }
     }
 }

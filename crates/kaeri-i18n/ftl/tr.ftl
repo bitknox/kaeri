@@ -3974,9 +3974,6 @@ tui-together-section = Birlikte
 # Prompt of the Join line in the Together section.
 tui-together-join-prompt = bağlantı ya da kod
 
-# Hint line of the keys in the Together section.
-tui-together-keys = r hazır · c bağlantıyı kopyala · s şimdi başlat · x ayrıl
-
 # Toast when what was typed in the Together section's Join line is neither a link nor a code.
 tui-together-not-a-link = Bu bir parti bağlantısı ya da kodu değil.
 

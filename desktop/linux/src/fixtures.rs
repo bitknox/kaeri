@@ -125,6 +125,22 @@ impl FakeParty {
         self.member(name, |m| m.chat(message));
     }
 
+    /// The member reacts `at` seconds into the episode.
+    pub fn reacts(&self, name: &str, reaction: kaeri_party::Reaction, at: f64) {
+        self.member(name, |m| m.chat(&kaeri_party::reaction::encode(reaction, at)));
+    }
+
+    /// The server turns chat on or off, and says how long a line may be to members who join
+    /// after this.
+    pub fn set_chat(&self, on: bool, max_length: Option<u32>) {
+        self.with(|server| server.set_chat(on, max_length));
+    }
+
+    /// The server takes chat and sends it to no one, so a sender's line never comes back.
+    pub fn swallow_chat(&self, swallow: bool) {
+        self.with(|server| server.swallow_chat(swallow));
+    }
+
     /// The server goes away, as one lost does: every connection dropped and none taken.
     pub fn go_down(&self, down: bool) {
         self.with(|server| {

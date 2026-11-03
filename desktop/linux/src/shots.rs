@@ -117,7 +117,7 @@ pub const ALL: [&str; 92] = [
 /// The watch party's shots, apart from the rest: each holds a party on the scene's own server,
 /// and they take long enough that a run of every shot would not fit its time. `--shot party`
 /// takes them all.
-pub const PARTY: [&str; 21] = [
+pub const PARTY: [&str; 32] = [
     "party-form",
     "party-joining",
     "party-refused",
@@ -125,6 +125,17 @@ pub const PARTY: [&str; 21] = [
     "party-panel",
     "party-ready",
     "party-chat",
+    "party-chat-column",
+    "party-chat-fold",
+    "party-chat-moment",
+    "party-chat-field",
+    "party-chat-count",
+    "party-chat-popover",
+    "party-chat-failed",
+    "party-chat-off",
+    "party-chat-hidden",
+    "party-chat-muted",
+    "party-chat-lobby",
     "party-left",
     "party-lost",
     "party-close",
@@ -2010,7 +2021,7 @@ fn party_stage(shell: &Rc<Shell>, shot: &str) -> f64 {
             shell.go(Dest::Together);
             2.5
         }
-        "party-lobby" | "party-lobby-invited" | "party-lobby-waiting" => {
+        "party-lobby" | "party-lobby-invited" | "party-lobby-waiting" | "party-chat-lobby" => {
             let Some(server) = serve(None) else { return 0.0 };
             let file = |episode: &str| {
                 kaeri_party::file::file_name("Stardust Wayfarer", TITLE, episode) // i18n-skip
@@ -2026,6 +2037,7 @@ fn party_stage(shell: &Rc<Shell>, shot: &str) -> f64 {
                     }),
                 }));
                 crate::pages::lobby::push(&ctx, None);
+                let chatty = shot == "party-chat-lobby";
                 glib::timeout_add_local_once(Duration::from_millis(2500), move || {
                     PARTY_SERVER.with(|p| {
                         let p = p.borrow();
@@ -2036,6 +2048,11 @@ fn party_stage(shell: &Rc<Shell>, shot: &str) -> f64 {
                         party.add(ROOM, "Ren");
                         party.opens("Ren", &file("9"), 1440.0);
                         party.ready("Ren", false);
+                        if chatty {
+                            party.says("Mika", "snacks ready?");
+                            party.says("Ren", "two minutes, making tea");
+                            party.says("Mika", "the soundtrack is at music.example/ost");
+                        }
                     });
                 });
                 if shot == "party-lobby-waiting" {
@@ -2172,6 +2189,7 @@ fn party_stage(shell: &Rc<Shell>, shot: &str) -> f64 {
                 "party-lost" => 18.0,
                 "party-upnext" => 12.0,
                 "party-left" | "party-ready" => 16.0,
+                "party-chat-failed" => 19.0,
                 _ => 14.0,
             }
         }
@@ -2191,6 +2209,13 @@ fn party_playing(shell: &Rc<Shell>, server: String, shot: String) {
     let until = move |at: f64| wait((at - started.elapsed().as_secs_f64()).max(0.0));
     glib::spawn_future_local(async move {
         let hub = Rc::clone(&shell.ctx.hub);
+        match shot.as_str() {
+            "party-chat-count" => party_chat_setup(|p| p.set_chat(true, Some(40))),
+            "party-chat-off" => party_chat_setup(|p| p.set_chat(false, None)),
+            "party-chat-failed" => party_chat_setup(|p| p.swallow_chat(true)),
+            "party-chat-hidden" => shell.ctx.prefs.set_hide_chat(true),
+            _ => {}
+        }
         hub.send(Command::PartyJoin { server, room: ROOM.into(), name: Some("Ada".into()) });
         hub.send(Command::Play {
             id: AnilistId::new(TITLE),
@@ -2248,6 +2273,12 @@ fn party_playing(shell: &Rc<Shell>, server: String, shot: String) {
                 until(11.5).await;
                 party(&|p| p.says("Mika", "Starting in a minute, grabbing tea"));
             }
+            "party-chat-column" | "party-chat-fold" | "party-chat-moment"
+            | "party-chat-field" | "party-chat-count" | "party-chat-popover"
+            | "party-chat-failed" | "party-chat-off" | "party-chat-hidden"
+            | "party-chat-muted" => {
+                chat_scene(&shell, &shot, &party).await;
+            }
             "party-left" => {
                 until(11.5).await;
                 shell.player.show_party();
@@ -2279,6 +2310,98 @@ fn party_playing(shell: &Rc<Shell>, server: String, shot: String) {
     });
 }
 
+/// Set the server's chat up before the shot's party joins.
+#[cfg(feature = "fixtures")]
+fn party_chat_setup(act: impl FnOnce(&crate::fixtures::FakeParty)) {
+    PARTY_SERVER.with(|p| {
+        if let Some(party) = p.borrow().as_ref() {
+            act(party);
+        }
+    });
+}
+
+/// Runs an act on the shot's server.
+#[cfg(feature = "fixtures")]
+type PartyAct = dyn Fn(&dyn Fn(&crate::fixtures::FakeParty));
+
+/// The chat states the watch together chat board draws, over the playing party. Everything lands
+/// at about 11 s and the shot is taken at 14 s, while the lines still hold.
+#[cfg(feature = "fixtures")]
+async fn chat_scene(shell: &Rc<Shell>, shot: &str, party: &PartyAct) {
+    use kaeri_party::Reaction;
+    wait(10.0).await;
+    party(&|p| p.add(ROOM, "Sol"));
+    wait(0.6).await;
+    let lines = [
+        ("Mika", "ok starting"),
+        ("Ren", "the handoff in the rain, I knew it"),
+        ("Sol", "wait, who is the new runner"),
+    ];
+    match shot {
+        "party-chat-fold" => {
+            for (who, text) in lines.iter().chain(&[
+                ("Mika", "this part again"),
+                ("Ren", "ready"),
+                ("Sol", "one sec"),
+            ]) {
+                party(&|p| p.says(who, text));
+                wait(0.15).await;
+            }
+        }
+        "party-chat-moment" => {
+            party(&|p| p.says("Mika", "ok starting"));
+            wait(0.3).await;
+            party(&|p| {
+                p.reacts("Ren", Reaction::Gasp, 1.5);
+                p.reacts("Mika", Reaction::Laugh, 3.0);
+                p.reacts("Sol", Reaction::Laugh, 3.1);
+            });
+        }
+        "party-chat-off" | "party-chat-hidden" => {
+            party(&|p| p.says("Mika", "ok starting"));
+            wait(0.4).await;
+            shell.player.chat().shot_pop();
+        }
+        "party-chat-field" => {
+            party(&|p| p.says("Mika", lines[0].1));
+            wait(0.3).await;
+            shell.player.chat().shot_type("the handoff in the rain");
+        }
+        "party-chat-count" => {
+            wait(0.3).await;
+            shell.player.chat().shot_type("the handoff in the rain, I knew it, so good");
+        }
+        "party-chat-failed" => {
+            wait(0.3).await;
+            shell.player.chat().shot_type("anyone there");
+            shell.player.chat().shot_send();
+            wait(6.0).await;
+            shell.player.show_party();
+        }
+        "party-chat-popover" | "party-chat-muted" => {
+            for (who, text) in lines {
+                party(&|p| p.says(who, text));
+                wait(0.2).await;
+            }
+            party(&|p| p.reacts("Ren", Reaction::Laugh, 3.0));
+            if shot == "party-chat-muted" {
+                shell.ctx.hub.send(Command::Party(kaeri_model::party::PartyCommand::Mute {
+                    name: "Sol".into(),
+                    muted: true,
+                }));
+            }
+            wait(0.4).await;
+            shell.player.show_party();
+        }
+        _ => {
+            for (who, text) in lines {
+                party(&|p| p.says(who, text));
+                wait(0.3).await;
+            }
+        }
+    }
+}
+
 /// Leave the party state a shot put the window in.
 #[cfg(feature = "fixtures")]
 fn party_unstage(shell: &Rc<Shell>, shot: &str) {
@@ -2290,6 +2413,7 @@ fn party_unstage(shell: &Rc<Shell>, shot: &str) {
     close_dialogs(&shell.ctx.window);
     close_dialogs(&shell.ctx.window);
     shell.ctx.hub.send(Command::PartyLeave);
+    shell.ctx.prefs.set_hide_chat(false);
     if shell.is_player() {
         shell.player.close();
     }

@@ -3925,9 +3925,6 @@ tui-together-section = Nonton bareng
 # Prompt of the Join line in the Together section.
 tui-together-join-prompt = tautan atau kode
 
-# Hint line of the keys in the Together section.
-tui-together-keys = r siap · c salin tautan · s mulai sekarang · x keluar
-
 # Toast when what was typed in the Together section's Join line is neither a link nor a code.
 tui-together-not-a-link = Itu bukan tautan atau kode nonton bareng.
 

@@ -562,6 +562,7 @@ impl Inner {
             }
             if name == "playback" && *title == Group::Player {
                 group.add(&self.clear_skips_row());
+                group.add(&self.hide_chat_row());
                 any = true;
             }
             if name == "downloads" && *title == Group::Files {
@@ -689,6 +690,22 @@ impl Inner {
     }
 
     /// Clear skip times you marked: the engine answers with a notice of how many it forgot.
+    /// Hide chat: this device stops showing chat and reactions, in the player and the lobby.
+    fn hide_chat_row(self: &Rc<Self>) -> adw::SwitchRow {
+        let row = adw::SwitchRow::builder()
+            .title(t::settings_hide_chat())
+            .subtitle(t::settings_hide_chat_line())
+            .active(self.ctx.prefs.hide_chat())
+            .build();
+        let ctx = Rc::downgrade(&self.ctx);
+        row.connect_active_notify(move |row| {
+            if let Some(ctx) = ctx.upgrade() {
+                ctx.prefs.set_hide_chat(row.is_active());
+            }
+        });
+        row
+    }
+
     fn clear_skips_row(self: &Rc<Self>) -> adw::ActionRow {
         let row = adw::ActionRow::builder().title(t::settings_clear_skips()).build();
         let clear = gtk::Button::with_label(&t::player_skip_clear());

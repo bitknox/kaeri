@@ -666,3 +666,7 @@ keys-hint-copy-link = Copy link
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 # @max 20
 keys-hint-leave-party = Leave
+
+# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
+# @max 20
+keys-hint-say = Say

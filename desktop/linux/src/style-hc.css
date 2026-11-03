@@ -40,3 +40,5 @@ list.boxed-list, .boxed-list > row, .corner-card, popover > contents {
 
 /* A seen mark and the calendar's today differ by more than colour. */
 .mark.ring { box-shadow: inset 0 0 0 2px var(--haze); }
+
+.chat-line, .chat-moment { background: black; border: 1px solid white; }

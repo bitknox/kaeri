@@ -3,7 +3,7 @@
 use kaeri_i18n::t;
 use kaeri_model::{
     command::Command,
-    party::{PartyCommand, PartyRecentRoom, PartyTarget},
+    party::{PartyChatRefusal, PartyCommand, PartyRecentRoom, PartyTarget, Reaction},
 };
 
 use super::{App, Field, alert, info};
@@ -46,6 +46,7 @@ impl App {
             Action::ClearCompleted if party => self.party_copy_link(),
             Action::ShowSources if party => self.party_start(),
             Action::HideFromContinue if party => Some(Command::PartyLeave),
+            Action::FixMapping if party => self.open_say(),
             _ => return None,
         })
     }
@@ -117,6 +118,66 @@ impl App {
         None
     }
 
+    /// `m`: the field for saying something, unless the room's server has no chat.
+    fn open_say(&mut self) -> Option<Command> {
+        if self.party_chat_state.as_ref().is_some_and(|s| !s.allowed) {
+            self.push_toast(info(t::party_chat_off()));
+            return None;
+        }
+        self.nav.open_overlay(Overlay::Say);
+        None
+    }
+
+    /// Enter in the Say field: the line goes to the party and the field stays open for the
+    /// next. A typed `*laughs*`, `*gasps*`, `*claps*` or `*cries*` is the reaction.
+    pub(super) fn submit_say(&mut self) -> Option<Command> {
+        let text = self.text(Field::Say).trim().to_owned();
+        if text.is_empty() {
+            return None;
+        }
+        self.field_mut(Field::Say).clear();
+        let reaction = match text.as_str() {
+            "*laughs*" => Some(Reaction::Laugh),
+            "*gasps*" => Some(Reaction::Gasp),
+            "*claps*" => Some(Reaction::Clap),
+            "*cries*" => Some(Reaction::Cry),
+            _ => None,
+        };
+        Some(Command::Party(match reaction {
+            Some(reaction) => PartyCommand::React { reaction },
+            None => PartyCommand::Say { text },
+        }))
+    }
+
+    /// The conversation changed. A line the server never echoed comes back into the field,
+    /// once, when the field is open and empty.
+    pub(super) fn set_party_chat(
+        &mut self,
+        conversation: kaeri_model::party::PartyConversation,
+    ) {
+        let failed = conversation.failed.clone();
+        let fresh = failed != self.party_chat.failed;
+        self.party_chat = conversation;
+        if let Some(text) = failed
+            && fresh
+            && self.nav.overlay() == Some(&Overlay::Say)
+            && self.text(Field::Say).is_empty()
+        {
+            self.set_text(Field::Say, text);
+        }
+    }
+
+    /// The engine turned a line or a reaction down.
+    pub(super) fn chat_refused(&mut self, refusal: PartyChatRefusal) {
+        match refusal {
+            PartyChatRefusal::Off => self.push_toast(info(t::party_chat_off())),
+            PartyChatRefusal::Wait { seconds } => {
+                self.push_toast(info(t::party_chat_wait(i64::from(seconds))));
+            }
+            PartyChatRefusal::NotPlaying => {}
+        }
+    }
+
     /// Take the lobby's word for how the party stands.
     pub(super) fn set_party(&mut self, view: kaeri_model::party::PartyView) {
         self.party = Some(view);
@@ -126,6 +187,8 @@ impl App {
     pub(super) fn end_party(&mut self) {
         self.party = None;
         self.party_members.clear();
+        self.party_chat = Default::default();
+        self.party_chat_state = None;
     }
 
     /// The last rooms arrived: keep the cursor on a row that exists.
@@ -278,5 +341,72 @@ mod tests {
         assert_eq!(a.handle(Action::HideFromContinue, 5), Some(Command::PartyLeave));
         a.apply(Event::PartyLeft { reason: None });
         assert!(a.party.is_none() && a.party_members.is_empty());
+    }
+
+    fn in_party() -> App {
+        let mut a = app();
+        a.apply(Event::PartyJoined(view(false)));
+        a.handle(Action::JumpSection(10), 5);
+        a.nav.focus_stage();
+        a
+    }
+
+    #[test]
+    fn m_opens_the_say_field_and_enter_sends_and_keeps_it_open() {
+        let mut a = in_party();
+        a.handle(Action::FixMapping, 5);
+        assert_eq!(a.nav.overlay(), Some(&Overlay::Say));
+        for ch in "ok starting".chars() {
+            a.type_char(ch);
+        }
+        assert_eq!(
+            a.handle(Action::Open, 5),
+            Some(Command::Party(PartyCommand::Say { text: "ok starting".into() }))
+        );
+        assert_eq!(a.nav.overlay(), Some(&Overlay::Say), "the field stays for the next line");
+        assert!(a.text(Field::Say).is_empty());
+    }
+
+    #[test]
+    fn a_typed_reaction_word_is_the_reaction() {
+        use kaeri_model::party::Reaction;
+        let mut a = in_party();
+        a.handle(Action::FixMapping, 5);
+        for ch in "*laughs*".chars() {
+            a.type_char(ch);
+        }
+        assert_eq!(
+            a.handle(Action::Open, 5),
+            Some(Command::Party(PartyCommand::React { reaction: Reaction::Laugh }))
+        );
+    }
+
+    #[test]
+    fn a_server_without_chat_says_so_instead_of_opening_the_field() {
+        use kaeri_model::party::PartyChatState;
+        let mut a = in_party();
+        a.apply(Event::PartyChatState(PartyChatState {
+            allowed: false,
+            max_length: 150,
+            muted: Vec::new(),
+            wait_seconds: 0,
+            react_wait_seconds: 0,
+        }));
+        a.handle(Action::FixMapping, 5);
+        assert_eq!(a.nav.overlay(), None);
+    }
+
+    #[test]
+    fn a_line_that_never_came_back_returns_to_the_open_field_and_leaving_forgets_the_chat() {
+        use kaeri_model::party::PartyConversation;
+        let mut a = in_party();
+        a.handle(Action::FixMapping, 5);
+        a.apply(Event::PartyChat(PartyConversation {
+            failed: Some("anyone there".into()),
+            ..Default::default()
+        }));
+        assert_eq!(a.text(Field::Say), "anyone there");
+        a.apply(Event::PartyLeft { reason: None });
+        assert!(a.party_chat.failed.is_none() && a.party_chat.lines.is_empty());
     }
 }

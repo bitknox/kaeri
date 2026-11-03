@@ -309,3 +309,14 @@ progressbar.home-progress progress { min-height: 3px; border-radius: 2px; backgr
 .home-end { font-size: 14px; }
 .home-end link { color: var(--silk); }
 .home-capsule { padding: 0 8px; }
+
+/* Watch together chat. Chat never takes the amber: Send is tonal, glyphs are silk, ticks are haze. */
+.chat-line { background: alpha(black, 0.62); color: var(--silk, white); border-radius: 12px; padding: 6px 12px; min-height: 0; box-shadow: none; border: none; }
+.chat-line label { color: inherit; }
+button.chat-fold { font-size: 0.9em; }
+button.chat-fold label { color: alpha(white, 0.72); }
+.chat-moment { background: alpha(black, 0.62); color: var(--silk, white); border-radius: 999px; padding: 6px 14px 6px 10px; }
+.chat-field entry { min-height: 34px; }
+.chat-tail { color: var(--haze, alpha(white, 0.6)); font-size: 0.85em; }
+.chat-field entry.counting { padding-right: 44px; }
+button.cooling { opacity: 0.4; }

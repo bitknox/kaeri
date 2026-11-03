@@ -4072,9 +4072,6 @@ tui-together-section = Смотреть вместе
 # Prompt of the Join line in the Together section.
 tui-together-join-prompt = ссылка или код
 
-# Hint line of the keys in the Together section.
-tui-together-keys = r готов · c копировать ссылку · s начать сейчас · x выйти
-
 # Toast when what was typed in the Together section's Join line is neither a link nor a code.
 tui-together-not-a-link = Это не ссылка и не код комнаты.
 

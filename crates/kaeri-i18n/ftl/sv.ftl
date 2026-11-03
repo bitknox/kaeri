@@ -3974,9 +3974,6 @@ tui-together-section = Tillsammans
 # Prompt of the Join line in the Together section.
 tui-together-join-prompt = länk eller kod
 
-# Hint line of the keys in the Together section.
-tui-together-keys = r redo · c kopiera länk · s starta nu · x lämna
-
 # Toast when what was typed in the Together section's Join line is neither a link nor a code.
 tui-together-not-a-link = Det där är varken en länk eller en kod för watch party.
 

@@ -15,7 +15,7 @@ use kaeri_i18n::t;
 use kaeri_model::{
     command::Command,
     event::Event,
-    party::{PartyConnection, PartyMember},
+    party::{PartyCommand, PartyConnection, PartyMember},
 };
 
 use crate::{widgets, window::Ctx};
@@ -38,6 +38,8 @@ pub struct Panel {
     place: gtk::Label,
     motd: gtk::Label,
     leave: gtk::Button,
+    /// The conversation under the members.
+    chat: Rc<super::chat::Pane>,
     /// Set while the switch follows the engine, so its change is not the viewer's.
     from_engine: Cell<bool>,
     leaving: Cell<bool>,
@@ -45,6 +47,11 @@ pub struct Panel {
 }
 
 impl Panel {
+    /// The conversation as it stands, for when the popover opens.
+    pub fn refresh_chat(&self) {
+        self.chat.refresh();
+    }
+
     pub fn new(ctx: &Rc<Ctx>) -> Rc<Self> {
         let body = gtk::Box::new(gtk::Orientation::Vertical, 12);
         body.set_width_request(320);
@@ -87,6 +94,10 @@ impl Panel {
         ready_row.append(&ready);
         body.append(&ready_row);
 
+        body.append(&gtk::Separator::new(gtk::Orientation::Horizontal));
+
+        let chat = super::chat::Pane::new(ctx, super::chat::Place::Popover);
+        body.append(&chat.root);
         body.append(&gtk::Separator::new(gtk::Orientation::Horizontal));
 
         let copy_label = gtk::Label::new(Some(&t::party_copy_invite()));
@@ -141,6 +152,7 @@ impl Panel {
             place,
             motd,
             leave: leave.clone(),
+            chat,
             from_engine: Cell::new(false),
             leaving: Cell::new(false),
             copied: Cell::new(0),
@@ -192,9 +204,10 @@ impl Panel {
                 }
                 match event {
                     Event::PartyLeft { .. } => panel.popover.popdown(),
-                    Event::PartyJoined(_) | Event::PartyState(_) | Event::PartyMembers(_) => {
-                        panel.show()
-                    }
+                    Event::PartyJoined(_)
+                    | Event::PartyState(_)
+                    | Event::PartyMembers(_)
+                    | Event::PartyChatState(_) => panel.show(),
                     _ => {}
                 }
             }
@@ -216,8 +229,14 @@ impl Panel {
         }
         match known.party_members.as_deref() {
             Some(members) => {
+                let muted = known
+                    .party_chat_state
+                    .as_ref()
+                    .map(|s| s.muted.clone())
+                    .unwrap_or_default();
                 for member in members {
-                    self.members.append(&row(member));
+                    let is_muted = muted.contains(&member.name);
+                    self.members.append(&row(&self.ctx, member, is_muted));
                 }
                 self.ready_line.set_label(&super::ready_line(members));
                 self.ready_line.set_visible(true);
@@ -277,7 +296,7 @@ impl Panel {
 
 /// One member: a water dot when ready, a ring when not, their name and what differs about
 /// their file, and the state in words.
-fn row(member: &PartyMember) -> gtk::Box {
+fn row(ctx: &Rc<Ctx>, member: &PartyMember, muted: bool) -> gtk::Box {
     let mark = gtk::Box::new(gtk::Orientation::Horizontal, 0);
     mark.add_css_class("mark");
     mark.add_css_class(match member.ready {
@@ -299,9 +318,10 @@ fn row(member: &PartyMember) -> gtk::Box {
         file.set_max_width_chars(MAX_CHARS);
         names.append(&file);
     }
-    let state = gtk::Label::new(Some(&super::member_state(member)));
+    let said = if muted { t::party_member_muted() } else { super::member_state(member) };
+    let state = gtk::Label::new(Some(&said));
     state.add_css_class("caption");
-    if member.ready != Some(true) {
+    if member.ready != Some(true) || muted {
         state.add_css_class("haze");
     }
     state.set_valign(gtk::Align::Center);
@@ -314,7 +334,56 @@ fn row(member: &PartyMember) -> gtk::Box {
     line.update_property(&[gtk::accessible::Property::Label(&format!(
         "{}, {}",
         super::member_name(member),
-        super::member_state(member)
+        said
     ))]);
+    if !member.you {
+        mute_menu(ctx, &line, &member.name, muted);
+    }
     line
+}
+
+/// A secondary click, Menu or Shift+F10 on a member offers Mute, or Unmute when they are muted:
+/// for this party, on this device. Nothing about it reaches the room.
+fn mute_menu(ctx: &Rc<Ctx>, row: &gtk::Box, name: &str, muted: bool) {
+    let label = if muted { t::party_unmute(name) } else { t::party_mute(name) };
+    let button = gtk::Button::with_label(&label);
+    button.add_css_class("flat");
+    let menu = gtk::Popover::builder().child(&button).has_arrow(false).build();
+    menu.set_parent(row);
+    menu.set_position(gtk::PositionType::Bottom);
+    row.connect_destroy({
+        let menu = menu.clone();
+        move |_| menu.unparent()
+    });
+    button.connect_clicked({
+        let (ctx, name, menu) = (Rc::clone(ctx), name.to_owned(), menu.clone());
+        move |_| {
+            menu.popdown();
+            ctx.hub
+                .send(Command::Party(PartyCommand::Mute { name: name.clone(), muted: !muted }));
+        }
+    });
+    let click = gtk::GestureClick::builder().button(gtk::gdk::BUTTON_SECONDARY).build();
+    click.connect_pressed({
+        let menu = menu.clone();
+        move |_, _, _, _| menu.popup()
+    });
+    row.add_controller(click);
+    row.set_focusable(true);
+    let shortcuts = gtk::ShortcutController::new();
+    for trigger in ["Menu", "<Shift>F10"] {
+        if let Some(trigger) = gtk::ShortcutTrigger::parse_string(trigger) {
+            let menu = menu.clone();
+            shortcuts.add_shortcut(gtk::Shortcut::new(
+                Some(trigger),
+                Some(gtk::CallbackAction::new(move |_, _| {
+                    menu.popup();
+                    gtk::glib::Propagation::Stop
+                })),
+            ));
+        }
+    }
+    row.add_controller(shortcuts);
+    // Orca's actions menu: the same offer.
+    row.set_tooltip_text(Some(&label));
 }

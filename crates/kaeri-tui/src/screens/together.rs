@@ -2,7 +2,9 @@
 //! last rooms. Only metadata crosses the server: names, a file name and where it is up to.
 
 use kaeri_i18n::t;
-use kaeri_model::party::{PartyConnection, PartyRecentRoom, PartySources};
+use kaeri_model::party::{
+    PartyChatBody, PartyChatLine, PartyConnection, PartyRecentRoom, PartySources, Reaction,
+};
 use ratatui::{buffer::Buffer, layout::Rect, style::Modifier, widgets::Widget};
 
 use crate::{
@@ -136,6 +138,12 @@ pub(super) fn render_together(buf: &mut Buffer, app: &App, area: Rect) {
             }
             y += 1;
         }
+    }
+
+    // Without the detail pane the conversation sits here, above the Join line, as much as fits.
+    if detail.is_none() && app.party.is_some() && y + 8 < main.bottom() {
+        let room = Rect { y, height: (main.bottom() - y).saturating_sub(6).min(8), ..main };
+        y += render_chat(buf, app, room) + 1;
     }
 
     // Row 0: the Join line.
@@ -302,6 +310,11 @@ fn render_detail(buf: &mut Buffer, app: &App, area: Rect) {
         for line in wrap(&t::tui_together_keys(), width, 3) {
             put(buf, &mut y, &line, dim);
         }
+        y += 1;
+        if y + 3 < area.bottom() {
+            let room = Rect { y, height: area.bottom() - y, ..area };
+            render_chat(buf, app, room);
+        }
     } else if let Some(room) = app.selected_room() {
         put(buf, &mut y, &t::party_server(), dim);
         put(buf, &mut y, &room.server, text);
@@ -309,4 +322,88 @@ fn render_detail(buf: &mut Buffer, app: &App, area: Rect) {
         put(buf, &mut y, &t::party_room(), dim);
         put(buf, &mut y, &room.room, text);
     }
+}
+
+/// A reaction line as the conversation says it: "Ren and Mika laughed at 12:04".
+fn reaction_line(line: &PartyChatLine, who: &str) -> Option<String> {
+    let PartyChatBody::Reacted { reaction, at, with } = &line.body else { return None };
+    let names = match with.as_slice() {
+        [] => who.to_owned(),
+        [second] => t::party_names_two(who, second),
+        [second, third] => t::party_names_three(who, second, third),
+        [second, rest @ ..] => t::party_names_others(who, second, rest.len() as i64),
+    };
+    let did = match reaction {
+        Reaction::Laugh => t::party_reacted_laugh(&names),
+        Reaction::Gasp => t::party_reacted_gasp(&names),
+        Reaction::Clap => t::party_reacted_clap(&names),
+        Reaction::Cry => t::party_reacted_cry(&names),
+    };
+    let total = at.max(0.0).round() as i64;
+    let (h, m, s) = (total / 3600, total / 60 % 60, total % 60);
+    let time = if h > 0 { format!("{h}:{m:02}:{s:02}") } else { format!("{m}:{s:02}") };
+    Some(t::party_reacted_at(&did, &time))
+}
+
+/// The conversation: the newest lines that fit, a reaction as a dim line, a muted member's line
+/// as "Ren is muted", "Couldn't send" after a line the server never echoed, and the privacy
+/// line when there is room. When the room's server has no chat it says so and nothing else.
+/// Returns the rows used.
+fn render_chat(buf: &mut Buffer, app: &App, area: Rect) -> u16 {
+    let dim = app.palette.style(Role::TextDim);
+    let text = app.palette.style(Role::Text);
+    let width = area.width as usize;
+    let mut y = area.top();
+    buf.set_string(area.left(), y, truncate(&t::party_chat_title(), width), dim);
+    y += 1;
+    if y < area.bottom() {
+        Hairline::new(&app.palette).render(Rect { y, height: 1, ..area }, buf);
+        y += 1;
+    }
+    if app.party_chat_state.as_ref().is_some_and(|s| !s.allowed) {
+        if y < area.bottom() {
+            buf.set_string(area.left(), y, truncate(&t::party_chat_off(), width), dim);
+            y += 1;
+        }
+        return y - area.top();
+    }
+    // Rows for the lines: what is left after the failure and the privacy line.
+    let failed = app.party_chat.failed.is_some();
+    let reserve = u16::from(failed) + u16::from(area.height >= 6);
+    let rows = area.bottom().saturating_sub(y).saturating_sub(reserve) as usize;
+    let mut shown: Vec<(String, bool)> = Vec::new();
+    for line in &app.party_chat.lines {
+        let who = if line.you { t::party_chat_you() } else { line.from.clone() };
+        if line.muted {
+            shown.push((t::party_muted_line(&line.from), true));
+            continue;
+        }
+        match &line.body {
+            PartyChatBody::Said { text } => shown.push((format!("{who}  {text}"), false)),
+            PartyChatBody::Reacted { .. } => {
+                if let Some(said) = reaction_line(line, &who) {
+                    shown.push((said, true));
+                }
+            }
+        }
+    }
+    if shown.is_empty() && rows > 0 {
+        buf.set_string(area.left(), y, truncate(&t::party_chat_field(), width), dim);
+        y += 1;
+    }
+    let skip = shown.len().saturating_sub(rows);
+    for (line, quiet) in shown.into_iter().skip(skip) {
+        buf.set_string(area.left(), y, truncate(&line, width), if quiet { dim } else { text });
+        y += 1;
+    }
+    if failed && y < area.bottom() {
+        let line = format!("{} · {}", t::party_chat_not_sent(), t::party_chat_retry());
+        buf.set_string(area.left(), y, truncate(&line, width), app.palette.style(Role::Alert));
+        y += 1;
+    }
+    if area.height >= 6 && y < area.bottom() {
+        buf.set_string(area.left(), y, truncate(&t::party_chat_privacy(), width), dim);
+        y += 1;
+    }
+    y - area.top()
 }

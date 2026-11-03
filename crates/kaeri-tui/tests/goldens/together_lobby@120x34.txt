@@ -7,13 +7,13 @@ Kaeri                                                                           
   ▥  Library                │  kite-7qm4-xr9d                                   party.example:8999
   ↓  Downloads              │                                                   Connected, encrypted · 42 ms
   ◇  Sources                │  ○ Ada (you)                     Not ready
-  ◎  Accounts               │  ● Mika                          Ready            r ready · c copy link · s start now ·
-  ≡  Settings               │  ○ Ren                           Not ready        x leave
+  ◎  Accounts               │  ● Mika                          Ready            m say · r ready · c copy link · s
+  ≡  Settings               │  ○ Ren                           Not ready        start now · x leave
 ▌ ⇄  Together               │
-                            │  Play starts once you're ready
-                            │  Plays from your sources
-                            │
-                            │  ▌ Join a party  [link or code]
+                            │  Play starts once you're ready                    Chat
+                            │  Plays from your sources                          ──────────────────────────────────────
+                            │                                                   Say something
+                            │  ▌ Join a party  [link or code]                   Messages go through the room's server…
                             │
                             │  Recent rooms
                             │  ──────────────────────────────────────────────
@@ -31,7 +31,7 @@ Kaeri                                                                           
                             │
                             │
 ─────────────────────────────────────────────── ▌ Joined the watch party in room kite-7qm4-xr9d on party.example:8999. ─
-plugins · Subbed · 1080p                                               ↵ open   r ready   c copy link   x leave   ? keys
+plugins · Subbed · 1080p                                       ↵ open   m say   r ready   c copy link   x leave   ? keys
 === styles ===
 colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
 r00 c00-04 fg=text mod=BOLD
@@ -77,27 +77,31 @@ r09 c28-28 fg=rule
 r09 c31-31 fg=state
 r09 c33-36 fg=text
 r09 c63-67 fg=state
-r09 c80-116 fg=text-dim
+r09 c80-112 fg=text-dim
 r10 c02-02 fg=text-dim
 r10 c05-12 fg=text-dim
 r10 c28-28 fg=rule
 r10 c31-31 fg=text-dim
 r10 c33-35 fg=text
 r10 c63-71 fg=text-dim
-r10 c80-86 fg=text-dim
+r10 c80-98 fg=text-dim
 r11 c00-00 fg=text-dim
 r11 c02-02 fg=text
 r11 c05-12 fg=text mod=BOLD
 r11 c28-28 fg=rule
 r12 c28-28 fg=rule
 r12 c31-59 fg=text
+r12 c80-83 fg=text-dim
 r13 c28-28 fg=rule
 r13 c31-53 fg=text-dim
+r13 c80-117 fg=rule
 r14 c28-28 fg=rule
+r14 c80-92 fg=text-dim
 r15 c28-28 fg=rule
 r15 c31-31 fg=obi
 r15 c33-44 fg=text mod=BOLD
 r15 c47-60 fg=text-dim
+r15 c80-117 fg=text-dim
 r16 c28-28 fg=rule
 r17 c28-28 fg=rule
 r17 c31-42 fg=text-dim
@@ -124,8 +128,10 @@ r32 c48-48 fg=state
 r32 c49-118 fg=text
 r32 c119-119 fg=rule
 r33 c00-23 fg=text-dim
-r33 c71-71 fg=text
-r33 c72-79 fg=text-dim
+r33 c63-63 fg=text
+r33 c64-71 fg=text-dim
+r33 c72-72 fg=text
+r33 c73-79 fg=text-dim
 r33 c80-80 fg=text
 r33 c81-89 fg=text-dim
 r33 c90-90 fg=text

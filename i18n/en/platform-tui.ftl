@@ -44,7 +44,7 @@ tui-together-join-prompt = link or code
 
 # Hint line of the keys in the Together section.
 # @only tui
-tui-together-keys = r ready · c copy link · s start now · x leave
+tui-together-keys = m say · r ready · c copy link · s start now · x leave
 
 # Toast when what was typed in the Together section's Join line is neither a link nor a code.
 # @only tui

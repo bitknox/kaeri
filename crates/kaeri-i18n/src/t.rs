@@ -3975,6 +3975,11 @@ pub fn keys_hint_leave_party() -> String {
     text("keys-hint-leave-party", &[])
 }
 
+/// Status line hint beside a key, saying what that key does here. Keep it to a word or two.
+pub fn keys_hint_say() -> String {
+    text("keys-hint-say", &[])
+}
+
 /// Shown in place of a screen when the terminal is too small to draw it.
 pub fn lists_terminal_too_small() -> String {
     text("lists-terminal-too-small", &[])

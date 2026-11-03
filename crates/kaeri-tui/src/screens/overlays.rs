@@ -156,6 +156,7 @@ pub(super) fn render_overlay(
             .collect(),
         Overlay::JoinStore => vec![(String::new(), t::overlays_hint_join_store())],
         Overlay::JoinParty => vec![(String::new(), t::together_join_line())],
+        Overlay::Say => vec![(String::new(), t::party_chat_privacy())],
         Overlay::InviteName => vec![(String::new(), t::overlays_hint_invite_name())],
         Overlay::StoreConfirm => store_confirm_rows(app),
         Overlay::PluginAction => plugin_action_rows(app).0,
@@ -308,6 +309,7 @@ pub(super) fn render_overlay(
             let room = (band.width as usize).saturating_sub(title.cells() + 8);
             titled(&format!("{}▏", tail(&field_text(app, Field::PartyLink), room)))
         }
+        Overlay::Say => typed(Field::Say),
         Overlay::InviteName => typed(Field::InviteName),
         Overlay::StoreConfirm => store_confirm_heading(app),
         Overlay::PluginAction => match app.plugin_in_action() {
