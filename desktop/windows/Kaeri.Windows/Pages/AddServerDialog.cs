@@ -100,14 +100,18 @@ sealed class AddServerDialog
         problemLine.Visibility = text is null ? Visibility.Collapsed : Visibility.Visible;
     }
 
+    /// <summary>The panel the error line is in. WinUI leaves Parent null for a child added in code, so it is kept here.</summary>
+    Panel? problemHost;
+
     /// <summary>The one error line, moved to <paramref name="panel"/>.</summary>
     void Attach(Panel panel, int at = -1)
     {
-        (problemLine.Parent as Panel)?.Children.Remove(problemLine);
+        problemHost?.Children.Remove(problemLine);
         if (at < 0)
             panel.Children.Add(problemLine);
         else
             panel.Children.Insert(at, problemLine);
+        problemHost = panel;
     }
 
     void Clear(string title, string primary)

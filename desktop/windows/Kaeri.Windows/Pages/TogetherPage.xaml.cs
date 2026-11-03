@@ -96,12 +96,14 @@ public sealed partial class TogetherPage : Page
             ctx.Window.ShowParty(new PartyDialog.For.Episode(pick.Id, pick.Episode));
     }
 
+    /// <summary>The row the join field is in. WinUI leaves Parent null for a child added in code, so it is kept here.</summary>
+    Panel? joinRow;
+
     void Show()
     {
         // The join field and its line outlive a rebuild; let go of their old parents first.
-        foreach (var kept in new FrameworkElement[] { join, joinProblem })
-            if (kept.Parent is Panel old)
-                old.Children.Remove(kept);
+        joinRow?.Children.Remove(join);
+        joinRow = null;
         Stack.Children.Clear();
         var heading = Ui.Text(T.TogetherTitle, "PageTitleStyle");
         AutomationProperties.SetHeadingLevel(heading, Microsoft.UI.Xaml.Automation.Peers.AutomationHeadingLevel.Level1);
@@ -132,6 +134,7 @@ public sealed partial class TogetherPage : Page
         Stack.Children.Add(Ui.Haze(T.TogetherJoinLine));
         var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
         row.Children.Add(join);
+        joinRow = row;
         row.Children.Add(Ui.Label(T.TogetherPaste, async (_, _) => await PasteIntoJoin()));
         row.Children.Add(Ui.Label(T.TogetherJoinAction, (_, _) => Join(join.Text)));
         Stack.Children.Add(row);
