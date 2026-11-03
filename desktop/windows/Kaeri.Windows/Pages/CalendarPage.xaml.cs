@@ -247,6 +247,14 @@ public sealed partial class CalendarPage : Page
         Track();
         var days = Calendar.Week(monday, broadcasts, zone);
         var today = Calendar.Day(Now, zone);
+        // The engine answers a visit with the week the page already drew from what it knew, and
+        // any progress anywhere says so too: drawn again only when what it shows has changed.
+        // Its relative lines keep their own 20 s refresh (Tick).
+        var willBeWide = Scroll.ActualWidth == 0 || Scroll.ActualWidth >= WeekWidth;
+        var key = Key(monday, today, willBeWide, days, new Plan(this, days, oldest, latest));
+        if (key == shownKey)
+            return;
+        shownKey = key;
         Days.Children.Clear();
         Days.ColumnDefinitions.Clear();
         Days.RowDefinitions.Clear();
@@ -268,6 +276,30 @@ public sealed partial class CalendarPage : Page
             ShowWeek(days, today, plan);
         else
             ShowAgenda(days, today, plan);
+    }
+
+    /// <summary>What the days were last drawn from.</summary>
+    string? shownKey;
+
+    /// <summary>Everything the drawn week depends on, as one string to compare.</summary>
+    string Key(DateOnly monday, DateOnly today, bool wideNow, List<(DateOnly Day, List<Broadcast> Broadcasts)> days, Plan plan)
+    {
+        var key = new System.Text.StringBuilder();
+        key.Append(monday).Append('|').Append(today).Append('|').Append(wideNow).Append('|').Append(failed?.ToString() ?? "")
+            .Append('|').Append(loaded).Append(ctx.Known.Offline).Append(placeholders).Append(slow).Append(mine)
+            .Append(plan.MineEmpty).Append(plan.PastFailed).Append(plan.AheadFailed).Append('|');
+        for (var i = 0; i < 7; i++)
+            key.Append(plan.InRange[i] ? 'r' : '-').Append(plan.Pending[i] ? 'p' : '-').Append(plan.Past[i] ? 'b' : '-')
+                .Append(plan.Beyond[i] ? 'a' : '-').Append(plan.End[i] ? 'e' : '-');
+        foreach (var (_, list) in days)
+        {
+            key.Append('/');
+            foreach (var b in list)
+                key.Append(b.Entry.Id).Append(',').Append(b.Episode).Append(',').Append(b.Airs).Append(',').Append(b.Was)
+                    .Append(',').Append(b.Watched).Append(',').Append(b.Dubbed).Append(',').Append(b.Entry.AiringApproximate)
+                    .Append(',').Append(b.Entry.Title).Append(',').Append(b.Entry.BannerUrl ?? b.Entry.CoverUrl).Append(';');
+        }
+        return key.ToString();
     }
 
     /// <summary>What each day of the shown week is: inside the reach or not, loaded or waiting, and the lines that follow.</summary>
