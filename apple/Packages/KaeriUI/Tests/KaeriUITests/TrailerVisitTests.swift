@@ -41,21 +41,19 @@ private func visit(
     return (visit, surface)
 }
 
-/// Wait for `condition`, five seconds at most. The visit's timers run on the main actor with every
+/// Wait for `condition`, as long as it takes. The visit's timers run on the main actor with every
 /// other test's, so a fixed sleep can end before a second timer, started by the first, has fired.
+/// A layout test can hold the main actor for seconds on a busy runner; the visit's timer is then
+/// due but queued behind this wait, so a deadline here would pass before the timer had its turn.
+/// The suite's time limit ends a wait for something that never comes.
 @MainActor
 private func until(_ condition: () -> Bool) async throws {
-    let deadline = ContinuousClock.now + .seconds(5)
     while !condition() {
-        guard ContinuousClock.now < deadline else {
-            Issue.record("timed out")
-            return
-        }
         try await Task.sleep(for: .milliseconds(10))
     }
 }
 
-@MainActor
+@MainActor @Suite(.timeLimit(.minutes(1)))
 struct TrailerVisitTests {
     @Test func theArtStaysUntilAFrameIsOnScreen() {
         let (visit, surface) = visit()
