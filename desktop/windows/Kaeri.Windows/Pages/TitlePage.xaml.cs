@@ -176,6 +176,8 @@ public sealed partial class TitlePage : Page, IPageKeys
         SourceItem.Text = T.SourcePickerTitle;
         State.Placeholders = Placeholders;
         State.ActivityText = T.TitleLoading;
+        EpisodesState.Placeholders = EpisodePlaceholders;
+        EpisodesState.ActivityText = T.TitleLoading;
         var settings = new Microsoft.UI.Xaml.Input.KeyboardAccelerator { Key = global::Windows.System.VirtualKey.I, Modifiers = global::Windows.System.VirtualKeyModifiers.Control };
         settings.Invoked += (_, a) =>
         {
@@ -224,6 +226,20 @@ public sealed partial class TitlePage : Page, IPageKeys
         return page;
     }
 
+    /// <summary>
+    /// The episode rows while they load, in the rows' own layout: a still and two lines, 72 high
+    /// with 8 between. As many as the title has, where that is known, up to a screenful, so the
+    /// rows that replace them take the room they kept.
+    /// </summary>
+    UIElement EpisodePlaceholders()
+    {
+        var count = (int)Math.Clamp(ctx.Known.Entry(id)?.Episodes ?? 4, 1, 12);
+        var rows = States.Rows(count, 128, 72, rowHeight: 72, spacing: 8);
+        if (rows is FrameworkElement f)
+            f.Margin = new Thickness(0, 8, 0, 0);
+        return rows;
+    }
+
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
@@ -233,6 +249,9 @@ public sealed partial class TitlePage : Page, IPageKeys
             State.Wait();
         ctx.Send(new Command.LoadDetail(id));
         ctx.Send(new Command.LoadEpisodes(id));
+        // Episodes not yet known: nothing for 600 ms, then plates in the rows' place.
+        if (!ctx.Known.Episodes.ContainsKey(id))
+            EpisodesState.Wait();
         // The queue, for each row's download cell.
         ctx.Send(new Command.LoadDownloads());
         ctx.Send(new Command.LoadDub(id));
@@ -720,6 +739,7 @@ public sealed partial class TitlePage : Page, IPageKeys
             return item;
         }).ToList();
         EpisodeList.ItemsSource = items;
+        EpisodesState.Done();
         ShowDownloads(ctx.Known.Downloads);
         var metadataOnly = rows.Length > 0 && rows.All(r => r.MetadataOnly);
         EpisodesNote.Text = metadataOnly ? T.TitleEpisodesNoSource : "";
