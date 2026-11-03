@@ -15,8 +15,10 @@ namespace Kaeri.Windows.Pages;
 /// <summary>
 /// Calendar: the week, Monday first, All airing or My list. Seven columns with today's raised from
 /// heading to foot while the content is wide enough; an agenda of days below that. Each
-/// broadcast says "E10 · 16:30", "E10 dubbed · 16:30" for a dub, "· Moved from 23:00" when it moved,
-/// and carries a water dot when it has aired and is not watched. The engine's window sets how far
+/// broadcast to watch shows its banner at 16:9, its time first ("~16:30" for an estimate, "Moved
+/// from 23:00" beside it when it moved), the show, and "E9 in 1 h 30 min" or "E8 out 1 d ago" with
+/// " · Dubbed" for a dub and a water dot when it has aired and is not watched. A watched one is a
+/// single quiet line, as on the Mac. The engine's window sets how far
 /// the weeks reach; weeks beyond what is loaded page in as they are approached, and a silk hairline
 /// marks the time now in today's column.
 /// </summary>
@@ -38,6 +40,8 @@ public sealed partial class CalendarPage : Page
     TextBlock? nowTime;
     long nowAt;
     int airedToday = -1;
+    /// <summary>The shown broadcasts' "in 1 h 30 min" lines and their buttons, kept to the clock by <see cref="Tick"/>.</summary>
+    readonly List<(TextBlock Status, Button Button, Broadcast Broadcast)> live = [];
     readonly Microsoft.UI.Dispatching.DispatcherQueueTimer silence, activity, minute;
 
     public CalendarPage()
@@ -229,7 +233,8 @@ public sealed partial class CalendarPage : Page
         Days.ColumnDefinitions.Clear();
         Days.RowDefinitions.Clear();
         nowTime = null;
-        wide = Scroll.ActualWidth == 0 || Scroll.ActualWidth >= WeekWidth;
+        live.Clear();
+        wide =Scroll.ActualWidth == 0 || Scroll.ActualWidth >= WeekWidth;
         if (failed is not null)
         {
             Days.Children.Add(States.Unavailable(T.CalendarLoadFailed, T.StateCheckConnection, T.ActionTryAgain, Refresh, error: true));
@@ -475,10 +480,21 @@ public sealed partial class CalendarPage : Page
         return line;
     }
 
-    /// <summary>Each 20 s: the time on the hairline, and a rebuild when a broadcast has passed it.</summary>
+    /// <summary>
+    /// Each 20 s: the broadcasts' lines and names to the clock, the time on the hairline, and a
+    /// rebuild when a broadcast has passed it.
+    /// </summary>
     void Tick()
     {
-        if (week != 0 || !loaded)
+        if (!loaded)
+            return;
+        var at = Now;
+        foreach (var (status, button, b) in live)
+        {
+            status.Text = b.Status(at);
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(button, b.Spoken(at, zone));
+        }
+        if (week != 0)
             return;
         if (nowTime is not null)
             nowTime.Text = Calendar.Time(Now, zone);
@@ -568,29 +584,52 @@ public sealed partial class CalendarPage : Page
         return heading;
     }
 
+    /// <summary>A cell while its week loads: the banner, then the time, the title and the line, where they will stand.</summary>
     static StackPanel CellPlaceholder()
     {
-        var cell = new StackPanel { Spacing = 6 };
-        cell.Children.Add(new Border { Height = 56, CornerRadius = new CornerRadius(6), Background = (Brush)Application.Current.Resources["RaisedBrush"] });
-        cell.Children.Add(States.Plate(90, 12, 3));
-        cell.Children.Add(States.Plate(60, 10, 3));
+        var cell = new StackPanel { Spacing = 8 };
+        cell.Children.Add(Wide(new Border { CornerRadius = new CornerRadius(6), Background = Ui.Res<Brush>("RaisedBrush") }));
+        var lines = new StackPanel { Spacing = 4 };
+        lines.Children.Add(States.Plate(40, 12, 3));
+        lines.Children.Add(States.Plate(90, 12, 3));
+        lines.Children.Add(States.Plate(70, 10, 3));
+        cell.Children.Add(lines);
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetAccessibilityView(cell, Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Raw);
         return cell;
     }
 
+    /// <summary>Keeps <paramref name="box"/> at 16:9 of the width its column gives it.</summary>
+    static T Wide<T>(T box) where T : FrameworkElement
+    {
+        box.SizeChanged += (_, e) =>
+        {
+            var height = Math.Round(e.NewSize.Width * 9 / 16);
+            if (e.NewSize.Width > 0 && (double.IsNaN(box.Height) || Math.Abs(box.Height - height) > 0.5))
+                box.Height = height;
+        };
+        return box;
+    }
+
     static TextBlock Haze(string text) => new() { Text = text, Style = (Style)Application.Current.Resources["HazeCaptionStyle"] };
 
+    static Button BroadcastButton() => new()
+    {
+        Padding = new Thickness(0),
+        Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
+        BorderThickness = new Thickness(0),
+        HorizontalAlignment = HorizontalAlignment.Stretch,
+        HorizontalContentAlignment = HorizontalAlignment.Stretch,
+    };
+
+    /// <summary>
+    /// A broadcast in a day's column. One to watch has its banner at 16:9, then the time in silk
+    /// with any move beside it in haze, the show in up to two lines, and a haze line with the
+    /// water dot when it is new: "E8 out 1 d 2 h ago", "E9 in 1 h 30 min". One watched is a
+    /// single quiet line.
+    /// </summary>
     FrameworkElement Cell(Broadcast b)
     {
-        var item = new CoverItem(b.Entry);
-        var button = new Button
-        {
-            Padding = new Thickness(0),
-            Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
-            BorderThickness = new Thickness(0),
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-            HorizontalContentAlignment = HorizontalAlignment.Stretch,
-        };
+        var button = BroadcastButton();
         button.Click += (_, _) => ctx.OpenTitle(b.Entry.Id);
         HoverPreview.Attach(button, b.Entry.Id);
         if (b.Watched)
@@ -601,60 +640,119 @@ public sealed partial class CalendarPage : Page
             button.Content = new TextBlock { Text = quiet, Style = (Style)Application.Current.Resources["HazeCaptionStyle"] };
             return button;
         }
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(button, Spoken(b));
-        var panel = new StackPanel { Spacing = 4 };
-        var banner = new Grid { CornerRadius = new CornerRadius(6), Background = item.Placeholder, Height = 56 };
-        var image = new Image { Stretch = Stretch.UniformToFill };
-        banner.Children.Add(image);
-        panel.Children.Add(banner);
-        ctx.Art.Bind(b.Entry.BannerUrl ?? b.Entry.CoverUrl, s => image.Source = s);
-        panel.Children.Add(new TextBlock { Text = b.Entry.Title, Style = (Style)Application.Current.Resources["ShowTitleStyle"], TextWrapping = TextWrapping.WrapWholeWords, MaxLines = 2 });
-        panel.Children.Add(EpisodeLine(b));
+        var now = Now;
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(button, b.Spoken(now, zone));
+        var panel = new StackPanel { Spacing = 8 };
+        panel.Children.Add(Wide(Banner(b)));
+        var text = new StackPanel { Spacing = 2 };
+        text.Children.Add(ClockLine(b));
+        text.Children.Add(TitleLine(b, 2));
+        text.Children.Add(StatusLine(b, now, button));
+        panel.Children.Add(text);
         button.Content = panel;
         return button;
     }
 
+    /// <summary>A broadcast in the agenda: the banner at 16:9 beside the same three lines as a cell.</summary>
     FrameworkElement AgendaRow(Broadcast b)
     {
-        var item = new CoverItem(b.Entry);
-        var grid = new Grid { ColumnSpacing = 12, Height = 62 };
+        var button = BroadcastButton();
+        var now = Now;
+        var grid = new Grid { ColumnSpacing = 12 };
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(96) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        var banner = new Grid { CornerRadius = new CornerRadius(6), Background = item.Placeholder, Width = 96, Height = 54 };
-        var image = new Image { Stretch = Stretch.UniformToFill };
-        banner.Children.Add(image);
-        ctx.Art.Bind(b.Entry.BannerUrl ?? b.Entry.CoverUrl, s => image.Source = s);
+        var banner = Banner(b);
+        banner.Width = 96;
+        banner.Height = 54;
+        banner.VerticalAlignment = VerticalAlignment.Top;
         grid.Children.Add(banner);
         var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Spacing = 2 };
-        text.Children.Add(new TextBlock { Text = b.Entry.Title, Style = (Style)Application.Current.Resources["ShowTitleStyle"] });
-        text.Children.Add(EpisodeLine(b));
+        text.Children.Add(ClockLine(b));
+        text.Children.Add(TitleLine(b, 1));
+        text.Children.Add(StatusLine(b, now, button));
         Grid.SetColumn(text, 1);
         grid.Children.Add(text);
-        var button = new Button
-        {
-            Content = grid,
-            Padding = new Thickness(0),
-            Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
-            BorderThickness = new Thickness(0),
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-            HorizontalContentAlignment = HorizontalAlignment.Stretch,
-        };
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(button, Spoken(b));
+        button.Content = grid;
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(button, b.Spoken(now, zone));
         button.Click += (_, _) => ctx.OpenTitle(b.Entry.Id);
         HoverPreview.Attach(button, b.Entry.Id);
         return button;
     }
 
-    /// <summary>What Narrator reads for a broadcast: its title and its line, the dub's mark in it and an estimate said as one.</summary>
-    string Spoken(Broadcast b) => $"{b.Entry.Title}, {b.Spoken(zone)}";
-
-    FrameworkElement EpisodeLine(Broadcast b)
+    /// <summary>The show's banner, or its cover where it has none, filling a rounded plate of its colour.</summary>
+    Grid Banner(Broadcast b)
     {
-        var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
-        if (b.IsNew(Now))
-            line.Children.Add(new Ellipse { Width = 6, Height = 6, Fill = (Brush)Application.Current.Resources["WaterBrush"], VerticalAlignment = VerticalAlignment.Center });
-        // A dub is marked in the line after its episode, "E10 dubbed · 16:30", as every episode line is.
-        line.Children.Add(new TextBlock { Text = b.Line(zone), Style = (Style)Application.Current.Resources["HazeCaptionStyle"], TextWrapping = TextWrapping.WrapWholeWords });
+        var banner = new Grid { CornerRadius = new CornerRadius(6), Background = new CoverItem(b.Entry).Placeholder };
+        var image = new Image { Stretch = Stretch.UniformToFill, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+        banner.Children.Add(image);
+        ctx.Art.Bind(b.Entry.BannerUrl ?? b.Entry.CoverUrl, s => image.Source = s);
+        return banner;
+    }
+
+    /// <summary>"16:30" in silk, "~16:30" for an estimate, with "Moved from 23:00" beside it in haze when it moved.</summary>
+    TextBlock ClockLine(Broadcast b)
+    {
+        var line = new TextBlock
+        {
+            FontSize = 13,
+            LineHeight = 16,
+            TextWrapping = TextWrapping.NoWrap,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            Foreground = Ui.Res<Brush>("SilkBrush"),
+        };
+        Microsoft.UI.Xaml.Documents.Typography.SetNumeralAlignment(line, FontNumeralAlignment.Tabular);
+        line.Inlines.Add(new Microsoft.UI.Xaml.Documents.Run { Text = b.Clock(zone) });
+        if (b.DelayNote(zone) is { } note)
+            line.Inlines.Add(new Microsoft.UI.Xaml.Documents.Run { Text = " " + note, FontSize = 12, Foreground = Ui.Res<Brush>("HazeBrush") });
+        return line;
+    }
+
+    static TextBlock TitleLine(Broadcast b, int lines) => new()
+    {
+        Text = b.Entry.Title,
+        Style = Ui.Res<Style>("ShowTitleStyle"),
+        FontSize = 13,
+        LineHeight = 17,
+        MaxLines = lines,
+        TextWrapping = lines > 1 ? TextWrapping.Wrap : TextWrapping.NoWrap,
+        Foreground = Ui.Res<Brush>("SilkBrush"),
+    };
+
+    /// <summary>
+    /// "E8 out 1 d 2 h ago" or "E9 in 1 h 30 min" in haze, up to two lines, after the water dot
+    /// when it has aired and is not watched. The dot sits on the first line. The words and the
+    /// button's name follow the clock while the page is up.
+    /// </summary>
+    FrameworkElement StatusLine(Broadcast b, long now, Button button)
+    {
+        var line = new Grid { ColumnSpacing = 4 };
+        var fresh = b.IsNew(now);
+        if (fresh)
+        {
+            line.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            line.Children.Add(new Ellipse
+            {
+                Width = 6,
+                Height = 6,
+                Fill = Ui.Res<Brush>("WaterBrush"),
+                VerticalAlignment = VerticalAlignment.Top,
+                Margin = new Thickness(0, 5, 0, 0),
+            });
+        }
+        line.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        var status = new TextBlock
+        {
+            Text = b.Status(now),
+            FontSize = 12,
+            LineHeight = 16,
+            MaxLines = 2,
+            TextWrapping = TextWrapping.WrapWholeWords,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            Foreground = Ui.Res<Brush>("HazeBrush"),
+        };
+        Grid.SetColumn(status, fresh ? 1 : 0);
+        line.Children.Add(status);
+        live.Add((status, button, b));
         return line;
     }
 

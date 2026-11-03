@@ -891,6 +891,18 @@ public static partial class T
     /// <summary>Calendar: what the screen reader says for an episode already watched.</summary>
     public static string CalendarWatchedSpoken(string title, string episode) => Fill(Get("CalendarWatchedSpoken"), ("title", title), ("episode", episode));
 
+    /// <summary>Calendar: the line under a show in the week, for an episode that has aired. The span is already worded, such as "1 d 2 h ago".</summary>
+    public static string CalendarCellOut(long episode, string ago) => Fill(Get("CalendarCellOut"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("ago", ago));
+
+    /// <summary>Calendar: the line under a show in the week, for a dubbed episode that has aired. The spaces around the dot don't break, so a line that wraps never leaves "Dubbed" on its own.</summary>
+    public static string CalendarCellOutDubbed(long episode, string ago) => Fill(Get("CalendarCellOutDubbed"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("ago", ago));
+
+    /// <summary>Calendar: the line under a show in the week, for an episode that airs soon. The span is already worded, such as "1 h 30 min".</summary>
+    public static string CalendarCellIn(long episode, string span) => Fill(Get("CalendarCellIn"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("span", span));
+
+    /// <summary>Calendar: the line under a show in the week, for a dubbed episode that airs soon. The spaces around the dot don't break, so a line that wraps never leaves "Dubbed" on its own.</summary>
+    public static string CalendarCellInDubbed(long episode, string span) => Fill(Get("CalendarCellInDubbed"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("span", span));
+
     /// <summary>Library: a list's tab with how many titles are on it, such as "Watching 12".</summary>
     public static string LibraryListCount(string list, long count) => Fill(Get("LibraryListCount"), ("list", list), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -7717,6 +7729,10 @@ public static partial class T
         ["CalendarEpisodeDubbed"] = "E{episode} dubbed",
         ["CalendarWatchedLine"] = "{title} · {episode}",
         ["CalendarWatchedSpoken"] = "{title}, {episode}, watched",
+        ["CalendarCellOut"] = "E{episode} out {ago}",
+        ["CalendarCellOutDubbed"] = "E{episode} out {ago} · Dubbed",
+        ["CalendarCellIn"] = "E{episode} in {span}",
+        ["CalendarCellInDubbed"] = "E{episode} in {span} · Dubbed",
         ["LibraryListCount"] = "{list} {count}",
         ["SearchSortName"] = "Sort",
         ["FilterPickedTwo"] = "{first}, {second}",

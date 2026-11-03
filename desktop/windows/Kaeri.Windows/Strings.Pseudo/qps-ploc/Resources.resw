@@ -1267,6 +1267,22 @@
     <value>[{title}, {episode}, ŵàţçĥéð~~~~~~]</value>
     <comment>Calendar: what the screen reader says for an episode already watched.</comment>
   </data>
+  <data name="CalendarCellOut" xml:space="preserve">
+    <value>[É{episode} öüţ {ago}~~~~]</value>
+    <comment>Calendar: the line under a show in the week, for an episode that has aired. The span is already worded, such as "1 d 2 h ago".</comment>
+  </data>
+  <data name="CalendarCellOutDubbed" xml:space="preserve">
+    <value>[É{episode} öüţ {ago} · Ðüƀƀéð~~~~~~~]</value>
+    <comment>Calendar: the line under a show in the week, for a dubbed episode that has aired. The spaces around the dot don't break, so a line that wraps never leaves "Dubbed" on its own.</comment>
+  </data>
+  <data name="CalendarCellIn" xml:space="preserve">
+    <value>[É{episode} îñ {span}~~~~]</value>
+    <comment>Calendar: the line under a show in the week, for an episode that airs soon. The span is already worded, such as "1 h 30 min".</comment>
+  </data>
+  <data name="CalendarCellInDubbed" xml:space="preserve">
+    <value>[É{episode} îñ {span} · Ðüƀƀéð~~~~~~]</value>
+    <comment>Calendar: the line under a show in the week, for a dubbed episode that airs soon. The spaces around the dot don't break, so a line that wraps never leaves "Dubbed" on its own.</comment>
+  </data>
   <data name="LibraryListCount" xml:space="preserve">
     <value>[{list} {count}~~~]</value>
     <comment>Library: a list's tab with how many titles are on it, such as "Watching 12".</comment>
