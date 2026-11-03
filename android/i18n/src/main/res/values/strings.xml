@@ -5118,6 +5118,8 @@
     <string name="episode_go_to">Go to episode…</string>
     <!-- Title of the Go to episode field. -->
     <string name="episode_go_to_title">Go to episode</string>
+    <!-- Button of the Go to episode field that goes to the number typed. -->
+    <string name="episode_go_to_go">Go</string>
     <!-- Placeholder of the Go to episode field: the first and last episode of the show. -->
     <string name="episode_go_to_hint">%1$d to %2$d</string>
     <!-- Accessibility label of the Go to episode field. -->

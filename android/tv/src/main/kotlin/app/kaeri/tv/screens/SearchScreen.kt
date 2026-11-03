@@ -4,6 +4,16 @@
 
 package app.kaeri.tv.screens
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.ui.semantics.heading
+import app.kaeri.design.Motion
+import app.kaeri.engine.ffi.trendPeriodChoice
+import app.kaeri.engine.ffi.trendPeriods
+import app.kaeri.engine.ffi.trendPeriodLabel
+import app.kaeri.engine.model.SearchSort
+import app.kaeri.engine.model.SurprisePool
+import app.kaeri.engine.model.TrendPeriod
+import app.kaeri.store.TrendAnswer
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.foundation.layout.heightIn
@@ -157,6 +167,7 @@ fun SearchScreen(nav: TvNavigator, memory: FocusMemory, onOpen: (AnilistId) -> U
     LaunchedEffect(Unit) {
         store.loadSeasonal()
         store.loadSearchFacets()
+        store.loadBrowse()
     }
     LaunchedEffect(text) {
         val words = text.trim()
@@ -382,6 +393,7 @@ private fun Results(
     val season = seasonal.ids.mapNotNull { entries[it] }
     val placeholders = placeholdersAfterWait(searching && results is ListState.Loading)
     val shown = if (searching) found else season
+    val dubs by store.titles.dubLines.collectAsStateWithLifecycle()
     // One line over the posters, always there, so results arriving never move the chips. It
     // changes with them: a new heading over the last search's posters would name the wrong ones.
     val asked = when {
@@ -414,6 +426,13 @@ private fun Results(
         ) {
             item(key = "chips", span = { GridItemSpan(maxLineSpan) }, contentType = "chips") {
                 FilterChips(store, query, status, memory)
+            }
+            if (!searching) {
+                status.rails?.firstOrNull { it.query.sort == SearchSort.TRENDING && !it.query.hasFilters() }?.let { rail ->
+                    item(key = "trending", span = { GridItemSpan(maxLineSpan) }, contentType = "trending") {
+                        TrendingShelf(rail, entries, memory, onOpen)
+                    }
+                }
             }
             item(key = "heading", span = { GridItemSpan(maxLineSpan) }, contentType = "heading") {
                 Text(
@@ -467,7 +486,7 @@ private fun Results(
                 PosterCard(
                     entry,
                     onClick = { onOpen(entry.id) },
-                    line = entry.posterLine(LocalContext.current),
+                    line = entry.posterLine(context, dubs[entry.id]),
                     sheet = { planSheet(context, store, entry, onOpen) },
                     modifier = Modifier.remembered(memory, "result/${entry.id}"),
                 )
@@ -475,6 +494,57 @@ private fun Results(
             if (searching && status.loadingMore) {
                 items(3, key = { "more/$it" }, contentType = { "poster" }) {
                     CardPlaceholder(Canvas.PosterWidth, Canvas.PosterHeight)
+                }
+            }
+        }
+    }
+}
+
+/**
+ * The Trending rail: its heading, the periods as chips (Up from the shelf reaches them) and the
+ * posters. A new period crossfades the shelf on standard; the old posters stay until the new
+ * ones are in, so the shelf is never empty.
+ */
+@Composable
+private fun TrendingShelf(rail: app.kaeri.engine.model.BrowseRail, entries: Map<AnilistId, app.kaeri.engine.model.Entry>, memory: FocusMemory, onOpen: (AnilistId) -> Unit) {
+    val store = LocalAppStore.current
+    val context = LocalContext.current
+    val status by store.search.status.collectAsStateWithLifecycle()
+    val dubs by store.titles.dubLines.collectAsStateWithLifecycle()
+    val period = status.period
+    val answer = if (period == TrendPeriod.TODAY) TrendAnswer(rail.entries) else status.trending[period]
+    var held by remember { mutableStateOf(answer?.takeIf { !it.failed }) }
+    LaunchedEffect(answer) { if (answer != null && !answer.failed) held = answer }
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(stringResource(R.string.search_sort_trending), style = MaterialTheme.typography.titleMedium, color = ObiSilk.Silk, maxLines = 1, modifier = Modifier.semantics { heading() })
+        Row(Modifier.focusRestorer(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            for (each in trendPeriods()) {
+                TvTab(
+                    trendPeriodChoice(each),
+                    selected = each == period,
+                    onSelect = { if (each != period) store.chooseTrending(each) },
+                    settle = null,
+                    chip = true,
+                    modifier = Modifier.remembered(memory, "trending/${each.name}"),
+                )
+            }
+        }
+        if (answer?.failed == true) {
+            Text(Strings.trendingFailed(context, trendPeriodChoice(period).lowercase()), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Haze)
+            TonalButton(onClick = { store.chooseTrending(period) }, modifier = Modifier.remembered(memory, "trending/retry")) { ButtonLabel(stringResource(R.string.action_try_again)) }
+        } else {
+            Crossfade(held, animationSpec = Motion.standard(), label = "trending shelf") { shown -> // i18n-skip
+                Row(Modifier.focusRestorer().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(Canvas.CardGap)) {
+                    for (entry in shown?.entries.orEmpty().take(10)) {
+                        val now = entries[entry.id] ?: entry
+                        PosterCard(
+                            now,
+                            onClick = { onOpen(entry.id) },
+                            line = now.posterLine(context, dubs[entry.id]),
+                            sheet = { planSheet(context, store, now, onOpen) },
+                            modifier = Modifier.remembered(memory, "trending/${entry.id}"),
+                        )
+                    }
                 }
             }
         }
@@ -524,7 +594,18 @@ private fun FilterChips(store: AppStore, query: SearchQuery, status: app.kaeri.s
             selected = query.sort != null,
             onSelect = {
                 actions?.open(
-                    ActionSheet(Strings.tvSortTitle(context), searchSorts(!query.isBrowse()).map { each -> CardAction(SearchWords.sort(context, each), selected = each == sort) { filter { it.copy(sort = each) } } }),
+                    ActionSheet(Strings.tvSortTitle(context), searchSorts(!query.isBrowse()).flatMap { each ->
+                        if (each == SearchSort.TRENDING) {
+                            // Trending says its period: today, this week or this month.
+                            trendPeriods().map { period ->
+                                CardAction(trendPeriodLabel(period), selected = each == sort && (query.periodInEffect() ?: TrendPeriod.TODAY) == period) {
+                                    filter { it.copy(sort = each, period = period.takeIf { p -> p != TrendPeriod.TODAY }) }
+                                }
+                            }
+                        } else {
+                            listOf(CardAction(SearchWords.sort(context, each), selected = each == sort) { filter { it.copy(sort = each, period = null) } })
+                        }
+                    }),
                 )
             },
             settle = null,
@@ -603,6 +684,25 @@ private fun FilterChips(store: AppStore, query: SearchQuery, status: app.kaeri.s
             chip = true,
             modifier = Modifier.remembered(memory, "chip/available"),
         )
+        if (query.text.isBlank()) SurprisePill(SurprisePool.Filters(query), Modifier.remembered(memory, "chip/surprise"))
+    }
+}
+
+/** Surprise me, or Another in place of the title page on screen, a tonal pill: the pool is the filters set, or the Planning list. A spinner shows past 600 ms. */
+@Composable
+fun SurprisePill(pool: SurprisePool, modifier: Modifier = Modifier, another: Boolean = false) {
+    val store = LocalAppStore.current
+    val asking by store.surprise.asking.collectAsStateWithLifecycle()
+    var slow by remember { mutableStateOf(false) }
+    LaunchedEffect(asking != null) {
+        slow = false
+        if (asking != null) {
+            delay(600)
+            slow = true
+        }
+    }
+    TonalButton(onClick = { store.surprise(pool, inPlace = another) }, modifier = modifier, height = 40.dp) {
+        ButtonLabel(stringResource(if (another) R.string.surprise_another else R.string.surprise_me) + if (slow && asking != null) "…" else "") // i18n-skip
     }
 }
 

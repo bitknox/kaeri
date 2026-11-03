@@ -9812,6 +9812,10 @@ object Strings {
     fun episodeGoToTitle(context: Context): String =
         context.getString(R.string.episode_go_to_title)
 
+    /** Button of the Go to episode field that goes to the number typed. */
+    fun episodeGoToGo(context: Context): String =
+        context.getString(R.string.episode_go_to_go)
+
     /** Placeholder of the Go to episode field: the first and last episode of the show. */
     fun episodeGoToHint(context: Context, first: Int, last: Int): String =
         context.getString(R.string.episode_go_to_hint, first, last)

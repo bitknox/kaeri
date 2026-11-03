@@ -41149,6 +41149,18 @@
         }
       }
     },
+    "episode-go-to-go" : {
+      "comment" : "Button of the Go to episode field that goes to the number typed.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go"
+          }
+        }
+      }
+    },
     "episode-go-to-hint" : {
       "comment" : "Placeholder of the Go to episode field: the first and last episode of the show. Argument 1: first (Int). Argument 2: last (Int).",
       "extractionState" : "manual",

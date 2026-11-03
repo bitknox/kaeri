@@ -160,16 +160,45 @@ private fun SheetList(model: PlayerModel, sheet: PlayerSheet, onMoreSubtitleSett
     }
     // The episode under focus or the pointer, for the footer under the Episodes list.
     var pointed by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
+    // A long series' list is one range of 100 at a time, opening on the range of the episode playing.
+    val ranges = if (sheet == PlayerSheet.Episodes) panelRanges(model) else null
+    var range by androidx.compose.runtime.remember(ranges?.size) { androidx.compose.runtime.mutableIntStateOf(ranges?.let { r -> (model.menus?.episodes?.indexOfFirst { it.current } ?: 0).coerceAtLeast(0) / 100 } ?: 0) }
+    var goal by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
+    var asking by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    val listState = rememberLazyListState(initialFirstVisibleItemIndex = if (ranges == null) current else (current - range * 100).coerceAtLeast(0))
+    val picker = ranges?.let { PanelRanges(it, range, { range = it }, { asking = true }) }
+    LaunchedEffect(goal, range) {
+        val number = goal ?: return@LaunchedEffect
+        val within = panelRows(model, range).indexOfFirst { it.number == number }
+        if (within >= 0) {
+            listState.animateScrollToItem(within + 1)
+            goal = null
+        }
+    }
+    if (asking) {
+        val store = app.kaeri.ui.LocalAppStore.current
+        val tables by store.titles.episodes.collectAsStateWithLifecycle()
+        val rows = model.titleOnScreen?.let { tables[it] }.orEmpty()
+        app.kaeri.ui.GoToEpisodeDialog(rows, onDismiss = { asking = false }, onGo = { index, _ ->
+            asking = false
+            val number = rows.getOrNull(index)?.number
+            val at = model.menus?.episodes?.indexOfFirst { it.number == number } ?: -1
+            if (number != null && at >= 0) {
+                range = at / 100
+                goal = number
+            }
+        })
+    }
     androidx.compose.foundation.layout.Column {
         LazyColumn(
-            state = rememberLazyListState(initialFirstVisibleItemIndex = current),
+            state = listState,
             contentPadding = if (sheet == PlayerSheet.Episodes) PaddingValues(top = padding.calculateTopPadding()) else padding,
             modifier = Modifier.weight(1f, fill = false)
                 .then(if (sheet == PlayerSheet.Episodes) Modifier.heightIn(max = (LocalConfiguration.current.screenHeightDp * 0.45f).dp) else Modifier),
         ) {
             when (sheet) {
                 PlayerSheet.Tracks -> tracks(model, onMoreSubtitleSettings)
-                PlayerSheet.Episodes -> episodes(model) { number, on -> if (on) pointed = number else if (pointed == number) pointed = null }
+                PlayerSheet.Episodes -> episodes(model, picker, range) { number, on -> if (on) pointed = number else if (pointed == number) pointed = null }
                 PlayerSheet.Sources -> sources(model, onDismiss)
                 PlayerSheet.SkipTimes -> skipTimes(model, onDismiss)
                 PlayerSheet.People -> item(key = "people") { app.kaeri.ui.PartyPeopleContent(onDone = onDismiss) } // i18n-skip
@@ -313,13 +342,51 @@ private fun LazyListScope.tracks(model: PlayerModel, onMore: () -> Unit) {
     }
 }
 
-private fun LazyListScope.episodes(model: PlayerModel, onPoint: (number: String, on: Boolean) -> Unit) {
+/** A long series' range picker in the Episodes panel's heading row. */
+private class PanelRanges(val items: List<app.kaeri.ui.RangeItem>, val selected: Int, val onPick: (Int) -> Unit, val onGoTo: () -> Unit)
+
+/** The ranges of the panel's episodes, in hundreds, when there are more than a hundred; else none. */
+@Composable
+private fun panelRanges(model: PlayerModel): List<app.kaeri.ui.RangeItem>? {
+    val episodes = model.menus?.episodes.orEmpty()
+    if (episodes.size <= 100) return null
+    val watched = stringResource(R.string.episode_watched)
+    return remember(episodes, watched) {
+        episodes.chunked(100).map { chunk ->
+            app.kaeri.ui.RangeItem(
+                chunk.first().number.toDoubleOrNull()?.toInt() ?: 0,
+                chunk.last().number.toDoubleOrNull()?.toInt() ?: 0,
+                if (chunk.all { it.watched }) watched else null,
+            )
+        }
+    }
+}
+
+/** The episodes the panel lists: the selected range's, or all of a short series. */
+private fun panelRows(model: PlayerModel, range: Int) =
+    model.menus?.episodes.orEmpty().let { all -> if (all.size > 100) all.chunked(100).getOrElse(range) { emptyList() } else all }
+
+private fun LazyListScope.episodes(model: PlayerModel, picker: PanelRanges?, range: Int, onPoint: (number: String, on: Boolean) -> Unit) {
     val menus = model.menus
-    heading(R.string.player_episodes)
+    if (picker == null) {
+        heading(R.string.player_episodes)
+    } else {
+        item(key = "heading-ranged") {
+            Row(Modifier.fillMaxWidth().padding(start = 56.dp, end = 24.dp, top = 12.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    stringResource(R.string.player_episodes),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = ObiSilk.Haze,
+                    modifier = Modifier.weight(1f).semantics { heading() },
+                )
+                app.kaeri.ui.RangeChip(picker.items, picker.selected, picker.onPick, onGoTo = picker.onGoTo, container = ObiSilk.FaintRule, content = ObiSilk.Silk)
+            }
+        }
+    }
     if (menus == null || menus.episodes.isEmpty()) {
         item(key = "no-episodes") { Note(stringResource(R.string.player_sheet_episodes_loading)) }
     } else {
-        items(menus.episodes, key = { "ep-${it.number}" }) { row ->
+        items(panelRows(model, range), key = { "ep-${it.number}" }) { row ->
             val hover = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
             val hovered by hover.collectIsHoveredAsState()
             androidx.compose.runtime.LaunchedEffect(hovered) { onPoint(row.number, hovered) }

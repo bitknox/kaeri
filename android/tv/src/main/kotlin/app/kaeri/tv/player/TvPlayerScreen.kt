@@ -4,6 +4,8 @@
 
 package app.kaeri.tv.player
 
+import app.kaeri.tv.ui.TvTab
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import app.kaeri.i18n.Strings
@@ -831,8 +833,34 @@ private fun Panel(model: PlayerModel, panel: PlayerPanel, onDone: () -> Unit, mo
         var pointed by remember { mutableStateOf<String?>(null) }
         // The episode list opens with the playing episode laid out, one row below the top, so
         // focus can start on it with the footer taking room under the list.
-        val state = remember(panel) {
-            val at = if (panel == PlayerPanel.Episodes) model.menus?.episodes?.indexOfFirst { it.current } ?: -1 else -1
+        // A long series is one range of 100 at a time, opening on the one holding the episode playing.
+        val all = model.menus?.episodes.orEmpty()
+        val ranged = panel == PlayerPanel.Episodes && all.size > 100
+        var range by remember(ranged) { mutableIntStateOf(if (ranged) all.indexOfFirst { it.current }.coerceAtLeast(0) / 100 else 0) }
+        val shownEpisodes = if (ranged) all.chunked(100).getOrElse(range) { emptyList() } else all
+        if (ranged) {
+            val context = LocalContext.current
+            val chunks = remember(all) { all.chunked(100) }
+            androidx.compose.foundation.lazy.LazyRow(
+                Modifier.padding(bottom = 12.dp).focusGroup(),
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                items(chunks.size, key = { "range/$it" }) { index ->
+                    val chunk = chunks[index]
+                    TvTab(
+                        Strings.episodeRange(context, chunk.first().number.toDoubleOrNull()?.toInt() ?: 0, chunk.last().number.toDoubleOrNull()?.toInt() ?: 0),
+                        selected = index == range,
+                        onSelect = { range = index },
+                        settle = null,
+                        chip = true,
+                        count = if (chunk.all { it.watched }) stringResource(R.string.episode_watched) else null,
+                    )
+                }
+            }
+        }
+        val state = remember(panel, range) {
+            val at = if (panel == PlayerPanel.Episodes) shownEpisodes.indexOfFirst { it.current } else -1
             androidx.compose.foundation.lazy.LazyListState((at - 1).coerceAtLeast(0))
         }
         LazyColumn(
@@ -841,7 +869,7 @@ private fun Panel(model: PlayerModel, panel: PlayerPanel, onDone: () -> Unit, mo
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             when (panel) {
-                PlayerPanel.Episodes -> items(model.menus?.episodes.orEmpty(), key = { it.number }) { episode ->
+                PlayerPanel.Episodes -> items(shownEpisodes, key = { it.number }) { episode ->
                     TvListRow(
                         episode.title?.let { stringResource(R.string.tv_player_episode_row, episode.number, it) } ?: episode.label,
                         onClick = {

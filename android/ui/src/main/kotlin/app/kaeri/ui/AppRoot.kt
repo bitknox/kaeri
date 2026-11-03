@@ -359,8 +359,8 @@ fun AppRoot(
                         NavHost(
                             nav,
                             startDestination = graphRoute(start),
-                            enterTransition = { if (switching()) fadeIn(Motion.quick()) else EnterTransition.None },
-                            exitTransition = { if (switching()) fadeOut(Motion.quick()) else ExitTransition.KeepUntilTransitionsFinished },
+                            enterTransition = { if (navigator.replacing) fadeIn(Motion.standard()) else if (switching()) fadeIn(Motion.quick()) else EnterTransition.None },
+                            exitTransition = { if (navigator.replacing) fadeOut(Motion.standard()) else if (switching()) fadeOut(Motion.quick()) else ExitTransition.KeepUntilTransitionsFinished },
                             popEnterTransition = { if (switching()) fadeIn(Motion.quick()) else EnterTransition.None },
                             popExitTransition = { if (switching()) fadeOut(Motion.quick()) else ExitTransition.KeepUntilTransitionsFinished },
                         ) {
@@ -412,6 +412,7 @@ fun AppRoot(
         }
         if (firstLaunch) FirstLaunch(onCover = { covered = it })
         MatchPickerHost()
+        SurpriseHost()
         EngineDown()
     }
 }

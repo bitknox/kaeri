@@ -243,6 +243,12 @@ private fun Browse(nav: TvNavigator, play: (AnilistId, UInt) -> Unit, playFromSt
     val partyView by store.party.view.collectAsStateWithLifecycle()
     val inParty = partyView != null
     LaunchedEffect(inParty) { if (inParty && partyView?.playing != true) nav.openLobby() }
+    // A pick opens its title page, or takes the open one's place for Another.
+    LaunchedEffect(store) {
+        store.surprise.picks.collect { pick ->
+            if (pick.inPlace) nav.replaceTitle(pick.id) else nav.openTitle(pick.id)
+        }
+    }
     val drawer = rememberDrawerState(DrawerValue.Closed)
     val rail = remember { RailFocus() }
     val screens = rememberSaveableStateHolder()

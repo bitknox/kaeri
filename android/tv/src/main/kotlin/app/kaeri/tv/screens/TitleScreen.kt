@@ -399,6 +399,13 @@ private fun Header(
                 onClick = { actions?.open(titleSheet(context, store, entry, rows, action, Strings.sourcePickerTitle(context), actions)) },
                 modifier = Modifier.remembered(memory, "more"),
             )
+            // Another, once Surprise me opened this page and its pool has more than this one.
+            val visit by store.surprise.visit.collectAsStateWithLifecycle()
+            androidx.compose.runtime.DisposableEffect(entry.id) { onDispose { store.surprise.left(entry.id) } }
+            visit?.takeIf { it.id == entry.id && it.more }?.let { pick ->
+                Spacer(Modifier.width(16.dp))
+                SurprisePill(pick.pool, Modifier.remembered(memory, "another"), another = true)
+            }
         }
         ServiceLine(availability, memory)
     }

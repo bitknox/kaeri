@@ -112,6 +112,7 @@ import app.kaeri.design.tabular
 import app.kaeri.engine.core.AnilistId
 import app.kaeri.store.MatchWords
 import app.kaeri.engine.model.Entry
+import app.kaeri.store.SurprisePick
 import app.kaeri.engine.model.EpisodeRow
 import app.kaeri.engine.model.LinkedTitle
 import app.kaeri.store.AppClock
@@ -500,7 +501,7 @@ fun TitleScreen(id: AnilistId, actions: AppActions) {
                 )
             }
         }
-        TitleTopBar(entry, onBack = navigator::back, modifier = Modifier.padding(top = inset).zIndex(3f))
+        TitleTopBar(entry, pick = surprisePick(id), onBack = navigator::back, modifier = Modifier.padding(top = inset).zIndex(3f))
     }
     if (aboutOpen) {
         MoreAboutSheet(entry, onDismiss = { aboutOpen = false }) { other ->
@@ -767,6 +768,13 @@ private fun SeasonPage(
     val failedIds by store.titles.failed.collectAsStateWithLifecycle()
     val failed = !loaded && entry.id in failedIds
     val synopses = rememberSynopsisPage(entry, episodes)
+    // Go to episode: once the row's range is on screen, the list scrolls to put it at the top.
+    val goal = synopses.goal
+    LaunchedEffect(goal, synopses.selected) {
+        val row = synopses.rows.firstOrNull { it.number == goal } ?: return@LaunchedEffect
+        list.landOn(synopses.key(entry.id, row))
+        synopses.arrived()
+    }
     androidx.compose.runtime.CompositionLocalProvider(LocalUserMarks provides marks) {
         // Every item moves as one when another comes or goes, as the title's details arrive: the
         // synopsis, the facts and Related fade in above the episodes as they make room, and the
@@ -1158,7 +1166,7 @@ internal fun titleAction(entry: Entry): TitleAction {
 
 /** Back and More, each a 40 circle on surfaceContainer in a 48 target, over the banner. */
 @Composable
-private fun TitleTopBar(entry: Entry, onBack: () -> Unit, modifier: Modifier = Modifier) {
+private fun TitleTopBar(entry: Entry, pick: SurprisePick?, onBack: () -> Unit, modifier: Modifier = Modifier) {
     val store = LocalAppStore.current
     var more by remember { mutableStateOf(false) }
     var showSettings by rememberSaveable(entry.id) { mutableStateOf(false) }
@@ -1171,6 +1179,8 @@ private fun TitleTopBar(entry: Entry, onBack: () -> Unit, modifier: Modifier = M
     ) {
         CircleIconButton(Icons.Back, stringResource(R.string.action_back), onBack)
         Spacer(Modifier.weight(1f))
+        // A picked title's Another, while the pool has more to pick: a text button, so Surprise me's word stays.
+        if (pick != null && pick.more) AnotherButton(pick)
         val action = titleAction(entry)
         if (store.tv.available && action.playable) {
             CircleIconButton(Icons.Tv, stringResource(R.string.tv_play_on), {
@@ -1715,7 +1725,7 @@ private fun LazyListScope.episodeRows(
     val rangeDub = if (ranged) null else dub
     if (ranged) {
         item(key = "range-row", contentType = "range-row") {
-            Box(itemMotion()) { RangeRow(listed, page.ranges, page.selected, page.pick, dub) }
+            Box(itemMotion()) { RangeRow(listed, page.ranges, page.selected, page.pick, dub, onGoTo = page.openGoTo) }
         }
     }
     if (folded.isNotEmpty()) {
@@ -1737,7 +1747,8 @@ private fun LazyListScope.episodeRows(
     // saying what it shows, with Hide.
     val line = shown.indexOfFirst { page.hides(it) }
     val rowItem: @Composable androidx.compose.foundation.lazy.LazyItemScope.(EpisodeRow) -> Unit = { row ->
-        Box(itemMotion()) { page.InPlace(row) { EpisodeRowView(entry, it, next, actions, page.reveals, page) } }
+        val fill = if (page.landed == row.number) Modifier.background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)) else Modifier
+        Box(itemMotion().then(fill)) { page.InPlace(row) { EpisodeRowView(entry, it, next, actions, page.reveals, page) } }
     }
     val protection: androidx.compose.foundation.lazy.LazyListScope.() -> Unit = {
         val episode = protectionStart(listed, shown[line]) ?: next.toInt()
@@ -1752,6 +1763,29 @@ private fun LazyListScope.episodeRows(
     } else {
         items(shown, key = { page.key(entry.id, it) }, contentType = { "episode" }) { row -> rowItem(row) }
     }
+}
+
+/**
+ * Scroll so the item with [key] stands at the top, the way Go to episode lands: a row on screen
+ * scrolls there; one off screen is found by walking up from the end of the table, and jumped to.
+ */
+internal suspend fun androidx.compose.foundation.lazy.LazyListState.landOn(key: Any) {
+    fun index() = layoutInfo.visibleItemsInfo.firstOrNull { it.key == key }?.index
+    index()?.let { animateScrollToItem(it); return }
+    scrollToItem(layoutInfo.totalItemsCount - 1)
+    var steps = 0
+    while (index() == null && canScrollBackward && steps++ < 400) scrollBy(-layoutInfo.viewportSize.height * 0.7f)
+    index()?.let { scrollToItem(it) }
+}
+
+/** [landOn] for the tablet's grid. */
+internal suspend fun androidx.compose.foundation.lazy.grid.LazyGridState.landOn(key: Any) {
+    fun index() = layoutInfo.visibleItemsInfo.firstOrNull { it.key == key }?.index
+    index()?.let { animateScrollToItem(it); return }
+    scrollToItem(layoutInfo.totalItemsCount - 1)
+    var steps = 0
+    while (index() == null && canScrollBackward && steps++ < 400) scrollBy(-layoutInfo.viewportSize.height * 0.7f)
+    index()?.let { scrollToItem(it) }
 }
 
 /**
@@ -1770,6 +1804,14 @@ internal class SynopsisPage(
     val reveals: Reveals,
     /** How many leading rows of the selected range fold into one line, from the engine. */
     private val foldCount: Int,
+    /** Opens Go to episode's number field. */
+    val openGoTo: () -> Unit = {},
+    /** The episode Go to episode last landed on, in the selected fill; `null` once any other is chosen. */
+    val landed: String? = null,
+    /** The episode to scroll to once its range is on screen. */
+    val goal: String? = null,
+    /** Said when the list has scrolled to [goal]. */
+    val arrived: () -> Unit = {},
 ) {
     /** The rows shown: the selected range's, or all of a short series. */
     val rows: List<EpisodeRow> = if (ranges.isEmpty()) listed else rangeRows(listed, ranges[selected])
@@ -1822,7 +1864,19 @@ private fun rememberSynopsisPage(entry: Entry, episodes: List<EpisodeRow>?): Syn
     val selected = (picked ?: opens).coerceIn(0, maxOf(0, ranges.size - 1))
     val outlook = rememberTextOutlook(Triple(entry.id, selected, ranges.size), episodes, ::episodeText)
     val foldCount = remember(listed, ranges, selected) { if (ranges.isEmpty()) 0 else app.kaeri.engine.ffi.episodeFold(listed, ranges[selected]).toInt() }
-    return SynopsisPage(listed, ranges, selected, { picked = it }, outlook, protect, reveals, foldCount)
+    var goal by remember(entry.id) { mutableStateOf<String?>(null) }
+    var landed by remember(entry.id) { mutableStateOf<String?>(null) }
+    var asking by remember(entry.id) { mutableStateOf(false) }
+    if (asking) {
+        GoToEpisodeDialog(listed, onDismiss = { asking = false }, onGo = { index, range ->
+            asking = false
+            if (range != null) picked = range
+            val number = listed.getOrNull(index)?.number
+            landed = number
+            goal = number
+        })
+    }
+    return SynopsisPage(listed, ranges, selected, { picked = it; landed = null }, outlook, protect, reveals, foldCount, { asking = true }, landed, goal, { goal = null })
 }
 
 /**
@@ -1947,7 +2001,7 @@ private fun EpisodePlaceholder() {
 }
 
 /** Seconds from now, as the rows compare a broadcast against it. */
-private fun nowSeconds() = AppClock.now().epochSecond
+internal fun nowSeconds() = AppClock.now().epochSecond
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -2036,6 +2090,11 @@ private fun TabletTitle(
     val unfolded by store.episodeFolds.unfolded.collectAsStateWithLifecycle()
     val grid = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
     val fold = rememberEpisodeFold(entry.id, grid)
+    LaunchedEffect(page.goal, page.selected) {
+        val row = page.rows.firstOrNull { it.number == page.goal } ?: return@LaunchedEffect
+        grid.landOn(page.key(entry.id, row))
+        page.arrived()
+    }
     // Back, the gesture or the key, closes the pane before it leaves the page.
     androidx.activity.compose.BackHandler(enabled = aboutOpen) { aboutOpen = false }
     androidx.compose.runtime.CompositionLocalProvider(LocalUserMarks provides marks) {
@@ -2116,7 +2175,7 @@ private fun TabletTitle(
                     if (listed.isEmpty()) fullWidth("no-episodes") { NoEpisodes(entry.id, itemMotion().padding(start = 16.dp)) }
                     // A long series shows one range of 100 at a time, as on a phone.
                     if (page.ranges.isNotEmpty()) {
-                        fullWidth("range-row") { Box(itemMotion()) { RangeRow(listed, page.ranges, page.selected, page.pick, null, Modifier.widthIn(max = BesideDims.MaxWidth)) } }
+                        fullWidth("range-row") { Box(itemMotion()) { RangeRow(listed, page.ranges, page.selected, page.pick, null, Modifier.widthIn(max = BesideDims.MaxWidth), onGoTo = page.openGoTo) } }
                     }
                     // One column of beside rows, as on an iPad at regular width.
                     val folded = if (page.ranges.isEmpty()) entry.foldedEpisodes(page.rows) else page.folded(entry)
@@ -2150,7 +2209,7 @@ private fun TabletTitle(
                     }
                 }
             }
-            TitleTopBar(entry, onBack = navigator::back, modifier = Modifier.padding(top = inset))
+            TitleTopBar(entry, pick = surprisePick(id), onBack = navigator::back, modifier = Modifier.padding(top = inset))
         }
         if (aboutOpen) {
             AboutPane(entry, onClose = { aboutOpen = false }) { other ->

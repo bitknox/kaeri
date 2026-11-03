@@ -9252,6 +9252,9 @@ public enum L {
     /// Title of the Go to episode field.
     public static var episodeGoToTitle: String { string("episode-go-to-title", fallback: "Go to episode") }
 
+    /// Button of the Go to episode field that goes to the number typed.
+    public static var episodeGoToGo: String { string("episode-go-to-go", fallback: "Go") }
+
     /// Placeholder of the Go to episode field: the first and last episode of the show.
     public static func episodeGoToHint(first: Int, last: Int) -> String {
         Self.format("episode-go-to-hint", fallback: "%1$lld to %2$lld", first, last)

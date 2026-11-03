@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.kaeri.design.ArtShape
 import app.kaeri.design.ShowTitle
+import app.kaeri.engine.model.CountLine
 import app.kaeri.engine.model.Entry
 import app.kaeri.i18n.R
 
@@ -61,6 +62,10 @@ internal fun PosterCell(
     onOpen: (() -> Unit)? = null,
     /** Lines the detail may take; Search's, which can end in where the title plays, takes two. */
     detailLines: Int = 1,
+    /** The count line, first under the title: "12 ep · Dub 8". Search, its rails and the Library say it. */
+    count: CountLine? = null,
+    /** Whether the cell is narrow, so its count takes the short form. */
+    narrow: Boolean = true,
 ) {
     val navigator = LocalNavigator.current
     val newWord = stringResource(R.string.poster_new)
@@ -84,6 +89,7 @@ internal fun PosterCell(
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = 8.dp),
         )
+        count?.let { CountText(it, narrow, Modifier.padding(top = 2.dp)) }
         detail?.let {
             Row(
                 Modifier.padding(top = 2.dp),

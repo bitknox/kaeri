@@ -3,6 +3,7 @@
 
 package app.kaeri.tv.screens
 
+import app.kaeri.engine.model.SurprisePool
 import app.kaeri.tv.seasonName
 import androidx.annotation.StringRes
 import app.kaeri.i18n.Strings
@@ -289,6 +290,8 @@ fun LibraryScreen(nav: TvNavigator, memory: FocusMemory, onOpen: (AnilistId) -> 
                         modifier = Modifier.firstFocus(memory, "tab/${each.name}", each == segment && shown.isEmpty()),
                     )
                 }
+                // Surprise me picks from Planning, so it sits with that list only.
+                if (segment == LibrarySegment.PLANNING && signedIn) SurprisePill(SurprisePool.Planning, Modifier.remembered(memory, "tab/surprise"))
             }
         }
         if (offline) {

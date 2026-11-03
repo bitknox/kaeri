@@ -518,6 +518,8 @@ internal fun RangeRow(
     onPick: (Int) -> Unit,
     dub: String?,
     modifier: Modifier = Modifier,
+    /** Go to episode, the menu's last item: opens its number field. */
+    onGoTo: (() -> Unit)? = null,
 ) {
     val colors = MaterialTheme.colorScheme
     val context = LocalContext.current
@@ -567,6 +569,16 @@ internal fun RangeRow(
                         onClick = {
                             open = false
                             onPick(index)
+                        },
+                    )
+                }
+                if (onGoTo != null) {
+                    HorizontalDivider()
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.episode_go_to)) },
+                        onClick = {
+                            open = false
+                            onGoTo()
                         },
                     )
                 }

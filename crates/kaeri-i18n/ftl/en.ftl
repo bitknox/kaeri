@@ -9600,6 +9600,9 @@ episode-go-to = Go to episode…
 # Title of the Go to episode field.
 episode-go-to-title = Go to episode
 
+# Button of the Go to episode field that goes to the number typed.
+episode-go-to-go = Go
+
 # Placeholder of the Go to episode field: the first and last episode of the show.
 episode-go-to-hint = { $first } to { $last }
 
