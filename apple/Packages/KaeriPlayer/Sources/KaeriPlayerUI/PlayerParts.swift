@@ -54,125 +54,6 @@ struct PlayerPicture: View {
     }
 }
 
-/// From the playback staged to the first frame: the title's wide art at the screen's full size
-/// under a calm ground scrim (the banner, else a still already seen, else the ground alone),
-/// the title, "Starting episode 7" over a thin amber line that sweeps while it waits, and what
-/// the wait is on below. After 20 s it offers another source, and to stop. When the playback
-/// never played, it says so: "Couldn't play episode 7", with Choose source and Close. Between
-/// episodes the last frame fades through the ground colour, never black.
-struct StartingCurtain: View {
-    @Environment(AppStore.self) private var store
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    let model: PlayerModel
-    let metrics: PlayerMetrics
-
-    var body: some View {
-        // The title the engine names with the starting screen, else the one staged: its art by
-        // the hero-art rule where the title is known here, else the banner the engine sends.
-        let id = model.starting?.id ?? model.staged?.id
-        let entry = id.flatMap { store.titles[$0] }
-        let url = entry.map { store.heroArt($0).url } ?? model.starting?.bannerUrl
-        let image = url.flatMap { store.artwork.image($0) }
-        GeometryReader { proxy in
-            ZStack {
-                Palette.ground
-                if let image {
-                    FilledArt(image: image)
-                        .transition(.opacity)
-                    Palette.ground.opacity(0.55)
-                }
-                block
-                    .frame(width: min(520, max(0, proxy.size.width - 2 * (metrics.touch ? 56 : 48))), alignment: .leading)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-        }
-        .animation(.fadeIn, value: image != nil)
-        .clipped()
-        .task(id: url) {
-            // As sharp as the screen, which the player may come to fill.
-            if let url { await store.artwork.show(url, maxPixelSize: ScreenPixels.longSide) }
-        }
-        .task(id: entry?.id) {
-            // A title with no banner shows a still already seen, which the episode list has.
-            if let entry, entry.bannerUrl == nil, store.titles.episodes[entry.id] == nil {
-                store.loadEpisodes(entry.id)
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var block: some View {
-        let episode = model.startingEpisode ?? ""
-        VStack(alignment: .leading, spacing: 0) {
-            Text(model.showTitle)
-                .font(.showTitle(size: metrics.touch ? 22 : 30))
-                .lineLimit(2)
-            if model.failure != nil {
-                Text(L.playerFailedTitleText(episode: episode))
-                    .font(.system(size: metrics.touch ? 17 : 15, weight: .semibold))
-                    .padding(.top, 10)
-                Text(L.playerFailedDetail)
-                    .font(.system(size: 13))
-                    .foregroundStyle(.haze)
-                    .padding(.top, 4)
-                HStack(spacing: 8) {
-                    Button(L.playerChooseSource) { model.chooseSource() }
-                        .buttonStyle(PillButtonStyle(kind: .primary, metrics: metrics))
-                        .keyboardShortcut(.defaultAction)
-                    Button(L.actionClose) { model.viewerClosed() }
-                        .buttonStyle(PillButtonStyle(kind: .secondary, metrics: metrics))
-                        .keyboardShortcut(.cancelAction)
-                }
-                .padding(.top, 16)
-            } else {
-                let starting = model.starting
-                let note = starting.flatMap { PlayerModel.startingNote(in: store.jobs.running, episode: $0.episode) }
-                let demo = (model.starting?.id ?? model.staged?.id).flatMap { store.titles[$0] }?.isDemo == true
-                Text(demo ? L.playerStartingPart(part: episode) : L.playerStartingText(episode: episode))
-                    .font(.system(size: metrics.touch ? 17 : 15, weight: .medium))
-                    .padding(.top, 8)
-                if demo {
-                    // The licence asks for the credit wherever the work shows.
-                    Text(L.playerDemoCredit)
-                        .font(.system(size: 13))
-                        .foregroundStyle(.haze)
-                        .padding(.top, 4)
-                }
-                LoaderLine(reduceMotion: reduceMotion)
-                    .frame(height: 2)
-                    .padding(.top, 12)
-                // Its place kept while there is nothing to say, so nothing moves when there is.
-                Text(starting?.wait(at: model.clock, note: note) ?? " ")
-                    .font(.system(size: 13))
-                    .monospacedDigit()
-                    .foregroundStyle(.haze)
-                    .contentTransition(.opacity)
-                    .padding(.top, 10)
-                if starting?.offersChoice(at: model.clock) == true {
-                    HStack(spacing: 8) {
-                        Button(L.playerChooseSource) { model.chooseSource() }
-                            .buttonStyle(PillButtonStyle(kind: .secondary, metrics: metrics))
-                        Button(L.actionStop) { model.viewerClosed() }
-                            .buttonStyle(PillButtonStyle(kind: .quiet, metrics: metrics))
-                    }
-                    .padding(.top, 16)
-                    .transition(.opacity)
-                }
-            }
-            if model.choosingSource {
-                SourceList(model: model, metrics: metrics)
-                    .padding(.top, 16)
-                    .transition(.opacity)
-            }
-        }
-        .foregroundStyle(.silk)
-        .shadow(color: Color(rgb: 0x0A0C18, opacity: 0.5), radius: 1, y: 1)
-        .animation(.standard, value: model.failure)
-        .animation(.standard, value: model.choosingSource)
-        .accessibilityElement(children: .contain)
-    }
-}
-
 /// Indeterminate progress as a thin amber line: a stretch of amber easing across a faint track,
 /// back and forth, calm. Still, with Reduce Motion.
 ///
@@ -180,10 +61,15 @@ struct StartingCurtain: View {
 /// line takes its size and place at once wherever it is laid out, and only the stretch moves.
 struct LoaderLine: View {
     let reduceMotion: Bool
+    /// How full it is, 0 to 1, when mpv gives a buffering percentage: the stretch gives way to a
+    /// fill that follows each number.
+    var progress: Double?
     /// What VoiceOver says it is.
     var label = L.playerLoadingAnnounce
     /// When the stretch set off from the left.
     @State private var began = Date.now
+    /// Under Reduce Motion the stretch rests and breathes.
+    @State private var breathing = false
 
     var body: some View {
         GeometryReader { proxy in
@@ -191,7 +77,12 @@ struct LoaderLine: View {
             ZStack(alignment: .leading) {
                 Capsule().fill(Palette.silk.opacity(0.14))
                 if reduceMotion {
-                    Capsule().fill(Palette.amber.opacity(0.8))
+                    Capsule()
+                        .fill(Palette.amber)
+                        .frame(width: stretch)
+                        .opacity(progress != nil ? 0 : breathing ? 0.4 : 1)
+                        .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: breathing)
+                        .onAppear { breathing = true }
                 } else {
                     TimelineView(.animation) { context in
                         let travel = proxy.size.width - stretch
@@ -200,8 +91,17 @@ struct LoaderLine: View {
                             .frame(width: stretch)
                             .offset(x: travel * Self.across(after: context.date.timeIntervalSince(began), travel: travel))
                     }
+                    .opacity(progress != nil ? 0 : 1)
+                }
+                if let progress {
+                    Capsule()
+                        .fill(Palette.amber)
+                        .frame(width: proxy.size.width * min(1, max(0, progress)))
+                        .transition(.opacity)
                 }
             }
+            .animation(reduceMotion ? .fadeIn : .standard, value: progress)
+            .animation(.fadeIn, value: progress == nil)
         }
         .accessibilityElement()
         .accessibilityLabel(label)

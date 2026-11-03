@@ -34,6 +34,10 @@
 #
 # Each goes to apple/.shots/<device>-<shot>.png, ":" and "=" made "-", which git ignores.
 #
+# The starting screen on the engine's made-up starts: player-start-<state>-<seconds>[-details]
+# [-choose], with the state's name from StartingFixture in kebab case (player-start-slow-10,
+# player-start-failed-no-episode-3-details). KAERI_REDUCE_MOTION=1 runs it with Reduce Motion.
+#
 # The player's states are shots too: player-starting, player-playing, player-skip, player-up-next,
 # player-still-watching, player-stall, player-buffering, player-scrubbing, player-tracks (the
 # Subtitles and audio menu open), player-speed, player-picture (Picture and sound), player-episodes
@@ -93,12 +97,36 @@ done
 shots=("${expanded[@]}")
 for shot in "${shots[@]}"; do
   case "${shot%%:*}" in watching | sourceless | unsure | linkopened | fresh | playing | suggested | oneleft | continuefull | notfound | slow | failed | offline | licensed | servers | library | sourcesbusy | available | demoonly | demoplayed | demoandstore | demoremoved | subtitlestyled | crashoff | crashsaved | crashheld | storeowner | storeinvited | together) ;; player-*) ;; *) usage ;; esac
+  if [[ "$shot" == player-start-* ]]; then continue; fi
   if [[ "$shot" == player-* && ! " ${players[*]} " == *" $shot "* ]]; then usage; fi
 done
+
+# The starting screen's shot player-start-<state>-<seconds>[-details][-choose] as state, seconds
+# and the options, one per line.
+startparts() {
+  local rest="${1#player-start-}" details=0 choose=0
+  while :; do
+    case "$rest" in
+      *-details) details=1; rest="${rest%-details}" ;;
+      *-choose) choose=1; rest="${rest%-choose}" ;;
+      *) break ;;
+    esac
+  done
+  printf '%s\n' "${rest%-*}" "${rest##*-}" "$details" "$choose"
+}
 
 # The launch arguments for a shot: the scene, and the screen it names.
 arguments() {
   local shot="$1" scene="${1%%:*}" screens="" screen
+  if [[ "$shot" == player-start-* ]]; then
+    local parts
+    parts=()
+    while IFS= read -r line; do parts+=("$line"); done < <(startparts "$shot")
+    printf '%s\n' -KaeriScene playing -KaeriPlayerShot start-fixture -KaeriStartState "${parts[0]}" -KaeriStartAt "${parts[1]}"
+    [[ "${parts[2]}" != 1 ]] || printf '%s\n' -KaeriStartDetails 1
+    [[ "${parts[3]}" != 1 ]] || printf '%s\n' -KaeriStartChoose 1
+    return
+  fi
   if [[ "$shot" == player-* ]]; then
     printf '%s\n' -KaeriScene playing -KaeriPlayerShot "${shot#player-}"
     [[ -z "${KAERI_POINTED:-}" ]] || printf '%s\n' -KaeriPlayerPointer "$KAERI_POINTED"
@@ -155,6 +183,15 @@ done
 if [[ "$device" == mac ]]; then
   "$apple/scripts/engine.sh" testing macos
   for shot in "${shots[@]}"; do
+    if [[ "$shot" == player-start-* ]]; then
+      parts=()
+      while IFS= read -r line; do parts+=("$line"); done < <(startparts "$shot")
+      (cd "$apple/Packages/KaeriDev" &&
+        KAERI_START_STATE="${parts[0]}" KAERI_START_AT="${parts[1]}" KAERI_START_DETAILS="${parts[2]}" \
+        KAERI_START_CHOOSE="${parts[3]}" swift run KaeriDev --scene playing --player-shot start-fixture \
+          --snapshot "$out/mac-$shot.png")
+      continue
+    fi
     if [[ "$shot" == player-* ]]; then
       pointed=()
       [[ -z "${KAERI_POINTED:-}" ]] || pointed=(-KaeriPlayerPointer "$KAERI_POINTED")

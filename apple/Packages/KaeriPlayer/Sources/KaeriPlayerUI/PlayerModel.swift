@@ -152,6 +152,10 @@ public final class PlayerModel {
 
     public private(set) var staged: StagedPlayback?
     public private(set) var starting: StartingScreen?
+    /// What the engine has said of the start under way: the steps behind the starting screen.
+    public private(set) var walk: StartingWalk?
+    /// The task that shows the step line waiting out its hold.
+    @ObservationIgnored private var holdRelease: Task<Void, Never>?
     public private(set) var episode: EpisodeOnScreen?
     public private(set) var menus: PlayerMenus?
     public private(set) var skip: SkipOffer?
@@ -339,6 +343,11 @@ public final class PlayerModel {
     @ObservationIgnored private(set) var controlsLift: Double = 0
     /// The lift easing `sub-pos` there, while it runs.
     @ObservationIgnored private(set) var subtitleTween: Task<Void, Never>?
+    /// The Details list is open on the starting screen, remembered on this device.
+    public var startDetailsOpen = UserDefaults.standard.bool(forKey: PlayerModel.detailsKey) {
+        didSet { UserDefaults.standard.set(startDetailsOpen, forKey: Self.detailsKey) }
+    }
+    nonisolated static let detailsKey = "kaeri.player.startDetails"
     /// The starting screen held over the picture, for a screenshot of it.
     public var holdsCurtain = false
     /// Scrubbing, at this time: the seek line follows the finger, not mpv.
@@ -363,8 +372,13 @@ public final class PlayerModel {
             for op in ops { apply(op, for: playback) }
         case .playerUi(let playback, let ui):
             apply(ui, for: playback)
-        case .playbackStaged(let id, let title, let episode, let episodeTitle, _, _):
+        case .playbackStaged(let id, let title, let episode, let episodeTitle, _, let resume):
             since = time.now()
+            // Said again for the same play (idempotent), it keeps what the start has told.
+            if walk?.id != id || walk?.episode != episode {
+                walk = StartingWalk(id: id, episode: episode, resume: resume, at: since ?? time.now())
+                holdRelease?.cancel()
+            }
             closedByViewer = false
             stagedAhead = true
             failure = nil
@@ -374,7 +388,11 @@ public final class PlayerModel {
             partySaysWhy = false
             staged = StagedPlayback(id: id, title: title, episode: episode, episodeTitle: episodeTitle)
             present()
-        case .playbackEnded(_, let ending, let rollingOn, _):
+        case .startingStep(let id, let episode, let step, let line):
+            guard isPresented, !closedByViewer, walk?.id == id, walk?.episode == episode else { return }
+            walk?.take(step, line: line, at: time.now())
+            holdLine()
+        case .playbackEnded(_, let ending, let rollingOn, let said):
             if rollingOn {
                 // Not when the viewer sought into the ending: someone was there.
                 rollPending = !(upNext?.sought ?? false)
@@ -382,7 +400,7 @@ public final class PlayerModel {
                 // It never played: no stream was found, or none showed a frame. Say so where the
                 // viewer is looking, with another source to choose, rather than vanish.
                 verdictPending = false
-                failure = PlaybackFailure(id: staged?.id, episode: episode)
+                failure = PlaybackFailure(id: staged?.id, episode: episode, view: said.map { StartFailureView(why: $0.why, text: $0.text) } ?? StartFailureView())
                 Self.note(.warn, "couldn't play episode \(episode)")
             } else if backend == nil {
                 // Nothing was opened for it, or it played elsewhere, or it is simply over.
@@ -757,7 +775,7 @@ public final class PlayerModel {
         // Say it where the viewer is looking, with the failure card, rather than flash and close.
         if let episode {
             isPresented = true
-            failure = PlaybackFailure(id: id, episode: episode)
+            failure = PlaybackFailure(id: id, episode: episode, view: StartFailureView())
         }
     }
 
@@ -816,6 +834,8 @@ public final class PlayerModel {
         controlsLift = 0
         staged = nil
         starting = nil
+        walk = nil
+        holdRelease?.cancel()
         episode = nil
         menus = nil
         skip = nil
@@ -876,6 +896,10 @@ public final class PlayerModel {
             if !hasPicture { firstFrame() }
         case .fileLoaded:
             Self.note(.info, "#\(current.map(String.init) ?? "?") file loaded\(elapsed)")
+            if !hasPicture, walk != nil {
+                walk?.loaded(at: time.now())
+                holdLine()
+            }
         case .endFile(let end):
             Self.note(end.reason == "error" ? .warn : .info,
                 "#\(current.map(String.init) ?? "?") file ended: \(end.reason)\(end.error.map { ", \(AppLog.redacting($0))" } ?? "")")
@@ -1364,7 +1388,60 @@ public final class PlayerModel {
         choosingSource = false
         sourceChoices = nil
         failure = nil
+        walk = nil
         send(.playSource(id: id, episode: episode, providerId: candidate.providerId, sourceId: candidate.id))
+    }
+
+    /// Skip the source (or stream) being tried: the walk moves on to the next.
+    public func skipSource() {
+        input()
+        control(.skipSource)
+    }
+
+    /// Begin the episode at 0 in place of where it was left. The sources are not asked again;
+    /// the line that said where it resumes says so.
+    public func playFromBeginning() {
+        input()
+        guard walk?.fromBeginning == false else { return }
+        walk?.fromBeginning = true
+        control(.playFromBeginning)
+    }
+
+    /// Start the episode again, asking the same sources.
+    public func tryAgain() {
+        input()
+        guard let id = staged?.id ?? failure?.id, let episode = startingEpisode else { return }
+        failure = nil
+        walk = nil
+        send(.play(id: id, episode: episode, fromStart: false))
+    }
+
+    /// Play the episode in `translation`: the player's own choice once it has opened, else the
+    /// session's translation set and the play asked again, behind the same screen.
+    public func startWith(_ translation: KaeriKit.Translation) {
+        input()
+        guard let id = staged?.id, let episode = startingEpisode else { return }
+        if backend != nil {
+            control(.choose(.translation(translation)))
+        } else {
+            send(.setTranslation(translation: translation))
+            send(.play(id: id, episode: episode, fromStart: false))
+        }
+        walk?.choseTranslation(translation)
+    }
+
+    /// Give the step line its turn once its hold is over.
+    private func holdLine() {
+        holdRelease?.cancel()
+        guard let at = walk?.releaseAt else { return }
+        holdRelease = Task { @MainActor [weak self, time] in
+            let wait = at - time.now()
+            if wait > .zero { try? await time.sleep(wait) }
+            guard !Task.isCancelled, let self else { return }
+            self.walk?.release(at: time.now())
+            self.clock = time.now()
+            self.holdLine()
+        }
     }
 
     /// Done with the sources: back to what the screen showed.
@@ -1827,6 +1904,12 @@ public final class PlayerModel {
     /// Set one subtitle choice from the player's quick panel: the engine keeps it for the device.
     /// More in Settings…: the app closes the player and opens the Playback pane.
     @ObservationIgnored public var openSubtitleSettings: (@MainActor () -> Void)?
+    /// Show downloads, from the starting screen while offline: the app closes the player and opens them.
+    @ObservationIgnored public var openDownloads: (@MainActor () -> Void)?
+    /// Fix match for a title, from a failed start that matched the wrong show.
+    @ObservationIgnored public var openFixMatch: (@MainActor (AnilistId) -> Void)?
+    /// Add a plugin store, from a failed start with no source set up.
+    @ObservationIgnored public var openPluginStores: (@MainActor () -> Void)?
     @ObservationIgnored public var setSubtitleSetting: (@MainActor (SettingKey, SettingValue) -> Void)?
 
     #if FIXTURES

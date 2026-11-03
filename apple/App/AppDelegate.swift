@@ -125,6 +125,22 @@ final class AppDelegate: NSObject {
             player?.viewerClosed()
             navigator?.openSettings(.playback)
         }
+        player.openFixMatch = { [weak player, weak navigator] id in
+            player?.viewerClosed()
+            navigator?.matchPicker = MatchPickerRequest(id: id, fromMenu: false)
+        }
+        player.openPluginStores = { [weak player, weak navigator] in
+            player?.viewerClosed()
+            navigator?.open(.pluginStores)
+        }
+        player.openDownloads = { [weak player, weak navigator] in
+            player?.viewerClosed()
+            #if os(iOS)
+            navigator?.showDownloads(compact: UIDevice.current.userInterfaceIdiom == .phone)
+            #else
+            navigator?.showDownloads(compact: false)
+            #endif
+        }
         watchPlaying()
     }
 

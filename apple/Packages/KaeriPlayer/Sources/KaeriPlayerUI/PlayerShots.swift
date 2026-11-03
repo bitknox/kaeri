@@ -10,6 +10,10 @@ import Foundation
 public enum PlayerShot: String, CaseIterable, Sendable {
     /// The banner under "Starting episode 7" (T2, M4).
     case starting
+    /// The starting screen on the engine's made-up start: `KAERI_START_STATE` (or
+    /// `-KaeriStartState`) names the state, `KAERI_START_AT` the seconds to hold it at,
+    /// `KAERI_START_DETAILS=1` opens Details.
+    case startFixture = "start-fixture"
     /// Playing, with the controls up (MacPlayer, PhonePlayer), round and round Part A.
     case playing
     /// Playing, with the controls left to fade 2 s after the last input, as they do: for the
@@ -116,6 +120,43 @@ public enum PlayerShot: String, CaseIterable, Sendable {
 }
 
 extension PlayerModel {
+    /// A launch argument or environment variable of the starting screen's shot.
+    private static func startParameter(_ name: String) -> String? {
+        let arguments = ProcessInfo.processInfo.arguments
+        if let index = arguments.firstIndex(of: "-KaeriStart" + name.capitalized), arguments.indices.contains(index + 1) {
+            return arguments[index + 1]
+        }
+        return ProcessInfo.processInfo.environment["KAERI_START_" + name.uppercased()]
+    }
+
+    /// The made-up start named by the launch, its events said as the engine says them and held at
+    /// the second asked for.
+    func stageStartFixture(store: AppStore) async -> Bool {
+        let states: [String: StartingFixture] = [
+            "title-lookup": .titleLookup, "sources-loading": .sourcesLoading, "asking-first": .askingFirst,
+            "asking-pinned": .askingPinned, "source-missed": .sourceMissed, "source-failed": .sourceFailed,
+            "sources-resting": .sourcesResting, "slow": .slow, "finding-peers": .findingPeers,
+            "peers-known": .peersKnown, "found": .found, "fetching-subtitles": .fetchingSubtitles,
+            "another-stream": .anotherStream, "buffering-torrent": .bufferingTorrent,
+            "buffering-direct": .bufferingDirect, "offline": .offline, "failed-no-episode": .failedNoEpisode,
+            "failed-no-match": .failedNoMatch, "failed-no-sources": .failedNoSources, "failed-not-aired": .failedNotAired,
+        ]
+        guard let state = Self.startParameter("state").flatMap({ states[$0] }) else { return false }
+        let hold = Self.startParameter("at").flatMap(Double.init) ?? 2
+        if Self.startParameter("details") == "1" { startDetailsOpen = true }
+        let began = ContinuousClock.now
+        for fixture in startingFixture(state: state) {
+            let at = began + .milliseconds(Int(fixture.atMs))
+            guard at <= began + .seconds(hold) else { break }
+            if at > .now { try? await Task.sleep(until: at) }
+            store.apply(fixture.event)
+        }
+        try? await Task.sleep(until: began + .seconds(hold))
+        if Self.startParameter("choose") == "1" { chooseSource() }
+        try? await Task.sleep(for: .milliseconds(400))
+        return isPresented
+    }
+
     /// Play the first Continue row, the Playing scene's episode 7, and bring the player to
     /// `shot`. False when it did not get there in time.
     public func stage(_ shot: PlayerShot, store: AppStore) async -> Bool {
@@ -127,6 +168,7 @@ extension PlayerModel {
             try? await Task.sleep(for: .seconds(1.5))
             return failure != nil
         }
+        if shot == .startFixture { return await stageStartFixture(store: store) }
         holdsCurtain = shot == .starting || shot == .statsWaiting
         store.send(.play(id: item.id, episode: String(item.episode)))
         guard await waited(30, { self.isPresented && self.hasPicture && self.duration != nil }) else { return false }
@@ -135,7 +177,7 @@ extension PlayerModel {
         case .starting:
             // The banner's art.
             try? await Task.sleep(for: .seconds(1))
-        case .couldntPlay:
+        case .couldntPlay, .startFixture:
             break
         case .playing:
             seek(to: 31)

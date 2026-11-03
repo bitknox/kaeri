@@ -92,6 +92,8 @@ public struct StartingScreen: Equatable, Sendable {
 public struct PlaybackFailure: Equatable, Sendable {
     public var id: AnilistId?
     public var episode: String
+    /// Why, in plain words, and which action leads.
+    public var view = StartFailureView()
 }
 
 extension StartingScreen {

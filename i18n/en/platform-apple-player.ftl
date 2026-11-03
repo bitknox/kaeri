@@ -148,3 +148,20 @@ player-sound = Sound
 
 # Spoken by VoiceOver on the loading indicator before the video shows.
 player-loading-announce = Starting
+
+# Row in the starting screen's Details list once the title has been looked up.
+apple-start-looked-up = Looked up the title
+
+# Detail line on the starting screen after the viewer chose to play from the beginning.
+apple-start-beginning = Starting from the beginning
+
+# Seconds on the starting screen's detail line when no other fact leads it.
+# @arg seconds: int
+apple-start-seconds = { $seconds } s
+
+# Label of the switch in the starting screen's Details list that plays the episode with its subtitles.
+# @max 16
+apple-start-subtitled = Subtitled
+
+# VoiceOver announcement once, when a start has taken more than a few seconds.
+apple-start-still-starting = Still starting. Choose { -source } is available.

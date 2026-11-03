@@ -201,7 +201,7 @@ struct ActivityLine: View {
 extension Navigator {
     /// Downloads, from wherever it is asked: its section on the Mac and a wide iPad, Library's
     /// first row pushed on iPhone and a narrow iPad window, which have no Downloads tab.
-    func showDownloads(compact: Bool) {
+    public func showDownloads(compact: Bool) {
         if compact {
             section = .library
             downloadsPushed = true
