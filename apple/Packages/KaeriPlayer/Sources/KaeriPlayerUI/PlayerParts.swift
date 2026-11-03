@@ -1318,6 +1318,7 @@ struct EpisodeList: View {
             }
         }
             .onChange(of: focus) { focused?.wrappedValue = focus }
+            #if FIXTURES
             .task {
                 // A screenshot's keyboard focus on a row, by its number.
                 guard focused != nil, let number = PlayerShot.focusedEpisode(in: ProcessInfo.processInfo.arguments)
@@ -1328,6 +1329,7 @@ struct EpisodeList: View {
                 // is told the row all the same.
                 focused?.wrappedValue = number
             }
+            #endif
         ForEach(episodes, id: \.number) { row in
             if row.current {
                 // One block, which the list scrolls into view whole as it opens.
