@@ -14722,6 +14722,21 @@ pub fn stores_share() -> String {
     text("stores-share", &[])
 }
 
+/// The line in the episode list where spoiler protection starts, after the person chose to see what it hides.
+pub fn episode_protection_shown(episode: i64) -> String {
+    text("episode-protection-shown", &[("episode", Arg::Int(episode))])
+}
+
+/// Button on the spoiler protection line: shows the synopses and stills it hides, until the page closes.
+pub fn episode_protection_show() -> String {
+    text("episode-protection-show", &[])
+}
+
+/// Button on the spoiler protection line once it is showing what it hides: hides it again.
+pub fn episode_protection_hide() -> String {
+    text("episode-protection-hide", &[])
+}
+
 /// Title of the state when a title page could not load.
 pub fn title_load_failed() -> String {
     text("title-load-failed", &[])

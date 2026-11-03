@@ -9153,6 +9153,15 @@ stores-qr-warning-device = [Šçàñ ţĥîš ŵîţĥ ţĥé ðéṽîçé ýö
 # Button that opens the system share sheet for the invite link.
 stores-share = [Šĥàŕé…~~]
 
+# The line in the episode list where spoiler protection starts, after the person chose to see what it hides.
+episode-protection-shown = [Šĥöŵîñĝ ŵĥàţ çöɱéš àƒţéŕ éþîšöðé { $episode }.~~~~~~~~~~~~]
+
+# Button on the spoiler protection line: shows the synopses and stills it hides, until the page closes.
+episode-protection-show = [Šĥöŵ~~]
+
+# Button on the spoiler protection line once it is showing what it hides: hides it again.
+episode-protection-hide = [Ĥîðé~~]
+
 # Title of the state when a title page could not load.
 title-load-failed = [Çöüļðñ'ţ ļöàð ţĥîš ţîţļé~~~~~~~~]
 

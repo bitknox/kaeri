@@ -18,11 +18,14 @@ namespace Kaeri.Windows.Pages;
 public sealed partial class EpisodeItem : INotifyPropertyChanged
 {
     ImageSource? still;
+    bool narrow, room, held;
+    double rowHeight = Synopsis.RowWide, textOpacity = 1, blurOpacity;
+    string description = "";
+    Microsoft.UI.Dispatching.DispatcherQueueTimer? growing;
 
-    internal EpisodeItem(EpisodeRow row, bool spoiler, uint title = 0)
+    internal EpisodeItem(EpisodeRow row, uint title = 0)
     {
         Row = row;
-        Spoiler = spoiler;
         Title = title;
         Discussion = Ctx.Current is { } ctx && uint.TryParse(row.Number, out var n) ? ctx.Known.Discussions.GetValueOrDefault((title, n)) : 0;
     }
@@ -47,8 +50,7 @@ public sealed partial class EpisodeItem : INotifyPropertyChanged
     public string DiscussionLine => T.DiscussionRow(Discussion);
     public Visibility DiscussionShown => Discussion > 0 ? Visibility.Visible : Visibility.Collapsed;
 
-    public EpisodeRow Row { get; }
-    public bool Spoiler { get; }
+    public EpisodeRow Row { get; private set; }
     public string Heading => long.TryParse(Row.Number, out var n)
         ? Row.Title is { Length: > 0 } t ? T.EpisodeWithTitle(n, t) : T.EpisodeNumber(n)
         : Row.Title is { Length: > 0 } named ? T.EpisodeTextWithTitle(Row.Number, named) : T.EpisodeNumberText(Row.Number);
@@ -63,20 +65,113 @@ public sealed partial class EpisodeItem : INotifyPropertyChanged
     public Visibility PartWay => Row.Watched is > 0 and < 1 && !Row.Completed ? Visibility.Visible : Visibility.Collapsed;
     public bool Playable => EpisodeSources.Playable(Row);
     public string WatchedAction => Row.Completed ? T.EpisodeMarkUnwatched : T.EpisodeMarkWatched;
-    public Visibility SpoilerShown => Spoiler ? Visibility.Visible : Visibility.Collapsed;
 
-    public string Line
+    /// <summary>The facts line: length or what is left, when it aired, a filler episode saying so.</summary>
+    public string Line => Synopsis.Facts(Row, DateTimeOffset.UtcNow.ToUnixTimeSeconds(), at => Synopsis.Date(at));
+
+    // What the row's layout is, from the window's width and what the engine says of text and
+    // protection. The page sets it with Lay; every figure here is a size, never read from the text.
+    public double RowHeight => rowHeight;
+    public double StillWidth => narrow ? Synopsis.StillNarrow : Synopsis.StillWide;
+    public double StillHeight => StillWidth * 9 / 16;
+    public int StillRowSpan => narrow ? 1 : 2;
+    public int SynopsisColumn => narrow ? 0 : 1;
+    public int SynopsisColumnSpan => narrow ? 3 : 1;
+    public Thickness HeadMargin => narrow ? new Thickness(0) : new Thickness(0, 10, 0, 0);
+    public VerticalAlignment HeadAlign => narrow ? VerticalAlignment.Center : VerticalAlignment.Top;
+    public Thickness RowPad => narrow && room ? new Thickness(0, 8, 0, 8) : new Thickness(0);
+    /// <summary>Beside the still the room is always there, so a reveal moves nothing; under it, only where the row is tall.</summary>
+    public Visibility TextVisible => !narrow || room ? Visibility.Visible : Visibility.Collapsed;
+    public string Description => description;
+    public double TextOpacity => textOpacity;
+    /// <summary>The blurred copy of the still over the sharp one, fading away on a reveal.</summary>
+    public double BlurOpacity => blurOpacity;
+    public bool Protectable { get; private set; }
+    public bool Held => held;
+    public Visibility HeldShown => held ? Visibility.Visible : Visibility.Collapsed;
+    /// <summary>The whole synopsis, for the row's tooltip.</summary>
+    public string? Tip => room && !held ? Synopsis.TextOf(Row) : null;
+    /// <summary>What Narrator reads after the name: the synopsis, or that spoiler protection hides it. Not read again when text arrives late.</summary>
+    public string HelpText => held ? T.EpisodeSynopsisHidden : room ? Synopsis.TextOf(Row) ?? "" : "";
+
+    /// <summary>
+    /// Takes the layout the width, the text outlook and spoiler protection give. A narrow row that
+    /// grows takes its height first (the standard token) and its text fades in once there is room.
+    /// </summary>
+    internal void Lay(bool narrow, EpisodeText outlook, bool protectable, bool held, bool animate)
     {
-        get
+        growing?.Stop();
+        var from = rowHeight;
+        this.narrow = narrow;
+        Protectable = protectable;
+        this.held = held;
+        room = Synopsis.HasRoom(outlook, held);
+        blurOpacity = held && Row.Thumbnail is not null ? 1 : 0;
+        var to = Synopsis.RowHeight(narrow, room);
+        Changed(nameof(StillWidth), nameof(StillHeight), nameof(StillRowSpan), nameof(SynopsisColumn), nameof(SynopsisColumnSpan),
+            nameof(HeadMargin), nameof(HeadAlign), nameof(RowPad), nameof(TextVisible), nameof(BlurOpacity), nameof(Held), nameof(HeldShown),
+            nameof(Tip), nameof(HelpText));
+        var text = Synopsis.TextOf(Row);
+        if (!animate || !narrow || !Motion.Enabled || Math.Abs(from - to) < 1)
         {
-            if (Row.Unsourced)
-                return T.EpisodeUnsourced;
-            if (Row.DurationSecs is not { } secs)
-                return Row.MetadataOnly ? T.EpisodeListedByAnilist : "";
-            if (Row.Watched is > 0 and < 1 && !Row.Completed)
-                return T.TimeMinutesLeft(Math.Max(1, (long)Math.Round(secs * (1 - Row.Watched) / 60)));
-            return Wording.Minutes(secs);
+            rowHeight = to;
+            Changed(nameof(RowHeight));
+            SetText(text, animate);
+            return;
         }
+        // The row takes its height first, so no line is ever clipped by a growing frame.
+        if (!room)
+            SetText(null, false);
+        Motion.Ease(this, from, to, height =>
+        {
+            rowHeight = height;
+            Changed(nameof(RowHeight));
+        });
+        if (room)
+        {
+            growing = Timers.Weak(this, Motion.Standard, false, static item =>
+            {
+                item.growing?.Stop();
+                item.SetText(Synopsis.TextOf(item.Row), true);
+            });
+            growing.Start();
+        }
+    }
+
+    /// <summary>
+    /// The synopsis the row shows: text that arrives fades in over 0.2 s into the room the row kept.
+    /// A row laid out without room (protected, or no text coming) takes none until its next layout.
+    /// </summary>
+    internal void SetText(string? text, bool animate)
+    {
+        text = room && !held ? text : null;
+        if ((text ?? "") == description)
+            return;
+        description = text ?? "";
+        Changed(nameof(Description), nameof(Tip), nameof(HelpText));
+        textOpacity = 1;
+        if (text is not null && animate)
+        {
+            textOpacity = Motion.Enabled ? 0 : 1;
+            Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread()?.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+            {
+                textOpacity = 1;
+                Changed(nameof(TextOpacity));
+            });
+        }
+        Changed(nameof(TextOpacity));
+    }
+
+    /// <summary>
+    /// Takes over what the row of the same episode showed before the table was drawn again, so text
+    /// that arrives late fades into the room the row kept rather than the row starting over.
+    /// </summary>
+    internal void Inherit(EpisodeItem was)
+    {
+        narrow = was.narrow;
+        rowHeight = was.rowHeight;
+        description = was.description;
+        blurOpacity = was.blurOpacity;
     }
 
     EpisodeDownload download = EpisodeDownload.Of([], 0, "");
@@ -142,6 +237,50 @@ public sealed partial class EpisodeItem : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
 }
 
+/// <summary>The quiet line between episode rows: the folded watched episodes, or where spoiler protection starts.</summary>
+public sealed partial class NoteItem : INotifyPropertyChanged
+{
+    string line = "", action = "";
+
+    internal NoteItem(bool fold, long episode, string line, string action)
+    {
+        Fold = fold;
+        Episode = episode;
+        this.line = line;
+        this.action = action;
+    }
+
+    public bool Fold { get; }
+
+    /// <summary>For a protection line, the last episode before it.</summary>
+    public long Episode { get; }
+
+    public string Line => line;
+    public string Action => action;
+    public Visibility LineShown => line.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+    internal void Say(string line, string action)
+    {
+        this.line = line;
+        this.action = action;
+        PropertyChanged?.Invoke(this, new(nameof(Line)));
+        PropertyChanged?.Invoke(this, new(nameof(Action)));
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+}
+
+/// <summary>Picks an episode row's template or a note's.</summary>
+public sealed partial class EpisodeTemplates : DataTemplateSelector
+{
+    public DataTemplate? Episode { get; set; }
+    public DataTemplate? Note { get; set; }
+
+    protected override DataTemplate? SelectTemplateCore(object item) => item is NoteItem ? Note : Episode;
+
+    protected override DataTemplate? SelectTemplateCore(object item, DependencyObject container) => SelectTemplateCore(item);
+}
+
 /// <summary>
 /// A title's page: the banner with the ground over its lower part, the cover beside the show
 /// title, the metadata line, the one amber action labelled with what it plays, the list status
@@ -174,6 +313,7 @@ public sealed partial class TitlePage : Page, IPageKeys
             StatusMenu.Items.Add(item);
         }
         SourceItem.Text = T.SourcePickerTitle;
+        EpisodeList.ItemTemplateSelector = (DataTemplateSelector)EpisodeList.Resources["Templates"];
         State.Placeholders = Placeholders;
         State.ActivityText = T.TitleLoading;
         var settings = new Microsoft.UI.Xaml.Input.KeyboardAccelerator { Key = global::Windows.System.VirtualKey.I, Modifiers = global::Windows.System.VirtualKeyModifiers.Control };
@@ -213,7 +353,7 @@ public sealed partial class TitlePage : Page, IPageKeys
         bars.Children.Add(States.Plate(150, 40, 6));
         head.Children.Add(bars);
         page.Children.Add(head);
-        var rows = States.Rows(4, 128, 72);
+        var rows = States.Rows(4, 192, 108);
         if (rows is FrameworkElement f)
             f.Margin = new Thickness(36, 8, 36, 0);
         page.Children.Add(rows);
@@ -232,6 +372,8 @@ public sealed partial class TitlePage : Page, IPageKeys
         // The queue, for each row's download cell.
         ctx.Send(new Command.LoadDownloads());
         ctx.Send(new Command.LoadDub(id));
+        // The show's own spoiler protection, which the rows follow.
+        ctx.Send(new Command.LoadShowSettings(id));
         DubLine.Opacity = 0;
         Show();
         ShowEpisodes();
@@ -379,9 +521,8 @@ public sealed partial class TitlePage : Page, IPageKeys
                     ctx.Send(new Command.LoadEpisodes(id));
                     break;
                 case Event.DiscussionFound found when found.Media == id:
-                    if (EpisodeList.ItemsSource is IEnumerable<EpisodeItem> shown)
-                        foreach (var item in shown.Where(i => i.Row.Number == found.Episode.ToString()))
-                            item.Discussion = found.Comments;
+                    foreach (var item in Episodes().Where(i => i.Row.Number == found.Episode.ToString()))
+                        item.Discussion = found.Comments;
                     break;
                 case Event.TitleDub td when td.Id == id:
                     var line = Wording.DubLine(td.Dub);
@@ -403,6 +544,15 @@ public sealed partial class TitlePage : Page, IPageKeys
                     // The button plays the first episode after the next that a source lists.
                     if (ctx.Known.Entry(id) is { } known)
                         ShowAction(known);
+                    break;
+                case Event.ShowSettings st when st.V1.Id == id:
+                    var own = st.V1.Rows.FirstOrDefault(r => r.Key == ShowSettingKey.SpoilerProtection)?.Value == "on";
+                    var had = st.V1.Rows.Any(r => r.Key == ShowSettingKey.SpoilerProtection);
+                    if ((had ? own : (bool?)null) != ownSpoilers)
+                    {
+                        ownSpoilers = had ? own : null;
+                        ShowEpisodes();
+                    }
                     break;
                 case Event.Downloads d:
                     ShowDownloads(d.V1);
@@ -702,19 +852,73 @@ public sealed partial class TitlePage : Page, IPageKeys
         }
     }
 
+    // How the episode list is drawn: the window's width, the range and fold the viewer chose, and
+    // what spoiler protection holds back.
+    bool narrowList, opened, revealAll;
+    int? chosenRange;
+    bool? ownSpoilers;
+    EpisodeText outlook = EpisodeText.None;
+    EpisodeRange[] ranges = [];
+    NoteItem? protection;
+    readonly HashSet<string> revealed = [];
+
+    IEnumerable<EpisodeItem> Episodes() => (EpisodeList.ItemsSource as IEnumerable<object>)?.OfType<EpisodeItem>() ?? [];
+
+    /// <summary>Whether spoiler protection is on for this show: what it sets for itself, else Settings.</summary>
+    bool ProtectionOn() => ownSpoilers ?? SettingsCatalog.IsOn(ctx.Known.Setting(SettingKey.SpoilerProtection));
+
+    /// <summary>The next episode: the last one protection shows.</summary>
+    long Next() => ctx.Known.Entry(id)?.Progress?.Next ?? 1;
+
+    bool Held(EpisodeRow row) =>
+        Synopsis.Held(row, ProtectionOn(), Next(), revealAll || revealed.Contains(row.Number));
+
     void ShowEpisodes()
     {
         if (!ctx.Known.Episodes.TryGetValue(id, out var rows))
             return;
-        var next = ctx.Known.Entry(id)?.Progress?.Next ?? 1;
-        var items = rows.Select(r =>
+        narrowList = Scroll.ActualWidth is > 0 and < Synopsis.NarrowBelow;
+        var (rs, at, plan) = Synopsis.Layout(rows, chosenRange, opened, DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+        ranges = rs;
+        outlook = rows.Length == 0 ? EpisodeText.None : KaeriFfiMethods.EpisodeText(rows);
+        ShowRanges(rows, at);
+
+        var on = ProtectionOn();
+        var next = Next();
+        var entry = ctx.Known.Entry(id);
+        // A row without a still of its own stands on the show's wide art, never blurred.
+        var wide = entry?.BannerUrl ?? entry?.CoverUrl;
+        var before = new Dictionary<string, EpisodeItem>();
+        foreach (var old in Episodes())
+            before.TryAdd(old.Row.Number, old);
+
+        var shown = rows[(plan.Start + plan.Fold)..plan.End];
+        var start = Synopsis.ProtectionStart(shown, on, next);
+        var items = new List<object>();
+        protection = null;
+        if (plan.Fold > 0)
         {
-            var spoiler = uint.TryParse(r.Number, out var n) && n > next && !r.Completed;
-            var item = new EpisodeItem(r, spoiler, id);
-            // A spoiler's still loads too, and shows blurred.
-            ctx.Art.Bind(r.Thumbnail, s => item.Still = s);
-            return item;
-        }).ToList();
+            var first = Synopsis.Number(rows[plan.Start].Number) ?? 1;
+            var last = Synopsis.Number(rows[plan.Start + plan.Fold - 1].Number) ?? first;
+            items.Add(new NoteItem(true, 0, "", T.TitleWatchedRange(first, last)));
+        }
+        for (var i = 0; i < shown.Length; i++)
+        {
+            if (start is { } line && line.At == i)
+            {
+                protection = new NoteItem(false, line.Before, "", "");
+                SayProtection();
+                items.Add(protection);
+            }
+            var row = shown[i];
+            var item = new EpisodeItem(row, id);
+            var known = before.GetValueOrDefault(row.Number);
+            if (known is not null)
+                item.Inherit(known);
+            item.Lay(narrowList, outlook, Synopsis.Protectable(row, on, next), Held(row), known is not null);
+            ctx.Art.Bind(row.Thumbnail ?? wide, s => item.Still = s);
+            items.Add(item);
+        }
         EpisodeList.ItemsSource = items;
         ShowDownloads(ctx.Known.Downloads);
         var metadataOnly = rows.Length > 0 && rows.All(r => r.MetadataOnly);
@@ -722,13 +926,90 @@ public sealed partial class TitlePage : Page, IPageKeys
         EpisodesNote.Visibility = metadataOnly ? Visibility.Visible : Visibility.Collapsed;
     }
 
+    /// <summary>The range picker beside the season picker: shown for a show of over 100 episodes.</summary>
+    void ShowRanges(EpisodeRow[] rows, int selected)
+    {
+        RangePicker.SelectionChanged -= OnRangePicked;
+        RangePicker.Items.Clear();
+        if (ranges.Length > 1)
+            foreach (var item in Synopsis.RangeItems(rows, ranges))
+            {
+                var entry = new ComboBoxItem { Content = item.State is null ? item.Label : $"{item.Label} · {item.State}" };
+                AutomationProperties.SetName(entry, item.Spoken);
+                RangePicker.Items.Add(entry);
+            }
+        RangePicker.SelectedIndex = ranges.Length > 1 ? selected : -1;
+        RangePicker.SelectionChanged += OnRangePicked;
+        if (ranges.Length > 1)
+            Motion.Show(RangePicker);
+        else
+            Motion.Set(RangePicker, false);
+    }
+
+    /// <summary>A range was picked: the list crossfades in place to its rows.</summary>
+    void OnRangePicked(object sender, SelectionChangedEventArgs e)
+    {
+        if (RangePicker.SelectedIndex is not (var at and >= 0) || at >= ranges.Length)
+            return;
+        chosenRange = at;
+        opened = false;
+        ShowEpisodes();
+        Motion.FadeIn(EpisodeList);
+    }
+
+    /// <summary>The protection line's words, for whether the rows are showing.</summary>
+    void SayProtection()
+    {
+        if (protection is not { } note)
+            return;
+        note.Say(revealAll ? T.EpisodeProtectionShown(note.Episode)
+                : narrowList ? T.EpisodeProtectionLineShort(note.Episode) : T.EpisodeProtectionLine(note.Episode),
+            revealAll ? T.EpisodeProtectionHide : T.EpisodeProtectionShow);
+    }
+
+    /// <summary>Every row takes the layout the width, the text outlook and protection give now.</summary>
+    void Relay(bool animate, EpisodeItem? only = null)
+    {
+        var on = ProtectionOn();
+        var next = Next();
+        foreach (var item in Episodes().Where(i => only is null || i == only))
+            item.Lay(narrowList, outlook, Synopsis.Protectable(item.Row, on, next), Held(item.Row), animate);
+    }
+
+    void OnNote(object sender, RoutedEventArgs e)
+    {
+        if (ItemOfNote(sender) is not { } note)
+            return;
+        if (note.Fold)
+        {
+            opened = true;
+            ShowEpisodes();
+            return;
+        }
+        revealAll = !revealAll;
+        if (!revealAll)
+            revealed.Clear();
+        SayProtection();
+        Relay(true);
+    }
+
+    static NoteItem? ItemOfNote(object sender) => (sender as FrameworkElement)?.Tag as NoteItem;
+
+    /// <summary>Show synopsis on one protected episode: its still and its text, for this visit.</summary>
+    void OnEpisodeReveal(object sender, RoutedEventArgs e)
+    {
+        if (ItemOf(sender) is not { } item)
+            return;
+        revealed.Add(item.Row.Number);
+        Relay(true, item);
+    }
+
     static T Res<T>(string key) => (T)Application.Current.Resources[key];
 
     /// <summary>Each episode row's download cell, from the queue.</summary>
     void ShowDownloads(DownloadRow[] rows)
     {
-        if (EpisodeList.ItemsSource is not IEnumerable<EpisodeItem> items)
-            return;
+        var items = Episodes().ToList();
         foreach (var item in items)
             item.Download = EpisodeDownload.Of(rows, id, item.Row.Number);
 #if KAERI_TESTING
@@ -797,6 +1078,14 @@ public sealed partial class TitlePage : Page, IPageKeys
     void OnSizeChanged(object sender, SizeChangedEventArgs e)
     {
         Layout();
+        // A narrow window stacks each row's text under its still.
+        var narrow = Scroll.ActualWidth is > 0 and < Synopsis.NarrowBelow;
+        if (narrow != narrowList && EpisodeList.ItemsSource is not null)
+        {
+            narrowList = narrow;
+            SayProtection();
+            Relay(false);
+        }
         if (Current() is { } entry)
             ShowDetails(entry);
     }
@@ -952,7 +1241,7 @@ public sealed partial class TitlePage : Page, IPageKeys
     {
         var focused = FocusManager.GetFocusedElement(XamlRoot) as DependencyObject;
         var item = focused is not null ? EpisodeList.ItemFromContainer(focused) as EpisodeItem : null;
-        if (item is null && action is not null && EpisodeList.ItemsSource is IEnumerable<EpisodeItem> all)
+        if (item is null && action is not null && Episodes().ToList() is var all)
             item = all.FirstOrDefault(i => i.Row.Number == action.Episode.ToString());
         if (item is null)
             return false;

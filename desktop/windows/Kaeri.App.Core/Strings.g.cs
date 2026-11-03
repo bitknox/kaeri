@@ -6399,6 +6399,15 @@ public static partial class T
     /// <summary>Button that opens the system share sheet for the invite link.</summary>
     public static string StoresShare => Get("StoresShare");
 
+    /// <summary>The line in the episode list where spoiler protection starts, after the person chose to see what it hides.</summary>
+    public static string EpisodeProtectionShown(long episode) => Fill(Get("EpisodeProtectionShown"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Button on the spoiler protection line: shows the synopses and stills it hides, until the page closes.</summary>
+    public static string EpisodeProtectionShow => Get("EpisodeProtectionShow");
+
+    /// <summary>Button on the spoiler protection line once it is showing what it hides: hides it again.</summary>
+    public static string EpisodeProtectionHide => Get("EpisodeProtectionHide");
+
     /// <summary>Title of the state when a title page could not load.</summary>
     public static string TitleLoadFailed => Get("TitleLoadFailed");
 
@@ -9777,6 +9786,9 @@ public static partial class T
         ["StoresQrWarning"] = "Anyone who scans this code can use the invite. It works once and lasts seven days.",
         ["StoresQrWarningDevice"] = "Scan this with the device you want to link. It works once and lasts seven days.",
         ["StoresShare"] = "Share…",
+        ["EpisodeProtectionShown"] = "Showing what comes after episode {episode}.",
+        ["EpisodeProtectionShow"] = "Show",
+        ["EpisodeProtectionHide"] = "Hide",
         ["TitleLoadFailed"] = "Couldn't load this title",
         ["TitleNoAnswer"] = "AniList didn't answer. Try again.",
         ["TitleLoading"] = "Loading this title",

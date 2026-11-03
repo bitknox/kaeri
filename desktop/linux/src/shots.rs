@@ -19,7 +19,7 @@ const TITLE: u32 = 900_001;
 const PLAYING: (u32, &str) = (900_002, "4");
 
 /// Every shot by name, in the order a run takes them.
-pub const ALL: [&str; 93] = [
+pub const ALL: [&str; 98] = [
     "home",
     "welcome",
     "offline",
@@ -40,6 +40,11 @@ pub const ALL: [&str; 93] = [
     "discussion-waiting",
     "discussion-signed-out",
     "title-discussion",
+    "synopsis",
+    "synopsis-revealed",
+    "synopsis-shown",
+    "synopsis-none",
+    "synopsis-long",
     "title-watch-again",
     "show-settings",
     "library",
@@ -627,6 +632,9 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
             });
             4.0
         }
+        #[cfg(feature = "fixtures")]
+        "synopsis" | "synopsis-revealed" | "synopsis-shown" | "synopsis-none"
+        | "synopsis-long" => stage_synopsis(shell, shot),
         "title-discussion" => {
             // The episode that has a thread says so under its row.
             shell.go(Dest::Home);
@@ -1185,7 +1193,8 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
             close_dialogs(&shell.ctx.window);
             let _ = WidgetExt::activate_action(&shell.ctx.window, "win.back", None);
         }
-        "title" | "pad-title" | "title-discussion" => {
+        "title" | "pad-title" | "title-discussion" | "synopsis" | "synopsis-revealed"
+        | "synopsis-shown" | "synopsis-none" | "synopsis-long" => {
             let _ = WidgetExt::activate_action(&shell.ctx.window, "win.back", None);
         }
         "trailer-preview" => crate::trailer::close_preview(),
@@ -3437,6 +3446,104 @@ fn skip_stage(shell: &Rc<Shell>, name: &str) -> f64 {
 #[cfg(not(feature = "fixtures"))]
 fn skip_stage(_: &Rc<Shell>, _: &str) -> f64 {
     0.0
+}
+
+/// The synopses of the title page's list, made up: one line per episode of the finished title.
+#[cfg(feature = "fixtures")]
+const LINES: [&str; 11] = [
+    "A lamplighter wakes on the star road with a lantern and no name.",
+    "The crew take on a passenger who pays in maps, and the first map is of a place that has not been built yet.",
+    "A storm closes the pass with the mail still aboard. The pilot has to choose between turning back and flying the old route under the cloud line, the one her mentor never came back from.",
+    "Ryo repairs the engine by lamplight while the others argue over where the next island lies.",
+    "A festival of paper lanterns drifts up from the sea of cloud, and one of them carries a message for the youngest pilot.",
+    "The crew wait out a calm at a floating harbour where nobody has docked in years.",
+    "A storm closes Kiriya Pass with the mail still aboard. Toma has to choose between turning back and flying the old route under the cloud line.",
+    "Ryo finds the letter Toma has carried since the first night, and reads it before she can stop him. Neither of them speaks again until the lamps of Hoshimi come up out of the cloud.",
+    "On an island with one lamp left, the crew meet the keeper who lights it every night for a ship that stopped coming. Ryo stays behind to help, and nearly misses the morning departure. The keeper gives Toma a map that was never meant to leave the island, and asks only that she carry it past the edge of the cloud sea.",
+    "The crew of a patched-up airship carry letters and strangers between islands that float above an endless sea of cloud.",
+    "A clock that runs four minutes slow is the only witness to a theft on Lantern Street.",
+];
+
+/// The title page with synopses on its episodes, as the fixture scene has none of its own: the
+/// table the page got is sent again with text, and which rows are ahead. `synopsis-long` sends a
+/// table of 250; `synopsis-none` opens a title whose table has no text at all.
+#[cfg(feature = "fixtures")]
+fn stage_synopsis(shell: &Rc<Shell>, shot: &str) -> f64 {
+    use kaeri_model::episodes::EpisodeRow;
+    let window = &shell.ctx.window;
+    shell.go(Dest::Home);
+    let title = if shot == "synopsis-none" { PLAYING.0 } else { TITLE };
+    let seen: Rc<std::cell::RefCell<Vec<EpisodeRow>>> = Rc::default();
+    let hub = Rc::clone(&shell.ctx.hub);
+    let listening = hub.listen({
+        let seen = Rc::clone(&seen);
+        move |event| {
+            if let Event::Episodes { id, rows, .. } = event
+                && id.get() == title
+            {
+                seen.replace(rows.clone());
+            }
+        }
+    });
+    let _ = WidgetExt::activate_action(window, "win.open-title", Some(&title.to_variant()));
+    if shot == "synopsis-none" {
+        return 3.5;
+    }
+    let ctx = Rc::clone(&shell.ctx);
+    let shot = shot.to_owned();
+    glib::timeout_add_local_once(Duration::from_millis(2500), move || {
+        hub.forget(listening);
+        let base = seen.borrow().clone();
+        let next = 7;
+        let mut rows: Vec<EpisodeRow> = if shot == "synopsis-long" {
+            (1..=250)
+                .map(|n| {
+                    let mut row = base[(n - 1) % base.len()].clone();
+                    row.number = n.to_string();
+                    row.title = Some(format!("Letter number {n}"));
+                    row
+                })
+                .collect()
+        } else {
+            base
+        };
+        let next = if shot == "synopsis-long" { 230 } else { next };
+        for (i, row) in rows.iter_mut().enumerate() {
+            let n = i + 1;
+            row.completed = n < next;
+            row.watched = if n == next { 0.42 } else { 0.0 };
+            row.past_progress = n > next;
+            row.description =
+                (n != 10 || shot == "synopsis-long").then(|| LINES[i % LINES.len()].to_owned());
+            row.kind = (n == 10).then_some(kaeri_model::episodes::EpisodeKind::Filler);
+        }
+        hub.take(vec![Event::Episodes {
+            id: kaeri_core::ids::AnilistId::new(TITLE),
+            rows,
+            failed: None,
+        }]);
+        let for_press = Rc::clone(&ctx);
+        let press = move |label: String| {
+            if let Some(button) = button_labelled(for_press.window.upcast_ref(), &label) {
+                button.emit_clicked();
+            }
+        };
+        let ctx2 = Rc::clone(&ctx);
+        glib::timeout_add_local_once(Duration::from_millis(800), move || match shot.as_str() {
+            "synopsis-revealed" => {
+                if let Some(page) = ctx2.nav().and_then(|nav| nav.visible_page()) {
+                    let _ = WidgetExt::activate_action(
+                        &page,
+                        "title.show-synopsis",
+                        Some(&"9".to_variant()),
+                    );
+                }
+            }
+            "synopsis-shown" => press(kaeri_i18n::t::episode_protection_show()),
+            _ => {}
+        });
+    });
+    6.0
 }
 
 #[cfg(test)]

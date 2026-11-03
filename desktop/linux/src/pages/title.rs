@@ -5,7 +5,8 @@
 
 use std::{
     cell::{Cell, RefCell},
-    rc::Rc,
+    collections::HashSet,
+    rc::{Rc, Weak},
 };
 
 use adw::prelude::*;
@@ -15,10 +16,11 @@ use kaeri_i18n::t;
 use kaeri_model::{
     catalog::{Entry, LibrarySegment, LinkedTitle, RelationKind},
     command::{Command, LicensedCommand},
-    episodes::EpisodeRow,
+    episodes::{self, EpisodeRange, EpisodeRow, EpisodeText},
     event::Event,
     licensed::{AvailabilityCase, TitleAvailability},
     settings::SettingKey,
+    show::ShowSettingKey,
 };
 
 use crate::{
@@ -26,7 +28,7 @@ use crate::{
     pages::licensed,
     say,
     states::{Shape, States},
-    widgets,
+    synopsis, widgets,
     window::{Ctx, Size},
 };
 
@@ -44,7 +46,6 @@ struct EpisodeLine {
     toggled: glib::SignalHandlerId,
     name: gtk::Label,
     still: gtk::Widget,
-    frame: gtk::Box,
     /// The row's content, dimmed when no source lists the episode.
     root: gtk::Box,
     sub: gtk::Label,
@@ -53,6 +54,38 @@ struct EpisodeLine {
     bar: gtk::ProgressBar,
     menu: gio::Menu,
     shown: RefCell<EpisodeRow>,
+    /// The row itself, which carries its tooltip and what a screen reader says of it.
+    list_row: gtk::ListBoxRow,
+    /// The synopsis, and the box that keeps its room (three lines).
+    synopsis: gtk::Label,
+    room_box: gtk::Box,
+    /// The blurred copy of the still over the sharp one, while spoiler protection holds the row.
+    blur: Option<gtk::Widget>,
+    /// Spoiler protection holds the row back now.
+    protected: Cell<bool>,
+    /// The row kept room for text when it was laid out (and does now: a reveal gives it).
+    room: Cell<bool>,
+    /// The height the row has now.
+    height: Cell<i32>,
+}
+
+/// What the episode list was drawn from: when a table arrives that differs in none of it, the
+/// rows change in place; otherwise the list is drawn again.
+#[derive(PartialEq)]
+struct Drawn {
+    numbers: Vec<String>,
+    narrow: bool,
+    range: Option<usize>,
+    fold: usize,
+    protection_at: Option<usize>,
+}
+
+/// The one line where spoiler protection starts.
+struct Protection {
+    label: gtk::Label,
+    button: gtk::Button,
+    /// The last episode before it.
+    episode: i64,
 }
 
 struct Page {
@@ -68,6 +101,31 @@ struct Page {
     episodes: gtk::ListBox,
     episodes_state: Rc<States>,
     lines: RefCell<Vec<EpisodeLine>>,
+    /// The page itself, for what a row's buttons call.
+    me: RefCell<Weak<Page>>,
+    /// The scrolled page, kept so unfolding the watched rows leaves the next one where it was.
+    scroll: gtk::ScrolledWindow,
+    /// Over the episode list: the snapshot a range switch crossfades from.
+    veil: gtk::Overlay,
+    /// The range picker, beside the heading of the list.
+    range_slot: gtk::Box,
+    /// Whether the table had text, expected text or none when it was first laid out: kept until
+    /// the next layout (a range switch, or the page coming back), so rows never grow on screen.
+    outlook: Cell<Option<EpisodeText>>,
+    /// The episodes the viewer asked to see through spoiler protection, for this visit.
+    revealed: RefCell<HashSet<String>>,
+    /// Spoiler protection's line was asked to show every row.
+    reveal_all: Cell<bool>,
+    /// What the show sets for itself in spoiler protection, once the engine said.
+    own_spoilers: Cell<Option<bool>>,
+    /// The range showing, an index into the table's ranges; none until the page chooses.
+    range: Cell<Option<usize>>,
+    /// The line of folded watched episodes was opened.
+    unfolded: Cell<bool>,
+    /// What the list was drawn from, to tell a change in place from one that needs a new layout.
+    drawn: RefCell<Option<Drawn>>,
+    /// The protection line, once drawn: its text, its button and where it stands.
+    protection: RefCell<Option<Protection>>,
     /// Whether the engine has answered for the episodes, so no table means none.
     listed: Cell<bool>,
     columns: gtk::Box,
@@ -123,7 +181,8 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
     let seasons = gtk::Box::new(gtk::Orientation::Horizontal, 0);
     let synopsis = gtk::Box::new(gtk::Orientation::Vertical, 0);
     let episodes = gtk::ListBox::new();
-    episodes.add_css_class("boxed-list");
+    // Rows have no dividers: the still anchors each one.
+    episodes.add_css_class("episode-list");
     episodes.set_selection_mode(gtk::SelectionMode::None);
     let none = widgets::haze(&t::title_no_episodes(), "");
     none.set_valign(gtk::Align::Start);
@@ -150,8 +209,17 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
     main.append(&seasons);
     let heading = widgets::heading(&t::title_episodes());
     heading.set_margin_top(12);
-    main.append(&heading);
-    main.append(&episodes_state.widget);
+    // The heading, and beside it the range picker of a long series.
+    let range_slot = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+    range_slot.set_valign(gtk::Align::End);
+    let heading_row = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+    heading_row.append(&heading);
+    heading_row.append(&range_slot);
+    main.append(&heading_row);
+    // Over the list, a range switch lays the old list's picture and fades it out.
+    let veil = gtk::Overlay::new();
+    veil.set_child(Some(&episodes_state.widget));
+    main.append(&veil);
 
     let side = gtk::Box::new(gtk::Orientation::Vertical, 18);
     side.set_size_request(260, -1);
@@ -225,6 +293,18 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
         episodes,
         episodes_state,
         lines: RefCell::default(),
+        me: RefCell::default(),
+        scroll: scroll.clone(),
+        veil,
+        range_slot,
+        outlook: Cell::new(None),
+        revealed: RefCell::default(),
+        reveal_all: Cell::new(false),
+        own_spoilers: Cell::new(None),
+        range: Cell::new(None),
+        unfolded: Cell::new(false),
+        drawn: RefCell::default(),
+        protection: RefCell::default(),
         listed: Cell::new(false),
         columns,
         rows: Rc::default(),
@@ -267,6 +347,7 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
             }
         }
     });
+    page.me.replace(Rc::downgrade(&page));
     page.actions();
     ctx.hub.known.borrow_mut().visit(id);
     if let Some(entry) = &entry {
@@ -275,6 +356,8 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
     ctx.hub.send(Command::LoadDetail(id));
     ctx.hub.send(Command::LoadEpisodes(id));
     ctx.hub.send(Command::LoadDub(id));
+    // The show's own spoiler protection, which the rows follow.
+    ctx.hub.send(Command::LoadShowSettings { id });
     // Kept as long as the page it draws, and deaf once that is gone.
     navigation.connect_destroy(move |_| {
         if let Some(id) = page.listening.borrow_mut().take() {
@@ -310,9 +393,20 @@ impl Page {
             }
             Event::Episodes { id, rows, .. } if *id == self.id => {
                 self.listed.set(true);
+                let same = {
+                    let old = self.rows.borrow();
+                    old.len() == rows.len()
+                        && old.iter().zip(rows).all(|(a, b)| a.number == b.number)
+                };
                 self.rows.replace(rows.clone());
                 self.ask_availability();
-                self.draw_episodes();
+                // The same table with more in it (text that arrived late, a mark): the rows
+                // change in place, and only a change in what the list is made of draws it again.
+                if same && self.drawn.borrow().is_some() {
+                    self.update_episodes();
+                } else {
+                    self.draw_episodes();
+                }
                 // The table decides what More offers.
                 if let Some(entry) = self.ctx.hub.entry(self.id) {
                     self.fill(&entry);
@@ -385,6 +479,21 @@ impl Page {
                     self.fill(&entry);
                 }
                 self.update_episodes();
+                // Which rows are ahead moved with the mark.
+                self.ctx.hub.send(Command::LoadEpisodes(self.id));
+            }
+            Event::ShowSettings(view) if view.id == self.id => {
+                let own = view
+                    .rows
+                    .iter()
+                    .find(|row| row.key == ShowSettingKey::SpoilerProtection)
+                    .map(|row| row.value == "on");
+                if own != self.own_spoilers.get() {
+                    self.own_spoilers.set(own);
+                    if self.drawn.borrow().is_some() {
+                        self.draw_episodes();
+                    }
+                }
             }
             _ => {}
         }
@@ -535,6 +644,19 @@ impl Page {
             }
         });
         group.add_action(&watched);
+        // Show synopsis, from a protected row's menu and for a screen reader.
+        let reveal = gio::SimpleAction::new("show-synopsis", Some(glib::VariantTy::STRING));
+        reveal.connect_activate({
+            let page = self.me.borrow().clone();
+            move |_, arg| {
+                if let (Some(page), Some(number)) =
+                    (page.upgrade(), arg.and_then(String::from_variant))
+                {
+                    page.reveal(&number);
+                }
+            }
+        });
+        group.add_action(&reveal);
         if let Some(navigation) = self.navigation.upgrade() {
             navigation.insert_action_group("title", Some(&group));
         }
@@ -988,39 +1110,262 @@ impl Page {
         self.side.append(&column);
     }
 
-    /// The episode table, drawn whole: when it arrives and when the window changes size.
+    /// Whether spoiler protection is on for this show: what it sets for itself, else Settings.
+    fn protection_on(&self) -> bool {
+        self.own_spoilers.get().unwrap_or_else(|| {
+            self.ctx
+                .hub
+                .known
+                .borrow()
+                .setting(SettingKey::SpoilerProtection)
+                .is_some_and(|r| catalog::is_on(&r))
+        })
+    }
+
+    /// The next episode: the last one protection shows.
+    fn next(&self) -> i64 {
+        self.ctx.hub.entry(self.id).and_then(|e| e.progress).map_or(1, |p| i64::from(p.next))
+    }
+
+    /// Whether the viewer asked to see this episode through spoiler protection.
+    fn shown(&self, number: &str) -> bool {
+        self.reveal_all.get() || self.revealed.borrow().contains(number)
+    }
+
+    /// What the list is made of: the range showing, the folded rows, where protection starts.
+    fn plan(&self, rows: &[EpisodeRow]) -> (Vec<EpisodeRange>, synopsis::Plan) {
+        let now = glib::DateTime::now_utc().map_or(0, |t| t.to_unix());
+        let ranges = episodes::episode_ranges(rows, now);
+        let at = self
+            .range
+            .get()
+            .filter(|at| *at < ranges.len())
+            .unwrap_or_else(|| episodes::episode_range_to_open(rows) as usize)
+            .min(ranges.len().saturating_sub(1));
+        let range = ranges.get(at).copied().unwrap_or(EpisodeRange {
+            start: 0,
+            end: rows.len() as u32,
+            watched: false,
+            not_out: false,
+        });
+        let fold = episodes::episode_fold(rows, &range);
+        let plan = synopsis::plan(rows, Some(&range), fold, self.unfolded.get());
+        (ranges, plan)
+    }
+
+    /// The range picker beside the heading: shown from 101 episodes, with what each range holds.
+    fn fill_ranges(&self, rows: &[EpisodeRow], ranges: &[EpisodeRange], at: usize) {
+        clear(&self.range_slot);
+        if ranges.is_empty() {
+            return;
+        }
+        let items = synopsis::range_items(rows, ranges);
+        let model = gtk::StringList::new(&[]);
+        for item in &items {
+            model.append(&item.label);
+        }
+        let factory = gtk::SignalListItemFactory::new();
+        factory.connect_setup(|_, object| {
+            let Some(item) = object.downcast_ref::<gtk::ListItem>() else { return };
+            let line = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+            let label = gtk::Label::new(None);
+            label.set_xalign(0.0);
+            label.set_hexpand(true);
+            let state = widgets::haze("", "caption");
+            state.set_wrap(false);
+            line.append(&label);
+            line.append(&state);
+            item.set_child(Some(&line));
+        });
+        factory.connect_bind({
+            let labels: Vec<(String, Option<String>)> =
+                items.iter().map(|i| (i.label.clone(), i.state.clone())).collect();
+            move |_, object| {
+                let Some(item) = object.downcast_ref::<gtk::ListItem>() else { return };
+                let Some(line) = item.child().and_downcast::<gtk::Box>() else { return };
+                let Some((label, state)) = labels.get(item.position() as usize) else { return };
+                if let Some(first) = line.first_child().and_downcast::<gtk::Label>() {
+                    first.set_label(label);
+                }
+                if let Some(last) = line.last_child().and_downcast::<gtk::Label>() {
+                    last.set_label(state.as_deref().unwrap_or(""));
+                    // The button shows the label alone; the open list says what each holds.
+                    last.set_visible(
+                        state.is_some()
+                            && item.child().is_some_and(|c| {
+                                c.ancestor(gtk::Popover::static_type()).is_some()
+                            }),
+                    );
+                }
+            }
+        });
+        let picker = gtk::DropDown::new(Some(model), gtk::Expression::NONE);
+        picker.set_factory(Some(&factory));
+        picker.set_list_factory(Some(&factory));
+        picker.set_tooltip_text(Some(&t::episode_range_label()));
+        picker.update_property(&[gtk::accessible::Property::Label(&t::episode_range_label())]);
+        picker.set_selected(at as u32);
+        let page = self.me.borrow().clone();
+        picker.connect_selected_notify(move |picker| {
+            if let Some(page) = page.upgrade() {
+                page.switch_range(picker.selected() as usize);
+            }
+        });
+        self.range_slot.append(&picker);
+    }
+
+    /// A range was chosen: the old list and the new crossfade in place, and the new range opens
+    /// at its first unwatched episode with the table laid out again.
+    fn switch_range(&self, to: usize) {
+        if self.range.get().is_some_and(|at| at == to) {
+            return;
+        }
+        let before =
+            gtk::WidgetPaintable::new(Some(&self.episodes_state.widget)).current_image();
+        let ghost = gtk::Picture::for_paintable(&before);
+        ghost.set_can_target(false);
+        ghost.set_halign(gtk::Align::Fill);
+        ghost.set_valign(gtk::Align::Start);
+        ghost.set_content_fit(gtk::ContentFit::Fill);
+        self.range.set(Some(to));
+        self.unfolded.set(false);
+        // The next layout decides the rows' room again.
+        self.outlook.set(None);
+        self.draw_episodes();
+        self.veil.add_overlay(&ghost);
+        let veil = self.veil.clone();
+        let gone = ghost.clone();
+        let fade = adw::TimedAnimation::new(&ghost, 1.0, 0.0, 300, motion::opacity(&ghost));
+        fade.set_easing(adw::Easing::EaseOutCubic);
+        fade.connect_done(move |_| veil.remove_overlay(&gone));
+        fade.play();
+        // The page scrolls the pickers into view first when they were above the screen.
+        if let Some(parent) = self.range_slot.parent() {
+            let y = parent
+                .compute_point(
+                    &self.scroll.child().unwrap_or_else(|| parent.clone()),
+                    &gtk::graphene::Point::zero(),
+                )
+                .map_or(0.0, |p| f64::from(p.y()));
+            let adjustment = self.scroll.vadjustment();
+            if adjustment.value() > y {
+                adjustment.set_value(y);
+            }
+        }
+    }
+
+    /// The episode table, drawn whole: when it arrives, when the window changes size and when the
+    /// list is made of something else (a range, an opened fold, a reveal of every row).
     fn draw_episodes(&self) {
         clear_list(&self.episodes);
         self.lines.borrow_mut().clear();
+        self.protection.replace(None);
         let rows = self.rows.borrow();
         if rows.is_empty() {
+            self.drawn.replace(None);
+            self.fill_ranges(&rows, &[], 0);
             if self.listed.get() {
                 self.episodes_state.empty();
             }
             return;
         }
         let narrow = *self.sized.borrow() == Size::Narrow;
-        let w = if narrow { 96 } else { 128 };
+        let outlook = self.outlook.get().unwrap_or_else(|| episodes::episode_text(&rows));
+        self.outlook.set(Some(outlook));
+        let (ranges, plan) = self.plan(&rows);
+        let selected = ranges.iter().position(|r| r.start as usize == plan.start).unwrap_or(0);
+        self.range.set(if ranges.is_empty() { None } else { Some(selected) });
+        self.fill_ranges(&rows, &ranges, selected);
+
+        let on = self.protection_on();
+        let next = self.next();
         let entry = self.ctx.hub.entry(self.id);
         let color = entry.as_ref().and_then(|e| e.cover_color.clone());
+        // A row without a still of its own stands on the show's wide art, never blurred.
+        let wide_art =
+            entry.as_ref().and_then(|e| e.banner_url.clone().or(e.cover_url.clone()));
         let id = self.id.get();
-        let mut lines = Vec::with_capacity(rows.len());
+        let shown = &rows[plan.start + plan.fold..plan.end];
+        let protection_at = synopsis::protection_start(shown, on, next).map(|(at, _)| at);
+        self.drawn.replace(Some(Drawn {
+            numbers: rows.iter().map(|r| r.number.clone()).collect(),
+            narrow,
+            range: self.range.get(),
+            fold: plan.fold,
+            protection_at,
+        }));
+        let mut lines = Vec::with_capacity(shown.len());
         // Case B: each episode opens its own page on the service, or else the title's.
         let service = self
             .availability()
             .filter(|a| a.case == AvailabilityCase::OnService)
             .and_then(|a| a.main.clone().map(|main| (main, a.episodes)));
-        for row in rows.iter() {
-            let line = gtk::Box::new(gtk::Orientation::Horizontal, 12);
-            line.add_css_class("episode-row");
-            line.set_size_request(-1, if narrow { 54 } else { 72 });
 
-            let (still, frame) =
-                widgets::still(&self.ctx.hub, row.thumbnail.as_deref(), color.as_deref(), w);
-            line.append(&still);
+        if plan.fold > 0 {
+            let first = synopsis::number(&rows[plan.start].number).unwrap_or(1);
+            let last =
+                synopsis::number(&rows[plan.start + plan.fold - 1].number).unwrap_or(first);
+            let label = t::title_watched_range(first, last);
+            let button = gtk::Button::with_label(&label);
+            button.add_css_class("flat");
+            button.set_halign(gtk::Align::Start);
+            button.update_property(&[gtk::accessible::Property::Label(&format!(
+                "{label}, {}", // i18n-skip
+                t::state_collapsed().to_lowercase()
+            ))]);
+            let page = self.me.borrow().clone();
+            button.connect_clicked(move |_| {
+                if let Some(page) = page.upgrade() {
+                    page.unfold();
+                }
+            });
+            self.episodes.append(&Self::note_row(&button));
+        }
+
+        for (at, row) in shown.iter().enumerate() {
+            if protection_at == Some(at) {
+                let (_, before) =
+                    synopsis::protection_start(shown, on, next).unwrap_or((at, 0));
+                self.episodes.append(&self.protection_row(before, narrow));
+            }
+            let held = synopsis::protected(row, on, next, self.shown(&row.number));
+            let room = synopsis::has_room(outlook, held);
+            let height = synopsis::row_height(narrow, room);
+            let tall = narrow && room;
+
+            let root = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            root.add_css_class("episode-row");
+            root.add_css_class("synopsis-row");
+            root.set_size_request(-1, height);
+            let line = gtk::Box::new(gtk::Orientation::Horizontal, 14);
+
+            let w = if narrow { synopsis::STILL_NARROW } else { synopsis::STILL_WIDE };
+            let own = row.thumbnail.clone();
+            let (still, _) = widgets::still(
+                &self.ctx.hub,
+                own.as_deref().or(wide_art.as_deref()),
+                color.as_deref(),
+                w,
+            );
+            // Sharp under blurred: a reveal fades the blurred one away.
+            let (still_widget, blur): (gtk::Widget, Option<gtk::Widget>) =
+                if own.is_some() && synopsis::protectable(row, on, next) {
+                    let (veil, veil_frame) =
+                        widgets::still(&self.ctx.hub, own.as_deref(), color.as_deref(), w);
+                    veil_frame.add_css_class("spoiler");
+                    veil.set_can_target(false);
+                    let both = gtk::Overlay::new();
+                    both.set_child(Some(&still));
+                    both.add_overlay(&veil);
+                    both.set_valign(gtk::Align::Center);
+                    veil.set_opacity(if held { 1.0 } else { 0.0 });
+                    (both.upcast(), Some(veil.upcast()))
+                } else {
+                    (still.upcast(), None)
+                };
+            line.append(&still_widget);
 
             let text = gtk::Box::new(gtk::Orientation::Vertical, 2);
-            text.set_valign(gtk::Align::Center);
             text.set_hexpand(true);
             let name = match &row.title {
                 Some(title) if !title.is_empty() => {
@@ -1029,6 +1374,7 @@ impl Page {
                 _ => t::episode_number(say::episode_n(&row.number)),
             };
             let label = gtk::Label::new(Some(&name));
+            label.add_css_class("heading");
             label.set_xalign(0.0);
             label.set_ellipsize(gtk::pango::EllipsizeMode::End);
             if narrow {
@@ -1051,10 +1397,48 @@ impl Page {
             text.append(&discuss);
             let bar = gtk::ProgressBar::new();
             bar.set_margin_top(4);
-            bar.set_size_request(120, -1);
-            bar.set_halign(gtk::Align::Start);
+            // Narrow, the track is as wide as the room the title leaves.
+            bar.set_size_request(if narrow { 48 } else { 120 }, -1);
+            bar.set_halign(if narrow { gtk::Align::Fill } else { gtk::Align::Start });
             crate::widgets::name_progress(&bar);
             text.append(&bar);
+
+            // Three lines of synopsis in a box of fixed height. Beside the still the box is
+            // always there, so a reveal moves nothing; under it, only where the row is tall.
+            let synopsis_label = gtk::Label::new(None);
+            synopsis_label.add_css_class("haze");
+            synopsis_label.set_xalign(0.0);
+            synopsis_label.set_yalign(0.0);
+            synopsis_label.set_wrap(true);
+            synopsis_label.set_wrap_mode(gtk::pango::WrapMode::Word);
+            synopsis_label.set_lines(3);
+            synopsis_label.set_ellipsize(gtk::pango::EllipsizeMode::End);
+            synopsis_label.set_hexpand(true);
+            let room_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            room_box.set_size_request(-1, synopsis::TEXT_HEIGHT);
+            room_box.set_overflow(gtk::Overflow::Hidden);
+            room_box.append(&synopsis_label);
+            room_box.set_margin_top(4);
+            if narrow {
+                room_box.set_visible(tall);
+            } else {
+                text.append(&room_box);
+            }
+
+            if narrow {
+                text.set_valign(gtk::Align::Center);
+                line.set_valign(if tall { gtk::Align::Start } else { gtk::Align::Center });
+                line.set_vexpand(!tall);
+                if tall {
+                    line.set_margin_top(8);
+                }
+            } else {
+                // Title and facts stay at the still's top, whether or not text is below them.
+                text.set_valign(gtk::Align::Start);
+                text.set_margin_top(10);
+                line.set_valign(gtk::Align::Fill);
+                line.set_vexpand(true);
+            }
             line.append(&text);
 
             let check = gtk::CheckButton::new();
@@ -1094,9 +1478,15 @@ impl Page {
                 .build();
             more.add_css_class("flat");
             line.append(&more);
+            root.append(&line);
+            if narrow {
+                room_box.set_margin_start(0);
+                room_box.set_margin_bottom(8);
+                root.append(&room_box);
+            }
 
             let list_row = gtk::ListBoxRow::builder()
-                .child(&line)
+                .child(&root)
                 .activatable(choices::playable(row) || outside.is_some())
                 .build();
             match &outside {
@@ -1118,14 +1508,20 @@ impl Page {
                 check,
                 toggled,
                 name: label,
-                still: still.upcast(),
-                frame,
-                root: line,
+                still: still_widget,
+                root,
                 sub,
                 discuss,
                 bar,
                 menu,
                 shown: RefCell::new(row.clone()),
+                list_row,
+                synopsis: synopsis_label,
+                room_box,
+                blur,
+                protected: Cell::new(held),
+                room: Cell::new(room),
+                height: Cell::new(height),
             };
             self.dress(&drawn, row, false);
             lines.push(drawn);
@@ -1135,13 +1531,250 @@ impl Page {
         self.episodes_state.content();
     }
 
-    /// Marks and progress moved: each row changed in place.
-    fn update_episodes(&self) {
-        if self.lines.borrow().len() != self.rows.borrow().len() {
-            self.draw_episodes();
+    /// A line of the list that is no episode: not a row to play, only its button.
+    fn note_row(button: &impl IsA<gtk::Widget>) -> gtk::ListBoxRow {
+        let line = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+        line.set_margin_top(6);
+        line.set_margin_bottom(6);
+        line.set_margin_start(6);
+        line.append(button);
+        gtk::ListBoxRow::builder().child(&line).activatable(false).selectable(false).build()
+    }
+
+    /// The one line where spoiler protection starts, with its button: Show, or Hide once the
+    /// rows are shown.
+    fn protection_row(&self, before: i64, narrow: bool) -> gtk::ListBoxRow {
+        let label = gtk::Label::new(None);
+        label.add_css_class("haze");
+        label.set_xalign(0.0);
+        label.set_hexpand(true);
+        label.set_wrap(true);
+        let button = gtk::Button::new();
+        button.add_css_class("flat");
+        button.set_valign(gtk::Align::Center);
+        let line = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+        line.set_margin_top(8);
+        line.set_margin_bottom(8);
+        line.set_margin_start(6);
+        line.set_margin_end(6);
+        line.append(&label);
+        line.append(&button);
+        let page = self.me.borrow().clone();
+        button.connect_clicked(move |_| {
+            if let Some(page) = page.upgrade() {
+                page.reveal_every(!page.reveal_all.get());
+            }
+        });
+        self.protection.replace(Some(Protection { label, button, episode: before }));
+        self.say_protection(narrow);
+        gtk::ListBoxRow::builder().child(&line).activatable(false).selectable(false).build()
+    }
+
+    /// The protection line's words, for whether the rows are showing.
+    fn say_protection(&self, narrow: bool) {
+        let Some(line) = self
+            .protection
+            .borrow()
+            .as_ref()
+            .map(|p| (p.label.clone(), p.button.clone(), p.episode))
+        else {
+            return;
+        };
+        let (label, button, episode) = line;
+        let showing = self.reveal_all.get();
+        label.set_label(&if showing {
+            t::episode_protection_shown(episode)
+        } else if narrow {
+            t::episode_protection_line_short(episode)
+        } else {
+            t::episode_protection_line(episode)
+        });
+        button.set_label(&if showing {
+            t::episode_protection_hide()
+        } else {
+            t::episode_protection_show()
+        });
+    }
+
+    /// The folded watched episodes were opened: they appear above, and the next episode's row
+    /// stays where it was on screen.
+    fn unfold(&self) {
+        let next = self.lines.borrow().first().map(|l| l.list_row.clone());
+        let before = next.as_ref().and_then(|row| self.row_top(row));
+        self.unfolded.set(true);
+        self.draw_episodes();
+        if let Some(before) = before {
+            let page = self.me.borrow().clone();
+            let number =
+                self.rows.borrow().iter().find(|r| !r.completed).map(|r| r.number.clone());
+            glib::idle_add_local_once(move || {
+                let Some(page) = page.upgrade() else { return };
+                let target = page
+                    .lines
+                    .borrow()
+                    .iter()
+                    .find(|l| Some(&l.number) == number.as_ref())
+                    .map(|l| l.list_row.clone());
+                if let Some(now) = target.and_then(|row| page.row_top(&row)) {
+                    let adjustment = page.scroll.vadjustment();
+                    adjustment.set_value(adjustment.value() + now - before);
+                }
+            });
+        }
+    }
+
+    /// Where a row's top is, in the scrolled page's content.
+    fn row_top(&self, row: &gtk::ListBoxRow) -> Option<f64> {
+        let content = self.scroll.child()?;
+        row.compute_point(&content, &gtk::graphene::Point::zero()).map(|p| f64::from(p.y()))
+    }
+
+    /// Show synopsis on one protected episode: its still and its text, for this visit.
+    fn reveal(&self, number: &str) {
+        self.revealed.borrow_mut().insert(number.to_owned());
+        self.settle_all(Some(number.to_owned()));
+    }
+
+    /// The protection line's button: every row after it shows (or is held back again).
+    fn reveal_every(&self, on: bool) {
+        self.reveal_all.set(on);
+        if !on {
+            self.revealed.borrow_mut().clear();
+        }
+        self.say_protection(*self.sized.borrow() == Size::Narrow);
+        self.settle_all(None);
+    }
+
+    /// Every row (or the one `only` names) takes the state the rules give it now.
+    fn settle_all(&self, only: Option<String>) {
+        let rows = self.rows.borrow().clone();
+        for line in self.lines.borrow().iter() {
+            if only.as_ref().is_some_and(|n| *n != line.number) {
+                continue;
+            }
+            if let Some(row) = rows.iter().find(|r| r.number == line.number) {
+                self.settle(line, row, true);
+            }
+        }
+    }
+
+    /// One row's protection, room and text as the rules give them now: a blurred still fading to
+    /// sharp, a narrow row taking its height before its text fades in.
+    fn settle(&self, line: &EpisodeLine, row: &EpisodeRow, animate: bool) {
+        let outlook = self.outlook.get().unwrap_or(EpisodeText::None);
+        let narrow = *self.sized.borrow() == Size::Narrow;
+        let on = self.protection_on();
+        let next = self.next();
+        let held = synopsis::protected(row, on, next, self.shown(&row.number));
+        let was_held = line.protected.replace(held);
+        line.protected.set(held);
+        if let Some(blur) = &line.blur {
+            let to = if held { 1.0 } else { 0.0 };
+            if animate && was_held != held && (blur.opacity() - to).abs() > f64::EPSILON {
+                let from = blur.opacity();
+                let animation = if held {
+                    motion::quick(blur, from, to, motion::opacity(blur))
+                } else {
+                    motion::standard(blur, from, to, motion::opacity(blur))
+                };
+                animation.play();
+            } else {
+                blur.set_opacity(to);
+            }
+        }
+        let room = synopsis::has_room(outlook, held);
+        line.room.set(room);
+        let height = synopsis::row_height(narrow, room);
+        let old = line.height.replace(height);
+        if !narrow || height == old {
+            // Beside the still the row keeps its height: only the text changes.
+            self.set_text(line, row, animate);
             return;
         }
+        // Under the still the row takes its height first, and the text fades in once there is
+        // room for it, so no line is ever clipped by a growing frame.
+        line.room_box.set_visible(room || animate);
+        if !animate {
+            line.root.set_size_request(-1, height);
+            line.room_box.set_visible(room);
+            self.set_text(line, row, false);
+            return;
+        }
+        if !room {
+            self.set_text(line, row, false);
+        }
+        let root = line.root.clone();
+        let target = adw::CallbackAnimationTarget::new(move |v| {
+            root.set_size_request(-1, v.round() as i32);
+        });
+        let animation = motion::standard(&line.root, f64::from(old), f64::from(height), target);
+        let page = self.me.borrow().clone();
+        let number = line.number.clone();
+        let box_ = line.room_box.clone();
+        animation.connect_done(move |_| {
+            box_.set_visible(room);
+            if room && let Some(page) = page.upgrade() {
+                page.set_text_by_number(&number, true);
+            }
+        });
+        animation.play();
+    }
+
+    fn set_text_by_number(&self, number: &str, animate: bool) {
+        let rows = self.rows.borrow().clone();
+        for line in self.lines.borrow().iter().filter(|l| l.number == number) {
+            if let Some(row) = rows.iter().find(|r| r.number == number) {
+                self.set_text(line, row, animate);
+            }
+        }
+    }
+
+    /// The row's synopsis, its tooltip and what a screen reader says of it. Text that arrives
+    /// fades in over 0.2 s into the room the row kept; a row laid out without room waits for
+    /// the next layout.
+    fn set_text(&self, line: &EpisodeLine, row: &EpisodeRow, animate: bool) {
+        let text = synopsis::text_of(row).filter(|_| line.room.get() && !line.protected.get());
+        let now = line.synopsis.label();
+        match text {
+            Some(text) if now != text => {
+                line.synopsis.set_label(text);
+                if animate {
+                    motion::fade_in(&line.synopsis);
+                } else {
+                    line.synopsis.set_opacity(1.0);
+                }
+            }
+            Some(_) => line.synopsis.set_opacity(1.0),
+            None => line.synopsis.set_label(""),
+        }
+        line.list_row.set_tooltip_text(text);
+        let description = if line.protected.get() {
+            t::episode_synopsis_hidden()
+        } else {
+            text.unwrap_or_default().to_owned()
+        };
+        line.list_row.update_property(&[gtk::accessible::Property::Description(&description)]);
+    }
+
+    /// Marks and progress moved: each row changed in place.
+    fn update_episodes(&self) {
+        // A table that is made of something else (protection moved with the marks, a longer
+        // table) draws the list again; the same table changes its rows where they stand.
         let rows = self.rows.borrow();
+        let on = self.protection_on();
+        let next = self.next();
+        if let Some(drawn) = self.drawn.borrow().as_ref() {
+            let (_, plan) = self.plan(&rows);
+            let shown = &rows[plan.start + plan.fold..plan.end];
+            let numbers_same = drawn.numbers.len() == rows.len()
+                && drawn.numbers.iter().zip(rows.iter()).all(|(a, b)| *a == b.number);
+            let at = synopsis::protection_start(shown, on, next).map(|(at, _)| at);
+            if !numbers_same || drawn.fold != plan.fold || drawn.protection_at != at {
+                drop(rows);
+                self.draw_episodes();
+                return;
+            }
+        }
         for line in self.lines.borrow().iter() {
             if let Some(row) = rows.iter().find(|r| r.number == line.number)
                 && *line.shown.borrow() != *row
@@ -1178,19 +1811,7 @@ impl Page {
     fn dress(&self, line: &EpisodeLine, row: &EpisodeRow, animate: bool) {
         let entry = self.ctx.hub.entry(self.id);
         let next = entry.as_ref().and_then(|e| e.progress).map_or(1, |p| p.next);
-        let number: u32 = row.number.parse().unwrap_or(0);
-        let spoilers = self
-            .ctx
-            .hub
-            .known
-            .borrow()
-            .setting(SettingKey::SpoilerProtection)
-            .is_some_and(|r| catalog::is_on(&r));
-        if spoilers && !row.completed && number > next {
-            line.frame.add_css_class("spoiler");
-        } else {
-            line.frame.remove_css_class("spoiler");
-        }
+        let spoilers = self.protection_on();
 
         line.check.block_signal(&line.toggled);
         line.check.set_active(row.completed);
@@ -1220,16 +1841,13 @@ impl Page {
             line.root.remove_css_class("dim-label");
         }
         let part_way = row.watched > 0.0 && !row.completed;
-        let sub = match (part_way, row.duration_secs) {
-            _ if row.unsourced => t::episode_unsourced(),
-            (true, Some(d)) => {
-                let left = (d as f64 * (1.0 - row.watched)).max(60.0);
-                t::time_minutes_left((left / 60.0).round() as i64)
-            }
-            (false, Some(d)) => say::minutes(d),
-            _ if row.metadata_only => t::episode_row_not_out(),
-            _ => String::new(),
-        };
+        let now = glib::DateTime::now_utc().map_or(0, |t| t.to_unix());
+        let sub = synopsis::facts(row, now, |at| {
+            glib::DateTime::from_unix_local(at)
+                .ok()
+                .and_then(|d| d.format("%-d %b %Y").ok())
+                .map_or_else(String::new, |d| d.to_string())
+        });
         line.sub.set_label(&sub);
         line.sub.set_visible(!sub.is_empty());
         line.bar.set_fraction(row.watched);
@@ -1240,6 +1858,13 @@ impl Page {
         let target = format!("(uint32 {id}, '{n}')"); // i18n-skip
         line.menu.remove_all();
         let first = gio::Menu::new();
+        if synopsis::protected(row, spoilers, i64::from(next), self.shown(&row.number)) {
+            // Show synopsis comes first for a protected episode.
+            first.append(
+                Some(&t::episode_synopsis_show()),
+                Some(&format!("title.show-synopsis('{n}')")), // i18n-skip
+            );
+        }
         if choices::playable(row) {
             let episode = say::episode_n(n);
             let label = match (part_way, row.duration_secs) {
@@ -1310,6 +1935,15 @@ impl Page {
             );
             line.menu.append_section(None, &third);
         }
+        // The row is one element: number, title and facts in its label, the synopsis last in its
+        // description (set with the text, and not announced when it arrives late).
+        let spoken = if sub.is_empty() {
+            line.name.label().to_string()
+        } else {
+            format!("{}, {sub}", line.name.label()) // i18n-skip
+        };
+        line.list_row.update_property(&[gtk::accessible::Property::Label(&spoken)]);
+        self.settle(line, row, animate);
     }
 }
 
@@ -1355,6 +1989,7 @@ mod tests {
             delayed_from: None,
             metadata_only,
             past_progress: false,
+            synopsis_pending: false,
             unsourced,
             source: None,
         };

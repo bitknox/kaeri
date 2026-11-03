@@ -41139,6 +41139,18 @@
         }
       }
     },
+    "episode-protection-hide" : {
+      "comment" : "Button on the spoiler protection line once it is showing what it hides: hides it again.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide"
+          }
+        }
+      }
+    },
     "episode-protection-line" : {
       "comment" : "One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden. Argument 1: episode (Int).",
       "extractionState" : "manual",
@@ -41159,6 +41171,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hidden after episode %1$lld"
+          }
+        }
+      }
+    },
+    "episode-protection-show" : {
+      "comment" : "Button on the spoiler protection line: shows the synopses and stills it hides, until the page closes.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show"
+          }
+        }
+      }
+    },
+    "episode-protection-shown" : {
+      "comment" : "The line in the episode list where spoiler protection starts, after the person chose to see what it hides. Argument 1: episode (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Showing what comes after episode %1$lld."
           }
         }
       }

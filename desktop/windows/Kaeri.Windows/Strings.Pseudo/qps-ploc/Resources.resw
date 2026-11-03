@@ -8790,6 +8790,18 @@
     <value>[Šĥàŕé…~~]</value>
     <comment>Button that opens the system share sheet for the invite link.</comment>
   </data>
+  <data name="EpisodeProtectionShown" xml:space="preserve">
+    <value>[Šĥöŵîñĝ ŵĥàţ çöɱéš àƒţéŕ éþîšöðé {episode}.~~~~~~~~~~~~]</value>
+    <comment>The line in the episode list where spoiler protection starts, after the person chose to see what it hides.</comment>
+  </data>
+  <data name="EpisodeProtectionShow" xml:space="preserve">
+    <value>[Šĥöŵ~~]</value>
+    <comment>Button on the spoiler protection line: shows the synopses and stills it hides, until the page closes.</comment>
+  </data>
+  <data name="EpisodeProtectionHide" xml:space="preserve">
+    <value>[Ĥîðé~~]</value>
+    <comment>Button on the spoiler protection line once it is showing what it hides: hides it again.</comment>
+  </data>
   <data name="TitleLoadFailed" xml:space="preserve">
     <value>[Çöüļðñ'ţ ļöàð ţĥîš ţîţļé~~~~~~~~]</value>
     <comment>Title of the state when a title page could not load.</comment>

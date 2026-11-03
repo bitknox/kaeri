@@ -9264,6 +9264,18 @@ object Strings {
     fun storesShare(context: Context): String =
         context.getString(R.string.stores_share)
 
+    /** The line in the episode list where spoiler protection starts, after the person chose to see what it hides. */
+    fun episodeProtectionShown(context: Context, episode: Int): String =
+        context.getString(R.string.episode_protection_shown, episode)
+
+    /** Button on the spoiler protection line: shows the synopses and stills it hides, until the page closes. */
+    fun episodeProtectionShow(context: Context): String =
+        context.getString(R.string.episode_protection_show)
+
+    /** Button on the spoiler protection line once it is showing what it hides: hides it again. */
+    fun episodeProtectionHide(context: Context): String =
+        context.getString(R.string.episode_protection_hide)
+
     /** Title of the state when a title page could not load. */
     fun titleLoadFailed(context: Context): String =
         context.getString(R.string.title_load_failed)

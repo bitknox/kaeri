@@ -121,13 +121,17 @@
               <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
               </Grid.ColumnDefinitions>
               <TextBlock Text="{x:Bind s:T.TitleEpisodes}" Style="{StaticResource SectionTitleStyle}" VerticalAlignment="Center" />
               <ComboBox x:Name="SeasonPicker" Grid.Column="1" MinWidth="220" VerticalAlignment="Center" Visibility="Collapsed"
                         AutomationProperties.Name="{x:Bind s:T.FilterSeason}" SelectionChanged="OnSeasonPicked" />
+              <!-- A show of over 100 episodes lists them in ranges of 100, beside the season picker. -->
+              <ComboBox x:Name="RangePicker" Grid.Column="2" MinWidth="200" VerticalAlignment="Center" Visibility="Collapsed"
+                        AutomationProperties.Name="{x:Bind s:T.EpisodeRangeLabel}" SelectionChanged="OnRangePicked" />
               <!-- How far the dub goes. Faded in when the engine says. -->
-              <TextBlock x:Name="DubLine" Style="{StaticResource HazeCaptionStyle}" Grid.Column="2" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
+              <TextBlock x:Name="DubLine" Style="{StaticResource HazeCaptionStyle}" Grid.Column="3" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
                          Margin="0,4,0,0" Opacity="0">
                 <TextBlock.OpacityTransition>
                   <ScalarTransition Duration="0:0:0.2" />
@@ -138,16 +142,35 @@
             <ListView x:Name="EpisodeList" SelectionMode="None" IsItemClickEnabled="True" ItemClick="OnEpisodeClick"
                       ContainerContentChanging="OnEpisodeContainer"
                       Margin="-12,4,0,0" AutomationProperties.Name="{x:Bind s:T.TitleEpisodes}">
-              <ListView.ItemTemplate>
-                <DataTemplate x:DataType="local:EpisodeItem">
-                  <Grid MinHeight="72" Margin="0,4" ColumnSpacing="14" AutomationProperties.Name="{x:Bind Name}" Opacity="{x:Bind Dim}">
+              <ListView.Resources>
+                <DataTemplate x:Key="NoteTemplate" x:DataType="local:NoteItem">
+                  <Grid MinHeight="44" ColumnSpacing="12">
                     <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="128" />
                       <ColumnDefinition Width="*" />
                       <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
+                    <TextBlock Text="{x:Bind Line, Mode=OneWay}" Style="{StaticResource HazeCaptionStyle}" TextWrapping="Wrap"
+                               VerticalAlignment="Center" Visibility="{x:Bind LineShown}" />
+                    <HyperlinkButton Grid.Column="1" Content="{x:Bind Action, Mode=OneWay}" Click="OnNote" Tag="{x:Bind}"
+                                     VerticalAlignment="Center" Padding="8,4" />
+                  </Grid>
+                </DataTemplate>
+                <DataTemplate x:Key="EpisodeTemplate" x:DataType="local:EpisodeItem">
+                  <Grid Height="{x:Bind RowHeight, Mode=OneWay}" Padding="{x:Bind RowPad, Mode=OneWay}" Margin="0,2" ColumnSpacing="14"
+                        AutomationProperties.Name="{x:Bind Name}" AutomationProperties.HelpText="{x:Bind HelpText, Mode=OneWay}"
+                        Opacity="{x:Bind Dim}" ToolTipService.ToolTip="{x:Bind Tip, Mode=OneWay}">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="Auto" />
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
                     <Grid.ContextFlyout>
                       <MenuFlyout>
+                        <MenuFlyoutItem Text="{x:Bind s:T.EpisodeSynopsisShow}" Click="OnEpisodeReveal" Tag="{x:Bind}" Visibility="{x:Bind HeldShown, Mode=OneWay}" />
                         <MenuFlyoutItem Text="{x:Bind s:T.ActionPlay}" Click="OnEpisodePlay" Tag="{x:Bind}" IsEnabled="{x:Bind Playable}" />
                         <MenuFlyoutItem Text="{x:Bind s:T.EpisodePlayFromBeginning}" Click="OnEpisodeFromStart" Tag="{x:Bind}" Visibility="{x:Bind PartWay}" />
                         <MenuFlyoutItem Text="{x:Bind s:T.TvPlayOn}" Click="OnEpisodeOnTv" Tag="{x:Bind}" Visibility="{x:Bind OnTv}" IsEnabled="{x:Bind Playable}" />
@@ -156,12 +179,17 @@
                         <MenuFlyoutItem Text="{x:Bind s:T.TitleEpisodeDownload}" Click="OnEpisodeDownload" Tag="{x:Bind}" IsEnabled="{x:Bind CanDownload, Mode=OneWay}" />
                       </MenuFlyout>
                     </Grid.ContextFlyout>
-                    <Grid Width="128" Height="72" CornerRadius="6" Background="{ThemeResource RaisedBrush}">
+                    <Grid Width="{x:Bind StillWidth, Mode=OneWay}" Height="{x:Bind StillHeight, Mode=OneWay}" Grid.RowSpan="{x:Bind StillRowSpan, Mode=OneWay}"
+                          VerticalAlignment="Top" CornerRadius="6" Background="{ThemeResource RaisedBrush}">
                       <Image Source="{x:Bind Still, Mode=OneWay}" Stretch="UniformToFill" AutomationProperties.AccessibilityView="Raw" />
-                      <!-- A still past the next episode, blurred: the spoiler pattern. -->
-                      <Border Visibility="{x:Bind SpoilerShown}" Background="{ThemeResource SpoilerBrush}" />
+                      <!-- A still the viewer has not asked to see, blurred; a reveal clears it. -->
+                      <Border Background="{ThemeResource SpoilerBrush}" Opacity="{x:Bind BlurOpacity, Mode=OneWay}" IsHitTestVisible="False">
+                        <Border.OpacityTransition>
+                          <ScalarTransition Duration="0:0:0.3" />
+                        </Border.OpacityTransition>
+                      </Border>
                     </Grid>
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+                    <StackPanel Grid.Column="1" VerticalAlignment="{x:Bind HeadAlign, Mode=OneWay}" Margin="{x:Bind HeadMargin, Mode=OneWay}" Spacing="4">
                       <TextBlock Text="{x:Bind Heading}" Style="{StaticResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" />
                       <TextBlock Text="{x:Bind Line}" Style="{StaticResource HazeCaptionStyle}" />
                       <!-- The quiet row under a watched episode whose discussion the engine found. -->
@@ -175,7 +203,17 @@
                       </HyperlinkButton>
                       <ProgressBar Value="{x:Bind Watched}" Maximum="1" Width="160" HorizontalAlignment="Left" Visibility="{x:Bind PartWay}" AutomationProperties.AccessibilityView="Raw" />
                     </StackPanel>
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <!-- The synopsis: three lines of body text, beside the still or under it. Read by Narrator through the row's help text. -->
+                    <TextBlock Grid.Row="1" Grid.Column="{x:Bind SynopsisColumn, Mode=OneWay}" Grid.ColumnSpan="{x:Bind SynopsisColumnSpan, Mode=OneWay}"
+                               Text="{x:Bind Description, Mode=OneWay}" Opacity="{x:Bind TextOpacity, Mode=OneWay}"
+                               Visibility="{x:Bind TextVisible, Mode=OneWay}" Margin="0,6,0,0" FontSize="14" LineHeight="20"
+                               TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxLines="3" VerticalAlignment="Top"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.AccessibilityView="Raw">
+                      <TextBlock.OpacityTransition>
+                        <ScalarTransition Duration="0:0:0.2" />
+                      </TextBlock.OpacityTransition>
+                    </TextBlock>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Top">
                     <!-- The episode's download: Download on hover or focus, then how far, then a check.
                          The cell keeps its width in every state, so the row never moves. -->
                     <Button Width="36" Height="36" Padding="0" Style="{StaticResource SubtleButtonStyle}"
@@ -211,7 +249,8 @@
                     </StackPanel>
                   </Grid>
                 </DataTemplate>
-              </ListView.ItemTemplate>
+                <local:EpisodeTemplates x:Key="Templates" Episode="{StaticResource EpisodeTemplate}" Note="{StaticResource NoteTemplate}" />
+              </ListView.Resources>
             </ListView>
           </StackPanel>
           <StackPanel x:Name="DetailsBelow" Spacing="16" />

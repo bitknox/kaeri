@@ -8790,6 +8790,18 @@
     <value>Share…</value>
     <comment>Button that opens the system share sheet for the invite link.</comment>
   </data>
+  <data name="EpisodeProtectionShown" xml:space="preserve">
+    <value>Showing what comes after episode {episode}.</value>
+    <comment>The line in the episode list where spoiler protection starts, after the person chose to see what it hides.</comment>
+  </data>
+  <data name="EpisodeProtectionShow" xml:space="preserve">
+    <value>Show</value>
+    <comment>Button on the spoiler protection line: shows the synopses and stills it hides, until the page closes.</comment>
+  </data>
+  <data name="EpisodeProtectionHide" xml:space="preserve">
+    <value>Hide</value>
+    <comment>Button on the spoiler protection line once it is showing what it hides: hides it again.</comment>
+  </data>
   <data name="TitleLoadFailed" xml:space="preserve">
     <value>Couldn't load this title</value>
     <comment>Title of the state when a title page could not load.</comment>

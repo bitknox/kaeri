@@ -123,7 +123,11 @@ levelbar block.empty { background: var(--edge); }
 .filter-chip image { -gtk-icon-size: 12px; opacity: 0.7; }
 
 /* Episode rows. */
+list.episode-list { background: none; }
+list.episode-list > row { border-radius: 8px; }
 .episode-row { min-height: 72px; padding: 6px 0; }
+/* Rows with a synopsis have a height of their own, set from the size and never from the text. */
+.episode-row.synopsis-row { min-height: 0; padding: 0 0 0 12px; }
 .watched .episode-name { color: var(--haze); }
 
 /* The player: controls on a 35% dim of the ground, no blur, and behind each bar a gradient that

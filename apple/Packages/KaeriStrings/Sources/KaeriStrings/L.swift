@@ -8698,6 +8698,17 @@ public enum L {
     /// Button that opens the system share sheet for the invite link.
     public static var storesShare: String { string("stores-share", fallback: "Share…") }
 
+    /// The line in the episode list where spoiler protection starts, after the person chose to see what it hides.
+    public static func episodeProtectionShown(episode: Int) -> String {
+        Self.format("episode-protection-shown", fallback: "Showing what comes after episode %1$lld.", episode)
+    }
+
+    /// Button on the spoiler protection line: shows the synopses and stills it hides, until the page closes.
+    public static var episodeProtectionShow: String { string("episode-protection-show", fallback: "Show") }
+
+    /// Button on the spoiler protection line once it is showing what it hides: hides it again.
+    public static var episodeProtectionHide: String { string("episode-protection-hide", fallback: "Hide") }
+
     /// Title of the state when a title page could not load.
     public static var titleLoadFailed: String { string("title-load-failed", fallback: "Couldn't load this title") }
 

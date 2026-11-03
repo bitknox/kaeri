@@ -9153,6 +9153,15 @@ stores-qr-warning-device = Scan this with the device you want to link. It works 
 # Button that opens the system share sheet for the invite link.
 stores-share = Share…
 
+# The line in the episode list where spoiler protection starts, after the person chose to see what it hides.
+episode-protection-shown = Showing what comes after episode { $episode }.
+
+# Button on the spoiler protection line: shows the synopses and stills it hides, until the page closes.
+episode-protection-show = Show
+
+# Button on the spoiler protection line once it is showing what it hides: hides it again.
+episode-protection-hide = Hide
+
 # Title of the state when a title page could not load.
 title-load-failed = Couldn't load this title
 

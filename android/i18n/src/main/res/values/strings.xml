@@ -4826,6 +4826,12 @@
     <string name="stores_qr_warning_device">Scan this with the device you want to link. It works once and lasts seven days.</string>
     <!-- Button that opens the system share sheet for the invite link. -->
     <string name="stores_share">Share…</string>
+    <!-- The line in the episode list where spoiler protection starts, after the person chose to see what it hides. -->
+    <string name="episode_protection_shown">Showing what comes after episode %1$d.</string>
+    <!-- Button on the spoiler protection line: shows the synopses and stills it hides, until the page closes. -->
+    <string name="episode_protection_show">Show</string>
+    <!-- Button on the spoiler protection line once it is showing what it hides: hides it again. -->
+    <string name="episode_protection_hide">Hide</string>
     <!-- Title of the state when a title page could not load. -->
     <string name="title_load_failed">Couldn\'t load this title</string>
     <!-- Line under the load failure when AniList did not answer. -->
