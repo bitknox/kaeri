@@ -61,7 +61,7 @@
         </StackPanel>
       </ScrollViewer>
       <ScrollViewer x:Name="DetailScroll" Grid.Column="1" VerticalScrollBarVisibility="Auto">
-        <StackPanel x:Name="Detail" Spacing="8" Padding="0,0,12,24" MaxWidth="560" HorizontalAlignment="Stretch" />
+        <StackPanel x:Name="Detail" Spacing="8" Padding="0,0,12,24" MaxWidth="560" HorizontalAlignment="Left" />
       </ScrollViewer>
     </Grid>
   </Grid>

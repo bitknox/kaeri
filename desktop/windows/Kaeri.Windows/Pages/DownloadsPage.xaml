@@ -28,7 +28,7 @@
     </Grid>
     <ProgressBar x:Name="Meter" Grid.Row="1" Minimum="0" Maximum="1" Height="4" AutomationProperties.Name="{x:Bind app:T.DownloadsSpaceLabel}" />
     <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
-      <StackPanel x:Name="Body" Spacing="8" Padding="0,4,12,24" MaxWidth="900" HorizontalAlignment="Stretch" />
+      <StackPanel x:Name="Body" Spacing="8" Padding="0,4,12,24" MaxWidth="900" HorizontalAlignment="Left" />
     </ScrollViewer>
   </Grid>
 </Page>
