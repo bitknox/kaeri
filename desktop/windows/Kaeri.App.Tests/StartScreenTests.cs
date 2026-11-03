@@ -94,7 +94,24 @@ public class StartScreenTests
         start.BeginFromStart();
         var frame = start.Frame(Ms(2000));
         Assert.StartsWith("Starting from the beginning · ", frame.Detail);
-        Assert.DoesNotContain(StartAction.FromBeginning, Actions(frame));
+        Assert.Contains(frame.Buttons, b => b.Action == StartAction.FromBeginning && !b.Shown);
+    }
+
+    [Fact]
+    public void APressedPlayFromTheBeginningKeepsItsSlotSoNothingMoves()
+    {
+        var start = Start();
+        start.Tick(Ms(6000));
+        var before = start.Frame(Ms(6000));
+        Assert.Equal([StartAction.Cancel, StartAction.FromBeginning, StartAction.ChooseSource, StartAction.Details], Actions(before));
+        Assert.All(before.Buttons, b => Assert.True(b.Shown));
+        start.BeginFromStart();
+        var after = start.Frame(Ms(6000));
+        // The same slots in the same order, the pressed one hidden in its place.
+        Assert.Equal(Actions(before), Actions(after));
+        Assert.Equal(
+            [(StartAction.Cancel, true), (StartAction.FromBeginning, false), (StartAction.ChooseSource, true), (StartAction.Details, true)],
+            after.Buttons.Select(b => (b.Action, b.Shown)));
     }
 
     [Fact]

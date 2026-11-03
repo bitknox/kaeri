@@ -873,7 +873,26 @@ impl StartView {
                 {
                     slot.label.set_label(&button.label);
                 }
-                slot.show(button.is_some(), immediately);
+                let on = button.is_some_and(|b| b.shown);
+                if !on && slot.present.get() && slot.button.has_focus() {
+                    // Focus moves on to the next button on show before this one's slot hides.
+                    let next = frame.buttons.iter().filter(|b| b.shown).find_map(|b| {
+                        let after = self.slots.iter().position(|(a, _)| a == action)?;
+                        let (_, s) =
+                            self.slots.iter().skip(after + 1).find(|(a, _)| *a == b.action)?;
+                        Some(s.button.clone())
+                    });
+                    let next = next.or_else(|| {
+                        self.slots
+                            .iter()
+                            .find(|(a, _)| *a == Action::Cancel)
+                            .map(|(_, s)| s.button.clone())
+                    });
+                    if let Some(next) = next {
+                        next.grab_focus();
+                    }
+                }
+                slot.show(on, immediately);
                 if let Some(chevron) = &slot.chevron {
                     chevron.set_icon_name(Some(if details_open {
                         "pan-up-symbolic"

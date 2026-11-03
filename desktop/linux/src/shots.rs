@@ -743,10 +743,13 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
         }
         // The starting screen, driven by the engine's made-up starts: `start-<state>-<seconds>`
         // plays the state's events on their own clock and is taken that long after the start.
-        // With `-details` after the state, Details opens 5 s in.
+        // With `-details` after the state, Details opens 5 s in; with `-beginning`, Play from the
+        // beginning is pressed 4 s in.
         start if start.starts_with("start-") => {
             let details = start.contains("-details-");
-            let Some((state, seconds)) = start_state(&start.replace("-details-", "-")) else {
+            let beginning = start.contains("-beginning-");
+            let name = start.replace("-details-", "-").replace("-beginning-", "-");
+            let Some((state, seconds)) = start_state(&name) else {
                 return 0.1;
             };
             shell.go(Dest::Home);
@@ -754,6 +757,12 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
                 let player = Rc::clone(&shell.player);
                 glib::timeout_add_local_once(Duration::from_secs(5), move || {
                     player.shot_start_details();
+                });
+            }
+            if beginning {
+                let player = Rc::clone(&shell.player);
+                glib::timeout_add_local_once(Duration::from_secs(4), move || {
+                    player.shot_start_from_beginning();
                 });
             }
             let hub = Rc::clone(&shell.ctx.hub);

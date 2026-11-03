@@ -2329,6 +2329,11 @@ impl PlayerView {
         self.start_action(start_model::Action::Details);
     }
 
+    /// For a shot: Play from the beginning on the starting screen, pressed as the viewer presses it.
+    pub fn shot_start_from_beginning(&self) {
+        self.start_action(start_model::Action::FromBeginning);
+    }
+
     /// For a shot: the subtitle style panel, or with a subtitle, that on screen first.
     #[cfg(feature = "fixtures")]
     pub fn shot_style(&self, subtitle: Option<&str>) {

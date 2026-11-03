@@ -62,7 +62,17 @@ public sealed partial class PlayerView
             case Event.PlaybackStaged st:
                 staged = (st.Id, st.Episode, st.Resume);
                 if (start is { } open && open.Id == st.Id && open.Episode == st.Episode)
+                {
+                    // The screen can open before the engine says where it resumes: the row then
+                    // gets its Play from the beginning slot, and the kept room with it.
+                    var had = open.Resumes;
                     open.ResumeAt = st.Resume;
+                    if (open.Resumes != had)
+                    {
+                        BuildStartRows(open.Resumes);
+                        RefreshStart();
+                    }
+                }
                 break;
             case Event.StartingStep step when start is { } s && s.Id == step.Id && s.Episode == step.Episode:
                 s.Step(step.Step, step.Line, StartElapsed);
@@ -475,8 +485,22 @@ public sealed partial class PlayerView
             var spec = frame.Buttons.FirstOrDefault(b => b.Action == action);
             if (spec is not null)
                 DressStartButton(button, spec, frame.DetailsOpen);
-            Present(button, spec is not null);
+            var on = spec is { Shown: true };
+            if (!on && button.IsHitTestVisible && button.FocusState != FocusState.Unfocused)
+                FocusNextStartButton(action, frame, button.FocusState);
+            Present(button, on);
         }
+    }
+
+    /// <summary>A button about to hide had focus: it moves on to the next one on show, or back to Cancel.</summary>
+    void FocusNextStartButton(StartAction leaving, StartFrame frame, FocusState how)
+    {
+        var after = Array.IndexOf(Waiting, leaving);
+        var next = Waiting.Skip(after + 1)
+            .Where(a => frame.Buttons.Any(b => b.Action == a && b.Shown))
+            .Select(a => startButtons.GetValueOrDefault(a))
+            .FirstOrDefault(b => b is { IsHitTestVisible: true });
+        (next ?? startButtons.GetValueOrDefault(StartAction.Cancel))?.Focus(how == FocusState.Keyboard ? FocusState.Keyboard : FocusState.Programmatic);
     }
 
     Button MakeStartButton(StartButton spec, bool detailsOpen)
@@ -782,10 +806,11 @@ public sealed partial class PlayerView
 
 #if KAERI_TESTING
     /// <summary>
-    /// <c>--show=starting-&lt;state&gt;[-details][-&lt;seconds&gt;][-reduced]</c>: the engine's made-up start in that
+    /// <c>--show=starting-&lt;state&gt;[-details][-beginning][-&lt;seconds&gt;][-reduced]</c>: the engine's made-up start in that
     /// state (the names of <see cref="StartingFixture"/>, kebab-cased), played on its own clock, or
     /// with a number of seconds frozen at that moment for a screenshot. With <c>-details</c>,
-    /// Details opens 5 s in, as the viewer opens it.
+    /// Details opens 5 s in, as the viewer opens it; with <c>-beginning</c>, Play from the beginning is
+    /// pressed 4 s in, from the keyboard, so focus moves on.
     /// </summary>
     internal async Task StartDemo(string what)
     {
@@ -815,6 +840,9 @@ public sealed partial class PlayerView
             freeze = seconds;
             rest = rest[..cut];
         }
+        var beginning = rest.EndsWith("-beginning", StringComparison.Ordinal);
+        if (beginning)
+            rest = rest[..^"-beginning".Length];
         var details = rest.EndsWith("-details", StringComparison.Ordinal);
         if (details)
             rest = rest[..^"-details".Length];
@@ -852,6 +880,8 @@ public sealed partial class PlayerView
         Heard([new Event.PlayerUi(1, new PlayerUi.Starting(900_001, "The Lamp Road", "7", "The Lamp Seller", art?.CoverUrl, art?.BannerUrl))]);
         if (details && freeze is null)
             _ = OpenDetailsLater();
+        if (beginning && freeze is null)
+            _ = FromBeginningLater();
         var events = KaeriFfiMethods.StartingFixture(fixture);
         var began = Stopwatch.GetTimestamp();
         foreach (var item in events.OrderBy(e => e.AtMs))
@@ -879,6 +909,14 @@ public sealed partial class PlayerView
                 s.DetailsOpen = true;
             RefreshStart();
         }
+    }
+
+    async Task FromBeginningLater()
+    {
+        await Task.Delay(TimeSpan.FromSeconds(4));
+        if (startButtons.TryGetValue(StartAction.FromBeginning, out var button) && button.IsHitTestVisible)
+            button.Focus(FocusState.Keyboard);
+        StartPressed(StartAction.FromBeginning);
     }
 
     async Task OpenDetailsLater()

@@ -13,7 +13,11 @@ public enum StartAction { Cancel, FromBeginning, ChooseSource, Details, Skip, Sh
 /// <summary>How a button is drawn: flat, the tonal pill, or the amber of a failure's primary.</summary>
 public enum StartLook { Quiet, Tonal, Primary }
 
-public sealed record StartButton(StartAction Action, string Label, StartLook Look);
+/// <summary>
+/// A button of the starting screen. <paramref name="Shown"/> is false for a slot kept as a
+/// placeholder: not shown, no click or focus, and its room stays so the buttons after it don't move.
+/// </summary>
+public sealed record StartButton(StartAction Action, string Label, StartLook Look, bool Shown = true);
 
 /// <summary>The mark in front of a Details row.</summary>
 public enum StartMark { Done, Empty, Now, Rest }
@@ -332,8 +336,9 @@ public sealed class StartScreen(uint id, string episode, double? resume)
             row.Add(new(StartAction.ShowDownloads, T.StateOfflineShowDownloads, StartLook.Tonal));
             return row;
         }
-        if (at >= DetailAt && ResumeAt is not null && !fromBeginning)
-            row.Add(new(StartAction.FromBeginning, T.PlayerStartFromBeginning, StartLook.Tonal));
+        // Once pressed, its slot stays as a hidden placeholder: nothing after it moves.
+        if (at >= DetailAt && ResumeAt is not null)
+            row.Add(new(StartAction.FromBeginning, T.PlayerStartFromBeginning, StartLook.Tonal, Shown: !fromBeginning));
         if (at >= ToolsAt)
         {
             row.Add(new(StartAction.ChooseSource, T.PlayerChooseSource, StartLook.Tonal));

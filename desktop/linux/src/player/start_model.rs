@@ -61,6 +61,9 @@ pub struct Button {
     pub action: Action,
     pub label: String,
     pub look: Look,
+    /// False for a slot kept as a placeholder: the button is not shown and takes no click or
+    /// focus, and its room stays so the buttons after it don't move.
+    pub shown: bool,
 }
 
 /// The mark in front of a Details row.
@@ -479,7 +482,7 @@ impl Start {
 
     /// The buttons at `at`, in arrival order.
     fn buttons(&self, at: Duration) -> Vec<Button> {
-        let button = |action, label, look| Button { action, label, look };
+        let button = |action, label, look| Button { action, label, look, shown: true };
         if let Some(failure) = &self.failure {
             return failure_buttons(failure);
         }
@@ -492,12 +495,12 @@ impl Start {
             ));
             return row;
         }
-        if at >= DETAIL_AT && self.resume.is_some() && !self.from_beginning {
-            row.push(button(
-                Action::FromBeginning,
-                t::player_start_from_beginning(),
-                Look::Tonal,
-            ));
+        if at >= DETAIL_AT && self.resume.is_some() {
+            // Once pressed, its slot stays as a hidden placeholder: nothing after it moves.
+            row.push(Button {
+                shown: !self.from_beginning,
+                ..button(Action::FromBeginning, t::player_start_from_beginning(), Look::Tonal)
+            });
         }
         if at >= TOOLS_AT {
             row.push(button(Action::ChooseSource, t::player_choose_source(), Look::Tonal));
@@ -603,7 +606,7 @@ impl Start {
 
 /// The buttons of a failure: the primary first, by what went wrong.
 fn failure_buttons(failure: &StartFailure) -> Vec<Button> {
-    let button = |action, label, look| Button { action, label, look };
+    let button = |action, label, look| Button { action, label, look, shown: true };
     let again = |look| button(Action::TryAgain, t::action_try_again(), look);
     let another = |look| button(Action::ChooseAnother, t::player_choose_another_source(), look);
     let details = button(Action::Details, t::player_start_details(), Look::Quiet);
@@ -836,7 +839,34 @@ mod tests {
         s.begin_from_start();
         let f = s.frame(ms(2_000));
         assert!(f.detail().starts_with("Starting from the beginning · "), "{}", f.detail());
-        assert!(!actions(&f).contains(&Action::FromBeginning));
+        let kept = f.buttons.iter().find(|b| b.action == Action::FromBeginning);
+        assert!(kept.is_some_and(|b| !b.shown), "the pressed button stays as a placeholder");
+    }
+
+    #[test]
+    fn a_pressed_play_from_the_beginning_keeps_its_slot_so_nothing_moves() {
+        let mut s = start();
+        s.tick(ms(6_000));
+        let before = s.frame(ms(6_000));
+        assert_eq!(
+            actions(&before),
+            [Action::Cancel, Action::FromBeginning, Action::ChooseSource, Action::Details]
+        );
+        assert!(before.buttons.iter().all(|b| b.shown));
+        s.begin_from_start();
+        let after = s.frame(ms(6_000));
+        // The same slots in the same order, the pressed one hidden in its place.
+        assert_eq!(actions(&after), actions(&before));
+        let shown: Vec<_> = after.buttons.iter().map(|b| (b.action, b.shown)).collect();
+        assert_eq!(
+            shown,
+            [
+                (Action::Cancel, true),
+                (Action::FromBeginning, false),
+                (Action::ChooseSource, true),
+                (Action::Details, true),
+            ]
+        );
     }
 
     #[test]
