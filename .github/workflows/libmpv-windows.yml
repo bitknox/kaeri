@@ -1,0 +1,215 @@
+name: libmpv for Windows
+
+# The Windows app's libmpv, built with Kaeri's mpv patches by desktop/windows/scripts/libmpv-build.sh
+# for x86_64 and aarch64: mpv's own Windows build script in BtbN's FFmpeg-Builds images, the LGPL
+# variant, cross-compiled on Linux. Each build is checked on Windows by tapcheck (the demuxer
+# audio tap, on generated tones) and kept on the deps-libmpv pre-release with the source it was
+# built from, where desktop/windows/scripts/libmpv.ps1 fetches it by SHA-256. CI and the release
+# never build libmpv themselves.
+#
+# The build's name is a hash of what it is made from (libmpv-build.sh name). A name the
+# pre-release has already is not built again, and nothing on the pre-release is ever replaced:
+# old files stay so older commits still build. It runs when one of those inputs changes, on any
+# branch, and by dispatch.
+on:
+  push:
+    paths:
+      - .github/workflows/libmpv-windows.yml
+      - desktop/windows/scripts/libmpv-build.sh
+      - desktop/windows/scripts/libmpv.ps1
+      - desktop/windows/libmpv/**
+      - android/mpv/patches/mpv/**
+      - android/scripts/mpv.sh
+  workflow_dispatch:
+
+concurrency:
+  group: libmpv-windows-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  RELEASE: deps-libmpv
+
+jobs:
+  # The build's name, and whether the pre-release has its files already.
+  name:
+    runs-on: ubuntu-latest
+    outputs:
+      build: ${{ steps.name.outputs.build }}
+      published: ${{ steps.name.outputs.published }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: name
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          build="$(desktop/windows/scripts/libmpv-build.sh name)"
+          echo "build=$build" >> "$GITHUB_OUTPUT"
+          have="$(gh release view "$RELEASE" --json assets -q '.assets[].name')"
+          published=true
+          for file in "libmpv-$build-x86_64-w64-mingw32-lgpl.zip" "libmpv-$build-aarch64-w64-mingw32-lgpl.zip" \
+            "libmpv-$build-sources.tar"; do
+            grep -qxF "$file" <<<"$have" || published=false
+          done
+          echo "published=$published" >> "$GITHUB_OUTPUT"
+          echo "::notice::libmpv $build: $([[ $published == true ]] && echo "on $RELEASE already" || echo "to build")"
+
+  build:
+    needs: name
+    if: needs.name.outputs.published != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86_64, aarch64]
+    env:
+      BUILD: ${{ needs.name.outputs.build }}
+    steps:
+      - uses: actions/checkout@v7
+      # A finished build of this name, from an earlier run whose publish did not get to it.
+      - name: Restore the build
+        id: cache
+        uses: actions/cache/restore@v6
+        with:
+          path: out
+          key: libmpv-windows-${{ env.BUILD }}-${{ matrix.arch }}
+      # The image is about 2 GB packed; the build needs room beside it.
+      - name: Room
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h /
+      - name: Build
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: >-
+          desktop/windows/scripts/libmpv-build.sh build ${{ matrix.arch }} out
+          ${{ matrix.arch == 'x86_64' && '--sources' || '' }}
+      - name: The build's record
+        if: always()
+        run: |
+          cat out/*-BUILD.txt 2>/dev/null || true
+          ls -l out
+      - name: Keep the build
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: out
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+      - uses: actions/upload-artifact@v7
+        with:
+          name: libmpv-${{ matrix.arch }}
+          path: out/*
+          retention-days: 7
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: libmpv-${{ matrix.arch }}-log
+          path: out/*-build.log
+          retention-days: 7
+
+  # Two minutes of tones and a test pattern for the check, made here: no media is downloaded.
+  media:
+    needs: name
+    if: needs.name.outputs.published != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends ffmpeg >/dev/null
+          ffmpeg -hide_banner -loglevel error -f lavfi -i "sine=frequency=440:duration=120" \
+            -f lavfi -i "testsrc2=size=320x240:rate=24:duration=120" \
+            -c:a aac -b:a 96k -c:v mpeg4 -q:v 8 -shortest tones.mkv
+          ls -l tones.mkv
+      - uses: actions/upload-artifact@v7
+        with:
+          name: tones
+          path: tones.mkv
+          retention-days: 1
+
+  # The tap on Windows itself, with each architecture's DLL.
+  check:
+    needs: [name, build, media]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            os: windows-latest
+          - arch: aarch64
+            os: windows-11-arm
+    env:
+      BUILD: ${{ needs.name.outputs.build }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: libmpv-${{ matrix.arch }}
+          path: out
+      - uses: actions/download-artifact@v8
+        with:
+          name: tones
+      - name: Tap check
+        shell: pwsh
+        run: |
+          Expand-Archive "out/libmpv-$env:BUILD-${{ matrix.arch }}-w64-mingw32-lgpl.zip" lib
+          Copy-Item "out/libmpv-$env:BUILD-${{ matrix.arch }}-tapcheck.exe" lib/tapcheck.exe
+          ./lib/tapcheck.exe tones.mkv
+          if ($LASTEXITCODE -ne 0) { throw "tapcheck failed" }
+
+  # Onto the pre-release, beside what is there: never replacing a file, never as a release of
+  # its own, never the latest.
+  publish:
+    needs: [name, build, check]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      BUILD: ${{ needs.name.outputs.build }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: libmpv-*
+          path: out
+          merge-multiple: true
+      - name: Upload
+        run: |
+          [[ "$(gh release view "$RELEASE" -R "$GITHUB_REPOSITORY" --json isPrerelease -q .isPrerelease)" == true ]] ||
+            { echo "::error::$RELEASE is not a pre-release"; exit 1; }
+          have="$(gh release view "$RELEASE" -R "$GITHUB_REPOSITORY" --json assets -q '.assets[].name')"
+          for file in "libmpv-$BUILD-x86_64-w64-mingw32-lgpl.zip" "libmpv-$BUILD-aarch64-w64-mingw32-lgpl.zip" \
+            "libmpv-$BUILD-sources.tar"; do
+            [[ -f "out/$file" ]] || { echo "::error::the build made no $file"; exit 1; }
+            if grep -qxF "$file" <<<"$have"; then
+              echo "$file is on $RELEASE already"
+              continue
+            fi
+            gh release upload "$RELEASE" -R "$GITHUB_REPOSITORY" "out/$file"
+          done
+          (cd out && sha256sum "libmpv-$BUILD-"*.zip "libmpv-$BUILD-sources.tar")
+          # The notes say what Kaeri's own builds are, once.
+          notes="$(gh release view "$RELEASE" -R "$GITHUB_REPOSITORY" --json body -q .body)"
+          if [[ "$notes" != *"libmpv-windows.yml"* ]]; then
+            printf '%s\n\n%s\n' "$notes" "Files named libmpv-<mpv version>-kaeri-<hash>-* are Kaeri's own builds of libmpv for Windows (LGPL configuration), made by .github/workflows/libmpv-windows.yml with desktop/windows/scripts/libmpv-build.sh: mpv's own Windows build script and FFmpeg-Builds images, with Kaeri's mpv patches. Each build's -sources.tar holds everything it was built from." >notes.txt
+            gh release edit "$RELEASE" -R "$GITHUB_REPOSITORY" --notes-file notes.txt
+          fi
+          [[ "$(gh release view "$RELEASE" -R "$GITHUB_REPOSITORY" --json isPrerelease -q .isPrerelease)" == true ]]
+
+  # libmpv.ps1 fetches this build: the app ships what was just checked. A change to the patches
+  # fails here until libmpv.ps1 is pinned to the new build, with the SHA-256 values the publish
+  # job printed.
+  pinned:
+    needs: [name, publish]
+    if: ${{ !cancelled() && (needs.publish.result == 'success' || needs.name.outputs.published == 'true') }}
+    runs-on: ubuntu-latest
+    env:
+      BUILD: ${{ needs.name.outputs.build }}
+    steps:
+      - uses: actions/checkout@v7
+      - run: |
+          pinned="$(sed -n "s/^\$build = '\(.*\)'$/\1/p" desktop/windows/scripts/libmpv.ps1)"
+          [[ "$pinned" == "$BUILD" ]] ||
+            { echo "::error::libmpv.ps1 fetches $pinned; pin it to $BUILD"; exit 1; }
