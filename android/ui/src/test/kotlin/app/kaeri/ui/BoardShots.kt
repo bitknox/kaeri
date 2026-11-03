@@ -60,6 +60,7 @@ import app.kaeri.engine.core.AnilistId
 import app.kaeri.engine.core.Translation
 import app.kaeri.engine.core.SourceCandidate
 import app.kaeri.engine.model.Event
+import app.kaeri.engine.model.EpisodeRow
 import app.kaeri.engine.model.SourceNote
 import app.kaeri.engine.model.SourceOption
 import app.kaeri.engine.model.SearchQuery
@@ -68,6 +69,7 @@ import app.kaeri.store.AppStore
 import app.kaeri.store.HAS_TESTING_ENGINE
 import app.kaeri.testkit.FixtureArt
 import app.kaeri.testkit.Scene
+import app.kaeri.testkit.SynopsisFixtures
 import app.kaeri.testkit.PartyStates
 import app.kaeri.engine.model.PartyFound
 import app.kaeri.engine.model.PartySources
@@ -505,6 +507,12 @@ class BoardShots {
         compose.onNodeWithText(label).performScrollTo().performClick()
     }
 
+    private fun toRanges() {
+        compose.onNode(hasScrollToKeyAction() and hasAnyDescendant(hasText("More about this show")))
+            .performScrollToKey("range-row")
+        compose.waitForIdle()
+    }
+
     /** The title page scrolled to the row its watched episodes fold under. */
     private fun toEpisodes() {
         compose.onNode(hasScrollToKeyAction() and hasAnyDescendant(hasText("More about this show")))
@@ -523,8 +531,11 @@ class BoardShots {
         compose.onNodeWithText("watched", substring = true).performClick()
         compose.waitForIdle()
         assertEquals("the last episode watched stays put", before, lastWatched.getUnclippedBoundsInRoot().top)
+        // The unfolded rows push the fold off the top: find the list by the row kept in place.
+        compose.onNode(hasScrollToKeyAction() and hasAnyDescendant(hasText("E6 \u00b7", substring = true)))
+            .performScrollToKey(watchedFold(900001u))
+        compose.waitForIdle()
         compose.onNodeWithText("Hide watched episodes").assertExists()
-        toEpisodes()
     }
 
     /**
@@ -726,6 +737,57 @@ class BoardShots {
         compose.mainClock.autoAdvance = true
     }
 
+    // Episode synopses (the synopsis board, section 3): text and stills laid on the scene's table.
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_synopsis() = shoot("phone-title", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses) { toEpisodes() }
+
+    /** Protection on: facts and a blurred still after the next episode, with the line where it starts. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_synopsis_protected() = shoot("phone-protected", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses) { toEpisodes() }
+
+    /** No synopses and none coming: every row is the short form. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_synopsis_none() = shoot("phone-none", WATCHING, title = 900001u, episodes = SynopsisFixtures::withoutText) { toEpisodes() }
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_synopsis_ranges() = shoot("phone-ranges", WATCHING, title = 900001u, episodes = SynopsisFixtures::long) {
+        toRanges()
+        compose.onNodeWithContentDescription("Episode range").performClick()
+        compose.waitForIdle()
+    }
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_synopsis_ranged() = shoot("phone-ranged", WATCHING, title = 900001u, episodes = SynopsisFixtures::long) { toRanges() }
+
+    /** Long press: the sheet with the whole synopsis above the actions. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_synopsis_sheet() = shoot("phone-sheet", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses, screen = true) {
+        toEpisodes()
+        compose.onNodeWithText("E7", substring = true).performTouchInput { longClick() }
+        compose.waitForIdle()
+    }
+
+    /** A protected episode's sheet: Show synopsis first, the still blurred. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_synopsis_sheet_protected() = shoot("phone-sheet-protected", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses, screen = true) {
+        toEpisodes()
+        compose.onNodeWithText("E9", substring = true).performTouchInput { longClick() }
+        compose.waitForIdle()
+    }
+
+    @Test
+    @Config(qualifiers = PHONE, fontScale = 2.0f)
+    fun phone_title_synopsis_large_text() = shoot("phone-large-text", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses) { toEpisodes() }
+
+
     private fun shoot(
         name: String,
         scene: String,
@@ -752,6 +814,8 @@ class BoardShots {
         party: List<Event> = emptyList(),
         /** Run on the store before the screens show: a lobby a link opened, say. */
         before: ((AppStore) -> Unit)? = null,
+        /** The episode tables of the scene as they are sent: text and stills laid on, say. */
+        episodes: ((AnilistId, List<EpisodeRow>) -> List<EpisodeRow>)? = null,
         then: ((AppStore) -> Unit)? = null,
     ) {
         val recorded = Scene.named(scene)
@@ -759,6 +823,7 @@ class BoardShots {
         // The art the screens ask for, as the fake AniList serves it.
         val store = AppStore(scope, clock = { 0L }, artworkWithoutEngine = { url -> PaleBanner.bytes(url) ?: FixtureArt.bytes(url) })
         val events = recorded.events.filter { replayed(it) && !exclude(it) }.map { if (sourceless) withoutSources(it) else it }.map { if (dub) dubbed(it) else it }
+            .map { if (episodes != null && it is Event.Episodes) Event.Episodes(it.id, episodes(it.id, it.rows)) else it }
         // After the scene each time, so its own detail never wins over the pale one.
         fun replay() {
             store.apply(events)
@@ -866,6 +931,7 @@ class BoardShots {
         fun seasonalList(event: Event) = event is Event.Content && event.view == ContentFor.Seasonal
 
         const val WATCHING = "watching"
+
         const val HOME_WATCHING = "home-watching"
         const val FRESH = "fresh"
         const val TOGETHER = "together"

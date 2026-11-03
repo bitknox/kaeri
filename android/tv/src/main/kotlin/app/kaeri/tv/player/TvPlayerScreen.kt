@@ -92,6 +92,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.material3.MaterialTheme
@@ -826,7 +827,12 @@ private fun Panel(model: PlayerModel, panel: PlayerPanel, onDone: () -> Unit, mo
             .padding(start = 16.dp, end = PANEL_END, top = 27.dp, bottom = 27.dp),
     ) {
         Text(title, style = MaterialTheme.typography.headlineSmall, color = ObiSilk.Silk, modifier = Modifier.padding(start = 16.dp, bottom = 12.dp).semantics { heading() })
-        LazyColumn(Modifier.focusRequester(list).focusGroup(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        // The episode under focus, for the footer under the list.
+        var pointed by remember { mutableStateOf<String?>(null) }
+        LazyColumn(
+            Modifier.focusRequester(list).focusGroup().then(if (panel == PlayerPanel.Episodes) Modifier.weight(1f) else Modifier),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
             when (panel) {
                 PlayerPanel.Episodes -> items(model.menus?.episodes.orEmpty(), key = { it.number }) { episode ->
                     TvListRow(
@@ -841,7 +847,8 @@ private fun Panel(model: PlayerModel, panel: PlayerPanel, onDone: () -> Unit, mo
                             else -> null
                         },
                         selected = episode.current,
-                        modifier = if (episode.current) Modifier.focusRequester(current) else Modifier,
+                        modifier = (if (episode.current) Modifier.focusRequester(current) else Modifier)
+                            .onFocusChanged { if (it.hasFocus) pointed = episode.number },
                     )
                 }
                 PlayerPanel.Tracks -> {
@@ -882,6 +889,10 @@ private fun Panel(model: PlayerModel, panel: PlayerPanel, onDone: () -> Unit, mo
                     )
                 }
             }
+        }
+        if (panel == PlayerPanel.Episodes) {
+            val playing = model.menus?.episodes?.firstOrNull { it.current }
+            EpisodesFooter(model.titleOnScreen, pointed ?: playing?.number)
         }
     }
     LaunchedEffect(panel) {
@@ -1050,4 +1061,32 @@ private fun wallMinute(): java.time.Instant {
         }
     }
     return now
+}
+
+/**
+ * Three lines of the focused episode's synopsis under the Episodes list, when the title's table is
+ * cached (it never fetches). No text for an episode spoiler protection hides; the room is kept
+ * only where text can land, and text that arrives later fades in.
+ */
+@Composable
+private fun EpisodesFooter(id: app.kaeri.engine.core.AnilistId?, number: String?) {
+    val store = LocalAppStore.current
+    val tables by store.titles.episodes.collectAsStateWithLifecycle()
+    val settings by store.settings.view.collectAsStateWithLifecycle()
+    val rows = id?.let { tables[it] } ?: return
+    if (number == null) return
+    val outlook = remember(id, rows.isEmpty()) { app.kaeri.engine.ffi.episodeText(rows) }
+    if (outlook == app.kaeri.engine.model.EpisodeText.NONE) return
+    val row = rows.firstOrNull { it.number == number }
+    val protect = settings?.let { store.settings.isOn(app.kaeri.engine.model.SettingKey.SPOILER_PROTECTION, it) } ?: true
+    val hidden = protect && row?.pastProgress == true && !row.completed
+    val text = row?.description?.takeIf { it.isNotBlank() && !hidden }
+    val room = with(androidx.compose.ui.platform.LocalDensity.current) { (20.sp * 3).toDp() }
+    Box(Modifier.padding(start = 16.dp, top = 12.dp).fillMaxWidth().height(room).clearAndSetSemantics {}) {
+        androidx.compose.animation.Crossfade(text, animationSpec = app.kaeri.design.Motion.fadeIn(), label = "episodes-footer") { shown -> // i18n-skip
+            if (shown != null) {
+                Text(app.kaeri.design.rememberTagged(shown), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, maxLines = 3, overflow = TextOverflow.Ellipsis)
+            }
+        }
+    }
 }

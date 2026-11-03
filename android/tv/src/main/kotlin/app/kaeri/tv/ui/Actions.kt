@@ -55,7 +55,7 @@ import app.kaeri.store.label
 data class CardAction(val label: String, val selected: Boolean = false, val then: ActionSheet? = null, val supporting: String? = null, val flagRes: Int? = null, val run: () -> Unit = {})
 
 /** A card's actions, under its title; or, with a [body], what it draws in their place. */
-data class ActionSheet(val title: String, val actions: List<CardAction> = emptyList(), val width: androidx.compose.ui.unit.Dp = 400.dp, val body: (@Composable () -> Unit)? = null)
+data class ActionSheet(val title: String, val actions: List<CardAction> = emptyList(), val width: androidx.compose.ui.unit.Dp = 400.dp, val body: (@Composable () -> Unit)? = null, val lead: (@Composable () -> Unit)? = null)
 
 /**
  * The panel showing now, if any; the browse UI draws it over the screen. A sheet opened while one
@@ -152,6 +152,7 @@ private fun Sheet(host: ActionsHost, sheet: ActionSheet, modifier: Modifier) {
             color = ObiSilk.Silk,
             modifier = Modifier.padding(start = 16.dp, bottom = 12.dp).semantics { heading() },
         )
+        sheet.lead?.invoke()
         val body = sheet.body
         if (body != null) {
             body()

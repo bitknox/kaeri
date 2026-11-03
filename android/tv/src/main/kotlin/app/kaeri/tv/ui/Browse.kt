@@ -120,6 +120,8 @@ fun BrowseRow(
     state: LazyListState = rememberLazyListState(),
     subtitle: String? = null,
     fallback: FocusRequester = FocusRequester.Default,
+    /** Drawn between the heading and the cards, as the episode ranges' chips are. */
+    belowHeader: (@Composable () -> Unit)? = null,
     content: LazyListScope.() -> Unit,
 ) {
     val keyline = with(LocalDensity.current) { Canvas.Keyline.toPx() }
@@ -134,6 +136,10 @@ fun BrowseRow(
                     Text(subtitle.orEmpty(), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, maxLines = 1)
                 }
             }
+        }
+        if (belowHeader != null) {
+            Spacer(Modifier.height(Canvas.HeaderGap - Canvas.FocusRoom))
+            belowHeader()
         }
         Spacer(Modifier.height(Canvas.HeaderGap - Canvas.FocusRoom))
         ScrollRule(spec) {

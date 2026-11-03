@@ -32,6 +32,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.height
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
@@ -290,6 +294,10 @@ private fun LazyListScope.tracks(model: PlayerModel, onMore: () -> Unit) {
 private fun LazyListScope.episodes(model: PlayerModel) {
     val menus = model.menus
     heading(R.string.player_episodes)
+    // The playing episode's synopsis in a footer under the heading, from the title's table when it is cached.
+    menus?.episodes?.firstOrNull { it.current }?.let { playing ->
+        item(key = "episode-footer") { EpisodeFooter(model.titleOnScreen, playing.number, playing.label, playing.title) }
+    }
     if (menus == null || menus.episodes.isEmpty()) {
         item(key = "no-episodes") { Note(stringResource(R.string.player_sheet_episodes_loading)) }
     } else {
@@ -391,3 +399,37 @@ private val Check: ImageVector = ImageVector.Builder("Check", 24.dp, 24.dp, 24f,
         strokeLineJoin = StrokeJoin.Round,
     )
 }.build()
+
+/**
+ * Three lines of the playing episode's synopsis under the Episodes heading, when the title's table
+ * is cached (it never fetches). No text for an episode spoiler protection hides; the room is kept
+ * only where text can land, and text that arrives later fades in.
+ */
+@Composable
+private fun EpisodeFooter(id: app.kaeri.engine.core.AnilistId?, number: String, label: String, title: String?) {
+    val store = app.kaeri.ui.LocalAppStore.current
+    val tables by store.titles.episodes.collectAsStateWithLifecycle()
+    val rows = id?.let { tables[it] } ?: return
+    val protect = app.kaeri.ui.spoilerProtected(id)
+    val outlook = remember(id, rows.isEmpty()) { app.kaeri.engine.ffi.episodeText(rows) }
+    if (outlook == app.kaeri.engine.model.EpisodeText.NONE) return
+    val row = rows.firstOrNull { it.number == number }
+    val hidden = protect && row?.pastProgress == true && row.completed.not()
+    val text = row?.description?.takeIf { it.isNotBlank() && !hidden }
+    Column(Modifier.fillMaxWidth().padding(start = 56.dp, end = 24.dp, bottom = 8.dp)) {
+        Text(
+            title?.let { "$label · $it" } ?: label, // i18n-skip
+            style = MaterialTheme.typography.bodyLarge,
+            color = ObiSilk.Silk,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Box(Modifier.padding(top = 4.dp).fillMaxWidth().height(with(androidx.compose.ui.platform.LocalDensity.current) { (20.sp * 3).toDp() })) {
+            androidx.compose.animation.Crossfade(text, animationSpec = app.kaeri.design.Motion.fadeIn(), label = "episode-footer") { shown -> // i18n-skip
+                if (shown != null) {
+                    Text(app.kaeri.design.rememberTagged(shown), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                }
+            }
+        }
+    }
+}

@@ -12,6 +12,7 @@ import app.kaeri.tv.ui.TrailerScreen
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -70,6 +71,14 @@ import androidx.tv.material3.Text
 import kotlinx.coroutines.launch
 import app.kaeri.design.CoverPlate
 import app.kaeri.design.ObiSilk
+import app.kaeri.design.Reveals
+import app.kaeri.design.rememberTagged
+import app.kaeri.engine.ffi.episodeRangeToOpen
+import app.kaeri.engine.ffi.episodeRanges
+import app.kaeri.engine.ffi.episodeText
+import app.kaeri.engine.model.EpisodeText
+import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.getValue
 import app.kaeri.engine.core.AnilistId
 import app.kaeri.engine.model.Entry
 import app.kaeri.engine.model.EpisodeRow
@@ -396,7 +405,7 @@ private fun Seasons(
 @Composable
 private fun Episodes(
     entry: Entry,
-    rows: List<EpisodeRow>?,
+    allRows: List<EpisodeRow>?,
     dub: String?,
     action: PlayAction,
     spoilers: Boolean,
@@ -408,7 +417,22 @@ private fun Episodes(
     val store = LocalAppStore.current
     val host = LocalActions.current
     val context = LocalContext.current
-    val next = rows?.indexOfFirst { it.number == action.episode.toString() }?.takeIf { it >= 0 } ?: 0
+    val scope = rememberCoroutineScope()
+    // A long series shows one range of 100 at a time, opening on the one holding the next episode.
+    val ranges = remember(allRows) { if (allRows != null && allRows.size > 100) episodeRanges(allRows, System.currentTimeMillis() / 1000) else emptyList() }
+    val opens = remember(allRows, ranges) { if (allRows != null && ranges.isNotEmpty()) episodeRangeToOpen(allRows).toInt() else 0 }
+    var picked by remember { mutableStateOf<Int?>(null) }
+    val selected = (picked ?: opens).coerceIn(0, maxOf(0, ranges.size - 1))
+    val rows = remember(allRows, ranges, selected) {
+        if (allRows == null || ranges.isEmpty()) allRows else allRows.subList(ranges[selected].start.toInt().coerceIn(0, allRows.size), ranges[selected].end.toInt().coerceIn(0, allRows.size))
+    }
+    // Room for text is decided once for a table or range, so text that turns up later for a table
+    // laid out short waits for the next layout.
+    val outlook = remember(entry.id, selected, allRows == null) { allRows?.let(::episodeText) ?: EpisodeText.NONE }
+    val band = outlook != EpisodeText.NONE
+    val reveals = remember(entry.id) { Reveals() }
+    val next = rows?.indexOfFirst { it.number == action.episode.toString() }?.takeIf { it >= 0 }
+        ?: rows?.indexOfFirst { !it.completed }?.takeIf { it >= 0 } ?: 0
     val state = rememberLazyListState(initialFirstVisibleItemIndex = next)
     val nextRequester = remember { FocusRequester() }
     val placeholders = placeholdersAfterWait(rows == null)
@@ -416,7 +440,57 @@ private fun Episodes(
     val found by store.discussion.found.collectAsStateWithLifecycle()
     val settings by store.settings.view.collectAsStateWithLifecycle()
     val discussions = settings == null || store.settings.isOn(app.kaeri.engine.model.SettingKey.EPISODE_DISCUSSIONS, settings)
-    BrowseRow(stringResource(R.string.title_episodes), modifier = modifier, subtitle = dub, state = state, fallback = nextRequester) {
+    // Choosing a range moves focus to the new range's first unwatched card.
+    var moved by remember { mutableStateOf(false) }
+    androidx.compose.runtime.LaunchedEffect(selected, moved) {
+        if (!moved) return@LaunchedEffect
+        moved = false
+        val at = rows?.indexOfFirst { !it.completed }?.takeIf { it >= 0 } ?: 0
+        state.scrollToItem(at)
+        repeat(5) {
+            androidx.compose.runtime.withFrameNanos { }
+            if (runCatching { nextRequester.requestFocus() }.isSuccess) return@LaunchedEffect
+        }
+    }
+    val chipRequesters = remember(ranges.size) { List(ranges.size) { FocusRequester() } }
+    BrowseRow(
+        stringResource(R.string.title_episodes),
+        modifier = modifier,
+        subtitle = dub,
+        state = state,
+        fallback = nextRequester,
+        belowHeader = if (ranges.isEmpty() || allRows == null) null else {
+            {
+                androidx.compose.foundation.lazy.LazyRow(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = Canvas.FocusRoom).focusGroup(),
+                    contentPadding = PaddingValues(start = Canvas.Keyline, end = Canvas.SafeX),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(ranges.size, key = { "range/$it" }) { index ->
+                        val (from, to) = rangeBounds(allRows, ranges[index])
+                        TvTab(
+                            Strings.episodeRange(context, from, to),
+                            selected = index == selected,
+                            onSelect = {
+                                if (index != selected) {
+                                    picked = index
+                                    moved = true
+                                }
+                            },
+                            settle = null,
+                            chip = true,
+                            count = when {
+                                ranges[index].watched -> Strings.episodeWatched(context)
+                                ranges[index].notOut -> Strings.episodeRowNotOut(context)
+                                else -> null
+                            },
+                            modifier = Modifier.focusRequester(chipRequesters[index]).remembered(memory, "range/$index"),
+                        )
+                    }
+                }
+            }
+        },
+    ) {
         if (failed != null && rows.isNullOrEmpty()) {
             // The table could not be loaded: why, and a way to ask again.
             item(key = "episodes-failed", contentType = "failed") {
@@ -431,13 +505,16 @@ private fun Episodes(
         }
         if (rows == null) {
             if (placeholders) {
-                items(PLACEHOLDER_CARDS, key = { "placeholder/$it" }) { Box(swapFade()) { app.kaeri.tv.ui.CardPlaceholder(Canvas.CardWidth, Canvas.CardHeight) } }
+                items(PLACEHOLDER_CARDS, key = { "placeholder/$it" }) { Box(swapFade()) { app.kaeri.tv.ui.CardPlaceholder(EpisodeCardDims.Width, EpisodeCardDims.StillHeight) } }
             }
             return@BrowseRow
         }
         items(rows, key = { it.number }, contentType = { "episode" }) { row ->
             val index = rows.indexOf(row)
             val playsNext = index == next
+            // Ahead of the next episode under protection, unless this visit revealed it.
+            val ahead = spoilers && index > next && !row.completed
+            val covered = ahead && !reveals.isShown(row.number)
             Box(swapFade()) {
             EpisodeCard(
                 row = row,
@@ -450,20 +527,37 @@ private fun Episodes(
                     ?.let { Strings.discussionRow(context, it.toInt()) },
                 // Unwatched stills after the next one keep their colours and none of their detail.
                 // Only an episode's own still can spoil; the show's banner in its place cannot.
-                spoiler = spoilers && index > next && !row.completed && row.thumbnail != null,
+                spoiler = covered && row.thumbnail != null,
+                covered = covered,
+                band = band,
                 // One no source lists plays nothing: Center offers what can be done instead.
                 onClick = {
-                    if (row.unsourced) host?.open(episodeSheet(context, store, entry, rows, row, onPlayFromStart))
+                    if (row.unsourced) host?.open(episodeSheet(context, store, entry, rows, row, onPlayFromStart, covered) { reveals.show(row.number) })
                     else row.number.toUIntOrNull()?.let { onPlay(entry.id, it) }
                 },
-                sheet = { episodeSheet(context, store, entry, rows, row, onPlayFromStart) },
+                sheet = { episodeSheet(context, store, entry, rows, row, onPlayFromStart, covered) { reveals.show(row.number) } },
                 modifier = Modifier
-                    .then(if (playsNext) Modifier.focusRequester(nextRequester) else Modifier)
+                    .then(if (index == next) Modifier.focusRequester(nextRequester) else Modifier)
                     .remembered(memory, "episode/${row.number}"),
             )
             }
         }
     }
+}
+
+/** The measures of an episode card, from the board: three across the safe area. */
+internal object EpisodeCardDims {
+    val Width = 252.dp
+    val StillHeight = 142.dp
+    val BodyLine = 20.sp
+    const val Lines = 3
+}
+
+/** A range of a long series as its chip names it: the first and last episode numbers in it. */
+internal fun rangeBounds(rows: List<EpisodeRow>, range: app.kaeri.engine.model.EpisodeRange): Pair<Int, Int> {
+    val first = rows.getOrNull(range.start.toInt())?.number?.toDoubleOrNull()?.toInt() ?: (range.start.toInt() + 1)
+    val last = rows.getOrNull(range.end.toInt() - 1)?.number?.toDoubleOrNull()?.toInt() ?: range.end.toInt()
+    return first to last
 }
 
 @Composable
@@ -474,20 +568,35 @@ private fun EpisodeCard(
     progress: Float?,
     discussion: String?,
     spoiler: Boolean,
+    /** Spoiler protection covers this card's text: facts and a blurred still. */
+    covered: Boolean,
+    /** Whether the cards keep room for three lines under them. */
+    band: Boolean,
     onClick: () -> Unit,
     sheet: () -> ActionSheet,
     modifier: Modifier,
 ) {
     val context = LocalContext.current
-    val base = cardLabel(context, row.cardTitle(context), line, progress)
-    val label = if (row.completed) Strings.tvCardLabelWatched(context, base) else base
-    Column(Modifier.width(Canvas.CardWidth)) {
-        ArtCard(onClick, Canvas.CardWidth, Canvas.CardHeight, modifier, sheet, label) {
-            // One no source lists is dimmed under its focus ring, which stays as bright as any.
+    val density = LocalDensity.current
+    var focused by remember { mutableStateOf(false) }
+    val title = row.title?.takeIf { it.isNotBlank() } ?: Strings.episodeNumber(context, row.number.toInt())
+    val aired = row.airsAt?.takeIf { it <= System.currentTimeMillis() / 1000 }?.let { airedDate(context, it) }
+    val facts = listOfNotNull(Strings.episodeLineDetail(context, row.number.toInt(), line ?: ""), aired)
+        .joinToString(" · ") // i18n-skip
+        .replace(Regex(" · $"), "")
+    val synopsis = row.description?.takeIf { it.isNotBlank() && !covered }
+    val hiddenWord = stringResource(R.string.episode_synopsis_hidden)
+    // The card reads as one: number, title, facts, then the synopsis last, or that it is hidden.
+    val base = cardLabel(context, title, facts, progress)
+    val said = base.let { if (row.completed) Strings.tvCardLabelWatched(context, it) else it } +
+        (synopsis?.let { ". $it" } ?: if (covered) ". $hiddenWord" else "") // i18n-skip
+    Column(Modifier.width(EpisodeCardDims.Width).onFocusChanged { focused = it.hasFocus }) {
+        ArtCard(onClick, EpisodeCardDims.Width, EpisodeCardDims.StillHeight, modifier, sheet, said) {
+            // The show's banner stands in for a still the episode does not have, and is never blurred.
             ArtImage(
                 row.thumbnail ?: entry.bannerUrl,
                 CoverPlate.parse(entry.coverColor),
-                pixels(Canvas.CardWidth),
+                pixels(EpisodeCardDims.Width),
                 Modifier.fillMaxSize().alpha(if (row.unsourced) 0.45f else 1f),
                 spoiler = spoiler,
             )
@@ -497,11 +606,45 @@ private fun EpisodeCard(
                     Modifier.align(Alignment.TopEnd).padding(8.dp).size(24.dp).background(ObiSilk.Ground.copy(alpha = 0.72f), CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(TvIcons.Check, contentDescription = null, tint = ObiSilk.Water, modifier = Modifier.size(16.dp))
+                    Icon(TvIcons.Check, contentDescription = null, tint = ObiSilk.Water, modifier = Modifier.size(24.dp * 2 / 3))
                 }
             }
         }
-        CardText(row.cardTitle(context), line, titleColor = if (row.completed || row.unsourced) ObiSilk.Haze else ObiSilk.Silk)
+        Spacer(Modifier.height(10.dp))
+        Text(
+            title,
+            style = MaterialTheme.typography.titleSmall,
+            color = if (row.completed || row.unsourced) ObiSilk.Haze else ObiSilk.Silk,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.clearAndSetSemantics {},
+        )
+        Text(
+            facts,
+            style = MaterialTheme.typography.labelMedium,
+            color = ObiSilk.Haze,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.clearAndSetSemantics {},
+        )
+        if (band) {
+            // The room for text: it fades in on the fade-in token, and the focused card's goes from haze to silk.
+            val room = with(density) { (EpisodeCardDims.BodyLine * EpisodeCardDims.Lines).toDp() }
+            Box(Modifier.padding(top = 6.dp).fillMaxWidth().height(room).clearAndSetSemantics {}) {
+                androidx.compose.animation.Crossfade(synopsis, animationSpec = app.kaeri.design.Motion.fadeIn(), label = "synopsis") { shown -> // i18n-skip
+                    if (shown != null) {
+                        val color by androidx.compose.animation.animateColorAsState(if (focused) ObiSilk.Silk else ObiSilk.Haze, app.kaeri.design.Motion.quick(), label = "synopsis-color") // i18n-skip
+                        Text(
+                            rememberTagged(shown),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = color,
+                            maxLines = EpisodeCardDims.Lines,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                }
+            }
+        }
         if (discussion != null) {
             Text(
                 discussion,
@@ -514,6 +657,14 @@ private fun EpisodeCard(
         }
     }
 }
+
+/** "Aired 21 May 2014". */
+private fun airedDate(context: Context, airsAt: Long): String =
+    Strings.titleFactsAired(
+        context,
+        java.time.format.DateTimeFormatter.ofLocalizedDate(java.time.format.FormatStyle.MEDIUM)
+            .format(java.time.Instant.ofEpochSecond(airsAt).atZone(java.time.ZoneId.systemDefault())),
+    )
 
 /** The synopsis (six lines at most), then studio, genres and source. Focusable, so it scrolls in. */
 @Composable
@@ -613,15 +764,20 @@ fun episodeSheet(
     rows: List<EpisodeRow>,
     row: EpisodeRow,
     onPlayFromStart: (AnilistId, UInt) -> Unit,
+    /** Spoiler protection covers this episode's text and still: Show synopsis leads the actions. */
+    covered: Boolean = false,
+    onShow: () -> Unit = {},
 ): ActionSheet {
     val upTo = rows.takeWhile { it.number != row.number }.map { it.number } + row.number
     val number = row.number.toUIntOrNull()?.takeIf { !row.metadataOnly && !row.unsourced }
     val title = "${entry.title} · ${row.cardTitle(context)}" // i18n-skip
     val episode = row.number.toUIntOrNull()
     val comments = episode?.takeIf { row.completed && (store.settings.view.value == null || store.discussionsOn()) }?.let { store.discussion.count(entry.id, it) }
+    val synopsis = row.description?.takeIf { it.isNotBlank() && !covered }
     return ActionSheet(
         title,
         listOfNotNull(
+            if (covered) CardAction(Strings.episodeSynopsisShow(context)) { onShow() } else null,
             number?.let { CardAction(Strings.episodePlayFromBeginning(context)) { onPlayFromStart(entry.id, it) } },
             if (row.completed) {
                 CardAction(Strings.episodeMarkUnwatched(context)) { store.setWatched(entry.id, listOf(row.number), watched = false) }
@@ -646,6 +802,20 @@ fun episodeSheet(
                 CardAction(Strings.playerChooseSource(context), then = ActionSheet(title, body = { EpisodeReleases(store, entry.id, row.number) }))
             },
         ),
+        // The whole synopsis at the top, in its own language; the card shows three lines of it.
+        width = if (synopsis != null) 520.dp else 400.dp,
+        lead = synopsis?.let { text ->
+            {
+                Text(
+                    rememberTagged(text),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = ObiSilk.Haze,
+                    maxLines = 9,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+                )
+            }
+        },
     )
 }
 
