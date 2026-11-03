@@ -9301,6 +9301,33 @@ episode-fold =
        *[other] { $count } watched episodes
     }
 
+# An episode's number in a facts line on phones.
+episode-short = E{ $episode }
+
+# Part of an episode's facts line: when it aired. The date is already formatted.
+episode-aired = Aired { $date }
+
+# Two parts of an episode's facts line, set one after the other.
+episode-facts-join = { $first } · { $second }
+
+# Button in the line where spoiler protection starts: shows what comes after.
+episode-protection-show = Show
+
+# Button in that line once the rows after it are shown: hides them again.
+episode-protection-hide = Hide
+
+# The line where spoiler protection starts, once the rows after it are shown.
+episode-protection-shown = Showing what comes after episode { $episode }.
+
+# The same line on phones.
+episode-protection-shown-short = Showing after episode { $episode }
+
+# An episode range in the range menu: the first and the last episode.
+episode-range-short = { $from }–{ $to }
+
+# An item of the range menu: the range, then Watched or Not out yet.
+episode-range-item = { $range } · { $state }
+
 # Accessibility label of the button that opens an episode's menu.
 episode-options = Episode options
 
