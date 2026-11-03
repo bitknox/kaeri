@@ -50,6 +50,9 @@
         <NavigationViewItem Content="{x:Bind app:T.NavSeasonal}" Tag="seasonal" AccessKey="S">
           <NavigationViewItem.Icon><FontIcon Glyph="&#xE734;" /></NavigationViewItem.Icon>
         </NavigationViewItem>
+        <NavigationViewItem Content="{x:Bind app:T.NavSearch}" Tag="search" AccessKey="R">
+          <NavigationViewItem.Icon><FontIcon Glyph="&#xE721;" /></NavigationViewItem.Icon>
+        </NavigationViewItem>
         <NavigationViewItem Content="{x:Bind app:T.NavLibrary}" Tag="library" AccessKey="L">
           <NavigationViewItem.Icon><FontIcon Glyph="&#xE8F1;" /></NavigationViewItem.Icon>
         </NavigationViewItem>

@@ -65,8 +65,8 @@ public sealed partial class MainWindow : Window
         this.options = options;
         InitializeComponent();
         Title = T.AppName;
-        // Each destination's tooltip names its shortcut: Ctrl+1 to Ctrl+8, in the sidebar's order.
-        string[] names = [T.HomeTitle, T.NavCalendar, T.NavSeasonal, T.NavLibrary, T.NavDownloads, T.TogetherTitle, T.SourcesTitle, T.NavPluginStores];
+        // Each destination's tooltip names its shortcut: Ctrl+1 to Ctrl+9, in the sidebar's order.
+        string[] names = [T.HomeTitle, T.NavCalendar, T.NavSeasonal, T.NavSearch, T.NavLibrary, T.NavDownloads, T.TogetherTitle, T.SourcesTitle, T.NavPluginStores];
         foreach (var (item, n) in Nav.MenuItems.OfType<NavigationViewItem>().Select((item, i) => (item, i)))
             ToolTipService.SetToolTip(item, T.TooltipWithKey(names[n], $"Ctrl+{n + 1}"));
         // The built-in Settings item reads the system language, so it takes the catalogue's word.
@@ -771,7 +771,7 @@ public sealed partial class MainWindow : Window
         Navigate("settings", pane);
     }
 
-    /// <summary>Goes to a destination by its tag, as the pane and Ctrl+1 to Ctrl+8 do.</summary>
+    /// <summary>Goes to a destination by its tag, as the pane and Ctrl+1 to Ctrl+9 do.</summary>
     internal void Go(string tag)
     {
         if (Player.Showing)
@@ -845,6 +845,15 @@ public sealed partial class MainWindow : Window
         {
             if (tag == "account")
                 ContentFrame.Navigate(typeof(SettingsPage), "accounts", new SuppressNavigationTransitionInfo());
+            else if (tag == "search")
+            {
+                // Search in the sidebar, as on the Mac: the page with what the box holds, and the
+                // box ready to type in.
+                var query = SearchBox.Text.Trim();
+                if (ContentFrame.CurrentSourcePageType != typeof(SearchPage))
+                    Navigate("search", query.Length > 0 ? query : null);
+                SearchBox.Focus(FocusState.Programmatic);
+            }
             else
                 Navigate(tag);
         }
@@ -904,7 +913,7 @@ public sealed partial class MainWindow : Window
             Nav.SelectedItem = e.Parameter as string == "accounts" ? AccountItem : Nav.SettingsItem;
         else if (e.SourcePageType == typeof(FolderPage) || e.SourcePageType == typeof(ServerPage) || e.SourcePageType == typeof(LicensedPage))
             Nav.SelectedItem = Nav.MenuItems.OfType<NavigationViewItem>().FirstOrDefault(i => (string?)i.Tag == "providers");
-        else if (Destinations.FirstOrDefault(d => d.Value == e.SourcePageType).Key is { } tag && tag != "search")
+        else if (Destinations.FirstOrDefault(d => d.Value == e.SourcePageType).Key is { } tag)
             Nav.SelectedItem = Nav.MenuItems.OfType<NavigationViewItem>().FirstOrDefault(i => (string?)i.Tag == tag);
         else
             Nav.SelectedItem = null;
@@ -1469,7 +1478,8 @@ public sealed partial class MainWindow : Window
 
     void Keys()
     {
-        string[] tags = ["home", "calendar", "seasonal", "library", "downloads", "together", "providers", "stores"];
+        // Ctrl+1 to Ctrl+9 in the sidebar's order, as Command+1 to 9 on the Mac.
+        string[] tags = ["home", "calendar", "seasonal", "search", "library", "downloads", "together", "providers", "stores"];
         for (var i = 0; i < tags.Length; i++)
         {
             var tag = tags[i];
@@ -1548,7 +1558,7 @@ public sealed partial class MainWindow : Window
             grid.Children.Add(key);
         }
         Section(T.ShortcutsWindow);
-        Line(T.ShortcutsSections, T.ShortcutsKeysRange("Ctrl+1", "Ctrl+8"));
+        Line(T.ShortcutsSections, T.ShortcutsKeysRange("Ctrl+1", "Ctrl+9"));
         Line(T.NavSearch, "Ctrl+F, Ctrl+E");
         Line(T.ActionBack, T.ShortcutsKeysBack("Alt+Left"));
         Line(T.NavSettings, "Ctrl+,");
