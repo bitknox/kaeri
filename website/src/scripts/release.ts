@@ -1,7 +1,7 @@
 /**
- * The latest release, as GitHub's API describes it, kept for the browser session so a second page
- * asks no more. Null when the API fails or is rate-limited, and the pages then keep their links to
- * the release page.
+ * The latest release, as GitHub's API describes it, kept for ten minutes so a second page asks no
+ * more and a release made since still shows soon. Null when the API fails or is rate-limited, and
+ * the pages then keep the version and links they were built with.
  */
 import { LATEST_API } from '../data/site';
 
@@ -12,20 +12,21 @@ export interface Release {
 }
 
 const KEY = 'kaeri-latest-release';
+const KEEP_MS = 10 * 60 * 1000;
 
 async function lookup(): Promise<Release | null> {
 	try {
-		const kept = sessionStorage.getItem(KEY);
-		if (kept) return JSON.parse(kept) as Release;
+		const kept = JSON.parse(sessionStorage.getItem(KEY) ?? 'null') as { at: number; release: Release } | null;
+		if (kept?.release && Date.now() - kept.at < KEEP_MS) return kept.release;
 	} catch {
-		// No storage in this window; ask GitHub.
+		// No storage in this window, or an older entry; ask GitHub.
 	}
 	try {
 		const response = await fetch(LATEST_API, { headers: { Accept: 'application/vnd.github+json' } });
 		if (!response.ok) return null;
 		const release = (await response.json()) as Release;
 		try {
-			sessionStorage.setItem(KEY, JSON.stringify(release));
+			sessionStorage.setItem(KEY, JSON.stringify({ at: Date.now(), release }));
 		} catch {
 			// Kept for this page only.
 		}
