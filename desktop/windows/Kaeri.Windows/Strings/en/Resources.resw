@@ -1523,6 +1523,58 @@
     <value>Account, {state}</value>
     <comment>Name of the account entry in the navigation pane, followed by its state.</comment>
   </data>
+  <data name="WindowsStartSeconds" xml:space="preserve">
+    <value>{seconds} s</value>
+    <comment>The seconds a start has waited, last on the detail line after the facts: "10 s".</comment>
+  </data>
+  <data name="WindowsStartRowLookedUp" xml:space="preserve">
+    <value>Looked up the title</value>
+    <comment>Details row for the title lookup once it is done.</comment>
+  </data>
+  <data name="WindowsStartRowAsking" xml:space="preserve">
+    <value>Asking</value>
+    <comment>Details row note for the source being asked now.</comment>
+  </data>
+  <data name="WindowsStartRowSkip" xml:space="preserve">
+    <value>Skip</value>
+    <comment>Button in the Details row of the source being asked: skips it.</comment>
+  </data>
+  <data name="WindowsStartStillStarting" xml:space="preserve">
+    <value>Still starting. Choose source is available.</value>
+    <comment>Said to a screen reader once, when a start has waited 8 seconds.</comment>
+  </data>
+  <data name="WindowsStartAnnounce" xml:space="preserve">
+    <value>Starting episode {episode}, {title}</value>
+    <comment>Said to a screen reader when the starting screen opens. The title is the show's.</comment>
+  </data>
+  <data name="WindowsStartFailedAnnounce" xml:space="preserve">
+    <value>{title}. {reason}</value>
+    <comment>Said to a screen reader when a start has failed: the failure's title, then its reason.</comment>
+  </data>
+  <data name="WindowsStartStatus" xml:space="preserve">
+    <value>{step}, {detail}</value>
+    <comment>Accessible label of the starting screen's step and detail lines, read as one element.</comment>
+  </data>
+  <data name="WindowsStartRowNoMatch" xml:space="preserve">
+    <value>Doesn't have this show</value>
+    <comment>Details row note for a source that has no match for the show.</comment>
+  </data>
+  <data name="WindowsStartRowNoEpisode" xml:space="preserve">
+    <value>Doesn't have episode {episode}</value>
+    <comment>Details row note for a source that has the show and not the episode.</comment>
+  </data>
+  <data name="WindowsStartRowFailed" xml:space="preserve">
+    <value>Didn't answer</value>
+    <comment>Details row note for a source that gave an error.</comment>
+  </data>
+  <data name="WindowsStartRowTimedOut" xml:space="preserve">
+    <value>Took too long</value>
+    <comment>Details row note for a source that took too long.</comment>
+  </data>
+  <data name="WindowsStartRowSkipped" xml:space="preserve">
+    <value>Skipped</value>
+    <comment>Details row note for a source the viewer skipped.</comment>
+  </data>
   <data name="SettingsLoading" xml:space="preserve">
     <value>Loading settings</value>
     <comment>Busy line while Settings waits for the engine's values.</comment>

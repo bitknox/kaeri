@@ -139,6 +139,16 @@ impl Prefs {
         }
     }
 
+    /// Whether the starting screen's Details list is open: kept for this device.
+    pub fn starting_details(&self) -> bool {
+        self.keys.borrow().boolean("player", "starting-details").unwrap_or(false)
+    }
+
+    pub fn set_starting_details(&self, open: bool) {
+        self.keys.borrow().set_boolean("player", "starting-details", open);
+        self.save();
+    }
+
     /// The searches made last, newest first.
     pub fn recent_searches(&self) -> Vec<String> {
         // One per line: a search is one line of the search entry.

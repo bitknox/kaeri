@@ -1122,6 +1122,48 @@ discussion-like-named =
        *[other] Like, { $count } likes
     }
 
+# The seconds a start has waited, last on the detail line after the facts: "10 s".
+linux-start-seconds = { $seconds } s
+
+# Details row for the title lookup once it is done.
+linux-start-row-looked-up = Looked up the title
+
+# Details row note for the source being asked now.
+linux-start-row-asking = Asking
+
+# Details row note for a source that will be asked next.
+linux-start-row-next = Next
+
+# Button in the Details row of the source being asked: skips it.
+linux-start-row-skip = Skip
+
+# Said to a screen reader once, when a start has waited 8 seconds.
+linux-start-still-starting = Still starting. Choose source is available.
+
+# Said to a screen reader when the starting screen opens. The title is the show's.
+linux-start-announce = Starting episode { $episode }, { $title }
+
+# Said to a screen reader when a start has failed: the failure's title, then its reason.
+linux-start-failed-announce = { $title }. { $reason }
+
+# Accessible label of the starting screen's step and detail lines, read as one element.
+linux-start-status = { $step }, { $detail }
+
+# Details row note for a source that has no match for the show.
+linux-start-row-no-match = Doesn't have this show
+
+# Details row note for a source that has the show and not the episode.
+linux-start-row-no-episode = Doesn't have episode { $episode }
+
+# Details row note for a source that gave an error.
+linux-start-row-failed = Didn't answer
+
+# Details row note for a source that took too long.
+linux-start-row-timed-out = Took too long
+
+# Details row note for a source the viewer skipped.
+linux-start-row-skipped = Skipped
+
 # Tooltip on the button that opens a setting's preview on a page of its own, and accessible name of the preview.
 settings-preview = Preview
 

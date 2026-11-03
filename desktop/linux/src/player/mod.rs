@@ -37,6 +37,8 @@ use crate::{
 
 mod coming;
 mod marking;
+mod start_model;
+mod start_view;
 mod stats;
 mod style_panel;
 mod timeline;
@@ -147,11 +149,11 @@ pub struct PlayerView {
     frame: Cell<Option<(Restore, Instant)>>,
     /// When the mini player last toggled.
     mini_at: Cell<Option<Instant>>,
-    /// Since when the starting screen has waited, the line's tick, and the engine's note on
-    /// the start's job.
-    starting_since: Cell<Option<Instant>>,
-    starting_tick: RefCell<Option<glib::SourceId>>,
-    starting_note: RefCell<Option<String>>,
+    /// The start in progress, what the starting screen says of it, since when it has waited
+    /// and the clock that moves it on.
+    start: RefCell<Option<start_model::Start>>,
+    start_since: Cell<Option<Instant>>,
+    start_tick: RefCell<Option<glib::SourceId>>,
     /// Where the playback resumed, while "Resumed at" shows: it goes 6 s of playback later.
     resumed_from: Cell<Option<f64>>,
     /// The last automatic skip, while Undo is offered for it.
@@ -230,8 +232,6 @@ impl Undo {
 const UNDO_PLAYED: f64 = 6.0;
 const UNDO_MOST: Duration = Duration::from_secs(15);
 
-/// How long the starting screen says only "Starting episode 7".
-const STARTING_QUIET: Duration = Duration::from_secs(3);
 /// How long "Resumed at" stays, in seconds of playback.
 const RESUMED_FOR: f64 = 6.0;
 
@@ -259,10 +259,10 @@ struct Ui {
     remaining: gtk::Label,
     volume: gtk::Scale,
     starting: gtk::Box,
-    starting_art: gtk::Picture,
-    starting_line: gtk::Label,
-    /// The demo's credit, in haze under the line, because its licence asks for it where it plays.
-    starting_credit: gtk::Label,
+    start: Rc<start_view::StartView>,
+    /// What the header and bottom bar show that the starting screen leaves out: the board keeps
+    /// only Back and the window's buttons over the art.
+    start_tools: Vec<gtk::Widget>,
     /// The subtitle style panel's button.
     style: gtk::MenuButton,
     cards: gtk::Box,
@@ -392,9 +392,9 @@ impl PlayerView {
             engine_marks: RefCell::new(None),
             preview,
             mini: Cell::new(None),
-            starting_since: Cell::new(None),
-            starting_tick: RefCell::default(),
-            starting_note: RefCell::default(),
+            start: RefCell::default(),
+            start_since: Cell::new(None),
+            start_tick: RefCell::default(),
             resumed_from: Cell::new(None),
             undo: Cell::new(None),
             skip_since: Cell::new(None),
@@ -623,6 +623,7 @@ impl PlayerView {
             media.stopped();
         }
         self.tv_media();
+        self.end_start();
         self.ui.starting.set_visible(true);
         self.ui.starting.set_opacity(1.0);
     }
@@ -711,57 +712,239 @@ impl PlayerView {
             Event::PlayerBuffered { ranges, .. } => {
                 self.ui.marked.set_buffered(ranges.iter().map(|r| (r.start, r.end)).collect());
             }
-            Event::JobNote { job, note, .. } => {
-                let starting = self
-                    .ctx
-                    .hub
-                    .known
-                    .borrow()
-                    .jobs
-                    .get(job)
-                    .is_some_and(|activity| activity.starts_with("starting"));
-                if starting {
-                    self.starting_note.replace(Some(say::msg(note)));
+            Event::PlaybackStaged { id, title, episode, episode_title, resume, .. } => {
+                self.staged(*id, title, episode, episode_title.as_deref(), *resume);
+            }
+            Event::StartingStep { id, episode, step, line } => {
+                self.start_step(*id, episode, step, line.as_ref());
+            }
+            Event::PlaybackEnded { failure: Some(failure), rolling_on: false, .. } => {
+                self.start_failed(failure);
+            }
+            Event::Connectivity { offline } => {
+                let at = self.start_elapsed();
+                if let Some(start) = self.start.borrow_mut().as_mut() {
+                    start.connectivity(*offline, at);
                 }
+                if *offline && self.start.borrow().is_some() {
+                    self.announce(&t::player_start_offline_detail(&self.start_episode()));
+                }
+                self.show_start();
             }
             _ => {}
         }
     }
 
-    /// The starting screen's line: "Starting episode 7", and from 3 s the wait admitted, with
-    /// the engine's note when it has one: "Finding a source · 4 s".
-    fn tick_starting(&self, episode: &str, demo: bool) {
-        if let Some(tick) = self.starting_tick.borrow_mut().take() {
+    /// Whether a start is on screen: before the first frame, and after a failure.
+    pub fn is_starting(&self) -> bool {
+        self.start.borrow().is_some()
+    }
+
+    /// The bars while a start is on screen: Back and the window's buttons only.
+    fn start_chrome(&self, on: bool) {
+        self.ui.bottom.set_visible(!on);
+        for widget in &self.ui.start_tools {
+            widget.set_opacity(if on { 0.0 } else { 1.0 });
+            widget.set_can_target(!on);
+            widget.set_focusable(!on);
+        }
+    }
+
+    /// The start is over: it played, or the player closed.
+    fn end_start(&self) {
+        if self.start.replace(None).is_some() {
+            self.start_chrome(false);
+        }
+        self.start_since.set(None);
+    }
+
+    fn start_elapsed(&self) -> Duration {
+        self.start_since.get().map_or(Duration::ZERO, |since| since.elapsed())
+    }
+
+    fn start_episode(&self) -> String {
+        self.start.borrow().as_ref().map(|s| s.episode.clone()).unwrap_or_default()
+    }
+
+    /// A play was staged: the starting screen opens at once, with the title's art where it is
+    /// already known.
+    fn staged(
+        &self,
+        id: AnilistId,
+        title: &str,
+        episode: &str,
+        episode_title: Option<&str>,
+        resume: Option<f64>,
+    ) {
+        self.begin_start(id, title, episode, episode_title, resume);
+        let entry = self.ctx.hub.entry(id);
+        let art = entry.and_then(|e| e.banner_url.or(e.cover_url));
+        self.ctx.hub.art(&self.ui.start.art, art.as_deref());
+        self.open();
+    }
+
+    /// A new start: the model, the screen and the clock.
+    fn begin_start(
+        &self,
+        id: AnilistId,
+        title: &str,
+        episode: &str,
+        episode_title: Option<&str>,
+        resume: Option<f64>,
+    ) {
+        if let Some(tick) = self.start_tick.borrow_mut().take() {
             tick.remove();
         }
-        self.starting_since.set(Some(Instant::now()));
-        self.starting_note.replace(None);
-        self.ui.starting_credit.set_visible(demo);
-        self.ui.starting_line.set_label(&if demo {
-            t::player_starting_part(episode)
-        } else {
-            t::player_starting(crate::party::number(episode))
-        });
+        self.start.replace(Some(start_model::Start::new(id, episode, resume)));
+        self.start_chrome(true);
+        if let Some(start) = self.start.borrow_mut().as_mut() {
+            start.details_open = self.ctx.prefs.starting_details();
+        }
+        self.start_since.set(Some(Instant::now()));
+        self.ui.show.set_label(title);
+        self.late.set(false);
+        let translation = self.episode_line.borrow().2;
+        self.episode_line.replace((
+            episode.to_owned(),
+            episode_title.map(str::to_owned),
+            translation,
+        ));
+        let line = self.show_episode_line();
+        let demo = id == kaeri_core::demo::DEMO_ANILIST_ID;
+        self.ui.start.begin(title, &line, demo);
+        self.ui.starting.set_visible(true);
+        self.ui.starting.set_opacity(1.0);
+        self.clear_cards();
+        self.resumed_done();
+        self.announce(&t::linux_start_announce(crate::party::number(episode), title));
+        self.show_start();
         let me = self.me.clone();
-        let tick = glib::timeout_add_local(Duration::from_secs(1), move || {
+        let tick = glib::timeout_add_local(Duration::from_millis(100), move || {
             let Some(view) = me.upgrade() else { return glib::ControlFlow::Break };
-            let since = view.starting_since.get();
-            let (Some(since), true) = (since, view.ui.starting.is_visible()) else {
-                view.starting_tick.borrow_mut().take();
+            if view.start.borrow().is_none() || !view.ui.starting.is_visible() {
+                view.start_tick.borrow_mut().take();
                 return glib::ControlFlow::Break;
-            };
-            let waited = since.elapsed();
-            if waited >= STARTING_QUIET {
-                let seconds = waited.as_secs() as i64;
-                let line = match view.starting_note.borrow().as_deref() {
-                    Some(note) => t::player_note_waited(note, seconds),
-                    None => t::player_finding_source(seconds),
-                };
-                view.ui.starting_line.set_label(&line);
             }
+            let at = view.start_elapsed();
+            if let Some(start) = view.start.borrow_mut().as_mut() {
+                start.tick(at);
+            }
+            let slow = view.start.borrow_mut().as_mut().and_then(|s| s.slow_announcement(at));
+            if let Some(slow) = slow {
+                view.announce(&slow);
+            }
+            view.show_start();
             glib::ControlFlow::Continue
         });
-        self.starting_tick.replace(Some(tick));
+        self.start_tick.replace(Some(tick));
+    }
+
+    /// Draw what the model says now.
+    fn show_start(&self) {
+        let at = self.start_elapsed();
+        let drawn = self.start.borrow().as_ref().map(|s| (s.frame(at), s.details_open));
+        if let Some((frame, open)) = drawn {
+            self.ui.start.show(&frame, open);
+        }
+    }
+
+    fn start_step(
+        &self,
+        id: AnilistId,
+        episode: &str,
+        step: &kaeri_model::starting::StartStep,
+        line: Option<&kaeri_model::Msg>,
+    ) {
+        let at = self.start_elapsed();
+        {
+            let mut start = self.start.borrow_mut();
+            let Some(start) = start.as_mut().filter(|s| s.id == id && s.episode == episode)
+            else {
+                return;
+            };
+            start.step(step, line, at);
+        }
+        self.show_start();
+    }
+
+    /// The start ended without playing, and the engine says why: the failure screen.
+    fn start_failed(&self, failure: &kaeri_model::starting::StartFailure) {
+        if self.start.borrow().is_none() {
+            return;
+        }
+        if let Some(start) = self.start.borrow_mut().as_mut() {
+            start.fail(failure.clone());
+        }
+        self.show_start();
+        let frame = self.start.borrow().as_ref().map(|s| s.frame(self.start_elapsed()));
+        if let Some(Some((title, reason))) = frame.map(|f| f.failure) {
+            self.announce_high(&t::linux_start_failed_announce(&title, &reason));
+        }
+        self.ui.start.focus_primary();
+        self.open();
+    }
+
+    /// What a button on the starting screen does.
+    fn start_action(&self, action: start_model::Action) {
+        use start_model::Action as A;
+        let Some((id, episode)) =
+            self.start.borrow().as_ref().map(|s| (s.id, s.episode.clone()))
+        else {
+            return;
+        };
+        match action {
+            A::Cancel | A::Close => self.close(),
+            A::FromBeginning => {
+                self.send(PlayerCommand::PlayFromBeginning);
+                if let Some(start) = self.start.borrow_mut().as_mut() {
+                    start.begin_from_start();
+                }
+                self.show_start();
+            }
+            A::Skip => self.send(PlayerCommand::SkipSource),
+            A::ChooseSource | A::ChooseAnother => {
+                crate::party::source::choose(&self.ctx, id, &episode);
+            }
+            A::Details => {
+                let open = {
+                    let mut start = self.start.borrow_mut();
+                    let Some(start) = start.as_mut() else { return };
+                    start.details_open = !start.details_open;
+                    start.details_open
+                };
+                self.ctx.prefs.set_starting_details(open);
+                self.show_start();
+            }
+            A::ShowDownloads => {
+                self.close();
+                let _ = WidgetExt::activate_action(
+                    &self.ctx.window,
+                    "win.go",
+                    Some(&"downloads".to_variant()),
+                );
+            }
+            A::TryAgain => {
+                self.ctx.hub.send(Command::Play { id, episode, from_start: false });
+            }
+            A::FixMatch => {
+                self.close();
+                let _ = crate::pages::match_picker::open(
+                    &self.ctx,
+                    &self.ctx.window,
+                    id,
+                    true,
+                    None,
+                );
+            }
+            A::AddStore => {
+                self.close();
+                let _ = WidgetExt::activate_action(
+                    &self.ctx.window,
+                    "win.go",
+                    Some(&"stores".to_variant()),
+                );
+            }
+        }
     }
 
     /// "Resumed at 12:04" with Start Over, in the top leading corner.
@@ -779,6 +962,14 @@ impl PlayerView {
             .page
             .upcast_ref::<gtk::Widget>()
             .announce(text, gtk::AccessibleAnnouncementPriority::Medium);
+    }
+
+    /// Say `text` to a screen reader at once: a failure.
+    fn announce_high(&self, text: &str) {
+        self.ui
+            .page
+            .upcast_ref::<gtk::Widget>()
+            .announce(text, gtk::AccessibleAnnouncementPriority::High);
     }
 
     fn resumed_done(&self) {
@@ -818,19 +1009,27 @@ impl PlayerView {
                 if let Some(media) = self.media() {
                     media.track(Track {
                         show: title.clone(),
-                        title: line,
+                        title: line.clone(),
                         art: banner_url.clone().or_else(|| cover_url.clone()),
                     });
                 }
-                self.tick_starting(episode, *id == kaeri_core::demo::DEMO_ANILIST_ID);
-                self.resumed_done();
+                // The play was staged already, and its screen has been counting: the same
+                // start goes on. Else (a start that was not staged) the screen opens now.
+                let same = self
+                    .start
+                    .borrow()
+                    .as_ref()
+                    .is_some_and(|s| s.id == *id && s.episode == *episode);
+                if same {
+                    self.ui.start.set_show(title);
+                    self.ui.start.set_episode_line(&line);
+                } else {
+                    self.begin_start(*id, title, episode, episode_title.as_deref(), None);
+                }
                 self.ui.starting.set_visible(true);
                 self.ui.starting.set_opacity(1.0);
-                self.ui.starting_art.set_paintable(Some(&widgets::swatch(None)));
-                self.ctx
-                    .hub
-                    .art(&self.ui.starting_art, banner_url.as_deref().or(cover_url.as_deref()));
-                self.clear_cards();
+                let art = banner_url.as_deref().or(cover_url.as_deref());
+                self.ctx.hub.art(&self.ui.start.art, art);
                 self.open();
             }
             PlayerUi::Episode { number, title, show, translation, .. } => {
@@ -1286,7 +1485,7 @@ impl PlayerView {
         }
         if state.has_picture && ui.starting.is_visible() {
             fade(&ui.starting, false);
-            self.starting_since.set(None);
+            self.end_start();
         }
         // Six seconds of playback on, or a seek back past it, and "Resumed at" goes.
         if let (Some(from), Some(position)) = (self.resumed_from.get(), state.position)
@@ -1436,6 +1635,7 @@ impl PlayerView {
             || card
             || self.focus_on_controls()
             || crate::window::screen_reader_running()
+            || self.start.borrow().is_some()
             || !self.shown.get()
         {
             if self.shown.get() {
@@ -1605,6 +1805,9 @@ impl PlayerView {
         if self.mini.get().is_some() {
             return vec![self.ui.mini.clone().upcast(), self.ui.dim.clone().upcast()];
         }
+        if self.start.borrow().is_some() {
+            return vec![self.ui.top.clone().upcast(), self.ui.dim.clone().upcast()];
+        }
         vec![
             self.ui.top.clone().upcast(),
             self.ui.bottom.clone().upcast(),
@@ -1733,6 +1936,22 @@ impl PlayerView {
 
     fn wire(self: &Rc<Self>) {
         let ui = &self.ui;
+        ui.start.connect_action({
+            let weak = Rc::downgrade(self);
+            Rc::new(move |action| {
+                if let Some(view) = weak.upgrade() {
+                    view.start_action(action);
+                }
+            })
+        });
+        ui.start.connect_translation({
+            let weak = Rc::downgrade(self);
+            Rc::new(move |translation| {
+                if let Some(view) = weak.upgrade() {
+                    view.send(PlayerCommand::Choose(PlayerChoice::Translation(translation)));
+                }
+            })
+        });
         let weak = Rc::downgrade(self);
         let act = move |f: fn(&PlayerView)| {
             let weak = weak.clone();
@@ -2734,39 +2953,9 @@ fn build_ui(ctx: &Rc<Ctx>, video: &gtk::Widget) -> Ui {
     bottom.append(&speed_button);
     bottom.append(&settings);
 
-    // The starting screen: the banner full frame, the line and a spinner.
-    let starting_art =
-        gtk::Picture::builder().accessible_role(gtk::AccessibleRole::Presentation).build();
-    starting_art.set_content_fit(gtk::ContentFit::Cover);
-    starting_art.set_can_shrink(true);
-    starting_art.add_css_class("art-fade");
-    let spinner = adw::Spinner::new();
-    spinner.set_size_request(32, 32);
-    let starting_line = gtk::Label::new(Some(&t::player_starting_plain()));
-    starting_line.add_css_class("title-3");
-    let middle = gtk::Box::new(gtk::Orientation::Vertical, 16);
-    middle.set_halign(gtk::Align::Center);
-    middle.set_valign(gtk::Align::Center);
-    middle.append(&spinner);
-    middle.append(&starting_line);
-    let starting_credit = gtk::Label::new(Some(&t::player_demo_credit()));
-    starting_credit.add_css_class("haze");
-    starting_credit.add_css_class("caption");
-    starting_credit.set_wrap(true);
-    starting_credit.set_justify(gtk::Justification::Center);
-    starting_credit.set_visible(false);
-    middle.append(&starting_credit);
-    let starting_stack = gtk::Overlay::new();
-    starting_stack.set_child(Some(&starting_art));
-    let shade = gtk::Box::new(gtk::Orientation::Vertical, 0);
-    shade.add_css_class("player-dim-flat");
-    starting_stack.add_overlay(&shade);
-    starting_stack.add_overlay(&middle);
-    let starting = gtk::Box::new(gtk::Orientation::Vertical, 0);
-    starting.add_css_class("player-starting");
-    starting.append(&starting_stack);
-    starting_stack.set_vexpand(true);
-    starting.set_can_target(false);
+    // The starting screen: the art under its ground, Kaeri's line and the tools by time.
+    let start = start_view::StartView::new();
+    let starting = start.root.clone();
 
     // The corner cards.
     let skip = Card::new();
@@ -2995,9 +3184,17 @@ fn build_ui(ctx: &Rc<Ctx>, video: &gtk::Widget) -> Ui {
         remaining,
         volume,
         starting,
-        starting_art,
-        starting_line,
-        starting_credit,
+        start,
+        start_tools: vec![
+            titles.clone().upcast(),
+            full.clone().upcast(),
+            mini_button.clone().upcast(),
+            episodes.clone().upcast(),
+            tracks.clone().upcast(),
+            style.clone().upcast(),
+            people.clone().upcast(),
+            tv.clone().upcast(),
+        ],
         style,
         cards,
         skip,
