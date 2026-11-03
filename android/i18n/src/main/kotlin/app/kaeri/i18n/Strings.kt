@@ -1357,6 +1357,14 @@ object Strings {
     fun castSettingsTorrentsNote(context: Context): String =
         context.getString(R.string.cast_settings_torrents_note)
 
+    /** Details row on the starting screen once the title has been looked up. */
+    fun androidStartTitleLookedUp(context: Context): String =
+        context.getString(R.string.android_start_title_looked_up)
+
+    /** Spoken once by the screen reader when a start has gone on for a while. It names the button that appears. */
+    fun androidStartStillStarting(context: Context): String =
+        context.getString(R.string.android_start_still_starting)
+
     /** Notice at the top right while an episode plays and a phone asks to pair. The code is six digits, grouped. */
     fun tvPairRequestHeld(context: Context, phone: String, code: String): String =
         context.getString(R.string.tv_pair_request_held, phone, code)

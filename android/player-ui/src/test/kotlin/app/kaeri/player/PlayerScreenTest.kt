@@ -88,7 +88,7 @@ class PlayerScreenTest {
         }
         shown()
         compose.onNodeWithText("Couldn't play episode 7").assertIsDisplayed()
-        compose.onNodeWithText("Choose source").assertIsDisplayed()
+        compose.onNodeWithText("Choose another source").assertIsDisplayed()
         compose.onNodeWithText("Close").performClick()
         compose.waitForIdle()
         assertFalse(model.isPresented)

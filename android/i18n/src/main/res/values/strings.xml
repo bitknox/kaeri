@@ -724,6 +724,10 @@
     <string name="cast_settings_torrents">Torrents while casting</string>
     <!-- Settings, Sources: under the row above. -->
     <string name="cast_settings_torrents_note">Lets a TV with Chromecast built in play torrents. This device sends the episode for as long as it plays.</string>
+    <!-- Details row on the starting screen once the title has been looked up. -->
+    <string name="android_start_title_looked_up">Looked up the title</string>
+    <!-- Spoken once by the screen reader when a start has gone on for a while. It names the button that appears. -->
+    <string name="android_start_still_starting">Still starting. Choose source is available.</string>
     <!-- Notice at the top right while an episode plays and a phone asks to pair. The code is six digits, grouped. -->
     <string name="tv_pair_request_held">%1$s wants to pair. Code %2$s</string>
     <!-- TV, Continue hero: the action when no source can play yet. -->

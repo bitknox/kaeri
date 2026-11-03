@@ -6,6 +6,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalInspectionMode
+import app.kaeri.engine.model.FixtureEvent
+import app.kaeri.engine.model.StartingFixture
+import app.kaeri.engine.ffi.startingFixture
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onRoot
 import app.kaeri.testkit.captureRoboImage
@@ -122,6 +125,24 @@ class PlayerShots {
         model.apply(Event.PlayerBuffered(1u, listOf(TimeRange(0.0, 480.0), TimeRange(700.0, 760.0))))
     }
 
+    @Test fun phone_start_title_lookup() = starting("phone-start-title-lookup", StartingFixture.TITLE_LOOKUP, extra = 1_500)
+    @Test fun phone_start_asking_first() = starting("phone-start-asking-first", StartingFixture.ASKING_FIRST, extra = 3_500)
+    @Test fun phone_start_asking_pinned() = starting("phone-start-asking-pinned", StartingFixture.ASKING_PINNED, extra = 3_500)
+    @Test fun phone_start_source_missed() = starting("phone-start-source-missed", StartingFixture.SOURCE_MISSED, extra = 3_500)
+    @Test fun phone_start_resting() = starting("phone-start-resting", StartingFixture.SOURCES_RESTING, extra = 3_500)
+    @Test fun phone_start_slow() = starting("phone-start-slow", StartingFixture.SLOW, extra = 500)
+    @Test fun phone_start_finding_peers() = starting("phone-start-finding-peers", StartingFixture.FINDING_PEERS, extra = 3_500)
+    @Test fun phone_start_peers_known() = starting("phone-start-peers-known", StartingFixture.PEERS_KNOWN, extra = 1_500)
+    @Test fun phone_start_found() = starting("phone-start-found", StartingFixture.FOUND, extra = 1_500)
+    @Test fun phone_start_another_stream() = starting("phone-start-another-stream", StartingFixture.ANOTHER_STREAM, extra = 1_500)
+    @Test fun phone_start_buffering_torrent() = starting("phone-start-buffering-torrent", StartingFixture.BUFFERING_TORRENT, extra = 1_500)
+    @Test fun phone_start_buffering_direct() = starting("phone-start-buffering-direct", StartingFixture.BUFFERING_DIRECT, extra = 1_500)
+    @Test fun phone_start_offline() = starting("phone-start-offline", StartingFixture.OFFLINE, extra = 1_500)
+    @Test fun phone_start_failed_no_episode() = starting("phone-start-failed-no-episode", StartingFixture.FAILED_NO_EPISODE, extra = 1_500)
+    @Test fun phone_start_failed_no_match() = starting("phone-start-failed-no-match", StartingFixture.FAILED_NO_MATCH, extra = 1_500)
+    @Test fun phone_start_failed_no_sources() = starting("phone-start-failed-no-sources", StartingFixture.FAILED_NO_SOURCES, extra = 1_500)
+    @Test fun phone_start_failed_not_aired() = starting("phone-start-failed-not-aired", StartingFixture.FAILED_NOT_AIRED, extra = 1_500)
+
     /** The starting screen (T2): the banner art under the dim, the indicator and its line, before the first frame. */
     @Test
     fun phone_player_starting() = shoot("phone-player-starting", picture = false) { model, _ ->
@@ -131,6 +152,26 @@ class PlayerShots {
                 PlayerUi.Starting(900_001u, TITLE, "7", EPISODE, "${FixtureArt.HOST}cover/900001-xl.jpg", "${FixtureArt.HOST}banner/900001.jpg"),
             ),
         )
+    }
+
+    /** The starting screen as the engine's made-up start in [state] leaves it [extra] ms after its last event. */
+    private fun starting(name: String, state: StartingFixture, extra: Long = 600, dark: Boolean = false) {
+        val events = startingFixture(state)
+        shoot(name, picture = false, fixture = events) { model, _ ->
+            time = (events.lastOrNull()?.atMs ?: 0u).toLong() + extra
+            model.poke()
+            if (state.name.startsWith("FAILED")) check(model.failure != null) { "failed: presented=${model.isPresented} ep=${model.startingEpisode}" }
+        }
+    }
+
+    private fun replay(events: List<FixtureEvent>) {
+        // The art of the title being started, as the engine's start tells it.
+        model.apply(Event.PlayerUi(1u, PlayerUi.Starting(900_001u, TITLE, "7", EPISODE, "${FixtureArt.HOST}cover/900001-xl.jpg", "${FixtureArt.HOST}banner/900001.jpg")))
+        for (e in events) {
+            time = e.atMs.toLong()
+            model.apply(e.event)
+            model.poke()
+        }
     }
 
     /** The store of the shot being taken, for the steps that act on the screen. */
@@ -313,6 +354,7 @@ class PlayerShots {
         picture: Boolean = true,
         discussionSheet: Boolean = false,
         after: () -> Unit = {},
+        fixture: List<FixtureEvent>? = null,
         at: (PlayerModel, ScriptedMpv) -> Unit,
     ) {
         store = AppStore(scope, clock = { 0L }, artworkWithoutEngine = FixtureArt::bytes)
@@ -324,9 +366,11 @@ class PlayerShots {
         // The clock held, so the controls stay up for the shot as after a tap.
         model = PlayerModel(send = { sent += it }, backend = { ScriptedMpv().also { mpv = it; playing = it } }, scope = scope, now = { time }, hwdec = "no")
         compose.runOnUiThread {
-            model.apply(Event.PlaybackStaged(900_001u, TITLE, "7", EPISODE, 1.0))
-            model.apply(Event.PlayerOps(1u, listOf(PlayerOp.Open(true, null, null), PlayerOp.Load("/media/episode.mkv", emptyList()))))
-            model.apply(Event.PlayerUi(1u, PlayerUi.Episode("7", "Episode 7", EPISODE, TITLE, Translation.SUB)))
+            if (fixture == null) model.apply(Event.PlaybackStaged(900_001u, TITLE, "7", EPISODE, 1.0))
+            if (fixture == null) {
+                model.apply(Event.PlayerOps(1u, listOf(PlayerOp.Open(true, null, null), PlayerOp.Load("/media/episode.mkv", emptyList()))))
+                model.apply(Event.PlayerUi(1u, PlayerUi.Episode("7", "Episode 7", EPISODE, TITLE, Translation.SUB)))
+            }
         }
         compose.waitForIdle()
         val art = FixtureArt.bytes("${FixtureArt.HOST}banner/900001.jpg")!!
@@ -350,15 +394,18 @@ class PlayerShots {
         }
         compose.waitForIdle()
         compose.runOnUiThread {
-            val m = mpv!!
-            m.emit(MpvEvent.of(MpvNative.Event.START_FILE))
-            m.emit(MpvEvent.of(MpvNative.Event.FILE_LOADED))
-            m.emit(MpvEvent.property("duration", MpvValue.Real(1442.0)))
-            m.emit(MpvEvent.property("pause", MpvValue.Flag(false)))
-            m.emit(MpvEvent.property("video-params", MpvValue.parse("""{"w":1920,"h":1080,"dw":1920,"dh":1080}""")!!))
-            m.emit(MpvEvent.property("chapter-list", MpvValue.parse(CHAPTERS)!!))
-            if (picture) m.emit(MpvEvent.of(MpvNative.Event.PLAYBACK_RESTART))
+            val m = mpv ?: ScriptedMpv()
+            if (fixture == null) {
+                m.emit(MpvEvent.of(MpvNative.Event.START_FILE))
+                m.emit(MpvEvent.of(MpvNative.Event.FILE_LOADED))
+                m.emit(MpvEvent.property("duration", MpvValue.Real(1442.0)))
+                m.emit(MpvEvent.property("pause", MpvValue.Flag(false)))
+                m.emit(MpvEvent.property("video-params", MpvValue.parse("""{"w":1920,"h":1080,"dw":1920,"dh":1080}""")!!))
+                m.emit(MpvEvent.property("chapter-list", MpvValue.parse(CHAPTERS)!!))
+                if (picture) m.emit(MpvEvent.of(MpvNative.Event.PLAYBACK_RESTART))
+            }
             model.poke()
+            fixture?.let { replay(it) }
             at(model, m)
         }
         compose.mainClock.advanceTimeBy(1_000)

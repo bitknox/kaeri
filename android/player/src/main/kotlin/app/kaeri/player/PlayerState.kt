@@ -105,7 +105,26 @@ data class PlaybackFailure(
     val reason: String? = null,
     /** What the engine said, as a message, so the reason reads in the person's language. */
     val msg: app.kaeri.engine.model.Msg? = null,
+    /** Why the engine says it failed, which picks the screen's buttons. */
+    val why: app.kaeri.engine.model.NoSourceWhy? = null,
+    /** What the start had done by then, for its Details list. */
+    val trail: StartProgress? = null,
+    /** When it ended, in the clock the model keeps. */
+    val endedAt: Long = 0L,
 ) {
+    /** The cause behind [msg], when the engine gave one. */
+    val cause: app.kaeri.engine.model.Cause?
+        get() = (msg as? app.kaeri.engine.model.Msg.NoticeReason)?.reason
+
+    /** Whether the title matched none of the sources, so Fix match is the way on. */
+    val noMatch: Boolean get() = cause is app.kaeri.engine.model.Cause.TitleNoMatch
+
+    /** Whether the episode has not aired, which no source can change. */
+    val notAired: Boolean get() = why == app.kaeri.engine.model.NoSourceWhy.NOT_AIRED
+
+    /** Whether no source is set up, so the way on is to add a store. */
+    val noSources: Boolean get() = why == app.kaeri.engine.model.NoSourceWhy.NO_SOURCES
+
     /** The reason in the person's language when the engine sent a message, else as it came. */
     fun reasonText(context: Context): String? =
         msg?.let { reason(it.text(context)) } ?: reason

@@ -349,31 +349,6 @@ fun StillWatching(model: PlayerModel) {
     }
 }
 
-/**
- * What the starting screen says under its line: after 20 s of finding nothing, Choose source and
- * Stop; and when the playback never played, "Couldn't play episode 7" with Choose source and Close.
- */
-@Composable
-internal fun StartingChoices(model: PlayerModel, onChooseSource: () -> Unit) {
-    val starting = model.starting
-    if (model.failure == null && (starting == null || !starting.offersChoice(model.clock))) return
-    Row(Modifier.padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (model.failure != null) {
-            Button(
-                onClick = onChooseSource,
-                colors = ButtonDefaults.buttonColors(containerColor = ObiSilk.Amber, contentColor = ObiSilk.Ground),
-            ) { Text(stringResource(R.string.player_choose_source)) }
-            TextButton(onClick = model::viewerClosed) { Text(stringResource(R.string.action_close), color = ObiSilk.Silk) }
-        } else {
-            FilledTonalButton(
-                onClick = onChooseSource,
-                colors = ButtonDefaults.filledTonalButtonColors(containerColor = ObiSilk.RaisedSelected, contentColor = ObiSilk.Silk),
-            ) { Text(stringResource(R.string.player_choose_source)) }
-            TextButton(onClick = model::viewerClosed) { Text(stringResource(R.string.action_stop), color = ObiSilk.Silk) }
-        }
-    }
-}
-
 /** The 250 ms fade into the ground at Up Next's zero, and out of it on the next first frame (T5). */
 internal val ThroughGround = tween<Float>(250, easing = FastOutLinearInEasing)
 
