@@ -131,7 +131,13 @@ impl Run<'_> {
         // Until the first frame, once a second: how fast data arrives, for the starting screen.
         let mut pace_tick = tokio::time::interval(Duration::from_secs(1));
         let say = |step, line| {
-            crate::playback::starting::say(tx, context.anilist_id, &context.episode, step, line);
+            crate::playback::starting::say(
+                tx,
+                context.anilist_id,
+                &context.episode,
+                step,
+                line,
+            );
         };
         // The governor keeps its steps across episodes in this window, but its evidence is
         // per file.

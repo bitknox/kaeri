@@ -24,7 +24,16 @@ use super::{
 use crate::harness::{HEADLESS_MPV, Harness, Options, mpv_here, names};
 
 /// What the lookup of a play that has no stream says, once the play is staged.
-const LOOKED_UP: [&str; 5] = ["JobNote", "JobNote", "Toast", "PlaybackEnded", "JobDone"];
+const LOOKED_UP: [&str; 8] = [
+    "JobNote",
+    "StartingStep",
+    "JobNote",
+    "StartingStep",
+    "StartingStep",
+    "Toast",
+    "PlaybackEnded",
+    "JobDone",
+];
 
 /// What the engine staged: whose, under what name, which episode, and the episode's own name.
 /// The one `PlaybackStaged` among `updates`, at the speed nothing remembered.

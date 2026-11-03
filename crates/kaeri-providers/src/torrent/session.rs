@@ -754,7 +754,11 @@ impl TorrentSession {
                 let bytes = live.download_speed.mbps * 1024.0 * 1024.0;
                 return Some(Pace {
                     peers: u32::try_from(live.snapshot.peer_stats.live).unwrap_or(u32::MAX),
-                    bytes_per_second: if bytes.is_finite() && bytes > 0.0 { bytes as u64 } else { 0 },
+                    bytes_per_second: if bytes.is_finite() && bytes > 0.0 {
+                        bytes as u64
+                    } else {
+                        0
+                    },
                 });
             }
             None

@@ -20,6 +20,5 @@ pub use proxy::{ProxyState, TorrentRoute};
 pub use registry::{Attempt, ProviderRegistry};
 pub use resolve::{
     Answer, Candidate, Contribution, Gathered, Resolution, Surveyed, confirm, first_answer,
-    first_answer_with,
-    gather, resolve, survey,
+    first_answer_with, gather, resolve, survey,
 };

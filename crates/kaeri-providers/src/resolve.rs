@@ -352,7 +352,9 @@ where
         registry.ids().into_iter().filter(|id| !usable.contains(id)).collect();
     if !skipped.is_empty() {
         tracing::info!(?skipped, "sources resting after failures, not asked");
-        walk.say(Step::Resting { names: skipped.iter().map(|id| display_name(registry, id)).collect() });
+        walk.say(Step::Resting {
+            names: skipped.iter().map(|id| display_name(registry, id)).collect(),
+        });
     }
     let total = usable.len();
     for (index, provider_id) in usable.into_iter().enumerate() {
@@ -1024,6 +1026,45 @@ mod tests {
         let cached = store.lookup_mapping(WANDERER, "beta").unwrap().unwrap();
         assert_eq!(cached.provider_key.as_str(), "beta-1");
         assert!(store.lookup_mapping(WANDERER, "alpha").unwrap().is_none());
+    }
+
+    #[tokio::test]
+    async fn the_walk_tells_each_source_asked_and_missed_in_order() {
+        use crate::walk::{Miss, Step, Walk};
+        use std::sync::{Arc, Mutex};
+        let store = Store::open_in_memory().unwrap();
+        let registry = ProviderRegistry::new(vec![
+            MockProvider::new("alpha").with_hits(vec![]).arc(),
+            MockProvider::new("beta")
+                .with_hits(vec![wanderer_hit("beta-1")])
+                .with_streams(vec![stream("https://beta.example/1.m3u8")])
+                .arc(),
+        ]);
+        let seen = Arc::new(Mutex::new(Vec::new()));
+        let sink = seen.clone();
+        let walk = Walk::observed(move |step| sink.lock().unwrap().push(step));
+        let answer = first_answer_with(
+            &store,
+            &registry,
+            WANDERER,
+            &wanderer(),
+            Translation::Sub,
+            0,
+            &walk,
+            |source, key| async move { source.resolve(&key, "1", Translation::Sub, 0).await },
+        )
+        .await;
+        assert!(matches!(answer, Answer::Answered { .. }));
+        let seen = seen.lock().unwrap();
+        let asked: Vec<_> = seen
+            .iter()
+            .map(|s| match s {
+                Step::Asking { place, total, .. } => format!("ask {place}/{total}"),
+                Step::Missed { miss, .. } => format!("miss {}", *miss == Miss::NoMatch),
+                _ => "other".into(),
+            })
+            .collect();
+        assert_eq!(asked, ["ask 1/2", "miss true", "ask 2/2"]);
     }
 
     #[tokio::test]

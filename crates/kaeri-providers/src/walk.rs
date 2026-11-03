@@ -106,7 +106,10 @@ pub async fn asking<T>(
     match &walk.observer {
         Some(observer) => {
             ASKED
-                .scope(Asked { name: name.map(str::to_owned), observer: Arc::clone(observer) }, asking)
+                .scope(
+                    Asked { name: name.map(str::to_owned), observer: Arc::clone(observer) },
+                    asking,
+                )
                 .await
         }
         None => asking.await,

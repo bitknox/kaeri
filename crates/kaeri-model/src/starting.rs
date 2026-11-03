@@ -76,3 +76,59 @@ pub struct StartFailure {
     pub why: crate::party::NoSourceWhy,
     pub text: crate::Msg,
 }
+
+/// A made-up start, for an app's previews, screenshots and tests: the events the engine says
+/// for it, with no network or player behind them. See `fixture` in the engine's
+/// `playback::starting`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum StartingFixture {
+    /// The title is looked up; the episode resumes at 10:06.
+    TitleLookup,
+    /// Sources still loading are waited for.
+    SourcesLoading,
+    /// The first of three sources is asked.
+    AskingFirst,
+    /// The first of three is asked, and the show is pinned to it.
+    AskingPinned,
+    /// The first source has no such episode and the second is asked.
+    SourceMissed,
+    /// The first source did not answer and the second is asked.
+    SourceFailed,
+    /// A resting source is passed over and the first of two is asked.
+    SourcesResting,
+    /// The second of three sources is still asked 24 seconds in.
+    Slow,
+    /// A torrent finds peers for the second source.
+    FindingPeers,
+    /// A torrent has peers and a speed, and the player waits for data.
+    PeersKnown,
+    /// Streams found: the player opens the first of three.
+    Found,
+    /// The first stream's subtitles are fetched.
+    FetchingSubtitles,
+    /// The first stream showed no video and the second of three opens.
+    AnotherStream,
+    /// A torrent's player waits for data, 40% full.
+    BufferingTorrent,
+    /// A direct stream's player waits for data and knows no percentage.
+    BufferingDirect,
+    /// The device is offline.
+    Offline,
+    /// Every source has the show and none has the episode.
+    FailedNoEpisode,
+    /// No source matched the show.
+    FailedNoMatch,
+    /// No source is set up.
+    FailedNoSources,
+    /// The episode has not aired yet.
+    FailedNotAired,
+}
+
+/// An event of a made-up start, and how many milliseconds after the start it is said.
+#[derive(Debug)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct FixtureEvent {
+    pub at_ms: u64,
+    pub event: crate::event::Event,
+}

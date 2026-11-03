@@ -25,9 +25,9 @@ use crate::{
         handoff::{Handoff, successor, take_controls},
         link::{PlayerOpener, PlayerTarget, opener},
         resolve::{Pick, Resolved, resolve_for_playback},
-        starting::Starting,
         shaders::shader_dir,
         slot::PlayerSlot,
+        starting::Starting,
     },
     services::Services,
     show_settings,
@@ -817,7 +817,8 @@ fn spawn_playback(
         // Found, from the ladder just now or from ahead: the screen's step is now the player
         // opening the first stream.
         if let Some(first) = streams.first() {
-            let source = registry.get(&first.provider_id).map(|s| s.manifest().display_name.clone());
+            let source =
+                registry.get(&first.provider_id).map(|s| s.manifest().display_name.clone());
             starting.step(
                 kaeri_model::starting::StartStep::Found {
                     count: u32::try_from(streams.len()).unwrap_or(u32::MAX),

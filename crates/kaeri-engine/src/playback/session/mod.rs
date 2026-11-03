@@ -371,7 +371,13 @@ pub async fn play(
         // but no longer than a moment: the tracks still on their way follow as they arrive.
         let mut late = None;
         let say = |step, line| {
-            crate::playback::starting::say(&tx, context.anilist_id, &context.episode, step, line);
+            crate::playback::starting::say(
+                &tx,
+                context.anilist_id,
+                &context.episode,
+                step,
+                line,
+            );
         };
         if !localised[index] {
             if streams[index].subtitles.iter().any(subtitles::fetches) {

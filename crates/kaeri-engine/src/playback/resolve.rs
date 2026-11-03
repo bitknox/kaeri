@@ -4,9 +4,9 @@
 use kaeri_core::ids::AnilistId;
 use kaeri_meta::Meta;
 use kaeri_model::StoreMsg;
+use kaeri_model::starting::StartStep;
 use kaeri_model::{Cause, Msg};
 use kaeri_model::{event::Event, notice::Notice, party::NoSourceWhy};
-use kaeri_model::starting::StartStep;
 use kaeri_providers::{ProviderRegistry, walk};
 use kaeri_store::Store;
 
@@ -489,6 +489,7 @@ fn untracked_context(
 /// The streams of the release pinned for a title, when one is pinned, its source is in use and
 /// the release holds `episode`. Otherwise `None`, and the episode is found as ever: a batch
 /// that stops at episode 6 is no reason to refuse episode 7.
+#[allow(clippy::too_many_arguments)]
 async fn pinned_release(
     store: &Store,
     registry: &ProviderRegistry,
@@ -523,7 +524,14 @@ async fn pinned_release(
     let streams = walk::asking(
         &watching,
         name.as_deref(),
-        source.resolve_source(&pin.provider_id, &key, episode, translation, &pin.release_id, now),
+        source.resolve_source(
+            &pin.provider_id,
+            &key,
+            episode,
+            translation,
+            &pin.release_id,
+            now,
+        ),
     )
     .await;
     match streams {

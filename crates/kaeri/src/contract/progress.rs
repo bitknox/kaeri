@@ -253,7 +253,16 @@ async fn an_ending_that_rolls_on_plays_the_next_episode_under_the_name_it_played
     let updates = h.settle().await;
 
     // Episode 5 is started and staged, and the lookup finds nothing to play.
-    let looked_up = ["JobNote", "JobNote", "Toast", "PlaybackEnded", "JobDone"];
+    let looked_up = [
+        "JobNote",
+        "StartingStep",
+        "JobNote",
+        "StartingStep",
+        "StartingStep",
+        "Toast",
+        "PlaybackEnded",
+        "JobDone",
+    ];
     let finished_4 = ["Progress", "Playback", "Progress", "PlaybackEnded", "PlaybackStaged"];
     assert_eq!(names(&updates), [&finished_4[..], &looked_up].concat());
     assert_eq!(finished(&h), ["1", "2", "3", "4"]);
@@ -275,7 +284,16 @@ async fn an_episode_picked_in_the_player_is_asked_for_by_the_title_playing() {
     let updates = h.settle().await;
 
     // Started and staged, as the player asked, and looked up; there is nothing to play it from.
-    let looked_up = ["JobNote", "JobNote", "Toast", "PlaybackEnded", "JobDone"];
+    let looked_up = [
+        "JobNote",
+        "StartingStep",
+        "JobNote",
+        "StartingStep",
+        "StartingStep",
+        "Toast",
+        "PlaybackEnded",
+        "JobDone",
+    ];
     let picked = ["Progress", "Playback", "PlayerPlayEpisode", "PlaybackStaged"];
     assert_eq!(names(&updates), [&picked[..], &looked_up].concat());
     assert!(
