@@ -1,0 +1,50 @@
+From 4c2a19791b072bf8ba2c38df2157571873bbe1f7 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Kacper=20Michaj=C5=82ow?= <kasper93@gmail.com>
+Date: Sun, 8 Mar 2026 14:22:02 +0100
+Subject: [PATCH] vulkan/context_win: load vkCreateWin32SurfaceKHR
+
+https://github.com/BtbN/Vulkan-Shim-Loader doesn't expose those symbols,
+so just load them manually.
+---
+ video/out/vulkan/context_win.c | 10 +++++++++-
+ video/out/vulkan/utils.c       |  6 +++++-
+ 2 files changed, 14 insertions(+), 2 deletions(-)
+
+diff --git a/video/out/vulkan/context_win.c b/video/out/vulkan/context_win.c
+index a05124347876d..a68a3ef51e807 100644
+--- a/video/out/vulkan/context_win.c
++++ b/video/out/vulkan/context_win.c
+@@ -97,7 +97,15 @@ static bool win_init(struct ra_ctx *ctx)
+     };
+ 
+     VkInstance inst = vk->vkinst->instance;
+-    VkResult res = vkCreateWin32SurfaceKHR(inst, &wininfo, NULL, &vk->surface);
++    mp_assert(vk->vkinst->get_proc_addr);
++    PFN_vkCreateWin32SurfaceKHR pCreateWin32SurfaceKHR = (PFN_vkCreateWin32SurfaceKHR)
++        vk->vkinst->get_proc_addr(inst, "vkCreateWin32SurfaceKHR");
++    if (!pCreateWin32SurfaceKHR) {
++        MP_MSG(ctx, msgl, "Failed to load vkCreateWin32SurfaceKHR\n");
++        goto error;
++    }
++
++    VkResult res = pCreateWin32SurfaceKHR(inst, &wininfo, NULL, &vk->surface);
+     if (res != VK_SUCCESS) {
+         MP_MSG(ctx, msgl, "Failed creating Windows surface\n");
+         goto error;
+diff --git a/video/out/vulkan/utils.c b/video/out/vulkan/utils.c
+index d01fc3be0b883..c535291b1e750 100644
+--- a/video/out/vulkan/utils.c
++++ b/video/out/vulkan/utils.c
+@@ -34,7 +34,11 @@ void mpvk_uninit(struct mpvk_ctx *vk)
+ {
+     if (vk->surface) {
+         mp_assert(vk->vkinst);
+-        vkDestroySurfaceKHR(vk->vkinst->instance, vk->surface, NULL);
++        mp_assert(vk->vkinst->get_proc_addr);
++        PFN_vkDestroySurfaceKHR pDestroySurfaceKHR = (PFN_vkDestroySurfaceKHR)
++            vk->vkinst->get_proc_addr(vk->vkinst->instance, "vkDestroySurfaceKHR");
++        if (pDestroySurfaceKHR)
++            pDestroySurfaceKHR(vk->vkinst->instance, vk->surface, NULL);
+         vk->surface = VK_NULL_HANDLE;
+     }
+ 
