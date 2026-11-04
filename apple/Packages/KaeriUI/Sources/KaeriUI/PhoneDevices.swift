@@ -10,7 +10,6 @@ import SwiftUI
 
 struct PhoneDevicesPage: View {
     @Environment(AppStore.self) private var store
-    @Environment(Navigator.self) private var navigator
     @State private var removing: SyncDeviceView?
     @State private var turningOff = false
     @State private var renaming = false
@@ -29,17 +28,18 @@ struct PhoneDevicesPage: View {
                 }
                 .listRowBackground(Palette.raised)
             } header: { PhoneSectionHeader(L.devicesThisDevice) }
-            if sync.enabled {
+            if sync.inUse {
                 enabled(sync)
             } else {
+                // Before sync is on: the two ways in, each opening its sheet. Either one turns sync on.
                 Section {
-                    VStack(alignment: .leading, spacing: 10) {
-                        PhoneRowTitle(title: L.syncOffTitle, note: L.syncOffLine)
-                        Button(L.syncTurnOn + "…") { sync.sheet = .road }
-                            .buttonStyle(SyncButtonStyle2())
+                    SyncChoice(title: L.syncRoadNearby, line: L.syncRoadNearbyLine, glyph: "wifi", chevron: true) {
+                        sync.sheet = .pairShow
                     }
-                    .listRowBackground(Palette.raised)
-                } header: { PhoneSectionHeader(L.syncGroup) }
+                    SyncChoice(title: L.syncRoadCloud, line: L.syncRoadCloudLine, glyph: "icloud", chevron: true) {
+                        sync.addCloudFolder()
+                    }
+                } header: { PhoneSectionHeader(L.syncGroup) } footer: { Text(L.syncStartFoot) }
                 if store.tv.available {
                     NavigationLink(value: PhoneSettingsPage.tvs) {
                         PhoneRowTitle(title: L.tvPairedTvs, note: L.devicesPairedTvsFoot)
@@ -59,7 +59,6 @@ struct PhoneDevicesPage: View {
             if renaming { draft = sync.status.deviceName ?? (sync.deviceName.isEmpty ? DeviceNaming.system : sync.deviceName) }
         }
         .modifier(SyncPresenter())
-        .onLaunchSheet("sync-road", navigator) { sync.sheet = .road }
     }
 
     @ViewBuilder
@@ -138,6 +137,7 @@ struct PhoneDevicesPage: View {
                 }
                 .listRowBackground(Palette.raised)
                 Button(L.cloudSyncNow) { sync.syncNow() }.listRowBackground(Palette.raised)
+                Button(L.cloudUseAnother) { sync.useAnotherService() }.listRowBackground(Palette.raised)
                 if [SyncFolderKind.googleDrive, .dropbox, .oneDrive].contains(folder.kind) {
                     if line.state == .signedOut || line.state == .problem {
                         Button(sync.signedOutByHand ? L.cloudSignIn : L.cloudSignInAgain) { sync.signInAgain(folder.kind) }
@@ -146,10 +146,22 @@ struct PhoneDevicesPage: View {
                         Button(L.cloudSignOut) { sync.signOut(folder.kind) }.listRowBackground(Palette.raised)
                     }
                 }
+                Button(L.cloudRemove, role: .destructive) { sync.removingFolder = true }
+                    .foregroundStyle(.vermilion)
+                    .listRowBackground(Palette.raised)
             } else {
-                Button(L.cloudAdd) { sync.sheet = .picker }.listRowBackground(Palette.raised)
+                Button(L.cloudAdd) { sync.addCloudFolder() }.listRowBackground(Palette.raised)
             }
         } header: { PhoneSectionHeader(L.cloudGroup) } footer: { Text(L.cloudFoot) }
+        .confirmationDialog(
+            L.cloudRemoveTitle(service: sync.status.folder.map { SyncModel.name($0.kind) } ?? ""),
+            isPresented: Binding(get: { sync.removingFolder }, set: { sync.removingFolder = $0 }),
+            titleVisibility: .visible
+        ) {
+            Button(L.cloudRemove, role: .destructive) { sync.removeFolder() }
+        } message: {
+            Text(L.cloudRemoveLine(kind: Device.name, service: sync.status.folder.map { SyncModel.name($0.kind) } ?? ""))
+        }
         if sync.status.recoveryKey {
             Section {
                 HStack {

@@ -65,6 +65,8 @@ struct AppSheets: ViewModifier {
                     let callback = try await webSignIn.signIn(url: request.url, callbackScheme: request.callbackScheme)
                     store.finishSignIn(request, callback: callback)
                 } catch {
+                    // The page closed because its request moved on: nothing to end or say.
+                    if Task.isCancelled { return }
                     store.cancelSignIn(request)
                     // Closing the sheet is a cancel; anything else says why nothing happened.
                     if let failure = error as? ASWebAuthenticationSessionError, failure.code == .canceledLogin { return }

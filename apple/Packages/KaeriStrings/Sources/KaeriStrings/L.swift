@@ -2624,11 +2624,6 @@ public enum L {
     /// Title of the page of paired TVs on a phone.
     public static var tvTitleList: String { string("tv-title-list", fallback: "TVs") }
 
-    /// Line under the settings group of paired TVs. The code is a short fingerprint.
-    public static func tvSettingsFootnote(code: String) -> String {
-        Self.format("tv-settings-footnote", fallback: "A TV lists this device with the code %1$@. Forget a TV here and it forgets this device too.", code)
-    }
-
     /// Time of the last sighting of a paired TV, within the last minute.
     public static var tvSeenJustNow: String { string("tv-seen-just-now", fallback: "just now") }
 

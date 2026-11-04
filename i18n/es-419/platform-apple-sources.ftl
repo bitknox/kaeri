@@ -54,7 +54,6 @@ tv-bar-cant-reach = No se puede conectar con { $name }
 tv-bar-not-found = No se encontró { $name }
 tv-paired-tvs = Televisores emparejados
 tv-title-list = Televisores
-tv-settings-footnote = Un televisor registra este { -device } con el código { $code }. Si olvidas un televisor aquí, también olvida este { -device }.
 tv-seen-just-now = justo ahora
 stores-link-send-once = Envía este enlace a { $who }. Funciona una vez, hasta { $until }.
 stores-link-send-once-anyone = Envía este enlace a la persona a quien va dirigido. Funciona una vez, hasta { $until }.

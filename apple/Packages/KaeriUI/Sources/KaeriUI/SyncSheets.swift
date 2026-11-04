@@ -25,16 +25,23 @@ struct SyncPresenter: ViewModifier {
                 SyncSheetHost(sheet: sheet)
                     .environment(store)
                     #if os(iOS)
-                    .presentationDetents(sheet == .road ? [.medium] : [.large])
+                    .presentationDetents([.large])
                     .presentationBackground(Palette.ground)
-                    .interactiveDismissDisabled(sheet == .recoveryKey)
+                    .interactiveDismissDisabled(store.sync.holdsSheet)
                     #endif
             }
-            .task(id: store.sync.signIn) { await runWebSignIn() }
+            .task(id: WebPage(request: store.sync.signIn, opens: store.sync.pageOpens)) { await runWebSignIn() }
+    }
+
+    /// The page shown for a sign-in: a new step, or Open the page again, opens it anew.
+    private struct WebPage: Equatable {
+        let request: SyncSignInRequest?
+        let opens: Int
     }
 
     private func runWebSignIn() async {
         let sync = store.sync
+        let opens = sync.pageOpens
         guard let request = sync.signIn, case .sheet(let url, let scheme) = request.step,
               let link = URL(string: url) else { return }
         do {
@@ -44,12 +51,19 @@ struct SyncPresenter: ViewModifier {
             } else {
                 callback = try await webSignIn.signIn(url: link, callbackScheme: scheme)
             }
+            sync.signInReturned(request.service)
             sync.send(.finishSyncSignIn(service: request.service, callback: callback.absoluteString))
         } catch let error as NSError {
-            // Closing the sheet is the person's choice, so nothing is said; anything else is a refusal.
+            // The page closed because its request moved on: a newer page took its place, it was
+            // opened again, or the engine ended it and has said why. Only a page whose view went
+            // while it was still the engine's request ends that sign-in here.
+            if Task.isCancelled {
+                if sync.signIn == request, sync.pageOpens == opens { sync.cancelSignIn() }
+                return
+            }
+            // Closing the page is the person's choice, so nothing is said; anything else is a refusal.
             let closed = error.domain == "com.apple.AuthenticationServices.WebAuthenticationSession" && error.code == 1
-            sync.cancelSignIn()
-            if !closed { sync.denied = request.service }
+            if closed { sync.signInClosed() } else { sync.signInRefused(request.service) }
         }
     }
 }
@@ -59,7 +73,6 @@ private struct SyncSheetHost: View {
 
     var body: some View {
         switch sheet {
-        case .road: RoadSheet()
         case .picker: CloudPickerSheet()
         case .nextcloud: NextcloudSheet()
         case .webDav: WebDavSheet()
@@ -77,58 +90,72 @@ private extension SyncModel {
     func close() { sheet = nil }
 }
 
-// MARK: Road
-
-struct RoadSheet: View {
-    @Environment(AppStore.self) private var store
-
-    var body: some View {
-        let sync = store.sync
-        SyncSheetFrame(title: L.syncRoadTitle, cancel: { sync.close() }) {
-            SyncSection(footer: L.syncRoadLater) {
-                SyncChoice(title: L.syncRoadNearby, line: L.syncRoadNearbyLine, glyph: "wifi") {
-                    sync.sheet = .pairShow
-                }
-                if sync.offersCloud || store.sync.status.clouds.isEmpty {
-                    SyncChoice(title: L.syncRoadCloud, line: L.syncRoadCloudLine, glyph: "icloud") {
-                        sync.sheet = .picker
-                    }
-                }
-            }
-        } bottom: {
-            #if os(macOS)
-            SyncButton(title: L.actionCancel) { sync.close() }
-            #endif
-        }
-    }
-}
-
 // MARK: Cloud picker
 
+/// The cloud folder's sheet: the list of services, then, in the same sheet, the wait for the
+/// chosen one's page, the sign-in finishing, the folder being made, and the recovery key or what
+/// went wrong. Each step crossfades into the next.
 struct CloudPickerSheet: View {
     @Environment(AppStore.self) private var store
     @State private var importing = false
 
     var body: some View {
         let sync = store.sync
+        ZStack {
+            Group {
+                switch sync.cloudStep {
+                case nil: list(sync)
+                case .key?: RecoveryKeySheet()
+                case let step?: CloudStepView(step: step, deviceName: name)
+                }
+            }
+            .id(Self.phase(sync.cloudStep))
+            .transition(.opacity)
+        }
+        .animation(.standard, value: Self.phase(sync.cloudStep))
+        .onDisappear { store.sync.pickerClosed() }
+        .fileImporter(isPresented: $importing, allowedContentTypes: [.folder]) { result in
+            if case .success(let url) = result {
+                _ = url.startAccessingSecurityScopedResource()
+                sync.startDirectory(url.path, deviceName: name)
+            }
+        }
+    }
+
+    private static func phase(_ step: CloudStep?) -> String {
+        switch step {
+        case nil: "list"
+        case .waiting?: "waiting"
+        case .connecting?: "connecting"
+        case .settingUp?: "setting-up"
+        case .failed?: "failed"
+        case .key?: "key"
+        }
+    }
+
+    @ViewBuilder
+    private func list(_ sync: SyncModel) -> some View {
+        let current = sync.switching ? sync.status.folder?.kind : nil
         SyncSheetFrame(title: L.cloudPickTitle, cancel: { sync.close() }) {
-            SyncSection(footer: L.cloudPickFoot) {
+            SyncSection(footer: current.map { L.cloudSwitchFoot(service: SyncModel.name($0)) + " " + L.cloudPickFoot } ?? L.cloudPickFoot) {
                 ForEach(sync.offered, id: \.service) { view in
-                    SyncChoice(title: SyncModel.name(view.service), line: line(view.service), glyph: glyph(view.service)) {
+                    let inUse = current == view.service
+                    SyncChoice(title: SyncModel.name(view.service), line: inUse ? L.cloudInUse : line(view.service), glyph: glyph(view.service)) {
                         sync.choose(view.service, deviceName: name)
                     }
-                    if sync.denied == view.service {
-                        SyncProblemLine(text: L.cloudErrDenied(service: SyncModel.name(view.service)))
-                    }
+                    .disabled(inUse)
+                    .opacity(inUse ? 0.38 : 1)
                     if case .unavailable = view.way {
                         SyncNote(text: L.tvCloudNeedsPhoneNone)
                     }
                 }
             }
             SyncSection(header: L.cloudOther) {
-                SyncChoice(title: L.cloudWebdav, line: L.cloudWebdavLine, glyph: "server.rack") {
+                SyncChoice(title: L.cloudWebdav, line: current == .webDav ? L.cloudInUse : L.cloudWebdavLine, glyph: "server.rack") {
                     sync.sheet = .webDav
                 }
+                .disabled(current == .webDav)
+                .opacity(current == .webDav ? 0.38 : 1)
                 SyncChoice(title: L.cloudFolder(kind: Device.name), line: L.cloudFolderLine, glyph: "folder") {
                     importing = true
                 }
@@ -137,12 +164,6 @@ struct CloudPickerSheet: View {
             #if os(macOS)
             SyncButton(title: L.actionCancel) { sync.close() }
             #endif
-        }
-        .fileImporter(isPresented: $importing, allowedContentTypes: [.folder]) { result in
-            if case .success(let url) = result {
-                _ = url.startAccessingSecurityScopedResource()
-                sync.startDirectory(url.path, deviceName: name)
-            }
         }
     }
 
@@ -160,6 +181,134 @@ struct CloudPickerSheet: View {
 
     private func glyph(_ kind: SyncFolderKind) -> String {
         kind == .nextcloud ? "cloud" : "externaldrive.connected.to.line.below"
+    }
+}
+
+/// A step of the cloud folder's sheet after the list: its title, a line with an indicator or the
+/// error's glyph, and its buttons. Past the page's answer Cancel is dimmed: the engine can't stop
+/// the token fetch or the first write half way.
+private struct CloudStepView: View {
+    @Environment(AppStore.self) private var store
+    let step: CloudStep
+    let deviceName: String
+
+    var body: some View {
+        let sync = store.sync
+        let busy = step.underWay && !waiting
+        SyncSheetFrame(title: title, cancel: { sync.cancelCloudStep() }, cancelDimmed: busy) {
+            switch step {
+            case .waiting(let kind):
+                CloudStatusLine(text: L.cloudWaiting(service: SyncModel.name(kind)), busy: true)
+                SyncNote(text: pageLine(kind))
+            case .connecting:
+                CloudStatusLine(text: L.cloudConnectingLine, busy: true, color: .haze)
+            case .settingUp(let kind):
+                CloudStatusLine(text: L.cloudSettingUpLine(service: SyncModel.name(kind)), busy: true, color: .haze)
+            case .failed(let kind, let problem, let folder):
+                CloudStatusLine(text: Self.problemLine(kind, problem, folder: folder), busy: false)
+            case .key:
+                EmptyView()
+            }
+        } bottom: {
+            #if os(macOS)
+            switch step {
+            case .waiting:
+                HStack(spacing: 10) {
+                    SyncButton(title: L.cloudOpenAgain) { sync.openPageAgain() }
+                    Spacer(minLength: 0)
+                    SyncButton(title: L.actionCancel) { sync.cancelCloudStep() }
+                }
+                .frame(maxWidth: .infinity)
+                .layoutPriority(1)
+            case .failed:
+                SyncButton(title: L.actionCancel) { sync.cancelCloudStep() }
+                SyncButton(title: L.actionTryAgain, primary: true) { sync.tryAgain(deviceName: deviceName) }
+            default:
+                SyncButton(title: L.actionCancel) {}
+                    .disabled(true)
+            }
+            #else
+            switch step {
+            case .waiting:
+                SyncButton(title: L.cloudOpenAgain, wide: true) { sync.openPageAgain() }
+            case .failed:
+                SyncButton(title: L.actionTryAgain, primary: true, wide: true) { sync.tryAgain(deviceName: deviceName) }
+            default:
+                EmptyView()
+            }
+            #endif
+        }
+    }
+
+    private var waiting: Bool {
+        if case .waiting = step { return true }
+        return false
+    }
+
+    private var title: String {
+        switch step {
+        case .waiting(let kind):
+            #if os(macOS)
+            L.cloudBrowserTitle(service: SyncModel.name(kind))
+            #else
+            L.cloudSheetWait
+            #endif
+        case .connecting(let kind): L.cloudConnecting(service: SyncModel.name(kind))
+        case .settingUp: L.cloudSettingUp
+        case .failed(_, _, folder: true): L.cloudErrSetupTitle
+        case .failed(let kind, _, _): L.cloudErrSigninTitle(service: SyncModel.name(kind))
+        case .key: L.rkeyTitle
+        }
+    }
+
+    private func pageLine(_ kind: SyncFolderKind) -> String {
+        #if os(macOS)
+        L.cloudBrowserLine(service: SyncModel.name(kind))
+        #else
+        L.cloudSheetLine(service: SyncModel.name(kind))
+        #endif
+    }
+
+    /// What went wrong, in a line: refused, timed out, offline, or the sign-in or the folder
+    /// failing otherwise. The engine's own words go to Messages.
+    static func problemLine(_ kind: SyncFolderKind, _ problem: SyncProblem, folder: Bool) -> String {
+        let name = SyncModel.name(kind)
+        switch problem {
+        case .signInDenied: return L.cloudErrDeniedShort(service: name)
+        case .signInExpired: return L.cloudErrTimeout
+        case .unreachable: return L.cloudErrOffline(service: name)
+        default: return folder ? L.cloudErrTitle(service: name) : L.cloudErrSigninOther(service: name)
+        }
+    }
+}
+
+/// The line under a step's title: an indeterminate indicator, or the error's glyph, and words.
+private struct CloudStatusLine: View {
+    let text: String
+    let busy: Bool
+    var color: Color = .silk
+
+    var body: some View {
+        HStack(alignment: busy ? .center : .firstTextBaseline, spacing: 8) {
+            if busy {
+                ProgressView().controlSize(.small)
+            } else {
+                Image(systemName: "exclamationmark.circle.fill")
+                    .font(.plat(mac: 13, touch: 17))
+                    .foregroundStyle(.vermilion)
+                    .accessibilityHidden(true)
+            }
+            Text(text)
+                .font(.plat(mac: 13, touch: 17))
+                .foregroundStyle(color)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+        #if os(iOS)
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 4, trailing: 16))
+        #endif
     }
 }
 

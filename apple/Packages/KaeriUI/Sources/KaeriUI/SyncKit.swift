@@ -24,6 +24,8 @@ struct SyncSheetFrame<Content: View, Bottom: View>: View {
     let title: String
     /// The cancel in the navigation bar on iPhone and iPad.
     var cancel: (() -> Void)?
+    /// The cancel shows dimmed: the step under way can't be stopped.
+    var cancelDimmed = false
     var width: CGFloat = 480
     @ViewBuilder let content: Content
     @ViewBuilder let bottom: Bottom
@@ -63,7 +65,7 @@ struct SyncSheetFrame<Content: View, Bottom: View>: View {
                 .toolbar {
                     if let cancel {
                         ToolbarItem(placement: .topBarLeading) {
-                            Button(L.actionCancel, action: cancel).tint(.silk)
+                            Button(L.actionCancel, action: cancel).tint(.silk).disabled(cancelDimmed)
                         }
                     }
                 }
@@ -112,6 +114,8 @@ struct SyncChoice: View {
     var line: String?
     var lineColor: Color = .haze
     var glyph: String?
+    /// A chevron at the end on iPhone and iPad, where the row opens a sheet of its own.
+    var chevron = false
     let action: () -> Void
 
     var body: some View {
@@ -140,6 +144,12 @@ struct SyncChoice: View {
                     if let line { Text(line).font(.ui(13)).foregroundStyle(lineColor).fixedSize(horizontal: false, vertical: true) }
                 }
                 Spacer(minLength: 0)
+                if chevron {
+                    Image(systemName: "chevron.right")
+                        .font(.ui(13, weight: .semibold))
+                        .foregroundStyle(.haze)
+                        .accessibilityHidden(true)
+                }
             }
             .padding(.vertical, 4)
             .contentShape(.rect)

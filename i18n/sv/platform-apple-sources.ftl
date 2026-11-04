@@ -51,7 +51,6 @@ tv-bar-cant-reach = Det går inte att nå { $name }
 tv-bar-not-found = { $name } hittades inte
 tv-paired-tvs = Parkopplade TV:ar
 tv-title-list = TV:ar
-tv-settings-footnote = En TV listar den här { -device }en med koden { $code }. Glömmer du en TV här glöms också den här { -device }en.
 tv-seen-just-now = just nu
 stores-link-send-once = Skicka länken till { $who }. Den fungerar en gång, till { $until }.
 stores-link-send-once-anyone = Skicka länken till personen den är till för. Den fungerar en gång, till { $until }.

@@ -14,9 +14,12 @@ import KaeriKit
 ///     signedout-err  Google Drive signed the app out
 ///     offline        the folder cannot be reached
 ///     folder-gone    a local folder that is gone
-///     road           the road sheet; picker, picker-denied, nextcloud, nextcloud-wait, nextcloud-err,
-///                    webdav, webdav-err, key, key-qr, restore, restore-wrong, pair-show, pair-enter,
-///                    pair-err, pair-nf, paired, profile-add, profile-edit are the sheets, over `on`
+///     picker         the cloud folder's sheet; picker-wait, picker-connecting, picker-setup,
+///                    picker-denied, picker-err-setup and picker-key its steps over `off`; switch
+///                    its Use another service, remove the Remove cloud folder confirmation; nextcloud,
+///                    nextcloud-wait, nextcloud-err, webdav, webdav-err, key, key-qr, restore,
+///                    restore-wrong, pair-show, pair-enter, pair-err, pair-nf, paired, profile-add,
+///                    profile-edit are the sheets, over `on`
 ///     first-setup    first launch's code page (with sheet=welcome-setup); first-paired its paired page
 ///     pair-motion, first-motion  the code page, then the paired page after 4 s, for recordings
 ///     alone          sync on with no other device yet
@@ -26,7 +29,9 @@ import KaeriKit
 ///     profiles       two profiles
 public enum SyncScene: String, Sendable {
     case off, on, syncing, settingup, signedout, signedoutErr = "signedout-err", offline
-    case folderGone = "folder-gone", road, picker, pickerDenied = "picker-denied", nextcloud
+    case folderGone = "folder-gone", picker, pickerDenied = "picker-denied", nextcloud
+    case pickerWait = "picker-wait", pickerConnecting = "picker-connecting", pickerSetup = "picker-setup"
+    case pickerErrSetup = "picker-err-setup", pickerKey = "picker-key", switchService = "switch", remove
     case nextcloudWait = "nextcloud-wait", nextcloudErr = "nextcloud-err", webdav, webdavErr = "webdav-err"
     case key, keyQr = "key-qr", restore, restoreWrong = "restore-wrong"
     case pairShow = "pair-show", pairEnter = "pair-enter", pairErr = "pair-err", pairNf = "pair-nf", paired
@@ -93,7 +98,8 @@ extension SyncModel {
         var status = SyncStatus(enabled: false, syncing: false, clouds: Self.clouds())
         var sheet: SyncSheet?
         switch scene {
-        case .off, .firstSetup, .firstPaired, .firstMotion: break
+        case .off, .firstSetup, .firstPaired, .firstMotion, .pickerWait, .pickerConnecting, .pickerSetup,
+             .pickerDenied, .pickerErrSetup, .pickerKey: break
         case .paused:
             status = Self.group(now: now, notes: true, held: true)
         case .alone:
@@ -105,8 +111,8 @@ extension SyncModel {
         case .pairWrong, .pairWorking, .pairMotion:
             status = Self.group(now: now, notes: true)
         case .on, .key, .keyQr, .pairShow, .pairEnter, .pairErr, .pairNf, .paired, .profiles,
-             .profileAdd, .profileEdit, .picker, .pickerDenied, .nextcloud, .nextcloudWait, .nextcloudErr,
-             .webdav, .webdavErr, .restore, .restoreWrong, .road:
+             .profileAdd, .profileEdit, .picker, .nextcloud, .nextcloudWait, .nextcloudErr,
+             .webdav, .webdavErr, .restore, .restoreWrong, .switchService, .remove:
             status = Self.group(now: now, notes: true)
         case .syncing:
             status = Self.group(now: now, syncing: true)
@@ -135,11 +141,31 @@ extension SyncModel {
         stage(status: status, profiles: isProfile ? people : [])
         stagedRemoteKeys = [Self.tvKey]
         switch scene {
-        case .road: sheet = .road
         case .picker: sheet = .picker
-        case .pickerDenied:
-            denied = .googleDrive
+        case .pickerWait:
+            stage(cloudStep: .waiting(.googleDrive))
             sheet = .picker
+        case .pickerConnecting:
+            stage(cloudStep: .connecting(.googleDrive))
+            sheet = .picker
+        case .pickerSetup:
+            stage(cloudStep: .settingUp(.googleDrive))
+            sheet = .picker
+        case .pickerDenied:
+            stage(cloudStep: .failed(.googleDrive, .signInDenied(service: .googleDrive), folder: false))
+            sheet = .picker
+        case .pickerErrSetup:
+            stage(cloudStep: .failed(.googleDrive, .unreachable, folder: true))
+            sheet = .picker
+        case .pickerKey:
+            stage(key: "K7QM4XR9TB2HWN6CP3ZD8FLA")
+            stage(cloudStep: .key)
+            sheet = .picker
+        case .switchService:
+            stage(cloudStep: nil, switching: true)
+            sheet = .picker
+        case .remove:
+            removingFolder = true
         case .nextcloud: sheet = .nextcloud
         case .nextcloudWait:
             stage(signIn: SyncSignInRequest(service: .nextcloud, step: .browser(url: "https://cloud.example/login/flow")))
