@@ -707,6 +707,9 @@ async fn code(
             return Err(SyncProblem::SignInDenied { service: service.kind() }.into());
         }
     };
+    if matches!(catcher, Catcher::Loopback(_)) && param("code").is_some() {
+        say(tx, service, Some(SyncSignInStep::Connecting));
+    }
     if let Some(error) = param("error") {
         // Saying no on the service's page, or the service refusing, is a denial.
         if error == "access_denied" {

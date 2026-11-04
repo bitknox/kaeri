@@ -549,8 +549,14 @@ async fn start_in(
 ) {
     let target = match target_for(services, Some(tx), &mut folder).await {
         Ok(target) => target,
-        Err(Ended::Cancelled) => return say_status(services, tx),
-        Err(Ended::Problem(p)) => return fail(services, tx, p),
+        Err(Ended::Cancelled) => {
+            leave_nothing(services, &folder, None);
+            return say_status(services, tx);
+        }
+        Err(Ended::Problem(p)) => {
+            leave_nothing(services, &folder, Some(&p));
+            return fail(services, tx, p);
+        }
     };
     let enabled = services.store.sync_device().ok().flatten().is_some();
     let id = device_id(services);
@@ -567,8 +573,24 @@ async fn start_in(
             tracking::commands::announce_signed_in(&services.store, &services.sync);
             pass(services, tx).await;
         }
-        Err(p) => fail(services, tx, p),
+        Err(p) => {
+            leave_nothing(services, &folder, Some(&p));
+            fail(services, tx, p);
+        }
     }
+}
+
+/// A set-up through a cloud drive that failed or was cancelled leaves no sign-in behind: a
+/// service shows as signed in only once its folder has worked. A folder of that service already
+/// in use keeps it, and so does a folder that a join comes next for: another group's, joined with
+/// its recovery key, or a TV's that holds no group yet.
+fn leave_nothing(services: &Ctx, folder: &SyncFolderSpec, problem: Option<&SyncProblem>) {
+    let Some(service) = Service::of(&folder.kind) else { return };
+    let in_use = saved_folder(services).is_some_and(|f| f.kind == folder.kind);
+    if in_use || matches!(problem, Some(SyncProblem::GroupExists | SyncProblem::NoGroup)) {
+        return;
+    }
+    cloud::forget(services, service);
 }
 
 /// The id this device writes under: the one it had, even with sync turned off since, so the log
@@ -701,6 +723,10 @@ pub async fn change_folder(services: &Ctx, tx: &Outbox, folder: Option<SyncFolde
         return fail(services, tx, SyncProblem::NoGroup);
     };
     let Some(mut folder) = folder else {
+        // Removing a cloud drive's folder signs out of it too: no sign-in outlives its folder.
+        if let Some(service) = saved_folder(services).and_then(|f| Service::of(&f.kind)) {
+            cloud::forget(services, service);
+        }
         services.syncing.set_road(None);
         let _ = services.store.sync_meta_clear(ROAD_META);
         for key in [FOLDER, LAST, ERROR, PROBLEM] {
@@ -714,10 +740,12 @@ pub async fn change_folder(services: &Ctx, tx: &Outbox, folder: Option<SyncFolde
     let target = match target_for(services, Some(tx), &mut folder).await {
         Ok(target) => target,
         Err(Ended::Cancelled) => {
+            leave_nothing(services, &folder, None);
             cloud::ended(services, tx, &kind);
             return say_status(services, tx);
         }
         Err(Ended::Problem(p)) => {
+            leave_nothing(services, &folder, Some(&p));
             cloud::ended(services, tx, &kind);
             return fail(services, tx, p);
         }
@@ -729,6 +757,7 @@ pub async fn change_folder(services: &Ctx, tx: &Outbox, folder: Option<SyncFolde
             pass(services, tx).await;
         }
         Err(p) => {
+            leave_nothing(services, &folder, Some(&p));
             cloud::ended(services, tx, &kind);
             fail(services, tx, p);
         }

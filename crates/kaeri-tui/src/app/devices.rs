@@ -726,7 +726,7 @@ impl App {
             | SyncSignInStep::Sheet { url, .. }
             | SyncSignInStep::Page { url } => Some(url.clone()),
             SyncSignInStep::Code { verification_url, .. } => Some(verification_url.clone()),
-            SyncSignInStep::Finishing => None,
+            SyncSignInStep::Finishing | SyncSignInStep::Connecting => None,
         }
     }
 

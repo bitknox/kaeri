@@ -7496,6 +7496,63 @@ public static partial class T
     /// <summary>Error naming a device that is not known by name.</summary>
     public static string DevicesOtherDevice => Get("DevicesOtherDevice");
 
+    /// <summary>Wait line on iPhone and iPad, where the sign-in page is a web sheet, not the browser.</summary>
+    public static string CloudSheetLine(string service) => Fill(Get("CloudSheetLine"), ("service", service));
+
+    /// <summary>Sheet or dialog title after the browser came back with access allowed.</summary>
+    public static string CloudConnecting(string service) => Fill(Get("CloudConnecting"), ("service", service));
+
+    /// <summary>Status line beside the indicator while connecting.</summary>
+    public static string CloudConnectingLine => Get("CloudConnectingLine");
+
+    /// <summary>Status line under Setting up the folder, whose title is cloud-setting-up.</summary>
+    public static string CloudSettingUpLine(string service) => Fill(Get("CloudSettingUpLine"), ("service", service));
+
+    /// <summary>Error title in the sign-in sheet or dialog.</summary>
+    public static string CloudErrSigninTitle(string service) => Fill(Get("CloudErrSigninTitle"), ("service", service));
+
+    /// <summary>Error title when the sign-in worked and the folder could not be set up.</summary>
+    public static string CloudErrSetupTitle => Get("CloudErrSetupTitle");
+
+    /// <summary>Error line beside Try again, after access was refused on the service's page.</summary>
+    public static string CloudErrDeniedShort(string service) => Fill(Get("CloudErrDeniedShort"), ("service", service));
+
+    /// <summary>Error line for any other failure during the sign-in; the details go to Messages.</summary>
+    public static string CloudErrSigninOther(string service) => Fill(Get("CloudErrSigninOther"), ("service", service));
+
+    /// <summary>More menu item, and a row on phones; the Mac adds an ellipsis.</summary>
+    public static string CloudUseAnother => Get("CloudUseAnother");
+
+    /// <summary>More menu item in red, and a button in the TV's dialog.</summary>
+    public static string CloudRemove => Get("CloudRemove");
+
+    /// <summary>Confirmation title before removing the cloud folder.</summary>
+    public static string CloudRemoveTitle(string service) => Fill(Get("CloudRemoveTitle"), ("service", service));
+
+    /// <summary>Confirmation line before removing the cloud folder.</summary>
+    public static string CloudRemoveLine(string kind, string service) => Fill(Get("CloudRemoveLine"), ("kind", kind), ("service", service));
+
+    /// <summary>Destructive button in the remove confirmation.</summary>
+    public static string CloudRemoveAction => Get("CloudRemoveAction");
+
+    /// <summary>Accessibility label of the More button on the cloud folder row.</summary>
+    public static string CloudMore(string service) => Fill(Get("CloudMore"), ("service", service));
+
+    /// <summary>Picker row line for the service in use, under Use another service.</summary>
+    public static string CloudInUse => Get("CloudInUse");
+
+    /// <summary>Picker line under Use another service.</summary>
+    public static string CloudSwitchFoot(string service) => Fill(Get("CloudSwitchFoot"), ("service", service));
+
+    /// <summary>Footer under the two ways in while sync is off.</summary>
+    public static string SyncStartFoot => Get("SyncStartFoot");
+
+    /// <summary>Aside on the Devices page on the Mac and iPad.</summary>
+    public static string DevicesAside(string kind) => Fill(Get("DevicesAside"), ("kind", kind));
+
+    /// <summary>TV Devices footer while sync is off, after devices-sync-foot.</summary>
+    public static string TvSyncStartFoot => Get("TvSyncStartFoot");
+
     /// <summary>Title of the state when a title page could not load.</summary>
     public static string TitleLoadFailed => Get("TitleLoadFailed");
 
@@ -8401,6 +8458,12 @@ public static partial class T
 
     /// <summary>Line over the next episode on the casting card while its count runs. At 0 the TV plays it.</summary>
     public static string TvCastUpNextIn(long seconds) => Fill(Get("TvCastUpNextIn"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Play on TV row holding the code a TV lists this device by, shown in groups of four.</summary>
+    public static string TvCodeRow => Get("TvCodeRow");
+
+    /// <summary>Line under the paired TVs, now that the code has its own row.</summary>
+    public static string TvForgetNote => Get("TvForgetNote");
 
     /// <summary>Heading of the update row in settings and about.</summary>
     public static string UpdatesTitle => Get("UpdatesTitle");
@@ -11198,6 +11261,25 @@ public static partial class T
         ["DeviceKindTv"] = "TV",
         ["FirstSetupPhone"] = "Set up from your phone",
         ["DevicesOtherDevice"] = "the other device",
+        ["CloudSheetLine"] = "{service}’s page is open. Allow access there, and Kaeri carries on by itself.",
+        ["CloudConnecting"] = "Connecting to {service}",
+        ["CloudConnectingLine"] = "Access allowed. Finishing the sign-in.",
+        ["CloudSettingUpLine"] = "Making Kaeri’s folder in {service} and sealing a first copy of your history.",
+        ["CloudErrSigninTitle"] = "Couldn’t sign in to {service}",
+        ["CloudErrSetupTitle"] = "Couldn’t set up the folder",
+        ["CloudErrDeniedShort"] = "{service} didn’t give Kaeri access.",
+        ["CloudErrSigninOther"] = "{service} didn’t finish the sign-in. Try again in a moment.",
+        ["CloudUseAnother"] = "Use another service",
+        ["CloudRemove"] = "Remove cloud folder",
+        ["CloudRemoveTitle"] = "Remove {service} from sync?",
+        ["CloudRemoveLine"] = "Everything on this {kind} stays here, and paired devices nearby keep syncing. The folder stays in {service} with its sealed copy, and your other devices use it until you remove it on them too.",
+        ["CloudRemoveAction"] = "Remove",
+        ["CloudMore"] = "More for {service}",
+        ["CloudInUse"] = "In use",
+        ["CloudSwitchFoot"] = "{service} stays in use until the new folder is ready.",
+        ["SyncStartFoot"] = "Either one turns sync on, and you can use both.",
+        ["DevicesAside"] = "Sync carries where you stopped, your history and your settings between your own devices, nearby or through a cloud folder you choose. It is sealed before it leaves this {kind}.",
+        ["TvSyncStartFoot"] = "Pairing with your phone turns sync on. Then this TV can join your cloud folder.",
         ["TitleLoadFailed"] = "Couldn't load this title",
         ["TitleNoAnswer"] = "AniList didn't answer. Try again.",
         ["TitleLoading"] = "Loading this title",
@@ -11503,6 +11585,8 @@ public static partial class T
         ["TvCastUnmute"] = "Unmute",
         ["TvCastVolumeOnTv"] = "Set on the TV",
         ["TvCastUpNextIn"] = "Up next · plays in {seconds} s",
+        ["TvCodeRow"] = "Code on TVs",
+        ["TvForgetNote"] = "Forget a TV here and it forgets this device too.",
         ["UpdatesTitle"] = "Updates",
         ["UpdatesChecking"] = "Checking for a newer version…",
         ["UpdatesUpToDate"] = "Up to date",

@@ -10292,6 +10292,82 @@
     <value>the other device</value>
     <comment>Error naming a device that is not known by name.</comment>
   </data>
+  <data name="CloudSheetLine" xml:space="preserve">
+    <value>{service}’s page is open. Allow access there, and Kaeri carries on by itself.</value>
+    <comment>Wait line on iPhone and iPad, where the sign-in page is a web sheet, not the browser.</comment>
+  </data>
+  <data name="CloudConnecting" xml:space="preserve">
+    <value>Connecting to {service}</value>
+    <comment>Sheet or dialog title after the browser came back with access allowed.</comment>
+  </data>
+  <data name="CloudConnectingLine" xml:space="preserve">
+    <value>Access allowed. Finishing the sign-in.</value>
+    <comment>Status line beside the indicator while connecting.</comment>
+  </data>
+  <data name="CloudSettingUpLine" xml:space="preserve">
+    <value>Making Kaeri’s folder in {service} and sealing a first copy of your history.</value>
+    <comment>Status line under Setting up the folder, whose title is cloud-setting-up.</comment>
+  </data>
+  <data name="CloudErrSigninTitle" xml:space="preserve">
+    <value>Couldn’t sign in to {service}</value>
+    <comment>Error title in the sign-in sheet or dialog.</comment>
+  </data>
+  <data name="CloudErrSetupTitle" xml:space="preserve">
+    <value>Couldn’t set up the folder</value>
+    <comment>Error title when the sign-in worked and the folder could not be set up.</comment>
+  </data>
+  <data name="CloudErrDeniedShort" xml:space="preserve">
+    <value>{service} didn’t give Kaeri access.</value>
+    <comment>Error line beside Try again, after access was refused on the service's page.</comment>
+  </data>
+  <data name="CloudErrSigninOther" xml:space="preserve">
+    <value>{service} didn’t finish the sign-in. Try again in a moment.</value>
+    <comment>Error line for any other failure during the sign-in; the details go to Messages.</comment>
+  </data>
+  <data name="CloudUseAnother" xml:space="preserve">
+    <value>Use another service</value>
+    <comment>More menu item, and a row on phones; the Mac adds an ellipsis.</comment>
+  </data>
+  <data name="CloudRemove" xml:space="preserve">
+    <value>Remove cloud folder</value>
+    <comment>More menu item in red, and a button in the TV's dialog.</comment>
+  </data>
+  <data name="CloudRemoveTitle" xml:space="preserve">
+    <value>Remove {service} from sync?</value>
+    <comment>Confirmation title before removing the cloud folder.</comment>
+  </data>
+  <data name="CloudRemoveLine" xml:space="preserve">
+    <value>Everything on this {kind} stays here, and paired devices nearby keep syncing. The folder stays in {service} with its sealed copy, and your other devices use it until you remove it on them too.</value>
+    <comment>Confirmation line before removing the cloud folder.</comment>
+  </data>
+  <data name="CloudRemoveAction" xml:space="preserve">
+    <value>Remove</value>
+    <comment>Destructive button in the remove confirmation.</comment>
+  </data>
+  <data name="CloudMore" xml:space="preserve">
+    <value>More for {service}</value>
+    <comment>Accessibility label of the More button on the cloud folder row.</comment>
+  </data>
+  <data name="CloudInUse" xml:space="preserve">
+    <value>In use</value>
+    <comment>Picker row line for the service in use, under Use another service.</comment>
+  </data>
+  <data name="CloudSwitchFoot" xml:space="preserve">
+    <value>{service} stays in use until the new folder is ready.</value>
+    <comment>Picker line under Use another service.</comment>
+  </data>
+  <data name="SyncStartFoot" xml:space="preserve">
+    <value>Either one turns sync on, and you can use both.</value>
+    <comment>Footer under the two ways in while sync is off.</comment>
+  </data>
+  <data name="DevicesAside" xml:space="preserve">
+    <value>Sync carries where you stopped, your history and your settings between your own devices, nearby or through a cloud folder you choose. It is sealed before it leaves this {kind}.</value>
+    <comment>Aside on the Devices page on the Mac and iPad.</comment>
+  </data>
+  <data name="TvSyncStartFoot" xml:space="preserve">
+    <value>Pairing with your phone turns sync on. Then this TV can join your cloud folder.</value>
+    <comment>TV Devices footer while sync is off, after devices-sync-foot.</comment>
+  </data>
   <data name="TitleLoadFailed" xml:space="preserve">
     <value>Couldn't load this title</value>
     <comment>Title of the state when a title page could not load.</comment>
@@ -11511,6 +11587,14 @@
   <data name="TvCastUpNextIn" xml:space="preserve">
     <value>Up next · plays in {seconds} s</value>
     <comment>Line over the next episode on the casting card while its count runs. At 0 the TV plays it.</comment>
+  </data>
+  <data name="TvCodeRow" xml:space="preserve">
+    <value>Code on TVs</value>
+    <comment>Play on TV row holding the code a TV lists this device by, shown in groups of four.</comment>
+  </data>
+  <data name="TvForgetNote" xml:space="preserve">
+    <value>Forget a TV here and it forgets this device too.</value>
+    <comment>Line under the paired TVs, now that the code has its own row.</comment>
   </data>
   <data name="UpdatesTitle" xml:space="preserve">
     <value>Updates</value>

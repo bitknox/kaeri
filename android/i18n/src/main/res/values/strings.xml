@@ -5541,6 +5541,44 @@
     <string name="first_setup_phone">Set up from your phone</string>
     <!-- Error naming a device that is not known by name. -->
     <string name="devices_other_device">the other device</string>
+    <!-- Wait line on iPhone and iPad, where the sign-in page is a web sheet, not the browser. -->
+    <string name="cloud_sheet_line">%1$s’s page is open. Allow access there, and Kaeri carries on by itself.</string>
+    <!-- Sheet or dialog title after the browser came back with access allowed. -->
+    <string name="cloud_connecting">Connecting to %1$s</string>
+    <!-- Status line beside the indicator while connecting. -->
+    <string name="cloud_connecting_line">Access allowed. Finishing the sign-in.</string>
+    <!-- Status line under Setting up the folder, whose title is cloud-setting-up. -->
+    <string name="cloud_setting_up_line">Making Kaeri’s folder in %1$s and sealing a first copy of your history.</string>
+    <!-- Error title in the sign-in sheet or dialog. -->
+    <string name="cloud_err_signin_title">Couldn’t sign in to %1$s</string>
+    <!-- Error title when the sign-in worked and the folder could not be set up. -->
+    <string name="cloud_err_setup_title">Couldn’t set up the folder</string>
+    <!-- Error line beside Try again, after access was refused on the service's page. -->
+    <string name="cloud_err_denied_short">%1$s didn’t give Kaeri access.</string>
+    <!-- Error line for any other failure during the sign-in; the details go to Messages. -->
+    <string name="cloud_err_signin_other">%1$s didn’t finish the sign-in. Try again in a moment.</string>
+    <!-- More menu item, and a row on phones; the Mac adds an ellipsis. -->
+    <string name="cloud_use_another">Use another service</string>
+    <!-- More menu item in red, and a button in the TV's dialog. -->
+    <string name="cloud_remove">Remove cloud folder</string>
+    <!-- Confirmation title before removing the cloud folder. -->
+    <string name="cloud_remove_title">Remove %1$s from sync?</string>
+    <!-- Confirmation line before removing the cloud folder. -->
+    <string name="cloud_remove_line">Everything on this %1$s stays here, and paired devices nearby keep syncing. The folder stays in %2$s with its sealed copy, and your other devices use it until you remove it on them too.</string>
+    <!-- Destructive button in the remove confirmation. -->
+    <string name="cloud_remove_action">Remove</string>
+    <!-- Accessibility label of the More button on the cloud folder row. -->
+    <string name="cloud_more">More for %1$s</string>
+    <!-- Picker row line for the service in use, under Use another service. -->
+    <string name="cloud_in_use">In use</string>
+    <!-- Picker line under Use another service. -->
+    <string name="cloud_switch_foot">%1$s stays in use until the new folder is ready.</string>
+    <!-- Footer under the two ways in while sync is off. -->
+    <string name="sync_start_foot">Either one turns sync on, and you can use both.</string>
+    <!-- Aside on the Devices page on the Mac and iPad. -->
+    <string name="devices_aside">Sync carries where you stopped, your history and your settings between your own devices, nearby or through a cloud folder you choose. It is sealed before it leaves this %1$s.</string>
+    <!-- TV Devices footer while sync is off, after devices-sync-foot. -->
+    <string name="tv_sync_start_foot">Pairing with your phone turns sync on. Then this TV can join your cloud folder.</string>
     <!-- Title of the state when a title page could not load. -->
     <string name="title_load_failed">Couldn\'t load this title</string>
     <!-- Line under the load failure when AniList did not answer. -->
@@ -6154,6 +6192,10 @@
     <string name="tv_cast_volume_on_tv">Set on the TV</string>
     <!-- Line over the next episode on the casting card while its count runs. At 0 the TV plays it. -->
     <string name="tv_cast_up_next_in">Up next · plays in %1$d s</string>
+    <!-- Play on TV row holding the code a TV lists this device by, shown in groups of four. -->
+    <string name="tv_code_row">Code on TVs</string>
+    <!-- Line under the paired TVs, now that the code has its own row. -->
+    <string name="tv_forget_note">Forget a TV here and it forgets this device too.</string>
     <!-- Heading of the update row in settings and about. -->
     <string name="updates_title">Updates</string>
     <!-- Line while the app checks. -->

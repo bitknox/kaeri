@@ -2472,8 +2472,8 @@ mod tests {
 
         use kaeri_model::{
             group::{
-                CloudUnavailable, SyncCloudWay, SyncFolderKind, SyncFolderSpec, SyncProblem,
-                SyncSignInStep, SyncStatus,
+                CloudUnavailable, SyncCloudWay, SyncCommand, SyncFolderKind, SyncFolderSpec,
+                SyncProblem, SyncSignInStep, SyncStatus,
             },
             stores::Secret,
         };
@@ -2632,9 +2632,14 @@ mod tests {
                 .collect();
             // The browser step carries the page, for "Open the page again".
             let url = rig.opened.lock().unwrap()[0].clone();
+            // Connecting once the browser comes back, before the code is exchanged.
             assert_eq!(
                 steps,
-                [SyncSignInStep::Browser { url: url.clone() }, SyncSignInStep::Finishing]
+                [
+                    SyncSignInStep::Browser { url: url.clone() },
+                    SyncSignInStep::Connecting,
+                    SyncSignInStep::Finishing
+                ]
             );
             assert!(seen.iter().any(|e| matches!(e, Event::SyncRecoveryKey(_))), "{seen:?}");
             assert!(!seen.iter().any(|e| matches!(e, Event::SyncProblem(_))), "{seen:?}");
@@ -2673,6 +2678,42 @@ mod tests {
             let seen = rig.watch.until(|e| matches!(e, Event::SyncStatus(_))).await;
             let row = status_of(&seen).clouds.into_iter().find(|c| c.service == google());
             assert_eq!(row.unwrap().account, None);
+        }
+
+        #[tokio::test]
+        async fn removing_a_cloud_folder_signs_out_of_its_service() {
+            let mut rig = rig(CloudClient::Desktop, true, true).await;
+            rig.engine.send(Command::StartSync {
+                device_name: "Desk".into(),
+                folder: folder(google()),
+            });
+            rig.watch.until(ended(google())).await;
+            assert!(has_token(&rig, "cloud-google"));
+            rig.engine.send(Command::SyncGroup(SyncCommand::ChangeSyncFolder { folder: None }));
+            let seen = rig.watch.until(|e| matches!(e, Event::SyncStatus(_))).await;
+            let status = status_of(&seen);
+            assert!(status.enabled && status.folder.is_none(), "{status:?}");
+            assert!(!has_token(&rig, "cloud-google"));
+            let row = status.clouds.into_iter().find(|c| c.service == google()).unwrap();
+            assert!(!row.signed_in && row.account.is_none());
+        }
+
+        #[tokio::test]
+        async fn a_first_set_up_that_fails_leaves_no_folder_and_no_sign_in() {
+            let mut rig = rig(CloudClient::Desktop, true, true).await;
+            rig.fake.fail_drive(1000, 500, None);
+            rig.engine.send(Command::StartSync {
+                device_name: "Desk".into(),
+                folder: folder(google()),
+            });
+            let seen = rig.watch.until(ended(google())).await;
+            assert!(!problems(&seen).is_empty(), "{seen:?}");
+            assert!(!has_token(&rig, "cloud-google"));
+            rig.engine.send(Command::LoadSync);
+            let seen = rig.watch.until(|e| matches!(e, Event::SyncStatus(_))).await;
+            let status = status_of(&seen);
+            assert!(status.folder.is_none(), "{status:?}");
+            assert!(status.clouds.iter().all(|c| !c.signed_in), "{status:?}");
         }
 
         #[tokio::test]
@@ -2835,7 +2876,6 @@ mod tests {
             };
             assert_eq!(callback_scheme, "kaeri");
             assert!(url.contains("redirect_uri=kaeri%3A%2F%2Fauth%2Fonedrive"), "{url}");
-            let state = url.split("&state=").nth(1).expect("a state").to_owned();
 
             // A redirect for a page this engine never opened is refused, and said.
             let wrong = Secret("kaeri://auth/onedrive?code=fake-code&state=other".into());

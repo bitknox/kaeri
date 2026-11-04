@@ -10418,6 +10418,63 @@ first-setup-phone = [Šéţ üþ ƒŕöɱ ýöüŕ þĥöñé~~~~~~~]
 # Error naming a device that is not known by name.
 devices-other-device = [ţĥé öţĥéŕ ðéṽîçé~~~~~]
 
+# Wait line on iPhone and iPad, where the sign-in page is a web sheet, not the browser.
+cloud-sheet-line = [{ $service }’š þàĝé îš öþéñ. Åļļöŵ àççéšš ţĥéŕé, àñð Ķàéŕî çàŕŕîéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~]
+
+# Sheet or dialog title after the browser came back with access allowed.
+cloud-connecting = [Çöññéçţîñĝ ţö { $service }~~~~~~]
+
+# Status line beside the indicator while connecting.
+cloud-connecting-line = [Åççéšš àļļöŵéð. Ƒîñîšĥîñĝ ţĥé šîĝñ-îñ.~~~~~~~~~~~~]
+
+# Status line under Setting up the folder, whose title is cloud-setting-up.
+cloud-setting-up-line = [Ṁàķîñĝ Ķàéŕî’š ƒöļðéŕ îñ { $service } àñð šéàļîñĝ à ƒîŕšţ çöþý öƒ ýöüŕ ĥîšţöŕý.~~~~~~~~~~~~~~~~~~~~~]
+
+# Error title in the sign-in sheet or dialog.
+cloud-err-signin-title = [Çöüļðñ’ţ šîĝñ îñ ţö { $service }~~~~~~~]
+
+# Error title when the sign-in worked and the folder could not be set up.
+cloud-err-setup-title = [Çöüļðñ’ţ šéţ üþ ţĥé ƒöļðéŕ~~~~~~~~]
+
+# Error line beside Try again, after access was refused on the service's page.
+cloud-err-denied-short = [{ $service } ðîðñ’ţ ĝîṽé Ķàéŕî àççéšš.~~~~~~~~~]
+
+# Error line for any other failure during the sign-in; the details go to Messages.
+cloud-err-signin-other = [{ $service } ðîðñ’ţ ƒîñîšĥ ţĥé šîĝñ-îñ. Ţŕý àĝàîñ îñ à ɱöɱéñţ.~~~~~~~~~~~~~~~~]
+
+# More menu item, and a row on phones; the Mac adds an ellipsis.
+cloud-use-another = [Ûšé àñöţĥéŕ šéŕṽîçé~~~~~~]
+
+# More menu item in red, and a button in the TV's dialog.
+cloud-remove = [Ŕéɱöṽé çļöüð ƒöļðéŕ~~~~~~]
+
+# Confirmation title before removing the cloud folder.
+cloud-remove-title = [Ŕéɱöṽé { $service } ƒŕöɱ šýñç?~~~~~~~]
+
+# Confirmation line before removing the cloud folder.
+cloud-remove-line = [Éṽéŕýţĥîñĝ öñ ţĥîš { $kind } šţàýš ĥéŕé, àñð þàîŕéð ðéṽîçéš ñéàŕƀý ķééþ šýñçîñĝ. Ţĥé ƒöļðéŕ šţàýš îñ { $service } ŵîţĥ îţš šéàļéð çöþý, àñð ýöüŕ öţĥéŕ ðéṽîçéš üšé îţ üñţîļ ýöü ŕéɱöṽé îţ öñ ţĥéɱ ţöö.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Destructive button in the remove confirmation.
+cloud-remove-action = [Ŕéɱöṽé~~]
+
+# Accessibility label of the More button on the cloud folder row.
+cloud-more = [Ṁöŕé ƒöŕ { $service }~~~~]
+
+# Picker row line for the service in use, under Use another service.
+cloud-in-use = [Îñ üšé~~]
+
+# Picker line under Use another service.
+cloud-switch-foot = [{ $service } šţàýš îñ üšé üñţîļ ţĥé ñéŵ ƒöļðéŕ îš ŕéàðý.~~~~~~~~~~~~~~~]
+
+# Footer under the two ways in while sync is off.
+sync-start-foot = [Éîţĥéŕ öñé ţüŕñš šýñç öñ, àñð ýöü çàñ üšé ƀöţĥ.~~~~~~~~~~~~~~~]
+
+# Aside on the Devices page on the Mac and iPad.
+devices-aside = [Šýñç çàŕŕîéš ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš ƀéţŵééñ ýöüŕ öŵñ ðéṽîçéš, ñéàŕƀý öŕ ţĥŕöüĝĥ à çļöüð ƒöļðéŕ ýöü çĥööšé. Îţ îš šéàļéð ƀéƒöŕé îţ ļéàṽéš ţĥîš { $kind }.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# TV Devices footer while sync is off, after devices-sync-foot.
+tv-sync-start-foot = [Þàîŕîñĝ ŵîţĥ ýöüŕ þĥöñé ţüŕñš šýñç öñ. Ţĥéñ ţĥîš ŢṼ çàñ ĵöîñ ýöüŕ çļöüð ƒöļðéŕ.~~~~~~~~~~~~~~~~~~~~~~~~]
+
 # Title of the state when a title page could not load.
 title-load-failed = [Çöüļðñ'ţ ļöàð ţĥîš ţîţļé~~~~~~~~]
 
@@ -11335,6 +11392,12 @@ tv-cast-volume-on-tv = [Šéţ öñ ţĥé ŢṼ~~~~]
 
 # Line over the next episode on the casting card while its count runs. At 0 the TV plays it.
 tv-cast-up-next-in = [Ûþ ñéẋţ · þļàýš îñ { $seconds } š~~~~~~~~]
+
+# Play on TV row holding the code a TV lists this device by, shown in groups of four.
+tv-code-row = [Çöðé öñ ŢṼš~~~~]
+
+# Line under the paired TVs, now that the code has its own row.
+tv-forget-note = [Ƒöŕĝéţ à ŢṼ ĥéŕé àñð îţ ƒöŕĝéţš ţĥîš ðéṽîçé ţöö.~~~~~~~~~~~~~~~]
 
 # Heading of the update row in settings and about.
 updates-title = [Ûþðàţéš~~~]

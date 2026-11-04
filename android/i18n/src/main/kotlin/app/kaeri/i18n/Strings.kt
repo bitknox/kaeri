@@ -10650,6 +10650,82 @@ object Strings {
     fun devicesOtherDevice(context: Context): String =
         context.getString(R.string.devices_other_device)
 
+    /** Wait line on iPhone and iPad, where the sign-in page is a web sheet, not the browser. */
+    fun cloudSheetLine(context: Context, service: String): String =
+        context.getString(R.string.cloud_sheet_line, service)
+
+    /** Sheet or dialog title after the browser came back with access allowed. */
+    fun cloudConnecting(context: Context, service: String): String =
+        context.getString(R.string.cloud_connecting, service)
+
+    /** Status line beside the indicator while connecting. */
+    fun cloudConnectingLine(context: Context): String =
+        context.getString(R.string.cloud_connecting_line)
+
+    /** Status line under Setting up the folder, whose title is cloud-setting-up. */
+    fun cloudSettingUpLine(context: Context, service: String): String =
+        context.getString(R.string.cloud_setting_up_line, service)
+
+    /** Error title in the sign-in sheet or dialog. */
+    fun cloudErrSigninTitle(context: Context, service: String): String =
+        context.getString(R.string.cloud_err_signin_title, service)
+
+    /** Error title when the sign-in worked and the folder could not be set up. */
+    fun cloudErrSetupTitle(context: Context): String =
+        context.getString(R.string.cloud_err_setup_title)
+
+    /** Error line beside Try again, after access was refused on the service's page. */
+    fun cloudErrDeniedShort(context: Context, service: String): String =
+        context.getString(R.string.cloud_err_denied_short, service)
+
+    /** Error line for any other failure during the sign-in; the details go to Messages. */
+    fun cloudErrSigninOther(context: Context, service: String): String =
+        context.getString(R.string.cloud_err_signin_other, service)
+
+    /** More menu item, and a row on phones; the Mac adds an ellipsis. */
+    fun cloudUseAnother(context: Context): String =
+        context.getString(R.string.cloud_use_another)
+
+    /** More menu item in red, and a button in the TV's dialog. */
+    fun cloudRemove(context: Context): String =
+        context.getString(R.string.cloud_remove)
+
+    /** Confirmation title before removing the cloud folder. */
+    fun cloudRemoveTitle(context: Context, service: String): String =
+        context.getString(R.string.cloud_remove_title, service)
+
+    /** Confirmation line before removing the cloud folder. */
+    fun cloudRemoveLine(context: Context, kind: String, service: String): String =
+        context.getString(R.string.cloud_remove_line, kind, service)
+
+    /** Destructive button in the remove confirmation. */
+    fun cloudRemoveAction(context: Context): String =
+        context.getString(R.string.cloud_remove_action)
+
+    /** Accessibility label of the More button on the cloud folder row. */
+    fun cloudMore(context: Context, service: String): String =
+        context.getString(R.string.cloud_more, service)
+
+    /** Picker row line for the service in use, under Use another service. */
+    fun cloudInUse(context: Context): String =
+        context.getString(R.string.cloud_in_use)
+
+    /** Picker line under Use another service. */
+    fun cloudSwitchFoot(context: Context, service: String): String =
+        context.getString(R.string.cloud_switch_foot, service)
+
+    /** Footer under the two ways in while sync is off. */
+    fun syncStartFoot(context: Context): String =
+        context.getString(R.string.sync_start_foot)
+
+    /** Aside on the Devices page on the Mac and iPad. */
+    fun devicesAside(context: Context, kind: String): String =
+        context.getString(R.string.devices_aside, kind)
+
+    /** TV Devices footer while sync is off, after devices-sync-foot. */
+    fun tvSyncStartFoot(context: Context): String =
+        context.getString(R.string.tv_sync_start_foot)
+
     /** Title of the state when a title page could not load. */
     fun titleLoadFailed(context: Context): String =
         context.getString(R.string.title_load_failed)
@@ -11857,6 +11933,14 @@ object Strings {
     /** Line over the next episode on the casting card while its count runs. At 0 the TV plays it. */
     fun tvCastUpNextIn(context: Context, seconds: Int): String =
         context.getString(R.string.tv_cast_up_next_in, seconds)
+
+    /** Play on TV row holding the code a TV lists this device by, shown in groups of four. */
+    fun tvCodeRow(context: Context): String =
+        context.getString(R.string.tv_code_row)
+
+    /** Line under the paired TVs, now that the code has its own row. */
+    fun tvForgetNote(context: Context): String =
+        context.getString(R.string.tv_forget_note)
 
     /** Heading of the update row in settings and about. */
     fun updatesTitle(context: Context): String =

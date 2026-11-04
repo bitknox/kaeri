@@ -588,3 +588,72 @@ first-setup-phone = Set up from your phone
 
 # Error naming a device that is not known by name.
 devices-other-device = the other { -device }
+
+# Wait line on iPhone and iPad, where the sign-in page is a web sheet, not the browser.
+# @arg service: text
+cloud-sheet-line = { $service }’s page is open. Allow access there, and { -app-name } carries on by itself.
+
+# Sheet or dialog title after the browser came back with access allowed.
+# @arg service: text
+cloud-connecting = Connecting to { $service }
+
+# Status line beside the indicator while connecting.
+cloud-connecting-line = Access allowed. Finishing the sign-in.
+
+# Status line under Setting up the folder, whose title is cloud-setting-up.
+# @arg service: text
+cloud-setting-up-line = Making { -app-name }’s folder in { $service } and sealing a first copy of your history.
+
+# Error title in the sign-in sheet or dialog.
+# @arg service: text
+cloud-err-signin-title = Couldn’t sign in to { $service }
+
+# Error title when the sign-in worked and the folder could not be set up.
+cloud-err-setup-title = Couldn’t set up the folder
+
+# Error line beside Try again, after access was refused on the service's page.
+# @arg service: text
+cloud-err-denied-short = { $service } didn’t give { -app-name } access.
+
+# Error line for any other failure during the sign-in; the details go to Messages.
+# @arg service: text
+cloud-err-signin-other = { $service } didn’t finish the sign-in. Try again in a moment.
+
+# More menu item, and a row on phones; the Mac adds an ellipsis.
+cloud-use-another = Use another service
+
+# More menu item in red, and a button in the TV's dialog.
+cloud-remove = Remove cloud folder
+
+# Confirmation title before removing the cloud folder.
+# @arg service: text
+cloud-remove-title = Remove { $service } from sync?
+
+# Confirmation line before removing the cloud folder.
+# @arg kind: text
+# @arg service: text
+cloud-remove-line = Everything on this { $kind } stays here, and paired { -device-pl } nearby keep syncing. The folder stays in { $service } with its sealed copy, and your other { -device-pl } use it until you remove it on them too.
+
+# Destructive button in the remove confirmation.
+cloud-remove-action = Remove
+
+# Accessibility label of the More button on the cloud folder row.
+# @arg service: text
+cloud-more = More for { $service }
+
+# Picker row line for the service in use, under Use another service.
+cloud-in-use = In use
+
+# Picker line under Use another service.
+# @arg service: text
+cloud-switch-foot = { $service } stays in use until the new folder is ready.
+
+# Footer under the two ways in while sync is off.
+sync-start-foot = Either one turns sync on, and you can use both.
+
+# Aside on the Devices page on the Mac and iPad.
+# @arg kind: text
+devices-aside = Sync carries where you stopped, your history and your settings between your own { -device-pl }, nearby or through a cloud folder you choose. It is sealed before it leaves this { $kind }.
+
+# TV Devices footer while sync is off, after devices-sync-foot.
+tv-sync-start-foot = Pairing with your phone turns sync on. Then this TV can join your cloud folder.

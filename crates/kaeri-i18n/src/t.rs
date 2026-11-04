@@ -16777,6 +16777,101 @@ pub fn devices_other_device() -> String {
     text("devices-other-device", &[])
 }
 
+/// Wait line on iPhone and iPad, where the sign-in page is a web sheet, not the browser.
+pub fn cloud_sheet_line(service: &str) -> String {
+    text("cloud-sheet-line", &[("service", Arg::Text(service))])
+}
+
+/// Sheet or dialog title after the browser came back with access allowed.
+pub fn cloud_connecting(service: &str) -> String {
+    text("cloud-connecting", &[("service", Arg::Text(service))])
+}
+
+/// Status line beside the indicator while connecting.
+pub fn cloud_connecting_line() -> String {
+    text("cloud-connecting-line", &[])
+}
+
+/// Status line under Setting up the folder, whose title is cloud-setting-up.
+pub fn cloud_setting_up_line(service: &str) -> String {
+    text("cloud-setting-up-line", &[("service", Arg::Text(service))])
+}
+
+/// Error title in the sign-in sheet or dialog.
+pub fn cloud_err_signin_title(service: &str) -> String {
+    text("cloud-err-signin-title", &[("service", Arg::Text(service))])
+}
+
+/// Error title when the sign-in worked and the folder could not be set up.
+pub fn cloud_err_setup_title() -> String {
+    text("cloud-err-setup-title", &[])
+}
+
+/// Error line beside Try again, after access was refused on the service's page.
+pub fn cloud_err_denied_short(service: &str) -> String {
+    text("cloud-err-denied-short", &[("service", Arg::Text(service))])
+}
+
+/// Error line for any other failure during the sign-in; the details go to Messages.
+pub fn cloud_err_signin_other(service: &str) -> String {
+    text("cloud-err-signin-other", &[("service", Arg::Text(service))])
+}
+
+/// More menu item, and a row on phones; the Mac adds an ellipsis.
+pub fn cloud_use_another() -> String {
+    text("cloud-use-another", &[])
+}
+
+/// More menu item in red, and a button in the TV's dialog.
+pub fn cloud_remove() -> String {
+    text("cloud-remove", &[])
+}
+
+/// Confirmation title before removing the cloud folder.
+pub fn cloud_remove_title(service: &str) -> String {
+    text("cloud-remove-title", &[("service", Arg::Text(service))])
+}
+
+/// Confirmation line before removing the cloud folder.
+pub fn cloud_remove_line(kind: &str, service: &str) -> String {
+    text("cloud-remove-line", &[("kind", Arg::Text(kind)), ("service", Arg::Text(service))])
+}
+
+/// Destructive button in the remove confirmation.
+pub fn cloud_remove_action() -> String {
+    text("cloud-remove-action", &[])
+}
+
+/// Accessibility label of the More button on the cloud folder row.
+pub fn cloud_more(service: &str) -> String {
+    text("cloud-more", &[("service", Arg::Text(service))])
+}
+
+/// Picker row line for the service in use, under Use another service.
+pub fn cloud_in_use() -> String {
+    text("cloud-in-use", &[])
+}
+
+/// Picker line under Use another service.
+pub fn cloud_switch_foot(service: &str) -> String {
+    text("cloud-switch-foot", &[("service", Arg::Text(service))])
+}
+
+/// Footer under the two ways in while sync is off.
+pub fn sync_start_foot() -> String {
+    text("sync-start-foot", &[])
+}
+
+/// Aside on the Devices page on the Mac and iPad.
+pub fn devices_aside(kind: &str) -> String {
+    text("devices-aside", &[("kind", Arg::Text(kind))])
+}
+
+/// TV Devices footer while sync is off, after devices-sync-foot.
+pub fn tv_sync_start_foot() -> String {
+    text("tv-sync-start-foot", &[])
+}
+
 /// Title of the state when a title page could not load.
 pub fn title_load_failed() -> String {
     text("title-load-failed", &[])
@@ -18285,6 +18380,16 @@ pub fn tv_cast_volume_on_tv() -> String {
 /// Line over the next episode on the casting card while its count runs. At 0 the TV plays it.
 pub fn tv_cast_up_next_in(seconds: i64) -> String {
     text("tv-cast-up-next-in", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Play on TV row holding the code a TV lists this device by, shown in groups of four.
+pub fn tv_code_row() -> String {
+    text("tv-code-row", &[])
+}
+
+/// Line under the paired TVs, now that the code has its own row.
+pub fn tv_forget_note() -> String {
+    text("tv-forget-note", &[])
 }
 
 /// Heading of the update row in settings and about.
