@@ -25,8 +25,32 @@ const WAS_OPENING_FOR: Duration =
 const FOUND_ANSWER_FOR: Duration =
     Duration::from_secs(kaeri_model::playback::FOUND_ANSWER_SECS as u64);
 
-/// A prompt's button: its words, whether it is the one to press, and what it does.
-type PromptButton = (String, bool, Box<dyn Fn(&PlayerView)>);
+/// A prompt's button: its words, whether it is the one to press, what the log calls the answer,
+/// and what it does.
+type PromptButton = (String, bool, &'static str, Box<dyn Fn(&PlayerView)>);
+
+/// What the log calls a skip card.
+fn log_name(prompt: SkipPrompt) -> String {
+    match prompt {
+        SkipPrompt::WasOpening { .. } => "was that the opening".into(),
+        SkipPrompt::WrongTimes { kind } => format!("wrong {kind:?} times"),
+        SkipPrompt::FoundEdges { kind, episode } => {
+            format!("found {kind:?}, episode {episode}")
+        }
+        SkipPrompt::FoundSaved { kind, episode } => {
+            format!("found {kind:?} saved, episode {episode}")
+        }
+        SkipPrompt::FoundNever => "found, never ask".into(),
+        SkipPrompt::Share => "share skip times".into(),
+    }
+}
+
+/// The card's answer, or its time running out, in the log.
+fn note_answer(answer: &str, prompt: Option<SkipPrompt>) {
+    if let Some(prompt) = prompt {
+        tracing::info!(answer, card = %log_name(prompt), "skip card answered");
+    }
+}
 
 const KINDS: [SkipKind; 3] = [SkipKind::Opening, SkipKind::Ending, SkipKind::Recap];
 
@@ -394,6 +418,12 @@ impl PlayerView {
         if let Some(source) = self.prompt_timer.take() {
             source.remove();
         }
+        // Said in the log, so a card that never showed can be told from one never sent.
+        match (prompt, self.skip_prompt.get()) {
+            (Some(card), _) => tracing::info!(card = %log_name(card), "skip card shown"),
+            (None, Some(card)) => tracing::info!(card = %log_name(card), "skip card gone"),
+            (None, None) => {}
+        }
         if matches!(prompt, Some(SkipPrompt::Share)) {
             self.skip_prompt.set(None);
             self.ui.skip_prompt.set(false);
@@ -419,6 +449,7 @@ impl PlayerView {
         let source = glib::timeout_add_local_once(after, move || {
             let Some(view) = weak.upgrade() else { return };
             view.prompt_timer.take();
+            note_answer("timed out", view.skip_prompt.get());
             if view.skip_prompt.take().is_some() {
                 view.ui.skip_prompt.set(false);
                 view.send(PlayerCommand::DismissSkipPrompt);
@@ -441,11 +472,13 @@ impl PlayerView {
                     (
                         t::player_dont_ask_again(),
                         false,
+                        "don't ask again",
                         Box::new(|v| v.send(PlayerCommand::NeverAskWasOpening)),
                     ),
                     (
                         t::player_mark_it(),
                         true,
+                        "mark",
                         Box::new(|v| v.begin_marking(Some(SkipKind::Opening))),
                     ),
                 ],
@@ -457,11 +490,13 @@ impl PlayerView {
                     (
                         t::player_skip_report(),
                         false,
+                        "report",
                         Box::new(move |v| v.send(PlayerCommand::ReportSkip { kind })),
                     ),
                     (
                         t::player_skip_mark(),
                         true,
+                        "mark",
                         Box::new(move |v| v.begin_marking(Some(kind))),
                     ),
                 ],
@@ -476,16 +511,19 @@ impl PlayerView {
                     (
                         t::player_dont_ask_again(),
                         false,
+                        "don't ask again",
                         Box::new(|v| v.send(PlayerCommand::NeverAskWasOpening)),
                     ),
                     (
                         t::player_found_adjust(),
                         false,
+                        "adjust",
                         Box::new(move |v| v.send(PlayerCommand::AdjustFoundSkip { kind })),
                     ),
                     (
                         t::player_found_yes(),
                         true,
+                        "yes",
                         Box::new(move |v| v.send(PlayerCommand::ConfirmFoundSkip { kind })),
                     ),
                 ],
@@ -540,7 +578,7 @@ impl PlayerView {
             row.set_halign(gtk::Align::End);
             row
         });
-        for (n, (text, suggested, act)) in buttons.into_iter().enumerate() {
+        for (n, (text, suggested, said, act)) in buttons.into_iter().enumerate() {
             let button = pill(&text, suggested);
             if found && n == 0 {
                 button.add_css_class("flat");
@@ -551,6 +589,7 @@ impl PlayerView {
             let stays = answered && n != 1;
             button.connect_clicked(move |_| {
                 let Some(view) = weak.upgrade() else { return };
+                note_answer(said, view.skip_prompt.get());
                 if !stays {
                     if let Some(source) = view.prompt_timer.take() {
                         source.remove();
@@ -627,7 +666,10 @@ impl PlayerView {
         dialog.connect_response(None, move |_, response| {
             let Some(view) = weak.upgrade() else { return };
             view.sharing.set(false);
-            view.send(PlayerCommand::AnswerShareSkipTimes { share: response == "share" });
+            let share = response == "share";
+            let answer = if share { "share" } else { "don't share" };
+            note_answer(answer, Some(SkipPrompt::Share));
+            view.send(PlayerCommand::AnswerShareSkipTimes { share });
         });
         dialog.present(Some(&self.ctx.window));
         self.skip_dialog.replace(Some(dialog.upcast()));

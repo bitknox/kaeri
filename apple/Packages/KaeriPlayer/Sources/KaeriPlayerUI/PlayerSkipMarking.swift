@@ -54,6 +54,18 @@ extension SkipPrompt {
         }
     }
 
+    /// What the log calls it.
+    var logName: String {
+        switch self {
+        case .wasOpening: "was that the opening"
+        case .wrongTimes(let kind): "wrong \(kind) times"
+        case .foundEdges(let kind, let episode): "found \(kind), episode \(episode)"
+        case .foundSaved(let kind, let episode): "found \(kind) saved, episode \(episode)"
+        case .foundNever: "found, never ask"
+        case .share: "share skip times"
+        }
+    }
+
     /// The kind a card is about, when it is about one.
     var kind: SkipKind? {
         switch self {
@@ -161,7 +173,13 @@ extension PlayerModel {
         if view != nil { skipTimesOpen = false }
     }
 
-    func applySkipPrompt(_ prompt: SkipPrompt?) {
+    func applySkipPrompt(_ prompt: SkipPrompt?, for playback: PlaybackId) {
+        // Said in the log, so a card that never showed can be told from one never sent.
+        if let prompt {
+            Self.note(.info, "#\(playback) skip card shown: \(prompt.logName)")
+        } else if let offer = skipPrompt {
+            Self.note(.info, "#\(playback) skip card gone: \(offer.prompt.logName)")
+        }
         skipPrompt = prompt.map { SkipPromptOffer(prompt: $0, since: time.now()) }
         if prompt != nil { undo = nil }
     }
@@ -188,7 +206,8 @@ extension PlayerModel {
         offer.seen = now
         if !paused, !(holds.contains("voiceover") || holds.contains("switchcontrol")) || offer.prompt.isAnswer { offer.played += elapsed }
         if offer.played >= offer.stays {
-            dismissSkipPrompt()
+            noteSkipAnswer("timed out")
+            closeSkipPrompt()
         } else {
             skipPrompt = offer
         }
@@ -248,17 +267,30 @@ extension PlayerModel {
 
     public func reportSkip(_ kind: SkipKind) {
         input()
+        noteSkipAnswer("report")
         skipPrompt = nil
         control(.reportSkip(kind: kind))
     }
 
     public func dismissSkipPrompt() {
+        noteSkipAnswer("closed")
+        closeSkipPrompt()
+    }
+
+    private func closeSkipPrompt() {
         skipPrompt = nil
         control(.dismissSkipPrompt)
     }
 
+    /// The card's answer, or its time running out, in the log.
+    private func noteSkipAnswer(_ answer: String) {
+        guard let offer = skipPrompt else { return }
+        Self.note(.info, "#\(playback.map(String.init) ?? "?") skip card answered: \(answer), on \(offer.prompt.logName)")
+    }
+
     public func neverAskWasOpening() {
         input()
+        noteSkipAnswer("don't ask again")
         // The found times' card says so in place, when the engine answers; the other just goes.
         if case .foundEdges = skipPrompt?.prompt {} else { skipPrompt = nil }
         control(.neverAskWasOpening)
@@ -268,6 +300,7 @@ extension PlayerModel {
     public func markFromPrompt() {
         input()
         guard let offer = skipPrompt else { return }
+        noteSkipAnswer("mark")
         skipPrompt = nil
         switch offer.prompt {
         case .wasOpening: control(.beginSkipMark(kind: .opening))
@@ -280,12 +313,14 @@ extension PlayerModel {
     /// says so, in place.
     public func confirmFoundSkip(_ kind: SkipKind) {
         input()
+        noteSkipAnswer("yes")
         control(.confirmFoundSkip(kind: kind))
     }
 
     /// Adjust, on the card or a found row: the marking bar opens on the found stretch.
     public func adjustFoundSkip(_ kind: SkipKind) {
         input()
+        noteSkipAnswer("adjust")
         skipPrompt = nil
         skipTimesOpen = false
         control(.adjustFoundSkip(kind: kind))
@@ -293,6 +328,7 @@ extension PlayerModel {
 
     public func answerShareSkipTimes(_ share: Bool) {
         input()
+        noteSkipAnswer(share ? "share" : "don't share")
         skipPrompt = nil
         control(.answerShareSkipTimes(share: share))
     }

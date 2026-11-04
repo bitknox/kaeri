@@ -16,6 +16,9 @@ struct PlaybackHookTests {
             .playerOps(playback: 1, ops: [.open(fullscreen: false, speed: nil, volume: nil)]),
             .progressQueued,
             .playerUi(playback: 1, ui: .skipCleared),
+            .playerSkipMark(playback: 1, view: nil),
+            .playerSkipPrompt(playback: 1, prompt: .foundEdges(kind: .opening, episode: 7)),
+            .playerSkipNotice(playback: 1, notice: .confirmed),
             .playbackKept,
             .playbackEnded(watched: true, ending: .complete(next: nil), rollingOn: false),
         ])
@@ -23,6 +26,9 @@ struct PlaybackHookTests {
             .playbackStaged(id: 900_001, title: "Stardust Wayfarer", episode: "7", episodeTitle: nil, speed: 1),
             .playerOps(playback: 1, ops: [.open(fullscreen: false, speed: nil, volume: nil)]),
             .playerUi(playback: 1, ui: .skipCleared),
+            .playerSkipMark(playback: 1, view: nil),
+            .playerSkipPrompt(playback: 1, prompt: .foundEdges(kind: .opening, episode: 7)),
+            .playerSkipNotice(playback: 1, notice: .confirmed),
             .playbackKept,
             .playbackEnded(watched: true, ending: .complete(next: nil), rollingOn: false),
         ])

@@ -218,6 +218,12 @@ impl Run<'_> {
         if self.marking.prompt == prompt {
             return;
         }
+        // Said in the log, so a card that never showed can be told from one never asked.
+        match (self.marking.prompt, prompt) {
+            (_, Some(card)) => tracing::info!(?card, "skip card shown"),
+            (Some(card), None) => tracing::info!(?card, "skip card gone"),
+            (None, None) => {}
+        }
         self.marking.prompt = prompt;
         let _ = link.overlay(Overlay::SkipPrompt(prompt)).await;
     }
@@ -229,6 +235,23 @@ impl Run<'_> {
         link: &dyn PlayerLink,
         tracker: &mut PlaybackTracker,
     ) {
+        if let Some(card) = self.marking.prompt {
+            let answer = match command {
+                PlayerCommand::ConfirmFoundSkip { .. } => Some("yes"),
+                PlayerCommand::AdjustFoundSkip { .. } => Some("adjust"),
+                PlayerCommand::NeverAskWasOpening => Some("don't ask again"),
+                PlayerCommand::BeginSkipMark { .. } => Some("mark"),
+                PlayerCommand::ReportSkip { .. } => Some("report"),
+                PlayerCommand::AnswerShareSkipTimes { share: true } => Some("share"),
+                PlayerCommand::AnswerShareSkipTimes { share: false } => Some("don't share"),
+                // The app's own: the card's time ran out, or the viewer closed it.
+                PlayerCommand::DismissSkipPrompt => Some("dismissed"),
+                _ => None,
+            };
+            if let Some(answer) = answer {
+                tracing::info!(?card, answer, "skip card answered");
+            }
+        }
         match command {
             PlayerCommand::BeginSkipMark { kind } => self.begin_mark(kind, link, tracker).await,
             PlayerCommand::SetSkipMarkKind { kind } => {
@@ -608,6 +631,7 @@ impl Run<'_> {
             || self.marking.bar.is_some()
             || self.marking.prompt.is_some()
         {
+            tracing::debug!(?kind, "found times' card not asked here");
             return;
         }
         let (id, api) = (self.context.anilist_id, kind.api_type());
@@ -618,6 +642,8 @@ impl Run<'_> {
         if first {
             let card = SkipPrompt::FoundEdges { kind: offered(kind), episode };
             self.say_prompt(link, Some(card)).await;
+        } else {
+            tracing::debug!(?kind, "found times' card asked for this show before");
         }
     }
 
