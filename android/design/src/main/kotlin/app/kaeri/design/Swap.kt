@@ -116,21 +116,41 @@ class StillFade {
     internal val alpha = Animatable(1f)
 
     /**
-     * Runs [change] behind a still of the container as it is now, then fades the still out. With
-     * [atFullSpeed] the fade runs at full speed whatever the system's animator scale says, for
-     * Remove animations. Without a container to record, [change] just runs.
+     * Takes the still now, before the change is made, and lays it over the container at once. A
+     * change that is applied first and recorded after (a range picked, then the list scrolled) would
+     * only record the new page. [swap] then fades this still out; [release] drops it if none comes.
+     */
+    suspend fun hold() {
+        val taken = layer?.let { runCatching { it.toImageBitmap() }.getOrNull() } ?: return
+        alpha.snapTo(1f)
+        still = taken
+    }
+
+    /** Drops a held still that no [swap] is going to fade. */
+    fun release() {
+        still = null
+    }
+
+    /**
+     * Runs [change] behind a still of the container (the one [hold] took, else one taken now), then
+     * fades the still out on [Motion.standard]. With [fullSpeed] the fade runs at full speed
+     * whatever the system's animator scale says, for Remove animations. Without a container to
+     * record, [change] just runs.
      */
     suspend fun swap(fullSpeed: Boolean = false, change: suspend () -> Unit) {
-        val taken = layer?.let { runCatching { it.toImageBitmap() }.getOrNull() }
+        val held = still
+        val taken = held ?: layer?.let { runCatching { it.toImageBitmap() }.getOrNull() }
         if (taken == null) {
             change()
             return
         }
-        alpha.snapTo(1f)
-        still = taken
+        if (held == null) {
+            alpha.snapTo(1f)
+            still = taken
+        }
         try {
             change()
-            if (fullSpeed) atFullSpeed { alpha.animateTo(0f, Motion.fadeIn()) } else alpha.animateTo(0f, Motion.fadeIn())
+            if (fullSpeed) atFullSpeed { alpha.animateTo(0f, Motion.standard()) } else alpha.animateTo(0f, Motion.standard())
         } finally {
             still = null
         }

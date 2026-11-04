@@ -4,6 +4,9 @@
 package app.kaeri.ui
 
 import app.kaeri.design.SwapFade
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.ui.text.font.FontWeight
+import app.kaeri.design.ObiSilk
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
@@ -286,8 +289,13 @@ fun GoToEpisodeDialog(
                 modifier = Modifier.semantics { contentDescription = label },
             )
         },
-        confirmButton = { TextButton(onClick = go, enabled = result is app.kaeri.engine.model.GoTo.Row) { Text(stringResource(R.string.episode_go_to_go)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        // No amber in this dialog: both buttons are silk, Go in semibold.
+        confirmButton = {
+            TextButton(onClick = go, enabled = result is app.kaeri.engine.model.GoTo.Row, colors = ButtonDefaults.textButtonColors(contentColor = ObiSilk.Silk)) {
+                Text(stringResource(R.string.episode_go_to_go), fontWeight = FontWeight.SemiBold)
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss, colors = ButtonDefaults.textButtonColors(contentColor = ObiSilk.Silk)) { Text(stringResource(R.string.action_cancel)) } },
     )
 }
 

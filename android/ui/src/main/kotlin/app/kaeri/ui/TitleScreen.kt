@@ -108,6 +108,7 @@ import app.kaeri.engine.ffi.episodeText
 import androidx.compose.runtime.Stable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import app.kaeri.design.ObiSilk
+import app.kaeri.design.StillFade
 import app.kaeri.design.ShowTitle
 import app.kaeri.design.tabular
 import app.kaeri.engine.core.AnilistId
@@ -768,18 +769,20 @@ private fun SeasonPage(
     val context = LocalContext.current
     val failedIds by store.titles.failed.collectAsStateWithLifecycle()
     val failed = !loaded && entry.id in failedIds
-    val synopses = rememberSynopsisPage(entry, episodes)
+    val jumpFade = app.kaeri.design.rememberStillFade()
+    val synopses = rememberSynopsisPage(entry, episodes, jumpFade)
     // Go to episode: once the row's range is on screen, the list scrolls to put it at the top.
     val goal = synopses.goal
     // A jump further than a screen, or any with Remove animations on, crossfades: a still of the page
     // fades out over the list once it has landed, so it never streaks and never cuts.
     val removed = app.kaeri.design.rememberAnimationsRemoved()
-    val jumpFade = app.kaeri.design.rememberStillFade()
     val jumpScope = rememberCoroutineScope()
     val jumping = remember { booleanArrayOf(false) }
+    // The landed row stands right under the floating bar and the range chip, so the new chip stays in view.
+    val landing = with(androidx.compose.ui.platform.LocalDensity.current) { (inset + 64.dp + 56.dp).roundToPx() }
     LaunchedEffect(goal, synopses.selected) {
-        if (jumping[0]) return@LaunchedEffect
-        val row = synopses.rows.firstOrNull { it.number == goal } ?: return@LaunchedEffect
+        if (jumping[0]) { jumpFade.release(); return@LaunchedEffect }
+        val row = synopses.rows.firstOrNull { it.number == goal } ?: run { jumpFade.release(); return@LaunchedEffect }
         val key = synopses.key(entry.id, row)
         val near = list.layoutInfo.visibleItemsInfo.any { it.key == key }
         if (removed || !near) {
@@ -787,14 +790,15 @@ private fun SeasonPage(
             jumping[0] = true
             jumpScope.launch {
                 try {
-                    jumpFade.swap(fullSpeed = removed) { list.landOn(key) }
+                    jumpFade.swap(fullSpeed = removed) { list.landOn(key, landing) }
                     synopses.arrived()
                 } finally {
                     jumping[0] = false
                 }
             }
         } else {
-            list.landOn(key)
+            jumpFade.release()
+            list.landOn(key, landing)
             synopses.arrived()
         }
     }
@@ -1792,13 +1796,14 @@ private fun LazyListScope.episodeRows(
  * Scroll so the item with [key] stands at the top, the way Go to episode lands: a row on screen
  * scrolls there; one off screen is found by walking up from the end of the table, and jumped to.
  */
-internal suspend fun androidx.compose.foundation.lazy.LazyListState.landOn(key: Any) {
+internal suspend fun androidx.compose.foundation.lazy.LazyListState.landOn(key: Any, offset: Int = 0) {
     fun index() = layoutInfo.visibleItemsInfo.firstOrNull { it.key == key }?.index
-    index()?.let { animateScrollToItem(it); return }
+    // [offset] is how far under the top the row stands: the bars above it and the range chip, which stay in view.
+    index()?.let { animateScrollToItem(it, -offset); return }
     scrollToItem(layoutInfo.totalItemsCount - 1)
     var steps = 0
     while (index() == null && canScrollBackward && steps++ < 400) scrollBy(-layoutInfo.viewportSize.height * 0.7f)
-    index()?.let { scrollToItem(it) }
+    index()?.let { scrollToItem(it, -offset) }
 }
 
 /** [landOn] for the tablet's grid. */
@@ -1879,7 +1884,8 @@ internal class SynopsisPage(
 }
 
 @Composable
-private fun rememberSynopsisPage(entry: Entry, episodes: List<EpisodeRow>?): SynopsisPage {
+private fun rememberSynopsisPage(entry: Entry, episodes: List<EpisodeRow>?, before: StillFade? = null): SynopsisPage {
+    val beforeScope = rememberCoroutineScope()
     val protect = spoilerProtected(entry.id)
     val reveals = remember(entry.id) { Reveals() }
     val listed = remember(entry, episodes) { episodes?.let { entry.listedEpisodes(it) }.orEmpty() }
@@ -1895,10 +1901,14 @@ private fun rememberSynopsisPage(entry: Entry, episodes: List<EpisodeRow>?): Syn
     if (asking) {
         GoToEpisodeDialog(listed, onDismiss = { asking = false }, onGo = { index, range ->
             asking = false
-            if (range != null) picked = range
             val number = listed.getOrNull(index)?.number
-            landed = number
-            goal = number
+            // A jump to another range holds a still of the page as it is now, so the old range fades out.
+            beforeScope.launch {
+                if (range != null) before?.hold()
+                if (range != null) picked = range
+                landed = number
+                goal = number
+            }
         })
     }
     return SynopsisPage(listed, ranges, selected, { picked = it; landed = null }, outlook, protect, reveals, foldCount, { asking = true }, landed, goal, { goal = null }, asking)
