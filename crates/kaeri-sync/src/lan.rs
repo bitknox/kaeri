@@ -16,12 +16,16 @@ use std::{
     time::{Duration, Instant},
 };
 
+pub use kaeri_remote::{
+    discovery::{Advert, Advertiser, Browser, Discovery, DiscoverySink, FoundTv as Found},
+    identity::Identity,
+    pairing::CODE_LIFETIME,
+};
 use kaeri_remote::{
     identity::Fingerprint,
-    pairing::{Binding, MAX_TRIES, PairingCode, PhonePairing, TvPairing},
+    pairing::{Binding, MAX_TRIES, PairError, PairingCode, PhonePairing, TvPairing},
     tls::{self, EXPORTER_LABEL, SYNC_ALPN},
 };
-pub use kaeri_remote::{identity::Identity, pairing::CODE_LIFETIME};
 use kaeri_store::Store;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use tokio::{
@@ -39,6 +43,17 @@ use crate::{
 };
 
 const TRUST: &str = "lan.trust";
+
+/// The DNS-SD service type a device registers while it listens for others to pair with it:
+/// apart from the remote's `_kaeri._tcp`, so a phone showing a code never lists as a TV.
+pub const SERVICE_TYPE: &str = "_kaeri-sync._tcp";
+
+/// The port a device listens on when it is free, so an address typed by hand rarely needs one.
+/// When it is taken the device takes any port, and its advert says which.
+pub const DEFAULT_PORT: u16 = 47_812;
+
+/// The version of this road a device advertises, as `v` in its TXT record.
+pub const VERSION: u32 = 1;
 const ANSWER: Duration = Duration::from_secs(10);
 const MAX_FRAME: usize = 64 * 1024;
 
@@ -56,6 +71,24 @@ pub struct Me {
 }
 
 impl Me {
+    /// What to register with the platform's DNS-SD under [`SERVICE_TYPE`] while listening on
+    /// `port`: the device's name, and a TXT record of `v` and `id`, the short form of its key's
+    /// fingerprint, by which a device that browses leaves itself out.
+    pub fn advert(&self, port: u16) -> Advert {
+        let mut end = self.name.len().min(63);
+        while !self.name.is_char_boundary(end) {
+            end -= 1;
+        }
+        Advert {
+            instance: self.name[..end].to_owned(),
+            port,
+            txt: vec![
+                ("v".into(), VERSION.to_string()),
+                ("id".into(), self.identity.fingerprint().short()),
+            ],
+        }
+    }
+
     fn paired(&self) -> Paired {
         Paired {
             device: self.device.clone(),
@@ -271,6 +304,10 @@ async fn serve(
         return Err(SyncError::Damaged("expected hello"));
     };
     let (peer, just_paired) = if let Some(known) = find(store, &peer_fp) {
+        if store.sync_device_paused(&known.device) {
+            write(&mut stream, &Msg::Refused).await?;
+            return Err(SyncError::Paused);
+        }
         write(&mut stream, &Msg::Ready).await?;
         (known, false)
     } else {
@@ -291,7 +328,7 @@ async fn serve(
         };
         let Some(code) = code else {
             write(&mut stream, &Msg::Refused).await?;
-            return Err(pairing("no code is showing"));
+            return Err(SyncError::NoCode);
         };
         let binding = Binding { phone: peer_fp, tv: me.identity.fingerprint(), exporter };
         let (side, message, mac) =
@@ -302,7 +339,7 @@ async fn serve(
         };
         if side.confirm(&mac).is_err() {
             write(&mut stream, &Msg::Refused).await?;
-            return Err(SyncError::Pairing("the code was wrong".into()));
+            return Err(SyncError::WrongCode);
         }
         // Right: the code is spent.
         *showing.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = None;
@@ -389,20 +426,30 @@ pub async fn dial(
     let started = code.map(|c| PhonePairing::start(c, binding));
     write(&mut stream, &Msg::Hello { pair: started.as_ref().map(|(_, m)| m.clone()) }).await?;
     let (peer, just_paired) = match read(&mut stream).await? {
-        Msg::Ready => (find(store, &their_fp), false),
+        Msg::Ready => {
+            let peer = find(store, &their_fp);
+            if peer.as_ref().is_some_and(|p| store.sync_device_paused(&p.device)) {
+                return Err(SyncError::Paused);
+            }
+            (peer, false)
+        }
         Msg::PairReply { message, mac } => {
             let (side, _) = started.ok_or_else(|| pairing("a code was not asked for"))?;
-            let proof = side.finish(&message, &mac).map_err(pairing)?;
+            let proof = side.finish(&message, &mac).map_err(|e| match e {
+                PairError::Mismatch => SyncError::WrongCode,
+                e => pairing(e),
+            })?;
             write(&mut stream, &Msg::Proof { mac: proof, who: me.paired() }).await?;
             let Msg::Paired { who } = read(&mut stream).await? else {
-                return Err(SyncError::Pairing("the code was wrong".into()));
+                return Err(SyncError::WrongCode);
             };
             trust(store, their_fp, who.clone())?;
             (Some(who), true)
         }
-        Msg::Refused => {
-            return Err(SyncError::Pairing("that device is not showing a code".into()));
-        }
+        // Refused with a code: none is showing. Without one: the device knows this one and
+        // holds back from it, or knows it no longer.
+        Msg::Refused if code.is_some() => return Err(SyncError::NoCode),
+        Msg::Refused => return Err(SyncError::Paused),
         _ => return Err(SyncError::Damaged("unexpected reply")),
     };
     let received = swap_sign_ins(&mut stream, me, peer.as_ref(), just_paired).await?;

@@ -261,6 +261,34 @@ impl Store {
         self.sync_register(kinds::DEVICE_CLOUD, &me, Some(json), None)
     }
 
+    /// Rename this device in the group: the name every device lists it under, kept as the
+    /// `device_name` register so the latest rename wins wherever it arrives.
+    pub fn sync_rename_me(&self, name: &str) -> Result<()> {
+        let Some(me) = self.sync_device()? else { return Ok(()) };
+        if self.sync_reg_value(kinds::DEVICE_NAME, &me)?.as_deref() == Some(name) {
+            return Ok(());
+        }
+        self.sync_register(kinds::DEVICE_NAME, &me, Some(name), None)?;
+        self.with_personal(|c| {
+            c.execute("UPDATE sync_peer SET name = ?2 WHERE device = ?1", params![me, name])?;
+            Ok(())
+        })
+    }
+
+    /// Set a register about this device (its kind, its remote's key) when it changed.
+    pub fn sync_set_mine(&self, kind: &str, value: &str) -> Result<()> {
+        let Some(me) = self.sync_device()? else { return Ok(()) };
+        if self.sync_reg_value(kind, &me)?.as_deref() == Some(value) {
+            return Ok(());
+        }
+        self.sync_register(kind, &me, Some(value), None)
+    }
+
+    /// Whether the group holds back from `device`: its Sync switch is off.
+    pub fn sync_device_paused(&self, device: &str) -> bool {
+        self.sync_reg_value(kinds::DEVICE_SYNC, device).ok().flatten().as_deref() == Some("off")
+    }
+
     /// Of the watches that arrived, the `(tracker, title)` pairs this device must fill: a tracker
     /// the watching device was not queued for, that this device is signed in to, that no device
     /// has reached the episode on, and whose lead (see [`lead_device`]) is this device. Anything
@@ -921,8 +949,12 @@ fn apply_reg(
                 params![key, value.unwrap_or("[]")],
             )?;
         }
-        // The engine reads it from the register when it needs it.
-        kinds::DEVICE_CLOUD => {}
+        // The engine reads these from the register when it needs them.
+        kinds::DEVICE_CLOUD
+        | kinds::DEVICE_KIND
+        | kinds::DEVICE_REMOTE_KEY
+        | kinds::DEVICE_SYNC
+        | kinds::DEVICE_REMOTE => {}
         other => report.effects.push(Effect {
             kind: other.to_owned(),
             key: key.to_owned(),

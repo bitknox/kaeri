@@ -238,6 +238,17 @@ impl FfiPlatform {
         })
     }
 
+    /// What kind of device sync lists this as, on the others' Devices.
+    pub fn sync_kind(self) -> kaeri_model::group::SyncDeviceKind {
+        use kaeri_model::group::SyncDeviceKind as Kind;
+        match self {
+            Self::MacOs | Self::Windows => Kind::Computer,
+            Self::Ios | Self::Android => Kind::Phone,
+            Self::IpadOs | Self::AndroidTablet => Kind::Tablet,
+            Self::AndroidTv => Kind::Tv,
+        }
+    }
+
     /// A phone or a tablet, which a cast's torrent would keep busy for a whole episode.
     pub fn handheld(self) -> bool {
         matches!(self, Self::Ios | Self::IpadOs | Self::Android | Self::AndroidTablet)

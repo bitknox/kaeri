@@ -735,6 +735,8 @@ impl App {
             Event::Progress { id, progress, resume, episodes } => {
                 self.apply_progress(id, progress, resume, episodes)
             }
+            // Pairing by code is the apps' Add a device sheet.
+            Event::SyncPairFailed { .. } => {}
         }
     }
 
