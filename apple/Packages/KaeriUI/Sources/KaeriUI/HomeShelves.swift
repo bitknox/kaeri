@@ -249,7 +249,8 @@ struct HomeContinueCard: View {
                 HStack(spacing: 6) {
                     if item.new { Circle().fill(.water).frame(width: 6, height: 6).accessibilityHidden(true) }
                     Text(HomeCardLine.text(item, store: store))
-                        .lineLimit(1)
+                        .lineLimit(HomeCardLine.lines(item))
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 .font(.ui(layout.cardLine.size))
                 .fixedLineHeight(layout.cardLine.line, relativeTo: .footnote)
@@ -302,7 +303,9 @@ struct HomePosterCard: View {
                     .padding(.top, 8)
                 HStack(spacing: 6) {
                     if item.new { Circle().fill(.water).frame(width: 6, height: 6).accessibilityHidden(true) }
-                    Text(HomeCardLine.text(item, store: store)).lineLimit(1)
+                    Text(HomeCardLine.text(item, store: store))
+                        .lineLimit(HomeCardLine.lines(item))
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 .font(.ui(layout.posterLine.size))
                 .fixedLineHeight(layout.posterLine.line, relativeTo: .footnote)
@@ -322,6 +325,11 @@ struct HomePosterCard: View {
 
 /// The words under a card, and what VoiceOver says for it.
 enum HomeCardLine {
+    /// The device line may not fit a narrow card: it takes a second row rather than being cut.
+    static func lines(_ item: HomeItem) -> Int {
+        item.lastDevice != nil && item.resume != nil && item.episode != nil ? 2 : 1
+    }
+
     @MainActor
     static func text(_ item: HomeItem, store: AppStore) -> String {
         if store.discovery.playable(item.entry.id, sent: item.playable) == .notFound { return L.homeNotFound }
@@ -514,7 +522,8 @@ private struct HomeWeekCell: View {
                     HStack(spacing: 4) {
                         if item.new { Circle().fill(.water).frame(width: 6, height: 6).accessibilityHidden(true) }
                         Text(HomeCardLine.text(item, store: store))
-                            .lineLimit(1)
+                            .lineLimit(HomeCardLine.lines(item))
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     .font(.ui(12, weight: .semibold))
                     .monospacedDigit()

@@ -682,7 +682,7 @@ struct PairedContent: View {
                 }
             }
         } bottom: {
-            SyncButton(title: L.actionDone, primary: true, wide: Device.name != "Mac") { // i18n-skip
+            SyncButton(title: first ? L.onboardingContinue : L.actionDone, primary: true, wide: Device.name != "Mac") {
                 if copySignIns { sync.copySignIns(from: device, [.trackers]) }
                 sync.resetPair()
                 sync.close()
