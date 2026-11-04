@@ -36,5 +36,5 @@ internal object Flavour {
     const val UPDATES = true
 
     /** Nothing to set up for the app. */
-    fun started(store: AppStore, intent: Intent) = Unit
+    fun started(store: AppStore, intent: Intent, host: app.kaeri.player.PlayerHost? = null) = Unit
 }

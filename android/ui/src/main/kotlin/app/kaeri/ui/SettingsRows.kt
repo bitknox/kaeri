@@ -181,6 +181,8 @@ internal fun RowText(
     modifier: Modifier = Modifier,
     titleStyle: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.titleMedium,
     valueFlag: Int? = null,
+    /** A line after the note in the row's own colour: why a switch that is on does nothing now. */
+    extra: String? = null,
 ) {
     val colors = MaterialTheme.colorScheme
     val secondary = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant
@@ -193,6 +195,7 @@ internal fun RowText(
             }
         }
         note?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = secondary) }
+        extra?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = LocalContentColor.current, modifier = Modifier.padding(top = 4.dp)) }
     }
 }
 
@@ -314,6 +317,7 @@ fun SwitchRow(
     note: String? = null,
     enabled: Boolean = true,
     focus: String? = null,
+    extra: String? = null,
     onChange: (Boolean) -> Unit,
 ) {
     val onWord = stringResource(R.string.value_on)
@@ -323,7 +327,7 @@ fun SwitchRow(
         onClick = if (enabled) ({ onChange(!checked) }) else null,
         focus = focus,
         modifier = Modifier
-            .heightIn(min = if (note != null) 72.dp else 56.dp)
+            .heightIn(min = if (note != null || extra != null) 72.dp else 56.dp)
             .alpha(if (enabled) 1f else 0.38f)
             .semantics(mergeDescendants = true) {
                 role = Role.Switch
@@ -331,7 +335,7 @@ fun SwitchRow(
             },
     ) { selected ->
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            RowText(title, null, note, selected, Modifier.weight(1f))
+            RowText(title, null, note, selected, Modifier.weight(1f), extra = extra)
             SettingSwitchMark(checked, enabled)
         }
     }

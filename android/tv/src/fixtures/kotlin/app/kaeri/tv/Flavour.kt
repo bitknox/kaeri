@@ -102,7 +102,7 @@ internal object Flavour {
      * has no tracker to answer with one. `expires=<seconds>` sets how long its code has left, 0 for
      * one already expired, 899 unless it says.
      */
-    fun started(store: AppStore, intent: Intent) {
+    fun started(store: AppStore, intent: Intent, host: app.kaeri.player.PlayerHost? = null) {
         PartyShot.named(intent.getStringExtra("party"))?.let { shot ->
             val app = app ?: return@let
             FixtureParty.listen(app)
@@ -110,6 +110,7 @@ internal object Flavour {
                 if (!FixtureParty.stage(shot, store, TvStage(app))) Log.w(TvApp.TAG, "the party scene did not set up")
             }
         }
+        intent.getStringExtra("found")?.let { which -> host?.let { FoundDemo.run(it, store, MainScope(), which) } }
         intent.getStringExtra("day")?.toIntOrNull()?.let { store.calendar.opensOn = it }
         // Episodes of the first fixture marked watched, 1,2,3: playback would also have the engine
         // look their threads up, so the one with a fixture thread is said found as it would be.

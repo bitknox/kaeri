@@ -129,6 +129,7 @@ val PlaybackRows: List<Pair<SettingKey, Int>> = listOf(
     SettingKey.SKIP_RECAP to R.string.settings_skip_recap,
     SettingKey.SKIP_FILLER to R.string.settings_skip_filler,
     SettingKey.MARK_CHAPTERS to R.string.settings_mark_opening,
+    SettingKey.FIND_SKIP_TIMES to R.string.settings_find_skips,
     SettingKey.ASK_WAS_OPENING to R.string.settings_ask_was_opening,
     SettingKey.SHARE_SKIP_TIMES to R.string.settings_share_skips,
     SettingKey.COMMIT_THRESHOLD to R.string.settings_counts_watched,
@@ -316,7 +317,8 @@ private fun LazyListScope.playbackRows(store: AppStore, view: SettingsView?, mem
                         change(store, key, row?.change, switch, view)
                     }
                 },
-                supporting = overridden,
+                // Why finding is paused, where someone would look: a TV has only low storage to say.
+                supporting = overridden ?: if (key == SettingKey.FIND_SKIP_TIMES) app.kaeri.store.skipFindPausedLine(context, view?.skipFindPaused) else null,
                 value = if (switch) null else settingValue(context, key, row),
                 switch = if (switch) store.settings.isOn(key, view) else null,
                 enabled = SettingsCatalog.editable(row),

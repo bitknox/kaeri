@@ -76,7 +76,7 @@ class MpvClient(private val name: String) {
     }
 
     /** Creates and initialises mpv with [options], set in order, observing [observed]. */
-    suspend fun start(options: List<Pair<String, String>>, observed: List<String>, logLevel: String = "warn") = call {
+    suspend fun start(options: List<Pair<String, String>>, observed: List<String>, logLevel: String = "warn", audioTap: Long = 0L) = call {
         check(handle == 0L) { "mpv $name has already started" }
         val h = MpvNative.create { id, prop, data ->
             val event = MpvEvent(id, prop, data?.toString(Charsets.UTF_8))
@@ -84,6 +84,10 @@ class MpvClient(private val name: String) {
             deliver(event)
         }
         check(h != 0L) { "mpv_create failed" }
+        if (audioTap != 0L) {
+            val tapped = MpvNative.setAudioTap(h, audioTap)
+            if (tapped < 0) Log.w(MpvLog.TAG, "the audio tap was refused ($tapped): finding skip times needs the patched libmpv")
+        }
         for ((key, value) in options) MpvNative.setOption(h, key, value)
         val r = MpvNative.initialize(h, logLevel)
         if (r < 0) {

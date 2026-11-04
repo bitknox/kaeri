@@ -172,7 +172,9 @@ fun Modifier.entryFocus(target: FocusRequester): Modifier {
         holding = false
     }
     // Once focus has moved on it is not a stop for a screen reader either: a nameless, screen-sized node.
-    return focusRequester(holder).focusProperties { canFocus = holding }.then(if (holding) Modifier.focusable() else Modifier)
+    // No focusProperties here: canFocus = false on a container would be inherited by the buttons
+    // inside it, and the D-pad could not reach any but the one focused.
+    return focusRequester(holder).then(if (holding) Modifier.focusable() else Modifier)
 }
 
 /** This item is remembered under [key] in [memory], and focused again when the screen returns. */

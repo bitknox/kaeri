@@ -71,6 +71,8 @@ data class EngineLaunch(
     val traktClientId: String? = null,
     /** The profile to start in, once the install has more than one; `null` for the one used last. */
     val profile: String? = null,
+    /** The player's libmpv carries the demuxer's audio tap and each of its cores has the engine's callback. */
+    val audioTap: Boolean = true,
 ) {
     /** Which engine. */
     sealed interface Engine {
@@ -96,6 +98,7 @@ data class EngineLaunch(
             traktClientId = traktClientId,
             secrets = secrets,
             profile = profile,
+            audioTap = audioTap,
         )
 
     /** Stand the engine up. Blocks while it opens its files, so call it off the main thread. */
