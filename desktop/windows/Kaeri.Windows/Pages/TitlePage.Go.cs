@@ -97,7 +97,11 @@ public sealed partial class TitlePage
             Land(row);
     }
 
-    /// <summary>Goes to the row: a scroll within the screen, a crossfade across a range or a fold.</summary>
+    /// <summary>
+    /// Goes to the row: a scroll when it is within a screen, else a crossfade (across a range, out
+    /// of the fold, or further down the same range, so a long jump never streaks). With animation
+    /// effects off every jump is the crossfade.
+    /// </summary>
     void Land(GoTo.Row row)
     {
         var rows = Rows();
@@ -107,42 +111,59 @@ public sealed partial class TitlePage
         var across = ranges.Length > 1 && (int)row.Range != shownRange;
         var hidden = !Episodes().Any(i => i.Row.Number == number);
         targetNumber = number;
-        void Mark()
+        void Mark(bool animate)
         {
             foreach (var item in Episodes())
                 item.Target = item.Row.Number == number;
             var target = Episodes().FirstOrDefault(i => i.Row.Number == number);
             if (target is null)
                 return;
-            var animate = Motion.Enabled && !across && !hidden;
-            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+            if (animate)
             {
-                if (EpisodeList.ContainerFromItem(target) is UIElement container)
-                    container.StartBringIntoView(new BringIntoViewOptions { VerticalAlignmentRatio = 0, AnimationDesired = animate });
-                else
-                    EpisodeList.ScrollIntoView(target);
-            });
+                DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+                {
+                    if (EpisodeList.ContainerFromItem(target) is UIElement container)
+                        container.StartBringIntoView(new BringIntoViewOptions { VerticalAlignmentRatio = 0, AnimationDesired = true });
+                });
+                return;
+            }
+            // Under the crossfade: the new rows are laid out now, so the first frame after the
+            // change already has the row at the top, and a row not built yet is never missed.
+            EpisodeList.UpdateLayout();
+            if (EpisodeList.ContainerFromItem(target) is UIElement row)
+                row.StartBringIntoView(new BringIntoViewOptions { VerticalAlignmentRatio = 0, AnimationDesired = false });
         }
-        if (!across && !hidden)
+        if (!across && !hidden && Motion.Enabled && WithinScreen(number))
         {
-            Mark();
+            Mark(true);
             return;
         }
         Crossfade.Swap(Scroll, () =>
         {
+            // Within the range the rows stand; only the scroll changes under the fade.
             if (across)
             {
                 chosenRange = (int)row.Range;
                 opened = false;
+                ShowEpisodes();
             }
-            ShowEpisodes();
             if (!Episodes().Any(i => i.Row.Number == number))
             {
                 opened = true;
                 ShowEpisodes();
             }
-            Mark();
+            Mark(false);
         });
+    }
+
+    /// <summary>Whether the row is at most a screen's scroll away from the top of the view.</summary>
+    bool WithinScreen(string number)
+    {
+        var target = Episodes().FirstOrDefault(i => i.Row.Number == number);
+        if (target is null || EpisodeList.ContainerFromItem(target) is not UIElement container)
+            return false;
+        var top = container.TransformToVisual(Scroll).TransformPoint(new global::Windows.Foundation.Point(0, 0)).Y;
+        return Math.Abs(top) <= Scroll.ViewportHeight;
     }
 
     // Ctrl+Shift+[ and ].

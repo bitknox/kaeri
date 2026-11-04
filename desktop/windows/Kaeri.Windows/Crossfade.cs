@@ -57,11 +57,22 @@ static class Crossfade
         Grid.SetRowSpan(ghost, Grid.GetRowSpan(area));
         Grid.SetColumnSpan(ghost, Grid.GetColumnSpan(area));
         host.Children.Add(ghost);
-        Motion.HideStandard(ghost);
-        var timer = ghost.DispatcherQueue.CreateTimer();
-        timer.Interval = Motion.Standard + TimeSpan.FromMilliseconds(80);
-        timer.IsRepeating = false;
-        timer.Tick += (_, _) => host.Children.Remove(ghost);
-        timer.Start();
+        // The fade waits two frames, so what the change settles a frame late (a scroll to a row
+        // just built) happens under the picture and never shows half done.
+        var frames = 0;
+        EventHandler<object>? drawn = null;
+        drawn = (_, _) =>
+        {
+            if (++frames < 2)
+                return;
+            Microsoft.UI.Xaml.Media.CompositionTarget.Rendering -= drawn;
+            Motion.HideStandard(ghost);
+            var timer = ghost.DispatcherQueue.CreateTimer();
+            timer.Interval = Motion.Standard + TimeSpan.FromMilliseconds(80);
+            timer.IsRepeating = false;
+            timer.Tick += (_, _) => host.Children.Remove(ghost);
+            timer.Start();
+        };
+        Microsoft.UI.Xaml.Media.CompositionTarget.Rendering += drawn;
     }
 }

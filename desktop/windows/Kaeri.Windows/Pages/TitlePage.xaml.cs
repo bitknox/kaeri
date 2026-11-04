@@ -220,7 +220,7 @@ public sealed partial class EpisodeItem : INotifyPropertyChanged
                 return;
             download = value;
             Changed(nameof(DownloadOpacity), nameof(DownloadSay), nameof(DownloadGlyph), nameof(DownloadTint), nameof(GlyphShown),
-                nameof(RingShown), nameof(RingWaiting), nameof(RingActive), nameof(RingValue), nameof(CanDownload));
+                nameof(RingShown), nameof(RingLoaded), nameof(RingWaiting), nameof(RingActive), nameof(RingValue), nameof(CanDownload));
         }
     }
 
@@ -250,6 +250,7 @@ public sealed partial class EpisodeItem : INotifyPropertyChanged
     };
     public Visibility GlyphShown => Download.Kind is EpisodeDownloadKind.None or EpisodeDownloadKind.Done or EpisodeDownloadKind.Failed ? Visibility.Visible : Visibility.Collapsed;
     public Visibility RingShown => GlyphShown == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+    public bool RingLoaded => RingShown == Visibility.Visible;
     public bool RingWaiting => Download.Kind == EpisodeDownloadKind.Queued;
     /// <summary>A paused download's ring stands still at how far it got.</summary>
     public bool RingActive => Download.Kind != EpisodeDownloadKind.Paused;
@@ -555,12 +556,22 @@ public sealed partial class TitlePage : Page, IPageKeys
                         OpenGoTo("go:128");
                     });
                     break;
-                // Motion E: 2, 3, 6 typed on the list at episode 230, a jump within the screen.
+                // Motion E: 2, 3, 3 typed with episode 230 at the top, a short jump within the screen.
                 case "synopsis-go-digits":
-                    Later(1.0, () => EpisodeList.Focus(FocusState.Keyboard));
+                    Later(0.6, () =>
+                    {
+                        if (Episodes().FirstOrDefault(i => i.Row.Number == "230") is { } from && EpisodeList.ContainerFromItem(from) is UIElement row)
+                            row.StartBringIntoView(new BringIntoViewOptions { AnimationDesired = false, VerticalAlignmentRatio = 0 });
+                    });
+                    // The list has focus on that row, as after a click on it.
+                    Later(1.0, () =>
+                    {
+                        if (Episodes().FirstOrDefault(i => i.Row.Number == "230") is { } from && EpisodeList.ContainerFromItem(from) is Control row)
+                            row.Focus(FocusState.Programmatic);
+                    });
                     Later(1.6, () => TypeDigit(2));
                     Later(1.9, () => TypeDigit(3));
-                    Later(2.2, () => TypeDigit(6));
+                    Later(2.2, () => TypeDigit(3));
                     break;
             }
             return;

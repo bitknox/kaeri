@@ -245,7 +245,8 @@
                         <Grid>
                           <FontIcon Glyph="{x:Bind DownloadGlyph, Mode=OneWay}" FontSize="16"
                                     Foreground="{x:Bind DownloadTint, Mode=OneWay}" Visibility="{x:Bind GlyphShown, Mode=OneWay}" />
-                          <ProgressRing Width="20" Height="20" Visibility="{x:Bind RingShown, Mode=OneWay}"
+                          <!-- Only a downloading row has its ring: fifty rings cost a range switch most of its time. -->
+                          <ProgressRing x:Name="Ring" x:Load="{x:Bind RingLoaded, Mode=OneWay}" Width="20" Height="20"
                                         IsIndeterminate="{x:Bind RingWaiting, Mode=OneWay}" IsActive="{x:Bind RingActive, Mode=OneWay}"
                                         Value="{x:Bind RingValue, Mode=OneWay}" Maximum="100" />
                         </Grid>
