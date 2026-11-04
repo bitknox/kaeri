@@ -62,6 +62,10 @@ pub const DEVICE_TABLES: &[&str] = &[
     "skip_votes",
     "aniskip_outbox",
     "party_room",
+    "dub_extent",
+    "skip_prints",
+    "skip_found",
+    "skip_found_show",
 ];
 
 const FILE: &str = "profiles.json";
