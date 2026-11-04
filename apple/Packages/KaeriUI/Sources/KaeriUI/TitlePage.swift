@@ -1314,7 +1314,7 @@ struct EpisodePlaceholderRow: View {
             RoundedRectangle(cornerRadius: 6).fill(.raised).frame(width: metrics.still.width, height: metrics.still.height)
             // A redacted title and facts line, and no synopsis lines: a show without synopses
             // never promises them.
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text("The Lantern Road") // i18n-skip
                 Text("24 min · Aired 21 May 2014") // i18n-skip
                     .font(EpisodeRowLabel.factsFont(metrics))
@@ -1330,7 +1330,7 @@ struct EpisodePlaceholderRow: View {
     }
 }
 
-/// The synopsis, the facts and the sheet's opener beside the episodes: eight lines on the
+/// The synopsis, the facts and the sheet's opener beside the episodes: five lines on the
 /// Mac, three lines on iPad with "More" to show the rest in place.
 struct TitleDetails: View {
     let entry: Entry
@@ -1340,7 +1340,7 @@ struct TitleDetails: View {
             let synopsis = entry.shownSynopsis
             if !synopsis.isEmpty {
                 #if os(macOS)
-                InlineMoreText(text: synopsis, lines: 8, font: .mac(13), lineHeight: 20)
+                InlineMoreText(text: synopsis, lines: 5, font: .mac(13), lineHeight: 20)
                     .id(entry.id)
                 #else
                 InlineMoreText(text: synopsis, lines: 3, font: .mac(13))

@@ -1,4 +1,4 @@
-// An episode's row on a title page: its still, title, facts line and up to three lines of synopsis,
+// An episode's row on a title page: its still, title, facts line and up to three lines of synopsis (two where it sits beside the still),
 // on the Mac, the iPad and the iPhone, by the sizes in EpisodeMetrics. The row's height is fixed
 // by its kind, never by whether its text has come, so text that arrives later fades in to room
 // the row already holds.
@@ -49,14 +49,16 @@ struct EpisodeRowLabel: View {
     // MARK: Layouts
 
     private func beside(facts: String, text: String?) -> some View {
-        HStack(spacing: 14) {
+        // The text is pinned to the still's top, so every title in the list starts at one height.
+        HStack(alignment: .top, spacing: 14) {
             if numberColumn { number }
             still
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 0) {
                 title(lines: 1)
-                factsLine(facts, lines: 1)
+                factsLine(facts, lines: 1).padding(.top, 2)
                 // About 58 characters a line, however wide the window.
-                synopsis(text, lines: 3)
+                synopsis(text, lines: 2)
+                    .padding(.top, 8)
                     .frame(maxWidth: Self.measure, alignment: .leading)
             }
             .frame(maxWidth: .infinity, maxHeight: metrics.still.height, alignment: .topLeading)
@@ -71,9 +73,9 @@ struct EpisodeRowLabel: View {
             HStack(alignment: .top, spacing: 12) {
                 if numberColumn { number }
                 still
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 0) {
                     title(lines: 2)
-                    factsLine(facts, lines: 2)
+                    factsLine(facts, lines: 2).padding(.top, 2)
                 }
                 .frame(maxWidth: .infinity, alignment: .topLeading)
                 if external { trailing }
@@ -89,11 +91,11 @@ struct EpisodeRowLabel: View {
     /// The row at the biggest text sizes: the still across the row, the title on two lines, the
     /// facts, then four lines of text.
     private func stack(facts: String, text: String?) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            still(width: nil)
+        VStack(alignment: .leading, spacing: 0) {
+            still(width: nil).padding(.bottom, 8)
             title(lines: 2)
-            factsLine(facts, lines: 3)
-            if room && !hidden { synopsis(text, lines: 4) }
+            factsLine(facts, lines: 3).padding(.top, 2)
+            if room && !hidden { synopsis(text, lines: 4).padding(.top, 8) }
         }
         .padding(.vertical, 8)
         .frame(maxWidth: .infinity, alignment: .topLeading)
@@ -145,10 +147,9 @@ struct EpisodeRowLabel: View {
     private func title(lines: Int) -> some View {
         Text(row.title ?? L.episodeNumberString(number: row.number))
             .font(Self.titleFont(metrics))
-            .foregroundStyle(row.completed ? .haze : .silk)
+            .foregroundStyle(.silk)
             .lineLimit(lines)
             .multilineTextAlignment(.leading)
-            .animation(.quick, value: row.completed)
     }
 
     private func factsLine(_ facts: String, lines: Int) -> some View {
