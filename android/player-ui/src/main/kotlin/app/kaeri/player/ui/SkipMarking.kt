@@ -220,7 +220,10 @@ private fun Review(model: PlayerModel, view: SkipMarkView) {
         val short = view.check == SkipMarkCheck.TooShort
         Text(it, style = MaterialTheme.typography.bodySmall, color = if (short) ObiSilk.Vermilion else ObiSilk.Haze)
     }
-    for (note in view.notes) Text(SkipWords.note(context, note), style = MaterialTheme.typography.bodySmall, color = ObiSilk.Haze)
+    // The notes are one label with a line break between them: a tight note, not paragraphs with a gap.
+    if (view.notes.isNotEmpty()) {
+        Text(view.notes.joinToString("\n") { SkipWords.note(context, it) }, style = MaterialTheme.typography.bodySmall, color = ObiSilk.Haze)
+    }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End), verticalAlignment = Alignment.CenterVertically) {
         TextButton(onClick = model::previewEdges, enabled = !view.previewing) {
             Text(Strings.playerMarkWatchEdges(context), color = if (view.previewing) ObiSilk.Haze else ObiSilk.Silk)
