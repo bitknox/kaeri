@@ -334,15 +334,22 @@ impl PlayerView {
             }
             SkipMarkCheck::Fine => {}
         }
-        for n in &view.notes {
-            match n {
-                SkipMarkNote::Shares => note(t::player_mark_shares()),
+        // The notes are one label with a line break between them, as the board's note is: one
+        // tight block, not a paragraph each.
+        let lines: Vec<String> = view
+            .notes
+            .iter()
+            .map(|n| match n {
+                SkipMarkNote::Shares => t::player_mark_shares(),
                 SkipMarkNote::Replaces { start, end } => {
-                    note(t::player_mark_replaces(&say::clock(*start), &say::clock(*end)));
+                    t::player_mark_replaces(&say::clock(*start), &say::clock(*end))
                 }
-                SkipMarkNote::NoEntry => note(t::player_mark_no_mal()),
-                SkipMarkNote::Found => note(t::player_mark_found()),
-            }
+                SkipMarkNote::NoEntry => t::player_mark_no_mal(),
+                SkipMarkNote::Found => t::player_mark_found(),
+            })
+            .collect();
+        if !lines.is_empty() {
+            note(lines.join("\n"));
         }
         let actions = gtk::Box::new(gtk::Orientation::Horizontal, 8);
         actions.set_margin_top(4);
