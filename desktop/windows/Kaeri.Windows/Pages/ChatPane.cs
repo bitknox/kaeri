@@ -220,7 +220,7 @@ sealed class ChatPane : StackPanel
         scroll = new ScrollViewer
         {
             Content = list,
-            MaxHeight = lobby ? 360 : 200,
+            MaxHeight = lobby ? 360 : 160,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
         };

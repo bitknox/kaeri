@@ -91,9 +91,18 @@ sealed class PartyPanel
         };
         body.Children.Add(leave);
 
-        Flyout = new Flyout { Content = body, Placement = FlyoutPlacementMode.BottomEdgeAlignedRight };
+        // The whole flyout hangs under the people button: when the window is short it scrolls
+        // rather than moving up over the top bar and the button that opened it.
+        var scroll = new ScrollViewer { Content = body, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+        Flyout = new Flyout { Content = scroll, Placement = FlyoutPlacementMode.BottomEdgeAlignedRight };
         Flyout.Opening += (_, _) =>
         {
+            if (Flyout.Target is { XamlRoot: { } root } target)
+            {
+                var below = target.TransformToVisual(null).TransformPoint(new global::Windows.Foundation.Point(0, target.ActualHeight)).Y;
+                // The presenter's padding and border, and a gap above the window's edge.
+                scroll.MaxHeight = Math.Max(160, root.Size.Height - below - 48);
+            }
             leaving = false;
             leave.Content = T.PartyLeave;
             Show();

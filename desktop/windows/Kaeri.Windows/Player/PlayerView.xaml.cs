@@ -396,14 +396,23 @@ public sealed partial class PlayerView : UserControl
     /// <summary>A line for the viewer over the video, where the window's toasts can't be seen.</summary>
     internal void Say(string text) => Alert(text);
 
+    /// <summary>Whether the alert is up: it counts as one of the chat column's three lines.</summary>
+    bool alertUp;
+
     async void Alert(string text)
     {
         AlertText.Text = text;
         Motion.Show(AlertCard);
+        alertUp = true;
+        MakeChatRoom();
         Announce(AlertText);
         await Task.Delay(TimeSpan.FromSeconds(4 * NoticeTime.Scale(DeviceWatch.ScreenReaderRunning())));
         if (AlertText.Text == text)
+        {
             Motion.Hide(AlertCard);
+            alertUp = false;
+            DrainChat();
+        }
     }
 
     /// <summary>

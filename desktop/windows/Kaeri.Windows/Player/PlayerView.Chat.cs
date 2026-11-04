@@ -34,7 +34,10 @@ public sealed partial class PlayerView
     const double TickNear = 4;
 
     readonly List<Border> chatShown = [];
+    readonly Dictionary<Border, (string Who, bool You, string Text)> chatSaid = [];
     readonly Queue<(string Who, bool You, string Text)> chatWaiting = new();
+    /// <summary>Lines a notice pushed out of the column, oldest first: they come back above the rest.</summary>
+    readonly List<(string Who, bool You, string Text)> chatPushed = [];
     ulong chatSeen;
     bool chatPopover, reactionsBuilt;
     ChatField? chatField;
@@ -94,8 +97,10 @@ public sealed partial class PlayerView
     void ChatClear()
     {
         chatShown.Clear();
+        chatSaid.Clear();
         ChatLines.Children.Clear();
         chatWaiting.Clear();
+        chatPushed.Clear();
         ChatFold.Visibility = Visibility.Collapsed;
         ChatMoments.Children.Clear();
         momentsLeaving.Clear();
@@ -178,7 +183,7 @@ public sealed partial class PlayerView
         // Said to a screen reader as it comes; reactions are not.
         if (FrameworkElementAutomationPeer.CreatePeerForElement(ChatLines) is { } peer)
             peer.RaiseNotificationEvent(AutomationNotificationKind.Other, AutomationNotificationProcessing.All, T.PartyChatAnnounce(who, said.Text), "party-chat-line");
-        if (chatShown.Count < Chat.Column && chatWaiting.Count == 0)
+        if (chatShown.Count < ChatRoom && chatWaiting.Count == 0 && chatPushed.Count == 0)
             ShowLine(who, line.You, said.Text);
         else
         {
@@ -189,7 +194,7 @@ public sealed partial class PlayerView
 
     void ShowFold()
     {
-        var count = chatWaiting.Count;
+        var count = chatWaiting.Count + chatPushed.Count;
         if (count == 0)
         {
             if (ChatFold.Visibility == Visibility.Visible)
@@ -226,11 +231,12 @@ public sealed partial class PlayerView
         };
     }
 
-    void ShowLine(string who, bool you, string text)
+    void ShowLine(string who, bool you, string text, bool above = false)
     {
         var card = LineCard(who, you, text);
-        chatShown.Add(card);
-        ChatLines.Children.Add(card);
+        chatShown.Insert(above ? 0 : chatShown.Count, card);
+        chatSaid[card] = (who, you, text);
+        ChatLines.Children.Insert(above ? 0 : ChatLines.Children.Count, card);
         Arrives(card);
         ShowFold();
         var hold = Chat.Hold(text);
@@ -261,6 +267,7 @@ public sealed partial class PlayerView
         {
             if (!chatShown.Remove(card))
                 return;
+            chatSaid.Remove(card);
             ChatLines.Children.Remove(card);
             if (!Motion.Enabled)
             {
@@ -271,10 +278,47 @@ public sealed partial class PlayerView
                     Motion.Show(other);
                 }
             }
-            while (chatShown.Count < Chat.Column && chatWaiting.TryDequeue(out var next))
-                ShowLine(next.Who, next.You, next.Text);
-            ShowFold();
+            DrainChat();
         });
+    }
+
+    /// <summary>How many chat lines the column has room for: a notice above them takes one of the three.</summary>
+    int ChatRoom => alertUp ? Chat.Column - 1 : Chat.Column;
+
+    /// <summary>Waiting lines take the room the column has, and the fold counts the rest.</summary>
+    void DrainChat()
+    {
+        // A pushed line is older than any shown, so it comes back at the top, newest of them first.
+        while (chatShown.Count < ChatRoom && chatPushed.Count > 0)
+        {
+            var back = chatPushed[^1];
+            chatPushed.RemoveAt(chatPushed.Count - 1);
+            ShowLine(back.Who, back.You, back.Text, above: true);
+        }
+        while (chatShown.Count < ChatRoom && chatWaiting.TryDequeue(out var next))
+            ShowLine(next.Who, next.You, next.Text);
+        ShowFold();
+    }
+
+    /// <summary>
+    /// A notice came up over the lines: the oldest lines past the room fade out into the fold, and
+    /// come back at the top, for a full hold, once the notice has gone.
+    /// </summary>
+    void MakeChatRoom()
+    {
+        var pushed = false;
+        while (chatShown.Count > ChatRoom)
+        {
+            var oldest = chatShown[0];
+            chatShown.RemoveAt(0);
+            if (chatSaid.Remove(oldest, out var said))
+                chatPushed.Add(said);
+            pushed = true;
+            Motion.Hide(oldest);
+            ChatAfter(Motion.FadeOutTime + TimeSpan.FromMilliseconds(20), () => ChatLines.Children.Remove(oldest));
+        }
+        if (pushed)
+            ShowFold();
     }
 
     /// <summary>The people flyout opened or closed: the column steps aside while the same lines are in it.</summary>
@@ -289,6 +333,7 @@ public sealed partial class PlayerView
                 Motion.Hide(ChatFold);
             // What waited is in the flyout now.
             chatWaiting.Clear();
+            chatPushed.Clear();
         }
         else
         {
