@@ -97,6 +97,9 @@ static partial class SyncDialogs
             case "sync-switch":
                 PickerChange(SyncFolderKind.GoogleDrive);
                 break;
+            case "sync-more":
+                MoreOpener?.Invoke();
+                break;
             case "sync-remove":
                 RemoveFolder(SyncFolderKind.GoogleDrive);
                 break;

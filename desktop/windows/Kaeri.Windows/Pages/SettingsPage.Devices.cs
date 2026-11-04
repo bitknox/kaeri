@@ -310,6 +310,7 @@ public sealed partial class SettingsPage
             VerticalAlignment = VerticalAlignment.Center,
             Flyout = flyout,
         };
+        SyncDialogs.MoreOpener = () => flyout.ShowAt(more);
         AutomationProperties.SetName(more, T.CloudMore(service));
         ToolTipService.SetToolTip(more, T.CloudMore(service));
         return more;

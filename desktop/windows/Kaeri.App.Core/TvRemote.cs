@@ -999,8 +999,12 @@ public static class TvWords
         return tv.LastSeen is { } seen ? T.TvPairedSeen(paired, Wording.Ago(Math.Max(0, now.ToUnixTimeSeconds() - seen))) : paired;
     }
 
-    public static string Footnote(string shortFingerprint) =>
-        T.TvDeviceCode(shortFingerprint);
+    public static string Footnote => T.TvForgetNote;
+
+    /// <summary>The TV's code in groups of four, upper case, as a TV shows it.</summary>
+    public static string GroupedCode(string shortFingerprint) =>
+        string.Join(' ', Enumerable.Range(0, (shortFingerprint.Length + 3) / 4)
+            .Select(i => shortFingerprint.Substring(i * 4, Math.Min(4, shortFingerprint.Length - i * 4)).ToUpperInvariant()));
 
     public static string PairNote => T.TvNonePairedDetail;
 

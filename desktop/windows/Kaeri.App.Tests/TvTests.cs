@@ -56,7 +56,8 @@ public class TvWordsTests
         Assert.Equal("English (Signs)", TvWords.Track(tracks[1], english));
         Assert.Equal("Off", TvWords.Chosen(tracks, off: true));
         Assert.Equal("Track 9", TvWords.Track(new FfiTvTrack(9, null, null, false), english));
-        Assert.Equal("A TV lists this device with the code AB12. Forget a TV here and it forgets this device too.", TvWords.Footnote("AB12"));
+        Assert.Equal("Forget a TV here and it forgets this device too.", TvWords.Footnote);
+        Assert.Equal("8094 20D8 F5F8 818D", TvWords.GroupedCode("809420d8f5f8818d"));
     }
 
     [Fact]

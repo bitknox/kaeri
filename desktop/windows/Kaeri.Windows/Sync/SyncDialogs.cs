@@ -29,6 +29,9 @@ enum Origin
 /// </summary>
 static partial class SyncDialogs
 {
+    /// <summary>Opens the cloud card's More menu; the card sets it when it draws, and the shots call it.</summary>
+    public static Action? MoreOpener;
+
     static Ctx Ctx => Ctx.Current;
     static XamlRoot? Root => Ctx.Window.Content?.XamlRoot;
 
