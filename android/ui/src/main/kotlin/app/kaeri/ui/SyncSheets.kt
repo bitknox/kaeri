@@ -70,6 +70,10 @@ import app.kaeri.engine.model.SyncProblem
 import app.kaeri.engine.model.SyncSignInStep
 import app.kaeri.i18n.R
 import app.kaeri.i18n.Strings
+import app.kaeri.store.setDeviceSync
+import app.kaeri.store.setDeviceRemote
+import app.kaeri.store.renameDevice
+import app.kaeri.store.pairWithCode
 import app.kaeri.store.AppStore
 import app.kaeri.store.SyncSheet
 import app.kaeri.store.cancelSyncSignIn
@@ -346,7 +350,7 @@ internal fun NameSheet() {
         SheetField(name, { name = it }, stringResource(R.string.devices_name), keyboard = KeyboardOptions(imeAction = ImeAction.Done))
         SheetButtons {
             QuietButton(stringResource(R.string.action_cancel)) { store.sync.show(null) }
-            Button(enabled = name.isNotBlank(), onClick = { store.sync.rename(name); store.sync.show(null) }) { Text(stringResource(R.string.action_save)) }
+            Button(enabled = name.isNotBlank(), onClick = { store.renameDevice(name); store.sync.show(null) }) { Text(stringResource(R.string.action_save)) }
         }
     }
 }
@@ -377,7 +381,7 @@ internal fun AddDeviceDialog() {
     val name = deviceName()
     var code by remember { mutableStateOf("") }
     val digits = code.filter { it.isDigit() }
-    SettingsSheet(onDismiss = { store.sync.show(null) }, holdsInput = code.isNotEmpty()) {
+    SettingsSheet(onDismiss = { store.pairStop(); store.sync.show(null) }, holdsInput = code.isNotEmpty()) {
         SheetTitle(stringResource(R.string.devices_add))
         SheetText(stringResource(R.string.pair_enter_line))
         SheetField(
@@ -389,10 +393,14 @@ internal fun AddDeviceDialog() {
             supporting = stringResource(R.string.pair_same_wifi),
             error = problem != null,
         )
-        problemWords(context, problem)?.let { SheetProblem(it) }
+        val failed by store.sync.pairFailed.collectAsStateWithLifecycle()
+        val pairWords = failed?.let { (why, device) ->
+            if (why == app.kaeri.engine.model.SyncPairProblem.WRONG_CODE) Strings.pairErrCode(context, device ?: stringResource(R.string.devices_other_device)) else Strings.pairErrNotFound(context)
+        }
+        (pairWords ?: problemWords(context, problem))?.let { SheetProblem(it) }
         SheetButtons {
             QuietButton(stringResource(R.string.pair_show_instead)) { store.pairInvite(name); store.sync.show(SyncSheet.CODE) }
-            Button(enabled = digits.length == 6, onClick = { store.pairJoin(name, "", digits) }) { Text(stringResource(R.string.pair_button)) }
+            Button(enabled = digits.length == 6, onClick = { store.pairWithCode(name, digits) }) { Text(stringResource(R.string.pair_button)) }
         }
     }
 }
@@ -521,13 +529,14 @@ internal fun RecoveryKeyDialog(key: String) {
 @Composable
 internal fun DevicePage(device: app.kaeri.engine.model.SyncDeviceView, onRemove: () -> Unit, onDismiss: () -> Unit) {
     val context = LocalContext.current
-    val isTv = deviceIcon(device.name) == SyncIcons.Tv
+    val store = LocalAppStore.current
     SettingsSheet(onDismiss = onDismiss) {
         SheetTitle(device.name)
         lastSeenLine(context, device.lastSeen)?.let { SheetText(it) }
         Column(Modifier.padding(top = 16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            SwitchRow(Place.First, stringResource(R.string.devices_sync_switch), true) {}
-            if (isTv) SwitchRow(Place.Last, stringResource(R.string.devices_remote_switch), true) {}
+            val remote = device.remoteKey != null
+            SwitchRow(if (remote) Place.First else Place.Only, stringResource(R.string.devices_sync_switch), !device.paused) { store.setDeviceSync(device.name, device.paused) }
+            if (remote) SwitchRow(Place.Last, stringResource(R.string.devices_remote_switch), !device.remoteOff) { store.setDeviceRemote(device.name, device.remoteOff) }
         }
         SheetText(Strings.devicesSwitchesFoot(context, device.name), Modifier.padding(top = 8.dp))
         SheetButtons {

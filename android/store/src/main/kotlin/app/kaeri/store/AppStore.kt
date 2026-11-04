@@ -1326,6 +1326,7 @@ class AppStore(
             is Event.SyncRecoveryKey -> sync.recoveryKey(event.v1)
             is Event.SyncSignIn -> syncSignIn(event.service, event.step)
             is Event.SyncProblem -> sync.problem(event.v1)
+            is Event.SyncPairFailed -> sync.pairFailed(event.problem, event.device)
             is Event.SyncSignInsCopied -> sync.copied(SignInsCopied(event.device, event.trackers, event.clouds, event.lacking))
             is Event.Profiles -> sync.profiles(event.v1)
             is Event.ProfileSwitch -> onProfileSwitch?.invoke(event.id)

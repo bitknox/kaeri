@@ -9869,6 +9869,10 @@ object Strings {
     fun firstSetupPhone(context: Context): String =
         context.getString(R.string.first_setup_phone)
 
+    /** Error naming a device that is not known by name. */
+    fun devicesOtherDevice(context: Context): String =
+        context.getString(R.string.devices_other_device)
+
     /** Title of the state when a title page could not load. */
     fun titleLoadFailed(context: Context): String =
         context.getString(R.string.title_load_failed)

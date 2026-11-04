@@ -15499,6 +15499,11 @@ pub fn first_setup_phone() -> String {
     text("first-setup-phone", &[])
 }
 
+/// Error naming a device that is not known by name.
+pub fn devices_other_device() -> String {
+    text("devices-other-device", &[])
+}
+
 /// Title of the state when a title page could not load.
 pub fn title_load_failed() -> String {
     text("title-load-failed", &[])

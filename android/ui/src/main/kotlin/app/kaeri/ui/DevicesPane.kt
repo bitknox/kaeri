@@ -42,6 +42,7 @@ import app.kaeri.engine.model.SyncProblem
 import app.kaeri.engine.model.SyncStatus
 import app.kaeri.i18n.R
 import app.kaeri.i18n.Strings
+import app.kaeri.store.setDeviceSync
 import app.kaeri.store.SyncSheet
 import app.kaeri.store.Wording
 import app.kaeri.store.loadSync
@@ -142,7 +143,7 @@ internal fun DevicesPane(actions: AppActions) {
             onDismiss = { turningOff = false },
         ) { store.leaveSync(); turningOff = false }
     }
-    opened?.let { device -> DevicePage(device, onRemove = { removing = device; opened = null }) { opened = null } }
+    opened?.let { shown -> val device = store.sync.status.value?.devices?.firstOrNull { it.id == shown.id } ?: shown; DevicePage(device, onRemove = { removing = device; opened = null }) { opened = null } }
 }
 
 /** Sync is off: what it does, and the button that asks how the devices should share. */
@@ -189,9 +190,9 @@ private fun YourDevices(status: SyncStatus, onOpen: (SyncDeviceView) -> Unit, on
                 add { place ->
                     val line = listOfNotNull(
                         lastSeenLine(context, device.lastSeen),
-                        if (device.name.contains("TV", ignoreCase = true)) stringResource(R.string.devices_remote_switch) else null,
+                        if (device.remoteKey != null && !device.remoteOff) stringResource(R.string.devices_remote_switch) else null,
                     ).joinToString(" · ") // i18n-skip
-                    DeviceRow(place, device.name, line, status.error == null, onClick = { onOpen(device) }, onSwitch = { onRemove(device) })
+                    DeviceRow(place, device.name, line, status.error == null, on = !device.paused, onClick = { onOpen(device) }, onSwitch = { store.setDeviceSync(device.name, device.paused) })
                 }
             }
             remoteOnly.forEach { tv ->
@@ -218,7 +219,7 @@ private fun YourDevices(status: SyncStatus, onOpen: (SyncDeviceView) -> Unit, on
 }
 
 @Composable
-private fun DeviceRow(place: Place, name: String, line: String, well: Boolean, onClick: () -> Unit, onSwitch: () -> Unit) {
+private fun DeviceRow(place: Place, name: String, line: String, well: Boolean, on: Boolean, onClick: () -> Unit, onSwitch: () -> Unit) {
     RowFrame(place, onClick = onClick, modifier = Modifier.heightIn(min = 72.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             Icon(deviceIcon(name), null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -231,7 +232,7 @@ private fun DeviceRow(place: Place, name: String, line: String, well: Boolean, o
                     }
                 }
             }
-            Box(Modifier.clickable(onClick = onSwitch)) { SettingSwitchMark(true) }
+            Box(Modifier.clickable(onClick = onSwitch)) { SettingSwitchMark(on) }
         }
     }
 }

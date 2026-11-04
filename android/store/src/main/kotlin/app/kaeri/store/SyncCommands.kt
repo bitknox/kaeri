@@ -138,3 +138,30 @@ fun AppStore.copyAllSignIns() {
     val clouds = listOf(SyncFolderKind.GOOGLE_DRIVE, SyncFolderKind.DROPBOX, SyncFolderKind.ONE_DRIVE).map { SyncCopy.Cloud(it) }
     copySignIns(null, listOf(SyncCopy.Trackers) + clouds)
 }
+
+/** Pair with whichever device on this network shows [code]. */
+fun AppStore.pairWithCode(deviceName: String, code: String) {
+    sync.problemSeen()
+    send(Command.SyncGroup(SyncCommand.PairWithCode(deviceName, code)))
+}
+
+/** Rename this device, in the group when sync is on. */
+fun AppStore.renameDevice(name: String) {
+    sync.rename(name)
+    send(Command.SyncGroup(SyncCommand.RenameDevice(name.trim())))
+}
+
+/** The Sync switch of [device]: off holds the group back from it. */
+fun AppStore.setDeviceSync(device: String, on: Boolean) {
+    send(Command.SyncGroup(SyncCommand.SetDeviceSync(device, on)))
+}
+
+/** The Remote switch of this device and [device], as a pair. */
+fun AppStore.setDeviceRemote(device: String, on: Boolean) {
+    send(Command.SyncGroup(SyncCommand.SetDeviceRemote(device, on)))
+}
+
+/** Hand the engine the platform's DNS-SD for typed-code pairing, once it runs. */
+fun AppStore.setSyncNetwork(network: app.kaeri.engine.ffi.FfiSyncNetwork) {
+    engine?.setSyncNetwork(network)
+}

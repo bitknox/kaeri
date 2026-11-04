@@ -9626,6 +9626,9 @@ device-kind-tv = [ŢṼ~]
 # TV welcome, text button.
 first-setup-phone = [Šéţ üþ ƒŕöɱ ýöüŕ þĥöñé~~~~~~~]
 
+# Error naming a device that is not known by name.
+devices-other-device = [ţĥé öţĥéŕ ðéṽîçé~~~~~]
+
 # Title of the state when a title page could not load.
 title-load-failed = [Çöüļðñ'ţ ļöàð ţĥîš ţîţļé~~~~~~~~]
 

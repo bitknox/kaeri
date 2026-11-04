@@ -9626,6 +9626,9 @@ device-kind-tv = TV
 # TV welcome, text button.
 first-setup-phone = Set up from your phone
 
+# Error naming a device that is not known by name.
+devices-other-device = the other device
+
 # Title of the state when a title page could not load.
 title-load-failed = Couldn't load this title
 

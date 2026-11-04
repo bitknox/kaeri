@@ -9447,6 +9447,10 @@
     <value>[Šéţ üþ ƒŕöɱ ýöüŕ þĥöñé~~~~~~~]</value>
     <comment>TV welcome, text button.</comment>
   </data>
+  <data name="DevicesOtherDevice" xml:space="preserve">
+    <value>[ţĥé öţĥéŕ ðéṽîçé~~~~~]</value>
+    <comment>Error naming a device that is not known by name.</comment>
+  </data>
   <data name="TitleLoadFailed" xml:space="preserve">
     <value>[Çöüļðñ'ţ ļöàð ţĥîš ţîţļé~~~~~~~~]</value>
     <comment>Title of the state when a title page could not load.</comment>

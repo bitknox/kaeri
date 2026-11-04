@@ -26621,6 +26621,18 @@
         }
       }
     },
+    "devices-other-device" : {
+      "comment" : "Error naming a device that is not known by name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the other device"
+          }
+        }
+      }
+    },
     "devices-paired-today" : {
       "comment" : "Line under a TV paired for Play on TV today.",
       "extractionState" : "manual",

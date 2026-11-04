@@ -6885,6 +6885,9 @@ public static partial class T
     /// <summary>TV welcome, text button.</summary>
     public static string FirstSetupPhone => Get("FirstSetupPhone");
 
+    /// <summary>Error naming a device that is not known by name.</summary>
+    public static string DevicesOtherDevice => Get("DevicesOtherDevice");
+
     /// <summary>Title of the state when a title page could not load.</summary>
     public static string TitleLoadFailed => Get("TitleLoadFailed");
 
@@ -10293,6 +10296,7 @@ public static partial class T
         ["DeviceKindTablet"] = "tablet",
         ["DeviceKindTv"] = "TV",
         ["FirstSetupPhone"] = "Set up from your phone",
+        ["DevicesOtherDevice"] = "the other device",
         ["TitleLoadFailed"] = "Couldn't load this title",
         ["TitleNoAnswer"] = "AniList didn't answer. Try again.",
         ["TitleLoading"] = "Loading this title",

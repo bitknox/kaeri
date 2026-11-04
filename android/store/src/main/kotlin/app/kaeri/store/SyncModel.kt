@@ -141,6 +141,15 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
         _copied.value = null
     }
 
+    private val _pairFailed = MutableStateFlow<Pair<app.kaeri.engine.model.SyncPairProblem, String?>?>(null)
+
+    /** Why the last typed code did not pair, and the device that turned it down when one did. */
+    val pairFailed: StateFlow<Pair<app.kaeri.engine.model.SyncPairProblem, String?>?> = _pairFailed.asStateFlow()
+
+    internal fun pairFailed(problem: app.kaeri.engine.model.SyncPairProblem, device: String?) {
+        _pairFailed.value = problem to device
+    }
+
     private val _first = MutableStateFlow(false)
 
     /** True while a pairing runs from the first-launch pages, which word the code and the success as theirs. */
@@ -157,6 +166,7 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
 
     /** The problem was read, or the sheet that showed it was left. */
     fun problemSeen() {
+        _pairFailed.value = null
         _problem.value = null
     }
 
