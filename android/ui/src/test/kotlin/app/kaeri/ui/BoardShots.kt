@@ -153,6 +153,51 @@ class BoardShots {
     @Config(qualifiers = PHONE)
     fun phone_join_failed_not_allowed() = shoot("phone-join-failed-not-allowed", WATCHING) { kotlinx.coroutines.runBlocking { app.kaeri.store.FixtureSync.stage(it, "join-failed-not-allowed") } }
 
+    /** One frame of the sign-in wait board: Devices on [scene], with [state] staged as the Fixtures app stages it. */
+    private fun signInWait(name: String, scene: String, state: String?) =
+        shoot(name, scene, page = "settings/devices", screen = true) {
+            if (state != null) kotlinx.coroutines.runBlocking { app.kaeri.store.FixtureSync.stage(it, state) }
+        }
+
+    @Test @Config(qualifiers = PHONE)
+    fun phone_wait_off() = signInWait("phone-wait-off", WATCHING, null)
+
+    @Test @Config(qualifiers = PHONE)
+    fun phone_wait_picker() = signInWait("phone-wait-picker", "sync_nearby", "picker")
+
+    @Test @Config(qualifiers = PHONE)
+    fun phone_wait_waiting() = signInWait("phone-wait-waiting", "sync_nearby", "waiting")
+
+    @Test @Config(qualifiers = PHONE)
+    fun phone_wait_connecting() = signInWait("phone-wait-connecting", "sync_nearby", "connecting")
+
+    @Test @Config(qualifiers = PHONE)
+    fun phone_wait_setting_up() = signInWait("phone-wait-setting-up", "sync_nearby", "setting-up")
+
+    @Test @Config(qualifiers = PHONE)
+    fun phone_wait_key_sheet() = signInWait("phone-wait-key-sheet", "sync_nearby", "key-sheet")
+
+    @Test @Config(qualifiers = PHONE)
+    fun phone_wait_timed_out() = signInWait("phone-wait-timed-out", "sync_nearby", "timed-out")
+
+    @Test @Config(qualifiers = PHONE)
+    fun phone_wait_denied() = signInWait("phone-wait-denied", "sync_nearby", "denied")
+
+    @Test @Config(qualifiers = PHONE)
+    fun phone_wait_setup_failed() = signInWait("phone-wait-setup-failed", "sync_nearby", "setup-failed")
+
+    @Test @Config(qualifiers = PHONE)
+    fun phone_wait_cloud() = signInWait("phone-wait-cloud", "sync_cloud", null)
+
+    @Test @Config(qualifiers = PHONE)
+    fun phone_wait_switch_service() = signInWait("phone-wait-switch-service", "sync_cloud", "switch-service")
+
+    @Test @Config(qualifiers = PHONE)
+    fun phone_wait_remove_ask() = signInWait("phone-wait-remove-ask", "sync_cloud", "remove-ask")
+
+    @Test @Config(qualifiers = PHONE)
+    fun phone_wait_signed_out() = signInWait("phone-wait-signed-out", "sync_cloud", "signed-out")
+
     @Test
     @Config(qualifiers = PHONE)
     fun phone_home_continue_full() = shoot("phone-home-continue-full", "home-continuefull")

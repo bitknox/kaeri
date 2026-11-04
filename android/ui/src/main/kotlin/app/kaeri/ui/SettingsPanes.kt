@@ -810,13 +810,17 @@ private fun SignInButton(label: String, busy: Boolean, onClick: () -> Unit) {
 
 /** A row that is one action in silk, such as Sync now or Sign out. */
 @Composable
-internal fun ActionRow(place: Place, title: String, enabled: Boolean = true, note: String? = null, onClick: () -> Unit) {
+internal fun ActionRow(place: Place, title: String, enabled: Boolean = true, note: String? = null, destructive: Boolean = false, onClick: () -> Unit) {
     RowFrame(place, onClick = if (enabled) onClick else null) {
         Column {
             Text(
                 title,
                 style = MaterialTheme.typography.titleMedium,
-                color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                color = when {
+                    !enabled -> MaterialTheme.colorScheme.onSurfaceVariant
+                    destructive -> MaterialTheme.colorScheme.error
+                    else -> MaterialTheme.colorScheme.onSurface
+                },
             )
             note?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         }

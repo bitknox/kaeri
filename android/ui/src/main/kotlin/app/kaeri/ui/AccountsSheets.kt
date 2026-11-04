@@ -80,11 +80,16 @@ import app.kaeri.store.CodeCountdown
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun SettingsSheet(onDismiss: () -> Unit, tall: Boolean = false, holdsInput: Boolean = false, content: @Composable () -> Unit) {
+internal fun SettingsSheet(onDismiss: () -> Unit, tall: Boolean = false, holdsInput: Boolean = false, dismissible: Boolean = true, content: @Composable () -> Unit) {
     val colors = MaterialTheme.colorScheme
+    // A sheet that must stay (a set-up past the point it can be stopped, a key not yet seen) says no to every way out.
+    val allowed = rememberUpdatedState(dismissible)
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = tall),
+        onDismissRequest = { if (allowed.value) onDismiss() },
+        sheetState = rememberModalBottomSheetState(
+            skipPartiallyExpanded = tall,
+            confirmValueChange = { it != androidx.compose.material3.SheetValue.Hidden || allowed.value },
+        ),
         properties = sheetProperties(holdsInput),
         containerColor = colors.surfaceContainer,
         scrimColor = Color.Black.copy(alpha = 0.32f),

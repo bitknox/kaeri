@@ -39,13 +39,22 @@ fun AppStore.loadSync() {
 /** Set sync up in [folder], naming this device [deviceName]: a cloud drive signs in first. */
 fun AppStore.startSync(deviceName: String, folder: SyncFolderSpec) {
     sync.problemSeen()
-    sync.starting = folder
+    sync.begin(folder)
     send(Command.StartSync(deviceName, folder))
+}
+
+/**
+ * Begin a cloud folder from the picker: a device with a folder in use moves to the new one and
+ * keeps the old until it is ready, one without sets sync up in it.
+ */
+fun AppStore.beginSyncFolder(deviceName: String, folder: SyncFolderSpec) {
+    if (sync.status.value?.folder != null) changeSyncFolder(folder) else startSync(deviceName, folder)
 }
 
 /** Join the group [folder] holds, with its recovery key. */
 fun AppStore.joinSync(deviceName: String, folder: SyncFolderSpec, recoveryKey: String) {
     sync.problemSeen()
+    sync.begin(folder)
     send(Command.JoinSync(deviceName, folder, recoveryKey))
 }
 
@@ -64,8 +73,16 @@ fun AppStore.syncSignOut(service: SyncFolderKind) {
 fun AppStore.cancelSyncSignIn() {
     accounts.signIn.value?.takeIf { it.tracker in SYNC_SERVICES }?.let(accounts::signInEnded)
     send(Command.CancelSyncSignIn)
-    sync.signIn(SyncFolderKind.GOOGLE_DRIVE, null)
+    sync.cancelled()
 }
+
+/** The sign-in's page again, as Open the page again asks: the tab the person closed, or lost behind another app. */
+fun AppStore.openSyncPageAgain() {
+    accounts.signIn.value?.takeIf { it.tracker in SYNC_SERVICES }?.let { accounts.reopen(it) }
+}
+
+/** Whether [request] is a cloud folder's sign-in rather than a tracker's. */
+fun AppStore.isSyncSignIn(request: SignInRequest): Boolean = request.tracker in SYNC_SERVICES
 
 fun AppStore.syncFolderNow() {
     send(Command.SyncFolderNow)
@@ -110,6 +127,10 @@ fun AppStore.copySignIns(device: String?, copy: List<SyncCopy>, address: String?
 }
 
 fun AppStore.changeSyncFolder(folder: SyncFolderSpec?) {
+    if (folder != null) {
+        sync.problemSeen()
+        sync.begin(folder)
+    }
     send(Command.SyncGroup(SyncCommand.ChangeSyncFolder(folder)))
 }
 

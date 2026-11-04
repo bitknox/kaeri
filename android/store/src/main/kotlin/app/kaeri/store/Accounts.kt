@@ -124,6 +124,15 @@ class AccountsModel(private val clock: () -> Long = { System.currentTimeMillis()
         _signIn.value = request
     }
 
+    private val _reopen = kotlinx.coroutines.flow.MutableSharedFlow<SignInRequest>(extraBufferCapacity = 1)
+
+    /** A sign-in's page asked for again: the activity opens a tab for it, even though one was opened already. */
+    val reopened: kotlinx.coroutines.flow.SharedFlow<SignInRequest> = _reopen
+
+    internal fun reopen(request: SignInRequest) {
+        _reopen.tryEmit(request)
+    }
+
     /** The browser came back from [request], or was closed. */
     internal fun signInEnded(request: SignInRequest) {
         if (_signIn.value == request) _signIn.value = null

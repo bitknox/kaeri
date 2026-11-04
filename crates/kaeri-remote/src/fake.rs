@@ -115,6 +115,7 @@ impl FakeParty {
             muted: self.muted.clone(),
             wait_seconds: 0,
             react_wait_seconds: 0,
+            hidden: false,
         }
     }
 }

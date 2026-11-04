@@ -43,6 +43,7 @@ import app.kaeri.engine.model.SyncStatus
 import app.kaeri.i18n.R
 import app.kaeri.i18n.Strings
 import app.kaeri.store.setDeviceSync
+import app.kaeri.store.FolderAsk
 import app.kaeri.store.SyncSheet
 import app.kaeri.store.Wording
 import app.kaeri.store.loadSync
@@ -52,6 +53,7 @@ import app.kaeri.store.showRecoveryKey
 import app.kaeri.store.syncFolderNow
 import app.kaeri.store.syncSignInAgain
 import app.kaeri.store.syncSignOut
+import app.kaeri.store.changeSyncFolder
 
 /** The name a device takes before the person edits it: the system's own where there is one, else the model. */
 internal fun systemDeviceName(context: Context): String {
@@ -99,9 +101,9 @@ internal fun DevicesPane(actions: AppActions) {
     val store = LocalAppStore.current
     val context = LocalContext.current
     val status by store.sync.status.collectAsStateWithLifecycle()
-    val settingUp by store.sync.settingUp.collectAsStateWithLifecycle()
     var removing by remember { mutableStateOf<SyncDeviceView?>(null) }
     var turningOff by remember { mutableStateOf(false) }
+    val folderAsk by store.sync.folderAsk.collectAsStateWithLifecycle()
     var opened by remember { mutableStateOf<SyncDeviceView?>(null) }
     LaunchedEffect(Unit) { store.loadSync() }
     val synced = status
@@ -117,7 +119,7 @@ internal fun DevicesPane(actions: AppActions) {
             TvSettingsGroup()
         } else {
             YourDevices(synced, onOpen = { opened = it }, onRemove = { removing = it })
-            CloudGroup(synced, settingUp)
+            CloudGroup(synced)
             if (synced.recoveryKey) RecoveryKeyRow(synced)
             TvSettingsGroup()
             SettingsGroup(
@@ -134,6 +136,16 @@ internal fun DevicesPane(actions: AppActions) {
             onDismiss = { removing = null },
         ) { store.removeSyncDevice(device.id); removing = null }
     }
+    val inUse = synced?.folder
+    if (folderAsk == FolderAsk.REMOVE && inUse != null) {
+        val service = cloudName(inUse.kind).ifEmpty { Strings.cloudFolder(context, kindWord()) }
+        ConfirmAlert(
+            title = Strings.cloudRemoveTitle(context, service),
+            text = Strings.cloudRemoveLine(context, kindWord(), service),
+            confirm = stringResource(R.string.cloud_remove_action),
+            onDismiss = { store.sync.askFolder(null) },
+        ) { store.changeSyncFolder(null); store.sync.askFolder(null) }
+    }
     if (turningOff) {
         val name = synced?.deviceName ?: systemDeviceName(context)
         ConfirmAlert(
@@ -146,25 +158,29 @@ internal fun DevicesPane(actions: AppActions) {
     opened?.let { shown -> val device = store.sync.status.value?.devices?.firstOrNull { it.id == shown.id } ?: shown; DevicePage(device, onRemove = { removing = device; opened = null }) { opened = null } }
 }
 
-/** Sync is off: what it does, and the button that asks how the devices should share. */
+/** Sync is off: the two ways in, each of which turns sync on by itself. */
 @Composable
 private fun SyncOffGroup() {
     val store = LocalAppStore.current
-    val colors = MaterialTheme.colorScheme
-    Column {
-        SettingsHeader(stringResource(R.string.sync_group))
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(colors.surfaceContainer)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Text(stringResource(R.string.sync_off_title), style = MaterialTheme.typography.titleMedium)
-            Text(stringResource(R.string.sync_off_line), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
-            Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.End) {
-                Button(onClick = { store.sync.show(SyncSheet.ROAD) }) { Text(stringResource(R.string.sync_turn_on)) }
+    SettingsGroup(
+        title = stringResource(R.string.sync_group),
+        footer = stringResource(R.string.sync_start_foot),
+        rows = listOf(
+            { place -> WayRow(place, SyncIcons.Devices, stringResource(R.string.sync_road_nearby), stringResource(R.string.sync_road_nearby_line)) { store.sync.show(SyncSheet.ADD) } },
+            { place -> WayRow(place, SyncIcons.Cloud, stringResource(R.string.sync_road_cloud), stringResource(R.string.sync_road_cloud_line)) { store.sync.show(SyncSheet.PICKER) } },
+        ),
+    )
+}
+
+/** A way into sync: its icon, its name and what it does. */
+@Composable
+private fun WayRow(place: Place, icon: ImageVector, title: String, line: String, onClick: () -> Unit) {
+    RowFrame(place, onClick = onClick, modifier = Modifier.heightIn(min = 72.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Icon(icon, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 2.dp))
+            Column(Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.titleMedium)
+                Text(line, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -239,7 +255,7 @@ private fun DeviceRow(place: Place, name: String, line: String, well: Boolean, o
 
 /** The cloud folder: its service and state, then Sync now and Sign out; or Add a cloud folder. */
 @Composable
-private fun CloudGroup(status: SyncStatus, settingUp: Boolean) {
+private fun CloudGroup(status: SyncStatus) {
     val store = LocalAppStore.current
     val context = LocalContext.current
     val colors = MaterialTheme.colorScheme
@@ -249,19 +265,14 @@ private fun CloudGroup(status: SyncStatus, settingUp: Boolean) {
     val signedOut = problem is SyncProblem.SignInNeeded
     val kind = kindWord()
     if (folder == null) {
-        val working = settingUp
         SettingsGroup(
             title = stringResource(R.string.cloud_group),
             footer = stringResource(R.string.cloud_foot),
             rows = listOf { place ->
-                if (working) {
-                    CloudRow(place, stringResource(R.string.cloud_group), null) { SettingUpLine() }
-                } else {
-                    RowFrame(place, onClick = { store.sync.show(SyncSheet.PICKER) }, modifier = Modifier.heightIn(min = 56.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                            Icon(SyncIcons.Cloud, null, tint = colors.onSurfaceVariant)
-                            Text(stringResource(R.string.cloud_add), style = MaterialTheme.typography.titleMedium)
-                        }
+                RowFrame(place, onClick = { store.sync.show(SyncSheet.PICKER) }, modifier = Modifier.heightIn(min = 56.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Icon(SyncIcons.Cloud, null, tint = colors.onSurfaceVariant)
+                        Text(stringResource(R.string.cloud_add), style = MaterialTheme.typography.titleMedium)
                     }
                 }
             },
@@ -276,7 +287,6 @@ private fun CloudGroup(status: SyncStatus, settingUp: Boolean) {
         rows = buildList<@Composable (Place) -> Unit> {
             add { place ->
                 when {
-                    settingUp -> CloudRow(place, name, null) { SettingUpLine() }
                     failed -> CloudRow(place, stringResource(R.string.cloud_err_title, name), null) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Box(Modifier.padding(top = 7.dp)) { StateDot(colors.error) }
@@ -299,12 +309,13 @@ private fun CloudGroup(status: SyncStatus, settingUp: Boolean) {
             }
             if (signedOut) {
                 add { place -> ActionRow(place, stringResource(R.string.cloud_sign_in_again)) { store.syncSignInAgain(folder.kind) } }
-            } else if (problem is SyncProblem.Unreachable && status.error != null && failed && false) {
-                add { place -> ActionRow(place, stringResource(R.string.cloud_choose_folder)) { store.sync.show(SyncSheet.PICKER) } }
+                add { place -> ActionRow(place, stringResource(R.string.cloud_use_another)) { store.sync.show(SyncSheet.PICKER) } }
             } else {
                 add { place -> ActionRow(place, stringResource(R.string.cloud_sync_now), enabled = !status.syncing) { store.syncFolderNow() } }
+                add { place -> ActionRow(place, stringResource(R.string.cloud_use_another)) { store.sync.show(SyncSheet.PICKER) } }
                 add { place -> ActionRow(place, stringResource(R.string.cloud_sign_out)) { if (service != null && service != SyncFolderKind.DIRECTORY) store.syncSignOut(service) } }
             }
+            add { place -> ActionRow(place, stringResource(R.string.cloud_remove), destructive = true) { store.sync.askFolder(FolderAsk.REMOVE) } }
         },
     )
 }
@@ -329,23 +340,6 @@ private fun CloudRow(place: Place, title: String, onClick: (() -> Unit)?, line: 
     }
 }
 
-/** "Setting up the folder", with the small ring: shown only once the first write has taken 600 ms. */
-@Composable
-private fun SettingUpLine() {
-    val colors = MaterialTheme.colorScheme
-    var shown by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        kotlinx.coroutines.delay(600)
-        shown = true
-    }
-    androidx.compose.animation.AnimatedVisibility(visible = shown, enter = androidx.compose.animation.fadeIn(app.kaeri.design.Motion.fadeIn())) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            androidx.compose.material3.CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = colors.onSurfaceVariant)
-            Text(stringResource(R.string.cloud_setting_up), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
-        }
-    }
-}
-
 /** The recovery key row: "Made 2 Nov", opening the key again after the device's own lock. */
 @Composable
 private fun RecoveryKeyRow(status: SyncStatus) {
@@ -366,23 +360,21 @@ private fun DevicesSheets() {
     val store = LocalAppStore.current
     val sheet by store.sync.sheet.collectAsStateWithLifecycle()
     val key by store.sync.recoveryKey.collectAsStateWithLifecycle()
+    val keyInSheet by store.sync.keyInSheet.collectAsStateWithLifecycle()
     val problem by store.sync.problem.collectAsStateWithLifecycle()
-    val signIn by store.sync.signIn.collectAsStateWithLifecycle()
+    val finished by store.sync.finished.collectAsStateWithLifecycle()
+    val before = remember { finished }
     LaunchedEffect(problem) {
         if (problem is SyncProblem.GroupExists) store.sync.starting?.let { store.sync.askKey(it) }
     }
-    // Past the browser, every sheet closes at once: the cloud row carries the wait.
-    LaunchedEffect(signIn?.step) {
-        if (signIn?.step is app.kaeri.engine.model.SyncSignInStep.Finishing) store.sync.show(null)
+    // A set-up that came through closes the sheet it was begun in, unless the recovery key is on it: Done does then.
+    LaunchedEffect(finished) {
+        val open = store.sync.sheet.value
+        val ours = open == SyncSheet.PICKER || open == SyncSheet.WEBDAV || open == SyncSheet.NEXTCLOUD || open == SyncSheet.KEY
+        if (finished != before && ours && store.sync.recoveryKey.value == null) store.sync.show(null)
     }
-    // A set-up that finished closes the sheet it was begun in.
-    LaunchedEffect(store.sync.status.collectAsStateWithLifecycle().value?.folder) {
-        if (sheet == SyncSheet.PICKER || sheet == SyncSheet.WEBDAV || sheet == SyncSheet.NEXTCLOUD || sheet == SyncSheet.KEY) {
-            if (store.sync.status.value?.folder != null) store.sync.show(null)
-        }
-    }
+    val setUpSheets = sheet == SyncSheet.PICKER || sheet == SyncSheet.WEBDAV || sheet == SyncSheet.NEXTCLOUD || sheet == SyncSheet.KEY
     when (sheet) {
-        SyncSheet.ROAD -> RoadSheet()
         SyncSheet.PICKER -> CloudPickerSheet()
         SyncSheet.NEXTCLOUD -> NextcloudSheet()
         SyncSheet.WEBDAV -> WebDavSheet()
@@ -392,7 +384,8 @@ private fun DevicesSheets() {
         SyncSheet.NAME -> NameSheet()
         else -> {}
     }
-    key?.let { RecoveryKeyDialog(it) }
+    // The key of a set-up shows in that set-up's sheet; any other shows full screen.
+    if (!(keyInSheet && setUpSheets)) key?.let { RecoveryKeyDialog(it) }
     val copied by store.sync.copied.collectAsStateWithLifecycle()
     copied?.let { PairOkSheet(it) }
 }
