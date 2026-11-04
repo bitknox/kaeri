@@ -107,6 +107,8 @@ public final class PlayerModel {
             configuration.shaderCache = shaderCache
         }
         configuration.options = options
+        // The demuxer's audio tap for finding skip times: the engine's callback, on this core.
+        configuration.audioTap = audioTapCallback()
         return MpvClient(configuration: configuration)
     }
 
@@ -231,6 +233,13 @@ public final class PlayerModel {
     private(set) var discussionWatch = PlayerDiscussion()
     /// The app's discussions, for the More menu and the Playback menu.
     public var discussionHost: DiscussionHost?
+    /// Why finding skip times from the audio is paused, as the engine's settings say, for the
+    /// Skip times panel. Nothing else in the player says it.
+    #if FIXTURES
+    /// A shot of a card holds it up, as a screen reader does.
+    @ObservationIgnored public var holdsPromptsForShot = false
+    #endif
+    @ObservationIgnored public var skipFindPause: @MainActor () -> SkipFindPause? = { nil }
     public private(set) var speed: Double = 1
     /// The volume as mpv last reported it.
     public private(set) var volume: Double = 100

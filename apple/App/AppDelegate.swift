@@ -57,6 +57,14 @@ final class AppDelegate: NSObject {
         tvNowPlaying = TVNowPlaying(tv: store.tv, player: player)
         #endif
         super.init()
+        player.skipFindPause = { [weak store] in store?.settings.pausedOverride ?? store?.settings.view?.skipFindPaused }
+        #if FIXTURES
+        // `-KaeriSkipPause low-power|storage`: a shot of finding paused, whatever the device says.
+        let arguments = ProcessInfo.processInfo.arguments
+        if let at = arguments.firstIndex(of: "-KaeriSkipPause"), arguments.indices.contains(at + 1) {
+            store.settings.pausedOverride = arguments[at + 1] == "storage" ? .storage : .lowPower
+        }
+        #endif
         store.onPlayback = { [weak player = self.player] event in player?.apply(event) }
         store.playerTakesPlay = { [weak player = self.player] command in player?.playAsked(command) ?? false }
         // Play on TV from the player: the TV picker over it, and the player closed once the TV
@@ -264,6 +272,16 @@ final class AppDelegate: NSObject {
             print("KAERI_READY")
             fflush(stdout)
         }
+        #if FIXTURES
+        // `-KaeriSkipPauseFlip`: Low Power Mode on at 0.8 s and off at 3.8 s, from 1.5 s after the
+        // scene is ready, for the recording of the paused line (motion E).
+        if ProcessInfo.processInfo.arguments.contains("-KaeriSkipPauseFlip") {
+            try? await Task.sleep(for: .seconds(2.3))
+            store.settings.pausedOverride = .lowPower
+            try? await Task.sleep(for: .seconds(3))
+            store.settings.pausedOverride = nil
+        }
+        #endif
         #if FIXTURES && os(macOS)
         // The Mac feature video's Home sequence: see VideoHomeSequence.
         if let file = VideoHomeSequence.marksFile() {

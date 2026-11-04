@@ -89,15 +89,23 @@ struct SettingsScreen: View {
         VStack(alignment: .leading, spacing: 0) {
             SettingsTabs(selection: $navigator.settingsPane)
                 .padding(EdgeInsets(top: 4, leading: 24, bottom: 0, trailing: 24))
-            ScrollView {
-                SettingsColumns {
-                    pane
-                    SettingsAside(pane: navigator.settingsPane)
+            ScrollViewReader { proxy in
+                ScrollView {
+                    SettingsColumns {
+                        pane
+                        SettingsAside(pane: navigator.settingsPane)
+                    }
+                    .padding(EdgeInsets(top: 20, leading: 24, bottom: 24, trailing: 24))
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .padding(EdgeInsets(top: 20, leading: 24, bottom: 24, trailing: 24))
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .scrollIndicators(.never)
+                .task {
+                    // A launch scroll brings the find row into view, for the Fixtures shots.
+                    guard navigator.launchScroll != nil else { return }
+                    try? await Task.sleep(for: .milliseconds(800))
+                    proxy.scrollTo("findSkips", anchor: .center)
+                }
             }
-            .scrollIndicators(.never)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
@@ -212,7 +220,7 @@ struct SettingsResults: View {
         (L.settingsAudio, .playback), (L.playerSubtitles, .playback), (L.settingsQuality, .playback),
         (L.settingsAutoPlay, .playback), (L.settingsUpNextCountdown, .playback),
         (L.settingsSkipOpening, .playback), (L.settingsSkipRecap, .playback), (L.settingsAskWasOpening, .playback),
-        (L.settingsShareSkips, .playback), (L.settingsClearSkips, .playback), (L.settingsSkipFiller, .playback),
+        (L.settingsFindSkips, .playback), (L.settingsShareSkips, .playback), (L.settingsClearSkips, .playback), (L.settingsSkipFiller, .playback),
         (L.settingsMarkOpening, .playback), (L.settingsCountsWatched, .playback),
         (L.settingsSpoiler, .playback), (L.playerUpscaling, .playback), (L.playerNightMode, .playback),
         (L.settingsStartFullScreen, .playback), (L.settingsHideChat, .playback),
@@ -428,6 +436,7 @@ struct GeneralPane: View {
 
 struct PlaybackPane: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var confirmClearSkips = false
 
     var body: some View {
@@ -450,6 +459,10 @@ struct PlaybackPane: View {
             SettingsRow(title: SettingKey.skipButton.title, note: L.settingsSkipButtonDetail) {
                 SettingSwitch(key: .skipButton)
             }
+            SettingsRow(title: SettingKey.findSkipTimes.title, note: L.settingsFindSkipsDetail, status: store.settings.skipFindPausedWords) {
+                SettingSwitch(key: .findSkipTimes)
+            }
+            .id("findSkips")
             SettingsRow(title: SettingKey.askWasOpening.title, note: L.settingsAskWasOpeningDetail) {
                 SettingSwitch(key: .askWasOpening)
             }
@@ -473,6 +486,7 @@ struct PlaybackPane: View {
                 SettingSwitch(key: .spoilerProtection)
             }
         }
+        .animation(reduceMotion ? nil : .standard, value: store.settings.skipFindPausedWords)
         SettingsGroup(title: L.playerPictureAndSound) {
             // Selected: the column beside the pane is about it.
             SettingsRow(title: SettingKey.upscaling.title, selected: true) {

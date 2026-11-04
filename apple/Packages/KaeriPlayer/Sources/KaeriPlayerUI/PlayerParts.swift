@@ -895,12 +895,21 @@ struct StallCardView: View {
 struct CornerCard: View {
     let model: PlayerModel
     let metrics: PlayerMetrics
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    /// The found times' card fades in and rises 8 pt; Reduce Motion drops the rise. It fades out.
+    private var promptTransition: AnyTransition {
+        switch model.skipPrompt?.prompt {
+        case .foundEdges where !reduceMotion: .asymmetric(insertion: .opacity.combined(with: .offset(y: 8)), removal: .opacity)
+        default: .opacity
+        }
+    }
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             switch model.corner {
             case .stall: StallCardView(model: model, metrics: metrics).transition(.opacity)
-            case .prompt: SkipPromptCard(model: model, metrics: metrics).transition(.opacity)
+            case .prompt: SkipPromptCard(model: model, metrics: metrics).transition(promptTransition)
             case .undo: UndoNote(model: model, metrics: metrics).transition(.opacity)
             case .upNext: UpNextCardView(model: model, metrics: metrics).transition(.opacity)
             case .skip: SkipButton(model: model, metrics: metrics).transition(.opacity)

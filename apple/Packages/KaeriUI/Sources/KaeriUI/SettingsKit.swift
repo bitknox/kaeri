@@ -71,10 +71,13 @@ struct SettingsRow<Accessory: View>: View {
     let title: String
     var note: String?
     var noteColor: Color = .haze
+    /// A line in silk under the note: a status, such as why a setting is paused.
+    var status: String?
     var selected = false
     /// A state's dot before the note, as an account row has it.
     var dot: SyncSummary.State?
     @ViewBuilder let accessory: Accessory
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(spacing: 16) {
@@ -91,14 +94,25 @@ struct SettingsRow<Accessory: View>: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
+                if let status {
+                    Text(status)
+                        .font(.mac(12))
+                        .foregroundStyle(.silk)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 4)
+                        // The room opens on standard and the text fades in; Reduce Motion jumps
+                        // the room and fades the text.
+                        .transition(.opacity.animation(.fadeIn))
+                }
             }
+            .animation(reduceMotion ? nil : .standard, value: status)
             .macLineHeight(16)
             Spacer(minLength: 0)
             accessory
         }
-        .padding(note == nil ? EdgeInsets(top: 4, leading: 10, bottom: 4, trailing: 6)
+        .padding(note == nil && status == nil ? EdgeInsets(top: 4, leading: 10, bottom: 4, trailing: 6)
                              : EdgeInsets(top: 8, leading: 10, bottom: 8, trailing: 6))
-        .frame(minHeight: note == nil ? 36 : 50)
+        .frame(minHeight: note == nil && status == nil ? 36 : 50)
         .background(selected ? Palette.selection : .clear, in: .rect(cornerRadius: 8))
         .contentShape(.rect)
         .padding(.horizontal, 4)
@@ -258,6 +272,7 @@ extension SettingKey {
         case .autoNext: L.settingsAutoPlay
         case .skipOpening: L.settingsSkipOpening
         case .skipRecap: L.settingsSkipRecap
+        case .findSkipTimes: L.settingsFindSkips
         case .askWasOpening: L.settingsAskWasOpening
         case .shareSkipTimes: L.settingsShareSkips
         case .skipFiller: L.settingsSkipFiller

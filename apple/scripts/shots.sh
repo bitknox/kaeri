@@ -27,7 +27,8 @@
 # drawn titles (with the scenes suggested, oneleft, continuefull, notfound, slow, failed and offline,
 # which stage Home's states), offline=1, the fake AniList gone once the first Home has loaded,
 # for Home's offline line over what it kept, and source=<licensed|server|folder>, the row
-# Sources has selected (scenes licensed, servers and library seed one each, sourcesbusy all of them mid-scan, signed out and matching):
+# Sources has selected (scenes licensed, servers and library seed one each, sourcesbusy all of them mid-scan, signed out and matching),
+# and skippause=<low-power|storage>, Settings' "Find skip times" row paused for that reason:
 #
 #   apple/scripts/shots.sh mac watching watching:calendar watching:title=900001 fresh
 #   apple/scripts/shots.sh mac watching:settings+pane=sources+showcase=sources
@@ -67,7 +68,9 @@ players=(player-starting player-playing player-skip player-up-next player-still-
   player-stats-buffering player-stats-hdr player-stats-paused player-stats-copied player-discussion player-discussion-open
   player-mark-start player-mark-end player-mark-review player-mark-short player-mark-long player-mark-replaces
   player-mark-shares player-mark-noentry player-mark-editing player-mark-previewing player-prompt-opening
-  player-prompt-wrong player-prompt-share player-skip-times)
+  player-prompt-wrong player-prompt-share player-skip-times player-found-skip player-found-controls
+  player-found-prompt player-found-saved player-found-never player-found-review player-found-nudged
+  player-found-undo player-found-panel player-found-panel-paused)
 
 usage() {
   echo "usage: apple/scripts/shots.sh <mac|iphone|ipad> [--landscape] [<watching|sourceless|unsure|linkopened|fresh|playing|demoonly|demoplayed|demoandstore|demoremoved|subtitlestyled|crashoff|crashsaved|crashheld|storeowner|storeinvited|together>[:<section|key=value>]|player|player-<state>]…" >&2
@@ -119,6 +122,7 @@ arguments() {
       scroll=*) printf '%s\n' -KaeriScroll "${screen#scroll=}" ;;
       palette=*) printf '%s\n' -KaeriPalette "${screen#palette=}" ;;
       pane=*) printf '%s\n' -KaeriPane "${screen#pane=}" ;;
+      skippause=*) printf '%s\n' -KaeriSkipPause "${screen#skippause=}" ;;
       notice=*) printf '%s\n' -KaeriNotice "${screen#notice=}" ;;
       sheet=*) printf '%s\n' -KaeriSheet "${screen#sheet=}" ;;
       tv=*) printf '%s\n' -KaeriTV "${screen#tv=}" ;;

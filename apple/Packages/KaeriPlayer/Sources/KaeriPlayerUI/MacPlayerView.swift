@@ -622,6 +622,8 @@ public struct MacPlayerView: View {
                 model.cancelNext()
             } else if model.corner == .stall {
                 model.keepWaiting()
+            } else if model.corner == .prompt {
+                model.dismissSkipPrompt()
             } else if model.fullScreen {
                 model.fullScreen = false
             } else {

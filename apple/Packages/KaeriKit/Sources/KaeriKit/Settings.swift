@@ -22,7 +22,7 @@ extension SettingKey {
     /// The settings with two states, on and off, that a switch shows.
     public var isSwitch: Bool {
         switch self {
-        case .motion, .autoNext, .skipOpening, .skipRecap, .askWasOpening, .shareSkipTimes, .skipFiller, .markChapters, .skipButton, .fullscreen, .nightMode,
+        case .motion, .autoNext, .skipOpening, .skipRecap, .findSkipTimes, .askWasOpening, .shareSkipTimes, .skipFiller, .markChapters, .skipButton, .fullscreen, .nightMode,
              .mergeSubtitles, .keepSeeding, .presence, .presenceTitle, .presenceRich, .torrents, .syncplay,
              .updateCheck, .updateBeta, .spoilerProtection, .downloadsOnCellular, .torrentsOnCellular, .adultTitles,
              .episodeDiscussions, .commentImages, .hoverCards:
