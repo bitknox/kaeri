@@ -349,7 +349,7 @@ pub async fn first_answer_with<T, F, Fut>(
     ask: F,
 ) -> Answer<T>
 where
-    F: Fn(ProviderRegistry, ProviderKey) -> Fut,
+    F: Fn(ProviderRegistry, ProviderKey, TitleHints) -> Fut,
     Fut: std::future::Future<Output = Attempt<T>>,
 {
     let mut reasons = Vec::new();
@@ -1092,7 +1092,9 @@ mod tests {
             Translation::Sub,
             0,
             &walk,
-            |source, key| async move { source.resolve(&key, "1", Translation::Sub, 0).await },
+            |source, key, hints| async move {
+                source.resolve(&key, "1", Translation::Sub, &hints, 0).await
+            },
         )
         .await;
         assert!(matches!(answer, Answer::Answered { .. }));
