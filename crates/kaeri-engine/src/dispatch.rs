@@ -607,6 +607,7 @@ pub(crate) fn dispatch(
             let network = crate::phases::Network { cellular, constrained, offline };
             let moved = engine.network.offline != offline;
             services.offline.store(offline, std::sync::atomic::Ordering::Relaxed);
+            services.connection.send_replace(offline);
             crate::phases::network_path(network, engine, tx);
             ahead::resume(engine, services, tx);
             // Home open says it is offline, and since when, or stops saying so, at once.

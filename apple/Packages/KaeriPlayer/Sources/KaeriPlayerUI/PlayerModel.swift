@@ -363,7 +363,7 @@ public final class PlayerModel {
             for op in ops { apply(op, for: playback) }
         case .playerUi(let playback, let ui):
             apply(ui, for: playback)
-        case .playbackStaged(let id, let title, let episode, let episodeTitle, _):
+        case .playbackStaged(let id, let title, let episode, let episodeTitle, _, _):
             since = time.now()
             closedByViewer = false
             stagedAhead = true
@@ -374,7 +374,7 @@ public final class PlayerModel {
             partySaysWhy = false
             staged = StagedPlayback(id: id, title: title, episode: episode, episodeTitle: episodeTitle)
             present()
-        case .playbackEnded(_, let ending, let rollingOn):
+        case .playbackEnded(_, let ending, let rollingOn, _):
             if rollingOn {
                 // Not when the viewer sought into the ending: someone was there.
                 rollPending = !(upNext?.sought ?? false)

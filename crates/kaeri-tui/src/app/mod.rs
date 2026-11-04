@@ -662,9 +662,19 @@ impl App {
             Event::PlaybackSpeed(speed) => self.apply_playback_speed(speed),
             Event::ActiveProvider(provider) => self.active_provider = Some(provider),
             Event::PlaybackKept => self.apply_playback_kept(),
-            Event::PlaybackStaged { id, title, episode, episode_title, speed } => {
+            Event::PlaybackStaged { id, title, episode, episode_title, speed, .. } => {
                 self.take_staged(id, title, episode, episode_title, speed);
             }
+            // The terminal has no starting screen; it keeps the notice a stream with no video
+            // had before the step carried it.
+            Event::StartingStep {
+                step: kaeri_model::starting::StartStep::TryingAnotherStream { next, total },
+                ..
+            } => self.push_toast(Notice::info(kaeri_model::Msg::NoticeStreamNoVideo {
+                next: i64::from(next),
+                total: i64::from(total),
+            })),
+            Event::StartingStep { .. } => {}
             // A play cast to a TV, which the terminal does not do: no player of its own opens.
             Event::CastStaged { .. } => {}
             // The window has changed hands, so what reports from here on is the successor. What

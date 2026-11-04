@@ -174,6 +174,9 @@ notice-reason = { $reason }
 # Reason: no source is set up, so nothing can be played or downloaded. Shown in a toast.
 cause-no-sources = Inga källor är inställda. Lägg till en på skärmen Källor.
 
+# Reason: the play waited two minutes for a connection and the device stayed offline. Shown in a toast and on the failure screen.
+cause-no-connection = Ingen anslutning. Försök igen när du är online.
+
 # A play's explanation: the episode's broadcast is still ahead. The "when" says today, tomorrow or a date.
 notice-not-aired = Avsnitt { $episode } sänds { $when }.
 
@@ -242,6 +245,27 @@ status-looking-up-title = Slår upp titeln…
 
 # Job note while a play waits for the sources to arrive.
 status-loading-sources = Läser in källor…
+
+# Starting screen, step line while the title is looked up.
+start-looking-up-title = Söker upp titeln
+
+# Starting screen, step line while sources still being set up are waited for.
+start-getting-sources-ready = Förbereder dina källor
+
+# Starting screen, step line while one source is asked for the episode. The name is the source's own.
+start-asking-source = Frågar { $name }
+
+# Starting screen, step line once a stream is found and the player opens it.
+start-opening-stream = Öppnar strömmen
+
+# Starting screen, step line when a stream showed no video and the next stream of the same source is opened.
+start-trying-another-stream = Provar en annan ström
+
+# Starting screen, step line while a torrent looks for peers that can send it. Never says torrent.
+start-finding-peers = Letar efter peers
+
+# Starting screen, step line while the player waits for data to fill its buffer.
+start-buffering = Buffrar
 
 # Job note while the sources are asked for an episode. The episode is its label, often a number.
 status-searching-sources = Söker i källor efter avsnitt { $episode }…
@@ -6650,6 +6674,127 @@ player-add-plugin-store = Lägg till en tilläggsbutik
 
 # Short word while the video buffers.
 player-buffering = Buffrar
+
+# Detail line while a source is asked and more than one is in the viewer's order.
+player-start-place = { $place } av { $total } källor
+
+# Detail line while the source asked is the one the show is pinned to.
+player-start-pinned = Ditt val för den här serien
+
+# Detail line when a source has no match for the show.
+player-start-miss-no-match = { $name } har inte den här serien
+
+# Detail line when a source has the show and not the episode. The episode is its label.
+player-start-miss-no-episode = { $name } har inte avsnitt { $episode }
+
+# Detail line when a source failed and the next is asked.
+player-start-miss-failed = { $name } svarade inte
+
+# Detail line when a source took too long and the next is asked.
+player-start-miss-timed-out = { $name } tog för lång tid
+
+# Detail line after the viewer skipped the source being asked.
+player-start-miss-skipped = Du hoppade över { $name }
+
+# Details row for sources passed over because they failed lately. The name goes before it.
+player-start-resting = Hoppades över efter senaste fel
+
+# Detail line once the streams are found and the player opens one. The name is the source's.
+player-start-from = Från { $name }
+
+# Detail line when a stream showed no video and another opens.
+player-start-no-video = Den första visade ingen video
+
+# Detail line with the place of the stream being opened.
+player-start-stream-place = Ström { $next } av { $total }
+
+# Detail line while a torrent has peers.
+player-start-peers =
+    { $count ->
+        [one] En peer
+       *[other] { $count } peers
+    }
+
+# Detail line with the speed data arrives at, already sized with one decimal, such as "3.4 MB".
+player-start-speed = { $speed }/s
+
+# Step line while the player fills its buffer and gives a number.
+player-start-buffering-percent = Buffrar · { $percent }
+
+# Step line while the episode resumes where it was left.
+player-start-resuming = Återupptar vid { $clock }
+
+# Button on the starting screen that plays the episode from its beginning.
+player-start-from-beginning = Spela från början
+
+# Button on the starting screen that opens the list of steps.
+player-start-details = Detaljer
+
+# Button that skips the source being asked. The name is the source's.
+player-start-skip-source = Hoppa över { $name }
+
+# Button that opens the next stream of the same source.
+player-start-skip-stream = Hoppa över strömmen
+
+# Step line when a start is slow: still waiting for the source. The name is the source's.
+player-start-still-waiting = Väntar fortfarande på { $name }
+
+# Step line while the device is offline and the episode will start when it is back.
+player-start-offline = Väntar på anslutning
+
+# Detail line while offline. The episode is its label.
+player-start-offline-detail = Du är offline. Avsnitt { $episode } startar när du är online igen.
+
+# Button on the failure screen that opens the fix for a title that matched the wrong show.
+player-start-fix-match = Rätta matchning
+
+# Details row label for the translation of the episode.
+player-start-translation = Ljud och undertexter
+
+# Details row once the title has been looked up.
+player-start-looked-up = Titeln hittades
+
+# Seconds on the starting screen's detail line and Details rows.
+player-start-seconds = { $seconds } s
+
+# Spoken once, when a start has taken more than a few seconds.
+player-start-still-starting = Startar fortfarande. Du kan välja bland källor.
+
+# Spoken when a start begins. The episode is its label.
+player-start-announce = Startar avsnitt { $episode }, { $title }
+
+# Spoken when a start fails: the title, then the reason.
+player-start-failed-announce = { $title }. { $reason }
+
+# Accessibility value of the starting screen: the step line, then the detail line.
+player-start-status = { $step }, { $detail }
+
+# Detail line on the starting screen after the viewer chose to play from the beginning.
+player-start-beginning = Startar från början
+
+# Details row while a source is being asked.
+player-start-row-asking = Frågar
+
+# Details row outcome when a source has no match for the show.
+player-start-row-no-match = Har inte den här serien
+
+# Details row outcome when a source has the show and not the episode. The episode is its label.
+player-start-row-no-episode = Har inte avsnitt { $episode }
+
+# Details row outcome when a source failed.
+player-start-row-failed = Svarade inte
+
+# Details row outcome when a source took too long.
+player-start-row-timed-out = Tog för lång tid
+
+# Details row outcome when the viewer skipped a source.
+player-start-row-skipped = Överhoppad
+
+# Second clause of a failure: the sources that were asked, joined as a list by the app.
+player-start-asked = { $names } tillfrågades.
+
+# Label of the switch in the Details list that plays the episode with its subtitles.
+player-start-subtitled = Textad
 
 # Title of the stall card. The seconds count up.
 player-stall-title = Källa buffrar · { $seconds } s

@@ -1005,12 +1005,12 @@ public final class AppStore {
         case .imageFailed(let url, _):
             artwork.failed(url: url)
 
-        case .playbackStaged(let id, _, let episode, _, _):
+        case .playbackStaged(let id, _, let episode, _, _, _):
             if startAt?.staged(id: id, episode: episode) == false { startAt = nil }
             let after = playSent.map { " \(AppLog.ms(since: $0)) ms after play" } ?? ""
             AppLog.info("store", "staged \(id) episode \(episode)\(after)")
             onPlayback?(event)
-        case .playbackEnded(let watched, let ending, let rollingOn):
+        case .playbackEnded(let watched, let ending, let rollingOn, _):
             AppLog.info("store", "playback ended: \(ending), watched \(watched), rolling on \(rollingOn)")
             onPlayback?(event)
             widgetsChanged()

@@ -1,5 +1,6 @@
 notice-reason = { $reason }
 cause-no-sources = Hiçbir { -source } ayarlanmadı. { -source-cap-pl } ekranını açıp bir { -source } ekleyin.
+cause-no-connection = Bağlantı yok. Çevrimiçi olunca tekrar dene.
 notice-not-aired = Bölüm { $episode }, { $when } yayınlanacak.
 notice-not-aired-yet = Bölüm { $episode } henüz yayınlanmadı. Bölüm { $next }, { $when } yayınlanacak.
 cause-airs-today = bugün saat { $time }
@@ -28,6 +29,13 @@ cause-already-in-downloads = { $count ->
  }
 status-looking-up-title = Başlık aranıyor…
 status-loading-sources = Yükleniyor: { -source-pl }…
+start-looking-up-title = Başlık aranıyor
+start-getting-sources-ready = { -source-pl } hazırlanıyor
+start-asking-source = { $name } soruluyor
+start-opening-stream = Akış açılıyor
+start-trying-another-stream = Başka bir akış deneniyor
+start-finding-peers = Eşler aranıyor
+start-buffering = Arabelleğe alınıyor
 status-searching-sources = Bölüm { $episode } için { -source-pl } aranıyor…
 notice-player-failed-to-start = mpv başlatılamadı. Tek başına çalışıp çalışmadığını kontrol edin. ({ $reason })
 notice-stream-no-video = Bu akıştan görüntü gelmedi. Bir sonraki akış deneniyor ({ $next }/{ $total }).

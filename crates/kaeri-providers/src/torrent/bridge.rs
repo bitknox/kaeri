@@ -79,6 +79,9 @@ impl TorrentPlayback {
         let session =
             self.session().ok_or_else(|| ProviderError::Unavailable(PLAYBACK_OFF.into()))?;
         let magnet = self.with_trackers(&named.url);
+        // The metadata comes from peers, which can take a minute and a half: the walk asking
+        // this source says so, so the screen is not left saying it searches.
+        crate::walk::finding_peers();
         let active = session.stream(&magnet, episode.trim().parse().ok()).await?;
         tracing::info!(provider = %named.provider_id, file = %active.file.name, "starting torrent");
         Ok(Stream {

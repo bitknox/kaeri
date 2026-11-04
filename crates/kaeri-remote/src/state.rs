@@ -252,7 +252,7 @@ impl StateFolder {
     pub fn event(&mut self, event: &Event) -> bool {
         match event {
             // A cast's card is folded as a TV's state is: the play staged for the TV it casts to.
-            Event::PlaybackStaged { id, title, episode, episode_title, speed }
+            Event::PlaybackStaged { id, title, episode, episode_title, speed, .. }
             | Event::CastStaged { id, title, episode, episode_title, speed } => {
                 let carried = self
                     .system_volume
@@ -441,6 +441,7 @@ mod tests {
             episode: "3".into(),
             episode_title: None,
             speed: 1.0,
+            resume: None,
         }
     }
 
@@ -473,6 +474,7 @@ mod tests {
             watched: true,
             ending: kaeri_model::playback::Ending::Complete { next: None },
             rolling_on,
+            failure: None,
         };
         assert!(!folder.event(&ended(true)));
         assert!(folder.state().now_playing.is_some());
@@ -501,6 +503,7 @@ mod tests {
             episode: "1".into(),
             episode_title: None,
             speed: 1.0,
+            resume: None,
         });
         folder.event(&Event::PlaybackKept);
         assert_eq!(folder.state().now_playing.as_ref().unwrap().id, AnilistId::new(42));

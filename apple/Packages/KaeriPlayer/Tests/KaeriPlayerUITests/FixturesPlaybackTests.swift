@@ -170,7 +170,7 @@ struct FixturesPlaybackTests {
     /// The `PlaybackEnded`s among `events`, in order.
     static func endings(_ events: [Event]) -> [(watched: Bool, ending: Ending, rollingOn: Bool)] {
         events.compactMap { event in
-            if case .playbackEnded(let watched, let ending, let rollingOn) = event { (watched, ending, rollingOn) } else { nil }
+            if case .playbackEnded(let watched, let ending, let rollingOn, _) = event { (watched, ending, rollingOn) } else { nil }
         }
     }
 

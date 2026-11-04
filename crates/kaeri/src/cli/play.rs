@@ -192,6 +192,7 @@ pub async fn play_cli(
         None,
         &config.playback,
         None,
+        None,
     )
     .await
     .map_err(|reason| anyhow::anyhow!(reason))?;

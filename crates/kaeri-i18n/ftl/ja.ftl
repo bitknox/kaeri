@@ -174,6 +174,9 @@ notice-reason = { $reason }
 # Reason: no source is set up, so nothing can be played or downloaded. Shown in a toast.
 cause-no-sources = ソースが設定されていません。ソースの画面で追加してください。
 
+# Reason: the play waited two minutes for a connection and the device stayed offline. Shown in a toast and on the failure screen.
+cause-no-connection = 接続がありません。オンラインに戻ったらもう一度お試しください。
+
 # A play's explanation: the episode's broadcast is still ahead. The "when" says today, tomorrow or a date.
 notice-not-aired = 第{ $episode }話は{ $when }に放送予定です。
 
@@ -239,6 +242,27 @@ status-looking-up-title = タイトルを検索しています…
 
 # Job note while a play waits for the sources to arrive.
 status-loading-sources = ソースを読み込んでいます…
+
+# Starting screen, step line while the title is looked up.
+start-looking-up-title = タイトルを検索中
+
+# Starting screen, step line while sources still being set up are waited for.
+start-getting-sources-ready = ソースを準備中
+
+# Starting screen, step line while one source is asked for the episode. The name is the source's own.
+start-asking-source = { $name }に問い合わせ中
+
+# Starting screen, step line once a stream is found and the player opens it.
+start-opening-stream = ストリームを開いています
+
+# Starting screen, step line when a stream showed no video and the next stream of the same source is opened.
+start-trying-another-stream = 別のストリームを試しています
+
+# Starting screen, step line while a torrent looks for peers that can send it. Never says torrent.
+start-finding-peers = ピアを探しています
+
+# Starting screen, step line while the player waits for data to fill its buffer.
+start-buffering = バッファリング中
 
 # Job note while the sources are asked for an episode. The episode is its label, often a number.
 status-searching-sources = ソースでエピソード{ $episode }を検索しています…
@@ -6582,6 +6606,126 @@ player-add-plugin-store = プラグインストアを追加
 
 # Short word while the video buffers.
 player-buffering = バッファリング中
+
+# Detail line while a source is asked and more than one is in the viewer's order.
+player-start-place = ソース { $total } 件中 { $place } 件目
+
+# Detail line while the source asked is the one the show is pinned to.
+player-start-pinned = この作品で選んだもの
+
+# Detail line when a source has no match for the show.
+player-start-miss-no-match = { $name }にはこの作品がありません
+
+# Detail line when a source has the show and not the episode. The episode is its label.
+player-start-miss-no-episode = { $name }にはエピソード { $episode } がありません
+
+# Detail line when a source failed and the next is asked.
+player-start-miss-failed = { $name }から応答がありませんでした
+
+# Detail line when a source took too long and the next is asked.
+player-start-miss-timed-out = { $name }の応答に時間がかかりすぎました
+
+# Detail line after the viewer skipped the source being asked.
+player-start-miss-skipped = { $name }をスキップしました
+
+# Details row for sources passed over because they failed lately. The name goes before it.
+player-start-resting = 最近の失敗によりスキップ
+
+# Detail line once the streams are found and the player opens one. The name is the source's.
+player-start-from = { $name }から
+
+# Detail line when a stream showed no video and another opens.
+player-start-no-video = 最初のストリームは映像が表示されませんでした
+
+# Detail line with the place of the stream being opened.
+player-start-stream-place = ストリーム { $total } 件中 { $next } 件目
+
+# Detail line while a torrent has peers.
+player-start-peers =
+    { $count ->
+       *[other] ピア { $count } 件
+    }
+
+# Detail line with the speed data arrives at, already sized with one decimal, such as "3.4 MB".
+player-start-speed = { $speed }/s
+
+# Step line while the player fills its buffer and gives a number.
+player-start-buffering-percent = バッファリング中 · { $percent }
+
+# Step line while the episode resumes where it was left.
+player-start-resuming = { $clock } から再開中
+
+# Button on the starting screen that plays the episode from its beginning.
+player-start-from-beginning = 最初から再生
+
+# Button on the starting screen that opens the list of steps.
+player-start-details = 詳細
+
+# Button that skips the source being asked. The name is the source's.
+player-start-skip-source = { $name }をスキップ
+
+# Button that opens the next stream of the same source.
+player-start-skip-stream = このストリームをスキップ
+
+# Step line when a start is slow: still waiting for the source. The name is the source's.
+player-start-still-waiting = { $name }を待っています
+
+# Step line while the device is offline and the episode will start when it is back.
+player-start-offline = 接続を待っています
+
+# Detail line while offline. The episode is its label.
+player-start-offline-detail = オフラインです。エピソード { $episode } はオンラインに戻ると開始します。
+
+# Button on the failure screen that opens the fix for a title that matched the wrong show.
+player-start-fix-match = 一致を修正
+
+# Details row label for the translation of the episode.
+player-start-translation = 音声と字幕
+
+# Details row once the title has been looked up.
+player-start-looked-up = タイトルを検索しました
+
+# Seconds on the starting screen's detail line and Details rows.
+player-start-seconds = { $seconds } 秒
+
+# Spoken once, when a start has taken more than a few seconds.
+player-start-still-starting = まだ開始中です。ソースを選ぶこともできます。
+
+# Spoken when a start begins. The episode is its label.
+player-start-announce = エピソード { $episode } { $title } を開始します
+
+# Spoken when a start fails: the title, then the reason.
+player-start-failed-announce = { $title }。{ $reason }
+
+# Accessibility value of the starting screen: the step line, then the detail line.
+player-start-status = { $step }、{ $detail }
+
+# Detail line on the starting screen after the viewer chose to play from the beginning.
+player-start-beginning = 最初から開始します
+
+# Details row while a source is being asked.
+player-start-row-asking = 問い合わせ中
+
+# Details row outcome when a source has no match for the show.
+player-start-row-no-match = この作品はありません
+
+# Details row outcome when a source has the show and not the episode. The episode is its label.
+player-start-row-no-episode = エピソード { $episode } はありません
+
+# Details row outcome when a source failed.
+player-start-row-failed = 応答なし
+
+# Details row outcome when a source took too long.
+player-start-row-timed-out = 時間切れ
+
+# Details row outcome when the viewer skipped a source.
+player-start-row-skipped = スキップ済み
+
+# Second clause of a failure: the sources that were asked, joined as a list by the app.
+player-start-asked = { $names }に問い合わせました。
+
+# Label of the switch in the Details list that plays the episode with its subtitles.
+player-start-subtitled = 字幕あり
 
 # Title of the stall card. The seconds count up.
 player-stall-title = ソースがバッファリング中 · { $seconds }秒

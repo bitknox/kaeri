@@ -295,6 +295,11 @@ pub fn cause_no_sources() -> String {
     text("cause-no-sources", &[])
 }
 
+/// Reason: the play waited two minutes for a connection and the device stayed offline. Shown in a toast and on the failure screen.
+pub fn cause_no_connection() -> String {
+    text("cause-no-connection", &[])
+}
+
 /// A play's explanation: the episode's broadcast is still ahead. The "when" says today, tomorrow or a date.
 pub fn notice_not_aired(episode: i64, when: &str) -> String {
     text("notice-not-aired", &[("episode", Arg::Int(episode)), ("when", Arg::Text(when))])
@@ -388,6 +393,41 @@ pub fn status_looking_up_title() -> String {
 /// Job note while a play waits for the sources to arrive.
 pub fn status_loading_sources() -> String {
     text("status-loading-sources", &[])
+}
+
+/// Starting screen, step line while the title is looked up.
+pub fn start_looking_up_title() -> String {
+    text("start-looking-up-title", &[])
+}
+
+/// Starting screen, step line while sources still being set up are waited for.
+pub fn start_getting_sources_ready() -> String {
+    text("start-getting-sources-ready", &[])
+}
+
+/// Starting screen, step line while one source is asked for the episode. The name is the source's own.
+pub fn start_asking_source(name: &str) -> String {
+    text("start-asking-source", &[("name", Arg::Text(name))])
+}
+
+/// Starting screen, step line once a stream is found and the player opens it.
+pub fn start_opening_stream() -> String {
+    text("start-opening-stream", &[])
+}
+
+/// Starting screen, step line when a stream showed no video and the next stream of the same source is opened.
+pub fn start_trying_another_stream() -> String {
+    text("start-trying-another-stream", &[])
+}
+
+/// Starting screen, step line while a torrent looks for peers that can send it. Never says torrent.
+pub fn start_finding_peers() -> String {
+    text("start-finding-peers", &[])
+}
+
+/// Starting screen, step line while the player waits for data to fill its buffer.
+pub fn start_buffering() -> String {
+    text("start-buffering", &[])
 }
 
 /// Job note while the sources are asked for an episode. The episode is its label, often a number.
@@ -10936,6 +10976,201 @@ pub fn player_add_plugin_store() -> String {
 /// Short word while the video buffers.
 pub fn player_buffering() -> String {
     text("player-buffering", &[])
+}
+
+/// Detail line while a source is asked and more than one is in the viewer's order.
+pub fn player_start_place(place: i64, total: i64) -> String {
+    text("player-start-place", &[("place", Arg::Int(place)), ("total", Arg::Int(total))])
+}
+
+/// Detail line while the source asked is the one the show is pinned to.
+pub fn player_start_pinned() -> String {
+    text("player-start-pinned", &[])
+}
+
+/// Detail line when a source has no match for the show.
+pub fn player_start_miss_no_match(name: &str) -> String {
+    text("player-start-miss-no-match", &[("name", Arg::Text(name))])
+}
+
+/// Detail line when a source has the show and not the episode. The episode is its label.
+pub fn player_start_miss_no_episode(name: &str, episode: &str) -> String {
+    text("player-start-miss-no-episode", &[("name", Arg::Text(name)), ("episode", Arg::Text(episode))])
+}
+
+/// Detail line when a source failed and the next is asked.
+pub fn player_start_miss_failed(name: &str) -> String {
+    text("player-start-miss-failed", &[("name", Arg::Text(name))])
+}
+
+/// Detail line when a source took too long and the next is asked.
+pub fn player_start_miss_timed_out(name: &str) -> String {
+    text("player-start-miss-timed-out", &[("name", Arg::Text(name))])
+}
+
+/// Detail line after the viewer skipped the source being asked.
+pub fn player_start_miss_skipped(name: &str) -> String {
+    text("player-start-miss-skipped", &[("name", Arg::Text(name))])
+}
+
+/// Details row for sources passed over because they failed lately. The name goes before it.
+pub fn player_start_resting() -> String {
+    text("player-start-resting", &[])
+}
+
+/// Detail line once the streams are found and the player opens one. The name is the source's.
+pub fn player_start_from(name: &str) -> String {
+    text("player-start-from", &[("name", Arg::Text(name))])
+}
+
+/// Detail line when a stream showed no video and another opens.
+pub fn player_start_no_video() -> String {
+    text("player-start-no-video", &[])
+}
+
+/// Detail line with the place of the stream being opened.
+pub fn player_start_stream_place(next: i64, total: i64) -> String {
+    text("player-start-stream-place", &[("next", Arg::Int(next)), ("total", Arg::Int(total))])
+}
+
+/// Detail line while a torrent has peers.
+pub fn player_start_peers(count: i64) -> String {
+    text("player-start-peers", &[("count", Arg::Int(count))])
+}
+
+/// Detail line with the speed data arrives at, already sized with one decimal, such as "3.4 MB".
+pub fn player_start_speed(speed: &str) -> String {
+    text("player-start-speed", &[("speed", Arg::Text(speed))])
+}
+
+/// Step line while the player fills its buffer and gives a number.
+pub fn player_start_buffering_percent(percent: &str) -> String {
+    text("player-start-buffering-percent", &[("percent", Arg::Text(percent))])
+}
+
+/// Step line while the episode resumes where it was left.
+pub fn player_start_resuming(clock: &str) -> String {
+    text("player-start-resuming", &[("clock", Arg::Text(clock))])
+}
+
+/// Button on the starting screen that plays the episode from its beginning.
+pub fn player_start_from_beginning() -> String {
+    text("player-start-from-beginning", &[])
+}
+
+/// Button on the starting screen that opens the list of steps.
+pub fn player_start_details() -> String {
+    text("player-start-details", &[])
+}
+
+/// Button that skips the source being asked. The name is the source's.
+pub fn player_start_skip_source(name: &str) -> String {
+    text("player-start-skip-source", &[("name", Arg::Text(name))])
+}
+
+/// Button that opens the next stream of the same source.
+pub fn player_start_skip_stream() -> String {
+    text("player-start-skip-stream", &[])
+}
+
+/// Step line when a start is slow: still waiting for the source. The name is the source's.
+pub fn player_start_still_waiting(name: &str) -> String {
+    text("player-start-still-waiting", &[("name", Arg::Text(name))])
+}
+
+/// Step line while the device is offline and the episode will start when it is back.
+pub fn player_start_offline() -> String {
+    text("player-start-offline", &[])
+}
+
+/// Detail line while offline. The episode is its label.
+pub fn player_start_offline_detail(episode: &str) -> String {
+    text("player-start-offline-detail", &[("episode", Arg::Text(episode))])
+}
+
+/// Button on the failure screen that opens the fix for a title that matched the wrong show.
+pub fn player_start_fix_match() -> String {
+    text("player-start-fix-match", &[])
+}
+
+/// Details row label for the translation of the episode.
+pub fn player_start_translation() -> String {
+    text("player-start-translation", &[])
+}
+
+/// Details row once the title has been looked up.
+pub fn player_start_looked_up() -> String {
+    text("player-start-looked-up", &[])
+}
+
+/// Seconds on the starting screen's detail line and Details rows.
+pub fn player_start_seconds(seconds: i64) -> String {
+    text("player-start-seconds", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Spoken once, when a start has taken more than a few seconds.
+pub fn player_start_still_starting() -> String {
+    text("player-start-still-starting", &[])
+}
+
+/// Spoken when a start begins. The episode is its label.
+pub fn player_start_announce(episode: &str, title: &str) -> String {
+    text("player-start-announce", &[("episode", Arg::Text(episode)), ("title", Arg::Text(title))])
+}
+
+/// Spoken when a start fails: the title, then the reason.
+pub fn player_start_failed_announce(title: &str, reason: &str) -> String {
+    text("player-start-failed-announce", &[("title", Arg::Text(title)), ("reason", Arg::Text(reason))])
+}
+
+/// Accessibility value of the starting screen: the step line, then the detail line.
+pub fn player_start_status(step: &str, detail: &str) -> String {
+    text("player-start-status", &[("step", Arg::Text(step)), ("detail", Arg::Text(detail))])
+}
+
+/// Detail line on the starting screen after the viewer chose to play from the beginning.
+pub fn player_start_beginning() -> String {
+    text("player-start-beginning", &[])
+}
+
+/// Details row while a source is being asked.
+pub fn player_start_row_asking() -> String {
+    text("player-start-row-asking", &[])
+}
+
+/// Details row outcome when a source has no match for the show.
+pub fn player_start_row_no_match() -> String {
+    text("player-start-row-no-match", &[])
+}
+
+/// Details row outcome when a source has the show and not the episode. The episode is its label.
+pub fn player_start_row_no_episode(episode: &str) -> String {
+    text("player-start-row-no-episode", &[("episode", Arg::Text(episode))])
+}
+
+/// Details row outcome when a source failed.
+pub fn player_start_row_failed() -> String {
+    text("player-start-row-failed", &[])
+}
+
+/// Details row outcome when a source took too long.
+pub fn player_start_row_timed_out() -> String {
+    text("player-start-row-timed-out", &[])
+}
+
+/// Details row outcome when the viewer skipped a source.
+pub fn player_start_row_skipped() -> String {
+    text("player-start-row-skipped", &[])
+}
+
+/// Second clause of a failure: the sources that were asked, joined as a list by the app.
+pub fn player_start_asked(names: &str) -> String {
+    text("player-start-asked", &[("names", Arg::Text(names))])
+}
+
+/// Label of the switch in the Details list that plays the episode with its subtitles.
+pub fn player_start_subtitled() -> String {
+    text("player-start-subtitled", &[])
 }
 
 /// Title of the stall card. The seconds count up.

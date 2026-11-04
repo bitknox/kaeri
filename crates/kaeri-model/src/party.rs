@@ -211,6 +211,9 @@ pub enum NoSourceWhy {
     NoSources,
     /// The sources were asked, and none of them played it.
     NotFound,
+    /// The device stayed offline for the two minutes a start waits for a connection, and no
+    /// source was asked.
+    NoConnection,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

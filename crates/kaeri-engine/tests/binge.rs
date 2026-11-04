@@ -137,6 +137,8 @@ fn settings(auto_next: bool) -> PlaySettings {
         up_next_countdown: 10,
         mpv_options: Vec::new(),
         untracked: false,
+        swarm: Default::default(),
+        begin: Default::default(),
     }
 }
 

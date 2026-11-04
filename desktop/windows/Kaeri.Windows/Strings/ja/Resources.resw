@@ -209,6 +209,9 @@
   <data name="CauseNoSources" xml:space="preserve">
     <value>ソースが設定されていません。ソースの画面で追加してください。</value>
   </data>
+  <data name="CauseNoConnection" xml:space="preserve">
+    <value>接続がありません。オンラインに戻ったらもう一度お試しください。</value>
+  </data>
   <data name="NoticeNotAired" xml:space="preserve">
     <value>第{episode}話は{when}に放送予定です。</value>
   </data>
@@ -265,6 +268,27 @@
   </data>
   <data name="StatusLoadingSources" xml:space="preserve">
     <value>ソースを読み込んでいます…</value>
+  </data>
+  <data name="StartLookingUpTitle" xml:space="preserve">
+    <value>タイトルを検索中</value>
+  </data>
+  <data name="StartGettingSourcesReady" xml:space="preserve">
+    <value>ソースを準備中</value>
+  </data>
+  <data name="StartAskingSource" xml:space="preserve">
+    <value>{name}に問い合わせ中</value>
+  </data>
+  <data name="StartOpeningStream" xml:space="preserve">
+    <value>ストリームを開いています</value>
+  </data>
+  <data name="StartTryingAnotherStream" xml:space="preserve">
+    <value>別のストリームを試しています</value>
+  </data>
+  <data name="StartFindingPeers" xml:space="preserve">
+    <value>ピアを探しています</value>
+  </data>
+  <data name="StartBuffering" xml:space="preserve">
+    <value>バッファリング中</value>
   </data>
   <data name="StatusSearchingSources" xml:space="preserve">
     <value>ソースでエピソード{episode}を検索しています…</value>
@@ -4027,6 +4051,123 @@
   </data>
   <data name="PlayerBuffering" xml:space="preserve">
     <value>バッファリング中</value>
+  </data>
+  <data name="PlayerStartPlace" xml:space="preserve">
+    <value>ソース {total} 件中 {place} 件目</value>
+  </data>
+  <data name="PlayerStartPinned" xml:space="preserve">
+    <value>この作品で選んだもの</value>
+  </data>
+  <data name="PlayerStartMissNoMatch" xml:space="preserve">
+    <value>{name}にはこの作品がありません</value>
+  </data>
+  <data name="PlayerStartMissNoEpisode" xml:space="preserve">
+    <value>{name}にはエピソード {episode} がありません</value>
+  </data>
+  <data name="PlayerStartMissFailed" xml:space="preserve">
+    <value>{name}から応答がありませんでした</value>
+  </data>
+  <data name="PlayerStartMissTimedOut" xml:space="preserve">
+    <value>{name}の応答に時間がかかりすぎました</value>
+  </data>
+  <data name="PlayerStartMissSkipped" xml:space="preserve">
+    <value>{name}をスキップしました</value>
+  </data>
+  <data name="PlayerStartResting" xml:space="preserve">
+    <value>最近の失敗によりスキップ</value>
+  </data>
+  <data name="PlayerStartFrom" xml:space="preserve">
+    <value>{name}から</value>
+  </data>
+  <data name="PlayerStartNoVideo" xml:space="preserve">
+    <value>最初のストリームは映像が表示されませんでした</value>
+  </data>
+  <data name="PlayerStartStreamPlace" xml:space="preserve">
+    <value>ストリーム {total} 件中 {next} 件目</value>
+  </data>
+  <data name="PlayerStartPeers_other" xml:space="preserve">
+    <value>ピア {count} 件</value>
+  </data>
+  <data name="PlayerStartSpeed" xml:space="preserve">
+    <value>{speed}/s</value>
+  </data>
+  <data name="PlayerStartBufferingPercent" xml:space="preserve">
+    <value>バッファリング中 · {percent}</value>
+  </data>
+  <data name="PlayerStartResuming" xml:space="preserve">
+    <value>{clock} から再開中</value>
+  </data>
+  <data name="PlayerStartFromBeginning" xml:space="preserve">
+    <value>最初から再生</value>
+  </data>
+  <data name="PlayerStartDetails" xml:space="preserve">
+    <value>詳細</value>
+  </data>
+  <data name="PlayerStartSkipSource" xml:space="preserve">
+    <value>{name}をスキップ</value>
+  </data>
+  <data name="PlayerStartSkipStream" xml:space="preserve">
+    <value>このストリームをスキップ</value>
+  </data>
+  <data name="PlayerStartStillWaiting" xml:space="preserve">
+    <value>{name}を待っています</value>
+  </data>
+  <data name="PlayerStartOffline" xml:space="preserve">
+    <value>接続を待っています</value>
+  </data>
+  <data name="PlayerStartOfflineDetail" xml:space="preserve">
+    <value>オフラインです。エピソード {episode} はオンラインに戻ると開始します。</value>
+  </data>
+  <data name="PlayerStartFixMatch" xml:space="preserve">
+    <value>一致を修正</value>
+  </data>
+  <data name="PlayerStartTranslation" xml:space="preserve">
+    <value>音声と字幕</value>
+  </data>
+  <data name="PlayerStartLookedUp" xml:space="preserve">
+    <value>タイトルを検索しました</value>
+  </data>
+  <data name="PlayerStartSeconds" xml:space="preserve">
+    <value>{seconds} 秒</value>
+  </data>
+  <data name="PlayerStartStillStarting" xml:space="preserve">
+    <value>まだ開始中です。ソースを選ぶこともできます。</value>
+  </data>
+  <data name="PlayerStartAnnounce" xml:space="preserve">
+    <value>エピソード {episode} {title} を開始します</value>
+  </data>
+  <data name="PlayerStartFailedAnnounce" xml:space="preserve">
+    <value>{title}。{reason}</value>
+  </data>
+  <data name="PlayerStartStatus" xml:space="preserve">
+    <value>{step}、{detail}</value>
+  </data>
+  <data name="PlayerStartBeginning" xml:space="preserve">
+    <value>最初から開始します</value>
+  </data>
+  <data name="PlayerStartRowAsking" xml:space="preserve">
+    <value>問い合わせ中</value>
+  </data>
+  <data name="PlayerStartRowNoMatch" xml:space="preserve">
+    <value>この作品はありません</value>
+  </data>
+  <data name="PlayerStartRowNoEpisode" xml:space="preserve">
+    <value>エピソード {episode} はありません</value>
+  </data>
+  <data name="PlayerStartRowFailed" xml:space="preserve">
+    <value>応答なし</value>
+  </data>
+  <data name="PlayerStartRowTimedOut" xml:space="preserve">
+    <value>時間切れ</value>
+  </data>
+  <data name="PlayerStartRowSkipped" xml:space="preserve">
+    <value>スキップ済み</value>
+  </data>
+  <data name="PlayerStartAsked" xml:space="preserve">
+    <value>{names}に問い合わせました。</value>
+  </data>
+  <data name="PlayerStartSubtitled" xml:space="preserve">
+    <value>字幕あり</value>
   </data>
   <data name="PlayerStallTitle" xml:space="preserve">
     <value>ソースがバッファリング中 · {seconds}秒</value>

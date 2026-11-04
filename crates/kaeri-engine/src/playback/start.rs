@@ -24,9 +24,10 @@ use crate::{
         autonext::{Follow, Staged},
         handoff::{Handoff, successor, take_controls},
         link::{PlayerOpener, PlayerTarget, opener},
-        resolve::{Pick, Resolved, resolve_for_playback},
+        resolve::{Pick, Resolved, Unplayable, resolve_for_playback},
         shaders::shader_dir,
         slot::PlayerSlot,
+        starting::Starting,
     },
     services::Services,
     show_settings,
@@ -215,6 +216,7 @@ fn stage(
     played: &Played,
     title: String,
     episode_title: Option<String>,
+    resume: Option<f64>,
     opener: &dyn PlayerOpener,
     engine: &mut EngineState,
 ) -> Event {
@@ -231,10 +233,19 @@ fn stage(
     let speed = engine.config.effective().playback.persisted_speed.unwrap_or(1.0);
     match opener.target() {
         PlayerTarget::Local => {
-            Event::PlaybackStaged { id, title, episode, episode_title, speed }
+            Event::PlaybackStaged { id, title, episode, episode_title, speed, resume }
         }
         PlayerTarget::Cast(_) => Event::CastStaged { id, title, episode, episode_title, speed },
     }
+}
+
+/// Where `episode` of title `id` was left, when it was: best-effort, as every read of the
+/// resume point is, since a database hiccup must not stop an episode from playing.
+fn resume_of(store: &kaeri_store::Store, id: AnilistId, episode: &str) -> Option<f64> {
+    store
+        .resume_position(id, episode)
+        .inspect_err(|e| tracing::warn!(error = %e, "could not read resume position"))
+        .unwrap_or(None)
 }
 
 /// Play a link the viewer opened as episode `episode` of title `id`, as they confirmed it: a
@@ -339,18 +350,25 @@ fn play_staged(
 ) -> Event {
     let Services { paths, sync, prefetch, store, .. } = services;
     let played = engine.next_playback(id, &episode);
-    let staged = stage(&played, title, episode_title, opener.as_ref(), engine);
+    // Where the episode was left, for the starting screen to say it resumes there. Not for a
+    // play from the beginning, or one that records nothing.
+    let resume = (!from_start && id != kaeri_model::opened::UNTRACKED)
+        .then(|| resume_of(store, id, &episode))
+        .flatten();
+    let staged = stage(&played, title, episode_title, resume, opener.as_ref(), engine);
     // What the show sets for itself, over the config in effect: sub or dub, quality, what is
     // skipped.
     let for_show = show_settings::for_show(engine.config.effective(), store, id);
     let hints =
         hints_for(id, &episode, PlayKind::Staged, for_show.playback.skip_filler, engine);
-    let EngineState { player_tx, finding, .. } = engine;
+    let EngineState { player_tx, finding, skipping, beginning, .. } = engine;
     let config = &for_show;
     // A fresh channel per playback. The one playing gives up its window only once
     // this one has something to play — see `Handoff`.
     let (prx, handoff) = take_controls(player_tx, successor(id, &episode, &hints, config));
     let stopped = watch_for_stop(finding);
+    let skip = watch_for_skip(skipping);
+    let begin = watch_for_begin(beginning);
     // Never from the streams found ahead for a release picked by hand: the pick names its
     // own. Otherwise the same fresh channel, the same session-replacement semantics.
     let prefetched = match pick {
@@ -372,6 +390,8 @@ fn play_staged(
         party,
         prx,
         stopped,
+        skip,
+        begin,
         handoff,
         config,
         services,
@@ -428,11 +448,14 @@ pub fn play_local(
         engine.cache.hints(id, &episode, for_show.playback.skip_filler, PlayKind::Staged);
     // Named by the download it plays: the Downloads screen says what its rows are called.
     let episode_title = engine.cache.episode_title(id, &episode);
-    let staged = stage(&played, title.clone(), episode_title, opener.as_ref(), engine);
+    let resume = resume_of(store, id, &episode);
+    let staged = stage(&played, title.clone(), episode_title, resume, opener.as_ref(), engine);
     let _ = tx.send(staged);
-    let EngineState { player_tx, finding, .. } = engine;
+    let EngineState { player_tx, finding, skipping, beginning, .. } = engine;
     // Nothing to find: it opens at once, and a Stop is its session's from the start.
     *finding = None;
+    *skipping = None;
+    *beginning = None;
     let config = &for_show;
     // No provider walk and no torrent session — the file is on disk — but the full
     // playback session all the same: a downloaded episode records history, resumes,
@@ -531,11 +554,24 @@ fn machine(opener: Arc<dyn PlayerOpener>, services: &Services) -> playback::Mach
 /// A Stop is that playback's whether or not it has opened yet: one still finding its stream
 /// reads its controls only once it plays, so it is told at once as well, and opens nothing.
 pub fn control_player(command: PlayerCommand, engine: &EngineState) {
-    let EngineState { player_tx, finding, .. } = engine;
+    let EngineState { player_tx, finding, skipping, beginning, .. } = engine;
+    if command == PlayerCommand::PlayFromBeginning
+        && let Some(beginning) = beginning
+    {
+        // Read when the file is opened; a file already open hears the command as well.
+        beginning.store(true, std::sync::atomic::Ordering::SeqCst);
+    }
     if command == PlayerCommand::Stop
         && let Some(finding) = finding
     {
         finding.send_replace(true);
+    }
+    // Heard by the walk through the sources while one is under way, and by nothing after.
+    if command == PlayerCommand::SkipSource {
+        if let Some(skipping) = skipping.as_ref().filter(|skipping| !skipping.is_closed()) {
+            skipping.send_modify(|count| *count += 1);
+        }
+        return;
     }
     if let Some(sender) = player_tx.as_ref() {
         let _ = sender.send(command);
@@ -578,6 +614,24 @@ fn watch_for_stop(finding: &mut Option<watch::Sender<bool>>) -> watch::Receiver<
     let (stop, stopped) = watch::channel(false);
     *finding = Some(stop);
     stopped
+}
+
+/// A fresh count for the skip that reaches the playback starting now, kept as the engine's
+/// `skipping` in place of the one before it.
+fn watch_for_skip(skipping: &mut Option<watch::Sender<u64>>) -> watch::Receiver<u64> {
+    let (skip, skipped) = watch::channel(0);
+    *skipping = Some(skip);
+    skipped
+}
+
+/// A fresh flag for the begin-at-0 that reaches the playback starting now, kept as the engine's
+/// `beginning` in place of the one before it.
+fn watch_for_begin(
+    beginning: &mut Option<Arc<std::sync::atomic::AtomicBool>>,
+) -> Arc<std::sync::atomic::AtomicBool> {
+    let begin = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    *beginning = Some(begin.clone());
+    begin
 }
 
 /// What ended a playback's wait for its stream before the stream was found.
@@ -629,6 +683,10 @@ fn spawn_playback(
     commands: mpsc::UnboundedReceiver<kaeri_model::command::PlayerCommand>,
     // Whether a Stop reached this playback before it opened: see `control_player`.
     mut stopped: watch::Receiver<bool>,
+    // The count the walk through the sources watches for a skip of the source it is asking.
+    skip: watch::Receiver<u64>,
+    // Whether the viewer asked to begin at 0: see `PlayerCommand::PlayFromBeginning`.
+    begin: Arc<std::sync::atomic::AtomicBool>,
     handoff: Handoff,
     config: &Config,
     services: &Services,
@@ -671,6 +729,8 @@ fn spawn_playback(
     let reports = services.servers.reports();
     // An untracked play is of no show whose episodes could be compared.
     let find = !untracked && services.skip_find.runs(config);
+    let mut link = services.connection.subscribe();
+    let torrents = services.registry.torrents().clone();
     let (config, meta, store, registry, http, machine, slot, tx) = (
         config.clone(),
         services.meta.clone(),
@@ -684,6 +744,7 @@ fn spawn_playback(
 
     tokio::spawn(async move {
         let playback = config.playback.clone();
+        let starting = Starting::new(&tx, id, &episode, Some(skip));
         let resolving = async {
             match prefetched {
                 Some(found) => {
@@ -691,17 +752,35 @@ fn spawn_playback(
                     Ok(found)
                 }
                 None => {
-                    resolve_for_playback(
-                        &meta,
-                        &store,
-                        &registry,
-                        id,
-                        &episode,
-                        pick,
-                        &playback,
-                        job.as_ref(),
-                    )
-                    .await
+                    // Offline, or offline again before any source is asked, the start waits
+                    // for a connection for up to two minutes and carries on by itself when it
+                    // is back. Stopped meanwhile, the select below ends it at once.
+                    let waited = starting
+                        .when_connected(
+                            &mut link,
+                            crate::playback::starting::OFFLINE_WAIT,
+                            || {
+                                resolve_for_playback(
+                                    &meta,
+                                    &store,
+                                    &registry,
+                                    id,
+                                    &episode,
+                                    pick.clone(),
+                                    &playback,
+                                    job.as_ref(),
+                                    Some(&starting),
+                                )
+                            },
+                        )
+                        .await;
+                    match waited {
+                        Some(resolved) => resolved,
+                        None => {
+                            tracing::info!(episode = %episode, "no connection came back in time");
+                            Err(Unplayable::no_connection())
+                        }
+                    }
                 }
             }
         };
@@ -757,6 +836,11 @@ fn spawn_playback(
                 // The failure ladder's first rung: name the failure rather than showing an
                 // empty screen. Releasing the eyecatch is what the alert does for us. In a
                 // party the dialog names it instead, and the ending below releases it.
+                let failure = kaeri_model::starting::StartFailure {
+                    why: reason.why,
+                    text: reason.text.clone(),
+                    asked: starting.asked(),
+                };
                 if party {
                     let _ = tx.send(Event::PartyNoSource {
                         id,
@@ -769,12 +853,26 @@ fn spawn_playback(
                 }
                 // A window left open for this episode would wait for nothing.
                 slot.release();
-                let _ = tx
-                    .send(Event::playback_ended(false, kaeri_model::playback::Ending::Failed));
+                let _ = tx.send(Event::playback_failed(failure));
                 return;
             }
         };
         let (streams, mut context) = context;
+        // Found, from the ladder just now or from ahead: the screen's step is now the player
+        // opening the first stream.
+        if let Some(first) = streams.first() {
+            let source =
+                registry.get(&first.provider_id).map(|s| s.manifest().display_name.clone());
+            starting.step(
+                kaeri_model::starting::StartStep::Found {
+                    count: u32::try_from(streams.len()).unwrap_or(u32::MAX),
+                    source,
+                    quality: first.quality,
+                    translation: context.translation,
+                },
+                Some(Msg::StartOpeningStream),
+            );
+        }
         // Played from the beginning: no resume point, so the player opens at nought, nothing
         // says it resumed, and the history it writes as it plays is where it is left next.
         if from_start {
@@ -801,6 +899,8 @@ fn spawn_playback(
             shader_dir,
             reports,
             find_skip_times: find,
+            swarm: crate::playback::starting::Swarm::of(torrents),
+            begin,
             ..play_settings(&config, tracker_ids, hub)
         };
         let settings = if untracked { settings.untracked() } else { settings };
@@ -856,6 +956,8 @@ pub fn play_settings(
         up_next_countdown: playback::UP_NEXT_COUNTDOWN,
         mpv_options: kaeri_playback::protocol::option_pairs(&playback.mpv_args),
         untracked: false,
+        swarm: Default::default(),
+        begin: Default::default(),
     }
 }
 

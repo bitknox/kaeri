@@ -10,6 +10,50 @@ player-choose-source = Выбрать { -source }
 player-choose-another-source = Выбрать другой { -source }
 player-add-plugin-store = Добавить { -plugin-store }
 player-buffering = Буферизация
+player-start-place = { -source } { $place } из { $total }
+player-start-pinned = Ваш выбор для этого шоу
+player-start-miss-no-match = У { $name } нет этого шоу
+player-start-miss-no-episode = У { $name } нет серии { $episode }
+player-start-miss-failed = { $name } не ответил
+player-start-miss-timed-out = { $name } отвечал слишком долго
+player-start-miss-skipped = Вы пропустили { $name }
+player-start-resting = Пропущены после недавних сбоев
+player-start-from = Из { $name }
+player-start-no-video = Первый не показал видео
+player-start-stream-place = Поток { $next } из { $total }
+player-start-peers = { $count ->
+    [one] { $count } пир
+    [few] { $count } пира
+    [many] { $count } пиров
+   *[other] { $count } пира
+ }
+player-start-speed = { $speed }/с
+player-start-buffering-percent = Буферизация · { $percent }
+player-start-resuming = Продолжаем с { $clock }
+player-start-from-beginning = Смотреть с начала
+player-start-details = Подробности
+player-start-skip-source = Пропустить { $name }
+player-start-skip-stream = Пропустить этот поток
+player-start-still-waiting = Всё ещё ждём { $name }
+player-start-offline = Ожидание подключения
+player-start-offline-detail = Вы не в сети. Серия { $episode } начнётся, когда сеть появится.
+player-start-fix-match = Исправить совпадение
+player-start-translation = Звук и субтитры
+player-start-looked-up = Название найдено
+player-start-seconds = { $seconds } с
+player-start-still-starting = Всё ещё запускается. Можно выбрать { -source }.
+player-start-announce = Запуск серии { $episode }, { $title }
+player-start-failed-announce = { $title }. { $reason }
+player-start-status = { $step }, { $detail }
+player-start-beginning = Начинаем сначала
+player-start-row-asking = Запрос
+player-start-row-no-match = Нет этого шоу
+player-start-row-no-episode = Нет серии { $episode }
+player-start-row-failed = Не ответил
+player-start-row-timed-out = Слишком долго
+player-start-row-skipped = Пропущено
+player-start-asked = Опрошены: { $names }.
+player-start-subtitled = { -subbed-cap }
 player-stall-title = { -source-cap } буферизуется · { $seconds } с
 player-stall-detail = Другой поток может начаться без ожидания.
 player-switch-source = Сменить { -source }

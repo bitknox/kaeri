@@ -20,6 +20,16 @@ pub fn player_stats_fixture(state: StatsFixture) -> PlayerStats {
     kaeri_engine::playback::stats::fixture(state)
 }
 
+/// The events of a made-up start in `state`, each with the milliseconds after the start it is
+/// said: what an app's previews, screenshots and tests show of the starting screen with no
+/// network or player behind them.
+#[uniffi::export]
+pub fn starting_fixture(
+    state: kaeri_model::starting::StartingFixture,
+) -> Vec<kaeri_model::starting::FixtureEvent> {
+    kaeri_engine::playback::starting::fixture(state)
+}
+
 /// A made-up marking bar in `state`: what an app's previews, screenshots and tests show with no
 /// player behind them.
 #[uniffi::export]
@@ -323,5 +333,13 @@ mod tests {
         assert!(waiting.waiting && waiting.rows.iter().all(|r| r.value == "–"));
         let local = player_stats_fixture(StatsFixture::Local);
         assert!(local.rows.iter().all(|r| r.label != "Network"));
+        let asking = starting_fixture(kaeri_model::starting::StartingFixture::AskingPinned);
+        assert!(asking.iter().any(|e| matches!(
+            e.event,
+            kaeri_model::event::Event::StartingStep {
+                step: kaeri_model::starting::StartStep::AskingSource { pinned: true, .. },
+                ..
+            }
+        )));
     }
 }

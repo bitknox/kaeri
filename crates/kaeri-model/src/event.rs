@@ -356,6 +356,11 @@ pub enum Event {
         watched: bool,
         ending: Ending,
         rolling_on: bool,
+        /// Why it failed, when `ending` is [`Ending::Failed`] and the engine knows: the same
+        /// reason the alert before it says, so a failure screen picks its words and its
+        /// actions from one value.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        failure: Option<crate::starting::StartFailure>,
     },
     /// A playback the engine has started, as Now Playing shows it while its stream is found:
     /// whose it is, what it is called, which episode and the episode's own name, and the speed
@@ -373,6 +378,25 @@ pub enum Event {
         episode: String,
         episode_title: Option<String>,
         speed: f64,
+        /// Where the episode was left, in seconds, when it resumes there: read when the play
+        /// is staged, so the starting screen can say "Resuming at 12:04" from the start. `None`
+        /// for an episode played from the beginning or never watched.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        resume: Option<f64>,
+    },
+    /// A step of a start the engine is making, as the starting screen shows it: which source
+    /// is being asked, one coming up empty, a torrent finding peers, the streams found, the
+    /// player opening one, buffering. Named by the title and episode of the play it belongs to,
+    /// which the screen matches to the [`Event::PlaybackStaged`] it holds. Said from the play
+    /// being staged until its first frame; a start that is cancelled or fails says no more.
+    ///
+    /// `line` is what the step line says now, as a message id, when this step changes it, and
+    /// `None` for a step that only adds to the detail line or the Details list.
+    StartingStep {
+        id: AnilistId,
+        episode: String,
+        step: crate::starting::StartStep,
+        line: Option<Msg>,
     },
     /// A playback the engine has started on the TV it casts to, as [`Event::PlaybackStaged`]
     /// says one for the player here: every play while casting, the first and the next episode
@@ -791,6 +815,16 @@ impl Event {
     /// A playback's ending as the playback says it: whether it rolls on is not its to know,
     /// and the engine says it on the way. See [`Event::PlaybackEnded`].
     pub fn playback_ended(watched: bool, ending: Ending) -> Self {
-        Self::PlaybackEnded { watched, ending, rolling_on: false }
+        Self::PlaybackEnded { watched, ending, rolling_on: false, failure: None }
+    }
+
+    /// A playback that could not play, with the reason the failure screen gives.
+    pub fn playback_failed(failure: crate::starting::StartFailure) -> Self {
+        Self::PlaybackEnded {
+            watched: false,
+            ending: Ending::Failed,
+            rolling_on: false,
+            failure: Some(failure),
+        }
     }
 }

@@ -174,6 +174,9 @@ notice-reason = { $reason }
 # Reason: no source is set up, so nothing can be played or downloaded. Shown in a toast.
 cause-no-sources = Belum ada sumber-sumber yang diatur. Tambahkan satu di layar Sumber-sumber.
 
+# Reason: the play waited two minutes for a connection and the device stayed offline. Shown in a toast and on the failure screen.
+cause-no-connection = Tidak ada koneksi. Coba lagi saat kamu kembali online.
+
 # A play's explanation: the episode's broadcast is still ahead. The "when" says today, tomorrow or a date.
 notice-not-aired = Episode { $episode } tayang { $when }.
 
@@ -239,6 +242,27 @@ status-looking-up-title = Mencari judul…
 
 # Job note while a play waits for the sources to arrive.
 status-loading-sources = Memuat sumber-sumber…
+
+# Starting screen, step line while the title is looked up.
+start-looking-up-title = Mencari judul
+
+# Starting screen, step line while sources still being set up are waited for.
+start-getting-sources-ready = Menyiapkan sumber-sumber kamu
+
+# Starting screen, step line while one source is asked for the episode. The name is the source's own.
+start-asking-source = Menanyakan ke { $name }
+
+# Starting screen, step line once a stream is found and the player opens it.
+start-opening-stream = Membuka stream
+
+# Starting screen, step line when a stream showed no video and the next stream of the same source is opened.
+start-trying-another-stream = Mencoba stream lain
+
+# Starting screen, step line while a torrent looks for peers that can send it. Never says torrent.
+start-finding-peers = Mencari peer
+
+# Starting screen, step line while the player waits for data to fill its buffer.
+start-buffering = Buffering
 
 # Job note while the sources are asked for an episode. The episode is its label, often a number.
 status-searching-sources = Mencari sumber-sumber untuk episode { $episode }…
@@ -6582,6 +6606,126 @@ player-add-plugin-store = Tambahkan toko plugin
 
 # Short word while the video buffers.
 player-buffering = Memuat
+
+# Detail line while a source is asked and more than one is in the viewer's order.
+player-start-place = { $place } dari { $total } sumber-sumber
+
+# Detail line while the source asked is the one the show is pinned to.
+player-start-pinned = Pilihanmu untuk serial ini
+
+# Detail line when a source has no match for the show.
+player-start-miss-no-match = { $name } tidak punya serial ini
+
+# Detail line when a source has the show and not the episode. The episode is its label.
+player-start-miss-no-episode = { $name } tidak punya episode { $episode }
+
+# Detail line when a source failed and the next is asked.
+player-start-miss-failed = { $name } tidak merespons
+
+# Detail line when a source took too long and the next is asked.
+player-start-miss-timed-out = { $name } terlalu lama
+
+# Detail line after the viewer skipped the source being asked.
+player-start-miss-skipped = Kamu melewati { $name }
+
+# Details row for sources passed over because they failed lately. The name goes before it.
+player-start-resting = Dilewati karena gagal baru-baru ini
+
+# Detail line once the streams are found and the player opens one. The name is the source's.
+player-start-from = Dari { $name }
+
+# Detail line when a stream showed no video and another opens.
+player-start-no-video = Yang pertama tidak menampilkan video
+
+# Detail line with the place of the stream being opened.
+player-start-stream-place = Stream { $next } dari { $total }
+
+# Detail line while a torrent has peers.
+player-start-peers =
+    { $count ->
+       *[other] { $count } peer
+    }
+
+# Detail line with the speed data arrives at, already sized with one decimal, such as "3.4 MB".
+player-start-speed = { $speed }/s
+
+# Step line while the player fills its buffer and gives a number.
+player-start-buffering-percent = Buffering · { $percent }
+
+# Step line while the episode resumes where it was left.
+player-start-resuming = Melanjutkan di { $clock }
+
+# Button on the starting screen that plays the episode from its beginning.
+player-start-from-beginning = Putar dari awal
+
+# Button on the starting screen that opens the list of steps.
+player-start-details = Detail
+
+# Button that skips the source being asked. The name is the source's.
+player-start-skip-source = Lewati { $name }
+
+# Button that opens the next stream of the same source.
+player-start-skip-stream = Lewati stream ini
+
+# Step line when a start is slow: still waiting for the source. The name is the source's.
+player-start-still-waiting = Masih menunggu { $name }
+
+# Step line while the device is offline and the episode will start when it is back.
+player-start-offline = Menunggu koneksi
+
+# Detail line while offline. The episode is its label.
+player-start-offline-detail = Kamu sedang offline. Episode { $episode } dimulai saat kamu kembali online.
+
+# Button on the failure screen that opens the fix for a title that matched the wrong show.
+player-start-fix-match = Perbaiki kecocokan
+
+# Details row label for the translation of the episode.
+player-start-translation = Audio dan subtitel
+
+# Details row once the title has been looked up.
+player-start-looked-up = Judul ditemukan
+
+# Seconds on the starting screen's detail line and Details rows.
+player-start-seconds = { $seconds } dtk
+
+# Spoken once, when a start has taken more than a few seconds.
+player-start-still-starting = Masih memulai. Kamu bisa memilih sumber lain.
+
+# Spoken when a start begins. The episode is its label.
+player-start-announce = Memulai episode { $episode }, { $title }
+
+# Spoken when a start fails: the title, then the reason.
+player-start-failed-announce = { $title }. { $reason }
+
+# Accessibility value of the starting screen: the step line, then the detail line.
+player-start-status = { $step }, { $detail }
+
+# Detail line on the starting screen after the viewer chose to play from the beginning.
+player-start-beginning = Mulai dari awal
+
+# Details row while a source is being asked.
+player-start-row-asking = Menanyakan
+
+# Details row outcome when a source has no match for the show.
+player-start-row-no-match = Tidak punya serial ini
+
+# Details row outcome when a source has the show and not the episode. The episode is its label.
+player-start-row-no-episode = Tidak punya episode { $episode }
+
+# Details row outcome when a source failed.
+player-start-row-failed = Tidak merespons
+
+# Details row outcome when a source took too long.
+player-start-row-timed-out = Terlalu lama
+
+# Details row outcome when the viewer skipped a source.
+player-start-row-skipped = Dilewati
+
+# Second clause of a failure: the sources that were asked, joined as a list by the app.
+player-start-asked = { $names } sudah ditanyai.
+
+# Label of the switch in the Details list that plays the episode with its subtitles.
+player-start-subtitled = Bersubtitel
 
 # Title of the stall card. The seconds count up.
 player-stall-title = Sumber sedang memuat · { $seconds } dtk

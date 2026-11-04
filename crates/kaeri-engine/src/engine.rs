@@ -305,6 +305,7 @@ impl Engine {
                     stores: parts.stores,
                     slot: Default::default(),
                     offline: Default::default(),
+                    connection: Arc::new(tokio::sync::watch::channel(false).0),
                     prefetch: Default::default(),
                     artwork: Default::default(),
                     player_theme,

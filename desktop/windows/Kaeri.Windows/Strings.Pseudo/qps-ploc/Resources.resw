@@ -267,6 +267,10 @@
     <value>[Ñö šöüŕçéš àŕé šéţ üþ. Åðð öñé öñ ţĥé Šöüŕçéš šçŕééñ.~~~~~~~~~~~~~~~~]</value>
     <comment>Reason: no source is set up, so nothing can be played or downloaded. Shown in a toast.</comment>
   </data>
+  <data name="CauseNoConnection" xml:space="preserve">
+    <value>[Ñö çöññéçţîöñ. Ţŕý àĝàîñ ŵĥéñ ýöü'ŕé ƀàçķ öñļîñé.~~~~~~~~~~~~~~~]</value>
+    <comment>Reason: the play waited two minutes for a connection and the device stayed offline. Shown in a toast and on the failure screen.</comment>
+  </data>
   <data name="NoticeNotAired" xml:space="preserve">
     <value>[Éþîšöðé {episode} àîŕš {when}.~~~~~~~]</value>
     <comment>A play's explanation: the episode's broadcast is still ahead. The "when" says today, tomorrow or a date.</comment>
@@ -354,6 +358,34 @@
   <data name="StatusLoadingSources" xml:space="preserve">
     <value>[Ļöàðîñĝ šöüŕçéš…~~~~~]</value>
     <comment>Job note while a play waits for the sources to arrive.</comment>
+  </data>
+  <data name="StartLookingUpTitle" xml:space="preserve">
+    <value>[Ļööķîñĝ üþ ţĥé ţîţļé~~~~~~]</value>
+    <comment>Starting screen, step line while the title is looked up.</comment>
+  </data>
+  <data name="StartGettingSourcesReady" xml:space="preserve">
+    <value>[Ĝéţţîñĝ ýöüŕ šöüŕçéš ŕéàðý~~~~~~~~]</value>
+    <comment>Starting screen, step line while sources still being set up are waited for.</comment>
+  </data>
+  <data name="StartAskingSource" xml:space="preserve">
+    <value>[Åšķîñĝ {name}~~~]</value>
+    <comment>Starting screen, step line while one source is asked for the episode. The name is the source's own.</comment>
+  </data>
+  <data name="StartOpeningStream" xml:space="preserve">
+    <value>[Öþéñîñĝ ţĥé šţŕéàɱ~~~~~~]</value>
+    <comment>Starting screen, step line once a stream is found and the player opens it.</comment>
+  </data>
+  <data name="StartTryingAnotherStream" xml:space="preserve">
+    <value>[Ţŕýîñĝ àñöţĥéŕ šţŕéàɱ~~~~~~~]</value>
+    <comment>Starting screen, step line when a stream showed no video and the next stream of the same source is opened.</comment>
+  </data>
+  <data name="StartFindingPeers" xml:space="preserve">
+    <value>[Ƒîñðîñĝ þééŕš~~~~]</value>
+    <comment>Starting screen, step line while a torrent looks for peers that can send it. Never says torrent.</comment>
+  </data>
+  <data name="StartBuffering" xml:space="preserve">
+    <value>[Ɓüƒƒéŕîñĝ~~~]</value>
+    <comment>Starting screen, step line while the player waits for data to fill its buffer.</comment>
   </data>
   <data name="StatusSearchingSources" xml:space="preserve">
     <value>[Šéàŕçĥîñĝ šöüŕçéš ƒöŕ éþîšöðé {episode}…~~~~~~~~~~~]</value>
@@ -5758,6 +5790,166 @@
   <data name="PlayerBuffering" xml:space="preserve">
     <value>[Ɓüƒƒéŕîñĝ~~~]</value>
     <comment>Short word while the video buffers.</comment>
+  </data>
+  <data name="PlayerStartPlace" xml:space="preserve">
+    <value>[{place} öƒ {total} šöüŕçéš~~~~~~]</value>
+    <comment>Detail line while a source is asked and more than one is in the viewer's order.</comment>
+  </data>
+  <data name="PlayerStartPinned" xml:space="preserve">
+    <value>[Ýöüŕ þîçķ ƒöŕ ţĥîš šĥöŵ~~~~~~~]</value>
+    <comment>Detail line while the source asked is the one the show is pinned to.</comment>
+  </data>
+  <data name="PlayerStartMissNoMatch" xml:space="preserve">
+    <value>[{name} ðöéšñ'ţ ĥàṽé ţĥîš šĥöŵ~~~~~~~~]</value>
+    <comment>Detail line when a source has no match for the show.</comment>
+  </data>
+  <data name="PlayerStartMissNoEpisode" xml:space="preserve">
+    <value>[{name} ðöéšñ'ţ ĥàṽé éþîšöðé {episode}~~~~~~~~~]</value>
+    <comment>Detail line when a source has the show and not the episode. The episode is its label.</comment>
+  </data>
+  <data name="PlayerStartMissFailed" xml:space="preserve">
+    <value>[{name} ðîðñ'ţ àñšŵéŕ~~~~~~]</value>
+    <comment>Detail line when a source failed and the next is asked.</comment>
+  </data>
+  <data name="PlayerStartMissTimedOut" xml:space="preserve">
+    <value>[{name} ţööķ ţöö ļöñĝ~~~~~~]</value>
+    <comment>Detail line when a source took too long and the next is asked.</comment>
+  </data>
+  <data name="PlayerStartMissSkipped" xml:space="preserve">
+    <value>[Ýöü šķîþþéð {name}~~~~~]</value>
+    <comment>Detail line after the viewer skipped the source being asked.</comment>
+  </data>
+  <data name="PlayerStartResting" xml:space="preserve">
+    <value>[Šķîþþéð àƒţéŕ ŕéçéñţ ƒàîļüŕéš~~~~~~~~~]</value>
+    <comment>Details row for sources passed over because they failed lately. The name goes before it.</comment>
+  </data>
+  <data name="PlayerStartFrom" xml:space="preserve">
+    <value>[Ƒŕöɱ {name}~~~]</value>
+    <comment>Detail line once the streams are found and the player opens one. The name is the source's.</comment>
+  </data>
+  <data name="PlayerStartNoVideo" xml:space="preserve">
+    <value>[Ţĥé ƒîŕšţ öñé šĥöŵéð ñö ṽîðéö~~~~~~~~~]</value>
+    <comment>Detail line when a stream showed no video and another opens.</comment>
+  </data>
+  <data name="PlayerStartStreamPlace" xml:space="preserve">
+    <value>[{next} öƒ {total} šţŕéàɱš~~~~~~]</value>
+    <comment>Detail line with the place of the stream being opened.</comment>
+  </data>
+  <data name="PlayerStartPeers_one" xml:space="preserve">
+    <value>[Öñé þééŕ~~~]</value>
+    <comment>Detail line while a torrent has peers.</comment>
+  </data>
+  <data name="PlayerStartPeers_other" xml:space="preserve">
+    <value>[{count} þééŕš~~~]</value>
+    <comment>Detail line while a torrent has peers.</comment>
+  </data>
+  <data name="PlayerStartSpeed" xml:space="preserve">
+    <value>[{speed}/š~~]</value>
+    <comment>Detail line with the speed data arrives at, already sized with one decimal, such as "3.4 MB".</comment>
+  </data>
+  <data name="PlayerStartBufferingPercent" xml:space="preserve">
+    <value>[Ɓüƒƒéŕîñĝ · {percent}~~~~~]</value>
+    <comment>Step line while the player fills its buffer and gives a number.</comment>
+  </data>
+  <data name="PlayerStartResuming" xml:space="preserve">
+    <value>[Ŕéšüɱîñĝ àţ {clock}~~~~~]</value>
+    <comment>Step line while the episode resumes where it was left.</comment>
+  </data>
+  <data name="PlayerStartFromBeginning" xml:space="preserve">
+    <value>[Þļàý ƒŕöɱ ţĥé ƀéĝîññîñĝ~~~~~~~]</value>
+    <comment>Button on the starting screen that plays the episode from its beginning.</comment>
+  </data>
+  <data name="PlayerStartDetails" xml:space="preserve">
+    <value>[Ðéţàîļš~~~]</value>
+    <comment>Button on the starting screen that opens the list of steps.</comment>
+  </data>
+  <data name="PlayerStartSkipSource" xml:space="preserve">
+    <value>[Šķîþ {name}~~~]</value>
+    <comment>Button that skips the source being asked. The name is the source's.</comment>
+  </data>
+  <data name="PlayerStartSkipStream" xml:space="preserve">
+    <value>[Šķîþ ţĥîš šţŕéàɱ~~~~~]</value>
+    <comment>Button that opens the next stream of the same source.</comment>
+  </data>
+  <data name="PlayerStartStillWaiting" xml:space="preserve">
+    <value>[Šţîļļ ŵàîţîñĝ ƒöŕ {name}~~~~~~~]</value>
+    <comment>Step line when a start is slow: still waiting for the source. The name is the source's.</comment>
+  </data>
+  <data name="PlayerStartOffline" xml:space="preserve">
+    <value>[Ŵàîţîñĝ ƒöŕ à çöññéçţîöñ~~~~~~~~]</value>
+    <comment>Step line while the device is offline and the episode will start when it is back.</comment>
+  </data>
+  <data name="PlayerStartOfflineDetail" xml:space="preserve">
+    <value>[Ýöü'ŕé öƒƒļîñé. Éþîšöðé {episode} šţàŕţš ŵĥéñ ýöü'ŕé ƀàçķ.~~~~~~~~~~~~~~~~]</value>
+    <comment>Detail line while offline. The episode is its label.</comment>
+  </data>
+  <data name="PlayerStartFixMatch" xml:space="preserve">
+    <value>[Ƒîẋ ɱàţçĥ~~~]</value>
+    <comment>Button on the failure screen that opens the fix for a title that matched the wrong show.</comment>
+  </data>
+  <data name="PlayerStartTranslation" xml:space="preserve">
+    <value>[Åüðîö àñð šüƀţîţļéš~~~~~~]</value>
+    <comment>Details row label for the translation of the episode.</comment>
+  </data>
+  <data name="PlayerStartLookedUp" xml:space="preserve">
+    <value>[Ļööķéð üþ ţĥé ţîţļé~~~~~~]</value>
+    <comment>Details row once the title has been looked up.</comment>
+  </data>
+  <data name="PlayerStartSeconds" xml:space="preserve">
+    <value>[{seconds} š~~]</value>
+    <comment>Seconds on the starting screen's detail line and Details rows.</comment>
+  </data>
+  <data name="PlayerStartStillStarting" xml:space="preserve">
+    <value>[Šţîļļ šţàŕţîñĝ. Ýöü çàñ çĥööšé à šöüŕçé ñöŵ.~~~~~~~~~~~~~~]</value>
+    <comment>Spoken once, when a start has taken more than a few seconds.</comment>
+  </data>
+  <data name="PlayerStartAnnounce" xml:space="preserve">
+    <value>[Šţàŕţîñĝ éþîšöðé {episode}, {title}~~~~~~~~]</value>
+    <comment>Spoken when a start begins. The episode is its label.</comment>
+  </data>
+  <data name="PlayerStartFailedAnnounce" xml:space="preserve">
+    <value>[{title}. {reason}~~~]</value>
+    <comment>Spoken when a start fails: the title, then the reason.</comment>
+  </data>
+  <data name="PlayerStartStatus" xml:space="preserve">
+    <value>[{step}, {detail}~~~]</value>
+    <comment>Accessibility value of the starting screen: the step line, then the detail line.</comment>
+  </data>
+  <data name="PlayerStartBeginning" xml:space="preserve">
+    <value>[Šţàŕţîñĝ ƒŕöɱ ţĥé ƀéĝîññîñĝ~~~~~~~~~]</value>
+    <comment>Detail line on the starting screen after the viewer chose to play from the beginning.</comment>
+  </data>
+  <data name="PlayerStartRowAsking" xml:space="preserve">
+    <value>[Åšķîñĝ~~]</value>
+    <comment>Details row while a source is being asked.</comment>
+  </data>
+  <data name="PlayerStartRowNoMatch" xml:space="preserve">
+    <value>[Ðöéšñ'ţ ĥàṽé ţĥîš šĥöŵ~~~~~~~]</value>
+    <comment>Details row outcome when a source has no match for the show.</comment>
+  </data>
+  <data name="PlayerStartRowNoEpisode" xml:space="preserve">
+    <value>[Ðöéšñ'ţ ĥàṽé éþîšöðé {episode}~~~~~~~~]</value>
+    <comment>Details row outcome when a source has the show and not the episode. The episode is its label.</comment>
+  </data>
+  <data name="PlayerStartRowFailed" xml:space="preserve">
+    <value>[Ðîðñ'ţ àñšŵéŕ~~~~]</value>
+    <comment>Details row outcome when a source failed.</comment>
+  </data>
+  <data name="PlayerStartRowTimedOut" xml:space="preserve">
+    <value>[Ţööķ ţöö ļöñĝ~~~~]</value>
+    <comment>Details row outcome when a source took too long.</comment>
+  </data>
+  <data name="PlayerStartRowSkipped" xml:space="preserve">
+    <value>[Šķîþþéð~~~]</value>
+    <comment>Details row outcome when the viewer skipped a source.</comment>
+  </data>
+  <data name="PlayerStartAsked" xml:space="preserve">
+    <value>[{names} ŵéŕé àšķéð.~~~~~]</value>
+    <comment>Second clause of a failure: the sources that were asked, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartSubtitled" xml:space="preserve">
+    <value>[Šüƀţîţļéð~~~]</value>
+    <comment>Label of the switch in the Details list that plays the episode with its subtitles.</comment>
   </data>
   <data name="PlayerStallTitle" xml:space="preserve">
     <value>[Šöüŕçé îš ƀüƒƒéŕîñĝ · {seconds} š~~~~~~~~~]</value>

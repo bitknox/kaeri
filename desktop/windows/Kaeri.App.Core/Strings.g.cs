@@ -189,6 +189,9 @@ public static partial class T
     /// <summary>Reason: no source is set up, so nothing can be played or downloaded. Shown in a toast.</summary>
     public static string CauseNoSources => Get("CauseNoSources");
 
+    /// <summary>Reason: the play waited two minutes for a connection and the device stayed offline. Shown in a toast and on the failure screen.</summary>
+    public static string CauseNoConnection => Get("CauseNoConnection");
+
     /// <summary>A play's explanation: the episode's broadcast is still ahead. The "when" says today, tomorrow or a date.</summary>
     public static string NoticeNotAired(long episode, string when) => Fill(Get("NoticeNotAired"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("when", when));
 
@@ -245,6 +248,27 @@ public static partial class T
 
     /// <summary>Job note while a play waits for the sources to arrive.</summary>
     public static string StatusLoadingSources => Get("StatusLoadingSources");
+
+    /// <summary>Starting screen, step line while the title is looked up.</summary>
+    public static string StartLookingUpTitle => Get("StartLookingUpTitle");
+
+    /// <summary>Starting screen, step line while sources still being set up are waited for.</summary>
+    public static string StartGettingSourcesReady => Get("StartGettingSourcesReady");
+
+    /// <summary>Starting screen, step line while one source is asked for the episode. The name is the source's own.</summary>
+    public static string StartAskingSource(string name) => Fill(Get("StartAskingSource"), ("name", name));
+
+    /// <summary>Starting screen, step line once a stream is found and the player opens it.</summary>
+    public static string StartOpeningStream => Get("StartOpeningStream");
+
+    /// <summary>Starting screen, step line when a stream showed no video and the next stream of the same source is opened.</summary>
+    public static string StartTryingAnotherStream => Get("StartTryingAnotherStream");
+
+    /// <summary>Starting screen, step line while a torrent looks for peers that can send it. Never says torrent.</summary>
+    public static string StartFindingPeers => Get("StartFindingPeers");
+
+    /// <summary>Starting screen, step line while the player waits for data to fill its buffer.</summary>
+    public static string StartBuffering => Get("StartBuffering");
 
     /// <summary>Job note while the sources are asked for an episode. The episode is its label, often a number.</summary>
     public static string StatusSearchingSources(string episode) => Fill(Get("StatusSearchingSources"), ("episode", episode));
@@ -4170,6 +4194,123 @@ public static partial class T
     /// <summary>Short word while the video buffers.</summary>
     public static string PlayerBuffering => Get("PlayerBuffering");
 
+    /// <summary>Detail line while a source is asked and more than one is in the viewer's order.</summary>
+    public static string PlayerStartPlace(long place, long total) => Fill(Get("PlayerStartPlace"), ("place", place.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Detail line while the source asked is the one the show is pinned to.</summary>
+    public static string PlayerStartPinned => Get("PlayerStartPinned");
+
+    /// <summary>Detail line when a source has no match for the show.</summary>
+    public static string PlayerStartMissNoMatch(string name) => Fill(Get("PlayerStartMissNoMatch"), ("name", name));
+
+    /// <summary>Detail line when a source has the show and not the episode. The episode is its label.</summary>
+    public static string PlayerStartMissNoEpisode(string name, string episode) => Fill(Get("PlayerStartMissNoEpisode"), ("name", name), ("episode", episode));
+
+    /// <summary>Detail line when a source failed and the next is asked.</summary>
+    public static string PlayerStartMissFailed(string name) => Fill(Get("PlayerStartMissFailed"), ("name", name));
+
+    /// <summary>Detail line when a source took too long and the next is asked.</summary>
+    public static string PlayerStartMissTimedOut(string name) => Fill(Get("PlayerStartMissTimedOut"), ("name", name));
+
+    /// <summary>Detail line after the viewer skipped the source being asked.</summary>
+    public static string PlayerStartMissSkipped(string name) => Fill(Get("PlayerStartMissSkipped"), ("name", name));
+
+    /// <summary>Details row for sources passed over because they failed lately. The name goes before it.</summary>
+    public static string PlayerStartResting => Get("PlayerStartResting");
+
+    /// <summary>Detail line once the streams are found and the player opens one. The name is the source's.</summary>
+    public static string PlayerStartFrom(string name) => Fill(Get("PlayerStartFrom"), ("name", name));
+
+    /// <summary>Detail line when a stream showed no video and another opens.</summary>
+    public static string PlayerStartNoVideo => Get("PlayerStartNoVideo");
+
+    /// <summary>Detail line with the place of the stream being opened.</summary>
+    public static string PlayerStartStreamPlace(long next, long total) => Fill(Get("PlayerStartStreamPlace"), ("next", next.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Detail line while a torrent has peers.</summary>
+    public static string PlayerStartPeers(long count) => Fill(GetPlural("PlayerStartPeers", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Detail line with the speed data arrives at, already sized with one decimal, such as "3.4 MB".</summary>
+    public static string PlayerStartSpeed(string speed) => Fill(Get("PlayerStartSpeed"), ("speed", speed));
+
+    /// <summary>Step line while the player fills its buffer and gives a number.</summary>
+    public static string PlayerStartBufferingPercent(string percent) => Fill(Get("PlayerStartBufferingPercent"), ("percent", percent));
+
+    /// <summary>Step line while the episode resumes where it was left.</summary>
+    public static string PlayerStartResuming(string clock) => Fill(Get("PlayerStartResuming"), ("clock", clock));
+
+    /// <summary>Button on the starting screen that plays the episode from its beginning.</summary>
+    public static string PlayerStartFromBeginning => Get("PlayerStartFromBeginning");
+
+    /// <summary>Button on the starting screen that opens the list of steps.</summary>
+    public static string PlayerStartDetails => Get("PlayerStartDetails");
+
+    /// <summary>Button that skips the source being asked. The name is the source's.</summary>
+    public static string PlayerStartSkipSource(string name) => Fill(Get("PlayerStartSkipSource"), ("name", name));
+
+    /// <summary>Button that opens the next stream of the same source.</summary>
+    public static string PlayerStartSkipStream => Get("PlayerStartSkipStream");
+
+    /// <summary>Step line when a start is slow: still waiting for the source. The name is the source's.</summary>
+    public static string PlayerStartStillWaiting(string name) => Fill(Get("PlayerStartStillWaiting"), ("name", name));
+
+    /// <summary>Step line while the device is offline and the episode will start when it is back.</summary>
+    public static string PlayerStartOffline => Get("PlayerStartOffline");
+
+    /// <summary>Detail line while offline. The episode is its label.</summary>
+    public static string PlayerStartOfflineDetail(string episode) => Fill(Get("PlayerStartOfflineDetail"), ("episode", episode));
+
+    /// <summary>Button on the failure screen that opens the fix for a title that matched the wrong show.</summary>
+    public static string PlayerStartFixMatch => Get("PlayerStartFixMatch");
+
+    /// <summary>Details row label for the translation of the episode.</summary>
+    public static string PlayerStartTranslation => Get("PlayerStartTranslation");
+
+    /// <summary>Details row once the title has been looked up.</summary>
+    public static string PlayerStartLookedUp => Get("PlayerStartLookedUp");
+
+    /// <summary>Seconds on the starting screen's detail line and Details rows.</summary>
+    public static string PlayerStartSeconds(long seconds) => Fill(Get("PlayerStartSeconds"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Spoken once, when a start has taken more than a few seconds.</summary>
+    public static string PlayerStartStillStarting => Get("PlayerStartStillStarting");
+
+    /// <summary>Spoken when a start begins. The episode is its label.</summary>
+    public static string PlayerStartAnnounce(string episode, string title) => Fill(Get("PlayerStartAnnounce"), ("episode", episode), ("title", title));
+
+    /// <summary>Spoken when a start fails: the title, then the reason.</summary>
+    public static string PlayerStartFailedAnnounce(string title, string reason) => Fill(Get("PlayerStartFailedAnnounce"), ("title", title), ("reason", reason));
+
+    /// <summary>Accessibility value of the starting screen: the step line, then the detail line.</summary>
+    public static string PlayerStartStatus(string step, string detail) => Fill(Get("PlayerStartStatus"), ("step", step), ("detail", detail));
+
+    /// <summary>Detail line on the starting screen after the viewer chose to play from the beginning.</summary>
+    public static string PlayerStartBeginning => Get("PlayerStartBeginning");
+
+    /// <summary>Details row while a source is being asked.</summary>
+    public static string PlayerStartRowAsking => Get("PlayerStartRowAsking");
+
+    /// <summary>Details row outcome when a source has no match for the show.</summary>
+    public static string PlayerStartRowNoMatch => Get("PlayerStartRowNoMatch");
+
+    /// <summary>Details row outcome when a source has the show and not the episode. The episode is its label.</summary>
+    public static string PlayerStartRowNoEpisode(string episode) => Fill(Get("PlayerStartRowNoEpisode"), ("episode", episode));
+
+    /// <summary>Details row outcome when a source failed.</summary>
+    public static string PlayerStartRowFailed => Get("PlayerStartRowFailed");
+
+    /// <summary>Details row outcome when a source took too long.</summary>
+    public static string PlayerStartRowTimedOut => Get("PlayerStartRowTimedOut");
+
+    /// <summary>Details row outcome when the viewer skipped a source.</summary>
+    public static string PlayerStartRowSkipped => Get("PlayerStartRowSkipped");
+
+    /// <summary>Second clause of a failure: the sources that were asked, joined as a list by the app.</summary>
+    public static string PlayerStartAsked(string names) => Fill(Get("PlayerStartAsked"), ("names", names));
+
+    /// <summary>Label of the switch in the Details list that plays the episode with its subtitles.</summary>
+    public static string PlayerStartSubtitled => Get("PlayerStartSubtitled");
+
     /// <summary>Title of the stall card. The seconds count up.</summary>
     public static string PlayerStallTitle(long seconds) => Fill(Get("PlayerStallTitle"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -7925,6 +8066,7 @@ public static partial class T
         ["LicensedMarked"] = "Episode {episode} marked as watched.",
         ["NoticeReason"] = "{reason}",
         ["CauseNoSources"] = "No sources are set up. Add one on the Sources screen.",
+        ["CauseNoConnection"] = "No connection. Try again when you're back online.",
         ["NoticeNotAired"] = "Episode {episode} airs {when}.",
         ["NoticeNotAiredYet"] = "Episode {episode} hasn't aired yet. Episode {next} airs {when}.",
         ["CauseAirsToday"] = "today at {time}",
@@ -7947,6 +8089,13 @@ public static partial class T
         ["CauseAlreadyInDownloads_other"] = "{count} episodes are already in downloads.",
         ["StatusLookingUpTitle"] = "Looking up the title…",
         ["StatusLoadingSources"] = "Loading sources…",
+        ["StartLookingUpTitle"] = "Looking up the title",
+        ["StartGettingSourcesReady"] = "Getting your sources ready",
+        ["StartAskingSource"] = "Asking {name}",
+        ["StartOpeningStream"] = "Opening the stream",
+        ["StartTryingAnotherStream"] = "Trying another stream",
+        ["StartFindingPeers"] = "Finding peers",
+        ["StartBuffering"] = "Buffering",
         ["StatusSearchingSources"] = "Searching sources for episode {episode}…",
         ["NoticePlayerFailedToStart"] = "Couldn't start mpv. Check that it runs on its own. ({reason})",
         ["NoticeStreamNoVideo"] = "No video from that stream. Trying {next} of {total}.",
@@ -9298,6 +9447,46 @@ public static partial class T
         ["PlayerChooseAnotherSource"] = "Choose another source",
         ["PlayerAddPluginStore"] = "Add a plugin store",
         ["PlayerBuffering"] = "Buffering",
+        ["PlayerStartPlace"] = "{place} of {total} sources",
+        ["PlayerStartPinned"] = "Your pick for this show",
+        ["PlayerStartMissNoMatch"] = "{name} doesn't have this show",
+        ["PlayerStartMissNoEpisode"] = "{name} doesn't have episode {episode}",
+        ["PlayerStartMissFailed"] = "{name} didn't answer",
+        ["PlayerStartMissTimedOut"] = "{name} took too long",
+        ["PlayerStartMissSkipped"] = "You skipped {name}",
+        ["PlayerStartResting"] = "Skipped after recent failures",
+        ["PlayerStartFrom"] = "From {name}",
+        ["PlayerStartNoVideo"] = "The first one showed no video",
+        ["PlayerStartStreamPlace"] = "{next} of {total} streams",
+        ["PlayerStartPeers_one"] = "One peer",
+        ["PlayerStartPeers_other"] = "{count} peers",
+        ["PlayerStartSpeed"] = "{speed}/s",
+        ["PlayerStartBufferingPercent"] = "Buffering · {percent}",
+        ["PlayerStartResuming"] = "Resuming at {clock}",
+        ["PlayerStartFromBeginning"] = "Play from the beginning",
+        ["PlayerStartDetails"] = "Details",
+        ["PlayerStartSkipSource"] = "Skip {name}",
+        ["PlayerStartSkipStream"] = "Skip this stream",
+        ["PlayerStartStillWaiting"] = "Still waiting for {name}",
+        ["PlayerStartOffline"] = "Waiting for a connection",
+        ["PlayerStartOfflineDetail"] = "You're offline. Episode {episode} starts when you're back.",
+        ["PlayerStartFixMatch"] = "Fix match",
+        ["PlayerStartTranslation"] = "Audio and subtitles",
+        ["PlayerStartLookedUp"] = "Looked up the title",
+        ["PlayerStartSeconds"] = "{seconds} s",
+        ["PlayerStartStillStarting"] = "Still starting. You can choose a source now.",
+        ["PlayerStartAnnounce"] = "Starting episode {episode}, {title}",
+        ["PlayerStartFailedAnnounce"] = "{title}. {reason}",
+        ["PlayerStartStatus"] = "{step}, {detail}",
+        ["PlayerStartBeginning"] = "Starting from the beginning",
+        ["PlayerStartRowAsking"] = "Asking",
+        ["PlayerStartRowNoMatch"] = "Doesn't have this show",
+        ["PlayerStartRowNoEpisode"] = "Doesn't have episode {episode}",
+        ["PlayerStartRowFailed"] = "Didn't answer",
+        ["PlayerStartRowTimedOut"] = "Took too long",
+        ["PlayerStartRowSkipped"] = "Skipped",
+        ["PlayerStartAsked"] = "{names} were asked.",
+        ["PlayerStartSubtitled"] = "Subtitled",
         ["PlayerStallTitle"] = "Source is buffering · {seconds} s",
         ["PlayerStallDetail"] = "Another stream may play without waiting.",
         ["PlayerSwitchSource"] = "Switch source",

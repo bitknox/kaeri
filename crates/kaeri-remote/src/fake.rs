@@ -231,6 +231,7 @@ fn stage(server: &RemoteServer, playing: &Playing) {
         episode: number,
         episode_title,
         speed: 1.0,
+        resume: None,
     });
     tracks(server, playing);
     server.observe(&position(playing));
@@ -315,6 +316,7 @@ fn engine(server: &RemoteServer, script: &mut Script, titles: &[FakeTitle], comm
                         watched: by > 0,
                         ending: Ending::Complete { next: Some(playing.episode.to_string()) },
                         rolling_on: true,
+                        failure: None,
                     });
                     stage(server, playing);
                     return;

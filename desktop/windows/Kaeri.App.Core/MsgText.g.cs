@@ -74,6 +74,13 @@ public static class MsgText
         Msg.NoticeNotAiredYet x => T.NoticeNotAiredYet(x.Episode, x.Next, x.When.Text()),
         Msg.StatusLookingUpTitle => T.StatusLookingUpTitle,
         Msg.StatusLoadingSources => T.StatusLoadingSources,
+        Msg.StartLookingUpTitle => T.StartLookingUpTitle,
+        Msg.StartGettingSourcesReady => T.StartGettingSourcesReady,
+        Msg.StartAskingSource x => T.StartAskingSource(x.Name),
+        Msg.StartOpeningStream => T.StartOpeningStream,
+        Msg.StartTryingAnotherStream => T.StartTryingAnotherStream,
+        Msg.StartFindingPeers => T.StartFindingPeers,
+        Msg.StartBuffering => T.StartBuffering,
         Msg.StatusSearchingSources x => T.StatusSearchingSources(x.Episode),
         Msg.NoticePlayerFailedToStart x => T.NoticePlayerFailedToStart(x.Reason),
         Msg.NoticeStreamNoVideo x => T.NoticeStreamNoVideo(x.Next, x.Total),
@@ -295,6 +302,7 @@ public static class MsgText
     public static string Text(this Cause message) => message switch
     {
         Cause.NoSources => T.CauseNoSources,
+        Cause.NoConnection => T.CauseNoConnection,
         Cause.AirsToday x => T.CauseAirsToday(x.Time),
         Cause.AirsTomorrow x => T.CauseAirsTomorrow(x.Time),
         Cause.AirsInDays x => T.CauseAirsInDays(x.Days, x.Time),

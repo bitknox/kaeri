@@ -4,13 +4,14 @@
 
 use std::time::Duration;
 
-use kaeri_core::stream::Stream;
+use kaeri_core::stream::{Stream, StreamKind};
 use kaeri_model::{
     Msg,
     command::PlayerCommand,
     event::Event,
     hosted::TrackKind as TrackChoice,
     notice::{Notice, NoticeHint},
+    starting::StartStep,
 };
 use kaeri_playback::{
     Action, Choice, PlaybackEvent, PlaybackTracker, ScriptEvent, SkipInterval, SkipKind,
@@ -138,6 +139,17 @@ impl Run<'_> {
         let mut buffered = super::timeline::Buffered::default();
         let clock = tokio::time::Instant::now();
         let mut picture_tick = tokio::time::interval(Duration::from_secs(1));
+        // Until the first frame, once a second: how fast data arrives, for the starting screen.
+        let mut pace_tick = tokio::time::interval(Duration::from_secs(1));
+        let say = |step, line| {
+            crate::playback::starting::say(
+                tx,
+                context.anilist_id,
+                &context.episode,
+                step,
+                line,
+            );
+        };
         // The governor keeps its steps across episodes in this window, but its evidence is
         // per file.
         player.picture.governor.new_file();
@@ -215,6 +227,23 @@ impl Run<'_> {
                     self.still = fetched.ok().flatten();
                     if let Some(next) = self.up_next() {
                         let _ = link.overlay(next).await;
+                    }
+                    continue;
+                }
+                _ = pace_tick.tick(), if !ever_played => {
+                    if stream.kind == StreamKind::TorrentHttp {
+                        if let Some(pace) = settings.swarm.pace(&stream.url) {
+                            say(
+                                StartStep::Swarm {
+                                    peers: pace.peers,
+                                    bytes_per_second: pace.bytes_per_second,
+                                },
+                                None,
+                            );
+                        }
+                    } else {
+                        // Answered as a sampled figure, which is said below.
+                        let _ = link.sample(vec!["cache-speed".to_owned()]).await;
                     }
                     continue;
                 }
@@ -457,7 +486,14 @@ impl Run<'_> {
             // The stats take their figures from what the player says; what is read for them
             // alone goes no further.
             stats.observe(&event);
-            if matches!(event, PlaybackEvent::Sampled { .. }) {
+            if let PlaybackEvent::Sampled { name, value } = &event {
+                if !ever_played
+                    && name == "cache-speed"
+                    && stream.kind != StreamKind::TorrentHttp
+                    && let Some(speed) = value.as_f64().filter(|s| s.is_finite() && *s >= 0.0)
+                {
+                    say(StartStep::Speed { bytes_per_second: speed as u64 }, None);
+                }
                 continue;
             }
 
@@ -637,6 +673,16 @@ impl Run<'_> {
                         if std::mem::take(&mut stall_shown) {
                             let _ = link.overlay(Overlay::StallCleared).await;
                         }
+                    }
+                }
+                // A number only while playback waits on the cache, which before the first frame
+                // a torrent's start does (the player is told to fill it first).
+                PlaybackEvent::BufferFill(percent) => {
+                    if buffering && !ever_played {
+                        say(
+                            StartStep::Buffering { percent: u32::from(*percent) },
+                            Some(Msg::StartBuffering),
+                        );
                     }
                 }
                 PlaybackEvent::Cached(ranges) => {

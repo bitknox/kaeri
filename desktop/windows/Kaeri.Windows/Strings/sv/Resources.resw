@@ -209,6 +209,9 @@
   <data name="CauseNoSources" xml:space="preserve">
     <value>Inga källor är inställda. Lägg till en på skärmen Källor.</value>
   </data>
+  <data name="CauseNoConnection" xml:space="preserve">
+    <value>Ingen anslutning. Försök igen när du är online.</value>
+  </data>
   <data name="NoticeNotAired" xml:space="preserve">
     <value>Avsnitt {episode} sänds {when}.</value>
   </data>
@@ -274,6 +277,27 @@
   </data>
   <data name="StatusLoadingSources" xml:space="preserve">
     <value>Läser in källor…</value>
+  </data>
+  <data name="StartLookingUpTitle" xml:space="preserve">
+    <value>Söker upp titeln</value>
+  </data>
+  <data name="StartGettingSourcesReady" xml:space="preserve">
+    <value>Förbereder dina källor</value>
+  </data>
+  <data name="StartAskingSource" xml:space="preserve">
+    <value>Frågar {name}</value>
+  </data>
+  <data name="StartOpeningStream" xml:space="preserve">
+    <value>Öppnar strömmen</value>
+  </data>
+  <data name="StartTryingAnotherStream" xml:space="preserve">
+    <value>Provar en annan ström</value>
+  </data>
+  <data name="StartFindingPeers" xml:space="preserve">
+    <value>Letar efter peers</value>
+  </data>
+  <data name="StartBuffering" xml:space="preserve">
+    <value>Buffrar</value>
   </data>
   <data name="StatusSearchingSources" xml:space="preserve">
     <value>Söker i källor efter avsnitt {episode}…</value>
@@ -4159,6 +4183,126 @@
   </data>
   <data name="PlayerBuffering" xml:space="preserve">
     <value>Buffrar</value>
+  </data>
+  <data name="PlayerStartPlace" xml:space="preserve">
+    <value>{place} av {total} källor</value>
+  </data>
+  <data name="PlayerStartPinned" xml:space="preserve">
+    <value>Ditt val för den här serien</value>
+  </data>
+  <data name="PlayerStartMissNoMatch" xml:space="preserve">
+    <value>{name} har inte den här serien</value>
+  </data>
+  <data name="PlayerStartMissNoEpisode" xml:space="preserve">
+    <value>{name} har inte avsnitt {episode}</value>
+  </data>
+  <data name="PlayerStartMissFailed" xml:space="preserve">
+    <value>{name} svarade inte</value>
+  </data>
+  <data name="PlayerStartMissTimedOut" xml:space="preserve">
+    <value>{name} tog för lång tid</value>
+  </data>
+  <data name="PlayerStartMissSkipped" xml:space="preserve">
+    <value>Du hoppade över {name}</value>
+  </data>
+  <data name="PlayerStartResting" xml:space="preserve">
+    <value>Hoppades över efter senaste fel</value>
+  </data>
+  <data name="PlayerStartFrom" xml:space="preserve">
+    <value>Från {name}</value>
+  </data>
+  <data name="PlayerStartNoVideo" xml:space="preserve">
+    <value>Den första visade ingen video</value>
+  </data>
+  <data name="PlayerStartStreamPlace" xml:space="preserve">
+    <value>Ström {next} av {total}</value>
+  </data>
+  <data name="PlayerStartPeers_one" xml:space="preserve">
+    <value>En peer</value>
+  </data>
+  <data name="PlayerStartPeers_other" xml:space="preserve">
+    <value>{count} peers</value>
+  </data>
+  <data name="PlayerStartSpeed" xml:space="preserve">
+    <value>{speed}/s</value>
+  </data>
+  <data name="PlayerStartBufferingPercent" xml:space="preserve">
+    <value>Buffrar · {percent}</value>
+  </data>
+  <data name="PlayerStartResuming" xml:space="preserve">
+    <value>Återupptar vid {clock}</value>
+  </data>
+  <data name="PlayerStartFromBeginning" xml:space="preserve">
+    <value>Spela från början</value>
+  </data>
+  <data name="PlayerStartDetails" xml:space="preserve">
+    <value>Detaljer</value>
+  </data>
+  <data name="PlayerStartSkipSource" xml:space="preserve">
+    <value>Hoppa över {name}</value>
+  </data>
+  <data name="PlayerStartSkipStream" xml:space="preserve">
+    <value>Hoppa över strömmen</value>
+  </data>
+  <data name="PlayerStartStillWaiting" xml:space="preserve">
+    <value>Väntar fortfarande på {name}</value>
+  </data>
+  <data name="PlayerStartOffline" xml:space="preserve">
+    <value>Väntar på anslutning</value>
+  </data>
+  <data name="PlayerStartOfflineDetail" xml:space="preserve">
+    <value>Du är offline. Avsnitt {episode} startar när du är online igen.</value>
+  </data>
+  <data name="PlayerStartFixMatch" xml:space="preserve">
+    <value>Rätta matchning</value>
+  </data>
+  <data name="PlayerStartTranslation" xml:space="preserve">
+    <value>Ljud och undertexter</value>
+  </data>
+  <data name="PlayerStartLookedUp" xml:space="preserve">
+    <value>Titeln hittades</value>
+  </data>
+  <data name="PlayerStartSeconds" xml:space="preserve">
+    <value>{seconds} s</value>
+  </data>
+  <data name="PlayerStartStillStarting" xml:space="preserve">
+    <value>Startar fortfarande. Du kan välja bland källor.</value>
+  </data>
+  <data name="PlayerStartAnnounce" xml:space="preserve">
+    <value>Startar avsnitt {episode}, {title}</value>
+  </data>
+  <data name="PlayerStartFailedAnnounce" xml:space="preserve">
+    <value>{title}. {reason}</value>
+  </data>
+  <data name="PlayerStartStatus" xml:space="preserve">
+    <value>{step}, {detail}</value>
+  </data>
+  <data name="PlayerStartBeginning" xml:space="preserve">
+    <value>Startar från början</value>
+  </data>
+  <data name="PlayerStartRowAsking" xml:space="preserve">
+    <value>Frågar</value>
+  </data>
+  <data name="PlayerStartRowNoMatch" xml:space="preserve">
+    <value>Har inte den här serien</value>
+  </data>
+  <data name="PlayerStartRowNoEpisode" xml:space="preserve">
+    <value>Har inte avsnitt {episode}</value>
+  </data>
+  <data name="PlayerStartRowFailed" xml:space="preserve">
+    <value>Svarade inte</value>
+  </data>
+  <data name="PlayerStartRowTimedOut" xml:space="preserve">
+    <value>Tog för lång tid</value>
+  </data>
+  <data name="PlayerStartRowSkipped" xml:space="preserve">
+    <value>Överhoppad</value>
+  </data>
+  <data name="PlayerStartAsked" xml:space="preserve">
+    <value>{names} tillfrågades.</value>
+  </data>
+  <data name="PlayerStartSubtitled" xml:space="preserve">
+    <value>Textad</value>
   </data>
   <data name="PlayerStallTitle" xml:space="preserve">
     <value>Källa buffrar · {seconds} s</value>

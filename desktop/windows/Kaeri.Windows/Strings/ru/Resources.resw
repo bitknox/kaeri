@@ -209,6 +209,9 @@
   <data name="CauseNoSources" xml:space="preserve">
     <value>Источники не настроены. Добавьте источник на экране «Источники».</value>
   </data>
+  <data name="CauseNoConnection" xml:space="preserve">
+    <value>Нет подключения. Повторите попытку, когда появится сеть.</value>
+  </data>
   <data name="NoticeNotAired" xml:space="preserve">
     <value>Эпизод {episode} выходит {when}.</value>
   </data>
@@ -292,6 +295,27 @@
   </data>
   <data name="StatusLoadingSources" xml:space="preserve">
     <value>Загружаем источники…</value>
+  </data>
+  <data name="StartLookingUpTitle" xml:space="preserve">
+    <value>Поиск названия</value>
+  </data>
+  <data name="StartGettingSourcesReady" xml:space="preserve">
+    <value>Подготавливаем ваши источники</value>
+  </data>
+  <data name="StartAskingSource" xml:space="preserve">
+    <value>Запрос к {name}</value>
+  </data>
+  <data name="StartOpeningStream" xml:space="preserve">
+    <value>Открываем поток</value>
+  </data>
+  <data name="StartTryingAnotherStream" xml:space="preserve">
+    <value>Пробуем другой поток</value>
+  </data>
+  <data name="StartFindingPeers" xml:space="preserve">
+    <value>Поиск пиров</value>
+  </data>
+  <data name="StartBuffering" xml:space="preserve">
+    <value>Буферизация</value>
   </data>
   <data name="StatusSearchingSources" xml:space="preserve">
     <value>Запрашиваем источники об эпизоде {episode}…</value>
@@ -4423,6 +4447,132 @@
   </data>
   <data name="PlayerBuffering" xml:space="preserve">
     <value>Буферизация</value>
+  </data>
+  <data name="PlayerStartPlace" xml:space="preserve">
+    <value>источник {place} из {total}</value>
+  </data>
+  <data name="PlayerStartPinned" xml:space="preserve">
+    <value>Ваш выбор для этого шоу</value>
+  </data>
+  <data name="PlayerStartMissNoMatch" xml:space="preserve">
+    <value>У {name} нет этого шоу</value>
+  </data>
+  <data name="PlayerStartMissNoEpisode" xml:space="preserve">
+    <value>У {name} нет серии {episode}</value>
+  </data>
+  <data name="PlayerStartMissFailed" xml:space="preserve">
+    <value>{name} не ответил</value>
+  </data>
+  <data name="PlayerStartMissTimedOut" xml:space="preserve">
+    <value>{name} отвечал слишком долго</value>
+  </data>
+  <data name="PlayerStartMissSkipped" xml:space="preserve">
+    <value>Вы пропустили {name}</value>
+  </data>
+  <data name="PlayerStartResting" xml:space="preserve">
+    <value>Пропущены после недавних сбоев</value>
+  </data>
+  <data name="PlayerStartFrom" xml:space="preserve">
+    <value>Из {name}</value>
+  </data>
+  <data name="PlayerStartNoVideo" xml:space="preserve">
+    <value>Первый не показал видео</value>
+  </data>
+  <data name="PlayerStartStreamPlace" xml:space="preserve">
+    <value>Поток {next} из {total}</value>
+  </data>
+  <data name="PlayerStartPeers_one" xml:space="preserve">
+    <value>{count} пир</value>
+  </data>
+  <data name="PlayerStartPeers_few" xml:space="preserve">
+    <value>{count} пира</value>
+  </data>
+  <data name="PlayerStartPeers_many" xml:space="preserve">
+    <value>{count} пиров</value>
+  </data>
+  <data name="PlayerStartPeers_other" xml:space="preserve">
+    <value>{count} пира</value>
+  </data>
+  <data name="PlayerStartSpeed" xml:space="preserve">
+    <value>{speed}/с</value>
+  </data>
+  <data name="PlayerStartBufferingPercent" xml:space="preserve">
+    <value>Буферизация · {percent}</value>
+  </data>
+  <data name="PlayerStartResuming" xml:space="preserve">
+    <value>Продолжаем с {clock}</value>
+  </data>
+  <data name="PlayerStartFromBeginning" xml:space="preserve">
+    <value>Смотреть с начала</value>
+  </data>
+  <data name="PlayerStartDetails" xml:space="preserve">
+    <value>Подробности</value>
+  </data>
+  <data name="PlayerStartSkipSource" xml:space="preserve">
+    <value>Пропустить {name}</value>
+  </data>
+  <data name="PlayerStartSkipStream" xml:space="preserve">
+    <value>Пропустить этот поток</value>
+  </data>
+  <data name="PlayerStartStillWaiting" xml:space="preserve">
+    <value>Всё ещё ждём {name}</value>
+  </data>
+  <data name="PlayerStartOffline" xml:space="preserve">
+    <value>Ожидание подключения</value>
+  </data>
+  <data name="PlayerStartOfflineDetail" xml:space="preserve">
+    <value>Вы не в сети. Серия {episode} начнётся, когда сеть появится.</value>
+  </data>
+  <data name="PlayerStartFixMatch" xml:space="preserve">
+    <value>Исправить совпадение</value>
+  </data>
+  <data name="PlayerStartTranslation" xml:space="preserve">
+    <value>Звук и субтитры</value>
+  </data>
+  <data name="PlayerStartLookedUp" xml:space="preserve">
+    <value>Название найдено</value>
+  </data>
+  <data name="PlayerStartSeconds" xml:space="preserve">
+    <value>{seconds} с</value>
+  </data>
+  <data name="PlayerStartStillStarting" xml:space="preserve">
+    <value>Всё ещё запускается. Можно выбрать источник.</value>
+  </data>
+  <data name="PlayerStartAnnounce" xml:space="preserve">
+    <value>Запуск серии {episode}, {title}</value>
+  </data>
+  <data name="PlayerStartFailedAnnounce" xml:space="preserve">
+    <value>{title}. {reason}</value>
+  </data>
+  <data name="PlayerStartStatus" xml:space="preserve">
+    <value>{step}, {detail}</value>
+  </data>
+  <data name="PlayerStartBeginning" xml:space="preserve">
+    <value>Начинаем сначала</value>
+  </data>
+  <data name="PlayerStartRowAsking" xml:space="preserve">
+    <value>Запрос</value>
+  </data>
+  <data name="PlayerStartRowNoMatch" xml:space="preserve">
+    <value>Нет этого шоу</value>
+  </data>
+  <data name="PlayerStartRowNoEpisode" xml:space="preserve">
+    <value>Нет серии {episode}</value>
+  </data>
+  <data name="PlayerStartRowFailed" xml:space="preserve">
+    <value>Не ответил</value>
+  </data>
+  <data name="PlayerStartRowTimedOut" xml:space="preserve">
+    <value>Слишком долго</value>
+  </data>
+  <data name="PlayerStartRowSkipped" xml:space="preserve">
+    <value>Пропущено</value>
+  </data>
+  <data name="PlayerStartAsked" xml:space="preserve">
+    <value>Опрошены: {names}.</value>
+  </data>
+  <data name="PlayerStartSubtitled" xml:space="preserve">
+    <value>С субтитрами</value>
   </data>
   <data name="PlayerStallTitle" xml:space="preserve">
     <value>Источник буферизуется · {seconds} с</value>

@@ -528,6 +528,7 @@ mod tests {
             episode: "5".into(),
             episode_title: Some("Fifth".into()),
             speed: 1.25,
+            resume: None,
         });
         let playing = a.playing.as_ref().expect("staged");
         assert_eq!(
@@ -785,6 +786,7 @@ mod tests {
             episode: "2".into(),
             episode_title: Some("Episode 2".into()),
             speed: 1.25,
+            resume: None,
         });
         assert_eq!(a.playing.as_ref().map(|p| p.speed), Some(1.25));
         // ...and here, when Enter asks for one.

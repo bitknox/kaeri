@@ -10,6 +10,50 @@ player-choose-source = Wybierz { -source }
 player-choose-another-source = Wybierz inne { -source }
 player-add-plugin-store = Dodaj { -plugin-store }
 player-buffering = Buforowanie
+player-start-place = { -source } { $place } z { $total }
+player-start-pinned = Twój wybór dla tego serialu
+player-start-miss-no-match = { $name } nie ma tego serialu
+player-start-miss-no-episode = { $name } nie ma odcinka { $episode }
+player-start-miss-failed = { $name } nie odpowiedziało
+player-start-miss-timed-out = { $name } odpowiadało zbyt długo
+player-start-miss-skipped = Pominięto: { $name }
+player-start-resting = Pominięte po niedawnych błędach
+player-start-from = Z: { $name }
+player-start-no-video = Pierwszy nie pokazał obrazu
+player-start-stream-place = Strumień { $next } z { $total }
+player-start-peers = { $count ->
+    [one] Jeden peer
+    [few] { $count } peery
+    [many] { $count } peerów
+   *[other] { $count } peera
+ }
+player-start-speed = { $speed }/s
+player-start-buffering-percent = Buforowanie · { $percent }
+player-start-resuming = Wznawianie od { $clock }
+player-start-from-beginning = Odtwórz od początku
+player-start-details = Szczegóły
+player-start-skip-source = Pomiń: { $name }
+player-start-skip-stream = Pomiń ten strumień
+player-start-still-waiting = Nadal czekam na: { $name }
+player-start-offline = Oczekiwanie na połączenie
+player-start-offline-detail = Jesteś offline. Odcinek { $episode } ruszy, gdy wrócisz.
+player-start-fix-match = Popraw dopasowanie
+player-start-translation = Dźwięk i napisy
+player-start-looked-up = Wyszukano tytuł
+player-start-seconds = { $seconds } s
+player-start-still-starting = Nadal się uruchamia. Możesz wybrać { -source }.
+player-start-announce = Uruchamianie odcinka { $episode }, { $title }
+player-start-failed-announce = { $title }. { $reason }
+player-start-status = { $step }, { $detail }
+player-start-beginning = Start od początku
+player-start-row-asking = Pytanie
+player-start-row-no-match = Nie ma tego serialu
+player-start-row-no-episode = Nie ma odcinka { $episode }
+player-start-row-failed = Nie odpowiedziało
+player-start-row-timed-out = Trwało zbyt długo
+player-start-row-skipped = Pominięto
+player-start-asked = Zapytano: { $names }.
+player-start-subtitled = { -subbed-cap }
 player-stall-title = { -source-cap } buforuje · { $seconds } s
 player-stall-detail = Inny strumień może odtwarzać się bez czekania.
 player-switch-source = Zmień { -source }
