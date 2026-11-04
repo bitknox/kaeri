@@ -639,6 +639,21 @@ public final class AppStore {
         send(.loadDub(id))
     }
 
+    /// Trending over `period`, for Search's rail and its period menu. The choice is remembered by
+    /// the engine; the rail keeps its old covers until the new ones are in.
+    public func loadTrending(_ period: TrendPeriod) {
+        search.choose(period)
+        send(.loadTrending(period))
+    }
+
+    /// Surprise me, or Another: a title from `pool`, which the engine answers with one pick. Past
+    /// 600 ms the button shows a spinner (`search.surpriseSpinning`); pressing again meanwhile
+    /// does nothing.
+    public func surprise(_ pool: SurprisePool) {
+        guard search.beginSurprise() else { return }
+        send(.surprise(pool))
+    }
+
     /// Sources are ready where none were: each title whose episodes are AniList's alone is asked
     /// for them again, however lately it was, so its list takes its source's numbering.
     private func sourcesArrived() {
@@ -922,6 +937,7 @@ public final class AppStore {
             episodesLanded(id)
         case .titleDub(let id, let dub):
             titles.dub(id: id, extent: dub)
+            titles.recount(id, dub: dub, dubChanged: dub != nil)
 
         case .toast(let notice):
             party.apply(event)
@@ -1069,6 +1085,10 @@ public final class AppStore {
             search.live(paused: paused)
         case .browse(let rails):
             search.rails(rails, titles: titles)
+        case .trending(let period, let entries, let updatedAt, let failed, let waiting):
+            search.trending(period, entries: entries, updatedAt: updatedAt, failed: failed, waiting: waiting, titles: titles)
+        case .surprise(let pool, let outcome):
+            search.surprise(pool, outcome)
         case .facets(let facets):
             search.facets(facets)
         case .recentSearches(let queries):

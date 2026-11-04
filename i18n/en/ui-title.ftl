@@ -372,6 +372,10 @@ episode-go-to = Go to episode…
 # @max 24
 episode-go-to-title = Go to episode
 
+# Button of the Go to episode field that goes to the number typed.
+# @max 12
+episode-go-to-go = Go
+
 # Placeholder of the Go to episode field: the first and last episode of the show.
 # @arg first: int
 # @arg last: int

@@ -79,6 +79,7 @@ public struct KaeriCommands<Playback: View, PlayerWindowItems: View>: Commands {
                 navigator.searchFiltersShown.toggle()
             }
             .keyboardShortcut("f", modifiers: [.command, .option])
+            SurpriseMenuItem(store: store, navigator: navigator)
             Button(L.menuCommandPalette) { navigator.paletteShown.toggle() }
                 .keyboardShortcut("k", modifiers: .command)
             Divider()
@@ -161,6 +162,19 @@ public struct KaeriCommands<Playback: View, PlayerWindowItems: View>: Commands {
                 .disabled(navigator.section != .calendar)
             Button(L.calendarFilterMineTitle) { store.setSwitch(.calendarMine, on: true) }
                 .disabled(navigator.section != .calendar)
+            Divider()
+            // A long series' ranges of 100 on the title page, beside Previous Week and Next Week:
+            // ⇧⌘[ and ⇧⌘], since ⌘[ is Back. Go to episode is ⌘L.
+            let ranges = navigator.episodeRangesShown
+            Button(L.menuPreviousEpisodes) { navigator.stepEpisodeRange(by: -1) }
+                .keyboardShortcut("[", modifiers: [.command, .shift])
+                .disabled(ranges?.hasPrevious != true)
+            Button(L.menuNextEpisodes) { navigator.stepEpisodeRange(by: 1) }
+                .keyboardShortcut("]", modifiers: [.command, .shift])
+                .disabled(ranges?.hasNext != true)
+            Button(L.episodeGoTo) { navigator.goToAsked += 1 }
+                .keyboardShortcut("l", modifiers: .command)
+                .disabled(navigator.goToShown == nil)
         }
 
         CommandGroup(after: .windowArrangement) {

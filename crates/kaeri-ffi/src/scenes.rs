@@ -438,6 +438,8 @@ impl FfiEngine {
             // The long franchise beside the six, for a season picker of twelve: a page opens on
             // it by id, as no list has it.
             server.add_titles(fixtures::long_franchise());
+            // And two for the episode list's synopses: twelve episodes, and 230 for its ranges.
+            server.add_titles(fixtures::synopsis_shows());
             // And the short one, five seasons with a film, an OVA and a web series beside them,
             // for a season row that fits across the page with Related beside it.
             server.add_titles(fixtures::franchise());
@@ -575,8 +577,22 @@ fn fixture_sources(scene: &FfiScene, art: &str, provided: &[(Media, u32)]) -> Pr
             MockProvider::new(sources::PROVIDER_ID).with_hits(Vec::new()).arc(),
         ]);
     }
-    let franchise =
-        || sources::with_long_franchise_and(sources::provider_with_art(art), provided);
+    let franchise = || {
+        let mut titles = provided.to_vec();
+        titles.extend(fixtures::synopsis_shows_media().into_iter().map(|media| {
+            // The long runner is still airing: the source lists what is out.
+            let episodes = if media.id == fixtures::LONG_RUNNER {
+                fixtures::LONG_RUNNER_AIRED
+            } else {
+                media.episodes.unwrap_or(1)
+            };
+            (media, episodes)
+        }));
+        sources::with_synopsis_episodes(sources::with_long_franchise_and(
+            sources::provider_with_art(art),
+            &titles,
+        ))
+    };
     let (FfiScene::Playing { media }
     | FfiScene::SkipMarked { media, .. }
     | FfiScene::WatchingMedia { media }) = scene

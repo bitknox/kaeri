@@ -556,6 +556,9 @@ struct HomeHover {
     let notFound: Bool
     let unaired: Bool
     let suggestion: Bool
+    /// The next episode's synopsis, for a title in Continue whose episode table is already here:
+    /// the card shows it in place of the show's. Never fetched for the card.
+    let episodeSynopsis: String?
 
     @MainActor
     init?(_ store: AppStore, _ id: AnilistId) {
@@ -580,12 +583,25 @@ struct HomeHover {
         episode = found.episode
         unaired = found.starts != nil
         suggestion = found.kind != .continue && found.kind != .thisWeek
+        // The next episode named and told, from the table as it is cached.
+        let next = continuing && !notFound
+            ? found.episode.flatMap { number in
+                store.titles.episodes[id]?.first { UInt32($0.number) == number }
+            }
+            : nil
+        let told = next?.description.flatMap { $0.isEmpty ? nil : $0 }
+        episodeSynopsis = told
         if notFound {
             line = L.homeNotFound
         } else if let because = found.because {
             line = L.homeSpotlightBecause(title: because)
+        } else if let reason = found.reason.map(HomeCardLine.reasonText) {
+            line = reason
+        } else if let next, told != nil {
+            line = next.title.map { L.episodeTitledText(number: next.number, title: $0) }
+                ?? L.episodeNumberString(number: next.number)
         } else {
-            line = found.reason.map(HomeCardLine.reasonText)
+            line = nil
         }
     }
 }

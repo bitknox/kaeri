@@ -134,10 +134,13 @@ extension View {
 
     /// One element for an episode: "Episode 7, The Lantern Road", valued "watched", "14 minutes
     /// left" or "not out yet", with its menu's items as actions. The default action plays it.
-    func episodeElement(_ row: EpisodeRow, value: [String], @ViewBuilder actions: () -> some View) -> some View {
+    func episodeElement(
+        _ row: EpisodeRow, value: [String], hint: String? = nil, @ViewBuilder actions: () -> some View
+    ) -> some View {
         accessibilityElement(children: .combine)
             .accessibilityLabel(row.spokenName)
             .accessibilityValue(value.joined(separator: ", "))
+            .accessibilityHint(hint.map { Text(EpisodeSpeech.tagged($0)) } ?? Text(""))
             .accessibilityActions(actions)
             .accessibilityInputLabels([Text(L.episodeNumber(number: Int(episode: row.number)))])
     }
@@ -253,5 +256,16 @@ struct NoticeAnnouncer: ViewModifier {
             words.accessibilitySpeechAnnouncementPriority = item.isAlert ? .high : .default
             AccessibilityNotification.Announcement(words).post()
         }
+    }
+}
+
+/// A synopsis for a screen reader: tagged with the language it is written in, so it is read in
+/// that language, not the interface's.
+@MainActor
+enum EpisodeSpeech {
+    static func tagged(_ text: String) -> AttributedString {
+        var attributed = AttributedString(text)
+        if let code = EpisodeLanguage.of(text) { attributed.languageIdentifier = code }
+        return attributed
     }
 }

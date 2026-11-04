@@ -67,6 +67,36 @@ public enum MotionDemo: String, CaseIterable, Sendable {
     /// Home: Not interested on the first poster that is not Continue's or the week's (Home
     /// board, prototype 6).
     case homeHide
+    /// The title `-KaeriOpen` names opened from nowhere, as the palette does: its page coming in,
+    /// its episode rows laid out.
+    case titleOpen
+    /// The title page's episodes scrolled to the last row of their range, then the next range
+    /// picked, as View › Next Episodes does: the rows crossfading, the pickers coming back.
+    case episodeRange
+    /// Show on the line where spoiler protection starts, then Hide 1.6 s later.
+    case protectionLine
+    /// Show synopsis on the first row spoiler protection hides, as its menu does.
+    case reveal
+    /// Search: Trending's heading menu switched from the period shown to the next one, Today to
+    /// This week (Browsing extras board, loop B).
+    case period
+    /// Surprise me on the screen's pool, then Another on the page it opened, 2.4 s later
+    /// (loop C).
+    case surprise
+    /// Go to episode on the title page on screen, as Go does: the numbers `-KaeriType` lists,
+    /// comma separated, 2 s apart (loop D). By default one in another range, one on the same
+    /// screen and one further down.
+    case goTo
+    /// Digits typed into the Mac's focused episode list, a key every 150 ms: `-KaeriType`'s,
+    /// else 237 (loop E).
+    case typed
+
+    /// What `-KaeriType` gives, for the demos that type.
+    private var typed: String? {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard let at = arguments.firstIndex(of: "-KaeriType"), arguments.indices.contains(at + 1) else { return nil }
+        return arguments[at + 1]
+    }
 
     /// The one the launch arguments name.
     public static func from(arguments: [String] = ProcessInfo.processInfo.arguments) -> MotionDemo? {
@@ -83,6 +113,17 @@ public enum MotionDemo: String, CaseIterable, Sendable {
         case .backSpotlight, .backReopen:
             MotionDemo.t1Spotlight.run(navigator: navigator, store: store)
             try? await Task.sleep(for: .seconds(2))
+        case .episodeRange, .protectionLine, .reveal, .goTo, .typed:
+            for _ in 0..<200 {
+                if let id = navigator.titleOnMac ?? navigator.paths[navigator.section]?.last?.id,
+                   store.titles.episodes[id] != nil { break }
+                try? await Task.sleep(for: .milliseconds(50))
+            }
+            if self == .episodeRange {
+                try? await Task.sleep(for: .milliseconds(600))
+                navigator.episodeListToEnd += 1
+                try? await Task.sleep(for: .milliseconds(1200))
+            }
         case .season:
             for _ in 0..<200 {
                 if let id = navigator.titleOnMac ?? navigator.paths[navigator.section]?.last?.id,
@@ -210,6 +251,72 @@ public enum MotionDemo: String, CaseIterable, Sendable {
             let shelves = store.discovery.view?.sections.filter { $0.kind != .continue && $0.kind != .thisWeek } ?? []
             guard let item = shelves.first?.items.first else { return }
             store.notInterested(item.entry, title: item.entry.showTitle, unaired: item.starts != nil)
+        case .titleOpen:
+            let arguments = ProcessInfo.processInfo.arguments
+            guard let at = arguments.firstIndex(of: "-KaeriOpen"), arguments.indices.contains(at + 1),
+                  let id = AnilistId(arguments[at + 1])
+            else { return }
+            navigator.openTitle(id)
+        case .episodeRange:
+            if navigator.episodeRangesShown != nil {
+                navigator.stepEpisodeRange(by: 1)
+            } else if let id = navigator.paths[navigator.section]?.last?.id,
+                      let rows = store.titles.episodes[id] {
+                // A phone has no View menu: the next range is picked as its picker picks it.
+                let plan = EpisodePlan(rows: rows, picked: navigator.episodeRange[id])
+                guard plan.index + 1 < plan.ranges.count else { return }
+                navigator.episodeRange[id] = plan.index + 1
+            }
+        case .protectionLine:
+            guard let id = navigator.titleOnMac ?? navigator.paths[navigator.section]?.last?.id else { return }
+            withAnimation(.standard) { navigator.showAllSynopses(id, true) }
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(1600))
+                withAnimation(.standard) { navigator.showAllSynopses(id, false) }
+            }
+        case .reveal:
+            guard let id = navigator.titleOnMac ?? navigator.paths[navigator.section]?.last?.id,
+                  let rows = store.titles.episodes[id],
+                  let first = EpisodeProtection.startsAt(rows, spoilers: store.spoilerProtection(for: id))
+            else { return }
+            withAnimation(.standard) { navigator.showSynopsis(id, first) }
+        case .period:
+            store.loadTrending(store.search.trendingPeriod == .today ? .week : .today)
+        case .surprise:
+            guard let pool = surprisePool(store: store, navigator: navigator) else { return }
+            navigator.anotherAsked = false
+            store.surprise(pool)
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(2400))
+                guard let visit = navigator.pickVisit else { return }
+                navigator.anotherAsked = true
+                store.surprise(visit.pool)
+            }
+        case .goTo:
+            guard let id = navigator.titleOnMac ?? navigator.paths[navigator.section]?.last?.id,
+                  let loaded = store.titles.episodes[id], let entry = store.titles[id]
+            else { return }
+            let rows = entry.episodeTable(loaded)
+            let numbers = (typed ?? "137,140,190").split(separator: ",").map(String.init)
+            Task { @MainActor in
+                for (at, number) in numbers.enumerated() {
+                    if at > 0 { try? await Task.sleep(for: .seconds(2)) }
+                    if case .row(let index, let range) = goToResult(rows: rows, typed: number) {
+                        navigator.land(on: id, rows: rows, index: Int(index), range: range.map(Int.init))
+                    }
+                }
+            }
+        case .typed:
+            guard let id = navigator.titleOnMac ?? navigator.paths[navigator.section]?.last?.id,
+                  let loaded = store.titles.episodes[id], let entry = store.titles[id]
+            else { return }
+            let rows = entry.episodeTable(loaded)
+            Task { @MainActor in
+                for digit in typed ?? "237" {
+                    navigator.typeEpisode(String(digit), title: id, rows: rows)
+                    try? await Task.sleep(for: .milliseconds(150))
+                }
+            }
         }
     }
 }

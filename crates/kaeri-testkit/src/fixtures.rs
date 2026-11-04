@@ -529,6 +529,116 @@ pub fn long_franchise_media() -> Vec<Media> {
     long_franchise().into_iter().map(decode).collect()
 }
 
+/// Two titles for the episode list's synopses, in no list, search or franchise: a twelve episode
+/// show with a synopsis and a still on every episode but the tenth, and a long runner whose 230
+/// episodes make three ranges, the last of them not out yet.
+///
+/// | [`SYNOPSIS_SHOW`] 920021 | Tegami no Hikousen / Letters Above the Clouds | TV, finished, 12 episodes; a synopsis on every episode but the tenth |
+/// | [`LONG_RUNNER`] 920020 | Tokei no Arubai / The Clockmaker's Alibi | TV, releasing, 230 episodes weekly from December 2022, 200 out and listed; a synopsis on most, none on every ninth |
+pub const SYNOPSIS_SHOW: AnilistId = AnilistId::new(920_021);
+/// How many episodes [`SYNOPSIS_SHOW`] has.
+pub const SYNOPSIS_SHOW_EPISODES: u32 = 12;
+/// See [`SYNOPSIS_SHOW`].
+pub const LONG_RUNNER: AnilistId = AnilistId::new(920_020);
+/// How many episodes [`LONG_RUNNER`] has.
+pub const LONG_RUNNER_EPISODES: u32 = 230;
+/// How many of [`LONG_RUNNER`]'s episodes are out at [`FIXTURE_NOW`], which is all its source lists.
+pub const LONG_RUNNER_AIRED: u32 = 200;
+
+/// [`SYNOPSIS_SHOW`] and [`LONG_RUNNER`], as the single-title query answers them.
+pub fn synopsis_shows() -> Vec<Value> {
+    use serde_json::json;
+    let one = |id: AnilistId,
+               romaji: &str,
+               english: &str,
+               colour: &str,
+               episodes: u32,
+               year: u16,
+               about: &str| {
+        let id = id.get();
+        json!({
+            "id": id,
+            "idMal": null,
+            "title": { "romaji": romaji, "english": english, "native": null },
+            "format": "TV",
+            "status": "FINISHED",
+            "coverImage": {
+                "large": format!("{ART_HOST}cover/{id}.jpg"),
+                "extraLarge": format!("{ART_HOST}cover/{id}.jpg"),
+                "color": colour,
+            },
+            "season": "SPRING",
+            "seasonYear": year,
+            "description": about,
+            "genres": ["Adventure", "Slice of Life"],
+            "episodes": episodes,
+            "duration": 24,
+            "startDate": { "year": year, "month": 4, "day": 5 },
+            "endDate": { "year": year, "month": 6, "day": 21 },
+            "relations": { "edges": [] },
+        })
+    };
+    // The twelve broadcasts, weekly from Saturday 5 April 2014, so each row says when it aired.
+    let mut letters = one(
+        SYNOPSIS_SHOW,
+        "Tegami no Hikousen",
+        "Letters Above the Clouds",
+        "#5f7fa0",
+        SYNOPSIS_SHOW_EPISODES,
+        2014,
+        "The crew of a patched-up airship carry letters and strangers between islands that \
+         float above an endless sea of cloud.",
+    );
+    letters["aired"] = (1..=SYNOPSIS_SHOW_EPISODES)
+        .map(|episode| {
+            json!({ "episode": episode, "airingAt": 1_396_710_000 + i64::from(episode - 1) * 604_800 })
+        })
+        .collect();
+    // Weekly from Thursday 15 December 2022: the source lists the 200 out, and the schedule has
+    // the 30 still to come. A page lists what is out and the next to air, so its third range is
+    // episode 201 alone, not out yet.
+    let mut runner = one(
+        LONG_RUNNER,
+        "Tokei no Arubai",
+        "The Clockmaker's Alibi",
+        "#8a7f5f",
+        LONG_RUNNER_EPISODES,
+        2023,
+        "Inspector Mido has until the next tide to prove who set the clock. A case a week, \
+         in a harbour town that keeps its own time.",
+    );
+    let broadcast = |episode: u32| 1_671_062_400 + i64::from(episode - 1) * 604_800;
+    let (out, ahead): (Vec<u32>, Vec<u32>) =
+        (1..=LONG_RUNNER_EPISODES).partition(|&episode| broadcast(episode) <= FIXTURE_NOW);
+    let first = ahead[0];
+    runner["season"] = json!("WINTER");
+    runner["startDate"] = json!({ "year": 2022, "month": 12, "day": 15 });
+    runner["status"] = json!("RELEASING");
+    runner["endDate"] = Value::Null;
+    runner["nextAiringEpisode"] = json!({
+        "episode": first,
+        "airingAt": broadcast(first),
+        "timeUntilAiring": broadcast(first) - FIXTURE_NOW,
+    });
+    runner["aired"] = out
+        .iter()
+        .rev()
+        .map(|&episode| json!({ "episode": episode, "airingAt": broadcast(episode) }))
+        .collect();
+    runner["upcoming"] = json!({
+        "nodes": ahead
+            .iter()
+            .map(|&episode| json!({ "episode": episode, "airingAt": broadcast(episode) }))
+            .collect::<Vec<_>>(),
+    });
+    vec![letters, runner]
+}
+
+/// [`synopsis_shows`]' titles, decoded.
+pub fn synopsis_shows_media() -> Vec<Media> {
+    synopsis_shows().into_iter().map(decode).collect()
+}
+
 /// One title with everything the Title screen shows. Panics for an id not in the set.
 pub fn media(id: AnilistId) -> Media {
     decode(wire(id).unwrap_or_else(|| panic!("{id} is not a fixture title")).clone())
@@ -631,6 +741,31 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn the_long_runner_has_its_last_range_still_to_come() {
+        let runner = synopsis_shows_media()
+            .into_iter()
+            .find(|media| media.id == LONG_RUNNER)
+            .expect("the long runner is a synopsis show");
+        assert!(runner.aired.iter().all(|b| b.airing_at <= FIXTURE_NOW));
+        assert!(runner.upcoming.nodes.iter().all(|b| b.airing_at > FIXTURE_NOW));
+        let next = runner.next_airing_episode.expect("it is still airing");
+        let first = runner.upcoming.nodes.first().expect("it has more to come");
+        assert_eq!((first.episode, first.airing_at), (next.episode, next.airing_at));
+        assert_eq!(next.airing_at - next.time_until_airing, FIXTURE_NOW);
+        let times = runner.air_times();
+        assert_eq!(times.len(), LONG_RUNNER_EPISODES as usize);
+        assert_eq!(runner.aired.len(), LONG_RUNNER_AIRED as usize);
+        assert!(
+            times.range(201..).all(|(_, &at)| at > FIXTURE_NOW),
+            "the third range is not out"
+        );
+        assert!(
+            times.range(..=100).all(|(_, &at)| at <= FIXTURE_NOW),
+            "the first range is out"
+        );
     }
 
     #[test]

@@ -24,7 +24,7 @@ struct SeasonalScreen: View {
                 retry: { store.loadSeasonal() }
             ) { ids in
                 PosterGrid(entries: ids.compactMap { store.titles[$0] }, minimum: minimum, spacing: minimum < 128 ? 12 : 20) { entry in
-                    PosterCell(entry: entry, detail: entry.genres.first, width: minimum)
+                    PosterCell(entry: entry, detail: entry.genres.first, count: entry.countLine, width: minimum)
                 }
             } empty: {
                 QuietLine(L.seasonalEmptyTitle(season: store.seasonalName))
@@ -141,7 +141,9 @@ struct LibraryScreen: View {
                        spacing: minimum < 128 ? 12 : 20) { entry in
                 PosterCell(
                     entry: entry,
-                    detail: libraryLine(entry, in: navigator.librarySegment),
+                    // One line in the Library: the count, the dub appended, where the engine has one.
+                    detail: entry.countLine == nil ? libraryLine(entry, in: navigator.librarySegment) : nil,
+                    count: entry.countLine,
                     fresh: freshLine(entry),
                     fraction: meter(entry, in: navigator.librarySegment),
                     width: minimum

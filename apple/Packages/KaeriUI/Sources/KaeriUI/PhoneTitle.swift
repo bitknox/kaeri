@@ -15,6 +15,12 @@ struct PhoneTitle: View {
     @Namespace private var rotor
     /// Whether the main button has scrolled away, for the capsule that takes its place below.
     @State private var mainButtonGone = false
+    /// Whether the episode rows keep room for text, settled when they are first laid out.
+    @State private var room = EpisodeRoom()
+    /// Where the range menu's row stands from the top of the list's visible area, as it last
+    /// stood on screen. Kept out of the view's state, so scrolling redraws nothing: a page redrawn
+    /// on every scroll step takes no scroll to its episodes.
+    @State private var pickers = PickersPlace()
     let id: AnilistId
 
     /// Case B: the service the main action opens.
@@ -27,7 +33,11 @@ struct PhoneTitle: View {
         let entry = store.titles.page(id)
         let action = TitleAction(entry, handedOff: navigator.handedOff, episodes: store.titles.episodes[entry.id])
         let art = store.heroArt(entry)
+        let episodes = entry.episodeTable(store.titles.episodes[id] ?? [])
+        let plan = EpisodePlan(rows: episodes, picked: navigator.episodeRange[id])
+        let loaded = store.titles.episodes[id] != nil
         // A list, so the episodes take their swipes (native-ux), drawn as the scroll view was.
+        ScrollViewReader { reader in
         List {
             VStack(alignment: .leading, spacing: 0) {
                 // The wide art: it stretches when pulled down and scrolls at half speed (T1).
@@ -235,12 +245,37 @@ struct PhoneTitle: View {
                 .padding(.bottom, 16)
             }
             .bareRow()
-            PhoneEpisodes(entry: entry, spoilers: store.spoilerProtection(for: id), rotor: rotor)
+            Color.clear.frame(height: 0).bareRow().id("episodes")
+            PhoneEpisodes(
+                entry: entry, spoilers: store.spoilerProtection(for: id), rotor: rotor,
+                room: room.room, rows: episodes, plan: plan, pickers: pickers
+            )
             Color.clear.frame(height: 32).bareRow()
         }
         .bareList()
-        // The placeholders give way to the rows in one fade (T8).
-        .animation(.standard, value: store.titles.episodes[id] != nil)
+        // The placeholders give way to the rows in one fade (T8), and a range switch crossfades
+        // its rows in place.
+        .animation(.standard, value: loaded)
+        .animation(.standard, value: plan.index)
+        // The room for text is settled when the rows are first laid out, and again each time the
+        // page comes back or a range is picked: text that turned up meanwhile waits for that.
+        .onChange(of: loaded, initial: true) { if loaded { room.settle(plan.shown) } }
+        .onChange(of: plan.index) { room.settle(plan.shown, again: true) }
+        .onAppear { if loaded { room.settle(plan.shown, again: true) } }
+        // A range switch brings the pickers back into view when they were scrolled away above,
+        // under the navigation bar or past it.
+        .onChange(of: plan.index) {
+            guard pickers.now < 100 else { return }
+            withAnimation(.standard) { reader.scrollTo("episodes", anchor: UnitPoint(x: 0, y: 0.12)) }
+        }
+        // The motion audit's range switch: the list scrolled to its last row first.
+        .onChange(of: navigator.episodeListToEnd) {
+            guard let last = plan.shown.last?.number else { return }
+            reader.scrollTo(last, anchor: .bottom)
+        }
+        .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { [pickers] _, offset in
+            pickers.offset = offset
+        }
         .nudgeableScroll()
         .ignoresSafeArea(edges: art.isCompact ? [] : .top)
         .scrollIndicators(.never)
@@ -263,6 +298,7 @@ struct PhoneTitle: View {
         }
         .animation(reduceMotion ? nil : .standard, value: mainButtonGone)
         .toolbar {
+            ToolbarItem(placement: .topBarTrailing) { AnotherButton(id: id) }
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     TitleMoreItems(entry: entry)
@@ -287,6 +323,54 @@ struct PhoneTitle: View {
             for art in TitlePage.seasonArt(around: id, in: TitleFamily(entry), store: store) {
                 store.artwork.request(art.url, maxPixelSize: art.pixels)
             }
+        }
+        // Go to episode landed a row: a near one scrolls to the top; another range, a long jump
+        // and Reduce Motion crossfade to the list with the row already there.
+        .onChange(of: navigator.goToRow[id]) { _, landed in
+            guard let landed else { return }
+            let switching = landed.range != nil && landed.range != plan.index
+            let target = switching ? EpisodePlan(rows: episodes, picked: landed.range) : plan
+            let at = target.shown.firstIndex { $0.number == landed.number } ?? 0
+            let onScreen = target.shown.indices.filter { pickers.onScreen.contains(target.shown[$0].number) }
+            let move = GoToMove.to(
+                index: at, switching: switching, reduced: reduceMotion, onScreen: onScreen, pickersTop: pickers.now, rowHeight: 92
+            )
+            let opens = target.fold.map { at < $0.count } == true && !navigator.watchedShown(id)
+            // A list scrolls a row to its top, centre or bottom only, and its top is under the
+            // navigation bar: the row above goes to the top, so the landed row stands just below
+            // the bar. The first row, or one under a closed fold, is centred.
+            let drawnFrom = (opens || navigator.watchedShown(id)) ? 0 : target.fold?.count ?? 0
+            let above: String? = at - 1 >= drawnFrom ? target.shown[at - 1].number : nil
+            let place = { reader.scrollTo(above ?? landed.number, anchor: above == nil ? .center : .top) }
+            switch move {
+            case .scroll:
+                if opens { navigator.toggleWatched(id) }
+                Task {
+                    if opens { try? await Task.sleep(for: .milliseconds(300)) }
+                    withAnimation(.standard) { place() }
+                }
+            case .crossfade:
+                WindowCrossfade.run {
+                    WindowCrossfade.still {
+                        if switching, let range = landed.range { navigator.episodeRange[id] = range }
+                        if opens { navigator.toggleWatched(id) }
+                    }
+                    try? await Task.sleep(for: .milliseconds(50))
+                    // A far row has no place in the list yet: centring it lays it and its
+                    // neighbours out, and then the row above can go to the top.
+                    WindowCrossfade.still { reader.scrollTo(landed.number, anchor: .center) }
+                    try? await Task.sleep(for: .milliseconds(50))
+                    WindowCrossfade.still { place() }
+                }
+            }
+        }
+        // A screenshot's `-KaeriScroll`: the page scrolled to its episodes once they are drawn.
+        .task(id: loaded) {
+            guard loaded, navigator.launchScroll != nil else { return }
+            navigator.launchScroll = nil
+            try? await Task.sleep(for: .milliseconds(1_200))
+            reader.scrollTo("episodes", anchor: UnitPoint(x: 0, y: 0.12))
+        }
         }
     }
 
@@ -328,45 +412,108 @@ struct PhoneEpisodes: View {
     let spoilers: Bool
     /// Where the page's Unwatched episodes rotor finds the rows.
     let rotor: Namespace.ID
+    /// Whether the table keeps room for text: settled by the page when it lays the rows out.
+    let room: Bool
+    let rows: [EpisodeRow]
+    let plan: EpisodePlan
+    /// Where the range menu's row last stood, for the page.
+    var pickers: PickersPlace? = nil
+    /// Go to episode's alert, from the range menu's last item.
+    @State private var goToOpen = false
+    @State private var typed = ""
+    @State private var goToError: String?
 
     var body: some View {
-        let rows = entry.episodeTable(store.titles.episodes[entry.id] ?? [])
         let loaded = store.titles.episodes[entry.id] != nil
         // Rows of the page's list, each with its swipes; the folded run is one row, which opens
         // in place.
         let inset = EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
-        if loaded {
-            // The watched run folds away above the last episode watched.
-            let fold = WatchedFold(rows)
-            if let fold {
-                WatchedFoldSection(
-                    fold: fold, shown: navigator.watchedShown(entry.id), phone: true,
-                    dub: store.titles.dubLines[entry.id],
-                    toggle: { navigator.toggleWatched(entry.id) }
-                ) {
-                    ForEach(rows.prefix(fold.count), id: \.number) {
-                        PhoneEpisodeRow(entry: entry, row: $0, spoilers: spoilers, rotor: rotor)
+        let dub = store.titles.dubLines[entry.id]
+        let ranged = !plan.ranges.isEmpty
+        let protectedFrom = EpisodeProtection.start(plan.shown, spoilers: spoilers)
+        Group {
+            if loaded {
+                // A long series: the dub line and the range menu share a row.
+                if ranged {
+                    HStack(spacing: 12) {
+                        if let dub {
+                            Text(dub)
+                                .font(.ui(15))
+                                .foregroundStyle(.haze)
+                                .lineLimit(1)
+                                .transition(.opacity.animation(.fadeIn))
+                        }
+                        Spacer(minLength: 0)
+                        EpisodeRangeMenu(plan: plan, rows: rows, phone: true, goTo: { typed = ""; goToError = nil; goToOpen = true }) {
+                            navigator.episodeRange[entry.id] = $0
+                        }
+                        .alert(L.episodeGoToTitle, isPresented: $goToOpen) {
+                            TextField(goToHint(rows: rows), text: $typed)
+                                .keyboardType(.numberPad)
+                                .accessibilityLabel(goToLabel(rows: rows))
+                            Button(L.actionCancel, role: .cancel) {}
+                            Button(L.episodeGoToGo) { goTo(rows: rows) }
+                        } message: {
+                            Text(goToError ?? goToHint(rows: rows))
+                        }
                     }
+                    .frame(minHeight: 44)
+                    .onGeometryChange(for: CGFloat.self) { $0.frame(in: .scrollView).minY } action: { [pickers] top in
+                        pickers?.saw(top)
+                    }
+                    .bareRow(inset)
                 }
-                .bareRow(inset)
-            }
-            // With no watched run to fold, the line has a row of its own above the episodes.
-            if fold == nil, let dub = store.titles.dubLines[entry.id] {
-                Text(dub)
-                    .font(.ui(15))
-                    .foregroundStyle(.haze)
-                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                    .padding(.leading, 34)
+                // The watched run folds away above the last episode watched.
+                if let fold = plan.fold {
+                    WatchedFoldSection(
+                        fold: fold, shown: navigator.watchedShown(entry.id), phone: true,
+                        dub: ranged ? nil : dub,
+                        toggle: { navigator.toggleWatched(entry.id) }
+                    ) {
+                        ForEach(plan.shown.prefix(fold.count), id: \.number) {
+                            PhoneEpisodeRow(entry: entry, row: $0, spoilers: spoilers, rotor: rotor, room: room, protectedFrom: protectedFrom)
+                        }
+                    }
                     .bareRow(inset)
-                    .transition(.opacity.animation(.fadeIn))
-            }
-            ForEach(rows.dropFirst(fold?.count ?? 0), id: \.number) {
-                PhoneEpisodeRow(entry: entry, row: $0, spoilers: spoilers, rotor: rotor)
+                }
+                // With no watched run to fold, the line has a row of its own above the episodes.
+                if plan.fold == nil, !ranged, let dub {
+                    Text(dub)
+                        .font(.ui(15))
+                        .foregroundStyle(.haze)
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .bareRow(inset)
+                        .transition(.opacity.animation(.fadeIn))
+                }
+                ForEach(plan.shown.dropFirst(plan.fold?.count ?? 0), id: \.number) { row in
+                    PhoneEpisodeRow(entry: entry, row: row, spoilers: spoilers, rotor: rotor, room: room, protectedFrom: protectedFrom)
+                        .bareRow(inset)
+                        .transition(.opacity)
+                        .onAppear { pickers?.onScreen.insert(row.number) }
+                        .onDisappear { pickers?.onScreen.remove(row.number) }
+                }
+            } else {
+                EpisodePlaceholders(count: entry.episodes, metrics: .phone)
                     .bareRow(inset)
             }
-        } else {
-            EpisodePlaceholders(count: entry.episodes)
-                .bareRow(inset)
+        }
+    }
+}
+
+extension PhoneEpisodes {
+    /// Go: the row lands, or the alert comes back saying why not, with the number kept.
+    fileprivate func goTo(rows: [EpisodeRow]) {
+        let result = goToResult(rows: rows, typed: typed)
+        switch result {
+        case .row(let index, let range):
+            navigator.land(on: entry.id, rows: rows, index: Int(index), range: range.map(Int.init))
+        case .noSuch, .notOut:
+            goToError = goToMessage(result: result)
+            Task {
+                try? await Task.sleep(for: .milliseconds(350))
+                goToOpen = true
+            }
+        case .empty: break
         }
     }
 }
@@ -374,26 +521,45 @@ struct PhoneEpisodes: View {
 /// One episode on an iPhone's page.
 struct PhoneEpisodeRow: View {
     @Environment(AppStore.self) private var store
+    @Environment(Navigator.self) private var navigator
     let entry: Entry
     let row: EpisodeRow
     let spoilers: Bool
     let rotor: Namespace.ID
+    /// Whether the table keeps room for text.
+    let room: Bool
+    /// The episode that spoiler protection's line sits above, and the one it names.
+    let protectedFrom: (row: String, after: Int)?
+
+    private var next: UInt32 { entry.progress?.next ?? 1 }
+
+    private var hidden: Bool {
+        EpisodeProtection.hidden(
+            row, spoilers: spoilers,
+            revealed: navigator.synopsisShown[entry.id] ?? [], all: navigator.synopsisAllShown.contains(entry.id)
+        )
+    }
 
     var body: some View {
         VStack(spacing: 0) {
+            if let protectedFrom, row.number == protectedFrom.row {
+                let shown = navigator.synopsisAllShown.contains(entry.id)
+                ProtectionLine(episode: protectedFrom.after, shown: shown, phone: true) {
+                    withAnimation(.standard) { navigator.showAllSynopses(entry.id, !shown) }
+                }
+            }
             rowBody
-            DiscussionLine(entry: entry, row: row, inset: 118)
+            DiscussionLine(entry: entry, row: row, inset: 156)
         }
         .episodeSwipes(entry, row)
     }
 
     @ViewBuilder
     private var rowBody: some View {
-        let next = entry.progress?.next ?? 1
         let number = UInt32(row.number) ?? 0
         let current = number == next
         if row.isUnaired(), let airs = row.airsDate {
-            PhoneUnairedRow(row: row, airs: airs)
+            PhoneUnairedRow(entry: entry, row: row, airs: airs)
                 .accessibilityRotorEntry(id: row.number, in: rotor)
         } else if row.metadataOnly || row.unsourced {
             // One no source has: nothing to play, so a tap offers what can be done, adding a
@@ -401,11 +567,11 @@ struct PhoneEpisodeRow: View {
             Menu {
                 EpisodeMenu(entry: entry, number: number, row: row)
             } label: {
-                label(number: number, next: next, current: current)
+                label(current: current)
             }
             .buttonStyle(.plain)
             .pointerHover()
-            .episodeElement(row, value: row.spokenValue(entry, current: current, upcoming: false)) {
+            .episodeElement(row, value: spoken(current: current), hint: hint) {
                 EpisodeMenu(entry: entry, number: number, row: row)
             }
             .accessibilityRotorEntry(id: row.number, in: rotor)
@@ -413,88 +579,72 @@ struct PhoneEpisodeRow: View {
             Button {
                 store.send(.play(id: entry.id, episode: row.number))
             } label: {
-                label(number: number, next: next, current: current)
+                label(current: current)
             }
             .buttonStyle(.plain)
             .pointerHover()
-            .episodeElement(row, value: row.spokenValue(entry, current: current, upcoming: false)) {
+            .episodeElement(row, value: spoken(current: current), hint: hint) {
                 EpisodeMenu(entry: entry, number: number, row: row)
             }
             .accessibilityRotorEntry(id: row.number, in: rotor)
-            .contextMenu { EpisodeMenu(entry: entry, number: number, row: row) }
+            .contextMenu {
+                EpisodeMenu(entry: entry, number: number, row: row)
+            } preview: {
+                EpisodePreview(entry: entry, row: row, hidden: hidden)
+                    .environment(store)
+                    .environment(navigator)
+            }
         }
     }
 
-    private func label(number: UInt32, next: UInt32, current: Bool) -> some View {
-        HStack(spacing: 12) {
-            Text(row.number)
-                .font(.ui(15, weight: current ? .semibold : .regular))
-                .monospacedDigit()
-                .foregroundStyle(current ? .amber : .haze)
-                .animation(.quick, value: current)
-                .frame(width: 22, alignment: .trailing)
-            EpisodeStill(entry: entry, row: row, hidden: spoilers && number > next && !row.completed,
-                         unaired: false, size: CGSize(width: 72, height: 40))
-                .opacity(row.completed ? 0.7 : 1)
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text(row.title ?? L.episodeNumberString(number: row.number))
-                        .font(.ui(17))
-                        .foregroundStyle(row.completed ? .haze : .silk)
-                        .rowTitle()
-                        .animation(.quick, value: row.completed)
-                    if row.kind == .filler { Text(L.episodeFiller).groupHeaderStyle() }
-                }
-                if row.unsourced {
-                    Text(L.episodeUnsourced).font(.ui(15)).foregroundStyle(.haze)
-                } else if current, let resume = entry.resume, let fraction = resume.fraction, fraction > 0 {
-                    HStack(spacing: 8) {
-                        Held(value: fraction) { Meter(fraction: $0, height: 3).frame(width: 88) }
-                        let left = max(1, Int(((resume.position / fraction - resume.position) / 60).rounded()))
-                        Held(value: left) { MinutesLeft(minutes: $0, size: 15) }
-                    }
-                } else if let seconds = row.durationSecs {
-                    Text(L.timeMinutes(minutes: max(1, Int((Double(seconds) / 60).rounded()))))
-                        .font(.ui(15))
-                        .foregroundStyle(.haze)
-                }
-            }
-            Spacer(minLength: 0)
-            WatchedCheck(watched: row.completed, size: 15)
-        }
+    private func spoken(current: Bool) -> [String] {
+        row.spokenValue(entry, current: current, upcoming: false)
+    }
+
+    /// The synopsis said last, or why it is not there.
+    private var hint: String? {
+        if hidden { return L.episodeSynopsisHidden }
+        return room ? row.description : nil
+    }
+
+    private func label(current: Bool) -> some View {
+        EpisodeRowLabel(
+            entry: entry, row: row, metrics: .phone, room: room, hidden: hidden, current: current,
+            numberColumn: false, asked: navigator.synopsisIsShown(entry.id, row.number)
+        )
         .opacity(row.unsourced ? 0.55 : 1)
-        .frame(minHeight: 56)
+        // The row Go to episode landed keeps the selection fill until another lands.
+        .background(navigator.goToRow[entry.id]?.number == row.number ? Palette.raisedSelected : .clear, in: .rect(cornerRadius: 8))
         .contentShape(.rect)
     }
 }
 
-/// The next episode still to air on an iPhone's page: no button; the flat placeholder, its title
+/// The next episode still to air on an iPhone's page: no button; the show's banner crop, its title
 /// in haze and "Airs Thursday 16:30" in water.
 struct PhoneUnairedRow: View {
+    let entry: Entry
     let row: EpisodeRow
     let airs: Date
 
     var body: some View {
         let when = AirsWords.airs(airs)
-        HStack(spacing: 12) {
-            Text(row.number)
-                .font(.ui(15))
-                .monospacedDigit()
-                .foregroundStyle(.haze)
-                .frame(width: 22, alignment: .trailing)
-            RoundedRectangle(cornerRadius: 6).fill(Palette.artPlaceholder).frame(width: 72, height: 40)
+        HStack(alignment: .top, spacing: 12) {
+            // The show's banner crop: the episode has no still before it airs.
+            EpisodeStill(entry: entry, row: row, hidden: false, unaired: true, size: EpisodeMetrics.phone.still)
             VStack(alignment: .leading, spacing: 4) {
-                Text(row.title ?? L.episodeNumberString(number: row.number)).font(.ui(17)).foregroundStyle(.haze).rowTitle()
+                Text(row.title ?? L.episodeNumberString(number: row.number))
+                    .font(.headline).foregroundStyle(.haze).lineLimit(2)
                 HStack(spacing: 6) {
                     Circle().fill(.water).frame(width: 6, height: 6)
                     Text(when).monospacedDigit()
                 }
-                .font(.ui(15))
+                .font(.ui(13))
                 .foregroundStyle(.water)
             }
             Spacer(minLength: 0)
         }
-        .frame(minHeight: 56)
+        .padding(.top, 8)
+        .frame(minHeight: EpisodeMetrics.phone.short, alignment: .top)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(L.titleEpisodeRowUnaired(title: row.title.map { L.episodeTitledText(number: row.number, title: $0) } ?? L.episodeNumberString(number: row.number), when: when))
     }

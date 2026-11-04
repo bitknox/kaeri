@@ -1292,10 +1292,53 @@ struct EpisodeList: View {
     /// After an episode is picked: the iPhone's and iPad's sheet closes, since the sources move
     /// to the picked row and every row between would shift under the next tap.
     var picked: (() -> Void)? = nil
+    /// The episode the pointer is over, for the panel's footer.
+    var pointed: Binding<String?>? = nil
+    /// The episode whose row has the keyboard's focus, for the panel's footer.
+    var focused: Binding<String?>? = nil
+    /// A long series' range of 100 the panel shows: the playing episode's until one is picked.
+    @State private var picked_range: Int?
+    @State private var goToOpen = false
+    /// The row Go to episode asks the panel's scroll view to put at the top.
+    var landed: Binding<String?>? = nil
+    @FocusState private var focus: String?
+    /// The pointer's last row, let go 150 ms after the pointer leaves it: crossing a gap or a
+    /// source between rows keeps the footer where it was.
+    @State private var leaving: Task<Void, Never>?
 
     var body: some View {
-        let episodes = model.menus?.episodes ?? []
-        MenuHeading(title: L.playerEpisodes)
+        let all = model.menus?.episodes ?? []
+        let ranges = PanelRanges(all, picked: picked_range)
+        let episodes = ranges.shown
+        HStack(spacing: 0) {
+            MenuHeading(title: L.playerEpisodes)
+            if !ranges.chunks.isEmpty {
+                PanelRangeMenu(ranges: ranges, pick: { picked_range = $0 }, goTo: { goToOpen = true })
+                    .popover(isPresented: $goToOpen, arrowEdge: .bottom) {
+                        PanelGoTo(episodes: all) { number in
+                            goToOpen = false
+                            if let index = all.firstIndex(where: { $0.number == number }) {
+                                picked_range = index / PanelRanges.size
+                                landed?.wrappedValue = number
+                            }
+                        }
+                    }
+                    .padding(.trailing, 8)
+            }
+        }
+            .onChange(of: focus) { focused?.wrappedValue = focus }
+            #if FIXTURES
+            .task {
+                // A screenshot's keyboard focus on a row, by its number.
+                guard focused != nil, let number = PlayerShot.focusedEpisode(in: ProcessInfo.processInfo.arguments)
+                else { return }
+                try? await Task.sleep(for: .milliseconds(300))
+                focus = number
+                // A window that is not key takes no focus, as a snapshot's never is: the footer
+                // is told the row all the same.
+                focused?.wrappedValue = number
+            }
+            #endif
         ForEach(episodes, id: \.number) { row in
             if row.current {
                 // One block, which the list scrolls into view whole as it opens.
@@ -1310,7 +1353,7 @@ struct EpisodeList: View {
             }
         }
         // Before the engine has listed the episodes, or with none of them playing.
-        if !episodes.contains(where: \.current) {
+        if !all.contains(where: \.current) {
             SourceGroup(model: model, metrics: metrics)
         }
     }
@@ -1324,6 +1367,22 @@ struct EpisodeList: View {
             model.choose(.episode(row.number))
             if !row.current { picked?() }
         }
+        .focused($focus, equals: row.number)
+        .onHover { inside in
+            guard let pointed else { return }
+            if inside {
+                leaving?.cancel()
+                leaving = nil
+                pointed.wrappedValue = row.number
+            } else if pointed.wrappedValue == row.number {
+                leaving?.cancel()
+                leaving = Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(150))
+                    guard !Task.isCancelled, pointed.wrappedValue == row.number else { return }
+                    pointed.wrappedValue = nil
+                }
+            }
+        }
     }
 
     static func row(_ number: String) -> String { "episode \(number)" }
@@ -1331,6 +1390,115 @@ struct EpisodeList: View {
     /// The episode playing: what a list too long for its panel or sheet scrolls to as it opens.
     static func selectedRow(_ model: PlayerModel) -> String? {
         model.menus?.episodes.first(where: \.current).map { row($0.number) }
+    }
+}
+
+/// A long series' ranges of 100 in the player's Episodes panel: the same ranges as the title
+/// page's, opening on the playing episode's.
+struct PanelRanges {
+    static let size = 100
+    let all: [MenuEpisode]
+    let chunks: [Range<Int>]
+    let index: Int
+
+    init(_ all: [MenuEpisode], picked: Int?) {
+        self.all = all
+        guard all.count > Self.size else {
+            chunks = []
+            index = 0
+            return
+        }
+        chunks = stride(from: 0, to: all.count, by: Self.size).map { $0..<min($0 + Self.size, all.count) }
+        let playing = all.firstIndex(where: \.current).map { $0 / Self.size } ?? 0
+        index = min(max(picked ?? playing, 0), chunks.count - 1)
+    }
+
+    /// The rows shown: the range's, or all of them.
+    var shown: [MenuEpisode] { chunks.isEmpty ? all : Array(all[chunks[index]]) }
+
+    func title(_ i: Int) -> String {
+        let range = chunks[i]
+        return L.episodeRangeShort(from: all[range.lowerBound].number, to: all[range.upperBound - 1].number)
+    }
+}
+
+/// The range pop-up at the trailing end of the panel's heading row, with the title page's items
+/// and Go to episode last.
+struct PanelRangeMenu: View {
+    let ranges: PanelRanges
+    let pick: (Int) -> Void
+    let goTo: () -> Void
+
+    var body: some View {
+        Menu {
+            ForEach(ranges.chunks.indices, id: \.self) { i in
+                Toggle(ranges.title(i), isOn: Binding(get: { i == ranges.index }, set: { _ in pick(i) }))
+            }
+            Divider()
+            Button(L.episodeGoTo, systemImage: "arrow.right.to.line", action: goTo)
+        } label: {
+            HStack(spacing: 4) {
+                Text(ranges.title(ranges.index)).monospacedDigit()
+                Image(systemName: "chevron.up.chevron.down").font(.system(size: 8, weight: .semibold))
+            }
+            .font(.system(size: 12, weight: .medium))
+            .foregroundStyle(.haze)
+            .frame(minHeight: 22)
+            .contentShape(.rect)
+        }
+        .menuStyle(.button)
+        .menuIndicator(.hidden)
+        .buttonStyle(.plain)
+        .fixedSize()
+        .accessibilityLabel(L.episodeRangeLabel)
+        .accessibilityValue(ranges.title(ranges.index))
+    }
+}
+
+/// Go to episode in the player's panel: a number, and the range and row it lands on.
+struct PanelGoTo: View {
+    let episodes: [MenuEpisode]
+    let go: (String) -> Void
+    @State private var typed = ""
+    @State private var message: String?
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(L.episodeGoToTitle).font(.system(size: 13, weight: .semibold)).foregroundStyle(.silk)
+            TextField("", text: $typed)
+                .textFieldStyle(.roundedBorder)
+                .focused($focused)
+                .onSubmit(submit)
+                .onChange(of: typed) { _, _ in message = nil }
+                #if os(iOS)
+                .keyboardType(.numberPad)
+                #endif
+            if let message {
+                Text(message).font(.system(size: 12)).foregroundStyle(.vermilion)
+            } else if let first = episodes.first?.number, let last = episodes.last?.number {
+                Text(L.episodeGoToHint(first: Int(first) ?? 1, last: Int(last) ?? episodes.count))
+                    .font(.system(size: 12)).foregroundStyle(.haze)
+            }
+            HStack {
+                Spacer()
+                Button(L.episodeGoToGo, action: submit).disabled(typed.isEmpty)
+            }
+        }
+        .padding(12)
+        .frame(width: 220)
+        .onAppear { focused = true }
+    }
+
+    private func submit() {
+        let number = typed.trimmingCharacters(in: .whitespaces)
+        guard !number.isEmpty else { return }
+        if episodes.contains(where: { $0.number == number }) {
+            go(number)
+        } else {
+            let last = episodes.compactMap { Int($0.number) }.max() ?? episodes.count
+            message = L.episodeGoToNone(number: Int(number) ?? 0, last: last)
+        }
     }
 }
 
@@ -1512,5 +1680,77 @@ struct MarkedStretch: View {
             .animation(.quick, value: start)
             .animation(.quick, value: view.end)
         }
+    }
+}
+
+/// The foot of the Episodes panel: the title of the episode under the pointer, else the one with
+/// the keyboard's focus, else the one playing, and its synopsis in three lines. A protected
+/// episode gets its title and length and no synopsis, and no bar to say so. The room is kept only
+/// if the table had synopses when the panel opened, decided as the panel is made so it opens at
+/// its final layout; text that comes later fades in.
+struct EpisodeFooter: View {
+    @Environment(AppStore.self) private var store
+    let model: PlayerModel
+    let metrics: PlayerMetrics
+    let pointed: String?
+    let focused: String?
+    /// Whether the table had synopses when the panel opened: the first value made is kept.
+    @State private var reserved: Bool
+
+    init(model: PlayerModel, metrics: PlayerMetrics, table: [EpisodeRow], pointed: String?, focused: String?) {
+        self.model = model
+        self.metrics = metrics
+        self.pointed = pointed
+        self.focused = focused
+        _reserved = State(initialValue: episodeText(rows: table) == .present)
+    }
+
+    var body: some View {
+        if reserved, let id = model.staged?.id {
+            footer(id: id, table: store.titles.episodes[id] ?? [])
+        }
+    }
+
+    private func footer(id: AnilistId, table: [EpisodeRow]) -> some View {
+        let episodes = model.menus?.episodes ?? []
+        // A screenshot points at a row by its words, as the list's rows light them.
+        let named = model.pointedRow.flatMap { words in
+            episodes.first { item in
+                (item.title.map { "\(item.label) · \($0)" } ?? item.label) == words
+            }?.number
+        }
+        let number = pointed ?? focused ?? named ?? episodes.first(where: \.current)?.number
+        let row = table.first { $0.number == number }
+        let hidden = row.map { store.spoilerProtection(for: id) && $0.spoilerAhead } ?? false
+        let text = hidden ? nil : row?.description
+        return VStack(alignment: .leading, spacing: 3) {
+            if let row {
+                Text(row.title.map { L.episodeTitledText(number: row.number, title: $0) } ?? L.episodeNumberString(number: row.number))
+                    .font(metrics.touch ? .footnote : .system(size: 11.5))
+                    .foregroundStyle(.haze)
+                    .lineLimit(1)
+                ZStack(alignment: .topLeading) {
+                    if hidden {
+                        Text(row.durationSecs.map { L.episodeFactsLength(minutes: max(1, Int((Double($0) / 60).rounded()))) } ?? "")
+                            .id("facts")
+                    } else if let text, !text.isEmpty {
+                        Text(text).lineLimit(3).id(text)
+                    }
+                }
+                .font(metrics.touch ? .subheadline : .system(size: 12))
+                // 12 on 17 on the Mac.
+                .lineSpacing(metrics.touch ? 0 : 2.7)
+                .foregroundStyle(.haze)
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+                .transition(.opacity)
+                .animation(.fadeIn, value: text)
+            }
+        }
+        .padding(.horizontal, metrics.touch ? 16 : 12)
+        .padding(.top, 8)
+        .padding(.bottom, 10)
+        .frame(maxWidth: .infinity, minHeight: metrics.touch ? 104 : 92, maxHeight: metrics.touch ? nil : 92, alignment: .topLeading)
+        .overlay(alignment: .top) { Rectangle().fill(Palette.faintRule).frame(height: 1) }
+        .accessibilityElement(children: .combine)
     }
 }

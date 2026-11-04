@@ -26,6 +26,13 @@ struct WatchedFold: Equatable {
         last = rows[count - 1].number
     }
 
+    /// The first `count` of `rows` fold: a range's watched run, as the engine counted it.
+    init(count: Int, of rows: [EpisodeRow]) {
+        self.count = count
+        first = rows[0].number
+        last = rows[count - 1].number
+    }
+
     /// "Episodes 1 to 5 watched".
     var label: String {
         L.titleWatchedRange(first: Int(episode: first), last: Int(episode: last))

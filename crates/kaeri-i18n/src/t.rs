@@ -17172,6 +17172,11 @@ pub fn episode_go_to_title() -> String {
     text("episode-go-to-title", &[])
 }
 
+/// Button of the Go to episode field that goes to the number typed.
+pub fn episode_go_to_go() -> String {
+    text("episode-go-to-go", &[])
+}
+
 /// Placeholder of the Go to episode field: the first and last episode of the show.
 pub fn episode_go_to_hint(first: i64, last: i64) -> String {
     text("episode-go-to-hint", &[("first", Arg::Int(first)), ("last", Arg::Int(last))])

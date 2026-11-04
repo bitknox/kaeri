@@ -7781,6 +7781,9 @@ public static partial class T
     /// <summary>Title of the Go to episode field.</summary>
     public static string EpisodeGoToTitle => Get("EpisodeGoToTitle");
 
+    /// <summary>Button of the Go to episode field that goes to the number typed.</summary>
+    public static string EpisodeGoToGo => Get("EpisodeGoToGo");
+
     /// <summary>Placeholder of the Go to episode field: the first and last episode of the show.</summary>
     public static string EpisodeGoToHint(long first, long last) => Fill(Get("EpisodeGoToHint"), ("first", first.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("last", last.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -11283,6 +11286,7 @@ public static partial class T
         ["MoreFollowingLine"] = "{status} · {score}/10",
         ["EpisodeGoTo"] = "Go to episode…",
         ["EpisodeGoToTitle"] = "Go to episode",
+        ["EpisodeGoToGo"] = "Go",
         ["EpisodeGoToHint"] = "{first} to {last}",
         ["EpisodeGoToLabel"] = "Episode, {first} to {last}",
         ["EpisodeGoToNone"] = "No episode {number}. This show has {last}.",

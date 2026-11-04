@@ -483,6 +483,17 @@ public struct PhonePlayerView: View {
 
     @ViewBuilder
     private func menuSheet(_ sheet: Sheet) -> some View {
+        if sheet == .episodes {
+            // The episode under the pointer or with the keyboard's focus, else the one playing,
+            // in a footer under the list, kept only if the table had synopses when it opened.
+            PhoneEpisodesSheet(model: model, metrics: metrics) { menuList(sheet, pointed: $0, focused: $1) }
+        } else {
+            menuList(sheet, pointed: nil, focused: nil)
+        }
+    }
+
+    @ViewBuilder
+    private func menuList(_ sheet: Sheet, pointed: Binding<String?>?, focused: Binding<String?>?) -> some View {
         ScrollViewReader { list in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -529,7 +540,7 @@ public struct PhonePlayerView: View {
                             }
                         }
                     case .episodes:
-                        EpisodeList(model: model, metrics: metrics) { self.sheet = nil }
+                        EpisodeList(model: model, metrics: metrics, picked: { self.sheet = nil }, pointed: pointed, focused: focused)
                     case .party:
                         EmptyView()
                     }
@@ -678,6 +689,29 @@ public enum PlayerOrientation {
             window.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
         }
         scene.requestGeometryUpdate(.iOS(interfaceOrientations: on ? .landscape : .portrait)) { _ in }
+    }
+}
+
+/// The Episodes sheet on iPhone and iPad: the list, and under it the footer with the title and
+/// synopsis of the row under the pointer or with the keyboard's focus, else the playing one, as
+/// the Mac's panel has it.
+private struct PhoneEpisodesSheet<List: View>: View {
+    @Environment(AppStore.self) private var store
+    let model: PlayerModel
+    let metrics: PlayerMetrics
+    @ViewBuilder let list: (Binding<String?>, Binding<String?>) -> List
+    @State private var pointed: String?
+    @State private var focused: String?
+
+    var body: some View {
+        list($pointed, $focused)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                EpisodeFooter(
+                    model: model, metrics: metrics, table: model.staged.flatMap { store.titles.episodes[$0.id] } ?? [],
+                    pointed: pointed, focused: focused
+                )
+                .background(Palette.ground)
+            }
     }
 }
 #endif

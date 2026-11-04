@@ -207,6 +207,11 @@ final class Delegate: NSObject, NSApplicationDelegate {
         if options.fullScreenCycles > 0, let window = Snapshot.window {
             await fullScreenCycles(window: window, url: url)
         }
+        if let point = options.openMenu, let window = Snapshot.window {
+            await Snapshot.withMenu(at: point, open: window, to: url)
+            exitAfterSnapshot()
+            return
+        }
         do {
             guard let window = Snapshot.window else { throw Snapshot.Problem.noWindow }
             try Snapshot.write(window, to: url)
