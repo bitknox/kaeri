@@ -738,6 +738,8 @@ impl App {
             Event::SyncPairFailed { problem, device } => {
                 self.apply_pair_failed(problem, device)
             }
+            // Joining a store through a paired device is the apps' first launch.
+            Event::SyncStoreJoined { .. } | Event::SyncStoreJoinFailed { .. } => {}
         }
     }
 

@@ -18,7 +18,7 @@ use kaeri_model::{
     event::Event,
     group::{
         SyncDeviceKind, SyncDeviceView, SyncFolderKind, SyncFolderSpec, SyncFolderView,
-        SyncNoteView, SyncPairProblem, SyncProblem, SyncSignInStep, SyncStatus, SyncStoreOffer,
+        SyncNoteView, SyncPairProblem, SyncProblem, SyncSignInStep, SyncStatus,
     },
 };
 use kaeri_store::sync::{Effect, kinds};
@@ -128,6 +128,9 @@ pub struct SyncHub {
     browser: Mutex<Option<Arc<dyn lan::Browser>>>,
     /// The instance registered while this device listens for pairing, to withdraw.
     advertised: Mutex<Option<String>>,
+    /// Plugin store invites a paired device handed over and this device has not spent: in
+    /// memory only (see [`crate::store_join`]).
+    pub(crate) store_invites: Mutex<Vec<crate::store_join::Held>>,
 }
 
 fn locked<T>(m: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
@@ -406,6 +409,7 @@ fn announce_self(services: &Ctx, id: &str, name: &str, key: &DeviceKey) {
     if let Err(e) = services.store.sync_device_add(id, name, &key.public_hex()) {
         tracing::warn!(error = %e, "could not add this device to the sync log");
     }
+    crate::store_join::announce_joined(services);
 }
 
 /// How sync stands, from the log and what is kept beside it.
@@ -479,11 +483,7 @@ pub fn status(services: &Ctx) -> SyncStatus {
         .collect();
     let joined: Vec<String> =
         services.stores.rows().unwrap_or_default().into_iter().map(|row| row.url).collect();
-    let offers = crate::sync::stores_to_join(&services.store, &joined)
-        .unwrap_or_default()
-        .into_iter()
-        .map(|(address, name)| SyncStoreOffer { address, name })
-        .collect();
+    let offers = crate::store_join::offers(services, &joined);
     let folder = saved_folder(services);
     // This device's folder, else the one most of the others say they use.
     let group_folder = folder.as_ref().map(|f| f.kind.clone()).or_else(|| {
@@ -917,6 +917,7 @@ pub fn leave(services: &Ctx, tx: &Outbox) {
     let _ = services.store.sync_meta_remove(RECOVERY_MADE);
     let _ = services.store.sync_meta_clear(ROAD_META);
     crate::handoff::forget_all(&services.store);
+    crate::store_join::forget_all(services);
     say_status(services, tx);
 }
 
@@ -1580,21 +1581,27 @@ impl ThisDevice {
     }
 }
 
-/// Swap histories with a device already paired.
-pub async fn sync_with(services: &Ctx, tx: &Outbox, device: &str, address: &str) {
+/// Swap histories with a device already paired. Whether the session took place.
+pub async fn sync_with(services: &Ctx, tx: &Outbox, device: &str, address: &str) -> bool {
     let (Some(me), Ok(addr)) = (lan_me(services), address_of(address)) else {
-        return fail(services, tx, SyncProblem::Other("could not reach that device".into()));
+        fail(services, tx, SyncProblem::Other("could not reach that device".into()));
+        return false;
     };
     let pinned = lan::fingerprint_of(&services.store, device);
     if pinned.is_none() {
-        return fail(services, tx, SyncProblem::Other("that device is not paired".into()));
+        fail(services, tx, SyncProblem::Other("that device is not paired".into()));
+        return false;
     }
     match lan::dial(&me, &services.store, addr, None, pinned).await {
         Ok(report) => {
             carry_out_peer(services, tx, &report).await;
             say_status(services, tx);
+            true
         }
-        Err(e) => fail(services, tx, problem(&e)),
+        Err(e) => {
+            fail(services, tx, problem(&e));
+            false
+        }
     }
 }
 

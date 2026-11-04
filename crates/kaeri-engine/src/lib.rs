@@ -140,6 +140,7 @@ pub mod show_settings;
 pub mod skip_marks;
 pub mod sources;
 pub(crate) mod state;
+pub mod store_join;
 pub mod subtitles;
 pub mod sync;
 pub mod syncing;

@@ -945,3 +945,266 @@ mod remote_switch {
         runtime.block_on(client.send(RemoteCommand::Navigate { key: Key::Down })).unwrap();
     }
 }
+
+/// Joining a plugin store through a paired device: the member device makes this one its own
+/// invite over the paired link, and this one spends it. Stores on loopback.
+mod store_join {
+    use std::sync::Arc;
+
+    use kaeri_model::group::SyncStoreProblem;
+    use kaeri_plugin_store::{
+        StoreClient,
+        protocol::{InviteKind, InviteRequest, Role},
+        server::{self, Server, Storage},
+    };
+
+    use super::*;
+
+    /// A plugin store served on loopback, with its owner's token.
+    struct Hosted {
+        runtime: tokio::runtime::Runtime,
+        base: String,
+        owner: String,
+        client: StoreClient,
+        stop: Option<tokio::sync::oneshot::Sender<()>>,
+        _dir: tempfile::TempDir,
+    }
+
+    impl Hosted {
+        fn serve(name: &str) -> Self {
+            let runtime = tokio::runtime::Runtime::new().unwrap();
+            let dir = tempfile::tempdir().unwrap();
+            let client = StoreClient::new(Duration::from_secs(5)).unwrap();
+            let (stop, stopped) = tokio::sync::oneshot::channel::<()>();
+            let (base, owner) = runtime.block_on(async {
+                let (listener, addr) =
+                    server::bind("127.0.0.1:0".parse().unwrap()).await.unwrap();
+                let base = format!("http://{addr}");
+                let store = server::open(
+                    &Storage::Dir(dir.path().join("store")),
+                    Some(&base),
+                    Some(name),
+                )
+                .await
+                .unwrap();
+                let invite =
+                    store.fresh_owner_invite(&base, server::now()).await.unwrap().unwrap();
+                let server =
+                    Arc::new(Server::new(store, Some(base.clone()), None, None, false));
+                tokio::spawn(server::serve(listener, server, None, async move {
+                    let _ = stopped.await;
+                }));
+                let owner = client.redeem(&invite, "Computer").await.unwrap().token;
+                (base, owner)
+            });
+            Self { runtime, base, owner, client, stop: Some(stop), _dir: dir }
+        }
+
+        /// An invite for someone new called `name`.
+        fn invite(&self, name: &str) -> String {
+            let request = InviteRequest::member(name, Role::Member);
+            let made = self
+                .runtime
+                .block_on(self.client.create_invite(&self.base, &self.owner, &request))
+                .unwrap();
+            made.link
+        }
+
+        /// How many devices `name` has in the store, and how many members it has.
+        fn devices_of(&self, name: &str) -> (u32, usize) {
+            let list =
+                self.runtime.block_on(self.client.members(&self.base, &self.owner)).unwrap();
+            let devices = list.members.iter().find(|m| m.name == name).map_or(0, |m| m.devices);
+            (devices, list.members.len())
+        }
+
+        /// Cancel every device invite still waiting, as the owner.
+        fn cancel_device_invites(&self) {
+            self.runtime.block_on(async {
+                let list = self.client.members(&self.base, &self.owner).await.unwrap();
+                for invite in list.invites.iter().filter(|i| i.kind == InviteKind::Device) {
+                    self.client
+                        .cancel_invite(&self.base, &self.owner, &invite.id)
+                        .await
+                        .unwrap();
+                }
+            });
+        }
+
+        fn remove(&self, name: &str) {
+            self.runtime.block_on(async {
+                let list = self.client.members(&self.base, &self.owner).await.unwrap();
+                let member = list.members.iter().find(|m| m.name == name).unwrap();
+                self.client.remove_member(&self.base, &self.owner, &member.id).await.unwrap();
+            });
+        }
+
+        /// Stop answering: the store is offline.
+        fn stop(&mut self) {
+            if let Some(stop) = self.stop.take() {
+                let _ = stop.send(());
+            }
+            // The listener closes once the server's loop has seen the signal.
+            let base = self.base.clone();
+            let closed = self.runtime.block_on(async {
+                for _ in 0..50 {
+                    let addr = base.trim_start_matches("http://").to_owned();
+                    if tokio::net::TcpStream::connect(addr).await.is_err() {
+                        return true;
+                    }
+                    tokio::time::sleep(Duration::from_millis(20)).await;
+                }
+                false
+            });
+            assert!(closed, "the store stopped listening");
+        }
+    }
+
+    fn join(app: &mut App, link: String) {
+        app.engine.send(Command::JoinStore { link: Secret(link), label: None, name: None });
+        app.until("the store joined", |e| matches!(e, Event::StoreJoined { .. }).then_some(()));
+    }
+
+    fn join_from(
+        app: &App,
+        device: Option<String>,
+        stores: Vec<String>,
+        address: Option<String>,
+    ) {
+        app.engine.send(Command::SyncGroup(SyncCommand::JoinStoresFrom {
+            device,
+            stores,
+            address,
+        }));
+    }
+
+    fn joined(app: &mut App) -> (String, String, String) {
+        app.until("a store joined through the other device", |event| match event {
+            Event::SyncStoreJoined { device, address, name, .. } => {
+                Some((device.clone(), address.clone(), name.clone()))
+            }
+            Event::SyncStoreJoinFailed { problem, .. } => panic!("{problem:?}"),
+            _ => None,
+        })
+    }
+
+    fn join_failed(app: &mut App) -> (String, String, SyncStoreProblem) {
+        app.until("a store not joined", |event| match event {
+            Event::SyncStoreJoinFailed { device, address, problem, .. } => {
+                Some((device.clone(), address.clone(), *problem))
+            }
+            Event::SyncStoreJoined { .. } => panic!("joined"),
+            _ => None,
+        })
+    }
+
+    /// The tablet, set up from first launch, pairs with Kim's phone, which is a member of
+    /// `stores`: the phone's invites are held on the tablet, offered and not yet spent.
+    fn first_launch(stores: &[&Hosted]) -> (App, App, String) {
+        let mut phone = App::start();
+        for store in stores {
+            join(&mut phone, store.invite("Kim"));
+        }
+        let mut tablet = App::start();
+        join_from(&tablet, None, Vec::new(), None);
+        pair(&mut tablet, "Kitchen iPad", &mut phone, "Kim's phone");
+        let held = tablet.status_where("the invites held", |s| {
+            s.stores_to_join.len() == stores.len()
+                && s.stores_to_join.iter().all(|o| o.invite_from.is_some())
+        });
+        let phone_id = other_device(&held);
+        for (offer, store) in held.stores_to_join.iter().zip(stores) {
+            assert_eq!(offer.invite_from.as_deref(), Some(phone_id.as_str()));
+            assert!(held.stores_to_join.iter().any(|o| o.address == store.base), "{offer:?}");
+        }
+        (phone, tablet, phone_id)
+    }
+
+    #[test]
+    fn a_device_set_up_from_first_launch_joins_the_paired_devices_store_with_its_own_token() {
+        let store = Hosted::serve("Hilltop Plugins");
+        let (_phone, mut tablet, phone_id) = first_launch(&[&store]);
+        // Held, not spent, until the person says so on the success sheet.
+        assert_eq!(store.devices_of("Kim"), (1, 2));
+
+        join_from(&tablet, Some(phone_id.clone()), vec![store.base.clone()], None);
+        let (from, address, name) = joined(&mut tablet);
+        assert_eq!(
+            (from, address, name.as_str()),
+            (phone_id, store.base.clone(), "Hilltop Plugins")
+        );
+        // Another device of Kim's, with a token of its own: no new member.
+        assert_eq!(store.devices_of("Kim"), (2, 2));
+        let after =
+            tablet.status_where("nothing left to join", |s| s.stores_to_join.is_empty());
+        assert!(after.enabled);
+    }
+
+    #[test]
+    fn an_invite_cancelled_is_refused_and_an_offline_store_keeps_its_invite_for_another_try() {
+        let cancelled = Hosted::serve("Hilltop Plugins");
+        let mut offline = Hosted::serve("Riverside Plugins");
+        let (_phone, mut tablet, phone_id) = first_launch(&[&cancelled, &offline]);
+
+        cancelled.cancel_device_invites();
+        join_from(&tablet, Some(phone_id.clone()), vec![cancelled.base.clone()], None);
+        let (from, address, problem) = join_failed(&mut tablet);
+        assert_eq!(
+            (from.as_str(), address, problem),
+            (phone_id.as_str(), cancelled.base.clone(), SyncStoreProblem::Refused)
+        );
+
+        offline.stop();
+        join_from(&tablet, Some(phone_id.clone()), vec![offline.base.clone()], None);
+        let (_, address, problem) = join_failed(&mut tablet);
+        assert_eq!((address, problem), (offline.base.clone(), SyncStoreProblem::Offline));
+        let kept = tablet.status_where("the offline store's invite kept", |s| {
+            s.stores_to_join
+                .iter()
+                .any(|o| o.address == offline.base && o.invite_from.is_some())
+        });
+        let gone = kept.stores_to_join.iter().find(|o| o.address == cancelled.base);
+        assert!(gone.is_none_or(|o| o.invite_from.is_none()), "a refused invite is let go");
+    }
+
+    #[test]
+    fn a_device_no_longer_a_member_cannot_invite_and_an_unreachable_one_is_offline() {
+        let store = Hosted::serve("Hilltop Plugins");
+        let mut phone = App::start();
+        join(&mut phone, store.invite("Kim"));
+        let mut tablet = App::start();
+        pair(&mut tablet, "Kitchen iPad", &mut phone, "Kim's phone");
+        let paired = tablet.status_where("the store offered", |s| {
+            s.stores_to_join.iter().any(|o| o.address == store.base)
+        });
+        let phone_id = other_device(&paired);
+
+        // The owner removes Kim: the phone's token no longer makes invites. The phone listens,
+        // and the tablet opens a session with it to ask.
+        store.remove("Kim");
+        phone.engine.send(Command::PairInvite { device_name: "Kim's phone".into() });
+        let phone_port = phone.until("the phone listening", |event| match event {
+            Event::SyncInvite { port, .. } => Some(*port),
+            _ => None,
+        });
+        join_from(
+            &tablet,
+            Some(phone_id.clone()),
+            Vec::new(),
+            Some(format!("127.0.0.1:{phone_port}")),
+        );
+        let (from, address, problem) = join_failed(&mut tablet);
+        assert_eq!(
+            (from, address, problem),
+            (phone_id.clone(), store.base.clone(), SyncStoreProblem::NotAllowed)
+        );
+
+        // Asked with an address nobody answers at: the paired device is offline.
+        let nobody = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let unanswered = format!("127.0.0.1:{}", nobody.local_addr().unwrap().port());
+        drop(nobody);
+        join_from(&tablet, Some(phone_id), vec![store.base.clone()], Some(unanswered));
+        let (_, _, problem) = join_failed(&mut tablet);
+        assert_eq!(problem, SyncStoreProblem::Offline);
+    }
+}

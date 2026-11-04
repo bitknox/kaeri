@@ -920,6 +920,8 @@ pub fn name(update: &Event) -> &'static str {
         Event::PartyRecent(_) => "PartyRecent",
         Event::PartyLastOut { .. } => "PartyLastOut",
         Event::SyncPairFailed { .. } => "SyncPairFailed",
+        Event::SyncStoreJoined { .. } => "SyncStoreJoined",
+        Event::SyncStoreJoinFailed { .. } => "SyncStoreJoinFailed",
     }
 }
 
@@ -1232,6 +1234,20 @@ fn copy(update: &Event) -> Event {
         }
         Event::SyncPairFailed { problem, device } => {
             Event::SyncPairFailed { problem: *problem, device: device.clone() }
+        }
+        Event::SyncStoreJoined { device, store, address, name } => Event::SyncStoreJoined {
+            device: device.clone(),
+            store: store.clone(),
+            address: address.clone(),
+            name: name.clone(),
+        },
+        Event::SyncStoreJoinFailed { device, address, name, problem } => {
+            Event::SyncStoreJoinFailed {
+                device: device.clone(),
+                address: address.clone(),
+                name: name.clone(),
+                problem: *problem,
+            }
         }
     }
 }

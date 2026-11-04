@@ -8846,6 +8846,18 @@
     <value>More for {name}</value>
     <comment>Accessible name and tooltip of the menu button on a profile's row.</comment>
   </data>
+  <data name="SyncStoreErrOffline" xml:space="preserve">
+    <value>Couldn't reach {store} or {device}. Try again when both are online.</value>
+    <comment>Line on a store row when joining it through a paired device failed because the store or the paired device could not be reached. The person can try again later.</comment>
+  </data>
+  <data name="SyncStoreErrRefused" xml:space="preserve">
+    <value>{store} didn't accept the invite. Ask its owner for a new one.</value>
+    <comment>Line on a store row when the store turned the invite down, for example because it was cancelled or used up.</comment>
+  </data>
+  <data name="SyncStoreErrNotAllowed" xml:space="preserve">
+    <value>{device} can't invite other devices to {store}. Ask the plugin store's owner for an invite.</value>
+    <comment>Line on a store row when the paired device can't make invites to the store, because it isn't a named member there any more or joined through an open link.</comment>
+  </data>
   <data name="DevicesTitle" xml:space="preserve">
     <value>Devices</value>
     <comment>Settings row and page title, every platform.</comment>

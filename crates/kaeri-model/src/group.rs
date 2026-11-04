@@ -159,6 +159,39 @@ pub enum SyncCommand {
     /// that drives TVs, paired as a remote. Off, the TV refuses that phone's commands and keeps
     /// the pairing. Both devices see the switch.
     SetDeviceRemote { device: String, on: bool },
+    /// Join plugin stores through `device`, a paired device that is a member of them: it makes
+    /// this device its own invite and hands it over the paired link, and this device spends it,
+    /// so it gets a token of its own. `stores` are addresses from `SyncStatus::stores_to_join`;
+    /// empty means every store `device` is a member of that this device is not.
+    ///
+    /// An invite already handed over (`SyncStoreOffer::invite_from` is `device`) is spent at
+    /// once. The rest are asked of `device` and come with the next session between the two,
+    /// whichever side opens it; with `address` (`host:port`) this device opens one now.
+    ///
+    /// `device` `None` asks the next device this one pairs with, in the pairing itself, as
+    /// first launch does: its invites are held, not spent, and the stores list with
+    /// `invite_from` set until this command names them with that device. Held invites live in
+    /// memory only and are gone when the app quits.
+    ///
+    /// Answered per store with `Event::SyncStoreJoined` or `Event::SyncStoreJoinFailed`, then
+    /// `Event::SyncStatus`.
+    JoinStoresFrom { device: Option<String>, stores: Vec<String>, address: Option<String> },
+}
+
+/// Why a plugin store could not be joined through a paired device.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum SyncStoreProblem {
+    /// The store could not be reached, from this device or from the paired one, or the paired
+    /// device could not be reached (`sync-store-err-offline`). Trying again can work.
+    Offline,
+    /// The store turned the invite down: it ended or was cancelled before it was spent, or the
+    /// store refused to make one (`sync-store-err-refused`).
+    Refused,
+    /// The paired device can't invite this one: it joined the store with the store's open link,
+    /// it is no longer a member, or its Kaeri is too old to make invites for another device
+    /// (`sync-store-err-not-allowed`).
+    NotAllowed,
 }
 
 /// A watch that was kept although another device had marked the episode unwatched.
@@ -179,6 +212,11 @@ pub struct SyncNoteView {
 pub struct SyncStoreOffer {
     pub address: String,
     pub name: String,
+    /// The paired device whose invite to this store this device holds, ready to spend with
+    /// `SyncCommand::JoinStoresFrom`: the first launch success sheet's "Join the plugin store"
+    /// switch. `None` when no invite is held.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub invite_from: Option<String>,
 }
 
 /// What the Sync section shows.
