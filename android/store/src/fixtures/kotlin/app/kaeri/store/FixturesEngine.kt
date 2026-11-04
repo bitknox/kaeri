@@ -54,6 +54,11 @@ private fun FixtureScene.ffi(): FfiScene = when (this) {
     FixtureScene.CRASH_SAVED -> FfiScene.CrashSaved
     FixtureScene.CRASH_HELD -> FfiScene.CrashHeld
     FixtureScene.TOGETHER -> FfiScene.Together
+    FixtureScene.SYNC_ON -> FfiScene.SyncOn
+    FixtureScene.SYNC_NEARBY -> FfiScene.SyncNearby
+    FixtureScene.SYNC_CLOUD -> FfiScene.SyncCloud
+    FixtureScene.SYNC_TV_PHONE_SIGN_IN -> FfiScene.SyncTvPhoneSignIn
+    FixtureScene.PROFILES -> FfiScene.Profiles
 }
 
 /** What the Playing scene streams, and Watching's when set: the fixtures' `media` extra, set at launch. */

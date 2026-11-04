@@ -4780,6 +4780,354 @@
     <string name="stores_qr_warning_device">Scan this with the device you want to link. It works once and lasts seven days.</string>
     <!-- Button that opens the system share sheet for the invite link. -->
     <string name="stores_share">Share…</string>
+    <!-- Settings row and page title, every platform. -->
+    <string name="devices_title">Devices</string>
+    <!-- Devices row value while sync is off. -->
+    <string name="devices_row_off">Sync off</string>
+    <!-- Devices row value; “Synced 2 min ago”, “Synced just now”. -->
+    <string name="devices_row_synced">Synced %1$s</string>
+    <!-- Devices row value with the error glyph. -->
+    <string name="devices_row_error">Couldn’t sync</string>
+    <!-- Group heading over the name. -->
+    <string name="devices_this_device">This device</string>
+    <!-- Row for this device’s name. -->
+    <string name="devices_name">Name</string>
+    <!-- Group heading while off. -->
+    <string name="sync_group">Sync</string>
+    <!-- Off state. -->
+    <string name="sync_off_title">Sync is off</string>
+    <!-- Off state. -->
+    <string name="sync_off_line">Turn it on to keep where you stopped, your history and your settings the same on your devices.</string>
+    <!-- Button; the Mac adds an ellipsis. -->
+    <string name="sync_turn_on">Turn on sync</string>
+    <!-- Road sheet title. -->
+    <string name="sync_road_title">How should your devices share?</string>
+    <!-- Road sheet row. -->
+    <string name="sync_road_nearby">With a device nearby</string>
+    <!-- Road sheet row line. -->
+    <string name="sync_road_nearby_line">Pair with another device on the same Wi-Fi. Nothing is stored anywhere else.</string>
+    <!-- Road sheet row. -->
+    <string name="sync_road_cloud">Through a cloud folder</string>
+    <!-- Road sheet row line. Names no service, since a build may hide some (decision 14). -->
+    <string name="sync_road_cloud_line">A cloud drive you already use, or your own server. Works while your devices are apart, and keeps a backup.</string>
+    <!-- Road sheet footer. -->
+    <string name="sync_road_later">You can add the other way later. Most people use both.</string>
+    <!-- Group heading. -->
+    <string name="devices_yours">Your devices</string>
+    <!-- Empty Your devices. -->
+    <string name="devices_only_this">Only this device</string>
+    <!-- Empty Your devices. -->
+    <string name="devices_only_this_line">Pair another device to share where you stopped, your history and your settings.</string>
+    <!-- Row and sheet title. -->
+    <string name="devices_add">Add a device</string>
+    <!-- Device row line past 30 days. -->
+    <string name="devices_not_seen">Not seen for %1$d days</string>
+    <!-- A device paired only for Play on TV. -->
+    <string name="devices_remote_only">Remote only</string>
+    <!-- Button on a remote-only TV row. -->
+    <string name="devices_also_sync">Also sync with %1$s</string>
+    <!-- Footer while sync is off. -->
+    <string name="devices_paired_tvs_foot">Paired for Play on TV. A TV paired as a remote never gets your history.</string>
+    <!-- Switch on a device. -->
+    <string name="devices_sync_switch">Sync</string>
+    <!-- Switch on a TV. -->
+    <string name="devices_remote_switch">Remote</string>
+    <!-- Device page footer. -->
+    <string name="devices_switches_foot">Sync shares where you stopped, your history and your settings. Remote lets this phone drive %1$s.</string>
+    <!-- Device page, destructive. -->
+    <string name="devices_remove">Remove this device</string>
+    <!-- Alert title. -->
+    <string name="devices_remove_alert">Remove %1$s?</string>
+    <!-- Alert message. -->
+    <string name="devices_remove_alert_line">%1$s keeps what it has, but gets nothing new from your other devices.</string>
+    <!-- Last row; “this phone”, “this Mac”. -->
+    <string name="sync_turn_off">Turn off sync on this %1$s</string>
+    <!-- Alert title. -->
+    <string name="sync_turn_off_alert">Turn off sync on %1$s?</string>
+    <!-- Alert message. -->
+    <string name="sync_turn_off_alert_line">This %1$s stops sharing with your other devices. Everything it has stays here.</string>
+    <!-- Group heading. -->
+    <string name="cloud_group">Cloud folder</string>
+    <!-- Group footer. -->
+    <string name="cloud_foot">Fills in while your devices are apart, and keeps a sealed backup. Only your devices can read it.</string>
+    <!-- Row when only the nearby road is set. -->
+    <string name="cloud_add">Add a cloud folder</string>
+    <!-- Picker title. -->
+    <string name="cloud_pick_title">Choose a cloud folder</string>
+    <!-- Picker row line. -->
+    <string name="cloud_google_line">A hidden Kaeri folder in your Drive</string>
+    <!-- Picker row line. -->
+    <string name="cloud_nextcloud_line">Your own or a hosted Nextcloud server</string>
+    <!-- Picker row line, Apple and Windows. -->
+    <string name="cloud_icloud_line">A folder you choose in iCloud Drive</string>
+    <!-- Picker group heading. -->
+    <string name="cloud_other">Other</string>
+    <!-- Picker row. -->
+    <string name="cloud_webdav">WebDAV server</string>
+    <!-- Picker row line. -->
+    <string name="cloud_webdav_line">Any server that speaks WebDAV</string>
+    <!-- Picker row line. -->
+    <string name="cloud_folder_line">For a folder another app keeps in step</string>
+    <!-- Picker footer. -->
+    <string name="cloud_pick_foot">Your devices keep a sealed copy of their changes in this folder. Only your devices can read it, and Kaeri runs no server of its own.</string>
+    <!-- Row line while the first write runs. -->
+    <string name="cloud_setting_up">Setting up the folder</string>
+    <!-- Field label. -->
+    <string name="cloud_nextcloud_address">Server address</string>
+    <!-- Field note. -->
+    <string name="cloud_nextcloud_address_note">The address you open Nextcloud at in a browser.</string>
+    <!-- Login flow wait. -->
+    <string name="cloud_nextcloud_wait_title">Finish signing in on %1$s</string>
+    <!-- Login flow wait. -->
+    <string name="cloud_nextcloud_wait_line">Your Nextcloud page is open in the browser. Allow access there, and this sheet carries on by itself.</string>
+    <!-- Wait row. -->
+    <string name="cloud_waiting">Waiting for %1$s</string>
+    <!-- Button. -->
+    <string name="cloud_open_again">Open the page again</string>
+    <!-- Text button. -->
+    <string name="cloud_app_password">Use an app password instead</string>
+    <!-- Button. -->
+    <string name="cloud_connect">Connect</string>
+    <!-- Error. -->
+    <string name="cloud_err_offline">Couldn’t reach %1$s. Check your connection.</string>
+    <!-- Inline error. -->
+    <string name="cloud_err_no_server">Couldn’t find a Nextcloud server at %1$s. Check the address.</string>
+    <!-- Inline error. -->
+    <string name="cloud_err_app_password">Nextcloud didn’t accept that app password. Make a new one in Nextcloud under Settings, Security.</string>
+    <!-- Inline error. -->
+    <string name="cloud_err_webdav">The server refused that user name or password.</string>
+    <!-- Error, with Open the page again. -->
+    <string name="cloud_err_timeout">The sign-in page closed before access was allowed.</string>
+    <!-- Error. -->
+    <string name="cloud_err_other_group">This folder belongs to another set of devices. Enter its recovery key to join them, or choose another folder.</string>
+    <!-- Status error, with Sign in again. -->
+    <string name="cloud_err_signed_out">%1$s signed Kaeri out. Your changes wait on this %2$s until you sign in again.</string>
+    <!-- Status error. -->
+    <string name="cloud_err_full">%1$s is full. Free some space there, then try again.</string>
+    <!-- Status error, with Choose folder. -->
+    <string name="cloud_err_folder_gone">Kaeri can’t open the folder any more. Choose it again.</string>
+    <!-- Status error title. -->
+    <string name="cloud_err_title">Couldn’t sync with %1$s</string>
+    <!-- Picker row line. -->
+    <string name="cloud_dropbox_line">Kaeri’s own folder in your Dropbox, Apps/Kaeri</string>
+    <!-- Picker row line. -->
+    <string name="cloud_onedrive_line">Kaeri’s own folder in your OneDrive, Apps/Kaeri</string>
+    <!-- Cloud group button. -->
+    <string name="cloud_sync_now">Sync now</string>
+    <!-- Cloud group button; at once, no question, except on the TV. -->
+    <string name="cloud_sign_out">Sign out</string>
+    <!-- Cloud group button after signing out. -->
+    <string name="cloud_sign_in">Sign in</string>
+    <!-- Cloud row after Sign out; hollow haze dot. -->
+    <string name="cloud_signed_out_line">Signed out. Changes wait on this %1$s until you sign in again.</string>
+    <!-- Picker row line after `SignInDenied`. -->
+    <string name="cloud_err_denied">%1$s didn’t give Kaeri access. Choose it again to retry.</string>
+    <!-- TV picker footer (decision 17). -->
+    <string name="tv_cloud_pick_foot">Choose the one your other devices use. A new cloud folder is added on a phone or computer, where its recovery key can be saved.</string>
+    <!-- TV picker row line for Dropbox. -->
+    <string name="tv_cloud_dropbox_line">Signs in on your phone</string>
+    <!-- TV, Dropbox. -->
+    <string name="tv_cloud_needs_phone_title">Dropbox signs in on your phone</string>
+    <!-- TV, Dropbox, a paired phone has it. -->
+    <string name="tv_cloud_needs_phone_has">%1$s is signed in to Dropbox. This TV can use that sign-in over your paired link.</string>
+    <!-- TV amber button; also for Nextcloud and WebDAV. -->
+    <string name="tv_use_phone_signin">Use %1$s’s sign-in</string>
+    <!-- TV, Dropbox, no phone has it. -->
+    <string name="tv_cloud_needs_phone_none">Dropbox has no sign-in a TV can do. On your phone, open Kaeri, then Settings, Devices, Cloud folder, and sign in to Dropbox there. Then choose Dropbox here again.</string>
+    <!-- TV code screen after the poll succeeds. -->
+    <string name="tv_cloud_finishing">Signed in. Setting up the folder</string>
+    <!-- TV cloud row. -->
+    <string name="tv_cloud_revoked_line">%1$s signed Kaeri out. Select to sign in again.</string>
+    <!-- TV cloud row. -->
+    <string name="tv_cloud_signed_out_line">Signed out. Select to sign in.</string>
+    <!-- TV ConfirmDialog. -->
+    <string name="tv_cloud_sign_out_title">Sign out of %1$s?</string>
+    <!-- TV ConfirmDialog, with Cancel focused and Sign out. -->
+    <string name="tv_cloud_sign_out_line">This TV stops syncing through %1$s. Changes wait here until you sign in again.</string>
+    <!-- Status line while offline. -->
+    <string name="cloud_offline">Waiting for a connection. Changes are kept on this %1$s.</string>
+    <!-- TV device flow. -->
+    <string name="tv_google_title">Sign in to Google Drive</string>
+    <!-- TV device flow. -->
+    <string name="tv_qr_open_page">Or scan to open the page</string>
+    <!-- TV Nextcloud. -->
+    <string name="tv_nextcloud_line">Scan this with your phone and allow access on your Nextcloud page. The TV carries on by itself.</string>
+    <!-- Sheet title. -->
+    <string name="rkey_title">Your recovery key</string>
+    <!-- Sheet line. -->
+    <string name="rkey_line">Keep this somewhere safe. It restores your history if you lose every device, and lets a new device join from your cloud folder.</string>
+    <!-- Button. -->
+    <string name="rkey_copy">Copy</string>
+    <!-- Text button. -->
+    <string name="rkey_qr">Show as QR code</string>
+    <!-- Sheet footnote. -->
+    <string name="rkey_again">You can see it again in Settings, Devices, after unlocking this %1$s.</string>
+    <!-- Devices row. -->
+    <string name="rkey_row">Recovery key</string>
+    <!-- Devices row value. -->
+    <string name="rkey_made">Made %1$s</string>
+    <!-- Row. -->
+    <string name="rkey_new">Make a new key</string>
+    <!-- Footer. -->
+    <string name="rkey_new_foot">The old key stops working, and your devices switch to the new one the next time they sync.</string>
+    <!-- Restore. -->
+    <string name="rkey_enter_title">Enter your recovery key</string>
+    <!-- Restore. -->
+    <string name="rkey_enter_line">%1$s holds history from %2$d devices. The key you saved when sync was turned on opens it.</string>
+    <!-- Field note. -->
+    <string name="rkey_enter_note">24 letters and digits, in groups of four. Spaces and case don’t matter.</string>
+    <!-- Inline error. -->
+    <string name="rkey_wrong">That key doesn’t open this folder. Check each group of four and try again.</string>
+    <!-- Button. -->
+    <string name="rkey_restore">Restore</string>
+    <!-- Add a device. -->
+    <string name="pair_enter_line">On the other device, open Kaeri and choose Set up from another device, or Settings, Devices, Show a code. Then enter the code here.</string>
+    <!-- Button, phones. -->
+    <string name="pair_scan">Scan the code</string>
+    <!-- Note. -->
+    <string name="pair_same_wifi">Both devices need to be on the same Wi-Fi.</string>
+    <!-- Button. -->
+    <string name="pair_button">Pair</string>
+    <!-- Text button. -->
+    <string name="pair_show_instead">Show a code here instead</string>
+    <!-- Code screen. -->
+    <string name="pair_show_title">Enter this code on your other device</string>
+    <!-- Code screen. -->
+    <string name="pair_show_scan">Or scan it from Kaeri on your phone.</string>
+    <!-- Code screen. -->
+    <string name="pair_good_for">Good for 2 minutes · %1$s</string>
+    <!-- TV code screen. -->
+    <string name="pair_tv_line">On your phone, open Kaeri, then Settings, Devices, Add a device, and scan this code or enter it.</string>
+    <!-- Success. -->
+    <string name="pair_ok">Paired with %1$s</string>
+    <!-- Success. -->
+    <string name="pair_ok_line">Bringing over your history. You can keep using Kaeri meanwhile.</string>
+    <!-- Success switch. -->
+    <string name="pair_copy_signins">Copy sign-ins from %1$s</string>
+    <!-- Success switch line. -->
+    <string name="pair_copy_signins_line">%1$s. Each device gets its own copy over this link.</string>
+    <!-- Error. -->
+    <string name="pair_err_code">That code didn’t match. Check the code on %1$s and try again.</string>
+    <!-- Error. -->
+    <string name="pair_err_not_found">Couldn’t find the device showing this code. Both devices need to be on the same Wi-Fi.</string>
+    <!-- Error on the showing side. -->
+    <string name="pair_err_expired">This code ran out. Show a new one.</string>
+    <!-- Profile question. -->
+    <string name="pair_which_profile">Which profile on %1$s is yours?</string>
+    <!-- Profile question. -->
+    <string name="pair_which_profile_line">This %1$s syncs with that profile only. The others stay on %2$s.</string>
+    <!-- Footer. -->
+    <string name="pair_also_sync_foot">%1$s already knows this phone from Play on TV, so syncing with it needs no new code.</string>
+    <!-- Continue, for a day. -->
+    <string name="continue_from_device">Episode %1$d · stopped at %2$s on %3$s</string>
+    <!-- Player, 6 s, with Start over. -->
+    <string name="player_resumed_from">Resumed at %1$s from %2$s</string>
+    <!-- Row line, Mac toolbar status. -->
+    <string name="sync_syncing">Syncing</string>
+    <!-- Mac jobs popover. -->
+    <string name="sync_syncing_with">Syncing with %1$s</string>
+    <!-- Device page group. -->
+    <string name="sync_notes">Sync notes</string>
+    <!-- Sync note. -->
+    <string name="sync_note_kept_watched">Episode %1$d of %2$s stays watched. %3$s marked it unwatched without knowing %4$s had finished it.</string>
+    <!-- Sync note action. -->
+    <string name="sync_note_undo">Mark unwatched</string>
+    <!-- Footer. -->
+    <string name="sync_notes_foot">Notes stay for 7 days.</string>
+    <!-- Settings row and page. -->
+    <string name="profiles_title">Profiles</string>
+    <!-- Profiles row value with one profile. -->
+    <string name="profiles_only_you">Only you</string>
+    <!-- Profiles page with one. -->
+    <string name="profiles_one_foot">Profiles keep separate history, Continue and accounts for people who share this device. With one profile, Kaeri has no picker and no names.</string>
+    <!-- Row, sheet title, picker tile. -->
+    <string name="profiles_add">Add a profile</string>
+    <!-- Sheet line. -->
+    <string name="profiles_add_line">Each profile keeps its own history, Continue and accounts. Sources and downloads stay shared on this device.</string>
+    <!-- Field label. -->
+    <string name="profiles_new">New profile</string>
+    <!-- Field label. -->
+    <string name="profiles_yours">Your profile</string>
+    <!-- Field note when signed in. -->
+    <string name="profiles_yours_note">Filled in from AniList. Until now this device had one profile with no name.</string>
+    <!-- Switch. -->
+    <string name="profiles_kids">Kids profile</string>
+    <!-- Switch footer. -->
+    <string name="profiles_kids_line">Adult titles stay off, and sources, devices and torrent settings are hidden in it.</string>
+    <!-- Settings foot in a kids profile. -->
+    <string name="profiles_kids_hidden">Sources and Devices are hidden in a kids profile, and adult titles stay off.</string>
+    <!-- Line under a kids profile. -->
+    <string name="profiles_kids_tag">Kids</string>
+    <!-- Button. -->
+    <string name="profiles_add_button">Add profile</string>
+    <!-- Profiles page footer. -->
+    <string name="profiles_shared_foot">Sources, downloads and this device’s settings are shared by every profile.</string>
+    <!-- Profile page row. -->
+    <string name="profiles_syncs_with">Syncs with</string>
+    <!-- Profile page, destructive. -->
+    <string name="profiles_delete">Delete profile</string>
+    <!-- Alert title. -->
+    <string name="profiles_delete_alert">Delete %1$s’s profile?</string>
+    <!-- Alert message. -->
+    <string name="profiles_delete_alert_line">%1$s’s history and sign-ins on this device are removed. Devices that sync with %1$s keep theirs.</string>
+    <!-- TV, and iPad when asked. -->
+    <string name="profiles_picker">Who’s watching?</string>
+    <!-- iPad switch. -->
+    <string name="profiles_ask_at_launch">Ask who’s watching at launch</string>
+    <!-- iPad footer. -->
+    <string name="profiles_ask_foot">Off by default. For an iPad the household shares. The account row switches profiles at any time.</string>
+    <!-- TV Settings. -->
+    <string name="profiles_switch">Switch profile</string>
+    <!-- Account sheet and menus. -->
+    <string name="profiles_manage">Manage profiles</string>
+    <!-- Welcome, text button; TV says “Set up from your phone”. -->
+    <string name="first_setup_other">Set up from another device</string>
+    <!-- Code screen from first launch. -->
+    <string name="first_setup_line">On a device that already has Kaeri, open Settings, Devices, Add a device, and enter this code or scan it.</string>
+    <!-- Text button. -->
+    <string name="first_restore">Restore from a cloud folder instead</string>
+    <!-- Success from first launch. -->
+    <string name="first_ok_line">Bringing over your history, settings and plugin stores. You can start using Kaeri now.</string>
+    <!-- Success switch. -->
+    <string name="first_join_store">Join the plugin store %1$s</string>
+    <!-- Success switch line. -->
+    <string name="first_join_store_line">%1$s makes this %2$s its own invite</string>
+    <!-- Picker row on a phone or computer. -->
+    <string name="cloud_folder">A folder on this %1$s</string>
+    <!-- Field note under the app password, on Android. -->
+    <string name="cloud_app_password_note">Make one in Nextcloud under Settings, Security. It is kept on this %1$s.</string>
+    <!-- Devices row value while sync is off and TVs are paired for Play on TV. The row says "Sync off", then this. -->
+    <plurals name="devices_tvs_for_play">
+        <item quantity="one">One TV for Play on TV</item>
+        <item quantity="other">%1$d TVs for Play on TV</item>
+    </plurals>
+    <!-- Line under a TV paired for Play on TV today. -->
+    <string name="devices_paired_today">Paired today</string>
+    <!-- Line under Add a device on the TV's Devices page. -->
+    <string name="tv_devices_add_line">Shows a code to enter on your phone</string>
+    <!-- TV Profiles page with one profile. -->
+    <string name="tv_profiles_only_you">Only you. Add a profile to keep separate history, Continue and accounts on this TV.</string>
+    <!-- TV Settings, Profiles: the row that opens the picker. -->
+    <string name="tv_profiles_opens_picker">Opens Who’s watching?</string>
+    <!-- TV Profiles page heading over the profiles. -->
+    <string name="tv_profiles_on_this_tv">Profiles on this TV</string>
+    <!-- Android recovery key sheet, third button. -->
+    <string name="rkey_save_file">Save as a file</string>
+    <!-- Android recovery key sheet, button that shows the key as a code. -->
+    <string name="rkey_qr_short">QR code</string>
+    <!-- Button on the Devices page and the add a device sheet that shows a pairing code instead of entering one. -->
+    <string name="pair_show_code">Show a code</string>
+    <!-- Cloud row button when the service signed Kaeri out. -->
+    <string name="cloud_sign_in_again">Sign in again</string>
+    <!-- Cloud row button when the folder can't be opened. -->
+    <string name="cloud_choose_folder">Choose folder</string>
+    <!-- Spoken label of a profile's avatar on Home. -->
+    <string name="profiles_avatar_desc">%1$s, switch profile</string>
+    <!-- Heading over the pairing code the other device shows, over the field. -->
+    <string name="pair_code_field">Pairing code</string>
+    <string name="device_kind_phone">phone</string>
+    <string name="device_kind_tablet">tablet</string>
+    <string name="device_kind_tv">TV</string>
     <!-- Title of the state when a title page could not load. -->
     <string name="title_load_failed">Couldn\'t load this title</string>
     <!-- Line under the load failure when AniList did not answer. -->

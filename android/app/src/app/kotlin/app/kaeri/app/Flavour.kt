@@ -21,7 +21,7 @@ internal object Flavour {
 
     fun launch(context: Context, intent: Intent): EngineLaunch =
         EngineLaunch.app(EngineHome.sandbox(files = context.filesDir, cache = context.cacheDir))
-            .copy(platform = enginePlatform(context))
+            .copy(platform = enginePlatform(context), profile = ProfileChoice.saved(context))
 
     /** The engine background work starts while the app is not running: the app's own files. */
     fun background(context: Context): EngineLaunch =

@@ -58,6 +58,14 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="kaeri" android:host="auth" android:pathPrefix="/" />
             </intent-filter>
+            <!-- Google Drive's sign-in for sync comes back on the Android client's own scheme, the
+                 client id reversed: it is a public id, and Google accepts no other redirect for it. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="com.googleusercontent.apps.206293095288-gitmhcp8qpohddgr0o8qli0e0o8kob4t" />
+            </intent-filter>
             <!-- AniList's sign-in on Android comes back on a verified App Link, which no other app
                  can claim: its implicit grant puts the token in the redirect. Verified against
                  https://kaeri.app/.well-known/assetlinks.json. -->

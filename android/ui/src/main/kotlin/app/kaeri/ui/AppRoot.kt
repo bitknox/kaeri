@@ -269,6 +269,7 @@ fun AppRoot(
         CrashNoticeAndReport()
         UpdatePrompts()
         AccountSheets()
+        ProfileSwitchSheet(actions)
         TvSheetHost()
         CastSheetHost()
         DiscussionHost()

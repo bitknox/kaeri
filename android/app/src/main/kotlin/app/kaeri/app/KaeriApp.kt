@@ -211,6 +211,8 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
         } else {
             store.start(launch, host(), prepare)
         }
+        // A profile switched to: remembered, and the engine started again on it.
+        store.onProfileSwitch = { id -> ProfileChoice.switchTo(this, id) }
         episodeAlerts.follow(scope)
         ContinueShortcut(this).follow(store, scope)
         widgetKeeper.followFillIns(store, scope)

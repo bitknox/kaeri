@@ -91,6 +91,7 @@ internal class BrowserSignIn(private val activity: ComponentActivity, private va
     companion object {
         private const val SCHEME = "kaeri"
         private const val CLOSE_GRACE_MILLIS = 400L
+        private const val GOOGLE_SCHEME = "com.googleusercontent.apps."
 
         /**
          * The tracker a sign-in's redirect is for: kaeri://auth/<tracker>, or the App Link
@@ -100,6 +101,8 @@ internal class BrowserSignIn(private val activity: ComponentActivity, private va
             val segments = data.pathSegments
             return when {
                 data.scheme == SCHEME && data.host == "auth" -> segments.firstOrNull()
+                // Google's Android client: its own reversed id is the scheme, and the service is Google Drive's.
+                data.scheme?.startsWith(GOOGLE_SCHEME) == true -> "google"
                 data.scheme == "https" && data.host == APP_LINK_HOST && segments.firstOrNull() == "auth" -> segments.getOrNull(1)
                 else -> null
             }?.takeIf { it.isNotEmpty() }

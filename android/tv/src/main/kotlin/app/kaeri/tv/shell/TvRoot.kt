@@ -67,6 +67,7 @@ import app.kaeri.tv.screens.SettingsSection
 import app.kaeri.tv.screens.TitleScreen
 import app.kaeri.tv.screens.UpdateScreen
 import app.kaeri.tv.signin.AddServerScreen
+import app.kaeri.tv.sync.TvSyncHost
 import app.kaeri.tv.signin.JoinStoreScreen
 import app.kaeri.tv.signin.LicensedScreen
 import app.kaeri.tv.signin.ServerScreen
@@ -149,6 +150,7 @@ fun TvRoot(
                 states.SaveableStateProvider("browse") { Browse(nav, play, playFromStart) }
             }
             if (firstLaunch && !player.isPresented) FirstLaunch(onCover = { covered = it })
+            TvSyncHost()
             if (remote != null) RemoteOverlays(remote, playing = player.isPresented, nav = nav)
             Notices(store, player, remote, notices, onUpdatePage = nav.top is Page.Update)
             EngineDown()
