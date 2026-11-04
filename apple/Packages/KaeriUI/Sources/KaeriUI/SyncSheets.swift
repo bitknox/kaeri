@@ -199,7 +199,7 @@ private struct CloudStepView: View {
             switch step {
             case .waiting(let kind):
                 CloudStatusLine(text: L.cloudWaiting(service: SyncModel.name(kind)), busy: true)
-                SyncNote(text: pageLine(kind))
+                CloudLede(text: pageLine(kind))
             case .connecting:
                 CloudStatusLine(text: L.cloudConnectingLine, busy: true, color: .haze)
             case .settingUp(let kind):
@@ -289,7 +289,7 @@ private struct CloudStatusLine: View {
     var color: Color = .silk
 
     var body: some View {
-        HStack(alignment: busy ? .center : .firstTextBaseline, spacing: 8) {
+        HStack(alignment: busy ? .center : .firstTextBaseline, spacing: touch ? 10 : 8) {
             if busy {
                 ProgressView().controlSize(.small)
             } else {
@@ -307,8 +307,38 @@ private struct CloudStatusLine: View {
         .accessibilityElement(children: .combine)
         #if os(iOS)
         .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
         .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 4, trailing: 16))
         #endif
+    }
+
+    private var touch: Bool {
+        #if os(iOS)
+        true
+        #else
+        false
+        #endif
+    }
+}
+
+/// The wait's line under its status: where to go, in the sheet's body size on iPhone and iPad.
+private struct CloudLede: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .font(.plat(mac: 12, touch: 17))
+            #if os(macOS)
+            .macLineHeight(17)
+            #endif
+            .foregroundStyle(.haze)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            #if os(iOS)
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 4, trailing: 16))
+            #endif
     }
 }
 

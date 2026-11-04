@@ -50,6 +50,16 @@ struct PhoneDevicesPage: View {
         }
         .navigationTitle(L.devicesTitle)
         .navigationBarTitleDisplayMode(.inline)
+        // On the page, not the cloud section, so it rises from the bottom as an action sheet.
+        .confirmationDialog(
+            L.cloudRemoveTitle(service: sync.status.folder.map { SyncModel.name($0.kind) } ?? ""),
+            isPresented: Binding(get: { sync.removingFolder }, set: { sync.removingFolder = $0 }),
+            titleVisibility: .visible
+        ) {
+            Button(L.cloudRemove, role: .destructive) { sync.removeFolder() }
+        } message: {
+            Text(L.cloudRemoveLine(kind: Device.name, service: sync.status.folder.map { SyncModel.name($0.kind) } ?? ""))
+        }
         .alert(L.devicesName, isPresented: $renaming) {
             TextField(L.devicesName, text: $draft)
             Button(L.actionCancel, role: .cancel) {}
@@ -153,15 +163,6 @@ struct PhoneDevicesPage: View {
                 Button(L.cloudAdd) { sync.addCloudFolder() }.listRowBackground(Palette.raised)
             }
         } header: { PhoneSectionHeader(L.cloudGroup) } footer: { Text(L.cloudFoot) }
-        .confirmationDialog(
-            L.cloudRemoveTitle(service: sync.status.folder.map { SyncModel.name($0.kind) } ?? ""),
-            isPresented: Binding(get: { sync.removingFolder }, set: { sync.removingFolder = $0 }),
-            titleVisibility: .visible
-        ) {
-            Button(L.cloudRemove, role: .destructive) { sync.removeFolder() }
-        } message: {
-            Text(L.cloudRemoveLine(kind: Device.name, service: sync.status.folder.map { SyncModel.name($0.kind) } ?? ""))
-        }
         if sync.status.recoveryKey {
             Section {
                 HStack {
