@@ -22,12 +22,6 @@ enum TVSettingsWords {
     static func footnote(_ tv: TVRemoteModel) -> String {
         L.tvForgetNote
     }
-
-    /// The code a TV lists this device by, in groups of four: "8094 20D8 F5F8 818D".
-    static func code(_ fingerprint: String) -> String {
-        let upper = Array(fingerprint.uppercased())
-        return stride(from: 0, to: upper.count, by: 4).map { String(upper[$0..<min($0 + 4, upper.count)]) }.joined(separator: " ")
-    }
 }
 
 /// Mac: a group of the Integrations pane. iPad: a group of the Playback pane, under Picture and
@@ -54,14 +48,6 @@ struct TVsGroup: View {
                         .buttonStyle(SecondaryCapsuleStyle(raisedSurface: true))
                 }
                 SettingsRow(title: SettingKey.castTvs.title, note: CastWords.tvsNote) { SettingSwitch(key: .castTvs) }
-                if !tv.shortFingerprint.isEmpty {
-                    SettingsRow(title: L.tvCodeRow) {
-                        Text(TVSettingsWords.code(tv.shortFingerprint))
-                            .font(.system(size: 12, design: .monospaced))
-                            .foregroundStyle(.haze)
-                            .textSelection(.enabled)
-                    }
-                }
             }
             .confirmationDialog(
                 L.tvForgetTitle(name: forgetting?.name ?? L.tvGenericName),
@@ -107,18 +93,6 @@ struct PhoneTVsPage: View {
                     .font(.ui(17, weight: .semibold))
                     .foregroundStyle(.silk)
                     .listRowBackground(Palette.raised)
-                if !tv.shortFingerprint.isEmpty {
-                    HStack {
-                        Text(L.tvCodeRow).font(.ui(17)).foregroundStyle(.silk)
-                        Spacer()
-                        Text(TVSettingsWords.code(tv.shortFingerprint))
-                            .font(.system(size: 15, design: .monospaced))
-                            .foregroundStyle(.haze)
-                            .textSelection(.enabled)
-                    }
-                    .accessibilityElement(children: .combine)
-                    .listRowBackground(Palette.raised)
-                }
             } header: {
                 PhoneSectionHeader(L.tvPairedTvs)
             } footer: {
