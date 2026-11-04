@@ -9837,6 +9837,90 @@ object Strings {
     fun storesShare(context: Context): String =
         context.getString(R.string.stores_share)
 
+    /** Windows and Linux dialog line while the browser is open for a cloud sign-in. */
+    fun cloudBrowserLine(context: Context, service: String): String =
+        context.getString(R.string.cloud_browser_line, service)
+
+    /** Windows and Linux dialog title while the browser is open for a cloud sign-in. */
+    fun cloudBrowserTitle(context: Context, service: String): String =
+        context.getString(R.string.cloud_browser_title, service)
+
+    /** Word for this device in sentences such as “Turn off sync on this computer”. */
+    fun deviceKindComputer(context: Context): String =
+        context.getString(R.string.device_kind_computer)
+
+    /** Button on the Devices page that opens the box for a code another device shows. */
+    fun devicesEnterCode(context: Context): String =
+        context.getString(R.string.devices_enter_code)
+
+    /** Button on the Devices page that shows the recovery key behind the computer’s own lock. */
+    fun devicesShowKey(context: Context): String =
+        context.getString(R.string.devices_show_key)
+
+    /** Button in the alert that turns sync off on this computer. */
+    fun devicesTurnOffAction(context: Context): String =
+        context.getString(R.string.devices_turn_off_action)
+
+    /** Label of the field for the other device’s address in the Enter a code dialog. */
+    fun pairAddressLabel(context: Context): String =
+        context.getString(R.string.pair_address_label)
+
+    /** Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself. */
+    fun pairByAddress(context: Context): String =
+        context.getString(R.string.pair_by_address)
+
+    /** Placeholder of the pairing code field. */
+    fun pairCodePlaceholder(context: Context): String =
+        context.getString(R.string.pair_code_placeholder)
+
+    /** Label of the field for a recovery key in the restore dialog. */
+    fun rkeyFieldLabel(context: Context): String =
+        context.getString(R.string.rkey_field_label)
+
+    /** Label of the user name field for WebDAV and a Nextcloud app password. */
+    fun cloudUserLabel(context: Context): String =
+        context.getString(R.string.cloud_user_label)
+
+    /** Label of the password field for WebDAV and a Nextcloud app password. */
+    fun cloudPasswordLabel(context: Context): String =
+        context.getString(R.string.cloud_password_label)
+
+    /** Label of the WebDAV server address field. */
+    fun cloudWebdavAddressLabel(context: Context): String =
+        context.getString(R.string.cloud_webdav_address_label)
+
+    /** Line under the pairing code while a device is being paired. */
+    fun pairWorkingLine(context: Context): String =
+        context.getString(R.string.pair_working_line)
+
+    /** Name for the device whose pairing code did not match, when no name is known yet. */
+    fun pairOtherDevice(context: Context): String =
+        context.getString(R.string.pair_other_device)
+
+    /** Note under the Enter a code dialog's fields: the address can be left empty. */
+    fun pairAddressOptional(context: Context): String =
+        context.getString(R.string.pair_address_optional)
+
+    /** Device page footer when the device has no Remote switch. */
+    fun devicesSyncFoot(context: Context): String =
+        context.getString(R.string.devices_sync_foot)
+
+    /** A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's. */
+    fun devicesLineRemote(context: Context, line: String): String =
+        context.getString(R.string.devices_line_remote, line)
+
+    /** Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux. */
+    fun profilesEditAction(context: Context): String =
+        context.getString(R.string.profiles_edit_action)
+
+    /** Label of the name field in the add and edit profile dialogs. */
+    fun profilesNameField(context: Context): String =
+        context.getString(R.string.profiles_name_field)
+
+    /** Accessible name and tooltip of the menu button on a profile's row. */
+    fun profilesMoreFor(context: Context, name: String): String =
+        context.getString(R.string.profiles_more_for, name)
+
     /** Line on a store row when joining it through a paired device failed because the store or the paired device could not be reached. The person can try again later. */
     fun syncStoreErrOffline(context: Context, store: String, device: String): String =
         context.getString(R.string.sync_store_err_offline, store, device)
@@ -9953,9 +10037,9 @@ object Strings {
     fun devicesRemoteSwitch(context: Context): String =
         context.getString(R.string.devices_remote_switch)
 
-    /** Device page footer. */
-    fun devicesSwitchesFoot(context: Context, device: String): String =
-        context.getString(R.string.devices_switches_foot, device)
+    /** Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC. */
+    fun devicesSwitchesFoot(context: Context, kind: String, device: String): String =
+        context.getString(R.string.devices_switches_foot, kind, device)
 
     /** Device page, destructive. */
     fun devicesRemove(context: Context): String =

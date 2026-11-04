@@ -18,7 +18,7 @@ pub fn open(ctx: &Rc<Ctx>) {
         .content_height(480)
         .child(&pages)
         .build();
-    pages.add(&welcome(&pages));
+    pages.add(&welcome(ctx, &dialog, &pages));
     pages.add(&anilist(ctx, &pages));
     pages.add(&sources(ctx, &dialog));
     dialog.present(Some(&ctx.window));
@@ -78,7 +78,11 @@ fn pill(label: &str, primary: bool) -> gtk::Button {
     button
 }
 
-fn welcome(pages: &adw::NavigationView) -> adw::NavigationPage {
+fn welcome(
+    ctx: &Rc<Ctx>,
+    dialog: &adw::Dialog,
+    pages: &adw::NavigationView,
+) -> adw::NavigationPage {
     let column = gtk::Box::new(gtk::Orientation::Vertical, 12);
     let nagare = nagare::picture(5);
     nagare.set_halign(gtk::Align::Center);
@@ -93,6 +97,26 @@ fn welcome(pages: &adw::NavigationView) -> adw::NavigationPage {
         move |_| pages.push_by_tag("anilist")
     });
     column.append(&next);
+    // A new device of someone who already uses Kaeri: bring the rest over instead.
+    for (label, pair) in [(t::first_setup_other(), true), (t::first_restore(), false)] {
+        let b = pill(&label, false);
+        b.add_css_class("flat");
+        b.connect_clicked({
+            let (ctx, dialog) = (Rc::clone(ctx), dialog.clone());
+            move |_| {
+                dialog.close();
+                if pair {
+                    crate::sync::dialogs::pair_show(
+                        &ctx,
+                        crate::sync::dialogs::Origin::FirstLaunch,
+                    );
+                } else {
+                    crate::sync::dialogs::picker(&ctx);
+                }
+            }
+        });
+        column.append(&b);
+    }
     step("welcome", &t::onboarding_welcome(), &column)
 }
 

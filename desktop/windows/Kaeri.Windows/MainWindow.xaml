@@ -41,7 +41,7 @@
                     IsSettingsVisible="True" PaneDisplayMode="Auto"
                     ExpandedModeThresholdWidth="1008" CompactModeThresholdWidth="641"
                     OpenPaneLength="240" IsTitleBarAutoPaddingEnabled="False"
-                    SelectionChanged="OnNavSelectionChanged">
+                    SelectionChanged="OnNavSelectionChanged" ItemInvoked="OnNavInvoked">
       <NavigationView.MenuItems>
         <NavigationViewItem Content="{x:Bind app:T.HomeTitle}" Tag="home" AccessKey="H">
           <NavigationViewItem.Icon><FontIcon Glyph="&#xE768;" /></NavigationViewItem.Icon>

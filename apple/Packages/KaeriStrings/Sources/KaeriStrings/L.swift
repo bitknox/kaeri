@@ -2717,9 +2717,6 @@ public enum L {
         Self.format("rkey-enter-line-generic", fallback: "%1$@ holds history from your other devices. The key you saved when sync was turned on opens it.", service)
     }
 
-    /// Name for the device whose pairing code did not match, when no name is known yet.
-    public static var pairOtherDevice: String { string("pair-other-device", fallback: "your other device") }
-
     /// Name of the fact on the title page that lists where else a show can be watched.
     public static var titleFactAlsoOn: String { string("title-fact-also-on", fallback: "Also on") }
 
@@ -9352,6 +9349,77 @@ public enum L {
     /// Button that opens the system share sheet for the invite link.
     public static var storesShare: String { string("stores-share", fallback: "Share…") }
 
+    /// Windows and Linux dialog line while the browser is open for a cloud sign-in.
+    public static func cloudBrowserLine(service: String) -> String {
+        Self.format("cloud-browser-line", fallback: "Your browser opened %1$@’s page. Allow access there, and Kaeri carries on by itself.", service)
+    }
+
+    /// Windows and Linux dialog title while the browser is open for a cloud sign-in.
+    public static func cloudBrowserTitle(service: String) -> String {
+        Self.format("cloud-browser-title", fallback: "Sign in to %1$@ in your browser", service)
+    }
+
+    /// Word for this device in sentences such as “Turn off sync on this computer”.
+    public static var deviceKindComputer: String { string("device-kind-computer", fallback: "computer") }
+
+    /// Button on the Devices page that opens the box for a code another device shows.
+    public static var devicesEnterCode: String { string("devices-enter-code", fallback: "Enter a code") }
+
+    /// Button on the Devices page that shows the recovery key behind the computer’s own lock.
+    public static var devicesShowKey: String { string("devices-show-key", fallback: "Show") }
+
+    /// Button in the alert that turns sync off on this computer.
+    public static var devicesTurnOffAction: String { string("devices-turn-off-action", fallback: "Turn off") }
+
+    /// Label of the field for the other device’s address in the Enter a code dialog.
+    public static var pairAddressLabel: String { string("pair-address-label", fallback: "Address") }
+
+    /// Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself.
+    public static var pairByAddress: String { string("pair-by-address", fallback: "Pair by address") }
+
+    /// Placeholder of the pairing code field.
+    public static var pairCodePlaceholder: String { string("pair-code-placeholder", fallback: "000 000") }
+
+    /// Label of the field for a recovery key in the restore dialog.
+    public static var rkeyFieldLabel: String { string("rkey-field-label", fallback: "Recovery key") }
+
+    /// Label of the user name field for WebDAV and a Nextcloud app password.
+    public static var cloudUserLabel: String { string("cloud-user-label", fallback: "User name") }
+
+    /// Label of the password field for WebDAV and a Nextcloud app password.
+    public static var cloudPasswordLabel: String { string("cloud-password-label", fallback: "Password") }
+
+    /// Label of the WebDAV server address field.
+    public static var cloudWebdavAddressLabel: String { string("cloud-webdav-address-label", fallback: "Server address") }
+
+    /// Line under the pairing code while a device is being paired.
+    public static var pairWorkingLine: String { string("pair-working-line", fallback: "Pairing") }
+
+    /// Name for the device whose pairing code did not match, when no name is known yet.
+    public static var pairOtherDevice: String { string("pair-other-device", fallback: "your other device") }
+
+    /// Note under the Enter a code dialog's fields: the address can be left empty.
+    public static var pairAddressOptional: String { string("pair-address-optional", fallback: "Leave the address empty and Kaeri looks for the device on this network.") }
+
+    /// Device page footer when the device has no Remote switch.
+    public static var devicesSyncFoot: String { string("devices-sync-foot", fallback: "Sync shares where you stopped, your history and your settings.") }
+
+    /// A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's.
+    public static func devicesLineRemote(line: String) -> String {
+        Self.format("devices-line-remote", fallback: "%1$@ · Remote", line)
+    }
+
+    /// Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux.
+    public static var profilesEditAction: String { string("profiles-edit-action", fallback: "Edit") }
+
+    /// Label of the name field in the add and edit profile dialogs.
+    public static var profilesNameField: String { string("profiles-name-field", fallback: "Name") }
+
+    /// Accessible name and tooltip of the menu button on a profile's row.
+    public static func profilesMoreFor(name: String) -> String {
+        Self.format("profiles-more-for", fallback: "More for %1$@", name)
+    }
+
     /// Line on a store row when joining it through a paired device failed because the store or the paired device could not be reached. The person can try again later.
     public static func syncStoreErrOffline(store: String, device: String) -> String {
         Self.format("sync-store-err-offline", fallback: "Couldn't reach %1$@ or %2$@. Try again when both are online.", store, device)
@@ -9451,9 +9519,9 @@ public enum L {
     /// Switch on a TV.
     public static var devicesRemoteSwitch: String { string("devices-remote-switch", fallback: "Remote") }
 
-    /// Device page footer.
-    public static func devicesSwitchesFoot(device: String) -> String {
-        Self.format("devices-switches-foot", fallback: "Sync shares where you stopped, your history and your settings. Remote lets this phone drive %1$@.", device)
+    /// Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC.
+    public static func devicesSwitchesFoot(kind: String, device: String) -> String {
+        Self.format("devices-switches-foot", fallback: "Sync shares where you stopped, your history and your settings. Remote lets this %1$@ drive %2$@.", kind, device)
     }
 
     /// Device page, destructive.

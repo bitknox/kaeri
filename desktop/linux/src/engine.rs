@@ -64,7 +64,21 @@ pub struct Started {
 /// Start the engine on the user's own directories, the terminal app's, so both share a history,
 /// a config and a library.
 pub async fn start(paths: Paths, host: Arc<dyn Host>) -> Result<Started, String> {
-    let (config, store, set_aside) = open(&paths)?;
+    let (mut config, store, set_aside) = open(&paths)?;
+    // An install with profiles enters the one used last and reads its settings over the shared
+    // file. A single user has none and nothing changes.
+    match kaeri_engine::profile::enter(&store, &paths, None) {
+        Ok(Some(_)) if kaeri_engine::profile::overlay_of(&store, &paths).is_some() => {
+            match kaeri_engine::profile::read_config(&store, &paths) {
+                Ok(profiled) => config = profiled,
+                Err(problem) => {
+                    tracing::error!(?problem, "the profile's settings did not load")
+                }
+            }
+        }
+        Ok(_) => {}
+        Err(reason) => tracing::warn!(%reason, "could not enter the profile used last"),
+    }
     let http = HttpClient::new(&config.network).map_err(|e| e.to_string())?;
     let mut options = EngineOptions::new(paths, config.clone(), http, store, theme());
     options.saved = Some(config);
@@ -73,6 +87,7 @@ pub async fn start(paths: Paths, host: Arc<dyn Host>) -> Result<Started, String>
     // Skip times found from the audio, where the libmpv this runs on has the demuxer tap: the
     // Flatpak's and the AppImage's do, a distribution's may not.
     options.audio_tap = kaeri_mpv_host::audio_tap_available();
+    options.device_kind = Some(kaeri_model::group::SyncDeviceKind::Computer);
     options.app_clients = app_clients();
     options.device_label = kaeri_i18n::t::shell_device_label();
     options.language = Some(kaeri_i18n::language().to_owned());
@@ -90,6 +105,8 @@ pub fn app_clients() -> AppClients {
         mal: Some("0ccc4725381aca9513f26d32107a94cd".into()),
         simkl: Some("016a3721d77c54d04f5aa6f5a213fe76f047d83d3ae35b2c892074859b88be0b".into()),
         trakt: Some("p2yWSSGe7aVAlnHEMiQQh0RhiL6ivZfJNaubOJi4DZE".into()),
+        // Cloud sign-in goes through the browser and a loopback port on a computer.
+        cloud_kind: Some(kaeri_engine::options::CloudClient::Desktop),
         ..AppClients::default()
     }
 }

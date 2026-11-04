@@ -85,6 +85,3 @@ sync-turn-off-button = Turn off
 # @arg service: text
 rkey-enter-line-generic = { $service } holds history from your other { -device-pl }. The key you saved when sync was turned on opens it.
 
-# Name for the device whose pairing code did not match, when no name is known yet.
-# @only apple
-pair-other-device = your other { -device }

@@ -129,6 +129,9 @@ pub enum StageView {
     Store(String),
     /// Who has joined a store, for its owner.
     StoreMembers(String),
+    /// This device, the others it syncs with, the cloud folder, and the profiles when there are
+    /// two or more. Reached from Settings.
+    Devices,
 }
 
 impl StageView {
@@ -137,7 +140,11 @@ impl StageView {
         match self {
             Self::Episodes(_) | Self::NowPlaying => true,
             Self::Section(s) => s.wants_wide_stage(),
-            Self::Title(_) | Self::Stores | Self::Store(_) | Self::StoreMembers(_) => false,
+            Self::Title(_)
+            | Self::Stores
+            | Self::Store(_)
+            | Self::StoreMembers(_)
+            | Self::Devices => false,
         }
     }
 
@@ -193,6 +200,40 @@ pub enum Overlay {
     FirstRun,
     /// Report a bug, with the crash reports saved on this device to add.
     BugReport,
+    /// How sync shares: with a device nearby, or through a cloud folder.
+    SyncRoad,
+    /// Pair with a device nearby: show a code, or enter one.
+    SyncNearby,
+    /// Which cloud folder to sync through.
+    SyncClouds,
+    /// A cloud sign-in running in the browser.
+    SyncWait,
+    /// A folder's address: a Nextcloud or WebDAV server's, or a path on this computer.
+    SyncAddress,
+    /// The user name a WebDAV or Nextcloud server signs in with.
+    SyncUser,
+    /// Its password, drawn masked and kept only until it is sent.
+    SyncPassword,
+    /// The recovery key, shown once it is made or asked for.
+    SyncRecoveryKey,
+    /// The recovery key of a folder that already holds a group, to join it.
+    SyncRestore,
+    /// Removing a device, or turning sync off here.
+    SyncConfirm,
+    /// One device of the group: its switches, copying its sign-ins, removing it.
+    SyncDevice,
+    /// This device's new name.
+    SyncName,
+    /// A pairing code this device shows, with its address.
+    SyncPairShow,
+    /// The pairing code another device shows.
+    SyncPairCode,
+    /// That device's address, the second step of entering a code.
+    SyncPairAddress,
+    /// A new profile's name.
+    ProfileName,
+    /// Whether the new profile is a kids profile.
+    ProfileKind,
 }
 
 impl Overlay {
@@ -228,7 +269,48 @@ impl Overlay {
             Self::PublishPick => t::nav_overlay_publish_pick(),
             Self::FirstRun => t::onboarding_welcome(),
             Self::BugReport => t::report_title(),
+            Self::SyncRoad => t::sync_road_title(),
+            Self::SyncNearby => t::devices_add(),
+            Self::SyncClouds => t::cloud_pick_title(),
+            Self::SyncWait => t::sync_tui_signing_in(),
+            Self::SyncAddress => t::cloud_nextcloud_address(),
+            Self::SyncUser => t::sync_tui_user(),
+            Self::SyncPassword => t::sync_tui_password(),
+            Self::SyncRecoveryKey => t::rkey_title(),
+            Self::SyncRestore => t::rkey_enter_title(),
+            Self::SyncConfirm => t::devices_title(),
+            Self::SyncDevice => t::devices_title(),
+            Self::SyncName => t::devices_name(),
+            Self::SyncPairShow => t::pair_show_title(),
+            Self::SyncPairCode => t::pair_code_field(),
+            Self::SyncPairAddress => t::sync_tui_pair_address(),
+            Self::ProfileName => t::profiles_new(),
+            Self::ProfileKind => t::profiles_add(),
         })
+    }
+
+    /// Whether this is one of the Devices screen's questions.
+    pub const fn is_devices(&self) -> bool {
+        matches!(
+            self,
+            Self::SyncRoad
+                | Self::SyncNearby
+                | Self::SyncClouds
+                | Self::SyncWait
+                | Self::SyncAddress
+                | Self::SyncUser
+                | Self::SyncPassword
+                | Self::SyncRecoveryKey
+                | Self::SyncRestore
+                | Self::SyncConfirm
+                | Self::SyncDevice
+                | Self::SyncName
+                | Self::SyncPairShow
+                | Self::SyncPairCode
+                | Self::SyncPairAddress
+                | Self::ProfileName
+                | Self::ProfileKind
+        )
     }
 
     /// Whether this overlay takes text input, which suppresses single-key bindings.
@@ -244,6 +326,14 @@ impl Overlay {
                 | Self::JoinStore
                 | Self::JoinParty
                 | Self::InviteName
+                | Self::SyncAddress
+                | Self::SyncUser
+                | Self::SyncPassword
+                | Self::SyncRestore
+                | Self::SyncName
+                | Self::SyncPairCode
+                | Self::SyncPairAddress
+                | Self::ProfileName
         )
     }
 }

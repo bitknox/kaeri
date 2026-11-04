@@ -44,6 +44,10 @@ impl App {
         action: Action,
         visible_rows: usize,
     ) -> Option<Command> {
+        // The Devices screen's questions, where leaving says something to the engine.
+        if let Some(task) = self.devices_overlay_key(overlay, action) {
+            return task;
+        }
         match action {
             Action::Quit => {
                 self.should_quit = true;
@@ -276,6 +280,7 @@ impl App {
             Some(Overlay::PluginAction) => self.plugin_choices().len(),
             Some(Overlay::PublishPick) => self.local_plugins.len(),
             Some(Overlay::BugReport) => 1 + self.crashes.len(),
+            Some(overlay) if overlay.is_devices() => self.devices_overlay_len(overlay),
             _ => 0,
         }
     }

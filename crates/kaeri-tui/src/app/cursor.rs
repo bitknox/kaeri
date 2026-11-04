@@ -26,6 +26,8 @@ enum Rows {
     Stores,
     StoreLines,
     Members,
+    /// Devices: this device, the others, the cloud folder and the profiles.
+    Devices,
 }
 
 /// Where a view's highlight is, and the first row its window shows.
@@ -65,6 +67,8 @@ pub struct Cursors {
     pub stores: Cursor,
     pub store_lines: Cursor,
     pub members: Cursor,
+    /// The Devices screen's rows.
+    pub devices: Cursor,
     /// The list overlay on top: Accounts, Conflicts, the list status, the palette and the rest.
     ///
     /// Its window is the renderer's to place, the only place that knows how many rows fit: see
@@ -177,6 +181,7 @@ impl App {
             StageView::Stores => Some(Rows::Stores),
             StageView::Store(_) => Some(Rows::StoreLines),
             StageView::StoreMembers(_) => Some(Rows::Members),
+            StageView::Devices => Some(Rows::Devices),
             StageView::Section(Section::Downloads) => Some(Rows::Downloads),
             StageView::Section(Section::Accounts) => Some(Rows::Accounts),
             StageView::Section(Section::Settings) => Some(Rows::Settings),
@@ -263,6 +268,7 @@ impl App {
                 .and_then(|id| self.store(id))
                 .map_or(0, |s| self.store_lines(s).len()),
             Rows::Members => self.member_lines().len(),
+            Rows::Devices => self.device_lines().len(),
             Rows::List => 0,
         };
         if len == 0 {
@@ -278,6 +284,7 @@ impl App {
             Rows::Stores => &mut self.cursors.stores.selected,
             Rows::StoreLines => &mut self.cursors.store_lines.selected,
             Rows::Members => &mut self.cursors.members.selected,
+            Rows::Devices => &mut self.cursors.devices.selected,
             Rows::List => return None,
         };
         let last = len as isize - 1;
@@ -461,7 +468,7 @@ mod tests {
             Action::RateTitle,
             Action::ShowEpisodes,
             Action::WatchOrder,
-            Action::Download,
+            // Download's `d` is the way into Devices here.
             Action::ShowSources,
             Action::OpenInBrowser,
         ];

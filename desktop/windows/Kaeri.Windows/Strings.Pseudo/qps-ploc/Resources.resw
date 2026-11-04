@@ -2087,6 +2087,26 @@
     <value>[Ŵîñðöŵš ŵîļļ àšķ ţö ļéţ Ķàéŕî ŕéàçĥ ýöüŕ ŢṼ.~~~~~~~~~~~~~~]</value>
     <comment>Line under the Chromecast group in Play on TV, until the app has served a TV once: Windows' firewall asks then whether the app may reach the network.</comment>
   </data>
+  <data name="RkeyLockWindows" xml:space="preserve">
+    <value>[Ýöü çàñ šéé îţ àĝàîñ îñ Šéţţîñĝš, Ðéṽîçéš, ŵîţĥ Ŵîñðöŵš Ĥéļļö.~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Footnote on the recovery key dialog; the lock is Windows Hello.</comment>
+  </data>
+  <data name="RkeyHelloReason" xml:space="preserve">
+    <value>[Šĥöŵ ţĥé Ķàéŕî ŕéçöṽéŕý ķéý~~~~~~~~~]</value>
+    <comment>What Windows Hello says it is asking for before the recovery key shows again.</comment>
+  </data>
+  <data name="DeviceKindPc" xml:space="preserve">
+    <value>[ÞÇ~]</value>
+    <comment>Word for this device in sentences such as “Turn off sync on this PC”.</comment>
+  </data>
+  <data name="DevicesSyncSwitchName" xml:space="preserve">
+    <value>[Šýñç ŵîţĥ {device}~~~~]</value>
+    <comment>Accessible name of the Sync switch on a device's card, with the device's name.</comment>
+  </data>
+  <data name="DevicesOpenName" xml:space="preserve">
+    <value>[Öþéñ {device}~~~]</value>
+    <comment>Accessible name of the button that opens a device's page from its card.</comment>
+  </data>
   <data name="SourcePickerSeeders_one" xml:space="preserve">
     <value>[Öñé šééðéŕ~~~]</value>
     <comment>Under a release in the source picker: how many people share it right now.</comment>
@@ -9451,6 +9471,90 @@
     <value>[Šĥàŕé…~~]</value>
     <comment>Button that opens the system share sheet for the invite link.</comment>
   </data>
+  <data name="CloudBrowserLine" xml:space="preserve">
+    <value>[Ýöüŕ ƀŕöŵšéŕ öþéñéð {service}’š þàĝé. Åļļöŵ àççéšš ţĥéŕé, àñð Ķàéŕî çàŕŕîéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Windows and Linux dialog line while the browser is open for a cloud sign-in.</comment>
+  </data>
+  <data name="CloudBrowserTitle" xml:space="preserve">
+    <value>[Šîĝñ îñ ţö {service} îñ ýöüŕ ƀŕöŵšéŕ~~~~~~~~~]</value>
+    <comment>Windows and Linux dialog title while the browser is open for a cloud sign-in.</comment>
+  </data>
+  <data name="DeviceKindComputer" xml:space="preserve">
+    <value>[çöɱþüţéŕ~~~]</value>
+    <comment>Word for this device in sentences such as “Turn off sync on this computer”.</comment>
+  </data>
+  <data name="DevicesEnterCode" xml:space="preserve">
+    <value>[Éñţéŕ à çöðé~~~~]</value>
+    <comment>Button on the Devices page that opens the box for a code another device shows.</comment>
+  </data>
+  <data name="DevicesShowKey" xml:space="preserve">
+    <value>[Šĥöŵ~~]</value>
+    <comment>Button on the Devices page that shows the recovery key behind the computer’s own lock.</comment>
+  </data>
+  <data name="DevicesTurnOffAction" xml:space="preserve">
+    <value>[Ţüŕñ öƒƒ~~~]</value>
+    <comment>Button in the alert that turns sync off on this computer.</comment>
+  </data>
+  <data name="PairAddressLabel" xml:space="preserve">
+    <value>[Åððŕéšš~~~]</value>
+    <comment>Label of the field for the other device’s address in the Enter a code dialog.</comment>
+  </data>
+  <data name="PairByAddress" xml:space="preserve">
+    <value>[Þàîŕ ƀý àððŕéšš~~~~~]</value>
+    <comment>Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself.</comment>
+  </data>
+  <data name="PairCodePlaceholder" xml:space="preserve">
+    <value>[000 000~~~]</value>
+    <comment>Placeholder of the pairing code field.</comment>
+  </data>
+  <data name="RkeyFieldLabel" xml:space="preserve">
+    <value>[Ŕéçöṽéŕý ķéý~~~~]</value>
+    <comment>Label of the field for a recovery key in the restore dialog.</comment>
+  </data>
+  <data name="CloudUserLabel" xml:space="preserve">
+    <value>[Ûšéŕ ñàɱé~~~]</value>
+    <comment>Label of the user name field for WebDAV and a Nextcloud app password.</comment>
+  </data>
+  <data name="CloudPasswordLabel" xml:space="preserve">
+    <value>[Þàššŵöŕð~~~]</value>
+    <comment>Label of the password field for WebDAV and a Nextcloud app password.</comment>
+  </data>
+  <data name="CloudWebdavAddressLabel" xml:space="preserve">
+    <value>[Šéŕṽéŕ àððŕéšš~~~~~]</value>
+    <comment>Label of the WebDAV server address field.</comment>
+  </data>
+  <data name="PairWorkingLine" xml:space="preserve">
+    <value>[Þàîŕîñĝ~~~]</value>
+    <comment>Line under the pairing code while a device is being paired.</comment>
+  </data>
+  <data name="PairOtherDevice" xml:space="preserve">
+    <value>[ýöüŕ öţĥéŕ ðéṽîçé~~~~~~]</value>
+    <comment>Name for the device whose pairing code did not match, when no name is known yet.</comment>
+  </data>
+  <data name="PairAddressOptional" xml:space="preserve">
+    <value>[Ļéàṽé ţĥé àððŕéšš éɱþţý àñð Ķàéŕî ļööķš ƒöŕ ţĥé ðéṽîçé öñ ţĥîš ñéţŵöŕķ.~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Note under the Enter a code dialog's fields: the address can be left empty.</comment>
+  </data>
+  <data name="DevicesSyncFoot" xml:space="preserve">
+    <value>[Šýñç šĥàŕéš ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš.~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Device page footer when the device has no Remote switch.</comment>
+  </data>
+  <data name="DevicesLineRemote" xml:space="preserve">
+    <value>[{line} · Ŕéɱöţé~~~~]</value>
+    <comment>A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's.</comment>
+  </data>
+  <data name="ProfilesEditAction" xml:space="preserve">
+    <value>[Éðîţ~~]</value>
+    <comment>Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux.</comment>
+  </data>
+  <data name="ProfilesNameField" xml:space="preserve">
+    <value>[Ñàɱé~~]</value>
+    <comment>Label of the name field in the add and edit profile dialogs.</comment>
+  </data>
+  <data name="ProfilesMoreFor" xml:space="preserve">
+    <value>[Ṁöŕé ƒöŕ {name}~~~~]</value>
+    <comment>Accessible name and tooltip of the menu button on a profile's row.</comment>
+  </data>
   <data name="SyncStoreErrOffline" xml:space="preserve">
     <value>[Çöüļðñ'ţ ŕéàçĥ {store} öŕ {device}. Ţŕý àĝàîñ ŵĥéñ ƀöţĥ àŕé öñļîñé.~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line on a store row when joining it through a paired device failed because the store or the paired device could not be reached. The person can try again later.</comment>
@@ -9568,8 +9672,8 @@
     <comment>Switch on a TV.</comment>
   </data>
   <data name="DevicesSwitchesFoot" xml:space="preserve">
-    <value>[Šýñç šĥàŕéš ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš. Ŕéɱöţé ļéţš ţĥîš þĥöñé ðŕîṽé {device}.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
-    <comment>Device page footer.</comment>
+    <value>[Šýñç šĥàŕéš ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš. Ŕéɱöţé ļéţš ţĥîš {kind} ðŕîṽé {device}.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC.</comment>
   </data>
   <data name="DevicesRemove" xml:space="preserve">
     <value>[Ŕéɱöṽé ţĥîš ðéṽîçé~~~~~~]</value>

@@ -1463,6 +1463,27 @@ stores-published-state = [Þüƀļîšĥéð~~~]
 # Accessible name of a row's Publish button.
 stores-publish-label = [Þüƀļîšĥ { $name } { $version }~~~~~]
 
+# Footnote on the recovery key dialog; the lock is the account password, asked through polkit.
+rkey-lock-linux = [Ýöü çàñ šéé îţ àĝàîñ îñ Šéţţîñĝš, Ðéṽîçéš, àƒţéŕ ýöüŕ àççöüñţ þàššŵöŕð.~~~~~~~~~~~~~~~~~~~~~~]
+
+# Reason polkit shows when it asks for the account password before the recovery key.
+rkey-lock-reason = [Šĥöŵ ţĥé Ķàéŕî ŕéçöṽéŕý ķéý~~~~~~~~~]
+
+# Accessible name of the sidebar account row when it opens the profile popover.
+profiles-popover-name = [Þŕöƒîļéš~~~]
+
+# Button that makes the first profile when none exists; the Profiles pane’s add row.
+profiles-add-row-action = [Åðð~]
+
+# Name of the folder picker dialog for a cloud folder on this computer.
+cloud-folder-chooser = [Çĥööšé à ƒöļðéŕ~~~~~]
+
+# Button that saves the recovery key to a file.
+rkey-save-as-file = [Šàṽé àš à ƒîļé~~~~~]
+
+# Button that closes the dialog that shows a device paired.
+pair-done-action = [Ðöñé~~]
+
 # Under a release in the source picker: how many people share it right now.
 source-picker-seeders-linux =
     { $count ->
@@ -4036,6 +4057,102 @@ stores-toast-nothing-to-publish = [Ţĥéŕé àŕé ñö þļüĝîñš îñ ý
 
 # Toast when the person tries to remove themselves from a store's members.
 stores-toast-that-is-you = [Ţĥàţ îš ýöü. Å šţöŕé àļŵàýš ķééþš îţš öŵñéŕ.~~~~~~~~~~~~~~]
+
+# The word for this kind of { -device } inside sentences such as "Turn off sync on this computer". Lower case.
+sync-tui-kind = [çöɱþüţéŕ~~~]
+
+# A row under Your { -device-pl }: pair by typing the code another { -device } shows.
+sync-tui-enter-code = [Éñţéŕ à çöðé~~~~]
+
+# The Cloud folder row while sync uses no cloud folder.
+sync-tui-no-cloud = [Ñö çļöüð ƒöļðéŕ~~~~~]
+
+# Beside a { -device } in Your { -device-pl } that has not synced with this one yet.
+sync-tui-device-never = [Ñöţ šýñçéð ýéţ~~~~~]
+
+# Beside a profile: the one in use now. Column value.
+sync-tui-profile-in-use = [Îñ üšé~~]
+
+# The wait while the browser shows a cloud service's sign-in page. The service is a name such as Dropbox.
+sync-tui-browser-line = [Ýöüŕ ƀŕöŵšéŕ öþéñéð { $service }’š þàĝé. Åļļöŵ àççéšš ţĥéŕé, àñð Ķàéŕî çàŕŕîéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Under Open the page again: the page's address follows on the next line, for a browser that did not open.
+sync-tui-browser-address = [Öŕ ĝö ţö ţĥîš àððŕéšš ýöüŕšéļƒ:~~~~~~~~~~]
+
+# Title of the waiting dialog while a cloud sign-in runs in the browser.
+sync-tui-signing-in = [Šîĝñîñĝ îñ~~~]
+
+# Title of the field for a WebDAV server's address.
+sync-tui-webdav-address = [ŴéƀÐÅṼ àððŕéšš~~~~~]
+
+# Under the WebDAV address field.
+sync-tui-webdav-address-note = [Ţĥé àððŕéšš öƒ ţĥé ƒöļðéŕ öñ ýöüŕ šéŕṽéŕ, šţàŕţîñĝ ŵîţĥ ĥţţþš://.~~~~~~~~~~~~~~~~~~~~]
+
+# Title of the field for a folder's path on this computer.
+sync-tui-folder-path = [Ƒöļðéŕ~~]
+
+# Under the folder path field.
+sync-tui-folder-path-note = [Ţĥé ƒüļļ þàţĥ öƒ à ƒöļðéŕ àñöţĥéŕ àþþ ķééþš îñ šţéþ, šüçĥ àš à šýñçéð ðŕîṽé.~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Title of the field for the user name a WebDAV or Nextcloud server signs in with.
+sync-tui-user = [Ûšéŕ ñàɱé~~~]
+
+# Under the user name field, for Nextcloud's app password.
+sync-tui-nextcloud-user-note = [Ţĥé ñàɱé ýöü šîĝñ îñ ţö Ñéẋţçļöüð ŵîţĥ.~~~~~~~~~~~~]
+
+# Title of the field for a WebDAV password. It is drawn as dots.
+sync-tui-password = [Þàššŵöŕð~~~]
+
+# Title of the field for a Nextcloud app password. It is drawn as dots.
+sync-tui-app-password = [Åþþ þàššŵöŕð~~~~]
+
+# Label before the six-digit pairing code this { -device } shows.
+sync-tui-code = [Çöðé~~]
+
+# Label before this { -device }'s network address and port, which the other { -device } enters with the code.
+sync-tui-address = [Åððŕéšš~~~]
+
+# While this { -device } is getting a pairing code ready to show.
+sync-tui-pair-making = [Ṁàķîñĝ à çöðé~~~~]
+
+# Title of the field for the other { -device }'s address, the second step of entering a code.
+sync-tui-pair-address = [Åððŕéšš öƒ ţĥé öţĥéŕ ðéṽîçé~~~~~~~~~]
+
+# Under the address field when entering a pairing code.
+sync-tui-pair-address-note = [Ţĥé àððŕéšš ţĥé öţĥéŕ ðéṽîçé šĥöŵš üñðéŕ îţš çöðé, šüçĥ àš 192.168.1.20:47811.~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# While this { -device } pairs with the one whose code was entered.
+sync-tui-pairing = [Þàîŕîñĝ~~~]
+
+# After a recovery key is shown: where to see it again in the terminal.
+sync-tui-rkey-again = [Ýöü çàñ šéé îţ àĝàîñ îñ Šéţţîñĝš, Ðéṽîçéš.~~~~~~~~~~~~~]
+
+# A choice when adding a profile: add it as a kids profile.
+sync-tui-add-kids = [Åðð àš à ķîðš þŕöƒîļé~~~~~~~]
+
+# Said when the terminal closes to start again on another profile, and printed when it cannot start again by itself.
+sync-tui-profile-restart = [Šţàŕţ Ķàéŕî àĝàîñ ţö üšé { $name }’š þŕöƒîļé.~~~~~~~~~~~~]
+
+# A sync problem: the folder holds nothing to join.
+sync-tui-err-no-group = [Ţĥîš ƒöļðéŕ ĥöļðš ñö ĥîšţöŕý ţö ĵöîñ. Çĥööšé àñöţĥéŕ ƒöļðéŕ.~~~~~~~~~~~~~~~~~~]
+
+# A sync problem: a cloud service that this build can't sign in to. The service is a name such as Dropbox.
+sync-tui-err-unavailable = [{ $service } îšñ’ţ àṽàîļàƀļé öñ ţĥîš ðéṽîçé.~~~~~~~~~~~]
+
+# Status line hint: Enter removes the highlighted { -device } from sync, after a question.
+sync-tui-hint-remove = [Ŕéɱöṽé~~]
+
+# Status line hint: Enter shows the recovery key.
+sync-tui-hint-show = [Šĥöŵ~~]
+
+# Status line hint: Enter turns sync off on this { -device }, after a question.
+sync-tui-hint-turn-off = [Ţüŕñ öƒƒ~~~]
+
+# Status line hint: a key that copies the recovery key.
+sync-tui-hint-copy = [Çöþý~~]
+
+# In place of a QR code when the window is too short to draw it whole.
+sync-tui-qr-no-room = [Ṁàķé ţĥé ŵîñðöŵ ţàļļéŕ ţö šéé ţĥé ǪŔ çöðé.~~~~~~~~~~~~~]
 
 # What the terminal says beside a notice that has something to do about it. The key is the one bound to stopping playback, as the key map draws it.
 hint-stop-playback = [Þŕéšš { $key } ţö šţöþ þļàýƀàçķ.~~~~~~~~~]
@@ -9621,6 +9738,69 @@ stores-qr-warning-device = [Šçàñ ţĥîš ŵîţĥ ţĥé ðéṽîçé ýö
 # Button that opens the system share sheet for the invite link.
 stores-share = [Šĥàŕé…~~]
 
+# Windows and Linux dialog line while the browser is open for a cloud sign-in.
+cloud-browser-line = [Ýöüŕ ƀŕöŵšéŕ öþéñéð { $service }’š þàĝé. Åļļöŵ àççéšš ţĥéŕé, àñð Ķàéŕî çàŕŕîéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Windows and Linux dialog title while the browser is open for a cloud sign-in.
+cloud-browser-title = [Šîĝñ îñ ţö { $service } îñ ýöüŕ ƀŕöŵšéŕ~~~~~~~~~]
+
+# Word for this device in sentences such as “Turn off sync on this computer”.
+device-kind-computer = [çöɱþüţéŕ~~~]
+
+# Button on the Devices page that opens the box for a code another device shows.
+devices-enter-code = [Éñţéŕ à çöðé~~~~]
+
+# Button on the Devices page that shows the recovery key behind the computer’s own lock.
+devices-show-key = [Šĥöŵ~~]
+
+# Button in the alert that turns sync off on this computer.
+devices-turn-off-action = [Ţüŕñ öƒƒ~~~]
+
+# Label of the field for the other device’s address in the Enter a code dialog.
+pair-address-label = [Åððŕéšš~~~]
+
+# Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself.
+pair-by-address = [Þàîŕ ƀý àððŕéšš~~~~~]
+
+# Placeholder of the pairing code field.
+pair-code-placeholder = [000 000~~~]
+
+# Label of the field for a recovery key in the restore dialog.
+rkey-field-label = [Ŕéçöṽéŕý ķéý~~~~]
+
+# Label of the user name field for WebDAV and a Nextcloud app password.
+cloud-user-label = [Ûšéŕ ñàɱé~~~]
+
+# Label of the password field for WebDAV and a Nextcloud app password.
+cloud-password-label = [Þàššŵöŕð~~~]
+
+# Label of the WebDAV server address field.
+cloud-webdav-address-label = [Šéŕṽéŕ àððŕéšš~~~~~]
+
+# Line under the pairing code while a device is being paired.
+pair-working-line = [Þàîŕîñĝ~~~]
+
+# Name for the device whose pairing code did not match, when no name is known yet.
+pair-other-device = [ýöüŕ öţĥéŕ ðéṽîçé~~~~~~]
+
+# Note under the Enter a code dialog's fields: the address can be left empty.
+pair-address-optional = [Ļéàṽé ţĥé àððŕéšš éɱþţý àñð Ķàéŕî ļööķš ƒöŕ ţĥé ðéṽîçé öñ ţĥîš ñéţŵöŕķ.~~~~~~~~~~~~~~~~~~~~~~]
+
+# Device page footer when the device has no Remote switch.
+devices-sync-foot = [Šýñç šĥàŕéš ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš.~~~~~~~~~~~~~~~~~~~]
+
+# A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's.
+devices-line-remote = [{ $line } · Ŕéɱöţé~~~~]
+
+# Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux.
+profiles-edit-action = [Éðîţ~~]
+
+# Label of the name field in the add and edit profile dialogs.
+profiles-name-field = [Ñàɱé~~]
+
+# Accessible name and tooltip of the menu button on a profile's row.
+profiles-more-for = [Ṁöŕé ƒöŕ { $name }~~~~]
+
 # Line on a store row when joining it through a paired device failed because the store or the paired device could not be reached. The person can try again later.
 sync-store-err-offline = [Çöüļðñ'ţ ŕéàçĥ { $store } öŕ { $device }. Ţŕý àĝàîñ ŵĥéñ ƀöţĥ àŕé öñļîñé.~~~~~~~~~~~~~~~~~~]
 
@@ -9708,8 +9888,8 @@ devices-sync-switch = [Šýñç~~]
 # Switch on a TV.
 devices-remote-switch = [Ŕéɱöţé~~]
 
-# Device page footer.
-devices-switches-foot = [Šýñç šĥàŕéš ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš. Ŕéɱöţé ļéţš ţĥîš þĥöñé ðŕîṽé { $device }.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+# Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC.
+devices-switches-foot = [Šýñç šĥàŕéš ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš. Ŕéɱöţé ļéţš ţĥîš { $kind } ðŕîṽé { $device }.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Device page, destructive.
 devices-remove = [Ŕéɱöṽé ţĥîš ðéṽîçé~~~~~~]

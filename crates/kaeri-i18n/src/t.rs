@@ -2270,6 +2270,41 @@ pub fn stores_publish_label(name: &str, version: &str) -> String {
     text("stores-publish-label", &[("name", Arg::Text(name)), ("version", Arg::Text(version))])
 }
 
+/// Footnote on the recovery key dialog; the lock is the account password, asked through polkit.
+pub fn rkey_lock_linux() -> String {
+    text("rkey-lock-linux", &[])
+}
+
+/// Reason polkit shows when it asks for the account password before the recovery key.
+pub fn rkey_lock_reason() -> String {
+    text("rkey-lock-reason", &[])
+}
+
+/// Accessible name of the sidebar account row when it opens the profile popover.
+pub fn profiles_popover_name() -> String {
+    text("profiles-popover-name", &[])
+}
+
+/// Button that makes the first profile when none exists; the Profiles pane’s add row.
+pub fn profiles_add_row_action() -> String {
+    text("profiles-add-row-action", &[])
+}
+
+/// Name of the folder picker dialog for a cloud folder on this computer.
+pub fn cloud_folder_chooser() -> String {
+    text("cloud-folder-chooser", &[])
+}
+
+/// Button that saves the recovery key to a file.
+pub fn rkey_save_as_file() -> String {
+    text("rkey-save-as-file", &[])
+}
+
+/// Button that closes the dialog that shows a device paired.
+pub fn pair_done_action() -> String {
+    text("pair-done-action", &[])
+}
+
 /// Under a release in the source picker: how many people share it right now.
 pub fn source_picker_seeders_linux(count: i64) -> String {
     text("source-picker-seeders-linux", &[("count", Arg::Int(count))])
@@ -6406,6 +6441,166 @@ pub fn stores_toast_nothing_to_publish(command: &str) -> String {
 /// Toast when the person tries to remove themselves from a store's members.
 pub fn stores_toast_that_is_you() -> String {
     text("stores-toast-that-is-you", &[])
+}
+
+/// The word for this kind of { -device } inside sentences such as "Turn off sync on this computer". Lower case.
+pub fn sync_tui_kind() -> String {
+    text("sync-tui-kind", &[])
+}
+
+/// A row under Your { -device-pl }: pair by typing the code another { -device } shows.
+pub fn sync_tui_enter_code() -> String {
+    text("sync-tui-enter-code", &[])
+}
+
+/// The Cloud folder row while sync uses no cloud folder.
+pub fn sync_tui_no_cloud() -> String {
+    text("sync-tui-no-cloud", &[])
+}
+
+/// Beside a { -device } in Your { -device-pl } that has not synced with this one yet.
+pub fn sync_tui_device_never() -> String {
+    text("sync-tui-device-never", &[])
+}
+
+/// Beside a profile: the one in use now. Column value.
+pub fn sync_tui_profile_in_use() -> String {
+    text("sync-tui-profile-in-use", &[])
+}
+
+/// The wait while the browser shows a cloud service's sign-in page. The service is a name such as Dropbox.
+pub fn sync_tui_browser_line(service: &str) -> String {
+    text("sync-tui-browser-line", &[("service", Arg::Text(service))])
+}
+
+/// Under Open the page again: the page's address follows on the next line, for a browser that did not open.
+pub fn sync_tui_browser_address() -> String {
+    text("sync-tui-browser-address", &[])
+}
+
+/// Title of the waiting dialog while a cloud sign-in runs in the browser.
+pub fn sync_tui_signing_in() -> String {
+    text("sync-tui-signing-in", &[])
+}
+
+/// Title of the field for a WebDAV server's address.
+pub fn sync_tui_webdav_address() -> String {
+    text("sync-tui-webdav-address", &[])
+}
+
+/// Under the WebDAV address field.
+pub fn sync_tui_webdav_address_note() -> String {
+    text("sync-tui-webdav-address-note", &[])
+}
+
+/// Title of the field for a folder's path on this computer.
+pub fn sync_tui_folder_path() -> String {
+    text("sync-tui-folder-path", &[])
+}
+
+/// Under the folder path field.
+pub fn sync_tui_folder_path_note() -> String {
+    text("sync-tui-folder-path-note", &[])
+}
+
+/// Title of the field for the user name a WebDAV or Nextcloud server signs in with.
+pub fn sync_tui_user() -> String {
+    text("sync-tui-user", &[])
+}
+
+/// Under the user name field, for Nextcloud's app password.
+pub fn sync_tui_nextcloud_user_note() -> String {
+    text("sync-tui-nextcloud-user-note", &[])
+}
+
+/// Title of the field for a WebDAV password. It is drawn as dots.
+pub fn sync_tui_password() -> String {
+    text("sync-tui-password", &[])
+}
+
+/// Title of the field for a Nextcloud app password. It is drawn as dots.
+pub fn sync_tui_app_password() -> String {
+    text("sync-tui-app-password", &[])
+}
+
+/// Label before the six-digit pairing code this { -device } shows.
+pub fn sync_tui_code() -> String {
+    text("sync-tui-code", &[])
+}
+
+/// Label before this { -device }'s network address and port, which the other { -device } enters with the code.
+pub fn sync_tui_address() -> String {
+    text("sync-tui-address", &[])
+}
+
+/// While this { -device } is getting a pairing code ready to show.
+pub fn sync_tui_pair_making() -> String {
+    text("sync-tui-pair-making", &[])
+}
+
+/// Title of the field for the other { -device }'s address, the second step of entering a code.
+pub fn sync_tui_pair_address() -> String {
+    text("sync-tui-pair-address", &[])
+}
+
+/// Under the address field when entering a pairing code.
+pub fn sync_tui_pair_address_note() -> String {
+    text("sync-tui-pair-address-note", &[])
+}
+
+/// While this { -device } pairs with the one whose code was entered.
+pub fn sync_tui_pairing() -> String {
+    text("sync-tui-pairing", &[])
+}
+
+/// After a recovery key is shown: where to see it again in the terminal.
+pub fn sync_tui_rkey_again() -> String {
+    text("sync-tui-rkey-again", &[])
+}
+
+/// A choice when adding a profile: add it as a kids profile.
+pub fn sync_tui_add_kids() -> String {
+    text("sync-tui-add-kids", &[])
+}
+
+/// Said when the terminal closes to start again on another profile, and printed when it cannot start again by itself.
+pub fn sync_tui_profile_restart(name: &str) -> String {
+    text("sync-tui-profile-restart", &[("name", Arg::Text(name))])
+}
+
+/// A sync problem: the folder holds nothing to join.
+pub fn sync_tui_err_no_group() -> String {
+    text("sync-tui-err-no-group", &[])
+}
+
+/// A sync problem: a cloud service that this build can't sign in to. The service is a name such as Dropbox.
+pub fn sync_tui_err_unavailable(service: &str) -> String {
+    text("sync-tui-err-unavailable", &[("service", Arg::Text(service))])
+}
+
+/// Status line hint: Enter removes the highlighted { -device } from sync, after a question.
+pub fn sync_tui_hint_remove() -> String {
+    text("sync-tui-hint-remove", &[])
+}
+
+/// Status line hint: Enter shows the recovery key.
+pub fn sync_tui_hint_show() -> String {
+    text("sync-tui-hint-show", &[])
+}
+
+/// Status line hint: Enter turns sync off on this { -device }, after a question.
+pub fn sync_tui_hint_turn_off() -> String {
+    text("sync-tui-hint-turn-off", &[])
+}
+
+/// Status line hint: a key that copies the recovery key.
+pub fn sync_tui_hint_copy() -> String {
+    text("sync-tui-hint-copy", &[])
+}
+
+/// In place of a QR code when the window is too short to draw it whole.
+pub fn sync_tui_qr_no_room() -> String {
+    text("sync-tui-qr-no-room", &[])
 }
 
 /// What the terminal says beside a notice that has something to do about it. The key is the one bound to stopping playback, as the key map draws it.
@@ -15460,6 +15655,111 @@ pub fn stores_share() -> String {
     text("stores-share", &[])
 }
 
+/// Windows and Linux dialog line while the browser is open for a cloud sign-in.
+pub fn cloud_browser_line(service: &str) -> String {
+    text("cloud-browser-line", &[("service", Arg::Text(service))])
+}
+
+/// Windows and Linux dialog title while the browser is open for a cloud sign-in.
+pub fn cloud_browser_title(service: &str) -> String {
+    text("cloud-browser-title", &[("service", Arg::Text(service))])
+}
+
+/// Word for this device in sentences such as “Turn off sync on this computer”.
+pub fn device_kind_computer() -> String {
+    text("device-kind-computer", &[])
+}
+
+/// Button on the Devices page that opens the box for a code another device shows.
+pub fn devices_enter_code() -> String {
+    text("devices-enter-code", &[])
+}
+
+/// Button on the Devices page that shows the recovery key behind the computer’s own lock.
+pub fn devices_show_key() -> String {
+    text("devices-show-key", &[])
+}
+
+/// Button in the alert that turns sync off on this computer.
+pub fn devices_turn_off_action() -> String {
+    text("devices-turn-off-action", &[])
+}
+
+/// Label of the field for the other device’s address in the Enter a code dialog.
+pub fn pair_address_label() -> String {
+    text("pair-address-label", &[])
+}
+
+/// Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself.
+pub fn pair_by_address() -> String {
+    text("pair-by-address", &[])
+}
+
+/// Placeholder of the pairing code field.
+pub fn pair_code_placeholder() -> String {
+    text("pair-code-placeholder", &[])
+}
+
+/// Label of the field for a recovery key in the restore dialog.
+pub fn rkey_field_label() -> String {
+    text("rkey-field-label", &[])
+}
+
+/// Label of the user name field for WebDAV and a Nextcloud app password.
+pub fn cloud_user_label() -> String {
+    text("cloud-user-label", &[])
+}
+
+/// Label of the password field for WebDAV and a Nextcloud app password.
+pub fn cloud_password_label() -> String {
+    text("cloud-password-label", &[])
+}
+
+/// Label of the WebDAV server address field.
+pub fn cloud_webdav_address_label() -> String {
+    text("cloud-webdav-address-label", &[])
+}
+
+/// Line under the pairing code while a device is being paired.
+pub fn pair_working_line() -> String {
+    text("pair-working-line", &[])
+}
+
+/// Name for the device whose pairing code did not match, when no name is known yet.
+pub fn pair_other_device() -> String {
+    text("pair-other-device", &[])
+}
+
+/// Note under the Enter a code dialog's fields: the address can be left empty.
+pub fn pair_address_optional() -> String {
+    text("pair-address-optional", &[])
+}
+
+/// Device page footer when the device has no Remote switch.
+pub fn devices_sync_foot() -> String {
+    text("devices-sync-foot", &[])
+}
+
+/// A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's.
+pub fn devices_line_remote(line: &str) -> String {
+    text("devices-line-remote", &[("line", Arg::Text(line))])
+}
+
+/// Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux.
+pub fn profiles_edit_action() -> String {
+    text("profiles-edit-action", &[])
+}
+
+/// Label of the name field in the add and edit profile dialogs.
+pub fn profiles_name_field() -> String {
+    text("profiles-name-field", &[])
+}
+
+/// Accessible name and tooltip of the menu button on a profile's row.
+pub fn profiles_more_for(name: &str) -> String {
+    text("profiles-more-for", &[("name", Arg::Text(name))])
+}
+
 /// Line on a store row when joining it through a paired device failed because the store or the paired device could not be reached. The person can try again later.
 pub fn sync_store_err_offline(store: &str, device: &str) -> String {
     text("sync-store-err-offline", &[("store", Arg::Text(store)), ("device", Arg::Text(device))])
@@ -15605,9 +15905,9 @@ pub fn devices_remote_switch() -> String {
     text("devices-remote-switch", &[])
 }
 
-/// Device page footer.
-pub fn devices_switches_foot(device: &str) -> String {
-    text("devices-switches-foot", &[("device", Arg::Text(device))])
+/// Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC.
+pub fn devices_switches_foot(kind: &str, device: &str) -> String {
+    text("devices-switches-foot", &[("kind", Arg::Text(kind)), ("device", Arg::Text(device))])
 }
 
 /// Device page, destructive.

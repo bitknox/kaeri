@@ -2087,6 +2087,26 @@
     <value>Windows will ask to let Kaeri reach your TV.</value>
     <comment>Line under the Chromecast group in Play on TV, until the app has served a TV once: Windows' firewall asks then whether the app may reach the network.</comment>
   </data>
+  <data name="RkeyLockWindows" xml:space="preserve">
+    <value>You can see it again in Settings, Devices, with Windows Hello.</value>
+    <comment>Footnote on the recovery key dialog; the lock is Windows Hello.</comment>
+  </data>
+  <data name="RkeyHelloReason" xml:space="preserve">
+    <value>Show the Kaeri recovery key</value>
+    <comment>What Windows Hello says it is asking for before the recovery key shows again.</comment>
+  </data>
+  <data name="DeviceKindPc" xml:space="preserve">
+    <value>PC</value>
+    <comment>Word for this device in sentences such as “Turn off sync on this PC”.</comment>
+  </data>
+  <data name="DevicesSyncSwitchName" xml:space="preserve">
+    <value>Sync with {device}</value>
+    <comment>Accessible name of the Sync switch on a device's card, with the device's name.</comment>
+  </data>
+  <data name="DevicesOpenName" xml:space="preserve">
+    <value>Open {device}</value>
+    <comment>Accessible name of the button that opens a device's page from its card.</comment>
+  </data>
   <data name="SourcePickerSeeders_one" xml:space="preserve">
     <value>One seeder</value>
     <comment>Under a release in the source picker: how many people share it right now.</comment>
@@ -9451,6 +9471,90 @@
     <value>Share…</value>
     <comment>Button that opens the system share sheet for the invite link.</comment>
   </data>
+  <data name="CloudBrowserLine" xml:space="preserve">
+    <value>Your browser opened {service}’s page. Allow access there, and Kaeri carries on by itself.</value>
+    <comment>Windows and Linux dialog line while the browser is open for a cloud sign-in.</comment>
+  </data>
+  <data name="CloudBrowserTitle" xml:space="preserve">
+    <value>Sign in to {service} in your browser</value>
+    <comment>Windows and Linux dialog title while the browser is open for a cloud sign-in.</comment>
+  </data>
+  <data name="DeviceKindComputer" xml:space="preserve">
+    <value>computer</value>
+    <comment>Word for this device in sentences such as “Turn off sync on this computer”.</comment>
+  </data>
+  <data name="DevicesEnterCode" xml:space="preserve">
+    <value>Enter a code</value>
+    <comment>Button on the Devices page that opens the box for a code another device shows.</comment>
+  </data>
+  <data name="DevicesShowKey" xml:space="preserve">
+    <value>Show</value>
+    <comment>Button on the Devices page that shows the recovery key behind the computer’s own lock.</comment>
+  </data>
+  <data name="DevicesTurnOffAction" xml:space="preserve">
+    <value>Turn off</value>
+    <comment>Button in the alert that turns sync off on this computer.</comment>
+  </data>
+  <data name="PairAddressLabel" xml:space="preserve">
+    <value>Address</value>
+    <comment>Label of the field for the other device’s address in the Enter a code dialog.</comment>
+  </data>
+  <data name="PairByAddress" xml:space="preserve">
+    <value>Pair by address</value>
+    <comment>Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself.</comment>
+  </data>
+  <data name="PairCodePlaceholder" xml:space="preserve">
+    <value>000 000</value>
+    <comment>Placeholder of the pairing code field.</comment>
+  </data>
+  <data name="RkeyFieldLabel" xml:space="preserve">
+    <value>Recovery key</value>
+    <comment>Label of the field for a recovery key in the restore dialog.</comment>
+  </data>
+  <data name="CloudUserLabel" xml:space="preserve">
+    <value>User name</value>
+    <comment>Label of the user name field for WebDAV and a Nextcloud app password.</comment>
+  </data>
+  <data name="CloudPasswordLabel" xml:space="preserve">
+    <value>Password</value>
+    <comment>Label of the password field for WebDAV and a Nextcloud app password.</comment>
+  </data>
+  <data name="CloudWebdavAddressLabel" xml:space="preserve">
+    <value>Server address</value>
+    <comment>Label of the WebDAV server address field.</comment>
+  </data>
+  <data name="PairWorkingLine" xml:space="preserve">
+    <value>Pairing</value>
+    <comment>Line under the pairing code while a device is being paired.</comment>
+  </data>
+  <data name="PairOtherDevice" xml:space="preserve">
+    <value>your other device</value>
+    <comment>Name for the device whose pairing code did not match, when no name is known yet.</comment>
+  </data>
+  <data name="PairAddressOptional" xml:space="preserve">
+    <value>Leave the address empty and Kaeri looks for the device on this network.</value>
+    <comment>Note under the Enter a code dialog's fields: the address can be left empty.</comment>
+  </data>
+  <data name="DevicesSyncFoot" xml:space="preserve">
+    <value>Sync shares where you stopped, your history and your settings.</value>
+    <comment>Device page footer when the device has no Remote switch.</comment>
+  </data>
+  <data name="DevicesLineRemote" xml:space="preserve">
+    <value>{line} · Remote</value>
+    <comment>A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's.</comment>
+  </data>
+  <data name="ProfilesEditAction" xml:space="preserve">
+    <value>Edit</value>
+    <comment>Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux.</comment>
+  </data>
+  <data name="ProfilesNameField" xml:space="preserve">
+    <value>Name</value>
+    <comment>Label of the name field in the add and edit profile dialogs.</comment>
+  </data>
+  <data name="ProfilesMoreFor" xml:space="preserve">
+    <value>More for {name}</value>
+    <comment>Accessible name and tooltip of the menu button on a profile's row.</comment>
+  </data>
   <data name="SyncStoreErrOffline" xml:space="preserve">
     <value>Couldn't reach {store} or {device}. Try again when both are online.</value>
     <comment>Line on a store row when joining it through a paired device failed because the store or the paired device could not be reached. The person can try again later.</comment>
@@ -9568,8 +9672,8 @@
     <comment>Switch on a TV.</comment>
   </data>
   <data name="DevicesSwitchesFoot" xml:space="preserve">
-    <value>Sync shares where you stopped, your history and your settings. Remote lets this phone drive {device}.</value>
-    <comment>Device page footer.</comment>
+    <value>Sync shares where you stopped, your history and your settings. Remote lets this {kind} drive {device}.</value>
+    <comment>Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC.</comment>
   </data>
   <data name="DevicesRemove" xml:space="preserve">
     <value>Remove this device</value>

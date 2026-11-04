@@ -1,0 +1,71 @@
+Kaeri                                                  plugins ●  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────
+ ▸ │  This device  ──────────────────────────────────────────────────────────
+ ▤ │    Name                        Kim's laptop
+ ▦ │
+────────────────────────────────────────────────────────────────────────────────
+▌ Address of the other device   192.168.1.31:47811▏
+────────────────────────────────────────────────────────────────────────────────
+  The address the other device shows under its code, such as
+  192.168.1.20:47811.
+
+  Couldn’t find the device showing this code. Both devices need to be on
+  the same Wi-Fi.
+
+   │
+   │
+   │
+   │
+   │
+   │
+   │  ────────────────────────────────────────────────────────────────────────
+   │    You can add the other way later. Most people use both.
+────────────────────────────────────────────────────────────────────────────────
+plugins · Subbed · 1080p                                     ↵ pair   esc cancel
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=rule mod=BOLD
+r00 c05-79 fg=rule
+r01 c00-79 fg=rule
+r02 c00-79 fg=rule
+r03 c00-79 fg=rule
+r04 c00-79 fg=rule
+r05 c00-79 fg=rule bg=ground
+r06 c00-00 fg=obi bg=ground
+r06 c01-01 fg=rule bg=ground
+r06 c02-50 fg=text bg=ground mod=BOLD
+r06 c51-79 fg=rule bg=ground
+r07 c00-79 fg=rule bg=ground
+r08 c00-01 fg=rule bg=ground
+r08 c02-59 fg=text-dim bg=ground
+r08 c60-79 fg=rule bg=ground
+r09 c00-01 fg=rule bg=ground
+r09 c02-20 fg=text-dim bg=ground
+r09 c21-79 fg=rule bg=ground
+r10 c00-00 fg=rule bg=ground
+r10 c01-01 fg=rule bg=ground mod=BOLD
+r10 c02-07 fg=rule bg=ground
+r10 c08-19 fg=rule bg=ground mod=BOLD
+r10 c20-79 fg=rule bg=ground
+r11 c00-01 fg=rule bg=ground
+r11 c02-71 fg=alert bg=ground
+r11 c72-79 fg=rule bg=ground
+r12 c00-01 fg=rule bg=ground
+r12 c02-16 fg=alert bg=ground
+r12 c17-79 fg=rule bg=ground
+r13 c00-79 fg=rule bg=ground
+r14 c00-79 fg=rule
+r15 c00-79 fg=rule
+r16 c00-79 fg=rule
+r17 c00-79 fg=rule
+r18 c00-79 fg=rule
+r19 c00-79 fg=rule
+r20 c00-79 fg=rule
+r21 c00-79 fg=rule
+r22 c00-79 fg=rule
+r23 c00-23 fg=text-dim
+r23 c24-60 fg=rule
+r23 c61-61 fg=text
+r23 c62-69 fg=text-dim
+r23 c70-72 fg=text
+r23 c73-79 fg=text-dim

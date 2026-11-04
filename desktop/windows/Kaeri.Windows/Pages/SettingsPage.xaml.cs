@@ -35,6 +35,8 @@ public sealed partial class SettingsPage : Page
             "notifications" => T.SettingsGroupNotifications,
             "sources" => T.SourcesTitle,
             "accounts" => T.NavAccounts,
+            "devices" => T.DevicesTitle,
+            "profiles" => T.ProfilesTitle,
             "library" => T.NavLibrary,
             "integrations" => T.SettingsGroupIntegrations,
             "advanced" => T.SettingsGroupAdvanced,
@@ -68,6 +70,8 @@ public sealed partial class SettingsPage : Page
             ("seeding", [K.KeepSeeding, K.SeedRatio, K.SeedHours, K.UploadLimit]),
         ]),
         new("accounts", "", []),
+        new("devices", "\uE772", []),
+        new("profiles", "\uE716", []),
         new("library", "\uE8F1", []),
         new("integrations", "",
         [
@@ -190,9 +194,11 @@ public sealed partial class SettingsPage : Page
         savedClock = Timers.Weak(this, TimeSpan.FromSeconds(8), false, static page => page.ShowSaved());
         // Heard from the start: what arrives before the page is loaded is not missed.
         ctx.Tv.Changed += TvChanged;
+        Sync.SyncDialogs.Changed += SyncChanged;
         ctx.Hear(this, Heard, () =>
         {
             ctx.Tv.Changed -= TvChanged;
+            Sync.SyncDialogs.Changed -= SyncChanged;
             guardClock.Stop();
             savedClock.Stop();
         });
@@ -208,7 +214,9 @@ public sealed partial class SettingsPage : Page
 
     void Heard(IReadOnlyList<Event> batch)
     {
-        if (batch.Any(e => e is Event.Settings || e is Event.Sync && pane.Name == "accounts" || e is Event.HiddenTitles && pane.Name == "library"))
+        if (batch.Any(e => e is Event.Settings || e is Event.Sync && pane.Name == "accounts" || e is Event.HiddenTitles && pane.Name == "library"
+            || e is Event.Profiles && pane.Name == "profiles"
+            || pane.Name == "devices" && (e is Event.SyncStatus || e is Event.Cards cards && cards.V1.Any(c => notesWaiting.Remove(c.Id)))))
             Show();
         else if (batch.Any(e => e is Event.TorrentProxy))
             ShowProxyCheck();
@@ -307,6 +315,7 @@ public sealed partial class SettingsPage : Page
         Cards.Children.Clear();
         guardCard = null;
         protectCard = null;
+        tvGroup = null;
         guardClock.Stop();
         if (narrow)
             Layout();
@@ -314,6 +323,12 @@ public sealed partial class SettingsPage : Page
         {
             case "accounts":
                 ShowAccounts();
+                break;
+            case "devices":
+                ShowDevices();
+                break;
+            case "profiles":
+                ShowProfiles();
                 break;
             case "about":
                 ShowAbout();
@@ -330,15 +345,11 @@ public sealed partial class SettingsPage : Page
                 tvGroup = null;
                 foreach (var (group, keys) in pane.Groups)
                 {
-                    // Play on TV's paired TVs, between Discord and Updates.
-                    if (pane.Name == "integrations" && group == "updates" && ctx.Tv.Available)
+                    // Play on TV's setting, between Discord and Updates; the paired TVs are on Devices.
+                    if (pane.Name == "integrations" && group == "updates" && ctx.Tv.Available && ctx.Known.Setting(K.CastTvs) is { } castTvs)
                     {
                         Cards.Children.Add(Heading(T.TvPlayOn));
-                        tvGroup = new StackPanel { Spacing = 4 };
-                        ShowTvs(tvGroup);
-                        Cards.Children.Add(tvGroup);
-                        if (ctx.Known.Setting(K.CastTvs) is { } castTvs)
-                            Cards.Children.Add(castCard = Card(castTvs));
+                        Cards.Children.Add(castCard = Card(castTvs));
                     }
                     // Only where the engine was built with a presence to publish.
                     if (keys.Contains(K.Presence) && ctx.Known.Settings is { PresenceAvailable: false })

@@ -322,6 +322,8 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
             shell.go(Dest::Home);
             1.0
         }
+        #[cfg(feature = "fixtures")]
+        s if crate::sync::shots::NAMES.contains(&s) => crate::sync::shots::stage(shell, s),
         "welcome" => {
             crate::pages::first_launch::open(&shell.ctx);
             1.5
@@ -1165,6 +1167,12 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
         close_dialogs(&shell.ctx.window);
     }
     match shot {
+        #[cfg(feature = "fixtures")]
+        s if crate::sync::shots::NAMES.contains(&s) => {
+            close_dialogs(&shell.ctx.window);
+            close_dialogs(&shell.ctx.window);
+            shell.ctx.hub.known.borrow_mut().invite = None;
+        }
         "title-more-about" => {
             close_dialogs(&shell.ctx.window);
             let _ = WidgetExt::activate_action(&shell.ctx.window, "win.back", None);
@@ -1835,6 +1843,8 @@ pub fn named(list: Option<&str>) -> Vec<String> {
                 "stats" => STATS.iter().map(|p| (*p).to_owned()).collect(),
                 "tv" => TV.iter().map(|p| (*p).to_owned()).collect(),
                 "cast" => CAST.iter().map(|p| (*p).to_owned()).collect(),
+                #[cfg(feature = "fixtures")]
+                "sync" => crate::sync::shots::NAMES.iter().map(|p| (*p).to_owned()).collect(),
                 "match" => MATCH.iter().map(|p| (*p).to_owned()).collect(),
                 one => vec![one.to_owned()],
             })

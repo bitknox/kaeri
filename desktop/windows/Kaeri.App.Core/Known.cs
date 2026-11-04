@@ -54,6 +54,24 @@ public sealed class Known
     /// <summary>What the search filters choose from, once the engine has said.</summary>
     public SearchFacets? Facets { get; private set; }
     public Dictionary<string, SyncState> Sync { get; } = [];
+
+    /// <summary>Sync between the person's own devices, as the engine last said; null before it has.</summary>
+    public SyncStatus? SyncGroup { get; set; }
+
+    /// <summary>The recovery key the engine just said, until its dialog closes.</summary>
+    public string? RecoveryKey { get; set; }
+
+    /// <summary>The pairing code this PC shows, its port, and when it runs out in Unix seconds.</summary>
+    public (string Code, ushort Port, long Until)? PairInvite { get; set; }
+
+    /// <summary>The problem sync last raised that a dialog may show, until it is dealt with.</summary>
+    public SyncProblem? SyncTrouble { get; set; }
+
+    /// <summary>The profiles on this PC, empty for one person, who never sees a picker or a name.</summary>
+    public ProfileView[] Profiles { get; set; } = [];
+
+    /// <summary>A cloud sign-in under way, and its step.</summary>
+    public (SyncFolderKind Service, SyncSignInStep Step)? SyncSigningIn { get; set; }
     public DownloadRow[] Downloads => Queue.Rows;
     public SeedRow[] Seeding { get; private set; } = [];
 
@@ -333,6 +351,29 @@ public sealed class Known
                 break;
             case Event.Sync s:
                 Sync[s.V1.Tracker] = s.V1;
+                break;
+            case Event.SyncStatus group:
+                // A pass that works clears the problem, except those only a dialog can answer.
+                if (group.V1.Problem is null && SyncTrouble is not (null or SyncProblem.WrongRecoveryKey or SyncProblem.GroupExists or SyncProblem.NoGroup))
+                    SyncTrouble = null;
+                SyncGroup = group.V1;
+                break;
+            case Event.SyncInvite invite:
+                PairInvite = (invite.Code, invite.Port, DateTimeOffset.UtcNow.ToUnixTimeSeconds() + invite.Seconds);
+                break;
+            case Event.SyncRecoveryKey recovery:
+                RecoveryKey = recovery.V1;
+                SyncSigningIn = null;
+                break;
+            case Event.SyncSignIn signIn:
+                SyncSigningIn = signIn.Step is { } step ? (signIn.Service, step) : null;
+                break;
+            case Event.Profiles profiles:
+                Profiles = profiles.V1.Profiles ?? [];
+                break;
+            case Event.SyncProblem problem:
+                SyncTrouble = problem.V1;
+                SyncSigningIn = null;
                 break;
             case Event.Downloads d:
                 Queue.Apply(d.V1, DateTimeOffset.UtcNow);

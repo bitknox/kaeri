@@ -309,3 +309,31 @@ progressbar.home-progress progress { min-height: 3px; border-radius: 2px; backgr
 .home-end { font-size: 14px; }
 .home-end link { color: var(--silk); }
 .home-capsule { padding: 0 8px; }
+
+/* Sync and profiles: the recovery key card, the pairing code, the small Kids tag. */
+.key-card {
+  background: var(--raised);
+  border: 1px solid var(--faint-rule);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+.key-grid {
+  font-family: monospace;
+  font-size: 17px;
+  letter-spacing: 1px;
+  color: var(--silk);
+}
+.pair-code {
+  font-family: monospace;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: var(--silk);
+}
+.tag-pill {
+  background: var(--raised);
+  color: var(--haze);
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 11px;
+}

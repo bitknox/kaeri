@@ -35,6 +35,8 @@ pub enum Action {
     CopyReport,
     /// Delete the chosen saved crash report, from Report a bug.
     DeleteCrash,
+    /// The Devices screen: sync with this person's other devices, and their profiles.
+    ShowDevices,
 
     // Movement
     Up,
@@ -149,6 +151,7 @@ impl Action {
         Self::ReportBug,
         Self::CopyReport,
         Self::DeleteCrash,
+        Self::ShowDevices,
         Self::JumpSection(1),
         Self::JumpSection(2),
         Self::JumpSection(3),
@@ -246,6 +249,7 @@ impl Action {
             Self::ReportBug => t::keys_action_report_bug(),
             Self::CopyReport => t::keys_action_copy_report(),
             Self::DeleteCrash => t::keys_action_delete_crash(),
+            Self::ShowDevices => t::devices_title(),
             Self::Up => t::keys_action_up(),
             Self::Down => t::keys_action_down(),
             Self::Left => t::keys_action_left(),
@@ -350,7 +354,8 @@ impl Action {
             | Self::OpenPrivacy
             | Self::ReportBug
             | Self::CopyReport
-            | Self::DeleteCrash => Scope::Global,
+            | Self::DeleteCrash
+            | Self::ShowDevices => Scope::Global,
 
             Self::Up
             | Self::Down

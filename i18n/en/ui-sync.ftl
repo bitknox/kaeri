@@ -81,9 +81,10 @@ devices-sync-switch = Sync
 # Switch on a TV.
 devices-remote-switch = Remote
 
-# Device page footer.
+# Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC.
+# @arg kind: text
 # @arg device: text
-devices-switches-foot = Sync shares where you stopped, your history and your settings. Remote lets this phone drive { $device }.
+devices-switches-foot = Sync shares where you stopped, your history and your settings. Remote lets this { $kind } drive { $device }.
 
 # Device page, destructive.
 devices-remove = Remove this { -device }

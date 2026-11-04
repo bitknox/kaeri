@@ -57,7 +57,7 @@ pub fn tv(handle: Handle, data: &Path, casting: Option<Casting>) -> Rc<Tv> {
             Err(e) => tracing::warn!(error = %e, name, "a fixture TV did not start"),
         }
     }
-    let sender = open_sender(&handle, data, casting)
+    let sender = open_sender(&handle, data, casting, None)
         .inspect_err(|e| tracing::warn!(error = %e, "no Play on TV"))
         .ok()
         .map(Arc::new);

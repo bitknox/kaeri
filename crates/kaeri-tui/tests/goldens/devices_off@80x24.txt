@@ -1,0 +1,86 @@
+Kaeri                                                  plugins ●  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────
+ ▸ │  This device  ──────────────────────────────────────────────────────────
+ ▤ │    Name                        Kim's laptop
+ ▦ │
+ / │  Sync  ─────────────────────────────────────────────────────────────────
+ ▥ │    Sync is off
+ ↓ │    Turn it on to keep where you stopped, your history and your settings
+ ◇ │    the same on your devices.
+ ◎ │
+▌≡ │  ▌ Turn on sync                Sync off
+ ⇄ │
+   │
+   │
+   │
+   │
+   │
+   │
+   │
+   │
+   │  ────────────────────────────────────────────────────────────────────────
+   │    You can add the other way later. Most people use both.
+────────────────────────────────────────────────────────────────────────────────
+plugins · Subbed · 1080p                                ↵ open   q back   ? keys
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c55-63 fg=state
+r00 c64-65 fg=text-dim
+r00 c66-66 fg=rule
+r00 c67-68 fg=text-dim
+r00 c69-79 fg=state
+r01 c00-79 fg=rule
+r02 c01-01 fg=text-dim
+r02 c03-03 fg=rule
+r02 c06-16 fg=text
+r02 c19-76 fg=rule
+r03 c01-01 fg=text-dim
+r03 c03-03 fg=rule
+r03 c08-11 fg=text
+r03 c36-47 fg=text-dim
+r04 c01-01 fg=text-dim
+r04 c03-03 fg=rule
+r05 c01-01 fg=text-dim
+r05 c03-03 fg=rule
+r05 c06-09 fg=text
+r05 c12-76 fg=rule
+r06 c01-01 fg=text-dim
+r06 c03-03 fg=rule
+r06 c08-18 fg=text
+r07 c01-01 fg=text-dim
+r07 c03-03 fg=rule
+r07 c08-75 fg=text-dim
+r08 c01-01 fg=text-dim
+r08 c03-03 fg=rule
+r08 c08-32 fg=text-dim
+r09 c01-01 fg=text-dim
+r09 c03-03 fg=rule
+r10 c00-00 fg=text-dim
+r10 c01-01 fg=text mod=BOLD
+r10 c03-03 fg=rule
+r10 c06-06 fg=obi
+r10 c08-19 fg=text mod=BOLD
+r10 c36-43 fg=text-dim
+r11 c01-01 fg=text-dim
+r11 c03-03 fg=rule
+r12 c03-03 fg=rule
+r13 c03-03 fg=rule
+r14 c03-03 fg=rule
+r15 c03-03 fg=rule
+r16 c03-03 fg=rule
+r17 c03-03 fg=rule
+r18 c03-03 fg=rule
+r19 c03-03 fg=rule
+r20 c03-03 fg=rule
+r20 c06-77 fg=rule
+r21 c03-03 fg=rule
+r21 c08-61 fg=text-dim
+r22 c00-79 fg=rule
+r23 c00-23 fg=text-dim
+r23 c56-56 fg=text
+r23 c57-64 fg=text-dim
+r23 c65-65 fg=text
+r23 c66-73 fg=text-dim
+r23 c74-74 fg=text
+r23 c75-79 fg=text-dim

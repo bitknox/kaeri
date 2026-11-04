@@ -91,7 +91,7 @@ struct Pane {
     groups: &'static [(Group, &'static [SettingKey])],
 }
 
-const PANES: [Pane; 10] = [
+const PANES: [Pane; 12] = [
     Pane {
         name: "general",
         icon: "preferences-system-symbolic", // i18n-skip
@@ -165,6 +165,8 @@ const PANES: [Pane; 10] = [
         ],
     },
     Pane { name: "accounts", icon: "avatar-default-symbolic", groups: &[] }, // i18n-skip
+    Pane { name: "devices", icon: "computer-symbolic", groups: &[] },        // i18n-skip
+    Pane { name: "profiles", icon: "system-users-symbolic", groups: &[] },   // i18n-skip
     Pane { name: "hidden", icon: "view-conceal-symbolic", groups: &[] },     // i18n-skip
     Pane {
         name: "integrations",
@@ -247,6 +249,8 @@ pub fn pane_title(name: &str) -> String {
         "notifications" => t::settings_group_notifications(),
         "sources" => t::sources_title(),
         "accounts" => t::accounts_title(),
+        "devices" => t::devices_title(),
+        "profiles" => t::profiles_title(),
         "hidden" => t::settings_hidden_titles(),
         "integrations" => t::settings_group_integrations(),
         "advanced" => t::settings_group_advanced(),
@@ -456,6 +460,22 @@ impl Inner {
                     shown();
                 }
             }
+            Event::SyncStatus(_) | Event::Profiles(_)
+                if matches!(*self.pane.borrow(), "devices" | "profiles") =>
+            {
+                let pane = *self.pane.borrow();
+                self.built.replace(None);
+                self.show(pane);
+            }
+            // A sync note's title came in.
+            Event::Cards(cards)
+                if *self.pane.borrow() == "devices"
+                    && crate::sync::devices::waits_for(cards) =>
+            {
+                let pane = *self.pane.borrow();
+                self.built.replace(None);
+                self.show(pane);
+            }
             Event::Sync(_)
             | Event::Authorize { .. }
             | Event::DeviceCode(_)
@@ -484,6 +504,8 @@ impl Inner {
         let page = adw::PreferencesPage::new();
         match name {
             "accounts" => self.accounts(&page),
+            "devices" => crate::sync::devices::fill(&self.ctx, &page),
+            "profiles" => crate::sync::profiles::fill(&self.ctx, &page),
             "hidden" => hidden_pane(&self.ctx, &page),
             "about" => {
                 about_pane(&page);
@@ -492,14 +514,13 @@ impl Inner {
                 page.add(&group);
             }
             "general" => page.add(&self.language_group()),
-            // The TVs paired for Play on TV lead Integrations, as on the Mac.
+            // The TVs paired for Play on TV moved to Devices; whether it lists TVs with
+            // Chromecast built in stays with the integrations.
             "integrations" => {
-                if let Some(group) = crate::tv::paired::group(&self.ctx) {
-                    // Whether Play on TV lists TVs with Chromecast built in, under the paired TVs.
-                    let cast_tvs = self.ctx.hub.known.borrow().setting(K::CastTvs);
-                    if let Some(row) = cast_tvs {
-                        group.add(&self.row(&row));
-                    }
+                let cast_tvs = self.ctx.hub.known.borrow().setting(K::CastTvs);
+                if let Some(row) = cast_tvs {
+                    let group = adw::PreferencesGroup::builder().title(t::tv_play_on()).build();
+                    group.add(&self.row(&row));
                     page.add(&group);
                 }
             }

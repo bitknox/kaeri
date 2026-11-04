@@ -22781,6 +22781,30 @@
         }
       }
     },
+    "cloud-browser-line" : {
+      "comment" : "Windows and Linux dialog line while the browser is open for a cloud sign-in. Argument 1: service (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your browser opened %1$@’s page. Allow access there, and Kaeri carries on by itself."
+          }
+        }
+      }
+    },
+    "cloud-browser-title" : {
+      "comment" : "Windows and Linux dialog title while the browser is open for a cloud sign-in. Argument 1: service (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in to %1$@ in your browser"
+          }
+        }
+      }
+    },
     "cloud-choose-folder" : {
       "comment" : "Cloud row button when the folder can't be opened.",
       "extractionState" : "manual",
@@ -23213,6 +23237,18 @@
         }
       }
     },
+    "cloud-password-label" : {
+      "comment" : "Label of the password field for WebDAV and a Nextcloud app password.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Password"
+          }
+        }
+      }
+    },
     "cloud-pick-foot" : {
       "comment" : "Picker footer.",
       "extractionState" : "manual",
@@ -23321,6 +23357,18 @@
         }
       }
     },
+    "cloud-user-label" : {
+      "comment" : "Label of the user name field for WebDAV and a Nextcloud app password.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User name"
+          }
+        }
+      }
+    },
     "cloud-waiting" : {
       "comment" : "Wait row. Argument 1: service (Text).",
       "extractionState" : "manual",
@@ -23341,6 +23389,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "WebDAV server"
+          }
+        }
+      }
+    },
+    "cloud-webdav-address-label" : {
+      "comment" : "Label of the WebDAV server address field.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server address"
           }
         }
       }
@@ -27237,6 +27297,18 @@
         }
       }
     },
+    "device-kind-computer" : {
+      "comment" : "Word for this device in sentences such as “Turn off sync on this computer”.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "computer"
+          }
+        }
+      }
+    },
     "device-kind-phone" : {
       "comment" : "",
       "extractionState" : "manual",
@@ -27317,6 +27389,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Also sync"
+          }
+        }
+      }
+    },
+    "devices-enter-code" : {
+      "comment" : "Button on the Devices page that opens the box for a code another device shows.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a code"
+          }
+        }
+      }
+    },
+    "devices-line-remote" : {
+      "comment" : "A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's. Argument 1: line (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · Remote"
           }
         }
       }
@@ -27501,14 +27597,38 @@
         }
       }
     },
-    "devices-switches-foot" : {
-      "comment" : "Device page footer. Argument 1: device (Text).",
+    "devices-show-key" : {
+      "comment" : "Button on the Devices page that shows the recovery key behind the computer’s own lock.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sync shares where you stopped, your history and your settings. Remote lets this phone drive %1$@."
+            "value" : "Show"
+          }
+        }
+      }
+    },
+    "devices-switches-foot" : {
+      "comment" : "Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC. Argument 1: kind (Text). Argument 2: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync shares where you stopped, your history and your settings. Remote lets this %1$@ drive %2$@."
+          }
+        }
+      }
+    },
+    "devices-sync-foot" : {
+      "comment" : "Device page footer when the device has no Remote switch.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync shares where you stopped, your history and your settings."
           }
         }
       }
@@ -27545,6 +27665,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Devices"
+          }
+        }
+      }
+    },
+    "devices-turn-off-action" : {
+      "comment" : "Button in the alert that turns sync off on this computer.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn off"
           }
         }
       }
@@ -103927,6 +104059,30 @@
         }
       }
     },
+    "pair-address-label" : {
+      "comment" : "Label of the field for the other device’s address in the Enter a code dialog.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Address"
+          }
+        }
+      }
+    },
+    "pair-address-optional" : {
+      "comment" : "Note under the Enter a code dialog's fields: the address can be left empty.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leave the address empty and Kaeri looks for the device on this network."
+          }
+        }
+      }
+    },
     "pair-also-sync-foot" : {
       "comment" : "Footer. Argument 1: device (Text).",
       "extractionState" : "manual",
@@ -103951,6 +104107,18 @@
         }
       }
     },
+    "pair-by-address" : {
+      "comment" : "Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pair by address"
+          }
+        }
+      }
+    },
     "pair-code-field" : {
       "comment" : "Heading over the pairing code the other device shows, over the field.",
       "extractionState" : "manual",
@@ -103971,6 +104139,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Six digits"
+          }
+        }
+      }
+    },
+    "pair-code-placeholder" : {
+      "comment" : "Placeholder of the pairing code field.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "000 000"
           }
         }
       }
@@ -104223,6 +104403,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "This %1$@ syncs with that profile only. The others stay on %2$@."
+          }
+        }
+      }
+    },
+    "pair-working-line" : {
+      "comment" : "Line under the pairing code while a device is being paired.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pairing"
           }
         }
       }
@@ -140537,6 +140729,18 @@
         }
       }
     },
+    "profiles-edit-action" : {
+      "comment" : "Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit"
+          }
+        }
+      }
+    },
     "profiles-kids" : {
       "comment" : "Switch.",
       "extractionState" : "manual",
@@ -140605,6 +140809,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Profile"
+          }
+        }
+      }
+    },
+    "profiles-more-for" : {
+      "comment" : "Accessible name and tooltip of the menu button on a profile's row. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More for %1$@"
+          }
+        }
+      }
+    },
+    "profiles-name-field" : {
+      "comment" : "Label of the name field in the add and edit profile dialogs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name"
           }
         }
       }
@@ -144775,6 +145003,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Enter your recovery key"
+          }
+        }
+      }
+    },
+    "rkey-field-label" : {
+      "comment" : "Label of the field for a recovery key in the restore dialog.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recovery key"
           }
         }
       }

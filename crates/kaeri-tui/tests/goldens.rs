@@ -58,8 +58,16 @@ use kaeri_model::{
     },
     sync::{ConflictRow, DeviceCodePrompt, PullError, SyncState},
 };
+use kaeri_model::{
+    group::{
+        CloudUnavailable, SyncCloudView, SyncCloudWay, SyncDeviceView, SyncFolderKind,
+        SyncFolderView, SyncNoteView, SyncProblem, SyncSignInStep, SyncStatus,
+    },
+    profiles::{ProfileView, ProfilesView},
+};
 use kaeri_tui::{
     Action, App, Clock, Keymap, Overlay, Palette, Role, Zone,
+    app::DeviceLine,
     eyecatch::{FRAME_MS, QUIET_HOLD_FRAMES, SWEEP_FRAMES},
     screens::{render_to_buffer, visible_rows},
 };
@@ -542,6 +550,33 @@ scenarios! {
     store_empty,
     members_loading,
     logs_empty,
+    devices_off,
+    devices_road,
+    devices_clouds,
+    devices_wait,
+    devices_nextcloud_wait,
+    devices_webdav_password,
+    devices_folder,
+    devices_on,
+    devices_alone,
+    devices_setting_up,
+    devices_signed_out,
+    devices_problem,
+    recovery_key,
+    recovery_key_qr,
+    restore_wrong_key,
+    pair_show,
+    pair_expired,
+    pair_enter_code,
+    pair_address_error,
+    remove_device_confirm,
+    device_page,
+    device_rename,
+    new_key_confirm,
+    devices_notes,
+    turn_off_confirm,
+    profiles_two,
+    add_profile,
 }
 
 /// A golden left behind by a renamed or removed scenario is a file nothing checks, and reads as
@@ -2549,4 +2584,370 @@ fn members_loading(s: &mut Screen) {
 fn logs_empty(s: &mut Screen) {
     home_watching(s);
     s.act(Action::ShowLogs);
+}
+
+// ── Devices ───────────────────────────────────────────────────────────────────────────────────
+
+fn sync_cloud(
+    service: SyncFolderKind,
+    way: SyncCloudWay,
+    signed_in: bool,
+    account: Option<&str>,
+) -> SyncCloudView {
+    SyncCloudView { service, way, signed_in, account: account.map(Into::into) }
+}
+
+/// The drives this build offers: Dropbox has no client id, so the picker leaves it out.
+fn sync_clouds(google_signed_in: bool) -> Vec<SyncCloudView> {
+    vec![
+        sync_cloud(
+            SyncFolderKind::GoogleDrive,
+            SyncCloudWay::Browser,
+            google_signed_in,
+            google_signed_in.then_some("kim@mail.example"),
+        ),
+        sync_cloud(
+            SyncFolderKind::Dropbox,
+            SyncCloudWay::Unavailable { reason: CloudUnavailable::NoClientId },
+            false,
+            None,
+        ),
+        sync_cloud(SyncFolderKind::OneDrive, SyncCloudWay::Browser, false, None),
+    ]
+}
+
+fn sync_device(
+    id: &str,
+    name: &str,
+    this_device: bool,
+    last_seen: Option<i64>,
+) -> SyncDeviceView {
+    SyncDeviceView {
+        id: id.into(),
+        name: name.into(),
+        this_device,
+        last_seen,
+        trackers: Vec::new(),
+        sign_ins: Vec::new(),
+        folder: None,
+        asked: Vec::new(),
+        kind: None,
+        paused: false,
+        remote_key: None,
+        remote_off: false,
+    }
+}
+
+fn sync_off() -> SyncStatus {
+    SyncStatus { clouds: sync_clouds(false), ..SyncStatus::default() }
+}
+
+/// Sync on with a phone and a TV, through Google Drive.
+fn sync_on() -> SyncStatus {
+    SyncStatus {
+        enabled: true,
+        device_name: Some("Kim's laptop".into()),
+        folder: Some(SyncFolderView {
+            kind: SyncFolderKind::GoogleDrive,
+            label: "Kaeri".into(),
+            account: Some("kim@mail.example".into()),
+        }),
+        devices: vec![
+            sync_device("a", "Kim's laptop", true, Some(NOW)),
+            sync_device("b", "Kim's iPhone", false, Some(NOW - 4 * MINUTE)),
+            sync_device("c", "Living room TV", false, Some(NOW - 9 * DAY)),
+        ],
+        last_synced: Some(NOW - 4 * MINUTE),
+        clouds: sync_clouds(true),
+        recovery_key: true,
+        recovery_key_made: Some(NOW - 15 * DAY),
+        ..SyncStatus::default()
+    }
+}
+
+/// Settings, then `d`, with sync as `status` says.
+fn devices_with(s: &mut Screen, status: SyncStatus) {
+    settled_on(s, 9);
+    s.app.set_device_name("Kim's laptop".into());
+    s.press(&["d"]);
+    s.apply(Event::SyncStatus(status));
+    // On the first row under the name, where the scenarios start.
+    s.app.cursors.devices.selected = 1;
+    s.draw();
+}
+
+/// The cursor on the first row of `line`.
+fn devices_cursor(s: &mut Screen, line: DeviceLine) {
+    let at = s.app.device_lines().iter().position(|l| *l == line).expect("the row is there");
+    s.app.cursors.devices.selected = at;
+    s.draw();
+}
+
+/// The cloud picker, at `kind`.
+fn devices_pick(s: &mut Screen, kind: SyncFolderKind) {
+    devices_with(s, sync_off());
+    s.press(&["enter", "j", "enter"]);
+    let at = s.app.cloud_choices().iter().position(|k| *k == kind).expect("offered");
+    for _ in 0..at {
+        s.press(&["j"]);
+    }
+}
+
+/// Sync is off: what it does, and the way to turn it on.
+fn devices_off(s: &mut Screen) {
+    devices_with(s, sync_off());
+}
+
+/// The two roads: a device nearby, or a cloud folder.
+fn devices_road(s: &mut Screen) {
+    devices_with(s, sync_off());
+    s.press(&["enter"]);
+}
+
+/// The cloud folders this build can use, Dropbox left out for want of a client id.
+fn devices_clouds(s: &mut Screen) {
+    devices_with(s, sync_off());
+    s.press(&["enter", "j", "enter", "j"]);
+}
+
+/// Google Drive's page is open in the browser; Enter opens it again.
+fn devices_wait(s: &mut Screen) {
+    devices_pick(s, SyncFolderKind::GoogleDrive);
+    s.press(&["enter"]);
+    s.apply(Event::SyncSignIn {
+        service: SyncFolderKind::GoogleDrive,
+        step: Some(SyncSignInStep::Browser {
+            url: "https://accounts.example/o/oauth2/auth?client_id=kaeri.example&state=7f3a9c"
+                .into(),
+        }),
+    });
+}
+
+/// Nextcloud's login page is open, with an app password as the other way.
+fn devices_nextcloud_wait(s: &mut Screen) {
+    devices_pick(s, SyncFolderKind::Nextcloud);
+    s.press(&["enter"]);
+    s.type_text("https://cloud.example");
+    s.press(&["enter"]);
+    s.apply(Event::SyncSignIn {
+        service: SyncFolderKind::Nextcloud,
+        step: Some(SyncSignInStep::Page {
+            url: "https://cloud.example/index.php/login/v2/flow/a8c2".into(),
+        }),
+    });
+}
+
+/// A WebDAV server's password, drawn as dots.
+fn devices_webdav_password(s: &mut Screen) {
+    devices_pick(s, SyncFolderKind::WebDav);
+    s.press(&["enter"]);
+    s.type_text("https://dav.example/kaeri");
+    s.press(&["enter"]);
+    s.type_text("kim");
+    s.press(&["enter"]);
+    s.type_text("hunter22");
+}
+
+/// A folder on this computer, sent and waiting on the engine.
+fn devices_folder(s: &mut Screen) {
+    devices_pick(s, SyncFolderKind::Directory);
+    s.press(&["enter"]);
+    s.type_text("/home/kim/Sync/Kaeri");
+    s.press(&["enter"]);
+}
+
+/// Sync on: a phone seen minutes ago, a TV not for days, the folder, its key and the way off.
+fn devices_on(s: &mut Screen) {
+    devices_with(s, sync_on());
+    s.press(&["j"]);
+}
+
+/// On with no other device and no cloud folder yet.
+fn devices_alone(s: &mut Screen) {
+    let mut status = sync_on();
+    status.devices.truncate(1);
+    status.folder = None;
+    status.last_synced = None;
+    status.recovery_key = false;
+    status.recovery_key_made = None;
+    status.clouds = sync_clouds(false);
+    devices_with(s, status);
+}
+
+/// Signed in to Google Drive; the folder is being set up.
+fn devices_setting_up(s: &mut Screen) {
+    devices_pick(s, SyncFolderKind::GoogleDrive);
+    s.press(&["enter"]);
+    s.apply(Event::SyncSignIn {
+        service: SyncFolderKind::GoogleDrive,
+        step: Some(SyncSignInStep::Finishing),
+    });
+}
+
+/// Google Drive signed this device out: the folder row asks to sign in again.
+fn devices_signed_out(s: &mut Screen) {
+    let mut status = sync_on();
+    status.problem = Some(SyncProblem::SignInNeeded { service: SyncFolderKind::GoogleDrive });
+    status.clouds = sync_clouds(false);
+    devices_with(s, status);
+    devices_cursor(s, DeviceLine::Folder);
+}
+
+/// A WebDAV server that could not be reached.
+fn devices_problem(s: &mut Screen) {
+    let mut status = sync_on();
+    status.folder = Some(SyncFolderView {
+        kind: SyncFolderKind::WebDav,
+        label: "dav.example".into(),
+        account: None,
+    });
+    status.clouds = sync_clouds(false);
+    status.problem = Some(SyncProblem::Unreachable);
+    devices_with(s, status);
+    devices_cursor(s, DeviceLine::Folder);
+}
+
+/// The recovery key, shown once, copied.
+fn recovery_key(s: &mut Screen) {
+    devices_with(s, sync_on());
+    s.apply(Event::SyncRecoveryKey("K7QM4XR9DH2VT8NB3CWZ6PLF".into()));
+    s.press(&["c"]);
+    s.app.clipboard_went(true);
+    s.draw();
+}
+
+/// The key as a QR code, where the window is tall enough for one.
+fn recovery_key_qr(s: &mut Screen) {
+    devices_with(s, sync_on());
+    s.apply(Event::SyncRecoveryKey("K7QM4XR9DH2VT8NB3CWZ6PLF".into()));
+    s.press(&["v"]);
+}
+
+/// The folder belongs to another group; the key entered does not open it.
+fn restore_wrong_key(s: &mut Screen) {
+    devices_pick(s, SyncFolderKind::Directory);
+    s.press(&["enter"]);
+    s.type_text("/home/kim/Sync/Kaeri");
+    s.press(&["enter"]);
+    s.apply(Event::SyncProblem(SyncProblem::GroupExists));
+    s.type_text("K7QM 4XR9 DH2V T8NB 3CWZ 6PLX");
+    s.press(&["enter"]);
+    s.apply(Event::SyncProblem(SyncProblem::WrongRecoveryKey));
+    s.type_text("K7QM");
+}
+
+/// A pairing code on show, twelve seconds in.
+fn pair_show(s: &mut Screen) {
+    devices_with(s, sync_on());
+    devices_cursor(s, DeviceLine::ShowCode);
+    s.press(&["enter"]);
+    s.app.set_lan_address(Some("192.168.1.20".into()));
+    s.apply(Event::SyncInvite { code: "042917".into(), port: 47811, seconds: 120 });
+    s.wait(Duration::from_secs(12));
+}
+
+/// The code ran out: Enter shows a new one.
+fn pair_expired(s: &mut Screen) {
+    pair_show(s);
+    s.wait(Duration::from_secs(200));
+}
+
+/// Entering another device's code, four digits in.
+fn pair_enter_code(s: &mut Screen) {
+    devices_with(s, sync_on());
+    devices_cursor(s, DeviceLine::EnterCode);
+    s.press(&["enter"]);
+    s.type_text("0429");
+}
+
+/// No device answered at the address given.
+fn pair_address_error(s: &mut Screen) {
+    devices_with(s, sync_off());
+    s.press(&["enter", "enter", "j", "enter"]);
+    s.type_text("042917");
+    s.press(&["enter"]);
+    s.type_text("192.168.1.31:47811");
+    s.press(&["enter"]);
+    s.apply(Event::SyncProblem(SyncProblem::Unreachable));
+}
+
+/// Removing the phone asks first.
+fn remove_device_confirm(s: &mut Screen) {
+    devices_with(s, sync_on());
+    s.press(&["enter", "G", "enter"]);
+}
+
+/// A device's page: its switches, with the Remote switch for a TV paired as a remote.
+fn device_page(s: &mut Screen) {
+    let mut status = sync_on();
+    status.devices[2].remote_key = Some("ab12cd34".into());
+    status.devices[2].sign_ins = vec![SyncFolderKind::Nextcloud];
+    status.devices[2].trackers = vec!["anilist".into()];
+    devices_with(s, status);
+    s.press(&["j", "enter"]);
+}
+
+/// Changing this device's name.
+fn device_rename(s: &mut Screen) {
+    devices_with(s, sync_on());
+    devices_cursor(s, DeviceLine::Name);
+    s.press(&["enter"]);
+}
+
+/// A new recovery key asks first.
+fn new_key_confirm(s: &mut Screen) {
+    devices_with(s, sync_on());
+    devices_cursor(s, DeviceLine::NewKey);
+    s.press(&["enter"]);
+}
+
+/// A kept watch another device marked unwatched, with the way to undo it.
+fn devices_notes(s: &mut Screen) {
+    let mut status = sync_on();
+    status.notes = vec![SyncNoteView {
+        id: 7,
+        anilist_id: 900_001,
+        episode: "5".into(),
+        watch_device: "Kim's laptop".into(),
+        unwatch_device: "Kim's iPhone".into(),
+        at: NOW - DAY,
+    }];
+    devices_with(s, status);
+    s.app.devices.note_titles.insert(900_001, "Lantern Harbor".into());
+    s.draw();
+    let at = s.app.device_lines().iter().position(|l| matches!(l, DeviceLine::Note(_)));
+    s.app.cursors.devices.selected = at.expect("the note is there");
+    s.draw();
+}
+
+/// Turning sync off asks first.
+fn turn_off_confirm(s: &mut Screen) {
+    devices_with(s, sync_on());
+    devices_cursor(s, DeviceLine::TurnOff);
+    s.press(&["enter"]);
+}
+
+fn profile_view(id: &str, name: &str, active: bool, kids: bool) -> ProfileView {
+    ProfileView { id: id.into(), name: name.into(), initials: name[..1].into(), kids, active }
+}
+
+/// Two profiles, one of them a kids profile, with sync off.
+fn profiles_two(s: &mut Screen) {
+    devices_with(s, sync_off());
+    s.apply(Event::Profiles(ProfilesView {
+        profiles: vec![
+            profile_view("p1", "Kim", true, false),
+            profile_view("p2", "Sam", false, true),
+        ],
+    }));
+    devices_cursor(s, DeviceLine::Profile(1));
+}
+
+/// A new profile's name given; the kind to add it as.
+fn add_profile(s: &mut Screen) {
+    profiles_two(s);
+    devices_cursor(s, DeviceLine::AddProfile);
+    s.press(&["enter"]);
+    s.type_text("Alex");
+    s.press(&["enter", "j"]);
 }

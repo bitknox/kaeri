@@ -1482,6 +1482,21 @@ public static partial class T
     /// <summary>Line under the Chromecast group in Play on TV, until the app has served a TV once: Windows' firewall asks then whether the app may reach the network.</summary>
     public static string TvCastFirewallAhead => Get("TvCastFirewallAhead");
 
+    /// <summary>Footnote on the recovery key dialog; the lock is Windows Hello.</summary>
+    public static string RkeyLockWindows => Get("RkeyLockWindows");
+
+    /// <summary>What Windows Hello says it is asking for before the recovery key shows again.</summary>
+    public static string RkeyHelloReason => Get("RkeyHelloReason");
+
+    /// <summary>Word for this device in sentences such as “Turn off sync on this PC”.</summary>
+    public static string DeviceKindPc => Get("DeviceKindPc");
+
+    /// <summary>Accessible name of the Sync switch on a device's card, with the device's name.</summary>
+    public static string DevicesSyncSwitchName(string device) => Fill(Get("DevicesSyncSwitchName"), ("device", device));
+
+    /// <summary>Accessible name of the button that opens a device's page from its card.</summary>
+    public static string DevicesOpenName(string device) => Fill(Get("DevicesOpenName"), ("device", device));
+
     /// <summary>Under a release in the source picker: how many people share it right now.</summary>
     public static string SourcePickerSeeders(long count) => Fill(GetPlural("SourcePickerSeeders", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -6872,6 +6887,69 @@ public static partial class T
     /// <summary>Button that opens the system share sheet for the invite link.</summary>
     public static string StoresShare => Get("StoresShare");
 
+    /// <summary>Windows and Linux dialog line while the browser is open for a cloud sign-in.</summary>
+    public static string CloudBrowserLine(string service) => Fill(Get("CloudBrowserLine"), ("service", service));
+
+    /// <summary>Windows and Linux dialog title while the browser is open for a cloud sign-in.</summary>
+    public static string CloudBrowserTitle(string service) => Fill(Get("CloudBrowserTitle"), ("service", service));
+
+    /// <summary>Word for this device in sentences such as “Turn off sync on this computer”.</summary>
+    public static string DeviceKindComputer => Get("DeviceKindComputer");
+
+    /// <summary>Button on the Devices page that opens the box for a code another device shows.</summary>
+    public static string DevicesEnterCode => Get("DevicesEnterCode");
+
+    /// <summary>Button on the Devices page that shows the recovery key behind the computer’s own lock.</summary>
+    public static string DevicesShowKey => Get("DevicesShowKey");
+
+    /// <summary>Button in the alert that turns sync off on this computer.</summary>
+    public static string DevicesTurnOffAction => Get("DevicesTurnOffAction");
+
+    /// <summary>Label of the field for the other device’s address in the Enter a code dialog.</summary>
+    public static string PairAddressLabel => Get("PairAddressLabel");
+
+    /// <summary>Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself.</summary>
+    public static string PairByAddress => Get("PairByAddress");
+
+    /// <summary>Placeholder of the pairing code field.</summary>
+    public static string PairCodePlaceholder => Get("PairCodePlaceholder");
+
+    /// <summary>Label of the field for a recovery key in the restore dialog.</summary>
+    public static string RkeyFieldLabel => Get("RkeyFieldLabel");
+
+    /// <summary>Label of the user name field for WebDAV and a Nextcloud app password.</summary>
+    public static string CloudUserLabel => Get("CloudUserLabel");
+
+    /// <summary>Label of the password field for WebDAV and a Nextcloud app password.</summary>
+    public static string CloudPasswordLabel => Get("CloudPasswordLabel");
+
+    /// <summary>Label of the WebDAV server address field.</summary>
+    public static string CloudWebdavAddressLabel => Get("CloudWebdavAddressLabel");
+
+    /// <summary>Line under the pairing code while a device is being paired.</summary>
+    public static string PairWorkingLine => Get("PairWorkingLine");
+
+    /// <summary>Name for the device whose pairing code did not match, when no name is known yet.</summary>
+    public static string PairOtherDevice => Get("PairOtherDevice");
+
+    /// <summary>Note under the Enter a code dialog's fields: the address can be left empty.</summary>
+    public static string PairAddressOptional => Get("PairAddressOptional");
+
+    /// <summary>Device page footer when the device has no Remote switch.</summary>
+    public static string DevicesSyncFoot => Get("DevicesSyncFoot");
+
+    /// <summary>A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's.</summary>
+    public static string DevicesLineRemote(string line) => Fill(Get("DevicesLineRemote"), ("line", line));
+
+    /// <summary>Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux.</summary>
+    public static string ProfilesEditAction => Get("ProfilesEditAction");
+
+    /// <summary>Label of the name field in the add and edit profile dialogs.</summary>
+    public static string ProfilesNameField => Get("ProfilesNameField");
+
+    /// <summary>Accessible name and tooltip of the menu button on a profile's row.</summary>
+    public static string ProfilesMoreFor(string name) => Fill(Get("ProfilesMoreFor"), ("name", name));
+
     /// <summary>Line on a store row when joining it through a paired device failed because the store or the paired device could not be reached. The person can try again later.</summary>
     public static string SyncStoreErrOffline(string store, string device) => Fill(Get("SyncStoreErrOffline"), ("store", store), ("device", device));
 
@@ -6959,8 +7037,8 @@ public static partial class T
     /// <summary>Switch on a TV.</summary>
     public static string DevicesRemoteSwitch => Get("DevicesRemoteSwitch");
 
-    /// <summary>Device page footer.</summary>
-    public static string DevicesSwitchesFoot(string device) => Fill(Get("DevicesSwitchesFoot"), ("device", device));
+    /// <summary>Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC.</summary>
+    public static string DevicesSwitchesFoot(string kind, string device) => Fill(Get("DevicesSwitchesFoot"), ("kind", kind), ("device", device));
 
     /// <summary>Device page, destructive.</summary>
     public static string DevicesRemove => Get("DevicesRemove");
@@ -9046,6 +9124,11 @@ public static partial class T
         ["TvProblemNoCode"] = "That code has expired. Ask the TV for a new one.",
         ["TvCastThroughPc"] = "Plays through this PC",
         ["TvCastFirewallAhead"] = "Windows will ask to let Kaeri reach your TV.",
+        ["RkeyLockWindows"] = "You can see it again in Settings, Devices, with Windows Hello.",
+        ["RkeyHelloReason"] = "Show the Kaeri recovery key",
+        ["DeviceKindPc"] = "PC",
+        ["DevicesSyncSwitchName"] = "Sync with {device}",
+        ["DevicesOpenName"] = "Open {device}",
         ["SourcePickerSeeders_one"] = "One seeder",
         ["SourcePickerSeeders_other"] = "{count} seeders",
         ["RatePerSecond"] = "{size}/s",
@@ -10894,6 +10977,27 @@ public static partial class T
         ["StoresQrWarning"] = "Anyone who scans this code can use the invite. It works once and lasts seven days.",
         ["StoresQrWarningDevice"] = "Scan this with the device you want to link. It works once and lasts seven days.",
         ["StoresShare"] = "Share…",
+        ["CloudBrowserLine"] = "Your browser opened {service}’s page. Allow access there, and Kaeri carries on by itself.",
+        ["CloudBrowserTitle"] = "Sign in to {service} in your browser",
+        ["DeviceKindComputer"] = "computer",
+        ["DevicesEnterCode"] = "Enter a code",
+        ["DevicesShowKey"] = "Show",
+        ["DevicesTurnOffAction"] = "Turn off",
+        ["PairAddressLabel"] = "Address",
+        ["PairByAddress"] = "Pair by address",
+        ["PairCodePlaceholder"] = "000 000",
+        ["RkeyFieldLabel"] = "Recovery key",
+        ["CloudUserLabel"] = "User name",
+        ["CloudPasswordLabel"] = "Password",
+        ["CloudWebdavAddressLabel"] = "Server address",
+        ["PairWorkingLine"] = "Pairing",
+        ["PairOtherDevice"] = "your other device",
+        ["PairAddressOptional"] = "Leave the address empty and Kaeri looks for the device on this network.",
+        ["DevicesSyncFoot"] = "Sync shares where you stopped, your history and your settings.",
+        ["DevicesLineRemote"] = "{line} · Remote",
+        ["ProfilesEditAction"] = "Edit",
+        ["ProfilesNameField"] = "Name",
+        ["ProfilesMoreFor"] = "More for {name}",
         ["SyncStoreErrOffline"] = "Couldn't reach {store} or {device}. Try again when both are online.",
         ["SyncStoreErrRefused"] = "{store} didn't accept the invite. Ask its owner for a new one.",
         ["SyncStoreErrNotAllowed"] = "{device} can't invite other devices to {store}. Ask the plugin store's owner for an invite.",
@@ -10923,7 +11027,7 @@ public static partial class T
         ["DevicesPairedTvsFoot"] = "Paired for Play on TV. A TV paired as a remote never gets your history.",
         ["DevicesSyncSwitch"] = "Sync",
         ["DevicesRemoteSwitch"] = "Remote",
-        ["DevicesSwitchesFoot"] = "Sync shares where you stopped, your history and your settings. Remote lets this phone drive {device}.",
+        ["DevicesSwitchesFoot"] = "Sync shares where you stopped, your history and your settings. Remote lets this {kind} drive {device}.",
         ["DevicesRemove"] = "Remove this device",
         ["DevicesRemoveAlert"] = "Remove {device}?",
         ["DevicesRemoveAlertLine"] = "{device} keeps what it has, but gets nothing new from your other devices.",
