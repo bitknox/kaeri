@@ -186,6 +186,13 @@ The build goes to a Docker volume named after `CARGO_TARGET_DIR`, not to that fo
 lands there. `desktop/linux/scripts/docker.sh --clean` deletes it, and `docker volume ls` lists
 them. Only what a command writes to `OUT` comes back to the host.
 
+The box links Debian's libmpv, which has no demuxer audio tap, so Settings says finding skip
+times is not available. To run on the patched libmpv a release carries, build it once with
+`desktop/linux/scripts/docker.sh desktop/linux/scripts/libmpv.sh`. It lands in
+`desktop/linux/.libmpv/current`, and from the next cargo build the app loads it from there
+(`desktop/linux/build.rs`). `KAERI_SYSTEM_LIBMPV=1` goes back to Debian's. The same works on a
+Linux machine of your own with the packages the Dockerfile lists.
+
 `--features fixtures` builds in the test kit's scene: a fake AniList on loopback, made-up titles
 and a watch history, under a data directory of its own. The app then takes `--fixtures`, and
 `shots.sh` has it screenshot its own pages at the brief's three sizes into `OUT`. `SIZES` picks

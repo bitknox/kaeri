@@ -273,6 +273,11 @@ player-skip-paused-battery-saver = Paused while battery saver is on.
 player-skip-paused-energy-saver = Paused while energy saver is on.
 player-skip-paused-power-saver = Paused while power saver is on.
 player-skip-paused-storage = Paused until 2 GB of storage is free.
+
+# Skip times panel and Settings: finding skip times from the audio can't run, because this
+# copy of the app has a video player that can't hand its audio over, such as a Linux build
+# using the system's own player library.
+player-skip-unavailable = Not available in this build of { -app-name }.
 player-skip-none = None yet
 
 # Skip times panel: removes your own mark.

@@ -125629,6 +125629,18 @@
         }
       }
     },
+    "player-skip-unavailable" : {
+      "comment" : "Skip times panel and Settings: finding skip times from the audio can't run, because this copy of the app has a video player that can't hand its audio over, such as a Linux build using the system's own player library.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not available in this build of Kaeri."
+          }
+        }
+      }
+    },
     "player-skip-wrong" : {
       "comment" : "Note after Undo on AniSkip times. $kind is in lower case: opening, ending or recap. Argument 1: kind (Text).",
       "extractionState" : "manual",

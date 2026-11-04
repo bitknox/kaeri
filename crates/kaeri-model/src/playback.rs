@@ -318,8 +318,8 @@ pub fn found_skip_scene(state: FoundSkipFixture) -> FoundSkipScene {
     state.scene()
 }
 
-/// Why finding skip times from the audio is paused: the line under its Settings row and in the
-/// Skip times panel. The player says nothing of it.
+/// Why finding skip times from the audio is paused, or can't run at all: the line under its
+/// Settings row and in the Skip times panel. The player says nothing of it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
 pub enum SkipFindPause {
@@ -329,6 +329,11 @@ pub enum SkipFindPause {
     LowPower,
     /// Under 2 GB of storage is free: "Paused until 2 GB of storage is free."
     Storage,
+    /// The player can't hand its audio over: its libmpv has no demuxer audio tap, as a
+    /// distribution's libmpv under a Linux build, or the app has not given it the engine's
+    /// callback. "Not available in this build of Kaeri." Finding never runs, and nothing else
+    /// changes: playback, AniSkip and marking work as they do with the setting off.
+    Unavailable,
 }
 
 /// A made-up state of found skip times, for an app's previews, screenshots and tests: one for

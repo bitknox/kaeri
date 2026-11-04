@@ -3,23 +3,25 @@
 #
 #   powershell -File desktop/windows/scripts/libmpv.ps1 [-Arch arm64|x64]
 #
-# mpv's own releases (v0.41.0) ship mpv.exe linked statically, with no libmpv DLL. libmpv for
-# Windows comes only from mpv's "development build" pre-release (tag git-release), which mpv's CI
-# rebuilds and replaces every few hours, so old files vanish. The two zips are therefore mirrored,
-# unmodified, on our own pre-release `deps-libmpv` (never the latest release).
-# To bump: download the new zips from mpv's git-release, upload them as new assets on the
-# deps-libmpv release (gh release upload deps-libmpv <zip>), then change $build and the two SHA-256
-# values below. Leave the old assets in place so older commits still build.
+# The zips are Kaeri's own LGPL builds, with Kaeri's mpv patches (the demuxer audio tap among
+# them), made by .github/workflows/libmpv-windows.yml with libmpv-build.sh and kept on the
+# pre-release `deps-libmpv` (never the latest release) beside the source they were built from.
+# A change to what the build is made from runs that workflow, which builds, checks and uploads
+# the new zips, prints their SHA-256 values and fails until $build and the two values below name
+# them. Old assets stay so older commits still build.
 # docs/desktop-windows-build.md says why the LGPL build.
 param([ValidateSet('arm64', 'x64')][string]$Arch = 'arm64')
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 
-$build = 'v0.41.0-dev-g703e59b0e-40117195812'
+$build = 'v0.41.0-kaeri-9f2ab280214a'
 $pins = @{
-  arm64 = @{ name = "libmpv-$build-aarch64-w64-mingw32-lgpl.zip"; sha256 = '7f5f029d8bfb2a28e72646dc3aa893ef2399e4e13986aea20abeecd1ddf42bea' }
-  x64   = @{ name = "libmpv-$build-x86_64-w64-mingw32-lgpl.zip"; sha256 = '4c9d0e3ff428cb12483d0d27736a17d7e14d161024052f526e90f447ef20b452' }
+  arm64 = @{ name = "libmpv-$build-aarch64-w64-mingw32-lgpl.zip"; sha256 = '229c2556e75fd12b9effb80ae0fd2bd824000655232b2f57f83b42c525465e8c' }
+  x64   = @{ name = "libmpv-$build-x86_64-w64-mingw32-lgpl.zip"; sha256 = 'd27f8fd5ab87b9770bcb80d169281287fabdfd3ac0b8c9d346ac40cf4df6a82c' }
 }
+# The source of this build (libmpv-$build-sources.tar on deps-libmpv), which
+# packaging/apps/sources.sh puts beside a release.
+$sources = 'adcec2968c1494c2b9170eb06dac0450e3c53f85250eaaff9829b5370334488f'
 $pin = $pins[$Arch]
 $url = "https://github.com/bitknox/kaeri/releases/download/deps-libmpv/$($pin.name)"
 

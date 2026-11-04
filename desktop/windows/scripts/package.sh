@@ -81,17 +81,20 @@ notices="$work/third-party"
 mkdir -p "$notices/libmpv"
 cp "$root/LICENSE" "$notices/LICENSE-kaeri.txt"
 cp "$windows/.libmpv/$arch/LICENSE.LGPL" "$notices/libmpv/LICENSE.LGPL"
+cp "$windows/.libmpv/$arch/BUILD.txt" "$notices/libmpv/BUILD.txt" || fail "libmpv.ps1's zip has no BUILD.txt"
 build="$(sed -n "s/^\$build = '\(.*\)'$/\1/p" "$windows/scripts/libmpv.ps1")"
 [[ -n "$build" ]] || fail "found no libmpv build in libmpv.ps1"
 cat >"$notices/libmpv/README.txt" <<EOF
-libmpv-2.dll is mpv's own LGPL build for Windows, $build, from mpv's development
-builds (https://github.com/mpv-player/mpv/releases/tag/git-release), made by
-https://github.com/shinchiro/mpv-winbuild-cmake. It is mpv without its GPL parts and FFmpeg
-without --enable-gpl, with the libraries beneath them linked into the one DLL, which the app loads
-as a library of its own and which can be replaced with one built from modified sources. The
-build's version names mpv's commit (after the g). kaeri keeps the zip, unmodified, on its
-deps-libmpv release: https://github.com/bitknox/kaeri/releases/tag/deps-libmpv
-LICENSE.LGPL is mpv's licence as the build ships it.
+libmpv-2.dll is kaeri's LGPL build of mpv for Windows, $build, made the way mpv's own
+development builds are: mpv's ci/build-mingw64-full.sh in FFmpeg-Builds' LGPL image, by
+desktop/windows/scripts/libmpv-build.sh in kaeri's repository, with kaeri's patches to mpv. It
+is mpv without its GPL parts and FFmpeg without --enable-gpl, with the libraries beneath them
+linked into the one DLL, which the app loads as a library of its own and which can be replaced
+with one built from modified sources. The zip and libmpv-$build-sources.tar, everything it was
+built from, are on kaeri's deps-libmpv release:
+https://github.com/bitknox/kaeri/releases/tag/deps-libmpv
+LICENSE.LGPL is mpv's licence as the build ships it. BUILD.txt names each source and the
+configuration it was built with.
 EOF
 cp "$root"/assets/mpv/licenses/* "$root/assets/shaders/THIRD-PARTY.md" "$root"/assets/shaders/LICENSE-* "$root/assets/flags/LICENSE-flag-icons" "$notices/"
 # The Windows App SDK's licence, from the package the app was built with.

@@ -4367,6 +4367,9 @@ public static partial class T
 
     public static string PlayerSkipPausedStorage => Get("PlayerSkipPausedStorage");
 
+    /// <summary>Skip times panel and Settings: finding skip times from the audio can't run, because this copy of the app has a video player that can't hand its audio over, such as a Linux build using the system's own player library.</summary>
+    public static string PlayerSkipUnavailable => Get("PlayerSkipUnavailable");
+
     public static string PlayerSkipNone => Get("PlayerSkipNone");
 
     /// <summary>Skip times panel: removes your own mark.</summary>
@@ -9101,6 +9104,7 @@ public static partial class T
         ["PlayerSkipPausedEnergySaver"] = "Paused while energy saver is on.",
         ["PlayerSkipPausedPowerSaver"] = "Paused while power saver is on.",
         ["PlayerSkipPausedStorage"] = "Paused until 2 GB of storage is free.",
+        ["PlayerSkipUnavailable"] = "Not available in this build of Kaeri.",
         ["PlayerSkipNone"] = "None yet",
         ["PlayerSkipClear"] = "Clear",
         ["PlayerResumedAt"] = "Resumed at {clock}",

@@ -6029,6 +6029,10 @@
   <data name="PlayerSkipPausedStorage" xml:space="preserve">
     <value>Paused until 2 GB of storage is free.</value>
   </data>
+  <data name="PlayerSkipUnavailable" xml:space="preserve">
+    <value>Not available in this build of Kaeri.</value>
+    <comment>Skip times panel and Settings: finding skip times from the audio can't run, because this copy of the app has a video player that can't hand its audio over, such as a Linux build using the system's own player library.</comment>
+  </data>
   <data name="PlayerSkipNone" xml:space="preserve">
     <value>None yet</value>
   </data>

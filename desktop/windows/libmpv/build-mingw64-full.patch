@@ -1,0 +1,92 @@
+mpv's ci/build-mingw64-full.sh, which makes mpv's own Windows development builds, changed for
+mpv v0.41.0 and for pinned sources. desktop/windows/scripts/libmpv-build.sh fetches the script
+at mpv commit 703e59b0e by its SHA-256 and applies this to it.
+
+- FFmpeg is the release archive the image is made for (Android's pin, n9.0.2), not master.
+- LuaJIT and libsixel are archives at pinned commits, and mujs is a pinned wrap, all put in
+  place before the script runs, instead of the newest each time.
+- No subrandr, AMF or libcurl: features added after v0.41.0, which has no options for them.
+- No --werror. mpv v0.41.0 predates the images' compilers, and mpv fixed their newer warnings
+  after the release. libmpv-build.sh also applies desktop/windows/libmpv/mpv/, fixes from mpv's
+  master for this toolchain.
+- No VapourSynth. v0.41.0 links its VSScript library at build time, which the images do not
+  carry; the development builds' newer mpv loads it as it runs. The filter only works with a
+  VapourSynth installation of one's own, which the app does not use.
+
+Everything else is mpv's: the image's toolchain and static libraries, FFmpeg's configure line,
+LuaJIT, libsixel, C++/WinRT for win32-smtc, mpv's meson options, the strip and the packaging.
+
+--- a/ci/build-mingw64-full.sh
++++ b/ci/build-mingw64-full.sh
+@@ -17,6 +17,9 @@
+ : "${VARIANT:?not running in a FFmpeg-Builds image}"
+ 
+ . ./ci/build-common.sh
++# Kaeri: no --werror. mpv v0.41.0 predates the images' compilers, whose newer warnings mpv fixed
++# after the release.
++common_args="${common_args/--werror/}"
+ 
+ # The dependency headers are not ours to fix, keep --werror to mpv's own code.
+ CFLAGS="${CFLAGS/-I${FFBUILD_PREFIX}\/include/-isystem${FFBUILD_PREFIX}/include}"
+@@ -30,7 +33,8 @@
+ endgroup() { echo "::endgroup::"; }
+ 
+ group "Building FFmpeg"
+-$gitclone https://github.com/FFmpeg/FFmpeg.git ffmpeg
++# Kaeri: FFmpeg is the release archive desktop/windows/scripts/libmpv-build.sh unpacked into
++# ./ffmpeg, the release the image is made for, not master.
+ pushd ffmpeg
+ # rav1e and librsvg bring their own Rust runtime, which clashes with subrandr's.
+ ./configure --prefix="$FFBUILD_PREFIX" --pkg-config-flags="--static" \
+@@ -47,7 +51,8 @@
+ endgroup
+ 
+ group "Building LuaJIT"
+-$gitclone -b v2.1 https://github.com/LuaJIT/LuaJIT.git
++# Kaeri: LuaJIT, libsixel and the mujs wrap are in place already, at the commits and the
++# release libmpv-build.sh pins.
+ pushd LuaJIT
+ # Strip -ldl, not needed for Windows.
+ sed -i "/^Libs\.private/d" etc/luajit.pc
+@@ -60,7 +65,6 @@
+ endgroup
+ 
+ group "Building libsixel"
+-$gitclone https://github.com/saitoha/libsixel.git
+ pushd libsixel
+ ./configure --prefix="$FFBUILD_PREFIX" --host="$FFBUILD_TOOLCHAIN" --disable-shared \
+             --disable-{img2sixel,sixel2png,python} --without-{jpeg,libcurl,png}
+@@ -69,10 +73,7 @@
+ popd
+ endgroup
+ 
+-group "Building subrandr"
+-build_subrandr "$FFBUILD_PREFIX" --target "$FFBUILD_RUST_TARGET" \
+-               --static-library true --shared-library false
+-endgroup
++# Kaeri: no subrandr, which mpv v0.41.0 has no option for.
+ 
+ group "Building cppwinrt"
+ # win32-smtc needs the C++/WinRT projection headers, generated from the
+@@ -96,7 +97,6 @@
+ 
+ group "Building mpv"
+ mkdir -p subprojects
+-meson wrap install mujs
+ meson subprojects download
+ 
+ mpv_args=(
+@@ -111,8 +111,11 @@
+     -Dmujs:werror=false
+     -Dmujs:default_library=static
+     -Dlua=luajit
+-    -D{amf,d3d11,javascript,lcms2,libbluray,libcurl,shaderc,sixel}=enabled
+-    -D{spirv-cross,subrandr,vapoursynth,vulkan,win32-smtc,zimg}=enabled
++    # Kaeri: without amf, libcurl and subrandr, which mpv v0.41.0 has no options for, and
++    # without VapourSynth, which v0.41.0 links at build time and the images do not carry.
++    -D{d3d11,javascript,lcms2,libbluray,shaderc,sixel}=enabled
++    -D{spirv-cross,vulkan,win32-smtc,zimg}=enabled
++    -Dvapoursynth=disabled
+ )
+ if $gpl; then
+     # Only the GPL image carries the dependencies of the GPL features.

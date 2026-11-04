@@ -3400,6 +3400,8 @@
     <string name="player_skip_paused_energy_saver">Paused while energy saver is on.</string>
     <string name="player_skip_paused_power_saver">Paused while power saver is on.</string>
     <string name="player_skip_paused_storage">Paused until 2 GB of storage is free.</string>
+    <!-- Skip times panel and Settings: finding skip times from the audio can't run, because this copy of the app has a video player that can't hand its audio over, such as a Linux build using the system's own player library. -->
+    <string name="player_skip_unavailable">Not available in this build of Kaeri.</string>
     <string name="player_skip_none">None yet</string>
     <!-- Skip times panel: removes your own mark. -->
     <string name="player_skip_clear">Clear</string>
