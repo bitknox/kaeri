@@ -55,7 +55,9 @@ public sealed class EngineSession : IDisposable
         MalClientId: signIn ? MalClient : null,
         SimklClientId: SimklClient,
         TraktClientId: TraktClient,
-        Language: T.Language);
+        Language: T.Language,
+        // Kaeri's own libmpv hands its audio over for finding skip times; another one put in its place may not.
+        AudioTap: KaeriFfiMethods.PlayerAudioTap());
 
     /// <summary>Kaeri's AniList client: implicit grant, redirecting to <c>kaeri://auth/anilist</c>.</summary>
     public const string AnilistClient = "54537";

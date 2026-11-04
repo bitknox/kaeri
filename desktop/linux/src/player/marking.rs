@@ -9,8 +9,8 @@ use kaeri_i18n::t;
 use kaeri_model::{
     command::PlayerCommand,
     playback::{
-        SkipEdge, SkipKind, SkipMarkCheck, SkipMarkNote, SkipMarkStep, SkipMarkView,
-        SkipNotice, SkipOrigin, SkipPrompt,
+        SkipEdge, SkipFindPause, SkipKind, SkipMarkCheck, SkipMarkNote, SkipMarkStep,
+        SkipMarkView, SkipNotice, SkipOrigin, SkipPrompt,
     },
 };
 
@@ -86,6 +86,15 @@ pub fn notice_text(notice: &SkipNotice) -> String {
 
 /// A button for the bar and the prompts: 34 px tall, a pill, amber when it is the next thing to
 /// do.
+/// Why finding skip times is paused, in Linux's words.
+pub fn skip_find_line(pause: SkipFindPause) -> String {
+    match pause {
+        SkipFindPause::LowPower => t::player_skip_paused_power_saver(),
+        SkipFindPause::Storage => t::player_skip_paused_storage(),
+        SkipFindPause::Unavailable => t::player_skip_unavailable(),
+    }
+}
+
 fn pill(text: &str, suggested: bool) -> gtk::Button {
     let button = gtk::Button::with_label(text);
     button.add_css_class("pill");
@@ -325,15 +334,22 @@ impl PlayerView {
             }
             SkipMarkCheck::Fine => {}
         }
-        for n in &view.notes {
-            match n {
-                SkipMarkNote::Shares => note(t::player_mark_shares()),
+        // The notes are one label with a line break between them, as the board's note is: one
+        // tight block, not a paragraph each.
+        let lines: Vec<String> = view
+            .notes
+            .iter()
+            .map(|n| match n {
+                SkipMarkNote::Shares => t::player_mark_shares(),
                 SkipMarkNote::Replaces { start, end } => {
-                    note(t::player_mark_replaces(&say::clock(*start), &say::clock(*end)));
+                    t::player_mark_replaces(&say::clock(*start), &say::clock(*end))
                 }
-                SkipMarkNote::NoEntry => note(t::player_mark_no_mal()),
-                SkipMarkNote::Found => note(t::player_mark_found()),
-            }
+                SkipMarkNote::NoEntry => t::player_mark_no_mal(),
+                SkipMarkNote::Found => t::player_mark_found(),
+            })
+            .collect();
+        if !lines.is_empty() {
+            note(lines.join("\n"));
         }
         let actions = gtk::Box::new(gtk::Orientation::Horizontal, 8);
         actions.set_margin_top(4);
@@ -413,12 +429,14 @@ impl PlayerView {
 
     fn build_prompt(&self, prompt: SkipPrompt) {
         let card = &self.ui.skip_prompt.widget;
-        while let Some(child) = card.first_child() {
-            card.remove(&child);
-        }
-        let (line, buttons): (String, Vec<PromptButton>) = match prompt {
+        // A found card's answer takes the question's place in the same card: the two crossfade.
+        let answer = matches!(prompt, SkipPrompt::FoundSaved { .. } | SkipPrompt::FoundNever)
+            && self.ui.skip_prompt.shown();
+        let (line, detail, buttons): (String, Option<String>, Vec<PromptButton>) = match prompt
+        {
             SkipPrompt::WasOpening { .. } => (
                 t::player_was_opening(),
+                None,
                 vec![
                     (
                         t::player_dont_ask_again(),
@@ -434,6 +452,7 @@ impl PlayerView {
             ),
             SkipPrompt::WrongTimes { kind } => (
                 t::player_skip_wrong(&kind_inline(kind)),
+                None,
                 vec![
                     (
                         t::player_skip_report(),
@@ -448,14 +467,11 @@ impl PlayerView {
                 ],
             ),
             SkipPrompt::FoundEdges { kind, episode } => (
-                format!(
-                    "{}\n{}",
-                    match kind {
-                        SkipKind::Ending => t::player_found_ask_ending(),
-                        _ => t::player_found_ask_opening(),
-                    },
-                    t::player_found_ask_share(episode.into())
-                ),
+                match kind {
+                    SkipKind::Ending => t::player_found_ask_ending(),
+                    _ => t::player_found_ask_opening(),
+                },
+                Some(t::player_found_ask_share(episode.into())),
                 vec![
                     (
                         t::player_dont_ask_again(),
@@ -475,38 +491,120 @@ impl PlayerView {
                 ],
             ),
             SkipPrompt::FoundSaved { episode, .. } => {
-                (t::player_found_saved(episode.into()), Vec::new())
+                (t::player_found_saved(episode.into()), None, Vec::new())
             }
-            SkipPrompt::FoundNever => (
-                format!("{}\n{}", t::player_found_never(), t::player_found_never_how()),
-                Vec::new(),
-            ),
+            SkipPrompt::FoundNever => {
+                (t::player_found_never(), Some(t::player_found_never_how()), Vec::new())
+            }
             SkipPrompt::Share => return,
         };
+        // The found times' card is two rows, the text and then the buttons, since three buttons
+        // and the question do not fit one.
+        let found = matches!(
+            prompt,
+            SkipPrompt::FoundEdges { .. }
+                | SkipPrompt::FoundSaved { .. }
+                | SkipPrompt::FoundNever
+        );
         // The found times' card is answered as it stands: the engine reads which card it was.
         let answered = matches!(prompt, SkipPrompt::FoundEdges { .. });
+        let page = gtk::Box::new(
+            if found { gtk::Orientation::Vertical } else { gtk::Orientation::Horizontal },
+            8,
+        );
+        let words = gtk::Box::new(gtk::Orientation::Vertical, 2);
+        words.set_valign(gtk::Align::Center);
+        words.set_hexpand(true);
         let label = gtk::Label::new(Some(&line));
-        label.set_valign(gtk::Align::Center);
         label.set_wrap(true);
-        label.set_max_width_chars(28);
         label.set_xalign(0.0);
-        card.append(&label);
-        for (text, suggested, act) in buttons {
+        if found {
+            if answered {
+                label.add_css_class("found-line");
+            }
+            label.set_width_chars(38);
+            label.set_max_width_chars(38);
+        } else {
+            label.set_max_width_chars(28);
+        }
+        words.append(&label);
+        if let Some(detail) = &detail {
+            let more = widgets::haze(detail, "found-detail");
+            more.set_width_chars(38);
+            more.set_max_width_chars(38);
+            words.append(&more);
+        }
+        page.append(&words);
+        let row = found.then(|| {
+            let row = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+            row.set_halign(gtk::Align::End);
+            row
+        });
+        for (n, (text, suggested, act)) in buttons.into_iter().enumerate() {
             let button = pill(&text, suggested);
+            if found && n == 0 {
+                button.add_css_class("flat");
+            }
             let weak = self.self_weak();
+            // Yes and Don't ask again stay up for the engine's answer; Adjust closes the card
+            // for the review.
+            let stays = answered && n != 1;
             button.connect_clicked(move |_| {
                 let Some(view) = weak.upgrade() else { return };
-                view.skip_prompt.set(None);
-                view.ui.skip_prompt.set(false);
-                if let Some(source) = view.prompt_timer.take() {
-                    source.remove();
+                if !stays {
+                    if let Some(source) = view.prompt_timer.take() {
+                        source.remove();
+                    }
+                    view.skip_prompt.set(None);
+                    view.ui.skip_prompt.set(false);
                 }
                 if !answered {
                     view.send(PlayerCommand::DismissSkipPrompt);
                 }
                 act(&view);
             });
-            card.append(&button);
+            match &row {
+                Some(row) => row.append(&button),
+                None => page.append(&button),
+            }
+        }
+        if let Some(row) = row {
+            page.append(&row);
+        }
+        // The card holds a stack, so that an answer can crossfade over the question.
+        let stack = match card.first_child().and_downcast::<gtk::Stack>() {
+            Some(stack) if answer => stack,
+            _ => {
+                while let Some(child) = card.first_child() {
+                    card.remove(&child);
+                }
+                let stack = gtk::Stack::new();
+                stack.set_hhomogeneous(false);
+                stack.set_vhomogeneous(false);
+                stack.set_interpolate_size(true);
+                card.append(&stack);
+                stack
+            }
+        };
+        stack.set_transition_type(if answer {
+            gtk::StackTransitionType::Crossfade
+        } else {
+            gtk::StackTransitionType::None
+        });
+        stack.set_transition_duration(300);
+        stack.add_child(&page);
+        stack.set_visible_child(&page);
+        if answer {
+            // The question leaves once the answer has covered it.
+            glib::timeout_add_local_once(Duration::from_millis(400), move || {
+                let mut child = stack.first_child();
+                while let Some(c) = child {
+                    child = c.next_sibling();
+                    if Some(&c) != stack.visible_child().as_ref() {
+                        stack.remove(&c);
+                    }
+                }
+            });
         }
     }
 
@@ -557,11 +655,26 @@ impl PlayerView {
                     _ => t::player_skip_from_file(),
                 },
             };
-            let subtitle = match found {
-                Some(m) => {
+            // Why nothing was found, when finding is paused: openings and endings only.
+            let paused = self
+                .ctx
+                .hub
+                .known
+                .borrow()
+                .settings
+                .as_ref()
+                .and_then(|v| v.skip_find_paused)
+                .filter(|p| {
+                    found.is_none()
+                        && kind != SkipKind::Recap
+                        && *p != SkipFindPause::Unavailable
+                });
+            let subtitle = match (found, paused) {
+                (Some(m), _) => {
                     format!("{}\u{2013}{} · {origin}", say::clock(m.start), say::clock(m.end)) // i18n-skip
                 }
-                None => origin,
+                (None, Some(pause)) => format!("{origin} · {}", skip_find_line(pause)), // i18n-skip
+                (None, None) => origin,
             };
             let row =
                 adw::ActionRow::builder().title(kind_name(kind)).subtitle(subtitle).build();
@@ -595,7 +708,10 @@ impl PlayerView {
                     _ => {}
                 }
             }
-            suffix(t::player_skip_mark(), Box::new(move |v| v.begin_marking(Some(kind))));
+            // A found row's Adjust edits it; the other rows offer a fresh mark.
+            if !matches!(found.and_then(|m| m.origin), Some(SkipOrigin::Found)) {
+                suffix(t::player_skip_mark(), Box::new(move |v| v.begin_marking(Some(kind))));
+            }
             list.append(&row);
         }
         let column = gtk::Box::new(gtk::Orientation::Vertical, 0);
@@ -664,5 +780,84 @@ impl PlayerView {
             },
         ]);
         self.show_skip_times();
+    }
+
+    /// For a shot: the card goes, as the engine takes it away.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_prompt_gone(&self) {
+        self.show_prompt(None);
+    }
+
+    /// For a shot: the review of a found stretch comes in, over what is on screen.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_review(&self, scene: kaeri_model::playback::FoundSkipScene) {
+        if let Some(mut view) = scene.mark {
+            view.start = view.start.map(|_| 10.0);
+            view.end = view.end.map(|_| 34.0);
+            view.length = 24.0;
+            self.skip_mark(Some(view));
+        }
+        self.wake();
+    }
+
+    /// For a shot: a found times' fixture state, its times moved into the shot's 60 s clip.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_found(&self, scene: kaeri_model::playback::FoundSkipScene) {
+        use kaeri_model::{hosted::PlayerUi, playback::TimelineMark};
+        // The fixture's times, 91 to 180 s and 1290 to 1379 s of a 1420 s episode, sit in the
+        // clip at 10 to 34 s and 44 to 58 s.
+        let anchors = [(0.0, 0.0), (91.0, 10.0), (180.0, 34.0), (1290.0, 44.0), (1379.0, 58.0)];
+        let into = |at: f64| {
+            let last = anchors[anchors.len() - 1];
+            if at >= last.0 {
+                return (last.1 + (at - last.0) * 2.0 / 41.0).min(60.0);
+            }
+            let n = anchors.iter().rposition(|a| a.0 <= at).unwrap_or(0);
+            let (a, b) = (anchors[n], anchors[n + 1]);
+            a.1 + (at - a.0) * (b.1 - a.1) / (b.0 - a.0)
+        };
+        self.shot_reset();
+        // Paused, nothing has been found yet: the panel's rows say why.
+        if let Some(view) = self.ctx.hub.known.borrow_mut().settings.as_mut() {
+            view.skip_find_paused = scene.paused;
+        }
+        let nothing_yet = scene.paused.is_some();
+        let marks: Vec<TimelineMark> = scene
+            .marks
+            .iter()
+            .filter(|_| !nothing_yet)
+            .map(|m| TimelineMark { start: into(m.start), end: into(m.end), ..*m })
+            .collect();
+        self.timeline_marks.replace(marks.clone());
+        self.engine_marks.replace(Some(super::timeline::from_marks(&marks)));
+        self.show_marks(60.0);
+        for ui in &scene.ui {
+            match ui {
+                PlayerUi::Skip { kind, to } => {
+                    self.player_ui(&PlayerUi::Skip { kind: *kind, to: into(*to) })
+                }
+                PlayerUi::AutoSkipped { kind, undo_to } => self
+                    .player_ui(&PlayerUi::AutoSkipped { kind: *kind, undo_to: into(*undo_to) }),
+                other => self.player_ui(other),
+            }
+        }
+        if let Some(mut view) = scene.mark.clone() {
+            view.start = view.start.map(into);
+            view.end = view.end.map(into);
+            if let (Some(start), Some(end)) = (view.start, view.end) {
+                view.length = end - start;
+            }
+            self.skip_mark(Some(view));
+        }
+        if let Some(prompt) = scene.prompt {
+            self.prompt_held.set(true);
+            self.show_prompt(Some(prompt));
+        }
+        if scene.panel {
+            self.show_skip_times();
+        }
+        if scene.controls || scene.mark.is_some() {
+            self.wake();
+        }
     }
 }

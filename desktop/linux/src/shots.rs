@@ -194,6 +194,24 @@ pub const CAST: [&str; 15] = [
     "torrents-on",
 ];
 
+/// The found skip times shots, one for each state of the engine's fixtures: `--shot found`
+/// takes them.
+pub const FOUND: [&str; 13] = [
+    "found-skip",
+    "found-controls",
+    "found-prompt",
+    "found-saved",
+    "found-never",
+    "found-review",
+    "found-nudged",
+    "found-undo",
+    "found-panel",
+    "found-panel-paused",
+    "found-set-on",
+    "found-set-low-power",
+    "found-set-storage",
+];
+
 /// The skip times shots, apart from the rest: `--shot skips` takes them.
 pub const SKIPS: [&str; 13] = [
     "skip-start",
@@ -398,6 +416,7 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
             }
             5.5
         }
+        motion if motion.starts_with("motion-found-") => found_motion(shell, motion),
         "motion-dismiss" => {
             shell.go(Dest::Home);
             // The first card of the last suggestion shelf, so the cards after it close the gap.
@@ -1138,6 +1157,7 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
             9.0
         }
         skip if skip.starts_with("skip-") => skip_stage(shell, skip),
+        found if found.starts_with("found-") => found_stage(shell, found),
         "mini" => {
             play(shell);
             let player = Rc::clone(&shell.player);
@@ -1848,6 +1868,7 @@ pub fn named(list: Option<&str>) -> Vec<String> {
             .flat_map(|s| match s {
                 "party" => PARTY.iter().map(|p| (*p).to_owned()).collect(),
                 "skips" => SKIPS.iter().map(|p| (*p).to_owned()).collect(),
+                "found" => FOUND.iter().map(|p| (*p).to_owned()).collect(),
                 "sources" => SOURCES.iter().map(|p| (*p).to_owned()).collect(),
                 "lawful" => LAWFUL.iter().map(|p| (*p).to_owned()).collect(),
                 "pad" => PAD.iter().map(|p| (*p).to_owned()).collect(),
@@ -3555,6 +3576,207 @@ fn skip_stage(shell: &Rc<Shell>, name: &str) -> f64 {
         _ => {}
     });
     11.0
+}
+
+/// The found skip times shots: the player or Settings in one of the engine's fixture states.
+#[cfg(feature = "fixtures")]
+fn found_stage(shell: &Rc<Shell>, name: &str) -> f64 {
+    use kaeri_model::playback::{FoundSkipFixture as F, found_skip_scene};
+    let state = match name {
+        "found-skip" => F::Skip,
+        "found-controls" => F::Controls,
+        "found-prompt" => F::Prompt,
+        "found-saved" => F::Saved,
+        "found-never" => F::Never,
+        "found-review" => F::Review,
+        "found-nudged" => F::Nudged,
+        "found-undo" => F::Undo,
+        "found-panel" => F::Panel,
+        "found-panel-paused" => F::PanelPaused,
+        "found-set-on" => F::SettingsOn,
+        "found-set-low-power" => F::SettingsLowPower,
+        _ => F::SettingsStorage,
+    };
+    let scene = found_skip_scene(state);
+    if scene.settings {
+        // The engine says why finding is paused with its Settings: say it as the fixture does.
+        if let Some(view) = shell.ctx.hub.known.borrow_mut().settings.as_mut() {
+            view.skip_find_paused = scene.paused;
+        }
+        shell.player.shot_reset();
+        shell.player.close();
+        shell.settings_pane("playback");
+        // The page builds its rows from the engine's Settings: send them as they now stand.
+        let view = shell.ctx.hub.known.borrow().settings.clone();
+        if let Some(view) = view {
+            shell.ctx.hub.take(vec![kaeri_model::event::Event::Settings(view)]);
+        }
+        let window = shell.ctx.window.clone();
+        glib::timeout_add_local_once(Duration::from_millis(900), move || {
+            reveal_row(window.upcast_ref(), &kaeri_i18n::t::settings_find_skips());
+        });
+        return 2.8;
+    }
+    shell.player.shot_reset();
+    play(shell);
+    let player = Rc::clone(&shell.player);
+    glib::timeout_add_local_once(Duration::from_millis(8000), move || player.shot_found(scene));
+    11.0
+}
+
+/// The found skip times' motion, for a recording of the screen: the card comes in over the video
+/// and answers by crossfading in place (`yes`, `never`), Adjust closes it for the review
+/// (`adjust`), and Settings' paused line opens and closes (`settings`).
+#[cfg(feature = "fixtures")]
+fn found_motion(shell: &Rc<Shell>, name: &str) -> f64 {
+    use kaeri_model::playback::{
+        FoundSkipFixture as F, SkipFindPause, SkipKind, SkipPrompt, found_skip_scene,
+    };
+    let at = |millis: u64, step: Box<dyn Fn() + 'static>| {
+        glib::timeout_add_local_once(Duration::from_millis(millis), step);
+    };
+    if name == "motion-found-settings" {
+        shell.settings_pane("playback");
+        let (hub, window) = (Rc::clone(&shell.ctx.hub), shell.ctx.window.clone());
+        // The row in the middle of the page, again after each time the engine's Settings
+        // rebuild the page.
+        for millis in [600, 1800, 4800] {
+            at(
+                millis,
+                Box::new({
+                    let window = window.clone();
+                    move || {
+                        reveal_row(window.upcast_ref(), &kaeri_i18n::t::settings_find_skips())
+                    }
+                }),
+            );
+        }
+        for (millis, pause) in [(1500, Some(SkipFindPause::LowPower)), (4500, None)] {
+            let hub = Rc::clone(&hub);
+            at(
+                millis,
+                Box::new(move || {
+                    let mut view = hub.known.borrow().settings.clone();
+                    if let Some(view) = view.as_mut() {
+                        view.skip_find_paused = pause;
+                    }
+                    if let Some(view) = view {
+                        hub.take(vec![kaeri_model::event::Event::Settings(view)]);
+                    }
+                }),
+            );
+        }
+        return 7.0;
+    }
+    shell.player.shot_reset();
+    play(shell);
+    let player = Rc::clone(&shell.player);
+    // The player takes a few seconds to come up: the script starts after them, as found_stage's does.
+    const START: u64 = 14000;
+    let (kind, episode) = (SkipKind::Opening, 3);
+    // The card lands 3 s after a skip; the recording starts as the clip does.
+    at(START + 1500, {
+        let player = Rc::clone(&player);
+        Box::new(move || {
+            // The Prompt scene: the card's question over the video, no Skip button beside it.
+            player.shot_found(found_skip_scene(F::Prompt));
+        })
+    });
+    match name {
+        "motion-found-yes" => {
+            at(START + 4500, {
+                let player = Rc::clone(&player);
+                Box::new(move || player.shot_prompt(SkipPrompt::FoundSaved { kind, episode }))
+            });
+            at(START + 8800, {
+                let player = Rc::clone(&player);
+                Box::new(move || player.shot_prompt_gone())
+            });
+        }
+        "motion-found-never" => {
+            at(START + 4500, {
+                let player = Rc::clone(&player);
+                Box::new(move || player.shot_prompt(SkipPrompt::FoundNever))
+            });
+            at(START + 8800, {
+                let player = Rc::clone(&player);
+                Box::new(move || player.shot_prompt_gone())
+            });
+        }
+        _ => {
+            // Adjust: the card goes and the review comes in with the found stretch.
+            at(START + 4000, {
+                let (player, window) = (Rc::clone(&player), shell.ctx.window.clone());
+                Box::new(move || {
+                    if let Some(button) = button_labelled(
+                        window.upcast_ref(),
+                        &kaeri_i18n::t::player_found_adjust(),
+                    ) {
+                        button.emit_clicked();
+                    }
+                    player.shot_review(found_skip_scene(F::Review));
+                })
+            });
+        }
+    }
+    25.0
+}
+
+/// Scrolls the row with this title into the middle of its page, as a viewer's own scrolling
+/// would: focusing a row alone leaves it at the page's edge.
+#[cfg(feature = "fixtures")]
+fn reveal_row(window: &gtk::Widget, title: &str) {
+    let Some(row) = row_titled(window, title) else { return };
+    // Focus brings the row into view first; then the scroller puts it in the page's middle.
+    row.grab_focus();
+    let mut parent = row.parent();
+    while let Some(widget) = parent {
+        if let Some(scroller) = widget.downcast_ref::<gtk::ScrolledWindow>() {
+            let scroller = scroller.clone();
+            glib::timeout_add_local_once(Duration::from_millis(600), move || {
+                let Some(viewport) = scroller.child() else { return };
+                // Measured against the scrolled content, not the viewport that moves over it.
+                let content = viewport
+                    .downcast_ref::<gtk::Viewport>()
+                    .and_then(gtk::Viewport::child)
+                    .unwrap_or(viewport);
+                let Some(bounds) = row.compute_bounds(&content) else { return };
+                let adjustment = scroller.vadjustment();
+                let middle = f64::from(bounds.y()) + f64::from(bounds.height()) / 2.0;
+                adjustment.set_value(middle - adjustment.page_size() / 2.0);
+            });
+            return;
+        }
+        parent = widget.parent();
+    }
+}
+
+/// The preferences row on the page on screen with this title.
+#[cfg(feature = "fixtures")]
+fn row_titled(widget: &gtk::Widget, title: &str) -> Option<adw::PreferencesRow> {
+    if let Some(row) = widget.downcast_ref::<adw::PreferencesRow>()
+        && row.title() == title
+    {
+        return Some(row.clone());
+    }
+    let mut child = widget.first_child();
+    while let Some(next) = child {
+        if let Some(found) = row_titled(&next, title) {
+            return Some(found);
+        }
+        child = next.next_sibling();
+    }
+    None
+}
+
+#[cfg(not(feature = "fixtures"))]
+fn found_stage(_: &Rc<Shell>, _: &str) -> f64 {
+    0.0
+}
+
+#[cfg(not(feature = "fixtures"))]
+fn found_motion(_: &Rc<Shell>, _: &str) -> f64 {
+    0.0
 }
 
 #[cfg(not(feature = "fixtures"))]

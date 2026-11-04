@@ -114,6 +114,15 @@ public sealed partial class MainWindow : Window
         };
         ctx = new Ctx { Session = session, Art = art, Window = this, Options = options, Updater = updater, Tv = tv };
         Ctx.Current = ctx;
+#if KAERI_TESTING
+        // The found skip times' shots: finding paused as a fixture says, whatever this machine does.
+        session.Known.ForcedPause = options.Show switch
+        {
+            "found-set-low-power" or "found-panel-paused" => SkipFindPause.LowPower,
+            "found-set-storage" => SkipFindPause.Storage,
+            _ => null,
+        };
+#endif
         // A fixture run has no trailers of its own; the testing build gives most titles a made-up one.
         session.Known.FixtureTrailers = options.Fixture;
         session.Batch += batch =>

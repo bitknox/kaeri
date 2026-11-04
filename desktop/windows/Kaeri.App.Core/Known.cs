@@ -36,6 +36,12 @@ public sealed class Known
     /// <summary>Each show's own settings sheet, as the engine last sent it, by AniList id.</summary>
     public Dictionary<uint, ShowSettingsView> ShowSheets { get; } = [];
 
+    /// <summary>Testing builds: a reason finding skip times is paused to say, whatever the engine does.</summary>
+    public SkipFindPause? ForcedPause { get; set; }
+
+    /// <summary>Why finding skip times from the audio is paused or can't run, as the engine last said.</summary>
+    public SkipFindPause? SkipFindPaused => ForcedPause ?? Settings?.SkipFindPaused;
+
     /// <summary>Play the demo was pressed and the player has not opened yet: the starting screen is the demo's.</summary>
     public bool DemoPlay { get; set; }
 

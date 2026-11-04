@@ -52,7 +52,7 @@ public sealed partial class SettingsPage : Page
             // head the pane on their own.
             ("language", [K.Titles, K.Trailers]),
             ("watching", [K.Translation, K.Quality, K.Subtitles, K.CommitThreshold]),
-            ("player", [K.AutoNext, K.UpNextCountdown, K.SkipOpening, K.SkipRecap, K.SkipFiller, K.MarkChapters, K.SkipButton, K.AskWasOpening, K.ShareSkipTimes, K.Fullscreen]),
+            ("player", [K.AutoNext, K.UpNextCountdown, K.SkipOpening, K.SkipRecap, K.SkipFiller, K.MarkChapters, K.SkipButton, K.FindSkipTimes, K.AskWasOpening, K.ShareSkipTimes, K.Fullscreen]),
             ("picture", [K.Upscaling, K.NightMode, K.SpoilerProtection, K.Motion]),
             // Laid out by SubtitleSettings: the preview and its ten rows.
             ("subtitles", [K.SubtitleSize]),
@@ -117,6 +117,7 @@ public sealed partial class SettingsPage : Page
         K.SkipOpening => T.SettingsSkipOpening,
         K.SkipFiller => T.SettingsSkipFiller,
         K.SkipRecap => T.SettingsSkipRecap,
+        K.FindSkipTimes => T.SettingsFindSkips,
         K.AskWasOpening => T.SettingsAskWasOpening,
         K.ShareSkipTimes => T.SettingsShareSkips,
         K.MarkChapters => T.SettingsMarkOpening,
@@ -381,7 +382,12 @@ public sealed partial class SettingsPage : Page
                     if (group == "language")
                         Cards.Children.Add(LanguageCard());
                     foreach (var row in rows)
-                        Cards.Children.Add(Card(row));
+                    {
+                        var made = Card(row);
+                        if (row.Key == K.FindSkipTimes)
+                            findCard = made;
+                        Cards.Children.Add(made);
+                    }
                     // The engine answers with a toast of how many skip times it forgot.
                     if (pane.Name == "playback" && group == "player")
                     {
@@ -520,6 +526,20 @@ public sealed partial class SettingsPage : Page
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(toggle, T.SettingsHideChat);
         toggle.Toggled += (_, _) => ChatSetting.Set(toggle.IsOn);
         return CardFrame(T.SettingsHideChat, T.SettingsHideChatLine, toggle);
+    }
+
+    /// <summary>A card's description with the reason a feature is paused under it, in the text colour.</summary>
+    static StackPanel PausedLine(string detail, string reason)
+    {
+        var lines = new StackPanel { Spacing = 2 };
+        lines.Children.Add(new TextBlock { Text = detail, TextWrapping = TextWrapping.WrapWholeWords });
+        var why = new TextBlock
+        {
+            Text = reason, TextWrapping = TextWrapping.WrapWholeWords, Name = "PausedLine",
+            Foreground = (Brush)Application.Current.Resources["TextFillColorPrimaryBrush"],
+        };
+        lines.Children.Add(why);
+        return lines;
     }
 
     static SettingsCard CardFrame(string title, string? description, FrameworkElement? control, string? glyph = null)
@@ -744,6 +764,7 @@ public sealed partial class SettingsPage : Page
 
     // The Chromecast switch under Play on TV, for the testing build to scroll to.
     FrameworkElement? castCard;
+    FrameworkElement? findCard;
 
 #if KAERI_TESTING
     bool demoed;
@@ -765,6 +786,14 @@ public sealed partial class SettingsPage : Page
             demoed = true;
             await Task.Delay(800);
             cast.StartBringIntoView(new BringIntoViewOptions { VerticalAlignmentRatio = 0.6, AnimationDesired = false });
+            return;
+        }
+        // --show=found-set-*: Playback scrolled to Find skip times, for a screenshot.
+        if (!demoed && pane.Name == "playback" && ctx.Options.Show?.StartsWith("found-set-", StringComparison.Ordinal) == true && findCard is { } find)
+        {
+            demoed = true;
+            await Task.Delay(800);
+            find.StartBringIntoView(new BringIntoViewOptions { VerticalAlignmentRatio = 0.5, AnimationDesired = false });
             return;
         }
         if (demoed || pane.Name != "sources" || ctx.Options.Show is not { } show || !show.StartsWith("torrent", StringComparison.Ordinal))
@@ -849,6 +878,15 @@ public sealed partial class SettingsPage : Page
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(guardCard, T.SettingsCardCheck(T.TorrentsLastCheck, word, note ?? ""));
     }
 
+    /// <summary>Why finding skip times is paused, by Windows' name for power saving, or null while it runs. Unavailable says it can't run in this build.</summary>
+    internal static string? FindSkipsPause(SkipFindPause? paused) => paused switch
+    {
+        SkipFindPause.LowPower => T.PlayerSkipPausedEnergySaver,
+        SkipFindPause.Storage => T.PlayerSkipPausedStorage,
+        SkipFindPause.Unavailable => T.PlayerSkipUnavailable,
+        _ => null,
+    };
+
     FrameworkElement Card(SettingRow row)
     {
         var title = Title(row.Key);
@@ -860,6 +898,8 @@ public sealed partial class SettingsPage : Page
             description = T.SettingsPresenceRichDetail(KaeriFfiMethods.TrackerName("anilist"));
         if (row.Key == K.UpdateBeta)
             description = T.UpdatesBetaDetail;
+        if (row.Key == K.FindSkipTimes)
+            description = ctx.Known.SkipFindPaused == SkipFindPause.Unavailable ? T.PlayerSkipUnavailable : T.SettingsFindSkipsDetail;
         if (row.Key == K.AskWasOpening)
             description = T.SettingsAskWasOpeningDetail;
         if (row.Key == K.ShareSkipTimes)
@@ -926,6 +966,10 @@ public sealed partial class SettingsPage : Page
                 break;
         }
         var card = CardFrame(title, description, control);
+        // Paused by a power saving mode or low storage: the reason joins the line, in the text colour.
+        if (row.Key == K.FindSkipTimes && ctx.Known.SkipFindPaused is SkipFindPause.LowPower or SkipFindPause.Storage
+            && FindSkipsPause(ctx.Known.SkipFindPaused) is { } why)
+            card.Description = PausedLine(description ?? "", why);
         // A row whose switch is off waits, greyed, as Windows Settings shows a dependent row.
         card.IsEnabled = SettingsCatalog.Needs(row.Key).All(k => SettingsCatalog.IsOn(ctx.Known.Setting(k)));
         return card;

@@ -1715,6 +1715,116 @@ public sealed partial class PlayerView : UserControl
     /// <c>stats-copied</c> or <c>stats-mini</c>; a <c>.srt</c> beside the clip is loaded for those and for
     /// <c>subtitles</c> and <c>subtitles-mini</c>.
     /// </summary>
+    /// <summary>A found skip times state from the engine's fixtures, as <c>--show=found-skip</c> and the rest: its marks, buttons, card, bar and panel over the playing clip, its times scaled to the clip's length.</summary>
+    async Task StageFound(string what)
+    {
+        var state = what switch
+        {
+            "found-skip" => FoundSkipFixture.Skip,
+            "found-controls" => FoundSkipFixture.Controls,
+            "found-prompt" => FoundSkipFixture.Prompt,
+            "found-saved" => FoundSkipFixture.Saved,
+            "found-never" => FoundSkipFixture.Never,
+            "found-review" => FoundSkipFixture.Review,
+            "found-nudged" => FoundSkipFixture.Nudged,
+            "found-undo" => FoundSkipFixture.Undo,
+            "found-panel" => FoundSkipFixture.Panel,
+            "found-panel-paused" => FoundSkipFixture.PanelPaused,
+            var motion when motion.StartsWith("found-motion-", StringComparison.Ordinal) => FoundSkipFixture.Prompt,
+            _ => FoundSkipFixture.SettingsOn,
+        };
+        var motionName = what.StartsWith("found-motion-", StringComparison.Ordinal) ? what["found-motion-".Length..] : null;
+        var scene = KaeriFfiMethods.FoundSkipScene(state);
+        if (scene.Settings)
+            return;
+        HoldUpNext = true;
+        upNext = null;
+        ShowUpNext();
+        // The fixture's times, 91 to 180 s and 1290 to 1379 s of a 1420 s episode, sit in the
+        // shot's 60 s clip at 10 to 34 s and 44 to 58 s.
+        (double At, double In)[] anchors = [(0, 0), (91, 10), (180, 34), (1290, 44), (1379, 58)];
+        double Into(double at)
+        {
+            if (at >= anchors[^1].At)
+                return Math.Min(60, anchors[^1].In + (at - anchors[^1].At) * 2 / 41);
+            var n = Array.FindLastIndex(anchors, a => a.At <= at);
+            var (a0, b0) = (anchors[n], anchors[n + 1]);
+            return a0.In + (at - a0.At) * (b0.In - a0.In) / (b0.At - a0.At);
+        }
+        var nothingYet = scene.Paused is not null;
+        timelineMarks = nothingYet ? [] : [.. scene.Marks.Select(m => new TimelineMark(m.Kind, Into(m.Start), Into(m.End), m.Origin))];
+        DrawTimeline();
+        foreach (var ui in scene.Ui)
+            Heard(ui switch
+            {
+                PlayerUi.Skip skip => new PlayerUi.Skip(skip.Kind, Into(skip.To)),
+                PlayerUi.AutoSkipped auto => new PlayerUi.AutoSkipped(auto.Kind, Into(auto.UndoTo)),
+                _ => ui,
+            });
+        // The Undo note stays up for the shot, as --show=undo's does.
+        if (undo is not null)
+        {
+            undo.Played = -600;
+            undo.Waited = -600;
+        }
+        if (scene.Mark is { } view)
+        {
+            marking = view with { Start = view.Start is { } vs ? Into(vs) : null, End = view.End is { } ve ? Into(ve) : null };
+            if (marking.Start is { } ms && marking.End is { } me)
+                marking = marking with { Length = me - ms };
+            DrawMarking();
+        }
+        if (scene.Prompt is { } card && motionName is null)
+        {
+            promptHeld = true;
+            ShowPrompt(card);
+        }
+        if (scene.Controls || scene.Mark is not null)
+            ShowControls();
+        if (scene.Panel)
+        {
+            await Task.Delay(300);
+            ShowSkipTimes();
+        }
+        if (motionName is not null && scene.Prompt is { } question)
+            await FoundMotion(motionName, question, Into);
+    }
+
+    /// <summary>
+    /// The found card's motion for a recording: the card comes in, then the engine's answer
+    /// replaces its question in place (<c>yes</c>, <c>never</c>), or Adjust closes it for the
+    /// review (<c>adjust</c>). It starts when the recording's script drops the go file.
+    /// </summary>
+    async Task FoundMotion(string name, SkipPrompt question, Func<double, double> into)
+    {
+        var go = Path.Combine(Path.GetTempPath(), "kaeri-motion-go");
+        while (!File.Exists(go))
+            await Task.Delay(40);
+        await Task.Delay(600);
+        promptHeld = false;
+        ShowPrompt(question);
+        await Task.Delay(2600);
+        switch (name)
+        {
+            case "yes":
+                ShowPrompt(KaeriFfiMethods.FoundSkipScene(FoundSkipFixture.Saved).Prompt);
+                break;
+            case "never":
+                ShowPrompt(KaeriFfiMethods.FoundSkipScene(FoundSkipFixture.Never).Prompt);
+                break;
+            case "adjust":
+                ShowPrompt(null);
+                if (KaeriFfiMethods.FoundSkipScene(FoundSkipFixture.Review).Mark is { } view)
+                {
+                    marking = view with { Start = view.Start is { } vs ? into(vs) : null, End = view.End is { } ve ? into(ve) : null };
+                    marking = marking with { Length = (marking.End ?? 0) - (marking.Start ?? 0) };
+                }
+                DrawMarking();
+                ShowControls();
+                break;
+        }
+    }
+
     async void Demo(string what)
     {
         await Task.Delay(1200);
@@ -1790,6 +1900,9 @@ public sealed partial class PlayerView : UserControl
                     && FrameworkElementAutomationPeer.CreatePeerForElement(sub)?.GetPattern(PatternInterface.ExpandCollapse)
                         is Microsoft.UI.Xaml.Automation.Provider.IExpandCollapseProvider peer)
                     peer.Expand();
+                break;
+            case var f when f.StartsWith("found-"):
+                await StageFound(f);
                 break;
             case var m when m.StartsWith("mark-"):
                 var fixture = m switch
