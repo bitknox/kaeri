@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using CommunityToolkit.WinUI.Controls;
@@ -262,7 +263,45 @@ public sealed partial class SettingsPage : Page
 
     static T Res<T>(string key) => (T)Application.Current.Resources[key];
 
+    /// <summary>The pane the cards were last made for.</summary>
+    string? shownPane;
+
+    /// <summary>
+    /// The pane's cards, made anew. For the same pane again, as after a setting changes, the page
+    /// stays where it was: the scroll offset, and the focus on the control of the same name. The
+    /// cards come and go within one frame, so nothing moves on screen.
+    /// </summary>
     void Show()
+    {
+        var same = shownPane == pane.Name;
+        var offset = CardScroll.VerticalOffset;
+        var focused = same && XamlRoot is not null ? FocusManager.GetFocusedElement(XamlRoot) as Control : null;
+        var focusName = focused is null ? null : AutomationProperties.GetName(focused);
+        var focusType = focused?.GetType();
+        Build();
+        shownPane = pane.Name;
+        if (!same)
+            return;
+        CardScroll.UpdateLayout();
+        CardScroll.ChangeView(null, offset, null, disableAnimation: true);
+        if (!string.IsNullOrEmpty(focusName) && Find(Cards, c => c.GetType() == focusType && AutomationProperties.GetName(c) == focusName) is { } again)
+            again.Focus(FocusState.Programmatic);
+    }
+
+    static Control? Find(DependencyObject under, Func<Control, bool> match)
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(under); i++)
+        {
+            var child = VisualTreeHelper.GetChild(under, i);
+            if (child is Control c && match(c))
+                return c;
+            if (Find(child, match) is { } found)
+                return found;
+        }
+        return null;
+    }
+
+    void Build()
     {
         quiet = true;
         Cards.Children.Clear();
@@ -357,7 +396,15 @@ public sealed partial class SettingsPage : Page
     /// </summary>
     void ShowHidden()
     {
-        ctx.Send(new Command.LoadHiddenTitles());
+        // Asked once as the pane opens; the engine's answer redraws it.
+        if (shownPane != "library")
+            ctx.Send(new Command.LoadHiddenTitles());
+        if (!ctx.Known.HiddenLoaded)
+        {
+            // Never "nothing hidden" before the engine has said: nothing for 600 ms, then plates.
+            State.Wait();
+            return;
+        }
         Cards.Children.Add(Heading(T.SettingsHiddenTitles));
         Cards.Children.Add(Note(T.SettingsHiddenTitlesBody));
         var hidden = ctx.Known.Hidden.Where(h => !ctx.Known.RestoredHere.Contains(h.Entry.Id)).ToArray();

@@ -16,7 +16,24 @@ public sealed partial class ServerPage : Page
     string id = "";
     bool quiet;
 
-    public ServerPage() => InitializeComponent();
+    public ServerPage()
+    {
+        InitializeComponent();
+        State.Placeholders = Placeholders;
+        // The saved servers are on this device.
+        State.NeedsConnection = false;
+    }
+
+    /// <summary>The server's name and line, Sign out, and its libraries as check rows, as plates.</summary>
+    static UIElement Placeholders()
+    {
+        var plates = new StackPanel { Spacing = 12 };
+        plates.Children.Add(States.Title(220));
+        plates.Children.Add(States.Plate(90, 32, 4));
+        plates.Children.Add(States.Heading());
+        plates.Children.Add(States.Rows(3, 20, 20, rowHeight: 44, spacing: 4));
+        return plates;
+    }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
@@ -39,6 +56,13 @@ public sealed partial class ServerPage : Page
     {
         quiet = true;
         Stack.Children.Clear();
+        if (!ctx.Known.ServersLoaded)
+        {
+            State.Wait();
+            quiet = false;
+            return;
+        }
+        State.Done();
         var row = ctx.Known.Servers.FirstOrDefault(s => s.Id == id);
         if (row is null)
         {

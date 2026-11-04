@@ -27,6 +27,17 @@ public sealed partial class ProvidersPage : Page
     {
         InitializeComponent();
         ToolTipService.SetToolTip(OpenLinkButton, "Ctrl+O"); // i18n-skip
+        // Two sections of rows, each under its heading, at the rows' own height.
+        State.Placeholders = () =>
+        {
+            var plates = new StackPanel { Spacing = 4 };
+            plates.Children.Add(States.Heading());
+            plates.Children.Add(States.Rows(2, 16, 16, rowHeight: 52, spacing: 0));
+            plates.Children.Add(States.Heading());
+            plates.Children.Add(States.Rows(3, 16, 16, rowHeight: 48, spacing: 0));
+            return plates;
+        };
+        State.NeedsConnection = false;
         ctx.Hear(this, Heard);
         Sections.KeyDown += OnOrderKey;
     }
@@ -70,6 +81,11 @@ public sealed partial class ProvidersPage : Page
         var none = ctx.Known.ProvidersLoaded && KaeriFfiMethods.HasNoSources(rows) && !rows.Any(r => r.IsDemo) && folders.Length == 0 && servers.Length == 0;
         NoSources.Visibility = none ? Visibility.Visible : Visibility.Collapsed;
         Columns.Visibility = none ? Visibility.Collapsed : Visibility.Visible;
+        // The sections wait for the engine's list: nothing for 600 ms, then plates in their place.
+        if (ctx.Known.ProvidersLoaded)
+            State.Done();
+        else
+            State.Wait();
         if (none && NoSources.Child is null)
             NoSources.Child = Empty();
         var current = rows.FirstOrDefault(r => r.Id == selected && (r.Kind is "plugin" or "torrent" or "remote" or "demo" || r.IsDemo));

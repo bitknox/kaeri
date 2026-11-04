@@ -48,6 +48,9 @@ public sealed partial class PlayerView : UserControl
     bool pictureSeen, pointerHidden, mini, miniTipShown;
     SeekPreview? preview;
     PreviewSource? stream, thumbs, previewSource;
+
+    /// <summary>Where the player keeps its compiled shaders, for the seek preview to share.</summary>
+    internal string? ShaderCache { get; set; }
     string? thumbnails;
     readonly object loads = new();
     PreviewSource? lastLoad;
@@ -162,8 +165,19 @@ public sealed partial class PlayerView : UserControl
         LiftSubtitles(animated: false);
         tick.Start();
         ShowStats();
-        Focus(FocusState.Programmatic);
+        // Just made visible, the view has no layout yet and WinUI refuses it the focus, which
+        // then stays on what opened it under the player: the player's keys would go there (Space
+        // pressing a Home card again). Asked again once it is laid out.
+        if (!Focus(FocusState.Programmatic))
+            DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
+            {
+                if (Showing)
+                    Focus(FocusState.Programmatic);
+            });
         ShowingChanged?.Invoke(true);
+#if KAERI_TESTING
+        Probe.Mark("loaded player");
+#endif
     }
 
     Control? returnFocus;
@@ -242,6 +256,15 @@ public sealed partial class PlayerView : UserControl
                 case Event.PlayerUi ui:
                     Heard(ui.Ui);
                     break;
+                case Event.PlaybackStaged s when !Showing:
+                    Staged(s);
+                    break;
+                case Event.PlaybackEnded when staged is not null:
+                    // Over before the player opened: no stream was found, or none would start.
+                    // The engine's notice says why; the starting screen goes.
+                    staged = null;
+                    Hide();
+                    break;
                 case Event.PlayerSkipMark or Event.PlayerSkipPrompt or Event.PlayerSkipNotice:
                     HeardSkip(e);
                     break;
@@ -286,11 +309,47 @@ public sealed partial class PlayerView : UserControl
         }
     }
 
+    /// <summary>The title staged and waiting on a source, before the player itself has said anything.</summary>
+    uint? staged;
+
+    /// <summary>
+    /// Play was pressed: the starting screen at once, the show's banner behind the ring, while the
+    /// engine finds a source, which can take seconds (native-ux: from PlaybackStaged to the first
+    /// frame). The player's own Starting carries on from it.
+    /// </summary>
+    void Staged(Event.PlaybackStaged s)
+    {
+        closedWhileFinding = false;
+        Open();
+        staged = s.Id;
+        pictureSeen = false;
+        playingId = s.Id;
+        ShowTitle.Text = s.Title;
+        EpisodeTitle.Text = Lines.EpisodeNamed(s.Episode, s.EpisodeTitle);
+        StartingShow.Text = s.Title;
+        startingEpisode = playingEpisode = s.Episode;
+        startingDemo = ctx is { } k && (k.Known.DemoPlay || k.Known.Entries.TryGetValue(s.Id, out var shown) && shown.IsDemo);
+        StartingArt.Source = null;
+        if (ctx?.Known.Entry(s.Id) is { } entry)
+            ctx.Art.Bind(entry.BannerUrl ?? entry.CoverUrl, image => StartingArt.Source = image);
+        ShowStarting();
+    }
+
     void Heard(PlayerUi ui)
     {
         switch (ui)
         {
             case PlayerUi.Starting s:
+                if (closedWhileFinding)
+                {
+                    // Found after the viewer closed the starting screen: told so, not shown.
+                    player?.ViewerClosed();
+                    break;
+                }
+                // Up since Play was pressed (Staged): the same screen goes on, its clock too.
+                var fromStaged = staged == s.Id;
+                var since = startingFrom;
+                staged = null;
                 Open();
                 still.Started();
                 pictureSeen = false;
@@ -310,9 +369,14 @@ public sealed partial class PlayerView : UserControl
                 if (ctx is not null)
                     ctx.Known.DemoPlay = false;
                 ShowTvButton();
-                StartingArt.Source = null;
-                ctx?.Art.Bind(s.BannerUrl ?? s.CoverUrl, image => StartingArt.Source = image);
+                if (!fromStaged || StartingArt.Source is null)
+                {
+                    StartingArt.Source = null;
+                    ctx?.Art.Bind(s.BannerUrl ?? s.CoverUrl, image => StartingArt.Source = image);
+                }
                 ShowStarting();
+                if (fromStaged)
+                    startingFrom = since;
                 undo = null;
                 UpdateCorner();
                 break;
@@ -696,11 +760,14 @@ public sealed partial class PlayerView : UserControl
         // The panel's timed states: the dashes, the waiting line, "Copied" going.
         if (stats.Shown)
             ShowStats();
-        if (player is null)
+        if (player is not { } asked)
             return;
-        var swapchain = (nint)player.Swapchain();
-        if (swapchain != 0 && swapchain != bound)
+        swapchainAsk ??= new SwapchainAsk(DispatcherQueue);
+        swapchainAsk.Ask(asked, swapchain =>
         {
+            // The answer for a player since closed or replaced is not this one's.
+            if (player != asked || swapchain == bound)
+                return;
             try
             {
                 Dxgi.SetSwapChain(VideoPanel, swapchain);
@@ -713,8 +780,10 @@ public sealed partial class PlayerView : UserControl
             {
                 KaeriFfiMethods.LogLine(FfiLogLevel.Warn, "windows", $"binding mpv's swapchain failed: {e.Message}");
             }
-        }
+        });
     }
+
+    SwapchainAsk? swapchainAsk;
 
     (uint W, uint H, double Scale)? panelAsked, panelSent;
     Microsoft.UI.Dispatching.DispatcherQueueTimer? panelPace;
@@ -979,9 +1048,22 @@ public sealed partial class PlayerView : UserControl
 
     internal void Close()
     {
+        if (staged is not null)
+        {
+            // Nothing opened yet: what is being found stops, and nothing the engine says brings
+            // the player back until Play is pressed again (as Apple's viewerClosed).
+            staged = null;
+            closedWhileFinding = true;
+            Send(new PlayerCommand.Stop());
+            Hide();
+            return;
+        }
         player?.ViewerClosed();
         Hide();
     }
+
+    /// <summary>The viewer closed the starting screen before a source was found.</summary>
+    bool closedWhileFinding;
 
     void OnPlayPause(object sender, RoutedEventArgs e) => Send(new PlayerCommand.TogglePause());
     void OnBack10(object sender, RoutedEventArgs e) => Send(new PlayerCommand.Seek(-10));
@@ -1875,7 +1957,7 @@ public sealed partial class PlayerView : UserControl
         if (duration <= 0 || ctx is null || Source() is not { } from)
             return;
         var seconds = PreviewSource.TimeAt(fraction * (Timeline.ActualWidth - 20), Timeline.ActualWidth - 20, duration);
-        preview ??= new SeekPreview(ctx.Session.Engine, PreviewPanel, DispatcherQueue);
+        preview ??= new SeekPreview(ctx.Session.Engine, PreviewPanel, DispatcherQueue, ShaderCache);
         preview.Show(seconds, from, XamlRoot?.RasterizationScale ?? 1.0);
         PreviewTime.Text = KaeriFfiMethods.PlayClock(seconds);
         var left = Timeline.TransformToVisual(Chrome).TransformPoint(new global::Windows.Foundation.Point(10 + fraction * (Timeline.ActualWidth - 20), 0)).X;

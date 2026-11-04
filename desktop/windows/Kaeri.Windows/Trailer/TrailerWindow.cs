@@ -122,6 +122,7 @@ static class TrailerWindow
             window.Close();
         };
         surface.KeyboardAccelerators.Add(escape);
+        surface.KeyboardAcceleratorPlacementMode = KeyboardAcceleratorPlacementMode.Hidden;
 
         KeepShape(window);
         current = window;

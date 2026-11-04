@@ -13,35 +13,52 @@ public sealed record Broadcast(Entry Entry, uint Episode, long Airs, long? Was)
     /// <summary>Aired and not watched: the water dot.</summary>
     public bool IsNew(long now) => Airs <= now && !Watched;
 
-    /// <summary>
-    /// "E10 dubbed · 16:30" for a dub row, "E10 · 16:30" for any other, "~16:30" when the time
-    /// is an estimate, with "· Moved from 23:00" when the schedule moved it.
-    /// </summary>
-    public string Line(TimeZoneInfo zone, CultureInfo? culture = null)
+    /// <summary>When it airs, the first thing a cell says: "16:30", or "~16:30" when the time is an estimate.</summary>
+    public string Clock(TimeZoneInfo zone, CultureInfo? culture = null)
     {
         var shown = Calendar.Time(Airs, zone, culture);
-        return Said(Entry.AiringApproximate ? T.CalendarTimeEstimate(shown) : shown, zone, culture);
+        return Entry.AiringApproximate ? T.CalendarTimeEstimate(shown) : shown;
     }
 
+    /// <summary>"Moved from 23:00" when the schedule moved it later, or nothing.</summary>
+    public string? DelayNote(TimeZoneInfo zone, CultureInfo? culture = null) =>
+        Was is { } was ? T.CalendarMovedFrom(Calendar.Time(was, zone, culture)) : null;
+
     /// <summary>
-    /// The line as Narrator reads it: "about 16:30" for an estimate, which the shown line marks
-    /// with a tilde that would be read out as one.
+    /// The line under the show: "E8 out 1 d 2 h ago" once it has aired, "E9 in 1 h 30 min"
+    /// before, with " · Dubbed" last for a dub.
     /// </summary>
-    public string Spoken(TimeZoneInfo zone, CultureInfo? culture = null)
+    public string Status(long now)
     {
-        var shown = Calendar.Time(Airs, zone, culture);
-        return Said(Entry.AiringApproximate ? T.CalendarTimeAbout(shown) : shown, zone, culture);
-    }
-
-    string Said(string time, TimeZoneInfo zone, CultureInfo? culture)
-    {
-        var line = Dubbed ? T.CalendarRowTimeDubbed(Episode, time) : T.CalendarRowTime(Episode, time);
-        return Was is { } was ? $"{line} · {T.CalendarMovedFrom(Calendar.Time(was, zone, culture))}" : line;
+        var seconds = Airs - now;
+        if (seconds <= 0)
+        {
+            var ago = Wording.Ago(-seconds);
+            return Dubbed ? T.CalendarCellOutDubbed(Episode, ago) : T.CalendarCellOut(Episode, ago);
+        }
+        var span = Wording.Countdown(seconds);
+        return Dubbed ? T.CalendarCellInDubbed(Episode, span) : T.CalendarCellIn(Episode, span);
     }
 
     /// <summary>
-    /// The episode with the row's mark after it, as every episode line ends its episode: "E10
-    /// dubbed" for a dub row, "E10" for a sub row, which is not marked.
+    /// The broadcast as Narrator reads it, in the order the cell shows it: "Atelier Hotaru, E10
+    /// dubbed, about 16:30, Moved from 23:00, in 4 h 30 min". An estimate is said as one, where
+    /// the cell marks it with a tilde that would be read out as one.
+    /// </summary>
+    public string Spoken(long now, TimeZoneInfo zone, CultureInfo? culture = null)
+    {
+        var time = Calendar.Time(Airs, zone, culture);
+        var parts = new List<string> { Entry.Title, EpisodeText, Entry.AiringApproximate ? T.CalendarTimeAbout(time) : time };
+        if (DelayNote(zone, culture) is { } note)
+            parts.Add(note);
+        var seconds = Airs - now;
+        parts.Add(seconds <= 0 ? T.CalendarOut(Wording.Ago(-seconds)) : Wording.In(seconds));
+        return string.Join(", ", parts);
+    }
+
+    /// <summary>
+    /// The episode with the row's mark after it: "E10 dubbed" for a dub row, "E10" for a sub
+    /// row, which is not marked.
     /// </summary>
     public string EpisodeText => Dubbed ? T.CalendarEpisodeDubbed(Episode) : T.EpisodeNumberShort(Episode);
 

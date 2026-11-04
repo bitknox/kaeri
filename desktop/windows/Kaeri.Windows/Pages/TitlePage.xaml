@@ -17,13 +17,15 @@
       <!-- The banner across the content, up to 360 high, the ground over its lower part. -->
       <Grid x:Name="Banner" VerticalAlignment="Top" Height="300">
         <Grid x:Name="Art">
-          <Image x:Name="BannerImage" Stretch="UniformToFill" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" />
+          <!-- Faded in once the page is laid out (ShowBanner), never drawn bare in its first frame. -->
+          <Image x:Name="BannerImage" Stretch="UniformToFill" VerticalAlignment="Center" Opacity="0" AutomationProperties.AccessibilityView="Raw" />
           <Rectangle x:Name="Scrim">
             <Rectangle.Fill>
               <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
                 <GradientStop Color="#00161A2E" Offset="0.25" />
                 <GradientStop Color="#D9161A2E" Offset="0.75" />
-                <GradientStop Color="#FF161A2E" Offset="1" />
+                <!-- The ground in full just before the edge, so no row of the art shows under it. -->
+                <GradientStop Color="#FF161A2E" Offset="0.97" />
               </LinearGradientBrush>
             </Rectangle.Fill>
           </Rectangle>
@@ -135,84 +137,87 @@
               </TextBlock>
             </Grid>
             <TextBlock x:Name="EpisodesNote" Style="{StaticResource HazeCaptionStyle}" Visibility="Collapsed" />
-            <ListView x:Name="EpisodeList" SelectionMode="None" IsItemClickEnabled="True" ItemClick="OnEpisodeClick"
-                      ContainerContentChanging="OnEpisodeContainer"
-                      Margin="-12,4,0,0" AutomationProperties.Name="{x:Bind s:T.TitleEpisodes}">
-              <ListView.ItemTemplate>
-                <DataTemplate x:DataType="local:EpisodeItem">
-                  <Grid MinHeight="72" Margin="0,4" ColumnSpacing="14" AutomationProperties.Name="{x:Bind Name}" Opacity="{x:Bind Dim}">
-                    <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="128" />
-                      <ColumnDefinition Width="*" />
-                      <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <Grid.ContextFlyout>
-                      <MenuFlyout>
-                        <MenuFlyoutItem Text="{x:Bind s:T.ActionPlay}" Click="OnEpisodePlay" Tag="{x:Bind}" IsEnabled="{x:Bind Playable}" />
-                        <MenuFlyoutItem Text="{x:Bind s:T.EpisodePlayFromBeginning}" Click="OnEpisodeFromStart" Tag="{x:Bind}" Visibility="{x:Bind PartWay}" />
-                        <MenuFlyoutItem Text="{x:Bind s:T.TvPlayOn}" Click="OnEpisodeOnTv" Tag="{x:Bind}" Visibility="{x:Bind OnTv}" IsEnabled="{x:Bind Playable}" />
-                        <MenuFlyoutItem Text="{x:Bind WatchedAction}" Click="OnEpisodeWatched" Tag="{x:Bind}" />
-                        <MenuFlyoutItem Text="{x:Bind s:T.DiscussionOpen}" Click="OnEpisodeDiscussion" Tag="{x:Bind}" Visibility="{x:Bind DiscussionShown, Mode=OneWay}" />
-                        <MenuFlyoutItem Text="{x:Bind s:T.TitleEpisodeDownload}" Click="OnEpisodeDownload" Tag="{x:Bind}" IsEnabled="{x:Bind CanDownload, Mode=OneWay}" />
-                      </MenuFlyout>
-                    </Grid.ContextFlyout>
-                    <Grid Width="128" Height="72" CornerRadius="6" Background="{ThemeResource RaisedBrush}">
-                      <Image Source="{x:Bind Still, Mode=OneWay}" Stretch="UniformToFill" AutomationProperties.AccessibilityView="Raw" />
-                      <!-- A still past the next episode, blurred: the spoiler pattern. -->
-                      <Border Visibility="{x:Bind SpoilerShown}" Background="{ThemeResource SpoilerBrush}" />
-                    </Grid>
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
-                      <TextBlock Text="{x:Bind Heading}" Style="{StaticResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" />
-                      <TextBlock Text="{x:Bind Line}" Style="{StaticResource HazeCaptionStyle}" />
-                      <!-- The quiet row under a watched episode whose discussion the engine found. -->
-                      <HyperlinkButton Content="{x:Bind DiscussionLine, Mode=OneWay}" Visibility="{x:Bind DiscussionShown, Mode=OneWay}"
-                                       Click="OnEpisodeDiscussion" Tag="{x:Bind}" Padding="0,3" MinHeight="24" FontSize="12"
-                                       Foreground="{ThemeResource HazeBrush}" ToolTipService.ToolTip="{x:Bind s:T.DiscussionOpen}">
-                        <HyperlinkButton.Resources>
-                          <SolidColorBrush x:Key="HyperlinkButtonForegroundPointerOver" Color="#E4E0D6" />
-                          <SolidColorBrush x:Key="HyperlinkButtonForegroundPressed" Color="#E4E0D6" />
-                        </HyperlinkButton.Resources>
-                      </HyperlinkButton>
-                      <ProgressBar Value="{x:Bind Watched}" Maximum="1" Width="160" HorizontalAlignment="Left" Visibility="{x:Bind PartWay}" AutomationProperties.AccessibilityView="Raw" />
-                    </StackPanel>
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                    <!-- The episode's download: Download on hover or focus, then how far, then a check.
-                         The cell keeps its width in every state, so the row never moves. -->
-                    <Button Width="36" Height="36" Padding="0" Style="{StaticResource SubtleButtonStyle}"
-                            Opacity="{x:Bind DownloadOpacity, Mode=OneWay}" IsEnabled="{x:Bind Playable}"
-                            Click="OnDownloadCell" Tag="{x:Bind}" GotFocus="OnDownloadCellFocus"
-                            ToolTipService.ToolTip="{x:Bind DownloadSay, Mode=OneWay}"
-                            AutomationProperties.Name="{x:Bind DownloadSay, Mode=OneWay}">
-                      <Grid>
-                        <FontIcon Glyph="{x:Bind DownloadGlyph, Mode=OneWay}" FontSize="16"
-                                  Foreground="{x:Bind DownloadTint, Mode=OneWay}" Visibility="{x:Bind GlyphShown, Mode=OneWay}" />
-                        <ProgressRing Width="20" Height="20" Visibility="{x:Bind RingShown, Mode=OneWay}"
-                                      IsIndeterminate="{x:Bind RingWaiting, Mode=OneWay}" IsActive="{x:Bind RingActive, Mode=OneWay}"
-                                      Value="{x:Bind RingValue, Mode=OneWay}" Maximum="100" />
+            <!-- The episodes load on their own: plates in the rows' layout while they come. -->
+            <local:StateHost x:Name="EpisodesState">
+              <ListView x:Name="EpisodeList" SelectionMode="None" IsItemClickEnabled="True" ItemClick="OnEpisodeClick"
+                        ContainerContentChanging="OnEpisodeContainer"
+                        Margin="-12,4,0,0" AutomationProperties.Name="{x:Bind s:T.TitleEpisodes}">
+                <ListView.ItemTemplate>
+                  <DataTemplate x:DataType="local:EpisodeItem">
+                    <Grid MinHeight="72" Margin="0,4" ColumnSpacing="14" AutomationProperties.Name="{x:Bind Name}" Opacity="{x:Bind Dim}">
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="128" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                      </Grid.ColumnDefinitions>
+                      <Grid.ContextFlyout>
+                        <MenuFlyout>
+                          <MenuFlyoutItem Text="{x:Bind s:T.ActionPlay}" Click="OnEpisodePlay" Tag="{x:Bind}" IsEnabled="{x:Bind Playable}" />
+                          <MenuFlyoutItem Text="{x:Bind s:T.EpisodePlayFromBeginning}" Click="OnEpisodeFromStart" Tag="{x:Bind}" Visibility="{x:Bind PartWay}" />
+                          <MenuFlyoutItem Text="{x:Bind s:T.TvPlayOn}" Click="OnEpisodeOnTv" Tag="{x:Bind}" Visibility="{x:Bind OnTv}" IsEnabled="{x:Bind Playable}" />
+                          <MenuFlyoutItem Text="{x:Bind WatchedAction}" Click="OnEpisodeWatched" Tag="{x:Bind}" />
+                          <MenuFlyoutItem Text="{x:Bind s:T.DiscussionOpen}" Click="OnEpisodeDiscussion" Tag="{x:Bind}" Visibility="{x:Bind DiscussionShown, Mode=OneWay}" />
+                          <MenuFlyoutItem Text="{x:Bind s:T.TitleEpisodeDownload}" Click="OnEpisodeDownload" Tag="{x:Bind}" IsEnabled="{x:Bind CanDownload, Mode=OneWay}" />
+                        </MenuFlyout>
+                      </Grid.ContextFlyout>
+                      <Grid Width="128" Height="72" CornerRadius="6" Background="{ThemeResource RaisedBrush}">
+                        <Image Source="{x:Bind Still, Mode=OneWay}" Stretch="UniformToFill" AutomationProperties.AccessibilityView="Raw" />
+                        <!-- A still past the next episode, blurred while spoiler protection is on: the spoiler pattern. -->
+                        <Border Visibility="{x:Bind SpoilerShown, Mode=OneWay}" Background="{ThemeResource SpoilerBrush}" />
                       </Grid>
-                    </Button>
-                    <!-- Watched is a state: a neutral check box, not an amber toggle. -->
-                    <CheckBox MinWidth="0" Padding="0" IsChecked="{x:Bind Completed}"
-                              Click="OnWatchedToggle" Tag="{x:Bind}" ToolTipService.ToolTip="{x:Bind s:T.EpisodeWatched}"
-                              AutomationProperties.Name="{x:Bind s:T.EpisodeWatched}" VerticalAlignment="Center">
-                      <!-- On the control itself: the app's theme overrides do not reach a template's check box. -->
-                      <CheckBox.Resources>
-                        <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillChecked" Color="#E4E0D6" />
-                        <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver" Color="#E4E0D6" Opacity="0.9" />
-                        <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPressed" Color="#9298B5" />
-                        <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeChecked" Color="#E4E0D6" />
-                        <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedPointerOver" Color="#E4E0D6" />
-                        <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedPressed" Color="#9298B5" />
-                        <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundChecked" Color="#161A2E" />
-                        <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPointerOver" Color="#161A2E" />
-                        <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPressed" Color="#161A2E" />
-                      </CheckBox.Resources>
-                    </CheckBox>
-                    </StackPanel>
-                  </Grid>
-                </DataTemplate>
-              </ListView.ItemTemplate>
-            </ListView>
+                      <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+                        <TextBlock Text="{x:Bind Heading}" Style="{StaticResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{x:Bind Line}" Style="{StaticResource HazeCaptionStyle}" />
+                        <!-- The quiet row under a watched episode whose discussion the engine found. -->
+                        <HyperlinkButton Content="{x:Bind DiscussionLine, Mode=OneWay}" Visibility="{x:Bind DiscussionShown, Mode=OneWay}"
+                                         Click="OnEpisodeDiscussion" Tag="{x:Bind}" Padding="0,3" MinHeight="24" FontSize="12"
+                                         Foreground="{ThemeResource HazeBrush}" ToolTipService.ToolTip="{x:Bind s:T.DiscussionOpen}">
+                          <HyperlinkButton.Resources>
+                            <SolidColorBrush x:Key="HyperlinkButtonForegroundPointerOver" Color="#E4E0D6" />
+                            <SolidColorBrush x:Key="HyperlinkButtonForegroundPressed" Color="#E4E0D6" />
+                          </HyperlinkButton.Resources>
+                        </HyperlinkButton>
+                        <ProgressBar Value="{x:Bind Watched}" Maximum="1" Width="160" HorizontalAlignment="Left" Visibility="{x:Bind PartWay}" AutomationProperties.AccessibilityView="Raw" />
+                      </StackPanel>
+                      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                      <!-- The episode's download: Download on hover or focus, then how far, then a check.
+                           The cell keeps its width in every state, so the row never moves. -->
+                      <Button Width="36" Height="36" Padding="0" Style="{StaticResource SubtleButtonStyle}"
+                              Opacity="{x:Bind DownloadOpacity, Mode=OneWay}" IsEnabled="{x:Bind Playable}"
+                              Click="OnDownloadCell" Tag="{x:Bind}" GotFocus="OnDownloadCellFocus"
+                              ToolTipService.ToolTip="{x:Bind DownloadSay, Mode=OneWay}"
+                              AutomationProperties.Name="{x:Bind DownloadSay, Mode=OneWay}">
+                        <Grid>
+                          <FontIcon Glyph="{x:Bind DownloadGlyph, Mode=OneWay}" FontSize="16"
+                                    Foreground="{x:Bind DownloadTint, Mode=OneWay}" Visibility="{x:Bind GlyphShown, Mode=OneWay}" />
+                          <ProgressRing Width="20" Height="20" Visibility="{x:Bind RingShown, Mode=OneWay}"
+                                        IsIndeterminate="{x:Bind RingWaiting, Mode=OneWay}" IsActive="{x:Bind RingActive, Mode=OneWay}"
+                                        Value="{x:Bind RingValue, Mode=OneWay}" Maximum="100" />
+                        </Grid>
+                      </Button>
+                      <!-- Watched is a state: a neutral check box, not an amber toggle. -->
+                      <CheckBox MinWidth="0" Padding="0" IsChecked="{x:Bind Completed}"
+                                Click="OnWatchedToggle" Tag="{x:Bind}" ToolTipService.ToolTip="{x:Bind s:T.EpisodeWatched}"
+                                AutomationProperties.Name="{x:Bind s:T.EpisodeWatched}" VerticalAlignment="Center">
+                        <!-- On the control itself: the app's theme overrides do not reach a template's check box. -->
+                        <CheckBox.Resources>
+                          <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillChecked" Color="#E4E0D6" />
+                          <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver" Color="#E4E0D6" Opacity="0.9" />
+                          <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPressed" Color="#9298B5" />
+                          <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeChecked" Color="#E4E0D6" />
+                          <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedPointerOver" Color="#E4E0D6" />
+                          <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedPressed" Color="#9298B5" />
+                          <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundChecked" Color="#161A2E" />
+                          <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPointerOver" Color="#161A2E" />
+                          <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPressed" Color="#161A2E" />
+                        </CheckBox.Resources>
+                      </CheckBox>
+                      </StackPanel>
+                    </Grid>
+                  </DataTemplate>
+                </ListView.ItemTemplate>
+              </ListView>
+            </local:StateHost>
           </StackPanel>
           <StackPanel x:Name="DetailsBelow" Spacing="16" />
         </StackPanel>

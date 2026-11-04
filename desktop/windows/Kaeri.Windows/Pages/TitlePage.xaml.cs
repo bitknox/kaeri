@@ -22,7 +22,7 @@ public sealed partial class EpisodeItem : INotifyPropertyChanged
     internal EpisodeItem(EpisodeRow row, bool spoiler, uint title = 0)
     {
         Row = row;
-        Spoiler = spoiler;
+        this.spoiler = spoiler;
         Title = title;
         Discussion = Ctx.Current is { } ctx && uint.TryParse(row.Number, out var n) ? ctx.Known.Discussions.GetValueOrDefault((title, n)) : 0;
     }
@@ -48,7 +48,22 @@ public sealed partial class EpisodeItem : INotifyPropertyChanged
     public Visibility DiscussionShown => Discussion > 0 ? Visibility.Visible : Visibility.Collapsed;
 
     public EpisodeRow Row { get; }
-    public bool Spoiler { get; }
+
+    bool spoiler;
+
+    /// <summary>Spoiler protection blurs the still: it follows the setting while the page is open.</summary>
+    public bool Spoiler
+    {
+        get => spoiler;
+        set
+        {
+            if (spoiler == value)
+                return;
+            spoiler = value;
+            Changed(nameof(SpoilerShown));
+        }
+    }
+
     public string Heading => long.TryParse(Row.Number, out var n)
         ? Row.Title is { Length: > 0 } t ? T.EpisodeWithTitle(n, t) : T.EpisodeNumber(n)
         : Row.Title is { Length: > 0 } named ? T.EpisodeTextWithTitle(Row.Number, named) : T.EpisodeNumberText(Row.Number);
@@ -176,6 +191,8 @@ public sealed partial class TitlePage : Page, IPageKeys
         SourceItem.Text = T.SourcePickerTitle;
         State.Placeholders = Placeholders;
         State.ActivityText = T.TitleLoading;
+        EpisodesState.Placeholders = EpisodePlaceholders;
+        EpisodesState.ActivityText = T.TitleLoading;
         var settings = new Microsoft.UI.Xaml.Input.KeyboardAccelerator { Key = global::Windows.System.VirtualKey.I, Modifiers = global::Windows.System.VirtualKeyModifiers.Control };
         settings.Invoked += (_, a) =>
         {
@@ -192,11 +209,25 @@ public sealed partial class TitlePage : Page, IPageKeys
         });
     }
 
-    /// <summary>The banner's height and where the cover and title start under it.</summary>
+    /// <summary>
+    /// The banner's height and where the cover and title start under it. Before the page has a
+    /// size of its own, as it is navigated to, the frame's width stands in, so the first frame
+    /// drawn already has the band it keeps: otherwise its foot drew at the XAML's 300 and then
+    /// jumped, with the title under it.
+    /// </summary>
     void Layout()
     {
-        var band = Math.Min(360, Math.Max(220, Scroll.ActualWidth * 9 / 32));
+        var width = Scroll.ActualWidth > 0 ? Scroll.ActualWidth : Frame?.ActualWidth ?? 0;
+        if (width <= 0)
+            return;
+        var band = Math.Min(360, Math.Max(220, width * 9 / 32));
+        if (Math.Abs(Banner.Height - band) < 0.5 && Banner.Clip is not null)
+            return;
         Banner.Height = band;
+        // The art fills the band by overflowing it (UniformToFill), and the scrim ends at the
+        // band's edge, so the band is clipped to its height: any overflow would show as a light
+        // line under the scrim. Only the height matters; the width is generous.
+        Banner.Clip = new RectangleGeometry { Rect = new global::Windows.Foundation.Rect(0, 0, 100_000, band) };
         Columns.Padding = new Thickness(36, band - 120, 36, 24);
     }
 
@@ -220,6 +251,20 @@ public sealed partial class TitlePage : Page, IPageKeys
         return page;
     }
 
+    /// <summary>
+    /// The episode rows while they load, in the rows' own layout: a still and two lines, 72 high
+    /// with 8 between. As many as the title has, where that is known, up to a screenful, so the
+    /// rows that replace them take the room they kept.
+    /// </summary>
+    UIElement EpisodePlaceholders()
+    {
+        var count = (int)Math.Clamp(ctx.Known.Entry(id)?.Episodes ?? 4, 1, 12);
+        var rows = States.Rows(count, 128, 72, rowHeight: 72, spacing: 8);
+        if (rows is FrameworkElement f)
+            f.Margin = new Thickness(0, 8, 0, 0);
+        return rows;
+    }
+
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
@@ -229,10 +274,16 @@ public sealed partial class TitlePage : Page, IPageKeys
             State.Wait();
         ctx.Send(new Command.LoadDetail(id));
         ctx.Send(new Command.LoadEpisodes(id));
+        // Episodes not yet known: nothing for 600 ms, then plates in the rows' place.
+        if (!ctx.Known.Episodes.ContainsKey(id))
+            EpisodesState.Wait();
         // The queue, for each row's download cell.
         ctx.Send(new Command.LoadDownloads());
         ctx.Send(new Command.LoadDub(id));
+        // What the show sets for itself, its spoiler protection among it.
+        ctx.Send(new Command.LoadShowSettings(id));
         DubLine.Opacity = 0;
+        Layout();
         Show();
         ShowEpisodes();
         // The cover a grid sent flies in to this one; anything else crossfades.
@@ -407,6 +458,10 @@ public sealed partial class TitlePage : Page, IPageKeys
                 case Event.Downloads d:
                     ShowDownloads(d.V1);
                     break;
+                case Event.Settings:
+                case Event.ShowSettings sheet when sheet.V1.Id == id:
+                    ShowSpoilers();
+                    break;
                 case Event.TitlesChanged:
                     // Named another way now, with its relations and recommendations.
                     ctx.Send(new Command.LoadDetail(id));
@@ -453,6 +508,36 @@ public sealed partial class TitlePage : Page, IPageKeys
     }
 #endif
 
+    /// <summary>
+    /// The banner's art, faded in once the page has been laid out. Drawn at once, it showed bare in
+    /// the page's first frame, before its scrim, and its foot read as a light line. The same art
+    /// arriving again leaves it as it is.
+    /// </summary>
+    void ShowBanner(ImageSource art)
+    {
+        var again = BannerImage.Source == art && BannerImage.Opacity > 0;
+        BannerImage.Source = art;
+        if (again)
+            return;
+        if (IsLoaded)
+        {
+            Motion.FadeIn(BannerImage);
+            return;
+        }
+        // From the cache the art is there before the page's first frame, and the scrim over it
+        // draws about 0.1 s after the page is loaded: the fade starts once it is surely there.
+        void Laid(object sender, RoutedEventArgs e)
+        {
+            Loaded -= Laid;
+            _ = Task.Delay(150).ContinueWith(_ => DispatcherQueue.TryEnqueue(() =>
+            {
+                if (BannerImage.Source == art)
+                    Motion.FadeIn(BannerImage);
+            }));
+        }
+        Loaded += Laid;
+    }
+
     void Show()
     {
         if (Current() is not { } entry)
@@ -460,9 +545,10 @@ public sealed partial class TitlePage : Page, IPageKeys
         State.Done();
         var cover = new CoverItem(entry);
         CoverFrame.Background = cover.Placeholder;
-        Art.Background = cover.Placeholder;
+        // No cover colour behind the banner: until its art fades in, the band is the ground, as
+        // under the scrim, so nothing lighter ends at its foot.
         ctx.Art.Bind(entry.CoverUrl, s => CoverImage.Source = s);
-        ctx.Art.Bind(entry.BannerUrl ?? entry.CoverUrl, s => BannerImage.Source = s);
+        ctx.Art.Bind(entry.BannerUrl ?? entry.CoverUrl, ShowBanner);
         ShowTitle.Text = entry.Title;
         Secondary.Text = entry.Secondary ?? "";
         Secondary.Visibility = entry.Secondary is { Length: > 0 } ? Visibility.Visible : Visibility.Collapsed;
@@ -707,15 +793,16 @@ public sealed partial class TitlePage : Page, IPageKeys
         if (!ctx.Known.Episodes.TryGetValue(id, out var rows))
             return;
         var next = ctx.Known.Entry(id)?.Progress?.Next ?? 1;
+        var on = Spoilers.On(ctx.Known, id);
         var items = rows.Select(r =>
         {
-            var spoiler = uint.TryParse(r.Number, out var n) && n > next && !r.Completed;
-            var item = new EpisodeItem(r, spoiler, id);
-            // A spoiler's still loads too, and shows blurred.
+            var item = new EpisodeItem(r, Spoilers.StillHidden(r, next, on), id);
+            // A spoiler's still loads too, and shows blurred, so turning protection off shows it at once.
             ctx.Art.Bind(r.Thumbnail, s => item.Still = s);
             return item;
         }).ToList();
         EpisodeList.ItemsSource = items;
+        EpisodesState.Done();
         ShowDownloads(ctx.Known.Downloads);
         var metadataOnly = rows.Length > 0 && rows.All(r => r.MetadataOnly);
         EpisodesNote.Text = metadataOnly ? T.TitleEpisodesNoSource : "";
@@ -723,6 +810,20 @@ public sealed partial class TitlePage : Page, IPageKeys
     }
 
     static T Res<T>(string key) => (T)Application.Current.Resources[key];
+
+    /// <summary>
+    /// The rows' blur, after spoiler protection changed in Settings or for this show: the rows
+    /// stay as they are, with their focus and the scroll place, and only the blur follows.
+    /// </summary>
+    void ShowSpoilers()
+    {
+        if (EpisodeList.ItemsSource is not IEnumerable<EpisodeItem> items)
+            return;
+        var next = ctx.Known.Entry(id)?.Progress?.Next ?? 1;
+        var on = Spoilers.On(ctx.Known, id);
+        foreach (var item in items)
+            item.Spoiler = Spoilers.StillHidden(item.Row, next, on);
+    }
 
     /// <summary>Each episode row's download cell, from the queue.</summary>
     void ShowDownloads(DownloadRow[] rows)
