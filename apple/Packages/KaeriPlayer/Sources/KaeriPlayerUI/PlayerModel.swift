@@ -447,7 +447,7 @@ public final class PlayerModel {
             applySkipMark(view)
         case .playerSkipPrompt(let playback, let prompt):
             guard accepts(playback) else { return }
-            applySkipPrompt(prompt)
+            applySkipPrompt(prompt, for: playback)
         case .playerSkipNotice(let playback, let notice):
             guard accepts(playback) else { return }
             say(notice.words)

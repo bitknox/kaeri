@@ -353,6 +353,11 @@ public sealed partial class PlayerView
     {
         promptTimer?.Stop();
         var before = skipPrompt;
+        // Said in the log, so a card that never showed can be told from one never sent.
+        if (prompt is not null)
+            KaeriFfiMethods.LogLine(FfiLogLevel.Info, "windows", $"skip card shown: {LogName(prompt)}");
+        else if (before is not null)
+            KaeriFfiMethods.LogLine(FfiLogLevel.Info, "windows", $"skip card gone: {LogName(before)}");
         skipPrompt = prompt;
         if (prompt is SkipPrompt.Share)
         {
@@ -396,10 +401,29 @@ public sealed partial class PlayerView
         s.Stop();
         if (skipPrompt is null)
             return;
+        NoteAnswer("timed out");
         skipPrompt = null;
         HidePrompt();
         SendQuietly(new PlayerCommand.DismissSkipPrompt());
     }
+
+    /// <summary>The card's answer, or its time running out, in the log.</summary>
+    void NoteAnswer(string answer)
+    {
+        if (skipPrompt is { } prompt)
+            KaeriFfiMethods.LogLine(FfiLogLevel.Info, "windows", $"skip card answered: {answer}, on {LogName(prompt)}");
+    }
+
+    /// <summary>What the log calls a skip card.</summary>
+    static string LogName(SkipPrompt prompt) => prompt switch
+    {
+        SkipPrompt.WasOpening => "was that the opening",
+        SkipPrompt.WrongTimes w => $"wrong {w.Kind.ToString().ToLowerInvariant()} times",
+        SkipPrompt.FoundEdges f => $"found {f.Kind.ToString().ToLowerInvariant()}, episode {f.Episode}",
+        SkipPrompt.FoundSaved f => $"found {f.Kind.ToString().ToLowerInvariant()} saved, episode {f.Episode}",
+        SkipPrompt.FoundNever => "found, never ask",
+        _ => "share skip times",
+    };
 
     void HidePrompt()
     {
@@ -421,29 +445,29 @@ public sealed partial class PlayerView
         }
         string line;
         string? detail = null;
-        var buttons = new List<(string Text, Action Act, PromptButton Look)>();
+        var buttons = new List<(string Text, Action Act, PromptButton Look, string Answer)>();
         var found = false;
         switch (prompt)
         {
             case SkipPrompt.WasOpening:
                 line = T.PlayerWasOpening;
-                buttons.Add((T.PlayerDontAskAgain, () => Send(new PlayerCommand.NeverAskWasOpening()), PromptButton.Plain));
-                buttons.Add((T.PlayerMarkIt, () => BeginMarking(SkipKind.Opening), PromptButton.Accent));
+                buttons.Add((T.PlayerDontAskAgain, () => Send(new PlayerCommand.NeverAskWasOpening()), PromptButton.Plain, "don't ask again"));
+                buttons.Add((T.PlayerMarkIt, () => BeginMarking(SkipKind.Opening), PromptButton.Accent, "mark"));
                 break;
             case SkipPrompt.WrongTimes wrong:
                 line = T.PlayerSkipWrong(KindInline(wrong.Kind));
                 var kind = wrong.Kind;
-                buttons.Add((T.PlayerSkipReport, () => Send(new PlayerCommand.ReportSkip(kind)), PromptButton.Plain));
-                buttons.Add((T.PlayerSkipMark, () => BeginMarking(kind), PromptButton.Accent));
+                buttons.Add((T.PlayerSkipReport, () => Send(new PlayerCommand.ReportSkip(kind)), PromptButton.Plain, "report"));
+                buttons.Add((T.PlayerSkipMark, () => BeginMarking(kind), PromptButton.Accent, "mark"));
                 break;
             case SkipPrompt.FoundEdges edges:
                 found = true;
                 line = edges.Kind == SkipKind.Ending ? T.PlayerFoundAskEnding : T.PlayerFoundAskOpening;
                 detail = T.PlayerFoundAskShare(edges.Episode);
                 var foundKind = edges.Kind;
-                buttons.Add((T.PlayerDontAskAgain, () => Send(new PlayerCommand.NeverAskWasOpening()), PromptButton.Quiet));
-                buttons.Add((T.PlayerFoundAdjust, () => Send(new PlayerCommand.AdjustFoundSkip(foundKind)), PromptButton.Plain));
-                buttons.Add((T.PlayerFoundYes, () => Send(new PlayerCommand.ConfirmFoundSkip(foundKind)), PromptButton.Accent));
+                buttons.Add((T.PlayerDontAskAgain, () => Send(new PlayerCommand.NeverAskWasOpening()), PromptButton.Quiet, "don't ask again"));
+                buttons.Add((T.PlayerFoundAdjust, () => Send(new PlayerCommand.AdjustFoundSkip(foundKind)), PromptButton.Plain, "adjust"));
+                buttons.Add((T.PlayerFoundYes, () => Send(new PlayerCommand.ConfirmFoundSkip(foundKind)), PromptButton.Accent, "yes"));
                 break;
             case SkipPrompt.FoundSaved saved:
                 found = true;
@@ -477,7 +501,7 @@ public sealed partial class PlayerView
             row.Children.Add(words);
         // The found times' card is answered as it stands: the engine reads which card it was.
         var answered = prompt is SkipPrompt.FoundEdges;
-        foreach (var (text, act, look) in buttons)
+        foreach (var (text, act, look, said) in buttons)
         {
             var b = new Button { Content = text, MinHeight = 32 };
             if (look == PromptButton.Accent)
@@ -491,6 +515,7 @@ public sealed partial class PlayerView
                 b.MinWidth = 64;
             b.Click += (_, _) =>
             {
+                NoteAnswer(said);
                 if (answered)
                 {
                     // Yes and Don't ask again are answered by the card's next words; Adjust closes it for the review.
@@ -578,7 +603,9 @@ public sealed partial class PlayerView
                 PrimaryButtonText = T.PlayerShareYes, CloseButtonText = T.PlayerShareNo, DefaultButton = ContentDialogButton.Primary,
             };
             var answer = await dialog.ShowAsync();
-            Send(new PlayerCommand.AnswerShareSkipTimes(answer == ContentDialogResult.Primary));
+            var share = answer == ContentDialogResult.Primary;
+            KaeriFfiMethods.LogLine(FfiLogLevel.Info, "windows", $"skip card answered: {(share ? "share" : "don't share")}, on share skip times");
+            Send(new PlayerCommand.AnswerShareSkipTimes(share));
         }
         finally
         {

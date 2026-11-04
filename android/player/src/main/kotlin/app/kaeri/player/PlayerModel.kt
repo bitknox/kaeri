@@ -433,6 +433,11 @@ class PlayerModel(
             }
             is Event.PlayerSkipPrompt -> if (accepts(event.playback)) {
                 val prompt = event.prompt
+                // Said in the log, so a card that never showed can be told from one never sent.
+                when {
+                    prompt != null -> note("#${event.playback} skip card shown: ${logName(prompt)}")
+                    skipPrompt != null -> note("#${event.playback} skip card gone: ${logName(skipPrompt!!.prompt)}")
+                }
                 asksToShare = prompt == SkipPrompt.Share
                 skipPrompt = prompt?.takeIf { it != SkipPrompt.Share }?.let { SkipPromptOffer(it, now()) }
                 promptHeld = 0L
@@ -1307,7 +1312,12 @@ class PlayerModel(
         val since = promptTickedAt
         promptTickedAt = now
         if (skipPrompt != null && !paused && !assisted && since != null) promptHeld += now - since
-        skipPrompt?.let { if (!assisted && promptHeld >= it.stays) dismissSkipPrompt() }
+        skipPrompt?.let {
+            if (!assisted && promptHeld >= it.stays) {
+                noteSkipAnswer("timed out")
+                closeSkipPrompt()
+            }
+        }
     }
 
     /** When the card's clock last ran, and how long it has been up while playing. */
@@ -1642,16 +1652,29 @@ class PlayerModel(
 
     fun reportSkip(kind: SkipKind) {
         input()
+        noteSkipAnswer("report")
         control(PlayerCommand.ReportSkip(kind))
     }
 
     fun dismissSkipPrompt() {
+        noteSkipAnswer("closed")
+        closeSkipPrompt()
+    }
+
+    private fun closeSkipPrompt() {
         skipPrompt = null
         control(PlayerCommand.DismissSkipPrompt)
     }
 
+    /** The card's answer, or its time running out, in the log. */
+    private fun noteSkipAnswer(answer: String) {
+        val offer = skipPrompt ?: return
+        note("#${playback ?: "?"} skip card answered: $answer, on ${logName(offer.prompt)}")
+    }
+
     /** On a found card the engine answers with the card that says what happened. */
     fun neverAskWasOpening() {
+        noteSkipAnswer("don't ask again")
         if (skipPrompt?.prompt !is SkipPrompt.FoundEdges) skipPrompt = null
         control(PlayerCommand.NeverAskWasOpening)
     }
@@ -1659,17 +1682,20 @@ class PlayerModel(
     /** Yes on the card: the found times become yours and are shared; the engine says Saved. */
     fun confirmFoundSkip(kind: SkipKind) {
         input()
+        noteSkipAnswer("yes")
         control(PlayerCommand.ConfirmFoundSkip(kind))
     }
 
     /** Adjust on the card or a found row: the review opens on the found stretch. */
     fun adjustFoundSkip(kind: SkipKind) {
         input()
+        noteSkipAnswer("adjust")
         skipPrompt = null
         control(PlayerCommand.AdjustFoundSkip(kind))
     }
 
     fun answerShare(share: Boolean) {
+        note("#${playback ?: "?"} skip card answered: ${if (share) "share" else "don't share"}, on share skip times")
         asksToShare = false
         control(PlayerCommand.AnswerShareSkipTimes(share))
     }
@@ -1849,6 +1875,16 @@ class PlayerModel(
 
         private fun note(message: String) {
             Log.i(TAG, message)
+        }
+
+        /** What the log calls a skip card. */
+        private fun logName(prompt: SkipPrompt): String = when (prompt) {
+            is SkipPrompt.WasOpening -> "was that the opening"
+            is SkipPrompt.WrongTimes -> "wrong ${prompt.kind.name.lowercase()} times"
+            is SkipPrompt.FoundEdges -> "found ${prompt.kind.name.lowercase()}, episode ${prompt.episode}"
+            is SkipPrompt.FoundSaved -> "found ${prompt.kind.name.lowercase()} saved, episode ${prompt.episode}"
+            is SkipPrompt.FoundNever -> "found, never ask"
+            is SkipPrompt.Share -> "share skip times"
         }
     }
 }

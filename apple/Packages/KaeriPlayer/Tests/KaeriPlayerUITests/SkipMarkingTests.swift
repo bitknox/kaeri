@@ -81,6 +81,39 @@ struct SkipMarkingTests {
         #expect(rig.controls == [.dismissSkipPrompt])
     }
 
+    /// The order a real session had, through the store as the app hands the engine's events on:
+    /// Up Next from the start, the found opening's Skip pressed, then its card. The card takes
+    /// the corner, waits through a pause and goes after its 12 s of playback.
+    @Test func theFoundTimesCardReachesThePlayerThroughTheStore() async throws {
+        let rig = Rig()
+        let store = AppStore()
+        store.onPlayback = { [weak model = rig.model] event in model?.apply(event) }
+        try await rig.opened(8)
+        store.apply([
+            .playerUi(playback: 8, ui: .upNext(
+                next: NextEpisode(number: "5", title: nil, thumbnail: nil), auto: true, endingAt: nil, countdown: 10,
+                stillWatchingAfter: 3)),
+            .playerUi(playback: 8, ui: .skip(kind: .opening, to: 151)),
+        ])
+        #expect(rig.model.corner == .skip)
+        rig.model.takeSkip()
+        store.apply([
+            .playerUi(playback: 8, ui: .skipCleared),
+            .playerSkipPrompt(playback: 8, prompt: .foundEdges(kind: .opening, episode: 4)),
+        ])
+        #expect(rig.model.skipPrompt?.prompt == .foundEdges(kind: .opening, episode: 4))
+        #expect(rig.model.corner == .prompt)
+        rig.mpv.emit(.property(name: "pause", value: .flag(true)))
+        try await until("paused") { rig.model.paused }
+        rig.step(.seconds(40))
+        #expect(rig.model.corner == .prompt, "a pause waits")
+        rig.mpv.emit(.property(name: "pause", value: .flag(false)))
+        try await until("playing") { !rig.model.paused }
+        rig.step(.seconds(13))
+        #expect(rig.model.skipPrompt == nil)
+        #expect(rig.controls.last == .dismissSkipPrompt)
+    }
+
     @Test func theFoundTimesCardWaitsWhilePausedAndAnswersAreSent() async throws {
         let rig = Rig()
         try await rig.opened()

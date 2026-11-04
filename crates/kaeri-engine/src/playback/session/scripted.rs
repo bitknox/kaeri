@@ -1393,6 +1393,65 @@ async fn a_found_opening_is_offered_then_asked_about_and_yes_shares_it() {
     assert_eq!(submission.episode, 2);
 }
 
+/// The order a real session had: a found opening, Up Next known from the start, Skip pressed,
+/// the source holding the stream while the player waits at the landing, a pause and play again.
+/// The card is asked once play has gone on past the landing, and nothing takes it back.
+#[tokio::test]
+async fn the_found_card_is_asked_after_a_held_stream_and_stays_up() {
+    use kaeri_model::playback::{SkipKind as Kind, SkipPrompt};
+    let rig = found_rig();
+    let (controls, commands) = mpsc::unbounded_channel::<PlayerCommand>();
+    let driving = async {
+        until_called(&rig, |call| matches!(call, Call::Load { .. })).await;
+        let window = rig.opener.window().expect("a window is open");
+        let at = |position| PlaybackEvent::Progress { position, duration: Some(LENGTH) };
+        window.send(at(1.0)).unwrap();
+        until_called(&rig, |call| *call == Call::Overlay(Overlay::Playing)).await;
+        hear_episode_two(&rig).await;
+        window.send(at(40.0)).unwrap();
+        until_called(&rig, |call| matches!(call, Call::Overlay(Overlay::SkipOffer { .. })))
+            .await;
+        controls.send(PlayerCommand::TakeSkip).unwrap();
+        until_called(&rig, |call| matches!(call, Call::Seek { .. })).await;
+        let (to, _) = *seeks(&rig.opener.calls()).last().unwrap();
+        // The source holds: the player waits at the landing, then is paused and played again.
+        window.send(PlaybackEvent::Seeking(true)).unwrap();
+        window.send(PlaybackEvent::Buffering(true)).unwrap();
+        window.send(at(to)).unwrap();
+        window.send(PlaybackEvent::Paused(true)).unwrap();
+        window.send(at(to + 4.0)).unwrap();
+        window.send(PlaybackEvent::Paused(false)).unwrap();
+        window.send(PlaybackEvent::Seeking(false)).unwrap();
+        window.send(PlaybackEvent::Buffering(false)).unwrap();
+        window.send(at(to + 1.0)).unwrap();
+        window.send(at(to + 3.5)).unwrap();
+        until_called(&rig, |call| matches!(call, Call::Overlay(Overlay::SkipPrompt(Some(_)))))
+            .await;
+        for second in 5..20 {
+            window.send(at(to + f64::from(second))).unwrap();
+        }
+        window.send(PlaybackEvent::Ended { complete: false }).unwrap();
+    };
+    let context = PlaybackContext { mal_id: Some(4_242), ..context("2", Some("3")) };
+    tokio::join!(
+        rig.play_steered(vec![stream(StreamKind::Mp4)], context, found_settings(), commands),
+        driving
+    );
+    let calls = rig.opener.calls();
+    assert!(
+        calls
+            .iter()
+            .any(|call| matches!(call, Call::Overlay(Overlay::Next { card: Some(_), .. }))),
+        "Up Next is said: {calls:#?}"
+    );
+    assert_eq!(
+        prompts(&calls),
+        [Some(SkipPrompt::FoundEdges { kind: Kind::Opening, episode: 2 })]
+    );
+    let show = rig.store.found_skip_show(AnilistId::new(900_001), "op").unwrap();
+    assert_eq!((show.skips, show.asked, show.confirmed), (1, true, false));
+}
+
 /// Don't ask again on the found times' card says so on the card and turns asking off.
 #[tokio::test]
 async fn never_on_the_found_card_says_so_and_turns_asking_off() {
