@@ -325,6 +325,9 @@ enum HomeCardLine {
     @MainActor
     static func text(_ item: HomeItem, store: AppStore) -> String {
         if store.discovery.playable(item.entry.id, sent: item.playable) == .notFound { return L.homeNotFound }
+        if let device = item.lastDevice, let resume = item.resume, let episode = item.episode {
+            return HomeWords.continueFrom(episode: episode, resume: resume, device: device)
+        }
         if let line = item.line { return line.text }
         if let reason = item.reason { return reasonText(reason) }
         if let airs = item.airsAt { return AirTime.clock(Date(timeIntervalSince1970: TimeInterval(airs))) }

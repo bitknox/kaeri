@@ -332,6 +332,13 @@ public final class SyncModel {
         send(.syncGroup(.copySignIns(device: device, copy: copy, address: address)))
     }
 
+    /// Join plugin stores through a paired device: it makes this device its own invite, so this
+    /// device gets a token of its own. With no `device`, asks the next device to pair for its
+    /// invites, inside the pairing session. An empty `stores` means every store `device` is in.
+    public func joinStores(from device: String?, _ stores: [String] = [], address: String? = nil) {
+        send(.syncGroup(.joinStoresFrom(device: device, stores: stores, address: address)))
+    }
+
     public func changeFolder(_ spec: SyncFolderSpec?) {
         send(.syncGroup(.changeSyncFolder(folder: spec)))
     }

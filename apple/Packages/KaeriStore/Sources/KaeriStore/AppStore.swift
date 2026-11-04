@@ -994,6 +994,11 @@ public final class AppStore {
             stores.previewed(answer)
         case .storeJoined(let store):
             stores.joined(store)
+        case .syncStoreJoined(_, _, _, _):
+            // The store list arrives with it (`.stores`), and the store shows there as joined.
+            break
+        case .syncStoreJoinFailed(let device, _, let name, let problem):
+            notices.post(Notice(kind: .alert, text: SyncWords.storeProblem(problem, store: name, device: device), hint: nil))
         case .inviteLink(let link):
             stores.invited(link)
         case .demo(let state):

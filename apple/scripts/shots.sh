@@ -23,7 +23,7 @@
 # (pale: 900001's page with a long title on a near-white banner; proxy: torrents through a saved proxy,
 # which sheet=proxy edits, and checking or unsaved its check under way or failed), and watched=<id>:<episodes>,
 # episodes marked watched as the shot starts (900006:8 is caught up), and
-# fold=open, the title page's watched episodes opened, world=1, Home's invented season of ten
+# continuefrom=<device>, Home's Continue cards saying another device played last, fold=open, the title page's watched episodes opened, world=1, Home's invented season of ten
 # drawn titles (with the scenes suggested, oneleft, continuefull, notfound, slow, failed and offline,
 # which stage Home's states), offline=1, the fake AniList gone once the first Home has loaded,
 # for Home's offline line over what it kept, and source=<licensed|server|folder>, the row
@@ -132,6 +132,7 @@ arguments() {
       fold=*) printf '%s\n' -KaeriFold "${screen#fold=}" ;;
       day=*) printf '%s\n' -KaeriDay "${screen#day=}" ;;
       mine=*) printf '%s\n' -KaeriCalendarMine "${screen#mine=}" ;;
+      continuefrom=*) printf '%s\n' -KaeriContinueFrom "${screen#continuefrom=}" ;;
       world=*) printf '%s\n' -KaeriHomeWorld "${screen#world=}" ;;
       offline=*) printf '%s\n' -KaeriGoOffline "${screen#offline=}" ;;
       *) printf '%s\n' -KaeriSection "$screen" ;;

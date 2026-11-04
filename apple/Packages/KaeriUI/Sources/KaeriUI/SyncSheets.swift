@@ -424,13 +424,13 @@ struct PairShowSheet: View {
     /// Leaving the page, where it is not a sheet of its own (first launch's page).
     var leave: (() -> Void)?
     /// First launch: the pairing is done and the flow ends.
-    var finished: (String?) -> Void = { _ in }
+    var finished: () -> Void = {}
 
     var body: some View {
         let sync = store.sync
         Group {
             if case .paired(let device) = sync.pair {
-                PairedContent(device: device, first: first, done: { link in if first { finished(link) } else { dismiss() } })
+                PairedContent(device: device, first: first, done: { if first { finished() } else { dismiss() } })
                     .transition(.opacity)
             } else {
                 showing(sync)
@@ -441,6 +441,9 @@ struct PairShowSheet: View {
         .task {
             if !sync.staged { sync.resetPair() }
             if !sync.staged { sync.invite(deviceName: sync.deviceName.isEmpty ? DeviceNaming.system : sync.deviceName) }
+            // First launch: the device that pairs is asked for invites to its plugin stores, with
+            // the pairing, so the switch on the paired page can join them.
+            if first, !sync.staged { sync.joinStores(from: nil) }
         }
         .onChange(of: sync.devices.count) { old, new in
             if new > old, sync.invite != nil, let other = sync.others.last { sync.stage(pair: .paired(other.name)) }
@@ -466,6 +469,22 @@ struct PairShowSheet: View {
                 #if os(iOS)
                 .listRowBackground(Color.clear)
                 #endif
+                // Where a network that hides devices from each other can reach this one: a small haze
+                // line under the code.
+                Text(address + ":" + String(invite.port))
+                    #if os(macOS)
+                    .font(.mac(11)).macLineHeight(15)
+                    #else
+                    .font(.ui(12))
+                    #endif
+                    .monospacedDigit()
+                    .foregroundStyle(.haze)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .textSelection(.enabled)
+                    #if os(iOS)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 4, trailing: 16))
+                    #endif
                 TimelineView(.periodic(from: .now, by: 1)) { context in
                     let left = max(0, Int(invite.until.timeIntervalSince(context.date)))
                     if left == 0 {
@@ -478,7 +497,6 @@ struct PairShowSheet: View {
                 #if os(iOS)
                 .listRowBackground(Color.clear)
                 #endif
-                SyncNote(text: address + ":" + String(invite.port)).monospacedDigit()
             } else {
                 ProgressView().frame(maxWidth: .infinity)
             }
@@ -610,10 +628,10 @@ struct PairedContent: View {
     @Environment(AppStore.self) private var store
     let device: String
     var first = false
-    var done: (String?) -> Void = { _ in }
+    var done: () -> Void = {}
     @State private var copySignIns: Bool
     @State private var joinStore = true
-    init(device: String, first: Bool = false, done: @escaping (String?) -> Void = { _ in }) {
+    init(device: String, first: Bool = false, done: @escaping () -> Void = {}) {
         self.device = device
         self.first = first
         self.done = done
@@ -623,7 +641,8 @@ struct PairedContent: View {
     var body: some View {
         let sync = store.sync
         let trackers = store.accounts.trackers.filter(\.connected).map { AccountsModel.name($0.tracker) }
-        let offer = first ? sync.status.storesToJoin.first : nil
+        // The stores this device can join through the paired one, whose invite is held for it.
+        let offer = first ? sync.status.storesToJoin.first(where: { $0.inviteFrom == device }) : nil
         SyncSheetFrame(title: L.pairOk(device: device)) {
             SyncNote(text: first ? L.firstOkLine : L.pairOkLine)
             if !trackers.isEmpty || first {
@@ -667,7 +686,8 @@ struct PairedContent: View {
                 if copySignIns { sync.copySignIns(from: device, [.trackers]) }
                 sync.resetPair()
                 sync.close()
-                done(joinStore ? offer?.address : nil)
+                if joinStore, let offer { sync.joinStores(from: device, [offer.address]) }
+                done()
             }
         }
     }

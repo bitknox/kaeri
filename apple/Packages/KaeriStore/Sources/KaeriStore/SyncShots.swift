@@ -101,7 +101,7 @@ extension SyncModel {
             status.devices = status.devices.filter(\.thisDevice)
             status.notes = []
         case .firstPairedStore:
-            status = Self.group(now: now, stores: [SyncStoreOffer(address: "store.example", name: "Hotaru")]) // i18n-skip
+            status = Self.group(now: now, stores: [SyncStoreOffer(address: "store.example", name: "Hotaru", inviteFrom: "Kitchen iPad")]) // i18n-skip
         case .pairWrong, .pairWorking, .pairMotion:
             status = Self.group(now: now, notes: true)
         case .on, .key, .keyQr, .pairShow, .pairEnter, .pairErr, .pairNf, .paired, .profiles,

@@ -85,6 +85,25 @@ struct SyncModelTests {
         #expect(sync.deviceName == "Kim’s Mac mini")
     }
 
+    @Test func joiningStoresThroughAPairedDeviceSendsItsAddressesAndTheNextPairingAsksWithoutOne() {
+        let sync = SyncModel()
+        var sent: [Command] = []
+        sync.send = { sent.append($0) }
+        sync.joinStores(from: nil)
+        sync.joinStores(from: "Kitchen iPad", ["store.example"])
+        #expect(sent == [
+            .syncGroup(.joinStoresFrom(device: nil, stores: [], address: nil)),
+            .syncGroup(.joinStoresFrom(device: "Kitchen iPad", stores: ["store.example"], address: nil)),
+        ])
+    }
+
+    @Test func eachStoreProblemHasItsOwnLineNamingTheStoreAndTheDevice() {
+        let lines = [SyncStoreProblem.offline, .refused, .notAllowed].map { SyncWords.storeProblem($0, store: "Hotaru", device: "Kitchen iPad") }
+        #expect(Set(lines).count == 3)
+        #expect(lines.allSatisfy { $0.contains("Hotaru") })
+        #expect(lines[0].contains("Kitchen iPad") && lines[2].contains("Kitchen iPad"))
+    }
+
     @Test func theSwitchesSendTheDevicesNameAndTheNewValue() {
         let sync = SyncModel()
         var sent: [Command] = []

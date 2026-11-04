@@ -206,7 +206,7 @@ struct FirstLaunch: View {
 
     /// Set up from another device: the code this device shows, and the way to a cloud folder.
     private var setup: some View {
-        PairShowSheet(first: true, restore: restore, leave: { page = .welcome }, finished: { link in finish(link) })
+        PairShowSheet(first: true, restore: restore, leave: { page = .welcome }, finished: { finish(nil) })
             .environment(store)
             .environment(\.syncEmbedded, true)
     }
