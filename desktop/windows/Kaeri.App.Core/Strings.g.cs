@@ -1434,6 +1434,27 @@ public static partial class T
     /// <summary>Line under the Chromecast group in Play on TV, until the app has served a TV once: Windows' firewall asks then whether the app may reach the network.</summary>
     public static string TvCastFirewallAhead => Get("TvCastFirewallAhead");
 
+    /// <summary>Footnote on the recovery key dialog; the lock is Windows Hello.</summary>
+    public static string RkeyLockWindows => Get("RkeyLockWindows");
+
+    /// <summary>What Windows Hello says it is asking for before the recovery key shows again.</summary>
+    public static string RkeyHelloReason => Get("RkeyHelloReason");
+
+    /// <summary>Word for this device in sentences such as “Turn off sync on this PC”.</summary>
+    public static string DeviceKindPc => Get("DeviceKindPc");
+
+    /// <summary>Accessible name of the Sync switch on a device's card, with the device's name.</summary>
+    public static string DevicesSyncSwitchName(string device) => Fill(Get("DevicesSyncSwitchName"), ("device", device));
+
+    /// <summary>Accessible name of the button that opens a device's page from its card.</summary>
+    public static string DevicesOpenName(string device) => Fill(Get("DevicesOpenName"), ("device", device));
+
+    /// <summary>Device page footer on a PC, which drives a TV as the remote.</summary>
+    public static string DevicesSwitchesFootPc(string device) => Fill(Get("DevicesSwitchesFootPc"), ("device", device));
+
+    /// <summary>Device page footer on a PC when the device has no Remote switch.</summary>
+    public static string DevicesSyncFoot => Get("DevicesSyncFoot");
+
     /// <summary>Under a release in the source picker: how many people share it right now.</summary>
     public static string SourcePickerSeeders(long count) => Fill(GetPlural("SourcePickerSeeders", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -6381,6 +6402,33 @@ public static partial class T
     /// <summary>Button in the alert that turns sync off on this computer.</summary>
     public static string DevicesTurnOffAction => Get("DevicesTurnOffAction");
 
+    /// <summary>Label of the field for the other device’s address in the Enter a code dialog.</summary>
+    public static string PairAddressLabel => Get("PairAddressLabel");
+
+    /// <summary>Placeholder of the pairing code field.</summary>
+    public static string PairCodePlaceholder => Get("PairCodePlaceholder");
+
+    /// <summary>Label of the field for a recovery key in the restore dialog.</summary>
+    public static string RkeyFieldLabel => Get("RkeyFieldLabel");
+
+    /// <summary>Label of the user name field for WebDAV and a Nextcloud app password.</summary>
+    public static string CloudUserLabel => Get("CloudUserLabel");
+
+    /// <summary>Label of the password field for WebDAV and a Nextcloud app password.</summary>
+    public static string CloudPasswordLabel => Get("CloudPasswordLabel");
+
+    /// <summary>Label of the WebDAV server address field.</summary>
+    public static string CloudWebdavAddressLabel => Get("CloudWebdavAddressLabel");
+
+    /// <summary>Line under the pairing code while a device is being paired.</summary>
+    public static string PairWorkingLine => Get("PairWorkingLine");
+
+    /// <summary>Name for the device whose pairing code did not match, when no name is known yet.</summary>
+    public static string PairOtherDevice => Get("PairOtherDevice");
+
+    /// <summary>Note under the Enter a code dialog's fields: the address can be left empty.</summary>
+    public static string PairAddressOptional => Get("PairAddressOptional");
+
     /// <summary>Settings row and page title, every platform.</summary>
     public static string DevicesTitle => Get("DevicesTitle");
 
@@ -8446,6 +8494,13 @@ public static partial class T
         ["TvProblemNoCode"] = "That code has expired. Ask the TV for a new one.",
         ["TvCastThroughPc"] = "Plays through this PC",
         ["TvCastFirewallAhead"] = "Windows will ask to let Kaeri reach your TV.",
+        ["RkeyLockWindows"] = "You can see it again in Settings, Devices, with Windows Hello.",
+        ["RkeyHelloReason"] = "Show the Kaeri recovery key",
+        ["DeviceKindPc"] = "PC",
+        ["DevicesSyncSwitchName"] = "Sync with {device}",
+        ["DevicesOpenName"] = "Open {device}",
+        ["DevicesSwitchesFootPc"] = "Sync shares where you stopped, your history and your settings. Remote lets this PC drive {device}.",
+        ["DevicesSyncFoot"] = "Sync shares where you stopped, your history and your settings.",
         ["SourcePickerSeeders_one"] = "One seeder",
         ["SourcePickerSeeders_other"] = "{count} seeders",
         ["RatePerSecond"] = "{size}/s",
@@ -10137,6 +10192,15 @@ public static partial class T
         ["DevicesEnterCode"] = "Enter a code",
         ["DevicesShowKey"] = "Show",
         ["DevicesTurnOffAction"] = "Turn off",
+        ["PairAddressLabel"] = "Address",
+        ["PairCodePlaceholder"] = "000 000",
+        ["RkeyFieldLabel"] = "Recovery key",
+        ["CloudUserLabel"] = "User name",
+        ["CloudPasswordLabel"] = "Password",
+        ["CloudWebdavAddressLabel"] = "Server address",
+        ["PairWorkingLine"] = "Pairing",
+        ["PairOtherDevice"] = "your other device",
+        ["PairAddressOptional"] = "Leave the address empty and Kaeri looks for the device on this network.",
         ["DevicesTitle"] = "Devices",
         ["DevicesRowOff"] = "Sync off",
         ["DevicesRowSynced"] = "Synced {ago}",

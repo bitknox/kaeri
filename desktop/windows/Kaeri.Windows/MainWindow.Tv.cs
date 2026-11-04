@@ -28,7 +28,7 @@ public sealed partial class MainWindow
     {
         try
         {
-            tvSender = engine.TvSender(TvWords.Device, $"kaeri-windows/{Updater.Current}");
+            tvSender = engine.TvSender(Sync.SyncDialogs.KeptName(dirs.Config) ?? TvWords.Device, $"kaeri-windows/{Updater.Current}");
         }
         catch (FfiException e)
         {

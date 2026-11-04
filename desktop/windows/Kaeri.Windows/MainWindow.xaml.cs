@@ -142,6 +142,9 @@ public sealed partial class MainWindow : Window
 #if KAERI_TESTING
             if (options.Showcase && Showcase.Holds(e))
                 return true;
+            // --show=sync-*: the made-up group stands in for the fixture engine's own.
+            if (options.Show?.StartsWith("sync-", StringComparison.Ordinal) == true && e is Event.SyncStatus or Event.SyncInvite)
+                return true;
             // --show=source-unsourced: the title's table, with episodes no source lists.
             if (options.Show is "source-unsourced" or "source-unsourced-end" && e is Event.Episodes table)
             {
@@ -165,6 +168,7 @@ public sealed partial class MainWindow : Window
         };
         session.Start();
         StartTv(engine);
+        StartSync(engine);
         // The network path, said to the engine now and on every change; it answers with one
         // online or offline state (Event.Connectivity) the pages show.
         network = new NetworkWatch(c => ctx.Send(c), ui, options.Offline);
@@ -534,7 +538,7 @@ public sealed partial class MainWindow : Window
         {
             switch (e)
             {
-                case Event.Sync:
+                case Event.Sync or Event.SyncStatus:
                     ShowAccount();
                     break;
                 case Event.Content { View: ContentFor.Continue } when !crashAsked:
@@ -627,10 +631,15 @@ public sealed partial class MainWindow : Window
     {
         var anilist = ctx.Known.Anilist;
         var reauth = anilist is { NeedsReauth: true };
+        // A cloud folder that signed Kaeri out marks the account too, until it is signed in again.
+        var cloud = ctx.Known.SyncGroup is { Problem: SyncProblem.SignInNeeded needed } && !Sync.SyncDialogs.ByHand
+            ? T.CloudErrSignedOut(SyncWords.ServiceName(needed.Service), SyncWords.Kind)
+            : null;
         AccountText.Text = anilist is null ? T.AccountsStateSignedOut : reauth ? T.AccountsPaneSignInAgain : anilist.User ?? Tracker;
         AccountDot.Visibility = anilist is { Outbox: > 0 } && !reauth ? Visibility.Visible : Visibility.Collapsed;
-        AccountAlert.Visibility = reauth ? Visibility.Visible : Visibility.Collapsed;
-        var tip = anilist is null ? T.LibrarySignedOutAction
+        AccountAlert.Visibility = reauth || cloud is not null ? Visibility.Visible : Visibility.Collapsed;
+        var tip = cloud is not null && !reauth ? cloud
+            : anilist is null ? T.LibrarySignedOutAction
             : reauth ? T.AccountsStateExpired(Tracker)
             : anilist.Outbox > 0 ? T.AccountsStateSignedInWaiting(Tracker, anilist.User ?? Tracker, anilist.Outbox)
             : T.AccountsStateSignedIn(Tracker, anilist.User ?? Tracker);

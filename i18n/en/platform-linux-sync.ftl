@@ -8,30 +8,6 @@ rkey-lock-linux = You can see it again in Settings, { -device-cap-pl }, after yo
 # @only linux
 rkey-lock-reason = Show the { -app-name } recovery key
 
-# Label of the field for the other device’s address in the Enter a code dialog.
-# @only linux
-pair-address-label = Address
-
-# Placeholder of the pairing code field.
-# @only linux
-pair-code-placeholder = 000 000
-
-# Label of the field for a recovery key in the restore dialog.
-# @only linux
-rkey-field-label = Recovery key
-
-# Label of the user name field for WebDAV and a Nextcloud app password.
-# @only linux
-cloud-user-label = User name
-
-# Label of the password field for WebDAV and a Nextcloud app password.
-# @only linux
-cloud-password-label = Password
-
-# Label of the WebDAV server address field.
-# @only linux
-cloud-webdav-address-label = Server address
-
 # Accessible name of the sidebar account row when it opens the profile popover.
 # @only linux
 profiles-popover-name = Profiles
@@ -52,18 +28,6 @@ cloud-folder-chooser = Choose a folder
 # @only linux
 rkey-save-as-file = Save as a file
 
-# Line under the pairing code while a device is being paired.
-# @only linux
-pair-working-line = Pairing
-
 # Button that closes the dialog that shows a device paired.
 # @only linux
 pair-done-action = Done
-
-# Name for the device whose pairing code did not match, when no name is known yet.
-# @only linux
-pair-other-device = your other { -device }
-
-# Note under the Enter a code dialog's fields: the address can be left empty.
-# @only linux
-pair-address-optional = Leave the address empty and { -app-name } looks for the { -device } on this network.

@@ -2023,6 +2023,34 @@
     <value>[Ŵîñðöŵš ŵîļļ àšķ ţö ļéţ Ķàéŕî ŕéàçĥ ýöüŕ ŢṼ.~~~~~~~~~~~~~~]</value>
     <comment>Line under the Chromecast group in Play on TV, until the app has served a TV once: Windows' firewall asks then whether the app may reach the network.</comment>
   </data>
+  <data name="RkeyLockWindows" xml:space="preserve">
+    <value>[Ýöü çàñ šéé îţ àĝàîñ îñ Šéţţîñĝš, Ðéṽîçéš, ŵîţĥ Ŵîñðöŵš Ĥéļļö.~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Footnote on the recovery key dialog; the lock is Windows Hello.</comment>
+  </data>
+  <data name="RkeyHelloReason" xml:space="preserve">
+    <value>[Šĥöŵ ţĥé Ķàéŕî ŕéçöṽéŕý ķéý~~~~~~~~~]</value>
+    <comment>What Windows Hello says it is asking for before the recovery key shows again.</comment>
+  </data>
+  <data name="DeviceKindPc" xml:space="preserve">
+    <value>[ÞÇ~]</value>
+    <comment>Word for this device in sentences such as “Turn off sync on this PC”.</comment>
+  </data>
+  <data name="DevicesSyncSwitchName" xml:space="preserve">
+    <value>[Šýñç ŵîţĥ {device}~~~~]</value>
+    <comment>Accessible name of the Sync switch on a device's card, with the device's name.</comment>
+  </data>
+  <data name="DevicesOpenName" xml:space="preserve">
+    <value>[Öþéñ {device}~~~]</value>
+    <comment>Accessible name of the button that opens a device's page from its card.</comment>
+  </data>
+  <data name="DevicesSwitchesFootPc" xml:space="preserve">
+    <value>[Šýñç šĥàŕéš ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš. Ŕéɱöţé ļéţš ţĥîš ÞÇ ðŕîṽé {device}.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Device page footer on a PC, which drives a TV as the remote.</comment>
+  </data>
+  <data name="DevicesSyncFoot" xml:space="preserve">
+    <value>[Šýñç šĥàŕéš ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš.~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Device page footer on a PC when the device has no Remote switch.</comment>
+  </data>
   <data name="SourcePickerSeeders_one" xml:space="preserve">
     <value>[Öñé šééðéŕ~~~]</value>
     <comment>Under a release in the source picker: how many people share it right now.</comment>
@@ -8765,6 +8793,42 @@
   <data name="DevicesTurnOffAction" xml:space="preserve">
     <value>[Ţüŕñ öƒƒ~~~]</value>
     <comment>Button in the alert that turns sync off on this computer.</comment>
+  </data>
+  <data name="PairAddressLabel" xml:space="preserve">
+    <value>[Åððŕéšš~~~]</value>
+    <comment>Label of the field for the other device’s address in the Enter a code dialog.</comment>
+  </data>
+  <data name="PairCodePlaceholder" xml:space="preserve">
+    <value>[000 000~~~]</value>
+    <comment>Placeholder of the pairing code field.</comment>
+  </data>
+  <data name="RkeyFieldLabel" xml:space="preserve">
+    <value>[Ŕéçöṽéŕý ķéý~~~~]</value>
+    <comment>Label of the field for a recovery key in the restore dialog.</comment>
+  </data>
+  <data name="CloudUserLabel" xml:space="preserve">
+    <value>[Ûšéŕ ñàɱé~~~]</value>
+    <comment>Label of the user name field for WebDAV and a Nextcloud app password.</comment>
+  </data>
+  <data name="CloudPasswordLabel" xml:space="preserve">
+    <value>[Þàššŵöŕð~~~]</value>
+    <comment>Label of the password field for WebDAV and a Nextcloud app password.</comment>
+  </data>
+  <data name="CloudWebdavAddressLabel" xml:space="preserve">
+    <value>[Šéŕṽéŕ àððŕéšš~~~~~]</value>
+    <comment>Label of the WebDAV server address field.</comment>
+  </data>
+  <data name="PairWorkingLine" xml:space="preserve">
+    <value>[Þàîŕîñĝ~~~]</value>
+    <comment>Line under the pairing code while a device is being paired.</comment>
+  </data>
+  <data name="PairOtherDevice" xml:space="preserve">
+    <value>[ýöüŕ öţĥéŕ ðéṽîçé~~~~~~]</value>
+    <comment>Name for the device whose pairing code did not match, when no name is known yet.</comment>
+  </data>
+  <data name="PairAddressOptional" xml:space="preserve">
+    <value>[Ļéàṽé ţĥé àððŕéšš éɱþţý àñð Ķàéŕî ļööķš ƒöŕ ţĥé ðéṽîçé öñ ţĥîš ñéţŵöŕķ.~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Note under the Enter a code dialog's fields: the address can be left empty.</comment>
   </data>
   <data name="DevicesTitle" xml:space="preserve">
     <value>[Ðéṽîçéš~~~]</value>

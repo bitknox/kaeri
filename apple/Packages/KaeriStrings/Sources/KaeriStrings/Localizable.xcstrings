@@ -23117,6 +23117,18 @@
         }
       }
     },
+    "cloud-password-label" : {
+      "comment" : "Label of the password field for WebDAV and a Nextcloud app password.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Password"
+          }
+        }
+      }
+    },
     "cloud-pick-foot" : {
       "comment" : "Picker footer.",
       "extractionState" : "manual",
@@ -23213,6 +23225,18 @@
         }
       }
     },
+    "cloud-user-label" : {
+      "comment" : "Label of the user name field for WebDAV and a Nextcloud app password.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User name"
+          }
+        }
+      }
+    },
     "cloud-waiting" : {
       "comment" : "Wait row. Argument 1: service (Text).",
       "extractionState" : "manual",
@@ -23233,6 +23257,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "WebDAV server"
+          }
+        }
+      }
+    },
+    "cloud-webdav-address-label" : {
+      "comment" : "Label of the WebDAV server address field.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server address"
           }
         }
       }
@@ -101099,6 +101135,30 @@
         }
       }
     },
+    "pair-address-label" : {
+      "comment" : "Label of the field for the other device’s address in the Enter a code dialog.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Address"
+          }
+        }
+      }
+    },
+    "pair-address-optional" : {
+      "comment" : "Note under the Enter a code dialog's fields: the address can be left empty.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leave the address empty and Kaeri looks for the device on this network."
+          }
+        }
+      }
+    },
     "pair-also-sync-foot" : {
       "comment" : "Footer. Argument 1: device (Text).",
       "extractionState" : "manual",
@@ -101131,6 +101191,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pairing code"
+          }
+        }
+      }
+    },
+    "pair-code-placeholder" : {
+      "comment" : "Placeholder of the pairing code field.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "000 000"
           }
         }
       }
@@ -101243,6 +101315,18 @@
         }
       }
     },
+    "pair-other-device" : {
+      "comment" : "Name for the device whose pairing code did not match, when no name is known yet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "your other device"
+          }
+        }
+      }
+    },
     "pair-same-wifi" : {
       "comment" : "Note.",
       "extractionState" : "manual",
@@ -101347,6 +101431,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "This %1$@ syncs with that profile only. The others stay on %2$@."
+          }
+        }
+      }
+    },
+    "pair-working-line" : {
+      "comment" : "Line under the pairing code while a device is being paired.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pairing"
           }
         }
       }
@@ -137623,6 +137719,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Enter your recovery key"
+          }
+        }
+      }
+    },
+    "rkey-field-label" : {
+      "comment" : "Label of the field for a recovery key in the restore dialog.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recovery key"
           }
         }
       }

@@ -8688,6 +8688,33 @@ public enum L {
     /// Button in the alert that turns sync off on this computer.
     public static var devicesTurnOffAction: String { string("devices-turn-off-action", fallback: "Turn off") }
 
+    /// Label of the field for the other device’s address in the Enter a code dialog.
+    public static var pairAddressLabel: String { string("pair-address-label", fallback: "Address") }
+
+    /// Placeholder of the pairing code field.
+    public static var pairCodePlaceholder: String { string("pair-code-placeholder", fallback: "000 000") }
+
+    /// Label of the field for a recovery key in the restore dialog.
+    public static var rkeyFieldLabel: String { string("rkey-field-label", fallback: "Recovery key") }
+
+    /// Label of the user name field for WebDAV and a Nextcloud app password.
+    public static var cloudUserLabel: String { string("cloud-user-label", fallback: "User name") }
+
+    /// Label of the password field for WebDAV and a Nextcloud app password.
+    public static var cloudPasswordLabel: String { string("cloud-password-label", fallback: "Password") }
+
+    /// Label of the WebDAV server address field.
+    public static var cloudWebdavAddressLabel: String { string("cloud-webdav-address-label", fallback: "Server address") }
+
+    /// Line under the pairing code while a device is being paired.
+    public static var pairWorkingLine: String { string("pair-working-line", fallback: "Pairing") }
+
+    /// Name for the device whose pairing code did not match, when no name is known yet.
+    public static var pairOtherDevice: String { string("pair-other-device", fallback: "your other device") }
+
+    /// Note under the Enter a code dialog's fields: the address can be left empty.
+    public static var pairAddressOptional: String { string("pair-address-optional", fallback: "Leave the address empty and Kaeri looks for the device on this network.") }
+
     /// Settings row and page title, every platform.
     public static var devicesTitle: String { string("devices-title", fallback: "Devices") }
 

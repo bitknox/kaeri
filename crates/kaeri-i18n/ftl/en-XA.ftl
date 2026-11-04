@@ -1433,24 +1433,6 @@ rkey-lock-linux = [Ýöü çàñ šéé îţ àĝàîñ îñ Šéţţîñĝš, �
 # Reason polkit shows when it asks for the account password before the recovery key.
 rkey-lock-reason = [Šĥöŵ ţĥé Ķàéŕî ŕéçöṽéŕý ķéý~~~~~~~~~]
 
-# Label of the field for the other device’s address in the Enter a code dialog.
-pair-address-label = [Åððŕéšš~~~]
-
-# Placeholder of the pairing code field.
-pair-code-placeholder = [000 000~~~]
-
-# Label of the field for a recovery key in the restore dialog.
-rkey-field-label = [Ŕéçöṽéŕý ķéý~~~~]
-
-# Label of the user name field for WebDAV and a Nextcloud app password.
-cloud-user-label = [Ûšéŕ ñàɱé~~~]
-
-# Label of the password field for WebDAV and a Nextcloud app password.
-cloud-password-label = [Þàššŵöŕð~~~]
-
-# Label of the WebDAV server address field.
-cloud-webdav-address-label = [Šéŕṽéŕ àððŕéšš~~~~~]
-
 # Accessible name of the sidebar account row when it opens the profile popover.
 profiles-popover-name = [Þŕöƒîļéš~~~]
 
@@ -1466,17 +1448,8 @@ cloud-folder-chooser = [Çĥööšé à ƒöļðéŕ~~~~~]
 # Button that saves the recovery key to a file.
 rkey-save-as-file = [Šàṽé àš à ƒîļé~~~~~]
 
-# Line under the pairing code while a device is being paired.
-pair-working-line = [Þàîŕîñĝ~~~]
-
 # Button that closes the dialog that shows a device paired.
 pair-done-action = [Ðöñé~~]
-
-# Name for the device whose pairing code did not match, when no name is known yet.
-pair-other-device = [ýöüŕ öţĥéŕ ðéṽîçé~~~~~~]
-
-# Note under the Enter a code dialog's fields: the address can be left empty.
-pair-address-optional = [Ļéàṽé ţĥé àððŕéšš éɱþţý àñð Ķàéŕî ļööķš ƒöŕ ţĥé ðéṽîçé öñ ţĥîš ñéţŵöŕķ.~~~~~~~~~~~~~~~~~~~~~~]
 
 # Under a release in the source picker: how many people share it right now.
 source-picker-seeders-linux =
@@ -9260,6 +9233,33 @@ devices-show-key = [Šĥöŵ~~]
 
 # Button in the alert that turns sync off on this computer.
 devices-turn-off-action = [Ţüŕñ öƒƒ~~~]
+
+# Label of the field for the other device’s address in the Enter a code dialog.
+pair-address-label = [Åððŕéšš~~~]
+
+# Placeholder of the pairing code field.
+pair-code-placeholder = [000 000~~~]
+
+# Label of the field for a recovery key in the restore dialog.
+rkey-field-label = [Ŕéçöṽéŕý ķéý~~~~]
+
+# Label of the user name field for WebDAV and a Nextcloud app password.
+cloud-user-label = [Ûšéŕ ñàɱé~~~]
+
+# Label of the password field for WebDAV and a Nextcloud app password.
+cloud-password-label = [Þàššŵöŕð~~~]
+
+# Label of the WebDAV server address field.
+cloud-webdav-address-label = [Šéŕṽéŕ àððŕéšš~~~~~]
+
+# Line under the pairing code while a device is being paired.
+pair-working-line = [Þàîŕîñĝ~~~]
+
+# Name for the device whose pairing code did not match, when no name is known yet.
+pair-other-device = [ýöüŕ öţĥéŕ ðéṽîçé~~~~~~]
+
+# Note under the Enter a code dialog's fields: the address can be left empty.
+pair-address-optional = [Ļéàṽé ţĥé àððŕéšš éɱþţý àñð Ķàéŕî ļööķš ƒöŕ ţĥé ðéṽîçé öñ ţĥîš ñéţŵöŕķ.~~~~~~~~~~~~~~~~~~~~~~]
 
 # Settings row and page title, every platform.
 devices-title = [Ðéṽîçéš~~~]

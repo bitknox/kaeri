@@ -9196,6 +9196,42 @@ object Strings {
     fun devicesTurnOffAction(context: Context): String =
         context.getString(R.string.devices_turn_off_action)
 
+    /** Label of the field for the other device’s address in the Enter a code dialog. */
+    fun pairAddressLabel(context: Context): String =
+        context.getString(R.string.pair_address_label)
+
+    /** Placeholder of the pairing code field. */
+    fun pairCodePlaceholder(context: Context): String =
+        context.getString(R.string.pair_code_placeholder)
+
+    /** Label of the field for a recovery key in the restore dialog. */
+    fun rkeyFieldLabel(context: Context): String =
+        context.getString(R.string.rkey_field_label)
+
+    /** Label of the user name field for WebDAV and a Nextcloud app password. */
+    fun cloudUserLabel(context: Context): String =
+        context.getString(R.string.cloud_user_label)
+
+    /** Label of the password field for WebDAV and a Nextcloud app password. */
+    fun cloudPasswordLabel(context: Context): String =
+        context.getString(R.string.cloud_password_label)
+
+    /** Label of the WebDAV server address field. */
+    fun cloudWebdavAddressLabel(context: Context): String =
+        context.getString(R.string.cloud_webdav_address_label)
+
+    /** Line under the pairing code while a device is being paired. */
+    fun pairWorkingLine(context: Context): String =
+        context.getString(R.string.pair_working_line)
+
+    /** Name for the device whose pairing code did not match, when no name is known yet. */
+    fun pairOtherDevice(context: Context): String =
+        context.getString(R.string.pair_other_device)
+
+    /** Note under the Enter a code dialog's fields: the address can be left empty. */
+    fun pairAddressOptional(context: Context): String =
+        context.getString(R.string.pair_address_optional)
+
     /** Settings row and page title, every platform. */
     fun devicesTitle(context: Context): String =
         context.getString(R.string.devices_title)

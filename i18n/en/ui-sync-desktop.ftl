@@ -19,3 +19,30 @@ devices-show-key = Show
 
 # Button in the alert that turns sync off on this computer.
 devices-turn-off-action = Turn off
+
+# Label of the field for the other device’s address in the Enter a code dialog.
+pair-address-label = Address
+
+# Placeholder of the pairing code field.
+pair-code-placeholder = 000 000
+
+# Label of the field for a recovery key in the restore dialog.
+rkey-field-label = Recovery key
+
+# Label of the user name field for WebDAV and a Nextcloud app password.
+cloud-user-label = User name
+
+# Label of the password field for WebDAV and a Nextcloud app password.
+cloud-password-label = Password
+
+# Label of the WebDAV server address field.
+cloud-webdav-address-label = Server address
+
+# Line under the pairing code while a device is being paired.
+pair-working-line = Pairing
+
+# Name for the device whose pairing code did not match, when no name is known yet.
+pair-other-device = your other { -device }
+
+# Note under the Enter a code dialog's fields: the address can be left empty.
+pair-address-optional = Leave the address empty and { -app-name } looks for the { -device } on this network.

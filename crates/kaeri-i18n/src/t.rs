@@ -2220,36 +2220,6 @@ pub fn rkey_lock_reason() -> String {
     text("rkey-lock-reason", &[])
 }
 
-/// Label of the field for the other device’s address in the Enter a code dialog.
-pub fn pair_address_label() -> String {
-    text("pair-address-label", &[])
-}
-
-/// Placeholder of the pairing code field.
-pub fn pair_code_placeholder() -> String {
-    text("pair-code-placeholder", &[])
-}
-
-/// Label of the field for a recovery key in the restore dialog.
-pub fn rkey_field_label() -> String {
-    text("rkey-field-label", &[])
-}
-
-/// Label of the user name field for WebDAV and a Nextcloud app password.
-pub fn cloud_user_label() -> String {
-    text("cloud-user-label", &[])
-}
-
-/// Label of the password field for WebDAV and a Nextcloud app password.
-pub fn cloud_password_label() -> String {
-    text("cloud-password-label", &[])
-}
-
-/// Label of the WebDAV server address field.
-pub fn cloud_webdav_address_label() -> String {
-    text("cloud-webdav-address-label", &[])
-}
-
 /// Accessible name of the sidebar account row when it opens the profile popover.
 pub fn profiles_popover_name() -> String {
     text("profiles-popover-name", &[])
@@ -2275,24 +2245,9 @@ pub fn rkey_save_as_file() -> String {
     text("rkey-save-as-file", &[])
 }
 
-/// Line under the pairing code while a device is being paired.
-pub fn pair_working_line() -> String {
-    text("pair-working-line", &[])
-}
-
 /// Button that closes the dialog that shows a device paired.
 pub fn pair_done_action() -> String {
     text("pair-done-action", &[])
-}
-
-/// Name for the device whose pairing code did not match, when no name is known yet.
-pub fn pair_other_device() -> String {
-    text("pair-other-device", &[])
-}
-
-/// Note under the Enter a code dialog's fields: the address can be left empty.
-pub fn pair_address_optional() -> String {
-    text("pair-address-optional", &[])
 }
 
 /// Under a release in the source picker: how many people share it right now.
@@ -14900,6 +14855,51 @@ pub fn devices_show_key() -> String {
 /// Button in the alert that turns sync off on this computer.
 pub fn devices_turn_off_action() -> String {
     text("devices-turn-off-action", &[])
+}
+
+/// Label of the field for the other device’s address in the Enter a code dialog.
+pub fn pair_address_label() -> String {
+    text("pair-address-label", &[])
+}
+
+/// Placeholder of the pairing code field.
+pub fn pair_code_placeholder() -> String {
+    text("pair-code-placeholder", &[])
+}
+
+/// Label of the field for a recovery key in the restore dialog.
+pub fn rkey_field_label() -> String {
+    text("rkey-field-label", &[])
+}
+
+/// Label of the user name field for WebDAV and a Nextcloud app password.
+pub fn cloud_user_label() -> String {
+    text("cloud-user-label", &[])
+}
+
+/// Label of the password field for WebDAV and a Nextcloud app password.
+pub fn cloud_password_label() -> String {
+    text("cloud-password-label", &[])
+}
+
+/// Label of the WebDAV server address field.
+pub fn cloud_webdav_address_label() -> String {
+    text("cloud-webdav-address-label", &[])
+}
+
+/// Line under the pairing code while a device is being paired.
+pub fn pair_working_line() -> String {
+    text("pair-working-line", &[])
+}
+
+/// Name for the device whose pairing code did not match, when no name is known yet.
+pub fn pair_other_device() -> String {
+    text("pair-other-device", &[])
+}
+
+/// Note under the Enter a code dialog's fields: the address can be left empty.
+pub fn pair_address_optional() -> String {
+    text("pair-address-optional", &[])
 }
 
 /// Settings row and page title, every platform.

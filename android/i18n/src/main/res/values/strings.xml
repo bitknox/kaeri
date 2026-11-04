@@ -4792,6 +4792,24 @@
     <string name="devices_show_key">Show</string>
     <!-- Button in the alert that turns sync off on this computer. -->
     <string name="devices_turn_off_action">Turn off</string>
+    <!-- Label of the field for the other device’s address in the Enter a code dialog. -->
+    <string name="pair_address_label">Address</string>
+    <!-- Placeholder of the pairing code field. -->
+    <string name="pair_code_placeholder">000 000</string>
+    <!-- Label of the field for a recovery key in the restore dialog. -->
+    <string name="rkey_field_label">Recovery key</string>
+    <!-- Label of the user name field for WebDAV and a Nextcloud app password. -->
+    <string name="cloud_user_label">User name</string>
+    <!-- Label of the password field for WebDAV and a Nextcloud app password. -->
+    <string name="cloud_password_label">Password</string>
+    <!-- Label of the WebDAV server address field. -->
+    <string name="cloud_webdav_address_label">Server address</string>
+    <!-- Line under the pairing code while a device is being paired. -->
+    <string name="pair_working_line">Pairing</string>
+    <!-- Name for the device whose pairing code did not match, when no name is known yet. -->
+    <string name="pair_other_device">your other device</string>
+    <!-- Note under the Enter a code dialog's fields: the address can be left empty. -->
+    <string name="pair_address_optional">Leave the address empty and Kaeri looks for the device on this network.</string>
     <!-- Settings row and page title, every platform. -->
     <string name="devices_title">Devices</string>
     <!-- Devices row value while sync is off. -->

@@ -1433,24 +1433,6 @@ rkey-lock-linux = You can see it again in Settings, Devices, after your account 
 # Reason polkit shows when it asks for the account password before the recovery key.
 rkey-lock-reason = Show the Kaeri recovery key
 
-# Label of the field for the other device’s address in the Enter a code dialog.
-pair-address-label = Address
-
-# Placeholder of the pairing code field.
-pair-code-placeholder = 000 000
-
-# Label of the field for a recovery key in the restore dialog.
-rkey-field-label = Recovery key
-
-# Label of the user name field for WebDAV and a Nextcloud app password.
-cloud-user-label = User name
-
-# Label of the password field for WebDAV and a Nextcloud app password.
-cloud-password-label = Password
-
-# Label of the WebDAV server address field.
-cloud-webdav-address-label = Server address
-
 # Accessible name of the sidebar account row when it opens the profile popover.
 profiles-popover-name = Profiles
 
@@ -1466,17 +1448,8 @@ cloud-folder-chooser = Choose a folder
 # Button that saves the recovery key to a file.
 rkey-save-as-file = Save as a file
 
-# Line under the pairing code while a device is being paired.
-pair-working-line = Pairing
-
 # Button that closes the dialog that shows a device paired.
 pair-done-action = Done
-
-# Name for the device whose pairing code did not match, when no name is known yet.
-pair-other-device = your other device
-
-# Note under the Enter a code dialog's fields: the address can be left empty.
-pair-address-optional = Leave the address empty and Kaeri looks for the device on this network.
 
 # Under a release in the source picker: how many people share it right now.
 source-picker-seeders-linux =
@@ -9260,6 +9233,33 @@ devices-show-key = Show
 
 # Button in the alert that turns sync off on this computer.
 devices-turn-off-action = Turn off
+
+# Label of the field for the other device’s address in the Enter a code dialog.
+pair-address-label = Address
+
+# Placeholder of the pairing code field.
+pair-code-placeholder = 000 000
+
+# Label of the field for a recovery key in the restore dialog.
+rkey-field-label = Recovery key
+
+# Label of the user name field for WebDAV and a Nextcloud app password.
+cloud-user-label = User name
+
+# Label of the password field for WebDAV and a Nextcloud app password.
+cloud-password-label = Password
+
+# Label of the WebDAV server address field.
+cloud-webdav-address-label = Server address
+
+# Line under the pairing code while a device is being paired.
+pair-working-line = Pairing
+
+# Name for the device whose pairing code did not match, when no name is known yet.
+pair-other-device = your other device
+
+# Note under the Enter a code dialog's fields: the address can be left empty.
+pair-address-optional = Leave the address empty and Kaeri looks for the device on this network.
 
 # Settings row and page title, every platform.
 devices-title = Devices
