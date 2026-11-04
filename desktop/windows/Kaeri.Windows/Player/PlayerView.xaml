@@ -119,9 +119,6 @@
             </Button>
             <Button x:Name="EpisodesButton" Style="{StaticResource PlayerButtonStyle}" AutomationProperties.Name="{x:Bind app:T.PlayerEpisodes}">
               <FontIcon Glyph="&#xE8FD;" FontSize="16" />
-              <Button.Flyout>
-                <MenuFlyout x:Name="EpisodesMenu" Placement="BottomEdgeAlignedRight" Opened="OnMenuOpened" Closed="OnMenuClosed" />
-              </Button.Flyout>
             </Button>
             <Button x:Name="MiniButton" Style="{StaticResource PlayerButtonStyle}" Click="OnMini" AutomationProperties.Name="{x:Bind app:T.PlayerMiniPlayer}">
               <FontIcon x:Name="MiniIcon" Glyph="&#xE8A7;" FontSize="16" />

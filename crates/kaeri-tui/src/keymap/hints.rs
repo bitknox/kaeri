@@ -239,6 +239,20 @@ pub(crate) fn status_hints_paged(
         }
         // Enter plays in the table; that is the table's whole point. A row from AniList alone
         // has nothing to play it from, and Enter there goes to add a source.
+        V::Episodes(_) if !app.go_count.is_empty() || app.go_error.is_some() => {
+            // A number is being typed: the key that takes it, drawn beside what it will take,
+            // and Esc to let go of it. After one went nowhere, only Esc: the line says why.
+            let mut hints = Vec::new();
+            if app.go_error.is_none() {
+                let go = key(Action::Bottom).unwrap_or_default();
+                hints.push((
+                    format!("{} {go}", app.go_count),
+                    said(t::keys_hint_go_to_episode()),
+                ));
+            }
+            hints.push((ESC.to_string(), said(t::keys_hint_clear())));
+            return hints;
+        }
         V::Episodes(_) => vec![
             (
                 Action::Open,
@@ -249,8 +263,12 @@ pub(crate) fn status_hints_paged(
         ],
         // Enter on a title page goes one deeper, into its episodes. Space is play next only
         // while nothing plays; then it pauses the player, as on every other screen.
-        V::Title(id) => vec![
-            if app.playing.is_some() {
+        V::Title(id) => [
+            // Another, on the page Surprise me opened, while its pool has one to pick.
+            app.surprised_here()
+                .filter(|picked| picked.more)
+                .map(|_| (Action::Surprise, said(t::keys_hint_another()))),
+            Some(if app.playing.is_some() {
                 (Action::PlayPause, Action::PlayPause.hint())
             } else if app.unlisted(*id) {
                 (Action::PlayNext, hint_add_source())
@@ -258,10 +276,13 @@ pub(crate) fn status_hints_paged(
                 (Action::PlayNext, said(t::title_button_watch_again()))
             } else {
                 (Action::PlayNext, Action::PlayNext.hint())
-            },
-            (Action::Open, Action::ShowEpisodes.hint()),
-            (Action::Back, Action::Back.hint()),
-        ],
+            }),
+            Some((Action::Open, Action::ShowEpisodes.hint())),
+            Some((Action::Back, Action::Back.hint())),
+        ]
+        .into_iter()
+        .flatten()
+        .collect(),
         V::Stores | V::Store(_) | V::StoreMembers(_) => {
             vec![(Action::Open, Action::Open.hint()), (Action::Back, Action::Back.hint())]
         }
@@ -293,6 +314,10 @@ pub(crate) fn status_hints_paged(
             let mut hints: Vec<(String, &'static str)> = Vec::new();
             hints.extend(sideways().map(|keys| (keys, hint_list())));
             if !app.content.is_empty() {
+                // Planning has Surprise me: a title picked from the list.
+                if app.library_segment == kaeri_model::catalog::LibrarySegment::Planning {
+                    hints.extend(key(Action::Surprise).map(|k| (k, Action::Surprise.hint())));
+                }
                 hints.extend(key(Action::Open).map(|k| (k, hint_open())));
                 hints.extend(
                     key(Action::ShowEpisodes).map(|k| (k, Action::ShowEpisodes.hint())),
@@ -421,6 +446,12 @@ pub(crate) fn status_hints_paged(
         }
         // An empty or failed list has no row to open.
         V::Section(_) if app.content.is_empty() => Vec::new(),
+        // Search's browse picks at random from its filters, where a search with words opens a
+        // row's episodes.
+        V::Section(Section::Search) if app.searched_query.is_browse() => vec![
+            (Action::Open, Action::Open.hint()),
+            (Action::Surprise, Action::Surprise.hint()),
+        ],
         V::Section(_) => vec![
             (Action::Open, Action::Open.hint()),
             (Action::ShowEpisodes, Action::ShowEpisodes.hint()),

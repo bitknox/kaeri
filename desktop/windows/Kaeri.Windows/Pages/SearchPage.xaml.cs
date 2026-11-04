@@ -24,10 +24,14 @@ public sealed partial class SearchPage : Page
     /// <summary>What was last asked, or null while the page shows this season.</summary>
     SearchQuery? asked;
     Entry[] entries = [];
+    readonly SurpriseButton surprise;
+    TrendingRail? rail;
 
     public SearchPage()
     {
         InitializeComponent();
+        surprise = new SurpriseButton(() => new SurprisePool.Filters(Searches.With(query, filters)), T.SurpriseHintFilters);
+        SurpriseHost.Content = surprise;
         State.Placeholders = () => States.Covers();
         State.ActivityText = T.StateLoading;
         settle.Tick += (_, _) =>
@@ -58,14 +62,66 @@ public sealed partial class SearchPage : Page
             ctx.Send(new Command.LoadSearchFacets());
         BuildFilters();
         Run();
+        rail?.Visit();
     }
+
+#if KAERI_TESTING
+    /// <summary>
+    /// --show=browse-period-menu opens the heading's menu; browse-trending-week switches to This
+    /// week; motion-period does both as a person would, the menu first, for the period clip.
+    /// </summary>
+    void StageRail(TrendingRail rail)
+    {
+        void After(double seconds, Action act)
+        {
+            var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(seconds) };
+            timer.Tick += (_, _) =>
+            {
+                timer.Stop();
+                act();
+            };
+            timer.Start();
+        }
+        switch (ctx.Options.Show)
+        {
+            case "browse-period-menu":
+                After(2.5, rail.OpenMenu);
+                break;
+            case "browse-trending-week":
+                After(2.5, () => rail.Pick(TrendPeriod.Week));
+                break;
+            case "motion-period":
+                After(3.0, rail.OpenMenu);
+                After(4.4, () => rail.Pick(TrendPeriod.Week));
+                break;
+        }
+    }
+#endif
 
     /// <summary>Asks the engine for what the box and the filters now say, or this season when they say nothing.</summary>
     void Run()
     {
         remembered = filters;
         ShowFilters();
-        if (query.Length == 0 && !filters.Narrows && filters.Sort is null)
+        // Surprise me picks from the filters, so it goes when words are typed; the rail shows with nothing asked.
+        SurpriseHost.Visibility = query.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
+        var browsing = query.Length == 0 && !filters.Narrows && filters.Sort is null;
+        if (browsing)
+        {
+            rail ??= new TrendingRail(period => Change(filters with { Sort = SearchSort.Trending, Period = period is TrendPeriod.Today ? null : period }, now: true));
+            if (RailHost.Content is null)
+            {
+                RailHost.Content = rail;
+                rail.Visit();
+#if KAERI_TESTING
+                StageRail(rail);
+#endif
+            }
+            RailHost.Visibility = Visibility.Visible;
+        }
+        else
+            RailHost.Visibility = Visibility.Collapsed;
+        if (browsing)
         {
             asked = null;
             Heading.Text = T.NavSearch;
@@ -91,6 +147,8 @@ public sealed partial class SearchPage : Page
 
     void Heard(IReadOnlyList<Event> batch)
     {
+        surprise.Heard(batch);
+        rail?.Heard(batch);
         foreach (var e in batch)
         {
             if (e is Event.Facets)
@@ -160,7 +218,20 @@ public sealed partial class SearchPage : Page
         SortMenu.Items.Clear();
         SortMenu.Items.Add(Radio(T.SortRelevance, "sort", filters.Sort is null, () => filters with { Sort = null }));
         foreach (var sort in Searches.Sorts)
-            SortMenu.Items.Add(Radio(Searches.SortName(sort), "sort", filters.Sort == sort, () => filters with { Sort = sort }));
+        {
+            if (sort != SearchSort.Trending)
+            {
+                SortMenu.Items.Add(Radio(Searches.SortName(sort), "sort", filters.Sort == sort, () => filters with { Sort = sort, Period = null }));
+                continue;
+            }
+            // Trending is three items, one per period: the sort and its period set together.
+            foreach (var p in Browsing.Periods)
+            {
+                var period = p;
+                var on = filters.Sort == sort && (filters.Period ?? TrendPeriod.Today) == period;
+                SortMenu.Items.Add(Radio(Browsing.Heading(period), "sort", on, () => filters with { Sort = sort, Period = period is TrendPeriod.Today ? null : period }));
+            }
+        }
     }
 
     /// <summary>The genres: the engine's list once it has one, AniList's usual ones until then.</summary>
@@ -184,12 +255,17 @@ public sealed partial class SearchPage : Page
     }
 
     /// <summary>A filter changed: show it at once, search once the clicks stop.</summary>
-    void Change(SearchFilters to)
+    void Change(SearchFilters to, bool now = false)
     {
         filters = to;
+        if (now)
+            BuildFilters();
         ShowFilters();
         settle.Stop();
-        settle.Start();
+        if (now)
+            Run();
+        else
+            settle.Start();
     }
 
     /// <summary>Each drop-down says its name, or in amber what it has.</summary>
@@ -200,7 +276,7 @@ public sealed partial class SearchPage : Page
         Say(SeasonButton, filters.Season is { } s ? Wording.SeasonName(s) : T.FilterSeason, filters.Season is not null);
         Say(YearButton, filters.Year?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? T.FilterYear, filters.Year is not null);
         Say(AvailableButton, filters.Available is { } a ? Searches.AvailableName(a) : T.SearchAvailableName, filters.Available is not null);
-        Say(SortButton, filters.Sort is { } o ? Searches.SortName(o) : T.SearchSortName, filters.Sort is not null);
+        Say(SortButton, filters.Sort is { } o ? Searches.SortName(o, filters.Period) : T.SearchSortName, filters.Sort is not null);
         if (filters.IsEmpty)
             Motion.Hide(ClearButton);
         else

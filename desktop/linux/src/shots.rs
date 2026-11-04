@@ -19,7 +19,7 @@ const TITLE: u32 = 900_001;
 const PLAYING: (u32, &str) = (900_002, "4");
 
 /// Every shot by name, in the order a run takes them.
-pub const ALL: [&str; 92] = [
+pub const ALL: [&str; 111] = [
     "home",
     "welcome",
     "offline",
@@ -27,6 +27,9 @@ pub const ALL: [&str; 92] = [
     "seasonal",
     "search",
     "search-results",
+    "browse-trending",
+    "browse-period-menu",
+    "title-another",
     "search-filters",
     "search-filters-none",
     "search-failed",
@@ -40,6 +43,18 @@ pub const ALL: [&str; 92] = [
     "discussion-waiting",
     "discussion-signed-out",
     "title-discussion",
+    "synopsis",
+    "synopsis-revealed",
+    "synopsis-shown",
+    "synopsis-none",
+    "synopsis-long",
+    "synopsis-ranges",
+    "go-dialog",
+    "go-dialog-none",
+    "go-dialog-not-out",
+    "go-typed",
+    "go-landed",
+    "go-error",
     "title-watch-again",
     "show-settings",
     "library",
@@ -103,6 +118,10 @@ pub const ALL: [&str; 92] = [
     "player",
     "player-marks",
     "player-tracks",
+    "player-episodes",
+    "player-episodes-focus",
+    "player-episodes-ranges",
+    "player-episodes-ranges-menu",
     "first-play-style",
     "player-undo",
     "mini",
@@ -505,6 +524,39 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
             shell.go(Dest::Search);
             2.0
         }
+        #[cfg(feature = "fixtures")]
+        "browse-trending" | "browse-period-menu" => {
+            use kaeri_model::browsing::TrendPeriod;
+            shell.go(Dest::Search);
+            let shell = Rc::clone(shell);
+            let menu = shot == "browse-period-menu";
+            glib::timeout_add_local_once(Duration::from_millis(2500), move || {
+                shell.search_page().trending().pick(TrendPeriod::Week);
+                if menu {
+                    glib::timeout_add_local_once(Duration::from_millis(1500), move || {
+                        if let Some(button) = shell.search_page().trending().menu() {
+                            button.popup();
+                        }
+                    });
+                }
+            });
+            5.5
+        }
+        #[cfg(feature = "fixtures")]
+        "title-another" => {
+            // Opened by Surprise me: the header says Another.
+            shell.go(Dest::Search);
+            shell.ctx.pick.replace(Some(crate::window::Pick {
+                id: kaeri_core::ids::AnilistId::new(TITLE),
+                pool: kaeri_model::browsing::SurprisePool::Filters {
+                    query: kaeri_model::search::SearchQuery::default(),
+                },
+                more: true,
+            }));
+            let _ =
+                WidgetExt::activate_action(window, "win.open-title", Some(&TITLE.to_variant()));
+            3.5
+        }
         "search-results" => {
             shell.go(Dest::Search);
             shell.search_page().search_for("hoshikuzu");
@@ -657,6 +709,59 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
                 }
             });
             4.0
+        }
+        #[cfg(feature = "fixtures")]
+        "synopsis" | "synopsis-revealed" | "synopsis-shown" | "synopsis-none"
+        | "synopsis-long" | "synopsis-ranges" | "go-dialog" | "go-dialog-none"
+        | "go-dialog-not-out" | "go-typed" | "go-landed" | "go-error" | "motion-go"
+        | "motion-typed" => stage_synopsis(shell, shot),
+        // Motion B: the period menu opened from the heading, This week picked, the covers
+        // crossfading to the week's.
+        #[cfg(feature = "fixtures")]
+        "motion-period" => {
+            use kaeri_model::browsing::TrendPeriod;
+            shell.go(Dest::Search);
+            let shell = Rc::clone(shell);
+            glib::timeout_add_local_once(Duration::from_millis(2500), move || {
+                let Some(button) = shell.search_page().trending().menu() else { return };
+                mark_step(
+                    "period.menu",
+                    &shell.search_page().trending().widget.clone().upcast(),
+                );
+                button.popup();
+                glib::timeout_add_local_once(Duration::from_millis(1400), move || {
+                    button.popdown();
+                    mark_step(
+                        "period.week",
+                        &shell.search_page().trending().widget.clone().upcast(),
+                    );
+                    shell.search_page().trending().pick(TrendPeriod::Week);
+                });
+            });
+            7.0
+        }
+        // Motion C: Another on a title Surprise me opened, crossfading to the next pick.
+        #[cfg(feature = "fixtures")]
+        "motion-another" => {
+            shell.go(Dest::Search);
+            shell.ctx.pick.replace(Some(crate::window::Pick {
+                id: kaeri_core::ids::AnilistId::new(TITLE),
+                pool: kaeri_model::browsing::SurprisePool::Filters {
+                    query: kaeri_model::search::SearchQuery::default(),
+                },
+                more: true,
+            }));
+            let _ =
+                WidgetExt::activate_action(window, "win.open-title", Some(&TITLE.to_variant()));
+            let ctx = Rc::clone(&shell.ctx);
+            glib::timeout_add_local_once(Duration::from_millis(3000), move || {
+                let label = kaeri_i18n::t::surprise_another();
+                if let Some(button) = button_labelled(ctx.window.upcast_ref(), &label) {
+                    mark_step("another", &ctx.window.clone().upcast());
+                    button.emit_clicked();
+                }
+            });
+            7.0
         }
         "title-discussion" => {
             // The episode that has a thread says so under its row.
@@ -1099,6 +1204,15 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
             }
             10.0
         }
+        "player-episodes"
+        | "player-episodes-focus"
+        | "player-episodes-ranges"
+        | "player-episodes-ranges-menu" => {
+            play(shell);
+            #[cfg(feature = "fixtures")]
+            stage_player_episodes(shell, shot);
+            10.5
+        }
         "player-tracks" => {
             play(shell);
             #[cfg(feature = "fixtures")]
@@ -1204,11 +1318,19 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
             close_dialogs(&shell.ctx.window);
             shell.ctx.hub.known.borrow_mut().invite = None;
         }
+        "title-another" => {
+            shell.ctx.pick.replace(None);
+            let _ = WidgetExt::activate_action(&shell.ctx.window, "win.back", None);
+        }
         "title-more-about" => {
             close_dialogs(&shell.ctx.window);
             let _ = WidgetExt::activate_action(&shell.ctx.window, "win.back", None);
         }
-        "title" | "pad-title" | "title-discussion" => {
+        "title" | "pad-title" | "title-discussion" | "synopsis" | "synopsis-revealed"
+        | "synopsis-shown" | "synopsis-none" | "synopsis-long" | "synopsis-ranges"
+        | "go-dialog" | "go-dialog-none" | "go-dialog-not-out" | "go-typed" | "go-landed"
+        | "go-error" | "motion-go" | "motion-typed" => {
+            close_dialogs(&shell.ctx.window);
             let _ = WidgetExt::activate_action(&shell.ctx.window, "win.back", None);
         }
         "trailer-preview" => crate::trailer::close_preview(),
@@ -1296,7 +1418,11 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
                 nav.pop();
             }
         }
-        "player-tracks" => {
+        "player-tracks"
+        | "player-episodes"
+        | "player-episodes-focus"
+        | "player-episodes-ranges"
+        | "player-episodes-ranges-menu" => {
             shell.player.close_menus();
             shell.player.close();
         }
@@ -1819,6 +1945,12 @@ async fn painted(shell: &Rc<Shell>, path: &std::path::Path, shot: &str) -> Resul
             let over = match shot.as_str() {
                 "player-marks" => player.shot_popover(),
                 "player-tracks" => player.shot_tracks_popover(),
+                "player-episodes" | "player-episodes-focus" | "player-episodes-ranges" => {
+                    player.shot_episodes_popover()
+                }
+                "synopsis-ranges" => range_popover(&window),
+                #[cfg(feature = "fixtures")]
+                "browse-period-menu" => period_popover(&window),
                 "first-play-style" => player.shot_style_popover(),
                 "party-title-menu" | "store-menu" | "match-fix-menu" => {
                     title_menu_popover(&window)
@@ -3004,6 +3136,87 @@ fn more_button(window: &adw::ApplicationWindow) -> Option<gtk::MenuButton> {
     find(window.upcast_ref())
 }
 
+/// The title page's range picker, while it is on screen.
+fn range_button(window: &adw::ApplicationWindow) -> Option<gtk::MenuButton> {
+    fn find(widget: &gtk::Widget, tip: &str) -> Option<gtk::MenuButton> {
+        if let Some(button) = widget.downcast_ref::<gtk::MenuButton>()
+            && button.tooltip_text().as_deref() == Some(tip)
+            && button.is_mapped()
+        {
+            return Some(button.clone());
+        }
+        let mut child = widget.first_child();
+        while let Some(next) = child {
+            if let Some(found) = find(&next, tip) {
+                return Some(found);
+            }
+            child = next.next_sibling();
+        }
+        None
+    }
+    find(window.upcast_ref(), &kaeri_i18n::t::episode_range_label())
+}
+
+/// The Trending rail's period menu, under its heading, over the window.
+#[cfg(feature = "fixtures")]
+fn period_popover(window: &adw::ApplicationWindow) -> Option<(gtk::Widget, f32, f32)> {
+    fn find(widget: &gtk::Widget) -> Option<gtk::MenuButton> {
+        if let Some(button) = widget.downcast_ref::<gtk::MenuButton>()
+            && button.widget_name() == "trend-period"
+            && button.is_mapped()
+        {
+            return Some(button.clone());
+        }
+        let mut child = widget.first_child();
+        while let Some(next) = child {
+            if let Some(found) = find(&next) {
+                return Some(found);
+            }
+            child = next.next_sibling();
+        }
+        None
+    }
+    let button = find(window.upcast_ref())?;
+    let popover = button.popover()?;
+    if !popover.is_visible() {
+        return None;
+    }
+    let bounds = button.compute_bounds(window)?;
+    let width = popover.width() as f32;
+    let x = (bounds.x() - 4.0).clamp(0.0, (window.width() as f32 - width).max(0.0));
+    Some((popover.upcast(), x, bounds.y() + bounds.height()))
+}
+
+/// The first text field under `widget`.
+#[cfg(feature = "fixtures")]
+fn find_entry(widget: &gtk::Widget) -> Option<gtk::Entry> {
+    if let Some(entry) = widget.downcast_ref::<gtk::Entry>() {
+        return Some(entry.clone());
+    }
+    let mut child = widget.first_child();
+    while let Some(next) = child {
+        if let Some(found) = find_entry(&next) {
+            return Some(found);
+        }
+        child = next.next_sibling();
+    }
+    None
+}
+
+/// The range picker's popover, under its button, over the window.
+fn range_popover(window: &adw::ApplicationWindow) -> Option<(gtk::Widget, f32, f32)> {
+    let button = range_button(window)?;
+    let popover = button.popover()?;
+    if !popover.is_visible() {
+        return None;
+    }
+    let bounds = button.compute_bounds(window)?;
+    let width = popover.width() as f32;
+    let x = (bounds.x() + bounds.width() / 2.0 - width / 2.0)
+        .clamp(0.0, (window.width() as f32 - width).max(0.0));
+    Some((popover.upcast(), x, bounds.y() + bounds.height()))
+}
+
 /// The More menu's popover, under its button, over the window.
 fn title_menu_popover(window: &adw::ApplicationWindow) -> Option<(gtk::Widget, f32, f32)> {
     let button = more_button(window)?;
@@ -3782,6 +3995,294 @@ fn found_motion(_: &Rc<Shell>, _: &str) -> f64 {
 #[cfg(not(feature = "fixtures"))]
 fn skip_stage(_: &Rc<Shell>, _: &str) -> f64 {
     0.0
+}
+
+/// The synopses of the title page's list, made up: one line per episode of the finished title.
+#[cfg(feature = "fixtures")]
+const LINES: [&str; 11] = [
+    "A lamplighter wakes on the star road with a lantern and no name.",
+    "The crew take on a passenger who pays in maps, and the first map is of a place that has not been built yet.",
+    "A storm closes the pass with the mail still aboard. The pilot has to choose between turning back and flying the old route under the cloud line, the one her mentor never came back from.",
+    "Ryo repairs the engine by lamplight while the others argue over where the next island lies.",
+    "A festival of paper lanterns drifts up from the sea of cloud, and one of them carries a message for the youngest pilot.",
+    "The crew wait out a calm at a floating harbour where nobody has docked in years.",
+    "A storm closes Kiriya Pass with the mail still aboard. Toma has to choose between turning back and flying the old route under the cloud line.",
+    "Ryo finds the letter Toma has carried since the first night, and reads it before she can stop him. Neither of them speaks again until the lamps of Hoshimi come up out of the cloud.",
+    "On an island with one lamp left, the crew meet the keeper who lights it every night for a ship that stopped coming. Ryo stays behind to help, and nearly misses the morning departure. The keeper gives Toma a map that was never meant to leave the island, and asks only that she carry it past the edge of the cloud sea.",
+    "The crew of a patched-up airship carry letters and strangers between islands that float above an endless sea of cloud.",
+    "A clock that runs four minutes slow is the only witness to a theft on Lantern Street.",
+];
+
+/// The player's Episodes panel with synopses: the playing title's table is sent again with text
+/// and the rows ahead, and the panel opened. With `focus`, the keyboard then moves to the second
+/// row, and the footer follows it.
+#[cfg(feature = "fixtures")]
+fn stage_player_episodes(shell: &Rc<Shell>, shot: &str) {
+    let focus = shot == "player-episodes-focus";
+    let ranged = shot.starts_with("player-episodes-ranges");
+    let menu = shot == "player-episodes-ranges-menu";
+    use kaeri_model::episodes::EpisodeRow;
+    let hub = Rc::clone(&shell.ctx.hub);
+    let seen: Rc<std::cell::RefCell<Vec<EpisodeRow>>> = Rc::default();
+    let listening = hub.listen({
+        let seen = Rc::clone(&seen);
+        move |event| {
+            if let Event::Episodes { id, rows, .. } = event
+                && id.get() == PLAYING.0
+            {
+                seen.replace(rows.clone());
+            }
+        }
+    });
+    let player = Rc::clone(&shell.player);
+    glib::timeout_add_local_once(Duration::from_secs(4), move || {
+        hub.forget(listening);
+        let base = seen.borrow().clone();
+        // A long series for the ranges: 250 rows, 230 playing.
+        let mut rows: Vec<EpisodeRow> = if ranged && !base.is_empty() {
+            (1..=250)
+                .map(|n| {
+                    let mut row = base[(n - 1) % base.len()].clone();
+                    row.number = n.to_string();
+                    row.title = Some(format!("Letter number {n}"));
+                    row
+                })
+                .collect()
+        } else {
+            base
+        };
+        let next = if ranged { 230 } else { 4 };
+        for (i, row) in rows.iter_mut().enumerate() {
+            let n = i + 1;
+            row.completed = n < next;
+            row.watched = if n == next { 0.42 } else { 0.0 };
+            row.past_progress = n > next;
+            row.spoiler_ahead = n > next;
+            row.description = Some(LINES[i % LINES.len()].to_owned());
+        }
+        hub.take(vec![Event::Episodes {
+            id: kaeri_core::ids::AnilistId::new(PLAYING.0),
+            rows,
+            failed: None,
+        }]);
+        glib::timeout_add_local_once(Duration::from_millis(1200), move || {
+            if ranged {
+                player.shot_ranged_rows();
+            }
+            player.shot_episodes();
+            if menu {
+                let player = Rc::clone(&player);
+                glib::timeout_add_local_once(Duration::from_millis(900), move || {
+                    player.shot_episodes_ranges()
+                });
+            }
+            if focus {
+                glib::timeout_add_local_once(Duration::from_millis(800), move || {
+                    player.shot_episodes_focus(1)
+                });
+            }
+        });
+    });
+}
+
+/// The title page with synopses on its episodes, as the fixture scene has none of its own: the
+/// table the page got is sent again with text, and which rows are ahead. `synopsis-long` sends a
+/// table of 250, and `synopsis-ranges` the same with the range picker open; `synopsis-none` opens a
+/// title whose table has no text at all.
+#[cfg(feature = "fixtures")]
+fn stage_synopsis(shell: &Rc<Shell>, shot: &str) -> f64 {
+    use kaeri_model::episodes::EpisodeRow;
+    let window = &shell.ctx.window;
+    shell.go(Dest::Home);
+    let title = if shot == "synopsis-none" { PLAYING.0 } else { TITLE };
+    let seen: Rc<std::cell::RefCell<Vec<EpisodeRow>>> = Rc::default();
+    let hub = Rc::clone(&shell.ctx.hub);
+    let listening = hub.listen({
+        let seen = Rc::clone(&seen);
+        move |event| {
+            if let Event::Episodes { id, rows, .. } = event
+                && id.get() == title
+            {
+                seen.replace(rows.clone());
+            }
+        }
+    });
+    let _ = WidgetExt::activate_action(window, "win.open-title", Some(&title.to_variant()));
+    if shot == "synopsis-none" {
+        return 3.5;
+    }
+    let wait = if shot.starts_with("motion-") { 8.0 } else { 6.0 };
+    let ctx = Rc::clone(&shell.ctx);
+    let shot = shot.to_owned();
+    glib::timeout_add_local_once(Duration::from_millis(2500), move || {
+        hub.forget(listening);
+        let base = seen.borrow().clone();
+        let next = 7;
+        let long =
+            !matches!(shot.as_str(), "synopsis" | "synopsis-revealed" | "synopsis-shown");
+        let mut rows: Vec<EpisodeRow> = if long {
+            (1..=250)
+                .map(|n| {
+                    let mut row = base[(n - 1) % base.len()].clone();
+                    row.number = n.to_string();
+                    row.title = Some(format!("Letter number {n}"));
+                    row
+                })
+                .collect()
+        } else {
+            base
+        };
+        let next = if long { 230 } else { next };
+        for (i, row) in rows.iter_mut().enumerate() {
+            let n = i + 1;
+            row.completed = n < next;
+            row.watched = if n == next { 0.42 } else { 0.0 };
+            row.past_progress = n > next;
+            row.spoiler_ahead = n > next;
+            row.description = (n != 10 || long).then(|| LINES[i % LINES.len()].to_owned());
+            row.kind = (n == 10).then_some(kaeri_model::episodes::EpisodeKind::Filler);
+            // The not-out shot: the last ten have no date, after 240 that came out.
+            if shot == "go-dialog-not-out" {
+                row.airs_at = (n <= 240).then_some(1_000_000_000 + n as i64 * 604_800);
+            }
+        }
+        hub.take(vec![Event::Episodes {
+            id: kaeri_core::ids::AnilistId::new(TITLE),
+            rows,
+            failed: None,
+        }]);
+        let for_press = Rc::clone(&ctx);
+        let press = move |label: String| {
+            if let Some(button) = button_labelled(for_press.window.upcast_ref(), &label) {
+                button.emit_clicked();
+            }
+        };
+        let ctx2 = Rc::clone(&ctx);
+        glib::timeout_add_local_once(Duration::from_millis(800), move || match shot.as_str() {
+            "synopsis-revealed" => {
+                if let Some(page) = ctx2.nav().and_then(|nav| nav.visible_page()) {
+                    let _ = WidgetExt::activate_action(
+                        &page,
+                        "title.show-synopsis",
+                        Some(&"9".to_variant()),
+                    );
+                }
+            }
+            "synopsis-shown" => press(kaeri_i18n::t::episode_protection_show()),
+            "go-dialog" | "go-dialog-none" | "go-dialog-not-out" => {
+                let page = ctx2.nav().and_then(|nav| nav.visible_page());
+                let window = ctx2.window.clone();
+                if let Some(page) = page {
+                    let _ = WidgetExt::activate_action(
+                        &page,
+                        "title.shot-go",
+                        Some(&"dialog".to_variant()),
+                    );
+                    let text = match shot.as_str() {
+                        "go-dialog-none" => "537",
+                        "go-dialog-not-out" => "245",
+                        _ => "",
+                    };
+                    glib::timeout_add_local_once(Duration::from_millis(500), move || {
+                        if let Some(entry) =
+                            window.visible_dialog().and_then(|d| find_entry(d.upcast_ref()))
+                        {
+                            entry.set_text(text);
+                            entry.set_position(-1);
+                        }
+                    });
+                }
+            }
+            "go-typed" | "go-landed" | "go-error" => {
+                if let Some(page) = ctx2.nav().and_then(|nav| nav.visible_page()) {
+                    let arg = match shot.as_str() {
+                        "go-typed" => "type:12",
+                        "go-landed" => "go:120",
+                        _ => "err:537",
+                    };
+                    let _ = WidgetExt::activate_action(
+                        &page,
+                        "title.shot-go",
+                        Some(&arg.to_variant()),
+                    );
+                }
+            }
+            // Motion D: Go to episode from 230 to 128, another range, typed one digit at a
+            // time and taken with Return.
+            "motion-go" => {
+                let Some(page) = ctx2.nav().and_then(|nav| nav.visible_page()) else { return };
+                mark_step("go.dialog", &ctx2.window.clone().upcast());
+                let _ = WidgetExt::activate_action(
+                    &page,
+                    "title.shot-go",
+                    Some(&"dialog".to_variant()),
+                );
+                let window = ctx2.window.clone();
+                for (i, text) in ["1", "12", "128"].into_iter().enumerate() {
+                    let window = window.clone();
+                    glib::timeout_add_local_once(
+                        Duration::from_millis(700 + 260 * i as u64),
+                        move || {
+                            if let Some(entry) =
+                                window.visible_dialog().and_then(|d| find_entry(d.upcast_ref()))
+                            {
+                                entry.set_text(text);
+                                entry.set_position(-1);
+                            }
+                        },
+                    );
+                }
+                glib::timeout_add_local_once(Duration::from_millis(2000), move || {
+                    if let Some(entry) =
+                        window.visible_dialog().and_then(|d| find_entry(d.upcast_ref()))
+                    {
+                        mark_step("go.land", &window.clone().upcast());
+                        entry.emit_activate();
+                    }
+                });
+            }
+            // Motion E: 2, 3, 6 typed on the list, which goes to 236 in the same range once the
+            // typing pauses.
+            "motion-typed" => {
+                let Some(page) = ctx2.nav().and_then(|nav| nav.visible_page()) else { return };
+                // The list scrolled to the rows around the next episode first.
+                let _ = WidgetExt::activate_action(
+                    &page,
+                    "title.shot-go",
+                    Some(&"go:226".to_variant()),
+                );
+                let window = ctx2.window.clone();
+                for (i, key) in ["2", "3", "6"].into_iter().enumerate() {
+                    let page = page.clone();
+                    let window = window.clone();
+                    glib::timeout_add_local_once(
+                        Duration::from_millis(1200 + 300 * i as u64),
+                        move || {
+                            if i == 0 {
+                                mark_step("typed", &window.upcast());
+                            }
+                            let _ = WidgetExt::activate_action(
+                                &page,
+                                "title.shot-go",
+                                Some(&format!("key:{key}").to_variant()),
+                            );
+                        },
+                    );
+                }
+            }
+            "synopsis-ranges" => {
+                // Focused first, so the page scrolls the picker into view, then opened.
+                if let Some(button) = range_button(&ctx2.window) {
+                    button.grab_focus();
+                    glib::timeout_add_local_once(Duration::from_millis(600), move || {
+                        button.popup()
+                    });
+                }
+            }
+            _ => {}
+        });
+    });
+    wait
 }
 
 #[cfg(test)]

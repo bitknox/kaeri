@@ -34,6 +34,9 @@ impl Keymap {
             bind(Binding::plain(Char('t')), A::ToggleTranslation);
             bind(Binding::plain(Char('/')), A::FocusSearch);
             bind(Binding::ctrl(Char('f')), A::FilterSearch);
+            // Surprise me, on Search's browse and on Planning, and Another on the page it opened.
+            // Search's field has the letters while it is typed in.
+            bind(Binding::plain(Char('z')), A::Surprise);
             // Logs get a real key rather than palette-only reachability. They are wanted at
             // exactly the moment something has broken, which is the worst moment to make someone
             // remember an indirection. And they are wanted most while something plays, so the

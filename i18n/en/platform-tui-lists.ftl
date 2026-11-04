@@ -510,6 +510,65 @@ lists-episode-dubbed = E{ $episode } · { -dubbed-cap }
 # @only tui
 lists-score = { $score }%
 
+# A search result's count at the end of its row: the number of episodes out of how many there
+# will be, while it airs. The table is narrow, so it is the two numbers alone.
+# @arg out: int
+# @arg total: int
+# @max 12
+# @only tui
+lists-count-out-of = { $out }/{ $total }
+
+# A search result's count at the end of its row: the number of episodes out of a total no one
+# has announced yet.
+# @arg out: int
+# @max 8
+# @only tui
+lists-count-out = { $out }/?
+
+# A search result's count at the end of its row, for a movie. Lower case, like the other words
+# in the column.
+# @max 7
+# @only tui
+lists-count-movie = movie
+
+# A search result's count at the end of its row, for a title not out yet whose start date
+# AniList does not know.
+# @max 6
+# @only tui
+lists-count-soon = soon
+
+# A search result's count at the end of its row, for a title not out yet: the day and month it
+# starts, such as "9 Jan". The month is the short month name.
+# @arg day: int
+# @arg month: text
+# @max 12
+# @only tui
+lists-count-starts = { $day } { $month }
+
+# After a search result's count, for a title a source said has a dub that does not say how far
+# it goes. Lower case, like the other words in the column.
+# @max 4
+# @only tui
+lists-count-dub = dub
+
+# After a search result's count: how far the dub goes, as "d12" for a dub to episode 12. The
+# column is narrow, so it is one letter and the number.
+# @arg through: int
+# @max 7
+# @only tui
+lists-count-dub-through = d{ $through }
+
+# Column heading above search results' episode counts, from 100 columns wide. Short for
+# episodes.
+# @max 5
+# @only tui
+lists-column-episodes = Eps
+
+# Column heading above how far each search result's dub goes, from 100 columns wide.
+# @max 5
+# @only tui
+lists-column-dub = Dub
+
 # A row on the { -continue-cap } list: the episode and how far into it the person stopped.
 # @arg episode: text
 # @arg percent: int

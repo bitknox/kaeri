@@ -3053,6 +3053,10 @@ object Strings {
     fun actionCancel(context: Context): String =
         context.getString(R.string.action_cancel)
 
+    /** Button that confirms a small question, such as the episode number to go to. */
+    fun actionGo(context: Context): String =
+        context.getString(R.string.action_go)
+
     /** Button that puts a question off until later. */
     fun actionNotNow(context: Context): String =
         context.getString(R.string.action_not_now)
@@ -10830,7 +10834,7 @@ object Strings {
     fun episodeFold(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.episode_fold, count, count)
 
-    /** An episode's number in a facts line on phones. */
+    /** An episode's number in a facts line on phones and in narrow desktop windows. */
     fun episodeShort(context: Context, episode: Int): String =
         context.getString(R.string.episode_short, episode)
 

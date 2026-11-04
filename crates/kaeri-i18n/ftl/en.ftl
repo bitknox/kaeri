@@ -1280,6 +1280,9 @@ shortcuts-group-lists = Lists
 # Shortcut: jump to a section of the app by number.
 shortcuts-go-to-section = Go to a section
 
+# Shortcut: step to the previous or next range of episodes on a title page.
+shortcuts-episode-ranges = Previous or next range of episodes
+
 # Shortcut: open the keyboard shortcuts window.
 shortcuts-show = Keyboard shortcuts
 
@@ -2207,6 +2210,9 @@ keys-action-filter = Filter
 keys-action-filter-search = Search filters
 
 # Action label in the help overlay and the command palette.
+keys-action-surprise = Surprise me
+
+# Action label in the help overlay and the command palette.
 keys-action-play-pause = Play or pause
 
 # Action label in the help overlay and the command palette.
@@ -2277,6 +2283,18 @@ keys-hint-mark-previous = Mark previous
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-filters = Filters
+
+# Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
+keys-hint-surprise = Surprise me
+
+# Status line hint on the episode list while a number is typed: the key that goes to that episode, drawn beside the number and G, as in "382 G go to".
+keys-hint-go-to-episode = Go to
+
+# Status line hint beside Esc on the episode list, while a number is typed or after one could not be gone to: Esc lets go of it.
+keys-hint-clear = Clear
+
+# Status line hint on a title page that Surprise me opened: the key picks another title in its place.
+keys-hint-another = Another
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-resync = Resync
@@ -2445,6 +2463,9 @@ keys-where-episodes = in the episode table
 
 # Ends the toast that says a command does nothing on this screen: it follows the command's name and "works", and names where the command does work.
 keys-where-elsewhere = on another screen
+
+# Ends the toast that says a command does nothing on this screen: it follows "Surprise me works", and names where it does.
+keys-where-surprise = on Search's browse and on Planning
 
 # Names a command that has no key, inside a sentence such as "Press … to confirm". The action is its label in lower case.
 keys-unbound = “{ $action }” in the palette
@@ -2897,6 +2918,33 @@ lists-episode-dubbed = E{ $episode } · Dubbed
 
 # A title's AniList score, out of a hundred, in its facts line and at the end of a list row.
 lists-score = { $score }%
+
+# A search result's count at the end of its row: the number of episodes out of how many there will be, while it airs. The table is narrow, so it is the two numbers alone.
+lists-count-out-of = { $out }/{ $total }
+
+# A search result's count at the end of its row: the number of episodes out of a total no one has announced yet.
+lists-count-out = { $out }/?
+
+# A search result's count at the end of its row, for a movie. Lower case, like the other words in the column.
+lists-count-movie = movie
+
+# A search result's count at the end of its row, for a title not out yet whose start date AniList does not know.
+lists-count-soon = soon
+
+# A search result's count at the end of its row, for a title not out yet: the day and month it starts, such as "9 Jan". The month is the short month name.
+lists-count-starts = { $day } { $month }
+
+# After a search result's count, for a title a source said has a dub that does not say how far it goes. Lower case, like the other words in the column.
+lists-count-dub = dub
+
+# After a search result's count: how far the dub goes, as "d12" for a dub to episode 12. The column is narrow, so it is one letter and the number.
+lists-count-dub-through = d{ $through }
+
+# Column heading above search results' episode counts, from 100 columns wide. Short for episodes.
+lists-column-episodes = Eps
+
+# Column heading above how far each search result's dub goes, from 100 columns wide.
+lists-column-dub = Dub
 
 # A row on the { -continue-cap } list: the episode and how far into it the person stopped.
 lists-row-resume-percent = { $episode } · { $percent }%
@@ -4510,6 +4558,9 @@ action-try-again = Try again
 
 # Button that closes a dialog without doing what it offered.
 action-cancel = Cancel
+
+# Button that confirms a small question, such as the episode number to go to.
+action-go = Go
 
 # Button that puts a question off until later.
 action-not-now = Not now
@@ -10509,7 +10560,7 @@ episode-fold =
        *[other] { $count } watched episodes
     }
 
-# An episode's number in a facts line on phones.
+# An episode's number in a facts line on phones and in narrow desktop windows.
 episode-short = E{ $episode }
 
 # Part of an episode's facts line: when it aired. The date is already formatted.

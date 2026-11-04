@@ -35,6 +35,7 @@ mod squeeze;
 mod states;
 mod style;
 mod sync;
+mod synopsis;
 mod trailer;
 mod tv;
 mod updater;

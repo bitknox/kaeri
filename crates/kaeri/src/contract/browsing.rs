@@ -15,6 +15,13 @@ use kaeri_testkit::{
 use super::{content, ids};
 use crate::harness::{Harness, names};
 
+/// The fake's week: the fixtures from halfway along, so it leads otherwise than today.
+fn week() -> Vec<AnilistId> {
+    let mut titles = ALL.to_vec();
+    titles.rotate_left(ALL.len() / 2);
+    titles
+}
+
 fn trending(updates: &[Event]) -> (TrendPeriod, Vec<AnilistId>, Option<i64>, bool) {
     updates
         .iter()
@@ -35,14 +42,14 @@ async fn trending_over_a_week_is_summed_in_one_request_and_kept() {
     assert_eq!(names(&updates), ["Trending"]);
     let (period, shown, updated_at, failed) = trending(&updates);
     assert_eq!((period, updated_at, failed), (TrendPeriod::Week, None, false));
-    assert_eq!(shown, ALL.to_vec(), "most trending first");
+    assert_eq!(shown, week(), "most trending first");
     assert_eq!(h.server().requests_for(Operation::TrendWeek).len(), 1);
 
     // Again: from what is kept, with its age, and nothing asked.
     h.send(Command::LoadTrending(TrendPeriod::Week));
     let again = h.settle().await;
     let (_, shown, updated_at, _) = trending(&again);
-    assert_eq!(shown, ALL.to_vec());
+    assert_eq!(shown, week());
     assert!(updated_at.is_some(), "a kept answer says when it was made");
     assert_eq!(h.server().requests_for(Operation::TrendWeek).len(), 1);
 }
@@ -54,7 +61,7 @@ async fn trending_over_a_month_takes_two_requests_and_ranks_by_the_sum() {
     let updates = h.settle().await;
     let (_, shown, _, failed) = trending(&updates);
     assert!(!failed);
-    let mut reversed = ALL.to_vec();
+    let mut reversed = week();
     reversed.reverse();
     assert_eq!(shown, reversed, "the month's figures rank otherwise than the week's");
     assert_eq!(h.server().requests_for(Operation::TrendMonthCandidates).len(), 1);
@@ -66,7 +73,7 @@ async fn a_trending_search_over_a_week_pages_the_periods_titles() {
     let mut h = Harness::new().await;
     h.send(Command::Search { query: SearchQuery::trending(TrendPeriod::Week) });
     let updates = h.settle().await;
-    assert_eq!(ids(content(&updates)), ALL.to_vec());
+    assert_eq!(ids(content(&updates)), week());
     assert_eq!(h.server().requests_for(Operation::TrendWeek).len(), 1);
     assert!(h.server().requests_for(Operation::Search).is_empty(), "no filter, no search");
 
@@ -77,7 +84,7 @@ async fn a_trending_search_over_a_week_pages_the_periods_titles() {
     };
     h.send(Command::Search { query: drama });
     let filtered = h.settle().await;
-    assert_eq!(ids(content(&filtered)), [FINISHED, SEQUEL, MOVIE]);
+    assert_eq!(ids(content(&filtered)), [MOVIE, FINISHED, SEQUEL]);
 }
 
 #[tokio::test]

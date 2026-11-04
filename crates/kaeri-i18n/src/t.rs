@@ -1985,6 +1985,11 @@ pub fn shortcuts_go_to_section() -> String {
     text("shortcuts-go-to-section", &[])
 }
 
+/// Shortcut: step to the previous or next range of episodes on a title page.
+pub fn shortcuts_episode_ranges() -> String {
+    text("shortcuts-episode-ranges", &[])
+}
+
 /// Shortcut: open the keyboard shortcuts window.
 pub fn shortcuts_show() -> String {
     text("shortcuts-show", &[])
@@ -3456,6 +3461,11 @@ pub fn keys_action_filter_search() -> String {
 }
 
 /// Action label in the help overlay and the command palette.
+pub fn keys_action_surprise() -> String {
+    text("keys-action-surprise", &[])
+}
+
+/// Action label in the help overlay and the command palette.
 pub fn keys_action_play_pause() -> String {
     text("keys-action-play-pause", &[])
 }
@@ -3573,6 +3583,26 @@ pub fn keys_hint_mark_previous() -> String {
 /// Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 pub fn keys_hint_filters() -> String {
     text("keys-hint-filters", &[])
+}
+
+/// Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
+pub fn keys_hint_surprise() -> String {
+    text("keys-hint-surprise", &[])
+}
+
+/// Status line hint on the episode list while a number is typed: the key that goes to that episode, drawn beside the number and G, as in "382 G go to".
+pub fn keys_hint_go_to_episode() -> String {
+    text("keys-hint-go-to-episode", &[])
+}
+
+/// Status line hint beside Esc on the episode list, while a number is typed or after one could not be gone to: Esc lets go of it.
+pub fn keys_hint_clear() -> String {
+    text("keys-hint-clear", &[])
+}
+
+/// Status line hint on a title page that Surprise me opened: the key picks another title in its place.
+pub fn keys_hint_another() -> String {
+    text("keys-hint-another", &[])
 }
 
 /// Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
@@ -3853,6 +3883,11 @@ pub fn keys_where_episodes() -> String {
 /// Ends the toast that says a command does nothing on this screen: it follows the command's name and "works", and names where the command does work.
 pub fn keys_where_elsewhere() -> String {
     text("keys-where-elsewhere", &[])
+}
+
+/// Ends the toast that says a command does nothing on this screen: it follows "Surprise me works", and names where it does.
+pub fn keys_where_surprise() -> String {
+    text("keys-where-surprise", &[])
 }
 
 /// Names a command that has no key, inside a sentence such as "Press … to confirm". The action is its label in lower case.
@@ -4593,6 +4628,51 @@ pub fn lists_episode_dubbed(episode: &str) -> String {
 /// A title's AniList score, out of a hundred, in its facts line and at the end of a list row.
 pub fn lists_score(score: i64) -> String {
     text("lists-score", &[("score", Arg::Int(score))])
+}
+
+/// A search result's count at the end of its row: the number of episodes out of how many there will be, while it airs. The table is narrow, so it is the two numbers alone.
+pub fn lists_count_out_of(out: i64, total: i64) -> String {
+    text("lists-count-out-of", &[("out", Arg::Int(out)), ("total", Arg::Int(total))])
+}
+
+/// A search result's count at the end of its row: the number of episodes out of a total no one has announced yet.
+pub fn lists_count_out(out: i64) -> String {
+    text("lists-count-out", &[("out", Arg::Int(out))])
+}
+
+/// A search result's count at the end of its row, for a movie. Lower case, like the other words in the column.
+pub fn lists_count_movie() -> String {
+    text("lists-count-movie", &[])
+}
+
+/// A search result's count at the end of its row, for a title not out yet whose start date AniList does not know.
+pub fn lists_count_soon() -> String {
+    text("lists-count-soon", &[])
+}
+
+/// A search result's count at the end of its row, for a title not out yet: the day and month it starts, such as "9 Jan". The month is the short month name.
+pub fn lists_count_starts(day: i64, month: &str) -> String {
+    text("lists-count-starts", &[("day", Arg::Int(day)), ("month", Arg::Text(month))])
+}
+
+/// After a search result's count, for a title a source said has a dub that does not say how far it goes. Lower case, like the other words in the column.
+pub fn lists_count_dub() -> String {
+    text("lists-count-dub", &[])
+}
+
+/// After a search result's count: how far the dub goes, as "d12" for a dub to episode 12. The column is narrow, so it is one letter and the number.
+pub fn lists_count_dub_through(through: i64) -> String {
+    text("lists-count-dub-through", &[("through", Arg::Int(through))])
+}
+
+/// Column heading above search results' episode counts, from 100 columns wide. Short for episodes.
+pub fn lists_column_episodes() -> String {
+    text("lists-column-episodes", &[])
+}
+
+/// Column heading above how far each search result's dub goes, from 100 columns wide.
+pub fn lists_column_dub() -> String {
+    text("lists-column-dub", &[])
 }
 
 /// A row on the { -continue-cap } list: the episode and how far into it the person stopped.
@@ -7196,6 +7276,11 @@ pub fn action_try_again() -> String {
 /// Button that closes a dialog without doing what it offered.
 pub fn action_cancel() -> String {
     text("action-cancel", &[])
+}
+
+/// Button that confirms a small question, such as the episode number to go to.
+pub fn action_go() -> String {
+    text("action-go", &[])
 }
 
 /// Button that puts a question off until later.
@@ -16922,7 +17007,7 @@ pub fn episode_fold(count: i64) -> String {
     text("episode-fold", &[("count", Arg::Int(count))])
 }
 
-/// An episode's number in a facts line on phones.
+/// An episode's number in a facts line on phones and in narrow desktop windows.
 pub fn episode_short(episode: i64) -> String {
     text("episode-short", &[("episode", Arg::Int(episode))])
 }

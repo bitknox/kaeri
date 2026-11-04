@@ -11693,6 +11693,18 @@
         }
       }
     },
+    "action-go" : {
+      "comment" : "Button that confirms a small question, such as the episode number to go to.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go"
+          }
+        }
+      }
+    },
     "action-install" : {
       "comment" : "Button that installs something.",
       "extractionState" : "manual",
@@ -44640,7 +44652,7 @@
       }
     },
     "episode-short" : {
-      "comment" : "An episode's number in a facts line on phones. Argument 1: episode (Int).",
+      "comment" : "An episode's number in a facts line on phones and in narrow desktop windows. Argument 1: episode (Int).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {

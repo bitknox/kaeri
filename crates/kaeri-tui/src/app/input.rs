@@ -56,6 +56,11 @@ impl App {
 
     /// Handle an action. Returns work for the caller to perform asynchronously.
     pub fn handle(&mut self, action: Action, visible_rows: usize) -> Option<Command> {
+        // Why a typed `G` went nowhere stays in the status line until the next key, and Esc
+        // then only lets go of it.
+        if self.go_error.take().is_some() && action == Action::Back {
+            return None;
+        }
         // While typing, most single-key bindings must not fire, or "d" would trigger a
         // download instead of entering a letter.
         if self.is_typing() {
@@ -75,6 +80,23 @@ impl App {
     /// from Search's field, the field still has focus once the palette closes, and going back
     /// through the typing gate swallowed nearly every command.
     pub(super) fn perform(&mut self, action: Action, visible_rows: usize) -> Option<Command> {
+        // Digits on the episode list build a number for `G` to go to; anything else lets go of it.
+        if self.in_episodes() && self.nav.focus() == Focus::Stage {
+            match action {
+                Action::JumpSection(n) => {
+                    self.type_go_digit(char::from_digit(u32::from(n % 10), 10).unwrap_or('0'));
+                    return None;
+                }
+                Action::Bottom if !self.go_count.is_empty() => return self.go_to_typed(),
+                Action::Back if !self.go_count.is_empty() => {
+                    self.go_count.clear();
+                    return None;
+                }
+                _ => self.go_count.clear(),
+            }
+        } else {
+            self.go_count.clear();
+        }
         // The download queue reads Space as pause and `x` as cancel, the keys it borrows from the
         // player. Resolved before the playback table: idle, those keys arrive as the browsing
         // actions — play next, remove from Continue — so a download could never be paused or
@@ -250,6 +272,7 @@ impl App {
             Action::DownloadRange => {
                 self.push_toast(info(t::toast_ranges_elsewhere()));
             }
+            Action::Surprise => return self.surprise(),
             Action::Filter if self.in_episodes() => self.cycle_episode_filter(),
             // By the view, not the section: a title opened from the results is a title page,
             // and `f` there means what it means on every other title page.
@@ -332,7 +355,7 @@ impl App {
     }
 
     /// An action that means nothing here, saying where it does.
-    fn works_elsewhere(&mut self, action: Action) {
+    pub(super) fn works_elsewhere(&mut self, action: Action) {
         // An action that means nothing here — a playback key with nothing playing, a
         // Downloads key elsewhere, usually run from the palette — says where it does
         // something rather than doing nothing, which would read as the key being broken.

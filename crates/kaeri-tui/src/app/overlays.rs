@@ -25,6 +25,8 @@ pub struct FrameReport {
     pub overlay_offset: Option<usize>,
     /// How many pages the help table ran to, when it was drawn.
     pub help_pages: Option<usize>,
+    /// The first row the episode table's window showed, when it was drawn.
+    pub episodes_offset: Option<usize>,
 }
 
 impl App {
@@ -338,6 +340,10 @@ impl App {
         }
         if let Some(pages) = report.help_pages {
             self.help_pages = pages;
+        }
+        if let Some(offset) = report.episodes_offset {
+            self.cursors.episodes.offset = offset;
+            self.episodes_jumped = false;
         }
     }
 }

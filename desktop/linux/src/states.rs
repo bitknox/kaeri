@@ -192,6 +192,11 @@ impl States {
         self.offline.set_description(Some(line));
     }
 
+    /// The failed state's heading, for a screen whose words depend on what it was loading.
+    pub fn failed_title(&self, title: &str) {
+        self.failed.set_title(title);
+    }
+
     /// What Try Again does: ask for the screen again.
     pub fn on_retry(&self, retry: impl Fn() + 'static) {
         self.retry.replace(Some(Rc::new(retry)));
@@ -253,6 +258,28 @@ impl States {
             states.timers.borrow_mut().push(line);
         });
         self.timers.borrow_mut().push(show);
+    }
+
+    /// The placeholders at once, with no fade of their own: for a caller that crossfades over
+    /// them with a picture of what was there.
+    pub fn placeholders_now(&self) {
+        self.cancel();
+        self.phase.set(Phase::Placeholders);
+        self.since.set(Some(Instant::now()));
+        self.widget.set_visible_child_name("placeholders");
+    }
+
+    /// When the placeholders came on screen, while they show.
+    pub fn placeholders_since(&self) -> Option<Instant> {
+        if self.phase.get() == Phase::Placeholders { self.since.get() } else { None }
+    }
+
+    /// The content, or the empty state, at once with no fade of its own: the caller crossfades.
+    pub fn answer_now(&self, empty: bool) {
+        self.cancel();
+        let phase = if empty { Phase::Empty } else { Phase::Content };
+        self.phase.set(phase);
+        show(&self.widget, phase, false);
     }
 
     /// The calendar's placeholders as an agenda, for a window too narrow for the week.

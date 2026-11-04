@@ -60,7 +60,8 @@ pub struct Cursors {
     /// Together: the Join line, then the recent rooms.
     pub together: Cursor,
     /// The episode table, kept apart from the list it was opened from so stepping back out of
-    /// Episodes does not disturb where you were in the list.
+    /// Episodes does not disturb where you were in the list. Its window is the frame's to place,
+    /// as the overlay's is, so the rows stay put while the highlight moves within them.
     pub episodes: Cursor,
     /// The three store screens, so stepping back out of a store finds the store list where it
     /// was. One past the last store is the join row.

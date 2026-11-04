@@ -33,9 +33,10 @@ use kaeri_core::{
 };
 use kaeri_model::{
     Msg,
+    browsing::DubKnown,
     catalog::{
-        Aired, AiringFact, ContentList, Entry, FuzzyDate, LibrarySegment, RelatedTitle,
-        ResumePoint, Season,
+        Aired, AiringFact, AiringStatus, ContentList, Entry, FuzzyDate, LibrarySegment,
+        RelatedTitle, ResumePoint, Season,
     },
     command::Command,
     downloads::{DownloadRow, DownloadState, SeedRow},
@@ -472,6 +473,8 @@ scenarios! {
     calendar,
     seasonal,
     search_results,
+    search_counts,
+    search_trending_week,
     library,
     downloads,
     providers,
@@ -482,6 +485,9 @@ scenarios! {
     title_not_started,
     episodes,
     episodes_long_filtered,
+    episodes_go_typing,
+    episodes_go_to,
+    episodes_go_none,
     episodes_from_anilist,
     now_playing,
     now_playing_paused_skip,
@@ -1177,6 +1183,97 @@ fn search_results(s: &mut Screen) {
     s.press(&["down", "down"]);
 }
 
+/// A made-up title for the count scenarios: a TV series of `episodes`, scored.
+fn counted(n: u32, title: &str, episodes: Option<u32>, score: Option<u32>) -> Entry {
+    Entry {
+        format: Some("TV".into()),
+        episodes,
+        year: Some(2026),
+        score,
+        genres: vec!["Drama".into()],
+        synopsis: format!("{title}: a story told in twelve evenings."),
+        ..Entry::new(id(300 + n), title)
+    }
+}
+
+/// Still airing: `out` episodes out.
+fn airing(entry: Entry, out: u32) -> Entry {
+    Entry { next_episode: Some(out + 1), status: Some(AiringStatus::Releasing), ..entry }
+}
+
+/// A dub a source said the title has, to episode `through` or with no count.
+fn dubbed(entry: Entry, through: Option<u32>) -> Entry {
+    Entry { dub: Some(DubKnown { through, complete: false }), ..entry }
+}
+
+fn movie(entry: Entry) -> Entry {
+    Entry { format: Some("MOVIE".into()), episodes: Some(1), ..entry }
+}
+
+fn not_out(entry: Entry, start: Option<FuzzyDate>) -> Entry {
+    Entry { status: Some(AiringStatus::NotYetReleased), start_date: start, ..entry }
+}
+
+/// A search with words, its results counted: a dub to an episode, a dub with no count, airing
+/// with and without a total, movies, a start date, and one not out with none.
+fn search_counts(s: &mut Screen) {
+    settled_on(s, 4);
+    s.type_text("lantern");
+    s.press(&["enter"]);
+    let keeper = Entry {
+        synopsis:
+            "A lamp keeper's daughter takes over the harbour light the winter her father \
+                   loses his sight."
+                .into(),
+        ..dubbed(counted(2, "The Lantern Keeper's Daughter", Some(12), Some(86)), Some(12))
+    };
+    s.list(vec![
+        dubbed(
+            airing(counted(1, "Lantern Street Casebook", Some(412), Some(88)), 402),
+            Some(64),
+        ),
+        keeper,
+        dubbed(movie(counted(3, "Paper Lantern Express", None, Some(84))), None),
+        airing(counted(4, "Lanterns of Hoshimi", Some(24), Some(81)), 5),
+        not_out(
+            counted(5, "Lantern Festival Club", Some(12), None),
+            Some(FuzzyDate { year: 2027, month: Some(1), day: Some(9) }),
+        ),
+        counted(6, "The Lantern Room", Some(26), Some(79)),
+        dubbed(counted(7, "Ninth Lantern", Some(13), Some(77)), None),
+        counted(8, "Lanternfish Diary", Some(24), Some(74)),
+        airing(counted(9, "Kitsune Lantern Radio", None, Some(72)), 5),
+        movie(counted(10, "One Lantern Left", None, Some(70))),
+        dubbed(counted(11, "Lantern Bearers of Kiri", Some(12), Some(69)), Some(6)),
+        not_out(counted(12, "Lanternlight Shrine", None, None), None),
+    ]);
+    s.press(&["down", "down"]);
+}
+
+/// Browse with nothing typed, sorted by Trending this week from the filters: the period at the
+/// far end of the prompt, and `z` offered for a pick from the list's filters.
+fn search_trending_week(s: &mut Screen) {
+    settled_on(s, 4);
+    s.act(Action::FilterSearch);
+    s.press(&["down"; 5]);
+    // Popularity, Score, Trending today, Trending this week.
+    s.press(&["right"; 4]);
+    s.press(&["enter"]);
+    s.list(vec![
+        dubbed(counted(21, "Ginga Mail Line", Some(24), Some(83)), None),
+        dubbed(airing(counted(22, "Natsukaze Relay", Some(24), Some(90)), 5), Some(3)),
+        airing(counted(1, "Lantern Street Casebook", Some(412), Some(88)), 402),
+        dubbed(airing(counted(23, "Snowline Orchestra", Some(12), Some(87)), 11), Some(9)),
+        counted(24, "Kitsune Radio Hour", Some(12), Some(80)),
+        airing(counted(25, "Saltwind Academy", Some(12), Some(78)), 3),
+        airing(counted(26, "Iron Tea Garden", Some(13), Some(76)), 8),
+        dubbed(airing(counted(27, "Paper Crane Courier", Some(24), Some(75)), 6), Some(2)),
+        airing(counted(28, "Moss and Mortar", Some(12), Some(74)), 5),
+        airing(counted(29, "Hoshimi Kissa", Some(10), Some(71)), 4),
+    ]);
+    s.press(&["down"]);
+}
+
 /// The Library on a segment past the first, so the strip's obi is not where the rail's is.
 fn library(s: &mut Screen) {
     settled_on(s, 5);
@@ -1585,6 +1682,77 @@ fn episodes_long_filtered(s: &mut Screen) {
     s.episodes(rows);
     s.press(&["f", "f"]);
     s.press(&["j"; 25]);
+}
+
+/// Lantern Street Casebook's 412 episodes, the first 305 watched.
+fn casebook_episodes() -> Vec<EpisodeRow> {
+    const TITLES: [&str; 27] = [
+        "The Weathervane Points North",
+        "A Receipt in the Hymn Book",
+        "Two Clocks, One Hour",
+        "The Ferryman's Day Off",
+        "Every Lamp on Lantern Street",
+        "The Quiet Bell",
+        "Ink on the Station Clock",
+        "A Parcel for No One",
+        "The Night Porter's Key",
+        "Salt in the Sugar Bowl",
+        "The Cartographer Returns",
+        "Footprints in Flour",
+        "A Room Above the Tram",
+        "The Glovemaker's Guest",
+        "Lanterns Out at Nine",
+        "A Coat Left on the Tram",
+        "The Pawnbroker's Ledger",
+        "Steam on the Window",
+        "The Lighthouse Clerk",
+        "A Map Folded Twice",
+        "The Fifth Witness",
+        "Rain at the Ticket Office",
+        "The Silent Auction",
+        "An Hour Taken Back",
+        "The Harbourmaster's Cat",
+        "A Lamp Lit Twice",
+        "The Last Tram Home",
+    ];
+    (1..=412)
+        .map(|n: u32| {
+            let title = match n {
+                296..=308 => TITLES[(n - 296) as usize],
+                379..=392 => TITLES[(n - 379 + 13) as usize],
+                _ => TITLES[(n % 27) as usize],
+            };
+            let row = episode(n, title);
+            if n <= 305 { watched(row) } else { row }
+        })
+        .collect()
+}
+
+/// The episode table of a 412-episode show, opened on its next episode.
+fn on_casebook_episodes(s: &mut Screen) {
+    settled_on(s, 1);
+    s.list(vec![counted(1, "Lantern Street Casebook", Some(412), Some(88))]);
+    s.press(&["e"]);
+    s.episodes(casebook_episodes());
+}
+
+/// Digits typed on the episode table: the number in the status line with the key that takes it,
+/// and a heading line where the fourth hundred begins.
+fn episodes_go_typing(s: &mut Screen) {
+    on_casebook_episodes(s);
+    s.press(&["3", "8", "2"]);
+}
+
+/// `382G`: the cursor on episode 382, in the table's top third.
+fn episodes_go_to(s: &mut Screen) {
+    on_casebook_episodes(s);
+    s.press(&["3", "8", "2", "G"]);
+}
+
+/// `537G` on a show of 412: why, in the status line in the alert colour, and the cursor stays.
+fn episodes_go_none(s: &mut Screen) {
+    on_casebook_episodes(s);
+    s.press(&["5", "3", "7", "G"]);
 }
 
 // ── Playback and the status rule ───────────────────────────────────────────────────────────────

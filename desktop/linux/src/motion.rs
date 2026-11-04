@@ -172,3 +172,37 @@ impl Fader {
         widget.as_ref().set_opacity(1.0);
     }
 }
+
+/// Reduce Animation is on.
+pub fn reduced() -> bool {
+    !gtk::Settings::default().is_some_and(|s| s.is_gtk_enable_animations())
+}
+
+/// `change` is made to `of` with a picture of it as it stood laid over it in `veil`, fading away
+/// on the standard token: both sides are drawn at once, so it is never empty. With `always` the
+/// crossfade plays under Reduce Animation too, where it is what reduced motion substitutes.
+pub fn ghost(
+    veil: &gtk::Overlay,
+    of: &impl IsA<gtk::Widget>,
+    always: bool,
+    change: impl FnOnce(),
+) {
+    let of = of.as_ref();
+    let before = gtk::WidgetPaintable::new(Some(of)).current_image();
+    let ghost = gtk::Picture::for_paintable(&before);
+    ghost.set_can_target(false);
+    ghost.set_halign(gtk::Align::Fill);
+    ghost.set_valign(gtk::Align::Start);
+    ghost.set_content_fit(gtk::ContentFit::Fill);
+    change();
+    if !of.is_mapped() {
+        return;
+    }
+    veil.add_overlay(&ghost);
+    let (veil, gone) = (veil.clone(), ghost.clone());
+    let fade = adw::TimedAnimation::new(&ghost, 1.0, 0.0, 300, opacity(&ghost));
+    fade.set_easing(adw::Easing::EaseOutCubic);
+    fade.set_follow_enable_animations_setting(!always);
+    fade.connect_done(move |_| veil.remove_overlay(&gone));
+    fade.play();
+}

@@ -280,6 +280,9 @@ public sealed partial class PlayerView : UserControl
                 case Event.TitleDub td when td.Id == playingId:
                     BuildTracks();
                     break;
+                case Event.ShowSettings st when st.V1.Id == playingId:
+                    ownSpoilers = st.V1.Rows.FirstOrDefault(r => r.Key == ShowSettingKey.SpoilerProtection) is { } own ? own.Value == "on" : null;
+                    break;
                 case Event.Settings:
                     stylePanel?.Heard(batch);
                     ApplySubtitleStyle(onlyIfChanged: true);
@@ -365,8 +368,15 @@ public sealed partial class PlayerView : UserControl
                 // Whether the show has a dub decides whether Tracks offers Sub and Dub; asked once
                 // a session for a show whose page has not already asked.
                 playingId = s.Id;
+                ownSpoilers = null;
                 if (ctx is { } c && !c.Known.Dubbed.ContainsKey(s.Id))
                     c.Send(new Command.LoadDub(s.Id));
+                // The table's synopses and the show's own protection, for the Episodes panel.
+                if (ctx is { } asking && s.Id != 0)
+                {
+                    asking.Send(new Command.LoadEpisodes(s.Id));
+                    asking.Send(new Command.LoadShowSettings(s.Id));
+                }
                 ShowTitle.Text = s.Title;
                 EpisodeTitle.Text = Lines.EpisodeNamed(s.EpisodeValue, s.EpisodeTitle);
                 StartingShow.Text = s.Title;
@@ -1371,22 +1381,28 @@ public sealed partial class PlayerView : UserControl
         return track.External ? T.PlayerTrackAdded(name) : name;
     }
 
+    EpisodesPanel? episodesPanel;
+    bool? ownSpoilers;
+
+    /// <summary>The Episodes panel: compact rows and a footer, from the engine's menu entries and the title's table.</summary>
+    void EnsureEpisodesPanel()
+    {
+        if (episodesPanel is not null)
+            return;
+        episodesPanel = new EpisodesPanel(
+            () => (PanelEpisodes(), ctx?.Known.Episodes.GetValueOrDefault(playingId) ?? [],
+                ownSpoilers ?? SettingsCatalog.IsOn(ctx?.Known.Setting(SettingKey.SpoilerProtection))),
+            number => Send(new PlayerCommand.Choose(new PlayerChoice.Episode(number))));
+        episodesPanel.Flyout.Opened += OnMenuOpened;
+        episodesPanel.Flyout.Closed += OnMenuClosed;
+        EpisodesButton.Flyout = episodesPanel.Flyout;
+    }
+
     void BuildMenus()
     {
         if (menus is null)
             return;
-        EpisodesMenu.Items.Clear();
-        foreach (var ep in menus.Episodes)
-        {
-            var item = new ToggleMenuFlyoutItem
-            {
-                Text = Lines.Episode(ep.Label, ep.Title, null),
-                IsChecked = ep.Current,
-            };
-            var number = ep.Number;
-            item.Click += (_, _) => Send(new PlayerCommand.Choose(new PlayerChoice.Episode(number)));
-            EpisodesMenu.Items.Add(item);
-        }
+        EnsureEpisodesPanel();
         EpisodesButton.IsEnabled = menus.Episodes.Length > 0;
 
         BuildTracks();
@@ -1707,6 +1723,17 @@ public sealed partial class PlayerView : UserControl
     void OnStillContinue(object sender, RoutedEventArgs e) => ContinueWatching();
     void OnStillStop(object sender, RoutedEventArgs e) => StillStopNow();
 
+    /// <summary>The panel's rows: the player's menu, or on a ranged shot one per row of the table.</summary>
+    MenuEpisode[] PanelEpisodes()
+    {
+#if KAERI_TESTING
+        if (ctx?.Options.Show is { } show && show.StartsWith("player-episodes-ranges", StringComparison.Ordinal)
+            && ctx.Known.Episodes.GetValueOrDefault(playingId) is { Length: > 100 } table)
+            return table.Select(r => new MenuEpisode(r.Number, T.EpisodeNumber(long.Parse(r.Number, System.Globalization.CultureInfo.InvariantCulture)), r.Title, r.Watched >= 0.9, false, r.Number == "230")).ToArray();
+#endif
+        return menus?.Episodes ?? [];
+    }
+
 #if KAERI_TESTING
     /// <summary>
     /// A state to bring up for a screenshot, on the testing build:
@@ -1836,6 +1863,28 @@ public sealed partial class PlayerView : UserControl
                 break;
             case "mini":
                 ToggleMini();
+                break;
+            case "player-episodes-ranges":
+            case "player-episodes-ranges-menu":
+                // 250 episodes in ranges, 230 playing; with -menu, the range menu open on Go to episode.
+                ShowControls();
+                OpenMenu(EpisodesButton);
+                if (what == "player-episodes-ranges-menu")
+                {
+                    await Task.Delay(900);
+                    episodesPanel?.OpenRanges();
+                }
+                break;
+            case "player-episodes":
+            case "player-episodes-focus":
+                // The Episodes panel open; with -focus, the keyboard then on its second row.
+                ShowControls();
+                OpenMenu(EpisodesButton);
+                if (what == "player-episodes-focus")
+                {
+                    await Task.Delay(800);
+                    episodesPanel?.FocusRow(1);
+                }
                 break;
             case "discussion-player":
                 if (ctx is { } talk && uint.TryParse(playingEpisode, out var talked))

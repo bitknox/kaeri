@@ -38,5 +38,5 @@ exec docker run --rm \
   -v "$repo:/src" -v "$volume:/target" -v "$out:/out" \
   -v kaeri-linux-cargo:/opt/cargo/registry \
   -e CARGO_TARGET_DIR=/target -e CARGO_INCREMENTAL=0 -e RUSTUP_TOOLCHAIN=1.99.1 \
-  -e HOME=/tmp/home -e SIZES -e SHOTS -e SCENES -e HOME_SHOTS \
+  -e HOME=/tmp/home -e SIZES -e SHOTS -e SCENES -e HOME_SHOTS -e MOTIONS -e FRAMES -e REDUCED -e CLIPS \
   -w /src "$image" "$@"

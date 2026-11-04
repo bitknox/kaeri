@@ -156,6 +156,23 @@ public sealed partial class MainWindow : Window
             // --show=sync-*: the made-up group stands in for the fixture engine's own.
             if (options.Show?.StartsWith("sync-", StringComparison.Ordinal) == true && e is Event.SyncStatus or Event.SyncInvite)
                 return true;
+            // --show=synopsis...: the title's table with synopses and rows ahead (synopsis-ranges: 250 of
+            // them); --show=player-episodes...: the playing title's, for the Episodes panel.
+            if (options.Show is { } synopsisShot && (synopsisShot.StartsWith("synopsis", StringComparison.Ordinal) || synopsisShot.StartsWith("player-episodes", StringComparison.Ordinal))
+                && e is Event.Episodes synopsisTable && synopsisTable.Rows.Length > 0)
+            {
+                var playerShot = synopsisShot.StartsWith("player-", StringComparison.Ordinal);
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    var next = playerShot ? ctx.Known.Entry(synopsisTable.Id)?.Progress?.Next ?? 4 : 7;
+                    var ranged = synopsisShot is "synopsis-ranges" || synopsisShot.StartsWith("synopsis-go", StringComparison.Ordinal) || synopsisShot.StartsWith("player-episodes-ranges", StringComparison.Ordinal);
+                    var shown = new Event[] { Showcase.Synopses(synopsisTable, ranged ? 230 : next, ranged, synopsisShot == "synopsis-go-not-out") };
+                    ctx.Known.Take(shown[0]);
+                    Heard(shown);
+                    ctx.Heard(shown);
+                });
+                return true;
+            }
             // --show=source-unsourced: the title's table, with episodes no source lists.
             if (options.Show is "source-unsourced" or "source-unsourced-end" && e is Event.Episodes table)
             {
@@ -552,7 +569,7 @@ public sealed partial class MainWindow : Window
             // the switch, whose first Continue case, the crash question, would take the event.
             if (options.Play && !played)
             {
-                if (e is Event.Home && ctx.Known.Home.Spotlight is { } spot)
+                if (e is Event.Home { V1.Spotlight: { Case: SpotlightCase.Continuing } spot })
                 {
                     played = true;
                     ctx.Play(spot.Entry.Id, spot.Episode.ToString(CultureInfo.InvariantCulture));
@@ -834,6 +851,21 @@ public sealed partial class MainWindow : Window
             ContentFrame.Navigate(typeof(TitlePage), id, new SuppressNavigationTransitionInfo());
             Motion.FadeIn(ContentFrame, Motion.Standard);
         }
+    }
+
+    /// <summary>
+    /// Another: this title's page is swapped for the next pick's, so Back goes to where Surprise me
+    /// was pressed. The page as it stood fades away over the new one on the standard token.
+    /// </summary>
+    internal void SwapTitle(uint id)
+    {
+        Crossfade.Swap(ContentFrame, () =>
+        {
+            ContentFrame.Navigate(typeof(TitlePage), id, new SuppressNavigationTransitionInfo());
+            // The page it replaces is not a place to come back to.
+            if (ContentFrame.BackStack.Count > 0)
+                ContentFrame.BackStack.RemoveAt(ContentFrame.BackStack.Count - 1);
+        });
     }
 
     /// <summary>A browse from Home: the query's genres and sort set, nothing typed.</summary>

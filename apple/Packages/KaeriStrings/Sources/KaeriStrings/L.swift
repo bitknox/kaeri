@@ -3486,6 +3486,9 @@ public enum L {
     /// Button that closes a dialog without doing what it offered.
     public static var actionCancel: String { string("action-cancel", fallback: "Cancel") }
 
+    /// Button that confirms a small question, such as the episode number to go to.
+    public static var actionGo: String { string("action-go", fallback: "Go") }
+
     /// Button that puts a question off until later.
     public static var actionNotNow: String { string("action-not-now", fallback: "Not now") }
 
@@ -10237,7 +10240,7 @@ public enum L {
         Self.format("episode-fold", fallback: "%1$lld watched episodes", count)
     }
 
-    /// An episode's number in a facts line on phones.
+    /// An episode's number in a facts line on phones and in narrow desktop windows.
     public static func episodeShort(episode: Int) -> String {
         Self.format("episode-short", fallback: "E%1$lld", episode)
     }

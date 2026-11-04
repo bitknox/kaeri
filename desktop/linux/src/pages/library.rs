@@ -8,6 +8,7 @@ use adw::prelude::*;
 use gtk::{gio, glib};
 use kaeri_i18n::t;
 use kaeri_model::{
+    browsing::SurprisePool,
     catalog::{ContentFor, ContentList, Entry, LibrarySegment},
     command::Command,
     event::Event,
@@ -71,7 +72,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     views.set_vexpand(true);
     let mut lists = Vec::new();
     for segment in LibrarySegment::ALL {
-        let grid = PosterGrid::with_caption(&ctx.hub, say::progress_caption);
+        let grid = PosterGrid::with_caption(&ctx.hub, say::library_line);
         let scroll = gtk::ScrolledWindow::builder()
             .hscrollbar_policy(gtk::PolicyType::Never)
             .child(&grid.widget)
@@ -182,6 +183,24 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     header.pack_start(&widgets::sidebar_button(&ctx.split));
     header.pack_start(&crate::window::tv_session_button(ctx));
     header.pack_end(&order_button);
+    // Surprise me, on Planning only: a random title from the list on this device.
+    let surprise = widgets::surprise_button(
+        ctx,
+        &t::surprise_me(),
+        &t::surprise_hint_planning(),
+        false,
+        || Some(SurprisePool::Planning),
+    );
+    surprise.set_visible(false);
+    header.pack_end(&surprise);
+    views.connect_visible_child_name_notify({
+        let surprise = surprise.clone();
+        move |views| {
+            surprise.set_visible(
+                views.visible_child_name().as_deref() == Some(LibrarySegment::Planning.label()),
+            );
+        }
+    });
     let navigation = widgets::content_page(&t::nav_library(), &header, &body);
 
     let page = Rc::new(Page {

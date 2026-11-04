@@ -1812,6 +1812,9 @@ public static partial class T
     /// <summary>Button that closes a dialog without doing what it offered.</summary>
     public static string ActionCancel => Get("ActionCancel");
 
+    /// <summary>Button that confirms a small question, such as the episode number to go to.</summary>
+    public static string ActionGo => Get("ActionGo");
+
     /// <summary>Button that puts a question off until later.</summary>
     public static string ActionNotNow => Get("ActionNotNow");
 
@@ -7631,7 +7634,7 @@ public static partial class T
     /// <summary>One line that stands for the watched episodes at the top of a range. Opening it shows them.</summary>
     public static string EpisodeFold(long count) => Fill(GetPlural("EpisodeFold", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
-    /// <summary>An episode's number in a facts line on phones.</summary>
+    /// <summary>An episode's number in a facts line on phones and in narrow desktop windows.</summary>
     public static string EpisodeShort(long episode) => Fill(Get("EpisodeShort"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Part of an episode's facts line: when it aired. The date is already formatted.</summary>
@@ -9241,6 +9244,7 @@ public static partial class T
         ["CastVolumeFixed"] = "Set on the TV",
         ["ActionTryAgain"] = "Try again",
         ["ActionCancel"] = "Cancel",
+        ["ActionGo"] = "Go",
         ["ActionNotNow"] = "Not now",
         ["DurationDays"] = "{days} d",
         ["DurationHoursMinutes"] = "{hours} h {minutes} min",

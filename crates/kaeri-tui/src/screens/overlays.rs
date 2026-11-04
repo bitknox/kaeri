@@ -577,7 +577,10 @@ mod tests {
         assert_eq!(help.overlay_offset, None);
         app.nav.close_overlay();
         app.nav.open_overlay(Overlay::Logs);
-        assert_eq!(draw(&app), FrameReport { overlay_offset: Some(0), help_pages: None });
+        assert_eq!(
+            draw(&app),
+            FrameReport { overlay_offset: Some(0), ..FrameReport::default() }
+        );
     }
 
     #[test]

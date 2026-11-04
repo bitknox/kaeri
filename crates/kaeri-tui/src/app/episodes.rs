@@ -5,6 +5,7 @@ use kaeri_core::{ids::AnilistId, traits::SourceCandidate};
 use kaeri_i18n::t;
 use kaeri_model::{
     Msg,
+    browsing::{self, GoTo},
     catalog::{ContentList, ResumePoint},
     command::Command,
     episodes::{DubExtent, EpisodeRow},
@@ -14,7 +15,7 @@ use kaeri_model::{
     sources::{MatchCandidate, MatchQuestion},
 };
 
-use super::{App, Field, info};
+use super::{App, Cursor, Field, info};
 use crate::nav::{Overlay, StageView};
 
 /// `"4"` → one episode, `"1-12"` → inclusive range, `"7-"` → everything from 7 on.
@@ -123,6 +124,39 @@ impl App {
         self.cursors.episodes.selected = kept
             .unwrap_or(self.cursors.episodes.selected)
             .min(self.episodes.len().saturating_sub(1));
+    }
+
+    /// A digit of the number being typed for `G`: five at most, and no leading zeros.
+    pub(super) fn type_go_digit(&mut self, digit: char) {
+        if self.go_count.len() < 5 && !(self.go_count.is_empty() && digit == '0') {
+            self.go_count.push(digit);
+        }
+    }
+
+    /// `G` after digits: the cursor goes to that episode, the row a third of the way down the
+    /// table (the frame places it: see [`Self::episodes_jumped`]). A number the show does not
+    /// have, or one that is not out, is said in the status line in the catalogue's words until
+    /// the next key, and the cursor stays.
+    pub(super) fn go_to_typed(&mut self) -> Option<Command> {
+        let typed = std::mem::take(&mut self.go_count);
+        let result =
+            browsing::go_to_episode(&self.episodes_all, &typed, self.clock.now_epoch());
+        match result {
+            GoTo::Row { index, .. } => {
+                let number = self.episodes_all[index as usize].number.clone();
+                // A filter that hides the episode gives way: the number asked for is the point.
+                if !self.episodes.iter().any(|r| r.number == number) {
+                    self.episode_filter = EpisodeFilter::All;
+                    self.apply_episode_filter();
+                }
+                if let Some(at) = self.episodes.iter().position(|r| r.number == number) {
+                    self.cursors.episodes = Cursor { selected: at, offset: at };
+                    self.episodes_jumped = true;
+                }
+            }
+            other => self.go_error = browsing::go_to_message(&other),
+        }
+        None
     }
 
     /// Whether the filter is hiding everything — distinct from a title with no episodes.
@@ -331,7 +365,7 @@ impl App {
             // reached the table it was listed in, and auto-next declined to roll on.
             // Opening the title sets this; entering its episodes has to as well.
             self.detail = Some(entry);
-            self.cursors.episodes.selected = 0;
+            self.cursors.episodes = Cursor::default();
             // Discard the previous title's rows *before* the screen appears. They were
             // being left in place until the new load answered, so opening episodes for one
             // show displayed another show's episode list — complete with its watch
@@ -774,6 +808,75 @@ mod tests {
         );
         assert_eq!(at(&a, 0), (three, three), "the page and the list row move");
         assert_eq!(at(&a, 1).1, two, "another show is not touched");
+    }
+
+    #[test]
+    fn digits_then_g_go_to_that_episode_and_other_keys_let_go() {
+        let mut a = app_at_episodes();
+        a.handle(Action::JumpSection(7), 5);
+        assert_eq!(a.go_count, "7", "a digit on the list is a number, not a section");
+        assert!(a.in_episodes(), "the section jump did not happen");
+        assert_eq!(a.handle(Action::Bottom, 5), None);
+        assert_eq!(a.cursors.episodes.selected, 6);
+        assert!(a.episodes_jumped, "the next frame places the row");
+        assert!(a.go_count.is_empty());
+
+        // Two digits make one number, and zero is the digit after the one.
+        a.handle(Action::JumpSection(1), 5);
+        a.handle(Action::JumpSection(10), 5);
+        assert_eq!(a.go_count, "10");
+        a.handle(Action::Back, 5);
+        assert!(a.go_count.is_empty(), "Esc lets go of the number first");
+        assert!(a.in_episodes(), "and does not leave the list");
+
+        // Any other key lets go of it, and G alone is still the bottom.
+        a.handle(Action::JumpSection(3), 5);
+        a.handle(Action::Down, 5);
+        assert!(a.go_count.is_empty());
+        a.handle(Action::Bottom, 5);
+        assert_eq!(a.cursors.episodes.selected, 11);
+    }
+
+    #[test]
+    fn go_to_an_episode_the_show_does_not_have_says_so_and_stays() {
+        let mut a = app_at_episodes();
+        a.set_episode_cursor(3);
+        for digit in [9, 9] {
+            a.handle(Action::JumpSection(digit), 5);
+        }
+        a.handle(Action::Bottom, 5);
+        assert_eq!(a.cursors.episodes.selected, 3, "the cursor stays");
+        let says = kaeri_model::browsing::go_to_message(&kaeri_model::browsing::GoTo::NoSuch {
+            number: 99,
+            last: 12,
+        });
+        assert_eq!(a.go_error, says, "said in the status line");
+        assert!(a.toasts.is_empty(), "not as a toast");
+
+        // Esc lets go of it and stays on the list; any other key lets go of it and acts.
+        a.handle(Action::Back, 5);
+        assert_eq!(a.go_error, None);
+        assert!(a.in_episodes());
+        a.handle(Action::JumpSection(9), 5);
+        a.handle(Action::JumpSection(9), 5);
+        a.handle(Action::Bottom, 5);
+        assert!(a.go_error.is_some());
+        a.handle(Action::Down, 5);
+        assert_eq!(a.go_error, None);
+        assert_eq!(a.cursors.episodes.selected, 4, "the key did what it does");
+    }
+
+    #[test]
+    fn go_to_an_episode_the_filter_hides_shows_all_again() {
+        let mut a = app_at_episodes();
+        a.episodes_all[4].completed = true;
+        a.episode_filter = EpisodeFilter::Unwatched;
+        a.apply_episode_filter();
+        assert!(a.episodes.iter().all(|r| r.number != "5"));
+        a.handle(Action::JumpSection(5), 5);
+        a.handle(Action::Bottom, 5);
+        assert_eq!(a.episode_filter, EpisodeFilter::All);
+        assert_eq!(a.episodes[a.cursors.episodes.selected].number, "5");
     }
 
     #[test]
