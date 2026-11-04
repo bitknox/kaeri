@@ -40,6 +40,11 @@ import app.kaeri.design.ObiSilk
 import app.kaeri.i18n.R as I18nR
 import app.kaeri.store.AppStore
 import app.kaeri.store.DevicePreferences
+import app.kaeri.store.SyncSheet
+import app.kaeri.store.copyAllSignIns
+import app.kaeri.store.joinStoresFrom
+import app.kaeri.store.pairInvite
+import app.kaeri.tv.sync.tvDeviceName
 import app.kaeri.tv.signin.JoinStoreScreen
 import app.kaeri.tv.signin.SignInScreen
 import app.kaeri.tv.ui.AmberButton
@@ -78,6 +83,12 @@ fun FirstLaunch(onCover: (Boolean) -> Unit, start: FirstLaunchPage = FirstLaunch
     val finish = {
         preferences.edit().putBoolean(FIRST_LAUNCH_DONE, true).apply()
         done = true
+    }
+    // A pairing from the welcome page that was read on its success page: the pages are through.
+    val copied by store.sync.copied.collectAsStateWithLifecycle()
+    var sawCopied by remember { mutableStateOf(false) }
+    LaunchedEffect(copied) {
+        if (copied != null) sawCopied = true else if (sawCopied) finish()
     }
     val trackers by store.accounts.trackers.collectAsStateWithLifecycle()
     val stores by store.stores.stores.collectAsStateWithLifecycle()
@@ -122,6 +133,8 @@ private fun Pages(start: FirstLaunchPage, finish: () -> Unit) {
 /** Welcome: Nagare, what Kaeri is, and Continue focused. */
 @Composable
 private fun Welcome(onNext: () -> Unit) {
+    val store = LocalAppStore.current
+    val context = LocalContext.current
     val next = remember { FocusRequester() }
     Row(
         Modifier
@@ -134,7 +147,16 @@ private fun Welcome(onNext: () -> Unit) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.widthIn(max = 560.dp)) {
             Text("Kaeri", style = MaterialTheme.typography.displaySmall, color = ObiSilk.Silk, modifier = Modifier.semantics { heading() }) // i18n-skip
             Text(stringResource(I18nR.string.onboarding_tagline), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Silk)
-            AmberButton(onClick = onNext, icon = null, modifier = Modifier.padding(top = 8.dp).focusRequester(next)) { ButtonLabel(stringResource(I18nR.string.onboarding_continue)) }
+            Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                AmberButton(onClick = onNext, icon = null, modifier = Modifier.focusRequester(next)) { ButtonLabel(stringResource(I18nR.string.onboarding_continue)) }
+                TonalButton(onClick = {
+                    store.sync.first(true)
+                    store.copyAllSignIns()
+                    store.joinStoresFrom(null)
+                    store.pairInvite(tvDeviceName(context))
+                    store.sync.show(SyncSheet.CODE)
+                }) { ButtonLabel(stringResource(I18nR.string.first_setup_phone)) }
+            }
         }
     }
 }

@@ -115,7 +115,7 @@ class TvShots {
     @Test
     @Config(qualifiers = PHONE)
     fun phone_settings_accounts_tv() =
-        shoot("phone-settings-accounts-tv", TvScene.PAIRED, page = settingsRoute(SettingsPane.Accounts), screen = false, scrollTo = "Pair a TV")
+        shoot("phone-settings-accounts-tv", TvScene.PAIRED, page = settingsRoute(SettingsPane.Devices), screen = false, scrollTo = "Pair a TV")
 
     @Test
     @Config(qualifiers = TABLET)

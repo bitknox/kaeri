@@ -60,6 +60,8 @@ import app.kaeri.engine.core.AnilistId
 import app.kaeri.engine.core.Translation
 import app.kaeri.engine.core.SourceCandidate
 import app.kaeri.engine.model.Event
+import app.kaeri.engine.model.SectionKind
+import app.kaeri.engine.model.SpotlightCase
 import app.kaeri.engine.model.SourceNote
 import app.kaeri.engine.model.SourceOption
 import app.kaeri.engine.model.SearchQuery
@@ -117,6 +119,25 @@ class BoardShots {
     @Test
     @Config(qualifiers = PHONE)
     fun phone_home_oneleft() = shoot("phone-home-oneleft", "home-oneleft")
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_home_continue_device() = shoot("phone-home-continue-device", WATCHING, device = true)
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_first_launch_join() = shoot("phone-first-launch-join", FRESH, firstLaunch = true) {
+        open("Set up from another device")
+        kotlinx.coroutines.runBlocking { app.kaeri.store.FixtureSync.stage(it, "first-ok-join") }
+    }
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_join_failed_offline() = shoot("phone-join-failed-offline", WATCHING) { kotlinx.coroutines.runBlocking { app.kaeri.store.FixtureSync.stage(it, "join-failed-offline") } }
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_join_failed_not_allowed() = shoot("phone-join-failed-not-allowed", WATCHING) { kotlinx.coroutines.runBlocking { app.kaeri.store.FixtureSync.stage(it, "join-failed-not-allowed") } }
 
     @Test
     @Config(qualifiers = PHONE)
@@ -742,6 +763,8 @@ class BoardShots {
         exclude: (Event) -> Boolean = { false },
         /** Whether every show on Continue was last watched dubbed. */
         dub: Boolean = false,
+        /** Whether another device of the group played Continue last. */
+        device: Boolean = false,
         /** Whether the whole screen is captured, so a menu's window shows. */
         screen: Boolean = false,
         /** Whether first launch's pages show, as on the app's first launch. */
@@ -758,7 +781,7 @@ class BoardShots {
         AppClock.clock = Clock.fixed(recorded.recordedAt, ZONE)
         // The art the screens ask for, as the fake AniList serves it.
         val store = AppStore(scope, clock = { 0L }, artworkWithoutEngine = { url -> PaleBanner.bytes(url) ?: FixtureArt.bytes(url) })
-        val events = recorded.events.filter { replayed(it) && !exclude(it) }.map { if (sourceless) withoutSources(it) else it }.map { if (dub) dubbed(it) else it }
+        val events = recorded.events.filter { replayed(it) && !exclude(it) }.map { if (sourceless) withoutSources(it) else it }.map { if (dub) dubbed(it) else it }.map { if (device) fromDevice(it) else it }
         // After the scene each time, so its own detail never wins over the pale one.
         fun replay() {
             store.apply(events)
@@ -890,6 +913,19 @@ class BoardShots {
             else -> true
         }
     }
+}
+
+/** [event], when it is the Home view, with Continue as another device of the group played it last, as the engine would say it. */
+private fun fromDevice(event: Event): Event = when (event) {
+    is Event.Home -> Event.Home(
+        event.v1.copy(
+            spotlight = event.v1.spotlight?.let { if (it.case == SpotlightCase.CONTINUING) it.copy(lastDevice = "Study Mac") else it },
+            sections = event.v1.sections.map { section ->
+                if (section.kind == SectionKind.CONTINUE) section.copy(items = section.items.map { it.copy(lastDevice = "Study Mac") }) else section
+            },
+        ),
+    )
+    else -> event
 }
 
 /** [event], when it is a list of titles, with every one last watched dubbed, as the engine would send them. */

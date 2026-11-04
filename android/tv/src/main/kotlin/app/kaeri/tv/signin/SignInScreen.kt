@@ -279,7 +279,7 @@ private fun DeviceCodeWay(store: AppStore, tracker: String, again: FocusRequeste
  * service gave no time.
  */
 @Composable
-private fun CodeExpiry(prompt: DeviceCodePrompt, onExpired: () -> Unit) {
+internal fun CodeExpiry(prompt: DeviceCodePrompt, onExpired: () -> Unit) {
     val expiresAt = prompt.expiresAt ?: return
     val expired by rememberUpdatedState(onExpired)
     var left by remember(prompt.code, expiresAt) { mutableLongStateOf(CodeCountdown.secondsLeft(expiresAt, System.currentTimeMillis())) }

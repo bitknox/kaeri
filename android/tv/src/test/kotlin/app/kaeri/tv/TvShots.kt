@@ -48,6 +48,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -75,6 +76,8 @@ import app.kaeri.engine.model.ContentFor
 import app.kaeri.engine.model.ContentList
 import app.kaeri.engine.model.Ending
 import app.kaeri.engine.model.Event
+import app.kaeri.engine.model.SectionKind
+import app.kaeri.engine.model.SpotlightCase
 import app.kaeri.engine.model.HiddenTitle
 import app.kaeri.engine.model.MenuChoices
 import app.kaeri.engine.model.MenuSource
@@ -1101,6 +1104,8 @@ class TvShots {
         offline: Boolean = false,
         /** Whether every show on Continue was last watched dubbed. */
         dub: Boolean = false,
+        /** Whether another device of the group played Continue last. */
+        device: Boolean = false,
         scene: String = WATCHING,
         /** The Settings section to open at, by its name. */
         section: String? = null,
@@ -1116,7 +1121,7 @@ class TvShots {
         AppClock.clock = Clock.fixed(recorded.recordedAt, ZONE)
         val store = AppStore(scope, decoder = TvArtDecoder, artworkBudget = TV_ART_BUDGET, clock = { 0L }, artworkWithoutEngine = FixtureArt::bytes)
         shot = store
-        val events = recorded.events.filter(::replayed).map { if (dub) dubbed(it) else it }.map { if (torrents != null) torrentsOn(it, proxy) else it } +
+        val events = recorded.events.filter(::replayed).map { if (dub) dubbed(it) else it }.map { if (device) fromDevice(it) else it }.map { if (torrents != null) torrentsOn(it, proxy) else it } +
             listOfNotNull(Event.Connectivity(true).takeIf { offline })
         // The proxy check's last word, said once.
         torrents?.let { store.apply(listOf(Event.TorrentProxy(it))) }
@@ -1177,6 +1182,60 @@ class TvShots {
     fun search_available_chip() = shoot("tv-search-available", query = "hoshi", then = {
         compose.onNodeWithText("Available").assertExists()
     })
+
+    /** A sync state of the Fixtures app staged on a recorded scene, as the Fixtures app's `sync` extra stages it. */
+    private fun syncShot(name: String, scene: String, state: String?, section: String? = "Devices", firstLaunch: Boolean = false) =
+        shoot(name, scene = scene, section = section, firstLaunch = firstLaunch, then = {
+            if (state != null) runBlocking { app.kaeri.store.FixtureSync.stage(shot, state) }
+        })
+
+    @Test fun sync_off() = syncShot("tv-sync-off", WATCHING, null)
+
+    @Test fun sync_on() = syncShot("tv-sync-on", "sync_on", null)
+
+    @Test fun sync_cloud() = syncShot("tv-sync-cloud", "sync_cloud", null)
+
+    @Test fun sync_error() = syncShot("tv-sync-error", "sync_cloud", "offline")
+
+    @Test fun sync_signed_out() = syncShot("tv-sync-signed-out", "sync_cloud", "signed-out")
+
+    @Test fun sync_road() = syncShot("tv-sync-road", "sync_nearby", "road")
+
+    @Test fun sync_picker() = syncShot("tv-sync-picker", "sync_nearby", "picker")
+
+    @Test fun sync_google_code() = syncShot("tv-sync-google-code", "sync_nearby", "google-code")
+
+    @Test fun sync_onedrive_code() = syncShot("tv-sync-onedrive-code", "sync_nearby", "onedrive-code")
+
+    @Test fun sync_code_expired() = syncShot("tv-sync-code-expired", "sync_nearby", "code-expired")
+
+    @Test fun sync_nextcloud_qr() = syncShot("tv-sync-nextcloud-qr", "sync_nearby", "nextcloud-qr")
+
+    @Test fun sync_dropbox_phone() = syncShot("tv-sync-dropbox-phone", "sync_tv_phone_sign_in", "dropbox-phone")
+
+    @Test fun sync_dropbox_no_phone() = syncShot("tv-sync-dropbox-no-phone", "sync_nearby", "dropbox-nophone")
+
+    @Test fun sync_pair_code() = syncShot("tv-sync-pair-code", "sync_on", "code")
+
+    @Test fun sync_pair_ok() = syncShot("tv-sync-pair-ok", "sync_on", "pair-ok")
+
+    @Test fun sync_first_welcome() = syncShot("tv-first-welcome", "fresh", null, section = null, firstLaunch = true)
+
+    @Test fun sync_first_code() = syncShot("tv-first-code", "fresh", "first-code", section = null, firstLaunch = true)
+
+    @Test fun sync_first_ok_join() = syncShot("tv-first-ok-join", "fresh", "first-ok-join", section = null, firstLaunch = true)
+
+    @Test fun sync_join_failed() = syncShot("tv-sync-join-failed", "sync_on", "join-failed-offline")
+
+    @Test fun home_continue_device() = shoot("tv-home-continue-device", scene = WATCHING, device = true)
+
+    @Test fun sync_first_ok() = syncShot("tv-first-ok", "fresh", "first-ok", section = null, firstLaunch = true)
+
+    @Test fun profiles_settings() = syncShot("tv-profiles", "profiles", null, section = "Profiles")
+
+    @Test fun profiles_only_you() = syncShot("tv-profiles-one", WATCHING, null, section = "Profiles")
+
+    @Test fun profiles_who() = syncShot("tv-profiles-who", "profiles", "who", section = null)
 
     private fun settle() {
         compose.mainClock.advanceTimeBy(3_000)
@@ -1258,6 +1317,19 @@ private fun torrentsOn(event: Event, proxy: Boolean = false): Event = when (even
             rows = event.v1.rows.map { if (it.key == SettingKey.TORRENTS) it.copy(value = "on") else it },
             sources = event.v1.sources.copy(torrent = true),
             torrent = TorrentView(if (proxy) ProxyView("proxy.example", 1080u, "mika") else null),
+        ),
+    )
+    else -> event
+}
+
+/** [event], when it is the Home view, with Continue as another device of the group played it last, as the engine would say it. */
+private fun fromDevice(event: Event): Event = when (event) {
+    is Event.Home -> Event.Home(
+        event.v1.copy(
+            spotlight = event.v1.spotlight?.let { if (it.case == SpotlightCase.CONTINUING) it.copy(lastDevice = "Study Mac") else it },
+            sections = event.v1.sections.map { section ->
+                if (section.kind == SectionKind.CONTINUE) section.copy(items = section.items.map { it.copy(lastDevice = "Study Mac") }) else section
+            },
         ),
     )
     else -> event

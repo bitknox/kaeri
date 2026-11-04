@@ -18,6 +18,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import app.kaeri.i18n.Strings
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -54,6 +59,12 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import app.kaeri.store.copyAllSignIns
+import app.kaeri.store.joinStoresFrom
+import app.kaeri.store.storeOffersFrom
+import app.kaeri.store.pairInvite
+import app.kaeri.store.pairStop
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import app.kaeri.design.Motion
@@ -63,7 +74,7 @@ import app.kaeri.store.DevicePreferences
 import app.kaeri.store.InviteLinks
 
 /** The pages, in order. */
-internal enum class FirstLaunchPage { Welcome, AniList, Sources }
+internal enum class FirstLaunchPage { Welcome, AniList, Sources, SetUp }
 
 /** The preference that says the pages have been through, on this device. */
 internal const val FIRST_LAUNCH_DONE = "firstLaunchDone"
@@ -130,18 +141,31 @@ private fun FirstLaunchPages(start: FirstLaunchPage, finish: () -> Unit) {
     LaunchedEffect(anilist) { if (anilist && page == FirstLaunchPage.AniList) page = FirstLaunchPage.Sources }
     LaunchedEffect(stores.isNotEmpty()) { if (stores.isNotEmpty() && page == FirstLaunchPage.Sources) finish() }
     LaunchedEffect(joining) { if (!joining.isNullOrEmpty()) page = FirstLaunchPage.Sources }
-    BackHandler(enabled = page != FirstLaunchPage.Welcome) { page = FirstLaunchPage.entries[page.ordinal - 1] }
+    BackHandler(enabled = page != FirstLaunchPage.Welcome) {
+        if (page == FirstLaunchPage.SetUp) {
+            store.pairStop()
+            store.sync.first(false)
+            page = FirstLaunchPage.Welcome
+        } else {
+            page = FirstLaunchPage.entries[page.ordinal - 1]
+        }
+    }
+    // A pairing that finished from here was read on its success page: the pages are through.
+    val copied by store.sync.copied.collectAsStateWithLifecycle()
+    val first by store.sync.first.collectAsStateWithLifecycle()
+    LaunchedEffect(copied, first, page) { if ((copied != null || first) && page != FirstLaunchPage.SetUp) page = FirstLaunchPage.SetUp }
     AnimatedContent(
         page,
         transitionSpec = { fadeIn(Motion.fadeIn()) togetherWith fadeOut(Motion.fadeOut()) },
         label = "first launch", // i18n-skip
     ) { shown ->
         when (shown) {
-            FirstLaunchPage.Welcome -> WelcomePage { page = FirstLaunchPage.AniList }
+            FirstLaunchPage.Welcome -> WelcomePage(next = { page = FirstLaunchPage.AniList }, setUp = { page = FirstLaunchPage.SetUp })
             FirstLaunchPage.AniList -> AniListPage(
                 signIn = { store.connect("anilist") },
                 notNow = { page = FirstLaunchPage.Sources },
             )
+            FirstLaunchPage.SetUp -> SetUpPage(done = finish)
             FirstLaunchPage.Sources -> SourcesPage(
                 join = { link -> store.stores.openJoin(link) },
                 skip = finish,
@@ -156,9 +180,16 @@ private fun FirstLaunchPages(start: FirstLaunchPage, finish: () -> Unit) {
 
 /** Nagare, the name, what Kaeri is, and Continue. */
 @Composable
-private fun WelcomePage(next: () -> Unit) {
+private fun WelcomePage(next: () -> Unit, setUp: () -> Unit) {
     PageFrame(
-        buttons = { Button(onClick = next, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.onboarding_continue)) } },
+        buttons = {
+            Button(onClick = next, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.onboarding_continue)) }
+            TextButton(
+                onClick = setUp,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
+            ) { Text(stringResource(R.string.first_setup_other)) }
+        },
     ) {
         Nagare(cell = 5, modifier = Modifier.align(Alignment.CenterHorizontally))
         Text(
@@ -168,6 +199,91 @@ private fun WelcomePage(next: () -> Unit) {
             modifier = Modifier.fillMaxWidth().padding(top = 24.dp).semantics { heading() },
         )
         PageLine(stringResource(R.string.onboarding_tagline), Modifier.padding(top = 8.dp), center = true)
+    }
+}
+
+/**
+ * Set up from another device: this device shows the code and its QR, a device that has Kaeri
+ * enters or scans it, and the page turns to the success line, whose Continue closes the pages.
+ */
+@Composable
+private fun SetUpPage(done: () -> Unit) {
+    val store = LocalAppStore.current
+    val context = LocalContext.current
+    val invite by store.sync.invite.collectAsStateWithLifecycle()
+    val copied by store.sync.copied.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) {
+        // Decision 11: sign-ins come over from first launch unless the person says otherwise.
+        store.sync.first(true)
+        if (store.sync.invite.value == null && store.sync.copied.value == null) {
+            store.copyAllSignIns()
+            store.joinStoresFrom(null)
+            store.pairInvite(systemDeviceName(context))
+        }
+    }
+    val shown = copied
+    if (shown != null) {
+        val status by store.sync.status.collectAsStateWithLifecycle()
+        val offers = status.storeOffersFrom(shown.device)
+        var off by rememberSaveable { mutableStateOf(setOf<String>()) }
+        PageFrame(
+            buttons = {
+                Button(
+                    onClick = {
+                        offers?.let { (device, list) ->
+                            val chosen = list.map { it.address }.filter { it !in off }
+                            if (chosen.isNotEmpty()) store.joinStoresFrom(device.id, chosen)
+                        }
+                        store.sync.copiedSeen()
+                        store.sync.first(false)
+                        done()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text(stringResource(R.string.onboarding_continue)) }
+            },
+        ) {
+            PageTitle(stringResource(R.string.pair_ok, shown.device))
+            PageLine(stringResource(R.string.first_ok_line), Modifier.padding(top = 8.dp))
+            offers?.let { (device, list) ->
+                list.forEach { offer ->
+                    JoinStoreSwitch(
+                        title = Strings.firstJoinStore(context, offer.name),
+                        line = Strings.firstJoinStoreLine(context, device.name, kindWord()),
+                        checked = offer.address !in off,
+                        onChange = { on -> off = if (on) off - offer.address else off + offer.address },
+                    )
+                }
+            }
+        }
+        return
+    }
+    PageFrame(
+        buttons = {
+            TextButton(
+                onClick = {
+                    store.pairStop()
+                    store.sync.first(false)
+                    store.sync.copiedSeen()
+                    done()
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
+            ) { Text(stringResource(R.string.onboarding_not_now)) }
+        },
+    ) {
+        PageTitle(stringResource(R.string.first_setup_other))
+        PageLine(stringResource(R.string.first_setup_line), Modifier.padding(top = 8.dp))
+        val code = invite
+        if (code != null) {
+            Text(
+                code.code.chunked(3).joinToString(" "), // i18n-skip
+                style = MaterialTheme.typography.displaySmall.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, letterSpacing = 4.sp),
+                modifier = Modifier.padding(top = 24.dp).align(Alignment.CenterHorizontally),
+            )
+            Box(Modifier.padding(top = 16.dp).align(Alignment.CenterHorizontally)) {
+                QrCode("kaeri://pair?port=${code.port}&code=${code.code}", label = stringResource(R.string.pair_show_scan))
+            }
+        }
     }
 }
 
@@ -274,6 +390,29 @@ private fun PageFrame(buttons: @Composable ColumnScope.() -> Unit, top: (@Compos
                 content = buttons,
             )
         }
+    }
+}
+
+/** The success page's "Join the plugin store" switch: its name, what the paired device does, and the switch. */
+@Composable
+private fun JoinStoreSwitch(title: String, line: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+    val onWord = stringResource(R.string.value_on)
+    val offWord = stringResource(R.string.value_off)
+    Row(
+        Modifier
+            .padding(top = 24.dp)
+            .fillMaxWidth()
+            .heightIn(min = 72.dp)
+            .toggleable(checked, role = Role.Switch, onValueChange = onChange)
+            .semantics { stateDescription = if (checked) onWord else offWord },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            Text(line, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        SettingSwitchMark(checked)
     }
 }
 

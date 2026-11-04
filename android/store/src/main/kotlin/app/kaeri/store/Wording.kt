@@ -16,6 +16,15 @@ import app.kaeri.engine.model.Entry
 import app.kaeri.engine.model.LibrarySegment
 import app.kaeri.engine.model.ResumePoint
 
+/**
+ * "Episode 7 · stopped at 12:04 on Study Mac": a Continue card's line when another device of the group played the
+ * title last in the last day. Null when none did, and the card says its own line.
+ */
+fun continueFromDeviceLine(context: Context, device: String?, episode: Int?, resume: ResumePoint?): String? {
+    if (device == null || episode == null || resume == null) return null
+    return Strings.continueFromDevice(context, episode, resume.clock(), device)
+}
+
 /** `12:30`, or `1:02:03` past the hour: the position as a viewer thinks of it. `ResumePoint::clock`. */
 fun ResumePoint.clock(): String {
     val total = maxOf(position, 0.0).toLong()

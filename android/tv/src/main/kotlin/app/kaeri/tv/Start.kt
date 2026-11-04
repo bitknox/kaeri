@@ -16,4 +16,6 @@ data class Start(
     val update: Boolean = false,
     /** A tracker whose sign-in opens over the destination: fixtures only, `--es signin trakt`. */
     val signIn: String? = null,
+    /** A Settings section to open on: fixtures' `--es settings Devices`. */
+    val settings: String? = null,
 )

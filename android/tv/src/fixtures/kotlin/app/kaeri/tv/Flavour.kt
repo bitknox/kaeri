@@ -24,6 +24,7 @@ import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import app.kaeri.engine.model.DeviceCodePrompt
 import app.kaeri.engine.model.Event
@@ -77,6 +78,7 @@ internal object Flavour {
             firstLaunch = intent.getBooleanExtra("firstLaunch", false),
             update = UpdateStage.named(intent.getStringExtra("update")) != null,
             signIn = intent.getStringExtra("signin"),
+            settings = intent.getStringExtra("settings"),
         )
     }
 
@@ -101,6 +103,13 @@ internal object Flavour {
             store.loadContinue(force = true)
             store.loadDetail(900001u)
             if ("7" in marks) store.apply(listOf(Event.DiscussionFound(900001u, 7u, 6u)))
+        }
+        intent.getStringExtra("sync")?.let { state ->
+            MainScope().launch {
+                store.phase.first { it == AppStore.Phase.Running }
+                delay(1_500)
+                app.kaeri.store.FixtureSync.stage(store, state)
+            }
         }
         val tracker = intent.getStringExtra("signin") ?: return
         val expiresAt = System.currentTimeMillis() / 1000 + (intent.getStringExtra("expires")?.toLongOrNull()?.coerceAtLeast(0) ?: 899)

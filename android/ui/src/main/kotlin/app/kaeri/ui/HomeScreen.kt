@@ -132,7 +132,7 @@ fun HomeScreen(actions: AppActions) {
     ScreenFrame(
         title = stringResource(R.string.home_title),
         // Wide windows have the account at the foot of the rail already.
-        account = if (wideWindow()) null else Account(user, actions.openSettings),
+        account = if (wideWindow()) null else profileAccount(user, actions.openSettings),
         actions = { PeopleAction() },
         // Home's line is the only one: the engine's job for Home would say the same again.
         line = line,

@@ -102,7 +102,7 @@ internal object Flavour {
         intent.getStringExtra("media")?.let { fixtureMedia = it }
         FixtureCasts.scene = CastScene.named(intent.getStringExtra("cast"))
         if (intent.getStringExtra("downloads") != null) fixtureDownloadClip = downloadClip(context)
-        return EngineLaunch.fixtures(scene, context.cacheDir).copy(platform = enginePlatform(context))
+        return EngineLaunch.fixtures(scene, context.cacheDir).copy(platform = enginePlatform(context), profile = intent.getStringExtra("profile") ?: ProfileChoice.saved(context))
     }
 
     /**
@@ -215,6 +215,9 @@ internal object Flavour {
             }
         }
         CastScene.named(intent.getStringExtra("cast"))?.let { return reachedCast(intent, store, it) }
+        intent.getStringExtra("sync")?.let { state ->
+            if (!app.kaeri.store.FixtureSync.stage(store, state)) Log.w(KaeriApp.TAG, "no sync state named $state: ${app.kaeri.store.FixtureSync.STATES.joinToString()}")
+        }
         val scene = TvScene.named(intent.getStringExtra("tv")) ?: return true
         val browser = withTimeoutOrNull(60_000) {
             while (store.tv.attachedBrowser == null) delay(50)

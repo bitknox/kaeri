@@ -92,7 +92,7 @@ fun LibraryScreen(actions: AppActions) {
 
     ScreenFrame(
         title = stringResource(R.string.nav_library),
-        account = Account(user, actions.openSettings),
+        account = profileAccount(user, actions.openSettings),
         actions = {
             if (!signedOut) {
                 Box {

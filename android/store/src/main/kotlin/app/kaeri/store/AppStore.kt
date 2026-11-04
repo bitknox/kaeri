@@ -138,6 +138,9 @@ class AppStore(
     val downloads = DownloadsModel()
     val settings = SettingsModel()
 
+    /** Sync between devices, the cloud folder's sign-in, and the profiles. */
+    val sync = SyncModel()
+
     /** Saved crash reports, the system's records offered, and the crash to mention. */
     val crashes = CrashReports()
 
@@ -222,6 +225,9 @@ class AppStore(
 
     /** The playback's events, for the player the app hosts: its ops and interface. */
     var onPlayback: ((Event) -> Unit)? = null
+
+    /** The engine named another profile to run: the app starts it again as that one. */
+    var onProfileSwitch: ((String) -> Unit)? = null
 
     /** A play was asked of the engine here, for the player to know one is on its way. */
     var onPlayAsked: (() -> Unit)? = null
@@ -902,14 +908,19 @@ class AppStore(
         accounts.leftForTab = false
         val request = accounts.signIn.value?.takeIf { it.answeredBy(tracker, callback) }
         if (request != null) accounts.signInEnded(request)
-        accounts.started(tracker, send(Command.FinishSignIn(tracker, callback)))
+        val service = SYNC_SERVICES[tracker]
+        if (service != null && (request != null || sync.signIn.value?.service == service)) {
+            send(Command.FinishSyncSignIn(service, callback))
+        } else {
+            accounts.started(tracker, send(Command.FinishSignIn(tracker, callback)))
+        }
         return request != null
     }
 
     /** The browser for [request] was closed without signing in. */
     fun cancelSignIn(request: SignInRequest) {
         accounts.signInEnded(request)
-        send(Command.CancelSignIn(request.tracker))
+        if (request.tracker in SYNC_SERVICES) send(Command.CancelSyncSignIn) else send(Command.CancelSignIn(request.tracker))
     }
 
     /** Kitsu's sign-in: its email or user name and password, exchanged for a token by the engine. */
@@ -1310,6 +1321,17 @@ class AppStore(
             is Event.MatchChoices, is Event.MatchSearchFailed, is Event.MatchFixFailed, is Event.TitleMatch -> applyMatch(event)
 
             is Event.Sync -> accounts.apply(event.v1)
+            is Event.SyncStatus -> sync.status(event.v1)
+            is Event.SyncInvite -> sync.invite(event.code, event.port.toInt(), event.seconds.toInt())
+            is Event.SyncRecoveryKey -> sync.recoveryKey(event.v1)
+            is Event.SyncSignIn -> syncSignIn(event.service, event.step)
+            is Event.SyncProblem -> sync.problem(event.v1)
+            is Event.SyncPairFailed -> sync.pairFailed(event.problem, event.device)
+            is Event.SyncSignInsCopied -> sync.copied(SignInsCopied(event.device, event.trackers, event.clouds, event.lacking))
+            is Event.SyncStoreJoined -> sync.storeJoin(StoreJoin.Joined(event.device, event.name))
+            is Event.SyncStoreJoinFailed -> sync.storeJoin(StoreJoin.Failed(event.device, event.name, event.problem))
+            is Event.Profiles -> sync.profiles(event.v1)
+            is Event.ProfileSwitch -> onProfileSwitch?.invoke(event.id)
             is Event.ViewerTitleLanguage -> accounts.viewerTitleLanguage(event.v1)
             is Event.Authorize -> accounts.authorize(SignInRequest(event.tracker, event.url, event.callbackScheme))
             is Event.DeviceCode -> accounts.deviceCode(event.v1)

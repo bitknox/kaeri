@@ -31,6 +31,8 @@ import app.kaeri.player.PlayerHost
 import app.kaeri.player.PlayerModel
 import app.kaeri.store.AppHost
 import app.kaeri.store.AppPhases
+import app.kaeri.store.setSyncNetwork
+import kotlinx.coroutines.flow.first
 import app.kaeri.store.AppStore
 import app.kaeri.store.EngineLaunch
 import app.kaeri.store.KeystoreKey
@@ -89,6 +91,14 @@ class TvApp : Application(), PlayerHost {
     }
 
     /** The remote phones drive this TV with, listening while the app is on screen. */
+    /** Typed-code pairing: the engine finds a device showing the code by DNS-SD, once it runs. */
+    private fun startSyncNetwork() {
+        scope.launch {
+            store.phase.first { it == AppStore.Phase.Running }
+            store.setSyncNetwork(app.kaeri.store.NsdSyncNetwork(this@TvApp))
+        }
+    }
+
     val remote: TvRemoteHost by lazy { TvRemoteHost(this, store, scope) }
 
     /** The launcher's Watch Next row, written from the Continue queue. */
@@ -118,6 +128,7 @@ class TvApp : Application(), PlayerHost {
         store.start(launch, host(), prepare)
         watchNetwork()
         ProcessLifecycleOwner.get().lifecycle.addObserver(remote)
+        startSyncNetwork()
         ProcessLifecycleOwner.get().lifecycle.addObserver(phases())
         watchNext.start()
     }

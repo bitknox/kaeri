@@ -67,6 +67,7 @@ import app.kaeri.tv.screens.SettingsSection
 import app.kaeri.tv.screens.TitleScreen
 import app.kaeri.tv.screens.UpdateScreen
 import app.kaeri.tv.signin.AddServerScreen
+import app.kaeri.tv.sync.TvSyncHost
 import app.kaeri.tv.signin.JoinStoreScreen
 import app.kaeri.tv.signin.LicensedScreen
 import app.kaeri.tv.signin.ServerScreen
@@ -149,6 +150,7 @@ fun TvRoot(
                 states.SaveableStateProvider("browse") { Browse(nav, play, playFromStart) }
             }
             if (firstLaunch && !player.isPresented) FirstLaunch(onCover = { covered = it })
+            TvSyncHost()
             if (remote != null) RemoteOverlays(remote, playing = player.isPresented, nav = nav)
             Notices(store, player, remote, notices, onUpdatePage = nav.top is Page.Update)
             EngineDown()
@@ -178,6 +180,19 @@ private fun BoxScope.Notices(store: AppStore, player: PlayerModel, remote: TvRem
         val said = pin ?: return@LaunchedEffect
         notices.say(app.kaeri.i18n.Strings.sourcePinUnavailable(context, said.name))
         store.sourceChoices.told(said)
+    }
+    // Plugin stores that could not be joined through a paired device, each said with why, a few seconds apart.
+    val joins by store.sync.storeJoins.collectAsStateWithLifecycle()
+    val syncStatus by store.sync.status.collectAsStateWithLifecycle()
+    LaunchedEffect(joins) {
+        if (joins.isEmpty()) return@LaunchedEffect
+        val failed = joins.filterIsInstance<app.kaeri.store.StoreJoin.Failed>()
+        store.sync.storeJoinsSeen()
+        failed.forEachIndexed { index, join ->
+            if (index > 0) kotlinx.coroutines.delay(4_000)
+            val device = syncStatus?.devices?.firstOrNull { it.id == join.device }?.name ?: join.device
+            notices.say(join.text(context, device))
+        }
     }
     // The notice after a crash, only while saving and asking are on: the engine gives none otherwise.
     val settings by store.settings.view.collectAsStateWithLifecycle()

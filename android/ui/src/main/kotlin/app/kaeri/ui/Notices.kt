@@ -137,3 +137,21 @@ internal fun SourcePinNotice() {
         store.sourceChoices.told(said)
     }
 }
+
+/** What joining plugin stores through a paired device came to, said as snackbars: each store that was not joined, and why. */
+@Composable
+internal fun StoreJoinNotices() {
+    val store = LocalAppStore.current
+    val snackbars = LocalSnackbars.current
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val joins by store.sync.storeJoins.collectAsStateWithLifecycle()
+    val status by store.sync.status.collectAsStateWithLifecycle()
+    LaunchedEffect(joins) {
+        if (joins.isEmpty()) return@LaunchedEffect
+        joins.filterIsInstance<app.kaeri.store.StoreJoin.Failed>().forEach { failed ->
+            val device = status?.devices?.firstOrNull { it.id == failed.device }?.name ?: failed.device
+            snackbars.show(failed.text(context, device))
+        }
+        store.sync.storeJoinsSeen()
+    }
+}
