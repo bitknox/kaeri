@@ -32,6 +32,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.height
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
@@ -126,7 +134,9 @@ fun PlayerSheets(model: PlayerModel, sheet: PlayerSheet?, onMoreSubtitleSettings
             if (sheet == PlayerSheet.Sources) model.cancelChoosingSource()
             onDismiss()
         },
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = sheet == PlayerSheet.People),
+        // The Episodes sheet opens at its own height, its list capped below, so the footer under the
+        // list is never left past the bottom of a half-open sheet.
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = sheet == PlayerSheet.People || sheet == PlayerSheet.Episodes),
         containerColor = ObiSilk.Raised,
         scrimColor = androidx.compose.material3.MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f),
         dragHandle = { BottomSheetDefaults.DragHandle(color = ObiSilk.Haze.copy(alpha = 0.4f)) },
@@ -154,14 +164,64 @@ private fun SheetList(model: PlayerModel, sheet: PlayerSheet, onMoreSubtitleSett
     // sight above it held sideways: its list, under the 48 dp handle, scrolls inside.
     val configuration = LocalConfiguration.current
     val bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-    val most = if (sheet == PlayerSheet.People) Modifier.heightIn(max = configuration.screenHeightDp.dp - 44.dp - 48.dp - bottom) else Modifier
-    LazyColumn(most, state = rememberLazyListState(initialFirstVisibleItemIndex = current), contentPadding = padding) {
-        when (sheet) {
-            PlayerSheet.Tracks -> tracks(model, onMoreSubtitleSettings)
-            PlayerSheet.Episodes -> episodes(model)
-            PlayerSheet.Sources -> sources(model, onDismiss)
-            PlayerSheet.SkipTimes -> skipTimes(model, onDismiss)
-            PlayerSheet.People -> item(key = "people") { app.kaeri.ui.PartyPeopleContent(onDone = onDismiss) } // i18n-skip
+    // The episode under focus or the pointer, for the footer under the Episodes list.
+    var pointed by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
+    // A long series' list is one range of 100 at a time, opening on the range of the episode playing.
+    val ranges = if (sheet == PlayerSheet.Episodes) panelRanges(model) else null
+    var range by androidx.compose.runtime.remember(ranges?.size) { androidx.compose.runtime.mutableIntStateOf(ranges?.let { r -> (model.menus?.episodes?.indexOfFirst { it.current } ?: 0).coerceAtLeast(0) / 100 } ?: 0) }
+    var goal by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
+    var asking by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    val listState = rememberLazyListState(initialFirstVisibleItemIndex = if (ranges == null) current else (current - range * 100).coerceAtLeast(0))
+    val picker = ranges?.let { PanelRanges(it, range, { range = it }, { asking = true }) }
+    LaunchedEffect(goal, range) {
+        val number = goal ?: return@LaunchedEffect
+        val within = panelRows(model, range).indexOfFirst { it.number == number }
+        if (within >= 0) {
+            listState.animateScrollToItem(within + 1)
+            goal = null
+        }
+    }
+    if (asking) {
+        val store = app.kaeri.ui.LocalAppStore.current
+        val tables by store.titles.episodes.collectAsStateWithLifecycle()
+        val rows = model.titleOnScreen?.let { tables[it] }.orEmpty()
+        app.kaeri.ui.GoToEpisodeDialog(rows, onDismiss = { asking = false }, onGo = { index, _ ->
+            asking = false
+            val number = rows.getOrNull(index)?.number
+            val at = model.menus?.episodes?.indexOfFirst { it.number == number } ?: -1
+            if (number != null && at >= 0) {
+                range = at / 100
+                goal = number
+            }
+        })
+    }
+    androidx.compose.foundation.layout.Column {
+        LazyColumn(
+            state = listState,
+            contentPadding = if (sheet == PlayerSheet.Episodes) PaddingValues(top = padding.calculateTopPadding()) else padding,
+            modifier = Modifier.weight(1f, fill = false)
+                .then(
+                    when (sheet) {
+                        PlayerSheet.Episodes -> Modifier.heightIn(max = (configuration.screenHeightDp * 0.45f).dp)
+                        PlayerSheet.People -> Modifier.heightIn(max = configuration.screenHeightDp.dp - 44.dp - 48.dp - bottom)
+                        else -> Modifier
+                    },
+                ),
+        ) {
+            when (sheet) {
+                PlayerSheet.Tracks -> tracks(model, onMoreSubtitleSettings)
+                PlayerSheet.Episodes -> episodes(model, picker, range) { number, on -> if (on) pointed = number else if (pointed == number) pointed = null }
+                PlayerSheet.Sources -> sources(model, onDismiss)
+                PlayerSheet.SkipTimes -> skipTimes(model, onDismiss)
+                PlayerSheet.People -> item(key = "people") { app.kaeri.ui.PartyPeopleContent(onDone = onDismiss) } // i18n-skip
+            }
+        }
+        if (sheet == PlayerSheet.Episodes) {
+            // Under the list, for the episode under focus or the pointer, else the one playing.
+            val episodes = model.menus?.episodes.orEmpty()
+            val shown = episodes.firstOrNull { it.number == pointed } ?: episodes.firstOrNull { it.current }
+            if (shown != null) EpisodeFooter(model.titleOnScreen, shown.number, shown.label, shown.title)
+            androidx.compose.foundation.layout.Spacer(Modifier.height(padding.calculateBottomPadding()))
         }
     }
 }
@@ -294,17 +354,61 @@ private fun LazyListScope.tracks(model: PlayerModel, onMore: () -> Unit) {
     }
 }
 
-private fun LazyListScope.episodes(model: PlayerModel) {
+/** A long series' range picker in the Episodes panel's heading row. */
+private class PanelRanges(val items: List<app.kaeri.ui.RangeItem>, val selected: Int, val onPick: (Int) -> Unit, val onGoTo: () -> Unit)
+
+/** The ranges of the panel's episodes, in hundreds, when there are more than a hundred; else none. */
+@Composable
+private fun panelRanges(model: PlayerModel): List<app.kaeri.ui.RangeItem>? {
+    val episodes = model.menus?.episodes.orEmpty()
+    if (episodes.size <= 100) return null
+    val watched = stringResource(R.string.episode_watched)
+    return remember(episodes, watched) {
+        episodes.chunked(100).map { chunk ->
+            app.kaeri.ui.RangeItem(
+                chunk.first().number.toDoubleOrNull()?.toInt() ?: 0,
+                chunk.last().number.toDoubleOrNull()?.toInt() ?: 0,
+                if (chunk.all { it.watched }) watched else null,
+            )
+        }
+    }
+}
+
+/** The episodes the panel lists: the selected range's, or all of a short series. */
+private fun panelRows(model: PlayerModel, range: Int) =
+    model.menus?.episodes.orEmpty().let { all -> if (all.size > 100) all.chunked(100).getOrElse(range) { emptyList() } else all }
+
+private fun LazyListScope.episodes(model: PlayerModel, picker: PanelRanges?, range: Int, onPoint: (number: String, on: Boolean) -> Unit) {
     val menus = model.menus
-    heading(R.string.player_episodes)
+    if (picker == null) {
+        heading(R.string.player_episodes)
+    } else {
+        item(key = "heading-ranged") {
+            Row(Modifier.fillMaxWidth().padding(start = 56.dp, end = 24.dp, top = 12.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    stringResource(R.string.player_episodes),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = ObiSilk.Haze,
+                    modifier = Modifier.weight(1f).semantics { heading() },
+                )
+                app.kaeri.ui.RangeChip(picker.items, picker.selected, picker.onPick, onGoTo = picker.onGoTo, container = ObiSilk.FaintRule, content = ObiSilk.Silk)
+            }
+        }
+    }
     if (menus == null || menus.episodes.isEmpty()) {
         item(key = "no-episodes") { Note(stringResource(R.string.player_sheet_episodes_loading)) }
     } else {
-        items(menus.episodes, key = { "ep-${it.number}" }) { row ->
+        items(panelRows(model, range), key = { "ep-${it.number}" }) { row ->
+            val hover = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+            val hovered by hover.collectIsHoveredAsState()
+            androidx.compose.runtime.LaunchedEffect(hovered) { onPoint(row.number, hovered) }
             Choice(
                 row.title?.let { "${row.label} · $it" } ?: row.label,
                 detail = if (row.filler) stringResource(R.string.episode_filler) else if (row.watched) stringResource(R.string.episode_watched) else null,
                 checked = row.current,
+                modifier = Modifier
+                    .hoverable(hover)
+                    .onFocusChanged { onPoint(row.number, it.hasFocus) },
             ) { model.choose(PlayerChoice.Episode(row.number)) }
         }
     }
@@ -362,9 +466,9 @@ private fun Note(text: String) {
 
 /** A row with the 24 dp check slot every row keeps, so the labels line up; the current one checked in silk. */
 @Composable
-private fun Choice(title: String, detail: String? = null, checked: Boolean, radio: Boolean = true, onClick: () -> Unit) {
+private fun Choice(title: String, detail: String? = null, checked: Boolean, radio: Boolean = true, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Row(
-        Modifier
+        modifier
             .fillMaxWidth()
             .heightIn(min = 56.dp)
             .semantics {
@@ -398,3 +502,39 @@ private val Check: ImageVector = ImageVector.Builder("Check", 24.dp, 24.dp, 24f,
         strokeLineJoin = StrokeJoin.Round,
     )
 }.build()
+
+/**
+ * A footer under the Episodes list: the focused or playing episode's name and three lines of its
+ * synopsis, when the title's table is cached (it never fetches). An episode spoiler protection
+ * hides shows its name and no text; the room is kept only where text can land, and text that
+ * arrives later fades in.
+ */
+@Composable
+private fun EpisodeFooter(id: app.kaeri.engine.core.AnilistId?, number: String, label: String, title: String?) {
+    val store = app.kaeri.ui.LocalAppStore.current
+    val tables by store.titles.episodes.collectAsStateWithLifecycle()
+    val rows = id?.let { tables[it] } ?: return
+    val protect = app.kaeri.ui.spoilerProtected(id)
+    val outlook = remember(id, rows.isEmpty()) { app.kaeri.engine.ffi.episodeText(rows) }
+    if (outlook == app.kaeri.engine.model.EpisodeText.NONE) return
+    val row = rows.firstOrNull { it.number == number }
+    val hidden = protect && row?.spoilerAhead == true
+    val text = row?.description?.takeIf { it.isNotBlank() && !hidden }
+    HorizontalDivider(color = ObiSilk.FaintRule)
+    Column(Modifier.fillMaxWidth().padding(start = 56.dp, end = 24.dp, top = 12.dp, bottom = 8.dp)) {
+        Text(
+            title?.let { "$label · $it" } ?: label, // i18n-skip
+            style = MaterialTheme.typography.bodyLarge,
+            color = ObiSilk.Silk,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Box(Modifier.padding(top = 4.dp).fillMaxWidth().height(with(androidx.compose.ui.platform.LocalDensity.current) { (20.sp * 3).toDp() })) {
+            androidx.compose.animation.Crossfade(text, animationSpec = app.kaeri.design.Motion.fadeIn(), label = "episode-footer") { shown -> // i18n-skip
+                if (shown != null) {
+                    Text(app.kaeri.design.rememberTagged(shown), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                }
+            }
+        }
+    }
+}

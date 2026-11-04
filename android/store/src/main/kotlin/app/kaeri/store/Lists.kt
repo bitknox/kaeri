@@ -14,6 +14,7 @@ import app.kaeri.engine.model.LibrarySegment
 import app.kaeri.engine.model.SearchFacets
 import app.kaeri.engine.model.SearchQuery
 import app.kaeri.engine.model.SearchSort
+import app.kaeri.engine.model.TrendPeriod
 import app.kaeri.engine.model.Season
 
 /** Where a list stands. */
@@ -288,6 +289,10 @@ class SearchModel {
         val recents: List<SearchQuery> = emptyList(),
         /** Whether typing waits for the search key: the AniList budget ran low. */
         val livePaused: Boolean = false,
+        /** The period the Trending rail shows: the one chosen, else the one kept on this device. */
+        val period: TrendPeriod = TrendPeriod.TODAY,
+        /** What each week or month answered; today is the start's own rail. */
+        val trending: Map<TrendPeriod, TrendAnswer> = emptyMap(),
     ) {
         /**
          * Whether Search shows its start: rails and recent searches rather than results. One typed
@@ -408,7 +413,38 @@ class SearchModel {
     internal fun recents(recents: List<SearchQuery>) = update { it.copy(recents = recents) }
 
     internal fun live(paused: Boolean) = update { it.copy(livePaused = paused) }
+
+    /** The period the person chose, until the engine says another. */
+    private var chosen = false
+
+    /** The Trending rail's period was chosen from its menu. */
+    internal fun choose(period: TrendPeriod) {
+        chosen = true
+        update { it.copy(period = period) }
+    }
+
+    /**
+     * A period's rail came in. The period kept from an earlier session shows when the start
+     * loads, unless one was chosen since.
+     */
+    internal fun trending(period: TrendPeriod, answer: TrendAnswer, titles: TitleCache) {
+        titles.merge(answer.entries)
+        update {
+            val next = it.copy(trending = it.trending + (period to answer))
+            if (chosen) next else next.copy(period = period)
+        }
+    }
 }
+
+/** What a Trending period came to: its titles in order, or that it could not load. */
+data class TrendAnswer(
+    val entries: List<Entry>,
+    /** When a kept answer was made, in Unix seconds; `null` for one just fetched. */
+    val updatedAt: Long? = null,
+    val failed: Boolean = false,
+    /** Seconds AniList asked us to wait, when the budget is spent. */
+    val waiting: UInt? = null,
+)
 
 /** The query as the engine searches for it and tags its answer: its text without the spaces around. */
 val SearchQuery.normalized: SearchQuery get() = copy(text = text.trim())

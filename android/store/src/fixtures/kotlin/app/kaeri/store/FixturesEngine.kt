@@ -36,6 +36,7 @@ private fun FixtureScene.ffi(): FfiScene = when (this) {
     FixtureScene.SERVERS -> FfiScene.Servers
     FixtureScene.SOURCES_BUSY -> FfiScene.SourcesBusy
     FixtureScene.AVAILABLE -> FfiScene.Available
+    FixtureScene.BROWSING -> FfiScene.Browsing
     // What it streams is the player's business, which comes with A3: a path or URL on the device.
     FixtureScene.PLAYING -> FfiScene.Playing(media = fixtureMedia)
     FixtureScene.SUGGESTED -> FfiScene.Suggested

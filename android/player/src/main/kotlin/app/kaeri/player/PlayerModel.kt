@@ -204,6 +204,10 @@ class PlayerModel(
         private set
     var starting by mutableStateOf<StartingScreen?>(null)
         private set
+
+    /** The title playing or about to, kept past the start screen, so the Episodes panel can look its table up. */
+    var titleOnScreen by mutableStateOf<AnilistId?>(null)
+        private set
     var episode by mutableStateOf<EpisodeOnScreen?>(null)
         private set
     var menus by mutableStateOf<PlayerMenus?>(null)
@@ -445,6 +449,7 @@ class PlayerModel(
                 sourceChoices = null
                 verdictPending = false
                 staged = StagedPlayback(event.id, event.title, event.episode, event.episodeTitle)
+                titleOnScreen = event.id
                 present()
                 changed()
             }
@@ -536,6 +541,7 @@ class PlayerModel(
                 failedWith = null
                 failedMsg = null
                 starting = StartingScreen(playback, ui.id, ui.title, ui.episode, ui.episodeTitle, ui.coverUrl, ui.bannerUrl, now)
+                ui.id?.let { titleOnScreen = it }
                 ui.coverUrl?.let { coverUrl = it }
                 ui.bannerUrl?.let { bannerUrl = it }
                 present()
@@ -899,6 +905,7 @@ class PlayerModel(
         fullScreen = false
         staged = null
         starting = null
+        titleOnScreen = null
         episode = null
         menus = null
         skip = null

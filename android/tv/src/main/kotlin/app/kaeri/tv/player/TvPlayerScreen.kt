@@ -4,6 +4,8 @@
 
 package app.kaeri.tv.player
 
+import app.kaeri.tv.ui.TvTab
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import app.kaeri.i18n.Strings
@@ -93,6 +95,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.material3.MaterialTheme
@@ -892,9 +895,47 @@ private fun Panel(model: PlayerModel, panel: PlayerPanel, onDone: () -> Unit, mo
             .padding(start = 16.dp, end = PANEL_END, top = 27.dp, bottom = 27.dp),
     ) {
         Text(title, style = MaterialTheme.typography.headlineSmall, color = ObiSilk.Silk, modifier = Modifier.padding(start = 16.dp, bottom = 12.dp).semantics { heading() })
-        LazyColumn(Modifier.focusRequester(list).focusGroup(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        // The episode under focus, for the footer under the list.
+        var pointed by remember { mutableStateOf<String?>(null) }
+        // The episode list opens with the playing episode laid out, one row below the top, so
+        // focus can start on it with the footer taking room under the list.
+        // A long series is one range of 100 at a time, opening on the one holding the episode playing.
+        val all = model.menus?.episodes.orEmpty()
+        val ranged = panel == PlayerPanel.Episodes && all.size > 100
+        var range by remember(ranged) { mutableIntStateOf(if (ranged) all.indexOfFirst { it.current }.coerceAtLeast(0) / 100 else 0) }
+        val shownEpisodes = if (ranged) all.chunked(100).getOrElse(range) { emptyList() } else all
+        if (ranged) {
+            val context = LocalContext.current
+            val chunks = remember(all) { all.chunked(100) }
+            androidx.compose.foundation.lazy.LazyRow(
+                Modifier.padding(bottom = 12.dp).focusGroup(),
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                items(chunks.size, key = { "range/$it" }) { index ->
+                    val chunk = chunks[index]
+                    TvTab(
+                        Strings.episodeRange(context, chunk.first().number.toDoubleOrNull()?.toInt() ?: 0, chunk.last().number.toDoubleOrNull()?.toInt() ?: 0),
+                        selected = index == range,
+                        onSelect = { range = index },
+                        settle = null,
+                        chip = true,
+                        count = if (chunk.all { it.watched }) stringResource(R.string.episode_watched) else null,
+                    )
+                }
+            }
+        }
+        val state = remember(panel, range) {
+            val at = if (panel == PlayerPanel.Episodes) shownEpisodes.indexOfFirst { it.current } else -1
+            androidx.compose.foundation.lazy.LazyListState((at - 1).coerceAtLeast(0))
+        }
+        LazyColumn(
+            state = state,
+            modifier = Modifier.focusRequester(list).focusGroup().then(if (panel == PlayerPanel.Episodes) Modifier.weight(1f) else Modifier),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
             when (panel) {
-                PlayerPanel.Episodes -> items(model.menus?.episodes.orEmpty(), key = { it.number }) { episode ->
+                PlayerPanel.Episodes -> items(shownEpisodes, key = { it.number }) { episode ->
                     TvListRow(
                         episode.title?.let { stringResource(R.string.tv_player_episode_row, episode.number, it) } ?: episode.label,
                         onClick = {
@@ -907,7 +948,8 @@ private fun Panel(model: PlayerModel, panel: PlayerPanel, onDone: () -> Unit, mo
                             else -> null
                         },
                         selected = episode.current,
-                        modifier = if (episode.current) Modifier.focusRequester(current) else Modifier,
+                        modifier = (if (episode.current) Modifier.focusRequester(current) else Modifier)
+                            .onFocusChanged { if (it.hasFocus) pointed = episode.number },
                     )
                 }
                 PlayerPanel.Tracks -> {
@@ -947,6 +989,14 @@ private fun Panel(model: PlayerModel, panel: PlayerPanel, onDone: () -> Unit, mo
                         modifier = if (source.current) Modifier.focusRequester(current) else Modifier,
                     )
                 }
+            }
+        }
+        if (panel == PlayerPanel.Episodes) {
+            val episodes = model.menus?.episodes.orEmpty()
+            val shown = episodes.firstOrNull { it.number == pointed } ?: episodes.firstOrNull { it.current }
+            if (shown != null) {
+                val heading = shown.title?.let { stringResource(R.string.tv_player_episode_row, shown.number, it) } ?: shown.label
+                EpisodesFooter(model.titleOnScreen, shown.number, heading)
             }
         }
     }
@@ -1116,4 +1166,36 @@ private fun wallMinute(): java.time.Instant {
         }
     }
     return now
+}
+
+/**
+ * A footer under the Episodes list: the focused episode's name, then three lines of its synopsis,
+ * when the title's table is cached (it never fetches). Spoiler protection follows the show's own
+ * setting, as the title page does: a protected episode shows its name and no text. The room is
+ * kept only where text can land, text that arrives later fades in, and TalkBack reads the footer
+ * as one: the name, then the synopsis.
+ */
+@Composable
+private fun EpisodesFooter(id: app.kaeri.engine.core.AnilistId?, number: String, heading: String) {
+    val store = LocalAppStore.current
+    val tables by store.titles.episodes.collectAsStateWithLifecycle()
+    val title = id ?: return
+    val rows = tables[title] ?: return
+    val outlook = remember(title, rows.isEmpty()) { app.kaeri.engine.ffi.episodeText(rows) }
+    if (outlook == app.kaeri.engine.model.EpisodeText.NONE) return
+    val row = rows.firstOrNull { it.number == number }
+    val protect = app.kaeri.tv.ui.spoilerProtected(title)
+    val hidden = protect && row?.spoilerAhead == true
+    val text = row?.description?.takeIf { it.isNotBlank() && !hidden }
+    val room = with(androidx.compose.ui.platform.LocalDensity.current) { (20.sp * 3).toDp() }
+    Column(Modifier.padding(start = 16.dp, top = 12.dp).fillMaxWidth().semantics(mergeDescendants = true) {}) {
+        Text(heading, style = MaterialTheme.typography.titleSmall, color = ObiSilk.Silk, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Box(Modifier.padding(top = 4.dp).fillMaxWidth().height(room)) {
+            androidx.compose.animation.Crossfade(text, animationSpec = app.kaeri.design.Motion.fadeIn(), label = "episodes-footer") { shown -> // i18n-skip
+                if (shown != null) {
+                    Text(app.kaeri.design.rememberTagged(shown), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                }
+            }
+        }
+    }
 }

@@ -65,7 +65,8 @@ internal fun filterRowState(context: Context, query: SearchQuery, phone: Boolean
     )
 
     val current = query.sortInEffect()
-    val sortWord = SearchWords.sort(context, current)
+    // Trending says its period in a browse: "Trending this week".
+    val sortWord = if (current == app.kaeri.engine.model.SearchSort.TRENDING && query.periodInEffect() != null) query.sortLabel() else SearchWords.sort(context, current)
     val sort = RowPill(sortWord, set = query.sort != null, spoken = Strings.sortLabel(context, sortWord))
 
     val pickedGenres = query.genres.size + query.genresExcluded.size

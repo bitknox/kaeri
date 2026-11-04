@@ -6,6 +6,8 @@ import org.robolectric.RuntimeEnvironment
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.getAllSemanticsNodes
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
@@ -17,6 +19,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -25,6 +28,7 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performScrollToKey
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
@@ -60,6 +64,7 @@ import app.kaeri.engine.core.AnilistId
 import app.kaeri.engine.core.Translation
 import app.kaeri.engine.core.SourceCandidate
 import app.kaeri.engine.model.Event
+import app.kaeri.engine.model.EpisodeRow
 import app.kaeri.engine.model.SectionKind
 import app.kaeri.engine.model.SpotlightCase
 import app.kaeri.engine.model.SourceNote
@@ -70,6 +75,7 @@ import app.kaeri.store.AppStore
 import app.kaeri.store.HAS_TESTING_ENGINE
 import app.kaeri.testkit.FixtureArt
 import app.kaeri.testkit.Scene
+import app.kaeri.testkit.SynopsisFixtures
 import app.kaeri.testkit.PartyStates
 import app.kaeri.engine.model.PartyFound
 import app.kaeri.engine.model.PartySources
@@ -526,6 +532,12 @@ class BoardShots {
         compose.onNodeWithText(label).performScrollTo().performClick()
     }
 
+    private fun toRanges() {
+        compose.onNode(hasScrollToKeyAction() and hasAnyDescendant(hasText("More about this show")))
+            .performScrollToKey("range-row")
+        compose.waitForIdle()
+    }
+
     /** The title page scrolled to the row its watched episodes fold under. */
     private fun toEpisodes() {
         compose.onNode(hasScrollToKeyAction() and hasAnyDescendant(hasText("More about this show")))
@@ -544,8 +556,11 @@ class BoardShots {
         compose.onNodeWithText("watched", substring = true).performClick()
         compose.waitForIdle()
         assertEquals("the last episode watched stays put", before, lastWatched.getUnclippedBoundsInRoot().top)
+        // The unfolded rows push the fold off the top: find the list by the row kept in place.
+        compose.onNode(hasScrollToKeyAction() and hasAnyDescendant(hasText("E6 \u00b7", substring = true)))
+            .performScrollToKey(watchedFold(900001u))
+        compose.waitForIdle()
         compose.onNodeWithText("Hide watched episodes").assertExists()
-        toEpisodes()
     }
 
     /**
@@ -735,16 +750,343 @@ class BoardShots {
     )
 
     /** Capture [name]-<ms> at each of [at] after [change], the clock held between frames. */
-    private fun frames(name: String, at: List<Long>, change: () -> Unit) {
+    private fun frames(name: String, at: List<Long>, screen: Boolean = false, change: () -> Unit) {
         compose.mainClock.autoAdvance = false
         change()
         var now = 0L
         for (ms in at) {
             compose.mainClock.advanceTimeBy(ms - now)
             now = ms
-            compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/$name-$ms.png")
+            val file = "${roborazziSystemPropertyOutputDirectory()}/$name-$ms.png"
+            if (screen) captureScreenRoboImage(file) else compose.onRoot().captureRoboImage(file)
         }
         compose.mainClock.autoAdvance = true
+    }
+
+    // Episode synopses (the synopsis board, section 3): text and stills laid on the scene's table.
+
+    /** Spoiler protection off for 900001, as its own setting says, laid over the scene's own sheet: every row takes its text. */
+    private val protectionOff: List<Event> =
+            listOf(
+                Event.ShowSettings(
+                    app.kaeri.engine.model.ShowSettingsView(
+                        id = 900001u,
+                        rows = listOf(
+                            app.kaeri.engine.model.ShowSettingRow(
+                                key = app.kaeri.engine.model.ShowSettingKey.SPOILER_PROTECTION,
+                                own = app.kaeri.engine.core.SettingValue.Bool(false),
+                                value = "off",
+                                default = "Use Default · On",
+                            ),
+                        ),
+                        remembered = emptyList(),
+                        source = null,
+                    ),
+                ),
+            )
+
+    /** The title page scrolled so the line where protection starts shows. */
+    private fun toProtection() {
+        compose.onNode(hasScrollToKeyAction() and hasAnyDescendant(hasText("More about this show")))
+            .performScrollToKey("protection-900001")
+        compose.waitForIdle()
+    }
+
+    /** Protection off: every row from the next episode on keeps its text. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_synopsis() = shoot("phone-title", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses, party = protectionOff) { toEpisodes() }
+
+    /** Protection on: facts and a blurred still after the next episode, under the line where it starts. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_synopsis_protected() = shoot("phone-protected", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses) { toProtection() }
+
+    /** One protected row revealed from its sheet: the still sharp, the row grown, its text in. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_synopsis_revealed() = shoot("phone-revealed", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses) {
+        toProtection()
+        compose.onNodeWithText("E8", substring = true).performTouchInput { longClick() }
+        compose.waitForIdle()
+        compose.onNodeWithText("Show synopsis").performClick()
+        compose.waitForIdle()
+    }
+
+    /** The line's Show: every row after it revealed, the line saying what it shows, with Hide. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_synopsis_showing() = shoot("phone-showing", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses) {
+        toProtection()
+        compose.onNodeWithText("Show").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("Hide").assertExists()
+    }
+
+    /** No synopses and none coming: every row is the short form. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_synopsis_none() = shoot("phone-none", WATCHING, title = 900001u, episodes = SynopsisFixtures::withoutText) { toEpisodes() }
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_synopsis_ranges() = shoot("phone-ranges", WATCHING, title = 900001u, episodes = SynopsisFixtures::long, screen = true) {
+        toRanges()
+        compose.onNodeWithContentDescription("Episode range").performClick()
+        compose.waitForIdle()
+    }
+
+    @Test
+    @Config(qualifiers = TABLET)
+    fun tablet_title_synopsis() = shoot("tablet-title-synopsis", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses) { toEpisodes() }
+
+    @Test
+    @Config(qualifiers = TABLET)
+    fun tablet_title_synopsis_ranged() = shoot("tablet-title-synopsis-ranged", WATCHING, title = 900001u, episodes = SynopsisFixtures::long) { toRanges() }
+
+    /** The tablet's range menu open over the beside rows. */
+    @Test
+    @Config(qualifiers = TABLET)
+    fun tablet_title_synopsis_ranges() = shoot("tablet-ranges", WATCHING, title = 900001u, episodes = SynopsisFixtures::long, screen = true) {
+        toRanges()
+        compose.onNodeWithContentDescription("Episode range").performClick()
+        compose.waitForIdle()
+    }
+
+    /** A protected row revealed on the tablet: still and text together, the row's height unchanged. */
+    @Test
+    @Config(qualifiers = TABLET)
+    fun tablet_title_synopsis_revealed() = shoot("tablet-revealed", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses) {
+        toProtection()
+        compose.onNodeWithText("E8", substring = true).performTouchInput { longClick() }
+        compose.waitForIdle()
+        compose.onNodeWithText("Show synopsis").performClick()
+        compose.waitForIdle()
+    }
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_synopsis_ranged() = shoot("phone-ranged", WATCHING, title = 900001u, episodes = SynopsisFixtures::long) { toRanges() }
+
+    /** Long press: the sheet with the whole synopsis above the actions. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_synopsis_sheet() = shoot("phone-sheet", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses, screen = true) {
+        toEpisodes()
+        compose.onNodeWithText("E7", substring = true).performTouchInput { longClick() }
+        compose.waitForIdle()
+    }
+
+    /** A protected episode's sheet: Show synopsis first with the open eye, the still blurred. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_synopsis_sheet_protected() = shoot("phone-sheet-protected", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses, screen = true) {
+        toProtection()
+        compose.onNodeWithText("E9", substring = true).performTouchInput { longClick() }
+        compose.waitForIdle()
+    }
+
+    @Test
+    @Config(qualifiers = PHONE, fontScale = 2.0f)
+    fun phone_title_synopsis_large_text() = shoot("phone-large-text", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses) { toEpisodes() }
+
+    // Browsing extras (the browsing board): count lines, Trending periods, Surprise me, Another, Go to episode.
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_search_start() = shoot("phone-browse-search-start", BROWSING, start = Destination.Search, before = { it.chooseTrending(app.kaeri.engine.model.TrendPeriod.TODAY) })
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_trending_week() = shoot("phone-browse-trending-week", BROWSING, start = Destination.Search, before = { it.chooseTrending(app.kaeri.engine.model.TrendPeriod.TODAY) }) { store ->
+        store.chooseTrending(app.kaeri.engine.model.TrendPeriod.WEEK)
+    }
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_trending_menu() = shoot("phone-browse-trending-menu", BROWSING, start = Destination.Search, screen = true, before = { it.chooseTrending(app.kaeri.engine.model.TrendPeriod.TODAY) }) {
+        compose.onNodeWithText("Trending today").performClick()
+        compose.waitForIdle()
+    }
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_results() = shoot("phone-browse-results", BROWSING, start = Destination.Search, search = SearchQuery(text = "hoshi"))
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_title_another() = shoot("phone-browse-title-another", BROWSING, start = Destination.Search) { store ->
+        store.apply(listOf(Event.Surprise(app.kaeri.engine.model.SurprisePool.Planning, app.kaeri.engine.model.SurpriseOutcome.Picked(900001u, true))))
+    }
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_go_to_episode() = shoot("phone-browse-go-to-episode", BROWSING, title = 900001u, episodes = SynopsisFixtures::long, screen = true, settle = false) {
+        toRanges()
+        compose.onNodeWithContentDescription("Episode range").performClick()
+        compose.waitForIdle()
+        // The field's cursor blinks for ever, so the clock is stepped, not waited for.
+        compose.mainClock.autoAdvance = false
+        compose.onNodeWithText("Go to episode", substring = true).performClick()
+        compose.mainClock.advanceTimeBy(600)
+    }
+
+    // Recordings, as frames 33 ms apart that make a 30 fps clip.
+
+    private val clip = (0L..900L step 33L).toList()
+
+    /** Loop A: a title's dub arrives while its cell is on screen; the dub part fades in on the line's end. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_dub_arrives_clip() = shoot("phone-browse-dub-clip-end", BROWSING, start = Destination.Search, search = SearchQuery(text = "hoshi")) { store ->
+        frames("phone-browse-dub-clip", clip) {
+            store.apply((900002u..900006u).map { Event.TitleDub(it, app.kaeri.engine.model.DubExtent(through = 3u, complete = false)) })
+        }
+    }
+
+    /** Loop B: the period switch; the shelf crossfades, the heading label on quick. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_period_clip() = shoot("phone-browse-period-clip-end", BROWSING, start = Destination.Search, screen = true, before = { it.chooseTrending(app.kaeri.engine.model.TrendPeriod.TODAY) }) {
+        compose.onNodeWithText("Trending today").performClick()
+        compose.waitForIdle()
+        frames("phone-browse-period-clip", clip, screen = true) { compose.onNodeWithText("This week").performClick() }
+    }
+
+    /** Loop C: Surprise me opens a title, then Another takes its place on a crossfade. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_another_clip() = shoot("phone-browse-another-clip-end", BROWSING, start = Destination.Search) { store ->
+        store.apply(listOf(Event.Surprise(app.kaeri.engine.model.SurprisePool.Planning, app.kaeri.engine.model.SurpriseOutcome.Picked(900001u, true))))
+        compose.waitForIdle()
+        frames("phone-browse-another-clip", (0L..900L step 33L).toList()) {
+            store.surprise(app.kaeri.engine.model.SurprisePool.Planning, inPlace = true)
+            store.apply(listOf(Event.Surprise(app.kaeri.engine.model.SurprisePool.Planning, app.kaeri.engine.model.SurpriseOutcome.Picked(900003u, true))))
+        }
+    }
+
+    /** Loop D's setup: the long runner's range menu, then Go to episode with [typed] in its field, the clock held. */
+    private fun goToSetup(typed: String) {
+        // Only a recording draws the dialog's window, which its semantics need.
+        assumeTrue(com.github.takahirom.roborazzi.roborazziSystemPropertyTaskType().isEnabled())
+        toRanges()
+        compose.onNodeWithContentDescription("Episode range").performClick()
+        compose.waitForIdle()
+        // The field's cursor blinks for ever, so the clock is stepped, not waited for.
+        compose.mainClock.autoAdvance = false
+        compose.onNodeWithText("Go to episode", substring = true).performClick()
+        compose.mainClock.advanceTimeBy(600)
+        // Robolectric lays a window out as it draws one, so the dialog is drawn once to be read.
+        captureScreenRoboImage("${roborazziSystemPropertyOutputDirectory()}/phone-browse-go-to-scratch.png")
+        // The dialog's field blinks its cursor for ever and the test's idle wait never ends, so its
+        // semantics are read from the dialog's own window, its actions invoked on the UI thread and
+        // the clock stepped.
+        val field = dialogNodes().first { SemanticsActions.SetText in it.config }
+        compose.runOnUiThread { field.config[SemanticsActions.SetText].action?.invoke(androidx.compose.ui.text.AnnotatedString(typed)) }
+        compose.mainClock.advanceTimeBy(300)
+        captureScreenRoboImage("${roborazziSystemPropertyOutputDirectory()}/phone-browse-go-to-scratch.png")
+    }
+
+    /** The semantics of the dialog on screen, read without the test's idle wait. */
+    @OptIn(androidx.compose.ui.InternalComposeUiApi::class)
+    private fun dialogNodes(): List<androidx.compose.ui.semantics.SemanticsNode> {
+        fun find(view: android.view.View): androidx.compose.ui.node.RootForTest? =
+            (view as? androidx.compose.ui.node.RootForTest)
+                ?: (view as? android.view.ViewGroup)?.let { group -> (0 until group.childCount).firstNotNullOfOrNull { find(group.getChildAt(it)) } }
+        // Every window the app has: the activity's and a dialog's, each with a compose root.
+        val global = Class.forName("android.view.WindowManagerGlobal")
+        val manager = global.getMethod("getInstance").invoke(null)
+        @Suppress("UNCHECKED_CAST")
+        val names = global.getMethod("getViewRootNames").invoke(manager) as Array<String>
+        val getRoot = global.getMethod("getRootView", String::class.java)
+        return names.mapNotNull { find(getRoot.invoke(manager, it) as android.view.View) }
+            .flatMap { root -> runCatching { root.semanticsOwner.getAllSemanticsNodes(mergingEnabled = true) }.getOrDefault(emptyList()) }
+    }
+
+    /** The dialog's Go button, pressed on the UI thread. */
+    private fun pressGo() {
+        val go = dialogNodes().first { node -> node.config.getOrNull(SemanticsProperties.Text)?.any { it.text == "Go" } == true && SemanticsActions.OnClick in node.config }
+        compose.runOnUiThread { go.config[SemanticsActions.OnClick].action?.invoke() }
+    }
+
+    /** Loop D: Go to episode 215 from the range menu: the list and the chip's label crossfade to the other range. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_go_to_clip() = shoot("phone-browse-go-to-clip-end", BROWSING, title = 900001u, episodes = SynopsisFixtures::long, screen = true, settle = false) {
+        goToSetup("215")
+        frames("phone-browse-go-to-clip", clip, screen = true) { pressGo() }
+    }
+
+    /** Loop D with Remove animations on: still a crossfade, both ranges drawn, never a cut. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_go_to_clip_removed() = shoot("phone-browse-go-to-removed-clip-end", BROWSING, title = 900001u, episodes = SynopsisFixtures::long, screen = true, settle = false, removed = true) {
+        goToSetup("215")
+        frames("phone-browse-go-to-removed-clip", clip, screen = true) { pressGo() }
+    }
+
+    /** Loop E: a short jump inside the range on screen, 154 from 151: the list scrolls and the row takes the selected fill. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_short_jump_clip() = shoot("phone-browse-short-jump-clip-end", BROWSING, title = 900001u, episodes = SynopsisFixtures::long, screen = true, settle = false) {
+        goToSetup("154")
+        frames("phone-browse-short-jump-clip", clip, screen = true) { pressGo() }
+    }
+
+    /** Loop E with Remove animations on: the scrolled list crossfades in instead. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_short_jump_clip_removed() = shoot("phone-browse-short-jump-removed-clip-end", BROWSING, title = 900001u, episodes = SynopsisFixtures::long, screen = true, settle = false, removed = true) {
+        goToSetup("154")
+        frames("phone-browse-short-jump-removed-clip", clip, screen = true) { pressGo() }
+    }
+
+    /** Loops B, A and C with Remove animations on, recorded again as crossfades. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_period_clip_removed() = shoot("phone-browse-period-removed-clip-end", BROWSING, start = Destination.Search, screen = true, removed = true, before = { it.chooseTrending(app.kaeri.engine.model.TrendPeriod.TODAY) }) {
+        compose.onNodeWithText("Trending today").performClick()
+        compose.waitForIdle()
+        frames("phone-browse-period-removed-clip", clip, screen = true) { compose.onNodeWithText("This week").performClick() }
+    }
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_dub_arrives_clip_removed() = shoot("phone-browse-dub-removed-clip-end", BROWSING, start = Destination.Search, search = SearchQuery(text = "hoshi"), removed = true) { store ->
+        frames("phone-browse-dub-removed-clip", clip) {
+            store.apply((900002u..900006u).map { Event.TitleDub(it, app.kaeri.engine.model.DubExtent(through = 3u, complete = false)) })
+        }
+    }
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_another_clip_removed() = shoot("phone-browse-another-removed-clip-end", BROWSING, start = Destination.Search, removed = true) { store ->
+        store.apply(listOf(Event.Surprise(app.kaeri.engine.model.SurprisePool.Planning, app.kaeri.engine.model.SurpriseOutcome.Picked(900001u, true))))
+        compose.waitForIdle()
+        // Robolectric draws only to capture, so the page is drawn once for the layer that records it.
+        compose.onRoot().captureToImage()
+        frames("phone-browse-another-removed-clip", clip) {
+            store.surprise(app.kaeri.engine.model.SurprisePool.Planning, inPlace = true)
+            store.apply(listOf(Event.Surprise(app.kaeri.engine.model.SurprisePool.Planning, app.kaeri.engine.model.SurpriseOutcome.Picked(900003u, true))))
+        }
+    }
+
+    /** The line's Show: the line crossfades, each row grows, then its text fades in. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_synopsis_reveal_clip() = shoot("phone-reveal-clip-end", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses) {
+        toProtection()
+        frames("phone-reveal-clip", clip) { compose.onNodeWithText("Show").performClick() }
+    }
+
+    /** A range switch: the rows crossfade in place. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_synopsis_range_clip() = shoot("phone-range-clip-end", WATCHING, title = 900001u, episodes = SynopsisFixtures::long) {
+        toRanges()
+        compose.onNodeWithContentDescription("Episode range").performClick()
+        compose.waitForIdle()
+        frames("phone-range-clip", clip, screen = true) { compose.onNodeWithText("Episodes 201 to 230").performClick() }
     }
 
     private fun shoot(
@@ -775,13 +1117,19 @@ class BoardShots {
         party: List<Event> = emptyList(),
         /** Run on the store before the screens show: a lobby a link opened, say. */
         before: ((AppStore) -> Unit)? = null,
+        /** The episode tables of the scene as they are sent: text and stills laid on, say. */
+        episodes: ((AnilistId, List<EpisodeRow>) -> List<EpisodeRow>)? = null,
+        /** Remove animations on, the system's animator duration scale at 0, as a person turns it on. */
+        removed: Boolean = false,
         then: ((AppStore) -> Unit)? = null,
     ) {
+        if (removed) removeAnimations()
         val recorded = Scene.named(scene)
         AppClock.clock = Clock.fixed(recorded.recordedAt, ZONE)
         // The art the screens ask for, as the fake AniList serves it.
         val store = AppStore(scope, clock = { 0L }, artworkWithoutEngine = { url -> PaleBanner.bytes(url) ?: FixtureArt.bytes(url) })
         val events = recorded.events.filter { replayed(it) && !exclude(it) }.map { if (sourceless) withoutSources(it) else it }.map { if (dub) dubbed(it) else it }.map { if (device) fromDevice(it) else it }
+            .map { if (episodes != null && it is Event.Episodes) Event.Episodes(it.id, episodes(it.id, it.rows)) else it }
         // After the scene each time, so its own detail never wins over the pale one.
         fun replay() {
             store.apply(events)
@@ -822,6 +1170,11 @@ class BoardShots {
         if (screen) captureScreenRoboImage(file) else compose.onRoot().captureRoboImage(file)
     }
 
+
+    /** Remove animations, as the Settings switch sets it: the animator duration scale at 0. */
+    private fun removeAnimations() {
+        android.provider.Settings.Global.putFloat(androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>().contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 0f)
+    }
 
     /** Tap what [label] names, scrolled to first where it sits in a list. */
     private fun open(label: String) {
@@ -889,6 +1242,8 @@ class BoardShots {
         fun seasonalList(event: Event) = event is Event.Content && event.view == ContentFor.Seasonal
 
         const val WATCHING = "watching"
+        const val BROWSING = "browsing"
+
         const val HOME_WATCHING = "home-watching"
         const val FRESH = "fresh"
         const val TOGETHER = "together"

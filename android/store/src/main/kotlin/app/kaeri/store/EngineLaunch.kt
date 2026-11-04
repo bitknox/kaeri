@@ -288,7 +288,10 @@ enum class FixtureScene {
     SYNC_TV_PHONE_SIGN_IN,
 
     /** [WATCHING] with three profiles, one of them a kids profile. */
-    PROFILES;
+    PROFILES,
+
+    /** [WATCHING] for Search's extras: dub counts on the cards, Surprise me's fixtures and a long franchise for ranges. */
+    BROWSING;
 
     companion object {
         /** The scene [name] says, case aside; `null` for one there is none of. */

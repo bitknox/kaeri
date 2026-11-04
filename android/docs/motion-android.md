@@ -63,6 +63,7 @@ object Motion {
 | quick | `spring(dampingRatio = 1f, stiffness = 1000f)` | `240ms` with the spring `linear()` below | Selection, toggles, row dim after marking watched, the divider handle, the fade-through between destinations (T6) |
 | standard | `spring(dampingRatio = 1f, stiffness = 440f)` | `360ms` with the spring `linear()` below | Content changes inside a screen, the spring back after a cancelled gesture |
 | fade-in | `tween(200, easing = LinearOutSlowInEasing)` | `200ms cubic-bezier(0, 0, 0.2, 1)` | Controls appearing, artwork, the first frame, page and detail content |
+| reveal | `tween(300, easing = LinearOutSlowInEasing)` | `300ms cubic-bezier(0, 0, 0.2, 1)` | A blurred still coming out sharp after Show synopsis, the protection line changing its words |
 | fade-out | `tween(300, easing = FastOutLinearInEasing)` | `300ms cubic-bezier(0.4, 0, 1, 1)` | Controls hiding, page content leaving |
 | linear | `tween(n, easing = LinearEasing)` | `ns linear` | Countdowns only: Up Next, 10 s |
 | system | the platform's own | shared bounds: `spring(1f, 400f)`, about 0.31 s, drawn as `380ms` with the spring `linear()` | Shared bounds and elements, NavHost seeking, sheets, menus, indicator, rail, panes, snackbar, PiP, rotation |

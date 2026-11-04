@@ -76,6 +76,29 @@ class Navigator(private val nav: NavHostController, private val start: Destinati
         nav.navigate(titleRoute(current(), id))
     }
 
+    /** Whether a title page is being swapped for another in place (Another): the pages crossfade. */
+    var replacing: Boolean by mutableStateOf(false)
+        private set
+
+    /**
+     * Another: [id]'s page takes the place of the title page on screen, so Back returns to where
+     * Surprise me was pressed. The two crossfade; nothing flies.
+     */
+    fun replaceTitle(id: AnilistId) {
+        val here = current()
+        source = null
+        replacing = true
+        nav.navigate(titleRoute(here, id)) { popUpTo(titlePattern(here)) { inclusive = true } }
+    }
+
+    /** The container the host is drawn in, for a still of the page being replaced (Another with Remove animations on). */
+    var fade: app.kaeri.design.StillFade? = null
+
+    /** The swap has settled. */
+    fun replaced() {
+        replacing = false
+    }
+
     /**
      * Switch to [destination] as it was left; on the current one, back to its start, scrolled to
      * the top by the screen.

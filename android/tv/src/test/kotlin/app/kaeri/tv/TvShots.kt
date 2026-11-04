@@ -213,6 +213,203 @@ class TvShots {
     @Test
     fun title() = shoot("tv-title", title = 900001u)
 
+    // Browsing extras (the browsing board): the Trending rail with its periods, Surprise me and Another.
+    @Test
+    fun browse_search_start() = shoot("tv-browse-search-start", start = Destination.Search, scene = BROWSING) { shot.chooseTrending(app.kaeri.engine.model.TrendPeriod.TODAY) }
+
+    @Test
+    fun browse_trending_week() = shoot("tv-browse-trending-week", start = Destination.Search, scene = BROWSING) {
+        shot.chooseTrending(app.kaeri.engine.model.TrendPeriod.TODAY)
+        shot.chooseTrending(app.kaeri.engine.model.TrendPeriod.WEEK)
+    }
+
+    /** Loop B on TV: the period chip chosen, the posters crossfade on standard, as frames 33 ms apart. */
+    @Test
+    fun browse_period_clip() = shoot("tv-browse-period-clip-end", start = Destination.Search, scene = BROWSING) {
+        shot.chooseTrending(app.kaeri.engine.model.TrendPeriod.TODAY)
+        settle()
+        compose.mainClock.autoAdvance = false
+        shot.chooseTrending(app.kaeri.engine.model.TrendPeriod.WEEK)
+        var now = 0L
+        for (ms in 0L..900L step 33L) {
+            compose.mainClock.advanceTimeBy(ms - now)
+            now = ms
+            compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-browse-period-clip-$ms.png")
+        }
+        compose.mainClock.autoAdvance = true
+        settle()
+    }
+
+    @Test
+    fun browse_results() = shoot("tv-browse-results", query = "hoshi", scene = BROWSING)
+
+    /** [change] captured as frames 33 ms apart, the clock held between them. */
+    private fun frames(name: String, change: () -> Unit) {
+        settle()
+        compose.mainClock.autoAdvance = false
+        change()
+        var now = 0L
+        for (ms in 0L..900L step 33L) {
+            compose.mainClock.advanceTimeBy(ms - now)
+            now = ms
+            compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/$name-$ms.png")
+        }
+        compose.mainClock.autoAdvance = true
+        settle()
+    }
+
+    private fun dubArrives() = shot.apply((900002u..900006u).map { Event.TitleDub(it, app.kaeri.engine.model.DubExtent(through = 3u, complete = false)) })
+
+    /** Loop A on TV: the dub part fades in on the end of each card's count line. */
+    @Test
+    fun browse_dub_arrives_clip() = shoot("tv-browse-dub-clip-end", query = "hoshi", scene = BROWSING) { frames("tv-browse-dub-clip") { dubArrives() } }
+
+    @Test
+    fun browse_dub_arrives_clip_removed() = shoot("tv-browse-dub-removed-clip-end", query = "hoshi", scene = BROWSING, removed = true) { frames("tv-browse-dub-removed-clip") { dubArrives() } }
+
+    /** Loop B on TV with Remove animations on: the shelf still crossfades. */
+    @Test
+    fun browse_period_clip_removed() = shoot("tv-browse-period-removed-clip-end", start = Destination.Search, scene = BROWSING, removed = true) {
+        shot.chooseTrending(app.kaeri.engine.model.TrendPeriod.TODAY)
+        frames("tv-browse-period-removed-clip") { shot.chooseTrending(app.kaeri.engine.model.TrendPeriod.WEEK) }
+    }
+
+    /** Surprise me on Planning: a tonal pill ending the header row, after the tabs. */
+    @Test
+    fun browse_planning_surprise() = shoot("tv-browse-planning-surprise", start = Destination.Library, scene = BROWSING) {
+        compose.onNodeWithText("Planning", substring = true).performSemanticsAction(SemanticsActions.OnClick)
+        settle()
+        compose.onNodeWithText("Surprise me").assertExists()
+    }
+
+    /** Another on TV: the title page crossfades to the pick, also with Remove animations on. */
+    @Test
+    fun browse_another_clip() = shoot("tv-browse-another-clip-end", start = Destination.Search, scene = BROWSING) {
+        shot.apply(listOf(Event.Surprise(app.kaeri.engine.model.SurprisePool.Planning, app.kaeri.engine.model.SurpriseOutcome.Picked(900001u, true))))
+        settle()
+        frames("tv-browse-another-clip") { shot.surprise(app.kaeri.engine.model.SurprisePool.Planning, inPlace = true); shot.apply(listOf(Event.Surprise(app.kaeri.engine.model.SurprisePool.Planning, app.kaeri.engine.model.SurpriseOutcome.Picked(900003u, false)))) }
+    }
+
+    @Test
+    fun browse_another_clip_removed() = shoot("tv-browse-another-removed-clip-end", start = Destination.Search, scene = BROWSING, removed = true) {
+        shot.apply(listOf(Event.Surprise(app.kaeri.engine.model.SurprisePool.Planning, app.kaeri.engine.model.SurpriseOutcome.Picked(900001u, true))))
+        settle()
+        frames("tv-browse-another-removed-clip") { shot.surprise(app.kaeri.engine.model.SurprisePool.Planning, inPlace = true); shot.apply(listOf(Event.Surprise(app.kaeri.engine.model.SurprisePool.Planning, app.kaeri.engine.model.SurpriseOutcome.Picked(900003u, false)))) }
+    }
+
+
+    @Test
+    fun browse_title_another() = shoot("tv-browse-title-another", start = Destination.Search, scene = BROWSING) {
+        shot.apply(listOf(Event.Surprise(app.kaeri.engine.model.SurprisePool.Planning, app.kaeri.engine.model.SurpriseOutcome.Picked(900001u, true))))
+    }
+
+    // Episode synopses (the synopsis board, section 4): three cards across with text under each.
+
+    /** The shelf with the next episode focused, its neighbours readable. */
+    @Test
+    fun title_episode_shelf() = shoot("tv-shelf", title = 900001u, episodes = app.kaeri.testkit.SynopsisFixtures::withSynopses) { toShelf() }
+
+    /** Cards after the next episode: facts and a blurred still, the text covered. */
+    @Test
+    fun title_episode_shelf_protected() = shoot("tv-protected", title = 900001u, episodes = app.kaeri.testkit.SynopsisFixtures::withSynopses) {
+        toShelf()
+        press(Key.DirectionRight)
+        settle()
+    }
+
+    /** A long series: a row of range chips above the shelf. */
+    @Test
+    fun title_episode_ranges() = shoot("tv-ranges", title = 900001u, episodes = app.kaeri.testkit.SynopsisFixtures::long) { toShelf() }
+
+    /** Long press on OK: the episode sheet with the whole synopsis above the actions. */
+    @Test
+    fun title_episode_sheet() = shoot("tv-sheet", title = 900001u, episodes = app.kaeri.testkit.SynopsisFixtures::withSynopses) {
+        toShelf()
+        // The card's long click, which a held OK sends.
+        compose.onNode(isFocused()).performSemanticsAction(SemanticsActions.OnLongClick)
+        settle()
+    }
+
+    /** A long series: focus on a range chip that is not the one shown, above the shelf. */
+    @Test
+    fun title_episode_range_chips() = shoot("tv-range-chips", title = 900001u, episodes = app.kaeri.testkit.SynopsisFixtures::long) {
+        toChips()
+        toChip("Episodes 201")
+    }
+
+    /** Choosing another range: the cards crossfade in place, as frames 33 ms apart. */
+    @Test
+    fun title_episode_range_clip() = shoot("tv-range-clip-end", title = 900001u, episodes = app.kaeri.testkit.SynopsisFixtures::long) {
+        toChips()
+        toChip("Episodes 201")
+        compose.mainClock.autoAdvance = false
+        // The key alone: press() would run the clock past the crossfade.
+        compose.onAllNodes(isRoot()).onLast().performKeyInput { pressKey(Key.DirectionCenter) }
+        var now = 0L
+        for (ms in 0L..900L step 33L) {
+            compose.mainClock.advanceTimeBy(ms - now)
+            now = ms
+            compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-range-clip-$ms.png")
+        }
+        compose.mainClock.autoAdvance = true
+        settle()
+    }
+
+    /** Along the range chips to the one starting [prefix]. */
+    private fun toChip(prefix: String) {
+        repeat(4) {
+            if (focusedText().startsWith(prefix)) return
+            press(Key.DirectionRight)
+            settle()
+        }
+        error("no chip $prefix took focus: ${focusedText()}")
+    }
+
+    /** From the header down to the range chips over the shelf. */
+    private fun toChips() {
+        repeat(8) {
+            if (focusedText().startsWith("Episodes ") || focusedLabel().startsWith("Episodes ")) return
+            press(Key.DirectionDown)
+            settle()
+        }
+        error("no range chip took focus: ${focusedText()} / ${focusedLabel()}")
+    }
+
+    /** The player's Episodes panel: focus on episode 6, and the footer under the list follows it. */
+    @Test
+    fun player_episodes() = playerShot("tv-player-episodes", prepare = { it.apply(listOf(Event.Episodes(900_001u, app.kaeri.testkit.SynopsisFixtures.table(900_001u)))) }) { model ->
+        compose.runOnUiThread {
+            model.apply(
+                Event.PlayerUi(
+                    1u,
+                    PlayerUi.Menus(
+                        episodes = app.kaeri.testkit.SynopsisFixtures.menu(app.kaeri.testkit.SynopsisFixtures.table(900_001u)),
+                        sources = emptyList(),
+                        translation = Translation.SUB,
+                        upscaling = MenuChoices("off"),
+                        toneMapping = null,
+                        nightMode = false,
+                    ),
+                ),
+            )
+        }
+        repeat(6) { if (focusedText() != "Episodes") press(Key.DirectionRight) }
+        assertEquals("Episodes", focusedText())
+        press(Key.DirectionCenter)
+        settle()
+        press(Key.DirectionUp)
+        settle()
+    }
+
+    /** Down from the header to the Episodes shelf, which opens focused on the next episode. */
+    private fun toShelf() {
+        repeat(6) {
+            if (focusedLabel().contains("E7")) return
+            press(Key.DirectionDown)
+            settle()
+        }
+    }
+
     /**
      * Source for this title from the title page's More, by the D-pad alone: the panel lists Automatic
      * and each source with its coverage or note, focus on the chosen one, long names cut short.
@@ -1152,12 +1349,13 @@ class TvShots {
     /** The navigator of the root [shoot] drew. */
     private var nav = TvNavigator()
 
-    private fun playerShot(name: String?, removed: Boolean = false, then: (PlayerModel) -> Unit) {
+    private fun playerShot(name: String?, removed: Boolean = false, prepare: (AppStore) -> Unit = {}, then: (PlayerModel) -> Unit) {
         if (removed) {
             android.provider.Settings.Global.putFloat(androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>().contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 0f)
         }
         AppClock.clock = Clock.fixed(Instant.parse("2026-10-20T19:02:00Z"), ZONE)
         val store = AppStore(scope, decoder = TvArtDecoder, artworkBudget = TV_ART_BUDGET, clock = { 0L }, artworkWithoutEngine = FixtureArt::bytes)
+        prepare(store)
         var mpv: ScriptedMpv? = null
         val model = PlayerModel(send = { sentCommands += it }, backend = { ScriptedMpv().also { mpv = it; playerMpv = it } }, scope = scope, now = { time }, hwdec = "no")
         compose.runOnUiThread {
@@ -1267,6 +1465,8 @@ class TvShots {
         proxy: Boolean = false,
         /** The TV's address on the network, so a QR page has one: none, as the JVM has no network, when null. */
         pageHost: String? = null,
+        /** The episode tables of the scene as they are sent: text and stills laid on, say. */
+        episodes: ((AnilistId, List<app.kaeri.engine.model.EpisodeRow>) -> List<app.kaeri.engine.model.EpisodeRow>)? = null,
         /** Remove animations on, the system's animator duration scale at 0, as a person turns it on. */
         removed: Boolean = false,
         then: (() -> Unit)? = null,
@@ -1278,7 +1478,8 @@ class TvShots {
         AppClock.clock = Clock.fixed(recorded.recordedAt, ZONE)
         val store = AppStore(scope, decoder = TvArtDecoder, artworkBudget = TV_ART_BUDGET, clock = { 0L }, artworkWithoutEngine = FixtureArt::bytes)
         shot = store
-        val events = recorded.events.filter(::replayed).map { if (dub) dubbed(it) else it }.map { if (device) fromDevice(it) else it }.map { if (torrents != null) torrentsOn(it, proxy) else it } +
+        val events = recorded.events.filter(::replayed).map { if (dub) dubbed(it) else it }.map { if (device) fromDevice(it) else it }.map { if (torrents != null) torrentsOn(it, proxy) else it }
+            .map { if (episodes != null && it is Event.Episodes) Event.Episodes(it.id, episodes(it.id, it.rows)) else it } +
             listOfNotNull(Event.Connectivity(true).takeIf { offline })
         // The proxy check's last word, said once.
         torrents?.let { store.apply(listOf(Event.TorrentProxy(it))) }
@@ -1415,6 +1616,10 @@ class TvShots {
     /** The store [shoot] made, for a test that has the engine answer partway. */
     private lateinit var shot: AppStore
 
+    /** The focused control's content description: a card's, which says number, title, facts and synopsis. */
+    private fun focusedLabel(): String =
+        compose.onNode(isFocused()).fetchSemanticsNode().config.getOrNull(SemanticsProperties.ContentDescription).orEmpty().joinToString(" ")
+
     private fun focusedText(): String {
         val node: SemanticsNodeInteraction = compose.onNode(isFocused())
         val text = node.fetchSemanticsNode().config.getOrNull(SemanticsProperties.Text).orEmpty()
@@ -1444,6 +1649,7 @@ class TvShots {
         const val TV = "w960dp-h540dp-land-television-xhdpi"
 
         const val WATCHING = "watching"
+        const val BROWSING = "browsing"
         const val HOME_WATCHING = "home-watching"
         const val TOGETHER = "together"
 

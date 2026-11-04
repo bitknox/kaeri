@@ -102,6 +102,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import app.kaeri.design.Motion
+import app.kaeri.design.SwapFade
 import app.kaeri.design.tabular
 import app.kaeri.engine.model.Bounds
 import app.kaeri.engine.model.BrowseRail
@@ -114,6 +115,14 @@ import app.kaeri.engine.model.OnList
 import app.kaeri.engine.model.Pick
 import app.kaeri.engine.model.SearchQuery
 import app.kaeri.engine.model.Season
+import app.kaeri.engine.model.SearchSort
+import app.kaeri.engine.model.SurprisePool
+import app.kaeri.engine.model.TrendPeriod
+import app.kaeri.engine.core.AnilistId
+import app.kaeri.engine.ffi.trendPeriodChoice
+import app.kaeri.engine.ffi.trendPeriodLabel
+import app.kaeri.engine.ffi.trendPeriods
+import app.kaeri.store.TrendAnswer
 import app.kaeri.engine.model.mediaFormatLabel
 import app.kaeri.engine.model.searchCountries
 import app.kaeri.engine.model.searchCountryLabel
@@ -290,6 +299,9 @@ fun SearchScreen(
                         onClick = { text.clearText() },
                         modifier = Modifier.semantics { contentDescription = clearLabel },
                     ) { Icon(Icons.Clear, contentDescription = null) }
+                } else if (status.query.isBrowse()) {
+                    // Surprise me, from the filters in effect: only where there are no words.
+                    SurpriseButton(SurprisePool.Filters(status.query))
                 }
             },
         )
@@ -450,9 +462,20 @@ private fun FilterRow(query: SearchQuery, phone: Boolean, rowScroll: LazyListSta
                 val current = query.sortInEffect()
                 MenuChip(words.sort.label, selected = words.sort.set, phone = phone, describe = words.sort.spoken, modifier = slot()) { close ->
                     for (sort in searchSorts(!query.isBrowse())) {
-                        Choice(SearchWords.sort(LocalContext.current, sort), sort == current) {
-                            close()
-                            store.editSearch { it.copy(sort = sort) }
+                        if (sort == SearchSort.TRENDING && query.isBrowse()) {
+                            // Trending is its three periods, so See all and the sort say the same.
+                            val shown = query.periodInEffect() ?: TrendPeriod.TODAY
+                            for (period in trendPeriods()) {
+                                Choice(trendPeriodLabel(period), current == SearchSort.TRENDING && period == shown) {
+                                    close()
+                                    store.editSearch { it.copy(sort = sort, period = period.takeIf { p -> p != TrendPeriod.TODAY }) }
+                                }
+                            }
+                        } else {
+                            Choice(SearchWords.sort(LocalContext.current, sort), sort == current) {
+                                close()
+                                store.editSearch { it.copy(sort = sort, period = null) }
+                            }
                         }
                     }
                 }
@@ -813,7 +836,7 @@ private fun SearchResults(query: SearchQuery, overdue: Boolean, phone: Boolean, 
                 is ListState.Loaded -> {
                     val entries = list.ids.mapNotNull { titles[it] }
                     items(entries, key = { it.id.toLong() }, contentType = { "poster" }) {
-                        PosterCell(it, itemMotion(), from = "search", detail = searchDetail(LocalContext.current, it), onOpen = store::rememberSearch, detailLines = 2)
+                        PosterCell(it, itemMotion(), from = "search", detail = searchDetail(LocalContext.current, it), onOpen = store::rememberSearch, detailLines = 2, count = it.countLineNow(), narrow = phone)
                     }
                     if (status.hasNext) {
                         items(3, key = { "more-$it" }, contentType = { "placeholder" }) { index ->
@@ -868,7 +891,7 @@ private fun SearchStart(gridState: LazyGridState) {
         } else {
             for (rail in rails.filter { it.entries.isNotEmpty() }) {
                 item(span = { GridItemSpan(maxLineSpan) }, key = "rail-${rail.title}") {
-                    RailRow(rail, rail.entries.map { titles[it.id] ?: it })
+                    if (rail.isTrending()) TrendingRail(rail, titles) else RailRow(rail, rail.entries.map { titles[it.id] ?: it })
                 }
             }
         }
@@ -930,7 +953,81 @@ private fun RailRow(rail: BrowseRail, entries: List<Entry>) {
             QuietButton(stringResource(R.string.search_see_all)) { store.search(rail.query) }
         }
         LazyRow(horizontalArrangement = Arrangement.spacedBy(13.dp)) {
-            items(entries, key = { it.id.toLong() }) { PosterCell(it, itemMotion().width(104.dp), from = "rail-${rail.title}") }
+            items(entries, key = { it.id.toLong() }) { PosterCell(it, itemMotion().width(104.dp), from = "rail-${rail.title}", detail = it.genreLine, count = it.countLineNow()) }
+        }
+    }
+}
+
+/** Whether this is Search's Trending rail: the one sorted by Trending, with nothing else set. */
+private fun BrowseRail.isTrending(): Boolean = query.sort == SearchSort.TRENDING && !query.hasFilters()
+
+/**
+ * The Trending rail: its heading is a menu of the periods, and the shelf below crossfades when the
+ * period changes. The old covers stay while the new ones load; past 600 ms they crossfade to
+ * plates, which hold at least 0.3 s, then to the new covers. Never blank.
+ */
+@Composable
+private fun TrendingRail(rail: BrowseRail, titles: Map<AnilistId, Entry>) {
+    val store = LocalAppStore.current
+    val status by store.search.status.collectAsStateWithLifecycle()
+    val period = status.period
+    val answer = if (period == TrendPeriod.TODAY) TrendAnswer(rail.entries) else status.trending[period]
+    var held by remember { mutableStateOf(answer?.takeIf { !it.failed }) }
+    var plates by remember { mutableStateOf(false) }
+    var platesAt by remember { mutableStateOf(0L) }
+    LaunchedEffect(period, answer) {
+        if (answer != null && !answer.failed) {
+            if (plates) {
+                val held = System.currentTimeMillis() - platesAt
+                if (held < 300) delay(300 - held)
+            }
+            held = answer
+            plates = false
+        } else if (answer == null) {
+            delay(600)
+            platesAt = System.currentTimeMillis()
+            plates = true
+        } else {
+            held = answer
+            plates = false
+        }
+    }
+    val shown = if (plates) null else held
+    Column {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                TrendingHeading(period, store::chooseTrending)
+                val age = shown?.updatedAt
+                if (age != null) {
+                    val ago = android.text.format.DateUtils.getRelativeTimeSpanString(age * 1000, System.currentTimeMillis(), android.text.format.DateUtils.MINUTE_IN_MILLIS).toString()
+                    Text(Strings.trendingUpdated(LocalContext.current, ago), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                }
+            }
+            QuietButton(stringResource(R.string.search_see_all)) {
+                store.search(SearchQuery(sort = SearchSort.TRENDING, period = period.takeIf { it != TrendPeriod.TODAY }))
+            }
+        }
+        if (answer?.failed == true && !plates) {
+            Text(
+                Strings.trendingFailed(LocalContext.current, trendPeriodChoice(period).lowercase()),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            QuietButton(stringResource(R.string.action_try_again)) { store.chooseTrending(period) }
+        } else {
+            SwapFade(shown, animationSpec = Motion.standard(), label = "trending shelf") { answered -> // i18n-skip
+                if (answered == null) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(13.dp)) {
+                        repeat(4) { Box(Modifier.width(104.dp)) { PosterPlaceholder() } }
+                    }
+                } else {
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(13.dp)) {
+                        items(answered.entries.map { titles[it.id] ?: it }, key = { it.id.toLong() }) {
+                            PosterCell(it, Modifier.width(104.dp), from = "rail-trending", detail = it.genreLine, count = it.countLineNow())
+                        }
+                    }
+                }
+            }
         }
     }
 }

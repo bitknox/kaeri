@@ -237,6 +237,17 @@ class TvNavigator(start: Destination = Destination.Home) {
     }
 
     /**
+     * Another: the pick takes the title page's place, so the page crossfades and Back returns to
+     * where Surprise me was pressed.
+     */
+    fun replaceTitle(id: AnilistId) {
+        val top = pages.lastOrNull() as? Page.Title ?: return openTitle(id)
+        pages.removeLast()
+        forget(top.key)
+        openTitle(id)
+    }
+
+    /**
      * Show another season of the title page on top in its place, so Back still returns to what
      * opened the first, not through every season visited.
      */

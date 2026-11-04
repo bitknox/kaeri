@@ -3,6 +3,8 @@
 
 package app.kaeri.tv
 
+import app.kaeri.engine.ffi.entryCountLine
+import app.kaeri.engine.model.DubKnown
 import app.kaeri.i18n.R
 import app.kaeri.store.percentText
 import app.kaeri.i18n.Strings
@@ -124,11 +126,18 @@ fun Entry.metadataLine(context: Context): String {
     return parts.joinToString(" · ") // i18n-skip
 }
 
-/** A poster's second line on Seasonal and Search: "24 episodes · 79%". */
-fun Entry.posterLine(context: Context): String? = listOfNotNull(
-    episodes?.takeIf { it > 0u }?.let { context.resources.getQuantityString(R.plurals.episodes_count, it.toInt(), it.toInt()) },
-    score?.let { percentText(it.toInt()) },
-).joinToString(" · ").ifEmpty { null } // i18n-skip
+/**
+ * A poster's second line on Seasonal and Search: the engine's short count, "5 of 24 · Dub 3", with
+ * the dub the title page has since learned. Without a count, the episodes and the score.
+ */
+fun Entry.posterLine(context: Context, live: app.kaeri.engine.model.DubExtent? = null): String? {
+    val line = if (live == null) countLine else entryCountLine(this, DubKnown(through = live.through, complete = live.complete))
+    if (line != null) return line.short
+    return listOfNotNull(
+        episodes?.takeIf { it > 0u }?.let { context.resources.getQuantityString(R.plurals.episodes_count, it.toInt(), it.toInt()) },
+        score?.let { percentText(it.toInt()) },
+    ).joinToString(" · ").ifEmpty { null } // i18n-skip
+}
 
 /** An episode card's line: "24 min", "14 min left", or "Watched". */
 fun EpisodeRow.cardLine(context: Context, resume: ResumePoint?, playsNext: Boolean): String? {

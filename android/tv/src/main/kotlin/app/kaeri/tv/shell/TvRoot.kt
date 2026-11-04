@@ -7,8 +7,6 @@ package app.kaeri.tv.shell
 import app.kaeri.store.text
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -41,6 +39,7 @@ import androidx.tv.material3.DrawerValue
 import androidx.tv.material3.ModalNavigationDrawer
 import androidx.tv.material3.rememberDrawerState
 import app.kaeri.design.Motion
+import app.kaeri.design.SwapFade
 import app.kaeri.design.ObiSilk
 import app.kaeri.engine.core.AnilistId
 import app.kaeri.engine.ffi.FfiScreen
@@ -260,6 +259,12 @@ private fun Browse(nav: TvNavigator, play: (AnilistId, UInt) -> Unit, playFromSt
     val partyView by store.party.view.collectAsStateWithLifecycle()
     val inParty = partyView != null
     LaunchedEffect(inParty) { if (inParty && partyView?.playing != true) nav.openLobby() }
+    // A pick opens its title page, or takes the open one's place for Another.
+    LaunchedEffect(store) {
+        store.surprise.picks.collect { pick ->
+            if (pick.inPlace) nav.replaceTitle(pick.id) else nav.openTitle(pick.id)
+        }
+    }
     val drawer = rememberDrawerState(DrawerValue.Closed)
     val rail = remember { RailFocus() }
     val screens = rememberSaveableStateHolder()
@@ -303,13 +308,7 @@ private fun Browse(nav: TvNavigator, play: (AnilistId, UInt) -> Unit, playFromSt
         CompositionLocalProvider(LocalActions provides actions) {
             Box(Modifier.fillMaxSize()) {
                 val reduced = LocalReducedMotion.current
-                AnimatedContent(
-                    targetState = shown,
-                    transitionSpec = {
-                        if (reduced) EnterTransition.None togetherWith ExitTransition.None else fadeIn(Motion.quick()) togetherWith fadeOut(Motion.quick())
-                    },
-                    label = "screen", // i18n-skip
-                ) { target ->
+                val screen: @Composable (Any) -> Unit = { target ->
                     val key = (target as? Page)?.key ?: (target as Destination).name
                     screens.SaveableStateProvider(key) {
                         Box(Modifier.fillMaxSize()) {
@@ -350,6 +349,16 @@ private fun Browse(nav: TvNavigator, play: (AnilistId, UInt) -> Unit, playFromSt
                             }
                         }
                     }
+                }
+                // Remove animations keeps the crossfade: both screens drawn, the new one fading in.
+                if (reduced) {
+                    SwapFade(shown, label = "screen") { screen(it) } // i18n-skip
+                } else {
+                    AnimatedContent(
+                        targetState = shown,
+                        transitionSpec = { fadeIn(Motion.quick()) togetherWith fadeOut(Motion.quick()) },
+                        label = "screen", // i18n-skip
+                    ) { screen(it) }
                 }
                 ActionsPanel(actions, Modifier.align(Alignment.CenterEnd))
             }

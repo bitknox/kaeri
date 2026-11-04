@@ -26,6 +26,8 @@ import app.kaeri.engine.core.SubtitleBackground
 import app.kaeri.engine.core.SubtitleEdge
 import app.kaeri.engine.model.DemoState
 import app.kaeri.engine.model.SubtitleStyle
+import app.kaeri.engine.model.SurprisePool
+import app.kaeri.engine.model.TrendPeriod
 import app.kaeri.engine.core.SourceCandidate
 import app.kaeri.engine.ffi.FfiEngine
 import app.kaeri.engine.ffi.resetConfig
@@ -131,6 +133,7 @@ class AppStore(
     val calendar = CalendarModel()
     val discussion = DiscussionModel()
     val search = SearchModel()
+    val surprise = SurpriseModel()
     val library = LibraryModel()
     val accounts = AccountsModel()
     val stores = StoresModel()
@@ -545,12 +548,33 @@ class AppStore(
         send(Command.SearchMore(query, page))
     }
 
+    /** Show the Trending rail for [period], asking for it: kept answers show at once. */
+    /** Ask for a Trending period's rail without choosing it. */
+    fun loadTrending(period: TrendPeriod) {
+        send(Command.LoadTrending(period))
+    }
+
+    fun chooseTrending(period: TrendPeriod) {
+        search.choose(period)
+        send(Command.LoadTrending(period))
+    }
+
+    /** Surprise me from [pool], or Another when [inPlace]: the pick arrives as [SurpriseModel.picks]. */
+    fun surprise(pool: SurprisePool, inPlace: Boolean = false) {
+        if (surprise.ask(pool, inPlace)) send(Command.Surprise(pool))
+    }
+
     /** Search's start: the rails, the recent searches and what the filters choose from. */
     fun loadSearchStart() {
         val now = search.status.value
         if (now.rails == null) send(Command.LoadBrowse)
         if (now.facets == null) send(Command.LoadSearchFacets)
         send(Command.LoadRecentSearches)
+    }
+
+    /** The browse rails, Trending among them, as the TV's Search asks; the filters' choices come with [loadSearchFacets]. */
+    fun loadBrowse() {
+        if (search.status.value.rails == null) send(Command.LoadBrowse)
     }
 
     /** Only what the filters choose from, as the TV's Search asks: no rails, no recent searches. */
@@ -1305,6 +1329,8 @@ class AppStore(
             is Event.LastAired -> titles.lastAired(event.v1)
             is Event.Episodes -> titles.episodes(event.id, event.rows, event.failed)
             is Event.TitleDub -> titles.dub(event.id, event.dub)
+            is Event.Trending -> search.trending(event.period, TrendAnswer(event.entries, event.updatedAt, event.failed, event.waiting), titles)
+            is Event.Surprise -> surprise.answer(event.pool, event.outcome)
 
             is Event.Connectivity -> _offline.value = event.offline
             // A failed sign-in the open sheet says in its place: the snackbar would draw under it.

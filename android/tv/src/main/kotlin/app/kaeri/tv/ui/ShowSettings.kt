@@ -221,3 +221,19 @@ private fun choiceSheet(context: Context, store: AppStore, id: AnilistId, choice
             },
     )
 }
+
+/**
+ * Whether spoiler protection covers [id]'s episodes: the show's own setting when it sets one, else
+ * Settings'. Covered until Settings has answered, so a still is never shown and then covered.
+ */
+@Composable
+fun spoilerProtected(id: AnilistId): Boolean {
+    val store = LocalAppStore.current
+    val sheets by store.showSettings.sheets.collectAsStateWithLifecycle()
+    val view by store.settings.view.collectAsStateWithLifecycle()
+    LaunchedEffect(id) { if (id !in store.showSettings.sheets.value) store.loadShowSettings(id) }
+    // The show's row says the value in effect for it, its own or Settings'.
+    sheets[id]?.rows?.firstOrNull { it.key == ShowSettingKey.SPOILER_PROTECTION }?.let { return app.kaeri.store.SettingsCatalog.isOnWords(it.value) }
+    val settings = view ?: return true
+    return store.settings.isOn(SettingKey.SPOILER_PROTECTION, settings)
+}
