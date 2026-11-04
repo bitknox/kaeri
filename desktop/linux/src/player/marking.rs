@@ -32,23 +32,23 @@ type PromptButton = (String, bool, &'static str, Box<dyn Fn(&PlayerView)>);
 /// What the log calls a skip card.
 fn log_name(prompt: SkipPrompt) -> String {
     match prompt {
-        SkipPrompt::WasOpening { .. } => "was that the opening".into(),
-        SkipPrompt::WrongTimes { kind } => format!("wrong {kind:?} times"),
+        SkipPrompt::WasOpening { .. } => "was that the opening".into(), // i18n-skip
+        SkipPrompt::WrongTimes { kind } => format!("wrong {kind:?} times"), // i18n-skip
         SkipPrompt::FoundEdges { kind, episode } => {
-            format!("found {kind:?}, episode {episode}")
+            format!("found {kind:?}, episode {episode}") // i18n-skip
         }
         SkipPrompt::FoundSaved { kind, episode } => {
-            format!("found {kind:?} saved, episode {episode}")
+            format!("found {kind:?} saved, episode {episode}") // i18n-skip
         }
-        SkipPrompt::FoundNever => "found, never ask".into(),
-        SkipPrompt::Share => "share skip times".into(),
+        SkipPrompt::FoundNever => "found, never ask".into(), // i18n-skip
+        SkipPrompt::Share => "share skip times".into(), // i18n-skip
     }
 }
 
 /// The card's answer, or its time running out, in the log.
 fn note_answer(answer: &str, prompt: Option<SkipPrompt>) {
     if let Some(prompt) = prompt {
-        tracing::info!(answer, card = %log_name(prompt), "skip card answered");
+        tracing::info!(answer, card = %log_name(prompt), "skip card answered"); // i18n-skip
     }
 }
 
@@ -420,8 +420,8 @@ impl PlayerView {
         }
         // Said in the log, so a card that never showed can be told from one never sent.
         match (prompt, self.skip_prompt.get()) {
-            (Some(card), _) => tracing::info!(card = %log_name(card), "skip card shown"),
-            (None, Some(card)) => tracing::info!(card = %log_name(card), "skip card gone"),
+            (Some(card), _) => tracing::info!(card = %log_name(card), "skip card shown"), // i18n-skip
+            (None, Some(card)) => tracing::info!(card = %log_name(card), "skip card gone"), // i18n-skip
             (None, None) => {}
         }
         if matches!(prompt, Some(SkipPrompt::Share)) {
@@ -449,7 +449,7 @@ impl PlayerView {
         let source = glib::timeout_add_local_once(after, move || {
             let Some(view) = weak.upgrade() else { return };
             view.prompt_timer.take();
-            note_answer("timed out", view.skip_prompt.get());
+            note_answer("timed out", view.skip_prompt.get()); // i18n-skip
             if view.skip_prompt.take().is_some() {
                 view.ui.skip_prompt.set(false);
                 view.send(PlayerCommand::DismissSkipPrompt);
@@ -472,7 +472,7 @@ impl PlayerView {
                     (
                         t::player_dont_ask_again(),
                         false,
-                        "don't ask again",
+                        "don't ask again", // i18n-skip
                         Box::new(|v| v.send(PlayerCommand::NeverAskWasOpening)),
                     ),
                     (
@@ -511,7 +511,7 @@ impl PlayerView {
                     (
                         t::player_dont_ask_again(),
                         false,
-                        "don't ask again",
+                        "don't ask again", // i18n-skip
                         Box::new(|v| v.send(PlayerCommand::NeverAskWasOpening)),
                     ),
                     (
@@ -667,7 +667,7 @@ impl PlayerView {
             let Some(view) = weak.upgrade() else { return };
             view.sharing.set(false);
             let share = response == "share";
-            let answer = if share { "share" } else { "don't share" };
+            let answer = if share { "share" } else { "don't share" }; // i18n-skip
             note_answer(answer, Some(SkipPrompt::Share));
             view.send(PlayerCommand::AnswerShareSkipTimes { share });
         });
