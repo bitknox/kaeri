@@ -4973,7 +4973,10 @@
     <!-- Restore. -->
     <string name="rkey_enter_title">Enter your recovery key</string>
     <!-- Restore. -->
-    <string name="rkey_enter_line">%1$s holds history from %2$d devices. The key you saved when sync was turned on opens it.</string>
+    <plurals name="rkey_enter_line">
+        <item quantity="one">%1$s holds history from %2$d device. The key you saved when sync was turned on opens it.</item>
+        <item quantity="other">%1$s holds history from %2$d devices. The key you saved when sync was turned on opens it.</item>
+    </plurals>
     <!-- Field note. -->
     <string name="rkey_enter_note">24 letters and digits, in groups of four. Spaces and case don’t matter.</string>
     <!-- Inline error. -->
@@ -5128,6 +5131,10 @@
     <string name="device_kind_phone">phone</string>
     <string name="device_kind_tablet">tablet</string>
     <string name="device_kind_tv">TV</string>
+    <!-- TV welcome, text button. -->
+    <string name="first_setup_phone">Set up from your phone</string>
+    <!-- Error naming a device that is not known by name. -->
+    <string name="devices_other_device">the other device</string>
     <!-- Title of the state when a title page could not load. -->
     <string name="title_load_failed">Couldn\'t load this title</string>
     <!-- Line under the load failure when AniList did not answer. -->

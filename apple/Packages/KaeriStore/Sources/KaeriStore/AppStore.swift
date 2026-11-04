@@ -299,6 +299,8 @@ public final class AppStore {
         )
         phase = .running
         attachTV(engine)
+        // Typed-code pairing finds the device showing the code by DNS-SD.
+        engine.setSyncNetwork(network: BonjourSyncNetwork())
         for command in early {
             client?.send(command)
         }
@@ -862,6 +864,7 @@ public final class AppStore {
         if !held.isEmpty, let kind = event.showcaseKind, held.contains(kind) { return }
         notifications.observe(event)
         sync.apply(event)
+        if case .syncStatus = event { tv.setRemoteOff(sync.remoteOff) }
         if case .profileSwitch(let id) = event { onProfileSwitch?(id) }
         answers.deliver([event])
         if case .downloads(let rows) = event { continued.update(rows) }

@@ -6652,7 +6652,7 @@ public static partial class T
     public static string RkeyEnterTitle => Get("RkeyEnterTitle");
 
     /// <summary>Restore.</summary>
-    public static string RkeyEnterLine(string service, long count) => Fill(Get("RkeyEnterLine"), ("service", service), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string RkeyEnterLine(string service, long count) => Fill(GetPlural("RkeyEnterLine", count), ("service", service), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Field note.</summary>
     public static string RkeyEnterNote => Get("RkeyEnterNote");
@@ -6881,6 +6881,12 @@ public static partial class T
     public static string DeviceKindTablet => Get("DeviceKindTablet");
 
     public static string DeviceKindTv => Get("DeviceKindTv");
+
+    /// <summary>TV welcome, text button.</summary>
+    public static string FirstSetupPhone => Get("FirstSetupPhone");
+
+    /// <summary>Error naming a device that is not known by name.</summary>
+    public static string DevicesOtherDevice => Get("DevicesOtherDevice");
 
     /// <summary>Title of the state when a title page could not load.</summary>
     public static string TitleLoadFailed => Get("TitleLoadFailed");
@@ -10209,7 +10215,8 @@ public static partial class T
         ["RkeyNew"] = "Make a new key",
         ["RkeyNewFoot"] = "The old key stops working, and your devices switch to the new one the next time they sync.",
         ["RkeyEnterTitle"] = "Enter your recovery key",
-        ["RkeyEnterLine"] = "{service} holds history from {count} devices. The key you saved when sync was turned on opens it.",
+        ["RkeyEnterLine_one"] = "{service} holds history from {count} device. The key you saved when sync was turned on opens it.",
+        ["RkeyEnterLine_other"] = "{service} holds history from {count} devices. The key you saved when sync was turned on opens it.",
         ["RkeyEnterNote"] = "24 letters and digits, in groups of four. Spaces and case don’t matter.",
         ["RkeyWrong"] = "That key doesn’t open this folder. Check each group of four and try again.",
         ["RkeyRestore"] = "Restore",
@@ -10288,6 +10295,8 @@ public static partial class T
         ["DeviceKindPhone"] = "phone",
         ["DeviceKindTablet"] = "tablet",
         ["DeviceKindTv"] = "TV",
+        ["FirstSetupPhone"] = "Set up from your phone",
+        ["DevicesOtherDevice"] = "the other device",
         ["TitleLoadFailed"] = "Couldn't load this title",
         ["TitleNoAnswer"] = "AniList didn't answer. Try again.",
         ["TitleLoading"] = "Loading this title",

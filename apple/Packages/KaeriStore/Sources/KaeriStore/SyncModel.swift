@@ -94,6 +94,8 @@ public final class SyncModel {
     public private(set) var recoveryKey: String?
     public private(set) var invite: SyncInviteView?
     public private(set) var pair: PairStage = .idle
+    /// The device that turned a typed code down, when only one did: the error names it.
+    public private(set) var pairFailedDevice: String?
     /// What the last Copy sign-ins brought.
     public private(set) var copied: SyncSignInsCopiedView?
     /// The cloud service signed in to, until its folder is made: the row says it is setting up.
@@ -118,6 +120,8 @@ public final class SyncModel {
     /// The other device a pass talks with: the first one that is not this device.
     public var syncingPartner: String? { status.devices.first { !$0.thisDevice }?.name }
     @ObservationIgnored public var send: (Command) -> Void = { _ in }
+    /// The remote keys the Fixtures app counts as paired, in place of the sender's.
+    @ObservationIgnored public var stagedRemoteKeys: Set<String>?
     /// Set by the Fixtures app: states stay as staged.
     @ObservationIgnored public var staged = false
     @ObservationIgnored private var settleTask: Task<Void, Never>?
@@ -266,12 +270,62 @@ public final class SyncModel {
         invite = nil
     }
 
+    /// A scanned code, which carries the address of the device showing it.
     public func pairWith(address: String, code: String, deviceName: String) {
         pair = .working
+        pairFailedDevice = nil
         send(.pairJoin(deviceName: deviceName, address: address, code: code))
     }
 
-    public func resetPair() { pair = .idle }
+    /// A typed code: the engine finds the device showing it on the network.
+    public func pairWithCode(_ code: String, deviceName: String) {
+        pair = .working
+        pairFailedDevice = nil
+        problem = nil
+        send(.syncGroup(.pairWithCode(deviceName: deviceName, code: code)))
+    }
+
+    public func resetPair() {
+        pair = .idle
+        pairFailedDevice = nil
+    }
+
+    /// The Add a device sheet closed: the code it showed stops being offered.
+    public func pairSheetClosed() {
+        send(.pairStop)
+        invite = nil
+    }
+
+    /// Rename this device, in the group when sync is on. Kept for the next start of Play on TV too.
+    public func rename(_ name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        deviceName = trimmed
+        Self.keepName(trimmed)
+        send(.syncGroup(.renameDevice(name: trimmed)))
+    }
+
+    /// The Sync switch of another device: off holds the group back from it.
+    public func setSync(_ device: SyncDeviceView, on: Bool) {
+        send(.syncGroup(.setDeviceSync(device: device.name, on: on)))
+    }
+
+    /// The Remote switch of this device and `device`, as a pair.
+    public func setRemote(_ device: SyncDeviceView, on: Bool) {
+        send(.syncGroup(.setDeviceRemote(device: device.name, on: on)))
+    }
+
+    /// The name this device keeps for Play on TV, from its last rename or the group's.
+    public static let nameKey = "syncDeviceName"
+
+    static func keepName(_ name: String) {
+        UserDefaults.standard.set(name, forKey: nameKey)
+    }
+
+    /// The remote keys (hex fingerprints) of the devices whose Remote switch is off.
+    public var remoteOff: Set<String> {
+        Set(status.devices.filter(\.remoteOff).compactMap(\.remoteKey))
+    }
 
     /// Ask the other device for its sign-ins when the next session between them opens.
     public func copySignIns(from device: String?, _ copy: [SyncCopy], address: String? = nil) {
@@ -316,6 +370,9 @@ public final class SyncModel {
                     sheet = nil
                 }
             }
+        case .syncPairFailed(let why, let device):
+            pair = .failed(why == .notFound ? .notFound : .code)
+            pairFailedDevice = device
         case .syncProblem(let found):
             problem = found
             if case .groupExists = found { sheet = .restore(lastService ?? .googleDrive) }
@@ -336,7 +393,10 @@ public final class SyncModel {
         let before = status
         status = new
         loaded = true
-        if let name = new.deviceName, deviceName.isEmpty { deviceName = name }
+        if let name = new.deviceName {
+            if deviceName.isEmpty { deviceName = name }
+            if new.enabled { Self.keepName(name) }
+        }
         if settingUp != nil, new.folder != nil, !new.syncing {
             settingUp = nil
             settingUpShown = false
@@ -409,7 +469,10 @@ public final class SyncModel {
     public func stage(signIn new: SyncSignInRequest?) { signIn = new }
     public func stage(key: String?) { recoveryKey = key }
     public func stage(invite new: SyncInviteView?) { invite = new }
-    public func stage(pair new: PairStage) { pair = new }
+    public func stage(pair new: PairStage, device: String? = nil) {
+        pair = new
+        pairFailedDevice = device
+    }
     public func stage(settingUp service: SyncFolderKind?) {
         settingUp = service
         settingUpShown = service != nil

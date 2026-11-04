@@ -39,4 +39,82 @@ struct SyncModelTests {
         sync.keySaved()
         #expect(sync.recoveryKey == nil && sync.sheet == nil)
     }
+
+    @Test func aTypedCodeIsSentAsPairWithCodeAndShowsTheTryUnderWay() {
+        let sync = SyncModel()
+        var sent: [Command] = []
+        sync.send = { sent.append($0) }
+        sync.pairWithCode("042917", deviceName: "Kim’s Mac")
+        #expect(sync.pair == .working)
+        #expect(sent == [.syncGroup(.pairWithCode(deviceName: "Kim’s Mac", code: "042917"))])
+    }
+
+    @Test func aWrongCodeNamesTheDeviceThatTurnedItDownAndNotFoundDoesNot() {
+        let sync = SyncModel()
+        sync.pairWithCode("042917", deviceName: "Kim’s Mac")
+        sync.apply(.syncPairFailed(problem: .wrongCode, device: "Kim’s iPhone"))
+        #expect(sync.pair == .failed(.code))
+        #expect(sync.pairFailedDevice == "Kim’s iPhone")
+        sync.apply(.syncProblem(.unreachable))
+        #expect(sync.pair == .failed(.code))
+        sync.pairWithCode("042917", deviceName: "Kim’s Mac")
+        #expect(sync.pairFailedDevice == nil)
+        sync.apply(.syncPairFailed(problem: .notFound, device: nil))
+        #expect(sync.pair == .failed(.notFound))
+    }
+
+    @Test func closingTheCodeSheetSendsPairStopAndForgetsTheCode() {
+        let sync = SyncModel()
+        var sent: [Command] = []
+        sync.send = { sent.append($0) }
+        sync.apply(.syncInvite(code: "042917", port: 47_812, seconds: 120))
+        #expect(sync.invite != nil)
+        sync.pairSheetClosed()
+        #expect(sync.invite == nil)
+        #expect(sent == [.pairStop])
+    }
+
+    @Test func renamingSendsTheTrimmedNameAndIgnoresAnEmptyOne() {
+        let sync = SyncModel()
+        var sent: [Command] = []
+        sync.send = { sent.append($0) }
+        sync.rename("   ")
+        #expect(sent.isEmpty)
+        sync.rename("  Kim’s Mac mini ")
+        #expect(sent == [.syncGroup(.renameDevice(name: "Kim’s Mac mini"))])
+        #expect(sync.deviceName == "Kim’s Mac mini")
+    }
+
+    @Test func theSwitchesSendTheDevicesNameAndTheNewValue() {
+        let sync = SyncModel()
+        var sent: [Command] = []
+        sync.send = { sent.append($0) }
+        let tv = SyncDeviceView(id: "tv", name: "Living room TV", thisDevice: false, remoteKey: "ab12")
+        sync.setSync(tv, on: false)
+        sync.setRemote(tv, on: false)
+        #expect(sent == [
+            .syncGroup(.setDeviceSync(device: "Living room TV", on: false)),
+            .syncGroup(.setDeviceRemote(device: "Living room TV", on: false)),
+        ])
+    }
+
+    @Test func theRemoteKeysOfTVsWhoseRemoteIsOffAreCollected() {
+        let sync = SyncModel()
+        sync.apply(.syncStatus(SyncStatus(enabled: true, devices: [
+            SyncDeviceView(id: "a", name: "Living room TV", thisDevice: false, remoteKey: "ab12", remoteOff: true),
+            SyncDeviceView(id: "b", name: "Den TV", thisDevice: false, remoteKey: "cd34"),
+            SyncDeviceView(id: "c", name: "Kim’s iPhone", thisDevice: false),
+        ], syncing: false)))
+        #expect(sync.remoteOff == ["ab12"])
+    }
+
+    @Test func aPausedDeviceKeepsItsRowAndASyncPassIsWorded() {
+        let sync = SyncModel()
+        sync.apply(.syncStatus(SyncStatus(enabled: true, devices: [
+            SyncDeviceView(id: "me", name: "Kim’s Mac", thisDevice: true),
+            SyncDeviceView(id: "b", name: "Kitchen iPad", thisDevice: false, paused: true),
+        ], syncing: false)))
+        #expect(sync.others.map(\.paused) == [true])
+        #expect(sync.syncingPartner == "Kitchen iPad")
+    }
 }

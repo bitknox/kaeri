@@ -104,6 +104,7 @@
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_kaeri._tcp</string>
+		<string>_kaeri-sync._tcp</string>
 		<string>_googlecast._tcp</string>
 	</array>
 	<key>NSCameraUsageDescription</key>

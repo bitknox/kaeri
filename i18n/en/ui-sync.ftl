@@ -318,7 +318,11 @@ rkey-enter-title = Enter your recovery key
 # Restore.
 # @arg service: text
 # @arg count: int
-rkey-enter-line = { $service } holds history from { $count } { -device-pl }. The key you saved when sync was turned on opens it.
+rkey-enter-line =
+    { $service } holds history from { $count ->
+        [one] { $count } { -device }
+       *[other] { $count } { -device-pl }
+    }. The key you saved when sync was turned on opens it.
 
 # Field note.
 rkey-enter-note = 24 letters and digits, in groups of four. Spaces and case don’t matter.
@@ -577,3 +581,9 @@ pair-code-field = Pairing code
 device-kind-phone = phone
 device-kind-tablet = tablet
 device-kind-tv = TV
+
+# TV welcome, text button.
+first-setup-phone = Set up from your phone
+
+# Error naming a device that is not known by name.
+devices-other-device = the other { -device }

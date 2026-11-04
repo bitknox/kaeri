@@ -18,6 +18,9 @@ import KaeriKit
 ///                    webdav, webdav-err, key, key-qr, restore, restore-wrong, pair-show, pair-enter,
 ///                    pair-err, pair-nf, paired, profile-add, profile-edit are the sheets, over `on`
 ///     first-setup    first launch's code page (with sheet=welcome-setup); first-paired its paired page
+///     paused         the group with Kitchen iPad's Sync off and the TV's Remote off
+///     pair-wrong     a typed code a named device turned down; pair-working the try under way
+///     first-paired-store  first launch's paired page with a plugin store to join
 ///     profiles       two profiles
 public enum SyncScene: String, Sendable {
     case off, on, syncing, settingup, signedout, signedoutErr = "signedout-err", offline
@@ -27,6 +30,7 @@ public enum SyncScene: String, Sendable {
     case pairShow = "pair-show", pairEnter = "pair-enter", pairErr = "pair-err", pairNf = "pair-nf", paired
     case firstSetup = "first-setup", firstPaired = "first-paired"
     case profiles, profileAdd = "profile-add", profileEdit = "profile-edit"
+    case paused, pairWrong = "pair-wrong", pairWorking = "pair-working", firstPairedStore = "first-paired-store"
 
     public static let argument = "-KaeriSync"
 
@@ -47,24 +51,33 @@ extension SyncModel {
         ]
     }
 
-    private static func devices(now: Int64) -> [SyncDeviceView] {
+    /// The staged TV's remote key, which the Fixtures app counts as paired.
+    static let tvKey = "ab12cd34ef56ab12cd34ef56ab12cd34"
+
+    private static func devices(now: Int64, paused: Bool = false, remoteOff: Bool = false) -> [SyncDeviceView] {
         [
             SyncDeviceView(id: "me", name: DeviceName.this, thisDevice: true, lastSeen: now),
-            SyncDeviceView(id: "kim-phone", name: "Kim’s iPhone", thisDevice: false, lastSeen: now - 20), // i18n-skip
-            SyncDeviceView(id: "living-room", name: "Living room TV", thisDevice: false, lastSeen: now - 120), // i18n-skip
-            SyncDeviceView(id: "kitchen", name: "Kitchen iPad", thisDevice: false, lastSeen: now - 31 * 86_400), // i18n-skip
+            SyncDeviceView(id: "kim-phone", name: "Kim’s iPhone", thisDevice: false, lastSeen: now - 20, kind: .phone), // i18n-skip
+            SyncDeviceView(
+                id: "living-room", name: "Living room TV", thisDevice: false, lastSeen: now - 120, kind: .tv, // i18n-skip
+                paused: false, remoteKey: Self.tvKey, remoteOff: remoteOff),
+            SyncDeviceView(
+                id: "kitchen", name: "Kitchen iPad", thisDevice: false, lastSeen: now - 31 * 86_400, // i18n-skip
+                kind: .tablet, paused: paused),
         ]
     }
 
     private static func group(
         now: Int64, syncing: Bool = false, problem: SyncProblem? = nil, folder: SyncFolderKind = .googleDrive,
-        account: String? = "kim@mail.example", notes: Bool = false
+        account: String? = "kim@mail.example", notes: Bool = false, held: Bool = false,
+        stores: [SyncStoreOffer] = []
     ) -> SyncStatus {
         SyncStatus(
             enabled: true, deviceName: DeviceName.this,
             folder: SyncFolderView(kind: folder, label: folder == .directory ? "Kaeri sync" : "", account: account), // i18n-skip
-            devices: devices(now: now), lastSynced: now - 240, syncing: syncing,
+            devices: devices(now: now, paused: held, remoteOff: held), lastSynced: now - 240, syncing: syncing,
             notes: notes ? [SyncNoteView(id: 1, anilistId: 900001, episode: "5", watchDevice: "Living room TV", unwatchDevice: "Kim’s MacBook Air", at: now - 3600)] : [], // i18n-skip
+            storesToJoin: stores,
             clouds: clouds(), problem: problem, groupFolder: folder, recoveryKey: true,
             recoveryKeyMade: now - 86_400
         )
@@ -79,6 +92,12 @@ extension SyncModel {
         var sheet: SyncSheet?
         switch scene {
         case .off, .firstSetup, .firstPaired: break
+        case .paused:
+            status = Self.group(now: now, notes: true, held: true)
+        case .firstPairedStore:
+            status = Self.group(now: now, stores: [SyncStoreOffer(address: "store.example", name: "Hotaru")]) // i18n-skip
+        case .pairWrong, .pairWorking:
+            status = Self.group(now: now, notes: true)
         case .on, .key, .keyQr, .pairShow, .pairEnter, .pairErr, .pairNf, .paired, .profiles,
              .profileAdd, .profileEdit, .picker, .pickerDenied, .nextcloud, .nextcloudWait, .nextcloudErr,
              .webdav, .webdavErr, .restore, .restoreWrong, .road:
@@ -108,6 +127,7 @@ extension SyncModel {
         ]
         let isProfile = [.profiles, .profileAdd, .profileEdit].contains(scene)
         stage(status: status, profiles: isProfile ? people : [])
+        stagedRemoteKeys = [Self.tvKey]
         switch scene {
         case .road: sheet = .road
         case .picker: sheet = .picker
@@ -143,6 +163,14 @@ extension SyncModel {
             stage(invite: SyncInviteView(code: "042917", port: 4510, until: .now.addingTimeInterval(108)))
         case .firstPaired:
             stage(pair: .paired("Kim’s iPhone")) // i18n-skip
+        case .firstPairedStore:
+            stage(pair: .paired("Kim’s iPhone")) // i18n-skip
+        case .pairWrong:
+            stage(pair: .failed(.code), device: "Kim’s iPhone") // i18n-skip
+            sheet = .pairEnter
+        case .pairWorking:
+            stage(pair: .working)
+            sheet = .pairEnter
         case .pairEnter: sheet = .pairEnter
         case .pairErr:
             stage(pair: .failed(.code))

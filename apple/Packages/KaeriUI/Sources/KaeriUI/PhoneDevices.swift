@@ -13,15 +13,19 @@ struct PhoneDevicesPage: View {
     @Environment(Navigator.self) private var navigator
     @State private var removing: SyncDeviceView?
     @State private var turningOff = false
+    @State private var renaming = false
+    @State private var draft = ""
 
     var body: some View {
         let sync = store.sync
         PhoneList {
             Section {
-                HStack {
-                    Text(L.devicesName).font(.ui(17)).foregroundStyle(.silk)
-                    Spacer()
-                    DevicesNameText()
+                Button { renaming = true } label: {
+                    HStack {
+                        Text(L.devicesName).font(.ui(17)).foregroundStyle(.silk)
+                        Spacer()
+                        DevicesNameText()
+                    }
                 }
                 .listRowBackground(Palette.raised)
             } header: { PhoneSectionHeader(L.devicesThisDevice) }
@@ -46,6 +50,14 @@ struct PhoneDevicesPage: View {
         }
         .navigationTitle(L.devicesTitle)
         .navigationBarTitleDisplayMode(.inline)
+        .alert(L.devicesName, isPresented: $renaming) {
+            TextField(L.devicesName, text: $draft)
+            Button(L.actionCancel, role: .cancel) {}
+            Button(L.actionSave) { sync.rename(draft) }
+        }
+        .onChange(of: renaming) {
+            if renaming { draft = sync.status.deviceName ?? (sync.deviceName.isEmpty ? DeviceNaming.system : sync.deviceName) }
+        }
         .modifier(SyncPresenter())
         .onLaunchSheet("sync-road", navigator) { sync.sheet = .road }
     }
@@ -56,7 +68,7 @@ struct PhoneDevicesPage: View {
             if sync.others.isEmpty { PhoneRowTitle(title: L.devicesOnlyThis, note: L.devicesOnlyThisLine).listRowBackground(Palette.raised) }
             ForEach(sync.others, id: \.id) { device in
                 let line = SyncWords.seen(device)
-                Toggle(isOn: Binding(get: { true }, set: { if !$0 { removing = device } })) {
+                Toggle(isOn: Binding(get: { !device.paused }, set: { sync.setSync(device, on: $0) })) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(device.name).font(.ui(17)).foregroundStyle(.silk)
                         HStack(spacing: 6) { StateDot(state: line.state); Text(line.text) }
@@ -65,6 +77,15 @@ struct PhoneDevicesPage: View {
                 }
                 .tint(.amber)
                 .listRowBackground(Palette.raised)
+                .swipeActions(edge: .trailing) {
+                    Button(L.devicesRemove, role: .destructive) { removing = device }
+                }
+                if device.remoteKey != nil {
+                    Toggle(L.devicesRemoteSwitch, isOn: store.remoteBinding(device))
+                        .font(.ui(17)).foregroundStyle(.silk)
+                        .tint(.amber)
+                        .listRowBackground(Palette.raised)
+                }
             }
             ForEach(store.tv.paired.filter { tv in !sync.devices.contains { $0.name == tv.name } }, id: \.fingerprint) { tv in
                 HStack {

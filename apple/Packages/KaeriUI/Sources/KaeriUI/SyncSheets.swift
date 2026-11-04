@@ -424,13 +424,13 @@ struct PairShowSheet: View {
     /// Leaving the page, where it is not a sheet of its own (first launch's page).
     var leave: (() -> Void)?
     /// First launch: the pairing is done and the flow ends.
-    var finished: () -> Void = {}
+    var finished: (String?) -> Void = { _ in }
 
     var body: some View {
         let sync = store.sync
         Group {
             if case .paired(let device) = sync.pair {
-                PairedContent(device: device, first: first, done: { if first { finished() } else { dismiss() } })
+                PairedContent(device: device, first: first, done: { link in if first { finished(link) } else { dismiss() } })
                     .transition(.opacity)
             } else {
                 showing(sync)
@@ -445,7 +445,7 @@ struct PairShowSheet: View {
         .onChange(of: sync.devices.count) { old, new in
             if new > old, sync.invite != nil, let other = sync.others.last { sync.stage(pair: .paired(other.name)) }
         }
-        .onDisappear { if sync.invite != nil { sync.stopInvite() } }
+        .onDisappear { sync.pairSheetClosed() }
     }
 
     private func showing(_ sync: SyncModel) -> some View {
@@ -509,6 +509,7 @@ struct PairShowSheet: View {
 
 struct PairEnterSheet: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var code = ""
     @State private var address = ""
     @State private var scanning = false
@@ -523,7 +524,7 @@ struct PairEnterSheet: View {
                 entering(sync)
             }
         }
-        .animation(.standard, value: sync.pair)
+        .animation(reduceMotion ? nil : .standard, value: sync.pair)
     }
 
     private func entering(_ sync: SyncModel) -> some View {
@@ -535,10 +536,8 @@ struct PairEnterSheet: View {
                 #if os(iOS)
                 .listRowBackground(Color.clear)
                 #endif
-            SyncField(label: L.tvAddress, text: $address, prompt: "192.168.1.20:4510", // i18n-skip
-                      invalid: failed == .notFound)
             if let failed {
-                SyncProblemLine(text: message(failed))
+                SyncProblemLine(text: message(failed, device: sync.pairFailedDevice))
             } else {
                 SyncNote(text: L.pairSameWifi)
             }
@@ -548,10 +547,12 @@ struct PairEnterSheet: View {
             }
             #endif
         } bottom: {
-            SyncButton(title: sync.pair == .working ? L.pairPairing : L.pairButton, primary: true, wide: true, action: submit)
-                .disabled(code.count < 6 || address.isEmpty || sync.pair == .working)
+            SyncButton(title: L.pairShowInstead) { sync.sheet = .pairShow }
+            SyncButton(title: sync.pair == .working ? L.pairPairing : L.pairButton, primary: true, wide: touch, action: submit)
+                .disabled(code.count < 6 || sync.pair == .working)
         }
         .onAppear { focused = true }
+        .onChange(of: code) { if sync.pair != .working, sync.pair != .idle { sync.resetPair() } }
         #if os(iOS)
         .sheet(isPresented: $scanning) {
             TVCodeScanner(scheme: "kaeri://pair/") { link in
@@ -565,11 +566,16 @@ struct PairEnterSheet: View {
 
     private func submit() {
         let sync = store.sync
-        guard code.count == 6, !address.isEmpty else { return }
-        sync.pairWith(address: address, code: code, deviceName: sync.deviceName.isEmpty ? DeviceNaming.system : sync.deviceName)
+        guard code.count == 6 else { return }
+        let name = sync.deviceName.isEmpty ? DeviceNaming.system : sync.deviceName
+        if address.isEmpty {
+            sync.pairWithCode(code, deviceName: name)
+        } else {
+            sync.pairWith(address: address, code: code, deviceName: name)
+        }
     }
 
-    /// `kaeri://pair/042917@192.168.1.20:4510`
+    /// `kaeri://pair/042917@192.168.1.20:4510`: a scanned code carries the address, so it needs no search.
     private func read(_ link: String) {
         let body = link.replacingOccurrences(of: "kaeri://pair/", with: "")
         let parts = body.split(separator: "@", maxSplits: 1).map(String.init)
@@ -579,9 +585,9 @@ struct PairEnterSheet: View {
         submit()
     }
 
-    private func message(_ problem: PairProblem) -> String {
+    private func message(_ problem: PairProblem, device: String?) -> String {
         switch problem {
-        case .code: L.pairErrCode(device: L.pairOtherDevice)
+        case .code: L.pairErrCode(device: device ?? L.devicesOtherDevice)
         case .notFound: L.pairErrNotFound
         case .expired: L.pairErrExpired
         }
@@ -601,9 +607,10 @@ struct PairedContent: View {
     @Environment(AppStore.self) private var store
     let device: String
     var first = false
-    var done: () -> Void = {}
+    var done: (String?) -> Void = { _ in }
     @State private var copySignIns: Bool
-    init(device: String, first: Bool = false, done: @escaping () -> Void = {}) {
+    @State private var joinStore = true
+    init(device: String, first: Bool = false, done: @escaping (String?) -> Void = { _ in }) {
         self.device = device
         self.first = first
         self.done = done
@@ -613,6 +620,7 @@ struct PairedContent: View {
     var body: some View {
         let sync = store.sync
         let trackers = store.accounts.trackers.filter(\.connected).map { AccountsModel.name($0.tracker) }
+        let offer = first ? sync.status.storesToJoin.first : nil
         SyncSheetFrame(title: L.pairOk(device: device)) {
             SyncNote(text: first ? L.firstOkLine : L.pairOkLine)
             if !trackers.isEmpty || first {
@@ -633,12 +641,30 @@ struct PairedContent: View {
                     #endif
                 }
             }
+            if let offer {
+                SyncSection(footer: nil) {
+                    #if os(macOS)
+                    SettingsRow(title: L.firstJoinStore(store: offer.name), note: L.firstJoinStoreLine(device: device, kind: Device.name)) {
+                        Toggle("", isOn: $joinStore).toggleStyle(.switch).tint(.amber).labelsHidden()
+                    }
+                    #else
+                    Toggle(isOn: $joinStore) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(L.firstJoinStore(store: offer.name)).font(.ui(17)).foregroundStyle(.silk)
+                            Text(L.firstJoinStoreLine(device: device, kind: Device.name)).font(.ui(13)).foregroundStyle(.haze)
+                        }
+                    }
+                    .tint(.amber)
+                    .listRowBackground(Palette.raised)
+                    #endif
+                }
+            }
         } bottom: {
             SyncButton(title: L.actionDone, primary: true, wide: Device.name != "Mac") { // i18n-skip
                 if copySignIns { sync.copySignIns(from: device, [.trackers]) }
                 sync.resetPair()
                 sync.close()
-                done()
+                done(joinStore ? offer?.address : nil)
             }
         }
     }

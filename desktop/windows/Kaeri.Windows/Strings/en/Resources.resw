@@ -9126,7 +9126,11 @@
     <value>Enter your recovery key</value>
     <comment>Restore.</comment>
   </data>
-  <data name="RkeyEnterLine" xml:space="preserve">
+  <data name="RkeyEnterLine_one" xml:space="preserve">
+    <value>{service} holds history from {count} device. The key you saved when sync was turned on opens it.</value>
+    <comment>Restore.</comment>
+  </data>
+  <data name="RkeyEnterLine_other" xml:space="preserve">
     <value>{service} holds history from {count} devices. The key you saved when sync was turned on opens it.</value>
     <comment>Restore.</comment>
   </data>
@@ -9438,6 +9442,14 @@
   </data>
   <data name="DeviceKindTv" xml:space="preserve">
     <value>TV</value>
+  </data>
+  <data name="FirstSetupPhone" xml:space="preserve">
+    <value>Set up from your phone</value>
+    <comment>TV welcome, text button.</comment>
+  </data>
+  <data name="DevicesOtherDevice" xml:space="preserve">
+    <value>the other device</value>
+    <comment>Error naming a device that is not known by name.</comment>
   </data>
   <data name="TitleLoadFailed" xml:space="preserve">
     <value>Couldn't load this title</value>

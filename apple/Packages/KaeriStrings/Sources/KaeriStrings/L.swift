@@ -9347,6 +9347,12 @@ public enum L {
 
     public static var deviceKindTv: String { string("device-kind-tv", fallback: "TV") }
 
+    /// TV welcome, text button.
+    public static var firstSetupPhone: String { string("first-setup-phone", fallback: "Set up from your phone") }
+
+    /// Error naming a device that is not known by name.
+    public static var devicesOtherDevice: String { string("devices-other-device", fallback: "the other device") }
+
     /// Title of the state when a title page could not load.
     public static var titleLoadFailed: String { string("title-load-failed", fallback: "Couldn't load this title") }
 

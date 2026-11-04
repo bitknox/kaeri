@@ -51,26 +51,52 @@ struct DevicesPane: View {
     }
 }
 
-/// This device's name, which the engine takes when sync is turned on.
+/// This device's name: edited in place, and kept on Return or when the field loses focus.
 struct DeviceNameField: View {
     @Environment(AppStore.self) private var store
+    @State private var draft = ""
+    @FocusState private var focused: Bool
+
+    private var current: String {
+        let sync = store.sync
+        return sync.status.deviceName ?? (sync.deviceName.isEmpty ? DeviceNaming.system : sync.deviceName)
+    }
 
     var body: some View {
-        let sync = store.sync
-        @Bindable var model = sync
-        TextField("", text: Binding(
-            get: { sync.enabled ? (sync.status.deviceName ?? sync.deviceName) : (sync.deviceName.isEmpty ? DeviceNaming.system : sync.deviceName) },
-            set: { model.deviceName = $0 }
-        ))
-        .textFieldStyle(.plain)
-        .font(.plat(mac: 13, touch: 15))
-        .multilineTextAlignment(.leading)
-        .padding(.horizontal, 10)
-        .frame(width: 210, height: 28)
-        .background(.ground, in: .rect(cornerRadius: 8))
-        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Palette.glassRule, lineWidth: 1))
-        .disabled(sync.enabled)
-        .accessibilityLabel(L.devicesName)
+        TextField("", text: $draft)
+            .textFieldStyle(.plain)
+            .font(.plat(mac: 13, touch: 15))
+            .multilineTextAlignment(.leading)
+            .padding(.horizontal, 10)
+            .frame(width: 210, height: 28)
+            .background(.ground, in: .rect(cornerRadius: 8))
+            .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(focused ? Palette.amber : Palette.glassRule, lineWidth: 1))
+            .focused($focused)
+            .onAppear { draft = current }
+            .onChange(of: current) { if !focused { draft = current } }
+            .onSubmit(commit)
+            .onChange(of: focused) { if !focused { commit() } }
+            .accessibilityLabel(L.devicesName)
+    }
+
+    private func commit() {
+        let trimmed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty { draft = current } else if trimmed != current { store.sync.rename(trimmed) }
+    }
+}
+
+extension AppStore {
+    /// The Remote switch of this device and `device`: on when the TV is paired as a remote here and
+    /// its switch is on. Turning it on with no pairing goes through the usual one, with a code.
+    func remoteBinding(_ device: SyncDeviceView) -> Binding<Bool> {
+        let paired = sync.stagedRemoteKeys.map { keys in device.remoteKey.map(keys.contains) ?? false }
+            ?? tv.paired.contains { $0.fingerprint == device.remoteKey }
+        return Binding(
+            get: { paired && !device.remoteOff },
+            set: { [self] on in
+                if on, !paired { tv.openPicker() } else { sync.setRemote(device, on: on) }
+            }
+        )
     }
 }
 
@@ -88,22 +114,23 @@ struct YourDevicesGroup: View {
             }
             ForEach(others, id: \.id) { device in
                 let line = SyncWords.seen(device)
-                let tv = store.tv.paired.first { $0.name == device.name }
                 SettingsRow(title: device.name, note: line.text, dot: line.state) {
                     HStack(spacing: 12) {
                         Text(L.devicesSyncSwitch).font(.mac(12)).foregroundStyle(.haze).fixedSize()
-                        Toggle(L.devicesSyncSwitch, isOn: Binding(get: { true }, set: { if !$0 { removing = device } }))
+                        Toggle(L.devicesSyncSwitch, isOn: Binding(get: { !device.paused }, set: { sync.setSync(device, on: $0) }))
                             .toggleStyle(.switch).tint(.amber).labelsHidden()
-                        if device.folder == nil, tv != nil || device.name.hasSuffix("TV") {
+                        if device.remoteKey != nil {
                             Text(L.devicesRemoteSwitch).font(.mac(12)).foregroundStyle(.haze).fixedSize()
-                            Toggle(L.devicesRemoteSwitch, isOn: Binding(
-                                get: { tv != nil },
-                                set: { on in
-                                    if on { store.tv.openPicker() } else if let tv { store.tv.forget(tv.fingerprint) }
-                                }
-                            ))
-                            .toggleStyle(.switch).tint(.amber).labelsHidden()
+                            Toggle(L.devicesRemoteSwitch, isOn: store.remoteBinding(device))
+                                .toggleStyle(.switch).tint(.amber).labelsHidden()
                         }
+                        Menu {
+                            Button(L.devicesRemove, role: .destructive) { removing = device }
+                        } label: {
+                            Image(systemName: "ellipsis").foregroundStyle(.haze)
+                        }
+                        .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
+                        .accessibilityLabel(device.name)
                     }
                 }
             }
