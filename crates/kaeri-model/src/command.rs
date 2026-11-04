@@ -267,6 +267,19 @@ pub enum Command {
     // from what was kept and asks nothing; asked while offline, it answers from what was kept
     // or with `None`, and asks again once back.
     LoadDub(AnilistId),
+    /// Trending over `period`, for Search's Trending rail and its period menu: answered by one
+    /// [`Event::Trending`](crate::event::Event::Trending), with no job. The choice is remembered
+    /// on this device, and Search's start shows the rail for it. Today is AniList's live
+    /// trending; a week or a month is summed from its daily figures, one request for the week
+    /// and two for the month, kept for six hours and a day. A kept answer shows at once, with its
+    /// age, and is asked again behind the screen once old. Never sent at launch.
+    LoadTrending(crate::browsing::TrendPeriod),
+    /// Surprise me, or Another: pick a title from `pool`, and answer with one
+    /// [`Event::Surprise`](crate::event::Event::Surprise) that says which to open. The pick skips
+    /// titles completed, dropped, hidden or adult (adult unless the setting is on), and the last
+    /// twenty picks of the session. The Planning list asks nothing; the filters ask AniList for
+    /// how many titles match, then for one page of them.
+    Surprise(crate::browsing::SurprisePool),
     CheckProviders,
     /// Check the torrent proxy again now, as Sources' Check now asks after a check failed.
     /// Answered with [`Event::TorrentProxy`](crate::event::Event::TorrentProxy): `Checking`,

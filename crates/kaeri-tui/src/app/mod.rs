@@ -513,6 +513,8 @@ impl App {
             | Event::Browse(_)
             | Event::Facets(_)
             | Event::RecentSearches(_) => {}
+            // Trending periods and Surprise me are the native apps'.
+            Event::Trending { .. } | Event::Surprise { .. } => {}
             // The terminal draws no licensed services yet: what the native apps are sent is not
             // asked for here.
             Event::Licensed(_)

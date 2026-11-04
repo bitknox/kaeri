@@ -203,6 +203,7 @@ async fn load_listed(
         &built.main,
         built.marks,
         now,
+        meta.episode_text(),
     );
     Ok(Listed { load: EpisodeLoad::Rows(built.rows), unnamed, main: Some(built.main) })
 }

@@ -1005,6 +1005,8 @@ mod tests {
             source: None,
             unsourced: false,
             past_progress: false,
+            spoiler_ahead: false,
+            synopsis_pending: false,
             thumbnail: None,
             description: None,
         };
@@ -1026,6 +1028,7 @@ mod tests {
                 number: number.into(),
                 watched: 1.0,
                 completed: true,
+                spoiler_ahead: false,
             }],
         };
         // The child's progress is not the parent's, however its episodes are numbered.

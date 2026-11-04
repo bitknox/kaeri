@@ -51,6 +51,42 @@ pub const UNSAID_FOR: i64 = 15 * 60;
 /// How many answers are kept before the stale ones are let go.
 const KEPT: usize = 512;
 
+/// Write what a lookup came to into the store, under the sources it asked.
+fn persist(store: &Store, id: AnilistId, route: &str, looked: Looked, said_at: i64) {
+    if looked == Looked::Unsaid
+        && let Ok(Some(mut row)) = store.dub_row(id, route)
+    {
+        // A source that could not say does not take back what it said: asked again later.
+        row.until = said_at + kept_for(looked);
+        if let Err(e) = store.put_dub(id, route, &row) {
+            tracing::warn!(error = %e, %id, "could not keep what a dub listing found");
+        }
+        return;
+    }
+    let (has_dub, through, complete, aired) = match looked {
+        Looked::Said { dub: Some(dub), aired, .. } => {
+            (true, Some(dub.through), dub.complete, aired)
+        }
+        Looked::Said { dub: None, aired, .. } => (false, None, false, aired),
+        Looked::Unsaid => (false, None, false, None),
+    };
+    let row = kaeri_store::DubRow {
+        has_dub,
+        through,
+        complete,
+        aired,
+        said_at,
+        until: said_at + kept_for(looked),
+    };
+    if let Err(e) = store.put_dub(id, route, &row) {
+        tracing::warn!(error = %e, %id, "could not keep what a dub listing found");
+    }
+    // What no card has needed for a quarter of a year goes.
+    if let Err(e) = store.prune_dubs(said_at) {
+        tracing::warn!(error = %e, "could not prune the kept dubs");
+    }
+}
+
 /// What a lookup came to.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Looked {
@@ -195,6 +231,24 @@ impl Dubs {
         Some((kept.dub, kept.until > now))
     }
 
+    /// What the store kept of title `id` asked of `route`, as [`Self::kept`] gives it: the dub, and
+    /// whether it is still fresh at `now`. A row that found a dub with no count is not one a
+    /// title page's lookup makes, and reads as no answer.
+    fn stored(
+        store: &Store,
+        id: AnilistId,
+        route: &str,
+        now: i64,
+    ) -> Option<(Option<DubExtent>, bool)> {
+        let row = store.dub_row(id, route).ok().flatten()?;
+        let dub = match (row.has_dub, row.through) {
+            (true, Some(through)) => Some(DubExtent { through, complete: row.complete }),
+            (true, None) => return None,
+            (false, _) => None,
+        };
+        Some((dub, row.until > now))
+    }
+
     fn keep(
         &self,
         id: AnilistId,
@@ -234,7 +288,9 @@ impl Dubs {
     pub(crate) fn ask_with(&self, id: AnilistId, offline: bool, asking: Asking, tx: &Outbox) {
         let now = asking.clock.now();
         let route = route(&asking.store, &asking.registry, id);
-        match self.kept(id, &route, now) {
+        let kept =
+            self.kept(id, &route, now).or_else(|| Self::stored(&asking.store, id, &route, now));
+        match kept {
             Some((dub, true)) => {
                 let _ = tx.send(Event::TitleDub { id, dub });
                 return;
@@ -280,7 +336,9 @@ impl Dubs {
                     });
             // Kept under the sources as they stand now that any on their way have arrived.
             let route = self::route(&store, &registry, id);
-            let dub = dubs.keep(id, route, looked, clock.now());
+            let said_at = clock.now();
+            persist(&store, id, &route, looked, said_at);
+            let dub = dubs.keep(id, route, looked, said_at);
             {
                 let mut inner = dubs.lock();
                 if inner.running.as_ref().is_some_and(|running| running.serial == serial) {
@@ -304,7 +362,10 @@ impl Dubs {
 
     /// Forget what is kept of title `id`, and stop its lookup: its match to a source changed,
     /// so what was listed may have been another title's.
-    pub fn forget(&self, id: AnilistId) {
+    pub fn forget(&self, id: AnilistId, store: &Store) {
+        if let Err(e) = store.forget_dub(id) {
+            tracing::warn!(error = %e, %id, "could not forget what was kept of a dub");
+        }
         let mut inner = self.lock();
         inner.kept.retain(|(kept, _), _| *kept != id);
         if inner.running.as_ref().is_some_and(|running| running.id == id)
@@ -640,6 +701,37 @@ mod tests {
             kept_for(Looked::Said { dub: six, airing: false, aired: Some(6) }),
             SETTLED_FOR
         );
+    }
+
+    #[tokio::test]
+    async fn what_was_found_is_kept_across_a_restart_and_forgotten_with_the_match() {
+        let dubbed = source("first", Some(6));
+        let counter = dubbed.call_count();
+        let mut page = Page::new(registry(vec![dubbed]), false);
+        let six = Some(DubExtent { through: 6, complete: false });
+        assert_eq!(page.open().await, six);
+        let asked = calls(&counter);
+
+        // A new run of the app: nothing in memory, the store has it, and the source is not asked.
+        page.dubs = Dubs::default();
+        assert_eq!(page.open().await, six);
+        assert_eq!(calls(&counter), asked);
+        let row = page.store.dubs_of(&[SHOW]).unwrap().remove(&SHOW).unwrap();
+        assert!(row.has_dub);
+        assert_eq!((row.through, row.aired), (Some(6), Some(6)));
+
+        page.dubs.forget(SHOW, &page.store);
+        assert!(page.store.dubs_of(&[SHOW]).unwrap().is_empty());
+    }
+
+    #[tokio::test]
+    async fn a_source_that_cannot_say_does_not_take_back_a_dub_it_said() {
+        let mut page = Page::new(registry(vec![source("first", Some(6))]), false);
+        page.open().await;
+        let path = route(&page.store, &page.registry, SHOW);
+        persist(&page.store, SHOW, &path, Looked::Unsaid, page.clock.now());
+        let row = page.store.dub_row(SHOW, &path).unwrap().unwrap();
+        assert!(row.has_dub && row.through == Some(6));
     }
 
     #[tokio::test]

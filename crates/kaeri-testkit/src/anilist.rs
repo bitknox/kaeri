@@ -97,6 +97,14 @@ pub enum Operation {
     DeleteThreadComment,
     /// `query::TOGGLE_COMMENT_LIKE`.
     ToggleCommentLike,
+    /// `query::media_total`: how many titles a browse matches, one title of them asked for.
+    Total,
+    /// `query::trend_week`: the last week's highest daily trending rows, with their cards.
+    TrendWeek,
+    /// `query::trend_month_candidates`: four pages of the highest daily rows of a month.
+    TrendMonthCandidates,
+    /// `query::trend_month_series`: the month's candidates with each day's figure.
+    TrendSeries,
     /// A request to the empty Tenrai.
     Tenrai,
     /// A request to the fake Kitsu: see [`kitsu`].
@@ -141,6 +149,14 @@ impl Operation {
             Self::LastAired
         } else if has("airingSchedules(") {
             Self::Schedule
+        } else if has("pageInfo { total }") {
+            Self::Total
+        } else if has("mediaTrends(") && has("trending media {") {
+            Self::TrendWeek
+        } else if has("mediaTrends(") {
+            Self::TrendMonthCandidates
+        } else if has("trends(date_greater") {
+            Self::TrendSeries
         } else if has("media(id_in:") && has("recommendations(") {
             Self::Recommended
         } else if has("media(id_in:") && has("relations {") && !has("prequels:") {
@@ -1344,6 +1360,64 @@ fn respond(
             }
             Reply::ok(Value::Object(data))
         }
+        Operation::Total => {
+            let mut data = serde_json::Map::new();
+            for (alias, page) in pages(vars) {
+                let total = search(&page, catalogue).len();
+                data.insert(alias, json!({ "pageInfo": { "total": total }, "media": [] }));
+            }
+            Reply::ok(Value::Object(data))
+        }
+        Operation::TrendWeek => {
+            // The first titles of the catalogue, most trending first, each on two days.
+            let rows: Vec<Value> = trend_titles(catalogue)
+                .into_iter()
+                .enumerate()
+                .flat_map(|(at, id)| {
+                    let card = catalogue.listed_with_links(id).map(|m| clock.media(m));
+                    [60, 40].map(|share| {
+                        json!({
+                            "mediaId": id.get(),
+                            "trending": (TREND_TITLES - at) as u64 * share,
+                            "media": card,
+                        })
+                    })
+                })
+                .collect();
+            let mut rows = rows;
+            rows.sort_by_key(|row| std::cmp::Reverse(row["trending"].as_u64()));
+            Reply::ok(json!({ "Page": { "mediaTrends": rows } }))
+        }
+        Operation::TrendMonthCandidates => {
+            // The same titles as the week, the later ones first: a month ranks them otherwise.
+            let rows: Vec<Value> = trend_titles(catalogue)
+                .into_iter()
+                .rev()
+                .map(|id| json!({ "mediaId": id.get(), "trending": 10 }))
+                .collect();
+            Reply::ok(json!({
+                "p1": { "mediaTrends": rows },
+                "p2": { "mediaTrends": [] },
+                "p3": { "mediaTrends": [] },
+                "p4": { "mediaTrends": [] },
+            }))
+        }
+        Operation::TrendSeries => {
+            let media: Vec<Value> = ids(&vars["ids"])
+                .into_iter()
+                .filter_map(|id| {
+                    let at = trend_titles(catalogue).iter().position(|t| *t == id)?;
+                    let mut card = clock.media(catalogue.listed_with_links(id)?);
+                    // The later a title is in the catalogue, the more a month gives it.
+                    let nodes: Vec<Value> = (0..3)
+                        .map(|day| json!({ "date": day, "trending": (at as u64 + 1) * 10 }))
+                        .collect();
+                    card["trends"] = json!({ "nodes": nodes });
+                    Some(card)
+                })
+                .collect();
+            Reply::ok(json!({ "Page": { "media": media } }))
+        }
         Operation::Facets => Reply::ok(facets()),
         Operation::Detail => {
             match vars["id"].as_u64().and_then(|id| catalogue.get(id)) {
@@ -1603,6 +1677,14 @@ fn pages(vars: &Value) -> Vec<(String, Value)> {
 /// as the app asks for that one and a test should not break when the season turns, and with the
 /// titles [`FakeAniList::add_season`] added beside them. Any other
 /// season, and every other filter, is applied to the fixtures as AniList would apply it.
+/// How many titles the fake's trending rows name.
+const TREND_TITLES: usize = 6;
+
+/// The titles the fake's trending rows are about: the first of the catalogue.
+fn trend_titles(catalogue: Catalogue<'_>) -> Vec<AnilistId> {
+    catalogue.pool().into_iter().take(TREND_TITLES).collect()
+}
+
 fn search(vars: &Value, catalogue: Catalogue<'_>) -> Vec<AnilistId> {
     let term = vars["search"].as_str().unwrap_or_default().trim().to_lowercase();
     let this_season = term.is_empty()
@@ -2015,6 +2097,13 @@ mod tests {
                 Operation::Browse,
             ),
             (query::FACETS.to_owned(), Operation::Facets),
+            (
+                query::media_total(&BrowseFilter::default().arguments("", 1, 1)).0,
+                Operation::Total,
+            ),
+            (query::trend_week(), Operation::TrendWeek),
+            (query::trend_month_candidates(), Operation::TrendMonthCandidates),
+            (query::trend_month_series(), Operation::TrendSeries),
             (query::by_id(false), Operation::Detail),
             (query::by_id(true), Operation::Detail),
             (query::by_ids(), Operation::Many),

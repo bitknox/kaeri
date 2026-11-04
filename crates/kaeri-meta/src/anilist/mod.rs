@@ -11,6 +11,7 @@
 pub mod model;
 pub mod query;
 pub mod threads;
+pub mod trends;
 
 use std::sync::Arc;
 

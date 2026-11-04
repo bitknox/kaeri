@@ -615,6 +615,7 @@ mod tests {
                     number: r.number.clone(),
                     watched: r.watched,
                     completed: r.completed,
+                    spoiler_ahead: r.spoiler_ahead,
                 })
                 .collect(),
         });
@@ -635,6 +636,7 @@ mod tests {
                     number: (*number).into(),
                     watched: *watched,
                     completed: *completed,
+                    spoiler_ahead: false,
                 })
                 .collect(),
         }
@@ -1114,6 +1116,8 @@ mod tests {
                 source: None,
                 unsourced: false,
                 past_progress: false,
+                spoiler_ahead: false,
+                synopsis_pending: false,
                 thumbnail: None,
                 description: None,
             },
@@ -1131,6 +1135,8 @@ mod tests {
                 source: None,
                 unsourced: false,
                 past_progress: false,
+                spoiler_ahead: false,
+                synopsis_pending: false,
                 thumbnail: None,
                 description: None,
             },
@@ -1192,6 +1198,8 @@ mod tests {
                         source: None,
                         unsourced: false,
                         past_progress: false,
+                        spoiler_ahead: false,
+                        synopsis_pending: false,
                         thumbnail: None,
                         description: None,
                     })
@@ -1333,6 +1341,8 @@ mod tests {
             source: None,
             unsourced: false,
             past_progress: false,
+            spoiler_ahead: false,
+            synopsis_pending: false,
             thumbnail: None,
             description: None,
         }]));
@@ -1385,6 +1395,8 @@ mod tests {
             source: None,
             unsourced: false,
             past_progress: false,
+            spoiler_ahead: false,
+            synopsis_pending: false,
             thumbnail: None,
             description: None,
         };

@@ -691,6 +691,12 @@ fn decode_entities(text: &str) -> String {
     out
 }
 
+/// Markup in a source's text as plain text: tags out, entities decoded, whitespace collapsed to
+/// single spaces, so a paragraph reads as one run.
+pub fn plain_run(raw: &str) -> String {
+    plain_text(raw).split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
 /// AniList's HTML as plain text, keeping its line structure: tags out, the entities it uses put
 /// back, spaces collapsed within a line and trimmed at its ends.
 ///

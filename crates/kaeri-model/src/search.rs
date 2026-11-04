@@ -10,7 +10,10 @@
 //! state say the same thing everywhere: [`SearchQuery::active`] lists what is set, each with the
 //! key that takes it off again ([`SearchQuery::without`]).
 
-use crate::catalog::{AiringStatus, Entry, Season, SourceMaterial};
+use crate::{
+    browsing::TrendPeriod,
+    catalog::{AiringStatus, Entry, Season, SourceMaterial},
+};
 
 /// The order results come in. A query with no sort of its own is sorted by
 /// [`SearchSort::Relevance`] when it has text and by [`SearchSort::Popularity`] when it has none:
@@ -320,6 +323,10 @@ pub struct SearchQuery {
     /// Available: `None` is All.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub available: Option<Available>,
+    /// The period a Trending browse covers; `None` is today, AniList's live trending. Counts only
+    /// for a browse sorted by Trending: see [`SearchQuery::period_in_effect`].
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub period: Option<TrendPeriod>,
 }
 
 /// The tag rank a query with tags asks for when it names none.
@@ -466,6 +473,38 @@ impl SearchQuery {
         }
     }
 
+    /// The period a Trending browse covers, when it is not today: a browse sorted by Trending
+    /// with a week or a month set. `None` for today, for any other sort, and for a search with
+    /// text, where the period means nothing.
+    pub fn period_in_effect(&self) -> Option<TrendPeriod> {
+        match self.period {
+            Some(period @ (TrendPeriod::Week | TrendPeriod::Month))
+                if self.is_browse() && self.sort_in_effect() == SearchSort::Trending =>
+            {
+                Some(period)
+            }
+            _ => None,
+        }
+    }
+
+    /// The sort's name as a heading says it: "Trending this week" for a week or a month,
+    /// otherwise [`SearchSort::label`].
+    pub fn sort_label(&self) -> String {
+        match self.period_in_effect() {
+            Some(period) => period.label(),
+            None => self.sort_in_effect().label().into(),
+        }
+    }
+
+    /// This query sorted by Trending over `period`.
+    pub fn trending(period: TrendPeriod) -> Self {
+        Self {
+            sort: Some(SearchSort::Trending),
+            period: (period != TrendPeriod::Today).then_some(period),
+            ..Self::default()
+        }
+    }
+
     /// The tag rank asked for: the query's own, or [`DEFAULT_TAG_RANK`].
     pub fn tag_rank_in_effect(&self) -> u8 {
         self.min_tag_rank.unwrap_or(DEFAULT_TAG_RANK).min(100)
@@ -558,7 +597,7 @@ impl SearchQuery {
     pub fn headline(&self) -> String {
         if self.is_browse() {
             let summary = self.summary();
-            if summary.is_empty() { self.sort_in_effect().label().into() } else { summary }
+            if summary.is_empty() { self.sort_label() } else { summary }
         } else {
             self.trimmed_text().into()
         }
@@ -593,7 +632,12 @@ impl SearchQuery {
 
     /// This query with every filter taken off, its text and sort kept: Clear Filters.
     pub fn cleared(&self) -> Self {
-        Self { text: self.text.clone(), sort: self.sort, ..Self::default() }
+        Self {
+            text: self.text.clone(),
+            sort: self.sort,
+            period: self.period,
+            ..Self::default()
+        }
     }
 
     /// How many filters are set among those the advanced panel holds, for the badge on its
@@ -708,6 +752,16 @@ impl SearchQuery {
     #[uniffi::method(name = "sort_in_effect")]
     fn ffi_sort_in_effect(&self) -> SearchSort {
         self.sort_in_effect()
+    }
+
+    #[uniffi::method(name = "period_in_effect")]
+    fn ffi_period_in_effect(&self) -> Option<TrendPeriod> {
+        self.period_in_effect()
+    }
+
+    #[uniffi::method(name = "sort_label")]
+    fn ffi_sort_label(&self) -> String {
+        self.sort_label()
     }
 
     #[uniffi::method(name = "active")]

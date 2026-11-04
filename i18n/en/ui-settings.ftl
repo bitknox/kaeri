@@ -177,7 +177,7 @@ settings-counts-watched-detail = Or when the ending starts, if it is marked
 settings-spoiler = Spoiler protection
 
 # Line under it.
-settings-spoiler-detail = Blurs stills of unwatched episodes after the next one
+settings-spoiler-detail = Hides stills and synopses of unwatched episodes after the next one
 
 # Line under the audio row.
 settings-audio-detail = Each show remembers its own audio and subtitles.
@@ -331,7 +331,7 @@ show-settings-blur-ahead = Blur stills ahead
 show-settings-show-everything = Show everything
 
 # Line under spoiler protection.
-show-settings-spoiler-detail = Blurs stills after the next episode.
+show-settings-spoiler-detail = Hides stills and synopses after the next episode.
 
 # Option: always.
 show-settings-always = Always

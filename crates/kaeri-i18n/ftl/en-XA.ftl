@@ -912,6 +912,18 @@ crash-notice = [Ķàéŕî çļöšéð àƒţéŕ à þŕöƀļéɱ.~~~~~~~~~]
 # The same notice on the TV, which has no button.
 crash-notice-tv = [Ķàéŕî çļöšéð àƒţéŕ à þŕöƀļéɱ. Ýöü çàñ ŕéþöŕţ îţ ƒŕöɱ Šéţţîñĝš, Åƀöüţ.~~~~~~~~~~~~~~~~~~~~~]
 
+# Toast: Surprise me on a search found no title matching the filters.
+notice-surprise-empty-filters = [Ñö ţîţļéš ɱàţçĥ ţĥéšé ƒîļţéŕš.~~~~~~~~~]
+
+# Toast: Surprise me on the Planning list, which has nothing on it to pick.
+notice-surprise-empty-planning = [Þļàññîñĝ îš éɱþţý.~~~~~~]
+
+# Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
+notice-surprise-offline = [Öƒƒļîñé. Šéàŕçĥ þîçķš ñééð ÅñîĻîšţ.~~~~~~~~~~~]
+
+# Toast: Surprise me on the filters, and AniList could not be asked.
+notice-surprise-failed = [Çöüļðñ'ţ þîçķ à ţîţļé ŕîĝĥţ ñöŵ. Ţŕý àĝàîñ îñ à ɱöɱéñţ.~~~~~~~~~~~~~~~~~]
+
 # Title of the dialog that edits the proxy.
 torrents-linux-edit-proxy-title = [Éðîţ þŕöẋý~~~]
 
@@ -7540,6 +7552,199 @@ search-available-services = [Öñ ýöüŕ šéŕṽîçéš~~~~~]
 # End of a search result's line: one of the person's licensed services has it.
 search-line-service = [Öñ { $service }~~]
 
+# The count line under a title in a list or on a card: how many episodes a finished show has.
+count-episodes =
+    { $count ->
+        [one] [Öñé éþîšöðé~~~~]
+       *[other] [{ $count } éþîšöðéš~~~~]
+    }
+
+# The same, short, for a cell too narrow for the long form.
+count-episodes-short = [{ $count } éþ~~]
+
+# The count line of a show that is airing and has a known total: episodes out so far, then the total.
+count-out-of = [{ $out } öƒ { $total } öüţ~~~~~]
+
+# The same, short.
+count-out-of-short = [{ $out } öƒ { $total }~~~]
+
+# The count line of a show that is airing and has no known total: episodes out so far.
+count-out =
+    { $count ->
+        [one] [Öñé éþîšöðé öüţ~~~~~]
+       *[other] [{ $count } éþîšöðéš öüţ~~~~~]
+    }
+
+# The same, short.
+count-out-short = [{ $count } öüţ~~~]
+
+# The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.
+count-starts = [Šţàŕţš { $date }~~~]
+
+# The count line of a show that has not started and has no date.
+count-not-out = [Ñöţ öüţ ýéţ~~~~]
+
+# The count line of a show the viewer is part way through, in the library: the next episode and the total.
+count-next-of = [Éþ { $episode } öƒ { $total }~~~~]
+
+# The dub part of a count line when a source has a dub and does not say how far it goes.
+count-dub = [Ðüƀ~]
+
+# The dub part of a count line: the last episode the dub has.
+count-dub-through = [Ðüƀ { $through }~~~]
+
+# What a screen reader says for a count line: the long form of a finished show.
+count-spoken-episodes =
+    { $count ->
+        [one] [Öñé éþîšöðé~~~~]
+       *[other] [{ $count } éþîšöðéš~~~~]
+    }
+
+# What a screen reader says for a show that is airing, with a known total.
+count-spoken-out-of = [{ $out } öƒ { $total } éþîšöðéš öüţ~~~~~~~]
+
+# What a screen reader says for a show that is airing with no known total.
+count-spoken-out =
+    { $count ->
+        [one] [Öñé éþîšöðé öüţ~~~~~]
+       *[other] [{ $count } éþîšöðéš öüţ~~~~~]
+    }
+
+# What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.
+count-spoken-starts = [Šţàŕţš { $date }~~~]
+
+# What a screen reader says for a show the viewer is part way through.
+count-spoken-next-of = [Éþîšöðé { $episode } öƒ { $total }~~~~~~]
+
+# What a screen reader says after the count when the dub goes to an episode.
+count-spoken-dub-through = [ðüƀƀéð ţö éþîšöðé { $through }~~~~~~~]
+
+# What a screen reader says after the count when a source has a dub and does not say how far it goes.
+count-spoken-dub = [ĥàš à ðüƀ~~~]
+
+# A month's short name, for "Starts 9 Jan".
+date-month-jan-short = [Ĵàñ~]
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-jan-long = [Ĵàñüàŕý~~~]
+
+# A month's short name, for "Starts 9 Jan".
+date-month-feb-short = [Ƒéƀ~]
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-feb-long = [Ƒéƀŕüàŕý~~~]
+
+# A month's short name, for "Starts 9 Jan".
+date-month-mar-short = [Ṁàŕ~]
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-mar-long = [Ṁàŕçĥ~~]
+
+# A month's short name, for "Starts 9 Jan".
+date-month-apr-short = [Åþŕ~]
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-apr-long = [Åþŕîļ~~]
+
+# A month's short name, for "Starts 9 Jan".
+date-month-may-short = [Ṁàý~]
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-may-long = [Ṁàý~]
+
+# A month's short name, for "Starts 9 Jan".
+date-month-jun-short = [Ĵüñ~]
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-jun-long = [Ĵüñé~~]
+
+# A month's short name, for "Starts 9 Jan".
+date-month-jul-short = [Ĵüļ~]
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-jul-long = [Ĵüļý~~]
+
+# A month's short name, for "Starts 9 Jan".
+date-month-aug-short = [Åüĝ~]
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-aug-long = [Åüĝüšţ~~]
+
+# A month's short name, for "Starts 9 Jan".
+date-month-sep-short = [Šéþ~]
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-sep-long = [Šéþţéɱƀéŕ~~~]
+
+# A month's short name, for "Starts 9 Jan".
+date-month-oct-short = [Öçţ~]
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-oct-long = [Öçţöƀéŕ~~~]
+
+# A month's short name, for "Starts 9 Jan".
+date-month-nov-short = [Ñöṽ~]
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-nov-long = [Ñöṽéɱƀéŕ~~~]
+
+# A month's short name, for "Starts 9 Jan".
+date-month-dec-short = [Ðéç~]
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-dec-long = [Ðéçéɱƀéŕ~~~]
+
+# Search's Trending heading and sort, for AniList's live trending.
+trending-today = [Ţŕéñðîñĝ ţöðàý~~~~~]
+
+# Search's Trending heading and sort, for the last seven days.
+trending-week = [Ţŕéñðîñĝ ţĥîš ŵééķ~~~~~~]
+
+# Search's Trending heading and sort, for the last thirty days.
+trending-month = [Ţŕéñðîñĝ ţĥîš ɱöñţĥ~~~~~~]
+
+# One choice of the Trending period menu, where the heading already says Trending.
+trending-choice-today = [Ţöðàý~~]
+
+# One choice of the Trending period menu: the last seven days.
+trending-choice-week = [Ţĥîš ŵééķ~~~]
+
+# One choice of the Trending period menu: the last thirty days.
+trending-choice-month = [Ţĥîš ɱöñţĥ~~~]
+
+# Shown in the Trending rail when a period could not load. The period is already worded, such as "this week".
+trending-failed = [Çöüļðñ'ţ ļöàð { $period }'š ţŕéñðîñĝ.~~~~~~~~~]
+
+# Line under a period that was kept from earlier, with how long ago. The age is already worded, such as "yesterday".
+trending-updated = [Ûþðàţéð { $age }~~~~]
+
+# Button that picks a random title from the screen it is on: the filters in Search, the Planning list in the library.
+surprise-me = [Šüŕþŕîšé ɱé~~~~]
+
+# The same as a menu bar item, in title case.
+surprise-me-menu = [Šüŕþŕîšé Ṁé~~~~]
+
+# Button on a picked title's page that swaps it for another pick. It takes the place of Surprise me for that visit.
+surprise-another = [Åñöţĥéŕ~~~]
+
+# Hint of the Surprise me button on the library's Planning list.
+surprise-hint-planning = [Öþéñš à ŕàñðöɱ ţîţļé ƒŕöɱ Þļàññîñĝ~~~~~~~~~~~]
+
+# Hint of the Surprise me button in Search.
+surprise-hint-filters = [Öþéñš à ŕàñðöɱ ţîţļé ƒŕöɱ ţĥéšé ƒîļţéŕš~~~~~~~~~~~~]
+
+# Hint of the Another button.
+surprise-another-hint = [Öþéñš àñöţĥéŕ ŕàñðöɱ ţîţļé îñ þļàçé öƒ ţĥîš öñé~~~~~~~~~~~~~~~]
+
+# Notice when Search's filters match no title to pick from.
+surprise-empty-filters = [Ñö ţîţļéš ɱàţçĥ ţĥéšé ƒîļţéŕš.~~~~~~~~~]
+
+# Notice when the Planning list is empty.
+surprise-empty-planning = [Þļàññîñĝ îš éɱþţý.~~~~~~]
+
+# Notice when a pick from Search needs AniList and the device is offline.
+surprise-offline = [Öƒƒļîñé. Šéàŕçĥ þîçķš ñééð ÅñîĻîšţ.~~~~~~~~~~~]
+
 # Title of the dialog that adds a media server.
 servers-add-title = [Åðð à ɱéðîà šéŕṽéŕ~~~~~~]
 
@@ -7916,7 +8121,7 @@ settings-counts-watched-detail = [Öŕ ŵĥéñ ţĥé éñðîñĝ šţàŕţš
 settings-spoiler = [Šþöîļéŕ þŕöţéçţîöñ~~~~~~]
 
 # Line under it.
-settings-spoiler-detail = [Ɓļüŕš šţîļļš öƒ üñŵàţçĥéð éþîšöðéš àƒţéŕ ţĥé ñéẋţ öñé~~~~~~~~~~~~~~~~]
+settings-spoiler-detail = [Ĥîðéš šţîļļš àñð šýñöþšéš öƒ üñŵàţçĥéð éþîšöðéš àƒţéŕ ţĥé ñéẋţ öñé~~~~~~~~~~~~~~~~~~~~]
 
 # Line under the audio row.
 settings-audio-detail = [Éàçĥ šĥöŵ ŕéɱéɱƀéŕš îţš öŵñ àüðîö àñð šüƀţîţļéš.~~~~~~~~~~~~~~~]
@@ -8064,7 +8269,7 @@ show-settings-blur-ahead = [Ɓļüŕ šţîļļš àĥéàð~~~~~~]
 show-settings-show-everything = [Šĥöŵ éṽéŕýţĥîñĝ~~~~~]
 
 # Line under spoiler protection.
-show-settings-spoiler-detail = [Ɓļüŕš šţîļļš àƒţéŕ ţĥé ñéẋţ éþîšöðé.~~~~~~~~~~~]
+show-settings-spoiler-detail = [Ĥîðéš šţîļļš àñð šýñöþšéš àƒţéŕ ţĥé ñéẋţ éþîšöðé.~~~~~~~~~~~~~~~]
 
 # Option: always.
 show-settings-always = [Åļŵàýš~~]
@@ -9391,6 +9596,70 @@ episode-row-airs = [Åîŕš { $when }~~~]
 # Accessibility label of an episode's still while spoiler protection hides it.
 episode-spoiler-hidden = [Ĥîððéñ ƀý šþöîļéŕ þŕöţéçţîöñ~~~~~~~~~]
 
+# Hint of a protected episode's row, and its still's label in a preview: the synopsis is hidden.
+episode-synopsis-hidden = [Šýñöþšîš ĥîððéñ ƀý šþöîļéŕ þŕöţéçţîöñ~~~~~~~~~~~~]
+
+# Menu item, button and screen reader action that reveals one protected episode's still and synopsis.
+episode-synopsis-show = [Šĥöŵ šýñöþšîš~~~~]
+
+# Screen reader hint of that action.
+episode-synopsis-show-hint = [Šĥöŵš ţĥîš éþîšöðé'š šţîļļ àñð šýñöþšîš~~~~~~~~~~~~]
+
+# Facts line of an episode with a length and an air date. The date is already formatted.
+episode-facts = [{ $minutes } ɱîñ · Åîŕéð { $date }~~~~~~]
+
+# Facts line of an episode with a length only.
+episode-facts-length = [{ $minutes } ɱîñ~~~]
+
+# Facts line of an episode that is part-watched.
+episode-facts-left = [{ $minutes } ɱîñ ļéƒţ~~~~]
+
+# One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.
+episode-protection-line = [Šþöîļéŕ þŕöţéçţîöñ ĥîðéš ŵĥàţ çöɱéš àƒţéŕ éþîšöðé { $episode }.~~~~~~~~~~~~~~~~~]
+
+# The same line on phones.
+episode-protection-line-short = [Ĥîððéñ àƒţéŕ éþîšöðé { $episode }~~~~~~~~]
+
+# Label of an episode range of a long series, in the range menu.
+episode-range = [Éþîšöðéš { $from } ţö { $to }~~~~~~]
+
+# Label of the control that picks an episode range.
+episode-range-label = [Éþîšöðé ŕàñĝé~~~~]
+
+# One line that stands for the watched episodes at the top of a range. Opening it shows them.
+episode-fold =
+    { $count ->
+        [one] [Öñé ŵàţçĥéð éþîšöðé~~~~~~]
+       *[other] [{ $count } ŵàţçĥéð éþîšöðéš~~~~~~]
+    }
+
+# An episode's number in a facts line on phones.
+episode-short = [É{ $episode }~~]
+
+# Part of an episode's facts line: when it aired. The date is already formatted.
+episode-aired = [Åîŕéð { $date }~~~]
+
+# Two parts of an episode's facts line, set one after the other.
+episode-facts-join = [{ $first } · { $second }~~~]
+
+# Button in the line where spoiler protection starts: shows what comes after.
+episode-protection-show = [Šĥöŵ~~]
+
+# Button in that line once the rows after it are shown: hides them again.
+episode-protection-hide = [Ĥîðé~~]
+
+# The line where spoiler protection starts, once the rows after it are shown.
+episode-protection-shown = [Šĥöŵîñĝ ŵĥàţ çöɱéš àƒţéŕ éþîšöðé { $episode }.~~~~~~~~~~~~]
+
+# The same line on phones.
+episode-protection-shown-short = [Šĥöŵîñĝ àƒţéŕ éþîšöðé { $episode }~~~~~~~~]
+
+# An episode range in the range menu: the first and the last episode.
+episode-range-short = [{ $from }–{ $to }~~~]
+
+# An item of the range menu: the range, then Watched or Not out yet.
+episode-range-item = [{ $range } · { $state }~~~]
+
 # Accessibility label of the button that opens an episode's menu.
 episode-options = [Éþîšöðé öþţîöñš~~~~~]
 
@@ -9511,6 +9780,24 @@ title-fact-tba = [Ţö ƀé àññöüñçéð~~~~~]
 
 # A followed person's status and score, such as "Completed · 9/10". The status is already worded.
 more-following-line = [{ $status } · { $score }/10~~~~]
+
+# Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.
+episode-go-to = [Ĝö ţö éþîšöðé…~~~~~]
+
+# Title of the Go to episode field.
+episode-go-to-title = [Ĝö ţö éþîšöðé~~~~]
+
+# Placeholder of the Go to episode field: the first and last episode of the show.
+episode-go-to-hint = [{ $first } ţö { $last }~~~]
+
+# Accessibility label of the Go to episode field.
+episode-go-to-label = [Éþîšöðé, { $first } ţö { $last }~~~~~~]
+
+# Shown when the number typed is not an episode of the show.
+episode-go-to-none = [Ñö éþîšöðé { $number }. Ţĥîš šĥöŵ ĥàš { $last }.~~~~~~~~~~~]
+
+# Shown when the number typed is an episode with no date that has not come out.
+episode-go-to-not-out = [Éþîšöðé { $number } îšñ'ţ öüţ ýéţ. Ţĥé ļàţéšţ îš { $latest }.~~~~~~~~~~~~~~]
 
 # Title of the settings group and the screen.
 torrents-title = [Ţöŕŕéñţš~~~]

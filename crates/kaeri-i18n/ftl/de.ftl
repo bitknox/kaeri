@@ -7669,7 +7669,7 @@ settings-counts-watched-detail = Oder wenn der Abspann beginnt, sofern er markie
 settings-spoiler = Spoiler-Schutz
 
 # Line under it.
-settings-spoiler-detail = Verwischt Standbilder von nicht gesehenen Folgen nach der nächsten.
+settings-spoiler-detail = Verwischt Standbilder und Inhaltsangaben nicht gesehener Folgen nach der nächsten
 
 # Line under the audio row.
 settings-audio-detail = Jede Serie merkt sich ihr eigenes Audio und ihre Untertitel.
@@ -7817,7 +7817,7 @@ show-settings-blur-ahead = Standbilder vorab verwischen
 show-settings-show-everything = Alles zeigen
 
 # Line under spoiler protection.
-show-settings-spoiler-detail = Verwischt Standbilder nach der nächsten Folge.
+show-settings-spoiler-detail = Verwischt Standbilder und Inhaltsangaben nach der nächsten Folge.
 
 # Option: always.
 show-settings-always = Immer
@@ -9113,6 +9113,70 @@ episode-row-airs = Erscheint { $when }
 
 # Accessibility label of an episode's still while spoiler protection hides it.
 episode-spoiler-hidden = Durch den Spoilerschutz ausgeblendet
+
+# Hint of a protected episode's row, and its still's label in a preview: the synopsis is hidden.
+episode-synopsis-hidden = Inhaltsangabe durch Spoilerschutz verborgen
+
+# Menu item, button and screen reader action that reveals one protected episode's still and synopsis.
+episode-synopsis-show = Inhaltsangabe zeigen
+
+# Screen reader hint of that action.
+episode-synopsis-show-hint = Zeigt Standbild und Inhaltsangabe dieser Folge
+
+# Facts line of an episode with a length and an air date. The date is already formatted.
+episode-facts = { $minutes } Min. · Ausgestrahlt am { $date }
+
+# Facts line of an episode with a length only.
+episode-facts-length = { $minutes } Min.
+
+# Facts line of an episode that is part-watched.
+episode-facts-left = Noch { $minutes } Min.
+
+# One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.
+episode-protection-line = Der Spoilerschutz verbirgt alles nach Folge { $episode }.
+
+# The same line on phones.
+episode-protection-line-short = Verborgen nach Folge { $episode }
+
+# Label of an episode range of a long series, in the range menu.
+episode-range = Folgen { $from } bis { $to }
+
+# Label of the control that picks an episode range.
+episode-range-label = Folgenbereich
+
+# One line that stands for the watched episodes at the top of a range. Opening it shows them.
+episode-fold =
+    { $count ->
+        [one] Eine gesehene Folge
+       *[other] { $count } gesehene Folgen
+    }
+
+# An episode's number in a facts line on phones.
+episode-short = F{ $episode }
+
+# Part of an episode's facts line: when it aired. The date is already formatted.
+episode-aired = Ausgestrahlt am { $date }
+
+# Two parts of an episode's facts line, set one after the other.
+episode-facts-join = { $first } · { $second }
+
+# Button in the line where spoiler protection starts: shows what comes after.
+episode-protection-show = Zeigen
+
+# Button in that line once the rows after it are shown: hides them again.
+episode-protection-hide = Verbergen
+
+# The line where spoiler protection starts, once the rows after it are shown.
+episode-protection-shown = Alles nach Folge { $episode } wird gezeigt.
+
+# The same line on phones.
+episode-protection-shown-short = Sichtbar nach Folge { $episode }
+
+# An episode range in the range menu: the first and the last episode.
+episode-range-short = { $from }–{ $to }
+
+# An item of the range menu: the range, then Watched or Not out yet.
+episode-range-item = { $range } · { $state }
 
 # Accessibility label of the button that opens an episode's menu.
 episode-options = Folgenoptionen

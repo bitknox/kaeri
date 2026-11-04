@@ -2014,7 +2014,7 @@
     <string name="settings_counts_watched">Şu noktada izlenmiş sayılır</string>
     <string name="settings_counts_watched_detail">Ya da bitiş işaretliyse, bitiş başladığında</string>
     <string name="settings_spoiler">Spoiler koruması</string>
-    <string name="settings_spoiler_detail">Sıradakinden sonraki izlenmemiş bölümlerin kareleri bulanıklaştırılır</string>
+    <string name="settings_spoiler_detail">Sıradakinden sonraki izlenmemiş bölümlerin karelerini ve özetlerini bulanıklaştırır</string>
     <string name="settings_audio_detail">Her dizi kendi ses ve altyazı tercihini hatırlar.</string>
     <string name="settings_system_captions">Sistem altyazı stilini kullan</string>
     <string name="settings_system_captions_detail">Düz altyazılar, Erişilebilirlik\'teki altyazı tercihlerinizi kullanır. Stilli altyazılar kendi görünümünü korur.</string>
@@ -2065,7 +2065,7 @@
     <string name="show_settings_skip_filler">Dolgu bölümlerini atla</string>
     <string name="show_settings_blur_ahead">İleriki bölümlerin karelerini bulanıklaştır</string>
     <string name="show_settings_show_everything">Her şeyi göster</string>
-    <string name="show_settings_spoiler_detail">Sıradakinden sonraki bölümlerin karelerini bulanıklaştırır.</string>
+    <string name="show_settings_spoiler_detail">sıradaki bölümden sonrasının kare ve özetlerini bulanıklaştırır.</string>
     <string name="show_settings_always">Her zaman</string>
     <string name="show_settings_never">Hiçbir zaman</string>
     <string name="show_settings_subs_remembered">Son bölümünüzden hatırlandı.</string>
@@ -2517,6 +2517,29 @@
     <string name="episode_row_not_out">Henüz yayımlanmadı</string>
     <string name="episode_row_airs">%1$s yayımlanır</string>
     <string name="episode_spoiler_hidden">Spoiler koruması nedeniyle gizli</string>
+    <string name="episode_synopsis_hidden">Özet, spoiler korumasıyla gizlendi</string>
+    <string name="episode_synopsis_show">Özeti göster</string>
+    <string name="episode_synopsis_show_hint">Bu bölümün karesini ve özetini gösterir</string>
+    <string name="episode_facts">%1$d dk · Yayın tarihi %2$s</string>
+    <string name="episode_facts_length">%1$d min</string>
+    <string name="episode_facts_left">%1$d dk kaldı</string>
+    <string name="episode_protection_line">Spoiler koruması, %1$d. bölümden sonrasını gizler.</string>
+    <string name="episode_protection_line_short">%1$d. bölümden sonra gizli</string>
+    <string name="episode_range">%1$d. ile %2$d. bölümler arası</string>
+    <string name="episode_range_label">Bölüm aralığı</string>
+    <plurals name="episode_fold">
+        <item quantity="one">İzlenen bir bölüm</item>
+        <item quantity="other">%1$d izlenen bölüm</item>
+    </plurals>
+    <string name="episode_short">B%1$d</string>
+    <string name="episode_aired">Yayın tarihi %1$s</string>
+    <string name="episode_facts_join">%1$s · %2$s</string>
+    <string name="episode_protection_show">Göster</string>
+    <string name="episode_protection_hide">Gizle</string>
+    <string name="episode_protection_shown">%1$d. bölümden sonrası gösteriliyor.</string>
+    <string name="episode_protection_shown_short">%1$d. bölümden sonra görünür</string>
+    <string name="episode_range_short">%1$s–%2$s</string>
+    <string name="episode_range_item">%1$s · %2$s</string>
     <string name="episode_options">Bölüm seçenekleri</string>
     <string name="episode_mark_watched">İzlendi olarak işaretle</string>
     <string name="episode_mark_unwatched">İzlenmedi olarak işaretle</string>

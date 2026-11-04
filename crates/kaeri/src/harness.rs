@@ -874,6 +874,8 @@ pub fn name(update: &Event) -> &'static str {
         Event::Conflicts(_) => "Conflicts",
         Event::Episodes { .. } => "Episodes",
         Event::TitleDub { .. } => "TitleDub",
+        Event::Trending { .. } => "Trending",
+        Event::Surprise { .. } => "Surprise",
         Event::Progress { .. } => "Progress",
         Event::TorrentProxy(_) => "TorrentProxy",
         Event::ProxyChecked(_) => "ProxyChecked",
@@ -1138,6 +1140,16 @@ fn copy(update: &Event) -> Event {
             Event::Episodes { id: *id, rows: rows.clone(), failed: failed.clone() }
         }
         Event::TitleDub { id, dub } => Event::TitleDub { id: *id, dub: *dub },
+        Event::Trending { period, entries, updated_at, failed, waiting } => Event::Trending {
+            period: *period,
+            entries: entries.clone(),
+            updated_at: *updated_at,
+            failed: *failed,
+            waiting: *waiting,
+        },
+        Event::Surprise { pool, outcome } => {
+            Event::Surprise { pool: pool.clone(), outcome: outcome.clone() }
+        }
         Event::Progress { id, progress, resume, episodes } => Event::Progress {
             id: *id,
             progress: *progress,

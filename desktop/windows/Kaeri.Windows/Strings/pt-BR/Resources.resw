@@ -5334,7 +5334,7 @@
     <value>Proteção contra spoilers</value>
   </data>
   <data name="SettingsSpoilerDetail" xml:space="preserve">
-    <value>Embaça as imagens de episódios não assistidos depois do próximo</value>
+    <value>Embaça imagens e sinopses de episódios não assistidos depois do próximo</value>
   </data>
   <data name="SettingsAudioDetail" xml:space="preserve">
     <value>Cada série guarda o próprio áudio e as próprias legendas.</value>
@@ -5484,7 +5484,7 @@
     <value>Mostrar tudo</value>
   </data>
   <data name="ShowSettingsSpoilerDetail" xml:space="preserve">
-    <value>Embaça as imagens depois do próximo episódio.</value>
+    <value>Embaça imagens e sinopses depois do próximo.</value>
   </data>
   <data name="ShowSettingsAlways" xml:space="preserve">
     <value>Sempre</value>
@@ -6805,6 +6805,72 @@
   </data>
   <data name="EpisodeSpoilerHidden" xml:space="preserve">
     <value>Oculto pela proteção contra spoilers</value>
+  </data>
+  <data name="EpisodeSynopsisHidden" xml:space="preserve">
+    <value>Sinopse oculta pela proteção contra spoilers</value>
+  </data>
+  <data name="EpisodeSynopsisShow" xml:space="preserve">
+    <value>Mostrar sinopse</value>
+  </data>
+  <data name="EpisodeSynopsisShowHint" xml:space="preserve">
+    <value>Mostra a imagem e a sinopse deste episódio</value>
+  </data>
+  <data name="EpisodeFacts" xml:space="preserve">
+    <value>{minutes} min · Exibido em {date}</value>
+  </data>
+  <data name="EpisodeFactsLength" xml:space="preserve">
+    <value>{minutes} min</value>
+  </data>
+  <data name="EpisodeFactsLeft" xml:space="preserve">
+    <value>Faltam {minutes} min</value>
+  </data>
+  <data name="EpisodeProtectionLine" xml:space="preserve">
+    <value>A proteção contra spoilers oculta o que vem depois do episódio {episode}.</value>
+  </data>
+  <data name="EpisodeProtectionLineShort" xml:space="preserve">
+    <value>Oculto após o episódio {episode}</value>
+  </data>
+  <data name="EpisodeRange" xml:space="preserve">
+    <value>Episódios {from} a {to}</value>
+  </data>
+  <data name="EpisodeRangeLabel" xml:space="preserve">
+    <value>Intervalo de episódios</value>
+  </data>
+  <data name="EpisodeFold_one" xml:space="preserve">
+    <value>Um episódio assistido</value>
+  </data>
+  <data name="EpisodeFold_many" xml:space="preserve">
+    <value>{count} episódios assistidos</value>
+  </data>
+  <data name="EpisodeFold_other" xml:space="preserve">
+    <value>{count} episódios assistidos</value>
+  </data>
+  <data name="EpisodeShort" xml:space="preserve">
+    <value>E{episode}</value>
+  </data>
+  <data name="EpisodeAired" xml:space="preserve">
+    <value>Exibido em {date}</value>
+  </data>
+  <data name="EpisodeFactsJoin" xml:space="preserve">
+    <value>{first} · {second}</value>
+  </data>
+  <data name="EpisodeProtectionShow" xml:space="preserve">
+    <value>Mostrar</value>
+  </data>
+  <data name="EpisodeProtectionHide" xml:space="preserve">
+    <value>Ocultar</value>
+  </data>
+  <data name="EpisodeProtectionShown" xml:space="preserve">
+    <value>Mostrando o que vem depois do episódio {episode}.</value>
+  </data>
+  <data name="EpisodeProtectionShownShort" xml:space="preserve">
+    <value>Visível após o episódio {episode}</value>
+  </data>
+  <data name="EpisodeRangeShort" xml:space="preserve">
+    <value>{from}–{to}</value>
+  </data>
+  <data name="EpisodeRangeItem" xml:space="preserve">
+    <value>{range} · {state}</value>
   </data>
   <data name="EpisodeOptions" xml:space="preserve">
     <value>Opções do episódio</value>

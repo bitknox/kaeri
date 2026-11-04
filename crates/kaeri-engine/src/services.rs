@@ -195,5 +195,9 @@ pub(crate) fn players(paths: &Paths) -> (Arc<dyn PowerSource>, Arc<HostedPlayers
 pub fn build_meta(config: &Config, http: &HttpClient, store: &Store) -> Meta {
     let anilist = AniList::new(http.clone(), config.network.anilist_rate_limit);
     let tenrai = config.meta.fallback.then(|| Tenrai::new(http.clone(), store.clone()));
-    Meta::new(anilist, tenrai, store.clone())
+    let text = config
+        .meta
+        .episode_text
+        .then(|| kaeri_meta::EpisodeText::new(http.clone(), store.clone()));
+    Meta::new(anilist, tenrai, store.clone()).with_episode_text(text)
 }

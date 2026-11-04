@@ -248,6 +248,8 @@ pub struct Meta {
     titles: crate::titles::Titles,
     anilist: AniList,
     tenrai: Option<std::sync::Arc<Tenrai>>,
+    /// The per-title synopsis fill, when switched on: see [`crate::episode_text`].
+    episode_text: Option<Arc<crate::episode_text::EpisodeText>>,
     store: Store,
     rung: std::sync::Arc<AtomicU8>,
     notice: std::sync::Arc<Mutex<Option<String>>>,
@@ -349,6 +351,7 @@ impl Meta {
             titles: crate::titles::Titles::default(),
             anilist,
             tenrai: tenrai.map(std::sync::Arc::new),
+            episode_text: None,
             store,
             rung: std::sync::Arc::new(AtomicU8::new(FRESH)),
             notice: std::sync::Arc::new(Mutex::new(None)),
@@ -363,6 +366,17 @@ impl Meta {
             tables: Arc::default(),
             headers_asking: Arc::default(),
         }
+    }
+
+    /// With the per-title synopsis fill, or without it when `None`.
+    pub fn with_episode_text(mut self, text: Option<crate::episode_text::EpisodeText>) -> Self {
+        self.episode_text = text.map(Arc::new);
+        self
+    }
+
+    /// The per-title synopsis fill, when it is on.
+    pub fn episode_text(&self) -> Option<Arc<crate::episode_text::EpisodeText>> {
+        self.episode_text.clone()
     }
 
     /// Which form of each title is shown: the setting, and the signed-in viewer's own choice
@@ -1388,6 +1402,34 @@ impl Meta {
             self.remember_page(page);
         }
         Ok(pages)
+    }
+
+    /// What was trending over the last `days` days (7 or 30; anything else is the week), most
+    /// first, summed from AniList's daily figures. See [`AniList::trending_week`].
+    pub async fn trending_over(
+        &self,
+        days: i64,
+        now: i64,
+    ) -> std::result::Result<Vec<Media>, AniListError> {
+        let from = now - days * 86_400;
+        let media = if days > 7 {
+            self.ask_anilist(self.anilist.trending_month(from)).await?
+        } else {
+            self.ask_anilist(self.anilist.trending_week(from)).await?
+        };
+        for media in &media {
+            self.remember(media);
+        }
+        Ok(media)
+    }
+
+    /// How many titles `filter` matches, `None` when AniList did not say: see
+    /// [`AniList::browse_total`].
+    pub async fn browse_total(
+        &self,
+        filter: &BrowseFilter,
+    ) -> std::result::Result<Option<u32>, AniListError> {
+        self.ask_anilist(self.anilist.browse_total(filter)).await
     }
 
     /// What the cache holds of `ids`, in that order, asking nobody: titles a screen showed

@@ -648,9 +648,10 @@ fn mark_dubbed(entries: &mut [Entry], dubs: &Dubs, store: &Store, registry: &Pro
     let mut through: HashMap<AnilistId, Option<u32>> = HashMap::new();
     dubbed_rows(entries, |id| {
         *through.entry(id).or_insert_with(|| {
-            dubs.knows(id)
-                .then(|| dubs.aired_through(id, &route(store, registry, id)))
-                .flatten()
+            let route = route(store, registry, id);
+            // What a page found this run, or else what the store kept of an earlier one.
+            let known = dubs.knows(id).then(|| dubs.aired_through(id, &route)).flatten();
+            known.or_else(|| store.dub_row(id, &route).ok().flatten().and_then(|row| row.aired))
         })
     });
 }

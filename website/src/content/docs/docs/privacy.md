@@ -50,6 +50,15 @@ mode, with reduced or removed animations, or with a screen reader running. While
 protection is on, the trailer of a title that follows one you haven't finished doesn't start by
 itself.
 
+## Episode synopses
+
+When a source lists an episode without a synopsis, Kaeri can fill it in from a public episode
+service at `api.ani.zip`. It is asked once for a title when you open the title's episodes, with
+that title's AniList id and nothing else. The service sees your IP address and that id. The answer
+is kept on the device for six hours while the show airs and a week after, so the same title is not
+asked again in that time. If the service refuses or does not answer, the episodes stay as they
+were. To turn this off, set `episode_text = false` under `[meta]` in `config.toml`.
+
 ## Episode discussions
 
 Once an episode counts as watched, the app looks for that episode's discussion thread on AniList's

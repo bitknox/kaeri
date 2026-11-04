@@ -7669,7 +7669,7 @@ settings-counts-watched-detail = Eller när avslutningen börjar, om den är mar
 settings-spoiler = Spoilerskydd
 
 # Line under it.
-settings-spoiler-detail = Suddar bilder från osedda avsnitt efter nästa
+settings-spoiler-detail = Suddar bilder och sammanfattningar för osedda avsnitt efter nästa
 
 # Line under the audio row.
 settings-audio-detail = Varje serie minns sitt eget ljud och sina undertexter.
@@ -7817,7 +7817,7 @@ show-settings-blur-ahead = Sudda bilder i förväg
 show-settings-show-everything = Visa allt
 
 # Line under spoiler protection.
-show-settings-spoiler-detail = Suddar bilder efter nästa avsnitt.
+show-settings-spoiler-detail = Suddar bilder och sammanfattningar efter nästa avsnitt.
 
 # Option: always.
 show-settings-always = Alltid
@@ -9113,6 +9113,70 @@ episode-row-airs = Sänds { $when }
 
 # Accessibility label of an episode's still while spoiler protection hides it.
 episode-spoiler-hidden = Dold av spoilerskydd
+
+# Hint of a protected episode's row, and its still's label in a preview: the synopsis is hidden.
+episode-synopsis-hidden = Sammanfattning dold av spoilerskydd
+
+# Menu item, button and screen reader action that reveals one protected episode's still and synopsis.
+episode-synopsis-show = Visa sammanfattning
+
+# Screen reader hint of that action.
+episode-synopsis-show-hint = Visar avsnittets bild och sammanfattning
+
+# Facts line of an episode with a length and an air date. The date is already formatted.
+episode-facts = { $minutes } min · Sändes { $date }
+
+# Facts line of an episode with a length only.
+episode-facts-length = { $minutes } min
+
+# Facts line of an episode that is part-watched.
+episode-facts-left = { $minutes } min kvar
+
+# One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.
+episode-protection-line = Spoilerskyddet döljer allt efter avsnitt { $episode }.
+
+# The same line on phones.
+episode-protection-line-short = Dolt efter avsnitt { $episode }
+
+# Label of an episode range of a long series, in the range menu.
+episode-range = Avsnitt { $from } till { $to }
+
+# Label of the control that picks an episode range.
+episode-range-label = Avsnittsintervall
+
+# One line that stands for the watched episodes at the top of a range. Opening it shows them.
+episode-fold =
+    { $count ->
+        [one] Ett sett avsnitt
+       *[other] { $count } sedda avsnitt
+    }
+
+# An episode's number in a facts line on phones.
+episode-short = A{ $episode }
+
+# Part of an episode's facts line: when it aired. The date is already formatted.
+episode-aired = Sändes { $date }
+
+# Two parts of an episode's facts line, set one after the other.
+episode-facts-join = { $first } · { $second }
+
+# Button in the line where spoiler protection starts: shows what comes after.
+episode-protection-show = Visa
+
+# Button in that line once the rows after it are shown: hides them again.
+episode-protection-hide = Dölj
+
+# The line where spoiler protection starts, once the rows after it are shown.
+episode-protection-shown = Visar allt efter avsnitt { $episode }.
+
+# The same line on phones.
+episode-protection-shown-short = Visas efter avsnitt { $episode }
+
+# An episode range in the range menu: the first and the last episode.
+episode-range-short = { $from }–{ $to }
+
+# An item of the range menu: the range, then Watched or Not out yet.
+episode-range-item = { $range } · { $state }
 
 # Accessibility label of the button that opens an episode's menu.
 episode-options = Avsnittsalternativ

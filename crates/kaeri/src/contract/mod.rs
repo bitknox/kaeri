@@ -14,6 +14,7 @@
 //! engine to the next play, which a source with no stream lets it start and look up. The
 //! player itself needs mpv, and the engine's `tests/binge.rs` covers it.
 
+mod browsing;
 mod budget;
 mod discussion;
 mod downloads;

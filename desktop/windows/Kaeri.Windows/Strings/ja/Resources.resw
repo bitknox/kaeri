@@ -5046,7 +5046,7 @@
     <value>ネタバレ防止</value>
   </data>
   <data name="SettingsSpoilerDetail" xml:space="preserve">
-    <value>次のエピソードより後の未視聴エピソードの静止画をぼかします。</value>
+    <value>次のエピソードより後の未視聴エピソードの静止画とあらすじをぼかします</value>
   </data>
   <data name="SettingsAudioDetail" xml:space="preserve">
     <value>作品ごとに、音声と字幕の設定を記憶します。</value>
@@ -5190,7 +5190,7 @@
     <value>すべて表示</value>
   </data>
   <data name="ShowSettingsSpoilerDetail" xml:space="preserve">
-    <value>次のエピソードより後の静止画をぼかします。</value>
+    <value>次のエピソードより後の静止画とあらすじをぼかします。</value>
   </data>
   <data name="ShowSettingsAlways" xml:space="preserve">
     <value>常に</value>
@@ -6451,6 +6451,66 @@
   </data>
   <data name="EpisodeSpoilerHidden" xml:space="preserve">
     <value>ネタバレ防止により非表示</value>
+  </data>
+  <data name="EpisodeSynopsisHidden" xml:space="preserve">
+    <value>ネタバレ防止のためあらすじを非表示</value>
+  </data>
+  <data name="EpisodeSynopsisShow" xml:space="preserve">
+    <value>あらすじを表示</value>
+  </data>
+  <data name="EpisodeSynopsisShowHint" xml:space="preserve">
+    <value>このエピソードの静止画とあらすじを表示します</value>
+  </data>
+  <data name="EpisodeFacts" xml:space="preserve">
+    <value>{minutes}分 · 放送日 {date}</value>
+  </data>
+  <data name="EpisodeFactsLength" xml:space="preserve">
+    <value>{minutes}分</value>
+  </data>
+  <data name="EpisodeFactsLeft" xml:space="preserve">
+    <value>残り{minutes}分</value>
+  </data>
+  <data name="EpisodeProtectionLine" xml:space="preserve">
+    <value>ネタバレ防止により、第{episode}話より後は非表示です。</value>
+  </data>
+  <data name="EpisodeProtectionLineShort" xml:space="preserve">
+    <value>第{episode}話より後は非表示</value>
+  </data>
+  <data name="EpisodeRange" xml:space="preserve">
+    <value>第{from}話〜第{to}話</value>
+  </data>
+  <data name="EpisodeRangeLabel" xml:space="preserve">
+    <value>エピソード範囲</value>
+  </data>
+  <data name="EpisodeFold_other" xml:space="preserve">
+    <value>視聴済み{count}エピソード</value>
+  </data>
+  <data name="EpisodeShort" xml:space="preserve">
+    <value>第{episode}話</value>
+  </data>
+  <data name="EpisodeAired" xml:space="preserve">
+    <value>放送日 {date}</value>
+  </data>
+  <data name="EpisodeFactsJoin" xml:space="preserve">
+    <value>{first} · {second}</value>
+  </data>
+  <data name="EpisodeProtectionShow" xml:space="preserve">
+    <value>表示</value>
+  </data>
+  <data name="EpisodeProtectionHide" xml:space="preserve">
+    <value>非表示</value>
+  </data>
+  <data name="EpisodeProtectionShown" xml:space="preserve">
+    <value>第{episode}話より後を表示中です。</value>
+  </data>
+  <data name="EpisodeProtectionShownShort" xml:space="preserve">
+    <value>第{episode}話より後を表示中</value>
+  </data>
+  <data name="EpisodeRangeShort" xml:space="preserve">
+    <value>{from}–{to}</value>
+  </data>
+  <data name="EpisodeRangeItem" xml:space="preserve">
+    <value>{range} · {state}</value>
   </data>
   <data name="EpisodeOptions" xml:space="preserve">
     <value>エピソードのオプション</value>

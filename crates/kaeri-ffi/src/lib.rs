@@ -30,6 +30,7 @@
 
 uniffi::setup_scaffolding!();
 
+mod browsing;
 mod bug_report;
 mod crash;
 mod engine;
@@ -46,6 +47,7 @@ mod scenes;
 mod sender;
 mod start;
 mod sync_network;
+mod synopsis;
 #[cfg(feature = "testing")]
 mod testing;
 mod trailer;
@@ -991,6 +993,7 @@ mod tests {
             licensed_only: true,
             on_list: Some(OnList::Hide),
             available: Some(kaeri_model::search::Available::OnYourServices),
+            period: Some(kaeri_model::browsing::TrendPeriod::Week),
         }
     }
 
@@ -1441,12 +1444,56 @@ mod tests {
             source: None,
             unsourced: false,
             past_progress: false,
+            spoiler_ahead: false,
+            synopsis_pending: false,
         };
         assert_eq!(crossed(row.clone()), row);
         let dub = DubExtent { through: 6, complete: false };
         assert_eq!(crossed(dub), dub);
         crosses_intact(Event::TitleDub { id: AnilistId::new(900_001), dub: Some(dub) });
         crosses_intact(Event::TitleDub { id: AnilistId::new(900_001), dub: None });
+    }
+
+    #[test]
+    fn the_browsing_extras_cross_intact() {
+        use kaeri_model::browsing::{CountLine, SurpriseOutcome, SurprisePool, TrendPeriod};
+        let id = AnilistId::new(900_001);
+        let line = CountLine {
+            long: "12 episodes · Dub 8".into(),
+            short: "12 ep · Dub 8".into(),
+            spoken: "12 episodes, dub through episode 8".into(),
+            dub: Some("Dub 8".into()),
+        };
+        let entry = Entry::new(id, "Kaze no Tegami");
+        crosses_intact(Event::Trending {
+            period: TrendPeriod::Week,
+            entries: vec![entry],
+            updated_at: Some(1_800_000_000),
+            failed: false,
+            waiting: Some(12),
+        });
+        for outcome in [
+            SurpriseOutcome::Picked { id, more: true },
+            SurpriseOutcome::Empty,
+            SurpriseOutcome::Offline,
+            SurpriseOutcome::Failed,
+        ] {
+            crosses_intact(Event::Surprise { pool: SurprisePool::Planning, outcome });
+        }
+        crosses_intact(Event::Surprise {
+            pool: SurprisePool::Filters { query: every_filter() },
+            outcome: SurpriseOutcome::Empty,
+        });
+        assert_eq!(crossed(line.clone()), line);
+        let commands = [
+            Command::LoadTrending(TrendPeriod::Month),
+            Command::Surprise(SurprisePool::Planning),
+            Command::Surprise(SurprisePool::Filters { query: every_filter() }),
+        ];
+        for command in commands {
+            let before = format!("{command:?}");
+            assert_eq!(format!("{:?}", crossed(command)), before);
+        }
     }
 
     #[test]

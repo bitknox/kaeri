@@ -5046,7 +5046,7 @@
     <value>Perlindungan spoiler</value>
   </data>
   <data name="SettingsSpoilerDetail" xml:space="preserve">
-    <value>Mengaburkan cuplikan episode yang belum ditonton setelah episode berikutnya</value>
+    <value>Mengaburkan cuplikan dan sinopsis episode yang belum ditonton setelah episode berikutnya</value>
   </data>
   <data name="SettingsAudioDetail" xml:space="preserve">
     <value>Setiap serial mengingat audio dan subtitelnya sendiri.</value>
@@ -5190,7 +5190,7 @@
     <value>Tampilkan semua</value>
   </data>
   <data name="ShowSettingsSpoilerDetail" xml:space="preserve">
-    <value>Mengaburkan cuplikan setelah episode berikutnya.</value>
+    <value>Mengaburkan cuplikan dan sinopsis setelah episode berikutnya.</value>
   </data>
   <data name="ShowSettingsAlways" xml:space="preserve">
     <value>Selalu</value>
@@ -6451,6 +6451,66 @@
   </data>
   <data name="EpisodeSpoilerHidden" xml:space="preserve">
     <value>Disembunyikan oleh perlindungan spoiler</value>
+  </data>
+  <data name="EpisodeSynopsisHidden" xml:space="preserve">
+    <value>Sinopsis disembunyikan oleh perlindungan spoiler</value>
+  </data>
+  <data name="EpisodeSynopsisShow" xml:space="preserve">
+    <value>Tampilkan sinopsis</value>
+  </data>
+  <data name="EpisodeSynopsisShowHint" xml:space="preserve">
+    <value>Menampilkan cuplikan dan sinopsis episode ini</value>
+  </data>
+  <data name="EpisodeFacts" xml:space="preserve">
+    <value>{minutes} mnt · Tayang {date}</value>
+  </data>
+  <data name="EpisodeFactsLength" xml:space="preserve">
+    <value>{minutes} mnt</value>
+  </data>
+  <data name="EpisodeFactsLeft" xml:space="preserve">
+    <value>Sisa {minutes} mnt</value>
+  </data>
+  <data name="EpisodeProtectionLine" xml:space="preserve">
+    <value>Perlindungan spoiler menyembunyikan semua setelah episode {episode}.</value>
+  </data>
+  <data name="EpisodeProtectionLineShort" xml:space="preserve">
+    <value>Disembunyikan setelah episode {episode}</value>
+  </data>
+  <data name="EpisodeRange" xml:space="preserve">
+    <value>Episode {from} sampai {to}</value>
+  </data>
+  <data name="EpisodeRangeLabel" xml:space="preserve">
+    <value>Rentang episode</value>
+  </data>
+  <data name="EpisodeFold_other" xml:space="preserve">
+    <value>{count} episode ditonton</value>
+  </data>
+  <data name="EpisodeShort" xml:space="preserve">
+    <value>E{episode}</value>
+  </data>
+  <data name="EpisodeAired" xml:space="preserve">
+    <value>Tayang {date}</value>
+  </data>
+  <data name="EpisodeFactsJoin" xml:space="preserve">
+    <value>{first} · {second}</value>
+  </data>
+  <data name="EpisodeProtectionShow" xml:space="preserve">
+    <value>Tampilkan</value>
+  </data>
+  <data name="EpisodeProtectionHide" xml:space="preserve">
+    <value>Sembunyikan</value>
+  </data>
+  <data name="EpisodeProtectionShown" xml:space="preserve">
+    <value>Menampilkan semua setelah episode {episode}.</value>
+  </data>
+  <data name="EpisodeProtectionShownShort" xml:space="preserve">
+    <value>Terlihat setelah episode {episode}</value>
+  </data>
+  <data name="EpisodeRangeShort" xml:space="preserve">
+    <value>{from}–{to}</value>
+  </data>
+  <data name="EpisodeRangeItem" xml:space="preserve">
+    <value>{range} · {state}</value>
   </data>
   <data name="EpisodeOptions" xml:space="preserve">
     <value>Opsi episode</value>

@@ -1425,6 +1425,26 @@ pub fn crash_notice_tv() -> String {
     text("crash-notice-tv", &[])
 }
 
+/// Toast: Surprise me on a search found no title matching the filters.
+pub fn notice_surprise_empty_filters() -> String {
+    text("notice-surprise-empty-filters", &[])
+}
+
+/// Toast: Surprise me on the Planning list, which has nothing on it to pick.
+pub fn notice_surprise_empty_planning() -> String {
+    text("notice-surprise-empty-planning", &[])
+}
+
+/// Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
+pub fn notice_surprise_offline() -> String {
+    text("notice-surprise-offline", &[])
+}
+
+/// Toast: Surprise me on the filters, and AniList could not be asked.
+pub fn notice_surprise_failed() -> String {
+    text("notice-surprise-failed", &[])
+}
+
 /// Title of the dialog that edits the proxy.
 pub fn torrents_linux_edit_proxy_title() -> String {
     text("torrents-linux-edit-proxy-title", &[])
@@ -12115,6 +12135,301 @@ pub fn search_line_service(service: &str) -> String {
     text("search-line-service", &[("service", Arg::Text(service))])
 }
 
+/// The count line under a title in a list or on a card: how many episodes a finished show has.
+pub fn count_episodes(count: i64) -> String {
+    text("count-episodes", &[("count", Arg::Int(count))])
+}
+
+/// The same, short, for a cell too narrow for the long form.
+pub fn count_episodes_short(count: i64) -> String {
+    text("count-episodes-short", &[("count", Arg::Int(count))])
+}
+
+/// The count line of a show that is airing and has a known total: episodes out so far, then the total.
+pub fn count_out_of(out: i64, total: i64) -> String {
+    text("count-out-of", &[("out", Arg::Int(out)), ("total", Arg::Int(total))])
+}
+
+/// The same, short.
+pub fn count_out_of_short(out: i64, total: i64) -> String {
+    text("count-out-of-short", &[("out", Arg::Int(out)), ("total", Arg::Int(total))])
+}
+
+/// The count line of a show that is airing and has no known total: episodes out so far.
+pub fn count_out(count: i64) -> String {
+    text("count-out", &[("count", Arg::Int(count))])
+}
+
+/// The same, short.
+pub fn count_out_short(count: i64) -> String {
+    text("count-out-short", &[("count", Arg::Int(count))])
+}
+
+/// The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.
+pub fn count_starts(date: &str) -> String {
+    text("count-starts", &[("date", Arg::Text(date))])
+}
+
+/// The count line of a show that has not started and has no date.
+pub fn count_not_out() -> String {
+    text("count-not-out", &[])
+}
+
+/// The count line of a show the viewer is part way through, in the library: the next episode and the total.
+pub fn count_next_of(episode: i64, total: i64) -> String {
+    text("count-next-of", &[("episode", Arg::Int(episode)), ("total", Arg::Int(total))])
+}
+
+/// The dub part of a count line when a source has a dub and does not say how far it goes.
+pub fn count_dub() -> String {
+    text("count-dub", &[])
+}
+
+/// The dub part of a count line: the last episode the dub has.
+pub fn count_dub_through(through: i64) -> String {
+    text("count-dub-through", &[("through", Arg::Int(through))])
+}
+
+/// What a screen reader says for a count line: the long form of a finished show.
+pub fn count_spoken_episodes(count: i64) -> String {
+    text("count-spoken-episodes", &[("count", Arg::Int(count))])
+}
+
+/// What a screen reader says for a show that is airing, with a known total.
+pub fn count_spoken_out_of(out: i64, total: i64) -> String {
+    text("count-spoken-out-of", &[("out", Arg::Int(out)), ("total", Arg::Int(total))])
+}
+
+/// What a screen reader says for a show that is airing with no known total.
+pub fn count_spoken_out(count: i64) -> String {
+    text("count-spoken-out", &[("count", Arg::Int(count))])
+}
+
+/// What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.
+pub fn count_spoken_starts(date: &str) -> String {
+    text("count-spoken-starts", &[("date", Arg::Text(date))])
+}
+
+/// What a screen reader says for a show the viewer is part way through.
+pub fn count_spoken_next_of(episode: i64, total: i64) -> String {
+    text("count-spoken-next-of", &[("episode", Arg::Int(episode)), ("total", Arg::Int(total))])
+}
+
+/// What a screen reader says after the count when the dub goes to an episode.
+pub fn count_spoken_dub_through(through: i64) -> String {
+    text("count-spoken-dub-through", &[("through", Arg::Int(through))])
+}
+
+/// What a screen reader says after the count when a source has a dub and does not say how far it goes.
+pub fn count_spoken_dub() -> String {
+    text("count-spoken-dub", &[])
+}
+
+/// A month's short name, for "Starts 9 Jan".
+pub fn date_month_jan_short() -> String {
+    text("date-month-jan-short", &[])
+}
+
+/// A month's full name, for a screen reader's "Starts 9 January".
+pub fn date_month_jan_long() -> String {
+    text("date-month-jan-long", &[])
+}
+
+/// A month's short name, for "Starts 9 Jan".
+pub fn date_month_feb_short() -> String {
+    text("date-month-feb-short", &[])
+}
+
+/// A month's full name, for a screen reader's "Starts 9 January".
+pub fn date_month_feb_long() -> String {
+    text("date-month-feb-long", &[])
+}
+
+/// A month's short name, for "Starts 9 Jan".
+pub fn date_month_mar_short() -> String {
+    text("date-month-mar-short", &[])
+}
+
+/// A month's full name, for a screen reader's "Starts 9 January".
+pub fn date_month_mar_long() -> String {
+    text("date-month-mar-long", &[])
+}
+
+/// A month's short name, for "Starts 9 Jan".
+pub fn date_month_apr_short() -> String {
+    text("date-month-apr-short", &[])
+}
+
+/// A month's full name, for a screen reader's "Starts 9 January".
+pub fn date_month_apr_long() -> String {
+    text("date-month-apr-long", &[])
+}
+
+/// A month's short name, for "Starts 9 Jan".
+pub fn date_month_may_short() -> String {
+    text("date-month-may-short", &[])
+}
+
+/// A month's full name, for a screen reader's "Starts 9 January".
+pub fn date_month_may_long() -> String {
+    text("date-month-may-long", &[])
+}
+
+/// A month's short name, for "Starts 9 Jan".
+pub fn date_month_jun_short() -> String {
+    text("date-month-jun-short", &[])
+}
+
+/// A month's full name, for a screen reader's "Starts 9 January".
+pub fn date_month_jun_long() -> String {
+    text("date-month-jun-long", &[])
+}
+
+/// A month's short name, for "Starts 9 Jan".
+pub fn date_month_jul_short() -> String {
+    text("date-month-jul-short", &[])
+}
+
+/// A month's full name, for a screen reader's "Starts 9 January".
+pub fn date_month_jul_long() -> String {
+    text("date-month-jul-long", &[])
+}
+
+/// A month's short name, for "Starts 9 Jan".
+pub fn date_month_aug_short() -> String {
+    text("date-month-aug-short", &[])
+}
+
+/// A month's full name, for a screen reader's "Starts 9 January".
+pub fn date_month_aug_long() -> String {
+    text("date-month-aug-long", &[])
+}
+
+/// A month's short name, for "Starts 9 Jan".
+pub fn date_month_sep_short() -> String {
+    text("date-month-sep-short", &[])
+}
+
+/// A month's full name, for a screen reader's "Starts 9 January".
+pub fn date_month_sep_long() -> String {
+    text("date-month-sep-long", &[])
+}
+
+/// A month's short name, for "Starts 9 Jan".
+pub fn date_month_oct_short() -> String {
+    text("date-month-oct-short", &[])
+}
+
+/// A month's full name, for a screen reader's "Starts 9 January".
+pub fn date_month_oct_long() -> String {
+    text("date-month-oct-long", &[])
+}
+
+/// A month's short name, for "Starts 9 Jan".
+pub fn date_month_nov_short() -> String {
+    text("date-month-nov-short", &[])
+}
+
+/// A month's full name, for a screen reader's "Starts 9 January".
+pub fn date_month_nov_long() -> String {
+    text("date-month-nov-long", &[])
+}
+
+/// A month's short name, for "Starts 9 Jan".
+pub fn date_month_dec_short() -> String {
+    text("date-month-dec-short", &[])
+}
+
+/// A month's full name, for a screen reader's "Starts 9 January".
+pub fn date_month_dec_long() -> String {
+    text("date-month-dec-long", &[])
+}
+
+/// Search's Trending heading and sort, for AniList's live trending.
+pub fn trending_today() -> String {
+    text("trending-today", &[])
+}
+
+/// Search's Trending heading and sort, for the last seven days.
+pub fn trending_week() -> String {
+    text("trending-week", &[])
+}
+
+/// Search's Trending heading and sort, for the last thirty days.
+pub fn trending_month() -> String {
+    text("trending-month", &[])
+}
+
+/// One choice of the Trending period menu, where the heading already says Trending.
+pub fn trending_choice_today() -> String {
+    text("trending-choice-today", &[])
+}
+
+/// One choice of the Trending period menu: the last seven days.
+pub fn trending_choice_week() -> String {
+    text("trending-choice-week", &[])
+}
+
+/// One choice of the Trending period menu: the last thirty days.
+pub fn trending_choice_month() -> String {
+    text("trending-choice-month", &[])
+}
+
+/// Shown in the Trending rail when a period could not load. The period is already worded, such as "this week".
+pub fn trending_failed(period: &str) -> String {
+    text("trending-failed", &[("period", Arg::Text(period))])
+}
+
+/// Line under a period that was kept from earlier, with how long ago. The age is already worded, such as "yesterday".
+pub fn trending_updated(age: &str) -> String {
+    text("trending-updated", &[("age", Arg::Text(age))])
+}
+
+/// Button that picks a random title from the screen it is on: the filters in Search, the Planning list in the library.
+pub fn surprise_me() -> String {
+    text("surprise-me", &[])
+}
+
+/// The same as a menu bar item, in title case.
+pub fn surprise_me_menu() -> String {
+    text("surprise-me-menu", &[])
+}
+
+/// Button on a picked title's page that swaps it for another pick. It takes the place of Surprise me for that visit.
+pub fn surprise_another() -> String {
+    text("surprise-another", &[])
+}
+
+/// Hint of the Surprise me button on the library's Planning list.
+pub fn surprise_hint_planning() -> String {
+    text("surprise-hint-planning", &[])
+}
+
+/// Hint of the Surprise me button in Search.
+pub fn surprise_hint_filters() -> String {
+    text("surprise-hint-filters", &[])
+}
+
+/// Hint of the Another button.
+pub fn surprise_another_hint() -> String {
+    text("surprise-another-hint", &[])
+}
+
+/// Notice when Search's filters match no title to pick from.
+pub fn surprise_empty_filters() -> String {
+    text("surprise-empty-filters", &[])
+}
+
+/// Notice when the Planning list is empty.
+pub fn surprise_empty_planning() -> String {
+    text("surprise-empty-planning", &[])
+}
+
+/// Notice when a pick from Search needs AniList and the device is offline.
+pub fn surprise_offline() -> String {
+    text("surprise-offline", &[])
+}
+
 /// Title of the dialog that adds a media server.
 pub fn servers_add_title() -> String {
     text("servers-add-title", &[])
@@ -15110,6 +15425,106 @@ pub fn episode_spoiler_hidden() -> String {
     text("episode-spoiler-hidden", &[])
 }
 
+/// Hint of a protected episode's row, and its still's label in a preview: the synopsis is hidden.
+pub fn episode_synopsis_hidden() -> String {
+    text("episode-synopsis-hidden", &[])
+}
+
+/// Menu item, button and screen reader action that reveals one protected episode's still and synopsis.
+pub fn episode_synopsis_show() -> String {
+    text("episode-synopsis-show", &[])
+}
+
+/// Screen reader hint of that action.
+pub fn episode_synopsis_show_hint() -> String {
+    text("episode-synopsis-show-hint", &[])
+}
+
+/// Facts line of an episode with a length and an air date. The date is already formatted.
+pub fn episode_facts(minutes: i64, date: &str) -> String {
+    text("episode-facts", &[("minutes", Arg::Int(minutes)), ("date", Arg::Text(date))])
+}
+
+/// Facts line of an episode with a length only.
+pub fn episode_facts_length(minutes: i64) -> String {
+    text("episode-facts-length", &[("minutes", Arg::Int(minutes))])
+}
+
+/// Facts line of an episode that is part-watched.
+pub fn episode_facts_left(minutes: i64) -> String {
+    text("episode-facts-left", &[("minutes", Arg::Int(minutes))])
+}
+
+/// One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.
+pub fn episode_protection_line(episode: i64) -> String {
+    text("episode-protection-line", &[("episode", Arg::Int(episode))])
+}
+
+/// The same line on phones.
+pub fn episode_protection_line_short(episode: i64) -> String {
+    text("episode-protection-line-short", &[("episode", Arg::Int(episode))])
+}
+
+/// Label of an episode range of a long series, in the range menu.
+pub fn episode_range(from: i64, to: i64) -> String {
+    text("episode-range", &[("from", Arg::Int(from)), ("to", Arg::Int(to))])
+}
+
+/// Label of the control that picks an episode range.
+pub fn episode_range_label() -> String {
+    text("episode-range-label", &[])
+}
+
+/// One line that stands for the watched episodes at the top of a range. Opening it shows them.
+pub fn episode_fold(count: i64) -> String {
+    text("episode-fold", &[("count", Arg::Int(count))])
+}
+
+/// An episode's number in a facts line on phones.
+pub fn episode_short(episode: i64) -> String {
+    text("episode-short", &[("episode", Arg::Int(episode))])
+}
+
+/// Part of an episode's facts line: when it aired. The date is already formatted.
+pub fn episode_aired(date: &str) -> String {
+    text("episode-aired", &[("date", Arg::Text(date))])
+}
+
+/// Two parts of an episode's facts line, set one after the other.
+pub fn episode_facts_join(first: &str, second: &str) -> String {
+    text("episode-facts-join", &[("first", Arg::Text(first)), ("second", Arg::Text(second))])
+}
+
+/// Button in the line where spoiler protection starts: shows what comes after.
+pub fn episode_protection_show() -> String {
+    text("episode-protection-show", &[])
+}
+
+/// Button in that line once the rows after it are shown: hides them again.
+pub fn episode_protection_hide() -> String {
+    text("episode-protection-hide", &[])
+}
+
+/// The line where spoiler protection starts, once the rows after it are shown.
+pub fn episode_protection_shown(episode: i64) -> String {
+    text("episode-protection-shown", &[("episode", Arg::Int(episode))])
+}
+
+/// The same line on phones.
+pub fn episode_protection_shown_short(episode: i64) -> String {
+    text("episode-protection-shown-short", &[("episode", Arg::Int(episode))])
+}
+
+/// An episode range in the range menu: the first and the last episode.
+pub fn episode_range_short(from: &str, to: &str) -> String {
+    text("episode-range-short", &[("from", Arg::Text(from)), ("to", Arg::Text(to))])
+}
+
+/// An item of the range menu: the range, then Watched or Not out yet.
+pub fn episode_range_item(range: &str, state: &str) -> String {
+    text("episode-range-item", &[("range", Arg::Text(range)), ("state", Arg::Text(state))])
+}
+
 /// Accessibility label of the button that opens an episode's menu.
 pub fn episode_options() -> String {
     text("episode-options", &[])
@@ -15303,6 +15718,36 @@ pub fn title_fact_tba() -> String {
 /// A followed person's status and score, such as "Completed · 9/10". The status is already worded.
 pub fn more_following_line(status: &str, score: i64) -> String {
     text("more-following-line", &[("status", Arg::Text(status)), ("score", Arg::Int(score))])
+}
+
+/// Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.
+pub fn episode_go_to() -> String {
+    text("episode-go-to", &[])
+}
+
+/// Title of the Go to episode field.
+pub fn episode_go_to_title() -> String {
+    text("episode-go-to-title", &[])
+}
+
+/// Placeholder of the Go to episode field: the first and last episode of the show.
+pub fn episode_go_to_hint(first: i64, last: i64) -> String {
+    text("episode-go-to-hint", &[("first", Arg::Int(first)), ("last", Arg::Int(last))])
+}
+
+/// Accessibility label of the Go to episode field.
+pub fn episode_go_to_label(first: i64, last: i64) -> String {
+    text("episode-go-to-label", &[("first", Arg::Int(first)), ("last", Arg::Int(last))])
+}
+
+/// Shown when the number typed is not an episode of the show.
+pub fn episode_go_to_none(number: i64, last: i64) -> String {
+    text("episode-go-to-none", &[("number", Arg::Int(number)), ("last", Arg::Int(last))])
+}
+
+/// Shown when the number typed is an episode with no date that has not come out.
+pub fn episode_go_to_not_out(number: i64, latest: i64) -> String {
+    text("episode-go-to-not-out", &[("number", Arg::Int(number)), ("latest", Arg::Int(latest))])
 }
 
 /// Title of the settings group and the screen.

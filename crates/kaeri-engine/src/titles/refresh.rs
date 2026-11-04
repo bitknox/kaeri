@@ -120,7 +120,7 @@ pub fn relist(
     tx: &Outbox,
 ) {
     services.prefetch.clear();
-    engine.dubs.forget(id);
+    engine.dubs.forget(id, &services.store);
     engine.names.forget(id);
     if !engine.listed.has(id) {
         return;

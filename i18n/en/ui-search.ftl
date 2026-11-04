@@ -300,3 +300,237 @@ search-available-services = On your services
 # End of a search result's line: one of the person's licensed services has it.
 # @arg service: text
 search-line-service = On { $service }
+
+## Counts, the dub, trending periods and picks
+
+# The count line under a title in a list or on a card: how many episodes a finished show has.
+# @arg count: int
+# @max 24
+count-episodes = { $count ->
+    [one] One episode
+   *[other] { $count } episodes
+ }
+
+# The same, short, for a cell too narrow for the long form.
+# @arg count: int
+# @max 12
+count-episodes-short = { $count } ep
+
+# The count line of a show that is airing and has a known total: episodes out so far, then the total.
+# @arg out: int
+# @arg total: int
+# @max 24
+count-out-of = { $out } of { $total } out
+
+# The same, short.
+# @arg out: int
+# @arg total: int
+# @max 16
+count-out-of-short = { $out } of { $total }
+
+# The count line of a show that is airing and has no known total: episodes out so far.
+# @arg count: int
+# @max 24
+count-out = { $count ->
+    [one] One episode out
+   *[other] { $count } episodes out
+ }
+
+# The same, short.
+# @arg count: int
+# @max 12
+count-out-short = { $count } out
+
+# The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.
+# @arg date: text
+# @max 24
+count-starts = Starts { $date }
+
+# The count line of a show that has not started and has no date.
+# @max 24
+count-not-out = Not out yet
+
+# The count line of a show the viewer is part way through, in the library: the next episode and the total.
+# @arg episode: int
+# @arg total: int
+# @max 24
+count-next-of = Ep { $episode } of { $total }
+
+# The dub part of a count line when a source has a dub and does not say how far it goes.
+# @max 12
+count-dub = Dub
+
+# The dub part of a count line: the last episode the dub has.
+# @arg through: int
+# @max 12
+count-dub-through = Dub { $through }
+
+# What a screen reader says for a count line: the long form of a finished show.
+# @arg count: int
+count-spoken-episodes = { $count ->
+    [one] One episode
+   *[other] { $count } episodes
+ }
+
+# What a screen reader says for a show that is airing, with a known total.
+# @arg out: int
+# @arg total: int
+count-spoken-out-of = { $out } of { $total } episodes out
+
+# What a screen reader says for a show that is airing with no known total.
+# @arg count: int
+count-spoken-out = { $count ->
+    [one] One episode out
+   *[other] { $count } episodes out
+ }
+
+# What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.
+# @arg date: text
+count-spoken-starts = Starts { $date }
+
+# What a screen reader says for a show the viewer is part way through.
+# @arg episode: int
+# @arg total: int
+count-spoken-next-of = Episode { $episode } of { $total }
+
+
+# What a screen reader says after the count when the dub goes to an episode.
+# @arg through: int
+count-spoken-dub-through = { -dubbed } to episode { $through }
+
+# What a screen reader says after the count when a source has a dub and does not say how far it goes.
+count-spoken-dub = has a dub
+
+# A month's short name, for "Starts 9 Jan".
+date-month-jan-short = Jan
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-jan-long = January
+
+# A month's short name, for "Starts 9 Jan".
+date-month-feb-short = Feb
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-feb-long = February
+
+# A month's short name, for "Starts 9 Jan".
+date-month-mar-short = Mar
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-mar-long = March
+
+# A month's short name, for "Starts 9 Jan".
+date-month-apr-short = Apr
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-apr-long = April
+
+# A month's short name, for "Starts 9 Jan".
+date-month-may-short = May
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-may-long = May
+
+# A month's short name, for "Starts 9 Jan".
+date-month-jun-short = Jun
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-jun-long = June
+
+# A month's short name, for "Starts 9 Jan".
+date-month-jul-short = Jul
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-jul-long = July
+
+# A month's short name, for "Starts 9 Jan".
+date-month-aug-short = Aug
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-aug-long = August
+
+# A month's short name, for "Starts 9 Jan".
+date-month-sep-short = Sep
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-sep-long = September
+
+# A month's short name, for "Starts 9 Jan".
+date-month-oct-short = Oct
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-oct-long = October
+
+# A month's short name, for "Starts 9 Jan".
+date-month-nov-short = Nov
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-nov-long = November
+
+# A month's short name, for "Starts 9 Jan".
+date-month-dec-short = Dec
+
+# A month's full name, for a screen reader's "Starts 9 January".
+date-month-dec-long = December
+
+# Search's Trending heading and sort, for AniList's live trending.
+# @max 24
+trending-today = Trending today
+
+# Search's Trending heading and sort, for the last seven days.
+# @max 24
+trending-week = Trending this week
+
+# Search's Trending heading and sort, for the last thirty days.
+# @max 26
+trending-month = Trending this month
+
+# One choice of the Trending period menu, where the heading already says Trending.
+# @max 16
+trending-choice-today = Today
+
+# One choice of the Trending period menu: the last seven days.
+# @max 16
+trending-choice-week = This week
+
+# One choice of the Trending period menu: the last thirty days.
+# @max 16
+trending-choice-month = This month
+
+# Shown in the Trending rail when a period could not load. The period is already worded, such as "this week".
+# @arg period: text
+trending-failed = Couldn't load { $period }'s trending.
+
+# Line under a period that was kept from earlier, with how long ago. The age is already worded, such as "yesterday".
+# @arg age: text
+trending-updated = Updated { $age }
+
+# Button that picks a random title from the screen it is on: the filters in Search, the Planning list in the library.
+# @max 20
+surprise-me = Surprise me
+
+# The same as a menu bar item, in title case.
+# @max 20
+surprise-me-menu = Surprise Me
+
+# Button on a picked title's page that swaps it for another pick. It takes the place of Surprise me for that visit.
+# @max 16
+surprise-another = Another
+
+# Hint of the Surprise me button on the library's Planning list.
+surprise-hint-planning = Opens a random title from Planning
+
+# Hint of the Surprise me button in Search.
+surprise-hint-filters = Opens a random title from these filters
+
+# Hint of the Another button.
+surprise-another-hint = Opens another random title in place of this one
+
+# Notice when Search's filters match no title to pick from.
+surprise-empty-filters = No titles match these filters.
+
+# Notice when the Planning list is empty.
+surprise-empty-planning = Planning is empty.
+
+# Notice when a pick from Search needs AniList and the device is offline.
+surprise-offline = Offline. Search picks need AniList.

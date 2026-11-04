@@ -108,6 +108,8 @@ pub struct EngineState {
     /// How far each title's dub goes, kept, and the lookup running: see
     /// [`crate::titles::dub`].
     pub dubs: crate::titles::dub::Dubs,
+    /// The last picks of Surprise me, and the counts of matches it asked.
+    pub picks: crate::catalog::surprise::Picks,
     /// The calendar's last window, kept ten minutes: see [`crate::catalog::calendar`].
     pub calendar: crate::catalog::calendar::CalendarMemory,
     /// Episode titles and stills another source gave a table without them, kept, and the
@@ -161,6 +163,7 @@ impl EngineState {
             ahead: Default::default(),
             search: Default::default(),
             dubs: Default::default(),
+            picks: Default::default(),
             calendar: Default::default(),
             names: Default::default(),
             listed: Default::default(),

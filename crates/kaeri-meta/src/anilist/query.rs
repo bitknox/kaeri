@@ -116,6 +116,76 @@ pub fn media_pages(
     (format!("query {head} {{\n{}\n}}", roots.join("\n")), serde_json::Value::Object(variables))
 }
 
+/// How many titles a browse matches, and nothing else of them: `perPage: 1` with the page's
+/// `total`, for Surprise me, which picks a random page of the whole. The arguments are those of
+/// [`media_pages`]; the page and its size are replaced.
+pub fn media_total(arguments: &[(Argument, serde_json::Value)]) -> (String, serde_json::Value) {
+    let mut declared = Vec::new();
+    let mut media_args = vec!["type: ANIME".to_owned()];
+    let mut variables = serde_json::Map::new();
+    for ((name, kind), value) in arguments {
+        if matches!(*name, "page" | "perPage") {
+            continue;
+        }
+        let variable = format!("r0_{name}");
+        declared.push(format!("${variable}: {kind}"));
+        variables.insert(variable.clone(), value.clone());
+        media_args.push(format!("{name}: ${variable}"));
+    }
+    let head =
+        if declared.is_empty() { String::new() } else { format!("({})", declared.join(", ")) };
+    (
+        format!(
+            "query {head} {{\nr0: Page(page: 1, perPage: 1) {{ pageInfo {{ total }} media({}) {{ id }} }}\n}}",
+            media_args.join(", ")
+        ),
+        serde_json::Value::Object(variables),
+    )
+}
+
+/// The last week's trending: the daily figures of the fifty highest rows since `$from`, each
+/// with its title's card, in one request. AniList's `mediaTrends` has one row per title per day.
+pub fn trend_week() -> String {
+    format!(
+        r"query ($from: Int) {{
+            Page(page: 1, perPage: 50) {{
+                mediaTrends(date_greater: $from, sort: TRENDING_DESC) {{
+                    mediaId trending media {{ {MEDIA_FIELDS} {LIST_LINKS} }}
+                }}
+            }}
+        }}"
+    )
+}
+
+/// The candidates for the last month's trending: four pages of the highest daily rows since
+/// `$from`, in one request, as ids and figures only. [`trend_month_series`] then asks each
+/// candidate's whole month.
+pub fn trend_month_candidates() -> String {
+    let pages: Vec<String> = (1..=4)
+        .map(|page| {
+            format!(
+                "p{page}: Page(page: {page}, perPage: 50) {{ mediaTrends(date_greater: $from, sort: TRENDING_DESC) {{ mediaId trending }} }}"
+            )
+        })
+        .collect();
+    format!("query ($from: Int) {{\n{}\n}}", pages.join("\n"))
+}
+
+/// The candidates' cards with their daily figures since `$from`, thirty-one rows at most each:
+/// what the month's ranking sums.
+pub fn trend_month_series() -> String {
+    format!(
+        r"query ($ids: [Int], $from: Int) {{
+            Page(perPage: 50) {{
+                media(id_in: $ids, type: ANIME) {{
+                    {MEDIA_FIELDS} {LIST_LINKS}
+                    trends(date_greater: $from, perPage: 31) {{ nodes {{ date trending }} }}
+                }}
+            }}
+        }}"
+    )
+}
+
 /// What the filters choose from: the genres, every tag with its category, and the streaming
 /// sites AniList links to. One request, asked about once a week, since these hardly change.
 pub const FACETS: &str = r"

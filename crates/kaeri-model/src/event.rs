@@ -6,6 +6,7 @@ use kaeri_core::{ids::AnilistId, traits::SourceCandidate};
 
 use crate::{
     Msg,
+    browsing::{SurpriseOutcome, SurprisePool, TrendPeriod},
     catalog::{ContentFor, ContentList, Entry, ResumePoint, TitleAired, TitleLanguage},
     discussion::DiscussionView,
     downloads::{DownloadRow, SeedRow},
@@ -491,6 +492,27 @@ pub enum Event {
     TitleDub {
         id: AnilistId,
         dub: Option<DubExtent>,
+    },
+    /// Trending over `period`, in answer to
+    /// [`Command::LoadTrending`](crate::command::Command::LoadTrending). `entries` is empty with
+    /// `failed` set when it could not load and nothing was kept; the rail shows its own failed
+    /// state. `updated_at` is when a kept answer was made, in Unix seconds, for "Updated
+    /// yesterday" on one that was not just fetched. `waiting` is how many seconds AniList asked
+    /// us to wait, when the budget is spent.
+    Trending {
+        period: TrendPeriod,
+        entries: Vec<Entry>,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        updated_at: Option<i64>,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        failed: bool,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        waiting: Option<u32>,
+    },
+    /// What a [`Command::Surprise`](crate::command::Command::Surprise) came to.
+    Surprise {
+        pool: SurprisePool,
+        outcome: SurpriseOutcome,
     },
     /// Where a title stands now, whole, after something moved it: a mark, the playhead of an
     /// episode playing, or how one ended. Sent ahead of the event that moved it, when an event

@@ -27,6 +27,9 @@ pub struct EpisodeProgress {
     pub watched: f64,
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub completed: bool,
+    /// [`EpisodeRow::spoiler_ahead`], worked out again for the title's next episode.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub spoiler_ahead: bool,
 }
 
 /// A playback's word on one episode: how far it got, of how long, and whether it counts as
@@ -68,7 +71,12 @@ impl Watch {
 
 impl From<&EpisodeRow> for EpisodeProgress {
     fn from(row: &EpisodeRow) -> Self {
-        Self { number: row.number.clone(), watched: row.watched, completed: row.completed }
+        Self {
+            number: row.number.clone(),
+            watched: row.watched,
+            completed: row.completed,
+            spoiler_ahead: row.spoiler_ahead,
+        }
     }
 }
 
@@ -259,6 +267,8 @@ mod tests {
                 source: None,
                 unsourced: false,
                 past_progress: false,
+                spoiler_ahead: false,
+                synopsis_pending: false,
             })
             .collect()
     }

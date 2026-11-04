@@ -35,6 +35,29 @@ episode-filler = Filler
 episode-row-not-out = Inte sänt än
 episode-row-airs = Sänds { $when }
 episode-spoiler-hidden = Dold av spoilerskydd
+episode-synopsis-hidden = Sammanfattning dold av spoilerskydd
+episode-synopsis-show = Visa sammanfattning
+episode-synopsis-show-hint = Visar avsnittets bild och sammanfattning
+episode-facts = { $minutes } min · Sändes { $date }
+episode-facts-length = { $minutes } min
+episode-facts-left = { $minutes } min kvar
+episode-protection-line = Spoilerskyddet döljer allt efter avsnitt { $episode }.
+episode-protection-line-short = Dolt efter avsnitt { $episode }
+episode-range = Avsnitt { $from } till { $to }
+episode-range-label = Avsnittsintervall
+episode-fold = { $count ->
+    [one] Ett sett avsnitt
+   *[other] { $count } sedda avsnitt
+ }
+episode-short = A{ $episode }
+episode-aired = Sändes { $date }
+episode-facts-join = { $first } · { $second }
+episode-protection-show = Visa
+episode-protection-hide = Dölj
+episode-protection-shown = Visar allt efter avsnitt { $episode }.
+episode-protection-shown-short = Visas efter avsnitt { $episode }
+episode-range-short = { $from }–{ $to }
+episode-range-item = { $range } · { $state }
 episode-options = Avsnittsalternativ
 episode-mark-watched = Markera som sett
 episode-mark-unwatched = Markera som osett
