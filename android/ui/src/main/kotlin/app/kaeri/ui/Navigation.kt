@@ -91,6 +91,9 @@ class Navigator(private val nav: NavHostController, private val start: Destinati
         nav.navigate(titleRoute(here, id)) { popUpTo(titlePattern(here)) { inclusive = true } }
     }
 
+    /** The container the host is drawn in, for a still of the page being replaced (Another with Remove animations on). */
+    var fade: app.kaeri.design.StillFade? = null
+
     /** The swap has settled. */
     fun replaced() {
         replacing = false

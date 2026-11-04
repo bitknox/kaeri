@@ -4,9 +4,9 @@
 
 package app.kaeri.tv.screens
 
-import androidx.compose.animation.Crossfade
 import androidx.compose.ui.semantics.heading
 import app.kaeri.design.Motion
+import app.kaeri.design.SwapFade
 import app.kaeri.engine.ffi.trendPeriodChoice
 import app.kaeri.engine.ffi.trendPeriods
 import app.kaeri.engine.ffi.trendPeriodLabel
@@ -533,7 +533,7 @@ private fun TrendingShelf(rail: app.kaeri.engine.model.BrowseRail, entries: Map<
             Text(Strings.trendingFailed(context, trendPeriodChoice(period).lowercase()), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Haze)
             TonalButton(onClick = { store.chooseTrending(period) }, modifier = Modifier.remembered(memory, "trending/retry")) { ButtonLabel(stringResource(R.string.action_try_again)) }
         } else {
-            Crossfade(held, animationSpec = Motion.standard(), label = "trending shelf") { shown -> // i18n-skip
+            SwapFade(held, animationSpec = Motion.standard(), label = "trending shelf") { shown -> // i18n-skip
                 Row(Modifier.focusRestorer().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(Canvas.CardGap)) {
                     for (entry in shown?.entries.orEmpty().take(10)) {
                         val now = entries[entry.id] ?: entry

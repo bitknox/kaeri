@@ -102,6 +102,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import app.kaeri.design.Motion
+import app.kaeri.design.SwapFade
 import app.kaeri.design.tabular
 import app.kaeri.engine.model.Bounds
 import app.kaeri.engine.model.BrowseRail
@@ -1014,7 +1015,7 @@ private fun TrendingRail(rail: BrowseRail, titles: Map<AnilistId, Entry>) {
             )
             QuietButton(stringResource(R.string.action_try_again)) { store.chooseTrending(period) }
         } else {
-            Crossfade(shown, animationSpec = Motion.standard(), label = "trending shelf") { answered -> // i18n-skip
+            SwapFade(shown, animationSpec = Motion.standard(), label = "trending shelf") { answered -> // i18n-skip
                 if (answered == null) {
                     Row(horizontalArrangement = Arrangement.spacedBy(13.dp)) {
                         repeat(4) { Box(Modifier.width(104.dp)) { PosterPlaceholder() } }

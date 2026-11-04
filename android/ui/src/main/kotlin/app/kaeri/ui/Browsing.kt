@@ -3,7 +3,8 @@
 
 package app.kaeri.ui
 
-import androidx.compose.animation.Crossfade
+import app.kaeri.design.SwapFade
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -147,7 +148,7 @@ internal fun SurpriseButton(pool: SurprisePool, modifier: Modifier = Modifier) {
             onClick = { store.surprise(pool) },
             modifier = Modifier.semantics { contentDescription = "$name. $hint" },
         ) {
-            Crossfade(slow, animationSpec = Motion.standard(), label = "surprise") { spinning -> // i18n-skip
+            SwapFade(slow, animationSpec = Motion.standard(), label = "surprise") { spinning -> // i18n-skip
                 if (spinning) {
                     CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                 } else {
@@ -181,11 +182,18 @@ internal fun AnotherButton(pick: SurprisePick, modifier: Modifier = Modifier) {
 internal fun SurpriseHost() {
     val store = LocalAppStore.current
     val navigator = LocalNavigator.current
+    val removed by rememberUpdatedState(app.kaeri.design.rememberAnimationsRemoved())
     LaunchedEffect(store) {
         store.surprise.picks.collect { pick ->
             if (pick.inPlace) {
-                navigator.replaceTitle(pick.id)
-                delay(600)
+                // With Remove animations on the host swaps at once, so a still of the old page fades out over the new.
+                val fade = navigator.fade
+                if (removed && fade != null) {
+                    fade.swap(fullSpeed = true) { navigator.replaceTitle(pick.id) }
+                } else {
+                    navigator.replaceTitle(pick.id)
+                    delay(600)
+                }
                 navigator.replaced()
             } else {
                 navigator.openTitle(pick.id, "surprise")
@@ -217,7 +225,7 @@ internal fun TrendingHeading(period: TrendPeriod, onPick: (TrendPeriod) -> Unit,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Crossfade(label, animationSpec = Motion.quick(), label = "trending heading") { // i18n-skip
+            SwapFade(label, animationSpec = Motion.quick(), label = "trending heading") { // i18n-skip
                 Text(it, style = MaterialTheme.typography.titleMedium)
             }
             Icon(Icons.Down, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
@@ -333,7 +341,7 @@ fun RangeChip(
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Crossfade(label, animationSpec = Motion.standard(), label = "range chip") { // i18n-skip
+            SwapFade(label, animationSpec = Motion.standard(), label = "range chip") { // i18n-skip
                 Text(it, style = MaterialTheme.typography.bodyMedium.tabular(), color = content)
             }
             Icon(Icons.Down, contentDescription = null, tint = content, modifier = Modifier.size(18.dp))

@@ -59,6 +59,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import app.kaeri.design.stillFade
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
@@ -220,6 +222,10 @@ fun AppRoot(
 ) {
     val nav = rememberNavController()
     val navigator = remember(nav) { Navigator(nav, start) }
+    // With Remove animations on, the page on screen is recorded, so Another can fade a still of it out.
+    val removed = app.kaeri.design.rememberAnimationsRemoved()
+    val pageFade = app.kaeri.design.rememberStillFade()
+    SideEffect { navigator.fade = pageFade }
     val sheets = remember { AppSheets() }
     // Whether Search is to open its field as it shows: a link to Search asked for it.
     var searchOpening by remember { mutableStateOf(false) }
@@ -354,7 +360,7 @@ fun AppRoot(
         ) { padding ->
             Row(Modifier.padding(padding).consumeWindowInsets(padding)) {
                 if (wide && !fullWindow && !onPlayer) Rail(current, entry?.destination?.route, navigator, routed)
-                SharedTransitionLayout {
+                SharedTransitionLayout(if (removed) Modifier.stillFade(pageFade) else Modifier) {
                     CompositionLocalProvider(LocalSharedTransitions provides this) {
                         NavHost(
                             nav,

@@ -102,6 +102,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import app.kaeri.design.ArtShape
 import app.kaeri.design.Motion
+import app.kaeri.design.stillFade
 import app.kaeri.design.Reveals
 import app.kaeri.engine.ffi.episodeText
 import androidx.compose.runtime.Stable
@@ -770,17 +771,39 @@ private fun SeasonPage(
     val synopses = rememberSynopsisPage(entry, episodes)
     // Go to episode: once the row's range is on screen, the list scrolls to put it at the top.
     val goal = synopses.goal
+    // A jump further than a screen, or any with Remove animations on, crossfades: a still of the page
+    // fades out over the list once it has landed, so it never streaks and never cuts.
+    val removed = app.kaeri.design.rememberAnimationsRemoved()
+    val jumpFade = app.kaeri.design.rememberStillFade()
+    val jumpScope = rememberCoroutineScope()
+    val jumping = remember { booleanArrayOf(false) }
     LaunchedEffect(goal, synopses.selected) {
+        if (jumping[0]) return@LaunchedEffect
         val row = synopses.rows.firstOrNull { it.number == goal } ?: return@LaunchedEffect
-        list.landOn(synopses.key(entry.id, row))
-        synopses.arrived()
+        val key = synopses.key(entry.id, row)
+        val near = list.layoutInfo.visibleItemsInfo.any { it.key == key }
+        if (removed || !near) {
+            // The fade outlives this effect, which restarts as the range changes under it.
+            jumping[0] = true
+            jumpScope.launch {
+                try {
+                    jumpFade.swap(fullSpeed = removed) { list.landOn(key) }
+                    synopses.arrived()
+                } finally {
+                    jumping[0] = false
+                }
+            }
+        } else {
+            list.landOn(key)
+            synopses.arrived()
+        }
     }
     androidx.compose.runtime.CompositionLocalProvider(LocalUserMarks provides marks) {
         // Every item moves as one when another comes or goes, as the title's details arrive: the
         // synopsis, the facts and Related fade in above the episodes as they make room, and the
         // placeholders of a season that had not arrived crossfade with what replaces them (T8).
         // Its ground hides the season it fades in over.
-        LazyColumn(state = list, modifier = modifier.pageGround(MaterialTheme.colorScheme.surface), contentPadding = PaddingValues(bottom = 24.dp)) {
+        LazyColumn(state = list, modifier = modifier.pageGround(MaterialTheme.colorScheme.surface).let { if (removed || synopses.asking || goal != null) it.stillFade(jumpFade) else it }, contentPadding = PaddingValues(bottom = 24.dp)) {
             item(key = "head", contentType = "head") {
                 if (crossfadeHead == null) {
                     TitleHead(entry, headEpisodes(entry.id), list, inset, shared)
@@ -1812,6 +1835,8 @@ internal class SynopsisPage(
     val goal: String? = null,
     /** Said when the list has scrolled to [goal]. */
     val arrived: () -> Unit = {},
+    /** Whether the Go to episode dialog is open, so the page is recorded for the crossfade after it. */
+    val asking: Boolean = false,
 ) {
     /** The rows shown: the selected range's, or all of a short series. */
     val rows: List<EpisodeRow> = if (ranges.isEmpty()) listed else rangeRows(listed, ranges[selected])
@@ -1848,7 +1873,7 @@ internal class SynopsisPage(
             // Keyed by the episode, so a row's own changes (text arriving, a mark) are not a crossfade.
             val latest = remember { mutableMapOf<String, EpisodeRow>() }
             latest[row.number] = row
-            androidx.compose.animation.Crossfade(row.number, animationSpec = Motion.standard(), label = "range-row") { content(latest[it] ?: row) } // i18n-skip
+            app.kaeri.design.SwapFade(row.number, animationSpec = Motion.standard(), label = "range-row") { content(latest[it] ?: row) } // i18n-skip
         }
     }
 }
@@ -1876,7 +1901,7 @@ private fun rememberSynopsisPage(entry: Entry, episodes: List<EpisodeRow>?): Syn
             goal = number
         })
     }
-    return SynopsisPage(listed, ranges, selected, { picked = it; landed = null }, outlook, protect, reveals, foldCount, { asking = true }, landed, goal, { goal = null })
+    return SynopsisPage(listed, ranges, selected, { picked = it; landed = null }, outlook, protect, reveals, foldCount, { asking = true }, landed, goal, { goal = null }, asking)
 }
 
 /**

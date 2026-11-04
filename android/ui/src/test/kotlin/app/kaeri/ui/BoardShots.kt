@@ -6,6 +6,8 @@ import org.robolectric.RuntimeEnvironment
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.getAllSemanticsNodes
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
@@ -17,6 +19,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -25,6 +28,7 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performScrollToKey
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
@@ -940,6 +944,112 @@ class BoardShots {
         }
     }
 
+    /** Loop D's setup: the long runner's range menu, then Go to episode with [typed] in its field, the clock held. */
+    private fun goToSetup(typed: String) {
+        // Only a recording draws the dialog's window, which its semantics need.
+        assumeTrue(com.github.takahirom.roborazzi.roborazziSystemPropertyTaskType().isEnabled())
+        toRanges()
+        compose.onNodeWithContentDescription("Episode range").performClick()
+        compose.waitForIdle()
+        // The field's cursor blinks for ever, so the clock is stepped, not waited for.
+        compose.mainClock.autoAdvance = false
+        compose.onNodeWithText("Go to episode", substring = true).performClick()
+        compose.mainClock.advanceTimeBy(600)
+        // Robolectric lays a window out as it draws one, so the dialog is drawn once to be read.
+        captureScreenRoboImage("${roborazziSystemPropertyOutputDirectory()}/phone-browse-go-to-scratch.png")
+        // The dialog's field blinks its cursor for ever and the test's idle wait never ends, so its
+        // semantics are read from the dialog's own window, its actions invoked on the UI thread and
+        // the clock stepped.
+        val field = dialogNodes().first { SemanticsActions.SetText in it.config }
+        compose.runOnUiThread { field.config[SemanticsActions.SetText].action?.invoke(androidx.compose.ui.text.AnnotatedString(typed)) }
+        compose.mainClock.advanceTimeBy(300)
+        captureScreenRoboImage("${roborazziSystemPropertyOutputDirectory()}/phone-browse-go-to-scratch.png")
+    }
+
+    /** The semantics of the dialog on screen, read without the test's idle wait. */
+    @OptIn(androidx.compose.ui.InternalComposeUiApi::class)
+    private fun dialogNodes(): List<androidx.compose.ui.semantics.SemanticsNode> {
+        fun find(view: android.view.View): androidx.compose.ui.node.RootForTest? =
+            (view as? androidx.compose.ui.node.RootForTest)
+                ?: (view as? android.view.ViewGroup)?.let { group -> (0 until group.childCount).firstNotNullOfOrNull { find(group.getChildAt(it)) } }
+        // Every window the app has: the activity's and a dialog's, each with a compose root.
+        val global = Class.forName("android.view.WindowManagerGlobal")
+        val manager = global.getMethod("getInstance").invoke(null)
+        @Suppress("UNCHECKED_CAST")
+        val names = global.getMethod("getViewRootNames").invoke(manager) as Array<String>
+        val getRoot = global.getMethod("getRootView", String::class.java)
+        return names.mapNotNull { find(getRoot.invoke(manager, it) as android.view.View) }
+            .flatMap { root -> runCatching { root.semanticsOwner.getAllSemanticsNodes(mergingEnabled = true) }.getOrDefault(emptyList()) }
+    }
+
+    /** The dialog's Go button, pressed on the UI thread. */
+    private fun pressGo() {
+        val go = dialogNodes().first { node -> node.config.getOrNull(SemanticsProperties.Text)?.any { it.text == "Go" } == true && SemanticsActions.OnClick in node.config }
+        compose.runOnUiThread { go.config[SemanticsActions.OnClick].action?.invoke() }
+    }
+
+    /** Loop D: Go to episode 215 from the range menu: the list and the chip's label crossfade to the other range. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_go_to_clip() = shoot("phone-browse-go-to-clip-end", BROWSING, title = 900001u, episodes = SynopsisFixtures::long, screen = true, settle = false) {
+        goToSetup("215")
+        frames("phone-browse-go-to-clip", clip, screen = true) { pressGo() }
+    }
+
+    /** Loop D with Remove animations on: still a crossfade, both ranges drawn, never a cut. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_go_to_clip_removed() = shoot("phone-browse-go-to-removed-clip-end", BROWSING, title = 900001u, episodes = SynopsisFixtures::long, screen = true, settle = false, removed = true) {
+        goToSetup("215")
+        frames("phone-browse-go-to-removed-clip", clip, screen = true) { pressGo() }
+    }
+
+    /** Loop E: a short jump inside the range on screen, 154 from 151: the list scrolls and the row takes the selected fill. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_short_jump_clip() = shoot("phone-browse-short-jump-clip-end", BROWSING, title = 900001u, episodes = SynopsisFixtures::long, screen = true, settle = false) {
+        goToSetup("154")
+        frames("phone-browse-short-jump-clip", clip, screen = true) { pressGo() }
+    }
+
+    /** Loop E with Remove animations on: the scrolled list crossfades in instead. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_short_jump_clip_removed() = shoot("phone-browse-short-jump-removed-clip-end", BROWSING, title = 900001u, episodes = SynopsisFixtures::long, screen = true, settle = false, removed = true) {
+        goToSetup("154")
+        frames("phone-browse-short-jump-removed-clip", clip, screen = true) { pressGo() }
+    }
+
+    /** Loops B, A and C with Remove animations on, recorded again as crossfades. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_period_clip_removed() = shoot("phone-browse-period-removed-clip-end", BROWSING, start = Destination.Search, screen = true, removed = true, before = { it.chooseTrending(app.kaeri.engine.model.TrendPeriod.TODAY) }) {
+        compose.onNodeWithText("Trending today").performClick()
+        compose.waitForIdle()
+        frames("phone-browse-period-removed-clip", clip, screen = true) { compose.onNodeWithText("This week").performClick() }
+    }
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_dub_arrives_clip_removed() = shoot("phone-browse-dub-removed-clip-end", BROWSING, start = Destination.Search, search = SearchQuery(text = "hoshi"), removed = true) { store ->
+        frames("phone-browse-dub-removed-clip", clip) {
+            store.apply((900002u..900006u).map { Event.TitleDub(it, app.kaeri.engine.model.DubExtent(through = 3u, complete = false)) })
+        }
+    }
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_another_clip_removed() = shoot("phone-browse-another-removed-clip-end", BROWSING, start = Destination.Search, removed = true) { store ->
+        store.apply(listOf(Event.Surprise(app.kaeri.engine.model.SurprisePool.Planning, app.kaeri.engine.model.SurpriseOutcome.Picked(900001u, true))))
+        compose.waitForIdle()
+        // Robolectric draws only to capture, so the page is drawn once for the layer that records it.
+        compose.onRoot().captureToImage()
+        frames("phone-browse-another-removed-clip", clip) {
+            store.surprise(app.kaeri.engine.model.SurprisePool.Planning, inPlace = true)
+            store.apply(listOf(Event.Surprise(app.kaeri.engine.model.SurprisePool.Planning, app.kaeri.engine.model.SurpriseOutcome.Picked(900003u, true))))
+        }
+    }
+
     /** The line's Show: the line crossfades, each row grows, then its text fades in. */
     @Test
     @Config(qualifiers = PHONE)
@@ -986,8 +1096,11 @@ class BoardShots {
         before: ((AppStore) -> Unit)? = null,
         /** The episode tables of the scene as they are sent: text and stills laid on, say. */
         episodes: ((AnilistId, List<EpisodeRow>) -> List<EpisodeRow>)? = null,
+        /** Remove animations on, the system's animator duration scale at 0, as a person turns it on. */
+        removed: Boolean = false,
         then: ((AppStore) -> Unit)? = null,
     ) {
+        if (removed) removeAnimations()
         val recorded = Scene.named(scene)
         AppClock.clock = Clock.fixed(recorded.recordedAt, ZONE)
         // The art the screens ask for, as the fake AniList serves it.
@@ -1034,6 +1147,11 @@ class BoardShots {
         if (screen) captureScreenRoboImage(file) else compose.onRoot().captureRoboImage(file)
     }
 
+
+    /** Remove animations, as the Settings switch sets it: the animator duration scale at 0. */
+    private fun removeAnimations() {
+        android.provider.Settings.Global.putFloat(androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>().contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 0f)
+    }
 
     /** Tap what [label] names, scrolled to first where it sits in a list. */
     private fun open(label: String) {

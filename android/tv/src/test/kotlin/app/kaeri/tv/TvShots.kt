@@ -237,6 +237,61 @@ class TvShots {
     @Test
     fun browse_results() = shoot("tv-browse-results", query = "hoshi", scene = BROWSING)
 
+    /** [change] captured as frames 33 ms apart, the clock held between them. */
+    private fun frames(name: String, change: () -> Unit) {
+        settle()
+        compose.mainClock.autoAdvance = false
+        change()
+        var now = 0L
+        for (ms in 0L..900L step 33L) {
+            compose.mainClock.advanceTimeBy(ms - now)
+            now = ms
+            compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/$name-$ms.png")
+        }
+        compose.mainClock.autoAdvance = true
+        settle()
+    }
+
+    private fun dubArrives() = shot.apply((900002u..900006u).map { Event.TitleDub(it, app.kaeri.engine.model.DubExtent(through = 3u, complete = false)) })
+
+    /** Loop A on TV: the dub part fades in on the end of each card's count line. */
+    @Test
+    fun browse_dub_arrives_clip() = shoot("tv-browse-dub-clip-end", query = "hoshi", scene = BROWSING) { frames("tv-browse-dub-clip") { dubArrives() } }
+
+    @Test
+    fun browse_dub_arrives_clip_removed() = shoot("tv-browse-dub-removed-clip-end", query = "hoshi", scene = BROWSING, removed = true) { frames("tv-browse-dub-removed-clip") { dubArrives() } }
+
+    /** Loop B on TV with Remove animations on: the shelf still crossfades. */
+    @Test
+    fun browse_period_clip_removed() = shoot("tv-browse-period-removed-clip-end", start = Destination.Search, scene = BROWSING, removed = true) {
+        shot.chooseTrending(app.kaeri.engine.model.TrendPeriod.TODAY)
+        frames("tv-browse-period-removed-clip") { shot.chooseTrending(app.kaeri.engine.model.TrendPeriod.WEEK) }
+    }
+
+    /** Surprise me on Planning: a tonal pill ending the header row, after the tabs. */
+    @Test
+    fun browse_planning_surprise() = shoot("tv-browse-planning-surprise", start = Destination.Library, scene = BROWSING) {
+        compose.onNodeWithText("Planning", substring = true).performSemanticsAction(SemanticsActions.OnClick)
+        settle()
+        compose.onNodeWithText("Surprise me").assertExists()
+    }
+
+    /** Another on TV: the title page crossfades to the pick, also with Remove animations on. */
+    @Test
+    fun browse_another_clip() = shoot("tv-browse-another-clip-end", start = Destination.Search, scene = BROWSING) {
+        shot.apply(listOf(Event.Surprise(app.kaeri.engine.model.SurprisePool.Planning, app.kaeri.engine.model.SurpriseOutcome.Picked(900001u, true))))
+        settle()
+        frames("tv-browse-another-clip") { shot.surprise(app.kaeri.engine.model.SurprisePool.Planning, inPlace = true); shot.apply(listOf(Event.Surprise(app.kaeri.engine.model.SurprisePool.Planning, app.kaeri.engine.model.SurpriseOutcome.Picked(900003u, false)))) }
+    }
+
+    @Test
+    fun browse_another_clip_removed() = shoot("tv-browse-another-removed-clip-end", start = Destination.Search, scene = BROWSING, removed = true) {
+        shot.apply(listOf(Event.Surprise(app.kaeri.engine.model.SurprisePool.Planning, app.kaeri.engine.model.SurpriseOutcome.Picked(900001u, true))))
+        settle()
+        frames("tv-browse-another-removed-clip") { shot.surprise(app.kaeri.engine.model.SurprisePool.Planning, inPlace = true); shot.apply(listOf(Event.Surprise(app.kaeri.engine.model.SurprisePool.Planning, app.kaeri.engine.model.SurpriseOutcome.Picked(900003u, false)))) }
+    }
+
+
     @Test
     fun browse_title_another() = shoot("tv-browse-title-another", start = Destination.Search, scene = BROWSING) {
         shot.apply(listOf(Event.Surprise(app.kaeri.engine.model.SurprisePool.Planning, app.kaeri.engine.model.SurpriseOutcome.Picked(900001u, true))))
@@ -1255,8 +1310,13 @@ class TvShots {
         pageHost: String? = null,
         /** The episode tables of the scene as they are sent: text and stills laid on, say. */
         episodes: ((AnilistId, List<app.kaeri.engine.model.EpisodeRow>) -> List<app.kaeri.engine.model.EpisodeRow>)? = null,
+        /** Remove animations on, the system's animator duration scale at 0, as a person turns it on. */
+        removed: Boolean = false,
         then: (() -> Unit)? = null,
     ) {
+        if (removed) {
+            android.provider.Settings.Global.putFloat(androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>().contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 0f)
+        }
         val recorded = Scene.named(scene)
         AppClock.clock = Clock.fixed(recorded.recordedAt, ZONE)
         val store = AppStore(scope, decoder = TvArtDecoder, artworkBudget = TV_ART_BUDGET, clock = { 0L }, artworkWithoutEngine = FixtureArt::bytes)
