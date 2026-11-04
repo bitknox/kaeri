@@ -1788,22 +1788,24 @@ impl Page {
             discuss.set_action_target_value(Some(&(id, row.number.clone()).to_variant()));
             text.append(&discuss);
 
-            // Three lines of synopsis in a box of fixed height. Beside the still the box is
+            // Two lines of synopsis beside the still, three under it, in a box of fixed height. Beside the still the box is
             // always there, so a reveal moves nothing; under it, only where the row is tall.
             let synopsis_label = gtk::Label::new(None);
             synopsis_label.add_css_class("haze");
+            synopsis_label.add_css_class("synopsis-text");
             synopsis_label.set_xalign(0.0);
             synopsis_label.set_yalign(0.0);
             synopsis_label.set_wrap(true);
             synopsis_label.set_wrap_mode(gtk::pango::WrapMode::Word);
-            synopsis_label.set_lines(3);
+            synopsis_label.set_lines(if narrow { 3 } else { 2 });
             synopsis_label.set_ellipsize(gtk::pango::EllipsizeMode::End);
             synopsis_label.set_hexpand(true);
             let room_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
             room_box.set_size_request(-1, synopsis::TEXT_HEIGHT);
             room_box.set_overflow(gtk::Overflow::Hidden);
             room_box.append(&synopsis_label);
-            room_box.set_margin_top(4);
+            // 2 px of the box's spacing plus 6 make the 8 px under the facts.
+            room_box.set_margin_top(6);
             if narrow {
                 room_box.set_visible(tall);
             } else {

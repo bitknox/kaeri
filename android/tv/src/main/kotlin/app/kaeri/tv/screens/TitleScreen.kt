@@ -742,23 +742,23 @@ private fun EpisodeCard(
         Text(
             title,
             style = MaterialTheme.typography.titleSmall,
-            color = if (row.completed || row.unsourced) ObiSilk.Haze else ObiSilk.Silk,
+            color = if (row.unsourced) ObiSilk.Haze else ObiSilk.Silk,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.clearAndSetSemantics {},
         )
         Text(
             facts,
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.bodySmall,
             color = ObiSilk.Haze,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.clearAndSetSemantics {},
+            modifier = Modifier.padding(top = 2.dp).clearAndSetSemantics {},
         )
         if (band) {
             // The room for text: it fades in on the fade-in token, and the focused card's goes from haze to silk.
             val room = with(density) { (EpisodeCardDims.BodyLine * EpisodeCardDims.Lines).toDp() }
-            Box(Modifier.padding(top = 6.dp).fillMaxWidth().height(room).clearAndSetSemantics {}) {
+            Box(Modifier.padding(top = 8.dp).fillMaxWidth().height(room).clearAndSetSemantics {}) {
                 androidx.compose.animation.Crossfade(synopsis, animationSpec = app.kaeri.design.Motion.fadeIn(), label = "synopsis") { shown -> // i18n-skip
                     if (shown != null) {
                         val color by androidx.compose.animation.animateColorAsState(if (focused) ObiSilk.Silk else ObiSilk.Haze, app.kaeri.design.Motion.quick(), label = "synopsis-color") // i18n-skip

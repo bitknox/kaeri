@@ -110,6 +110,8 @@ public sealed partial class EpisodeItem : INotifyPropertyChanged
     public int StillRowSpan => narrow ? 1 : 2;
     public int SynopsisColumn => narrow ? 0 : 1;
     public int SynopsisColumnSpan => narrow ? 3 : 1;
+    /// <summary>Two lines beside the still, where the row has less room; three under it.</summary>
+    public int SynopsisLines => narrow ? 3 : 2;
     public Thickness HeadMargin => narrow ? new Thickness(0) : new Thickness(0, 10, 0, 0);
     public VerticalAlignment HeadAlign => narrow ? VerticalAlignment.Center : VerticalAlignment.Top;
     public Thickness RowPad => narrow && room ? new Thickness(0, 8, 0, 8) : new Thickness(0);
@@ -141,7 +143,7 @@ public sealed partial class EpisodeItem : INotifyPropertyChanged
         room = Synopsis.HasRoom(outlook, held);
         blurOpacity = held && Row.Thumbnail is not null ? 1 : 0;
         var to = Synopsis.RowHeight(narrow, room);
-        Changed(nameof(StillWidth), nameof(StillHeight), nameof(StillRowSpan), nameof(SynopsisColumn), nameof(SynopsisColumnSpan),
+        Changed(nameof(StillWidth), nameof(StillHeight), nameof(StillRowSpan), nameof(SynopsisColumn), nameof(SynopsisColumnSpan), nameof(SynopsisLines),
             nameof(HeadMargin), nameof(HeadAlign), nameof(RowPad), nameof(TextVisible), nameof(BlurOpacity), nameof(Held), nameof(HeldShown),
             nameof(Tip), nameof(HelpText), nameof(RowHeading), nameof(HeadingWrap), nameof(HeadingLines), nameof(RowFacts));
         var text = Synopsis.TextOf(Row);
