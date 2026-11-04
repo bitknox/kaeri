@@ -84,18 +84,6 @@ pub fn group(ctx: &Rc<Ctx>) -> Option<adw::PreferencesGroup> {
             another.add_suffix(&pair);
             group.add(&another);
             rows.borrow_mut().push(another.upcast());
-            if let Some(short) = Some(ctx.tv.short_fingerprint()).filter(|c| !c.is_empty()) {
-                let code = gtk::Label::builder()
-                    .label(grouped(short))
-                    .css_classes(["monospace"])
-                    .selectable(true)
-                    .valign(gtk::Align::Center)
-                    .build();
-                let row = adw::ActionRow::builder().title(t::tv_code_row()).build();
-                row.add_suffix(&code);
-                group.add(&row);
-                rows.borrow_mut().push(row.upcast());
-            }
             true
         }
     };
@@ -142,22 +130,4 @@ fn confirm_forget(ctx: &Rc<Ctx>, paired: &KnownTv) {
         }
     });
     dialog.present(Some(&ctx.window));
-}
-
-/// The TV's code in groups of four, upper case, as a TV shows it.
-fn grouped(code: &str) -> String {
-    let code = code.to_uppercase();
-    code.as_bytes()
-        .chunks(4)
-        .map(|c| String::from_utf8_lossy(c).into_owned())
-        .collect::<Vec<_>>()
-        .join(" ")
-}
-
-#[cfg(test)]
-mod grouped_tests {
-    #[test]
-    fn code_reads_in_groups_of_four() {
-        assert_eq!(super::grouped("809420d8f5f8818d"), "8094 20D8 F5F8 818D");
-    }
 }
