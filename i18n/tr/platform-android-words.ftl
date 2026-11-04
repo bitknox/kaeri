@@ -191,7 +191,6 @@ tv-sheet-position = TV'deki konum
 tv-sheet-position-state = { $at } / { $total }
 tv-sheet-request-titled = { $title }, bölüm { $episode }
 tv-sheet-request-plain = Bölüm { $episode }
-tv-sheet-footer = Bir TV, bu { -device }ı { $code } koduyla listeler. Burada bir TV'yi unutursanız bu { -device } de unutulur.
 tv-sheet-title-fallback = TV
 episode-line-detail = E{ $number } · { $detail }
 calendar-day-label = { $day }

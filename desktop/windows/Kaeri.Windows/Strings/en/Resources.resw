@@ -1927,10 +1927,6 @@
     <value>Connecting to the TV</value>
     <comment>Title of the pairing sheet while it connects to a TV whose name it does not know yet.</comment>
   </data>
-  <data name="TvDeviceCode" xml:space="preserve">
-    <value>A TV lists this device with the code {code}. Forget a TV here and it forgets this device too.</value>
-    <comment>Under the paired TVs in Settings. The code is a few letters and digits the TV shows beside this { -device }.</comment>
-  </data>
   <data name="TvUnnamed" xml:space="preserve">
     <value>TV</value>
     <comment>What the remote calls a TV that has not said its name yet. Title of the remote.</comment>
@@ -11588,13 +11584,9 @@
     <value>Up next · plays in {seconds} s</value>
     <comment>Line over the next episode on the casting card while its count runs. At 0 the TV plays it.</comment>
   </data>
-  <data name="TvCodeRow" xml:space="preserve">
-    <value>Code on TVs</value>
-    <comment>Play on TV row holding the code a TV lists this device by, shown in groups of four.</comment>
-  </data>
   <data name="TvForgetNote" xml:space="preserve">
     <value>Forget a TV here and it forgets this device too.</value>
-    <comment>Line under the paired TVs, now that the code has its own row.</comment>
+    <comment>Line under the paired TVs.</comment>
   </data>
   <data name="UpdatesTitle" xml:space="preserve">
     <value>Updates</value>

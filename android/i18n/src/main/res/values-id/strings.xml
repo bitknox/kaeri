@@ -663,7 +663,6 @@
     <string name="tv_sheet_position_state">%1$s dari %2$s</string>
     <string name="tv_sheet_request_titled">%1$s, episode %2$s</string>
     <string name="tv_sheet_request_plain">Episode %1$s</string>
-    <string name="tv_sheet_footer">TV mencantumkan perangkat ini dengan kode %1$s. Jika Anda melupakan TV di sini, TV juga akan melupakan perangkat ini.</string>
     <string name="tv_sheet_title_fallback">TV</string>
     <string name="episode_line_detail">E%1$d · %2$s</string>
     <string name="calendar_day_label">%1$s</string>

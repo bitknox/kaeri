@@ -26488,12 +26488,6 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
-  "tv-device-code": {
-    "source": "ea15a7546a7c",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "tv-discussion-count-read-only": {
     "source": "b6369bed1b89",
     "state": "draft",
@@ -26548,12 +26542,6 @@
     "source": "03e3ed8ae92b",
     "state": "draft",
     "by": "haiku",
-    "at": "2026-10-31"
-  },
-  "tv-fingerprint-note": {
-    "source": "ea15a7546a7c",
-    "state": "draft",
-    "by": "agent",
     "at": "2026-10-31"
   },
   "tv-forget-detail": {
@@ -27529,12 +27517,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Connecting to the TV"
-  },
-  "tv-sheet-footer": {
-    "source": "ea15a7546a7c",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
   },
   "tv-sheet-not-listed": {
     "source": "80a19a6b04bd",

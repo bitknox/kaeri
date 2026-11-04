@@ -762,7 +762,6 @@
     <string name="tv_sheet_position_state">%1$s z %2$s</string>
     <string name="tv_sheet_request_titled">%1$s, odcinek %2$s</string>
     <string name="tv_sheet_request_plain">Odcinek %1$s</string>
-    <string name="tv_sheet_footer">Telewizor pokazuje to urządzenie z kodem %1$s. Usunięcie telewizora tutaj usuwa też to urządzenie.</string>
     <string name="tv_sheet_title_fallback">Telewizor</string>
     <string name="episode_line_detail">Odc. %1$d · %2$s</string>
     <string name="calendar_day_label">%1$s</string>

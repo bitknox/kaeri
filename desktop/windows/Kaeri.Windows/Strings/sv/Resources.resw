@@ -1409,9 +1409,6 @@
   <data name="TvConnectingToTv" xml:space="preserve">
     <value>Ansluter till TV:n</value>
   </data>
-  <data name="TvDeviceCode" xml:space="preserve">
-    <value>En TV visar den här enheten med koden {code}. Om du glömmer en TV här glöms även den här enheten bort.</value>
-  </data>
   <data name="TvUnnamed" xml:space="preserve">
     <value>TV</value>
   </data>

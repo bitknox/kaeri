@@ -11268,10 +11268,7 @@ public enum L {
         Self.format("tv-cast-up-next-in", fallback: "Up next · plays in %1$lld s", seconds)
     }
 
-    /// Play on TV row holding the code a TV lists this device by, shown in groups of four.
-    public static var tvCodeRow: String { string("tv-code-row", fallback: "Code on TVs") }
-
-    /// Line under the paired TVs, now that the code has its own row.
+    /// Line under the paired TVs.
     public static var tvForgetNote: String { string("tv-forget-note", fallback: "Forget a TV here and it forgets this device too.") }
 
     /// Heading of the update row in settings and about.

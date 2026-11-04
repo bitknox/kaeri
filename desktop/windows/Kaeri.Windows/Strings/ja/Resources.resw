@@ -1340,9 +1340,6 @@
   <data name="TvConnectingToTv" xml:space="preserve">
     <value>テレビに接続しています</value>
   </data>
-  <data name="TvDeviceCode" xml:space="preserve">
-    <value>テレビには、このデバイスがコード{code}で表示されます。ここでテレビの登録を解除すると、テレビ側でもこのデバイスの登録が解除されます。</value>
-  </data>
   <data name="TvUnnamed" xml:space="preserve">
     <value>テレビ</value>
   </data>

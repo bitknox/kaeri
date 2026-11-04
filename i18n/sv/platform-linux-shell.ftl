@@ -45,7 +45,6 @@ tv-none-found-announce = Ingen tv hittades. { $detail }
 tv-title-episode = { $title }, avsnitt { $episode }
 tv-episode = Avsnitt { $episode }
 tv-episode-titled = Avsnitt { $episode } · { $title }
-tv-fingerprint-note = En tv listar den här { -device }en med koden { $code }. Om du glömmer en tv här glöms även den här { -device }en.
 tv-paired-seen-now = { $paired } · sedd just nu
 tv-track-choice = { $row }, { $track }
 shell-device-label = Linux-dator

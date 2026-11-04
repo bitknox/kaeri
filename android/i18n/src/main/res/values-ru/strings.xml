@@ -762,7 +762,6 @@
     <string name="tv_sheet_position_state">%1$s из %2$s</string>
     <string name="tv_sheet_request_titled">%1$s, эпизод %2$s</string>
     <string name="tv_sheet_request_plain">Эпизод %1$s</string>
-    <string name="tv_sheet_footer">Телевизор показывает это устройство с кодом %1$s. Если удалить телевизор здесь, он забудет и это устройство.</string>
     <string name="tv_sheet_title_fallback">Телевизор</string>
     <string name="episode_line_detail">Эп. %1$d · %2$s</string>
     <string name="calendar_day_label">%1$s</string>

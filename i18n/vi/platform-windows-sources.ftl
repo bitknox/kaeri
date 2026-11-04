@@ -2,7 +2,6 @@ tv-picker-episode-of = { $title }, tập { $episode }
 episode-label = Tập { $episode }
 episode-label-of = Tập { $episode } của { $title }
 tv-connecting-to-tv = Đang kết nối với TV
-tv-device-code = TV hiển thị { -device } này với mã { $code }. Quên TV ở đây cũng quên { -device } này.
 tv-unnamed = TV
 tv-another-short = TV khác…
 tv-volume-label = Âm lượng TV

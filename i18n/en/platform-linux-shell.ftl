@@ -200,11 +200,6 @@ tv-episode = Episode { $episode }
 # @arg title: text
 tv-episode-titled = Episode { $episode } · { $title }
 
-# Explains the code a TV lists this computer by, above the paired TVs in the settings.
-# @only linux
-# @arg code: text
-tv-fingerprint-note = A TV lists this { -device } with the code { $code }. Forget a TV here and it forgets this { -device } too.
-
 # Settings line of a paired TV: paired on a date, reached in the last minute.
 # @only linux
 # @arg paired: text

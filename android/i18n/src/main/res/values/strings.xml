@@ -1321,8 +1321,6 @@
     <string name="tv_sheet_request_titled">%1$s, episode %2$s</string>
     <!-- TV sheet, picker: the episode a play request is for, with no show. -->
     <string name="tv_sheet_request_plain">Episode %1$s</string>
-    <!-- Settings, Play on TV: the note under the paired TVs. -->
-    <string name="tv_sheet_footer">A TV lists this device with the code %1$s. Forget a TV here and it forgets this device too.</string>
     <!-- TV sheet, remote: the sheet's title when the TV has no name yet. -->
     <string name="tv_sheet_title_fallback">TV</string>
     <!-- Episode row, second line: the episode's number, then a detail such as its length or air time. -->
@@ -6192,9 +6190,7 @@
     <string name="tv_cast_volume_on_tv">Set on the TV</string>
     <!-- Line over the next episode on the casting card while its count runs. At 0 the TV plays it. -->
     <string name="tv_cast_up_next_in">Up next · plays in %1$d s</string>
-    <!-- Play on TV row holding the code a TV lists this device by, shown in groups of four. -->
-    <string name="tv_code_row">Code on TVs</string>
-    <!-- Line under the paired TVs, now that the code has its own row. -->
+    <!-- Line under the paired TVs. -->
     <string name="tv_forget_note">Forget a TV here and it forgets this device too.</string>
     <!-- Heading of the update row in settings and about. -->
     <string name="updates_title">Updates</string>

@@ -1340,9 +1340,6 @@
   <data name="TvConnectingToTv" xml:space="preserve">
     <value>Đang kết nối với TV</value>
   </data>
-  <data name="TvDeviceCode" xml:space="preserve">
-    <value>TV hiển thị thiết bị này với mã {code}. Quên TV ở đây cũng quên thiết bị này.</value>
-  </data>
   <data name="TvUnnamed" xml:space="preserve">
     <value>TV</value>
   </data>

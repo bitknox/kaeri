@@ -1375,9 +1375,6 @@ tv-episode = Episode { $episode }
 # Line on the remote under the show: the episode, then its title.
 tv-episode-titled = Episode { $episode } · { $title }
 
-# Explains the code a TV lists this computer by, above the paired TVs in the settings.
-tv-fingerprint-note = A TV lists this device with the code { $code }. Forget a TV here and it forgets this device too.
-
 # Settings line of a paired TV: paired on a date, reached in the last minute.
 tv-paired-seen-now = { $paired } · seen just now
 
@@ -11393,10 +11390,7 @@ tv-cast-volume-on-tv = Set on the TV
 # Line over the next episode on the casting card while its count runs. At 0 the TV plays it.
 tv-cast-up-next-in = Up next · plays in { $seconds } s
 
-# Play on TV row holding the code a TV lists this device by, shown in groups of four.
-tv-code-row = Code on TVs
-
-# Line under the paired TVs, now that the code has its own row.
+# Line under the paired TVs.
 tv-forget-note = Forget a TV here and it forgets this device too.
 
 # Heading of the update row in settings and about.

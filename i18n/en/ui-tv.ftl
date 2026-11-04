@@ -253,8 +253,5 @@ tv-cast-volume-on-tv = Set on the TV
 # @arg seconds: int
 tv-cast-up-next-in = { -up-next-cap } · plays in { $seconds } s
 
-# Play on TV row holding the code a TV lists this device by, shown in groups of four.
-tv-code-row = Code on TVs
-
-# Line under the paired TVs, now that the code has its own row.
+# Line under the paired TVs.
 tv-forget-note = Forget a TV here and it forgets this { -device } too.

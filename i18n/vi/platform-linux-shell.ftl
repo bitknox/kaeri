@@ -42,7 +42,6 @@ tv-none-found-announce = Không tìm thấy TV nào. { $detail }
 tv-title-episode = { $title }, tập { $episode }
 tv-episode = Tập { $episode }
 tv-episode-titled = Tập { $episode } · { $title }
-tv-fingerprint-note = TV liệt kê { -device } này bằng mã { $code }. Quên một TV ở đây cũng sẽ quên { -device } này.
 tv-paired-seen-now = { $paired } · vừa thấy
 tv-track-choice = { $row }, { $track }
 shell-device-label = Máy tính Linux

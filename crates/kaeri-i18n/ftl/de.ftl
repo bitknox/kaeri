@@ -1339,9 +1339,6 @@ tv-episode = Folge { $episode }
 # Line on the remote under the show: the episode, then its title.
 tv-episode-titled = Folge { $episode } · { $title }
 
-# Explains the code a TV lists this computer by, above the paired TVs in the settings.
-tv-fingerprint-note = Ein Fernseher listet dieses Gerät mit dem Code { $code } auf. Wenn du hier einen Fernseher vergisst, vergisst er auch dieses Gerät.
-
 # Settings line of a paired TV: paired on a date, reached in the last minute.
 tv-paired-seen-now = { $paired } · gerade eben gesehen
 

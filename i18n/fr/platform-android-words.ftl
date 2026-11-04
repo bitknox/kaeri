@@ -203,7 +203,6 @@ tv-sheet-position = Position sur la TV
 tv-sheet-position-state = { $at } sur { $total }
 tv-sheet-request-titled = { $title }, épisode { $episode }
 tv-sheet-request-plain = Épisode { $episode }
-tv-sheet-footer = Une TV affiche cet { -device } avec le code { $code }. Oublier une TV ici l’oublie aussi pour cet { -device }.
 tv-sheet-title-fallback = TV
 episode-line-detail = E{ $number } · { $detail }
 calendar-day-label = { $day }

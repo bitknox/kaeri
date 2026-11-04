@@ -23531,12 +23531,6 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "tv-device-code": {
-    "source": "ea15a7546a7c",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "tv-discussion-count-read-only": {
     "source": "b6369bed1b89",
     "state": "draft",
@@ -23587,12 +23581,6 @@
   },
   "tv-field-user-optional": {
     "source": "03e3ed8ae92b",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "tv-fingerprint-note": {
-    "source": "ea15a7546a7c",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
@@ -24481,12 +24469,6 @@
   },
   "tv-sheet-connecting": {
     "source": "1721dca025e2",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "tv-sheet-footer": {
-    "source": "ea15a7546a7c",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"

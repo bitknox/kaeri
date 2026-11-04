@@ -26653,13 +26653,6 @@
     "at": "2026-10-31",
     "back": "Kaeri cannot connect with AniList right now."
   },
-  "tv-device-code": {
-    "source": "ea15a7546a7c",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "A television shows this device with the code { $code }. If you forget a television here, it also forgets this device."
-  },
   "tv-discussion-count-read-only": {
     "source": "b6369bed1b89",
     "state": "draft",
@@ -26722,13 +26715,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "User, if they ask for it"
-  },
-  "tv-fingerprint-note": {
-    "source": "ea15a7546a7c",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "A television shows this device with the code { $code }. If you forget a television here, it also forgets this device."
   },
   "tv-forget-detail": {
     "source": "c183eb8b0c91",
@@ -27767,13 +27753,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Connecting with the TV"
-  },
-  "tv-sheet-footer": {
-    "source": "ea15a7546a7c",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "A TV shows this device with the code { $code }. If you forget a TV here, it also forgets this device."
   },
   "tv-sheet-not-listed": {
     "source": "80a19a6b04bd",

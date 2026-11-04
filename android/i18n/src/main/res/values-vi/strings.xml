@@ -663,7 +663,6 @@
     <string name="tv_sheet_position_state">%1$s trên %2$s</string>
     <string name="tv_sheet_request_titled">%1$s, tập %2$s</string>
     <string name="tv_sheet_request_plain">Tập %1$s</string>
-    <string name="tv_sheet_footer">TV sẽ thấy thiết bị này với mã %1$s. Quên TV ở đây cũng sẽ quên thiết bị này.</string>
     <string name="tv_sheet_title_fallback">TV</string>
     <string name="episode_line_detail">E%1$d · %2$s</string>
     <string name="calendar_day_label">%1$s</string>

@@ -696,7 +696,6 @@
     <string name="tv_sheet_position_state">%1$s av %2$s</string>
     <string name="tv_sheet_request_titled">%1$s, avsnitt %2$s</string>
     <string name="tv_sheet_request_plain">Avsnitt %1$s</string>
-    <string name="tv_sheet_footer">En TV listar den här enheten med koden %1$s. Tar du bort en TV här glömmer den också den här enheten.</string>
     <string name="tv_sheet_title_fallback">TV</string>
     <string name="episode_line_detail">E%1$d · %2$s</string>
     <string name="calendar_day_label">%1$s</string>

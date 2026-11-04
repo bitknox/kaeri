@@ -1365,9 +1365,6 @@ public static partial class T
     /// <summary>Title of the pairing sheet while it connects to a TV whose name it does not know yet.</summary>
     public static string TvConnectingToTv => Get("TvConnectingToTv");
 
-    /// <summary>Under the paired TVs in Settings. The code is a few letters and digits the TV shows beside this { -device }.</summary>
-    public static string TvDeviceCode(string code) => Fill(Get("TvDeviceCode"), ("code", code));
-
     /// <summary>What the remote calls a TV that has not said its name yet. Title of the remote.</summary>
     public static string TvUnnamed => Get("TvUnnamed");
 
@@ -8459,10 +8456,7 @@ public static partial class T
     /// <summary>Line over the next episode on the casting card while its count runs. At 0 the TV plays it.</summary>
     public static string TvCastUpNextIn(long seconds) => Fill(Get("TvCastUpNextIn"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
-    /// <summary>Play on TV row holding the code a TV lists this device by, shown in groups of four.</summary>
-    public static string TvCodeRow => Get("TvCodeRow");
-
-    /// <summary>Line under the paired TVs, now that the code has its own row.</summary>
+    /// <summary>Line under the paired TVs.</summary>
     public static string TvForgetNote => Get("TvForgetNote");
 
     /// <summary>Heading of the update row in settings and about.</summary>
@@ -9162,7 +9156,6 @@ public static partial class T
         ["EpisodeLabel"] = "Episode {episode}",
         ["EpisodeLabelOf"] = "Episode {episode} of {title}",
         ["TvConnectingToTv"] = "Connecting to the TV",
-        ["TvDeviceCode"] = "A TV lists this device with the code {code}. Forget a TV here and it forgets this device too.",
         ["TvUnnamed"] = "TV",
         ["TvAnotherShort"] = "Another TV…",
         ["TvVolumeLabel"] = "TV volume",
@@ -11585,7 +11578,6 @@ public static partial class T
         ["TvCastUnmute"] = "Unmute",
         ["TvCastVolumeOnTv"] = "Set on the TV",
         ["TvCastUpNextIn"] = "Up next · plays in {seconds} s",
-        ["TvCodeRow"] = "Code on TVs",
         ["TvForgetNote"] = "Forget a TV here and it forgets this device too.",
         ["UpdatesTitle"] = "Updates",
         ["UpdatesChecking"] = "Checking for a newer version…",

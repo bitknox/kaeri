@@ -696,7 +696,6 @@
     <string name="tv_sheet_position_state">%1$s von %2$s</string>
     <string name="tv_sheet_request_titled">%1$s, Episode %2$s</string>
     <string name="tv_sheet_request_plain">Episode %1$s</string>
-    <string name="tv_sheet_footer">Ein Fernseher listet dieses Gerät mit dem Code %1$s auf. Wenn du hier einen Fernseher vergisst, vergisst er auch dieses Gerät.</string>
     <string name="tv_sheet_title_fallback">Fernseher</string>
     <string name="episode_line_detail">E%1$d · %2$s</string>
     <string name="calendar_day_label">%1$s</string>

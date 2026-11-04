@@ -1340,9 +1340,6 @@
   <data name="TvConnectingToTv" xml:space="preserve">
     <value>Menyambungkan ke TV</value>
   </data>
-  <data name="TvDeviceCode" xml:space="preserve">
-    <value>Sebuah TV mencantumkan perangkat ini dengan kode {code}. Jika TV dilupakan di sini, TV itu juga melupakan perangkat ini.</value>
-  </data>
   <data name="TvUnnamed" xml:space="preserve">
     <value>TV</value>
   </data>

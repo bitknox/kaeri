@@ -2,7 +2,6 @@ tv-picker-episode-of = { $title }、第{ $episode }話
 episode-label = エピソード{ $episode }
 episode-label-of = { $title }のエピソード{ $episode }
 tv-connecting-to-tv = テレビに接続しています
-tv-device-code = テレビには、この{ -device }がコード{ $code }で表示されます。ここでテレビの登録を解除すると、テレビ側でもこの{ -device }の登録が解除されます。
 tv-unnamed = テレビ
 tv-another-short = 別のテレビ…
 tv-volume-label = テレビの音量

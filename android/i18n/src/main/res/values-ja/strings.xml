@@ -663,7 +663,6 @@
     <string name="tv_sheet_position_state">%1$s / %2$s</string>
     <string name="tv_sheet_request_titled">%1$s、エピソード %2$s</string>
     <string name="tv_sheet_request_plain">エピソード %1$s</string>
-    <string name="tv_sheet_footer">テレビには、このデバイスがコード %1$s で表示されます。ここでテレビの登録を解除すると、テレビ側でもこのデバイスの登録が解除されます。</string>
     <string name="tv_sheet_title_fallback">テレビ</string>
     <string name="episode_line_detail">E%1$d · %2$s</string>
     <string name="calendar_day_label">%1$s</string>

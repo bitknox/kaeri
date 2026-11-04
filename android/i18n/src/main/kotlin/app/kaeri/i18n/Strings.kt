@@ -2449,10 +2449,6 @@ object Strings {
     fun tvSheetRequestPlain(context: Context, episode: String): String =
         context.getString(R.string.tv_sheet_request_plain, episode)
 
-    /** Settings, Play on TV: the note under the paired TVs. */
-    fun tvSheetFooter(context: Context, code: String): String =
-        context.getString(R.string.tv_sheet_footer, code)
-
     /** TV sheet, remote: the sheet's title when the TV has no name yet. */
     fun tvSheetTitleFallback(context: Context): String =
         context.getString(R.string.tv_sheet_title_fallback)
@@ -11934,11 +11930,7 @@ object Strings {
     fun tvCastUpNextIn(context: Context, seconds: Int): String =
         context.getString(R.string.tv_cast_up_next_in, seconds)
 
-    /** Play on TV row holding the code a TV lists this device by, shown in groups of four. */
-    fun tvCodeRow(context: Context): String =
-        context.getString(R.string.tv_code_row)
-
-    /** Line under the paired TVs, now that the code has its own row. */
+    /** Line under the paired TVs. */
     fun tvForgetNote(context: Context): String =
         context.getString(R.string.tv_forget_note)
 

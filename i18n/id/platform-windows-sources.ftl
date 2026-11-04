@@ -2,7 +2,6 @@ tv-picker-episode-of = { $title }, episode { $episode }
 episode-label = Episode { $episode }
 episode-label-of = Episode { $episode } dari { $title }
 tv-connecting-to-tv = Menyambungkan ke TV
-tv-device-code = Sebuah TV mencantumkan { -device } ini dengan kode { $code }. Jika TV dilupakan di sini, TV itu juga melupakan { -device } ini.
 tv-unnamed = TV
 tv-another-short = TV lain…
 tv-volume-label = Volume TV

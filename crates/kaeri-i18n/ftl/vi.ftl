@@ -1314,9 +1314,6 @@ tv-episode = Tập { $episode }
 # Line on the remote under the show: the episode, then its title.
 tv-episode-titled = Tập { $episode } · { $title }
 
-# Explains the code a TV lists this computer by, above the paired TVs in the settings.
-tv-fingerprint-note = TV liệt kê thiết bị này bằng mã { $code }. Quên một TV ở đây cũng sẽ quên thiết bị này.
-
 # Settings line of a paired TV: paired on a date, reached in the last minute.
 tv-paired-seen-now = { $paired } · vừa thấy
 

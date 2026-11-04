@@ -42,7 +42,6 @@ tv-none-found-announce = Tidak ada TV yang ditemukan. { $detail }
 tv-title-episode = { $title }, episode { $episode }
 tv-episode = Episode { $episode }
 tv-episode-titled = Episode { $episode } · { $title }
-tv-fingerprint-note = Sebuah TV mencantumkan { -device } ini dengan kode { $code }. Jika Anda melupakan TV di sini, TV itu juga melupakan { -device } ini.
 tv-paired-seen-now = { $paired } · terlihat baru saja
 tv-track-choice = { $row }, { $track }
 shell-device-label = Komputer Linux

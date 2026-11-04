@@ -2,7 +2,6 @@ tv-picker-episode-of = { $title }, odcinek { $episode }
 episode-label = Odcinek { $episode }
 episode-label-of = Odcinek { $episode }: { $title }
 tv-connecting-to-tv = Łączenie z telewizorem
-tv-device-code = Telewizor wyświetla to { -device } z kodem { $code }. Usunięcie telewizora tutaj usuwa także to { -device }.
 tv-unnamed = Telewizor
 tv-another-short = Inny telewizor…
 tv-volume-label = Głośność telewizora

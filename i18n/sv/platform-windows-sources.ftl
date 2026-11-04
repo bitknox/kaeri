@@ -2,7 +2,6 @@ tv-picker-episode-of = { $title }, avsnitt { $episode }
 episode-label = Avsnitt { $episode }
 episode-label-of = Avsnitt { $episode } av { $title }
 tv-connecting-to-tv = Ansluter till TV:n
-tv-device-code = En TV visar den här { -device }en med koden { $code }. Om du glömmer en TV här glöms även den här { -device }en bort.
 tv-unnamed = TV
 tv-another-short = Annan TV…
 tv-volume-label = TV:ns volym

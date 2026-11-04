@@ -1314,9 +1314,6 @@ tv-episode = 第{ $episode }話
 # Line on the remote under the show: the episode, then its title.
 tv-episode-titled = 第{ $episode }話 · { $title }
 
-# Explains the code a TV lists this computer by, above the paired TVs in the settings.
-tv-fingerprint-note = テレビにはこのデバイスがコード { $code } で表示されます。ここでテレビの登録を解除すると、テレビ側でもこのデバイスの登録が解除されます。
-
 # Settings line of a paired TV: paired on a date, reached in the last minute.
 tv-paired-seen-now = { $paired } · たった今確認済み
 

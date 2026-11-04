@@ -1478,9 +1478,6 @@
   <data name="TvConnectingToTv" xml:space="preserve">
     <value>Conectando con el televisor</value>
   </data>
-  <data name="TvDeviceCode" xml:space="preserve">
-    <value>Un televisor muestra este dispositivo con el código {code}. Si olvidas un televisor aquí, él también olvida este dispositivo.</value>
-  </data>
   <data name="TvUnnamed" xml:space="preserve">
     <value>Televisor</value>
   </data>

@@ -696,7 +696,6 @@
     <string name="tv_sheet_position_state">%1$s / %2$s</string>
     <string name="tv_sheet_request_titled">%1$s, bölüm %2$s</string>
     <string name="tv_sheet_request_plain">Bölüm %1$s</string>
-    <string name="tv_sheet_footer">Bir TV, bu cihazı %1$s koduyla listeler. Burada bir TV\'yi unutursanız bu cihaz de unutulur.</string>
     <string name="tv_sheet_title_fallback">TV</string>
     <string name="episode_line_detail">E%1$d · %2$s</string>
     <string name="calendar_day_label">%1$s</string>

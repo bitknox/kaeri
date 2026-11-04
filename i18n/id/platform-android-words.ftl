@@ -179,7 +179,6 @@ tv-sheet-position = Posisi di TV
 tv-sheet-position-state = { $at } dari { $total }
 tv-sheet-request-titled = { $title }, episode { $episode }
 tv-sheet-request-plain = Episode { $episode }
-tv-sheet-footer = TV mencantumkan { -device } ini dengan kode { $code }. Jika Anda melupakan TV di sini, TV juga akan melupakan { -device } ini.
 tv-sheet-title-fallback = TV
 episode-line-detail = E{ $number } · { $detail }
 calendar-day-label = { $day }

@@ -1478,9 +1478,6 @@
   <data name="TvConnectingToTv" xml:space="preserve">
     <value>Conectando à TV</value>
   </data>
-  <data name="TvDeviceCode" xml:space="preserve">
-    <value>Uma TV lista este dispositivo com o código {code}. Se você remover uma TV aqui, ela também esquece este dispositivo.</value>
-  </data>
   <data name="TvUnnamed" xml:space="preserve">
     <value>TV</value>
   </data>

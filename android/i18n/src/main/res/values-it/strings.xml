@@ -729,7 +729,6 @@
     <string name="tv_sheet_position_state">%1$s di %2$s</string>
     <string name="tv_sheet_request_titled">%1$s, episodio %2$s</string>
     <string name="tv_sheet_request_plain">Episodio %1$s</string>
-    <string name="tv_sheet_footer">Una TV elenca questo dispositivo con il codice %1$s. Se rimuovi una TV da qui, rimuovi anche questo dispositivo.</string>
     <string name="tv_sheet_title_fallback">TV</string>
     <string name="episode_line_detail">E%1$d · %2$s</string>
     <string name="calendar_day_label">%1$s</string>

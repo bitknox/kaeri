@@ -729,7 +729,6 @@
     <string name="tv_sheet_position_state">%1$s sur %2$s</string>
     <string name="tv_sheet_request_titled">%1$s, épisode %2$s</string>
     <string name="tv_sheet_request_plain">Épisode %1$s</string>
-    <string name="tv_sheet_footer">Une TV affiche cet appareil avec le code %1$s. Oublier une TV ici l’oublie aussi pour cet appareil.</string>
     <string name="tv_sheet_title_fallback">TV</string>
     <string name="episode_line_detail">E%1$d · %2$s</string>
     <string name="calendar_day_label">%1$s</string>

@@ -2,7 +2,6 @@ tv-picker-episode-of = { $title }, Bölüm { $episode }
 episode-label = Bölüm { $episode }
 episode-label-of = { $title }, Bölüm { $episode }
 tv-connecting-to-tv = Televizyona bağlanılıyor
-tv-device-code = Bir TV bu { -device } için { $code } kodunu gösterir. Burada bir TV'yi unutursanız bu { -device } da unutulur.
 tv-unnamed = TV
 tv-another-short = Başka TV…
 tv-volume-label = TV sesi

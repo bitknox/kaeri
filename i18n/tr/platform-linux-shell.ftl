@@ -45,7 +45,6 @@ tv-none-found-announce = TV bulunamadı. { $detail }
 tv-title-episode = { $title }, { $episode }. bölüm
 tv-episode = { $episode }. bölüm
 tv-episode-titled = { $episode }. bölüm · { $title }
-tv-fingerprint-note = Bir TV, bu { -device }ı { $code } koduyla listeler. Buradan bir TV'yi unutursanız bu { -device } da unutulur.
 tv-paired-seen-now = { $paired } · az önce görüldü
 tv-track-choice = { $row }, { $track }
 shell-device-label = Linux bilgisayarı

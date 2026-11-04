@@ -237911,18 +237911,6 @@
         }
       }
     },
-    "tv-code-row" : {
-      "comment" : "Play on TV row holding the code a TV lists this device by, shown in groups of four.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Code on TVs"
-          }
-        }
-      }
-    },
     "tv-connect" : {
       "comment" : "Button that connects to the typed address.",
       "extractionState" : "manual",
@@ -238356,7 +238344,7 @@
       }
     },
     "tv-forget-note" : {
-      "comment" : "Line under the paired TVs, now that the code has its own row.",
+      "comment" : "Line under the paired TVs.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {

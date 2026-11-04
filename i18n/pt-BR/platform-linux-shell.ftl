@@ -48,7 +48,6 @@ tv-none-found-announce = Nenhuma TV encontrada. { $detail }
 tv-title-episode = { $title }, episódio { $episode }
 tv-episode = Episódio { $episode }
 tv-episode-titled = Episódio { $episode } · { $title }
-tv-fingerprint-note = Uma TV mostra este { -device } com o código { $code }. Se você remover uma TV aqui, ela também esquece este { -device }.
 tv-paired-seen-now = { $paired } · visto agora mesmo
 tv-track-choice = { $row }, { $track }
 shell-device-label = Computador Linux

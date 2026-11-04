@@ -179,7 +179,6 @@ tv-sheet-position = Vị trí trên TV
 tv-sheet-position-state = { $at } trên { $total }
 tv-sheet-request-titled = { $title }, tập { $episode }
 tv-sheet-request-plain = Tập { $episode }
-tv-sheet-footer = TV sẽ thấy { -device } này với mã { $code }. Quên TV ở đây cũng sẽ quên { -device } này.
 tv-sheet-title-fallback = TV
 episode-line-detail = E{ $number } · { $detail }
 calendar-day-label = { $day }

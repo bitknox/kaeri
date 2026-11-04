@@ -26922,17 +26922,6 @@
     "at": "2026-10-31",
     "back": "{ -app-name } can't reach AniList right now."
   },
-  "tv-device-code": {
-    "source": "ea15a7546a7c",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "flags": [
-      "meaning: 'visar' (shows) replaces 'lists', and 'glömmer en TV' can read as accidentally forgetting rather than the Forget action.",
-      "context: '{ -device }en' glues a definite suffix onto a glossary term, which only works if the term is a common-gender noun."
-    ],
-    "back": "A TV shows this { -device } with the code { $code }. If you forget a TV here, this { -device } is forgotten too."
-  },
   "tv-discussion-count-read-only": {
     "source": "b6369bed1b89",
     "state": "draft",
@@ -26995,13 +26984,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Username, if asked for"
-  },
-  "tv-fingerprint-note": {
-    "source": "ea15a7546a7c",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "A TV lists this { -device } with the code { $code }. If you forget a TV here, this { -device } is forgotten too."
   },
   "tv-forget-detail": {
     "source": "c183eb8b0c91",
@@ -28061,13 +28043,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Connecting to the TV"
-  },
-  "tv-sheet-footer": {
-    "source": "ea15a7546a7c",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "A TV lists this { -device } with the code { $code }. If you remove a TV here, it also forgets this { -device }."
   },
   "tv-sheet-not-listed": {
     "source": "80a19a6b04bd",

@@ -2130,11 +2130,6 @@ pub fn tv_episode_titled(episode: &str, title: &str) -> String {
     text("tv-episode-titled", &[("episode", Arg::Text(episode)), ("title", Arg::Text(title))])
 }
 
-/// Explains the code a TV lists this computer by, above the paired TVs in the settings.
-pub fn tv_fingerprint_note(code: &str) -> String {
-    text("tv-fingerprint-note", &[("code", Arg::Text(code))])
-}
-
 /// Settings line of a paired TV: paired on a date, reached in the last minute.
 pub fn tv_paired_seen_now(paired: &str) -> String {
     text("tv-paired-seen-now", &[("paired", Arg::Text(paired))])
@@ -18382,12 +18377,7 @@ pub fn tv_cast_up_next_in(seconds: i64) -> String {
     text("tv-cast-up-next-in", &[("seconds", Arg::Int(seconds))])
 }
 
-/// Play on TV row holding the code a TV lists this device by, shown in groups of four.
-pub fn tv_code_row() -> String {
-    text("tv-code-row", &[])
-}
-
-/// Line under the paired TVs, now that the code has its own row.
+/// Line under the paired TVs.
 pub fn tv_forget_note() -> String {
     text("tv-forget-note", &[])
 }
