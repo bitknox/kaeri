@@ -86,6 +86,11 @@ sealed class EpisodesPanel
                 rangeOf.TryAdd(table[i].Number, r);
         var rowRange = new List<int>();
         var shownRange = playing is not null && rangeOf.TryGetValue(playing.Number, out var playingRange) ? playingRange : 0;
+        // Back from Go to episode: the panel opens on the range that holds it, the keyboard on it.
+        var target = goTarget;
+        goTarget = null;
+        if (target is not null && rangeOf.TryGetValue(target, out var targetRange))
+            shownRange = targetRange;
         foreach (var episode in episodes)
         {
             var line = new Grid { ColumnSpacing = 10 };
@@ -126,7 +131,7 @@ sealed class EpisodesPanel
                 Flyout.Hide();
                 choose(picked.Number);
             };
-            if (episode.Current)
+            if (target is null ? episode.Current : episode.Number == target)
                 current = row;
             list.Children.Add(row);
             buttons.Add(row);
@@ -168,8 +173,14 @@ sealed class EpisodesPanel
                 };
                 menu.Items.Add(item);
             }
+            // The title page's last item: Go to episode, which opens the panel again on that row.
+            menu.Items.Add(new MenuFlyoutSeparator());
+            var go = new MenuFlyoutItem { Text = T.EpisodeGoTo, KeyboardAcceleratorTextOverride = "Ctrl+G" };
+            go.Click += (_, _) => GoTo(table);
+            menu.Items.Add(go);
             dropdown.Flyout = menu;
             picker = dropdown;
+            rangePicker = dropdown;
         }
         var footer = new StackPanel
         {
@@ -195,9 +206,33 @@ sealed class EpisodesPanel
     }
 
     Button? focusAt;
+    string? goTarget;
+    DropDownButton? rangePicker;
+
+    /// <summary>Go to episode from the panel: the dialog, then the panel again with that row focused.</summary>
+    async void GoTo(EpisodeRow[] table)
+    {
+        var anchor = Flyout.Target;
+        var root = Flyout.XamlRoot ?? anchor?.XamlRoot;
+        Flyout.Hide();
+        if (root is null || table.Length == 0)
+            return;
+        if (await Pages.GoToDialog.Ask(root, table) is not { } row || row.Index >= table.Length)
+            return;
+        goTarget = table[(int)row.Index].Number;
+        if (anchor is not null)
+            Flyout.ShowAt(anchor);
+    }
     readonly List<Button> buttons = [];
 
 #if KAERI_TESTING
+    /// <summary>For a shot: the range menu open.</summary>
+    public void OpenRanges()
+    {
+        if (rangePicker?.Flyout is MenuFlyout menu)
+            menu.ShowAt(rangePicker);
+    }
+
     /// <summary>For a shot: the keyboard on row <paramref name="at"/>, which the footer follows.</summary>
     public void FocusRow(int at)
     {

@@ -168,6 +168,8 @@
           <SolidColorBrush x:Key="SidebarBrush" Color="#1C2034" />
           <!-- The bar over a spoiler, Raised selected. -->
           <SolidColorBrush x:Key="SpoilerBarBrush" Color="#343A57" />
+          <!-- The selected fill: a dialog's default button where amber would be a second amber. -->
+          <SolidColorBrush x:Key="SelectedFillBrush" Color="#343A57" />
           <SolidColorBrush x:Key="FaintRuleBrush" Color="#2F3242" />
           <!-- The player's 35% dim of the ground over the frame. -->
           <SolidColorBrush x:Key="DimBrush" Color="#161A2E" Opacity="0.35" />
@@ -195,6 +197,7 @@
           <SolidColorBrush x:Key="RaisedBrush" Color="{ThemeResource SystemColorWindowColor}" />
           <SolidColorBrush x:Key="SidebarBrush" Color="{ThemeResource SystemColorWindowColor}" />
           <SolidColorBrush x:Key="SpoilerBarBrush" Color="{ThemeResource SystemColorWindowColor}" />
+          <SolidColorBrush x:Key="SelectedFillBrush" Color="{ThemeResource SystemColorButtonFaceColor}" />
           <SolidColorBrush x:Key="SilkBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
           <SolidColorBrush x:Key="HazeBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
           <SolidColorBrush x:Key="AmberBrush" Color="{ThemeResource SystemColorHighlightColor}" />

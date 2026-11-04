@@ -52,8 +52,11 @@ public sealed partial class TitlePage
 
     // Another.
 
-    void ShowAnother() =>
+    void ShowAnother()
+    {
+        AnotherGlyph.Content ??= Dice.Icon();
         AnotherAction.Visibility = ctx.Pick is { More: true } pick && pick.Id == id ? Visibility.Visible : Visibility.Collapsed;
+    }
 
     void OnAnother(object sender, RoutedEventArgs e)
     {
@@ -90,67 +93,7 @@ public sealed partial class TitlePage
         var rows = Rows();
         if (rows.Length == 0)
             return;
-        var box = new NumberBox
-        {
-            Header = T.LibraryEpisode,
-            PlaceholderText = KaeriFfiMethods.GoToHint(rows),
-            Minimum = 1,
-            SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Hidden,
-            AcceptsExpression = false,
-            MinWidth = 280,
-        };
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(box, KaeriFfiMethods.GoToLabel(rows));
-        var error = new TextBlock { Style = (Style)Application.Current.Resources["HazeCaptionStyle"], TextWrapping = TextWrapping.WrapWholeWords, Visibility = Visibility.Collapsed };
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetLiveSetting(error, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
-        var body = new StackPanel { Spacing = 8 };
-        body.Children.Add(box);
-        body.Children.Add(error);
-        var dialog = new ContentDialog
-        {
-            XamlRoot = XamlRoot,
-            Title = T.EpisodeGoToTitle,
-            Content = body,
-            PrimaryButtonText = T.ActionGo,
-            CloseButtonText = T.ActionCancel,
-            DefaultButton = ContentDialogButton.Primary,
-        };
-        GoTo? landed = null;
-        // True when the number typed is a row; else the dialog says why and stays open.
-        bool Take()
-        {
-            var text = new string((box.Text ?? "").Where(char.IsAsciiDigit).ToArray());
-            var result = Browsing.Go(rows, text);
-            if (result is GoTo.Row)
-            {
-                landed = result;
-                return true;
-            }
-            error.Text = Browsing.GoMessage(result) ?? "";
-            error.Visibility = error.Text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
-            return false;
-        }
-        dialog.PrimaryButtonClick += (_, args) => args.Cancel = !Take();
-        box.KeyDown += (_, a) =>
-        {
-            if (a.Key != global::Windows.System.VirtualKey.Enter)
-                return;
-            a.Handled = true;
-            if (Take())
-                dialog.Hide();
-        };
-        await Dialogs.Show(dialog, () =>
-        {
-            box.Focus(FocusState.Programmatic);
-#if KAERI_TESTING
-            // A shot's number, put in the box and taken as Go would.
-            if (stage is not null)
-            {
-                box.Text = stage;
-                Take();
-            }
-#endif
-        });
-        if (landed is GoTo.Row row)
+        if (await GoToDialog.Ask(XamlRoot, rows, stage) is { } row)
             Land(row);
     }
 
@@ -175,7 +118,7 @@ public sealed partial class TitlePage
             DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
             {
                 if (EpisodeList.ContainerFromItem(target) is UIElement container)
-                    container.StartBringIntoView(new BringIntoViewOptions { VerticalAlignmentRatio = 0.5, AnimationDesired = animate });
+                    container.StartBringIntoView(new BringIntoViewOptions { VerticalAlignmentRatio = 0, AnimationDesired = animate });
                 else
                     EpisodeList.ScrollIntoView(target);
             });
@@ -230,13 +173,7 @@ public sealed partial class TitlePage
         if (digit is { } d)
         {
             e.Handled = true;
-            // Five digits at most, and no leading zero.
-            if (typed.Length >= 5 || (typed.Length == 0 && d == 0))
-                return;
-            typed += d.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            SayTyped();
-            typedTimer.Stop();
-            typedTimer.Start();
+            TypeDigit(d);
         }
         else if (typed.Length > 0 && key == global::Windows.System.VirtualKey.Enter)
         {
@@ -253,9 +190,22 @@ public sealed partial class TitlePage
         }
     }
 
+    /// <summary>A digit typed on the list: five at most, and no leading zero; the pause takes the number.</summary>
+    void TypeDigit(int d)
+    {
+        if (typed.Length >= 5 || (typed.Length == 0 && d == 0))
+            return;
+        typed += d.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        SayTyped();
+        typedTimer.Stop();
+        typedTimer.Start();
+    }
+
     void SayTyped()
     {
-        TypedText.Text = typed;
+        // Under Another when a pick shows it, else where it would stand.
+        TypedCapsule.Margin = new Thickness(0, AnotherAction.Visibility == Visibility.Visible ? 64 : 24, 36, 0);
+        TypedText.Text = T.EpisodeNumber(long.Parse(typed, System.Globalization.CultureInfo.InvariantCulture));
         Motion.Show(TypedCapsule);
     }
 

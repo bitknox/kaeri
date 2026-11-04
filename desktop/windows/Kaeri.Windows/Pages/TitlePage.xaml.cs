@@ -484,6 +484,17 @@ public sealed partial class TitlePage : Page, IPageKeys
     }
 
 #if KAERI_TESTING
+    void Later(double seconds, Action act)
+    {
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(seconds) };
+        timer.Tick += (_, _) =>
+        {
+            timer.Stop();
+            act();
+        };
+        timer.Start();
+    }
+
     /// <summary>The synopsis shots' state: see --show=synopsis... where the page opens.</summary>
     void StageSynopsis(string shot)
     {
@@ -499,6 +510,23 @@ public sealed partial class TitlePage : Page, IPageKeys
                 case "synopsis-go-landed":
                     if (Browsing.Go(Rows(), "142") is GoTo.Row landing)
                         Land(landing);
+                    break;
+                // Motion D: the range menu, then Go to episode, 128 typed and Go, across a range.
+                case "synopsis-go-motion":
+                    RangePicker.StartBringIntoView(new BringIntoViewOptions { AnimationDesired = false, VerticalAlignmentRatio = 0.2 });
+                    Later(1.0, () => RangePicker.Flyout?.ShowAt(RangePicker));
+                    Later(2.4, () =>
+                    {
+                        RangePicker.Flyout?.Hide();
+                        OpenGoTo("go:128");
+                    });
+                    break;
+                // Motion E: 2, 3, 6 typed on the list at episode 230, a jump within the screen.
+                case "synopsis-go-digits":
+                    Later(1.0, () => EpisodeList.Focus(FocusState.Keyboard));
+                    Later(1.6, () => TypeDigit(2));
+                    Later(1.9, () => TypeDigit(3));
+                    Later(2.2, () => TypeDigit(6));
                     break;
             }
             return;

@@ -95,6 +95,48 @@ public sealed partial class StateHost : Grid
         activity.Start();
     }
 
+    /// <summary>
+    /// Placeholders now, with no fade of their own: for a place whose caller crossfades it with
+    /// both sides drawn, as Trending's period switch does once the old covers have stood 600 ms.
+    /// </summary>
+    public void WaitNow()
+    {
+        Layer();
+        loading = true;
+        silence.Stop();
+        Motion.Set(message, false);
+        if (Content is { } content)
+            content.Visibility = Visibility.Collapsed;
+        waiting.Children.Clear();
+        if (Placeholders?.Invoke() is { } placeholders)
+            waiting.Children.Add(placeholders);
+        activityLine.Text = ActivityText;
+        activityLine.Visibility = Visibility.Collapsed;
+        waiting.Children.Add(activityLine);
+        placeholdersShown = true;
+        placeholdersSince = DateTimeOffset.UtcNow;
+        Motion.Set(waiting, true);
+        activity.Stop();
+        activity.Start();
+    }
+
+    /// <summary>When the placeholders came, while they show.</summary>
+    public DateTimeOffset? PlaceholdersSince => placeholdersShown ? placeholdersSince : null;
+
+    /// <summary>The content now, with no fade of its own: the caller crossfades the place.</summary>
+    public void DoneNow()
+    {
+        Layer();
+        loading = false;
+        silence.Stop();
+        activity.Stop();
+        Motion.Set(message, false);
+        placeholdersShown = false;
+        Motion.Set(waiting, false);
+        if (Content is { } content)
+            content.Visibility = Visibility.Visible;
+    }
+
     /// <summary>The answer: the content, crossfaded over the placeholders if they showed.</summary>
     public async void Done()
     {

@@ -65,6 +65,39 @@ public sealed partial class SearchPage : Page
         rail?.Visit();
     }
 
+#if KAERI_TESTING
+    /// <summary>
+    /// --show=browse-period-menu opens the heading's menu; browse-trending-week switches to This
+    /// week; motion-period does both as a person would, the menu first, for the period clip.
+    /// </summary>
+    void StageRail(TrendingRail rail)
+    {
+        void After(double seconds, Action act)
+        {
+            var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(seconds) };
+            timer.Tick += (_, _) =>
+            {
+                timer.Stop();
+                act();
+            };
+            timer.Start();
+        }
+        switch (ctx.Options.Show)
+        {
+            case "browse-period-menu":
+                After(2.5, rail.OpenMenu);
+                break;
+            case "browse-trending-week":
+                After(2.5, () => rail.Pick(TrendPeriod.Week));
+                break;
+            case "motion-period":
+                After(3.0, rail.OpenMenu);
+                After(4.4, () => rail.Pick(TrendPeriod.Week));
+                break;
+        }
+    }
+#endif
+
     /// <summary>Asks the engine for what the box and the filters now say, or this season when they say nothing.</summary>
     void Run()
     {
@@ -80,6 +113,9 @@ public sealed partial class SearchPage : Page
             {
                 RailHost.Content = rail;
                 rail.Visit();
+#if KAERI_TESTING
+                StageRail(rail);
+#endif
             }
             RailHost.Visibility = Visibility.Visible;
         }

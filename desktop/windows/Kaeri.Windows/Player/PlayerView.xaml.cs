@@ -1277,7 +1277,7 @@ public sealed partial class PlayerView : UserControl
         if (episodesPanel is not null)
             return;
         episodesPanel = new EpisodesPanel(
-            () => (menus?.Episodes ?? [], ctx?.Known.Episodes.GetValueOrDefault(playingId) ?? [],
+            () => (PanelEpisodes(), ctx?.Known.Episodes.GetValueOrDefault(playingId) ?? [],
                 ownSpoilers ?? SettingsCatalog.IsOn(ctx?.Known.Setting(SettingKey.SpoilerProtection))),
             number => Send(new PlayerCommand.Choose(new PlayerChoice.Episode(number))));
         episodesPanel.Flyout.Opened += OnMenuOpened;
@@ -1607,6 +1607,17 @@ public sealed partial class PlayerView : UserControl
     void OnStillContinue(object sender, RoutedEventArgs e) => ContinueWatching();
     void OnStillStop(object sender, RoutedEventArgs e) => StillStopNow();
 
+    /// <summary>The panel's rows: the player's menu, or on a ranged shot one per row of the table.</summary>
+    MenuEpisode[] PanelEpisodes()
+    {
+#if KAERI_TESTING
+        if (ctx?.Options.Show is { } show && show.StartsWith("player-episodes-ranges", StringComparison.Ordinal)
+            && ctx.Known.Episodes.GetValueOrDefault(playingId) is { Length: > 100 } table)
+            return table.Select(r => new MenuEpisode(r.Number, T.EpisodeNumber(long.Parse(r.Number, System.Globalization.CultureInfo.InvariantCulture)), r.Title, r.Watched >= 0.9, false, r.Number == "230")).ToArray();
+#endif
+        return menus?.Episodes ?? [];
+    }
+
 #if KAERI_TESTING
     /// <summary>
     /// A state to bring up for a screenshot, on the testing build:
@@ -1626,6 +1637,17 @@ public sealed partial class PlayerView : UserControl
                 break;
             case "mini":
                 ToggleMini();
+                break;
+            case "player-episodes-ranges":
+            case "player-episodes-ranges-menu":
+                // 250 episodes in ranges, 230 playing; with -menu, the range menu open on Go to episode.
+                ShowControls();
+                OpenMenu(EpisodesButton);
+                if (what == "player-episodes-ranges-menu")
+                {
+                    await Task.Delay(900);
+                    episodesPanel?.OpenRanges();
+                }
                 break;
             case "player-episodes":
             case "player-episodes-focus":

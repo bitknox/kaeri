@@ -48,13 +48,8 @@
               <TextBlock x:Name="Secondary" Style="{StaticResource HazeBodyStyle}" />
               <TextBlock x:Name="Meta" Style="{StaticResource HazeCaptionStyle}" />
               <local:OfflineLine />
-              <Grid ColumnSpacing="8" RowSpacing="8" Margin="0,10,0,0">
-                <Grid.RowDefinitions>
-                  <RowDefinition Height="Auto" />
-                  <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+              <Grid ColumnSpacing="8" Margin="0,10,0,0">
                 <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="Auto" />
                   <ColumnDefinition Width="Auto" />
                   <ColumnDefinition Width="Auto" />
                   <ColumnDefinition Width="Auto" />
@@ -65,14 +60,6 @@
                 <Button x:Name="TvAction" Grid.Column="1" HorizontalAlignment="Left" Height="40" Width="40" Padding="0" Visibility="Collapsed" Click="OnPlayOnTv"
                         ToolTipService.ToolTip="{x:Bind s:T.TitlePlayOnTvTooltip}" AutomationProperties.Name="{x:Bind s:T.TvPlayOn}">
                   <FontIcon Glyph="&#xE7F4;" FontSize="16" />
-                </Button>
-                <!-- Another: a title Surprise me opened swaps for the next pick; on its own line, so a long Resume label never clips it. -->
-                <Button x:Name="AnotherAction" Grid.Row="1" Grid.ColumnSpan="5" HorizontalAlignment="Left" Height="40" Visibility="Collapsed" Click="OnAnother"
-                        ToolTipService.ToolTip="{x:Bind s:T.SurpriseAnotherHint}" AutomationProperties.Name="{x:Bind s:T.SurpriseAnother}">
-                  <StackPanel Orientation="Horizontal" Spacing="8">
-                    <FontIcon Glyph="&#xE8B1;" FontSize="14" />
-                    <TextBlock Text="{x:Bind s:T.SurpriseAnother}" />
-                  </StackPanel>
                 </Button>
                 <DropDownButton x:Name="StatusButton" Grid.Column="2" Height="40" AutomationProperties.Name="{x:Bind s:T.TitleListStatus}">
                   <DropDownButton.Flyout>
@@ -290,8 +277,19 @@
     </Grid>
     </local:StateHost>
   </ScrollViewer>
-  <!-- Digits typed on the episodes: a capsule at the bottom that says what Go to episode will take. -->
-  <Border x:Name="TypedCapsule" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,32"
+  <!-- Another: a title Surprise me opened swaps for the next pick. It stands where Surprise me
+       stands on Search and Library, at the end of the page's heading row, so the swap leaves it still. -->
+  <Button x:Name="AnotherAction" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,24,36,0" MinHeight="32"
+          Visibility="Collapsed" Click="OnAnother"
+          ToolTipService.ToolTip="{x:Bind s:T.SurpriseAnotherHint}" AutomationProperties.Name="{x:Bind s:T.SurpriseAnother}"
+          AutomationProperties.HelpText="{x:Bind s:T.SurpriseAnotherHint}">
+    <StackPanel Orientation="Horizontal" Spacing="8">
+      <ContentPresenter x:Name="AnotherGlyph" Width="16" Height="16" VerticalAlignment="Center" />
+      <TextBlock Text="{x:Bind s:T.SurpriseAnother}" />
+    </StackPanel>
+  </Button>
+  <!-- Digits typed on the episodes: a small capsule at the top right that says what Go to episode will take. -->
+  <Border x:Name="TypedCapsule" Visibility="Collapsed" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,24,36,0"
           Padding="16,6" CornerRadius="999" Background="{ThemeResource RaisedBrush}" BorderBrush="{ThemeResource EdgeBrush}" BorderThickness="1"
           IsHitTestVisible="False" AutomationProperties.LiveSetting="Polite">
     <TextBlock x:Name="TypedText" Style="{StaticResource BodyTextBlockStyle}" />
