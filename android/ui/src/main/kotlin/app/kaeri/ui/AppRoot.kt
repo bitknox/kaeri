@@ -364,7 +364,10 @@ fun AppRoot(
             Row(Modifier.padding(padding).consumeWindowInsets(padding)) {
                 if (wide && !fullWindow && !onPlayer) Rail(current, entry?.destination?.route, navigator, routed)
                 SharedTransitionLayout(if (removed) Modifier.stillFade(pageFade) else Modifier) {
-                    CompositionLocalProvider(LocalSharedTransitions provides this) {
+                    CompositionLocalProvider(
+                        LocalSharedTransitions provides this,
+                        LocalSharedTransitionsView provides androidx.compose.ui.platform.LocalView.current,
+                    ) {
                         NavHost(
                             nav,
                             startDestination = graphRoute(start),
