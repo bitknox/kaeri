@@ -85,7 +85,7 @@ struct ProfileSheet: View {
             if firstEver {
                 SyncField(label: L.profilesYours, text: $first, note: L.profilesYoursNote)
             }
-            SyncField(label: editing == nil ? L.profilesNew : L.profilesTitle, text: $name)
+            SyncField(label: editing == nil ? L.profilesNew : L.devicesName, text: $name)
             SyncSection(footer: L.profilesKidsLine) {
                 #if os(macOS)
                 SettingsRow(title: L.profilesKids) {
