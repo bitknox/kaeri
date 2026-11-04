@@ -134,6 +134,6 @@ public sealed partial class ServerPage : Page
         // The engine holds the server and its sign-in for the notice's seconds; Undo brings it back without a password.
         var back = id;
         ctx.Window.Say(T.SourcesRemoved(row.Name), T.ActionUndo, () => ctx.Send(new Command.Server(new ServerCommand.Restore(back))));
-        ctx.Go("providers");
+        ctx.LeaveRemoved();
     }
 }

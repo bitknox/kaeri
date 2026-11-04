@@ -13,6 +13,26 @@ public sealed partial class MainWindow
     internal void Push(Type page, object? parameter = null) =>
         ContentFrame.Navigate(page, parameter, new SuppressNavigationTransitionInfo());
 
+    /// <summary>
+    /// Leaves the page of a source that was just removed for Your sources: Back when Your sources is
+    /// under it, else on to Your sources with the removed page taken out of the back stack, so Back
+    /// never returns to a page whose source is gone.
+    /// </summary>
+    internal void LeaveRemoved()
+    {
+        var stack = ContentFrame.BackStack;
+        if (stack.Count > 0 && stack[stack.Count - 1].SourcePageType == typeof(ProvidersPage))
+        {
+            GoBack();
+            return;
+        }
+        var removed = ContentFrame.CurrentSourcePageType;
+        Go("providers");
+        if (stack.Count > 0 && stack[stack.Count - 1].SourcePageType == removed)
+            stack.RemoveAt(stack.Count - 1);
+        AppTitleBar.IsBackButtonEnabled = ContentFrame.CanGoBack;
+    }
+
     /// <summary>The system's folder picker, or null when it is cancelled. UNC paths are accepted.</summary>
     internal async Task<string?> PickFolder()
     {

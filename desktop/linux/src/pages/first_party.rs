@@ -112,6 +112,16 @@ pub fn push(
     nav.push(&page);
 }
 
+/// Back from `page`, whose source was removed, to the page under it with the usual pop. Only
+/// while it is the page on screen: an answer that arrives while it slides away, or while another
+/// page covers it, pops nothing else.
+pub fn leave(ctx: &Rc<Ctx>, page: &adw::NavigationPage) {
+    let Some(nav) = ctx.nav() else { return };
+    if nav.visible_page().as_ref() == Some(page) {
+        nav.pop();
+    }
+}
+
 /// A page's big title and its quiet line.
 pub fn title_block(column: &gtk::Box, title: &str, line: &str) {
     let heading = gtk::Label::new(Some(title));

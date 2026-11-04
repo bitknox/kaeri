@@ -214,6 +214,43 @@ struct ProvidersScreen: View {
             selection = key
             navigator.launchSourceKey = nil
         }
+        // A source removed while its page shows, here or on another device: Back to Your
+        // sources, with the same crossfade.
+        .onRemoved(PagePresence(key: shown, present: shown.map { store.sourcePageExists($0) } ?? false)) {
+            selection = nil
+        }
+    }
+}
+
+extension AppStore {
+    /// Whether what a Sources page shows is still there: the plugin, the server or the folder.
+    func sourcePageExists(_ key: String) -> Bool {
+        if key == SourceKey.licensed { return true }
+        if let id = SourceKey.serverId(key) { return servers.row(id) != nil }
+        if let path = SourceKey.folderPath(key) { return local.folders.contains { $0.path == path } }
+        return providers.row(key) != nil
+    }
+}
+
+/// The page a detail view shows and whether its thing is still there.
+struct PagePresence: Equatable {
+    let key: String?
+    let present: Bool
+
+    /// Whether the thing on the same page went away. A page opened before its thing loaded, or
+    /// one opened for a thing that is not there (a plugin a store offers but this device lacks),
+    /// stays put.
+    static func removed(from old: PagePresence, to new: PagePresence) -> Bool {
+        old.key != nil && old.key == new.key && old.present && !new.present
+    }
+}
+
+extension View {
+    /// Run `leave` when the page's thing is removed while the page shows.
+    func onRemoved(_ presence: PagePresence, leave: @escaping () -> Void) -> some View {
+        onChange(of: presence) { old, new in
+            if PagePresence.removed(from: old, to: new) { leave() }
+        }
     }
 }
 
