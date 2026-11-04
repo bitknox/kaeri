@@ -36,11 +36,22 @@ import kotlinx.coroutines.delay
 class ColumnLine<T>(val item: T, val holdMillis: Long) {
     internal val state = MutableTransitionState(false)
     internal var leaving by mutableStateOf(false)
+
+    /**
+     * What the line's fade and hold have come to, kept here and not in the composition: the column
+     * is composed anew when the lines that left are removed from it, and the line standing must
+     * not start again from nothing, which would show as a blink.
+     */
+    internal val alpha = Animatable(0f)
+    internal var holdLeft = holdMillis
 }
 
 /** The fade-out, then the column closing up under it. */
 private const val CLOSE_DELAY_MS = 300
 private const val CLOSE_MS = 450
+
+/** The hold is waited out in steps, so a column composed anew carries on with what is left of it. */
+private const val HOLD_STEP_MS = 100L
 
 /**
  * The lines of a chat column in arrival order, [keep] in view and the rest folded into [fold]'s
@@ -73,14 +84,18 @@ fun <T> FoldingColumn(
             remember(entry) { entry.state.apply { if (!entry.leaving) targetState = true } }
             LaunchedEffect(inView) {
                 if (!inView || entry.leaving) return@LaunchedEffect
-                delay(entry.holdMillis)
+                while (entry.holdLeft > 0) {
+                    val step = minOf(entry.holdLeft, HOLD_STEP_MS)
+                    delay(step)
+                    entry.holdLeft -= step
+                }
                 entry.leaving = true
                 entry.state.targetState = false
                 delay((CLOSE_DELAY_MS + CLOSE_MS).toLong())
                 lines.remove(entry)
             }
             if (removed) {
-                val alpha = remember { Animatable(0f) }
+                val alpha = entry.alpha
                 LaunchedEffect(entry.leaving) {
                     atFullSpeed { if (entry.leaving) alpha.animateTo(0f, Motion.fadeOut()) else alpha.animateTo(1f, Motion.fadeIn()) }
                 }
