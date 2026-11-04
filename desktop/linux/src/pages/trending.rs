@@ -125,9 +125,13 @@ impl Rail {
         actions.add_action(&action);
         menu_button.insert_action_group("trend", Some(&actions));
 
-        let see_all = gtk::Button::with_label(&t::search_see_all());
+        // A link at the end of a heading is silk with a chevron: a flat button, not the amber
+        // underlined link, since the view's one amber belongs to its primary action.
+        let see_all_face = gtk::Box::new(gtk::Orientation::Horizontal, 4);
+        see_all_face.append(&gtk::Label::new(Some(&t::search_see_all())));
+        see_all_face.append(&gtk::Image::from_icon_name("go-next-symbolic"));
+        let see_all = gtk::Button::builder().child(&see_all_face).build();
         see_all.add_css_class("flat");
-        see_all.add_css_class("link");
         let top = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         top.append(&menu_button);
         let spacer = gtk::Box::new(gtk::Orientation::Horizontal, 0);

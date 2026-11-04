@@ -1468,7 +1468,8 @@ impl Page {
         if let Some(at) = words.find(&shown) {
             for (start, end) in [(0, at), (at + shown.len(), words.len())] {
                 if start < end {
-                    let mut haze = gtk::pango::AttrColor::new_foreground(0xA3A3, 0xA9A9, 0xC4C4);
+                    let mut haze =
+                        gtk::pango::AttrColor::new_foreground(0xA3A3, 0xA9A9, 0xC4C4);
                     haze.set_start_index(start as u32);
                     haze.set_end_index(end as u32);
                     attrs.insert(haze);
