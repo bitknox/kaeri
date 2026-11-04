@@ -9172,6 +9172,18 @@ object Strings {
     fun storesShare(context: Context): String =
         context.getString(R.string.stores_share)
 
+    /** Line on a store row when joining it through a paired device failed because the store or the paired device could not be reached. The person can try again later. */
+    fun syncStoreErrOffline(context: Context, store: String, device: String): String =
+        context.getString(R.string.sync_store_err_offline, store, device)
+
+    /** Line on a store row when the store turned the invite down, for example because it was cancelled or used up. */
+    fun syncStoreErrRefused(context: Context, store: String): String =
+        context.getString(R.string.sync_store_err_refused, store)
+
+    /** Line on a store row when the paired device can't make invites to the store, because it isn't a named member there any more or joined through an open link. */
+    fun syncStoreErrNotAllowed(context: Context, store: String, device: String): String =
+        context.getString(R.string.sync_store_err_not_allowed, store, device)
+
     /** Title of the state when a title page could not load. */
     fun titleLoadFailed(context: Context): String =
         context.getString(R.string.title_load_failed)

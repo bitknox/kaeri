@@ -309,6 +309,42 @@ mod tests {
     }
 
     #[test]
+    fn joining_a_store_through_a_paired_device_crosses_intact() {
+        use kaeri_model::group::{SyncCommand, SyncStatus, SyncStoreOffer, SyncStoreProblem};
+        let join = Command::SyncGroup(SyncCommand::JoinStoresFrom {
+            device: Some("00000000000000b2".into()),
+            stores: vec!["https://plugins.example".into()],
+            address: Some("192.0.2.4:47812".into()),
+        });
+        assert_eq!(crossed(join.clone()), join);
+        crosses_intact(Event::SyncStatus(SyncStatus {
+            enabled: true,
+            stores_to_join: vec![SyncStoreOffer {
+                address: "https://plugins.example".into(),
+                name: "Hilltop Plugins".into(),
+                invite_from: Some("00000000000000b2".into()),
+            }],
+            ..SyncStatus::default()
+        }));
+        crosses_intact(Event::SyncStoreJoined {
+            device: "00000000000000b2".into(),
+            store: "k1".into(),
+            address: "https://plugins.example".into(),
+            name: "Hilltop Plugins".into(),
+        });
+        for problem in
+            [SyncStoreProblem::Offline, SyncStoreProblem::Refused, SyncStoreProblem::NotAllowed]
+        {
+            crosses_intact(Event::SyncStoreJoinFailed {
+                device: "00000000000000b2".into(),
+                address: "https://plugins.example".into(),
+                name: "Hilltop Plugins".into(),
+                problem,
+            });
+        }
+    }
+
+    #[test]
     fn a_native_sign_in_crosses_with_its_redirect_kept_out_of_the_log() {
         crosses_intact(Event::Authorize {
             tracker: "anilist".into(),
@@ -1031,6 +1067,7 @@ mod tests {
             starts,
             playable: Playable::NotFound,
             because: Some("Stardust Wayfarer".into()),
+            last_device: Some("Study Mac".into()),
         };
         crosses_intact(Event::Home(Box::new(HomeView {
             spotlight: Some(Spotlight {
@@ -1045,6 +1082,7 @@ mod tests {
                 playable: Playable::Found,
                 line: Some(Msg::HomeTimeLeft { episode: 3, minutes: 12 }),
                 because: Some("Stardust Wayfarer".into()),
+                last_device: Some("Study Mac".into()),
             }),
             sections: vec![
                 HomeSection {

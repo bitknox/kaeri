@@ -726,6 +726,8 @@ impl App {
             }
             // Pairing by code is the apps' Add a device sheet.
             Event::SyncPairFailed { .. } => {}
+            // Joining a store through a paired device is the apps' first launch.
+            Event::SyncStoreJoined { .. } | Event::SyncStoreJoinFailed { .. } => {}
         }
     }
 

@@ -811,6 +811,7 @@ fn home_item(entry: Entry, action: HomeAction, line: Option<Msg>) -> HomeItem {
         starts: None,
         playable: Playable::Unknown,
         because: None,
+        last_device: None,
     }
 }
 
@@ -873,6 +874,7 @@ fn continuing(entry: Entry, episode: u32, minutes: i64) -> Spotlight {
         playable: Playable::Unknown,
         line: Some(Msg::HomeTimeLeft { episode: i64::from(episode), minutes }),
         because: None,
+        last_device: None,
     }
 }
 

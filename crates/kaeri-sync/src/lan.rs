@@ -54,7 +54,8 @@ pub const DEFAULT_PORT: u16 = 47_812;
 
 /// The version of this road a device advertises, as `v` in its TXT record.
 pub const VERSION: u32 = 1;
-const ANSWER: Duration = Duration::from_secs(10);
+/// How long either side waits for the other's next word.
+pub const ANSWER: Duration = Duration::from_secs(10);
 const MAX_FRAME: usize = 64 * 1024;
 
 /// What this device is, to the devices it pairs with.
@@ -371,6 +372,7 @@ async fn swap_sign_ins<S: AsyncRead + AsyncWrite + Unpin>(
     let sealed = match (&me.handoff, peer) {
         (Some(handoff), Some(peer)) if !theirs.is_empty() => handoff
             .answer(peer, &theirs)
+            .await
             .map(|plain| handoff::seal(peer, &me.device, &plain))
             .transpose()?
             .map(hex::encode),
@@ -553,12 +555,13 @@ mod tests {
         asked_of_me: Mutex<Vec<String>>,
     }
 
+    #[async_trait::async_trait]
     impl Handoff for Signs {
         fn asks(&self, _: &Paired, _: bool) -> Vec<String> {
             self.asks.clone()
         }
 
-        fn answer(&self, _: &Paired, asks: &[String]) -> Option<Vec<u8>> {
+        async fn answer(&self, _: &Paired, asks: &[String]) -> Option<Vec<u8>> {
             self.asked_of_me.lock().unwrap().extend(asks.iter().cloned());
             let given: Vec<_> = self.has.iter().filter(|(k, _)| asks.contains(k)).collect();
             Some(serde_json::to_vec(&given).unwrap())

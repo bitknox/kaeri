@@ -14627,6 +14627,21 @@ pub fn stores_share() -> String {
     text("stores-share", &[])
 }
 
+/// Line on a store row when joining it through a paired device failed because the store or the paired device could not be reached. The person can try again later.
+pub fn sync_store_err_offline(store: &str, device: &str) -> String {
+    text("sync-store-err-offline", &[("store", Arg::Text(store)), ("device", Arg::Text(device))])
+}
+
+/// Line on a store row when the store turned the invite down, for example because it was cancelled or used up.
+pub fn sync_store_err_refused(store: &str) -> String {
+    text("sync-store-err-refused", &[("store", Arg::Text(store))])
+}
+
+/// Line on a store row when the paired device can't make invites to the store, because it isn't a named member there any more or joined through an open link.
+pub fn sync_store_err_not_allowed(store: &str, device: &str) -> String {
+    text("sync-store-err-not-allowed", &[("store", Arg::Text(store)), ("device", Arg::Text(device))])
+}
+
 /// Title of the state when a title page could not load.
 pub fn title_load_failed() -> String {
     text("title-load-failed", &[])

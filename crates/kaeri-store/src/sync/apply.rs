@@ -197,6 +197,43 @@ impl Store {
         })
     }
 
+    /// Of `ids`, the titles another device of the group played last, at or after `since` (Unix
+    /// seconds): that device's name, by title. The play is the one the resume point comes from
+    /// (see `refresh_title`); a count adopted from a tracker was played nowhere. Empty with sync
+    /// off, and a title this device played last is left out.
+    pub fn sync_last_devices(&self, ids: &[u32], since: i64) -> Result<BTreeMap<u32, String>> {
+        self.with_personal(|c| {
+            let mut out = BTreeMap::new();
+            let Some(me) = log::device(c)? else { return Ok(out) };
+            let mut newest = c.prepare(&format!(
+                "SELECT uid, provider_id IS 'tracker', at FROM watch_event
+                  WHERE anilist_id = ?1
+                  ORDER BY (provider_id IS 'tracker'), {EFFECTIVE} DESC, CAST(episode AS REAL) DESC,
+                          COALESCE(uid, '') DESC
+                  LIMIT 1"
+            ))?;
+            let mut name =
+                c.prepare("SELECT name FROM sync_peer WHERE device = ?1 AND removed = 0")?;
+            for &id in ids {
+                let row: Option<(Option<String>, bool, i64)> = newest
+                    .query_row([id], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))
+                    .optional()?;
+                let Some((Some(uid), false, at)) = row else { continue };
+                // An event's id is `device:seq`.
+                let Some((device, _)) = uid.rsplit_once(':') else { continue };
+                if device == me || at < since {
+                    continue;
+                }
+                let named: Option<Option<String>> =
+                    name.query_row([device], |r| r.get(0)).optional()?;
+                if let Some(named) = named.flatten().filter(|n| !n.trim().is_empty()) {
+                    out.insert(id, named);
+                }
+            }
+            Ok(out)
+        })
+    }
+
     /// A kept-watch note, as a pass through the folder would leave one: for a fixture build
     /// that shows the note without a second device writing it.
     pub fn sync_fixture_note(

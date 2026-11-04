@@ -784,6 +784,17 @@ pub(crate) fn dispatch(
                 crate::handoff::copy_sign_ins(&ctx, &tx, device, &copy, address).await;
             });
         }
+        Command::SyncGroup(kaeri_model::group::SyncCommand::JoinStoresFrom {
+            device,
+            stores,
+            address,
+        }) => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::store_join::join_from(&ctx, &tx, device, stores, address).await;
+            });
+        }
         Command::SyncGroup(kaeri_model::group::SyncCommand::ChangeSyncFolder { folder }) => {
             let (ctx, tx) = (Ctx::of(services), tx.clone());
             tokio::spawn(async move {
