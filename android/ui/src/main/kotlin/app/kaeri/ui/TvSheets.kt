@@ -967,7 +967,7 @@ internal fun TvSettingsGroup() {
     if (!tv.available) return
     SettingsGroup(
         title = stringResource(R.string.tv_play_on),
-        footer = stringResource(R.string.tv_sheet_footer, tv.shortFingerprint),
+        footer = stringResource(R.string.tv_forget_note),
         rows = paired.map { paired ->
             @Composable { place: Place ->
                 InfoRow(

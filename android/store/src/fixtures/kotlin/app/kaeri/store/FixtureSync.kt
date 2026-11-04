@@ -20,8 +20,9 @@ import kotlinx.coroutines.withTimeoutOrNull
 object FixtureSync {
     /** The states [stage] knows, for the log's sake. */
     val STATES = listOf(
-        "road", "picker", "nextcloud", "nextcloud-wait", "webdav", "waiting", "finishing", "key", "key-wrong", "recovery-key",
+        "picker", "nextcloud", "nextcloud-wait", "webdav", "waiting", "finishing", "key", "key-wrong", "recovery-key",
         "add", "code", "name", "offline", "signed-out", "denied", "other-group", "switch", "setting-up", "pair-ok", "first-code", "first-ok", "first-ok-join", "join-failed-offline", "join-failed-refused", "join-failed-not-allowed",
+        "connecting", "key-sheet", "timed-out", "setup-failed", "switch-service", "remove-menu", "remove-ask", "onedrive-code-denied",
         "google-code", "onedrive-code", "code-expired", "dropbox-phone", "dropbox-nophone", "nextcloud-qr", "who",
     )
 
@@ -67,7 +68,6 @@ object FixtureSync {
         val now = System.currentTimeMillis() / 1000
         val spec = SyncFolderSpec(SyncFolderKind.GOOGLE_DRIVE, null, null, null)
         when (state) {
-            "road" -> store.sync.show(SyncSheet.ROAD)
             "picker" -> store.sync.show(SyncSheet.PICKER)
             "nextcloud" -> store.sync.show(SyncSheet.NEXTCLOUD)
             "nextcloud-wait" -> {
@@ -80,7 +80,40 @@ object FixtureSync {
                 store.apply(Event.SyncSignIn(SyncFolderKind.GOOGLE_DRIVE, SyncSignInStep.Browser(PAGE_URL)))
             }
             "finishing" -> store.apply(Event.SyncSignIn(SyncFolderKind.GOOGLE_DRIVE, SyncSignInStep.Finishing))
-            "setting-up" -> store.sync.settingUp(true)
+            "setting-up" -> {
+                store.sync.show(SyncSheet.PICKER)
+                store.apply(Event.SyncSignIn(SyncFolderKind.GOOGLE_DRIVE, SyncSignInStep.Finishing))
+                delay(1_200)
+            }
+            "connecting" -> {
+                store.sync.show(SyncSheet.PICKER)
+                store.apply(Event.SyncSignIn(SyncFolderKind.GOOGLE_DRIVE, SyncSignInStep.Connecting))
+                delay(1_200)
+            }
+            "key-sheet" -> {
+                store.sync.begin(spec)
+                store.sync.show(SyncSheet.PICKER)
+                store.apply(Event.SyncRecoveryKey("K7QM2WXD9PLR4ZTN8VBH3GFC"))
+                delay(600)
+            }
+            "timed-out" -> {
+                store.sync.show(SyncSheet.PICKER)
+                store.apply(Event.SyncProblem(SyncProblem.SignInExpired(SyncFolderKind.GOOGLE_DRIVE)))
+            }
+            "setup-failed" -> {
+                store.sync.show(SyncSheet.PICKER)
+                store.apply(Event.SyncSignIn(SyncFolderKind.GOOGLE_DRIVE, SyncSignInStep.Finishing))
+                delay(1_200)
+                store.apply(Event.SyncProblem(SyncProblem.Unreachable))
+            }
+            "switch-service" -> store.sync.show(SyncSheet.PICKER)
+            "remove-menu" -> store.sync.askFolder(FolderAsk.MENU)
+            "remove-ask" -> store.sync.askFolder(FolderAsk.REMOVE)
+            "onedrive-code-denied" -> {
+                store.apply(Event.SyncSignIn(SyncFolderKind.ONE_DRIVE, SyncSignInStep.Code("B4NQ7XLK", CODE_URL, (now + 899).toLong(), 5u)))
+                delay(600)
+                store.apply(Event.SyncProblem(SyncProblem.SignInDenied(SyncFolderKind.ONE_DRIVE)))
+            }
             "key" -> store.sync.askKey(spec)
             "key-wrong" -> {
                 store.sync.askKey(spec)

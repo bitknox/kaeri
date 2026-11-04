@@ -26,6 +26,7 @@ import app.kaeri.engine.core.SubtitleBackground
 import app.kaeri.engine.core.SubtitleEdge
 import app.kaeri.engine.model.DemoState
 import app.kaeri.engine.model.SubtitleStyle
+import app.kaeri.engine.model.SyncSignInStep
 import app.kaeri.engine.model.SurprisePool
 import app.kaeri.engine.model.TrendPeriod
 import app.kaeri.engine.core.SourceCandidate
@@ -934,6 +935,8 @@ class AppStore(
         if (request != null) accounts.signInEnded(request)
         val service = SYNC_SERVICES[tracker]
         if (service != null && (request != null || sync.signIn.value?.service == service)) {
+            // The page is done with: what shows next is the engine's exchange, said at once.
+            sync.signIn(service, SyncSignInStep.Connecting)
             send(Command.FinishSyncSignIn(service, callback))
         } else {
             accounts.started(tracker, send(Command.FinishSignIn(tracker, callback)))

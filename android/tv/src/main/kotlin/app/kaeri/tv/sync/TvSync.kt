@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -52,6 +53,7 @@ import app.kaeri.engine.model.SyncStatus
 import app.kaeri.i18n.R
 import app.kaeri.i18n.Strings
 import app.kaeri.store.AppStore
+import app.kaeri.store.FolderAsk
 import app.kaeri.store.SyncSheet
 import app.kaeri.store.Wording
 import app.kaeri.store.cancelSyncSignIn
@@ -72,6 +74,7 @@ import app.kaeri.store.switchProfile
 import app.kaeri.store.syncFolderNow
 import app.kaeri.store.syncSignInAgain
 import app.kaeri.store.syncSignOut
+import app.kaeri.store.changeSyncFolder
 import app.kaeri.tv.remote.ConfirmDialog
 import app.kaeri.tv.remote.QrCode
 import app.kaeri.tv.signin.CodeExpiry
@@ -143,6 +146,7 @@ fun LazyListScope.devices(memory: FocusMemory, first: Modifier) {
         val settingUp by store.sync.settingUp.collectAsStateWithLifecycle()
         var turningOff by remember { mutableStateOf(false) }
         var signingOut by remember { mutableStateOf<SyncFolderKind?>(null) }
+        val folderAsk by store.sync.folderAsk.collectAsStateWithLifecycle()
         var removing by remember { mutableStateOf<SyncDeviceView?>(null) }
         LaunchedEffect(Unit) { store.loadSync() }
         val synced = status
@@ -154,14 +158,13 @@ fun LazyListScope.devices(memory: FocusMemory, first: Modifier) {
             if (synced?.enabled != true) {
                 GroupLabel(stringResource(R.string.sync_group))
                 TvListRow(
-                    stringResource(R.string.sync_off_title),
-                    onClick = {},
-                    supporting = stringResource(R.string.sync_off_line),
-                    supportingLines = 3,
-                    height = 96.dp,
-                    modifier = first.remembered(memory, "devices/off"),
+                    stringResource(R.string.devices_add),
+                    onClick = { store.pairInvite(name); store.sync.show(SyncSheet.CODE) },
+                    supporting = stringResource(R.string.tv_devices_add_line),
+                    icon = SyncIcons.Devices,
+                    modifier = first.remembered(memory, "devices/add"),
                 )
-                TvListRow(stringResource(R.string.sync_turn_on), onClick = { store.sync.show(SyncSheet.ROAD) }, icon = SyncIcons.Sync, modifier = Modifier.remembered(memory, "devices/on"))
+                Footnote(stringResource(R.string.devices_sync_foot) + " " + stringResource(R.string.tv_sync_start_foot)) // i18n-skip
             } else {
                 GroupLabel(stringResource(R.string.devices_yours))
                 val others = synced.devices.filterNot { it.thisDevice }
@@ -207,7 +210,7 @@ fun LazyListScope.devices(memory: FocusMemory, first: Modifier) {
                     val signedOut = problem is SyncProblem.SignInNeeded
                     TvListRow(
                         if (failed) Strings.cloudErrTitle(context, service) else service,
-                        onClick = { if (signedOut) store.syncSignInAgain(folder.kind) else if (failed) store.syncFolderNow() else {} },
+                        onClick = { store.sync.askFolder(FolderAsk.MENU) },
                         supporting = when {
                             settingUp -> stringResource(R.string.tv_cloud_finishing)
                             signedOut -> Strings.tvCloudRevokedLine(context, service)
@@ -219,15 +222,40 @@ fun LazyListScope.devices(memory: FocusMemory, first: Modifier) {
                         dot = if (failed) ObiSilk.Vermilion else ObiSilk.Water,
                         modifier = Modifier.remembered(memory, "devices/folder"),
                     )
-                    if (!signedOut) {
-                        TvListRow(stringResource(R.string.cloud_sync_now), onClick = { if (!synced.syncing) store.syncFolderNow() }, modifier = Modifier.remembered(memory, "devices/now"))
-                        TvListRow(stringResource(R.string.cloud_sign_out), onClick = { signingOut = folder.kind }, modifier = Modifier.remembered(memory, "devices/out"))
-                    }
                 }
                 Footnote(stringResource(R.string.cloud_foot))
                 GroupLabel("")
                 TvListRow(stringResource(R.string.sync_turn_off, Strings.deviceKindTv(context)), onClick = { turningOff = true }, icon = SyncIcons.Power, modifier = Modifier.remembered(memory, "devices/off-now"))
             }
+        }
+        val folder = synced?.folder
+        if (folderAsk == FolderAsk.MENU && folder != null) {
+            val service = cloudName(folder.kind).ifEmpty { stringResource(R.string.devices_this_device) }
+            val signedOut = synced.problem is SyncProblem.SignInNeeded
+            CloudFolderDialog(
+                title = service,
+                line = if (synced.error != null || synced.problem != null) null else agoLine(context, synced.lastSynced),
+                actions = buildList {
+                    if (signedOut) {
+                        add(stringResource(R.string.cloud_sign_in_again) to { store.syncSignInAgain(folder.kind); store.sync.askFolder(null) })
+                    } else {
+                        add(stringResource(R.string.cloud_sync_now) to { if (!synced.syncing) store.syncFolderNow(); store.sync.askFolder(null) })
+                        add(stringResource(R.string.cloud_sign_out) to { signingOut = folder.kind; store.sync.askFolder(null) })
+                    }
+                    add(stringResource(R.string.cloud_remove) to { store.sync.askFolder(FolderAsk.REMOVE) })
+                },
+                onCancel = { store.sync.askFolder(null) },
+            )
+        }
+        if (folderAsk == FolderAsk.REMOVE && folder != null) {
+            val service = cloudName(folder.kind).ifEmpty { stringResource(R.string.devices_this_device) }
+            ConfirmDialog(
+                title = Strings.cloudRemoveTitle(context, service),
+                body = Strings.cloudRemoveLine(context, Strings.deviceKindTv(context), service),
+                action = stringResource(R.string.cloud_remove_action),
+                onConfirm = { store.changeSyncFolder(null); store.sync.askFolder(null) },
+                onCancel = { store.sync.askFolder(null) },
+            )
         }
         signingOut?.let { kind ->
             val service = cloudName(kind)
@@ -256,6 +284,29 @@ fun LazyListScope.devices(memory: FocusMemory, first: Modifier) {
                 onConfirm = { store.leaveSync(); turningOff = false },
                 onCancel = { turningOff = false },
             )
+        }
+    }
+}
+
+/** The cloud folder's actions, as a list in a dialog: the first focused, Cancel last. */
+@Composable
+private fun CloudFolderDialog(title: String, line: String?, actions: List<Pair<String, () -> Unit>>, onCancel: () -> Unit) {
+    androidx.compose.ui.window.Dialog(onDismissRequest = onCancel) {
+        val first = remember { FocusRequester() }
+        Column(
+            Modifier
+                .entryFocus(first)
+                .width(560.dp)
+                .background(ObiSilk.RaisedHigh, androidx.compose.foundation.shape.RoundedCornerShape(28.dp))
+                .padding(horizontal = 32.dp, vertical = 28.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(title, style = MaterialTheme.typography.headlineSmall, color = ObiSilk.Silk, modifier = Modifier.padding(horizontal = 4.dp).semantics { heading() })
+            if (line != null) Text(line, style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Haze, modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp))
+            actions.forEachIndexed { index, (label, run) ->
+                TonalButton(onClick = run, modifier = Modifier.fillMaxWidth().let { if (index == 0) it.focusRequester(first) else it }) { ButtonLabel(label) }
+            }
+            TonalButton(onClick = onCancel, modifier = Modifier.fillMaxWidth()) { ButtonLabel(stringResource(R.string.action_cancel)) }
         }
     }
 }
@@ -334,14 +385,24 @@ fun TvSyncHost() {
     val status by store.sync.status.collectAsStateWithLifecycle()
     val copied by store.sync.copied.collectAsStateWithLifecycle()
     AskAtLaunch()
+    val problem by store.sync.problem.collectAsStateWithLifecycle()
     val shown = signIn
     val step = shown?.step
+    // A refused or lapsed code stays on its own page, with the reason and a fresh code to ask for.
+    var lastCode by remember { mutableStateOf<Pair<SyncFolderKind, SyncSignInStep.Code>?>(null) }
+    LaunchedEffect(shown, problem) {
+        when {
+            shown != null && step is SyncSignInStep.Code -> lastCode = shown.service to step
+            shown == null && problem == null -> lastCode = null
+        }
+    }
+    val failed = problem?.takeIf { shown == null && it.endsSetUp() }
     when {
         copied != null -> PairOkPage(copied!!)
-        shown != null && step is SyncSignInStep.Code -> CloudCodePage(shown.service, step)
+        shown != null && step is SyncSignInStep.Code -> CloudCodePage(shown.service, step, null)
+        failed != null && lastCode != null -> CloudCodePage(lastCode!!.first, lastCode!!.second, failed)
         shown != null && step is SyncSignInStep.Page -> NextcloudQrPage(step)
         sheet == SyncSheet.KEY -> DropboxPhonePage(status)
-        sheet == SyncSheet.ROAD -> RoadPage()
         sheet == SyncSheet.CODE || sheet == SyncSheet.ADD -> PairCodePage()
         sheet == SyncSheet.SWITCH -> TvWhosWatching(onChosen = { store.sync.show(null) })
     }
@@ -429,49 +490,19 @@ private fun PairOkPage(copied: app.kaeri.store.SignInsCopied) {
     }
 }
 
-/** How should your devices share? On a TV: with a device nearby, or a cloud folder to join. */
-@Composable
-private fun RoadPage() {
-    val store = LocalAppStore.current
-    val context = LocalContext.current
-    val focus = remember { FocusRequester() }
-    SyncPage(onBack = { store.sync.show(null) }, focus) {
-        Text(stringResource(R.string.sync_road_title), style = MaterialTheme.typography.titleLarge, color = ObiSilk.Silk, modifier = Modifier.semantics { heading() })
-        Column(Modifier.widthIn(max = 720.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            TvListRow(
-                stringResource(R.string.sync_road_nearby),
-                onClick = { store.pairInvite(tvDeviceName(context)); store.sync.show(SyncSheet.CODE) },
-                supporting = stringResource(R.string.sync_road_nearby_line),
-                supportingLines = 2,
-                icon = SyncIcons.Devices,
-                height = 96.dp,
-                modifier = Modifier.focusRequester(focus),
-            )
-            TvListRow(
-                stringResource(R.string.sync_road_cloud),
-                onClick = { store.sync.show(SyncSheet.PICKER) },
-                supporting = stringResource(R.string.sync_road_cloud_line),
-                supportingLines = 3,
-                icon = SyncIcons.Cloud,
-                height = 120.dp,
-            )
-        }
-        Text(stringResource(R.string.sync_road_later), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze)
-        TonalButton(onClick = { store.sync.show(null) }) { ButtonLabel(stringResource(R.string.action_cancel)) }
-    }
-}
-
 /** A cloud service's device code: scan or type, with the time left, then a fresh code once it runs out. */
 @Composable
-private fun CloudCodePage(service: SyncFolderKind, step: SyncSignInStep.Code) {
+private fun CloudCodePage(service: SyncFolderKind, step: SyncSignInStep.Code, failure: SyncProblem?) {
     val store = LocalAppStore.current
     val context = LocalContext.current
     val name = cloudName(service)
     val prompt = remember(step) { DeviceCodePrompt(name, step.userCode, step.verificationUrl, step.expiresAt.toLong()) }
-    var expired by remember(step.userCode) { mutableStateOf(false) }
+    var lapsed by remember(step.userCode) { mutableStateOf(false) }
+    val expired = lapsed || failure != null
     val again = remember { FocusRequester() }
+    val leave = { store.cancelSyncSignIn(); store.sync.problemSeen() }
     LaunchedEffect(expired) { if (expired) runCatching { again.requestFocus() } }
-    SyncPage(onBack = { store.cancelSyncSignIn() }, again) {
+    SyncPage(onBack = leave, again) {
         Text(stringResource(R.string.accounts_sign_in_to, name), style = MaterialTheme.typography.titleLarge, color = ObiSilk.Silk, modifier = Modifier.semantics { heading() })
         Text(stringResource(R.string.tv_signin_device_steps), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Silk, modifier = Modifier.widthIn(max = 720.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(40.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -485,17 +516,38 @@ private fun CloudCodePage(service: SyncFolderKind, step: SyncSignInStep.Code) {
                 Text(step.verificationUrl, style = MaterialTheme.typography.labelLarge, color = ObiSilk.Haze)
             }
         }
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (!expired) Text(Strings.cloudWaiting(context, name), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze)
-            CodeExpiry(prompt, onExpired = { expired = true })
+        if (failure != null) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Box(Modifier.size(8.dp).background(ObiSilk.Vermilion, CircleShape))
+                Text(failureLine(context, failure, name), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Silk)
+            }
+        } else {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (!expired) Text(Strings.cloudWaiting(context, name), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze)
+                CodeExpiry(prompt, onExpired = { lapsed = true })
+            }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             if (expired) {
                 AmberButton(onClick = { store.syncSignInAgain(service) }, icon = null, modifier = Modifier.focusRequester(again)) { ButtonLabel(stringResource(R.string.action_new_code)) }
             }
-            TonalButton(onClick = { store.cancelSyncSignIn() }, modifier = if (expired) Modifier else Modifier.focusRequester(again)) { ButtonLabel(stringResource(R.string.action_cancel)) }
+            TonalButton(onClick = leave, modifier = if (expired) Modifier else Modifier.focusRequester(again)) { ButtonLabel(stringResource(R.string.action_cancel)) }
         }
     }
+}
+
+/** What a sign-in that ended says, for the code page. */
+private fun failureLine(context: Context, problem: SyncProblem, service: String): String = when (problem) {
+    is SyncProblem.SignInDenied -> Strings.cloudErrDeniedShort(context, service)
+    is SyncProblem.SignInExpired -> Strings.cloudErrTimeout(context)
+    SyncProblem.Unreachable -> Strings.cloudErrOffline(context, service)
+    else -> Strings.cloudErrSigninOther(context, service)
+}
+
+/** A problem that ends a sign-in in words, as against one a form says in place. */
+private fun SyncProblem.endsSetUp(): Boolean = when (this) {
+    SyncProblem.WrongRecoveryKey, SyncProblem.GroupExists, SyncProblem.NoGroup -> false
+    else -> true
 }
 
 /** Nextcloud on a TV: a QR code of its login page, for the phone to open and allow access on. */

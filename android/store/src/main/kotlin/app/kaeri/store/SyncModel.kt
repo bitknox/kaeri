@@ -34,7 +34,10 @@ sealed interface StoreJoin {
 }
 
 /** The sheets the Devices page opens, one at a time. */
-enum class SyncSheet { ROAD, PICKER, NEXTCLOUD, WEBDAV, KEY, ADD, CODE, NAME, SWITCH }
+enum class SyncSheet { PICKER, NEXTCLOUD, WEBDAV, KEY, ADD, CODE, NAME, SWITCH }
+
+/** A question about the cloud folder in use: its actions on a TV, or whether to remove it. */
+enum class FolderAsk { MENU, REMOVE }
 
 /** What the Devices page and its sheets know of sync and profiles. */
 class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) {
@@ -78,6 +81,15 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
     /** The sheet open over the Devices page, if one is. */
     val sheet: StateFlow<SyncSheet?> = _sheet.asStateFlow()
 
+    private val _folderAsk = MutableStateFlow<FolderAsk?>(null)
+
+    /** The question open about the cloud folder in use, if one is. */
+    val folderAsk: StateFlow<FolderAsk?> = _folderAsk.asStateFlow()
+
+    fun askFolder(ask: FolderAsk?) {
+        _folderAsk.value = ask
+    }
+
     /** The folder a join waits on a recovery key for: the one whose group another set of devices holds. */
     var joining: app.kaeri.engine.model.SyncFolderSpec? = null
         private set
@@ -95,6 +107,42 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
 
     /** The folder the last set-up asked for, kept so a group that already exists can be joined with its key. */
     var starting: app.kaeri.engine.model.SyncFolderSpec? = null
+        private set
+
+    /** A set-up or a change of folder is under way: begun, and neither failed, cancelled nor come through. */
+    var working: Boolean = false
+        private set
+
+    /** The sign-in came back and the folder is being made: a failure after this is the folder's, not the sign-in's. */
+    var passedSignIn: Boolean = false
+        private set
+
+    private val _finished = MutableStateFlow(0)
+
+    /** Counts the set-ups that came through: the folder asked for is now the one in use. */
+    val finished: StateFlow<Int> = _finished.asStateFlow()
+
+    private val _keyInSheet = MutableStateFlow(false)
+
+    /** The recovery key on show came from a set-up, so the set-up's own sheet carries it, not a full-screen dialog. */
+    val keyInSheet: StateFlow<Boolean> = _keyInSheet.asStateFlow()
+
+    /** A set-up through [folder] begins. */
+    internal fun begin(folder: app.kaeri.engine.model.SyncFolderSpec) {
+        starting = folder
+        working = true
+        passedSignIn = false
+        _keyInSheet.value = false
+        _problem.value = null
+        _pairFailed.value = null
+    }
+
+    /** The set-up was cancelled by the person: nothing is under way. */
+    internal fun cancelled() {
+        working = false
+        _settingUp.value = false
+        _signIn.value = null
+    }
 
     private val _name = MutableStateFlow<String?>(null)
 
@@ -113,7 +161,15 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
     internal fun status(status: SyncStatus) {
         val joined = _status.value?.devices?.size?.let { status.devices.size > it } == true
         _status.value = status
-        if (status.folder != null) _settingUp.value = false
+        // The folder asked for is the one in use. While a service is being changed the old one
+        // is in use still, so any folder says nothing then.
+        val asked = starting?.kind
+        val inUse = if (asked == null) status.folder != null else status.folder?.kind == asked
+        if (inUse) _settingUp.value = false
+        if (working && asked != null && inUse) {
+            working = false
+            _finished.value += 1
+        }
         if (joined) _invite.value = null
     }
 
@@ -124,6 +180,7 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
     internal fun signIn(service: SyncFolderKind, step: SyncSignInStep?) {
         _signIn.value = if (step == null) null else CloudSignIn(service, step)
         if (step is SyncSignInStep.Finishing) _settingUp.value = true
+        if (step is SyncSignInStep.Finishing || step is SyncSignInStep.Connecting) passedSignIn = true
         if (step != null) _problem.value = null
     }
 
@@ -131,10 +188,12 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
         _problem.value = problem
         _signIn.value = null
         _settingUp.value = false
+        working = false
     }
 
     internal fun recoveryKey(key: String) {
         _recoveryKey.value = key
+        _keyInSheet.value = working
     }
 
     internal fun invite(code: String, port: Int, seconds: Int) {
@@ -185,6 +244,7 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
     /** Done with the recovery key sheet. */
     fun recoveryKeySeen() {
         _recoveryKey.value = null
+        _keyInSheet.value = false
     }
 
     /** The problem was read, or the sheet that showed it was left. */

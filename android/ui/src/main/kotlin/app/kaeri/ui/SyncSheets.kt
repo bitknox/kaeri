@@ -5,6 +5,16 @@ package app.kaeri.ui
 
 import app.kaeri.design.SyncIcons
 import android.app.Activity
+import android.os.SystemClock
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateContentSize
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import app.kaeri.design.Motion
+import app.kaeri.store.beginSyncFolder
+import app.kaeri.store.openSyncPageAgain
 import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
@@ -17,6 +27,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,6 +41,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -149,37 +163,39 @@ internal fun SheetChoice(icon: ImageVector, title: String, line: String, busy: B
     }
 }
 
-/** How should your devices share? Nearby, through a cloud folder, or later. */
-@Composable
-internal fun RoadSheet() {
-    val store = LocalAppStore.current
-    SettingsSheet(onDismiss = { store.sync.show(null) }) {
-        SheetTitle(stringResource(R.string.sync_road_title))
-        SheetChoice(SyncIcons.Devices, stringResource(R.string.sync_road_nearby), stringResource(R.string.sync_road_nearby_line)) { store.sync.show(SyncSheet.ADD) }
-        SheetChoice(SyncIcons.Cloud, stringResource(R.string.sync_road_cloud), stringResource(R.string.sync_road_cloud_line)) { store.sync.show(SyncSheet.PICKER) }
-        SheetText(stringResource(R.string.sync_road_later), Modifier.padding(top = 8.dp))
-        SheetButtons { QuietButton(stringResource(R.string.action_cancel)) { store.sync.show(null) } }
-    }
-}
-
 /** The folder on this phone sync keeps its sealed copy in, where the app may write without a grant. */
 private fun localSyncFolder(context: Context): String =
     (context.getExternalFilesDir(null) ?: context.filesDir).resolve("Kaeri sync").absolutePath
 
-/** Choose a cloud folder: the services this build can sign in to, then Other. */
+/**
+ * Choose a cloud folder: the services this build can sign in to, then Other. The sheet stays
+ * through the whole set-up: it becomes the wait, the progress, the recovery key or the error.
+ */
 @Composable
 internal fun CloudPickerSheet() {
     val store = LocalAppStore.current
     val context = LocalContext.current
     val status by store.sync.status.collectAsStateWithLifecycle()
-    val signIn by store.sync.signIn.collectAsStateWithLifecycle()
     val problem by store.sync.problem.collectAsStateWithLifecycle()
     val name = deviceName()
     val kind = kindWord()
-    val signing = signIn
+    // The wait shows at once on the tap, before the browser or the engine has said anything.
+    var choosing by remember { mutableStateOf<SyncFolderKind?>(null) }
+    LaunchedEffect(problem) { if (problem != null) choosing = null }
+    val flow = rememberSignInFlow(failures = true, choosing = choosing)
+    val inUse = status?.folder?.kind
     val cloud = { service: SyncFolderKind -> status?.let { store.sync.cloud(service) } }
-    fun begin(spec: SyncFolderSpec) = store.startSync(name, spec)
-    SettingsSheet(onDismiss = { store.cancelSyncSignIn(); store.sync.show(null) }, tall = true) {
+    fun begin(spec: SyncFolderSpec) {
+        choosing = spec.kind.takeIf { it != SyncFolderKind.DIRECTORY }
+        store.beginSyncFolder(name, spec)
+    }
+    val close = { choosing = null; store.cancelSyncSignIn(); store.sync.show(null) }
+    FlowSheet(
+        flow,
+        onDismiss = { if (flow.target is SignInPhase.Key) store.sync.show(null) else close() },
+        onCancel = { choosing = null; store.cancelSyncSignIn(); store.sync.problemSeen() },
+        onTryAgain = { store.sync.starting?.let(::begin) },
+    ) {
         SheetTitle(stringResource(R.string.cloud_pick_title))
         val rows = buildList<Triple<SyncFolderKind, ImageVector, String>> {
             if (cloud(SyncFolderKind.DROPBOX) != null) add(Triple(SyncFolderKind.DROPBOX, SyncIcons.Cloud, stringResource(R.string.cloud_dropbox_line)))
@@ -188,25 +204,22 @@ internal fun CloudPickerSheet() {
             if (cloud(SyncFolderKind.ONE_DRIVE) != null) add(Triple(SyncFolderKind.ONE_DRIVE, SyncIcons.Cloud, stringResource(R.string.cloud_onedrive_line)))
         }
         rows.forEach { (service, icon, line) ->
-            val waiting = signing?.service == service
-            SheetChoice(
-                icon,
-                cloudName(service),
-                if (waiting) Strings.cloudWaiting(context, cloudName(service)) else line,
-                busy = waiting,
-                enabled = signing == null,
-            ) {
+            val current = inUse == service
+            SheetChoice(icon, cloudName(service), if (current) stringResource(R.string.cloud_in_use) else line, enabled = !current) {
                 if (service == SyncFolderKind.NEXTCLOUD) store.sync.show(SyncSheet.NEXTCLOUD) else begin(SyncFolderSpec(service, null, null, null))
             }
         }
         SettingsHeader(stringResource(R.string.cloud_other), Modifier.padding(start = 0.dp, top = 8.dp))
-        SheetChoice(SyncIcons.Server, stringResource(R.string.cloud_webdav), stringResource(R.string.cloud_webdav_line), enabled = signing == null) { store.sync.show(SyncSheet.WEBDAV) }
-        SheetChoice(SyncIcons.Folder, Strings.cloudFolder(context, kind), stringResource(R.string.cloud_folder_line), enabled = signing == null) {
+        SheetChoice(SyncIcons.Server, stringResource(R.string.cloud_webdav), stringResource(R.string.cloud_webdav_line), enabled = inUse != SyncFolderKind.WEB_DAV) { store.sync.show(SyncSheet.WEBDAV) }
+        SheetChoice(SyncIcons.Folder, Strings.cloudFolder(context, kind), stringResource(R.string.cloud_folder_line), enabled = inUse != SyncFolderKind.DIRECTORY) {
             begin(SyncFolderSpec(SyncFolderKind.DIRECTORY, localSyncFolder(context), null, null))
         }
-        problemWords(context, problem)?.let { SheetProblem(it) }
-        SheetText(stringResource(R.string.cloud_pick_foot), Modifier.padding(top = 16.dp))
-        SheetButtons { QuietButton(stringResource(R.string.action_cancel)) { store.cancelSyncSignIn(); store.sync.show(null) } }
+        val current = inUse?.let { cloudName(it).ifEmpty { Strings.cloudFolder(context, kind) } }
+        SheetText(
+            if (current != null) Strings.cloudSwitchFoot(context, current) else stringResource(R.string.cloud_pick_foot),
+            Modifier.padding(top = 16.dp),
+        )
+        SheetButtons { QuietButton(stringResource(R.string.action_cancel), onClick = close) }
     }
 }
 
@@ -215,7 +228,7 @@ internal fun problemWords(context: Context, problem: SyncProblem?, host: String?
     null, SyncProblem.WrongRecoveryKey, SyncProblem.GroupExists -> null
     SyncProblem.Unreachable -> if (host != null) Strings.cloudErrNoServer(context, host) else Strings.cloudErrOffline(context, "")
     is SyncProblem.SignInDenied -> Strings.cloudErrDenied(context, cloudName(problem.service))
-    is SyncProblem.SignInExpired -> Strings.cloudErrDenied(context, cloudName(problem.service))
+    is SyncProblem.SignInExpired -> Strings.cloudErrTimeout(context)
     is SyncProblem.SignInNeeded -> Strings.cloudErrSignedOut(context, cloudName(problem.service), "")
     is SyncProblem.Other -> problem.v1
     else -> Strings.cloudErrOffline(context, "")
@@ -238,7 +251,8 @@ internal fun NextcloudSheet() {
     LaunchedEffect(step) { (step as? SyncSignInStep.Page)?.let { runCatching { uri.openUri(it.url) } } }
     val host = address.removePrefix("https://").removePrefix("http://").trimEnd('/')
     val back = { store.cancelSyncSignIn(); store.sync.show(SyncSheet.PICKER) }
-    SettingsSheet(onDismiss = { store.cancelSyncSignIn(); store.sync.show(null) }, holdsInput = address.isNotEmpty()) {
+    val flow = rememberSignInFlow(failures = false, choosing = null)
+    FlowSheet(flow, onDismiss = { store.cancelSyncSignIn(); store.sync.show(null) }, onCancel = { store.cancelSyncSignIn(); store.sync.problemSeen() }, holdsInput = address.isNotEmpty()) {
         if (step != null && !appPassword) {
             SheetTitle(Strings.cloudNextcloudWaitTitle(context, host))
             SheetText(stringResource(R.string.cloud_nextcloud_wait_line))
@@ -294,7 +308,8 @@ internal fun WebDavSheet() {
     var user by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val refused = problem is SyncProblem.SignInDenied || problem is SyncProblem.Other
-    SettingsSheet(onDismiss = { store.sync.show(null) }, holdsInput = address.isNotEmpty()) {
+    val flow = rememberSignInFlow(failures = false, choosing = null)
+    FlowSheet(flow, onDismiss = { store.sync.show(null) }, onCancel = { store.sync.problemSeen() }, holdsInput = address.isNotEmpty()) {
         SheetTitle(stringResource(R.string.cloud_webdav))
         SheetField(address, { address = it }, stringResource(R.string.cloud_nextcloud_address), keyboard = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Next))
         SheetField(user, { user = it }, stringResource(R.string.accounts_user_or_email), modifier = Modifier.padding(top = 8.dp), keyboard = KeyboardOptions(imeAction = ImeAction.Next), error = refused)
@@ -320,7 +335,8 @@ internal fun EnterKeySheet() {
     val folder = store.sync.joining
     var key by remember { mutableStateOf("") }
     val service = folder?.let { cloudName(it.kind).ifEmpty { Strings.cloudFolder(context, kindWord()) } } ?: ""
-    SettingsSheet(onDismiss = { store.sync.show(null) }, holdsInput = key.isNotEmpty()) {
+    val flow = rememberSignInFlow(failures = false, choosing = null)
+    FlowSheet(flow, onDismiss = { store.sync.show(null) }, onCancel = { store.sync.problemSeen() }, holdsInput = key.isNotEmpty()) {
         SheetTitle(stringResource(R.string.rkey_enter_title))
         SheetText(Strings.rkeyEnterLine(context, service, 1))
         SheetField(
@@ -460,10 +476,13 @@ internal fun PairOkSheet(copied: app.kaeri.store.SignInsCopied) {
 
 private fun deviceName(context: Context): String = systemDeviceName(context)
 
-/** The recovery key, full screen: the words, Copy, Save as a file, QR code, and Done. */
+/**
+ * The recovery key's own parts, the same in the full-screen dialog and in a set-up's sheet: what
+ * it is for, the words, Copy, Save as a file and QR code, and where it can be seen again.
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun RecoveryKeyDialog(key: String) {
-    val store = LocalAppStore.current
+private fun RecoveryKeyParts(key: String, tonal: Boolean) {
     val context = LocalContext.current
     val clipboard = LocalClipboardManager.current
     val colors = MaterialTheme.colorScheme
@@ -479,43 +498,53 @@ internal fun RecoveryKeyDialog(key: String) {
             copied = false
         }
     }
+    Text(stringResource(R.string.rkey_line), style = MaterialTheme.typography.bodyLarge, color = colors.onSurfaceVariant)
+    Box(
+        Modifier.padding(vertical = 16.dp).fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(if (tonal) colors.surfaceContainerLowest else colors.surfaceContainer).padding(20.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (qr) {
+            QrCode(groups.joinToString(""), size = 200.dp, label = stringResource(R.string.rkey_qr_short))
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                groups.chunked(3).forEach { row ->
+                    Text(
+                        row.joinToString("   "), // i18n-skip
+                        style = MaterialTheme.typography.titleLarge.copy(fontFamily = FontFamily.Monospace, letterSpacing = 1.sp),
+                    )
+                }
+            }
+        }
+    }
+    val copy = { clipboard.setText(AnnotatedString(groups.joinToString(" "))); copied = true }
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        KeyAction(tonal, if (copied) Icons.Check else SyncIcons.Copy, if (copied) stringResource(R.string.action_copied) else stringResource(R.string.rkey_copy), copy)
+        KeyAction(tonal, SyncIcons.Save, stringResource(R.string.rkey_save_file)) { save.launch("kaeri-recovery-key.txt") }
+        KeyAction(tonal, SyncIcons.Qr, stringResource(R.string.rkey_qr_short)) { qr = !qr }
+    }
+    Text(Strings.rkeyAgain(context, kindWord()), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
+}
+
+/** One of the key's actions: a tonal button in a set-up's sheet, a text button in the full-screen dialog. */
+@Composable
+private fun KeyAction(tonal: Boolean, icon: ImageVector, label: String, onClick: () -> Unit) {
+    val content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {
+        Icon(icon, null, Modifier.padding(end = 8.dp))
+        Text(label)
+    }
+    if (tonal) FilledTonalButton(onClick = onClick, content = content) else TextButton(onClick = onClick, content = content)
+}
+
+/** The recovery key, full screen: the words, Copy, Save as a file, QR code, and Done. Export and Devices show it so. */
+@Composable
+internal fun RecoveryKeyDialog(key: String) {
+    val store = LocalAppStore.current
+    val colors = MaterialTheme.colorScheme
     Dialog(onDismissRequest = {}, properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false, dismissOnBackPress = false, decorFitsSystemWindows = false)) {
         Box(Modifier.fillMaxSize().background(colors.background)) {
             Column(Modifier.fillMaxSize().padding(horizontal = 24.dp).padding(top = 72.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.rkey_title), style = MaterialTheme.typography.headlineMedium)
-                Text(stringResource(R.string.rkey_line), style = MaterialTheme.typography.bodyLarge, color = colors.onSurfaceVariant)
-                Box(
-                    Modifier.padding(vertical = 16.dp).fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(colors.surfaceContainer).padding(20.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    if (qr) {
-                        QrCode(groups.joinToString(""), size = 200.dp, label = stringResource(R.string.rkey_qr_short))
-                    } else {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            groups.chunked(3).forEach { row ->
-                                Text(
-                                    row.joinToString("   "), // i18n-skip
-                                    style = MaterialTheme.typography.titleLarge.copy(fontFamily = FontFamily.Monospace, letterSpacing = 1.sp),
-                                )
-                            }
-                        }
-                    }
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TextButton(onClick = { clipboard.setText(AnnotatedString(groups.joinToString(" "))); copied = true }) {
-                        Icon(if (copied) Icons.Check else SyncIcons.Copy, null, Modifier.padding(end = 8.dp))
-                        Text(if (copied) stringResource(R.string.action_copied) else stringResource(R.string.rkey_copy))
-                    }
-                    TextButton(onClick = { save.launch("kaeri-recovery-key.txt") }) {
-                        Icon(SyncIcons.Save, null, Modifier.padding(end = 8.dp))
-                        Text(stringResource(R.string.rkey_save_file))
-                    }
-                    TextButton(onClick = { qr = !qr }) {
-                        Icon(SyncIcons.Qr, null, Modifier.padding(end = 8.dp))
-                        Text(stringResource(R.string.rkey_qr_short))
-                    }
-                }
-                Text(Strings.rkeyAgain(context, kindWord()), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
+                RecoveryKeyParts(key, tonal = false)
                 Box(Modifier.weight(1f))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                     Button(onClick = { store.sync.recoveryKeySeen() }) { Text(stringResource(R.string.action_done)) }
@@ -542,6 +571,186 @@ internal fun DevicePage(device: app.kaeri.engine.model.SyncDeviceView, onRemove:
         SheetButtons {
             QuietButton(stringResource(R.string.action_cancel), onClick = onDismiss)
             TextButton(onClick = onRemove) { Text(stringResource(R.string.devices_remove), color = MaterialTheme.colorScheme.error) }
+        }
+    }
+}
+
+// A cloud set-up's sheet: the wait, the progress, the recovery key and the error, in one container
+
+/** Where a set-up's sheet stands once it leaves its form. */
+internal sealed interface SignInPhase {
+    /** The service's page is open, or about to be: the wait. */
+    data class Waiting(val service: SyncFolderKind) : SignInPhase
+
+    /** The page came back with access allowed and the sign-in is being finished. */
+    data class Connecting(val service: SyncFolderKind) : SignInPhase
+
+    /** Signed in; the folder is being made and its first copy written. */
+    data class SettingUp(val service: SyncFolderKind) : SignInPhase
+
+    /** The set-up failed: [afterSignIn] says the sign-in itself worked and the folder did not. */
+    data class Failed(val problem: SyncProblem, val service: SyncFolderKind, val afterSignIn: Boolean) : SignInPhase
+
+    /** The folder is ready and its recovery key shows, once. */
+    data class Key(val key: String) : SignInPhase
+}
+
+/** Past the redirect, nothing can stop the sign-in or the first write: Cancel dims and the sheet stays. */
+private val SignInPhase?.pastReturn: Boolean get() = this is SignInPhase.Connecting || this is SignInPhase.SettingUp
+
+/** What a set-up's sheet shows now ([shown], paced) and what the engine says it should ([target]). */
+internal class SignInFlow(val target: SignInPhase?, val shown: SignInPhase?) {
+    /** Cancel is only for the wait and the error. */
+    val canCancel: Boolean get() = !target.pastReturn && target !is SignInPhase.Key
+
+    /** A sheet may be swiped or backed away only while it can still be cancelled. */
+    val dismissible: Boolean get() = canCancel
+}
+
+/** A problem that ends a set-up in words, as against one a form of its own says in place. */
+private fun SyncProblem?.endsSetUp(): Boolean = when (this) {
+    null, SyncProblem.WrongRecoveryKey, SyncProblem.GroupExists, SyncProblem.NoGroup -> false
+    else -> true
+}
+
+/** The service a problem names, or [fallback]. */
+private fun SyncProblem.service(fallback: SyncFolderKind): SyncFolderKind = when (this) {
+    is SyncProblem.SignInDenied -> service
+    is SyncProblem.SignInExpired -> service
+    is SyncProblem.SignInNeeded -> service
+    is SyncProblem.CloudUnavailable -> service
+    else -> fallback
+}
+
+/**
+ * The state of the set-up under way, paced as the board says: a progress state shows only once
+ * its step has run 600 ms, and a state that has shown stays at least 400 ms, so none blinks and
+ * none is skipped. [choosing] is the service just tapped, whose wait shows before the engine says
+ * anything. With [failures] the error comes into the sheet; without, a form says its own.
+ */
+@Composable
+internal fun rememberSignInFlow(failures: Boolean, choosing: SyncFolderKind?): SignInFlow {
+    val store = LocalAppStore.current
+    val signIn by store.sync.signIn.collectAsStateWithLifecycle()
+    val settingUp by store.sync.settingUp.collectAsStateWithLifecycle()
+    val problem by store.sync.problem.collectAsStateWithLifecycle()
+    val key by store.sync.recoveryKey.collectAsStateWithLifecycle()
+    val keyHere by store.sync.keyInSheet.collectAsStateWithLifecycle()
+    val asked = store.sync.starting?.kind ?: SyncFolderKind.GOOGLE_DRIVE
+    val service = signIn?.service ?: choosing ?: asked
+    val step = signIn?.step
+    val target: SignInPhase? = when {
+        keyHere && key != null -> SignInPhase.Key(key!!)
+        failures && problem.endsSetUp() -> SignInPhase.Failed(problem!!, problem!!.service(asked), store.sync.passedSignIn)
+        step is SyncSignInStep.Browser || step is SyncSignInStep.Sheet -> SignInPhase.Waiting(service)
+        step is SyncSignInStep.Connecting -> SignInPhase.Connecting(service)
+        step is SyncSignInStep.Finishing || (settingUp && step == null) -> SignInPhase.SettingUp(service)
+        choosing != null -> SignInPhase.Waiting(choosing)
+        else -> null
+    }
+    var shown by remember { mutableStateOf(target) }
+    var since by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
+    LaunchedEffect(target) {
+        if (target == shown) return@LaunchedEffect
+        if (target != null) {
+            // A progress state first shown waits for its step to have run 600 ms; one that follows a progress state does not.
+            if (target.pastReturn && !shown.pastReturn) delay(600)
+            if (shown != null) delay((since + 400 - SystemClock.elapsedRealtime()).coerceAtLeast(0))
+        }
+        shown = target
+        since = SystemClock.elapsedRealtime()
+    }
+    return SignInFlow(target, shown)
+}
+
+/** A set-up's sheet: [form] until a set-up leaves it, then the phases, crossfaded in the same container. */
+@Composable
+internal fun FlowSheet(
+    flow: SignInFlow,
+    onDismiss: () -> Unit,
+    onCancel: () -> Unit,
+    onTryAgain: () -> Unit = {},
+    holdsInput: Boolean = false,
+    form: @Composable () -> Unit,
+) {
+    SettingsSheet(onDismiss = onDismiss, tall = true, holdsInput = holdsInput || flow.shown != null, dismissible = flow.dismissible) {
+        Crossfade(
+            targetState = flow.shown,
+            animationSpec = Motion.standard(),
+            modifier = Modifier.animateContentSize(Motion.standard()),
+            label = "sign-in phase",
+        ) { phase ->
+            Column {
+                if (phase == null) form() else SignInPhaseContent(phase, flow.canCancel, onCancel, onTryAgain)
+            }
+        }
+    }
+}
+
+/** The indicator of a wait: silk on the tonal track, never amber, with no end to run to. */
+@Composable
+private fun WaitBar() {
+    val colors = MaterialTheme.colorScheme
+    LinearProgressIndicator(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+        color = colors.onSurface,
+        trackColor = colors.secondaryContainer,
+    )
+}
+
+/** One phase of a set-up's sheet. */
+@Composable
+private fun SignInPhaseContent(phase: SignInPhase, canCancel: Boolean, onCancel: () -> Unit, onTryAgain: () -> Unit) {
+    val context = LocalContext.current
+    val store = LocalAppStore.current
+    when (phase) {
+        is SignInPhase.Waiting -> {
+            val service = cloudName(phase.service)
+            SheetTitle(Strings.cloudBrowserTitle(context, service))
+            WaitBar()
+            Text(Strings.cloudWaiting(context, service), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+            SheetText(Strings.cloudBrowserLine(context, service), Modifier.padding(top = 4.dp))
+            Row(Modifier.fillMaxWidth().padding(top = 24.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                FilledTonalButton(onClick = { store.openSyncPageAgain() }) { Text(stringResource(R.string.cloud_open_again)) }
+                QuietButton(stringResource(R.string.action_cancel), enabled = canCancel, onClick = onCancel)
+            }
+        }
+        is SignInPhase.Connecting -> {
+            SheetTitle(Strings.cloudConnecting(context, cloudName(phase.service)))
+            WaitBar()
+            SheetText(stringResource(R.string.cloud_connecting_line), Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+            SheetButtons { QuietButton(stringResource(R.string.action_cancel), enabled = false, onClick = onCancel) }
+        }
+        is SignInPhase.SettingUp -> {
+            SheetTitle(stringResource(R.string.cloud_setting_up))
+            WaitBar()
+            SheetText(Strings.cloudSettingUpLine(context, cloudName(phase.service)), Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+            SheetButtons { QuietButton(stringResource(R.string.action_cancel), enabled = false, onClick = onCancel) }
+        }
+        is SignInPhase.Failed -> {
+            val service = cloudName(phase.service).ifEmpty { Strings.cloudFolder(context, kindWord()) }
+            SheetTitle(if (phase.afterSignIn) stringResource(R.string.cloud_err_setup_title) else Strings.cloudErrSigninTitle(context, service))
+            SheetProblem(
+                when (val problem = phase.problem) {
+                    is SyncProblem.SignInDenied -> Strings.cloudErrDeniedShort(context, service)
+                    is SyncProblem.SignInExpired -> stringResource(R.string.cloud_err_timeout)
+                    SyncProblem.Unreachable -> Strings.cloudErrOffline(context, service)
+                    is SyncProblem.Other -> if (phase.afterSignIn) problem.v1 else Strings.cloudErrSigninOther(context, service)
+                    else -> Strings.cloudErrSigninOther(context, service)
+                },
+                Modifier.padding(top = 4.dp),
+            )
+            SheetButtons {
+                QuietButton(stringResource(R.string.action_cancel), onClick = onCancel)
+                Button(onClick = onTryAgain) { Text(stringResource(R.string.action_try_again)) }
+            }
+        }
+        is SignInPhase.Key -> {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(R.string.rkey_title), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f).semantics { heading() })
+                Button(onClick = { store.sync.recoveryKeySeen(); store.sync.show(null) }) { Text(stringResource(R.string.action_done)) }
+            }
+            Column(Modifier.padding(top = 8.dp)) { RecoveryKeyParts(phase.key, tonal = true) }
         }
     }
 }

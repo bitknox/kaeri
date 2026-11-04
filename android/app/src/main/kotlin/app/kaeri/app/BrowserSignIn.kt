@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 import app.kaeri.design.ObiSilk
 import app.kaeri.store.AppStore
 import app.kaeri.store.SignInRequest
+import app.kaeri.store.isSyncSignIn
 
 /**
  * The browser half of a sign-in, for one activity. The redirect carries the code or the token
@@ -36,6 +37,12 @@ internal class BrowserSignIn(private val activity: ComponentActivity, private va
                 accounts.signIn.collect { request ->
                     accounts.toOpen(request)?.let(::launch)
                 }
+            }
+        }
+        // Open the page again: the sign-in's own tab, once more, closed or not.
+        activity.lifecycleScope.launch {
+            activity.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                accounts.reopened.collect(::launch)
             }
         }
     }
@@ -81,6 +88,8 @@ internal class BrowserSignIn(private val activity: ComponentActivity, private va
         if (!accounts.leftForTab) return
         accounts.leftForTab = false
         val request = accounts.tab ?: return
+        // A cloud folder's sign-in stays on its wait: Open the page again and Cancel are in the sheet.
+        if (store.isSyncSignIn(request)) return
         activity.lifecycleScope.launch {
             // A redirect that arrives with the resume is handled first.
             delay(CLOSE_GRACE_MILLIS)

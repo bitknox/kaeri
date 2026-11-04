@@ -1565,7 +1565,10 @@ class TvShots {
 
     @Test fun sync_signed_out() = syncShot("tv-sync-signed-out", "sync_cloud", "signed-out")
 
-    @Test fun sync_road() = syncShot("tv-sync-road", "sync_nearby", "road")
+    @Test fun sync_code_denied() = syncShot("tv-sync-code-denied", "sync_nearby", "onedrive-code-denied")
+
+    @Test fun sync_remove_menu() = syncShot("tv-sync-remove-menu", "sync_cloud", "remove-menu")
+    @Test fun sync_remove_ask() = syncShot("tv-sync-remove-ask", "sync_cloud", "remove-ask")
 
     @Test fun sync_picker() = syncShot("tv-sync-picker", "sync_nearby", "picker")
 
