@@ -198,6 +198,6 @@ public sealed partial class FolderPage : Page
         var back = path;
         ctx.Window.Say(T.SourcesRemoved(Path.GetFileName(path.TrimEnd('\\', '/')) is { Length: > 0 } n ? n : path) + " " + T.SourcesRemovedFilesStay,
             T.ActionUndo, () => ctx.Send(new Command.Local(new LocalCommand.RestoreFolder(back))));
-        ctx.Go("providers");
+        ctx.LeaveRemoved();
     }
 }

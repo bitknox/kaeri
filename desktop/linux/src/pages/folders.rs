@@ -167,10 +167,9 @@ pub fn push(ctx: &Rc<Ctx>, path: &str) {
                 known.local.as_ref().and_then(|v| v.folders.iter().find(|f| f.path == path)),
             ) else {
                 drop(known);
-                // Removed: the page goes with it.
-                if let Some(nav) = ctx.nav() {
-                    nav.pop();
-                }
+                // Removed: the page goes with it, once, whatever else the engine says while it
+                // slides away.
+                first_party::leave(ctx, page);
                 return;
             };
             let folder = folder.clone();

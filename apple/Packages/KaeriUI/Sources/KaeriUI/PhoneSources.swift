@@ -201,11 +201,18 @@ struct PhoneStoresPage: View {
 /// One store: its plugins with their actions, another device, leaving, and the key it was joined by.
 struct PhoneStorePage: View {
     @Environment(AppStore.self) private var appStore
+    @Environment(\.dismiss) private var dismiss
     let id: String
     @State private var leaving = false
     @State private var inviting = false
 
     var body: some View {
+        // A store left while its page shows goes Back to the stores.
+        page.onRemoved(PagePresence(key: id, present: appStore.stores.store(id) != nil)) { dismiss() }
+    }
+
+    @ViewBuilder
+    private var page: some View {
         if let row = appStore.stores.store(id) {
             PhoneList {
                 Section {
@@ -298,6 +305,7 @@ struct PhonePluginAction: View {
 /// may contact, and turning it off or removing it.
 struct PhonePluginPage: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.dismiss) private var dismiss
     let id: String
     @State private var removing = false
     @State private var confirmingUpdate = false
@@ -363,6 +371,8 @@ struct PhonePluginPage: View {
         .confirmationDialog(L.storesRemovePluginTitle(name: listing?.row.name ?? id), isPresented: $removing, titleVisibility: .visible) {
             Button(L.actionRemove, role: .destructive) { store.removePlugin(id) }
         }
+        // Removed while its page shows: Back to the list it came from.
+        .onRemoved(PagePresence(key: id, present: row != nil)) { dismiss() }
     }
 
     private func value(_ title: String, _ value: String) -> some View {
