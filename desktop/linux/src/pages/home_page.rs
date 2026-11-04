@@ -734,7 +734,8 @@ impl Page {
             synopsis.set_margin_top(12);
             info.append(&synopsis);
         }
-        if let Some(text) = s.line.as_ref().map(say::msg) {
+        let from_device = continue_from(s.last_device.as_deref(), Some(s.episode), s.resume);
+        if let Some(text) = from_device.or_else(|| s.line.as_ref().map(say::msg)) {
             let row = gtk::Box::new(gtk::Orientation::Horizontal, 12);
             row.set_margin_top(16);
             if let Some(fraction) = s.resume.and_then(|r| r.fraction) {
@@ -1036,10 +1037,8 @@ impl Page {
         title.set_margin_top(8);
         inner.append(&title);
 
-        let text = item
-            .line
-            .as_ref()
-            .map(say::msg)
+        let text = continue_from(item.last_device.as_deref(), item.episode, item.resume)
+            .or_else(|| item.line.as_ref().map(say::msg))
             .or_else(|| (item.playable == Playable::NotFound).then(t::home_not_found))
             .or_else(|| item.starts.map(|d| t::up_next_starts(&say::fuzzy_date(d))))
             .or_else(|| item.airs_at.map(crate::pages::calendar::time))
@@ -1861,6 +1860,17 @@ fn day_window<T>(
     let out = items.iter().take_while(|i| airs(i).unwrap_or(i64::MAX) <= now).count();
     let start = out.saturating_sub(1).min(items.len() - shown);
     &items[start..start + shown]
+}
+
+/// "Episode 7 · stopped at 12:04 on Study Mac": a Continue title that another device in the sync
+/// group played last, in place of the engine's line. `None` when this device played last, or
+/// the episode or where it was left is not known.
+fn continue_from(
+    device: Option<&str>,
+    episode: Option<u32>,
+    resume: Option<kaeri_model::catalog::ResumePoint>,
+) -> Option<String> {
+    Some(t::continue_from_device(i64::from(episode?), &resume?.clock(), device?))
 }
 
 #[cfg(test)]

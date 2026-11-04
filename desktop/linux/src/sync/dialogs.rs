@@ -14,7 +14,7 @@ use kaeri_model::{
     event::Event,
     group::{
         SyncCommand, SyncCopy, SyncDeviceView, SyncFolderKind, SyncFolderSpec, SyncPairProblem,
-        SyncProblem, SyncSignInStep,
+        SyncProblem, SyncSignInStep, SyncStoreProblem,
     },
     stores::Secret,
 };
@@ -77,6 +77,11 @@ struct Pair {
     address: gtk::Label,
     paired_title: gtk::Label,
     copy_slot: gtk::Box,
+    /// First launch: the plugin stores the paired device made invites for, as switches.
+    join_slot: gtk::Box,
+    joins: Rc<RefCell<Vec<(String, adw::SwitchRow)>>>,
+    /// The device that paired, once it has: its id and its name.
+    other: Rc<RefCell<Option<(String, String)>>>,
     origin: Origin,
     started_with: usize,
 }
@@ -675,11 +680,8 @@ fn nav_page(
     // Every page of the picker is 480 wide, the list and each form: a column of 432 between the
     // columns' 24 margins, so the dialog does not change width as the pages push.
     body.set_width_request(432);
-    let clamp = adw::Clamp::builder()
-        .maximum_size(480)
-        .tightening_threshold(480)
-        .child(body)
-        .build();
+    let clamp =
+        adw::Clamp::builder().maximum_size(480).tightening_threshold(480).child(body).build();
     let view = adw::ToolbarView::new();
     view.add_top_bar(&header);
     view.set_content(Some(&clamp));
@@ -955,6 +957,15 @@ fn address_text(port: u16) -> String {
 pub fn pair_show(ctx: &Rc<Ctx>, origin: Origin) {
     ctx.hub.known.borrow_mut().invite = None;
     ctx.hub.send(Command::PairInvite { device_name: typed_device_name() });
+    if origin == Origin::FirstLaunch {
+        // A new device asks the one it pairs with for an invite to each plugin store it is in,
+        // inside the pairing; what is held is spent when Done says which to join.
+        ctx.hub.send(Command::SyncGroup(SyncCommand::JoinStoresFrom {
+            device: None,
+            stores: Vec::new(),
+            address: None,
+        }));
+    }
     present_pair_show(ctx, origin);
 }
 
@@ -1007,13 +1018,38 @@ pub fn present_pair_show(ctx: &Rc<Ctx>, origin: Origin) {
     copy_slot.set_margin_start(0);
     copy_slot.set_margin_end(0);
     ok.append(&copy_slot);
+    let join_slot = column();
+    join_slot.set_margin_top(0);
+    join_slot.set_margin_bottom(0);
+    join_slot.set_margin_start(0);
+    join_slot.set_margin_end(0);
+    ok.append(&join_slot);
     stack.add_named(&ok, Some("paired"));
     let (dialog, header, _) = frame(&t::devices_add(), 440, &stack);
     let done = button(&t::action_done(), Some("suggested-action"));
     header.pack_end(&done);
+    let joins: Rc<RefCell<Vec<(String, adw::SwitchRow)>>> = Rc::default();
+    let other: Rc<RefCell<Option<(String, String)>>> = Rc::default();
     done.connect_clicked({
-        let d = dialog.clone();
+        let (ctx, d, joins, other) =
+            (Rc::downgrade(ctx), dialog.clone(), joins.clone(), other.clone());
         move |_| {
+            // Done spends the invites of the stores left on, through the device that paired.
+            let chosen: Vec<String> = joins
+                .borrow()
+                .iter()
+                .filter(|(_, row)| row.is_active())
+                .map(|(address, _)| address.clone())
+                .collect();
+            if let (Some(ctx), Some((id, _)), false) =
+                (ctx.upgrade(), other.borrow().clone(), chosen.is_empty())
+            {
+                ctx.hub.send(Command::SyncGroup(SyncCommand::JoinStoresFrom {
+                    device: Some(id),
+                    stores: chosen,
+                    address: None,
+                }));
+            }
             d.close();
         }
     });
@@ -1028,6 +1064,9 @@ pub fn present_pair_show(ctx: &Rc<Ctx>, origin: Origin) {
         address,
         paired_title,
         copy_slot,
+        join_slot,
+        joins,
+        other,
         origin,
         started_with,
     };
@@ -1105,6 +1144,10 @@ fn paired(ctx: &Rc<Ctx>, device: &str) {
         p.paired_title.set_label(&t::pair_ok(device));
         // First launch asks for them from the start; adding from Devices leaves them off.
         fill_copy(ctx, &p.copy_slot, other.as_ref(), p.origin == Origin::FirstLaunch);
+        if let Some(other) = &other {
+            p.other.replace(Some((other.id.clone(), other.name.clone())));
+        }
+        fill_joins(ctx, &p);
         p.stack.set_visible_child_name("paired");
     }
     if let Some(e) = with(|u| u.enter.clone()) {
@@ -1112,6 +1155,40 @@ fn paired(ctx: &Rc<Ctx>, device: &str) {
         fill_copy(ctx, &e.copy_slot, other.as_ref(), false);
         e.stack.set_visible_child_name("paired");
         e.working.set(false);
+    }
+}
+
+/// First launch: a switch for each plugin store the paired device made an invite for, on from the
+/// start. The engine says the offers again as they come, so rows are added for new ones only.
+fn fill_joins(ctx: &Rc<Ctx>, p: &Pair) {
+    if p.origin != Origin::FirstLaunch {
+        return;
+    }
+    let Some((id, name)) = p.other.borrow().clone() else { return };
+    let offers: Vec<_> = ctx
+        .hub
+        .known
+        .borrow()
+        .sync_group
+        .as_ref()
+        .map(|s| s.stores_to_join.clone())
+        .unwrap_or_default();
+    for offer in offers.into_iter().filter(|o| o.invite_from.as_deref() == Some(id.as_str())) {
+        if p.joins.borrow().iter().any(|(address, _)| *address == offer.address) {
+            continue;
+        }
+        let row = adw::SwitchRow::builder()
+            .title(glib::markup_escape_text(&t::first_join_store(&offer.name)))
+            .subtitle(glib::markup_escape_text(&t::first_join_store_line(
+                &name,
+                &super::kind(),
+            )))
+            .active(true)
+            .build();
+        let group = adw::PreferencesGroup::new();
+        group.add(&row);
+        p.join_slot.append(&group);
+        p.joins.borrow_mut().push((offer.address, row));
     }
 }
 
@@ -1601,9 +1678,30 @@ fn heard(ctx: &Rc<Ctx>, event: &Event) {
                 }
             }
         }
+        Event::SyncStoreJoinFailed { device, name, problem, .. } => {
+            let device = ctx
+                .hub
+                .known
+                .borrow()
+                .sync_group
+                .as_ref()
+                .and_then(|s| {
+                    s.devices.iter().find(|d| d.id == *device).map(|d| d.name.clone())
+                })
+                .unwrap_or_else(|| device.clone());
+            ctx.toast(&match problem {
+                SyncStoreProblem::Offline => t::sync_store_err_offline(name, &device),
+                SyncStoreProblem::Refused => t::sync_store_err_refused(name),
+                SyncStoreProblem::NotAllowed => t::sync_store_err_not_allowed(name, &device),
+            });
+        }
         Event::SyncStatus(status) => {
             if status.folder.is_some() && !status.syncing {
                 with(|u| u.setting_up = false);
+            }
+            // The first launch's store invites arrive after the pairing says it is done.
+            if let Some(p) = with(|u| u.pair.clone()) {
+                fill_joins(ctx, &p);
             }
             // A pairing finished when the group has a device it had not.
             if let Some(p) = with(|u| u.pair.clone())

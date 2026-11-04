@@ -18,7 +18,8 @@ use gtk::prelude::*;
 use super::dialogs::{self, Origin};
 use crate::window::Shell;
 
-pub const NAMES: [&str; 33] = [
+pub const NAMES: [&str; 34] = [
+    "sync-home-continue",
     "sync-off",
     "sync-road",
     "sync-picker",
@@ -187,6 +188,43 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
     let hub = &ctx.hub;
     let say = |events: Vec<Event>| hub.show_instead(events);
     let pane = if shot.starts_with("profiles") { "profiles" } else { "devices" };
+    if shot == "sync-home-continue" {
+        // Home as the engine sends it when the titles under way were last played on a paired
+        // device: its Continue cards and the spotlight say so. Each Home that arrives is sent
+        // again once, with the device set.
+        shell.go(crate::pages::Dest::Home);
+        let hub_again = Rc::clone(hub);
+        let hub = Rc::clone(hub);
+        let _ = hub.clone().listen(move |event| {
+            let Event::Home(view) = event else { return };
+            let stamped =
+                view.sections.iter().flat_map(|s| &s.items).any(|i| i.last_device.is_some());
+            if stamped {
+                return;
+            }
+            let mut view = view.clone();
+            let device = Some("Mika's phone".to_owned());
+            if let Some(spotlight) = view.spotlight.as_mut()
+                && spotlight.resume.is_some()
+            {
+                spotlight.last_device = device.clone();
+            }
+            for section in &mut view.sections {
+                if section.kind == kaeri_model::home::SectionKind::Continue {
+                    for item in section.items.iter_mut().take(2) {
+                        if item.resume.is_some() {
+                            item.last_device = device.clone();
+                        }
+                    }
+                }
+            }
+            let hub = Rc::clone(&hub);
+            glib::idle_add_local_once(move || hub.take(vec![Event::Home(view)]));
+        });
+        // Home was sent before this listened: ask for it again.
+        hub_again.send(kaeri_model::command::Command::LoadHome { refresh: false });
+        return 5.0;
+    }
     match shot {
         "sync-off" => say(vec![Event::SyncStatus(off())]),
         "sync-road" | "sync-picker" | "sync-picker-error" | "sync-wait" | "sync-nextcloud"
@@ -200,8 +238,16 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
         | "sync-pair-enter"
         | "sync-pair-enter-error"
         | "sync-pair-enter-wrong"
-        | "sync-pair-paired-first"
         | "sync-turn-off" => say(vec![Event::SyncStatus(on())]),
+        // First launch: the phone that paired made an invite for one plugin store.
+        "sync-pair-paired-first" => say(vec![Event::SyncStatus(SyncStatus {
+            stores_to_join: vec![kaeri_model::group::SyncStoreOffer {
+                address: "https://club.example".into(),
+                name: "Reading club".into(),
+                invite_from: Some("b".into()),
+            }],
+            ..on()
+        })]),
         "sync-devices-full"
         | "sync-device-page"
         | "sync-device-page-remote-off"
