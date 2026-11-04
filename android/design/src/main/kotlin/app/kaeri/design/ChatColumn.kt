@@ -5,7 +5,7 @@
 package app.kaeri.design
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
@@ -26,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -45,20 +46,25 @@ private const val CLOSE_MS = 450
  * The lines of a chat column in arrival order, [keep] in view and the rest folded into [fold]'s
  * count. A line's hold starts when it comes into view; then it fades out, the lines under it move
  * up, and it leaves [lines]. Each line stands [gap] above the next, and the gap closes with it.
+ * With [showFold] off, nothing past [keep] shows and no fold stands for it. With Remove animations
+ * on, the fades and the fold's crossfade still run at full speed; only the rise and the closing up
+ * land at once.
  */
 @Composable
 fun <T> FoldingColumn(
     lines: SnapshotStateList<ColumnLine<T>>,
     keep: Int = 3,
     gap: Dp = 6.dp,
+    showFold: Boolean = true,
     line: @Composable (T) -> Unit,
     fold: @Composable (Int) -> Unit,
 ) {
     val rise = with(LocalDensity.current) { 6.dp.roundToPx() }
+    val removed = rememberAnimationsRemoved()
     val staying = lines.filterNot { it.leaving }
     for (entry in lines.toList()) {
         val rank = staying.indexOf(entry)
-        if (!entry.leaving && rank > keep) continue
+        if (!entry.leaving && (rank > keep || (!showFold && rank >= keep))) continue
         key(entry) {
             val inView = entry.leaving || rank < keep
             // The fold keeps its last count while it fades into the line it held.
@@ -73,15 +79,29 @@ fun <T> FoldingColumn(
                 delay((CLOSE_DELAY_MS + CLOSE_MS).toLong())
                 lines.remove(entry)
             }
-            AnimatedVisibility(
-                visibleState = entry.state,
-                enter = fadeIn(Motion.fadeIn()) + slideInVertically(Motion.standard()) { rise },
-                exit = fadeOut(Motion.fadeOut()) +
-                    shrinkVertically(tween(CLOSE_MS, delayMillis = CLOSE_DELAY_MS, easing = FastOutSlowInEasing), shrinkTowards = Alignment.Top),
-            ) {
-                Box(Modifier.padding(bottom = gap)) {
-                    Crossfade(inView, animationSpec = Motion.fadeIn(), label = "fold") { shown ->
-                        if (shown) line(entry.item) else fold(folded)
+            if (removed) {
+                val alpha = remember { Animatable(0f) }
+                LaunchedEffect(entry.leaving) {
+                    atFullSpeed { if (entry.leaving) alpha.animateTo(0f, Motion.fadeOut()) else alpha.animateTo(1f, Motion.fadeIn()) }
+                }
+                if (!entry.leaving || alpha.value > 0f) {
+                    Box(Modifier.graphicsLayer { this.alpha = alpha.value }.padding(bottom = gap)) {
+                        SwapFade(inView, animationSpec = Motion.fadeIn(), label = "fold") { shown -> // i18n-skip
+                            if (shown) line(entry.item) else fold(folded)
+                        }
+                    }
+                }
+            } else {
+                AnimatedVisibility(
+                    visibleState = entry.state,
+                    enter = fadeIn(Motion.fadeIn()) + slideInVertically(Motion.standard()) { rise },
+                    exit = fadeOut(Motion.fadeOut()) +
+                        shrinkVertically(tween(CLOSE_MS, delayMillis = CLOSE_DELAY_MS, easing = FastOutSlowInEasing), shrinkTowards = Alignment.Top),
+                ) {
+                    Box(Modifier.padding(bottom = gap)) {
+                        SwapFade(inView, animationSpec = Motion.fadeIn(), label = "fold") { shown -> // i18n-skip
+                            if (shown) line(entry.item) else fold(folded)
+                        }
                     }
                 }
             }

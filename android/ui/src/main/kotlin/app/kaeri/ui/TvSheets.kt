@@ -43,6 +43,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
@@ -526,12 +527,40 @@ private fun TvChatBlock(tv: TvRemoteModel, tvName: String, party: app.kaeri.engi
     val store = LocalAppStore.current
     LaunchedEffect(Unit) { store.party.loadHideChat(context) }
     if (hidden) return
-    TvHeading(Strings.partyChatTitle(context))
+    val names = party.members
+    // Mute lives in one menu at the end of the heading, so it doesn't grow a button per member.
+    Row(Modifier.padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            Strings.partyChatTitle(context),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f).semantics { heading() },
+        )
+        if (!party.chatOff && names.isNotEmpty()) {
+            var menu by remember { mutableStateOf(false) }
+            Box {
+                IconButton(onClick = { menu = true }, modifier = Modifier.size(48.dp)) {
+                    Icon(Icons.More, contentDescription = stringResource(R.string.action_more), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                    for (name in names) {
+                        val muted = name in party.muted
+                        DropdownMenuItem(
+                            text = { Text(if (muted) Strings.partyUnmute(context, name) else Strings.partyMute(context, name)) },
+                            onClick = {
+                                menu = false
+                                tv.send(FfiTvCommand.PartyMute(name, !muted))
+                            },
+                        )
+                    }
+                }
+            }
+        }
+    }
     if (party.chatOff) {
         SheetText(Strings.partyChatOff(context))
         return
     }
-    val names = party.members
     Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
         for (line in party.messages) {
             val said = line.text
@@ -552,6 +581,18 @@ private fun TvChatBlock(tv: TvRemoteModel, tvName: String, party: app.kaeri.engi
                     }
                     Text(Strings.partyReactedAt(context, sentence, at), style = conversationStyle(), color = ObiSilk.Haze)
                 }
+            }
+        }
+        // A muted member is a line in the conversation, with the way back.
+        for (name in party.muted) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(Strings.partyMutedLine(context, name) + " · ", style = conversationStyle(), color = ObiSilk.Haze) // i18n-skip
+                Text(
+                    Strings.partyUnmuteShort(context),
+                    style = conversationStyle(),
+                    color = ObiSilk.Silk,
+                    modifier = Modifier.clickable(role = androidx.compose.ui.semantics.Role.Button) { tv.send(FfiTvCommand.PartyMute(name, false)) }.padding(vertical = 13.dp),
+                )
             }
         }
     }
@@ -597,16 +638,6 @@ private fun TvChatBlock(tv: TvRemoteModel, tvName: String, party: app.kaeri.engi
             SendButton(enabled = live && text.isNotBlank(), onClick = send)
         }
         Text(Strings.partySendsAs(context, tvName), style = MaterialTheme.typography.bodySmall, color = ObiSilk.Haze, modifier = Modifier.padding(start = 20.dp, top = 8.dp))
-    }
-    if (names.isNotEmpty()) {
-        Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            for (name in names) {
-                val muted = name in party.muted
-                QuietButton(if (muted) Strings.partyUnmute(context, name) else Strings.partyMute(context, name)) {
-                    tv.send(FfiTvCommand.PartyMute(name, !muted))
-                }
-            }
-        }
     }
 }
 

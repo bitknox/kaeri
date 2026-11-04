@@ -92,7 +92,7 @@ fun rememberChatOn(): Boolean {
  * 12; the column holds three and folds the rest into "n more in chat", which opens the people sheet.
  */
 @Composable
-fun PartyColumn(model: PlayerModel, onMore: () -> Unit, modifier: Modifier = Modifier) {
+fun PartyColumn(model: PlayerModel, onMore: () -> Unit, modifier: Modifier = Modifier, compact: Boolean = false) {
     val store = LocalAppStore.current
     val on = rememberChatOn()
     val conversation by store.party.conversation.collectAsStateWithLifecycle()
@@ -111,7 +111,8 @@ fun PartyColumn(model: PlayerModel, onMore: () -> Unit, modifier: Modifier = Mod
         Column {
             FoldingColumn(
                 standing,
-                keep = COLUMN_LINES,
+                keep = if (compact) 1 else COLUMN_LINES,
+                showFold = !compact,
                 line = { line ->
                     val said = (line.body as? PartyChatBody.Said)?.text.orEmpty()
                     ChatCapsule(Modifier.semantics { liveRegion = LiveRegionMode.Polite; contentDescription = Strings.partyChatAnnounce(context, chatName(context, line), said) }) {

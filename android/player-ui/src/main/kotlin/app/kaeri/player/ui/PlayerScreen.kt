@@ -457,7 +457,7 @@ fun PlayerScreen(
             if (inParty) {
                 // Above the keyboard there is little room left, so the column moves up while typing.
                 val columnTop by animateDpAsState(if (typing) 16.dp else 80.dp, Motion.standard(), label = "column")
-                PartyColumn(model, onMore = { sheet = PlayerSheet.People }, Modifier.align(Alignment.TopStart).padding(start = 48.dp, top = columnTop))
+                PartyColumn(model, onMore = { sheet = PlayerSheet.People }, Modifier.align(Alignment.TopStart).padding(start = 48.dp, top = columnTop), compact = typing)
             } else {
                 AlertNote(model, Modifier.align(Alignment.TopCenter).padding(top = 80.dp))
             }
