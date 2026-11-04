@@ -3,6 +3,8 @@
 
 package app.kaeri.tv.ui
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.lazy.LazyItemScope
@@ -31,6 +33,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.MotionDurationScale
+import androidx.compose.ui.graphics.graphicsLayer
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -83,10 +88,24 @@ fun TvListRow(
     valueFlagRes: Int? = null,
 ) {
     var focused by remember { mutableStateOf(false) }
+    // A supporting line that comes or goes (why finding is paused, say): the row makes room on
+    // standard and the words fade on the fade-in token. With Remove animations the room opens at
+    // once and the words still fade, on a clock of their own.
+    var lastSupporting by remember { mutableStateOf(supporting) }
+    if (supporting != null) lastSupporting = supporting
+    val words = remember { Animatable(if (supporting != null) 1f else 0f) }
+    val removed = LocalReducedMotion.current
+    LaunchedEffect(supporting != null) {
+        if (removed) {
+            withContext(object : MotionDurationScale { override val scaleFactor = 1f }) { words.animateTo(if (supporting != null) 1f else 0f, Motion.fadeIn()) }
+        } else {
+            words.animateTo(if (supporting != null) 1f else 0f, Motion.fadeIn())
+        }
+    }
     Surface(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.fillMaxWidth().heightIn(min = height).onFocusChanged { focused = it.isFocused }
+        modifier = modifier.animateContentSize(Motion.standard()).fillMaxWidth().heightIn(min = height).onFocusChanged { focused = it.isFocused }
             // The drawn switch and dot, said: Autoplay is on, this track is the selected one.
             .semantics {
                 if (switch != null) {
@@ -123,9 +142,10 @@ fun TvListRow(
             }
             Column(Modifier.weight(1f)) {
                 Text(headline, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                if (supporting != null) {
+                val shownSupporting = supporting ?: lastSupporting.takeIf { words.value > 0f }
+                if (shownSupporting != null) {
                     val quiet = if (focused || selected) LocalContentColor.current else ObiSilk.Haze
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(Modifier.graphicsLayer { alpha = words.value }, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (dot != null) {
                             // Level with the first line, however many the words wrap to.
                             val line = with(LocalDensity.current) { MaterialTheme.typography.bodyMedium.lineHeight.toDp() }
@@ -133,7 +153,7 @@ fun TvListRow(
                                 Box(Modifier.size(8.dp).background(dot, CircleShape))
                             }
                         }
-                        Text(supporting, style = MaterialTheme.typography.bodyMedium, color = quiet, maxLines = supportingLines, overflow = TextOverflow.Ellipsis)
+                        Text(shownSupporting, style = MaterialTheme.typography.bodyMedium, color = quiet, maxLines = supportingLines, overflow = TextOverflow.Ellipsis)
                     }
                 }
             }

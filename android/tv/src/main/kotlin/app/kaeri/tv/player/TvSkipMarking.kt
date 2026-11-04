@@ -28,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -217,8 +218,18 @@ private fun SkipPromptBody(model: PlayerModel, prompt: SkipPrompt, first: FocusR
         }
         if (buttons.isNotEmpty()) {
             Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Left and Right walk the buttons by order: the controls behind the card, when they are up,
+                // must not catch the focus by where they sit.
+                val stops = remember(buttons.size) { List(buttons.size) { FocusRequester() } }
                 buttons.forEachIndexed { index, (label, action) ->
-                    TonalButton(onClick = action, modifier = if (index == 0) Modifier.focusRequester(first) else Modifier) { ButtonLabel(label) }
+                    val own = if (index == 0) Modifier.focusRequester(first).focusRequester(stops[0]) else Modifier.focusRequester(stops[index])
+                    TonalButton(
+                        onClick = action,
+                        modifier = own.focusProperties {
+                            stops.getOrNull(index - 1)?.let { left = it }
+                            stops.getOrNull(index + 1)?.let { right = it }
+                        },
+                    ) { ButtonLabel(label) }
                 }
             }
         }
