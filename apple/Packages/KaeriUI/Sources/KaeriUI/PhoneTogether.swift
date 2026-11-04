@@ -145,19 +145,39 @@ struct PhoneTogetherLobby: View {
     @Environment(AppStore.self) private var store
     /// The keyboard is up, for the chat's field.
     @State private var typing = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private static let chatPlace = "chat"
+
+    /// The compact header's title: the show.
+    private var compactTitle: String {
+        let party = store.party
+        guard let room = party.lobbyEpisode else { return L.togetherTitle }
+        return room.id.flatMap { store.titles[$0]?.showTitle } ?? room.title
+    }
+
+    /// The compact header's line: how many are in the room and ready.
+    private var compactLine: String {
+        let members = store.party.members ?? []
+        return L.partyBarLine(count: members.count, ready: members.filter { $0.ready == true }.count)
+    }
 
     var body: some View {
         let party = store.party
         ScrollViewReader { reader in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    GeometryReader { proxy in
-                        TogetherStill(id: party.lobbyEpisode?.id, width: proxy.size.width,
-                                      height: proxy.size.width * 9 / 16)
+                    // While the chat field has the keyboard the large header steps aside for the
+                    // compact one in the navigation bar (watch together chat board, iPhone).
+                    if !typing {
+                        GeometryReader { proxy in
+                            TogetherStill(id: party.lobbyEpisode?.id, width: proxy.size.width,
+                                          height: proxy.size.width * 9 / 16)
+                        }
+                        .aspectRatio(16 / 9, contentMode: .fit)
+                        .transition(.opacity)
+                        TogetherRoomBlock(titleSize: 22).padding(.top, 16)
+                            .transition(.opacity)
                     }
-                    .aspectRatio(16 / 9, contentMode: .fit)
-                    TogetherRoomBlock(titleSize: 22).padding(.top, 16)
                     if party.inLobbyRoom, party.party?.roomEpisode == nil, party.party?.looking == false {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(L.partyRoomNothing).foregroundStyle(.silk)
@@ -200,14 +220,15 @@ struct PhoneTogetherLobby: View {
         .safeAreaInset(edge: .bottom) {
             if !typing { pinned.transition(.opacity) }
         }
-        .animation(.fadeIn, value: typing)
+        .animation(reduceMotion ? .fadeIn : .standard, value: typing)
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
             typing = true
         }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
             typing = false
         }
-        .navigationTitle("")
+        .navigationTitle(typing ? compactTitle : "")
+        .navigationSubtitle(typing ? compactLine : "")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
         .toolbar {

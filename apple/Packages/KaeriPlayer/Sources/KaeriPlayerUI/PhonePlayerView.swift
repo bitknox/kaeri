@@ -19,6 +19,8 @@ public struct PhonePlayerView: View {
     @State private var sheet: Sheet?
     /// The party sheet opens at the conversation: it came from the column's "n more in chat".
     @State private var sheetAtChat = false
+    /// The phone is held sideways: the party opens as a trailing panel over the video, not a sheet.
+    @State private var sideways = false
     @GestureState private var drag: CGFloat = 0
     @GestureState private var held = false
     @State private var heldSpeed: Double?
@@ -133,6 +135,7 @@ public struct PhonePlayerView: View {
                         .allowsHitTesting(false)
                 }
                 chatBar
+                sidePanel
                 // The iPhone gets the side panel; the iPad, wide and tall enough, the Mac's bar.
                 let wide = proxy.size.width >= 700 && proxy.size.height >= 600
                 SkipMarkLayer(model: model, metrics: metrics, layout: wide ? .bar : .panel)
@@ -177,7 +180,9 @@ public struct PhonePlayerView: View {
         .persistentSystemOverlays(.hidden)
         .playerAccessibility(model)
         .sensoryFeedback(.impact(weight: .light), trigger: drag > 120) { _, crossed in crossed }
-        .sheet(item: $sheet) { sheet in sheetContent(sheet) }
+        .sheet(item: sheetShown) { sheet in sheetContent(sheet) }
+        .onGeometryChange(for: Bool.self, of: Self.isSideways) { sideways = $0 }
+        .animation(reduceMotion ? .fadeIn : .standard, value: partyBeside)
         .onChange(of: sheet) { _, open in
             model.hold("sheet", open != nil)
             // A sheet closes the field's bar; the draft stays, and the party sheet's field shows it.
@@ -411,19 +416,56 @@ public struct PhonePlayerView: View {
         .voiceControlLabels(label)
     }
 
+    private nonisolated static func isSideways(_ proxy: GeometryProxy) -> Bool {
+        proxy.size.width > proxy.size.height && proxy.size.height < 500
+    }
+
+    private var partyBeside: Bool { sheet == .party && sideways }
+
+    /// The sheet on screen: not the party's while it is the side panel.
+    private var sheetShown: Binding<Sheet?> {
+        Binding(get: { partyBeside ? nil : sheet }, set: { sheet = $0 })
+    }
+
+    /// The party's members and conversation, in the sheet and in the sideways panel.
+    private var partyScroll: some View {
+        ScrollViewReader { reader in
+            ScrollView { PartyPanel(metrics: metrics) }
+                .task {
+                    // Opened from "n more in chat": at the conversation, not the members.
+                    guard sheetAtChat else { return }
+                    sheetAtChat = false
+                    await Task.yield()
+                    reader.scrollTo(PartyPanel.chatPlace, anchor: .top)
+                }
+        }
+    }
+
+    /// The party on a phone held sideways (watch together chat board): 360 pt at the trailing
+    /// edge over the video, which stays whole. A tap on the picture or a swipe toward the edge
+    /// closes it; under Reduce Motion it crossfades in place.
+    @ViewBuilder
+    private var sidePanel: some View {
+        if partyBeside {
+            partyScroll
+                .frame(width: 360)
+                .frame(maxHeight: .infinity)
+                .background(Palette.raised, in: UnevenRoundedRectangle(topLeadingRadius: 28, bottomLeadingRadius: 28))
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
+                .transition(reduceMotion ? .opacity : .move(edge: .trailing))
+                .gesture(DragGesture(minimumDistance: 24).onEnded { value in
+                    if value.translation.width > 60 { sheet = nil }
+                })
+                .accessibilityAddTraits(.isModal)
+                .accessibilityAction(.escape) { sheet = nil }
+                .preferredColorScheme(.dark)
+        }
+    }
+
     @ViewBuilder
     private func sheetContent(_ sheet: Sheet) -> some View {
         if sheet == .party {
-            ScrollViewReader { reader in
-                ScrollView { PartyPanel(metrics: metrics) }
-                    .task {
-                        // Opened from "n more in chat": at the conversation, not the members.
-                        guard sheetAtChat else { return }
-                        sheetAtChat = false
-                        await Task.yield()
-                        reader.scrollTo(PartyPanel.chatPlace, anchor: .top)
-                    }
-            }
+            partyScroll
             .presentationDetents([.medium, .large])
             .presentationBackground(Palette.ground)
             .presentationDragIndicator(.visible)
@@ -561,6 +603,10 @@ public struct PhonePlayerView: View {
     }
 
     private func toggleControls() {
+        if sheet == .party, sideways {
+            sheet = nil
+            return
+        }
         if model.controlsVisible && !model.paused { model.hideControls() } else { model.poke() }
     }
 
