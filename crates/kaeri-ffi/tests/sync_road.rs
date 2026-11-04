@@ -3,18 +3,22 @@
 #![cfg(feature = "testing")]
 
 use std::{
-    sync::{Arc, mpsc},
+    collections::BTreeMap,
+    sync::{Arc, Mutex, mpsc},
     thread,
     time::{Duration, Instant},
 };
 
-use kaeri_ffi::{FfiDirs, FfiEngine, FfiHost, FfiPlatform, FfiScene, FfiStart};
+use kaeri_ffi::{
+    FfiDirs, FfiEngine, FfiHost, FfiPlatform, FfiScene, FfiStart, FfiSyncAdvert,
+    FfiSyncNetwork, FfiSyncSink,
+};
 use kaeri_model::{
     command::Command,
     event::Event,
     group::{
-        CloudUnavailable, SyncCloudWay, SyncCommand, SyncCopy, SyncFolderKind, SyncFolderSpec,
-        SyncProblem, SyncSignInStep, SyncStatus,
+        CloudUnavailable, SyncCloudWay, SyncCommand, SyncCopy, SyncDeviceKind, SyncFolderKind,
+        SyncFolderSpec, SyncPairProblem, SyncProblem, SyncSignInStep, SyncStatus,
     },
     profiles::ProfilesView,
     stores::Secret,
@@ -52,12 +56,21 @@ impl App {
     }
 
     fn start_in(scene: Option<FfiScene>, start: FfiStart) -> Self {
+        Self::start_hosted(scene, Arc::new(Quiet), start)
+    }
+
+    /// An app on `platform`.
+    fn on(platform: FfiPlatform) -> Self {
+        Self::start_in(None, FfiStart { platform: Some(platform), ..FfiStart::default() })
+    }
+
+    fn start_hosted(scene: Option<FfiScene>, host: Arc<dyn FfiHost>, start: FfiStart) -> Self {
         let root = tempfile::tempdir().expect("a temporary directory");
         let dir = |name: &str| root.path().join(name).display().to_string();
         let dirs = FfiDirs { config: dir("config"), data: dir("data"), cache: dir("cache") };
         let engine = match scene {
-            Some(scene) => FfiEngine::start_scene(dirs, Arc::new(Quiet), scene, start),
-            None => FfiEngine::start_testing(dirs, Arc::new(Quiet), start),
+            Some(scene) => FfiEngine::start_scene(dirs, host, scene, start),
+            None => FfiEngine::start_testing(dirs, host, start),
         }
         .expect("the engine starts");
         let (tx, events) = mpsc::channel();
@@ -624,4 +637,311 @@ fn the_sync_scenes_show_nearby_cloud_and_a_tv_with_a_phones_sign_in() {
         dropbox.map(|c| c.way.clone()),
         Some(SyncCloudWay::Unavailable { reason: CloudUnavailable::NeedsPhone })
     );
+}
+
+/// A local network in memory for `_kaeri-sync._tcp`: what one app advertises, every app's browse
+/// finds, on loopback.
+#[derive(Clone, Default)]
+struct FakeNetwork {
+    adverts: Arc<Mutex<BTreeMap<String, FfiSyncAdvert>>>,
+}
+
+impl FfiSyncNetwork for FakeNetwork {
+    fn advertise(&self, advert: FfiSyncAdvert) {
+        self.adverts.lock().unwrap().insert(advert.instance.clone(), advert);
+    }
+    fn withdraw(&self, instance: String) {
+        self.adverts.lock().unwrap().remove(&instance);
+    }
+    fn browse(&self, sink: Arc<FfiSyncSink>) {
+        let adverts: Vec<FfiSyncAdvert> =
+            self.adverts.lock().unwrap().values().cloned().collect();
+        for advert in adverts {
+            let addresses = vec!["fe80::1%lo0".to_owned(), "127.0.0.1".to_owned()];
+            sink.found(advert.instance, addresses, advert.port, advert.txt);
+        }
+    }
+    fn stop_browsing(&self) {}
+}
+
+fn pair_failed(app: &mut App) -> (SyncPairProblem, Option<String>, SyncProblem) {
+    let (problem, device) = app.until("pairing to fail", |event| match event {
+        Event::SyncPairFailed { problem, device } => Some((*problem, device.clone())),
+        Event::SyncStatus(s) if s.devices.len() == 2 => panic!("paired"),
+        _ => None,
+    });
+    let words = app.until("the problem", |event| match event {
+        Event::SyncProblem(problem) => Some(problem.clone()),
+        _ => None,
+    });
+    (problem, device, words)
+}
+
+#[test]
+fn a_device_given_only_the_code_finds_the_device_showing_it_on_the_network() {
+    let network = FakeNetwork::default();
+    let mut living_room = App::start();
+    living_room.engine.set_sync_network(Arc::new(network.clone()));
+    let mut phone = App::start();
+    phone.engine.set_sync_network(Arc::new(network.clone()));
+
+    // Nobody shows a code yet.
+    phone.engine.send(Command::SyncGroup(SyncCommand::PairWithCode {
+        device_name: "Phone".into(),
+        code: "123456".into(),
+    }));
+    let (problem, device, _) = pair_failed(&mut phone);
+    assert_eq!((problem, device), (SyncPairProblem::NotFound, None));
+
+    living_room.engine.send(Command::PairInvite { device_name: "Living room".into() });
+    let code = living_room.until("the code", |event| match event {
+        Event::SyncInvite { code, .. } => Some(code.clone()),
+        _ => None,
+    });
+    let adverts = network.adverts.lock().unwrap().clone();
+    let advert = adverts.get("Living room").expect("the device showing a code is advertised");
+    assert!(advert.txt.iter().any(|t| t.key == "v" && t.value == "1"), "{advert:?}");
+    assert!(advert.txt.iter().any(|t| t.key == "id"), "{advert:?}");
+
+    let wrong = if code == "000000" { "111111" } else { "000000" };
+    phone.engine.send(Command::SyncGroup(SyncCommand::PairWithCode {
+        device_name: "Phone".into(),
+        code: wrong.into(),
+    }));
+    let (problem, device, words) = pair_failed(&mut phone);
+    assert_eq!((problem, device.as_deref()), (SyncPairProblem::WrongCode, Some("Living room")));
+    assert!(matches!(words, SyncProblem::Other(_)), "{words:?}");
+
+    phone.engine.send(Command::SyncGroup(SyncCommand::PairWithCode {
+        device_name: "Phone".into(),
+        code,
+    }));
+    let status = phone.status_where("both devices", |s| s.devices.len() == 2);
+    assert!(status.devices.iter().any(|d| d.name == "Living room"));
+    living_room.status_where("both devices", |s| s.devices.len() == 2);
+
+    // The code is put away, and the advert with it.
+    living_room.engine.send(Command::PairStop);
+    let deadline = Instant::now() + PATIENCE;
+    while !network.adverts.lock().unwrap().is_empty() {
+        assert!(Instant::now() < deadline, "the advert stays");
+        thread::sleep(Duration::from_millis(20));
+    }
+}
+
+#[test]
+fn a_renamed_device_is_renamed_on_the_others_and_a_held_back_one_is_refused_until_back_on() {
+    let mut living_room = App::start();
+    let mut phone = App::start();
+    let port = pair(&mut living_room, "Living room", &mut phone, "Phone");
+    let address = format!("127.0.0.1:{port}");
+    let seen = living_room.status_where("both devices", |s| s.devices.len() == 2);
+    let phone_id = other_device(&seen);
+    let room_id = seen.devices.iter().find(|d| d.this_device).unwrap().id.clone();
+
+    // Sync off for the phone: the living room refuses its sessions, and says so on its page.
+    living_room.engine.send(Command::SyncGroup(SyncCommand::SetDeviceSync {
+        device: phone_id.clone(),
+        on: false,
+    }));
+    living_room.status_where("the phone held back", |s| {
+        s.devices.iter().any(|d| d.id == phone_id && d.paused)
+    });
+
+    phone
+        .engine
+        .send(Command::SyncGroup(SyncCommand::RenameDevice { name: " Kitchen ".into() }));
+    let renamed =
+        phone.status_where("the new name", |s| s.device_name.as_deref() == Some("Kitchen"));
+    assert!(renamed.devices.iter().any(|d| d.this_device && d.name == "Kitchen"));
+    phone
+        .engine
+        .send(Command::SyncWithDevice { device: room_id.clone(), address: address.clone() });
+    let problem = phone.until("a refusal", |event| match event {
+        Event::SyncProblem(problem) => Some(problem.clone()),
+        _ => None,
+    });
+    assert!(matches!(problem, SyncProblem::Other(_)), "{problem:?}");
+
+    // Back on: the next session carries the new name.
+    living_room.engine.send(Command::SyncGroup(SyncCommand::SetDeviceSync {
+        device: phone_id.clone(),
+        on: true,
+    }));
+    living_room.status_where("the phone back", |s| {
+        s.devices.iter().any(|d| d.id == phone_id && !d.paused)
+    });
+    phone.engine.send(Command::SyncWithDevice { device: room_id, address });
+    let seen = living_room.status_where("the phone renamed", |s| {
+        s.devices.iter().any(|d| d.id == phone_id && d.name == "Kitchen")
+    });
+    assert!(seen.devices.iter().all(|d| !d.paused));
+}
+
+#[test]
+fn devices_say_their_kind_and_the_remote_switch_holds_on_both_sides() {
+    let mut tv = App::on(FfiPlatform::AndroidTv);
+    let mut phone = App::on(FfiPlatform::Ios);
+    let port = pair(&mut tv, "Living room", &mut phone, "Phone");
+    let on_tv = tv.status_where("both devices", |s| s.devices.len() == 2);
+    let phone_id = other_device(&on_tv);
+    let tv_id = on_tv.devices.iter().find(|d| d.this_device).unwrap().id.clone();
+    let kinds: BTreeMap<String, Option<SyncDeviceKind>> =
+        on_tv.devices.iter().map(|d| (d.name.clone(), d.kind)).collect();
+    assert_eq!(kinds["Living room"], Some(SyncDeviceKind::Tv));
+    assert_eq!(kinds["Phone"], Some(SyncDeviceKind::Phone));
+    assert!(on_tv.devices.iter().all(|d| !d.remote_off && d.remote_key.is_none()));
+
+    tv.engine.send(Command::SyncGroup(SyncCommand::SetDeviceRemote {
+        device: phone_id.clone(),
+        on: false,
+    }));
+    tv.status_where("remote off", |s| {
+        s.devices.iter().any(|d| d.id == phone_id && d.remote_off)
+    });
+    phone.engine.send(Command::SyncWithDevice {
+        device: tv_id.clone(),
+        address: format!("127.0.0.1:{port}"),
+    });
+    let on_phone = phone.status_where("remote off for the TV", |s| {
+        s.devices.iter().any(|d| d.id == tv_id && d.remote_off)
+    });
+    let me = on_phone.devices.iter().find(|d| d.this_device).unwrap();
+    assert!(!me.remote_off && me.kind == Some(SyncDeviceKind::Phone));
+}
+
+/// The remote's own pairing, with sync's Remote switch over it: a phone in the group is refused
+/// while the switch is off, and pairing it again at the TV turns the switch back on.
+#[cfg(feature = "remote")]
+mod remote_switch {
+    use kaeri_model::remote::FrontIntent;
+    use kaeri_remote::{
+        Error,
+        client::{Hello, RemoteClient},
+        command::{Key, RemoteCommand},
+        identity::{Fingerprint, Identity},
+        wire::Rejection,
+    };
+
+    use super::*;
+
+    /// A host whose keychain is a map, so the test holds the phone's remote key.
+    #[derive(Default)]
+    struct Keychain(Mutex<BTreeMap<String, String>>);
+
+    impl FfiHost for Keychain {
+        fn open_url(&self, _url: String) -> bool {
+            false
+        }
+        fn notify(&self, _title: String, _body: String) {}
+        fn secret_get(&self, id: String) -> Option<String> {
+            self.0.lock().unwrap().get(&id).cloned()
+        }
+        fn secret_set(&self, id: String, value: String) -> bool {
+            self.0.lock().unwrap().insert(id, value);
+            true
+        }
+        fn secret_delete(&self, id: String) -> bool {
+            self.0.lock().unwrap().remove(&id);
+            true
+        }
+    }
+
+    fn unhex(text: &str) -> Vec<u8> {
+        (0..text.len())
+            .step_by(2)
+            .map(|i| u8::from_str_radix(&text[i..i + 2], 16).unwrap())
+            .collect()
+    }
+
+    fn intent(app: &mut App) -> FrontIntent {
+        app.until("an intent", |event| match event {
+            Event::Remote(intent) => Some(intent.clone()),
+            _ => None,
+        })
+    }
+
+    #[test]
+    fn a_phone_in_the_group_is_refused_while_its_remote_switch_is_off() {
+        let mut tv = App::on(FfiPlatform::AndroidTv);
+        let keychain = Arc::new(Keychain::default());
+        let start = FfiStart { platform: Some(FfiPlatform::Ios), ..FfiStart::default() };
+        let mut phone = App::start_hosted(None, keychain.clone(), start);
+        let port = pair(&mut tv, "Living room", &mut phone, "Phone");
+        let on_tv = tv.status_where("both devices", |s| s.devices.len() == 2);
+        let (phone_id, tv_id) = (
+            other_device(&on_tv),
+            on_tv.devices.iter().find(|d| d.this_device).unwrap().id.clone(),
+        );
+
+        // Each says its remote key; a session carries them across.
+        let remote =
+            futures::executor::block_on(tv.engine.start_remote("Living room".into(), 0))
+                .expect("the remote listens");
+        let _sender = phone.engine.tv_sender("Phone".into(), "kaeri-test/0".into()).unwrap();
+        let kept = keychain
+            .0
+            .lock()
+            .unwrap()
+            .iter()
+            .find(|(k, _)| k.contains("remote-sender"))
+            .map(|(_, v)| v.clone())
+            .expect("the phone's key is kept");
+        let identity = Identity::from_pkcs8(&unhex(&kept)).unwrap();
+        let phone_key = identity.fingerprint().to_hex();
+        phone.engine.send(Command::SyncWithDevice {
+            device: tv_id.clone(),
+            address: format!("127.0.0.1:{port}"),
+        });
+        tv.status_where("the phone's remote key", |s| {
+            s.devices
+                .iter()
+                .any(|d| d.id == phone_id && d.remote_key.as_deref() == Some(&phone_key))
+        });
+        let on_phone = phone.status_where("the TV's remote key", |s| {
+            s.devices.iter().any(|d| d.id == tv_id && d.remote_key.is_some())
+        });
+        let tv_key =
+            on_phone.devices.iter().find(|d| d.id == tv_id).unwrap().remote_key.clone();
+        let tv_key = tv_key.as_deref().and_then(Fingerprint::from_hex).map(|f| f.short());
+        assert_eq!(tv_key, Some(remote.short_fingerprint()));
+
+        let runtime = tokio::runtime::Runtime::new().unwrap();
+        let addr = std::net::SocketAddr::from(([127, 0, 0, 1], remote.port()));
+        let hello = Hello { name: "Phone".into(), app: "kaeri-test/0".into() };
+        let connect_and_pair = |tv: &mut App| {
+            let mut client = runtime.block_on(async {
+                let mut client =
+                    RemoteClient::connect(addr, &identity, None, &hello).await.unwrap();
+                client.request_code().await.unwrap();
+                client
+            });
+            let FrontIntent::ShowPairingCode { code, .. } = intent(tv) else {
+                panic!("no pairing code shown")
+            };
+            runtime.block_on(client.pair(&code)).expect("the code pairs");
+            client
+        };
+        let mut client = connect_and_pair(&mut tv);
+        runtime.block_on(client.send(RemoteCommand::Navigate { key: Key::Down })).unwrap();
+
+        tv.engine.send(Command::SyncGroup(SyncCommand::SetDeviceRemote {
+            device: phone_id.clone(),
+            on: false,
+        }));
+        tv.status_where("remote off", |s| {
+            s.devices.iter().any(|d| d.id == phone_id && d.remote_off)
+        });
+        let refused = runtime.block_on(client.send(RemoteCommand::Navigate { key: Key::Down }));
+        assert!(matches!(refused, Err(Error::Rejected(Rejection::NotPaired))), "{refused:?}");
+        assert_eq!(remote.paired().len(), 1, "the pairing is kept");
+
+        // Paired again at the TV, with a code: the switch is back on.
+        drop(client);
+        let mut client = connect_and_pair(&mut tv);
+        tv.status_where("remote on", |s| {
+            s.devices.iter().any(|d| d.id == phone_id && !d.remote_off)
+        });
+        runtime.block_on(client.send(RemoteCommand::Navigate { key: Key::Down })).unwrap();
+    }
 }

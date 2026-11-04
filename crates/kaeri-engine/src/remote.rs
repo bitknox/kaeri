@@ -150,3 +150,46 @@ impl CommandSink for EngineSink {
         let _ = self.front.send(intent);
     }
 }
+
+/// A TV's paired phones as its server sees them, with the Remote switch from sync on top: a
+/// phone in the same sync group whose Remote switch with this TV is off counts as not paired,
+/// so its commands are refused, while the pairing itself is kept for when it is back on. Pairing
+/// again with a code at the TV turns it back on.
+pub struct SyncGate {
+    trust: Arc<dyn TrustStore>,
+    this_device: crate::syncing::ThisDevice,
+}
+
+impl SyncGate {
+    pub fn new(trust: Arc<dyn TrustStore>, this_device: crate::syncing::ThisDevice) -> Self {
+        Self { trust, this_device }
+    }
+}
+
+impl TrustStore for SyncGate {
+    fn get(&self, fingerprint: &Fingerprint) -> Option<PairedDevice> {
+        let device = self.trust.get(fingerprint)?;
+        self.this_device.phone_allowed(&fingerprint.to_hex()).then_some(device)
+    }
+
+    fn list(&self) -> Vec<PairedDevice> {
+        self.trust.list()
+    }
+
+    fn add(&self, device: PairedDevice) -> Result<bool, Error> {
+        let fingerprint = device.fingerprint.to_hex();
+        let added = self.trust.add(device)?;
+        if added {
+            self.this_device.phone_paired_again(&fingerprint);
+        }
+        Ok(added)
+    }
+
+    fn remove(&self, fingerprint: &Fingerprint) -> Result<bool, Error> {
+        self.trust.remove(fingerprint)
+    }
+
+    fn seen(&self, fingerprint: &Fingerprint, at: i64) {
+        self.trust.seen(fingerprint, at);
+    }
+}

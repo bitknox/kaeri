@@ -492,6 +492,11 @@ impl FfiEngine {
         let dir = home.data.join("remote");
         std::fs::create_dir_all(&dir).map_err(|e| fail(format!("{}: {e}", dir.display())))?;
         let known = KnownTvs::open(&dir).map_err(|e| fail(e.to_string()))?;
+        // The others in sync match it against the TVs they serve, for the Remote switch.
+        if let Some(this_device) = self.this_device() {
+            let key = identity.fingerprint().to_hex();
+            this_device.set_remote_key(kaeri_engine::syncing::RemoteRole::Phone, &key);
+        }
         let sender = TvSender::new(identity, Hello { name: device_name, app }, known);
         if let Some(engine) = self.remote_sender() {
             let _entered = self.runtime_handle().enter();

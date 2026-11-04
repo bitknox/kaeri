@@ -47,6 +47,9 @@ pub struct EngineOptions {
     /// The engine runs on a phone or a tablet, for the defaults that depend on the device:
     /// torrents while casting is off there. `false` for a computer and the terminal.
     pub handheld: bool,
+    /// What kind of device this is, for the other devices' lists in sync. `None` leaves it
+    /// unsaid (the terminal).
+    pub device_kind: Option<kaeri_model::group::SyncDeviceKind>,
     /// The language the front end speaks, as a tag from `kaeri_i18n::languages()`, for what
     /// the engine writes where the front end can't render it: a TV's episode line while casting.
     /// `None` for English.
@@ -102,6 +105,7 @@ impl EngineOptions {
             app_clients: AppClients::default(),
             device_label: kaeri_model::stores::COMPUTER.to_owned(),
             handheld: false,
+            device_kind: None,
             language: None,
             sources: None,
             background: Background::default(),
