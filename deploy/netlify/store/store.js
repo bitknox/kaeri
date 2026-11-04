@@ -104,7 +104,7 @@ function __wbg_get_imports() {
         __wbg__wbg_cb_unref_fffb441def202758: function(arg0) {
             arg0._wbg_cb_unref();
         },
-        __wbg_batch_f26761875ba11e5e: function() { return handleError(function (arg0, arg1) {
+        __wbg_batch_9b523d4c9b36b886: function() { return handleError(function (arg0, arg1) {
             const ret = arg0.batch(arg1);
             return ret;
         }, arguments); },
@@ -120,11 +120,11 @@ function __wbg_get_imports() {
             const ret = arg0.crypto;
             return ret;
         },
-        __wbg_delete_c7500023bb023600: function() { return handleError(function (arg0, arg1, arg2) {
+        __wbg_delete_6693836b375afb73: function() { return handleError(function (arg0, arg1, arg2) {
             const ret = arg0.delete(getStringFromWasm0(arg1, arg2));
             return ret;
         }, arguments); },
-        __wbg_dialect_3bab92303713e9c7: function(arg0, arg1) {
+        __wbg_dialect_f43debe871580b23: function(arg0, arg1) {
             const ret = arg1.dialect;
             const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
             const len1 = WASM_VECTOR_LEN;
@@ -142,7 +142,7 @@ function __wbg_get_imports() {
             const ret = Reflect.get(arg0, arg1);
             return ret;
         }, arguments); },
-        __wbg_get_9c04ed6edcf7f29a: function() { return handleError(function (arg0, arg1, arg2) {
+        __wbg_get_eb4c9880a6f41608: function() { return handleError(function (arg0, arg1, arg2) {
             const ret = arg0.get(getStringFromWasm0(arg1, arg2));
             return ret;
         }, arguments); },
@@ -261,11 +261,11 @@ function __wbg_get_imports() {
             const ret = arg0.push(arg1);
             return ret;
         },
-        __wbg_put_c9734c0f8aa320fa: function() { return handleError(function (arg0, arg1, arg2, arg3) {
+        __wbg_put_b0cc6a2acd3dc938: function() { return handleError(function (arg0, arg1, arg2, arg3) {
             const ret = arg0.put(getStringFromWasm0(arg1, arg2), arg3);
             return ret;
         }, arguments); },
-        __wbg_query_30d1d54949a59dc7: function() { return handleError(function (arg0, arg1, arg2, arg3) {
+        __wbg_query_4fc311504c0dfa3c: function() { return handleError(function (arg0, arg1, arg2, arg3) {
             const ret = arg0.query(getStringFromWasm0(arg1, arg2), arg3);
             return ret;
         }, arguments); },

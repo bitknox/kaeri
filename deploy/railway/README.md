@@ -27,7 +27,7 @@ whoever publishes the button. The result is the URL that replaces `TEMPLATE_CODE
 
 1. In Railway, open your workspace's Templates page and choose New Template.
 2. Add a service, choose Docker Image as its source, and enter
-   `ghcr.io/bitknox/kaeri-store:0.2`. Name the service `kaeri-store`.
+   `ghcr.io/bitknox/kaeri-store:0.3`. Name the service `kaeri-store`.
 3. Right-click the service, choose Attach Volume, and set the mount path to `/data`.
 4. In the service's Variables, add:
 
