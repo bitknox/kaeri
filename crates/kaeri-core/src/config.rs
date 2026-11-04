@@ -957,6 +957,11 @@ pub struct PlaybackConfig {
     /// start of an episode with no opening known, to mark it. On by default; the prompt's
     /// Don't ask again turns it off.
     pub ask_was_opening: bool,
+    /// Find openings and endings from the audio when nothing else has them: the player hands
+    /// over the first six and last four minutes, and they are compared across a show's
+    /// episodes, on this device. On by default; paused in a power saving mode and when storage
+    /// is low. Only players that can hand the audio over take part.
+    pub find_skip_times: bool,
     /// Share the skip times the viewer marks with AniSkip, a free shared list many players use:
     /// the times, the show's MyAnimeList number, the episode, the app's name and a random id for
     /// this install. `None` until the first Save asks, which shares nothing.
@@ -1035,6 +1040,7 @@ impl Default for PlaybackConfig {
             skip_button: true,
             skip_recap_auto: false,
             ask_was_opening: true,
+            find_skip_times: true,
             share_skip_times: None,
             skip_filler: false,
             up_next_countdown: 10,

@@ -15,6 +15,8 @@
 #                    among them), then ours, which makes that context follow the layer's size,
 #                    and upstream's coreaudio fix for macOS 27, which refused the channel map
 #                    and left mpv on avfoundation, two seconds behind on every volume change.
+#                    Then android/mpv/patches/mpv, the patches every platform that builds mpv
+#                    carries: the demuxer audio tap for skip detection (mpv_set_audio_tap).
 #
 # Every other library is MPVKit's own prebuilt static build, from the releases MPVKit pins, each
 # checked against its SHA-256: FFmpeg, libplacebo, MoltenVK, shaderc, OpenSSL, GnuTLS and the rest.
@@ -96,11 +98,12 @@ done
 
 # --- Freshness -------------------------------------------------------------------------------------
 
-# What the build is made from: this script, which holds every pin, and the patches.
+# What the build is made from: this script, which holds every pin, and the patches, the shared
+# mpv ones in android/mpv/patches/mpv among them.
 sources_hash() {
   (
     cd "$root"
-    git ls-files -co --exclude-standard -- apple/scripts/mpv.sh apple/patches |
+    git ls-files -co --exclude-standard -- apple/scripts/mpv.sh apple/patches android/mpv/patches/mpv |
       LC_ALL=C sort -u |
       while IFS= read -r file; do [[ -f "$file" ]] && printf '%s\n' "$file"; done |
       git hash-object --stdin-paths | shasum -a 256 | cut -d' ' -f1
@@ -132,7 +135,7 @@ if [[ -f "$out/stamp" && -d "$out/Mpv.xcframework" ]]; then
   fi
 fi
 if (( check )); then
-  echo "error: libmpv for ${slices[*]} is missing or older than apple/scripts/mpv.sh and apple/patches." >&2
+  echo "error: libmpv for ${slices[*]} is missing or older than apple/scripts/mpv.sh and its patches." >&2
   echo "error: run apple/scripts/mpv.sh ${slices[*]}" >&2
   exit 1
 fi
@@ -204,16 +207,21 @@ for dep in "${deps[@]}"; do
   IFS='|' read -r name url sum _ <<<"$dep"
   download "$name" "$url" "$sum"
 done
+# A clone of the tag, with each folder's patches applied in turn.
 fetch_git() {
-  local url="$1" tag="$2" dir="$3" patches="$4"
+  local url="$1" tag="$2" dir="$3"
+  shift 3
   git -c advice.detachedHead=false clone --quiet --depth 1 --branch "$tag" "$url" "$dir" >>"$log" 2>&1
-  local patch
-  for patch in "$patches"/*.patch; do
-    (cd "$dir" && git apply "$patch") || { echo "mpv.sh: $patch does not apply" >&2; exit 1; }
+  local patches patch
+  for patches in "$@"; do
+    for patch in "$patches"/*.patch; do
+      (cd "$dir" && git apply "$patch") || { echo "mpv.sh: $patch does not apply" >&2; exit 1; }
+    done
   done
 }
 fetch_git https://github.com/libass/libass.git "$libass_tag" "$work/src/libass" "$root/apple/patches/libass"
-fetch_git https://github.com/mpv-player/mpv.git "$mpv_tag" "$work/src/mpv" "$root/apple/patches/mpv"
+fetch_git https://github.com/mpv-player/mpv.git "$mpv_tag" "$work/src/mpv" "$root/apple/patches/mpv" \
+  "$root/android/mpv/patches/mpv"
 
 # --- Per slice -------------------------------------------------------------------------------------
 

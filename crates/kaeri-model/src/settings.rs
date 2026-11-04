@@ -46,6 +46,9 @@ pub enum SettingKey {
     /// start of an episode with no opening known. On by default; its Don't ask again turns it
     /// off.
     AskWasOpening,
+    /// Find openings and endings from the audio when AniSkip has none, on this device: the
+    /// native apps' row, where the player can hand the audio over. On by default.
+    FindSkipTimes,
     /// Share the skip times the viewer marks with AniSkip. Unset until the first Save asks,
     /// which reads as off.
     ShareSkipTimes,
@@ -221,7 +224,7 @@ impl SettingKey {
     /// The native apps' own rows, which the terminal's Settings screen does not show: a front
     /// end finds the rows both show among [`Self::ROWS`]. In no order of their own, since each
     /// app lays them out on its own panes; grouped by [`Self::category`] all the same.
-    pub const NATIVE_ROWS: [Self; 17] = [
+    pub const NATIVE_ROWS: [Self; 18] = [
         Self::UpNextCountdown,
         Self::SpoilerProtection,
         Self::DownloadQuality,
@@ -239,6 +242,7 @@ impl SettingKey {
         Self::CastTvs,
         Self::TorrentsWhileCasting,
         Self::HoverCards,
+        Self::FindSkipTimes,
     ];
 
     /// Where the file keeps it: the containing table, as the dotted path
@@ -279,6 +283,7 @@ impl SettingKey {
             Self::SkipOpening => (&["playback"], "skip_opening"),
             Self::SkipRecap => (&["playback"], "skip_recap_auto"),
             Self::AskWasOpening => (&["playback"], "ask_was_opening"),
+            Self::FindSkipTimes => (&["playback"], "find_skip_times"),
             Self::ShareSkipTimes => (&["playback"], "share_skip_times"),
             Self::SkipFiller => (&["playback"], "skip_filler"),
             Self::MarkChapters => (&["playback"], "mark_chapters"),
@@ -359,6 +364,7 @@ impl SettingKey {
             Self::SkipOpening => dst.skip_opening = src.skip_opening,
             Self::SkipRecap => dst.skip_recap_auto = src.skip_recap_auto,
             Self::AskWasOpening => dst.ask_was_opening = src.ask_was_opening,
+            Self::FindSkipTimes => dst.find_skip_times = src.find_skip_times,
             Self::ShareSkipTimes => dst.share_skip_times = src.share_skip_times,
             Self::SkipFiller => dst.skip_filler = src.skip_filler,
             Self::MarkChapters => dst.mark_chapters = src.mark_chapters,
@@ -461,6 +467,7 @@ impl SettingKey {
             | Self::SkipOpening
             | Self::SkipRecap
             | Self::AskWasOpening
+            | Self::FindSkipTimes
             | Self::ShareSkipTimes
             | Self::SkipFiller
             | Self::MarkChapters
@@ -529,7 +536,8 @@ impl SettingKey {
             // a note on its own OSD as it happens, which is a courtesy, not a prompt.
             Self::SkipOpening => "skip opening automatically",
             Self::SkipRecap => "skip recaps automatically",
-            Self::AskWasOpening => "ask whether a skip by hand was the opening",
+            Self::AskWasOpening => "ask about skip times",
+            Self::FindSkipTimes => "find skip times from the audio",
             Self::ShareSkipTimes => "share skip times with AniSkip",
             Self::SkipFiller => "skip filler automatically",
             Self::MarkChapters => "mark opening and ending",
@@ -675,6 +683,11 @@ pub struct SettingsView {
     /// Where torrent traffic goes, directly or through a proxy, as the torrent sheet and
     /// Sources show it. Boxed, as the bindings see the view itself.
     pub torrent: Box<crate::proxy::TorrentView>,
+    /// Why finding skip times from the audio is paused, while
+    /// [`SettingKey::FindSkipTimes`] is on: the line under its row. `None` while it runs, or
+    /// while it is off.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub skip_find_paused: Option<crate::playback::SkipFindPause>,
 }
 
 /// How many shows set a setting for themselves.
@@ -714,6 +727,8 @@ pub fn view(effective: &Config, saved: &Config) -> SettingsView {
         notify_switched_on: 0,
         subtitle_style: Some(effective.subtitles.clone().into()),
         torrent: Box::new(crate::proxy::view(&effective.providers.torrent)),
+        // The device's state is the engine's, which puts it in.
+        skip_find_paused: None,
     }
 }
 
@@ -872,6 +887,7 @@ pub fn step(
         SettingKey::SkipOpening => V::Bool(!playback.skip_opening),
         SettingKey::SkipRecap => V::Bool(!playback.skip_recap_auto),
         SettingKey::AskWasOpening => V::Bool(!playback.ask_was_opening),
+        SettingKey::FindSkipTimes => V::Bool(!playback.find_skip_times),
         SettingKey::ShareSkipTimes => V::Bool(playback.share_skip_times != Some(true)),
         SettingKey::SkipFiller => V::Bool(!playback.skip_filler),
         SettingKey::MarkChapters => V::Bool(!playback.mark_chapters),
@@ -1023,6 +1039,7 @@ pub fn put(config: &mut Config, key: SettingKey, value: &SettingValue) -> bool {
         (SettingKey::SkipOpening, V::Bool(on)) => playback.skip_opening = *on,
         (SettingKey::SkipRecap, V::Bool(on)) => playback.skip_recap_auto = *on,
         (SettingKey::AskWasOpening, V::Bool(on)) => playback.ask_was_opening = *on,
+        (SettingKey::FindSkipTimes, V::Bool(on)) => playback.find_skip_times = *on,
         (SettingKey::ShareSkipTimes, V::Bool(on)) => playback.share_skip_times = Some(*on),
         (SettingKey::SkipFiller, V::Bool(on)) => playback.skip_filler = *on,
         (SettingKey::MarkChapters, V::Bool(on)) => playback.mark_chapters = *on,
@@ -1208,6 +1225,7 @@ pub(crate) fn value(effective: &Config, saved: &Config, key: SettingKey) -> Stri
         SettingKey::SkipOpening => on_off(playback.skip_opening),
         SettingKey::SkipRecap => on_off(playback.skip_recap_auto),
         SettingKey::AskWasOpening => on_off(playback.ask_was_opening),
+        SettingKey::FindSkipTimes => on_off(playback.find_skip_times),
         SettingKey::ShareSkipTimes => on_off(playback.share_skip_times == Some(true)),
         SettingKey::SkipFiller => on_off(playback.skip_filler),
         SettingKey::MarkChapters => on_off(playback.mark_chapters),
@@ -1362,6 +1380,7 @@ fn two_state(effective: &Config, saved: &Config, key: SettingKey) -> Option<bool
         S::SkipOpening => c.playback.skip_opening,
         S::SkipRecap => c.playback.skip_recap_auto,
         S::AskWasOpening => c.playback.ask_was_opening,
+        S::FindSkipTimes => c.playback.find_skip_times,
         S::ShareSkipTimes => c.playback.share_skip_times == Some(true),
         S::SkipFiller => c.playback.skip_filler,
         S::MarkChapters => c.playback.mark_chapters,
@@ -1689,6 +1708,7 @@ mod tests {
                 (SettingKey::CastTvs, "on"),
                 (SettingKey::TorrentsWhileCasting, "on"),
                 (SettingKey::HoverCards, "on"),
+                (SettingKey::FindSkipTimes, "on"),
             ]
         );
         assert!(view.rows.iter().all(|row| !SettingKey::NATIVE_ROWS.contains(&row.key)));

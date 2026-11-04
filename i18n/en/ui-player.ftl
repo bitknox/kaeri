@@ -154,6 +154,9 @@ player-mark-watch-edges = Watch the edges
 # Line in the review with sharing on.
 player-mark-shares = Saving shares these times with AniSkip.
 
+# Review line when the stretch under review was found from the audio, not marked by hand.
+player-mark-found = { -app-name } found these times from the audio.
+
 # Line in the review when the mark replaces AniSkip's times.
 # @arg start: text
 # @arg end: text
@@ -216,11 +219,37 @@ player-mark-it = Mark it
 # @max 20
 player-dont-ask-again = Don't ask again
 
+# Prompt a few seconds after a skip over an opening found from the audio, with Yes, Adjust and
+# Don't ask again.
+player-found-ask-opening = { -app-name } found this opening. Were the edges right?
+
+# The same prompt after a skip over an ending found from the audio.
+player-found-ask-ending = { -app-name } found this ending. Were the edges right?
+
+# Line under that prompt, in a quieter colour. $episode is the episode's number.
+# @arg episode: int
+player-found-ask-share = Yes shares these times with AniSkip for episode { $episode }.
+
+# Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust
+# opens the review with the edges to nudge.
+# @max 12
+player-found-yes = Yes
+# @max 16
+player-found-adjust = Adjust
+
+# What the prompt says after Yes. $episode is the episode's number.
+# @arg episode: int
+player-found-saved = Saved. AniSkip gets these times for episode { $episode }.
+
+# What the prompt says after Don't ask again, with the line below it.
+player-found-never = { -app-name } won't ask about skip times again.
+player-found-never-how = You can turn it back on in Settings.
+
 # Title of the sheet shown on the first Save.
 player-share-title = Share your skip times with AniSkip?
 
 # Body of the sheet.
-player-share-body = AniSkip is a free, shared list of openings and endings, run by its own volunteers. Other people's players skip what you mark.
+player-share-body = AniSkip is a shared list of openings and endings, run by its own volunteers. Other people's players skip the times you mark and the found times you confirm.
 
 # What is sent, as a line under the body.
 player-share-sent = It gets the times, the show's MyAnimeList number, the episode and a random id made for this install. Not your name, your accounts or the { -source } you watch from. AniSkip sees your IP address to limit spam, and its terms ask that you are 13 or older.
@@ -235,6 +264,15 @@ player-share-no = Don't share
 player-skip-from-file = From the file
 player-skip-yours = Yours
 player-skip-from-aniskip = From AniSkip
+player-skip-found = Found by { -app-name }
+
+# Skip times panel and Settings: why finding skip times from the audio is paused, one line per
+# platform's name for its power saving mode, and one for low storage.
+player-skip-paused-low-power = Paused while Low Power Mode is on.
+player-skip-paused-battery-saver = Paused while battery saver is on.
+player-skip-paused-energy-saver = Paused while energy saver is on.
+player-skip-paused-power-saver = Paused while power saver is on.
+player-skip-paused-storage = Paused until 2 GB of storage is free.
 player-skip-none = None yet
 
 # Skip times panel: removes your own mark.

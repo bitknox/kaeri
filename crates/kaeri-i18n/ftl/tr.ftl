@@ -6804,9 +6804,6 @@ player-dont-ask-again = Bir daha sorma
 # Title of the sheet shown on the first Save.
 player-share-title = Atlama zamanlarınızı AniSkip ile paylaşalım mı?
 
-# Body of the sheet.
-player-share-body = AniSkip, kendi gönüllüleri tarafından işletilen, ücretsiz ve ortak bir açılış ve kapanış listesidir. Başkalarının oynatıcıları sizin işaretlediğinizi atlar.
-
 # What is sent, as a line under the body.
 player-share-sent = Zamanlar, dizinin MyAnimeList numarası, bölüm ve bu kurulum için üretilmiş rastgele bir kimlik gider. Adınız, hesaplarınız ya da izlediğiniz kaynak gitmez. AniSkip, istenmeyen içeriği sınırlamak için IP adresinizi görür ve şartları 13 yaş ve üzerini ister.
 
@@ -7647,23 +7644,8 @@ settings-skip-opening = Açılışı otomatik atla
 # Settings, Playback: whether recaps are skipped without asking.
 settings-skip-recap = Özetleri otomatik atla
 
-# Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand.
-settings-ask-was-opening = Elle açılış atladıktan sonra sor
-
-# Line under it.
-settings-ask-was-opening-detail = Bir sonraki sefer atlanması için işaretlemeyi önerir
-
 # Settings, Playback: whether marked skip times go to AniSkip.
 settings-share-skips = Atlama zamanlarını AniSkip ile paylaş
-
-# Line under it.
-settings-share-skips-detail = AniSkip, birçok oynatıcının kullandığı, ücretsiz ve ortak bir açılış ve kapanış listesidir. Zamanları, dizinin MyAnimeList numarasını, bölümü ve bu kurulum için rastgele bir kimliği alır.
-
-# Settings, Playback: removes every skip time you marked.
-settings-clear-skips = İşaretlediğiniz atlama zamanlarını temizle…
-
-# Question that asks before clearing every skip time you marked.
-settings-clear-skips-confirm = İşaretlediğiniz atlama zamanları temizlensin mi? AniSkip, paylaştıklarınızı tutar.
 
 # Row: skip filler.
 settings-skip-filler = Dolgu bölümlerini otomatik atla

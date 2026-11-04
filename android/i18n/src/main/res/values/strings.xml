@@ -3332,6 +3332,8 @@
     <string name="player_mark_watch_edges">Watch the edges</string>
     <!-- Line in the review with sharing on. -->
     <string name="player_mark_shares">Saving shares these times with AniSkip.</string>
+    <!-- Review line when the stretch under review was found from the audio, not marked by hand. -->
+    <string name="player_mark_found">Kaeri found these times from the audio.</string>
     <!-- Line in the review when the mark replaces AniSkip's times. -->
     <string name="player_mark_replaces">Replaces AniSkip\'s %1$s to %2$s, which is reported as wrong.</string>
     <!-- Line in the review when the show has no MyAnimeList entry. -->
@@ -3364,10 +3366,24 @@
     <string name="player_mark_it">Mark it</string>
     <!-- Button of that prompt that turns it off. Settings can turn it on again. -->
     <string name="player_dont_ask_again">Don\'t ask again</string>
+    <!-- Prompt a few seconds after a skip over an opening found from the audio, with Yes, Adjust and Don't ask again. -->
+    <string name="player_found_ask_opening">Kaeri found this opening. Were the edges right?</string>
+    <!-- The same prompt after a skip over an ending found from the audio. -->
+    <string name="player_found_ask_ending">Kaeri found this ending. Were the edges right?</string>
+    <!-- Line under that prompt, in a quieter colour. $episode is the episode's number. -->
+    <string name="player_found_ask_share">Yes shares these times with AniSkip for episode %1$d.</string>
+    <!-- Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust opens the review with the edges to nudge. -->
+    <string name="player_found_yes">Yes</string>
+    <string name="player_found_adjust">Adjust</string>
+    <!-- What the prompt says after Yes. $episode is the episode's number. -->
+    <string name="player_found_saved">Saved. AniSkip gets these times for episode %1$d.</string>
+    <!-- What the prompt says after Don't ask again, with the line below it. -->
+    <string name="player_found_never">Kaeri won\'t ask about skip times again.</string>
+    <string name="player_found_never_how">You can turn it back on in Settings.</string>
     <!-- Title of the sheet shown on the first Save. -->
     <string name="player_share_title">Share your skip times with AniSkip?</string>
     <!-- Body of the sheet. -->
-    <string name="player_share_body">AniSkip is a free, shared list of openings and endings, run by its own volunteers. Other people\'s players skip what you mark.</string>
+    <string name="player_share_body">AniSkip is a shared list of openings and endings, run by its own volunteers. Other people\'s players skip the times you mark and the found times you confirm.</string>
     <!-- What is sent, as a line under the body. -->
     <string name="player_share_sent">It gets the times, the show\'s MyAnimeList number, the episode and a random id made for this install. Not your name, your accounts or the source you watch from. AniSkip sees your IP address to limit spam, and its terms ask that you are 13 or older.</string>
     <!-- Buttons of the sheet. -->
@@ -3377,6 +3393,13 @@
     <string name="player_skip_from_file">From the file</string>
     <string name="player_skip_yours">Yours</string>
     <string name="player_skip_from_aniskip">From AniSkip</string>
+    <string name="player_skip_found">Found by Kaeri</string>
+    <!-- Skip times panel and Settings: why finding skip times from the audio is paused, one line per platform's name for its power saving mode, and one for low storage. -->
+    <string name="player_skip_paused_low_power">Paused while Low Power Mode is on.</string>
+    <string name="player_skip_paused_battery_saver">Paused while battery saver is on.</string>
+    <string name="player_skip_paused_energy_saver">Paused while energy saver is on.</string>
+    <string name="player_skip_paused_power_saver">Paused while power saver is on.</string>
+    <string name="player_skip_paused_storage">Paused until 2 GB of storage is free.</string>
     <string name="player_skip_none">None yet</string>
     <!-- Skip times panel: removes your own mark. -->
     <string name="player_skip_clear">Clear</string>
@@ -3928,18 +3951,26 @@
     <string name="settings_skip_opening">Skip opening automatically</string>
     <!-- Settings, Playback: whether recaps are skipped without asking. -->
     <string name="settings_skip_recap">Skip recaps automatically</string>
-    <!-- Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand. -->
-    <string name="settings_ask_was_opening">Ask after skipping an opening by hand</string>
+    <!-- Settings, Playback: finds openings and endings by comparing the audio of a show's episodes, when AniSkip has none. On by default. -->
+    <string name="settings_find_skips">Find skip times from the audio</string>
     <!-- Line under it. -->
-    <string name="settings_ask_was_opening_detail">Offers to mark it, so it is skipped next time</string>
+    <string name="settings_find_skips_detail">When AniSkip has no times, Kaeri compares the audio across a show\'s episodes, on this device.</string>
+    <!-- Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand, and whether it asks about the edges of a skip it found. -->
+    <string name="settings_ask_was_opening">Ask about skip times</string>
+    <!-- Line under it. -->
+    <string name="settings_ask_was_opening_detail">After you skip an opening by hand, and after a skip Kaeri found</string>
     <!-- Settings, Playback: whether marked skip times go to AniSkip. -->
     <string name="settings_share_skips">Share skip times with AniSkip</string>
     <!-- Line under it. -->
-    <string name="settings_share_skips_detail">AniSkip is a free, shared list of openings and endings that many players use. It gets the times, the show\'s MyAnimeList number, the episode and a random id for this install.</string>
-    <!-- Settings, Playback: removes every skip time you marked. -->
-    <string name="settings_clear_skips">Clear skip times you marked…</string>
-    <!-- Question that asks before clearing every skip time you marked. -->
-    <string name="settings_clear_skips_confirm">Clear the skip times you marked? AniSkip keeps the ones you shared.</string>
+    <string name="settings_share_skips_detail">AniSkip is a shared list of openings and endings that many players use. It gets the times you mark and the found times you confirm, the show\'s MyAnimeList number, the episode and a random id for this install.</string>
+    <!-- Settings, Playback: the row that removes every skip time you marked and every one found from the audio. Its button reads Clear. -->
+    <string name="settings_clear_skips">Skip times you marked or Kaeri found</string>
+    <!-- Question that asks before clearing them. -->
+    <string name="settings_clear_skips_confirm">Clear the skip times you marked and the ones Kaeri found? AniSkip keeps the ones you shared.</string>
+    <!-- Android's Settings: the title of that row, with the line below. -->
+    <string name="settings_clear_skips_android">Clear skip times</string>
+    <!-- Line under it. -->
+    <string name="settings_clear_skips_android_detail">The ones you marked and the ones Kaeri found</string>
     <!-- Row: skip filler. -->
     <string name="settings_skip_filler">Skip filler automatically</string>
     <!-- Row: mark the opening and ending. -->

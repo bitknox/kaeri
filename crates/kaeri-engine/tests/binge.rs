@@ -118,6 +118,7 @@ fn settings(auto_next: bool) -> PlaySettings {
         auto_skip: false,
         auto_skip_recap: false,
         ask_was_opening: false,
+        find_skip_times: false,
         share_skip_times: Some(false),
         mark_chapters: false,
         skip_button: false,

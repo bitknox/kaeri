@@ -4589,9 +4589,6 @@
   <data name="PlayerShareTitle" xml:space="preserve">
     <value>Делиться отметками пропуска с AniSkip?</value>
   </data>
-  <data name="PlayerShareBody" xml:space="preserve">
-    <value>AniSkip: бесплатный общий список опенингов и эндингов, который ведут его волонтёры. Плееры других людей пропускают то, что вы отметите.</value>
-  </data>
   <data name="PlayerShareSent" xml:space="preserve">
     <value>Он получает время, номер тайтла в MyAnimeList, эпизод и случайный идентификатор, созданный для этой установки. Ваше имя, аккаунты и источник, из которого вы смотрите, не передаются. AniSkip видит ваш IP-адрес, чтобы ограничивать спам, а по его условиям вам должно быть 13 лет или больше.</value>
   </data>
@@ -5456,23 +5453,8 @@
   <data name="SettingsSkipRecap" xml:space="preserve">
     <value>Пропускать рекапы автоматически</value>
   </data>
-  <data name="SettingsAskWasOpening" xml:space="preserve">
-    <value>Спрашивать после ручного пропуска опенинга</value>
-  </data>
-  <data name="SettingsAskWasOpeningDetail" xml:space="preserve">
-    <value>Предлагает отметить его, чтобы в следующий раз он пропускался</value>
-  </data>
   <data name="SettingsShareSkips" xml:space="preserve">
     <value>Делиться моментами пропуска с AniSkip</value>
-  </data>
-  <data name="SettingsShareSkipsDetail" xml:space="preserve">
-    <value>AniSkip: бесплатный общий список опенингов и эндингов, которым пользуются многие плееры. Он получает время, номер тайтла в MyAnimeList, эпизод и случайный идентификатор этой установки.</value>
-  </data>
-  <data name="SettingsClearSkips" xml:space="preserve">
-    <value>Удалить ваши отметки пропуска…</value>
-  </data>
-  <data name="SettingsClearSkipsConfirm" xml:space="preserve">
-    <value>Удалить отметки пропуска, которые вы сделали? Те, которыми вы поделились, останутся в AniSkip.</value>
   </data>
   <data name="SettingsSkipFiller" xml:space="preserve">
     <value>Пропускать филлеры автоматически</value>

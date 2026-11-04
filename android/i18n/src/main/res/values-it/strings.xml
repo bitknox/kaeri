@@ -1772,7 +1772,6 @@
     <string name="player_mark_it">Segnala</string>
     <string name="player_dont_ask_again">Non chiedere più</string>
     <string name="player_share_title">Condividere i tuoi tempi di salto con AniSkip?</string>
-    <string name="player_share_body">AniSkip è un elenco gratuito e condiviso di aperture e chiusure, gestito da volontari. I player degli altri saltano ciò che segni.</string>
     <string name="player_share_sent">Riceve i tempi, il numero MyAnimeList della serie, l\'episodio e un id casuale creato per questa installazione. Non il tuo nome, i tuoi account né la fonte da cui guardi. AniSkip vede il tuo indirizzo IP per limitare lo spam e le sue condizioni richiedono che tu abbia almeno 13 anni.</string>
     <string name="player_share_yes">Condividi</string>
     <string name="player_share_no">Non condividere</string>
@@ -2065,12 +2064,7 @@
     <string name="settings_up_next_countdown">Durata del conto alla rovescia del prossimo</string>
     <string name="settings_skip_opening">Salta automaticamente la sigla di apertura</string>
     <string name="settings_skip_recap">Salta automaticamente i riepiloghi</string>
-    <string name="settings_ask_was_opening">Chiedi dopo aver saltato un\'apertura a mano</string>
-    <string name="settings_ask_was_opening_detail">Propone di segnarla, così la volta dopo viene saltata</string>
     <string name="settings_share_skips">Condividi i tempi di salto con AniSkip</string>
-    <string name="settings_share_skips_detail">AniSkip è un elenco gratuito e condiviso di aperture e chiusure usato da molti player. Riceve i tempi, il numero MyAnimeList della serie, l\'episodio e un id casuale per questa installazione.</string>
-    <string name="settings_clear_skips">Cancella i tempi di salto segnati…</string>
-    <string name="settings_clear_skips_confirm">Cancellare i tempi di salto che hai segnato? AniSkip conserva quelli che hai condiviso.</string>
     <string name="settings_skip_filler">Salta automaticamente i filler</string>
     <string name="settings_mark_opening">Segna sigla di apertura e chiusura</string>
     <string name="settings_skip_button">Mostra il pulsante Salta</string>

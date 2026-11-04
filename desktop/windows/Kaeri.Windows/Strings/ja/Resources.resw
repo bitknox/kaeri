@@ -4193,9 +4193,6 @@
   <data name="PlayerShareTitle" xml:space="preserve">
     <value>スキップ位置をAniSkipと共有しますか?</value>
   </data>
-  <data name="PlayerShareBody" xml:space="preserve">
-    <value>AniSkipは、ボランティアが運営する、オープニングとエンディングの無料の共有リストです。あなたがマークした位置は、他の人のプレーヤーでもスキップされます。</value>
-  </data>
   <data name="PlayerShareSent" xml:space="preserve">
     <value>送信されるのは、スキップ位置、作品のMyAnimeList番号、エピソード、このインストール用に作られたランダムなIDです。あなたの名前、アカウント、視聴中のソースは送信されません。AniSkipはスパム対策のためIPアドレスを確認し、利用規約は13歳以上であることを求めています。</value>
   </data>
@@ -5024,23 +5021,8 @@
   <data name="SettingsSkipRecap" xml:space="preserve">
     <value>前回のあらすじを自動でスキップ</value>
   </data>
-  <data name="SettingsAskWasOpening" xml:space="preserve">
-    <value>手動でオープニングをスキップした後に確認する</value>
-  </data>
-  <data name="SettingsAskWasOpeningDetail" xml:space="preserve">
-    <value>マークを提案し、次回からスキップされるようにします</value>
-  </data>
   <data name="SettingsShareSkips" xml:space="preserve">
     <value>スキップ位置をAniSkipと共有</value>
-  </data>
-  <data name="SettingsShareSkipsDetail" xml:space="preserve">
-    <value>AniSkipは、多くのプレーヤーが使っている、オープニングとエンディングの無料の共有リストです。スキップ位置、作品のMyAnimeList番号、エピソード、このインストール用のランダムなIDが送信されます。</value>
-  </data>
-  <data name="SettingsClearSkips" xml:space="preserve">
-    <value>マークしたスキップ位置を消去…</value>
-  </data>
-  <data name="SettingsClearSkipsConfirm" xml:space="preserve">
-    <value>マークしたスキップ位置を消去しますか?共有済みの位置はAniSkipに残ります。</value>
   </data>
   <data name="SettingsSkipFiller" xml:space="preserve">
     <value>フィラーを自動でスキップ</value>

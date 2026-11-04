@@ -7,8 +7,10 @@
 #
 # The sources are the Android app's: FFmpeg's and mpv's archives as android/scripts/mpv.sh pins
 # them, by address and SHA-256. So the source a release attaches for the apps' libraries
-# (packaging/apps/sources.sh) is the source of these too. Everything else libmpv links, such as
-# libass, libplacebo, HarfBuzz, dav1d, GnuTLS and libva, is the build system's own, from Debian.
+# (packaging/apps/sources.sh) is the source of these too, and mpv gets Android's mpv patches,
+# android/mpv/patches/mpv/*.patch, such as the demuxer audio tap for skip detection
+# (mpv_set_audio_tap). Everything else libmpv links, such as libass, libplacebo, HarfBuzz,
+# dav1d, GnuTLS and libva, is the build system's own, from Debian.
 #
 #   FFmpeg      shared, LGPL-2.1-or-later. dav1d for AV1, GnuTLS for https, libxml2 for DASH,
 #               VA-API and NVDEC for hardware decoding, the lavfi device. Of the muxers and
@@ -28,8 +30,8 @@
 #   desktop/linux/.libmpv/<pin>-<arch>/features  FFmpeg's licence line and mpv's feature list
 #   desktop/linux/.libmpv/current                a link to the build for this machine
 #
-# Nothing is built when the stamp matches this script and Android's pins. With --check nothing
-# is built at all: it fails when the build is not current.
+# Nothing is built when the stamp matches this script, Android's pins and the mpv patches. With
+# --check nothing is built at all: it fails when the build is not current.
 set -euo pipefail
 shopt -s inherit_errexit 2>/dev/null || true
 
@@ -44,6 +46,10 @@ pin_of() {
 IFS='|' read -r _ ffmpeg_version ffmpeg_url ffmpeg_sum <<<"$(pin_of ffmpeg)"
 IFS='|' read -r _ mpv_version mpv_url mpv_sum <<<"$(pin_of mpv)"
 [[ -n "$ffmpeg_sum" && -n "$mpv_sum" ]] || fail "found no FFmpeg or mpv in $android's sources"
+mpv_patches=()
+for patch in "$root/android/mpv/patches/mpv/"*.patch; do
+  [[ -f "$patch" ]] && mpv_patches+=("$patch")
+done
 
 arch="$(uname -m)"
 pin="${mpv_version#v}-$ffmpeg_version"
@@ -57,8 +63,12 @@ case "${1:-}" in
   *) echo "usage: desktop/linux/scripts/libmpv.sh [--check]" >&2; exit 2 ;;
 esac
 
-# What the build is made from: this script and the two pins.
-hash="$( { cat "$0"; echo "$ffmpeg_url $ffmpeg_sum $mpv_url $mpv_sum"; } | sha256sum | cut -d' ' -f1)"
+# What the build is made from: this script, the two pins and the mpv patches.
+hash="$( {
+  cat "$0"
+  echo "$ffmpeg_url $ffmpeg_sum $mpv_url $mpv_sum"
+  for patch in "${mpv_patches[@]}"; do basename "$patch"; cat "$patch"; done
+} | sha256sum | cut -d' ' -f1)"
 if [[ -f "$out/stamp" && "$(sed -n 's/^sources //p' "$out/stamp")" == "$hash" ]]; then
   (( check )) || ln -sfn "$pin-$arch" "$cache/current"
   echo "libmpv.sh: libmpv is up to date in $out"
@@ -87,6 +97,11 @@ fetch() {
 step "fetching FFmpeg $ffmpeg_version and mpv $mpv_version"
 fetch ffmpeg "$ffmpeg_url" "$ffmpeg_sum"
 fetch mpv "$mpv_url" "$mpv_sum"
+# patch(1), not git apply, as Android applies them: the work tree sits inside this repository,
+# where git apply would take the paths as the repository's and skip them.
+for patch in "${mpv_patches[@]}"; do
+  patch -d "$work/src/mpv" -p1 -N -s <"$patch" || fail "$patch does not apply"
+done
 
 export PKG_CONFIG_PATH="$prefix/lib/pkgconfig"
 
@@ -161,6 +176,7 @@ features="$(sed -n 's/.*List of enabled features: *//p' "$work/mpv-configure.txt
   echo "arch $arch"
   echo "ffmpeg $ffmpeg_version $ffmpeg_url $ffmpeg_sum"
   echo "mpv $mpv_version $mpv_url $mpv_sum"
+  echo "mpv-patches$(for patch in "${mpv_patches[@]}"; do printf ' %s' "$(basename "$patch")"; done)"
   echo "seconds $((SECONDS - started))"
 } >"$prefix/stamp"
 rm -rf "$out" "$work"

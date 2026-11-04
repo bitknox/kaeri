@@ -6736,9 +6736,6 @@ player-dont-ask-again = Đừng hỏi lại
 # Title of the sheet shown on the first Save.
 player-share-title = Chia sẻ mốc bỏ qua của bạn với AniSkip?
 
-# Body of the sheet.
-player-share-body = AniSkip là danh sách phần mở đầu và kết thúc miễn phí, dùng chung, do các tình nguyện viên của riêng nó vận hành. Trình phát của người khác sẽ bỏ qua những gì bạn đánh dấu.
-
 # What is sent, as a line under the body.
 player-share-sent = Nó nhận các mốc thời gian, mã MyAnimeList của phim, tập phim và một mã ngẫu nhiên tạo riêng cho bản cài này. Không có tên, tài khoản hay nguồn bạn xem. AniSkip thấy địa chỉ IP của bạn để hạn chế spam, và điều khoản của họ yêu cầu bạn từ 13 tuổi trở lên.
 
@@ -7575,23 +7572,8 @@ settings-skip-opening = Tự động bỏ qua phần mở đầu
 # Settings, Playback: whether recaps are skipped without asking.
 settings-skip-recap = Tự động bỏ qua phần tóm tắt
 
-# Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand.
-settings-ask-was-opening = Hỏi sau khi tự bỏ qua phần mở đầu
-
-# Line under it.
-settings-ask-was-opening-detail = Đề nghị đánh dấu để lần sau được bỏ qua
-
 # Settings, Playback: whether marked skip times go to AniSkip.
 settings-share-skips = Chia sẻ mốc bỏ qua với AniSkip
-
-# Line under it.
-settings-share-skips-detail = AniSkip là danh sách phần mở đầu và kết thúc miễn phí, dùng chung, nhiều trình phát đang dùng. Nó nhận các mốc thời gian, mã MyAnimeList của phim, tập phim và một mã ngẫu nhiên cho bản cài này.
-
-# Settings, Playback: removes every skip time you marked.
-settings-clear-skips = Xóa mốc bỏ qua bạn đã đánh dấu…
-
-# Question that asks before clearing every skip time you marked.
-settings-clear-skips-confirm = Xóa các mốc bỏ qua bạn đã đánh dấu? AniSkip vẫn giữ những mốc bạn đã chia sẻ.
 
 # Row: skip filler.
 settings-skip-filler = Tự động bỏ qua tập độn

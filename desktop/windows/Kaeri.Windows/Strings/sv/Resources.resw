@@ -4325,9 +4325,6 @@
   <data name="PlayerShareTitle" xml:space="preserve">
     <value>Dela dina hopptider med AniSkip?</value>
   </data>
-  <data name="PlayerShareBody" xml:space="preserve">
-    <value>AniSkip är en gratis, delad lista över intron och outron, driven av sina egna volontärer. Andras spelare hoppar över det du markerar.</value>
-  </data>
   <data name="PlayerShareSent" xml:space="preserve">
     <value>Den får tiderna, seriens MyAnimeList-nummer, avsnittet och ett slumpmässigt id som skapats för den här installationen. Inte ditt namn, dina konton eller den källa du tittar från. AniSkip ser din IP-adress för att begränsa skräppost, och dess villkor kräver att du är 13 år eller äldre.</value>
   </data>
@@ -5168,23 +5165,8 @@
   <data name="SettingsSkipRecap" xml:space="preserve">
     <value>Hoppa över återblickar automatiskt</value>
   </data>
-  <data name="SettingsAskWasOpening" xml:space="preserve">
-    <value>Fråga efter manuellt hopp över ett intro</value>
-  </data>
-  <data name="SettingsAskWasOpeningDetail" xml:space="preserve">
-    <value>Erbjuder att markera det, så att det hoppas över framöver</value>
-  </data>
   <data name="SettingsShareSkips" xml:space="preserve">
     <value>Dela hopptider med AniSkip</value>
-  </data>
-  <data name="SettingsShareSkipsDetail" xml:space="preserve">
-    <value>AniSkip är en gratis, delad lista över intron och outron som många spelare använder. Den får tiderna, seriens MyAnimeList-nummer, avsnittet och ett slumpmässigt id för den här installationen.</value>
-  </data>
-  <data name="SettingsClearSkips" xml:space="preserve">
-    <value>Rensa hopptider du markerat…</value>
-  </data>
-  <data name="SettingsClearSkipsConfirm" xml:space="preserve">
-    <value>Rensa de hopptider du markerat? AniSkip behåller de du delade.</value>
   </data>
   <data name="SettingsSkipFiller" xml:space="preserve">
     <value>Hoppa över fyllnadsavsnitt automatiskt</value>

@@ -6736,9 +6736,6 @@ player-dont-ask-again = Jangan tanya lagi
 # Title of the sheet shown on the first Save.
 player-share-title = Bagikan waktu lewati Anda ke AniSkip?
 
-# Body of the sheet.
-player-share-body = AniSkip adalah daftar gratis bersama berisi pembukaan dan penutup, dikelola relawannya sendiri. Pemutar orang lain melewati apa yang Anda tandai.
-
 # What is sent, as a line under the body.
 player-share-sent = Yang dikirim: waktunya, nomor MyAnimeList acaranya, episodenya, dan id acak yang dibuat untuk instalasi ini. Bukan nama Anda, akun Anda, atau sumber tempat Anda menonton. AniSkip melihat alamat IP Anda untuk membatasi spam, dan ketentuannya mensyaratkan usia 13 tahun ke atas.
 
@@ -7575,23 +7572,8 @@ settings-skip-opening = Lewati pembukaan otomatis
 # Settings, Playback: whether recaps are skipped without asking.
 settings-skip-recap = Lewati rekap otomatis
 
-# Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand.
-settings-ask-was-opening = Tanya setelah melewati pembukaan secara manual
-
-# Line under it.
-settings-ask-was-opening-detail = Menawarkan untuk menandainya, jadi dilewati lain kali
-
 # Settings, Playback: whether marked skip times go to AniSkip.
 settings-share-skips = Bagikan waktu lewati ke AniSkip
-
-# Line under it.
-settings-share-skips-detail = AniSkip adalah daftar gratis bersama berisi pembukaan dan penutup yang dipakai banyak pemutar. Yang dikirim: waktunya, nomor MyAnimeList acaranya, episodenya, dan id acak untuk instalasi ini.
-
-# Settings, Playback: removes every skip time you marked.
-settings-clear-skips = Hapus waktu lewati yang Anda tandai…
-
-# Question that asks before clearing every skip time you marked.
-settings-clear-skips-confirm = Hapus waktu lewati yang Anda tandai? AniSkip tetap menyimpan yang sudah Anda bagikan.
 
 # Row: skip filler.
 settings-skip-filler = Lewati filler otomatis

@@ -1718,7 +1718,6 @@
     <string name="player_mark_it">İşaretle</string>
     <string name="player_dont_ask_again">Bir daha sorma</string>
     <string name="player_share_title">Atlama zamanlarınızı AniSkip ile paylaşalım mı?</string>
-    <string name="player_share_body">AniSkip, kendi gönüllüleri tarafından işletilen, ücretsiz ve ortak bir açılış ve kapanış listesidir. Başkalarının oynatıcıları sizin işaretlediğinizi atlar.</string>
     <string name="player_share_sent">Zamanlar, dizinin MyAnimeList numarası, bölüm ve bu kurulum için üretilmiş rastgele bir kimlik gider. Adınız, hesaplarınız ya da izlediğiniz kaynak gitmez. AniSkip, istenmeyen içeriği sınırlamak için IP adresinizi görür ve şartları 13 yaş ve üzerini ister.</string>
     <string name="player_share_yes">Paylaş</string>
     <string name="player_share_no">Paylaşma</string>
@@ -2007,12 +2006,7 @@
     <string name="settings_up_next_countdown">Sıradaki geri sayımı</string>
     <string name="settings_skip_opening">Açılışı otomatik atla</string>
     <string name="settings_skip_recap">Özetleri otomatik atla</string>
-    <string name="settings_ask_was_opening">Elle açılış atladıktan sonra sor</string>
-    <string name="settings_ask_was_opening_detail">Bir sonraki sefer atlanması için işaretlemeyi önerir</string>
     <string name="settings_share_skips">Atlama zamanlarını AniSkip ile paylaş</string>
-    <string name="settings_share_skips_detail">AniSkip, birçok oynatıcının kullandığı, ücretsiz ve ortak bir açılış ve kapanış listesidir. Zamanları, dizinin MyAnimeList numarasını, bölümü ve bu kurulum için rastgele bir kimliği alır.</string>
-    <string name="settings_clear_skips">İşaretlediğiniz atlama zamanlarını temizle…</string>
-    <string name="settings_clear_skips_confirm">İşaretlediğiniz atlama zamanları temizlensin mi? AniSkip, paylaştıklarınızı tutar.</string>
     <string name="settings_skip_filler">Dolgu bölümlerini otomatik atla</string>
     <string name="settings_mark_opening">Açılış ve bitişi işaretle</string>
     <string name="settings_skip_button">Atlama düğmesini göster</string>

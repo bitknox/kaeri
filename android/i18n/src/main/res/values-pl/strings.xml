@@ -1826,7 +1826,6 @@
     <string name="player_mark_it">Zaznacz</string>
     <string name="player_dont_ask_again">Nie pytaj więcej</string>
     <string name="player_share_title">Udostępniać twoje czasy pominięcia w AniSkip?</string>
-    <string name="player_share_body">AniSkip to darmowa, wspólna lista czołówek i zakończeń, prowadzona przez własnych wolontariuszy. Odtwarzacze innych osób pomijają to, co zaznaczysz.</string>
     <string name="player_share_sent">Dostaje czasy, numer serialu z MyAnimeList, odcinek i losowy identyfikator utworzony dla tej instalacji. Nie dostaje twojego imienia, kont ani tego, skąd oglądasz. AniSkip widzi twój adres IP, aby ograniczać spam, a jego regulamin wymaga ukończenia 13 lat.</string>
     <string name="player_share_yes">Udostępnij</string>
     <string name="player_share_no">Nie udostępniaj</string>
@@ -2123,12 +2122,7 @@
     <string name="settings_up_next_countdown">Następny: czas odliczania</string>
     <string name="settings_skip_opening">Automatycznie pomijaj czołówkę</string>
     <string name="settings_skip_recap">Pomijaj streszczenia automatycznie</string>
-    <string name="settings_ask_was_opening">Pytaj po ręcznym pominięciu czołówki</string>
-    <string name="settings_ask_was_opening_detail">Proponuje jej zaznaczenie, aby następnym razem została pominięta</string>
     <string name="settings_share_skips">Udostępniaj czasy pominięcia w AniSkip</string>
-    <string name="settings_share_skips_detail">AniSkip to darmowa, wspólna lista czołówek i zakończeń, z której korzysta wiele odtwarzaczy. Dostaje czasy, numer serialu z MyAnimeList, odcinek i losowy identyfikator tej instalacji.</string>
-    <string name="settings_clear_skips">Wyczyść zaznaczone czasy pominięcia…</string>
-    <string name="settings_clear_skips_confirm">Wyczyścić zaznaczone przez ciebie czasy pominięcia? AniSkip zachowuje te, które udostępniono.</string>
     <string name="settings_skip_filler">Automatycznie pomijaj wypełniacze</string>
     <string name="settings_mark_opening">Oznaczaj czołówkę i zakończenie</string>
     <string name="settings_skip_button">Pokazuj przycisk pomijania</string>

@@ -1772,7 +1772,6 @@
     <string name="player_mark_it">Marcarla</string>
     <string name="player_dont_ask_again">No preguntar más</string>
     <string name="player_share_title">¿Compartir tus tiempos de salto con AniSkip?</string>
-    <string name="player_share_body">AniSkip es una lista gratuita y compartida de aperturas y finales, mantenida por sus propios voluntarios. Los reproductores de otras personas omiten lo que tú marcas.</string>
     <string name="player_share_sent">Recibe los tiempos, el número de MyAnimeList de la serie, el episodio y un id aleatorio creado para esta instalación. No recibe tu nombre, tus cuentas ni la fuente desde la que ves. AniSkip ve tu dirección IP para limitar el spam y sus términos piden que tengas 13 años o más.</string>
     <string name="player_share_yes">Compartir</string>
     <string name="player_share_no">No compartir</string>
@@ -2065,12 +2064,7 @@
     <string name="settings_up_next_countdown">Duración de la cuenta regresiva de Siguiente</string>
     <string name="settings_skip_opening">Saltar la apertura automáticamente</string>
     <string name="settings_skip_recap">Omitir resúmenes automáticamente</string>
-    <string name="settings_ask_was_opening">Preguntar tras saltar una apertura a mano</string>
-    <string name="settings_ask_was_opening_detail">Ofrece marcarla para que se omita la próxima vez</string>
     <string name="settings_share_skips">Compartir tiempos de salto con AniSkip</string>
-    <string name="settings_share_skips_detail">AniSkip es una lista gratuita y compartida de aperturas y finales que usan muchos reproductores. Recibe los tiempos, el número de MyAnimeList de la serie, el episodio y un id aleatorio de esta instalación.</string>
-    <string name="settings_clear_skips">Borrar los tiempos de salto que marcaste…</string>
-    <string name="settings_clear_skips_confirm">¿Borrar los tiempos de salto que marcaste? AniSkip conserva los que compartiste.</string>
     <string name="settings_skip_filler">Saltar episodios de relleno automáticamente</string>
     <string name="settings_mark_opening">Marcar apertura y cierre</string>
     <string name="settings_skip_button">Mostrar botón de saltar</string>

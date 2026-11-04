@@ -91,16 +91,19 @@ impl Run<'_> {
             // settings have it, however this episode was left.
             ScriptEvent::CancelNext => self.cancel_next = true,
             ScriptEvent::Skip => {
-                if let Some(to) =
-                    tracker.offered_skip().map(|s| skip_target(s.end, tracker.duration()))
+                if let Some((kind, to)) = tracker
+                    .offered_skip()
+                    .map(|s| (s.kind, skip_target(s.end, tracker.duration())))
                 {
                     let _ = link.seek(to, true).await;
+                    self.skipped(kind, to, tracker).await;
                 }
             }
             ScriptEvent::UndoSkip { to } => {
                 let undone = last_skip.take();
                 if let Some(kind) = undone {
                     tracker.decline(kind);
+                    self.found_undone(kind, tracker).await;
                 }
                 let _ = link.seek(*to, true).await;
                 if let Some(kind) = undone {
@@ -242,7 +245,9 @@ pub(super) async fn apply_command(link: &dyn PlayerLink, command: PlayerCommand)
         | PlayerCommand::ReportSkip { .. }
         | PlayerCommand::DismissSkipPrompt
         | PlayerCommand::NeverAskWasOpening
-        | PlayerCommand::AnswerShareSkipTimes { .. } => {}
+        | PlayerCommand::AnswerShareSkipTimes { .. }
+        | PlayerCommand::ConfirmFoundSkip { .. }
+        | PlayerCommand::AdjustFoundSkip { .. } => {}
         // What a player's own interface reports, read by the loop as the companion's word.
         PlayerCommand::TakeSkip
         | PlayerCommand::UndoSkip { .. }

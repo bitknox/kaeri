@@ -60,6 +60,7 @@ use crate::{
 mod companion_state;
 mod controls;
 mod events;
+mod found;
 mod marking;
 mod presence;
 #[cfg(test)]
@@ -110,6 +111,10 @@ pub struct PlaySettings {
     /// Ask "Was that the opening?" after a skip by hand that looks like one, from
     /// `playback.ask_was_opening`.
     pub ask_was_opening: bool,
+    /// Find the opening and the ending from the audio, from `playback.find_skip_times`, where
+    /// the player hands the audio over and the device is not saving power or storage: see
+    /// [`crate::skip_find::SkipFind::runs`].
+    pub find_skip_times: bool,
     /// Whether the viewer's marks and votes go to AniSkip, from `playback.share_skip_times`:
     /// `None` until asked, which the first Save does.
     pub share_skip_times: Option<bool>,
@@ -302,6 +307,7 @@ pub async fn play(
         skips: aniskip.iter().map(|time| time.interval).collect(),
         aniskip,
         marks,
+        found: Vec::new(),
         marking: marking::SkipMarking::new(settings.ask_was_opening, settings.share_skip_times),
         // Cleared when the UI drops its sender, which disables that select branch — otherwise
         // a closed channel returns `None` instantly and spins the loop. Outside the attempt
@@ -491,7 +497,19 @@ pub async fn play(
             subtitle_language: settings.subtitle_language.clone(),
             dub: context.translation == Translation::Dub,
         });
-        if let Err(e) = load(current.link.as_ref(), &stream, &request).await {
+        // The audio of this file's head and tail, for finding its skip times: listened for
+        // before it loads, so none of it is missed. Never on a cast, which plays elsewhere.
+        let finder = (settings.find_skip_times
+            && current.link.target() == crate::playback::link::PlayerTarget::Local)
+            .then(|| {
+                found::Finder::start(
+                    store.clone(),
+                    context.anilist_id,
+                    context.episode.trim().to_owned(),
+                )
+            });
+        let tap = finder.as_ref().map(found::Finder::options).unwrap_or_default();
+        if let Err(e) = load(current.link.as_ref(), &stream, &request, tap).await {
             tracing::warn!(error = %e, "could not hand the stream to mpv");
         }
         // mpv is already at the resume point by now — `start` handled it. Saying so is what
@@ -501,7 +519,16 @@ pub async fn play(
             let _ = current.link.overlay(Overlay::Resumed { position }).await;
         }
 
-        let outcome = run.file(current, &stream, &streams, index, &mut commands, late).await;
+        let outcome = run
+            .file(
+                current,
+                &stream,
+                &streams,
+                index,
+                &mut commands,
+                events::Beside { late, finder },
+            )
+            .await;
 
         match outcome {
             FileOutcome::Switch { to, at } => {
@@ -672,15 +699,18 @@ async fn load(
     link: &dyn PlayerLink,
     stream: &Stream,
     request: &PlaybackRequest,
+    // The audio tap's options, when its skip times are found.
+    tap: Vec<(String, String)>,
 ) -> Result<(), LinkError> {
     link.overlay(Overlay::ThumbnailUrl(stream.thumbnail_url.clone())).await?;
-    let options = kaeri_playback::protocol::file_options(
+    let mut options = kaeri_playback::protocol::file_options(
         &stream.headers,
         request.start_at,
         &request.title,
         request.subtitle_language.as_deref(),
         request.dub,
     );
+    options.extend(tap);
     link.load(&stream.url, options).await
 }
 
@@ -708,6 +738,8 @@ struct Run<'a> {
     aniskip: Vec<AniSkipTime>,
     /// The viewer's own marks for the episode.
     marks: Vec<MarkedSkip>,
+    /// What was found from the audio of the file playing, by kind.
+    found: Vec<SkipInterval>,
     /// The marking bar, its prompts and the seeks they watch.
     marking: marking::SkipMarking,
     controls_open: bool,

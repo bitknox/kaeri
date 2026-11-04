@@ -82,7 +82,9 @@ pub use sender::{
 };
 #[cfg(all(feature = "remote", feature = "testing"))]
 pub use sender::{FfiFakeCast, FfiFakeCastOptions, FfiFakeTv};
-pub use start::{FfiBackground, FfiDirs, FfiError, FfiPlatform, FfiStart, SecretsMode};
+pub use start::{
+    FfiBackground, FfiDirs, FfiError, FfiPlatform, FfiStart, SecretsMode, audio_tap_callback,
+};
 pub use sync_network::{FfiSyncAdvert, FfiSyncNetwork, FfiSyncSink, FfiSyncTxt};
 
 /// Each command and event, written as the bindings write it and read back: what a front end sends
@@ -290,6 +292,7 @@ mod tests {
             secrets: Some(SecretsMode::FollowConfig),
             language: Some("da".into()),
             profile: Some("p2".into()),
+            audio_tap: true,
         };
         assert_eq!(crossed(start.clone()), start);
         assert_eq!(crossed(FfiStart::default()), FfiStart::default());
@@ -819,6 +822,20 @@ mod tests {
             prompt: Some(SkipPrompt::WrongTimes { kind: SkipKind::Ending }),
         });
         crosses_intact(Event::PlayerSkipPrompt { playback, prompt: Some(SkipPrompt::Share) });
+        // The found times' states: each prompt, mark, timeline and control they show.
+        for state in kaeri_model::playback::FoundSkipFixture::ALL {
+            let scene = kaeri_model::playback::found_skip_scene(state);
+            if let Some(prompt) = scene.prompt {
+                crosses_intact(Event::PlayerSkipPrompt { playback, prompt: Some(prompt) });
+            }
+            if let Some(view) = scene.mark.clone() {
+                crosses_intact(Event::PlayerSkipMark { playback, view: Some(view) });
+            }
+            crosses_intact(Event::PlayerTimeline { playback, marks: scene.marks.clone() });
+            for ui in scene.ui {
+                crosses_intact(Event::PlayerUi { playback, ui });
+            }
+        }
         crosses_intact(Event::PlayerSkipNotice {
             playback,
             notice: SkipNotice::SavedHere { kind: SkipKind::Opening, most: 180.0 },
@@ -901,6 +918,8 @@ mod tests {
             PlayerCommand::DismissSkipPrompt,
             PlayerCommand::NeverAskWasOpening,
             PlayerCommand::AnswerShareSkipTimes { share: true },
+            PlayerCommand::ConfirmFoundSkip { kind: SkipKind::Opening },
+            PlayerCommand::AdjustFoundSkip { kind: SkipKind::Ending },
             PlayerCommand::CopyStats {
                 about: StatsAbout {
                     app_version: "0.14.0".into(),

@@ -139,6 +139,7 @@ pub mod servers;
 pub mod services;
 pub mod settings;
 pub mod show_settings;
+pub mod skip_find;
 pub mod skip_marks;
 pub mod sources;
 pub(crate) mod state;

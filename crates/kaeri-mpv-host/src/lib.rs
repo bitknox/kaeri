@@ -32,7 +32,7 @@ pub mod render;
 
 #[cfg(feature = "libmpv")]
 pub use crate::{
-    mpv::{Mpv, MpvError},
+    mpv::{Mpv, MpvError, audio_tap_available},
     player::{
         HostEvent, Player, PlayerOptions, PlayerState, Sink, VideoOutput, composition_size,
         swapchain_of,

@@ -6928,6 +6928,9 @@ player-mark-watch-edges = Watch the edges
 # Line in the review with sharing on.
 player-mark-shares = Saving shares these times with AniSkip.
 
+# Review line when the stretch under review was found from the audio, not marked by hand.
+player-mark-found = Kaeri found these times from the audio.
+
 # Line in the review when the mark replaces AniSkip's times.
 player-mark-replaces = Replaces AniSkip's { $start } to { $end }, which is reported as wrong.
 
@@ -6977,11 +6980,33 @@ player-mark-it = Mark it
 # Button of that prompt that turns it off. Settings can turn it on again.
 player-dont-ask-again = Don't ask again
 
+# Prompt a few seconds after a skip over an opening found from the audio, with Yes, Adjust and Don't ask again.
+player-found-ask-opening = Kaeri found this opening. Were the edges right?
+
+# The same prompt after a skip over an ending found from the audio.
+player-found-ask-ending = Kaeri found this ending. Were the edges right?
+
+# Line under that prompt, in a quieter colour. $episode is the episode's number.
+player-found-ask-share = Yes shares these times with AniSkip for episode { $episode }.
+
+# Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust opens the review with the edges to nudge.
+player-found-yes = Yes
+
+player-found-adjust = Adjust
+
+# What the prompt says after Yes. $episode is the episode's number.
+player-found-saved = Saved. AniSkip gets these times for episode { $episode }.
+
+# What the prompt says after Don't ask again, with the line below it.
+player-found-never = Kaeri won't ask about skip times again.
+
+player-found-never-how = You can turn it back on in Settings.
+
 # Title of the sheet shown on the first Save.
 player-share-title = Share your skip times with AniSkip?
 
 # Body of the sheet.
-player-share-body = AniSkip is a free, shared list of openings and endings, run by its own volunteers. Other people's players skip what you mark.
+player-share-body = AniSkip is a shared list of openings and endings, run by its own volunteers. Other people's players skip the times you mark and the found times you confirm.
 
 # What is sent, as a line under the body.
 player-share-sent = It gets the times, the show's MyAnimeList number, the episode and a random id made for this install. Not your name, your accounts or the source you watch from. AniSkip sees your IP address to limit spam, and its terms ask that you are 13 or older.
@@ -6997,6 +7022,19 @@ player-skip-from-file = From the file
 player-skip-yours = Yours
 
 player-skip-from-aniskip = From AniSkip
+
+player-skip-found = Found by Kaeri
+
+# Skip times panel and Settings: why finding skip times from the audio is paused, one line per platform's name for its power saving mode, and one for low storage.
+player-skip-paused-low-power = Paused while Low Power Mode is on.
+
+player-skip-paused-battery-saver = Paused while battery saver is on.
+
+player-skip-paused-energy-saver = Paused while energy saver is on.
+
+player-skip-paused-power-saver = Paused while power saver is on.
+
+player-skip-paused-storage = Paused until 2 GB of storage is free.
 
 player-skip-none = None yet
 
@@ -7823,23 +7861,35 @@ settings-skip-opening = Skip opening automatically
 # Settings, Playback: whether recaps are skipped without asking.
 settings-skip-recap = Skip recaps automatically
 
-# Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand.
-settings-ask-was-opening = Ask after skipping an opening by hand
+# Settings, Playback: finds openings and endings by comparing the audio of a show's episodes, when AniSkip has none. On by default.
+settings-find-skips = Find skip times from the audio
 
 # Line under it.
-settings-ask-was-opening-detail = Offers to mark it, so it is skipped next time
+settings-find-skips-detail = When AniSkip has no times, Kaeri compares the audio across a show's episodes, on this device.
+
+# Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand, and whether it asks about the edges of a skip it found.
+settings-ask-was-opening = Ask about skip times
+
+# Line under it.
+settings-ask-was-opening-detail = After you skip an opening by hand, and after a skip Kaeri found
 
 # Settings, Playback: whether marked skip times go to AniSkip.
 settings-share-skips = Share skip times with AniSkip
 
 # Line under it.
-settings-share-skips-detail = AniSkip is a free, shared list of openings and endings that many players use. It gets the times, the show's MyAnimeList number, the episode and a random id for this install.
+settings-share-skips-detail = AniSkip is a shared list of openings and endings that many players use. It gets the times you mark and the found times you confirm, the show's MyAnimeList number, the episode and a random id for this install.
 
-# Settings, Playback: removes every skip time you marked.
-settings-clear-skips = Clear skip times you marked…
+# Settings, Playback: the row that removes every skip time you marked and every one found from the audio. Its button reads Clear.
+settings-clear-skips = Skip times you marked or Kaeri found
 
-# Question that asks before clearing every skip time you marked.
-settings-clear-skips-confirm = Clear the skip times you marked? AniSkip keeps the ones you shared.
+# Question that asks before clearing them.
+settings-clear-skips-confirm = Clear the skip times you marked and the ones Kaeri found? AniSkip keeps the ones you shared.
+
+# Android's Settings: the title of that row, with the line below.
+settings-clear-skips-android = Clear skip times
+
+# Line under it.
+settings-clear-skips-android-detail = The ones you marked and the ones Kaeri found
 
 # Row: skip filler.
 settings-skip-filler = Skip filler automatically

@@ -4193,9 +4193,6 @@
   <data name="PlayerShareTitle" xml:space="preserve">
     <value>Bagikan waktu lewati Anda ke AniSkip?</value>
   </data>
-  <data name="PlayerShareBody" xml:space="preserve">
-    <value>AniSkip adalah daftar gratis bersama berisi pembukaan dan penutup, dikelola relawannya sendiri. Pemutar orang lain melewati apa yang Anda tandai.</value>
-  </data>
   <data name="PlayerShareSent" xml:space="preserve">
     <value>Yang dikirim: waktunya, nomor MyAnimeList acaranya, episodenya, dan id acak yang dibuat untuk instalasi ini. Bukan nama Anda, akun Anda, atau sumber tempat Anda menonton. AniSkip melihat alamat IP Anda untuk membatasi spam, dan ketentuannya mensyaratkan usia 13 tahun ke atas.</value>
   </data>
@@ -5024,23 +5021,8 @@
   <data name="SettingsSkipRecap" xml:space="preserve">
     <value>Lewati rekap otomatis</value>
   </data>
-  <data name="SettingsAskWasOpening" xml:space="preserve">
-    <value>Tanya setelah melewati pembukaan secara manual</value>
-  </data>
-  <data name="SettingsAskWasOpeningDetail" xml:space="preserve">
-    <value>Menawarkan untuk menandainya, jadi dilewati lain kali</value>
-  </data>
   <data name="SettingsShareSkips" xml:space="preserve">
     <value>Bagikan waktu lewati ke AniSkip</value>
-  </data>
-  <data name="SettingsShareSkipsDetail" xml:space="preserve">
-    <value>AniSkip adalah daftar gratis bersama berisi pembukaan dan penutup yang dipakai banyak pemutar. Yang dikirim: waktunya, nomor MyAnimeList acaranya, episodenya, dan id acak untuk instalasi ini.</value>
-  </data>
-  <data name="SettingsClearSkips" xml:space="preserve">
-    <value>Hapus waktu lewati yang Anda tandai…</value>
-  </data>
-  <data name="SettingsClearSkipsConfirm" xml:space="preserve">
-    <value>Hapus waktu lewati yang Anda tandai? AniSkip tetap menyimpan yang sudah Anda bagikan.</value>
   </data>
   <data name="SettingsSkipFiller" xml:space="preserve">
     <value>Lewati filler otomatis</value>

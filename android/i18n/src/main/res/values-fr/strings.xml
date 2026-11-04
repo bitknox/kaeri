@@ -1772,7 +1772,6 @@
     <string name="player_mark_it">La marquer</string>
     <string name="player_dont_ask_again">Ne plus demander</string>
     <string name="player_share_title">Partager vos repères avec AniSkip ?</string>
-    <string name="player_share_body">AniSkip est une liste gratuite et partagée d’intros et de génériques, tenue par ses propres bénévoles. Les lecteurs des autres passent ce que vous marquez.</string>
     <string name="player_share_sent">Il reçoit les repères, le numéro MyAnimeList de la série, l’épisode et un identifiant aléatoire créé pour cette installation. Pas votre nom, vos comptes ni la source d’où vous regardez. AniSkip voit votre adresse IP pour limiter le spam, et ses conditions exigent d’avoir 13 ans ou plus.</string>
     <string name="player_share_yes">Partager</string>
     <string name="player_share_no">Ne pas partager</string>
@@ -2065,12 +2064,7 @@
     <string name="settings_up_next_countdown">À suivre : compte à rebours</string>
     <string name="settings_skip_opening">Passer le générique d’ouverture automatiquement</string>
     <string name="settings_skip_recap">Passer les résumés automatiquement</string>
-    <string name="settings_ask_was_opening">Demander après un saut manuel d’intro</string>
-    <string name="settings_ask_was_opening_detail">Propose de la marquer, pour qu’elle soit passée la prochaine fois</string>
     <string name="settings_share_skips">Partager les repères avec AniSkip</string>
-    <string name="settings_share_skips_detail">AniSkip est une liste gratuite et partagée d’intros et de génériques que de nombreux lecteurs utilisent. Il reçoit les repères, le numéro MyAnimeList de la série, l’épisode et un identifiant aléatoire pour cette installation.</string>
-    <string name="settings_clear_skips">Effacer les repères que vous avez marqués…</string>
-    <string name="settings_clear_skips_confirm">Effacer les repères que vous avez marqués ? AniSkip garde ceux que vous avez partagés.</string>
     <string name="settings_skip_filler">Passer les épisodes de remplissage automatiquement</string>
     <string name="settings_mark_opening">Marquer le générique d’ouverture et de fin</string>
     <string name="settings_skip_button">Afficher le bouton Passer</string>

@@ -1664,7 +1664,6 @@
     <string name="player_mark_it">Tandai</string>
     <string name="player_dont_ask_again">Jangan tanya lagi</string>
     <string name="player_share_title">Bagikan waktu lewati Anda ke AniSkip?</string>
-    <string name="player_share_body">AniSkip adalah daftar gratis bersama berisi pembukaan dan penutup, dikelola relawannya sendiri. Pemutar orang lain melewati apa yang Anda tandai.</string>
     <string name="player_share_sent">Yang dikirim: waktunya, nomor MyAnimeList acaranya, episodenya, dan id acak yang dibuat untuk instalasi ini. Bukan nama Anda, akun Anda, atau sumber tempat Anda menonton. AniSkip melihat alamat IP Anda untuk membatasi spam, dan ketentuannya mensyaratkan usia 13 tahun ke atas.</string>
     <string name="player_share_yes">Bagikan</string>
     <string name="player_share_no">Jangan bagikan</string>
@@ -1949,12 +1948,7 @@
     <string name="settings_up_next_countdown">Hitung mundur berikutnya</string>
     <string name="settings_skip_opening">Lewati pembukaan otomatis</string>
     <string name="settings_skip_recap">Lewati rekap otomatis</string>
-    <string name="settings_ask_was_opening">Tanya setelah melewati pembukaan secara manual</string>
-    <string name="settings_ask_was_opening_detail">Menawarkan untuk menandainya, jadi dilewati lain kali</string>
     <string name="settings_share_skips">Bagikan waktu lewati ke AniSkip</string>
-    <string name="settings_share_skips_detail">AniSkip adalah daftar gratis bersama berisi pembukaan dan penutup yang dipakai banyak pemutar. Yang dikirim: waktunya, nomor MyAnimeList acaranya, episodenya, dan id acak untuk instalasi ini.</string>
-    <string name="settings_clear_skips">Hapus waktu lewati yang Anda tandai…</string>
-    <string name="settings_clear_skips_confirm">Hapus waktu lewati yang Anda tandai? AniSkip tetap menyimpan yang sudah Anda bagikan.</string>
     <string name="settings_skip_filler">Lewati filler otomatis</string>
     <string name="settings_mark_opening">Tandai pembukaan dan penutup</string>
     <string name="settings_skip_button">Tampilkan tombol lewati</string>

@@ -6317,6 +6317,9 @@ public enum L {
     /// Line in the review with sharing on.
     public static var playerMarkShares: String { string("player-mark-shares", fallback: "Saving shares these times with AniSkip.") }
 
+    /// Review line when the stretch under review was found from the audio, not marked by hand.
+    public static var playerMarkFound: String { string("player-mark-found", fallback: "Kaeri found these times from the audio.") }
+
     /// Line in the review when the mark replaces AniSkip's times.
     public static func playerMarkReplaces(start: String, end: String) -> String {
         Self.format("player-mark-replaces", fallback: "Replaces AniSkip's %1$@ to %2$@, which is reported as wrong.", start, end)
@@ -6374,11 +6377,37 @@ public enum L {
     /// Button of that prompt that turns it off. Settings can turn it on again.
     public static var playerDontAskAgain: String { string("player-dont-ask-again", fallback: "Don't ask again") }
 
+    /// Prompt a few seconds after a skip over an opening found from the audio, with Yes, Adjust and Don't ask again.
+    public static var playerFoundAskOpening: String { string("player-found-ask-opening", fallback: "Kaeri found this opening. Were the edges right?") }
+
+    /// The same prompt after a skip over an ending found from the audio.
+    public static var playerFoundAskEnding: String { string("player-found-ask-ending", fallback: "Kaeri found this ending. Were the edges right?") }
+
+    /// Line under that prompt, in a quieter colour. $episode is the episode's number.
+    public static func playerFoundAskShare(episode: Int) -> String {
+        Self.format("player-found-ask-share", fallback: "Yes shares these times with AniSkip for episode %1$lld.", episode)
+    }
+
+    /// Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust opens the review with the edges to nudge.
+    public static var playerFoundYes: String { string("player-found-yes", fallback: "Yes") }
+
+    public static var playerFoundAdjust: String { string("player-found-adjust", fallback: "Adjust") }
+
+    /// What the prompt says after Yes. $episode is the episode's number.
+    public static func playerFoundSaved(episode: Int) -> String {
+        Self.format("player-found-saved", fallback: "Saved. AniSkip gets these times for episode %1$lld.", episode)
+    }
+
+    /// What the prompt says after Don't ask again, with the line below it.
+    public static var playerFoundNever: String { string("player-found-never", fallback: "Kaeri won't ask about skip times again.") }
+
+    public static var playerFoundNeverHow: String { string("player-found-never-how", fallback: "You can turn it back on in Settings.") }
+
     /// Title of the sheet shown on the first Save.
     public static var playerShareTitle: String { string("player-share-title", fallback: "Share your skip times with AniSkip?") }
 
     /// Body of the sheet.
-    public static var playerShareBody: String { string("player-share-body", fallback: "AniSkip is a free, shared list of openings and endings, run by its own volunteers. Other people's players skip what you mark.") }
+    public static var playerShareBody: String { string("player-share-body", fallback: "AniSkip is a shared list of openings and endings, run by its own volunteers. Other people's players skip the times you mark and the found times you confirm.") }
 
     /// What is sent, as a line under the body.
     public static var playerShareSent: String { string("player-share-sent", fallback: "It gets the times, the show's MyAnimeList number, the episode and a random id made for this install. Not your name, your accounts or the source you watch from. AniSkip sees your IP address to limit spam, and its terms ask that you are 13 or older.") }
@@ -6394,6 +6423,19 @@ public enum L {
     public static var playerSkipYours: String { string("player-skip-yours", fallback: "Yours") }
 
     public static var playerSkipFromAniskip: String { string("player-skip-from-aniskip", fallback: "From AniSkip") }
+
+    public static var playerSkipFound: String { string("player-skip-found", fallback: "Found by Kaeri") }
+
+    /// Skip times panel and Settings: why finding skip times from the audio is paused, one line per platform's name for its power saving mode, and one for low storage.
+    public static var playerSkipPausedLowPower: String { string("player-skip-paused-low-power", fallback: "Paused while Low Power Mode is on.") }
+
+    public static var playerSkipPausedBatterySaver: String { string("player-skip-paused-battery-saver", fallback: "Paused while battery saver is on.") }
+
+    public static var playerSkipPausedEnergySaver: String { string("player-skip-paused-energy-saver", fallback: "Paused while energy saver is on.") }
+
+    public static var playerSkipPausedPowerSaver: String { string("player-skip-paused-power-saver", fallback: "Paused while power saver is on.") }
+
+    public static var playerSkipPausedStorage: String { string("player-skip-paused-storage", fallback: "Paused until 2 GB of storage is free.") }
 
     public static var playerSkipNone: String { string("player-skip-none", fallback: "None yet") }
 
@@ -7292,23 +7334,35 @@ public enum L {
     /// Settings, Playback: whether recaps are skipped without asking.
     public static var settingsSkipRecap: String { string("settings-skip-recap", fallback: "Skip recaps automatically") }
 
-    /// Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand.
-    public static var settingsAskWasOpening: String { string("settings-ask-was-opening", fallback: "Ask after skipping an opening by hand") }
+    /// Settings, Playback: finds openings and endings by comparing the audio of a show's episodes, when AniSkip has none. On by default.
+    public static var settingsFindSkips: String { string("settings-find-skips", fallback: "Find skip times from the audio") }
 
     /// Line under it.
-    public static var settingsAskWasOpeningDetail: String { string("settings-ask-was-opening-detail", fallback: "Offers to mark it, so it is skipped next time") }
+    public static var settingsFindSkipsDetail: String { string("settings-find-skips-detail", fallback: "When AniSkip has no times, Kaeri compares the audio across a show's episodes, on this device.") }
+
+    /// Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand, and whether it asks about the edges of a skip it found.
+    public static var settingsAskWasOpening: String { string("settings-ask-was-opening", fallback: "Ask about skip times") }
+
+    /// Line under it.
+    public static var settingsAskWasOpeningDetail: String { string("settings-ask-was-opening-detail", fallback: "After you skip an opening by hand, and after a skip Kaeri found") }
 
     /// Settings, Playback: whether marked skip times go to AniSkip.
     public static var settingsShareSkips: String { string("settings-share-skips", fallback: "Share skip times with AniSkip") }
 
     /// Line under it.
-    public static var settingsShareSkipsDetail: String { string("settings-share-skips-detail", fallback: "AniSkip is a free, shared list of openings and endings that many players use. It gets the times, the show's MyAnimeList number, the episode and a random id for this install.") }
+    public static var settingsShareSkipsDetail: String { string("settings-share-skips-detail", fallback: "AniSkip is a shared list of openings and endings that many players use. It gets the times you mark and the found times you confirm, the show's MyAnimeList number, the episode and a random id for this install.") }
 
-    /// Settings, Playback: removes every skip time you marked.
-    public static var settingsClearSkips: String { string("settings-clear-skips", fallback: "Clear skip times you marked…") }
+    /// Settings, Playback: the row that removes every skip time you marked and every one found from the audio. Its button reads Clear.
+    public static var settingsClearSkips: String { string("settings-clear-skips", fallback: "Skip times you marked or Kaeri found") }
 
-    /// Question that asks before clearing every skip time you marked.
-    public static var settingsClearSkipsConfirm: String { string("settings-clear-skips-confirm", fallback: "Clear the skip times you marked? AniSkip keeps the ones you shared.") }
+    /// Question that asks before clearing them.
+    public static var settingsClearSkipsConfirm: String { string("settings-clear-skips-confirm", fallback: "Clear the skip times you marked and the ones Kaeri found? AniSkip keeps the ones you shared.") }
+
+    /// Android's Settings: the title of that row, with the line below.
+    public static var settingsClearSkipsAndroid: String { string("settings-clear-skips-android", fallback: "Clear skip times") }
+
+    /// Line under it.
+    public static var settingsClearSkipsAndroidDetail: String { string("settings-clear-skips-android-detail", fallback: "The ones you marked and the ones Kaeri found") }
 
     /// Row: skip filler.
     public static var settingsSkipFiller: String { string("settings-skip-filler", fallback: "Skip filler automatically") }

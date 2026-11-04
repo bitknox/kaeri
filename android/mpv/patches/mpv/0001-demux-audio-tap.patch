@@ -1,0 +1,799 @@
+demux: an audio tap at the demuxer, for skip detection
+
+Kaeri fingerprints the audio around openings and endings. The selected audio stream's
+compressed packets are copied as they enter the demuxer cache, so at readahead speed and
+ahead of playback, decoded on a thread of the tap's own and handed to the client as 16-bit
+mono samples at 11025 Hz with their playback-timeline timestamps. A call with no samples is
+a break: a seek, dropped packets, a track switch, the end of a window or of the file.
+
+The client sets its callback with mpv_set_audio_tap(), one per mpv core and never through
+an option, so a script or IPC client cannot point mpv at code. The options say what to tap:
+demuxer-audio-tap-windows (up to four start-end ranges in seconds, empty and off by
+default, read again for each packet so a runtime change applies to the packets after it),
+demuxer-audio-tap-tag (handed back with every call, read when the demuxer opens) and
+demuxer-audio-tap-max-bytes (the queue, 8 MiB by default, allocated once when the tap
+starts). The demuxer only copies a packet into that queue under its lock; when the queue is
+full the packet is dropped and the gap becomes a break, so the demuxer never waits. Audio
+that was delivered once is not delivered again.
+
+New files plus small hooks in demux.c, demux.h, player/client.c, player/client.h, the
+public client.h and meson.build. For mpv v0.41.0: android/scripts/mpv.sh and
+desktop/linux/scripts/libmpv.sh apply it to the release archive, apple/scripts/mpv.sh after
+its own patches. LGPL-2.1-or-later, as mpv.
+
+diff --git a/demux/demux.c b/demux/demux.c
+index d1accba..f64c635 100644
+--- a/demux/demux.c
++++ b/demux/demux.c
+@@ -44,6 +44,7 @@
+ 
+ #include "stream/stream.h"
+ #include "demux.h"
++#include "demux_atap.h"
+ #include "packet_pool.h"
+ #include "timeline.h"
+ #include "stheader.h"
+@@ -124,6 +125,12 @@ const struct m_sub_options demux_conf = {
+         {"metadata-codepage", OPT_STRING(meta_cp)},
+         {"autocreate-playlist", OPT_CHOICE(autocreate_playlist,
+             {"no", 0}, {"filter", 1}, {"same", 2})},
++        // Kaeri: the demuxer audio tap (demux_atap.c).
++        {"demuxer-audio-tap-windows",
++            OPT_STRING_VALIDATE(atap_windows, demux_atap_validate_windows)},
++        {"demuxer-audio-tap-tag", OPT_INT64(atap_tag)},
++        {"demuxer-audio-tap-max-bytes", OPT_BYTE_SIZE(atap_max_bytes),
++            M_RANGE(64 * 1024, M_MAX_MEM_BYTES)},
+         {0}
+     },
+     .size = sizeof(struct demux_opts),
+@@ -146,6 +153,7 @@ const struct m_sub_options demux_conf = {
+             [STREAM_AUDIO] = 10,
+         },
+         .meta_cp = "auto",
++        .atap_max_bytes = 8 * 1024 * 1024,
+     },
+     .get_sub_options = get_demux_sub_opts,
+ };
+@@ -271,6 +279,9 @@ struct demux_internal {
+     struct mp_recorder *dumper;
+     int dumper_status;
+ 
++    struct demux_atap *atap; // Kaeri: the audio tap, from the first packet it takes
++    int64_t atap_tag;
++
+     bool owns_stream;
+ 
+     // -- Access from demuxer thread only
+@@ -1077,6 +1088,9 @@ static void demux_shutdown(struct demux_internal *in)
+ 
+     dumper_close(in);
+ 
++    demux_atap_destroy(in->atap);
++    in->atap = NULL;
++
+     if (demuxer->desc->close)
+         demuxer->desc->close(in->d_thread);
+     demuxer->priv = NULL;
+@@ -2047,6 +2061,19 @@ static void add_packet_locked(struct sh_stream *stream, demux_packet_t *dp)
+ 
+     record_packet(in, dp);
+ 
++    // Kaeri: the audio tap copies the packet, before the disk cache can take its data.
++    struct demux_opts *atap_opts = in->d_user->opts;
++    if (stream->type == STREAM_AUDIO && in->can_cache &&
++        (in->atap || (atap_opts->atap_windows && atap_opts->atap_windows[0])))
++    {
++        if (!in->atap) {
++            in->atap = demux_atap_create(in->global, in->log, in->atap_tag,
++                                         atap_opts->atap_max_bytes);
++        }
++        if (in->atap)
++            demux_atap_feed(in->atap, stream, dp, in->ts_offset, atap_opts->atap_windows);
++    }
++
+     if (in->cache && in->d_user->opts->disk_cache && !dp->is_wrapped_avframe) {
+         int64_t pos = demux_cache_write(in->cache, dp);
+         if (pos >= 0) {
+@@ -2281,6 +2308,8 @@ static bool read_packet(struct demux_internal *in)
+                     in->wakeup_cb(in->wakeup_cb_ctx);
+                 mp_cond_signal(&in->wakeup);
+                 MP_VERBOSE(in, "EOF reached.\n");
++                if (in->atap)
++                    demux_atap_eof(in->atap);
+             }
+         }
+         in->eof = eof;
+@@ -3321,6 +3350,7 @@ static struct demuxer *open_given_type(struct mpv_global *global,
+         .seeking_in_progress = MP_NOPTS_VALUE,
+         .demux_ts = MP_NOPTS_VALUE,
+         .owns_stream = !params->external_stream,
++        .atap_tag = opts->atap_tag,
+     };
+     mp_mutex_init(&in->lock);
+     mp_cond_init(&in->wakeup);
+diff --git a/demux/demux.h b/demux/demux.h
+index 6f2f38c..1ba243e 100644
+--- a/demux/demux.h
++++ b/demux/demux.h
+@@ -87,6 +87,8 @@ struct demux_opts {
+     char *meta_cp;
+     bool force_retry_eof;
+     int autocreate_playlist;
++    char *atap_windows; // Kaeri: demux_atap.c
++    int64_t atap_tag, atap_max_bytes;
+ };
+ 
+ #define SEEK_FACTOR   (1 << 1)      // argument is in range [0,1]
+diff --git a/demux/demux_atap.c b/demux/demux_atap.c
+new file mode 100644
+index 0000000..6a86f61
+--- /dev/null
++++ b/demux/demux_atap.c
+@@ -0,0 +1,516 @@
++/*
++ * This file is part of mpv.
++ *
++ * mpv is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * mpv is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with mpv.  If not, see <http://www.gnu.org/licenses/>.
++ */
++
++/*
++ * Kaeri: the demuxer audio tap. The selected audio stream's compressed packets are copied as
++ * they enter the demuxer cache, so at readahead speed rather than playback speed, and decoded
++ * on a thread of the tap's own with a decoder of its own. The client gets 16-bit mono samples
++ * at 11025 Hz with their playback-timeline timestamps, through the callback it set with
++ * mpv_set_audio_tap() (one per mpv core). A call with count 0 marks a break: the next samples
++ * don't follow on.
++ *
++ * Audio that was delivered once is not delivered again (seeks back, packets fetched twice
++ * after the cache was pruned, a switch to another rendition of the same audio).
++ *
++ * The demuxer thread only copies the packet into a queue preallocated at creation, a ring of
++ * demuxer-audio-tap-max-bytes. When it is full the packet is dropped and the gap becomes a
++ * break; the demuxer never waits on the tap.
++ */
++
++#include <math.h>
++#include <stdatomic.h>
++#include <stdlib.h>
++#include <string.h>
++
++#include <libavcodec/avcodec.h>
++#include <libavutil/channel_layout.h>
++#include <libswresample/swresample.h>
++
++#include "common/av_common.h"
++#include "common/common.h"
++#include "common/global.h"
++#include "common/msg.h"
++#include "demux/demux_atap.h"
++#include "demux/packet.h"
++#include "demux/stheader.h"
++#include "osdep/threads.h"
++#include "osdep/timer.h"
++#include "player/client.h"
++#include "mpv_talloc.h"
++
++#define RATE 11025
++#define MAX_WINDOWS 4
++#define MAX_RANGES 64
++#define MIN_RING (64 * 1024)
++#define REC_ALIGN 8
++
++// --- The core's callback -----------------------------------------------------------------
++
++struct demux_atap_core {
++    mp_mutex lock; // held while the callback runs, so clearing it waits for a running call
++    atomic_bool set;
++    mpv_audio_tap_fn cb;
++    void *cb_ctx;
++};
++
++static void core_destroy(void *p)
++{
++    struct demux_atap_core *c = p;
++    mp_mutex_destroy(&c->lock);
++}
++
++struct demux_atap_core *demux_atap_core_create(void *ta_parent)
++{
++    struct demux_atap_core *c = talloc_zero(ta_parent, struct demux_atap_core);
++    mp_mutex_init(&c->lock);
++    atomic_init(&c->set, false);
++    talloc_set_destructor(c, core_destroy);
++    return c;
++}
++
++int demux_atap_core_set(struct demux_atap_core *c, mpv_audio_tap_fn cb, void *cb_ctx)
++{
++    if (!c)
++        return MPV_ERROR_UNINITIALIZED;
++    mp_mutex_lock(&c->lock);
++    c->cb = cb;
++    c->cb_ctx = cb ? cb_ctx : NULL;
++    atomic_store(&c->set, cb != NULL);
++    mp_mutex_unlock(&c->lock);
++    return 0;
++}
++
++static bool core_active(struct demux_atap_core *c)
++{
++    return c && atomic_load_explicit(&c->set, memory_order_relaxed);
++}
++
++// --- Windows -----------------------------------------------------------------------------
++
++// "a-b[,c-d]..." in seconds, at most MAX_WINDOWS. Returns how many, or -1 if malformed.
++static int parse_windows(const char *s, double win[MAX_WINDOWS][2])
++{
++    if (!s || !s[0])
++        return 0;
++    int n = 0;
++    while (true) {
++        if (n == MAX_WINDOWS)
++            return -1;
++        char *end;
++        double a = strtod(s, &end);
++        if (end == s || *end != '-')
++            return -1;
++        s = end + 1;
++        double b = strtod(s, &end);
++        if (end == s || !isfinite(a) || !isfinite(b) || b <= a)
++            return -1;
++        win[n][0] = a;
++        win[n][1] = b;
++        n++;
++        if (!*end)
++            return n;
++        if (*end != ',')
++            return -1;
++        s = end + 1;
++    }
++}
++
++int demux_atap_validate_windows(struct mp_log *log, const m_option_t *opt,
++                                struct bstr name, const char **value)
++{
++    double win[MAX_WINDOWS][2];
++    if (parse_windows(*value, win) >= 0)
++        return 0;
++    mp_err(log, "Option %.*s: expected up to %d windows of start-end in seconds, separated "
++           "by commas, such as 0-360,1200-1440.\n", BSTR_P(name), MAX_WINDOWS);
++    return M_OPT_INVALID;
++}
++
++// --- The queue ---------------------------------------------------------------------------
++
++enum { REC_PACKET, REC_BREAK, REC_WRAP };
++
++// A record in the ring, followed by len bytes of packet data.
++struct rec {
++    double pts;
++    struct sh_stream *sh;
++    uint32_t len;
++    uint8_t kind;
++    bool gap; // records before this one were dropped
++};
++
++static size_t rec_size(size_t len)
++{
++    return MP_ALIGN_UP(sizeof(struct rec) + len, REC_ALIGN);
++}
++
++struct demux_atap {
++    struct mp_log *log;
++    struct demux_atap_core *core;
++    int64_t tag;
++
++    // Demuxer thread only, under the demuxer's lock.
++    char *windows;
++    double win[MAX_WINDOWS][2];
++    int num_win;
++    bool in_run; // the last packet fed was in a window and queued
++    int64_t feeds, feed_ns, feed_max_ns;
++
++    // The ring: written by the demuxer, read by the worker, indices under lock.
++    mp_mutex lock;
++    mp_cond wakeup;
++    mp_thread thread;
++    bool terminate;
++    uint8_t *ring;
++    size_t size, head, tail, used, peak;
++    bool overflowed;
++    int64_t dropped;
++
++    // Worker thread only.
++    struct sh_stream *sh;
++    AVCodecContext *avctx;
++    struct SwrContext *swr;
++    int swr_rate, swr_format, swr_channels;
++    AVFrame *frame;
++    AVPacket *pkt;
++    double seg_start, next_pts;
++    double ranges[MAX_RANGES][2];
++    int num_ranges;
++    int16_t *buf;
++    int buf_samples;
++    int64_t dups, breaks, samples, work_ns;
++};
++
++// Appends a record, with t->lock held. Never allocates: when the ring has no room the record
++// is dropped, and the next one that fits carries the gap.
++static bool push(struct demux_atap *t, int kind, struct sh_stream *sh, double pts,
++                 const void *data, size_t len)
++{
++    if (!t->used)
++        t->head = t->tail = 0;
++    size_t need = rec_size(len);
++    size_t at = t->head, skip = 0;
++    if (t->size - at < need) {
++        skip = t->size - at;
++        at = 0;
++    }
++    if (need > t->size || t->used + skip + need > t->size) {
++        t->overflowed = true;
++        t->dropped++;
++        return false;
++    }
++    if (skip >= sizeof(struct rec))
++        ((struct rec *)(t->ring + t->head))->kind = REC_WRAP;
++    struct rec *r = (struct rec *)(t->ring + at);
++    *r = (struct rec){.pts = pts, .sh = sh, .len = len, .kind = kind, .gap = t->overflowed};
++    if (len)
++        memcpy(r + 1, data, len);
++    t->overflowed = false;
++    t->used += skip + need;
++    t->head = at + need;
++    if (t->head == t->size)
++        t->head = 0;
++    t->peak = MPMAX(t->peak, t->used);
++    mp_cond_signal(&t->wakeup);
++    return true;
++}
++
++static bool in_window(struct demux_atap *t, double pts)
++{
++    for (int n = 0; n < t->num_win; n++) {
++        if (pts >= t->win[n][0] && pts < t->win[n][1])
++            return true;
++    }
++    return false;
++}
++
++void demux_atap_feed(struct demux_atap *t, struct sh_stream *sh, struct demux_packet *dp,
++                     double ts_offset, const char *windows)
++{
++    int64_t t0 = mp_time_ns();
++    if (!windows)
++        windows = "";
++    if (!t->windows || strcmp(t->windows, windows)) {
++        talloc_free(t->windows);
++        t->windows = talloc_strdup(t, windows);
++        t->num_win = MPMAX(parse_windows(windows, t->win), 0);
++    }
++    double pts = dp->pts != MP_NOPTS_VALUE ? dp->pts : dp->dts;
++    pts = MP_ADD_PTS(pts, ts_offset);
++    bool want = pts != MP_NOPTS_VALUE && !dp->is_cached && dp->buffer && dp->len > 0 &&
++                core_active(t->core) && in_window(t, pts);
++    mp_mutex_lock(&t->lock);
++    if (want) {
++        t->in_run = push(t, REC_PACKET, sh, pts, dp->buffer, dp->len);
++    } else if (t->in_run) {
++        // The end of a window, or the tap was turned off.
++        push(t, REC_BREAK, sh, pts, NULL, 0);
++        t->in_run = false;
++    }
++    mp_mutex_unlock(&t->lock);
++    int64_t ns = mp_time_ns() - t0;
++    t->feed_ns += ns;
++    t->feed_max_ns = MPMAX(t->feed_max_ns, ns);
++    t->feeds++;
++}
++
++void demux_atap_eof(struct demux_atap *t)
++{
++    mp_mutex_lock(&t->lock);
++    if (t->in_run)
++        push(t, REC_BREAK, NULL, MP_NOPTS_VALUE, NULL, 0);
++    t->in_run = false;
++    mp_mutex_unlock(&t->lock);
++}
++
++// --- The worker --------------------------------------------------------------------------
++
++static void deliver(struct demux_atap *t, double pts, const int16_t *samples, int count)
++{
++    struct demux_atap_core *c = t->core;
++    mp_mutex_lock(&c->lock);
++    if (c->cb)
++        c->cb(c->cb_ctx, t->tag, pts, samples, count);
++    mp_mutex_unlock(&c->lock);
++}
++
++static void add_range(struct demux_atap *t, double a, double b)
++{
++    if (b <= a)
++        return;
++    for (int n = 0; n < t->num_ranges; n++) {
++        double *r = t->ranges[n];
++        if (a <= r[1] + 0.05 && b >= r[0] - 0.05) { // overlaps or touches: merge
++            a = MPMIN(a, r[0]);
++            b = MPMAX(b, r[1]);
++            MP_TARRAY_REMOVE_AT(t->ranges, t->num_ranges, n);
++            add_range(t, a, b);
++            return;
++        }
++    }
++    if (t->num_ranges == MAX_RANGES)
++        MP_TARRAY_REMOVE_AT(t->ranges, t->num_ranges, 0);
++    t->ranges[t->num_ranges][0] = a;
++    t->ranges[t->num_ranges][1] = b;
++    t->num_ranges++;
++}
++
++static bool delivered(struct demux_atap *t, double pts)
++{
++    if (t->next_pts != MP_NOPTS_VALUE && pts >= t->seg_start - 0.01 && pts < t->next_pts - 0.05)
++        return true;
++    for (int n = 0; n < t->num_ranges; n++) {
++        if (pts >= t->ranges[n][0] - 0.01 && pts < t->ranges[n][1] - 0.05)
++            return true;
++    }
++    return false;
++}
++
++static void tap_break(struct demux_atap *t)
++{
++    if (t->next_pts != MP_NOPTS_VALUE) {
++        add_range(t, t->seg_start, t->next_pts);
++        deliver(t, t->next_pts, NULL, 0);
++        t->breaks++;
++    }
++    t->next_pts = MP_NOPTS_VALUE;
++    if (t->avctx)
++        avcodec_flush_buffers(t->avctx);
++    swr_free(&t->swr);
++}
++
++static void open_decoder(struct demux_atap *t, struct sh_stream *sh)
++{
++    tap_break(t);
++    avcodec_free_context(&t->avctx);
++    t->sh = sh;
++    AVCodecParameters *par = mp_codec_params_to_av(sh->codec);
++    const AVCodec *codec = par ? avcodec_find_decoder(par->codec_id) : NULL;
++    if (codec) {
++        t->avctx = avcodec_alloc_context3(codec);
++        if (t->avctx && (avcodec_parameters_to_context(t->avctx, par) < 0 ||
++                         avcodec_open2(t->avctx, codec, NULL) < 0))
++            avcodec_free_context(&t->avctx);
++    }
++    avcodec_parameters_free(&par);
++    if (!t->avctx)
++        MP_ERR(t, "cannot decode this audio\n");
++}
++
++static bool setup_swr(struct demux_atap *t, AVFrame *f)
++{
++    if (t->swr && f->sample_rate == t->swr_rate && f->format == t->swr_format &&
++        f->ch_layout.nb_channels == t->swr_channels)
++        return true;
++    swr_free(&t->swr);
++    AVChannelLayout out = AV_CHANNEL_LAYOUT_MONO;
++    if (swr_alloc_set_opts2(&t->swr, &out, AV_SAMPLE_FMT_S16, RATE, &f->ch_layout,
++                            f->format, f->sample_rate, 0, NULL) < 0 ||
++        swr_init(t->swr) < 0)
++    {
++        swr_free(&t->swr);
++        return false;
++    }
++    t->swr_rate = f->sample_rate;
++    t->swr_format = f->format;
++    t->swr_channels = f->ch_layout.nb_channels;
++    return true;
++}
++
++static void process(struct demux_atap *t, struct rec *r)
++{
++    if (r->gap)
++        tap_break(t);
++    if (r->kind == REC_BREAK) {
++        tap_break(t);
++        return;
++    }
++    if (r->sh != t->sh)
++        open_decoder(t, r->sh);
++    if (!t->avctx)
++        return;
++    if (delivered(t, r->pts)) {
++        t->dups++;
++        return;
++    }
++    // A jump in time: a seek, or the cache refilling elsewhere.
++    if (t->next_pts != MP_NOPTS_VALUE && fabs(r->pts - t->next_pts) > 0.2)
++        tap_break(t);
++    if (t->next_pts == MP_NOPTS_VALUE)
++        t->seg_start = t->next_pts = r->pts;
++    // Not reference counted, so the decoder takes a padded copy.
++    t->pkt->data = (uint8_t *)(r + 1);
++    t->pkt->size = r->len;
++    int err = avcodec_send_packet(t->avctx, t->pkt);
++    t->pkt->data = NULL;
++    t->pkt->size = 0;
++    if (err < 0)
++        return;
++    while (avcodec_receive_frame(t->avctx, t->frame) >= 0) {
++        if (setup_swr(t, t->frame)) {
++            int out_max = swr_get_out_samples(t->swr, t->frame->nb_samples);
++            if (out_max > t->buf_samples) {
++                t->buf = talloc_realloc(t, t->buf, int16_t, out_max);
++                t->buf_samples = out_max;
++            }
++            uint8_t *out[1] = {(uint8_t *)t->buf};
++            int got = swr_convert(t->swr, out, out_max,
++                                  (const uint8_t **)t->frame->extended_data,
++                                  t->frame->nb_samples);
++            if (got > 0) {
++                deliver(t, t->next_pts, t->buf, got);
++                t->next_pts += got / (double)RATE;
++                t->samples += got;
++            }
++        }
++        av_frame_unref(t->frame);
++    }
++}
++
++static MP_THREAD_VOID worker(void *arg)
++{
++    struct demux_atap *t = arg;
++    mp_thread_set_name("audio-tap");
++    mp_mutex_lock(&t->lock);
++    while (!t->terminate) {
++        if (!t->used) {
++            mp_cond_wait(&t->wakeup, &t->lock);
++            continue;
++        }
++        size_t left = t->size - t->tail;
++        struct rec *r = (struct rec *)(t->ring + t->tail);
++        if (left < sizeof(*r) || r->kind == REC_WRAP) {
++            t->used -= left;
++            t->tail = 0;
++            continue;
++        }
++        // The demuxer writes only outside [tail, tail + used), so r stays as it is unlocked.
++        mp_mutex_unlock(&t->lock);
++        int64_t t0 = mp_time_ns();
++        process(t, r);
++        t->work_ns += mp_time_ns() - t0;
++        mp_mutex_lock(&t->lock);
++        size_t size = rec_size(r->len);
++        t->used -= size;
++        t->tail += size;
++        if (t->tail == t->size)
++            t->tail = 0;
++    }
++    mp_mutex_unlock(&t->lock);
++    tap_break(t); // the end of the file, or the demuxer closing
++    MP_THREAD_RETURN();
++}
++
++struct demux_atap *demux_atap_create(struct mpv_global *global, struct mp_log *log,
++                                     int64_t tag, int64_t max_bytes)
++{
++    struct demux_atap_core *core =
++        global->client_api ? mp_client_audio_tap(global->client_api) : NULL;
++    if (!core_active(core))
++        return NULL;
++    struct demux_atap *t = talloc_zero(NULL, struct demux_atap);
++    t->log = mp_log_new(t, log, "atap");
++    t->core = core;
++    t->tag = tag;
++    t->size = MPMAX(max_bytes, MIN_RING) & ~(size_t)(REC_ALIGN - 1);
++    t->ring = malloc(t->size);
++    t->frame = av_frame_alloc();
++    t->pkt = av_packet_alloc();
++    t->next_pts = MP_NOPTS_VALUE;
++    if (!t->ring || !t->frame || !t->pkt)
++        goto fail;
++    mp_mutex_init(&t->lock);
++    mp_cond_init(&t->wakeup);
++    if (mp_thread_create(&t->thread, worker, t)) {
++        mp_mutex_destroy(&t->lock);
++        mp_cond_destroy(&t->wakeup);
++        goto fail;
++    }
++    MP_VERBOSE(t, "on, tag %lld, queue %zu bytes\n", (long long)tag, t->size);
++    return t;
++fail:
++    MP_ERR(t, "cannot start\n");
++    free(t->ring);
++    av_frame_free(&t->frame);
++    av_packet_free(&t->pkt);
++    talloc_free(t);
++    return NULL;
++}
++
++void demux_atap_destroy(struct demux_atap *t)
++{
++    if (!t)
++        return;
++    mp_mutex_lock(&t->lock);
++    t->terminate = true;
++    mp_cond_signal(&t->wakeup);
++    mp_mutex_unlock(&t->lock);
++    mp_thread_join(t->thread);
++    MP_VERBOSE(t, "%lld feeds, feed avg %.2f us max %.1f us, %lld samples, %lld dups, "
++               "%lld dropped, %lld breaks, peak queue %zu bytes, worker %.1f ms\n",
++               (long long)t->feeds, t->feeds ? t->feed_ns / 1e3 / t->feeds : 0,
++               t->feed_max_ns / 1e3, (long long)t->samples, (long long)t->dups,
++               (long long)t->dropped, (long long)t->breaks, t->peak, t->work_ns / 1e6);
++    avcodec_free_context(&t->avctx);
++    swr_free(&t->swr);
++    av_frame_free(&t->frame);
++    av_packet_free(&t->pkt);
++    free(t->ring);
++    mp_mutex_destroy(&t->lock);
++    mp_cond_destroy(&t->wakeup);
++    talloc_free(t);
++}
+diff --git a/demux/demux_atap.h b/demux/demux_atap.h
+new file mode 100644
+index 0000000..80037d9
+--- /dev/null
++++ b/demux/demux_atap.h
+@@ -0,0 +1,50 @@
++/*
++ * This file is part of mpv.
++ *
++ * mpv is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * mpv is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with mpv.  If not, see <http://www.gnu.org/licenses/>.
++ */
++
++// Kaeri: the demuxer audio tap. See demux_atap.c.
++
++#pragma once
++
++#include <stdint.h>
++
++#include "mpv/client.h"
++#include "options/m_option.h"
++
++struct demux_atap;
++struct demux_atap_core;
++struct demux_packet;
++struct mp_log;
++struct mpv_global;
++struct sh_stream;
++
++// The core's callback, one per mpv core, owned by the client API (player/client.c).
++struct demux_atap_core *demux_atap_core_create(void *ta_parent);
++int demux_atap_core_set(struct demux_atap_core *core, mpv_audio_tap_fn cb, void *cb_ctx);
++
++// Checks demuxer-audio-tap-windows.
++OPT_STRING_VALIDATE_FUNC(demux_atap_validate_windows);
++
++// A demuxer's tap. Returns NULL when the core has no callback set.
++struct demux_atap *demux_atap_create(struct mpv_global *global, struct mp_log *log,
++                                     int64_t tag, int64_t max_bytes);
++// Called by the demuxer with its lock held, for each packet of the selected audio stream
++// that it keeps. Copies the packet into the tap's queue if it is in a window; never waits.
++void demux_atap_feed(struct demux_atap *t, struct sh_stream *sh, struct demux_packet *dp,
++                     double ts_offset, const char *windows);
++// Called by the demuxer with its lock held when it reaches the end of the file.
++void demux_atap_eof(struct demux_atap *t);
++void demux_atap_destroy(struct demux_atap *t);
+diff --git a/include/mpv/client.h b/include/mpv/client.h
+index 85cff63..109450e 100644
+--- a/include/mpv/client.h
++++ b/include/mpv/client.h
+@@ -1902,6 +1902,19 @@ MPV_EXPORT int mpv_get_wakeup_pipe(mpv_handle *ctx);
+ 
+ #endif
+ 
++/* Kaeri: compressed audio packets of the selected audio stream are copied as they enter the
++ * demuxer cache (so at readahead speed, ahead of playback), decoded on a thread of the tap's
++ * own, and handed over as 16-bit mono samples at 11025 Hz with their playback-timeline
++ * timestamps. count == 0 marks a break: the next samples don't follow on (seek, gap, dropped
++ * packets, track switch, end of a window, end of the file); pts is then where the run ended.
++ * `tag` is the value of the demuxer-audio-tap-tag option when that file's demuxer opened.
++ * Called on the tap's own thread with no mpv lock held; it must return quickly. */
++typedef void (*mpv_audio_tap_fn)(void *ctx, int64_t tag, double pts, const int16_t *samples, int count);
++/* Set (or with cb NULL, clear) the tap's callback for this mpv core. Returns an mpv error code.
++ * When it returns, the previous callback is not running and won't be called again, so it must
++ * not be called from the callback itself. */
++MPV_EXPORT int mpv_set_audio_tap(mpv_handle *ctx, mpv_audio_tap_fn cb, void *cb_ctx);
++
+ /**
+  * Defining MPV_CPLUGIN_DYNAMIC_SYM during plugin compilation will replace mpv_*
+  * functions with function pointers. Those pointer will be initialized when
+diff --git a/meson.build b/meson.build
+index fb10be5..d1e080a 100644
+--- a/meson.build
++++ b/meson.build
+@@ -93,6 +93,7 @@ sources = files(
+     'demux/cue.c',
+     'demux/cache.c',
+     'demux/demux.c',
++    'demux/demux_atap.c',
+     'demux/demux_cue.c',
+     'demux/demux_disc.c',
+     'demux/demux_edl.c',
+diff --git a/player/client.c b/player/client.c
+index e23b98b..027b572 100644
+--- a/player/client.c
++++ b/player/client.c
+@@ -41,6 +41,7 @@
+ #include "osdep/threads.h"
+ #include "osdep/timer.h"
+ #include "osdep/io.h"
++#include "demux/demux_atap.h"
+ #include "stream/stream.h"
+ 
+ #include "command.h"
+@@ -78,6 +79,8 @@ struct mp_client_api {
+     int64_t id_alloc;
+ 
+     struct mp_custom_protocol *custom_protocols;
++
++    struct demux_atap_core *audio_tap; // Kaeri: mpv_set_audio_tap()
+     int num_custom_protocols;
+ 
+     struct mpv_render_context *render_context;
+@@ -184,6 +187,7 @@ void mp_clients_init(struct MPContext *mpctx)
+     };
+     mpctx->global->client_api = mpctx->clients;
+     mp_mutex_init(&mpctx->clients->lock);
++    mpctx->clients->audio_tap = demux_atap_core_create(mpctx->clients);
+ }
+ 
+ void mp_clients_destroy(struct MPContext *mpctx)
+@@ -340,6 +344,17 @@ struct mpv_global *mp_client_get_global(struct mpv_handle *ctx)
+     return ctx->mpctx->global;
+ }
+ 
++// Kaeri: the demuxer audio tap's callback, one per core (demux/demux_atap.c).
++int mpv_set_audio_tap(mpv_handle *ctx, mpv_audio_tap_fn cb, void *cb_ctx)
++{
++    return demux_atap_core_set(ctx->clients->audio_tap, cb, cb_ctx);
++}
++
++struct demux_atap_core *mp_client_audio_tap(struct mp_client_api *clients)
++{
++    return clients->audio_tap;
++}
++
+ static void wakeup_client(struct mpv_handle *ctx)
+ {
+     mp_mutex_lock(&ctx->wakeup_lock);
+diff --git a/player/client.h b/player/client.h
+index eed1a1c..bb9fe72 100644
+--- a/player/client.h
++++ b/player/client.h
+@@ -35,6 +35,7 @@ struct mpv_handle *mp_new_client(struct mp_client_api *clients, const char *name
+ void mp_client_set_weak(struct mpv_handle *ctx);
+ struct mp_log *mp_client_get_log(struct mpv_handle *ctx);
+ struct mpv_global *mp_client_get_global(struct mpv_handle *ctx);
++struct demux_atap_core *mp_client_audio_tap(struct mp_client_api *clients); // Kaeri
+ 
+ void mp_client_broadcast_event_external(struct mp_client_api *api, int event,
+                                         void *data);

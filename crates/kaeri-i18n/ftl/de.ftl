@@ -6804,9 +6804,6 @@ player-dont-ask-again = Nicht mehr fragen
 # Title of the sheet shown on the first Save.
 player-share-title = Deine Überspringzeiten mit AniSkip teilen?
 
-# Body of the sheet.
-player-share-body = AniSkip ist eine freie, gemeinsame Liste von Vor- und Abspännen, betrieben von eigenen Freiwilligen. Die Player anderer Leute überspringen, was du markierst.
-
 # What is sent, as a line under the body.
 player-share-sent = Es erhält die Zeiten, die MyAnimeList-Nummer der Serie, die Folge und eine zufällige ID, die für diese Installation erzeugt wurde. Nicht deinen Namen, deine Konten oder die Quelle, aus der du schaust. AniSkip sieht deine IP-Adresse, um Spam zu begrenzen, und seine Nutzungsbedingungen verlangen ein Alter von mindestens 13 Jahren.
 
@@ -7647,23 +7644,8 @@ settings-skip-opening = Vorspann automatisch überspringen
 # Settings, Playback: whether recaps are skipped without asking.
 settings-skip-recap = Recaps automatisch überspringen
 
-# Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand.
-settings-ask-was-opening = Nach manuellem Überspringen eines Vorspanns fragen
-
-# Line under it.
-settings-ask-was-opening-detail = Bietet an, ihn zu markieren, damit er beim nächsten Mal übersprungen wird
-
 # Settings, Playback: whether marked skip times go to AniSkip.
 settings-share-skips = Überspringzeiten mit AniSkip teilen
-
-# Line under it.
-settings-share-skips-detail = AniSkip ist eine freie, gemeinsame Liste von Vor- und Abspännen, die viele Player nutzen. Es erhält die Zeiten, die MyAnimeList-Nummer der Serie, die Folge und eine zufällige ID für diese Installation.
-
-# Settings, Playback: removes every skip time you marked.
-settings-clear-skips = Markierte Überspringzeiten löschen…
-
-# Question that asks before clearing every skip time you marked.
-settings-clear-skips-confirm = Die von dir markierten Überspringzeiten löschen? AniSkip behält die, die du geteilt hast.
 
 # Row: skip filler.
 settings-skip-filler = Füllfolgen automatisch überspringen

@@ -6940,9 +6940,6 @@ player-dont-ask-again = Больше не спрашивать
 # Title of the sheet shown on the first Save.
 player-share-title = Делиться отметками пропуска с AniSkip?
 
-# Body of the sheet.
-player-share-body = AniSkip: бесплатный общий список опенингов и эндингов, который ведут его волонтёры. Плееры других людей пропускают то, что вы отметите.
-
 # What is sent, as a line under the body.
 player-share-sent = Он получает время, номер тайтла в MyAnimeList, эпизод и случайный идентификатор, созданный для этой установки. Ваше имя, аккаунты и источник, из которого вы смотрите, не передаются. AniSkip видит ваш IP-адрес, чтобы ограничивать спам, а по его условиям вам должно быть 13 лет или больше.
 
@@ -7791,23 +7788,8 @@ settings-skip-opening = Пропускать опенинг автоматиче
 # Settings, Playback: whether recaps are skipped without asking.
 settings-skip-recap = Пропускать рекапы автоматически
 
-# Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand.
-settings-ask-was-opening = Спрашивать после ручного пропуска опенинга
-
-# Line under it.
-settings-ask-was-opening-detail = Предлагает отметить его, чтобы в следующий раз он пропускался
-
 # Settings, Playback: whether marked skip times go to AniSkip.
 settings-share-skips = Делиться моментами пропуска с AniSkip
-
-# Line under it.
-settings-share-skips-detail = AniSkip: бесплатный общий список опенингов и эндингов, которым пользуются многие плееры. Он получает время, номер тайтла в MyAnimeList, эпизод и случайный идентификатор этой установки.
-
-# Settings, Playback: removes every skip time you marked.
-settings-clear-skips = Удалить ваши отметки пропуска…
-
-# Question that asks before clearing every skip time you marked.
-settings-clear-skips-confirm = Удалить отметки пропуска, которые вы сделали? Те, которыми вы поделились, останутся в AniSkip.
 
 # Row: skip filler.
 settings-skip-filler = Пропускать филлеры автоматически

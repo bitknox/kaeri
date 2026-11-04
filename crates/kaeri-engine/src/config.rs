@@ -38,6 +38,9 @@ pub struct ConfigState {
     /// The database whose sync log hears of a shared setting written: unset until the engine
     /// starts, and nothing is written to the log while sync is off.
     sync: Option<kaeri_store::Store>,
+    /// Why finding skip times from the audio is paused, as the engine last judged it:
+    /// [`SettingsView::skip_find_paused`]. See [`crate::skip_find::refresh`].
+    skip_find_paused: Option<kaeri_model::playback::SkipFindPause>,
 }
 
 impl ConfigState {
@@ -54,6 +57,7 @@ impl ConfigState {
             handheld: false,
             overlay: None,
             sync: None,
+            skip_find_paused: None,
         };
         state.fill();
         state
@@ -233,8 +237,21 @@ impl ConfigState {
             notify_switched_on: self.notify_switched_on,
             // What this build holds, not what the config asks: a phone's engine has no Discord.
             presence_available: cfg!(feature = "presence"),
+            skip_find_paused: self.skip_find_paused,
             ..settings::view(&self.effective, &self.saved)
         }
+    }
+
+    /// Why finding skip times is paused, as last judged.
+    pub const fn skip_find_paused(&self) -> Option<kaeri_model::playback::SkipFindPause> {
+        self.skip_find_paused
+    }
+
+    pub const fn set_skip_find_paused(
+        &mut self,
+        paused: Option<kaeri_model::playback::SkipFindPause>,
+    ) {
+        self.skip_find_paused = paused;
     }
 
     /// The counts of shows that set each setting for themselves, and of those that switch

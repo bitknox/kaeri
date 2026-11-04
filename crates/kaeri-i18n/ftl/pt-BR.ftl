@@ -6872,9 +6872,6 @@ player-dont-ask-again = Não perguntar mais
 # Title of the sheet shown on the first Save.
 player-share-title = Compartilhar seus tempos de pulo com o AniSkip?
 
-# Body of the sheet.
-player-share-body = O AniSkip é uma lista gratuita e compartilhada de aberturas e encerramentos, mantida por voluntários. Os players de outras pessoas pulam o que você marcar.
-
 # What is sent, as a line under the body.
 player-share-sent = Ele recebe os tempos, o número do título no MyAnimeList, o episódio e um id aleatório criado para esta instalação. Não recebe seu nome, suas contas nem a fonte de onde você assiste. O AniSkip vê seu endereço IP para limitar spam, e os termos dele pedem que você tenha 13 anos ou mais.
 
@@ -7719,23 +7716,8 @@ settings-skip-opening = Pular abertura automaticamente
 # Settings, Playback: whether recaps are skipped without asking.
 settings-skip-recap = Pular resumos automaticamente
 
-# Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand.
-settings-ask-was-opening = Perguntar após pular uma abertura manualmente
-
-# Line under it.
-settings-ask-was-opening-detail = Oferece marcá-la para que seja pulada da próxima vez
-
 # Settings, Playback: whether marked skip times go to AniSkip.
 settings-share-skips = Compartilhar tempos de pulo com o AniSkip
-
-# Line under it.
-settings-share-skips-detail = O AniSkip é uma lista gratuita e compartilhada de aberturas e encerramentos que muitos players usam. Ele recebe os tempos, o número do título no MyAnimeList, o episódio e um id aleatório desta instalação.
-
-# Settings, Playback: removes every skip time you marked.
-settings-clear-skips = Apagar os tempos de pulo que você marcou…
-
-# Question that asks before clearing every skip time you marked.
-settings-clear-skips-confirm = Apagar os tempos de pulo que você marcou? O AniSkip mantém os que você compartilhou.
 
 # Row: skip filler.
 settings-skip-filler = Pular episódios de enchimento automaticamente

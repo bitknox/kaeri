@@ -89,6 +89,7 @@ pub fn label(key: SettingKey) -> String {
         K::CastTvs => t::settings_label_cast_tvs(),
         K::TorrentsWhileCasting => t::settings_label_torrents_while_casting(),
         K::HoverCards => t::settings_label_hover_cards(),
+        K::FindSkipTimes => t::settings_find_skips(),
         K::SubtitleSize => t::settings_subs_size(),
         K::SubtitleFont => t::settings_subs_font(),
         K::SubtitleColour => t::settings_subs_colour(),
@@ -173,6 +174,7 @@ pub fn is_switch(key: SettingKey) -> bool {
             | K::CastTvs
             | K::TorrentsWhileCasting
             | K::HoverCards
+            | K::FindSkipTimes
     )
 }
 

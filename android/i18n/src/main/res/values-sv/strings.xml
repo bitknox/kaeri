@@ -1718,7 +1718,6 @@
     <string name="player_mark_it">Markera det</string>
     <string name="player_dont_ask_again">Fråga inte igen</string>
     <string name="player_share_title">Dela dina hopptider med AniSkip?</string>
-    <string name="player_share_body">AniSkip är en gratis, delad lista över intron och outron, driven av sina egna volontärer. Andras spelare hoppar över det du markerar.</string>
     <string name="player_share_sent">Den får tiderna, seriens MyAnimeList-nummer, avsnittet och ett slumpmässigt id som skapats för den här installationen. Inte ditt namn, dina konton eller den källa du tittar från. AniSkip ser din IP-adress för att begränsa skräppost, och dess villkor kräver att du är 13 år eller äldre.</string>
     <string name="player_share_yes">Dela</string>
     <string name="player_share_no">Dela inte</string>
@@ -2007,12 +2006,7 @@
     <string name="settings_up_next_countdown">Nedräkning för Nästa</string>
     <string name="settings_skip_opening">Hoppa över öppningen automatiskt</string>
     <string name="settings_skip_recap">Hoppa över återblickar automatiskt</string>
-    <string name="settings_ask_was_opening">Fråga efter manuellt hopp över ett intro</string>
-    <string name="settings_ask_was_opening_detail">Erbjuder att markera det, så att det hoppas över framöver</string>
     <string name="settings_share_skips">Dela hopptider med AniSkip</string>
-    <string name="settings_share_skips_detail">AniSkip är en gratis, delad lista över intron och outron som många spelare använder. Den får tiderna, seriens MyAnimeList-nummer, avsnittet och ett slumpmässigt id för den här installationen.</string>
-    <string name="settings_clear_skips">Rensa hopptider du markerat…</string>
-    <string name="settings_clear_skips_confirm">Rensa de hopptider du markerat? AniSkip behåller de du delade.</string>
     <string name="settings_skip_filler">Hoppa över fyllnadsavsnitt automatiskt</string>
     <string name="settings_mark_opening">Markera öppning och avslutning</string>
     <string name="settings_skip_button">Visa knappen Hoppa över</string>

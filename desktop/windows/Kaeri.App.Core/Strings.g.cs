@@ -4259,6 +4259,9 @@ public static partial class T
     /// <summary>Line in the review with sharing on.</summary>
     public static string PlayerMarkShares => Get("PlayerMarkShares");
 
+    /// <summary>Review line when the stretch under review was found from the audio, not marked by hand.</summary>
+    public static string PlayerMarkFound => Get("PlayerMarkFound");
+
     /// <summary>Line in the review when the mark replaces AniSkip's times.</summary>
     public static string PlayerMarkReplaces(string start, string end) => Fill(Get("PlayerMarkReplaces"), ("start", start), ("end", end));
 
@@ -4308,6 +4311,28 @@ public static partial class T
     /// <summary>Button of that prompt that turns it off. Settings can turn it on again.</summary>
     public static string PlayerDontAskAgain => Get("PlayerDontAskAgain");
 
+    /// <summary>Prompt a few seconds after a skip over an opening found from the audio, with Yes, Adjust and Don't ask again.</summary>
+    public static string PlayerFoundAskOpening => Get("PlayerFoundAskOpening");
+
+    /// <summary>The same prompt after a skip over an ending found from the audio.</summary>
+    public static string PlayerFoundAskEnding => Get("PlayerFoundAskEnding");
+
+    /// <summary>Line under that prompt, in a quieter colour. $episode is the episode's number.</summary>
+    public static string PlayerFoundAskShare(long episode) => Fill(Get("PlayerFoundAskShare"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust opens the review with the edges to nudge.</summary>
+    public static string PlayerFoundYes => Get("PlayerFoundYes");
+
+    public static string PlayerFoundAdjust => Get("PlayerFoundAdjust");
+
+    /// <summary>What the prompt says after Yes. $episode is the episode's number.</summary>
+    public static string PlayerFoundSaved(long episode) => Fill(Get("PlayerFoundSaved"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>What the prompt says after Don't ask again, with the line below it.</summary>
+    public static string PlayerFoundNever => Get("PlayerFoundNever");
+
+    public static string PlayerFoundNeverHow => Get("PlayerFoundNeverHow");
+
     /// <summary>Title of the sheet shown on the first Save.</summary>
     public static string PlayerShareTitle => Get("PlayerShareTitle");
 
@@ -4328,6 +4353,19 @@ public static partial class T
     public static string PlayerSkipYours => Get("PlayerSkipYours");
 
     public static string PlayerSkipFromAniskip => Get("PlayerSkipFromAniskip");
+
+    public static string PlayerSkipFound => Get("PlayerSkipFound");
+
+    /// <summary>Skip times panel and Settings: why finding skip times from the audio is paused, one line per platform's name for its power saving mode, and one for low storage.</summary>
+    public static string PlayerSkipPausedLowPower => Get("PlayerSkipPausedLowPower");
+
+    public static string PlayerSkipPausedBatterySaver => Get("PlayerSkipPausedBatterySaver");
+
+    public static string PlayerSkipPausedEnergySaver => Get("PlayerSkipPausedEnergySaver");
+
+    public static string PlayerSkipPausedPowerSaver => Get("PlayerSkipPausedPowerSaver");
+
+    public static string PlayerSkipPausedStorage => Get("PlayerSkipPausedStorage");
 
     public static string PlayerSkipNone => Get("PlayerSkipNone");
 
@@ -5138,7 +5176,13 @@ public static partial class T
     /// <summary>Settings, Playback: whether recaps are skipped without asking.</summary>
     public static string SettingsSkipRecap => Get("SettingsSkipRecap");
 
-    /// <summary>Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand.</summary>
+    /// <summary>Settings, Playback: finds openings and endings by comparing the audio of a show's episodes, when AniSkip has none. On by default.</summary>
+    public static string SettingsFindSkips => Get("SettingsFindSkips");
+
+    /// <summary>Line under it.</summary>
+    public static string SettingsFindSkipsDetail => Get("SettingsFindSkipsDetail");
+
+    /// <summary>Settings, Playback: whether the player asks "Was that the opening?" after a skip by hand, and whether it asks about the edges of a skip it found.</summary>
     public static string SettingsAskWasOpening => Get("SettingsAskWasOpening");
 
     /// <summary>Line under it.</summary>
@@ -5150,11 +5194,17 @@ public static partial class T
     /// <summary>Line under it.</summary>
     public static string SettingsShareSkipsDetail => Get("SettingsShareSkipsDetail");
 
-    /// <summary>Settings, Playback: removes every skip time you marked.</summary>
+    /// <summary>Settings, Playback: the row that removes every skip time you marked and every one found from the audio. Its button reads Clear.</summary>
     public static string SettingsClearSkips => Get("SettingsClearSkips");
 
-    /// <summary>Question that asks before clearing every skip time you marked.</summary>
+    /// <summary>Question that asks before clearing them.</summary>
     public static string SettingsClearSkipsConfirm => Get("SettingsClearSkipsConfirm");
+
+    /// <summary>Android's Settings: the title of that row, with the line below.</summary>
+    public static string SettingsClearSkipsAndroid => Get("SettingsClearSkipsAndroid");
+
+    /// <summary>Line under it.</summary>
+    public static string SettingsClearSkipsAndroidDetail => Get("SettingsClearSkipsAndroidDetail");
 
     /// <summary>Row: skip filler.</summary>
     public static string SettingsSkipFiller => Get("SettingsSkipFiller");
@@ -9011,6 +9061,7 @@ public static partial class T
         ["PlayerMarkForward1Label"] = "Move the {edge} forward one second",
         ["PlayerMarkWatchEdges"] = "Watch the edges",
         ["PlayerMarkShares"] = "Saving shares these times with AniSkip.",
+        ["PlayerMarkFound"] = "Kaeri found these times from the audio.",
         ["PlayerMarkReplaces"] = "Replaces AniSkip's {start} to {end}, which is reported as wrong.",
         ["PlayerMarkNoMal"] = "AniSkip has no entry for this show, so this stays on your devices.",
         ["PlayerMarkTooShort"] = "That is under 5 seconds. Mark where it ends.",
@@ -9028,14 +9079,28 @@ public static partial class T
         ["PlayerWasOpening"] = "Was that the opening?",
         ["PlayerMarkIt"] = "Mark it",
         ["PlayerDontAskAgain"] = "Don't ask again",
+        ["PlayerFoundAskOpening"] = "Kaeri found this opening. Were the edges right?",
+        ["PlayerFoundAskEnding"] = "Kaeri found this ending. Were the edges right?",
+        ["PlayerFoundAskShare"] = "Yes shares these times with AniSkip for episode {episode}.",
+        ["PlayerFoundYes"] = "Yes",
+        ["PlayerFoundAdjust"] = "Adjust",
+        ["PlayerFoundSaved"] = "Saved. AniSkip gets these times for episode {episode}.",
+        ["PlayerFoundNever"] = "Kaeri won't ask about skip times again.",
+        ["PlayerFoundNeverHow"] = "You can turn it back on in Settings.",
         ["PlayerShareTitle"] = "Share your skip times with AniSkip?",
-        ["PlayerShareBody"] = "AniSkip is a free, shared list of openings and endings, run by its own volunteers. Other people's players skip what you mark.",
+        ["PlayerShareBody"] = "AniSkip is a shared list of openings and endings, run by its own volunteers. Other people's players skip the times you mark and the found times you confirm.",
         ["PlayerShareSent"] = "It gets the times, the show's MyAnimeList number, the episode and a random id made for this install. Not your name, your accounts or the source you watch from. AniSkip sees your IP address to limit spam, and its terms ask that you are 13 or older.",
         ["PlayerShareYes"] = "Share",
         ["PlayerShareNo"] = "Don't share",
         ["PlayerSkipFromFile"] = "From the file",
         ["PlayerSkipYours"] = "Yours",
         ["PlayerSkipFromAniskip"] = "From AniSkip",
+        ["PlayerSkipFound"] = "Found by Kaeri",
+        ["PlayerSkipPausedLowPower"] = "Paused while Low Power Mode is on.",
+        ["PlayerSkipPausedBatterySaver"] = "Paused while battery saver is on.",
+        ["PlayerSkipPausedEnergySaver"] = "Paused while energy saver is on.",
+        ["PlayerSkipPausedPowerSaver"] = "Paused while power saver is on.",
+        ["PlayerSkipPausedStorage"] = "Paused until 2 GB of storage is free.",
         ["PlayerSkipNone"] = "None yet",
         ["PlayerSkipClear"] = "Clear",
         ["PlayerResumedAt"] = "Resumed at {clock}",
@@ -9310,12 +9375,16 @@ public static partial class T
         ["SettingsUpNextCountdown"] = "Up next countdown",
         ["SettingsSkipOpening"] = "Skip opening automatically",
         ["SettingsSkipRecap"] = "Skip recaps automatically",
-        ["SettingsAskWasOpening"] = "Ask after skipping an opening by hand",
-        ["SettingsAskWasOpeningDetail"] = "Offers to mark it, so it is skipped next time",
+        ["SettingsFindSkips"] = "Find skip times from the audio",
+        ["SettingsFindSkipsDetail"] = "When AniSkip has no times, Kaeri compares the audio across a show's episodes, on this device.",
+        ["SettingsAskWasOpening"] = "Ask about skip times",
+        ["SettingsAskWasOpeningDetail"] = "After you skip an opening by hand, and after a skip Kaeri found",
         ["SettingsShareSkips"] = "Share skip times with AniSkip",
-        ["SettingsShareSkipsDetail"] = "AniSkip is a free, shared list of openings and endings that many players use. It gets the times, the show's MyAnimeList number, the episode and a random id for this install.",
-        ["SettingsClearSkips"] = "Clear skip times you marked…",
-        ["SettingsClearSkipsConfirm"] = "Clear the skip times you marked? AniSkip keeps the ones you shared.",
+        ["SettingsShareSkipsDetail"] = "AniSkip is a shared list of openings and endings that many players use. It gets the times you mark and the found times you confirm, the show's MyAnimeList number, the episode and a random id for this install.",
+        ["SettingsClearSkips"] = "Skip times you marked or Kaeri found",
+        ["SettingsClearSkipsConfirm"] = "Clear the skip times you marked and the ones Kaeri found? AniSkip keeps the ones you shared.",
+        ["SettingsClearSkipsAndroid"] = "Clear skip times",
+        ["SettingsClearSkipsAndroidDetail"] = "The ones you marked and the ones Kaeri found",
         ["SettingsSkipFiller"] = "Skip filler automatically",
         ["SettingsMarkOpening"] = "Mark opening and ending",
         ["SettingsSkipButton"] = "Show skip button",

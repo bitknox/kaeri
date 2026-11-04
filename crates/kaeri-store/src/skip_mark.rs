@@ -113,13 +113,17 @@ impl Store {
         })
     }
 
-    /// Forget every mark the viewer made, and their votes and what waits to be sent with them:
-    /// what "Clear skip times you marked" does. How many marks there were.
+    /// Forget every mark the viewer made, and their votes and what waits to be sent with them,
+    /// and every fingerprint and stretch found from the audio: what "Clear skip times" does. How
+    /// many marks there were.
     pub fn clear_skip_marks(&self) -> Result<u32> {
         self.with_tx(|tx| {
             let gone = tx.execute("DELETE FROM skip_marks", [])?;
             tx.execute("DELETE FROM skip_votes", [])?;
             tx.execute("DELETE FROM aniskip_outbox", [])?;
+            tx.execute("DELETE FROM skip_prints", [])?;
+            tx.execute("DELETE FROM skip_found", [])?;
+            tx.execute("DELETE FROM skip_found_show", [])?;
             Ok(u32::try_from(gone).unwrap_or(u32::MAX))
         })
     }

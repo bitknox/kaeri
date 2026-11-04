@@ -182,6 +182,19 @@ pub struct FfiStart {
     /// `Event::ProfileSwitch` named. `None` for the one used last. Ignored for a single user.
     #[uniffi(default = None)]
     pub profile: Option<String>,
+    /// Whether the player the app hosts hands its audio over for finding skip times: its libmpv
+    /// carries the demuxer tap and the app has given it [`audio_tap_callback`]. `false` finds
+    /// none.
+    #[uniffi(default = false)]
+    pub audio_tap: bool,
+}
+
+/// The address of the engine's audio tap callback, for the app to give its libmpv's
+/// `mpv_set_audio_tap` before it starts the player: the audio for finding skip times comes back
+/// through it, tagged by each file's load. Then [`FfiStart::audio_tap`] tells the engine.
+#[uniffi::export]
+pub fn audio_tap_callback() -> u64 {
+    kaeri_audio_tap::callback_address() as u64
 }
 
 impl FfiStart {

@@ -4325,9 +4325,6 @@
   <data name="PlayerShareTitle" xml:space="preserve">
     <value>Deine Überspringzeiten mit AniSkip teilen?</value>
   </data>
-  <data name="PlayerShareBody" xml:space="preserve">
-    <value>AniSkip ist eine freie, gemeinsame Liste von Vor- und Abspännen, betrieben von eigenen Freiwilligen. Die Player anderer Leute überspringen, was du markierst.</value>
-  </data>
   <data name="PlayerShareSent" xml:space="preserve">
     <value>Es erhält die Zeiten, die MyAnimeList-Nummer der Serie, die Folge und eine zufällige ID, die für diese Installation erzeugt wurde. Nicht deinen Namen, deine Konten oder die Quelle, aus der du schaust. AniSkip sieht deine IP-Adresse, um Spam zu begrenzen, und seine Nutzungsbedingungen verlangen ein Alter von mindestens 13 Jahren.</value>
   </data>
@@ -5168,23 +5165,8 @@
   <data name="SettingsSkipRecap" xml:space="preserve">
     <value>Recaps automatisch überspringen</value>
   </data>
-  <data name="SettingsAskWasOpening" xml:space="preserve">
-    <value>Nach manuellem Überspringen eines Vorspanns fragen</value>
-  </data>
-  <data name="SettingsAskWasOpeningDetail" xml:space="preserve">
-    <value>Bietet an, ihn zu markieren, damit er beim nächsten Mal übersprungen wird</value>
-  </data>
   <data name="SettingsShareSkips" xml:space="preserve">
     <value>Überspringzeiten mit AniSkip teilen</value>
-  </data>
-  <data name="SettingsShareSkipsDetail" xml:space="preserve">
-    <value>AniSkip ist eine freie, gemeinsame Liste von Vor- und Abspännen, die viele Player nutzen. Es erhält die Zeiten, die MyAnimeList-Nummer der Serie, die Folge und eine zufällige ID für diese Installation.</value>
-  </data>
-  <data name="SettingsClearSkips" xml:space="preserve">
-    <value>Markierte Überspringzeiten löschen…</value>
-  </data>
-  <data name="SettingsClearSkipsConfirm" xml:space="preserve">
-    <value>Die von dir markierten Überspringzeiten löschen? AniSkip behält die, die du geteilt hast.</value>
   </data>
   <data name="SettingsSkipFiller" xml:space="preserve">
     <value>Füllfolgen automatisch überspringen</value>

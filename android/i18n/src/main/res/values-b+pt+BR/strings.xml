@@ -1772,7 +1772,6 @@
     <string name="player_mark_it">Marcar</string>
     <string name="player_dont_ask_again">Não perguntar mais</string>
     <string name="player_share_title">Compartilhar seus tempos de pulo com o AniSkip?</string>
-    <string name="player_share_body">O AniSkip é uma lista gratuita e compartilhada de aberturas e encerramentos, mantida por voluntários. Os players de outras pessoas pulam o que você marcar.</string>
     <string name="player_share_sent">Ele recebe os tempos, o número do título no MyAnimeList, o episódio e um id aleatório criado para esta instalação. Não recebe seu nome, suas contas nem a fonte de onde você assiste. O AniSkip vê seu endereço IP para limitar spam, e os termos dele pedem que você tenha 13 anos ou mais.</string>
     <string name="player_share_yes">Compartilhar</string>
     <string name="player_share_no">Não compartilhar</string>
@@ -2065,12 +2064,7 @@
     <string name="settings_up_next_countdown">Contagem do próximo</string>
     <string name="settings_skip_opening">Pular abertura automaticamente</string>
     <string name="settings_skip_recap">Pular resumos automaticamente</string>
-    <string name="settings_ask_was_opening">Perguntar após pular uma abertura manualmente</string>
-    <string name="settings_ask_was_opening_detail">Oferece marcá-la para que seja pulada da próxima vez</string>
     <string name="settings_share_skips">Compartilhar tempos de pulo com o AniSkip</string>
-    <string name="settings_share_skips_detail">O AniSkip é uma lista gratuita e compartilhada de aberturas e encerramentos que muitos players usam. Ele recebe os tempos, o número do título no MyAnimeList, o episódio e um id aleatório desta instalação.</string>
-    <string name="settings_clear_skips">Apagar os tempos de pulo que você marcou…</string>
-    <string name="settings_clear_skips_confirm">Apagar os tempos de pulo que você marcou? O AniSkip mantém os que você compartilhou.</string>
     <string name="settings_skip_filler">Pular episódios de enchimento automaticamente</string>
     <string name="settings_mark_opening">Marcar abertura e encerramento</string>
     <string name="settings_skip_button">Mostrar botão de pular</string>
