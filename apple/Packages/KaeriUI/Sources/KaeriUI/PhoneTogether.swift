@@ -193,7 +193,10 @@ struct PhoneTogetherLobby: View {
                         TogetherLastOutLine(lastOut: lastOut).padding(.top, 12)
                     }
                     TogetherSourcesLine().padding(.top, 12)
-                    TogetherMembers(rowHeight: 52).padding(.top, 28)
+                    // The members step aside with the large header while the field is up.
+                    if !typing {
+                        TogetherMembers(rowHeight: 52).padding(.top, 28).transition(.opacity)
+                    }
                     if party.inLobbyRoom, let view = party.party {
                         // Talk before play follows the members (watch together chat board, iPhone).
                         TogetherChat(size: 15).id(Self.chatPlace).padding(.top, 24)

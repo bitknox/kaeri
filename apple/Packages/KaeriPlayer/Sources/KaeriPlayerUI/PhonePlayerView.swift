@@ -306,6 +306,10 @@ public struct PhonePlayerView: View {
             }
             .background(.overVideo(0.62), in: .capsule)
             .overlay(Capsule().strokeBorder(Palette.glassOverArtEdge, lineWidth: 1))
+            // The side panel covers this edge: the buttons fade out while it is open.
+            .opacity(partyBeside ? 0 : 1)
+            .allowsHitTesting(!partyBeside)
+            .animation(partyBeside ? .fadeOut : .fadeIn, value: partyBeside)
         }
         .frame(height: 44)
         .padding(.horizontal, 56)
@@ -322,6 +326,9 @@ public struct PhonePlayerView: View {
                 .padding(.vertical, 2)
                 .background(.overVideo(0.62), in: .capsule)
                 .overlay(Capsule().strokeBorder(Palette.glassOverArtEdge, lineWidth: 1))
+                .opacity(partyBeside ? 0 : 1)
+                .allowsHitTesting(!partyBeside)
+                .animation(partyBeside ? .fadeOut : .fadeIn, value: partyBeside)
                 .padding(.top, 72)
                 .padding(.trailing, 56)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
