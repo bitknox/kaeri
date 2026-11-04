@@ -6669,6 +6669,128 @@ together-recent-note = [Ţĥé ļàšţ ţéñ, ķéþţ öñ ţĥîš ðéṽî
 # The start sheet's button after a title is picked.
 party-pick-continue = [Çöñţîñüé~~~]
 
+# Placeholder of every chat field, and the label of the button that opens it.
+party-chat-field = [Šàý šöɱéţĥîñĝ~~~~]
+
+# Button that sends a chat line.
+party-chat-send = [Šéñð~~]
+
+# Heading of the conversation in the lobby, on a phone's remote screen and the Android action that opens chat.
+party-chat-title = [Çĥàţ~~]
+
+# End of the chat field while sending waits, after three messages in five seconds.
+party-chat-wait = [Ŵàîţ { $seconds } š~~~]
+
+# Spoken once when sending waits, for screen readers.
+party-chat-wait-spoken =
+    { $seconds ->
+        [one] [Ŵàîţ öñé šéçöñð~~~~~]
+       *[other] [Ŵàîţ { $seconds } šéçöñðš~~~~~]
+    }
+
+# Line after the three newest chat lines on the video, which opens the conversation.
+party-chat-more = [{ $count } ɱöŕé îñ çĥàţ~~~~~]
+
+# Notice when the room's server has chat turned off, and the line that replaces the field.
+party-chat-off = [Ţĥîš ŕööɱ'š šéŕṽéŕ ĥàš çĥàţ ţüŕñéð öƒƒ~~~~~~~~~~~~]
+
+# Line under the chat field in the lobby, shown once.
+party-chat-privacy = [Ṁéššàĝéš ĝö ţĥŕöüĝĥ ţĥé ŕööɱ'š šéŕṽéŕ. Ķàéŕî ķééþš ñöñé.~~~~~~~~~~~~~~~~~]
+
+# Heading in the conversation when Hide chat is on.
+party-chat-hidden = [Çĥàţ îš ĥîððéñ~~~~~]
+
+# Line under it.
+party-chat-hidden-line = [Ĥîðé çĥàţ îš öñ îñ Šéţţîñĝš, üñðéŕ Þļàýƀàçķ.~~~~~~~~~~~~~~]
+
+# Button that turns Hide chat off.
+party-chat-show = [Šĥöŵ çĥàţ~~~]
+
+# Settings switch that hides chat in every watch party on this device.
+settings-hide-chat = [Ĥîðé çĥàţ îñ ŵàţçĥ þàŕţîéš~~~~~~~~]
+
+# Line under that switch.
+settings-hide-chat-line = [Ļîñéš, ŕéàçţîöñš àñð ţĥéîŕ ţîçķš öñ ţĥé šééķ ƀàŕ šţàý öƒƒ ţĥé ṽîðéö, àñð ţĥé ƒîéļð îš ĝöñé. Ţĥé þéöþļé ļîšţ šţîļļ šĥöŵš ŵĥö îš îñ ţĥé ŕööɱ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Member menu item and accessibility action that hides a member's lines and reactions for this party.
+party-mute = [Ṁüţé { $name }~~~]
+
+# Member menu item and accessibility action that shows a muted member's lines again.
+party-unmute = [Ûñɱüţé { $name }~~~]
+
+# Button in the conversation on the line that says a member is muted.
+party-unmute-short = [Ûñɱüţé~~]
+
+# State on a muted member's row.
+party-member-muted = [Ṁüţéð~~]
+
+# Line in the conversation where a muted member's lines were.
+party-muted-line = [{ $name } îš ɱüţéð~~~~]
+
+# Line in the conversation when a message never came back from the server, five seconds after it was sent.
+party-chat-not-sent = [Çöüļðñ'ţ šéñð~~~~]
+
+# Button after it, which sends the same text again.
+party-chat-retry = [Ţŕý àĝàîñ~~~]
+
+# Button on the TV's controls that opens the four reactions.
+party-react = [Ŕéàçţ~~]
+
+# Label of the laugh reaction button.
+party-react-laugh = [Ļàüĝĥ~~]
+
+# Label of the gasp reaction button.
+party-react-gasp = [Ĝàšþ~~]
+
+# Label of the clap reaction button.
+party-react-clap = [Çļàþ~~]
+
+# Label of the cry reaction button.
+party-react-cry = [Çŕý~]
+
+# Line in the conversation and in the terminal: a member laughed.
+party-reacted-laugh = [{ $name } ļàüĝĥéð~~~~]
+
+# Line in the conversation and in the terminal: a member gasped.
+party-reacted-gasp = [{ $name } ĝàšþéð~~~]
+
+# Line in the conversation and in the terminal: a member clapped.
+party-reacted-clap = [{ $name } çļàþþéð~~~~]
+
+# Line in the conversation and in the terminal: a member cried.
+party-reacted-cry = [{ $name } çŕîéð~~~]
+
+# A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The line is one of the party-reacted messages, the time is minutes and seconds.
+party-reacted-at = [{ $line } àţ { $time }~~~]
+
+# Two members named together, for a reaction made by both: "Ren and Mika".
+party-names-two = [{ $first } àñð { $second }~~~~]
+
+# Three members named together.
+party-names-three = [{ $first }, { $second } àñð { $third }~~~~~]
+
+# More than three members named together: two names and how many others.
+party-names-others = [{ $first }, { $second } àñð { $count } öţĥéŕš~~~~~~~]
+
+# Name of this device's own member in the conversation and on its reactions.
+party-chat-you = [Ýöü~]
+
+# Line on a phone's remote screen under the chat field: which device the line is said as.
+party-sends-as = [Šéñðš àš { $device }~~~~]
+
+# Label on the seek bar when pointing near a reaction tick: the moment and who reacted.
+party-tick-label = [{ $time } · { $names }~~~]
+
+# Spoken by a screen reader when a chat line arrives.
+party-chat-announce = [{ $name } šàýš { $message }~~~~]
+
+# Spoken by a screen reader once, when 20 characters are left in the chat field.
+party-chat-left =
+    { $count ->
+        [one] [{ $count } çĥàŕàçţéŕ ļéƒţ~~~~~~]
+       *[other] [{ $count } çĥàŕàçţéŕš ļéƒţ~~~~~~]
+    }
+
 # Label on the card for the episode that plays after this one.
 player-up-next = [Ûþ ñéẋţ~~~]
 

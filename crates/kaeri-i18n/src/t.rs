@@ -10668,6 +10668,196 @@ pub fn party_pick_continue() -> String {
     text("party-pick-continue", &[])
 }
 
+/// Placeholder of every chat field, and the label of the button that opens it.
+pub fn party_chat_field() -> String {
+    text("party-chat-field", &[])
+}
+
+/// Button that sends a chat line.
+pub fn party_chat_send() -> String {
+    text("party-chat-send", &[])
+}
+
+/// Heading of the conversation in the lobby, on a phone's remote screen and the Android action that opens chat.
+pub fn party_chat_title() -> String {
+    text("party-chat-title", &[])
+}
+
+/// End of the chat field while sending waits, after three messages in five seconds.
+pub fn party_chat_wait(seconds: i64) -> String {
+    text("party-chat-wait", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Spoken once when sending waits, for screen readers.
+pub fn party_chat_wait_spoken(seconds: i64) -> String {
+    text("party-chat-wait-spoken", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Line after the three newest chat lines on the video, which opens the conversation.
+pub fn party_chat_more(count: i64) -> String {
+    text("party-chat-more", &[("count", Arg::Int(count))])
+}
+
+/// Notice when the room's server has chat turned off, and the line that replaces the field.
+pub fn party_chat_off() -> String {
+    text("party-chat-off", &[])
+}
+
+/// Line under the chat field in the lobby, shown once.
+pub fn party_chat_privacy() -> String {
+    text("party-chat-privacy", &[])
+}
+
+/// Heading in the conversation when Hide chat is on.
+pub fn party_chat_hidden() -> String {
+    text("party-chat-hidden", &[])
+}
+
+/// Line under it.
+pub fn party_chat_hidden_line() -> String {
+    text("party-chat-hidden-line", &[])
+}
+
+/// Button that turns Hide chat off.
+pub fn party_chat_show() -> String {
+    text("party-chat-show", &[])
+}
+
+/// Settings switch that hides chat in every watch party on this device.
+pub fn settings_hide_chat() -> String {
+    text("settings-hide-chat", &[])
+}
+
+/// Line under that switch.
+pub fn settings_hide_chat_line() -> String {
+    text("settings-hide-chat-line", &[])
+}
+
+/// Member menu item and accessibility action that hides a member's lines and reactions for this party.
+pub fn party_mute(name: &str) -> String {
+    text("party-mute", &[("name", Arg::Text(name))])
+}
+
+/// Member menu item and accessibility action that shows a muted member's lines again.
+pub fn party_unmute(name: &str) -> String {
+    text("party-unmute", &[("name", Arg::Text(name))])
+}
+
+/// Button in the conversation on the line that says a member is muted.
+pub fn party_unmute_short() -> String {
+    text("party-unmute-short", &[])
+}
+
+/// State on a muted member's row.
+pub fn party_member_muted() -> String {
+    text("party-member-muted", &[])
+}
+
+/// Line in the conversation where a muted member's lines were.
+pub fn party_muted_line(name: &str) -> String {
+    text("party-muted-line", &[("name", Arg::Text(name))])
+}
+
+/// Line in the conversation when a message never came back from the server, five seconds after it was sent.
+pub fn party_chat_not_sent() -> String {
+    text("party-chat-not-sent", &[])
+}
+
+/// Button after it, which sends the same text again.
+pub fn party_chat_retry() -> String {
+    text("party-chat-retry", &[])
+}
+
+/// Button on the TV's controls that opens the four reactions.
+pub fn party_react() -> String {
+    text("party-react", &[])
+}
+
+/// Label of the laugh reaction button.
+pub fn party_react_laugh() -> String {
+    text("party-react-laugh", &[])
+}
+
+/// Label of the gasp reaction button.
+pub fn party_react_gasp() -> String {
+    text("party-react-gasp", &[])
+}
+
+/// Label of the clap reaction button.
+pub fn party_react_clap() -> String {
+    text("party-react-clap", &[])
+}
+
+/// Label of the cry reaction button.
+pub fn party_react_cry() -> String {
+    text("party-react-cry", &[])
+}
+
+/// Line in the conversation and in the terminal: a member laughed.
+pub fn party_reacted_laugh(name: &str) -> String {
+    text("party-reacted-laugh", &[("name", Arg::Text(name))])
+}
+
+/// Line in the conversation and in the terminal: a member gasped.
+pub fn party_reacted_gasp(name: &str) -> String {
+    text("party-reacted-gasp", &[("name", Arg::Text(name))])
+}
+
+/// Line in the conversation and in the terminal: a member clapped.
+pub fn party_reacted_clap(name: &str) -> String {
+    text("party-reacted-clap", &[("name", Arg::Text(name))])
+}
+
+/// Line in the conversation and in the terminal: a member cried.
+pub fn party_reacted_cry(name: &str) -> String {
+    text("party-reacted-cry", &[("name", Arg::Text(name))])
+}
+
+/// A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The line is one of the party-reacted messages, the time is minutes and seconds.
+pub fn party_reacted_at(line: &str, time: &str) -> String {
+    text("party-reacted-at", &[("line", Arg::Text(line)), ("time", Arg::Text(time))])
+}
+
+/// Two members named together, for a reaction made by both: "Ren and Mika".
+pub fn party_names_two(first: &str, second: &str) -> String {
+    text("party-names-two", &[("first", Arg::Text(first)), ("second", Arg::Text(second))])
+}
+
+/// Three members named together.
+pub fn party_names_three(first: &str, second: &str, third: &str) -> String {
+    text("party-names-three", &[("first", Arg::Text(first)), ("second", Arg::Text(second)), ("third", Arg::Text(third))])
+}
+
+/// More than three members named together: two names and how many others.
+pub fn party_names_others(first: &str, second: &str, count: i64) -> String {
+    text("party-names-others", &[("first", Arg::Text(first)), ("second", Arg::Text(second)), ("count", Arg::Int(count))])
+}
+
+/// Name of this device's own member in the conversation and on its reactions.
+pub fn party_chat_you() -> String {
+    text("party-chat-you", &[])
+}
+
+/// Line on a phone's remote screen under the chat field: which device the line is said as.
+pub fn party_sends_as(device: &str) -> String {
+    text("party-sends-as", &[("device", Arg::Text(device))])
+}
+
+/// Label on the seek bar when pointing near a reaction tick: the moment and who reacted.
+pub fn party_tick_label(time: &str, names: &str) -> String {
+    text("party-tick-label", &[("time", Arg::Text(time)), ("names", Arg::Text(names))])
+}
+
+/// Spoken by a screen reader when a chat line arrives.
+pub fn party_chat_announce(name: &str, message: &str) -> String {
+    text("party-chat-announce", &[("name", Arg::Text(name)), ("message", Arg::Text(message))])
+}
+
+/// Spoken by a screen reader once, when 20 characters are left in the chat field.
+pub fn party_chat_left(count: i64) -> String {
+    text("party-chat-left", &[("count", Arg::Int(count))])
+}
+
 /// Label on the card for the episode that plays after this one.
 pub fn player_up_next() -> String {
     text("player-up-next", &[])

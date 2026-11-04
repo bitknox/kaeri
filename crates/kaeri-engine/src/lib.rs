@@ -125,6 +125,8 @@ pub mod outbox;
 #[cfg(feature = "party")]
 pub mod party;
 #[cfg(feature = "party")]
+mod party_chat;
+#[cfg(feature = "party")]
 mod party_identify;
 pub mod phases;
 pub mod playback;

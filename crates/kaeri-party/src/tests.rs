@@ -398,7 +398,7 @@ async fn a_player_ahead_of_the_room_is_moved_back() {
 }
 
 #[tokio::test]
-async fn chat_and_comings_and_goings_are_notices() {
+async fn chat_comes_as_chat_and_comings_and_goings_are_notices() {
     let server = server().await;
     let mut viewer = Viewer::join(&server, "Ada");
     viewer.joined().await;
@@ -407,9 +407,10 @@ async fn chat_and_comings_and_goings_are_notices() {
     let mika = server.member(ROOM, "Mika");
     assert_eq!(viewer.notice(|k| matches!(k, NoticeKind::Joined { .. })).await, "Mika joined");
     mika.chat("starting in a minute\n");
+    let said = viewer.until("chat", |e| matches!(e, PartyEvent::Chat { .. })).await;
     assert_eq!(
-        viewer.notice(|k| matches!(k, NoticeKind::Chat { .. })).await,
-        "Mika: starting in a minute"
+        said,
+        PartyEvent::Chat { from: "Mika".into(), text: "starting in a minute".into() }
     );
     mika.leave();
     assert_eq!(viewer.notice(|k| matches!(k, NoticeKind::Left { .. })).await, "Mika left");
@@ -582,4 +583,79 @@ async fn looking_into_an_unreachable_server_says_why() {
     options.tls = Tls::Off;
     let reason = crate::client::look(options, Duration::from_millis(100)).await.unwrap_err();
     assert!(reason.contains("Could not reach"), "{reason}");
+}
+
+#[tokio::test]
+async fn the_welcome_says_what_chat_takes() {
+    let server = FakeServer::start(FakeOptions {
+        tick: Duration::from_millis(50),
+        max_chat_length: Some(300),
+        ..FakeOptions::default()
+    })
+    .await
+    .unwrap();
+    let mut viewer = Viewer::join(&server, "Ada");
+    viewer.joined().await;
+    let features = viewer.until("features", |e| matches!(e, PartyEvent::Features(_))).await;
+    assert_eq!(
+        features,
+        PartyEvent::Features(crate::ServerFeatures { chat: true, max_chat_length: 300 })
+    );
+}
+
+#[tokio::test]
+async fn what_this_member_says_reaches_the_room_and_comes_back() {
+    let server = server().await;
+    let mut viewer = Viewer::join(&server, "Ada");
+    viewer.joined().await;
+    viewer.until("the member list", |e| matches!(e, PartyEvent::Members(_))).await;
+    viewer.party.say("back in two".into());
+    let echo = viewer.until("the echo", |e| matches!(e, PartyEvent::Chat { .. })).await;
+    assert_eq!(echo, PartyEvent::Chat { from: "Ada".into(), text: "back in two".into() });
+    assert_eq!(server.said(), vec![("Ada".to_owned(), "back in two".to_owned())]);
+}
+
+#[tokio::test]
+async fn a_server_with_chat_off_is_not_sent_chat() {
+    let server = FakeServer::start(FakeOptions {
+        tick: Duration::from_millis(50),
+        chat: false,
+        ..FakeOptions::default()
+    })
+    .await
+    .unwrap();
+    let mut viewer = Viewer::join(&server, "Ada");
+    viewer.joined().await;
+    let features = viewer.until("features", |e| matches!(e, PartyEvent::Features(_))).await;
+    assert_eq!(
+        features,
+        PartyEvent::Features(crate::ServerFeatures { chat: false, max_chat_length: 150 })
+    );
+    viewer.party.say("anyone there".into());
+    // A following request is answered, so the chat line was read and not sent.
+    viewer.party.ready(true);
+    viewer.until("ready", |e| matches!(e, PartyEvent::Members(m) if m.iter().any(|x| x.you && x.ready == Some(true)))).await;
+    assert!(server.said().is_empty());
+}
+
+#[tokio::test]
+async fn a_long_line_from_a_server_with_longer_messages_is_not_cut_at_150() {
+    let server = FakeServer::start(FakeOptions {
+        tick: Duration::from_millis(50),
+        max_chat_length: Some(400),
+        ..FakeOptions::default()
+    })
+    .await
+    .unwrap();
+    let mut viewer = Viewer::join(&server, "Ada");
+    viewer.joined().await;
+    viewer.until("the member list", |e| matches!(e, PartyEvent::Members(_))).await;
+    let mika = server.member(ROOM, "Mika");
+    mika.chat(&"word ".repeat(60));
+    let PartyEvent::Chat { text, .. } =
+        viewer.until("chat", |e| matches!(e, PartyEvent::Chat { .. })).await
+    else {
+        unreachable!()
+    };
+    assert!(text.chars().count() > 150, "{}", text.chars().count());
 }

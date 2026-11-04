@@ -25,7 +25,9 @@ use crate::{
     notice::Notice,
     ping::Latency,
     sync::{Change, Decision, PlayerAction, RoomState, Sample, Sync},
-    wire::{self, FileInfo, MAX_LINE, OutState, ServerMessage, SetItem, UserEvent},
+    wire::{
+        self, FileInfo, MAX_LINE, OutState, ServerFeatures, ServerMessage, SetItem, UserEvent,
+    },
 };
 
 /// The port a Syncplay server listens on when none is given.
@@ -203,6 +205,13 @@ pub enum PartyEvent {
     Player(PlayerAction),
     /// Something to show on the player.
     Notice(Notice),
+    /// What the server takes, from its welcome: said after [`PartyEvent::Joined`] and
+    /// [`PartyEvent::Rejoined`].
+    Features(ServerFeatures),
+    /// A member said something, this one's own line coming back included. The text is on one
+    /// line and cut to what the server takes (at least 150 characters); it may be a reaction, see
+    /// [`crate::reaction::decode`].
+    Chat { from: String, text: String },
     /// The smoothed round trip to the server, in milliseconds, when it moves by more than a
     /// little.
     Latency(u32),
@@ -230,6 +239,8 @@ enum Input {
     },
     /// Play the room from where it is, whoever is not ready.
     Play,
+    /// Say this to the room, as chat.
+    Chat(String),
     Attach,
     Detach,
     Leave,
@@ -255,6 +266,13 @@ impl Party {
     /// What the player reports of itself.
     pub fn sample(&self, sample: Sample) {
         let _ = self.inputs.send(Input::Sample(sample));
+    }
+
+    /// Say `text` to the room. The room's server sends it back to everyone, this member
+    /// included, as [`PartyEvent::Chat`]; nothing is sent when the server has chat off, or while
+    /// the connection is being made again.
+    pub fn say(&self, text: String) {
+        let _ = self.inputs.send(Input::Chat(text));
     }
 
     /// Say whether this member is ready.
@@ -420,6 +438,7 @@ struct Membership {
     ready: bool,
     file: Option<FileInfo>,
     playlist: Playlist,
+    features: ServerFeatures,
     sync: Sync,
     latency: Latency,
     shown_latency: Option<u32>,
@@ -461,6 +480,7 @@ impl Membership {
             ready: false,
             file: None,
             playlist: Playlist::default(),
+            features: ServerFeatures::default(),
             sync: Sync::default(),
             latency: Latency::default(),
             shown_latency: None,
@@ -534,6 +554,7 @@ impl Membership {
         self.room = hello.room.unwrap_or_else(|| self.options.room.clone());
         self.members.clear();
         self.playlist = Playlist::default();
+        self.features = hello.features;
         self.listed = false;
         self.all_ready = false;
         self.ignoring_client = 0;
@@ -543,6 +564,7 @@ impl Membership {
         if self.joined_once {
             self.sync.rejoin();
             self.emit(PartyEvent::Rejoined { name: self.me.clone(), encrypted });
+            self.emit(PartyEvent::Features(self.features));
         } else {
             self.joined_once = true;
             self.emit(PartyEvent::Joined {
@@ -551,6 +573,7 @@ impl Membership {
                 encrypted,
                 motd: hello.motd.map(|m| crate::notice::clean(&m)),
             });
+            self.emit(PartyEvent::Features(self.features));
         }
         self.members
             .insert(self.me.clone(), Seen { ready: Some(self.ready), file: self.file.clone() });
@@ -695,8 +718,11 @@ impl Membership {
                     self.members_changed(false);
                 }
                 ServerMessage::Chat { from, message } => {
-                    if !message.trim().is_empty() {
-                        self.emit(PartyEvent::Notice(Notice::chat(&from, &message)));
+                    let longest = self.features.max_chat_length.max(crate::notice::LONGEST);
+                    let text = crate::notice::clean_to(&message, longest);
+                    if !text.is_empty() {
+                        let from = crate::notice::clean(&from);
+                        self.emit(PartyEvent::Chat { from, text });
                     }
                 }
                 ServerMessage::Error(reason) => {
@@ -870,6 +896,11 @@ impl Membership {
                 let position = self.sync.room_at(now).map_or(0.0, |(position, _)| position);
                 self.send_change(Change { position, paused: false, seek: false });
             }
+            Input::Chat(text) => {
+                if self.features.chat && !text.trim().is_empty() {
+                    self.outbox.push(wire::chat(&text));
+                }
+            }
             Input::Attach => self.sync.attach(),
             Input::Detach => self.sync.detach(),
             Input::Leave => {}
@@ -912,7 +943,8 @@ impl Membership {
             Input::Ready(ready) => self.ready = ready,
             Input::File(file) => self.file = file,
             // Nothing is written to a room that can't be heard.
-            Input::SetPlaylist { .. } | Input::MoveOn { .. } | Input::Play => {}
+            Input::SetPlaylist { .. } | Input::MoveOn { .. } | Input::Play | Input::Chat(_) => {
+            }
             Input::Attach => self.sync.attach(),
             Input::Detach => self.sync.detach(),
             Input::Leave => {}

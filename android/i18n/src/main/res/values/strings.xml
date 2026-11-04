@@ -3162,6 +3162,88 @@
     <string name="together_recent_note">The last ten, kept on this device</string>
     <!-- The start sheet's button after a title is picked. -->
     <string name="party_pick_continue">Continue</string>
+    <!-- Placeholder of every chat field, and the label of the button that opens it. -->
+    <string name="party_chat_field">Say something</string>
+    <!-- Button that sends a chat line. -->
+    <string name="party_chat_send">Send</string>
+    <!-- Heading of the conversation in the lobby, on a phone's remote screen and the Android action that opens chat. -->
+    <string name="party_chat_title">Chat</string>
+    <!-- End of the chat field while sending waits, after three messages in five seconds. -->
+    <string name="party_chat_wait">Wait %1$d s</string>
+    <!-- Spoken once when sending waits, for screen readers. -->
+    <plurals name="party_chat_wait_spoken">
+        <item quantity="one">Wait one second</item>
+        <item quantity="other">Wait %1$d seconds</item>
+    </plurals>
+    <!-- Line after the three newest chat lines on the video, which opens the conversation. -->
+    <string name="party_chat_more">%1$d more in chat</string>
+    <!-- Notice when the room's server has chat turned off, and the line that replaces the field. -->
+    <string name="party_chat_off">This room\'s server has chat turned off</string>
+    <!-- Line under the chat field in the lobby, shown once. -->
+    <string name="party_chat_privacy">Messages go through the room\'s server. Kaeri keeps none.</string>
+    <!-- Heading in the conversation when Hide chat is on. -->
+    <string name="party_chat_hidden">Chat is hidden</string>
+    <!-- Line under it. -->
+    <string name="party_chat_hidden_line">Hide chat is on in Settings, under Playback.</string>
+    <!-- Button that turns Hide chat off. -->
+    <string name="party_chat_show">Show chat</string>
+    <!-- Settings switch that hides chat in every watch party on this device. -->
+    <string name="settings_hide_chat">Hide chat in watch parties</string>
+    <!-- Line under that switch. -->
+    <string name="settings_hide_chat_line">Lines, reactions and their ticks on the seek bar stay off the video, and the field is gone. The people list still shows who is in the room.</string>
+    <!-- Member menu item and accessibility action that hides a member's lines and reactions for this party. -->
+    <string name="party_mute">Mute %1$s</string>
+    <!-- Member menu item and accessibility action that shows a muted member's lines again. -->
+    <string name="party_unmute">Unmute %1$s</string>
+    <!-- Button in the conversation on the line that says a member is muted. -->
+    <string name="party_unmute_short">Unmute</string>
+    <!-- State on a muted member's row. -->
+    <string name="party_member_muted">Muted</string>
+    <!-- Line in the conversation where a muted member's lines were. -->
+    <string name="party_muted_line">%1$s is muted</string>
+    <!-- Line in the conversation when a message never came back from the server, five seconds after it was sent. -->
+    <string name="party_chat_not_sent">Couldn\'t send</string>
+    <!-- Button after it, which sends the same text again. -->
+    <string name="party_chat_retry">Try again</string>
+    <!-- Button on the TV's controls that opens the four reactions. -->
+    <string name="party_react">React</string>
+    <!-- Label of the laugh reaction button. -->
+    <string name="party_react_laugh">Laugh</string>
+    <!-- Label of the gasp reaction button. -->
+    <string name="party_react_gasp">Gasp</string>
+    <!-- Label of the clap reaction button. -->
+    <string name="party_react_clap">Clap</string>
+    <!-- Label of the cry reaction button. -->
+    <string name="party_react_cry">Cry</string>
+    <!-- Line in the conversation and in the terminal: a member laughed. -->
+    <string name="party_reacted_laugh">%1$s laughed</string>
+    <!-- Line in the conversation and in the terminal: a member gasped. -->
+    <string name="party_reacted_gasp">%1$s gasped</string>
+    <!-- Line in the conversation and in the terminal: a member clapped. -->
+    <string name="party_reacted_clap">%1$s clapped</string>
+    <!-- Line in the conversation and in the terminal: a member cried. -->
+    <string name="party_reacted_cry">%1$s cried</string>
+    <!-- A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The line is one of the party-reacted messages, the time is minutes and seconds. -->
+    <string name="party_reacted_at">%1$s at %2$s</string>
+    <!-- Two members named together, for a reaction made by both: "Ren and Mika". -->
+    <string name="party_names_two">%1$s and %2$s</string>
+    <!-- Three members named together. -->
+    <string name="party_names_three">%1$s, %2$s and %3$s</string>
+    <!-- More than three members named together: two names and how many others. -->
+    <string name="party_names_others">%1$s, %2$s and %3$d others</string>
+    <!-- Name of this device's own member in the conversation and on its reactions. -->
+    <string name="party_chat_you">You</string>
+    <!-- Line on a phone's remote screen under the chat field: which device the line is said as. -->
+    <string name="party_sends_as">Sends as %1$s</string>
+    <!-- Label on the seek bar when pointing near a reaction tick: the moment and who reacted. -->
+    <string name="party_tick_label">%1$s · %2$s</string>
+    <!-- Spoken by a screen reader when a chat line arrives. -->
+    <string name="party_chat_announce">%1$s says %2$s</string>
+    <!-- Spoken by a screen reader once, when 20 characters are left in the chat field. -->
+    <plurals name="party_chat_left">
+        <item quantity="one">%1$d character left</item>
+        <item quantity="other">%1$d characters left</item>
+    </plurals>
     <!-- Label on the card for the episode that plays after this one. -->
     <string name="player_up_next">Up next</string>
     <!-- Label before the name of the work a show is based on. -->

@@ -248,7 +248,9 @@ The server, and everyone in the room, sees:
 - the name you join with and the room's name;
 - the show and episode you have open, as "Title · Episode 3", and its length;
 - when you play, pause and seek, with the position, and whether you're ready;
-- how long messages take to reach you.
+- how long messages take to reach you;
+- what you type in the room's chat, and your reactions, which are chat lines such as
+  `*laughs* 12:04` with the position in the episode.
 
 They never see the stream's address, your sources or your sign-ins. A party shares no video:
 everyone plays the episode from their own sources.
@@ -265,10 +267,18 @@ this website never receives the invite. The page makes no other request, runs no
 passes the invite only to the Kaeri app on your device. Cloudflare sees that the page was
 opened, as it does for any page here, but not whose room it was.
 
-Messages others send in the room show up on your player. Kaeri doesn't send any.
+Messages others send in the room show up on your player, and you can answer them.
 
 A party doesn't save your position while you watch. When the episode ends, it's marked watched and
 synced to your trackers, as any other play is.
+
+Chat goes through the room's server, to its operator and to everyone in the room, and is never
+end to end encrypted. Kaeri keeps chat in memory for as long as you are in the party and nowhere
+else: not on disk, not in the last ten rooms, not in a bug report and not in the log. Leaving
+drops it, and someone who joins later sees nothing said before. Links in chat are plain text and
+never open from the app. Mute hides a member for that party on your device only, and Hide chat in
+Settings turns chat off on the screen, though the room still has it. A server can turn chat off,
+and then the app says so and sends nothing.
 
 Watch together keeps the last ten rooms you were in on your device, so you can go back to one:
 the server and room, the show and the last episode the room reached, the names of the people who

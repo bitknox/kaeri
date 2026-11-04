@@ -572,6 +572,10 @@ impl App {
             // The lobby of a native app, the start the engine acts on, and a look into a room.
             Event::PartyForm(_)
             | Event::PartyMessage(_)
+            | Event::PartyChat(_)
+            | Event::PartyChatState(_)
+            | Event::PartyReaction(_)
+            | Event::PartyChatRefused(_)
             | Event::PartyStarted { .. }
             | Event::PartyGlimpse(_)
             | Event::PartyLookFailed { .. }

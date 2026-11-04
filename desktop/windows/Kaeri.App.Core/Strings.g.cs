@@ -4008,6 +4008,120 @@ public static partial class T
     /// <summary>The start sheet's button after a title is picked.</summary>
     public static string PartyPickContinue => Get("PartyPickContinue");
 
+    /// <summary>Placeholder of every chat field, and the label of the button that opens it.</summary>
+    public static string PartyChatField => Get("PartyChatField");
+
+    /// <summary>Button that sends a chat line.</summary>
+    public static string PartyChatSend => Get("PartyChatSend");
+
+    /// <summary>Heading of the conversation in the lobby, on a phone's remote screen and the Android action that opens chat.</summary>
+    public static string PartyChatTitle => Get("PartyChatTitle");
+
+    /// <summary>End of the chat field while sending waits, after three messages in five seconds.</summary>
+    public static string PartyChatWait(long seconds) => Fill(Get("PartyChatWait"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Spoken once when sending waits, for screen readers.</summary>
+    public static string PartyChatWaitSpoken(long seconds) => Fill(GetPlural("PartyChatWaitSpoken", seconds), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Line after the three newest chat lines on the video, which opens the conversation.</summary>
+    public static string PartyChatMore(long count) => Fill(Get("PartyChatMore"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Notice when the room's server has chat turned off, and the line that replaces the field.</summary>
+    public static string PartyChatOff => Get("PartyChatOff");
+
+    /// <summary>Line under the chat field in the lobby, shown once.</summary>
+    public static string PartyChatPrivacy => Get("PartyChatPrivacy");
+
+    /// <summary>Heading in the conversation when Hide chat is on.</summary>
+    public static string PartyChatHidden => Get("PartyChatHidden");
+
+    /// <summary>Line under it.</summary>
+    public static string PartyChatHiddenLine => Get("PartyChatHiddenLine");
+
+    /// <summary>Button that turns Hide chat off.</summary>
+    public static string PartyChatShow => Get("PartyChatShow");
+
+    /// <summary>Settings switch that hides chat in every watch party on this device.</summary>
+    public static string SettingsHideChat => Get("SettingsHideChat");
+
+    /// <summary>Line under that switch.</summary>
+    public static string SettingsHideChatLine => Get("SettingsHideChatLine");
+
+    /// <summary>Member menu item and accessibility action that hides a member's lines and reactions for this party.</summary>
+    public static string PartyMute(string name) => Fill(Get("PartyMute"), ("name", name));
+
+    /// <summary>Member menu item and accessibility action that shows a muted member's lines again.</summary>
+    public static string PartyUnmute(string name) => Fill(Get("PartyUnmute"), ("name", name));
+
+    /// <summary>Button in the conversation on the line that says a member is muted.</summary>
+    public static string PartyUnmuteShort => Get("PartyUnmuteShort");
+
+    /// <summary>State on a muted member's row.</summary>
+    public static string PartyMemberMuted => Get("PartyMemberMuted");
+
+    /// <summary>Line in the conversation where a muted member's lines were.</summary>
+    public static string PartyMutedLine(string name) => Fill(Get("PartyMutedLine"), ("name", name));
+
+    /// <summary>Line in the conversation when a message never came back from the server, five seconds after it was sent.</summary>
+    public static string PartyChatNotSent => Get("PartyChatNotSent");
+
+    /// <summary>Button after it, which sends the same text again.</summary>
+    public static string PartyChatRetry => Get("PartyChatRetry");
+
+    /// <summary>Button on the TV's controls that opens the four reactions.</summary>
+    public static string PartyReact => Get("PartyReact");
+
+    /// <summary>Label of the laugh reaction button.</summary>
+    public static string PartyReactLaugh => Get("PartyReactLaugh");
+
+    /// <summary>Label of the gasp reaction button.</summary>
+    public static string PartyReactGasp => Get("PartyReactGasp");
+
+    /// <summary>Label of the clap reaction button.</summary>
+    public static string PartyReactClap => Get("PartyReactClap");
+
+    /// <summary>Label of the cry reaction button.</summary>
+    public static string PartyReactCry => Get("PartyReactCry");
+
+    /// <summary>Line in the conversation and in the terminal: a member laughed.</summary>
+    public static string PartyReactedLaugh(string name) => Fill(Get("PartyReactedLaugh"), ("name", name));
+
+    /// <summary>Line in the conversation and in the terminal: a member gasped.</summary>
+    public static string PartyReactedGasp(string name) => Fill(Get("PartyReactedGasp"), ("name", name));
+
+    /// <summary>Line in the conversation and in the terminal: a member clapped.</summary>
+    public static string PartyReactedClap(string name) => Fill(Get("PartyReactedClap"), ("name", name));
+
+    /// <summary>Line in the conversation and in the terminal: a member cried.</summary>
+    public static string PartyReactedCry(string name) => Fill(Get("PartyReactedCry"), ("name", name));
+
+    /// <summary>A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The line is one of the party-reacted messages, the time is minutes and seconds.</summary>
+    public static string PartyReactedAt(string line, string time) => Fill(Get("PartyReactedAt"), ("line", line), ("time", time));
+
+    /// <summary>Two members named together, for a reaction made by both: "Ren and Mika".</summary>
+    public static string PartyNamesTwo(string first, string second) => Fill(Get("PartyNamesTwo"), ("first", first), ("second", second));
+
+    /// <summary>Three members named together.</summary>
+    public static string PartyNamesThree(string first, string second, string third) => Fill(Get("PartyNamesThree"), ("first", first), ("second", second), ("third", third));
+
+    /// <summary>More than three members named together: two names and how many others.</summary>
+    public static string PartyNamesOthers(string first, string second, long count) => Fill(Get("PartyNamesOthers"), ("first", first), ("second", second), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Name of this device's own member in the conversation and on its reactions.</summary>
+    public static string PartyChatYou => Get("PartyChatYou");
+
+    /// <summary>Line on a phone's remote screen under the chat field: which device the line is said as.</summary>
+    public static string PartySendsAs(string device) => Fill(Get("PartySendsAs"), ("device", device));
+
+    /// <summary>Label on the seek bar when pointing near a reaction tick: the moment and who reacted.</summary>
+    public static string PartyTickLabel(string time, string names) => Fill(Get("PartyTickLabel"), ("time", time), ("names", names));
+
+    /// <summary>Spoken by a screen reader when a chat line arrives.</summary>
+    public static string PartyChatAnnounce(string name, string message) => Fill(Get("PartyChatAnnounce"), ("name", name), ("message", message));
+
+    /// <summary>Spoken by a screen reader once, when 20 characters are left in the chat field.</summary>
+    public static string PartyChatLeft(long count) => Fill(GetPlural("PartyChatLeft", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
     /// <summary>Label on the card for the episode that plays after this one.</summary>
     public static string PlayerUpNext => Get("PlayerUpNext");
 
@@ -8808,6 +8922,46 @@ public static partial class T
         ["PartyHereCount"] = "{count} here",
         ["TogetherRecentNote"] = "The last ten, kept on this device",
         ["PartyPickContinue"] = "Continue",
+        ["PartyChatField"] = "Say something",
+        ["PartyChatSend"] = "Send",
+        ["PartyChatTitle"] = "Chat",
+        ["PartyChatWait"] = "Wait {seconds} s",
+        ["PartyChatWaitSpoken_one"] = "Wait one second",
+        ["PartyChatWaitSpoken_other"] = "Wait {seconds} seconds",
+        ["PartyChatMore"] = "{count} more in chat",
+        ["PartyChatOff"] = "This room's server has chat turned off",
+        ["PartyChatPrivacy"] = "Messages go through the room's server. Kaeri keeps none.",
+        ["PartyChatHidden"] = "Chat is hidden",
+        ["PartyChatHiddenLine"] = "Hide chat is on in Settings, under Playback.",
+        ["PartyChatShow"] = "Show chat",
+        ["SettingsHideChat"] = "Hide chat in watch parties",
+        ["SettingsHideChatLine"] = "Lines, reactions and their ticks on the seek bar stay off the video, and the field is gone. The people list still shows who is in the room.",
+        ["PartyMute"] = "Mute {name}",
+        ["PartyUnmute"] = "Unmute {name}",
+        ["PartyUnmuteShort"] = "Unmute",
+        ["PartyMemberMuted"] = "Muted",
+        ["PartyMutedLine"] = "{name} is muted",
+        ["PartyChatNotSent"] = "Couldn't send",
+        ["PartyChatRetry"] = "Try again",
+        ["PartyReact"] = "React",
+        ["PartyReactLaugh"] = "Laugh",
+        ["PartyReactGasp"] = "Gasp",
+        ["PartyReactClap"] = "Clap",
+        ["PartyReactCry"] = "Cry",
+        ["PartyReactedLaugh"] = "{name} laughed",
+        ["PartyReactedGasp"] = "{name} gasped",
+        ["PartyReactedClap"] = "{name} clapped",
+        ["PartyReactedCry"] = "{name} cried",
+        ["PartyReactedAt"] = "{line} at {time}",
+        ["PartyNamesTwo"] = "{first} and {second}",
+        ["PartyNamesThree"] = "{first}, {second} and {third}",
+        ["PartyNamesOthers"] = "{first}, {second} and {count} others",
+        ["PartyChatYou"] = "You",
+        ["PartySendsAs"] = "Sends as {device}",
+        ["PartyTickLabel"] = "{time} · {names}",
+        ["PartyChatAnnounce"] = "{name} says {message}",
+        ["PartyChatLeft_one"] = "{count} character left",
+        ["PartyChatLeft_other"] = "{count} characters left",
         ["PlayerUpNext"] = "Up next",
         ["TitleBasedOn"] = "Based on",
         ["PlayerStarting"] = "Starting episode {episode}",

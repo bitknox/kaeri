@@ -12,6 +12,7 @@
 //! - [`ping`]: the round trip, and how far a position from the room is moved on for it.
 //! - [`sync`]: the rules that keep a player with the room, pure and clocked by the caller.
 //! - [`notice`]: what the room says, in words.
+//! - [`reaction`]: reactions as chat lines, and [`limits`]: how much one member says.
 //! - [`client`]: the connection, reconnecting, and the members.
 //! - `fake` (feature `testing`): a server on the loopback interface for tests and Fixtures builds.
 //!
@@ -21,8 +22,10 @@ pub mod client;
 #[cfg(any(test, feature = "testing"))]
 pub mod fake;
 pub mod file;
+pub mod limits;
 pub mod notice;
 pub mod ping;
+pub mod reaction;
 pub mod sync;
 pub mod wire;
 
@@ -30,9 +33,11 @@ pub use client::{
     BadServer, DEFAULT_PORT, Glimpse, Member, Party, PartyEvent, PartyOptions, Playlist, Retry,
     Server, Tls, look,
 };
+pub use limits::SendLimits;
 pub use notice::{Notice, NoticeKind};
+pub use reaction::Reaction;
 pub use sync::{PlayerAction, Sample};
-pub use wire::FileInfo;
+pub use wire::{FileInfo, ServerFeatures};
 
 #[cfg(test)]
 mod tests;

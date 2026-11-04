@@ -37,7 +37,7 @@ pub enum NoticeKind {
 
 /// The longest name or message shown, in characters. Servers have their own limits; this keeps a
 /// server without one from filling the screen.
-const LONGEST: usize = 150;
+pub(crate) const LONGEST: usize = 150;
 
 impl Notice {
     pub fn chat(from: &str, message: &str) -> Self {
@@ -109,6 +109,11 @@ pub fn clock(seconds: f64) -> String {
 /// What someone else wrote, made safe to show: no control characters, on one line, and no
 /// longer than [`LONGEST`].
 pub fn clean(text: &str) -> String {
+    clean_to(text, LONGEST)
+}
+
+/// [`clean`] with another limit, for a chat line from a server that takes longer messages.
+pub fn clean_to(text: &str, longest: usize) -> String {
     let one_line: String = text
         .chars()
         .map(|c| if c.is_control() { ' ' } else { c })
@@ -116,7 +121,7 @@ pub fn clean(text: &str) -> String {
         .split_whitespace()
         .collect::<Vec<_>>()
         .join(" ");
-    match one_line.char_indices().nth(LONGEST) {
+    match one_line.char_indices().nth(longest) {
         Some((cut, _)) => format!("{}…", &one_line[..cut]),
         None => one_line,
     }

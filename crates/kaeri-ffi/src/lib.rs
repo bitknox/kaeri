@@ -56,7 +56,7 @@ pub use engine::FfiEngine;
 pub use host::FfiHost;
 pub use log::{FfiLogLevel, log_line, start_log};
 #[cfg(all(feature = "party", feature = "testing"))]
-pub use party::FfiFakeParty;
+pub use party::{FfiChatFixture, FfiFakeParty};
 pub use party::{
     clean_party_code, parse_party_invite, parse_party_target, party_invite_link,
     party_share_app_link, party_share_link,

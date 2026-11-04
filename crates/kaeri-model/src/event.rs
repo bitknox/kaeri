@@ -16,7 +16,8 @@ use crate::{
     notice::Notice,
     notifications::{NewEpisode, UpcomingNotices},
     party::{
-        NoSourceWhy, PartyForm, PartyGlimpse, PartyMember, PartyMessage, PartyRecentRoom,
+        NoSourceWhy, PartyChatRefusal, PartyChatState, PartyConversation, PartyForm,
+        PartyGlimpse, PartyMember, PartyMessage, PartyReaction, PartyRecentRoom,
         PartyStartKind, PartyView,
     },
     playback::{Ending, PlaybackId, SkipKind, TimeRange, TimelineMark},
@@ -715,6 +716,16 @@ pub enum Event {
     /// correction to stay with the room, everyone ready, or chat. Already shown on the player
     /// as a notice; this is for a party panel.
     PartyMessage(PartyMessage),
+    /// The party's conversation, whole, after every change: a line, a reaction, a mute, a send
+    /// that was never echoed. Nothing is kept past the party.
+    PartyChat(PartyConversation),
+    /// What this device may do in the conversation: whether the server has chat on, how long a
+    /// message may be, who is muted and how long Send waits.
+    PartyChatState(PartyChatState),
+    /// A reaction for the moment on the video, from any member but a muted one.
+    PartyReaction(PartyReaction),
+    /// A send that was not made, and why.
+    PartyChatRefused(PartyChatRefusal),
     /// The party is over: left on purpose with `None`, or for the reason given, worded for the
     /// user ("party.example:8999 refused the party: …"). What is playing goes on as a private
     /// session.
