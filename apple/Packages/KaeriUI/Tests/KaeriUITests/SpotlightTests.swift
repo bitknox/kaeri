@@ -276,6 +276,58 @@ struct SpotlightTests {
         #expect(indexer.shelf?.titles.isEmpty == true)
     }
 
+    // MARK: When Spotlight fails
+
+    @Test(.timeLimit(.minutes(1)))
+    func aRefusingIndexIsNotAskedAgainOnEveryChange() async throws {
+        let store = AppStore()
+        let index = RefusingIndex()
+        let indexer = SpotlightIndexer(
+            store: store, index: index, prefix: Self.prefix, file: nil,
+            defaults: Self.defaults, delay: .milliseconds(20), covers: FakeCovers()
+        )
+        indexer.start()
+        store.apply(.content(view: .continue, content: .entries([wayfarer()])))
+        try await until { await index.calls >= 1 }
+        // The lists go on changing while the app loads, every few seconds.
+        for titles in [[wayfarer(), steelGardener()], [steelGardener()], [wayfarer()]] {
+            store.apply(.content(view: .continue, content: .entries(titles)))
+            try await Task.sleep(for: .milliseconds(150))
+        }
+        #expect(await index.calls == 1, "no pass until the failure's wait is over")
+        #expect(await index.lookups == 1, "the copies Spotlight weighs the app against are looked for once")
+        #expect(indexer.shelf == nil, "nothing saved that Spotlight did not take")
+    }
+
+    @Test(.timeLimit(.minutes(1)))
+    func onceSpotlightTakesTitlesAgainThePassGoesThrough() async throws {
+        let store = AppStore()
+        let index = RefusingIndex(refusals: 2)
+        let indexer = SpotlightIndexer(
+            store: store, index: index, prefix: Self.prefix, file: nil,
+            defaults: Self.defaults, delay: .milliseconds(20), retry: .milliseconds(50), covers: FakeCovers()
+        )
+        indexer.start()
+        store.apply(.content(view: .continue, content: .entries([wayfarer()])))
+        // Refused twice, then taken, with no change to the lists to set it off.
+        try await until { indexer.shelf != nil }
+        #expect(await index.calls == 4, "two refused clears, then the clear and the titles")
+        #expect(await index.indexed == ["title/900001"])
+        #expect(await index.lookups == 1)
+    }
+
+    @Test func eachFailureInARowWaitsTwiceAsLongUpToAnHour() {
+        let waits = (1...8).map { SpotlightIndexer.wait(after: $0, retry: .seconds(60)) }
+        #expect(waits.map(\.components.seconds) == [60, 120, 240, 480, 960, 1920, 3600, 3600])
+        #expect(SpotlightIndexer.wait(after: 1_000, retry: .seconds(60)) == .seconds(3600))
+    }
+
+    @Test func onlyARefusedConnectionIsBeingTurnedAway() {
+        #expect(SpotlightIndexer.isTurnedAway(NSError(domain: CSIndexErrorDomain, code: -1003)))
+        #expect(!SpotlightIndexer.isTurnedAway(NSError(domain: CSIndexErrorDomain, code: -1000)))
+        #expect(!SpotlightIndexer.isTurnedAway(NSError(domain: NSCocoaErrorDomain, code: -1003)))
+    }
+
     /// Wait for `condition`, as long as it takes. A busy runner holds the main actor for
     /// seconds; the test's time limit ends a wait for something that never comes.
     func until(_ condition: () async -> Bool) async throws {
@@ -471,7 +523,37 @@ actor RecordingIndex: SpotlightIndex {
     }
     func delete(_ identifiers: [String]) async throws { calls.append(.delete(identifiers)) }
     func deleteAll(domains: [String]) async throws { calls.append(.deleteAll(domains)) }
+    func otherSignedCopies() async -> [String] { [] }
     func reset() { calls = [] }
+}
+
+/// Spotlight turning the app away, as it does while another signed copy of it is on the Mac:
+/// every call fails with CSIndexErrorDomain -1003, for the first `refusals` calls or for good.
+actor RefusingIndex: SpotlightIndex {
+    private(set) var calls = 0
+    /// How often the indexer looked for the other copies.
+    private(set) var lookups = 0
+    /// The titles taken once the refusals are over.
+    private(set) var indexed: [String] = []
+    private let refusals: Int
+
+    init(refusals: Int = .max) { self.refusals = refusals }
+
+    private func call() throws {
+        calls += 1
+        if calls <= refusals { throw NSError(domain: CSIndexErrorDomain, code: -1003) }
+    }
+
+    func index(_ items: [SpotlightItem]) async throws {
+        try call()
+        indexed += items.map(\.identifier)
+    }
+    func delete(_ identifiers: [String]) async throws { try call() }
+    func deleteAll(domains: [String]) async throws { try call() }
+    func otherSignedCopies() async -> [String] {
+        lookups += 1
+        return ["/Volumes/Kaeri/Kaeri.app"]
+    }
 }
 
 /// Covers as the tests have them: none until a test puts one here.
