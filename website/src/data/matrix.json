@@ -43,6 +43,19 @@
      ]
     },
     {
+     "id": "foundSkipTimes",
+     "cells": [
+      "y",
+      "y",
+      "y",
+      "y",
+      "y",
+      "y",
+      "y",
+      "n"
+     ]
+    },
+    {
      "id": "loadASubtitleFile",
      "cells": [
       "y",
@@ -66,19 +79,6 @@
       "miniPlayer",
       "miniPlayer",
       "n"
-     ]
-    },
-    {
-     "id": "watchParties",
-     "cells": [
-      "y",
-      "y",
-      "y",
-      "n",
-      "n",
-      "y",
-      "y",
-      "y"
      ]
     }
    ]
