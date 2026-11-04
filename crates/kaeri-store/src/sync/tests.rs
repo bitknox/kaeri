@@ -640,3 +640,40 @@ fn a_devices_cloud_travels_as_a_register_and_its_id_is_kept_while_sync_is_off() 
     a.store.sync_meta_remove("handoff.b2").unwrap();
     assert_eq!(a.store.sync_meta_get("handoff.b2").unwrap(), None);
 }
+
+#[test]
+fn continue_names_the_other_device_that_played_a_title_last_for_a_day() {
+    let mac = dev("aaaa", 100_000);
+    let phone = dev("bbbb", 100_000);
+    for d in [&mac, &phone] {
+        d.store.sync_device_add("aaaa", "Study Mac", "aa").unwrap();
+        d.store.sync_device_add("bbbb", "Kim's phone", "bb").unwrap();
+    }
+    mac.watch(SHOW, "3", 300.0, 1440.0);
+    mac.watch(OTHER, "1", 300.0, 1440.0);
+    exchange(&mac, &phone);
+    phone.advance(60);
+    phone.watch(SHOW, "3", 724.0, 1440.0);
+    exchange(&mac, &phone);
+
+    let since = mac.secs() - 86_400;
+    let ids = [SHOW.get(), OTHER.get()];
+    // On the Mac, the phone played the show last; the other title the Mac played itself.
+    let on_mac = mac.store.sync_last_devices(&ids, since).unwrap();
+    assert_eq!(
+        on_mac.into_iter().collect::<Vec<_>>(),
+        [(SHOW.get(), "Kim's phone".to_owned())]
+    );
+    // On the phone, the Mac played the other title last.
+    let on_phone = phone.store.sync_last_devices(&ids, since).unwrap();
+    assert_eq!(
+        on_phone.into_iter().collect::<Vec<_>>(),
+        [(OTHER.get(), "Study Mac".to_owned())]
+    );
+    // Older than a day, it is the usual line again.
+    let later = phone.secs() + 86_400 + 1;
+    assert!(mac.store.sync_last_devices(&ids, later - 86_400).unwrap().is_empty());
+    // With sync off nothing is named.
+    mac.store.sync_disable().unwrap();
+    assert!(mac.store.sync_last_devices(&ids, since).unwrap().is_empty());
+}

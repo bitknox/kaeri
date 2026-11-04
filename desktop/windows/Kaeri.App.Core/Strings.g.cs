@@ -6375,6 +6375,15 @@ public static partial class T
     /// <summary>Button that opens the system share sheet for the invite link.</summary>
     public static string StoresShare => Get("StoresShare");
 
+    /// <summary>Line on a store row when joining it through a paired device failed because the store or the paired device could not be reached. The person can try again later.</summary>
+    public static string SyncStoreErrOffline(string store, string device) => Fill(Get("SyncStoreErrOffline"), ("store", store), ("device", device));
+
+    /// <summary>Line on a store row when the store turned the invite down, for example because it was cancelled or used up.</summary>
+    public static string SyncStoreErrRefused(string store) => Fill(Get("SyncStoreErrRefused"), ("store", store));
+
+    /// <summary>Line on a store row when the paired device can't make invites to the store, because it isn't a named member there any more or joined through an open link.</summary>
+    public static string SyncStoreErrNotAllowed(string store, string device) => Fill(Get("SyncStoreErrNotAllowed"), ("store", store), ("device", device));
+
     /// <summary>Title of the state when a title page could not load.</summary>
     public static string TitleLoadFailed => Get("TitleLoadFailed");
 
@@ -9610,6 +9619,9 @@ public static partial class T
         ["StoresQrWarning"] = "Anyone who scans this code can use the invite. It works once and lasts seven days.",
         ["StoresQrWarningDevice"] = "Scan this with the device you want to link. It works once and lasts seven days.",
         ["StoresShare"] = "Share…",
+        ["SyncStoreErrOffline"] = "Couldn't reach {store} or {device}. Try again when both are online.",
+        ["SyncStoreErrRefused"] = "{store} didn't accept the invite. Ask its owner for a new one.",
+        ["SyncStoreErrNotAllowed"] = "{device} can't invite other devices to {store}. Ask the plugin store's owner for an invite.",
         ["TitleLoadFailed"] = "Couldn't load this title",
         ["TitleNoAnswer"] = "AniList didn't answer. Try again.",
         ["TitleLoading"] = "Loading this title",

@@ -7,6 +7,8 @@
 //! opens the session. An answer is sealed for the asking device's own key, so only it can open
 //! it. A device that receives the login of the folder the group uses, and has no folder yet,
 //! takes that folder, with the group's keys that came with it.
+//!
+//! Plugin store invites ride the same asks and answers: see [`crate::store_join`].
 
 use kaeri_model::{
     event::Event,
@@ -25,6 +27,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     cloud::{self, Ended, Service},
     outbox::Outbox,
+    store_join,
     syncing::{self, Ctx, KEYRING, PASSWORD, kind_name, kind_of},
     tracking,
 };
@@ -44,6 +47,34 @@ fn wants(store: &Store, device: &str) -> Vec<String> {
         .flatten()
         .and_then(|json| serde_json::from_str(&json).ok())
         .unwrap_or_default()
+}
+
+/// Replace the plugin store asks kept for `device` (or, with `None`, the next device to pair)
+/// with `asks`, leaving the sign-ins asked alone.
+pub(crate) fn replace_store_asks(store: &Store, device: Option<&str>, asks: &[String]) {
+    let key = device.unwrap_or(NEXT);
+    let mut kept: Vec<String> =
+        wants(store, key).into_iter().filter(|id| !store_join::is_store_ask(id)).collect();
+    kept.extend(asks.iter().cloned());
+    set_wants(store, key, &kept);
+}
+
+/// Add plugin store asks for `device`.
+pub(crate) fn add_store_asks(store: &Store, device: &str, asks: &[String]) {
+    let mut kept = wants(store, device);
+    for ask in asks {
+        if !kept.contains(ask) {
+            kept.push(ask.clone());
+        }
+    }
+    set_wants(store, device, &kept);
+}
+
+/// Take back plugin store asks for `device`.
+pub(crate) fn drop_store_asks(store: &Store, device: &str, asks: &[String]) {
+    let mut kept = wants(store, device);
+    kept.retain(|id| !asks.contains(id));
+    set_wants(store, device, &kept);
 }
 
 fn set_wants(store: &Store, device: &str, wants: &[String]) {
@@ -116,17 +147,24 @@ struct Bundle {
     trackers: Vec<TrackerGift>,
     clouds: Vec<CloudGift>,
     lacking: Vec<String>,
+    /// Plugin store invites made for the asking device, and the stores it made none for. Not
+    /// there in an answer from a Kaeri before them.
+    #[serde(default)]
+    stores: Vec<store_join::StoreGift>,
+    #[serde(default)]
+    store_refusals: Vec<store_join::StoreRefusal>,
 }
 
 /// The engine's side of the paired link's handoff.
 pub struct EngineHandoff {
     store: Store,
     sync: tracking::Sync,
+    stores: crate::plugin_stores::Stores,
 }
 
 impl EngineHandoff {
     pub fn of(ctx: &Ctx) -> Self {
-        Self { store: ctx.store.clone(), sync: ctx.sync.clone() }
+        Self { store: ctx.store.clone(), sync: ctx.sync.clone(), stores: ctx.stores.clone() }
     }
 
     fn in_group(&self, device: &str) -> bool {
@@ -175,6 +213,7 @@ impl EngineHandoff {
     }
 }
 
+#[async_trait::async_trait]
 impl Handoff for EngineHandoff {
     fn asks(&self, peer: &Paired, just_paired: bool) -> Vec<String> {
         let mut wanted = wants(&self.store, &peer.device);
@@ -201,12 +240,18 @@ impl Handoff for EngineHandoff {
         asks
     }
 
-    fn answer(&self, peer: &Paired, asks: &[String]) -> Option<Vec<u8>> {
+    async fn answer(&self, peer: &Paired, asks: &[String]) -> Option<Vec<u8>> {
         // Only a device still in the group is given anything.
         if !self.in_group(&peer.device) {
             return None;
         }
         let mut bundle = Bundle::default();
+        let store_asks: Vec<String> =
+            asks.iter().filter(|a| store_join::is_store_ask(a)).cloned().collect();
+        if !store_asks.is_empty() {
+            (bundle.stores, bundle.store_refusals) =
+                store_join::answer(&self.stores, &store_asks).await;
+        }
         for ask in asks {
             if let Some(id) = ask.strip_prefix(TRACKER) {
                 let signed_in =
@@ -242,7 +287,12 @@ pub async fn copy_sign_ins(
     address: Option<String>,
 ) {
     let ids: Vec<String> = copy.iter().filter_map(copy_id).collect();
-    set_wants(&ctx.store, device.as_deref().unwrap_or(NEXT), &ids);
+    // The plugin store asks are kept: they are `JoinStoresFrom`'s.
+    let key = device.as_deref().unwrap_or(NEXT);
+    let mut wanted: Vec<String> =
+        wants(&ctx.store, key).into_iter().filter(|id| store_join::is_store_ask(id)).collect();
+    wanted.extend(ids.iter().cloned());
+    set_wants(&ctx.store, key, &wanted);
     match (device, address) {
         (Some(device), Some(address)) if !ids.is_empty() => {
             syncing::sync_with(ctx, tx, &device, &address).await;
@@ -260,8 +310,24 @@ pub async fn take(ctx: &Ctx, tx: &Outbox, received: &Received) {
         tracing::warn!("a paired device's answer could not be read");
         return;
     };
+    let Bundle {
+        trackers: tracker_gifts,
+        clouds: cloud_gifts,
+        lacking,
+        stores,
+        store_refusals,
+    } = bundle;
+    let store_asks: Vec<String> =
+        received.asked.iter().filter(|a| store_join::is_store_ask(a)).cloned().collect();
+    if !store_asks.is_empty() {
+        store_join::take(ctx, tx, &from, &store_asks, stores, store_refusals).await;
+    }
+    // Only plugin stores were asked: no sign-ins to say.
+    if received.asked.iter().all(|a| store_join::is_store_ask(a)) {
+        return;
+    }
     let mut trackers = Vec::new();
-    for gift in bundle.trackers {
+    for gift in tracker_gifts {
         let asked = received.asked.iter().any(|a| a.strip_prefix(TRACKER) == Some(&gift.id));
         if !asked {
             continue;
@@ -288,7 +354,7 @@ pub async fn take(ctx: &Ctx, tx: &Outbox, received: &Received) {
         tracking::commands::announce_signed_in(&ctx.store, &ctx.sync);
     }
     let mut clouds = Vec::new();
-    for gift in bundle.clouds {
+    for gift in cloud_gifts {
         let Some(kind) = kind_of(&gift.kind) else { continue };
         if !received.asked.iter().any(|a| a.strip_prefix(CLOUD) == Some(gift.kind.as_str())) {
             continue;
@@ -307,7 +373,7 @@ pub async fn take(ctx: &Ctx, tx: &Outbox, received: &Received) {
         clouds.push(kind);
     }
     syncing::announce_cloud(ctx);
-    let lacking = bundle.lacking.iter().filter_map(|k| kind_of(k)).collect();
+    let lacking = lacking.iter().filter_map(|k| kind_of(k)).collect();
     let _ = tx.send(Event::SyncSignInsCopied { device: from, trackers, clouds, lacking });
 }
 

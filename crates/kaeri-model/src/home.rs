@@ -191,6 +191,9 @@ pub struct Spotlight {
     /// the hover card and the accessibility label.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub because: Option<String>,
+    /// For [`SpotlightCase::Continuing`], as [`HomeItem::last_device`].
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub last_device: Option<String>,
 }
 
 /// Which section a shelf is. The order of [`HomeView::sections`] is the engine's; this says what
@@ -292,6 +295,13 @@ pub struct HomeItem {
     /// short reason, the hover card and the accessibility label the full one.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub because: Option<String>,
+    /// On a Continue card, the name of the other device in the sync group that played the title
+    /// last, when that was in the last day: the line then reads "Episode 7 · stopped at 12:04
+    /// on Study Mac" (`continue-from-device`, with [`Self::resume`]'s clock) in place of
+    /// [`Self::line`]. `None` when this device played it last, longer ago than a day, or with
+    /// sync off.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub last_device: Option<String>,
 }
 
 /// A title hidden with Not interested, for Settings, Hidden titles.
@@ -373,6 +383,7 @@ mod tests {
             playable: Playable::Unknown,
             line: None,
             because: None,
+            last_device: None,
         }
     }
 

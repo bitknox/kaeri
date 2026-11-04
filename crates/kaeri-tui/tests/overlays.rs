@@ -479,6 +479,7 @@ fn enter_is_named_for_what_it_does() {
         starts: None,
         playable: Playable::Unknown,
         because: None,
+        last_device: None,
     };
     let section = HomeSection {
         kind: SectionKind::Continue,

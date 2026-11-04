@@ -58,6 +58,8 @@ const WEEK_KEY: &str = "home:week";
 const POPULAR_WEEK_KEY: &str = "home:week-popular";
 /// When the last load had every part answer: what an offline Home says it is from.
 const DAY: i64 = 86_400;
+/// How long a Continue card names the other device that played it last.
+const LAST_DEVICE_FOR: i64 = DAY;
 /// The Continue rows looked at for something waiting. The heading counts the waiting ones.
 const CONTINUE_LOOKED_AT: u32 = 50;
 /// How long a Continue title's cached record serves before Home asks for it again: its airing
@@ -444,6 +446,7 @@ fn poster(entry: Entry, viewer: &Viewer<'_>, line: Option<Msg>, now: i64) -> Hom
         playable,
         because: None,
         entry,
+        last_device: None,
     }
 }
 
@@ -460,7 +463,13 @@ fn viewer_store<'a>(viewer: &Viewer<'a>) -> &'a Store {
 
 /// A Continue card, when the show has something waiting: an episode left part-way, or one out
 /// past the last watched.
-fn continue_card(entry: &Entry, store: &Store, now: i64, today: i64) -> Option<HomeItem> {
+fn continue_card(
+    entry: &Entry,
+    store: &Store,
+    now: i64,
+    today: i64,
+    last_device: Option<String>,
+) -> Option<HomeItem> {
     let row = QueueItem::of(entry, Casing::Sentence);
     // Watched to the end is finished, not waiting, though the row would offer a rewatch.
     let past_the_end = row.resume.is_none()
@@ -502,6 +511,7 @@ fn continue_card(entry: &Entry, store: &Store, now: i64, today: i64) -> Option<H
         starts: None,
         playable,
         because: None,
+        last_device,
     })
 }
 
@@ -515,10 +525,17 @@ fn newest_waiting(entry: &Entry, episode: u32) -> bool {
 /// The shows with something waiting, most recent first, as many as are cached.
 fn continue_cards(meta: &Meta, store: &Store, now: i64, today: i64) -> Vec<HomeItem> {
     let ids = continue_ids(store);
+    // Another device's play is named for a day, then the card has its usual line.
+    let raw: Vec<u32> = ids.iter().map(|id| id.get()).collect();
+    let mut elsewhere =
+        store.sync_last_devices(&raw, now - LAST_DEVICE_FOR).unwrap_or_default();
     meta.cached(&ids)
         .iter()
         .map(|m| data::entry_from(m, Some(store)))
-        .filter_map(|entry| continue_card(&entry, store, now, today))
+        .filter_map(|entry| {
+            let device = elsewhere.remove(&entry.id.get());
+            continue_card(&entry, store, now, today, device)
+        })
         .collect()
 }
 
@@ -566,6 +583,7 @@ fn suggestions(
             starts: item.starts,
             playable,
             because: item.because.clone(),
+            last_device: None,
         };
         out.push((home, item.entry));
     }
@@ -680,6 +698,7 @@ fn compose(
             line => line.clone(),
         },
         because: None,
+        last_device: card.last_device.clone(),
     });
     if !cards.is_empty() {
         sections.push(HomeSection {
@@ -915,6 +934,7 @@ fn compose(
                 playable: item.playable,
                 line: None,
                 because: item.because.clone(),
+                last_device: None,
             }
         });
         if spotlight.is_none()
@@ -937,6 +957,7 @@ fn compose(
                     line: None,
                     because: None,
                     entry: item.entry,
+                    last_device: None,
                 }
             });
         }
@@ -957,6 +978,7 @@ fn compose(
             playable: Playable::Found,
             line: None,
             because: None,
+            last_device: None,
         });
     }
 
@@ -1062,6 +1084,7 @@ fn broadcast_cards(
                 playable: playable(store, entry.id, ask.now),
                 because: None,
                 entry,
+                last_device: None,
             })
         })
         .collect()

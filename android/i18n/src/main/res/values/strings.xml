@@ -4780,6 +4780,12 @@
     <string name="stores_qr_warning_device">Scan this with the device you want to link. It works once and lasts seven days.</string>
     <!-- Button that opens the system share sheet for the invite link. -->
     <string name="stores_share">Share…</string>
+    <!-- Line on a store row when joining it through a paired device failed because the store or the paired device could not be reached. The person can try again later. -->
+    <string name="sync_store_err_offline">Couldn\'t reach %1$s or %2$s. Try again when both are online.</string>
+    <!-- Line on a store row when the store turned the invite down, for example because it was cancelled or used up. -->
+    <string name="sync_store_err_refused">%1$s didn\'t accept the invite. Ask its owner for a new one.</string>
+    <!-- Line on a store row when the paired device can't make invites to the store, because it isn't a named member there any more or joined through an open link. -->
+    <string name="sync_store_err_not_allowed">%2$s can\'t invite other devices to %1$s. Ask the plugin store\'s owner for an invite.</string>
     <!-- Title of the state when a title page could not load. -->
     <string name="title_load_failed">Couldn\'t load this title</string>
     <!-- Line under the load failure when AniList did not answer. -->

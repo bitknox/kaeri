@@ -619,6 +619,23 @@ pub enum Event {
         problem: crate::group::SyncPairProblem,
         device: Option<String>,
     },
+    /// A plugin store was joined with an invite `device` made for this one
+    /// (`SyncCommand::JoinStoresFrom`): `store` is its id, as `Event::StoreJoined` has it,
+    /// `address` and `name` as `SyncStoreOffer` has them. `Event::Stores` comes too.
+    SyncStoreJoined {
+        device: String,
+        store: String,
+        address: String,
+        name: String,
+    },
+    /// A plugin store asked of `device` with `SyncCommand::JoinStoresFrom` was not joined, and
+    /// why.
+    SyncStoreJoinFailed {
+        device: String,
+        address: String,
+        name: String,
+        problem: crate::group::SyncStoreProblem,
+    },
     /// What a pasted invite link leads to, or why it leads nowhere.
     StorePreview(InvitePreview),
     /// A store was joined. The view moves into it if the user is still on the store list.
