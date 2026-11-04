@@ -878,6 +878,39 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
             }]);
             1.5
         }
+        // The starting screen, driven by the engine's made-up starts: `start-<state>-<seconds>`
+        // plays the state's events on their own clock and is taken that long after the start.
+        // With `-details` after the state, Details opens 5 s in; with `-beginning`, Play from the
+        // beginning is pressed 4 s in.
+        start if start.starts_with("start-") => {
+            let details = start.contains("-details-");
+            let beginning = start.contains("-beginning-");
+            let name = start.replace("-details-", "-").replace("-beginning-", "-");
+            let Some((state, seconds)) = start_state(&name) else {
+                return 0.1;
+            };
+            shell.go(Dest::Home);
+            if details {
+                let player = Rc::clone(&shell.player);
+                glib::timeout_add_local_once(Duration::from_secs(5), move || {
+                    player.shot_start_details();
+                });
+            }
+            if beginning {
+                let player = Rc::clone(&shell.player);
+                glib::timeout_add_local_once(Duration::from_secs(4), move || {
+                    player.shot_start_from_beginning();
+                });
+            }
+            let hub = Rc::clone(&shell.ctx.hub);
+            for fixture in kaeri_engine::playback::starting::fixture(state) {
+                let hub = Rc::clone(&hub);
+                glib::timeout_add_local_once(Duration::from_millis(fixture.at_ms), move || {
+                    hub.take(vec![fixture.event]);
+                });
+            }
+            seconds
+        }
         "demo-removed" => {
             shell.go(Dest::Home);
             shell.ctx.hub.send(Command::RemoveDemo);
@@ -1297,7 +1330,41 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
 }
 
 /// Leave the state a shot put the window in.
+/// The made-up start and the seconds a `start-<state>-<seconds>` shot names.
+fn start_state(shot: &str) -> Option<(kaeri_model::starting::StartingFixture, f64)> {
+    use kaeri_model::starting::StartingFixture as S;
+    let (state, seconds) = shot.strip_prefix("start-")?.rsplit_once('-')?;
+    let state = match state {
+        "title-lookup" => S::TitleLookup,
+        "sources-loading" => S::SourcesLoading,
+        "asking-first" => S::AskingFirst,
+        "asking-pinned" => S::AskingPinned,
+        "source-missed" => S::SourceMissed,
+        "source-failed" => S::SourceFailed,
+        "sources-resting" => S::SourcesResting,
+        "slow" => S::Slow,
+        "finding-peers" => S::FindingPeers,
+        "peers-known" => S::PeersKnown,
+        "found" => S::Found,
+        "fetching-subtitles" => S::FetchingSubtitles,
+        "another-stream" => S::AnotherStream,
+        "buffering-torrent" => S::BufferingTorrent,
+        "buffering-direct" => S::BufferingDirect,
+        "offline" => S::Offline,
+        "offline-timed-out" => S::OfflineTimedOut,
+        "failed-no-episode" => S::FailedNoEpisode,
+        "failed-no-match" => S::FailedNoMatch,
+        "failed-no-sources" => S::FailedNoSources,
+        "failed-not-aired" => S::FailedNotAired,
+        _ => return None,
+    };
+    Some((state, seconds.parse().ok()?))
+}
+
 fn unstage(shell: &Rc<Shell>, shot: &str) {
+    if shot.starts_with("start-") {
+        shell.player.close();
+    }
     if shot.starts_with("lawful-") {
         close_dialogs(&shell.ctx.window);
         close_dialogs(&shell.ctx.window);

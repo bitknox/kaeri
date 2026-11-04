@@ -49,28 +49,6 @@
          composition draws under with no airspace. -->
     <SwapChainPanel x:Name="VideoPanel" SizeChanged="OnPanelSizeChanged">
 
-      <!-- The starting screen: the banner full frame, the episode and a 32 px ring. -->
-      <Grid x:Name="Starting" Background="{ThemeResource GroundBrush}" Visibility="Collapsed">
-        <Image x:Name="StartingArt" Stretch="UniformToFill" Opacity="0.45" AutomationProperties.AccessibilityView="Raw" />
-        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="16">
-          <TextBlock x:Name="StartingShow" Style="{StaticResource ShowTitleLargeStyle}" HorizontalAlignment="Center" TextAlignment="Center" />
-          <TextBlock x:Name="StartingLine" Style="{StaticResource BodyLargeTextBlockStyle}" HorizontalAlignment="Center"
-                     Typography.NumeralAlignment="Tabular" AutomationProperties.LiveSetting="Polite" />
-          <!-- The demo's credit line, because CC BY asks for the credit where the work is used. -->
-          <TextBlock x:Name="StartingCredit" Text="{x:Bind app:T.PlayerDemoCredit}" Style="{StaticResource HazeBodyStyle}" HorizontalAlignment="Center" Visibility="Collapsed" />
-          <ProgressRing x:Name="StartingRing" IsActive="True" Width="32" Height="32" HorizontalAlignment="Center" />
-          <!-- No first frame after 20 s: another source, or stop. -->
-          <StackPanel x:Name="StartingChoices" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" Visibility="Collapsed">
-            <Button Content="{x:Bind app:T.ActionStop}" Click="OnStartingStop" />
-            <Button x:Name="StartingChoose" Content="{x:Bind app:T.PlayerChooseSource}" Style="{StaticResource AccentButtonStyle}" Click="OnStartingChoose">
-              <Button.Flyout>
-                <MenuFlyout x:Name="StartingSources" Placement="Bottom" Opening="OnStartingSourcesOpening" />
-              </Button.Flyout>
-            </Button>
-          </StackPanel>
-        </StackPanel>
-      </Grid>
-
       <!-- The controls on a 35% dim of the ground, collapsed when they fade so nothing sits
            over the video. -->
       <Grid x:Name="Chrome" Background="{ThemeResource PlayerScrimBrush}">
@@ -207,6 +185,82 @@
             </Button.Flyout>
           </Button>
         </Grid>
+      </Grid>
+
+      <!-- The starting screen: the art under a ground, then one column that says what the start is
+           doing (starting-screen board): the show, the episode, a 2 px line, the step and its
+           detail, the way out and, under Details, what each source said. -->
+      <Grid x:Name="Starting" Background="{ThemeResource GroundBrush}" Visibility="Collapsed" SizeChanged="OnStartingSized">
+        <Image x:Name="StartingArt" Stretch="UniformToFill" AutomationProperties.AccessibilityView="Raw" />
+        <Rectangle x:Name="StartingGround" Fill="{ThemeResource GroundBrush}" Opacity="0.55" AutomationProperties.AccessibilityView="Raw" />
+        <!-- The column's top is set when a start begins and stays: lines and buttons keep their
+             room, and Details and a longer failure grow downward only. -->
+        <StackPanel x:Name="StartingColumn" Width="520" HorizontalAlignment="Center" VerticalAlignment="Top">
+          <TextBlock x:Name="StartingShow" Style="{StaticResource ShowTitleLargeStyle}" FontSize="30" TextAlignment="Left"
+                     TextWrapping="WrapWholeWords" MaxLines="2" TextTrimming="CharacterEllipsis" />
+          <TextBlock x:Name="StartingEpisode" Style="{StaticResource HazeBodyStyle}" Margin="0,6,0,0" TextTrimming="CharacterEllipsis" />
+          <!-- The demo's credit line, because CC BY asks for the credit where the work is used. -->
+          <TextBlock x:Name="StartingCredit" Text="{x:Bind app:T.PlayerDemoCredit}" Style="{StaticResource HazeCaptionStyle}" Margin="0,4,0,0" Visibility="Collapsed" />
+          <Grid x:Name="StartingLoader" Height="2" Margin="0,16,0,14" SizeChanged="OnLoaderSized" AutomationProperties.AccessibilityView="Raw">
+            <Rectangle Fill="{ThemeResource SilkBrush}" Opacity="0.14" />
+            <Rectangle x:Name="LoaderStretch" Fill="{ThemeResource AmberBrush}" HorizontalAlignment="Left">
+              <Rectangle.RenderTransform>
+                <TranslateTransform x:Name="LoaderShift" />
+              </Rectangle.RenderTransform>
+            </Rectangle>
+          </Grid>
+          <!-- Two of each line, one over the other, for the crossfade in place. One line each, cut
+               at the end; a failure's reason may take two. -->
+          <Grid x:Name="StartingStepHost" MinHeight="20">
+            <Grid x:Name="StepRowA">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <Ellipse x:Name="StepDotA" Width="8" Height="8" Margin="0,0,8,0" VerticalAlignment="Center" Visibility="Collapsed" />
+              <TextBlock x:Name="StepA" Grid.Column="1" Style="{StaticResource BodyStrongTextBlockStyle}" Foreground="{ThemeResource SilkBrush}"
+                         TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+            </Grid>
+            <Grid x:Name="StepRowB" Opacity="0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <Ellipse x:Name="StepDotB" Width="8" Height="8" Margin="0,0,8,0" VerticalAlignment="Center" Visibility="Collapsed" />
+              <TextBlock x:Name="StepB" Grid.Column="1" Style="{StaticResource BodyStrongTextBlockStyle}" Foreground="{ThemeResource SilkBrush}"
+                         TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+            </Grid>
+          </Grid>
+          <Grid x:Name="StartingDetailHost" Margin="0,2,0,0" MinHeight="20">
+            <TextBlock x:Name="DetailA" Style="{StaticResource HazeBodyStyle}" Typography.NumeralAlignment="Tabular" TextWrapping="NoWrap"
+                       TextTrimming="CharacterEllipsis" Opacity="0" />
+            <TextBlock x:Name="DetailB" Style="{StaticResource HazeBodyStyle}" Typography.NumeralAlignment="Tabular" TextWrapping="NoWrap"
+                       TextTrimming="CharacterEllipsis" Opacity="0" />
+          </Grid>
+          <!-- The row: the room of every button the start can show, never drawn, under the rows
+               that crossfade on it (waiting, offline, failed). -->
+          <Grid x:Name="StartingRowHost" Margin="0,16,0,0">
+            <player:WrapRow x:Name="StartingRoom" Opacity="0" IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw" />
+            <player:WrapRow x:Name="StartingButtons" />
+            <player:WrapRow x:Name="StartingOffline" Opacity="0" IsHitTestVisible="False" />
+            <player:WrapRow x:Name="StartingFailing" Opacity="0" IsHitTestVisible="False" />
+          </Grid>
+          <StackPanel x:Name="StartingDetails" Margin="0,10,0,0" Visibility="Collapsed">
+            <StackPanel x:Name="StartingRows" />
+            <StackPanel x:Name="StartingLanguage" Orientation="Horizontal" Spacing="8" Margin="0,8,0,0" Visibility="Collapsed">
+              <TextBlock Text="{x:Bind app:T.PlayerStartTranslation}" Style="{StaticResource HazeBodyStyle}" VerticalAlignment="Center" />
+              <ToggleButton x:Name="StartingSub" Content="{x:Bind app:T.AudioSubbed}" Click="OnStartingSub" />
+              <ToggleButton x:Name="StartingDub" Content="{x:Bind app:T.AudioDubbed}" Click="OnStartingDub" />
+            </StackPanel>
+          </StackPanel>
+        </StackPanel>
+        <Button x:Name="StartingBack" Style="{StaticResource PlayerButtonStyle}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8"
+                Click="OnClose" AutomationProperties.Name="{x:Bind app:T.ActionBack}">
+          <FontIcon Glyph="&#xE72B;" FontSize="16" />
+        </Button>
+        <!-- What a screen reader hears of the start: the steps are said here, not on the lines
+             that fade. -->
+        <TextBlock x:Name="StartingAnnouncer" Width="1" Height="1" Opacity="0" AutomationProperties.LiveSetting="Polite" />
       </Grid>
 
       <!-- Stats for nerds (I, or Settings): the engine's rows, top trailing on the raised surface

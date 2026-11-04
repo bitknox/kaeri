@@ -8058,6 +8058,16 @@ pub fn player_position_spoken(position: &str, duration: &str) -> String {
     text("player-position-spoken", &[("position", Arg::Text(position)), ("duration", Arg::Text(duration))])
 }
 
+/// Two names, or the last two of a longer list, joined as a sentence lists them: "Alpha and Brook".
+pub fn names_pair(first: &str, last: &str) -> String {
+    text("names-pair", &[("first", Arg::Text(first)), ("last", Arg::Text(last))])
+}
+
+/// A list of names up to the last two, joined one by one: "Alpha, Brook".
+pub fn names_list(list: &str, next: &str) -> String {
+    text("names-list", &[("list", Arg::Text(list)), ("next", Arg::Text(next))])
+}
+
 /// Menu item that opens an episode's discussion.
 pub fn discussion_open() -> String {
     text("discussion-open", &[])

@@ -2280,6 +2280,12 @@ public static partial class T
     /// <summary>What a screen reader says for the player's seek bar: where the playhead is and how long the episode is. Both times are already spoken in full, such as "12 minutes 4 seconds".</summary>
     public static string PlayerPositionSpoken(string position, string duration) => Fill(Get("PlayerPositionSpoken"), ("position", position), ("duration", duration));
 
+    /// <summary>Two names, or the last two of a longer list, joined as a sentence lists them: "Alpha and Brook".</summary>
+    public static string NamesPair(string first, string last) => Fill(Get("NamesPair"), ("first", first), ("last", last));
+
+    /// <summary>A list of names up to the last two, joined one by one: "Alpha, Brook".</summary>
+    public static string NamesList(string list, string next) => Fill(Get("NamesList"), ("list", list), ("next", next));
+
     /// <summary>Menu item that opens an episode's discussion.</summary>
     public static string DiscussionOpen => Get("DiscussionOpen");
 
@@ -9402,6 +9408,8 @@ public static partial class T
         ["TvProblemFull"] = "This TV has as many devices paired as it can keep. Remove one in the TV's settings, under Remotes.",
         ["TvProblemUnpaired"] = "The TV doesn't know this device any more. Pair again.",
         ["PlayerPositionSpoken"] = "{position} of {duration}",
+        ["NamesPair"] = "{first} and {last}",
+        ["NamesList"] = "{list}, {next}",
         ["DiscussionOpen"] = "Discussion",
         ["DiscussionTitleEpisode"] = "Episode {episode} discussion",
         ["DiscussionRow_one"] = "Discussion · one comment",

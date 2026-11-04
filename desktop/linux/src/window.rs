@@ -1155,6 +1155,11 @@ impl Shell {
                 shell.ctx.updater.heard(status);
             }
             match event {
+                // The starting screen says why a start failed, and what it is doing instead
+                // of a notice over it.
+                Event::Toast(notice)
+                    if notice.kind == kaeri_model::notice::NoticeKind::Alert
+                        && shell.player.is_starting() => {}
                 Event::Toast(notice) => shell.ctx.notice(notice),
                 Event::Connectivity { offline } => widgets::set_offline(*offline),
                 Event::Content { view: ContentFor::Continue, content }

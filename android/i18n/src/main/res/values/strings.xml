@@ -1947,6 +1947,10 @@
     <string name="tv_problem_unpaired">The TV doesn\'t know this device any more. Pair again.</string>
     <!-- What a screen reader says for the player's seek bar: where the playhead is and how long the episode is. Both times are already spoken in full, such as "12 minutes 4 seconds". -->
     <string name="player_position_spoken">%1$s of %2$s</string>
+    <!-- Two names, or the last two of a longer list, joined as a sentence lists them: "Alpha and Brook". -->
+    <string name="names_pair">%1$s and %2$s</string>
+    <!-- A list of names up to the last two, joined one by one: "Alpha, Brook". -->
+    <string name="names_list">%1$s, %2$s</string>
     <!-- Menu item that opens an episode's discussion. -->
     <string name="discussion_open">Discussion</string>
     <!-- Title of the discussion window or sheet when the thread has no title yet. -->

@@ -523,6 +523,14 @@ public sealed partial class MainWindow : Window
                 await Task.Delay(1500);
                 Pages.InviteDialog.Show(ctx, Root.XamlRoot, "https://store.example/join/Kq3vT9xLw2", "Mira");
             });
+        // --show=starting-<state>[-<seconds>][-reduced]: the player's starting screen on the engine's
+        // made-up start, with no media: the player opens for it and nothing plays.
+        if (options.Show?.StartsWith("starting-", StringComparison.Ordinal) == true && !options.Play)
+            ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
+            {
+                await Task.Delay(1500);
+                await Player.StartDemo(options.Show);
+            });
         // --show=devicecode: Trakt's sign-in code, for a screenshot.
         if (options.Show == "devicecode")
             ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
@@ -608,6 +616,9 @@ public sealed partial class MainWindow : Window
                     break;
                 case Event.LicensedReturn back:
                     ShowReturn(back.V1);
+                    break;
+                // A start that failed says why on its own screen, not in a notice over it.
+                case Event.Toast { V1.Kind: NoticeKind.Alert } when Player.IsStarting:
                     break;
                 case Event.Toast t when !Lines.SettingSaved(t.V1):
                     ShowToast(t.V1);
@@ -1542,6 +1553,7 @@ public sealed partial class MainWindow : Window
     void Shutdown()
     {
         closing = true;
+        Player.Quiet();
         keepGoing?.Stop();
         newEpisodes?.Stop();
         toasts?.Stop();

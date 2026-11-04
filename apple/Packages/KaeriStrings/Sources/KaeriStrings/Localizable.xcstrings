@@ -82515,6 +82515,30 @@
         }
       }
     },
+    "names-list" : {
+      "comment" : "A list of names up to the last two, joined one by one: \"Alpha, Brook\". Argument 1: list (Text). Argument 2: next (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "names-pair" : {
+      "comment" : "Two names, or the last two of a longer list, joined as a sentence lists them: \"Alpha and Brook\". Argument 1: first (Text). Argument 2: last (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ and %2$@"
+          }
+        }
+      }
+    },
     "nav-accounts" : {
       "comment" : "Name of the screen and settings page for tracker accounts.",
       "extractionState" : "manual",

@@ -3677,6 +3677,14 @@ object Strings {
     fun playerPositionSpoken(context: Context, position: String, duration: String): String =
         context.getString(R.string.player_position_spoken, position, duration)
 
+    /** Two names, or the last two of a longer list, joined as a sentence lists them: "Alpha and Brook". */
+    fun namesPair(context: Context, first: String, last: String): String =
+        context.getString(R.string.names_pair, first, last)
+
+    /** A list of names up to the last two, joined one by one: "Alpha, Brook". */
+    fun namesList(context: Context, list: String, next: String): String =
+        context.getString(R.string.names_list, list, next)
+
     /** Menu item that opens an episode's discussion. */
     fun discussionOpen(context: Context): String =
         context.getString(R.string.discussion_open)

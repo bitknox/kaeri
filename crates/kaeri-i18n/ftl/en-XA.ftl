@@ -5035,6 +5035,12 @@ tv-problem-unpaired = [Ţĥé ŢṼ ðöéšñ'ţ ķñöŵ ţĥîš ðéṽîç�
 # What a screen reader says for the player's seek bar: where the playhead is and how long the episode is. Both times are already spoken in full, such as "12 minutes 4 seconds".
 player-position-spoken = [{ $position } öƒ { $duration }~~~]
 
+# Two names, or the last two of a longer list, joined as a sentence lists them: "Alpha and Brook".
+names-pair = [{ $first } àñð { $last }~~~~]
+
+# A list of names up to the last two, joined one by one: "Alpha, Brook".
+names-list = [{ $list }, { $next }~~~]
+
 # Menu item that opens an episode's discussion.
 discussion-open = [Ðîšçüššîöñ~~~]
 

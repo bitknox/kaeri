@@ -29,7 +29,7 @@ pub fn open(ctx: &Rc<Ctx>, id: AnilistId, episode: &str, why: NoSourceWhy, reaso
             dialog.set_response_appearance("providers", adw::ResponseAppearance::Suggested);
             dialog.set_default_response(Some("providers"));
         }
-        NoSourceWhy::NotFound => {
+        NoSourceWhy::NotFound | NoSourceWhy::NoConnection => {
             dialog.add_response("choose", &t::player_choose_source());
             dialog.set_response_appearance("choose", adw::ResponseAppearance::Suggested);
             dialog.set_default_response(Some("choose"));
@@ -82,7 +82,7 @@ fn words(
             t::party_nosource_none_title(),
             [place.as_str(), &t::party_nosource_none_detail(&what)].join(" "),
         ),
-        NoSourceWhy::NotFound => (
+        NoSourceWhy::NotFound | NoSourceWhy::NoConnection => (
             t::party_nosource_missing_title(),
             [
                 place.as_str(),

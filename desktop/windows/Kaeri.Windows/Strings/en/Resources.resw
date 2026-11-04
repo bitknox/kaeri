@@ -3163,6 +3163,14 @@
     <value>{position} of {duration}</value>
     <comment>What a screen reader says for the player's seek bar: where the playhead is and how long the episode is. Both times are already spoken in full, such as "12 minutes 4 seconds".</comment>
   </data>
+  <data name="NamesPair" xml:space="preserve">
+    <value>{first} and {last}</value>
+    <comment>Two names, or the last two of a longer list, joined as a sentence lists them: "Alpha and Brook".</comment>
+  </data>
+  <data name="NamesList" xml:space="preserve">
+    <value>{list}, {next}</value>
+    <comment>A list of names up to the last two, joined one by one: "Alpha, Brook".</comment>
+  </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>Discussion</value>
     <comment>Menu item that opens an episode's discussion.</comment>

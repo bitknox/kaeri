@@ -149,6 +149,24 @@ list.episode-list > row { border-radius: 8px; }
 .player-bar button { min-width: 40px; min-height: 40px; }
 .player-bar label { color: var(--silk); }
 .player-starting { background: var(--ground); }
+/* The starting screen: the art under 55% of the ground, 80% over bright art, then the column. */
+.start-ground { background: alpha(var(--ground), 0.55); }
+.start-ground.bright { background: alpha(var(--ground), 0.80); }
+.start-title { font-size: 30px; }
+.start-episode { font-size: 15px; margin-top: 6px; }
+.start-loader { color: var(--silk); }
+.start-amber { color: var(--amber); }
+.start-column overlay { margin-top: 14px; }
+.start-step { font-size: 15px; font-weight: 500; color: var(--silk); }
+.start-detail { font-size: 13px; font-feature-settings: "tnum"; }
+.start-actions { margin-top: 16px; }
+.start-actions .start-button { min-height: 34px; padding-top: 0; padding-bottom: 0; font-weight: 700; }
+.start-dot { background: var(--vermilion); border-radius: 999px; min-width: 8px; min-height: 8px; }
+.start-rows { font-size: 13px; margin-top: 10px; }
+.start-row { min-height: 28px; }
+.start-row-skip { min-height: 24px; padding: 0 8px; }
+.start-language { margin-top: 4px; font-size: 13px; }
+
 /* The seek line is drawn whole over the scale (player/timeline.rs): the scale keeps the input
    and the keyboard, and draws nothing of its own. */
 .timeline trough { background: none; min-height: 6px; outline: none; }

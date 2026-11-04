@@ -106,6 +106,12 @@ public sealed partial class PlayerView : UserControl
             accelerator.Invoked += (_, e) => Key(e, () => SpeedStep(step));
             KeyboardAccelerators.Add(accelerator);
         }
+        // The window closing takes the starting screen's clock and its looping line down first.
+        Unloaded += (_, _) =>
+        {
+            startTick?.Stop();
+            EndStart();
+        };
         tick = DispatcherQueue.GetForCurrentThread().CreateTimer();
         tick.Interval = TimeSpan.FromMilliseconds(250);
         tick.Tick += (_, _) => Tick();
@@ -216,6 +222,8 @@ public sealed partial class PlayerView : UserControl
         stats.Restart();
         statsUp = false;
         startingShown = skipShown = stallShown = upNextShown = false;
+        EndStart();
+        start = null;
         cornerCard = null;
         undo = null;
         upNext = null;
@@ -259,13 +267,17 @@ public sealed partial class PlayerView : UserControl
                     Heard(ui.Ui);
                     break;
                 case Event.PlaybackStaged s when !Showing:
+                    HeardStart(e);
                     Staged(s);
                     break;
-                case Event.PlaybackEnded when staged is not null:
-                    // Over before the player opened: no stream was found, or none would start.
-                    // The engine's notice says why; the starting screen goes.
-                    staged = null;
+                case Event.PlaybackEnded { Failure: null } when findingFor is not null:
+                    // Over before the player opened, with no failure for the starting screen to
+                    // show: the engine's notice says why, and the screen goes.
+                    findingFor = null;
                     Hide();
+                    break;
+                case Event.PlaybackStaged or Event.StartingStep or Event.PlaybackEnded:
+                    HeardStart(e);
                     break;
                 case Event.PlayerSkipMark or Event.PlayerSkipPrompt or Event.PlayerSkipNotice:
                     HeardSkip(e);
@@ -319,10 +331,10 @@ public sealed partial class PlayerView : UserControl
     }
 
     /// <summary>The title staged and waiting on a source, before the player itself has said anything.</summary>
-    uint? staged;
+    uint? findingFor;
 
     /// <summary>
-    /// Play was pressed: the starting screen at once, the show's banner behind the ring, while the
+    /// Play was pressed: the starting screen at once, the show's banner behind it, while the
     /// engine finds a source, which can take seconds (native-ux: from PlaybackStaged to the first
     /// frame). The player's own Starting carries on from it.
     /// </summary>
@@ -330,18 +342,14 @@ public sealed partial class PlayerView : UserControl
     {
         closedWhileFinding = false;
         Open();
-        staged = s.Id;
+        findingFor = s.Id;
         pictureSeen = false;
         playingId = s.Id;
         ShowTitle.Text = s.Title;
         EpisodeTitle.Text = Lines.EpisodeNamed(s.Episode, s.EpisodeTitle);
-        StartingShow.Text = s.Title;
-        startingEpisode = playingEpisode = s.Episode;
-        startingDemo = ctx is { } k && (k.Known.DemoPlay || k.Known.Entries.TryGetValue(s.Id, out var shown) && shown.IsDemo);
-        StartingArt.Source = null;
-        if (ctx?.Known.Entry(s.Id) is { } entry)
-            ctx.Art.Bind(entry.BannerUrl ?? entry.CoverUrl, image => StartingArt.Source = image);
-        ShowStarting();
+        playingEpisode = s.Episode;
+        var entry = ctx?.Known.Entry(s.Id);
+        BeginStart(new PlayerUi.Starting(s.Id, s.Title, s.Episode, s.EpisodeTitle, entry?.CoverUrl, entry?.BannerUrl));
     }
 
     void Heard(PlayerUi ui)
@@ -356,9 +364,8 @@ public sealed partial class PlayerView : UserControl
                     break;
                 }
                 // Up since Play was pressed (Staged): the same screen goes on, its clock too.
-                var fromStaged = staged == s.Id;
-                var since = startingFrom;
-                staged = null;
+                var fromStaged = findingFor == s.Id;
+                findingFor = null;
                 Open();
                 still.Started();
                 pictureSeen = false;
@@ -379,20 +386,27 @@ public sealed partial class PlayerView : UserControl
                 }
                 ShowTitle.Text = s.Title;
                 EpisodeTitle.Text = Lines.EpisodeNamed(s.EpisodeValue, s.EpisodeTitle);
-                StartingShow.Text = s.Title;
-                startingEpisode = playingEpisode = s.EpisodeValue;
-                startingDemo = ctx is { } k && (k.Known.DemoPlay || k.Known.Entries.TryGetValue(s.Id, out var shown) && shown.IsDemo);
-                if (ctx is not null)
-                    ctx.Known.DemoPlay = false;
+                playingEpisode = s.EpisodeValue;
                 ShowTvButton();
-                if (!fromStaged || StartingArt.Source is null)
+                if (fromStaged && start is { } open && open.Id == s.Id && open.Episode == s.EpisodeValue)
                 {
-                    StartingArt.Source = null;
-                    ctx?.Art.Bind(s.BannerUrl ?? s.CoverUrl, image => StartingArt.Source = image);
+                    // Up since Play was pressed: the same start goes on, its steps and clock too,
+                    // given the art now if the title's entry had none.
+                    if (StartingArt.Source is null && (s.BannerUrl ?? s.CoverUrl) is { Length: > 0 } art)
+                    {
+                        ctx?.Art.Bind(art, image =>
+                        {
+                            StartingArt.Source = image;
+                            startArtLoaded = true;
+                            RevealStartArt();
+                        });
+                        ctx?.Art.Bytes(art, bytes => _ = MeasureGround(bytes));
+                    }
                 }
-                ShowStarting();
-                if (fromStaged)
-                    startingFrom = since;
+                else
+                {
+                    BeginStart(s);
+                }
                 undo = null;
                 UpdateCorner();
                 break;
@@ -528,77 +542,7 @@ public sealed partial class PlayerView : UserControl
         flash.Start();
     }
 
-    // The starting screen: the episode, then after 3 s the wait, and after 20 s a way out.
-
-    bool startingDemo;
-
-    void ShowStarting()
-    {
-        startingShown = true;
-        startingFrom = Stopwatch.GetTimestamp();
-        StartingLine.Text = startingDemo ? Lines.StartingPart(startingEpisode) : Lines.Starting(startingEpisode);
-        StartingCredit.Visibility = startingDemo ? Visibility.Visible : Visibility.Collapsed;
-        StartingRing.Visibility = Visibility.Visible;
-        StartingChoices.Visibility = Visibility.Collapsed;
-        if (movingOn)
-        {
-            // Moving on to the next episode: the last frame fades to the ground over 0.25 s (T5).
-            movingOn = false;
-            Starting.Opacity = 0;
-            Motion.FadeIn(Starting, TimeSpan.FromMilliseconds(250));
-        }
-        else
-            Motion.Set(Starting, true);
-    }
-
-    bool movingOn;
-
-    void StartingClock()
-    {
-        if (!startingShown || StartingChoices.Visibility == Visibility.Visible)
-            return;
-        var waited = Stopwatch.GetElapsedTime(startingFrom).TotalSeconds;
-        if (waited >= 20)
-        {
-            StartingLine.Text = Lines.StartFailed(startingEpisode);
-            StartingRing.Visibility = Visibility.Collapsed;
-            // The source menu, once the player has one; before that, the next stream, as the stall card does.
-            var listed = menus is { Sources.Length: > 0 };
-            StartingChoose.Content = listed ? T.PlayerChooseSource : T.PlayerSwitchSource;
-            StartingChoose.Flyout = listed ? StartingSources : null;
-            StartingChoices.Visibility = Visibility.Visible;
-            Announce(StartingLine);
-            ShowPointer();
-        }
-        else if (waited >= 3)
-            StartingLine.Text = T.PlayerFindingSource((long)waited);
-    }
-
-    void OnStartingStop(object sender, RoutedEventArgs e) => Close();
-
-    void OnStartingChoose(object sender, RoutedEventArgs e)
-    {
-        if (StartingChoose.Flyout is not null)
-            return;
-        Send(new PlayerCommand.StallSwitch());
-        ShowStarting();
-    }
-
-    void OnStartingSourcesOpening(object? sender, object e)
-    {
-        StartingSources.Items.Clear();
-        foreach (var source in menus?.Sources ?? [])
-        {
-            var item = new MenuFlyoutItem { Text = source.Detail is { Length: > 0 } d ? $"{source.Label} · {d}" : source.Label };
-            var id = source.Id;
-            item.Click += (_, _) =>
-            {
-                Send(new PlayerCommand.Choose(new PlayerChoice.Source(id)));
-                ShowStarting();
-            };
-            StartingSources.Items.Add(item);
-        }
-    }
+    // The starting screen is in PlayerView.Starting.cs.
 
     /// <summary>The corner's clocks, four times a second: the stall count, the Undo window, Skip's dim.</summary>
     void CornerClock()
@@ -737,6 +681,7 @@ public sealed partial class PlayerView : UserControl
         {
             // The first frame fades in over the starting screen.
             startingShown = false;
+            EndStart();
             Motion.Hide(Starting);
         }
         if (state.HasPicture && !pictureSeen)
@@ -783,7 +728,6 @@ public sealed partial class PlayerView : UserControl
 
     void Tick()
     {
-        StartingClock();
         CornerClock();
         if (marking is { Step: SkipMarkStep.End })
             DrawTimeline();
@@ -1089,11 +1033,11 @@ public sealed partial class PlayerView : UserControl
 
     internal void Close()
     {
-        if (staged is not null)
+        if (findingFor is not null)
         {
             // Nothing opened yet: what is being found stops, and nothing the engine says brings
             // the player back until Play is pressed again (as Apple's viewerClosed).
-            staged = null;
+            findingFor = null;
             closedWhileFinding = true;
             Send(new PlayerCommand.Stop());
             Hide();
@@ -1921,10 +1865,10 @@ public sealed partial class PlayerView : UserControl
                 UpdateCorner();
                 break;
             case "starting":
-                startingEpisode = "1";
-                startingHeld = true;
-                ShowStarting();
-                startingFrom -= 21 * Stopwatch.Frequency;
+                await StartDemo("starting-slow-24");
+                break;
+            case var m when m.StartsWith("starting-", StringComparison.Ordinal):
+                await StartDemo(m);
                 break;
             case "tracks":
             case "tracks-sub":
@@ -2032,8 +1976,7 @@ public sealed partial class PlayerView : UserControl
                 {
                     case "stats-waiting":
                         // Opened before the file has: over the starting screen, a while on.
-                        startingHeld = true;
-                        ShowStarting();
+                        await StartDemo("starting-asking-first-4");
                         StageStats(StatsFixture.Waiting, TimeSpan.FromSeconds(5), copied: false);
                         break;
                     case "stats-buffering":
