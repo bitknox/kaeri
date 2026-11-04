@@ -1595,6 +1595,12 @@ class TvShots {
 
     @Test fun home_continue_device() = shoot("tv-home-continue-device", scene = WATCHING, device = true)
 
+    /** The Continue cards under the spotlight, with the line that says which device played last wrapping to two lines. */
+    @Test fun home_continue_device_cards() = shoot("tv-home-continue-device-cards", scene = WATCHING, device = true) {
+        press(Key.DirectionDown)
+        settle()
+    }
+
     @Test fun sync_first_ok() = syncShot("tv-first-ok", "fresh", "first-ok", section = null, firstLaunch = true)
 
     @Test fun profiles_settings() = syncShot("tv-profiles", "profiles", null, section = "Profiles")

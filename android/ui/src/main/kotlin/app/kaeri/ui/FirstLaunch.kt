@@ -61,7 +61,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.kaeri.store.copyAllSignIns
+import app.kaeri.store.copyNoSignIns
 import app.kaeri.store.joinStoresFrom
+import app.kaeri.store.pairedDevice
+import app.kaeri.store.signInNames
 import app.kaeri.store.storeOffersFrom
 import app.kaeri.store.pairInvite
 import app.kaeri.store.pairStop
@@ -226,10 +229,14 @@ private fun SetUpPage(done: () -> Unit) {
         val status by store.sync.status.collectAsStateWithLifecycle()
         val offers = status.storeOffersFrom(shown.device)
         var off by rememberSaveable { mutableStateOf(setOf<String>()) }
+        val paired = status.pairedDevice(shown.device)
+        val names = paired?.signInNames().orEmpty()
+        var copy by rememberSaveable { mutableStateOf(true) }
         PageFrame(
             buttons = {
                 Button(
                     onClick = {
+                        if (paired != null && names.isNotEmpty() && !copy) store.copyNoSignIns(paired.id)
                         offers?.let { (device, list) ->
                             val chosen = list.map { it.address }.filter { it !in off }
                             if (chosen.isNotEmpty()) store.joinStoresFrom(device.id, chosen)
@@ -244,6 +251,14 @@ private fun SetUpPage(done: () -> Unit) {
         ) {
             PageTitle(stringResource(R.string.pair_ok, shown.device))
             PageLine(stringResource(R.string.first_ok_line), Modifier.padding(top = 8.dp))
+            if (paired != null && names.isNotEmpty()) {
+                JoinStoreSwitch(
+                    title = Strings.pairCopySignins(context, paired.name),
+                    line = Strings.pairCopySigninsLine(context, names.joinToString(", ")),
+                    checked = copy,
+                    onChange = { copy = it },
+                )
+            }
             offers?.let { (device, list) ->
                 list.forEach { offer ->
                     JoinStoreSwitch(

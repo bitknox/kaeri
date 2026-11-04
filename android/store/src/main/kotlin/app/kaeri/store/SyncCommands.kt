@@ -139,6 +139,11 @@ fun AppStore.copyAllSignIns() {
     copySignIns(null, listOf(SyncCopy.Trackers) + clouds)
 }
 
+/** The success page's Copy sign-ins switch left off: nothing is copied from [device], whatever first launch asked. */
+fun AppStore.copyNoSignIns(device: String) {
+    copySignIns(device, emptyList())
+}
+
 /**
  * Join plugin stores through the paired device [device], which makes this device an invite of its own to each.
  * [stores] are addresses from the status offers; empty means every store it holds that this device doesn't.

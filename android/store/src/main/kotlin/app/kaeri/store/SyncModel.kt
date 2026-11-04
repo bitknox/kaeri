@@ -228,3 +228,20 @@ fun StoreJoin.Failed.text(context: android.content.Context, device: String): Str
     app.kaeri.engine.model.SyncStoreProblem.REFUSED -> app.kaeri.i18n.Strings.syncStoreErrRefused(context, store)
     app.kaeri.engine.model.SyncStoreProblem.NOT_ALLOWED -> app.kaeri.i18n.Strings.syncStoreErrNotAllowed(context, store, device)
 }
+
+/** The device that just paired, by [deviceName], as the group lists it: null until the status has it. */
+fun SyncStatus?.pairedDevice(deviceName: String): app.kaeri.engine.model.SyncDeviceView? =
+    this?.devices?.firstOrNull { !it.thisDevice && it.name == deviceName }
+
+/** The sign-ins this device holds, by name: its trackers, then its cloud drives and servers. Empty when it holds none. */
+fun app.kaeri.engine.model.SyncDeviceView.signInNames(): List<String> =
+    trackers.map { AccountsModel.name(it) } + signIns.mapNotNull { kind ->
+        when (kind) {
+            SyncFolderKind.GOOGLE_DRIVE -> "Google Drive" // i18n-skip
+            SyncFolderKind.DROPBOX -> "Dropbox" // i18n-skip
+            SyncFolderKind.ONE_DRIVE -> "OneDrive" // i18n-skip
+            SyncFolderKind.NEXTCLOUD -> "Nextcloud" // i18n-skip
+            SyncFolderKind.WEB_DAV -> "WebDAV" // i18n-skip
+            SyncFolderKind.DIRECTORY -> null
+        }
+    }

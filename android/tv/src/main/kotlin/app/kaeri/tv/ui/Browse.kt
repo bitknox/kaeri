@@ -258,6 +258,8 @@ fun WideCard(
     spoiler: Boolean = false,
     title: String = entry.title,
     sheet: (() -> ActionSheet)? = null,
+    /** Lines the card's line may take: more where it says which device played last, rather than being cut. */
+    lineLines: Int = 1,
 ) {
     Column(Modifier.width(Canvas.CardWidth)) {
         ArtCard(onClick, Canvas.CardWidth, Canvas.CardHeight, modifier, sheet, cardLabel(LocalContext.current, title, line, progress)) {
@@ -275,7 +277,7 @@ fun WideCard(
             }
             if (progress != null) ProgressEdge(progress, Modifier.align(Alignment.BottomStart))
         }
-        CardText(title, line, dot = if (newDot) ObiSilk.Water else null)
+        CardText(title, line, dot = if (newDot) ObiSilk.Water else null, lineLines = lineLines)
     }
 }
 
@@ -301,7 +303,7 @@ fun ActionSheet.accessibilityActions(host: ActionsHost): List<CustomAccessibilit
  * both to TalkBack, so they are not said twice.
  */
 @Composable
-fun CardText(title: String, line: String?, dot: Color? = null, titleColor: Color = ObiSilk.Silk) {
+fun CardText(title: String, line: String?, dot: Color? = null, titleColor: Color = ObiSilk.Silk, lineLines: Int = 1) {
     Spacer(Modifier.height(8.dp))
     Text(title, style = TvTitle.card, color = titleColor, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.clearAndSetSemantics {})
     if (line != null) {
@@ -310,7 +312,7 @@ fun CardText(title: String, line: String?, dot: Color? = null, titleColor: Color
                 Box(Modifier.size(6.dp).background(dot, CircleShape))
                 Spacer(Modifier.width(6.dp))
             }
-            Text(line, style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(line, style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, maxLines = lineLines, overflow = TextOverflow.Ellipsis)
         }
     }
 }

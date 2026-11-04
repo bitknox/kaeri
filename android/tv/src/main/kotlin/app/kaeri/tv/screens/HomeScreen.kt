@@ -297,6 +297,7 @@ private fun HomeCard(
             newDot = item.new,
             sheet = sheet,
             modifier = modifier,
+            lineLines = if (item.lastDevice != null && item.episode != null && item.resume != null) 2 else 1,
         )
     } else {
         PosterCard(entry, onClick = { onOpen(entry.id) }, line = line, sheet = sheet, modifier = modifier)
@@ -328,7 +329,7 @@ private fun SpotlightHero(
     HeroHeader(entry, rows, modifier) {
         Spacer(Modifier.height(4.dp))
         Text(spot.label.text(context), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, maxLines = 1)
-        if (line != null) Text(line, style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Haze, maxLines = 1)
+        if (line != null) Text(line, style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Haze, maxLines = if (spot.lastDevice != null && !notFound) 2 else 1)
         Spacer(Modifier.height(16.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             // No source can play yet: the one way on is a plugin store, as on the title page.

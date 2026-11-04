@@ -60,7 +60,10 @@ import app.kaeri.store.deleteProfile
 import app.kaeri.store.leaveSync
 import app.kaeri.store.loadSync
 import app.kaeri.store.pairInvite
+import app.kaeri.store.copyNoSignIns
 import app.kaeri.store.joinStoresFrom
+import app.kaeri.store.pairedDevice
+import app.kaeri.store.signInNames
 import app.kaeri.store.storeOffersFrom
 import app.kaeri.store.pairStop
 import app.kaeri.store.removeSyncDevice
@@ -376,7 +379,11 @@ private fun PairOkPage(copied: app.kaeri.store.SignInsCopied) {
     val status by store.sync.status.collectAsStateWithLifecycle()
     val offers = status.storeOffersFrom(copied.device)
     var off by rememberSaveable { mutableStateOf(setOf<String>()) }
+    val paired = status.pairedDevice(copied.device)
+    val names = paired?.signInNames().orEmpty()
+    var copy by rememberSaveable { mutableStateOf(true) }
     val done = {
+        if (paired != null && names.isNotEmpty() && !copy) store.copyNoSignIns(paired.id)
         offers?.let { (device, list) ->
             val chosen = list.map { it.address }.filter { it !in off }
             if (chosen.isNotEmpty()) store.joinStoresFrom(device.id, chosen)
@@ -391,6 +398,18 @@ private fun PairOkPage(copied: app.kaeri.store.SignInsCopied) {
             color = ObiSilk.Silk,
             modifier = Modifier.widthIn(max = 720.dp),
         )
+        if (paired != null && names.isNotEmpty()) {
+            Column(Modifier.widthIn(max = 720.dp)) {
+                TvListRow(
+                    Strings.pairCopySignins(context, paired.name),
+                    onClick = { copy = !copy },
+                    supporting = Strings.pairCopySigninsLine(context, names.joinToString(", ")),
+                    supportingLines = 2,
+                    switch = copy,
+                    height = 80.dp,
+                )
+            }
+        }
         offers?.let { (device, list) ->
             Column(Modifier.widthIn(max = 720.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 list.forEach { offer ->

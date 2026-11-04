@@ -31,6 +31,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performScrollToKey
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
@@ -129,6 +130,13 @@ class BoardShots {
     @Test
     @Config(qualifiers = PHONE)
     fun phone_home_continue_device() = shoot("phone-home-continue-device", WATCHING, device = true)
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_home_continue_device_cards() = shoot("phone-home-continue-device-cards", WATCHING, device = true, screen = true) {
+        compose.onRoot().performTouchInput { swipeUp(startY = bottom * 0.8f, endY = top + height * 0.2f, durationMillis = 300) }
+        compose.waitForIdle()
+    }
 
     @Test
     @Config(qualifiers = PHONE)
