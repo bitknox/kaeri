@@ -45,6 +45,7 @@ mod scenes;
 #[cfg(feature = "remote")]
 mod sender;
 mod start;
+mod sync_network;
 #[cfg(feature = "testing")]
 mod testing;
 mod trailer;
@@ -82,6 +83,7 @@ pub use sender::{
 #[cfg(all(feature = "remote", feature = "testing"))]
 pub use sender::{FfiFakeCast, FfiFakeCastOptions, FfiFakeTv};
 pub use start::{FfiBackground, FfiDirs, FfiError, FfiPlatform, FfiStart, SecretsMode};
+pub use sync_network::{FfiSyncAdvert, FfiSyncNetwork, FfiSyncSink, FfiSyncTxt};
 
 /// Each command and event, written as the bindings write it and read back: what a front end sends
 /// is what the engine receives, and what the engine says is what the front end reads. The Swift

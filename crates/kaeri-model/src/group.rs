@@ -55,6 +55,66 @@ pub struct SyncDeviceView {
     /// with it.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub asked: Vec<SyncCopy>,
+    /// What kind of device it is, as it says: for its icon, its page's Kind row and `$kind`.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub kind: Option<SyncDeviceKind>,
+    /// Its Sync switch is off: the group holds back from it, and it from the group, until a
+    /// device turns it on again with `SyncCommand::SetDeviceSync`. On this device's own row: one
+    /// of the others turned this device's Sync off.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub paused: bool,
+    /// The fingerprint (hex) of its remote's key, when it and this device are a TV and a device
+    /// that drives TVs: a TV's server key on a phone, a phone's key on the TV. Match it against
+    /// `FfiTvSender::paired` (a phone) or `FfiTvRemote::paired` (a TV): a match is the remote
+    /// pairing the Remote switch is about. `None`: no Remote switch on its page.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub remote_key: Option<String>,
+    /// The pair's Remote switch is off: the TV refuses that phone's commands, and keeps the
+    /// pairing so turning it on needs no code. Set with `SyncCommand::SetDeviceRemote`.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub remote_off: bool,
+}
+
+/// What kind of device a group's device is.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum SyncDeviceKind {
+    Phone,
+    Tablet,
+    Computer,
+    Tv,
+}
+
+impl SyncDeviceKind {
+    /// The register's word for it.
+    pub fn word(self) -> &'static str {
+        match self {
+            Self::Phone => "phone",
+            Self::Tablet => "tablet",
+            Self::Computer => "computer",
+            Self::Tv => "tv",
+        }
+    }
+
+    pub fn from_word(word: &str) -> Option<Self> {
+        Some(match word {
+            "phone" => Self::Phone,
+            "tablet" => Self::Tablet,
+            "computer" => Self::Computer,
+            "tv" => Self::Tv,
+            _ => return None,
+        })
+    }
+}
+
+/// Why pairing by code did not work, for the Add a device sheet.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum SyncPairProblem {
+    /// The device showing a code was found, and the code did not match (`pair-err-code`).
+    WrongCode,
+    /// No device showing a code answered on this network (`pair-err-not-found`).
+    NotFound,
 }
 
 /// A sign-in one device can ask another for, over the paired link.
@@ -82,6 +142,23 @@ pub enum SyncCommand {
     /// with `None` stop using a folder and keep syncing nearby. The new folder must be empty or
     /// hold this group already; one holding another group is `SyncProblem::GroupExists`.
     ChangeSyncFolder { folder: Option<SyncFolderSpec> },
+    /// Pair with the device showing `code` on this network, found through the app's DNS-SD
+    /// browse (`FfiEngine::set_sync_network`), then swap histories, as `Command::PairJoin` does
+    /// with an address. Sets sync up on this device first if it is not. A miss is
+    /// `Event::SyncPairFailed`, then `Event::SyncProblem` in words.
+    PairWithCode { device_name: String, code: String },
+    /// Rename this device: the name every device in the group lists it under, and the one it
+    /// pairs with from now on. Kept while sync is off too, as `SyncStatus::device_name`.
+    /// Answered with `Event::SyncStatus`.
+    RenameDevice { name: String },
+    /// Turn a device's Sync switch on or off. Off, the group holds back from it on both roads
+    /// and it from the group, keeping what it has; on again, it catches up. Every device in the
+    /// group sees the switch. Not for this device: `LeaveSync` is how it stops.
+    SetDeviceSync { device: String, on: bool },
+    /// Turn the Remote switch between this device and `device` on or off: a TV and a device
+    /// that drives TVs, paired as a remote. Off, the TV refuses that phone's commands and keeps
+    /// the pairing. Both devices see the switch.
+    SetDeviceRemote { device: String, on: bool },
 }
 
 /// A watch that was kept although another device had marked the episode unwatched.

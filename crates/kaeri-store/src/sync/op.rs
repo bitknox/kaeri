@@ -198,6 +198,16 @@ pub mod kinds {
     /// What a device keeps for the cloud: its folder's kind and the cloud sign-ins it holds, as
     /// the engine's JSON. Kept as a register only; the engine reads it back.
     pub const DEVICE_CLOUD: &str = "device_cloud";
+    /// What kind of device it is (`phone`, `tablet`, `computer`, `tv`). Key: the device id.
+    pub const DEVICE_KIND: &str = "device_kind";
+    /// The key the device's remote holds, `tv:<hex>` for a TV's server and `phone:<hex>` for a
+    /// device that drives TVs. Key: the device id.
+    pub const DEVICE_REMOTE_KEY: &str = "device_remote_key";
+    /// `off` while the group holds back from the device (its Sync switch). Key: the device id.
+    pub const DEVICE_SYNC: &str = "device_sync";
+    /// `off` while a phone may not drive a TV it is paired with (the pair's Remote switch). Key:
+    /// the two device ids, sorted, joined by `:`.
+    pub const DEVICE_REMOTE: &str = "device_remote";
 }
 
 #[cfg(test)]

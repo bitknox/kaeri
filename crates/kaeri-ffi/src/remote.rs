@@ -26,7 +26,7 @@ use kaeri_engine::{
             identity::{Fingerprint, Identity},
             server::{LinkSent, ServerOptions},
             state::Screen,
-            trust::FileTrust,
+            trust::{FileTrust, TrustStore},
         },
     },
 };
@@ -247,7 +247,17 @@ impl FfiEngine {
             let reason = format!("{}: {e}", remote_dir.display());
             FfiError::remote(Msg::StartFailedRemote { reason })
         })?;
-        let trust = Arc::new(FileTrust::open(&remote_dir).map_err(fail)?);
+        let file: Arc<dyn TrustStore> = Arc::new(FileTrust::open(&remote_dir).map_err(fail)?);
+        // The Remote switch on a phone's page in Devices, and this TV's key for the others to
+        // match it against.
+        let trust: Arc<dyn TrustStore> = match self.this_device() {
+            Some(this_device) => {
+                let key = fingerprint.to_hex();
+                this_device.set_remote_key(kaeri_engine::syncing::RemoteRole::Tv, &key);
+                Arc::new(kaeri_engine::remote::SyncGate::new(file, this_device))
+            }
+            None => file,
+        };
         let options = ServerOptions { tv_name: name, ..ServerOptions::default() };
         let running = Arc::clone(&attached.running);
         let intents = attached.intents.clone();

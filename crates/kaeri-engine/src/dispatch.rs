@@ -791,6 +791,34 @@ pub(crate) fn dispatch(
                 crate::syncing::change_folder(&ctx, &tx, folder).await;
             });
         }
+        Command::SyncGroup(kaeri_model::group::SyncCommand::PairWithCode {
+            device_name,
+            code,
+        }) => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::syncing::pair_with_code(&ctx, &tx, device_name, &code).await;
+            });
+        }
+        Command::SyncGroup(kaeri_model::group::SyncCommand::RenameDevice { name }) => {
+            crate::syncing::rename(&Ctx::of(services), tx, &name);
+            drop(job);
+        }
+        Command::SyncGroup(kaeri_model::group::SyncCommand::SetDeviceSync { device, on }) => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::syncing::set_device_sync(&ctx, &tx, &device, on).await;
+            });
+        }
+        Command::SyncGroup(kaeri_model::group::SyncCommand::SetDeviceRemote { device, on }) => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::syncing::set_device_remote(&ctx, &tx, &device, on).await;
+            });
+        }
         Command::ShowRecoveryKey => {
             crate::syncing::reveal_recovery_key(&Ctx::of(services), tx);
             drop(job);
