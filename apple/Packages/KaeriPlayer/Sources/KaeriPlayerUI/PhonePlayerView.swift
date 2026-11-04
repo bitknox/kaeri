@@ -3,6 +3,7 @@
 
 #if os(iOS)
 import AVKit
+import GameController
 import KaeriDesign
 import KaeriKit
 import KaeriPlayer
@@ -16,6 +17,8 @@ import UIKit
 public struct PhonePlayerView: View {
     let model: PlayerModel
     @State private var sheet: Sheet?
+    /// The party sheet opens at the conversation: it came from the column's "n more in chat".
+    @State private var sheetAtChat = false
     @GestureState private var drag: CGFloat = 0
     @GestureState private var held = false
     @State private var heldSpeed: Double?
@@ -25,6 +28,9 @@ public struct PhonePlayerView: View {
     @State private var fielding = false
     @FocusState private var fieldFocus: Bool
     @State private var keyboard: CGFloat = 0
+    /// Typing brings up the on-screen keyboard: no hardware keyboard is attached, or the last
+    /// keyboard frame was a full one rather than a hardware keyboard's shortcuts bar.
+    @State private var softKeyboard = GCKeyboard.coalesced == nil
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(AppStore.self) private var store
     private let metrics = PlayerMetrics.phone
@@ -107,7 +113,14 @@ public struct PhonePlayerView: View {
                     .padding(.leading, 56)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                     .animation(.standard, value: model.resume)
-                PartyColumn(model: model, metrics: metrics, covered: sheet == .party) { sheet = .party }
+                // While typing on a phone, one row fits between the header and the field's bar.
+                PartyColumn(
+                    model: model, metrics: metrics, covered: sheet == .party,
+                    rows: fielding && UIScreen.main.bounds.height < 500 ? 1 : PartyChat.columnRows
+                ) {
+                    sheetAtChat = true
+                    sheet = .party
+                }
                     .padding(.top, 72)
                     .padding(.leading, 56)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -165,9 +178,19 @@ public struct PhonePlayerView: View {
         .playerAccessibility(model)
         .sensoryFeedback(.impact(weight: .light), trigger: drag > 120) { _, crossed in crossed }
         .sheet(item: $sheet) { sheet in sheetContent(sheet) }
-        .onChange(of: sheet) { _, open in model.hold("sheet", open != nil) }
+        .onChange(of: sheet) { _, open in
+            model.hold("sheet", open != nil)
+            // A sheet closes the field's bar; the draft stays, and the party sheet's field shows it.
+            if open != nil, fielding { closeField() }
+        }
         .onChange(of: model.menuRequests) { sheet = Sheet(model.requestedMenu) }
-        .onChange(of: store.party.panelRequests) { sheet = store.party.inParty ? .party : nil }
+        .onChange(of: store.party.panelRequests) {
+            #if FIXTURES
+            // The conversation's shot opens the sheet as the column's fold does, at the chat.
+            if PartyScene.named() == .chatpanel { sheetAtChat = true }
+            #endif
+            sheet = store.party.inParty ? .party : nil
+        }
         // The party is over: its sheet goes with it.
         .onChange(of: store.party.inParty) { _, inParty in
             if !inParty {
@@ -180,6 +203,7 @@ public struct PhonePlayerView: View {
             guard let end = (note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect) else { return }
             let screen = UIScreen.main.bounds.height
             keyboard = max(0, screen - end.minY)
+            if fielding { softKeyboard = keyboard >= 100 }
         }
         .onChange(of: fieldFocus) { _, focused in
             if !focused, fielding, store.party.chat.draft.isEmpty { closeField() }
@@ -189,6 +213,16 @@ public struct PhonePlayerView: View {
             model.inParty = inParty
         }
         .onChange(of: model.chatRequests) { if chatShown, store.party.chat.allowed { startTyping() } }
+        .background {
+            // A hardware keyboard's C opens the field over the control row, as on the Mac (iPad).
+            if !fielding, chatShown {
+                Button(L.menuSaySomething) { model.requestChat() }
+                    .keyboardShortcut("c", modifiers: [])
+                    .frame(width: 0, height: 0)
+                    .opacity(0)
+                    .accessibilityHidden(true)
+            }
+        }
         .onChange(of: held) { _, on in speedHeld(on) }
         .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { height = $0 }
         .onChange(of: SubtitleLift(visible: visible, height: height), initial: true) { _, lift in
@@ -299,15 +333,18 @@ public struct PhonePlayerView: View {
         model.hold("chat", false)
     }
 
-    /// The field above the keyboard: 36 pt and Send; the video keeps playing above it.
+    /// The field above the keyboard: 36 pt and Send; the video keeps playing above it. On an iPad
+    /// with a hardware keyboard, where no keyboard comes up, it stands over the control row as on
+    /// the Mac: on glass at the leading edge, 520 pt at most, with no band behind it.
     @ViewBuilder
     private var chatBar: some View {
         let chat = store.party.chat
+        let hardware = UIDevice.current.userInterfaceIdiom == .pad && !softKeyboard
         if fielding, chatShown {
             HStack(spacing: 8) {
                 ChatTextField(
                     text: Binding(get: { chat.draft }, set: { chat.draft = $0 }),
-                    placeholder: L.partyChatField, style: .roomy, limit: chat.maxLength,
+                    placeholder: L.partyChatField, style: hardware ? .overVideo : .roomy, limit: chat.maxLength,
                     remaining: chat.remaining,
                     waitLabel: chat.wait > 0 ? L.partyChatWait(seconds: chat.wait) : nil,
                     waitSpoken: chat.wait > 0 ? L.partyChatWaitSpoken(seconds: chat.wait) : nil,
@@ -315,12 +352,14 @@ public struct PhonePlayerView: View {
                 ) {
                     chat.submit()
                 }
-                ChatSendButton(enabled: chat.canSend) { chat.submit() }
+                // With a hardware keyboard Return sends, as on the Mac: no button.
+                if !hardware { ChatSendButton(enabled: chat.canSend) { chat.submit() } }
             }
+            .frame(maxWidth: hardware ? 520 : .infinity, alignment: .leading)
             .padding(.horizontal, 56)
             .padding(.vertical, 8)
-            .frame(maxWidth: .infinity)
-            .background(Palette.ground.opacity(0.88))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(hardware ? Color.clear : Palette.ground.opacity(0.88))
             .padding(.bottom, max(keyboard, 76))
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             .transition(.opacity)
@@ -375,11 +414,20 @@ public struct PhonePlayerView: View {
     @ViewBuilder
     private func sheetContent(_ sheet: Sheet) -> some View {
         if sheet == .party {
-            ScrollView { PartyPanel(metrics: metrics) }
-                .presentationDetents([.medium, .large])
-                .presentationBackground(Palette.ground)
-                .presentationDragIndicator(.visible)
-                .preferredColorScheme(.dark)
+            ScrollViewReader { reader in
+                ScrollView { PartyPanel(metrics: metrics) }
+                    .task {
+                        // Opened from "n more in chat": at the conversation, not the members.
+                        guard sheetAtChat else { return }
+                        sheetAtChat = false
+                        await Task.yield()
+                        reader.scrollTo(PartyPanel.chatPlace, anchor: .top)
+                    }
+            }
+            .presentationDetents([.medium, .large])
+            .presentationBackground(Palette.ground)
+            .presentationDragIndicator(.visible)
+            .preferredColorScheme(.dark)
         } else {
             menuSheet(sheet)
         }

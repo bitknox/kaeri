@@ -51,11 +51,16 @@ public struct ChatConversation: View {
     let size: CGFloat
     let spacing: CGFloat
     let maxHeight: CGFloat
+    let font: Font?
     @State private var content: CGFloat = 0
 
-    public init(_ lines: [ChatLineData], size: CGFloat = 12, spacing: CGFloat = 7, maxHeight: CGFloat = 200) {
+    /// `font`, when given, stands in for the system font at `size`.
+    public init(
+        _ lines: [ChatLineData], size: CGFloat = 12, spacing: CGFloat = 7, maxHeight: CGFloat = 200, font: Font? = nil
+    ) {
         self.lines = lines
         self.size = size
+        self.font = font
         self.spacing = spacing
         self.maxHeight = maxHeight
     }
@@ -68,7 +73,7 @@ public struct ChatConversation: View {
                         ChatLineText(line).id(line.id)
                     }
                 }
-                .font(.system(size: size))
+                .font(font ?? .ui(size))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { content = $0 }
             }
@@ -136,14 +141,14 @@ public struct ChatTextField: View {
             field
             if let waitLabel {
                 Text(waitLabel)
-                    .font(.system(size: size - 1))
+                    .font(.ui(size - 1))
                     .foregroundStyle(Palette.haze)
                     .monospacedDigit()
                     .transition(.opacity)
                     .accessibilityLabel(waitSpoken ?? waitLabel)
             } else if let remaining {
                 Text("\(remaining)")
-                    .font(.system(size: size - 1))
+                    .font(.ui(size - 1))
                     .foregroundStyle(Palette.haze)
                     .monospacedDigit()
                     .transition(.opacity)
@@ -151,7 +156,7 @@ public struct ChatTextField: View {
             }
         }
         .padding(.horizontal, style == .overVideo ? 14 : 10)
-        .frame(height: style == .roomy ? 40 : 32)
+        .frame(minHeight: style == .roomy ? 40 : 32)
         .background { backdrop }
         .animation(.easeOut(duration: 0.2), value: waitLabel)
         .animation(.easeOut(duration: 0.2), value: remaining)
@@ -161,7 +166,7 @@ public struct ChatTextField: View {
     private var field: some View {
         let base = TextField(placeholder, text: $text)
             .textFieldStyle(.plain)
-            .font(.system(size: size))
+            .font(.ui(size))
             .foregroundStyle(Palette.silk)
             .tint(Palette.silk)
             .onSubmit(submit)

@@ -15,6 +15,8 @@ struct PartyPanel: View {
     let metrics: PlayerMetrics
     /// Copy invite link was pressed: "Copied" stands in its label for 2 s.
     @State private var copied = false
+    /// Where the conversation starts, for a sheet opened from the column's "n more in chat".
+    static let chatPlace = "chat"
 
     var body: some View {
         let party = store.party
@@ -37,6 +39,7 @@ struct PartyPanel: View {
                 .font(.system(size: metrics.body))
                 .padding(.top, 10)
                 ChatSection(metrics: metrics)
+                    .id(Self.chatPlace)
                     .padding(.top, 12)
                 Divider().padding(.vertical, 12)
                 invite(view)

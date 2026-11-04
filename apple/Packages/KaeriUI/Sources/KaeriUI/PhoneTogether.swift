@@ -8,6 +8,7 @@ import KaeriKit
 import KaeriStore
 import KaeriStrings
 import SwiftUI
+import UIKit
 
 /// The people button in Home's toolbar, before the account button.
 struct TogetherButton: ToolbarContent {
@@ -142,41 +143,70 @@ struct PhoneInParty: View {
 /// and Leave and Change episode under More.
 struct PhoneTogetherLobby: View {
     @Environment(AppStore.self) private var store
+    /// The keyboard is up, for the chat's field.
+    @State private var typing = false
+    private static let chatPlace = "chat"
 
     var body: some View {
         let party = store.party
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                GeometryReader { proxy in
-                    TogetherStill(id: party.lobbyEpisode?.id, width: proxy.size.width,
-                                  height: proxy.size.width * 9 / 16)
-                }
-                .aspectRatio(16 / 9, contentMode: .fit)
-                TogetherRoomBlock(titleSize: 22).padding(.top, 16)
-                if party.inLobbyRoom, party.party?.roomEpisode == nil, party.party?.looking == false {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(L.partyRoomNothing).foregroundStyle(.silk)
-                        Text(L.partyRoomNothingLine).foregroundStyle(.haze)
+        ScrollViewReader { reader in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    GeometryReader { proxy in
+                        TogetherStill(id: party.lobbyEpisode?.id, width: proxy.size.width,
+                                      height: proxy.size.width * 9 / 16)
                     }
-                    .font(.board(13))
-                    .padding(.top, 4)
+                    .aspectRatio(16 / 9, contentMode: .fit)
+                    TogetherRoomBlock(titleSize: 22).padding(.top, 16)
+                    if party.inLobbyRoom, party.party?.roomEpisode == nil, party.party?.looking == false {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(L.partyRoomNothing).foregroundStyle(.silk)
+                            Text(L.partyRoomNothingLine).foregroundStyle(.haze)
+                        }
+                        .font(.board(13))
+                        .padding(.top, 4)
+                    }
+                    if let guesses = party.party?.guesses, !guesses.isEmpty, party.inLobbyRoom {
+                        TogetherGuesses(guesses: guesses).padding(.top, 14)
+                    }
+                    if let lastOut = party.lastOut, party.inLobbyRoom {
+                        TogetherLastOutLine(lastOut: lastOut).padding(.top, 12)
+                    }
+                    TogetherSourcesLine().padding(.top, 12)
+                    TogetherMembers(rowHeight: 52).padding(.top, 28)
+                    if party.inLobbyRoom, let view = party.party {
+                        // Talk before play follows the members (watch together chat board, iPhone).
+                        TogetherChat(size: 15).id(Self.chatPlace).padding(.top, 24)
+                        TogetherInvite(view: view, codeSize: 22).padding(.top, 28)
+                    }
                 }
-                if let guesses = party.party?.guesses, !guesses.isEmpty, party.inLobbyRoom {
-                    TogetherGuesses(guesses: guesses).padding(.top, 14)
-                }
-                if let lastOut = party.lastOut, party.inLobbyRoom {
-                    TogetherLastOutLine(lastOut: lastOut).padding(.top, 12)
-                }
-                TogetherSourcesLine().padding(.top, 12)
-                TogetherMembers(rowHeight: 52).padding(.top, 28)
-                if party.inLobbyRoom, let view = party.party {
-                    TogetherInvite(view: view, codeSize: 22).padding(.top, 28)
-                }
+                .padding(EdgeInsets(top: 8, leading: 16, bottom: 24, trailing: 16))
             }
-            .padding(EdgeInsets(top: 8, leading: 16, bottom: 24, trailing: 16))
+            #if FIXTURES
+            .task {
+                // The lobby's chat shot: the conversation is under the members, so it scrolls there.
+                guard TogetherScene.named() == .lobbyChat else { return }
+                try? await Task.sleep(for: .milliseconds(700))
+                reader.scrollTo(Self.chatPlace, anchor: .bottom)
+            }
+            #endif
+            .onChange(of: typing) { _, up in
+                // The field and the privacy line under it stay in view above the keyboard.
+                if up { withAnimation(.standard) { reader.scrollTo(Self.chatPlace, anchor: .bottom) } }
+            }
         }
         .background(.ground)
-        .safeAreaInset(edge: .bottom) { pinned }
+        // While typing, the field rides above the keyboard and I'm ready steps aside for it.
+        .safeAreaInset(edge: .bottom) {
+            if !typing { pinned.transition(.opacity) }
+        }
+        .animation(.fadeIn, value: typing)
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+            typing = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            typing = false
+        }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)

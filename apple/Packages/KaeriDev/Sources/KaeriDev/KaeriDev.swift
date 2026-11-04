@@ -174,6 +174,10 @@ final class Delegate: NSObject, NSApplicationDelegate {
         if let scene = PartyScene.named() {
             let there = await player.stage(scene, store: store)
             print(there ? "KaeriDev: the party is at \(scene.rawValue)" : "KaeriDev: the party did not reach \(scene.rawValue)")
+            // A recording's scene (chatloop, reactloop): frames from the moment it is up.
+            if !options.frames.isEmpty, let url = options.snapshot, let window = Snapshot.window {
+                await frames(of: nil, in: window, to: url)
+            }
         }
         if let scene = TogetherScene.named() {
             let there = await store.party.stage(scene, store: store)

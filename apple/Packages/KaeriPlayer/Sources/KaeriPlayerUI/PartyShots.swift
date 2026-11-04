@@ -6,6 +6,9 @@
 import KaeriKit
 import KaeriStore
 import Foundation
+#if os(iOS)
+import UIKit
+#endif
 
 /// A party's state a screenshot shows: `-KaeriParty panel`.
 public enum PartyScene: String, CaseIterable, Sendable {
@@ -34,6 +37,9 @@ public enum PartyScene: String, CaseIterable, Sendable {
     case chatreact
     /// C pressed and a line typed, over the control row.
     case chatfield
+    /// The same on an iPad with a hardware keyboard: the field over the control row, and no
+    /// on-screen keyboard.
+    case chatkeys
     /// Four sends inside the window: the fourth waits ("Wait 3 s").
     case chatwait
     /// A server with chat turned off: C says so.
@@ -48,6 +54,13 @@ public enum PartyScene: String, CaseIterable, Sendable {
     case chathidden
     /// A server that takes 40 characters a message: the count in the field.
     case chatshort
+    /// For a recording: the column over the playing video, the controls gone. 1.5 s after the
+    /// scene is up ("KAERI_MOTION"), Mika, Ren, Sol, Mika and Ren say a line a second apart: three
+    /// rows, then "n more in chat", and each leaving 4 s later, the column closing up.
+    case chatloop
+    /// For a recording: the controls up, and 1.5 s after the scene is up ("KAERI_MOTION") Ren's
+    /// laugh arriving as a moment at the bottom trailing corner, with its tick, and leaving.
+    case reactloop
     /// The server gone mid-episode: the panel trying again.
     case lost
     /// Leave party pressed in the panel: the episode goes on, just for this device.
@@ -151,8 +164,8 @@ extension PlayerModel {
             party.askingToLeave = scene == .quit ? .quit : .close
             try? await Task.sleep(for: .milliseconds(900))
             return true
-        case .panel, .ready, .sync, .chat, .lost, .left, .chatline, .chatbusy, .chatreact, .chatfield, .chatwait,
-             .chatoff, .chatfail, .chatpanel, .chatmute, .chathidden, .chatshort:
+        case .panel, .ready, .sync, .chat, .lost, .left, .chatline, .chatbusy, .chatreact, .chatfield, .chatkeys,
+             .chatwait, .chatoff, .chatfail, .chatpanel, .chatmute, .chathidden, .chatshort, .chatloop, .reactloop:
             return await stagePlaying(scene, store: store)
         }
     }
@@ -226,6 +239,40 @@ extension PlayerModel {
                 let all = await partyWaited(10) { party.chat.column.count >= 6 }
                 there = there && all
             }
+        case .chatloop:
+            // Sol is in the room too, and the notice of the join has gone before the lines come.
+            fake.addMember(room: room, name: "Sol")
+            _ = await partyWaited(5) { party.members?.count == 4 }
+            try? await Task.sleep(for: .milliseconds(600))
+            _ = await partyWaited(10) { self.alert == nil }
+            pinnedControls = false
+            if paused { togglePause() }
+            hideControls()
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(1500))
+                print("KAERI_MOTION")
+                fflush(stdout)
+                let lines = [
+                    ("Mika", "this part again"), ("Ren", "the handoff in the rain, I knew it"),
+                    ("Sol", "wait, who is the new runner"), ("Mika", "ok starting"), ("Ren", "back in 2"),
+                ]
+                for (at, line) in lines.enumerated() {
+                    if at > 0 { try? await Task.sleep(for: .milliseconds(1000)) }
+                    fake.memberSays(name: line.0, message: line.1)
+                }
+            }
+        case .reactloop:
+            fake.memberSays(name: "Mika", message: "ok starting")
+            fake.memberReacts(name: "Sol", reaction: .clap, at: length * 0.14)
+            fake.memberReacts(name: "Mika", reaction: .laugh, at: length * 0.51)
+            there = await partyWaited(10) { party.chat.conversation.marks.count >= 2 }
+            try? await Task.sleep(for: .milliseconds(2500))
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(1500))
+                print("KAERI_MOTION")
+                fflush(stdout)
+                fake.memberReacts(name: "Ren", reaction: .laugh, at: length * 0.51)
+            }
         case .chatreact:
             // Reactions inside the short fixture's length, in the board's proportions.
             fake.memberSays(name: "Mika", message: "ok starting")
@@ -247,6 +294,20 @@ extension PlayerModel {
             requestChat()
             try? await Task.sleep(for: .milliseconds(400))
             party.chat.draft = "back in 2, pause if it gets good"
+        case .chatkeys:
+            chatFixtureLines(fake)
+            there = await partyWaited(10) { party.chat.conversation.lines.count >= 4 }
+            requestChat()
+            try? await Task.sleep(for: .milliseconds(400))
+            party.chat.draft = "pause if it gets good"
+            #if os(iOS)
+            // A Simulator run without Simulator.app has no hardware keyboard: the on-screen one
+            // goes down as it would with one attached, and the field stays with its text.
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            #endif
+            // Sol's join notice gone and the column settled under it.
+            _ = await partyWaited(10) { self.alert == nil }
+            try? await Task.sleep(for: .milliseconds(900))
         case .chatwait:
             requestChat()
             try? await Task.sleep(for: .milliseconds(400))

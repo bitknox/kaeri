@@ -122,6 +122,13 @@ public struct MacPlayerView: View {
         }
         // The party is over: its popover goes with it.
         .onChange(of: store.party.inParty) { _, inParty in if !inParty { partyOpen = false; fielding = false } }
+        // The popover has the conversation's own field: the bar's goes, and the draft stays.
+        .onChange(of: partyOpen) { _, open in
+            if open, fielding {
+                fielding = false
+                model.hold("chat", false)
+            }
+        }
         .animation(.fadeIn, value: fielding)
         .onChange(of: store.party.inParty, initial: true) { _, inParty in
             model.marksBlocked = inParty
