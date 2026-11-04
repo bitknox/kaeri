@@ -33,6 +33,9 @@ public sealed class Known
 
     public SettingsView? Settings { get; private set; }
 
+    /// <summary>Each show's own settings sheet, as the engine last sent it, by AniList id.</summary>
+    public Dictionary<uint, ShowSettingsView> ShowSheets { get; } = [];
+
     /// <summary>Play the demo was pressed and the player has not opened yet: the starting screen is the demo's.</summary>
     public bool DemoPlay { get; set; }
 
@@ -91,6 +94,9 @@ public sealed class Known
 
     /// <summary>The Jellyfin servers saved, with their libraries and how far matching has got.</summary>
     public ServerRow[] Servers { get; private set; } = [];
+
+    /// <summary>Whether the engine has listed the saved servers yet, even as none.</summary>
+    public bool ServersLoaded { get; private set; }
 
     /// <summary>The folders on this computer and the groups of files found in them.</summary>
     public LocalView? Local { get; private set; }
@@ -154,6 +160,9 @@ public sealed class Known
     /// <summary>The titles hidden with Not interested, newest first, once asked for.</summary>
     public HiddenTitle[] Hidden { get; private set; } = [];
 
+    /// <summary>Whether the engine has sent the hidden titles yet, even as none.</summary>
+    public bool HiddenLoaded { get; private set; }
+
     /// <summary>Titles restored from Settings in this run, until the engine sends the list again.</summary>
     public HashSet<uint> RestoredHere { get; } = [];
 
@@ -193,6 +202,9 @@ public sealed class Known
 
     /// <summary>The last ten rooms, kept on this device, newest first.</summary>
     public PartyRecentRoom[] PartyRecent { get; private set; } = [];
+
+    /// <summary>Whether the engine has sent the last rooms yet, even as none.</summary>
+    public bool PartyRecentLoaded { get; private set; }
 
     /// <summary>What looking into a room found, or why it could not, for the room that was opened last.</summary>
     public PartyGlimpse? PartyGlimpse { get; private set; }
@@ -275,6 +287,7 @@ public sealed class Known
                 break;
             case Event.HiddenTitles hidden:
                 Hidden = hidden.V1;
+                HiddenLoaded = true;
                 RestoredHere.Clear();
                 break;
             case Event.Detail d:
@@ -314,6 +327,9 @@ public sealed class Known
                 break;
             case Event.Settings s:
                 Settings = s.V1;
+                break;
+            case Event.ShowSettings sheet:
+                ShowSheets[sheet.V1.Id] = sheet.V1;
                 break;
             case Event.Autoplay a:
                 Autoplay = a.V1;
@@ -364,6 +380,7 @@ public sealed class Known
                 break;
             case Event.Server { V1: ServerEvent.Servers rows }:
                 Servers = rows.V1;
+                ServersLoaded = true;
                 foreach (var row in Servers)
                     Wait("s:" + row.Id, row.Matching);
                 break;
@@ -418,6 +435,7 @@ public sealed class Known
                 break;
             case Event.PartyRecent r:
                 PartyRecent = r.V1;
+                PartyRecentLoaded = true;
                 break;
             case Event.PartyGlimpse g:
                 PartyGlimpse = g.V1;

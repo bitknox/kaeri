@@ -40,19 +40,29 @@ sealed record Place(RectInt32 Frame, bool Maximised)
         }
     }
 
-    /// <summary>Whether enough of the frame's title strip lies on a display to be grabbed.</summary>
+    /// <summary>
+    /// Whether enough of the frame's title strip lies on a display to be grabbed. The display is
+    /// the one the strip overlaps most. <c>DisplayArea.FindAll()</c> is not used: walking its list
+    /// from C# throws InvalidCastException on some machines. When the check fails, the window is
+    /// centred instead.
+    /// </summary>
     public static bool OnADisplay(RectInt32 frame)
     {
-        foreach (var display in DisplayArea.FindAll())
+        try
         {
+            var strip = new RectInt32(frame.X, frame.Y, Math.Max(1, frame.Width), 40);
+            if (DisplayArea.GetFromRect(strip, DisplayAreaFallback.None) is not { } display)
+                return false;
             var area = display.WorkArea;
             var left = Math.Max(area.X, frame.X);
             var right = Math.Min(area.X + area.Width, frame.X + frame.Width);
             var top = frame.Y;
-            if (right - left >= 120 && top >= area.Y - 8 && top < area.Y + area.Height - 40)
-                return true;
+            return right - left >= 120 && top >= area.Y - 8 && top < area.Y + area.Height - 40;
         }
-        return false;
+        catch (Exception)
+        {
+            return false;
+        }
     }
 }
 

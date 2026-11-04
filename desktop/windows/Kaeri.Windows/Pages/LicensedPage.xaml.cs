@@ -16,7 +16,33 @@ public sealed partial class LicensedPage : Page
     readonly Ctx ctx = Ctx.Current;
     bool all, quiet;
 
-    public LicensedPage() => InitializeComponent();
+    public LicensedPage()
+    {
+        InitializeComponent();
+        State.Placeholders = Placeholders;
+        State.ActivityText = T.LicensedLoading;
+    }
+
+    /// <summary>Region's field, then the services as check rows, as plates.</summary>
+    static UIElement Placeholders()
+    {
+        var plates = new StackPanel { Spacing = 12, Margin = new Thickness(0, 12, 0, 0) };
+        plates.Children.Add(States.Plate(80, 12, 3));
+        plates.Children.Add(States.Plate(260, 32, 4));
+        plates.Children.Add(States.Plate(300, 10, 3));
+        plates.Children.Add(States.Heading());
+        for (var i = 0; i < 6; i++)
+        {
+            var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Height = 32 };
+            row.Children.Add(States.Plate(20, 20, 4));
+            row.Children.Add(States.Plate(120 + i % 3 * 30, 12, 3));
+            foreach (var plate in row.Children.OfType<FrameworkElement>())
+                plate.VerticalAlignment = VerticalAlignment.Center;
+            plates.Children.Add(row);
+        }
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAccessibilityView(plates, Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Raw);
+        return plates;
+    }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
@@ -33,16 +59,19 @@ public sealed partial class LicensedPage : Page
     void Draw()
     {
         quiet = true;
+        Head.Children.Clear();
         Stack.Children.Clear();
         var title = Ui.Text(T.LicensedTitle, "PageTitleStyle");
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetHeadingLevel(title, Microsoft.UI.Xaml.Automation.Peers.AutomationHeadingLevel.Level1);
-        Stack.Children.Add(title);
-        Stack.Children.Add(Ui.Text(T.LicensedBody, "BodyTextBlockStyle"));
+        Head.Children.Add(title);
+        Head.Children.Add(Ui.Text(T.LicensedBody, "BodyTextBlockStyle"));
         if (ctx.Known.Licensed is not { } view)
         {
+            State.Wait();
             quiet = false;
             return;
         }
+        State.Done();
 
         var region = new ComboBox { Header = T.LicensedRegion, MinWidth = 260, Margin = new Thickness(0, 12, 0, 0) };
         var codes = view.Regions.Length > 0 ? view.Regions : ["DK"];

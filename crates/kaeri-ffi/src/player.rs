@@ -15,7 +15,9 @@ use kaeri_model::{
     hosted::{MpvOption, PlayerOp, TrackKind},
     playback::PlaybackId,
 };
-use kaeri_mpv_host::{HostEvent, Player, PlayerOptions, PlayerState, VideoOutput};
+use kaeri_mpv_host::{
+    HostEvent, Player, PlayerOptions, PlayerState, VideoOutput, swapchain_of,
+};
 
 use crate::{FfiEngine, start::FfiError};
 
@@ -203,9 +205,13 @@ impl FfiPlayer {
         }
     }
 
-    /// The composition swapchain's address, or 0 while there is none.
+    /// The composition swapchain's address, or 0 while there is none. mpv answers from its video
+    /// thread, which can be busy for seconds, so the app asks from a thread of its own. The lock
+    /// is let go before mpv is asked, so the app's other calls on this player never wait behind
+    /// the answer. Closing meanwhile only defers freeing the core until the answer is in.
     pub fn swapchain(&self) -> u64 {
-        self.player().as_ref().and_then(Player::swapchain).unwrap_or(0)
+        let mpv = self.player().as_ref().map(|p| p.mpv().clone());
+        mpv.as_ref().and_then(swapchain_of).unwrap_or(0)
     }
 
     /// The display's HDR: its peak in nits while it shows HDR, `None` for SDR.

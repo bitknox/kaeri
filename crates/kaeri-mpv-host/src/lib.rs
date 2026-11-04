@@ -35,6 +35,7 @@ pub use crate::{
     mpv::{Mpv, MpvError},
     player::{
         HostEvent, Player, PlayerOptions, PlayerState, Sink, VideoOutput, composition_size,
+        swapchain_of,
     },
     render::{GetProcAddress, GlRenderer, NativeDisplay},
 };

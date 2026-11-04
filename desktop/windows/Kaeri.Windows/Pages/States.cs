@@ -42,6 +42,13 @@ public sealed partial class StateHost : Grid
     /// <summary>The job's activity line past 4 s: "Loading this season".</summary>
     public string ActivityText { get; set; } = T.StateLoading;
 
+    /// <summary>
+    /// Whether the place loads over the network. A place whose answer is on this device, such as
+    /// the downloads or the saved sources, keeps its placeholders while offline instead of saying
+    /// "You're offline".
+    /// </summary>
+    public bool NeedsConnection { get; set; } = true;
+
     UIElement? Content => Children.Count > 0 && Children[0] != waiting && Children[0] != message ? Children[0] : null;
 
     void Layer()
@@ -77,7 +84,7 @@ public sealed partial class StateHost : Grid
     {
         if (!loading)
             return;
-        if (Ctx.Current.Known.Offline)
+        if (NeedsConnection && Ctx.Current.Known.Offline)
         {
             Offline();
             return;
@@ -150,7 +157,8 @@ public sealed partial class StateHost : Grid
             var left = Least - (DateTimeOffset.UtcNow - placeholdersSince);
             if (left > TimeSpan.Zero)
                 await Task.Delay(left);
-            if (loading)
+            // A later load, or an answer that came twice in the 0.3 s, has this in hand.
+            if (loading || !placeholdersShown)
                 return;
             placeholdersShown = false;
             Motion.HideStandard(waiting);
@@ -177,7 +185,7 @@ public sealed partial class StateHost : Grid
     /// <summary>Failed to load: a plain line and Try again. The engine's reason goes to the log.</summary>
     public void Failed(string reason, Action retry)
     {
-        if (Ctx.Current.Known.Offline)
+        if (NeedsConnection && Ctx.Current.Known.Offline)
         {
             Done();
             if (Content is { } c)
@@ -309,13 +317,19 @@ static partial class States
         public void RecycleElement(ElementFactoryRecycleArgs args) { }
     }
 
-    /// <summary>Placeholder rows: a thumbnail plate and two bars, in a list's layout.</summary>
-    public static UIElement Rows(int count, double thumbWidth, double thumbHeight)
+    /// <summary>
+    /// Placeholder rows: a thumbnail plate and two bars, in a list's layout. A list whose rows
+    /// have a set height passes it, and the space between them, so the rows that replace the
+    /// plates take the room they kept.
+    /// </summary>
+    public static UIElement Rows(int count, double thumbWidth, double thumbHeight, double rowHeight = 0, double spacing = 12)
     {
-        var panel = new StackPanel { Spacing = 12 };
+        var panel = new StackPanel { Spacing = spacing };
         for (var i = 0; i < count; i++)
         {
             var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 14 };
+            if (rowHeight > 0)
+                row.Height = rowHeight;
             if (thumbWidth > 0)
                 row.Children.Add(Plate(thumbWidth, thumbHeight, 6));
             var bars = new StackPanel { Spacing = 8, VerticalAlignment = VerticalAlignment.Center };
@@ -325,6 +339,26 @@ static partial class States
             panel.Children.Add(row);
         }
         AutomationProperties.SetAccessibilityView(panel, AccessibilityView.Raw);
+        return panel;
+    }
+
+    /// <summary>A section heading's plate, where <see cref="Ui.Heading"/> would sit.</summary>
+    public static Border Heading()
+    {
+        var plate = Plate(140, 14, 3);
+        plate.Margin = new Thickness(0, 19, 0, 7);
+        return plate;
+    }
+
+    /// <summary>
+    /// A page heading's plates, where a page title and the line under it would sit, for a page
+    /// whose title comes with what it loads.
+    /// </summary>
+    public static StackPanel Title(double width = 260)
+    {
+        var panel = new StackPanel { Spacing = 12 };
+        panel.Children.Add(Plate(width, 28, 4));
+        panel.Children.Add(Plate(width * 1.4, 14, 3));
         return panel;
     }
 

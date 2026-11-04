@@ -65,8 +65,8 @@ public sealed partial class MainWindow : Window
         this.options = options;
         InitializeComponent();
         Title = T.AppName;
-        // Each destination's tooltip names its shortcut: Ctrl+1 to Ctrl+8, in the sidebar's order.
-        string[] names = [T.HomeTitle, T.NavCalendar, T.NavSeasonal, T.NavLibrary, T.NavDownloads, T.TogetherTitle, T.SourcesTitle, T.NavPluginStores];
+        // Each destination's tooltip names its shortcut: Ctrl+1 to Ctrl+9, in the sidebar's order.
+        string[] names = [T.HomeTitle, T.NavCalendar, T.NavSeasonal, T.NavSearch, T.NavLibrary, T.NavDownloads, T.TogetherTitle, T.SourcesTitle, T.NavPluginStores];
         foreach (var (item, n) in Nav.MenuItems.OfType<NavigationViewItem>().Select((item, i) => (item, i)))
             ToolTipService.SetToolTip(item, T.TooltipWithKey(names[n], $"Ctrl+{n + 1}"));
         // The built-in Settings item reads the system language, so it takes the catalogue's word.
@@ -92,6 +92,7 @@ public sealed partial class MainWindow : Window
         // else as a Windows notification.
         var host = new AppHost(ui, options.Fixture) { Notified = (title, body) => Notified(title, body) };
         (var engine, dirs) = StartEngine(host);
+        Player.ShaderCache = Path.Combine(dirs.Cache, "player");
 #if KAERI_TESTING
         fixtureInvite = options.Scene == "store-invited" ? engine.TestingStoreInvite() : null;
 #endif
@@ -549,6 +550,26 @@ public sealed partial class MainWindow : Window
         PartyHeard(batch);
         foreach (var e in batch)
         {
+            // --play: Home's spotlight, the title Continue leads with, once the engine has it. Before
+            // the switch, whose first Continue case, the crash question, would take the event.
+            if (options.Play && !played)
+            {
+                if (e is Event.Home { V1.Spotlight: { Case: SpotlightCase.Continuing } spot })
+                {
+                    played = true;
+                    ctx.Play(spot.Entry.Id, spot.Episode.ToString(CultureInfo.InvariantCulture));
+                }
+                else if (e is Event.Content { View: ContentFor.Continue, ContentValue: ContentList.Entries })
+                {
+                    var entries = ctx.Known.ListEntries(new ContentFor.Continue());
+                    var queue = Wording.Said(KaeriFfiMethods.ContinueQueue(entries, [.. ctx.Known.HiddenFromContinue], Casing.Sentence));
+                    if (queue.InProgress.Concat(queue.NewThisWeek).FirstOrDefault(q => q.Playable) is { } first)
+                    {
+                        played = true;
+                        ctx.Play(first.Entry.Id, first.Episode.ToString(CultureInfo.InvariantCulture));
+                    }
+                }
+            }
             switch (e)
             {
                 case Event.Sync:
@@ -605,18 +626,6 @@ public sealed partial class MainWindow : Window
                 case Event.NewEpisodes n:
                     foreach (var notice in Notices.Aired(n.V1))
                         toasts?.Post(notice);
-                    break;
-                case Event.Content { View: ContentFor.Continue, ContentValue: ContentList.Entries } when options.Play && !played:
-                    played = true;
-                    var entries = ctx.Known.ListEntries(new ContentFor.Continue());
-                    var queue = Wording.Said(KaeriFfiMethods.ContinueQueue(entries, [.. ctx.Known.HiddenFromContinue], Casing.Sentence));
-                    if (queue.InProgress.Concat(queue.NewThisWeek).FirstOrDefault(q => q.Playable) is { } first)
-                        ctx.Play(first.Entry.Id, first.Episode.ToString());
-                    break;
-                // Home now arrives whole, with the title to continue in its spotlight.
-                case Event.Home { V1.Spotlight: { Case: SpotlightCase.Continuing } spot } when options.Play && !played:
-                    played = true;
-                    ctx.Play(spot.Entry.Id, spot.Episode.ToString());
                     break;
             }
         }
@@ -779,7 +788,7 @@ public sealed partial class MainWindow : Window
         Navigate("settings", pane);
     }
 
-    /// <summary>Goes to a destination by its tag, as the pane and Ctrl+1 to Ctrl+8 do.</summary>
+    /// <summary>Goes to a destination by its tag, as the pane and Ctrl+1 to Ctrl+9 do.</summary>
     internal void Go(string tag)
     {
         if (Player.Showing)
@@ -868,6 +877,15 @@ public sealed partial class MainWindow : Window
         {
             if (tag == "account")
                 ContentFrame.Navigate(typeof(SettingsPage), "accounts", new SuppressNavigationTransitionInfo());
+            else if (tag == "search")
+            {
+                // Search in the sidebar, as on the Mac: the page with what the box holds, and the
+                // box ready to type in.
+                var query = SearchBox.Text.Trim();
+                if (ContentFrame.CurrentSourcePageType != typeof(SearchPage))
+                    Navigate("search", query.Length > 0 ? query : null);
+                SearchBox.Focus(FocusState.Programmatic);
+            }
             else
                 Navigate(tag);
         }
@@ -916,6 +934,19 @@ public sealed partial class MainWindow : Window
 
     void OnFrameNavigated(object sender, NavigationEventArgs e)
     {
+#if KAERI_TESTING
+        // For Kaeri.Drive: when a navigation is done, and when the new page has been laid out.
+        Probe.Mark($"navigated {e.SourcePageType.Name}");
+        if (e.Content is FrameworkElement shown)
+        {
+            void Laid(object s, RoutedEventArgs a)
+            {
+                shown.Loaded -= Laid;
+                Probe.Mark($"loaded {e.SourcePageType.Name}");
+            }
+            shown.Loaded += Laid;
+        }
+#endif
         RememberWhere();
         if (framePage != e.Content)
             ctx.Left(framePage);
@@ -927,7 +958,7 @@ public sealed partial class MainWindow : Window
             Nav.SelectedItem = e.Parameter as string == "accounts" ? AccountItem : Nav.SettingsItem;
         else if (e.SourcePageType == typeof(FolderPage) || e.SourcePageType == typeof(ServerPage) || e.SourcePageType == typeof(LicensedPage))
             Nav.SelectedItem = Nav.MenuItems.OfType<NavigationViewItem>().FirstOrDefault(i => (string?)i.Tag == "providers");
-        else if (Destinations.FirstOrDefault(d => d.Value == e.SourcePageType).Key is { } tag && tag != "search")
+        else if (Destinations.FirstOrDefault(d => d.Value == e.SourcePageType).Key is { } tag)
             Nav.SelectedItem = Nav.MenuItems.OfType<NavigationViewItem>().FirstOrDefault(i => (string?)i.Tag == tag);
         else
             Nav.SelectedItem = null;
@@ -1480,8 +1511,10 @@ public sealed partial class MainWindow : Window
         device.Dispose();
         StopTv();
         taskbar?.Clear();
-        player?.Shutdown();
+        // The engine first: on its way out it stops what plays and waits for the player to say
+        // where it ended, so the player must still be there to hear the stop.
         session.Dispose();
+        player?.Shutdown();
         player?.Dispose();
     }
 
@@ -1490,7 +1523,8 @@ public sealed partial class MainWindow : Window
 
     void Keys()
     {
-        string[] tags = ["home", "calendar", "seasonal", "library", "downloads", "together", "providers", "stores"];
+        // Ctrl+1 to Ctrl+9 in the sidebar's order, as Command+1 to 9 on the Mac.
+        string[] tags = ["home", "calendar", "seasonal", "search", "library", "downloads", "together", "providers", "stores"];
         for (var i = 0; i < tags.Length; i++)
         {
             var tag = tags[i];
@@ -1569,7 +1603,7 @@ public sealed partial class MainWindow : Window
             grid.Children.Add(key);
         }
         Section(T.ShortcutsWindow);
-        Line(T.ShortcutsSections, T.ShortcutsKeysRange("Ctrl+1", "Ctrl+8"));
+        Line(T.ShortcutsSections, T.ShortcutsKeysRange("Ctrl+1", "Ctrl+9"));
         Line(T.NavSearch, "Ctrl+F, Ctrl+E");
         Line(T.ActionBack, T.ShortcutsKeysBack("Alt+Left"));
         Line(T.NavSettings, "Ctrl+,");
