@@ -81,6 +81,16 @@ struct StartingStepsTests {
         #expect(lines(rig).detail.contains("2 of 3 streams"))
     }
 
+    @Test func detailsIsInTheRowFromTheStartWhileItsListIsRememberedOpen() {
+        let rig = run(.slow, to: 0.5)
+        #expect(rig.model.walk?.actions(at: rig.model.clock, detailsOpen: true) == [.cancel, .details])
+        rig.step(.seconds(1))
+        #expect(rig.model.walk?.actions(at: rig.model.clock, detailsOpen: true) == [.cancel, .playFromBeginning, .details])
+        #expect(rig.model.walk?.actions(at: rig.model.clock) == [.cancel, .playFromBeginning])
+        rig.step(.seconds(2))
+        #expect(rig.model.walk?.actions(at: rig.model.clock, detailsOpen: true) == [.cancel, .playFromBeginning, .chooseSource, .details])
+    }
+
     @Test func theActionsJoinTheRowByTimeInArrivalOrder() {
         let rig = run(.slow, to: 0.5)
         #expect(rig.model.walk?.actions(at: rig.model.clock) == [.cancel])

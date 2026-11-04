@@ -376,7 +376,7 @@ private struct StartActions: View {
 
     private var items: [Item] {
         if let failure = model.failure { return failureItems(failure) }
-        return (model.walk?.actions(at: model.clock) ?? [.cancel]).map(item)
+        return (model.walk?.actions(at: model.clock, detailsOpen: model.startDetailsOpen) ?? [.cancel]).map(item)
     }
 
     private func item(_ action: StartAction) -> Item {
