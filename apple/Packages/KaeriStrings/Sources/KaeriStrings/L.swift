@@ -9258,7 +9258,7 @@ public enum L {
     /// Title of the Go to episode field.
     public static var episodeGoToTitle: String { string("episode-go-to-title", fallback: "Go to episode") }
 
-    /// Default button of the Go to episode field, which goes to the number typed.
+    /// Button of the Go to episode field that goes to the number typed.
     public static var episodeGoToGo: String { string("episode-go-to-go", fallback: "Go") }
 
     /// Placeholder of the Go to episode field: the first and last episode of the show.

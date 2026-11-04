@@ -41150,7 +41150,7 @@
       }
     },
     "episode-go-to-go" : {
-      "comment" : "Default button of the Go to episode field, which goes to the number typed.",
+      "comment" : "Button of the Go to episode field that goes to the number typed.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {

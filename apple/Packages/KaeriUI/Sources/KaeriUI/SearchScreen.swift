@@ -1284,17 +1284,19 @@ private struct RailRow: View {
     /// their way, and plates once that has waited past 600 ms.
     @State private var held: (period: TrendPeriod, entries: [Entry])?
     @State private var plates = false
+    /// When the plates came, so they stay at least 0.3 s before the covers crossfade in.
+    @State private var platesAt: Date?
 
     private var period: TrendPeriod { trending ? store.search.trendingPeriod : .today }
-    private var shown: SearchModel.TrendingRail? {
-        trending ? store.search.trendingShown(browse: rail) : nil
-    }
 
     var body: some View {
         let width: CGFloat = compact ? 112 : 128
         let kept = trending ? store.search.trendingShown(browse: rail) : nil
         let entries = trending ? (kept?.failed == true ? [] : (kept?.entries ?? held?.entries ?? rail.entries)) : rail.entries
         let waiting = trending && store.search.trendingPending == period && kept == nil
+        // The period whose covers are drawn: the old one's while the new one's are on their way,
+        // so the covers swap in one crossfade when they come, not cell by cell.
+        let drawn = !trending ? TrendPeriod.today : kept != nil ? period : held?.period ?? .today
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 // The engine says it in sentence case, as the iPhone has it; the Mac's headings
@@ -1329,7 +1331,7 @@ private struct RailRow: View {
                 if kept?.failed == true {
                     TrendingFailed(period: period, compact: compact) { store.loadTrending(period) }
                         .transition(.opacity)
-                } else if waiting && plates {
+                } else if plates {
                     RailPlates(width: width, compact: compact).transition(.opacity)
                 } else {
                     ScrollView(.horizontal) {
@@ -1344,11 +1346,11 @@ private struct RailRow: View {
                     }
                     .scrollIndicators(.never)
                     .padding(-bleed)
-                    .id(trending ? period : .today)
+                    .id(drawn)
                     .transition(.opacity)
                 }
             }
-            .animation(.standard, value: period)
+            .animation(.standard, value: drawn)
             .animation(.standard, value: plates)
             .animation(.standard, value: kept?.failed)
         }
@@ -1356,9 +1358,17 @@ private struct RailRow: View {
             if let kept, !kept.failed { held = (period, kept.entries) }
         }
         .task(id: waiting) {
-            guard waiting else { plates = false; return }
-            try? await Task.sleep(for: SearchModel.quiet)
-            if !Task.isCancelled { plates = true }
+            if waiting {
+                try? await Task.sleep(for: SearchModel.quiet)
+                guard !Task.isCancelled else { return }
+                plates = true
+                platesAt = .now
+            } else if plates {
+                // Plates that came stay 0.3 s at least, so they never flash.
+                let stood = platesAt.map { Date.now.timeIntervalSince($0) } ?? 1
+                if stood < 0.3 { try? await Task.sleep(for: .seconds(0.3 - stood)) }
+                plates = false
+            }
         }
     }
 
@@ -1383,17 +1393,20 @@ private struct TrendingHeading: View {
                 Toggle(trendPeriodChoice(period: choice), isOn: Binding(get: { choice == period }, set: { _ in choose(choice) }))
             }
         } label: {
-            HStack(spacing: 4) {
-                Text(trendPeriodLabel(period: period))
-                    .contentTransition(.opacity)
-                Image(systemName: "chevron.down")
-                    .font(.ui(compact ? 12 : 10, weight: .semibold))
-                    .foregroundStyle(.haze)
-            }
-            .font(compact ? .ui(20, weight: .semibold) : .mac(15, weight: .semibold))
-            .foregroundStyle(.silk)
-            .frame(minHeight: compact ? 44 : 28)
-            .contentShape(.rect)
+            // One text joined by a no-break space, so at a large text size the chevron wraps with
+            // the last word, raised to the middle of the letters as it stood beside them.
+            let chevron = Text(Image(systemName: "chevron.down"))
+                .font(.ui(compact ? 12 : 10, weight: .semibold))
+                .foregroundStyle(.haze)
+                .baselineOffset(compact ? 2 : 1)
+            Text("\(trendPeriodLabel(period: period))\u{00A0}\(chevron)")
+                .contentTransition(.opacity)
+                .font(compact ? .ui(20, weight: .semibold) : .mac(15, weight: .semibold))
+                .foregroundStyle(.silk)
+                .frame(minHeight: compact ? 44 : 28)
+                .contentShape(.rect)
+                // The period alone, without the chevron's symbol name.
+                .accessibilityLabel(trendPeriodLabel(period: period))
         }
         .menuStyle(.button)
         .menuIndicator(.hidden)

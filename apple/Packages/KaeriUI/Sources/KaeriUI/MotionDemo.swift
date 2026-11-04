@@ -77,6 +77,26 @@ public enum MotionDemo: String, CaseIterable, Sendable {
     case protectionLine
     /// Show synopsis on the first row spoiler protection hides, as its menu does.
     case reveal
+    /// Search: Trending's heading menu switched from the period shown to the next one, Today to
+    /// This week (Browsing extras board, loop B).
+    case period
+    /// Surprise me on the screen's pool, then Another on the page it opened, 2.4 s later
+    /// (loop C).
+    case surprise
+    /// Go to episode on the title page on screen, as Go does: the numbers `-KaeriType` lists,
+    /// comma separated, 2 s apart (loop D). By default one in another range, one on the same
+    /// screen and one further down.
+    case goTo
+    /// Digits typed into the Mac's focused episode list, a key every 150 ms: `-KaeriType`'s,
+    /// else 237 (loop E).
+    case typed
+
+    /// What `-KaeriType` gives, for the demos that type.
+    private var typed: String? {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard let at = arguments.firstIndex(of: "-KaeriType"), arguments.indices.contains(at + 1) else { return nil }
+        return arguments[at + 1]
+    }
 
     /// The one the launch arguments name.
     public static func from(arguments: [String] = ProcessInfo.processInfo.arguments) -> MotionDemo? {
@@ -93,7 +113,7 @@ public enum MotionDemo: String, CaseIterable, Sendable {
         case .backSpotlight, .backReopen:
             MotionDemo.t1Spotlight.run(navigator: navigator, store: store)
             try? await Task.sleep(for: .seconds(2))
-        case .episodeRange, .protectionLine, .reveal:
+        case .episodeRange, .protectionLine, .reveal, .goTo, .typed:
             for _ in 0..<200 {
                 if let id = navigator.titleOnMac ?? navigator.paths[navigator.section]?.last?.id,
                    store.titles.episodes[id] != nil { break }
@@ -260,6 +280,43 @@ public enum MotionDemo: String, CaseIterable, Sendable {
                   let first = EpisodeProtection.startsAt(rows, spoilers: store.spoilerProtection(for: id))
             else { return }
             withAnimation(.standard) { navigator.showSynopsis(id, first) }
+        case .period:
+            store.loadTrending(store.search.trendingPeriod == .today ? .week : .today)
+        case .surprise:
+            guard let pool = surprisePool(store: store, navigator: navigator) else { return }
+            navigator.anotherAsked = false
+            store.surprise(pool)
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(2400))
+                guard let visit = navigator.pickVisit else { return }
+                navigator.anotherAsked = true
+                store.surprise(visit.pool)
+            }
+        case .goTo:
+            guard let id = navigator.titleOnMac ?? navigator.paths[navigator.section]?.last?.id,
+                  let loaded = store.titles.episodes[id], let entry = store.titles[id]
+            else { return }
+            let rows = entry.episodeTable(loaded)
+            let numbers = (typed ?? "137,140,190").split(separator: ",").map(String.init)
+            Task { @MainActor in
+                for (at, number) in numbers.enumerated() {
+                    if at > 0 { try? await Task.sleep(for: .seconds(2)) }
+                    if case .row(let index, let range) = goToResult(rows: rows, typed: number) {
+                        navigator.land(on: id, rows: rows, index: Int(index), range: range.map(Int.init))
+                    }
+                }
+            }
+        case .typed:
+            guard let id = navigator.titleOnMac ?? navigator.paths[navigator.section]?.last?.id,
+                  let loaded = store.titles.episodes[id], let entry = store.titles[id]
+            else { return }
+            let rows = entry.episodeTable(loaded)
+            Task { @MainActor in
+                for digit in typed ?? "237" {
+                    navigator.typeEpisode(String(digit), title: id, rows: rows)
+                    try? await Task.sleep(for: .milliseconds(150))
+                }
+            }
         }
     }
 }

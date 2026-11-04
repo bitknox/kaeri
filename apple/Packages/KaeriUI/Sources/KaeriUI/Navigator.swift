@@ -146,6 +146,8 @@ public final class Navigator {
     var goToShown: AnilistId?
     /// The digits typed into the focused episode list, shown in a capsule until the jump.
     var typedEpisode: TypedEpisode?
+    /// The pause after a typed digit, before the jump, and the capsule's second after it.
+    @ObservationIgnored var typingPause: Task<Void, Never>?
     /// The ranges of the episode list on screen, which the View menu steps through.
     var episodeRangesShown: EpisodeRangesShown?
     /// Counts the asks to scroll the episode list on screen to its last row, for the motion

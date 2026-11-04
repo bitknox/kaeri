@@ -9812,7 +9812,7 @@ object Strings {
     fun episodeGoToTitle(context: Context): String =
         context.getString(R.string.episode_go_to_title)
 
-    /** Default button of the Go to episode field, which goes to the number typed. */
+    /** Button of the Go to episode field that goes to the number typed. */
     fun episodeGoToGo(context: Context): String =
         context.getString(R.string.episode_go_to_go)
 

@@ -9408,7 +9408,7 @@
   </data>
   <data name="EpisodeGoToGo" xml:space="preserve">
     <value>Go</value>
-    <comment>Default button of the Go to episode field, which goes to the number typed.</comment>
+    <comment>Button of the Go to episode field that goes to the number typed.</comment>
   </data>
   <data name="EpisodeGoToHint" xml:space="preserve">
     <value>{first} to {last}</value>

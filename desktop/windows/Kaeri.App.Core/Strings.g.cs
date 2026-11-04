@@ -6843,7 +6843,7 @@ public static partial class T
     /// <summary>Title of the Go to episode field.</summary>
     public static string EpisodeGoToTitle => Get("EpisodeGoToTitle");
 
-    /// <summary>Default button of the Go to episode field, which goes to the number typed.</summary>
+    /// <summary>Button of the Go to episode field that goes to the number typed.</summary>
     public static string EpisodeGoToGo => Get("EpisodeGoToGo");
 
     /// <summary>Placeholder of the Go to episode field: the first and last episode of the show.</summary>

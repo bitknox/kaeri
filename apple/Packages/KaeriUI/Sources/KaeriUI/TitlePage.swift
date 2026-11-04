@@ -254,17 +254,16 @@ struct TitlePage: View {
                 }
             }
         }
-        .overlay(alignment: .topTrailing) {
-            if let typed = navigator.typedEpisode, typed.title == entry.id {
-                TypedEpisodeCapsule(text: typed.text, failed: typed.failed)
-                    .padding(EdgeInsets(top: 64, leading: 0, bottom: 0, trailing: 28))
-                    .transition(.opacity)
-                    .allowsHitTesting(false)
-            }
-        }
+        #if os(macOS)
+        .overlay(alignment: .topTrailing) { TypedCapsuleSlot(title: entry.id, top: 64) }
+        #endif
         .nudgeableScroll()
         .scrollIndicators(.never)
         .ignoresSafeArea(edges: .top)
+        #if os(iOS)
+        // Under the navigation bar, which the page's art runs beneath.
+        .overlay(alignment: .topTrailing) { TypedCapsuleSlot(title: entry.id, top: 12) }
+        #endif
         .trailerLaunchSheet(entry)
         .background(.ground)
         .unwatchedRotor(store.titles.episodes[entry.id] ?? [], in: rotor)
@@ -880,6 +879,8 @@ struct SeasonScroller<Cell: View>: View {
 struct EpisodeList: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
+    /// The iPad's Reduce Motion; the Mac's reaches `navigator.motionReduced` through its shell.
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var unwatchedOnly = false
     /// The last title whose rows were on screen, and how tall they stood: another title's
     /// placeholders keep that room, so nothing below or beside them moves until its rows come.
@@ -893,8 +894,6 @@ struct EpisodeList: View {
     @State private var pickers = PickersPlace()
     /// Whether Go to episode's popover is open, hanging from the range menu or the heading.
     @State private var goToOpen = false
-    /// The pause after a typed digit, before the jump.
-    @State private var typing: Task<Void, Never>?
     let entry: Entry
     /// Where the page's Unwatched episodes rotor finds the rows.
     let rotor: Namespace.ID
@@ -1027,20 +1026,33 @@ struct EpisodeList: View {
         .task { navigator.goToShown = entry.id }
         .onDisappear { if navigator.goToShown == entry.id { navigator.goToShown = nil } }
         .onChange(of: navigator.goToAsked) { goToOpen = true }
-        // A row landed: the range has switched where it had to, and the row goes to the top.
+        // A row landed: a near one scrolls to the top; another range, a long jump and Reduce
+        // Motion crossfade to the list with the row already there.
         .onChange(of: navigator.goToRow[entry.id]) { _, landed in
             guard let landed, let scroller else { return }
-            if let fold = plan.fold, let at = plan.shown.firstIndex(where: { $0.number == landed.number }),
-               at < fold.count, !navigator.watchedShown(entry.id) {
-                navigator.toggleWatched(entry.id)
-            }
-            Task {
-                // A range switch crossfades first, in place; then the row scrolls into place.
-                try? await Task.sleep(for: .milliseconds(navigator.motionReduced ? 50 : 250))
-                if navigator.motionReduced {
-                    scroller.scrollTo(landed.number, anchor: UnitPoint(x: 0, y: 0.1))
-                } else {
-                    withAnimation(.standard) { scroller.scrollTo(landed.number, anchor: UnitPoint(x: 0, y: 0.1)) }
+            let switching = landed.range != nil && landed.range != plan.index
+            let target = switching ? EpisodePlan(rows: rows, picked: landed.range) : plan
+            let at = target.shown.firstIndex { $0.number == landed.number } ?? 0
+            let average = lastRows.flatMap { $0.id == entry.id && !plan.shown.isEmpty ? $0.height / CGFloat(plan.shown.count) : nil } ?? 80
+            let move = GoToMove.to(index: at, switching: switching, reduced: navigator.motionReduced || reduceMotion, pickersTop: pickers.top, rowHeight: average)
+            // The watched run the row is folded into opens first.
+            let opens = target.fold.map { at < $0.count } == true && !navigator.watchedShown(entry.id)
+            switch move {
+            case .scroll:
+                if opens { navigator.toggleWatched(entry.id) }
+                Task {
+                    if opens { try? await Task.sleep(for: .milliseconds(300)) }
+                    withAnimation(GoToMove.scrolling) { scroller.scrollTo(landed.number, anchor: UnitPoint(x: 0, y: 0.1)) }
+                }
+            case .crossfade:
+                WindowCrossfade.run {
+                    WindowCrossfade.still {
+                        if switching, let range = landed.range { navigator.episodeRange[entry.id] = range }
+                        if opens { navigator.toggleWatched(entry.id) }
+                    }
+                    // The rows of the range are laid out before the scroll finds the row.
+                    try? await Task.sleep(for: .milliseconds(50))
+                    WindowCrossfade.still { scroller.scrollTo(landed.number, anchor: UnitPoint(x: 0, y: 0.1)) }
                 }
             }
         }
@@ -1054,7 +1066,6 @@ struct EpisodeList: View {
         }
         .onKeyPress(.return) {
             guard navigator.typedEpisode?.title == entry.id else { return .ignored }
-            typing?.cancel()
             jump(rows: rows, plan: plan)
             return .handled
         }
@@ -1080,27 +1091,11 @@ struct EpisodeList: View {
 
     /// One more digit, and the jump after 0.6 s of quiet.
     private func type(_ digits: String, rows: [EpisodeRow], plan: EpisodePlan) {
-        let text = (navigator.typedEpisode?.title == entry.id ? navigator.typedEpisode?.text ?? "" : "") + digits
-        withAnimation(.fadeIn) { navigator.typedEpisode = TypedEpisode(title: entry.id, text: text) }
-        typing?.cancel()
-        typing = Task {
-            try? await Task.sleep(for: .milliseconds(600))
-            if !Task.isCancelled { jump(rows: rows, plan: plan) }
-        }
+        navigator.typeEpisode(digits, title: entry.id, rows: rows)
     }
 
     private func jump(rows: [EpisodeRow], plan: EpisodePlan) {
-        guard let typed = navigator.typedEpisode, typed.title == entry.id else { return }
-        let result = goToResult(rows: rows, typed: typed.text)
-        if case .row = result {
-            land(result, rows: rows, plan: plan)
-        } else {
-            navigator.typedEpisode?.failed = true
-        }
-        typing = Task {
-            try? await Task.sleep(for: .seconds(1))
-            if !Task.isCancelled { withAnimation(.fadeIn) { navigator.typedEpisode = nil } }
-        }
+        navigator.jumpToTyped(title: entry.id, rows: rows)
     }
 
     private func row(_ row: EpisodeRow, protectedFrom: (row: String, after: Int)?) -> some View {

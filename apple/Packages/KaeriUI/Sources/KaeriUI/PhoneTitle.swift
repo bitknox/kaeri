@@ -324,20 +324,43 @@ struct PhoneTitle: View {
                 store.artwork.request(art.url, maxPixelSize: art.pixels)
             }
         }
-        // Go to episode landed a row: the range has switched where it had to, and the row goes to
-        // the top of the list.
+        // Go to episode landed a row: a near one scrolls to the top; another range, a long jump
+        // and Reduce Motion crossfade to the list with the row already there.
         .onChange(of: navigator.goToRow[id]) { _, landed in
             guard let landed else { return }
-            if let fold = plan.fold, let at = plan.shown.firstIndex(where: { $0.number == landed.number }),
-               at < fold.count, !navigator.watchedShown(id) {
-                navigator.toggleWatched(id)
-            }
-            Task {
-                try? await Task.sleep(for: .milliseconds(reduceMotion ? 50 : 250))
-                if reduceMotion {
-                    reader.scrollTo(landed.number, anchor: UnitPoint(x: 0, y: 0.1))
-                } else {
-                    withAnimation(.standard) { reader.scrollTo(landed.number, anchor: UnitPoint(x: 0, y: 0.1)) }
+            let switching = landed.range != nil && landed.range != plan.index
+            let target = switching ? EpisodePlan(rows: episodes, picked: landed.range) : plan
+            let at = target.shown.firstIndex { $0.number == landed.number } ?? 0
+            let onScreen = target.shown.indices.filter { pickers.onScreen.contains(target.shown[$0].number) }
+            let move = GoToMove.to(
+                index: at, switching: switching, reduced: reduceMotion, onScreen: onScreen, pickersTop: pickers.now, rowHeight: 92
+            )
+            let opens = target.fold.map { at < $0.count } == true && !navigator.watchedShown(id)
+            // A list scrolls a row to its top, centre or bottom only, and its top is under the
+            // navigation bar: the row above goes to the top, so the landed row stands just below
+            // the bar. The first row, or one under a closed fold, is centred.
+            let drawnFrom = (opens || navigator.watchedShown(id)) ? 0 : target.fold?.count ?? 0
+            let above: String? = at - 1 >= drawnFrom ? target.shown[at - 1].number : nil
+            let place = { reader.scrollTo(above ?? landed.number, anchor: above == nil ? .center : .top) }
+            switch move {
+            case .scroll:
+                if opens { navigator.toggleWatched(id) }
+                Task {
+                    if opens { try? await Task.sleep(for: .milliseconds(300)) }
+                    withAnimation(.standard) { place() }
+                }
+            case .crossfade:
+                WindowCrossfade.run {
+                    WindowCrossfade.still {
+                        if switching, let range = landed.range { navigator.episodeRange[id] = range }
+                        if opens { navigator.toggleWatched(id) }
+                    }
+                    try? await Task.sleep(for: .milliseconds(50))
+                    // A far row has no place in the list yet: centring it lays it and its
+                    // neighbours out, and then the row above can go to the top.
+                    WindowCrossfade.still { reader.scrollTo(landed.number, anchor: .center) }
+                    try? await Task.sleep(for: .milliseconds(50))
+                    WindowCrossfade.still { place() }
                 }
             }
         }
@@ -462,10 +485,12 @@ struct PhoneEpisodes: View {
                         .bareRow(inset)
                         .transition(.opacity.animation(.fadeIn))
                 }
-                ForEach(plan.shown.dropFirst(plan.fold?.count ?? 0), id: \.number) {
-                    PhoneEpisodeRow(entry: entry, row: $0, spoilers: spoilers, rotor: rotor, room: room, protectedFrom: protectedFrom)
+                ForEach(plan.shown.dropFirst(plan.fold?.count ?? 0), id: \.number) { row in
+                    PhoneEpisodeRow(entry: entry, row: row, spoilers: spoilers, rotor: rotor, room: room, protectedFrom: protectedFrom)
                         .bareRow(inset)
                         .transition(.opacity)
+                        .onAppear { pickers?.onScreen.insert(row.number) }
+                        .onDisappear { pickers?.onScreen.remove(row.number) }
                 }
             } else {
                 EpisodePlaceholders(count: entry.episodes, metrics: .phone)

@@ -210,6 +210,10 @@ struct EpisodePlan {
 
     /// Where they stand now, on screen or scrolled away.
     var now: CGFloat { top - (offset - offsetSeen) }
+
+    /// The episode rows a lazy list has on screen, by number: what Go to episode measures a
+    /// jump from, since rows far away have no place yet.
+    var onScreen: Set<String> = []
 }
 
 /// The language a synopsis is written in, so a screen reader and the line breaking follow the

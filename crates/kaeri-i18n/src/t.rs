@@ -15427,7 +15427,7 @@ pub fn episode_go_to_title() -> String {
     text("episode-go-to-title", &[])
 }
 
-/// Default button of the Go to episode field, which goes to the number typed.
+/// Button of the Go to episode field that goes to the number typed.
 pub fn episode_go_to_go() -> String {
     text("episode-go-to-go", &[])
 }

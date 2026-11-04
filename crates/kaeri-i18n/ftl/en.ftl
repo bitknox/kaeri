@@ -9600,7 +9600,7 @@ episode-go-to = Go to episode…
 # Title of the Go to episode field.
 episode-go-to-title = Go to episode
 
-# Default button of the Go to episode field, which goes to the number typed.
+# Button of the Go to episode field that goes to the number typed.
 episode-go-to-go = Go
 
 # Placeholder of the Go to episode field: the first and last episode of the show.
