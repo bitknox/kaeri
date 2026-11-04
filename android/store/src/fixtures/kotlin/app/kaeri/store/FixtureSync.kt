@@ -5,10 +5,14 @@
 package app.kaeri.store
 
 import app.kaeri.engine.model.Event
+import app.kaeri.engine.model.SyncDeviceView
 import app.kaeri.engine.model.SyncFolderKind
 import app.kaeri.engine.model.SyncFolderSpec
 import app.kaeri.engine.model.SyncProblem
 import app.kaeri.engine.model.SyncSignInStep
+import app.kaeri.engine.model.SyncStatus
+import app.kaeri.engine.model.SyncStoreOffer
+import app.kaeri.engine.model.SyncStoreProblem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
@@ -17,7 +21,7 @@ object FixtureSync {
     /** The states [stage] knows, for the log's sake. */
     val STATES = listOf(
         "road", "picker", "nextcloud", "nextcloud-wait", "webdav", "waiting", "finishing", "key", "key-wrong", "recovery-key",
-        "add", "code", "name", "offline", "signed-out", "denied", "other-group", "switch", "setting-up", "pair-ok", "first-code", "first-ok",
+        "add", "code", "name", "offline", "signed-out", "denied", "other-group", "switch", "setting-up", "pair-ok", "first-code", "first-ok", "first-ok-join", "join-failed-offline", "join-failed-refused", "join-failed-not-allowed",
         "google-code", "onedrive-code", "code-expired", "dropbox-phone", "dropbox-nophone", "nextcloud-qr", "who",
     )
 
@@ -26,7 +30,26 @@ object FixtureSync {
 
     /** Set up [state] once the engine has said how sync stands. False for a state there is none of. */
     suspend fun stage(store: AppStore, state: String): Boolean {
+        val kim = SyncDeviceView(id = "kim", name = "Kim's phone", thisDevice = false)
+        val offer = SyncStoreOffer(address = "https://plugins.example", name = "Example plugins", inviteFrom = "kim")
         when (state) {
+            "first-ok-join" -> {
+                store.apply(Event.SyncStatus(SyncStatus(enabled = true, syncing = false, devices = listOf(kim), storesToJoin = listOf(offer))))
+                store.sync.first(true)
+                store.apply(Event.SyncSignInsCopied("Kim's phone", listOf("anilist"), listOf(SyncFolderKind.DROPBOX), emptyList()))
+                return true
+            }
+            "join-failed-offline", "join-failed-refused", "join-failed-not-allowed" -> {
+                store.apply(Event.SyncStatus(SyncStatus(enabled = true, syncing = false, devices = listOf(kim))))
+                val problem = when (state) {
+                    "join-failed-offline" -> SyncStoreProblem.OFFLINE
+                    "join-failed-refused" -> SyncStoreProblem.REFUSED
+                    else -> SyncStoreProblem.NOT_ALLOWED
+                }
+                store.apply(Event.SyncStoreJoinFailed("kim", "https://plugins.example", "Example plugins", problem))
+                delay(800)
+                return true
+            }
             "first-code" -> {
                 store.sync.first(true)
                 store.sync.show(SyncSheet.CODE)

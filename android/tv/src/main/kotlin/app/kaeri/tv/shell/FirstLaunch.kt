@@ -42,6 +42,7 @@ import app.kaeri.store.AppStore
 import app.kaeri.store.DevicePreferences
 import app.kaeri.store.SyncSheet
 import app.kaeri.store.copyAllSignIns
+import app.kaeri.store.joinStoresFrom
 import app.kaeri.store.pairInvite
 import app.kaeri.tv.sync.tvDeviceName
 import app.kaeri.tv.signin.JoinStoreScreen
@@ -151,6 +152,7 @@ private fun Welcome(onNext: () -> Unit) {
                 TonalButton(onClick = {
                     store.sync.first(true)
                     store.copyAllSignIns()
+                    store.joinStoresFrom(null)
                     store.pairInvite(tvDeviceName(context))
                     store.sync.show(SyncSheet.CODE)
                 }) { ButtonLabel(stringResource(I18nR.string.first_setup_phone)) }

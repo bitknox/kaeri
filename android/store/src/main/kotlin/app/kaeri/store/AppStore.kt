@@ -1328,6 +1328,8 @@ class AppStore(
             is Event.SyncProblem -> sync.problem(event.v1)
             is Event.SyncPairFailed -> sync.pairFailed(event.problem, event.device)
             is Event.SyncSignInsCopied -> sync.copied(SignInsCopied(event.device, event.trackers, event.clouds, event.lacking))
+            is Event.SyncStoreJoined -> sync.storeJoin(StoreJoin.Joined(event.device, event.name))
+            is Event.SyncStoreJoinFailed -> sync.storeJoin(StoreJoin.Failed(event.device, event.name, event.problem))
             is Event.Profiles -> sync.profiles(event.v1)
             is Event.ProfileSwitch -> onProfileSwitch?.invoke(event.id)
             is Event.ViewerTitleLanguage -> accounts.viewerTitleLanguage(event.v1)

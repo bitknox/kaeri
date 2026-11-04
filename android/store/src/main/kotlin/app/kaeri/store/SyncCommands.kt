@@ -139,6 +139,15 @@ fun AppStore.copyAllSignIns() {
     copySignIns(null, listOf(SyncCopy.Trackers) + clouds)
 }
 
+/**
+ * Join plugin stores through the paired device [device], which makes this device an invite of its own to each.
+ * [stores] are addresses from the status offers; empty means every store it holds that this device doesn't.
+ * With a null [device] the ask goes to the next device this one pairs with, inside the pairing: first launch's default.
+ */
+fun AppStore.joinStoresFrom(device: String?, stores: List<String> = emptyList(), address: String? = null) {
+    send(Command.SyncGroup(SyncCommand.JoinStoresFrom(device, stores, address)))
+}
+
 /** Pair with whichever device on this network shows [code]. */
 fun AppStore.pairWithCode(deviceName: String, code: String) {
     sync.problemSeen()

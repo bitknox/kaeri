@@ -127,7 +127,8 @@ internal fun SpotlightBlock(spot: Spotlight, h: HomeHandlers) {
     val short = configuration.screenHeightDp < 480
     // The engine's line; "Not found in your sources" goes under the actions instead, so the
     // check's answer, which can take 4 s, never moves the synopsis or the buttons.
-    val line = spot.line?.text(context) ?: spot.starts?.words()?.let { Strings.upNextStarts(context, it) }
+    val line = app.kaeri.store.continueFromDeviceLine(context, spot.lastDevice, spot.episode.toInt(), spot.resume)
+        ?: spot.line?.text(context) ?: spot.starts?.words()?.let { Strings.upNextStarts(context, it) }
     val art: @Composable (Modifier) -> Unit = { m ->
         BannerArt(entry, m.aspectRatio(16f / 9f).shared(Shared.Art, id, "home-spotlight").shared(Shared.Player, id).clip(ArtShape.banner))
     }

@@ -60,6 +60,8 @@ import app.kaeri.store.deleteProfile
 import app.kaeri.store.leaveSync
 import app.kaeri.store.loadSync
 import app.kaeri.store.pairInvite
+import app.kaeri.store.joinStoresFrom
+import app.kaeri.store.storeOffersFrom
 import app.kaeri.store.pairStop
 import app.kaeri.store.removeSyncDevice
 import app.kaeri.store.startSync
@@ -370,7 +372,17 @@ private fun PairOkPage(copied: app.kaeri.store.SignInsCopied) {
     val store = LocalAppStore.current
     val first by store.sync.first.collectAsStateWithLifecycle()
     val focus = remember { FocusRequester() }
-    val done = { store.sync.copiedSeen(); store.sync.first(false); store.sync.show(null) }
+    val context = LocalContext.current
+    val status by store.sync.status.collectAsStateWithLifecycle()
+    val offers = status.storeOffersFrom(copied.device)
+    var off by rememberSaveable { mutableStateOf(setOf<String>()) }
+    val done = {
+        offers?.let { (device, list) ->
+            val chosen = list.map { it.address }.filter { it !in off }
+            if (chosen.isNotEmpty()) store.joinStoresFrom(device.id, chosen)
+        }
+        store.sync.copiedSeen(); store.sync.first(false); store.sync.show(null)
+    }
     SyncPage(onBack = done, focus) {
         Text(stringResource(R.string.pair_ok, copied.device), style = MaterialTheme.typography.titleLarge, color = ObiSilk.Silk, modifier = Modifier.semantics { heading() })
         Text(
@@ -379,6 +391,21 @@ private fun PairOkPage(copied: app.kaeri.store.SignInsCopied) {
             color = ObiSilk.Silk,
             modifier = Modifier.widthIn(max = 720.dp),
         )
+        offers?.let { (device, list) ->
+            Column(Modifier.widthIn(max = 720.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                list.forEach { offer ->
+                    val on = offer.address !in off
+                    TvListRow(
+                        Strings.firstJoinStore(context, offer.name),
+                        onClick = { off = if (on) off + offer.address else off - offer.address },
+                        supporting = Strings.firstJoinStoreLine(context, device.name, stringResource(R.string.device_kind_tv)),
+                        supportingLines = 2,
+                        switch = on,
+                        height = 80.dp,
+                    )
+                }
+            }
+        }
         AmberButton(onClick = done, icon = null, modifier = Modifier.focusRequester(focus)) { ButtonLabel(stringResource(if (first) R.string.onboarding_continue else R.string.action_done)) }
     }
 }

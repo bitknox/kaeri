@@ -265,6 +265,7 @@ fun AppRoot(
     ) {
         EngineNotices(onHint = routed.hint)
         SourcePinNotice()
+        StoreJoinNotices()
         LicensedReturnNotice()
         CrashNoticeAndReport()
         UpdatePrompts()

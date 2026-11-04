@@ -18,6 +18,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import app.kaeri.i18n.Strings
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -56,6 +61,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.kaeri.store.copyAllSignIns
+import app.kaeri.store.joinStoresFrom
+import app.kaeri.store.storeOffersFrom
 import app.kaeri.store.pairInvite
 import app.kaeri.store.pairStop
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -210,15 +217,23 @@ private fun SetUpPage(done: () -> Unit) {
         store.sync.first(true)
         if (store.sync.invite.value == null && store.sync.copied.value == null) {
             store.copyAllSignIns()
+            store.joinStoresFrom(null)
             store.pairInvite(systemDeviceName(context))
         }
     }
     val shown = copied
     if (shown != null) {
+        val status by store.sync.status.collectAsStateWithLifecycle()
+        val offers = status.storeOffersFrom(shown.device)
+        var off by rememberSaveable { mutableStateOf(setOf<String>()) }
         PageFrame(
             buttons = {
                 Button(
                     onClick = {
+                        offers?.let { (device, list) ->
+                            val chosen = list.map { it.address }.filter { it !in off }
+                            if (chosen.isNotEmpty()) store.joinStoresFrom(device.id, chosen)
+                        }
                         store.sync.copiedSeen()
                         store.sync.first(false)
                         done()
@@ -229,6 +244,16 @@ private fun SetUpPage(done: () -> Unit) {
         ) {
             PageTitle(stringResource(R.string.pair_ok, shown.device))
             PageLine(stringResource(R.string.first_ok_line), Modifier.padding(top = 8.dp))
+            offers?.let { (device, list) ->
+                list.forEach { offer ->
+                    JoinStoreSwitch(
+                        title = Strings.firstJoinStore(context, offer.name),
+                        line = Strings.firstJoinStoreLine(context, device.name, kindWord()),
+                        checked = offer.address !in off,
+                        onChange = { on -> off = if (on) off - offer.address else off + offer.address },
+                    )
+                }
+            }
         }
         return
     }
@@ -365,6 +390,29 @@ private fun PageFrame(buttons: @Composable ColumnScope.() -> Unit, top: (@Compos
                 content = buttons,
             )
         }
+    }
+}
+
+/** The success page's "Join the plugin store" switch: its name, what the paired device does, and the switch. */
+@Composable
+private fun JoinStoreSwitch(title: String, line: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+    val onWord = stringResource(R.string.value_on)
+    val offWord = stringResource(R.string.value_off)
+    Row(
+        Modifier
+            .padding(top = 24.dp)
+            .fillMaxWidth()
+            .heightIn(min = 72.dp)
+            .toggleable(checked, role = Role.Switch, onValueChange = onChange)
+            .semantics { stateDescription = if (checked) onWord else offWord },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            Text(line, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        SettingSwitchMark(checked)
     }
 }
 

@@ -24,6 +24,15 @@ data class CloudSignIn(val service: SyncFolderKind, val step: SyncSignInStep?)
 /** What a pairing from this device came to: who it paired with, and what the other side gave. */
 data class SignInsCopied(val device: String, val trackers: List<String>, val clouds: List<SyncFolderKind>, val lacking: List<SyncFolderKind>)
 
+/** What joining a plugin store through a paired device came to: [store] is its name, [device] the paired device's id. */
+sealed interface StoreJoin {
+    val device: String
+    val store: String
+
+    data class Joined(override val device: String, override val store: String) : StoreJoin
+    data class Failed(override val device: String, override val store: String, val problem: app.kaeri.engine.model.SyncStoreProblem) : StoreJoin
+}
+
 /** The sheets the Devices page opens, one at a time. */
 enum class SyncSheet { ROAD, PICKER, NEXTCLOUD, WEBDAV, KEY, ADD, CODE, NAME, SWITCH }
 
@@ -150,6 +159,20 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
         _pairFailed.value = problem to device
     }
 
+    private val _storeJoins = MutableStateFlow<List<StoreJoin>>(emptyList())
+
+    /** Stores joined or not through a paired device, in the order they were answered, until [storeJoinsSeen]. */
+    val storeJoins: StateFlow<List<StoreJoin>> = _storeJoins.asStateFlow()
+
+    internal fun storeJoin(join: StoreJoin) {
+        _storeJoins.value = _storeJoins.value + join
+    }
+
+    /** The answers were shown. */
+    fun storeJoinsSeen() {
+        _storeJoins.value = emptyList()
+    }
+
     private val _first = MutableStateFlow(false)
 
     /** True while a pairing runs from the first-launch pages, which word the code and the success as theirs. */
@@ -190,4 +213,18 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
 
     /** The cloud service [kind] in the picker, if this build has it. */
     fun cloud(kind: SyncFolderKind): SyncCloudView? = clouds().firstOrNull { it.service == kind }
+}
+
+/** The device that just paired, by [deviceName], with the stores it holds an invite to that this device can join: null when it holds none. */
+fun SyncStatus?.storeOffersFrom(deviceName: String): Pair<app.kaeri.engine.model.SyncDeviceView, List<app.kaeri.engine.model.SyncStoreOffer>>? {
+    val device = this?.devices?.firstOrNull { !it.thisDevice && it.name == deviceName } ?: return null
+    val offers = storesToJoin.filter { it.inviteFrom == device.id }
+    return if (offers.isEmpty()) null else device to offers
+}
+
+/** Why [this] store was not joined, in words, with [device] the paired device's name. */
+fun StoreJoin.Failed.text(context: android.content.Context, device: String): String = when (problem) {
+    app.kaeri.engine.model.SyncStoreProblem.OFFLINE -> app.kaeri.i18n.Strings.syncStoreErrOffline(context, store, device)
+    app.kaeri.engine.model.SyncStoreProblem.REFUSED -> app.kaeri.i18n.Strings.syncStoreErrRefused(context, store)
+    app.kaeri.engine.model.SyncStoreProblem.NOT_ALLOWED -> app.kaeri.i18n.Strings.syncStoreErrNotAllowed(context, store, device)
 }
