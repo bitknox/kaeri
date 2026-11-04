@@ -25,6 +25,16 @@ pub enum SyncError {
     Removed,
     #[error("{0}")]
     Pairing(String),
+    /// The device dialled is showing a code, and it is not the one given.
+    #[error("the code was wrong")]
+    WrongCode,
+    /// The device dialled is showing no code: it ran out, its tries were used, or it never
+    /// showed one.
+    #[error("that device is not showing a code")]
+    NoCode,
+    /// One of the two devices has its Sync switch off, so they do not exchange.
+    #[error("sync with that device is off")]
+    Paused,
     #[error("{0}")]
     Network(String),
 }

@@ -17,11 +17,11 @@ use std::{
 use kaeri_model::{
     event::Event,
     group::{
-        SyncDeviceView, SyncFolderKind, SyncFolderSpec, SyncFolderView, SyncNoteView,
-        SyncProblem, SyncSignInStep, SyncStatus, SyncStoreOffer,
+        SyncDeviceKind, SyncDeviceView, SyncFolderKind, SyncFolderSpec, SyncFolderView,
+        SyncNoteView, SyncPairProblem, SyncProblem, SyncSignInStep, SyncStatus, SyncStoreOffer,
     },
 };
-use kaeri_store::sync::Effect;
+use kaeri_store::sync::{Effect, kinds};
 use kaeri_sync::{
     SyncError,
     folder::{DirTarget, FolderError, FolderTarget},
@@ -32,6 +32,13 @@ use kaeri_sync::{
     road::{FolderReport, FolderRoad},
     webdav::{Password, WebDavTarget},
 };
+
+/// What the app's DNS-SD speaks to sync through [`ThisDevice::set_network`].
+pub mod network {
+    pub use kaeri_sync::lan::{
+        Advert, Advertiser, Browser, Discovery, DiscoverySink, Found, SERVICE_TYPE,
+    };
+}
 
 use crate::{
     cloud::{self, Ended, Service},
@@ -62,6 +69,16 @@ const PROBLEM: &str = "engine.problem";
 const SIGN_IN: &str = "signin:";
 /// When the recovery key this device holds was made, in Unix seconds.
 const RECOVERY_MADE: &str = "engine.recovery_made";
+/// `1` while the folder says the group holds back from this device (its Sync switch is off).
+const HELD: &str = "engine.held";
+/// What kind of device this is, as the app said: [`SyncDeviceKind::word`].
+const KIND: &str = "engine.kind";
+/// This device's remote key as the app said: `tv:<hex>` or `phone:<hex>`.
+const REMOTE_KEY: &str = "engine.remote_key";
+/// How long pairing by code waits for the browse to find a device showing one.
+const FIND_WAIT: Duration = Duration::from_secs(4);
+/// Once one is found, how much longer the browse goes on for others.
+const FIND_MORE: Duration = Duration::from_millis(400);
 /// What the folder road keeps of the folder it reads (cursors, numbers published), which means
 /// nothing in another folder.
 const ROAD_META: &str = "folder.";
@@ -105,6 +122,16 @@ pub struct SyncHub {
     pub cloud: crate::cloud::State,
     /// The language the front end speaks, as a tag, for the page a desktop sign-in ends on.
     language: Mutex<Option<String>>,
+    /// The app's DNS-SD: where a device showing a code says so, and how a device given only
+    /// the code finds it. See [`ThisDevice::set_network`].
+    advertiser: Mutex<Option<Arc<dyn lan::Advertiser>>>,
+    browser: Mutex<Option<Arc<dyn lan::Browser>>>,
+    /// The instance registered while this device listens for pairing, to withdraw.
+    advertised: Mutex<Option<String>>,
+}
+
+fn locked<T>(m: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
+    m.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
 impl std::fmt::Debug for SyncHub {
@@ -386,8 +413,11 @@ pub fn status(services: &Ctx) -> SyncStatus {
     let store = &services.store;
     let clouds = cloud::views(services);
     let Ok(Some(me)) = store.sync_device() else {
-        return SyncStatus { clouds, ..SyncStatus::default() };
+        // The name, kept from a rename while sync is off, for the next pairing to use.
+        let device_name = Some(device_name(services)).filter(|n| !n.is_empty());
+        return SyncStatus { clouds, device_name, ..SyncStatus::default() };
     };
+    let my_remote = remote_role(store, &me);
     let seen: std::collections::HashMap<String, i64> = store
         .sync_lead_candidates()
         .unwrap_or_default()
@@ -414,6 +444,21 @@ pub fn status(services: &Ctx) -> SyncStatus {
                 sign_ins: cloud.signins.iter().filter_map(|k| kind_of(k)).collect(),
                 folder: cloud.folder.as_deref().and_then(kind_of),
                 asked: crate::handoff::asked_of(store, &id),
+                kind: store
+                    .sync_reg_value(kinds::DEVICE_KIND, &id)
+                    .ok()
+                    .flatten()
+                    .and_then(|w| SyncDeviceKind::from_word(&w)),
+                paused: store.sync_device_paused(&id)
+                    || (id == me
+                        && store.sync_meta_get(HELD).ok().flatten().as_deref() == Some("1")),
+                remote_key: remote_key_for(store, &me, my_remote.as_ref(), &id),
+                remote_off: id != me
+                    && store
+                        .sync_reg_value(kinds::DEVICE_REMOTE, &pair_key(&me, &id))
+                        .ok()
+                        .flatten()
+                        .is_some_and(|v| v == "off"),
                 id,
                 name: name.unwrap_or_default(),
             }
@@ -735,6 +780,20 @@ pub(crate) fn announce_cloud(services: &Ctx) {
     {
         tracing::warn!(error = %e, "could not tell the group about this device's folder");
     }
+    announce_device(services);
+}
+
+/// Tell the group what kind of device this is and its remote's key, as the app said, when it
+/// changed.
+fn announce_device(services: &Ctx) {
+    for (meta, kind) in [(KIND, kinds::DEVICE_KIND), (REMOTE_KEY, kinds::DEVICE_REMOTE_KEY)] {
+        if let Some(value) =
+            services.store.sync_meta_get(meta).ok().flatten().filter(|v| !v.is_empty())
+            && let Err(e) = services.store.sync_set_mine(kind, &value)
+        {
+            tracing::warn!(error = %e, "could not tell the group about this device");
+        }
+    }
 }
 
 /// The account a folder is signed in to: the cloud drive's, or the Nextcloud or WebDAV login.
@@ -793,8 +852,14 @@ pub async fn pass(services: &Ctx, tx: &Outbox) {
     };
     services.syncing.running.store(false, Ordering::Release);
     match outcome {
+        Ok((road, report)) if report.paused => {
+            keep_ring(services, &road.keyring());
+            let _ = services.store.sync_meta_set(HELD, "1");
+            let _ = services.store.sync_meta_set(ERROR, "");
+        }
         Ok((road, report)) => {
             keep_ring(services, &road.keyring());
+            let _ = services.store.sync_meta_set(HELD, "");
             let _ = services.store.sync_meta_set(LAST, &kaeri_store::now().to_string());
             let _ = services.store.sync_meta_set(ERROR, "");
             let _ = services.store.sync_meta_set(PROBLEM, "");
@@ -837,6 +902,7 @@ fn carry_out(services: &Ctx, tx: &Outbox, report: FolderReport) {
 /// Leave the group: this device keeps its data and stops writing ops.
 pub fn leave(services: &Ctx, tx: &Outbox) {
     services.syncing.set_road(None);
+    stop_inviting(services);
     if let Err(e) = services.store.sync_disable() {
         tracing::warn!(error = %e, "could not turn sync off");
     }
@@ -845,7 +911,7 @@ pub fn leave(services: &Ctx, tx: &Outbox) {
     }
     // The cloud drives' sign-ins go with the group.
     cloud::forget_all(services);
-    for key in [FOLDER, NAME, LAST, ERROR, PROBLEM] {
+    for key in [FOLDER, NAME, LAST, ERROR, PROBLEM, HELD] {
         let _ = services.store.sync_meta_set(key, "");
     }
     let _ = services.store.sync_meta_remove(RECOVERY_MADE);
@@ -1139,11 +1205,22 @@ pub async fn invite(services: &Ctx, tx: &Outbox, device_name: String) {
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner)
         .clone();
+    let advert_of = me.clone();
     let listener = match held {
         Some(listener) => listener,
         None => {
-            let bound =
-                Listener::bind(me, services.store.clone(), ([0, 0, 0, 0], 0).into()).await;
+            // The usual port when it is free, so an address typed by hand needs none; any other.
+            let any = |port: u16| std::net::SocketAddr::from(([0, 0, 0, 0], port));
+            let bound = match Listener::bind(
+                me.clone(),
+                services.store.clone(),
+                any(lan::DEFAULT_PORT),
+            )
+            .await
+            {
+                Ok(listener) => Ok(listener),
+                Err(_) => Listener::bind(me, services.store.clone(), any(0)).await,
+            };
             let listener = match bound {
                 Ok(listener) => Arc::new(tokio::sync::Mutex::new(listener)),
                 Err(e) => return fail(services, tx, problem(&e)),
@@ -1176,6 +1253,16 @@ pub async fn invite(services: &Ctx, tx: &Outbox, device_name: String) {
         let guard = listener.lock().await;
         (guard.show_code(), guard.port())
     };
+    // Said on the network for a device given only the code: see `pair_with_code`.
+    let advertiser = locked(&services.syncing.advertiser).clone();
+    if let Some(advertiser) = advertiser {
+        let advert = advert_of.advert(port);
+        let before = locked(&services.syncing.advertised).replace(advert.instance.clone());
+        if let Some(before) = before.filter(|b| *b != advert.instance) {
+            advertiser.withdraw(&before);
+        }
+        advertiser.advertise(&advert);
+    }
     let _ = tx.send(Event::SyncInvite { code, port, seconds: lan::CODE_LIFETIME });
     say_status(services, tx);
 }
@@ -1183,10 +1270,36 @@ pub async fn invite(services: &Ctx, tx: &Outbox, device_name: String) {
 /// Stop listening: the code is gone and nobody can pair.
 pub fn stop_inviting(services: &Ctx) {
     *services.syncing.listener.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = None;
+    let instance = locked(&services.syncing.advertised).take();
+    let advertiser = locked(&services.syncing.advertiser).clone();
+    if let (Some(instance), Some(advertiser)) = (instance, advertiser) {
+        advertiser.withdraw(&instance);
+    }
 }
 
+/// An address as given: `host:port`, or an IP address alone on the usual port.
 fn address_of(text: &str) -> Result<std::net::SocketAddr, SyncProblem> {
-    text.trim().parse().map_err(|_| SyncProblem::Other(format!("not an address: {text}")))
+    let text = text.trim();
+    text.parse()
+        .or_else(|_| {
+            text.trim_start_matches('[')
+                .trim_end_matches(']')
+                .parse::<std::net::IpAddr>()
+                .map(|ip| std::net::SocketAddr::new(ip, lan::DEFAULT_PORT))
+        })
+        .map_err(|_| SyncProblem::Other(format!("not an address: {text}")))
+}
+
+/// Say why pairing did not work: for the sheet, then in words.
+fn pair_failed(
+    services: &Ctx,
+    tx: &Outbox,
+    problem: SyncPairProblem,
+    device: Option<String>,
+    words: SyncProblem,
+) {
+    let _ = tx.send(Event::SyncPairFailed { problem, device });
+    fail(services, tx, words);
 }
 
 /// Pair with the device showing `code` at `address`, then swap histories.
@@ -1202,7 +1315,268 @@ pub async fn pair(services: &Ctx, tx: &Outbox, device_name: String, address: &st
             carry_out_peer(services, tx, &report).await;
             say_status(services, tx);
         }
+        Err(SyncError::WrongCode) => {
+            let words = problem(&SyncError::WrongCode);
+            pair_failed(services, tx, SyncPairProblem::WrongCode, None, words);
+        }
+        Err(e @ (SyncError::NoCode | SyncError::Network(_))) => {
+            pair_failed(services, tx, SyncPairProblem::NotFound, None, problem(&e));
+        }
         Err(e) => fail(services, tx, problem(&e)),
+    }
+}
+
+/// Pair with whichever device on this network is showing `code`: the app's browse finds the
+/// devices listening for pairing, and each is tried with the code until one takes it. A device
+/// showing another code counts the try against its own.
+pub async fn pair_with_code(services: &Ctx, tx: &Outbox, device_name: String, code: &str) {
+    if let Err(p) = enable_for_pairing(services, &device_name) {
+        return fail(services, tx, p);
+    }
+    let Some(me) = lan_me(services) else {
+        return fail(services, tx, SyncProblem::Other("no key for this device".into()));
+    };
+    let mut wrong: Vec<String> = Vec::new();
+    for peer in showing_codes(services, &me).await {
+        for addr in &peer.addresses {
+            match lan::dial(&me, &services.store, *addr, Some(code), None).await {
+                Ok(report) => {
+                    carry_out_peer(services, tx, &report).await;
+                    return say_status(services, tx);
+                }
+                Err(SyncError::WrongCode) => {
+                    wrong.push(peer.instance.clone());
+                    break;
+                }
+                Err(SyncError::NoCode) => break,
+                // Another of its addresses may answer.
+                Err(_) => {}
+            }
+        }
+    }
+    if wrong.is_empty() {
+        let words = SyncProblem::Unreachable;
+        return pair_failed(services, tx, SyncPairProblem::NotFound, None, words);
+    }
+    let device = (wrong.len() == 1).then(|| wrong.remove(0));
+    let words = problem(&SyncError::WrongCode);
+    pair_failed(services, tx, SyncPairProblem::WrongCode, device, words);
+}
+
+/// The devices the app's browse finds listening for pairing, other than this one: the first
+/// within [`FIND_WAIT`], and any more within [`FIND_MORE`] of it.
+async fn showing_codes(services: &Ctx, me: &Me) -> Vec<lan::Found> {
+    let Some(browser) = locked(&services.syncing.browser).clone() else { return Vec::new() };
+    let (sink, mut seen) = lan::DiscoverySink::channel();
+    browser.start(sink);
+    let mine = me.identity.fingerprint().short();
+    let mut found: Vec<lan::Found> = Vec::new();
+    let mut until = tokio::time::Instant::now() + FIND_WAIT;
+    loop {
+        match tokio::time::timeout_at(until, seen.recv()).await {
+            Ok(Some(lan::Discovery::Found(peer))) => {
+                let usable = peer.id.as_deref() != Some(mine.as_str())
+                    && !peer.addresses.is_empty()
+                    && peer.protocol.is_none_or(|v| v == lan::VERSION);
+                found.retain(|p| p.instance != peer.instance);
+                if usable {
+                    if found.is_empty() {
+                        until = until.min(tokio::time::Instant::now() + FIND_MORE);
+                    }
+                    found.push(peer);
+                }
+            }
+            Ok(Some(lan::Discovery::Lost { instance })) => {
+                found.retain(|p| p.instance != instance);
+            }
+            Ok(None) | Err(_) => break,
+        }
+    }
+    browser.stop();
+    found
+}
+
+/// Rename this device in the group, or, with sync off, keep the name for the next pairing.
+pub fn rename(services: &Ctx, tx: &Outbox, name: &str) {
+    let name: String = name.trim().chars().take(64).collect();
+    if !name.is_empty() {
+        let _ = services.store.sync_meta_set(NAME, &name);
+        if let Err(e) = services.store.sync_rename_me(&name) {
+            tracing::warn!(error = %e, "could not rename this device in the sync log");
+        }
+    }
+    say_status(services, tx);
+}
+
+/// The key of the Remote switch between two devices: both ids, sorted.
+pub(crate) fn pair_key(a: &str, b: &str) -> String {
+    if a <= b { format!("{a}:{b}") } else { format!("{b}:{a}") }
+}
+
+/// A device's remote role and key, as it told the group: `(tv, hex)` or `(phone, hex)`.
+fn remote_role(store: &kaeri_store::Store, device: &str) -> Option<(String, String)> {
+    let value = store.sync_reg_value(kinds::DEVICE_REMOTE_KEY, device).ok().flatten()?;
+    let (role, key) = value.split_once(':')?;
+    Some((role.to_owned(), key.to_owned()))
+}
+
+/// `device`'s remote key, when it and this device are a TV and a phone: what the Remote switch
+/// on its page is about.
+fn remote_key_for(
+    store: &kaeri_store::Store,
+    me: &str,
+    mine: Option<&(String, String)>,
+    device: &str,
+) -> Option<String> {
+    if device == me {
+        return None;
+    }
+    let (my_role, _) = mine?;
+    let (role, key) = remote_role(store, device)?;
+    (role != *my_role).then_some(key)
+}
+
+/// After a switch changed a register: through the folder at once when there is one, which
+/// carries it and moves the markers; said as the status either way.
+async fn publish(services: &Ctx, tx: &Outbox) {
+    if saved_folder(services).is_some() {
+        pass(services, tx).await;
+    } else {
+        say_status(services, tx);
+    }
+}
+
+/// Turn another device's Sync switch on or off, for the whole group.
+pub async fn set_device_sync(services: &Ctx, tx: &Outbox, device: &str, on: bool) {
+    let Ok(Some(me)) = services.store.sync_device() else {
+        return fail(services, tx, SyncProblem::NoGroup);
+    };
+    if device == me {
+        return fail(
+            services,
+            tx,
+            SyncProblem::Other("this device stops with LeaveSync".into()),
+        );
+    }
+    if services.store.sync_device_paused(device) != on {
+        return say_status(services, tx);
+    }
+    let value = (!on).then_some("off");
+    if let Err(e) = services.store.sync_register(kinds::DEVICE_SYNC, device, value, None) {
+        return fail(services, tx, SyncProblem::Other(e.to_string()));
+    }
+    publish(services, tx).await;
+}
+
+/// Turn the Remote switch between this device and `device` on or off.
+pub async fn set_device_remote(services: &Ctx, tx: &Outbox, device: &str, on: bool) {
+    let Ok(Some(me)) = services.store.sync_device() else {
+        return fail(services, tx, SyncProblem::NoGroup);
+    };
+    let key = pair_key(&me, device);
+    let off = services.store.sync_reg_value(kinds::DEVICE_REMOTE, &key).ok().flatten();
+    if (off.as_deref() == Some("off")) != on {
+        return say_status(services, tx);
+    }
+    let value = (!on).then_some("off");
+    if let Err(e) = services.store.sync_register(kinds::DEVICE_REMOTE, &key, value, None) {
+        return fail(services, tx, SyncProblem::Other(e.to_string()));
+    }
+    publish(services, tx).await;
+}
+
+/// Which side of the remote this device is: a TV's server, or a device that drives TVs.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RemoteRole {
+    Tv,
+    Phone,
+}
+
+/// What sync hears about this device from the app beside the commands. Cheap to clone; one per
+/// engine, from [`crate::engine::Engine::this_device`].
+#[derive(Clone)]
+pub struct ThisDevice {
+    ctx: Ctx,
+    /// A command for the engine, as the app would send it: for a change that is the app's.
+    send: Arc<dyn Fn(kaeri_model::command::Command) + Send + Sync>,
+}
+
+impl ThisDevice {
+    pub(crate) fn of(
+        services: &Services,
+        send: impl Fn(kaeri_model::command::Command) + Send + Sync + 'static,
+    ) -> Self {
+        Self { ctx: Ctx::of(services), send: Arc::new(send) }
+    }
+
+    /// What kind of device this is, for the others' lists. Said to the group now if sync is on,
+    /// else once it is.
+    pub fn set_kind(&self, kind: SyncDeviceKind) {
+        let _ = self.ctx.store.sync_meta_set(KIND, kind.word());
+        announce_device(&self.ctx);
+    }
+
+    /// The fingerprint (hex) of this device's remote key: a TV's server, as it starts, or the
+    /// key a phone drives TVs with. The others match it against their remote pairings.
+    pub fn set_remote_key(&self, role: RemoteRole, fingerprint: &str) {
+        let role = match role {
+            RemoteRole::Tv => "tv",
+            RemoteRole::Phone => "phone",
+        };
+        let value = format!("{role}:{}", fingerprint.to_ascii_lowercase());
+        let _ = self.ctx.store.sync_meta_set(REMOTE_KEY, &value);
+        announce_device(&self.ctx);
+    }
+
+    /// The platform's DNS-SD, under [`lan::SERVICE_TYPE`]: the advertiser registers a device
+    /// while it shows a pairing code, and the browser finds one for `PairWithCode`.
+    pub fn set_network(
+        &self,
+        advertiser: Arc<dyn lan::Advertiser>,
+        browser: Arc<dyn lan::Browser>,
+    ) {
+        *locked(&self.ctx.syncing.advertiser) = Some(advertiser);
+        *locked(&self.ctx.syncing.browser) = Some(browser);
+    }
+
+    /// The group device that drives TVs with `phone` (a fingerprint, hex), if any.
+    fn phone_device(&self, phone: &str) -> Option<(String, String)> {
+        let me = self.ctx.store.sync_device().ok().flatten()?;
+        let want = format!("phone:{}", phone.to_ascii_lowercase());
+        let (device, _) = self
+            .ctx
+            .store
+            .sync_regs(kinds::DEVICE_REMOTE_KEY)
+            .ok()?
+            .into_iter()
+            .find(|(_, value)| *value == want)?;
+        Some((me, device))
+    }
+
+    /// Whether this TV takes commands from the paired phone `phone` (a fingerprint, hex): no
+    /// when it is in the group and the pair's Remote switch is off. A phone outside the group
+    /// is the remote's pairing alone to decide.
+    pub fn phone_allowed(&self, phone: &str) -> bool {
+        let Some((me, device)) = self.phone_device(phone) else { return true };
+        self.ctx
+            .store
+            .sync_reg_value(kinds::DEVICE_REMOTE, &pair_key(&me, &device))
+            .ok()
+            .flatten()
+            .as_deref()
+            != Some("off")
+    }
+
+    /// `phone` paired again on this TV, with a code: whoever typed it wants the remote on.
+    pub fn phone_paired_again(&self, phone: &str) {
+        if self.phone_allowed(phone) {
+            return;
+        }
+        if let Some((_, device)) = self.phone_device(phone) {
+            (self.send)(kaeri_model::command::Command::SyncGroup(
+                kaeri_model::group::SyncCommand::SetDeviceRemote { device, on: true },
+            ));
+        }
     }
 }
 
@@ -1221,5 +1595,27 @@ pub async fn sync_with(services: &Ctx, tx: &Outbox, device: &str, address: &str)
             say_status(services, tx);
         }
         Err(e) => fail(services, tx, problem(&e)),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn an_address_without_a_port_is_on_the_usual_one() {
+        let at = |text: &str| address_of(text).ok().map(|a| a.to_string());
+        assert_eq!(at("192.0.2.4:5000").as_deref(), Some("192.0.2.4:5000"));
+        assert_eq!(at(" 192.0.2.4 ").as_deref(), Some("192.0.2.4:47812"));
+        assert_eq!(at("2001:db8::4").as_deref(), Some("[2001:db8::4]:47812"));
+        assert_eq!(at("[2001:db8::4]").as_deref(), Some("[2001:db8::4]:47812"));
+        assert_eq!(at("[2001:db8::4]:9").as_deref(), Some("[2001:db8::4]:9"));
+        assert_eq!(at("living-room.example"), None);
+    }
+
+    #[test]
+    fn the_remote_switch_between_two_devices_has_one_key_either_way() {
+        assert_eq!(pair_key("b2", "a1"), "a1:b2");
+        assert_eq!(pair_key("a1", "b2"), pair_key("b2", "a1"));
     }
 }

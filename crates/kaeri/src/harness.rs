@@ -919,6 +919,7 @@ pub fn name(update: &Event) -> &'static str {
         Event::PartyLookFailed { .. } => "PartyLookFailed",
         Event::PartyRecent(_) => "PartyRecent",
         Event::PartyLastOut { .. } => "PartyLastOut",
+        Event::SyncPairFailed { .. } => "SyncPairFailed",
     }
 }
 
@@ -1228,6 +1229,9 @@ fn copy(update: &Event) -> Event {
         Event::PartyRecent(rooms) => Event::PartyRecent(rooms.clone()),
         Event::PartyLastOut { episode, airs } => {
             Event::PartyLastOut { episode: episode.clone(), airs: airs.clone() }
+        }
+        Event::SyncPairFailed { problem, device } => {
+            Event::SyncPairFailed { problem: *problem, device: device.clone() }
         }
     }
 }

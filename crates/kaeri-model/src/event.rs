@@ -612,6 +612,13 @@ pub enum Event {
         clouds: Vec<crate::group::SyncFolderKind>,
         lacking: Vec<crate::group::SyncFolderKind>,
     },
+    /// Pairing did not work, for the Add a device sheet: `device` is the name of the device whose
+    /// code did not match, when one device was showing a code. `Event::SyncProblem` follows with
+    /// the same in words.
+    SyncPairFailed {
+        problem: crate::group::SyncPairProblem,
+        device: Option<String>,
+    },
     /// What a pasted invite link leads to, or why it leads nowhere.
     StorePreview(InvitePreview),
     /// A store was joined. The view moves into it if the user is still on the store list.

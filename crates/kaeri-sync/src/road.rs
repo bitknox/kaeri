@@ -6,13 +6,20 @@
 //! <prefix>/devices/<id>/keys.bin     the keyring, wrapped for this device
 //! <prefix>/devices/<id>/000001.seg   this device's ops, sealed
 //! <prefix>/devices/<id>/acks.bin     the version vector this device has seen, sealed
+//! <prefix>/paused/<id>               present while the group holds back from that device
 //! ```
+//!
+//! A device whose Sync switch is off (the `device_sync` register) is held back from: the others
+//! skip its segments, and write its name under `paused/`, where it looks at the start of every
+//! pass and, finding itself, neither reads nor writes. The register alone could not say so, since
+//! a held-back device would never read the register that lets it back in. Not a lock, which
+//! removing a device is (it rotates the key): a device that ignored the marker could still read.
 
 use std::{collections::BTreeMap, sync::Arc};
 
 use kaeri_store::{
     Store,
-    sync::{Applied, Effect, Op, SyncNote, VersionVector},
+    sync::{Applied, Effect, Op, SyncNote, VersionVector, kinds},
 };
 
 use crate::{
@@ -41,6 +48,9 @@ pub struct FolderReport {
     pub titles: Vec<u32>,
     /// Completed watches that arrived, for the tracker rules.
     pub watches: Vec<kaeri_store::sync::ReceivedWatch>,
+    /// The group holds back from this device (its name is under `paused/`): the pass read and
+    /// wrote nothing.
+    pub paused: bool,
 }
 
 impl FolderReport {
@@ -267,6 +277,25 @@ impl FolderRoad {
         if removed.contains(&self.device) {
             return Err(SyncError::Removed);
         }
+        let marked: Vec<String> = self
+            .target
+            .list(&self.path("paused"))
+            .await?
+            .into_iter()
+            .filter(|e| !e.is_dir)
+            .map(|e| e.name)
+            .collect();
+        if marked.contains(&self.device) {
+            report.paused = true;
+            return Ok(report);
+        }
+        let paused: Vec<String> = self
+            .store
+            .sync_regs(kinds::DEVICE_SYNC)?
+            .into_iter()
+            .filter(|(_, value)| value == "off")
+            .map(|(device, _)| device)
+            .collect();
         // A rotation by another device reaches this one as a new keys.bin.
         self.refresh_keys().await?;
 
@@ -275,7 +304,7 @@ impl FolderRoad {
             devices.iter().filter(|e| e.is_dir).map(|e| e.name.clone()).collect();
         self.write_missing_keys(&present).await?;
         for entry in devices.iter().filter(|e| e.is_dir && e.name != self.device) {
-            if removed.contains(&entry.name) {
+            if removed.contains(&entry.name) || paused.contains(&entry.name) {
                 continue;
             }
             report.devices_seen += 1;
@@ -283,10 +312,45 @@ impl FolderRoad {
         }
         self.write_segments(&mut report).await?;
         self.write_acks().await?;
+        // After the segments, so a device that finds a marker can read the register behind it.
+        self.mark_paused(&paused, &marked, &removed).await?;
         report.compacted = self
             .compact(&devices.iter().map(|e| e.name.clone()).collect::<Vec<_>>(), &removed)
             .await?;
         Ok(report)
+    }
+
+    /// Bring `paused/` in line with the `device_sync` registers as this device has them: a
+    /// marker for each device held back, none for the others. Devices that knew less put a
+    /// marker back, or take one away, until they read the newer register.
+    async fn mark_paused(
+        &self,
+        paused: &[String],
+        marked: &[String],
+        removed: &[String],
+    ) -> Result<()> {
+        let group: Vec<String> = self
+            .store
+            .sync_peers()?
+            .into_iter()
+            .filter(|(device, _, _, gone)| !gone && *device != self.device)
+            .map(|(device, ..)| device)
+            .collect();
+        for device in group.iter().filter(|d| !removed.contains(d)) {
+            let path = self.path(&format!("paused/{device}"));
+            match (paused.contains(device), marked.contains(device)) {
+                (true, false) => match self.target.write_new(&path, b"off").await {
+                    Ok(()) | Err(FolderError::Exists(_)) => {}
+                    Err(e) => return Err(e.into()),
+                },
+                (false, true) => match self.target.remove(&path).await {
+                    Ok(()) | Err(FolderError::NotFound(_)) => {}
+                    Err(e) => return Err(e.into()),
+                },
+                _ => {}
+            }
+        }
+        Ok(())
     }
 
     /// Wrap the keyring for each device in the group's list that has no place in the folder yet:
@@ -613,6 +677,41 @@ mod tests {
         .await
         .unwrap();
         (a, ra, b, rb, recovery)
+    }
+
+    #[tokio::test]
+    async fn a_device_held_back_neither_reads_nor_is_read_until_its_sync_is_back_on() {
+        let target: Arc<dyn FolderTarget> = Arc::new(MemoryTarget::default());
+        let (a, ra, b, rb, _) = pair(&target).await;
+        ra.sync().await.unwrap();
+        rb.sync().await.unwrap();
+        ra.sync().await.unwrap();
+
+        // A turns B's Sync off: the register, then a pass that leaves B's marker.
+        a.store.sync_register(kinds::DEVICE_SYNC, &b.id, Some("off"), None).unwrap();
+        ra.sync().await.unwrap();
+        assert!(target.read("kaeri/paused/00000000000000b2").await.is_ok());
+        a.watch("1", 300.0);
+        ra.sync().await.unwrap();
+        b.watch("2", 600.0);
+        let r = rb.sync().await.unwrap();
+        assert!(r.paused);
+        assert_eq!((r.ops_applied, r.ops_written), (0, 0));
+        assert_eq!(b.resume("1"), None);
+        ra.sync().await.unwrap();
+        assert_eq!(a.resume("2"), None);
+
+        // Back on: the marker goes with A's next pass, and both catch up.
+        a.store.sync_register(kinds::DEVICE_SYNC, &b.id, None, None).unwrap();
+        ra.sync().await.unwrap();
+        assert!(target.read("kaeri/paused/00000000000000b2").await.is_err());
+        let r = rb.sync().await.unwrap();
+        assert!(!r.paused);
+        assert_eq!(b.resume("1"), Some(300.0));
+        ra.sync().await.unwrap();
+        assert_eq!(a.resume("2"), Some(600.0));
+        // B read the register that let it back in, and leaves no marker of its own.
+        assert!(!b.store.sync_device_paused(&b.id));
     }
 
     #[tokio::test]
