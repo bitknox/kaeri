@@ -980,21 +980,6 @@ internal fun TvSettingsGroup() {
         } + listOf<@Composable (Place) -> Unit>(
             { place -> ActionRow(place, stringResource(R.string.tv_pair_action), onClick = tv::openPicker) },
             { place -> SettingSwitch(place, SettingKey.CAST_TVS, stringResource(R.string.cast_settings_tvs), note = stringResource(R.string.cast_settings_tvs_note)) },
-            // The code a TV lists this phone by, where two senders share a name: in groups of four, to match on the TV.
-            { place ->
-                InfoRow(
-                    place,
-                    stringResource(R.string.tv_code_row),
-                    null,
-                    trailing = {
-                        Text(
-                            tv.shortFingerprint.filter { !it.isWhitespace() }.chunked(4).joinToString(" "), // i18n-skip
-                            style = MaterialTheme.typography.bodyMedium.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    },
-                )
-            },
         ),
     )
 }
