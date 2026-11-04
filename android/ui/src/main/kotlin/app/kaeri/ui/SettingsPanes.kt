@@ -316,6 +316,15 @@ internal fun PlaybackPane() {
                 { place -> SettingSwitch(place, SettingKey.NIGHT_MODE, stringResource(R.string.player_night_mode), note = stringResource(R.string.player_night_mode_detail)) },
             ),
         )
+        // Hide chat is this device's own: the engine always sends the room's words.
+        val hidden by store.party.hideChat.collectAsStateWithLifecycle()
+        LaunchedEffect(Unit) { store.party.loadHideChat(context) }
+        SettingsGroup(
+            title = stringResource(R.string.together_title),
+            rows = listOf(
+                { place -> SwitchRow(place, Strings.settingsHideChat(context), checked = hidden, note = Strings.settingsHideChatLine(context)) { store.party.setHideChat(context, it) } },
+            ),
+        )
     }
 }
 

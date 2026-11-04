@@ -1463,6 +1463,21 @@ class AppStore(
         send(Command.PartyLeave)
     }
 
+    /** Say something to the room; it shows when the server sends it back. */
+    fun partySay(text: String) {
+        send(Command.Party(PartyCommand.Say(text)))
+    }
+
+    /** React at the playhead. */
+    fun partyReact(reaction: app.kaeri.engine.model.Reaction) {
+        send(Command.Party(PartyCommand.React(reaction)))
+    }
+
+    /** Hide a member's lines and reactions for this party, on this device, or show them again. */
+    fun partyMute(name: String, muted: Boolean) {
+        send(Command.Party(PartyCommand.Mute(name, muted)))
+    }
+
     fun startPartyAnyway() {
         send(Command.Party(PartyCommand.StartAnyway))
     }

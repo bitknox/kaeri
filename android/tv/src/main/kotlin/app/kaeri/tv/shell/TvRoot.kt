@@ -202,8 +202,10 @@ private fun BoxScope.Notices(store: AppStore, player: PlayerModel, remote: TvRem
         kotlinx.coroutines.delay(1_000)
         if (store.crashes.pendingNotice() != null) notices.say(context.getString(app.kaeri.i18n.R.string.crash_notice_tv))
     }
+    // In a party the column on the video says the player's alerts, chat lines among them.
+    val inParty = store.party.view.collectAsStateWithLifecycle().value != null
     val alert = player.alert
-    LaunchedEffect(alert?.since) { alert?.let { notices.say(it.text) } }
+    LaunchedEffect(alert?.since) { alert?.takeUnless { inParty && player.hasPicture }?.let { notices.say(it.text) } }
     // A newer release, when the engine says to tell of it: the update's page is in Settings › About.
     // Held while something plays, as a phone asking to pair is, and said once it stops.
     val update by store.updates.notice.collectAsStateWithLifecycle()

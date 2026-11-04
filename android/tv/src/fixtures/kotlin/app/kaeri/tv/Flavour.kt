@@ -14,6 +14,9 @@
 //   firstLaunch  true to show first launch's pages, which fixtures leave out otherwise
 //   update    a made-up release staged for the update's page, which opens over the section:
 //             available, allowing, downloading, failed or storage; nothing is fetched or installed
+//   party     a watch party on the testing engine's fake server, for the chat board (PartyShot):
+//             chatline, chatreact, chatloop and the rest; the log says "KAERI_PARTY ready <shot>"
+//             once it is there. chatloop waits for `am broadcast -a app.kaeri.fixtures.PARTY_GO`
 
 package app.kaeri.tv
 
@@ -31,13 +34,19 @@ import app.kaeri.engine.model.Event
 import app.kaeri.store.AppStore
 import app.kaeri.store.EngineLaunch
 import app.kaeri.store.FixtureScene
+import app.kaeri.store.FixtureParty
+import app.kaeri.store.PartyShot
+import app.kaeri.store.PartyStage
 import app.kaeri.store.enginePlatform
 import app.kaeri.store.fixtureMedia
 import app.kaeri.store.fixtures
 import app.kaeri.tv.shell.Destination
 
 internal object Flavour {
+    private var app: TvApp? = null
+
     fun launch(context: Context, intent: Intent): EngineLaunch {
+        app = context.applicationContext as? TvApp
         val named = intent.getStringExtra("scene")
         val scene = named?.let(FixtureScene::named) ?: FixtureScene.WATCHING
         if (named != null && FixtureScene.named(named) == null) Log.w(TvApp.TAG, "no scene named $named")
@@ -94,6 +103,13 @@ internal object Flavour {
      * one already expired, 899 unless it says.
      */
     fun started(store: AppStore, intent: Intent) {
+        PartyShot.named(intent.getStringExtra("party"))?.let { shot ->
+            val app = app ?: return@let
+            FixtureParty.listen(app)
+            MainScope().launch {
+                if (!FixtureParty.stage(shot, store, TvStage(app))) Log.w(TvApp.TAG, "the party scene did not set up")
+            }
+        }
         intent.getStringExtra("day")?.toIntOrNull()?.let { store.calendar.opensOn = it }
         // Episodes of the first fixture marked watched, 1,2,3: playback would also have the engine
         // look their threads up, so the one with a fixture thread is said found as it would be.
@@ -122,4 +138,21 @@ internal object Flavour {
             }
         }
     }
+}
+
+/** The TV's player, as the party scenes steer it. */
+private class TvStage(private val app: TvApp) : PartyStage {
+    private val player get() = app.player
+
+    override val playing: Boolean get() = player.isPresented && player.hasPicture && player.duration != null
+
+    override fun holdControls(on: Boolean) = player.hold("shot", on) // i18n-skip
+
+    override fun hideControls() = player.hideControls()
+
+    override fun seekTo(seconds: Double) = player.seekTo(seconds)
+
+    override fun setPlaying(playing: Boolean) = player.setPlaying(playing)
+
+    override fun hideChat(on: Boolean) = app.store.party.setHideChat(app, on)
 }

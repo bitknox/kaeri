@@ -130,6 +130,10 @@ fun PlayerChrome(
     discussion: DiscussionEntry? = null,
     /** Watch together's people, while this device is in a party. */
     onPeople: (() -> Unit)? = null,
+    /** Watch together's Chat, after People: opens the field. Null while chat is off or hidden. */
+    onChat: (() -> Unit)? = null,
+    /** Where on the seek line somebody reacted, in seconds. */
+    ticks: List<Double> = emptyList(),
 ) {
     Box(Modifier.fillMaxSize()) {
         PlayerScrim()
@@ -137,10 +141,14 @@ fun PlayerChrome(
             model, onClose, onTracks, onEpisodes, onSkipTimes, onPlayOnTv, discussion,
             Modifier.align(Alignment.TopStart).padding(start = 48.dp, end = 48.dp, top = 16.dp).fillMaxWidth().heightIn(min = 48.dp),
             onPeople,
+            onChat,
         )
+        // The four reactions stand at the trailing edge, where the thumb rests, clear of the subtitles.
+        if (onChat != null) ReactionColumn(Modifier.align(Alignment.TopEnd).padding(end = 48.dp, top = 76.dp))
         BottomBar(
             model,
             preview,
+            ticks,
             Modifier.align(Alignment.BottomStart).padding(start = 48.dp, end = 48.dp, bottom = 28.dp).fillMaxWidth().heightIn(min = 48.dp),
         )
     }
@@ -157,6 +165,7 @@ private fun TopBar(
     discussion: DiscussionEntry?,
     modifier: Modifier,
     onPeople: (() -> Unit)? = null,
+    onChat: (() -> Unit)? = null,
 ) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         ControlButton(PlayerIcons.Back, stringResource(R.string.action_back), onClick = onClose)
@@ -187,6 +196,7 @@ private fun TopBar(
         }
         onPlayOnTv?.let { ControlButton(PlayerIcons.Tv, stringResource(R.string.tv_play_on), onClick = it) }
         onPeople?.let { ControlButton(PlayerIcons.People, stringResource(R.string.together_people_button), onClick = it) }
+        onChat?.let { ControlButton(app.kaeri.design.ChatGlyphs.Chat, Strings.partyChatTitle(LocalContext.current), onClick = it) }
         ControlButton(PlayerIcons.Subtitles, stringResource(R.string.player_subtitles_audio_picture), onClick = onTracks)
         ControlButton(PlayerIcons.Episodes, stringResource(R.string.player_episodes), onClick = onEpisodes)
         MoreMenu(model, discussion, onSkipTimes)
@@ -244,7 +254,7 @@ private fun MoreMenu(model: PlayerModel, discussion: DiscussionEntry?, onSkipTim
 }
 
 @Composable
-private fun BottomBar(model: PlayerModel, preview: SeekPreview?, modifier: Modifier) {
+private fun BottomBar(model: PlayerModel, preview: SeekPreview?, ticks: List<Double>, modifier: Modifier) {
     val time = MaterialTheme.typography.labelLarge.tabular().copy(shadow = ControlShadow)
     val duration = model.duration ?: 0.0
     Row(modifier, verticalAlignment = Alignment.CenterVertically) {
@@ -257,7 +267,7 @@ private fun BottomBar(model: PlayerModel, preview: SeekPreview?, modifier: Modif
         StepButton(PlayerIcons.Forward, stringResource(R.string.player_forward_10)) { model.seekBy(10.0) }
         Spacer(Modifier.width(8.dp))
         Text(PlayerClock.label(model.position), style = time, color = ObiSilk.Silk, modifier = Modifier.widthIn(min = 44.dp))
-        SeekSlider(model, preview, Modifier.weight(1f).padding(horizontal = 12.dp))
+        SeekSlider(model, preview, ticks, Modifier.weight(1f).padding(horizontal = 12.dp))
         Text(
             PlayerClock.remaining(maxOf(0.0, duration - model.position)),
             style = time,
@@ -299,7 +309,7 @@ private fun StepButton(icon: ImageVector, label: String, onClick: () -> Unit) {
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SeekSlider(model: PlayerModel, preview: SeekPreview?, modifier: Modifier) {
+private fun SeekSlider(model: PlayerModel, preview: SeekPreview?, ticks: List<Double>, modifier: Modifier) {
     val haptics = LocalHapticFeedback.current
     val touch = remember { MutableInteractionSource() }
     val pressed by touch.collectIsPressedAsState()
@@ -348,6 +358,19 @@ private fun SeekSlider(model: PlayerModel, preview: SeekPreview?, modifier: Modi
         else -> 1f
     }
     Box(modifier.onGloballyPositioned { sliderLeft = it.positionInWindow().x; sliderWidth = it.size.width }) {
+    // Where somebody reacted: 2 dp ticks in haze, 4 dp above the line; those within 4 dp share one.
+    if (ticks.isNotEmpty()) {
+        Canvas(Modifier.fillMaxWidth().height(48.dp)) {
+            val handle = (model.position / duration).toFloat().coerceIn(0f, 1f) * size.width
+            var last = -100f
+            for (at in ticks) {
+                val x = (at / duration).toFloat().coerceIn(0f, 1f) * size.width
+                if (x - last < 4.dp.toPx() || kotlin.math.abs(x - handle) < 8.dp.toPx()) continue
+                last = x
+                drawRoundRect(ObiSilk.Haze, Offset(x - 1.dp.toPx(), 6.dp.toPx()), Size(2.dp.toPx(), 6.dp.toPx()), CornerRadius(1.dp.toPx()))
+            }
+        }
+    }
     if (active && scrubbing != null) {
         val handle = (scrubbing / duration).toFloat().coerceIn(0f, 1f) * sliderWidth
         val window = with(density) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
