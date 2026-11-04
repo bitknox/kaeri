@@ -174,6 +174,12 @@ struct EpisodeSynopsisTests {
         #expect(EpisodeFacts.line(row, current: false, minutesLeft: nil, leadsWithNumber: true) == "E7 · Watched")
     }
 
+    @Test func aPhoneRowWhoseTitleIsTheNumberLeavesItOutOfTheFacts() {
+        var row = rows(8, watched: 8)[3]
+        row.title = nil
+        #expect(EpisodeFacts.line(row, current: false, minutesLeft: nil, leadsWithNumber: true) == "Watched")
+    }
+
     @Test func aRowWithNoLengthAndNoDateHasNoFactsRatherThanAGap() {
         var row = rows(3)[1]
         row.durationSecs = nil

@@ -112,10 +112,11 @@ enum EpisodeProtection {
 enum EpisodeFacts {
     /// "14 min left · Aired 21 May 2014", "Watched · Aired 14 May 2014", "24 min · Filler": the
     /// length, or what is left of it or Watched, then when it aired, then what marks it. On phones
-    /// the episode's number leads it ("E7 · 14 min left"), where the row has no column for it.
+    /// the episode's number leads it ("E7 · 14 min left"), where the row has no column for it, unless
+    /// the row has no title of its own and its title is the number already.
     static func line(_ row: EpisodeRow, current: Bool, minutesLeft: Int?, leadsWithNumber: Bool) -> String {
         var parts: [String] = []
-        if leadsWithNumber { parts.append(L.episodeShort(episode: Int(episode: row.number))) }
+        if leadsWithNumber, row.title != nil { parts.append(L.episodeShort(episode: Int(episode: row.number))) }
         if row.completed {
             parts.append(L.episodeWatched)
         } else if current, let minutesLeft {
