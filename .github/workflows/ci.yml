@@ -284,6 +284,10 @@ jobs:
     name: ubuntu-24.04
     runs-on: ubuntu-24.04
     steps:
+      # The workspace's tests, the engine built a second way and Clippy outgrew the runner's
+      # free disk. The image's .NET, Android and Haskell toolchains are never used here.
+      - name: Free disk
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
       - uses: actions/checkout@v7
       - run: tools/ci-toolchain.sh wasm32-wasip2
       # Formatting is checked first: it needs no build, so a stray space fails in seconds.
@@ -323,6 +327,8 @@ jobs:
           retention-days: 1
           # Already zstd.
           compression-level: 0
+      # Uploaded, so its space goes back to the build.
+      - run: rm -f "$RUNNER_TEMP/linux-tests.tar.zst"
       # The build above, which cargo finds current. On main, only built, for the cache.
       - name: Test
         if: github.event_name == 'pull_request'

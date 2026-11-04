@@ -36,6 +36,7 @@ import app.kaeri.engine.model.Event
 import app.kaeri.store.AppStore
 import app.kaeri.store.EngineLaunch
 import app.kaeri.store.FixtureScene
+import app.kaeri.store.FixtureSync
 import app.kaeri.store.FixtureParty
 import app.kaeri.store.PartyShot
 import app.kaeri.store.PartyStage
@@ -128,7 +129,7 @@ internal object Flavour {
             MainScope().launch {
                 store.phase.first { it == AppStore.Phase.Running }
                 delay(1_500)
-                app.kaeri.store.FixtureSync.stage(store, state)
+                FixtureSync.stage(store, state)
             }
         }
         val tracker = intent.getStringExtra("signin") ?: return
