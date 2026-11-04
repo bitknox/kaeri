@@ -868,8 +868,8 @@ public final class AppStore {
     /// The events that open and run the player here.
     static func playsHere(_ event: Event) -> Bool {
         switch event {
-        case .playbackStaged, .playbackEnded, .playerOps, .playerUi, .playbackKept, .playerTimeline, .playerBuffered,
-            .playerStats:
+        case .playbackStaged, .startingStep, .playbackEnded, .playerOps, .playerUi, .playbackKept, .playerTimeline,
+            .playerBuffered, .playerStats:
             true
         default:
             false
@@ -1051,7 +1051,8 @@ public final class AppStore {
         case .sources:
             party.apply(event)
             onPlayback?(event)
-        case .playerOps, .playerUi, .playbackKept, .playerTimeline, .playerBuffered, .playerStats, .clipboard:
+        case .playerOps, .playerUi, .playbackKept, .playerTimeline, .playerBuffered, .playerStats, .clipboard,
+             .startingStep:
             onPlayback?(event)
 
         case .partyForm, .partyJoined, .partyState, .partyMembers, .partyLeft, .partyRecent, .partyGlimpse,

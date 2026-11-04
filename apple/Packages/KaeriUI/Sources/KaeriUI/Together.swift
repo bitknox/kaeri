@@ -278,7 +278,7 @@ struct TogetherSourcesLine: View {
                         line(dot: .water, airs(reason: reason))
                     case .noSources:
                         line(glyph: true, L.partyLobbySourcesMissing)
-                    case .notFound:
+                    case .notFound, .noConnection:
                         line(glyph: true, L.partyLobbySourcesMissing)
                     }
                     if showsActions, why != .notAired {

@@ -271,7 +271,7 @@ struct PartySourceState {
             switch ask.why {
             case .notAired: return .none
             case .noSources: return .providers
-            case .notFound: return .choose
+            case .notFound, .noConnection: return .choose
             }
         case .looking?: return .play
         case .listed(let found)?: return found.isEmpty ? .providers : .play
