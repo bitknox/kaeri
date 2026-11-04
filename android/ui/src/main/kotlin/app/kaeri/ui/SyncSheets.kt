@@ -538,7 +538,7 @@ internal fun DevicePage(device: app.kaeri.engine.model.SyncDeviceView, onRemove:
             SwitchRow(if (remote) Place.First else Place.Only, stringResource(R.string.devices_sync_switch), !device.paused) { store.setDeviceSync(device.name, device.paused) }
             if (remote) SwitchRow(Place.Last, stringResource(R.string.devices_remote_switch), !device.remoteOff) { store.setDeviceRemote(device.name, device.remoteOff) }
         }
-        SheetText(Strings.devicesSwitchesFoot(context, device.name), Modifier.padding(top = 8.dp))
+        SheetText(Strings.devicesSwitchesFoot(context, context.getString(R.string.device_kind_phone), device.name), Modifier.padding(top = 8.dp))
         SheetButtons {
             QuietButton(stringResource(R.string.action_cancel), onClick = onDismiss)
             TextButton(onClick = onRemove) { Text(stringResource(R.string.devices_remove), color = MaterialTheme.colorScheme.error) }
