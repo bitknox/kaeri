@@ -312,8 +312,8 @@ pub const fn found_answer_secs() -> u32 {
     FOUND_ANSWER_SECS
 }
 
-/// What the player shows in a found times' fixture state, for the apps' Fixtures builds.
-#[cfg_attr(feature = "ffi", uniffi::export)]
+/// What the player shows in a found times' fixture state, for the apps' Fixtures builds. Exported
+/// once, by kaeri-ffi's `words`, so Swift's one module has a single `foundSkipScene`.
 pub fn found_skip_scene(state: FoundSkipFixture) -> FoundSkipScene {
     state.scene()
 }
