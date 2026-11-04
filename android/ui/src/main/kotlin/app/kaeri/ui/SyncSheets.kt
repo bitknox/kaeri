@@ -678,7 +678,7 @@ internal fun FlowSheet(
             targetState = flow.shown,
             animationSpec = Motion.standard(),
             modifier = Modifier.animateContentSize(Motion.standard()),
-            label = "sign-in phase",
+            label = "sign-in phase", // i18n-skip
         ) { phase ->
             Column {
                 if (phase == null) form() else SignInPhaseContent(phase, flow.canCancel, onCancel, onTryAgain)
