@@ -736,9 +736,7 @@ impl Page {
                         }
                         Some(("type", digits)) => {
                             page.typed.replace(digits.to_owned());
-                            page.say_typed(Some(&t::episode_number(
-                                digits.parse().unwrap_or(0),
-                            )));
+                            page.say_number(digits);
                         }
                         _ => page.go_dialog(),
                     }
@@ -1420,7 +1418,7 @@ impl Page {
             self.say_typed(None);
             return true;
         }
-        self.say_typed(Some(&t::episode_number(typed.parse().unwrap_or(0))));
+        self.say_number(&typed);
         self.cancel_typing();
         let page = self.me.borrow().clone();
         let at =
@@ -1460,10 +1458,32 @@ impl Page {
         });
     }
 
+    /// The capsule's "Episode 382": the words around the number in haze, the number in silk.
+    fn say_number(&self, digits: &str) {
+        let number: i64 = digits.parse().unwrap_or(0);
+        let words = t::episode_number(number);
+        self.say_typed(Some(&words));
+        let attrs = gtk::pango::AttrList::new();
+        let shown = number.to_string();
+        if let Some(at) = words.find(&shown) {
+            for (start, end) in [(0, at), (at + shown.len(), words.len())] {
+                if start < end {
+                    let mut haze = gtk::pango::AttrColor::new_foreground(0xA3A3, 0xA9A9, 0xC4C4);
+                    haze.set_start_index(start as u32);
+                    haze.set_end_index(end as u32);
+                    attrs.insert(haze);
+                }
+            }
+        }
+        self.capsule.set_attributes(Some(&attrs));
+    }
+
     /// The capsule over the list: fades in with the first digit, updates in place, fades out.
+    /// A refusal's words are silk throughout.
     fn say_typed(&self, words: Option<&str>) {
         match words {
             Some(words) => {
+                self.capsule.set_attributes(None);
                 self.capsule.set_label(words);
                 if !self.capsule.is_visible() {
                     self.capsule.set_visible(true);

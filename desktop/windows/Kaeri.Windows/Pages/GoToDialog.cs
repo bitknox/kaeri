@@ -22,14 +22,22 @@ static class GoToDialog
             // The show's span under the field, as the board draws it: "1 to 412".
             Description = KaeriFfiMethods.GoToHint(rows),
             Minimum = 1,
-            SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact,
+            SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Inline,
             AcceptsExpression = false,
             MinWidth = 280,
         };
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(box, KaeriFfiMethods.GoToLabel(rows));
-        var error = new TextBlock { Style = (Style)Application.Current.Resources["HazeCaptionStyle"], TextWrapping = TextWrapping.WrapWholeWords, Visibility = Visibility.Collapsed };
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetLiveSetting(error, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
-        var body = new StackPanel { Spacing = 8 };
+        // A refusal takes the hint's place: the vermilion glyph, then the reason in silk.
+        var hint = box.Description;
+        var reason = new TextBlock { FontSize = 12, LineHeight = 16, Foreground = Ui.Res<Microsoft.UI.Xaml.Media.Brush>("SilkBrush"), TextWrapping = TextWrapping.WrapWholeWords };
+        var glyph = States.ErrorGlyph(13);
+        glyph.VerticalAlignment = VerticalAlignment.Top;
+        glyph.Margin = new Thickness(0, 1, 0, 0);
+        var error = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Margin = new Thickness(0, 6, 0, 0), Visibility = Visibility.Collapsed };
+        error.Children.Add(glyph);
+        error.Children.Add(reason);
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetLiveSetting(reason, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
+        var body = new StackPanel();
         body.Children.Add(box);
         body.Children.Add(error);
         var dialog = new ContentDialog
@@ -55,10 +63,25 @@ static class GoToDialog
                 landed = result;
                 return true;
             }
-            error.Text = Browsing.GoMessage(result) ?? "";
-            error.Visibility = error.Text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+            reason.Text = Browsing.GoMessage(result) ?? "";
+            var refused = reason.Text.Length > 0;
+            error.Visibility = refused ? Visibility.Visible : Visibility.Collapsed;
+            box.Description = refused ? null : hint;
             return false;
         }
+        // Go waits for a number, and typing again puts the hint back.
+        void Typed(string text)
+        {
+            dialog.IsPrimaryButtonEnabled = text.Any(char.IsAsciiDigit);
+            error.Visibility = Visibility.Collapsed;
+            box.Description = hint;
+        }
+        dialog.IsPrimaryButtonEnabled = false;
+        box.Loaded += (_, _) =>
+        {
+            if (Ui.Descendant<TextBox>(box) is { } field)
+                field.TextChanged += (_, _) => Typed(field.Text);
+        };
         dialog.PrimaryButtonClick += (_, args) => args.Cancel = !Take();
         box.KeyDown += (_, a) =>
         {

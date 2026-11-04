@@ -336,12 +336,15 @@ dialog.go-to button.suggested:disabled, dialog.go-to button.suggested-action:dis
   opacity: 0.5;
 }
 .typed-capsule {
-  background: var(--raised-selected);
+  background: rgba(46, 50, 74, 0.97);
   color: var(--silk);
-  border: 1px solid var(--edge);
-  border-radius: 999px;
-  padding: 4px 14px;
-  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  min-height: 28px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-feature-settings: "tnum";
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
 /* The player's Episodes panel: compact rows, and a footer for the one under the pointer. */

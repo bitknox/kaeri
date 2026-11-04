@@ -290,9 +290,12 @@
   </Button>
   <!-- Digits typed on the episodes: a small capsule at the top right that says what Go to episode will take. -->
   <Border x:Name="TypedCapsule" Visibility="Collapsed" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,24,36,0"
-          Padding="16,6" CornerRadius="999" Background="{ThemeResource RaisedBrush}" BorderBrush="{ThemeResource EdgeBrush}" BorderThickness="1"
-          IsHitTestVisible="False" AutomationProperties.LiveSetting="Polite">
-    <TextBlock x:Name="TypedText" Style="{StaticResource BodyTextBlockStyle}" />
+          Height="28" Padding="12,0" CornerRadius="14" Background="{ThemeResource CapsuleBrush}" BorderBrush="{ThemeResource CapsuleEdgeBrush}" BorderThickness="1"
+          Translation="0,0,24" IsHitTestVisible="False" AutomationProperties.LiveSetting="Polite">
+    <Border.Shadow>
+      <ThemeShadow />
+    </Border.Shadow>
+    <TextBlock x:Name="TypedText" FontSize="13" VerticalAlignment="Center" Typography.NumeralAlignment="Tabular" Foreground="{ThemeResource SilkBrush}" />
   </Border>
   <!-- A range switch: the page as it stood, fading away over the new rows. -->
   <Image x:Name="RangeGhost" Visibility="Collapsed" IsHitTestVisible="False" Stretch="Fill" HorizontalAlignment="Left" VerticalAlignment="Top"

@@ -205,7 +205,22 @@ public sealed partial class TitlePage
     {
         // Under Another when a pick shows it, else where it would stand.
         TypedCapsule.Margin = new Thickness(0, AnotherAction.Visibility == Visibility.Visible ? 64 : 24, 36, 0);
-        TypedText.Text = T.EpisodeNumber(long.Parse(typed, System.Globalization.CultureInfo.InvariantCulture));
+        // "Episode 382": the words around the number in haze, the number in silk.
+        var number = long.Parse(typed, System.Globalization.CultureInfo.InvariantCulture);
+        var words = T.EpisodeNumber(number);
+        var shown = number.ToString(System.Globalization.CultureInfo.CurrentCulture);
+        var at = words.IndexOf(shown, StringComparison.Ordinal);
+        TypedText.Inlines.Clear();
+        if (at < 0)
+            TypedText.Inlines.Add(new Microsoft.UI.Xaml.Documents.Run { Text = words });
+        else
+        {
+            var haze = Ui.Res<Microsoft.UI.Xaml.Media.Brush>("HazeBrush");
+            TypedText.Inlines.Add(new Microsoft.UI.Xaml.Documents.Run { Text = words[..at], Foreground = haze });
+            TypedText.Inlines.Add(new Microsoft.UI.Xaml.Documents.Run { Text = shown });
+            TypedText.Inlines.Add(new Microsoft.UI.Xaml.Documents.Run { Text = words[(at + shown.Length)..], Foreground = haze });
+        }
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(TypedCapsule, words);
         Motion.Show(TypedCapsule);
     }
 
@@ -225,6 +240,7 @@ public sealed partial class TitlePage
         }
         // The capsule says why, then goes.
         TypedText.Text = Browsing.GoMessage(result) ?? text;
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(TypedCapsule, TypedText.Text);
         var gone = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
         gone.Tick += (_, _) =>
         {

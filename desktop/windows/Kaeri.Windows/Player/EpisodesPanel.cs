@@ -241,5 +241,14 @@ sealed class EpisodesPanel
     }
 #endif
 
-    void OpenedAt(object? sender, object e) => focusAt?.Focus(FocusState.Programmatic);
+    void OpenedAt(object? sender, object e)
+    {
+        if (focusAt is not { } row)
+            return;
+        row.Focus(FocusState.Programmatic);
+        // Focus alone leaves the list at its top: the row comes into view a third of the way down,
+        // once the panel has laid out.
+        row.DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+            row.StartBringIntoView(new BringIntoViewOptions { AnimationDesired = false, VerticalAlignmentRatio = 0.33 }));
+    }
 }
