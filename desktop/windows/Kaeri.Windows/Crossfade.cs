@@ -7,8 +7,8 @@ namespace Kaeri.Windows;
 /// <summary>
 /// A swap of what an area shows, as a crossfade with both sides drawn: the area as it stood is
 /// kept as a picture over it, the change is made, and the picture fades away on the standard
-/// token, so the area is never empty between the two. With animation effects off the change just
-/// happens.
+/// token, so the area is never empty between the two. A fade, so it stays with animation effects
+/// off.
 /// </summary>
 static class Crossfade
 {
@@ -23,7 +23,7 @@ static class Crossfade
                 break;
             }
         RenderTargetBitmap? before = null;
-        if (host is not null && Motion.Enabled && area.ActualWidth > 0 && area.ActualHeight > 0)
+        if (host is not null && area.ActualWidth > 0 && area.ActualHeight > 0)
         {
             try
             {

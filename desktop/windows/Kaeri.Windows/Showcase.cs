@@ -138,11 +138,12 @@ static class Showcase
         var rows = table.Rows;
         if (@long && rows.Length > 0)
             rows = [.. Enumerable.Range(1, 250).Select(n => rows[(n - 1) % rows.Length] with { Number = n.ToString(), Title = $"Letter number {n}" })];
-        // Go to episode's not-out refusal: the first 240 have aired and the rest are scheduled.
+        // Go to episode's not-out refusal: the first 240 have aired, 241 is announced with a date,
+        // and the rest have none, so 245 is not out yet.
         if (dated)
         {
             var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            rows = [.. rows.Select((row, at) => row with { AirsAt = at < 240 ? now - (240 - at) * 86400 : now + (at - 239) * 7 * 86400 })];
+            rows = [.. rows.Select((row, at) => row with { AirsAt = at < 240 ? now - (240 - at) * 86400 : at == 240 ? now + 7 * 86400 : null })];
         }
         return table with { Rows = [.. rows.Select((row, at) =>
         {

@@ -53,6 +53,7 @@ static class GoToDialog
             PrimaryButtonStyle = (Style)Application.Current.Resources["SelectedFillButtonStyle"],
         };
         GoTo? landed = null;
+        string? refusedText = null;
         // True when the number typed is a row; else the dialog says why and stays open.
         bool Take()
         {
@@ -63,6 +64,8 @@ static class GoToDialog
                 landed = result;
                 return true;
             }
+            dialog.IsPrimaryButtonEnabled = text.Length > 0;
+            refusedText = box.Text ?? "";
             reason.Text = Browsing.GoMessage(result) ?? "";
             var refused = reason.Text.Length > 0;
             error.Visibility = refused ? Visibility.Visible : Visibility.Collapsed;
@@ -73,11 +76,14 @@ static class GoToDialog
         void Typed(string text)
         {
             dialog.IsPrimaryButtonEnabled = text.Any(char.IsAsciiDigit);
+            if (text == refusedText)
+                return;
             error.Visibility = Visibility.Collapsed;
             box.Description = hint;
         }
         dialog.IsPrimaryButtonEnabled = false;
-        box.Loaded += (_, _) =>
+        // The box's own text field, once the dialog is up and the box has its template.
+        dialog.Opened += (_, _) =>
         {
             if (Ui.Descendant<TextBox>(box) is { } field)
                 field.TextChanged += (_, _) => Typed(field.Text);
