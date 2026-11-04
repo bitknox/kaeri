@@ -69,6 +69,48 @@ const state = { y: 'available', d: 'development', n: 'none' } as const;
 		</div>
 	</section>
 
+	<section class="f-sect" aria-labelledby="found-h">
+		<div class="f-in">
+			<div class="band-head">
+				<h2 id="found-h">{t('features.found.title')}</h2>
+				<p><span class="lead">{t('features.found.lead')}</span> {t('features.found.text')}</p>
+			</div>
+			<figure class="f-fig f-diagram">
+				<Flow
+					label={t('features.found.diagram')}
+					steps={[
+						{ title: t('features.found.earlier'), text: t('features.found.earlierText') },
+						{ title: t('features.found.episode'), text: t('features.found.episodeText') },
+						{ title: t('features.found.times'), text: t('features.found.timesText') },
+					]}
+					between={[t('features.found.compared'), t('features.found.finds')]}
+				/>
+				<figcaption>{t('features.found.caption')}</figcaption>
+			</figure>
+		</div>
+	</section>
+
+	<section class="band band-green" aria-labelledby="together-h">
+		<div class="band-in">
+			<div class="band-head">
+				<h2 id="together-h">{t('features.together.title')}</h2>
+				<p><span class="lead">{t('features.together.lead')}</span> {t('features.together.text')}</p>
+			</div>
+			<figure class="f-fig f-diagram">
+				<Flow
+					label={t('features.together.diagram')}
+					steps={[
+						{ title: t('features.together.you'), text: t('features.together.youText') },
+						{ title: t('features.together.server'), text: t('features.together.serverText') },
+						{ title: t('features.together.friends'), text: t('features.together.friendsText') },
+					]}
+					between={[t('features.together.sends'), t('features.together.keeps')]}
+				/>
+				<figcaption>{t('features.together.caption')}</figcaption>
+			</figure>
+		</div>
+	</section>
+
 	<section class="f-sect" aria-labelledby="sync-h">
 		<div class="f-in">
 			<div class="band-head">
@@ -78,12 +120,9 @@ const state = { y: 'available', d: 'development', n: 'none' } as const;
 			<figure class="f-fig f-diagram">
 				<Flow
 					label={t('features.sync.diagram')}
-					steps={[
-						{ title: t('features.sync.history'), text: t('features.sync.historyText') },
-						{ title: t('features.sync.queue'), text: t('features.sync.queueText') },
-						{ title: t('features.sync.trackers'), text: t('features.sync.trackersText') },
-					]}
-					between={[t('features.sync.each'), t('features.sync.order')]}
+					steps={[{ title: t('features.sync.device'), text: t('features.sync.deviceText') }]}
+					between={[t('features.sync.sealed')]}
+					last={['nearby', 'cloud'].map((id) => ({ title: t(`features.sync.${id}`), text: t(`features.sync.${id}Text`) }))}
 				/>
 				<figcaption>{t('features.sync.caption')}</figcaption>
 			</figure>
