@@ -192,6 +192,11 @@ final class Delegate: NSObject, NSApplicationDelegate {
             let there = await store.party.stage(scene, store: store)
             print(there ? "KaeriDev: Watch together is at \(scene.rawValue)" : "KaeriDev: Watch together did not reach \(scene.rawValue)")
         }
+        // `KAERI_PROBE_TOOLTIPS=1`: every tooltip the window could show now (TooltipProbe).
+        if TooltipProbe.asked, let window = Snapshot.window {
+            try? await Task.sleep(for: .milliseconds(600))
+            TooltipProbe.run(window: window, playerUp: player.inMainWindow)
+        }
         guard let url = options.snapshot else { return }
         // The art's and the preview's fade-ins, and KAERI_SHOT_WAIT seconds more for a trailer.
         let more = ProcessInfo.processInfo.environment["KAERI_SHOT_WAIT"].flatMap(Double.init) ?? 0

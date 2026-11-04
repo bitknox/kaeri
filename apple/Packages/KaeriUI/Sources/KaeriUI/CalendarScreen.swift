@@ -657,7 +657,7 @@ struct CalendarToolbar: View {
                     .disabled(!bounds.touches(weekDays(offset: week - 1)))
                 Button(L.calendarToday) { navigator.showCalendarWeek(0) }
                     .disabled(week == 0)
-                    .help(L.calendarToday)
+                    .tooltip(L.calendarToday)
                 Button(L.calendarNextWeek, systemImage: "chevron.right") { navigator.showCalendarWeek(week + 1) }
                     .labelStyle(.iconOnly)
                     .disabled(!bounds.touches(weekDays(offset: week + 1)))

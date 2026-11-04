@@ -46,7 +46,7 @@ struct TrailerSoundButton: View {
         }
         .buttonStyle(.plain)
         .animation(.quick, value: visit.muted)
-        .help(L.titleTrailerSound)
+        .tooltip(L.titleTrailerSound)
         .accessibilityLabel(L.titleTrailerSound)
         .accessibilityAddTraits(visit.muted ? [] : .isSelected)
         .opacity(visit.shown ? 1 : 0)
