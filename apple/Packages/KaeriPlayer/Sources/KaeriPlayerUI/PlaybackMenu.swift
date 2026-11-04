@@ -49,6 +49,8 @@ public struct PlaybackMenu: View {
         Button(model.skip.map { $0.kind == .ending ? L.menuSkipEnding : $0.kind == .recap ? L.menuSkipRecap : L.menuSkipOpening } ?? L.menuSkipOpening) { model.takeSkip() }
             .keyboardShortcut("s", modifiers: [])
             .disabled(!keys || model.skip == nil)
+        Button(L.menuSaySomething) { model.requestChat() }
+            .disabled(!playing || !model.inParty)
         Button(L.menuMarkSkipTimes) { model.beginSkipMark() }
             .keyboardShortcut("k", modifiers: .option)
             .disabled(!model.canMarkSkips)

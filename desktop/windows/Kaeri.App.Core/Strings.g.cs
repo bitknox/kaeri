@@ -5443,6 +5443,9 @@ public static partial class T
     /// <summary>Group heading.</summary>
     public static string SettingsGroupPlayback => Get("SettingsGroupPlayback");
 
+    /// <summary>Group heading in Playback settings, above the switch that hides chat.</summary>
+    public static string SettingsGroupWatchParties => Get("SettingsGroupWatchParties");
+
     /// <summary>Group heading.</summary>
     public static string SettingsGroupWatching => Get("SettingsGroupWatching");
 
@@ -10483,6 +10486,7 @@ public static partial class T
         ["SettingsGroupGeneral"] = "General",
         ["SettingsGroupTitles"] = "Titles",
         ["SettingsGroupPlayback"] = "Playback",
+        ["SettingsGroupWatchParties"] = "Watch parties",
         ["SettingsGroupWatching"] = "Watching",
         ["SettingsGroupPlayer"] = "Player",
         ["SettingsGroupPicture"] = "Picture",

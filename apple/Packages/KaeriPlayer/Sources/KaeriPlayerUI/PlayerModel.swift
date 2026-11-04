@@ -167,10 +167,18 @@ public final class PlayerModel {
     public var markEdge: SkipEdge = .start
     /// Marking is off while a watch party plays: the app sets it from the party's state.
     public var marksBlocked = false
+    /// Whether a watch party is joined, which the menus' Say Something… needs.
+    public var inParty = false
+    /// Counts the asks to open the chat field (Playback › Say Something…).
+    public private(set) var chatRequests = 0
+    public func requestChat() { chatRequests += 1 }
     public private(set) var upNext: UpNextCard?
     public private(set) var stall: StallCard?
     public private(set) var resume: ResumeNote?
     public private(set) var alert: PlayerAlert?
+    /// Whether an alert from the engine is not for the notice column: set by the app, which knows
+    /// the party's chat.
+    public var alertFilter: (@MainActor (String) -> Bool)?
     public private(set) var upscaler: String?
     public private(set) var hdr: String?
     /// The playback never played: "Couldn't play episode 7", with Choose source and Close.
@@ -522,6 +530,8 @@ public final class PlayerModel {
             if url != thumbnails { preview.close() }
             thumbnails = url
         case .alert(let text, let kind):
+            // A typed line of the party's chat is in the column already, as its own line.
+            if alertFilter?(text) == true { break }
             Self.note(kind == .alert ? .warn : .info, "#\(playback) alert: \(text)")
             alert = PlayerAlert(text: text, kind: kind, since: now)
         }

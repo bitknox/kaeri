@@ -8250,6 +8250,9 @@ settings-group-titles = [Ţîţļéš~~]
 # Group heading.
 settings-group-playback = [Þļàýƀàçķ~~~]
 
+# Group heading in Playback settings, above the switch that hides chat.
+settings-group-watch-parties = [Ŵàţçĥ þàŕţîéš~~~~]
+
 # Group heading.
 settings-group-watching = [Ŵàţçĥîñĝ~~~]
 

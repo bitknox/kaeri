@@ -7725,6 +7725,9 @@ public enum L {
     /// Group heading.
     public static var settingsGroupPlayback: String { string("settings-group-playback", fallback: "Playback") }
 
+    /// Group heading in Playback settings, above the switch that hides chat.
+    public static var settingsGroupWatchParties: String { string("settings-group-watch-parties", fallback: "Watch parties") }
+
     /// Group heading.
     public static var settingsGroupWatching: String { string("settings-group-watching", fallback: "Watching") }
 

@@ -39,6 +39,9 @@ settings-group-titles = Titles
 # Group heading.
 settings-group-playback = Playback
 
+# Group heading in Playback settings, above the switch that hides chat.
+settings-group-watch-parties = { -watch-party-cap-pl }
+
 # Group heading.
 settings-group-watching = Watching
 

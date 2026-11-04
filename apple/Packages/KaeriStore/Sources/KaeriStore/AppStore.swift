@@ -153,6 +153,7 @@ public final class AppStore {
         updates.send = { [weak self] command in self?.send(command) }
         party.send = { [weak self] command in self?.send(command) }
         sync.send = { [weak self] command in self?.send(command) }
+        party.chat.send = { [weak self] command in self?.send(command) }
         party.say = { [weak self] notice, player, kind in
             guard let self else { return }
             if party.playerUp() {
@@ -1038,8 +1039,12 @@ public final class AppStore {
             onPlayback?(event)
 
         case .partyForm, .partyJoined, .partyState, .partyMembers, .partyLeft, .partyRecent, .partyGlimpse,
-             .partyLookFailed, .partyLastOut, .partyMessage, .partyStarted:
+             .partyLookFailed, .partyLastOut, .partyMessage, .partyStarted, .partyChat, .partyChatState,
+             .partyReaction:
             party.apply(event)
+        case .partyChatRefused:
+            // The field and the glyphs already show the wait; the engine has said no.
+            break
         case .partyNoSource:
             // The party's sheet says it, and the player steps aside for it.
             party.apply(event)

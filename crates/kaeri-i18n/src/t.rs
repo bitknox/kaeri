@@ -13245,6 +13245,11 @@ pub fn settings_group_playback() -> String {
     text("settings-group-playback", &[])
 }
 
+/// Group heading in Playback settings, above the switch that hides chat.
+pub fn settings_group_watch_parties() -> String {
+    text("settings-group-watch-parties", &[])
+}
+
 /// Group heading.
 pub fn settings_group_watching() -> String {
     text("settings-group-watching", &[])

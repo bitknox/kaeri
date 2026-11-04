@@ -215,7 +215,7 @@ struct SettingsResults: View {
         (L.settingsShareSkips, .playback), (L.settingsClearSkips, .playback), (L.settingsSkipFiller, .playback),
         (L.settingsMarkOpening, .playback), (L.settingsCountsWatched, .playback),
         (L.settingsSpoiler, .playback), (L.playerUpscaling, .playback), (L.playerNightMode, .playback),
-        (L.settingsStartFullScreen, .playback),
+        (L.settingsStartFullScreen, .playback), (L.settingsHideChat, .playback),
         (L.downloadsFolder, .downloads), (L.downloadsQuality, .downloads), (L.settingsMergeSubtitles, .downloads),
         (L.settingsKeepSeeding, .downloads), (L.settingsAfterDownload, .downloads), (L.settingsWatchedDownloads, .downloads),
         (L.settingsNewEpisodes, .notifications), (L.settingsSystemNotifications, .notifications),
@@ -485,6 +485,9 @@ struct PlaybackPane: View {
             SettingsRow(title: SettingKey.fullscreen.title) { SettingSwitch(key: .fullscreen) }
             #endif
         }
+        SettingsGroup(title: L.settingsGroupWatchParties) {
+            SettingsRow(title: L.settingsHideChat, note: L.settingsHideChatLine) { HideChatSwitch() }
+        }
         #if os(iOS)
         // The TVs paired to this iPad, beside the rest of how episodes play. The Mac keeps them
         // in Integrations; the iPhone in its own page of the settings sheet.
@@ -613,5 +616,19 @@ struct AdvancedPane: View {
                 .padding(.top, 24)
             #endif
         }
+    }
+}
+
+/// Hide chat: lines, reactions, ticks and the field stay off the video, in every party on this
+/// device.
+struct HideChatSwitch: View {
+    @Environment(AppStore.self) private var store
+
+    var body: some View {
+        let chat = store.party.chat
+        Toggle(L.settingsHideChat, isOn: Binding(get: { chat.hidden }, set: { chat.hidden = $0 }))
+            .toggleStyle(.switch)
+            .tint(.amber)
+            .labelsHidden()
     }
 }

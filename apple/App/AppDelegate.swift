@@ -65,6 +65,10 @@ final class AppDelegate: NSObject {
         // What a watch party says goes over the video while the player is up.
         store.party.playerUp = { [weak player] in player?.isPresented ?? false }
         store.playerSays = { [weak player] text, kind in player?.say(text, kind: kind) }
+        player.alertFilter = { [weak store] text in
+            guard let store, store.party.inParty else { return false }
+            return store.party.chat.isChatNotice(text, members: (store.party.members ?? []).map(\.name))
+        }
         #if os(iOS)
         // The playback's Live Activity, told what plays as Now Playing is, and its Play and Pause.
         player.onLiveActivity = { [weak store] playing in store?.playbackChanged(playing) }
