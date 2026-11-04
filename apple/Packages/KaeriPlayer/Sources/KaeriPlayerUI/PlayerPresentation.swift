@@ -37,6 +37,8 @@ struct HostsPlayer<Over: ViewModifier>: ViewModifier {
 
     /// The player has the main window: up, and not in Picture in Picture.
     private var inWindow: Bool { model.inMainWindow }
+    /// The browsing is hidden under the player, until Back starts to bring it back.
+    private var covered: Bool { inWindow && !model.returning }
     #else
     @Environment(\.scenePhase) private var phase
     #endif
@@ -60,7 +62,7 @@ struct HostsPlayer<Over: ViewModifier>: ViewModifier {
         #if os(macOS)
         content
             // The browsing stays where it was, under the player, for Back to return to.
-            .opacity(inWindow ? 0 : 1)
+            .opacity(covered ? 0 : 1)
             .allowsHitTesting(!inWindow)
             .accessibilityHidden(inWindow)
             .overlay {

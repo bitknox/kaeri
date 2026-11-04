@@ -24,8 +24,9 @@ public struct MacPlayerView: View {
     @State private var height: CGFloat = 0
     /// How the main window looked before the player took it over, to give it back.
     @State private var saved: SavedWindow?
-    /// Full screen was the player's doing, and ends with it.
-    @State private var enteredFullScreen = false
+    /// On the way back to browsing: out of the player's full screen first, before the player
+    /// shrinks into its banner.
+    @State private var leavingFullScreen = false
     /// Grown to the window from the banner; false while it is the banner's size.
     @State private var grown = false
     /// How far below the top the top bar starts: in full screen, under the strip where macOS
@@ -59,7 +60,10 @@ public struct MacPlayerView: View {
         self.model = model
     }
 
-    private var visible: Bool { (model.controlsVisible || panel != nil || partyOpen || overBar) && !model.stillWatching && model.failure == nil && !curtain }
+    private var visible: Bool {
+        (model.controlsVisible || panel != nil || partyOpen || overBar) && !model.stillWatching && model.failure == nil
+            && !curtain && !leavingFullScreen && !model.returning
+    }
 
     /// Whether the pointer may hide over the video (PlayerPointer).
     private var pointerIdle: Bool {
@@ -102,6 +106,8 @@ public struct MacPlayerView: View {
         .font(.system(size: 13))
         .clipShape(.rect(cornerRadius: grown ? 0 : ArtShape.bannerRadius))
         .modifier(GrowFromBanner(id: model.staged?.id, zoom: reduceMotion ? nil : zoom, grown: grown))
+        // Faded out as it shrinks, while the browsing fades in under it: the way in, reversed.
+        .opacity(model.returning ? 0 : 1)
         .ignoresSafeArea()
         .background(WindowReader { window = $0 })
         .onPreferenceChange(WheelStops.self) { wheelStops = $0 }
@@ -160,6 +166,10 @@ public struct MacPlayerView: View {
             topInset = 0
             PlayerModel.note(.info, "player window out of full screen, \(Self.describe(window))")
             if model.fullScreen { model.fullScreen = false }
+            if leavingFullScreen {
+                // After the layout the window's new size brings.
+                DispatchQueue.main.async { returnToBrowsing() }
+            }
         }
         .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { height = $0 }
         .onChange(of: SubtitleLift(visible: visible, height: height), initial: true) { _, lift in
@@ -739,7 +749,6 @@ public struct MacPlayerView: View {
         topInset = Self.revealStrip(of: window)
         PlayerModel.note(.info, "player in the main window, \(Self.describe(window)), asked for full screen \(model.fullScreen)")
         if model.fullScreen, !window.styleMask.contains(.fullScreen) {
-            enteredFullScreen = true
             // Once the window is on screen: a window still ordering in will not go full screen.
             DispatchQueue.main.async { [weak window] in
                 guard let window, model.fullScreen, !window.styleMask.contains(.fullScreen) else { return }
@@ -748,29 +757,50 @@ public struct MacPlayerView: View {
         }
     }
 
-    /// The main window as it was before the player, and out of the full screen the player put it
-    /// in.
+    /// The main window as it was before the player, and out of any full screen it went into
+    /// while the player had it, whichever way it went in. Once: Back gives it back before the
+    /// player shrinks, and the player going away finds nothing left to do.
     private func restore(_ window: NSWindow) {
-        saved?.restore(window)
-        saved = nil
         for kind in [NSWindow.ButtonType.closeButton, .miniaturizeButton, .zoomButton] {
             window.standardWindowButton(kind)?.alphaValue = 1
         }
-        if enteredFullScreen, window.styleMask.contains(.fullScreen) { window.toggleFullScreen(nil) }
-        enteredFullScreen = false
+        guard let saved else { return }
+        saved.restore(window)
+        self.saved = nil
+        if !saved.fullScreen, window.styleMask.contains(.fullScreen) { window.toggleFullScreen(nil) }
         PlayerModel.note(.info, "main window back to browsing, \(Self.describe(window))")
     }
 
-    /// Back to the title page: the video shrinks into the banner it came from, and the playback
-    /// stops with its place saved.
+    /// Back to where the play started: the video shrinks into the banner or card it grew out of,
+    /// and the playback stops with its place saved. The way in reversed, so a full screen the
+    /// player went into ends first, the system's way, as it began after the player grew.
     private func back() {
+        guard !leavingFullScreen, !model.returning else { return }
         PlayerModel.note(.info, "back from the player")
         PlayerPointer.shared.release()
-        guard zoom != nil, !reduceMotion else {
-            model.viewerClosed()
+        if let window, window.styleMask.contains(.fullScreen), saved?.fullScreen == false {
+            leavingFullScreen = true
+            window.toggleFullScreen(nil)
+            // Should AppKit never say the window is out, the player goes back from where it is.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                if leavingFullScreen { returnToBrowsing() }
+            }
             return
         }
-        withAnimation(.standard) { grown = false }
+        returnToBrowsing()
+    }
+
+    /// The browsing comes back as it will stay, its toolbar and title bar with it, and the player
+    /// shrinks into its banner (standard) as it fades out over it; under Reduce Motion, where
+    /// nothing grows, the two crossfade.
+    private func returnToBrowsing() {
+        guard !model.returning else { return }
+        leavingFullScreen = false
+        if let window { restore(window) }
+        withAnimation(.standard) {
+            model.returning = true
+            grown = false
+        }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { model.viewerClosed() }
     }
 
@@ -806,14 +836,14 @@ public struct MacPlayerView: View {
     private func fullScreen(_ on: Bool) {
         DispatchQueue.main.async { [weak window, model] in
             guard let window, model.fullScreen == on, window.styleMask.contains(.fullScreen) != on else { return }
-            if on { enteredFullScreen = true }
             window.toggleFullScreen(nil)
         }
     }
 
     /// The title bar is transparent and hides with the controls.
     private func titleBar(_ visible: Bool) {
-        guard let window else { return }
+        // On the way back the window's buttons are the browsing's again, and stay.
+        guard let window, !model.returning, !leavingFullScreen else { return }
         NSAnimationContext.runAnimationGroup { context in
             context.duration = visible ? 0.2 : 0.3
             for kind in [NSWindow.ButtonType.closeButton, .miniaturizeButton, .zoomButton] {
@@ -868,10 +898,13 @@ struct SavedWindow {
     let backgroundColor: NSColor
     let appearance: NSAppearance?
     let toolbarVisible: Bool?
+    /// The window was full screen before the player: it stays so after.
+    let fullScreen: Bool
 
     @MainActor
     init(_ window: NSWindow) {
         toolbarVisible = window.toolbar?.isVisible
+        fullScreen = window.styleMask.contains(.fullScreen)
         transparentTitleBar = window.titlebarAppearsTransparent
         titleVisibility = window.titleVisibility
         fullSizeContent = window.styleMask.contains(.fullSizeContentView)

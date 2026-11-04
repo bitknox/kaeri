@@ -124,6 +124,10 @@ public final class PlayerModel {
     public private(set) var layer: MpvLayer?
     /// The window fills the screen: the engine's Open and its cycles, and the viewer's.
     public var fullScreen = false
+    /// On its way back into the browsing, which shows again under it: the Mac's player shrinking
+    /// into its banner after Back. It stays set as the player goes, so the view leaving keeps
+    /// the opacity it faded to, until the next player comes up.
+    public var returning = false
 
     /// The newest playback the engine has spoken of, whose file the player shows or is opening.
     public private(set) var playback: PlaybackId?
@@ -612,6 +616,7 @@ public final class PlayerModel {
     private func present() {
         guard !isPresented else { return }
         isPresented = true
+        returning = false
         clock = time.now()
         lastInput = time.now()
         startTicker()
