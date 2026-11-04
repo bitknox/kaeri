@@ -10,7 +10,17 @@ import LocalAuthentication
 import SwiftUI
 
 /// A sheet: its title, its rows, and the buttons that end it.
+private struct SyncEmbeddedKey: EnvironmentKey { static let defaultValue = false }
+extension EnvironmentValues {
+    /// The frame sits in a page of first launch, which has its own surface and padding.
+    var syncEmbedded: Bool {
+        get { self[SyncEmbeddedKey.self] }
+        set { self[SyncEmbeddedKey.self] = newValue }
+    }
+}
+
 struct SyncSheetFrame<Content: View, Bottom: View>: View {
+    @Environment(\.syncEmbedded) private var embedded
     let title: String
     /// The cancel in the navigation bar on iPhone and iPad.
     var cancel: (() -> Void)?
@@ -34,9 +44,9 @@ struct SyncSheetFrame<Content: View, Bottom: View>: View {
             }
             .padding(.top, 20)
         }
-        .padding(30)
-        .frame(width: width)
-        .background(.raised)
+        .padding(embedded ? 0 : 30)
+        .frame(width: embedded ? nil : width)
+        .background(embedded ? Color.clear : Palette.raised)
         #else
         NavigationStack {
             PhoneList {

@@ -416,12 +416,21 @@ enum LocalAddress {
 struct PairShowSheet: View {
     @Environment(AppStore.self) private var store
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dismiss) private var dismiss
+    /// First launch's "Set up from another device": a new device shows the code, and Restore
+    /// from a cloud folder is the other way.
+    var first = false
+    var restore: () -> Void = {}
+    /// Leaving the page, where it is not a sheet of its own (first launch's page).
+    var leave: (() -> Void)?
+    /// First launch: the pairing is done and the flow ends.
+    var finished: () -> Void = {}
 
     var body: some View {
         let sync = store.sync
         Group {
             if case .paired(let device) = sync.pair {
-                PairedContent(device: device)
+                PairedContent(device: device, first: first, done: { if first { finished() } else { dismiss() } })
                     .transition(.opacity)
             } else {
                 showing(sync)
@@ -430,7 +439,7 @@ struct PairShowSheet: View {
         }
         .animation(reduceMotion ? nil : .standard, value: sync.pair)
         .task {
-            sync.resetPair()
+            if !sync.staged { sync.resetPair() }
             if !sync.staged { sync.invite(deviceName: sync.deviceName.isEmpty ? DeviceNaming.system : sync.deviceName) }
         }
         .onChange(of: sync.devices.count) { old, new in
@@ -440,7 +449,8 @@ struct PairShowSheet: View {
     }
 
     private func showing(_ sync: SyncModel) -> some View {
-        SyncSheetFrame(title: L.pairShowTitle, cancel: { sync.close() }) {
+        SyncSheetFrame(title: first ? L.firstSetupOther : L.pairShowTitle, cancel: { sync.close(); if let leave { leave() } else { dismiss() } }) {
+            if first { SyncNote(text: L.firstSetupLine) }
             if let invite = sync.invite {
                 let address = LocalAddress.current
                 let code = Text(spaced(invite.code))
@@ -461,7 +471,7 @@ struct PairShowSheet: View {
                     if left == 0 {
                         SyncProblemLine(text: L.pairErrExpired)
                     } else {
-                        SyncNote(text: L.pairShowScan + " " + L.pairGoodFor(left: String(format: "%d:%02d", left / 60, left % 60)))
+                        SyncNote(text: (first ? L.pairSameWifi : L.pairShowScan) + " " + L.pairGoodFor(left: String(format: "%d:%02d", left / 60, left % 60)))
                             .monospacedDigit()
                     }
                 }
@@ -473,7 +483,14 @@ struct PairShowSheet: View {
                 ProgressView().frame(maxWidth: .infinity)
             }
         } bottom: {
-            SyncButton(title: L.actionDone, primary: true, wide: touch) { sync.close() }
+            if first {
+                #if os(macOS)
+                SyncButton(title: L.actionCancel) { sync.close(); leave?() }
+                #endif
+                SyncButton(title: L.firstRestore, wide: touch) { sync.stopInvite(); restore() }
+            } else {
+                SyncButton(title: L.actionDone, primary: true, wide: touch) { sync.close() }
+            }
         }
     }
 
@@ -583,24 +600,32 @@ struct PairEnterSheet: View {
 struct PairedContent: View {
     @Environment(AppStore.self) private var store
     let device: String
-    @State private var copySignIns = false
+    var first = false
+    var done: () -> Void = {}
+    @State private var copySignIns: Bool
+    init(device: String, first: Bool = false, done: @escaping () -> Void = {}) {
+        self.device = device
+        self.first = first
+        self.done = done
+        _copySignIns = State(initialValue: first)
+    }
 
     var body: some View {
         let sync = store.sync
         let trackers = store.accounts.trackers.filter(\.connected).map { AccountsModel.name($0.tracker) }
         SyncSheetFrame(title: L.pairOk(device: device)) {
-            SyncNote(text: L.pairOkLine)
-            if !trackers.isEmpty {
+            SyncNote(text: first ? L.firstOkLine : L.pairOkLine)
+            if !trackers.isEmpty || first {
                 SyncSection(footer: nil) {
                     #if os(macOS)
-                    SettingsRow(title: L.pairCopySignins(device: device), note: L.pairCopySigninsLine(trackers: trackers.joined(separator: ", "))) {
+                    SettingsRow(title: L.pairCopySignins(device: device), note: L.pairCopySigninsLine(trackers: trackers.isEmpty ? AccountsModel.name("anilist") : trackers.joined(separator: ", "))) {
                         Toggle("", isOn: $copySignIns).toggleStyle(.switch).tint(.amber).labelsHidden()
                     }
                     #else
                     Toggle(isOn: $copySignIns) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(L.pairCopySignins(device: device)).font(.ui(17)).foregroundStyle(.silk)
-                            Text(L.pairCopySigninsLine(trackers: trackers.joined(separator: ", "))).font(.ui(13)).foregroundStyle(.haze)
+                            Text(L.pairCopySigninsLine(trackers: trackers.isEmpty ? AccountsModel.name("anilist") : trackers.joined(separator: ", "))).font(.ui(13)).foregroundStyle(.haze)
                         }
                     }
                     .tint(.amber)
@@ -613,6 +638,7 @@ struct PairedContent: View {
                 if copySignIns { sync.copySignIns(from: device, [.trackers]) }
                 sync.resetPair()
                 sync.close()
+                done()
             }
         }
     }

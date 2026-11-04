@@ -131,3 +131,78 @@ struct ProfileSheet: View {
         }
     }
 }
+
+#if os(iOS)
+/// iPad: who is watching, asked at launch when Ask who's watching at launch is on and the
+/// install has two or more profiles. A full-screen cover; the profile chosen opens, which is a
+/// switch when it is not the one in use.
+struct ProfilePickerPresenter: ViewModifier {
+    @Environment(AppStore.self) private var store
+    @Environment(Navigator.self) private var navigator
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage("askWhoAtLaunch") private var ask = false
+    @State private var answered = false
+    @State private var forced = false
+
+    private var due: Bool {
+        guard UIDevice.current.userInterfaceIdiom == .pad, !answered else { return false }
+        return (ask || forced) && store.sync.hasProfiles
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .task {
+                // i18n-skip: a shot's sheet name
+                if navigator.launchSheet == "profile-picker" { forced = true; navigator.launchSheet = nil }
+            }
+            .fullScreenCover(isPresented: Binding(get: { due }, set: { if !$0 { answered = true } })) {
+                ProfilePicker { profile in
+                    if !profile.active { store.sync.switchProfile(profile.id) }
+                    answered = true
+                }
+                .environment(store)
+                .transaction { if reduceMotion { $0.animation = nil } }
+            }
+    }
+}
+
+struct ProfilePicker: View {
+    @Environment(AppStore.self) private var store
+    let choose: (ProfileView) -> Void
+
+    var body: some View {
+        VStack(spacing: 32) {
+            Spacer()
+            Text(L.profilesPicker)
+                .font(.ui(34, weight: .bold))
+                .foregroundStyle(.silk)
+                .accessibilityAddTraits(.isHeader)
+            HStack(alignment: .top, spacing: 40) {
+                ForEach(store.sync.profiles, id: \.id) { profile in
+                    Button { choose(profile) } label: {
+                        VStack(spacing: 10) {
+                            Text(profile.initials)
+                                .font(.ui(48, weight: .bold))
+                                .foregroundStyle(.silk)
+                                .frame(width: 120, height: 120)
+                                .background(Palette.selection, in: .circle)
+                            Text(profile.name).font(.ui(20, weight: .semibold)).foregroundStyle(.silk)
+                            if profile.kids { Text(L.profilesKidsTag).font(.ui(15)).foregroundStyle(.haze) }
+                        }
+                        .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(profile.name)
+                }
+            }
+            Text(L.profilesPickerLine)
+                .font(.ui(15))
+                .foregroundStyle(.haze)
+                .multilineTextAlignment(.center)
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Palette.ground.ignoresSafeArea())
+    }
+}
+#endif

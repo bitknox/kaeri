@@ -28,6 +28,9 @@ struct AppSheets: ViewModifier {
             // An episode's discussion: a sheet, a side panel or a window.
             .modifier(DiscussionSheets())
             .modifier(FirstLaunchPresenter())
+            #if os(iOS)
+            .modifier(ProfilePickerPresenter())
+            #endif
             .modifier(ReportSheetPresenter())
             .modifier(CrashNoticePresenter())
             #if os(iOS)

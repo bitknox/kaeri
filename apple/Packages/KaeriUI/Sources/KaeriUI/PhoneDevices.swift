@@ -66,9 +66,21 @@ struct PhoneDevicesPage: View {
                 .tint(.amber)
                 .listRowBackground(Palette.raised)
             }
+            ForEach(store.tv.paired.filter { tv in !sync.devices.contains { $0.name == tv.name } }, id: \.fingerprint) { tv in
+                HStack {
+                    PhoneRowTitle(title: tv.name, note: L.devicesRemoteOnly)
+                    Spacer()
+                    Button(L.devicesAlsoSyncShort) { sync.alsoSync(with: tv.name, address: tv.address) }
+                        .buttonStyle(SyncButtonStyle2())
+                        .accessibilityLabel(L.devicesAlsoSync(device: tv.name))
+                }
+                .listRowBackground(Palette.raised)
+            }
             Button(L.pairShowCode) { sync.sheet = .pairShow }.listRowBackground(Palette.raised)
             Button(L.pairEnterCode) { sync.sheet = .pairEnter }.listRowBackground(Palette.raised)
-        } header: { PhoneSectionHeader(L.devicesYours) }
+        } header: { PhoneSectionHeader(L.devicesYours) } footer: {
+            if let tv = store.tv.paired.first(where: { tv in !sync.devices.contains { $0.name == tv.name } }) { Text(L.pairAlsoSyncFoot(device: tv.name)) }
+        }
         .confirmationDialog(
             L.devicesRemoveAlert(device: removing?.name ?? ""),
             isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }),
@@ -77,6 +89,19 @@ struct PhoneDevicesPage: View {
             Button(L.devicesRemove, role: .destructive) { sync.remove(device.id) }
         } message: { device in
             Text(L.devicesRemoveAlertLine(device: device.name))
+        }
+        if !sync.notes.isEmpty {
+            Section {
+                ForEach(sync.notes, id: \.id) { note in
+                    VStack(alignment: .leading, spacing: 8) {
+                        PhoneRowTitle(title: SyncWords.note(note, store: store))
+                        Button(L.syncNoteUndo) { sync.undo(note) }
+                            .buttonStyle(.borderless).font(.ui(17, weight: .semibold))
+                    }
+                    .listRowBackground(Palette.raised)
+                }
+                .task(id: sync.notes.map(\.anilistId)) { store.prepareCards(sync.notes.map(\.anilistId)) }
+            } header: { PhoneSectionHeader(L.syncNotes) } footer: { Text(L.syncNotesFoot) }
         }
         Section {
             if let folder = sync.status.folder {

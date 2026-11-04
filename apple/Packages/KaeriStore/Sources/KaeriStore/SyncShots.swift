@@ -17,6 +17,7 @@ import KaeriKit
 ///     road           the road sheet; picker, picker-denied, nextcloud, nextcloud-wait, nextcloud-err,
 ///                    webdav, webdav-err, key, key-qr, restore, restore-wrong, pair-show, pair-enter,
 ///                    pair-err, pair-nf, paired, profile-add, profile-edit are the sheets, over `on`
+///     first-setup    first launch's code page (with sheet=welcome-setup); first-paired its paired page
 ///     profiles       two profiles
 public enum SyncScene: String, Sendable {
     case off, on, syncing, settingup, signedout, signedoutErr = "signedout-err", offline
@@ -24,6 +25,7 @@ public enum SyncScene: String, Sendable {
     case nextcloudWait = "nextcloud-wait", nextcloudErr = "nextcloud-err", webdav, webdavErr = "webdav-err"
     case key, keyQr = "key-qr", restore, restoreWrong = "restore-wrong"
     case pairShow = "pair-show", pairEnter = "pair-enter", pairErr = "pair-err", pairNf = "pair-nf", paired
+    case firstSetup = "first-setup", firstPaired = "first-paired"
     case profiles, profileAdd = "profile-add", profileEdit = "profile-edit"
 
     public static let argument = "-KaeriSync"
@@ -56,12 +58,13 @@ extension SyncModel {
 
     private static func group(
         now: Int64, syncing: Bool = false, problem: SyncProblem? = nil, folder: SyncFolderKind = .googleDrive,
-        account: String? = "kim@mail.example"
+        account: String? = "kim@mail.example", notes: Bool = false
     ) -> SyncStatus {
         SyncStatus(
             enabled: true, deviceName: DeviceName.this,
             folder: SyncFolderView(kind: folder, label: folder == .directory ? "Kaeri sync" : "", account: account), // i18n-skip
             devices: devices(now: now), lastSynced: now - 240, syncing: syncing,
+            notes: notes ? [SyncNoteView(id: 1, anilistId: 900001, episode: "5", watchDevice: "Living room TV", unwatchDevice: "Kim’s MacBook Air", at: now - 3600)] : [], // i18n-skip
             clouds: clouds(), problem: problem, groupFolder: folder, recoveryKey: true,
             recoveryKeyMade: now - 86_400
         )
@@ -75,14 +78,15 @@ extension SyncModel {
         var status = SyncStatus(enabled: false, syncing: false, clouds: Self.clouds())
         var sheet: SyncSheet?
         switch scene {
-        case .off: break
+        case .off, .firstSetup, .firstPaired: break
         case .on, .key, .keyQr, .pairShow, .pairEnter, .pairErr, .pairNf, .paired, .profiles,
              .profileAdd, .profileEdit, .picker, .pickerDenied, .nextcloud, .nextcloudWait, .nextcloudErr,
              .webdav, .webdavErr, .restore, .restoreWrong, .road:
-            status = Self.group(now: now)
+            status = Self.group(now: now, notes: true)
         case .syncing:
             status = Self.group(now: now, syncing: true)
             syncingShown = true
+            syncingSince = .now - .seconds(4)
         case .settingup:
             status = Self.group(now: now, syncing: true)
             stage(settingUp: .googleDrive)
@@ -135,6 +139,10 @@ extension SyncModel {
         case .pairShow:
             stage(invite: SyncInviteView(code: "042917", port: 4510, until: .now.addingTimeInterval(108)))
             sheet = .pairShow
+        case .firstSetup:
+            stage(invite: SyncInviteView(code: "042917", port: 4510, until: .now.addingTimeInterval(108)))
+        case .firstPaired:
+            stage(pair: .paired("Kim’s iPhone")) // i18n-skip
         case .pairEnter: sheet = .pairEnter
         case .pairErr:
             stage(pair: .failed(.code))

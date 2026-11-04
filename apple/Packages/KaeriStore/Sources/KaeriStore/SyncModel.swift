@@ -113,6 +113,10 @@ public final class SyncModel {
     public private(set) var signedOutByHand = false
     /// A short quiet while a pass runs, so the toolbar capsule says Syncing only past 600 ms.
     public internal(set) var syncingShown = false
+    /// When the pass shown as Syncing began, for the popover's elapsed time.
+    public internal(set) var syncingSince: ContinuousClock.Instant?
+    /// The other device a pass talks with: the first one that is not this device.
+    public var syncingPartner: String? { status.devices.first { !$0.thisDevice }?.name }
     @ObservationIgnored public var send: (Command) -> Void = { _ in }
     /// Set by the Fixtures app: states stay as staged.
     @ObservationIgnored public var staged = false
@@ -233,7 +237,21 @@ public final class SyncModel {
     public func syncNow() { send(.syncFolderNow) }
     public func turnOff() { send(.leaveSync) }
     public func remove(_ device: String) { send(.removeSyncDevice(device: device)) }
+    /// A TV paired as a remote already trusts this device: swap histories with it, no new code.
+    public func alsoSync(with device: String, address: String) {
+        send(.syncWithDevice(device: device, address: address))
+    }
+
     public func dismissNote(_ id: Int64) { send(.dismissSyncNote(id: id)) }
+
+    /// The conflicts the rules decided against someone's action, newest first, kept 7 days.
+    public var notes: [SyncNoteView] { status.notes.sorted { $0.at > $1.at } }
+
+    /// A note's undo: the episode is marked unwatched here, and the note goes.
+    public func undo(_ note: SyncNoteView) {
+        send(.setWatched(id: note.anilistId, episodes: [note.episode], watched: false))
+        dismissNote(note.id)
+    }
     public func showRecoveryKey() {
         keyCameFromDevices = true
         send(.showRecoveryKey)
@@ -336,10 +354,12 @@ public final class SyncModel {
                 try? await Task.sleep(for: .milliseconds(600))
                 guard !Task.isCancelled else { return }
                 self?.syncingShown = true
+                self?.syncingSince = .now
             }
         } else if !new.syncing {
             syncingTask?.cancel()
             syncingShown = false
+            syncingSince = nil
         }
         if new.problem == nil { problem = problem.flatMap { Self.stays($0) ? $0 : nil } }
     }

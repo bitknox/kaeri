@@ -31,6 +31,7 @@ struct DevicesPane: View {
         }
         if sync.enabled {
             YourDevicesGroup()
+            SyncNotesGroup()
             CloudFolderGroup()
             RecoveryKeyGroup()
             TurnOffGroup()
@@ -104,6 +105,12 @@ struct YourDevicesGroup: View {
                             .toggleStyle(.switch).tint(.amber).labelsHidden()
                         }
                     }
+                }
+            }
+            ForEach(store.tv.paired.filter { tv in !sync.devices.contains { $0.name == tv.name } }, id: \.fingerprint) { tv in
+                SettingsRow(title: tv.name, note: L.devicesRemoteOnly) {
+                    Button(L.devicesAlsoSync(device: tv.name)) { sync.alsoSync(with: tv.name, address: tv.address) }
+                        .buttonStyle(SecondaryCapsuleStyle(raisedSurface: true))
                 }
             }
             SettingsRow(title: L.devicesAdd) {
@@ -252,6 +259,27 @@ struct TurnOffGroup: View {
             Button(L.syncTurnOffButton, role: .destructive) { sync.turnOff() }
         } message: {
             Text(L.syncTurnOffAlertLine(kind: Device.name))
+        }
+    }
+}
+
+/// What the rules decided against someone's action: a watch kept although another device marked
+/// the episode unwatched, with its undo, for 7 days.
+struct SyncNotesGroup: View {
+    @Environment(AppStore.self) private var store
+
+    var body: some View {
+        let sync = store.sync
+        if !sync.notes.isEmpty {
+            SettingsGroup(title: L.syncNotes, footnote: L.syncNotesFoot) {
+                Color.clear.frame(height: 0).task(id: sync.notes.map(\.anilistId)) { store.prepareCards(sync.notes.map(\.anilistId)) }
+                ForEach(sync.notes, id: \.id) { note in
+                    SettingsRow(title: SyncWords.note(note, store: store)) {
+                        Button(L.syncNoteUndo) { sync.undo(note) }
+                            .buttonStyle(SecondaryCapsuleStyle(raisedSurface: true))
+                    }
+                }
+            }
         }
     }
 }

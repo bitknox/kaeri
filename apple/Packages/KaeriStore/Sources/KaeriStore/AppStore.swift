@@ -100,6 +100,9 @@ public final class AppStore {
     @ObservationIgnored public private(set) var artwork: ArtworkStore!
 
     @ObservationIgnored private var client: EngineClient?
+    /// Another profile was chosen: the app stops the engine and starts afresh in it, keeping
+    /// nothing of this profile in memory.
+    @ObservationIgnored public var onProfileSwitch: (@MainActor (String) -> Void)?
     /// When a batch was last applied.
     @ObservationIgnored var lastApplied = ContinuousClock.now
     /// What the screens asked for before the engine was there, sent once it is.
@@ -859,6 +862,7 @@ public final class AppStore {
         if !held.isEmpty, let kind = event.showcaseKind, held.contains(kind) { return }
         notifications.observe(event)
         sync.apply(event)
+        if case .profileSwitch(let id) = event { onProfileSwitch?(id) }
         answers.deliver([event])
         if case .downloads(let rows) = event { continued.update(rows) }
         if wantsWeek, NotificationsModel.reschedules(after: event) { refreshNotices() }

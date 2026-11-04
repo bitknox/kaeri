@@ -8,6 +8,12 @@ import SwiftUI
 
 @MainActor
 enum SyncWords {
+    /// A sync note's sentence: the episode kept watched, who unwatched it and who had finished it.
+    static func note(_ note: SyncNoteView, store: AppStore) -> String {
+        let title = store.titles[note.anilistId]?.showTitle ?? ""
+        return L.syncNoteKeptWatched(n: Int(note.episode) ?? 0, title: title, other: note.unwatchDevice, device: note.watchDevice)
+    }
+
     /// "Synced just now", "Synced 2 min ago", or "Not seen for 31 days" past 30 days.
     static func seen(_ device: SyncDeviceView, now: Date = .now) -> (text: String, state: SyncSummary.State) {
         guard let at = device.lastSeen else { return (L.settingsSyncedJustNow, .synced) }
