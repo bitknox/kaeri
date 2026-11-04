@@ -338,6 +338,7 @@ public sealed partial class SettingsPage : Page
                         var clear = new Button { Content = T.PlayerSkipClear };
                         clear.Click += (_, _) => ctx.Send(new Command.ClearSkipMarks());
                         Cards.Children.Add(CardFrame(T.SettingsClearSkips, null, clear));
+                        Cards.Children.Add(HideChatCard());
                     }
                     if (pane.Name == "downloads" && group == "files")
                         Cards.Children.Add(WhenClosingCard());
@@ -454,6 +455,15 @@ public sealed partial class SettingsPage : Page
     };
 
     /// <summary>A row as Windows 11 Settings draws one: the Toolkit's SettingsCard.</summary>
+    /// <summary>Hide chat in watch parties: the app's own setting, kept on this device.</summary>
+    static SettingsCard HideChatCard()
+    {
+        var toggle = new ToggleSwitch { IsOn = ChatSetting.Hidden, OnContent = "", OffContent = "", MinWidth = 0 };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(toggle, T.SettingsHideChat);
+        toggle.Toggled += (_, _) => ChatSetting.Set(toggle.IsOn);
+        return CardFrame(T.SettingsHideChat, T.SettingsHideChatLine, toggle);
+    }
+
     static SettingsCard CardFrame(string title, string? description, FrameworkElement? control, string? glyph = null)
     {
         var card = new SettingsCard { Header = title, Description = description, Content = control };

@@ -35,6 +35,7 @@
     <KeyboardAccelerator Key="T" Invoked="OnKeyTracks" />
     <KeyboardAccelerator Key="I" Invoked="OnKeyStats" />
     <KeyboardAccelerator Key="Back" Invoked="OnKeySpeedNormal" />
+    <KeyboardAccelerator Key="C" Invoked="OnKeyChat" />
     <!-- ] and [ have no VirtualKey names: they are added in code. -->
   </UserControl.KeyboardAccelerators>
   <Grid x:Name="Root" Background="Black" PointerMoved="OnPointerMoved" Tapped="OnVideoTapped"
@@ -94,6 +95,8 @@
             <TextBlock x:Name="EpisodeTitle" Style="{StaticResource HazeCaptionStyle}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" Opacity="0.8" />
           </StackPanel>
           <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
+            <!-- In a party with chat: the four reactions, before the people. Filled in code. -->
+            <StackPanel x:Name="Reactions" Orientation="Horizontal" Spacing="2" Margin="0,0,6,0" Visibility="Collapsed" />
             <!-- Watch party: the form that starts a party, or the party's panel once in one. -->
             <Button x:Name="PartyButton" Style="{StaticResource PlayerButtonStyle}" Click="OnParty" ToolTipService.ToolTip="{x:Bind app:T.PartyTitle}" AutomationProperties.Name="{x:Bind app:T.PartyTitle}">
               <Grid>
@@ -339,10 +342,32 @@
       <TeachingTip x:Name="MiniTip" Target="{x:Bind MiniButton}" Title="{x:Bind app:T.PlayerMiniPlayer}"
                    PreferredPlacement="Bottom" IsLightDismissEnabled="True" MaxWidth="260" />
 
-      <!-- What the player says on the video: an alert, briefly, in the top leading corner. -->
-      <Border x:Name="AlertCard" Visibility="Collapsed" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="24,72,0,0"
-              Background="{ThemeResource RaisedBrush}" CornerRadius="8" Padding="16,10">
-        <TextBlock x:Name="AlertText" TextWrapping="WrapWholeWords" MaxWidth="480" AutomationProperties.LiveSetting="Assertive" />
+      <!-- What the player says on the video, in one column in the top leading corner: an alert
+           first, briefly, then the party's chat lines under it, three at most, and the fold. -->
+      <StackPanel x:Name="ChatColumn" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="24,72,0,0" Spacing="6">
+        <Border x:Name="AlertCard" Visibility="Collapsed" HorizontalAlignment="Left"
+                Background="{ThemeResource RaisedBrush}" CornerRadius="8" Padding="16,10">
+          <TextBlock x:Name="AlertText" TextWrapping="WrapWholeWords" MaxWidth="480" AutomationProperties.LiveSetting="Assertive" />
+        </Border>
+        <StackPanel x:Name="ChatLines" Spacing="6" />
+        <Button x:Name="ChatFold" Visibility="Collapsed" Click="OnChatFold" Padding="16,10" MinHeight="40" CornerRadius="8"
+                Background="{ThemeResource RaisedBrush}" BorderBrush="{ThemeResource HairBrush}" BorderThickness="1">
+          <TextBlock x:Name="ChatFoldText" Style="{StaticResource HazeBodyStyle}" />
+        </Button>
+      </StackPanel>
+
+      <!-- A reaction's moment: the glyph and the name, bottom trailing, above the corner's card. -->
+      <StackPanel x:Name="ChatMoments" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,12,76" Spacing="6"
+                  IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw" />
+
+      <!-- C opens the field above the controls; Enter sends and keeps it open, Escape closes it. -->
+      <Border x:Name="ChatFieldSlot" Visibility="Collapsed" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+              Margin="24,0,0,72" Width="480" />
+
+      <!-- Near a reaction's tick, when the preview has no frame to show: who reacted there. -->
+      <Border x:Name="TickLabel" Visibility="Collapsed" HorizontalAlignment="Left" VerticalAlignment="Bottom" IsHitTestVisible="False"
+              Background="{ThemeResource RaisedBrush}" CornerRadius="6" Padding="8,3">
+        <TextBlock x:Name="TickLabelText" Style="{StaticResource CaptionTextBlockStyle}" Typography.NumeralAlignment="Tabular" />
       </Border>
 
       <!-- What a key did while the controls stay hidden: the time after a seek, the volume, the

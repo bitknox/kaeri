@@ -162,6 +162,7 @@ public sealed partial class PlayerView : UserControl
         LiftSubtitles(animated: false);
         tick.Start();
         ShowStats();
+        ChatReflect();
         Focus(FocusState.Programmatic);
         ShowingChanged?.Invoke(true);
     }
@@ -194,8 +195,9 @@ public sealed partial class PlayerView : UserControl
         still.Reset();
         click.Stop();
         Visibility = Visibility.Collapsed;
-        foreach (var layer in new UIElement[] { StillLayer, Starting, SkipSlot, UndoCard, UpNextCard, StallCard, AlertCard, Flash, StatsLayer })
+        foreach (var layer in new UIElement[] { StillLayer, Starting, SkipSlot, UndoCard, UpNextCard, StallCard, AlertCard, Flash, StatsLayer, ChatFieldSlot, TickLabel })
             Motion.Set(layer, false);
+        ChatClear();
         // Kept up for the next playback, which waits for its own figures.
         stats.Restart();
         statsUp = false;
@@ -247,6 +249,10 @@ public sealed partial class PlayerView : UserControl
                     break;
                 case Event.PartyJoined or Event.PartyLeft:
                     ShowPartyButton();
+                    ChatHeard(e);
+                    break;
+                case Event.PartyChat or Event.PartyChatState or Event.PartyReaction or Event.PartyChatRefused:
+                    ChatHeard(e);
                     break;
                 case Event.TitleDub td when td.Id == playingId:
                     BuildTracks();
@@ -368,7 +374,9 @@ public sealed partial class PlayerView : UserControl
                 UpdateCorner();
                 break;
             case PlayerUi.Alert alert:
-                Alert(alert.Text);
+                // A chat line has its own place on the video, in the column.
+                if (!ChatEcho(alert.Text))
+                    Alert(alert.Text);
                 break;
             case PlayerUi.Thumbnails thumb:
                 if (thumb.Url != thumbnails)
@@ -563,6 +571,7 @@ public sealed partial class PlayerView : UserControl
     void DrawTimeline()
     {
         TimelineUnder.Children.Clear();
+        tickPlaces.Clear();
         if (Find(Timeline, "HorizontalTrackRect") is not FrameworkElement track || track.ActualWidth <= 0)
             return;
         var thumb = Find(Timeline, "HorizontalThumb") as FrameworkElement;
@@ -612,6 +621,8 @@ public sealed partial class PlayerView : UserControl
         // The stretch being marked grows at half water until it is saved.
         if (ProvisionalMark() is { } mine)
             Bar(X(mine.From), X(mine.To), water, 0.5);
+        // The party's reactions, as ticks above the line.
+        DrawTicks(X, at.Y, usable);
     }
 
     Microsoft.UI.Xaml.Shapes.Rectangle? playedBar;
@@ -779,6 +790,10 @@ public sealed partial class PlayerView : UserControl
             return;
         chromeShown = false;
         Motion.Hide(Chrome);
+        // An empty field goes with the controls.
+        if (chatField is { } field && field.Box.Text.Length == 0)
+            CloseChatField();
+        TickLabel.Visibility = Visibility.Collapsed;
         LiftSubtitles();
         PreviewBox.Visibility = Visibility.Collapsed;
         ControlsChanged?.Invoke(false);
@@ -788,6 +803,11 @@ public sealed partial class PlayerView : UserControl
     {
         if (keepControls || paused || overBar || menuOpen || Marking)
             return;
+        if (ChatFieldHolds())
+        {
+            idle.Start();
+            return;
+        }
         if (ControlsInUse())
         {
             // A screen reader is running, or a control has focus by any means: hold them.
@@ -871,6 +891,8 @@ public sealed partial class PlayerView : UserControl
             partyPanel = new PartyPanel(ctx);
             partyPanel.Flyout.Opened += OnMenuOpened;
             partyPanel.Flyout.Closed += OnMenuClosed;
+            partyPanel.Flyout.Opened += (_, _) => ChatPopover(true);
+            partyPanel.Flyout.Closed += (_, _) => ChatPopover(false);
         }
         ShowControls();
         partyPanel.Flyout.ShowAt(PartyButton);
@@ -1418,6 +1440,9 @@ public sealed partial class PlayerView : UserControl
         // Typing in the discussion's field, or pressing a key on one of its buttons, is not a player key.
         if (discussion is { } pane && XamlRoot is { } root && FocusManager.GetFocusedElement(root) is DependencyObject focus && Within(focus, pane))
             return;
+        // Nor is typing in the chat's field, over the video or in the people flyout.
+        if (Typing())
+            return;
         e.Handled = true;
         if (show)
             ShowControls();
@@ -1831,6 +1856,10 @@ public sealed partial class PlayerView : UserControl
             ClosePreview();
         stats.Mini = on;
         ShowStats();
+        // The small window has no room for the column or the reactions.
+        if (on)
+            ChatClear();
+        ChatReflect();
     }
 
     // Previews on the timeline.
@@ -1868,6 +1897,7 @@ public sealed partial class PlayerView : UserControl
             return;
         var point = e.GetCurrentPoint(Timeline).Position;
         PreviewAtFraction(Math.Clamp((point.X - 10) / Math.Max(1, Timeline.ActualWidth - 20), 0, 1));
+        ShowTickLabel(e.GetCurrentPoint(TimelineUnder).Position.X);
     }
 
     void PreviewAtFraction(double fraction)
@@ -1883,7 +1913,11 @@ public sealed partial class PlayerView : UserControl
         PreviewBox.Visibility = Visibility.Visible;
     }
 
-    void OnTimelineExited(object sender, PointerRoutedEventArgs e) => PreviewBox.Visibility = Visibility.Collapsed;
+    void OnTimelineExited(object sender, PointerRoutedEventArgs e)
+    {
+        PreviewBox.Visibility = Visibility.Collapsed;
+        TickLabel.Visibility = Visibility.Collapsed;
+    }
 
     void ClosePreview()
     {

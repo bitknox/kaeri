@@ -13,8 +13,9 @@ namespace Kaeri.Windows.Player;
 /// <summary>
 /// The party, from the player's people button: how the connection stands, who is in the room
 /// and who is ready, this member's own ready switch, the invite link to copy, the server and
-/// room as text for someone joining with Syncplay itself, and Leave party. It follows the
-/// engine while it is open, and each part keeps its place as the room changes.
+/// room as text for someone joining with Syncplay itself, and Leave party. Under Ready, the
+/// party's conversation and its field. A member's row offers Mute from its context menu. It
+/// follows the engine while it is open, and each part keeps its place as the room changes.
 /// </summary>
 sealed class PartyPanel
 {
@@ -31,6 +32,7 @@ sealed class PartyPanel
     readonly TextBlock place = new() { IsTextSelectionEnabled = true, TextWrapping = TextWrapping.Wrap };
     readonly TextBlock motd = Ui.Text("", "HazeCaptionStyle");
     readonly Button leave = new() { Content = T.PartyLeave, HorizontalAlignment = HorizontalAlignment.Stretch };
+    readonly ChatPane chat;
     bool fromEngine, leaving;
     int copied;
 
@@ -60,7 +62,10 @@ sealed class PartyPanel
         };
         body.Children.Add(ready);
 
-        body.Children.Add(new Border { Height = 1, Background = Ui.Res<Brush>("DividerStrokeColorDefaultBrush"), Margin = new Thickness(0, 2, 0, 2) });
+        body.Children.Add(Rule());
+        chat = new ChatPane(ctx, lobby: false);
+        body.Children.Add(chat);
+        body.Children.Add(Rule());
 
         var copyContent = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
         copyContent.Children.Add(new FontIcon { Glyph = "", FontSize = 14 });
@@ -94,8 +99,18 @@ sealed class PartyPanel
             Show();
             ctx.Batch += Heard;
         };
-        Flyout.Closed += (_, _) => ctx.Batch -= Heard;
+        Flyout.Closed += (_, _) =>
+        {
+            ctx.Batch -= Heard;
+            ChatSetting.Changed -= chat.Refresh;
+        };
+        Flyout.Opened += (_, _) => ChatSetting.Changed += chat.Refresh;
     }
+
+    static Border Rule() => new() { Height = 1, Background = Ui.Res<Brush>("DividerStrokeColorDefaultBrush"), Margin = new Thickness(0, 2, 0, 2) };
+
+    /// <summary>The conversation's field, for the player to focus.</summary>
+    internal ChatField Field => chat.Field;
 
     void Heard(IReadOnlyList<Event> batch)
     {
@@ -106,6 +121,10 @@ sealed class PartyPanel
         }
         if (batch.Any(e => e is Event.PartyState or Event.PartyJoined or Event.PartyMembers))
             Show();
+        else if (batch.Any(e => e is Event.PartyChatState))
+            ShowMembers();
+        if (batch.Any(e => e is Event.PartyChat or Event.PartyChatState))
+            chat.Refresh();
     }
 
     void Show()
@@ -117,22 +136,8 @@ sealed class PartyPanel
         reconnecting.IsActive = lost;
         reconnecting.Opacity = lost ? 1 : 0;
 
-        members.Children.Clear();
-        if (ctx.Known.PartyMembers is { } list)
-        {
-            foreach (var member in list)
-                members.Children.Add(Row(member));
-            readyLine.Text = Parties.ReadyLine(list);
-        }
-        else
-        {
-            // Before the room lists its members: one row's height, waiting.
-            var wait = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, MinHeight = 36 };
-            wait.Children.Add(new ProgressRing { Width = 16, Height = 16, IsActive = true });
-            wait.Children.Add(Ui.Text(T.PartyWaitingMembers, "HazeBodyStyle"));
-            members.Children.Add(wait);
-            readyLine.Text = "";
-        }
+        ShowMembers();
+        chat.Refresh();
 
         fromEngine = true;
         ready.IsOn = party.Ready;
@@ -149,7 +154,32 @@ sealed class PartyPanel
         leave.IsEnabled = !leaving;
     }
 
-    static FrameworkElement Row(PartyMember member)
+    void ShowMembers()
+    {
+        members.Children.Clear();
+        if (ctx.Known.PartyMembers is { } list)
+        {
+            var muted = ctx.Known.PartyChatState?.Muted ?? [];
+            foreach (var member in list)
+                members.Children.Add(Row(member, muted.Contains(member.Name)));
+            readyLine.Text = Parties.ReadyLine(list);
+        }
+        else
+        {
+            // Before the room lists its members: one row's height, waiting.
+            var wait = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, MinHeight = 36 };
+            wait.Children.Add(new ProgressRing { Width = 16, Height = 16, IsActive = true });
+            wait.Children.Add(Ui.Text(T.PartyWaitingMembers, "HazeBodyStyle"));
+            members.Children.Add(wait);
+            readyLine.Text = "";
+        }
+    }
+
+    /// <summary>
+    /// A member: ready or not, and Muted when this device mutes them. Another member's row
+    /// offers Mute or Unmute from its context menu (a secondary click, Shift+F10 or the menu key).
+    /// </summary>
+    FrameworkElement Row(PartyMember member, bool muted)
     {
         var row = new Grid { ColumnSpacing = 10, MinHeight = 36, Padding = new Thickness(0, 2, 0, 2) };
         row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(20) });
@@ -171,11 +201,24 @@ sealed class PartyPanel
             names.Children.Add(Ui.Text(file, "HazeCaptionStyle", wrap: false));
         Grid.SetColumn(names, 1);
         row.Children.Add(names);
-        var state = Ui.Text(Parties.MemberState(member), isReady ? "CaptionTextBlockStyle" : "HazeCaptionStyle", wrap: false);
+        var said = muted ? T.PartyMemberMuted : Parties.MemberState(member);
+        var state = Ui.Text(said, isReady && !muted ? "CaptionTextBlockStyle" : "HazeCaptionStyle", wrap: false);
         state.VerticalAlignment = VerticalAlignment.Center;
         Grid.SetColumn(state, 2);
         row.Children.Add(state);
-        AutomationProperties.SetName(row, $"{Parties.MemberName(member)}, {Parties.MemberState(member)}");
+        AutomationProperties.SetName(row, $"{Parties.MemberName(member)}, {said}");
+        if (!member.You && (ctx.Known.PartyChatState?.Allowed ?? true) && !ChatSetting.Hidden)
+        {
+            var name = member.Name;
+            var item = new MenuFlyoutItem { Text = muted ? T.PartyUnmute(name) : T.PartyMute(name) };
+            item.Click += (_, _) => ctx.Send(new Command.Party(new PartyCommand.Mute(name, !muted)));
+            var menu = new MenuFlyout();
+            menu.Items.Add(item);
+            row.ContextFlyout = menu;
+            // Reachable from the keyboard: the row takes focus, and its menu opens on Shift+F10.
+            row.IsTabStop = true;
+            row.UseSystemFocusVisuals = true;
+        }
         return row;
     }
 

@@ -193,6 +193,12 @@ public sealed class Known
 
     public string? PartyLookFailure { get; private set; }
 
+    /// <summary>The party's conversation as the engine last sent it, whole: lines, reaction marks and a lost send.</summary>
+    public PartyConversation? PartyChat { get; private set; }
+
+    /// <summary>What this device may do in the conversation now, once the room's server has said.</summary>
+    public PartyChatState? PartyChatState { get; private set; }
+
     /// <summary>The AniList account, when signed in.</summary>
     public SyncState? Anilist => Sync.TryGetValue("anilist", out var s) && s.Connected ? s : null;
 
@@ -385,7 +391,11 @@ public sealed class Known
             case Event.PartyJoined j:
                 // A room joined afresh lists its members afresh.
                 if (Party is null || Party.Server != j.V1.Server || Party.Room != j.V1.Room)
+                {
                     PartyMembers = null;
+                    PartyChat = null;
+                    PartyChatState = null;
+                }
                 Party = j.V1;
                 break;
             case Event.PartyState p:
@@ -408,6 +418,14 @@ public sealed class Known
             case Event.PartyLeft:
                 Party = null;
                 PartyMembers = null;
+                PartyChat = null;
+                PartyChatState = null;
+                break;
+            case Event.PartyChat c:
+                PartyChat = c.V1;
+                break;
+            case Event.PartyChatState c:
+                PartyChatState = c.V1;
                 break;
             case Event.Update u:
                 // A check that found nothing new leaves a release found before on offer only
