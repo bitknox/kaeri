@@ -130,7 +130,16 @@ class Navigator(private val nav: NavHostController, private val start: Destinati
     }
 }
 
+/** Open Downloads over whatever is on screen, from the player's offline start. */
+fun Navigator.openDownloads() = open(DOWNLOADS_ROUTE)
+
+/** Open the plugin stores page, from a start that has no source to ask. */
+fun Navigator.openStores() = open(STORES_ROUTE)
+
 val LocalNavigator = staticCompositionLocalOf<Navigator> { error("no Navigator in this composition") }
+
+/** The same navigator, or null where none is provided (the player on its own, in a test). */
+val LocalNavigatorOrNull = staticCompositionLocalOf<Navigator?> { null }
 
 /** The layout the shared elements fly in, around the NavHost. */
 @OptIn(ExperimentalSharedTransitionApi::class)

@@ -27,6 +27,8 @@
 //             match-found or match-empty open the match picker on the first fixture (unsure scene)
 //   player    a player state to shoot (from A3)
 //   found     flow or settings: the found skip times demo, the engine's part scripted, for recording motion
+//   start     a made-up start (StartingFixture, as `slow` or `failed-no-episode`) said to the real
+//             player screen on its own clock; `details` 1 opens Details, `startdelay` ms waits first
 //   code      a tracker whose device-code sheet opens, with a made-up code that expires in 15 minutes
 //   expires   seconds the `code` sheet's code has left, 0 for one already expired
 //   day       days after today the calendar opens on, for a day with broadcasts: the fixtures'
@@ -286,7 +288,8 @@ internal object Flavour {
     }
 
     /** What the extras ask of the engine once it is up, once per process. */
-    fun started(context: Context, store: AppStore, intent: Intent, notifier: EpisodeNotifier) {
+    fun started(context: Context, store: AppStore, intent: Intent, notifier: EpisodeNotifier, player: app.kaeri.player.PlayerModel) {
+        StartReplay.from(context, store, player, intent)
         if (marked) return
         marked = true
         if (intent.getStringExtra("notify") != null) notifyFixtures(store, notifier)

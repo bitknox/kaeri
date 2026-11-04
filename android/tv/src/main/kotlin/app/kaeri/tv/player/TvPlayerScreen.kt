@@ -268,9 +268,8 @@ fun TvPlayerScreen(
 
     // The starting screen's own buttons (another source, Back) keep the focus they take: the root
     // taking it back would leave them unreachable.
-    val layerButtons = starting && (
-        model.failure != null && !model.choosingSource || model.starting?.offersChoice(model.clock) == true
-        )
+    val startFocus = remember { StartFocus() }
+    val layerButtons = starting && (model.failure != null && !model.choosingSource || startFocus.held)
     // A corner card up: the chrome going hands focus to it, not to the root behind it.
     val cardUp = !starting && panel == null && model.marking == null && (
         model.corner == PlayerModel.Corner.Prompt && model.skipPrompt != null ||
@@ -371,6 +370,13 @@ fun TvPlayerScreen(
                     return@onPreviewKeyEvent true
                 }
                 if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                // While a start runs nothing holds focus; the first direction press lands on Choose source.
+                if (starting && model.failure == null && !startFocus.held && startFocus.ready &&
+                    event.key in setOf(Key.DirectionUp, Key.DirectionDown, Key.DirectionLeft, Key.DirectionRight)
+                ) {
+                    startFocus.target.tryFocus()
+                    return@onPreviewKeyEvent true
+                }
                 // Any key, the TV's remote's or a phone's: somebody is there.
                 model.viewerThere()
                 when (event.key) {
@@ -395,7 +401,7 @@ fun TvPlayerScreen(
             .focusable(),
     ) {
         video(Modifier.fillMaxSize())
-        StartingLayer(model, starting, onClose = { model.viewerClosed() })
+        StartingLayer(model, starting, startFocus, onClose = { model.viewerClosed() })
         AnimatedVisibility(
             visible = chrome,
             // A panel over it is all a screen reader reaches.
@@ -540,76 +546,6 @@ fun VideoSurface(model: PlayerModel, modifier: Modifier) {
             },
             modifier = modifier,
         )
-    }
-}
-
-/**
- * The starting screen: the ground, the banner at the top, the show title, "Starting episode 7"
- * and what the wait is on, and the 32 dp indicator. After 20 s, another source or Back.
- */
-@Composable
-private fun StartingLayer(model: PlayerModel, up: Boolean, onClose: () -> Unit) {
-    val shown by animateFloatAsState(if (up) 1f else 0f, if (LocalReducedMotion.current) snap() else Motion.fadeIn(), label = "starting") // i18n-skip
-    if (shown == 0f) return
-    val starting = model.starting
-    Column(Modifier.fillMaxSize().alpha(shown).background(ObiSilk.Ground), horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(Modifier.fillMaxWidth().height(200.dp)) {
-            val banner = starting?.bannerUrl ?: model.bannerUrl
-            if (banner != null) ArtImage(banner, plate = ObiSilk.Ground, maxPixelSize = 1920, modifier = Modifier.fillMaxSize())
-        }
-        Spacer(Modifier.height(40.dp))
-        Text(model.showTitle, style = TvTitle.player, color = ObiSilk.Silk, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Spacer(Modifier.height(8.dp))
-        val failure = model.failure
-        if (failure != null && !model.choosingSource) {
-            // It never played: say so, and the one way on, focused.
-            // Why, as the engine said it; with no source at all, the way to one instead.
-            val addStore = LocalAddStore.current
-            val first = remember { FocusRequester() }
-            Text(stringResource(R.string.player_failed_title, failure.episode.toInt()), style = MaterialTheme.typography.headlineSmall, color = ObiSilk.Silk)
-            Spacer(Modifier.height(8.dp))
-            Text(
-                when {
-                    addStore != null -> stringResource(R.string.player_failed_no_sources)
-                    failure.reasonText(LocalContext.current) != null -> "${failure.reasonText(LocalContext.current)}." // i18n-skip
-                    else -> stringResource(R.string.player_failed_detail)
-                },
-                style = MaterialTheme.typography.bodyLarge,
-                color = ObiSilk.Haze,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.widthIn(max = 640.dp),
-            )
-            Spacer(Modifier.height(24.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                if (addStore != null) {
-                    AmberButton(onClick = addStore, icon = null, modifier = Modifier.focusRequester(first)) { ButtonLabel(stringResource(R.string.player_add_plugin_store)) }
-                } else {
-                    TonalButton(onClick = { model.chooseSource() }, modifier = Modifier.focusRequester(first)) { ButtonLabel(stringResource(R.string.player_choose_another_source)) }
-                }
-                TonalButton(onClick = onClose) { ButtonLabel(stringResource(R.string.action_back)) }
-            }
-            LaunchedEffect(failure) { first.focusSoon() }
-            return@Column
-        }
-        Text(
-            model.startingLine(LocalContext.current) ?: model.startingEpisode?.let { stringResource(R.string.player_starting, it.toInt()) }.orEmpty(),
-            style = MaterialTheme.typography.bodyLarge,
-            color = ObiSilk.Haze,
-        )
-        if (model.startingDemo) {
-            Text(stringResource(R.string.player_demo_credit), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, modifier = Modifier.padding(top = 4.dp))
-        }
-        Spacer(Modifier.height(24.dp))
-        Spinner()
-        if (starting != null && starting.offersChoice(model.clock)) {
-            val first = remember { FocusRequester() }
-            Spacer(Modifier.height(24.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                TonalButton(onClick = { model.chooseSource() }, modifier = Modifier.focusRequester(first)) { ButtonLabel(stringResource(R.string.player_choose_another_source)) }
-                TonalButton(onClick = onClose) { ButtonLabel(stringResource(R.string.action_back)) }
-            }
-            LaunchedEffect(Unit) { first.focusSoon() }
-        }
     }
 }
 

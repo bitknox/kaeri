@@ -178,7 +178,7 @@ class MainActivity : ComponentActivity() {
         app.store.tv.firstUse = ::askLocalNetworkOnce
         // Where Android stopped the app as "Install unknown apps" turned on, the press goes on.
         app.appUpdates?.kept()?.let(app.store.updates::returning)
-        Flavour.started(this, app.store, intent, app.episodeNotifier)
+        Flavour.started(this, app.store, intent, app.episodeNotifier, app.player)
         val steerable = debuggable || Flavour.FIXTURES
         val start = intent.getStringExtra(SECTION)?.takeIf { steerable }
             ?.let(Destination::named) ?: Destination.Home

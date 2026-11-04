@@ -265,6 +265,7 @@ fun AppRoot(
     CompositionLocalProvider(
         LocalAppStore provides store,
         LocalNavigator provides navigator,
+        LocalNavigatorOrNull provides navigator,
         LocalSnackbars provides snackbars,
         LocalAppSheets provides sheets,
         LocalNotificationActions provides actions.notifications,

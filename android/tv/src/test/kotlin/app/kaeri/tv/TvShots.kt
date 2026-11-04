@@ -72,6 +72,8 @@ import app.kaeri.tv.ui.ActionsPanel
 import app.kaeri.tv.ui.notInstalledPanel
 import app.kaeri.engine.core.Translation
 import app.kaeri.engine.ffi.playerStatsFixture
+import app.kaeri.engine.ffi.startingFixture
+import app.kaeri.engine.model.StartingFixture
 import app.kaeri.engine.model.ContentFor
 import app.kaeri.engine.model.ContentList
 import app.kaeri.engine.model.Ending
@@ -1201,13 +1203,20 @@ class TvShots {
         downTo("Upload limit")
     }
 
-    /** A torrent starting: 23 s in, what the wait is on, and another source offered. */
-    @Test
-    fun player_torrent_starting() = startingShot("tv-player-torrent-starting", waited = 23_000)
-
-    /** The first seconds of a start, before the wait says what it is on. */
-    @Test
-    fun player_starting() = startingShot("tv-player-starting", waited = 1_000)
+    @Test fun player_start_title_lookup() = startingShot("tv-start-title-lookup", StartingFixture.TITLE_LOOKUP, 1_500)
+    @Test fun player_start_asking_first() = startingShot("tv-start-asking-first", StartingFixture.ASKING_FIRST, 3_500)
+    @Test fun player_start_source_missed() = startingShot("tv-start-source-missed", StartingFixture.SOURCE_MISSED, 3_500)
+    @Test fun player_start_slow() = startingShot("tv-start-slow", StartingFixture.SLOW, 500)
+    @Test fun player_start_finding_peers() = startingShot("tv-start-finding-peers", StartingFixture.FINDING_PEERS, 3_500)
+    @Test fun player_start_peers_known() = startingShot("tv-start-peers-known", StartingFixture.PEERS_KNOWN, 1_500)
+    @Test fun player_start_found() = startingShot("tv-start-found", StartingFixture.FOUND, 1_500)
+    @Test fun player_start_buffering_torrent() = startingShot("tv-start-buffering-torrent", StartingFixture.BUFFERING_TORRENT, 1_500)
+    @Test fun player_start_offline() = startingShot("tv-start-offline", StartingFixture.OFFLINE, 1_500)
+    @Test fun player_start_offline_timed_out() = startingShot("tv-start-offline-timed-out", StartingFixture.OFFLINE_TIMED_OUT, 1_500)
+    @Test fun player_start_failed_no_episode() = startingShot("tv-start-failed-no-episode", StartingFixture.FAILED_NO_EPISODE, 1_500)
+    @Test fun player_start_failed_no_match() = startingShot("tv-start-failed-no-match", StartingFixture.FAILED_NO_MATCH, 1_500)
+    @Test fun player_start_failed_no_sources() = startingShot("tv-start-failed-no-sources", StartingFixture.FAILED_NO_SOURCES, 1_500)
+    @Test fun player_start_failed_not_aired() = startingShot("tv-start-failed-not-aired", StartingFixture.FAILED_NOT_AIRED, 1_500)
 
     /** A torrent that stalled mid-episode: the stall card, Switch source focused. */
     @Test
@@ -1298,19 +1307,18 @@ class TvShots {
         compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-player-failed.png")
     }
 
-    /** The starting screen [waited] ms after the engine said it is starting, before any frame. */
-    private fun startingShot(name: String, waited: Long) {
+    /** The starting screen as the engine's made-up start in [state] leaves it [extra] ms after its last event. */
+    private fun startingShot(name: String, state: StartingFixture, extra: Long) {
         AppClock.clock = Clock.fixed(Instant.parse("2026-10-20T19:02:00Z"), ZONE)
         val store = AppStore(scope, decoder = TvArtDecoder, artworkBudget = TV_ART_BUDGET, clock = { 0L }, artworkWithoutEngine = FixtureArt::bytes)
         val model = PlayerModel(send = {}, backend = { ScriptedMpv() }, scope = scope, now = { time }, hwdec = "no")
+        val events = startingFixture(state)
         compose.runOnUiThread {
-            model.apply(Event.PlaybackStaged(900_001u, TITLE, "7", EPISODE, 1.0))
-            model.apply(
-                Event.PlayerUi(
-                    1u,
-                    PlayerUi.Starting(900_001u, TITLE, "7", EPISODE, "${FixtureArt.HOST}cover/900001-xl.jpg", "${FixtureArt.HOST}banner/900001.jpg"),
-                ),
-            )
+            model.apply(Event.PlayerUi(1u, PlayerUi.Starting(900_001u, TITLE, "7", EPISODE, "${FixtureArt.HOST}cover/900001-xl.jpg", "${FixtureArt.HOST}banner/900001.jpg")))
+            for (e in events) {
+                time = e.atMs.toLong()
+                model.apply(e.event)
+            }
         }
         compose.setContent {
             TvTheme {
@@ -1320,7 +1328,7 @@ class TvShots {
             }
         }
         compose.waitForIdle()
-        time = waited
+        time = (events.lastOrNull()?.atMs ?: 0u).toLong() + extra
         compose.runOnUiThread { model.poke() }
         settle()
         awaitArt(store)

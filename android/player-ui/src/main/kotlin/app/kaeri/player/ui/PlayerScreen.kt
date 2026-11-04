@@ -574,65 +574,6 @@ fun VideoSurface(model: PlayerModel, modifier: Modifier, view: (SurfaceView?) ->
     }
 }
 
-/**
- * The starting screen, in the player at full size: the ground, the title's wide art cropped to
- * the video rect under a 35 % ground dim, and the 32 dp indicator with "Starting episode 7" below
- * it, until the first frame lifts it on the fade-in curve (T2).
- */
-@Composable
-private fun StartingLayer(model: PlayerModel, rect: VideoRect, art: Boolean, onChooseSource: () -> Unit) {
-    val up = model.isPresented && (model.starting != null || !model.hasPicture || model.failure != null)
-    val shown by animateFloatAsState(if (up) 1f else 0f, Motion.fadeIn(), label = "starting") // i18n-skip
-    if (shown == 0f) return
-    val store = LocalAppStore.current
-    val entries by store.titles.entries.collectAsStateWithLifecycle()
-    val tables by store.titles.episodes.collectAsStateWithLifecycle()
-    val id = model.titleId
-    // The hero-art rule, as the title page has it: the banner, else a still already seen.
-    val wide = if (!art) null else id?.let { entries[it] }?.let { HeroArt.of(it, tables[id]).url } ?: model.starting?.bannerUrl
-    Box(Modifier.fillMaxSize().graphicsLayer { alpha = shown }.background(ObiSilk.Ground)) {
-        Box(Modifier.offset(rect.x, rect.y).size(rect.width, rect.height)) {
-            if (wide != null) ArtworkImage(wide, plate = null, maxPixelSize = pixels(rect.width), modifier = Modifier.fillMaxSize())
-            Box(Modifier.fillMaxSize().background(ObiSilk.Ground.copy(alpha = 0.35f)))
-            val line = MaterialTheme.typography.titleMedium.copy(
-                fontSize = 16.sp,
-                lineHeight = 24.sp,
-                fontWeight = FontWeight.Medium,
-                shadow = Shadow(Color.Black.copy(alpha = 0.7f), Offset(0f, 1f), 1f),
-            )
-            Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
-                val failure = model.failure
-                if (failure != null) {
-                    // It never played: said where the viewer is looking, with another source to choose.
-                    Text(Strings.playerFailedTitleText(LocalContext.current, failure.episode), style = line, color = ObiSilk.Silk, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
-                    Text(
-                        // Why, as the engine said it, when it did.
-                        failure.reasonText(LocalContext.current)?.let { "$it." } ?: stringResource(R.string.player_failed_detail), // i18n-skip
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = ObiSilk.Haze,
-                        modifier = Modifier.padding(top = 4.dp).semantics { liveRegion = LiveRegionMode.Polite },
-                    )
-                } else {
-                    val loading = stringResource(R.string.state_loading)
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(32.dp).semantics { contentDescription = loading },
-                        color = ObiSilk.Silk,
-                        strokeWidth = 3.dp,
-                        trackColor = Color.Transparent,
-                    )
-                    Spacer(Modifier.height(16.dp))
-                    Text(model.startingLine(LocalContext.current) ?: model.startingEpisode?.let { Strings.playerStartingText(LocalContext.current, it) }.orEmpty(), style = line, color = ObiSilk.Silk, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
-                    // The licence asks for the credit wherever the work shows, so the starting screen has its line.
-                    if (model.startingDemo) {
-                        Text(stringResource(R.string.player_demo_credit), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, modifier = Modifier.padding(top = 4.dp))
-                    }
-                }
-                StartingChoices(model, onChooseSource)
-            }
-        }
-    }
-}
-
 /** The system bars hidden while the player is up, and back when it goes; a swipe shows them a moment. */
 @Composable
 private fun Immersive() {

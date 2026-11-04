@@ -80,6 +80,8 @@ class PlayerScreenTest {
 
     private val orientation: Int get() = compose.activity.requestedOrientation
 
+    // A phone on its side, as the player holds it: the column keeps room for the lines and buttons to come.
+    @Config(qualifiers = "w915dp-h412dp-land-420dpi")
     @Test
     fun aPlayThatNeverPlayedSaysSoWithCloseWhichClosesIt() {
         compose.runOnUiThread {
@@ -88,7 +90,7 @@ class PlayerScreenTest {
         }
         shown()
         compose.onNodeWithText("Couldn't play episode 7").assertIsDisplayed()
-        compose.onNodeWithText("Choose source").assertIsDisplayed()
+        compose.onNodeWithText("Choose another source").assertIsDisplayed()
         compose.onNodeWithText("Close").performClick()
         compose.waitForIdle()
         assertFalse(model.isPresented)
