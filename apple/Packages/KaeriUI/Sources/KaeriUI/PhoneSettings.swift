@@ -76,13 +76,23 @@ extension PhoneSettingsPage {
 struct PhoneList<Content: View>: View {
     @ViewBuilder let content: Content
 
+    @Environment(Navigator.self) private var navigator
+
     var body: some View {
-        List { content }
-            .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .background(.ground)
-            .listRowBackground(Palette.raised)
-            .environment(\.defaultMinListRowHeight, 48)
+        ScrollViewReader { proxy in
+            List { content }
+                .listStyle(.insetGrouped)
+                .scrollContentBackground(.hidden)
+                .background(.ground)
+                .listRowBackground(Palette.raised)
+                .environment(\.defaultMinListRowHeight, 48)
+                .task {
+                    // A launch scroll brings the find row into view, for the Fixtures shots.
+                    guard navigator.launchScroll != nil else { return }
+                    try? await Task.sleep(for: .milliseconds(800))
+                    proxy.scrollTo("findSkips", anchor: .center)
+                }
+        }
     }
 }
 
@@ -108,6 +118,7 @@ struct PhoneRowTitle: View {
     var note: String?
     /// A line in silk under the note: a status, such as why a setting is paused.
     var status: String?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -117,8 +128,10 @@ struct PhoneRowTitle: View {
             }
             if let status {
                 Text(status).font(.ui(13)).foregroundStyle(.silk).padding(.top, 4)
+                    .transition(.opacity.animation(.fadeIn))
             }
         }
+        .animation(reduceMotion ? nil : .standard, value: status)
     }
 }
 
@@ -335,6 +348,7 @@ struct PhoneGeneralPage: View {
 
 struct PhonePlaybackPage: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var confirmClearSkips = false
 
     var body: some View {
@@ -360,6 +374,7 @@ struct PhonePlaybackPage: View {
                 PhoneSettingSwitch(key: .markChapters)
                 PhoneSettingSwitch(key: .skipButton, note: L.settingsSkipButtonDetail)
                 PhoneSettingSwitch(key: .findSkipTimes, note: L.settingsFindSkipsDetail, status: store.settings.skipFindPausedWords)
+                    .id("findSkips")
                 PhoneSettingSwitch(key: .askWasOpening, note: L.settingsAskWasOpeningDetail)
                 PhoneSettingSwitch(key: .shareSkipTimes, note: L.settingsShareSkipsDetail)
                 Button(L.settingsClearSkips) { confirmClearSkips = true }
@@ -381,6 +396,7 @@ struct PhonePlaybackPage: View {
                 PhoneSectionHeader(L.playerPictureAndSound)
             }
         }
+        .animation(reduceMotion ? nil : .standard, value: store.settings.skipFindPausedWords)
         .navigationTitle(L.settingsGroupPlayback)
         .navigationBarTitleDisplayMode(.inline)
     }

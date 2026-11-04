@@ -241,6 +241,16 @@ final class AppDelegate: NSObject {
             print("KAERI_READY")
             fflush(stdout)
         }
+        #if FIXTURES
+        // `-KaeriSkipPauseFlip`: Low Power Mode on at 0.8 s and off at 3.8 s, from 1.5 s after the
+        // scene is ready, for the recording of the paused line (motion E).
+        if ProcessInfo.processInfo.arguments.contains("-KaeriSkipPauseFlip") {
+            try? await Task.sleep(for: .seconds(2.3))
+            store.settings.pausedOverride = .lowPower
+            try? await Task.sleep(for: .seconds(3))
+            store.settings.pausedOverride = nil
+        }
+        #endif
         #if FIXTURES && os(macOS)
         // The Mac feature video's Home sequence: see VideoHomeSequence.
         if let file = VideoHomeSequence.marksFile() {

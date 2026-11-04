@@ -75,6 +75,7 @@ struct SettingsRow<Accessory: View>: View {
     var status: String?
     var selected = false
     @ViewBuilder let accessory: Accessory
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(spacing: 16) {
@@ -94,8 +95,12 @@ struct SettingsRow<Accessory: View>: View {
                         .foregroundStyle(.silk)
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.top, 4)
+                        // The room opens on standard and the text fades in; Reduce Motion jumps
+                        // the room and fades the text.
+                        .transition(.opacity.animation(.fadeIn))
                 }
             }
+            .animation(reduceMotion ? nil : .standard, value: status)
             .macLineHeight(16)
             Spacer(minLength: 0)
             accessory

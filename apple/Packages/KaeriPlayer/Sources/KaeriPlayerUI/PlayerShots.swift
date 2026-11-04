@@ -93,6 +93,11 @@ public enum PlayerShot: String, CaseIterable, Sendable {
     case foundUndo = "found-undo"
     case foundPanel = "found-panel"
     case foundPanelPaused = "found-panel-paused"
+    /// Scripted motion for recordings (the board's prototypes A to C): the scene plays itself a
+    /// second and a half after it is up, so a recording started before the launch catches it.
+    case foundMotionA = "found-motion-a"
+    case foundMotionB = "found-motion-b"
+    case foundMotionC = "found-motion-c"
 
     /// The engine's fixture for a found times' shot.
     var found: FoundSkipFixture? {
@@ -241,6 +246,8 @@ extension PlayerModel {
         case .foundSkip, .foundControls, .foundPrompt, .foundSaved, .foundNever, .foundReview, .foundNudged,
             .foundUndo, .foundPanel, .foundPanelPaused:
             there = await stageFound(shot)
+        case .foundMotionA, .foundMotionB, .foundMotionC:
+            there = await stageFoundMotion(shot)
         case .discussion, .discussionOpen:
             seek(to: (duration ?? 46) * 0.86)
             there = await waited(10) { self.discussionOffer != nil && self.paused == false }
@@ -312,6 +319,61 @@ extension PlayerModel {
         return there
     }
 
+    /// The board's motion prototypes A to C over the playing episode, with the times in the clip
+    /// (opening 10 to 28 s). A: Skip opening is pressed, playback lands, and 3 s later the card
+    /// arrives. B: Yes, and the answer crossfades in the card. C: Adjust opens the review, which
+    /// plays the edges. The script starts 1.5 s after the scene is up.
+    private func stageFoundMotion(_ shot: PlayerShot) async -> Bool {
+        guard let playback else { return false }
+        holdsPromptsForShot = true
+        let ask = SkipPrompt.foundEdges(kind: .opening, episode: 3)
+        var there = true
+        switch shot {
+        case .foundMotionA:
+            seek(to: 8.5)
+            there = await waited(10) { abs(self.position - 8.5) < 1.5 }
+            apply(.playerTimeline(playback: playback, marks: [TimelineMark(kind: .opening, start: 10, end: 28, origin: .found)]))
+            apply(.playerUi(playback: playback, ui: .skip(kind: .opening, to: 28)))
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(1.5 + 0.6))
+                self.seek(to: 28)
+                self.apply(.playerUi(playback: playback, ui: .skipCleared))
+                try? await Task.sleep(for: .seconds(3))
+                self.apply(.playerSkipPrompt(playback: playback, prompt: ask))
+            }
+        case .foundMotionB:
+            seek(to: 30)
+            there = await waited(10) { abs(self.position - 30) < 1.5 }
+            apply(.playerUi(playback: playback, ui: .skipCleared))
+            apply(.playerSkipPrompt(playback: playback, prompt: ask))
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(1.5 + 1))
+                self.apply(.playerSkipPrompt(playback: playback, prompt: .foundSaved(kind: .opening, episode: 3)))
+                try? await Task.sleep(for: .seconds(4))
+                self.apply(.playerSkipPrompt(playback: playback, prompt: nil))
+            }
+        default:
+            seek(to: 30)
+            there = await waited(10) { abs(self.position - 30) < 1.5 }
+            apply(.playerTimeline(playback: playback, marks: [TimelineMark(kind: .opening, start: 10, end: 28, origin: .found)]))
+            apply(.playerUi(playback: playback, ui: .skipCleared))
+            apply(.playerSkipPrompt(playback: playback, prompt: ask))
+            let review = foundSkipScene(state: .review).mark
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(1.5 + 1))
+                self.apply(.playerSkipPrompt(playback: playback, prompt: nil))
+                if var view = review {
+                    view.start = 10
+                    view.end = 28
+                    view.length = 18
+                    self.apply(.playerSkipMark(playback: playback, view: view))
+                }
+                self.seek(to: 7)
+            }
+        }
+        return there
+    }
+
     /// A found times' fixture over the playing episode. The scene's 1:31 to 3:00 opening lies
     /// beyond the clip, so its times are moved into it: the opening to 10 to 28 s, the ending
     /// to 40 to 52 s, and the playhead with them.
@@ -329,7 +391,8 @@ extension PlayerModel {
         seek(to: fit(scene.position))
         var there = await waited(10) { abs(self.position - fit(scene.position)) < 1.5 }
         holdsPromptsForShot = true
-        apply(.playerTimeline(playback: playback, marks: scene.marks.map {
+        // The paused panel is the board's episode with nothing found yet.
+        apply(.playerTimeline(playback: playback, marks: (scene.paused != nil ? [] : scene.marks).map {
             TimelineMark(kind: $0.kind, start: fit($0.start), end: fit($0.end), origin: $0.origin)
         }))
         // The playing episode's own skip offer is not the scene's.
