@@ -386,7 +386,7 @@ private struct HoverSoundToggle: View {
         }
         .buttonStyle(.plain)
         .focusable(false)
-        .help(L.titleTrailerSound)
+        .tooltip(L.titleTrailerSound)
         .accessibilityLabel(L.titleTrailerSound)
         .accessibilityValue(on ? L.valueOn : L.valueOff)
         .opacity(shown ? 1 : 0)

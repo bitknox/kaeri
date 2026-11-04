@@ -52,7 +52,7 @@ struct SeasonalToolbar: View {
             Label(L.seasonalFilterInSearch, systemImage: "line.3.horizontal.decrease")
                 .labelStyle(.titleAndIcon)
         }
-        .help(L.seasonalFilterHelp)
+        .tooltip(L.seasonalFilterHelp)
     }
 }
 

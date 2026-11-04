@@ -65,6 +65,8 @@ struct HostsPlayer<Over: ViewModifier>: ViewModifier {
             .opacity(covered ? 0 : 1)
             .allowsHitTesting(!inWindow)
             .accessibilityHidden(inWindow)
+            // Its tooltips too, which that hit testing does not reach everywhere (`tooltip`).
+            .environment(\.coveredByPlayer, inWindow)
             .overlay {
                 if inWindow {
                     MacPlayerView(model: model)

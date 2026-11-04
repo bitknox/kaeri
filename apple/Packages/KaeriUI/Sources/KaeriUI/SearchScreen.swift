@@ -832,7 +832,7 @@ struct SearchFilterRow: View {
         .filterMenu()
         // A season is a season of one year.
         .disabled(query.singleYear == nil && query.season == nil)
-        .help(query.singleYear == nil ? L.filterSeasonPickYear : "")
+        .tooltip(query.singleYear == nil ? L.filterSeasonPickYear : "")
     }
 
     private func formats(_ query: SearchQuery) -> some View {
@@ -914,7 +914,7 @@ struct SearchFilterRow: View {
         .pointerHover()
         .accessibilityLabel(L.filtersTitle)
         .accessibilityValue(count == 0 ? "" : L.searchFiltersSet(count: Int(count)))
-        .help(L.searchFiltersHelp)
+        .tooltip(L.searchFiltersHelp)
     }
 
     private func filtersCapsule(_ query: SearchQuery, glyph: Bool) -> some View {
@@ -943,7 +943,7 @@ struct SearchFilterRow: View {
         }
         .filterMenu()
         .accessibilityLabel(L.sortLabel(sort: searchSortLabel(sort: current)))
-        .help(glyph ? L.sortLabel(sort: searchSortLabel(sort: current)) : "")
+        .tooltip(glyph ? L.sortLabel(sort: searchSortLabel(sort: current)) : "")
     }
 
     private func sortCapsule(_ query: SearchQuery, glyph: Bool) -> some View {
@@ -1837,7 +1837,7 @@ struct SearchFiltersPanel: View {
         .buttonStyle(.plain)
         .pointerHover()
         .accessibilityLabel(L.filtersClose)
-        .help(L.filtersClose)
+        .tooltip(L.filtersClose)
     }
 
     @ViewBuilder
@@ -2049,7 +2049,7 @@ private struct TagRow: View {
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
-        .help(tag.description)
+        .tooltip(tag.description)
         .contextMenu {
             Button(L.searchInclude) { set(.include) }
             Button(L.searchLeaveOut) { set(.exclude) }

@@ -36,7 +36,7 @@ struct SurpriseButton: View {
             } label: {
                 SurpriseGlyph(spinning: store.search.surpriseSpinning)
             }
-            .help(L.surpriseMe)
+            .tooltip(L.surpriseMe)
             .accessibilityLabel(L.surpriseMe)
             .accessibilityHint(pool == .planning ? L.surpriseHintPlanning : L.surpriseHintFilters)
         }
@@ -77,7 +77,7 @@ struct AnotherButton: View {
                     Text(L.surpriseAnother)
                 }
             }
-            .help(L.surpriseAnotherHint)
+            .tooltip(L.surpriseAnotherHint)
             .accessibilityHint(L.surpriseAnotherHint)
         }
     }

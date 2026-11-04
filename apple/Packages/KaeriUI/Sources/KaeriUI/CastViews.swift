@@ -559,7 +559,7 @@ struct CastToolbarButton: View {
             }
             .animation(.standard, value: cast.stage)
         }
-        .help(L.tvShowRemote(name: cast.tvName))
+        .tooltip(L.tvShowRemote(name: cast.tvName))
         .accessibilityLabel(CastWords.barLine(cast))
     }
 }

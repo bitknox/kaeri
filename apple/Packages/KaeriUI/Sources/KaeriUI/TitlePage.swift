@@ -516,7 +516,7 @@ struct TitleHero: View {
                             Label(L.tvPlayOn, systemImage: "tv")
                         }
                         .buttonStyle(SecondaryCapsuleStyle(height: Self.pad ? 48 : 28, fontSize: Self.pad ? 17 : 13))
-                        .help(L.titlePlayOnTvHelp)
+                        .tooltip(L.titlePlayOnTvHelp)
                     }
                     #if os(iOS)
                     // The list's menu, in the header where a narrow window's bar has no room.
@@ -1151,7 +1151,7 @@ struct EpisodeRowView: View {
                 airedRow
                     #if os(macOS)
                     // A synopsis cut at three lines is whole here, as a cut title is.
-                    .help(helpText)
+                    .tooltip(helpText)
                     #endif
                 DiscussionLine(entry: entry, row: row, inset: textInset)
             }

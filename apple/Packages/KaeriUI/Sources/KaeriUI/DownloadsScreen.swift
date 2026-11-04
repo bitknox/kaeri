@@ -299,7 +299,7 @@ struct DownloadLine: View {
                 Button(L.downloadsStartNow) { store.startDownloadNow(row.id) }
                     .buttonStyle(SecondaryCapsuleStyle())
                     .fixedSize()
-                    .help(L.downloadsStartNowHelp)
+                    .tooltip(L.downloadsStartNowHelp)
                 icon("xmark", L.downloadsRemoveFromQueue) { store.cancelDownload(row.id) }
             case .failed:
                 Button(L.actionTryAgain) { store.retryDownload(row) }
@@ -318,7 +318,7 @@ struct DownloadLine: View {
                 .contentShape(.rect)
         }
         .buttonStyle(.plain)
-        .help(label)
+        .tooltip(label)
         .accessibilityLabel(label)
     }
 }

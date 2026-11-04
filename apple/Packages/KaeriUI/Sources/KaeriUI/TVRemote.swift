@@ -96,7 +96,7 @@ struct TVNowPlayingButton: View {
                 Label(store.tv.now == nil ? card.tvName : L.tvStatusPlaying(name: card.tvName), systemImage: "tv")
                 #endif
             }
-            .help(L.tvShowRemote(name: card.tvName))
+            .tooltip(L.tvShowRemote(name: card.tvName))
         }
     }
 }
@@ -928,7 +928,7 @@ struct MacTVRemote: View {
         }
         .buttonStyle(SecondaryCapsuleStyle())
         .accessibilityLabel(label)
-        .help(label)
+        .tooltip(label)
     }
 
     private func pairAgain() {
