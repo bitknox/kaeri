@@ -939,6 +939,16 @@ class BoardShots {
         compose.mainClock.advanceTimeBy(600)
     }
 
+    /** The page scrolled by hand into the middle of a range: the chip pins under the floating bar, not at the top of the screen. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_browse_pinned_chip() = shoot("phone-browse-pinned-chip", BROWSING, title = 900001u, episodes = SynopsisFixtures::long, screen = true) {
+        toRanges()
+        compose.onRoot()
+            .performTouchInput { swipeUp(startY = bottom * 0.8f, endY = top + height * 0.1f, durationMillis = 300) }
+        compose.waitForIdle()
+    }
+
     // Recordings, as frames 33 ms apart that make a 30 fps clip.
 
     private val clip = (0L..900L step 33L).toList()
