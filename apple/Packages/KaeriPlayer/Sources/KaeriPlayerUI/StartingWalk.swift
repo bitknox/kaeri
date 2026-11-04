@@ -331,12 +331,13 @@ public struct StartingWalk: Equatable, Sendable {
 
     /// The row's buttons at `now`, in the order they arrived. Play from the beginning stays in
     /// its place once chosen (the screen shows it spent), so the buttons after it keep theirs.
-    public func actions(at now: ContinuousClock.Instant) -> [StartAction] {
+    /// While `detailsOpen`, Details is in the row from the start, so the list can always be closed.
+    public func actions(at now: ContinuousClock.Instant, detailsOpen: Bool = false) -> [StartAction] {
         let age = now - began
         if waiting { return [.cancel, .showDownloads] }
         var actions: [StartAction] = [.cancel]
         if resume != nil, age >= Self.detailAfter { actions.append(.playFromBeginning) }
-        if age >= Self.toolsAfter { actions += [.chooseSource, .details] }
+        if age >= Self.toolsAfter { actions += [.chooseSource, .details] } else if detailsOpen { actions.append(.details) }
         if let label = skipLabel(at: now) { actions.append(.skip(label)) }
         return actions
     }
