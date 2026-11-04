@@ -28,6 +28,9 @@ public struct MacPlayerView: View {
     @State private var enteredFullScreen = false
     /// Grown to the window from the banner; false while it is the banner's size.
     @State private var grown = false
+    /// How far below the top the top bar starts: in full screen, under the strip where macOS
+    /// keeps the title bar to slide in with the menu bar (`revealStrip`).
+    @State private var topInset: CGFloat = 0
     /// The top bar's control under the pointer, as the title bar strip says it: where the
     /// controls' own hover cannot see it.
     @State private var pointed: String?
@@ -148,11 +151,13 @@ public struct MacPlayerView: View {
         .onChange(of: model.chatRequests) { sayHello() }
         .onReceive(NotificationCenter.default.publisher(for: NSWindow.didEnterFullScreenNotification)) { note in
             guard let window, (note.object as? NSWindow) === window else { return }
-            PlayerModel.note(.info, "player window full screen, \(Self.describe(window))")
+            topInset = Self.revealStrip(of: window)
+            PlayerModel.note(.info, "player window full screen, \(Self.describe(window)), top bar \(Int(topInset)) pt down")
             if !model.fullScreen { model.fullScreen = true }
         }
         .onReceive(NotificationCenter.default.publisher(for: NSWindow.didExitFullScreenNotification)) { note in
             guard let window, (note.object as? NSWindow) === window else { return }
+            topInset = 0
             PlayerModel.note(.info, "player window out of full screen, \(Self.describe(window))")
             if model.fullScreen { model.fullScreen = false }
         }
@@ -180,12 +185,12 @@ public struct MacPlayerView: View {
             .padding(metrics.cornerInset)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
         ResumeNoteView(model: model, metrics: metrics)
-            .padding(.top, 60)
+            .padding(.top, 60 + topInset)
             .padding(.leading, 20)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .animation(.standard, value: model.resume)
         PartyColumn(model: model, metrics: metrics, covered: partyOpen) { people() }
-            .padding(.top, 60)
+            .padding(.top, 60 + topInset)
             .padding(.leading, 20)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         if store.party.inParty, store.party.chat.shown {
@@ -201,7 +206,7 @@ public struct MacPlayerView: View {
         // is, under the menus that hang from it.
         StatsPanel(model: model, metrics: metrics)
             .takesScrollWheel()
-            .padding(.top, 60)
+            .padding(.top, 60 + topInset)
             .padding(.trailing, 16)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
             .animation(model.statsPanel != nil ? .fadeIn : .fadeOut, value: model.statsPanel != nil)
@@ -264,7 +269,7 @@ public struct MacPlayerView: View {
                     .init(color: Palette.ground.opacity(0.72), location: 0),
                     .init(color: Palette.ground.opacity(0), location: 1),
                 ])
-                .frame(height: 112)
+                .frame(height: 112 + topInset)
                 Spacer(minLength: 0)
                 scrim(stops: [
                     .init(color: Palette.ground.opacity(0), location: 0),
@@ -276,6 +281,7 @@ public struct MacPlayerView: View {
             .allowsHitTesting(false)
             VStack(spacing: 0) {
                 header
+                    .padding(.top, topInset)
                 Spacer(minLength: 0)
                 chatField
                 controlRow
@@ -561,7 +567,7 @@ public struct MacPlayerView: View {
         }
         // Below the title strip and above the control row, whichever end it hangs from: the top
         // bar's menus under the capsule, the control row's over their buttons.
-        .padding(EdgeInsets(top: 50, leading: 0, bottom: 60, trailing: Self.panelTrailing(which, playOnTV: model.playOnTVAvailable)))
+        .padding(EdgeInsets(top: 50 + topInset, leading: 0, bottom: 60, trailing: Self.panelTrailing(which, playOnTV: model.playOnTVAvailable)))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: Self.panelHangs(which))
         // One panel for each menu, so going from one to another crossfades rather than jumping
         // the same panel across.
@@ -730,6 +736,7 @@ public struct MacPlayerView: View {
         // The player is dark whatever the system's appearance: AppKit's own controls in it, the
         // spinner among them, draw for a dark window.
         window.appearance = NSAppearance(named: .darkAqua)
+        topInset = Self.revealStrip(of: window)
         PlayerModel.note(.info, "player in the main window, \(Self.describe(window)), asked for full screen \(model.fullScreen)")
         if model.fullScreen, !window.styleMask.contains(.fullScreen) {
             enteredFullScreen = true
@@ -765,6 +772,18 @@ public struct MacPlayerView: View {
         }
         withAnimation(.standard) { grown = false }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { model.viewerClosed() }
+    }
+
+    /// In full screen, the strip at the top of the screen where macOS keeps the window's title
+    /// bar, ready to slide in with the menu bar: a window of AppKit's own, invisible until then,
+    /// that takes every click in it, so a control there answers only below it. The top bar starts
+    /// under it. None outside full screen, where the bar's controls take their clicks in the
+    /// title bar strip themselves (`titleBarControl`).
+    static func revealStrip(of window: NSWindow) -> CGFloat {
+        guard window.styleMask.contains(.fullScreen),
+              let strip = window.standardWindowButton(.closeButton)?.window, strip !== window
+        else { return 0 }
+        return max(0, strip.frame.intersection(window.frame).height)
     }
 
     /// "1058×595 pt at (227, 175), screen 1512×945 pt at 2.0×, full screen no", for the log.
