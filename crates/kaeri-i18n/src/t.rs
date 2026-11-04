@@ -2230,11 +2230,6 @@ pub fn profiles_add_row_action() -> String {
     text("profiles-add-row-action", &[])
 }
 
-/// Button that opens a profile’s page from its row.
-pub fn profiles_edit_action() -> String {
-    text("profiles-edit-action", &[])
-}
-
 /// Name of the folder picker dialog for a cloud folder on this computer.
 pub fn cloud_folder_chooser() -> String {
     text("cloud-folder-chooser", &[])
@@ -14902,6 +14897,31 @@ pub fn pair_address_optional() -> String {
     text("pair-address-optional", &[])
 }
 
+/// Device page footer when the device has no Remote switch.
+pub fn devices_sync_foot() -> String {
+    text("devices-sync-foot", &[])
+}
+
+/// A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's.
+pub fn devices_line_remote(line: &str) -> String {
+    text("devices-line-remote", &[("line", Arg::Text(line))])
+}
+
+/// Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux.
+pub fn profiles_edit_action() -> String {
+    text("profiles-edit-action", &[])
+}
+
+/// Label of the name field in the add and edit profile dialogs.
+pub fn profiles_name_field() -> String {
+    text("profiles-name-field", &[])
+}
+
+/// Accessible name and tooltip of the menu button on a profile's row.
+pub fn profiles_more_for(name: &str) -> String {
+    text("profiles-more-for", &[("name", Arg::Text(name))])
+}
+
 /// Settings row and page title, every platform.
 pub fn devices_title() -> String {
     text("devices-title", &[])
@@ -15032,9 +15052,9 @@ pub fn devices_remote_switch() -> String {
     text("devices-remote-switch", &[])
 }
 
-/// Device page footer.
-pub fn devices_switches_foot(device: &str) -> String {
-    text("devices-switches-foot", &[("device", Arg::Text(device))])
+/// Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC.
+pub fn devices_switches_foot(kind: &str, device: &str) -> String {
+    text("devices-switches-foot", &[("kind", Arg::Text(kind)), ("device", Arg::Text(device))])
 }
 
 /// Device page, destructive.

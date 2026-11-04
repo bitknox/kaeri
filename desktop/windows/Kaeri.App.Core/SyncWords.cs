@@ -75,7 +75,7 @@ public static class SyncWords
         if (device.Folder is null && pairedTv && device.LastSeen is null)
             return (T.DevicesRemoteOnly, SyncMark.None);
         if (device.RemoteKey is not null || pairedTv)
-            line = line.Length == 0 ? T.DevicesRemoteSwitch : $"{line} · {T.DevicesRemoteSwitch}";
+            line = line.Length == 0 ? T.DevicesRemoteSwitch : T.DevicesLineRemote(line);
         return (line, mark);
     }
 

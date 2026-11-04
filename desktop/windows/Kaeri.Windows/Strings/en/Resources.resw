@@ -2043,14 +2043,6 @@
     <value>Open {device}</value>
     <comment>Accessible name of the button that opens a device's page from its card.</comment>
   </data>
-  <data name="DevicesSwitchesFootPc" xml:space="preserve">
-    <value>Sync shares where you stopped, your history and your settings. Remote lets this PC drive {device}.</value>
-    <comment>Device page footer on a PC, which drives a TV as the remote.</comment>
-  </data>
-  <data name="DevicesSyncFoot" xml:space="preserve">
-    <value>Sync shares where you stopped, your history and your settings.</value>
-    <comment>Device page footer on a PC when the device has no Remote switch.</comment>
-  </data>
   <data name="SourcePickerSeeders_one" xml:space="preserve">
     <value>One seeder</value>
     <comment>Under a release in the source picker: how many people share it right now.</comment>
@@ -8830,6 +8822,26 @@
     <value>Leave the address empty and Kaeri looks for the device on this network.</value>
     <comment>Note under the Enter a code dialog's fields: the address can be left empty.</comment>
   </data>
+  <data name="DevicesSyncFoot" xml:space="preserve">
+    <value>Sync shares where you stopped, your history and your settings.</value>
+    <comment>Device page footer when the device has no Remote switch.</comment>
+  </data>
+  <data name="DevicesLineRemote" xml:space="preserve">
+    <value>{line} · Remote</value>
+    <comment>A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's.</comment>
+  </data>
+  <data name="ProfilesEditAction" xml:space="preserve">
+    <value>Edit</value>
+    <comment>Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux.</comment>
+  </data>
+  <data name="ProfilesNameField" xml:space="preserve">
+    <value>Name</value>
+    <comment>Label of the name field in the add and edit profile dialogs.</comment>
+  </data>
+  <data name="ProfilesMoreFor" xml:space="preserve">
+    <value>More for {name}</value>
+    <comment>Accessible name and tooltip of the menu button on a profile's row.</comment>
+  </data>
   <data name="DevicesTitle" xml:space="preserve">
     <value>Devices</value>
     <comment>Settings row and page title, every platform.</comment>
@@ -8935,8 +8947,8 @@
     <comment>Switch on a TV.</comment>
   </data>
   <data name="DevicesSwitchesFoot" xml:space="preserve">
-    <value>Sync shares where you stopped, your history and your settings. Remote lets this phone drive {device}.</value>
-    <comment>Device page footer.</comment>
+    <value>Sync shares where you stopped, your history and your settings. Remote lets this {kind} drive {device}.</value>
+    <comment>Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC.</comment>
   </data>
   <data name="DevicesRemove" xml:space="preserve">
     <value>Remove this device</value>

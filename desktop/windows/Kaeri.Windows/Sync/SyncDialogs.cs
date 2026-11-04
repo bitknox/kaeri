@@ -999,7 +999,7 @@ static partial class SyncDialogs
         // Only for a pair that is a TV and a device that drives TVs.
         if (device.RemoteKey is not null)
             body.Children.Add(Switch(T.DevicesRemoteSwitch, !device.RemoteOff, on => Ctx.Send(new Command.SyncGroup(new SyncCommand.SetDeviceRemote(device.Id, on)))));
-        var foot = Note(device.RemoteKey is null ? T.DevicesSyncFoot : T.DevicesSwitchesFootPc(device.Name));
+        var foot = Note(device.RemoteKey is null ? T.DevicesSyncFoot : T.DevicesSwitchesFoot(SyncWords.Kind, device.Name));
         foot.Margin = new Thickness(2, 4, 0, 8);
         body.Children.Add(foot);
         if (CopySwitch(device, false) is { } copy)

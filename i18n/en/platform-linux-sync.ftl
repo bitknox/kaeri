@@ -16,10 +16,6 @@ profiles-popover-name = Profiles
 # @only linux
 profiles-add-row-action = Add
 
-# Button that opens a profile’s page from its row.
-# @only linux
-profiles-edit-action = Edit
-
 # Name of the folder picker dialog for a cloud folder on this computer.
 # @only linux
 cloud-folder-chooser = Choose a folder

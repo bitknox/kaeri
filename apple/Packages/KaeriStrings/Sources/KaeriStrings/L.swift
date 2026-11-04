@@ -8715,6 +8715,25 @@ public enum L {
     /// Note under the Enter a code dialog's fields: the address can be left empty.
     public static var pairAddressOptional: String { string("pair-address-optional", fallback: "Leave the address empty and Kaeri looks for the device on this network.") }
 
+    /// Device page footer when the device has no Remote switch.
+    public static var devicesSyncFoot: String { string("devices-sync-foot", fallback: "Sync shares where you stopped, your history and your settings.") }
+
+    /// A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's.
+    public static func devicesLineRemote(line: String) -> String {
+        Self.format("devices-line-remote", fallback: "%1$@ · Remote", line)
+    }
+
+    /// Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux.
+    public static var profilesEditAction: String { string("profiles-edit-action", fallback: "Edit") }
+
+    /// Label of the name field in the add and edit profile dialogs.
+    public static var profilesNameField: String { string("profiles-name-field", fallback: "Name") }
+
+    /// Accessible name and tooltip of the menu button on a profile's row.
+    public static func profilesMoreFor(name: String) -> String {
+        Self.format("profiles-more-for", fallback: "More for %1$@", name)
+    }
+
     /// Settings row and page title, every platform.
     public static var devicesTitle: String { string("devices-title", fallback: "Devices") }
 
@@ -8799,9 +8818,9 @@ public enum L {
     /// Switch on a TV.
     public static var devicesRemoteSwitch: String { string("devices-remote-switch", fallback: "Remote") }
 
-    /// Device page footer.
-    public static func devicesSwitchesFoot(device: String) -> String {
-        Self.format("devices-switches-foot", fallback: "Sync shares where you stopped, your history and your settings. Remote lets this phone drive %1$@.", device)
+    /// Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC.
+    public static func devicesSwitchesFoot(kind: String, device: String) -> String {
+        Self.format("devices-switches-foot", fallback: "Sync shares where you stopped, your history and your settings. Remote lets this %1$@ drive %2$@.", kind, device)
     }
 
     /// Device page, destructive.

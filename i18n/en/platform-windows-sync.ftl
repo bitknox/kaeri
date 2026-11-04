@@ -21,12 +21,3 @@ devices-sync-switch-name = Sync with { $device }
 # @only windows
 # @arg device: text
 devices-open-name = Open { $device }
-
-# Device page footer on a PC, which drives a TV as the remote.
-# @only windows
-# @arg device: text
-devices-switches-foot-pc = Sync shares where you stopped, your history and your settings. Remote lets this PC drive { $device }.
-
-# Device page footer on a PC when the device has no Remote switch.
-# @only windows
-devices-sync-foot = Sync shares where you stopped, your history and your settings.

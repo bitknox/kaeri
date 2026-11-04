@@ -1439,9 +1439,6 @@ profiles-popover-name = [Þŕöƒîļéš~~~]
 # Button that makes the first profile when none exists; the Profiles pane’s add row.
 profiles-add-row-action = [Åðð~]
 
-# Button that opens a profile’s page from its row.
-profiles-edit-action = [Éðîţ~~]
-
 # Name of the folder picker dialog for a cloud folder on this computer.
 cloud-folder-chooser = [Çĥööšé à ƒöļðéŕ~~~~~]
 
@@ -9261,6 +9258,21 @@ pair-other-device = [ýöüŕ öţĥéŕ ðéṽîçé~~~~~~]
 # Note under the Enter a code dialog's fields: the address can be left empty.
 pair-address-optional = [Ļéàṽé ţĥé àððŕéšš éɱþţý àñð Ķàéŕî ļööķš ƒöŕ ţĥé ðéṽîçé öñ ţĥîš ñéţŵöŕķ.~~~~~~~~~~~~~~~~~~~~~~]
 
+# Device page footer when the device has no Remote switch.
+devices-sync-foot = [Šýñç šĥàŕéš ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš.~~~~~~~~~~~~~~~~~~~]
+
+# A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's.
+devices-line-remote = [{ $line } · Ŕéɱöţé~~~~]
+
+# Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux.
+profiles-edit-action = [Éðîţ~~]
+
+# Label of the name field in the add and edit profile dialogs.
+profiles-name-field = [Ñàɱé~~]
+
+# Accessible name and tooltip of the menu button on a profile's row.
+profiles-more-for = [Ṁöŕé ƒöŕ { $name }~~~~]
+
 # Settings row and page title, every platform.
 devices-title = [Ðéṽîçéš~~~]
 
@@ -9339,8 +9351,8 @@ devices-sync-switch = [Šýñç~~]
 # Switch on a TV.
 devices-remote-switch = [Ŕéɱöţé~~]
 
-# Device page footer.
-devices-switches-foot = [Šýñç šĥàŕéš ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš. Ŕéɱöţé ļéţš ţĥîš þĥöñé ðŕîṽé { $device }.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+# Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC.
+devices-switches-foot = [Šýñç šĥàŕéš ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš. Ŕéɱöţé ļéţš ţĥîš { $kind } ðŕîṽé { $device }.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Device page, destructive.
 devices-remove = [Ŕéɱöṽé ţĥîš ðéṽîçé~~~~~~]

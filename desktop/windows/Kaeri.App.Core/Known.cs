@@ -64,6 +64,9 @@ public sealed class Known
     /// <summary>The problem sync last raised that a dialog may show, until it is dealt with.</summary>
     public SyncProblem? SyncTrouble { get; set; }
 
+    /// <summary>The profiles on this PC, empty for one person, who never sees a picker or a name.</summary>
+    public ProfileView[] Profiles { get; set; } = [];
+
     /// <summary>A cloud sign-in under way, and its step.</summary>
     public (SyncFolderKind Service, SyncSignInStep Step)? SyncSigningIn { get; set; }
     public DownloadRow[] Downloads => Queue.Rows;
@@ -348,6 +351,9 @@ public sealed class Known
                 break;
             case Event.SyncSignIn signIn:
                 SyncSigningIn = signIn.Step is { } step ? (signIn.Service, step) : null;
+                break;
+            case Event.Profiles profiles:
+                Profiles = profiles.V1.Profiles ?? [];
                 break;
             case Event.SyncProblem problem:
                 SyncTrouble = problem.V1;

@@ -35,6 +35,7 @@ public sealed partial class SettingsPage : Page
             "sources" => T.SourcesTitle,
             "accounts" => T.NavAccounts,
             "devices" => T.DevicesTitle,
+            "profiles" => T.ProfilesTitle,
             "library" => T.NavLibrary,
             "integrations" => T.SettingsGroupIntegrations,
             "advanced" => T.SettingsGroupAdvanced,
@@ -69,6 +70,7 @@ public sealed partial class SettingsPage : Page
         ]),
         new("accounts", "", []),
         new("devices", "\uE772", []),
+        new("profiles", "\uE716", []),
         new("library", "\uE8F1", []),
         new("integrations", "",
         [
@@ -212,6 +214,7 @@ public sealed partial class SettingsPage : Page
     void Heard(IReadOnlyList<Event> batch)
     {
         if (batch.Any(e => e is Event.Settings || e is Event.Sync && pane.Name == "accounts" || e is Event.HiddenTitles && pane.Name == "library"
+            || e is Event.Profiles && pane.Name == "profiles"
             || pane.Name == "devices" && (e is Event.SyncStatus || e is Event.Cards cards && cards.V1.Any(c => notesWaiting.Remove(c.Id)))))
             Show();
         else if (batch.Any(e => e is Event.TorrentProxy))
@@ -284,6 +287,9 @@ public sealed partial class SettingsPage : Page
                 break;
             case "devices":
                 ShowDevices();
+                break;
+            case "profiles":
+                ShowProfiles();
                 break;
             case "about":
                 ShowAbout();

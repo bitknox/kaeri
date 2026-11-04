@@ -9232,6 +9232,26 @@ object Strings {
     fun pairAddressOptional(context: Context): String =
         context.getString(R.string.pair_address_optional)
 
+    /** Device page footer when the device has no Remote switch. */
+    fun devicesSyncFoot(context: Context): String =
+        context.getString(R.string.devices_sync_foot)
+
+    /** A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's. */
+    fun devicesLineRemote(context: Context, line: String): String =
+        context.getString(R.string.devices_line_remote, line)
+
+    /** Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux. */
+    fun profilesEditAction(context: Context): String =
+        context.getString(R.string.profiles_edit_action)
+
+    /** Label of the name field in the add and edit profile dialogs. */
+    fun profilesNameField(context: Context): String =
+        context.getString(R.string.profiles_name_field)
+
+    /** Accessible name and tooltip of the menu button on a profile's row. */
+    fun profilesMoreFor(context: Context, name: String): String =
+        context.getString(R.string.profiles_more_for, name)
+
     /** Settings row and page title, every platform. */
     fun devicesTitle(context: Context): String =
         context.getString(R.string.devices_title)
@@ -9336,9 +9356,9 @@ object Strings {
     fun devicesRemoteSwitch(context: Context): String =
         context.getString(R.string.devices_remote_switch)
 
-    /** Device page footer. */
-    fun devicesSwitchesFoot(context: Context, device: String): String =
-        context.getString(R.string.devices_switches_foot, device)
+    /** Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC. */
+    fun devicesSwitchesFoot(context: Context, kind: String, device: String): String =
+        context.getString(R.string.devices_switches_foot, kind, device)
 
     /** Device page, destructive. */
     fun devicesRemove(context: Context): String =

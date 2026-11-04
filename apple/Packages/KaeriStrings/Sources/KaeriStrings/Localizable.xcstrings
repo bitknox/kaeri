@@ -26657,6 +26657,18 @@
         }
       }
     },
+    "devices-line-remote" : {
+      "comment" : "A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's. Argument 1: line (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · Remote"
+          }
+        }
+      }
+    },
     "devices-name" : {
       "comment" : "Row for this device’s name.",
       "extractionState" : "manual",
@@ -26838,13 +26850,25 @@
       }
     },
     "devices-switches-foot" : {
-      "comment" : "Device page footer. Argument 1: device (Text).",
+      "comment" : "Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC. Argument 1: kind (Text). Argument 2: device (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sync shares where you stopped, your history and your settings. Remote lets this phone drive %1$@."
+            "value" : "Sync shares where you stopped, your history and your settings. Remote lets this %1$@ drive %2$@."
+          }
+        }
+      }
+    },
+    "devices-sync-foot" : {
+      "comment" : "Device page footer when the device has no Remote switch.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync shares where you stopped, your history and your settings."
           }
         }
       }
@@ -133575,6 +133599,18 @@
         }
       }
     },
+    "profiles-edit-action" : {
+      "comment" : "Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit"
+          }
+        }
+      }
+    },
     "profiles-kids" : {
       "comment" : "Switch.",
       "extractionState" : "manual",
@@ -133631,6 +133667,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Manage profiles"
+          }
+        }
+      }
+    },
+    "profiles-more-for" : {
+      "comment" : "Accessible name and tooltip of the menu button on a profile's row. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More for %1$@"
+          }
+        }
+      }
+    },
+    "profiles-name-field" : {
+      "comment" : "Label of the name field in the add and edit profile dialogs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name"
           }
         }
       }

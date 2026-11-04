@@ -1371,7 +1371,12 @@ pub fn device_page(ctx: &Rc<Ctx>, device: &SyncDeviceView) {
         group.add(&remote);
     }
     body.append(&group);
-    body.append(&note(&t::devices_switches_foot(&device.name)));
+    // The Remote sentence only beside a Remote switch.
+    body.append(&note(&if device.remote_key.is_some() {
+        t::devices_switches_foot(&t::device_kind_computer(), &device.name)
+    } else {
+        t::devices_sync_foot()
+    }));
     if let Some(row) = copy_switch(ctx, device, false) {
         let copy = adw::PreferencesGroup::new();
         copy.add(&row);

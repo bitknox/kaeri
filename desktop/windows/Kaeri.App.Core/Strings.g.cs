@@ -1449,12 +1449,6 @@ public static partial class T
     /// <summary>Accessible name of the button that opens a device's page from its card.</summary>
     public static string DevicesOpenName(string device) => Fill(Get("DevicesOpenName"), ("device", device));
 
-    /// <summary>Device page footer on a PC, which drives a TV as the remote.</summary>
-    public static string DevicesSwitchesFootPc(string device) => Fill(Get("DevicesSwitchesFootPc"), ("device", device));
-
-    /// <summary>Device page footer on a PC when the device has no Remote switch.</summary>
-    public static string DevicesSyncFoot => Get("DevicesSyncFoot");
-
     /// <summary>Under a release in the source picker: how many people share it right now.</summary>
     public static string SourcePickerSeeders(long count) => Fill(GetPlural("SourcePickerSeeders", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -6429,6 +6423,21 @@ public static partial class T
     /// <summary>Note under the Enter a code dialog's fields: the address can be left empty.</summary>
     public static string PairAddressOptional => Get("PairAddressOptional");
 
+    /// <summary>Device page footer when the device has no Remote switch.</summary>
+    public static string DevicesSyncFoot => Get("DevicesSyncFoot");
+
+    /// <summary>A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's.</summary>
+    public static string DevicesLineRemote(string line) => Fill(Get("DevicesLineRemote"), ("line", line));
+
+    /// <summary>Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux.</summary>
+    public static string ProfilesEditAction => Get("ProfilesEditAction");
+
+    /// <summary>Label of the name field in the add and edit profile dialogs.</summary>
+    public static string ProfilesNameField => Get("ProfilesNameField");
+
+    /// <summary>Accessible name and tooltip of the menu button on a profile's row.</summary>
+    public static string ProfilesMoreFor(string name) => Fill(Get("ProfilesMoreFor"), ("name", name));
+
     /// <summary>Settings row and page title, every platform.</summary>
     public static string DevicesTitle => Get("DevicesTitle");
 
@@ -6507,8 +6516,8 @@ public static partial class T
     /// <summary>Switch on a TV.</summary>
     public static string DevicesRemoteSwitch => Get("DevicesRemoteSwitch");
 
-    /// <summary>Device page footer.</summary>
-    public static string DevicesSwitchesFoot(string device) => Fill(Get("DevicesSwitchesFoot"), ("device", device));
+    /// <summary>Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC.</summary>
+    public static string DevicesSwitchesFoot(string kind, string device) => Fill(Get("DevicesSwitchesFoot"), ("kind", kind), ("device", device));
 
     /// <summary>Device page, destructive.</summary>
     public static string DevicesRemove => Get("DevicesRemove");
@@ -8499,8 +8508,6 @@ public static partial class T
         ["DeviceKindPc"] = "PC",
         ["DevicesSyncSwitchName"] = "Sync with {device}",
         ["DevicesOpenName"] = "Open {device}",
-        ["DevicesSwitchesFootPc"] = "Sync shares where you stopped, your history and your settings. Remote lets this PC drive {device}.",
-        ["DevicesSyncFoot"] = "Sync shares where you stopped, your history and your settings.",
         ["SourcePickerSeeders_one"] = "One seeder",
         ["SourcePickerSeeders_other"] = "{count} seeders",
         ["RatePerSecond"] = "{size}/s",
@@ -10201,6 +10208,11 @@ public static partial class T
         ["PairWorkingLine"] = "Pairing",
         ["PairOtherDevice"] = "your other device",
         ["PairAddressOptional"] = "Leave the address empty and Kaeri looks for the device on this network.",
+        ["DevicesSyncFoot"] = "Sync shares where you stopped, your history and your settings.",
+        ["DevicesLineRemote"] = "{line} · Remote",
+        ["ProfilesEditAction"] = "Edit",
+        ["ProfilesNameField"] = "Name",
+        ["ProfilesMoreFor"] = "More for {name}",
         ["DevicesTitle"] = "Devices",
         ["DevicesRowOff"] = "Sync off",
         ["DevicesRowSynced"] = "Synced {ago}",
@@ -10227,7 +10239,7 @@ public static partial class T
         ["DevicesPairedTvsFoot"] = "Paired for Play on TV. A TV paired as a remote never gets your history.",
         ["DevicesSyncSwitch"] = "Sync",
         ["DevicesRemoteSwitch"] = "Remote",
-        ["DevicesSwitchesFoot"] = "Sync shares where you stopped, your history and your settings. Remote lets this phone drive {device}.",
+        ["DevicesSwitchesFoot"] = "Sync shares where you stopped, your history and your settings. Remote lets this {kind} drive {device}.",
         ["DevicesRemove"] = "Remove this device",
         ["DevicesRemoveAlert"] = "Remove {device}?",
         ["DevicesRemoveAlertLine"] = "{device} keeps what it has, but gets nothing new from your other devices.",

@@ -593,7 +593,7 @@ pub(super) fn devices_body(app: &App, overlay: &Overlay, width: u16, room: usize
             if let Some(address) = &d.address {
                 body.push(
                     "",
-                    labelled(&address_label, &format!("{address}:{}", invite.port)),
+                    labelled(&address_label, &format!("{address}:{}", invite.port)), // i18n-skip
                     Tone::Text,
                 ); // i18n-skip
             }
@@ -692,7 +692,11 @@ pub(super) fn devices_body(app: &App, overlay: &Overlay, width: u16, room: usize
             }
             if device.remote_key.is_some() {
                 body.blank();
-                body.prose(&t::devices_switches_foot(&device.name), text, Tone::Dim);
+                body.prose(
+                    &t::devices_switches_foot(&t::device_kind_computer(), &device.name),
+                    text,
+                    Tone::Dim,
+                );
             }
             body
         }

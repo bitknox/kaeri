@@ -35,7 +35,7 @@ pub fn ask(then: impl FnOnce() + 'static) {
         Some("org.freedesktop.PolicyKit1"),
         "/org/freedesktop/PolicyKit1/Authority",
         "org.freedesktop.PolicyKit1.Authority",
-        "CheckAuthorization",
+        "CheckAuthorization", // i18n-skip
         Some(&args),
         None,
         gio::DBusCallFlags::NONE,

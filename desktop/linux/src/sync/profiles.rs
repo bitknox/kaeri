@@ -81,7 +81,7 @@ fn profile_row(ctx: &Rc<Ctx>, p: &ProfileView) -> adw::ActionRow {
         .valign(gtk::Align::Center)
         .build(); // i18n-skip
     menu.add_css_class("flat");
-    menu.update_property(&[gtk::accessible::Property::Label(&p.name)]);
+    menu.update_property(&[gtk::accessible::Property::Label(&t::profiles_more_for(&p.name))]);
     let pop = gtk::Popover::new();
     let items = gtk::Box::new(gtk::Orientation::Vertical, 0);
     for (label, kind) in [(t::profiles_edit_action(), 0), (t::profiles_delete(), 1)] {
@@ -139,7 +139,7 @@ pub fn edit_dialog(ctx: &Rc<Ctx>, existing: Option<ProfileView>) {
     body.set_margin_bottom(24);
     body.set_margin_top(6);
     let group = adw::PreferencesGroup::new();
-    let name = adw::EntryRow::builder().title(t::profiles_popover_name()).build();
+    let name = adw::EntryRow::builder().title(t::profiles_name_field()).build();
     if let Some(p) = &existing {
         name.set_text(&p.name);
     }

@@ -57,10 +57,10 @@ impl Mark {
     pub fn markup(self, text: &str) -> String {
         let text = glib_escape(text);
         let dot = match self {
-            Self::Water => "<span foreground=\"#7FC7D9\">\u{25CF}</span> ",
-            Self::Amber => "<span foreground=\"#F2A64B\">\u{25CF}</span> ",
-            Self::Vermilion => "<span foreground=\"#E06B54\">\u{25CF}</span> ",
-            Self::Hollow => "<span foreground=\"#A3A9C4\">\u{25CB}</span> ",
+            Self::Water => "<span foreground=\"#7FC7D9\">\u{25CF}</span> ", // i18n-skip
+            Self::Amber => "<span foreground=\"#F2A64B\">\u{25CF}</span> ", // i18n-skip
+            Self::Vermilion => "<span foreground=\"#E06B54\">\u{25CF}</span> ", // i18n-skip
+            Self::Hollow => "<span foreground=\"#A3A9C4\">\u{25CB}</span> ", // i18n-skip
             Self::None => "",
         };
         format!("{dot}{text}")

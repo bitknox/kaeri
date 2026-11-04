@@ -15,7 +15,7 @@ Kaeri                                                                           
   Remove this device
 
   Sync shares where you stopped, your history and your settings. Remote
-  lets this phone drive Living room TV.
+  lets this computer drive Living room TV.
 
                             │
                             │
@@ -71,8 +71,8 @@ r16 c00-01 fg=rule bg=ground
 r16 c02-70 fg=text-dim bg=ground
 r16 c71-119 fg=rule bg=ground
 r17 c00-01 fg=rule bg=ground
-r17 c02-38 fg=text-dim bg=ground
-r17 c39-119 fg=rule bg=ground
+r17 c02-41 fg=text-dim bg=ground
+r17 c42-119 fg=rule bg=ground
 r18 c00-119 fg=rule bg=ground
 r19 c00-119 fg=rule
 r20 c00-119 fg=rule

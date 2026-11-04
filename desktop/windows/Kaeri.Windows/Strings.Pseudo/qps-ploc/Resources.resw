@@ -2043,14 +2043,6 @@
     <value>[Öþéñ {device}~~~]</value>
     <comment>Accessible name of the button that opens a device's page from its card.</comment>
   </data>
-  <data name="DevicesSwitchesFootPc" xml:space="preserve">
-    <value>[Šýñç šĥàŕéš ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš. Ŕéɱöţé ļéţš ţĥîš ÞÇ ðŕîṽé {device}.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
-    <comment>Device page footer on a PC, which drives a TV as the remote.</comment>
-  </data>
-  <data name="DevicesSyncFoot" xml:space="preserve">
-    <value>[Šýñç šĥàŕéš ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš.~~~~~~~~~~~~~~~~~~~]</value>
-    <comment>Device page footer on a PC when the device has no Remote switch.</comment>
-  </data>
   <data name="SourcePickerSeeders_one" xml:space="preserve">
     <value>[Öñé šééðéŕ~~~]</value>
     <comment>Under a release in the source picker: how many people share it right now.</comment>
@@ -8830,6 +8822,26 @@
     <value>[Ļéàṽé ţĥé àððŕéšš éɱþţý àñð Ķàéŕî ļööķš ƒöŕ ţĥé ðéṽîçé öñ ţĥîš ñéţŵöŕķ.~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Note under the Enter a code dialog's fields: the address can be left empty.</comment>
   </data>
+  <data name="DevicesSyncFoot" xml:space="preserve">
+    <value>[Šýñç šĥàŕéš ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš.~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Device page footer when the device has no Remote switch.</comment>
+  </data>
+  <data name="DevicesLineRemote" xml:space="preserve">
+    <value>[{line} · Ŕéɱöţé~~~~]</value>
+    <comment>A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's.</comment>
+  </data>
+  <data name="ProfilesEditAction" xml:space="preserve">
+    <value>[Éðîţ~~]</value>
+    <comment>Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux.</comment>
+  </data>
+  <data name="ProfilesNameField" xml:space="preserve">
+    <value>[Ñàɱé~~]</value>
+    <comment>Label of the name field in the add and edit profile dialogs.</comment>
+  </data>
+  <data name="ProfilesMoreFor" xml:space="preserve">
+    <value>[Ṁöŕé ƒöŕ {name}~~~~]</value>
+    <comment>Accessible name and tooltip of the menu button on a profile's row.</comment>
+  </data>
   <data name="DevicesTitle" xml:space="preserve">
     <value>[Ðéṽîçéš~~~]</value>
     <comment>Settings row and page title, every platform.</comment>
@@ -8935,8 +8947,8 @@
     <comment>Switch on a TV.</comment>
   </data>
   <data name="DevicesSwitchesFoot" xml:space="preserve">
-    <value>[Šýñç šĥàŕéš ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš. Ŕéɱöţé ļéţš ţĥîš þĥöñé ðŕîṽé {device}.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
-    <comment>Device page footer.</comment>
+    <value>[Šýñç šĥàŕéš ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš. Ŕéɱöţé ļéţš ţĥîš {kind} ðŕîṽé {device}.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC.</comment>
   </data>
   <data name="DevicesRemove" xml:space="preserve">
     <value>[Ŕéɱöṽé ţĥîš ðéṽîçé~~~~~~]</value>

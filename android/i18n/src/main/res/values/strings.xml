@@ -4810,6 +4810,16 @@
     <string name="pair_other_device">your other device</string>
     <!-- Note under the Enter a code dialog's fields: the address can be left empty. -->
     <string name="pair_address_optional">Leave the address empty and Kaeri looks for the device on this network.</string>
+    <!-- Device page footer when the device has no Remote switch. -->
+    <string name="devices_sync_foot">Sync shares where you stopped, your history and your settings.</string>
+    <!-- A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's. -->
+    <string name="devices_line_remote">%1$s · Remote</string>
+    <!-- Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux. -->
+    <string name="profiles_edit_action">Edit</string>
+    <!-- Label of the name field in the add and edit profile dialogs. -->
+    <string name="profiles_name_field">Name</string>
+    <!-- Accessible name and tooltip of the menu button on a profile's row. -->
+    <string name="profiles_more_for">More for %1$s</string>
     <!-- Settings row and page title, every platform. -->
     <string name="devices_title">Devices</string>
     <!-- Devices row value while sync is off. -->
@@ -4862,8 +4872,8 @@
     <string name="devices_sync_switch">Sync</string>
     <!-- Switch on a TV. -->
     <string name="devices_remote_switch">Remote</string>
-    <!-- Device page footer. -->
-    <string name="devices_switches_foot">Sync shares where you stopped, your history and your settings. Remote lets this phone drive %1$s.</string>
+    <!-- Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC. -->
+    <string name="devices_switches_foot">Sync shares where you stopped, your history and your settings. Remote lets this %1$s drive %2$s.</string>
     <!-- Device page, destructive. -->
     <string name="devices_remove">Remove this device</string>
     <!-- Alert title. -->

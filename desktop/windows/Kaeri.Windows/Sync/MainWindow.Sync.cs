@@ -14,9 +14,12 @@ public sealed partial class MainWindow
         if (!options.Fixture)
             engine.SetSyncNetwork(new SyncNetwork());
         SyncDialogs.Install(dirs.Config);
+        Profiles.Install();
 #if KAERI_TESTING
         if (options.Show?.StartsWith("sync-", StringComparison.Ordinal) == true)
             SyncDialogs.Stage(options.Show);
+        if (options.Show?.StartsWith("profiles-", StringComparison.Ordinal) == true)
+            Profiles.Stage(options.Show);
 #endif
     }
 }

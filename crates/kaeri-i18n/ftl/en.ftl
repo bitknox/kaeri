@@ -1439,9 +1439,6 @@ profiles-popover-name = Profiles
 # Button that makes the first profile when none exists; the Profiles pane’s add row.
 profiles-add-row-action = Add
 
-# Button that opens a profile’s page from its row.
-profiles-edit-action = Edit
-
 # Name of the folder picker dialog for a cloud folder on this computer.
 cloud-folder-chooser = Choose a folder
 
@@ -9261,6 +9258,21 @@ pair-other-device = your other device
 # Note under the Enter a code dialog's fields: the address can be left empty.
 pair-address-optional = Leave the address empty and Kaeri looks for the device on this network.
 
+# Device page footer when the device has no Remote switch.
+devices-sync-foot = Sync shares where you stopped, your history and your settings.
+
+# A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's.
+devices-line-remote = { $line } · Remote
+
+# Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux.
+profiles-edit-action = Edit
+
+# Label of the name field in the add and edit profile dialogs.
+profiles-name-field = Name
+
+# Accessible name and tooltip of the menu button on a profile's row.
+profiles-more-for = More for { $name }
+
 # Settings row and page title, every platform.
 devices-title = Devices
 
@@ -9339,8 +9351,8 @@ devices-sync-switch = Sync
 # Switch on a TV.
 devices-remote-switch = Remote
 
-# Device page footer.
-devices-switches-foot = Sync shares where you stopped, your history and your settings. Remote lets this phone drive { $device }.
+# Device page footer when the device has a Remote switch. The kind is this device's word, such as computer or PC.
+devices-switches-foot = Sync shares where you stopped, your history and your settings. Remote lets this { $kind } drive { $device }.
 
 # Device page, destructive.
 devices-remove = Remove this device

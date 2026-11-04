@@ -121,7 +121,7 @@ fn device_row(ctx: &Rc<Ctx>, device: &SyncDeviceView) -> adw::ActionRow {
     if remote_only {
         text = t::devices_remote_only();
     } else if device.remote_key.is_some() || paired_tv {
-        text = format!("{text} · {}", t::devices_remote_switch());
+        text = t::devices_line_remote(&text);
     }
     let row = adw::ActionRow::builder()
         .title(glib::markup_escape_text(&device.name))

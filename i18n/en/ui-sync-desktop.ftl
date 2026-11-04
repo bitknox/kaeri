@@ -46,3 +46,20 @@ pair-other-device = your other { -device }
 
 # Note under the Enter a code dialog's fields: the address can be left empty.
 pair-address-optional = Leave the address empty and { -app-name } looks for the { -device } on this network.
+
+# Device page footer when the device has no Remote switch.
+devices-sync-foot = Sync shares where you stopped, your history and your settings.
+
+# A device's line on the Devices page with Remote after it, when this device drives it as a remote. The word is the Remote switch's.
+# @arg line: text
+devices-line-remote = { $line } · Remote
+
+# Menu item on a profile's row on the Profiles pane, and the edit dialog's title on Linux.
+profiles-edit-action = Edit
+
+# Label of the name field in the add and edit profile dialogs.
+profiles-name-field = Name
+
+# Accessible name and tooltip of the menu button on a profile's row.
+# @arg name: text
+profiles-more-for = More for { $name }
