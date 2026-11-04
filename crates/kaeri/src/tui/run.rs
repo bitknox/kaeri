@@ -63,7 +63,12 @@ pub async fn run(
 
     // What the file says, as distinct from what is in effect: `--theme` changes only this
     // session, and the Settings screen has to be able to tell the two apart.
-    let saved = Config::load(&paths).unwrap_or_default();
+    // A profile's own file is read over the shared one.
+    let saved = match kaeri_engine::profile::overlay_of(&store, &paths) {
+        Some(overlay) => kaeri_core::profile::load_with_overlay(&paths, &overlay),
+        None => Config::load(&paths),
+    }
+    .unwrap_or_default();
 
     // The engine, started as the app launches it: its source chain built behind the interface,
     // and its own work beside the commands. The player is dressed in the immersive palette
@@ -81,6 +86,8 @@ pub async fn run(
     // The settings as the engine starts on them, which it says again at launch.
     let settings = kaeri_model::settings::view(&config, &saved);
     let mut app = App::with_images(settings, palette, keymap, image_engine);
+    // What sync names this computer when it starts without a name in the group.
+    app.set_device_name(computer_name());
     // The crash reports saved here, for Report a bug to offer. Saving is off unless asked for,
     // so this is usually empty.
     if let Some(store) = kaeri_engine::crash::armed_store() {
@@ -148,7 +155,8 @@ pub async fn run(
         // A link the screen asked to copy with no event to carry it, as the store's open link
         // is: handed over before the frame that says whether it went.
         if let Some(text) = app.take_clipboard() {
-            app.open_link_copied = copy_to_clipboard(terminal.backend_mut(), &text);
+            let went = copy_to_clipboard(terminal.backend_mut(), &text);
+            app.clipboard_went(went);
         }
         for id in app.take_deleted_crashes() {
             kaeri_engine::crash::delete_saved(&id);
@@ -162,7 +170,7 @@ pub async fn run(
         // it, and the frame after the ending shows it, as when the interface staged it itself.
         let waiting = app.awaiting_engine() && engine_due.is_some_and(|by| now < by);
         // Work on screen keeps its clocks and its pulse moving, the eyecatch its wipe.
-        let live = !app.jobs.is_empty() || app.is_animating();
+        let live = !app.jobs.is_empty() || app.is_animating() || app.is_ticking();
         if !waiting && (!idle_tick || repaint.due(live, now)) {
             // Broken out of rather than returned from: a terminal that can no longer be drawn
             // on still has to be given back, and the player closed.
@@ -222,6 +230,10 @@ pub async fn run(
                 };
                 if rolling_on {
                     engine_due = Some(std::time::Instant::now() + ENGINE_WAIT);
+                }
+                // A pairing code is shown with the address the other device reaches it at.
+                if matches!(update, Event::SyncInvite { .. }) {
+                    app.set_lan_address(lan_address());
                 }
                 match update {
                     // Decoded off the loop; it comes back on the arm below.
@@ -296,7 +308,56 @@ pub async fn run(
     // given a moment to record where it was left: the engine knows which.
     engine.shutdown().await;
     restore_terminal(&mut terminal)?;
+    // Another profile was chosen: the terminal starts again on it, as the apps restart their
+    // engine, so nothing of the profile left is kept in memory.
+    if let Some(name) = app.profile_restart() {
+        result?;
+        start_again(name);
+        return Ok(());
+    }
     result
+}
+
+/// Start this program again in place, with the arguments it was started with. Where it cannot,
+/// it says how to.
+fn start_again(name: &str) {
+    #[cfg(unix)]
+    if let Ok(program) = std::env::current_exe() {
+        use std::os::unix::process::CommandExt;
+        let problem =
+            std::process::Command::new(program).args(std::env::args_os().skip(1)).exec();
+        tracing::warn!(%problem, "could not start again on the profile chosen");
+    }
+    println!("{}", t::sync_tui_profile_restart(name));
+}
+
+/// What this computer is called, as its owner named it: the Mac's computer name, else the host
+/// name. Sync starts with it, and it can be changed on another device.
+fn computer_name() -> String {
+    #[cfg(target_os = "macos")]
+    if let Ok(out) =
+        std::process::Command::new("scutil").args(["--get", "ComputerName"]).output()
+        && out.status.success()
+        && let Ok(name) = String::from_utf8(out.stdout)
+        && !name.trim().is_empty()
+    {
+        return name.trim().to_owned();
+    }
+    ["/proc/sys/kernel/hostname", "/etc/hostname"]
+        .iter()
+        .filter_map(|file| std::fs::read_to_string(file).ok())
+        .map(|name| name.trim().to_owned())
+        .find(|name| !name.is_empty())
+        .unwrap_or_else(|| kaeri_model::stores::COMPUTER.to_owned())
+}
+
+/// This computer's address on the local network: the one its default route leaves from. A UDP
+/// connect only picks the route; nothing is sent.
+fn lan_address() -> Option<String> {
+    let socket = std::net::UdpSocket::bind(("0.0.0.0", 0)).ok()?;
+    socket.connect(("192.0.2.1", 9)).ok()?;
+    let ip = socket.local_addr().ok()?.ip();
+    (!ip.is_unspecified() && !ip.is_loopback()).then(|| ip.to_string())
 }
 
 /// Say that the config did not load, on the status line for as long as the session runs and in

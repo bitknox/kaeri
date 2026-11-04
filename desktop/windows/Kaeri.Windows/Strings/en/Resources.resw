@@ -8742,6 +8742,727 @@
     <value>Share…</value>
     <comment>Button that opens the system share sheet for the invite link.</comment>
   </data>
+  <data name="CloudBrowserLine" xml:space="preserve">
+    <value>Your browser opened {service}’s page. Allow access there, and Kaeri carries on by itself.</value>
+    <comment>Windows and Linux dialog line while the browser is open for a cloud sign-in.</comment>
+  </data>
+  <data name="CloudBrowserTitle" xml:space="preserve">
+    <value>Sign in to {service} in your browser</value>
+    <comment>Windows and Linux dialog title while the browser is open for a cloud sign-in.</comment>
+  </data>
+  <data name="DeviceKindComputer" xml:space="preserve">
+    <value>computer</value>
+    <comment>Word for this device in sentences such as “Turn off sync on this computer”.</comment>
+  </data>
+  <data name="DevicesEnterCode" xml:space="preserve">
+    <value>Enter a code</value>
+    <comment>Button on the Devices page that opens the box for a code another device shows.</comment>
+  </data>
+  <data name="DevicesShowKey" xml:space="preserve">
+    <value>Show</value>
+    <comment>Button on the Devices page that shows the recovery key behind the computer’s own lock.</comment>
+  </data>
+  <data name="DevicesTurnOffAction" xml:space="preserve">
+    <value>Turn off</value>
+    <comment>Button in the alert that turns sync off on this computer.</comment>
+  </data>
+  <data name="DevicesTitle" xml:space="preserve">
+    <value>Devices</value>
+    <comment>Settings row and page title, every platform.</comment>
+  </data>
+  <data name="DevicesRowOff" xml:space="preserve">
+    <value>Sync off</value>
+    <comment>Devices row value while sync is off.</comment>
+  </data>
+  <data name="DevicesRowSynced" xml:space="preserve">
+    <value>Synced {ago}</value>
+    <comment>Devices row value; “Synced 2 min ago”, “Synced just now”.</comment>
+  </data>
+  <data name="DevicesRowError" xml:space="preserve">
+    <value>Couldn’t sync</value>
+    <comment>Devices row value with the error glyph.</comment>
+  </data>
+  <data name="DevicesThisDevice" xml:space="preserve">
+    <value>This device</value>
+    <comment>Group heading over the name.</comment>
+  </data>
+  <data name="DevicesName" xml:space="preserve">
+    <value>Name</value>
+    <comment>Row for this device’s name.</comment>
+  </data>
+  <data name="SyncGroup" xml:space="preserve">
+    <value>Sync</value>
+    <comment>Group heading while off.</comment>
+  </data>
+  <data name="SyncOffTitle" xml:space="preserve">
+    <value>Sync is off</value>
+    <comment>Off state.</comment>
+  </data>
+  <data name="SyncOffLine" xml:space="preserve">
+    <value>Turn it on to keep where you stopped, your history and your settings the same on your devices.</value>
+    <comment>Off state.</comment>
+  </data>
+  <data name="SyncTurnOn" xml:space="preserve">
+    <value>Turn on sync</value>
+    <comment>Button; the Mac adds an ellipsis.</comment>
+  </data>
+  <data name="SyncRoadTitle" xml:space="preserve">
+    <value>How should your devices share?</value>
+    <comment>Road sheet title.</comment>
+  </data>
+  <data name="SyncRoadNearby" xml:space="preserve">
+    <value>With a device nearby</value>
+    <comment>Road sheet row.</comment>
+  </data>
+  <data name="SyncRoadNearbyLine" xml:space="preserve">
+    <value>Pair with another device on the same Wi-Fi. Nothing is stored anywhere else.</value>
+    <comment>Road sheet row line.</comment>
+  </data>
+  <data name="SyncRoadCloud" xml:space="preserve">
+    <value>Through a cloud folder</value>
+    <comment>Road sheet row.</comment>
+  </data>
+  <data name="SyncRoadCloudLine" xml:space="preserve">
+    <value>A cloud drive you already use, or your own server. Works while your devices are apart, and keeps a backup.</value>
+    <comment>Road sheet row line. Names no service, since a build may hide some (decision 14).</comment>
+  </data>
+  <data name="SyncRoadLater" xml:space="preserve">
+    <value>You can add the other way later. Most people use both.</value>
+    <comment>Road sheet footer.</comment>
+  </data>
+  <data name="DevicesYours" xml:space="preserve">
+    <value>Your devices</value>
+    <comment>Group heading.</comment>
+  </data>
+  <data name="DevicesOnlyThis" xml:space="preserve">
+    <value>Only this device</value>
+    <comment>Empty Your devices.</comment>
+  </data>
+  <data name="DevicesOnlyThisLine" xml:space="preserve">
+    <value>Pair another device to share where you stopped, your history and your settings.</value>
+    <comment>Empty Your devices.</comment>
+  </data>
+  <data name="DevicesAdd" xml:space="preserve">
+    <value>Add a device</value>
+    <comment>Row and sheet title.</comment>
+  </data>
+  <data name="DevicesNotSeen" xml:space="preserve">
+    <value>Not seen for {days} days</value>
+    <comment>Device row line past 30 days.</comment>
+  </data>
+  <data name="DevicesRemoteOnly" xml:space="preserve">
+    <value>Remote only</value>
+    <comment>A device paired only for Play on TV.</comment>
+  </data>
+  <data name="DevicesAlsoSync" xml:space="preserve">
+    <value>Also sync with {device}</value>
+    <comment>Button on a remote-only TV row.</comment>
+  </data>
+  <data name="DevicesPairedTvsFoot" xml:space="preserve">
+    <value>Paired for Play on TV. A TV paired as a remote never gets your history.</value>
+    <comment>Footer while sync is off.</comment>
+  </data>
+  <data name="DevicesSyncSwitch" xml:space="preserve">
+    <value>Sync</value>
+    <comment>Switch on a device.</comment>
+  </data>
+  <data name="DevicesRemoteSwitch" xml:space="preserve">
+    <value>Remote</value>
+    <comment>Switch on a TV.</comment>
+  </data>
+  <data name="DevicesSwitchesFoot" xml:space="preserve">
+    <value>Sync shares where you stopped, your history and your settings. Remote lets this phone drive {device}.</value>
+    <comment>Device page footer.</comment>
+  </data>
+  <data name="DevicesRemove" xml:space="preserve">
+    <value>Remove this device</value>
+    <comment>Device page, destructive.</comment>
+  </data>
+  <data name="DevicesRemoveAlert" xml:space="preserve">
+    <value>Remove {device}?</value>
+    <comment>Alert title.</comment>
+  </data>
+  <data name="DevicesRemoveAlertLine" xml:space="preserve">
+    <value>{device} keeps what it has, but gets nothing new from your other devices.</value>
+    <comment>Alert message.</comment>
+  </data>
+  <data name="SyncTurnOff" xml:space="preserve">
+    <value>Turn off sync on this {kind}</value>
+    <comment>Last row; “this phone”, “this Mac”.</comment>
+  </data>
+  <data name="SyncTurnOffAlert" xml:space="preserve">
+    <value>Turn off sync on {device}?</value>
+    <comment>Alert title.</comment>
+  </data>
+  <data name="SyncTurnOffAlertLine" xml:space="preserve">
+    <value>This {kind} stops sharing with your other devices. Everything it has stays here.</value>
+    <comment>Alert message.</comment>
+  </data>
+  <data name="CloudGroup" xml:space="preserve">
+    <value>Cloud folder</value>
+    <comment>Group heading.</comment>
+  </data>
+  <data name="CloudFoot" xml:space="preserve">
+    <value>Fills in while your devices are apart, and keeps a sealed backup. Only your devices can read it.</value>
+    <comment>Group footer.</comment>
+  </data>
+  <data name="CloudAdd" xml:space="preserve">
+    <value>Add a cloud folder</value>
+    <comment>Row when only the nearby road is set.</comment>
+  </data>
+  <data name="CloudPickTitle" xml:space="preserve">
+    <value>Choose a cloud folder</value>
+    <comment>Picker title.</comment>
+  </data>
+  <data name="CloudGoogleLine" xml:space="preserve">
+    <value>A hidden Kaeri folder in your Drive</value>
+    <comment>Picker row line.</comment>
+  </data>
+  <data name="CloudNextcloudLine" xml:space="preserve">
+    <value>Your own or a hosted Nextcloud server</value>
+    <comment>Picker row line.</comment>
+  </data>
+  <data name="CloudIcloudLine" xml:space="preserve">
+    <value>A folder you choose in iCloud Drive</value>
+    <comment>Picker row line, Apple and Windows.</comment>
+  </data>
+  <data name="CloudOther" xml:space="preserve">
+    <value>Other</value>
+    <comment>Picker group heading.</comment>
+  </data>
+  <data name="CloudWebdav" xml:space="preserve">
+    <value>WebDAV server</value>
+    <comment>Picker row.</comment>
+  </data>
+  <data name="CloudWebdavLine" xml:space="preserve">
+    <value>Any server that speaks WebDAV</value>
+    <comment>Picker row line.</comment>
+  </data>
+  <data name="CloudFolderLine" xml:space="preserve">
+    <value>For a folder another app keeps in step</value>
+    <comment>Picker row line.</comment>
+  </data>
+  <data name="CloudPickFoot" xml:space="preserve">
+    <value>Your devices keep a sealed copy of their changes in this folder. Only your devices can read it, and Kaeri runs no server of its own.</value>
+    <comment>Picker footer.</comment>
+  </data>
+  <data name="CloudSettingUp" xml:space="preserve">
+    <value>Setting up the folder</value>
+    <comment>Row line while the first write runs.</comment>
+  </data>
+  <data name="CloudNextcloudAddress" xml:space="preserve">
+    <value>Server address</value>
+    <comment>Field label.</comment>
+  </data>
+  <data name="CloudNextcloudAddressNote" xml:space="preserve">
+    <value>The address you open Nextcloud at in a browser.</value>
+    <comment>Field note.</comment>
+  </data>
+  <data name="CloudNextcloudWaitTitle" xml:space="preserve">
+    <value>Finish signing in on {host}</value>
+    <comment>Login flow wait.</comment>
+  </data>
+  <data name="CloudNextcloudWaitLine" xml:space="preserve">
+    <value>Your Nextcloud page is open in the browser. Allow access there, and this sheet carries on by itself.</value>
+    <comment>Login flow wait.</comment>
+  </data>
+  <data name="CloudWaiting" xml:space="preserve">
+    <value>Waiting for {service}</value>
+    <comment>Wait row.</comment>
+  </data>
+  <data name="CloudOpenAgain" xml:space="preserve">
+    <value>Open the page again</value>
+    <comment>Button.</comment>
+  </data>
+  <data name="CloudAppPassword" xml:space="preserve">
+    <value>Use an app password instead</value>
+    <comment>Text button.</comment>
+  </data>
+  <data name="CloudConnect" xml:space="preserve">
+    <value>Connect</value>
+    <comment>Button.</comment>
+  </data>
+  <data name="CloudErrOffline" xml:space="preserve">
+    <value>Couldn’t reach {service}. Check your connection.</value>
+    <comment>Error.</comment>
+  </data>
+  <data name="CloudErrNoServer" xml:space="preserve">
+    <value>Couldn’t find a Nextcloud server at {host}. Check the address.</value>
+    <comment>Inline error.</comment>
+  </data>
+  <data name="CloudErrAppPassword" xml:space="preserve">
+    <value>Nextcloud didn’t accept that app password. Make a new one in Nextcloud under Settings, Security.</value>
+    <comment>Inline error.</comment>
+  </data>
+  <data name="CloudErrWebdav" xml:space="preserve">
+    <value>The server refused that user name or password.</value>
+    <comment>Inline error.</comment>
+  </data>
+  <data name="CloudErrTimeout" xml:space="preserve">
+    <value>The sign-in page closed before access was allowed.</value>
+    <comment>Error, with Open the page again.</comment>
+  </data>
+  <data name="CloudErrOtherGroup" xml:space="preserve">
+    <value>This folder belongs to another set of devices. Enter its recovery key to join them, or choose another folder.</value>
+    <comment>Error.</comment>
+  </data>
+  <data name="CloudErrSignedOut" xml:space="preserve">
+    <value>{service} signed Kaeri out. Your changes wait on this {kind} until you sign in again.</value>
+    <comment>Status error, with Sign in again.</comment>
+  </data>
+  <data name="CloudErrFull" xml:space="preserve">
+    <value>{service} is full. Free some space there, then try again.</value>
+    <comment>Status error.</comment>
+  </data>
+  <data name="CloudErrFolderGone" xml:space="preserve">
+    <value>Kaeri can’t open the folder any more. Choose it again.</value>
+    <comment>Status error, with Choose folder.</comment>
+  </data>
+  <data name="CloudErrTitle" xml:space="preserve">
+    <value>Couldn’t sync with {service}</value>
+    <comment>Status error title.</comment>
+  </data>
+  <data name="CloudDropboxLine" xml:space="preserve">
+    <value>Kaeri’s own folder in your Dropbox, Apps/Kaeri</value>
+    <comment>Picker row line.</comment>
+  </data>
+  <data name="CloudOnedriveLine" xml:space="preserve">
+    <value>Kaeri’s own folder in your OneDrive, Apps/Kaeri</value>
+    <comment>Picker row line.</comment>
+  </data>
+  <data name="CloudSyncNow" xml:space="preserve">
+    <value>Sync now</value>
+    <comment>Cloud group button.</comment>
+  </data>
+  <data name="CloudSignOut" xml:space="preserve">
+    <value>Sign out</value>
+    <comment>Cloud group button; at once, no question, except on the TV.</comment>
+  </data>
+  <data name="CloudSignIn" xml:space="preserve">
+    <value>Sign in</value>
+    <comment>Cloud group button after signing out.</comment>
+  </data>
+  <data name="CloudSignedOutLine" xml:space="preserve">
+    <value>Signed out. Changes wait on this {kind} until you sign in again.</value>
+    <comment>Cloud row after Sign out; hollow haze dot.</comment>
+  </data>
+  <data name="CloudErrDenied" xml:space="preserve">
+    <value>{service} didn’t give Kaeri access. Choose it again to retry.</value>
+    <comment>Picker row line after `SignInDenied`.</comment>
+  </data>
+  <data name="TvCloudPickFoot" xml:space="preserve">
+    <value>Choose the one your other devices use. A new cloud folder is added on a phone or computer, where its recovery key can be saved.</value>
+    <comment>TV picker footer (decision 17).</comment>
+  </data>
+  <data name="TvCloudDropboxLine" xml:space="preserve">
+    <value>Signs in on your phone</value>
+    <comment>TV picker row line for Dropbox.</comment>
+  </data>
+  <data name="TvCloudNeedsPhoneTitle" xml:space="preserve">
+    <value>Dropbox signs in on your phone</value>
+    <comment>TV, Dropbox.</comment>
+  </data>
+  <data name="TvCloudNeedsPhoneHas" xml:space="preserve">
+    <value>{device} is signed in to Dropbox. This TV can use that sign-in over your paired link.</value>
+    <comment>TV, Dropbox, a paired phone has it.</comment>
+  </data>
+  <data name="TvUsePhoneSignin" xml:space="preserve">
+    <value>Use {device}’s sign-in</value>
+    <comment>TV amber button; also for Nextcloud and WebDAV.</comment>
+  </data>
+  <data name="TvCloudNeedsPhoneNone" xml:space="preserve">
+    <value>Dropbox has no sign-in a TV can do. On your phone, open Kaeri, then Settings, Devices, Cloud folder, and sign in to Dropbox there. Then choose Dropbox here again.</value>
+    <comment>TV, Dropbox, no phone has it.</comment>
+  </data>
+  <data name="TvCloudFinishing" xml:space="preserve">
+    <value>Signed in. Setting up the folder</value>
+    <comment>TV code screen after the poll succeeds.</comment>
+  </data>
+  <data name="TvCloudRevokedLine" xml:space="preserve">
+    <value>{service} signed Kaeri out. Select to sign in again.</value>
+    <comment>TV cloud row.</comment>
+  </data>
+  <data name="TvCloudSignedOutLine" xml:space="preserve">
+    <value>Signed out. Select to sign in.</value>
+    <comment>TV cloud row.</comment>
+  </data>
+  <data name="TvCloudSignOutTitle" xml:space="preserve">
+    <value>Sign out of {service}?</value>
+    <comment>TV ConfirmDialog.</comment>
+  </data>
+  <data name="TvCloudSignOutLine" xml:space="preserve">
+    <value>This TV stops syncing through {service}. Changes wait here until you sign in again.</value>
+    <comment>TV ConfirmDialog, with Cancel focused and Sign out.</comment>
+  </data>
+  <data name="CloudOffline" xml:space="preserve">
+    <value>Waiting for a connection. Changes are kept on this {kind}.</value>
+    <comment>Status line while offline.</comment>
+  </data>
+  <data name="TvGoogleTitle" xml:space="preserve">
+    <value>Sign in to Google Drive</value>
+    <comment>TV device flow.</comment>
+  </data>
+  <data name="TvQrOpenPage" xml:space="preserve">
+    <value>Or scan to open the page</value>
+    <comment>TV device flow.</comment>
+  </data>
+  <data name="TvNextcloudLine" xml:space="preserve">
+    <value>Scan this with your phone and allow access on your Nextcloud page. The TV carries on by itself.</value>
+    <comment>TV Nextcloud.</comment>
+  </data>
+  <data name="RkeyTitle" xml:space="preserve">
+    <value>Your recovery key</value>
+    <comment>Sheet title.</comment>
+  </data>
+  <data name="RkeyLine" xml:space="preserve">
+    <value>Keep this somewhere safe. It restores your history if you lose every device, and lets a new device join from your cloud folder.</value>
+    <comment>Sheet line.</comment>
+  </data>
+  <data name="RkeyCopy" xml:space="preserve">
+    <value>Copy</value>
+    <comment>Button.</comment>
+  </data>
+  <data name="RkeyQr" xml:space="preserve">
+    <value>Show as QR code</value>
+    <comment>Text button.</comment>
+  </data>
+  <data name="RkeyAgain" xml:space="preserve">
+    <value>You can see it again in Settings, Devices, after unlocking this {kind}.</value>
+    <comment>Sheet footnote.</comment>
+  </data>
+  <data name="RkeyRow" xml:space="preserve">
+    <value>Recovery key</value>
+    <comment>Devices row.</comment>
+  </data>
+  <data name="RkeyMade" xml:space="preserve">
+    <value>Made {date}</value>
+    <comment>Devices row value.</comment>
+  </data>
+  <data name="RkeyNew" xml:space="preserve">
+    <value>Make a new key</value>
+    <comment>Row.</comment>
+  </data>
+  <data name="RkeyNewFoot" xml:space="preserve">
+    <value>The old key stops working, and your devices switch to the new one the next time they sync.</value>
+    <comment>Footer.</comment>
+  </data>
+  <data name="RkeyEnterTitle" xml:space="preserve">
+    <value>Enter your recovery key</value>
+    <comment>Restore.</comment>
+  </data>
+  <data name="RkeyEnterLine" xml:space="preserve">
+    <value>{service} holds history from {count} devices. The key you saved when sync was turned on opens it.</value>
+    <comment>Restore.</comment>
+  </data>
+  <data name="RkeyEnterNote" xml:space="preserve">
+    <value>24 letters and digits, in groups of four. Spaces and case don’t matter.</value>
+    <comment>Field note.</comment>
+  </data>
+  <data name="RkeyWrong" xml:space="preserve">
+    <value>That key doesn’t open this folder. Check each group of four and try again.</value>
+    <comment>Inline error.</comment>
+  </data>
+  <data name="RkeyRestore" xml:space="preserve">
+    <value>Restore</value>
+    <comment>Button.</comment>
+  </data>
+  <data name="PairEnterLine" xml:space="preserve">
+    <value>On the other device, open Kaeri and choose Set up from another device, or Settings, Devices, Show a code. Then enter the code here.</value>
+    <comment>Add a device.</comment>
+  </data>
+  <data name="PairScan" xml:space="preserve">
+    <value>Scan the code</value>
+    <comment>Button, phones.</comment>
+  </data>
+  <data name="PairSameWifi" xml:space="preserve">
+    <value>Both devices need to be on the same Wi-Fi.</value>
+    <comment>Note.</comment>
+  </data>
+  <data name="PairButton" xml:space="preserve">
+    <value>Pair</value>
+    <comment>Button.</comment>
+  </data>
+  <data name="PairShowInstead" xml:space="preserve">
+    <value>Show a code here instead</value>
+    <comment>Text button.</comment>
+  </data>
+  <data name="PairShowTitle" xml:space="preserve">
+    <value>Enter this code on your other device</value>
+    <comment>Code screen.</comment>
+  </data>
+  <data name="PairShowScan" xml:space="preserve">
+    <value>Or scan it from Kaeri on your phone.</value>
+    <comment>Code screen.</comment>
+  </data>
+  <data name="PairGoodFor" xml:space="preserve">
+    <value>Good for 2 minutes · {left}</value>
+    <comment>Code screen.</comment>
+  </data>
+  <data name="PairTvLine" xml:space="preserve">
+    <value>On your phone, open Kaeri, then Settings, Devices, Add a device, and scan this code or enter it.</value>
+    <comment>TV code screen.</comment>
+  </data>
+  <data name="PairOk" xml:space="preserve">
+    <value>Paired with {device}</value>
+    <comment>Success.</comment>
+  </data>
+  <data name="PairOkLine" xml:space="preserve">
+    <value>Bringing over your history. You can keep using Kaeri meanwhile.</value>
+    <comment>Success.</comment>
+  </data>
+  <data name="PairCopySignins" xml:space="preserve">
+    <value>Copy sign-ins from {device}</value>
+    <comment>Success switch.</comment>
+  </data>
+  <data name="PairCopySigninsLine" xml:space="preserve">
+    <value>{trackers}. Each device gets its own copy over this link.</value>
+    <comment>Success switch line.</comment>
+  </data>
+  <data name="PairErrCode" xml:space="preserve">
+    <value>That code didn’t match. Check the code on {device} and try again.</value>
+    <comment>Error.</comment>
+  </data>
+  <data name="PairErrNotFound" xml:space="preserve">
+    <value>Couldn’t find the device showing this code. Both devices need to be on the same Wi-Fi.</value>
+    <comment>Error.</comment>
+  </data>
+  <data name="PairErrExpired" xml:space="preserve">
+    <value>This code ran out. Show a new one.</value>
+    <comment>Error on the showing side.</comment>
+  </data>
+  <data name="PairWhichProfile" xml:space="preserve">
+    <value>Which profile on {device} is yours?</value>
+    <comment>Profile question.</comment>
+  </data>
+  <data name="PairWhichProfileLine" xml:space="preserve">
+    <value>This {kind} syncs with that profile only. The others stay on {device}.</value>
+    <comment>Profile question.</comment>
+  </data>
+  <data name="PairAlsoSyncFoot" xml:space="preserve">
+    <value>{device} already knows this phone from Play on TV, so syncing with it needs no new code.</value>
+    <comment>Footer.</comment>
+  </data>
+  <data name="ContinueFromDevice" xml:space="preserve">
+    <value>Episode {n} · stopped at {time} on {device}</value>
+    <comment>Continue, for a day.</comment>
+  </data>
+  <data name="PlayerResumedFrom" xml:space="preserve">
+    <value>Resumed at {time} from {device}</value>
+    <comment>Player, 6 s, with Start over.</comment>
+  </data>
+  <data name="SyncSyncing" xml:space="preserve">
+    <value>Syncing</value>
+    <comment>Row line, Mac toolbar status.</comment>
+  </data>
+  <data name="SyncSyncingWith" xml:space="preserve">
+    <value>Syncing with {device}</value>
+    <comment>Mac jobs popover.</comment>
+  </data>
+  <data name="SyncNotes" xml:space="preserve">
+    <value>Sync notes</value>
+    <comment>Device page group.</comment>
+  </data>
+  <data name="SyncNoteKeptWatched" xml:space="preserve">
+    <value>Episode {n} of {title} stays watched. {other} marked it unwatched without knowing {device} had finished it.</value>
+    <comment>Sync note.</comment>
+  </data>
+  <data name="SyncNoteUndo" xml:space="preserve">
+    <value>Mark unwatched</value>
+    <comment>Sync note action.</comment>
+  </data>
+  <data name="SyncNotesFoot" xml:space="preserve">
+    <value>Notes stay for 7 days.</value>
+    <comment>Footer.</comment>
+  </data>
+  <data name="ProfilesTitle" xml:space="preserve">
+    <value>Profiles</value>
+    <comment>Settings row and page.</comment>
+  </data>
+  <data name="ProfilesOnlyYou" xml:space="preserve">
+    <value>Only you</value>
+    <comment>Profiles row value with one profile.</comment>
+  </data>
+  <data name="ProfilesOneFoot" xml:space="preserve">
+    <value>Profiles keep separate history, Continue and accounts for people who share this device. With one profile, Kaeri has no picker and no names.</value>
+    <comment>Profiles page with one.</comment>
+  </data>
+  <data name="ProfilesAdd" xml:space="preserve">
+    <value>Add a profile</value>
+    <comment>Row, sheet title, picker tile.</comment>
+  </data>
+  <data name="ProfilesAddLine" xml:space="preserve">
+    <value>Each profile keeps its own history, Continue and accounts. Sources and downloads stay shared on this device.</value>
+    <comment>Sheet line.</comment>
+  </data>
+  <data name="ProfilesNew" xml:space="preserve">
+    <value>New profile</value>
+    <comment>Field label.</comment>
+  </data>
+  <data name="ProfilesYours" xml:space="preserve">
+    <value>Your profile</value>
+    <comment>Field label.</comment>
+  </data>
+  <data name="ProfilesYoursNote" xml:space="preserve">
+    <value>Filled in from AniList. Until now this device had one profile with no name.</value>
+    <comment>Field note when signed in.</comment>
+  </data>
+  <data name="ProfilesKids" xml:space="preserve">
+    <value>Kids profile</value>
+    <comment>Switch.</comment>
+  </data>
+  <data name="ProfilesKidsLine" xml:space="preserve">
+    <value>Adult titles stay off, and sources, devices and torrent settings are hidden in it.</value>
+    <comment>Switch footer.</comment>
+  </data>
+  <data name="ProfilesKidsHidden" xml:space="preserve">
+    <value>Sources and Devices are hidden in a kids profile, and adult titles stay off.</value>
+    <comment>Settings foot in a kids profile.</comment>
+  </data>
+  <data name="ProfilesKidsTag" xml:space="preserve">
+    <value>Kids</value>
+    <comment>Line under a kids profile.</comment>
+  </data>
+  <data name="ProfilesAddButton" xml:space="preserve">
+    <value>Add profile</value>
+    <comment>Button.</comment>
+  </data>
+  <data name="ProfilesSharedFoot" xml:space="preserve">
+    <value>Sources, downloads and this device’s settings are shared by every profile.</value>
+    <comment>Profiles page footer.</comment>
+  </data>
+  <data name="ProfilesSyncsWith" xml:space="preserve">
+    <value>Syncs with</value>
+    <comment>Profile page row.</comment>
+  </data>
+  <data name="ProfilesDelete" xml:space="preserve">
+    <value>Delete profile</value>
+    <comment>Profile page, destructive.</comment>
+  </data>
+  <data name="ProfilesDeleteAlert" xml:space="preserve">
+    <value>Delete {name}’s profile?</value>
+    <comment>Alert title.</comment>
+  </data>
+  <data name="ProfilesDeleteAlertLine" xml:space="preserve">
+    <value>{name}’s history and sign-ins on this device are removed. Devices that sync with {name} keep theirs.</value>
+    <comment>Alert message.</comment>
+  </data>
+  <data name="ProfilesPicker" xml:space="preserve">
+    <value>Who’s watching?</value>
+    <comment>TV, and iPad when asked.</comment>
+  </data>
+  <data name="ProfilesAskAtLaunch" xml:space="preserve">
+    <value>Ask who’s watching at launch</value>
+    <comment>iPad switch.</comment>
+  </data>
+  <data name="ProfilesAskFoot" xml:space="preserve">
+    <value>Off by default. For an iPad the household shares. The account row switches profiles at any time.</value>
+    <comment>iPad footer.</comment>
+  </data>
+  <data name="ProfilesSwitch" xml:space="preserve">
+    <value>Switch profile</value>
+    <comment>TV Settings.</comment>
+  </data>
+  <data name="ProfilesManage" xml:space="preserve">
+    <value>Manage profiles</value>
+    <comment>Account sheet and menus.</comment>
+  </data>
+  <data name="FirstSetupOther" xml:space="preserve">
+    <value>Set up from another device</value>
+    <comment>Welcome, text button; TV says “Set up from your phone”.</comment>
+  </data>
+  <data name="FirstSetupLine" xml:space="preserve">
+    <value>On a device that already has Kaeri, open Settings, Devices, Add a device, and enter this code or scan it.</value>
+    <comment>Code screen from first launch.</comment>
+  </data>
+  <data name="FirstRestore" xml:space="preserve">
+    <value>Restore from a cloud folder instead</value>
+    <comment>Text button.</comment>
+  </data>
+  <data name="FirstOkLine" xml:space="preserve">
+    <value>Bringing over your history, settings and plugin stores. You can start using Kaeri now.</value>
+    <comment>Success from first launch.</comment>
+  </data>
+  <data name="FirstJoinStore" xml:space="preserve">
+    <value>Join the plugin store {store}</value>
+    <comment>Success switch.</comment>
+  </data>
+  <data name="FirstJoinStoreLine" xml:space="preserve">
+    <value>{device} makes this {kind} its own invite</value>
+    <comment>Success switch line.</comment>
+  </data>
+  <data name="CloudFolder" xml:space="preserve">
+    <value>A folder on this {kind}</value>
+    <comment>Picker row on a phone or computer.</comment>
+  </data>
+  <data name="CloudAppPasswordNote" xml:space="preserve">
+    <value>Make one in Nextcloud under Settings, Security. It is kept on this {kind}.</value>
+    <comment>Field note under the app password, on Android.</comment>
+  </data>
+  <data name="DevicesTvsForPlay_one" xml:space="preserve">
+    <value>One TV for Play on TV</value>
+    <comment>Devices row value while sync is off and TVs are paired for Play on TV. The row says "Sync off", then this.</comment>
+  </data>
+  <data name="DevicesTvsForPlay_other" xml:space="preserve">
+    <value>{count} TVs for Play on TV</value>
+    <comment>Devices row value while sync is off and TVs are paired for Play on TV. The row says "Sync off", then this.</comment>
+  </data>
+  <data name="DevicesPairedToday" xml:space="preserve">
+    <value>Paired today</value>
+    <comment>Line under a TV paired for Play on TV today.</comment>
+  </data>
+  <data name="TvDevicesAddLine" xml:space="preserve">
+    <value>Shows a code to enter on your phone</value>
+    <comment>Line under Add a device on the TV's Devices page.</comment>
+  </data>
+  <data name="TvProfilesOnlyYou" xml:space="preserve">
+    <value>Only you. Add a profile to keep separate history, Continue and accounts on this TV.</value>
+    <comment>TV Profiles page with one profile.</comment>
+  </data>
+  <data name="TvProfilesOpensPicker" xml:space="preserve">
+    <value>Opens Who’s watching?</value>
+    <comment>TV Settings, Profiles: the row that opens the picker.</comment>
+  </data>
+  <data name="TvProfilesOnThisTv" xml:space="preserve">
+    <value>Profiles on this TV</value>
+    <comment>TV Profiles page heading over the profiles.</comment>
+  </data>
+  <data name="RkeySaveFile" xml:space="preserve">
+    <value>Save as a file</value>
+    <comment>Android recovery key sheet, third button.</comment>
+  </data>
+  <data name="RkeyQrShort" xml:space="preserve">
+    <value>QR code</value>
+    <comment>Android recovery key sheet, button that shows the key as a code.</comment>
+  </data>
+  <data name="PairShowCode" xml:space="preserve">
+    <value>Show a code</value>
+    <comment>Button on the Devices page and the add a device sheet that shows a pairing code instead of entering one.</comment>
+  </data>
+  <data name="CloudSignInAgain" xml:space="preserve">
+    <value>Sign in again</value>
+    <comment>Cloud row button when the service signed Kaeri out.</comment>
+  </data>
+  <data name="CloudChooseFolder" xml:space="preserve">
+    <value>Choose folder</value>
+    <comment>Cloud row button when the folder can't be opened.</comment>
+  </data>
+  <data name="ProfilesAvatarDesc" xml:space="preserve">
+    <value>{name}, switch profile</value>
+    <comment>Spoken label of a profile's avatar on Home.</comment>
+  </data>
+  <data name="PairCodeField" xml:space="preserve">
+    <value>Pairing code</value>
+    <comment>Heading over the pairing code the other device shows, over the field.</comment>
+  </data>
+  <data name="DeviceKindPhone" xml:space="preserve">
+    <value>phone</value>
+  </data>
+  <data name="DeviceKindTablet" xml:space="preserve">
+    <value>tablet</value>
+  </data>
+  <data name="DeviceKindTv" xml:space="preserve">
+    <value>TV</value>
+  </data>
   <data name="TitleLoadFailed" xml:space="preserve">
     <value>Couldn't load this title</value>
     <comment>Title of the state when a title page could not load.</comment>

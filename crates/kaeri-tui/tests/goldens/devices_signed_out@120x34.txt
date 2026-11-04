@@ -1,0 +1,127 @@
+Kaeri                                                                                          plugins ●  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ▸  Home                   │  This device  ─────────────────────────────────────────────────────────────────────────
+  ▤  Calendar               │    Name                        Kim's laptop
+  ▦  Seasonal               │
+  /  Search                 │  Your devices  ────────────────────────────────────────────────────────────────────────
+  ▥  Library                │    Kim's iPhone                Synced 4 min ago
+  ↓  Downloads              │    Living room TV              Not seen for 9 days
+  ◇  Sources                │    Show a code
+  ◎  Accounts               │    Enter a code
+▌ ≡  Settings               │
+  ⇄  Together               │  Cloud folder  ────────────────────────────────────────────────────────────────────────
+                            │  ▌ Google Drive                Sign in again
+                            │    Google Drive signed Kaeri out. Your changes wait on this computer until you sign in
+                            │    again.
+                            │    Recovery key                Made 4 October
+                            │
+                            │    Turn off sync on this computer
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │  ───────────────────────────────────────────────────────────────────────────────────────
+                            │    Fills in while your devices are apart, and keeps a sealed backup. Only your devices
+                            │    can read it.
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+plugins · Subbed · 1080p                                                                     ↵ sign in   q back   ? keys
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c95-103 fg=state
+r00 c104-105 fg=text-dim
+r00 c106-106 fg=rule
+r00 c107-108 fg=text-dim
+r00 c109-119 fg=state
+r01 c00-119 fg=rule
+r02 c02-02 fg=text-dim
+r02 c05-08 fg=text-dim
+r02 c28-28 fg=rule
+r02 c31-41 fg=text
+r02 c44-116 fg=rule
+r03 c02-02 fg=text-dim
+r03 c05-12 fg=text-dim
+r03 c28-28 fg=rule
+r03 c33-36 fg=text-dim
+r03 c61-72 fg=text
+r04 c02-02 fg=text-dim
+r04 c05-12 fg=text-dim
+r04 c28-28 fg=rule
+r05 c02-02 fg=text-dim
+r05 c05-10 fg=text-dim
+r05 c28-28 fg=rule
+r05 c31-42 fg=text
+r05 c45-116 fg=rule
+r06 c02-02 fg=text-dim
+r06 c05-11 fg=text-dim
+r06 c28-28 fg=rule
+r06 c33-44 fg=text
+r06 c61-76 fg=text-dim
+r07 c02-02 fg=text-dim
+r07 c05-13 fg=text-dim
+r07 c28-28 fg=rule
+r07 c33-46 fg=text
+r07 c61-79 fg=text-dim
+r08 c02-02 fg=text-dim
+r08 c05-11 fg=text-dim
+r08 c28-28 fg=rule
+r08 c33-43 fg=text
+r09 c02-02 fg=text-dim
+r09 c05-12 fg=text-dim
+r09 c28-28 fg=rule
+r09 c33-44 fg=text
+r10 c00-00 fg=text-dim
+r10 c02-02 fg=text
+r10 c05-12 fg=text mod=BOLD
+r10 c28-28 fg=rule
+r11 c02-02 fg=text-dim
+r11 c05-12 fg=text-dim
+r11 c28-28 fg=rule
+r11 c31-42 fg=text
+r11 c45-116 fg=rule
+r12 c28-28 fg=rule
+r12 c31-31 fg=obi
+r12 c33-44 fg=text mod=BOLD
+r12 c61-73 fg=alert
+r13 c28-28 fg=rule
+r13 c33-115 fg=alert
+r14 c28-28 fg=rule
+r14 c33-38 fg=alert
+r15 c28-28 fg=rule
+r15 c33-44 fg=text
+r15 c61-74 fg=text-dim
+r16 c28-28 fg=rule
+r17 c28-28 fg=rule
+r17 c33-62 fg=text
+r18 c28-28 fg=rule
+r19 c28-28 fg=rule
+r20 c28-28 fg=rule
+r21 c28-28 fg=rule
+r22 c28-28 fg=rule
+r23 c28-28 fg=rule
+r24 c28-28 fg=rule
+r25 c28-28 fg=rule
+r26 c28-28 fg=rule
+r27 c28-28 fg=rule
+r28 c28-28 fg=rule
+r29 c28-28 fg=rule
+r29 c31-117 fg=rule
+r30 c28-28 fg=rule
+r30 c33-115 fg=text-dim
+r31 c28-28 fg=rule
+r31 c33-44 fg=text-dim
+r32 c00-119 fg=rule
+r33 c00-23 fg=text-dim
+r33 c93-93 fg=text
+r33 c94-104 fg=text-dim
+r33 c105-105 fg=text
+r33 c106-113 fg=text-dim
+r33 c114-114 fg=text
+r33 c115-119 fg=text-dim

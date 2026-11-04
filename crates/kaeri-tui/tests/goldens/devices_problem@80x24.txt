@@ -1,0 +1,97 @@
+Kaeri                                                  plugins ●  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────
+ ▸ │  This device  ──────────────────────────────────────────────────────────
+ ▤ │    Name                        Kim's laptop
+ ▦ │
+ / │  Your devices  ─────────────────────────────────────────────────────────
+ ▥ │    Kim's iPhone                Synced 4 min ago
+ ↓ │    Living room TV              Not seen for 9 days
+ ◇ │    Show a code
+ ◎ │    Enter a code
+▌≡ │
+ ⇄ │  Cloud folder  ─────────────────────────────────────────────────────────
+   │  ▌ WebDAV server               Couldn’t sync
+   │    dav.example
+   │    Couldn’t reach WebDAV server. Check your connection.
+   │    Recovery key                Made 4 October
+   │
+   │    Turn off sync on this computer
+   │
+   │  ────────────────────────────────────────────────────────────────────────
+   │    Fills in while your devices are apart, and keeps a sealed backup.
+   │    Only your devices can read it.
+────────────────────────────────────────────────────────────────────────────────
+plugins · Subbed · 1080p                            ↵ sync now   q back   ? keys
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c55-63 fg=state
+r00 c64-65 fg=text-dim
+r00 c66-66 fg=rule
+r00 c67-68 fg=text-dim
+r00 c69-79 fg=state
+r01 c00-79 fg=rule
+r02 c01-01 fg=text-dim
+r02 c03-03 fg=rule
+r02 c06-16 fg=text
+r02 c19-76 fg=rule
+r03 c01-01 fg=text-dim
+r03 c03-03 fg=rule
+r03 c08-11 fg=text-dim
+r03 c36-47 fg=text
+r04 c01-01 fg=text-dim
+r04 c03-03 fg=rule
+r05 c01-01 fg=text-dim
+r05 c03-03 fg=rule
+r05 c06-17 fg=text
+r05 c20-76 fg=rule
+r06 c01-01 fg=text-dim
+r06 c03-03 fg=rule
+r06 c08-19 fg=text
+r06 c36-51 fg=text-dim
+r07 c01-01 fg=text-dim
+r07 c03-03 fg=rule
+r07 c08-21 fg=text
+r07 c36-54 fg=text-dim
+r08 c01-01 fg=text-dim
+r08 c03-03 fg=rule
+r08 c08-18 fg=text
+r09 c01-01 fg=text-dim
+r09 c03-03 fg=rule
+r09 c08-19 fg=text
+r10 c00-00 fg=text-dim
+r10 c01-01 fg=text mod=BOLD
+r10 c03-03 fg=rule
+r11 c01-01 fg=text-dim
+r11 c03-03 fg=rule
+r11 c06-17 fg=text
+r11 c20-76 fg=rule
+r12 c03-03 fg=rule
+r12 c06-06 fg=obi
+r12 c08-20 fg=text mod=BOLD
+r12 c36-48 fg=alert
+r13 c03-03 fg=rule
+r13 c08-18 fg=text-dim
+r14 c03-03 fg=rule
+r14 c08-59 fg=alert
+r15 c03-03 fg=rule
+r15 c08-19 fg=text
+r15 c36-49 fg=text-dim
+r16 c03-03 fg=rule
+r17 c03-03 fg=rule
+r17 c08-37 fg=text
+r18 c03-03 fg=rule
+r19 c03-03 fg=rule
+r19 c06-77 fg=rule
+r20 c03-03 fg=rule
+r20 c08-72 fg=text-dim
+r21 c03-03 fg=rule
+r21 c08-37 fg=text-dim
+r22 c00-79 fg=rule
+r23 c00-23 fg=text-dim
+r23 c52-52 fg=text
+r23 c53-64 fg=text-dim
+r23 c65-65 fg=text
+r23 c66-73 fg=text-dim
+r23 c74-74 fg=text
+r23 c75-79 fg=text-dim

@@ -376,10 +376,31 @@ pub(crate) fn status_hints_paged(
         },
         // Settings has nothing to open and no episodes, so offering those keys would be a lie.
         // Left and Right are what actually do something here.
+        // `d` leads to Devices, first so a narrow line drops it before the arrows.
         V::Section(Section::Settings) => {
-            let hints: Vec<_> =
-                sideways().map(|keys| (keys, hint_change())).into_iter().collect();
+            let mut hints: Vec<_> = key(Action::Download)
+                .map(|k| (k, said(t::devices_title())))
+                .into_iter()
+                .collect();
+            hints.extend(sideways().map(|keys| (keys, hint_change())));
             return with_help(keymap, hints);
+        }
+        // Enter is named for what it does on the row under the cursor.
+        V::Devices => {
+            use crate::app::{DeviceLine as L, FolderState};
+            let enter = match app.device_line() {
+                Some(L::Device(_)) => said(t::sync_tui_hint_remove()),
+                Some(L::RecoveryKey) => said(t::sync_tui_hint_show()),
+                Some(L::TurnOff) => said(t::sync_tui_hint_turn_off()),
+                Some(L::SignOut) => hint_sign_out(),
+                Some(L::Folder) if app.folder_state() == FolderState::SignedOut => {
+                    hint_sign_in()
+                }
+                Some(L::Folder) => said(t::cloud_sync_now()),
+                Some(L::Profile(_)) => hint_use(),
+                _ => hint_open(),
+            };
+            vec![(Action::Open, enter), (Action::Back, Action::Back.hint())]
         }
         // An empty or failed list has no row to open.
         V::Section(_) if app.content.is_empty() => Vec::new(),
@@ -439,6 +460,23 @@ fn overlay_hints(
         O::CommandPalette => {
             vec![hint("↑↓", hint_move()), hint("↵", hint_run()), hint(ESC, hint_close())]
         }
+        O::SyncWait => vec![hint("↵", hint_open()), hint(ESC, hint_cancel())],
+        O::SyncRecoveryKey => vec![
+            hint("c", said(t::sync_tui_hint_copy())),
+            hint("v", said(t::rkey_qr_short())),
+            hint("↵", hint_close()),
+        ],
+        O::SyncPairShow if app.pair_code_expired() => {
+            vec![hint("↵", said(t::pair_show_code())), hint(ESC, hint_close())]
+        }
+        O::SyncPairShow => vec![hint(ESC, hint_close())],
+        O::SyncConfirm => {
+            let verb = match &app.devices.confirm {
+                Some(crate::app::DeviceConfirm::Remove { .. }) => t::sync_tui_hint_remove(),
+                _ => t::sync_tui_hint_turn_off(),
+            };
+            vec![hint("↵", said(verb)), hint(ESC, hint_cancel())]
+        }
         other => {
             let verb = match other {
                 O::ListStatus => hint_set(),
@@ -461,6 +499,15 @@ fn overlay_hints(
                 O::JoinStore => hint_check(),
                 O::JoinParty => hint_open(),
                 O::InviteName => hint_make_link(),
+                O::SyncAddress
+                    if app.devices.kind != Some(kaeri_model::group::SyncFolderKind::WebDav) =>
+                {
+                    said(t::cloud_connect())
+                }
+                O::SyncAddress | O::SyncUser | O::SyncPairCode | O::ProfileName => hint_next(),
+                O::SyncPassword => hint_sign_in(),
+                O::SyncRestore => said(t::rkey_restore()),
+                O::SyncPairAddress => said(t::pair_button()),
                 _ => hint_choose(),
             };
             vec![hint("↵", verb), hint(ESC, hint_cancel())]

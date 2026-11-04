@@ -6363,6 +6363,543 @@ public static partial class T
     /// <summary>Button that opens the system share sheet for the invite link.</summary>
     public static string StoresShare => Get("StoresShare");
 
+    /// <summary>Windows and Linux dialog line while the browser is open for a cloud sign-in.</summary>
+    public static string CloudBrowserLine(string service) => Fill(Get("CloudBrowserLine"), ("service", service));
+
+    /// <summary>Windows and Linux dialog title while the browser is open for a cloud sign-in.</summary>
+    public static string CloudBrowserTitle(string service) => Fill(Get("CloudBrowserTitle"), ("service", service));
+
+    /// <summary>Word for this device in sentences such as “Turn off sync on this computer”.</summary>
+    public static string DeviceKindComputer => Get("DeviceKindComputer");
+
+    /// <summary>Button on the Devices page that opens the box for a code another device shows.</summary>
+    public static string DevicesEnterCode => Get("DevicesEnterCode");
+
+    /// <summary>Button on the Devices page that shows the recovery key behind the computer’s own lock.</summary>
+    public static string DevicesShowKey => Get("DevicesShowKey");
+
+    /// <summary>Button in the alert that turns sync off on this computer.</summary>
+    public static string DevicesTurnOffAction => Get("DevicesTurnOffAction");
+
+    /// <summary>Settings row and page title, every platform.</summary>
+    public static string DevicesTitle => Get("DevicesTitle");
+
+    /// <summary>Devices row value while sync is off.</summary>
+    public static string DevicesRowOff => Get("DevicesRowOff");
+
+    /// <summary>Devices row value; “Synced 2 min ago”, “Synced just now”.</summary>
+    public static string DevicesRowSynced(string ago) => Fill(Get("DevicesRowSynced"), ("ago", ago));
+
+    /// <summary>Devices row value with the error glyph.</summary>
+    public static string DevicesRowError => Get("DevicesRowError");
+
+    /// <summary>Group heading over the name.</summary>
+    public static string DevicesThisDevice => Get("DevicesThisDevice");
+
+    /// <summary>Row for this device’s name.</summary>
+    public static string DevicesName => Get("DevicesName");
+
+    /// <summary>Group heading while off.</summary>
+    public static string SyncGroup => Get("SyncGroup");
+
+    /// <summary>Off state.</summary>
+    public static string SyncOffTitle => Get("SyncOffTitle");
+
+    /// <summary>Off state.</summary>
+    public static string SyncOffLine => Get("SyncOffLine");
+
+    /// <summary>Button; the Mac adds an ellipsis.</summary>
+    public static string SyncTurnOn => Get("SyncTurnOn");
+
+    /// <summary>Road sheet title.</summary>
+    public static string SyncRoadTitle => Get("SyncRoadTitle");
+
+    /// <summary>Road sheet row.</summary>
+    public static string SyncRoadNearby => Get("SyncRoadNearby");
+
+    /// <summary>Road sheet row line.</summary>
+    public static string SyncRoadNearbyLine => Get("SyncRoadNearbyLine");
+
+    /// <summary>Road sheet row.</summary>
+    public static string SyncRoadCloud => Get("SyncRoadCloud");
+
+    /// <summary>Road sheet row line. Names no service, since a build may hide some (decision 14).</summary>
+    public static string SyncRoadCloudLine => Get("SyncRoadCloudLine");
+
+    /// <summary>Road sheet footer.</summary>
+    public static string SyncRoadLater => Get("SyncRoadLater");
+
+    /// <summary>Group heading.</summary>
+    public static string DevicesYours => Get("DevicesYours");
+
+    /// <summary>Empty Your devices.</summary>
+    public static string DevicesOnlyThis => Get("DevicesOnlyThis");
+
+    /// <summary>Empty Your devices.</summary>
+    public static string DevicesOnlyThisLine => Get("DevicesOnlyThisLine");
+
+    /// <summary>Row and sheet title.</summary>
+    public static string DevicesAdd => Get("DevicesAdd");
+
+    /// <summary>Device row line past 30 days.</summary>
+    public static string DevicesNotSeen(long days) => Fill(Get("DevicesNotSeen"), ("days", days.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A device paired only for Play on TV.</summary>
+    public static string DevicesRemoteOnly => Get("DevicesRemoteOnly");
+
+    /// <summary>Button on a remote-only TV row.</summary>
+    public static string DevicesAlsoSync(string device) => Fill(Get("DevicesAlsoSync"), ("device", device));
+
+    /// <summary>Footer while sync is off.</summary>
+    public static string DevicesPairedTvsFoot => Get("DevicesPairedTvsFoot");
+
+    /// <summary>Switch on a device.</summary>
+    public static string DevicesSyncSwitch => Get("DevicesSyncSwitch");
+
+    /// <summary>Switch on a TV.</summary>
+    public static string DevicesRemoteSwitch => Get("DevicesRemoteSwitch");
+
+    /// <summary>Device page footer.</summary>
+    public static string DevicesSwitchesFoot(string device) => Fill(Get("DevicesSwitchesFoot"), ("device", device));
+
+    /// <summary>Device page, destructive.</summary>
+    public static string DevicesRemove => Get("DevicesRemove");
+
+    /// <summary>Alert title.</summary>
+    public static string DevicesRemoveAlert(string device) => Fill(Get("DevicesRemoveAlert"), ("device", device));
+
+    /// <summary>Alert message.</summary>
+    public static string DevicesRemoveAlertLine(string device) => Fill(Get("DevicesRemoveAlertLine"), ("device", device));
+
+    /// <summary>Last row; “this phone”, “this Mac”.</summary>
+    public static string SyncTurnOff(string kind) => Fill(Get("SyncTurnOff"), ("kind", kind));
+
+    /// <summary>Alert title.</summary>
+    public static string SyncTurnOffAlert(string device) => Fill(Get("SyncTurnOffAlert"), ("device", device));
+
+    /// <summary>Alert message.</summary>
+    public static string SyncTurnOffAlertLine(string kind) => Fill(Get("SyncTurnOffAlertLine"), ("kind", kind));
+
+    /// <summary>Group heading.</summary>
+    public static string CloudGroup => Get("CloudGroup");
+
+    /// <summary>Group footer.</summary>
+    public static string CloudFoot => Get("CloudFoot");
+
+    /// <summary>Row when only the nearby road is set.</summary>
+    public static string CloudAdd => Get("CloudAdd");
+
+    /// <summary>Picker title.</summary>
+    public static string CloudPickTitle => Get("CloudPickTitle");
+
+    /// <summary>Picker row line.</summary>
+    public static string CloudGoogleLine => Get("CloudGoogleLine");
+
+    /// <summary>Picker row line.</summary>
+    public static string CloudNextcloudLine => Get("CloudNextcloudLine");
+
+    /// <summary>Picker row line, Apple and Windows.</summary>
+    public static string CloudIcloudLine => Get("CloudIcloudLine");
+
+    /// <summary>Picker group heading.</summary>
+    public static string CloudOther => Get("CloudOther");
+
+    /// <summary>Picker row.</summary>
+    public static string CloudWebdav => Get("CloudWebdav");
+
+    /// <summary>Picker row line.</summary>
+    public static string CloudWebdavLine => Get("CloudWebdavLine");
+
+    /// <summary>Picker row line.</summary>
+    public static string CloudFolderLine => Get("CloudFolderLine");
+
+    /// <summary>Picker footer.</summary>
+    public static string CloudPickFoot => Get("CloudPickFoot");
+
+    /// <summary>Row line while the first write runs.</summary>
+    public static string CloudSettingUp => Get("CloudSettingUp");
+
+    /// <summary>Field label.</summary>
+    public static string CloudNextcloudAddress => Get("CloudNextcloudAddress");
+
+    /// <summary>Field note.</summary>
+    public static string CloudNextcloudAddressNote => Get("CloudNextcloudAddressNote");
+
+    /// <summary>Login flow wait.</summary>
+    public static string CloudNextcloudWaitTitle(string host) => Fill(Get("CloudNextcloudWaitTitle"), ("host", host));
+
+    /// <summary>Login flow wait.</summary>
+    public static string CloudNextcloudWaitLine => Get("CloudNextcloudWaitLine");
+
+    /// <summary>Wait row.</summary>
+    public static string CloudWaiting(string service) => Fill(Get("CloudWaiting"), ("service", service));
+
+    /// <summary>Button.</summary>
+    public static string CloudOpenAgain => Get("CloudOpenAgain");
+
+    /// <summary>Text button.</summary>
+    public static string CloudAppPassword => Get("CloudAppPassword");
+
+    /// <summary>Button.</summary>
+    public static string CloudConnect => Get("CloudConnect");
+
+    /// <summary>Error.</summary>
+    public static string CloudErrOffline(string service) => Fill(Get("CloudErrOffline"), ("service", service));
+
+    /// <summary>Inline error.</summary>
+    public static string CloudErrNoServer(string host) => Fill(Get("CloudErrNoServer"), ("host", host));
+
+    /// <summary>Inline error.</summary>
+    public static string CloudErrAppPassword => Get("CloudErrAppPassword");
+
+    /// <summary>Inline error.</summary>
+    public static string CloudErrWebdav => Get("CloudErrWebdav");
+
+    /// <summary>Error, with Open the page again.</summary>
+    public static string CloudErrTimeout => Get("CloudErrTimeout");
+
+    /// <summary>Error.</summary>
+    public static string CloudErrOtherGroup => Get("CloudErrOtherGroup");
+
+    /// <summary>Status error, with Sign in again.</summary>
+    public static string CloudErrSignedOut(string service, string kind) => Fill(Get("CloudErrSignedOut"), ("service", service), ("kind", kind));
+
+    /// <summary>Status error.</summary>
+    public static string CloudErrFull(string service) => Fill(Get("CloudErrFull"), ("service", service));
+
+    /// <summary>Status error, with Choose folder.</summary>
+    public static string CloudErrFolderGone => Get("CloudErrFolderGone");
+
+    /// <summary>Status error title.</summary>
+    public static string CloudErrTitle(string service) => Fill(Get("CloudErrTitle"), ("service", service));
+
+    /// <summary>Picker row line.</summary>
+    public static string CloudDropboxLine => Get("CloudDropboxLine");
+
+    /// <summary>Picker row line.</summary>
+    public static string CloudOnedriveLine => Get("CloudOnedriveLine");
+
+    /// <summary>Cloud group button.</summary>
+    public static string CloudSyncNow => Get("CloudSyncNow");
+
+    /// <summary>Cloud group button; at once, no question, except on the TV.</summary>
+    public static string CloudSignOut => Get("CloudSignOut");
+
+    /// <summary>Cloud group button after signing out.</summary>
+    public static string CloudSignIn => Get("CloudSignIn");
+
+    /// <summary>Cloud row after Sign out; hollow haze dot.</summary>
+    public static string CloudSignedOutLine(string kind) => Fill(Get("CloudSignedOutLine"), ("kind", kind));
+
+    /// <summary>Picker row line after `SignInDenied`.</summary>
+    public static string CloudErrDenied(string service) => Fill(Get("CloudErrDenied"), ("service", service));
+
+    /// <summary>TV picker footer (decision 17).</summary>
+    public static string TvCloudPickFoot => Get("TvCloudPickFoot");
+
+    /// <summary>TV picker row line for Dropbox.</summary>
+    public static string TvCloudDropboxLine => Get("TvCloudDropboxLine");
+
+    /// <summary>TV, Dropbox.</summary>
+    public static string TvCloudNeedsPhoneTitle => Get("TvCloudNeedsPhoneTitle");
+
+    /// <summary>TV, Dropbox, a paired phone has it.</summary>
+    public static string TvCloudNeedsPhoneHas(string device) => Fill(Get("TvCloudNeedsPhoneHas"), ("device", device));
+
+    /// <summary>TV amber button; also for Nextcloud and WebDAV.</summary>
+    public static string TvUsePhoneSignin(string device) => Fill(Get("TvUsePhoneSignin"), ("device", device));
+
+    /// <summary>TV, Dropbox, no phone has it.</summary>
+    public static string TvCloudNeedsPhoneNone => Get("TvCloudNeedsPhoneNone");
+
+    /// <summary>TV code screen after the poll succeeds.</summary>
+    public static string TvCloudFinishing => Get("TvCloudFinishing");
+
+    /// <summary>TV cloud row.</summary>
+    public static string TvCloudRevokedLine(string service) => Fill(Get("TvCloudRevokedLine"), ("service", service));
+
+    /// <summary>TV cloud row.</summary>
+    public static string TvCloudSignedOutLine => Get("TvCloudSignedOutLine");
+
+    /// <summary>TV ConfirmDialog.</summary>
+    public static string TvCloudSignOutTitle(string service) => Fill(Get("TvCloudSignOutTitle"), ("service", service));
+
+    /// <summary>TV ConfirmDialog, with Cancel focused and Sign out.</summary>
+    public static string TvCloudSignOutLine(string service) => Fill(Get("TvCloudSignOutLine"), ("service", service));
+
+    /// <summary>Status line while offline.</summary>
+    public static string CloudOffline(string kind) => Fill(Get("CloudOffline"), ("kind", kind));
+
+    /// <summary>TV device flow.</summary>
+    public static string TvGoogleTitle => Get("TvGoogleTitle");
+
+    /// <summary>TV device flow.</summary>
+    public static string TvQrOpenPage => Get("TvQrOpenPage");
+
+    /// <summary>TV Nextcloud.</summary>
+    public static string TvNextcloudLine => Get("TvNextcloudLine");
+
+    /// <summary>Sheet title.</summary>
+    public static string RkeyTitle => Get("RkeyTitle");
+
+    /// <summary>Sheet line.</summary>
+    public static string RkeyLine => Get("RkeyLine");
+
+    /// <summary>Button.</summary>
+    public static string RkeyCopy => Get("RkeyCopy");
+
+    /// <summary>Text button.</summary>
+    public static string RkeyQr => Get("RkeyQr");
+
+    /// <summary>Sheet footnote.</summary>
+    public static string RkeyAgain(string kind) => Fill(Get("RkeyAgain"), ("kind", kind));
+
+    /// <summary>Devices row.</summary>
+    public static string RkeyRow => Get("RkeyRow");
+
+    /// <summary>Devices row value.</summary>
+    public static string RkeyMade(string date) => Fill(Get("RkeyMade"), ("date", date));
+
+    /// <summary>Row.</summary>
+    public static string RkeyNew => Get("RkeyNew");
+
+    /// <summary>Footer.</summary>
+    public static string RkeyNewFoot => Get("RkeyNewFoot");
+
+    /// <summary>Restore.</summary>
+    public static string RkeyEnterTitle => Get("RkeyEnterTitle");
+
+    /// <summary>Restore.</summary>
+    public static string RkeyEnterLine(string service, long count) => Fill(Get("RkeyEnterLine"), ("service", service), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Field note.</summary>
+    public static string RkeyEnterNote => Get("RkeyEnterNote");
+
+    /// <summary>Inline error.</summary>
+    public static string RkeyWrong => Get("RkeyWrong");
+
+    /// <summary>Button.</summary>
+    public static string RkeyRestore => Get("RkeyRestore");
+
+    /// <summary>Add a device.</summary>
+    public static string PairEnterLine => Get("PairEnterLine");
+
+    /// <summary>Button, phones.</summary>
+    public static string PairScan => Get("PairScan");
+
+    /// <summary>Note.</summary>
+    public static string PairSameWifi => Get("PairSameWifi");
+
+    /// <summary>Button.</summary>
+    public static string PairButton => Get("PairButton");
+
+    /// <summary>Text button.</summary>
+    public static string PairShowInstead => Get("PairShowInstead");
+
+    /// <summary>Code screen.</summary>
+    public static string PairShowTitle => Get("PairShowTitle");
+
+    /// <summary>Code screen.</summary>
+    public static string PairShowScan => Get("PairShowScan");
+
+    /// <summary>Code screen.</summary>
+    public static string PairGoodFor(string left) => Fill(Get("PairGoodFor"), ("left", left));
+
+    /// <summary>TV code screen.</summary>
+    public static string PairTvLine => Get("PairTvLine");
+
+    /// <summary>Success.</summary>
+    public static string PairOk(string device) => Fill(Get("PairOk"), ("device", device));
+
+    /// <summary>Success.</summary>
+    public static string PairOkLine => Get("PairOkLine");
+
+    /// <summary>Success switch.</summary>
+    public static string PairCopySignins(string device) => Fill(Get("PairCopySignins"), ("device", device));
+
+    /// <summary>Success switch line.</summary>
+    public static string PairCopySigninsLine(string trackers) => Fill(Get("PairCopySigninsLine"), ("trackers", trackers));
+
+    /// <summary>Error.</summary>
+    public static string PairErrCode(string device) => Fill(Get("PairErrCode"), ("device", device));
+
+    /// <summary>Error.</summary>
+    public static string PairErrNotFound => Get("PairErrNotFound");
+
+    /// <summary>Error on the showing side.</summary>
+    public static string PairErrExpired => Get("PairErrExpired");
+
+    /// <summary>Profile question.</summary>
+    public static string PairWhichProfile(string device) => Fill(Get("PairWhichProfile"), ("device", device));
+
+    /// <summary>Profile question.</summary>
+    public static string PairWhichProfileLine(string kind, string device) => Fill(Get("PairWhichProfileLine"), ("kind", kind), ("device", device));
+
+    /// <summary>Footer.</summary>
+    public static string PairAlsoSyncFoot(string device) => Fill(Get("PairAlsoSyncFoot"), ("device", device));
+
+    /// <summary>Continue, for a day.</summary>
+    public static string ContinueFromDevice(long n, string time, string device) => Fill(Get("ContinueFromDevice"), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("time", time), ("device", device));
+
+    /// <summary>Player, 6 s, with Start over.</summary>
+    public static string PlayerResumedFrom(string time, string device) => Fill(Get("PlayerResumedFrom"), ("time", time), ("device", device));
+
+    /// <summary>Row line, Mac toolbar status.</summary>
+    public static string SyncSyncing => Get("SyncSyncing");
+
+    /// <summary>Mac jobs popover.</summary>
+    public static string SyncSyncingWith(string device) => Fill(Get("SyncSyncingWith"), ("device", device));
+
+    /// <summary>Device page group.</summary>
+    public static string SyncNotes => Get("SyncNotes");
+
+    /// <summary>Sync note.</summary>
+    public static string SyncNoteKeptWatched(long n, string title, string other, string device) => Fill(Get("SyncNoteKeptWatched"), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("title", title), ("other", other), ("device", device));
+
+    /// <summary>Sync note action.</summary>
+    public static string SyncNoteUndo => Get("SyncNoteUndo");
+
+    /// <summary>Footer.</summary>
+    public static string SyncNotesFoot => Get("SyncNotesFoot");
+
+    /// <summary>Settings row and page.</summary>
+    public static string ProfilesTitle => Get("ProfilesTitle");
+
+    /// <summary>Profiles row value with one profile.</summary>
+    public static string ProfilesOnlyYou => Get("ProfilesOnlyYou");
+
+    /// <summary>Profiles page with one.</summary>
+    public static string ProfilesOneFoot => Get("ProfilesOneFoot");
+
+    /// <summary>Row, sheet title, picker tile.</summary>
+    public static string ProfilesAdd => Get("ProfilesAdd");
+
+    /// <summary>Sheet line.</summary>
+    public static string ProfilesAddLine => Get("ProfilesAddLine");
+
+    /// <summary>Field label.</summary>
+    public static string ProfilesNew => Get("ProfilesNew");
+
+    /// <summary>Field label.</summary>
+    public static string ProfilesYours => Get("ProfilesYours");
+
+    /// <summary>Field note when signed in.</summary>
+    public static string ProfilesYoursNote => Get("ProfilesYoursNote");
+
+    /// <summary>Switch.</summary>
+    public static string ProfilesKids => Get("ProfilesKids");
+
+    /// <summary>Switch footer.</summary>
+    public static string ProfilesKidsLine => Get("ProfilesKidsLine");
+
+    /// <summary>Settings foot in a kids profile.</summary>
+    public static string ProfilesKidsHidden => Get("ProfilesKidsHidden");
+
+    /// <summary>Line under a kids profile.</summary>
+    public static string ProfilesKidsTag => Get("ProfilesKidsTag");
+
+    /// <summary>Button.</summary>
+    public static string ProfilesAddButton => Get("ProfilesAddButton");
+
+    /// <summary>Profiles page footer.</summary>
+    public static string ProfilesSharedFoot => Get("ProfilesSharedFoot");
+
+    /// <summary>Profile page row.</summary>
+    public static string ProfilesSyncsWith => Get("ProfilesSyncsWith");
+
+    /// <summary>Profile page, destructive.</summary>
+    public static string ProfilesDelete => Get("ProfilesDelete");
+
+    /// <summary>Alert title.</summary>
+    public static string ProfilesDeleteAlert(string name) => Fill(Get("ProfilesDeleteAlert"), ("name", name));
+
+    /// <summary>Alert message.</summary>
+    public static string ProfilesDeleteAlertLine(string name) => Fill(Get("ProfilesDeleteAlertLine"), ("name", name));
+
+    /// <summary>TV, and iPad when asked.</summary>
+    public static string ProfilesPicker => Get("ProfilesPicker");
+
+    /// <summary>iPad switch.</summary>
+    public static string ProfilesAskAtLaunch => Get("ProfilesAskAtLaunch");
+
+    /// <summary>iPad footer.</summary>
+    public static string ProfilesAskFoot => Get("ProfilesAskFoot");
+
+    /// <summary>TV Settings.</summary>
+    public static string ProfilesSwitch => Get("ProfilesSwitch");
+
+    /// <summary>Account sheet and menus.</summary>
+    public static string ProfilesManage => Get("ProfilesManage");
+
+    /// <summary>Welcome, text button; TV says “Set up from your phone”.</summary>
+    public static string FirstSetupOther => Get("FirstSetupOther");
+
+    /// <summary>Code screen from first launch.</summary>
+    public static string FirstSetupLine => Get("FirstSetupLine");
+
+    /// <summary>Text button.</summary>
+    public static string FirstRestore => Get("FirstRestore");
+
+    /// <summary>Success from first launch.</summary>
+    public static string FirstOkLine => Get("FirstOkLine");
+
+    /// <summary>Success switch.</summary>
+    public static string FirstJoinStore(string store) => Fill(Get("FirstJoinStore"), ("store", store));
+
+    /// <summary>Success switch line.</summary>
+    public static string FirstJoinStoreLine(string device, string kind) => Fill(Get("FirstJoinStoreLine"), ("device", device), ("kind", kind));
+
+    /// <summary>Picker row on a phone or computer.</summary>
+    public static string CloudFolder(string kind) => Fill(Get("CloudFolder"), ("kind", kind));
+
+    /// <summary>Field note under the app password, on Android.</summary>
+    public static string CloudAppPasswordNote(string kind) => Fill(Get("CloudAppPasswordNote"), ("kind", kind));
+
+    /// <summary>Devices row value while sync is off and TVs are paired for Play on TV. The row says "Sync off", then this.</summary>
+    public static string DevicesTvsForPlay(long count) => Fill(GetPlural("DevicesTvsForPlay", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Line under a TV paired for Play on TV today.</summary>
+    public static string DevicesPairedToday => Get("DevicesPairedToday");
+
+    /// <summary>Line under Add a device on the TV's Devices page.</summary>
+    public static string TvDevicesAddLine => Get("TvDevicesAddLine");
+
+    /// <summary>TV Profiles page with one profile.</summary>
+    public static string TvProfilesOnlyYou => Get("TvProfilesOnlyYou");
+
+    /// <summary>TV Settings, Profiles: the row that opens the picker.</summary>
+    public static string TvProfilesOpensPicker => Get("TvProfilesOpensPicker");
+
+    /// <summary>TV Profiles page heading over the profiles.</summary>
+    public static string TvProfilesOnThisTv => Get("TvProfilesOnThisTv");
+
+    /// <summary>Android recovery key sheet, third button.</summary>
+    public static string RkeySaveFile => Get("RkeySaveFile");
+
+    /// <summary>Android recovery key sheet, button that shows the key as a code.</summary>
+    public static string RkeyQrShort => Get("RkeyQrShort");
+
+    /// <summary>Button on the Devices page and the add a device sheet that shows a pairing code instead of entering one.</summary>
+    public static string PairShowCode => Get("PairShowCode");
+
+    /// <summary>Cloud row button when the service signed Kaeri out.</summary>
+    public static string CloudSignInAgain => Get("CloudSignInAgain");
+
+    /// <summary>Cloud row button when the folder can't be opened.</summary>
+    public static string CloudChooseFolder => Get("CloudChooseFolder");
+
+    /// <summary>Spoken label of a profile's avatar on Home.</summary>
+    public static string ProfilesAvatarDesc(string name) => Fill(Get("ProfilesAvatarDesc"), ("name", name));
+
+    /// <summary>Heading over the pairing code the other device shows, over the field.</summary>
+    public static string PairCodeField => Get("PairCodeField");
+
+    public static string DeviceKindPhone => Get("DeviceKindPhone");
+
+    public static string DeviceKindTablet => Get("DeviceKindTablet");
+
+    public static string DeviceKindTv => Get("DeviceKindTv");
+
     /// <summary>Title of the state when a title page could not load.</summary>
     public static string TitleLoadFailed => Get("TitleLoadFailed");
 
@@ -9594,6 +10131,187 @@ public static partial class T
         ["StoresQrWarning"] = "Anyone who scans this code can use the invite. It works once and lasts seven days.",
         ["StoresQrWarningDevice"] = "Scan this with the device you want to link. It works once and lasts seven days.",
         ["StoresShare"] = "Share…",
+        ["CloudBrowserLine"] = "Your browser opened {service}’s page. Allow access there, and Kaeri carries on by itself.",
+        ["CloudBrowserTitle"] = "Sign in to {service} in your browser",
+        ["DeviceKindComputer"] = "computer",
+        ["DevicesEnterCode"] = "Enter a code",
+        ["DevicesShowKey"] = "Show",
+        ["DevicesTurnOffAction"] = "Turn off",
+        ["DevicesTitle"] = "Devices",
+        ["DevicesRowOff"] = "Sync off",
+        ["DevicesRowSynced"] = "Synced {ago}",
+        ["DevicesRowError"] = "Couldn’t sync",
+        ["DevicesThisDevice"] = "This device",
+        ["DevicesName"] = "Name",
+        ["SyncGroup"] = "Sync",
+        ["SyncOffTitle"] = "Sync is off",
+        ["SyncOffLine"] = "Turn it on to keep where you stopped, your history and your settings the same on your devices.",
+        ["SyncTurnOn"] = "Turn on sync",
+        ["SyncRoadTitle"] = "How should your devices share?",
+        ["SyncRoadNearby"] = "With a device nearby",
+        ["SyncRoadNearbyLine"] = "Pair with another device on the same Wi-Fi. Nothing is stored anywhere else.",
+        ["SyncRoadCloud"] = "Through a cloud folder",
+        ["SyncRoadCloudLine"] = "A cloud drive you already use, or your own server. Works while your devices are apart, and keeps a backup.",
+        ["SyncRoadLater"] = "You can add the other way later. Most people use both.",
+        ["DevicesYours"] = "Your devices",
+        ["DevicesOnlyThis"] = "Only this device",
+        ["DevicesOnlyThisLine"] = "Pair another device to share where you stopped, your history and your settings.",
+        ["DevicesAdd"] = "Add a device",
+        ["DevicesNotSeen"] = "Not seen for {days} days",
+        ["DevicesRemoteOnly"] = "Remote only",
+        ["DevicesAlsoSync"] = "Also sync with {device}",
+        ["DevicesPairedTvsFoot"] = "Paired for Play on TV. A TV paired as a remote never gets your history.",
+        ["DevicesSyncSwitch"] = "Sync",
+        ["DevicesRemoteSwitch"] = "Remote",
+        ["DevicesSwitchesFoot"] = "Sync shares where you stopped, your history and your settings. Remote lets this phone drive {device}.",
+        ["DevicesRemove"] = "Remove this device",
+        ["DevicesRemoveAlert"] = "Remove {device}?",
+        ["DevicesRemoveAlertLine"] = "{device} keeps what it has, but gets nothing new from your other devices.",
+        ["SyncTurnOff"] = "Turn off sync on this {kind}",
+        ["SyncTurnOffAlert"] = "Turn off sync on {device}?",
+        ["SyncTurnOffAlertLine"] = "This {kind} stops sharing with your other devices. Everything it has stays here.",
+        ["CloudGroup"] = "Cloud folder",
+        ["CloudFoot"] = "Fills in while your devices are apart, and keeps a sealed backup. Only your devices can read it.",
+        ["CloudAdd"] = "Add a cloud folder",
+        ["CloudPickTitle"] = "Choose a cloud folder",
+        ["CloudGoogleLine"] = "A hidden Kaeri folder in your Drive",
+        ["CloudNextcloudLine"] = "Your own or a hosted Nextcloud server",
+        ["CloudIcloudLine"] = "A folder you choose in iCloud Drive",
+        ["CloudOther"] = "Other",
+        ["CloudWebdav"] = "WebDAV server",
+        ["CloudWebdavLine"] = "Any server that speaks WebDAV",
+        ["CloudFolderLine"] = "For a folder another app keeps in step",
+        ["CloudPickFoot"] = "Your devices keep a sealed copy of their changes in this folder. Only your devices can read it, and Kaeri runs no server of its own.",
+        ["CloudSettingUp"] = "Setting up the folder",
+        ["CloudNextcloudAddress"] = "Server address",
+        ["CloudNextcloudAddressNote"] = "The address you open Nextcloud at in a browser.",
+        ["CloudNextcloudWaitTitle"] = "Finish signing in on {host}",
+        ["CloudNextcloudWaitLine"] = "Your Nextcloud page is open in the browser. Allow access there, and this sheet carries on by itself.",
+        ["CloudWaiting"] = "Waiting for {service}",
+        ["CloudOpenAgain"] = "Open the page again",
+        ["CloudAppPassword"] = "Use an app password instead",
+        ["CloudConnect"] = "Connect",
+        ["CloudErrOffline"] = "Couldn’t reach {service}. Check your connection.",
+        ["CloudErrNoServer"] = "Couldn’t find a Nextcloud server at {host}. Check the address.",
+        ["CloudErrAppPassword"] = "Nextcloud didn’t accept that app password. Make a new one in Nextcloud under Settings, Security.",
+        ["CloudErrWebdav"] = "The server refused that user name or password.",
+        ["CloudErrTimeout"] = "The sign-in page closed before access was allowed.",
+        ["CloudErrOtherGroup"] = "This folder belongs to another set of devices. Enter its recovery key to join them, or choose another folder.",
+        ["CloudErrSignedOut"] = "{service} signed Kaeri out. Your changes wait on this {kind} until you sign in again.",
+        ["CloudErrFull"] = "{service} is full. Free some space there, then try again.",
+        ["CloudErrFolderGone"] = "Kaeri can’t open the folder any more. Choose it again.",
+        ["CloudErrTitle"] = "Couldn’t sync with {service}",
+        ["CloudDropboxLine"] = "Kaeri’s own folder in your Dropbox, Apps/Kaeri",
+        ["CloudOnedriveLine"] = "Kaeri’s own folder in your OneDrive, Apps/Kaeri",
+        ["CloudSyncNow"] = "Sync now",
+        ["CloudSignOut"] = "Sign out",
+        ["CloudSignIn"] = "Sign in",
+        ["CloudSignedOutLine"] = "Signed out. Changes wait on this {kind} until you sign in again.",
+        ["CloudErrDenied"] = "{service} didn’t give Kaeri access. Choose it again to retry.",
+        ["TvCloudPickFoot"] = "Choose the one your other devices use. A new cloud folder is added on a phone or computer, where its recovery key can be saved.",
+        ["TvCloudDropboxLine"] = "Signs in on your phone",
+        ["TvCloudNeedsPhoneTitle"] = "Dropbox signs in on your phone",
+        ["TvCloudNeedsPhoneHas"] = "{device} is signed in to Dropbox. This TV can use that sign-in over your paired link.",
+        ["TvUsePhoneSignin"] = "Use {device}’s sign-in",
+        ["TvCloudNeedsPhoneNone"] = "Dropbox has no sign-in a TV can do. On your phone, open Kaeri, then Settings, Devices, Cloud folder, and sign in to Dropbox there. Then choose Dropbox here again.",
+        ["TvCloudFinishing"] = "Signed in. Setting up the folder",
+        ["TvCloudRevokedLine"] = "{service} signed Kaeri out. Select to sign in again.",
+        ["TvCloudSignedOutLine"] = "Signed out. Select to sign in.",
+        ["TvCloudSignOutTitle"] = "Sign out of {service}?",
+        ["TvCloudSignOutLine"] = "This TV stops syncing through {service}. Changes wait here until you sign in again.",
+        ["CloudOffline"] = "Waiting for a connection. Changes are kept on this {kind}.",
+        ["TvGoogleTitle"] = "Sign in to Google Drive",
+        ["TvQrOpenPage"] = "Or scan to open the page",
+        ["TvNextcloudLine"] = "Scan this with your phone and allow access on your Nextcloud page. The TV carries on by itself.",
+        ["RkeyTitle"] = "Your recovery key",
+        ["RkeyLine"] = "Keep this somewhere safe. It restores your history if you lose every device, and lets a new device join from your cloud folder.",
+        ["RkeyCopy"] = "Copy",
+        ["RkeyQr"] = "Show as QR code",
+        ["RkeyAgain"] = "You can see it again in Settings, Devices, after unlocking this {kind}.",
+        ["RkeyRow"] = "Recovery key",
+        ["RkeyMade"] = "Made {date}",
+        ["RkeyNew"] = "Make a new key",
+        ["RkeyNewFoot"] = "The old key stops working, and your devices switch to the new one the next time they sync.",
+        ["RkeyEnterTitle"] = "Enter your recovery key",
+        ["RkeyEnterLine"] = "{service} holds history from {count} devices. The key you saved when sync was turned on opens it.",
+        ["RkeyEnterNote"] = "24 letters and digits, in groups of four. Spaces and case don’t matter.",
+        ["RkeyWrong"] = "That key doesn’t open this folder. Check each group of four and try again.",
+        ["RkeyRestore"] = "Restore",
+        ["PairEnterLine"] = "On the other device, open Kaeri and choose Set up from another device, or Settings, Devices, Show a code. Then enter the code here.",
+        ["PairScan"] = "Scan the code",
+        ["PairSameWifi"] = "Both devices need to be on the same Wi-Fi.",
+        ["PairButton"] = "Pair",
+        ["PairShowInstead"] = "Show a code here instead",
+        ["PairShowTitle"] = "Enter this code on your other device",
+        ["PairShowScan"] = "Or scan it from Kaeri on your phone.",
+        ["PairGoodFor"] = "Good for 2 minutes · {left}",
+        ["PairTvLine"] = "On your phone, open Kaeri, then Settings, Devices, Add a device, and scan this code or enter it.",
+        ["PairOk"] = "Paired with {device}",
+        ["PairOkLine"] = "Bringing over your history. You can keep using Kaeri meanwhile.",
+        ["PairCopySignins"] = "Copy sign-ins from {device}",
+        ["PairCopySigninsLine"] = "{trackers}. Each device gets its own copy over this link.",
+        ["PairErrCode"] = "That code didn’t match. Check the code on {device} and try again.",
+        ["PairErrNotFound"] = "Couldn’t find the device showing this code. Both devices need to be on the same Wi-Fi.",
+        ["PairErrExpired"] = "This code ran out. Show a new one.",
+        ["PairWhichProfile"] = "Which profile on {device} is yours?",
+        ["PairWhichProfileLine"] = "This {kind} syncs with that profile only. The others stay on {device}.",
+        ["PairAlsoSyncFoot"] = "{device} already knows this phone from Play on TV, so syncing with it needs no new code.",
+        ["ContinueFromDevice"] = "Episode {n} · stopped at {time} on {device}",
+        ["PlayerResumedFrom"] = "Resumed at {time} from {device}",
+        ["SyncSyncing"] = "Syncing",
+        ["SyncSyncingWith"] = "Syncing with {device}",
+        ["SyncNotes"] = "Sync notes",
+        ["SyncNoteKeptWatched"] = "Episode {n} of {title} stays watched. {other} marked it unwatched without knowing {device} had finished it.",
+        ["SyncNoteUndo"] = "Mark unwatched",
+        ["SyncNotesFoot"] = "Notes stay for 7 days.",
+        ["ProfilesTitle"] = "Profiles",
+        ["ProfilesOnlyYou"] = "Only you",
+        ["ProfilesOneFoot"] = "Profiles keep separate history, Continue and accounts for people who share this device. With one profile, Kaeri has no picker and no names.",
+        ["ProfilesAdd"] = "Add a profile",
+        ["ProfilesAddLine"] = "Each profile keeps its own history, Continue and accounts. Sources and downloads stay shared on this device.",
+        ["ProfilesNew"] = "New profile",
+        ["ProfilesYours"] = "Your profile",
+        ["ProfilesYoursNote"] = "Filled in from AniList. Until now this device had one profile with no name.",
+        ["ProfilesKids"] = "Kids profile",
+        ["ProfilesKidsLine"] = "Adult titles stay off, and sources, devices and torrent settings are hidden in it.",
+        ["ProfilesKidsHidden"] = "Sources and Devices are hidden in a kids profile, and adult titles stay off.",
+        ["ProfilesKidsTag"] = "Kids",
+        ["ProfilesAddButton"] = "Add profile",
+        ["ProfilesSharedFoot"] = "Sources, downloads and this device’s settings are shared by every profile.",
+        ["ProfilesSyncsWith"] = "Syncs with",
+        ["ProfilesDelete"] = "Delete profile",
+        ["ProfilesDeleteAlert"] = "Delete {name}’s profile?",
+        ["ProfilesDeleteAlertLine"] = "{name}’s history and sign-ins on this device are removed. Devices that sync with {name} keep theirs.",
+        ["ProfilesPicker"] = "Who’s watching?",
+        ["ProfilesAskAtLaunch"] = "Ask who’s watching at launch",
+        ["ProfilesAskFoot"] = "Off by default. For an iPad the household shares. The account row switches profiles at any time.",
+        ["ProfilesSwitch"] = "Switch profile",
+        ["ProfilesManage"] = "Manage profiles",
+        ["FirstSetupOther"] = "Set up from another device",
+        ["FirstSetupLine"] = "On a device that already has Kaeri, open Settings, Devices, Add a device, and enter this code or scan it.",
+        ["FirstRestore"] = "Restore from a cloud folder instead",
+        ["FirstOkLine"] = "Bringing over your history, settings and plugin stores. You can start using Kaeri now.",
+        ["FirstJoinStore"] = "Join the plugin store {store}",
+        ["FirstJoinStoreLine"] = "{device} makes this {kind} its own invite",
+        ["CloudFolder"] = "A folder on this {kind}",
+        ["CloudAppPasswordNote"] = "Make one in Nextcloud under Settings, Security. It is kept on this {kind}.",
+        ["DevicesTvsForPlay_one"] = "One TV for Play on TV",
+        ["DevicesTvsForPlay_other"] = "{count} TVs for Play on TV",
+        ["DevicesPairedToday"] = "Paired today",
+        ["TvDevicesAddLine"] = "Shows a code to enter on your phone",
+        ["TvProfilesOnlyYou"] = "Only you. Add a profile to keep separate history, Continue and accounts on this TV.",
+        ["TvProfilesOpensPicker"] = "Opens Who’s watching?",
+        ["TvProfilesOnThisTv"] = "Profiles on this TV",
+        ["RkeySaveFile"] = "Save as a file",
+        ["RkeyQrShort"] = "QR code",
+        ["PairShowCode"] = "Show a code",
+        ["CloudSignInAgain"] = "Sign in again",
+        ["CloudChooseFolder"] = "Choose folder",
+        ["ProfilesAvatarDesc"] = "{name}, switch profile",
+        ["PairCodeField"] = "Pairing code",
+        ["DeviceKindPhone"] = "phone",
+        ["DeviceKindTablet"] = "tablet",
+        ["DeviceKindTv"] = "TV",
         ["TitleLoadFailed"] = "Couldn't load this title",
         ["TitleNoAnswer"] = "AniList didn't answer. Try again.",
         ["TitleLoading"] = "Loading this title",

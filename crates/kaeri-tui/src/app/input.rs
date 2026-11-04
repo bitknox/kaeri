@@ -113,6 +113,10 @@ impl App {
         if let Some(task) = self.together_key(action) {
             return task;
         }
+        // Devices, and Settings' `d` for it, ahead of the title commands too.
+        if let Some(task) = self.devices_key(action) {
+            return task;
+        }
 
         // Title commands have nothing to act on without a title, on screen or highlighted, and
         // each says so the same way rather than some doing nothing at all.
@@ -372,6 +376,9 @@ impl App {
             }
             Action::Open if self.nav.overlay() == Some(&Overlay::InviteName) => {
                 return self.submit_invite_name();
+            }
+            Action::Open if self.nav.overlay().is_some_and(Overlay::is_devices) => {
+                return self.submit_devices_field();
             }
             // A join's confirmation, with this device's name in it to change.
             Action::Open if self.nav.overlay() == Some(&Overlay::StoreConfirm) => {

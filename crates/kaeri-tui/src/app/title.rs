@@ -137,7 +137,10 @@ impl App {
                 let id = self.playing.as_ref()?.id?;
                 self.detail.iter().chain(self.content.entries()).find(|e| e.id == id)
             }
-            StageView::Stores | StageView::Store(_) | StageView::StoreMembers(_) => None,
+            StageView::Stores
+            | StageView::Store(_)
+            | StageView::StoreMembers(_)
+            | StageView::Devices => None,
         }
     }
 

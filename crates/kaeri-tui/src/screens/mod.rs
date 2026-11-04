@@ -12,6 +12,7 @@
 
 mod accounts;
 mod chrome;
+mod devices;
 mod downloads;
 mod episodes;
 #[cfg(test)]
@@ -42,6 +43,7 @@ use crate::{
 
 use accounts::render_accounts;
 use chrome::{render_activity, render_header, render_status, render_toasts};
+use devices::render_devices;
 use downloads::render_downloads;
 use episodes::render_episodes;
 use lists::{plate_row, render_library, render_list};
@@ -152,6 +154,7 @@ fn render_stage(buf: &mut Buffer, app: &App, area: Rect) {
         StageView::Stores => render_stores(buf, app, inner),
         StageView::Store(id) => render_store(buf, app, inner, id),
         StageView::StoreMembers(id) => render_store_members(buf, app, inner, id),
+        StageView::Devices => render_devices(buf, app, inner),
         StageView::Section(section) => match section {
             Section::Home | Section::Seasonal | Section::Search | Section::Calendar => {
                 render_list(buf, app, inner, *section)

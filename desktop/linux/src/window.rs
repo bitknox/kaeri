@@ -441,6 +441,7 @@ impl Shell {
         let _ = shell.pad.set(crate::pad::Pad::attach(&shell));
         shell.watch_pages();
         crate::tv::sheet::attach(&shell.ctx);
+        crate::sync::install(&shell.ctx);
         shell.breakpoints();
         shell.actions(app);
         shell.listen();
@@ -1476,7 +1477,15 @@ fn sidebar(ctx: &Rc<Ctx>) -> (adw::NavigationPage, gtk::ListBox, gtk::ListBox) {
     let pick = |list: &gtk::ListBox| {
         list.connect_row_activated(|list, row| {
             let name = row.widget_name();
-            if name == "account" {
+            if name == "account" && row.has_css_class("has-profiles") {
+                let mut child = row.first_child();
+                while let Some(w) = child {
+                    if let Some(pop) = w.downcast_ref::<gtk::Popover>() {
+                        pop.popup();
+                    }
+                    child = w.next_sibling();
+                }
+            } else if name == "account" {
                 let _ =
                     list.activate_action("win.settings-pane", Some(&"accounts".to_variant()));
             } else {
@@ -1787,7 +1796,26 @@ fn account_row(ctx: &Rc<Ctx>) -> gtk::ListBoxRow {
     line.append(&text);
     let row = gtk::ListBoxRow::builder().child(&line).build();
     row.set_widget_name("account");
-
+    // From the second profile on, the row names the profile and opens the switcher.
+    let switcher: Rc<RefCell<Option<gtk::Popover>>> = Rc::default();
+    ctx.hub.listen({
+        let (ctx, row, switcher) = (Rc::downgrade(ctx), row.clone(), switcher.clone());
+        move |event| {
+            let Some(ctx) = ctx.upgrade() else { return };
+            if matches!(event, Event::Profiles(_)) {
+                if let Some(old) = switcher.borrow_mut().take() {
+                    old.unparent();
+                }
+                row.remove_css_class("has-profiles");
+                if ctx.hub.known.borrow().profiles.len() >= 2 {
+                    row.add_css_class("has-profiles");
+                    let pop = crate::sync::profiles::popover(&ctx);
+                    pop.set_parent(&row);
+                    switcher.replace(Some(pop));
+                }
+            }
+        }
+    });
     let show = {
         let (avatar, name, status, dot) = (avatar, name, status, dot);
         let hub = Rc::downgrade(&ctx.hub);

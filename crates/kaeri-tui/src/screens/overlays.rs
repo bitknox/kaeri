@@ -18,6 +18,7 @@ use crate::{
 
 use super::{
     accounts::{accounts_rows, conflict_rows},
+    devices::{devices_body, draw_art, tone_style},
     episodes::{candidate_rows, source_rows},
     line,
     stores::{
@@ -127,7 +128,11 @@ pub(super) fn render_overlay(
         height: geometry.stage.height,
     };
 
-    let rows = match overlay {
+    // The Devices screen's questions are laid out whole by the screen, QR code and all.
+    let room = host.height.saturating_sub(4).max(1) as usize;
+    let body = overlay.is_devices().then(|| devices_body(app, overlay, area.width, room));
+
+    let mut rows = match overlay {
         Overlay::Help => help_rows(app),
         Overlay::CommandPalette => palette_rows(app),
         Overlay::Accounts => accounts_rows(app),
@@ -171,7 +176,12 @@ pub(super) fn render_overlay(
             ("i".into(), t::onboarding_invite_heading()),
             ("s".into(), t::onboarding_skip()),
         ],
+        _ => body.as_ref().map(|body| body.rows.clone()).unwrap_or_default(),
     };
+    // Tall enough for the QR code beside the rows.
+    if let Some(body) = &body {
+        rows.resize(rows.len().max(body.art.len()), (String::new(), String::new()));
+    }
 
     // Overlays that are a list of things you pick from need a focus marker. The palette was
     // excluded here on the theory that it is a preview rather than a picker — but it *is* a
@@ -181,6 +191,7 @@ pub(super) fn render_overlay(
         Overlay::PluginAction => Some(plugin_action_rows(app).1 + app.cursors.overlay.selected),
         // "Nothing logged yet" is a note, not a line that can be picked.
         Overlay::Logs if app.logs.is_empty() => None,
+        _ if body.is_some() => body.as_ref().and_then(|body| body.selected),
         _ => matches!(
             overlay,
             Overlay::Accounts
@@ -211,7 +222,6 @@ pub(super) fn render_overlay(
 
     // Only the help overlay is a reference table worth columnising. A picker reads as a
     // single ranked list; splitting it would scatter the best match away from the top.
-    let room = host.height.saturating_sub(4).max(1) as usize;
     let (columns, column_width, per_column, position) = if matches!(overlay, Overlay::Help) {
         let available = area.width.saturating_sub(4);
         let help = help_layout(&rows, available, room);
@@ -253,6 +263,11 @@ pub(super) fn render_overlay(
         (shown, area.width.saturating_sub(4), visible.max(1), position)
     };
 
+    // A QR code takes the right of the band, so the keys sit to its left.
+    let art_width =
+        body.as_ref().and_then(|body| body.art.first()).map_or(0, |row| row.cells());
+    let column_width =
+        column_width.saturating_sub(if art_width > 0 { art_width as u16 + 3 } else { 0 });
     let height = (per_column as u16 + 4).min(host.height);
     let band = layout::overlay_band(host, height);
 
@@ -360,7 +375,7 @@ pub(super) fn render_overlay(
             Some((_, episode)) => t::overlays_heading_releases(episode),
             None => t::overlays_heading_releases_bare(),
         }),
-        _ => title.clone(),
+        _ => body.as_ref().map_or_else(|| title.clone(), |body| body.heading.clone()),
     };
     // Where in a table too long for the band the window is, so the rest is known to exist.
     let position = position.filter(|p| p.cells() + 8 < band.width as usize);
@@ -403,11 +418,14 @@ pub(super) fn render_overlay(
         // group apart without spending bold, which stays reserved for the selection.
         let is_scope_heading =
             matches!(overlay, Overlay::Help) && key.is_empty() && !label.starts_with(' ');
+        let tone = body.as_ref().and_then(|body| body.tones.get(i));
         buf.set_string(
             x,
             y,
             truncate(label, label_room),
-            if is_selected || i < emphasised {
+            if let Some(tone) = tone {
+                tone_style(app, *tone, is_selected)
+            } else if is_selected || i < emphasised {
                 app.palette.style(Role::Text).add_modifier(Modifier::BOLD)
             } else if is_scope_heading {
                 app.palette.style(Role::Text)
@@ -421,6 +439,9 @@ pub(super) fn render_overlay(
                 buf.set_string(key_x, y, key, app.palette.style(Role::Text));
             }
         }
+    }
+    if let Some(body) = body.as_ref().filter(|body| !body.art.is_empty()) {
+        draw_art(buf, &body.art, band, title_y + 2);
     }
     report
 }

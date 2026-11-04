@@ -292,6 +292,26 @@ async fn main() -> Result<()> {
     // The language, once: `--lang` over the config key, both over the system's. KAERI_LANG
     // (for trying a language or the pseudo-locale) still comes first.
     kaeri_i18n::init(args.lang.as_deref().or(config.language.as_deref()));
+
+    let http = HttpClient::new(&config.network).context("building http client")?;
+    // A damaged database is moved aside for a new one, and the interface says where it went.
+    let (store, set_aside) =
+        Store::open_or_set_aside(paths.database()).context("opening the local database")?;
+    // An install with profiles enters the one used last, and reads its own settings over the
+    // shared file. A single user has none, and nothing changes.
+    match kaeri_engine::profile::enter(&store, &paths, None) {
+        Ok(Some(_)) if kaeri_engine::profile::overlay_of(&store, &paths).is_some() => {
+            match kaeri_engine::profile::read_config(&store, &paths) {
+                Ok(profiled) => config = profiled,
+                Err(problem) => {
+                    tracing::error!(%problem, "the profile's settings did not load");
+                    config_problem.get_or_insert(problem);
+                }
+            }
+        }
+        Ok(_) => {}
+        Err(reason) => tracing::warn!(%reason, "could not enter the profile used last"),
+    }
     if let Some(mode) = &args.theme {
         config.theme.mode = match mode.as_str() {
             "immersive" => ThemeMode::Immersive,
@@ -300,11 +320,6 @@ async fn main() -> Result<()> {
             _ => ThemeMode::Adaptive,
         };
     }
-
-    let http = HttpClient::new(&config.network).context("building http client")?;
-    // A damaged database is moved aside for a new one, and the interface says where it went.
-    let (store, set_aside) =
-        Store::open_or_set_aside(paths.database()).context("opening the local database")?;
 
     if args.update {
         return cli::update::self_update(&http, args.beta || config.updates.beta).await;

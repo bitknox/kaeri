@@ -39,6 +39,7 @@ use crate::{
 
 mod accounts;
 mod cursor;
+mod devices;
 mod downloads;
 mod episodes;
 #[cfg(test)]
@@ -61,6 +62,10 @@ use self::title::TitleFrame;
 pub use self::{
     accounts::sync_badge,
     cursor::{Cursor, Cursors},
+    devices::{
+        DeviceConfirm, DeviceLine, Devices, FolderState, PairCode, code_groups, key_groups,
+        pair_link,
+    },
     episodes::EpisodeFilter,
     lists::{
         cycle_search_filter, search_filter_labels, search_filter_summary, search_filter_value,
@@ -74,6 +79,7 @@ pub use self::{
     text::{Field, TextField},
 };
 pub(crate) use self::{
+    devices::{is_drive, service_line, service_name},
     episodes::countdown_text,
     title::{push_detail, status_text, watch_order, watched_all},
 };
@@ -331,6 +337,8 @@ pub struct App {
     pub open_join: Option<(String, OpenJoinView)>,
     /// Whether the open link overlay's link went to the clipboard, as `invite_copied` says it.
     pub open_link_copied: bool,
+    /// The Devices screen: sync, pairing and profiles.
+    pub devices: Devices,
     /// The store just opened from its page, whose link is shown when the answer comes.
     pub(crate) opening: Option<String>,
     /// Text waiting to go to the terminal's clipboard: see [`App::take_clipboard`].
@@ -457,6 +465,7 @@ impl App {
             invite_copied: false,
             open_join: None,
             open_link_copied: false,
+            devices: Devices::default(),
             opening: None,
             clipboard: None,
             plugin_action: None,
@@ -599,15 +608,17 @@ impl App {
             }
             Event::MetaStatus(rows) => self.meta_status = rows,
             Event::Stores(rows) => self.apply_stores(rows),
-            // The terminal app has no profiles or sync section of its own.
-            Event::Profiles(_)
-            | Event::ProfileSwitch { .. }
-            | Event::SyncStatus(_)
-            | Event::SyncInvite { .. }
-            | Event::SyncSignIn { .. }
-            | Event::SyncRecoveryKey(_)
-            | Event::SyncProblem(_)
-            | Event::SyncSignInsCopied { .. } => {}
+            Event::Profiles(view) => self.apply_profiles(view),
+            Event::ProfileSwitch { id } => self.apply_profile_switch(id),
+            Event::SyncStatus(status) => self.apply_sync_status(status),
+            Event::SyncInvite { code, port, seconds } => {
+                self.apply_sync_invite(code, port, seconds)
+            }
+            Event::SyncSignIn { service, step } => self.apply_sync_sign_in(service, step),
+            Event::SyncRecoveryKey(key) => self.apply_recovery_key(key),
+            Event::SyncProblem(problem) => self.apply_sync_problem(problem),
+            // Copying sign-ins to another device is the phone apps' part.
+            Event::SyncSignInsCopied { .. } => {}
             Event::StorePreview(outcome) => self.apply_store_preview(outcome),
             Event::StoreJoined { store } => self.apply_store_joined(store),
             Event::InviteLink(view) => self.apply_invite_link(view),
