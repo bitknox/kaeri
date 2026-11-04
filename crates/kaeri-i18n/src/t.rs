@@ -14857,6 +14857,11 @@ pub fn pair_address_label() -> String {
     text("pair-address-label", &[])
 }
 
+/// Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself.
+pub fn pair_by_address() -> String {
+    text("pair-by-address", &[])
+}
+
 /// Placeholder of the pairing code field.
 pub fn pair_code_placeholder() -> String {
     text("pair-code-placeholder", &[])

@@ -2043,10 +2043,6 @@
     <value>[Öþéñ {device}~~~]</value>
     <comment>Accessible name of the button that opens a device's page from its card.</comment>
   </data>
-  <data name="PairByAddress" xml:space="preserve">
-    <value>[Þàîŕ ƀý àððŕéšš~~~~~]</value>
-    <comment>Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself.</comment>
-  </data>
   <data name="SourcePickerSeeders_one" xml:space="preserve">
     <value>[Öñé šééðéŕ~~~]</value>
     <comment>Under a release in the source picker: how many people share it right now.</comment>
@@ -8793,6 +8789,10 @@
   <data name="PairAddressLabel" xml:space="preserve">
     <value>[Åððŕéšš~~~]</value>
     <comment>Label of the field for the other device’s address in the Enter a code dialog.</comment>
+  </data>
+  <data name="PairByAddress" xml:space="preserve">
+    <value>[Þàîŕ ƀý àððŕéšš~~~~~]</value>
+    <comment>Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself.</comment>
   </data>
   <data name="PairCodePlaceholder" xml:space="preserve">
     <value>[000 000~~~]</value>

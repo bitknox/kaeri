@@ -4794,6 +4794,8 @@
     <string name="devices_turn_off_action">Turn off</string>
     <!-- Label of the field for the other device’s address in the Enter a code dialog. -->
     <string name="pair_address_label">Address</string>
+    <!-- Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself. -->
+    <string name="pair_by_address">Pair by address</string>
     <!-- Placeholder of the pairing code field. -->
     <string name="pair_code_placeholder">000 000</string>
     <!-- Label of the field for a recovery key in the restore dialog. -->

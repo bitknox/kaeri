@@ -286,7 +286,7 @@ fn open(ctx: &Rc<crate::window::Ctx>, shot: &str) {
         | "sync-pair-paired"
         | "sync-pair-paired-first"
         | "sync-first-pair" => {
-            ctx.hub.known.borrow_mut().invite = Some(("482913".into(), 47_800, now() + 270));
+            ctx.hub.known.borrow_mut().invite = Some(("482913".into(), 47_800, now() + 120));
             let origin = if matches!(shot, "sync-first-pair" | "sync-pair-paired-first") {
                 Origin::FirstLaunch
             } else {

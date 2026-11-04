@@ -56,8 +56,8 @@ impl Title {
 #[derive(Clone)]
 struct Picker {
     dialog: adw::Dialog,
-    stack: gtk::Stack,
-    title: Title,
+    nav: adw::NavigationView,
+    wait_page: adw::NavigationPage,
     error: gtk::Label,
     wait_title: gtk::Label,
     wait_line: gtk::Label,
@@ -370,7 +370,6 @@ pub fn sign_in_again(ctx: &Rc<Ctx>, service: &SyncFolderKind) {
     ctx.hub.known.borrow_mut().sync_problem = None;
     ctx.hub.send(Command::SyncSignIn { service: service.clone() });
     let p = present_picker(ctx, "wait");
-    p.title.set_title(&t::cloud_browser_title(&service_name(service)));
     set_wait(&p, service, None);
 }
 
@@ -383,21 +382,20 @@ pub fn picker_wait(ctx: &Rc<Ctx>, service: &SyncFolderKind, url: &str) {
 
 fn set_wait(p: &Picker, service: &SyncFolderKind, url: Option<&str>) {
     let name = service_name(service);
-    p.title.set_title(&t::cloud_browser_title(&name));
+    p.wait_page.set_title(&t::cloud_browser_title(&name));
     p.wait_title.set_label(&t::cloud_waiting(&name));
     p.wait_line.set_label(&t::cloud_browser_line(&name));
     p.open_again.set_visible(url.is_some());
     p.open_again.set_widget_name(url.unwrap_or_default());
-    p.stack.set_visible_child_name("wait");
+    go(p, "wait");
 }
 
 fn present_picker(ctx: &Rc<Ctx>, page: &str) -> Picker {
     if let Some(p) = with(|u| u.picker.clone()) {
-        p.stack.set_visible_child_name(page);
+        go(&p, page);
         return p;
     }
     let status = ctx.hub.known.borrow().sync_group.clone().unwrap_or_default();
-    let stack = crossfade_stack();
 
     // The list.
     let list_page = column();
@@ -452,7 +450,6 @@ fn present_picker(ctx: &Rc<Ctx>, page: &str) -> Picker {
     }
     list_page.append(&list);
     list_page.append(&note(&t::cloud_pick_foot()));
-    stack.add_named(&list_page, Some("list"));
 
     // The wait.
     let wait = column();
@@ -478,7 +475,6 @@ fn present_picker(ctx: &Rc<Ctx>, page: &str) -> Picker {
     wait.append(&wait_title);
     wait.append(&wait_line);
     wait.append(&open_again);
-    stack.add_named(&wait, Some("wait"));
 
     // Nextcloud.
     let nc = column();
@@ -506,7 +502,6 @@ fn present_picker(ctx: &Rc<Ctx>, page: &str) -> Picker {
             b.set_visible(false);
         }
     });
-    nc.append(&step_pill(&stack, &service_name(&SyncFolderKind::Nextcloud)));
     nc.append(&nc_error);
     nc.append(&nc_group);
     nc.append(&nc_note);
@@ -541,7 +536,6 @@ fn present_picker(ctx: &Rc<Ctx>, page: &str) -> Picker {
             ctx.hub.send(Command::StartSync { device_name: typed_device_name(), folder: spec });
         }
     });
-    stack.add_named(&nc, Some("nextcloud"));
 
     // WebDAV.
     let dav = column();
@@ -577,22 +571,54 @@ fn present_picker(ctx: &Rc<Ctx>, page: &str) -> Picker {
             ctx.hub.send(Command::StartSync { device_name: typed_device_name(), folder: spec });
         }
     });
-    dav.append(&step_pill(&stack, &t::cloud_webdav()));
     dav.append(&dav_error);
     dav.append(&dav_group);
     dav.append(&dav_connect);
-    stack.add_named(&dav, Some("webdav"));
-    stack.set_visible_child_name(page);
 
-    let (dialog, header, title) = frame(&t::cloud_pick_title(), 480, &stack);
-    let cancel = button(&t::action_cancel(), None);
-    header.pack_start(&cancel);
-    // The one place Cancel means two things: from the list it closes, from any later step it
-    // stops the sign-in quietly and the picker is back as it was.
+    // The list is the root page; the forms and the wait are pushed on it, so the header bar's
+    // own back button replaces a step label and the push is the system navigation motion.
+    let nav = adw::NavigationView::new();
+    nav.set_pop_on_escape(false);
+    let (list_nav, list_cancel) = nav_page("list", &t::cloud_pick_title(), &list_page, None);
+    let (nc_nav, nc_cancel) = nav_page("nextcloud", "Nextcloud", &nc, Some(true)); // i18n-skip
+    let (dav_nav, dav_cancel) = nav_page("webdav", &t::cloud_webdav(), &dav, Some(true));
+    let (wait_page, wait_cancel) =
+        nav_page("wait", &t::cloud_browser_title(""), &wait, Some(false));
+    // Cancel on a pushed page returns to the list, which stops a sign-in under way.
+    for cancel in [&nc_cancel, &dav_cancel, &wait_cancel] {
+        cancel.connect_clicked({
+            let nav = nav.clone();
+            move |_| {
+                nav.pop_to_tag("list");
+            }
+        });
+    }
+    for page in [&nc_nav, &dav_nav, &wait_page] {
+        nav.add(page);
+    }
+    let pages = match page {
+        "nextcloud" => vec![list_nav.clone(), nc_nav.clone()],
+        "webdav" => vec![list_nav.clone(), dav_nav.clone()],
+        "wait" => vec![list_nav.clone(), wait_page.clone()],
+        _ => vec![list_nav.clone()],
+    };
+    nav.replace(&pages);
+    let dialog = adw::Dialog::builder()
+        .content_width(480)
+        .follows_content_size(true)
+        .child(&nav)
+        .build();
+    dialog.set_title(&t::cloud_pick_title());
+    list_cancel.connect_clicked({
+        let d = dialog.clone();
+        move |_| {
+            d.close();
+        }
+    });
     let picker = Picker {
         dialog: dialog.clone(),
-        stack: stack.clone(),
-        title: title.clone(),
+        nav: nav.clone(),
+        wait_page,
         error,
         wait_title,
         wait_line,
@@ -601,34 +627,16 @@ fn present_picker(ctx: &Rc<Ctx>, page: &str) -> Picker {
         dav_error,
         nc_host: nc_host.clone(),
     };
-    cancel.connect_clicked({
-        let (p, ctx) = (picker.clone(), Rc::downgrade(ctx));
-        move |_| {
-            let page = p.stack.visible_child_name().unwrap_or_default();
-            if page == "list" {
-                p.dialog.close();
-                return;
-            }
+    // Leaving a step by Cancel or the back button stops a sign-in that was under way.
+    nav.connect_popped({
+        let ctx = Rc::downgrade(ctx);
+        move |_, _| {
             if let Some(ctx) = ctx.upgrade() {
                 ctx.hub.send(Command::CancelSyncSignIn);
                 ctx.hub.known.borrow_mut().sync_signin = None;
             }
-            p.stack.set_visible_child_name("list");
-            p.title.set_title(&t::cloud_pick_title());
         }
     });
-    // Back to the list from the forms.
-    let retitle = {
-        let title = title.clone();
-        move |s: &gtk::Stack| match s.visible_child_name().as_deref() {
-            Some("list") => title.set_title(&t::cloud_pick_title()),
-            Some("nextcloud") => title.set_title("Nextcloud"), // i18n-skip
-            Some("webdav") => title.set_title(&t::cloud_webdav()),
-            _ => {}
-        }
-    };
-    retitle(&stack);
-    stack.connect_visible_child_name_notify(retitle);
     dialog.connect_closed(|_| with(|u| u.picker = None));
     with(|u| u.picker = Some(picker.clone()));
     present(ctx, &dialog);
@@ -643,18 +651,57 @@ fn line_centered() -> gtk::Label {
     l
 }
 
-/// The pill at the top of a form page: the service this step is for, with a way back to the list.
-fn step_pill(stack: &gtk::Stack, name: &str) -> gtk::Button {
-    let content = gtk::Box::new(gtk::Orientation::Horizontal, 6);
-    content.append(&gtk::Image::from_icon_name("go-previous-symbolic")); // i18n-skip
-    content.append(&gtk::Label::new(Some(name)));
-    let pill = gtk::Button::builder().child(&content).halign(gtk::Align::Start).build();
-    pill.add_css_class("step-pill");
-    pill.connect_clicked({
-        let stack = stack.clone();
-        move |_| stack.set_visible_child_name("list")
-    });
-    pill
+/// A page of the picker's navigation: its own header bar over `body`, and its Cancel button. The
+/// list has Cancel at the start, which closes the dialog; a pushed page has the back button, and
+/// Cancel at the end. `pushed` is `Some(true)` for a form, whose back button stays, and
+/// `Some(false)` for the wait, which only Cancel leaves.
+fn nav_page(
+    tag: &str,
+    title: &str,
+    body: &impl IsA<gtk::Widget>,
+    pushed: Option<bool>,
+) -> (adw::NavigationPage, gtk::Button) {
+    let header = adw::HeaderBar::new();
+    header.set_show_start_title_buttons(false);
+    header.set_show_end_title_buttons(false);
+    let cancel = button(&t::action_cancel(), None);
+    match pushed {
+        None => header.pack_start(&cancel),
+        Some(back) => {
+            header.pack_end(&cancel);
+            header.set_show_back_button(back);
+        }
+    }
+    // Every page of the picker is 480 wide, the list and each form: a column of 432 between the
+    // columns' 24 margins, so the dialog does not change width as the pages push.
+    body.set_width_request(432);
+    let clamp = adw::Clamp::builder()
+        .maximum_size(480)
+        .tightening_threshold(480)
+        .child(body)
+        .build();
+    let view = adw::ToolbarView::new();
+    view.add_top_bar(&header);
+    view.set_content(Some(&clamp));
+    let page = adw::NavigationPage::builder().title(title).tag(tag).child(&view).build();
+    if pushed == Some(false) {
+        page.set_can_pop(false);
+    }
+    (page, cancel)
+}
+
+/// Moves the picker to `page`: back to the list, or the form or the wait pushed on it.
+fn go(p: &Picker, page: &str) {
+    let visible = p.nav.visible_page_tag();
+    if visible.as_deref() == Some(page) {
+        return;
+    }
+    if visible.as_deref() != Some("list") {
+        p.nav.pop_to_tag("list");
+    }
+    if page != "list" {
+        p.nav.push_by_tag(page);
+    }
 }
 
 fn host_of(typed: &str) -> String {
@@ -685,8 +732,8 @@ fn choose(ctx: &Rc<Ctx>, kind: &SyncFolderKind) {
             });
             set_wait(&p, kind, None);
         }
-        SyncFolderKind::Nextcloud => p.stack.set_visible_child_name("nextcloud"),
-        SyncFolderKind::WebDav => p.stack.set_visible_child_name("webdav"),
+        SyncFolderKind::Nextcloud => go(&p, "nextcloud"),
+        SyncFolderKind::WebDav => go(&p, "webdav"),
         SyncFolderKind::Directory => {
             let chooser = gtk::FileDialog::builder().title(t::cloud_folder_chooser()).build();
             let ctx = Rc::downgrade(ctx);
@@ -1155,15 +1202,33 @@ pub fn pair_enter(ctx: &Rc<Ctx>) {
     code.set_max_length(7);
     let address = adw::EntryRow::builder().title(t::pair_address_label()).build();
     group.add(&code);
+    // The address is for networks where the code's device can't be found by itself, so it waits
+    // behind a text button.
+    address.set_visible(false);
     group.add(&address);
     body.append(&group);
     let error = error_label();
     body.append(&error);
     body.append(&note(&t::pair_same_wifi()));
-    body.append(&note(&t::pair_address_optional()));
+    let address_note = note(&t::pair_address_optional());
+    address_note.set_visible(false);
+    body.append(&address_note);
+    let links = gtk::Box::new(gtk::Orientation::Horizontal, 6);
     let show = button(&t::pair_show_instead(), Some("flat"));
     show.set_halign(gtk::Align::Start);
-    body.append(&show);
+    links.append(&show);
+    let by_address = button(&t::pair_by_address(), Some("flat"));
+    by_address.connect_clicked({
+        let (address, address_note) = (address.clone(), address_note.clone());
+        move |b| {
+            address.set_visible(true);
+            address_note.set_visible(true);
+            b.set_visible(false);
+            address.grab_focus();
+        }
+    });
+    links.append(&by_address);
+    body.append(&links);
     stack.add_named(&body, Some("entering"));
     let ok = column();
     let paired_title = gtk::Label::new(None);
@@ -1531,7 +1596,7 @@ fn heard(ctx: &Rc<Ctx>, event: &Event) {
                             Some(SyncFolderKind::WebDav) => "webdav",
                             _ => "list",
                         };
-                        p.stack.set_visible_child_name(page);
+                        go(&p, page);
                     }
                 }
             }

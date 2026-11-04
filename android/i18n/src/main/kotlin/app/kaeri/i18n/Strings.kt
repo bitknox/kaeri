@@ -9200,6 +9200,10 @@ object Strings {
     fun pairAddressLabel(context: Context): String =
         context.getString(R.string.pair_address_label)
 
+    /** Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself. */
+    fun pairByAddress(context: Context): String =
+        context.getString(R.string.pair_by_address)
+
     /** Placeholder of the pairing code field. */
     fun pairCodePlaceholder(context: Context): String =
         context.getString(R.string.pair_code_placeholder)

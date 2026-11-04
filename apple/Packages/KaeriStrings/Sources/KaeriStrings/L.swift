@@ -8691,6 +8691,9 @@ public enum L {
     /// Label of the field for the other device’s address in the Enter a code dialog.
     public static var pairAddressLabel: String { string("pair-address-label", fallback: "Address") }
 
+    /// Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself.
+    public static var pairByAddress: String { string("pair-by-address", fallback: "Pair by address") }
+
     /// Placeholder of the pairing code field.
     public static var pairCodePlaceholder: String { string("pair-code-placeholder", fallback: "000 000") }
 

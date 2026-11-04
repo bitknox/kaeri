@@ -101207,6 +101207,18 @@
         }
       }
     },
+    "pair-by-address" : {
+      "comment" : "Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pair by address"
+          }
+        }
+      }
+    },
     "pair-code-field" : {
       "comment" : "Heading over the pairing code the other device shows, over the field.",
       "extractionState" : "manual",

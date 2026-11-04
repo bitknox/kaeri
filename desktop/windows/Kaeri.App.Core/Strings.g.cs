@@ -1449,9 +1449,6 @@ public static partial class T
     /// <summary>Accessible name of the button that opens a device's page from its card.</summary>
     public static string DevicesOpenName(string device) => Fill(Get("DevicesOpenName"), ("device", device));
 
-    /// <summary>Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself.</summary>
-    public static string PairByAddress => Get("PairByAddress");
-
     /// <summary>Under a release in the source picker: how many people share it right now.</summary>
     public static string SourcePickerSeeders(long count) => Fill(GetPlural("SourcePickerSeeders", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -6402,6 +6399,9 @@ public static partial class T
     /// <summary>Label of the field for the other device’s address in the Enter a code dialog.</summary>
     public static string PairAddressLabel => Get("PairAddressLabel");
 
+    /// <summary>Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself.</summary>
+    public static string PairByAddress => Get("PairByAddress");
+
     /// <summary>Placeholder of the pairing code field.</summary>
     public static string PairCodePlaceholder => Get("PairCodePlaceholder");
 
@@ -8511,7 +8511,6 @@ public static partial class T
         ["DeviceKindPc"] = "PC",
         ["DevicesSyncSwitchName"] = "Sync with {device}",
         ["DevicesOpenName"] = "Open {device}",
-        ["PairByAddress"] = "Pair by address",
         ["SourcePickerSeeders_one"] = "One seeder",
         ["SourcePickerSeeders_other"] = "{count} seeders",
         ["RatePerSecond"] = "{size}/s",
@@ -10204,6 +10203,7 @@ public static partial class T
         ["DevicesShowKey"] = "Show",
         ["DevicesTurnOffAction"] = "Turn off",
         ["PairAddressLabel"] = "Address",
+        ["PairByAddress"] = "Pair by address",
         ["PairCodePlaceholder"] = "000 000",
         ["RkeyFieldLabel"] = "Recovery key",
         ["CloudUserLabel"] = "User name",

@@ -23,6 +23,9 @@ devices-turn-off-action = Turn off
 # Label of the field for the other device’s address in the Enter a code dialog.
 pair-address-label = Address
 
+# Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself.
+pair-by-address = Pair by address
+
 # Placeholder of the pairing code field.
 pair-code-placeholder = 000 000
 
