@@ -808,6 +808,7 @@ private fun SeasonPage(
         // placeholders of a season that had not arrived crossfade with what replaces them (T8).
         // Its ground hides the season it fades in over.
         LazyColumn(state = list, modifier = modifier.pageGround(MaterialTheme.colorScheme.surface).let { if (removed || synopses.asking || goal != null) it.stillFade(jumpFade) else it }, contentPadding = PaddingValues(bottom = 24.dp)) {
+            CountingScope(this).run {
             item(key = "head", contentType = "head") {
                 if (crossfadeHead == null) {
                     TitleHead(entry, headEpisodes(entry.id), list, inset, shared)
@@ -866,7 +867,8 @@ private fun SeasonPage(
             }
             val related = entry.relatedCards()
             if (related.isNotEmpty()) item(key = "related", contentType = "related") { Box(itemMotion()) { RelatedRail(related) } }
-            episodeRows(list, inset + 64.dp, entry, episodes, actions, unfolded = entry.id in unfolded, onFold = fold, wait = !ahead, dub = dubs[entry.id]?.line(context), page = synopses)
+            episodeRows(list, inset + 64.dp, count, entry, episodes, actions, unfolded = entry.id in unfolded, onFold = fold, wait = !ahead, dub = dubs[entry.id]?.line(context), page = synopses)
+        }
         }
     }
 }
@@ -1715,6 +1717,28 @@ private fun Seasons(
     }
 }
 
+/** A list's content that knows how many items it has declared so far, for what must know its own index. */
+@OptIn(ExperimentalFoundationApi::class)
+private class CountingScope(private val inner: LazyListScope) : LazyListScope by inner {
+    var count = 0
+        private set
+
+    override fun item(key: Any?, contentType: Any?, content: @Composable androidx.compose.foundation.lazy.LazyItemScope.() -> Unit) {
+        count += 1
+        inner.item(key, contentType, content)
+    }
+
+    override fun items(count: Int, key: ((index: Int) -> Any)?, contentType: (index: Int) -> Any?, itemContent: @Composable androidx.compose.foundation.lazy.LazyItemScope.(index: Int) -> Unit) {
+        this.count += count
+        inner.items(count, key, contentType, itemContent)
+    }
+
+    override fun stickyHeader(key: Any?, contentType: Any?, content: @Composable androidx.compose.foundation.lazy.LazyItemScope.(index: Int) -> Unit) {
+        count += 1
+        inner.stickyHeader(key, contentType, content)
+    }
+}
+
 /**
  * The episodes, a row each, from the last one watched, the watched ones before it folded under
  * one row; plates in their place while the table loads.
@@ -1724,6 +1748,8 @@ private fun LazyListScope.episodeRows(
     list: LazyListState,
     /** How far under the top the range row pins: the status bar and the floating bar's 64 dp. */
     pinnedBelow: Dp,
+    /** The index the range row takes in the list: the items declared before it. */
+    headerAt: Int,
     entry: Entry,
     episodes: List<EpisodeRow>?,
     actions: AppActions,
@@ -1758,11 +1784,10 @@ private fun LazyListScope.episodeRows(
         // The range row pins under the floating bar while the rows of its range scroll, so the
         // chip stays in view after Go to lands far into a range.
         stickyHeader(key = "range-row", contentType = "range-row") {
-            val stuck by remember(list) {
-                derivedStateOf {
-                    val at = list.layoutInfo.visibleItemsInfo.firstOrNull { it.key == "range-row" }?.index
-                    at != null && (list.firstVisibleItemIndex > at || (list.firstVisibleItemIndex == at && list.firstVisibleItemScrollOffset > 0))
-                }
+            // Pinned from the first pixel it scrolls past the top, wherever the list was left: the
+            // pinned row is not among the visible items, so the index it was declared at says.
+            val stuck by remember(list, headerAt) {
+                derivedStateOf { list.firstVisibleItemIndex > headerAt || (list.firstVisibleItemIndex == headerAt && list.firstVisibleItemScrollOffset > 0) }
             }
             Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface)) {
                 if (stuck) Spacer(Modifier.height(pinnedBelow))
