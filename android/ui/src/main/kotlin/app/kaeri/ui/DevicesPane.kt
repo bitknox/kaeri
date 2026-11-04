@@ -392,6 +392,8 @@ private fun DevicesSheets() {
         else -> {}
     }
     key?.let { RecoveryKeyDialog(it) }
+    val copied by store.sync.copied.collectAsStateWithLifecycle()
+    copied?.let { PairOkSheet(it) }
 }
 
 /** The Settings row's value: Sync off, Synced 2 min ago, or Couldn't sync. */

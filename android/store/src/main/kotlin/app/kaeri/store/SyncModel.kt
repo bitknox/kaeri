@@ -136,6 +136,20 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
         _copied.value = copied
     }
 
+    /** The pairing success was read: Done on its sheet or page. */
+    fun copiedSeen() {
+        _copied.value = null
+    }
+
+    private val _first = MutableStateFlow(false)
+
+    /** True while a pairing runs from the first-launch pages, which word the code and the success as theirs. */
+    val first: StateFlow<Boolean> = _first.asStateFlow()
+
+    fun first(on: Boolean) {
+        _first.value = on
+    }
+
     /** Done with the recovery key sheet. */
     fun recoveryKeySeen() {
         _recoveryKey.value = null

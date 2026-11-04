@@ -9558,7 +9558,7 @@ object Strings {
 
     /** Restore. */
     fun rkeyEnterLine(context: Context, service: String, count: Int): String =
-        context.getString(R.string.rkey_enter_line, service, count)
+        context.resources.getQuantityString(R.plurals.rkey_enter_line, count, service, count)
 
     /** Field note. */
     fun rkeyEnterNote(context: Context): String =
@@ -9864,6 +9864,10 @@ object Strings {
 
     fun deviceKindTv(context: Context): String =
         context.getString(R.string.device_kind_tv)
+
+    /** TV welcome, text button. */
+    fun firstSetupPhone(context: Context): String =
+        context.getString(R.string.first_setup_phone)
 
     /** Title of the state when a title page could not load. */
     fun titleLoadFailed(context: Context): String =

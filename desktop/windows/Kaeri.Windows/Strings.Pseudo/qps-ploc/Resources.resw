@@ -9126,7 +9126,11 @@
     <value>[Éñţéŕ ýöüŕ ŕéçöṽéŕý ķéý~~~~~~~]</value>
     <comment>Restore.</comment>
   </data>
-  <data name="RkeyEnterLine" xml:space="preserve">
+  <data name="RkeyEnterLine_one" xml:space="preserve">
+    <value>[{service} ĥöļðš ĥîšţöŕý ƒŕöɱ {count} ðéṽîçé. Ţĥé ķéý ýöü šàṽéð ŵĥéñ šýñç ŵàš ţüŕñéð öñ öþéñš îţ.~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Restore.</comment>
+  </data>
+  <data name="RkeyEnterLine_other" xml:space="preserve">
     <value>[{service} ĥöļðš ĥîšţöŕý ƒŕöɱ {count} ðéṽîçéš. Ţĥé ķéý ýöü šàṽéð ŵĥéñ šýñç ŵàš ţüŕñéð öñ öþéñš îţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Restore.</comment>
   </data>
@@ -9438,6 +9442,10 @@
   </data>
   <data name="DeviceKindTv" xml:space="preserve">
     <value>[ŢṼ~]</value>
+  </data>
+  <data name="FirstSetupPhone" xml:space="preserve">
+    <value>[Šéţ üþ ƒŕöɱ ýöüŕ þĥöñé~~~~~~~]</value>
+    <comment>TV welcome, text button.</comment>
   </data>
   <data name="TitleLoadFailed" xml:space="preserve">
     <value>[Çöüļðñ'ţ ļöàð ţĥîš ţîţļé~~~~~~~~]</value>

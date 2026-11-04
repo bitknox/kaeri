@@ -15494,6 +15494,11 @@ pub fn device_kind_tv() -> String {
     text("device-kind-tv", &[])
 }
 
+/// TV welcome, text button.
+pub fn first_setup_phone() -> String {
+    text("first-setup-phone", &[])
+}
+
 /// Title of the state when a title page could not load.
 pub fn title_load_failed() -> String {
     text("title-load-failed", &[])

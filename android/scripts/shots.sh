@@ -91,6 +91,7 @@ extras() {
   for screen in $screens; do
     case "$screen" in
       "") ;;
+      firstLaunch=*) printf '%s\n' --ez firstLaunch true ;;
       query=*) printf '%s\n' --es section search --es query "${screen#query=}" ;;
       *=*) printf '%s\n' --es "${screen%%=*}" "${screen#*=}" ;;
       *) printf '%s\n' --es section "$screen" ;;

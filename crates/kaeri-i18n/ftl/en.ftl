@@ -9385,7 +9385,11 @@ rkey-new-foot = The old key stops working, and your devices switch to the new on
 rkey-enter-title = Enter your recovery key
 
 # Restore.
-rkey-enter-line = { $service } holds history from { $count } devices. The key you saved when sync was turned on opens it.
+rkey-enter-line =
+    { $count ->
+        [one] { $service } holds history from { $count } device. The key you saved when sync was turned on opens it.
+       *[other] { $service } holds history from { $count } devices. The key you saved when sync was turned on opens it.
+    }
 
 # Field note.
 rkey-enter-note = 24 letters and digits, in groups of four. Spaces and case don’t matter.
@@ -9618,6 +9622,9 @@ device-kind-phone = phone
 device-kind-tablet = tablet
 
 device-kind-tv = TV
+
+# TV welcome, text button.
+first-setup-phone = Set up from your phone
 
 # Title of the state when a title page could not load.
 title-load-failed = Couldn't load this title

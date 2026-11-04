@@ -22,6 +22,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -326,15 +327,59 @@ fun TvSyncHost() {
     val sheet by store.sync.sheet.collectAsStateWithLifecycle()
     val signIn by store.sync.signIn.collectAsStateWithLifecycle()
     val status by store.sync.status.collectAsStateWithLifecycle()
+    val copied by store.sync.copied.collectAsStateWithLifecycle()
+    AskAtLaunch()
     val shown = signIn
     val step = shown?.step
     when {
+        copied != null -> PairOkPage(copied!!)
         shown != null && step is SyncSignInStep.Code -> CloudCodePage(shown.service, step)
         shown != null && step is SyncSignInStep.Page -> NextcloudQrPage(step)
         sheet == SyncSheet.KEY -> DropboxPhonePage(status)
         sheet == SyncSheet.ROAD -> RoadPage()
         sheet == SyncSheet.CODE || sheet == SyncSheet.ADD -> PairCodePage()
         sheet == SyncSheet.SWITCH -> TvWhosWatching(onChosen = { store.sync.show(null) })
+    }
+}
+
+/** Who's watching? once as the app opens, when Ask at launch is on and more than one profile is here. */
+@Composable
+private fun AskAtLaunch() {
+    val store = LocalAppStore.current
+    val context = LocalContext.current
+    val profiles by store.sync.profiles.collectAsStateWithLifecycle()
+    var asked by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(Unit) { store.loadSync() }
+    LaunchedEffect(profiles.profiles.size) {
+        if (asked || profiles.profiles.size < 2) return@LaunchedEffect
+        asked = true
+        val preferences = app.kaeri.store.DevicePreferences.of(context)
+        // A relaunch after a switch has just been asked.
+        val switched = preferences.getBoolean(PROFILE_SWITCHED, false)
+        preferences.edit().putBoolean(PROFILE_SWITCHED, false).apply()
+        if (!switched && preferences.getBoolean(ASK_AT_LAUNCH, false)) store.sync.show(SyncSheet.SWITCH)
+    }
+}
+
+internal const val ASK_AT_LAUNCH = "profilesAskAtLaunch"
+internal const val PROFILE_SWITCHED = "profileSwitched"
+
+/** Pairing worked: who with. From first launch, Continue closes the welcome pages too. */
+@Composable
+private fun PairOkPage(copied: app.kaeri.store.SignInsCopied) {
+    val store = LocalAppStore.current
+    val first by store.sync.first.collectAsStateWithLifecycle()
+    val focus = remember { FocusRequester() }
+    val done = { store.sync.copiedSeen(); store.sync.first(false); store.sync.show(null) }
+    SyncPage(onBack = done, focus) {
+        Text(stringResource(R.string.pair_ok, copied.device), style = MaterialTheme.typography.titleLarge, color = ObiSilk.Silk, modifier = Modifier.semantics { heading() })
+        Text(
+            stringResource(if (first) R.string.first_ok_line else R.string.pair_ok_line),
+            style = MaterialTheme.typography.bodyLarge,
+            color = ObiSilk.Silk,
+            modifier = Modifier.widthIn(max = 720.dp),
+        )
+        AmberButton(onClick = done, icon = null, modifier = Modifier.focusRequester(focus)) { ButtonLabel(stringResource(if (first) R.string.onboarding_continue else R.string.action_done)) }
     }
 }
 
@@ -477,10 +522,10 @@ private fun PairCodePage() {
             delay(1000)
         }
     }
-    val close = { store.pairStop(); store.sync.show(null) }
+    val close = { store.pairStop(); store.sync.first(false); store.sync.show(null) }
     SyncPage(onBack = close, focus) {
         Text(stringResource(R.string.pair_show_title), style = MaterialTheme.typography.titleLarge, color = ObiSilk.Silk, modifier = Modifier.semantics { heading() })
-        Text(stringResource(R.string.pair_tv_line), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Silk, modifier = Modifier.widthIn(max = 880.dp))
+        Text(stringResource(if (store.sync.first.collectAsStateWithLifecycle().value) R.string.first_setup_line else R.string.pair_tv_line), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Silk, modifier = Modifier.widthIn(max = 880.dp))
         val shown = invite
         if (shown != null) {
             Row(horizontalArrangement = Arrangement.spacedBy(40.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -539,6 +584,15 @@ fun LazyListScope.profiles(memory: FocusMemory, first: Modifier) {
                     )
                 }
                 Footnote(stringResource(R.string.profiles_shared_foot))
+                val preferences = remember { app.kaeri.store.DevicePreferences.of(context) }
+                var ask by remember { mutableStateOf(preferences.getBoolean(ASK_AT_LAUNCH, false)) }
+                TvListRow(
+                    stringResource(R.string.profiles_ask_at_launch),
+                    onClick = { ask = !ask; preferences.edit().putBoolean(ASK_AT_LAUNCH, ask).apply() },
+                    switch = ask,
+                    modifier = Modifier.remembered(memory, "profiles/ask"),
+                )
+                Footnote(stringResource(R.string.profiles_ask_foot))
                 TvListRow(
                     stringResource(R.string.profiles_switch),
                     onClick = { store.sync.show(SyncSheet.SWITCH) },

@@ -439,6 +439,17 @@ internal fun ShowCodeDialog() {
     }
 }
 
+/** Pairing worked: who with, and that the history comes over while the app stays usable. */
+@Composable
+internal fun PairOkSheet(copied: app.kaeri.store.SignInsCopied) {
+    val store = LocalAppStore.current
+    SettingsSheet(onDismiss = { store.sync.copiedSeen() }) {
+        SheetTitle(stringResource(R.string.pair_ok, copied.device))
+        SheetText(stringResource(R.string.pair_ok_line))
+        SheetButtons { Button(onClick = { store.sync.copiedSeen() }) { Text(stringResource(R.string.action_done)) } }
+    }
+}
+
 private fun deviceName(context: Context): String = systemDeviceName(context)
 
 /** The recovery key, full screen: the words, Copy, Save as a file, QR code, and Done. */

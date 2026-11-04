@@ -17,7 +17,7 @@ object FixtureSync {
     /** The states [stage] knows, for the log's sake. */
     val STATES = listOf(
         "road", "picker", "nextcloud", "nextcloud-wait", "webdav", "waiting", "finishing", "key", "key-wrong", "recovery-key",
-        "add", "code", "name", "offline", "signed-out", "denied", "other-group", "switch", "setting-up", "pair-ok",
+        "add", "code", "name", "offline", "signed-out", "denied", "other-group", "switch", "setting-up", "pair-ok", "first-code", "first-ok",
         "google-code", "onedrive-code", "code-expired", "dropbox-phone", "dropbox-nophone", "nextcloud-qr", "who",
     )
 
@@ -26,6 +26,19 @@ object FixtureSync {
 
     /** Set up [state] once the engine has said how sync stands. False for a state there is none of. */
     suspend fun stage(store: AppStore, state: String): Boolean {
+        when (state) {
+            "first-code" -> {
+                store.sync.first(true)
+                store.sync.show(SyncSheet.CODE)
+                store.apply(Event.SyncInvite("428917", 41234u, 105u))
+                return true
+            }
+            "first-ok" -> {
+                store.sync.first(true)
+                store.apply(Event.SyncSignInsCopied("Kim's phone", listOf("anilist"), listOf(SyncFolderKind.DROPBOX), emptyList()))
+                return true
+            }
+        }
         store.loadSync()
         withTimeoutOrNull(30_000) { store.sync.status.first { it != null } } ?: return false
         val now = System.currentTimeMillis() / 1000
@@ -71,6 +84,15 @@ object FixtureSync {
             }
             "switch" -> store.sync.show(SyncSheet.SWITCH)
             "pair-ok" -> store.apply(Event.SyncSignInsCopied("Kim's phone", listOf("anilist"), listOf(SyncFolderKind.DROPBOX), emptyList()))
+            "first-code" -> {
+                store.sync.first(true)
+                store.sync.show(SyncSheet.CODE)
+                store.apply(Event.SyncInvite("428917", 41234u, 105u))
+            }
+            "first-ok" -> {
+                store.sync.first(true)
+                store.apply(Event.SyncSignInsCopied("Kim's phone", listOf("anilist"), listOf(SyncFolderKind.DROPBOX), emptyList()))
+            }
             "google-code" -> store.apply(Event.SyncSignIn(SyncFolderKind.GOOGLE_DRIVE, SyncSignInStep.Code("WXRTKLMN", CODE_URL, (now + 899).toLong(), 5u)))
             "onedrive-code" -> store.apply(Event.SyncSignIn(SyncFolderKind.ONE_DRIVE, SyncSignInStep.Code("B4NQ7XLK", CODE_URL, (now + 899).toLong(), 5u)))
             "code-expired" -> store.apply(Event.SyncSignIn(SyncFolderKind.GOOGLE_DRIVE, SyncSignInStep.Code("WXRTKLMN", CODE_URL, (now - 5).toLong(), 5u)))

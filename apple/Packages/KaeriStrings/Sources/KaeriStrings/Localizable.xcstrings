@@ -48103,6 +48103,18 @@
         }
       }
     },
+    "first-setup-phone" : {
+      "comment" : "TV welcome, text button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set up from your phone"
+          }
+        }
+      }
+    },
     "format-movie" : {
       "comment" : "Format of a show: a film.",
       "extractionState" : "manual",
@@ -137526,7 +137538,29 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ holds history from %2$lld devices. The key you saved when sync was turned on opens it."
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ holds history from %2$lld device. The key you saved when sync was turned on opens it."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ holds history from %2$lld devices. The key you saved when sync was turned on opens it."
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }

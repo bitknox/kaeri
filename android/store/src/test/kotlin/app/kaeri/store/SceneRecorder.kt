@@ -80,6 +80,7 @@ class SceneRecorder {
             // the searches the shots run, and each fixture title's page, episodes and settings
             // sheet.
             store.loadHome()
+            store.loadSync()
             // The lawful sources' pages: the Sources rows, the servers and the licensed services.
             store.loadServers()
             store.checkProviders()

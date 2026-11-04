@@ -132,3 +132,9 @@ fun AppStore.switchProfile(id: String) {
 fun AppStore.deleteProfile(id: String) {
     send(Command.DeleteProfile(id))
 }
+
+/** Ask for every sign-in the next paired device holds: the trackers and each cloud drive. First launch's default. */
+fun AppStore.copyAllSignIns() {
+    val clouds = listOf(SyncFolderKind.GOOGLE_DRIVE, SyncFolderKind.DROPBOX, SyncFolderKind.ONE_DRIVE).map { SyncCopy.Cloud(it) }
+    copySignIns(null, listOf(SyncCopy.Trackers) + clouds)
+}
