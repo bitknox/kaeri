@@ -545,9 +545,12 @@ struct PairEnterSheet: View {
             if TVCodeScanner.isSupported {
                 SyncChoice(title: L.pairScan, glyph: "qrcode.viewfinder") { scanning = true }
             }
+            SyncChoice(title: L.pairShowInstead, glyph: "number") { sync.sheet = .pairShow }
             #endif
         } bottom: {
+            #if os(macOS)
             SyncButton(title: L.pairShowInstead) { sync.sheet = .pairShow }
+            #endif
             SyncButton(title: sync.pair == .working ? L.pairPairing : L.pairButton, primary: true, wide: touch, action: submit)
                 .disabled(code.count < 6 || sync.pair == .working)
         }

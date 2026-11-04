@@ -18,6 +18,8 @@ import KaeriKit
 ///                    webdav, webdav-err, key, key-qr, restore, restore-wrong, pair-show, pair-enter,
 ///                    pair-err, pair-nf, paired, profile-add, profile-edit are the sheets, over `on`
 ///     first-setup    first launch's code page (with sheet=welcome-setup); first-paired its paired page
+///     pair-motion, first-motion  the code page, then the paired page after 4 s, for recordings
+///     alone          sync on with no other device yet
 ///     paused         the group with Kitchen iPad's Sync off and the TV's Remote off
 ///     pair-wrong     a typed code a named device turned down; pair-working the try under way
 ///     first-paired-store  first launch's paired page with a plugin store to join
@@ -30,7 +32,7 @@ public enum SyncScene: String, Sendable {
     case pairShow = "pair-show", pairEnter = "pair-enter", pairErr = "pair-err", pairNf = "pair-nf", paired
     case firstSetup = "first-setup", firstPaired = "first-paired"
     case profiles, profileAdd = "profile-add", profileEdit = "profile-edit"
-    case paused, pairWrong = "pair-wrong", pairWorking = "pair-working", firstPairedStore = "first-paired-store"
+    case pairMotion = "pair-motion", firstMotion = "first-motion", alone, paused, pairWrong = "pair-wrong", pairWorking = "pair-working", firstPairedStore = "first-paired-store"
 
     public static let argument = "-KaeriSync"
 
@@ -91,12 +93,16 @@ extension SyncModel {
         var status = SyncStatus(enabled: false, syncing: false, clouds: Self.clouds())
         var sheet: SyncSheet?
         switch scene {
-        case .off, .firstSetup, .firstPaired: break
+        case .off, .firstSetup, .firstPaired, .firstMotion: break
         case .paused:
             status = Self.group(now: now, notes: true, held: true)
+        case .alone:
+            status = Self.group(now: now)
+            status.devices = status.devices.filter(\.thisDevice)
+            status.notes = []
         case .firstPairedStore:
             status = Self.group(now: now, stores: [SyncStoreOffer(address: "store.example", name: "Hotaru")]) // i18n-skip
-        case .pairWrong, .pairWorking:
+        case .pairWrong, .pairWorking, .pairMotion:
             status = Self.group(now: now, notes: true)
         case .on, .key, .keyQr, .pairShow, .pairEnter, .pairErr, .pairNf, .paired, .profiles,
              .profileAdd, .profileEdit, .picker, .pickerDenied, .nextcloud, .nextcloudWait, .nextcloudErr,
@@ -159,6 +165,19 @@ extension SyncModel {
         case .pairShow:
             stage(invite: SyncInviteView(code: "042917", port: 4510, until: .now.addingTimeInterval(108)))
             sheet = .pairShow
+        case .pairMotion:
+            stage(invite: SyncInviteView(code: "042917", port: 4510, until: .now.addingTimeInterval(108)))
+            sheet = .pairShow
+            Task { [weak self] in
+                try? await Task.sleep(for: .seconds(4))
+                self?.stage(pair: .paired("Kim’s iPhone")) // i18n-skip
+            }
+        case .firstMotion:
+            stage(invite: SyncInviteView(code: "042917", port: 4510, until: .now.addingTimeInterval(108)))
+            Task { [weak self] in
+                try? await Task.sleep(for: .seconds(4))
+                self?.stage(pair: .paired("Kim’s iPhone")) // i18n-skip
+            }
         case .firstSetup:
             stage(invite: SyncInviteView(code: "042917", port: 4510, until: .now.addingTimeInterval(108)))
         case .firstPaired:

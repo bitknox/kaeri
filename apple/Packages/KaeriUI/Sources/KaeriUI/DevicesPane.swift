@@ -73,7 +73,7 @@ struct DeviceNameField: View {
             .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(focused ? Palette.amber : Palette.glassRule, lineWidth: 1))
             .focused($focused)
             .onAppear { draft = current }
-            .onChange(of: current) { if !focused { draft = current } }
+            .onChange(of: current) { draft = current }
             .onSubmit(commit)
             .onChange(of: focused) { if !focused { commit() } }
             .accessibilityLabel(L.devicesName)
@@ -299,7 +299,6 @@ struct SyncNotesGroup: View {
         let sync = store.sync
         if !sync.notes.isEmpty {
             SettingsGroup(title: L.syncNotes, footnote: L.syncNotesFoot) {
-                Color.clear.frame(height: 0).task(id: sync.notes.map(\.anilistId)) { store.prepareCards(sync.notes.map(\.anilistId)) }
                 ForEach(sync.notes, id: \.id) { note in
                     SettingsRow(title: SyncWords.note(note, store: store)) {
                         Button(L.syncNoteUndo) { sync.undo(note) }
@@ -307,6 +306,7 @@ struct SyncNotesGroup: View {
                     }
                 }
             }
+            .task(id: sync.notes.map(\.anilistId)) { store.prepareCards(sync.notes.map(\.anilistId)) }
         }
     }
 }
