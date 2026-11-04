@@ -134,6 +134,8 @@ list.episode-list > row { border-radius: 8px; }
 /* Rows with a synopsis have a height of their own, set from the size and never from the text. */
 .episode-row.synopsis-row { min-height: 0; padding: 0 0 0 12px; }
 .watched .episode-name { color: var(--haze); }
+/* The synopsis line is 20 px, as on Windows, where GTK would give about 17.5. */
+.synopsis-text { line-height: 1.43; }
 
 /* The player: controls on a 35% dim of the ground, no blur, and behind each bar a gradient that
    reaches 72% at the screen edge, so silk holds 5:1 on a white frame. */

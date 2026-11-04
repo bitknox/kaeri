@@ -282,14 +282,19 @@ internal fun rememberRowMarks(row: EpisodeRow, fraction: Float?): RowMarks {
 
 /** "E7 · 14 min left" or "E6 · 24 min". */
 internal fun episodeDetail(context: Context, row: EpisodeRow, resume: app.kaeri.engine.model.ResumePoint?): String {
+    val detail = episodeDetailOnly(context, row, resume)
+    return if (detail != null) Strings.episodeLineDetail(context, row.number.toInt(), detail) else Strings.episodeNumberShort(context, row.number.toInt())
+}
+
+/** The part of [episodeDetail] after the number: "14 min left" or "24 min", or null when there is none. */
+internal fun episodeDetailOnly(context: Context, row: EpisodeRow, resume: app.kaeri.engine.model.ResumePoint?): String? {
     val fraction = resume?.fraction
-    val detail = if (resume != null && fraction != null && fraction > 0) {
+    return if (resume != null && fraction != null && fraction > 0) {
         val left = maxOf(1, ((resume.position / fraction - resume.position) / 60).roundToInt())
         Strings.timeMinutesLeft(context, left)
     } else {
         minutes(context, row)
     }
-    return if (detail != null) Strings.episodeLineDetail(context, row.number.toInt(), detail) else Strings.episodeNumberShort(context, row.number.toInt())
 }
 
 /** The check, drawn along its path to [progress], as the brief's trimPathEnd draw-on does it. */

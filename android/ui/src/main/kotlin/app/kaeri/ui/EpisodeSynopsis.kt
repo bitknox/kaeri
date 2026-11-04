@@ -132,7 +132,8 @@ internal object BesideDims {
     val Gap = 16.dp
     val TitleLine = 22.sp
     val FactsLine = 18.sp
-    val BandGap = 6.dp
+    val BandGap = 8.dp
+    const val SynopsisLines = 2
 
     /** How wide a beside row grows on a wide tablet, so its text keeps a readable measure. */
     val MaxWidth = 760.dp
@@ -190,20 +191,32 @@ internal fun airedDate(context: Context, airsAt: Long): String =
  * The facts under an episode's title, as its row and its sheet both say them: "E7 · 14 min left",
  * "E6 · Watched" or "E8 · 24 min", then "Aired 21 May 2014" once it has.
  */
-internal fun rowFacts(context: Context, entry: Entry, row: EpisodeRow, current: Boolean, unaired: Boolean): Pair<String, String?> {
+internal fun rowFacts(context: Context, entry: Entry, row: EpisodeRow, current: Boolean, unaired: Boolean, withNumber: Boolean = true): Pair<String, String?> {
     val number = row.number.toDoubleOrNull()?.toInt() ?: 0
     val resume = entry.resume?.takeIf { current && !row.completed }
-    val first = when {
-        unaired -> {
-            val airs = row.airsAt?.let { airsWords(context, Instant.ofEpochSecond(it)) }
-            Strings.episodeLineDetail(context, number, airs?.let { Strings.episodeRowAirs(context, it) } ?: Strings.episodeRowNotOut(context))
+    val first = if (withNumber) {
+        when {
+            unaired -> Strings.episodeLineDetail(context, number, unairedDetail(context, row))
+            row.unsourced -> Strings.episodeLineDetail(context, number, Strings.episodeUnsourced(context))
+            row.completed -> Strings.episodeLineDetail(context, number, Strings.episodeWatched(context))
+            else -> episodeDetail(context, row, resume = resume)
         }
-        row.unsourced -> Strings.episodeLineDetail(context, number, Strings.episodeUnsourced(context))
-        row.completed -> Strings.episodeLineDetail(context, number, Strings.episodeWatched(context))
-        else -> episodeDetail(context, row, resume = resume)
+    } else {
+        // The title is the number already, so the facts leave "E4" out.
+        when {
+            unaired -> unairedDetail(context, row)
+            row.unsourced -> Strings.episodeUnsourced(context)
+            row.completed -> Strings.episodeWatched(context)
+            else -> episodeDetailOnly(context, row, resume = resume) ?: ""
+        }
     }
     val second = row.airsAt?.takeIf { !unaired && it <= AppClock.now().epochSecond }?.let { airedDate(context, it) }
     return first to second
+}
+
+private fun unairedDetail(context: Context, row: EpisodeRow): String {
+    val airs = row.airsAt?.let { airsWords(context, Instant.ofEpochSecond(it)) }
+    return airs?.let { Strings.episodeRowAirs(context, it) } ?: Strings.episodeRowNotOut(context)
 }
 
 // The row
@@ -236,12 +249,14 @@ internal fun EpisodeCard(
     val fraction = resume?.fraction?.toFloat()
     val marks = rememberRowMarks(row, fraction)
     val airs = row.airsAt?.takeIf { unaired }?.let { airsWords(context, Instant.ofEpochSecond(it)) }
-    val (first, second) = rowFacts(context, entry, row, current, unaired)
+    // A title that is only the number comes through empty; the row writes "Episode N" and leaves "E4" out of the facts.
+    val titled = !row.title.isNullOrBlank()
+    val (first, second) = rowFacts(context, entry, row, current, unaired, withNumber = titled || beside)
     val unairedLabel = if (unaired) {
         val number = row.number
         when {
-            row.title != null && airs != null -> Strings.episodeUnairedAirsLabel(context, number, row.title!!, airs)
-            row.title != null -> Strings.episodeUnairedLabel(context, number, row.title!!)
+            titled && airs != null -> Strings.episodeUnairedAirsLabel(context, number, row.title!!, airs)
+            titled -> Strings.episodeUnairedLabel(context, number, row.title!!)
             airs != null -> Strings.episodeUnairedAirsLabelPlain(context, number, airs)
             else -> Strings.episodeUnairedLabelPlain(context, number)
         }
@@ -253,10 +268,11 @@ internal fun EpisodeCard(
     val hiddenWord = stringResource(R.string.episode_synopsis_hidden)
     val showWord = stringResource(R.string.episode_synopsis_show)
     val stacked = density.fontScale >= RowDims.StackScale
-    val header = with(density) { maxOf(RowDims.StillHeight, ((RowDims.TitleLine * 2).toDp() + (RowDims.FactsLine * 2).toDp() + 2.dp)) }
+    val header = with(density) { maxOf(RowDims.StillHeight, ((RowDims.TitleLine * 2).toDp() + (RowDims.FactsLine * 2).toDp() + 4.dp)) }
     val band = with(density) { (RowDims.BodyLine * RowDims.SynopsisLines).toDp() }
-    val title = row.title ?: stringResource(R.string.episode_number, row.number.toInt())
-    val titleColor = if (unaired) colors.onSurfaceVariant else androidx.compose.ui.graphics.lerp(colors.onSurface, colors.onSurfaceVariant, marks.dim.value)
+    val title = row.title?.takeIf { it.isNotBlank() } ?: stringResource(R.string.episode_number, row.number.toInt())
+    // A watched row keeps a silk title; the check and the dimmed still say watched.
+    val titleColor = if (unaired) colors.onSurfaceVariant else colors.onSurface
     // A row that grows on screen (a reveal) takes its height first; its text fades in after.
     val tall = form == RowForm.TALL
     var settled by remember { mutableStateOf(tall) }
@@ -297,7 +313,8 @@ internal fun EpisodeCard(
     val grows = Modifier.animateContentSize(Motion.standard()) { _, _ -> if (tall) settled = true }
     if (beside) {
         // The text beside the still; the row keeps its height whether text can land or not.
-        val besideText = with(density) { BesideDims.TitleLine.toDp() + 2.dp + BesideDims.FactsLine.toDp() + BesideDims.BandGap + band }
+        val besideBand = with(density) { (RowDims.BodyLine * BesideDims.SynopsisLines).toDp() }
+        val besideText = with(density) { BesideDims.TitleLine.toDp() + 2.dp + BesideDims.FactsLine.toDp() + BesideDims.BandGap + besideBand }
         val height = BesideDims.Pad * 2 + maxOf(BesideDims.StillHeight, besideText)
         Row(
             Modifier
@@ -321,7 +338,7 @@ internal fun EpisodeCard(
                 if (tall) {
                     // Text that turns up later fades in; a revealed row's fades in once it shows.
                     val shown = row.description?.takeIf { it.isNotBlank() && !hidden }
-                    SynopsisBand(shown, Modifier.padding(top = BesideDims.BandGap).fillMaxWidth().height(band), maxLines = RowDims.SynopsisLines)
+                    SynopsisBand(shown, Modifier.padding(top = BesideDims.BandGap).fillMaxWidth().height(besideBand), maxLines = BesideDims.SynopsisLines)
                 }
             }
         }
@@ -416,12 +433,12 @@ private fun RowHeader(
             }
         }
         // A watched row's check draws itself on at the head of its facts: "✓ E6 · Watched".
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 2.dp)) {
             if (marks.check.value > 0f) {
                 DrawnCheck(marks.check.value, colors.onSurfaceVariant, 14.dp, described = false)
                 Spacer(Modifier.width(4.dp))
             }
-            Text(first, style = MaterialTheme.typography.bodySmall.tabular().copy(lineHeight = factsLine), color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (first.isNotEmpty()) Text(first, style = MaterialTheme.typography.bodySmall.tabular().copy(lineHeight = factsLine), color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         if (second != null) {
             Text(second, style = MaterialTheme.typography.bodySmall.copy(lineHeight = factsLine), color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -627,7 +644,7 @@ internal fun EpisodeSheet(
         scope.launch { state.hide() }.invokeOnCompletion { onDismiss() }
     }
     val items = episodeActions(entry, row, actions, ::close)
-    val title = row.title ?: stringResource(R.string.episode_number, row.number.toInt())
+    val title = row.title?.takeIf { it.isNotBlank() } ?: stringResource(R.string.episode_number, row.number.toInt())
     // The row's own facts: "E7 · 14 min left", then when it aired.
     val (kicker, aired) = rowFacts(context, entry, row, current, unaired = false)
     val synopsis = row.description?.takeIf { it.isNotBlank() && !hidden }
