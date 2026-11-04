@@ -16,14 +16,16 @@ use crate::{
 const LABEL: &[u8] = b"kaeri-sync/1 handoff";
 
 /// The engine's side of a handoff, asked during each session with a paired device.
+#[async_trait::async_trait]
 pub trait Handoff: Send + Sync {
     /// What this device asks `peer` for now: ids the engine understands, such as
     /// `tracker:anilist`. Empty for nothing. `just_paired` when the session began by pairing.
     fn asks(&self, peer: &Paired, just_paired: bool) -> Vec<String>;
 
     /// The answer to what `peer` asked, as plain bytes the crate seals for it, or `None` to send
-    /// nothing.
-    fn answer(&self, peer: &Paired, asks: &[String]) -> Option<Vec<u8>>;
+    /// nothing. It may ask a server first (a plugin store making an invite), but the other side
+    /// waits for it only so long: keep it well under [`crate::lan::ANSWER`].
+    async fn answer(&self, peer: &Paired, asks: &[String]) -> Option<Vec<u8>>;
 }
 
 /// What a peer sent for what this device asked.
