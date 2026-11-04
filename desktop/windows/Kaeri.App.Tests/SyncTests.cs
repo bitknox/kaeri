@@ -62,17 +62,16 @@ public class SyncTests
     [Fact]
     public void TheCloudCardSaysWhatTheFolderNeeds()
     {
-        Assert.IsType<CloudState.SettingUp>(SyncWords.State(Status(), Now, settingUp: true, byHand: false));
-        Assert.IsType<CloudState.Syncing>(SyncWords.State(Status(syncing: true), Now, false, false));
-        Assert.IsType<CloudState.Synced>(SyncWords.State(Status(), Now, false, false));
+        Assert.IsType<CloudState.Syncing>(SyncWords.State(Status(syncing: true), Now, false));
+        Assert.IsType<CloudState.Synced>(SyncWords.State(Status(), Now, false));
         var signedOut = new SyncProblem.SignInNeeded(SyncFolderKind.Dropbox);
         // Signed out by hand is the person's own doing; otherwise the service signed Kaeri out.
-        Assert.IsType<CloudState.SignedOut>(SyncWords.State(Status(signedOut), Now, false, byHand: true));
-        var problem = Assert.IsType<CloudState.Problem>(SyncWords.State(Status(signedOut), Now, false, false));
+        Assert.IsType<CloudState.SignedOut>(SyncWords.State(Status(signedOut), Now, byHand: true));
+        var problem = Assert.IsType<CloudState.Problem>(SyncWords.State(Status(signedOut), Now, false));
         Assert.Equal(ProblemFix.SignInAgain, problem.Fix);
         Assert.Contains("PC", problem.Line);
-        Assert.IsType<CloudState.Offline>(SyncWords.State(Status(new SyncProblem.Unreachable()), Now, false, false));
-        var gone = Assert.IsType<CloudState.Problem>(SyncWords.State(Status(new SyncProblem.Unreachable(), kind: SyncFolderKind.Directory), Now, false, false));
+        Assert.IsType<CloudState.Offline>(SyncWords.State(Status(new SyncProblem.Unreachable()), Now, false));
+        var gone = Assert.IsType<CloudState.Problem>(SyncWords.State(Status(new SyncProblem.Unreachable(), kind: SyncFolderKind.Directory), Now, false));
         Assert.Equal(ProblemFix.ChooseFolder, gone.Fix);
     }
 
@@ -95,6 +94,31 @@ public class SyncTests
         Assert.Equal(T.CloudErrWebdav, SyncWords.ProblemText(new SyncProblem.Unreachable(), SyncFolderKind.WebDav, ""));
         Assert.Equal(T.RkeyWrong, SyncWords.ProblemText(new SyncProblem.WrongRecoveryKey(), null, ""));
         Assert.Equal("cloud.example:8443", SyncWords.HostOf(" https://cloud.example:8443/remote.php/dav "));
+    }
+
+    [Fact]
+    public void ASignInThatFailsSaysWhichStepFailed()
+    {
+        var refused = SyncWords.SignInError(new SyncProblem.SignInDenied(SyncFolderKind.GoogleDrive), SyncFolderKind.GoogleDrive, "", false);
+        Assert.Equal(T.CloudErrSigninTitle("Google Drive"), refused.Title);
+        Assert.Equal(T.CloudErrDeniedShort("Google Drive"), refused.Line);
+        var late = SyncWords.SignInError(new SyncProblem.SignInExpired(SyncFolderKind.GoogleDrive), SyncFolderKind.GoogleDrive, "", false);
+        Assert.Equal(T.CloudErrTimeout, late.Line);
+        var other = SyncWords.SignInError(new SyncProblem.Other("details"), SyncFolderKind.GoogleDrive, "details", false);
+        Assert.Equal(T.CloudErrSigninOther("Google Drive"), other.Line);
+        // After the folder was reached the title says the set-up failed, with the problem's own line.
+        var full = SyncWords.SignInError(new SyncProblem.Other("full"), SyncFolderKind.GoogleDrive, "full", true);
+        Assert.Equal((T.CloudErrSetupTitle, "full"), full);
+    }
+
+    [Fact]
+    public void SyncOnWithNothingToSyncWithReadsAsOff()
+    {
+        Assert.True(SyncWords.Bare(new SyncStatus(false, false, Devices: [], Notes: [], StoresToJoin: [], Clouds: [])));
+        var alone = Status() with { Folder = null, Devices = [Device(Now) with { ThisDevice = true }] };
+        Assert.True(SyncWords.Bare(alone));
+        Assert.False(SyncWords.Bare(Status()));
+        Assert.False(SyncWords.Bare(alone with { Devices = [Device(Now)] }));
     }
 
     [Fact]

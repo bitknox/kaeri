@@ -25,7 +25,6 @@ public abstract record CloudState
 {
     public sealed record Synced(string Line) : CloudState;
     public sealed record Syncing : CloudState;
-    public sealed record SettingUp : CloudState;
     public sealed record SignedOut : CloudState;
     public sealed record Problem(string Line, ProblemFix Fix) : CloudState;
     public sealed record Offline : CloudState;
@@ -80,14 +79,19 @@ public static class SyncWords
     }
 
     /// <summary>
+    /// Sync is on but has nothing to sync with: no other device and no folder. That reads as off,
+    /// with the two ways in, as pairing or adding a folder is what turns sync on.
+    /// </summary>
+    public static bool Bare(SyncStatus status) =>
+        !status.Enabled || (status.Folder is null && status.Devices.All(d => d.ThisDevice));
+
+    /// <summary>
     /// The cloud card's state; <paramref name="byHand"/> is that the person pressed Sign out, so a
     /// sign-in that is needed is theirs and no error.
     /// </summary>
-    public static CloudState State(SyncStatus status, long now, bool settingUp, bool byHand)
+    public static CloudState State(SyncStatus status, long now, bool byHand)
     {
         var service = status.Folder is { } f ? ServiceName(f.Kind) : "";
-        if (settingUp)
-            return new CloudState.SettingUp();
         switch (status.Problem)
         {
             case SyncProblem.SignInNeeded when byHand:
@@ -178,6 +182,24 @@ public static class SyncWords
             SyncProblem.WrongRecoveryKey => T.RkeyWrong,
             SyncProblem.Other other => other.V1,
             _ => T.DevicesRowError,
+        };
+    }
+
+    /// <summary>
+    /// The title and the line of a failed cloud sign-in. A refusal, a page that timed out, or any
+    /// other failure before the folder (the details go to Messages) say the sign-in failed; one
+    /// after the folder was reached says it could not be set up.
+    /// </summary>
+    public static (string Title, string Line) SignInError(SyncProblem problem, SyncFolderKind service, string text, bool finishing)
+    {
+        var name = ServiceName(service);
+        var signIn = T.CloudErrSigninTitle(name);
+        return problem switch
+        {
+            SyncProblem.SignInDenied => (signIn, T.CloudErrDeniedShort(name)),
+            SyncProblem.SignInExpired => (signIn, T.CloudErrTimeout),
+            _ when finishing => (T.CloudErrSetupTitle, text),
+            _ => (signIn, T.CloudErrSigninOther(name)),
         };
     }
 

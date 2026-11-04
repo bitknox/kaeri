@@ -104,7 +104,6 @@ pub struct Tv {
     taken: RefCell<Option<(AnilistId, String)>>,
     on_taken_over: RefCell<Option<Notice>>,
     paired: RefCell<Vec<KnownTv>>,
-    short: String,
     browsers: Cell<u32>,
     request: RefCell<Option<Request>>,
     pairing: RefCell<Option<Step>>,
@@ -156,7 +155,6 @@ impl Tv {
         browser: Arc<dyn Browser>,
         cast_browser: Arc<dyn CastBrowser>,
     ) -> Rc<Self> {
-        let short = sender.as_ref().map(|s| s.short_fingerprint()).unwrap_or_default();
         let tv = Rc::new_cyclic(|me| Self {
             me: me.clone(),
             handle,
@@ -170,7 +168,6 @@ impl Tv {
             taken: RefCell::default(),
             on_taken_over: RefCell::default(),
             paired: RefCell::default(),
-            short,
             browsers: Cell::new(0),
             request: RefCell::default(),
             pairing: RefCell::default(),
@@ -281,11 +278,6 @@ impl Tv {
 
     pub fn paired(&self) -> Vec<KnownTv> {
         self.paired.borrow().clone()
-    }
-
-    /// This computer's key, as a TV's settings list it.
-    pub fn short_fingerprint(&self) -> &str {
-        &self.short
     }
 
     pub fn sheet(&self) -> Option<Sheet> {

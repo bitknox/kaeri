@@ -503,12 +503,9 @@ public sealed partial class SettingsPage : Page
         var pair = new Button { Content = T.TvPairMenu };
         pair.Click += (_, _) => tv.OpenPicker();
         group.Children.Add(CardFrame(tv.Paired.Length == 0 ? T.TvNonePaired : T.SettingsAnotherTv, TvWords.PairNote, pair, tv.Paired.Length == 0 ? "\uE7F4" : "\uE710"));
-        if (tv.ShortFingerprint.Length > 0)
-        {
-            var foot = Ui.Text(TvWords.Footnote(tv.ShortFingerprint), "HazeCaptionStyle");
-            foot.Margin = new Thickness(2, 4, 0, 0);
-            group.Children.Add(foot);
-        }
+        var foot = Ui.Text(TvWords.Footnote, "HazeCaptionStyle");
+        foot.Margin = new Thickness(2, 4, 0, 0);
+        group.Children.Add(foot);
     }
 
     static TextBlock Heading(string text) => new()

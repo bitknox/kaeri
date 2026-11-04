@@ -20,22 +20,23 @@ enum Origin
 }
 
 /// <summary>
-/// The dialogs of sync, each a ContentDialog over the window: how devices share, choosing a cloud
-/// folder and waiting for the browser, the recovery key behind Windows Hello, restoring with it,
-/// pairing both ways, a device's own page, and turning sync off. The engine's events move them
-/// on: a cloud sign-in's steps turn the picker into a wait in place, a crossfade, and the return
-/// closes the picker before the recovery key shows. Only the UI thread touches them.
+/// The dialogs of sync, each a ContentDialog over the window: choosing a cloud folder and waiting
+/// for the browser, the recovery key behind Windows Hello, restoring with it, pairing both ways,
+/// a device's own page, and turning sync off. The engine's events move them on: a cloud sign-in's
+/// steps turn the picker into a wait in place and then into Connecting, Setting up the folder,
+/// and the recovery key or an error, each a crossfade in the same dialog. Only the UI thread
+/// touches them.
 /// </summary>
 static partial class SyncDialogs
 {
+    /// <summary>Opens the cloud card's More menu; the card sets it when it draws, and the shots call it.</summary>
+    public static Action? MoreOpener;
+
     static Ctx Ctx => Ctx.Current;
     static XamlRoot? Root => Ctx.Window.Content?.XamlRoot;
 
     /// <summary>The person pressed Sign out, so the sign-in the folder needs is theirs and no error.</summary>
     public static bool ByHand { get; private set; }
-
-    /// <summary>A cloud sign-in came back and the folder is being set up.</summary>
-    public static bool SettingUp { get; private set; }
 
     /// <summary>The pane draws again: the cloud card's state moved on without an event of its own.</summary>
     public static event Action? Changed;
@@ -265,72 +266,222 @@ static partial class SyncDialogs
             await global::Windows.System.Launcher.LaunchUriAsync(uri);
     }
 
-    // ---------------------------------------------------------------- road
-
-    /// <summary>How should your devices share? From Devices while sync is off.</summary>
-    public static void Road()
-    {
-        var body = new StackPanel { Spacing = 12 };
-        ContentDialog? dialog = null;
-        var list = ChoiceList(tag =>
-        {
-            dialog?.Hide();
-            if ((string)tag == "nearby")
-                PairShow(Origin.Devices);
-            else
-                Picker();
-        });
-        list.Items.Add(ChoiceRow(T.SyncRoadNearby, T.SyncRoadNearbyLine, "", "nearby"));
-        list.Items.Add(ChoiceRow(T.SyncRoadCloud, T.SyncRoadCloudLine, "", "cloud"));
-        body.Children.Add(list);
-        body.Children.Add(Note(T.SyncRoadLater));
-        dialog = Dialog(T.SyncRoadTitle, body);
-        dialog.CloseButtonText = T.ActionCancel;
-        dialog.DefaultButton = ContentDialogButton.None;
-        Present(dialog);
-    }
-
     // ---------------------------------------------------------------- picker and wait
+
+    /// <summary>Where the sign-in stands in the picker's wait.</summary>
+    enum Phase
+    {
+        /// <summary>The browser is open on the service's page.</summary>
+        Browser,
+        /// <summary>The browser came back with access allowed.</summary>
+        Connecting,
+        /// <summary>Signed in; the folder is being made.</summary>
+        SettingUp,
+        /// <summary>The sign-in or the set-up failed.</summary>
+        Error,
+        /// <summary>The folder is ready and the recovery key shows.</summary>
+        Key,
+    }
 
     sealed class PickerParts
     {
         public required ContentDialog Dialog;
         public required Steps Pages;
         public required Title Title;
-        public required TextBlock Error, WaitTitle, WaitLine, NcError, DavError;
-        public required Button OpenAgain;
+        public required TextBlock Error, WaitTitle, WaitLine, FailLine, NcError, DavError;
+        public required HyperlinkButton OpenAgain;
+        public required ProgressRing Ring;
+        public required StackPanel KeySlot;
+        public Phase State = Phase.Browser;
         public string NcHost = "";
         public string? WaitUrl;
+        /// <summary>The sign-in got as far as making the folder.</summary>
+        public bool Finishing;
+        /// <summary>The dialog is being closed by the code, not by the person.</summary>
+        public bool Done;
+        /// <summary>When the browser came back, and when Connecting or Setting up was put on screen.</summary>
+        public DateTime? Returned, Shown;
+        public CancellationTokenSource? Pending;
     }
 
     static PickerParts? picker;
 
+    /// <summary>The picker was opened by Use another service: a choice moves the group's folder.</summary>
+    static bool changing;
+
     /// <summary>Choose a cloud folder.</summary>
-    public static void Picker() => PresentPicker("list");
+    public static void Picker()
+    {
+        changing = false;
+        PresentPicker("list", null);
+    }
+
+    /// <summary>Use another service: the picker with the folder in use marked, whose choice moves the group.</summary>
+    public static void PickerChange(SyncFolderKind inUse)
+    {
+        changing = true;
+        PresentPicker("list", inUse);
+    }
 
     /// <summary>The wait for the browser on its own: Sign in again from the cloud card.</summary>
     public static void SignInAgain(SyncFolderKind service)
     {
         ByHand = false;
+        changing = false;
         last = service;
         Ctx.Known.SyncTrouble = null;
         Ctx.Send(new Command.SyncSignIn(service));
-        var p = PresentPicker("wait");
-        SetWait(p, service, null);
+        var p = PresentPicker("wait", null);
+        StageTo(p, service, Phase.Browser);
     }
 
-    static void SetWait(PickerParts p, SyncFolderKind service, string? url)
+    /// <summary>Set a folder up: the first one turns sync on, and Use another service moves the group.</summary>
+    static void Begin(SyncFolderSpec folder)
+    {
+        if (changing)
+            Ctx.Send(new Command.SyncGroup(new SyncCommand.ChangeSyncFolder(folder)));
+        else
+            Ctx.Send(new Command.StartSync(TypedName, folder));
+    }
+
+    /// <summary>Remove the cloud folder, after asking what stays. It signs out of the service too.</summary>
+    public static async void RemoveFolder(SyncFolderKind kind)
+    {
+        var service = SyncWords.ServiceName(kind);
+        if (Root is { } root && await Ui.Confirm(root, T.CloudRemoveTitle(service), T.CloudRemoveLine(SyncWords.Kind, service), T.CloudRemoveAction))
+            Ctx.Send(new Command.SyncGroup(new SyncCommand.ChangeSyncFolder(null)));
+    }
+
+    /// <summary>
+    /// Puts the wait in <paramref name="stage"/> at the pace of the return: Connecting and Setting
+    /// up show only past 600 ms of it, and a state shown stays at least 400 ms.
+    /// </summary>
+    static async void StageTo(PickerParts p, SyncFolderKind service, Phase stage, string? url = null, (string Title, string Line)? error = null)
+    {
+        var returning = stage is Phase.Connecting or Phase.SettingUp;
+        p.Pending?.Cancel();
+        p.Pending = null;
+        if (stage == Phase.Browser)
+        {
+            p.Returned = null;
+            p.Shown = null;
+            p.Finishing = false;
+        }
+        else
+        {
+            p.Returned ??= DateTime.UtcNow;
+        }
+        var delay = TimeSpan.Zero;
+        if (returning && p.Shown is null && p.Returned is { } returned)
+            delay = TimeSpan.FromMilliseconds(600) - (DateTime.UtcNow - returned);
+        if (p.Shown is { } shown)
+        {
+            var left = TimeSpan.FromMilliseconds(400) - (DateTime.UtcNow - shown);
+            if (left > delay)
+                delay = left;
+        }
+        if (delay > TimeSpan.Zero)
+        {
+            var pending = p.Pending = new CancellationTokenSource();
+            try
+            {
+                await Task.Delay(delay, pending.Token);
+            }
+            catch (TaskCanceledException)
+            {
+                return;
+            }
+        }
+        p.Shown = returning ? DateTime.UtcNow : null;
+        ShowStage(p, service, stage, url, error);
+    }
+
+    /// <summary>Closes the picker once the state on screen has had its 400 ms.</summary>
+    static async void FinishAfterStage(PickerParts p)
+    {
+        p.Pending?.Cancel();
+        p.Pending = null;
+        if (p.Shown is { } shown)
+        {
+            var left = TimeSpan.FromMilliseconds(400) - (DateTime.UtcNow - shown);
+            if (left > TimeSpan.Zero)
+            {
+                var pending = p.Pending = new CancellationTokenSource();
+                try
+                {
+                    await Task.Delay(left, pending.Token);
+                }
+                catch (TaskCanceledException)
+                {
+                    return;
+                }
+            }
+        }
+        Close(p);
+    }
+
+    static void Close(PickerParts p)
+    {
+        p.Done = true;
+        p.Dialog.Hide();
+    }
+
+    /// <summary>
+    /// Puts the wait in <paramref name="stage"/> at once: the title and the content crossfade, the
+    /// ring stays. Cancel dims once the browser has come back, as that cannot be stopped.
+    /// </summary>
+    static void ShowStage(PickerParts p, SyncFolderKind service, Phase stage, string? url, (string Title, string Line)? error)
     {
         var name = SyncWords.ServiceName(service);
+        p.State = stage;
+        var (title, line) = stage switch
+        {
+            Phase.Browser => (T.CloudBrowserTitle(name), T.CloudBrowserLine(name)),
+            Phase.Connecting => (T.CloudConnecting(name), T.CloudConnectingLine),
+            Phase.SettingUp => (T.CloudSettingUp, T.CloudSettingUpLine(name)),
+            Phase.Error => error ?? ("", ""),
+            _ => (T.RkeyTitle, ""),
+        };
         p.WaitTitle.Text = T.CloudWaiting(name);
-        p.WaitLine.Text = T.CloudBrowserLine(name);
+        p.WaitTitle.Visibility = stage == Phase.Browser ? Visibility.Visible : Visibility.Collapsed;
+        p.WaitLine.Text = line;
+        p.FailLine.Text = line;
         p.WaitUrl = url;
-        p.OpenAgain.Visibility = url is null ? Visibility.Collapsed : Visibility.Visible;
-        p.Pages.Show("wait");
-        p.Title.Set(T.CloudBrowserTitle(name));
+        p.OpenAgain.Visibility = stage == Phase.Browser && url is not null ? Visibility.Visible : Visibility.Collapsed;
+        p.Title.Set(title);
+        p.Pages.Show(stage switch { Phase.Error => "error", Phase.Key => "key", _ => "wait" });
+        Buttons(p);
     }
 
-    static PickerParts PresentPicker(string page)
+    /// <summary>The dialog's buttons for the page it shows.</summary>
+    static void Buttons(PickerParts p)
+    {
+        var showing = p.Pages.Showing;
+        var form = showing is "nextcloud" or "webdav";
+        var dialog = p.Dialog;
+        dialog.PrimaryButtonText = form ? T.CloudConnect : showing == "error" ? T.ActionTryAgain : showing == "key" ? T.ActionDone : "";
+        dialog.DefaultButton = dialog.PrimaryButtonText.Length > 0 ? ContentDialogButton.Primary : ContentDialogButton.None;
+        // Cancel is the secondary button, so it can dim: the Close button has no disabled state.
+        dialog.SecondaryButtonText = showing == "key" ? "" : T.ActionCancel;
+        dialog.IsSecondaryButtonEnabled = !Dimmed(p);
+    }
+
+    /// <summary>Cancel is dimmed: the browser came back and the token fetch cannot be stopped half way.</summary>
+    static bool Dimmed(PickerParts p) => p.Pages.Showing == "wait" && p.State is Phase.Connecting or Phase.SettingUp;
+
+    /// <summary>Cancel by the person: a sign-in under way stops quietly and the picker is back as it was.</summary>
+    static void CancelStep(PickerParts p)
+    {
+        if (p.Pages.Showing == "wait")
+        {
+            Ctx.Send(new Command.CancelSyncSignIn());
+            Ctx.Known.SyncSigningIn = null;
+        }
+        p.Pending?.Cancel();
+        p.Pages.Show("list");
+    }
+
+    static PickerParts PresentPicker(string page, SyncFolderKind? inUse)
     {
         if (picker is { } open)
         {
@@ -368,19 +519,33 @@ static partial class SyncDialogs
         listPage.Children.Add(Note(T.CloudPickFoot));
         pages.Add("list", listPage);
 
-        // The wait.
+        // The wait: its states crossfade in the one dialog. The ring stays; the title in the
+        // dialog's header and the line below it change.
         var wait = new StackPanel { Spacing = 12 };
         var waitRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
-        waitRow.Children.Add(new ProgressRing { IsActive = true, Width = 20, Height = 20 });
+        var ring = new ProgressRing { IsActive = true, Width = 20, Height = 20 };
+        waitRow.Children.Add(ring);
         var waitTitle = Ui.Text("", "BodyStrongTextBlockStyle");
         waitTitle.VerticalAlignment = VerticalAlignment.Center;
         waitRow.Children.Add(waitTitle);
         wait.Children.Add(waitRow);
         var waitLine = Ui.Text("", "HazeBodyStyle");
         wait.Children.Add(waitLine);
-        var openAgain = new Button { Content = T.CloudOpenAgain, Visibility = Visibility.Collapsed };
+        // A secondary link is silk; the dialog's one amber is its primary button.
+        var openAgain = Link(T.CloudOpenAgain);
+        openAgain.Visibility = Visibility.Collapsed;
         wait.Children.Add(openAgain);
         pages.Add("wait", wait);
+
+        // A failure: what failed, with Try again and Cancel in the buttons.
+        var failed = new StackPanel { Spacing = 12 };
+        var failLine = Ui.Text("", "HazeBodyStyle");
+        failed.Children.Add(failLine);
+        pages.Add("error", failed);
+
+        // The recovery key, once the folder is ready.
+        var keySlot = new StackPanel { Spacing = 16 };
+        pages.Add("key", keySlot);
 
         // Nextcloud.
         var nc = new StackPanel { Spacing = 12 };
@@ -441,7 +606,6 @@ static partial class SyncDialogs
         Grid.SetColumn(title.View, 1);
         titleRow.Children.Add(title.View);
         var dialog = Dialog(titleRow, pages.View, 456);
-        dialog.CloseButtonText = T.ActionCancel;
         dialog.DefaultButton = ContentDialogButton.None;
         var parts = new PickerParts
         {
@@ -451,6 +615,9 @@ static partial class SyncDialogs
             Error = error,
             WaitTitle = waitTitle,
             WaitLine = waitLine,
+            FailLine = failLine,
+            Ring = ring,
+            KeySlot = keySlot,
             OpenAgain = openAgain,
             NcError = ncError,
             DavError = davError,
@@ -472,7 +639,7 @@ static partial class SyncDialogs
             Ctx.Known.SyncTrouble = null;
             SayError(ncError, null);
             var withPassword = appGroup.Visibility == Visibility.Visible;
-            Ctx.Send(new Command.StartSync(TypedName, new SyncFolderSpec(SyncFolderKind.Nextcloud, typed, withPassword ? user.Text : null, withPassword ? password.Password : null)));
+            Begin(new SyncFolderSpec(SyncFolderKind.Nextcloud, typed, withPassword ? user.Text : null, withPassword ? password.Password : null));
         }
         void ConnectWebdav()
         {
@@ -481,36 +648,49 @@ static partial class SyncDialogs
             last = SyncFolderKind.WebDav;
             Ctx.Known.SyncTrouble = null;
             SayError(davError, null);
-            Ctx.Send(new Command.StartSync(TypedName, new SyncFolderSpec(SyncFolderKind.WebDav, davAddress.Text.Trim(), davUser.Text, davPassword.Password)));
+            Begin(new SyncFolderSpec(SyncFolderKind.WebDav, davAddress.Text.Trim(), davUser.Text, davPassword.Password));
         }
         dialog.PrimaryButtonClick += (_, e) =>
         {
+            if (parts.State == Phase.Key && pages.Showing == "key")
+            {
+                // Done closes the dialog; the key is not offered again by itself.
+                Ctx.Known.RecoveryKey = null;
+                parts.Done = true;
+                return;
+            }
             e.Cancel = true;
             if (pages.Showing == "nextcloud")
                 ConnectNextcloud();
             else if (pages.Showing == "webdav")
                 ConnectWebdav();
+            else if (pages.Showing == "error" && last is { } again)
+                Choose(again);
         };
         // The one place Cancel means two things: from the list it closes, from any later step it
         // stops the sign-in quietly and the picker is back as it was.
-        dialog.CloseButtonClick += (_, e) =>
+        dialog.SecondaryButtonClick += (_, e) =>
         {
             if (pages.Showing == "list")
                 return;
             e.Cancel = true;
-            if (pages.Showing == "wait")
-            {
-                Ctx.Send(new Command.CancelSyncSignIn());
-                Ctx.Known.SyncSigningIn = null;
-            }
-            pages.Show("list");
+            CancelStep(parts);
+        };
+        // Escape is Cancel: it closes the list, goes back from a later step, does nothing while
+        // Cancel is dimmed and never loses a key not yet seen.
+        dialog.Closing += (_, e) =>
+        {
+            if (parts.Done || e.Result != ContentDialogResult.None || pages.Showing == "list")
+                return;
+            e.Cancel = true;
+            if (pages.Showing != "key" && !Dimmed(parts))
+                CancelStep(parts);
         };
         pages.Shown += name =>
         {
             var form = name is "nextcloud" or "webdav";
             back.Visibility = form ? Visibility.Visible : Visibility.Collapsed;
-            dialog.PrimaryButtonText = form ? T.CloudConnect : "";
-            dialog.DefaultButton = form ? ContentDialogButton.Primary : ContentDialogButton.None;
+            Buttons(parts);
             switch (name)
             {
                 case "list":
@@ -526,6 +706,7 @@ static partial class SyncDialogs
         };
         dialog.Closed += (_, _) =>
         {
+            parts.Pending?.Cancel();
             if (picker == parts)
                 picker = null;
         };
@@ -533,6 +714,17 @@ static partial class SyncDialogs
         picker = parts;
         Present(dialog);
         return parts;
+    }
+
+    /// <summary>The row of the service in use, in Use another service: dimmed and marked.</summary>
+    static ListViewItem InUse(ListViewItem row, SyncFolderKind kind, SyncFolderKind? inUse)
+    {
+        if (inUse != kind)
+            return row;
+        row.IsEnabled = false;
+        if (row.Content is Grid { Children: { Count: > 1 } children } && children[1] is StackPanel { Children: { Count: > 1 } words } && words[1] is TextBlock line)
+            line.Text = T.CloudInUse;
+        return row;
     }
 
     const string ICloudName = "iCloud Drive"; // i18n-skip
@@ -553,8 +745,8 @@ static partial class SyncDialogs
         switch (kind)
         {
             case SyncFolderKind.GoogleDrive or SyncFolderKind.Dropbox or SyncFolderKind.OneDrive:
-                Ctx.Send(new Command.StartSync(TypedName, new SyncFolderSpec(kind)));
-                SetWait(p, kind, null);
+                Begin(new SyncFolderSpec(kind));
+                StageTo(p, kind, Phase.Browser);
                 break;
             case SyncFolderKind.Nextcloud:
                 p.Pages.Show("nextcloud");
@@ -564,7 +756,7 @@ static partial class SyncDialogs
                 break;
             default:
                 if (await Ctx.Window.PickFolder() is { Length: > 0 } path)
-                    Ctx.Send(new Command.StartSync(TypedName, new SyncFolderSpec(SyncFolderKind.Directory, path)));
+                    Begin(new SyncFolderSpec(SyncFolderKind.Directory, path));
                 break;
         }
     }
@@ -573,13 +765,13 @@ static partial class SyncDialogs
 
     static ContentDialog? keyDialog;
 
-    /// <summary>The recovery key, once the first cloud folder is set, or when it is seen again.</summary>
-    public static void KeyDialog()
+    /// <summary>
+    /// The recovery key's content, into <paramref name="body"/>: its line, the key in groups of
+    /// four, Copy, Save and the QR code, and the note on how to see it again.
+    /// </summary>
+    static void FillKey(StackPanel body, string key)
     {
-        if (Ctx.Known.RecoveryKey is not { } key)
-            return;
-        keyDialog?.Hide();
-        var body = new StackPanel { Spacing = 16 };
+        body.Children.Clear();
         body.Children.Add(Ui.Text(T.RkeyLine, "HazeBodyStyle"));
         var groups = SyncWords.KeyGroups(key);
         var grid = new StackPanel { Spacing = 6 };
@@ -637,6 +829,16 @@ static partial class SyncDialogs
         };
         body.Children.Add(buttons);
         body.Children.Add(Note(T.RkeyLockWindows));
+    }
+
+    /// <summary>The recovery key on its own, when it is seen again from Devices. The first time, it shows in the picker's dialog.</summary>
+    public static void KeyDialog()
+    {
+        if (Ctx.Known.RecoveryKey is not { } key)
+            return;
+        keyDialog?.Hide();
+        var body = new StackPanel { Spacing = 16 };
+        FillKey(body, key);
         var dialog = Dialog(T.RkeyTitle, body, 432);
         dialog.PrimaryButtonText = T.ActionDone;
         // Only Done closes it: Escape would lose a key never seen again without the lock.
@@ -1099,35 +1301,39 @@ static partial class SyncDialogs
         {
             case Event.SyncSignIn { Step: SyncSignInStep.Browser browser } signIn:
                 if (picker is { } waiting)
-                    SetWait(waiting, signIn.Service, browser.Url);
+                    StageTo(waiting, signIn.Service, Phase.Browser, browser.Url);
                 break;
-            case Event.SyncSignIn { Step: SyncSignInStep.Finishing }:
-                SettingUp = true;
-                picker?.Dialog.Hide();
-                Changed?.Invoke();
-                // The card says it is setting up only past 600 ms; a quick finish never flashes it.
-                Ctx.Window.DispatcherQueue.TryEnqueue(async () =>
+            case Event.SyncSignIn { Step: SyncSignInStep.Connecting } connecting:
+                if (picker is { } returned)
+                    StageTo(returned, connecting.Service, Phase.Connecting);
+                break;
+            case Event.SyncSignIn { Step: SyncSignInStep.Finishing } finishing:
+                if (picker is { } making)
                 {
-                    await Task.Delay(600);
-                    if (SettingUp)
-                        Changed?.Invoke();
-                });
+                    making.Finishing = true;
+                    StageTo(making, finishing.Service, Phase.SettingUp);
+                }
                 break;
             case Event.SyncSignIn { Step: null }:
-                if (Ctx.Known.SyncTrouble is null)
-                    picker?.Dialog.Hide();
+                if (Ctx.Known.SyncTrouble is null && picker is { State: not Phase.Key } over)
+                    FinishAfterStage(over);
                 break;
-            case Event.SyncRecoveryKey:
-                SettingUp = false;
-                picker?.Dialog.Hide();
-                KeyDialog();
+            case Event.SyncRecoveryKey recovery:
+                if (picker is { } making2)
+                {
+                    // The folder was made from the picker: the key shows in the same dialog.
+                    FillKey(making2.KeySlot, recovery.V1);
+                    StageTo(making2, last ?? SyncFolderKind.GoogleDrive, Phase.Key);
+                }
+                else
+                {
+                    KeyDialog();
+                }
                 break;
             case Event.SyncProblem problem:
                 Problem(problem.V1);
                 break;
             case Event.SyncStatus status:
-                if (status.V1.Folder is not null && !status.V1.Syncing)
-                    SettingUp = false;
                 if (status.V1.Enabled && restore is { } restored)
                     restored.Dialog.Hide();
                 // A pairing finished when the group has a device it had not.
@@ -1155,11 +1361,11 @@ static partial class SyncDialogs
     static void Problem(SyncProblem problem)
     {
         var text = SyncWords.ProblemText(problem, last, picker?.NcHost ?? "");
-        SettingUp = false;
         switch (problem)
         {
             case SyncProblem.GroupExists:
-                picker?.Dialog.Hide();
+                if (picker is { } closing)
+                    Close(closing);
                 Restore(last ?? SyncFolderKind.GoogleDrive);
                 return;
             case SyncProblem.WrongRecoveryKey:
@@ -1181,6 +1387,12 @@ static partial class SyncDialogs
         }
         if (picker is { } p)
         {
+            if (last is SyncFolderKind.GoogleDrive or SyncFolderKind.Dropbox or SyncFolderKind.OneDrive)
+            {
+                // The error is said in the dialog, with Try again.
+                StageTo(p, last.Value, Phase.Error, error: SyncWords.SignInError(problem, last.Value, text, p.Finishing));
+                return;
+            }
             SayError(last switch { SyncFolderKind.Nextcloud => p.NcError, SyncFolderKind.WebDav => p.DavError, _ => p.Error }, text);
             p.Pages.Show(last switch { SyncFolderKind.Nextcloud => "nextcloud", SyncFolderKind.WebDav => "webdav", _ => "list" });
         }

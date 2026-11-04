@@ -999,8 +999,8 @@ public static class TvWords
         return tv.LastSeen is { } seen ? T.TvPairedSeen(paired, Wording.Ago(Math.Max(0, now.ToUnixTimeSeconds() - seen))) : paired;
     }
 
-    public static string Footnote(string shortFingerprint) =>
-        T.TvDeviceCode(shortFingerprint);
+    public static string Footnote => T.TvForgetNote;
+
 
     public static string PairNote => T.TvNonePairedDetail;
 
