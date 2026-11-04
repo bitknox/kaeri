@@ -64,6 +64,7 @@ public final class SettingsModel {
         switch pausedOverride ?? view?.skipFindPaused {
         case .lowPower: L.playerSkipPausedLowPower
         case .storage: L.playerSkipPausedStorage
+        case .unavailable: L.playerSkipUnavailable
         case nil: nil
         }
     }

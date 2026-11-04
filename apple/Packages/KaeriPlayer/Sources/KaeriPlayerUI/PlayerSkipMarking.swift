@@ -314,6 +314,7 @@ extension PlayerModel {
         switch pause {
         case .lowPower: return L.playerSkipPausedLowPower
         case .storage: return L.playerSkipPausedStorage
+        case .unavailable: return L.playerSkipUnavailable
         }
     }
 

@@ -12,4 +12,5 @@ fun skipFindPausedLine(context: Context, pause: SkipFindPause?): String? = when 
     null -> null
     SkipFindPause.LOW_POWER -> Strings.playerSkipPausedBatterySaver(context)
     SkipFindPause.STORAGE -> Strings.playerSkipPausedStorage(context)
+    SkipFindPause.UNAVAILABLE -> Strings.playerSkipUnavailable(context)
 }
