@@ -147,6 +147,11 @@ static partial class SyncDialogs
             case "sync-pair-enter":
                 PairEnter();
                 break;
+            case "sync-pair-enter-address":
+                PairEnter();
+                await Task.Delay(400);
+                enter?.ByAddress?.Invoke();
+                break;
             case "sync-pair-enter-typed":
                 PairEnter();
                 await Task.Delay(400);

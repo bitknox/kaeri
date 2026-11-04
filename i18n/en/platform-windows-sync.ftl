@@ -21,3 +21,7 @@ devices-sync-switch-name = Sync with { $device }
 # @only windows
 # @arg device: text
 devices-open-name = Open { $device }
+
+# Text button in Enter a code that shows the address field, for networks where the device showing the code can't be found by itself.
+# @only windows
+pair-by-address = Pair by address

@@ -117,6 +117,16 @@ static partial class SyncDialogs
 
     static TextBlock Note(string text) => Ui.Text(text, "HazeCaptionStyle");
 
+    /// <summary>A text link in silk: the view's one amber stays on its primary button.</summary>
+    static HyperlinkButton Link(string text)
+    {
+        var link = new HyperlinkButton { Content = text, Padding = new Thickness(0) };
+        var silk = Ui.Res<Brush>("SilkBrush");
+        foreach (var state in new[] { "HyperlinkButtonForeground", "HyperlinkButtonForegroundPointerOver", "HyperlinkButtonForegroundPressed" }) // i18n-skip
+            link.Resources[state] = silk;
+        return link;
+    }
+
     static TextBlock ErrorLine()
     {
         var error = Ui.Text("", "BodyTextBlockStyle");
@@ -382,21 +392,18 @@ static partial class SyncDialogs
         appGroup.Children.Add(user);
         appGroup.Children.Add(password);
         var ncNote = Note(T.CloudNextcloudAddressNote);
-        var appPassword = new HyperlinkButton { Content = T.CloudAppPassword, Padding = new Thickness(0) };
+        var appPassword = Link(T.CloudAppPassword);
         appPassword.Click += (_, _) =>
         {
             Motion.Show(appGroup);
             ncNote.Text = T.CloudAppPasswordNote(SyncWords.Kind);
             appPassword.Visibility = Visibility.Collapsed;
         };
-        var connect = new Button { Content = T.CloudConnect, Style = Ui.Res<Style>("AccentButtonStyle"), HorizontalAlignment = HorizontalAlignment.Right };
-        nc.Children.Add(StepPill(pages, "Nextcloud")); // i18n-skip
         nc.Children.Add(ncError);
         nc.Children.Add(address);
         nc.Children.Add(ncNote);
         nc.Children.Add(appGroup);
         nc.Children.Add(appPassword);
-        nc.Children.Add(connect);
         pages.Add("nextcloud", nc);
 
         // WebDAV.
@@ -405,17 +412,35 @@ static partial class SyncDialogs
         var davAddress = Field(T.CloudWebdavAddressLabel, InputScopeNameValue.Url);
         var davUser = Field(T.CloudUserLabel);
         var davPassword = new PasswordBox { Header = T.CloudPasswordLabel };
-        var davConnect = new Button { Content = T.CloudConnect, Style = Ui.Res<Style>("AccentButtonStyle"), HorizontalAlignment = HorizontalAlignment.Right };
-        dav.Children.Add(StepPill(pages, T.CloudWebdav));
         dav.Children.Add(davError);
         dav.Children.Add(davAddress);
         dav.Children.Add(davUser);
         dav.Children.Add(davPassword);
-        dav.Children.Add(davConnect);
         pages.Add("webdav", dav);
 
         var title = new Title(T.CloudPickTitle);
-        var dialog = Dialog(title.View, pages.View, 456);
+        // A form page has a back glyph before its title, which already names the service.
+        var back = new Button
+        {
+            Content = new FontIcon { Glyph = "\uE72B", FontSize = 14 },
+            Width = 32,
+            Height = 32,
+            Padding = new Thickness(0),
+            Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
+            BorderThickness = new Thickness(0),
+            VerticalAlignment = VerticalAlignment.Center,
+            Visibility = Visibility.Collapsed,
+        };
+        AutomationProperties.SetName(back, T.ActionBack);
+        ToolTipService.SetToolTip(back, T.ActionBack);
+        back.Click += (_, _) => pages.Show("list");
+        var titleRow = new Grid { ColumnSpacing = 8 };
+        titleRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        titleRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        titleRow.Children.Add(back);
+        Grid.SetColumn(title.View, 1);
+        titleRow.Children.Add(title.View);
+        var dialog = Dialog(titleRow, pages.View, 456);
         dialog.CloseButtonText = T.ActionCancel;
         dialog.DefaultButton = ContentDialogButton.None;
         var parts = new PickerParts
@@ -435,7 +460,9 @@ static partial class SyncDialogs
             if (parts.WaitUrl is { } url)
                 OpenUrl(url);
         };
-        connect.Click += (_, _) =>
+        // Connect is the dialog's primary button on the Nextcloud and WebDAV pages; it keeps the
+        // dialog open, and the engine's answer moves it on.
+        void ConnectNextcloud()
         {
             var typed = address.Text.Trim();
             if (typed.Length == 0)
@@ -446,8 +473,8 @@ static partial class SyncDialogs
             SayError(ncError, null);
             var withPassword = appGroup.Visibility == Visibility.Visible;
             Ctx.Send(new Command.StartSync(TypedName, new SyncFolderSpec(SyncFolderKind.Nextcloud, typed, withPassword ? user.Text : null, withPassword ? password.Password : null)));
-        };
-        davConnect.Click += (_, _) =>
+        }
+        void ConnectWebdav()
         {
             if (davAddress.Text.Trim().Length == 0 || davUser.Text.Length == 0)
                 return;
@@ -455,6 +482,14 @@ static partial class SyncDialogs
             Ctx.Known.SyncTrouble = null;
             SayError(davError, null);
             Ctx.Send(new Command.StartSync(TypedName, new SyncFolderSpec(SyncFolderKind.WebDav, davAddress.Text.Trim(), davUser.Text, davPassword.Password)));
+        }
+        dialog.PrimaryButtonClick += (_, e) =>
+        {
+            e.Cancel = true;
+            if (pages.Showing == "nextcloud")
+                ConnectNextcloud();
+            else if (pages.Showing == "webdav")
+                ConnectWebdav();
         };
         // The one place Cancel means two things: from the list it closes, from any later step it
         // stops the sign-in quietly and the picker is back as it was.
@@ -472,6 +507,10 @@ static partial class SyncDialogs
         };
         pages.Shown += name =>
         {
+            var form = name is "nextcloud" or "webdav";
+            back.Visibility = form ? Visibility.Visible : Visibility.Collapsed;
+            dialog.PrimaryButtonText = form ? T.CloudConnect : "";
+            dialog.DefaultButton = form ? ContentDialogButton.Primary : ContentDialogButton.None;
             switch (name)
             {
                 case "list":
@@ -494,18 +533,6 @@ static partial class SyncDialogs
         picker = parts;
         Present(dialog);
         return parts;
-    }
-
-    /// <summary>The pill at the top of a form page: the service this step is for, with a way back to the list.</summary>
-    static Button StepPill(Steps pages, string name)
-    {
-        var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
-        content.Children.Add(new FontIcon { Glyph = "", FontSize = 12 });
-        content.Children.Add(new TextBlock { Text = name });
-        var pill = new Button { Content = content, CornerRadius = new CornerRadius(14), Padding = new Thickness(12, 4, 12, 4) };
-        AutomationProperties.SetName(pill, name);
-        pill.Click += (_, _) => pages.Show("list");
-        return pill;
     }
 
     const string ICloudName = "iCloud Drive"; // i18n-skip
@@ -825,6 +852,8 @@ static partial class SyncDialogs
         public required StackPanel CopySlot;
         public bool Working;
         public bool Paired;
+        /// <summary>Shows the address field, as Pair by address does.</summary>
+        public Action? ByAddress;
     }
 
     static EnterParts? enter;
@@ -849,12 +878,26 @@ static partial class SyncDialogs
         // A failed pairing already says where to look; the Wi-Fi line steps aside for it.
         error.RegisterPropertyChangedCallback(TextBlock.TextProperty, (_, _) =>
             sameWifi.Visibility = error.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed);
+        // For networks where the device can't be found by itself: the address, behind its own link.
         var address = Field(T.PairAddressLabel, InputScopeNameValue.Url);
         address.PlaceholderText = "192.0.2.4"; // i18n-skip
-        body.Children.Add(address);
-        body.Children.Add(Note(T.PairAddressOptional));
-        var showInstead = new HyperlinkButton { Content = T.PairShowInstead, Padding = new Thickness(0) };
-        body.Children.Add(showInstead);
+        var byAddress = new StackPanel { Spacing = 12, Visibility = Visibility.Collapsed };
+        byAddress.Children.Add(address);
+        byAddress.Children.Add(Note(T.PairAddressOptional));
+        body.Children.Add(byAddress);
+        var links = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 24 };
+        var pairByAddress = Link(T.PairByAddress);
+        void OpenAddress()
+        {
+            pairByAddress.Visibility = Visibility.Collapsed;
+            Motion.Show(byAddress);
+            address.Focus(FocusState.Programmatic);
+        }
+        pairByAddress.Click += (_, _) => OpenAddress();
+        var showInstead = Link(T.PairShowInstead);
+        links.Children.Add(showInstead);
+        links.Children.Add(pairByAddress);
+        body.Children.Add(links);
         pages.Add("entering", body);
         var ok = new StackPanel { Spacing = 12 };
         ok.Children.Add(Ui.Text(T.PairOkLine, "HazeBodyStyle"));
@@ -867,7 +910,7 @@ static partial class SyncDialogs
         dialog.PrimaryButtonText = T.PairButton;
         dialog.CloseButtonText = T.ActionCancel;
         dialog.IsPrimaryButtonEnabled = false;
-        var parts = new EnterParts { Dialog = dialog, Pages = pages, Error = error, PairedTitle = pairedTitle, CopySlot = copySlot };
+        var parts = new EnterParts { Dialog = dialog, Pages = pages, Error = error, PairedTitle = pairedTitle, CopySlot = copySlot, ByAddress = OpenAddress };
         digits.Changed += () =>
         {
             if (!parts.Working && !parts.Paired)
