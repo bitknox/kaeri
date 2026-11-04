@@ -225,7 +225,29 @@ fn home_ask(engine: &EngineState, services: &Services, refresh: bool) -> HomeAsk
         offline: engine.network.offline,
         refresh,
         sources: !services.registry.usable_ids().is_empty(),
+        usable: probe::Usable::of(&services.registry),
         demo: crate::demo::state(engine, services),
+    }
+}
+
+/// The sources changed, so a miss kept from the ones before may no longer hold. A title the
+/// apps were told is not found this session is told what it is now, and asked again when
+/// interest is shown in it, and a Home open goes out again with its marks as they now stand.
+pub(crate) fn home_after_sources(engine: &mut EngineState, services: &Services, tx: &Outbox) {
+    let usable = probe::Usable::of(&services.registry);
+    let now = services.clock.now();
+    let probed: Vec<_> = engine.probed.keys().copied().collect();
+    for id in probed {
+        if let Some(playable) = probe::lapsed(&services.store, id, &usable, now) {
+            engine.probed.remove(&id);
+            let _ = tx.send(Event::TitlePlayable { id, playable });
+        }
+    }
+    if engine.home.asked() {
+        let (ask, memory) = (home_ask(engine, services, false), engine.home.clone());
+        spawn(None, services, tx, move |lent| async move {
+            home::changed(&lent.meta, &lent.store, &lent.tx, &ask, &memory);
+        });
     }
 }
 

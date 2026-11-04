@@ -43,6 +43,7 @@ use crate::{
     catalog::{
         browse,
         filter::{self, Viewer},
+        probe,
         up_next::{self, Pick},
     },
     data,
@@ -111,6 +112,8 @@ pub struct HomeAsk {
     pub refresh: bool,
     /// A source is installed and on, so something on Home can play.
     pub sources: bool,
+    /// The sources usable, which a kept miss holds for only while they stand.
+    pub usable: probe::Usable,
     /// Where the demo stands: the spotlight's case 0 and the demo-only closing line.
     pub demo: kaeri_model::sources::DemoState,
 }
@@ -392,29 +395,10 @@ fn entries(meta: &Meta, store: &Store, ids: &[u32]) -> Vec<Entry> {
     meta.cached(&ids).iter().map(|m| data::entry_from(m, Some(store))).collect()
 }
 
-/// What the sources check last found for `id`, while it is a day old or less.
-fn playable(store: &Store, id: AnilistId, now: i64) -> Playable {
-    match kept::<crate::catalog::home::Probed>(store, &probe_key(id)) {
-        Some(probed) if now - probed.at < DAY => {
-            if probed.found {
-                Playable::Found
-            } else {
-                Playable::NotFound
-            }
-        }
-        _ => Playable::Unknown,
-    }
-}
-
-/// What the sources check found, as kept.
-#[derive(Serialize, Deserialize)]
-pub(crate) struct Probed {
-    pub at: i64,
-    pub found: bool,
-}
-
-pub(crate) fn probe_key(id: AnilistId) -> String {
-    format!("probe:{}", id.get())
+/// What the sources check last found for `id` that still holds with the sources as they stand:
+/// see [`probe::kept`].
+fn playable(store: &Store, id: AnilistId, ask: &HomeAsk) -> Playable {
+    probe::kept(store, id, &ask.usable, ask.now).unwrap_or(Playable::Unknown)
 }
 
 /// The main action for a title that has not been started: play episode 1 when it is out and a
@@ -427,8 +411,8 @@ fn first_action(out: bool, playable: Playable, planned: bool) -> HomeAction {
     }
 }
 
-fn poster(entry: Entry, viewer: &Viewer<'_>, line: Option<Msg>, now: i64) -> HomeItem {
-    let playable = playable(viewer_store(viewer), entry.id, now);
+fn poster(entry: Entry, viewer: &Viewer<'_>, line: Option<Msg>, ask: &HomeAsk) -> HomeItem {
+    let playable = playable(viewer_store(viewer), entry.id, ask);
     let planned = viewer.status_of(entry.id).as_deref() == Some("PLANNING");
     let out = entry.status != Some(AiringStatus::NotYetReleased);
     let starts = (!out).then_some(entry.start_date).flatten();
@@ -466,10 +450,11 @@ fn viewer_store<'a>(viewer: &Viewer<'a>) -> &'a Store {
 fn continue_card(
     entry: &Entry,
     store: &Store,
-    now: i64,
+    ask: &HomeAsk,
     today: i64,
     last_device: Option<String>,
 ) -> Option<HomeItem> {
+    let now = ask.now;
     let row = QueueItem::of(entry, Casing::Sentence);
     // Watched to the end is finished, not waiting, though the row would offer a rewatch.
     let past_the_end = row.resume.is_none()
@@ -494,7 +479,7 @@ fn continue_card(
         }
         (None, _, _) => Some(Msg::HomeEpisodeNext { episode }),
     };
-    let playable = playable(store, entry.id, now);
+    let playable = playable(store, entry.id, ask);
     let action = if row.resume.is_some() { HomeAction::Resume } else { HomeAction::Play };
     Some(HomeItem {
         entry: entry.clone(),
@@ -523,7 +508,8 @@ fn newest_waiting(entry: &Entry, episode: u32) -> bool {
 }
 
 /// The shows with something waiting, most recent first, as many as are cached.
-fn continue_cards(meta: &Meta, store: &Store, now: i64, today: i64) -> Vec<HomeItem> {
+fn continue_cards(meta: &Meta, store: &Store, ask: &HomeAsk, today: i64) -> Vec<HomeItem> {
+    let now = ask.now;
     let ids = continue_ids(store);
     // Another device's play is named for a day, then the card has its usual line.
     let raw: Vec<u32> = ids.iter().map(|id| id.get()).collect();
@@ -534,7 +520,7 @@ fn continue_cards(meta: &Meta, store: &Store, now: i64, today: i64) -> Vec<HomeI
         .map(|m| data::entry_from(m, Some(store)))
         .filter_map(|entry| {
             let device = elsewhere.remove(&entry.id.get());
-            continue_card(&entry, store, now, today, device)
+            continue_card(&entry, store, ask, today, device)
         })
         .collect()
 }
@@ -545,7 +531,7 @@ fn suggestions(
     meta: &Meta,
     viewer: &Viewer<'_>,
     part: &PersonalPart,
-    now: i64,
+    ask: &HomeAsk,
 ) -> Vec<(HomeItem, Entry)> {
     let store = viewer_store(viewer);
     let picks: Vec<&Pick> = part.picks.iter().collect();
@@ -561,7 +547,7 @@ fn suggestions(
         let mut pick = pick.clone();
         pick.planned = viewer.status_of(entry.id).as_deref() == Some("PLANNING");
         let item = up_next::item(&pick, entry.clone());
-        let playable = playable(store, entry.id, now);
+        let playable = playable(store, entry.id, ask);
         let out_now = item.action == UpNextAction::PlayFirstEpisode;
         // The short reason; the full one is the app's, from `because`.
         let line = match item.reason {
@@ -678,7 +664,7 @@ fn compose(
     let mut pending: Vec<HomePart> = Vec::new();
 
     // Continue, and the spotlight when something in it is waiting.
-    let cards = continue_cards(meta, store, now, day_mark(ask));
+    let cards = continue_cards(meta, store, ask, day_mark(ask));
     let mut spotlight = cards.first().map(|card| Spotlight {
         case: SpotlightCase::Continuing,
         label: Msg::HomeSpotlightContinuing,
@@ -723,7 +709,7 @@ fn compose(
     }
 
     let suggested =
-        personal.as_ref().map(|p| suggestions(meta, &viewer, p, now)).unwrap_or_default();
+        personal.as_ref().map(|p| suggestions(meta, &viewer, p, ask)).unwrap_or_default();
     // A title shows on one discovery shelf only: the first that has it.
     let mut seen: HashSet<AnilistId> = HashSet::new();
     let shelf = |items: Vec<HomeItem>, most: usize, seen: &mut HashSet<AnilistId>| {
@@ -757,7 +743,7 @@ fn compose(
             entries(meta, store, &part.next)
                 .into_iter()
                 .filter(|e| viewer.eligible(e))
-                .map(|e| poster(e, &viewer, None, now)),
+                .map(|e| poster(e, &viewer, None, ask)),
         );
         let items = shelf(items, SHELF_SHOWN, &mut seen);
         if !items.is_empty() {
@@ -816,7 +802,7 @@ fn compose(
             .filter(|e| viewer.eligible(e))
             .map(|e| {
                 let line = newest_out(&e);
-                poster(e, &viewer, line, now)
+                poster(e, &viewer, line, ask)
             })
             .collect();
         let items = shelf(items, SHELF_SHOWN, &mut seen);
@@ -836,7 +822,7 @@ fn compose(
         let items = entries(meta, store, &rail.ids)
             .into_iter()
             .filter(|e| viewer.eligible(e))
-            .map(|e| poster(e, &viewer, None, now))
+            .map(|e| poster(e, &viewer, None, ask))
             .collect();
         let items = shelf(items, SUGGESTIONS_SHOWN, &mut seen);
         if !items.is_empty() {
@@ -855,7 +841,7 @@ fn compose(
         let items = entries(meta, store, &rail.ids)
             .into_iter()
             .filter(|e| viewer.eligible(e))
-            .map(|e| poster(e, &viewer, None, now))
+            .map(|e| poster(e, &viewer, None, ask))
             .collect();
         let items = shelf(items, SHELF_SHOWN, &mut seen);
         if !items.is_empty() {
@@ -896,7 +882,7 @@ fn compose(
                 .filter(|e| viewer.eligible(e))
                 .map(|e| {
                     let line = newest_out(&e);
-                    poster(e, &viewer, line, now)
+                    poster(e, &viewer, line, ask)
                 })
                 .collect();
             let items = shelf(items, SHELF_SHOWN, &mut seen);
@@ -944,7 +930,7 @@ fn compose(
             let entry = popular(meta, &viewer, &part.this)
                 .or_else(|| popular(meta, &viewer, &part.previous));
             spotlight = entry.map(|entry| {
-                let item = poster(entry, &viewer, None, now);
+                let item = poster(entry, &viewer, None, ask);
                 Spotlight {
                     case: SpotlightCase::Popular,
                     label: Msg::HomeSpotlightPopular,
@@ -1081,7 +1067,7 @@ fn broadcast_cards(
                 day: if week { day } else { None },
                 reason: None,
                 starts: None,
-                playable: playable(store, entry.id, ask.now),
+                playable: playable(store, entry.id, ask),
                 because: None,
                 entry,
                 last_device: None,
@@ -1894,6 +1880,7 @@ mod tests {
             offline: false,
             refresh: false,
             sources: true,
+            usable: Default::default(),
             demo: Default::default(),
         };
         let part = |from: u64, id: u32| PersonalPart {
@@ -1918,6 +1905,40 @@ mod tests {
         // The run from before the pull lands last, and the newer answer stays.
         assert!(!keep_personal(&store, &ask, &part(before, 1)));
         assert_eq!(kept_rail().map(|r| r.ids), Some(vec![2]));
+    }
+
+    #[test]
+    fn home_marks_a_kept_miss_only_while_the_sources_it_was_asked_of_stand() {
+        let store = Store::open_in_memory().unwrap();
+        let id = AnilistId::new(900_302);
+        let ask = |mark: u64| HomeAsk {
+            listed: false,
+            adult: false,
+            now: 1_000_000,
+            zone: jiff::tz::TimeZone::UTC,
+            offline: false,
+            refresh: false,
+            sources: true,
+            usable: probe::Usable { ids: vec!["alpha".into()], mark },
+            demo: Default::default(),
+        };
+        let miss = |sources: serde_json::Value| {
+            let json = serde_json::json!({ "at": 999_000, "found": false, "sources": sources });
+            store.set_meta_text(&probe::probe_key(id), &json.to_string()).unwrap();
+        };
+        miss(serde_json::json!(7));
+        assert_eq!(playable(&store, id, &ask(7)), Playable::NotFound);
+        // Another set of sources: the miss was not theirs.
+        assert_eq!(playable(&store, id, &ask(8)), Playable::Unknown);
+        // Kept before misses named their sources.
+        miss(serde_json::Value::Null);
+        assert_eq!(playable(&store, id, &ask(7)), Playable::Unknown);
+        // A mapping kept since for a usable source wins over the miss.
+        miss(serde_json::json!(7));
+        let key = kaeri_core::ids::ProviderKey::new("k");
+        let rung = kaeri_store::ResolutionRung::ProviderSearch;
+        store.cache_resolution(id, "alpha", &key, 0.95, rung, 999_500).unwrap();
+        assert_eq!(playable(&store, id, &ask(7)), Playable::Found);
     }
 
     #[test]

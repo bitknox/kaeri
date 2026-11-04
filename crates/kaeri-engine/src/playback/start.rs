@@ -703,6 +703,7 @@ fn spawn_playback(
     tx: &Outbox,
 ) {
     let untracked = Pick::untracked(pick.as_ref());
+    let from_sources = matches!(pick, None | Some(Pick::Release { .. }));
     // An untracked play keeps no seat at a party: the room would be told of a title it is not.
     let hub = if untracked { Default::default() } else { services.party.clone() };
     // A cast with Torrents while casting off passes torrents over, and the next source plays.
@@ -858,6 +859,10 @@ fn spawn_playback(
             }
         };
         let (streams, mut context) = context;
+        // Streams from a source, not a link the viewer opened: a miss Home kept is a find now.
+        if from_sources && !streams.is_empty() {
+            crate::catalog::probe::listed(&store, &tx, id);
+        }
         // Found, from the ladder just now or from ahead: the screen's step is now the player
         // opening the first stream.
         if let Some(first) = streams.first() {
