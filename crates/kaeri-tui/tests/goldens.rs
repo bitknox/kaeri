@@ -545,6 +545,8 @@ scenarios! {
     accounts_none,
     together_empty,
     together_lobby,
+    together_chat,
+    together_chat_hidden,
     together_recent,
     stores_none_joined,
     store_empty,
@@ -2489,6 +2491,79 @@ fn together_lobby(s: &mut Screen) {
         party_member("Mika", Some(true), false),
         party_member("Ren", Some(false), false),
     ]));
+}
+
+/// In a party with a conversation going: a reaction, a muted member, the cursor on that
+/// member, and the Say line open with something typed. The board's "Together, typing".
+fn together_chat(s: &mut Screen) {
+    use kaeri_model::party::{
+        PartyChatBody, PartyChatLine, PartyChatState, PartyConversation, Reaction,
+    };
+    together_lobby(s);
+    s.apply(Event::PartyMembers(vec![
+        party_member("Ada", Some(true), true),
+        party_member("Mika", Some(true), false),
+        party_member("Ren", Some(true), false),
+        party_member("Sol", Some(true), false),
+    ]));
+    let said = |id: u64, from: &str, text: &str| PartyChatLine {
+        id,
+        from: from.into(),
+        you: from == "Ada",
+        body: PartyChatBody::Said { text: text.into() },
+        muted: from == "Sol",
+    };
+    s.apply(Event::PartyChat(PartyConversation {
+        lines: vec![
+            said(1, "Mika", "ok starting"),
+            said(2, "Ren", "the handoff in the rain, I knew it"),
+            PartyChatLine {
+                id: 3,
+                from: "Ren".into(),
+                you: false,
+                body: PartyChatBody::Reacted {
+                    reaction: Reaction::Laugh,
+                    at: 724.0,
+                    with: vec!["Mika".into()],
+                },
+                muted: false,
+            },
+            said(4, "Sol", "wait, who is the new runner"),
+            said(5, "Ada", "back in 2, pause if it gets good"),
+            said(
+                6,
+                "Mika",
+                "this part again, the long leg before the relay station where it all turns",
+            ),
+        ],
+        marks: Vec::new(),
+        failed: None,
+    }));
+    s.apply(Event::PartyChatState(PartyChatState {
+        allowed: true,
+        max_length: 150,
+        muted: vec!["Sol".into()],
+        wait_seconds: 0,
+        react_wait_seconds: 0,
+        hidden: false,
+    }));
+    s.press(&["j", "j"]);
+    s.press(&["m"]);
+    s.type_text("the soundtrack is great");
+}
+
+/// Hide chat on: the conversation says so, and the status line offers Show chat.
+fn together_chat_hidden(s: &mut Screen) {
+    use kaeri_model::party::PartyChatState;
+    together_lobby(s);
+    s.apply(Event::PartyChatState(PartyChatState {
+        allowed: true,
+        max_length: 150,
+        muted: Vec::new(),
+        wait_seconds: 0,
+        react_wait_seconds: 0,
+        hidden: true,
+    }));
 }
 
 fn recent_room(

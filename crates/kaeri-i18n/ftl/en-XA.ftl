@@ -2578,6 +2578,21 @@ keys-hint-copy-link = [Çöþý ļîñķ~~~]
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-leave-party = [Ļéàṽé~~]
 
+# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
+keys-hint-say = [Šàý~]
+
+# Status line hint beside a key, on a watch party member's row: hide their lines and reactions for the party. Keep it to a word or two.
+keys-hint-mute = [Ṁüţé~~]
+
+# Status line hint beside a key, on a muted watch party member's row: show their lines again. Keep it to a word or two.
+keys-hint-unmute = [Ûñɱüţé~~]
+
+# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every watch party. Keep it to a word or two.
+keys-hint-hide-chat = [Ĥîðé çĥàţ~~~]
+
+# Status line hint beside a key: turns Hide chat off again. Keep it to a word or two.
+keys-hint-show-chat = [Šĥöŵ çĥàţ~~~]
+
 # Shown in place of a screen when the terminal is too small to draw it.
 lists-terminal-too-small = [Ñééðš à ļàŕĝéŕ ţéŕɱîñàļ~~~~~~~]
 
@@ -4181,8 +4196,8 @@ tui-together-section = [Ţöĝéţĥéŕ~~~]
 # Prompt of the Join line in the Together section.
 tui-together-join-prompt = [ļîñķ öŕ çöðé~~~~]
 
-# Hint line of the keys in the Together section.
-tui-together-keys = [ŕ ŕéàðý · ç çöþý ļîñķ · š šţàŕţ ñöŵ · ẋ ļéàṽé~~~~~~~~~~~~~~]
+# Line under "Chat is hidden" in the Together section's conversation, while Hide chat is on.
+tui-together-chat-hidden-line = [Ļîñéš àñð ŕéàçţîöñš šţàý öƒƒ ţĥé þļàýéŕ îñ éṽéŕý þàŕţý.~~~~~~~~~~~~~~~~~]
 
 # Toast when what was typed in the Together section's Join line is neither a link nor a code.
 tui-together-not-a-link = [Ţĥàţ îš ñöţ à þàŕţý ļîñķ öŕ çöðé.~~~~~~~~~~]

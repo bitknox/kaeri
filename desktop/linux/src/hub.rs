@@ -88,6 +88,11 @@ pub struct Known {
     pub party: Option<PartyView>,
     /// The party's members, this device's first, once the room has listed them.
     pub party_members: Option<Vec<PartyMember>>,
+    /// The party's conversation as the engine last said it, in memory for the party only.
+    pub party_chat: kaeri_model::party::PartyConversation,
+    /// What this device may do in the conversation: chat on or off, the length, who is muted
+    /// and how long Send waits.
+    pub party_chat_state: Option<kaeri_model::party::PartyChatState>,
     /// What the form that starts a party opens with, once the engine has said.
     pub party_form: Option<PartyForm>,
     /// The last ten rooms, newest first.
@@ -371,10 +376,14 @@ impl Known {
             }
             Event::PartyState(view) => self.party = Some(view.clone()),
             Event::PartyMembers(members) => self.party_members = Some(members.clone()),
+            Event::PartyChat(conversation) => self.party_chat = conversation.clone(),
+            Event::PartyChatState(state) => self.party_chat_state = Some(state.clone()),
             Event::PartyLeft { .. } => {
                 self.party_last_out = None;
                 self.party = None;
                 self.party_members = None;
+                self.party_chat = Default::default();
+                self.party_chat_state = None;
             }
             Event::JobDone(job) => {
                 self.jobs.remove(job);

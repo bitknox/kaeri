@@ -73,6 +73,8 @@ enum Control {
     React(Reaction),
     /// Hide a member's lines and reactions on this device, or show them again.
     Mute(String, bool),
+    /// The terminal's Hide chat was turned over.
+    HideChat(bool),
     Leave,
     /// Leave for another party, which says itself: this one ends without a word.
     Switch,
@@ -190,7 +192,8 @@ pub fn join_with(
         looking: true,
         moves_on: false,
     };
-    let task = Task::new(party, env, view, pick);
+    let mut task = Task::new(party, env, view, pick);
+    task.chat.set_hidden(engine.config.effective().syncplay.hide_chat);
     tokio::spawn(task.run(events, seats, controls, internals));
     engine.party = Some(Running { control, server: address, room: room.to_owned() });
     true
@@ -324,6 +327,7 @@ pub fn command(
         PartyCommand::Say { text } => steer(Control::Say(text), engine, tx),
         PartyCommand::React { reaction } => steer(Control::React(reaction), engine, tx),
         PartyCommand::Mute { name, muted } => steer(Control::Mute(name, muted), engine, tx),
+        PartyCommand::HideChat { hidden } => hide_chat(hidden, engine, services, tx),
         PartyCommand::LookIn { server, room, name } => {
             look_in((server, room, name), engine, services, tx);
         }
@@ -361,6 +365,15 @@ pub fn start_anyway(engine: &EngineState, tx: &Outbox) {
 /// Open the player in the room's episode once more.
 pub fn open_player(engine: &EngineState, tx: &Outbox) {
     steer(Control::OpenPlayer, engine, tx);
+}
+
+/// Turn the terminal's Hide chat over: kept in the config for every party, and told to the one
+/// going, which says it back in its chat state. Out of a party it is only kept.
+fn hide_chat(hidden: bool, engine: &mut EngineState, services: &Services, tx: &Outbox) {
+    crate::settings::save_hide_chat(hidden, engine, services, tx);
+    if let Some(running) = going(engine) {
+        let _ = running.control.send(Control::HideChat(hidden));
+    }
 }
 
 fn steer(control: Control, engine: &EngineState, tx: &Outbox) {
@@ -694,13 +707,28 @@ impl Task {
     fn on_heard(&mut self, from: &str, text: &str) {
         match self.chat.hear(from, text) {
             Heard::Quiet => {}
-            Heard::Typed { from, text } => {
+            Heard::Typed { from, you, text } => {
                 let notice = Notice::chat(&from, &text);
-                self.cue(SeatCue::Notice(notice.text.clone()));
+                if !self.chat.hidden() {
+                    self.cue(SeatCue::Chat {
+                        who: worded(&from, you),
+                        you,
+                        text: kaeri_party::notice::clean_to(&text, self.chat.max_length()),
+                        notice: notice.text.clone(),
+                    });
+                }
                 let kind = message_kind(notice.kind);
                 self.say(Event::PartyMessage(PartyMessage { kind, text: notice.text }));
             }
-            Heard::Reacted(moment) => self.say(Event::PartyReaction(moment)),
+            Heard::Reacted(moment) => {
+                if !self.chat.hidden() {
+                    self.cue(SeatCue::Reaction {
+                        who: worded(&moment.from, moment.you),
+                        reaction: moment.reaction,
+                    });
+                }
+                self.say(Event::PartyReaction(moment));
+            }
         }
         self.say_chat();
     }
@@ -1178,6 +1206,13 @@ impl Task {
                 self.say_chat();
                 self.say_chat_state();
             }
+            Control::HideChat(hidden) => {
+                self.chat.set_hidden(hidden);
+                if hidden {
+                    self.cue(SeatCue::ChatCleared);
+                }
+                self.say_chat_state();
+            }
             Control::Leave => self.party.leave(),
             Control::Switch => {
                 self.quiet = true;
@@ -1253,6 +1288,11 @@ fn member(member: Member) -> PartyMember {
         file_matches: member.file_matches,
         you: member.you,
     }
+}
+
+/// Who a line or a moment on the player is from: "You" for this device.
+fn worded(from: &str, you: bool) -> String {
+    if you { kaeri_i18n::t::party_chat_you() } else { kaeri_party::notice::clean(from) }
 }
 
 fn message_kind(kind: NoticeKind) -> PartyMessageKind {

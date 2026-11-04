@@ -43,3 +43,4 @@ list.boxed-list, .boxed-list > row, .corner-card, popover > contents {
 
 .key-card { border-color: var(--edge); }
 .tag-pill { border: 1px solid var(--edge); }
+.chat-line, .chat-moment { background: black; border: 1px solid white; }

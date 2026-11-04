@@ -184,6 +184,8 @@ pub enum Overlay {
     JoinStore,
     /// Type a party's link or code.
     JoinParty,
+    /// Say something to the party.
+    Say,
     /// A store action that needs a yes: joining, leaving, removing someone.
     StoreConfirm,
     /// What can be done with one of a store's plugins.
@@ -261,6 +263,7 @@ impl Overlay {
             Self::Logs => t::nav_overlay_logs(),
             Self::JoinStore => t::nav_overlay_join_store(),
             Self::JoinParty => t::together_join(),
+            Self::Say => t::keys_hint_say(),
             Self::StoreConfirm => t::nav_overlay_store_confirm(),
             Self::PluginAction => t::nav_overlay_plugin_action(),
             Self::InviteName => t::nav_overlay_invite_name(),
@@ -325,6 +328,7 @@ impl Overlay {
                 | Self::KitsuPassword
                 | Self::JoinStore
                 | Self::JoinParty
+                | Self::Say
                 | Self::InviteName
                 | Self::SyncAddress
                 | Self::SyncUser

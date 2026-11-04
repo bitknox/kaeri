@@ -666,3 +666,26 @@ keys-hint-copy-link = Copy link
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 # @max 20
 keys-hint-leave-party = Leave
+
+# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
+# @max 20
+keys-hint-say = Say
+
+# Status line hint beside a key, on a watch party member's row: hide their lines and reactions
+# for the party. Keep it to a word or two.
+# @max 20
+keys-hint-mute = Mute
+
+# Status line hint beside a key, on a muted watch party member's row: show their lines again.
+# Keep it to a word or two.
+# @max 20
+keys-hint-unmute = Unmute
+
+# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off
+# the screen in every watch party. Keep it to a word or two.
+# @max 20
+keys-hint-hide-chat = Hide chat
+
+# Status line hint beside a key: turns Hide chat off again. Keep it to a word or two.
+# @max 20
+keys-hint-show-chat = Show chat

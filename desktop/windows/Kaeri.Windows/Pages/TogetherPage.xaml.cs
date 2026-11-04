@@ -21,6 +21,7 @@ public sealed partial class TogetherPage : Page
     readonly Ctx ctx = Ctx.Current;
     readonly TextBox join = new() { PlaceholderText = T.TogetherJoinField, MinWidth = 280 };
     readonly TextBlock joinProblem = Ui.Text("", "HazeCaptionStyle");
+    ChatPane? chat;
     bool inLobby;
 
     // The last rooms and a party's members, each kept across redraws so its 600 ms is not started
@@ -41,7 +42,8 @@ public sealed partial class TogetherPage : Page
             if (e.Key == VirtualKey.Enter)
                 Join(join.Text);
         };
-        ctx.Hear(this, Heard);
+        ctx.Hear(this, Heard, () => ChatSetting.Changed -= ChatChanged);
+        ChatSetting.Changed += ChatChanged;
         // Ctrl+V outside a field pastes into Join.
         Loaded += (_, _) => KeyboardAccelerators.Add(Paste());
         // Not named in a tooltip over the whole page; the paste hint under the field says it.
@@ -74,7 +76,12 @@ public sealed partial class TogetherPage : Page
         if (batch.Any(e => e is Event.PartyJoined or Event.PartyState or Event.PartyMembers or Event.PartyLeft
             or Event.PartyRecent or Event.PartyGlimpse or Event.PartyLookFailed or Event.PartyForm or Event.PartyLastOut))
             Show();
+        // The conversation changes in place, so its field keeps focus and what is typed.
+        else if (batch.Any(e => e is Event.PartyChat or Event.PartyChatState))
+            chat?.Refresh();
     }
+
+    void ChatChanged() => chat?.Refresh();
 
     async Task PasteIntoJoin()
     {
@@ -115,6 +122,9 @@ public sealed partial class TogetherPage : Page
         // The join field and its line outlive a rebuild; let go of their old parents first.
         joinRow?.Children.Remove(join);
         joinRow = null;
+        foreach (var kept in new FrameworkElement?[] { join, joinProblem, chat })
+            if (kept?.Parent is Panel old)
+                old.Children.Remove(kept);
         Stack.Children.Clear();
         var heading = Ui.Text(T.TogetherTitle, "PageTitleStyle");
         AutomationProperties.SetHeadingLevel(heading, Microsoft.UI.Xaml.Automation.Peers.AutomationHeadingLevel.Level1);
@@ -292,6 +302,12 @@ public sealed partial class TogetherPage : Page
             if (party.Code is { } code)
                 Stack.Children.Add(Ui.Text(T.PartyCode + " " + code, "BodyStrongTextBlockStyle"));
         }
+        // The conversation under the room, with its field and, once, where the messages go.
+        Stack.Children.Add(Section(T.PartyChatTitle));
+        chat ??= new ChatPane(ctx, lobby: true) { MaxWidth = 480, HorizontalAlignment = HorizontalAlignment.Stretch };
+        chat.Refresh();
+        Stack.Children.Add(chat);
+
         var leave = Ui.Label(T.PartyLeave, (_, _) => ctx.Send(new Command.PartyLeave()));
         leave.Margin = new Thickness(0, 12, 0, 0);
         Stack.Children.Add(leave);
@@ -333,6 +349,15 @@ public sealed partial class TogetherPage : Page
         AutomationProperties.SetName(grid, $"{member.Name}, {state}");
         return grid;
     }
+
+#if KAERI_TESTING
+    /// <summary>A shot's: the page scrolled to its end, where the lobby's conversation is.</summary>
+    internal void ShotScrollToEnd()
+    {
+        Scroll.UpdateLayout();
+        Scroll.ChangeView(null, Scroll.ScrollableHeight, null, true);
+    }
+#endif
 
     static TextBlock Section(string text)
     {

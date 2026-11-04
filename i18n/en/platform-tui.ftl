@@ -42,9 +42,9 @@ tui-together-section = Together
 # @only tui
 tui-together-join-prompt = link or code
 
-# Hint line of the keys in the Together section.
+# Line under "Chat is hidden" in the Together section's conversation, while Hide chat is on.
 # @only tui
-tui-together-keys = r ready · c copy link · s start now · x leave
+tui-together-chat-hidden-line = Lines and reactions stay off the player in every party.
 
 # Toast when what was typed in the Together section's Join line is neither a link nor a code.
 # @only tui

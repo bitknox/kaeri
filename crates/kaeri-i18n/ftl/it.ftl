@@ -4050,9 +4050,6 @@ tui-together-section = Insieme
 # Prompt of the Join line in the Together section.
 tui-together-join-prompt = link o codice
 
-# Hint line of the keys in the Together section.
-tui-together-keys = r pronto · c copia link · s avvia ora · x esci
-
 # Toast when what was typed in the Together section's Join line is neither a link nor a code.
 tui-together-not-a-link = Non è un link o un codice di una watch party.
 

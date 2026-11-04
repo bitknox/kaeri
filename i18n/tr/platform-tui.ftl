@@ -7,6 +7,5 @@ status-reloading-sources = { -source-pl } yeniden yükleniyor…
 pin-unavailable = Bu başlık için sabitlenen { $name } kullanılamıyor. Bunun yerine diğer { -source-pl } deneniyor.
 tui-together-section = Birlikte
 tui-together-join-prompt = bağlantı ya da kod
-tui-together-keys = r hazır · c bağlantıyı kopyala · s şimdi başlat · x ayrıl
 tui-together-not-a-link = Bu bir parti bağlantısı ya da kodu değil.
 tui-together-recent-alone = { $episode }. bölüm · { $when }

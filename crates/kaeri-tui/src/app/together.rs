@@ -3,7 +3,9 @@
 use kaeri_i18n::t;
 use kaeri_model::{
     command::Command,
-    party::{PartyCommand, PartyRecentRoom, PartyTarget},
+    party::{
+        PartyChatRefusal, PartyCommand, PartyMember, PartyRecentRoom, PartyTarget, Reaction,
+    },
 };
 
 use super::{App, Field, alert, info};
@@ -20,14 +22,41 @@ impl App {
             && matches!(self.nav.current(), StageView::Section(Section::Together))
     }
 
-    /// The rows the cursor walks: the Join line, then the recent rooms.
+    /// The rows the cursor walks: the party's other members, the Join line, then the recent
+    /// rooms.
     pub(super) fn together_rows(&self) -> usize {
-        1 + self.party_recent.len()
+        self.others().count() + 1 + self.party_recent.len()
     }
 
-    /// The recent room under the cursor; `None` on the Join line.
+    /// The party's members other than this device's, in the order the rows list them. They are
+    /// rows so `M` can mute one.
+    pub fn others(&self) -> impl Iterator<Item = &PartyMember> {
+        self.party_members.iter().filter(|m| !m.you && self.party.is_some())
+    }
+
+    /// The other member under the cursor.
+    pub fn selected_member(&self) -> Option<&PartyMember> {
+        self.others().nth(self.cursors.together.selected)
+    }
+
+    /// The row of the Join line.
+    pub fn join_row(&self) -> usize {
+        self.others().count()
+    }
+
+    /// The recent room under the cursor; `None` on the Join line or a member.
     pub fn selected_room(&self) -> Option<&PartyRecentRoom> {
-        self.party_recent.get(self.cursors.together.selected.checked_sub(1)?)
+        self.party_recent.get(self.cursors.together.selected.checked_sub(self.join_row() + 1)?)
+    }
+
+    /// Whether this member's lines and reactions are muted for the party.
+    pub fn is_muted(&self, name: &str) -> bool {
+        self.party_chat_state.as_ref().is_some_and(|s| s.muted.iter().any(|m| m == name))
+    }
+
+    /// Whether Hide chat is on.
+    pub fn chat_hidden(&self) -> bool {
+        self.party_chat_state.as_ref().is_some_and(|s| s.hidden)
     }
 
     /// The keys of the section. `Some` when one was taken, with what it asks of the engine.
@@ -46,12 +75,21 @@ impl App {
             Action::ClearCompleted if party => self.party_copy_link(),
             Action::ShowSources if party => self.party_start(),
             Action::HideFromContinue if party => Some(Command::PartyLeave),
+            Action::FixMapping if party => self.open_say(),
+            Action::MarkAllPrevious if party => self.party_mute(),
+            Action::ToggleSynopsis if party => {
+                Some(Command::Party(PartyCommand::HideChat { hidden: !self.chat_hidden() }))
+            }
             _ => return None,
         })
     }
 
-    /// Enter: the Join line asks for a link or code; a recent room is joined again.
+    /// Enter: the Join line asks for a link or code; a recent room is joined again. A member's
+    /// row opens nothing.
     fn open_together_row(&mut self) -> Option<Command> {
+        if self.selected_member().is_some() {
+            return None;
+        }
         match self.selected_room() {
             None => {
                 self.field_mut(Field::PartyLink).clear();
@@ -117,6 +155,78 @@ impl App {
         None
     }
 
+    /// `M` on a member's row: mute them for the party, or unmute them.
+    fn party_mute(&mut self) -> Option<Command> {
+        let name = self.selected_member()?.name.clone();
+        let muted = !self.is_muted(&name);
+        Some(Command::Party(PartyCommand::Mute { name, muted }))
+    }
+
+    /// `m`: the field for saying something, unless the room's server has no chat or Hide chat
+    /// is on.
+    fn open_say(&mut self) -> Option<Command> {
+        if self.party_chat_state.as_ref().is_some_and(|s| !s.allowed) {
+            self.push_toast(info(t::party_chat_off()));
+            return None;
+        }
+        if self.chat_hidden() {
+            self.push_toast(info(t::party_chat_hidden()));
+            return None;
+        }
+        self.nav.open_overlay(Overlay::Say);
+        None
+    }
+
+    /// Enter in the Say field: the line goes to the party and the field stays open for the
+    /// next. A typed `*laughs*`, `*gasps*`, `*claps*` or `*cries*` is the reaction.
+    pub(super) fn submit_say(&mut self) -> Option<Command> {
+        let text = self.text(Field::Say).trim().to_owned();
+        if text.is_empty() {
+            return None;
+        }
+        self.field_mut(Field::Say).clear();
+        let reaction = match text.as_str() {
+            "*laughs*" => Some(Reaction::Laugh),
+            "*gasps*" => Some(Reaction::Gasp),
+            "*claps*" => Some(Reaction::Clap),
+            "*cries*" => Some(Reaction::Cry),
+            _ => None,
+        };
+        Some(Command::Party(match reaction {
+            Some(reaction) => PartyCommand::React { reaction },
+            None => PartyCommand::Say { text },
+        }))
+    }
+
+    /// The conversation changed. A line the server never echoed comes back into the field,
+    /// once, when the field is open and empty.
+    pub(super) fn set_party_chat(
+        &mut self,
+        conversation: kaeri_model::party::PartyConversation,
+    ) {
+        let failed = conversation.failed.clone();
+        let fresh = failed != self.party_chat.failed;
+        self.party_chat = conversation;
+        if let Some(text) = failed
+            && fresh
+            && self.nav.overlay() == Some(&Overlay::Say)
+            && self.text(Field::Say).is_empty()
+        {
+            self.set_text(Field::Say, text);
+        }
+    }
+
+    /// The engine turned a line or a reaction down.
+    pub(super) fn chat_refused(&mut self, refusal: PartyChatRefusal) {
+        match refusal {
+            PartyChatRefusal::Off => self.push_toast(info(t::party_chat_off())),
+            PartyChatRefusal::Wait { seconds } => {
+                self.push_toast(info(t::party_chat_wait(i64::from(seconds))));
+            }
+            PartyChatRefusal::NotPlaying => {}
+        }
+    }
+
     /// Take the lobby's word for how the party stands.
     pub(super) fn set_party(&mut self, view: kaeri_model::party::PartyView) {
         self.party = Some(view);
@@ -126,11 +236,24 @@ impl App {
     pub(super) fn end_party(&mut self) {
         self.party = None;
         self.party_members.clear();
+        self.keep_together_cursor();
+        self.party_chat = Default::default();
+        self.party_chat_state = None;
     }
 
     /// The last rooms arrived: keep the cursor on a row that exists.
     pub(super) fn set_recent_rooms(&mut self, rooms: Vec<PartyRecentRoom>) {
         self.party_recent = rooms;
+        self.keep_together_cursor();
+    }
+
+    /// The members changed: keep the cursor on a row that exists.
+    pub(super) fn set_party_members(&mut self, members: Vec<PartyMember>) {
+        self.party_members = members;
+        self.keep_together_cursor();
+    }
+
+    fn keep_together_cursor(&mut self) {
         let last = self.together_rows() - 1;
         self.cursors.together.selected = self.cursors.together.selected.min(last);
     }
@@ -278,5 +401,145 @@ mod tests {
         assert_eq!(a.handle(Action::HideFromContinue, 5), Some(Command::PartyLeave));
         a.apply(Event::PartyLeft { reason: None });
         assert!(a.party.is_none() && a.party_members.is_empty());
+    }
+
+    fn in_party() -> App {
+        let mut a = app();
+        a.apply(Event::PartyJoined(view(false)));
+        a.handle(Action::JumpSection(10), 5);
+        a.nav.focus_stage();
+        a
+    }
+
+    #[test]
+    fn m_opens_the_say_field_and_enter_sends_and_keeps_it_open() {
+        let mut a = in_party();
+        a.handle(Action::FixMapping, 5);
+        assert_eq!(a.nav.overlay(), Some(&Overlay::Say));
+        for ch in "ok starting".chars() {
+            a.type_char(ch);
+        }
+        assert_eq!(
+            a.handle(Action::Open, 5),
+            Some(Command::Party(PartyCommand::Say { text: "ok starting".into() }))
+        );
+        assert_eq!(a.nav.overlay(), Some(&Overlay::Say), "the field stays for the next line");
+        assert!(a.text(Field::Say).is_empty());
+    }
+
+    #[test]
+    fn a_typed_reaction_word_is_the_reaction() {
+        use kaeri_model::party::Reaction;
+        let mut a = in_party();
+        a.handle(Action::FixMapping, 5);
+        for ch in "*laughs*".chars() {
+            a.type_char(ch);
+        }
+        assert_eq!(
+            a.handle(Action::Open, 5),
+            Some(Command::Party(PartyCommand::React { reaction: Reaction::Laugh }))
+        );
+    }
+
+    #[test]
+    fn a_server_without_chat_says_so_instead_of_opening_the_field() {
+        use kaeri_model::party::PartyChatState;
+        let mut a = in_party();
+        a.apply(Event::PartyChatState(PartyChatState {
+            allowed: false,
+            max_length: 150,
+            muted: Vec::new(),
+            wait_seconds: 0,
+            react_wait_seconds: 0,
+            hidden: false,
+        }));
+        a.handle(Action::FixMapping, 5);
+        assert_eq!(a.nav.overlay(), None);
+    }
+
+    fn member(name: &str, you: bool) -> PartyMember {
+        PartyMember {
+            name: name.into(),
+            ready: Some(false),
+            file: None,
+            duration: None,
+            file_matches: None,
+            you,
+        }
+    }
+
+    fn chat_state(muted: &[&str], hidden: bool) -> kaeri_model::party::PartyChatState {
+        kaeri_model::party::PartyChatState {
+            allowed: true,
+            max_length: 150,
+            muted: muted.iter().map(|m| (*m).to_owned()).collect(),
+            wait_seconds: 0,
+            react_wait_seconds: 0,
+            hidden,
+        }
+    }
+
+    #[test]
+    fn the_cursor_walks_the_other_members_then_join_and_shift_m_mutes_the_one_under_it() {
+        let mut a = in_party();
+        a.apply(Event::PartyRecent(vec![room("ember-2hv8-kd4p")]));
+        a.apply(Event::PartyMembers(vec![
+            member("Ada", true),
+            member("Mika", false),
+            member("Ren", false),
+        ]));
+        assert_eq!(a.together_rows(), 4, "Mika, Ren, Join, one room");
+        assert_eq!(a.selected_member().map(|m| m.name.as_str()), Some("Mika"));
+        assert_eq!(a.handle(Action::Open, 5), None, "Enter opens nothing on a member");
+        assert_eq!(a.nav.overlay(), None);
+        a.handle(Action::Down, 5);
+        assert_eq!(
+            a.handle(Action::MarkAllPrevious, 5),
+            Some(Command::Party(PartyCommand::Mute { name: "Ren".into(), muted: true }))
+        );
+        a.apply(Event::PartyChatState(chat_state(&["Ren"], false)));
+        assert_eq!(
+            a.handle(Action::MarkAllPrevious, 5),
+            Some(Command::Party(PartyCommand::Mute { name: "Ren".into(), muted: false }))
+        );
+        a.handle(Action::Down, 5);
+        assert_eq!(a.handle(Action::MarkAllPrevious, 5), None, "the Join line has no member");
+        a.handle(Action::Down, 5);
+        assert_eq!(a.selected_room().map(|r| r.room.as_str()), Some("ember-2hv8-kd4p"));
+
+        // Someone leaves: the cursor stays on a row that exists.
+        a.apply(Event::PartyMembers(vec![member("Ada", true)]));
+        assert_eq!(a.cursors.together.selected, 1);
+        assert_eq!(a.selected_room().map(|r| r.room.as_str()), Some("ember-2hv8-kd4p"));
+    }
+
+    #[test]
+    fn i_turns_hide_chat_over_and_m_says_chat_is_hidden_while_it_is_on() {
+        let mut a = in_party();
+        assert_eq!(
+            a.handle(Action::ToggleSynopsis, 5),
+            Some(Command::Party(PartyCommand::HideChat { hidden: true }))
+        );
+        a.apply(Event::PartyChatState(chat_state(&[], true)));
+        assert_eq!(
+            a.handle(Action::ToggleSynopsis, 5),
+            Some(Command::Party(PartyCommand::HideChat { hidden: false }))
+        );
+        a.handle(Action::FixMapping, 5);
+        assert_eq!(a.nav.overlay(), None, "no field while chat is hidden");
+    }
+
+    #[test]
+    fn a_line_that_never_came_back_returns_to_the_open_field_and_leaving_forgets_the_chat() {
+        use kaeri_model::party::PartyConversation;
+        let mut a = in_party();
+        a.handle(Action::FixMapping, 5);
+        a.apply(Event::PartyChat(PartyConversation {
+            failed: Some("anyone there".into()),
+            ..Default::default()
+        }));
+        assert_eq!(a.text(Field::Say), "anyone there");
+        a.apply(Event::PartyLeft { reason: None });
+        assert!(a.party_chat.failed.is_none() && a.party_chat.lines.is_empty());
     }
 }

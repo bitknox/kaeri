@@ -4099,9 +4099,6 @@ tui-together-section = Razem
 # Prompt of the Join line in the Together section.
 tui-together-join-prompt = link lub kod
 
-# Hint line of the keys in the Together section.
-tui-together-keys = r gotowy · c kopiuj link · s zacznij teraz · x wyjdź
-
 # Toast when what was typed in the Together section's Join line is neither a link nor a code.
 tui-together-not-a-link = To nie jest link ani kod pokoju.
 

@@ -34,6 +34,8 @@ struct Lobby {
     body: gtk::Box,
     /// The connection line, shown while the room cannot be reached.
     banner: adw::Banner,
+    /// The conversation, kept across the body's rebuilds.
+    chat: Rc<crate::party::chat::Pane>,
 }
 
 /// Show the lobby on Watch together, over the place. With `looking`, it looks into that room
@@ -60,6 +62,7 @@ fn build(ctx: &Rc<Ctx>, looking: Option<Looking>) -> adw::NavigationPage {
         failed: RefCell::new(None),
         body: body.clone(),
         banner: banner.clone(),
+        chat: crate::party::chat::Pane::new(ctx, crate::party::chat::Place::Lobby),
     });
     lobby.show();
     let view = adw::ToolbarView::new();
@@ -205,6 +208,10 @@ impl Lobby {
         while let Some(child) = self.body.first_child() {
             self.body.remove(&child);
         }
+        // Detached from the old body so the next one can take it.
+        if self.chat.root.parent().is_some() {
+            self.chat.root.unparent();
+        }
         if let Some(looking) = &self.looking
             && crate::party::is_looking(view.as_ref(), &looking.server, &looking.room)
         {
@@ -229,6 +236,18 @@ impl Lobby {
         columns.append(&self.left(&view, &members, last_out));
         columns.append(&self.right(&view, &members));
         self.body.append(&columns);
+        let heading = gtk::Label::new(Some(&t::party_chat_title()));
+        heading.add_css_class("title-3");
+        heading.set_xalign(0.0);
+        heading.set_accessible_role(gtk::AccessibleRole::Heading);
+        // In from the edge as far as the columns' children are, so the headings line up.
+        let chat = gtk::Box::new(gtk::Orientation::Vertical, 8);
+        chat.set_margin_start(3);
+        chat.set_margin_end(3);
+        chat.append(&heading);
+        chat.append(&self.chat.root);
+        self.body.append(&chat);
+        self.chat.refresh();
     }
 
     /// The room's episode, the sources line, and the actions.

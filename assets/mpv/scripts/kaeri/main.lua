@@ -69,6 +69,7 @@ local skipped = require("elements/skipped")
 local stall = require("elements/stall")
 local up_next = require("elements/up_next")
 local toast = require("elements/toast")
+local chat = require("elements/chat")
 local pause_flash = require("elements/pause_flash")
 local help = require("help")
 local host = require("host")
@@ -85,6 +86,8 @@ overlay.register(skipped)
 overlay.register(stall)
 overlay.register(up_next)
 overlay.register(toast)
+-- After the notice and the corner, which it stacks clear of.
+overlay.register(chat)
 overlay.register(subsync.element)
 overlay.register(substyle.element)
 overlay.register(pause_flash)
@@ -122,6 +125,8 @@ local function publish()
         loading = { visible = overlay.visible(loading) and loading.card_visible() },
         stall = { visible = overlay.visible(stall) },
         toast = toast.text(),
+        -- Beyond the brief: watch together chat, the column's lines and the reaction moments.
+        chat = chat.published(),
         mini = mini.active(),
         -- Not in the brief's shape: the subtitle-sync step (1-4) while it runs.
         sync = subsync.step(),
@@ -195,6 +200,7 @@ local function refresh()
     end
     up_next.sync_still(winner == up_next)
     overlay.show(toast, toast.wants())
+    overlay.show(chat, chat.wants() and not loading.card_visible())
     overlay.show(subsync.element, subsync.element.wants())
     overlay.show(substyle.element, substyle.element.wants())
     overlay.show(menu_view, menu_view.wants())
@@ -281,6 +287,21 @@ end)
 mp.register_script_message("toast", function(json)
     local payload = util.parse_json(json)
     toast.show(payload.text, util.str(payload.level), util.num(payload.duration))
+end)
+
+mp.register_script_message("chat-line", function(json)
+    local payload = util.parse_json(json)
+    chat.set_more(util.tbl(payload.more))
+    chat.line(payload.who, payload.you, payload.text)
+end)
+
+mp.register_script_message("chat-react", function(json)
+    local payload = util.parse_json(json)
+    chat.react(payload.who, payload.glyph)
+end)
+
+mp.register_script_message("chat-clear", function()
+    chat.clear()
 end)
 
 mp.register_script_message("stall", function(json)

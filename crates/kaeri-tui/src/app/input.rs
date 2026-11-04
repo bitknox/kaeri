@@ -374,6 +374,9 @@ impl App {
             Action::Open if self.nav.overlay() == Some(&Overlay::JoinParty) => {
                 return self.submit_party_link();
             }
+            Action::Open if self.nav.overlay() == Some(&Overlay::Say) => {
+                return self.submit_say();
+            }
             Action::Open if self.nav.overlay() == Some(&Overlay::InviteName) => {
                 return self.submit_invite_name();
             }

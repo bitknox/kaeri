@@ -318,6 +318,10 @@ pub struct App {
     pub party_members: Vec<kaeri_model::party::PartyMember>,
     /// The last rooms, newest first.
     pub party_recent: Vec<kaeri_model::party::PartyRecentRoom>,
+    /// The party's conversation, kept for the party only.
+    pub party_chat: kaeri_model::party::PartyConversation,
+    /// What the room's server allows in chat, once it has said.
+    pub party_chat_state: Option<kaeri_model::party::PartyChatState>,
     /// Joined plugin stores.
     pub stores: Vec<StoreRow>,
     /// Whether the store list has arrived at least once, so "none joined" is not said early.
@@ -456,6 +460,8 @@ impl App {
             party: None,
             party_members: Vec::new(),
             party_recent: Vec::new(),
+            party_chat: Default::default(),
+            party_chat_state: None,
             stores_loaded: false,
             members_for: None,
             store_members: Vec::new(),
@@ -570,7 +576,7 @@ impl App {
                 self.set_party(view);
             }
             Event::PartyState(view) => self.set_party(view),
-            Event::PartyMembers(members) => self.party_members = members,
+            Event::PartyMembers(members) => self.set_party_members(members),
             Event::PartyRecent(rooms) => self.set_recent_rooms(rooms),
             Event::PartyLeft { reason: Some(reason) } => {
                 self.end_party();
@@ -581,12 +587,12 @@ impl App {
             }
             Event::PartyLeft { reason: None } => self.end_party(),
             // The lobby of a native app, the start the engine acts on, and a look into a room.
+            Event::PartyChat(conversation) => self.set_party_chat(conversation),
+            Event::PartyChatState(state) => self.party_chat_state = Some(state),
+            Event::PartyChatRefused(refusal) => self.chat_refused(refusal),
             Event::PartyForm(_)
             | Event::PartyMessage(_)
-            | Event::PartyChat(_)
-            | Event::PartyChatState(_)
             | Event::PartyReaction(_)
-            | Event::PartyChatRefused(_)
             | Event::PartyStarted { .. }
             | Event::PartyGlimpse(_)
             | Event::PartyLookFailed { .. }

@@ -3952,9 +3952,6 @@ tui-together-section = 一緒に見る
 # Prompt of the Join line in the Together section.
 tui-together-join-prompt = リンクまたはコード
 
-# Hint line of the keys in the Together section.
-tui-together-keys = r 準備完了 · c リンクをコピー · s 今すぐ開始 · x 退出
-
 # Toast when what was typed in the Together section's Join line is neither a link nor a code.
 tui-together-not-a-link = 同時視聴のリンクまたはコードではありません。
 

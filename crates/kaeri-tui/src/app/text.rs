@@ -28,6 +28,8 @@ pub enum Field {
     JoinLink,
     /// A watch party's link or code.
     PartyLink,
+    /// What is said to the party.
+    Say,
     /// Who an invite is for.
     InviteName,
     /// What a store joined with an invite calls this device, on the join's confirmation.
@@ -51,7 +53,7 @@ pub enum Field {
 }
 
 impl Field {
-    pub const ALL: [Self; 19] = [
+    pub const ALL: [Self; 20] = [
         Self::Search,
         Self::Palette,
         Self::ManualQuery,
@@ -61,6 +63,7 @@ impl Field {
         Self::KitsuPassword,
         Self::JoinLink,
         Self::PartyLink,
+        Self::Say,
         Self::InviteName,
         Self::DeviceLabel,
         Self::SyncAddress,
@@ -180,6 +183,7 @@ impl App {
             Some(Overlay::KitsuPassword) => Field::KitsuPassword,
             Some(Overlay::JoinStore) => Field::JoinLink,
             Some(Overlay::JoinParty) => Field::PartyLink,
+            Some(Overlay::Say) => Field::Say,
             Some(Overlay::InviteName) => Field::InviteName,
             Some(Overlay::StoreConfirm) if self.naming_device() => Field::DeviceLabel,
             Some(Overlay::SyncAddress) => Field::SyncAddress,
@@ -235,6 +239,7 @@ impl App {
         // An invite link is a one-time credential; a dismissed prompt forgets it.
         self.field_mut(Field::JoinLink).clear();
         self.field_mut(Field::PartyLink).clear();
+        self.field_mut(Field::Say).clear();
         self.field_mut(Field::InviteName).clear();
         self.field_mut(Field::DeviceLabel).clear();
         // A sync form left half filled keeps nothing: a password and a recovery key least.

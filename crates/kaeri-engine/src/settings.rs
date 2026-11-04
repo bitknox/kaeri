@@ -87,6 +87,22 @@ pub fn set_translation(translation: Translation, engine: &mut EngineState, tx: &
     let _ = tx.send(Event::Settings(engine.config.view()));
 }
 
+/// The terminal's Hide chat for watch parties, in effect at once and kept in the file. It has
+/// no Settings row: `i` in Together turns it over.
+pub fn save_hide_chat(
+    hidden: bool,
+    engine: &mut EngineState,
+    services: &Services,
+    tx: &Outbox,
+) {
+    use kaeri_core::settings::SettingValue as V;
+    if engine.config.effective().syncplay.hide_chat == hidden {
+        return;
+    }
+    engine.config.effective_mut().syncplay.hide_chat = hidden;
+    write_setting(&["syncplay"], "hide_chat", V::Bool(hidden), engine, services, tx);
+}
+
 /// Write a setting the config already has in effect, and say how that went: the settings as
 /// the file then leaves them, the "saved" or "not saved" notice, and the work the write leaves
 /// the engine side.

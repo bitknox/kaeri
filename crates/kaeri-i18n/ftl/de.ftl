@@ -4001,9 +4001,6 @@ tui-together-section = Gemeinsam
 # Prompt of the Join line in the Together section.
 tui-together-join-prompt = Link oder Code
 
-# Hint line of the keys in the Together section.
-tui-together-keys = r bereit · c Link kopieren · s jetzt starten · x verlassen
-
 # Toast when what was typed in the Together section's Join line is neither a link nor a code.
 tui-together-not-a-link = Das ist kein Watchparty-Link und kein Code.
 

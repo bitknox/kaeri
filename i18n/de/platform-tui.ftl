@@ -7,6 +7,5 @@ status-reloading-sources = { -source-pl } werden neu geladen…
 pin-unavailable = { $name } ist für diesen Titel angeheftet, aber nicht verfügbar. Deshalb werden die anderen { -source-pl } verwendet.
 tui-together-section = Gemeinsam
 tui-together-join-prompt = Link oder Code
-tui-together-keys = r bereit · c Link kopieren · s jetzt starten · x verlassen
 tui-together-not-a-link = Das ist kein { -watch-party }-Link und kein Code.
 tui-together-recent-alone = Folge { $episode } · { $when }

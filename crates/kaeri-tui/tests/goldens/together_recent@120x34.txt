@@ -1,21 +1,21 @@
 Kaeri                                                                                                          plugins ●
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  ▸  Home                   │  Watch together                                   Server
-  ▤  Calendar               │  ──────────────────────────────────────────────   party.example:8999
-  ▦  Seasonal               │  Pick something you're watching, then invite
-  /  Search                 │  friends with a link or a code.                   Room
-  ▥  Library                │                                                   kite-7qm4-xr9d
-  ↓  Downloads              │    Join a party  [link or code]
-  ◇  Sources                │
-  ◎  Accounts               │  Recent rooms
-  ≡  Settings               │  ──────────────────────────────────────────────
-▌ ⇄  Together               │  ▌ Natsukaze Relay
+  ▸  Home                   │  Watch together                         Server
+  ▤  Calendar               │  ────────────────────────────────────   party.example:8999
+  ▦  Seasonal               │  Pick something you're watching, then
+  /  Search                 │  invite friends with a link or a        Room
+  ▥  Library                │  code.                                  kite-7qm4-xr9d
+  ↓  Downloads              │
+  ◇  Sources                │    Join a party  [link or code]
+  ◎  Accounts               │
+  ≡  Settings               │  Recent rooms
+▌ ⇄  Together               │  ────────────────────────────────────
+                            │  ▌ Natsukaze Relay
                             │    Episode 8 · with Mika, Ren · Today
                             │    Lantern Harbour
                             │    Episode 3 · with Mika · Saturday
                             │    Glass Orchard
                             │    Episode 1 · 10 Oct
-                            │
                             │
                             │
                             │
@@ -41,58 +41,59 @@ r02 c02-02 fg=text-dim
 r02 c05-08 fg=text-dim
 r02 c28-28 fg=rule
 r02 c31-44 fg=text-dim
-r02 c80-85 fg=text-dim
+r02 c70-75 fg=text-dim
 r03 c02-02 fg=text-dim
 r03 c05-12 fg=text-dim
 r03 c28-28 fg=rule
-r03 c31-76 fg=rule
-r03 c80-97 fg=text
+r03 c31-66 fg=rule
+r03 c70-87 fg=text
 r04 c02-02 fg=text-dim
 r04 c05-12 fg=text-dim
 r04 c28-28 fg=rule
-r04 c31-73 fg=text-dim
+r04 c31-66 fg=text-dim
 r05 c02-02 fg=text-dim
 r05 c05-10 fg=text-dim
 r05 c28-28 fg=rule
-r05 c31-60 fg=text-dim
-r05 c80-83 fg=text-dim
+r05 c31-61 fg=text-dim
+r05 c70-73 fg=text-dim
 r06 c02-02 fg=text-dim
 r06 c05-11 fg=text-dim
 r06 c28-28 fg=rule
-r06 c80-93 fg=text
+r06 c31-35 fg=text-dim
+r06 c70-83 fg=text
 r07 c02-02 fg=text-dim
 r07 c05-13 fg=text-dim
 r07 c28-28 fg=rule
-r07 c33-44 fg=text
-r07 c47-60 fg=text-dim
 r08 c02-02 fg=text-dim
 r08 c05-11 fg=text-dim
 r08 c28-28 fg=rule
+r08 c33-44 fg=text
+r08 c47-60 fg=text-dim
 r09 c02-02 fg=text-dim
 r09 c05-12 fg=text-dim
 r09 c28-28 fg=rule
-r09 c31-42 fg=text-dim
 r10 c02-02 fg=text-dim
 r10 c05-12 fg=text-dim
 r10 c28-28 fg=rule
-r10 c31-76 fg=rule
+r10 c31-42 fg=text-dim
 r11 c00-00 fg=text-dim
 r11 c02-02 fg=text
 r11 c05-12 fg=text mod=BOLD
 r11 c28-28 fg=rule
-r11 c31-31 fg=obi
-r11 c33-47 fg=text mod=BOLD
+r11 c31-66 fg=rule
 r12 c28-28 fg=rule
-r12 c33-66 fg=text-dim
+r12 c31-31 fg=obi
+r12 c33-47 fg=text mod=BOLD
 r13 c28-28 fg=rule
-r13 c33-47 fg=text
+r13 c33-66 fg=text-dim
 r14 c28-28 fg=rule
-r14 c33-64 fg=text-dim
+r14 c33-47 fg=text
 r15 c28-28 fg=rule
-r15 c33-45 fg=text
+r15 c33-64 fg=text-dim
 r16 c28-28 fg=rule
-r16 c33-50 fg=text-dim
+r16 c33-45 fg=text
 r17 c28-28 fg=rule
+r17 c33-50 fg=text-dim
 r18 c28-28 fg=rule
 r19 c28-28 fg=rule
 r20 c28-28 fg=rule

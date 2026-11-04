@@ -2578,6 +2578,21 @@ keys-hint-copy-link = Copy link
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-leave-party = Leave
 
+# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
+keys-hint-say = Say
+
+# Status line hint beside a key, on a watch party member's row: hide their lines and reactions for the party. Keep it to a word or two.
+keys-hint-mute = Mute
+
+# Status line hint beside a key, on a muted watch party member's row: show their lines again. Keep it to a word or two.
+keys-hint-unmute = Unmute
+
+# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every watch party. Keep it to a word or two.
+keys-hint-hide-chat = Hide chat
+
+# Status line hint beside a key: turns Hide chat off again. Keep it to a word or two.
+keys-hint-show-chat = Show chat
+
 # Shown in place of a screen when the terminal is too small to draw it.
 lists-terminal-too-small = Needs a larger terminal
 
@@ -4181,8 +4196,8 @@ tui-together-section = Together
 # Prompt of the Join line in the Together section.
 tui-together-join-prompt = link or code
 
-# Hint line of the keys in the Together section.
-tui-together-keys = r ready · c copy link · s start now · x leave
+# Line under "Chat is hidden" in the Together section's conversation, while Hide chat is on.
+tui-together-chat-hidden-line = Lines and reactions stay off the player in every party.
 
 # Toast when what was typed in the Together section's Join line is neither a link nor a code.
 tui-together-not-a-link = That is not a party link or code.

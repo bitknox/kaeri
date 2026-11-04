@@ -43,6 +43,7 @@ cast = ["remote", "dep:kaeri-cast"]
 kaeri-core.workspace = true
 kaeri-jellyfin.workspace = true
 kaeri-meta.workspace = true
+kaeri-i18n.workspace = true
 kaeri-model.workspace = true
 kaeri-net.workspace = true
 kaeri-discord = { workspace = true, optional = true }

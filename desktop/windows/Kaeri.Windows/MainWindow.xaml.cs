@@ -93,6 +93,7 @@ public sealed partial class MainWindow : Window
         var host = new AppHost(ui, options.Fixture) { Notified = (title, body) => Notified(title, body) };
         (var engine, dirs) = StartEngine(host);
         Player.ShaderCache = Path.Combine(dirs.Cache, "player");
+        ChatSetting.Load(dirs.Config);
 #if KAERI_TESTING
         fixtureInvite = options.Scene == "store-invited" ? engine.TestingStoreInvite() : null;
 #endif

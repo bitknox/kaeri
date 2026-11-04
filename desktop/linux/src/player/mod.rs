@@ -35,6 +35,7 @@ use crate::{
     window::{Ctx, Shell, Size},
 };
 
+mod chat;
 mod coming;
 mod marking;
 mod stats;
@@ -266,6 +267,7 @@ struct Ui {
     /// The subtitle style panel's button.
     style: gtk::MenuButton,
     cards: gtk::Box,
+    chat: Rc<chat::Chat>,
     skip: Card,
     skip_button: gtk::Button,
     /// The marking bar, at the top of the video while skip times are marked.
@@ -679,7 +681,14 @@ impl PlayerView {
             }
             Event::PlayerUi { ui, .. } => self.player_ui(ui),
             Event::Settings(_) => self.style_subtitles(),
-            Event::PartyJoined(_) | Event::PartyLeft { .. } => self.show_party_button(),
+            Event::PartyJoined(_) | Event::PartyLeft { .. } => {
+                self.show_party_button();
+                self.ui.chat.heard(event, true);
+            }
+            Event::PartyChat(_)
+            | Event::PartyChatState(_)
+            | Event::PartyReaction(_)
+            | Event::PartyChatRefused(_) => self.ui.chat.heard(event, true),
             Event::PlayerSkipMark { view, .. } => self.skip_mark(view.clone()),
             Event::PlayerSkipPrompt { prompt, .. } => {
                 if !self.prompt_held.get() || prompt.is_some() {
@@ -914,7 +923,13 @@ impl PlayerView {
                 self.wake();
             }
             PlayerUi::StallCleared => self.stall_over(),
-            PlayerUi::Alert { text, .. } => self.ctx.alert(&crate::catalog::shown(text)),
+            PlayerUi::Alert { text, .. } => {
+                let shown = crate::catalog::shown(text);
+                // A chat line has its own place on the video, in the column.
+                if !self.ui.chat.is_echo(&shown) {
+                    self.ctx.alert(&shown);
+                }
+            }
             PlayerUi::Thumbnails { url } => self.preview.thumbnails(url.as_deref()),
             PlayerUi::Resumed { position } => self.resumed(*position),
             _ => {}
@@ -1428,7 +1443,8 @@ impl PlayerView {
     /// keyboard focus is on a control or a screen reader runs.
     fn rest(&self) {
         let menu_open = self.ui.menu_buttons.iter().any(|b| b.is_active())
-            || self.party.popover.is_visible();
+            || self.party.popover.is_visible()
+            || self.ui.chat.holds_controls();
         let card = self.ui.stall.shown() || self.marking.borrow().is_some();
         if self.state.borrow().paused
             || self.over_bar.get()
@@ -1803,10 +1819,32 @@ impl PlayerView {
                 }
             }
         });
+        self.party.popover.connect_map({
+            let weak = Rc::downgrade(self);
+            move |_| {
+                if let Some(view) = weak.upgrade() {
+                    view.party.refresh_chat();
+                    view.ui.chat.popover(true);
+                }
+            }
+        });
+        self.ui.chat.on_marks({
+            let marked = self.ui.marked.clone_handle();
+            move |marks| marked.set_reactions(marks)
+        });
+        self.ui.chat.on_open_conversation({
+            let weak = Rc::downgrade(self);
+            move || {
+                if let Some(view) = weak.upgrade() {
+                    view.show_party();
+                }
+            }
+        });
         self.party.popover.connect_closed({
             let weak = Rc::downgrade(self);
             move |_| {
                 if let Some(view) = weak.upgrade() {
+                    view.ui.chat.popover(false);
                     view.wake();
                 }
             }
@@ -1945,7 +1983,9 @@ impl PlayerView {
                 if let Some(seconds) = timeline::time_at(&view.ui.timeline, x)
                     && has_duration
                 {
-                    view.preview.show(x, seconds, view.ui.marked.at(seconds));
+                    let duration = view.state.borrow().duration.unwrap_or(0.0);
+                    let tick = view.ui.marked.tick_label(seconds, duration);
+                    view.preview.show(x, seconds, view.ui.marked.at(seconds), tick);
                 }
             }
         });
@@ -2196,7 +2236,8 @@ impl PlayerView {
         let Some(duration) = self.state.borrow().duration else { return };
         let Some(x) = timeline::x_at(&self.ui.timeline, fraction) else { return };
         let seconds = duration * fraction;
-        self.preview.show(x, seconds, self.ui.marked.at(seconds));
+        let tick = self.ui.marked.tick_label(seconds, duration);
+        self.preview.show(x, seconds, self.ui.marked.at(seconds), tick);
         self.wake();
     }
 
@@ -2240,6 +2281,12 @@ impl PlayerView {
         }
         self.wake();
         self.party.popover.popup();
+    }
+
+    /// The chat over the video, for the shots.
+    #[cfg(feature = "fixtures")]
+    pub fn chat(&self) -> Rc<chat::Chat> {
+        Rc::clone(&self.ui.chat)
     }
 
     /// The people button as the party stands: a dot while in one, and its name.
@@ -2370,6 +2417,11 @@ impl PlayerView {
             Key::BackSpace => self.ask_speed(1.0),
             Key::e | Key::E if self.in_party() => {}
             Key::e | Key::E => self.ui.episodes.popup(),
+            Key::c | Key::C if self.in_party() => {
+                if !self.ui.chat.open_field() {
+                    return false;
+                }
+            }
             Key::t | Key::T => self.ui.tracks.popup(),
             Key::i | Key::I => self.toggle_stats(),
             Key::u | Key::U => {
@@ -2897,6 +2949,11 @@ fn build_ui(ctx: &Rc<Ctx>, video: &gtk::Widget) -> Ui {
     resumed.append(&start_over);
 
     let cards = gtk::Box::new(gtk::Orientation::Vertical, 8);
+    let chat = chat::Chat::new(ctx, &cards);
+    for button in chat.buttons.iter().rev() {
+        top.pack_end(button);
+    }
+
     cards.set_halign(gtk::Align::End);
     cards.set_valign(gtk::Align::End);
     cards.set_margin_end(24);
@@ -2949,6 +3006,9 @@ fn build_ui(ctx: &Rc<Ctx>, video: &gtk::Widget) -> Ui {
     stage.add_overlay(&dim);
     stage.add_overlay(&starting);
     stage.add_overlay(&cards);
+    stage.add_overlay(&chat.column);
+    stage.add_overlay(&chat.moments);
+    stage.add_overlay(&chat.field);
     stage.add_overlay(&mark_bar);
     stage.add_overlay(&resumed);
     stage.add_overlay(&mini);
@@ -3000,6 +3060,7 @@ fn build_ui(ctx: &Rc<Ctx>, video: &gtk::Widget) -> Ui {
         starting_credit,
         style,
         cards,
+        chat,
         skip,
         skip_button,
         mark_bar,

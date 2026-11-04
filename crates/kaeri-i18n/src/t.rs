@@ -4075,6 +4075,31 @@ pub fn keys_hint_leave_party() -> String {
     text("keys-hint-leave-party", &[])
 }
 
+/// Status line hint beside a key, saying what that key does here. Keep it to a word or two.
+pub fn keys_hint_say() -> String {
+    text("keys-hint-say", &[])
+}
+
+/// Status line hint beside a key, on a watch party member's row: hide their lines and reactions for the party. Keep it to a word or two.
+pub fn keys_hint_mute() -> String {
+    text("keys-hint-mute", &[])
+}
+
+/// Status line hint beside a key, on a muted watch party member's row: show their lines again. Keep it to a word or two.
+pub fn keys_hint_unmute() -> String {
+    text("keys-hint-unmute", &[])
+}
+
+/// Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every watch party. Keep it to a word or two.
+pub fn keys_hint_hide_chat() -> String {
+    text("keys-hint-hide-chat", &[])
+}
+
+/// Status line hint beside a key: turns Hide chat off again. Keep it to a word or two.
+pub fn keys_hint_show_chat() -> String {
+    text("keys-hint-show-chat", &[])
+}
+
 /// Shown in place of a screen when the terminal is too small to draw it.
 pub fn lists_terminal_too_small() -> String {
     text("lists-terminal-too-small", &[])
@@ -6648,9 +6673,9 @@ pub fn tui_together_join_prompt() -> String {
     text("tui-together-join-prompt", &[])
 }
 
-/// Hint line of the keys in the Together section.
-pub fn tui_together_keys() -> String {
-    text("tui-together-keys", &[])
+/// Line under "Chat is hidden" in the Together section's conversation, while Hide chat is on.
+pub fn tui_together_chat_hidden_line() -> String {
+    text("tui-together-chat-hidden-line", &[])
 }
 
 /// Toast when what was typed in the Together section's Join line is neither a link nor a code.

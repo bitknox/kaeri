@@ -111,6 +111,7 @@ const SILK: (f64, f64, f64) = (228.0 / 255.0, 224.0 / 255.0, 214.0 / 255.0);
 const AMBER: (f64, f64, f64) = (242.0 / 255.0, 166.0 / 255.0, 75.0 / 255.0);
 /// The unplayed line: the palette's control edge, 3.94:1 on the ground.
 const EDGE: (f64, f64, f64) = (114.0 / 255.0, 120.0 / 255.0, 146.0 / 255.0);
+const HAZE: (f64, f64, f64) = (163.0 / 255.0, 169.0 / 255.0, 196.0 / 255.0);
 const WATER: (f64, f64, f64) = (127.0 / 255.0, 199.0 / 255.0, 217.0 / 255.0);
 /// The line's thickness at rest and under the pointer, and the knob's radius.
 const LINE: f64 = 4.0;
@@ -162,6 +163,25 @@ pub struct Marked {
     buffered: Rc<RefCell<Vec<(f64, f64)>>>,
     /// The stretch being marked, in seconds, drawn at half water until it is saved.
     provisional: Rc<Cell<Option<(f64, f64)>>>,
+    /// Where the party reacted, as ticks over the line, and the line's width the last time it
+    /// was drawn.
+    reactions: Rc<RefCell<Vec<kaeri_model::party::PartyReactionMark>>>,
+    drawn_width: Rc<Cell<f64>>,
+}
+
+/// The ticks of a [`Marked`], to hand to a callback.
+pub struct Ticks {
+    marks: gtk::DrawingArea,
+    reactions: Rc<RefCell<Vec<kaeri_model::party::PartyReactionMark>>>,
+}
+
+impl Ticks {
+    pub fn set_reactions(&self, marks: Vec<kaeri_model::party::PartyReactionMark>) {
+        if *self.reactions.borrow() != marks {
+            self.reactions.replace(marks);
+            self.marks.queue_draw();
+        }
+    }
 }
 
 impl Marked {
@@ -175,6 +195,8 @@ impl Marked {
         widget.add_overlay(&marks);
         let buffered: Rc<RefCell<Vec<(f64, f64)>>> = Rc::default();
         let provisional: Rc<Cell<Option<(f64, f64)>>> = Rc::default();
+        let reactions: Rc<RefCell<Vec<kaeri_model::party::PartyReactionMark>>> = Rc::default();
+        let drawn_width: Rc<Cell<f64>> = Rc::default();
         let thickness = Rc::new(Cell::new(LINE));
         let hovered = Rc::new(Cell::new(false));
         marks.set_draw_func({
@@ -183,6 +205,8 @@ impl Marked {
             let provisional = Rc::clone(&provisional);
             let thickness = Rc::clone(&thickness);
             let hovered = Rc::clone(&hovered);
+            let reactions = Rc::clone(&reactions);
+            let drawn_width = Rc::clone(&drawn_width);
             let scale = scale.downgrade();
             move |area, cr, _, _| {
                 let Some(scale) = scale.upgrade() else { return };
@@ -251,6 +275,17 @@ impl Marked {
                     let _ = cr.paint();
                     let _ = cr.restore();
                 }
+                // The party's reactions: haze ticks 2 by 5 px, 3 px above the line, ticks within
+                // 4 px of each other as one.
+                drawn_width.set(w);
+                if length > 0.0 {
+                    rgba(HAZE, 1.0);
+                    for tick in crate::party::chat::ticks(&reactions.borrow(), length, w, 4.0) {
+                        let tx = at(tick.at - adjustment.lower()).round();
+                        cr.rectangle(tx - 1.0, cy - t - 3.0 - 5.0, 2.0, 5.0);
+                        let _ = cr.fill();
+                    }
+                }
                 let flags = scale.state_flags();
                 let knob = hovered.get()
                     || flags.contains(gtk::StateFlags::ACTIVE)
@@ -301,7 +336,7 @@ impl Marked {
             let marks = marks.clone();
             move |_, _| marks.queue_draw()
         });
-        Self { widget, marks, segments, buffered, provisional }
+        Self { widget, marks, segments, buffered, provisional, reactions, drawn_width }
     }
 
     /// The played part moved: drawn again.
@@ -315,6 +350,23 @@ impl Marked {
             self.buffered.replace(ranges);
             self.marks.queue_draw();
         }
+    }
+
+    /// A handle that draws the same ticks, for a callback.
+    pub fn clone_handle(&self) -> Ticks {
+        Ticks { marks: self.marks.clone(), reactions: Rc::clone(&self.reactions) }
+    }
+
+    /// The tick within 6 px of `seconds` on a line `duration` long, as its label: "12:04 · Ren".
+    pub fn tick_label(&self, seconds: f64, duration: f64) -> Option<String> {
+        let width = self.drawn_width.get();
+        if duration <= 0.0 || width <= 0.0 {
+            return None;
+        }
+        crate::party::chat::ticks(&self.reactions.borrow(), duration, width, 4.0)
+            .into_iter()
+            .find(|tick| (tick.at - seconds).abs() / duration * width <= 6.0)
+            .map(|tick| tick.label())
     }
 
     /// Draw the stretch being marked, or nothing.
@@ -441,9 +493,10 @@ impl Preview {
 
     /// The frame and time at `seconds`, over the timeline at `x`, labelled `segment` if it is
     /// in one.
-    pub fn show(&self, x: f64, seconds: f64, segment: Option<Kind>) {
+    pub fn show(&self, x: f64, seconds: f64, segment: Option<Kind>, tick: Option<String>) {
         let clock = say::clock(seconds);
         self.time.set_label(&match segment {
+            _ if tick.is_some() => tick.unwrap_or_default(),
             Some(Kind::Opening) => t::player_time_opening(&clock),
             Some(Kind::Ending) => t::player_time_ending(&clock),
             None => clock,

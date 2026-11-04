@@ -3952,9 +3952,6 @@ tui-together-section = Cùng xem
 # Prompt of the Join line in the Together section.
 tui-together-join-prompt = liên kết hoặc mã
 
-# Hint line of the keys in the Together section.
-tui-together-keys = r sẵn sàng · c chép liên kết · s bắt đầu ngay · x rời đi
-
 # Toast when what was typed in the Together section's Join line is neither a link nor a code.
 tui-together-not-a-link = Đây không phải liên kết hay mã xem chung.
 

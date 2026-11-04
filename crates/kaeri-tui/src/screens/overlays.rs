@@ -117,6 +117,10 @@ pub(super) fn render_overlay(
     let Some(overlay) = app.nav.overlay() else {
         return report;
     };
+    if *overlay == Overlay::Say {
+        render_say(buf, app, geometry.stage);
+        return report;
+    }
 
     // Full width, but only ever as tall as the stage. The header and status line carry state
     // the user still needs while a modal is open — provider health, the proxy badge, the sync
@@ -161,6 +165,7 @@ pub(super) fn render_overlay(
             .collect(),
         Overlay::JoinStore => vec![(String::new(), t::overlays_hint_join_store())],
         Overlay::JoinParty => vec![(String::new(), t::together_join_line())],
+        Overlay::Say => vec![(String::new(), t::party_chat_privacy())],
         Overlay::InviteName => vec![(String::new(), t::overlays_hint_invite_name())],
         Overlay::StoreConfirm => store_confirm_rows(app),
         Overlay::PluginAction => plugin_action_rows(app).0,
@@ -323,6 +328,7 @@ pub(super) fn render_overlay(
             let room = (band.width as usize).saturating_sub(title.cells() + 8);
             titled(&format!("{}▏", tail(&field_text(app, Field::PartyLink), room)))
         }
+        Overlay::Say => typed(Field::Say),
         Overlay::InviteName => typed(Field::InviteName),
         Overlay::StoreConfirm => store_confirm_heading(app),
         Overlay::PluginAction => match app.plugin_in_action() {
@@ -447,6 +453,36 @@ pub(super) fn render_overlay(
 }
 
 /// What a text field shows: what was typed, or a dot for each character of a masked one.
+/// The Say line: one row at the bottom of the stage under a hairline, so the conversation it
+/// answers stays in view above it. No scrim; the keys are on the status line.
+fn render_say(buf: &mut Buffer, app: &App, stage: Rect) {
+    if stage.height < 3 || stage.width < 8 {
+        return;
+    }
+    let y = stage.bottom() - 1;
+    let ground =
+        app.palette.raised().or(app.palette.ground()).unwrap_or(app.palette.ground_ref());
+    for row in y - 1..=y {
+        for x in stage.left()..stage.right() {
+            buf[(x, row)].reset();
+            buf[(x, row)].set_char(' ').set_bg(ground.to_ratatui());
+        }
+    }
+    Hairline::new(&app.palette).render(Rect { y: y - 1, height: 1, ..stage }, buf);
+    buf[(stage.left(), y)].set_char(OBI).set_style(app.palette.style(Role::Obi));
+    let title = Overlay::Say.title().to_string();
+    let x = stage.left() + 2;
+    buf.set_string(x, y, &title, app.palette.style(Role::Text).add_modifier(Modifier::BOLD));
+    let x = x + title.cells() as u16 + 2;
+    let room = stage.right().saturating_sub(x + 1) as usize;
+    buf.set_string(
+        x,
+        y,
+        format!("{}▏", tail(&field_text(app, Field::Say), room)),
+        app.palette.style(Role::Text),
+    );
+}
+
 pub(super) fn field_text(app: &App, field: Field) -> String {
     let line = app.field(field);
     if field.masked() { "•".repeat(line.len()) } else { line.as_str().to_owned() }

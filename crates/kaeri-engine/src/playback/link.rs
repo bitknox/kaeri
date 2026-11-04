@@ -306,6 +306,14 @@ pub enum Overlay {
     Skipped { kind: SkipKind, from: f64, to: f64 },
     /// A message on the video.
     Toast { text: String, level: Level },
+    /// A party's chat line for the column under the notices: who, worded ("You" when `you`),
+    /// and what they said. A player without the column shows `notice`, the line as a notice,
+    /// as it did before.
+    ChatLine { who: String, you: bool, text: String, notice: String },
+    /// A party member's reaction, for its moment bottom trailing.
+    Reaction { who: String, reaction: kaeri_model::party::Reaction },
+    /// Hide chat was turned on: the column and the moments leave the video.
+    ChatCleared,
     /// The stream has been held waiting for data this long, mid-episode.
     Stall { seconds: u64 },
     /// The stall is over.
