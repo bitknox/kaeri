@@ -538,7 +538,7 @@ pub(crate) fn say_status(services: &Ctx, tx: &Outbox) {
 pub async fn start(services: &Ctx, tx: &Outbox, device_name: String, folder: SyncFolderSpec) {
     let kind = folder.kind.clone();
     start_in(services, tx, device_name, folder).await;
-    cloud::ended(tx, &kind);
+    cloud::ended(services, tx, &kind);
 }
 
 async fn start_in(
@@ -625,6 +625,7 @@ pub(crate) fn take_folder(services: &Ctx, folder: &SyncFolderSpec, road: FolderR
     }
     services.syncing.set_road(Some(Arc::new(road)));
     announce_cloud(services);
+    tracing::info!(kind = ?folder.kind, "the sync folder is ready");
 }
 
 fn kept_ring(services: &Ctx) -> Option<Keyring> {
@@ -648,7 +649,7 @@ pub async fn join(
 ) {
     let kind = folder.kind.clone();
     join_in(services, tx, device_name, folder, recovery).await;
-    cloud::ended(tx, &kind);
+    cloud::ended(services, tx, &kind);
 }
 
 async fn join_in(
@@ -713,22 +714,22 @@ pub async fn change_folder(services: &Ctx, tx: &Outbox, folder: Option<SyncFolde
     let target = match target_for(services, Some(tx), &mut folder).await {
         Ok(target) => target,
         Err(Ended::Cancelled) => {
-            cloud::ended(tx, &kind);
+            cloud::ended(services, tx, &kind);
             return say_status(services, tx);
         }
         Err(Ended::Problem(p)) => {
-            cloud::ended(tx, &kind);
+            cloud::ended(services, tx, &kind);
             return fail(services, tx, p);
         }
     };
     match settle(services, tx, target, &folder, &id).await {
         Ok(road) => {
             take_folder(services, &folder, road);
-            cloud::ended(tx, &kind);
+            cloud::ended(services, tx, &kind);
             pass(services, tx).await;
         }
         Err(p) => {
-            cloud::ended(tx, &kind);
+            cloud::ended(services, tx, &kind);
             fail(services, tx, p);
         }
     }
@@ -929,7 +930,7 @@ pub async fn sign_in_again(services: &Ctx, tx: &Outbox, kind: SyncFolderKind) {
     };
     let outcome = cloud::sign_in(services, tx, service).await;
     sign_in_done(services, tx, &kind, outcome).await;
-    cloud::ended(tx, &kind);
+    cloud::ended(services, tx, &kind);
 }
 
 /// What follows a sign-in on its own: a pass when sync uses the drive, the problem if it failed.

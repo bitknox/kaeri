@@ -2837,15 +2837,19 @@ mod tests {
             assert!(url.contains("redirect_uri=kaeri%3A%2F%2Fauth%2Fonedrive"), "{url}");
             let state = url.split("&state=").nth(1).expect("a state").to_owned();
 
-            // A redirect for another request is not this one's to finish.
+            // A redirect for a page this engine never opened is refused, and said.
             let wrong = Secret("kaeri://auth/onedrive?code=fake-code&state=other".into());
             rig.engine.send(Command::FinishSyncSignIn {
                 service: SyncFolderKind::OneDrive,
                 callback: wrong,
             });
-            tokio::time::sleep(Duration::from_millis(100)).await;
+            let seen = rig.watch.until(ended(SyncFolderKind::OneDrive)).await;
+            let denied = SyncProblem::SignInDenied { service: SyncFolderKind::OneDrive };
+            assert!(problems(&seen).contains(&denied), "{seen:?}");
             assert!(!has_token(&rig, "cloud-onedrive"));
 
+            rig.engine.send(Command::SyncSignIn { service: SyncFolderKind::OneDrive });
+            let state = query(&sheet_url(&mut rig).await, "state");
             let callback =
                 Secret(format!("kaeri://auth/onedrive?code=fake-code&state={state}"));
             rig.engine.send(Command::FinishSyncSignIn {
@@ -2856,6 +2860,114 @@ mod tests {
             assert!(has_token(&rig, "cloud-onedrive"));
             // The Microsoft client is public: no secret went with it.
             assert!(rig.fake.token_requests().iter().all(|r| !r.contains_key("client_secret")));
+        }
+
+        /// The next sheet step's page.
+        async fn sheet_url(rig: &mut Rig) -> String {
+            let seen = rig
+                .watch
+                .until(|e| {
+                    matches!(
+                        e,
+                        Event::SyncSignIn { step: Some(SyncSignInStep::Sheet { .. }), .. }
+                    )
+                })
+                .await;
+            match seen.last() {
+                Some(Event::SyncSignIn {
+                    step: Some(SyncSignInStep::Sheet { url, .. }),
+                    ..
+                }) => url.clone(),
+                _ => panic!("the sheet"),
+            }
+        }
+
+        /// A query value of `url`, as sent (the states and challenges need no decoding).
+        fn query(url: &str, name: &str) -> String {
+            let query = url.split_once('?').map_or("", |(_, q)| q);
+            query
+                .split('&')
+                .find_map(|pair| pair.strip_prefix(&format!("{name}=")))
+                .unwrap_or_else(|| panic!("no {name} in {url}"))
+                .to_owned()
+        }
+
+        // The Mac's Google sign-in that never finished: a second sign-in began over the first
+        // while its page was still open (a second click on the picker's row, the row showing no
+        // wait). The first page's redirect then reached the second sign-in, which refused it as
+        // another request's and waited ten minutes with no page open, while the first sign-in's
+        // end closed the picker: nothing on screen, and nothing said.
+        #[tokio::test]
+        async fn a_second_sign_in_over_an_open_page_takes_that_pages_redirect() {
+            let mut rig = rig(CloudClient::Ios, false, true).await;
+            for _ in 0..2 {
+                rig.engine.send(Command::StartSync {
+                    device_name: "Mac".into(),
+                    folder: folder(google()),
+                });
+            }
+            let first = sheet_url(&mut rig).await;
+            let second = sheet_url(&mut rig).await;
+            assert_ne!(query(&first, "state"), query(&second, "state"));
+            // The first sign-in's end does not close the second's sheet.
+            tokio::time::sleep(Duration::from_millis(200)).await;
+            rig.engine.send(Command::LoadSync);
+            let seen = rig.watch.until(|e| matches!(e, Event::SyncStatus(_))).await;
+            assert!(!seen.iter().any(ended(google())), "{seen:?}");
+
+            // The person finishes the first page.
+            let callback = Secret(format!(
+                "example.apps.123:/oauth2redirect?state={}&code=fake-code&scope=x",
+                query(&first, "state")
+            ));
+            rig.engine.send(Command::FinishSyncSignIn { service: google(), callback });
+            let seen = rig.watch.until(ended(google())).await;
+            assert!(problems(&seen).is_empty(), "{seen:?}");
+            assert!(seen.iter().any(|e| matches!(e, Event::SyncRecoveryKey(_))), "{seen:?}");
+            assert!(has_token(&rig, "cloud-google"));
+            // Exchanged with the first page's own verifier, as its code was asked for.
+            let sent = rig.fake.token_requests();
+            let verifier =
+                sent.iter().find_map(|r| r.get("code_verifier")).expect("an exchange");
+            assert_eq!(
+                kaeri_sync::google::challenge_for(verifier),
+                query(&first, "code_challenge")
+            );
+        }
+
+        #[tokio::test]
+        async fn a_refused_late_or_declined_redirect_is_said() {
+            let mut rig = rig(CloudClient::Ios, false, true).await;
+            let denied = SyncProblem::SignInDenied { service: google() };
+
+            // Declined on the service's page.
+            rig.engine.send(Command::SyncSignIn { service: google() });
+            let state = query(&sheet_url(&mut rig).await, "state");
+            let callback = Secret(format!(
+                "example.apps.123:/oauth2redirect?error=access_denied&state={state}"
+            ));
+            rig.engine.send(Command::FinishSyncSignIn { service: google(), callback });
+            let seen = rig.watch.until(ended(google())).await;
+            assert!(problems(&seen).contains(&denied), "{seen:?}");
+
+            // A code the service does not take.
+            rig.engine.send(Command::SyncSignIn { service: google() });
+            let state = query(&sheet_url(&mut rig).await, "state");
+            let callback =
+                Secret(format!("example.apps.123:/oauth2redirect?state={state}&code=stale"));
+            rig.engine.send(Command::FinishSyncSignIn { service: google(), callback });
+            let seen = rig.watch.until(ended(google())).await;
+            assert!(problems(&seen).contains(&denied), "{seen:?}");
+
+            // A page that comes back with no sign-in waiting.
+            let callback = Secret(format!(
+                "example.apps.123:/oauth2redirect?state={state}&code=fake-code"
+            ));
+            rig.engine.send(Command::FinishSyncSignIn { service: google(), callback });
+            let seen = rig.watch.until(|e| matches!(e, Event::SyncProblem(_))).await;
+            let expired = SyncProblem::SignInExpired { service: google() };
+            assert_eq!(problems(&seen), [expired]);
+            assert!(!has_token(&rig, "cloud-google"));
         }
 
         #[tokio::test]

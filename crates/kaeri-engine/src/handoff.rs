@@ -407,15 +407,15 @@ async fn take_folder(
     let target = match syncing::target_for(ctx, None, &mut spec).await {
         Ok(target) => target,
         Err(Ended::Problem(p)) => {
-            cloud::ended(tx, kind);
+            cloud::ended(ctx, tx, kind);
             return syncing::fail(ctx, tx, p);
         }
-        Err(Ended::Cancelled) => return cloud::ended(tx, kind),
+        Err(Ended::Cancelled) => return cloud::ended(ctx, tx, kind),
     };
     let road =
         FolderRoad::open(target, "", ctx.store.clone(), &id, syncing::device_key(ctx), ring);
     syncing::take_folder(ctx, &spec, road);
-    cloud::ended(tx, kind);
+    cloud::ended(ctx, tx, kind);
     let (ctx, tx) = (ctx.clone(), tx.clone());
     // The first pass runs on its own, so the session that brought the login ends now.
     tokio::spawn(async move { syncing::pass(&ctx, &tx).await });
