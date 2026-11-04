@@ -538,7 +538,7 @@ pub(crate) fn say_status(services: &Ctx, tx: &Outbox) {
 pub async fn start(services: &Ctx, tx: &Outbox, device_name: String, folder: SyncFolderSpec) {
     let kind = folder.kind.clone();
     start_in(services, tx, device_name, folder).await;
-    cloud::ended(tx, &kind);
+    cloud::ended(services, tx, &kind);
 }
 
 async fn start_in(
@@ -549,8 +549,14 @@ async fn start_in(
 ) {
     let target = match target_for(services, Some(tx), &mut folder).await {
         Ok(target) => target,
-        Err(Ended::Cancelled) => return say_status(services, tx),
-        Err(Ended::Problem(p)) => return fail(services, tx, p),
+        Err(Ended::Cancelled) => {
+            leave_nothing(services, &folder, None);
+            return say_status(services, tx);
+        }
+        Err(Ended::Problem(p)) => {
+            leave_nothing(services, &folder, Some(&p));
+            return fail(services, tx, p);
+        }
     };
     let enabled = services.store.sync_device().ok().flatten().is_some();
     let id = device_id(services);
@@ -567,8 +573,24 @@ async fn start_in(
             tracking::commands::announce_signed_in(&services.store, &services.sync);
             pass(services, tx).await;
         }
-        Err(p) => fail(services, tx, p),
+        Err(p) => {
+            leave_nothing(services, &folder, Some(&p));
+            fail(services, tx, p);
+        }
     }
+}
+
+/// A set-up through a cloud drive that failed or was cancelled leaves no sign-in behind: a
+/// service shows as signed in only once its folder has worked. A folder of that service already
+/// in use keeps it, and so does a folder that a join comes next for: another group's, joined with
+/// its recovery key, or a TV's that holds no group yet.
+fn leave_nothing(services: &Ctx, folder: &SyncFolderSpec, problem: Option<&SyncProblem>) {
+    let Some(service) = Service::of(&folder.kind) else { return };
+    let in_use = saved_folder(services).is_some_and(|f| f.kind == folder.kind);
+    if in_use || matches!(problem, Some(SyncProblem::GroupExists | SyncProblem::NoGroup)) {
+        return;
+    }
+    cloud::forget(services, service);
 }
 
 /// The id this device writes under: the one it had, even with sync turned off since, so the log
@@ -625,6 +647,7 @@ pub(crate) fn take_folder(services: &Ctx, folder: &SyncFolderSpec, road: FolderR
     }
     services.syncing.set_road(Some(Arc::new(road)));
     announce_cloud(services);
+    tracing::info!(kind = ?folder.kind, "the sync folder is ready");
 }
 
 fn kept_ring(services: &Ctx) -> Option<Keyring> {
@@ -648,7 +671,7 @@ pub async fn join(
 ) {
     let kind = folder.kind.clone();
     join_in(services, tx, device_name, folder, recovery).await;
-    cloud::ended(tx, &kind);
+    cloud::ended(services, tx, &kind);
 }
 
 async fn join_in(
@@ -700,6 +723,10 @@ pub async fn change_folder(services: &Ctx, tx: &Outbox, folder: Option<SyncFolde
         return fail(services, tx, SyncProblem::NoGroup);
     };
     let Some(mut folder) = folder else {
+        // Removing a cloud drive's folder signs out of it too: no sign-in outlives its folder.
+        if let Some(service) = saved_folder(services).and_then(|f| Service::of(&f.kind)) {
+            cloud::forget(services, service);
+        }
         services.syncing.set_road(None);
         let _ = services.store.sync_meta_clear(ROAD_META);
         for key in [FOLDER, LAST, ERROR, PROBLEM] {
@@ -713,22 +740,25 @@ pub async fn change_folder(services: &Ctx, tx: &Outbox, folder: Option<SyncFolde
     let target = match target_for(services, Some(tx), &mut folder).await {
         Ok(target) => target,
         Err(Ended::Cancelled) => {
-            cloud::ended(tx, &kind);
+            leave_nothing(services, &folder, None);
+            cloud::ended(services, tx, &kind);
             return say_status(services, tx);
         }
         Err(Ended::Problem(p)) => {
-            cloud::ended(tx, &kind);
+            leave_nothing(services, &folder, Some(&p));
+            cloud::ended(services, tx, &kind);
             return fail(services, tx, p);
         }
     };
     match settle(services, tx, target, &folder, &id).await {
         Ok(road) => {
             take_folder(services, &folder, road);
-            cloud::ended(tx, &kind);
+            cloud::ended(services, tx, &kind);
             pass(services, tx).await;
         }
         Err(p) => {
-            cloud::ended(tx, &kind);
+            leave_nothing(services, &folder, Some(&p));
+            cloud::ended(services, tx, &kind);
             fail(services, tx, p);
         }
     }
@@ -929,7 +959,7 @@ pub async fn sign_in_again(services: &Ctx, tx: &Outbox, kind: SyncFolderKind) {
     };
     let outcome = cloud::sign_in(services, tx, service).await;
     sign_in_done(services, tx, &kind, outcome).await;
-    cloud::ended(tx, &kind);
+    cloud::ended(services, tx, &kind);
 }
 
 /// What follows a sign-in on its own: a pass when sync uses the drive, the problem if it failed.

@@ -51,7 +51,6 @@ tv-bar-cant-reach = { $name } ulaşılamıyor
 tv-bar-not-found = { $name } bulunamadı
 tv-paired-tvs = Eşleşmiş TV'ler
 tv-title-list = TV'ler
-tv-settings-footnote = Bir TV, bu { -device }ı { $code } koduyla listeler. Burada bir TV'yi unutursanız bu { -device }ı da unutur.
 tv-seen-just-now = Az önce
 stores-link-send-once = Bu bağlantıyı { $who } kişisine gönderin. Yalnızca bir kez çalışır ve { $until } tarihine kadar geçerlidir.
 stores-link-send-once-anyone = Bu bağlantıyı kendisi için hazırlanan kişiye gönderin. Yalnızca bir kez çalışır ve { $until } tarihine kadar geçerlidir.

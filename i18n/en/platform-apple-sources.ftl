@@ -179,10 +179,6 @@ tv-paired-tvs = Paired TVs
 # Title of the page of paired TVs on a phone.
 tv-title-list = TVs
 
-# Line under the settings group of paired TVs. The code is a short fingerprint.
-# @arg code: text
-tv-settings-footnote = A TV lists this { -device } with the code { $code }. Forget a TV here and it forgets this { -device } too.
-
 # Time of the last sighting of a paired TV, within the last minute.
 tv-seen-just-now = just now
 

@@ -323,6 +323,10 @@ pub enum SyncSignInStep {
     Code { user_code: String, verification_url: String, expires_at: i64, interval: u32 },
     /// Signed in; the folder is being set up.
     Finishing,
+    /// The browser came back to the engine with access allowed, and the sign-in is being
+    /// finished. Said on a computer, whose loopback catches the redirect; an app that hands a
+    /// sheet's redirect back with `Command::FinishSyncSignIn` knows it then by itself.
+    Connecting,
 }
 
 /// How a pairing or a join went wrong, for the sheet that asked.

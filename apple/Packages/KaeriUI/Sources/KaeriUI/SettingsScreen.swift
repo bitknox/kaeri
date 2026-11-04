@@ -234,7 +234,7 @@ struct SettingsResults: View {
         (AccountsModel.name("kitsu"), .accounts), (AccountsModel.name("simkl"), .accounts),
         (AccountsModel.name("trakt"), .accounts), (L.accountsSyncNow, .accounts),
         (L.accountsSignOut, .accounts), (L.settingsPrivacy, .accounts),
-        (L.devicesTitle, .devices), (L.syncTurnOn, .devices), (L.cloudGroup, .devices), (L.rkeyRow, .devices),
+        (L.devicesTitle, .devices), (L.syncRoadNearby, .devices), (L.syncRoadCloud, .devices), (L.cloudGroup, .devices), (L.rkeyRow, .devices),
         (L.profilesTitle, .profiles), (L.profilesAdd, .profiles),
         (L.settingsCheckUpdates, updatesPane),
         (L.settingsMpvOptions, .advanced),
@@ -359,7 +359,7 @@ struct SettingsAside: View {
             case .accounts:
                 aside(L.navAccounts, L.settingsAsideAccounts)
             case .devices:
-                aside(L.devicesTitle, L.cloudFoot)
+                aside(L.devicesTitle, L.devicesAside(kind: Device.name))
             case .profiles:
                 aside(L.profilesTitle, L.profilesOneFoot)
             case .integrations:

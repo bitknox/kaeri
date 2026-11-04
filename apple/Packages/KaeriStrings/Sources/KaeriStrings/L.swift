@@ -2624,11 +2624,6 @@ public enum L {
     /// Title of the page of paired TVs on a phone.
     public static var tvTitleList: String { string("tv-title-list", fallback: "TVs") }
 
-    /// Line under the settings group of paired TVs. The code is a short fingerprint.
-    public static func tvSettingsFootnote(code: String) -> String {
-        Self.format("tv-settings-footnote", fallback: "A TV lists this device with the code %1$@. Forget a TV here and it forgets this device too.", code)
-    }
-
     /// Time of the last sighting of a paired TV, within the last minute.
     public static var tvSeenJustNow: String { string("tv-seen-just-now", fallback: "just now") }
 
@@ -10076,6 +10071,85 @@ public enum L {
     /// Error naming a device that is not known by name.
     public static var devicesOtherDevice: String { string("devices-other-device", fallback: "the other device") }
 
+    /// Wait line on iPhone and iPad, where the sign-in page is a web sheet, not the browser.
+    public static func cloudSheetLine(service: String) -> String {
+        Self.format("cloud-sheet-line", fallback: "%1$@’s page is open. Allow access there, and Kaeri carries on by itself.", service)
+    }
+
+    /// Sheet or dialog title after the browser came back with access allowed.
+    public static func cloudConnecting(service: String) -> String {
+        Self.format("cloud-connecting", fallback: "Connecting to %1$@", service)
+    }
+
+    /// Status line beside the indicator while connecting.
+    public static var cloudConnectingLine: String { string("cloud-connecting-line", fallback: "Access allowed. Finishing the sign-in.") }
+
+    /// Status line under Setting up the folder, whose title is cloud-setting-up.
+    public static func cloudSettingUpLine(service: String) -> String {
+        Self.format("cloud-setting-up-line", fallback: "Making Kaeri’s folder in %1$@ and sealing a first copy of your history.", service)
+    }
+
+    /// Error title in the sign-in sheet or dialog.
+    public static func cloudErrSigninTitle(service: String) -> String {
+        Self.format("cloud-err-signin-title", fallback: "Couldn’t sign in to %1$@", service)
+    }
+
+    /// Error title when the sign-in worked and the folder could not be set up.
+    public static var cloudErrSetupTitle: String { string("cloud-err-setup-title", fallback: "Couldn’t set up the folder") }
+
+    /// Error line beside Try again, after access was refused on the service's page.
+    public static func cloudErrDeniedShort(service: String) -> String {
+        Self.format("cloud-err-denied-short", fallback: "%1$@ didn’t give Kaeri access.", service)
+    }
+
+    /// Error line for any other failure during the sign-in; the details go to Messages.
+    public static func cloudErrSigninOther(service: String) -> String {
+        Self.format("cloud-err-signin-other", fallback: "%1$@ didn’t finish the sign-in. Try again in a moment.", service)
+    }
+
+    /// More menu item, and a row on phones; the Mac adds an ellipsis.
+    public static var cloudUseAnother: String { string("cloud-use-another", fallback: "Use another service") }
+
+    /// More menu item in red, and a button in the TV's dialog.
+    public static var cloudRemove: String { string("cloud-remove", fallback: "Remove cloud folder") }
+
+    /// Confirmation title before removing the cloud folder.
+    public static func cloudRemoveTitle(service: String) -> String {
+        Self.format("cloud-remove-title", fallback: "Remove %1$@ from sync?", service)
+    }
+
+    /// Confirmation line before removing the cloud folder.
+    public static func cloudRemoveLine(kind: String, service: String) -> String {
+        Self.format("cloud-remove-line", fallback: "Everything on this %1$@ stays here, and paired devices nearby keep syncing. The folder stays in %2$@ with its sealed copy, and your other devices use it until you remove it on them too.", kind, service)
+    }
+
+    /// Destructive button in the remove confirmation.
+    public static var cloudRemoveAction: String { string("cloud-remove-action", fallback: "Remove") }
+
+    /// Accessibility label of the More button on the cloud folder row.
+    public static func cloudMore(service: String) -> String {
+        Self.format("cloud-more", fallback: "More for %1$@", service)
+    }
+
+    /// Picker row line for the service in use, under Use another service.
+    public static var cloudInUse: String { string("cloud-in-use", fallback: "In use") }
+
+    /// Picker line under Use another service.
+    public static func cloudSwitchFoot(service: String) -> String {
+        Self.format("cloud-switch-foot", fallback: "%1$@ stays in use until the new folder is ready.", service)
+    }
+
+    /// Footer under the two ways in while sync is off.
+    public static var syncStartFoot: String { string("sync-start-foot", fallback: "Either one turns sync on, and you can use both.") }
+
+    /// Aside on the Devices page on the Mac and iPad.
+    public static func devicesAside(kind: String) -> String {
+        Self.format("devices-aside", fallback: "Sync carries where you stopped, your history and your settings between your own devices, nearby or through a cloud folder you choose. It is sealed before it leaves this %1$@.", kind)
+    }
+
+    /// TV Devices footer while sync is off, after devices-sync-foot.
+    public static var tvSyncStartFoot: String { string("tv-sync-start-foot", fallback: "Pairing with your phone turns sync on. Then this TV can join your cloud folder.") }
+
     /// Title of the state when a title page could not load.
     public static var titleLoadFailed: String { string("title-load-failed", fallback: "Couldn't load this title") }
 
@@ -11193,6 +11267,12 @@ public enum L {
     public static func tvCastUpNextIn(seconds: Int) -> String {
         Self.format("tv-cast-up-next-in", fallback: "Up next · plays in %1$lld s", seconds)
     }
+
+    /// Play on TV row holding the code a TV lists this device by, shown in groups of four.
+    public static var tvCodeRow: String { string("tv-code-row", fallback: "Code on TVs") }
+
+    /// Line under the paired TVs, now that the code has its own row.
+    public static var tvForgetNote: String { string("tv-forget-note", fallback: "Forget a TV here and it forgets this device too.") }
 
     /// Heading of the update row in settings and about.
     public static var updatesTitle: String { string("updates-title", fallback: "Updates") }

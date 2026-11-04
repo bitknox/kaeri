@@ -14,11 +14,37 @@ public struct SyncSignInRequest: Equatable, Sendable {
     public var step: SyncSignInStep
 }
 
+/// What the cloud folder's sheet shows after a service is chosen, in place of the list: the wait
+/// for its page, the sign-in finishing, the folder being made, what went wrong, or the new
+/// recovery key.
+public enum CloudStep: Equatable, Sendable {
+    case waiting(SyncFolderKind)
+    case connecting(SyncFolderKind)
+    case settingUp(SyncFolderKind)
+    /// `folder` when the sign-in had worked and the folder could not be made.
+    case failed(SyncFolderKind, SyncProblem, folder: Bool)
+    case key
+
+    /// A step under way, which the engine moves on by itself.
+    public var underWay: Bool {
+        switch self {
+        case .waiting, .connecting, .settingUp: true
+        case .failed, .key: false
+        }
+    }
+
+    /// Connecting and setting up show only once they have run 600 ms.
+    var quiet: Bool {
+        switch self {
+        case .connecting, .settingUp: true
+        default: false
+        }
+    }
+}
+
 /// The sheets sync opens. One at a time: a sheet over another is a step of the first.
 public enum SyncSheet: Equatable, Identifiable, Sendable {
-    /// With a device nearby, or through a cloud folder.
-    case road
-    /// Choose a cloud folder.
+    /// Choose a cloud folder, then its sign-in and set-up in the same sheet (`cloudStep`).
     case picker
     /// A Nextcloud server's address, then its login page.
     case nextcloud
@@ -39,7 +65,6 @@ public enum SyncSheet: Equatable, Identifiable, Sendable {
 
     public var id: String {
         switch self {
-        case .road: "road"
         case .picker: "picker"
         case .nextcloud: "nextcloud"
         case .webDav: "webdav"
@@ -103,8 +128,16 @@ public final class SyncModel {
     /// Whether the folder is being set up long enough to say so (past 600 ms).
     public internal(set) var settingUpShown = false
     public var sheet: SyncSheet?
-    /// A service whose sign-in page was closed or refused, for the line under the picker.
-    public var denied: SyncFolderKind?
+    /// What the cloud folder's sheet shows in place of its list, nil for the list. A step shows
+    /// past its quiet time and stays at least 400 ms (`aim`).
+    public private(set) var cloudStep: CloudStep?
+    /// The picker was opened to move the group to another service: the one in use is dimmed, and
+    /// a choice changes the folder instead of setting sync up.
+    public private(set) var switching = false
+    /// The Remove cloud folder confirmation is up.
+    public var removingFolder = false
+    /// How many times the person asked for the sign-in page again; the presenter opens it anew.
+    public private(set) var pageOpens = 0
     /// What the recovery key sheet was opened for: set up, or seen again from Devices.
     public private(set) var keyCameFromDevices = false
     /// A device's name that was typed for this one, until the engine says it back.
@@ -126,12 +159,19 @@ public final class SyncModel {
     @ObservationIgnored public var staged = false
     @ObservationIgnored private var settleTask: Task<Void, Never>?
     @ObservationIgnored private var syncingTask: Task<Void, Never>?
+    /// The step the engine is at, which `cloudStep` shows once its time comes.
+    @ObservationIgnored private var cloudTarget: CloudStep?
+    @ObservationIgnored private var cloudShownAt: ContinuousClock.Instant?
+    @ObservationIgnored private var cloudTask: Task<Void, Never>?
 
     public init() {}
 
     // MARK: Reading
 
     public var enabled: Bool { status.enabled }
+    /// Sync as the pages show it: on with another device or a folder. On, alone and without a
+    /// folder (a code shown and never entered) reads as off.
+    public var inUse: Bool { status.enabled && (status.folder != nil || !others.isEmpty) }
     public var hasProfiles: Bool { profiles.count >= 2 }
     public var activeProfile: ProfileView? { profiles.first(where: \.active) }
 
@@ -155,7 +195,7 @@ public final class SyncModel {
     public enum RowState: Equatable { case off, synced(Date?), error }
 
     public var rowState: RowState {
-        if !status.enabled { return .off }
+        if !inUse { return .off }
         if status.problem != nil || status.error != nil { return .error }
         return .synced(status.lastSynced.map { Date(timeIntervalSince1970: TimeInterval($0)) })
     }
@@ -183,14 +223,29 @@ public final class SyncModel {
         send(.pairInvite(deviceName: deviceName))
     }
 
-    /// A service from the picker: the three cloud drives go straight into their sign-in.
+    /// Add a cloud folder: the picker, setting sync up.
+    public func addCloudFolder() {
+        switching = false
+        resetCloudStep()
+        sheet = .picker
+    }
+
+    /// Use another service: the picker, moving the group's folder.
+    public func useAnotherService() {
+        switching = true
+        resetCloudStep()
+        sheet = .picker
+    }
+
+    /// A service from the picker: the three cloud drives go straight into their sign-in, and the
+    /// sheet waits for its page at once.
     public func choose(_ kind: SyncFolderKind, deviceName: String) {
         problem = nil
-        denied = nil
         lastService = kind
         switch kind {
         case .googleDrive, .dropbox, .oneDrive:
-            send(.startSync(deviceName: deviceName, folder: SyncFolderSpec(kind: kind)))
+            aim(.waiting(kind), atOnce: true)
+            begin(SyncFolderSpec(kind: kind), deviceName: deviceName)
         case .nextcloud: sheet = .nextcloud
         case .webDav: sheet = .webDav
         case .directory: break
@@ -200,20 +255,110 @@ public final class SyncModel {
     public func startNextcloud(address: String, deviceName: String) {
         problem = nil
         lastService = .nextcloud
-        send(.startSync(deviceName: deviceName, folder: SyncFolderSpec(kind: .nextcloud, address: address)))
+        begin(SyncFolderSpec(kind: .nextcloud, address: address), deviceName: deviceName)
     }
 
     public func startWebDav(address: String, user: String, password: String, deviceName: String) {
         problem = nil
         lastService = .webDav
-        send(.startSync(deviceName: deviceName, folder: SyncFolderSpec(
-            kind: .webDav, address: address, user: user, password: password)))
+        begin(SyncFolderSpec(kind: .webDav, address: address, user: user, password: password), deviceName: deviceName)
     }
 
     public func startDirectory(_ path: String, deviceName: String) {
         problem = nil
         lastService = .directory
-        send(.startSync(deviceName: deviceName, folder: SyncFolderSpec(kind: .directory, address: path)))
+        aim(.settingUp(.directory), atOnce: true)
+        begin(SyncFolderSpec(kind: .directory, address: path), deviceName: deviceName)
+    }
+
+    /// Set sync up with `folder`, or move the group to it under Use another service.
+    private func begin(_ folder: SyncFolderSpec, deviceName: String) {
+        if switching {
+            changeFolder(folder)
+        } else {
+            send(.startSync(deviceName: deviceName, folder: folder))
+        }
+    }
+
+    /// The sign-in page came back with its answer, which the app hands the engine now.
+    public func signInReturned(_ service: SyncFolderKind) {
+        if cloudTarget == .waiting(service) { aim(.connecting(service)) }
+    }
+
+    /// The sign-in page was closed by the person: the sign-in ends quietly, and a sheet that
+    /// waited for it goes back to its list.
+    public func signInClosed() {
+        cancelSignIn()
+        if case .waiting = cloudTarget { aim(nil) }
+    }
+
+    /// The sign-in page failed other than by being closed: the service refused.
+    public func signInRefused(_ service: SyncFolderKind) {
+        let waiting = cloudTarget?.underWay == true
+        cancelSignIn()
+        if waiting, sheet == .picker {
+            aim(.failed(service, .signInDenied(service: service), folder: false))
+        } else {
+            problem = .signInDenied(service: service)
+        }
+    }
+
+    /// Open the page again: the presenter closes the one it has and opens the same page.
+    public func openPageAgain() { pageOpens += 1 }
+
+    /// Cancel in the cloud folder's sheet: back to the list from the wait, closed from an error.
+    public func cancelCloudStep() {
+        switch cloudTarget {
+        case .waiting:
+            cancelSignIn()
+            aim(nil)
+        case .connecting, .settingUp:
+            break
+        case .failed, .key, nil:
+            sheet = nil
+            resetCloudStep()
+        }
+    }
+
+    /// Try again after an error: the same choice again. A folder of this device has its own
+    /// picker, so that one goes back to the list.
+    public func tryAgain(deviceName: String) {
+        guard case .failed(let kind, _, _) = cloudTarget else { return }
+        if [.googleDrive, .dropbox, .oneDrive].contains(kind) {
+            choose(kind, deviceName: deviceName)
+        } else {
+            aim(nil)
+        }
+    }
+
+    /// The cloud folder's sheet went: a sign-in still waiting for its page goes with it.
+    public func pickerClosed() {
+        if case .waiting = cloudTarget { cancelSignIn() }
+        if sheet != .picker {
+            resetCloudStep()
+            switching = false
+        }
+    }
+
+    /// Remove cloud folder, after its confirmation: the engine signs out of the service too.
+    public func removeFolder() {
+        removingFolder = false
+        signedOutByHand = false
+        problem = nil
+        changeFolder(nil)
+    }
+
+    /// Whether the sheet may not be swiped away: the folder is being made, or the key shows.
+    public var holdsSheet: Bool {
+        switch sheet {
+        case .recoveryKey: return true
+        case .picker:
+            switch cloudStep {
+            case .connecting, .settingUp, .key: return true
+            default: return false
+            }
+        default: return false
+        }
     }
 
     /// A folder that already holds a group, joined with its recovery key.
@@ -364,16 +509,34 @@ public final class SyncModel {
             settingUpShown = false
             settleTask?.cancel()
             signIn = nil
-            sheet = .recoveryKey
+            // The picker's sheet turns into the key; any other sheet gives way to it.
+            if sheet == .picker, cloudTarget != nil {
+                aim(.key)
+            } else {
+                sheet = .recoveryKey
+            }
         case .syncSignIn(let service, let step):
             lastService = service
             if let step {
                 signIn = SyncSignInRequest(service: service, step: step)
                 if case .finishing = step { beginSettingUp(service) }
+                if sheet == .picker, cloudTarget?.underWay == true {
+                    switch step {
+                    case .connecting: aim(.connecting(service))
+                    case .finishing: aim(.settingUp(service))
+                    default: if case .waiting = cloudTarget {} else { aim(.waiting(service)) }
+                    }
+                }
             } else {
                 signIn = nil
-                // The picker and its sign-in close together; the row says it is setting up.
-                if problem == nil, sheet == .picker || sheet == .nextcloud || sheet == .webDav {
+                if sheet == .picker {
+                    // A sign-in that ended while its sheet waited on it ended well: the sheet
+                    // closes and the row says the rest. A key or an error keeps the sheet.
+                    if cloudTarget?.underWay == true, problem == nil {
+                        sheet = nil
+                        resetCloudStep()
+                    }
+                } else if problem == nil, sheet == .nextcloud || sheet == .webDav {
                     sheet = nil
                 }
             }
@@ -382,7 +545,13 @@ public final class SyncModel {
             pairFailedDevice = device
         case .syncProblem(let found):
             problem = found
-            if case .groupExists = found { sheet = .restore(lastService ?? .googleDrive) }
+            if case .groupExists = found {
+                resetCloudStep()
+                sheet = .restore(lastService ?? .googleDrive)
+            } else if sheet == .picker, let target = cloudTarget, target.underWay {
+                let folder: Bool = { if case .settingUp = target { return true } else { return false } }()
+                aim(.failed(lastService ?? .googleDrive, found, folder: folder))
+            }
             settingUp = nil
             settingUpShown = false
             signIn = nil
@@ -403,6 +572,12 @@ public final class SyncModel {
         if let name = new.deviceName {
             if deviceName.isEmpty { deviceName = name }
             if new.enabled { Self.keepName(name) }
+        }
+        // A folder of this device set up with no new key: the picker's work is done.
+        if sheet == .picker, case .settingUp(.directory) = cloudTarget, new.folder?.kind == .directory,
+           before.folder?.kind != .directory || before.folder?.label != new.folder?.label {
+            sheet = nil
+            resetCloudStep()
         }
         if settingUp != nil, new.folder != nil, !new.syncing {
             settingUp = nil
@@ -454,6 +629,38 @@ public final class SyncModel {
         recoveryKey = nil
         sheet = nil
         keyCameFromDevices = false
+        resetCloudStep()
+    }
+
+    // MARK: The cloud folder's sheet
+
+    /// Move the sheet to `step`: at once when nothing shows, else once the step shown has had
+    /// its 400 ms; connecting and setting up wait 600 ms first, so a quick step never shows.
+    /// The list (nil), and a step the person's own tap began, come at once.
+    private func aim(_ step: CloudStep?, atOnce: Bool = false) {
+        cloudTarget = step
+        cloudTask?.cancel()
+        let now = ContinuousClock.now
+        guard let step, !staged, !atOnce else { return show(step) }
+        var due = step.quiet ? now + .milliseconds(600) : now
+        if cloudStep != nil, let at = cloudShownAt { due = max(due, at + .milliseconds(400)) }
+        guard due > now else { return show(step) }
+        cloudTask = Task { [weak self] in
+            try? await Task.sleep(until: due, clock: .continuous)
+            guard !Task.isCancelled, let self, self.cloudTarget == step else { return }
+            self.show(step)
+        }
+    }
+
+    private func show(_ step: CloudStep?) {
+        cloudStep = step
+        cloudShownAt = step == nil ? nil : .now
+    }
+
+    private func resetCloudStep() {
+        cloudTask?.cancel()
+        cloudTarget = nil
+        show(nil)
     }
 
     /// The code the other device showed ran out.
@@ -485,6 +692,11 @@ public final class SyncModel {
         settingUpShown = service != nil
     }
     public func stage(copied new: SyncSignInsCopiedView?) { copied = new }
+    public func stage(cloudStep step: CloudStep?, switching: Bool = false) {
+        self.switching = switching
+        cloudTarget = step
+        show(step)
+    }
 }
 
 /// Sign-ins that came over the link.

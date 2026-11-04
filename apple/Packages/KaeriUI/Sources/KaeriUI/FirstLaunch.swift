@@ -77,7 +77,7 @@ struct FirstLaunchPresenter: ViewModifier {
         UserDefaults.standard.set(true, forKey: FirstLaunchFlag.key)
         if restoring {
             restoring = false
-            store.sync.sheet = .picker
+            store.sync.addCloudFolder()
         }
         if let joining {
             navigator.invite = joining

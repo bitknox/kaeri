@@ -770,8 +770,12 @@ pub(crate) fn dispatch(
             });
         }
         Command::FinishSyncSignIn { service, callback } => {
-            if let Some(service) = crate::cloud::Service::of(&service) {
-                services.syncing.cloud.deliver(service, callback.0);
+            if let Some(cloud) = crate::cloud::Service::of(&service)
+                && !services.syncing.cloud.deliver(cloud, callback.0)
+            {
+                // A page that came back after its sign-in ended: said, never dropped quietly.
+                let expired = kaeri_model::group::SyncProblem::SignInExpired { service };
+                let _ = tx.send(Event::SyncProblem(expired));
             }
             drop(job);
         }

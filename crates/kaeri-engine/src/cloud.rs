@@ -100,6 +100,30 @@ struct Active {
     service: SyncFolderKind,
     callback: Option<mpsc::UnboundedSender<String>>,
     cancel: Arc<Notify>,
+    /// The pages it sent someone to, its own and those of the sign-ins it took over.
+    asked: Vec<Asked>,
+}
+
+/// A sign-in page this engine opened: the state it carries, and what its code is exchanged
+/// with. Never logged.
+#[derive(Clone)]
+struct Asked {
+    state: String,
+    verifier: String,
+    redirect: String,
+}
+
+/// How many pages of earlier sign-ins a sign-in over them still takes the redirect of.
+const ASKED_KEPT: usize = 4;
+
+/// What a redirect's state says of the sign-in that got it.
+enum Answer {
+    /// One of its pages: exchanged with that page's verifier and redirect.
+    Ours(Asked),
+    /// No page this engine opened for it.
+    Foreign,
+    /// A newer sign-in took this one's place.
+    Superseded,
 }
 
 /// What the engine keeps of cloud sign-in between commands.
@@ -123,18 +147,62 @@ impl State {
 
     /// Begin a sign-in to `service` (a cloud drive, or Nextcloud's login page), ending any
     /// other under way.
+    ///
+    /// A sheet sign-in begun over one to the same service, from a second click or a second
+    /// try while the first page is still open, takes over that one's pages: whichever page the
+    /// person finishes, its redirect signs in.
     pub(crate) fn begin(&self, service: SyncFolderKind, with_sheet: bool) -> Running {
         let (tx, rx) = mpsc::unbounded_channel();
         let cancel = Arc::new(Notify::new());
         let id = self.next.fetch_add(1, Ordering::Relaxed);
-        let mine =
-            Active { id, service, callback: with_sheet.then_some(tx), cancel: cancel.clone() };
+        let mut active = self.active.lock().unwrap_or_else(PoisonError::into_inner);
+        let before = active.take();
+        let asked = match &before {
+            Some(b) if with_sheet && b.service == service && b.callback.is_some() => {
+                b.asked.clone()
+            }
+            _ => Vec::new(),
+        };
+        *active = Some(Active {
+            id,
+            service,
+            callback: with_sheet.then_some(tx),
+            cancel: cancel.clone(),
+            asked,
+        });
+        drop(active);
         // A sign-in begun over another one ends it.
-        let before = self.active.lock().unwrap_or_else(PoisonError::into_inner).replace(mine);
         if let Some(before) = before {
             before.cancel.notify_one();
         }
         Running { id, rx, cancel }
+    }
+
+    /// Keep the page sign-in `id` sent someone to, for its redirect.
+    fn ask(&self, id: u64, asked: Asked) {
+        let mut active = self.active.lock().unwrap_or_else(PoisonError::into_inner);
+        if let Some(a) = active.as_mut().filter(|a| a.id == id) {
+            a.asked.push(asked);
+            let over = a.asked.len().saturating_sub(ASKED_KEPT + 1);
+            a.asked.drain(..over);
+        }
+    }
+
+    /// Which of sign-in `id`'s pages a redirect carrying `state` came back from.
+    fn answer(&self, id: u64, state: Option<&str>) -> Answer {
+        let active = self.active.lock().unwrap_or_else(PoisonError::into_inner);
+        let Some(a) = active.as_ref().filter(|a| a.id == id) else {
+            return Answer::Superseded;
+        };
+        state
+            .and_then(|state| a.asked.iter().find(|asked| asked.state == state))
+            .map_or(Answer::Foreign, |asked| Answer::Ours(asked.clone()))
+    }
+
+    /// Whether a sign-in to `kind` is under way now.
+    pub(crate) fn under_way(&self, kind: &SyncFolderKind) -> bool {
+        let active = self.active.lock().unwrap_or_else(PoisonError::into_inner);
+        active.as_ref().is_some_and(|a| a.service == *kind)
     }
 
     pub(crate) fn finish(&self, id: u64) {
@@ -152,19 +220,21 @@ impl State {
         }
     }
 
-    /// The web sheet's redirect, for the sign-in waiting on it.
-    pub fn deliver(&self, service: Service, callback: String) {
+    /// The web sheet's redirect, for the sign-in waiting on it. Says whether one was.
+    pub fn deliver(&self, service: Service, callback: String) -> bool {
         let active = self.active.lock().unwrap_or_else(PoisonError::into_inner);
-        match active
+        let waiting = active
             .as_ref()
             .filter(|a| a.service == service.kind())
             .and_then(|a| a.callback.as_ref())
-        {
-            Some(tx) => {
-                let _ = tx.send(callback);
-            }
-            None => tracing::info!("a sign-in redirect arrived with no sign-in waiting for it"),
+            .is_some_and(|tx| tx.send(callback).is_ok());
+        if !waiting {
+            tracing::info!(
+                service = ?service.kind(),
+                "a sign-in redirect arrived with no sign-in waiting for it, refused"
+            );
         }
+        waiting
     }
 }
 
@@ -438,8 +508,12 @@ pub(crate) fn say_for(tx: &Outbox, kind: &SyncFolderKind, step: Option<SyncSignI
     let _ = tx.send(Event::SyncSignIn { service: kind.clone(), step });
 }
 
-/// Say the sign-in is over, whether it signed in, was cancelled or failed.
-pub fn ended(tx: &Outbox, kind: &SyncFolderKind) {
+/// Say the sign-in is over, whether it signed in, was cancelled or failed. Not while a newer
+/// sign-in to the same service is under way: that one's sheet is not this one's to close.
+pub fn ended(ctx: &Ctx, tx: &Outbox, kind: &SyncFolderKind) {
+    if ctx.syncing.cloud.under_way(kind) {
+        return;
+    }
     if Service::of(kind).is_some() || *kind == SyncFolderKind::Nextcloud {
         say_for(tx, kind, None);
     }
@@ -501,11 +575,25 @@ pub async fn sign_in(ctx: &Ctx, tx: &Outbox, service: Service) -> Result<(), End
     };
     let endpoints = endpoints(ctx, service).await;
     let mut run = ctx.syncing.cloud.begin(service.kind(), way == SyncCloudWay::Sheet);
+    tracing::info!(service = ?service.kind(), redirect = redirect_kind(&way), "a cloud sign-in started");
     let outcome = match way {
         SyncCloudWay::DeviceCode => device(ctx, tx, service, &endpoints, &config, &run).await,
         _ => code(ctx, tx, service, kind, &endpoints, &config, &mut run).await,
     };
     ctx.syncing.cloud.finish(run.id);
+    match &outcome {
+        Ok(_) => {
+            tracing::info!(service = ?service.kind(), "the cloud sign-in's exchange is done")
+        }
+        Err(Ended::Cancelled) => {
+            tracing::info!(service = ?service.kind(), "a cloud sign-in ended unfinished")
+        }
+        Err(Ended::Problem(p)) => tracing::info!(
+            service = ?service.kind(),
+            reason = problem_class(p),
+            "a cloud sign-in failed"
+        ),
+    }
     let tokens = outcome?;
     let Some(refresh) = tokens.refresh_token else {
         return Err(
@@ -518,6 +606,37 @@ pub async fn sign_in(ctx: &Ctx, tx: &Outbox, service: Service) -> Result<(), End
         .map_err(|e| SyncProblem::Other(format!("the sign-in could not be kept: {e}")))?;
     learn_account(ctx, service).await;
     Ok(())
+}
+
+/// How a sign-in comes back, for the log.
+fn redirect_kind(way: &SyncCloudWay) -> &'static str {
+    match way {
+        SyncCloudWay::Sheet => "sheet",
+        SyncCloudWay::Browser => "loopback",
+        SyncCloudWay::DeviceCode => "device code",
+        SyncCloudWay::Unavailable { .. } => "none",
+    }
+}
+
+/// What kind of failure `e` is, for the log: never its words, which may quote a service.
+fn error_class(e: &FolderError) -> &'static str {
+    match e {
+        FolderError::Unauthorized => "refused",
+        FolderError::Unreachable(_) => "unreachable",
+        FolderError::Server(_) => "server",
+        _ => "other",
+    }
+}
+
+/// What kind of problem `p` is, for the log.
+fn problem_class(p: &SyncProblem) -> &'static str {
+    match p {
+        SyncProblem::SignInDenied { .. } => "refused",
+        SyncProblem::SignInExpired { .. } => "timed out",
+        SyncProblem::Unreachable => "unreachable",
+        SyncProblem::CloudUnavailable { .. } => "unavailable",
+        _ => "other",
+    }
 }
 
 enum Catcher {
@@ -550,6 +669,10 @@ async fn code(
     let redirect = redirect_for(service, kind, &config.client_id, port);
     let url = authorize_url(service, endpoints, config, &redirect, &pkce.challenge, &state)
         .map_err(|e| Ended::Problem(problem(service, &e)))?;
+    ctx.syncing.cloud.ask(
+        run.id,
+        Asked { state, verifier: pkce.verifier.clone(), redirect: redirect.clone() },
+    );
     match &catcher {
         Catcher::Sheet => {
             let callback_scheme = redirect.split(':').next().unwrap_or_default().to_owned();
@@ -560,34 +683,37 @@ async fn code(
             say(tx, service, Some(SyncSignInStep::Browser { url }));
         }
     }
-    let params = loop {
-        let got = tokio::select! {
-            () = run.cancel.notified() => return Err(Ended::Cancelled),
-            () = tokio::time::sleep(PAGE_WAIT) => {
-                return Err(SyncProblem::SignInExpired { service: service.kind() }.into());
-            }
-            got = next_params(&mut catcher, &mut run.rx) => got,
-        };
-        let Some(params) = got else {
-            return Err(Ended::Cancelled);
-        };
-        let param =
-            |name: &str| params.iter().find(|(n, _)| n == name).map(|(_, v)| v.as_str());
-        // A redirect for some other request: not this sign-in's to finish, so it goes on waiting.
-        if param("state") != Some(state.as_str()) {
+    let got = tokio::select! {
+        () = run.cancel.notified() => return Err(Ended::Cancelled),
+        () = tokio::time::sleep(PAGE_WAIT) => {
+            return Err(SyncProblem::SignInExpired { service: service.kind() }.into());
+        }
+        got = next_params(&mut catcher, &mut run.rx) => got,
+    };
+    let Some(params) = got else {
+        return Err(Ended::Cancelled);
+    };
+    tracing::info!(service = ?service.kind(), "a sign-in redirect came back");
+    let param = |name: &str| params.iter().find(|(n, _)| n == name).map(|(_, v)| v.clone());
+    let asked = match ctx.syncing.cloud.answer(run.id, param("state").as_deref()) {
+        Answer::Ours(asked) => asked,
+        Answer::Superseded => return Err(Ended::Cancelled),
+        // No page this engine opened: refused, and said, as the page that was open is spent.
+        Answer::Foreign => {
             tracing::warn!(
                 service = ?service.kind(),
                 "a sign-in redirect that does not carry this request's state, refused"
             );
-            continue;
+            return Err(SyncProblem::SignInDenied { service: service.kind() }.into());
         }
-        break params;
     };
-    let param = |name: &str| params.iter().find(|(n, _)| n == name).map(|(_, v)| v.clone());
+    if matches!(catcher, Catcher::Loopback(_)) && param("code").is_some() {
+        say(tx, service, Some(SyncSignInStep::Connecting));
+    }
     if let Some(error) = param("error") {
-        // Saying no on the service's page is cancelling.
+        // Saying no on the service's page, or the service refusing, is a denial.
         if error == "access_denied" {
-            return Err(Ended::Cancelled);
+            return Err(SyncProblem::SignInDenied { service: service.kind() }.into());
         }
         let reason = param("error_description").unwrap_or(error);
         return Err(SyncProblem::Other(reason).into());
@@ -600,11 +726,18 @@ async fn code(
         endpoints,
         config,
         &code,
-        &redirect,
-        &pkce.verifier,
+        &asked.redirect,
+        &asked.verifier,
     )
     .await
-    .map_err(|e| Ended::Problem(problem(service, &e)))
+    .map_err(|e| {
+        tracing::info!(
+            service = ?service.kind(),
+            reason = error_class(&e),
+            "the sign-in's code exchange failed"
+        );
+        Ended::Problem(problem(service, &e))
+    })
 }
 
 async fn next_params(

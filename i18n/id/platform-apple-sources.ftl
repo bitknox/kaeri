@@ -48,7 +48,6 @@ tv-bar-cant-reach = Tidak dapat menjangkau { $name }
 tv-bar-not-found = { $name } tidak ditemukan
 tv-paired-tvs = TV yang sudah dipasangkan
 tv-title-list = TV
-tv-settings-footnote = TV mencantumkan { -device } ini dengan kode { $code }. Jika Anda menghapus TV di sini, TV itu juga melupakan { -device } ini.
 tv-seen-just-now = baru saja
 stores-link-send-once = Kirim tautan ini ke { $who }. Tautan hanya bisa dipakai sekali, sampai { $until }.
 stores-link-send-once-anyone = Kirim tautan ini kepada orang yang dituju. Tautan hanya bisa dipakai sekali, sampai { $until }.

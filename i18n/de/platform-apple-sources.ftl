@@ -51,7 +51,6 @@ tv-bar-cant-reach = { $name } ist nicht erreichbar
 tv-bar-not-found = { $name } nicht gefunden
 tv-paired-tvs = Gekoppelte Fernseher
 tv-title-list = Fernseher
-tv-settings-footnote = Der Fernseher führt dieses { -device } mit dem Code { $code } auf. Entfernst du hier einen Fernseher, vergisst er auch dieses { -device }.
 tv-seen-just-now = gerade eben
 stores-link-send-once = Schick diesen Link an { $who }. Er funktioniert einmal, bis { $until }.
 stores-link-send-once-anyone = Schick diesen Link an die Person, für die er ist. Er funktioniert einmal, bis { $until }.

@@ -1,6 +1,6 @@
 // Settings, Devices on the Mac and iPad: this device's name, the devices in the group, the cloud
-// folder, the recovery key and Turn off sync, in the pane's cards. The iPhone has its own page
-// (PhoneDevices).
+// folder, the recovery key and Turn off sync, in the pane's cards; before sync is on, the two ways
+// in. The iPhone has its own page (PhoneDevices).
 
 import KaeriDesign
 import KaeriKit
@@ -22,32 +22,49 @@ enum DeviceNaming {
 
 struct DevicesPane: View {
     @Environment(AppStore.self) private var store
-    @Environment(Navigator.self) private var navigator
 
     var body: some View {
         let sync = store.sync
         SettingsGroup(title: L.devicesThisDevice) {
             SettingsRow(title: L.devicesName) { DeviceNameField() }
         }
-        if sync.enabled {
+        if sync.inUse {
             YourDevicesGroup()
             SyncNotesGroup()
             CloudFolderGroup()
             RecoveryKeyGroup()
             TurnOffGroup()
+            TVsGroup()
         } else {
-            SettingsGroup(title: L.syncGroup) {
-                SettingsRow(title: L.syncOffTitle, note: L.syncOffLine) {
-                    Button { sync.sheet = .road } label: { Text(L.syncTurnOn + "…") }
-                        .buttonStyle(PrimaryCapsuleStyle(height: 28))
-                }
-            }
+            SyncStartGroup()
             TVsGroup(title: L.tvPairedTvs, footnoteOverride: L.devicesPairedTvsFoot)
         }
-        if sync.enabled { TVsGroup() }
         Color.clear.frame(height: 0)
             .modifier(SyncPresenter())
-            .onLaunchSheet("sync-road", navigator) { sync.sheet = .road }
+    }
+}
+
+/// Before sync is on: the two ways in, each with its own buttons. Either one turns sync on.
+struct SyncStartGroup: View {
+    @Environment(AppStore.self) private var store
+
+    var body: some View {
+        let sync = store.sync
+        SettingsGroup(title: L.syncGroup, footnote: L.syncStartFoot) {
+            SettingsRow(title: L.syncRoadNearby, note: L.syncRoadNearbyLine) {
+                HStack(spacing: 8) {
+                    Button(L.pairShowCode) { sync.sheet = .pairShow }
+                    Button(L.pairEnterCode) { sync.sheet = .pairEnter }
+                }
+                .buttonStyle(SecondaryCapsuleStyle(raisedSurface: true))
+                .fixedSize()
+            }
+            SettingsRow(title: L.syncRoadCloud, note: L.syncRoadCloudLine) {
+                Button(L.cloudAdd) { sync.addCloudFolder() }
+                    .buttonStyle(SecondaryCapsuleStyle(raisedSurface: true))
+                    .fixedSize()
+            }
+        }
     }
 }
 
@@ -160,21 +177,30 @@ struct YourDevicesGroup: View {
     }
 }
 
-/// The cloud folder: the service with its state, then Sync now and Sign out; or the way to add one.
+/// The cloud folder: the service with its state, then Sync now and its More menu; or the way to
+/// add one. Remove asks first, in an alert.
 struct CloudFolderGroup: View {
     @Environment(AppStore.self) private var store
 
     var body: some View {
         let sync = store.sync
+        let service = sync.status.folder.map { SyncModel.name($0.kind) } ?? ""
         SettingsGroup(title: L.cloudGroup, footnote: L.cloudFoot) {
             if let folder = sync.status.folder {
                 CloudRow(folder: folder)
             } else {
                 SettingsRow(title: L.cloudAdd) {
-                    Button(L.actionAdd) { sync.sheet = .picker }
+                    Button(L.actionAdd) { sync.addCloudFolder() }
                         .buttonStyle(SecondaryCapsuleStyle(raisedSurface: true))
                 }
             }
+        }
+        .alert(L.cloudRemoveTitle(service: service), isPresented: Binding(get: { sync.removingFolder }, set: { sync.removingFolder = $0 })) {
+            Button(L.actionCancel, role: .cancel) {}
+                .keyboardShortcut(.defaultAction)
+            Button(L.cloudRemoveAction, role: .destructive) { sync.removeFolder() }
+        } message: {
+            Text(L.cloudRemoveLine(kind: Device.name, service: service))
         }
     }
 }
@@ -228,11 +254,32 @@ struct CloudRow: View {
         if needsSignIn, cloud {
             Button(sync.signedOutByHand ? L.cloudSignIn : L.cloudSignInAgain) { sync.signInAgain(folder.kind) }
         } else if sync.status.problem == .unreachable, folder.kind == .directory {
-            Button(L.cloudChooseFolder) { sync.sheet = .picker }
+            Button(L.cloudChooseFolder) { sync.useAnotherService() }
         } else {
             Button(L.cloudSyncNow) { sync.syncNow() }
-            if cloud { Button(L.cloudSignOut) { sync.signOut(folder.kind) } }
         }
+        Menu {
+            Button(Self.further(L.cloudUseAnother)) { sync.useAnotherService() }
+            if cloud, !needsSignIn { Button(L.cloudSignOut) { sync.signOut(folder.kind) } }
+            Divider()
+            Button(Self.further(L.cloudRemove), role: .destructive) { sync.removingFolder = true }
+        } label: {
+            Image(systemName: "ellipsis").foregroundStyle(.haze)
+        }
+        .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
+        #if os(iOS)
+        .frame(minWidth: 34, minHeight: 34)
+        #endif
+        .accessibilityLabel(L.cloudMore(service: SyncModel.name(folder.kind)))
+    }
+
+    /// A menu item that opens a further step: the Mac adds an ellipsis.
+    private static func further(_ title: String) -> String {
+        #if os(macOS)
+        title + "…"
+        #else
+        title
+        #endif
     }
 
     private static func isSignIn(_ problem: SyncProblem) -> Bool {

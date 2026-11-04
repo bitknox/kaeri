@@ -10292,6 +10292,82 @@
     <value>[ţĥé öţĥéŕ ðéṽîçé~~~~~]</value>
     <comment>Error naming a device that is not known by name.</comment>
   </data>
+  <data name="CloudSheetLine" xml:space="preserve">
+    <value>[{service}’š þàĝé îš öþéñ. Åļļöŵ àççéšš ţĥéŕé, àñð Ķàéŕî çàŕŕîéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Wait line on iPhone and iPad, where the sign-in page is a web sheet, not the browser.</comment>
+  </data>
+  <data name="CloudConnecting" xml:space="preserve">
+    <value>[Çöññéçţîñĝ ţö {service}~~~~~~]</value>
+    <comment>Sheet or dialog title after the browser came back with access allowed.</comment>
+  </data>
+  <data name="CloudConnectingLine" xml:space="preserve">
+    <value>[Åççéšš àļļöŵéð. Ƒîñîšĥîñĝ ţĥé šîĝñ-îñ.~~~~~~~~~~~~]</value>
+    <comment>Status line beside the indicator while connecting.</comment>
+  </data>
+  <data name="CloudSettingUpLine" xml:space="preserve">
+    <value>[Ṁàķîñĝ Ķàéŕî’š ƒöļðéŕ îñ {service} àñð šéàļîñĝ à ƒîŕšţ çöþý öƒ ýöüŕ ĥîšţöŕý.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Status line under Setting up the folder, whose title is cloud-setting-up.</comment>
+  </data>
+  <data name="CloudErrSigninTitle" xml:space="preserve">
+    <value>[Çöüļðñ’ţ šîĝñ îñ ţö {service}~~~~~~~]</value>
+    <comment>Error title in the sign-in sheet or dialog.</comment>
+  </data>
+  <data name="CloudErrSetupTitle" xml:space="preserve">
+    <value>[Çöüļðñ’ţ šéţ üþ ţĥé ƒöļðéŕ~~~~~~~~]</value>
+    <comment>Error title when the sign-in worked and the folder could not be set up.</comment>
+  </data>
+  <data name="CloudErrDeniedShort" xml:space="preserve">
+    <value>[{service} ðîðñ’ţ ĝîṽé Ķàéŕî àççéšš.~~~~~~~~~]</value>
+    <comment>Error line beside Try again, after access was refused on the service's page.</comment>
+  </data>
+  <data name="CloudErrSigninOther" xml:space="preserve">
+    <value>[{service} ðîðñ’ţ ƒîñîšĥ ţĥé šîĝñ-îñ. Ţŕý àĝàîñ îñ à ɱöɱéñţ.~~~~~~~~~~~~~~~~]</value>
+    <comment>Error line for any other failure during the sign-in; the details go to Messages.</comment>
+  </data>
+  <data name="CloudUseAnother" xml:space="preserve">
+    <value>[Ûšé àñöţĥéŕ šéŕṽîçé~~~~~~]</value>
+    <comment>More menu item, and a row on phones; the Mac adds an ellipsis.</comment>
+  </data>
+  <data name="CloudRemove" xml:space="preserve">
+    <value>[Ŕéɱöṽé çļöüð ƒöļðéŕ~~~~~~]</value>
+    <comment>More menu item in red, and a button in the TV's dialog.</comment>
+  </data>
+  <data name="CloudRemoveTitle" xml:space="preserve">
+    <value>[Ŕéɱöṽé {service} ƒŕöɱ šýñç?~~~~~~~]</value>
+    <comment>Confirmation title before removing the cloud folder.</comment>
+  </data>
+  <data name="CloudRemoveLine" xml:space="preserve">
+    <value>[Éṽéŕýţĥîñĝ öñ ţĥîš {kind} šţàýš ĥéŕé, àñð þàîŕéð ðéṽîçéš ñéàŕƀý ķééþ šýñçîñĝ. Ţĥé ƒöļðéŕ šţàýš îñ {service} ŵîţĥ îţš šéàļéð çöþý, àñð ýöüŕ öţĥéŕ ðéṽîçéš üšé îţ üñţîļ ýöü ŕéɱöṽé îţ öñ ţĥéɱ ţöö.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Confirmation line before removing the cloud folder.</comment>
+  </data>
+  <data name="CloudRemoveAction" xml:space="preserve">
+    <value>[Ŕéɱöṽé~~]</value>
+    <comment>Destructive button in the remove confirmation.</comment>
+  </data>
+  <data name="CloudMore" xml:space="preserve">
+    <value>[Ṁöŕé ƒöŕ {service}~~~~]</value>
+    <comment>Accessibility label of the More button on the cloud folder row.</comment>
+  </data>
+  <data name="CloudInUse" xml:space="preserve">
+    <value>[Îñ üšé~~]</value>
+    <comment>Picker row line for the service in use, under Use another service.</comment>
+  </data>
+  <data name="CloudSwitchFoot" xml:space="preserve">
+    <value>[{service} šţàýš îñ üšé üñţîļ ţĥé ñéŵ ƒöļðéŕ îš ŕéàðý.~~~~~~~~~~~~~~~]</value>
+    <comment>Picker line under Use another service.</comment>
+  </data>
+  <data name="SyncStartFoot" xml:space="preserve">
+    <value>[Éîţĥéŕ öñé ţüŕñš šýñç öñ, àñð ýöü çàñ üšé ƀöţĥ.~~~~~~~~~~~~~~~]</value>
+    <comment>Footer under the two ways in while sync is off.</comment>
+  </data>
+  <data name="DevicesAside" xml:space="preserve">
+    <value>[Šýñç çàŕŕîéš ŵĥéŕé ýöü šţöþþéð, ýöüŕ ĥîšţöŕý àñð ýöüŕ šéţţîñĝš ƀéţŵééñ ýöüŕ öŵñ ðéṽîçéš, ñéàŕƀý öŕ ţĥŕöüĝĥ à çļöüð ƒöļðéŕ ýöü çĥööšé. Îţ îš šéàļéð ƀéƒöŕé îţ ļéàṽéš ţĥîš {kind}.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Aside on the Devices page on the Mac and iPad.</comment>
+  </data>
+  <data name="TvSyncStartFoot" xml:space="preserve">
+    <value>[Þàîŕîñĝ ŵîţĥ ýöüŕ þĥöñé ţüŕñš šýñç öñ. Ţĥéñ ţĥîš ŢṼ çàñ ĵöîñ ýöüŕ çļöüð ƒöļðéŕ.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>TV Devices footer while sync is off, after devices-sync-foot.</comment>
+  </data>
   <data name="TitleLoadFailed" xml:space="preserve">
     <value>[Çöüļðñ'ţ ļöàð ţĥîš ţîţļé~~~~~~~~]</value>
     <comment>Title of the state when a title page could not load.</comment>
@@ -11511,6 +11587,14 @@
   <data name="TvCastUpNextIn" xml:space="preserve">
     <value>[Ûþ ñéẋţ · þļàýš îñ {seconds} š~~~~~~~~]</value>
     <comment>Line over the next episode on the casting card while its count runs. At 0 the TV plays it.</comment>
+  </data>
+  <data name="TvCodeRow" xml:space="preserve">
+    <value>[Çöðé öñ ŢṼš~~~~]</value>
+    <comment>Play on TV row holding the code a TV lists this device by, shown in groups of four.</comment>
+  </data>
+  <data name="TvForgetNote" xml:space="preserve">
+    <value>[Ƒöŕĝéţ à ŢṼ ĥéŕé àñð îţ ƒöŕĝéţš ţĥîš ðéṽîçé ţöö.~~~~~~~~~~~~~~~]</value>
+    <comment>Line under the paired TVs, now that the code has its own row.</comment>
   </data>
   <data name="UpdatesTitle" xml:space="preserve">
     <value>[Ûþðàţéš~~~]</value>

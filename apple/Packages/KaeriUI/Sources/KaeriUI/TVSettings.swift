@@ -20,7 +20,7 @@ enum TVSettingsWords {
     }
 
     static func footnote(_ tv: TVRemoteModel) -> String {
-        L.tvSettingsFootnote(code: tv.shortFingerprint)
+        L.tvForgetNote
     }
 }
 

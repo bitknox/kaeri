@@ -22841,6 +22841,30 @@
         }
       }
     },
+    "cloud-connecting" : {
+      "comment" : "Sheet or dialog title after the browser came back with access allowed. Argument 1: service (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connecting to %1$@"
+          }
+        }
+      }
+    },
+    "cloud-connecting-line" : {
+      "comment" : "Status line beside the indicator while connecting.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Access allowed. Finishing the sign-in."
+          }
+        }
+      }
+    },
     "cloud-dropbox-line" : {
       "comment" : "Picker row line.",
       "extractionState" : "manual",
@@ -22873,6 +22897,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ didn’t give Kaeri access. Choose it again to retry."
+          }
+        }
+      }
+    },
+    "cloud-err-denied-short" : {
+      "comment" : "Error line beside Try again, after access was refused on the service's page. Argument 1: service (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ didn’t give Kaeri access."
           }
         }
       }
@@ -22937,6 +22973,18 @@
         }
       }
     },
+    "cloud-err-setup-title" : {
+      "comment" : "Error title when the sign-in worked and the folder could not be set up.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn’t set up the folder"
+          }
+        }
+      }
+    },
     "cloud-err-signed-out" : {
       "comment" : "Status error, with Sign in again. Argument 1: service (Text). Argument 2: kind (Text).",
       "extractionState" : "manual",
@@ -22945,6 +22993,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ signed Kaeri out. Your changes wait on this %2$@ until you sign in again."
+          }
+        }
+      }
+    },
+    "cloud-err-signin-other" : {
+      "comment" : "Error line for any other failure during the sign-in; the details go to Messages. Argument 1: service (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ didn’t finish the sign-in. Try again in a moment."
+          }
+        }
+      }
+    },
+    "cloud-err-signin-title" : {
+      "comment" : "Error title in the sign-in sheet or dialog. Argument 1: service (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn’t sign in to %1$@"
           }
         }
       }
@@ -23057,6 +23129,18 @@
         }
       }
     },
+    "cloud-in-use" : {
+      "comment" : "Picker row line for the service in use, under Use another service.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In use"
+          }
+        }
+      }
+    },
     "cloud-loopback-done" : {
       "comment" : "The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.",
       "extractionState" : "manual",
@@ -23137,6 +23221,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bạn có thể đóng thẻ này và quay lại Kaeri."
+          }
+        }
+      }
+    },
+    "cloud-more" : {
+      "comment" : "Accessibility label of the More button on the cloud folder row. Argument 1: service (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More for %1$@"
           }
         }
       }
@@ -23285,6 +23381,54 @@
         }
       }
     },
+    "cloud-remove" : {
+      "comment" : "More menu item in red, and a button in the TV's dialog.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove cloud folder"
+          }
+        }
+      }
+    },
+    "cloud-remove-action" : {
+      "comment" : "Destructive button in the remove confirmation.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove"
+          }
+        }
+      }
+    },
+    "cloud-remove-line" : {
+      "comment" : "Confirmation line before removing the cloud folder. Argument 1: kind (Text). Argument 2: service (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Everything on this %1$@ stays here, and paired devices nearby keep syncing. The folder stays in %2$@ with its sealed copy, and your other devices use it until you remove it on them too."
+          }
+        }
+      }
+    },
+    "cloud-remove-title" : {
+      "comment" : "Confirmation title before removing the cloud folder. Argument 1: service (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove %1$@ from sync?"
+          }
+        }
+      }
+    },
     "cloud-setting-up" : {
       "comment" : "Row line while the first write runs.",
       "extractionState" : "manual",
@@ -23293,6 +23437,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Setting up the folder"
+          }
+        }
+      }
+    },
+    "cloud-setting-up-line" : {
+      "comment" : "Status line under Setting up the folder, whose title is cloud-setting-up. Argument 1: service (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Making Kaeri’s folder in %1$@ and sealing a first copy of your history."
+          }
+        }
+      }
+    },
+    "cloud-sheet-line" : {
+      "comment" : "Wait line on iPhone and iPad, where the sign-in page is a web sheet, not the browser. Argument 1: service (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@’s page is open. Allow access there, and Kaeri carries on by itself."
           }
         }
       }
@@ -23357,6 +23525,18 @@
         }
       }
     },
+    "cloud-switch-foot" : {
+      "comment" : "Picker line under Use another service. Argument 1: service (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ stays in use until the new folder is ready."
+          }
+        }
+      }
+    },
     "cloud-sync-now" : {
       "comment" : "Cloud group button.",
       "extractionState" : "manual",
@@ -23365,6 +23545,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sync now"
+          }
+        }
+      }
+    },
+    "cloud-use-another" : {
+      "comment" : "More menu item, and a row on phones; the Mac adds an ellipsis.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use another service"
           }
         }
       }
@@ -27401,6 +27593,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Also sync"
+          }
+        }
+      }
+    },
+    "devices-aside" : {
+      "comment" : "Aside on the Devices page on the Mac and iPad. Argument 1: kind (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync carries where you stopped, your history and your settings between your own devices, nearby or through a cloud folder you choose. It is sealed before it leaves this %1$@."
           }
         }
       }
@@ -223031,6 +223235,18 @@
         }
       }
     },
+    "sync-start-foot" : {
+      "comment" : "Footer under the two ways in while sync is off.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Either one turns sync on, and you can use both."
+          }
+        }
+      }
+    },
     "sync-store-err-not-allowed" : {
       "comment" : "Line on a store row when the paired device can't make invites to the store, because it isn't a named member there any more or joined through an open link. Argument 1: store (Text). Argument 2: device (Text).",
       "extractionState" : "manual",
@@ -237695,6 +237911,18 @@
         }
       }
     },
+    "tv-code-row" : {
+      "comment" : "Play on TV row holding the code a TV lists this device by, shown in groups of four.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code on TVs"
+          }
+        }
+      }
+    },
     "tv-connect" : {
       "comment" : "Button that connects to the typed address.",
       "extractionState" : "manual",
@@ -238123,6 +238351,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Quên %1$@"
+          }
+        }
+      }
+    },
+    "tv-forget-note" : {
+      "comment" : "Line under the paired TVs, now that the code has its own row.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forget a TV here and it forgets this device too."
           }
         }
       }
@@ -243155,90 +243395,6 @@
         }
       }
     },
-    "tv-settings-footnote" : {
-      "comment" : "Line under the settings group of paired TVs. The code is a short fingerprint. Argument 1: code (Text).",
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Fernseher führt dieses Gerät mit dem Code %1$@ auf. Entfernst du hier einen Fernseher, vergisst er auch dieses Gerät."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A TV lists this device with the code %1$@. Forget a TV here and it forgets this device too."
-          }
-        },
-        "es-419" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Un televisor registra este dispositivo con el código %1$@. Si olvidas un televisor aquí, también olvida este dispositivo."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Une TV liste cet appareil avec le code %1$@. Si vous oubliez une TV ici, elle oublie aussi cet appareil."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "TV mencantumkan perangkat ini dengan kode %1$@. Jika Anda menghapus TV di sini, TV itu juga melupakan perangkat ini."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Una TV elenca questo dispositivo con il codice %1$@. Se dimentichi una TV qui, dimentica anche questo dispositivo."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "テレビには、このデバイスがコード%1$@で表示されます。ここでテレビを削除すると、このデバイスの記録も消えます。"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Telewizor widzi to urządzenie z kodem %1$@. Zapomnienie telewizora tutaj usuwa też to urządzenie."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uma TV lista este dispositivo com o código %1$@. Se você esquecer uma TV aqui, ela também esquece este dispositivo."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Телевизор видит это устройство под кодом %1$@. Если забыть телевизор здесь, он забудет и это устройство."
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "En TV listar den här enheten med koden %1$@. Glömmer du en TV här glöms också den här enheten."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bir TV, bu cihazı %1$@ koduyla listeler. Burada bir TV'yi unutursanız bu cihazı da unutur."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Một TV hiển thị thiết bị này với mã %1$@. Quên TV tại đây thì TV đó cũng quên thiết bị này."
-          }
-        }
-      }
-    },
     "tv-sheet-title-pair" : {
       "comment" : "Title of the sheet when no TV is paired and the user came from Play on TV.",
       "extractionState" : "manual",
@@ -243991,6 +244147,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đang kết nối lại tới %1$@"
+          }
+        }
+      }
+    },
+    "tv-sync-start-foot" : {
+      "comment" : "TV Devices footer while sync is off, after devices-sync-foot.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pairing with your phone turns sync on. Then this TV can join your cloud folder."
           }
         }
       }

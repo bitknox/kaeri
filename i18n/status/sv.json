@@ -28048,13 +28048,6 @@
     "at": "2026-10-31",
     "back": "{ $setting }, { $value }"
   },
-  "tv-settings-footnote": {
-    "source": "ea15a7546a7c",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "A TV lists this { -device } with the code { $code }. If you forget a TV here, this { -device } is forgotten too."
-  },
   "tv-sheet-code-on": {
     "source": "c2afc1a88aea",
     "state": "draft",

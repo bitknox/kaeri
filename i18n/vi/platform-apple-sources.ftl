@@ -48,7 +48,6 @@ tv-bar-cant-reach = Không kết nối được { $name }
 tv-bar-not-found = Không tìm thấy { $name }
 tv-paired-tvs = TV đã ghép đôi
 tv-title-list = TV
-tv-settings-footnote = Một TV hiển thị { -device } này với mã { $code }. Quên TV tại đây thì TV đó cũng quên { -device } này.
 tv-seen-just-now = vừa xong
 stores-link-send-once = Gửi liên kết này cho { $who }. Liên kết chỉ dùng được một lần, đến { $until }.
 stores-link-send-once-anyone = Gửi liên kết này cho người nhận. Liên kết chỉ dùng được một lần, đến { $until }.
