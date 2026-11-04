@@ -30,7 +30,7 @@ object FixtureSync {
 
     /** Set up [state] once the engine has said how sync stands. False for a state there is none of. */
     suspend fun stage(store: AppStore, state: String): Boolean {
-        val kim = SyncDeviceView(id = "kim", name = "Kim's phone", thisDevice = false)
+        val kim = SyncDeviceView(id = "kim", name = "Kim's phone", thisDevice = false, trackers = listOf("anilist"), signIns = listOf(SyncFolderKind.DROPBOX))
         val offer = SyncStoreOffer(address = "https://plugins.example", name = "Example plugins", inviteFrom = "kim")
         when (state) {
             "first-ok-join" -> {

@@ -240,7 +240,8 @@ private fun ContinueCard(item: HomeItem, width: Dp, h: HomeHandlers) {
                     (app.kaeri.store.continueFromDeviceLine(context, item.lastDevice, item.episode?.toInt(), item.resume) ?: item.line?.text(context)).orEmpty(),
                     style = MaterialTheme.typography.bodyMedium.tabular(),
                     color = colors.onSurfaceVariant,
-                    maxLines = largeTextLines(),
+                    // The line saying which device played last wraps to a second line, never cut.
+                    maxLines = if (item.lastDevice != null) maxOf(2, largeTextLines()) else largeTextLines(),
                     overflow = TextOverflow.Ellipsis,
                 )
             }
