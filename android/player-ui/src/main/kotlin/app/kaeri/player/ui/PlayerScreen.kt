@@ -456,7 +456,7 @@ fun PlayerScreen(
             // In a party the notice leads the chat column at the top leading corner; else it stands top centre.
             if (inParty) {
                 // Above the keyboard there is little room left, so the column moves up while typing.
-                val columnTop by animateDpAsState(if (typing) 16.dp else 80.dp, Motion.standard(), label = "column")
+                val columnTop by animateDpAsState(if (typing) 16.dp else 80.dp, Motion.standard(), label = "column") // i18n-skip
                 PartyColumn(model, onMore = { sheet = PlayerSheet.People }, Modifier.align(Alignment.TopStart).padding(start = 48.dp, top = columnTop), compact = typing)
             } else {
                 AlertNote(model, Modifier.align(Alignment.TopCenter).padding(top = 80.dp))

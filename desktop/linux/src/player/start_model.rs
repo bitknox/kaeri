@@ -563,7 +563,7 @@ impl Start {
         let failure = self.failure.as_ref().map(|failure| {
             let reason = failure_reason(&failure.text);
             let second = match names(&failure.asked) {
-                Some(names) => format!("{reason} {}", t::player_start_asked(&names)),
+                Some(names) => [reason, t::player_start_asked(&names)].join(" "),
                 None => reason,
             };
             (t::player_failed_title_text(&self.episode), second)

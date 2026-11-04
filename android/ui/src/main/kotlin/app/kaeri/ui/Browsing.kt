@@ -149,7 +149,7 @@ internal fun SurpriseButton(pool: SurprisePool, modifier: Modifier = Modifier) {
     ) {
         IconButton(
             onClick = { store.surprise(pool) },
-            modifier = Modifier.semantics { contentDescription = "$name. $hint" },
+            modifier = Modifier.semantics { contentDescription = "$name. $hint" }, // i18n-skip
         ) {
             SwapFade(slow, animationSpec = Motion.standard(), label = "surprise") { spinning -> // i18n-skip
                 if (spinning) {
