@@ -469,6 +469,10 @@ pub(crate) async fn list_episodes(
         }
     };
     let listed = load_listed(&meta, &store, &registry, id, &mut early).await;
+    // Listed by a source: a miss Home kept for the title is a find now.
+    if listed.as_ref().is_ok_and(|listed| listed.main.is_some()) {
+        crate::catalog::probe::listed(&store, &tx, id);
+    }
     let current = match &listed {
         Ok(listed) => current_match(&store, &registry, id, listed.main.as_deref()),
         Err(_) => None,

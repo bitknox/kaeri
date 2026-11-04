@@ -99,14 +99,15 @@ impl Listed {
 }
 
 /// The sources changed: order, which are on, one installed, updated or removed, or the torrent
-/// source joined. Whatever was found against the old sources is dropped, and the titles
-/// shown are listed again.
+/// source joined. Whatever was found against the old sources is dropped, the titles shown
+/// are listed again, and Home's marks are brought up to date.
 pub fn sources_changed(engine: &mut EngineState, services: &Services, tx: &Outbox) {
     // A next episode found ahead was found from the old sources.
     services.prefetch.clear();
     for id in engine.listed.ids() {
         relist(id, false, engine, services, tx);
     }
+    dispatch::home_after_sources(engine, services, tx);
 }
 
 /// Title `id` is listed again, with its dub and episode names asked afresh, when the viewer
