@@ -215169,6 +215169,42 @@
         }
       }
     },
+    "sync-store-err-not-allowed" : {
+      "comment" : "Line on a store row when the paired device can't make invites to the store, because it isn't a named member there any more or joined through an open link. Argument 1: store (Text). Argument 2: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$@ can't invite other devices to %1$@. Ask the plugin store's owner for an invite."
+          }
+        }
+      }
+    },
+    "sync-store-err-offline" : {
+      "comment" : "Line on a store row when joining it through a paired device failed because the store or the paired device could not be reached. The person can try again later. Argument 1: store (Text). Argument 2: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't reach %1$@ or %2$@. Try again when both are online."
+          }
+        }
+      }
+    },
+    "sync-store-err-refused" : {
+      "comment" : "Line on a store row when the store turned the invite down, for example because it was cancelled or used up. Argument 1: store (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ didn't accept the invite. Ask its owner for a new one."
+          }
+        }
+      }
+    },
     "sync-syncing" : {
       "comment" : "Row line, Mac toolbar status.",
       "extractionState" : "manual",

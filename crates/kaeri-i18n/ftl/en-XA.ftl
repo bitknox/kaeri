@@ -9096,6 +9096,15 @@ stores-qr-warning-device = [Šçàñ ţĥîš ŵîţĥ ţĥé ðéṽîçé ýö
 # Button that opens the system share sheet for the invite link.
 stores-share = [Šĥàŕé…~~]
 
+# Line on a store row when joining it through a paired device failed because the store or the paired device could not be reached. The person can try again later.
+sync-store-err-offline = [Çöüļðñ'ţ ŕéàçĥ { $store } öŕ { $device }. Ţŕý àĝàîñ ŵĥéñ ƀöţĥ àŕé öñļîñé.~~~~~~~~~~~~~~~~~~]
+
+# Line on a store row when the store turned the invite down, for example because it was cancelled or used up.
+sync-store-err-refused = [{ $store } ðîðñ'ţ àççéþţ ţĥé îñṽîţé. Åšķ îţš öŵñéŕ ƒöŕ à ñéŵ öñé.~~~~~~~~~~~~~~~~~~]
+
+# Line on a store row when the paired device can't make invites to the store, because it isn't a named member there any more or joined through an open link.
+sync-store-err-not-allowed = [{ $device } çàñ'ţ îñṽîţé öţĥéŕ ðéṽîçéš ţö { $store }. Åšķ ţĥé þļüĝîñ šţöŕé'š öŵñéŕ ƒöŕ àñ îñṽîţé.~~~~~~~~~~~~~~~~~~~~~~~~~]
+
 # Settings row and page title, every platform.
 devices-title = [Ðéṽîçéš~~~]
 

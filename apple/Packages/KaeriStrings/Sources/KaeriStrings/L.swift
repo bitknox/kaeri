@@ -8734,6 +8734,21 @@ public enum L {
     /// Button that opens the system share sheet for the invite link.
     public static var storesShare: String { string("stores-share", fallback: "Share…") }
 
+    /// Line on a store row when joining it through a paired device failed because the store or the paired device could not be reached. The person can try again later.
+    public static func syncStoreErrOffline(store: String, device: String) -> String {
+        Self.format("sync-store-err-offline", fallback: "Couldn't reach %1$@ or %2$@. Try again when both are online.", store, device)
+    }
+
+    /// Line on a store row when the store turned the invite down, for example because it was cancelled or used up.
+    public static func syncStoreErrRefused(store: String) -> String {
+        Self.format("sync-store-err-refused", fallback: "%1$@ didn't accept the invite. Ask its owner for a new one.", store)
+    }
+
+    /// Line on a store row when the paired device can't make invites to the store, because it isn't a named member there any more or joined through an open link.
+    public static func syncStoreErrNotAllowed(store: String, device: String) -> String {
+        Self.format("sync-store-err-not-allowed", fallback: "%2$@ can't invite other devices to %1$@. Ask the plugin store's owner for an invite.", store, device)
+    }
+
     /// Settings row and page title, every platform.
     public static var devicesTitle: String { string("devices-title", fallback: "Devices") }
 
