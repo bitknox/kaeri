@@ -281,8 +281,13 @@ mod tests {
             simkl_client_id: Some("a-simkl-client".into()),
             trakt_client_id: Some("a-trakt-client".into()),
             trakt_client_secret: Some("a-trakt-secret".into()),
+            google_client_id: Some("a-google-client".into()),
+            google_client_secret: Some("a-google-secret".into()),
+            dropbox_app_key: Some("a-dropbox-key".into()),
+            onedrive_client_id: Some("an-onedrive-client".into()),
             secrets: Some(SecretsMode::FollowConfig),
             language: Some("da".into()),
+            profile: Some("p2".into()),
         };
         assert_eq!(crossed(start.clone()), start);
         assert_eq!(crossed(FfiStart::default()), FfiStart::default());

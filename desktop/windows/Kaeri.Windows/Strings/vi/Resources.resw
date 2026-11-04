@@ -689,6 +689,9 @@
   <data name="StoresReadyDemoStays" xml:space="preserve">
     <value>{store} đã sẵn sàng. Bản demo vẫn nằm cuối mục Các nguồn của bạn.</value>
   </data>
+  <data name="CloudLoopbackDone" xml:space="preserve">
+    <value>Bạn có thể đóng thẻ này và quay lại Kaeri.</value>
+  </data>
   <data name="NoticeSignedIn" xml:space="preserve">
     <value>Đã đăng nhập vào {tracker}.</value>
   </data>

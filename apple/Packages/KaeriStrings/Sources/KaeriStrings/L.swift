@@ -941,6 +941,9 @@ public enum L {
         Self.format("stores-ready-demo-stays", fallback: "%1$@ is ready. The demo stays last in Your sources.", store)
     }
 
+    /// The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.
+    public static var cloudLoopbackDone: String { string("cloud-loopback-done", fallback: "You can close this tab and go back to Kaeri.") }
+
     /// Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
     public static func noticeSignedIn(tracker: String) -> String {
         Self.format("notice-signed-in", fallback: "Signed in to %1$@.", tracker)

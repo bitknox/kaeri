@@ -714,6 +714,9 @@ sources-demo-removed = Demo removed
 # Notice after the first plugin from a store installs while the demo is on. It offers Remove demo for 8 seconds.
 stores-ready-demo-stays = { $store } is ready. The demo stays last in Your sources.
 
+# The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.
+cloud-loopback-done = You can close this tab and go back to Kaeri.
+
 # Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
 notice-signed-in = Signed in to { $tracker }.
 

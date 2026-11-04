@@ -482,6 +482,8 @@
     <string name="sources_demo_removed">Demo removed</string>
     <!-- Notice after the first plugin from a store installs while the demo is on. It offers Remove demo for 8 seconds. -->
     <string name="stores_ready_demo_stays">%1$s is ready. The demo stays last in Your sources.</string>
+    <!-- The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves. -->
+    <string name="cloud_loopback_done">You can close this tab and go back to Kaeri.</string>
     <!-- Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList. -->
     <string name="notice_signed_in">Signed in to %1$s.</string>
     <!-- Toast after a sign-in succeeded and the token went into the system keychain. -->

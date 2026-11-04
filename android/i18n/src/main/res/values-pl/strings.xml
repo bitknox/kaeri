@@ -280,6 +280,7 @@
     <string name="notice_party_not_built">Wspólne oglądania nie są w tej wersji aplikacji.</string>
     <string name="sources_demo_removed">Demo usunięte</string>
     <string name="stores_ready_demo_stays">%1$s jest gotowy. Demo zostaje na końcu listy: Źródła.</string>
+    <string name="cloud_loopback_done">Możesz zamknąć tę kartę i wrócić do Kaeri.</string>
     <string name="notice_signed_in">Zalogowano do %1$s.</string>
     <string name="notice_signed_in_keychain">Zalogowano do %1$s. Token zapisano w pęku kluczy systemu.</string>
     <string name="notice_signed_in_file">Zalogowano do %1$s. Pęk kluczy jest niedostępny, więc token zapisano w prywatnym pliku na tym komputerze.</string>

@@ -122,9 +122,10 @@ pub(crate) fn check(engine: &EngineState, services: &Services, tx: &Outbox) {
     });
 }
 
-/// Whether the Library's tracker is signed in, whose list the database keeps a copy of.
+/// Whether there is a list: the Library's tracker is signed in, whose list the database keeps a
+/// copy of, or a device set statuses that sync brought here.
 pub(crate) fn list_signed_in(services: &Services) -> bool {
-    services.sync.trackers.first().is_some_and(|tracker| tracker.is_authenticated())
+    crate::sync::has_list(services)
 }
 
 /// The shows followed, as of `now`: on the list as watching or rewatching, and as planning too

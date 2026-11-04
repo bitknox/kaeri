@@ -576,6 +576,42 @@ pub enum Event {
     Discussion(DiscussionView),
     /// Every joined plugin store, replacing whatever was there.
     Stores(Vec<StoreRow>),
+    /// The profiles, and which is in use, replacing whatever was there. Empty for a single user.
+    Profiles(crate::profiles::ProfilesView),
+    /// A profile was chosen. The front end stops the engine, which saves what plays, and starts
+    /// it again with this profile in `FfiStart::profile`; nothing of the one left is kept in
+    /// memory, so its screens, caches and signed-in trackers are the next profile's from then on.
+    ProfileSwitch {
+        id: String,
+    },
+    /// How sync stands, replacing whatever was there.
+    SyncStatus(crate::group::SyncStatus),
+    /// A pairing code is showing: this device listens at `port` for it, and it stops working
+    /// after `seconds` or three wrong tries. The QR code carries the device's address, `port`
+    /// and the code.
+    SyncInvite {
+        code: String,
+        port: u16,
+        seconds: u32,
+    },
+    /// The recovery key, to show once. Never sent again; only a new one can be made.
+    SyncRecoveryKey(String),
+    /// A cloud sign-in for sync moved on: `step` says what to show, `None` that it is over (signed
+    /// in, cancelled or failed; a failure comes as `SyncProblem` too).
+    SyncSignIn {
+        service: crate::group::SyncFolderKind,
+        step: Option<crate::group::SyncSignInStep>,
+    },
+    /// A sync set-up or join did not work.
+    SyncProblem(crate::group::SyncProblem),
+    /// Sign-ins asked of `device` came: the `trackers` signed in here now, the `clouds` held
+    /// now, and the cloud sign-ins asked for that it did not have (`lacking`).
+    SyncSignInsCopied {
+        device: String,
+        trackers: Vec<String>,
+        clouds: Vec<crate::group::SyncFolderKind>,
+        lacking: Vec<crate::group::SyncFolderKind>,
+    },
     /// What a pasted invite link leads to, or why it leads nowhere.
     StorePreview(InvitePreview),
     /// A store was joined. The view moves into it if the user is still on the store list.

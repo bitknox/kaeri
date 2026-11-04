@@ -268,6 +268,7 @@
     <string name="notice_party_not_built">Las watch parties no están incluidas en esta app.</string>
     <string name="sources_demo_removed">Demo quitada</string>
     <string name="stores_ready_demo_stays">%1$s está lista. La demo queda al final de Tus fuentes.</string>
+    <string name="cloud_loopback_done">Puedes cerrar esta pestaña y volver a Kaeri.</string>
     <string name="notice_signed_in">Sesión iniciada en %1$s.</string>
     <string name="notice_signed_in_keychain">Sesión iniciada en %1$s. El token está en el llavero del sistema.</string>
     <string name="notice_signed_in_file">Sesión iniciada en %1$s. No hay llavero disponible, así que el token está en un archivo privado de este dispositivo.</string>

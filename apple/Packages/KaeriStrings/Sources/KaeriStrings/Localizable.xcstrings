@@ -22625,6 +22625,90 @@
         }
       }
     },
+    "cloud-loopback-done" : {
+      "comment" : "The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du kannst diesen Tab schließen und zu Kaeri zurückkehren."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can close this tab and go back to Kaeri."
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puedes cerrar esta pestaña y volver a Kaeri."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vous pouvez fermer cet onglet et revenir à Kaeri."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anda bisa menutup tab ini dan kembali ke Kaeri."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puoi chiudere questa scheda e tornare a Kaeri."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このタブを閉じて Kaeri に戻ってください。"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Możesz zamknąć tę kartę i wrócić do Kaeri."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Você pode fechar esta aba e voltar ao Kaeri."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Можно закрыть эту вкладку и вернуться в Kaeri."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du kan stänga den här fliken och gå tillbaka till Kaeri."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu sekmeyi kapatıp Kaeri'ye dönebilirsiniz."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bạn có thể đóng thẻ này và quay lại Kaeri."
+          }
+        }
+      }
+    },
     "config-reset-failed" : {
       "comment" : "Message when the settings could not be reset after a start failed on them: the config file could not be moved aside. The path is the file, the reason comes from the system. Argument 1: path (Text). Argument 2: reason (Text).",
       "extractionState" : "manual",

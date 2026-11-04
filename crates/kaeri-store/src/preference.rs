@@ -29,7 +29,7 @@ impl Store {
     /// The caller is expected to check that the id still names a registered provider — see
     /// [`Self::set_provider_preference`] for why this does not do that itself.
     pub fn provider_preference(&self, anilist_id: AnilistId) -> Result<Option<String>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let found = c
                 .query_row(
                     "SELECT provider_id FROM provider_preference WHERE anilist_id = ?1",
@@ -53,7 +53,13 @@ impl Store {
         provider_id: &str,
         at: i64,
     ) -> Result<()> {
-        self.with_conn(|c| {
+        self.with_personal_tx(|c| {
+            self.emit_reg(
+                c,
+                crate::sync::kinds::PIN,
+                &anilist_id.get().to_string(),
+                Some(&crate::sync::pin_json(provider_id, None, None)),
+            )?;
             c.execute(
                 "INSERT INTO provider_preference (anilist_id, provider_id, created_at)
                  VALUES (?1, ?2, ?3)
@@ -70,7 +76,7 @@ impl Store {
 
     /// The release pinned within the pinned source for a title, if any.
     pub fn release_preference(&self, anilist_id: AnilistId) -> Result<Option<ReleasePin>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let found = c
                 .query_row(
                     "SELECT provider_id, release_id, release_title FROM provider_preference
@@ -97,7 +103,17 @@ impl Store {
         pin: &ReleasePin,
         at: i64,
     ) -> Result<()> {
-        self.with_conn(|c| {
+        self.with_personal_tx(|c| {
+            self.emit_reg(
+                c,
+                crate::sync::kinds::PIN,
+                &anilist_id.get().to_string(),
+                Some(&crate::sync::pin_json(
+                    &pin.provider_id,
+                    Some(pin.release_id.clone()),
+                    Some(pin.title.clone()),
+                )),
+            )?;
             c.execute(
                 "INSERT INTO provider_preference
                     (anilist_id, provider_id, created_at, release_id, release_title)
@@ -121,7 +137,8 @@ impl Store {
 
     /// Return a title to automatic source selection.
     pub fn clear_provider_preference(&self, anilist_id: AnilistId) -> Result<()> {
-        self.with_conn(|c| {
+        self.with_personal_tx(|c| {
+            self.emit_reg(c, crate::sync::kinds::PIN, &anilist_id.get().to_string(), None)?;
             c.execute(
                 "DELETE FROM provider_preference WHERE anilist_id = ?1",
                 [anilist_id.get()],

@@ -268,6 +268,7 @@
     <string name="notice_party_not_built">Visionnages en groupe ne sont pas inclus dans cette application.</string>
     <string name="sources_demo_removed">Démo retirée</string>
     <string name="stores_ready_demo_stays">%1$s est prête. La démo reste en dernier dans Vos sources.</string>
+    <string name="cloud_loopback_done">Vous pouvez fermer cet onglet et revenir à Kaeri.</string>
     <string name="notice_signed_in">Connecté à %1$s.</string>
     <string name="notice_signed_in_keychain">Connecté à %1$s. Le jeton est enregistré dans le trousseau du système.</string>
     <string name="notice_signed_in_file">Connecté à %1$s. Aucun trousseau n\'est disponible, donc le jeton est dans un fichier privé sur cet appareil.</string>

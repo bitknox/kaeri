@@ -897,6 +897,10 @@ object Strings {
     fun storesReadyDemoStays(context: Context, store: String): String =
         context.getString(R.string.stores_ready_demo_stays, store)
 
+    /** The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves. */
+    fun cloudLoopbackDone(context: Context): String =
+        context.getString(R.string.cloud_loopback_done)
+
     /** Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList. */
     fun noticeSignedIn(context: Context, tracker: String): String =
         context.getString(R.string.notice_signed_in, tracker)

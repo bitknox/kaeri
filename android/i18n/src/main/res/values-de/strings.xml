@@ -256,6 +256,7 @@
     <string name="notice_party_not_built">Watchpartys sind in dieser App nicht eingebaut.</string>
     <string name="sources_demo_removed">Demo entfernt</string>
     <string name="stores_ready_demo_stays">%1$s ist bereit. Die Demo bleibt am Ende von „Deine Quellen“.</string>
+    <string name="cloud_loopback_done">Du kannst diesen Tab schließen und zu Kaeri zurückkehren.</string>
     <string name="notice_signed_in">Bei %1$s angemeldet.</string>
     <string name="notice_signed_in_keychain">Bei %1$s angemeldet. Das Token liegt im Schlüsselbund des Systems.</string>
     <string name="notice_signed_in_file">Bei %1$s angemeldet. Es ist kein Schlüsselbund verfügbar, deshalb liegt das Token in einer privaten Datei auf diesem Gerät.</string>

@@ -1,6 +1,6 @@
 {
  "scene": "home-offline",
- "recordedAt": 1793647702695,
+ "recordedAt": 1793717813895,
  "events": [
   {
    "@type": "Settings",
@@ -747,11 +747,6 @@
    "v1": "1"
   },
   {
-   "@type": "JobStarted",
-   "job": "3",
-   "activity": "loading continue watching"
-  },
-  {
    "@type": "MetaStatus",
    "v1": [
     {
@@ -810,6 +805,11 @@
   },
   {
    "@type": "JobStarted",
+   "job": "3",
+   "activity": "loading continue watching"
+  },
+  {
+   "@type": "JobStarted",
    "job": "4",
    "activity": "loading this season"
   },
@@ -817,19 +817,6 @@
    "@type": "JobStarted",
    "job": "5",
    "activity": "loading the calendar"
-  },
-  {
-   "@type": "Content",
-   "view": {
-    "@type": "Continue"
-   },
-   "content": {
-    "@type": "Empty"
-   }
-  },
-  {
-   "@type": "JobDone",
-   "v1": "3"
   },
   {
    "@type": "Downloads",
@@ -854,7 +841,7 @@
     "recentServers": [],
     "suggestedServer": "syncplay.pl:8995",
     "suggestedRunBy": "the Syncplay project",
-    "room": "bloom-nzzy-hvvt",
+    "room": "moss-db97-uzxf",
     "name": "kaeri"
    }
   },
@@ -911,6 +898,26 @@
    "activity": "loading your planning list"
   },
   {
+   "@type": "JobStarted",
+   "job": "10",
+   "activity": "loading your completed list"
+  },
+  {
+   "@type": "JobStarted",
+   "job": "11",
+   "activity": "loading your paused list"
+  },
+  {
+   "@type": "JobStarted",
+   "job": "12",
+   "activity": "loading your dropped list"
+  },
+  {
+   "@type": "JobStarted",
+   "job": "13",
+   "activity": "loading the title"
+  },
+  {
    "@type": "Content",
    "view": {
     "@type": "Library",
@@ -924,31 +931,6 @@
   {
    "@type": "JobDone",
    "v1": "8"
-  },
-  {
-   "@type": "JobStarted",
-   "job": "10",
-   "activity": "loading your completed list"
-  },
-  {
-   "@type": "Content",
-   "view": {
-    "@type": "Library",
-    "v1": "PLANNING"
-   },
-   "content": {
-    "@type": "Entries",
-    "v1": []
-   }
-  },
-  {
-   "@type": "JobDone",
-   "v1": "9"
-  },
-  {
-   "@type": "JobStarted",
-   "job": "11",
-   "activity": "loading your paused list"
   },
   {
    "@type": "Content",
@@ -966,9 +948,19 @@
    "v1": "10"
   },
   {
-   "@type": "JobStarted",
-   "job": "12",
-   "activity": "loading your dropped list"
+   "@type": "Content",
+   "view": {
+    "@type": "Library",
+    "v1": "PLANNING"
+   },
+   "content": {
+    "@type": "Entries",
+    "v1": []
+   }
+  },
+  {
+   "@type": "JobDone",
+   "v1": "9"
   },
   {
    "@type": "Content",
@@ -986,11 +978,6 @@
    "v1": "11"
   },
   {
-   "@type": "JobStarted",
-   "job": "13",
-   "activity": "loading the title"
-  },
-  {
    "@type": "Content",
    "view": {
     "@type": "Library",
@@ -1004,6 +991,19 @@
   {
    "@type": "JobDone",
    "v1": "12"
+  },
+  {
+   "@type": "Content",
+   "view": {
+    "@type": "Continue"
+   },
+   "content": {
+    "@type": "Empty"
+   }
+  },
+  {
+   "@type": "JobDone",
+   "v1": "3"
   },
   {
    "@type": "JobStarted",
@@ -1453,13 +1453,13 @@
    "activity": "loading the title"
   },
   {
+   "@type": "ProviderPreference",
+   "v1": null
+  },
+  {
    "@type": "JobStarted",
    "job": "29",
    "activity": "loading episodes"
-  },
-  {
-   "@type": "ProviderPreference",
-   "v1": null
   },
   {
    "@type": "JobStarted",
@@ -1500,9 +1500,17 @@
    "activity": "loading episodes"
   },
   {
+   "@type": "ProviderPreference",
+   "v1": null
+  },
+  {
    "@type": "JobStarted",
    "job": "36",
    "activity": "loading the title"
+  },
+  {
+   "@type": "ProviderPreference",
+   "v1": null
   },
   {
    "@type": "JobStarted",
@@ -1514,12 +1522,18 @@
    "v1": null
   },
   {
-   "@type": "ProviderPreference",
-   "v1": null
+   "@type": "Content",
+   "view": {
+    "@type": "Calendar"
+   },
+   "content": {
+    "@type": "Failed",
+    "v1": "network: error sending request for url (http://127.0.0.1:64063/graphql)"
+   }
   },
   {
-   "@type": "ProviderPreference",
-   "v1": null
+   "@type": "JobDone",
+   "v1": "5"
   },
   {
    "@type": "Facets",
@@ -1549,12 +1563,68 @@
    }
   },
   {
-   "@type": "Browse",
-   "v1": []
+   "@type": "MetaStatus",
+   "v1": [
+    {
+     "source": "anilist",
+     "state": "backing off",
+     "healthy": false,
+     "active": false,
+     "detail": "network: error sending request for url (http://127.0.0.1:64063/graphql)",
+     "retryAt": "1793717873"
+    },
+    {
+     "source": "tenrai",
+     "state": "serving",
+     "healthy": true,
+     "active": true,
+     "detail": null,
+     "retryAt": null
+    },
+    {
+     "source": "cache",
+     "state": "ready",
+     "healthy": true,
+     "active": false,
+     "detail": "0 titles",
+     "retryAt": null
+    }
+   ]
+  },
+  {
+   "@type": "Toast",
+   "v1": {
+    "kind": "INFO",
+    "text": "AniList isn't answering. Showing data from another service for now.",
+    "hint": null,
+    "msg": {
+     "@type": "Store",
+     "v1": {
+      "@type": "NoticeAnilistUnreachable"
+     }
+    }
+   }
+  },
+  {
+   "@type": "Caption",
+   "view": {
+    "@type": "Seasonal"
+   },
+   "text": "fall 2026"
+  },
+  {
+   "@type": "Content",
+   "view": {
+    "@type": "Seasonal"
+   },
+   "content": {
+    "@type": "Entries",
+    "v1": []
+   }
   },
   {
    "@type": "JobDone",
-   "v1": "6"
+   "v1": "4"
   },
   {
    "@type": "Licensed",
@@ -1820,20 +1890,6 @@
    }
   },
   {
-   "@type": "Content",
-   "view": {
-    "@type": "Calendar"
-   },
-   "content": {
-    "@type": "Failed",
-    "v1": "network: anilist skipped after repeated failures; next try in 119s"
-   }
-  },
-  {
-   "@type": "JobDone",
-   "v1": "5"
-  },
-  {
    "@type": "Toast",
    "v1": {
     "kind": "ALERT",
@@ -1849,17 +1905,50 @@
    "v1": "13"
   },
   {
+   "@type": "Episodes",
+   "id": "900001",
+   "rows": [],
+   "failed": {
+    "@type": "NoticeEpisodesFailed",
+    "reason": "anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
+   }
+  },
+  {
+   "@type": "Toast",
+   "v1": {
+    "kind": "ALERT",
+    "text": "Couldn't load the episodes. anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached",
+    "hint": null,
+    "msg": {
+     "@type": "NoticeEpisodesFailed",
+     "reason": "anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
+    }
+   }
+  },
+  {
+   "@type": "JobDone",
+   "v1": "14"
+  },
+  {
    "@type": "MatchSearchFailed",
    "id": "900001",
    "query": "Stardust",
    "reason": {
     "@type": "Verbatim",
-    "text": "anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
+    "text": "anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
    }
   },
   {
    "@type": "JobDone",
    "v1": "25"
+  },
+  {
+   "@type": "Browse",
+   "v1": []
+  },
+  {
+   "@type": "JobDone",
+   "v1": "6"
   },
   {
    "@type": "Toast",
@@ -1877,343 +1966,29 @@
    "v1": "15"
   },
   {
-   "@type": "Toast",
-   "v1": {
-    "kind": "ALERT",
-    "text": "Couldn't load this title. Check your connection and try again.",
-    "hint": null,
-    "msg": {
-     "@type": "NoticeTitleLoadFailed"
-    }
-   }
-  },
-  {
-   "@type": "JobDone",
-   "v1": "19"
-  },
-  {
    "@type": "Episodes",
    "id": "900002",
    "rows": [],
    "failed": {
     "@type": "NoticeEpisodesFailed",
-    "reason": "anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
-   }
-  },
-  {
-   "@type": "Episodes",
-   "id": "900001",
-   "rows": [],
-   "failed": {
-    "@type": "NoticeEpisodesFailed",
-    "reason": "anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
+    "reason": "anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
    }
   },
   {
    "@type": "Toast",
    "v1": {
     "kind": "ALERT",
-    "text": "Couldn't load the episodes. anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached",
+    "text": "Couldn't load the episodes. anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached",
     "hint": null,
     "msg": {
      "@type": "NoticeEpisodesFailed",
-     "reason": "anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
-    }
-   }
-  },
-  {
-   "@type": "Toast",
-   "v1": {
-    "kind": "ALERT",
-    "text": "Couldn't load the episodes. anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached",
-    "hint": null,
-    "msg": {
-     "@type": "NoticeEpisodesFailed",
-     "reason": "anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
+     "reason": "anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
     }
    }
   },
   {
    "@type": "JobDone",
    "v1": "16"
-  },
-  {
-   "@type": "JobDone",
-   "v1": "14"
-  },
-  {
-   "@type": "Episodes",
-   "id": "900004",
-   "rows": [],
-   "failed": {
-    "@type": "NoticeEpisodesFailed",
-    "reason": "anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
-   }
-  },
-  {
-   "@type": "Toast",
-   "v1": {
-    "kind": "ALERT",
-    "text": "Couldn't load the episodes. anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached",
-    "hint": null,
-    "msg": {
-     "@type": "NoticeEpisodesFailed",
-     "reason": "anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
-    }
-   }
-  },
-  {
-   "@type": "JobDone",
-   "v1": "20"
-  },
-  {
-   "@type": "Toast",
-   "v1": {
-    "kind": "ALERT",
-    "text": "Couldn't load this title. Check your connection and try again.",
-    "hint": null,
-    "msg": {
-     "@type": "NoticeTitleLoadFailed"
-    }
-   }
-  },
-  {
-   "@type": "JobDone",
-   "v1": "17"
-  },
-  {
-   "@type": "Episodes",
-   "id": "900003",
-   "rows": [],
-   "failed": {
-    "@type": "NoticeEpisodesFailed",
-    "reason": "anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
-   }
-  },
-  {
-   "@type": "Toast",
-   "v1": {
-    "kind": "ALERT",
-    "text": "Couldn't load the episodes. anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached",
-    "hint": null,
-    "msg": {
-     "@type": "NoticeEpisodesFailed",
-     "reason": "anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
-    }
-   }
-  },
-  {
-   "@type": "JobDone",
-   "v1": "18"
-  },
-  {
-   "@type": "Toast",
-   "v1": {
-    "kind": "ALERT",
-    "text": "Couldn't load this title. Check your connection and try again.",
-    "hint": null,
-    "msg": {
-     "@type": "NoticeTitleLoadFailed"
-    }
-   }
-  },
-  {
-   "@type": "JobDone",
-   "v1": "21"
-  },
-  {
-   "@type": "Episodes",
-   "id": "900005",
-   "rows": [],
-   "failed": {
-    "@type": "NoticeEpisodesFailed",
-    "reason": "anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
-   }
-  },
-  {
-   "@type": "Toast",
-   "v1": {
-    "kind": "ALERT",
-    "text": "Couldn't load the episodes. anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached",
-    "hint": null,
-    "msg": {
-     "@type": "NoticeEpisodesFailed",
-     "reason": "anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
-    }
-   }
-  },
-  {
-   "@type": "JobDone",
-   "v1": "22"
-  },
-  {
-   "@type": "Toast",
-   "v1": {
-    "kind": "ALERT",
-    "text": "Couldn't load this title. Check your connection and try again.",
-    "hint": null,
-    "msg": {
-     "@type": "NoticeTitleLoadFailed"
-    }
-   }
-  },
-  {
-   "@type": "JobDone",
-   "v1": "23"
-  },
-  {
-   "@type": "Episodes",
-   "id": "900006",
-   "rows": [],
-   "failed": {
-    "@type": "NoticeEpisodesFailed",
-    "reason": "anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
-   }
-  },
-  {
-   "@type": "Toast",
-   "v1": {
-    "kind": "ALERT",
-    "text": "Couldn't load the episodes. anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached",
-    "hint": null,
-    "msg": {
-     "@type": "NoticeEpisodesFailed",
-     "reason": "anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
-    }
-   }
-  },
-  {
-   "@type": "JobDone",
-   "v1": "24"
-  },
-  {
-   "@type": "MetaStatus",
-   "v1": [
-    {
-     "source": "anilist",
-     "state": "backing off",
-     "healthy": false,
-     "active": false,
-     "detail": "network: error sending request for url (http://127.0.0.1:56598/graphql)",
-     "retryAt": "1793648002"
-    },
-    {
-     "source": "tenrai",
-     "state": "serving",
-     "healthy": true,
-     "active": true,
-     "detail": null,
-     "retryAt": null
-    },
-    {
-     "source": "cache",
-     "state": "ready",
-     "healthy": true,
-     "active": false,
-     "detail": "0 titles",
-     "retryAt": null
-    }
-   ]
-  },
-  {
-   "@type": "Toast",
-   "v1": {
-    "kind": "INFO",
-    "text": "AniList isn't answering. Showing data from another service for now.",
-    "hint": null,
-    "msg": {
-     "@type": "Store",
-     "v1": {
-      "@type": "NoticeAnilistUnreachable"
-     }
-    }
-   }
-  },
-  {
-   "@type": "Episodes",
-   "id": "920009",
-   "rows": [],
-   "failed": {
-    "@type": "NoticeEpisodesFailed",
-    "reason": "anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
-   }
-  },
-  {
-   "@type": "Caption",
-   "view": {
-    "@type": "Seasonal"
-   },
-   "text": "fall 2026"
-  },
-  {
-   "@type": "Content",
-   "view": {
-    "@type": "Seasonal"
-   },
-   "content": {
-    "@type": "Entries",
-    "v1": []
-   }
-  },
-  {
-   "@type": "Toast",
-   "v1": {
-    "kind": "ALERT",
-    "text": "Couldn't load the episodes. anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached",
-    "hint": null,
-    "msg": {
-     "@type": "NoticeEpisodesFailed",
-     "reason": "anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
-    }
-   }
-  },
-  {
-   "@type": "JobDone",
-   "v1": "4"
-  },
-  {
-   "@type": "JobDone",
-   "v1": "33"
-  },
-  {
-   "@type": "Toast",
-   "v1": {
-    "kind": "ALERT",
-    "text": "Couldn't load this title. Check your connection and try again.",
-    "hint": null,
-    "msg": {
-     "@type": "NoticeTitleLoadFailed"
-    }
-   }
-  },
-  {
-   "@type": "Episodes",
-   "id": "920010",
-   "rows": [],
-   "failed": {
-    "@type": "NoticeEpisodesFailed",
-    "reason": "anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
-   }
-  },
-  {
-   "@type": "Toast",
-   "v1": {
-    "kind": "ALERT",
-    "text": "Couldn't load the episodes. anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached",
-    "hint": null,
-    "msg": {
-     "@type": "NoticeEpisodesFailed",
-     "reason": "anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
-    }
-   }
-  },
-  {
-   "@type": "JobDone",
-   "v1": "32"
-  },
-  {
-   "@type": "JobDone",
-   "v1": "35"
   },
   {
    "@type": "SearchPaging",
@@ -2250,17 +2025,6 @@
     "available": null
    },
    "hasNext": false
-  },
-  {
-   "@type": "Toast",
-   "v1": {
-    "kind": "ALERT",
-    "text": "Couldn't load this title. Check your connection and try again.",
-    "hint": null,
-    "msg": {
-     "@type": "NoticeTitleLoadFailed"
-    }
-   }
   },
   {
    "@type": "Caption",
@@ -2302,8 +2066,44 @@
    "text": ""
   },
   {
+   "@type": "Toast",
+   "v1": {
+    "kind": "ALERT",
+    "text": "Couldn't load this title. Check your connection and try again.",
+    "hint": null,
+    "msg": {
+     "@type": "NoticeTitleLoadFailed"
+    }
+   }
+  },
+  {
+   "@type": "Episodes",
+   "id": "900003",
+   "rows": [],
+   "failed": {
+    "@type": "NoticeEpisodesFailed",
+    "reason": "anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
+   }
+  },
+  {
+   "@type": "Toast",
+   "v1": {
+    "kind": "ALERT",
+    "text": "Couldn't load the episodes. anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached",
+    "hint": null,
+    "msg": {
+     "@type": "NoticeEpisodesFailed",
+     "reason": "anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
+    }
+   }
+  },
+  {
    "@type": "JobDone",
-   "v1": "34"
+   "v1": "17"
+  },
+  {
+   "@type": "JobDone",
+   "v1": "18"
   },
   {
    "@type": "Content",
@@ -2364,6 +2164,206 @@
   },
   {
    "@type": "JobDone",
+   "v1": "19"
+  },
+  {
+   "@type": "Episodes",
+   "id": "900004",
+   "rows": [],
+   "failed": {
+    "@type": "NoticeEpisodesFailed",
+    "reason": "anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
+   }
+  },
+  {
+   "@type": "Toast",
+   "v1": {
+    "kind": "ALERT",
+    "text": "Couldn't load the episodes. anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached",
+    "hint": null,
+    "msg": {
+     "@type": "NoticeEpisodesFailed",
+     "reason": "anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
+    }
+   }
+  },
+  {
+   "@type": "JobDone",
+   "v1": "20"
+  },
+  {
+   "@type": "Toast",
+   "v1": {
+    "kind": "ALERT",
+    "text": "Couldn't load this title. Check your connection and try again.",
+    "hint": null,
+    "msg": {
+     "@type": "NoticeTitleLoadFailed"
+    }
+   }
+  },
+  {
+   "@type": "JobDone",
+   "v1": "21"
+  },
+  {
+   "@type": "Episodes",
+   "id": "900005",
+   "rows": [],
+   "failed": {
+    "@type": "NoticeEpisodesFailed",
+    "reason": "anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
+   }
+  },
+  {
+   "@type": "Toast",
+   "v1": {
+    "kind": "ALERT",
+    "text": "Couldn't load the episodes. anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached",
+    "hint": null,
+    "msg": {
+     "@type": "NoticeEpisodesFailed",
+     "reason": "anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
+    }
+   }
+  },
+  {
+   "@type": "JobDone",
+   "v1": "22"
+  },
+  {
+   "@type": "Toast",
+   "v1": {
+    "kind": "ALERT",
+    "text": "Couldn't load this title. Check your connection and try again.",
+    "hint": null,
+    "msg": {
+     "@type": "NoticeTitleLoadFailed"
+    }
+   }
+  },
+  {
+   "@type": "JobDone",
+   "v1": "23"
+  },
+  {
+   "@type": "Episodes",
+   "id": "900006",
+   "rows": [],
+   "failed": {
+    "@type": "NoticeEpisodesFailed",
+    "reason": "anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
+   }
+  },
+  {
+   "@type": "Toast",
+   "v1": {
+    "kind": "ALERT",
+    "text": "Couldn't load the episodes. anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached",
+    "hint": null,
+    "msg": {
+     "@type": "NoticeEpisodesFailed",
+     "reason": "anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
+    }
+   }
+  },
+  {
+   "@type": "Toast",
+   "v1": {
+    "kind": "ALERT",
+    "text": "Couldn't load this title. Check your connection and try again.",
+    "hint": null,
+    "msg": {
+     "@type": "NoticeTitleLoadFailed"
+    }
+   }
+  },
+  {
+   "@type": "JobDone",
+   "v1": "24"
+  },
+  {
+   "@type": "JobDone",
+   "v1": "28"
+  },
+  {
+   "@type": "Episodes",
+   "id": "920002",
+   "rows": [],
+   "failed": {
+    "@type": "NoticeEpisodesFailed",
+    "reason": "anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
+   }
+  },
+  {
+   "@type": "Toast",
+   "v1": {
+    "kind": "ALERT",
+    "text": "Couldn't load the episodes. anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached",
+    "hint": null,
+    "msg": {
+     "@type": "NoticeEpisodesFailed",
+     "reason": "anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
+    }
+   }
+  },
+  {
+   "@type": "JobDone",
+   "v1": "29"
+  },
+  {
+   "@type": "Toast",
+   "v1": {
+    "kind": "ALERT",
+    "text": "Couldn't load this title. Check your connection and try again.",
+    "hint": null,
+    "msg": {
+     "@type": "NoticeTitleLoadFailed"
+    }
+   }
+  },
+  {
+   "@type": "JobDone",
+   "v1": "32"
+  },
+  {
+   "@type": "Episodes",
+   "id": "920009",
+   "rows": [],
+   "failed": {
+    "@type": "NoticeEpisodesFailed",
+    "reason": "anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
+   }
+  },
+  {
+   "@type": "Toast",
+   "v1": {
+    "kind": "ALERT",
+    "text": "Couldn't load the episodes. anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached",
+    "hint": null,
+    "msg": {
+     "@type": "NoticeEpisodesFailed",
+     "reason": "anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
+    }
+   }
+  },
+  {
+   "@type": "JobDone",
+   "v1": "33"
+  },
+  {
+   "@type": "Toast",
+   "v1": {
+    "kind": "ALERT",
+    "text": "Couldn't load this title. Check your connection and try again.",
+    "hint": null,
+    "msg": {
+     "@type": "NoticeTitleLoadFailed"
+    }
+   }
+  },
+  {
+   "@type": "JobDone",
    "v1": "26"
   },
   {
@@ -2372,24 +2372,104 @@
    "rows": [],
    "failed": {
     "@type": "NoticeEpisodesFailed",
-    "reason": "anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
+    "reason": "anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
    }
   },
   {
    "@type": "Toast",
    "v1": {
     "kind": "ALERT",
-    "text": "Couldn't load the episodes. anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached",
+    "text": "Couldn't load the episodes. anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached",
     "hint": null,
     "msg": {
      "@type": "NoticeEpisodesFailed",
-     "reason": "anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
+     "reason": "anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
     }
    }
   },
   {
    "@type": "JobDone",
    "v1": "27"
+  },
+  {
+   "@type": "Toast",
+   "v1": {
+    "kind": "ALERT",
+    "text": "Couldn't load this title. Check your connection and try again.",
+    "hint": null,
+    "msg": {
+     "@type": "NoticeTitleLoadFailed"
+    }
+   }
+  },
+  {
+   "@type": "JobDone",
+   "v1": "36"
+  },
+  {
+   "@type": "Toast",
+   "v1": {
+    "kind": "ALERT",
+    "text": "Couldn't load this title. Check your connection and try again.",
+    "hint": null,
+    "msg": {
+     "@type": "NoticeTitleLoadFailed"
+    }
+   }
+  },
+  {
+   "@type": "JobDone",
+   "v1": "34"
+  },
+  {
+   "@type": "Episodes",
+   "id": "920010",
+   "rows": [],
+   "failed": {
+    "@type": "NoticeEpisodesFailed",
+    "reason": "anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
+   }
+  },
+  {
+   "@type": "Toast",
+   "v1": {
+    "kind": "ALERT",
+    "text": "Couldn't load the episodes. anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached",
+    "hint": null,
+    "msg": {
+     "@type": "NoticeEpisodesFailed",
+     "reason": "anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
+    }
+   }
+  },
+  {
+   "@type": "JobDone",
+   "v1": "35"
+  },
+  {
+   "@type": "Episodes",
+   "id": "920012",
+   "rows": [],
+   "failed": {
+    "@type": "NoticeEpisodesFailed",
+    "reason": "anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
+   }
+  },
+  {
+   "@type": "Toast",
+   "v1": {
+    "kind": "ALERT",
+    "text": "Couldn't load the episodes. anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached",
+    "hint": null,
+    "msg": {
+     "@type": "NoticeEpisodesFailed",
+     "reason": "anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
+    }
+   }
+  },
+  {
+   "@type": "JobDone",
+   "v1": "37"
   },
   {
    "@type": "Toast",
@@ -2412,104 +2492,24 @@
    "rows": [],
    "failed": {
     "@type": "NoticeEpisodesFailed",
-    "reason": "anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
+    "reason": "anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
    }
   },
   {
    "@type": "Toast",
    "v1": {
     "kind": "ALERT",
-    "text": "Couldn't load the episodes. anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached",
+    "text": "Couldn't load the episodes. anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached",
     "hint": null,
     "msg": {
      "@type": "NoticeEpisodesFailed",
-     "reason": "anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
+     "reason": "anilist: network: error sending request for url (http://127.0.0.1:64063/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
     }
    }
   },
   {
    "@type": "JobDone",
    "v1": "31"
-  },
-  {
-   "@type": "Toast",
-   "v1": {
-    "kind": "ALERT",
-    "text": "Couldn't load this title. Check your connection and try again.",
-    "hint": null,
-    "msg": {
-     "@type": "NoticeTitleLoadFailed"
-    }
-   }
-  },
-  {
-   "@type": "JobDone",
-   "v1": "28"
-  },
-  {
-   "@type": "Episodes",
-   "id": "920002",
-   "rows": [],
-   "failed": {
-    "@type": "NoticeEpisodesFailed",
-    "reason": "anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
-   }
-  },
-  {
-   "@type": "Toast",
-   "v1": {
-    "kind": "ALERT",
-    "text": "Couldn't load the episodes. anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached",
-    "hint": null,
-    "msg": {
-     "@type": "NoticeEpisodesFailed",
-     "reason": "anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
-    }
-   }
-  },
-  {
-   "@type": "JobDone",
-   "v1": "29"
-  },
-  {
-   "@type": "Toast",
-   "v1": {
-    "kind": "ALERT",
-    "text": "Couldn't load this title. Check your connection and try again.",
-    "hint": null,
-    "msg": {
-     "@type": "NoticeTitleLoadFailed"
-    }
-   }
-  },
-  {
-   "@type": "JobDone",
-   "v1": "36"
-  },
-  {
-   "@type": "Episodes",
-   "id": "920012",
-   "rows": [],
-   "failed": {
-    "@type": "NoticeEpisodesFailed",
-    "reason": "anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
-   }
-  },
-  {
-   "@type": "Toast",
-   "v1": {
-    "kind": "ALERT",
-    "text": "Couldn't load the episodes. anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached",
-    "hint": null,
-    "msg": {
-     "@type": "NoticeEpisodesFailed",
-     "reason": "anilist: network: error sending request for url (http://127.0.0.1:56598/graphql); fallback: tenrai: no mal id mapped for this title; nothing useful cached"
-    }
-   }
-  },
-  {
-   "@type": "JobDone",
-   "v1": "37"
   },
   {
    "@type": "JobStarted",

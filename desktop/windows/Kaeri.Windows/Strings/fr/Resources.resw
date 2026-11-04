@@ -761,6 +761,9 @@
   <data name="StoresReadyDemoStays" xml:space="preserve">
     <value>{store} est prête. La démo reste en dernier dans Vos sources.</value>
   </data>
+  <data name="CloudLoopbackDone" xml:space="preserve">
+    <value>Vous pouvez fermer cet onglet et revenir à Kaeri.</value>
+  </data>
   <data name="NoticeSignedIn" xml:space="preserve">
     <value>Connecté à {tracker}.</value>
   </data>

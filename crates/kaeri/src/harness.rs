@@ -676,7 +676,7 @@ impl Harness {
             Internal::SettingsSaved => self.trace.push("SettingsSaved"),
             Internal::SourcesReordered => self.trace.push("SourcesReordered"),
             // What it leads to, it says: keep next's rows on the queue.
-            Internal::SourcesChanged | Internal::LetGo => {}
+            Internal::SourcesChanged | Internal::LetGo | Internal::SyncEffects => {}
         }
     }
 
@@ -886,6 +886,14 @@ pub fn name(update: &Event) -> &'static str {
         Event::DiscussionFound { .. } => "DiscussionFound",
         Event::Discussion(_) => "Discussion",
         Event::Stores(_) => "Stores",
+        Event::Profiles(_) => "Profiles",
+        Event::ProfileSwitch { .. } => "ProfileSwitch",
+        Event::SyncStatus(_) => "SyncStatus",
+        Event::SyncInvite { .. } => "SyncInvite",
+        Event::SyncSignIn { .. } => "SyncSignIn",
+        Event::SyncRecoveryKey(_) => "SyncRecoveryKey",
+        Event::SyncProblem(_) => "SyncProblem",
+        Event::SyncSignInsCopied { .. } => "SyncSignInsCopied",
         Event::StorePreview(_) => "StorePreview",
         Event::StoreJoined { .. } => "StoreJoined",
         Event::InviteLink(_) => "InviteLink",
@@ -1146,6 +1154,25 @@ fn copy(update: &Event) -> Event {
         }
         Event::Discussion(view) => Event::Discussion(view.clone()),
         Event::Stores(rows) => Event::Stores(rows.clone()),
+        Event::Profiles(view) => Event::Profiles(view.clone()),
+        Event::ProfileSwitch { id } => Event::ProfileSwitch { id: id.clone() },
+        Event::SyncStatus(status) => Event::SyncStatus(status.clone()),
+        Event::SyncInvite { code, port, seconds } => {
+            Event::SyncInvite { code: code.clone(), port: *port, seconds: *seconds }
+        }
+        Event::SyncSignIn { service, step } => {
+            Event::SyncSignIn { service: service.clone(), step: step.clone() }
+        }
+        Event::SyncRecoveryKey(key) => Event::SyncRecoveryKey(key.clone()),
+        Event::SyncProblem(problem) => Event::SyncProblem(problem.clone()),
+        Event::SyncSignInsCopied { device, trackers, clouds, lacking } => {
+            Event::SyncSignInsCopied {
+                device: device.clone(),
+                trackers: trackers.clone(),
+                clouds: clouds.clone(),
+                lacking: lacking.clone(),
+            }
+        }
         Event::StorePreview(preview) => Event::StorePreview(preview.clone()),
         Event::StoreJoined { store } => Event::StoreJoined { store: store.clone() },
         Event::InviteLink(view) => Event::InviteLink(view.clone()),

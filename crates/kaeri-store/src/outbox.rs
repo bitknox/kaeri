@@ -75,7 +75,7 @@ impl Store {
         let payload = serde_json::to_string(op)
             .map_err(|source| StoreError::Encode { what: "TrackOp", source })?;
 
-        self.with_tx(|tx| {
+        self.with_personal_tx(|tx| {
             if let TrackOp::SetProgress { episode, .. } = op {
                 let existing: Option<(i64, String)> = tx
                     .query_row(
@@ -132,7 +132,7 @@ impl Store {
         now: i64,
         limit: u32,
     ) -> Result<Vec<OutboxEntry>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut stmt = c.prepare(
                 "SELECT id, tracker_id, op, attempts, created_at
                    FROM sync_outbox
@@ -182,7 +182,7 @@ impl Store {
 
     /// Remove a successfully-sent operation.
     pub fn complete(&self, id: i64) -> Result<()> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             c.execute("DELETE FROM sync_outbox WHERE id = ?1", [id])?;
             Ok(())
         })
@@ -190,7 +190,7 @@ impl Store {
 
     /// Record a failure and schedule a retry, or give up on an operation that never will.
     pub fn fail(&self, id: i64, error: &str, now: i64) -> Result<()> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let attempts = c
                 .query_row("SELECT attempts + 1 FROM sync_outbox WHERE id = ?1", [id], |r| {
                     r.get::<_, u32>(0)
@@ -236,7 +236,7 @@ impl Store {
     /// Not counted as an attempt: nothing failed, and the row has to be ready to go the
     /// moment a mapping arrives rather than an hour into a backoff.
     pub fn defer(&self, id: i64, reason: &str) -> Result<()> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             c.execute(
                 "UPDATE sync_outbox SET next_retry = ?1, last_error = ?2 WHERE id = ?3",
                 rusqlite::params![DEFERRED, reason, id],
@@ -250,12 +250,12 @@ impl Store {
     /// Called by every mapping refresh. Public so that anything else which changes what the
     /// mappings can answer can say so too.
     pub fn wake_deferred(&self) -> Result<usize> {
-        self.with_conn(wake_deferred_in)
+        self.with_personal(wake_deferred_in)
     }
 
     /// Ops held for a mapping, for the Accounts screen.
     pub fn outbox_deferred(&self, tracker_id: &str) -> Result<u32> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             Ok(c.query_row(
                 "SELECT COUNT(*) FROM sync_outbox WHERE tracker_id = ?1 AND next_retry = ?2",
                 rusqlite::params![tracker_id, DEFERRED],
@@ -266,7 +266,7 @@ impl Store {
 
     /// Number of pending operations, for the `⇅` badge in the status line.
     pub fn outbox_depth(&self, tracker_id: Option<&str>) -> Result<u32> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let depth = match tracker_id {
                 Some(t) => c.query_row(
                     "SELECT COUNT(*) FROM sync_outbox WHERE tracker_id = ?1",
@@ -286,7 +286,7 @@ impl Store {
         tracker_id: &str,
         anilist_id: AnilistId,
     ) -> Result<Option<u32>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             Ok(c.query_row(
                 "SELECT MAX(CAST(json_extract(op, '$.episode') AS INTEGER))
                    FROM sync_outbox

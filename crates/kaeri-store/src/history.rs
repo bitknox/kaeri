@@ -116,7 +116,17 @@ impl Store {
     /// `episodes_done` counts *distinct* completed episodes from the log rather than
     /// incrementing a counter, so rewatching an episode cannot inflate it.
     pub fn record_event(&self, event: &WatchEvent) -> Result<()> {
-        self.with_tx(|tx| {
+        self.record_event_queued(event, Vec::new())
+    }
+
+    /// [`Self::record_event`], saying which trackers the watch was queued for, so that devices
+    /// that receive it know which trackers its origin already covers.
+    pub fn record_event_queued(
+        &self,
+        event: &WatchEvent,
+        queued_for: Vec<String>,
+    ) -> Result<()> {
+        self.with_personal_tx(|tx| {
             tx.execute(
                 "INSERT INTO watch_event
                    (anilist_id, episode, position_secs, duration_secs, watched_secs,
@@ -134,6 +144,12 @@ impl Store {
                     event.at,
                 ],
             )?;
+
+            // With sync on, the op, the event's id and the projection are the sync log's.
+            let rowid = tx.last_insert_rowid();
+            if self.sync_local_watch(tx, rowid, event, queued_for)? {
+                return Ok(());
+            }
 
             let episodes_done: u32 = tx.query_row(
                 "SELECT COUNT(DISTINCT episode) FROM watch_event
@@ -192,7 +208,10 @@ impl Store {
     /// Episodes already recorded as completed are skipped, so this is idempotent and cannot
     /// inflate the count. Returns how many episodes were newly marked.
     pub fn adopt_progress(&self, anilist_id: AnilistId, upto: u32, at: i64) -> Result<u32> {
-        self.with_tx(|tx| {
+        self.with_personal_tx(|tx| {
+            if let Some(device) = crate::sync::device_of(tx)? {
+                return self.adopt_synced(tx, &device, anilist_id, upto, at);
+            }
             // One statement over a generated series rather than a query per episode: a
             // catch-up can be hundreds of episodes, and the per-episode form spent a
             // round trip on each one.
@@ -246,11 +265,13 @@ impl Store {
     /// The unmark half of a manual toggle is [`Self::unmark_episode`], which keeps what was
     /// watched of an episode only marked.
     pub fn forget_episode(&self, anilist_id: AnilistId, episode: &str) -> Result<()> {
-        self.with_tx(|tx| {
+        self.with_personal_tx(|tx| {
+            let removed = Self::sync_event_uids(tx, anilist_id.get(), episode, false)?;
             tx.execute(
                 "DELETE FROM watch_event WHERE anilist_id = ?1 AND episode = ?2",
                 rusqlite::params![anilist_id.get(), episode],
             )?;
+            self.sync_local_unwatch(tx, anilist_id.get(), episode, removed)?;
             reproject(tx, anilist_id)
         })
     }
@@ -271,7 +292,7 @@ impl Store {
         anilist_id: AnilistId,
         episode: &str,
     ) -> Result<Option<WatchEvent>> {
-        self.with_tx(|tx| {
+        self.with_personal_tx(|tx| {
             let params = rusqlite::params![anilist_id.get(), episode];
             let played_through: bool = tx.query_row(
                 &format!(
@@ -282,6 +303,8 @@ impl Store {
                 params,
                 |r| r.get(0),
             )?;
+            let removed =
+                Self::sync_event_uids(tx, anilist_id.get(), episode, !played_through)?;
             if played_through {
                 tx.execute(
                     "DELETE FROM watch_event WHERE anilist_id = ?1 AND episode = ?2",
@@ -294,6 +317,7 @@ impl Store {
                     params,
                 )?;
             }
+            self.sync_local_unwatch(tx, anilist_id.get(), episode, removed)?;
             reproject(tx, anilist_id)?;
             Ok(tx
                 .query_row(
@@ -311,7 +335,7 @@ impl Store {
 
     /// Current progress for one title.
     pub fn progress(&self, anilist_id: AnilistId) -> Result<Option<Progress>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut stmt = c.prepare(
                 "SELECT anilist_id, last_episode, last_position, last_duration,
                         episodes_done, updated_at
@@ -334,7 +358,7 @@ impl Store {
     /// this be reported as watched", two questions with different right answers. See
     /// [`RESUME_CEILING`].
     pub fn resume_position(&self, anilist_id: AnilistId, episode: &str) -> Result<Option<f64>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let row: Option<(f64, Option<f64>, i64)> = c
                 .query_row(
                     "SELECT position_secs, duration_secs, completed FROM watch_event
@@ -361,7 +385,7 @@ impl Store {
     /// title and closing it three seconds later puts it at the top of the rail forever — measured
     /// on a real database, where a three-second row outranked an episode left at 61%.
     pub fn continue_list(&self, limit: u32) -> Result<Vec<Progress>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut stmt = c.prepare(
                 "SELECT anilist_id, last_episode, last_position, last_duration,
                         episodes_done, updated_at
@@ -379,7 +403,7 @@ impl Store {
     /// Every title with an episode watched, hidden from Continue or not, most recent first:
     /// what has been finished or started here, which "Up next for you" suggests from.
     pub fn watched_titles(&self, limit: u32) -> Result<Vec<Progress>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut stmt = c.prepare(
                 "SELECT anilist_id, last_episode, last_position, last_duration,
                         episodes_done, updated_at
@@ -399,10 +423,16 @@ impl Store {
     /// so the meter and resume point are intact wherever else they show. The next recorded
     /// watch clears the flag — a dismissed title earns its way back by being watched.
     pub fn hide_from_continue(&self, anilist_id: AnilistId) -> Result<()> {
-        self.with_conn(|c| {
-            c.execute(
+        self.with_personal_tx(|tx| {
+            tx.execute(
                 "UPDATE watch_progress SET hidden = 1 WHERE anilist_id = ?1",
                 [anilist_id.get()],
+            )?;
+            self.emit_reg(
+                tx,
+                crate::sync::kinds::HIDE,
+                &anilist_id.get().to_string(),
+                Some("1"),
             )?;
             Ok(())
         })
@@ -416,7 +446,7 @@ impl Store {
     /// a recap numbered "12.5", anything with letters in it — sits outside the numbering a
     /// tracker counts in, so it neither raises progress nor stands in for an episode.
     pub fn tracker_progress(&self, anilist_id: AnilistId) -> Result<u32> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let highest: i64 = c.query_row(
                 "SELECT COALESCE(MAX(CAST(episode AS INTEGER)), 0) FROM watch_event
                   WHERE anilist_id = ?1 AND completed = 1
@@ -435,7 +465,7 @@ impl Store {
         anilist_id: AnilistId,
         episode: &str,
     ) -> Result<Option<(bool, i64)>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             Ok(c.query_row(
                 "SELECT completed, at FROM watch_event
                   WHERE anilist_id = ?1 AND episode = ?2
@@ -450,7 +480,7 @@ impl Store {
     /// The translation `anilist_id` was last watched in: the newest record of a play that says
     /// which. `None` when no play here said, as for progress taken from a tracker's list.
     pub fn last_translation(&self, anilist_id: AnilistId) -> Result<Option<Translation>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let text: Option<String> = c
                 .query_row(
                     "SELECT translation FROM watch_event
@@ -466,7 +496,7 @@ impl Store {
 
     /// Distinct completed episodes, however they are numbered.
     pub fn completed_episode_count(&self, anilist_id: AnilistId) -> Result<u32> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             Ok(c.query_row(
                 "SELECT COUNT(DISTINCT episode) FROM watch_event
                   WHERE anilist_id = ?1 AND completed = 1",
@@ -481,7 +511,7 @@ impl Store {
     /// Read whole rather than off [`Self::events_for`], whose limit is a few episodes' worth of
     /// rows — every ten seconds of playback is one — so an early episode drops out of it.
     pub fn completed_episodes(&self, anilist_id: AnilistId) -> Result<Vec<String>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut stmt = c.prepare(
                 "SELECT DISTINCT episode FROM watch_event
                   WHERE anilist_id = ?1 AND completed = 1",
@@ -493,7 +523,7 @@ impl Store {
 
     /// Full event log for a title, newest first. Used by the stats view.
     pub fn events_for(&self, anilist_id: AnilistId, limit: u32) -> Result<Vec<WatchEvent>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut stmt = c.prepare(&format!(
                 "SELECT {EVENT_COLUMNS}
                    FROM watch_event
@@ -537,6 +567,10 @@ fn row_to_event(r: &rusqlite::Row<'_>) -> rusqlite::Result<WatchEvent> {
 /// with nothing behind it and no resume point to return to. Rebuilt from the newest surviving
 /// event, or dropped when the last one is gone.
 fn reproject(tx: &rusqlite::Transaction<'_>, anilist_id: AnilistId) -> Result<()> {
+    // With sync on the projection is the sync log's: newest by stamp, and hidden by its register.
+    if crate::sync::device_of(tx)?.is_some() {
+        return Ok(crate::sync::refresh_title(tx, anilist_id.get())?);
+    }
     let episodes_done: u32 = tx.query_row(
         "SELECT COUNT(DISTINCT episode) FROM watch_event
           WHERE anilist_id = ?1 AND completed = 1",

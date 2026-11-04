@@ -681,6 +681,9 @@ public static partial class T
     /// <summary>Notice after the first plugin from a store installs while the demo is on. It offers Remove demo for 8 seconds.</summary>
     public static string StoresReadyDemoStays(string store) => Fill(Get("StoresReadyDemoStays"), ("store", store));
 
+    /// <summary>The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.</summary>
+    public static string CloudLoopbackDone => Get("CloudLoopbackDone");
+
     /// <summary>Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.</summary>
     public static string NoticeSignedIn(string tracker) => Fill(Get("NoticeSignedIn"), ("tracker", tracker));
 
@@ -7655,6 +7658,7 @@ public static partial class T
         ["NoticePartyNotBuilt"] = "Watch parties aren't built into this app.",
         ["SourcesDemoRemoved"] = "Demo removed",
         ["StoresReadyDemoStays"] = "{store} is ready. The demo stays last in Your sources.",
+        ["CloudLoopbackDone"] = "You can close this tab and go back to Kaeri.",
         ["NoticeSignedIn"] = "Signed in to {tracker}.",
         ["NoticeSignedInKeychain"] = "Signed in to {tracker}. The token is in the OS keychain.",
         ["NoticeSignedInFile"] = "Signed in to {tracker}. No keychain is available, so the token is in a private file on this device.",

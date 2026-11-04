@@ -2522,6 +2522,12 @@
     "at": "2026-10-31",
     "back": "Downloads are still in progress"
   },
+  "cloud-loopback-done": {
+    "source": "050681f99538",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-03"
+  },
   "config-reset-failed": {
     "source": "35546d7814d4",
     "state": "draft",

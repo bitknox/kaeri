@@ -138,7 +138,7 @@ impl Viewer {
 
 /// Whether the list the database keeps is a signed-in tracker's: the Library's, the first.
 pub(crate) fn listed(services: &Services) -> bool {
-    services.sync.trackers.first().is_some_and(|tracker| tracker.is_authenticated())
+    crate::sync::has_list(services)
 }
 
 impl Ahead {

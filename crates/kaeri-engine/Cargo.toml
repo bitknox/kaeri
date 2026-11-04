@@ -28,7 +28,7 @@ presence = ["dep:kaeri-discord"]
 # What a test stands the engine up with instead of what it builds, and what only a test wants to
 # hear from it: see `options::Parts` and `engine::Traced`. Never on in a build that ships: the
 # binary turns it on for its own tests alone, as a dev-dependency.
-testing = ["kaeri-party?/testing"]
+testing = ["kaeri-party?/testing", "kaeri-sync/testing"]
 # Watch parties on a Syncplay server, played with whichever player a play has: see `party`. The
 # desktop apps turn it on beside `--no-default-features`; a phone's build leaves it off for now.
 party = ["dep:kaeri-party"]
@@ -58,6 +58,8 @@ kaeri-providers.workspace = true
 kaeri-remote = { workspace = true, optional = true }
 kaeri-cast = { workspace = true, optional = true }
 kaeri-store.workspace = true
+kaeri-sync.workspace = true
+hex = "0.4"
 kaeri-track.workspace = true
 open = { workspace = true, optional = true }
 async-trait.workspace = true

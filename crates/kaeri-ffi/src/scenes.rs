@@ -185,6 +185,26 @@ pub enum FfiScene {
     /// [`Self::Fresh`] with the same store, not joined: [`FfiEngine::testing_store_invite`] is
     /// the Book club link, used once so far, for the join sheet with its name field.
     StoreInvited,
+    /// [`Self::Watching`] with sync set up: this device is Kim's iPhone, the group holds the
+    /// Living room TV as well, heard from two minutes ago, the folder is `Shared/Kaeri`, and one
+    /// note says a watch of Hoshikuzu no Tabibito episode 3 was kept although the iPhone marked
+    /// it unwatched. No folder is behind it; the engine runs no pass.
+    SyncOn,
+    /// [`Self::Watching`] with sync on nearby only: this device is Kim's iPhone, paired with the
+    /// Living room TV (signed in to AniList), heard from five minutes ago. No cloud folder, so no
+    /// recovery key.
+    SyncNearby,
+    /// [`Self::Watching`] syncing through Google Drive, signed in as kim@mail.example: this
+    /// device is Kim's iPhone, the group holds Kim's MacBook Air, and the recovery key was made
+    /// three days ago and can be shown again.
+    SyncCloud,
+    /// [`Self::Watching`] on a TV (start it with `FfiPlatform::AndroidTv`): this device is the
+    /// Living room TV, paired with Kim's iPhone, which syncs through Dropbox and holds the
+    /// sign-in the TV can use. The TV has no folder yet.
+    SyncTvPhoneSignIn,
+    /// [`Self::Watching`] with three profiles: Alex, who is in use and whose data this is,
+    /// Kim, and Sam, a kids profile. Kim's and Sam's start empty.
+    Profiles,
 }
 
 /// The magnet link [`FfiScene::LinkOpened`] opens: a made-up info hash whose name is
@@ -263,6 +283,11 @@ impl FfiScene {
                 | Self::Slow
                 | Self::Failed
                 | Self::LinkOpened
+                | Self::SyncOn
+                | Self::SyncNearby
+                | Self::SyncCloud
+                | Self::SyncTvPhoneSignIn
+                | Self::Profiles
         )
     }
 
@@ -285,7 +310,24 @@ impl FfiScene {
                 | Self::NotFound
                 | Self::Slow
                 | Self::Failed
+                | Self::SyncOn
+                | Self::SyncNearby
+                | Self::SyncCloud
+                | Self::SyncTvPhoneSignIn
+                | Self::Profiles
         )
+    }
+
+    /// How sync stands in the scene, for those that have it on.
+    fn sync(&self) -> Option<kaeri_engine::syncing::FixtureSync> {
+        use kaeri_engine::syncing::FixtureSync;
+        Some(match self {
+            Self::SyncOn => FixtureSync::Folder,
+            Self::SyncNearby => FixtureSync::Nearby,
+            Self::SyncCloud => FixtureSync::Cloud,
+            Self::SyncTvPhoneSignIn => FixtureSync::TvPhoneSignIn,
+            _ => return None,
+        })
     }
 }
 
@@ -352,10 +394,23 @@ impl FfiEngine {
         }
         let now = clock.now();
         scene_config(&dirs, &scene, now)?;
-        let opened = Opened::open(&dirs)?;
+        if scene == FfiScene::Profiles {
+            seed_profiles(&dirs, now)?;
+        }
+        let opened = Opened::open_as(&dirs, start.profile.as_deref())?;
         seed_crashes(&opened.paths.data_dir, &scene, now);
         let world = home_world.then(|| HomeWorld::at(HomeClock::in_zone(now, &clock.zone())));
         seed_scene(&opened.store, &scene, now);
+        if let Some(sync) = scene.sync() {
+            let tokens =
+                TokenStore::with_backend(opened.paths.data_dir.join("tokens"), Backend::File);
+            for (id, value) in kaeri_engine::syncing::seed_fixture_as(&opened.store, now, sync)
+            {
+                tokens.set(id, &value).map_err(|e| {
+                    FfiError::engine(Msg::StartFailed { reason: e.to_string() })
+                })?;
+            }
+        }
         if let Some(world) = world.as_ref().filter(|_| scene.has_world_history()) {
             world.seed_history(&opened.store, now);
             library_statuses(&opened.store, world, now);
@@ -770,6 +825,11 @@ fn seed_scene(store: &Store, scene: &FfiScene, now: i64) {
         | FfiScene::Unsure
         | FfiScene::Slow
         | FfiScene::Failed
+        | FfiScene::SyncOn
+        | FfiScene::SyncNearby
+        | FfiScene::SyncCloud
+        | FfiScene::SyncTvPhoneSignIn
+        | FfiScene::Profiles
         | FfiScene::LinkOpened => {
             // Oldest first, since each watch moves its title to the top.
             seed::watched(store, AIRING_NO_MAL, 7, now - 3 * DAY);
@@ -784,6 +844,20 @@ fn seed_scene(store: &Store, scene: &FfiScene, now: i64) {
             }
         }
     }
+}
+
+/// The profiles [`FfiScene::Profiles`] keeps, Alex last used.
+fn seed_profiles(dirs: &FfiDirs, now: i64) -> Result<(), FfiError> {
+    let data = std::path::Path::new(&dirs.data);
+    let failed = |e: kaeri_store::StoreError| {
+        FfiError::store(Msg::StartFailedDatabase {
+            path: dirs.data.clone(),
+            reason: e.to_string(),
+        })
+    };
+    kaeri_store::profile::add(data, "Kim", false, "Alex", now - 20).map_err(failed)?;
+    kaeri_store::profile::add(data, "Sam", true, "Alex", now - 10).map_err(failed)?;
+    kaeri_store::profile::touch(data, "p1", now).map_err(failed)
 }
 
 /// The three rooms [`FfiScene::Together`] keeps.

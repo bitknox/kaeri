@@ -112,7 +112,7 @@ impl Store {
         etag: Option<&str>,
         now: i64,
     ) -> Result<usize> {
-        self.with_tx(|tx| {
+        let written = self.with_tx(|tx| {
             let mut written = 0usize;
             {
                 // `priority` decides the direction of each field, which it did not before:
@@ -178,14 +178,15 @@ impl Store {
                 rusqlite::params![source, etag, now, written as u32],
             )?;
 
-            // New mappings are the one thing a deferred outbox op waits for, so every one of
-            // them gets another look — whichever path refreshed the datasets, and whether or
-            // not this pass happened to cover its title. One that is still unmappable is
-            // simply deferred again by the next drain.
-            crate::outbox::wake_deferred_in(tx)?;
-
             Ok(written)
-        })
+        })?;
+        // New mappings are the one thing a deferred outbox op waits for, so every one of
+        // them gets another look, whichever path refreshed the datasets and whether or
+        // not this pass happened to cover its title. One that is still unmappable is
+        // simply deferred again by the next drain. The outbox is the profile's own, so this
+        // wakes the one in use; a profile switched to wakes its own (see `Store::use_profile`).
+        self.wake_deferred()?;
+        Ok(written)
     }
 
     /// Full mapping row for a title.

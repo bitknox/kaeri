@@ -599,6 +599,15 @@ impl App {
             }
             Event::MetaStatus(rows) => self.meta_status = rows,
             Event::Stores(rows) => self.apply_stores(rows),
+            // The terminal app has no profiles or sync section of its own.
+            Event::Profiles(_)
+            | Event::ProfileSwitch { .. }
+            | Event::SyncStatus(_)
+            | Event::SyncInvite { .. }
+            | Event::SyncSignIn { .. }
+            | Event::SyncRecoveryKey(_)
+            | Event::SyncProblem(_)
+            | Event::SyncSignInsCopied { .. } => {}
             Event::StorePreview(outcome) => self.apply_store_preview(outcome),
             Event::StoreJoined { store } => self.apply_store_joined(store),
             Event::InviteLink(view) => self.apply_invite_link(view),

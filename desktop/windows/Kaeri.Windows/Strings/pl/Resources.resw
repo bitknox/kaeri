@@ -797,6 +797,9 @@
   <data name="StoresReadyDemoStays" xml:space="preserve">
     <value>{store} jest gotowy. Demo zostaje na końcu listy: Źródła.</value>
   </data>
+  <data name="CloudLoopbackDone" xml:space="preserve">
+    <value>Możesz zamknąć tę kartę i wrócić do Kaeri.</value>
+  </data>
   <data name="NoticeSignedIn" xml:space="preserve">
     <value>Zalogowano do {tracker}.</value>
   </data>

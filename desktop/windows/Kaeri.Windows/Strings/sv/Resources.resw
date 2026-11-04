@@ -725,6 +725,9 @@
   <data name="StoresReadyDemoStays" xml:space="preserve">
     <value>{store} är klar. Demon ligger kvar sist bland Dina källor.</value>
   </data>
+  <data name="CloudLoopbackDone" xml:space="preserve">
+    <value>Du kan stänga den här fliken och gå tillbaka till Kaeri.</value>
+  </data>
   <data name="NoticeSignedIn" xml:space="preserve">
     <value>Inloggad på {tracker}.</value>
   </data>
