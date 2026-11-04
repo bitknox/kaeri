@@ -121,11 +121,31 @@ final class AppDelegate: NSObject {
         #endif
         #endif
         crashCollection = CrashCollection(store: store)
+        store.onProfileSwitch = { [weak self] id in self?.enterProfile(id) }
         player.openSubtitleSettings = { [weak player, weak navigator] in
             player?.viewerClosed()
             navigator?.openSettings(.playback)
         }
         watchPlaying()
+    }
+
+    /// Another profile: the engine stops, then the app starts again in it, so nothing of the
+    /// old profile stays in memory. The Mac opens a new instance; an iPhone or iPad closes and
+    /// opens on the next launch, in the profile chosen.
+    private func enterProfile(_ id: String) {
+        UserDefaults.standard.set(id, forKey: "profileToEnter")
+        Task { @MainActor in
+            await store.shutdown(within: .seconds(3))
+            #if os(macOS)
+            let configuration = NSWorkspace.OpenConfiguration()
+            configuration.createsNewApplicationInstance = true
+            NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: configuration) { _, _ in
+                DispatchQueue.main.async { NSApp.terminate(nil) }
+            }
+            #else
+            exit(0)
+            #endif
+        }
     }
 
     /// In the background, what waits follows whether the player plays: watched here rather than
@@ -169,7 +189,10 @@ final class AppDelegate: NSObject {
         // The testing engine keeps tokens in files of its own; nothing reaches the keychain.
         let secrets: any SecretBackend = MemorySecrets()
         #else
-        let launch = EngineLaunch.app(platform: Self.platform)
+        var launch = EngineLaunch.app(platform: Self.platform)
+        // The profile a switch chose, used once; after it the engine remembers the last in use.
+        launch.profile = UserDefaults.standard.string(forKey: "profileToEnter")
+        UserDefaults.standard.removeObject(forKey: "profileToEnter")
         let secrets: any SecretBackend = KeychainSecrets()
         #endif
         await store.start(launch, host: AppHost(secrets: secrets, open: Self.open))
@@ -215,6 +238,10 @@ final class AppDelegate: NSObject {
         // A screenshot of Play on TV: the scene the arguments name, on screen.
         if let scene = TVScene.named() {
             ready = await store.tv.reached(scene) && ready
+        }
+        // A screenshot of sync: the state the arguments name, on screen.
+        if let scene = SyncScene.named() {
+            ready = await store.sync.stage(scene, store: store) && ready
         }
         // A screenshot of casting: the scene the arguments name, on screen.
         if let scene = CastScene.named() {

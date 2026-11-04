@@ -9849,6 +9849,707 @@ object Strings {
     fun syncStoreErrNotAllowed(context: Context, store: String, device: String): String =
         context.getString(R.string.sync_store_err_not_allowed, store, device)
 
+    /** Settings row and page title, every platform. */
+    fun devicesTitle(context: Context): String =
+        context.getString(R.string.devices_title)
+
+    /** Devices row value while sync is off. */
+    fun devicesRowOff(context: Context): String =
+        context.getString(R.string.devices_row_off)
+
+    /** Devices row value; “Synced 2 min ago”, “Synced just now”. */
+    fun devicesRowSynced(context: Context, ago: String): String =
+        context.getString(R.string.devices_row_synced, ago)
+
+    /** Devices row value with the error glyph. */
+    fun devicesRowError(context: Context): String =
+        context.getString(R.string.devices_row_error)
+
+    /** Group heading over the name. */
+    fun devicesThisDevice(context: Context): String =
+        context.getString(R.string.devices_this_device)
+
+    /** Row for this device’s name. */
+    fun devicesName(context: Context): String =
+        context.getString(R.string.devices_name)
+
+    /** Group heading while off. */
+    fun syncGroup(context: Context): String =
+        context.getString(R.string.sync_group)
+
+    /** Off state. */
+    fun syncOffTitle(context: Context): String =
+        context.getString(R.string.sync_off_title)
+
+    /** Off state. */
+    fun syncOffLine(context: Context): String =
+        context.getString(R.string.sync_off_line)
+
+    /** Button; the Mac adds an ellipsis. */
+    fun syncTurnOn(context: Context): String =
+        context.getString(R.string.sync_turn_on)
+
+    /** Road sheet title. */
+    fun syncRoadTitle(context: Context): String =
+        context.getString(R.string.sync_road_title)
+
+    /** Road sheet row. */
+    fun syncRoadNearby(context: Context): String =
+        context.getString(R.string.sync_road_nearby)
+
+    /** Road sheet row line. */
+    fun syncRoadNearbyLine(context: Context): String =
+        context.getString(R.string.sync_road_nearby_line)
+
+    /** Road sheet row. */
+    fun syncRoadCloud(context: Context): String =
+        context.getString(R.string.sync_road_cloud)
+
+    /** Road sheet row line. Names no service, since a build may hide some (decision 14). */
+    fun syncRoadCloudLine(context: Context): String =
+        context.getString(R.string.sync_road_cloud_line)
+
+    /** Road sheet footer. */
+    fun syncRoadLater(context: Context): String =
+        context.getString(R.string.sync_road_later)
+
+    /** Group heading. */
+    fun devicesYours(context: Context): String =
+        context.getString(R.string.devices_yours)
+
+    /** Empty Your devices. */
+    fun devicesOnlyThis(context: Context): String =
+        context.getString(R.string.devices_only_this)
+
+    /** Empty Your devices. */
+    fun devicesOnlyThisLine(context: Context): String =
+        context.getString(R.string.devices_only_this_line)
+
+    /** Row and sheet title. */
+    fun devicesAdd(context: Context): String =
+        context.getString(R.string.devices_add)
+
+    /** Device row line past 30 days. */
+    fun devicesNotSeen(context: Context, days: Int): String =
+        context.getString(R.string.devices_not_seen, days)
+
+    /** A device paired only for Play on TV. */
+    fun devicesRemoteOnly(context: Context): String =
+        context.getString(R.string.devices_remote_only)
+
+    /** Button on a remote-only TV row. */
+    fun devicesAlsoSync(context: Context, device: String): String =
+        context.getString(R.string.devices_also_sync, device)
+
+    /** Footer while sync is off. */
+    fun devicesPairedTvsFoot(context: Context): String =
+        context.getString(R.string.devices_paired_tvs_foot)
+
+    /** Switch on a device. */
+    fun devicesSyncSwitch(context: Context): String =
+        context.getString(R.string.devices_sync_switch)
+
+    /** Switch on a TV. */
+    fun devicesRemoteSwitch(context: Context): String =
+        context.getString(R.string.devices_remote_switch)
+
+    /** Device page footer. */
+    fun devicesSwitchesFoot(context: Context, device: String): String =
+        context.getString(R.string.devices_switches_foot, device)
+
+    /** Device page, destructive. */
+    fun devicesRemove(context: Context): String =
+        context.getString(R.string.devices_remove)
+
+    /** Alert title. */
+    fun devicesRemoveAlert(context: Context, device: String): String =
+        context.getString(R.string.devices_remove_alert, device)
+
+    /** Alert message. */
+    fun devicesRemoveAlertLine(context: Context, device: String): String =
+        context.getString(R.string.devices_remove_alert_line, device)
+
+    /** Last row; “this phone”, “this Mac”. */
+    fun syncTurnOff(context: Context, kind: String): String =
+        context.getString(R.string.sync_turn_off, kind)
+
+    /** Alert title. */
+    fun syncTurnOffAlert(context: Context, device: String): String =
+        context.getString(R.string.sync_turn_off_alert, device)
+
+    /** Alert message. */
+    fun syncTurnOffAlertLine(context: Context, kind: String): String =
+        context.getString(R.string.sync_turn_off_alert_line, kind)
+
+    /** Group heading. */
+    fun cloudGroup(context: Context): String =
+        context.getString(R.string.cloud_group)
+
+    /** Group footer. */
+    fun cloudFoot(context: Context): String =
+        context.getString(R.string.cloud_foot)
+
+    /** Row when only the nearby road is set. */
+    fun cloudAdd(context: Context): String =
+        context.getString(R.string.cloud_add)
+
+    /** Picker title. */
+    fun cloudPickTitle(context: Context): String =
+        context.getString(R.string.cloud_pick_title)
+
+    /** Picker row line. */
+    fun cloudGoogleLine(context: Context): String =
+        context.getString(R.string.cloud_google_line)
+
+    /** Picker row line. */
+    fun cloudNextcloudLine(context: Context): String =
+        context.getString(R.string.cloud_nextcloud_line)
+
+    /** Picker row line, Apple and Windows. */
+    fun cloudIcloudLine(context: Context): String =
+        context.getString(R.string.cloud_icloud_line)
+
+    /** Picker group heading. */
+    fun cloudOther(context: Context): String =
+        context.getString(R.string.cloud_other)
+
+    /** Picker row. */
+    fun cloudWebdav(context: Context): String =
+        context.getString(R.string.cloud_webdav)
+
+    /** Picker row line. */
+    fun cloudWebdavLine(context: Context): String =
+        context.getString(R.string.cloud_webdav_line)
+
+    /** Picker row line. */
+    fun cloudFolderLine(context: Context): String =
+        context.getString(R.string.cloud_folder_line)
+
+    /** Picker footer. */
+    fun cloudPickFoot(context: Context): String =
+        context.getString(R.string.cloud_pick_foot)
+
+    /** Row line while the first write runs. */
+    fun cloudSettingUp(context: Context): String =
+        context.getString(R.string.cloud_setting_up)
+
+    /** Field label. */
+    fun cloudNextcloudAddress(context: Context): String =
+        context.getString(R.string.cloud_nextcloud_address)
+
+    /** Field note. */
+    fun cloudNextcloudAddressNote(context: Context): String =
+        context.getString(R.string.cloud_nextcloud_address_note)
+
+    /** Login flow wait. */
+    fun cloudNextcloudWaitTitle(context: Context, host: String): String =
+        context.getString(R.string.cloud_nextcloud_wait_title, host)
+
+    /** Login flow wait. */
+    fun cloudNextcloudWaitLine(context: Context): String =
+        context.getString(R.string.cloud_nextcloud_wait_line)
+
+    /** Wait row. */
+    fun cloudWaiting(context: Context, service: String): String =
+        context.getString(R.string.cloud_waiting, service)
+
+    /** Button. */
+    fun cloudOpenAgain(context: Context): String =
+        context.getString(R.string.cloud_open_again)
+
+    /** Text button. */
+    fun cloudAppPassword(context: Context): String =
+        context.getString(R.string.cloud_app_password)
+
+    /** Button. */
+    fun cloudConnect(context: Context): String =
+        context.getString(R.string.cloud_connect)
+
+    /** Error. */
+    fun cloudErrOffline(context: Context, service: String): String =
+        context.getString(R.string.cloud_err_offline, service)
+
+    /** Inline error. */
+    fun cloudErrNoServer(context: Context, host: String): String =
+        context.getString(R.string.cloud_err_no_server, host)
+
+    /** Inline error. */
+    fun cloudErrAppPassword(context: Context): String =
+        context.getString(R.string.cloud_err_app_password)
+
+    /** Inline error. */
+    fun cloudErrWebdav(context: Context): String =
+        context.getString(R.string.cloud_err_webdav)
+
+    /** Error, with Open the page again. */
+    fun cloudErrTimeout(context: Context): String =
+        context.getString(R.string.cloud_err_timeout)
+
+    /** Error. */
+    fun cloudErrOtherGroup(context: Context): String =
+        context.getString(R.string.cloud_err_other_group)
+
+    /** Status error, with Sign in again. */
+    fun cloudErrSignedOut(context: Context, service: String, kind: String): String =
+        context.getString(R.string.cloud_err_signed_out, service, kind)
+
+    /** Status error. */
+    fun cloudErrFull(context: Context, service: String): String =
+        context.getString(R.string.cloud_err_full, service)
+
+    /** Status error, with Choose folder. */
+    fun cloudErrFolderGone(context: Context): String =
+        context.getString(R.string.cloud_err_folder_gone)
+
+    /** Status error title. */
+    fun cloudErrTitle(context: Context, service: String): String =
+        context.getString(R.string.cloud_err_title, service)
+
+    /** Picker row line. */
+    fun cloudDropboxLine(context: Context): String =
+        context.getString(R.string.cloud_dropbox_line)
+
+    /** Picker row line. */
+    fun cloudOnedriveLine(context: Context): String =
+        context.getString(R.string.cloud_onedrive_line)
+
+    /** Cloud group button. */
+    fun cloudSyncNow(context: Context): String =
+        context.getString(R.string.cloud_sync_now)
+
+    /** Cloud group button; at once, no question, except on the TV. */
+    fun cloudSignOut(context: Context): String =
+        context.getString(R.string.cloud_sign_out)
+
+    /** Cloud group button after signing out. */
+    fun cloudSignIn(context: Context): String =
+        context.getString(R.string.cloud_sign_in)
+
+    /** Cloud row after Sign out; hollow haze dot. */
+    fun cloudSignedOutLine(context: Context, kind: String): String =
+        context.getString(R.string.cloud_signed_out_line, kind)
+
+    /** Picker row line after `SignInDenied`. */
+    fun cloudErrDenied(context: Context, service: String): String =
+        context.getString(R.string.cloud_err_denied, service)
+
+    /** TV picker footer (decision 17). */
+    fun tvCloudPickFoot(context: Context): String =
+        context.getString(R.string.tv_cloud_pick_foot)
+
+    /** TV picker row line for Dropbox. */
+    fun tvCloudDropboxLine(context: Context): String =
+        context.getString(R.string.tv_cloud_dropbox_line)
+
+    /** TV, Dropbox. */
+    fun tvCloudNeedsPhoneTitle(context: Context): String =
+        context.getString(R.string.tv_cloud_needs_phone_title)
+
+    /** TV, Dropbox, a paired phone has it. */
+    fun tvCloudNeedsPhoneHas(context: Context, device: String): String =
+        context.getString(R.string.tv_cloud_needs_phone_has, device)
+
+    /** TV amber button; also for Nextcloud and WebDAV. */
+    fun tvUsePhoneSignin(context: Context, device: String): String =
+        context.getString(R.string.tv_use_phone_signin, device)
+
+    /** TV, Dropbox, no phone has it. */
+    fun tvCloudNeedsPhoneNone(context: Context): String =
+        context.getString(R.string.tv_cloud_needs_phone_none)
+
+    /** TV code screen after the poll succeeds. */
+    fun tvCloudFinishing(context: Context): String =
+        context.getString(R.string.tv_cloud_finishing)
+
+    /** TV cloud row. */
+    fun tvCloudRevokedLine(context: Context, service: String): String =
+        context.getString(R.string.tv_cloud_revoked_line, service)
+
+    /** TV cloud row. */
+    fun tvCloudSignedOutLine(context: Context): String =
+        context.getString(R.string.tv_cloud_signed_out_line)
+
+    /** TV ConfirmDialog. */
+    fun tvCloudSignOutTitle(context: Context, service: String): String =
+        context.getString(R.string.tv_cloud_sign_out_title, service)
+
+    /** TV ConfirmDialog, with Cancel focused and Sign out. */
+    fun tvCloudSignOutLine(context: Context, service: String): String =
+        context.getString(R.string.tv_cloud_sign_out_line, service)
+
+    /** Status line while offline. */
+    fun cloudOffline(context: Context, kind: String): String =
+        context.getString(R.string.cloud_offline, kind)
+
+    /** TV device flow. */
+    fun tvGoogleTitle(context: Context): String =
+        context.getString(R.string.tv_google_title)
+
+    /** TV device flow. */
+    fun tvQrOpenPage(context: Context): String =
+        context.getString(R.string.tv_qr_open_page)
+
+    /** TV Nextcloud. */
+    fun tvNextcloudLine(context: Context): String =
+        context.getString(R.string.tv_nextcloud_line)
+
+    /** Sheet title. */
+    fun rkeyTitle(context: Context): String =
+        context.getString(R.string.rkey_title)
+
+    /** Sheet line. */
+    fun rkeyLine(context: Context): String =
+        context.getString(R.string.rkey_line)
+
+    /** Button. */
+    fun rkeyCopy(context: Context): String =
+        context.getString(R.string.rkey_copy)
+
+    /** Text button. */
+    fun rkeyQr(context: Context): String =
+        context.getString(R.string.rkey_qr)
+
+    /** Sheet footnote. */
+    fun rkeyAgain(context: Context, kind: String): String =
+        context.getString(R.string.rkey_again, kind)
+
+    /** Devices row. */
+    fun rkeyRow(context: Context): String =
+        context.getString(R.string.rkey_row)
+
+    /** Devices row value. */
+    fun rkeyMade(context: Context, date: String): String =
+        context.getString(R.string.rkey_made, date)
+
+    /** Row. */
+    fun rkeyNew(context: Context): String =
+        context.getString(R.string.rkey_new)
+
+    /** Footer. */
+    fun rkeyNewFoot(context: Context): String =
+        context.getString(R.string.rkey_new_foot)
+
+    /** Restore. */
+    fun rkeyEnterTitle(context: Context): String =
+        context.getString(R.string.rkey_enter_title)
+
+    /** Restore. */
+    fun rkeyEnterLine(context: Context, service: String, count: Int): String =
+        context.resources.getQuantityString(R.plurals.rkey_enter_line, count, service, count)
+
+    /** Field note. */
+    fun rkeyEnterNote(context: Context): String =
+        context.getString(R.string.rkey_enter_note)
+
+    /** Inline error. */
+    fun rkeyWrong(context: Context): String =
+        context.getString(R.string.rkey_wrong)
+
+    /** Button. */
+    fun rkeyRestore(context: Context): String =
+        context.getString(R.string.rkey_restore)
+
+    /** Add a device. */
+    fun pairEnterLine(context: Context): String =
+        context.getString(R.string.pair_enter_line)
+
+    /** Button, phones. */
+    fun pairScan(context: Context): String =
+        context.getString(R.string.pair_scan)
+
+    /** Note. */
+    fun pairSameWifi(context: Context): String =
+        context.getString(R.string.pair_same_wifi)
+
+    /** Button. */
+    fun pairButton(context: Context): String =
+        context.getString(R.string.pair_button)
+
+    /** Text button. */
+    fun pairShowInstead(context: Context): String =
+        context.getString(R.string.pair_show_instead)
+
+    /** Code screen. */
+    fun pairShowTitle(context: Context): String =
+        context.getString(R.string.pair_show_title)
+
+    /** Code screen. */
+    fun pairShowScan(context: Context): String =
+        context.getString(R.string.pair_show_scan)
+
+    /** Code screen. */
+    fun pairGoodFor(context: Context, left: String): String =
+        context.getString(R.string.pair_good_for, left)
+
+    /** TV code screen. */
+    fun pairTvLine(context: Context): String =
+        context.getString(R.string.pair_tv_line)
+
+    /** Success. */
+    fun pairOk(context: Context, device: String): String =
+        context.getString(R.string.pair_ok, device)
+
+    /** Success. */
+    fun pairOkLine(context: Context): String =
+        context.getString(R.string.pair_ok_line)
+
+    /** Success switch. */
+    fun pairCopySignins(context: Context, device: String): String =
+        context.getString(R.string.pair_copy_signins, device)
+
+    /** Success switch line. */
+    fun pairCopySigninsLine(context: Context, trackers: String): String =
+        context.getString(R.string.pair_copy_signins_line, trackers)
+
+    /** Error. */
+    fun pairErrCode(context: Context, device: String): String =
+        context.getString(R.string.pair_err_code, device)
+
+    /** Error. */
+    fun pairErrNotFound(context: Context): String =
+        context.getString(R.string.pair_err_not_found)
+
+    /** Error on the showing side. */
+    fun pairErrExpired(context: Context): String =
+        context.getString(R.string.pair_err_expired)
+
+    /** Profile question. */
+    fun pairWhichProfile(context: Context, device: String): String =
+        context.getString(R.string.pair_which_profile, device)
+
+    /** Profile question. */
+    fun pairWhichProfileLine(context: Context, kind: String, device: String): String =
+        context.getString(R.string.pair_which_profile_line, kind, device)
+
+    /** Footer. */
+    fun pairAlsoSyncFoot(context: Context, device: String): String =
+        context.getString(R.string.pair_also_sync_foot, device)
+
+    /** Continue, for a day. */
+    fun continueFromDevice(context: Context, n: Int, time: String, device: String): String =
+        context.getString(R.string.continue_from_device, n, time, device)
+
+    /** Player, 6 s, with Start over. */
+    fun playerResumedFrom(context: Context, time: String, device: String): String =
+        context.getString(R.string.player_resumed_from, time, device)
+
+    /** Row line, Mac toolbar status. */
+    fun syncSyncing(context: Context): String =
+        context.getString(R.string.sync_syncing)
+
+    /** Mac jobs popover. */
+    fun syncSyncingWith(context: Context, device: String): String =
+        context.getString(R.string.sync_syncing_with, device)
+
+    /** Device page group. */
+    fun syncNotes(context: Context): String =
+        context.getString(R.string.sync_notes)
+
+    /** Sync note. */
+    fun syncNoteKeptWatched(context: Context, n: Int, title: String, other: String, device: String): String =
+        context.getString(R.string.sync_note_kept_watched, n, title, other, device)
+
+    /** Sync note action. */
+    fun syncNoteUndo(context: Context): String =
+        context.getString(R.string.sync_note_undo)
+
+    /** Footer. */
+    fun syncNotesFoot(context: Context): String =
+        context.getString(R.string.sync_notes_foot)
+
+    /** Settings row and page. */
+    fun profilesTitle(context: Context): String =
+        context.getString(R.string.profiles_title)
+
+    /** Profiles row value with one profile. */
+    fun profilesOnlyYou(context: Context): String =
+        context.getString(R.string.profiles_only_you)
+
+    /** Profiles page with one. */
+    fun profilesOneFoot(context: Context): String =
+        context.getString(R.string.profiles_one_foot)
+
+    /** Row, sheet title, picker tile. */
+    fun profilesAdd(context: Context): String =
+        context.getString(R.string.profiles_add)
+
+    /** Sheet line. */
+    fun profilesAddLine(context: Context): String =
+        context.getString(R.string.profiles_add_line)
+
+    /** Field label. */
+    fun profilesNew(context: Context): String =
+        context.getString(R.string.profiles_new)
+
+    /** Field label. */
+    fun profilesYours(context: Context): String =
+        context.getString(R.string.profiles_yours)
+
+    /** Field note when signed in. */
+    fun profilesYoursNote(context: Context): String =
+        context.getString(R.string.profiles_yours_note)
+
+    /** Switch. */
+    fun profilesKids(context: Context): String =
+        context.getString(R.string.profiles_kids)
+
+    /** Switch footer. */
+    fun profilesKidsLine(context: Context): String =
+        context.getString(R.string.profiles_kids_line)
+
+    /** Settings foot in a kids profile. */
+    fun profilesKidsHidden(context: Context): String =
+        context.getString(R.string.profiles_kids_hidden)
+
+    /** Line under a kids profile. */
+    fun profilesKidsTag(context: Context): String =
+        context.getString(R.string.profiles_kids_tag)
+
+    /** Button. */
+    fun profilesAddButton(context: Context): String =
+        context.getString(R.string.profiles_add_button)
+
+    /** Profiles page footer. */
+    fun profilesSharedFoot(context: Context): String =
+        context.getString(R.string.profiles_shared_foot)
+
+    /** Profile page row. */
+    fun profilesSyncsWith(context: Context): String =
+        context.getString(R.string.profiles_syncs_with)
+
+    /** Profile page, destructive. */
+    fun profilesDelete(context: Context): String =
+        context.getString(R.string.profiles_delete)
+
+    /** Alert title. */
+    fun profilesDeleteAlert(context: Context, name: String): String =
+        context.getString(R.string.profiles_delete_alert, name)
+
+    /** Alert message. */
+    fun profilesDeleteAlertLine(context: Context, name: String): String =
+        context.getString(R.string.profiles_delete_alert_line, name)
+
+    /** TV, and iPad when asked. */
+    fun profilesPicker(context: Context): String =
+        context.getString(R.string.profiles_picker)
+
+    /** iPad switch. */
+    fun profilesAskAtLaunch(context: Context): String =
+        context.getString(R.string.profiles_ask_at_launch)
+
+    /** iPad footer. */
+    fun profilesAskFoot(context: Context): String =
+        context.getString(R.string.profiles_ask_foot)
+
+    /** TV Settings. */
+    fun profilesSwitch(context: Context): String =
+        context.getString(R.string.profiles_switch)
+
+    /** Account sheet and menus. */
+    fun profilesManage(context: Context): String =
+        context.getString(R.string.profiles_manage)
+
+    /** Welcome, text button; TV says “Set up from your phone”. */
+    fun firstSetupOther(context: Context): String =
+        context.getString(R.string.first_setup_other)
+
+    /** Code screen from first launch. */
+    fun firstSetupLine(context: Context): String =
+        context.getString(R.string.first_setup_line)
+
+    /** Text button. */
+    fun firstRestore(context: Context): String =
+        context.getString(R.string.first_restore)
+
+    /** Success from first launch. */
+    fun firstOkLine(context: Context): String =
+        context.getString(R.string.first_ok_line)
+
+    /** Success switch. */
+    fun firstJoinStore(context: Context, store: String): String =
+        context.getString(R.string.first_join_store, store)
+
+    /** Success switch line. */
+    fun firstJoinStoreLine(context: Context, device: String, kind: String): String =
+        context.getString(R.string.first_join_store_line, device, kind)
+
+    /** Picker row on a phone or computer. */
+    fun cloudFolder(context: Context, kind: String): String =
+        context.getString(R.string.cloud_folder, kind)
+
+    /** Field note under the app password, on Android. */
+    fun cloudAppPasswordNote(context: Context, kind: String): String =
+        context.getString(R.string.cloud_app_password_note, kind)
+
+    /** Devices row value while sync is off and TVs are paired for Play on TV. The row says "Sync off", then this. */
+    fun devicesTvsForPlay(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.devices_tvs_for_play, count, count)
+
+    /** Line under a TV paired for Play on TV today. */
+    fun devicesPairedToday(context: Context): String =
+        context.getString(R.string.devices_paired_today)
+
+    /** Line under Add a device on the TV's Devices page. */
+    fun tvDevicesAddLine(context: Context): String =
+        context.getString(R.string.tv_devices_add_line)
+
+    /** TV Profiles page with one profile. */
+    fun tvProfilesOnlyYou(context: Context): String =
+        context.getString(R.string.tv_profiles_only_you)
+
+    /** TV Settings, Profiles: the row that opens the picker. */
+    fun tvProfilesOpensPicker(context: Context): String =
+        context.getString(R.string.tv_profiles_opens_picker)
+
+    /** TV Profiles page heading over the profiles. */
+    fun tvProfilesOnThisTv(context: Context): String =
+        context.getString(R.string.tv_profiles_on_this_tv)
+
+    /** Android recovery key sheet, third button. */
+    fun rkeySaveFile(context: Context): String =
+        context.getString(R.string.rkey_save_file)
+
+    /** Android recovery key sheet, button that shows the key as a code. */
+    fun rkeyQrShort(context: Context): String =
+        context.getString(R.string.rkey_qr_short)
+
+    /** Button on the Devices page and the add a device sheet that shows a pairing code instead of entering one. */
+    fun pairShowCode(context: Context): String =
+        context.getString(R.string.pair_show_code)
+
+    /** Cloud row button when the service signed Kaeri out. */
+    fun cloudSignInAgain(context: Context): String =
+        context.getString(R.string.cloud_sign_in_again)
+
+    /** Cloud row button when the folder can't be opened. */
+    fun cloudChooseFolder(context: Context): String =
+        context.getString(R.string.cloud_choose_folder)
+
+    /** Spoken label of a profile's avatar on Home. */
+    fun profilesAvatarDesc(context: Context, name: String): String =
+        context.getString(R.string.profiles_avatar_desc, name)
+
+    /** Heading over the pairing code the other device shows, over the field. */
+    fun pairCodeField(context: Context): String =
+        context.getString(R.string.pair_code_field)
+
+    fun deviceKindPhone(context: Context): String =
+        context.getString(R.string.device_kind_phone)
+
+    fun deviceKindTablet(context: Context): String =
+        context.getString(R.string.device_kind_tablet)
+
+    fun deviceKindTv(context: Context): String =
+        context.getString(R.string.device_kind_tv)
+
+    /** TV welcome, text button. */
+    fun firstSetupPhone(context: Context): String =
+        context.getString(R.string.first_setup_phone)
+
+    /** Error naming a device that is not known by name. */
+    fun devicesOtherDevice(context: Context): String =
+        context.getString(R.string.devices_other_device)
+
     /** Title of the state when a title page could not load. */
     fun titleLoadFailed(context: Context): String =
         context.getString(R.string.title_load_failed)

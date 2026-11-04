@@ -133,9 +133,19 @@ public final class TVRemoteModel {
         }
     }
 
+    /// TVs (by fingerprint) whose Remote switch is off in Devices: left out of Play on TV, and
+    /// kept paired so the switch turns on again without a code.
+    public private(set) var remoteOff: Set<String> = []
+
+    public func setRemoteOff(_ keys: Set<String>) {
+        guard keys != remoteOff else { return }
+        remoteOff = keys
+        refresh()
+    }
+
     func refresh() {
         guard let sender else { return }
-        rows = sender.rows()
+        rows = sender.rows().filter { row in row.fingerprint.map { !remoteOff.contains($0) } ?? true }
         paired = sender.paired()
         cast.refresh(sender.castRows())
     }
@@ -487,9 +497,14 @@ public final class TVRemoteModel {
         return tvPlayhead(now: now, elapsed: max(0, until.timeIntervalSince(cardAt)))
     }
 
-    /// What a TV lists this device as: the kind of device, never the name it was given, which
-    /// is often its owner's.
+    /// What a TV lists this device as: the name sync keeps for it (the person's own rename, or
+    /// the one the group knows it by), else the kind of device.
     public static var deviceName: String {
+        if let kept = UserDefaults.standard.string(forKey: SyncModel.nameKey), !kept.isEmpty { return kept }
+        return kind
+    }
+
+    private static var kind: String {
         #if os(macOS)
         "Mac" // i18n-skip
         #else

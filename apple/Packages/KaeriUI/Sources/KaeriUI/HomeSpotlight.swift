@@ -139,7 +139,11 @@ struct HomeSpotlightView: View {
     /// with the dot for a new episode, or when a title starts.
     @ViewBuilder
     private func progress(facts: HomeFacts) -> some View {
-        let line = spot.line?.text
+        // Another device played it last, within a day: "Episode 7 · stopped at 12:04 on Kim's Mac".
+        let elsewhere = spot.lastDevice.flatMap { device in
+            spot.resume.map { HomeWords.continueFrom(episode: spot.episode, resume: $0, device: device) }
+        }
+        let line = elsewhere ?? spot.line?.text
         if spot.case == .continuing, let line {
             HStack(spacing: 10) {
                 if let fraction = spot.resume?.fraction {
@@ -152,7 +156,9 @@ struct HomeSpotlightView: View {
                 }
             }
             .font(.ui(layout.secondary))
-            .lineLimit(1)
+            // The device that played last may not fit beside the meter: the line takes a second row.
+            .lineLimit(elsewhere == nil ? 1 : 2)
+            .fixedSize(horizontal: false, vertical: elsewhere != nil)
         } else if let line = line ?? HomeWords.starts(spot.starts) {
             Text(line)
                 .font(.ui(layout.secondary))
@@ -377,6 +383,11 @@ struct HomeSynopsis: View {
 }
 
 enum HomeWords {
+    /// "Episode 7 · stopped at 12:04 on Kim's Mac": Continue, for the day after another device played.
+    static func continueFrom(episode: UInt32, resume: ResumePoint, device: String) -> String {
+        L.continueFromDevice(n: Int(episode), time: resume.clock, device: device)
+    }
+
     /// "3 October" or "October 2026", when a title has not started airing.
     static func starts(_ date: FuzzyDate?) -> String? {
         guard let date, let month = date.month, (1...12).contains(Int(month)) else {

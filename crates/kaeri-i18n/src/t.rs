@@ -15475,6 +15475,883 @@ pub fn sync_store_err_not_allowed(store: &str, device: &str) -> String {
     text("sync-store-err-not-allowed", &[("store", Arg::Text(store)), ("device", Arg::Text(device))])
 }
 
+/// Settings row and page title, every platform.
+pub fn devices_title() -> String {
+    text("devices-title", &[])
+}
+
+/// Devices row value while sync is off.
+pub fn devices_row_off() -> String {
+    text("devices-row-off", &[])
+}
+
+/// Devices row value; “Synced 2 min ago”, “Synced just now”.
+pub fn devices_row_synced(ago: &str) -> String {
+    text("devices-row-synced", &[("ago", Arg::Text(ago))])
+}
+
+/// Devices row value with the error glyph.
+pub fn devices_row_error() -> String {
+    text("devices-row-error", &[])
+}
+
+/// Group heading over the name.
+pub fn devices_this_device() -> String {
+    text("devices-this-device", &[])
+}
+
+/// Row for this device’s name.
+pub fn devices_name() -> String {
+    text("devices-name", &[])
+}
+
+/// Group heading while off.
+pub fn sync_group() -> String {
+    text("sync-group", &[])
+}
+
+/// Off state.
+pub fn sync_off_title() -> String {
+    text("sync-off-title", &[])
+}
+
+/// Off state.
+pub fn sync_off_line() -> String {
+    text("sync-off-line", &[])
+}
+
+/// Button; the Mac adds an ellipsis.
+pub fn sync_turn_on() -> String {
+    text("sync-turn-on", &[])
+}
+
+/// Road sheet title.
+pub fn sync_road_title() -> String {
+    text("sync-road-title", &[])
+}
+
+/// Road sheet row.
+pub fn sync_road_nearby() -> String {
+    text("sync-road-nearby", &[])
+}
+
+/// Road sheet row line.
+pub fn sync_road_nearby_line() -> String {
+    text("sync-road-nearby-line", &[])
+}
+
+/// Road sheet row.
+pub fn sync_road_cloud() -> String {
+    text("sync-road-cloud", &[])
+}
+
+/// Road sheet row line. Names no service, since a build may hide some (decision 14).
+pub fn sync_road_cloud_line() -> String {
+    text("sync-road-cloud-line", &[])
+}
+
+/// Road sheet footer.
+pub fn sync_road_later() -> String {
+    text("sync-road-later", &[])
+}
+
+/// Group heading.
+pub fn devices_yours() -> String {
+    text("devices-yours", &[])
+}
+
+/// Empty Your devices.
+pub fn devices_only_this() -> String {
+    text("devices-only-this", &[])
+}
+
+/// Empty Your devices.
+pub fn devices_only_this_line() -> String {
+    text("devices-only-this-line", &[])
+}
+
+/// Row and sheet title.
+pub fn devices_add() -> String {
+    text("devices-add", &[])
+}
+
+/// Device row line past 30 days.
+pub fn devices_not_seen(days: i64) -> String {
+    text("devices-not-seen", &[("days", Arg::Int(days))])
+}
+
+/// A device paired only for Play on TV.
+pub fn devices_remote_only() -> String {
+    text("devices-remote-only", &[])
+}
+
+/// Button on a remote-only TV row.
+pub fn devices_also_sync(device: &str) -> String {
+    text("devices-also-sync", &[("device", Arg::Text(device))])
+}
+
+/// Footer while sync is off.
+pub fn devices_paired_tvs_foot() -> String {
+    text("devices-paired-tvs-foot", &[])
+}
+
+/// Switch on a device.
+pub fn devices_sync_switch() -> String {
+    text("devices-sync-switch", &[])
+}
+
+/// Switch on a TV.
+pub fn devices_remote_switch() -> String {
+    text("devices-remote-switch", &[])
+}
+
+/// Device page footer.
+pub fn devices_switches_foot(device: &str) -> String {
+    text("devices-switches-foot", &[("device", Arg::Text(device))])
+}
+
+/// Device page, destructive.
+pub fn devices_remove() -> String {
+    text("devices-remove", &[])
+}
+
+/// Alert title.
+pub fn devices_remove_alert(device: &str) -> String {
+    text("devices-remove-alert", &[("device", Arg::Text(device))])
+}
+
+/// Alert message.
+pub fn devices_remove_alert_line(device: &str) -> String {
+    text("devices-remove-alert-line", &[("device", Arg::Text(device))])
+}
+
+/// Last row; “this phone”, “this Mac”.
+pub fn sync_turn_off(kind: &str) -> String {
+    text("sync-turn-off", &[("kind", Arg::Text(kind))])
+}
+
+/// Alert title.
+pub fn sync_turn_off_alert(device: &str) -> String {
+    text("sync-turn-off-alert", &[("device", Arg::Text(device))])
+}
+
+/// Alert message.
+pub fn sync_turn_off_alert_line(kind: &str) -> String {
+    text("sync-turn-off-alert-line", &[("kind", Arg::Text(kind))])
+}
+
+/// Group heading.
+pub fn cloud_group() -> String {
+    text("cloud-group", &[])
+}
+
+/// Group footer.
+pub fn cloud_foot() -> String {
+    text("cloud-foot", &[])
+}
+
+/// Row when only the nearby road is set.
+pub fn cloud_add() -> String {
+    text("cloud-add", &[])
+}
+
+/// Picker title.
+pub fn cloud_pick_title() -> String {
+    text("cloud-pick-title", &[])
+}
+
+/// Picker row line.
+pub fn cloud_google_line() -> String {
+    text("cloud-google-line", &[])
+}
+
+/// Picker row line.
+pub fn cloud_nextcloud_line() -> String {
+    text("cloud-nextcloud-line", &[])
+}
+
+/// Picker row line, Apple and Windows.
+pub fn cloud_icloud_line() -> String {
+    text("cloud-icloud-line", &[])
+}
+
+/// Picker group heading.
+pub fn cloud_other() -> String {
+    text("cloud-other", &[])
+}
+
+/// Picker row.
+pub fn cloud_webdav() -> String {
+    text("cloud-webdav", &[])
+}
+
+/// Picker row line.
+pub fn cloud_webdav_line() -> String {
+    text("cloud-webdav-line", &[])
+}
+
+/// Picker row line.
+pub fn cloud_folder_line() -> String {
+    text("cloud-folder-line", &[])
+}
+
+/// Picker footer.
+pub fn cloud_pick_foot() -> String {
+    text("cloud-pick-foot", &[])
+}
+
+/// Row line while the first write runs.
+pub fn cloud_setting_up() -> String {
+    text("cloud-setting-up", &[])
+}
+
+/// Field label.
+pub fn cloud_nextcloud_address() -> String {
+    text("cloud-nextcloud-address", &[])
+}
+
+/// Field note.
+pub fn cloud_nextcloud_address_note() -> String {
+    text("cloud-nextcloud-address-note", &[])
+}
+
+/// Login flow wait.
+pub fn cloud_nextcloud_wait_title(host: &str) -> String {
+    text("cloud-nextcloud-wait-title", &[("host", Arg::Text(host))])
+}
+
+/// Login flow wait.
+pub fn cloud_nextcloud_wait_line() -> String {
+    text("cloud-nextcloud-wait-line", &[])
+}
+
+/// Wait row.
+pub fn cloud_waiting(service: &str) -> String {
+    text("cloud-waiting", &[("service", Arg::Text(service))])
+}
+
+/// Button.
+pub fn cloud_open_again() -> String {
+    text("cloud-open-again", &[])
+}
+
+/// Text button.
+pub fn cloud_app_password() -> String {
+    text("cloud-app-password", &[])
+}
+
+/// Button.
+pub fn cloud_connect() -> String {
+    text("cloud-connect", &[])
+}
+
+/// Error.
+pub fn cloud_err_offline(service: &str) -> String {
+    text("cloud-err-offline", &[("service", Arg::Text(service))])
+}
+
+/// Inline error.
+pub fn cloud_err_no_server(host: &str) -> String {
+    text("cloud-err-no-server", &[("host", Arg::Text(host))])
+}
+
+/// Inline error.
+pub fn cloud_err_app_password() -> String {
+    text("cloud-err-app-password", &[])
+}
+
+/// Inline error.
+pub fn cloud_err_webdav() -> String {
+    text("cloud-err-webdav", &[])
+}
+
+/// Error, with Open the page again.
+pub fn cloud_err_timeout() -> String {
+    text("cloud-err-timeout", &[])
+}
+
+/// Error.
+pub fn cloud_err_other_group() -> String {
+    text("cloud-err-other-group", &[])
+}
+
+/// Status error, with Sign in again.
+pub fn cloud_err_signed_out(service: &str, kind: &str) -> String {
+    text("cloud-err-signed-out", &[("service", Arg::Text(service)), ("kind", Arg::Text(kind))])
+}
+
+/// Status error.
+pub fn cloud_err_full(service: &str) -> String {
+    text("cloud-err-full", &[("service", Arg::Text(service))])
+}
+
+/// Status error, with Choose folder.
+pub fn cloud_err_folder_gone() -> String {
+    text("cloud-err-folder-gone", &[])
+}
+
+/// Status error title.
+pub fn cloud_err_title(service: &str) -> String {
+    text("cloud-err-title", &[("service", Arg::Text(service))])
+}
+
+/// Picker row line.
+pub fn cloud_dropbox_line() -> String {
+    text("cloud-dropbox-line", &[])
+}
+
+/// Picker row line.
+pub fn cloud_onedrive_line() -> String {
+    text("cloud-onedrive-line", &[])
+}
+
+/// Cloud group button.
+pub fn cloud_sync_now() -> String {
+    text("cloud-sync-now", &[])
+}
+
+/// Cloud group button; at once, no question, except on the TV.
+pub fn cloud_sign_out() -> String {
+    text("cloud-sign-out", &[])
+}
+
+/// Cloud group button after signing out.
+pub fn cloud_sign_in() -> String {
+    text("cloud-sign-in", &[])
+}
+
+/// Cloud row after Sign out; hollow haze dot.
+pub fn cloud_signed_out_line(kind: &str) -> String {
+    text("cloud-signed-out-line", &[("kind", Arg::Text(kind))])
+}
+
+/// Picker row line after `SignInDenied`.
+pub fn cloud_err_denied(service: &str) -> String {
+    text("cloud-err-denied", &[("service", Arg::Text(service))])
+}
+
+/// TV picker footer (decision 17).
+pub fn tv_cloud_pick_foot() -> String {
+    text("tv-cloud-pick-foot", &[])
+}
+
+/// TV picker row line for Dropbox.
+pub fn tv_cloud_dropbox_line() -> String {
+    text("tv-cloud-dropbox-line", &[])
+}
+
+/// TV, Dropbox.
+pub fn tv_cloud_needs_phone_title() -> String {
+    text("tv-cloud-needs-phone-title", &[])
+}
+
+/// TV, Dropbox, a paired phone has it.
+pub fn tv_cloud_needs_phone_has(device: &str) -> String {
+    text("tv-cloud-needs-phone-has", &[("device", Arg::Text(device))])
+}
+
+/// TV amber button; also for Nextcloud and WebDAV.
+pub fn tv_use_phone_signin(device: &str) -> String {
+    text("tv-use-phone-signin", &[("device", Arg::Text(device))])
+}
+
+/// TV, Dropbox, no phone has it.
+pub fn tv_cloud_needs_phone_none() -> String {
+    text("tv-cloud-needs-phone-none", &[])
+}
+
+/// TV code screen after the poll succeeds.
+pub fn tv_cloud_finishing() -> String {
+    text("tv-cloud-finishing", &[])
+}
+
+/// TV cloud row.
+pub fn tv_cloud_revoked_line(service: &str) -> String {
+    text("tv-cloud-revoked-line", &[("service", Arg::Text(service))])
+}
+
+/// TV cloud row.
+pub fn tv_cloud_signed_out_line() -> String {
+    text("tv-cloud-signed-out-line", &[])
+}
+
+/// TV ConfirmDialog.
+pub fn tv_cloud_sign_out_title(service: &str) -> String {
+    text("tv-cloud-sign-out-title", &[("service", Arg::Text(service))])
+}
+
+/// TV ConfirmDialog, with Cancel focused and Sign out.
+pub fn tv_cloud_sign_out_line(service: &str) -> String {
+    text("tv-cloud-sign-out-line", &[("service", Arg::Text(service))])
+}
+
+/// Status line while offline.
+pub fn cloud_offline(kind: &str) -> String {
+    text("cloud-offline", &[("kind", Arg::Text(kind))])
+}
+
+/// TV device flow.
+pub fn tv_google_title() -> String {
+    text("tv-google-title", &[])
+}
+
+/// TV device flow.
+pub fn tv_qr_open_page() -> String {
+    text("tv-qr-open-page", &[])
+}
+
+/// TV Nextcloud.
+pub fn tv_nextcloud_line() -> String {
+    text("tv-nextcloud-line", &[])
+}
+
+/// Sheet title.
+pub fn rkey_title() -> String {
+    text("rkey-title", &[])
+}
+
+/// Sheet line.
+pub fn rkey_line() -> String {
+    text("rkey-line", &[])
+}
+
+/// Button.
+pub fn rkey_copy() -> String {
+    text("rkey-copy", &[])
+}
+
+/// Text button.
+pub fn rkey_qr() -> String {
+    text("rkey-qr", &[])
+}
+
+/// Sheet footnote.
+pub fn rkey_again(kind: &str) -> String {
+    text("rkey-again", &[("kind", Arg::Text(kind))])
+}
+
+/// Devices row.
+pub fn rkey_row() -> String {
+    text("rkey-row", &[])
+}
+
+/// Devices row value.
+pub fn rkey_made(date: &str) -> String {
+    text("rkey-made", &[("date", Arg::Text(date))])
+}
+
+/// Row.
+pub fn rkey_new() -> String {
+    text("rkey-new", &[])
+}
+
+/// Footer.
+pub fn rkey_new_foot() -> String {
+    text("rkey-new-foot", &[])
+}
+
+/// Restore.
+pub fn rkey_enter_title() -> String {
+    text("rkey-enter-title", &[])
+}
+
+/// Restore.
+pub fn rkey_enter_line(service: &str, count: i64) -> String {
+    text("rkey-enter-line", &[("service", Arg::Text(service)), ("count", Arg::Int(count))])
+}
+
+/// Field note.
+pub fn rkey_enter_note() -> String {
+    text("rkey-enter-note", &[])
+}
+
+/// Inline error.
+pub fn rkey_wrong() -> String {
+    text("rkey-wrong", &[])
+}
+
+/// Button.
+pub fn rkey_restore() -> String {
+    text("rkey-restore", &[])
+}
+
+/// Add a device.
+pub fn pair_enter_line() -> String {
+    text("pair-enter-line", &[])
+}
+
+/// Button, phones.
+pub fn pair_scan() -> String {
+    text("pair-scan", &[])
+}
+
+/// Note.
+pub fn pair_same_wifi() -> String {
+    text("pair-same-wifi", &[])
+}
+
+/// Button.
+pub fn pair_button() -> String {
+    text("pair-button", &[])
+}
+
+/// Text button.
+pub fn pair_show_instead() -> String {
+    text("pair-show-instead", &[])
+}
+
+/// Code screen.
+pub fn pair_show_title() -> String {
+    text("pair-show-title", &[])
+}
+
+/// Code screen.
+pub fn pair_show_scan() -> String {
+    text("pair-show-scan", &[])
+}
+
+/// Code screen.
+pub fn pair_good_for(left: &str) -> String {
+    text("pair-good-for", &[("left", Arg::Text(left))])
+}
+
+/// TV code screen.
+pub fn pair_tv_line() -> String {
+    text("pair-tv-line", &[])
+}
+
+/// Success.
+pub fn pair_ok(device: &str) -> String {
+    text("pair-ok", &[("device", Arg::Text(device))])
+}
+
+/// Success.
+pub fn pair_ok_line() -> String {
+    text("pair-ok-line", &[])
+}
+
+/// Success switch.
+pub fn pair_copy_signins(device: &str) -> String {
+    text("pair-copy-signins", &[("device", Arg::Text(device))])
+}
+
+/// Success switch line.
+pub fn pair_copy_signins_line(trackers: &str) -> String {
+    text("pair-copy-signins-line", &[("trackers", Arg::Text(trackers))])
+}
+
+/// Error.
+pub fn pair_err_code(device: &str) -> String {
+    text("pair-err-code", &[("device", Arg::Text(device))])
+}
+
+/// Error.
+pub fn pair_err_not_found() -> String {
+    text("pair-err-not-found", &[])
+}
+
+/// Error on the showing side.
+pub fn pair_err_expired() -> String {
+    text("pair-err-expired", &[])
+}
+
+/// Profile question.
+pub fn pair_which_profile(device: &str) -> String {
+    text("pair-which-profile", &[("device", Arg::Text(device))])
+}
+
+/// Profile question.
+pub fn pair_which_profile_line(kind: &str, device: &str) -> String {
+    text("pair-which-profile-line", &[("kind", Arg::Text(kind)), ("device", Arg::Text(device))])
+}
+
+/// Footer.
+pub fn pair_also_sync_foot(device: &str) -> String {
+    text("pair-also-sync-foot", &[("device", Arg::Text(device))])
+}
+
+/// Continue, for a day.
+pub fn continue_from_device(n: i64, time: &str, device: &str) -> String {
+    text("continue-from-device", &[("n", Arg::Int(n)), ("time", Arg::Text(time)), ("device", Arg::Text(device))])
+}
+
+/// Player, 6 s, with Start over.
+pub fn player_resumed_from(time: &str, device: &str) -> String {
+    text("player-resumed-from", &[("time", Arg::Text(time)), ("device", Arg::Text(device))])
+}
+
+/// Row line, Mac toolbar status.
+pub fn sync_syncing() -> String {
+    text("sync-syncing", &[])
+}
+
+/// Mac jobs popover.
+pub fn sync_syncing_with(device: &str) -> String {
+    text("sync-syncing-with", &[("device", Arg::Text(device))])
+}
+
+/// Device page group.
+pub fn sync_notes() -> String {
+    text("sync-notes", &[])
+}
+
+/// Sync note.
+pub fn sync_note_kept_watched(n: i64, title: &str, other: &str, device: &str) -> String {
+    text("sync-note-kept-watched", &[("n", Arg::Int(n)), ("title", Arg::Text(title)), ("other", Arg::Text(other)), ("device", Arg::Text(device))])
+}
+
+/// Sync note action.
+pub fn sync_note_undo() -> String {
+    text("sync-note-undo", &[])
+}
+
+/// Footer.
+pub fn sync_notes_foot() -> String {
+    text("sync-notes-foot", &[])
+}
+
+/// Settings row and page.
+pub fn profiles_title() -> String {
+    text("profiles-title", &[])
+}
+
+/// Profiles row value with one profile.
+pub fn profiles_only_you() -> String {
+    text("profiles-only-you", &[])
+}
+
+/// Profiles page with one.
+pub fn profiles_one_foot() -> String {
+    text("profiles-one-foot", &[])
+}
+
+/// Row, sheet title, picker tile.
+pub fn profiles_add() -> String {
+    text("profiles-add", &[])
+}
+
+/// Sheet line.
+pub fn profiles_add_line() -> String {
+    text("profiles-add-line", &[])
+}
+
+/// Field label.
+pub fn profiles_new() -> String {
+    text("profiles-new", &[])
+}
+
+/// Field label.
+pub fn profiles_yours() -> String {
+    text("profiles-yours", &[])
+}
+
+/// Field note when signed in.
+pub fn profiles_yours_note() -> String {
+    text("profiles-yours-note", &[])
+}
+
+/// Switch.
+pub fn profiles_kids() -> String {
+    text("profiles-kids", &[])
+}
+
+/// Switch footer.
+pub fn profiles_kids_line() -> String {
+    text("profiles-kids-line", &[])
+}
+
+/// Settings foot in a kids profile.
+pub fn profiles_kids_hidden() -> String {
+    text("profiles-kids-hidden", &[])
+}
+
+/// Line under a kids profile.
+pub fn profiles_kids_tag() -> String {
+    text("profiles-kids-tag", &[])
+}
+
+/// Button.
+pub fn profiles_add_button() -> String {
+    text("profiles-add-button", &[])
+}
+
+/// Profiles page footer.
+pub fn profiles_shared_foot() -> String {
+    text("profiles-shared-foot", &[])
+}
+
+/// Profile page row.
+pub fn profiles_syncs_with() -> String {
+    text("profiles-syncs-with", &[])
+}
+
+/// Profile page, destructive.
+pub fn profiles_delete() -> String {
+    text("profiles-delete", &[])
+}
+
+/// Alert title.
+pub fn profiles_delete_alert(name: &str) -> String {
+    text("profiles-delete-alert", &[("name", Arg::Text(name))])
+}
+
+/// Alert message.
+pub fn profiles_delete_alert_line(name: &str) -> String {
+    text("profiles-delete-alert-line", &[("name", Arg::Text(name))])
+}
+
+/// TV, and iPad when asked.
+pub fn profiles_picker() -> String {
+    text("profiles-picker", &[])
+}
+
+/// iPad switch.
+pub fn profiles_ask_at_launch() -> String {
+    text("profiles-ask-at-launch", &[])
+}
+
+/// iPad footer.
+pub fn profiles_ask_foot() -> String {
+    text("profiles-ask-foot", &[])
+}
+
+/// TV Settings.
+pub fn profiles_switch() -> String {
+    text("profiles-switch", &[])
+}
+
+/// Account sheet and menus.
+pub fn profiles_manage() -> String {
+    text("profiles-manage", &[])
+}
+
+/// Welcome, text button; TV says “Set up from your phone”.
+pub fn first_setup_other() -> String {
+    text("first-setup-other", &[])
+}
+
+/// Code screen from first launch.
+pub fn first_setup_line() -> String {
+    text("first-setup-line", &[])
+}
+
+/// Text button.
+pub fn first_restore() -> String {
+    text("first-restore", &[])
+}
+
+/// Success from first launch.
+pub fn first_ok_line() -> String {
+    text("first-ok-line", &[])
+}
+
+/// Success switch.
+pub fn first_join_store(store: &str) -> String {
+    text("first-join-store", &[("store", Arg::Text(store))])
+}
+
+/// Success switch line.
+pub fn first_join_store_line(device: &str, kind: &str) -> String {
+    text("first-join-store-line", &[("device", Arg::Text(device)), ("kind", Arg::Text(kind))])
+}
+
+/// Picker row on a phone or computer.
+pub fn cloud_folder(kind: &str) -> String {
+    text("cloud-folder", &[("kind", Arg::Text(kind))])
+}
+
+/// Field note under the app password, on Android.
+pub fn cloud_app_password_note(kind: &str) -> String {
+    text("cloud-app-password-note", &[("kind", Arg::Text(kind))])
+}
+
+/// Devices row value while sync is off and TVs are paired for Play on TV. The row says "Sync off", then this.
+pub fn devices_tvs_for_play(count: i64) -> String {
+    text("devices-tvs-for-play", &[("count", Arg::Int(count))])
+}
+
+/// Line under a TV paired for Play on TV today.
+pub fn devices_paired_today() -> String {
+    text("devices-paired-today", &[])
+}
+
+/// Line under Add a device on the TV's Devices page.
+pub fn tv_devices_add_line() -> String {
+    text("tv-devices-add-line", &[])
+}
+
+/// TV Profiles page with one profile.
+pub fn tv_profiles_only_you() -> String {
+    text("tv-profiles-only-you", &[])
+}
+
+/// TV Settings, Profiles: the row that opens the picker.
+pub fn tv_profiles_opens_picker() -> String {
+    text("tv-profiles-opens-picker", &[])
+}
+
+/// TV Profiles page heading over the profiles.
+pub fn tv_profiles_on_this_tv() -> String {
+    text("tv-profiles-on-this-tv", &[])
+}
+
+/// Android recovery key sheet, third button.
+pub fn rkey_save_file() -> String {
+    text("rkey-save-file", &[])
+}
+
+/// Android recovery key sheet, button that shows the key as a code.
+pub fn rkey_qr_short() -> String {
+    text("rkey-qr-short", &[])
+}
+
+/// Button on the Devices page and the add a device sheet that shows a pairing code instead of entering one.
+pub fn pair_show_code() -> String {
+    text("pair-show-code", &[])
+}
+
+/// Cloud row button when the service signed Kaeri out.
+pub fn cloud_sign_in_again() -> String {
+    text("cloud-sign-in-again", &[])
+}
+
+/// Cloud row button when the folder can't be opened.
+pub fn cloud_choose_folder() -> String {
+    text("cloud-choose-folder", &[])
+}
+
+/// Spoken label of a profile's avatar on Home.
+pub fn profiles_avatar_desc(name: &str) -> String {
+    text("profiles-avatar-desc", &[("name", Arg::Text(name))])
+}
+
+/// Heading over the pairing code the other device shows, over the field.
+pub fn pair_code_field() -> String {
+    text("pair-code-field", &[])
+}
+
+pub fn device_kind_phone() -> String {
+    text("device-kind-phone", &[])
+}
+
+pub fn device_kind_tablet() -> String {
+    text("device-kind-tablet", &[])
+}
+
+pub fn device_kind_tv() -> String {
+    text("device-kind-tv", &[])
+}
+
+/// TV welcome, text button.
+pub fn first_setup_phone() -> String {
+    text("first-setup-phone", &[])
+}
+
+/// Error naming a device that is not known by name.
+pub fn devices_other_device() -> String {
+    text("devices-other-device", &[])
+}
+
 /// Title of the state when a title page could not load.
 pub fn title_load_failed() -> String {
     text("title-load-failed", &[])

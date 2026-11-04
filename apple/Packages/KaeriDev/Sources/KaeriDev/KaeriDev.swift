@@ -124,6 +124,7 @@ final class Delegate: NSObject, NSApplicationDelegate {
         var settled = await store.settle()
         if store.applyGoOfflineArgument() { settled = await store.settle() }
         store.applyShowcase()
+        if let scene = SyncScene.named() { _ = await store.sync.stage(scene, store: store) }
         await visit(options.visit)
         // A launch sheet whose button the showcase puts up (sheet=proxy) opens only once it is
         // there: wait for the sheet to be taken, and for it to slide in.

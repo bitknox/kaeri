@@ -10,8 +10,8 @@
 # generated episode first on Continue), then after a colon a section (calendar, seasonal, search, library,
 # downloads, providers, pluginStores, settings) or title=<id>, select=<id>, query=<words>,
 # genre=<name> (Search browsing a genre), filters=set (Search with Fantasy, 2024, Spring, TV and two sheet filters set, on the fuller catalogue, which finds two titles), scroll=<points> (Search's results scrolled), available=<here|services> (Search with its Available filter set) or palette=<words>, with more joined by +: pane=<Settings
-# pane>, notice=alert (a failure toast), sheet=<torrent|proxy|join|kitsu|update|show|about|report|welcome-sources|filters|messages|discussion-<episode>>,
-# tv=<paired|picker|code|expired|remote|lost|refused|empty|bar|away>, Play on TV with the Fixtures app's
+# pane>, notice=alert (a failure toast), sheet=<torrent|proxy|join|kitsu|update|show|about|report|welcome-sources|welcome-setup|filters|messages|discussion-<episode>>,
+# sync=<state> (a Devices state or sync sheet, see SyncScene), tv=<paired|picker|code|expired|remote|lost|refused|empty|bar|away>, Play on TV with the Fixtures app's
 # fake TVs (FixtureTVs.swift says what each shows), cast=<scene>, casting to the made-up TVs with
 # Chromecast built in (FixtureCasts.swift lists the scenes), day=<days after today>, the calendar opened on
 # that day, for one with broadcasts, mine=1 the calendar on My list,
@@ -23,7 +23,7 @@
 # (pale: 900001's page with a long title on a near-white banner; proxy: torrents through a saved proxy,
 # which sheet=proxy edits, and checking or unsaved its check under way or failed), and watched=<id>:<episodes>,
 # episodes marked watched as the shot starts (900006:8 is caught up), and
-# fold=open, the title page's watched episodes opened, world=1, Home's invented season of ten
+# continuefrom=<device>, Home's Continue cards saying another device played last, fold=open, the title page's watched episodes opened, world=1, Home's invented season of ten
 # drawn titles (with the scenes suggested, oneleft, continuefull, notfound, slow, failed and offline,
 # which stage Home's states), offline=1, the fake AniList gone once the first Home has loaded,
 # for Home's offline line over what it kept, and source=<licensed|server|folder>, the row
@@ -122,6 +122,7 @@ arguments() {
       notice=*) printf '%s\n' -KaeriNotice "${screen#notice=}" ;;
       sheet=*) printf '%s\n' -KaeriSheet "${screen#sheet=}" ;;
       tv=*) printf '%s\n' -KaeriTV "${screen#tv=}" ;;
+      sync=*) printf '%s\n' -KaeriSync "${screen#sync=}" ;;
       cast=*) printf '%s\n' -KaeriCast "${screen#cast=}" ;;
       party=*) printf '%s\n' -KaeriParty "${screen#party=}" ;;
       together=*) printf '%s\n' -KaeriSection together -KaeriTogether "${screen#together=}" ;;
@@ -131,6 +132,7 @@ arguments() {
       fold=*) printf '%s\n' -KaeriFold "${screen#fold=}" ;;
       day=*) printf '%s\n' -KaeriDay "${screen#day=}" ;;
       mine=*) printf '%s\n' -KaeriCalendarMine "${screen#mine=}" ;;
+      continuefrom=*) printf '%s\n' -KaeriContinueFrom "${screen#continuefrom=}" ;;
       world=*) printf '%s\n' -KaeriHomeWorld "${screen#world=}" ;;
       offline=*) printf '%s\n' -KaeriGoOffline "${screen#offline=}" ;;
       *) printf '%s\n' -KaeriSection "$screen" ;;

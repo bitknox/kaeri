@@ -375,16 +375,20 @@ struct SyncCapsule: View {
         .accessibilityLabel(accessibilityLabel(summary))
         .accessibilityHint(L.shellSyncHint)
         .popover(isPresented: $showing, arrowEdge: .bottom) {
-            JobsPopover {
+            JobsPopover(openAccounts: {
                 showing = false
                 open()
-            }
+            }, openDevices: {
+                showing = false
+                navigator.openSettings(.devices)
+            })
         }
     }
 
     /// Where sync stands, or on Home offline, Home's own line: offline is said once there.
     private var shown: SyncSummary {
         let summary = store.accounts.summary
+        if store.sync.syncingShown { return SyncSummary(text: L.syncSyncing, state: .waiting, tracker: summary.tracker) }
         guard navigator.section == .home, navigator.titleOnMac == nil, let line = store.homeOfflineLine else {
             return summary
         }
@@ -403,9 +407,14 @@ struct SyncCapsule: View {
 struct JobsPopover: View {
     @Environment(AppStore.self) private var store
     let openAccounts: () -> Void
+    var openDevices: () -> Void = {}
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            if store.sync.syncingShown {
+                syncRow
+                Rectangle().fill(.faintRule).frame(height: 1).padding(.vertical, 12)
+            }
             Text(store.accounts.summary.text)
                 .font(.mac(13, weight: .semibold))
                 .foregroundStyle(.silk)
@@ -439,11 +448,38 @@ struct JobsPopover: View {
                 .padding(.top, 10)
             }
             Rectangle().fill(.faintRule).frame(height: 1).padding(.vertical, 12)
-            Button(L.accountsSettings, action: openAccounts)
-                .buttonStyle(SecondaryCapsuleStyle())
+            HStack(spacing: 8) {
+                Button(L.accountsSettings, action: openAccounts)
+                    .buttonStyle(SecondaryCapsuleStyle())
+                if store.sync.status.enabled {
+                    Button(L.syncPopoverOpen, action: openDevices)
+                        .buttonStyle(SecondaryCapsuleStyle())
+                }
+            }
         }
         .padding(16)
         .frame(width: 300, alignment: .leading)
+    }
+
+    /// The sync pass: whom it talks with and how long it has run.
+    private var syncRow: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { _ in
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                Text(store.sync.syncingPartner.map { L.syncSyncingWith(device: $0) } ?? L.syncSyncing)
+                    .foregroundStyle(.silk)
+                Spacer(minLength: 12)
+                if let since = store.sync.syncingSince {
+                    let seconds = Int((ContinuousClock.now - since).components.seconds)
+                    Text(seconds < 60
+                        ? L.durationSeconds(seconds: seconds)
+                        : L.durationMinutesSeconds(minutes: seconds / 60, seconds: String(seconds % 60)))
+                        .monospacedDigit()
+                        .foregroundStyle(.haze)
+                }
+            }
+            .font(.mac(13))
+            .accessibilityElement(children: .combine)
+        }
     }
 
     /// "4s", "1m 12s".

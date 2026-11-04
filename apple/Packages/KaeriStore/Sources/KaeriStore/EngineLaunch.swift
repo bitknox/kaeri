@@ -35,6 +35,8 @@ public struct EngineLaunch: Sendable {
     /// The device sign-ins' clients: Simkl's, and Trakt's, which has no secret.
     public var simklClientID: String?
     public var traktClientID: String?
+    /// The profile to start in, when the person switched: nil for the one used last.
+    public var profile: String?
 
     /// Kaeri's AniList client: implicit grant, redirecting to `kaeri://auth/anilist`.
     /// Not a secret; it ships in the app.
@@ -108,7 +110,8 @@ public struct EngineLaunch: Sendable {
             malClientId: malClientID,
             simklClientId: simklClientID,
             traktClientId: traktClientID,
-            secrets: secrets
+            secrets: secrets,
+            profile: profile
         )
     }
 

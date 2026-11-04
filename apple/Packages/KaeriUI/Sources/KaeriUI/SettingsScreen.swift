@@ -9,7 +9,7 @@ import SwiftUI
 
 /// Settings' panes. Integrations stays out of v1.
 public enum SettingsPane: String, CaseIterable, Identifiable, Hashable, Sendable {
-    case general, playback, downloads, notifications, sources, accounts, integrations, advanced
+    case general, playback, downloads, notifications, sources, accounts, devices, profiles, integrations, advanced
 
     public var id: String { rawValue }
 
@@ -21,6 +21,8 @@ public enum SettingsPane: String, CaseIterable, Identifiable, Hashable, Sendable
         case .notifications: L.settingsGroupNotifications
         case .sources: L.sourcesTitle
         case .accounts: L.navAccounts
+        case .devices: L.devicesTitle
+        case .profiles: L.profilesTitle
         case .integrations: L.settingsGroupIntegrations
         case .advanced: L.settingsGroupAdvanced
         }
@@ -42,6 +44,8 @@ public enum PhoneSettingsPage: Hashable, Sendable {
     case root, general, playback, downloads, notifications, sources, accounts, providers, stores, about, acknowledgements
     /// The TVs paired for Play on TV.
     case tvs
+    /// Sync with the devices in the group, and profiles.
+    case devices, profiles
     /// The titles marked Not interested, with Restore.
     case hiddenTitles
     case store(String)
@@ -65,6 +69,8 @@ public enum PhoneSettingsPage: Hashable, Sendable {
         case "licensed": .licensed
         case "about": .about
         case "tvs": .tvs
+        case "devices", "sync": .devices
+        case "profiles": .profiles
         case "hidden": .hiddenTitles
         case "stores", "pluginStores": .stores
         // The showcase's own, for screenshots.
@@ -109,6 +115,8 @@ struct SettingsScreen: View {
             case .notifications: NotificationsPane()
             case .sources: SourcesPane()
             case .accounts: AccountsPane()
+            case .devices: DevicesPane()
+            case .profiles: ProfilesPane()
             case .integrations: IntegrationsPane()
             case .advanced: AdvancedPane()
                 }
@@ -218,6 +226,8 @@ struct SettingsResults: View {
         (AccountsModel.name("kitsu"), .accounts), (AccountsModel.name("simkl"), .accounts),
         (AccountsModel.name("trakt"), .accounts), (L.accountsSyncNow, .accounts),
         (L.accountsSignOut, .accounts), (L.settingsPrivacy, .accounts),
+        (L.devicesTitle, .devices), (L.syncTurnOn, .devices), (L.cloudGroup, .devices), (L.rkeyRow, .devices),
+        (L.profilesTitle, .profiles), (L.profilesAdd, .profiles),
         (L.settingsCheckUpdates, updatesPane),
         (L.settingsMpvOptions, .advanced),
     ].filter { SettingsPane.shown.contains($0.pane) }
@@ -273,6 +283,22 @@ struct SettingsTabs: View {
     @Binding var selection: SettingsPane
 
     var body: some View {
+        #if os(iOS)
+        // Eleven panes outgrow an iPad's width: the row scrolls, and its ends fade where more is.
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) { tabs.padding(.horizontal, 16) }
+                .mask(LinearGradient(stops: [
+                    .init(color: .clear, location: 0), .init(color: .black, location: 0.03),
+                    .init(color: .black, location: 0.94), .init(color: .clear, location: 1),
+                ], startPoint: .leading, endPoint: .trailing))
+                .onChange(of: selection) { _, new in withAnimation(.standard) { proxy.scrollTo(new, anchor: .center) } }
+        }
+        #else
+        tabs
+        #endif
+    }
+
+    private var tabs: some View {
         HStack(spacing: 4) {
             ForEach(SettingsPane.shown) { pane in
                 let selected = pane == selection
@@ -282,12 +308,14 @@ struct SettingsTabs: View {
                     Text(pane.title)
                         .font(.mac(13, weight: selected ? .medium : .regular))
                         .foregroundStyle(selected ? .amber : .silk)
+                        .fixedSize()
                         .padding(.horizontal, 12)
                         .frame(height: 28)
                         .background(selected ? Palette.selection : .clear, in: .capsule)
                         .contentShape(.capsule)
                 }
                 .buttonStyle(.plain)
+                .id(pane)
                 .accessibilityAddTraits(selected ? .isSelected : [])
             }
         }
@@ -322,6 +350,10 @@ struct SettingsAside: View {
                 }
             case .accounts:
                 aside(L.navAccounts, L.settingsAsideAccounts)
+            case .devices:
+                aside(L.devicesTitle, L.cloudFoot)
+            case .profiles:
+                aside(L.profilesTitle, L.profilesOneFoot)
             case .integrations:
                 if store.settings.hasPresence { PresencePreview() }
             case .advanced:
@@ -347,6 +379,14 @@ struct SettingsAside: View {
 
 /// What the device is called in a sentence: "this Mac", "this iPad", "this iPhone".
 enum Device {
+    static var isPad: Bool {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom == .pad
+        #else
+        false
+        #endif
+    }
+
     static var name: String {
         #if os(macOS)
         "Mac" // i18n-skip

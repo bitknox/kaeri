@@ -271,6 +271,13 @@ public struct SystemWebSignIn: WebSignIn {
 
     @MainActor
     public func signIn(url: URL, callbackScheme: String) async throws -> URL {
+        try await signIn(url: url, callbackScheme: callbackScheme, shared: false)
+    }
+
+    /// `shared` uses the browser's own session, so a service the person is already signed in to
+    /// asks for one tap (Apple sign-in for a cloud folder).
+    @MainActor
+    public func signIn(url: URL, callbackScheme: String, shared: Bool) async throws -> URL {
         let anchor = PresentationAnchor()
         return try await withCheckedThrowingContinuation { continuation in
             let answer = Once(continuation)
@@ -285,7 +292,7 @@ public struct SystemWebSignIn: WebSignIn {
                     answer.resume(.failure(error ?? ASWebAuthenticationSessionError(.canceledLogin)))
                 }
             }
-            session.prefersEphemeralWebBrowserSession = true
+            session.prefersEphemeralWebBrowserSession = !shared
             session.presentationContextProvider = anchor
             // Held until it answers: the system keeps no session of its own, and one let go of
             // closes its sheet, or never answers at all. Its presentation context is a weak

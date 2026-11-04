@@ -75,6 +75,8 @@ public final class AppStore {
     public let updates = UpdatesModel()
     /// Play on TV: the TVs, pairing, and the card of the one driven.
     public let tv = TVRemoteModel()
+    /// Sync between this person's devices, and the profiles on this one.
+    public let sync = SyncModel()
     /// The watch party this device is in, and the sheets that start one.
     public let party = PartyModel()
     /// The subtitle style before the last reset, for its Undo.
@@ -98,6 +100,9 @@ public final class AppStore {
     @ObservationIgnored public private(set) var artwork: ArtworkStore!
 
     @ObservationIgnored private var client: EngineClient?
+    /// Another profile was chosen: the app stops the engine and starts afresh in it, keeping
+    /// nothing of this profile in memory.
+    @ObservationIgnored public var onProfileSwitch: (@MainActor (String) -> Void)?
     /// When a batch was last applied.
     @ObservationIgnored var lastApplied = ContinuousClock.now
     /// What the screens asked for before the engine was there, sent once it is.
@@ -147,6 +152,7 @@ public final class AppStore {
         continued.send = { [weak self] command in self?.send(command) }
         updates.send = { [weak self] command in self?.send(command) }
         party.send = { [weak self] command in self?.send(command) }
+        sync.send = { [weak self] command in self?.send(command) }
         party.say = { [weak self] notice, player, kind in
             guard let self else { return }
             if party.playerUp() {
@@ -293,11 +299,14 @@ public final class AppStore {
         )
         phase = .running
         attachTV(engine)
+        // Typed-code pairing finds the device showing the code by DNS-SD.
+        engine.setSyncNetwork(network: BonjourSyncNetwork())
         for command in early {
             client?.send(command)
         }
         early = []
         artwork.sendUnsent()
+        sync.load()
     }
 
     /// The engine's sender for Play on TV, browsing the network with Bonjour; in the Fixtures
@@ -854,6 +863,9 @@ public final class AppStore {
     public func apply(_ event: Event) {
         if !held.isEmpty, let kind = event.showcaseKind, held.contains(kind) { return }
         notifications.observe(event)
+        sync.apply(event)
+        if case .syncStatus = event { tv.setRemoteOff(sync.remoteOff) }
+        if case .profileSwitch(let id) = event { onProfileSwitch?(id) }
         answers.deliver([event])
         if case .downloads(let rows) = event { continued.update(rows) }
         if wantsWeek, NotificationsModel.reschedules(after: event) { refreshNotices() }
@@ -982,6 +994,11 @@ public final class AppStore {
             stores.previewed(answer)
         case .storeJoined(let store):
             stores.joined(store)
+        case .syncStoreJoined(_, _, _, _):
+            // The store list arrives with it (`.stores`), and the store shows there as joined.
+            break
+        case .syncStoreJoinFailed(let device, _, let name, let problem):
+            notices.post(Notice(kind: .alert, text: SyncWords.storeProblem(problem, store: name, device: device), hint: nil))
         case .inviteLink(let link):
             stores.invited(link)
         case .demo(let state):

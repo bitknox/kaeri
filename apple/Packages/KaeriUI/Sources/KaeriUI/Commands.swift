@@ -108,6 +108,27 @@ public struct KaeriCommands<Playback: View, PlayerWindowItems: View>: Commands {
             EpisodeCommands(store: store, navigator: navigator)
         }
 
+        // Profile: only with two or more, switching by number.
+        if store.sync.hasProfiles {
+        CommandMenu(L.profilesMenu) {
+            let sync = store.sync
+            ForEach(Array(sync.profiles.prefix(9).enumerated()), id: \.element.id) { index, profile in
+                Button {
+                    if !profile.active { sync.switchProfile(profile.id) }
+                } label: {
+                    if profile.active { Label(profile.name, systemImage: "checkmark") } else { Text(profile.name) }
+                }
+                .keyboardShortcut(KeyEquivalent(Character(String(index + 1))), modifiers: [.control, .command])
+            }
+            Divider()
+            Button(L.profilesAdd + "…") {
+                navigator.openSettings(.profiles)
+                sync.sheet = .profileAdd
+            }
+            Button(L.profilesManage) { navigator.openSettings(.profiles) }
+        }
+        }
+
         CommandMenu(L.sourcesTitle) {
             sectionButton(.providers, "6")
             sectionButton(.pluginStores, "7")
