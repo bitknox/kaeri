@@ -8,7 +8,7 @@ import Pic from '../../components/Pic.astro';
 import matrix from '../../data/matrix.json';
 import small from '../../data/small.json';
 import Page from '../../layouts/Page.astro';
-import { CC, DEMO_PART_2, DOWNLOAD, INSTALL_GUIDE, STORES } from '../../data/site';
+import { CC, DEMO_PART_1, DEMO_PART_2, DOWNLOAD, INSTALL_GUIDE, STORES } from '../../data/site';
 import { localePaths, useSite } from '../../i18n/site';
 
 export const getStaticPaths = localePaths;
@@ -75,16 +75,10 @@ const state = { y: 'available', d: 'development', n: 'none' } as const;
 				<h2 id="found-h">{t('features.found.title')}</h2>
 				<p><span class="lead">{t('features.found.lead')}</span> {t('features.found.text')}</p>
 			</div>
-			<figure class="f-fig f-diagram">
-				<Flow
-					label={t('features.found.diagram')}
-					steps={[
-						{ title: t('features.found.earlier'), text: t('features.found.earlierText') },
-						{ title: t('features.found.episode'), text: t('features.found.episodeText') },
-						{ title: t('features.found.times'), text: t('features.found.timesText') },
-					]}
-					between={[t('features.found.compared'), t('features.found.finds')]}
-				/>
+			<figure class="f-fig">
+				<div class="crop" style="aspect-ratio: 1920 / 900">
+					<Pic name="tv-skip-found" sizes="min(1200px, 100vw)" style="left: 0; top: 0; width: 100%" alt={t('features.found.alt')} />
+				</div>
 				<figcaption>{t('features.found.caption')}</figcaption>
 			</figure>
 		</div>
@@ -96,17 +90,11 @@ const state = { y: 'available', d: 'development', n: 'none' } as const;
 				<h2 id="together-h">{t('features.together.title')}</h2>
 				<p><span class="lead">{t('features.together.lead')}</span> {t('features.together.text')}</p>
 			</div>
-			<figure class="f-fig f-diagram">
-				<Flow
-					label={t('features.together.diagram')}
-					steps={[
-						{ title: t('features.together.you'), text: t('features.together.youText') },
-						{ title: t('features.together.server'), text: t('features.together.serverText') },
-						{ title: t('features.together.friends'), text: t('features.together.friendsText') },
-					]}
-					between={[t('features.together.sends'), t('features.together.keeps')]}
-				/>
-				<figcaption>{t('features.together.caption')}</figcaption>
+			<figure>
+				<div class="crop crop-b" style="aspect-ratio: 2200 / 1080">
+					<Pic name="android-party-chat" sizes="min(1310px, 110vw)" style="left: -4.55%; top: 0; width: 109.1%" alt={t('features.together.alt')} />
+				</div>
+				<figcaption set:html={t('features.together.caption', { source: DEMO_PART_1, licence: CC })} />
 			</figure>
 		</div>
 	</section>
@@ -117,13 +105,10 @@ const state = { y: 'available', d: 'development', n: 'none' } as const;
 				<h2 id="sync-h">{t('features.sync.title')}</h2>
 				<p><span class="lead">{t('features.sync.lead')}</span> {t('features.sync.text')}</p>
 			</div>
-			<figure class="f-fig f-diagram">
-				<Flow
-					label={t('features.sync.diagram')}
-					steps={[{ title: t('features.sync.device'), text: t('features.sync.deviceText') }]}
-					between={[t('features.sync.sealed')]}
-					last={['nearby', 'cloud'].map((id) => ({ title: t(`features.sync.${id}`), text: t(`features.sync.${id}Text`) }))}
-				/>
+			<figure class="f-fig">
+				<div class="crop" style="aspect-ratio: 2110 / 1310">
+					<Pic name="mac-devices" sizes="min(1456px, 122vw)" style="left: -21.33%; top: -14.12%; width: 121.33%" alt={t('features.sync.alt')} />
+				</div>
 				<figcaption>{t('features.sync.caption')}</figcaption>
 			</figure>
 		</div>

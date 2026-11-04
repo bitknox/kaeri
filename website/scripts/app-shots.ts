@@ -67,6 +67,9 @@ const SHOTS: Record<string, Spec> = {
 	'linux-calendar': { from: 'linux-calendar.png', widths: [1270] },
 	'windows-search': { from: 'windows-search.png', widths: [1030] },
 	'tv-search': { from: 'tv-search.png', widths: TV },
+	'tv-skip-found': { from: 'tv-found-review.png', widths: TV },
+	'android-party-chat': { from: 'phone-party-chatreact.png', widths: PHONE_WIDE },
+	'mac-devices': { from: 'mac-devices-sync-on.png', widths: MAC },
 };
 
 const dir = process.argv[2];
