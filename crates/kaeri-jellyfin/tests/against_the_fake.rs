@@ -194,9 +194,10 @@ async fn the_source_lists_episodes_and_plays_one_directly() {
     let server = FakeJellyfin::start().await;
     let source = source(&server).await;
     let key = ProviderKey::new("s-1");
-    let episodes = source.episodes(&key, Translation::Sub).await.unwrap();
+    let episodes = source.episodes(&key, Translation::Sub, &Default::default()).await.unwrap();
     assert_eq!(episodes.len(), 3);
-    let streams = source.resolve(&key, "2", Translation::Sub).await.unwrap();
+    let streams =
+        source.resolve(&key, "2", Translation::Sub, &Default::default()).await.unwrap();
     let stream = &streams[0];
     assert!(stream.url.contains("/Videos/s-1-1-2/stream?static=true"), "{}", stream.url);
     assert!(!stream.url.contains(fake::TOKEN));
@@ -205,7 +206,7 @@ async fn the_source_lists_episodes_and_plays_one_directly() {
     assert!(stream.subtitles[0].url.starts_with("http://127.0.0.1"));
     assert!(stream.headers[0].1.contains("Token="));
     assert_eq!(
-        source.resolve(&key, "9", Translation::Sub).await.unwrap_err(),
+        source.resolve(&key, "9", Translation::Sub, &Default::default()).await.unwrap_err(),
         kaeri_core::error::ProviderError::NotFound
     );
 }
@@ -214,7 +215,7 @@ async fn the_source_lists_episodes_and_plays_one_directly() {
 async fn the_source_finds_a_title_by_name() {
     let server = FakeJellyfin::start().await;
     let source = source(&server).await;
-    let hits = source.search("harbour", Translation::Sub).await.unwrap();
+    let hits = source.search("harbour", Translation::Sub, &Default::default()).await.unwrap();
     assert_eq!(hits.len(), 1);
     assert_eq!(hits[0].title, "Lantern Harbour");
 }

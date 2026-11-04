@@ -253,6 +253,26 @@ pub enum MediaStatus {
     Unknown,
 }
 
+/// What is known about the title being asked for, handed to a source with each search, episode
+/// listing and stream request. Everything is optional: a source may use any of it or none.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct TitleHints {
+    pub anilist_id: Option<crate::ids::AnilistId>,
+    pub romaji: Option<String>,
+    pub english: Option<String>,
+    pub native: Option<String>,
+    pub synonyms: Vec<String>,
+}
+
+impl TitleHints {
+    /// The same hints with the AniList id set, for a caller that knows the id but built the names
+    /// elsewhere.
+    pub fn with_anilist(mut self, id: crate::ids::AnilistId) -> Self {
+        self.anilist_id = Some(id);
+        self
+    }
+}
+
 /// One candidate returned by a provider's search.
 ///
 /// The extra fields beyond `title` exist for scoring, not display: episode count, year

@@ -1050,12 +1050,16 @@ mod tests {
             episode_count: Some(12),
             year: Some(2024),
             format: Some(MediaFormat::Tv),
+            hints: Default::default(),
         };
         let source = unsure_source("http://127.0.0.1:9/art/", &sources::episode_clip());
         let runtime =
             tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
-        let search =
-            |query: &str| runtime.block_on(source.search(query, Translation::Sub)).unwrap();
+        let search = |query: &str| {
+            runtime
+                .block_on(source.search(query, Translation::Sub, &Default::default()))
+                .unwrap()
+        };
 
         let ladder = search("Hoshikuzu no Tabibito");
         let ranked = rank(&target, &ladder);

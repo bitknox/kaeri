@@ -121,6 +121,7 @@ fn rank_media(text: &str, candidates: &[Media]) -> Vec<(Media, bool)> {
         episode_count: None,
         year: None,
         format: None,
+        hints: Default::default(),
     };
     title::rank(&target, &hits)
         .into_iter()

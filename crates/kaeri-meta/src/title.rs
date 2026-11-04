@@ -180,6 +180,9 @@ pub struct MatchTarget {
     pub episode_count: Option<u32>,
     pub year: Option<u16>,
     pub format: Option<MediaFormat>,
+    /// The same names and id as handed to sources, so a source can use them as well as search by
+    /// the first title.
+    pub hints: kaeri_core::media::TitleHints,
 }
 
 /// Confidence floor below which a match is offered for disambiguation instead of used.
@@ -502,6 +505,7 @@ mod tests {
             episode_count: Some(28),
             year: Some(2023),
             format: Some(MediaFormat::Tv),
+            hints: Default::default(),
         };
         let corroborated = vec![SearchHit {
             episode_count: Some(28),

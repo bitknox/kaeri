@@ -256,8 +256,8 @@ mod tests {
                 &target,
                 Translation::Sub,
                 fixtures::FIXTURE_NOW,
-                |source, key| async move {
-                    source.episodes(&key, Translation::Sub, fixtures::FIXTURE_NOW).await
+                |source, key, hints| async move {
+                    source.episodes(&key, Translation::Sub, &hints, fixtures::FIXTURE_NOW).await
                 },
             )
             .await;
@@ -282,8 +282,8 @@ mod tests {
                 &media.match_target(),
                 Translation::Sub,
                 fixtures::FIXTURE_NOW,
-                |source, key| async move {
-                    source.episodes(&key, Translation::Sub, fixtures::FIXTURE_NOW).await
+                |source, key, hints| async move {
+                    source.episodes(&key, Translation::Sub, &hints, fixtures::FIXTURE_NOW).await
                 },
             )
             .await;
@@ -314,7 +314,9 @@ mod tests {
                 &media.match_target(),
                 Translation::Sub,
                 clock.now,
-                |source, key| async move { source.episodes(&key, Translation::Sub, 0).await },
+                |source, key, hints| async move {
+                    source.episodes(&key, Translation::Sub, &hints, 0).await
+                },
             )
             .await;
             let Answer::Answered { key: matched, value, .. } = answer else {
@@ -328,10 +330,12 @@ mod tests {
     #[tokio::test]
     async fn each_title_has_a_stream_and_an_unknown_key_has_none() {
         let registry = registry();
-        let streams = registry.resolve(&key(MOVIE), "1", Translation::Sub, 0).await;
+        let streams =
+            registry.resolve(&key(MOVIE), "1", Translation::Sub, &Default::default(), 0).await;
         assert_eq!(streams.value.expect("a stream")[0].url, clip().url);
-        let unknown =
-            registry.resolve(&ProviderKey::new("nope"), "1", Translation::Sub, 0).await;
+        let unknown = registry
+            .resolve(&ProviderKey::new("nope"), "1", Translation::Sub, &Default::default(), 0)
+            .await;
         assert!(unknown.value.is_none());
     }
 
@@ -340,7 +344,7 @@ mod tests {
         use kaeri_core::traits::Provider;
         let base = "http://127.0.0.1:9/art/";
         let episodes = provider_with_art(base)
-            .episodes(&key(FINISHED), Translation::Sub)
+            .episodes(&key(FINISHED), Translation::Sub, &Default::default())
             .await
             .expect("the finished title's episodes");
         assert_eq!(
@@ -348,7 +352,7 @@ mod tests {
             Some("http://127.0.0.1:9/art/ep/900001/3.jpg")
         );
         let plain = provider()
-            .episodes(&key(FINISHED), Translation::Sub)
+            .episodes(&key(FINISHED), Translation::Sub, &Default::default())
             .await
             .expect("the finished title's episodes");
         assert_eq!(plain[2].thumbnail.as_deref(), Some("https://img.example/ep/900001/3.jpg"));

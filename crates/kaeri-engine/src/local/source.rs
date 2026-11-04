@@ -89,6 +89,7 @@ impl Provider for LocalSource {
         &self,
         query: &str,
         _: Translation,
+        _hints: &kaeri_core::media::TitleHints,
     ) -> Result<Vec<SearchHit>, ProviderError> {
         let needle = query.trim().to_lowercase();
         Ok(self
@@ -124,6 +125,7 @@ impl Provider for LocalSource {
         &self,
         key: &ProviderKey,
         _: Translation,
+        _hints: &kaeri_core::media::TitleHints,
     ) -> Result<Vec<Episode>, ProviderError> {
         let group = self.group(key).ok_or(ProviderError::NotFound)?;
         Ok(labelled(&group)
@@ -137,6 +139,7 @@ impl Provider for LocalSource {
         key: &ProviderKey,
         episode: &str,
         _: Translation,
+        _hints: &kaeri_core::media::TitleHints,
     ) -> Result<Vec<Stream>, ProviderError> {
         let group = self.group(key).ok_or(ProviderError::NotFound)?;
         let (_, path) = labelled(&group)
@@ -182,11 +185,12 @@ mod tests {
         std::fs::write(&file, b"").unwrap();
         let source = LocalSource::new(vec![group(Standing::Matched, file.to_str().unwrap())]);
         let key = ProviderKey::new("g");
-        let streams = source.resolve(&key, "2", Translation::Sub).await.unwrap();
+        let streams =
+            source.resolve(&key, "2", Translation::Sub, &Default::default()).await.unwrap();
         assert_eq!(streams[0].url, file.to_str().unwrap());
         std::fs::remove_file(&file).unwrap();
         assert!(matches!(
-            source.resolve(&key, "2", Translation::Sub).await,
+            source.resolve(&key, "2", Translation::Sub, &Default::default()).await,
             Err(ProviderError::Unavailable(_))
         ));
     }
@@ -200,12 +204,15 @@ mod tests {
         let labels = |eps: Vec<Episode>| {
             eps.into_iter().map(|e| e.number.as_str().to_owned()).collect::<Vec<_>>()
         };
-        assert_eq!(labels(source.episodes(&key, Translation::Sub).await.unwrap()), ["2"]);
+        assert_eq!(
+            labels(source.episodes(&key, Translation::Sub, &Default::default()).await.unwrap()),
+            ["2"]
+        );
         g.files[1] =
             FileEntry { season: Some(0), episode: Some(1), set: true, ..g.files[1].clone() };
         let source = LocalSource::new(vec![g]);
         assert_eq!(
-            labels(source.episodes(&key, Translation::Sub).await.unwrap()),
+            labels(source.episodes(&key, Translation::Sub, &Default::default()).await.unwrap()),
             ["2", "SP1"]
         );
     }

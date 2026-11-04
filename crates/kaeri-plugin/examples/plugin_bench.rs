@@ -52,7 +52,7 @@ async fn main() {
 
         // The first call after loading, which includes instantiating the component.
         let started = Instant::now();
-        let _ = plugin.list_episodes("example:x", "sub").await;
+        let _ = plugin.list_episodes("example:x", "sub", &nothing()).await;
         let first = started.elapsed();
 
         // Steady state. Each call is a fresh store, so this is not a warm-cache figure — it is
@@ -60,7 +60,7 @@ async fn main() {
         const ROUNDS: u32 = 20;
         let started = Instant::now();
         for _ in 0..ROUNDS {
-            let _ = plugin.list_episodes("example:x", "sub").await;
+            let _ = plugin.list_episodes("example:x", "sub", &nothing()).await;
         }
         let per_call = started.elapsed() / ROUNDS;
 
@@ -75,4 +75,15 @@ async fn main() {
         "A fresh store per call is deliberate: it is what stops one search leaking state into"
     );
     println!("the next. Instantiation is therefore part of every call, not a one-off.");
+}
+
+/// No hints: the benchmark measures the call, not what a plugin does with what it is told.
+fn nothing() -> kaeri_plugin::engine::TitleHints {
+    kaeri_plugin::engine::TitleHints {
+        anilist_id: None,
+        romaji: None,
+        english: None,
+        native: None,
+        synonyms: Vec::new(),
+    }
 }

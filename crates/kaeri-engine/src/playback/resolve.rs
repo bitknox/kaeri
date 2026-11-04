@@ -377,8 +377,10 @@ pub async fn resolve_for_playback(
                         playback.translation,
                         now,
                         &walking,
-                        |source, key| async move {
-                            source.resolve(&key, episode, playback.translation, now).await
+                        |source, key, hints| async move {
+                            source
+                                .resolve(&key, episode, playback.translation, &hints, now)
+                                .await
                         },
                     )
                     .await;

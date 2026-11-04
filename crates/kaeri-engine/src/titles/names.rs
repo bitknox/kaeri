@@ -528,8 +528,16 @@ async fn look_up(
             &target,
             Translation::Sub,
             now,
-            |source, key| {
-                super::coverage::listing(source, key, Translation::Sub, (store, id), media, now)
+            |source, key, hints| {
+                super::coverage::listing(
+                    source,
+                    key,
+                    hints,
+                    Translation::Sub,
+                    (store, id),
+                    media,
+                    now,
+                )
             },
         )
         .await;

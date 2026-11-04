@@ -89,7 +89,7 @@ async fn check(
             let Some(source) = registry.pinned(provider_id) else {
                 return Said::CouldNotTell;
             };
-            let attempt = source.search(query, translation, now).await;
+            let attempt = source.search(query, translation, &target.hints, now).await;
             match attempt.value {
                 Some(hits) if hits.is_empty() => Said::HasNot,
                 Some(hits) => {

@@ -22,7 +22,7 @@
 
 use kaeri_core::{
     ids::{AnilistId, ProviderKey},
-    media::{SearchHit, Translation},
+    media::{SearchHit, TitleHints, Translation},
 };
 use kaeri_meta::title::{CONFIDENCE_FLOOR, MatchTarget, Rejection, rank};
 use kaeri_store::{ResolutionRung, Store};
@@ -81,6 +81,11 @@ impl Resolution {
     }
 }
 
+/// What a source is told about a title: the target's names with the AniList id filled in.
+pub fn hints_for(anilist_id: AnilistId, target: &MatchTarget) -> TitleHints {
+    target.hints.clone().with_anilist(anilist_id)
+}
+
 /// Resolve a title against the first usable provider.
 ///
 /// One provider's key, for the callers that work with one source. To ask the whole chain for
@@ -116,7 +121,10 @@ pub async fn resolve(
         return Resolution::NotFound { reason: "no title to search for".into() };
     };
 
-    let attempt = registry.search(query, translation, now).await;
+    // The first title is the query. The id and every other known name go along as hints, so a
+    // source that can use them is not limited to the one spelling.
+    let hints = hints_for(anilist_id, target);
+    let attempt = registry.search(query, translation, &hints, now).await;
     let Some(hits) = attempt.value else {
         let reason = if attempt.failures.is_empty() {
             "no providers available".to_owned()
@@ -224,7 +232,7 @@ async fn match_and_ask<T, F, Fut>(
     ask: &F,
 ) -> Outcome<T>
 where
-    F: Fn(ProviderRegistry, ProviderKey) -> Fut,
+    F: Fn(ProviderRegistry, ProviderKey, TitleHints) -> Fut,
     Fut: std::future::Future<Output = Attempt<T>>,
 {
     let Some(source) = registry.pinned(provider_id) else { return Outcome::Skipped };
@@ -234,7 +242,7 @@ where
         Resolution::Resolved { key, confidence, rung, .. } => {
             tracing::info!(provider = %provider_id, ?rung, confidence, elapsed_ms = ms(began), "title matched");
             let asked = std::time::Instant::now();
-            let attempt = ask(source, key.clone()).await;
+            let attempt = ask(source, key.clone(), hints_for(anilist_id, target)).await;
             let summary = attempt.summary();
             let miss = miss_of(&attempt);
             match attempt.value {
@@ -310,7 +318,7 @@ pub async fn first_answer<T, F, Fut>(
     ask: F,
 ) -> Answer<T>
 where
-    F: Fn(ProviderRegistry, ProviderKey) -> Fut,
+    F: Fn(ProviderRegistry, ProviderKey, TitleHints) -> Fut,
     Fut: std::future::Future<Output = Attempt<T>>,
 {
     first_answer_with(
@@ -516,7 +524,7 @@ pub async fn gather<T, F, Fut>(
 ) -> Gathered<T>
 where
     T: Clone,
-    F: Fn(ProviderRegistry, ProviderKey) -> Fut,
+    F: Fn(ProviderRegistry, ProviderKey, TitleHints) -> Fut,
     Fut: std::future::Future<Output = Attempt<T>>,
 {
     use futures::StreamExt;
@@ -665,7 +673,7 @@ pub async fn survey<T, F, Fut>(
     ask: F,
 ) -> Vec<(String, Surveyed<T>)>
 where
-    F: Fn(ProviderRegistry, ProviderKey) -> Fut,
+    F: Fn(ProviderRegistry, ProviderKey, TitleHints) -> Fut,
     Fut: std::future::Future<Output = Attempt<T>>,
 {
     let ask = &ask;
@@ -734,6 +742,7 @@ mod tests {
             episode_count: Some(28),
             year: Some(2023),
             format: Some(MediaFormat::Tv),
+            hints: Default::default(),
         }
     }
 
@@ -768,6 +777,35 @@ mod tests {
         let cached = store.lookup_mapping(HOSHIKUZU, "torrent").unwrap().unwrap();
         assert_eq!(cached.provider_key.as_str(), "t-1");
         assert_ne!(cached.rung, ResolutionRung::Override, "must stay revisable");
+    }
+
+    #[tokio::test]
+    async fn a_source_is_told_the_id_and_every_known_name_not_only_the_first() {
+        let store = Store::open_in_memory().unwrap();
+        let provider =
+            MockProvider::new("torrent").with_hits(vec![hit("t-1", "Hoshikuzu no Tabibito")]);
+        let seen = provider.hints_seen();
+        let registry = ProviderRegistry::new(vec![provider.arc()]);
+        let target = MatchTarget {
+            titles: vec!["Hoshikuzu no Tabibito".into(), "Stardust Wayfarer".into()],
+            hints: TitleHints {
+                romaji: Some("Hoshikuzu no Tabibito".into()),
+                english: Some("Stardust Wayfarer".into()),
+                synonyms: vec!["Hoshitabi".into()],
+                ..Default::default()
+            },
+            ..target()
+        };
+
+        let r = resolve(&store, &registry, HOSHIKUZU, &target, Translation::Sub, 0).await;
+        assert!(r.key().is_some(), "{r:?}");
+
+        let seen = seen.lock().unwrap();
+        assert_eq!(seen.len(), 1, "one search");
+        assert_eq!(seen[0].anilist_id, Some(HOSHIKUZU));
+        assert_eq!(seen[0].english.as_deref(), Some("Stardust Wayfarer"));
+        assert_eq!(seen[0].romaji.as_deref(), Some("Hoshikuzu no Tabibito"));
+        assert_eq!(seen[0].synonyms, ["Hoshitabi"]);
     }
 
     #[tokio::test]
@@ -970,6 +1008,7 @@ mod tests {
             episode_count: Some(12),
             year: Some(2024),
             format: Some(MediaFormat::Tv),
+            hints: Default::default(),
         }
     }
 
@@ -995,7 +1034,9 @@ mod tests {
             &wanderer(),
             Translation::Sub,
             0,
-            |source, key| async move { source.resolve(&key, "1", Translation::Sub, 0).await },
+            |source, key, hints| async move {
+                source.resolve(&key, "1", Translation::Sub, &hints, 0).await
+            },
         )
         .await
     }
@@ -1103,7 +1144,9 @@ mod tests {
             &wanderer(),
             Translation::Sub,
             0,
-            |source, key| async move { source.episodes(&key, Translation::Sub, 0).await },
+            |source, key, hints| async move {
+                source.episodes(&key, Translation::Sub, &hints, 0).await
+            },
             |answers| {
                 let have: std::collections::BTreeSet<_> = answers
                     .iter()
