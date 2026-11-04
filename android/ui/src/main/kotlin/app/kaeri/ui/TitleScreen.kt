@@ -866,7 +866,7 @@ private fun SeasonPage(
             }
             val related = entry.relatedCards()
             if (related.isNotEmpty()) item(key = "related", contentType = "related") { Box(itemMotion()) { RelatedRail(related) } }
-            episodeRows(entry, episodes, actions, unfolded = entry.id in unfolded, onFold = fold, wait = !ahead, dub = dubs[entry.id]?.line(context), page = synopses)
+            episodeRows(list, inset + 64.dp, entry, episodes, actions, unfolded = entry.id in unfolded, onFold = fold, wait = !ahead, dub = dubs[entry.id]?.line(context), page = synopses)
         }
     }
 }
@@ -1719,7 +1719,11 @@ private fun Seasons(
  * The episodes, a row each, from the last one watched, the watched ones before it folded under
  * one row; plates in their place while the table loads.
  */
+@OptIn(ExperimentalFoundationApi::class)
 private fun LazyListScope.episodeRows(
+    list: LazyListState,
+    /** How far under the top the range row pins: the status bar and the floating bar's 64 dp. */
+    pinnedBelow: Dp,
     entry: Entry,
     episodes: List<EpisodeRow>?,
     actions: AppActions,
@@ -1751,8 +1755,19 @@ private fun LazyListScope.episodeRows(
     val folded = page.folded(entry)
     val rangeDub = if (ranged) null else dub
     if (ranged) {
-        item(key = "range-row", contentType = "range-row") {
-            Box(itemMotion()) { RangeRow(listed, page.ranges, page.selected, page.pick, dub, onGoTo = page.openGoTo) }
+        // The range row pins under the floating bar while the rows of its range scroll, so the
+        // chip stays in view after Go to lands far into a range.
+        stickyHeader(key = "range-row", contentType = "range-row") {
+            val stuck by remember(list) {
+                derivedStateOf {
+                    val at = list.layoutInfo.visibleItemsInfo.firstOrNull { it.key == "range-row" }?.index
+                    at != null && (list.firstVisibleItemIndex > at || (list.firstVisibleItemIndex == at && list.firstVisibleItemScrollOffset > 0))
+                }
+            }
+            Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface)) {
+                if (stuck) Spacer(Modifier.height(pinnedBelow))
+                Box(itemMotion()) { RangeRow(listed, page.ranges, page.selected, page.pick, dub, onGoTo = page.openGoTo) }
+            }
         }
     }
     if (folded.isNotEmpty()) {
