@@ -63,3 +63,7 @@ pair-done-action = Done
 # Name for the device whose pairing code did not match, when no name is known yet.
 # @only linux
 pair-other-device = your other { -device }
+
+# Note under the Enter a code dialog's fields: the address can be left empty.
+# @only linux
+pair-address-optional = Leave the address empty and { -app-name } looks for the { -device } on this network.

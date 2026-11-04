@@ -42,4 +42,4 @@ list.boxed-list, .boxed-list > row, .corner-card, popover > contents {
 .mark.ring { box-shadow: inset 0 0 0 2px var(--haze); }
 
 .key-card { border-color: var(--edge); }
-.tag-pill { border: 1px solid var(--edge); }
+.tag-pill, .step-pill { border: 1px solid var(--edge); }

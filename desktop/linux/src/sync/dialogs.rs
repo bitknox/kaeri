@@ -12,7 +12,10 @@ use kaeri_i18n::t;
 use kaeri_model::{
     command::Command,
     event::Event,
-    group::{SyncDeviceView, SyncFolderKind, SyncFolderSpec, SyncProblem, SyncSignInStep},
+    group::{
+        SyncCommand, SyncCopy, SyncDeviceView, SyncFolderKind, SyncFolderSpec, SyncPairProblem,
+        SyncProblem, SyncSignInStep,
+    },
     stores::Secret,
 };
 
@@ -26,16 +29,41 @@ pub enum Origin {
     FirstLaunch,
 }
 
+/// A dialog's title in its header bar. A new title crossfades in over the old one, as the
+/// content below it does, in place of swapping at once.
+#[derive(Clone)]
+struct Title(gtk::Stack);
+
+impl Title {
+    fn new(text: &str) -> Self {
+        let stack = gtk::Stack::new();
+        stack.set_transition_type(gtk::StackTransitionType::Crossfade);
+        stack.set_transition_duration(200);
+        stack.set_hhomogeneous(false);
+        let this = Self(stack);
+        this.set_title(text);
+        this
+    }
+
+    fn set_title(&self, text: &str) {
+        if self.0.child_by_name(text).is_none() {
+            self.0.add_named(&adw::WindowTitle::new(text, ""), Some(text));
+        }
+        self.0.set_visible_child_name(text);
+    }
+}
+
 #[derive(Clone)]
 struct Picker {
     dialog: adw::Dialog,
     stack: gtk::Stack,
-    title: adw::WindowTitle,
+    title: Title,
     error: gtk::Label,
     wait_title: gtk::Label,
     wait_line: gtk::Label,
     open_again: gtk::Button,
     nc_error: gtk::Label,
+    dav_error: gtk::Label,
     nc_host: Rc<RefCell<String>>,
 }
 
@@ -48,6 +76,8 @@ struct Pair {
     qr: gtk::DrawingArea,
     address: gtk::Label,
     paired_title: gtk::Label,
+    copy_slot: gtk::Box,
+    origin: Origin,
     started_with: usize,
 }
 
@@ -58,6 +88,7 @@ struct Enter {
     error: gtk::Label,
     pair: gtk::Button,
     paired_title: gtk::Label,
+    copy_slot: gtk::Box,
     working: Rc<std::cell::Cell<bool>>,
 }
 
@@ -78,6 +109,9 @@ struct Ui {
     setting_up: bool,
     name: Option<String>,
     last: Option<SyncFolderKind>,
+    /// The sheet already said why pairing failed, in words of its own: the problem that follows
+    /// says the same and stays quiet.
+    pair_said: bool,
 }
 
 thread_local! {
@@ -116,12 +150,12 @@ fn frame(
     title: &str,
     width: i32,
     body: &impl IsA<gtk::Widget>,
-) -> (adw::Dialog, adw::HeaderBar, adw::WindowTitle) {
+) -> (adw::Dialog, adw::HeaderBar, Title) {
     let header = adw::HeaderBar::new();
     header.set_show_start_title_buttons(false);
     header.set_show_end_title_buttons(false);
-    let name = adw::WindowTitle::new(title, "");
-    header.set_title_widget(Some(&name));
+    let name = Title::new(title);
+    header.set_title_widget(Some(&name.0));
     let view = adw::ToolbarView::new();
     view.add_top_bar(&header);
     view.set_content(Some(body));
@@ -148,6 +182,7 @@ fn note(text: &str) -> gtk::Label {
     l.add_css_class("haze");
     l.add_css_class("caption");
     l.set_wrap(true);
+    l.set_max_width_chars(64);
     l.set_xalign(0.0);
     l
 }
@@ -156,6 +191,7 @@ fn line(text: &str) -> gtk::Label {
     let l = gtk::Label::new(Some(text));
     l.add_css_class("haze");
     l.set_wrap(true);
+    l.set_max_width_chars(52);
     l.set_xalign(0.0);
     l
 }
@@ -470,6 +506,7 @@ fn present_picker(ctx: &Rc<Ctx>, page: &str) -> Picker {
             b.set_visible(false);
         }
     });
+    nc.append(&step_pill(&stack, &service_name(&SyncFolderKind::Nextcloud)));
     nc.append(&nc_error);
     nc.append(&nc_group);
     nc.append(&nc_note);
@@ -540,6 +577,7 @@ fn present_picker(ctx: &Rc<Ctx>, page: &str) -> Picker {
             ctx.hub.send(Command::StartSync { device_name: typed_device_name(), folder: spec });
         }
     });
+    dav.append(&step_pill(&stack, &t::cloud_webdav()));
     dav.append(&dav_error);
     dav.append(&dav_group);
     dav.append(&dav_connect);
@@ -560,9 +598,9 @@ fn present_picker(ctx: &Rc<Ctx>, page: &str) -> Picker {
         wait_line,
         open_again,
         nc_error: nc_error.clone(),
+        dav_error,
         nc_host: nc_host.clone(),
     };
-    let _ = (dav_error,);
     cancel.connect_clicked({
         let (p, ctx) = (picker.clone(), Rc::downgrade(ctx));
         move |_| {
@@ -580,15 +618,17 @@ fn present_picker(ctx: &Rc<Ctx>, page: &str) -> Picker {
         }
     });
     // Back to the list from the forms.
-    stack.connect_visible_child_name_notify({
+    let retitle = {
         let title = title.clone();
-        move |s| match s.visible_child_name().as_deref() {
+        move |s: &gtk::Stack| match s.visible_child_name().as_deref() {
             Some("list") => title.set_title(&t::cloud_pick_title()),
             Some("nextcloud") => title.set_title("Nextcloud"), // i18n-skip
             Some("webdav") => title.set_title(&t::cloud_webdav()),
             _ => {}
         }
-    });
+    };
+    retitle(&stack);
+    stack.connect_visible_child_name_notify(retitle);
     dialog.connect_closed(|_| with(|u| u.picker = None));
     with(|u| u.picker = Some(picker.clone()));
     present(ctx, &dialog);
@@ -601,6 +641,20 @@ fn line_centered() -> gtk::Label {
     l.set_xalign(0.5);
     l.set_max_width_chars(44);
     l
+}
+
+/// The pill at the top of a form page: the service this step is for, with a way back to the list.
+fn step_pill(stack: &gtk::Stack, name: &str) -> gtk::Button {
+    let content = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+    content.append(&gtk::Image::from_icon_name("go-previous-symbolic")); // i18n-skip
+    content.append(&gtk::Label::new(Some(name)));
+    let pill = gtk::Button::builder().child(&content).halign(gtk::Align::Start).build();
+    pill.add_css_class("step-pill");
+    pill.connect_clicked({
+        let stack = stack.clone();
+        move |_| stack.set_visible_child_name("list")
+    });
+    pill
 }
 
 fn host_of(typed: &str) -> String {
@@ -764,6 +818,16 @@ pub fn show_key_again(ctx: &Rc<Ctx>) {
     });
 }
 
+/// Make a new recovery key, after the account password where polkit is there to ask.
+pub fn make_new_key(ctx: &Rc<Ctx>) {
+    let ctx = Rc::downgrade(ctx);
+    super::lock::ask(move || {
+        if let Some(ctx) = ctx.upgrade() {
+            ctx.hub.send(Command::NewRecoveryKey);
+        }
+    });
+}
+
 /// Restore: a folder that holds history asks for its recovery key.
 pub fn restore(ctx: &Rc<Ctx>, service: &SyncFolderKind) {
     if let Some(r) = with(|u| u.restore.take()) {
@@ -878,7 +942,6 @@ pub fn present_pair_show(ctx: &Rc<Ctx>, origin: Origin) {
     showing.append(&address);
     stack.add_named(&showing, Some("showing"));
     let ok = column();
-    ok.set_halign(gtk::Align::Center);
     let paired_title = gtk::Label::new(None);
     paired_title.add_css_class("title-3");
     ok.append(&paired_title);
@@ -891,6 +954,12 @@ pub fn present_pair_show(ctx: &Rc<Ctx>, origin: Origin) {
         });
         l
     });
+    let copy_slot = column();
+    copy_slot.set_margin_top(0);
+    copy_slot.set_margin_bottom(0);
+    copy_slot.set_margin_start(0);
+    copy_slot.set_margin_end(0);
+    ok.append(&copy_slot);
     stack.add_named(&ok, Some("paired"));
     let (dialog, header, _) = frame(&t::devices_add(), 440, &stack);
     let done = button(&t::action_done(), Some("suggested-action"));
@@ -911,6 +980,8 @@ pub fn present_pair_show(ctx: &Rc<Ctx>, origin: Origin) {
         qr,
         address,
         paired_title,
+        copy_slot,
+        origin,
         started_with,
     };
     dialog.connect_closed({
@@ -918,9 +989,8 @@ pub fn present_pair_show(ctx: &Rc<Ctx>, origin: Origin) {
         move |_| {
             with(|u| u.pair = None);
             if let Some(ctx) = ctx.upgrade() {
-                if ctx.hub.known.borrow().invite.is_some() {
-                    ctx.hub.send(Command::PairStop);
-                }
+                // Always: a device that stays advertised lists after its code has run out.
+                ctx.hub.send(Command::PairStop);
                 ctx.hub.known.borrow_mut().invite = None;
             }
         }
@@ -977,24 +1047,98 @@ fn refresh_pair(ctx: &Rc<Ctx>, p: &Pair) {
     }
 }
 
-/// A pairing finished: the dialog's content crossfades to the success.
-fn paired(device: &str) {
+/// A pairing finished: the dialog's content crossfades to the success, with the Copy sign-ins
+/// switch when the other device holds sign-ins this one could take.
+fn paired(ctx: &Rc<Ctx>, device: &str) {
+    let other =
+        ctx.hub.known.borrow().sync_group.as_ref().and_then(|s| {
+            s.devices.iter().find(|d| !d.this_device && d.name == device).cloned()
+        });
     if let Some(p) = with(|u| u.pair.clone()) {
         p.paired_title.set_label(&t::pair_ok(device));
+        // First launch asks for them from the start; adding from Devices leaves them off.
+        fill_copy(ctx, &p.copy_slot, other.as_ref(), p.origin == Origin::FirstLaunch);
         p.stack.set_visible_child_name("paired");
     }
     if let Some(e) = with(|u| u.enter.clone()) {
         e.paired_title.set_label(&t::pair_ok(device));
+        fill_copy(ctx, &e.copy_slot, other.as_ref(), false);
         e.stack.set_visible_child_name("paired");
         e.working.set(false);
     }
+}
+
+fn fill_copy(ctx: &Rc<Ctx>, slot: &gtk::Box, device: Option<&SyncDeviceView>, on: bool) {
+    // Filled once: the engine says the group again while the success shows.
+    if slot.first_child().is_some() {
+        return;
+    }
+    if let Some(device) = device
+        && let Some(row) = copy_switch(ctx, device, on)
+    {
+        let group = adw::PreferencesGroup::new();
+        group.add(&row);
+        slot.append(&group);
+    }
+}
+
+/// The name a tracker or cloud sign-in goes by.
+fn sign_in_name(id: &str) -> String {
+    match id {
+        "anilist" => "AniList", // i18n-skip
+        "mal" => "MyAnimeList", // i18n-skip
+        "simkl" => "Simkl",     // i18n-skip
+        "trakt" => "Trakt",     // i18n-skip
+        other => other,
+    }
+    .to_owned()
+}
+
+/// What `device` holds sign-ins for, as a list a person reads.
+fn sign_in_names(device: &SyncDeviceView) -> String {
+    let mut names: Vec<String> = device.trackers.iter().map(|id| sign_in_name(id)).collect();
+    names.extend(device.sign_ins.iter().map(service_name));
+    names.join(", ")
+}
+
+/// The Copy sign-ins switch for `device`, when it holds sign-ins. `on` is where it starts when
+/// nothing was asked of the device yet.
+pub fn copy_switch(ctx: &Rc<Ctx>, device: &SyncDeviceView, on: bool) -> Option<adw::SwitchRow> {
+    if device.trackers.is_empty() && device.sign_ins.is_empty() {
+        return None;
+    }
+    let row = adw::SwitchRow::builder()
+        .title(glib::markup_escape_text(&t::pair_copy_signins(&device.name)))
+        .subtitle(glib::markup_escape_text(&t::pair_copy_signins_line(&sign_in_names(device))))
+        .active(on || !device.asked.is_empty())
+        .build();
+    let (hub, id) = (Rc::downgrade(&ctx.hub), device.id.clone());
+    let mut copy = vec![SyncCopy::Trackers];
+    copy.extend(device.sign_ins.iter().cloned().map(|service| SyncCopy::Cloud { service }));
+    let ask = {
+        let (hub, id, copy) = (hub.clone(), id.clone(), copy.clone());
+        move |on: bool| {
+            if let Some(hub) = hub.upgrade() {
+                hub.send(Command::SyncGroup(SyncCommand::CopySignIns {
+                    device: Some(id.clone()),
+                    copy: if on { copy.clone() } else { Vec::new() },
+                    address: None,
+                }));
+            }
+        }
+    };
+    if on && device.asked.is_empty() {
+        ask(true);
+    }
+    row.connect_active_notify(move |r| ask(r.is_active()));
+    Some(row)
 }
 
 /// For a shot: the paired success on the showing side.
 #[cfg(feature = "fixtures")]
 pub fn pair_show_paired(ctx: &Rc<Ctx>, device: &str, origin: Origin) {
     present_pair_show(ctx, origin);
-    paired(device);
+    paired(ctx, device);
 }
 
 /// Add a device by entering the code the other one shows.
@@ -1016,12 +1160,12 @@ pub fn pair_enter(ctx: &Rc<Ctx>) {
     let error = error_label();
     body.append(&error);
     body.append(&note(&t::pair_same_wifi()));
+    body.append(&note(&t::pair_address_optional()));
     let show = button(&t::pair_show_instead(), Some("flat"));
     show.set_halign(gtk::Align::Start);
     body.append(&show);
     stack.add_named(&body, Some("entering"));
     let ok = column();
-    ok.set_halign(gtk::Align::Center);
     let paired_title = gtk::Label::new(None);
     paired_title.add_css_class("title-3");
     ok.append(&paired_title);
@@ -1030,6 +1174,12 @@ pub fn pair_enter(ctx: &Rc<Ctx>) {
         l.set_label(&t::pair_ok_line());
         l
     });
+    let copy_slot_enter = column();
+    copy_slot_enter.set_margin_top(0);
+    copy_slot_enter.set_margin_bottom(0);
+    copy_slot_enter.set_margin_start(0);
+    copy_slot_enter.set_margin_end(0);
+    ok.append(&copy_slot_enter);
     stack.add_named(&ok, Some("paired"));
     let (dialog, header, _) = frame(&t::devices_add(), 440, &stack);
     let cancel = button(&t::action_cancel(), None);
@@ -1038,14 +1188,13 @@ pub fn pair_enter(ctx: &Rc<Ctx>) {
     header.pack_start(&cancel);
     header.pack_end(&pair);
     let check = {
-        let (code, address, pair) = (code.clone(), address.clone(), pair.clone());
+        let (code, pair) = (code.clone(), pair.clone());
         move |_: &adw::EntryRow| {
             let digits = code.text().chars().filter(char::is_ascii_digit).count();
-            pair.set_sensitive(digits == 6 && !address.text().trim().is_empty());
+            pair.set_sensitive(digits == 6);
         }
     };
-    code.connect_changed(check.clone());
-    address.connect_changed(check);
+    code.connect_changed(check);
     cancel.connect_clicked({
         let d = dialog.clone();
         move |_| {
@@ -1072,15 +1221,30 @@ pub fn pair_enter(ctx: &Rc<Ctx>) {
             working.set(true);
             b.set_label(&t::pair_working_line());
             b.set_sensitive(false);
-            ctx.hub.send(Command::PairJoin {
-                device_name: typed_device_name(),
-                address: address.text().trim().to_owned(),
-                code: code.text().chars().filter(char::is_ascii_digit).collect(),
+            with(|u| u.pair_said = false);
+            let code: String = code.text().chars().filter(char::is_ascii_digit).collect();
+            let address = address.text().trim().to_owned();
+            // Without an address the engine finds the device showing the code on the network.
+            ctx.hub.send(if address.is_empty() {
+                Command::SyncGroup(SyncCommand::PairWithCode {
+                    device_name: typed_device_name(),
+                    code,
+                })
+            } else {
+                Command::PairJoin { device_name: typed_device_name(), address, code }
             });
         }
     });
     dialog.connect_closed(|_| with(|u| u.enter = None));
-    let enter = Enter { dialog: dialog.clone(), stack, error, pair, paired_title, working };
+    let enter = Enter {
+        dialog: dialog.clone(),
+        stack,
+        error,
+        pair,
+        paired_title,
+        copy_slot: copy_slot_enter,
+        working,
+    };
     with(|u| u.enter = Some(enter));
     present(ctx, &dialog);
 }
@@ -1145,8 +1309,8 @@ pub fn turn_off(ctx: &Rc<Ctx>) {
     );
 }
 
-/// Switching a device off removes it, after asking; the switch goes back on if not.
-pub fn remove_device(ctx: &Rc<Ctx>, device: &SyncDeviceView, switch: gtk::Switch) {
+/// Remove a device from the group, after asking.
+pub fn remove_device(ctx: &Rc<Ctx>, device: &SyncDeviceView, cancelled: impl Fn() + 'static) {
     let (hub, id) = (Rc::downgrade(&ctx.hub), device.id.clone());
     alert(
         ctx,
@@ -1158,8 +1322,105 @@ pub fn remove_device(ctx: &Rc<Ctx>, device: &SyncDeviceView, switch: gtk::Switch
                 hub.send(Command::RemoveSyncDevice { device: id.clone() });
             }
         },
-        move || switch.set_active(true),
+        cancelled,
     );
+}
+
+/// One device's page: its Sync switch, its Remote switch when it and this device are a TV and a
+/// device that drives TVs, Copy sign-ins, and Remove this device.
+pub fn device_page(ctx: &Rc<Ctx>, device: &SyncDeviceView) {
+    let body = column();
+    let group = adw::PreferencesGroup::new();
+    let send = |ctx: &Rc<Ctx>, command: SyncCommand| ctx.hub.send(Command::SyncGroup(command));
+    let sync = adw::SwitchRow::builder()
+        .title(t::devices_sync_switch())
+        .active(!device.paused)
+        .build();
+    sync.connect_active_notify({
+        let (ctx, id) = (Rc::downgrade(ctx), device.id.clone());
+        move |row| {
+            if let Some(ctx) = ctx.upgrade() {
+                send(
+                    &ctx,
+                    SyncCommand::SetDeviceSync { device: id.clone(), on: row.is_active() },
+                );
+            }
+        }
+    });
+    group.add(&sync);
+    // Only for a pair that is a TV and a device that drives TVs.
+    if device.remote_key.is_some() {
+        let remote = adw::SwitchRow::builder()
+            .title(t::devices_remote_switch())
+            .active(!device.remote_off)
+            .build();
+        remote.connect_active_notify({
+            let (ctx, id) = (Rc::downgrade(ctx), device.id.clone());
+            move |row| {
+                if let Some(ctx) = ctx.upgrade() {
+                    send(
+                        &ctx,
+                        SyncCommand::SetDeviceRemote {
+                            device: id.clone(),
+                            on: row.is_active(),
+                        },
+                    );
+                }
+            }
+        });
+        group.add(&remote);
+    }
+    body.append(&group);
+    body.append(&note(&t::devices_switches_foot(&device.name)));
+    if let Some(row) = copy_switch(ctx, device, false) {
+        let copy = adw::PreferencesGroup::new();
+        copy.add(&row);
+        body.append(&copy);
+    }
+    let remove = button(&t::devices_remove(), Some("destructive-action"));
+    remove.set_halign(gtk::Align::Start);
+    body.append(&remove);
+    let (dialog, header, _) = frame(&device.name, 440, &body);
+    let done = button(&t::action_done(), Some("suggested-action"));
+    header.pack_end(&done);
+    done.connect_clicked({
+        let d = dialog.clone();
+        move |_| {
+            d.close();
+        }
+    });
+    remove.connect_clicked({
+        let (ctx, device, d) = (Rc::downgrade(ctx), device.clone(), dialog.clone());
+        move |_| {
+            if let Some(ctx) = ctx.upgrade() {
+                d.close();
+                remove_device(&ctx, &device, || {});
+            }
+        }
+    });
+    present(ctx, &dialog);
+}
+
+/// Mark a kept watch unwatched after all, and let the note go.
+pub fn undo_note(ctx: &Rc<Ctx>, id: i64, anilist_id: u32, episode: &str) {
+    ctx.hub.send(Command::SetWatched {
+        id: kaeri_core::ids::AnilistId::new(anilist_id),
+        episodes: vec![episode.to_owned()],
+        watched: false,
+    });
+    ctx.hub.send(Command::DismissSyncNote { id });
+}
+
+/// This device's new name, said to the group (or kept for the next pairing while sync is off).
+/// The Play on TV sender takes it the next time it starts.
+pub fn rename(ctx: &Rc<Ctx>, name: &str) {
+    let name = name.trim();
+    if name.is_empty() {
+        return;
+    }
+    set_device_name(name);
+    ctx.prefs.set_device_name(name);
+    ctx.hub.send(Command::SyncGroup(SyncCommand::RenameDevice { name: name.to_owned() }));
 }
 
 // ---------------------------------------------------------------- events
@@ -1238,12 +1499,15 @@ fn heard(ctx: &Rc<Ctx>, event: &Event) {
                 _ => {
                     if let Some(e) = with(|u| u.enter.clone()) {
                         e.working.set(false);
+                        let said = with(|u| std::mem::take(&mut u.pair_said));
                         let shown = match problem {
                             SyncProblem::Unreachable => t::pair_err_not_found(),
                             SyncProblem::Other(_) => t::pair_err_code(&t::pair_other_device()),
                             _ => text.clone(),
                         };
-                        say_error(&e.error, Some(&shown));
+                        if !said {
+                            say_error(&e.error, Some(&shown));
+                        }
                         e.pair.set_label(&t::pair_button());
                         e.pair.set_sensitive(true);
                     }
@@ -1251,6 +1515,9 @@ fn heard(ctx: &Rc<Ctx>, event: &Event) {
                         match service {
                             Some(SyncFolderKind::Nextcloud) => {
                                 say_error(&p.nc_error, Some(&text))
+                            }
+                            Some(SyncFolderKind::WebDav) => {
+                                say_error(&p.dav_error, Some(&text))
                             }
                             _ => say_error(&p.error, Some(&text)),
                         }
@@ -1273,11 +1540,26 @@ fn heard(ctx: &Rc<Ctx>, event: &Event) {
                 && status.devices.len() > p.started_with
                 && let Some(other) = status.devices.iter().rev().find(|d| !d.this_device)
             {
-                paired(&other.name);
+                paired(ctx, &other.name);
             } else if with(|u| u.enter.as_ref().is_some_and(|e| e.working.get()))
                 && let Some(other) = status.devices.iter().rev().find(|d| !d.this_device)
             {
-                paired(&other.name);
+                paired(ctx, &other.name);
+            }
+        }
+        Event::SyncPairFailed { problem, device } => {
+            if let Some(e) = with(|u| u.enter.clone()) {
+                let text = match problem {
+                    SyncPairProblem::WrongCode => {
+                        t::pair_err_code(&device.clone().unwrap_or_else(t::pair_other_device))
+                    }
+                    SyncPairProblem::NotFound => t::pair_err_not_found(),
+                };
+                e.working.set(false);
+                say_error(&e.error, Some(&text));
+                e.pair.set_label(&t::pair_button());
+                e.pair.set_sensitive(true);
+                with(|u| u.pair_said = true);
             }
         }
         Event::SyncInvite { .. } => {

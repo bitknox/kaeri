@@ -13,9 +13,9 @@ Kaeri                                                  plugins ●  ·  anilist 
    │    Google Drive                Synced 4 min ago
    │    Sign out                    kim@mail.example
    │    Recovery key                Made 4 October
+   │    Make a new key
    │
    │    Turn off sync on this computer
-   │
    │
    │
    │
@@ -37,8 +37,8 @@ r02 c06-16 fg=text
 r02 c19-76 fg=rule
 r03 c01-01 fg=text-dim
 r03 c03-03 fg=rule
-r03 c08-11 fg=text-dim
-r03 c36-47 fg=text
+r03 c08-11 fg=text
+r03 c36-47 fg=text-dim
 r04 c01-01 fg=text-dim
 r04 c03-03 fg=rule
 r05 c01-01 fg=text-dim
@@ -77,9 +77,10 @@ r14 c03-03 fg=rule
 r14 c08-19 fg=text
 r14 c36-49 fg=text-dim
 r15 c03-03 fg=rule
+r15 c08-21 fg=text
 r16 c03-03 fg=rule
-r16 c08-37 fg=text
 r17 c03-03 fg=rule
+r17 c08-37 fg=text
 r18 c03-03 fg=rule
 r19 c03-03 fg=rule
 r20 c03-03 fg=rule

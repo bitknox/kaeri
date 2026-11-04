@@ -2290,6 +2290,11 @@ pub fn pair_other_device() -> String {
     text("pair-other-device", &[])
 }
 
+/// Note under the Enter a code dialog's fields: the address can be left empty.
+pub fn pair_address_optional() -> String {
+    text("pair-address-optional", &[])
+}
+
 /// Under a release in the source picker: how many people share it right now.
 pub fn source_picker_seeders_linux(count: i64) -> String {
     text("source-picker-seeders-linux", &[("count", Arg::Int(count))])

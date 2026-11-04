@@ -46,10 +46,12 @@ pub enum Field {
     PairAddress,
     /// A new profile's name.
     ProfileName,
+    /// This device's name in the group.
+    DeviceName,
 }
 
 impl Field {
-    pub const ALL: [Self; 18] = [
+    pub const ALL: [Self; 19] = [
         Self::Search,
         Self::Palette,
         Self::ManualQuery,
@@ -68,6 +70,7 @@ impl Field {
         Self::PairCode,
         Self::PairAddress,
         Self::ProfileName,
+        Self::DeviceName,
     ];
 
     /// Whether `ch` goes into this field as it stands: a field that takes only some of what
@@ -86,6 +89,7 @@ impl Field {
             Self::RecoveryKey => ch.is_ascii_alphanumeric() || ch == ' ' || ch == '-',
             Self::PairAddress => !ch.is_whitespace(),
             Self::ProfileName => field.len() < 40,
+            Self::DeviceName => field.len() < 64,
             _ => true,
         }
     }
@@ -185,6 +189,7 @@ impl App {
             Some(Overlay::SyncPairCode) => Field::PairCode,
             Some(Overlay::SyncPairAddress) => Field::PairAddress,
             Some(Overlay::ProfileName) => Field::ProfileName,
+            Some(Overlay::SyncName) => Field::DeviceName,
             _ if self.nav.section() == Section::Search => Field::Search,
             _ => return None,
         })

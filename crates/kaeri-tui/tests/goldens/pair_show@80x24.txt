@@ -13,9 +13,9 @@ Kaeri                                                  plugins ●  ·  anilist 
   Both devices need to be on the same Wi-Fi.
 
    │    Recovery key                Made 4 October
+   │    Make a new key
    │
    │    Turn off sync on this computer
-   │
    │
    │
    │  ────────────────────────────────────────────────────────────────────────

@@ -14,8 +14,8 @@ Kaeri                                                  plugins ●  ·  anilist 
   Copied                                                                   c
   Show as QR code                                                          v
 
-   │    Turn off sync on this computer
    │
+   │    Turn off sync on this computer
    │
    │
    │

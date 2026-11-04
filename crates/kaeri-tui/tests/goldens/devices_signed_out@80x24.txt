@@ -14,9 +14,9 @@ Kaeri                                                  plugins ●  ·  anilist 
    │    Google Drive signed Kaeri out. Your changes wait on this computer
    │    until you sign in again.
    │    Recovery key                Made 4 October
+   │    Make a new key
    │
    │    Turn off sync on this computer
-   │
    │  ────────────────────────────────────────────────────────────────────────
    │    Fills in while your devices are apart, and keeps a sealed backup.
    │    Only your devices can read it.
@@ -37,8 +37,8 @@ r02 c06-16 fg=text
 r02 c19-76 fg=rule
 r03 c01-01 fg=text-dim
 r03 c03-03 fg=rule
-r03 c08-11 fg=text-dim
-r03 c36-47 fg=text
+r03 c08-11 fg=text
+r03 c36-47 fg=text-dim
 r04 c01-01 fg=text-dim
 r04 c03-03 fg=rule
 r05 c01-01 fg=text-dim
@@ -78,9 +78,10 @@ r15 c03-03 fg=rule
 r15 c08-19 fg=text
 r15 c36-49 fg=text-dim
 r16 c03-03 fg=rule
+r16 c08-21 fg=text
 r17 c03-03 fg=rule
-r17 c08-37 fg=text
 r18 c03-03 fg=rule
+r18 c08-37 fg=text
 r19 c03-03 fg=rule
 r19 c06-77 fg=rule
 r20 c03-03 fg=rule

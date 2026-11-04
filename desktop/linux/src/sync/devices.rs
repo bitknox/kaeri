@@ -9,7 +9,7 @@ use gtk::glib;
 use kaeri_i18n::t;
 use kaeri_model::{
     command::Command,
-    group::{SyncDeviceView, SyncStatus},
+    group::{SyncCommand, SyncDeviceKind, SyncDeviceView, SyncStatus},
 };
 
 use super::{CloudState, Mark, ProblemFix, dialogs};
@@ -25,6 +25,9 @@ pub fn fill(ctx: &Rc<Ctx>, page: &adw::PreferencesPage) {
     page.add(&this_device(ctx, &status));
     if status.enabled {
         page.add(&your_devices(ctx, &status));
+        if let Some(group) = sync_notes(ctx, &status) {
+            page.add(&group);
+        }
         page.add(&cloud_folder(ctx, &status));
         if let Some(group) = recovery_and_off(ctx, &status) {
             page.add(&group);
@@ -68,11 +71,36 @@ fn this_device(ctx: &Rc<Ctx>, status: &SyncStatus) -> adw::PreferencesGroup {
     gtk::prelude::EditableExt::set_alignment(&name, 1.0);
     name.set_width_chars(22);
     name.set_text(&device_name(ctx, status));
-    name.set_editable(!status.enabled);
-    name.set_sensitive(!status.enabled);
     name.set_widget_name("device-name");
     name.update_property(&[gtk::accessible::Property::Label(&t::devices_name())]);
-    name.connect_changed(|entry| dialogs::set_device_name(&entry.text()));
+    name.set_max_length(64);
+    // Said to the group on Enter, or with the tick that shows once the text differs.
+    let saved = name.text().to_string();
+    name.connect_changed(move |entry| {
+        let changed = entry.text() != saved;
+        entry.set_icon_from_icon_name(
+            gtk::EntryIconPosition::Secondary,
+            changed.then_some("object-select-symbolic"), // i18n-skip
+        );
+    });
+    name.set_icon_tooltip_text(gtk::EntryIconPosition::Secondary, Some(&t::action_save()));
+    name.set_icon_activatable(gtk::EntryIconPosition::Secondary, true);
+    name.connect_icon_release({
+        let ctx = Rc::downgrade(ctx);
+        move |entry, _| {
+            if let Some(ctx) = ctx.upgrade() {
+                dialogs::rename(&ctx, &entry.text());
+            }
+        }
+    });
+    name.connect_activate({
+        let ctx = Rc::downgrade(ctx);
+        move |entry| {
+            if let Some(ctx) = ctx.upgrade() {
+                dialogs::rename(&ctx, &entry.text());
+            }
+        }
+    });
     row.add_suffix(&name);
     group.add(&row);
     group
@@ -87,53 +115,147 @@ pub fn device_name(ctx: &Rc<Ctx>, status: &SyncStatus) -> String {
 
 fn device_row(ctx: &Rc<Ctx>, device: &SyncDeviceView) -> adw::ActionRow {
     let (line, mark) = super::seen_line(device, now());
-    let remote_only = device.folder.is_none()
-        && ctx.tv.paired().iter().any(|tv| tv.name == device.name)
-        && device.last_seen.is_none();
+    let paired_tv = ctx.tv.paired().iter().any(|tv| tv.name == device.name);
+    let remote_only = device.folder.is_none() && paired_tv && device.last_seen.is_none();
     let mut text = line;
     if remote_only {
         text = t::devices_remote_only();
-    } else if ctx.tv.paired().iter().any(|tv| tv.name == device.name) {
+    } else if device.remote_key.is_some() || paired_tv {
         text = format!("{text} · {}", t::devices_remote_switch());
     }
     let row = adw::ActionRow::builder()
         .title(glib::markup_escape_text(&device.name))
         .subtitle(mark.markup(&text))
+        .activatable(true)
         .build();
-    row.add_prefix(&gtk::Image::from_icon_name(device_icon(&device.name)));
+    row.add_prefix(&gtk::Image::from_icon_name(device_icon(device)));
     let sync = gtk::Switch::new();
     sync.set_valign(gtk::Align::Center);
-    sync.set_active(true);
+    sync.set_active(!device.paused);
     sync.update_property(&[gtk::accessible::Property::Label(&format!(
         "{} {}",
         t::devices_sync_switch(),
         device.name
     ))]);
-    // Switching a device off asks, then removes it: the engine has no half way.
+    // The group's switch: off holds the group back from the device, and it from the group. Taking
+    // the device out is on its page.
     sync.connect_state_set({
-        let ctx = Rc::downgrade(ctx);
-        let device = device.clone();
-        move |switch, on| {
-            if !on && let Some(ctx) = ctx.upgrade() {
-                dialogs::remove_device(&ctx, &device, switch.clone());
-                return glib::Propagation::Stop;
+        let (ctx, id) = (Rc::downgrade(ctx), device.id.clone());
+        move |_, on| {
+            if let Some(ctx) = ctx.upgrade() {
+                ctx.hub.send(Command::SyncGroup(SyncCommand::SetDeviceSync {
+                    device: id.clone(),
+                    on,
+                }));
             }
             glib::Propagation::Proceed
         }
     });
     row.add_suffix(&sync);
+    row.add_suffix(&gtk::Image::from_icon_name("go-next-symbolic")); // i18n-skip
+    row.connect_activated({
+        let (ctx, device) = (Rc::downgrade(ctx), device.clone());
+        move |_| {
+            if let Some(ctx) = ctx.upgrade() {
+                dialogs::device_page(&ctx, &device);
+            }
+        }
+    });
     row
 }
 
-fn device_icon(name: &str) -> &'static str {
-    let lower = name.to_lowercase();
-    if lower.contains("tv") {
-        "video-display-symbolic" // i18n-skip
-    } else if lower.contains("phone") || lower.contains("iphone") {
-        "phone-symbolic" // i18n-skip
-    } else {
-        "computer-symbolic" // i18n-skip
+fn device_icon(device: &SyncDeviceView) -> &'static str {
+    match device.kind {
+        Some(SyncDeviceKind::Tv) => "video-display-symbolic", // i18n-skip
+        Some(SyncDeviceKind::Phone | SyncDeviceKind::Tablet) => "phone-symbolic", // i18n-skip
+        Some(SyncDeviceKind::Computer) => "computer-symbolic", // i18n-skip
+        None => {
+            let lower = device.name.to_lowercase();
+            if lower.contains("tv") {
+                "video-display-symbolic" // i18n-skip
+            } else if lower.contains("phone") {
+                "phone-symbolic" // i18n-skip
+            } else {
+                "computer-symbolic" // i18n-skip
+            }
+        }
     }
+}
+
+thread_local! {
+    /// Titles of kept watches the pane asked for and has not shown yet.
+    static WAITING: std::cell::RefCell<std::collections::HashSet<u32>> = Default::default();
+}
+
+/// Whether the cards that just arrived hold a title a sync note is waiting for, so the pane
+/// shows it.
+pub fn waits_for(cards: &[kaeri_model::catalog::Entry]) -> bool {
+    WAITING.with_borrow_mut(|w| {
+        let mut arrived = false;
+        for card in cards {
+            arrived |= w.remove(&card.id.get());
+        }
+        arrived
+    })
+}
+
+/// What the rules decided against someone's action: a watch kept although another device marked
+/// the episode unwatched, with its undo, for 7 days.
+fn sync_notes(ctx: &Rc<Ctx>, status: &SyncStatus) -> Option<adw::PreferencesGroup> {
+    if status.notes.is_empty() {
+        return None;
+    }
+    let mut notes = status.notes.clone();
+    notes.sort_by_key(|n| std::cmp::Reverse(n.at));
+    let ids: Vec<u32> = notes.iter().map(|n| n.anilist_id).collect();
+    let missing: Vec<_> = {
+        let known = ctx.hub.known.borrow();
+        ids.iter()
+            .filter(|id| !known.entries.contains_key(id))
+            .map(|id| kaeri_core::ids::AnilistId::new(*id))
+            .collect()
+    };
+    if !missing.is_empty() {
+        WAITING.with_borrow_mut(|w| w.extend(missing.iter().map(|id| id.get())));
+        ctx.hub.send(Command::LoadCards { ids: missing });
+    }
+    let group = adw::PreferencesGroup::builder()
+        .title(t::sync_notes())
+        .description(t::sync_notes_foot())
+        .build();
+    for note in notes {
+        let title = ctx
+            .hub
+            .known
+            .borrow()
+            .entries
+            .get(&note.anilist_id)
+            .map(|e| e.title.clone())
+            .unwrap_or_default();
+        let episode = note.episode.parse::<i64>().unwrap_or(0);
+        let row = adw::ActionRow::builder()
+            .title(glib::markup_escape_text(&t::sync_note_kept_watched(
+                episode,
+                &title,
+                &note.unwatch_device,
+                &note.watch_device,
+            )))
+            .title_lines(0)
+            .build();
+        let undo = gtk::Button::with_label(&t::sync_note_undo());
+        undo.set_valign(gtk::Align::Center);
+        undo.connect_clicked({
+            let (ctx, note) = (Rc::downgrade(ctx), note.clone());
+            move |_| {
+                if let Some(ctx) = ctx.upgrade() {
+                    dialogs::undo_note(&ctx, note.id, note.anilist_id, &note.episode);
+                }
+            }
+        });
+        row.add_suffix(&undo);
+        group.add(&row);
+    }
+    Some(group)
 }
 
 fn your_devices(ctx: &Rc<Ctx>, status: &SyncStatus) -> adw::PreferencesGroup {
@@ -335,6 +457,24 @@ fn recovery_and_off(ctx: &Rc<Ctx>, status: &SyncStatus) -> Option<adw::Preferenc
         });
         row.add_suffix(&show);
         group.add(&row);
+    }
+    if status.recovery_key {
+        let fresh = adw::ActionRow::builder()
+            .title(t::rkey_new())
+            .subtitle(t::rkey_new_foot())
+            .subtitle_lines(0)
+            .activatable(true)
+            .build();
+        fresh.add_prefix(&gtk::Image::from_icon_name("view-refresh-symbolic")); // i18n-skip
+        fresh.connect_activated({
+            let ctx = Rc::downgrade(ctx);
+            move |_| {
+                if let Some(ctx) = ctx.upgrade() {
+                    dialogs::make_new_key(&ctx);
+                }
+            }
+        });
+        group.add(&fresh);
     }
     let off = gtk::Button::with_label(&t::sync_turn_off(&super::kind()));
     off.add_css_class("flat");

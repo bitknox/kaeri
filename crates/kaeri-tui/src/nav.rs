@@ -220,6 +220,10 @@ pub enum Overlay {
     SyncRestore,
     /// Removing a device, or turning sync off here.
     SyncConfirm,
+    /// One device of the group: its switches, copying its sign-ins, removing it.
+    SyncDevice,
+    /// This device's new name.
+    SyncName,
     /// A pairing code this device shows, with its address.
     SyncPairShow,
     /// The pairing code another device shows.
@@ -275,6 +279,8 @@ impl Overlay {
             Self::SyncRecoveryKey => t::rkey_title(),
             Self::SyncRestore => t::rkey_enter_title(),
             Self::SyncConfirm => t::devices_title(),
+            Self::SyncDevice => t::devices_title(),
+            Self::SyncName => t::devices_name(),
             Self::SyncPairShow => t::pair_show_title(),
             Self::SyncPairCode => t::pair_code_field(),
             Self::SyncPairAddress => t::sync_tui_pair_address(),
@@ -297,6 +303,8 @@ impl Overlay {
                 | Self::SyncRecoveryKey
                 | Self::SyncRestore
                 | Self::SyncConfirm
+                | Self::SyncDevice
+                | Self::SyncName
                 | Self::SyncPairShow
                 | Self::SyncPairCode
                 | Self::SyncPairAddress
@@ -322,6 +330,7 @@ impl Overlay {
                 | Self::SyncUser
                 | Self::SyncPassword
                 | Self::SyncRestore
+                | Self::SyncName
                 | Self::SyncPairCode
                 | Self::SyncPairAddress
                 | Self::ProfileName

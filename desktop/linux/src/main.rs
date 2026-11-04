@@ -204,7 +204,11 @@ fn main() -> glib::ExitCode {
         data: paths.data_dir.clone(),
         paths,
         runtime: runtime.handle().clone(),
-        casting: tv::cast::Casting { hub: casting.0, engine: casting.1 },
+        casting: tv::cast::Casting {
+            hub: casting.0,
+            engine: casting.1,
+            this_device: engine.this_device(),
+        },
     };
     let pending = Rc::new(RefCell::new(Some((events_rx, host_rx))));
     let shell_slot: Rc<RefCell<Option<Rc<Shell>>>> = Rc::default();
@@ -291,6 +295,7 @@ impl Files {
         tv::cast::Casting {
             hub: Arc::clone(&self.casting.hub),
             engine: self.casting.engine.clone(),
+            this_device: self.casting.this_device.clone(),
         }
     }
 }
@@ -370,12 +375,18 @@ fn start_fixtures(
 
 /// Play on TV's sender: on the scene's TVs on loopback for a fixture run, never a real one.
 fn play_on_tv(args: &Args, files: &Files) -> Rc<tv::Tv> {
+    // Sync finds the device showing a pairing code, and shows this one's, over Avahi.
+    files
+        .casting
+        .this_device
+        .set_network(tv::avahi::Advertise::start(), tv::avahi::Avahi::start_sync());
     #[cfg(feature = "fixtures")]
     if args.fixtures {
         return tv::fixture::tv(files.runtime.clone(), &files.data, Some(files.casting()));
     }
     let _ = args;
-    tv::Tv::new(files.runtime.clone(), &files.data, Some(files.casting()))
+    let name = prefs::saved_device_name(&files.prefs);
+    tv::Tv::new(files.runtime.clone(), &files.data, Some(files.casting()), name)
 }
 
 fn build(

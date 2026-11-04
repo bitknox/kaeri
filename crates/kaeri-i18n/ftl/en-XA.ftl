@@ -1475,6 +1475,9 @@ pair-done-action = [Ðöñé~~]
 # Name for the device whose pairing code did not match, when no name is known yet.
 pair-other-device = [ýöüŕ öţĥéŕ ðéṽîçé~~~~~~]
 
+# Note under the Enter a code dialog's fields: the address can be left empty.
+pair-address-optional = [Ļéàṽé ţĥé àððŕéšš éɱþţý àñð Ķàéŕî ļööķš ƒöŕ ţĥé ðéṽîçé öñ ţĥîš ñéţŵöŕķ.~~~~~~~~~~~~~~~~~~~~~~]
+
 # Under a release in the source picker: how many people share it right now.
 source-picker-seeders-linux =
     { $count ->

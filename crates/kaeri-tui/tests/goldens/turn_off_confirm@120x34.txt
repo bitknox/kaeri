@@ -14,8 +14,8 @@ Kaeri                                                                           
   This computer stops sharing with your other devices. Everything it has
   stays here.
 
-                            │  ▌ Turn off sync on this computer
                             │
+                            │  ▌ Turn off sync on this computer
                             │
                             │
                             │
@@ -60,10 +60,10 @@ r14 c00-01 fg=rule bg=ground
 r14 c02-12 fg=text-dim bg=ground
 r14 c13-119 fg=rule bg=ground
 r15 c00-119 fg=rule bg=ground
-r16 c00-32 fg=rule
-r16 c33-62 fg=rule mod=BOLD
-r16 c63-119 fg=rule
-r17 c00-119 fg=rule
+r16 c00-119 fg=rule
+r17 c00-32 fg=rule
+r17 c33-62 fg=rule mod=BOLD
+r17 c63-119 fg=rule
 r18 c00-119 fg=rule
 r19 c00-119 fg=rule
 r20 c00-119 fg=rule

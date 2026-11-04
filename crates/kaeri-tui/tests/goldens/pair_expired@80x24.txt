@@ -13,9 +13,9 @@ Kaeri                                                  plugins ●  ·  anilist 
 
   Show a code                                                              ↵
 
+   │    Make a new key
    │
    │    Turn off sync on this computer
-   │
    │
    │
    │  ────────────────────────────────────────────────────────────────────────

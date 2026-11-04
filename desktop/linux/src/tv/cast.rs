@@ -30,6 +30,8 @@ use super::{Request, Sheet, Tv};
 pub struct Casting {
     pub hub: Arc<CastHub>,
     pub engine: RemoteSender,
+    /// What sync hears of this computer's remote key, so it can offer the Remote switch.
+    pub this_device: kaeri_engine::syncing::ThisDevice,
 }
 
 /// A seconds counter joins the starting line after this long, as under that it is only noise.

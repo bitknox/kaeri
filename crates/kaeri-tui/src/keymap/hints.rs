@@ -460,6 +460,9 @@ fn overlay_hints(
         O::CommandPalette => {
             vec![hint("↑↓", hint_move()), hint("↵", hint_run()), hint(ESC, hint_close())]
         }
+        O::SyncDevice => {
+            vec![hint("↑↓", hint_move()), hint("↵", hint_change()), hint(ESC, hint_close())]
+        }
         O::SyncWait => vec![hint("↵", hint_open()), hint(ESC, hint_cancel())],
         O::SyncRecoveryKey => vec![
             hint("c", said(t::sync_tui_hint_copy())),
@@ -473,6 +476,7 @@ fn overlay_hints(
         O::SyncConfirm => {
             let verb = match &app.devices.confirm {
                 Some(crate::app::DeviceConfirm::Remove { .. }) => t::sync_tui_hint_remove(),
+                Some(crate::app::DeviceConfirm::NewKey) => t::rkey_new(),
                 _ => t::sync_tui_hint_turn_off(),
             };
             vec![hint("↵", said(verb)), hint(ESC, hint_cancel())]

@@ -14,8 +14,8 @@ Kaeri                                                                           
   Kim's iPhone keeps what it has, but gets nothing new from your other
   devices.
 
-                            │    Turn off sync on this computer
                             │
+                            │    Turn off sync on this computer
                             │
                             │
                             │

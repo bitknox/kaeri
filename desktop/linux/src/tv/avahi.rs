@@ -73,6 +73,12 @@ impl Avahi {
     pub fn start() -> Arc<Self> {
         Arc::new(Self(Feed::start(SERVICE_TYPE)))
     }
+
+    /// The same browse for the devices showing a pairing code, under sync's own service type.
+    /// Asked on the main loop, where the browse runs.
+    pub fn start_sync() -> Arc<Self> {
+        Arc::new(Self(Feed::start(kaeri_engine::syncing::network::SERVICE_TYPE)))
+    }
 }
 
 impl Browser for Avahi {
@@ -373,6 +379,166 @@ impl State {
         );
         (self.report.found)(instance, addresses, &first.txt);
     }
+}
+
+/// What the advertiser is asked: register a device under its instance name, or take it away.
+enum Publish {
+    Add { instance: String, port: u16, txt: Vec<(String, String)> },
+    Remove(String),
+}
+
+/// The engine's advertiser for a device that shows a pairing code, over Avahi's entry groups. It
+/// is asked on any thread; the registration runs on the main loop. With no Avahi nothing is
+/// registered, and the code still pairs by address or QR code.
+pub struct Advertise {
+    asks: async_channel::Sender<Publish>,
+}
+
+impl Advertise {
+    pub fn start() -> Arc<Self> {
+        let (asks, rx) = async_channel::unbounded();
+        glib::spawn_future_local(publish(rx));
+        Arc::new(Self { asks })
+    }
+}
+
+impl kaeri_engine::syncing::network::Advertiser for Advertise {
+    fn advertise(&self, advert: &kaeri_engine::syncing::network::Advert) {
+        let _ = self.asks.send_blocking(Publish::Add {
+            instance: advert.instance.clone(),
+            port: advert.port,
+            txt: advert.txt.clone(),
+        });
+    }
+
+    fn withdraw(&self, instance: &str) {
+        let _ = self.asks.send_blocking(Publish::Remove(instance.to_owned()));
+    }
+}
+
+const ENTRY_GROUP: &str = "org.freedesktop.Avahi.EntryGroup";
+
+async fn publish(asks: async_channel::Receiver<Publish>) {
+    let mut groups: BTreeMap<String, String> = BTreeMap::new();
+    let connection = match gio::bus_get_future(gio::BusType::System).await {
+        Ok(connection) => Some(connection),
+        Err(e) => {
+            tracing::info!(error = %e, "no Avahi to show a pairing code with: only the address");
+            None
+        }
+    };
+    while let Ok(ask) = asks.recv().await {
+        let Some(connection) = &connection else { continue };
+        match ask {
+            Publish::Add { instance, port, txt } => {
+                if let Some(old) = groups.remove(&instance) {
+                    free_group(connection, &old);
+                }
+                match register(connection, &instance, port, &txt).await {
+                    Ok(path) => {
+                        groups.insert(instance, path);
+                    }
+                    Err(e) => tracing::warn!(error = %e, "Avahi did not register the code"),
+                }
+            }
+            Publish::Remove(instance) => {
+                if let Some(path) = groups.remove(&instance) {
+                    free_group(connection, &path);
+                }
+            }
+        }
+    }
+}
+
+/// One entry group with the sync service in it, committed. Returns its object path.
+async fn register(
+    connection: &gio::DBusConnection,
+    instance: &str,
+    port: u16,
+    txt: &[(String, String)],
+) -> Result<String, glib::Error> {
+    const NEW_GROUP: &str = "EntryGroupNew"; // i18n-skip
+    const ADD: &str = "AddService"; // i18n-skip
+    const COMMIT: &str = "Commit"; // i18n-skip
+    let reply = connection
+        .call_future(
+            Some(AVAHI),
+            "/",
+            SERVER,
+            NEW_GROUP,
+            None,
+            glib::VariantTy::new("(o)").ok(),
+            gio::DBusCallFlags::NONE,
+            TIMEOUT_MS,
+        )
+        .await?;
+    let path = object_path(&reply).ok_or_else(|| {
+        glib::Error::new(gio::IOErrorEnum::InvalidData, "Avahi named no entry group") // i18n-skip
+    })?;
+    let record: Vec<Vec<u8>> =
+        txt.iter().map(|(key, value)| format!("{key}={value}").into_bytes()).collect();
+    let args = (
+        UNSPEC,
+        UNSPEC,
+        0u32,
+        instance,
+        kaeri_engine::syncing::network::SERVICE_TYPE,
+        "",
+        "",
+        port,
+        record,
+    )
+        .to_variant();
+    let done = async {
+        connection
+            .call_future(
+                Some(AVAHI),
+                &path,
+                ENTRY_GROUP,
+                ADD,
+                Some(&args),
+                None,
+                gio::DBusCallFlags::NONE,
+                TIMEOUT_MS,
+            )
+            .await?;
+        connection
+            .call_future(
+                Some(AVAHI),
+                &path,
+                ENTRY_GROUP,
+                COMMIT,
+                None,
+                None,
+                gio::DBusCallFlags::NONE,
+                TIMEOUT_MS,
+            )
+            .await
+    }
+    .await;
+    match done {
+        Ok(_) => Ok(path),
+        Err(e) => {
+            free_group(connection, &path);
+            Err(e)
+        }
+    }
+}
+
+/// Free an entry group, which takes its service off the network.
+fn free_group(connection: &gio::DBusConnection, path: &str) {
+    connection.call(
+        Some(AVAHI),
+        path,
+        ENTRY_GROUP,
+        "Free", // i18n-skip
+        None,
+        None,
+        gio::DBusCallFlags::NONE,
+        TIMEOUT_MS,
+        gio::Cancellable::NONE,
+        |_| {},
+    );
 }
 
 fn object_path(reply: &glib::Variant) -> Option<String> {

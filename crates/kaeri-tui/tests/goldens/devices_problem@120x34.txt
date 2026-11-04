@@ -14,9 +14,9 @@ Kaeri                                                                           
                             │    dav.example
                             │    Couldn’t reach WebDAV server. Check your connection.
                             │    Recovery key                Made 4 October
+                            │    Make a new key
                             │
                             │    Turn off sync on this computer
-                            │
                             │
                             │
                             │
@@ -49,8 +49,8 @@ r02 c44-116 fg=rule
 r03 c02-02 fg=text-dim
 r03 c05-12 fg=text-dim
 r03 c28-28 fg=rule
-r03 c33-36 fg=text-dim
-r03 c61-72 fg=text
+r03 c33-36 fg=text
+r03 c61-72 fg=text-dim
 r04 c02-02 fg=text-dim
 r04 c05-12 fg=text-dim
 r04 c28-28 fg=rule
@@ -98,9 +98,10 @@ r15 c28-28 fg=rule
 r15 c33-44 fg=text
 r15 c61-74 fg=text-dim
 r16 c28-28 fg=rule
+r16 c33-46 fg=text
 r17 c28-28 fg=rule
-r17 c33-62 fg=text
 r18 c28-28 fg=rule
+r18 c33-62 fg=text
 r19 c28-28 fg=rule
 r20 c28-28 fg=rule
 r21 c28-28 fg=rule

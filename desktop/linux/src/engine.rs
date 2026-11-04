@@ -84,6 +84,7 @@ pub async fn start(paths: Paths, host: Arc<dyn Host>) -> Result<Started, String>
     options.saved = Some(config);
     options.set_aside = set_aside;
     options.hosted_player = true;
+    options.device_kind = Some(kaeri_model::group::SyncDeviceKind::Computer);
     options.app_clients = app_clients();
     options.device_label = kaeri_i18n::t::shell_device_label();
     options.language = Some(kaeri_i18n::language().to_owned());

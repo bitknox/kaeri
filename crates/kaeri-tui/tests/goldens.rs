@@ -61,7 +61,7 @@ use kaeri_model::{
 use kaeri_model::{
     group::{
         CloudUnavailable, SyncCloudView, SyncCloudWay, SyncDeviceView, SyncFolderKind,
-        SyncFolderView, SyncProblem, SyncSignInStep, SyncStatus,
+        SyncFolderView, SyncNoteView, SyncProblem, SyncSignInStep, SyncStatus,
     },
     profiles::{ProfileView, ProfilesView},
 };
@@ -570,6 +570,10 @@ scenarios! {
     pair_enter_code,
     pair_address_error,
     remove_device_confirm,
+    device_page,
+    device_rename,
+    new_key_confirm,
+    devices_notes,
     turn_off_confirm,
     profiles_two,
     add_profile,
@@ -2621,6 +2625,10 @@ fn sync_device(
         sign_ins: Vec::new(),
         folder: None,
         asked: Vec::new(),
+        kind: None,
+        paused: false,
+        remote_key: None,
+        remote_off: false,
     }
 }
 
@@ -2657,6 +2665,9 @@ fn devices_with(s: &mut Screen, status: SyncStatus) {
     s.app.set_device_name("Kim's laptop".into());
     s.press(&["d"]);
     s.apply(Event::SyncStatus(status));
+    // On the first row under the name, where the scenarios start.
+    s.app.cursors.devices.selected = 1;
+    s.draw();
 }
 
 /// The cursor on the first row of `line`.
@@ -2857,7 +2868,50 @@ fn pair_address_error(s: &mut Screen) {
 /// Removing the phone asks first.
 fn remove_device_confirm(s: &mut Screen) {
     devices_with(s, sync_on());
+    s.press(&["enter", "G", "enter"]);
+}
+
+/// A device's page: its switches, with the Remote switch for a TV paired as a remote.
+fn device_page(s: &mut Screen) {
+    let mut status = sync_on();
+    status.devices[2].remote_key = Some("ab12cd34".into());
+    status.devices[2].sign_ins = vec![SyncFolderKind::Nextcloud];
+    status.devices[2].trackers = vec!["anilist".into()];
+    devices_with(s, status);
+    s.press(&["j", "enter"]);
+}
+
+/// Changing this device's name.
+fn device_rename(s: &mut Screen) {
+    devices_with(s, sync_on());
+    devices_cursor(s, DeviceLine::Name);
     s.press(&["enter"]);
+}
+
+/// A new recovery key asks first.
+fn new_key_confirm(s: &mut Screen) {
+    devices_with(s, sync_on());
+    devices_cursor(s, DeviceLine::NewKey);
+    s.press(&["enter"]);
+}
+
+/// A kept watch another device marked unwatched, with the way to undo it.
+fn devices_notes(s: &mut Screen) {
+    let mut status = sync_on();
+    status.notes = vec![SyncNoteView {
+        id: 7,
+        anilist_id: 900_001,
+        episode: "5".into(),
+        watch_device: "Kim's laptop".into(),
+        unwatch_device: "Kim's iPhone".into(),
+        at: NOW - DAY,
+    }];
+    devices_with(s, status);
+    s.app.devices.note_titles.insert(900_001, "Lantern Harbor".into());
+    s.draw();
+    let at = s.app.device_lines().iter().position(|l| matches!(l, DeviceLine::Note(_)));
+    s.app.cursors.devices.selected = at.expect("the note is there");
+    s.draw();
 }
 
 /// Turning sync off asks first.

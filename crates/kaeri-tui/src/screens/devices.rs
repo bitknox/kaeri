@@ -12,8 +12,8 @@ use ratatui::{buffer::Buffer, layout::Rect, style::Modifier, widgets::Widget};
 use super::chrome::mark_selected;
 use crate::{
     app::{
-        App, DeviceConfirm, DeviceLine, Field, FolderState, code_groups, countdown_text,
-        is_drive, key_groups, pair_link, service_line, service_name,
+        App, DeviceConfirm, DeviceLine, DevicePageItem, Field, FolderState, code_groups,
+        countdown_text, is_drive, key_groups, pair_link, service_line, service_name,
     },
     nav::{Focus, Overlay},
     theme::{Role, glyph},
@@ -30,8 +30,6 @@ enum Line {
     Heading(String),
     /// Prose the cursor does not stop on.
     Prose(String, Role),
-    /// A label and its value the cursor does not stop on.
-    Fact(String, String),
     /// A row the cursor stops on.
     Row {
         at: usize,
@@ -63,16 +61,38 @@ fn folder_place(app: &App, kind: &SyncFolderKind) -> Option<String> {
 
 /// Every line, and which of them the cursor stops on, in order.
 fn lines(app: &App) -> Vec<Line> {
-    let mut out = vec![
-        Line::Heading(t::devices_this_device()),
-        Line::Fact(t::devices_name(), app.device_name()),
-        Line::Blank,
-    ];
+    let mut out = Vec::new();
     let status = app.devices.status.as_ref();
     let row =
         |at: usize, label: String, value: String| Line::Row { at, label, value, alert: false };
     for (at, device_line) in app.device_lines().into_iter().enumerate() {
         match device_line {
+            DeviceLine::Name => {
+                out.push(Line::Heading(t::devices_this_device()));
+                out.push(row(at, t::devices_name(), app.device_name()));
+                out.push(Line::Blank);
+            }
+            DeviceLine::NewKey => out.push(row(at, t::rkey_new(), String::new())),
+            DeviceLine::Note(i) => {
+                let Some(note) = status.and_then(|s| s.notes.get(i)) else { continue };
+                if !out.iter().any(|l| matches!(l, Line::Heading(h) if *h == t::sync_notes())) {
+                    out.push(Line::Blank);
+                    out.push(Line::Heading(t::sync_notes()));
+                }
+                let title =
+                    app.devices.note_titles.get(&note.anilist_id).cloned().unwrap_or_default();
+                let episode = note.episode.parse::<i64>().unwrap_or(0);
+                out.push(Line::Prose(
+                    t::sync_note_kept_watched(
+                        episode,
+                        &title,
+                        &note.unwatch_device,
+                        &note.watch_device,
+                    ),
+                    Role::TextDim,
+                ));
+                out.push(row(at, t::sync_note_undo(), String::new()));
+            }
             DeviceLine::TurnOn => {
                 out.push(Line::Heading(t::sync_group()));
                 out.push(Line::Prose(t::sync_off_title(), Role::Text));
@@ -188,6 +208,9 @@ fn note(app: &App) -> Option<String> {
         DeviceLine::ShowCode | DeviceLine::EnterCode => t::pair_same_wifi(),
         DeviceLine::AddCloud | DeviceLine::Folder | DeviceLine::SignOut => t::cloud_foot(),
         DeviceLine::RecoveryKey => t::rkey_line(),
+        DeviceLine::NewKey => t::rkey_new_foot(),
+        DeviceLine::Note(_) => t::sync_notes_foot(),
+        DeviceLine::Name => return None,
         DeviceLine::TurnOff => t::sync_turn_off_alert_line(&t::sync_tui_kind()),
         DeviceLine::AddProfile => t::profiles_add_line(),
         DeviceLine::Profile(_) => t::profiles_shared_foot(),
@@ -248,22 +271,6 @@ pub(super) fn render_devices(buf: &mut Buffer, app: &App, area: Rect) {
                     y,
                     truncate(text, prose_width),
                     app.palette.style(*role),
-                );
-            }
-            Line::Fact(label, value) => {
-                let label_room = value_x.saturating_sub(area.left() + 3) as usize;
-                buf.set_string(
-                    area.left() + 2,
-                    y,
-                    truncate(label, label_room),
-                    app.palette.style(Role::TextDim),
-                );
-                let value_room = area.right().saturating_sub(value_x) as usize;
-                buf.set_string(
-                    value_x,
-                    y,
-                    truncate(value, value_room),
-                    app.palette.style(Role::Text),
                 );
             }
             Line::Row { at, label, value, alert } => {
@@ -561,6 +568,7 @@ pub(super) fn devices_body(app: &App, overlay: &Overlay, width: u16, room: usize
                 Some(DeviceConfirm::Remove { name, .. }) => {
                     (t::devices_remove_alert(name), t::devices_remove_alert_line(name))
                 }
+                Some(DeviceConfirm::NewKey) => (t::rkey_new(), t::rkey_new_foot()),
                 _ => (
                     t::sync_turn_off_alert(&app.device_name()),
                     t::sync_turn_off_alert_line(&t::sync_tui_kind()),
@@ -639,6 +647,53 @@ pub(super) fn devices_body(app: &App, overlay: &Overlay, width: u16, room: usize
                 body.prose(&t::sync_tui_pairing(), text, Tone::Dim);
             }
             body.problem(app, text);
+            body
+        }
+        Overlay::SyncName => Body::new(typed(app, overlay.title(), Field::DeviceName)),
+        Overlay::SyncDevice => {
+            let Some(device) = app.page_device() else { return Body::new(app.device_name()) };
+            let mut body = Body::new(device.name.clone());
+            let state = |on: bool| if on { t::value_on() } else { t::value_off() };
+            for (at, item) in app.device_page_items().into_iter().enumerate() {
+                match item {
+                    DevicePageItem::Sync => body.choice(
+                        at,
+                        cursor,
+                        format!("{}   {}", t::devices_sync_switch(), state(!device.paused)), // i18n-skip
+                        None,
+                        text,
+                    ),
+                    DevicePageItem::Remote => body.choice(
+                        at,
+                        cursor,
+                        format!(
+                            "{}   {}",
+                            t::devices_remote_switch(),
+                            state(!device.remote_off)
+                        ), // i18n-skip
+                        None,
+                        text,
+                    ),
+                    DevicePageItem::CopySignIns => body.choice(
+                        at,
+                        cursor,
+                        format!(
+                            "{}   {}", // i18n-skip
+                            t::pair_copy_signins(&device.name),
+                            state(!device.asked.is_empty())
+                        ),
+                        None,
+                        text,
+                    ),
+                    DevicePageItem::Remove => {
+                        body.choice(at, cursor, t::devices_remove(), None, text);
+                    }
+                }
+            }
+            if device.remote_key.is_some() {
+                body.blank();
+                body.prose(&t::devices_switches_foot(&device.name), text, Tone::Dim);
+            }
             body
         }
         Overlay::ProfileName => {

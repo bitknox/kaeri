@@ -116,6 +116,13 @@ impl Prefs {
         self.save();
     }
 
+    /// The name given to this computer in Devices, kept for the Play on TV sender, which says
+    /// it to TVs when it starts.
+    pub fn set_device_name(&self, name: &str) {
+        self.keys.borrow().set_string("sync", "device-name", name);
+        self.save();
+    }
+
     /// Whether first launch has been shown or passed over, so it never shows again.
     pub fn welcomed(&self) -> bool {
         self.keys.borrow().boolean("first-launch", "done").unwrap_or(false)
@@ -176,6 +183,13 @@ impl Prefs {
             tracing::warn!(error = %e, file = %self.file.display(), "the preferences were not saved");
         }
     }
+}
+
+/// The device name kept in the preferences at `file`, when one was given.
+pub fn saved_device_name(file: &std::path::Path) -> Option<String> {
+    let keys = glib::KeyFile::new();
+    keys.load_from_file(file, glib::KeyFileFlags::NONE).ok()?;
+    keys.string("sync", "device-name").ok().map(String::from).filter(|n| !n.is_empty())
 }
 
 /// The `language` key of the config file at `file`: `None` when it is unset, `"system"`, or the

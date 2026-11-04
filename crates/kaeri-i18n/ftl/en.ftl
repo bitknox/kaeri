@@ -1475,6 +1475,9 @@ pair-done-action = Done
 # Name for the device whose pairing code did not match, when no name is known yet.
 pair-other-device = your other device
 
+# Note under the Enter a code dialog's fields: the address can be left empty.
+pair-address-optional = Leave the address empty and Kaeri looks for the device on this network.
+
 # Under a release in the source picker: how many people share it right now.
 source-picker-seeders-linux =
     { $count ->

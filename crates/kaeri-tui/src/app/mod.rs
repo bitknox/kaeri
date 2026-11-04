@@ -63,8 +63,8 @@ pub use self::{
     accounts::sync_badge,
     cursor::{Cursor, Cursors},
     devices::{
-        DeviceConfirm, DeviceLine, Devices, FolderState, PairCode, code_groups, key_groups,
-        pair_link,
+        DeviceConfirm, DeviceLine, DevicePageItem, Devices, FolderState, PairCode, code_groups,
+        key_groups, pair_link,
     },
     episodes::EpisodeFilter,
     lists::{
@@ -541,7 +541,7 @@ impl App {
             // a full record for any other id answers a title the user has already left.
             Event::Detail(entry) => self.apply_detail(entry),
             // The terminal has no hover cards.
-            Event::Cards(_) => {}
+            Event::Cards(cards) => self.apply_note_titles(&cards),
             // The engine names every title as the setting says; nothing here asks the viewer's.
             Event::ViewerTitleLanguage(_) => {}
             Event::TitlesChanged(_) => self.titles_changed(),
@@ -735,8 +735,9 @@ impl App {
             Event::Progress { id, progress, resume, episodes } => {
                 self.apply_progress(id, progress, resume, episodes)
             }
-            // Pairing by code is the apps' Add a device sheet.
-            Event::SyncPairFailed { .. } => {}
+            Event::SyncPairFailed { problem, device } => {
+                self.apply_pair_failed(problem, device)
+            }
         }
     }
 

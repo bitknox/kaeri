@@ -13,9 +13,9 @@ Kaeri                                                  plugins ●  ·  anilist 
    │    Google Drive                Synced 4 min ago
    │    Sign out                    kim@mail.example
    │    Recovery key                Made 4 October
+   │    Make a new key
    │
    │  ▌ Turn off sync on this computer
-   │
    │
    │  ────────────────────────────────────────────────────────────────────────
    │    This computer stops sharing with your other devices. Everything it
@@ -49,10 +49,10 @@ r12 c00-79 fg=rule
 r13 c00-79 fg=rule
 r14 c00-79 fg=rule
 r15 c00-79 fg=rule
-r16 c00-07 fg=rule
-r16 c08-37 fg=rule mod=BOLD
-r16 c38-79 fg=rule
-r17 c00-79 fg=rule
+r16 c00-79 fg=rule
+r17 c00-07 fg=rule
+r17 c08-37 fg=rule mod=BOLD
+r17 c38-79 fg=rule
 r18 c00-79 fg=rule
 r19 c00-79 fg=rule
 r20 c00-79 fg=rule

@@ -455,6 +455,15 @@ impl Inner {
                 self.built.replace(None);
                 self.show(pane);
             }
+            // A sync note's title came in.
+            Event::Cards(cards)
+                if *self.pane.borrow() == "devices"
+                    && crate::sync::devices::waits_for(cards) =>
+            {
+                let pane = *self.pane.borrow();
+                self.built.replace(None);
+                self.show(pane);
+            }
             Event::Sync(_)
             | Event::Authorize { .. }
             | Event::DeviceCode(_)

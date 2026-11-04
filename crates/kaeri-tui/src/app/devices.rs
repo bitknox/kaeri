@@ -4,15 +4,21 @@
 //! The engine owns sync. What it last said is kept here as it said it, with what the screen's
 //! questions are waiting on: the folder being set up, the code on show, the key to show once.
 
+use std::collections::{HashMap, HashSet};
+
 use kaeri_i18n::t;
 use kaeri_model::{
+    catalog::Entry,
     command::Command,
     group::{
-        SyncCloudWay, SyncFolderKind, SyncFolderSpec, SyncProblem, SyncSignInStep, SyncStatus,
+        SyncCloudWay, SyncCommand, SyncCopy, SyncDeviceView, SyncFolderKind, SyncFolderSpec,
+        SyncPairProblem, SyncProblem, SyncSignInStep, SyncStatus,
     },
     profiles::{ProfileView, ProfilesView},
     stores::Secret,
 };
+
+use kaeri_core::ids::AnilistId;
 
 use super::{App, Cursor, Field, alert, info};
 use crate::{
@@ -36,11 +42,27 @@ pub enum DeviceConfirm {
     Remove { id: String, name: String },
     /// Turn sync off on this device.
     TurnOff,
+    /// Make a new recovery key, which stops the old one working.
+    NewKey,
+}
+
+/// A choice on a device's page.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DevicePageItem {
+    /// Its Sync switch.
+    Sync,
+    /// Its Remote switch, when it is paired as a remote.
+    Remote,
+    /// Ask it for its sign-ins.
+    CopySignIns,
+    Remove,
 }
 
 /// A row of the Devices screen the cursor stops on.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DeviceLine {
+    /// This device's name: change it.
+    Name,
     /// Sync is off: turn it on.
     TurnOn,
     /// Another device in the group, by its place in the status's list.
@@ -54,7 +76,11 @@ pub enum DeviceLine {
     /// Sign out of the cloud drive the folder is in.
     SignOut,
     RecoveryKey,
+    /// Make a new recovery key.
+    NewKey,
     TurnOff,
+    /// A sync note, by its place in the status's list: mark the episode unwatched.
+    Note(usize),
     /// A profile, by its place in the list.
     Profile(usize),
     AddProfile,
@@ -106,6 +132,14 @@ pub struct Devices {
     /// holds another group.
     pub pending: Option<SyncFolderSpec>,
     pub confirm: Option<DeviceConfirm>,
+    /// The device whose page is open, by id.
+    pub device_page: Option<String>,
+    /// Why a pairing by code missed, in words, until the problem that follows says it.
+    pub pair_failed: Option<String>,
+    /// The titles sync notes name, as the engine answered.
+    pub note_titles: HashMap<u32, String>,
+    /// The titles already asked for.
+    pub titles_asked: HashSet<u32>,
     /// The profile switched to, which the terminal starts again on.
     pub restart_as: Option<String>,
 }
@@ -252,13 +286,18 @@ impl App {
 
     /// The rows of the Devices screen the cursor stops on, top to bottom.
     pub fn device_lines(&self) -> Vec<DeviceLine> {
-        let mut lines = Vec::new();
+        let mut lines = vec![DeviceLine::Name];
         match self.devices.status.as_ref().filter(|s| s.enabled) {
             None => lines.push(DeviceLine::TurnOn),
             Some(status) => {
                 for (i, device) in status.devices.iter().enumerate() {
                     if !device.this_device {
                         lines.push(DeviceLine::Device(i));
+                    }
+                }
+                for (i, note) in status.notes.iter().enumerate() {
+                    if self.devices.note_titles.contains_key(&note.anilist_id) {
+                        lines.push(DeviceLine::Note(i));
                     }
                 }
                 lines.push(DeviceLine::ShowCode);
@@ -273,6 +312,7 @@ impl App {
                 }
                 if status.recovery_key {
                     lines.push(DeviceLine::RecoveryKey);
+                    lines.push(DeviceLine::NewKey);
                 }
                 lines.push(DeviceLine::TurnOff);
             }
@@ -408,13 +448,28 @@ impl App {
         let line = self.device_line()?;
         self.devices.problem = None;
         match line {
+            DeviceLine::Name => {
+                let name = self.device_name();
+                self.set_text(Field::DeviceName, name);
+                self.open_sync_overlay(Overlay::SyncName);
+            }
             DeviceLine::TurnOn => self.open_sync_overlay(Overlay::SyncRoad),
             DeviceLine::Device(i) => {
-                let device = self.devices.status.as_ref()?.devices.get(i)?;
-                self.devices.confirm = Some(DeviceConfirm::Remove {
-                    id: device.id.clone(),
-                    name: device.name.clone(),
+                let id = self.devices.status.as_ref()?.devices.get(i)?.id.clone();
+                self.devices.device_page = Some(id);
+                self.open_sync_overlay(Overlay::SyncDevice);
+            }
+            DeviceLine::Note(i) => {
+                let note = self.devices.status.as_ref()?.notes.get(i)?;
+                self.commands.push(Command::SetWatched {
+                    id: kaeri_core::ids::AnilistId::new(note.anilist_id),
+                    episodes: vec![note.episode.clone()],
+                    watched: false,
                 });
+                return Some(Command::DismissSyncNote { id: note.id });
+            }
+            DeviceLine::NewKey => {
+                self.devices.confirm = Some(DeviceConfirm::NewKey);
                 self.open_sync_overlay(Overlay::SyncConfirm);
             }
             DeviceLine::ShowCode => return self.show_pair_code(),
@@ -493,6 +548,7 @@ impl App {
         self.devices.pending = None;
         self.devices.kind = None;
         self.devices.pairing_with = None;
+        self.devices.pair_failed = None;
     }
 
     /// The ids of the devices in the group now.
@@ -589,6 +645,7 @@ impl App {
                 self.devices.confirm = None;
                 None
             }
+            (Overlay::SyncDevice, Action::Open) => self.choose_on_device_page(),
             (Overlay::SyncRoad | Overlay::SyncNearby | Overlay::SyncClouds, Action::Open)
             | (Overlay::ProfileKind, Action::Open) => self.choose_in_sync_overlay(overlay),
             // The rest of the list questions move as every list overlay does.
@@ -596,11 +653,65 @@ impl App {
                 Overlay::SyncRoad
                 | Overlay::SyncNearby
                 | Overlay::SyncClouds
+                | Overlay::SyncDevice
                 | Overlay::ProfileKind,
                 _,
             ) => return None,
             _ => None,
         })
+    }
+
+    /// The device whose page is open.
+    pub fn page_device(&self) -> Option<&SyncDeviceView> {
+        let id = self.devices.device_page.as_deref()?;
+        self.devices.status.as_ref()?.devices.iter().find(|d| d.id == id)
+    }
+
+    /// The choices on the open device's page, in order.
+    pub fn device_page_items(&self) -> Vec<DevicePageItem> {
+        let Some(device) = self.page_device() else { return Vec::new() };
+        let mut items = vec![DevicePageItem::Sync];
+        if device.remote_key.is_some() {
+            items.push(DevicePageItem::Remote);
+        }
+        if !device.trackers.is_empty() || !device.sign_ins.is_empty() {
+            items.push(DevicePageItem::CopySignIns);
+        }
+        items.push(DevicePageItem::Remove);
+        items
+    }
+
+    /// Enter on a choice of a device's page.
+    fn choose_on_device_page(&mut self) -> Option<Command> {
+        let item = *self.device_page_items().get(self.cursors.overlay.selected)?;
+        let device = self.page_device()?.clone();
+        match item {
+            DevicePageItem::Sync => Some(Command::SyncGroup(SyncCommand::SetDeviceSync {
+                device: device.id,
+                on: device.paused,
+            })),
+            DevicePageItem::Remote => Some(Command::SyncGroup(SyncCommand::SetDeviceRemote {
+                device: device.id,
+                on: device.remote_off,
+            })),
+            DevicePageItem::CopySignIns => {
+                let mut copy = vec![SyncCopy::Trackers];
+                copy.extend(
+                    device.sign_ins.iter().cloned().map(|service| SyncCopy::Cloud { service }),
+                );
+                Some(Command::SyncGroup(SyncCommand::CopySignIns {
+                    device: Some(device.id),
+                    copy: if device.asked.is_empty() { copy } else { Vec::new() },
+                    address: None,
+                }))
+            }
+            DevicePageItem::Remove => {
+                self.devices.confirm =
+                    Some(DeviceConfirm::Remove { id: device.id, name: device.name });
+                self.next_sync_overlay(Overlay::SyncConfirm);
+                None
+            }
+        }
     }
 
     /// The service the browser is open for.
@@ -635,6 +746,7 @@ impl App {
         match overlay {
             Overlay::SyncRoad | Overlay::SyncNearby | Overlay::ProfileKind => 2,
             Overlay::SyncClouds => self.cloud_choices().len(),
+            Overlay::SyncDevice => self.device_page_items().len(),
             _ => 0,
         }
     }
@@ -688,6 +800,7 @@ impl App {
         match self.devices.confirm.take()? {
             DeviceConfirm::Remove { id, .. } => Some(Command::RemoveSyncDevice { device: id }),
             DeviceConfirm::TurnOff => Some(Command::LeaveSync),
+            DeviceConfirm::NewKey => Some(Command::NewRecoveryKey),
         }
     }
 
@@ -769,12 +882,41 @@ impl App {
                     code: self.text(Field::PairCode).to_owned(),
                 })
             }
+            Overlay::SyncName => {
+                self.nav.close_overlay();
+                self.field_mut(Field::DeviceName).clear();
+                self.devices.this_name.clone_from(&text);
+                Some(Command::SyncGroup(SyncCommand::RenameDevice { name: text }))
+            }
             Overlay::ProfileName => {
                 self.next_sync_overlay(Overlay::ProfileKind);
                 None
             }
             _ => None,
         }
+    }
+
+    /// A pairing by code missed: the words wait for the problem that follows.
+    pub(super) fn apply_pair_failed(
+        &mut self,
+        problem: SyncPairProblem,
+        device: Option<String>,
+    ) {
+        self.devices.pair_failed = Some(match problem {
+            SyncPairProblem::WrongCode => {
+                t::pair_err_code(&device.unwrap_or_else(t::pair_other_device))
+            }
+            SyncPairProblem::NotFound => t::pair_err_not_found(),
+        });
+    }
+
+    /// Titles for the sync notes, which name them by id.
+    pub(super) fn apply_note_titles(&mut self, entries: &[Entry]) {
+        for entry in entries {
+            self.devices.note_titles.insert(entry.id.get(), entry.title.clone());
+        }
+        let last = self.device_lines().len().saturating_sub(1);
+        self.cursors.devices.selected = self.cursors.devices.selected.min(last);
     }
 
     /// How sync stands now: a folder set up closes its form, and a pairing that added a device
@@ -802,6 +944,17 @@ impl App {
             self.devices.invite = None;
             self.forget_sync_form();
             self.push_toast(info(t::pair_ok(&name)));
+        }
+        let unasked: Vec<AnilistId> = status
+            .notes
+            .iter()
+            .map(|n| n.anilist_id)
+            .filter(|id| !self.devices.note_titles.contains_key(id))
+            .filter(|id| self.devices.titles_asked.insert(*id))
+            .map(AnilistId::new)
+            .collect();
+        if !unasked.is_empty() {
+            self.commands.push(Command::LoadCards { ids: unasked });
         }
         self.devices.status = Some(status);
         let last = self.device_lines().len().saturating_sub(1);
@@ -866,7 +1019,8 @@ impl App {
             self.open_sync_overlay(Overlay::SyncRestore);
             return;
         }
-        let text = self.problem_text(&problem);
+        let text =
+            self.devices.pair_failed.take().unwrap_or_else(|| self.problem_text(&problem));
         if self.nav.overlay() == Some(&Overlay::SyncWait) {
             self.nav.close_overlay();
             self.devices.sign_in = None;
@@ -923,6 +1077,10 @@ mod tests {
             sign_ins: Vec::new(),
             folder: None,
             asked: Vec::new(),
+            kind: None,
+            paused: false,
+            remote_key: None,
+            remote_off: false,
         }
     }
 
@@ -976,6 +1134,8 @@ mod tests {
         assert_eq!(a.take_commands(), vec![Command::LoadProfiles]);
         assert!(a.in_devices());
         a.apply(Event::SyncStatus(status));
+        // On the first row under the name, where these tests start.
+        a.cursors.devices.selected = 1;
         a
     }
 
@@ -986,7 +1146,7 @@ mod tests {
     #[test]
     fn settings_d_and_the_palette_open_devices() {
         let mut a = at_devices(off());
-        assert_eq!(a.device_lines(), vec![DeviceLine::TurnOn]);
+        assert_eq!(a.device_lines(), vec![DeviceLine::Name, DeviceLine::TurnOn]);
         a.handle(Action::Back, 5);
         assert_eq!(a.nav.current(), &StageView::Section(Section::Settings));
 
@@ -1205,6 +1365,9 @@ mod tests {
         let mut a = at_devices(on(Some(SyncFolderKind::GoogleDrive)));
         assert_eq!(a.device_line(), Some(DeviceLine::Device(1)));
         assert_eq!(a.handle(Action::Open, 5), None);
+        assert_eq!(a.nav.overlay(), Some(&Overlay::SyncDevice));
+        a.handle(Action::Bottom, 5);
+        assert_eq!(a.handle(Action::Open, 5), None);
         assert_eq!(a.nav.overlay(), Some(&Overlay::SyncConfirm));
         assert_eq!(a.handle(Action::Down, 5), None, "a stray key answers nothing");
         assert_eq!(
@@ -1219,6 +1382,106 @@ mod tests {
         assert!(!a.nav.has_overlay() && a.devices.confirm.is_none());
         a.handle(Action::Open, 5);
         assert_eq!(a.handle(Action::Open, 5), Some(Command::LeaveSync));
+    }
+
+    #[test]
+    fn a_devices_page_turns_its_switches_and_the_remote_shows_only_when_paired() {
+        let mut status = on(Some(SyncFolderKind::GoogleDrive));
+        status.devices[1].sign_ins = vec![SyncFolderKind::Nextcloud];
+        let mut a = at_devices(status.clone());
+        a.handle(Action::Open, 5);
+        assert_eq!(
+            a.device_page_items(),
+            vec![DevicePageItem::Sync, DevicePageItem::CopySignIns, DevicePageItem::Remove]
+        );
+        assert_eq!(
+            a.handle(Action::Open, 5),
+            Some(Command::SyncGroup(SyncCommand::SetDeviceSync {
+                device: "b".into(),
+                on: false,
+            }))
+        );
+        a.handle(Action::Down, 5);
+        let task = a.handle(Action::Open, 5);
+        let Some(Command::SyncGroup(SyncCommand::CopySignIns { device, copy, .. })) = task
+        else {
+            panic!("{task:?}")
+        };
+        assert_eq!(device.as_deref(), Some("b"));
+        assert_eq!(copy.len(), 2);
+
+        status.devices[1].remote_key = Some("ab12".into());
+        status.devices[1].remote_off = true;
+        a.apply(Event::SyncStatus(status));
+        assert!(a.device_page_items().contains(&DevicePageItem::Remote));
+        a.cursors.overlay.selected = 1;
+        assert_eq!(
+            a.handle(Action::Open, 5),
+            Some(Command::SyncGroup(SyncCommand::SetDeviceRemote {
+                device: "b".into(),
+                on: true,
+            }))
+        );
+    }
+
+    #[test]
+    fn the_name_is_renamed_and_a_new_key_asks_first() {
+        let mut a = at_devices(on(Some(SyncFolderKind::GoogleDrive)));
+        a.cursors.devices.selected = 0;
+        a.handle(Action::Open, 5);
+        assert_eq!(a.nav.overlay(), Some(&Overlay::SyncName));
+        assert_eq!(a.text(Field::DeviceName), "Kim's laptop");
+        a.set_text(Field::DeviceName, "Den".into());
+        assert_eq!(
+            a.submit_devices_field(),
+            Some(Command::SyncGroup(SyncCommand::RenameDevice { name: "Den".into() }))
+        );
+
+        a.cursors.devices.selected =
+            a.device_lines().iter().position(|l| *l == DeviceLine::NewKey).unwrap();
+        assert_eq!(a.handle(Action::Open, 5), None);
+        assert_eq!(a.handle(Action::Open, 5), Some(Command::NewRecoveryKey));
+    }
+
+    #[test]
+    fn a_note_waits_for_its_title_then_marks_the_episode_unwatched() {
+        use kaeri_model::group::SyncNoteView;
+        let mut status = on(Some(SyncFolderKind::GoogleDrive));
+        status.notes = vec![SyncNoteView {
+            id: 7,
+            anilist_id: 900_001,
+            episode: "5".into(),
+            watch_device: "Kim's laptop".into(),
+            unwatch_device: "Kim's iPhone".into(),
+            at: 1_792_000_000,
+        }];
+        let mut a = at_devices(status);
+        assert!(!a.device_lines().iter().any(|l| matches!(l, DeviceLine::Note(_))));
+        assert!(a.take_commands().contains(&Command::LoadCards {
+            ids: vec![kaeri_core::ids::AnilistId::new(900_001)]
+        }));
+        a.devices.note_titles.insert(900_001, "Made-up Show".into());
+        a.cursors.devices.selected =
+            a.device_lines().iter().position(|l| *l == DeviceLine::Note(0)).unwrap();
+        assert_eq!(a.handle(Action::Open, 5), Some(Command::DismissSyncNote { id: 7 }));
+        assert!(a.take_commands().contains(&Command::SetWatched {
+            id: kaeri_core::ids::AnilistId::new(900_001),
+            episodes: vec!["5".into()],
+            watched: false,
+        }));
+    }
+
+    #[test]
+    fn a_wrong_code_is_said_by_the_device_that_refused_it() {
+        let mut a = at_devices(off());
+        a.cursors.overlay = Cursor::default();
+        a.nav.open_overlay(Overlay::SyncPairCode);
+        a.apply(Event::SyncPairFailed {
+            problem: SyncPairProblem::WrongCode,
+            device: Some("Kim's iPhone".into()),
+        });
+        a.apply(Event::SyncProblem(SyncProblem::Other("raw".into())));
+        assert_eq!(a.devices.problem, Some(t::pair_err_code("Kim's iPhone")));
     }
 
     #[test]
@@ -1263,7 +1526,7 @@ mod tests {
     fn one_profile_shows_nothing_and_two_can_be_switched_and_added_to() {
         let mut a = at_devices(off());
         a.apply(Event::Profiles(ProfilesView { profiles: Vec::new() }));
-        assert_eq!(a.device_lines(), vec![DeviceLine::TurnOn]);
+        assert_eq!(a.device_lines(), vec![DeviceLine::Name, DeviceLine::TurnOn]);
 
         a.apply(Event::Profiles(ProfilesView {
             profiles: vec![
@@ -1274,6 +1537,7 @@ mod tests {
         assert_eq!(
             a.device_lines(),
             vec![
+                DeviceLine::Name,
                 DeviceLine::TurnOn,
                 DeviceLine::Profile(0),
                 DeviceLine::Profile(1),

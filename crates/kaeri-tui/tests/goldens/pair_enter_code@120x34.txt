@@ -15,7 +15,7 @@ Kaeri                                                                           
 
   Both devices need to be on the same Wi-Fi.
 
-                            │
+                            │    Turn off sync on this computer
                             │
                             │
                             │

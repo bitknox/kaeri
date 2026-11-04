@@ -330,6 +330,16 @@ progressbar.home-progress progress { min-height: 3px; border-radius: 2px; backgr
   letter-spacing: 4px;
   color: var(--silk);
 }
+.step-pill {
+  background: var(--raised);
+  color: var(--haze);
+  border-radius: 999px;
+  padding: 2px 12px 2px 8px;
+  min-height: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+.step-pill:hover { background: var(--raised-selected); color: var(--silk); }
 .tag-pill {
   background: var(--raised);
   color: var(--haze);

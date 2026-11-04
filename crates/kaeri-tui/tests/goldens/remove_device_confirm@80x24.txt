@@ -13,9 +13,9 @@ Kaeri                                                  plugins ●  ·  anilist 
    │    Google Drive                Synced 4 min ago
    │    Sign out                    kim@mail.example
    │    Recovery key                Made 4 October
+   │    Make a new key
    │
    │    Turn off sync on this computer
-   │
    │
    │
    │
