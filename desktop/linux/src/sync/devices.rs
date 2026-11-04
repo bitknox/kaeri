@@ -5,7 +5,7 @@
 use std::rc::Rc;
 
 use adw::prelude::*;
-use gtk::glib;
+use gtk::{gio, glib};
 use kaeri_i18n::t;
 use kaeri_model::{
     command::Command,
@@ -23,7 +23,7 @@ fn now() -> i64 {
 pub fn fill(ctx: &Rc<Ctx>, page: &adw::PreferencesPage) {
     let status = ctx.hub.known.borrow().sync_group.clone().unwrap_or_default();
     page.add(&this_device(ctx, &status));
-    if status.enabled {
+    if !super::bare(&status) {
         page.add(&your_devices(ctx, &status));
         if let Some(group) = sync_notes(ctx, &status) {
             page.add(&group);
@@ -36,30 +36,76 @@ pub fn fill(ctx: &Rc<Ctx>, page: &adw::PreferencesPage) {
             page.add(&group);
         }
     } else {
-        let group = adw::PreferencesGroup::builder().title(t::sync_group()).build();
-        let row = adw::ActionRow::builder()
-            .title(t::sync_off_title())
-            .subtitle(t::sync_off_line())
-            .build();
-        let on = gtk::Button::with_label(&t::sync_turn_on());
-        on.add_css_class("suggested-action");
-        on.set_valign(gtk::Align::Center);
-        on.connect_clicked({
-            let ctx = Rc::downgrade(ctx);
-            move |_| {
-                if let Some(ctx) = ctx.upgrade() {
-                    dialogs::road(&ctx);
-                }
-            }
-        });
-        row.add_suffix(&on);
-        group.add(&row);
-        page.add(&group);
+        page.add(&two_ways_in(ctx));
         if let Some(group) = crate::tv::paired::group(ctx) {
             group.set_description(Some(t::devices_paired_tvs_foot().as_str()));
             page.add(&group);
         }
     }
+}
+
+/// While sync is off: the two ways in, in one boxed list under what sync shares, and a footnote
+/// under it. Pairing a device or adding a cloud folder turns sync on by itself.
+fn two_ways_in(ctx: &Rc<Ctx>) -> adw::PreferencesGroup {
+    let group = adw::PreferencesGroup::builder()
+        .title(t::sync_group())
+        .description(t::devices_sync_foot())
+        .build();
+    let button = |label: &str| {
+        let b = gtk::Button::with_label(label);
+        b.set_valign(gtk::Align::Center);
+        b
+    };
+    let nearby = adw::ActionRow::builder()
+        .title(t::sync_road_nearby())
+        .subtitle(t::sync_road_nearby_line())
+        .subtitle_lines(0)
+        .build();
+    let show = button(&t::pair_show_code());
+    let enter = button(&t::devices_enter_code());
+    nearby.add_suffix(&show);
+    nearby.add_suffix(&enter);
+    show.connect_clicked({
+        let ctx = Rc::downgrade(ctx);
+        move |_| {
+            if let Some(ctx) = ctx.upgrade() {
+                dialogs::pair_show(&ctx, dialogs::Origin::Devices);
+            }
+        }
+    });
+    enter.connect_clicked({
+        let ctx = Rc::downgrade(ctx);
+        move |_| {
+            if let Some(ctx) = ctx.upgrade() {
+                dialogs::pair_enter(&ctx);
+            }
+        }
+    });
+    let cloud = adw::ActionRow::builder()
+        .title(t::sync_road_cloud())
+        .subtitle(t::sync_road_cloud_line())
+        .subtitle_lines(0)
+        .build();
+    let add = button(&t::cloud_add());
+    cloud.add_suffix(&add);
+    add.connect_clicked({
+        let ctx = Rc::downgrade(ctx);
+        move |_| {
+            if let Some(ctx) = ctx.upgrade() {
+                dialogs::picker(&ctx);
+            }
+        }
+    });
+    group.add(&nearby);
+    group.add(&cloud);
+    let foot = gtk::Label::new(Some(&t::sync_start_foot()));
+    foot.add_css_class("haze");
+    foot.add_css_class("caption");
+    foot.set_wrap(true);
+    foot.set_xalign(0.0);
+    foot.set_margin_top(6);
+    group.add(&foot);
+    group
 }
 
 fn this_device(ctx: &Rc<Ctx>, status: &SyncStatus) -> adw::PreferencesGroup {
@@ -331,14 +377,13 @@ fn cloud_folder(ctx: &Rc<Ctx>, status: &SyncStatus) -> adw::PreferencesGroup {
         group.add(&row);
         return group;
     };
-    let state = super::cloud_state(status, now(), dialogs::setting_up(), dialogs::by_hand());
+    let state = super::cloud_state(status, now(), dialogs::by_hand());
     let row = adw::ActionRow::builder()
         .title(glib::markup_escape_text(&super::service_name(&folder.kind)))
         .build();
     let (line, mark) = match &state {
         CloudState::Synced(s) => (s.clone(), Mark::Water),
         CloudState::Syncing => (t::sync_syncing(), Mark::Water),
-        CloudState::SettingUp => (t::cloud_setting_up(), Mark::None),
         CloudState::SignedOut => (t::cloud_signed_out_line(&super::kind()), Mark::Hollow),
         CloudState::Problem(text, _) => (text.clone(), Mark::Vermilion),
         CloudState::Offline => (t::cloud_offline(&super::kind()), Mark::Amber),
@@ -353,13 +398,7 @@ fn cloud_folder(ctx: &Rc<Ctx>, status: &SyncStatus) -> adw::PreferencesGroup {
         line.push_str(&format!(" · {}", glib::markup_escape_text(account)));
     }
     row.set_subtitle(&line);
-    if state == CloudState::SettingUp {
-        let spinner = adw::Spinner::new();
-        spinner.set_size_request(24, 24);
-        row.add_prefix(&spinner);
-    } else {
-        row.add_prefix(&gtk::Image::from_icon_name("weather-overcast-symbolic")); // i18n-skip
-    }
+    row.add_prefix(&gtk::Image::from_icon_name("weather-overcast-symbolic")); // i18n-skip
     let service = folder.kind.clone();
     let cloud = matches!(
         service,
@@ -368,11 +407,6 @@ fn cloud_folder(ctx: &Rc<Ctx>, status: &SyncStatus) -> adw::PreferencesGroup {
             | kaeri_model::group::SyncFolderKind::OneDrive
     );
     match state {
-        CloudState::SettingUp => {
-            let b = button(&t::cloud_sync_now(), None);
-            b.set_sensitive(false);
-            row.add_suffix(&b);
-        }
         CloudState::SignedOut | CloudState::Problem(_, ProblemFix::SignInAgain) => {
             let again = matches!(state, CloudState::Problem(..));
             let label = if again { t::cloud_sign_in_again() } else { t::cloud_sign_in() };
@@ -412,23 +446,107 @@ fn cloud_folder(ctx: &Rc<Ctx>, status: &SyncStatus) -> adw::PreferencesGroup {
                 }
             });
             row.add_suffix(&now_button);
-            if cloud {
-                let out = button(&t::cloud_sign_out(), Some("flat"));
-                out.connect_clicked({
-                    let hub = Rc::downgrade(&ctx.hub);
-                    move |_| {
-                        dialogs::signed_out_by_hand();
-                        if let Some(hub) = hub.upgrade() {
-                            hub.send(Command::SyncSignOut { service: service.clone() });
-                        }
-                    }
-                });
-                row.add_suffix(&out);
-            }
         }
     }
+    row.add_suffix(&more_menu(ctx, &folder.kind, cloud));
     group.add(&row);
     group
+}
+
+thread_local! {
+    /// The cloud row's More button last drawn, for the shot that opens it.
+    static MORE: std::cell::RefCell<Option<glib::WeakRef<gtk::MenuButton>>> = const { std::cell::RefCell::new(None) };
+}
+
+/// For a shot: open the cloud row's More menu.
+#[cfg(feature = "fixtures")]
+pub fn pop_more() {
+    if let Some(button) = MORE.with_borrow(|m| m.as_ref().and_then(|w| w.upgrade())) {
+        button.popup();
+    }
+}
+
+/// The cloud row's More button: Use another service, Sign out for a cloud drive and, apart
+/// below them, Remove cloud folder, which asks first.
+fn more_menu(
+    ctx: &Rc<Ctx>,
+    kind: &kaeri_model::group::SyncFolderKind,
+    cloud: bool,
+) -> gtk::MenuButton {
+    let actions = gio::SimpleActionGroup::new();
+    let another = gio::SimpleAction::new("another", None);
+    another.connect_activate({
+        let (ctx, kind) = (Rc::downgrade(ctx), kind.clone());
+        move |_, _| {
+            if let Some(ctx) = ctx.upgrade() {
+                dialogs::picker_change(&ctx, &kind);
+            }
+        }
+    });
+    actions.add_action(&another);
+    let sign_out = gio::SimpleAction::new("signout", None);
+    sign_out.connect_activate({
+        let (hub, kind) = (Rc::downgrade(&ctx.hub), kind.clone());
+        move |_, _| {
+            dialogs::signed_out_by_hand();
+            if let Some(hub) = hub.upgrade() {
+                hub.send(Command::SyncSignOut { service: kind.clone() });
+            }
+        }
+    });
+    actions.add_action(&sign_out);
+    let remove = gio::SimpleAction::new("remove", None);
+    remove.connect_activate({
+        let (ctx, kind) = (Rc::downgrade(ctx), kind.clone());
+        move |_, _| {
+            if let Some(ctx) = ctx.upgrade() {
+                dialogs::remove_folder(&ctx, &kind);
+            }
+        }
+    });
+    actions.add_action(&remove);
+
+    let menu = gio::Menu::new();
+    let ways = gio::Menu::new();
+    ways.append(Some(&t::cloud_use_another()), Some("cloud.another"));
+    if cloud {
+        ways.append(Some(&t::cloud_sign_out()), Some("cloud.signout"));
+    }
+    menu.append_section(None, &ways);
+    // Remove sits apart and is the one item in vermilion, so it is a custom child of the popover.
+    let apart = gio::Menu::new();
+    let item = gio::MenuItem::new(None, None);
+    item.set_attribute_value("custom", Some(&"remove".to_variant()));
+    apart.append_item(&item);
+    menu.append_section(None, &apart);
+    let popover = gtk::PopoverMenu::from_model(Some(&menu));
+    let label = gtk::Label::new(Some(&t::cloud_remove()));
+    label.add_css_class("error");
+    label.set_xalign(0.0);
+    let remove_row = gtk::Button::new();
+    remove_row.set_child(Some(&label));
+    remove_row.add_css_class("flat");
+    remove_row.connect_clicked({
+        let (popover, remove) = (popover.clone(), remove);
+        move |_| {
+            popover.popdown();
+            remove.activate(None);
+        }
+    });
+    popover.add_child(&remove_row, "remove");
+    let more = gtk::MenuButton::builder()
+        .icon_name("view-more-symbolic") // i18n-skip
+        .popover(&popover)
+        .valign(gtk::Align::Center)
+        .css_classes(["flat"])
+        .build();
+    more.update_property(&[gtk::accessible::Property::Label(&t::cloud_more(
+        &super::service_name(kind),
+    ))]);
+    more.set_tooltip_text(Some(&t::cloud_more(&super::service_name(kind))));
+    more.insert_action_group("cloud", Some(&actions));
+    MORE.with_borrow_mut(|m| *m = Some(more.downgrade()));
+    more
 }
 
 /// The recovery key row (once a folder holds one) and Turn off sync last, in one box.

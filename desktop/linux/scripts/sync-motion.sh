@@ -29,7 +29,7 @@ for mode in normal reduced; do
   # Cut from the first frame that is not black, where the window came up.
   start=$(ffmpeg -hide_banner -i "/tmp/raw-$mode.mp4" -vf blackdetect=d=0.2:pix_th=0.05 -an -f null - 2>&1 \
     | grep -oE 'black_end:[0-9.]+' | head -1 | cut -d: -f2)
-  ffmpeg -hide_banner -loglevel error -y -ss "${start:-0}" -i "/tmp/raw-$mode.mp4" -t 14 \
+  ffmpeg -hide_banner -loglevel error -y -ss "${start:-0}" -i "/tmp/raw-$mode.mp4" -t 18 \
     -c:v libx264 -preset veryfast -pix_fmt yuv420p "/out/motion/sync-picker-$mode.mp4"
 done
 ls -1 /out/motion

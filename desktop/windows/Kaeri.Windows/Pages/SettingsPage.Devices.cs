@@ -32,7 +32,7 @@ public sealed partial class SettingsPage
     {
         var status = ctx.Known.SyncGroup ?? new SyncStatus(false, false, Devices: [], Notes: [], StoresToJoin: [], Clouds: []);
         ThisDevice(status);
-        if (status.Enabled)
+        if (!SyncWords.Bare(status))
         {
             YourDevices(status);
             SyncNotes(status);
@@ -42,12 +42,35 @@ public sealed partial class SettingsPage
         }
         else
         {
-            Cards.Children.Add(Heading(T.SyncGroup));
-            var on = new Button { Content = T.SyncTurnOn, Style = Res<Style>("AccentButtonStyle") };
-            on.Click += (_, _) => SyncDialogs.Road();
-            Cards.Children.Add(CardFrame(T.SyncOffTitle, T.SyncOffLine, on, ""));
+            TwoWaysIn();
             PairedTvs(true);
         }
+    }
+
+    /// <summary>
+    /// While sync is off: the two ways in, each a card with its buttons, under what sync shares,
+    /// and a footnote. Pairing a device or adding a cloud folder turns sync on by itself.
+    /// </summary>
+    void TwoWaysIn()
+    {
+        Cards.Children.Add(Heading(T.SyncGroup));
+        var lead = Ui.Text(T.DevicesSyncFoot, "HazeCaptionStyle");
+        lead.Margin = new Thickness(2, 0, 0, 4);
+        Cards.Children.Add(lead);
+        var nearby = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+        var show = new Button { Content = T.PairShowCode };
+        show.Click += (_, _) => SyncDialogs.PairShow(Origin.Devices);
+        var enter = new Button { Content = T.DevicesEnterCode };
+        enter.Click += (_, _) => SyncDialogs.PairEnter();
+        nearby.Children.Add(show);
+        nearby.Children.Add(enter);
+        Cards.Children.Add(CardFrame(T.SyncRoadNearby, T.SyncRoadNearbyLine, nearby, "\uE702"));
+        var add = new Button { Content = T.CloudAdd };
+        add.Click += (_, _) => SyncDialogs.Picker();
+        Cards.Children.Add(CardFrame(T.SyncRoadCloud, T.SyncRoadCloudLine, add, "\uE753"));
+        var foot = Ui.Text(T.SyncStartFoot, "HazeCaptionStyle");
+        foot.Margin = new Thickness(2, 4, 0, 0);
+        Cards.Children.Add(foot);
     }
 
     void ThisDevice(SyncStatus status)
@@ -207,12 +230,11 @@ public sealed partial class SettingsPage
             return;
         }
         var service = SyncWords.ServiceName(folder.Kind);
-        var state = SyncWords.State(status, Now, SyncDialogs.SettingUp, SyncDialogs.ByHand);
+        var state = SyncWords.State(status, Now, SyncDialogs.ByHand);
         var (line, mark) = state switch
         {
             CloudState.Synced synced => (folder.Account is { } account ? $"{synced.Line} · {account}" : synced.Line, SyncMark.Water),
             CloudState.Syncing => (T.SyncSyncing, SyncMark.Water),
-            CloudState.SettingUp => (T.CloudSettingUp, SyncMark.None),
             CloudState.SignedOut => (T.CloudSignedOutLine(SyncWords.Kind), SyncMark.Hollow),
             CloudState.Problem problem => (problem.Line, SyncMark.Vermilion),
             _ => (T.CloudOffline(SyncWords.Kind), SyncMark.Amber),
@@ -220,9 +242,6 @@ public sealed partial class SettingsPage
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
         switch (state)
         {
-            case CloudState.SettingUp:
-                buttons.Children.Add(new Button { Content = T.CloudSyncNow, IsEnabled = false });
-                break;
             case CloudState.SignedOut or CloudState.Problem { Fix: ProblemFix.SignInAgain }:
                 var again = state is CloudState.Problem;
                 var signIn = new Button { Content = again ? T.CloudSignInAgain : T.CloudSignIn };
@@ -240,28 +259,60 @@ public sealed partial class SettingsPage
                 var now = new Button { Content = T.CloudSyncNow, IsEnabled = !status.Syncing };
                 now.Click += (_, _) => ctx.Send(new Command.SyncFolderNow());
                 buttons.Children.Add(now);
-                if (SyncWords.IsCloud(folder.Kind))
-                {
-                    var signOut = new Button { Content = T.CloudSignOut };
-                    signOut.Click += (_, _) =>
-                    {
-                        SyncDialogs.SignedOutByHand();
-                        ctx.Send(new Command.SyncSignOut(folder.Kind));
-                    };
-                    buttons.Children.Add(signOut);
-                }
                 break;
         }
+        buttons.Children.Add(MoreButton(folder.Kind, service));
         var card = new SettingsCard
         {
             Header = state is CloudState.Problem ? T.CloudErrTitle(service) : service,
             Content = buttons,
-            HeaderIcon = new FontIcon { Glyph = "", Opacity = state is CloudState.SettingUp ? 0.45 : 1 },
+            HeaderIcon = new FontIcon { Glyph = "" },
         };
         if (Marked(line, mark) is { } described)
             card.Description = described;
         AutomationProperties.SetName(card, $"{card.Header}, {line}");
         Cards.Children.Add(card);
+    }
+
+    /// <summary>
+    /// The cloud card's More button, a borderless glyph button with a flyout: Use another service,
+    /// Sign out for a cloud drive and, apart below a separator, Remove cloud folder in the
+    /// critical colour, which asks first.
+    /// </summary>
+    Button MoreButton(SyncFolderKind kind, string service)
+    {
+        var flyout = new MenuFlyout();
+        var another = new MenuFlyoutItem { Text = T.CloudUseAnother };
+        another.Click += (_, _) => SyncDialogs.PickerChange(kind);
+        flyout.Items.Add(another);
+        if (SyncWords.IsCloud(kind))
+        {
+            var signOut = new MenuFlyoutItem { Text = T.CloudSignOut };
+            signOut.Click += (_, _) =>
+            {
+                SyncDialogs.SignedOutByHand();
+                ctx.Send(new Command.SyncSignOut(kind));
+            };
+            flyout.Items.Add(signOut);
+        }
+        flyout.Items.Add(new MenuFlyoutSeparator());
+        var remove = new MenuFlyoutItem { Text = T.CloudRemove, Foreground = Res<Brush>("SystemFillColorCriticalBrush") };
+        remove.Click += (_, _) => SyncDialogs.RemoveFolder(kind);
+        flyout.Items.Add(remove);
+        var more = new Button
+        {
+            Content = new FontIcon { Glyph = "\uE712", FontSize = 16 },
+            Width = 32,
+            Height = 32,
+            Padding = new Thickness(0),
+            Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
+            BorderThickness = new Thickness(0),
+            VerticalAlignment = VerticalAlignment.Center,
+            Flyout = flyout,
+        };
+        AutomationProperties.SetName(more, T.CloudMore(service));
+        ToolTipService.SetToolTip(more, T.CloudMore(service));
+        return more;
     }
 
     /// <summary>The recovery key (once a folder holds one), Make a new key, and Turn off sync last.</summary>

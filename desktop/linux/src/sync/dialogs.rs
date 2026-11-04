@@ -1,10 +1,15 @@
-//! The dialogs of sync: how devices share, choosing a cloud folder and waiting for the browser,
-//! the recovery key, restoring with it, and pairing both ways. Each is an AdwDialog on the
-//! window; the choosing ones never close on a click outside. The engine's events move them on:
-//! a cloud sign-in's steps turn the picker into a wait in place (a crossfade), and the return
-//! closes every dialog together before the recovery key shows.
+//! The dialogs of sync: choosing a cloud folder and waiting for the browser, the recovery key,
+//! restoring with it, and pairing both ways. Each is an AdwDialog on the window; the choosing
+//! ones never close on a click outside. The engine's events move them on: a cloud sign-in's
+//! steps turn the picker into a wait in place and then into Connecting, Setting up the folder,
+//! and the recovery key or an error, each a crossfade in the same dialog.
 
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::{
+    cell::{Cell, RefCell},
+    collections::HashMap,
+    rc::Rc,
+    time::{Duration, Instant},
+};
 
 use adw::prelude::*;
 use gtk::{gio, glib};
@@ -53,15 +58,51 @@ impl Title {
     }
 }
 
+/// Where the sign-in stands in the picker's wait page.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Stage {
+    /// The browser is open on the service's page.
+    Browser,
+    /// The browser came back with access allowed.
+    Connecting,
+    /// Signed in; the folder is being made.
+    SettingUp,
+    /// The sign-in or the set-up failed.
+    Error,
+    /// The folder is ready and the recovery key shows.
+    Key,
+}
+
+/// The timing of the return: a state shows only past 600 ms and then stays at least 400 ms.
+#[derive(Default)]
+struct Pace {
+    /// When the browser came back.
+    returned: Option<Instant>,
+    /// When Connecting or Setting up was put on screen.
+    shown: Option<Instant>,
+    /// The sign-in got as far as making the folder.
+    finishing: bool,
+    timer: Option<glib::SourceId>,
+}
+
 #[derive(Clone)]
 struct Picker {
     dialog: adw::Dialog,
     nav: adw::NavigationView,
     wait_page: adw::NavigationPage,
     error: gtk::Label,
+    head: Title,
+    body: gtk::Stack,
+    spinner: adw::Spinner,
     wait_title: gtk::Label,
     wait_line: gtk::Label,
     open_again: gtk::Button,
+    fail_line: gtk::Label,
+    key_slot: gtk::Box,
+    cancel: gtk::Button,
+    primary: gtk::Button,
+    stage: Rc<Cell<Stage>>,
+    pace: Rc<RefCell<Pace>>,
     nc_error: gtk::Label,
     dav_error: gtk::Label,
     nc_host: Rc<RefCell<String>>,
@@ -111,7 +152,8 @@ struct Ui {
     restore: Option<Restore>,
     key: Option<adw::Dialog>,
     by_hand: bool,
-    setting_up: bool,
+    /// The picker was opened by Use another service: a choice moves the group's folder.
+    changing: bool,
     name: Option<String>,
     last: Option<SyncFolderKind>,
     /// The sheet already said why pairing failed, in words of its own: the problem that follows
@@ -129,10 +171,6 @@ fn with<R>(f: impl FnOnce(&mut Ui) -> R) -> R {
 
 pub fn by_hand() -> bool {
     with(|u| u.by_hand)
-}
-
-pub fn setting_up() -> bool {
-    with(|u| u.setting_up)
 }
 
 pub fn signed_out_by_hand() {
@@ -295,107 +333,185 @@ pub fn qr_area(text: &str, px: i32) -> gtk::DrawingArea {
     area
 }
 
-// ---------------------------------------------------------------- road
-
-/// How should your devices share? Over Devices while sync is off.
-pub fn road(ctx: &Rc<Ctx>) {
-    let body = column();
-    let list = boxed();
-    let nearby = choice_row(
-        &t::sync_road_nearby(),
-        &t::sync_road_nearby_line(),
-        "network-wireless-symbolic",
-    ); // i18n-skip
-    let cloud = choice_row(
-        &t::sync_road_cloud(),
-        &t::sync_road_cloud_line(),
-        "weather-overcast-symbolic",
-    ); // i18n-skip
-    list.append(&nearby);
-    list.append(&cloud);
-    body.append(&list);
-    body.append(&note(&t::sync_road_later()));
-    let (dialog, header, _) = frame(&t::sync_road_title(), 480, &body);
-    let cancel = button(&t::action_cancel(), None);
-    header.pack_start(&cancel);
-    cancel.connect_clicked({
-        let d = dialog.clone();
-        move |_| {
-            d.close();
-        }
-    });
-    nearby.connect_activated({
-        let (ctx, d) = (Rc::downgrade(ctx), dialog.clone());
-        move |_| {
-            d.close();
-            if let Some(ctx) = ctx.upgrade() {
-                pair_show(&ctx, Origin::Devices);
-            }
-        }
-    });
-    cloud.connect_activated({
-        let (ctx, d) = (Rc::downgrade(ctx), dialog.clone());
-        move |_| {
-            d.close();
-            if let Some(ctx) = ctx.upgrade() {
-                picker(&ctx);
-            }
-        }
-    });
-    present(ctx, &dialog);
-}
-
 // ---------------------------------------------------------------- picker and wait
 
 /// Choose a cloud folder.
 pub fn picker(ctx: &Rc<Ctx>) {
-    present_picker(ctx, "list");
+    with(|u| u.changing = false);
+    present_picker(ctx, "list", None);
 }
 
-/// For a shot: the sign-in came back, so the picker closes.
-#[cfg(feature = "fixtures")]
-pub fn finish_for_shot(_ctx: &Rc<Ctx>) {
-    if let Some(p) = with(|u| u.picker.clone()) {
-        p.dialog.close();
-    }
+/// Use another service: the picker, with the folder in use marked, whose choice moves the
+/// group to the new folder.
+pub fn picker_change(ctx: &Rc<Ctx>, in_use: &SyncFolderKind) {
+    with(|u| u.changing = true);
+    present_picker(ctx, "list", Some(in_use.clone()));
 }
 
 /// For a shot: the picker on one of its pages.
 #[cfg(feature = "fixtures")]
 pub fn picker_page(ctx: &Rc<Ctx>, page: &str) {
-    present_picker(ctx, page);
+    present_picker(ctx, page, None);
 }
 
 /// The wait for the browser, on its own: Sign in again from the cloud row.
 pub fn sign_in_again(ctx: &Rc<Ctx>, service: &SyncFolderKind) {
     with(|u| {
         u.by_hand = false;
+        u.changing = false;
         u.last = Some(service.clone());
     });
     ctx.hub.known.borrow_mut().sync_problem = None;
     ctx.hub.send(Command::SyncSignIn { service: service.clone() });
-    let p = present_picker(ctx, "wait");
-    set_wait(&p, service, None);
+    let p = present_picker(ctx, "wait", None);
+    stage_to(&p, service, Stage::Browser, None, None);
 }
 
-/// For a shot: the wait page for `service`, the browser opened at `url`.
+/// For a shot: the wait page in one of its states for `service`. The browser's is opened at
+/// `url`; "denied", "expired" and "full" are the errors; "key" the recovery key.
 #[cfg(feature = "fixtures")]
-pub fn picker_wait(ctx: &Rc<Ctx>, service: &SyncFolderKind, url: &str) {
-    let p = present_picker(ctx, "wait");
-    set_wait(&p, service, Some(url));
+pub fn picker_state(ctx: &Rc<Ctx>, service: &SyncFolderKind, state: &str, url: &str) {
+    let p = present_picker(ctx, "wait", None);
+    let name = service_name(service);
+    let (stage, error) = match state {
+        "connecting" => (Stage::Connecting, None),
+        "setting" => (Stage::SettingUp, None),
+        "denied" => (
+            Stage::Error,
+            Some((t::cloud_err_signin_title(&name), t::cloud_err_denied_short(&name))),
+        ),
+        "expired" => {
+            (Stage::Error, Some((t::cloud_err_signin_title(&name), t::cloud_err_timeout())))
+        }
+        "full" => (Stage::Error, Some((t::cloud_err_setup_title(), t::cloud_err_full(&name)))),
+        "key" => (Stage::Key, None),
+        _ => (Stage::Browser, None),
+    };
+    if stage == Stage::Key {
+        fill_key(ctx, &p.key_slot, "K7QM4XR9TB2HWN6CP3ZD8FLA");
+    }
+    show_stage(&p, service, stage, (stage == Stage::Browser).then_some(url), error.as_ref());
 }
 
-fn set_wait(p: &Picker, service: &SyncFolderKind, url: Option<&str>) {
+/// The state the wait page is in, and the pace it came at: Connecting and Setting up show
+/// only past 600 ms of the return, and a state shown stays at least 400 ms.
+fn stage_to(
+    p: &Picker,
+    service: &SyncFolderKind,
+    stage: Stage,
+    url: Option<&str>,
+    error: Option<(String, String)>,
+) {
+    let returning = matches!(stage, Stage::Connecting | Stage::SettingUp);
+    let delay = {
+        let mut pace = p.pace.borrow_mut();
+        if let Some(id) = pace.timer.take() {
+            id.remove();
+        }
+        if stage == Stage::Browser {
+            *pace = Pace::default();
+        } else {
+            pace.returned.get_or_insert_with(Instant::now);
+        }
+        let mut delay = Duration::ZERO;
+        if returning && pace.shown.is_none() {
+            let since = pace.returned.map(|r| r.elapsed()).unwrap_or_default();
+            delay = Duration::from_millis(600).saturating_sub(since);
+        }
+        if let Some(shown) = pace.shown {
+            delay = delay.max(Duration::from_millis(400).saturating_sub(shown.elapsed()));
+        }
+        delay
+    };
+    let (p2, service, url) = (p.clone(), service.clone(), url.map(str::to_owned));
+    let apply = move || {
+        p2.pace.borrow_mut().shown = returning.then(Instant::now);
+        show_stage(&p2, &service, stage, url.as_deref(), error.as_ref());
+    };
+    if delay.is_zero() {
+        apply();
+    } else {
+        let p3 = p.clone();
+        let id = glib::timeout_add_local_once(delay, move || {
+            p3.pace.borrow_mut().timer = None;
+            apply();
+        });
+        p.pace.borrow_mut().timer = Some(id);
+    }
+}
+
+/// Close the picker once the state on screen has had its 400 ms.
+fn close_after_stage(p: &Picker) {
+    let delay = {
+        let mut pace = p.pace.borrow_mut();
+        if let Some(id) = pace.timer.take() {
+            id.remove();
+        }
+        pace.shown
+            .map_or(Duration::ZERO, |s| Duration::from_millis(400).saturating_sub(s.elapsed()))
+    };
+    let p2 = p.clone();
+    let close = move || {
+        p2.dialog.set_can_close(true);
+        p2.dialog.force_close();
+    };
+    if delay.is_zero() {
+        close();
+    } else {
+        let p3 = p.clone();
+        let id = glib::timeout_add_local_once(delay, move || {
+            p3.pace.borrow_mut().timer = None;
+            close();
+        });
+        p.pace.borrow_mut().timer = Some(id);
+    }
+}
+
+/// Put the wait page in `stage` at once: the title in the header bar and the content crossfade,
+/// the spinner stays. Cancel dims once the browser has come back, as that cannot be stopped.
+fn show_stage(
+    p: &Picker,
+    service: &SyncFolderKind,
+    stage: Stage,
+    url: Option<&str>,
+    error: Option<&(String, String)>,
+) {
     let name = service_name(service);
-    p.wait_page.set_title(&t::cloud_browser_title(&name));
+    p.stage.set(stage);
+    let (title, line) = match stage {
+        Stage::Browser => (t::cloud_browser_title(&name), t::cloud_browser_line(&name)),
+        Stage::Connecting => (t::cloud_connecting(&name), t::cloud_connecting_line()),
+        Stage::SettingUp => (t::cloud_setting_up(), t::cloud_setting_up_line(&name)),
+        Stage::Error => error.cloned().unwrap_or_default(),
+        Stage::Key => (t::rkey_title(), String::new()),
+    };
+    p.wait_page.set_title(&title);
+    p.head.set_title(&title);
     p.wait_title.set_label(&t::cloud_waiting(&name));
-    p.wait_line.set_label(&t::cloud_browser_line(&name));
-    p.open_again.set_visible(url.is_some());
+    p.wait_title.set_visible(stage == Stage::Browser);
+    p.wait_line.set_label(&line);
+    p.fail_line.set_label(&line);
+    p.spinner.set_visible(!matches!(stage, Stage::Error | Stage::Key));
+    p.open_again.set_visible(stage == Stage::Browser && url.is_some());
     p.open_again.set_widget_name(url.unwrap_or_default());
+    p.body.set_visible_child_name(match stage {
+        Stage::Error => "error",
+        Stage::Key => "key",
+        _ => "progress",
+    });
+    p.cancel.set_visible(stage != Stage::Key);
+    p.cancel.set_sensitive(!matches!(stage, Stage::Connecting | Stage::SettingUp));
+    p.primary.set_visible(matches!(stage, Stage::Error | Stage::Key));
+    p.primary.set_label(&if stage == Stage::Key {
+        t::action_done()
+    } else {
+        t::action_try_again()
+    });
+    p.dialog.set_can_close(matches!(stage, Stage::Browser | Stage::Error));
     go(p, "wait");
 }
 
-fn present_picker(ctx: &Rc<Ctx>, page: &str) -> Picker {
+fn present_picker(ctx: &Rc<Ctx>, page: &str, in_use: Option<SyncFolderKind>) -> Picker {
     if let Some(p) = with(|u| u.picker.clone()) {
         go(&p, page);
         return p;
@@ -417,6 +533,7 @@ fn present_picker(ctx: &Rc<Ctx>, page: &str) -> Picker {
             _ => (t::cloud_nextcloud_line(), "network-server-symbolic"), // i18n-skip
         };
         let row = choice_row(&name, &line, icon);
+        mark_in_use(&row, &kind, in_use.as_ref());
         row.connect_activated({
             let ctx = Rc::downgrade(ctx);
             let kind = kind.clone();
@@ -443,8 +560,10 @@ fn present_picker(ctx: &Rc<Ctx>, page: &str) -> Picker {
         ),
     ] {
         let row = choice_row(&title, &line, icon);
+        mark_in_use(&row, &kind, in_use.as_ref());
         row.connect_activated({
             let ctx = Rc::downgrade(ctx);
+            let kind = kind.clone();
             move |_| {
                 if let Some(ctx) = ctx.upgrade() {
                     choose(&ctx, &kind);
@@ -454,17 +573,22 @@ fn present_picker(ctx: &Rc<Ctx>, page: &str) -> Picker {
         list.append(&row);
     }
     list_page.append(&list);
-    list_page.append(&note(&t::cloud_pick_foot()));
+    list_page.append(&note(&match &in_use {
+        Some(kind) => {
+            format!("{} {}", t::cloud_switch_foot(&service_name(kind)), t::cloud_pick_foot())
+        }
+        None => t::cloud_pick_foot(),
+    }));
 
-    // The wait.
-    let wait = column();
-    wait.set_halign(gtk::Align::Center);
+    // The wait: one stack whose states crossfade, in the one dialog.
+    let progress = gtk::Box::new(gtk::Orientation::Vertical, 12);
+    progress.set_halign(gtk::Align::Center);
     let spinner = adw::Spinner::new();
     spinner.set_size_request(40, 40);
     let wait_title = gtk::Label::new(None);
     wait_title.add_css_class("heading");
     let wait_line = line_centered();
-    let open_again = button(&t::cloud_open_again(), None);
+    let open_again = button(&t::cloud_open_again(), Some("flat"));
     open_again.set_halign(gtk::Align::Center);
     open_again.set_visible(false);
     open_again.connect_clicked({
@@ -476,10 +600,20 @@ fn present_picker(ctx: &Rc<Ctx>, page: &str) -> Picker {
             }
         }
     });
-    wait.append(&spinner);
-    wait.append(&wait_title);
-    wait.append(&wait_line);
-    wait.append(&open_again);
+    progress.append(&spinner);
+    progress.append(&wait_title);
+    progress.append(&wait_line);
+    progress.append(&open_again);
+    let failed = gtk::Box::new(gtk::Orientation::Vertical, 12);
+    let fail_line = line("");
+    failed.append(&fail_line);
+    let key_slot = gtk::Box::new(gtk::Orientation::Vertical, 12);
+    let body = crossfade_stack();
+    body.add_named(&progress, Some("progress"));
+    body.add_named(&failed, Some("error"));
+    body.add_named(&key_slot, Some("key"));
+    let wait = column();
+    wait.append(&body);
 
     // Nextcloud.
     let nc = column();
@@ -538,7 +672,7 @@ fn present_picker(ctx: &Rc<Ctx>, page: &str) -> Picker {
                 user: g.is_visible().then(|| user.text().to_string()),
                 password: g.is_visible().then(|| Secret(pass.text().to_string())),
             };
-            ctx.hub.send(Command::StartSync { device_name: typed_device_name(), folder: spec });
+            begin(&ctx, spec);
         }
     });
 
@@ -573,7 +707,7 @@ fn present_picker(ctx: &Rc<Ctx>, page: &str) -> Picker {
                 user: Some(u.text().to_string()),
                 password: Some(Secret(p.text().to_string())),
             };
-            ctx.hub.send(Command::StartSync { device_name: typed_device_name(), folder: spec });
+            begin(&ctx, spec);
         }
     });
     dav.append(&dav_error);
@@ -584,11 +718,22 @@ fn present_picker(ctx: &Rc<Ctx>, page: &str) -> Picker {
     // own back button replaces a step label and the push is the system navigation motion.
     let nav = adw::NavigationView::new();
     nav.set_pop_on_escape(false);
-    let (list_nav, list_cancel) = nav_page("list", &t::cloud_pick_title(), &list_page, None);
-    let (nc_nav, nc_cancel) = nav_page("nextcloud", "Nextcloud", &nc, Some(true)); // i18n-skip
-    let (dav_nav, dav_cancel) = nav_page("webdav", &t::cloud_webdav(), &dav, Some(true));
-    let (wait_page, wait_cancel) =
-        nav_page("wait", &t::cloud_browser_title(""), &wait, Some(false));
+    let head = Title::new(&t::cloud_pick_title());
+    let primary = button(&t::action_try_again(), Some("suggested-action"));
+    primary.set_visible(false);
+    let (list_nav, list_cancel) =
+        nav_page("list", &t::cloud_pick_title(), &list_page, None, None, None);
+    let (nc_nav, nc_cancel) = nav_page("nextcloud", "Nextcloud", &nc, Some(true), None, None); // i18n-skip
+    let (dav_nav, dav_cancel) =
+        nav_page("webdav", &t::cloud_webdav(), &dav, Some(true), None, None);
+    let (wait_page, wait_cancel) = nav_page(
+        "wait",
+        &t::cloud_browser_title(""),
+        &wait,
+        Some(false),
+        Some(&head),
+        Some(&primary),
+    );
     // Cancel on a pushed page returns to the list, which stops a sign-in under way.
     for cancel in [&nc_cancel, &dav_cancel, &wait_cancel] {
         cancel.connect_clicked({
@@ -625,9 +770,18 @@ fn present_picker(ctx: &Rc<Ctx>, page: &str) -> Picker {
         nav: nav.clone(),
         wait_page,
         error,
+        head,
+        body,
+        spinner,
         wait_title,
         wait_line,
         open_again,
+        fail_line,
+        key_slot,
+        cancel: wait_cancel,
+        primary: primary.clone(),
+        stage: Rc::new(Cell::new(Stage::Browser)),
+        pace: Rc::default(),
         nc_error: nc_error.clone(),
         dav_error,
         nc_host: nc_host.clone(),
@@ -642,7 +796,34 @@ fn present_picker(ctx: &Rc<Ctx>, page: &str) -> Picker {
             }
         }
     });
-    dialog.connect_closed(|_| with(|u| u.picker = None));
+    primary.connect_clicked({
+        let (ctx, p) = (Rc::downgrade(ctx), picker.clone());
+        move |_| {
+            let Some(ctx) = ctx.upgrade() else { return };
+            match p.stage.get() {
+                Stage::Key => {
+                    ctx.hub.known.borrow_mut().recovery_key = None;
+                    p.dialog.set_can_close(true);
+                    p.dialog.force_close();
+                }
+                // Try again starts a new sign-in in the same dialog.
+                _ => {
+                    if let Some(kind) = with(|u| u.last.clone()) {
+                        choose(&ctx, &kind);
+                    }
+                }
+            }
+        }
+    });
+    dialog.connect_closed({
+        let p = picker.clone();
+        move |_| {
+            if let Some(id) = p.pace.borrow_mut().timer.take() {
+                id.remove();
+            }
+            with(|u| u.picker = None);
+        }
+    });
     with(|u| u.picker = Some(picker.clone()));
     present(ctx, &dialog);
     picker
@@ -659,12 +840,15 @@ fn line_centered() -> gtk::Label {
 /// A page of the picker's navigation: its own header bar over `body`, and its Cancel button. The
 /// list has Cancel at the start, which closes the dialog; a pushed page has the back button, and
 /// Cancel at the end. `pushed` is `Some(true)` for a form, whose back button stays, and
-/// `Some(false)` for the wait, which only Cancel leaves.
+/// `Some(false)` for the wait, which only Cancel leaves. The wait gives its header a title that
+/// crossfades and a primary button (Try again, Done) beside Cancel.
 fn nav_page(
     tag: &str,
     title: &str,
     body: &impl IsA<gtk::Widget>,
     pushed: Option<bool>,
+    head: Option<&Title>,
+    primary: Option<&gtk::Button>,
 ) -> (adw::NavigationPage, gtk::Button) {
     let header = adw::HeaderBar::new();
     header.set_show_start_title_buttons(false);
@@ -673,9 +857,15 @@ fn nav_page(
     match pushed {
         None => header.pack_start(&cancel),
         Some(back) => {
+            if let Some(primary) = primary {
+                header.pack_end(primary);
+            }
             header.pack_end(&cancel);
             header.set_show_back_button(back);
         }
+    }
+    if let Some(head) = head {
+        header.set_title_widget(Some(&head.0));
     }
     // Every page of the picker is 480 wide, the list and each form: a column of 432 between the
     // columns' 24 margins, so the dialog does not change width as the pages push.
@@ -712,6 +902,25 @@ fn host_of(typed: &str) -> String {
     t.split('/').next().unwrap_or(t).to_owned()
 }
 
+/// Set a folder up: the first one turns sync on, and Use another service moves the group.
+fn begin(ctx: &Rc<Ctx>, folder: SyncFolderSpec) {
+    if with(|u| u.changing) {
+        ctx.hub
+            .send(Command::SyncGroup(SyncCommand::ChangeSyncFolder { folder: Some(folder) }));
+    } else {
+        ctx.hub.send(Command::StartSync { device_name: typed_device_name(), folder });
+    }
+}
+
+/// The row of the service in use, in Use another service: dimmed and marked.
+fn mark_in_use(row: &adw::ActionRow, kind: &SyncFolderKind, in_use: Option<&SyncFolderKind>) {
+    if in_use == Some(kind) {
+        row.set_subtitle(&t::cloud_in_use());
+        row.set_sensitive(false);
+        row.set_activatable(false);
+    }
+}
+
 /// A row in the picker was chosen.
 fn choose(ctx: &Rc<Ctx>, kind: &SyncFolderKind) {
     ctx.hub.known.borrow_mut().sync_problem = None;
@@ -723,16 +932,16 @@ fn choose(ctx: &Rc<Ctx>, kind: &SyncFolderKind) {
     say_error(&p.error, None);
     match kind {
         SyncFolderKind::GoogleDrive | SyncFolderKind::Dropbox | SyncFolderKind::OneDrive => {
-            ctx.hub.send(Command::StartSync {
-                device_name: typed_device_name(),
-                folder: SyncFolderSpec {
+            begin(
+                ctx,
+                SyncFolderSpec {
                     kind: kind.clone(),
                     address: None,
                     user: None,
                     password: None,
                 },
-            });
-            set_wait(&p, kind, None);
+            );
+            stage_to(&p, kind, Stage::Browser, None, None);
         }
         SyncFolderKind::Nextcloud => go(&p, "nextcloud"),
         SyncFolderKind::WebDav => go(&p, "webdav"),
@@ -743,17 +952,36 @@ fn choose(ctx: &Rc<Ctx>, kind: &SyncFolderKind) {
             chooser.select_folder(window.as_ref(), gio::Cancellable::NONE, move |picked| {
                 let (Ok(folder), Some(ctx)) = (picked, ctx.upgrade()) else { return };
                 let Some(path) = folder.path() else { return };
-                ctx.hub.send(Command::StartSync {
-                    device_name: typed_device_name(),
-                    folder: SyncFolderSpec {
+                begin(
+                    &ctx,
+                    SyncFolderSpec {
                         kind: SyncFolderKind::Directory,
                         address: Some(path.display().to_string()),
                         user: None,
                         password: None,
                     },
-                });
+                );
             });
         }
+    }
+}
+
+/// The title and the line of a failed cloud sign-in: a refusal, a page that timed out, or any
+/// other failure before the folder (the details go to Messages) say the sign-in failed; one
+/// after it says the folder could not be set up.
+fn sign_in_error(
+    problem: &SyncProblem,
+    service: &SyncFolderKind,
+    text: &str,
+    p: &Picker,
+) -> (String, String) {
+    let name = service_name(service);
+    let signin = t::cloud_err_signin_title(&name);
+    match problem {
+        SyncProblem::SignInDenied { .. } => (signin, t::cloud_err_denied_short(&name)),
+        SyncProblem::SignInExpired { .. } => (signin, t::cloud_err_timeout()),
+        _ if p.pace.borrow().finishing => (t::cloud_err_setup_title(), text.to_owned()),
+        _ => (signin, t::cloud_err_signin_other(&name)),
     }
 }
 
@@ -781,17 +1009,16 @@ pub fn problem_text(
 
 // ---------------------------------------------------------------- recovery key
 
-/// The recovery key, once the first cloud folder is set; `from_devices` when it is seen again.
-pub fn key_dialog(ctx: &Rc<Ctx>) {
-    let Some(key) = ctx.hub.known.borrow().recovery_key.clone() else { return };
-    if let Some(d) = with(|u| u.key.take()) {
-        d.force_close();
+/// The recovery key's content, into `body`: its line, the key in groups of four, Copy, Save and
+/// the QR code, and the note on how to see it again.
+fn fill_key(ctx: &Rc<Ctx>, body: &gtk::Box, key: &str) {
+    while let Some(child) = body.first_child() {
+        body.remove(&child);
     }
-    let body = column();
     body.append(&line(&t::rkey_line()));
     let card = gtk::Box::new(gtk::Orientation::Vertical, 6);
     card.add_css_class("key-card");
-    let groups = super::key_groups(&key);
+    let groups = super::key_groups(key);
     for row in groups.chunks(3) {
         let l = gtk::Label::new(Some(&row.join("  ")));
         l.add_css_class("key-grid");
@@ -838,6 +1065,17 @@ pub fn key_dialog(ctx: &Rc<Ctx>) {
             });
         }
     });
+}
+
+/// The recovery key on its own, when it is seen again from Devices. The first time, it shows in
+/// the picker's dialog, where the folder was made.
+pub fn key_dialog(ctx: &Rc<Ctx>) {
+    let Some(key) = ctx.hub.known.borrow().recovery_key.clone() else { return };
+    if let Some(d) = with(|u| u.key.take()) {
+        d.force_close();
+    }
+    let body = column();
+    fill_key(ctx, &body, &key);
     let (dialog, header, _) = frame(&t::rkey_title(), 480, &body);
     let done = button(&t::action_done(), Some("suggested-action"));
     header.pack_end(&done);
@@ -1451,6 +1689,24 @@ pub fn turn_off(ctx: &Rc<Ctx>) {
     );
 }
 
+/// Remove the cloud folder, after asking what stays. It signs out of the service too.
+pub fn remove_folder(ctx: &Rc<Ctx>, kind: &SyncFolderKind) {
+    let hub = Rc::downgrade(&ctx.hub);
+    let service = service_name(kind);
+    alert(
+        ctx,
+        &t::cloud_remove_title(&service),
+        &t::cloud_remove_line(&super::kind(), &service),
+        &t::cloud_remove_action(),
+        move || {
+            if let Some(hub) = hub.upgrade() {
+                hub.send(Command::SyncGroup(SyncCommand::ChangeSyncFolder { folder: None }));
+            }
+        },
+        || {},
+    );
+}
+
 /// Remove a device from the group, after asking.
 pub fn remove_device(ctx: &Rc<Ctx>, device: &SyncDeviceView, cancelled: impl Fn() + 'static) {
     let (hub, id) = (Rc::downgrade(&ctx.hub), device.id.clone());
@@ -1589,23 +1845,15 @@ fn heard(ctx: &Rc<Ctx>, event: &Event) {
         Event::SyncSignIn { service, step: Some(step) } => {
             let Some(p) = with(|u| u.picker.clone()) else { return };
             match step {
-                SyncSignInStep::Browser { url } => set_wait(&p, service, Some(url)),
+                SyncSignInStep::Browser { url } => {
+                    stage_to(&p, service, Stage::Browser, Some(url), None)
+                }
+                SyncSignInStep::Connecting => {
+                    stage_to(&p, service, Stage::Connecting, None, None)
+                }
                 SyncSignInStep::Finishing => {
-                    with(|u| u.setting_up = true);
-                    // The row says it is setting up only past 600 ms.
-                    let ctx = Rc::downgrade(ctx);
-                    glib::timeout_add_local_once(
-                        std::time::Duration::from_millis(600),
-                        move || {
-                            if let Some(ctx) = ctx.upgrade()
-                                && with(|u| u.setting_up)
-                                && let Some(status) = ctx.hub.known.borrow().sync_group.clone()
-                            {
-                                ctx.hub.take(vec![Event::SyncStatus(status)]);
-                            }
-                        },
-                    );
-                    p.dialog.close();
+                    p.pace.borrow_mut().finishing = true;
+                    stage_to(&p, service, Stage::SettingUp, None, None);
                 }
                 _ => {}
             }
@@ -1613,16 +1861,22 @@ fn heard(ctx: &Rc<Ctx>, event: &Event) {
         Event::SyncSignIn { step: None, .. } => {
             if ctx.hub.known.borrow().sync_problem.is_none()
                 && let Some(p) = with(|u| u.picker.clone())
+                && p.stage.get() != Stage::Key
             {
-                p.dialog.close();
+                close_after_stage(&p);
             }
         }
-        Event::SyncRecoveryKey(_) => {
-            with(|u| u.setting_up = false);
-            if let Some(p) = with(|u| u.picker.clone()) {
-                p.dialog.close();
+        Event::SyncRecoveryKey(key) => {
+            match with(|u| u.picker.clone()) {
+                // The folder was made from the picker: the key shows in the same dialog.
+                Some(p) => {
+                    let service =
+                        with(|u| u.last.clone()).unwrap_or(SyncFolderKind::GoogleDrive);
+                    fill_key(ctx, &p.key_slot, key);
+                    stage_to(&p, &service, Stage::Key, None, None);
+                }
+                None => key_dialog(ctx),
             }
-            key_dialog(ctx);
         }
         Event::SyncProblem(problem) => {
             let service = with(|u| u.last.clone());
@@ -1630,11 +1884,10 @@ fn heard(ctx: &Rc<Ctx>, event: &Event) {
                 .map(|p| p.nc_host.borrow().clone())
                 .unwrap_or_default();
             let text = problem_text(problem, service.as_ref(), &host);
-            with(|u| u.setting_up = false);
             match problem {
                 SyncProblem::GroupExists => {
                     if let Some(p) = with(|u| u.picker.clone()) {
-                        p.dialog.close();
+                        p.dialog.force_close();
                     }
                     restore(ctx, &service.unwrap_or(SyncFolderKind::GoogleDrive));
                 }
@@ -1661,19 +1914,27 @@ fn heard(ctx: &Rc<Ctx>, event: &Event) {
                     if let Some(p) = with(|u| u.picker.clone()) {
                         match service {
                             Some(SyncFolderKind::Nextcloud) => {
-                                say_error(&p.nc_error, Some(&text))
+                                say_error(&p.nc_error, Some(&text));
+                                go(&p, "nextcloud");
                             }
                             Some(SyncFolderKind::WebDav) => {
-                                say_error(&p.dav_error, Some(&text))
+                                say_error(&p.dav_error, Some(&text));
+                                go(&p, "webdav");
                             }
-                            _ => say_error(&p.error, Some(&text)),
+                            Some(
+                                kind @ (SyncFolderKind::GoogleDrive
+                                | SyncFolderKind::Dropbox
+                                | SyncFolderKind::OneDrive),
+                            ) => {
+                                // The error is said in the dialog, with Try again.
+                                let error = sign_in_error(problem, &kind, &text, &p);
+                                stage_to(&p, &kind, Stage::Error, None, Some(error));
+                            }
+                            _ => {
+                                say_error(&p.error, Some(&text));
+                                go(&p, "list");
+                            }
                         }
-                        let page = match service {
-                            Some(SyncFolderKind::Nextcloud) => "nextcloud",
-                            Some(SyncFolderKind::WebDav) => "webdav",
-                            _ => "list",
-                        };
-                        go(&p, page);
                     }
                 }
             }
@@ -1696,9 +1957,6 @@ fn heard(ctx: &Rc<Ctx>, event: &Event) {
             });
         }
         Event::SyncStatus(status) => {
-            if status.folder.is_some() && !status.syncing {
-                with(|u| u.setting_up = false);
-            }
             // The first launch's store invites arrive after the pairing says it is done.
             if let Some(p) = with(|u| u.pair.clone()) {
                 fill_joins(ctx, &p);

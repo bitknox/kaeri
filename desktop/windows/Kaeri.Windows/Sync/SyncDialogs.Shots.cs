@@ -65,22 +65,17 @@ static partial class SyncDialogs
             await Task.Delay(1500);
             Say(show switch
             {
-                "sync-off" or "sync-road" or "sync-picker" or "sync-picker-error" or "sync-wait" or "sync-nextcloud" or "sync-webdav"
+                "sync-off" or "sync-picker" or "sync-picker-error" or "sync-wait" or "sync-connecting" or "sync-setting-up" or "sync-key-setup"
+                    or "sync-wait-denied" or "sync-wait-expired" or "sync-wait-full" or "sync-nextcloud" or "sync-webdav"
                     or "sync-restore" or "sync-restore-wrong" or "sync-motion" => Off(),
                 "sync-devices-full" or "sync-device-page" or "sync-device-page-remote-off" or "sync-device-page-phone" or "sync-notes" => Full(),
                 "sync-syncing" => On() with { Syncing = true },
-                "sync-setting" => On(),
                 "sync-problem" => On() with { Problem = new SyncProblem.SignInNeeded(SyncFolderKind.GoogleDrive) },
                 "sync-signedout" => On() with { Problem = new SyncProblem.SignInNeeded(SyncFolderKind.GoogleDrive) },
                 "sync-offline" => On() with { Problem = new SyncProblem.Unreachable(), Error = "offline" }, // i18n-skip
                 "sync-none" => On() with { Folder = null, RecoveryKey = false, RecoveryKeyMade = null },
                 _ => On(),
             });
-            if (show == "sync-setting")
-            {
-                SettingUp = true;
-                Changed?.Invoke();
-            }
             if (show == "sync-signedout")
             {
                 ByHand = true;
@@ -96,25 +91,28 @@ static partial class SyncDialogs
         const string url = "https://auth.example/authorize";
         switch (show)
         {
-            case "sync-road":
-                Road();
-                break;
             case "sync-picker":
                 Picker();
+                break;
+            case "sync-switch":
+                PickerChange(SyncFolderKind.GoogleDrive);
+                break;
+            case "sync-remove":
+                RemoveFolder(SyncFolderKind.GoogleDrive);
                 break;
             case "sync-picker-error":
                 last = SyncFolderKind.Dropbox;
                 Picker();
                 Problem(new SyncProblem.Unreachable());
                 break;
-            case "sync-wait":
-                SetWait(PresentPicker("list"), SyncFolderKind.GoogleDrive, url);
+            case "sync-wait" or "sync-connecting" or "sync-setting-up" or "sync-key-setup" or "sync-wait-denied" or "sync-wait-expired" or "sync-wait-full":
+                ShowState(show, SyncFolderKind.GoogleDrive, url);
                 break;
             case "sync-nextcloud":
-                PresentPicker("nextcloud");
+                PresentPicker("nextcloud", null);
                 break;
             case "sync-webdav":
-                PresentPicker("webdav");
+                PresentPicker("webdav", null);
                 break;
             case "sync-restore":
                 Restore(SyncFolderKind.GoogleDrive);
@@ -195,17 +193,39 @@ static partial class SyncDialogs
                 // Google Drive's wait, then the sign-in comes back and the folder is set up.
                 Picker();
                 await Task.Delay(2000);
-                PresentPicker("nextcloud");
+                PresentPicker("nextcloud", null);
                 await Task.Delay(2000);
-                PresentPicker("list");
+                PresentPicker("list", null);
                 await Task.Delay(1500);
-                if (picker is { } p)
-                    SetWait(p, SyncFolderKind.GoogleDrive, url);
-                await Task.Delay(2500);
-                picker?.Dialog.Hide();
-                Say(On());
+                // Google Drive chosen: the wait, the return, the folder being made, the key.
+                foreach (var state in new[] { "sync-wait", "sync-connecting", "sync-setting-up", "sync-key-setup" })
+                {
+                    ShowState(state, SyncFolderKind.GoogleDrive, url);
+                    await Task.Delay(state == "sync-wait" ? 2500 : 1500);
+                }
                 break;
         }
+    }
+
+    /// <summary>The picker's wait in one of its states, at once and without the return's pacing.</summary>
+    static void ShowState(string show, SyncFolderKind service, string url)
+    {
+        var p = PresentPicker("wait", null);
+        var name = SyncWords.ServiceName(service);
+        (Phase, (string, string)?) pick = show switch
+        {
+            "sync-connecting" => (Phase.Connecting, null),
+            "sync-setting-up" => (Phase.SettingUp, null),
+            "sync-key-setup" => (Phase.Key, null),
+            "sync-wait-denied" => (Phase.Error, (T.CloudErrSigninTitle(name), T.CloudErrDeniedShort(name))),
+            "sync-wait-expired" => (Phase.Error, (T.CloudErrSigninTitle(name), T.CloudErrTimeout)),
+            "sync-wait-full" => (Phase.Error, (T.CloudErrSetupTitle, T.CloudErrFull(name))),
+            _ => (Phase.Browser, null),
+        };
+        var (stage, error) = pick;
+        if (stage == Phase.Key)
+            FillKey(p.KeySlot, "K7QM4XR9TB2HWN6CP3ZD8FLA");
+        ShowStage(p, service, stage, stage == Phase.Browser ? url : null, error);
     }
 
     /// <summary>Types a code into the open Enter a code dialog's boxes, as a person would.</summary>

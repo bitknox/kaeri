@@ -96,7 +96,6 @@ pub fn seen_line(device: &SyncDeviceView, now: i64) -> (String, Mark) {
 pub enum CloudState {
     Synced(String),
     Syncing,
-    SettingUp,
     SignedOut,
     /// The service signed this device out, or its folder is gone: the line and its button.
     Problem(String, ProblemFix),
@@ -113,16 +112,8 @@ pub enum ProblemFix {
 
 /// The cloud row's state from the engine's status; `by_hand` is that the person pressed Sign
 /// out, so a sign-in that is needed is theirs and no error.
-pub fn cloud_state(
-    status: &SyncStatus,
-    now: i64,
-    setting_up: bool,
-    by_hand: bool,
-) -> CloudState {
+pub fn cloud_state(status: &SyncStatus, now: i64, by_hand: bool) -> CloudState {
     let service = status.folder.as_ref().map(|f| service_name(&f.kind)).unwrap_or_default();
-    if setting_up {
-        return CloudState::SettingUp;
-    }
     match &status.problem {
         Some(SyncProblem::SignInNeeded { .. }) if by_hand => return CloudState::SignedOut,
         Some(SyncProblem::SignInNeeded { .. }) => {
@@ -152,6 +143,12 @@ pub fn cloud_state(
         Some(at) => CloudState::Synced(t::devices_row_synced(&ago_inline((now - at).max(0)))),
         None => CloudState::Synced(t::devices_row_synced(&t::time_just_now_inline())),
     }
+}
+
+/// Sync is on but has nothing to sync with: no other device and no folder. That reads as off, with
+/// the two ways in, as pairing or adding a folder is what turns sync on.
+pub fn bare(status: &SyncStatus) -> bool {
+    !status.enabled || (status.folder.is_none() && status.devices.iter().all(|d| d.this_device))
 }
 
 /// The cloud services this build offers, alphabetical, with those it cannot sign in to hidden
@@ -254,10 +251,10 @@ mod tests {
             ..SyncStatus::default()
         };
         assert!(matches!(
-            cloud_state(&status, 0, false, false),
+            cloud_state(&status, 0, false),
             CloudState::Problem(_, ProblemFix::SignInAgain)
         ));
-        assert_eq!(cloud_state(&status, 0, false, true), CloudState::SignedOut);
+        assert_eq!(cloud_state(&status, 0, true), CloudState::SignedOut);
     }
 }
 

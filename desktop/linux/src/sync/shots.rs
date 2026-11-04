@@ -8,7 +8,7 @@ use kaeri_model::{
     event::Event,
     group::{
         CloudUnavailable, SyncCloudView, SyncCloudWay, SyncDeviceKind, SyncDeviceView,
-        SyncFolderKind, SyncFolderView, SyncNoteView, SyncProblem, SyncSignInStep, SyncStatus,
+        SyncFolderKind, SyncFolderView, SyncNoteView, SyncProblem, SyncStatus,
     },
     profiles::{ProfileView, ProfilesView},
 };
@@ -18,13 +18,21 @@ use gtk::prelude::*;
 use super::dialogs::{self, Origin};
 use crate::window::Shell;
 
-pub const NAMES: [&str; 34] = [
+pub const NAMES: [&str; 42] = [
     "sync-home-continue",
     "sync-off",
-    "sync-road",
     "sync-picker",
     "sync-picker-error",
+    "sync-switch",
     "sync-wait",
+    "sync-connecting",
+    "sync-setting-up",
+    "sync-key-setup",
+    "sync-wait-denied",
+    "sync-wait-expired",
+    "sync-wait-full",
+    "sync-more",
+    "sync-remove",
     "sync-nextcloud",
     "sync-webdav",
     "sync-restore",
@@ -129,10 +137,6 @@ fn full() -> SyncStatus {
     }
 }
 
-pub fn finished() -> SyncStatus {
-    on()
-}
-
 fn off() -> SyncStatus {
     SyncStatus {
         device_name: Some("Study desktop".into()),
@@ -227,11 +231,16 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
     }
     match shot {
         "sync-off" => say(vec![Event::SyncStatus(off())]),
-        "sync-road" | "sync-picker" | "sync-picker-error" | "sync-wait" | "sync-nextcloud"
-        | "sync-webdav" | "sync-restore" | "sync-restore-wrong" => {
+        "sync-picker" | "sync-picker-error" | "sync-wait" | "sync-connecting"
+        | "sync-setting-up" | "sync-key-setup" | "sync-wait-denied" | "sync-wait-expired"
+        | "sync-wait-full" | "sync-nextcloud" | "sync-webdav" | "sync-restore"
+        | "sync-restore-wrong" => {
             say(vec![Event::SyncStatus(off())]);
         }
         "sync-on"
+        | "sync-switch"
+        | "sync-more"
+        | "sync-remove"
         | "sync-key"
         | "sync-pair-show"
         | "sync-pair-paired"
@@ -281,7 +290,7 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
     let owned = shot.to_owned();
     glib::timeout_add_local_once(Duration::from_millis(500), move || open(&ctx, &owned));
     if shot == "sync-motion" {
-        return 10.0;
+        return 16.0;
     }
     2.0
 }
@@ -303,23 +312,62 @@ fn open(ctx: &Rc<crate::window::Ctx>, shot: &str) {
                     dialogs::picker_page(&ctx, "list");
                     let ctx = Rc::clone(&ctx);
                     glib::timeout_add_local_once(Duration::from_millis(1500), move || {
-                        dialogs::picker_wait(&ctx, &SyncFolderKind::Dropbox, open_url);
+                        // Dropbox chosen: the wait, the return, the folder being made, the key.
+                        let dropbox = SyncFolderKind::Dropbox;
+                        dialogs::picker_state(&ctx, &dropbox, "wait", open_url);
                         let ctx2 = Rc::clone(&ctx);
                         glib::timeout_add_local_once(Duration::from_millis(2500), move || {
-                            ctx2.hub.take(vec![Event::SyncStatus(super::shots::finished())]);
-                            dialogs::finish_for_shot(&ctx2);
+                            dialogs::picker_state(&ctx2, &dropbox, "connecting", open_url);
+                            let ctx3 = Rc::clone(&ctx2);
+                            glib::timeout_add_local_once(
+                                Duration::from_millis(1500),
+                                move || {
+                                    dialogs::picker_state(&ctx3, &dropbox, "setting", open_url);
+                                    let ctx4 = Rc::clone(&ctx3);
+                                    glib::timeout_add_local_once(
+                                        Duration::from_millis(1500),
+                                        move || {
+                                            dialogs::picker_state(
+                                                &ctx4, &dropbox, "key", open_url,
+                                            );
+                                        },
+                                    );
+                                },
+                            );
                         });
                     });
                 });
             });
         }
-        "sync-road" => dialogs::road(ctx),
         "sync-picker" => dialogs::picker(ctx),
         "sync-picker-error" => {
             ctx.hub.take(vec![Event::SyncProblem(SyncProblem::Unreachable)]);
             dialogs::picker(ctx);
         }
-        "sync-wait" => dialogs::picker_wait(ctx, &SyncFolderKind::Dropbox, open_url),
+        "sync-switch" => dialogs::picker_change(ctx, &SyncFolderKind::Dropbox),
+        "sync-wait" => {
+            dialogs::picker_state(ctx, &SyncFolderKind::GoogleDrive, "wait", open_url)
+        }
+        "sync-connecting" => {
+            dialogs::picker_state(ctx, &SyncFolderKind::GoogleDrive, "connecting", open_url)
+        }
+        "sync-setting-up" => {
+            dialogs::picker_state(ctx, &SyncFolderKind::GoogleDrive, "setting", open_url)
+        }
+        "sync-key-setup" => {
+            dialogs::picker_state(ctx, &SyncFolderKind::GoogleDrive, "key", open_url)
+        }
+        "sync-wait-denied" => {
+            dialogs::picker_state(ctx, &SyncFolderKind::GoogleDrive, "denied", open_url)
+        }
+        "sync-wait-expired" => {
+            dialogs::picker_state(ctx, &SyncFolderKind::GoogleDrive, "expired", open_url)
+        }
+        "sync-wait-full" => {
+            dialogs::picker_state(ctx, &SyncFolderKind::GoogleDrive, "full", open_url)
+        }
+        "sync-more" => super::devices::pop_more(),
+        "sync-remove" => dialogs::remove_folder(ctx, &SyncFolderKind::Dropbox),
         "sync-nextcloud" => dialogs::picker_page(ctx, "nextcloud"),
         "sync-webdav" => dialogs::picker_page(ctx, "webdav"),
         "sync-restore" => dialogs::restore(ctx, &SyncFolderKind::Dropbox),
@@ -374,5 +422,4 @@ fn open(ctx: &Rc<crate::window::Ctx>, shot: &str) {
         }
         _ => {}
     }
-    let _ = SyncSignInStep::Finishing;
 }
