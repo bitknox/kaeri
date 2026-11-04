@@ -236,6 +236,13 @@ impl FfiEngine {
     }
 }
 
+impl FfiEngine {
+    /// What sync hears from the app beside the commands, until the engine stops.
+    pub(crate) fn this_device(&self) -> Option<kaeri_engine::syncing::ThisDevice> {
+        lock(&self.engine).as_ref().map(Engine::this_device)
+    }
+}
+
 impl Drop for FfiEngine {
     /// Stop the runtime without waiting, when the app let go without [`Self::shutdown`]. A
     /// runtime dropped in place would wait for the work still running on it, and panics on a
@@ -307,6 +314,7 @@ impl Opened {
         if let Some(platform) = start.platform {
             platform.device_label().clone_into(&mut options.device_label);
             options.handheld = platform.handheld();
+            options.device_kind = Some(platform.sync_kind());
         }
         options.language.clone_from(&start.language);
         // Nothing changes the config for one session here, as the terminal's flags can, so the

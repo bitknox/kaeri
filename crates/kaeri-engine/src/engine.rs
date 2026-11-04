@@ -101,6 +101,9 @@ pub struct Engine {
     /// Casting's devices and the cast running now, which the TV picker and the cast's card read.
     #[cfg(feature = "cast")]
     casts: Arc<crate::cast::CastHub>,
+    /// What the app tells sync about this device beside the commands: see
+    /// [`crate::syncing::ThisDevice`].
+    this_device: crate::syncing::ThisDevice,
 }
 
 /// [`Engine::send`] for the remote, held apart from the engine so the remote's server can keep
@@ -212,6 +215,7 @@ impl Engine {
             app_clients,
             device_label,
             handheld,
+            device_kind,
             language,
             sources: given,
             background,
@@ -497,6 +501,16 @@ impl Engine {
         let (stops_tx, stops) = mpsc::unbounded_channel();
         let (out, live) = mpsc::unbounded_channel();
         let jobs = Jobs::default();
+        // Commands sync's handle sends itself, while the engine runs: not one that keeps it up.
+        let weak = commands_tx.downgrade();
+        let this_device = crate::syncing::ThisDevice::of(&services, move |command| {
+            if let Some(commands) = weak.upgrade() {
+                let _ = commands.send(Message::Command { job: None, command });
+            }
+        });
+        if let Some(kind) = device_kind {
+            this_device.set_kind(kind);
+        }
         let actor = Actor {
             state,
             services,
@@ -522,6 +536,7 @@ impl Engine {
             hosted,
             #[cfg(feature = "cast")]
             casts,
+            this_device,
             #[cfg(feature = "testing")]
             sent: AtomicU64::new(0),
         };
@@ -558,6 +573,12 @@ impl Engine {
     #[cfg(feature = "cast")]
     pub fn casts(&self) -> Arc<crate::cast::CastHub> {
         Arc::clone(&self.casts)
+    }
+
+    /// What sync needs to hear about this device from the app rather than by command: its kind,
+    /// its remote's key, the network's DNS-SD, and whether a phone may drive this TV.
+    pub fn this_device(&self) -> crate::syncing::ThisDevice {
+        self.this_device.clone()
     }
 
     #[cfg(feature = "remote")]
