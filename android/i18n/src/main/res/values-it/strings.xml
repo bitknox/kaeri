@@ -1627,7 +1627,6 @@
     <string name="together_line">Ognuno riproduce l\'episodio dalle proprie fonti. Il server serve solo a tenervi allineati.</string>
     <string name="together_people_button">Guarda insieme</string>
     <string name="together_start">Avvia un watch party</string>
-    <string name="together_start_line">Scegli qualcosa che stai guardando, poi invita gli amici con un link o un codice.</string>
     <string name="together_join">Unisciti a un watch party</string>
     <string name="together_join_line">Incolla il link d\'invito di un amico o scrivi il codice che ti ha detto.</string>
     <string name="together_join_field">Link o codice</string>

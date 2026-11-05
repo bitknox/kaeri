@@ -10313,6 +10313,11 @@ pub fn party_form_nothing() -> String {
     text("party-form-nothing", &[])
 }
 
+/// Line on the form that starts a party with nothing picked yet.
+pub fn party_form_pick_later() -> String {
+    text("party-form-pick-later", &[])
+}
+
 /// Line naming the episode of the form.
 pub fn party_form_episode_of(episode: i64, title: &str) -> String {
     text("party-form-episode-of", &[("episode", Arg::Int(episode)), ("title", Arg::Text(title))])
@@ -10896,6 +10901,11 @@ pub fn party_bar_line(count: i64, ready: i64) -> String {
 /// Second line of the bar when nothing plays for you.
 pub fn party_bar_idle() -> String {
     text("party-bar-idle", &[])
+}
+
+/// Second line of the bar while the room has nothing picked: a play anywhere in the app picks the episode for the room.
+pub fn party_bar_pick() -> String {
+    text("party-bar-pick", &[])
 }
 
 /// Notice in the player when someone pauses.

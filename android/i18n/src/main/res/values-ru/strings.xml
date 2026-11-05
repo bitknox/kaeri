@@ -1679,7 +1679,6 @@
     <string name="together_line">Каждый смотрит эпизод из своих источники. Сервер только синхронизирует вас.</string>
     <string name="together_people_button">Смотреть вместе</string>
     <string name="together_start">Начать просмотр</string>
-    <string name="together_start_line">Выберите, что смотрите, и пригласите друзей по ссылке или коду.</string>
     <string name="together_join">Присоединиться</string>
     <string name="together_join_line">Вставьте ссылку-приглашение друга или введите код, который он назвал.</string>
     <string name="together_join_field">Ссылка или код</string>

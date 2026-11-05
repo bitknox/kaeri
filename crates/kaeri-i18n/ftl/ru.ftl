@@ -6727,9 +6727,6 @@ together-people-button = Смотреть вместе
 # Button that starts a watch party from the place. The one amber button there.
 together-start = Начать просмотр
 
-# Line under Start a party.
-together-start-line = Выберите, что смотрите, и пригласите друзей по ссылке или коду.
-
 # Heading of the field that joins a watch party.
 together-join = Присоединиться
 

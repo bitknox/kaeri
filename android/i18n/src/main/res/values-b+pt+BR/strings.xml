@@ -1627,7 +1627,6 @@
     <string name="together_line">Cada pessoa reproduz o episódio a partir das próprias fontes. O servidor só mantém todo mundo em sincronia.</string>
     <string name="together_people_button">Assistir juntos</string>
     <string name="together_start">Iniciar sessão em grupo</string>
-    <string name="together_start_line">Escolha algo que você está assistindo e convide amigos com um link ou um código.</string>
     <string name="together_join">Entrar numa sessão em grupo</string>
     <string name="together_join_line">Cole o link de convite de um amigo ou digite o código que ele passou.</string>
     <string name="together_join_field">Link ou código</string>

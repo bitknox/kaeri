@@ -6595,9 +6595,6 @@ together-people-button = Gemeinsam schauen
 # Button that starts a watch party from the place. The one amber button there.
 together-start = Watchparty starten
 
-# Line under Start a party.
-together-start-line = Wähle etwas, das du schaust, und lade Freunde per Link oder Code ein.
-
 # Heading of the field that joins a watch party.
 together-join = Watchparty beitreten
 

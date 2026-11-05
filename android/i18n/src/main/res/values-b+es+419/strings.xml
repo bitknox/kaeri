@@ -1627,7 +1627,6 @@
     <string name="together_line">Cada quien reproduce el episodio desde sus propias fuentes. El servidor solo los mantiene sincronizados.</string>
     <string name="together_people_button">Ver juntos</string>
     <string name="together_start">Iniciar una watch party</string>
-    <string name="together_start_line">Elige algo que estés viendo y luego invita a tus amigos con un enlace o un código.</string>
     <string name="together_join">Unirse a una watch party</string>
     <string name="together_join_line">Pega el enlace de invitación de un amigo o escribe el código que te dicte.</string>
     <string name="together_join_field">Enlace o código</string>

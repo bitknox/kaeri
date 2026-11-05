@@ -4049,9 +4049,6 @@
   <data name="TogetherStart" xml:space="preserve">
     <value>Avvia un watch party</value>
   </data>
-  <data name="TogetherStartLine" xml:space="preserve">
-    <value>Scegli qualcosa che stai guardando, poi invita gli amici con un link o un codice.</value>
-  </data>
   <data name="TogetherJoin" xml:space="preserve">
     <value>Unisciti a un watch party</value>
   </data>

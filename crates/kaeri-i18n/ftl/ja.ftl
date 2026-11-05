@@ -6529,9 +6529,6 @@ together-people-button = 一緒に見る
 # Button that starts a watch party from the place. The one amber button there.
 together-start = 同時視聴を始める
 
-# Line under Start a party.
-together-start-line = 視聴中の作品を選び、リンクまたはコードで友達を招待します。
-
 # Heading of the field that joins a watch party.
 together-join = 同時視聴に参加
 

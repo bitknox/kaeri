@@ -122113,6 +122113,18 @@
         }
       }
     },
+    "party-bar-pick" : {
+      "comment" : "Second line of the bar while the room has nothing picked: a play anywhere in the app picks the episode for the room.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Press Play on any episode to watch it with the room"
+          }
+        }
+      }
+    },
     "party-bar-title" : {
       "comment" : "Title line of the bar above the tabs while you are in a party. Argument 1: title (Text). Argument 2: episode (Text).",
       "extractionState" : "manual",
@@ -125933,6 +125945,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tập đang phát sẽ phát cùng phòng."
+          }
+        }
+      }
+    },
+    "party-form-pick-later" : {
+      "comment" : "Line on the form that starts a party with nothing picked yet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Once you're in, press Play on any episode to watch it with the room."
           }
         }
       }
@@ -261177,82 +261201,10 @@
       "comment" : "Line under Start a party.",
       "extractionState" : "manual",
       "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wähle etwas, das du schaust, und lade Freunde per Link oder Code ein."
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pick something you're watching, then invite friends with a link or a code."
-          }
-        },
-        "es-419" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Elige algo que estés viendo y luego invita a tus amigos con un enlace o un código."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choisissez ce que vous regardez, puis invitez vos amis avec un lien ou un code."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pilih sesuatu yang sedang Anda tonton, lalu undang teman dengan tautan atau kode."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scegli qualcosa che stai guardando, poi invita gli amici con un link o un codice."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "視聴中の作品を選び、リンクまたはコードで友達を招待します。"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wybierz coś, co oglądasz, i zaproś znajomych linkiem lub kodem."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Escolha algo que você está assistindo e convide amigos com um link ou um código."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Выберите, что смотрите, и пригласите друзей по ссылке или коду."
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Välj något du tittar på och bjud in vänner med en länk eller kod."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "İzlediğiniz bir şeyi seçin, sonra arkadaşlarınızı bağlantı ya da kodla davet edin."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chọn phim bạn đang xem, rồi mời bạn bè bằng liên kết hoặc mã."
+            "value" : "Open a room and invite friends with a link or a code, then press Play on what you want to watch."
           }
         }
       }

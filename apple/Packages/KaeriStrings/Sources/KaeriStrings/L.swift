@@ -5588,6 +5588,9 @@ public enum L {
     /// Line on the form when no episode is playing yet.
     public static var partyFormNothing: String { string("party-form-nothing", fallback: "What's playing now plays with the room.") }
 
+    /// Line on the form that starts a party with nothing picked yet.
+    public static var partyFormPickLater: String { string("party-form-pick-later", fallback: "Once you're in, press Play on any episode to watch it with the room.") }
+
     /// Line naming the episode of the form.
     public static func partyFormEpisodeOf(episode: Int, title: String) -> String {
         Self.format("party-form-episode-of", fallback: "Episode %1$lld of %2$@", episode, title)
@@ -5770,7 +5773,7 @@ public enum L {
     public static var togetherStart: String { string("together-start", fallback: "Start a party") }
 
     /// Line under Start a party.
-    public static var togetherStartLine: String { string("together-start-line", fallback: "Pick something you're watching, then invite friends with a link or a code.") }
+    public static var togetherStartLine: String { string("together-start-line", fallback: "Open a room and invite friends with a link or a code, then press Play on what you want to watch.") }
 
     /// Heading of the field that joins a watch party.
     public static var togetherJoin: String { string("together-join", fallback: "Join a party") }
@@ -6012,6 +6015,9 @@ public enum L {
 
     /// Second line of the bar when nothing plays for you.
     public static var partyBarIdle: String { string("party-bar-idle", fallback: "In the room · nothing playing for you") }
+
+    /// Second line of the bar while the room has nothing picked: a play anywhere in the app picks the episode for the room.
+    public static var partyBarPick: String { string("party-bar-pick", fallback: "Press Play on any episode to watch it with the room") }
 
     /// Notice in the player when someone pauses.
     public static func partyPausedBy(name: String) -> String {

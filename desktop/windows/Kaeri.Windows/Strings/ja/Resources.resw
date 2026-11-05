@@ -3797,9 +3797,6 @@
   <data name="TogetherStart" xml:space="preserve">
     <value>同時視聴を始める</value>
   </data>
-  <data name="TogetherStartLine" xml:space="preserve">
-    <value>視聴中の作品を選び、リンクまたはコードで友達を招待します。</value>
-  </data>
   <data name="TogetherJoin" xml:space="preserve">
     <value>同時視聴に参加</value>
   </data>

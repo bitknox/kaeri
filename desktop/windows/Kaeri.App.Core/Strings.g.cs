@@ -3630,6 +3630,9 @@ public static partial class T
     /// <summary>Line on the form when no episode is playing yet.</summary>
     public static string PartyFormNothing => Get("PartyFormNothing");
 
+    /// <summary>Line on the form that starts a party with nothing picked yet.</summary>
+    public static string PartyFormPickLater => Get("PartyFormPickLater");
+
     /// <summary>Line naming the episode of the form.</summary>
     public static string PartyFormEpisodeOf(long episode, string title) => Fill(Get("PartyFormEpisodeOf"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("title", title));
 
@@ -3980,6 +3983,9 @@ public static partial class T
 
     /// <summary>Second line of the bar when nothing plays for you.</summary>
     public static string PartyBarIdle => Get("PartyBarIdle");
+
+    /// <summary>Second line of the bar while the room has nothing picked: a play anywhere in the app picks the episode for the room.</summary>
+    public static string PartyBarPick => Get("PartyBarPick");
 
     /// <summary>Notice in the player when someone pauses.</summary>
     public static string PartyPausedBy(string name) => Fill(Get("PartyPausedBy"), ("name", name));
@@ -9932,6 +9938,7 @@ public static partial class T
         ["PartyInviteRoom"] = "Room {room} on {server}",
         ["PartyJoining"] = "Joining {room} on {server}…",
         ["PartyFormNothing"] = "What's playing now plays with the room.",
+        ["PartyFormPickLater"] = "Once you're in, press Play on any episode to watch it with the room.",
         ["PartyFormEpisodeOf"] = "Episode {episode} of {title}",
         ["PartyFormEpisode"] = "Episode {episode}",
         ["PartyEndedEarly"] = "The watch party ended before it began.",
@@ -9982,7 +9989,7 @@ public static partial class T
         ["TogetherLine"] = "Everyone plays the episode from their own sources. The server only keeps you in step.",
         ["TogetherPeopleButton"] = "Watch together",
         ["TogetherStart"] = "Start a party",
-        ["TogetherStartLine"] = "Pick something you're watching, then invite friends with a link or a code.",
+        ["TogetherStartLine"] = "Open a room and invite friends with a link or a code, then press Play on what you want to watch.",
         ["TogetherJoin"] = "Join a party",
         ["TogetherJoinLine"] = "Paste a friend's invite link, or type the code they read out.",
         ["TogetherJoinField"] = "Link or code",
@@ -10052,6 +10059,7 @@ public static partial class T
         ["PartyBarTitle"] = "{title} · Episode {episode}",
         ["PartyBarLine"] = "{count} in the room · {ready} ready",
         ["PartyBarIdle"] = "In the room · nothing playing for you",
+        ["PartyBarPick"] = "Press Play on any episode to watch it with the room",
         ["PartyPausedBy"] = "Paused by {name}",
         ["PartyPlayedBy"] = "Played by {name}",
         ["PartySeekedBy"] = "{name} moved to {time}",

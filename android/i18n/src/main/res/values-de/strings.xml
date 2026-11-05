@@ -1575,7 +1575,6 @@
     <string name="together_line">Alle spielen die Folge aus ihren eigenen Quellen ab. Der Server hält euch nur im Takt.</string>
     <string name="together_people_button">Gemeinsam schauen</string>
     <string name="together_start">Watchparty starten</string>
-    <string name="together_start_line">Wähle etwas, das du schaust, und lade Freunde per Link oder Code ein.</string>
     <string name="together_join">Watchparty beitreten</string>
     <string name="together_join_line">Füge den Einladungslink eines Freundes ein oder tippe den Code, den er vorliest.</string>
     <string name="together_join_field">Link oder Code</string>
