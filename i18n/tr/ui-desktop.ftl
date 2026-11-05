@@ -27,3 +27,5 @@ updates-restart = Güncelle ve yeniden aç
 tv-problem-full = Bu TV'ye daha fazla { -device } eşleştirilemiyor. TV'nin ayarlarında, Uzaktan kumandalar bölümünden birini kaldırın.
 tv-problem-unpaired = TV bu { -device }ı artık tanımıyor. Yeniden eşleştirin.
 player-position-spoken = { $position } / { $duration }
+names-pair = { $first } ve { $last }
+names-list = { $list }, { $next }

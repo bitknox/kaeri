@@ -20,3 +20,7 @@ player-more-discussion-note = { $count ->
    *[other] { $count } komentar · video dijeda
  }
 player-more-discussion-pauses = Video dijeda saat dibuka
+search-pill-set = { $filter }, { $value }
+search-pill-any = { $filter }, apa saja
+search-pill-all-set = Semua filter, { $count } diatur
+search-pill-clear = Hapus semua filter

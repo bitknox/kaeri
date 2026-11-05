@@ -90,3 +90,70 @@ search-available-all = Semua
 search-available-here = Bisa diputar di sini
 search-available-services = Di layanan Anda
 search-line-service = Di { $service }
+count-episodes = { $count ->
+   *[other] { $count } episode
+ }
+count-episodes-short = { $count } eps
+count-out-of = { $out }/{ $total } tayang
+count-out-of-short = { $out }/{ $total }
+count-out = { $count ->
+   *[other] { $count } episode tayang
+ }
+count-out-short = { $count } tayang
+count-starts = Mulai { $date }
+count-not-out = Belum tayang
+count-next-of = Eps { $episode } dari { $total }
+count-dub = Dub
+count-dub-through = Dub { $through }
+count-spoken-episodes = { $count ->
+   *[other] { $count } episode
+ }
+count-spoken-out-of = { $out } dari { $total } episode sudah tayang
+count-spoken-out = { $count ->
+   *[other] { $count } episode sudah tayang
+ }
+count-spoken-starts = Mulai { $date }
+count-spoken-next-of = Episode { $episode } dari { $total }
+count-spoken-dub-through = { -dubbed-cap } sampai episode { $through }
+count-spoken-dub = punya dub
+date-month-jan-short = Jan
+date-month-jan-long = Januari
+date-month-feb-short = Feb
+date-month-feb-long = Februari
+date-month-mar-short = Mar
+date-month-mar-long = Maret
+date-month-apr-short = Apr
+date-month-apr-long = April
+date-month-may-short = Mei
+date-month-may-long = Mei
+date-month-jun-short = Jun
+date-month-jun-long = Juni
+date-month-jul-short = Jul
+date-month-jul-long = Juli
+date-month-aug-short = Agu
+date-month-aug-long = Agustus
+date-month-sep-short = Sep
+date-month-sep-long = September
+date-month-oct-short = Okt
+date-month-oct-long = Oktober
+date-month-nov-short = Nov
+date-month-nov-long = November
+date-month-dec-short = Des
+date-month-dec-long = Desember
+trending-today = Tren hari ini
+trending-week = Tren minggu ini
+trending-month = Tren bulan ini
+trending-choice-today = Hari ini
+trending-choice-week = Minggu ini
+trending-choice-month = Bulan ini
+trending-failed = Tren { $period } tidak dapat dimuat.
+trending-updated = Diperbarui { $age }
+surprise-me = Kejutkan saya
+surprise-me-menu = Kejutkan Saya
+surprise-another = Yang lain
+surprise-hint-planning = Membuka judul acak dari Rencana
+surprise-hint-filters = Membuka judul acak dari filter ini
+surprise-another-hint = Membuka judul acak lain sebagai ganti yang ini
+surprise-empty-filters = Tidak ada judul yang cocok dengan filter ini.
+surprise-empty-planning = Daftar rencana kosong.
+surprise-offline = Sedang offline. Pilihan dari pencarian memerlukan AniList.

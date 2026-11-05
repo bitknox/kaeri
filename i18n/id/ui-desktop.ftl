@@ -27,3 +27,5 @@ updates-restart = Mulai ulang
 tv-problem-full = TV ini sudah memiliki { -device-pl } sebanyak yang bisa disimpannya. Hapus salah satu di pengaturan TV, di bagian Remote.
 tv-problem-unpaired = TV tidak lagi mengenali { -device } ini. Pasangkan lagi.
 player-position-spoken = { $position } dari { $duration }
+names-pair = { $first } dan { $last }
+names-list = { $list }, { $next }

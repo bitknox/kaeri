@@ -21,3 +21,7 @@ player-more-discussion-note = { $count ->
    *[other] { $count } yorum · video duraklar
  }
 player-more-discussion-pauses = Açınca video duraklar
+search-pill-set = { $filter }, { $value }
+search-pill-any = { $filter }, hepsi
+search-pill-all-set = Tüm filtreler, { $count } ayarlı
+search-pill-clear = Tüm filtreleri temizle

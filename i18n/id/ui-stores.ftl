@@ -1,6 +1,6 @@
 stores-joined = Sudah bergabung
 stores-empty-title = Belum ada { -plugin-store-pl }
-stores-empty-detail = { -plugin-store-cap-pl } dijalankan oleh orang yang Anda kenal. Gabung ke salah satunya dengan tautan undangan yang dikirim pemiliknya.
+stores-empty-detail = { -plugin-store-cap-pl } menyimpan { -plugin-pl } bertanda tangan dan memberi setiap { -device } tokennya sendiri. Bergabunglah dengan tautan undangan dari pemiliknya.
 stores-intro = { -plugin-cap-pl } menambahkan { -source-pl }. Setiap { -plugin } mencantumkan host yang dihubunginya sebelum Anda memasangnya.
 stores-not-from-app = { -plugin-cap-pl } berasal dari pemilik { -plugin-store }, bukan dari { -app-name }. Anda dapat keluar dari { -plugin-store } kapan saja.
 stores-join-owner-responsible = { $owner } mengelola { -plugin-store } ini dan memilih { -plugin-pl }-nya. { -app-name } tidak membuat, meninjau, atau menyetujuinya.
@@ -170,7 +170,7 @@ stores-offers-plugins = { $count ->
    *[other] { $count } { -plugin }
  }
 notice-open-stores = Buka { -plugin-store-pl }
-stores-what-is = { -plugin-store-cap } adalah server kecil yang dikelola satu orang untuk orang yang ia undang. Ia menawarkan { -source-pl } berupa { -plugin-pl }. { -app-name } tidak menjalankan dan tidak mendaftar { -plugin-store-pl } mana pun, jadi Anda bergabung lewat tautan undangan dari pemiliknya.
+stores-what-is = { -plugin-store-cap } adalah server kecil yang menyimpan { -plugin-pl } bertanda tangan dan memberi setiap { -device } tokennya sendiri. Ia menawarkan { -source-pl } sebagai { -plugin-pl }. { -app-name } tidak menjalankan atau mendaftar { -plugin-store } apa pun, jadi Anda bergabung dengan tautan undangan dari pemiliknya.
 stores-what-is-link = Apa itu { -plugin-store }?
 stores-invite-rules = Tautan undangan berlaku sekali, untuk satu orang, dan bertahan tujuh hari. Minta yang baru ke pemilik { -plugin-store } jika milik Anda sudah kedaluwarsa.
 stores-qr-label = Kode QR untuk tautan undangan

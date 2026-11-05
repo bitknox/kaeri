@@ -69,3 +69,4 @@ tv-cast-mute = Sessize al
 tv-cast-unmute = Sesi aç
 tv-cast-volume-on-tv = Ses TV'den ayarlanır
 tv-cast-up-next-in = { -up-next-cap } · { $seconds } sn içinde oynar
+tv-forget-note = Burada bir TV'yi unutursanız o da bu { -device } cihazı unutur.
