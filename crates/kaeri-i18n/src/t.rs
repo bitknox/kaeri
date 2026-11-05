@@ -14355,6 +14355,11 @@ pub fn source_note_held_back() -> String {
     text("source-note-held-back", &[])
 }
 
+/// Under a source that names torrents while torrent playback is off in Settings.
+pub fn source_note_torrents_off() -> String {
+    text("source-note-torrents-off", &[])
+}
+
 /// Heading over one source's releases, for a source that offers several (a batch, single episodes).
 pub fn source_picker_releases() -> String {
     text("source-picker-releases", &[])
@@ -14465,6 +14470,11 @@ pub fn sources_status_held_back() -> String {
     text("sources-status-held-back", &[])
 }
 
+/// Status: a source that names torrents, while torrent playback is off.
+pub fn sources_status_torrents_off() -> String {
+    text("sources-status-torrents-off", &[])
+}
+
 /// Status: slow.
 pub fn sources_status_slow() -> String {
     text("sources-status-slow", &[])
@@ -14488,6 +14498,11 @@ pub fn sources_detail_not_answering_plain() -> String {
 /// Status line: waiting for the proxy check.
 pub fn sources_detail_held_back() -> String {
     text("sources-detail-held-back", &[])
+}
+
+/// Status line: torrent playback is off.
+pub fn sources_detail_torrents_off() -> String {
+    text("sources-detail-torrents-off", &[])
 }
 
 /// Status line: disabled.

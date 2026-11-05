@@ -242,7 +242,7 @@ public sealed partial class ProvidersPage : Page
                 line.Children.Add(Ui.Dot(Colours.Haze));
                 break;
         }
-        if (standing.StandingLine() is { } words)
+        if (standing.StandingLine(info.Row) is { } words)
             line.Children.Add(Ui.Text(words, "HazeCaptionStyle", wrap: false));
         else if (info.Update is not null)
         {
@@ -276,7 +276,7 @@ public sealed partial class ProvidersPage : Page
         if (row.State == "down" && row.LastError is not null)
             facts.Children.Add(Ui.Haze(T.SourcesDetailSite));
         if (row.HeldBack)
-            facts.Children.Add(Ui.Haze(T.SourcesDetailHeldBack));
+            facts.Children.Add(Ui.Haze(row.HeldBackFor == HoldReason.TorrentsOff ? T.SourcesDetailTorrentsOff : T.SourcesDetailHeldBack));
         var hosts = info.Hosts.Count > 0 ? info.Hosts : row.Hosts ?? [];
         facts.Children.Add(Ui.Haze(hosts.Count > 0 ? T.SourcesContactsOne(string.Join(", ", hosts)) : T.SourcesContactsNone));
         if (row.Torrents)

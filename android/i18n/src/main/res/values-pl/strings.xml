@@ -2523,6 +2523,7 @@
     <string name="source_note_gone">Niezainstalowane</string>
     <string name="source_note_ambiguous">Nie udało się dopasować tego tytułu</string>
     <string name="source_note_held_back">Czeka na sprawdzenie proxy</string>
+    <string name="source_note_torrents_off">Odtwarzanie torrentów jest wyłączone</string>
     <string name="source_picker_releases">Wydania</string>
     <string name="source_picker_chosen">Wybrane</string>
     <string name="source_pin_unavailable">%1$s nie działa teraz, więc odcinki tego tytułu pochodzą z pozostałych: źródła.</string>
@@ -2545,11 +2546,13 @@
     <string name="sources_origin_in">W %1$s</string>
     <string name="sources_status_not_answering">Nie odpowiada</string>
     <string name="sources_status_held_back">Wstrzymane</string>
+    <string name="sources_status_torrents_off">Torrenty wyłączone</string>
     <string name="sources_status_slow">Wolne</string>
     <string name="sources_status_update">Dostępna aktualizacja</string>
     <string name="sources_detail_not_answering">Nie odpowiada. %1$s</string>
     <string name="sources_detail_not_answering_plain">Nie odpowiada.</string>
     <string name="sources_detail_held_back">Czeka, aż proxy przejdzie sprawdzenie.</string>
+    <string name="sources_detail_torrents_off">Odtwarzanie torrentów jest wyłączone. Możesz je włączyć w Ustawieniach, w sekcji Źródła.</string>
     <string name="sources_detail_disabled">Wyłączone. Zachowuje swoje miejsce i nie jest sprawdzane.</string>
     <string name="sources_detail_gone">Źródło nie jest już tutaj.</string>
     <string name="sources_detail_site">Źródło nie odpowiedziało.</string>

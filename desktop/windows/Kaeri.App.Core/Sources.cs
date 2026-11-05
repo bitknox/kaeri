@@ -90,10 +90,10 @@ public static class ProviderRows
     }
 
     /// <summary>The words beside a source's name when it needs saying, or null for one that works.</summary>
-    public static string? StandingLine(this ProviderStanding standing) => standing switch
+    public static string? StandingLine(this ProviderStanding standing, ProviderRow? row = null) => standing switch
     {
         ProviderStanding.Failing => T.SourcesStatusNotAnswering,
-        ProviderStanding.HeldBack => T.SourcesStatusHeldBack,
+        ProviderStanding.HeldBack => row?.HeldBackFor == HoldReason.TorrentsOff ? T.SourcesStatusTorrentsOff : T.SourcesStatusHeldBack,
         ProviderStanding.Off => T.SourceNoteOff,
         ProviderStanding.Slow => T.SourcesStatusSlow,
         _ => null,

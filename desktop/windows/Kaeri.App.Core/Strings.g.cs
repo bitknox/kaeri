@@ -6046,6 +6046,9 @@ public static partial class T
     /// <summary>Under a source that waits for the proxy check in Settings.</summary>
     public static string SourceNoteHeldBack => Get("SourceNoteHeldBack");
 
+    /// <summary>Under a source that names torrents while torrent playback is off in Settings.</summary>
+    public static string SourceNoteTorrentsOff => Get("SourceNoteTorrentsOff");
+
     /// <summary>Heading over one source's releases, for a source that offers several (a batch, single episodes).</summary>
     public static string SourcePickerReleases => Get("SourcePickerReleases");
 
@@ -6112,6 +6115,9 @@ public static partial class T
     /// <summary>Status: held back.</summary>
     public static string SourcesStatusHeldBack => Get("SourcesStatusHeldBack");
 
+    /// <summary>Status: a source that names torrents, while torrent playback is off.</summary>
+    public static string SourcesStatusTorrentsOff => Get("SourcesStatusTorrentsOff");
+
     /// <summary>Status: slow.</summary>
     public static string SourcesStatusSlow => Get("SourcesStatusSlow");
 
@@ -6126,6 +6132,9 @@ public static partial class T
 
     /// <summary>Status line: waiting for the proxy check.</summary>
     public static string SourcesDetailHeldBack => Get("SourcesDetailHeldBack");
+
+    /// <summary>Status line: torrent playback is off.</summary>
+    public static string SourcesDetailTorrentsOff => Get("SourcesDetailTorrentsOff");
 
     /// <summary>Status line: disabled.</summary>
     public static string SourcesDetailDisabled => Get("SourcesDetailDisabled");
@@ -10762,6 +10771,7 @@ public static partial class T
         ["SourceNoteGone"] = "Not installed",
         ["SourceNoteAmbiguous"] = "Couldn't match this title",
         ["SourceNoteHeldBack"] = "Waiting for the proxy check",
+        ["SourceNoteTorrentsOff"] = "Torrent playback is off",
         ["SourcePickerReleases"] = "Releases",
         ["SourcePickerChosen"] = "Chosen",
         ["SourcePinUnavailable"] = "{name} isn't available right now, so this title's episodes come from your other sources.",
@@ -10784,11 +10794,13 @@ public static partial class T
         ["SourcesOriginIn"] = "In {place}",
         ["SourcesStatusNotAnswering"] = "Not answering",
         ["SourcesStatusHeldBack"] = "Held back",
+        ["SourcesStatusTorrentsOff"] = "Torrents off",
         ["SourcesStatusSlow"] = "Slow",
         ["SourcesStatusUpdate"] = "Update available",
         ["SourcesDetailNotAnswering"] = "Not answering. {why}",
         ["SourcesDetailNotAnsweringPlain"] = "Not answering.",
         ["SourcesDetailHeldBack"] = "Waiting until the proxy check passes.",
+        ["SourcesDetailTorrentsOff"] = "Torrent playback is off. You can turn it on in Settings, under Sources.",
         ["SourcesDetailDisabled"] = "Off. It keeps its place and isn't tried.",
         ["SourcesDetailGone"] = "This source is no longer here.",
         ["SourcesDetailSite"] = "The source didn't answer.",

@@ -8846,6 +8846,9 @@ source-note-ambiguous = Không khớp được tựa này
 # Under a source that waits for the proxy check in Settings.
 source-note-held-back = Đang chờ kiểm tra proxy
 
+# Under a source that names torrents while torrent playback is off in Settings.
+source-note-torrents-off = Phát torrent đang tắt
+
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 source-picker-releases = Các bản phát hành
 
@@ -8912,6 +8915,9 @@ sources-status-not-answering = Không phản hồi
 # Status: held back.
 sources-status-held-back = Bị giữ lại
 
+# Status: a source that names torrents, while torrent playback is off.
+sources-status-torrents-off = Torrent đang tắt
+
 # Status: slow.
 sources-status-slow = Chậm
 
@@ -8926,6 +8932,9 @@ sources-detail-not-answering-plain = Không phản hồi.
 
 # Status line: waiting for the proxy check.
 sources-detail-held-back = Đang chờ cho đến khi proxy đạt kiểm tra.
+
+# Status line: torrent playback is off.
+sources-detail-torrents-off = Phát torrent đang tắt. Bạn có thể bật trong Cài đặt, ở mục Các nguồn.
 
 # Status line: disabled.
 sources-detail-disabled = Đã tắt. Vẫn giữ vị trí nhưng không được thử.

@@ -17,7 +17,7 @@ use kaeri_model::{
     },
     episodes::{EpisodeAiring, EpisodeKind, EpisodeRow},
     progress::TitleProgress,
-    sources::ProviderRow,
+    sources::{HoldReason, ProviderRow},
 };
 use kaeri_store::Store;
 
@@ -723,6 +723,7 @@ pub fn provider_rows(
                     last_error: h.last_error.clone(),
                     usable: h.is_usable() && !disabled,
                     held_back: h.held_back.is_some(),
+                    held_back_for: h.held_back.as_deref().map(hold_reason),
                     ..described
                 },
                 None => {
@@ -734,6 +735,15 @@ pub fn provider_rows(
     // The demo is listed last, whatever its place in the chain.
     rows.sort_by_key(|row| row.is_demo);
     rows
+}
+
+/// Names why a source is held back. Anything but playback being off is the proxy's check.
+fn hold_reason(reason: &str) -> HoldReason {
+    if reason == kaeri_providers::torrent::bridge::PLAYBACK_OFF {
+        HoldReason::TorrentsOff
+    } else {
+        HoldReason::ProxyCheck
+    }
 }
 
 /// How a source's episode numbers stand to AniList's for one title.
@@ -1261,6 +1271,16 @@ mod naming_tests {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn a_playback_off_hold_is_named_torrents_off_and_a_proxy_hold_the_proxy_check() {
+        use super::{HoldReason, hold_reason};
+        assert_eq!(
+            hold_reason(kaeri_providers::torrent::bridge::PLAYBACK_OFF),
+            HoldReason::TorrentsOff
+        );
+        assert_eq!(hold_reason("proxy check failed"), HoldReason::ProxyCheck);
+    }
+
     use super::*;
     use kaeri_core::ids::AnilistId;
     use kaeri_model::present;

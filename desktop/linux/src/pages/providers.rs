@@ -16,7 +16,7 @@ use kaeri_model::{
     servers::ServerCommand,
     settings::SettingKey,
     sources::{
-        ProviderOrigin, ProviderRow, SourceSection, has_no_sources, order_with_source_moved,
+        HoldReason, ProviderOrigin, ProviderRow, SourceSection, has_no_sources, order_with_source_moved,
         source_groups,
     },
 };
@@ -80,6 +80,9 @@ fn came_from(row: &ProviderRow) -> String {
 pub fn standing_words(row: &ProviderRow) -> Option<(String, &'static str)> {
     match Standing::of(row) {
         Standing::Failing => Some((t::sources_status_not_answering(), "vermilion")),
+        Standing::HeldBack if row.held_back_for == Some(HoldReason::TorrentsOff) => {
+            Some((t::sources_status_torrents_off(), "ring"))
+        }
         Standing::HeldBack => Some((t::sources_status_held_back(), "ring")),
         Standing::Off => Some((t::value_off(), "ring")),
         Standing::Slow => Some((t::sources_status_slow(), "haze")),

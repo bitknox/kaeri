@@ -2387,6 +2387,7 @@
     <string name="source_note_gone">Inte installerad</string>
     <string name="source_note_ambiguous">Det gick inte att matcha titeln</string>
     <string name="source_note_held_back">Väntar på proxykontrollen</string>
+    <string name="source_note_torrents_off">Torrentuppspelning är av</string>
     <string name="source_picker_releases">Utgåvor</string>
     <string name="source_picker_chosen">Vald</string>
     <string name="source_pin_unavailable">%1$s är inte tillgänglig just nu, så den här titelns avsnitt kommer från dina övriga källor.</string>
@@ -2409,11 +2410,13 @@
     <string name="sources_origin_in">I %1$s</string>
     <string name="sources_status_not_answering">Svarar inte</string>
     <string name="sources_status_held_back">Spärrad</string>
+    <string name="sources_status_torrents_off">Torrents av</string>
     <string name="sources_status_slow">Långsam</string>
     <string name="sources_status_update">Uppdatering finns</string>
     <string name="sources_detail_not_answering">Svarar inte. %1$s</string>
     <string name="sources_detail_not_answering_plain">Svarar inte.</string>
     <string name="sources_detail_held_back">Väntar tills proxykontrollen godkänns.</string>
+    <string name="sources_detail_torrents_off">Torrentuppspelning är av. Du kan slå på den i Inställningar, under Källor.</string>
     <string name="sources_detail_disabled">Av. Den behåller sin plats och provas inte.</string>
     <string name="sources_detail_gone">Den här källan finns inte längre.</string>
     <string name="sources_detail_site">källan svarade inte.</string>

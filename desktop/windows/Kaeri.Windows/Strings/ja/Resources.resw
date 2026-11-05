@@ -6089,6 +6089,9 @@
   <data name="SourceNoteHeldBack" xml:space="preserve">
     <value>プロキシの確認待ち</value>
   </data>
+  <data name="SourceNoteTorrentsOff" xml:space="preserve">
+    <value>トレントの再生はオフです</value>
+  </data>
   <data name="SourcePickerReleases" xml:space="preserve">
     <value>リリース</value>
   </data>
@@ -6155,6 +6158,9 @@
   <data name="SourcesStatusHeldBack" xml:space="preserve">
     <value>保留中</value>
   </data>
+  <data name="SourcesStatusTorrentsOff" xml:space="preserve">
+    <value>トレントはオフ</value>
+  </data>
   <data name="SourcesStatusSlow" xml:space="preserve">
     <value>遅い</value>
   </data>
@@ -6169,6 +6175,9 @@
   </data>
   <data name="SourcesDetailHeldBack" xml:space="preserve">
     <value>プロキシの確認に通るまで待機します。</value>
+  </data>
+  <data name="SourcesDetailTorrentsOff" xml:space="preserve">
+    <value>トレントの再生はオフです。設定の「ソース」でオンにできます。</value>
   </data>
   <data name="SourcesDetailDisabled" xml:space="preserve">
     <value>オフです。順番は保持されますが、試されません。</value>

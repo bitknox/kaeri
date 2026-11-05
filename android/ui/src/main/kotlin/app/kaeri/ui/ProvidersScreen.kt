@@ -63,6 +63,7 @@ import androidx.navigation.compose.composable
 import kotlin.math.roundToInt
 import app.kaeri.design.tabular
 import app.kaeri.engine.core.SettingValue
+import app.kaeri.engine.model.HoldReason
 import app.kaeri.engine.model.ProviderOrigin
 import app.kaeri.engine.model.ProviderRow
 import app.kaeri.engine.model.SettingKey
@@ -124,7 +125,8 @@ internal data class ProviderInfo(val row: ProviderRow, val context: Context, val
     fun state(offline: Boolean): Pair<String, StateKind>? = when {
             row.disabled -> Strings.valueOff(context) to StateKind.Off
             row.standing == ProviderStanding.Failing && !offline -> Strings.sourcesStatusNotAnswering(context) to StateKind.Problem
-            row.standing == ProviderStanding.HeldBack -> Strings.sourcesStatusHeldBack(context) to StateKind.Off
+            row.standing == ProviderStanding.HeldBack ->
+                (if (row.heldBackFor == HoldReason.TORRENTS_OFF) Strings.sourcesStatusTorrentsOff(context) else Strings.sourcesStatusHeldBack(context)) to StateKind.Off
             row.update != null -> Strings.sourcesStatusUpdate(context) to StateKind.Update
             else -> null
         }
@@ -700,7 +702,8 @@ private fun stateLine(context: Context, info: ProviderInfo, offline: Boolean): P
     info.row.standing == ProviderStanding.Failing && offline -> null
     info.row.standing == ProviderStanding.Failing ->
         (info.row.lastError?.let { Strings.sourcesDetailNotAnswering(context, providerReason(context, it)) } ?: Strings.sourcesDetailNotAnsweringPlain(context)) to true
-    info.row.standing == ProviderStanding.HeldBack -> Strings.sourcesDetailHeldBack(context) to false
+    info.row.standing == ProviderStanding.HeldBack ->
+        (if (info.row.heldBackFor == HoldReason.TORRENTS_OFF) Strings.sourcesDetailTorrentsOff(context) else Strings.sourcesDetailHeldBack(context)) to false
     else -> null
 }
 

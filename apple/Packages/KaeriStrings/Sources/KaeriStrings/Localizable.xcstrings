@@ -214977,6 +214977,90 @@
         }
       }
     },
+    "source-note-torrents-off" : {
+      "comment" : "Under a source that names torrents while torrent playback is off in Settings.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrent-Wiedergabe ist aus"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrent playback is off"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrents desactivados"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrents désactivés"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pemutaran torrent mati"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrent disattivati"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "トレントの再生はオフです"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odtwarzanie torrentów jest wyłączone"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrents desativados"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Воспроизведение торрентов выключено"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrentuppspelning är av"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrent oynatma kapalı"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phát torrent đang tắt"
+          }
+        }
+      }
+    },
     "source-picker-automatic" : {
       "comment" : "The first choice: let Kaeri pick per episode. Paired with source-picker-automatic-detail.",
       "extractionState" : "manual",
@@ -219453,6 +219537,90 @@
         }
       }
     },
+    "sources-detail-torrents-off" : {
+      "comment" : "Status line: torrent playback is off.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Torrent-Wiedergabe ist aus. Du kannst sie in den Einstellungen unter Quellen einschalten."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrent playback is off. You can turn it on in Settings, under Sources."
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La reproducción de torrents está desactivada. Puedes activarla en Ajustes, en Fuentes."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La lecture des torrents est désactivée. Vous pouvez l'activer dans Réglages, sous Sources."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pemutaran torrent mati. Kamu bisa menyalakannya di Pengaturan, di bagian Sumber-sumber."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La riproduzione dei torrent è disattivata. Puoi attivarla in Impostazioni, sotto Fonti."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "トレントの再生はオフです。設定の「ソース」でオンにできます。"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odtwarzanie torrentów jest wyłączone. Możesz je włączyć w Ustawieniach, w sekcji Źródła."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A reprodução de torrents está desativada. Você pode ativá-la em Ajustes, em Fontes."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Воспроизведение торрентов выключено. Его можно включить в настройках, в разделе Источники."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrentuppspelning är av. Du kan slå på den i Inställningar, under Källor."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrent oynatma kapalı. Ayarlar'da Kaynaklar bölümünden açabilirsin."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phát torrent đang tắt. Bạn có thể bật trong Cài đặt, ở mục Các nguồn."
+          }
+        }
+      }
+    },
     "sources-drag-hint" : {
       "comment" : "Accessibility hint of the drag handle.",
       "extractionState" : "manual",
@@ -223649,6 +223817,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chậm"
+          }
+        }
+      }
+    },
+    "sources-status-torrents-off" : {
+      "comment" : "Status: a source that names torrents, while torrent playback is off.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrents aus"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrents off"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrents desactivados"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrents désactivés"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrent mati"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrent disattivati"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "トレントはオフ"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrenty wyłączone"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrents desativados"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Торренты выключены"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrents av"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrentler kapalı"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrent đang tắt"
           }
         }
       }
