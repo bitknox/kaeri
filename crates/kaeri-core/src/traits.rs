@@ -10,6 +10,10 @@
 use async_trait::async_trait;
 
 use crate::{
+    books::{
+        BookHints, BookIds, BookSourceManifest, ChapterContent, SeriesDetail, SeriesHit,
+        SourceChapter,
+    },
     error::ProviderError,
     ids::{AnilistId, ExternalIds, ProviderKey},
     media::{Episode, SearchHit, TitleHints, Translation},
@@ -216,6 +220,64 @@ pub trait Provider: Send + Sync {
     /// protection check, is not a broken source. Returning an error keeps it out of
     /// resolution entirely.
     fn is_available(&self) -> Result<(), ProviderError> {
+        Ok(())
+    }
+}
+
+/// A source of books: folders, Komga, Kavita and OPDS servers, and `kaeri:books` plugins.
+///
+/// The same shape as the `source` interface in `wit/kaeri-books.wit`, as [`Provider`] mirrors
+/// `kaeri:provider`, so a plugin is indistinguishable from a built-in source here. The book
+/// registry ranks them with the same health and failover rules as shows.
+#[async_trait]
+pub trait BookSource: Send + Sync {
+    fn manifest(&self) -> &BookSourceManifest;
+
+    /// Find series. For a plugin this is how a work is found at all: its ids are its own.
+    async fn search(
+        &self,
+        query: &str,
+        hints: &BookHints,
+    ) -> Result<Vec<SeriesHit>, ProviderError>;
+
+    /// One series, described.
+    async fn series(&self, id: &str, hints: &BookHints) -> Result<SeriesDetail, ProviderError>;
+
+    /// A series' chapters, in any order: every version and language the source lists.
+    async fn chapters(
+        &self,
+        id: &str,
+        hints: &BookHints,
+    ) -> Result<Vec<SourceChapter>, ProviderError>;
+
+    /// What chapter `chapter` of series `series` is made of: page images to fetch, text, or a
+    /// whole book file.
+    async fn content(
+        &self,
+        series: &str,
+        chapter: &str,
+    ) -> Result<ChapterContent, ProviderError>;
+
+    /// Find a series by the ids other services know it by, with no fuzzy matching. A source
+    /// with its own index (a server, a folder) answers from it; the default answers `None`, so
+    /// the caller falls back to [`Self::search`].
+    async fn lookup(&self, _ids: &BookIds) -> Result<Option<SeriesHit>, ProviderError> {
+        Ok(None)
+    }
+
+    /// Tell the source a chapter was read, or read no more: Komga's and Kavita's progress
+    /// write-back. Plain OPDS and plugins keep the default, which does nothing.
+    async fn report_progress(
+        &self,
+        _series: &str,
+        _chapter: &str,
+        _read: bool,
+    ) -> Result<(), ProviderError> {
+        Ok(())
+    }
+
+    /// Cheap liveness probe. The default says it is answering.
+    async fn health_check(&self) -> Result<(), ProviderError> {
         Ok(())
     }
 }

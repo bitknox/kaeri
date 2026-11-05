@@ -253,6 +253,143 @@ pub enum MediaStatus {
     Unknown,
 }
 
+/// What a work is: a show, or a book of pictures or of words. A light novel is [`Medium::Novel`];
+/// manhwa and manhua are [`Medium::Manga`] with an [`Origin`], and a webtoon is a
+/// [`ReadingFormat`]. One work is one series in one medium.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+#[serde(rename_all = "lowercase")]
+pub enum Medium {
+    Anime,
+    Manga,
+    Novel,
+}
+
+impl Medium {
+    /// The name the store, sync and plugins use: `anime`, `manga`, `novel`.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Anime => "anime",
+            Self::Manga => "manga",
+            Self::Novel => "novel",
+        }
+    }
+
+    /// The medium a plugin or the store names, `None` for anything else. AniList's own words
+    /// (`ANIME`, `MANGA`, a `NOVEL` format, `light novel`) are read too.
+    pub fn parse(name: &str) -> Option<Self> {
+        match name.trim().to_ascii_lowercase().replace(['_', '-'], " ").as_str() {
+            "anime" | "show" | "shows" => Some(Self::Anime),
+            "manga" | "manhwa" | "manhua" | "comic" | "comics" | "webtoon" => Some(Self::Manga),
+            "novel" | "novels" | "light novel" | "web novel" | "ln" => Some(Self::Novel),
+            _ => None,
+        }
+    }
+
+    /// Whether this is a medium that is read rather than watched.
+    pub const fn is_reading(self) -> bool {
+        matches!(self, Self::Manga | Self::Novel)
+    }
+}
+
+impl fmt::Display for Medium {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+/// How a book is laid out. Plugins and servers name it as a string; one this does not model is
+/// kept as [`ReadingFormat::Other`], since a person may see it.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ReadingFormat {
+    Manga,
+    OneShot,
+    /// One long strip read from top to bottom.
+    Webtoon,
+    Novel,
+    Other(String),
+}
+
+impl ReadingFormat {
+    /// A plugin's or AniList's name for a format: `manga`, `one-shot`, `ONE_SHOT`, `webtoon`,
+    /// `novel`, `NOVEL`. An empty name is `None`.
+    pub fn parse(name: &str) -> Option<Self> {
+        let trimmed = name.trim();
+        if trimmed.is_empty() {
+            return None;
+        }
+        Some(match trimmed.to_ascii_lowercase().replace(['_', '-', ' '], "").as_str() {
+            "manga" | "manhwa" | "manhua" | "comic" => Self::Manga,
+            "oneshot" => Self::OneShot,
+            "webtoon" | "strip" | "longstrip" => Self::Webtoon,
+            "novel" | "lightnovel" | "webnovel" => Self::Novel,
+            _ => Self::Other(trimmed.to_owned()),
+        })
+    }
+
+    /// The name plugins and the store use for it; an unknown format keeps its own.
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Manga => "manga",
+            Self::OneShot => "one-shot",
+            Self::Webtoon => "webtoon",
+            Self::Novel => "novel",
+            Self::Other(name) => name,
+        }
+    }
+
+    /// The medium a book of this format belongs to, where the format says.
+    pub fn medium(&self) -> Option<Medium> {
+        match self {
+            Self::Manga | Self::OneShot | Self::Webtoon => Some(Medium::Manga),
+            Self::Novel => Some(Medium::Novel),
+            Self::Other(_) => None,
+        }
+    }
+}
+
+/// Where a book comes from, by country. Manhwa is [`Medium::Manga`] from [`Origin::Korea`].
+/// Plugins send an ISO 3166 code and AniList its `countryOfOrigin`; another country is kept as
+/// [`Origin::Other`] with its code.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Origin {
+    Japan,
+    Korea,
+    China,
+    Taiwan,
+    Other(String),
+}
+
+impl Origin {
+    /// An ISO 3166 code (`JP`, `KR`, `CN`, `TW`) or a country's English name. Empty is `None`.
+    pub fn parse(code: &str) -> Option<Self> {
+        let trimmed = code.trim();
+        if trimmed.is_empty() {
+            return None;
+        }
+        Some(match trimmed.to_ascii_lowercase().as_str() {
+            "jp" | "jpn" | "japan" => Self::Japan,
+            "kr" | "kor" | "korea" | "south korea" => Self::Korea,
+            "cn" | "chn" | "china" => Self::China,
+            "tw" | "twn" | "taiwan" => Self::Taiwan,
+            _ => Self::Other(trimmed.to_ascii_uppercase()),
+        })
+    }
+
+    /// The ISO 3166 code: `JP`, `KR`, `CN`, `TW`, or the one kept.
+    pub fn code(&self) -> &str {
+        match self {
+            Self::Japan => "JP",
+            Self::Korea => "KR",
+            Self::China => "CN",
+            Self::Taiwan => "TW",
+            Self::Other(code) => code,
+        }
+    }
+}
+
 /// What is known about the title being asked for, handed to a source with each search, episode
 /// listing and stream request. Everything is optional: a source may use any of it or none.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -305,6 +442,24 @@ impl SearchHit {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn media_formats_and_origins_read_what_plugins_and_anilist_send() {
+        assert_eq!(Medium::parse("MANGA"), Some(Medium::Manga));
+        assert_eq!(Medium::parse("light_novel"), Some(Medium::Novel));
+        assert_eq!(Medium::parse("podcast"), None);
+        assert_eq!(ReadingFormat::parse("ONE_SHOT"), Some(ReadingFormat::OneShot));
+        assert_eq!(ReadingFormat::parse("one-shot"), Some(ReadingFormat::OneShot));
+        assert_eq!(
+            ReadingFormat::parse("Webtoon").and_then(|f| f.medium()),
+            Some(Medium::Manga)
+        );
+        assert_eq!(ReadingFormat::parse("4-koma"), Some(ReadingFormat::Other("4-koma".into())));
+        assert_eq!(ReadingFormat::parse(" "), None);
+        assert_eq!(Origin::parse("kr"), Some(Origin::Korea));
+        assert_eq!(Origin::parse("fr").map(|o| o.code().to_owned()), Some("FR".into()));
+        assert_eq!(Origin::Taiwan.code(), "TW");
+    }
 
     #[test]
     fn translation_round_trips_and_toggles() {
