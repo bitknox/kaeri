@@ -1,6 +1,6 @@
 stores-joined = Ansluten
 stores-empty-title = Inga { -plugin-store-pl } än
-stores-empty-detail = { -plugin-store-cap-pl } drivs av personer du känner. Gå med i en av dem med inbjudningslänken som ägaren skickar till dig.
+stores-empty-detail = { -plugin-store-cap-pl } innehåller signerade { -plugin-pl } och ger varje { -device } sin egen token. Gå med i en med inbjudningslänken som ägaren skickar till dig.
 stores-intro = { -plugin-cap-pl } lägger till { -source-pl }. Varje visar vilka värdar den kontaktar innan du installerar den.
 stores-not-from-app = { -plugin-cap-pl } kommer från { -plugin-store }ens ägare, inte från { -app-name }. Du kan lämna en { -plugin-store } när som helst.
 stores-join-owner-responsible = { $owner } driver den här { -plugin-store } och valde dess { -plugin-pl }. { -app-name } har inte gjort, granskat eller godkänt dem.
@@ -175,7 +175,7 @@ stores-offers-plugins = { $count ->
    *[other] { $count } { -plugin-pl }
  }
 notice-open-stores = Öppna { -plugin-store-pl }
-stores-what-is = En { -plugin-store } är en liten server som en person driver åt dem hen bjuder in. Den erbjuder { -source-pl } som { -plugin-pl }. { -app-name } driver inga { -plugin-store-pl } och listar inga, så du går med i en via en inbjudningslänk från ägaren.
+stores-what-is = En { -plugin-store } är en liten server som innehåller signerade { -plugin-pl } och ger varje { -device } sin egen token. Den erbjuder { -source-pl } som { -plugin-pl }. { -app-name } driver inga { -plugin-store-pl } och listar inga, så du går med via en inbjudningslänk från ägaren.
 stores-what-is-link = Vad är en { -plugin-store }?
 stores-invite-rules = En inbjudningslänk gäller en gång, för en person, och i sju dagar. Be { -plugin-store }ens ägare om en ny om din har gått ut.
 stores-qr-label = QR-kod för inbjudningslänken

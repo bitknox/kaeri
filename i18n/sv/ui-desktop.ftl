@@ -27,3 +27,5 @@ updates-restart = Starta om och uppdatera
 tv-problem-full = TV:n har så många { -device-pl } parkopplade som den klarar. Ta bort en i TV:ns inställningar, under Fjärrkontroller.
 tv-problem-unpaired = TV:n känner inte längre igen den här { -device }en. Parkoppla igen.
 player-position-spoken = { $position } av { $duration }
+names-pair = { $first } och { $last }
+names-list = { $list }, { $next }

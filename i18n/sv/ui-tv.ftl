@@ -69,3 +69,4 @@ tv-cast-mute = Ljud av
 tv-cast-unmute = Ljud på
 tv-cast-volume-on-tv = Ställs in på TV:n
 tv-cast-up-next-in = { -up-next-cap } · spelas om { $seconds } s
+tv-forget-note = Glömmer du en TV här glömmer den den här { -device }en också.

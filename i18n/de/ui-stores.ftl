@@ -1,6 +1,6 @@
 stores-joined = Beigetreten
 stores-empty-title = Noch keine { -plugin-store-pl }
-stores-empty-detail = { -plugin-store-cap-pl } werden von Leuten betrieben, die du kennst. Tritt einem bei, indem du den Einladungslink einfügst, den dir die betreibende Person schickt.
+stores-empty-detail = { -plugin-store-cap-pl } enthalten signierte { -plugin-pl } und geben jedem { -device } ein eigenes Token. Tritt einem mit dem Einladungslink bei, den dir die betreibende Person schickt.
 stores-intro = { -plugin-cap-pl } fügen { -source-pl } hinzu. Jedes listet die Hosts auf, die es kontaktiert, bevor du es installierst.
 stores-not-from-app = { -plugin-cap-pl } kommen von der Person, die den { -plugin-store } betreibt, nicht von { -app-name }. Du kannst einen { -plugin-store } jederzeit verlassen.
 stores-join-owner-responsible = { $owner } betreibt diesen { -plugin-store } und hat dessen { -plugin-pl } ausgewählt. { -app-name } hat sie weder erstellt noch geprüft oder genehmigt.
@@ -175,7 +175,7 @@ stores-offers-plugins = { $count ->
    *[other] { $count } { -plugin-pl }
  }
 notice-open-stores = { -plugin-store-pl } öffnen
-stores-what-is = Ein { -plugin-store } ist ein kleiner Server, den eine Person für die Leute betreibt, die sie einlädt. Er bietet { -source-pl } als { -plugin-pl } an. { -app-name } betreibt keine { -plugin-store-pl } und listet keine auf, du trittst also mit einem Einladungslink des Besitzers bei.
+stores-what-is = Ein { -plugin-store } ist ein kleiner Server mit signierten { -plugin-pl }, der jedem { -device } ein eigenes Token gibt. Er bietet { -source-pl } als { -plugin-pl } an. { -app-name } betreibt keine { -plugin-store-pl } und listet keine auf, also trittst du mit einem Einladungslink des Besitzers bei.
 stores-what-is-link = Was ist ein { -plugin-store }?
 stores-invite-rules = Ein Einladungslink gilt einmal, für eine Person, und sieben Tage. Frag den Besitzer des { -plugin-store } nach einem neuen, wenn deiner abgelaufen ist.
 stores-qr-label = QR-Code für den Einladungslink

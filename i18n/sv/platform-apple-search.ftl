@@ -16,6 +16,7 @@ search-statuses-count = { $count ->
 search-leave-out = Uteslut
 search-include = Inkludera
 search-filters-help = Taggar, längd, betyg, ursprung och var det går att se
+search-all-filters = Alla filter
 search-filters-set = { $count } valda
 search-sort-by = Sortera efter
 search-clear-all = Rensa allt
