@@ -1,5 +1,6 @@
 action-try-again = 再試行
 action-cancel = キャンセル
+action-go = 移動
 action-not-now = 後で
 duration-days = { $days }日
 duration-hours-minutes = { $hours }時間{ $minutes }分

@@ -19,3 +19,7 @@ notice-episodes-queued = { $count ->
 settings-subs-reset-done = 字幕スタイルをリセットしました
 crash-notice = 問題が発生したため、{ -app-name }を終了しました。
 crash-notice-tv = 問題が発生したため、{ -app-name }を終了しました。設定の「情報」から報告できます。
+notice-surprise-empty-filters = この条件に合う作品がありません。
+notice-surprise-empty-planning = 「計画中」リストが空です。
+notice-surprise-offline = オフラインです。検索からのおまかせにはAniListが必要です。
+notice-surprise-failed = いまは作品を選べませんでした。しばらくしてからもう一度お試しください。

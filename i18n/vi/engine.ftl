@@ -19,3 +19,7 @@ notice-episodes-queued = { $count ->
 settings-subs-reset-done = Đã đặt lại kiểu phụ đề
 crash-notice = { -app-name } đã đóng sau một sự cố.
 crash-notice-tv = { -app-name } đã đóng sau một sự cố. Bạn có thể báo cáo trong Cài đặt, Giới thiệu.
+notice-surprise-empty-filters = Không có tựa nào khớp với các bộ lọc này.
+notice-surprise-empty-planning = Danh sách Dự định xem đang trống.
+notice-surprise-offline = Đang ngoại tuyến. Gợi ý ngẫu nhiên trong tìm kiếm cần AniList.
+notice-surprise-failed = Lúc này chưa chọn được tựa nào. Hãy thử lại sau ít phút.

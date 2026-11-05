@@ -69,3 +69,4 @@ tv-cast-mute = Tắt tiếng
 tv-cast-unmute = Bật tiếng
 tv-cast-volume-on-tv = Chỉnh trên TV
 tv-cast-up-next-in = { -up-next-cap } · phát sau { $seconds } s
+tv-forget-note = Quên một TV ở đây thì TV đó cũng quên { -device } này.

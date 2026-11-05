@@ -20,3 +20,7 @@ player-more-discussion-note = { $count ->
    *[other] コメント{ $count }件 · 一時停止します
  }
 player-more-discussion-pauses = 動画を一時停止します
+search-pill-set = { $filter }、{ $value }
+search-pill-any = { $filter }、指定なし
+search-pill-all-set = すべての絞り込み、{ $count }件設定中
+search-pill-clear = すべての絞り込みを解除

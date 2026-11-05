@@ -10,6 +10,7 @@ shell-changes-waiting = { $count ->
 shell-tracker-synced = { $tracker } · 同期済み
 shortcuts-group-lists = リスト
 shortcuts-go-to-section = セクションに移動
+shortcuts-episode-ranges = 前後のエピソード範囲に移動
 shortcuts-show = キーボードショートカット
 shortcuts-close-window = ウィンドウを閉じる
 shortcuts-quit = 終了

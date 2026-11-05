@@ -13,6 +13,7 @@ search-statuses-count = { $count ->
 search-leave-out = 除外
 search-include = 含める
 search-filters-help = タグ、長さ、スコア、製作国、視聴先
+search-all-filters = すべての絞り込み
 search-filters-set = { $count }件設定
 search-sort-by = 並び替え
 search-clear-all = すべてクリア

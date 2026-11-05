@@ -69,3 +69,4 @@ tv-cast-mute = ミュート
 tv-cast-unmute = ミュート解除
 tv-cast-volume-on-tv = テレビ側で設定
 tv-cast-up-next-in = { -up-next-cap } · { $seconds }秒後に再生
+tv-forget-note = ここでテレビの登録を解除すると、テレビ側でもこの{ -device }の登録が解除されます。

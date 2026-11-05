@@ -10,6 +10,7 @@ shell-changes-waiting = { $count ->
 shell-tracker-synced = { $tracker } · Đã đồng bộ
 shortcuts-group-lists = Danh sách
 shortcuts-go-to-section = Chuyển đến một mục
+shortcuts-episode-ranges = Nhóm tập trước hoặc sau
 shortcuts-show = Phím tắt bàn phím
 shortcuts-close-window = Đóng cửa sổ
 shortcuts-quit = Thoát

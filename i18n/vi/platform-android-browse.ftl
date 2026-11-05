@@ -20,3 +20,7 @@ player-more-discussion-note = { $count ->
    *[other] { $count } bình luận · tạm dừng video
  }
 player-more-discussion-pauses = Tạm dừng video
+search-pill-set = { $filter }, { $value }
+search-pill-any = { $filter }, bất kỳ
+search-pill-all-set = Tất cả bộ lọc, đã đặt { $count }
+search-pill-clear = Xóa tất cả bộ lọc

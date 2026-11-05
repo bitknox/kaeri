@@ -7,5 +7,6 @@ status-reloading-sources = { -source-pl }を再読み込みしています…
 pin-unavailable = この作品に固定されていた{ -source }の{ $name }は利用できないため、ほかの{ -source-pl }を使用します。
 tui-together-section = { -watch-together-cap }
 tui-together-join-prompt = リンクまたはコード
+tui-together-chat-hidden-line = すべてのパーティで、チャットとリアクションはプレーヤーに表示されません。
 tui-together-not-a-link = { -watch-party }のリンクまたはコードではありません。
 tui-together-recent-alone = エピソード { $episode } · { $when }

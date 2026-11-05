@@ -27,6 +27,9 @@ notice-signed-out-queue = { $count ->
  }
 notice-sign-out-failed = Không đăng xuất được khỏi { $tracker }. Hãy thử lại. { $reason }
 notice-not-saved-because = Không lưu được cài đặt đó. { $cause }
+notice-proxy-saved = Lưu lượng torrent giờ đi qua proxy.
+notice-proxy-removed = Torrent giờ kết nối trực tiếp, không qua proxy.
+notice-proxy-not-checked = Không kiểm tra được proxy. { $cause }
 notice-proxy-password-not-kept = Không giữ được mật khẩu proxy. Hãy nhập lại để thử lưu. { $reason }
 notice-show-setting-refused = Không lưu được cài đặt đó. { $value } không phải giá trị hợp lệ cho { $setting }.
 notice-show-not-reset = Không đặt lại được cài đặt của bộ phim này. { $reason }

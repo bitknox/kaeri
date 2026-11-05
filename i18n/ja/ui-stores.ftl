@@ -1,6 +1,6 @@
 stores-joined = 参加済み
 stores-empty-title = まだ{ -plugin-store-pl }がありません
-stores-empty-detail = { -plugin-store-cap-pl }は、知り合いが運営しています。運営者から届いた招待リンクで参加できます。
+stores-empty-detail = { -plugin-store-cap-pl }は署名付きの{ -plugin-pl }を保管し、{ -device }ごとに専用のトークンを発行します。運営者から届いた招待リンクで参加できます。
 stores-intro = { -plugin-cap-pl }は{ -source-pl }を追加します。それぞれ、インストールする前に接続先のホストを一覧で示します。
 stores-not-from-app = { -plugin-cap-pl }は、{ -plugin-store }の運営者が提供するもので、{ -app-name }が提供するものではありません。{ -plugin-store }からはいつでも退出できます。
 stores-join-owner-responsible = この{ -plugin-store }は{ $owner }が運営し、{ -plugin-pl }も{ $owner }が選んでいます。{ -app-name }は作成も確認も承認もしていません。
@@ -170,7 +170,7 @@ stores-offers-plugins = { $count ->
    *[other] 提供している{ -plugin-pl }（{ $count }件）
  }
 notice-open-stores = { -plugin-store-pl }を開く
-stores-what-is = { -plugin-store }は、一人の運営者が、招待した人のために運営する小さなサーバーです。{ -source-pl }を{ -plugin-pl }として提供します。{ -app-name }は{ -plugin-store-pl }を運営せず、一覧も載せません。所有者からの招待リンクで参加してください。
+stores-what-is = { -plugin-store }は、署名付きの{ -plugin-pl }を保管し、{ -device }ごとに専用のトークンを発行する小さなサーバーです。{ -source-pl }を{ -plugin-pl }として提供します。{ -app-name }は{ -plugin-store-pl }を運営せず、一覧も載せません。所有者からの招待リンクで参加してください。
 stores-what-is-link = { -plugin-store }とは?
 stores-invite-rules = 招待リンクは、1人が1回だけ使え、7日間有効です。期限が切れた場合は、{ -plugin-store }の所有者に新しいリンクを依頼してください。
 stores-qr-label = 招待リンクのQRコード
