@@ -160,7 +160,7 @@ fun TitleScreen(
     val store = LocalAppStore.current
     LaunchedEffect(id) {
         store.loadDetail(id)
-        store.loadEpisodes(id)
+        store.loadEpisodesForPage(id)
         store.loadDub(id)
     }
     val entries by store.titles.entries.collectAsStateWithLifecycle()
