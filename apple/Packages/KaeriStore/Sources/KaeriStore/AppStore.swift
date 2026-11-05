@@ -947,9 +947,10 @@ public final class AppStore {
             widgetsChanged()
         case .lastAired(let rows):
             titles.lastAired(rows)
-        case .episodes(let id, let rows, _):
+        case .episodes(let id, let rows, let failed):
             titles.episodes(id: id, rows: rows)
-            episodesArrived[id] = now()
+            // A failed listing is not a table to keep: the page asks again when it next opens.
+            if failed == nil { episodesArrived[id] = now() }
             episodesLanded(id)
         case .titleDub(let id, let dub):
             titles.dub(id: id, extent: dub)
