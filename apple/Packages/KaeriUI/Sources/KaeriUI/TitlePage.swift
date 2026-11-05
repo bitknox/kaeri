@@ -304,7 +304,7 @@ struct TitlePage: View {
             // Its page, what it says about services under its buttons, and its art, asked at
             // once: the page lays out once, with all of it.
             store.prefetchPage(id)
-            if store.titles.episodes[id] == nil { store.loadEpisodes(id) }
+            store.loadEpisodesForPage(id)
             store.loadDub(id)
             // What the show sets for itself, its spoiler protection among it: from the database.
             store.loadShowSettings(id)

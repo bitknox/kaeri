@@ -111,6 +111,10 @@ public final class AppStore {
     @ObservationIgnored private var stillsAsked: Set<AnilistId> = []
     /// When each cover's card and table data was last asked with its screen's (see `prepareCards`).
     @ObservationIgnored private var prepared: [AnilistId: ContinuousClock.Instant] = [:]
+    /// The clock the asking rules read; tests move it.
+    @ObservationIgnored var now: () -> ContinuousClock.Instant = { ContinuousClock.now }
+    /// When each title's episode table last arrived (see `loadEpisodesForPage`).
+    @ObservationIgnored private var episodesArrived: [AnilistId: ContinuousClock.Instant] = [:]
     /// When each question about a title last went out (see `ask`).
     @ObservationIgnored private var asked: [TitleQuestion: ContinuousClock.Instant] = [:]
     /// The kinds of the engine's events a showcase set aside, so its rows stay on screen.
@@ -456,6 +460,10 @@ public final class AppStore {
     /// its answer is on its way, which a selection moving back and forth would otherwise do.
     public static let askAgainAfter: Duration = .seconds(20)
 
+    /// How long a title's episode table stands for a page opening. A source may list the next
+    /// episode minutes after a page was first shown, so an older table is asked for again.
+    public static let episodesFresh: Duration = .seconds(5 * 60)
+
     /// What you were watching, unless it was answered within `listFresh`; `force` asks anyway.
     public func loadContinue(force: Bool = false) {
         guard force || !continuing.list.answered(within: Self.listFresh) else { return }
@@ -606,6 +614,13 @@ public final class AppStore {
         send(.loadEpisodes(id))
     }
 
+    /// A title page's episodes: asked when there is no table or the one held arrived longer than
+    /// `episodesFresh` ago. The page keeps showing the held table until the new one lands.
+    public func loadEpisodesForPage(_ id: AnilistId) {
+        if titles.episodes[id] != nil, let at = episodesArrived[id], now() - at < Self.episodesFresh { return }
+        loadEpisodes(id)
+    }
+
     /// The covers a screen shows, for their hover cards: their cards and what their episode tables
     /// need, in one batched request at low priority, so a hover asks nothing. Covers asked within
     /// `preparedFor`, or whose table is here, are left out, so it may be called as the pointer moves.
@@ -677,7 +692,7 @@ public final class AppStore {
     /// Whether `question` may go out now: not asked within `askAgainAfter`. Noted as asked when it
     /// may.
     private func ask(_ question: TitleQuestion) -> Bool {
-        let now = ContinuousClock.now
+        let now = now()
         if let at = asked[question], now - at < Self.askAgainAfter { return false }
         asked[question] = now
         return true
@@ -934,6 +949,7 @@ public final class AppStore {
             titles.lastAired(rows)
         case .episodes(let id, let rows, _):
             titles.episodes(id: id, rows: rows)
+            episodesArrived[id] = now()
             episodesLanded(id)
         case .titleDub(let id, let dub):
             titles.dub(id: id, extent: dub)

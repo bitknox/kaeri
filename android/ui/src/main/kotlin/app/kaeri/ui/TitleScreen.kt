@@ -206,7 +206,7 @@ fun TitleScreen(id: AnilistId, actions: AppActions) {
     }
     LaunchedEffect(shown) {
         ask(shown)
-        store.loadEpisodes(shown)
+        store.loadEpisodesForPage(shown)
         store.loadDub(shown)
         // The show's own settings, for its spoiler protection.
         store.loadShowSettings(shown)
