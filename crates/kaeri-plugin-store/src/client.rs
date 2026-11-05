@@ -583,8 +583,7 @@ pub fn verify_index(
 ) -> Result<Index, ClientError> {
     key.verify_index(&signed.index, &signed.signature)
         .map_err(|_| ClientError::BadSignature)?;
-    let index: Index = serde_json::from_str(&signed.index)
-        .map_err(|e| ClientError::Malformed(e.to_string()))?;
+    let index = read_index(&signed.index)?;
     if index.protocol != PROTOCOL {
         return Err(ClientError::Protocol(index.protocol));
     }
@@ -605,6 +604,31 @@ pub fn verify_index(
         return Err(ClientError::Malformed(format!("reserved plugin id {:?}", bad.id)));
     }
     Ok(index)
+}
+
+/// The kind of plugin an index entry offers when it names none: a source of shows.
+const SHOWS: &str = "shows";
+
+/// Read an index document, leaving out the entries of a kind this version cannot use, as a store
+/// lists for a newer Kaeri. They are left out before anything else is read of them, so an entry
+/// shaped for a newer version fails nothing.
+fn read_index(document: &str) -> Result<Index, ClientError> {
+    let malformed = |e: serde_json::Error| ClientError::Malformed(e.to_string());
+    let mut raw: serde_json::Value = serde_json::from_str(document).map_err(malformed)?;
+    if let Some(plugins) = raw.get_mut("plugins").and_then(serde_json::Value::as_array_mut) {
+        let listed = plugins.len();
+        plugins.retain(|entry| match entry.get("kind") {
+            None | Some(serde_json::Value::Null) => true,
+            Some(kind) => kind.as_str() == Some(SHOWS),
+        });
+        if plugins.len() < listed {
+            tracing::debug!(
+                skipped = listed - plugins.len(),
+                "a store lists plugins of a kind this version cannot use"
+            );
+        }
+    }
+    serde_json::from_value(raw).map_err(malformed)
 }
 
 /// Check downloaded bytes against their index entry.
@@ -760,6 +784,27 @@ mod tests {
         };
         let index = serde_json::to_string(&index).unwrap();
         SignedIndex { signature: key.sign_index(&index), index }
+    }
+
+    #[test]
+    fn entries_of_a_kind_this_version_cannot_use_are_left_out() {
+        let key = SigningKey::generate().unwrap();
+        let mut index: serde_json::Value =
+            serde_json::from_str(&signed(&key, 3, &["plain", "named"]).index).unwrap();
+        let plugins = index["plugins"].as_array_mut().unwrap();
+        plugins[1]["kind"] = "shows".into();
+        // A newer store's book plugin, shaped as this version would not read an entry.
+        plugins.push(serde_json::json!({
+            "id": "pages",
+            "kind": "books",
+            "media": ["manga"],
+            "sha256": "",
+        }));
+        let index = index.to_string();
+        let signed = SignedIndex { signature: key.sign_index(&index), index };
+        let index = verify_index(&signed, &key.public(), 0).unwrap();
+        let ids: Vec<_> = index.plugins.iter().map(|p| p.id.as_str()).collect();
+        assert_eq!(ids, ["plain", "named"]);
     }
 
     #[test]

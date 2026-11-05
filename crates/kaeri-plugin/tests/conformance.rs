@@ -644,6 +644,46 @@ async fn a_plugin_built_for_the_old_abi_major_is_refused_with_a_clear_error() {
     }
 }
 
+#[tokio::test]
+async fn a_plugin_for_a_newer_kaeri_is_named_as_that_rather_than_broken() {
+    // A source for a world this host does not have, and one built for a later provider major:
+    // neither is broken, and neither needs a rebuild. This app needs an update.
+    use wasm_encoder::{
+        Component, ComponentImportSection, ComponentTypeRef, ComponentTypeSection, InstanceType,
+    };
+    for (import, world) in [
+        ("kaeri:books/host@1.0.0", "kaeri:books@1.0.0"),
+        ("kaeri:provider/host@4.0.0", "kaeri:provider@4.0.0"),
+    ] {
+        let mut types = ComponentTypeSection::new();
+        types.instance(&InstanceType::new());
+        let mut imports = ComponentImportSection::new();
+        imports.import(import, ComponentTypeRef::Instance(0));
+        let mut newer = Component::new();
+        newer.section(&types);
+        newer.section(&imports);
+
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("newer-plugin.wasm");
+        std::fs::write(&path, newer.finish()).unwrap();
+
+        let host = PluginHost::new(Limits::default(), None).unwrap();
+        match host.load(&path).await {
+            Err(error @ PluginError::NeedsNewerKaeri { .. }) => {
+                let PluginError::NeedsNewerKaeri { world: found, .. } = &error else {
+                    unreachable!()
+                };
+                assert_eq!(found, world);
+                assert!(error.to_string().contains("newer version of Kaeri"), "{error}");
+            }
+            other => panic!("{import}: expected NeedsNewerKaeri, got {:?}", other.map(|_| ())),
+        }
+        // Not counted with the plugins built for an older interface.
+        let loaded = kaeri_plugin::load_providers_reporting(&host, dir.path()).await;
+        assert!(loaded.providers.is_empty() && loaded.outdated.is_empty(), "{import}");
+    }
+}
+
 // ── a source that names torrents ─────────────────────────────────────────────────────────────
 //
 // `plugins/test-torrent-source` is a made-up source. Kaeri finds no torrents of its own: a

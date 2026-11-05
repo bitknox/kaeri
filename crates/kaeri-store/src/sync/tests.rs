@@ -677,3 +677,79 @@ fn continue_names_the_other_device_that_played_a_title_last_for_a_day() {
     mac.store.sync_disable().unwrap();
     assert!(mac.store.sync_last_devices(&ids, since).unwrap().is_empty());
 }
+
+/// What a newer version would write: an op of a kind this version does not know, numbered after
+/// `seq - 1` of `device`'s.
+fn future_op(device: &str, seq: u64, stamp: Stamp) -> serde_json::Value {
+    serde_json::json!({
+        "d": device,
+        "s": seq,
+        "t": stamp,
+        "b": { "k": "chapter_read", "work": "w-1", "chapter": "10.5", "pages": [1, 2] },
+    })
+}
+
+#[test]
+fn a_batch_with_an_unknown_kind_applies_the_rest_and_relays_it() {
+    let a = dev("aaaa", 10_000);
+    let b = dev("bbbb", 10_000);
+    let c = dev("cccc", 10_000);
+    a.finish(SHOW, "1");
+    let [watch] =
+        <[Op; 1]>::try_from(a.store.ops_after(&Default::default(), 10).unwrap()).unwrap();
+    // The batch as a newer `aaaa` sends it: a known op, one it does not know, and a known one
+    // numbered after it. Read from JSON, as both roads read it.
+    let mut later = watch.clone();
+    later.seq = 3;
+    later.stamp += 2;
+    let OpBody::Watch { episode, .. } = &mut later.body else { unreachable!() };
+    *episode = "2".into();
+    let unknown = future_op("aaaa", 2, watch.stamp + 1);
+    let wire = serde_json::json!([watch, unknown, later]).to_string();
+    let ops: Vec<Op> = serde_json::from_str(&wire).expect("an unknown kind fails nothing");
+    assert!(!ops[1].body.is_known());
+
+    let applied = b.store.apply_ops(ops).unwrap();
+    assert_eq!((applied.ops, applied.unknown, applied.gaps), (2, 1, 0));
+    assert_eq!(b.store.completed_episodes(SHOW).unwrap(), vec!["1".to_string(), "2".into()]);
+    assert_eq!(b.store.version_vector().unwrap()["aaaa"], 3, "its number is held");
+
+    // Relayed to a third device as it arrived.
+    let relayed = b.store.ops_after(&c.store.version_vector().unwrap(), usize::MAX).unwrap();
+    let held = relayed.iter().find(|op| op.device == "aaaa" && op.seq == 2).unwrap();
+    assert_eq!(serde_json::to_value(held).unwrap(), unknown);
+    let applied = c.store.apply_ops(relayed).unwrap();
+    assert_eq!((applied.unknown, applied.gaps), (1, 0));
+    assert_eq!(c.store.completed_episodes(SHOW).unwrap().len(), 2);
+    assert_eq!(dump(&b.store), dump(&c.store));
+}
+
+#[test]
+fn a_held_op_applies_once_this_version_knows_its_kind() {
+    let a = dev("aaaa", 10_000);
+    let b = dev("bbbb", 10_000);
+    let unknown: Op = serde_json::from_value(future_op("aaaa", 1, 1 << 40)).unwrap();
+    assert_eq!(b.store.apply_ops(vec![unknown]).unwrap().unknown, 1);
+    assert!(b.store.completed_episodes(SHOW).unwrap().is_empty());
+
+    // An update teaches the device the kind: stood in for here by giving the held op a body
+    // this version reads.
+    a.finish(SHOW, "1");
+    let watch = a.store.ops_after(&Default::default(), 1).unwrap().remove(0);
+    let body = serde_json::to_string(&watch.body).unwrap();
+    b.store
+        .with_personal(|c| {
+            c.execute(
+                "UPDATE sync_op SET body = ?1 WHERE device = 'aaaa' AND seq = 1",
+                [&body],
+            )?;
+            Ok(())
+        })
+        .unwrap();
+
+    // The next batch, empty or not, applies it, once.
+    assert_eq!(b.store.apply_ops(Vec::new()).unwrap().ops, 1);
+    assert_eq!(b.store.completed_episodes(SHOW).unwrap(), vec!["1".to_string()]);
+    assert_eq!(b.store.apply_ops(Vec::new()).unwrap().ops, 0);
+    assert_eq!(b.store.sync_meta_get("held_unknown").unwrap(), None);
+}

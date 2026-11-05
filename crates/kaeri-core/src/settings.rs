@@ -379,6 +379,31 @@ mod tests {
     }
 
     #[test]
+    fn a_section_this_version_does_not_know_loads_and_survives_a_write() {
+        // A newer app's whole section, with a table and a list of tables inside it.
+        let dir = temp_dir("unknown-section");
+        let paths = paths_in(&dir);
+        let section = "[reading]\nmedium = \"books\"\n\n[reading.eink]\nrefresh = 6\n\n\
+                       [[reading.shelves]]\nname = \"Later\"\n";
+        std::fs::write(&paths.config_file, format!("[playback]\nquality = 1080\n\n{section}"))
+            .unwrap();
+        assert_eq!(
+            crate::config::Config::load(&paths)
+                .expect("an unknown section is read past")
+                .playback
+                .quality,
+            1080
+        );
+
+        write_key(&paths, &["playback"], "quality", SettingValue::Int(720)).unwrap();
+
+        let after = std::fs::read_to_string(&paths.config_file).unwrap();
+        assert!(after.contains("quality = 720"), "value not written:\n{after}");
+        assert!(after.contains(section), "unknown section lost:\n{after}");
+        assert_eq!(crate::config::Config::load(&paths).unwrap().playback.quality, 720);
+    }
+
+    #[test]
     fn a_list_is_written_as_an_array_and_the_rest_of_the_file_survives() {
         let dir = temp_dir("list");
         let paths = paths_in(&dir);

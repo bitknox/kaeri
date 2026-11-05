@@ -357,6 +357,9 @@ pub async fn load_providers_reporting(
                     .map_or(path.clone(), |s| s.to_string_lossy().into_owned());
                 loaded.outdated.push(name);
             }
+            Err(engine::PluginError::NeedsNewerKaeri { path, world }) => {
+                tracing::warn!(%path, %world, "skipping plugin made for a newer version of Kaeri");
+            }
             Err(e) => tracing::warn!(error = %e, "skipping unloadable plugin"),
         }
     }
