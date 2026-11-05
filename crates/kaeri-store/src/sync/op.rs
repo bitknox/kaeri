@@ -80,6 +80,44 @@ pub enum OpBody {
     TrackerMark { tracker: String, anilist_id: u32, episode: u32 },
     /// What this device holds downloaded. Each device writes only its own.
     DownloadState { anilist_id: u32, episode: String, done: bool },
+    /// A read event: a place in a chapter, or the chapter finished. Its id is `device:seq` of
+    /// this op. `work` and `chapter` are the engine's WorkId and ChapterId strings, and only
+    /// works AniList lists are written.
+    Read {
+        work: String,
+        chapter: String,
+        page: Option<u32>,
+        of: Option<u32>,
+        strip_image: Option<u32>,
+        strip_offset: Option<f64>,
+        novel_pos: Option<String>,
+        completed: bool,
+        source_id: Option<String>,
+        at: i64,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        version_label: Option<String>,
+        /// The trackers this read was queued for on the device that read it.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        queued_for: Vec<String>,
+        /// The newest unread of this chapter the reading device had seen (a stamp, 0 for none).
+        #[serde(default, skip_serializing_if = "is_zero")]
+        seen_unread: u64,
+    },
+    /// Chapters taken back, naming the read events this device saw and removed.
+    Unread { work: String, chapter: String, removes: Vec<String> },
+    /// A watermark: every chapter at or below `upto_chapter` (in `upto_volume`, for numbers that
+    /// start again each volume) counts as read, including chapters a source lists later.
+    ReadAdopt { work: String, upto_chapter: String, upto_volume: Option<String>, at: i64 },
+    /// Read again from the start: reads and watermarks older than this are set aside. With
+    /// `undoes`, the reset of that id is undone and what it set aside comes back.
+    ReadReset {
+        work: String,
+        at: i64,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        undoes: Option<String>,
+    },
+    /// The highest chapter and volume a tracker is known to hold for a work: a max register.
+    ReadMark { tracker: String, anilist_id: u32, chapter: u32, volume: Option<u32> },
     /// A device joined, with its X25519 public key (hex).
     DeviceAdd { device: String, name: String, pubkey: String },
     /// A device left. Wins over any add of the same device.
@@ -101,6 +139,11 @@ const KINDS: &[&str] = &[
     "reg",
     "tracker_mark",
     "download_state",
+    "read",
+    "unread",
+    "read_adopt",
+    "read_reset",
+    "read_mark",
     "device_add",
     "device_remove",
     "noop",
@@ -225,6 +268,8 @@ pub struct Applied {
     pub titles: Vec<u32>,
     /// Completed watches that arrived, for the tracker lead rule.
     pub watches: Vec<ReceivedWatch>,
+    /// Works whose reading changed, by WorkId.
+    pub works: Vec<String>,
     pub(crate) device: Vec<DeviceWrite>,
 }
 
@@ -238,8 +283,22 @@ pub mod kinds {
     pub const PIN: &str = "pin";
     pub const MATCH: &str = "match";
     pub const LET_GO: &str = "let_go";
+    /// Reading's, applied here. Keys: `<work>/<setting>` (mode, direction and colour only),
+    /// `<work>`, `<work>/<chapter>`, `<tracker>/<work>` and `<source_id>/<series_ref>`.
+    pub const READ_SERIES: &str = "read_series";
+    pub const READ_STATUS: &str = "read_status";
+    pub const READ_SCORE: &str = "read_score";
+    pub const READ_HIDE: &str = "read_hide";
+    pub const READ_BOOKMARK: &str = "read_bookmark";
+    pub const READ_TRACK_MAP: &str = "read_track_map";
+    pub const BOOK_MATCH: &str = "book_match";
     /// Engine kinds, returned as [`super::Effect`]s.
     pub const SETTING: &str = "setting";
+    /// Reading's engine kinds: the book sources' order (key empty), a book source switched off
+    /// (key its id), and the account's watch, read or both (key `account`).
+    pub const BOOK_SOURCE_ORDER: &str = "book_source_order";
+    pub const BOOK_SOURCE_OFF: &str = "book_source_off";
+    pub const MEDIUM_ACCOUNT: &str = "medium_account";
     pub const SOURCE_ORDER: &str = "source_order";
     pub const SOURCE_OFF: &str = "source_off";
     pub const STORE: &str = "store";
@@ -348,6 +407,30 @@ mod tests {
             OpBody::Reg { kind: "k".into(), key: "1".into(), value: None },
             OpBody::TrackerMark { tracker: "t".into(), anilist_id: 1, episode: 2 },
             OpBody::DownloadState { anilist_id: 1, episode: "1".into(), done: true },
+            OpBody::Read {
+                work: "a:1".into(),
+                chapter: "10.5".into(),
+                page: Some(3),
+                of: Some(20),
+                strip_image: None,
+                strip_offset: None,
+                novel_pos: None,
+                completed: false,
+                source_id: None,
+                at: 0,
+                version_label: None,
+                queued_for: Vec::new(),
+                seen_unread: 0,
+            },
+            OpBody::Unread { work: "a:1".into(), chapter: "1".into(), removes: Vec::new() },
+            OpBody::ReadAdopt {
+                work: "a:1".into(),
+                upto_chapter: "v2/3".into(),
+                upto_volume: Some("2".into()),
+                at: 0,
+            },
+            OpBody::ReadReset { work: "a:1".into(), at: 0, undoes: None },
+            OpBody::ReadMark { tracker: "t".into(), anilist_id: 1, chapter: 10, volume: None },
             OpBody::DeviceAdd { device: "ab".into(), name: "n".into(), pubkey: "00".into() },
             OpBody::DeviceRemove { device: "ab".into() },
             OpBody::Noop,

@@ -25,6 +25,7 @@ pub mod outbox;
 pub mod party_room;
 pub mod preference;
 pub mod profile;
+pub mod reading;
 pub mod schema;
 pub mod server_health;
 pub mod show_setting;

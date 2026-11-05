@@ -108,6 +108,7 @@ impl Store {
             set_meta(tx, "enabled", "1")?;
             if first {
                 backfill(tx, device_id, wall, &dismissed)?;
+                crate::reading::backfill(tx, device_id)?;
                 set_meta(tx, "backfilled", "1")?;
             }
             Ok(())
