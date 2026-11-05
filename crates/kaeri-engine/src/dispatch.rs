@@ -523,6 +523,10 @@ pub(crate) fn dispatch(
         // Each refused where this build has no player to play in: see `playback::refuse`.
         // A play wants the source's time: a dub or episode names lookup running stops for it.
         Command::Play { id, episode, from_start } => {
+            #[cfg(feature = "party")]
+            if crate::party::play_in_room(id, &episode, engine, services) {
+                return;
+            }
             engine.dubs.stop();
             engine.names.stop();
             #[cfg(feature = "party")]

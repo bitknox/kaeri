@@ -429,7 +429,16 @@ found for the play that follows. A device whose sources lack the episode stays i
   writes the next entry (`Party::move_on`, idempotent) and every device opens it from the
   playlist index, paused at 0:00. Each device says ready when its first frame is open; the room
   plays when all are. With no next entry the lobby is told (`PartyLastOut`).
-- Closing the player keeps the member in the room; Leave is its own command.
+- Closing the player keeps the member in the room; Leave is its own command. The lobby's Open
+  player (`OpenPlayer`) takes them back in while the room plays. Only the terminal leaves the
+  party when its player closes.
+- A member in the lobby when the room plays without them (someone pressed play, or started
+  anyway) opens the room's episode and is brought to the room's position, ready or not
+  (`PartyStarted` with kind `Rejoin`). The client says the room's play state with
+  `PartyEvent::RoomPlays`, with or without a player open.
+- In the apps, a play anywhere while a party is going is the room's: another episode is picked
+  for the room (as `ChangeEpisode`), and the room's own episode, with the player closed, opens
+  the player again. The terminal, where every play joins a party, plays as before.
 
 ## Looking in and recent rooms
 

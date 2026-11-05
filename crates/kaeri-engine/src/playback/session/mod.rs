@@ -662,8 +662,9 @@ pub async fn play(
                     && !exited
                     && !run.in_party
                     && run.next.is_some();
-                // Stopping the player or closing its window leaves the party; an episode that
-                // ended, or failed, stays in it, for the next to play with the room.
+                // Stopping the player or closing its window asks to leave the party, which only
+                // the terminal does; an episode that ended, or failed, stays in it, for the next
+                // to play with the room.
                 if let Some(seat) = run.seat.take() {
                     seat.report(SeatReport::Ended {
                         leave: stopped || quit,

@@ -279,6 +279,22 @@ async fn the_first_to_watch_sets_the_room_and_the_next_is_brought_to_it() {
 }
 
 #[tokio::test]
+async fn a_member_with_no_player_is_told_when_the_room_plays_and_pauses() {
+    let server = server().await;
+    let mika = server.member(ROOM, "Mika");
+    mika.open(EPISODE, LENGTH);
+    let mut viewer = Viewer::join(&server, "Ada");
+    viewer.joined().await;
+    viewer.until("paused at first", |e| matches!(e, PartyEvent::RoomPlays(false))).await;
+
+    // Nothing open here: no player to move, but the room playing is said.
+    mika.play();
+    viewer.until("the room plays", |e| matches!(e, PartyEvent::RoomPlays(true))).await;
+    mika.pause();
+    viewer.until("the room pauses", |e| matches!(e, PartyEvent::RoomPlays(false))).await;
+}
+
+#[tokio::test]
 async fn someone_else_pausing_seeking_and_resuming_moves_this_player() {
     let server = server().await;
     let mika = server.member(ROOM, "Mika");
