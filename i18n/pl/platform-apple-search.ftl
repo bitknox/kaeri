@@ -22,6 +22,7 @@ search-statuses-count = { $count ->
 search-leave-out = Wyklucz
 search-include = Uwzględnij
 search-filters-help = Tagi, długość, ocena, pochodzenie i gdzie obejrzeć
+search-all-filters = Wszystkie filtry
 search-filters-set = Ustawionych: { $count }
 search-sort-by = Sortuj wg
 search-clear-all = Wyczyść wszystko

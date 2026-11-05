@@ -69,3 +69,4 @@ tv-cast-mute = Выключить звук
 tv-cast-unmute = Включить звук
 tv-cast-volume-on-tv = Задаётся на ТВ
 tv-cast-up-next-in = { -up-next-cap } · воспроизведение через { $seconds } с
+tv-forget-note = Если убрать здесь телевизор, он тоже забудет это { -device }.

@@ -188,3 +188,51 @@ party-in-the-room = В комнате
 party-here-count = Здесь: { $count }
 together-recent-note = Последние десять, хранятся на этом устройстве
 party-pick-continue = { -proceed-cap }
+party-chat-field = Написать
+party-chat-send = Отправить
+party-chat-title = Чат
+party-chat-wait = Ждите { $seconds } с
+party-chat-wait-spoken = { $seconds ->
+    [one] Подождите одну секунду
+    [few] Подождите { $seconds } секунды
+    [many] Подождите { $seconds } секунд
+   *[other] Подождите { $seconds } секунды
+ }
+party-chat-more = Ещё в чате: { $count }
+party-chat-off = На сервере этой комнаты чат отключён
+party-chat-privacy = Сообщения проходят через сервер комнаты. { -app-name } их не хранит.
+party-chat-hidden = Чат скрыт
+party-chat-hidden-line = Скрытие чата включено в настройках, в разделе «Воспроизведение».
+party-chat-show = Показать чат
+settings-hide-chat = Скрывать чат в совместных просмотрах
+settings-hide-chat-line = Сообщения, реакции и их метки на шкале перемотки не показываются на видео, а поле ввода пропадает. Список участников по-прежнему показывает, кто в комнате.
+party-mute = Скрыть сообщения: { $name }
+party-unmute = Показать сообщения: { $name }
+party-unmute-short = Показать
+party-member-muted = Скрыт
+party-muted-line = Сообщения скрыты: { $name }
+party-chat-not-sent = Не отправлено
+party-chat-retry = Повторить
+party-react = Реакция
+party-react-laugh = Смех
+party-react-gasp = Удивление
+party-react-clap = Аплодисменты
+party-react-cry = Слёзы
+party-reacted-laugh = { $name }: смех
+party-reacted-gasp = { $name }: удивление
+party-reacted-clap = { $name }: аплодисменты
+party-reacted-cry = { $name }: слёзы
+party-reacted-at = { $line } на { $time }
+party-names-two = { $first } и { $second }
+party-names-three = { $first }, { $second } и { $third }
+party-names-others = { $first }, { $second } и ещё { $count }
+party-chat-you = Вы
+party-sends-as = Отправляется от имени { $device }
+party-tick-label = { $time } · { $names }
+party-chat-announce = { $name } пишет: { $message }
+party-chat-left = { $count ->
+    [one] Остался { $count } символ
+    [few] Осталось { $count } символа
+    [many] Осталось { $count } символов
+   *[other] Осталось { $count } символа
+ }

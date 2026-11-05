@@ -90,3 +90,82 @@ search-available-all = Все
 search-available-here = Играет здесь
 search-available-services = В ваших сервисах
 search-line-service = В { $service }
+count-episodes = { $count ->
+    [one] Один эпизод
+    [few] { $count } эпизода
+    [many] { $count } эпизодов
+   *[other] { $count } эпизода
+ }
+count-episodes-short = { $count } эп.
+count-out-of = Вышло { $out } из { $total }
+count-out-of-short = { $out } из { $total }
+count-out = { $count ->
+    [one] Вышел один эпизод
+    [few] Вышло { $count } эпизода
+    [many] Вышло { $count } эпизодов
+   *[other] Вышло { $count } эпизода
+ }
+count-out-short = Вышло { $count }
+count-starts = Старт: { $date }
+count-not-out = Ещё не вышло
+count-next-of = Эп. { $episode } из { $total }
+count-dub = Дубляж
+count-dub-through = Дубляж { $through }
+count-spoken-episodes = { $count ->
+    [one] Один эпизод
+    [few] { $count } эпизода
+    [many] { $count } эпизодов
+   *[other] { $count } эпизода
+ }
+count-spoken-out-of = Вышло эпизодов: { $out } из { $total }
+count-spoken-out = { $count ->
+    [one] Вышел один эпизод
+    [few] Вышло { $count } эпизода
+    [many] Вышло { $count } эпизодов
+   *[other] Вышло { $count } эпизода
+ }
+count-spoken-starts = Старт: { $date }
+count-spoken-next-of = Эпизод { $episode } из { $total }
+count-spoken-dub-through = { -dubbed } до эпизода { $through }
+count-spoken-dub = есть дубляж
+date-month-jan-short = янв
+date-month-jan-long = января
+date-month-feb-short = фев
+date-month-feb-long = февраля
+date-month-mar-short = мар
+date-month-mar-long = марта
+date-month-apr-short = апр
+date-month-apr-long = апреля
+date-month-may-short = мая
+date-month-may-long = мая
+date-month-jun-short = июн
+date-month-jun-long = июня
+date-month-jul-short = июл
+date-month-jul-long = июля
+date-month-aug-short = авг
+date-month-aug-long = августа
+date-month-sep-short = сен
+date-month-sep-long = сентября
+date-month-oct-short = окт
+date-month-oct-long = октября
+date-month-nov-short = ноя
+date-month-nov-long = ноября
+date-month-dec-short = дек
+date-month-dec-long = декабря
+trending-today = В тренде сегодня
+trending-week = В тренде на этой неделе
+trending-month = В тренде в этом месяце
+trending-choice-today = Сегодня
+trending-choice-week = Эта неделя
+trending-choice-month = Этот месяц
+trending-failed = Не удалось загрузить тренды ({ $period }).
+trending-updated = Обновлено { $age }
+surprise-me = Удиви меня
+surprise-me-menu = Удиви меня
+surprise-another = Другой
+surprise-hint-planning = Открывает случайный тайтл из списка «В планах»
+surprise-hint-filters = Открывает случайный тайтл по этим фильтрам
+surprise-another-hint = Открывает другой случайный тайтл вместо этого
+surprise-empty-filters = Нет тайтлов, подходящих под эти фильтры.
+surprise-empty-planning = Список «В планах» пуст.
+surprise-offline = Нет сети. Для случайного выбора в поиске нужен AniList.

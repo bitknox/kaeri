@@ -22,3 +22,7 @@ notice-episodes-queued = { $count ->
 settings-subs-reset-done = Стиль субтитров сброшен
 crash-notice = { -app-name } закрылось после сбоя.
 crash-notice-tv = { -app-name } закрылось после сбоя. Сообщить о нём можно в настройках, в разделе «О программе».
+notice-surprise-empty-filters = Нет тайтлов, подходящих под эти фильтры.
+notice-surprise-empty-planning = Список «В планах» пуст.
+notice-surprise-offline = Нет сети. Для случайного выбора в поиске нужен AniList.
+notice-surprise-failed = Сейчас не удалось выбрать тайтл. Попробуйте чуть позже.

@@ -23,3 +23,7 @@ player-more-discussion-note = { $count ->
    *[other] { $count } комментария · ставит на паузу
  }
 player-more-discussion-pauses = Ставит видео на паузу
+search-pill-set = { $filter }, { $value }
+search-pill-any = { $filter }, любое
+search-pill-all-set = Все фильтры, задано: { $count }
+search-pill-clear = Сбросить все фильтры
