@@ -106,9 +106,11 @@ public class SyncTests
         Assert.Equal(T.CloudErrTimeout, late.Line);
         var other = SyncWords.SignInError(new SyncProblem.Other("details"), SyncFolderKind.GoogleDrive, "details", false);
         Assert.Equal(T.CloudErrSigninOther("Google Drive"), other.Line);
-        // After the folder was reached the title says the set-up failed, with the problem's own line.
+        // After the folder was reached the title says the set-up failed, with the fixed line, never the engine's words.
         var full = SyncWords.SignInError(new SyncProblem.Other("full"), SyncFolderKind.GoogleDrive, "full", true);
-        Assert.Equal((T.CloudErrSetupTitle, "full"), full);
+        Assert.Equal((T.CloudErrSetupTitle, T.CloudErrSetupOther("Google Drive")), full);
+        var away = SyncWords.SignInError(new SyncProblem.Unreachable(), SyncFolderKind.GoogleDrive, "", false);
+        Assert.Equal((T.CloudErrSigninTitle("Google Drive"), T.CloudErrOffline("Google Drive")), away);
     }
 
     [Fact]

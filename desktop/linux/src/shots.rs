@@ -2017,6 +2017,8 @@ async fn painted(shell: &Rc<Shell>, path: &std::path::Path, shot: &str) -> Resul
                 }
                 "synopsis-ranges" => range_popover(&window),
                 #[cfg(feature = "fixtures")]
+                "sync-more" => crate::sync::devices::shot_more_popover(&window),
+                #[cfg(feature = "fixtures")]
                 "browse-period-menu" => period_popover(&window),
                 "first-play-style" => player.shot_style_popover(),
                 "party-title-menu" | "store-menu" | "match-fix-menu" => {
