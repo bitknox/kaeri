@@ -76,6 +76,18 @@ extension EngineLaunch {
         case "playing": return .playing(media: media(arguments: arguments))
         case "storeowner": return .storeOwner
         case "storeinvited": return .storeInvited
+        case "readingfirstrun": return .readingFirstRun
+        case "readingupdatesheet": return .readingUpdateSheet
+        case "readingjoinask": return .readingJoinAsk
+        case "readinghome": return .readingHome
+        case "readingseries": return .readingSeries
+        case "readermangartl": return .readerMangaRtl
+        case "readerstrip": return .readerStrip
+        case "readernovel": return .readerNovel
+        case "readermoved": return .readerMoved
+        case "einkgrey": return .einkGrey
+        case "einkkaleidounsure": return .einkKaleidoUnsure
+        case "readingdark": return .readingDark
         default: return nil
         }
     }

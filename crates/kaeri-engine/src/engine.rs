@@ -372,16 +372,19 @@ impl Engine {
         state.config.set_sync(services.store.clone());
         crate::tracking::commands::announce_signed_in(&services.store, &services.sync);
         state.config.set_handheld(handheld);
-        let account = services
-            .store
-            .sync_regs(kaeri_store::sync::kinds::MEDIUM_ACCOUNT)
-            .ok()
-            .and_then(|regs| regs.into_iter().next().map(|(_, value)| value));
+        let account = {
+            use kaeri_store::sync::kinds::MEDIUM_ACCOUNT;
+            let store = &services.store;
+            store.sync_regs(MEDIUM_ACCOUNT).ok().and_then(|regs| {
+                let (key, value) = regs.into_iter().next()?;
+                Some((value, store.sync_reg_writer(MEDIUM_ACCOUNT, &key).ok().flatten()))
+            })
+        };
         state.reading = crate::reading::ReadingState::at_launch(
             reading,
             edition,
             state.config.effective().reading.kaeri_is_for.as_deref(),
-            account.as_deref(),
+            account.as_ref().map(|(answer, writer)| (answer.as_str(), writer.clone())),
             new_install,
         );
         crate::crash::arm_from(&services.paths.data_dir, state.config.effective());

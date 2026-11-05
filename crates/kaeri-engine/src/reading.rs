@@ -48,15 +48,22 @@ impl ReadingState {
         available: bool,
         edition: AppEdition,
         stored: Option<&str>,
-        account: Option<&str>,
+        account: Option<(&str, Option<String>)>,
         new_install: bool,
     ) -> Self {
         let stored = stored.and_then(KaeriIsFor::parse);
-        let account = account.and_then(KaeriIsFor::parse);
-        let ask = match stored {
-            Some(_) => None,
-            None if new_install => Some(MediumAsk::FirstRun),
-            None => Some(MediumAsk::Updated),
+        let (account, writer) = match account {
+            Some((answer, writer)) => (KaeriIsFor::parse(answer), writer),
+            None => (None, None),
+        };
+        let ask = match (stored, account) {
+            (Some(mine), Some(theirs)) if mine != theirs => Some(MediumAsk::Joined {
+                devices: writer.into_iter().collect(),
+                answer: theirs,
+            }),
+            (Some(_), _) => None,
+            (None, _) if new_install => Some(MediumAsk::FirstRun),
+            (None, _) => Some(MediumAsk::Updated),
         };
         Self { available, edition, stored, account, ask }
     }
