@@ -619,6 +619,10 @@ cloud-err-denied-short = { $service } didn’t give { -app-name } access.
 # @arg service: text
 cloud-err-signin-other = { $service } didn’t finish the sign-in. Try again in a moment.
 
+# Error line for any other failure while making the folder after the sign-in; the details go to Messages.
+# @arg service: text
+cloud-err-setup-other = { -app-name } couldn’t make its folder in { $service }. Try again in a moment.
+
 # More menu item, and a row on phones; the Mac adds an ellipsis.
 cloud-use-another = Use another service
 

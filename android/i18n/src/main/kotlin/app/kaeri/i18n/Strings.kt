@@ -10678,6 +10678,10 @@ object Strings {
     fun cloudErrSigninOther(context: Context, service: String): String =
         context.getString(R.string.cloud_err_signin_other, service)
 
+    /** Error line for any other failure while making the folder after the sign-in; the details go to Messages. */
+    fun cloudErrSetupOther(context: Context, service: String): String =
+        context.getString(R.string.cloud_err_setup_other, service)
+
     /** More menu item, and a row on phones; the Mac adds an ellipsis. */
     fun cloudUseAnother(context: Context): String =
         context.getString(R.string.cloud_use_another)

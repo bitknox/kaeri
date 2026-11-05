@@ -16812,6 +16812,11 @@ pub fn cloud_err_signin_other(service: &str) -> String {
     text("cloud-err-signin-other", &[("service", Arg::Text(service))])
 }
 
+/// Error line for any other failure while making the folder after the sign-in; the details go to Messages.
+pub fn cloud_err_setup_other(service: &str) -> String {
+    text("cloud-err-setup-other", &[("service", Arg::Text(service))])
+}
+
 /// More menu item, and a row on phones; the Mac adds an ellipsis.
 pub fn cloud_use_another() -> String {
     text("cloud-use-another", &[])

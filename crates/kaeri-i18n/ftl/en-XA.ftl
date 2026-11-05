@@ -10439,6 +10439,9 @@ cloud-err-denied-short = [{ $service } ðîðñ’ţ ĝîṽé Ķàéŕî àçç
 # Error line for any other failure during the sign-in; the details go to Messages.
 cloud-err-signin-other = [{ $service } ðîðñ’ţ ƒîñîšĥ ţĥé šîĝñ-îñ. Ţŕý àĝàîñ îñ à ɱöɱéñţ.~~~~~~~~~~~~~~~~]
 
+# Error line for any other failure while making the folder after the sign-in; the details go to Messages.
+cloud-err-setup-other = [Ķàéŕî çöüļðñ’ţ ɱàķé îţš ƒöļðéŕ îñ { $service }. Ţŕý àĝàîñ îñ à ɱöɱéñţ.~~~~~~~~~~~~~~~~~~~]
+
 # More menu item, and a row on phones; the Mac adds an ellipsis.
 cloud-use-another = [Ûšé àñöţĥéŕ šéŕṽîçé~~~~~~]
 

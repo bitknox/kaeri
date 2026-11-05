@@ -22973,6 +22973,18 @@
         }
       }
     },
+    "cloud-err-setup-other" : {
+      "comment" : "Error line for any other failure while making the folder after the sign-in; the details go to Messages. Argument 1: service (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri couldn’t make its folder in %1$@. Try again in a moment."
+          }
+        }
+      }
+    },
     "cloud-err-setup-title" : {
       "comment" : "Error title when the sign-in worked and the folder could not be set up.",
       "extractionState" : "manual",

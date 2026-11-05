@@ -10320,6 +10320,10 @@
     <value>{service} didn’t finish the sign-in. Try again in a moment.</value>
     <comment>Error line for any other failure during the sign-in; the details go to Messages.</comment>
   </data>
+  <data name="CloudErrSetupOther" xml:space="preserve">
+    <value>Kaeri couldn’t make its folder in {service}. Try again in a moment.</value>
+    <comment>Error line for any other failure while making the folder after the sign-in; the details go to Messages.</comment>
+  </data>
   <data name="CloudUseAnother" xml:space="preserve">
     <value>Use another service</value>
     <comment>More menu item, and a row on phones; the Mac adds an ellipsis.</comment>

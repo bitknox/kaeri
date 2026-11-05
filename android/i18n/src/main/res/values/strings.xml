@@ -5555,6 +5555,8 @@
     <string name="cloud_err_denied_short">%1$s didn’t give Kaeri access.</string>
     <!-- Error line for any other failure during the sign-in; the details go to Messages. -->
     <string name="cloud_err_signin_other">%1$s didn’t finish the sign-in. Try again in a moment.</string>
+    <!-- Error line for any other failure while making the folder after the sign-in; the details go to Messages. -->
+    <string name="cloud_err_setup_other">Kaeri couldn’t make its folder in %1$s. Try again in a moment.</string>
     <!-- More menu item, and a row on phones; the Mac adds an ellipsis. -->
     <string name="cloud_use_another">Use another service</string>
     <!-- More menu item in red, and a button in the TV's dialog. -->

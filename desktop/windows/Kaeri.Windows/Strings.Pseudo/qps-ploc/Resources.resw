@@ -10320,6 +10320,10 @@
     <value>[{service} ðîðñ’ţ ƒîñîšĥ ţĥé šîĝñ-îñ. Ţŕý àĝàîñ îñ à ɱöɱéñţ.~~~~~~~~~~~~~~~~]</value>
     <comment>Error line for any other failure during the sign-in; the details go to Messages.</comment>
   </data>
+  <data name="CloudErrSetupOther" xml:space="preserve">
+    <value>[Ķàéŕî çöüļðñ’ţ ɱàķé îţš ƒöļðéŕ îñ {service}. Ţŕý àĝàîñ îñ à ɱöɱéñţ.~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Error line for any other failure while making the folder after the sign-in; the details go to Messages.</comment>
+  </data>
   <data name="CloudUseAnother" xml:space="preserve">
     <value>[Ûšé àñöţĥéŕ šéŕṽîçé~~~~~~]</value>
     <comment>More menu item, and a row on phones; the Mac adds an ellipsis.</comment>

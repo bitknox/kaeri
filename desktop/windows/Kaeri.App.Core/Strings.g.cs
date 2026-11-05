@@ -7517,6 +7517,9 @@ public static partial class T
     /// <summary>Error line for any other failure during the sign-in; the details go to Messages.</summary>
     public static string CloudErrSigninOther(string service) => Fill(Get("CloudErrSigninOther"), ("service", service));
 
+    /// <summary>Error line for any other failure while making the folder after the sign-in; the details go to Messages.</summary>
+    public static string CloudErrSetupOther(string service) => Fill(Get("CloudErrSetupOther"), ("service", service));
+
     /// <summary>More menu item, and a row on phones; the Mac adds an ellipsis.</summary>
     public static string CloudUseAnother => Get("CloudUseAnother");
 
@@ -11262,6 +11265,7 @@ public static partial class T
         ["CloudErrSetupTitle"] = "Couldn’t set up the folder",
         ["CloudErrDeniedShort"] = "{service} didn’t give Kaeri access.",
         ["CloudErrSigninOther"] = "{service} didn’t finish the sign-in. Try again in a moment.",
+        ["CloudErrSetupOther"] = "Kaeri couldn’t make its folder in {service}. Try again in a moment.",
         ["CloudUseAnother"] = "Use another service",
         ["CloudRemove"] = "Remove cloud folder",
         ["CloudRemoveTitle"] = "Remove {service} from sync?",

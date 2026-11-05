@@ -10107,6 +10107,11 @@ public enum L {
         Self.format("cloud-err-signin-other", fallback: "%1$@ didn’t finish the sign-in. Try again in a moment.", service)
     }
 
+    /// Error line for any other failure while making the folder after the sign-in; the details go to Messages.
+    public static func cloudErrSetupOther(service: String) -> String {
+        Self.format("cloud-err-setup-other", fallback: "Kaeri couldn’t make its folder in %1$@. Try again in a moment.", service)
+    }
+
     /// More menu item, and a row on phones; the Mac adds an ellipsis.
     public static var cloudUseAnother: String { string("cloud-use-another", fallback: "Use another service") }
 
