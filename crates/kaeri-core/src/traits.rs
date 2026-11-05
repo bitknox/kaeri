@@ -423,6 +423,26 @@ pub enum TrackOp {
         score: f32,
         at: i64,
     },
+    /// Chapters read, and volumes where the tracker has a field for them. Monotonic like
+    /// `SetProgress`, run once for each.
+    SetReadProgress {
+        anilist_id: crate::ids::AnilistId,
+        chapter: u32,
+        volume: Option<u32>,
+    },
+    /// A reading list's status. `rereading` is Read again: MyAnimeList's `is_rereading`,
+    /// Kitsu's `reconsuming`, AniList's `REPEATING`.
+    SetReadStatus {
+        anilist_id: crate::ids::AnilistId,
+        status: WatchStatus,
+        rereading: bool,
+        at: i64,
+    },
+    SetReadScore {
+        anilist_id: crate::ids::AnilistId,
+        score: f32,
+        at: i64,
+    },
 }
 
 impl TrackOp {
@@ -430,9 +450,36 @@ impl TrackOp {
         match self {
             Self::SetProgress { anilist_id, .. }
             | Self::SetStatus { anilist_id, .. }
-            | Self::SetScore { anilist_id, .. } => *anilist_id,
+            | Self::SetScore { anilist_id, .. }
+            | Self::SetReadProgress { anilist_id, .. }
+            | Self::SetReadStatus { anilist_id, .. }
+            | Self::SetReadScore { anilist_id, .. } => *anilist_id,
         }
     }
+
+    /// Whether this is about reading. Those wait in an outbox of their own, which an older
+    /// version never opens, and the watching queue never carries them.
+    pub const fn is_reading(&self) -> bool {
+        matches!(
+            self,
+            Self::SetReadProgress { .. }
+                | Self::SetReadStatus { .. }
+                | Self::SetReadScore { .. }
+        )
+    }
+}
+
+/// One manga's or novel's state on a tracker.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TrackedReadEntry {
+    pub anilist_id: crate::ids::AnilistId,
+    pub medium: crate::media::Medium,
+    pub chapters: u32,
+    /// `None` where the tracker has no volume field (Kitsu).
+    pub volumes: Option<u32>,
+    pub status: WatchStatus,
+    pub rereading: bool,
+    pub score: Option<f32>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
@@ -457,10 +504,21 @@ mod tests {
             TrackOp::SetProgress { anilist_id: id, episode: 12 },
             TrackOp::SetStatus { anilist_id: id, status: WatchStatus::Current, at: 0 },
             TrackOp::SetScore { anilist_id: id, score: 9.0, at: 0 },
+            TrackOp::SetReadProgress { anilist_id: id, chapter: 40, volume: Some(4) },
+            TrackOp::SetReadStatus {
+                anilist_id: id,
+                status: WatchStatus::Current,
+                rereading: true,
+                at: 0,
+            },
+            TrackOp::SetReadScore { anilist_id: id, score: 8.0, at: 0 },
         ];
         for op in &ops {
             assert_eq!(op.anilist_id(), id);
         }
+        assert_eq!(ops.iter().filter(|op| op.is_reading()).count(), 3);
+        let json = serde_json::to_string(&ops[3]).unwrap();
+        assert!(json.contains(r#""op":"set_read_progress""#), "{json}");
     }
 
     #[test]
