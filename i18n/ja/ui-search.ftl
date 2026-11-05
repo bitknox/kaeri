@@ -90,3 +90,70 @@ search-available-all = すべて
 search-available-here = ここで再生可
 search-available-services = 登録サービス内
 search-line-service = { $service }にあります
+count-episodes = { $count ->
+   *[other] { $count }話
+ }
+count-episodes-short = { $count }話
+count-out-of = { $out }/{ $total }話 配信済み
+count-out-of-short = { $out }/{ $total }
+count-out = { $count ->
+   *[other] { $count }話 配信済み
+ }
+count-out-short = { $count }話
+count-starts = { $date }開始
+count-not-out = 未配信
+count-next-of = 第{ $episode }話/全{ $total }話
+count-dub = 吹替
+count-dub-through = 吹替 { $through }
+count-spoken-episodes = { $count ->
+   *[other] { $count }話
+ }
+count-spoken-out-of = 全{ $total }話のうち{ $out }話が配信済み
+count-spoken-out = { $count ->
+   *[other] { $count }話が配信済み
+ }
+count-spoken-starts = { $date }開始
+count-spoken-next-of = 全{ $total }話のうち第{ $episode }話
+count-spoken-dub-through = 第{ $through }話まで{ -dubbed }
+count-spoken-dub = 吹替あり
+date-month-jan-short = 1月
+date-month-jan-long = 1月
+date-month-feb-short = 2月
+date-month-feb-long = 2月
+date-month-mar-short = 3月
+date-month-mar-long = 3月
+date-month-apr-short = 4月
+date-month-apr-long = 4月
+date-month-may-short = 5月
+date-month-may-long = 5月
+date-month-jun-short = 6月
+date-month-jun-long = 6月
+date-month-jul-short = 7月
+date-month-jul-long = 7月
+date-month-aug-short = 8月
+date-month-aug-long = 8月
+date-month-sep-short = 9月
+date-month-sep-long = 9月
+date-month-oct-short = 10月
+date-month-oct-long = 10月
+date-month-nov-short = 11月
+date-month-nov-long = 11月
+date-month-dec-short = 12月
+date-month-dec-long = 12月
+trending-today = 今日のトレンド
+trending-week = 今週のトレンド
+trending-month = 今月のトレンド
+trending-choice-today = 今日
+trending-choice-week = 今週
+trending-choice-month = 今月
+trending-failed = { $period }のトレンドを読み込めませんでした。
+trending-updated = { $age }に更新
+surprise-me = おまかせ
+surprise-me-menu = おまかせ
+surprise-another = 別の作品
+surprise-hint-planning = 「計画中」からランダムに作品を開きます
+surprise-hint-filters = この条件からランダムに作品を開きます
+surprise-another-hint = この作品の代わりに、別のランダムな作品を開きます
+surprise-empty-filters = この条件に合う作品がありません。
+surprise-empty-planning = 「計画中」リストが空です。
+surprise-offline = オフラインです。検索からのおまかせにはAniListが必要です。

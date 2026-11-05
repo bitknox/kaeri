@@ -7,5 +7,6 @@ status-reloading-sources = Đang tải lại { -source-pl }…
 pin-unavailable = { $name } được ghim cho tựa này nhưng không khả dụng, nên { -source-pl } khác được dùng.
 tui-together-section = { -watch-together-cap }
 tui-together-join-prompt = liên kết hoặc mã
+tui-together-chat-hidden-line = Tin nhắn và biểu cảm không hiện trên trình phát ở mọi buổi xem.
 tui-together-not-a-link = Đây không phải liên kết hay mã { -watch-party }.
 tui-together-recent-alone = Tập { $episode } · { $when }

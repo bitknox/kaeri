@@ -90,3 +90,70 @@ search-available-all = Tất cả
 search-available-here = Phát được tại đây
 search-available-services = Trên dịch vụ của bạn
 search-line-service = Trên { $service }
+count-episodes = { $count ->
+   *[other] { $count } tập
+ }
+count-episodes-short = { $count } tập
+count-out-of = Đã ra { $out } trên { $total } tập
+count-out-of-short = { $out } trên { $total }
+count-out = { $count ->
+   *[other] Đã ra { $count } tập
+ }
+count-out-short = Ra { $count }
+count-starts = Bắt đầu { $date }
+count-not-out = Chưa ra mắt
+count-next-of = Tập { $episode } trên { $total }
+count-dub = { -dubbed-cap }
+count-dub-through = LT { $through }
+count-spoken-episodes = { $count ->
+   *[other] { $count } tập
+ }
+count-spoken-out-of = Đã ra { $out } trên { $total } tập
+count-spoken-out = { $count ->
+   *[other] Đã ra { $count } tập
+ }
+count-spoken-starts = Bắt đầu { $date }
+count-spoken-next-of = Tập { $episode } trên { $total }
+count-spoken-dub-through = { -dubbed } đến tập { $through }
+count-spoken-dub = có bản { -dubbed }
+date-month-jan-short = thg 1
+date-month-jan-long = tháng 1
+date-month-feb-short = thg 2
+date-month-feb-long = tháng 2
+date-month-mar-short = thg 3
+date-month-mar-long = tháng 3
+date-month-apr-short = thg 4
+date-month-apr-long = tháng 4
+date-month-may-short = thg 5
+date-month-may-long = tháng 5
+date-month-jun-short = thg 6
+date-month-jun-long = tháng 6
+date-month-jul-short = thg 7
+date-month-jul-long = tháng 7
+date-month-aug-short = thg 8
+date-month-aug-long = tháng 8
+date-month-sep-short = thg 9
+date-month-sep-long = tháng 9
+date-month-oct-short = thg 10
+date-month-oct-long = tháng 10
+date-month-nov-short = thg 11
+date-month-nov-long = tháng 11
+date-month-dec-short = thg 12
+date-month-dec-long = tháng 12
+trending-today = Thịnh hành hôm nay
+trending-week = Thịnh hành tuần này
+trending-month = Thịnh hành tháng này
+trending-choice-today = Hôm nay
+trending-choice-week = Tuần này
+trending-choice-month = Tháng này
+trending-failed = Không tải được mục thịnh hành { $period }.
+trending-updated = Cập nhật { $age }
+surprise-me = Ngẫu nhiên
+surprise-me-menu = Ngẫu nhiên
+surprise-another = Tựa khác
+surprise-hint-planning = Mở một tựa ngẫu nhiên từ Dự định xem
+surprise-hint-filters = Mở một tựa ngẫu nhiên từ các bộ lọc này
+surprise-another-hint = Mở một tựa ngẫu nhiên khác thay cho tựa này
+surprise-empty-filters = Không có tựa nào khớp với các bộ lọc này.
+surprise-empty-planning = Danh sách Dự định xem đang trống.
+surprise-offline = Đang ngoại tuyến. Gợi ý ngẫu nhiên trong tìm kiếm cần AniList.
