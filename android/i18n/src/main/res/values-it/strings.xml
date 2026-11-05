@@ -2455,6 +2455,7 @@
     <string name="source_note_gone">Non installata</string>
     <string name="source_note_ambiguous">Impossibile abbinare questo titolo</string>
     <string name="source_note_held_back">In attesa del controllo del proxy</string>
+    <string name="source_note_torrents_off">Torrent disattivati</string>
     <string name="source_picker_releases">Versioni</string>
     <string name="source_picker_chosen">Scelta</string>
     <string name="source_pin_unavailable">%1$s non è disponibile in questo momento, quindi gli episodi di questo titolo arrivano dalle altre fonti.</string>
@@ -2477,11 +2478,13 @@
     <string name="sources_origin_in">In posizione %1$s</string>
     <string name="sources_status_not_answering">Non risponde</string>
     <string name="sources_status_held_back">Trattenuta</string>
+    <string name="sources_status_torrents_off">Torrent disattivati</string>
     <string name="sources_status_slow">Lenta</string>
     <string name="sources_status_update">Aggiornamento disponibile</string>
     <string name="sources_detail_not_answering">Non risponde. %1$s</string>
     <string name="sources_detail_not_answering_plain">Non risponde.</string>
     <string name="sources_detail_held_back">In attesa che il controllo del proxy venga superato.</string>
+    <string name="sources_detail_torrents_off">La riproduzione dei torrent è disattivata. Puoi attivarla in Impostazioni, sotto Fonti.</string>
     <string name="sources_detail_disabled">Disattivata. Mantiene il suo posto e non viene provata.</string>
     <string name="sources_detail_gone">Questa fonte non c\'è più.</string>
     <string name="sources_detail_site">La fonte non ha risposto.</string>

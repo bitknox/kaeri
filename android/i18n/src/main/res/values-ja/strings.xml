@@ -2319,6 +2319,7 @@
     <string name="source_note_gone">未インストール</string>
     <string name="source_note_ambiguous">この作品と一致させられませんでした</string>
     <string name="source_note_held_back">プロキシの確認待ち</string>
+    <string name="source_note_torrents_off">トレントの再生はオフです</string>
     <string name="source_picker_releases">リリース</string>
     <string name="source_picker_chosen">選択中</string>
     <string name="source_pin_unavailable">%1$sは現在利用できないため、この作品のエピソードは他のソースから取得します。</string>
@@ -2341,11 +2342,13 @@
     <string name="sources_origin_in">%1$sにあります</string>
     <string name="sources_status_not_answering">応答なし</string>
     <string name="sources_status_held_back">保留中</string>
+    <string name="sources_status_torrents_off">トレントはオフ</string>
     <string name="sources_status_slow">遅い</string>
     <string name="sources_status_update">アップデートあり</string>
     <string name="sources_detail_not_answering">応答がありません。%1$s</string>
     <string name="sources_detail_not_answering_plain">応答がありません。</string>
     <string name="sources_detail_held_back">プロキシの確認に通るまで待機します。</string>
+    <string name="sources_detail_torrents_off">トレントの再生はオフです。設定の「ソース」でオンにできます。</string>
     <string name="sources_detail_disabled">オフです。順番は保持されますが、試されません。</string>
     <string name="sources_detail_gone">このソースはもうありません。</string>
     <string name="sources_detail_site">ソースが応答しませんでした。</string>

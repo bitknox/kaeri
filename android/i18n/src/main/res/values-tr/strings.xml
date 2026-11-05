@@ -2387,6 +2387,7 @@
     <string name="source_note_gone">Yüklü değil</string>
     <string name="source_note_ambiguous">Bu başlık eşleştirilemedi</string>
     <string name="source_note_held_back">Proxy denetimi bekleniyor</string>
+    <string name="source_note_torrents_off">Torrent oynatma kapalı</string>
     <string name="source_picker_releases">Sürümler</string>
     <string name="source_picker_chosen">Seçildi</string>
     <string name="source_pin_unavailable">%1$s şu anda kullanılamıyor, bu yüzden bu başlığın bölümleri diğer kaynaklarınızdan geliyor.</string>
@@ -2409,11 +2410,13 @@
     <string name="sources_origin_in">%1$s içinde</string>
     <string name="sources_status_not_answering">Yanıt vermiyor</string>
     <string name="sources_status_held_back">Bekletildi</string>
+    <string name="sources_status_torrents_off">Torrentler kapalı</string>
     <string name="sources_status_slow">Yavaş</string>
     <string name="sources_status_update">Güncelleme var</string>
     <string name="sources_detail_not_answering">Yanıt vermiyor. %1$s</string>
     <string name="sources_detail_not_answering_plain">Yanıt vermiyor.</string>
     <string name="sources_detail_held_back">Proxy denetimi geçilene kadar bekleniyor.</string>
+    <string name="sources_detail_torrents_off">Torrent oynatma kapalı. Ayarlar\'da Kaynaklar bölümünden açabilirsin.</string>
     <string name="sources_detail_disabled">Kapalı. Yerini korur, denenmez.</string>
     <string name="sources_detail_gone">Bu kaynak artık yok.</string>
     <string name="sources_detail_site">Bu kaynak yanıt vermedi.</string>

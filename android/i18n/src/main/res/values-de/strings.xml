@@ -2387,6 +2387,7 @@
     <string name="source_note_gone">Nicht installiert</string>
     <string name="source_note_ambiguous">Titel konnte nicht zugeordnet werden</string>
     <string name="source_note_held_back">Wartet auf die Proxy-Prüfung</string>
+    <string name="source_note_torrents_off">Torrent-Wiedergabe ist aus</string>
     <string name="source_picker_releases">Releases</string>
     <string name="source_picker_chosen">Gewählt</string>
     <string name="source_pin_unavailable">%1$s ist gerade nicht verfügbar, deshalb kommen die Folgen dieses Titels von deinen anderen Quellen.</string>
@@ -2409,11 +2410,13 @@
     <string name="sources_origin_in">In %1$s</string>
     <string name="sources_status_not_answering">Antwortet nicht</string>
     <string name="sources_status_held_back">Zurückgehalten</string>
+    <string name="sources_status_torrents_off">Torrents aus</string>
     <string name="sources_status_slow">Langsam</string>
     <string name="sources_status_update">Update verfügbar</string>
     <string name="sources_detail_not_answering">Antwortet nicht. %1$s</string>
     <string name="sources_detail_not_answering_plain">Antwortet nicht.</string>
     <string name="sources_detail_held_back">Wartet, bis die Proxy-Prüfung besteht.</string>
+    <string name="sources_detail_torrents_off">Die Torrent-Wiedergabe ist aus. Du kannst sie in den Einstellungen unter Quellen einschalten.</string>
     <string name="sources_detail_disabled">Aus. Sie behält ihren Platz und wird nicht ausprobiert.</string>
     <string name="sources_detail_gone">Diese Quelle ist nicht mehr da.</string>
     <string name="sources_detail_site">Die Quelle hat nicht geantwortet.</string>

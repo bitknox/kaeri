@@ -8928,6 +8928,9 @@ source-note-ambiguous = Titel konnte nicht zugeordnet werden
 # Under a source that waits for the proxy check in Settings.
 source-note-held-back = Wartet auf die Proxy-Prüfung
 
+# Under a source that names torrents while torrent playback is off in Settings.
+source-note-torrents-off = Torrent-Wiedergabe ist aus
+
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 source-picker-releases = Releases
 
@@ -8994,6 +8997,9 @@ sources-status-not-answering = Antwortet nicht
 # Status: held back.
 sources-status-held-back = Zurückgehalten
 
+# Status: a source that names torrents, while torrent playback is off.
+sources-status-torrents-off = Torrents aus
+
 # Status: slow.
 sources-status-slow = Langsam
 
@@ -9008,6 +9014,9 @@ sources-detail-not-answering-plain = Antwortet nicht.
 
 # Status line: waiting for the proxy check.
 sources-detail-held-back = Wartet, bis die Proxy-Prüfung besteht.
+
+# Status line: torrent playback is off.
+sources-detail-torrents-off = Die Torrent-Wiedergabe ist aus. Du kannst sie in den Einstellungen unter Quellen einschalten.
 
 # Status line: disabled.
 sources-detail-disabled = Aus. Sie behält ihren Platz und wird nicht ausprobiert.

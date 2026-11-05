@@ -20,6 +20,9 @@ pub struct ProviderRow {
     /// Withheld by local policy rather than broken: torrents waiting for their proxy, say.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub held_back: bool,
+    /// Why it is held back, so the screen names the real cause. `None` when it is not.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub held_back_for: Option<HoldReason>,
     /// The name it goes by: the plugin's own, or the built-in source's.
     pub name: String,
     /// A plugin's version. `None` for a source built into Kaeri.
@@ -411,6 +414,16 @@ pub fn demo_info() -> DemoInfo {
 pub struct SourceChip {
     pub id: String,
     pub state: SourceState,
+}
+
+/// Why local policy is keeping a source out.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum HoldReason {
+    /// Torrent playback is switched off, so a source that names torrents is passed over.
+    TorrentsOff,
+    /// A proxy is set and its check has not passed.
+    ProxyCheck,
 }
 
 /// Each configured source, in the order failover walks them, and how it stands.

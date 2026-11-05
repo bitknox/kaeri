@@ -7,6 +7,7 @@ use kaeri_model::{
     catalog::{ContentList, Entry, LibrarySegment},
     command::Command,
     episodes::EpisodeRow,
+    sources::HoldReason,
 };
 
 use super::{App, info};
@@ -510,7 +511,9 @@ impl App {
             if !row.kind.is_empty() {
                 push_detail(&mut label, &row.kind);
             }
-            if row.held_back {
+            if row.held_back_for == Some(HoldReason::TorrentsOff) {
+                push_detail(&mut label, &t::source_note_torrents_off());
+            } else if row.held_back {
                 push_detail(&mut label, &t::source_note_held_back());
             } else if !row.usable {
                 push_detail(&mut label, &t::title_source_failing());
@@ -872,6 +875,26 @@ mod tests {
         a.handle(Action::Back, 5);
         assert_eq!(a.handle(Action::PlayNext, 5), Some(Command::play(row, first())));
         assert_eq!(a.playing.as_ref().map(|p| p.title.as_str()), Some("Title 2"));
+    }
+
+    #[test]
+    fn the_source_picker_names_why_a_source_is_held_back() {
+        use kaeri_model::sources::{HoldReason, ProviderRow};
+
+        let mut a = home_list(5);
+        let held = |id: &str, why| ProviderRow {
+            id: id.into(),
+            held_back: true,
+            held_back_for: Some(why),
+            ..Default::default()
+        };
+        a.apply(Event::Providers(vec![
+            held("index", HoldReason::TorrentsOff),
+            held("proxied", HoldReason::ProxyCheck),
+        ]));
+        let labels: Vec<_> = a.provider_choices().into_iter().map(|(_, l)| l).collect();
+        assert!(labels[1].ends_with(&t::source_note_torrents_off()), "{labels:?}");
+        assert!(labels[2].ends_with(&t::source_note_held_back()), "{labels:?}");
     }
 
     #[test]

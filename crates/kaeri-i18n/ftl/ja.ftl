@@ -8846,6 +8846,9 @@ source-note-ambiguous = この作品と一致させられませんでした
 # Under a source that waits for the proxy check in Settings.
 source-note-held-back = プロキシの確認待ち
 
+# Under a source that names torrents while torrent playback is off in Settings.
+source-note-torrents-off = トレントの再生はオフです
+
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 source-picker-releases = リリース
 
@@ -8912,6 +8915,9 @@ sources-status-not-answering = 応答なし
 # Status: held back.
 sources-status-held-back = 保留中
 
+# Status: a source that names torrents, while torrent playback is off.
+sources-status-torrents-off = トレントはオフ
+
 # Status: slow.
 sources-status-slow = 遅い
 
@@ -8926,6 +8932,9 @@ sources-detail-not-answering-plain = 応答がありません。
 
 # Status line: waiting for the proxy check.
 sources-detail-held-back = プロキシの確認に通るまで待機します。
+
+# Status line: torrent playback is off.
+sources-detail-torrents-off = トレントの再生はオフです。設定の「ソース」でオンにできます。
 
 # Status line: disabled.
 sources-detail-disabled = オフです。順番は保持されますが、試されません。

@@ -2319,6 +2319,7 @@
     <string name="source_note_gone">Tidak terpasang</string>
     <string name="source_note_ambiguous">Tidak bisa mencocokkan judul ini</string>
     <string name="source_note_held_back">Menunggu pemeriksaan proxy</string>
+    <string name="source_note_torrents_off">Pemutaran torrent mati</string>
     <string name="source_picker_releases">Rilis</string>
     <string name="source_picker_chosen">Dipilih</string>
     <string name="source_pin_unavailable">%1$s sedang tidak tersedia, jadi episode judul ini berasal dari sumber-sumber lain Anda.</string>
@@ -2341,11 +2342,13 @@
     <string name="sources_origin_in">Di %1$s</string>
     <string name="sources_status_not_answering">Tidak merespons</string>
     <string name="sources_status_held_back">Ditahan</string>
+    <string name="sources_status_torrents_off">Torrent mati</string>
     <string name="sources_status_slow">Lambat</string>
     <string name="sources_status_update">Pembaruan tersedia</string>
     <string name="sources_detail_not_answering">Tidak merespons. %1$s</string>
     <string name="sources_detail_not_answering_plain">Tidak merespons.</string>
     <string name="sources_detail_held_back">Menunggu sampai pemeriksaan proxy lolos.</string>
+    <string name="sources_detail_torrents_off">Pemutaran torrent mati. Kamu bisa menyalakannya di Pengaturan, di bagian Sumber-sumber.</string>
     <string name="sources_detail_disabled">Mati. Posisinya tetap, dan tidak dicoba.</string>
     <string name="sources_detail_gone">Sumber ini tidak ada lagi.</string>
     <string name="sources_detail_site">Sumber tidak merespons.</string>

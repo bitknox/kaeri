@@ -8710,6 +8710,10 @@ object Strings {
     fun sourceNoteHeldBack(context: Context): String =
         context.getString(R.string.source_note_held_back)
 
+    /** Under a source that names torrents while torrent playback is off in Settings. */
+    fun sourceNoteTorrentsOff(context: Context): String =
+        context.getString(R.string.source_note_torrents_off)
+
     /** Heading over one source's releases, for a source that offers several (a batch, single episodes). */
     fun sourcePickerReleases(context: Context): String =
         context.getString(R.string.source_picker_releases)
@@ -8798,6 +8802,10 @@ object Strings {
     fun sourcesStatusHeldBack(context: Context): String =
         context.getString(R.string.sources_status_held_back)
 
+    /** Status: a source that names torrents, while torrent playback is off. */
+    fun sourcesStatusTorrentsOff(context: Context): String =
+        context.getString(R.string.sources_status_torrents_off)
+
     /** Status: slow. */
     fun sourcesStatusSlow(context: Context): String =
         context.getString(R.string.sources_status_slow)
@@ -8817,6 +8825,10 @@ object Strings {
     /** Status line: waiting for the proxy check. */
     fun sourcesDetailHeldBack(context: Context): String =
         context.getString(R.string.sources_detail_held_back)
+
+    /** Status line: torrent playback is off. */
+    fun sourcesDetailTorrentsOff(context: Context): String =
+        context.getString(R.string.sources_detail_torrents_off)
 
     /** Status line: disabled. */
     fun sourcesDetailDisabled(context: Context): String =

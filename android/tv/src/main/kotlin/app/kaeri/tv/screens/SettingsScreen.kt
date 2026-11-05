@@ -57,6 +57,7 @@ import androidx.tv.material3.Text
 import kotlinx.coroutines.launch
 import app.kaeri.design.Nagare
 import app.kaeri.design.ObiSilk
+import app.kaeri.engine.model.HoldReason
 import app.kaeri.engine.model.ProviderOrigin
 import app.kaeri.store.TorrentWords
 import app.kaeri.engine.model.ProviderRow
@@ -670,7 +671,8 @@ private fun providerOrigin(context: Context, row: ProviderRow): String = when (v
 /** A source's word, only for a problem: "Not answering", "Held back". */
 private fun providerProblem(context: Context, row: ProviderRow): String? = when (row.standing) {
     ProviderStanding.Failing -> Strings.sourcesStatusNotAnswering(context)
-    ProviderStanding.HeldBack -> Strings.sourcesStatusHeldBack(context)
+    ProviderStanding.HeldBack ->
+        if (row.heldBackFor == HoldReason.TORRENTS_OFF) Strings.sourcesStatusTorrentsOff(context) else Strings.sourcesStatusHeldBack(context)
     else -> null
 }
 
