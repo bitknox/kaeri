@@ -465,6 +465,14 @@ pub(crate) fn dispatch(
             crate::servers::command(command, services, order, tx)
         }
 
+        // Reading: refused in place while it ships dark. See `reading`.
+        Command::Reading(command) => crate::reading::reading(&engine.reading, command, tx),
+        Command::Reader(command) => crate::reading::reader(&engine.reading, command, tx),
+        Command::BookSources(command) => {
+            crate::reading::book_sources(&engine.reading, command, tx)
+        }
+        Command::Medium(command) => engine.reading.medium(command, tx),
+
         // An episode's discussion: off the loop, with no job, each answered with the
         // discussion whole. See `discussion`.
         Command::OpenDiscussion { media, episode } => {

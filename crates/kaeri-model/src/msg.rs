@@ -413,6 +413,8 @@ pub enum Msg {
     NoticeSurpriseFailed,
     /// A plugin store's, a source's or a torrent's message: see [`StoreMsg`].
     Store(StoreMsg),
+    /// A message about reading manga and novels: see [`ReadingMsg`].
+    Reading(ReadingMsg),
     /// Text Kaeri does not own, shown as it is: a plugin's note, a tracker's error.
     Verbatim { text: String },
 }
@@ -622,6 +624,7 @@ impl Msg {
             Self::NoticeSurpriseOffline => "notice-surprise-offline",
             Self::NoticeSurpriseFailed => "notice-surprise-failed",
             Self::Store(msg) => msg.id(),
+            Self::Reading(msg) => msg.id(),
             Self::Verbatim { .. } => "verbatim",
         }
     }
@@ -830,6 +833,7 @@ impl Msg {
             Self::NoticeSurpriseOffline => Vec::new(),
             Self::NoticeSurpriseFailed => Vec::new(),
             Self::Store(msg) => msg.values(),
+            Self::Reading(msg) => msg.values(),
             Self::Verbatim { text } => vec![("text", Value::Text(text.clone()))],
         }
     }
@@ -838,6 +842,12 @@ impl Msg {
 impl From<StoreMsg> for Msg {
     fn from(msg: StoreMsg) -> Self {
         Self::Store(msg)
+    }
+}
+
+impl From<ReadingMsg> for Msg {
+    fn from(msg: ReadingMsg) -> Self {
+        Self::Reading(msg)
     }
 }
 
@@ -1161,6 +1171,162 @@ impl StoreMsg {
             Self::NoticePartyNotBuilt => Vec::new(),
             Self::SourcesDemoRemoved => Vec::new(),
             Self::StoresReadyDemoStays { store } => vec![("store", Value::Text(store.clone()))],
+        }
+    }
+}
+
+/// The messages of `i18n/en/engine-reading.ftl`, as [`Msg::Reading`] holds them.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum ReadingMsg {
+    /// Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.
+    ReadingNextChapter { chapter: String },
+    /// Under a cover or on a series page: when new chapters usually come out.
+    ReadingUsuallyMondays,
+    /// Under a cover or on a series page: when new chapters usually come out.
+    ReadingUsuallyTuesdays,
+    /// Under a cover or on a series page: when new chapters usually come out.
+    ReadingUsuallyWednesdays,
+    /// Under a cover or on a series page: when new chapters usually come out.
+    ReadingUsuallyThursdays,
+    /// Under a cover or on a series page: when new chapters usually come out.
+    ReadingUsuallyFridays,
+    /// Under a cover or on a series page: when new chapters usually come out.
+    ReadingUsuallySaturdays,
+    /// Under a cover or on a series page: when new chapters usually come out.
+    ReadingUsuallySundays,
+    /// Under a cover or on a series page: how often new chapters come out, in weeks.
+    ReadingAboutEveryWeeks { weeks: i64 },
+    /// On a book's series page, when the same story is also a show. Shown only to someone who both watches and reads.
+    ReadingAlsoAShow,
+    /// On a show's page, when the same story is also a manga or a novel. Shown only to someone who both watches and reads.
+    ReadingAlsoABook,
+    /// Under a tracker on a series page, when the furthest chapter read is a half chapter. Trackers count whole chapters only. The chapter is its number, such as 10.5; whole is the number the tracker gets, such as 10.
+    ReadingSplitChapter { chapter: String, whole: String },
+    /// A notice over the page when a chapter opens where it was left. It offers Start over.
+    ReaderResumed { page: i64 },
+    /// A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.
+    ReaderBackToPage { page: i64 },
+    /// A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The device is its name, such as Living room tablet.
+    ReaderMoved { chapter: String, page: i64, device: String },
+    /// A notice the first time a series opens with its reading direction guessed. It offers Change.
+    ReaderDetectedRightToLeft,
+    /// A notice the first time a series opens with its reading direction guessed. It offers Change.
+    ReaderDetectedLeftToRight,
+    /// A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.
+    ReaderDetectedStrip,
+    /// Why a chapter or a list could not load: there is no connection.
+    ReadingFailedOffline,
+    /// Why a chapter or a list could not load: the source did not answer. The source is its name.
+    ReadingFailedSourceDown { source: String },
+    /// Why a chapter could not load: the source no longer has it.
+    ReadingFailedNotFound,
+    /// Why a chapter or a list could not load: the source refused. The reason comes from the source.
+    ReadingFailedBlocked { source: String, reason: String },
+    /// Why a chapter or a list could not load: the source answered with something Kaeri could not read.
+    ReadingFailedParse { source: String },
+    /// Why one page did not load. The status is the server's HTTP status code, such as 404.
+    ReadingFailedPage { status: i64 },
+    /// Why something could not load: a sign-in is needed. What is a server's or a tracker's name.
+    ReadingFailedSignIn { what: String },
+    /// Why a book could not open: its file or folder is gone, perhaps on a drive that is not connected. The path is the file's.
+    ReadingFailedFileMissing { path: String },
+    /// Why a book could not open: the file is damaged or not what its name says. The format is a short name such as CBZ or EPUB.
+    ReadingFailedUnreadable { path: String, format: String },
+    /// Why a file was not added: Kaeri does not read its kind. The extension is such as .djvu.
+    ReadingFailedUnsupported { extension: String },
+    /// Why a book could not open: it is copy-protected or encrypted.
+    ReadingFailedProtected,
+    /// Why a chapter could not be saved: the disk is full.
+    ReadingFailedDiskFull,
+    /// Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.
+    ReadingFailedWebview { version: i64 },
+    /// Why a book plugin could not be used: it was built for a newer Kaeri. The world is the plugin interface's name and version.
+    ReadingFailedNeedsNewer { world: String },
+    /// Why a reading request was refused: reading is not available in this build.
+    ReadingFailedOff,
+    /// Why something about reading failed, for any other reason. The reason is as it came.
+    ReadingFailedOther { reason: String },
+}
+
+impl ReadingMsg {
+    /// The catalogue id of the message.
+    pub fn id(&self) -> &'static str {
+        match self {
+            Self::ReadingNextChapter { .. } => "reading-next-chapter",
+            Self::ReadingUsuallyMondays => "reading-usually-mondays",
+            Self::ReadingUsuallyTuesdays => "reading-usually-tuesdays",
+            Self::ReadingUsuallyWednesdays => "reading-usually-wednesdays",
+            Self::ReadingUsuallyThursdays => "reading-usually-thursdays",
+            Self::ReadingUsuallyFridays => "reading-usually-fridays",
+            Self::ReadingUsuallySaturdays => "reading-usually-saturdays",
+            Self::ReadingUsuallySundays => "reading-usually-sundays",
+            Self::ReadingAboutEveryWeeks { .. } => "reading-about-every-weeks",
+            Self::ReadingAlsoAShow => "reading-also-a-show",
+            Self::ReadingAlsoABook => "reading-also-a-book",
+            Self::ReadingSplitChapter { .. } => "reading-split-chapter",
+            Self::ReaderResumed { .. } => "reader-resumed",
+            Self::ReaderBackToPage { .. } => "reader-back-to-page",
+            Self::ReaderMoved { .. } => "reader-moved",
+            Self::ReaderDetectedRightToLeft => "reader-detected-right-to-left",
+            Self::ReaderDetectedLeftToRight => "reader-detected-left-to-right",
+            Self::ReaderDetectedStrip => "reader-detected-strip",
+            Self::ReadingFailedOffline => "reading-failed-offline",
+            Self::ReadingFailedSourceDown { .. } => "reading-failed-source-down",
+            Self::ReadingFailedNotFound => "reading-failed-not-found",
+            Self::ReadingFailedBlocked { .. } => "reading-failed-blocked",
+            Self::ReadingFailedParse { .. } => "reading-failed-parse",
+            Self::ReadingFailedPage { .. } => "reading-failed-page",
+            Self::ReadingFailedSignIn { .. } => "reading-failed-sign-in",
+            Self::ReadingFailedFileMissing { .. } => "reading-failed-file-missing",
+            Self::ReadingFailedUnreadable { .. } => "reading-failed-unreadable",
+            Self::ReadingFailedUnsupported { .. } => "reading-failed-unsupported",
+            Self::ReadingFailedProtected => "reading-failed-protected",
+            Self::ReadingFailedDiskFull => "reading-failed-disk-full",
+            Self::ReadingFailedWebview { .. } => "reading-failed-webview",
+            Self::ReadingFailedNeedsNewer { .. } => "reading-failed-needs-newer",
+            Self::ReadingFailedOff => "reading-failed-off",
+            Self::ReadingFailedOther { .. } => "reading-failed-other",
+        }
+    }
+
+    /// The message's arguments, by catalogue name.
+    pub fn values(&self) -> Vec<(&'static str, Value)> {
+        match self {
+            Self::ReadingNextChapter { chapter } => vec![("chapter", Value::Text(chapter.clone()))],
+            Self::ReadingUsuallyMondays => Vec::new(),
+            Self::ReadingUsuallyTuesdays => Vec::new(),
+            Self::ReadingUsuallyWednesdays => Vec::new(),
+            Self::ReadingUsuallyThursdays => Vec::new(),
+            Self::ReadingUsuallyFridays => Vec::new(),
+            Self::ReadingUsuallySaturdays => Vec::new(),
+            Self::ReadingUsuallySundays => Vec::new(),
+            Self::ReadingAboutEveryWeeks { weeks } => vec![("weeks", Value::Int(*weeks))],
+            Self::ReadingAlsoAShow => Vec::new(),
+            Self::ReadingAlsoABook => Vec::new(),
+            Self::ReadingSplitChapter { chapter, whole } => vec![("chapter", Value::Text(chapter.clone())), ("whole", Value::Text(whole.clone()))],
+            Self::ReaderResumed { page } => vec![("page", Value::Int(*page))],
+            Self::ReaderBackToPage { page } => vec![("page", Value::Int(*page))],
+            Self::ReaderMoved { chapter, page, device } => vec![("chapter", Value::Text(chapter.clone())), ("page", Value::Int(*page)), ("device", Value::Text(device.clone()))],
+            Self::ReaderDetectedRightToLeft => Vec::new(),
+            Self::ReaderDetectedLeftToRight => Vec::new(),
+            Self::ReaderDetectedStrip => Vec::new(),
+            Self::ReadingFailedOffline => Vec::new(),
+            Self::ReadingFailedSourceDown { source } => vec![("source", Value::Text(source.clone()))],
+            Self::ReadingFailedNotFound => Vec::new(),
+            Self::ReadingFailedBlocked { source, reason } => vec![("source", Value::Text(source.clone())), ("reason", Value::Text(reason.clone()))],
+            Self::ReadingFailedParse { source } => vec![("source", Value::Text(source.clone()))],
+            Self::ReadingFailedPage { status } => vec![("status", Value::Int(*status))],
+            Self::ReadingFailedSignIn { what } => vec![("what", Value::Text(what.clone()))],
+            Self::ReadingFailedFileMissing { path } => vec![("path", Value::Text(path.clone()))],
+            Self::ReadingFailedUnreadable { path, format } => vec![("path", Value::Text(path.clone())), ("format", Value::Text(format.clone()))],
+            Self::ReadingFailedUnsupported { extension } => vec![("extension", Value::Text(extension.clone()))],
+            Self::ReadingFailedProtected => Vec::new(),
+            Self::ReadingFailedDiskFull => Vec::new(),
+            Self::ReadingFailedWebview { version } => vec![("version", Value::Int(*version))],
+            Self::ReadingFailedNeedsNewer { world } => vec![("world", Value::Text(world.clone()))],
+            Self::ReadingFailedOff => Vec::new(),
+            Self::ReadingFailedOther { reason } => vec![("reason", Value::Text(reason.clone()))],
         }
     }
 }

@@ -10,6 +10,7 @@ import app.kaeri.engine.model.Size
 import app.kaeri.engine.model.SizeUnit
 import app.kaeri.engine.model.Span
 import app.kaeri.engine.model.StoreMsg
+import app.kaeri.engine.model.ReadingMsg
 import app.kaeri.i18n.Strings
 
 /** The message in the person's language. Text Kaeri does not own is shown as it came. */
@@ -216,6 +217,7 @@ fun Msg.text(context: Context): String =
         is Msg.NoticeSurpriseOffline -> Strings.noticeSurpriseOffline(context)
         is Msg.NoticeSurpriseFailed -> Strings.noticeSurpriseFailed(context)
         is Msg.Store -> this.v1.text(context)
+        is Msg.Reading -> this.v1.text(context)
         is Msg.Verbatim -> this.text
     }
 
@@ -298,6 +300,45 @@ fun StoreMsg.text(context: Context): String =
         is StoreMsg.NoticePartyNotBuilt -> Strings.noticePartyNotBuilt(context)
         is StoreMsg.SourcesDemoRemoved -> Strings.sourcesDemoRemoved(context)
         is StoreMsg.StoresReadyDemoStays -> Strings.storesReadyDemoStays(context, this.store)
+    }
+
+/** One of [Msg]'s nested messages in the person's language. */
+fun ReadingMsg.text(context: Context): String =
+    when (this) {
+        is ReadingMsg.ReadingNextChapter -> Strings.readingNextChapter(context, this.chapter)
+        is ReadingMsg.ReadingUsuallyMondays -> Strings.readingUsuallyMondays(context)
+        is ReadingMsg.ReadingUsuallyTuesdays -> Strings.readingUsuallyTuesdays(context)
+        is ReadingMsg.ReadingUsuallyWednesdays -> Strings.readingUsuallyWednesdays(context)
+        is ReadingMsg.ReadingUsuallyThursdays -> Strings.readingUsuallyThursdays(context)
+        is ReadingMsg.ReadingUsuallyFridays -> Strings.readingUsuallyFridays(context)
+        is ReadingMsg.ReadingUsuallySaturdays -> Strings.readingUsuallySaturdays(context)
+        is ReadingMsg.ReadingUsuallySundays -> Strings.readingUsuallySundays(context)
+        is ReadingMsg.ReadingAboutEveryWeeks -> Strings.readingAboutEveryWeeks(context, this.weeks.toInt())
+        is ReadingMsg.ReadingAlsoAShow -> Strings.readingAlsoAShow(context)
+        is ReadingMsg.ReadingAlsoABook -> Strings.readingAlsoABook(context)
+        is ReadingMsg.ReadingSplitChapter -> Strings.readingSplitChapter(context, this.chapter, this.whole)
+        is ReadingMsg.ReaderResumed -> Strings.readerResumed(context, this.page.toInt())
+        is ReadingMsg.ReaderBackToPage -> Strings.readerBackToPage(context, this.page.toInt())
+        is ReadingMsg.ReaderMoved -> Strings.readerMoved(context, this.chapter, this.page.toInt(), this.device)
+        is ReadingMsg.ReaderDetectedRightToLeft -> Strings.readerDetectedRightToLeft(context)
+        is ReadingMsg.ReaderDetectedLeftToRight -> Strings.readerDetectedLeftToRight(context)
+        is ReadingMsg.ReaderDetectedStrip -> Strings.readerDetectedStrip(context)
+        is ReadingMsg.ReadingFailedOffline -> Strings.readingFailedOffline(context)
+        is ReadingMsg.ReadingFailedSourceDown -> Strings.readingFailedSourceDown(context, this.source)
+        is ReadingMsg.ReadingFailedNotFound -> Strings.readingFailedNotFound(context)
+        is ReadingMsg.ReadingFailedBlocked -> Strings.readingFailedBlocked(context, this.source, this.reason)
+        is ReadingMsg.ReadingFailedParse -> Strings.readingFailedParse(context, this.source)
+        is ReadingMsg.ReadingFailedPage -> Strings.readingFailedPage(context, this.status.toInt())
+        is ReadingMsg.ReadingFailedSignIn -> Strings.readingFailedSignIn(context, this.what)
+        is ReadingMsg.ReadingFailedFileMissing -> Strings.readingFailedFileMissing(context, this.path)
+        is ReadingMsg.ReadingFailedUnreadable -> Strings.readingFailedUnreadable(context, this.path, this.format)
+        is ReadingMsg.ReadingFailedUnsupported -> Strings.readingFailedUnsupported(context, this.extension)
+        is ReadingMsg.ReadingFailedProtected -> Strings.readingFailedProtected(context)
+        is ReadingMsg.ReadingFailedDiskFull -> Strings.readingFailedDiskFull(context)
+        is ReadingMsg.ReadingFailedWebview -> Strings.readingFailedWebview(context, this.version.toInt())
+        is ReadingMsg.ReadingFailedNeedsNewer -> Strings.readingFailedNeedsNewer(context, this.world)
+        is ReadingMsg.ReadingFailedOff -> Strings.readingFailedOff(context)
+        is ReadingMsg.ReadingFailedOther -> Strings.readingFailedOther(context, this.reason)
     }
 
 /** A reason in the person's language, inside a message or on its own. */

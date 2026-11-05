@@ -221,6 +221,8 @@ impl Engine {
             sources: given,
             background,
             set_aside,
+            reading,
+            edition,
             #[cfg(feature = "testing")]
             parts,
             #[cfg(feature = "testing")]
@@ -368,6 +370,7 @@ impl Engine {
         state.config.set_sync(services.store.clone());
         crate::tracking::commands::announce_signed_in(&services.store, &services.sync);
         state.config.set_handheld(handheld);
+        state.reading = crate::reading::ReadingState::new(reading, edition);
         crate::crash::arm_from(&services.paths.data_dir, state.config.effective());
         services.syncing.set_language(language.clone());
         #[cfg(feature = "cast")]

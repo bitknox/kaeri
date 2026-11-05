@@ -210,6 +210,7 @@ extension Msg {
         case .noticeSurpriseOffline: L.noticeSurpriseOffline
         case .noticeSurpriseFailed: L.noticeSurpriseFailed
         case let .store(msg): msg.text
+        case let .reading(msg): msg.text
         case let .verbatim(text): text
         }
     }
@@ -295,6 +296,48 @@ extension StoreMsg {
         case .noticePartyNotBuilt: L.noticePartyNotBuilt
         case .sourcesDemoRemoved: L.sourcesDemoRemoved
         case .storesReadyDemoStays(let store): L.storesReadyDemoStays(store: store)
+        }
+    }
+}
+
+extension ReadingMsg {
+    /// One of `Msg`'s nested messages in the person's language.
+    public var text: String {
+        switch self {
+        case .readingNextChapter(let chapter): L.readingNextChapter(chapter: chapter)
+        case .readingUsuallyMondays: L.readingUsuallyMondays
+        case .readingUsuallyTuesdays: L.readingUsuallyTuesdays
+        case .readingUsuallyWednesdays: L.readingUsuallyWednesdays
+        case .readingUsuallyThursdays: L.readingUsuallyThursdays
+        case .readingUsuallyFridays: L.readingUsuallyFridays
+        case .readingUsuallySaturdays: L.readingUsuallySaturdays
+        case .readingUsuallySundays: L.readingUsuallySundays
+        case .readingAboutEveryWeeks(let weeks): L.readingAboutEveryWeeks(weeks: Int(weeks))
+        case .readingAlsoAShow: L.readingAlsoAShow
+        case .readingAlsoABook: L.readingAlsoABook
+        case .readingSplitChapter(let chapter, let whole): L.readingSplitChapter(chapter: chapter, whole: whole)
+        case .readerResumed(let page): L.readerResumed(page: Int(page))
+        case .readerBackToPage(let page): L.readerBackToPage(page: Int(page))
+        case .readerMoved(let chapter, let page, let device): L.readerMoved(chapter: chapter, page: Int(page), device: device)
+        case .readerDetectedRightToLeft: L.readerDetectedRightToLeft
+        case .readerDetectedLeftToRight: L.readerDetectedLeftToRight
+        case .readerDetectedStrip: L.readerDetectedStrip
+        case .readingFailedOffline: L.readingFailedOffline
+        case .readingFailedSourceDown(let source): L.readingFailedSourceDown(source: source)
+        case .readingFailedNotFound: L.readingFailedNotFound
+        case .readingFailedBlocked(let source, let reason): L.readingFailedBlocked(source: source, reason: reason)
+        case .readingFailedParse(let source): L.readingFailedParse(source: source)
+        case .readingFailedPage(let status): L.readingFailedPage(status: Int(status))
+        case .readingFailedSignIn(let what): L.readingFailedSignIn(what: what)
+        case .readingFailedFileMissing(let path): L.readingFailedFileMissing(path: path)
+        case .readingFailedUnreadable(let path, let format): L.readingFailedUnreadable(path: path, format: format)
+        case .readingFailedUnsupported(let extension): L.readingFailedUnsupported(extension: extension)
+        case .readingFailedProtected: L.readingFailedProtected
+        case .readingFailedDiskFull: L.readingFailedDiskFull
+        case .readingFailedWebview(let version): L.readingFailedWebview(version: Int(version))
+        case .readingFailedNeedsNewer(let world): L.readingFailedNeedsNewer(world: world)
+        case .readingFailedOff: L.readingFailedOff
+        case .readingFailedOther(let reason): L.readingFailedOther(reason: reason)
         }
     }
 }

@@ -683,6 +683,146 @@
     <value>Couldn't reach {server}. Check the server, or try again.</value>
     <comment>Message when a watch party's server could not be reached, in the lobby or when looking in.</comment>
   </data>
+  <data name="ReadingNextChapter" xml:space="preserve">
+    <value>Chapter {chapter}</value>
+    <comment>Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.</comment>
+  </data>
+  <data name="ReadingUsuallyMondays" xml:space="preserve">
+    <value>Usually Mondays</value>
+    <comment>Under a cover or on a series page: when new chapters usually come out.</comment>
+  </data>
+  <data name="ReadingUsuallyTuesdays" xml:space="preserve">
+    <value>Usually Tuesdays</value>
+    <comment>Under a cover or on a series page: when new chapters usually come out.</comment>
+  </data>
+  <data name="ReadingUsuallyWednesdays" xml:space="preserve">
+    <value>Usually Wednesdays</value>
+    <comment>Under a cover or on a series page: when new chapters usually come out.</comment>
+  </data>
+  <data name="ReadingUsuallyThursdays" xml:space="preserve">
+    <value>Usually Thursdays</value>
+    <comment>Under a cover or on a series page: when new chapters usually come out.</comment>
+  </data>
+  <data name="ReadingUsuallyFridays" xml:space="preserve">
+    <value>Usually Fridays</value>
+    <comment>Under a cover or on a series page: when new chapters usually come out.</comment>
+  </data>
+  <data name="ReadingUsuallySaturdays" xml:space="preserve">
+    <value>Usually Saturdays</value>
+    <comment>Under a cover or on a series page: when new chapters usually come out.</comment>
+  </data>
+  <data name="ReadingUsuallySundays" xml:space="preserve">
+    <value>Usually Sundays</value>
+    <comment>Under a cover or on a series page: when new chapters usually come out.</comment>
+  </data>
+  <data name="ReadingAboutEveryWeeks_one" xml:space="preserve">
+    <value>About every week</value>
+    <comment>Under a cover or on a series page: how often new chapters come out, in weeks.</comment>
+  </data>
+  <data name="ReadingAboutEveryWeeks_other" xml:space="preserve">
+    <value>About every {weeks} weeks</value>
+    <comment>Under a cover or on a series page: how often new chapters come out, in weeks.</comment>
+  </data>
+  <data name="ReadingAlsoAShow" xml:space="preserve">
+    <value>Also a show</value>
+    <comment>On a book's series page, when the same story is also a show. Shown only to someone who both watches and reads.</comment>
+  </data>
+  <data name="ReadingAlsoABook" xml:space="preserve">
+    <value>Also a book</value>
+    <comment>On a show's page, when the same story is also a manga or a novel. Shown only to someone who both watches and reads.</comment>
+  </data>
+  <data name="ReadingSplitChapter" xml:space="preserve">
+    <value>Chapter {chapter} goes to trackers as {whole}.</value>
+    <comment>Under a tracker on a series page, when the furthest chapter read is a half chapter. Trackers count whole chapters only. The chapter is its number, such as 10.5; whole is the number the tracker gets, such as 10.</comment>
+  </data>
+  <data name="ReaderResumed" xml:space="preserve">
+    <value>Resumed at page {page}</value>
+    <comment>A notice over the page when a chapter opens where it was left. It offers Start over.</comment>
+  </data>
+  <data name="ReaderBackToPage" xml:space="preserve">
+    <value>Back to page {page}</value>
+    <comment>A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.</comment>
+  </data>
+  <data name="ReaderMoved" xml:space="preserve">
+    <value>Moved to chapter {chapter}, page {page}, where {device} stopped</value>
+    <comment>A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The device is its name, such as Living room tablet.</comment>
+  </data>
+  <data name="ReaderDetectedRightToLeft" xml:space="preserve">
+    <value>Right to left, detected</value>
+    <comment>A notice the first time a series opens with its reading direction guessed. It offers Change.</comment>
+  </data>
+  <data name="ReaderDetectedLeftToRight" xml:space="preserve">
+    <value>Left to right, detected</value>
+    <comment>A notice the first time a series opens with its reading direction guessed. It offers Change.</comment>
+  </data>
+  <data name="ReaderDetectedStrip" xml:space="preserve">
+    <value>Long strip, detected</value>
+    <comment>A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.</comment>
+  </data>
+  <data name="ReadingFailedOffline" xml:space="preserve">
+    <value>You're offline. Downloaded chapters still open.</value>
+    <comment>Why a chapter or a list could not load: there is no connection.</comment>
+  </data>
+  <data name="ReadingFailedSourceDown" xml:space="preserve">
+    <value>{source} isn't answering. Try again later.</value>
+    <comment>Why a chapter or a list could not load: the source did not answer. The source is its name.</comment>
+  </data>
+  <data name="ReadingFailedNotFound" xml:space="preserve">
+    <value>This source doesn't have it anymore. Try another source.</value>
+    <comment>Why a chapter could not load: the source no longer has it.</comment>
+  </data>
+  <data name="ReadingFailedBlocked" xml:space="preserve">
+    <value>{source} refused the request. {reason}</value>
+    <comment>Why a chapter or a list could not load: the source refused. The reason comes from the source.</comment>
+  </data>
+  <data name="ReadingFailedParse" xml:space="preserve">
+    <value>Kaeri couldn't read what {source} sent. Its plugin may need an update.</value>
+    <comment>Why a chapter or a list could not load: the source answered with something Kaeri could not read.</comment>
+  </data>
+  <data name="ReadingFailedPage" xml:space="preserve">
+    <value>This page didn't load (error {status}). Try again.</value>
+    <comment>Why one page did not load. The status is the server's HTTP status code, such as 404.</comment>
+  </data>
+  <data name="ReadingFailedSignIn" xml:space="preserve">
+    <value>Sign in to {what} again to keep reading.</value>
+    <comment>Why something could not load: a sign-in is needed. What is a server's or a tracker's name.</comment>
+  </data>
+  <data name="ReadingFailedFileMissing" xml:space="preserve">
+    <value>{path} isn't there anymore. If it's on a drive, connect it and try again.</value>
+    <comment>Why a book could not open: its file or folder is gone, perhaps on a drive that is not connected. The path is the file's.</comment>
+  </data>
+  <data name="ReadingFailedUnreadable" xml:space="preserve">
+    <value>{path} couldn't be read as {format}. The file may be damaged.</value>
+    <comment>Why a book could not open: the file is damaged or not what its name says. The format is a short name such as CBZ or EPUB.</comment>
+  </data>
+  <data name="ReadingFailedUnsupported" xml:space="preserve">
+    <value>Kaeri can't read {extension} files.</value>
+    <comment>Why a file was not added: Kaeri does not read its kind. The extension is such as .djvu.</comment>
+  </data>
+  <data name="ReadingFailedProtected" xml:space="preserve">
+    <value>This book is copy-protected, so Kaeri can't open it.</value>
+    <comment>Why a book could not open: it is copy-protected or encrypted.</comment>
+  </data>
+  <data name="ReadingFailedDiskFull" xml:space="preserve">
+    <value>There's no room left on this device. Free some space and try again.</value>
+    <comment>Why a chapter could not be saved: the disk is full.</comment>
+  </data>
+  <data name="ReadingFailedWebview" xml:space="preserve">
+    <value>Novels need a newer system WebView than version {version}. Update Android System WebView and try again.</value>
+    <comment>Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.</comment>
+  </data>
+  <data name="ReadingFailedNeedsNewer" xml:space="preserve">
+    <value>This plugin needs a newer Kaeri ({world}). Update Kaeri to use it.</value>
+    <comment>Why a book plugin could not be used: it was built for a newer Kaeri. The world is the plugin interface's name and version.</comment>
+  </data>
+  <data name="ReadingFailedOff" xml:space="preserve">
+    <value>Reading isn't available in this version of Kaeri.</value>
+    <comment>Why a reading request was refused: reading is not available in this build.</comment>
+  </data>
+  <data name="ReadingFailedOther" xml:space="preserve">
+    <value>Something went wrong. {reason}</value>
+    <comment>Why something about reading failed, for any other reason. The reason is as it came.</comment>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>Joined {store} as {member}.</value>
     <comment>Toast after joining a plugin store with an invite that names this device's owner.</comment>

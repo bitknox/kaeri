@@ -625,6 +625,142 @@ object Strings {
     fun partyServerUnreachable(context: Context, server: String): String =
         context.getString(R.string.party_server_unreachable, server)
 
+    /** Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5. */
+    fun readingNextChapter(context: Context, chapter: String): String =
+        context.getString(R.string.reading_next_chapter, chapter)
+
+    /** Under a cover or on a series page: when new chapters usually come out. */
+    fun readingUsuallyMondays(context: Context): String =
+        context.getString(R.string.reading_usually_mondays)
+
+    /** Under a cover or on a series page: when new chapters usually come out. */
+    fun readingUsuallyTuesdays(context: Context): String =
+        context.getString(R.string.reading_usually_tuesdays)
+
+    /** Under a cover or on a series page: when new chapters usually come out. */
+    fun readingUsuallyWednesdays(context: Context): String =
+        context.getString(R.string.reading_usually_wednesdays)
+
+    /** Under a cover or on a series page: when new chapters usually come out. */
+    fun readingUsuallyThursdays(context: Context): String =
+        context.getString(R.string.reading_usually_thursdays)
+
+    /** Under a cover or on a series page: when new chapters usually come out. */
+    fun readingUsuallyFridays(context: Context): String =
+        context.getString(R.string.reading_usually_fridays)
+
+    /** Under a cover or on a series page: when new chapters usually come out. */
+    fun readingUsuallySaturdays(context: Context): String =
+        context.getString(R.string.reading_usually_saturdays)
+
+    /** Under a cover or on a series page: when new chapters usually come out. */
+    fun readingUsuallySundays(context: Context): String =
+        context.getString(R.string.reading_usually_sundays)
+
+    /** Under a cover or on a series page: how often new chapters come out, in weeks. */
+    fun readingAboutEveryWeeks(context: Context, weeks: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_about_every_weeks, weeks, weeks)
+
+    /** On a book's series page, when the same story is also a show. Shown only to someone who both watches and reads. */
+    fun readingAlsoAShow(context: Context): String =
+        context.getString(R.string.reading_also_a_show)
+
+    /** On a show's page, when the same story is also a manga or a novel. Shown only to someone who both watches and reads. */
+    fun readingAlsoABook(context: Context): String =
+        context.getString(R.string.reading_also_a_book)
+
+    /** Under a tracker on a series page, when the furthest chapter read is a half chapter. Trackers count whole chapters only. The chapter is its number, such as 10.5; whole is the number the tracker gets, such as 10. */
+    fun readingSplitChapter(context: Context, chapter: String, whole: String): String =
+        context.getString(R.string.reading_split_chapter, chapter, whole)
+
+    /** A notice over the page when a chapter opens where it was left. It offers Start over. */
+    fun readerResumed(context: Context, page: Int): String =
+        context.getString(R.string.reader_resumed, page)
+
+    /** A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page. */
+    fun readerBackToPage(context: Context, page: Int): String =
+        context.getString(R.string.reader_back_to_page, page)
+
+    /** A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The device is its name, such as Living room tablet. */
+    fun readerMoved(context: Context, chapter: String, page: Int, device: String): String =
+        context.getString(R.string.reader_moved, chapter, page, device)
+
+    /** A notice the first time a series opens with its reading direction guessed. It offers Change. */
+    fun readerDetectedRightToLeft(context: Context): String =
+        context.getString(R.string.reader_detected_right_to_left)
+
+    /** A notice the first time a series opens with its reading direction guessed. It offers Change. */
+    fun readerDetectedLeftToRight(context: Context): String =
+        context.getString(R.string.reader_detected_left_to_right)
+
+    /** A notice the first time a series opens as one long strip, guessed from its pages. It offers Change. */
+    fun readerDetectedStrip(context: Context): String =
+        context.getString(R.string.reader_detected_strip)
+
+    /** Why a chapter or a list could not load: there is no connection. */
+    fun readingFailedOffline(context: Context): String =
+        context.getString(R.string.reading_failed_offline)
+
+    /** Why a chapter or a list could not load: the source did not answer. The source is its name. */
+    fun readingFailedSourceDown(context: Context, source: String): String =
+        context.getString(R.string.reading_failed_source_down, source)
+
+    /** Why a chapter could not load: the source no longer has it. */
+    fun readingFailedNotFound(context: Context): String =
+        context.getString(R.string.reading_failed_not_found)
+
+    /** Why a chapter or a list could not load: the source refused. The reason comes from the source. */
+    fun readingFailedBlocked(context: Context, source: String, reason: String): String =
+        context.getString(R.string.reading_failed_blocked, source, reason)
+
+    /** Why a chapter or a list could not load: the source answered with something Kaeri could not read. */
+    fun readingFailedParse(context: Context, source: String): String =
+        context.getString(R.string.reading_failed_parse, source)
+
+    /** Why one page did not load. The status is the server's HTTP status code, such as 404. */
+    fun readingFailedPage(context: Context, status: Int): String =
+        context.getString(R.string.reading_failed_page, status)
+
+    /** Why something could not load: a sign-in is needed. What is a server's or a tracker's name. */
+    fun readingFailedSignIn(context: Context, what: String): String =
+        context.getString(R.string.reading_failed_sign_in, what)
+
+    /** Why a book could not open: its file or folder is gone, perhaps on a drive that is not connected. The path is the file's. */
+    fun readingFailedFileMissing(context: Context, path: String): String =
+        context.getString(R.string.reading_failed_file_missing, path)
+
+    /** Why a book could not open: the file is damaged or not what its name says. The format is a short name such as CBZ or EPUB. */
+    fun readingFailedUnreadable(context: Context, path: String, format: String): String =
+        context.getString(R.string.reading_failed_unreadable, path, format)
+
+    /** Why a file was not added: Kaeri does not read its kind. The extension is such as .djvu. */
+    fun readingFailedUnsupported(context: Context, extension: String): String =
+        context.getString(R.string.reading_failed_unsupported, extension)
+
+    /** Why a book could not open: it is copy-protected or encrypted. */
+    fun readingFailedProtected(context: Context): String =
+        context.getString(R.string.reading_failed_protected)
+
+    /** Why a chapter could not be saved: the disk is full. */
+    fun readingFailedDiskFull(context: Context): String =
+        context.getString(R.string.reading_failed_disk_full)
+
+    /** Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80. */
+    fun readingFailedWebview(context: Context, version: Int): String =
+        context.getString(R.string.reading_failed_webview, version)
+
+    /** Why a book plugin could not be used: it was built for a newer Kaeri. The world is the plugin interface's name and version. */
+    fun readingFailedNeedsNewer(context: Context, world: String): String =
+        context.getString(R.string.reading_failed_needs_newer, world)
+
+    /** Why a reading request was refused: reading is not available in this build. */
+    fun readingFailedOff(context: Context): String =
+        context.getString(R.string.reading_failed_off)
+
+    /** Why something about reading failed, for any other reason. The reason is as it came. */
+    fun readingFailedOther(context: Context, reason: String): String =
+        context.getString(R.string.reading_failed_other, reason)
+
     /** Toast after joining a plugin store with an invite that names this device's owner. */
     fun storeJoined(context: Context, store: String, member: String): String =
         context.getString(R.string.store_joined, store, member)

@@ -133,6 +133,7 @@ pub mod playback;
 pub mod plugin_stores;
 pub mod profile;
 pub mod proxy;
+pub mod reading;
 #[cfg(feature = "remote")]
 pub mod remote;
 pub mod servers;
