@@ -96,6 +96,8 @@ pub struct Config {
     pub subtitles: SubtitlesConfig,
     /// Whether a crash is kept on this device for a bug report.
     pub crash_reports: CrashReportsConfig,
+    /// Reading: what this device is for, and the reader's settings kept on it.
+    pub reading: ReadingConfig,
     /// Keybinding overrides, `action = "key"`. The help overlay is generated from the
     /// resolved map so it can never drift from what the keys actually do.
     pub keys: BTreeMap<String, String>,
@@ -533,12 +535,71 @@ pub struct NotificationsConfig {
     /// Let a native app notify you of each new episode of the shows you follow, from its
     /// background check. Off until you turn it on.
     pub episodes: bool,
+    /// The same for new chapters of the series you read. Off until you turn it on.
+    pub chapters: bool,
 }
 
 impl Default for NotificationsConfig {
     fn default() -> Self {
-        Self { airing_digest: true, desktop: false, episodes: false }
+        Self { airing_digest: true, desktop: false, episodes: false, chapters: false }
     }
+}
+
+/// Reading, per device. The reader's own settings sit in the medium tables under the names the
+/// model's `ReaderSettingKey` gives them (`direction = "rtl"`, `text_size = 1.1`): the ones that
+/// follow the person (mode, direction, colour, look, font) are shared settings, the rest are this
+/// device's geometry. An unset key is the reader's default.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct ReadingConfig {
+    /// What this device is for: `watch`, `read` or `both`. Unset until the person answers.
+    pub kaeri_is_for: Option<String>,
+    /// For development in the terminal: turns reading on, which release builds leave off.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub dev: bool,
+    /// Whether a series' own mode, direction and colour follow the person to their other
+    /// devices.
+    pub series_choices_follow: bool,
+    /// Download chapters on a cellular connection, not only on Wi-Fi.
+    pub downloads_on_cellular: bool,
+    /// Keep the next chapters of what you read downloaded. Unset is the edition's own: on for
+    /// the e-reader build, off elsewhere.
+    pub keep_chapters_ready: Option<bool>,
+    /// Delete a downloaded chapter once it is read.
+    pub delete_after_reading: bool,
+    pub manga: BTreeMap<String, toml::Value>,
+    pub novel: BTreeMap<String, toml::Value>,
+    /// E-ink: `mode` (auto, on, off), `colour_panel` (the answer to "Is this a colour
+    /// screen?") and the refresh settings.
+    pub eink: BTreeMap<String, toml::Value>,
+    /// The OPDS feed this device serves to e-readers. Its password is in the secure store.
+    pub feed: FeedConfig,
+}
+
+impl Default for ReadingConfig {
+    fn default() -> Self {
+        Self {
+            kaeri_is_for: None,
+            dev: false,
+            series_choices_follow: true,
+            downloads_on_cellular: false,
+            keep_chapters_ready: None,
+            delete_after_reading: false,
+            manga: BTreeMap::new(),
+            novel: BTreeMap::new(),
+            eink: BTreeMap::new(),
+            feed: FeedConfig::default(),
+        }
+    }
+}
+
+/// The OPDS feed: off until turned on.
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(default)]
+pub struct FeedConfig {
+    pub on: bool,
+    /// Unset picks a free port.
+    pub port: Option<u16>,
 }
 
 /// The sources built into Kaeri, as opposed to the plugins people install.

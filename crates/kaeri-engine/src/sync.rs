@@ -77,6 +77,13 @@ pub fn apply_effects(
                     wrote = true;
                 }
             }
+            kinds::MEDIUM_ACCOUNT => {
+                let answer = value.as_deref().and_then(kaeri_model::medium::KaeriIsFor::parse);
+                let writer = services.store.sync_reg_writer(&kind, &key).ok().flatten();
+                if engine.reading.account_received(answer, writer) {
+                    let _ = tx.send(Event::Medium(engine.reading.view()));
+                }
+            }
             // Stores are read from the log when asked: see `stores_to_join`.
             _ => {}
         }

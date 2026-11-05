@@ -471,7 +471,7 @@ pub(crate) fn dispatch(
         Command::BookSources(command) => {
             crate::reading::book_sources(&engine.reading, command, tx)
         }
-        Command::Medium(command) => engine.reading.medium(command, tx),
+        Command::Medium(command) => crate::reading::medium(engine, services, command, tx),
 
         // An episode's discussion: off the loop, with no job, each answered with the
         // discussion whole. See `discussion`.

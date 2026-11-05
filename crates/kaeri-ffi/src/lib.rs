@@ -407,8 +407,17 @@ mod tests {
             language: Some("da".into()),
             profile: Some("p2".into()),
             audio_tap: true,
+            reading: true,
+            edition: Some(kaeri_model::medium::AppEdition::ReadOnly),
         };
         assert_eq!(crossed(start.clone()), start);
+        assert_eq!(start.edition(), kaeri_model::medium::AppEdition::ReadOnly);
+        let tv = FfiStart {
+            platform: Some(FfiPlatform::AndroidTv),
+            edition: Some(kaeri_model::medium::AppEdition::Full),
+            ..FfiStart::default()
+        };
+        assert_eq!(tv.edition(), kaeri_model::medium::AppEdition::WatchOnly);
         assert_eq!(crossed(FfiStart::default()), FfiStart::default());
         for platform in [
             FfiPlatform::MacOs,

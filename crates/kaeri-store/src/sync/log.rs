@@ -282,6 +282,20 @@ impl Store {
         })
     }
 
+    /// The name of the device that last set a register, or its id when it gave no name.
+    pub fn sync_reg_writer(&self, kind: &str, key: &str) -> Result<Option<String>> {
+        self.with_personal(|c| {
+            Ok(c.query_row(
+                "SELECT COALESCE(p.name, r.device) FROM sync_reg r
+                   LEFT JOIN sync_peer p ON p.device = r.device
+                  WHERE r.kind = ?1 AND r.key = ?2",
+                [kind, key],
+                |r| r.get(0),
+            )
+            .optional()?)
+        })
+    }
+
     /// Set a title's status or score as the person set it, keeping the register's rule.
     pub fn set_synced_status(&self, anilist_id: u32, status: Option<&str>) -> Result<()> {
         self.with_personal_tx(|tx| {

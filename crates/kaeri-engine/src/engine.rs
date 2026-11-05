@@ -230,6 +230,8 @@ impl Engine {
             #[cfg(feature = "testing")]
             free_space,
         } = options;
+        // Read before anything is written: no config file is a new install.
+        let new_install = !paths.config_file.exists();
         if background.prune {
             // Old logs, stale covers and the player's leftovers, off the critical path.
             {
@@ -370,7 +372,18 @@ impl Engine {
         state.config.set_sync(services.store.clone());
         crate::tracking::commands::announce_signed_in(&services.store, &services.sync);
         state.config.set_handheld(handheld);
-        state.reading = crate::reading::ReadingState::new(reading, edition);
+        let account = services
+            .store
+            .sync_regs(kaeri_store::sync::kinds::MEDIUM_ACCOUNT)
+            .ok()
+            .and_then(|regs| regs.into_iter().next().map(|(_, value)| value));
+        state.reading = crate::reading::ReadingState::at_launch(
+            reading,
+            edition,
+            state.config.effective().reading.kaeri_is_for.as_deref(),
+            account.as_deref(),
+            new_install,
+        );
         crate::crash::arm_from(&services.paths.data_dir, state.config.effective());
         services.syncing.set_language(language.clone());
         #[cfg(feature = "cast")]

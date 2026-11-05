@@ -16,7 +16,10 @@ use kaeri_model::{
     },
 };
 
-use crate::outbox::Outbox;
+use kaeri_core::settings::SettingValue;
+use kaeri_store::sync::kinds;
+
+use crate::{outbox::Outbox, services::Services, state::EngineState};
 
 /// What the engine knows about reading on this device.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -35,6 +38,27 @@ pub struct ReadingState {
 impl ReadingState {
     pub fn new(available: bool, edition: AppEdition) -> Self {
         Self { available, edition, ..Self::default() }
+    }
+
+    /// The state at launch: this device's kept answer, the account's from sync, and whether
+    /// the install is new. A device with no answer is asked once: on a new install as the
+    /// second page of the first run, after an update as one sheet over Home. When the account
+    /// says otherwise, the question names the devices that do.
+    pub fn at_launch(
+        available: bool,
+        edition: AppEdition,
+        stored: Option<&str>,
+        account: Option<&str>,
+        new_install: bool,
+    ) -> Self {
+        let stored = stored.and_then(KaeriIsFor::parse);
+        let account = account.and_then(KaeriIsFor::parse);
+        let ask = match stored {
+            Some(_) => None,
+            None if new_install => Some(MediumAsk::FirstRun),
+            None => Some(MediumAsk::Updated),
+        };
+        Self { available, edition, stored, account, ask }
     }
 
     /// The answer in effect: Watch while reading is not available, else the edition's own.
@@ -60,24 +84,77 @@ impl ReadingState {
         }
     }
 
-    /// Watch, read or both: always answered with the view.
-    pub fn medium(&mut self, command: MediumCommand, tx: &Outbox) {
-        let open = self.available && self.edition.fixed().is_none();
-        match command {
-            MediumCommand::Load => {}
-            MediumCommand::Choose { answer, delete_downloads: _ } if open => {
-                self.stored = Some(answer);
-            }
-            MediumCommand::Answer { ask: _, answer } if open => {
-                self.stored = Some(answer);
-                self.ask = None;
-            }
-            MediumCommand::Choose { .. } | MediumCommand::Answer { .. } => {
-                tracing::debug!("the medium is fixed in this build");
-            }
-        }
-        let _ = tx.send(Event::Medium(self.view()));
+    /// Whether this device's answer is its own to give.
+    fn open(&self) -> bool {
+        self.available && self.edition.fixed().is_none()
     }
+
+    /// The account's answer arrived from another device, named `writer`. Asks when it differs
+    /// from this device's, and says whether the view changed.
+    pub fn account_received(
+        &mut self,
+        answer: Option<KaeriIsFor>,
+        writer: Option<String>,
+    ) -> bool {
+        let before = self.view();
+        self.account = answer;
+        if let Some(answer) = answer
+            && self.open()
+            && answer != self.answer()
+        {
+            let devices = writer.into_iter().collect();
+            self.ask = Some(MediumAsk::Joined { devices, answer });
+        }
+        self.view() != before
+    }
+}
+
+/// Watch, read or both: always answered with the view. The answer is this device's, kept in
+/// `reading.kaeri_is_for`, and told to the account so a device that joins later is asked.
+pub(crate) fn medium(
+    engine: &mut EngineState,
+    services: &Services,
+    command: MediumCommand,
+    tx: &Outbox,
+) {
+    let open = engine.reading.open();
+    let answer = match command {
+        MediumCommand::Load => None,
+        MediumCommand::Choose { answer, delete_downloads } if open => {
+            if delete_downloads {
+                // No chapters are downloaded until downloads land.
+                tracing::debug!("no chapter downloads to delete");
+            }
+            Some(answer)
+        }
+        MediumCommand::Answer { ask: _, answer } if open => {
+            engine.reading.ask = None;
+            Some(answer)
+        }
+        MediumCommand::Choose { .. } | MediumCommand::Answer { .. } => {
+            tracing::debug!("the medium is fixed in this build");
+            None
+        }
+    };
+    if let Some(answer) = answer {
+        engine.reading.stored = Some(answer);
+        let value = SettingValue::Str(answer.as_str().to_owned());
+        if let Err(e) =
+            engine.config.write(&services.paths, &["reading"], "kaeri_is_for", value)
+        {
+            tracing::warn!(error = %e, "the medium answer was not written");
+        }
+        if let Err(e) = services.store.sync_register(
+            kinds::MEDIUM_ACCOUNT,
+            "account",
+            Some(answer.as_str()),
+            None,
+        ) {
+            tracing::warn!(error = %e, "the medium answer was not told to sync");
+        }
+        engine.reading.account = Some(answer);
+    }
+    let _ = tx.send(Event::Medium(engine.reading.view()));
 }
 
 /// A reading command.
@@ -185,5 +262,28 @@ mod tests {
         };
         assert_eq!(reader.view().answer, KaeriIsFor::Read);
         assert_eq!(reader.view().ask, None);
+    }
+
+    #[test]
+    fn a_device_without_an_answer_is_asked_once_and_the_account_can_ask_again() {
+        let fresh = ReadingState::at_launch(true, AppEdition::Full, None, None, true);
+        assert_eq!(fresh.view().ask, Some(MediumAsk::FirstRun));
+        let updated = ReadingState::at_launch(true, AppEdition::Full, None, None, false);
+        assert_eq!(updated.view().ask, Some(MediumAsk::Updated));
+        let mut kept =
+            ReadingState::at_launch(true, AppEdition::Full, Some("both"), None, false);
+        assert_eq!((kept.view().ask, kept.answer()), (None, KaeriIsFor::Both));
+
+        kept.account_received(Some(KaeriIsFor::Both), Some("Desk".into()));
+        assert_eq!(kept.view().ask, None);
+        assert!(kept.account_received(Some(KaeriIsFor::Read), Some("Desk".into())));
+        assert_eq!(
+            kept.view().ask,
+            Some(MediumAsk::Joined { devices: vec!["Desk".into()], answer: KaeriIsFor::Read })
+        );
+
+        let mut dark = ReadingState::at_launch(false, AppEdition::Full, None, None, true);
+        dark.account_received(Some(KaeriIsFor::Read), None);
+        assert_eq!(dark.view().ask, None);
     }
 }
